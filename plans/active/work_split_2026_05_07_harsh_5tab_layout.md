@@ -433,6 +433,303 @@ REPORT-BACK:
 - **Cadence**: 10-min monitoring sweeps; appending findings into the plan body's "Day 2 monitoring sweep"
   subsection.
 
+#### Tab 4 — `deploy-missing-tarball-refresh-tab` 🟢 IN FLIGHT (deploy_missing Phase 1, P0, ~3-4h)
+
+- **Started**: 2026-05-08 05:11 UTC (STARTED ping ack'd by main; clean boot, no flags).
+- **Plan-of-record**: [`deploy_missing_auto_launch_2026_05_07.plan.md`](deploy_missing_auto_launch_2026_05_07.plan.md) Phase 1.
+- **Why this now**: Just-unblocked because Tab 3 landed deployment-api Phase 2 endpoints today. Phase 1 builds
+  the tarball-refresh wiring that the eventual auto-launch endpoint (Phase 2) depends on.
+- **Scope**: refresh-tarballs-for-shard-key.sh + Cloud Build trigger + deployment-api staleness-check helper.
+  Phase 0 (security review) is operator-owned, Phase 2+ are gated on Phase 0; do NOT proceed past Phase 1.
+
+**Scope clarifications** (read before opening the prompt):
+- **Tab 4 ships Phase 1 only**: `refresh-tarballs-for-shard-key.sh` + Cloud Build trigger + deployment-api
+  staleness-check helper. Phase 0 (security review) is operator-owned and Phase 2+ depend on Phase 0's IAM
+  decision; do NOT proceed past Phase 1.
+- **Bonus** (if time): draft a Phase 0 IAM-scope proposal doc in the plan body for operator review (don't sign
+  off; just propose).
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 4 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1, a separate Claude
+Code session on the SAME PC, sharing the SAME .git/ + working tree as you).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
+  3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
+  4. plans/active/deploy_missing_auto_launch_2026_05_07.plan.md — your plan-of-record (full body).
+  5. plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md — parent plan
+     (Phase 3 ships the preview-mode Deploy-Missing button; Tab 4 builds toward the auto-launch
+     successor).
+
+Your agent-tag for ping-ledger entries: deploy-missing-tarball-refresh-tab (or shorter — pick).
+Your tab number: 4.
+
+The boot section in the orchestration ledger covers everything on workflow: shared working tree,
+push discipline (conditional — push iff zero incoming on origin; flag for main + operator
+review otherwise), Q&A flow via plan-of-record + ping ledger, plan-doc curation (checkbox
+flips per shippable unit, DONE block on completion), findings triage. Read it once and follow.
+
+YOUR TASK:
+
+Implement Phase 1 (tarball-refresh wiring) of deploy_missing_auto_launch_2026_05_07.plan.md.
+Phase 0 (security review) is operator-owned and Phase 2+ are gated on Phase 0's IAM decisions
+— do NOT proceed past Phase 1.
+
+Phase 1 todos (3 P0 items per the plan):
+
+1. **`deployment-service/scripts/vm/refresh-tarballs-for-shard-key.sh <asset_group>`**
+   - New script that wraps `create-code-tarballs.sh --asset-group X`.
+   - Emits a `TARBALLS_REFRESHED` event when complete (use the standard log_event helper from
+     unified-trading-library).
+   - Per CLAUDE.md "VM tarball deployment" rule: tarball naming follows
+     `gs://deployment-scripts-${PID}/code/<tarball>.tar.gz`.
+
+2. **Cloud Build trigger that runs the refresh script via REST**
+   - Located in `deployment-service/cloud-build/` (or wherever existing Cloud Build configs
+     live — investigate the repo first).
+   - Returns the `build_id` so deployment-api can poll for success.
+   - Should be invokable via the standard `cloudbuild.builds.create` RPC; auth via the existing
+     deployment-api Cloud Run service account.
+
+3. **deployment-api pre-launch check helper**
+   - New helper in deployment-api: read the asset-group tarball's GCS object mtime, compare to
+     `git rev-parse HEAD` of `live-defi-rollout` (use unified_cloud_interface for the GCS read).
+   - If stale (tarball mtime < latest pushed commit timestamp), kick the Cloud Build via the
+     trigger above and wait for completion (poll the build_id) before returning success.
+   - Stub the actual gcloud-invoke for Phase 2 (Phase 1 just builds the staleness gate).
+   - Standalone helper module — NOT wired into any route yet (Phase 2 will wire).
+
+**Bonus** (only if time after Phase 1 + tests + plan flips ship clean): draft a Phase 0 IAM-scope
+proposal doc as a new section in the deploy_missing plan body. Propose the minimal IAM scope for
+the eventual Phase 2 endpoint (e.g. `roles/compute.instanceAdmin.v1` scoped to a specific zone +
+image family + subnet, vs blanket). Operator reviews before Phase 2 ships.
+
+REPOS OWNED (edit rights):
+- deployment-service — new script under scripts/vm/, new Cloud Build trigger config.
+- deployment-api — new helper module (not wired into any route).
+- unified-trading-pm — plan flips on deploy_missing plan + bonus IAM proposal section.
+
+READ-ONLY DEPS (do NOT edit):
+- unified-trading-library — read log_event signature for the TARBALLS_REFRESHED emission;
+  do NOT modify.
+- unified-cloud-interface — read get_storage_client signature for GCS mtime read; do NOT modify.
+
+COLLISION BOUNDARIES:
+- Tab 2 (cefi-babysit-tab) is monitoring cefi VMs — only edits cefi_master.plan.md. ZERO overlap.
+- Ikenna's parallel work (writegate Phase 2.A residual on MDPS, alerting Phase 2 on
+  alerting-service). ZERO overlap with deploy_missing surface.
+- main.py in deployment-api is touched by Tab 3 (just landed) — your helper is standalone, NOT
+  wired into routes yet, so no main.py edits needed in Tab 4.
+
+DONE-DEFINITION (verifiable bullets):
+- [ ] refresh-tarballs-for-shard-key.sh shipped + emits TARBALLS_REFRESHED event.
+- [ ] Cloud Build trigger config shipped + invokable via REST returning build_id.
+- [ ] deployment-api staleness-check helper shipped (mtime-vs-HEAD gate, kicks Cloud Build,
+      waits for completion).
+- [ ] Unit tests for the helper (mock the Cloud Build poll + GCS mtime read).
+- [ ] `cd deployment-api && bash scripts/quality-gates.sh` Pass 1 green.
+- [ ] `cd deployment-service && bash scripts/quality-gates.sh` Pass 1 green.
+- [ ] Plan flips: plans/active/deploy_missing_auto_launch_2026_05_07.plan.md Phase 1 todos
+      `- [ ]` → `- [x]` with `<repo>@<sha>` evidence.
+- [ ] Plan-flip commit in PM with message
+      `plan(deploy-missing-auto-launch): flip Phase 1 checkboxes (...)`.
+- [ ] Bonus (optional): Phase 0 IAM-scope proposal section in the plan body.
+
+REPORT-BACK:
+- Per shippable unit: code commit + plan-flip commit. Push per the conditional rule
+  (`git fetch` + zero-incoming → push; any incoming → flag in plan-of-record + ping main).
+- Final: append a "DONE-2026-05-08" comment block at the bottom of
+  plans/active/deploy_missing_auto_launch_2026_05_07.plan.md body listing every code +
+  plan-flip commit sha. Main agent sees your commits immediately via shared .git/ +
+  `git log --oneline live-defi-rollout`.
+````
+
+#### Tab 5 — DeFi lending-indices bug fixes 🟡 QUEUED (P0, ~4-6h, MTDS + instruments-service)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 5 tasks"_.
+
+**Why now**: P0 blocker for `carry_staked_basis` (May-23 lead archetype) on Ethereum — Bug 1 = AAVE V3 ETH
+silent-zero. All 3 bugs already diagnosed in the issue doc. Friendly hand-off ahead of Ikenna's D4 DeFi
+launches (those depend on lending-indices working).
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 5 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
+  3. plans/active/issues/lending_indices_handler_bugs_2026_05_07.md — your plan-of-record
+     (full bug evidence + suggested fixes).
+  4. plans/active/defi_master_2026_05_07.plan.md § "Lending-indices VM run-quality bugs" —
+     parent context.
+
+Your agent-tag: lending-indices-bugfix-tab. Your tab number: 5.
+
+YOUR TASK: ship the 3 bug fixes documented in lending_indices_handler_bugs_2026_05_07.md:
+
+* Bug 1 — AAVE V3 ETHEREUM silent-zero (subgraph routing config error in
+  market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py).
+* Bug 2 — Compound V3 schema drift (GraphQL query update).
+* Bug 3 — instruments-service DeFi instrument-discovery launch-date floor handling
+  (architectural — read the issue doc carefully before proposing the fix).
+
+Bugs are independent — ship them in 3 separate commits. Per CLAUDE.md HARD RULE: commit per
+shippable unit. Push per the conditional rule (fetch + zero incoming → push; any incoming →
+flag in your plan-of-record's `## Open questions`).
+
+REPOS OWNED: market-tick-data-service, instruments-service.
+
+DONE-DEFINITION:
+- [ ] All 3 bugs fixed with unit tests covering the regression cases.
+- [ ] `cd market-tick-data-service && bash scripts/quality-gates.sh` Pass 1 green.
+- [ ] `cd instruments-service && bash scripts/quality-gates.sh` Pass 1 green.
+- [ ] Issue doc updated to RESOLVED with `<repo>@<sha>` evidence per bug.
+- [ ] DONE-2026-05-08 block at the bottom of the issue doc.
+
+REPORT-BACK: code commits + plan-flip commit per shippable unit; conditional push.
+````
+
+#### Tab 6 — DeFi 988-missing-dates audit 🟡 QUEUED (diagnostic-only, ~2-3h, no editing)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 6 tasks"_.
+
+**Why now**: Prioritises Harsh's D4 P0 manifest rescan + Ikenna's D4 DeFi launch decisions. The current
+"988 dates missing" headline doesn't break down by `(chain, protocol, data_type)`; this audit produces the
+breakdown so D4 can target the `carry_staked_basis` chain set (Ethereum + Solana + Arbitrum + Base).
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 6 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
+  3. plans/active/defi_master_2026_05_07.plan.md § "Tail-chain / mid-tier protocol coverage
+     (DeFi data-status — 988 dates missing)" — your plan-of-record context.
+  4. unified_api_contracts.canonical.crosscutting.chain_genesis SSOT (CHAIN_GENESIS_DATES).
+  5. unified_api_contracts.canonical.domain.defi.protocol_launch SSOT (PROTOCOL_LAUNCH_DATES).
+
+Your agent-tag: defi-988-audit-tab. Your tab number: 6.
+
+YOUR TASK: produce a per-(chain, protocol, data_type) breakdown of the 988 missing DeFi dates,
+ranked by relevance to the May-23 archetypes (carry_staked_basis lead, leveraged_funding_arb).
+
+This is DIAGNOSTIC ONLY — no code changes. Output is a new markdown doc:
+plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md (file an issue doc per the
+Findings Triage Discipline issue-doc format in CLAUDE.md).
+
+Approach (suggested):
+1. Read the canonical DeFi manifest at gs://market-data-tick-defi-central-element-323112/
+   _index/availability_index.parquet (use unified_cloud_interface).
+2. Filter to capture_status ∈ {empty_confirmed, attempted_failed, expected_unattempted}.
+3. Cross-check against CHAIN_GENESIS_DATES + PROTOCOL_LAUNCH_DATES — anything pre-genesis
+   should be empty_confirmed[EXPECTED_PRE_GENESIS_CHAIN] (legitimate); anything else is
+   actually-missing.
+4. Group remaining missing rows by (chain, protocol, data_type), count, sort by relevance to
+   carry_staked_basis (Ethereum + Solana + Arbitrum + Base, focus on AAVE V3 / Lido / Rocket
+   Pool / Jito / Marinade / Pyth / Chainlink) and leveraged_funding_arb (perp DEXes).
+5. Write the audit doc with the breakdown table + top-5 priority list for D4 backfill.
+
+REPOS OWNED: unified-trading-pm (issue doc only).
+
+DONE-DEFINITION:
+- [ ] plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md filed with breakdown table.
+- [ ] Top-5 priority list for D4 backfill action.
+- [ ] Linked from defi_master plan body's "Tail-chain coverage" section (one-line annotation).
+- [ ] DONE-2026-05-08 block at the bottom of the audit doc.
+
+REPORT-BACK: 1 commit (issue doc) + 1 commit (defi_master annotation); conditional push.
+````
+
+#### Tab 7 — MTDS Databento path-streaming Phase 1 🟡 QUEUED (pure-win refactor, ~8-10h, MTDS only)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 7 tasks"_.
+
+**Why now**: Risk mitigation ahead of Ikenna's D4 DeFi launches + the post-cefi-drain TradFi + DeFi reruns.
+ES.OPT-class days currently spike >1GB peak RSS under eager-materialisation. Path-streaming bounds peak
+memory; SDK-supported (`path=<tempfile>` + `to_df(count=N)` chunking); byte-identical output. Pure refactor,
+low risk, big throughput payoff.
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 7 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
+  3. plans/active/mtds_databento_path_streaming_2026_05_07.plan.md Phase 1 — your plan-of-record.
+
+Your agent-tag: mtds-databento-streaming-tab. Your tab number: 7.
+
+YOUR TASK: implement Phase 1 of mtds_databento_path_streaming_2026_05_07.plan.md — chunked
+streaming for Databento `get_range` responses to bound peak memory.
+
+Refactor scope (per the plan body's 5 migration steps):
+* market-tick-data-service/market_tick_data_service/adapters/databento_adapter.py — switch
+  eager `to_df()` materialisation to `path=<tempfile>` + chunked `to_df(count=N)` iteration.
+* Output is byte-identical to the current path (verify via parquet row-count + checksum tests
+  on a fixture day).
+* Tests: 5 unit tests covering the chunked iteration path (per plan body).
+
+REPOS OWNED: market-tick-data-service.
+
+DONE-DEFINITION:
+- [ ] databento_adapter.py refactored to chunked streaming.
+- [ ] 5 unit tests pass.
+- [ ] `cd market-tick-data-service && bash scripts/quality-gates.sh` Pass 1 green.
+- [ ] Manual smoke: heavy-day fixture (or memory-profile run on a sample) shows bounded peak.
+- [ ] Plan flips: Phase 1 todos `- [ ]` → `- [x]` with `<repo>@<sha>` evidence.
+- [ ] DONE-2026-05-08 block at the bottom of the plan body.
+
+REPORT-BACK: 5-6 small commits per CLAUDE.md cadence; conditional push.
+````
+
+#### Tab 8 — Audit followups cleanup 🟡 QUEUED (plan hygiene, ~1h, PM only)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 8 tasks"_.
+
+**Why now**: Filler-class work; pure win. 6 line-edit fixes to plan-doc anomalies surfaced in the 2026-05-07
+audit. Good first task for an idle tab.
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 8 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
+  3. plans/active/audit_followups_2026_05_07.plan.md items #1-#6 — your plan-of-record.
+
+Your agent-tag: audit-followups-tab. Your tab number: 8.
+
+YOUR TASK: ship the 6 line-edit fixes in audit_followups_2026_05_07.plan.md (stale plan
+references, archived plan listings, module path drifts, STALE markers). Each item has a
+specific file:line + the exact fix described in the plan body. Pure mechanical work.
+
+REPOS OWNED: unified-trading-pm (plan files + codex docs).
+
+DONE-DEFINITION:
+- [ ] All 6 items shipped.
+- [ ] Each item's checkbox flipped `- [ ]` → `- [x]` in the plan body with `PM@<sha>` evidence.
+- [ ] DONE-2026-05-08 block at the bottom of the plan body.
+- [ ] Pre-commit prettier auto-format passes.
+
+REPORT-BACK: 1-2 commits (small scope); conditional push.
+````
+
 #### Tab 3 — deployment-api Phase 2 endpoints ✅ DONE 2026-05-08 (P0, single repo)
 
 **Status**: Spawned + completed in one session. Six checkboxes flipped + DONE-2026-05-08 block in plan body.

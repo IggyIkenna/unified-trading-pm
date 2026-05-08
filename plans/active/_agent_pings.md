@@ -27,4 +27,4 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 
 # Active pings
 
-_(empty — no spawned agents have pinged yet)_
+_(empty — Tab 4 STARTED ping ack'd 2026-05-08 05:12 UTC; clean boot, no flags)_
