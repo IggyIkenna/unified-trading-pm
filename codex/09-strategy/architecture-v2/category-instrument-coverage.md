@@ -799,6 +799,7 @@ execution. Covers price, funding-rate, IV, and odds dispersion depending on cell
 | TradFi                  | option        | PARTIAL   | CBOE via IBKR + same-surface no-arb (butterfly / calendar / parity)                                  | IV dispersion / surface          | CME options-on-futures + cross-listed equity options arb not declared                                                                                                                                                                                                                                                                                                                                |
 | Sports & Prediction     | event_settled | SUPPORTED | Unity 10 child books (single-wallet arb), Betfair direct ↔ Smarkets direct, Unity ↔ Betfair direct | price (odds dispersion)          | Unity single-wallet makes this near-atomic                                                                                                                                                                                                                                                                                                                                                           |
 | Sports & Prediction     | event_settled | SUPPORTED | Polymarket ↔ Unity / Betfair for correlated markets                                                 | price (cross-category arb)       | —                                                                                                                                                                                                                                                                                                                                                                                                    |
+| TradFi ↔ Prediction     | event_contract | PARTIAL   | CME ECES/ECNQ/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECBTC ↔ Polymarket BTC_UP_DOWN_DAILY / SPX_UP_DOWN_DAILY / etc. canonical_question_groups | price (cross-asset_group basis arb) | NEW per `cme_polymarket_arb_2026_05_08` plan: 9 CME event-contract roots semantically equivalent to Polymarket binary outcomes; basis exploitable when the venues' implied probabilities diverge >50bps annualised. Phase 1 (UAC `InstrumentType.EVENT_CONTRACT` + Databento BAG classifier) shipped 2026-05-08. Phase 2 cross-link (`linked_canonical_question_group`) blocked on `predictions_master_2026_05_07` Phase 5 (6 of 9 canonical groups still need backfill: RUT/DJIA/GOLD/CRUDE/NATGAS/EUR up-down dailies). Phases 3–5 (MTDS shard atom + per-cluster expiry + strategy archetype `cme_polymarket_event_arb` + execution-service CME ClearPort connector) follow Phase 2. **Out of May-23 critical path** — option value of being live, not the deadline itself. |
 
 Not applicable: lending (no arb concept for a supplied balance — `YIELD_ROTATION_LENDING` captures rate spread), staking
 (no arb — `CARRY_STAKED_BASIS`).
@@ -873,6 +874,13 @@ ARBITRAGE_PRICE_DISPERSION@betfair-matchbook-champions-league-gbp-prod
 ARBITRAGE_PRICE_DISPERSION@polymarket-unity-elections-usdc-prod
 ARBITRAGE_PRICE_DISPERSION@polymarket-betfair-sports-usdc-prod
 ARBITRAGE_PRICE_DISPERSION@polymarket-unity-nba-champion-usdc-prod
+
+# Cross-asset_group (CME event_contract ↔ Polymarket canonical_question_group)
+# NEW per cme_polymarket_arb_2026_05_08 plan; archetype = cme_polymarket_event_arb (Phase 5).
+# Currently PARTIAL — only ECES/ECBTC have Polymarket-side canonical groups (SPX_UP_DOWN_DAILY,
+# BTC_UP_DOWN_DAILY); ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E blocked on predictions_master Phase 5.
+ARBITRAGE_PRICE_DISPERSION@cme-polymarket-spx-up-down-daily-usd-prod
+ARBITRAGE_PRICE_DISPERSION@cme-polymarket-btc-up-down-daily-usd-prod
 ```
 
 ---

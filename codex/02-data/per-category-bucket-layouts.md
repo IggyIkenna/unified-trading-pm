@@ -30,6 +30,15 @@ scope: [engineer, admin]
 >   every experiment version).
 > - **instrument_type for instruments-service**: NOT a shard axis (Databento + TARDIS bulk-fetch all instrument_types
 >   per venue in one call). Display axis only — row column for filter/group.
+> - **TradFi EVENT_CONTRACT (CME ECES/ECBTC/etc., post-cme_polymarket_arb_2026_05_08 Phase 1)**: shard atom =
+>   `(asset_group=tradfi, venue=CME, data_type=EVENT_CONTRACT, root, resolution_date, day)`. **Bundled by
+>   `(root, resolution_date)`** — a single (e.g.) `ECBTC × 2026-05-09` bundle holds all strikes × outcomes; the
+>   `strike_threshold` differentiates clusters within the bundle, NOT a shard axis. Cluster validation per Phase 1A of
+>   writegate: `expected_root_clusters[(root, resolution_date)] = {strike_threshold: 2}` (YES + NO contract per
+>   strike), `cluster_extractor=lambda row: f"{row.strike_threshold}:{row.outcome}"`. Distinct from CME options
+>   (ES.OPT etc.) which keep `instrument_type=OPTION` and the 11-cluster ES.OPT taxonomy. Linked to the equivalent
+>   Polymarket `canonical_question_group` via UAC SSOT (Phase 2 — blocked on predictions-master Phase 5 backfill).
+>   GCS subfolder per `INSTRUMENT_TYPE_FOLDER_MAP[EVENT_CONTRACT]` = `event_contracts`.
 
 **Purpose**: canonical reference for every upstream/downstream GCS path layout per market asset_group (formerly
 "category"). Written 2026-04-20 after the SPORTS smoke incident where MDPS + instruments-service + MTDS each had
