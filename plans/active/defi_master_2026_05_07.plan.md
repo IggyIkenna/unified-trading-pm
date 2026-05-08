@@ -350,6 +350,16 @@ these venues.
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
+> **Audit 2026-05-08 (Tab 6, defi-988-audit-tab)**: per-(chain, protocol, data_type) breakdown +
+> top-5 priority list filed at
+> [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md).
+> TL;DR: 1.3M non-captured rows across 10 DeFi buckets but **99% are SSOT-correct pre-genesis/pre-launch
+> clipping**; only **13,632 rows / 2,234 distinct dates are actionable**. Top concentrations: (1) Tab 5
+> lending-indices fixes resolve ~2.4k; (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot
+> V3) resolve ~1.4k; (3) UAC `PROTOCOL_LAUNCH_DATES` tightening for vault protocols (YEARN V3 / Morpho Vaults
+> / Ethena vault) reclassifies ~6.9k from `SOURCE_RETURNED_ZERO` → `legit_pre_protocol_launch`; (4) ASTER
+> perp-funding adapter has **zero captured rows** (correctness risk if ASTER on May-23 hedge-leg path).
+
 - [ ] [AGENT] P0. Tail chains 25% coverage diagnosis: Aurora / Celo / Fantom / Mantle / Metis / Moonbeam each have 1
       protocol live; per-chain protocol expansion deferred-post-cutover unless `carry_staked_basis` /
       `leveraged_funding_arb` requires those chains. [AUDIT 2026-05-07: FRESH — actionable diagnostic only; expansion
