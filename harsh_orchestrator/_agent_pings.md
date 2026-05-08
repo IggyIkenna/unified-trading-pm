@@ -27,4 +27,6 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-_(empty — Tab 12 Q1 ✅ RESOLVED ~10:30 UTC; operator picked (b) Defer per features_repo_consolidation_2026_05_08 absorption. All 12 spawned tabs ✅ DONE today (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14). Only Tab 2 (cefi-babysit) still IN FLIGHT. Beef-up sub-agent BLOCKED ping resolved via fast-forward rebase + push of sports_master beef-up.)_
+[2026-05-08 11:13 UTC] features-consolidation-tab — STARTED Tab 2 (plans/active/features_repo_consolidation_2026_05_08.plan.md + plans/epics/ml_and_features_master_2026_05_07.plan.md Phase 2A/2B+3); kicking off Phase 0 pre-audit fan-out
+[2026-05-08 11:14 UTC] instruments-live-tab — STARTED Tab 1 (plans/epics/instruments_live_master_2026_05_08.md + plans/epics/predictions_master_2026_05_07.md Phase 2+3 + archived instruments_and_market_tick_data_completion_2026_05_01 catalog-aware writer-guard); starting with Predictions Phase 2 adapter lifecycle gating (instruments-service Phase 1 already shipped 98bb167 + b904785) — fanning out 3 sub-agents (Polymarket adapter, Kalshi adapter, UMI tick provider rename + writer migration)
+[2026-05-08 11:14 UTC] mechanical-refactor-tab — STARTED Tab 5 (7 plans: launcher_consolidation + data_status_tests + mtds_databento + mtds_per_instrument + hard_schema + api_football + cme_polymarket); reading plans-of-record before fan-out. Local PM is 6 commits behind origin with foreign dirty files (cefi_master/LEDGER/ONBOARDING/manifest) — NOT mine, leaving alone
