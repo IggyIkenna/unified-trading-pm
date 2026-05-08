@@ -14,6 +14,8 @@ deadline: 2026-05-23
 
 # Epic — S&P Prediction (CME) (May 23 2026)
 
+> **🔴 SUPERSEDED 2026-05-08** — folded into [`tradfi_master_2026_05_07.md`](./tradfi_master_2026_05_07.md) § "May-23 deliverable A — S&P prediction" per operator direction. This file is archived; content remains verbatim for archaeology. **Edit the master, not this file.**
+
 ## Why this epic exists
 
 The S&P 500 prediction is the **TradFi ML deliverable** for May 23: a swing high/low ML model (re-using the C5 model

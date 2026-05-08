@@ -372,6 +372,39 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
       liquidity, microstructure, perp_basis, options_iv) need registry entries. Source-of-truth:
       `features-cefi-service/calculators/` metadata. Coordinator Phase 4.
 
+## May-23 deliverable (folded from `cefi_ml_may_23_2026.epic` 2026-05-08)
+
+> **Folded epic** (operator direction 2026-05-08): May-23 deadline content originally in `plans/epics/cefi_ml_may_23_2026.epic.md` is consolidated here. Archived epic: [`plans/archive/cefi_ml_may_23_2026.epic.md`](../archive/cefi_ml_may_23_2026.epic.md).
+
+**Why:** Second live archetype for May 23 — continuous ML prediction signal tradable across OKX + Binance + Bybit on real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the live ML loop end-to-end.
+
+### End-state at May 23 (success criteria)
+
+- [ ] **Continuous ML prediction signal live** on real capital across OKX + Binance + Bybit, ≥7 continuous days.
+- [ ] **End-to-end ML pipeline live**: live tick data → live features → live model inference → live strategy decision → live execution → live position + risk + P&L attribution.
+- [ ] **Backtest fidelity** for the same signal proven via 2-year batch backtest config grid (master plan Group F item 18).
+- [ ] **Live model lifecycle**: hot-reload of model artefacts without service restart; model-version traceability per trade; model-drift alerting.
+- [ ] **Live alerting active**: signal-staleness + execution-quality + P&L deviation + position breaches.
+- [ ] **Kill switches + circuit breakers**: position-limit, P&L drawdown, signal-staleness, model-drift detection.
+- [ ] **DART manual override**: operator can pause / override / replicate any ML-driven trade.
+
+### IN/OUT scope
+
+- **IN**: one ML archetype × OKX + Binance + Bybit live; full live ML pipeline; live model registry + hot-reload + version traceability; live alerting + kill switches; DART manual-trade replication; backtest fidelity proof (2-year config grid).
+- **OUT (post-May-23)**: additional CeFi venues; multiple concurrent ML archetypes; cross-asset-group ML signals; full AWS-side parity for live ML.
+
+### Cross-epic handshakes
+
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue, strategy IDs, client wiring, infrastructure baseline.
+- **Shares with:** `live_defi_rollout` (CeFi venue connectivity overlap on Bybit / Binance / OKX; same execution-service adapters + alerting rules).
+- **Provides to:** `sp_prediction` + `sports_ml` + `prediction_markets` (shared ML lifecycle infrastructure: model registry, training pipeline, drift detection, batch backtest harness).
+
+### Open questions
+
+- [ ] **Which ML archetype family?** Master plan Q&A 7 defaulted "running on representative sample (not deployed in production)" for CeFi — this flips that to "deployed in production." Confirm specific archetype.
+- [ ] **Model retraining cadence**: continuous / daily / weekly? Affects features-pipeline staleness budgets + alerting thresholds.
+- [ ] **Capital scale**: trade size + position cap. Operator-set per archetype ID.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Live = batch**: same code path; only fill source differs (cefi_master shares the unified pipeline; no live-only

@@ -14,6 +14,8 @@ deadline: 2026-05-23
 
 # Epic — Prediction Markets (May 23 2026)
 
+> **🔴 SUPERSEDED 2026-05-08** — folded into [`predictions_master_2026_05_07.md`](./predictions_master_2026_05_07.md) § "May-23 deliverable" per operator direction. This file is archived; content remains verbatim for archaeology. **Edit the master, not this file.**
+
 ## Why this epic exists
 
 Prediction-markets ship **full backtest** for May 23 — features → strategy → execution all backtest, no live. Like the

@@ -739,6 +739,39 @@ features silently miss bookmaker × market gaps.
       league_strength, fixture_xg, lineup_quality, market_consensus, etc.) need registry entries. Source-of-truth:
       `features-sports-service/features_sports_service/calculators/` calculator metadata. Coordinator Phase 4.
 
+## May-23 deliverable (folded from `sports_ml_may_23_2026.epic` 2026-05-08)
+
+> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/sports_ml_may_23_2026.epic.md`. Archived: [`plans/archive/sports_ml_may_23_2026.epic.md`](../archive/sports_ml_may_23_2026.epic.md).
+
+**Why:** Sports ML prediction ships **backtest-only** for May 23 — but unlike S&P prediction (data → ML training only), this goes **all the way through strategy backtest + execution backtest** as well. ML signal + strategy + execution all backtest in the unified pipeline. No live trading. Bugs/backfills/schema fixes inclusive at every layer.
+
+### End-state at May 23 (success criteria)
+
+- [ ] **Sports ML model trains end-to-end in batch** on representative history.
+- [ ] **Strategy backtest** of ML signal runs end-to-end through unified pipeline (no standalone backtest engine, no inline settlement) — strategy interacts with PBM + R&E + execution-service per `Batch = Live` rule.
+- [ ] **Execution backtest** runs through matching engine (Sports L0 TOB matcher, per matching_engine SSOT) — simulated fills with accurate slippage / commission / latency / venue liquidity, NOT face-value odds.
+- [ ] **Sports data pipeline clean** end-to-end: instruments (URDI sports/) + odds (api_football, footystats, odds_api) + features (features-sports) — no phantom rows, no NaN placeholders, manifest 100% honest, `available_at` correctly stamped per row.
+- [ ] **Honest-coverage baseline** for sports manifest: ratchet established + monitored.
+- [ ] **Phantom recovery complete** for sports fixtures (truthset rebuild + capture-status reclassification).
+- [ ] **Strategy + execution layers fixed where needed** — bugs across ML + strategy + execution caught this cycle.
+
+### IN/OUT scope
+
+- **IN**: full backtest pipeline (instruments → odds → features → ML training → ML inference → strategy → execution → PBM → R&E → P&L attribution); sports backfill end-to-end (api_football / footystats / transfermarkt / understat / soccer_football_info / open_meteo / odds_api / MDPS odds horizon bucket); sports phantom-recovery + honest-coverage close-outs; `available_at` rename + per-row stamping (kickoff−60min for lineups, event-time for events, match_end_time for post-match); execution backtest with L0 TOB matcher (real fills); 2-year-equivalent backtest config grid.
+- **OUT**: live trading; live odds capture (forward-poll continues but not gating); multiple ML archetypes (one is the bar); production deployment.
+
+### Cross-epic handshakes
+
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue (sports ML archetype + venues), infrastructure baseline, UI replication of backtest harness.
+- **Shares with:** `cefi_ml`, `sp_prediction`, `prediction_markets` (now folded into respective masters) share ML lifecycle (training pipeline, model registry, drift detection, batch backtest harness).
+- **Provides to:** `predictions_master` (folded `prediction_markets`) may consume sports ML signals as inputs to sports-betting prediction-market strategies (Polymarket fixture markets).
+
+### Open questions
+
+- [ ] **Which sports ML archetype?** Match-outcome / goal-scorer / in-play live-odds? Operator-pick.
+- [ ] **Which leagues in scope?** All-leagues universal model, or top-tier subset (EPL/LaLiga/Serie A/Bundesliga/MLS)?
+- [ ] **Bookmaker scope**: which odds sources for execution backtest? odds_api closing prices? MDPS odds horizon bucket for in-play?
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Sports GCS path SSOT** (CLAUDE.md): use `unified_api_contracts.sports.candidate_parquet_paths` — NEVER hardcode

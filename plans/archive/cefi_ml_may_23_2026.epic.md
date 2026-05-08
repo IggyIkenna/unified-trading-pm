@@ -14,6 +14,8 @@ deadline: 2026-05-23
 
 # Epic — CeFi ML (May 23 2026)
 
+> **🔴 SUPERSEDED 2026-05-08** — folded into [`cefi_master_2026_05_07.md`](./cefi_master_2026_05_07.md) § "May-23 deliverable" per operator direction (consolidate same-domain epics into masters; less indirection). This file is archived; content remains verbatim for archaeology. **Edit the master, not this file.**
+
 ## Why this epic exists
 
 The **second live archetype** for May 23: a continuous ML prediction signal that's tradable across OKX, Binance, and
@@ -57,14 +59,14 @@ strategy → execution) must work in live mode for the three target venues.
 
 | Path                                                                                                                  | Role                                                                                     | Status |
 | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------ |
-| [`cefi_master_2026_05_07`](./cefi_master_2026_05_07.plan.md)                                                          | CeFi venue + pipeline umbrella (Bybit / Deribit / Binance / OKX / others)                | Active |
-| [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.plan.md)                                    | ML lifecycle + features umbrella (training/inference, model registry, hot-reload, drift) | Active |
-| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.plan.md)                                | Strategy v2 + DART manual-trade lane                                                     | Active |
-| [`instruments_live_master_2026_05_08`](./instruments_live_master_2026_05_08.plan.md)                                  | Live instrument refresh + lifecycle for OKX/Binance/Bybit                                | Active |
-| [`active/live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md) | Live pipeline activation (MTDS/MDPS/features) — gates live ML inference                  | Active |
-| [`active/features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.plan.md)           | Features-repo consolidation (pre-req for live-pipeline plan; merges 8 features-\* repos) | Active |
-| [`active/alerting_service_live_rules_2026_05_07`](../active/alerting_service_live_rules_2026_05_07.plan.md)           | Live alerting rules (signal staleness, model drift, P&L deviation)                       | Active |
-| [`infrastructure_master_2026_05_07`](./infrastructure_master_2026_05_07.plan.md)                                      | Infrastructure umbrella                                                                  | Active |
+| [`cefi_master_2026_05_07`](./cefi_master_2026_05_07.md.md)                                                          | CeFi venue + pipeline umbrella (Bybit / Deribit / Binance / OKX / others)                | Active |
+| [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.md.md)                                    | ML lifecycle + features umbrella (training/inference, model registry, hot-reload, drift) | Active |
+| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.md.md)                                | Strategy v2 + DART manual-trade lane                                                     | Active |
+| [`instruments_live_master_2026_05_08`](./instruments_live_master_2026_05_08.md.md)                                  | Live instrument refresh + lifecycle for OKX/Binance/Bybit                                | Active |
+| [`active/live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md.md) | Live pipeline activation (MTDS/MDPS/features) — gates live ML inference                  | Active |
+| [`active/features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md.md)           | Features-repo consolidation (pre-req for live-pipeline plan; merges 8 features-\* repos) | Active |
+| [`active/alerting_service_live_rules_2026_05_07`](../active/alerting_service_live_rules_2026_05_07.md.md)           | Live alerting rules (signal staleness, model drift, P&L deviation)                       | Active |
+| [`infrastructure_master_2026_05_07`](./infrastructure_master_2026_05_07.md.md)                                      | Infrastructure umbrella                                                                  | Active |
 
 ## Cross-epic handshakes
 
@@ -88,7 +90,7 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md). 
 
 ## Open questions
 
-- [ ] **Which ML archetype family?** ([Master plan Q&A 7](../active/master_to_live_defi_2026_05_23.plan.md) defaulted
+- [ ] **Which ML archetype family?** ([Master plan Q&A 7](../active/master_to_live_defi_2026_05_23.md.md) defaulted
       "running on representative sample (not necessarily deployed in production)" for CeFi — this epic flips that to
       "deployed in production." Confirm: which specific archetype goes live? Operator direction needed.)
 - [ ] **Model retraining cadence**: continuous? daily? weekly? Affects features pipeline staleness budgets and alerting
@@ -97,7 +99,7 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md). 
 
 ## See also
 
-- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.plan.md) — May-23 cutover master
+- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md.md) — May-23 cutover master
 - [`codex/04-architecture/ml-experiment-lifecycle.md`](../../codex/04-architecture/ml-experiment-lifecycle.md) (codex
   gap; lands as part of `ml_and_features_master`)
 - [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md)

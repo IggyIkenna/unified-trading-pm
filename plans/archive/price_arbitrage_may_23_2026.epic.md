@@ -14,6 +14,8 @@ deadline: 2026-05-23
 
 # Epic — Price Arbitrage (CME futures + ETFs) (May 23 2026)
 
+> **🔴 SUPERSEDED 2026-05-08** — folded into [`tradfi_master_2026_05_07.md`](./tradfi_master_2026_05_07.md) § "May-23 deliverable B — Price arbitrage" per operator direction. This file is archived; content remains verbatim for archaeology. **Edit the master, not this file.**
+
 ## Why this epic exists
 
 The price-arbitrage archetype family ships **backtest-only** for May 23. It covers:

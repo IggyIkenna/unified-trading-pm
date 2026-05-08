@@ -298,6 +298,71 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
       butterfly, calendar_spread, vix_basis, etc.). Source-of-truth: `features-tradfi-service/calculators/` metadata.
       Coordinator Phase 4.
 
+## May-23 deliverable A — S&P prediction (folded from `sp_prediction_may_23_2026.epic` 2026-05-08)
+
+> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/sp_prediction_may_23_2026.epic.md`. Archived: [`plans/archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md).
+
+**Why:** TradFi ML deliverable for May 23 — S&P swing high/low ML model (re-using C5 model shape) trained end-to-end in batch from SP futures + Bitcoin + calendar features. Batch-only; no live trading, no live tick collection. Every layer of the data pipeline must work end-to-end in batch; bugs/backfills/schema fixes inclusive at every layer.
+
+### End-state at May 23 (success criteria)
+
+- [ ] **S&P swing high/low ML model trains end-to-end in batch** on representative 2-year history.
+- [ ] **Feature inputs complete**: SP futures (ES + MES + micros on CME) + Bitcoin features + calendar features (holidays, half-days, expiries, FOMC, NFP, CPI).
+- [ ] **Instrument data clean** for ES/MES/Bitcoin futures across training window — manifest 100% honest, no empty placeholders, no phantom captured rows, no stale schema parquets.
+- [ ] **MTDS tick data clean** for ES/MES/BTC futures + S&P spot index + ETF references.
+- [ ] **MDPS bar data clean** — no 1440-NaN-OHLCV regression, every (venue, data_type, day) bar populated or honestly empty.
+- [ ] **Features pipeline clean** — features-tradfi (or post-consolidation features-service) emits feature parquets without NaN-blanket placeholders; `available_at` correctly stamped per row; LookaheadBiasError strict-mode passes.
+- [ ] **ML training pipeline clean** — model trains with no skipped windows, no silent NaN-substitution, no leaked future data; reproducible from a single config + random seed.
+- [ ] **Strategy + execution layers PROGRESSED, not gated** — bugs fixed where possible; gating success = clean ML training, not full strategy/execution coverage.
+- [ ] **Backtest harness wired** — 2-year config grid runner per master plan Group F item 18.
+
+### IN/OUT scope (S&P prediction)
+
+- **IN**: full ML data pipeline (instruments → MTDS → MDPS → features → ML training); all bugs/backfills/schema fixes/NaN-placeholder cleanups/manifest reconcilers/`available_at` stamping fixes/LookaheadBias strict-mode wiring; 2-year batch backtest config grid; calendar features (FOMC, NFP, CPI); Bitcoin cross-asset features; TradFi infra cleanup (ES.OPT 11-cluster validation, ETF backfill, futures continuous-contract rolling).
+- **OUT**: live trading, live tick collection, live instrument refresh, strategy catalogue completeness for this archetype (still applies via cross_cutting), production deployment of model.
+
+### Open questions (S&P prediction)
+
+- [ ] **C5 model shape stable?** Expected yes; this deliverable is data + ML pipeline, not model R&D.
+- [ ] **Calendar feature inputs**: which exact macro events? Minimum FOMC + NFP + CPI; PCE + retail sales optional.
+- [ ] **Bitcoin features at what granularity?** Daily / hourly / 15-min? Determines which CeFi/DeFi sources needed.
+
+---
+
+## May-23 deliverable B — Price arbitrage (folded from `price_arbitrage_may_23_2026.epic` 2026-05-08)
+
+> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/price_arbitrage_may_23_2026.epic.md`. Archived: [`plans/archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md).
+
+**Why:** Price-arbitrage archetype family ships **backtest-only** for May 23 — CME same-day-expiry arb (ES/MES/micros, BTC futures variants) + ETF↔future arb (SPY/IVV/VOO vs ES) + cross-venue ETF arb. Carry-family was lifted out per operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_master`.
+
+### End-state at May 23 (success criteria)
+
+- [ ] **Full backtest of CME same-day-expiry arb** (ES vs MES + variants, BTC futures variants) on 2-year history.
+- [ ] **Full backtest of ETF↔future arb** for the SP500 ETF set (SPY/IVV/VOO) vs ES futures.
+- [ ] **Full backtest of cross-venue ETF arb** wherever ETFs are tradable.
+- [ ] **Backtest fidelity**: real matching engine, real fees, real exchange-specific microstructure (CME tick rules, ETF NBBO, half-day calendar). Per master plan Group F item 17.
+- [ ] **Strategy + execution layers PROGRESSED, not gated** — exercise unified pipeline so live activation seam is small.
+- [ ] **TradFi data pipeline clean** for all required instruments across backtest window.
+- [ ] **2-year batch backtest config grid** for both arb archetypes — P&L variance per config dimension captured.
+
+### IN/OUT scope (price arbitrage)
+
+- **IN**: same-day-expiry arb on CME (ES/MES/micros + BTC futures); ETF↔future arb (SPY/IVV/VOO vs ES); cross-venue ETF combos; TradFi ETF backfill + futures continuous-contract rolling; backtest fidelity (matching engine + fees + microstructure); strategy + execution exercised via unified pipeline.
+- **OUT**: live trading; carry-family archetypes (moved to `defi_master` live_defi_rollout deliverable); spot-vs-perp crypto carry (also in `defi_master`); production deployment of arb signal.
+
+### Open questions (price arbitrage)
+
+- [ ] **Cross-venue ETF universe**: which non-CME venues for ETF leg? US-listed ETF + CME future is obvious; international? CFD venues?
+- [ ] **Backtest window**: 2-year confirmed, or shorter to focus on recent regime?
+
+---
+
+## Cross-epic handshakes (both deliverables)
+
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue completeness (S&P + price-arb archetypes × all venue combos enumerated even if not launching this cycle).
+- **Shares with:** `cefi_ml_may_23_2026` (now in `cefi_master`) shares ML lifecycle infrastructure (training pipeline, model registry, features-service consolidation). Both S&P and price-arb deliverables share ES/MES + ETF instrument + MTDS data — same TradFi backfill clean.
+- **Provides to:** `prediction_markets_may_23_2026` (now in `predictions_master`) may consume S&P features as cross-asset inputs (SPX-up-down canonical question groups). Carry archetypes in `defi_master` lift backtest fidelity work from price-arb's matching-engine + fee + calendar coverage.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **VIX 15m source layering** (CLAUDE.md): Barchart preload + Yahoo rolling + honest gap. MTDS routing in

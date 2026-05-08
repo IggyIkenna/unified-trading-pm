@@ -329,6 +329,40 @@ before CME arb can link.
       per-binary-outcome features need registry entries. Source-of-truth: features-\* services that consume prediction
       tick data. Coordinator Phase 4.
 
+## May-23 deliverable (folded from `prediction_markets_may_23_2026.epic` 2026-05-08)
+
+> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/prediction_markets_may_23_2026.epic.md`. Archived: [`plans/archive/prediction_markets_may_23_2026.epic.md`](../archive/prediction_markets_may_23_2026.epic.md).
+
+**Why:** Prediction-markets ship **full backtest** for May 23 — features → strategy → execution all backtest, no live. Like sports ML, end-to-end pipeline coverage at every layer; unlike S&P prediction which only goes to ML training. Cross-asset features (S&P, sports, crypto) consumed since prediction-markets often resolve based on outcomes other features predict.
+
+### End-state at May 23 (success criteria)
+
+- [ ] **Polymarket backtest** runs end-to-end through unified pipeline for at least one canonical-question-group archetype (BTC up-down hourly OR SPX up-down daily OR similar).
+- [ ] **Kalshi backtest** runs for at least one event family (e.g. CPI prints, FOMC outcomes).
+- [ ] **Opinion Trade backtest** runs for at least one event family.
+- [ ] **CME event futures arbitrage backtest** runs for at least one cross-venue pair (e.g. CME inflation event future vs Kalshi CPI market).
+- [ ] **Prediction data pipeline clean**: instruments (per-market lifecycle: market_created_at / resolution_time / settlement_time) + tick data (CLOB captures respecting lifecycle bounds) + features (canonical-question-group bundle SSOT).
+- [ ] **Cross-asset features wired**: S&P features, sports features, crypto features all consumable by prediction strategies as inputs.
+- [ ] **LookaheadBiasError strict** at every features compute — feature compute at time T can only consume ticks where `tick.timestamp ≤ T AND tick.market_id`'s `market_created_at ≤ T` (CLAUDE.md "Prediction market lifecycle timing" SSOT).
+- [ ] **Cluster validation MANDATORY** for `prediction_canonical_question_group` bundle data_type at `record_captured` (UAC `BUNDLED_DATA_TYPES` includes prediction).
+- [ ] **Strategy + execution layers PROGRESSED** through unified pipeline — backtest end-to-end, no inline settlement.
+
+### IN/OUT scope
+
+- **IN**: full backtest of 4 prediction-market archetypes (Polymarket / Kalshi / Opinion Trade / CME event futures arb); prediction-market data pipeline (instrument lifecycle 3 timestamps per market_id, CLOB tick capture, canonical-question-group bundle aggregation); cross-asset feature consumption (S&P / sports / crypto); strategy + execution backtest through unified pipeline.
+- **OUT**: live trading; live tick capture; production deployment of any prediction strategy; full canonical-question-group SSOT for every market_id (cover at minimum the archetypes in scope; remaining mappings post-May-23).
+
+### Cross-epic handshakes
+
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue (4 prediction archetypes × all canonical-question-groups + venues enumerated). Cross-asset features depend on `tradfi_master` (S&P features) + `sports_master` (sports features) + DeFi/CeFi crypto features (`defi_master` + `cefi_master`).
+- **Shares with:** Cross-asset features pipeline shared with all other ML/backtest deliverables.
+
+### Open questions
+
+- [ ] **Which canonical question groups MUST land for May 23?** Operator-pick — BTC up-down hourly + SPX up-down daily seem strong candidates; election + CPI prints optional.
+- [ ] **CME event futures inventory**: which CME event futures in scope for cross-venue arb backtest?
+- [ ] **Opinion Trade integration depth**: API access + venue connector? Or static historical odds-only for backtest?
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Prediction market lifecycle timing** (CLAUDE.md): NO ticks before `market_created_at`, NO ticks after

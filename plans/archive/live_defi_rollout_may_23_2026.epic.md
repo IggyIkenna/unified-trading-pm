@@ -14,6 +14,8 @@ deadline: 2026-05-23
 
 # Epic — Live DeFi Rollout (May 23 2026)
 
+> **🔴 SUPERSEDED 2026-05-08** — folded into [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md) § "May-23 deliverable" per operator direction (3-layer master+epic+cutover-master collapses to 2-layer). This file is archived; content remains verbatim for archaeology. **Edit the master, not this file.**
+
 ## Why this epic exists
 
 This is the **headline live deliverable** for May 23 2026: real wallet, real capital, real fills, ≥7 continuous days of
@@ -68,16 +70,16 @@ CeFi + DeFi spot/perp/future combos and the live infra is what actually unlocks 
 
 | Path                                                                                                                                                                              | Role                                                                                                             | Status |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------ |
-| [`active/defi_master_2026_05_07`](../active/defi_master_2026_05_07.plan.md)                                                                                                       | DeFi pipeline umbrella (folds defi_e2e + defi_pipeline_extension + leveraged_leg + carry_staked_basis archetype) | Active |
-| [`active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md)                           | DeFi archetype canonicalisation + venue matrix                                                                   | Active |
-| [`active/aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.plan.md)                                                                             | AWS↔GCP parity for DeFi-first migration (data + batch + live-trading layer)                                     | Active |
-| [`active/alerting_service_live_rules_2026_05_07`](../active/alerting_service_live_rules_2026_05_07.plan.md)                                                                       | Live alerting rules (was the only Group F service with no plan pre-2026-05-06 audit)                             | Active |
-| [`active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20`](../active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md) | Fund admin + capital flow (treasury / subs+reds)                                                                 | Active |
-| [`cefi_master_2026_05_07`](./cefi_master_2026_05_07.plan.md)                                                                                                                      | CeFi venues for hedge legs (Bybit / Deribit / Binance / OKX); shared with `cefi_ml` epic                         | Active |
-| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.plan.md)                                                                                            | Strategy v2 + DART manual-trade lane                                                                             | Active |
-| [`instruments_live_master_2026_05_08`](./instruments_live_master_2026_05_08.plan.md)                                                                                              | Live instrument refresh / lifecycle for active venues                                                            | Active |
-| [`active/live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)                                                             | Live pipeline activation (MTDS/MDPS/features) — gates live-mode P&L attribution                                  | Active |
-| [`infrastructure_master_2026_05_07`](./infrastructure_master_2026_05_07.plan.md)                                                                                                  | Infrastructure umbrella (deployment, observability, AWS) — also referenced from cross_cutting epic               | Active |
+| [`active/defi_master_2026_05_07`](../active/defi_master_2026_05_07.md.md)                                                                                                       | DeFi pipeline umbrella (folds defi_e2e + defi_pipeline_extension + leveraged_leg + carry_staked_basis archetype) | Active |
+| [`active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md.md)                           | DeFi archetype canonicalisation + venue matrix                                                                   | Active |
+| [`active/aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md.md)                                                                             | AWS↔GCP parity for DeFi-first migration (data + batch + live-trading layer)                                     | Active |
+| [`active/alerting_service_live_rules_2026_05_07`](../active/alerting_service_live_rules_2026_05_07.md.md)                                                                       | Live alerting rules (was the only Group F service with no plan pre-2026-05-06 audit)                             | Active |
+| [`active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20`](../active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md.md) | Fund admin + capital flow (treasury / subs+reds)                                                                 | Active |
+| [`cefi_master_2026_05_07`](./cefi_master_2026_05_07.md.md)                                                                                                                      | CeFi venues for hedge legs (Bybit / Deribit / Binance / OKX); shared with `cefi_ml` epic                         | Active |
+| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.md.md)                                                                                            | Strategy v2 + DART manual-trade lane                                                                             | Active |
+| [`instruments_live_master_2026_05_08`](./instruments_live_master_2026_05_08.md.md)                                                                                              | Live instrument refresh / lifecycle for active venues                                                            | Active |
+| [`active/live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md.md)                                                             | Live pipeline activation (MTDS/MDPS/features) — gates live-mode P&L attribution                                  | Active |
+| [`infrastructure_master_2026_05_07`](./infrastructure_master_2026_05_07.md.md)                                                                                                  | Infrastructure umbrella (deployment, observability, AWS) — also referenced from cross_cutting epic               | Active |
 
 ## Cross-epic handshakes
 
@@ -111,7 +113,7 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md) f
 
 ## See also
 
-- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.plan.md) — May-23 cutover master
+- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md.md) — May-23 cutover master
   (umbrella-of-epics)
 - [`codex/04-architecture/copper-custody-integration.md`](../../codex/04-architecture/copper-custody-integration.md)
 - [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md)

@@ -14,6 +14,8 @@ deadline: 2026-05-23
 
 # Epic — Sports ML (May 23 2026)
 
+> **🔴 SUPERSEDED 2026-05-08** — folded into [`sports_master_2026_05_07.md`](./sports_master_2026_05_07.md) § "May-23 deliverable" per operator direction. This file is archived; content remains verbatim for archaeology. **Edit the master, not this file.**
+
 ## Why this epic exists
 
 Sports ML prediction ships **backtest-only** for May 23, but unlike S&P prediction (which only goes up to ML training),
@@ -63,14 +65,14 @@ fixes are inclusive at every layer.
 
 | Path                                                                                                                                | Role                                                                       | Status |
 | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------ |
-| [`sports_master_2026_05_07`](./sports_master_2026_05_07.plan.md)                                                                    | Sports umbrella (data pipeline + features + ML + strategy + execution)     | Active |
-| [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.plan.md)                                                  | ML lifecycle + features umbrella                                           | Active |
-| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.plan.md)                                              | Strategy v2 + DART manual-trade lane                                       | Active |
-| [`active/api_football_minimal_flattening_removal_2026_05_07`](../active/api_football_minimal_flattening_removal_2026_05_07.plan.md) | api_football odds schema cleanup                                           | Active |
-| [`active/writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.plan.md)           | Write-gate / honest-coverage umbrella                                      | Active |
-| [`active/features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.plan.md)                         | Features-repo consolidation (features-sports merges into features-service) | Active |
-| [`active/live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md)               | Live-pipeline activation — batch portion is required here                  | Active |
-| [`manifest_migration_master_2026_05_07`](./manifest_migration_master_2026_05_07.plan.md)                                            | Manifest schema v6                                                         | Active |
+| [`sports_master_2026_05_07`](./sports_master_2026_05_07.md)                                                                    | Sports umbrella (data pipeline + features + ML + strategy + execution)     | Active |
+| [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.md)                                                  | ML lifecycle + features umbrella                                           | Active |
+| [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.md)                                              | Strategy v2 + DART manual-trade lane                                       | Active |
+| [`active/api_football_minimal_flattening_removal_2026_05_07`](../active/api_football_minimal_flattening_removal_2026_05_07.md) | api_football odds schema cleanup                                           | Active |
+| [`active/writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)           | Write-gate / honest-coverage umbrella                                      | Active |
+| [`active/features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md)                         | Features-repo consolidation (features-sports merges into features-service) | Active |
+| [`active/live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md)               | Live-pipeline activation — batch portion is required here                  | Active |
+| [`manifest_migration_master_2026_05_07`](./manifest_migration_master_2026_05_07.md)                                            | Manifest schema v6                                                         | Active |
 
 ## Cross-epic handshakes
 
@@ -98,6 +100,6 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md). 
 
 ## See also
 
-- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.plan.md) — May-23 cutover master
+- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
 - [`codex/02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md)
 - [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md)

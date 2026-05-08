@@ -850,6 +850,42 @@ remains open. Folds into the existing "Lending-indices VM run-quality bugs" sect
       yields; cross-protocol carry, bridge-flow, MEV-leakage, gas-fee bands etc. likely need additions. Audit
       `features-defi-service/` + `features-onchain-service/` calculator metadata. Coordinator Phase 4.
 
+## May-23 deliverable (folded from `live_defi_rollout_may_23_2026.epic` 2026-05-08)
+
+> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/live_defi_rollout_may_23_2026.epic.md`. Archived: [`plans/archive/live_defi_rollout_may_23_2026.epic.md`](../archive/live_defi_rollout_may_23_2026.epic.md). The 3-layer (master + epic + cutover-master) collapses to 2-layer (master + cutover-master).
+
+**Why:** Headline live deliverable for May 23 — real wallet, real capital, real fills, ≥7 continuous days of production trading. Absorbs all CARRY archetypes (staked-basis, vanilla-basis, cross-venue carry) per operator 2026-05-08 — carry's hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is what unlocks it.
+
+### End-state at May 23 (success criteria)
+
+- [ ] **Live trading on real wallet** for **carry archetypes** (staked-basis carry + vanilla-basis carry + cross-venue carry) for ≥7 continuous days, on representative capital (size TBD per operator).
+- [ ] **Six perp venues live**: Bybit, Deribit, Binance, OKX (CeFi) + Hyperliquid, Aster (DeFi DEXs). Hedge legs route across all six.
+- [ ] **Cross-venue spot/perp/future legs live** for carry: CME futures + ETF + DeFi spot + CeFi perp + DeFi perp combos tradable end-to-end through unified pipeline.
+- [ ] **Custody integrated**: Copper for DeFi side; CEFFU for Binance institutional flow (manual handoff acceptable per master plan Q&A 3); cross-wallet transfer paths verified.
+- [ ] **Live alerting active**: data freshness + P&L deviation + position breaches + circuit-breaker trips + kill-switch activations alert through alerting-service to operator + DART.
+- [ ] **Live observability complete**: every VM emits structured events to GCS event stream; deployment-UI tails events without SSH; per-instrument progress events with row counts so silent-success-with-zero-output is detectable.
+- [ ] **Auto-recovery wired** for known transient failure classes (RPC blip, CEX rate-limit, oracle staleness) per codex `autonomous-recovery-matrix.md`.
+- [ ] **Kill switches wired** per archetype: position-limit breach, P&L drawdown threshold, oracle-feed-stale, counterparty-exposure cap. Operator-pullable from DART.
+- [ ] **Batch-vs-live reconciliation running**: per-archetype P&L diff + per-trade fill comparison nightly.
+- [ ] **AWS↔GCP parity**: live trading + monitoring runnable on AWS for at least one carry archetype (cloud-parity proof; full-scale AWS NOT required).
+
+### IN/OUT scope
+
+- **IN**: all three carry-family archetypes (`carry_staked_basis` lead — recursive LST + perp short hedge; `carry_basis_perp` vanilla; `cross_venue_carry` CME × CeFi × DeFi); custody (Copper + CEFFU manual handoff); live treasury flows + cross-wallet transfer paths; live trading guardrails (circuit breakers, kill switches, alerting rules, auto-recovery); 6-venue perp universe (CeFi 4 + DeFi DEX 2) + CME futures + ETF spot + DeFi spot DEXs (LST oracles); AWS↔GCP parity proof at live-trading layer (single archetype, not full scale); DART manual-trade lane for 3-day manual → 7-day automated default; live observability + event streaming.
+- **OUT (post-May-23)**: full strategy mesh launch (only carry archetypes; `leveraged_funding_arb` CAN slip if Week 3 tight per master plan risk register); full AWS scale (single-archetype proof only); ML-driven DeFi archetypes (DeFi stays rules-based this cycle); other archetype families (price-arb, prediction, sports — own deliverables in respective masters).
+
+### Cross-epic handshakes
+
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue, strategy IDs, client wiring, UI replication of manual-trade DART, infrastructure baseline.
+- **Provides to:** `cefi_master` cefi_ml deliverable (CeFi venue connectivity overlap on Bybit / Binance / OKX — same execution-service adapters, same alerting rules, same kill-switch wiring; only strategy-decision layer differs between rules-based carry and ML signal).
+- **Blocks:** Nothing else on May 23 — this is the headline. Subsequent archetype launches (post-May-23) wait for live proof here.
+
+### Open questions
+
+- [ ] **Manual-trade gating duration** (master plan Q&A 5). Default 3-day manual → 7-day automated. Resolve before May 18.
+- [ ] **research-service repo decision** (master plan Q&A 6). Default: fold into deployment-api unless scope grows.
+- [ ] **Is `leveraged_funding_arb` strictly required for May 23, or fallback if carry slips?** Master plan risk register says it can slip; confirm.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Pyth UNBANNED for Solana** (2026-05-06): use Hermes (batch) + PythNet (live). Other chains stay on Chainlink. See
