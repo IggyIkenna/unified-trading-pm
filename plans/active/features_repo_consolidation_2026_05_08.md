@@ -95,7 +95,7 @@ depends_on: []
 todos:
   - id: phase-0-pre-audit-manifest
     content: |
-      - [ ] [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce a single artifact under
+      - [x] [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce a single artifact under
         `unified-trading-pm/plans/active/issues/features_repo_consolidation_preaudit_2026_05_08.md` enumerating, per
         source repo (8 features-* repos):
         (a) every Python module + class + public function and which sub-package it lands in post-merge;
@@ -115,12 +115,18 @@ todos:
         catching every external import. **Foot-gun**: `unified-trading-pm/cursor-configs/` and
         `unified-trading-pm/codex/` may reference module paths in docs (search for `features_<family>_service` as a
         substring, not just `import` lines).
-    status: todo
-    note: ""
+
+        **SHIPPED 2026-05-08** — artifact at `plans/active/issues/features_repo_consolidation_preaudit_2026_05_08.md`
+        (1286 lines / 152 KB). 503 py source files; **only 11 external Python import lines to rewrite** (Phase 4.1
+        footprint much smaller than plan body assumed); 51 string references (test-params + openapi catalogues +
+        .gitignore) for case-by-case manual fixup; 6 lift candidates + 4 NOT-implemented-anywhere helpers documented.
+        Big findings folded into Phase 4/5 sub-todos below + audit-findings section after risk register.
+    status: completed
+    note: "general-purpose sub-agent shipped artifact 2026-05-08; read-only audit, no code commits."
 
   - id: phase-1a-uac-feature-family-schema
     content: |
-      - [ ] [AGENT] P0. Phase 1A — Add `feature_family` to UAC v5 manifest schema. PARALLEL with 1B.
+      - [x] [AGENT] P0. Phase 1A — Add `feature_family` to UAC v5 manifest schema. PARALLEL with 1B.
 
       Site: `unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py` (or the equivalent
       v5 manifest schema SSOT — locate via `grep -rn "feature_group" unified-api-contracts/unified_api_contracts/canonical/`).
@@ -151,12 +157,22 @@ todos:
       (3) JSON serialization round-trip preserves both columns.
 
       QG: `cd unified-api-contracts && bash scripts/quality-gates.sh` clean. Push to `live-defi-rollout`.
-    status: todo
-    note: ""
+
+      **SHIPPED 2026-05-08 — UAC@`7f63ca3`.** Site decision: placed in `canonical/domain/features/registry.py`
+      (alongside `EXPECTED_FEATURE_GROUPS_BY_SERVICE` dependency) rather than `crosscutting/honest_coverage.py` —
+      natural locality + plan body says "or the equivalent v5 manifest schema SSOT". Files: registry.py (+139),
+      features/__init__.py (+10 facade re-export), tests/unit/test_feature_family.py (+160, 9 tests). Mapped 83
+      feature_groups across 5 services (onchain=12, delta_one=36, sports=35; volatility/cross_instrument empty
+      stubs; calendar/commodity/multi_timeframe families have 0 mapped today — registry will populate as those
+      services declare). **No cross-family collisions detected.** QG: foreign-code lint failure on
+      `_instrument_enums.py:52` E501 (parallel agent's uncommitted; not mine); my files clean (0 ruff, 0 basedpyright);
+      9 new tests pass + 18 existing test_feature_dag_ssot.py tests still pass.
+    status: completed
+    note: "Sub-agent shipped UAC@7f63ca3, pushed clean (0 0 vs origin)."
 
   - id: phase-1b-utl-manifestwriter-feature-family-param
     content: |
-      - [ ] [AGENT] P0. Phase 1B — `ManifestWriter.record_captured` / `record_empty` / `record_failed` /
+      - [x] [AGENT] P0. Phase 1B — `ManifestWriter.record_captured` / `record_empty` / `record_failed` /
         `record_expected_empty` accept a new optional `feature_family: str | None = None` kwarg, default None for
         non-features writers (cefi / defi / tradfi / sports / prediction MTDS+MDPS pass nothing, behaviour
         unchanged). PARALLEL with 1A.
@@ -177,8 +193,22 @@ todos:
       (4) the write is row-level: same shard with two feature_families produces two distinct rows, not collisions.
 
       QG: UTL quality-gates.sh clean.
-    status: todo
-    note: ""
+
+      **SHIPPED 2026-05-08 — UTL@`c16cef3`.** Files: manifest_writer.py (+217), __init__.py (+2 — export
+      MissingFeatureFamilyError), tests/unit/test_manifest_writer_feature_family.py (+260, 10 tests).
+      **Design choice — enforcement gate**: implemented `feature_group is set ⇒ feature_family required` shape (NOT
+      CLI-detection). Specifically `if effective_feature_group and not feature_family: raise` where "effective"
+      considers both row_key.feature_group AND the direct kwarg. Cleaner than CLI introspection;
+      ManifestWriter doesn't need to know about service CLIs. Documented in `MissingFeatureFamilyError` docstring.
+      **Production-safety verified**: the 8 features-* services use `writer.add(...)` not `record_captured(...)` —
+      the new gate fires on the four record_* methods only. `add()` unchanged. **No in-flight VMs break.**
+      QG: pre-existing failures only (verified via git-stash ablation: 7 E501s in manifest_writer.py:145-160 /
+      1441 / 1449 attribute to commit 68b3804a 2026-05-07 semver-bot; 12 pre-existing basedpyright errors;
+      11 pre-existing test failures in test_manifest_writer_capture_status/v6/v7/normalising/record_empty_reason —
+      all foreign, all from 2026-05-07 LegacyBlankErrorReasonError hardening). My new test file: 0 ruff, 0 basedpyright,
+      10/10 tests pass. Phase 4 follow-ups documented below: add() migration, validate_df kwarg, NormalisingManifestWriter cleanup.
+    status: completed
+    note: "Sub-agent shipped UTL@c16cef3, pushed clean (0 0 vs origin)."
 
   - id: phase-2-create-features-service-repo
     content: |
@@ -690,3 +720,136 @@ completing before Phase 7 archives the repos.
 | `git subtree` not available on agent's machine                                                  | Low        | Phase 3 stalls                       | Document `brew install git-subtree` (or use `git-subtree.sh` from git-core/contrib) at Phase 3 start                |
 | Operator launches a source-repo VM during transition window                                     | Low        | Confusing data-status output         | Phase 8A migration + banner discipline; transition window ≤2 days                                                   |
 | Workspace-manifest agents (plan-health, conflict-resolution) flag the 8 archived repos as drift | Low        | Noise in agent reports               | Phase 7 step 5+6 removes them from workspace-manifest in the same commit                                            |
+
+## Phase 0 audit findings — discoveries to fold into later phases
+
+Discovered during Phase 0 read-only audit (artifact at
+[`plans/active/issues/features_repo_consolidation_preaudit_2026_05_08.md`](issues/features_repo_consolidation_preaudit_2026_05_08.md))
++ Phase 1B implementation surprises. All findings adjacent-to-this-plan per Findings Triage Discipline; folded
+in here rather than punted to issues folder. Plan-body Phase 4/5 todos reference these sub-todos.
+
+### F1 — LookaheadBiasError silently underprotected in 6 of 8 families ⚠️ data-correctness
+
+**Severity**: P0 / data-correctness / contradicts CLAUDE.md "Shard-granularity SSOT" rule
+("`LookaheadBiasError` raised loud at every features-\* + MDPS compute, not warn-mode").
+
+**Status today** (per Phase 0 audit § 9.3):
+
+- `features-onchain-service` ✅ enforces production-side
+- `features-sports-service` ✅ enforces production-side
+- `features-calendar-service` ❌ references only in tests
+- `features-cross-instrument-service` ❌ references only in tests
+- `features-multi-timeframe-service` ❌ references only in tests
+- `features-volatility-service` ❌ references only in tests
+- `features-commodity-service` ❌ **zero references**
+- `features-delta-one-service` ❌ **zero references**
+
+**Action — add Phase 5 sub-todo**: while lifting `LookaheadBiasError` per the existing Phase 5 todo, ALSO extend the
+gate to fire production-side in all 8 families. Each family's compute entry-point gets an
+`assert_no_lookahead_for_feature_group(...)` call before processing inputs. Per-family unit tests asserting raise on
+stale input. Lands as part of the same logical unit as the helper lift to UTL (avoids two churn cycles).
+
+### F2 — `features-onchain-service/config.py` does not import `UnifiedCloudConfig` ⚠️ SSOT-violation
+
+**Severity**: P1 / workspace SSOT violation per CLAUDE.md Key Rules ("`UnifiedCloudConfig` / `config.key_name` — never
+`os.getenv('KEY', '')`"). Other 7 features-\* repos all import it.
+
+**Action — add Phase 4 sub-todo (4.7)**: during the import-rewrite + config-consolidation sweep, audit
+`features_service/onchain/config.py` (post-Phase 3 location) for bare `os.getenv` calls; replace with
+`UnifiedCloudConfig` access. One-shot fix, lands with the rest of Phase 4.
+
+### F3 — High-leverage lifts beyond plan-body's 4 helpers — extend Phase 5 lift list
+
+**Severity**: P1 / scope expansion — saves duplicated maintenance across consolidated repo.
+
+Per Phase 0 audit § 9, the following NOT-LIFTED dups were discovered in addition to the plan-body's 4 helpers:
+
+- **`BuilderEntry`** — 7-way duplicate (7 of 8 repos copy-paste same dataclass). UTL already has `feature_calculator/`
+  + `feature_service_base/` modules — natural home. Single highest-leverage lift.
+- **`BroadcastSink` / `LiveDataSource`** — 4-way duplicate (calendar / delta_one / onchain / volatility).
+- **`BaseFeatureCalculator`** — 3-way duplicate (cross_instrument / delta_one / multi_timeframe).
+- **`FeatureBatchHandler`** — NOT IMPLEMENTED anywhere; every family has copy-paste batch_handler. Coordinate with
+  `ml_and_features_master_2026_05_07` Phase 2.UTL-LIFT (which lifts FeatureBatchHandler for the 4 features-\* repos
+  that have it) — that work overlaps; banner mutually.
+- **`ManifestFreshnessCache`** — NOT IMPLEMENTED in UTL or any features-\* repo (per `ml_and_features_master`
+  Phase 1A.UTL-CACHE-ADOPT).
+- **`WatermarkAlignmentFanin`** — NOT IMPLEMENTED anywhere — greenfield in UTL (already in plan-body Phase 5 list).
+
+**Action — extend Phase 5 todo** to cover these (BuilderEntry + BroadcastSink/LiveDataSource + BaseFeatureCalculator
+in addition to plan-body's 4). Total Phase 5 scope: 7 lifts + the LookaheadBiasError extension to 6 families + the
+optional FeatureBatchHandler / ManifestFreshnessCache greenfields if not landed by `ml_and_features_master` first.
+
+### F4 — Phase 4.1 cross-family import rewrite footprint is much smaller than assumed
+
+**Severity**: P2 / scope-shrink (good news).
+
+Plan-body Phase 4.1 talked about `features_<f1>` importing from `features_<f2>` as a routine concern (cross-instrument
+depending on delta-one outputs, etc.). **Phase 0 audit found ZERO production cross-family imports.** Only ONE
+cross-family Python dep exists workspace-wide: `features-delta-one-service/tests/unit/.../test_temporal.py` imports
+`features_calendar_service`. Phase 4.1's grep+sed pass is essentially trivial — one test-file rewrite + the 11 external
+import lines documented in Phase 0 § (b).
+
+**Action — none required.** Phase 4.1 is shorter than scoped; no plan change. Documented for future agent so they
+don't expect to find dozens of cross-family imports.
+
+### F5 — `features-sports-service` is the largest family by every dimension
+
+**Severity**: P2 / Phase 3 sequencing.
+
+Sports = 111 files / 56 tests / 15 scripts / 20 sub-packages (3× the median repo). Has its own intra-package
+`features_sports_service/scripts/` alongside top-level `scripts/`. Phase 3 step ordering: do sports LAST among the 8
+subtree merges so a partial-failure recovery can still ship the other 7 cleanly. Or split sports into a checkpoint
+(separate per-family commit per existing plan, but observe wall-clock there).
+
+### F6 — Phase 1B production-safety: `add()` legacy method requires Phase 4 migration
+
+**Severity**: P0 / dependency for Phase 4.
+
+Phase 1B's enforcement gate (`feature_group is set ⇒ feature_family required`) fires on `record_captured` /
+`record_empty` / `record_failed` / `record_expected_empty`. The 8 features-\* services CURRENTLY call `writer.add(...)`
+which is the legacy public API path. `add()` was deliberately NOT modified by Phase 1B — it writes `feature_family=""`
+rows for features services as a back-compat shape, so existing VMs are unaffected. **Phase 4 MUST migrate features-\*
+call sites from `writer.add(...)` to `writer.record_captured(...)` with `feature_family` passed**, otherwise the
+consolidated `features-service` repo writes manifest rows with `feature_family=""` and the deployment-UI's Phase 8B
+drilldown column renders empty. Add as Phase 4 sub-todo (4.8).
+
+### F7 — Phase 1B follow-ups: `validate_df` + `NormalisingManifestWriter` need Phase 4/5 attention
+
+**Severity**: P2 / Phase 4-5 scope.
+
+- `validate_df` (UTL public) doesn't accept `feature_family` kwarg today. Strict-mode schema-mismatch paths via this
+  function that have `feature_group` set in row_key would trigger the gate. Add as Phase 4 sub-todo (4.9).
+- `manifest_writer_normalising.py` (`NormalisingManifestWriter` wrapper) doesn't accept `feature_family` either; only
+  test callers exercise it; broken anyway today (calls `record_empty` with no reason → `LegacyBlankErrorReasonError`).
+  Phase 5 sub-todo (lift or delete).
+
+---
+
+## DONE-2026-05-08
+
+Phase 0 + Phase 1A + Phase 1B shipped today by the `features-consolidation-tab` (Tab 2 of
+[`plans/active/work_split_2026_05_08_harsh.md`](work_split_2026_05_08_harsh.md)). Stopping at the **Phase 2 HUMAN+AGENT
+gate** — operator must `git init` + create the empty `git@github.com:IggyIkenna/features-service.git` GitHub remote
+before the agent can scaffold the consolidated repo.
+
+| Phase | Repo | Commit | Push | Notes |
+|---|---|---|---|---|
+| 0 — pre-audit manifest | unified-trading-pm | (uncommitted artifact, ships with this PM commit) | this commit | 1286 lines, 152 KB; 503 py source files; 11 ext imports + 51 string refs |
+| 1A — UAC FeatureFamily enum + FEATURE_GROUP_TO_FAMILY registry | unified-api-contracts | `7f63ca3` | ✅ pushed | 83 feature_groups mapped, no cross-family collisions, 9 unit tests |
+| 1B — UTL ManifestWriter feature_family kwarg + MissingFeatureFamilyError | unified-trading-library | `c16cef3` | ✅ pushed | gate: feature_group ⇒ feature_family required; 4 record_* methods; 10 unit tests; production-safe (`add()` unchanged) |
+
+**Audit findings folded into plan**: F1-F7 above (LookaheadBiasError underprotection, UnifiedCloudConfig violation,
+4 additional lift candidates, Phase 4.1 scope-shrink, sports-as-largest, `add()` migration dependency, validate_df +
+NormalisingManifestWriter follow-ups).
+
+**Cross-side handshake status (per work-split § "Cross-side handshakes")**:
+
+- Harsh Tab 2 (features_repo_consolidation Phase 1-4) → Ikenna Tab 2 (live-pipeline Phase 4-7): **Phase 1 land
+  announced here**; Ikenna Tab 2 unblocked from continuing past their Phase-1-dependent work.
+
+- Harsh Tab 2 (ml-features-phase2a wires) → Ikenna Tab 2 (live-pipeline Phase 11 ServiceEmissionPolicy slice b):
+  not yet — wires happen in Phase 4 (Tab 12 Q1 absorption) which is after Phase 2 gate.
+
+**Hard gate hit**: Phase 2 (`phase-2-create-features-service-repo`) is `[HUMAN+AGENT]` — agent prepares local
+`git init` + skeleton + asks operator to create the empty remote on GitHub. Standing by for operator direction. Once
+the GitHub remote exists, Tab 2 picks Phase 2-3 back up.
