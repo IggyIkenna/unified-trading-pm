@@ -1013,51 +1013,53 @@ restores from that patch, undoing your in-flight edit.
 Symptoms (any one is enough to confirm the failure mode):
 
 - You ran `Edit`/`Write`, the tool reported success, but the next `git status` shows the file as unmodified.
-- You committed, but `git show --stat HEAD` shows zero insertions to YOUR file (only foreign files in the commit) —
-  even though you just edited it and your commit message describes that file.
-- `git log --oneline -3` shows commits attributed to `semver-rollout[bot]` or another agent's identity that contain
-  YOUR commit message but missing YOUR content.
+- You committed, but `git show --stat HEAD` shows zero insertions to YOUR file (only foreign files in the commit) — even
+  though you just edited it and your commit message describes that file.
+- `git log --oneline -3` shows commits attributed to `semver-rollout[bot]` or another agent's identity that contain YOUR
+  commit message but missing YOUR content.
 - You see `"Restored working tree changes from .../prek/patches/"` in any commit/git output.
 
 **The workaround (codified):**
 
 1. **Tighten the Edit → stage → commit → push window.** The race is between the Edit completing and `git add` running.
    Every separate Bash call is a window. Pack them into ONE Bash command:
+
    ```bash
    git add <specific-file> \
      && git diff --cached --name-status \
      && git commit --no-verify -m "..." \
      && git push origin <branch> --no-verify
    ```
+
    No intermediate Bash calls (no `git status` / `git log` / `ls` between Edit and add). The whole sequence runs in a
    single shell process, faster than the hook's restore window.
 
 2. **`--no-verify` IS authorized in this case** despite the workspace rule "Never skip hooks unless user explicitly
-   requests." The condition is: (a) you have observed the auto-restore symptoms above wiping at least one of your
-   edits in this session, AND (b) the alternative is losing real work. Per 2026-05-08 user direction *"fix to keep
-   your work"* — that's the explicit authorization for this failure mode going forward; do NOT re-ask each session.
+   requests." The condition is: (a) you have observed the auto-restore symptoms above wiping at least one of your edits
+   in this session, AND (b) the alternative is losing real work. Per 2026-05-08 user direction _"fix to keep your work"_
+   — that's the explicit authorization for this failure mode going forward; do NOT re-ask each session.
 
 3. **Verify post-push with `git show --stat HEAD`.** If the commit landed but shows zero insertions to your file
    (foot-gun #1 + #4 combined: revert raced you, then a foreign-work-only commit went through under your message),
    re-Edit and retry. Don't assume the commit succeeded just because `git push` returned `0`.
 
-4. **Stage explicitly by name, never `git add .` / `git add -A`.** Composes with the foot-gun #1 / #2 mitigations
-   above — the auto-revert race amplifies foreign-bundling risk because the moment your file gets reverted, anything
-   ELSE staged in the index (foreign agent's WIP) is what your commit will contain.
+4. **Stage explicitly by name, never `git add .` / `git add -A`.** Composes with the foot-gun #1 / #2 mitigations above
+   — the auto-revert race amplifies foreign-bundling risk because the moment your file gets reverted, anything ELSE
+   staged in the index (foreign agent's WIP) is what your commit will contain.
 
-5. **If your file was repeatedly reverted across multiple Edit attempts**, the prek patch under
-   `~/.cache/prek/patches/` is the likely restore source. The fix is to commit immediately after the first successful
-   Edit, before prek's next patch cycle. There is currently no workspace-wide setting to disable prek's restore
-   behaviour — the tighter Edit → commit window is the only mitigation.
+5. **If your file was repeatedly reverted across multiple Edit attempts**, the prek patch under `~/.cache/prek/patches/`
+   is the likely restore source. The fix is to commit immediately after the first successful Edit, before prek's next
+   patch cycle. There is currently no workspace-wide setting to disable prek's restore behaviour — the tighter Edit →
+   commit window is the only mitigation.
 
 **Anti-patterns:**
 
-- **Don't** assume a successful Edit tool result means the file is on disk by the time you commit. Two seconds is
-  enough for a restore to fire.
+- **Don't** assume a successful Edit tool result means the file is on disk by the time you commit. Two seconds is enough
+  for a restore to fire.
 - **Don't** run `git status` / verification commands between Edit and commit "just to be safe" — every extra command
   widens the race window.
-- **Don't** retry the same Edit + commit sequence five times hoping it sticks. Diagnose, then bundle Edit-adjacent
-  ops into one Bash call.
+- **Don't** retry the same Edit + commit sequence five times hoping it sticks. Diagnose, then bundle Edit-adjacent ops
+  into one Bash call.
 - **Don't** silently use `--no-verify` outside this failure mode. It bypasses real safety hooks (lint, secret-scan,
   conventional-commits) when used routinely — the authorization is scoped to "auto-restore is observed wiping work."
 
@@ -1596,6 +1598,21 @@ Spawned agent appends a one-liner when it has a Q on its plan-of-record; main ag
 answered. Zero history kept here. **Don't write Qs into the work-split plan itself** — those go on the agent's
 plan-of-record (the master / domain plan it's executing against).
 
+**Ping ledger bifurcation (codified 2026-05-08).** There are TWO ping ledgers, NOT one. Both follow the format above but
+serve different surfaces:
+
+- **Workspace-shared `plans/active/_agent_pings.md`** — for **cross-side** comms only (Ikenna ↔ Harsh hard-gate
+  signalling: a UAC contract landed, a UTL helper signature shipped, an in-flight refactor banner needs broadcasting).
+  Polls run on the same ~1-min cadence but the surface stays quiet because cross-side comms are rare. Both sides write
+  here.
+- **Per-side `<side>_orchestrator/_agent_pings.md`** — for **intra-side** comms only (one operator's main agent ↔ that
+  operator's spawned tabs: STARTED acks, blocker Qs, DONE announcements). Decoupled per side so STARTED/DONE noise
+  doesn't clog the cross-side ledger. Today both sides have these directories: `harsh_orchestrator/` and
+  `ikenna_orchestrator/`, each with `AGENT_ONBOARDING.md` + `LEDGER.md` + `_agent_pings.md`.
+
+The bifurcation matters because intra-side ledgers fill up fast (15-20 STARTED+DONE acks per cycle is normal) while
+cross-side ledgers should have <5 active entries. Mixing them makes both surfaces unreadable.
+
 **Polling cadence (Model B main agent).** Main agent polls `_agent_pings.md` every **~1 min** while operator is active.
 When tabs go quiet (no pings 30+ min), stretch to 5 min. Main does NOT implement plan items — only direction +
 dispatch + curation. Anything taking >1 min in chat either delegates (spawn fresh tab) or backgrounds
@@ -1767,13 +1784,13 @@ never see it. Rules MUST be pasted directly into the prompt text.
 ### SSOT shape (codified 2026-05-08)
 
 `SUB_AGENT_MANDATORY_RULES.md` is a **symlink to CLAUDE.md** in PM canonical
-(`unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md → CLAUDE.md`). The two files have **identical
-content** — sub-agents need every workspace rule the parent agent has, and the prior ~30% subset file was a perpetual
-drift hazard. Per-repo `.claude/SUB_AGENT_MANDATORY_RULES.md` symlinks (rolled out via
-`scripts/rollout-agent-symlinks.sh`) point through to the same canonical, so existing references like *"read
-SUB_AGENT_MANDATORY_RULES.md"* continue to work at every site that already used them — they now deliver the full
-workspace-rules surface, not the old subset. Sub-agent-specific framing (*"you are a sub-agent, the rules below apply
-to you"*) is added by the inject script preamble + by spawn prompts in the work-split plans, not by file content.
+(`unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md → CLAUDE.md`). The two files have **identical content**
+— sub-agents need every workspace rule the parent agent has, and the prior ~30% subset file was a perpetual drift
+hazard. Per-repo `.claude/SUB_AGENT_MANDATORY_RULES.md` symlinks (rolled out via `scripts/rollout-agent-symlinks.sh`)
+point through to the same canonical, so existing references like _"read SUB_AGENT_MANDATORY_RULES.md"_ continue to work
+at every site that already used them — they now deliver the full workspace-rules surface, not the old subset.
+Sub-agent-specific framing (_"you are a sub-agent, the rules below apply to you"_) is added by the inject script
+preamble + by spawn prompts in the work-split plans, not by file content.
 
 ### When launching ANY sub-agent or autonomous agent
 
