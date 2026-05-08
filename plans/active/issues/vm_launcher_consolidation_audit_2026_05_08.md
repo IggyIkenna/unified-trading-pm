@@ -181,3 +181,42 @@ Pure rename + path-update.
 2. **Phase 1 SAMPLE shipped this session by Tab 1 main**: 4-5 representative wrappers (defi flavor) to demonstrate the
    pattern + verify the wrapper shape works end-to-end. Remaining Phase 1 tomorrow's split.
 3. **Phase 2-5**: tomorrow's split as separate Tab assignments.
+
+## Phase 1 sample shipped 2026-05-08 (Tab 1 main)
+
+`e2e-testing@d824cb6` — 6 of ~24 Phase 1 migrations done. Each legacy launcher in `e2e-testing/scripts/defi/` is now
+a ~30-line wrapper that translates legacy `--start/--end/--dry-run` flags to canonical positional args + execs the
+deployment-service launcher. **1483 lines of duplicated launcher code removed; replaced with 150 lines of pass-through.**
+
+| Legacy | Canonical (deployment-service) |
+|--------|-------------------------------|
+| `e2e-testing/scripts/defi/launch_lst_rates_vm.sh` | `launch-mtds-lst-rates-backfill-vm.sh` |
+| `e2e-testing/scripts/defi/launch_lending_indices_vm.sh` | `launch-mtds-lending-indices-backfill-vm.sh` |
+| `e2e-testing/scripts/defi/launch_gas_fees_vm.sh` | `launch-mtds-gas-fees-backfill-vm.sh` |
+| `e2e-testing/scripts/defi/launch_eigenlayer_rewards_vm.sh` | `launch-mtds-eigenlayer-rewards-backfill-vm.sh` |
+| `e2e-testing/scripts/defi/launch_dex_pools_vm.sh` | `launch-mtds-dex-pools-backfill-vm.sh` |
+| `e2e-testing/scripts/defi/launch_solana_drift_vm.sh` | `launch-mtds-solana-drift-backfill-vm.sh` |
+
+Wrapper template verified end-to-end: `bash <wrapper> --help` passes through to canonical's `--help` cleanly +
+emits the `[migrated 2026-05-08]` banner showing the redirect destination + date window.
+
+**Remaining Phase 1** (next session, ~3 AI-days):
+
+- `e2e-testing/scripts/common/` — 4 launchers
+- `e2e-testing/scripts/prediction/` — 2 (the simple ones; the orchestrator + setup-backfill-vm need Phase 2/3 design)
+- `e2e-testing/scripts/sports/` — 7 simple wrappers (the 2 sweep orchestrators are Phase 3)
+- `features-sports-service/scripts/launch_parallel_backfill.sh` — 1
+- `deployment-service/scripts/deploy-dashboard-gce-vm.sh` → `deployment-service/scripts/vm/launch-dashboard-vm.sh` (intra-repo rename)
+
+**Phase 2 (NEW canonical launchers needed)** — `launch_liquidations_vm.sh` + `launch_perp_funding_vm.sh` +
+`launch_solana_gas_vm.sh` (defi) + `launch_prediction_features_vm.sh` (prediction). Each needs a real port +
+watchdog dict registration. ~4 AI-days.
+
+**Phase 3 (orchestrators)** — fleet/sweep launchers. Re-design as deployment-service composite launchers. ~2 AI-days.
+
+**Phase 4 (Cloud Run)** — 3 deploy scripts move to `deployment-service/scripts/cloud-run/`. ~1 AI-day.
+
+**Phase 5 (intra-repo rename)** — 1 launcher. ~0.5 AI-day.
+
+Total Phase 1-5: ~10 AI-days. Phase 1 sample (6/24) shipped this session validates the wrapper template + reduces the
+risk of remaining migrations (mechanical replication).
