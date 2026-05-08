@@ -1006,6 +1006,90 @@ This applies to every plan in `plans/active/` and every working session — tier
 even single-item flips when that's all the session shipped. Reviewers reject sessions that ship code without the
 matching plan flip, and reject sessions that have stale uncommitted work older than a single shippable unit.
 
+## Post-Plan-Phase Codex Audit (HARD RULE codified 2026-05-08)
+
+After every major plan-phase completion (a phase/tier landing as fully done — every checkbox in that phase flipped to
+`- [x]`), run a **codex audit pass**: walk every codex doc the plan touches or _should have_ touched, verify the doc
+reflects the new SSOT the plan established, and update or write the doc as part of the same logical unit. The plan's
+"Codex SSOT updates" phase (typically the second-to-last phase) is the FORMAL codification of this rule — but the audit
+happens at every major-phase boundary, not only at plan-end, so codex doesn't drift mid-plan.
+
+### What the audit covers
+
+For each major plan phase, ask three questions:
+
+1. **Did this phase change a contract / shape / pattern that's described somewhere in codex?** If yes, find the doc(s)
+   and update them. Examples: new UAC enum, new manifest column, new event type, new helper class, new architectural
+   pattern, new shard atom dimension, new SSOT for any cross-cutting concern.
+2. **Did this phase establish a new pattern that's NOT yet described in codex but should be?** If yes, write the new doc
+   as a stub (entry-point + key principles + cross-references back to the plan), folding it into a later plan phase for
+   full content. The stub IS part of the plan-phase deliverable.
+3. **Did this phase invalidate an existing codex doc** (e.g. by changing the recommended approach, deprecating a
+   pattern, replacing a workspace-wide rule)? If yes, update the doc to reflect the new state in the same commit, OR add
+   a banner on the doc with `> **SUPERSEDED 2026-05-XX by <plan-name> Phase N — see <new-doc>**`.
+
+### When to do it
+
+- **At every major plan-phase boundary** (not just plan completion). A 5-phase plan does the audit 5 times, once per
+  phase boundary. This prevents codex from drifting against the plan mid-execution.
+- **Within the same logical unit as the phase-completion commit batch.** Plan flip + code commits + codex updates ride
+  together in the same shippable unit per the Commit+Push+Flip rule.
+- **Before the plan unlocks for archive.** Final unlock check: every codex doc the plan touched or should have touched
+  is consistent with the shipped state.
+
+### Stub vs full content
+
+A codex doc stub is a legitimate intermediate state — entry-point with TL;DR, key principles, anti-patterns, and
+cross-references back to the plan. Stubs SHIP at plan-mid (they document the design + signpost where the full content
+will land). Full content is enhanced + promoted as the corresponding plan phase ships its work.
+
+The codex doc paths the plan creates / enhances MUST be enumerated as explicit todos in the plan's "Codex SSOT updates"
+phase. Plans that omit codex doc updates from their phase list are review-blocking — every plan that lands a contract /
+pattern / architectural change MUST list the codex docs it touches.
+
+### Why
+
+Per CLAUDE.md "Master Plan — Live DeFi Trading" principle: **docs are the intent.** If codex describes the system as it
+WAS before the plan landed, the workspace's "doc → plan → code" discipline is broken — agents reading the doc will write
+code against the wrong contract. Even one stale doc creates collision risk in the parallel-agent workflow. The
+audit-at-every-phase-boundary discipline keeps the doc layer ahead of (or at parity with) the code.
+
+### Concrete pattern (the 2026-05-08 live-pipeline activation as reference)
+
+The live-pipeline activation (3 plans + 4 codex docs landed 2026-05-08) follows this pattern:
+
+- `live_pipeline_mtds_mdps_features_2026_05_08.plan.md` Phase 14 lists 8 codex docs (3 NEW + 5 UPDATE).
+- `gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md` Phase 7 lists 6 codex docs (1 NEW + 5 UPDATE).
+- `features_repo_consolidation_2026_05_08.plan.md` Phase 9 lists 6 codex docs (1 NEW + 5 UPDATE).
+- All 4 NEW docs were stubbed at plan-creation time (codex/05-infrastructure/live-pipeline-architecture.md +
+  replay-subsystem.md + codex/02-data/pipeline-mode-partition.md +
+  codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md) so the design is captured upfront.
+- Each plan phase that changes a contract or pattern triggers the relevant codex update before the phase commits flip to
+  `- [x]`.
+
+### Anti-patterns
+
+- **Don't defer codex updates to plan-end.** Mid-plan agents reading a stale doc write incorrect code. Audit at every
+  phase boundary.
+- **Don't write codex docs without a plan reference.** Every NEW doc points back to the plan that owns it, so
+  future-readers can find the work-context.
+- **Don't update codex without flipping the plan checkbox.** The codex update IS part of the phase deliverable; if it's
+  done, the checkbox flips.
+- **Don't add a "we'll write the codex later" placeholder.** If the work is done but the doc isn't, the phase is not
+  done — keep the checkbox at `- [ ]`.
+- **Don't bypass the audit because "the plan didn't list a codex doc."** If the work changed a contract/pattern, the
+  codex doc updates are in scope regardless of whether the plan listed them. Add the missing item to the plan + ship the
+  doc + flip both as part of the same logical unit.
+
+### Composes with
+
+- `Capture discoveries as plan todos immediately` — codex gaps discovered mid-plan get captured as plan todos.
+- `Plans must capture full codebase impact upfront` — codex docs touched by a plan MUST be enumerated in the plan body;
+  not "deferred to later."
+- `Cross-Plan Coordination Banners` — codex doc touchpoints often span multiple plans; banner them mutually.
+- `Commit + Push + Flip Plan Checkboxes` — codex updates ship in the same logical unit as the code commits
+  - plan flip.
+
 ## CI Verification After Every Push (HARD RULE)
 
 Every `git push` to a branch that **triggers remote CI** MUST be verified — the repo's CI bot reports pass/fail to
@@ -1020,13 +1104,13 @@ convergence. main → always stable"):
 - **Pushes to `main`** → trigger Quality Gates + downstream workflows. **Always verify.**
 - **Pull requests targeting `main`** → trigger Quality Gates on the PR head. **Verify on PR open + each new commit.**
 - **Pushes to `live-defi-rollout` and other `feat/*` feature branches** → **DO NOT trigger remote CI**. Quality is
-  enforced **locally** via `bash scripts/quality-gates.sh` before push, per the per-shippable-unit commit cadence in
-  the rule above.
+  enforced **locally** via `bash scripts/quality-gates.sh` before push, per the per-shippable-unit commit cadence in the
+  rule above.
 
 For feature-branch pushes the watcher's job is lighter: confirm the push landed on origin
 (`git rev-list --left-right --count HEAD...origin/<branch>` returns `0 0`) and stop. No CI run to wait for; no failure
-to diagnose. The merge-to-main step (via `quickmerge`'s eventual promotion or a manual `staging` PR) is when the full
-CI gate fires — watcher discipline kicks in fully at that step.
+to diagnose. The merge-to-main step (via `quickmerge`'s eventual promotion or a manual `staging` PR) is when the full CI
+gate fires — watcher discipline kicks in fully at that step.
 
 If the workflow trigger config changes (e.g. CI starts firing on `live-defi-rollout` pushes), this section + the
 workflow yaml become the joint SSOT — update both in lockstep so the rule stays accurate.
