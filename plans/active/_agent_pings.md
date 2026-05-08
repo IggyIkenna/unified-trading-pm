@@ -28,3 +28,5 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 # Active pings
 
 _(empty — STARTED pings ack'd 2026-05-08 05:25 UTC for Tabs 4 (05:11), 5/6/8 (05:22), 7 (05:23). All clean boots, no flags. 5 tabs IN FLIGHT.)_
+
+[2026-05-08 05:55 UTC] audit-followups-tab — DONE Tab 8 (audit_followups_2026_05_07.plan.md ARCHIVE-READY); all 6 anomalies closed PM@8286cf4 / 8d33d97 / b9593b2 / 728a63f, pushed to live-defi-rollout. Going quiet.
