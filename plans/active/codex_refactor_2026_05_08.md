@@ -469,22 +469,32 @@ drift.
   intentional forwarders with incoming SSOT-pointer contracts that require expansion (not deletion) to clear. Acceptance
   is moved to B.4-bis when expansion lands.
 
-### Phase B.5 — SOURCE_COVERAGE_START dedup — PARALLEL — P2
+### Phase B.5 — SOURCE_COVERAGE_START dedup — PARALLEL — P2 — SHIPPED
 
-- [ ] [SCRIPT] P2. UAC `unified_api_contracts.sports.SOURCE_COVERAGE_START` is the canonical SSOT. Codex docs duplicate
-      the values in 4 places.
+- [x] [SCRIPT] P2. UAC `unified_api_contracts.sports.SOURCE_COVERAGE_START` is the canonical SSOT. Codex docs duplicate
+      the values in 4 places. **SHIPPED 2026-05-08** — added canonical literal-values table to availability-manifest doc
+      (under § "Source coverage start dates (canonical) — `SOURCE_COVERAGE_START` SSOT", new sub-section between
+      Sparseness and Data Freshness); cross-linked from sports-data-source-coverage-matrix.md (§2.6 odds_api line),
+      mtds-data-source-coverage-matrix.md (top-of-file Cross-refs block), and pipeline-coverage-matrix.md (both SPORTS
+      tables — instruments-service §1 + MTDS §2). Verified via grep: only one doc enumerates the literal dates
+      (`api_football=2018-01-01`, `footystats=2019-01-01`, `understat=2015-01-16`, `transfermarkt=2019-01-01`,
+      `open_meteo=2019-03-02`, `odds_api=2020-06-06`, `soccer_football_info=2020-01-01` override, `api_football`
+      per-fixture=2020-06-06 override). `sports-schema-paths.md` already deleted in Phase D.2 (PM@e641f3f1).
 
   **Files to update**:
-  - [ ] `02-data/availability-manifest-and-data-status.md` — keep ONE table here as canonical reference (already
-        comprehensive).
-  - [ ] `02-data/sports-data-source-coverage-matrix.md:43-50` — replace explicit dates with cross-link to
-        availability-manifest doc.
-  - [ ] `02-data/sports-schema-paths.md:163-172` — same.
-  - [ ] `02-data/mtds-data-source-coverage-matrix.md` — add cross-link if not present.
-  - [ ] All consumer docs: cite via cross-link, never redeclare values.
+  - [x] `02-data/availability-manifest-and-data-status.md` — canonical literal-values table added (§ Source coverage
+        start dates (canonical)).
+  - [x] `02-data/sports-data-source-coverage-matrix.md:219` — explicit `SOURCE_COVERAGE_START 2020-06-06` replaced with
+        cross-link to availability-manifest § Source coverage start dates.
+  - [x] `02-data/sports-schema-paths.md:163-172` — N/A, doc deleted in Phase D.2.
+  - [x] `02-data/mtds-data-source-coverage-matrix.md` — cross-link added in top-of-file Cross-refs block (UAC SSOT +
+        codex literal-values mirror callout).
+  - [x] `02-data/pipeline-coverage-matrix.md` — both SPORTS tables (instruments-service §1, MTDS §2) replaced with
+        cross-link blockquotes pointing at the canonical table.
+  - [x] All consumer docs: cite via cross-link, never redeclare values.
 
   **Acceptance**: only ONE codex doc enumerates the literal `SOURCE_COVERAGE_START` values; all others link to it. UAC
-  code remains the runtime SSOT.
+  code remains the runtime SSOT. **MET**.
 
 ---
 
