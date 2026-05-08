@@ -31,7 +31,7 @@ view modes across admin + client surfaces. One component, four view modes, three
 **Why one component.** Tiers differ only in which rows are visible, which columns/actions render, and whether mutations
 are allowed. Every tier shares the same `<FamilyArchetypePicker>`, venue-set chip, maturity-phase badge, product-routing
 badge, and live P&L spark. Single primitive → uniform grammar → easier refactoring → orphan audit (see
-[`../../06-coding-standards/orphan-audit.md`](../../06-coding-standards/orphan-audit.md)) sees one page per viewMode,
+[`../../04-architecture/orphan-audit.md`](../../04-architecture/orphan-audit.md)) sees one page per viewMode,
 all reachable.
 
 ---
@@ -227,7 +227,7 @@ flows into the catalogue and back.
 ## §8 — Orphan-audit compliance
 
 The rebuilt surface follows the orphan-audit policy (see
-[`../../06-coding-standards/orphan-audit.md`](../../06-coding-standards/orphan-audit.md)):
+[`../../04-architecture/orphan-audit.md`](../../04-architecture/orphan-audit.md)):
 
 - `/services/strategy-catalogue` **stays mounted** — it was a DART sub-route chip, now becomes the Tier 3 page.
   `SERVICE_REGISTRY.dart.subRoutes[]` keeps its `strategy-catalogue` chip (label: "Catalogue") pointing at the same URL
@@ -396,5 +396,5 @@ authoritative admin surface — there is no separate "admin catalogue editor" pa
   primitive, not a 6th tile.
 - [`../../14-playbooks/shared-core/odum-paper-client-zero.md`](../../14-playbooks/shared-core/odum-paper-client-zero.md)
   — the series source for FOMO tearsheets.
-- [`../../06-coding-standards/orphan-audit.md`](../../06-coding-standards/orphan-audit.md) — policy this surface
+- [`../../04-architecture/orphan-audit.md`](../../04-architecture/orphan-audit.md) — policy this surface
   complies with.

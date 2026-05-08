@@ -232,7 +232,7 @@ that middleware fails, the token confirm alone is not a security boundary.
 
 The four `/api/onboarding/*` route handlers do not appear on any nav surface (they're fetched programmatically from the
 Documents panel). They are in the orphan-audit whitelist under the `API-HANDLER` category per
-[`orphan-audit.md` § Whitelist Triage Rule](orphan-audit.md#whitelist-triage-rule). Both `list` and `delete` were added
+[`orphan-audit.md` § Whitelist Triage Rule](../04-architecture/orphan-audit.md#whitelist-triage-rule). Both `list` and `delete` were added
 2026-04-21 alongside this plan. `reset` was deleted (replaced by the per-doc `delete` endpoint).
 
 ---
@@ -263,4 +263,4 @@ Events are fire-and-forget (`void recordAdminEvent(...)`) so the response never 
   framework adapter to discover React Router routes.~~ **Shipped 2026-04-22** in deployment-ui `e5d2355`. React Router
   variant at `deployment-ui/scripts/orphan-audit.ts` discovers `<Route path="...">` JSX; same whitelist / baseline /
   blocking contract as the Next.js variant. Triage surfaced 2 real orphans (`/chaos`, `/client-subscriptions`) — wired
-  into `Header.tsx` admin nav. See `codex/06-coding-standards/orphan-audit.md §8`.
+  into `Header.tsx` admin nav. See `codex/04-architecture/orphan-audit.md §8`.
