@@ -261,10 +261,12 @@ would not have supported cluster-validation cleanly; option (c) was open but not
 
 ### Adapter migration (MTDS — Polymarket + Kalshi)
 
-- [ ] [SCRIPT] P0. Polymarket adapter (`polymarket_adapter.py:454–602`): read lifecycle from instruments-service; reject
+- [x] [SCRIPT] P0. Polymarket adapter (`polymarket_adapter.py:454–602`): read lifecycle from instruments-service; reject
       ticks outside `[market_created_at, settlement_time]` window per CLAUDE.md "Prediction market lifecycle timing"
       rule. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:lifecycle-ingestion writer in instruments-service (Phase
-      1) → BLOCKER CLEARED 2026-05-08 by instruments-service@`98bb167` + `b904785`]
+      1) → BLOCKER CLEARED 2026-05-08 by instruments-service@`98bb167` + `b904785`] **SHIPPED mtds@`7643a5c`**
+      "feat(predictions): Polymarket adapter per-market lifecycle gating + tests" — `_LifecycleBounds` at
+      `polymarket_adapter.py:135` + `_load_lifecycles_from_gcs` at `:834` confirmed on origin.
       **WIP-READY ON-DISK 2026-05-08 (Tab 1 instruments-live-tab — pending main-agent commit + push)**:
       `market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py` (~268-line diff vs HEAD)
       adds frozen `_LifecycleBounds` dataclass + `_load_lifecycles_from_gcs(date)` static method reading
@@ -285,8 +287,10 @@ would not have supported cluster-validation cleanly; option (c) was open but not
       validation kwargs at `record_captured` for the bundled `prediction_canonical_question_group` data_type**
       DEFERRED to Q1 → option (a) writer migration (Ikenna-side cross-cutting helper signature lock first); Phase 2
       adapter-level work scope correctly stops at the per-row column emission + lifecycle gate.
-- [ ] [SCRIPT] P0. Kalshi adapter (`kalshi_adapter.py:242–269`): same migration. [AUDIT 2026-05-07: BLOCKED-ON
+- [x] [SCRIPT] P0. Kalshi adapter (`kalshi_adapter.py:242–269`): same migration. [AUDIT 2026-05-07: BLOCKED-ON
       predictions_master:Phase 1 lifecycle ingestion → BLOCKER CLEARED 2026-05-08 by instruments-service@`98bb167`]
+      **SHIPPED mtds@`e8a6903`** "feat(predictions): Kalshi adapter per-market lifecycle gating + tests" —
+      `_load_lifecycles_from_gcs` at `kalshi_adapter.py:369` confirmed on origin.
       **WIP-READY ON-DISK 2026-05-08 (Tab 1 — pending main-agent commit + push)**:
       `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py` (~233-line diff vs HEAD)
       adds module-level `_coerce_datetime` + `_extract_lifecycles_from_dataframe` + `_extract_lifecycles_from_records`
@@ -335,8 +339,11 @@ would not have supported cluster-validation cleanly; option (c) was open but not
       manifest re-bundling lands here (MTDS orchestrator) or stays implicit via the per-row `data_type="trades"`
       shape with `canonical_question_group` attached as a separate manifest column. Flagged for plan-of-record Q&A
       not chat — see `## Open questions` below.
-- [ ] [TEST] P0. MTDS unit tests: lifecycle gating (pre-created tick rejected, post-settled tick rejected); cluster
+- [x] [TEST] P0. MTDS unit tests: lifecycle gating (pre-created tick rejected, post-settled tick rejected); cluster
       validation per `(canonical_question_group, day)`. [AUDIT 2026-05-07: BLOCKED-ON above adapter migrations]
+      **SHIPPED mtds@`7643a5c` + mtds@`e8a6903`** — 16 lifecycle-gating tests on origin (lifecycle-gating half
+      complete; cluster-validation tests for the bundled `prediction_canonical_question_group` data_type remain
+      deferred to the orchestrator-level Q1 option (a) writer migration).
       **WIP-READY ON-DISK 2026-05-08 (Tab 1 — pending main-agent commit + push)**: 16 lifecycle-gating tests covering
       both adapters (7 polymarket + 9 kalshi, all GREEN under `pytest -v` — see WIP-READY annotations on the two
       adapter todos above for the per-test list). Cluster-validation tests for the bundled

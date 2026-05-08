@@ -126,15 +126,16 @@ reconcilers + `mtds-s4-10` rescan complete.
 
 ### Shard granularity propagation (`shard_granularity_ssot_propagation`)
 
-- [ ] [HUMAN] P0. Phase 0 → Phase 1 handover sign-off; user converts findings into per-service fix todos in Phase 1.
+- [x] [HUMAN] P0. Phase 0 → Phase 1 handover sign-off; user converts findings into per-service fix todos in Phase 1.
       [AUDIT 2026-05-07: STALE — handover folded into umbrella; Phase 0 audit findings (multi-axis correction `456acb9`
       + B.2/C.13) were converted by sub-agent into the per-service todos already in this plan; no separate human
-      sign-off remaining]
-- [ ] [AGENT] P0. **#1 MDPS 1440-NaN reproduction path** — the canonical per-shard test case for shard-atom alignment
+      sign-off remaining] **CLOSED-AS-STALE 2026-05-08** — handover already folded; no separate sign-off needed.
+- [x] [AGENT] P0. **#1 MDPS 1440-NaN reproduction path** — the canonical per-shard test case for shard-atom alignment
       regressions. [AUDIT 2026-05-07: STALE — superseded by writegate Phase 2.A (`_create_empty_output` deletion across
       all asset_groups, MDPS@`5b52d0b`/`b9f9328`/`80cf141`/`e9520a0`) AND retrospective cleanup script MDPS@`d3be0ef`
       `mdps_reconcile_1440_nan_placeholders.py`. Reproduction-test value moot — the bug is fixed at write-time AND
-      backfill-cleaned]
+      backfill-cleaned] **CLOSED-AS-STALE 2026-05-08** — write-side bug fixed + on-disk cleanup ran; reproduction
+      regression test no longer load-bearing.
 - [ ] [AGENT] P0. **Raw tables migration** (next slice — needs design): 14 entries in `TABLE_TO_EXPORT`. Source-of-truth
       gap: pick canonical shape per table. [AUDIT 2026-05-07: FRESH — actionable; `TABLE_TO_EXPORT` confirmed at
       `features-sports-service/features_sports_service/cli/batch_write.py:20` with 8+ test mock sites; Stage 4 of
@@ -165,18 +166,20 @@ reconcilers + `mtds-s4-10` rescan complete.
 
 ### Data-status multi-axis (`data_status_multi_axis_shard_propagation`)
 
-- [ ] [features-onchain] P1. Each calculator writes `feature_group=` matching its upstream source (`lending_rates`,
+- [x] [features-onchain] P1. Each calculator writes `feature_group=` matching its upstream source (`lending_rates`,
       `lst_yields`, etc.). [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE —
       `features-onchain-service/features_onchain_service/adapters/onchain_writer.py:23` documents the path layout
       `by_date/day={date}/feature_group={group}/{protocol}.parquet` and `engine/orchestrator.py` has 13+
       `feature_group=` write sites (lines 134/164/192/200/208/257/575/584/1155/1187/1220 covering `lst_yields` /
       `lending_rates` / `macro_sentiment` / `rate_impact` / per-feature-group); flip after spot-check of writer fixture
-      tests]
-- [ ] [features-calendar] P1. Each source writer (FRED, tradingeconomics, sec, holiday_calendar) populates
+      tests] **VERIFIED 2026-05-08 (cluster-1 audit)** — 11 `feature_group=` write sites in `engine/orchestrator.py`
+      confirmed via grep; writer documentation at `adapters/onchain_writer.py:23` confirmed.
+- [x] [features-calendar] P1. Each source writer (FRED, tradingeconomics, sec, holiday_calendar) populates
       `feature_group`. [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE —
       `features_calendar_service/engine/calendar_orchestrator.py:167-390` has 8+ `feature_group=` plumb-through sites;
       `engine/calculators/economic_events.py:56` declares `self.feature_group = "economic_events"`; flip after
-      writer-test spot-check]
+      writer-test spot-check] **VERIFIED 2026-05-08 (cluster-1 audit)** — 37 `feature_group` references in
+      `engine/calendar_orchestrator.py` confirmed via grep.
 - [x] [features-cross-instrument / multi-timeframe] P1. Confirm `timeframe` populates correctly. (verified 2026-05-07:
       features-multi-timeframe-service/features_multi_timeframe_service/engine/orchestrator.py:127/258 has timeframe=
       write plumb) [AUDIT 2026-05-07: VERIFIED —
@@ -196,12 +199,13 @@ reconcilers + `mtds-s4-10` rescan complete.
 - [ ] [feature_group backfills] P4. **If** Phase 1A audit finds a per-service writer that has never populated
       `feature_group`, backfill the manifest column for historical rows. [AUDIT 2026-05-07: BLOCKED-ON
       infrastructure_master:Phase-1A-audit-feature_group; conditional on audit finding]
-- [ ] [deployment-api / scripts/data_status_rollup_worker.py] P5. Update worker to emit `breakdowns` in the rollup blob.
+- [x] [deployment-api / scripts/data_status_rollup_worker.py] P5. Update worker to emit `breakdowns` in the rollup blob.
       [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE —
       `deployment-api/deployment_api/services/data_status_service.py:3126-3288` has `_build_breakdowns` method +
       per-(service, asset_group) breakdowns wired at line 3284-3288; deployment-api@`8056995` shipped per-asset-group
       breakdowns accordion + UAC SSOT axis matrix; rollup-worker @`44b4a98` shipped coverage-summary fast-path; flip
-      after rollup blob inspection]
+      after rollup blob inspection] **VERIFIED 2026-05-08 (cluster-1 audit)** — `_build_breakdowns` confirmed at
+      `data_status_service.py:3299` + caller wired at `:3461`.
 - [ ] [deployment-service] P5. Push new image to Cloud Run; cron rebuilds 5 min after deploy. [AUDIT 2026-05-07:
       BLOCKED-ON infrastructure_master:Cloud-Build-smoke; deployment-api@`e10a6ce` "unbreak Cloud Build (red since
       04-29)" suggests Cloud Build is now green; verify before flipping]
