@@ -191,6 +191,13 @@ isProject: false
 
 # MTDS Databento path-streaming successor plan (2026-05-07)
 
+> **Fold-into-umbrella banner 2026-05-08**: this plan's Phases 1-4 overlap with the MTDS-streaming half of the
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](live_pipeline_mtds_mdps_features_2026_05_08.plan.md) umbrella's Phase
+> 3-3.5 (per-venue connection-pool + WS reconnect storm). Per the 2026-05-08 audit (Crit 6 GAP — completion-pointer):
+> this plan is the **MTDS-Databento-path-streaming sub-plan** of the live-pipeline umbrella; the umbrella's §
+> "Cross-plan coordination" explicitly cross-references this plan with banner-mutually directive. When this plan ships
+> Phases 2-4, its todos satisfy the umbrella's Phase 3.5d success-gate row.
+
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation 2026-05-08**
 >
 > [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase 3 rolls
