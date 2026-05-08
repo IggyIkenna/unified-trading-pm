@@ -6,12 +6,6 @@ last_updated: 2026-05-01
 scope: [engineer, admin]
 ---
 
-<!-- POST_PLAN_BANNER_2026_05_06_FINAL -->
-
-> **Post-2026-05-06** — read [`../POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md) before code/doc
-> changes informed by this doc. Active plans: writegate-honest-coverage, predictions-canonical_question_group,
-> data-status-multi-axis-shard. If this doc disagrees with active plans, the plans win. Flag conflicts to user.
-
 # Backfill completion playbook
 
 Goal: every asset group at 100% honest coverage for the instrument & market-data pipelines. "Honest" means `captured` or
@@ -163,7 +157,10 @@ What to check before kicking off Phase 1 sports work:
 - **Drilldown UI + endpoints** — [02-data/data-status-drilldown.md](../02-data/data-status-drilldown.md).
 - **Sports data-source coverage matrix + prediction-vs-reference league split** —
   [02-data/sports-data-source-coverage-matrix.md](../02-data/sports-data-source-coverage-matrix.md).
-- **Sports GCS path SSOT + phantom audit** — UAC `unified_api_contracts.sports.gcs_paths` (`candidate_parquet_paths`, `SPORTS_DATA_TYPE_TO_FOLDER`, `SPORTS_DATA_TYPE_LAYOUT`). Phantom-audit recipe: [02-data/availability-manifest-and-data-status.md](../02-data/availability-manifest-and-data-status.md) § "Phantom audit — re-runnable recipe".
+- **Sports GCS path SSOT + phantom audit** — UAC `unified_api_contracts.sports.gcs_paths` (`candidate_parquet_paths`,
+  `SPORTS_DATA_TYPE_TO_FOLDER`, `SPORTS_DATA_TYPE_LAYOUT`). Phantom-audit recipe:
+  [02-data/availability-manifest-and-data-status.md](../02-data/availability-manifest-and-data-status.md) § "Phantom
+  audit — re-runnable recipe".
 - **Sports adapter dependency order (api-football T0)** —
   [02-data/sports-adapter-dependency-order.md](../02-data/sports-adapter-dependency-order.md).
 - **DeFi data type catalog** — [02-data/defi-data-types-catalog.md](../02-data/defi-data-types-catalog.md).
