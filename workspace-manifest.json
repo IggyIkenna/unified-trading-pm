@@ -894,7 +894,7 @@
         }
       ],
       "github_url": "https://github.com/IggyIkenna/features-multi-timeframe-service",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 57,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
