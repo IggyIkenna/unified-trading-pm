@@ -104,6 +104,38 @@ out of scope today.
    (`UAC` / `UTL` / `MTDS` / `deployment-service`), add an `--include <repo>` line in
    `create-code-tarballs.sh` or use `--asset-group X` to include the right scope.
 
+## features-service consolidation (2026-05-08)
+
+The pre-2026-05-08 layout had 8 per-family launchers
+(`launch-features-onchain-vm.sh`, `launch-features-volatility-vm.sh`,
+`launch-features-cross-instrument-vm.sh`, `launch-features-sports-vm.sh`,
+`launch-features-calendar-vm.sh`, `launch-features-commodity-vm.sh`,
+`launch-features-delta-one-vm.sh`, `launch-features-multi-timeframe-vm.sh`).
+
+Per [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md)
+Phase 8A, those 8 launchers collapse to a single
+`deployment-service/scripts/vm/launch-features-vm.sh` parameterised by
+`--feature-family` + `--asset-group`. The consolidated launcher:
+
+1. Reads `--feature-family` from its argv + validates against the UAC
+   `FeatureFamily` StrEnum (8 members).
+2. Reads `--asset-group` per the workspace VM-Naming convention.
+3. Composes the VM name as
+   `features-{asset_group_lower}-{feature_family}-{ts}` —
+   e.g. `features-defi-onchain-20260508-152400`. The `features-` prefix
+   is registered ONCE in `VM_PREFIX_TO_BUCKET`, replacing the 8 per-family
+   prefixes that would otherwise be needed.
+4. Boots with `python -m features_service --feature-family <X> ...` per
+   the dispatcher contract in
+   [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+
+**Tarball impact**: `create-code-tarballs.sh --asset-group X` includes the
+single `features-service/` repo (rather than the 8 prior `features-*-service`
+repos). The consolidated tarball is smaller (deduplicated boilerplate +
+shared common/ directory) and faster to refresh.
+
+**Architecture SSOT**: [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+
 ## Migration in flight (2026-05-07)
 
 29 ad-hoc VM launchers + 1 dashboard launcher live outside `deployment-service/scripts/vm/`:
