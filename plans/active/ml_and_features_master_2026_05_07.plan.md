@@ -171,7 +171,7 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
 
 ## Open questions
 
-### Q1 — [ml-features-phase2a-tab, 2026-05-08 07:50 UTC] 🟡 BLOCKED — ESCALATED TO OPERATOR
+### Q1 — [ml-features-phase2a-tab, 2026-05-08 07:50 UTC] ✅ RESOLVED — operator picked (b) Defer per features-repo-consolidation absorption
 
 **Main agent escalation note 2026-05-08 07:55 UTC**: This is a strategic-scope call (defer/ship/contract- change), not a
 technical answer main can make autonomously. Surfaced to operator chat as case-5 BIG (work- split affecting + UTL
@@ -240,9 +240,43 @@ collision risk against parallel agents, for zero immediate correctness value.
 Continuing meanwhile with: per-service compute-boundary inventory doc (the 8-service map of where the wire would land),
 so whichever direction the operator picks, the next agent (or this one) can ship it without re-scanning.
 
----
+#### A1 — [main, 2026-05-08 ~10:30 UTC]
 
-## Phase 1 — UAC feature-DAG SSOT + UTL foundations (was: feature_dag_uac_ssot_and_features_coverage)
+**Status**: ✅ RESOLVED — operator (Harsh) picked **(b) Defer Tab 12**, with stronger reasoning than Tab 12's original
+proposal: the per-service wire-in approach itself is no longer the plan.
+
+**Why deferred** — Ikenna's plan-consolidation work (PM@`78918e1` 2026-05-08) shipped a new plan
+[`features_repo_consolidation_2026_05_08.plan.md`](features_repo_consolidation_2026_05_08.plan.md) (P0, deadline
+2026-05-13) that **restructures the entire features-\* layer**: merges all 8 features-\*-service repos into a single
+`features-service` repo with sub-packages per family. As part of that consolidation, **Phase 5 lifts 4 cross-family
+helpers into UTL** — including the exact one Tab 12 was wiring:
+
+> "(c) **`LookaheadBiasError` strict-mode gate** — per-row enforcement that
+> `input.available_at <= target_ts - horizon`. Currently fires in 3 of 8 features-\* repos with subtle differences
+> in horizon resolution; **lift into a single `assert_no_lookahead_for_feature_group(...)` helper** that reads horizon
+> from the UAC feature-DAG SSOT (per `ml_and_features_master` Phase 1A)."
+> — `features_repo_consolidation_2026_05_08.plan.md` Phase 5 §(c)
+
+**What this means concretely**:
+
+1. **Per-service wire-in is no longer the plan.** The helper goes ONCE into UTL `feature_service_base/` at the
+   consolidated layer, not 8 times into 8 separate service repos.
+2. **Tab 12's three sub-problems get resolved by the consolidation**:
+   - Sub-problem A (pd vs pl mismatch): single UTL helper signature designed once at the consolidated layer.
+   - Sub-problem B (`target_ts` plumbing): designed once at the UTL layer rather than plumbed through 8 different
+     calculator hierarchies.
+   - Sub-problem C (the 5-min UTL contract change to accept pd|pl): folds naturally into the Phase 5 lift.
+3. **Sequence going forward**:
+   1. Ikenna's writegate Phase 2.D ships adapter-side `available_at` stamping.
+   2. `features_repo_consolidation_2026_05_08` Phases 0-4 merge 8 repos → 1 (`features-service`).
+   3. Consolidation Phase 5 lifts the helper into UTL `feature_service_base/`.
+   4. `live_pipeline_mtds_mdps_features_2026_05_08` wires the consolidated service into the live runtime.
+
+**Tab 12's deliverable** — the per-service compute-boundary inventory map produced during the lunch-break wait — is
+**still valuable** as input to `features_repo_consolidation` Phase 0 pre-audit. Cross-reference for the consolidation
+plan to consume.
+
+**Tab 12 status**: ✅ DONE in registry; going-quiet honored. Q1 resolution is the durable artifact.
 
 > Source: `plans/archive/feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md`. Phase 1A
 >
@@ -310,6 +344,41 @@ Closes the sports-vocab gap (36 sports feature_groups in `EXPECTED_FEATURE_GROUP
 > doesn't amplify silent corruption.
 
 ### 2A — Replace per-service DAGs with UAC import + wire UTL lookahead helper
+
+#### Per-service compute-boundary inventory (Tab 12 prep, 2026-05-08 07:55 UTC)
+
+Probed all 8 candidate services from the Tab 12 spawn prompt to map the cleanest single wire-in site per service.
+Findings advisory until Q1 (above) resolves direction.
+
+**Tab 12 spawn-prompt's "8 services" appears to be 5 services + 3 categorical mismatches:**
+
+- **In scope (5)** — services in UAC `EXPECTED_FEATURE_GROUPS_BY_SERVICE`: `features-onchain-service`,
+  `features-delta-one-service`, `features-sports-service`, `features-volatility-service`,
+  `features-cross-instrument-service`.
+- **Out of scope (3)** — `market-data-processing-service` produces candles (raw ticks → OHLCV bars), not feature_groups;
+  `strategy-service` consumes feature_groups to produce trade decisions, doesn't produce them; the 3rd "+ 4 others" slot
+  in the spawn prompt likely intended to round to 8 but no other service produces feature_groups per the UAC registry.
+- **CLAUDE.md "LookaheadBiasError raised loud at every features-\* + MDPS compute" rule context**: applies to MDPS's
+  candle-aggregation _output_ availability stamping (writer-side), NOT the input-side
+  `assert_no_lookahead_for_feature_group` helper which is feature_group-keyed. Strategy-side lookahead validation uses
+  the existing row-level `PointInTimeEnforcer.check_observation_timestamp` API, not the new feature_group helper.
+
+**Per-service wire-site map (5 in-scope services):**
+
+| Service                           | UAC fg count | Base file:line                                                                                                                                                                              | Native df | `feature_group` on base?                                            | Wire complexity                                                                                                                                     | Status             |
+| --------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| features-delta-one-service        | 33           | [`base_calculator.py:90`](../../../features-delta-one-service/features_delta_one_service/app/calculators/base_calculator.py#L90) `BaseFeatureCalculator.calculate(df, symbol)`              | **pl**    | ✅ abstract property (`feature_group`)                              | **Clean**: 1 line in `calculate` after `validate_input` BEFORE `_calculate_features`.                                                               | Ready (pending Q1) |
+| features-cross-instrument-service | 0 (stub)     | [`base_calculator.py:101`](../../../features-cross-instrument-service/features_cross_instrument_service/app/calculators/base_calculator.py#L101) `BaseFeatureCalculator.calculate(df, ...)` | **pl**    | ✅ abstract property (line 58)                                      | **Clean**: same shape as delta-one. Helper no-ops because UAC registry empty stub.                                                                  | Ready (pending Q1) |
+| features-onchain-service          | 12           | [`base.py:93`](../../../features-onchain-service/features_onchain_service/app/calculators/base.py#L93) `OnChainCalculator.calculate(df, **params)`                                          | pd        | ❌ via `@FeatureCalculatorRegistry.register("name")` decorator only | **Medium**: needs (i) `feature_group` class-attr extraction from registry, (ii) `pl.from_pandas(df)` conversion or UTL helper variant accepting pd. | Ready (pending Q1) |
+| features-sports-service           | 36           | TBD — calculator base.py not at canonical path; per-`*_calculator.py` likely                                                                                                                | mixed     | TBD                                                                 | **Hard-blocked** by Phase 1A.3 sports vocabulary alignment todo above.                                                                              | Blocked-deeper     |
+| features-volatility-service       | 0 (stub)     | No `app/calculators/` populated; `BuilderRegistry` placeholder per audit 2026-05-07                                                                                                         | —         | —                                                                   | **No-op**: no calculators registered, wire would silently no-op until builders land.                                                                | No-op              |
+
+**Net wire surface if Q1 resolves to (a) "ship now":** 3 base-class edits (delta-one, cross-instrument, onchain) + 3
+unit tests = ~6 small commits, ~1.5h. Folding (c) into (a) (lift UTL helper to accept pd or pl) drops the medium onchain
+edit to clean → total ~1h. Sports + volatility deferred until upstream prereqs ship (Phase 1A.3 + builder registration
+respectively).
+
+**Original Phase 2A todos below remain unflipped** until Q1 resolves direction:
 
 - [ ] [AGENT] P1. **features-onchain-service**: delete local feature_group → required_inputs DAG (if any) + call
       `assert_no_lookahead_for_feature_group(feature_group, inputs_df, target_ts)` at each calculator's input-load

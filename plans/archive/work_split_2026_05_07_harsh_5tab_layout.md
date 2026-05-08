@@ -1229,12 +1229,22 @@ REPORT-BACK: 10 small commits per CLAUDE.md cadence (1 per launcher migration); 
 conditional rule.
 ```
 
-#### Tab 12 — `ml-features-phase2a-tab` 🟢 IN FLIGHT (P0, ~4-6h, 8 service touches)
+#### Tab 12 — `ml-features-phase2a-tab` ✅ DONE 2026-05-08 — DEFERRED per features-repo-consolidation absorption
 
-- **Started**: 2026-05-08 07:41 UTC (STARTED ping ack'd 07:43 UTC; clean boot, no flags).
-- **Plan-of-record**: [`ml_and_features_master_2026_05_07.plan.md`](ml_and_features_master_2026_05_07.plan.md) Phase 2A.
-- **Scope**: wire `assert_no_lookahead_for_feature_group` into 8 services (features-onchain, features-sports, MDPS,
-  strategy-service + 4 others) at compute entry points, strict-mode raise, per-service unit test.
+- **Resolved by main + operator 2026-05-08 ~10:30 UTC** — Tab 12's Q1 (scope ambiguity) escalated to operator during
+  lunch; resolved with operator pick **(b) Defer**. See A1 in
+  [`ml_and_features_master_2026_05_07.plan.md`](ml_and_features_master_2026_05_07.plan.md) `## Open questions` Q1
+  for full reasoning.
+- **Why deferred (stronger than Tab 12's original (b))**: Ikenna's plan consolidation (PM@`78918e1`) shipped
+  [`features_repo_consolidation_2026_05_08.plan.md`](features_repo_consolidation_2026_05_08.plan.md) (P0, deadline
+  2026-05-13) which **restructures the per-service approach itself**. Phase 5 of consolidation lifts
+  `assert_no_lookahead_for_feature_group` into UTL `feature_service_base/` at the consolidated `features-service`
+  layer — single point, not 8 per-service wires.
+- **Tab 12 deliverable preserved**: the per-service compute-boundary inventory map (what Tab 12 worked on during the
+  lunch-break wait) is durable input for `features_repo_consolidation_2026_05_08` Phase 0 pre-audit + Phase 5 lift.
+  Cross-reference from the consolidation plan to consume.
+- **Started**: 2026-05-08 07:41 UTC; **Q1 raised**: 07:50 UTC; **Q1 resolved**: ~10:30 UTC. **Going quiet** per
+  spawn protocol.
 
 **How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 12 tasks"_.
 

@@ -27,6 +27,4 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-[2026-05-08 07:50 UTC] ml-features-phase2a-tab — Q1 🟡 BLOCKED [ESCALATED-TO-OPERATOR 07:55 UTC] scope ambiguity
-strategic — Tab 12 continuing with inventory map meanwhile; see ml_and_features_master_2026_05_07.plan.md ## Open
-questions Q1
+_(empty — Tab 12 Q1 ✅ RESOLVED ~10:30 UTC; operator picked (b) Defer per features_repo_consolidation_2026_05_08 absorption. All 12 spawned tabs ✅ DONE today (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14). Only Tab 2 (cefi-babysit) still IN FLIGHT.)_
