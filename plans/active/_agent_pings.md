@@ -28,4 +28,3 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 # Active pings
 
 [2026-05-08 07:50 UTC] ml-features-phase2a-tab — Q1 🟡 BLOCKED [ESCALATED-TO-OPERATOR 07:55 UTC] scope ambiguity strategic — Tab 12 continuing with inventory map meanwhile; see ml_and_features_master_2026_05_07.plan.md ## Open questions Q1
-[2026-05-08 08:20 UTC] lending-indices-relaunch-tab — ✅ DONE Tab 9 — VALIDATION block appended to issues/lending_indices_handler_bugs_2026_05_07.md. AAVE V3 ETH captured rows start exactly 2023-01-27 (53 captured @ T+123min, matching probe). Bug 1 RESOLVED end-to-end (UAC SSOT misdiagnosis). Bugs 1+3 fix shipped: UAC@6a64a56 + MTDS@c6bdf96 + IS@6ae50de all on origin. PM commits 69ebe5b + new VALIDATION commit LOCAL only — Q2 push deferred per operator 07:18 UTC. Going quiet.

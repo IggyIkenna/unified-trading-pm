@@ -950,7 +950,20 @@ REPORT-BACK:
   `git log --oneline live-defi-rollout`.
 ````
 
-#### Tab 9 — `lending-indices-relaunch-tab` 🟢 IN FLIGHT — scope extended to bug-fix (operational + code, ~30min + ~2-3h)
+#### Tab 9 — `lending-indices-relaunch-tab` ✅ DONE 2026-05-08 — scope extended + validated end-to-end
+
+- **Verified by main 2026-05-08 08:21 UTC** — VALIDATION-2026-05-08 block in
+  [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md);
+  Tab 9 PM commit rebased + pushed as `e524ad7` to origin/live-defi-rollout. UAC + MTDS + IS fix commits
+  also on origin (UAC@`6a64a56` + MTDS@`c6bdf96` + IS@`6ae50de`).
+- **VM validation result at T+123min**: AAVE V3 ETH captured rows start exactly **2023-01-27** (53 captured
+  rows over 2023-01-27 → 2023-03-20). UAC fix end-to-end verified by real subgraph data — Bug 1 RESOLVED
+  as a UAC SSOT misdiagnosis (NOT a code bug).
+- **Going quiet** per spawn protocol.
+
+(Original Tab 9 history preserved below for audit reference.)
+
+#### Tab 9 (history) — scope extended to bug-fix (operational + code, ~30min + ~2-3h)
 
 > **🟢 UAC `chain_env.py:146` FIX LANDED 2026-05-08 at UAC@`6a64a56`** — Tab 9's diagnosis shipped:
 > `PROTOCOL_LAUNCH_DATES[("ETHEREUM", "AAVEV3")]` `"2022-03-14"` → `"2023-01-27"`. **Coordination mirror in
