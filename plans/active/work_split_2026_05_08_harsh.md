@@ -22,9 +22,9 @@ locked_since: 2026-05-08
 ## Why this split exists today
 
 - **15 days to live-DeFi cutover** (2026-05-23). Master plan
-  [`master_to_live_defi_2026_05_23`](master_to_live_defi_2026_05_23.plan.md) Group F + G are the gating ladder.
-  Harsh-side absorbs the implement-from-spec / mechanical / parallel-safe / single-repo-edits / test-execution /
-  launch-verify work that doesn't require cross-cutting design judgment.
+  [`master_to_live_defi_2026_05_23`](master_to_live_defi_2026_05_23.md) Group F + G are the gating ladder. Harsh-side
+  absorbs the implement-from-spec / mechanical / parallel-safe / single-repo-edits / test-execution / launch-verify work
+  that doesn't require cross-cutting design judgment.
 - **Yesterday's Harsh orchestration ledger finished** with 12 spawned tabs ✅ DONE (Tabs 3-14): deployment-api Phase 2
   endpoints, deploy-missing Phase 1 tarball-refresh, lending-indices Bug 1+2+3 fixes (Tab 5), defi-988 audit,
   mtds-databento path-streaming Phase 1, audit_followups, lending-indices VM relaunch validation, predictions Phase 1
@@ -41,6 +41,28 @@ locked_since: 2026-05-08
 - **Ping ledger (overnight)**: empty after rebase. `ml-features-phase2a-tab` Q1 ESCALATED-TO-OPERATOR was resolved this
   morning (operator picked option (b) — defer to features_repo_consolidation absorption). Beef-up sub-agent BLOCKED ping
   resolved via fast-forward rebase.
+
+## May-23 epic context (read first)
+
+The 2026-05-08 plans-restructure landed the **epic layer** at [`plans/epics/`](../epics/) above the granular masters
+(per [`plans_workspace_organization_2026_05_08.md`](plans_workspace_organization_2026_05_08.md) +
+[`plans/epics/README.md`](../epics/README.md)). 7 epics own the May-23 cutover targets:
+
+| Epic                                                                                | May-23 scope                              | Side ownership                       |
+| ----------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------ |
+| [`live_defi_rollout_may_23_2026`](../epics/live_defi_rollout_may_23_2026.epic.md)   | LIVE on real wallet — 3 carry archetypes  | Ikenna lead; Harsh implements pieces |
+| [`cefi_ml_may_23_2026`](../epics/cefi_ml_may_23_2026.epic.md)                       | LIVE on real capital — continuous ML CeFi | **Joint** (Harsh Tab 2 + Ikenna)     |
+| [`sp_prediction_may_23_2026`](../epics/sp_prediction_may_23_2026.epic.md)           | BATCH ML only                             | **Harsh lead** (Tab 2 + 5)           |
+| [`price_arbitrage_may_23_2026`](../epics/price_arbitrage_may_23_2026.epic.md)       | BACKTEST only                             | **Harsh lead** (Tab 5)               |
+| [`sports_ml_may_23_2026`](../epics/sports_ml_may_23_2026.epic.md)                   | BACKTEST only                             | **Harsh lead** (Tab 1 + 5)           |
+| [`prediction_markets_may_23_2026`](../epics/prediction_markets_may_23_2026.epic.md) | BACKTEST only                             | **Harsh lead** (Tab 1 + 5)           |
+| [`cross_cutting_may_23_2026`](../epics/cross_cutting_may_23_2026.epic.md)           | Workspace-wide                            | Both sides every tab                 |
+
+Harsh-side absorbs the implement-from-spec / mechanical / parallel-safe / single-repo / test-execution work for ALL 7
+epics; Ikenna-side owns the cross-cutting design + governance. The 4 BATCH/BACKTEST epics (sp_prediction +
+price_arbitrage + sports_ml + prediction_markets) are predominantly Harsh-side because they need full backtest pipeline
+runs + integration test matrices rather than judgment calls. Per [`plans/epics/README.md`](../epics/README.md): epics
+are **read-mostly** + don't duplicate sub-plans; this split assigns sub-plan tactical work, not epic-level deliverables.
 
 ## Working model
 
@@ -103,11 +125,12 @@ per-market_id lifecycle timestamps (`market_created_at`, `resolution_time`, `set
 because Phase 1 ingestion shipped 2026-05-07 (instruments-service@98bb167, MTDS@b904785) but Phase 2+3 (adapter
 migration + reader/feature/strategy consumers) was deferred.
 
-**Plan-of-record**: [`instruments_live_master_2026_05_08.plan.md`](../epics/instruments_live_master_2026_05_08.plan.md)
+**Plan-of-record**: [`instruments_live_master_2026_05_08.md`](../epics/instruments_live_master_2026_05_08.md)
 
-- [`predictions_master_2026_05_07.plan.md`](../epics/predictions_master_2026_05_07.plan.md) Phase 2+3 +
-  [`instruments_and_market_tick_data_completion_2026_05_01.plan.md`](instruments_and_market_tick_data_completion_2026_05_01.plan.md)
-  (catalog-aware writer-guard).
+- [`predictions_master_2026_05_07.md`](../epics/predictions_master_2026_05_07.md) Phase 2+3 +
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase 3.D.5
+  Wave 3 (catalog-aware writer-guard; archived parent
+  [`instruments_and_market_tick_data_completion_2026_05_01.md`](../archive/instruments_and_market_tick_data_completion_2026_05_01.md)).
 
 **Scope (4 items, P0-P1)**:
 
@@ -116,8 +139,8 @@ migration + reader/feature/strategy consumers) was deferred.
       phase: Cloud Scheduler cron config + audit job that reconciles per-asset_group catalog vs manifest at midnight +
       deployment-UI tab integration to surface live status. ~5 AI-days (1 per phase).
 - [ ] [SCRIPT] P0. **Predictions Phase 2 — MTDS Polymarket/Kalshi lifecycle gating + UMI tick provider data_type
-      rename** — per [`predictions_master_2026_05_07.plan.md`](../epics/predictions_master_2026_05_07.plan.md) Phase 2
-      deferred from Tab 10 yesterday. Per CLAUDE.md "Prediction market lifecycle timing": MTDS CLOB capture must respect
+      rename** — per [`predictions_master_2026_05_07.md`](../epics/predictions_master_2026_05_07.md) Phase 2 deferred
+      from Tab 10 yesterday. Per CLAUDE.md "Prediction market lifecycle timing": MTDS CLOB capture must respect
       lifecycle bounds (NO ticks before `market_created_at`, NO new ticks after `settlement_time`). Rename
       `umi_tick_provider.py:225` + `orchestrator.py:1990-1995` `data_type` → `prediction_canonical_question_group`.
       Per-market_id manifest rows + cluster-coverage gate. ~2 AI-days.
@@ -139,9 +162,11 @@ Ikenna touches DeFi adapters), deployment-ui (instruments-live tab integration; 
 
 - CLAUDE.md sections: "Prediction market lifecycle timing", "Per-asset-group shard-key matrix", "Honest absence vs fake
   placeholders", "Four-category empty-output decision", "Cluster validation MANDATORY at record_captured"
-- [`plans/epics/instruments_live_master_2026_05_08.plan.md`](../epics/instruments_live_master_2026_05_08.plan.md)
-- [`plans/epics/predictions_master_2026_05_07.plan.md`](../epics/predictions_master_2026_05_07.plan.md) Phase 2+3
-- [`plans/active/instruments_and_market_tick_data_completion_2026_05_01.plan.md`](instruments_and_market_tick_data_completion_2026_05_01.plan.md)
+- [`plans/epics/instruments_live_master_2026_05_08.md`](../epics/instruments_live_master_2026_05_08.md)
+- [`plans/epics/predictions_master_2026_05_07.md`](../epics/predictions_master_2026_05_07.md) Phase 2+3
+- [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md)
+  Phase 3.D.5 Wave 3 (catalog-aware writer-guard work; archived parent
+  [`instruments_and_market_tick_data_completion_2026_05_01.md`](../archive/instruments_and_market_tick_data_completion_2026_05_01.md))
 - [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
 - [`codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../../codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
 
@@ -176,10 +201,9 @@ Ikenna touches DeFi adapters), deployment-ui (instruments-live tab integration; 
 Tab 2's live-pipeline Phase 4-7 wiring. Tab 12 yesterday's deferred Phase 2A wires absorb into Phase 4-7 of THIS plan
 per resolved Tab 12 Q1.
 
-**Plan-of-record**: [`features_repo_consolidation_2026_05_08.plan.md`](features_repo_consolidation_2026_05_08.plan.md)
+**Plan-of-record**: [`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md)
 
-- [`ml_and_features_master_2026_05_07.plan.md`](../epics/ml_and_features_master_2026_05_07.plan.md) Phase 2A/2B +
-  Phase 3.
+- [`ml_and_features_master_2026_05_07.md`](../epics/ml_and_features_master_2026_05_07.md) Phase 2A/2B + Phase 3.
 
 **Scope (4 items, P0)**:
 
@@ -197,6 +221,17 @@ per resolved Tab 12 Q1.
       (operator picked option (b) — defer-into-consolidation). ~2 AI-days.
 - [ ] [SCRIPT] P0. **ml_and_features_master Phase 3 parquet column-pruning quick-win** — self-contained 1-3 day pure-win
       for ml-training-service. Memory + speed win on training reads. ~2 AI-days.
+- [ ] [LIVE-ML+SCRIPT] P0. **CeFi ML live-pipeline integration test + ML serving plumbing** — per
+      [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md). Joint with Ikenna Tab 2 design
+      (model_registry SSOT + hot-reload pattern). Harsh-side ships: (a) features-service ML inference handler consuming
+      the registry; (b) end-to-end integration test (live tick → live feature → live model inference → live strategy
+      decision → live execution → fill → P&L attribution) for one continuous-ML archetype across OKX + Binance + Bybit;
+      (c) live + batch backtest fidelity proof (2-year config grid → live config baseline per epic success criterion);
+      (d) per-trade model_version + model_artefact_uri tagging in execution events. ~4 AI-days.
+- [ ] [LIVE-ML+SCRIPT] P0. **sp_prediction full backtest pipeline run** — per
+      [`sp_prediction_may_23_2026.epic.md`](../epics/sp_prediction_may_23_2026.epic.md). 2-year batch backtest of CME
+      S&P swing high/low ML model (SP + BTC + calendar features). Pre-req: Tab 4 TradFi MDPS post-drain validation
+      green. Output: full backtest report with P&L attribution per archetype + per-feature SHAP attribution. ~2 AI-days.
 
 **Repos owned (collision boundary)**: features-onchain-service + features-sports-service + 6 other features-\* repos
 (all source repos for the consolidation; Tab 5 owns mechanical sweeps elsewhere — different repos), new
@@ -209,10 +244,10 @@ per resolved Tab 12 Q1.
 - CLAUDE.md sections: "ARCHITECTURE 2026-05-08 — Live pipeline" (features consolidation is the 3-5 day pre-req per the
   architecture decision), "Plans must capture full codebase impact upfront", "Post-Plan-Phase Codex Audit HARD RULE",
   "Shard-granularity SSOT" ([UAC] vs [UTL] vs [per-service] layer discipline)
-- [`plans/active/features_repo_consolidation_2026_05_08.plan.md`](features_repo_consolidation_2026_05_08.plan.md)
-- [`plans/epics/ml_and_features_master_2026_05_07.plan.md`](../epics/ml_and_features_master_2026_05_07.plan.md) Phase 2A
+- [`plans/active/features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md)
+- [`plans/epics/ml_and_features_master_2026_05_07.md`](../epics/ml_and_features_master_2026_05_07.md) Phase 2A
   - 2B + 3
-- [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md`](live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
+- [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md)
   (Ikenna Tab 2's plan — read for Phase 4-7 dependency surface)
 
 **Sub-agent fan-out**:
@@ -245,9 +280,9 @@ per resolved Tab 12 Q1.
 **Identity**: you own the deployment-UI re-shape thread. Auth + cloud-toggle + env-resolution + 4 lifecycle tab
 refactors. Pre-req for Ikenna Tab 5 audit-log integration (auth re-shape ships first; audit-log wraps it).
 
-**Plan-of-record**: [`deployment_ui_lifecycle_tabs_2026_05_08.plan.md`](deployment_ui_lifecycle_tabs_2026_05_08.plan.md)
+**Plan-of-record**: [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md)
 
-- [`deploy_missing_auto_launch_2026_05_07.plan.md`](deploy_missing_auto_launch_2026_05_07.plan.md) Phase 1+2.
+- [`deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md) Phase 1+2.
 
 **Scope (3 items, P0)**:
 
@@ -270,8 +305,8 @@ unified-config-interface (env-resolution), Firebase config files. **Hands off** 
 
 - CLAUDE.md sections: "Local Development" (full body for tier 0/1/2 + Firebase emulator + dev-start / dev-tiers
   scripts), "Workflow Templates", "Deploy_missing UI" (in DeFi Execution Architecture context)
-- [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.plan.md`](deployment_ui_lifecycle_tabs_2026_05_08.plan.md)
-- [`plans/active/deploy_missing_auto_launch_2026_05_07.plan.md`](deploy_missing_auto_launch_2026_05_07.plan.md)
+- [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md)
+- [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md)
 - [`codex/14-playbooks/authentication/firebase-local.md`](../../codex/14-playbooks/authentication/firebase-local.md)
 - [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../../codex/05-infrastructure/runtime-tiers-and-deployment.md)
 
@@ -304,11 +339,11 @@ unified-config-interface (env-resolution), Firebase config files. **Hands off** 
 **Identity**: you own the day-2/3 OPS thread. Cefi VM drain monitoring + post-drain reconcilers across all 5
 asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work.
 
-**Plan-of-record**: [`cefi_master_2026_05_07.plan.md`](../epics/cefi_master_2026_05_07.plan.md) (cefi drain) +
-[`tradfi_master_2026_05_07.plan.md`](../epics/tradfi_master_2026_05_07.plan.md) (TradFi MDPS post-drain) +
-[`manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md) Stage 4 (rescan)
+**Plan-of-record**: [`cefi_master_2026_05_07.md`](../epics/cefi_master_2026_05_07.md) (cefi drain) +
+[`tradfi_master_2026_05_07.md`](../epics/tradfi_master_2026_05_07.md) (TradFi MDPS post-drain) +
+[`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) Stage 4 (rescan)
 
-- [`sports_master_2026_05_07.plan.md`](../epics/sports_master_2026_05_07.plan.md) (per-source reconciler hook) +
+- [`sports_master_2026_05_07.md`](../epics/sports_master_2026_05_07.md) (per-source reconciler hook) +
   [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md).
 
 **Scope (4 items, P0-P1)**:
@@ -318,9 +353,9 @@ asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work
       sample-checked spot-shard via per-VM manifest at T+30min after each VM hits STOPPED. Drain report to operator +
       Ikenna Tab 5 (master plan refresh) before EOD. ~1 AI-day.
 - [ ] [SCRIPT] P0. **TradFi MDPS post-drain ES.OPT 11-cluster validation rerun** — 5 mdps-tradfi-2021/22/23/24/25 VMs
-      running per [`tradfi_master`](../epics/tradfi_master_2026_05_07.plan.md). After drain, rerun cluster-coverage gate
-      on TradFi MDPS shards; flag any partial bundles via the existing `MissingClusterValidationError` guard; fix in
-      place if any flag. ~1 AI-day.
+      running per [`tradfi_master`](../epics/tradfi_master_2026_05_07.md). After drain, rerun cluster-coverage gate on
+      TradFi MDPS shards; flag any partial bundles via the existing `MissingClusterValidationError` guard; fix in place
+      if any flag. ~1 AI-day.
 - [ ] [SCRIPT] P0. **Cross-asset manifest rescan post-CeFi drain (Stage 4 of manifest_migration_master)** — Ikenna Tab 3
       designs the schema flip + ships rescan launcher. You operate the launcher
       (`reconcile_phantom_manifest_rows_all.py     --asset-group {cefi|defi|tradfi|prediction|sports} --dry-run` per
@@ -328,9 +363,9 @@ asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work
       `--apply-write`. Banner-add to 5+ active plans on launch + banner-remove on completion. ~1.5 AI-days.
 - [ ] [SCRIPT] P1. **Sports per-source reconciler hook + features_sports_reconcile_available_at hook into per-source
       backfill VM exit-step** — sports_master Tab 3B Phase per
-      [`sports_master_2026_05_07.plan.md`](../epics/sports_master_2026_05_07.plan.md). Hook fires after each per-source
-      backfill VM completes; flips manifest captured → attempted_failed[error="MISSING_AVAILABLE_AT"] on parquets with
-      absent or 100% null available_at column. ~1 AI-day.
+      [`sports_master_2026_05_07.md`](../epics/sports_master_2026_05_07.md). Hook fires after each per-source backfill
+      VM completes; flips manifest captured → attempted_failed[error="MISSING_AVAILABLE_AT"] on parquets with absent or
+      100% null available_at column. ~1 AI-day.
 - [ ] [SCRIPT] P0. **defi_988 13,632 actionable rows targeted backfill** — Tab 6 yesterday's audit (PM@fc52188 →
       [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md))
       identified the top-5 priority list. Launch targeted backfill VMs per (chain, protocol, data_type) tuple. Per
@@ -347,11 +382,10 @@ code edits to Ikenna Tab 1.
 
 - CLAUDE.md sections: "VM tarball deployment", "VM Naming Convention", "Singleton-locked launchers", "No fire-and-forget
   VM launches", "Manifest concurrency principle", "Manifest phantom audit", "Per-VM shard isolation"
-- [`plans/epics/cefi_master_2026_05_07.plan.md`](../epics/cefi_master_2026_05_07.plan.md)
-- [`plans/epics/tradfi_master_2026_05_07.plan.md`](../epics/tradfi_master_2026_05_07.plan.md)
-- [`plans/epics/manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md)
-  Stage 4
-- [`plans/epics/sports_master_2026_05_07.plan.md`](../epics/sports_master_2026_05_07.plan.md) Tab 3B
+- [`plans/epics/cefi_master_2026_05_07.md`](../epics/cefi_master_2026_05_07.md)
+- [`plans/epics/tradfi_master_2026_05_07.md`](../epics/tradfi_master_2026_05_07.md)
+- [`plans/epics/manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) Stage 4
+- [`plans/epics/sports_master_2026_05_07.md`](../epics/sports_master_2026_05_07.md) Tab 3B
 - [`plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md)
 
 **Sub-agent fan-out**:
@@ -389,14 +423,14 @@ count but the cleanest by collision risk (each plan touches a different surface)
 sub-agents + master integration.
 
 **Plans-of-record**:
-[`launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md)
+[`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
 
-- [`data_status_comprehensive_test_coverage_2026_05_07.plan.md`](data_status_comprehensive_test_coverage_2026_05_07.plan.md)
-- [`mtds_databento_path_streaming_2026_05_07.plan.md`](mtds_databento_path_streaming_2026_05_07.plan.md)
-- [`mtds_per_instrument_download_api_2026_04_24.plan.md`](mtds_per_instrument_download_api_2026_04_24.plan.md)
-- [`hard_schema_enforcement_2026_05_08.plan.md`](hard_schema_enforcement_2026_05_08.plan.md)
-- [`api_football_minimal_flattening_removal_2026_05_07.plan.md`](api_football_minimal_flattening_removal_2026_05_07.plan.md)
-- [`cme_polymarket_arb_2026_05_08.plan.md`](cme_polymarket_arb_2026_05_08.plan.md).
+- [`data_status_comprehensive_test_coverage_2026_05_07.md`](data_status_comprehensive_test_coverage_2026_05_07.md)
+- [`mtds_databento_path_streaming_2026_05_07.md`](mtds_databento_path_streaming_2026_05_07.md)
+- [`mtds_per_instrument_download_api_2026_04_24.md`](mtds_per_instrument_download_api_2026_04_24.md)
+- [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md)
+- [`api_football_minimal_flattening_removal_2026_05_07.md`](api_football_minimal_flattening_removal_2026_05_07.md)
+- [`cme_polymarket_arb_2026_05_08.md`](cme_polymarket_arb_2026_05_08.md).
 
 **Scope (7 items, P0-P1)**:
 
@@ -406,28 +440,40 @@ sub-agents + master integration.
       `_SERVICE_LAUNCHER_SCRIPTS` registration if Deploy-Missing UI reachable + relaunch watchdog after each prefix add.
       ~2 AI-days.
 - [ ] [TEST] P0. **data_status_comprehensive_test_coverage all 30 todos** — 5 test categories × 6 repos. Per
-      [`data_status_comprehensive_test_coverage_2026_05_07.plan.md`](data_status_comprehensive_test_coverage_2026_05_07.plan.md).
+      [`data_status_comprehensive_test_coverage_2026_05_07.md`](data_status_comprehensive_test_coverage_2026_05_07.md).
       Each test category has explicit assertion shape per the plan body. ~3 AI-days.
 - [ ] [SCRIPT] P1. **mtds_databento path-streaming Phases 2-4** — Phase 2 memory profiler verification on heavy day;
       Phase 3 chunked streaming for `get_async_range`; Phase 4 deployment-VM smoke + memory-bound assertion. Per
-      [`mtds_databento_path_streaming_2026_05_07.plan.md`](mtds_databento_path_streaming_2026_05_07.plan.md). ~1.5
-      AI-days.
+      [`mtds_databento_path_streaming_2026_05_07.md`](mtds_databento_path_streaming_2026_05_07.md). ~1.5 AI-days.
 - [ ] [SCRIPT] P0. **mtds_per_instrument_download_api Phase 1.5 chain axis** — audit named CRITICAL-PATH per
-      [`mtds_per_instrument_download_api_2026_04_24.plan.md`](mtds_per_instrument_download_api_2026_04_24.plan.md). Adds
-      chain axis to the per-instrument download API; needed for DeFi instrument download support. ~1 AI-day.
+      [`mtds_per_instrument_download_api_2026_04_24.md`](mtds_per_instrument_download_api_2026_04_24.md). Adds chain
+      axis to the per-instrument download API; needed for DeFi instrument download support. ~1 AI-day.
 - [ ] [SCRIPT] P0. **hard_schema_enforcement Phases 1-5 mechanical migration scripts per asset_group** — per
-      [`hard_schema_enforcement_2026_05_08.plan.md`](hard_schema_enforcement_2026_05_08.plan.md). Each asset*group gets
-      a one-time migration script in instruments-service
+      [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md). Each asset*group gets a one-time
+      migration script in instruments-service
       `scripts/migrate*<asset_group>\_to_hard_schema.py`    (precedent:`migrate_local_sfi_to_canonical.py`). Per
       CLAUDE.md "Manifest migration, NOT fallback". ~2.5 AI-days.
 - [ ] [SCRIPT] P0. **api_football_minimal_flattening_removal all 16 todos** — UAC normalize.py:377-381 fix + re-fetch
       VM + manifest flip per
-      [`api_football_minimal_flattening_removal_2026_05_07.plan.md`](api_football_minimal_flattening_removal_2026_05_07.plan.md).
+      [`api_football_minimal_flattening_removal_2026_05_07.md`](api_football_minimal_flattening_removal_2026_05_07.md).
       Per CLAUDE.md "Manifest migration, NOT fallback" — write a migration script + remove the flattening fallback. ~1
       AI-day.
 - [ ] [SCRIPT] P1. **cme_polymarket_arb 6 phases** — config + CLOB / CME tick wiring + execution route + DART per
-      [`cme_polymarket_arb_2026_05_08.plan.md`](cme_polymarket_arb_2026_05_08.plan.md). New archetype RFC-based;
-      reference plan for similar arch wiring. ~2 AI-days.
+      [`cme_polymarket_arb_2026_05_08.md`](cme_polymarket_arb_2026_05_08.md). New archetype RFC-based; reference plan
+      for similar arch wiring. ~2 AI-days.
+- [ ] [BACKTEST+SCRIPT] P0. **prediction_markets full backtest pipeline run** — per
+      [`prediction_markets_may_23_2026.epic.md`](../epics/prediction_markets_may_23_2026.epic.md). Polymarket + Kalshi +
+      Opinion Trade + CME event futures arb full backtest. Pre-req: Tab 1 Predictions Phase 2+3 complete (lifecycle
+      ingestion + canonical_question_group migration). Output: full backtest report. ~2 AI-days.
+- [ ] [BACKTEST+SCRIPT] P0. **sports_ml full backtest pipeline run** — per
+      [`sports_ml_may_23_2026.epic.md`](../epics/sports_ml_may_23_2026.epic.md). Sports ML prediction (odds + features →
+      strategy → execution, all backtest). Pre-req: Tab 5 api_football_minimal_flattening_removal + Tab 4 sports
+      per-source reconciler hook. Output: full backtest report per league tier. ~2 AI-days.
+- [ ] [BACKTEST+SCRIPT] P0. **price_arbitrage full backtest pipeline run** — per
+      [`price_arbitrage_may_23_2026.epic.md`](../epics/price_arbitrage_may_23_2026.epic.md). CME futures same-day-expiry
+      arb + ETF↔future arb (TradFi). Pre-req: Tab 4 TradFi MDPS post-drain ES.OPT 11-cluster validation green. Output:
+      full backtest report per arb pair. ~2 AI-days. (NOTE: cme_polymarket_arb above is a DIFFERENT archetype —
+      same-day-expiry CME arb here is the broader TradFi cohort.)
 
 **Repos owned (collision boundary)**: deployment-service `scripts/vm/` + `vm_zombie_watchdog.py` (you create files; Tab
 4 launches existing files — coordinate via handshake), all 7 plan-target repos (each plan touches distinct surface).
@@ -558,8 +604,8 @@ BEFORE doing anything else, read in order:
   1. unified-trading-pm/cursor-configs/CLAUDE.md — workspace rules + § "Daily Work-Split Process".
   2. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
   3. plans/active/work_split_2026_05_08_harsh.md § "TAB 1 — Instruments-live + lifecycle ingestion".
-  4. plans/epics/instruments_live_master_2026_05_08.plan.md (primary plan-of-record).
-  5. plans/epics/predictions_master_2026_05_07.plan.md Phase 2+3.
+  4. plans/epics/instruments_live_master_2026_05_08.md (primary plan-of-record).
+  5. plans/epics/predictions_master_2026_05_07.md Phase 2+3.
 
 Your agent-tag: instruments-live-tab. Your tab number: 1.
 
@@ -585,8 +631,8 @@ BEFORE doing anything else, read in order:
      § "Shard-granularity SSOT" ([UAC] vs [UTL] vs [per-service] discipline),
      § "Post-Plan-Phase Codex Audit HARD RULE".
   2. plans/active/work_split_2026_05_08_harsh.md § "TAB 2 — Features-repo consolidation".
-  3. plans/active/features_repo_consolidation_2026_05_08.plan.md (primary).
-  4. plans/epics/ml_and_features_master_2026_05_07.plan.md Phase 2A/2B + Phase 3.
+  3. plans/active/features_repo_consolidation_2026_05_08.md (primary).
+  4. plans/epics/ml_and_features_master_2026_05_07.md Phase 2A/2B + Phase 3.
 
 Your agent-tag: features-consolidation-tab. Your tab number: 2.
 
@@ -605,8 +651,8 @@ BEFORE doing anything else, read in order:
   1. unified-trading-pm/cursor-configs/CLAUDE.md — esp. § "Local Development",
      § "Workflow Templates", § "Plan Locking".
   2. plans/active/work_split_2026_05_08_harsh.md § "TAB 3 — Deployment-UI lifecycle tabs".
-  3. plans/active/deployment_ui_lifecycle_tabs_2026_05_08.plan.md (primary).
-  4. plans/active/deploy_missing_auto_launch_2026_05_07.plan.md Phase 1+2.
+  3. plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (primary).
+  4. plans/active/deploy_missing_auto_launch_2026_05_07.md Phase 1+2.
 
 Your agent-tag: deployment-ui-tab. Your tab number: 3.
 
@@ -627,10 +673,10 @@ BEFORE doing anything else, read in order:
      § "VM Naming Convention", § "Singleton-locked launchers", § "No fire-and-forget VM
      launches", § "Manifest concurrency principle", § "Manifest phantom audit".
   2. plans/active/work_split_2026_05_08_harsh.md § "TAB 4 — Per-asset_group VM ops".
-  3. plans/epics/cefi_master_2026_05_07.plan.md (cefi drain).
-  4. plans/epics/tradfi_master_2026_05_07.plan.md (TradFi MDPS post-drain).
-  5. plans/epics/manifest_migration_master_2026_05_07.plan.md Stage 4 (rescan).
-  6. plans/epics/sports_master_2026_05_07.plan.md (per-source reconciler hook).
+  3. plans/epics/cefi_master_2026_05_07.md (cefi drain).
+  4. plans/epics/tradfi_master_2026_05_07.md (TradFi MDPS post-drain).
+  5. plans/epics/manifest_migration_master_2026_05_07.md Stage 4 (rescan).
+  6. plans/epics/sports_master_2026_05_07.md (per-source reconciler hook).
   7. plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md (top-5 priority list).
 
 Your agent-tag: vm-ops-tab. Your tab number: 4.
@@ -680,5 +726,4 @@ protocol.
 - Methodology spec: [`cursor-configs/CLAUDE.md`](../../cursor-configs/CLAUDE.md) §"Daily Work-Split Process".
 - Yesterday's archived split:
   [`plans/archive/work_split_2026_05_07_harsh_5tab_layout.md`](../archive/work_split_2026_05_07_harsh_5tab_layout.md).
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md) — the durable
-  readiness model.
+- Master plan: [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) — the durable readiness model.

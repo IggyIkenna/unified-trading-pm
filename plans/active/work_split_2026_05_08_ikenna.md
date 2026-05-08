@@ -23,7 +23,7 @@ locked_since: 2026-05-08
 ## Why this split exists today
 
 - **15 days to live-DeFi cutover** (2026-05-23). Master plan
-  [`master_to_live_defi_2026_05_23`](master_to_live_defi_2026_05_23.plan.md) Group F (live-only prerequisites) + Group G
+  [`master_to_live_defi_2026_05_23`](master_to_live_defi_2026_05_23.md) Group F (live-only prerequisites) + Group G
   (operator UX) are now the gating ladder. DeFi launches that started 2026-05-07 hit silent-zero regressions (Bug 1 AAVE
   V3 ETHEREUM root-caused as UAC SSOT drift; Tab 14 audit found 13 of 17 probed `(chain, protocol)` pairs have similar
   drift).
@@ -32,15 +32,37 @@ locked_since: 2026-05-08
   triage, master plan refresh). Carryover into today: alerting Phase 2-9, writegate Phase 2.A residual + Phase 5
   ratchet, defi_master Fork 1 deferred items + Tab 14 4 fix sub-tabs A/B/C/D, paper-trade smoke completion.
 - **New incoming overnight**: 4 plans landed 2026-05-07 → 2026-05-08 from cross-cutting scope:
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](live_pipeline_mtds_mdps_features_2026_05_08.plan.md) (14 phases),
-  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md) (overnight
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](live_pipeline_mtds_mdps_features_2026_05_08.md) (14 phases),
+  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](gcs_migration_bundle_pipeline_mode_2026_05_08.md) (overnight
   migration of millions of parquets),
-  [`features_repo_consolidation_2026_05_08`](features_repo_consolidation_2026_05_08.plan.md) (8 repos → 1, deadline
-  2026-05-13), [`hard_schema_enforcement_2026_05_08`](hard_schema_enforcement_2026_05_08.plan.md) (under
+  [`features_repo_consolidation_2026_05_08`](features_repo_consolidation_2026_05_08.md) (8 repos → 1, deadline
+  2026-05-13), [`hard_schema_enforcement_2026_05_08`](hard_schema_enforcement_2026_05_08.md) (under
   infrastructure_master). Live-pipeline + gcs-migration are cross-cutting / migration / governance = Ikenna-side;
   features-repo-consolidation + hard-schema are mechanical = Harsh-side per split principle.
 - **Ping ledger (overnight)**: 1 entry — `ml-features-phase2a-tab` Q1 🟡 BLOCKED [ESCALATED-TO-OPERATOR] strategic scope
   ambiguity. That's a Harsh-side ping; Ikenna doesn't pick up.
+
+## May-23 epic context (read first)
+
+The 2026-05-08 plans-restructure landed the **epic layer** at [`plans/epics/`](../epics/) above the granular masters
+(per [`plans_workspace_organization_2026_05_08.md`](plans_workspace_organization_2026_05_08.md) +
+[`plans/epics/README.md`](../epics/README.md)). 7 epics own the May-23 cutover targets:
+
+| Epic                                                                                | May-23 scope                              | Side ownership                           |
+| ----------------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------- |
+| [`live_defi_rollout_may_23_2026`](../epics/live_defi_rollout_may_23_2026.epic.md)   | LIVE on real wallet — 3 carry archetypes  | **Ikenna lead** (Tab 1 + Tab 5)          |
+| [`cefi_ml_may_23_2026`](../epics/cefi_ml_may_23_2026.epic.md)                       | LIVE on real capital — continuous ML CeFi | **Joint** (Ikenna Tab 2/5 + Harsh Tab 2) |
+| [`sp_prediction_may_23_2026`](../epics/sp_prediction_may_23_2026.epic.md)           | BATCH ML only                             | Harsh Tab 2 + 5                          |
+| [`price_arbitrage_may_23_2026`](../epics/price_arbitrage_may_23_2026.epic.md)       | BACKTEST only                             | Harsh Tab 5                              |
+| [`sports_ml_may_23_2026`](../epics/sports_ml_may_23_2026.epic.md)                   | BACKTEST only                             | Harsh Tab 1 + 5                          |
+| [`prediction_markets_may_23_2026`](../epics/prediction_markets_may_23_2026.epic.md) | BACKTEST only                             | Harsh Tab 1 + 5                          |
+| [`cross_cutting_may_23_2026`](../epics/cross_cutting_may_23_2026.epic.md)           | Workspace-wide                            | **Both sides every tab**                 |
+
+Ikenna-side covers the 2 LIVE epics (`live_defi_rollout` + `cefi_ml`) plus all `cross_cutting` infra (live-pipeline,
+writegate Phase 5, GCS migration, AWS, alerting, master plan refresh). Harsh-side covers the 4 BATCH/BACKTEST epics
+(`sp_prediction` + `price_arbitrage` + `sports_ml` + `prediction_markets`) plus implementation-from-spec for both LIVE
+epics. Per [`plans/epics/README.md`](../epics/README.md): epics are **read-mostly** + don't duplicate sub-plans; this
+split assigns sub-plan tactical work, not epic-level deliverables (the master plan tracks epic completion).
 
 ## Working model
 
@@ -100,10 +122,10 @@ a thin one.
 decisions, drift-fix sequencing, paper-trade interpretation, custody integration. Highest collision risk with Harsh's
 per-asset_group VM ops cluster (Tab 4 there) — coordinate via the cross-side handshake "DeFi VM relaunches".
 
-**Plan-of-record**: [`defi_master_2026_05_07.plan.md`](defi_master_2026_05_07.plan.md) (Fork 1 + Bug fixes + Stream A +
-Pyth Hermes) +
-[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md)
-(Stream A LST collateral) + [`master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md) Group F.
+**Plan-of-record**: [`defi_master_2026_05_07.md`](defi_master_2026_05_07.md) (Fork 1 + Bug fixes + Stream A + Pyth
+Hermes) +
+[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+(Stream A LST collateral) + [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F.
 
 **Scope (6 items, P0-P1)**:
 
@@ -131,7 +153,7 @@ Pyth Hermes) +
       test, drop a top-of-file `🟡 IN-FLIGHT REFACTOR` banner per CLAUDE.md "Cross-Plan Coordination Banners" rule while
       landing. **Done**: all 13 pairs corrected + tested + Tab 14 audit doc updated to RESOLVED. ~3 AI-days.
 - [ ] [DESIGN+UAC+CODEX] P0. **Stream A — DERIBIT/BYBIT/OKX ETH-LST collateral acceptance flips** — per
-      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md)
+      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       Stream A. Live-API probe to confirm exact 2026-05-07 collateral value ratios for Deribit stETH, Bybit
       stETH/wstETH/USDe/sUSDe, OKX wstETH/stETH. Document evidence in
       `unified-trading-pm/codex/14-playbooks/defi/venue-collateral-2026-05-07.md` (new doc). Update
@@ -161,12 +183,12 @@ position-balance-monitor-service (paper-trade smoke), deployment-service `script
 
 - CLAUDE.md sections: "DeFi Execution Architecture", "Pyth — UNBANNED 2026-05-06", "Cross-Plan Coordination Banners",
   "VM tarball deployment", "VM Naming Convention", "No fire-and-forget VM launches"
-- [`plans/active/defi_master_2026_05_07.plan.md`](defi_master_2026_05_07.plan.md) (full body — long)
+- [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) (full body — long)
 - [`plans/active/issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md)
 - [`plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md)
 - [`plans/active/issues/defi_fork1_prep_audit_2026_05_08.md`](issues/defi_fork1_prep_audit_2026_05_08.md) (Tab 14
   output: 13 of 17 pairs drift)
-- [`plans/active/master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md) Group F+G
+- [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F+G
 
 **Sub-agent fan-out**:
 
@@ -213,13 +235,15 @@ position-balance-monitor-service (paper-trade smoke), deployment-service `script
 MDPS + features-\* — the May-23 cutover model in code form. Writegate Phase 5 ratchet is the workspace QG gate that
 prevents honest-coverage % regressions post-cutover. Both are governance-grade work.
 
-**Plan-of-record**:
-[`live_pipeline_mtds_mdps_features_2026_05_08.plan.md`](live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
+**Plan-of-record**: [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md)
 
-- [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
-  Phase 5.
+- [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase 5.
+- [`available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md)
+  (Ikenna-owned 11-link chain meta-plan for available_at + lookahead-bias contract — links 0/3/4/5/7/8 land here).
+- [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md) (live-ML path activation for the May-23 CeFi ML
+  LIVE archetype — extends live_pipeline Phase 5-7 with model serving infra).
 
-**Scope (5 items, P0)**:
+**Scope (8 items, P0)**:
 
 - [ ] [INFRA+DESIGN] P0. **Live pipeline Phases 0-3** — Phase 0 audit pass (pre-flight gap doc); Phase 1-3 MTDS
       standalone cluster (per-venue VM topology + connection pool + sharding-orthogonal). Per CLAUDE.md "ARCHITECTURE
@@ -243,6 +267,27 @@ prevents honest-coverage % regressions post-cutover. Both are governance-grade w
       (currently a stub, needs population). Writes: UTL helper that computes honest-coverage % per shard-key from the
       manifest; base-service.sh QG STEP that fails CI if a service's coverage drops > 0.5pp from baseline; ratchet
       schedule (monthly cadence, 99% floor) per CLAUDE.md "honest absence" methodology. ~1 AI-day.
+- [ ] [DESIGN+CROSS-CUTTING] P0. **`available_at` + lookahead-bias completion (11-link chain)** — Ikenna-owned meta-plan
+      at [`available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md).
+      Audit 2026-05-08 found ~60% chain coverage; gaps were implicit. Tab 2 lands the cross-cutting links most tightly
+      coupled to live-pipeline: link 0 (MDPS bar timestamp + available_at semantics), 3 (reader propagation), 4 (UAC
+      `FEATURE_REQUIRED_INPUTS` expansion), 5 (UAC `AVAILABILITY_AT_SEMANTICS` coverage audit), 7
+      (`ManifestWriter assert_available_at_present` guard), 8 (QG static check). Links 1/2/6/9/10 distributed across Tab
+      1 (per-asset-group adapter stamping) + Harsh Tab 2 (calculator/writer-boundary enforcement) + cross-tab handshake.
+      ~3 AI-days for Ikenna Tab 2 share; ~5 AI-days plan-total.
+- [ ] [LIVE-ML+DESIGN] P0. **CeFi ML live-serving path activation** — per
+      [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md). Extends live_pipeline Phase 5-7 with: (a)
+      live model artefact registry (UTL `model_registry.py` reads / GCS path SSOT); (b) hot-reload of model artefacts
+      without service restart (mirror `InstrumentCacheDeltaReloader` pattern from Phase 10); (c) model-version
+      traceability per trade (every `FEATURE_COMPUTED` event + every strategy decision tag includes model_version +
+      model_artefact_uri); (d) live ML inference service handler in features-service compute path consuming the
+      registry. **Joint with Harsh Tab 2** which wires the ML pipeline + integration test on the Harsh side. ~3 AI-days
+      for Ikenna design + Harsh wiring share.
+- [ ] [DESIGN] P0. **CeFi ML model-drift alerting + ML signal lifecycle alerting** — per
+      [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md) success criterion "model-drift alerting
+      wired through alerting-service". Extends Tab 5 alerting Phase 2-9 with ML-specific rules (signal-staleness
+      threshold, model-drift detection, P&L deviation, ML inference latency SLO). Also wires DART manual-override of ML
+      trades per epic success criterion. ~2 AI-days for Tab 2 (rule design); the wiring lands in Tab 5.
 
 **Repos owned (collision boundary)**: MTDS (live-mode wiring; collides with Tab 1 only on lending-indices — different
 file paths), MDPS (`base_adapter.py` + `BaseCandleAdapter` + batch_workers — collides with **Harsh Tab 2 features + ML
@@ -257,8 +302,8 @@ not coordinated — see cross-side).
 - CLAUDE.md sections: "ARCHITECTURE 2026-05-08 — Live pipeline" (the architecture decision that drives this work),
   "Plans must capture full codebase impact upfront", "Post-Plan-Phase Codex Audit HARD RULE", "Service emission policy"
   (in Wave 4 slice a context), "Batch = Live: Unified Pipeline Architecture"
-- [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md`](live_pipeline_mtds_mdps_features_2026_05_08.plan.md)
-- [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md)
+- [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md)
+- [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.md)
   (cross-cutting; pipeline_mode hive partition migration is the parallel half)
 - [`codex/05-infrastructure/live-pipeline-architecture.md`](../../codex/05-infrastructure/live-pipeline-architecture.md)
 - [`codex/05-infrastructure/replay-subsystem.md`](../../codex/05-infrastructure/replay-subsystem.md)
@@ -306,12 +351,11 @@ decision (millions of parquets re-keyed). Manifest v6 → v7 is the schema evolu
 rollup-vs-drilldown denominator-divergence (codex SSOT codified 2026-05-07).
 
 **Plan-of-record**:
-[`gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md)
+[`gcs_migration_bundle_pipeline_mode_2026_05_08.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 
-- [`manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md)
-- [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) Phase
-  3.D.4 v2 + [`infrastructure_master_2026_05_07.plan.md`](../epics/infrastructure_master_2026_05_07.plan.md) v6→v7
-  schema.
+- [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md)
+- [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase 3.D.4
+  v2 + [`infrastructure_master_2026_05_07.md`](../epics/infrastructure_master_2026_05_07.md) v6→v7 schema.
 
 **Scope (5 items, P0)**:
 
@@ -348,8 +392,8 @@ rescan VM operation to Harsh Tab 4.
 
 - CLAUDE.md sections: "Manifest migration, NOT fallback" rule, "Honest absence vs fake placeholders", "Per-VM shard
   isolation for concurrent backfills", "Manifest concurrency principle", "Manifest phantom audit"
-- [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md)
-- [`plans/epics/manifest_migration_master_2026_05_07.plan.md`](../epics/manifest_migration_master_2026_05_07.plan.md)
+- [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.md)
+- [`plans/epics/manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md)
 - [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
 - [`codex/02-data/pipeline-mode-partition.md`](../../codex/02-data/pipeline-mode-partition.md)
 - [`codex/02-data/chunk-safe-manifest-migrations.md`](../../codex/02-data/chunk-safe-manifest-migrations.md)
@@ -388,8 +432,8 @@ rescan VM operation to Harsh Tab 4.
 master). Phase 0 (operator credit confirmed ≥$40k) + Phase 1 smoke shipped 2026-05-07; Phase 2 dual-bucket setup shipped
 2026-05-07. Today picks up Phase 3 + cross-cutting governance (cloud-agnostic-script-pattern.md SSOT).
 
-**Plan-of-record**: [`aws_migration_defi_first_2026_05_07.plan.md`](aws_migration_defi_first_2026_05_07.plan.md) +
-cross-references to [`master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md) Group F.
+**Plan-of-record**: [`aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md) +
+cross-references to [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F.
 
 **Scope (4 items, P0-P1)**:
 
@@ -418,7 +462,7 @@ Tab 5 (single owner of alerting); hands off live-pipeline cross-cloud verificati
 **Read-first**:
 
 - CLAUDE.md sections: "Force-Sync Warning (CRITICAL)", "Workspace Configs (Canonical in PM)", "Workflow Templates"
-- [`plans/active/aws_migration_defi_first_2026_05_07.plan.md`](aws_migration_defi_first_2026_05_07.plan.md) full body
+- [`plans/active/aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md) full body
 - [`codex/05-infrastructure/cloud-agnostic-migration.md`](../../codex/04-architecture/cloud-agnostic-migration.md)
   (existing — read for the migration framework)
 - [`codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`](../../codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md)
@@ -458,10 +502,10 @@ Tab 5 (single owner of alerting); hands off live-pipeline cross-cloud verificati
 ready to ship live trading by May 23?" Reads everything (live-pipeline + DeFi + GCS migration + AWS) and writes the
 readiness narrative + alert wiring + IAM/audit-log/rate-limit operator decisions.
 
-**Plan-of-record**: [`alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md)
+**Plan-of-record**: [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md)
 
-- [`master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md) Group F+G +
-  [`deploy_missing_auto_launch_2026_05_07.plan.md`](deploy_missing_auto_launch_2026_05_07.plan.md) Phase 0.
+- [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F+G +
+  [`deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md) Phase 0.
 
 **Scope (5 items, P0)**:
 
@@ -489,6 +533,13 @@ readiness narrative + alert wiring + IAM/audit-log/rate-limit operator decisions
       propagate through deploy_missing Phase 1+ and onto every Cloud Run service that uses the deployment-api launch
       path. **Done**: 3 STATUS DRAFT proposals → STATUS DECIDED with operator sign-off recorded; Phase 1+ work
       unblocked; IAM/audit-log/rate-limit propagated. ~2 AI-days.
+- [ ] [LIVE-ML+ARCHITECTURE] P0. **CeFi ML alerting wiring + kill-switches + DART manual-override** — per
+      [`cefi_ml_may_23_2026.epic.md`](../epics/cefi_ml_may_23_2026.epic.md) success criteria "Live alerting active" +
+      "Kill switches + circuit breakers wired per archetype" + "DART manual override". Wires Tab 2's design (this same
+      plan §"Tab 2 item 8") through alerting-service routing rules + execution-service kill-switch consumers + DART
+      pause/override/replicate UI via strategy_and_dart_master Phase 2.2. Without this, the May-23 LIVE cefi_ml epic
+      ships unprotected (operator pages would be the only kill-switch — unacceptable institutional shape per CLAUDE.md
+      "DeFi Execution Architecture"). ~3 AI-days.
 
 **Repos owned (collision boundary)**: alerting-service (full ownership), UAC `alerting.py` / `crosscutting/alerting.py`
 (Phase 1 shipped, additions only), deployment-api routing (auth_middleware.py for audit-log integration; collides with
@@ -499,10 +550,10 @@ readiness narrative + alert wiring + IAM/audit-log/rate-limit operator decisions
 
 - CLAUDE.md sections: "Master Plan — Live DeFi Trading by 2026-05-23" intro, "Service Infrastructure Requirements",
   "DeFi Execution Architecture" (kill-switch context), "Force-Sync Warning"
-- [`plans/active/alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md)
-- [`plans/active/master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md) Group F + G full
-- [`plans/active/deploy_missing_auto_launch_2026_05_07.plan.md`](deploy_missing_auto_launch_2026_05_07.plan.md) Phase
-  0 + the 3 STATUS DRAFT proposals
+- [`plans/active/alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md)
+- [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F + G full
+- [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md) Phase 0 + the 3
+  STATUS DRAFT proposals
 - [`codex/14-playbooks/alerting/alert-code-taxonomy.md`](../../codex/14-playbooks/alerting/alert-code-taxonomy.md)
 - [`codex/14-playbooks/alerting/threshold-tuning.md`](../../codex/14-playbooks/alerting/threshold-tuning.md)
 
@@ -518,8 +569,8 @@ readiness narrative + alert wiring + IAM/audit-log/rate-limit operator decisions
 
 **Collision risk**:
 
-- Master plan: Tab 5 ONLY tab that writes to master_to_live_defi_2026_05_23.plan.md this cycle. Other tabs MUST NOT
-  touch (per CLAUDE.md "Two teammates × multiple parallel agents — don't edit unfamiliar files").
+- Master plan: Tab 5 ONLY tab that writes to master_to_live_defi_2026_05_23.md this cycle. Other tabs MUST NOT touch
+  (per CLAUDE.md "Two teammates × multiple parallel agents — don't edit unfamiliar files").
 - alerting-service: Tab 5 ONLY. No collision.
 - deployment-api `auth_middleware.py`: Harsh Tab 3 (deployment-ui-lifecycle-tabs) writes auth-flow re-shape. Tab 5
   (audit-log integration for deploy_missing) might touch the same file. **Hard sync gate**: Tab 5 ships auth audit-log
@@ -624,13 +675,13 @@ immediately + announces in plan-of-record; consuming side `git pull`s before its
 - `strategy_and_dart_master` Phase 1 service-split full refactor + Phase 5 Unity UAT (operator-only $550 + Java binary)
 - `predictions_master` non-Phase-1 work (P1; in Harsh Tab 1 scope only if Phase 1 lands cleanly mid-cycle)
 - `consolidated_strategy_and_ui` Phase 3 deep work (now under `strategy_and_dart_master`)
-- [`fund_administration_service_and_pooled_subscription_redemption_2026_04_20`](fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md)
+- [`fund_administration_service_and_pooled_subscription_redemption_2026_04_20`](fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md)
   (post-2026-05-23 P2 per cross-plan position banner)
-- [`ml_pipeline_ui_integration_2026_04_16`](ml_pipeline_ui_integration_2026_04_16.plan.md) (deferred unless last 2 todos
+- [`ml_pipeline_ui_integration_2026_04_16`](ml_pipeline_ui_integration_2026_04_16.md) (deferred unless last 2 todos
   verifiable today)
-- [`api_football_minimal_flattening_removal_2026_05_07`](api_football_minimal_flattening_removal_2026_05_07.plan.md)
+- [`api_football_minimal_flattening_removal_2026_05_07`](api_football_minimal_flattening_removal_2026_05_07.md)
   (sports-pipeline plumbing — picks up post-May-23)
-- [`data_status_comprehensive_test_coverage_2026_05_07`](data_status_comprehensive_test_coverage_2026_05_07.plan.md)
+- [`data_status_comprehensive_test_coverage_2026_05_07`](data_status_comprehensive_test_coverage_2026_05_07.md)
   (regression-test net — post-May-23)
 
 ## Spawn prompts (paste-ready per tab)
@@ -649,7 +700,7 @@ BEFORE doing anything else, read in order:
   2. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
   3. plans/active/work_split_2026_05_08_ikenna.md § "TAB 1 — DeFi launch + Fork 1 completion" —
      your scope, repos owned, read-first list, sub-agent fan-out plan, collision risk, done definition.
-  4. plans/active/defi_master_2026_05_07.plan.md (full body — your primary plan-of-record).
+  4. plans/active/defi_master_2026_05_07.md (full body — your primary plan-of-record).
 
 Your agent-tag for ping-ledger entries: defi-fork1-completion-tab.
 Your tab number: 1.
@@ -658,7 +709,7 @@ ORCHESTRATION RULES (per CLAUDE.md § "Daily Work-Split Process" universal mecha
   1. Shared working tree — no `git pull` needed between tabs; pre-commit check
      (git status + git diff --cached --stat NO PATH ARG) mandatory before EVERY commit.
      Use `git add -p` for shared files; never `git add -A` / `git add <whole-shared-file>`.
-  2. Plan-doc Q&A flow — write blockers into defi_master_2026_05_07.plan.md `## Open questions`
+  2. Plan-doc Q&A flow — write blockers into defi_master_2026_05_07.md `## Open questions`
      (status 🟡 BLOCKED), append ping in plans/active/_agent_pings.md, continue with what you CAN do.
   3. Conditional push — per shippable unit: commit locally, fetch + check incoming, zero
      incoming → push, any incoming → flag + escalate.
@@ -671,7 +722,7 @@ relaunch + 4 UAC drift sub-tabs + Stream A LST collateral + Pyth Hermes archive 
 bSOL coverage gap). See work_split_2026_05_08_ikenna.md § "TAB 1" for full done-definition.
 
 REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push.
-Final: append a "DONE-2026-05-08" block at the bottom of defi_master_2026_05_07.plan.md
+Final: append a "DONE-2026-05-08" block at the bottom of defi_master_2026_05_07.md
 body listing every code + plan-flip commit sha. Then go quiet — don't pick up new work
 autonomously.
 ```
@@ -687,9 +738,9 @@ BEFORE doing anything else, read in order:
      "Plans must capture full codebase impact upfront" rule).
   2. plans/active/work_split_2026_05_08_ikenna.md § "TAB 2 — Live pipeline + writegate
      Phase 5 ratchet" — your scope.
-  3. plans/active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md (your primary
+  3. plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md (your primary
      plan-of-record).
-  4. plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md Phase 5 (your
+  4. plans/active/writegate_honest_coverage_endtoend_2026_05_06.md Phase 5 (your
      secondary plan-of-record).
   5. codex/05-infrastructure/live-pipeline-architecture.md + replay-subsystem.md +
      codex/02-data/pipeline-mode-partition.md +
@@ -716,9 +767,9 @@ BEFORE doing anything else, read in order:
      § "Honest absence vs fake placeholders", § "Per-VM shard isolation for concurrent backfills",
      § "Manifest concurrency principle", § "Manifest phantom audit".
   2. plans/active/work_split_2026_05_08_ikenna.md § "TAB 3 — GCS migration + manifest cluster".
-  3. plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md (primary).
-  4. plans/epics/manifest_migration_master_2026_05_07.plan.md.
-  5. plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md § Phase 3.D.4 v2.
+  3. plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md (primary).
+  4. plans/epics/manifest_migration_master_2026_05_07.md.
+  5. plans/active/writegate_honest_coverage_endtoend_2026_05_06.md § Phase 3.D.4 v2.
 
 Your agent-tag: gcs-manifest-migration-tab. Your tab number: 3.
 
@@ -737,7 +788,7 @@ BEFORE doing anything else, read in order:
   1. unified-trading-pm/cursor-configs/CLAUDE.md — esp. § "Force-Sync Warning (CRITICAL)",
      § "Workspace Configs (Canonical in PM)".
   2. plans/active/work_split_2026_05_08_ikenna.md § "TAB 4 — AWS migration + cloud-agnostic governance".
-  3. plans/active/aws_migration_defi_first_2026_05_07.plan.md (primary).
+  3. plans/active/aws_migration_defi_first_2026_05_07.md (primary).
   4. codex/05-infrastructure/cloud-agnostic-script-pattern.md (currently a stub — you populate it).
 
 Your agent-tag: aws-cloud-agnostic-tab. Your tab number: 4.
@@ -757,9 +808,9 @@ BEFORE doing anything else, read in order:
   1. unified-trading-pm/cursor-configs/CLAUDE.md — esp. § "Master Plan — Live DeFi Trading by 2026-05-23",
      § "DeFi Execution Architecture" (kill-switch context), § "Service Infrastructure Requirements".
   2. plans/active/work_split_2026_05_08_ikenna.md § "TAB 5 — Alerting + master refresh + governance".
-  3. plans/active/alerting_service_live_rules_2026_05_07.plan.md (primary).
-  4. plans/active/master_to_live_defi_2026_05_23.plan.md Group F+G full bodies.
-  5. plans/active/deploy_missing_auto_launch_2026_05_07.plan.md Phase 0.
+  3. plans/active/alerting_service_live_rules_2026_05_07.md (primary).
+  4. plans/active/master_to_live_defi_2026_05_23.md Group F+G full bodies.
+  5. plans/active/deploy_missing_auto_launch_2026_05_07.md Phase 0.
   6. codex/14-playbooks/alerting/alert-code-taxonomy.md + threshold-tuning.md.
 
 Your agent-tag: alerting-master-governance-tab. Your tab number: 5.
@@ -808,5 +859,4 @@ capturing the cycle's shipped work. EOD: archive this plan to `plans/archive/wor
 - Methodology spec: [`cursor-configs/CLAUDE.md`](../../cursor-configs/CLAUDE.md) §"Daily Work-Split Process".
 - Yesterday's archived split:
   [`plans/archive/work_split_2026_05_07_ikenna_5tab_layout.md`](../archive/work_split_2026_05_07_ikenna_5tab_layout.md).
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](master_to_live_defi_2026_05_23.plan.md) — the durable
-  readiness model.
+- Master plan: [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) — the durable readiness model.
