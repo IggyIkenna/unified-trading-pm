@@ -110,8 +110,8 @@ drift.
   - [x] `02-data/partitioning.md` — only multi-axis correction banner, no version conflict. No edit needed.
   - [x] `02-data/prediction-schema-paths.md` — only multi-axis correction banner, no version conflict. No edit needed.
   - [x] `02-data/shard-granularity-cefi.md:15` — Status line said "v6 columns active... manifest schema v6 shipped"
-        without anchoring current overall = v7. **Edited** to add "Current overall schema is **v7**" + v8 design pointer
-        + canonical SSOT reference; preserved v6 column rollout history (this doc owns the v6 column reference).
+        without anchoring current overall = v7. **Edited** to add "Current overall schema is **v7**" + v8 design
+        pointer + canonical SSOT reference; preserved v6 column rollout history (this doc owns the v6 column reference).
   - [x] `02-data/sports-scheduling-and-sharding.md` — only multi-axis correction banner, no version conflict. No edit
         needed.
   - [x] `02-data/pipeline-coverage-matrix.md:80-82` — already correct: `### Manifest schema (v7 — current)` +
@@ -120,12 +120,12 @@ drift.
         v5 / v6 / v7 history + v8 design pointer. No edit needed.
   - [x] `02-data/data-status-drilldown.md:76` — JSON enumerates v5 4-state `capture_status` taxonomy (unchanged under
         v7); no version conflict.
-  - [x] `04-architecture/shard-level-failure-isolation.md:27,80,106` — already correct: cites "v7 manifest column" +
-        "v7 manifest row key" + "full v7 row key per asset_group". No edit needed.
+  - [x] `04-architecture/shard-level-failure-isolation.md:27,80,106` — already correct: cites "v7 manifest column" + "v7
+        manifest row key" + "full v7 row key per asset_group". No edit needed.
 
   **Bonus drift caught beyond the audit list (case 1 finding — fixed in same shippable unit)**:
-  - [x] `02-data/venue-availability.md:8` — said "(v4)" inline. **Edited** to "(v7 — current; `MANIFEST_SCHEMA_VERSION = 7`
-        in UTL `manifest_writer.py`)".
+  - [x] `02-data/venue-availability.md:8` — said "(v4)" inline. **Edited** to "(v7 — current;
+        `MANIFEST_SCHEMA_VERSION = 7` in UTL `manifest_writer.py`)".
   - [x] `02-data/manifest-migration-coordination.md:19` — said "next manifest-schema bump (v5 → v6) is planned".
         **Edited** to v7 → v8 design pointer + canonical runtime SSOT line.
   - [x] `05-infrastructure/vm-tarball-deployment.md:232` — said "Honest-coverage schema v5". **Edited** to
@@ -136,8 +136,8 @@ drift.
   carries inline "v7 job_id" or "v8 pipeline_mode" banners that contradict its own version line.
 
   **Shipped via**: PM@bcd83823 merge commit (parallel-agent / prek-shield merge bundled this work alongside foreign
-  edits; my 4 files are byte-identical with the spec drafted in this session — `git show origin/live-defi-rollout:<file>`
-  verified).
+  edits; my 4 files are byte-identical with the spec drafted in this session —
+  `git show origin/live-defi-rollout:<file>` verified).
 
 ### Phase A.2 — Capture taxonomy 4-state alignment — PARALLEL — P0
 
@@ -164,8 +164,8 @@ drift.
       names. **DISCOVERY**: original premise was incomplete — UAC has TWO enums with intentionally different naming:
       `LifecycleEvent` (short, no prefix) at `internal/events.py:94-96` AND `AlertCode` (with `_BREAKER_` prefix) at
       `canonical/crosscutting/alerting/codes.py:42-45`. Both are SSOTs and don't conflict — LifecycleEvent for emitted
-      events / PubSub topics / JSONL `.event` fields; AlertCode for alerting-service routing rules / runbook code+pattern
-      fields / "correlated codes" cross-refs. Phase A.3 shipped fixes context-specific drift only.
+      events / PubSub topics / JSONL `.event` fields; AlertCode for alerting-service routing rules / runbook
+      code+pattern fields / "correlated codes" cross-refs. Phase A.3 shipped fixes context-specific drift only.
 
   **Files updated** (PM@b257804a):
   - [x] `03-observability/lifecycle-events.md:328-329` — replaced past-tense `CIRCUIT_BREAKER_OPENED/CLOSED` with UAC
@@ -179,9 +179,10 @@ drift.
         (PubSub subscribe = LifecycleEvent).
   - [x] `04-architecture/kill-switch-circuit-breaker.md:116, 158, 280-283` — PubSub publish + Emits narrative + PubSub
         Events table aligned to LifecycleEvent. Removed `CIRCUIT_BREAKER_DEGRADED / BACKOFF_ESCALATED / ORDER_THROTTLED`
-        rows (none exist in UAC `LifecycleEvent` enum). Added Lifecycle-vs-Alert taxonomy note documenting the dual SSOT.
-  - [x] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md:708` — `publishes CIRCUIT_BREAKER_OPEN` → `publishes CIRCUIT_OPEN
-        (UAC LifecycleEvent)`. (Already shipped in Phase A.5 PM@77e1978a.)
+        rows (none exist in UAC `LifecycleEvent` enum). Added Lifecycle-vs-Alert taxonomy note documenting the dual
+        SSOT.
+  - [x] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md:708` — `publishes CIRCUIT_BREAKER_OPEN` →
+        `publishes CIRCUIT_OPEN     (UAC LifecycleEvent)`. (Already shipped in Phase A.5 PM@77e1978a.)
   - [x] `14-playbooks/alerting/alert-code-taxonomy.md:82` — **NO CHANGE**: describes AlertCode pattern.
   - [x] `14-playbooks/alerting/circuit_breaker_open.md:66-68, 81, 86, 89` — JSONL `.event` field references aligned to
         LifecycleEvent names; title/Code/Pattern (line 2/17/32/33) preserved as `CIRCUIT_BREAKER_OPEN` (AlertCode).
@@ -198,42 +199,41 @@ drift.
 
 ### Phase A.4 — Family/archetype count refresh to 9/53 — PARALLEL — P0 — SHIPPED 2026-05-08 PM@9e90239c
 
-- [x] [SCRIPT] P0. UAC `StrategyArchetype` enum is the SSOT. All codex docs cite 9 families × 53 archetypes
-      (PM@d6d0cd57 refreshed strategy-summary.md; residuals refreshed PM@9e90239c).
+- [x] [SCRIPT] P0. UAC `StrategyArchetype` enum is the SSOT. All codex docs cite 9 families × 53 archetypes (PM@d6d0cd57
+      refreshed strategy-summary.md; residuals refreshed PM@9e90239c).
 
   **Files to update**:
   - [x] `09-strategy/README.md:19` — `8 families × 18 archetypes × 7 axes × 10 cross-cutting` →
-        `9 families × 53 archetypes × 7 axes × 10 cross-cutting`. Axis + cross-cutting counts verified unchanged
-        against UAC + strategy-summary.md. (PM@9e90239c.)
+        `9 families × 53 archetypes × 7 axes × 10 cross-cutting`. Axis + cross-cutting counts verified unchanged against
+        UAC + strategy-summary.md. (PM@9e90239c.)
   - [x] `09-strategy/architecture-v2/README.md:28-29` — `1 of 8 families` / `1 of 18 archetypes` → `1 of 9 / 1 of 53`.
         TL;DR action types also refreshed `(11 action types)` → `(14 action types per UAC InstructionActionV2 SSOT)`.
         (PM@9e90239c.)
   - [x] `09-strategy/architecture-v2/README.md:61` — section heading `## 8 Families` → `## 9 Families`; table extended
         with `PORTFOLIO` row; decision tree extended to 9 questions. (PM@9e90239c.)
   - [x] `09-strategy/architecture-v2/README.md:97,113` — `## 18 Archetypes` / `Total: 18 archetypes` →
-        `## 53 Archetypes` / `Total: 53 archetypes`; table expanded to 9 family rows with full Phase 9 additions
-        (4 `ARBITRAGE_MEV_*` + 1 `ARBITRAGE_CROSS_DOMAIN_EVENT` + 5 new `MARKET_MAKING_*` + 3 `DEFI_LP_*`
-        + 17 expanded `VOL_*` + 4 `PORTFOLIO_*`). 5-Layer Identity Model + Document Layout legend counts also
-        updated; `## Polymorphic StrategyInstruction (11 action types)` → `(14 action types)` with `CONVERT_DUST` /
-        `LP_MINT` / `LP_BURN` rows added. (PM@9e90239c.)
-  - [x] `09-strategy/architecture-v2/category-instrument-coverage.md:17,1422` —
-        `18 v2 strategy archetypes` → `53 v2 strategy archetypes` (line 17). Banner added documenting that the
-        matrix body covers the May-23 live + immediate-backtest subset; full per-cell Phase 9 materialisation
-        DEFERRED to Phase B (per-archetype subsection generation under `architecture-v2/archetypes/`). Changelog
-        entry added 2026-05-08. (PM@9e90239c.)
-  - [x] `09-strategy/cross-cutting/dart-manual-trade-spec.md:42-44, 67-75` — `11 action types` callout reworded
-        to point at UAC `InstructionActionV2` SSOT (14 members enumerated; matrix below covers the 11 actions in
-        scope for May-23, with `CONVERT_DUST` / `LP_MINT` / `LP_BURN` deferred alongside DeFi LP archetype
-        activation). `18 archetypes ... at 46 archetypes` paragraph rewritten to point at the UAC SSOT without
-        explicit count. `### 18 archetype docs referenced` heading rewritten to track the May-23 subset. The
-        action-count drift in `strategy-summary.md:30-31` (`13 action types`) is a separate fix vs the UAC enum
-        of 14; that drift is owned by the broader `strategy-summary.md` refresh under PM@d6d0cd57's continuation.
-        (PM@9e90239c.)
+        `## 53 Archetypes` / `Total: 53 archetypes`; table expanded to 9 family rows with full Phase 9 additions (4
+        `ARBITRAGE_MEV_*` + 1 `ARBITRAGE_CROSS_DOMAIN_EVENT` + 5 new `MARKET_MAKING_*` + 3 `DEFI_LP_*` + 17 expanded
+        `VOL_*` + 4 `PORTFOLIO_*`). 5-Layer Identity Model + Document Layout legend counts also updated;
+        `## Polymorphic StrategyInstruction (11 action types)` → `(14 action types)` with `CONVERT_DUST` / `LP_MINT` /
+        `LP_BURN` rows added. (PM@9e90239c.)
+  - [x] `09-strategy/architecture-v2/category-instrument-coverage.md:17,1422` — `18 v2 strategy archetypes` →
+        `53 v2 strategy archetypes` (line 17). Banner added documenting that the matrix body covers the May-23 live +
+        immediate-backtest subset; full per-cell Phase 9 materialisation DEFERRED to Phase B (per-archetype subsection
+        generation under `architecture-v2/archetypes/`). Changelog entry added 2026-05-08. (PM@9e90239c.)
+  - [x] `09-strategy/cross-cutting/dart-manual-trade-spec.md:42-44, 67-75` — `11 action types` callout reworded to point
+        at UAC `InstructionActionV2` SSOT (14 members enumerated; matrix below covers the 11 actions in scope for
+        May-23, with `CONVERT_DUST` / `LP_MINT` / `LP_BURN` deferred alongside DeFi LP archetype activation).
+        `18 archetypes ... at 46 archetypes` paragraph rewritten to point at the UAC SSOT without explicit count.
+        `### 18 archetype docs referenced` heading rewritten to track the May-23 subset. The action-count drift in
+        `strategy-summary.md:30-31` (`13 action types`) is a separate fix vs the UAC enum of 14; that drift is owned by
+        the broader `strategy-summary.md` refresh under PM@d6d0cd57's continuation. (PM@9e90239c.)
 
-  **Acceptance** (verified PM@9e90239c): workspace-wide `grep -rE "8 families|18 archetypes|46 archetypes" codex/09-strategy/`
-  returns zero current-state hits (the only `18 archetypes` reference is in the 2026-04-19 changelog entry of
-  `category-instrument-coverage.md`, which is a faithful historical record). UAC enum member counts (`StrategyFamily=9`,
-  `StrategyArchetype=53`, `InstructionActionV2=14`) are SSOT.
+  **Acceptance** (verified PM@9e90239c): workspace-wide
+  `grep -rE "8 families|18 archetypes|46 archetypes" codex/09-strategy/` returns zero current-state hits (the only
+  `18 archetypes` reference is in the 2026-04-19 changelog entry of `category-instrument-coverage.md`, which is a
+  faithful historical record). UAC enum member counts (`StrategyFamily=9`, `StrategyArchetype=53`,
+  `InstructionActionV2=14`) are SSOT.
 
 ### Phase A.5 — Live transport SSOT alignment to Redis Stream — PARALLEL — P0 — SHIPPED 2026-05-08
 
@@ -242,22 +242,20 @@ drift.
       codex docs claiming PubSub-only or embedded-only need banners pointing at the new SSOT.
 
   **Files updated**:
-  - [x] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` — POST-2026-05-08 SSOT banner added to § 3 Messaging Rules;
-        Core Rule + Transport Decision Matrix updated to name Redis Stream (inner-loop) + PubSub (cross-service)
-        explicitly. Cross-links to `05-infrastructure/live-pipeline-architecture.md` +
-        `03-observability/coordination-events.md`.
-  - [x] `04-architecture/batch-live-symmetry.md` — TL;DR transport row updated to
-        "Redis Stream (inner-loop) + PubSub (cross-service)"; "Live: PubSub as Message Bus" section retitled to
-        "Redis Stream (inner-loop) + PubSub (cross-service) as Message Bus" with the per-transport-class breakdown.
-        POST-2026-05-08 SSOT banner cross-links the live-pipeline + coordination-events docs.
+  - [x] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` — POST-2026-05-08 SSOT banner added to § 3 Messaging Rules; Core
+        Rule + Transport Decision Matrix updated to name Redis Stream (inner-loop) + PubSub (cross-service) explicitly.
+        Cross-links to `05-infrastructure/live-pipeline-architecture.md` + `03-observability/coordination-events.md`.
+  - [x] `04-architecture/batch-live-symmetry.md` — TL;DR transport row updated to "Redis Stream (inner-loop) + PubSub
+        (cross-service)"; "Live: PubSub as Message Bus" section retitled to "Redis Stream (inner-loop) + PubSub
+        (cross-service) as Message Bus" with the per-transport-class breakdown. POST-2026-05-08 SSOT banner cross-links
+        the live-pipeline + coordination-events docs.
   - [x] `04-architecture/deployment-topology-diagrams.md` — "Live Deployment" section retitled to "Redis Stream
         Cascade + Consolidated features-service"; package-embedding diagram explicitly framed as historical
-        (pre-2026-05-08); post-2026-05-08 update block at end of "Key characteristics" describes the
-        XADD / XREADGROUP cascade contract + cross-links live-pipeline-architecture + features-service-architecture.
+        (pre-2026-05-08); post-2026-05-08 update block at end of "Key characteristics" describes the XADD / XREADGROUP
+        cascade contract + cross-links live-pipeline-architecture + features-service-architecture.
   - [x] `04-architecture/README.md` — "two distinct concerns" framing rewritten: feature calculation runs in the
         consolidated features-service (asset-scoped + cross-cutting), data transport split between Redis Stream
-        (inner-loop) + PubSub (cross-service). Cross-links live-pipeline-architecture +
-        features-service-architecture.
+        (inner-loop) + PubSub (cross-service). Cross-links live-pipeline-architecture + features-service-architecture.
   - [x] `03-observability/coordination-events.md` — already updated 2026-05-08 to mention Redis Stream cascade
         (PM@d212f4e6); verified — § "Redis Stream cascade (inner-loop live pipeline)" already names
         CANDLE_BOUNDARY_CROSSED + CANDLE_COMPUTED + XREADGROUP semantics + replay handoff. No further drift.
@@ -276,8 +274,8 @@ drift.
         Batch Handler = `MatchingEngineHandler`, Live Handler = `ExecutionLiveHandler`, mode = `batch / live`, test
         coverage = `unit + integration`, notes describe matching-engine fills (UAC `BatchExecutionMode`) vs real venue
         with cross-link to `batch-live-pipeline.md` for execution-alpha = live − simulated.
-  - [x] `06-coding-standards/integration-testing-layers.md` — verified: no contradictory "execution = live only"
-        claim. Doc references execution test layers without asserting live-only.
+  - [x] `06-coding-standards/integration-testing-layers.md` — verified: no contradictory "execution = live only" claim.
+        Doc references execution test layers without asserting live-only.
   - [x] `09-strategy/architecture-v2/archetypes/*.md` — verified via workspace grep: no archetype doc contains
         "execution is live-only" or equivalent contradiction. Acceptance met.
   - [x] `10-audit/repos/execution-service.yaml` — verified: `deployment_modes: ["batch", "live"]` +
@@ -294,17 +292,17 @@ drift.
   **Files updated**:
   - [x] `04-architecture/README.md` — "Live deployments: 7-8 standalone processes" enumeration replaced with the
         consolidated shape: ONE `features-service` repo (8 family sub-packages) deployed in two flavors (asset-scoped
-        colocated with MDPS + cross-cutting standalone), plus MTDS / instruments / strategy / execution. Cross-link
-        to `features-service-architecture.md` + `live-pipeline-architecture.md`.
-  - [x] `04-architecture/deployment-topology-diagrams.md` — Live Deployment section retitled (per Phase A.5 work);
-        added explicit "Deploys 4-6 collapse to one consolidated features-service" sub-block in the post-2026-05-08
-        update describing the asset-scoped + cross-cutting flavors with feature_family dispatcher contract.
+        colocated with MDPS + cross-cutting standalone), plus MTDS / instruments / strategy / execution. Cross-link to
+        `features-service-architecture.md` + `live-pipeline-architecture.md`.
+  - [x] `04-architecture/deployment-topology-diagrams.md` — Live Deployment section retitled (per Phase A.5 work); added
+        explicit "Deploys 4-6 collapse to one consolidated features-service" sub-block in the post-2026-05-08 update
+        describing the asset-scoped + cross-cutting flavors with feature_family dispatcher contract.
   - [x] `05-infrastructure/launcher-script-ssot.md` — verified: parallel agent already added § "features-service
-        consolidation (2026-05-08)" describing the single `launch-features-vm.sh` parameterised by
-        `--feature-family` + `--asset-group`, replacing the pre-2026-05-08 8 per-family launchers. No further drift.
-  - [x] `05-infrastructure/deployment-clusters-live-vs-batch.md` — verified: doc already uses `features-*` (now
-        meaning feature families within the consolidated repo); single passing mention of "features-sports input
-        pipeline" is harmless prose. No update needed.
+        consolidation (2026-05-08)" describing the single `launch-features-vm.sh` parameterised by `--feature-family` +
+        `--asset-group`, replacing the pre-2026-05-08 8 per-family launchers. No further drift.
+  - [x] `05-infrastructure/deployment-clusters-live-vs-batch.md` — verified: doc already uses `features-*` (now meaning
+        feature families within the consolidated repo); single passing mention of "features-sports input pipeline" is
+        harmless prose. No update needed.
 
   **Acceptance**: no codex doc enumerates 5+ separate `features-*-service` repos as the live deployment shape. ✅
   verified.
@@ -313,32 +311,38 @@ drift.
 
 ## LAYER B — Workspace-wide mechanical sweeps (parallel; ship after Layer A or in parallel with it)
 
-### Phase B.1 — POST_PLAN_BANNER_2026_05_06 sweep (workspace-wide) — PARALLEL — P0
+### Phase B.1 — POST_PLAN_BANNER_2026_05_06 sweep (workspace-wide) — PARALLEL — P0 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P0. Banner cites 3 plans: writegate-honest-coverage (still active), predictions-canonical_question_group
+- [x] [SCRIPT] P0. Banner cites 3 plans: writegate-honest-coverage (still active), predictions-canonical_question_group
       (archived per MEMORY, folded into predictions_master), data-status-multi-axis-shard (no longer findable). 2 of 3
       banner-named plans no longer exist; banner is workspace-wide stale.
 
-  **Scope**: ~200 files across all codex sub-trees carry the banner.
+  **Scope**: 366 files across all codex sub-trees carried the banner (counted at sweep start). Sweep removed BOTH the
+  canonical `POST_PLAN_BANNER_2026_05_06_FINAL` shape AND the longer legacy `POST_PLAN_BANNER_2026_05_06` multi-line
+  variant (24 files used the legacy shape; 342 used the FINAL shape).
 
-  **Implementation**:
-  - [ ] Find every codex/\*.md containing `POST_PLAN_BANNER_2026_05_06_FINAL`.
-  - [ ] Per directory (one sub-agent per dir for safety): bulk-remove the banner from every file in that directory.
-        Single commit per directory (`docs(codex): sweep POST_PLAN_BANNER_2026_05_06 from <dir>/`).
-  - [ ] Operator approves the sweep before execution (large blast radius).
+  **Implementation** (operator-confirmed cadence: per-directory commit):
+  - [x] Find every codex/\*.md containing `POST_PLAN_BANNER_2026_05_06[_FINAL]`.
+  - [x] Per directory: bulk-remove the banner from every file in that directory. Single commit per directory.
+  - [x] Operator approved (Q2 of plan).
 
-  **Files affected** (counts from audit):
-  - `02-data/`: ~20 files
-  - `04-architecture/`: ~30 files (estimated)
-  - `05-infrastructure/`: ~10 files
-  - `06-coding-standards/`: most non-NEW docs (~20)
-  - `09-strategy/`: ~40 files (every archetype + family + architecture-v2/cross-cutting)
-  - `14-playbooks/`: 129 files (the largest cluster)
-  - Other small dirs: estimated ~10
+  **Per-directory commits**:
+  - PM@d094afdc — small dirs bundle (00-SSOT-INDEX + 01-domain + 02-venues + 03-observability + 03-services) — 11 files
+  - PM@d14d2591 — 02-data/ (14 files; 4 skipped due to foreign WIP — 2 swept later, 2 absorbed by PM@e641f3f1)
+  - PM@489108ce — 04-architecture/ (54 files, my sweep but message-attributed to a parallel agent's Phase C.3 commit
+    that hijacked my staging — content correct, attribution muddled, foot-gun #1 incident)
+  - PM@f58bc8a9 — 05-infrastructure/ (24 files; one foreign delete bundled, foot-gun #1 incident)
+  - PM@06e13ce2 — 06-coding-standards/ (45 files)
+  - PM@dedbe935 — 09-strategy/ (84 files)
+  - PM@8090d09c — 14-playbooks/ (129 files)
+  - PM@e641f3f1 — 02-data/ residual 2 files (`data-lineage-MTDS-features-ml.md` +
+    `sports-data-source-coverage-matrix.md`) — absorbed by parallel agent's Phase D.2 sports consolidation, not a
+    standalone B.1 commit but ships the same content.
 
-  Total: **~250 files**.
+  **Total**: 366 files swept across 8 commits (5 mine clean, 1 mine + 1-foreign-bundle, 1 foreign with my content, 1
+  foreign with my redundant content). Workspace-wide grep `POST_PLAN_BANNER_2026_05_06` in codex/ returns zero hits.
 
-  **Acceptance**: workspace-wide grep `POST_PLAN_BANNER_2026_05_06_FINAL` returns zero hits in codex/.
+  **Acceptance**: workspace-wide grep `POST_PLAN_BANNER_2026_05_06` in codex/ returns zero hits — VERIFIED.
 
 ### Phase B.2 — Plan filename convention sweep (.plan.md → .md in active/) — PARALLEL — P1
 
@@ -462,8 +466,8 @@ drift.
   candidates by incoming-ref count: testing (4) > service-structure-standards (3) > sub-agent-workflow (2) > others.
 
   **Acceptance status**: original acceptance criterion "no codex doc under 500 bytes" remains UNMET; the 12 stubs are
-  intentional forwarders with incoming SSOT-pointer contracts that require expansion (not deletion) to clear.
-  Acceptance is moved to B.4-bis when expansion lands.
+  intentional forwarders with incoming SSOT-pointer contracts that require expansion (not deletion) to clear. Acceptance
+  is moved to B.4-bis when expansion lands.
 
 ### Phase B.5 — SOURCE_COVERAGE_START dedup — PARALLEL — P2
 
@@ -486,46 +490,53 @@ drift.
 
 ## LAYER C — Easy consolidations (parallel; just-shipped docs that fold cleanly)
 
-### Phase C.1 — Delete `05-infrastructure/cloud-agnostic-migration.md` stub — PARALLEL — P1
+### Phase C.1 — Delete `05-infrastructure/cloud-agnostic-migration.md` stub — PARALLEL — P1 — SHIPPED
 
-- [ ] [SCRIPT] P1. The 05-infrastructure version is 501 bytes redirecting to
-      `04-architecture/cloud-agnostic-migration.md`. Delete the stub; redirect incoming refs.
+- [x] [SCRIPT] P1. The 05-infrastructure version is 501 bytes redirecting to
+      `04-architecture/cloud-agnostic-migration.md`. Delete the stub; redirect incoming refs. **SHIPPED 2026-05-08**
+      (PM@1e33b423 deletion + 05-infrastructure/README.md:171 already updated to point at 04-architecture in same
+      commit).
 
   **Implementation**:
-  - [ ] `git rm codex/05-infrastructure/cloud-agnostic-migration.md`.
-  - [ ] Update `codex/05-infrastructure/README.md:171` (and any other incoming refs in 05-infra) to point at
+  - [x] `git rm codex/05-infrastructure/cloud-agnostic-migration.md`.
+  - [x] Update `codex/05-infrastructure/README.md:171` (and any other incoming refs in 05-infra) to point at
         `04-architecture/cloud-agnostic-migration.md`.
-  - [ ] Workspace-wide grep `codex/05-infrastructure/cloud-agnostic-migration.md` → rewrite all refs.
+  - [x] Workspace-wide grep `codex/05-infrastructure/cloud-agnostic-migration.md` → rewrite all refs (PM-internal refs
+        verified; sibling-repo refs in deployment-service/terraform/ point at `unified-trading-codex/...` which is a
+        sibling-repo path, out of scope for PM).
 
   **Acceptance**: stub deleted; no broken links.
 
-### Phase C.2 — Fold `deployment-ui-environment-tiers.md` into `deployment-ui-architecture.md` — PARALLEL — P1
+### Phase C.2 — Fold `deployment-ui-environment-tiers.md` into `deployment-ui-architecture.md` — PARALLEL — P1 — SHIPPED
 
-- [ ] [SCRIPT] P1. The new `deployment-ui-environment-tiers.md` (4K, shipped today) duplicates env-resolution-by-domain
+- [x] [SCRIPT] P1. The new `deployment-ui-environment-tiers.md` (4K, shipped today) duplicates env-resolution-by-domain
       content already at `deployment-ui-architecture.md:117-141`. Plus the Tier 0/1/2/3 naming conflicts with
-      `runtime-tiers-and-deployment.md` T0–T6.
+      `runtime-tiers-and-deployment.md` T0–T6. **SHIPPED 2026-05-08** (PM@2818b6b9 deletion; fold-in already present in
+      deployment-ui-architecture.md per `EnvironmentTier` (DEV/STAGING/PROD) section + dev-mode subsection).
 
   **Implementation**:
-  - [ ] Move the hostname → port routing detail (lines 24-31 of environment-tiers) into `deployment-ui-architecture.md`.
-  - [ ] Move the Tier 0/1/2 vs Tier 3 distinction (lines 16-21) into `deployment-ui-architecture.md` BUT rename axis to
+  - [x] Move the hostname → port routing detail (lines 24-31 of environment-tiers) into `deployment-ui-architecture.md`.
+  - [x] Move the Tier 0/1/2 vs Tier 3 distinction (lines 16-21) into `deployment-ui-architecture.md` BUT rename axis to
         use UAC `EnvironmentTier` (DEV/STAGING/PROD) instead of the conflicting "Tier N" naming.
-  - [ ] `git rm codex/05-infrastructure/deployment-ui-environment-tiers.md`.
-  - [ ] Update incoming refs: `14-playbooks/authentication/firebase-local.md` (if it references the env-tiers doc), the
+  - [x] `git rm codex/05-infrastructure/deployment-ui-environment-tiers.md`.
+  - [x] Update incoming refs: `14-playbooks/authentication/firebase-local.md` (if it references the env-tiers doc), the
         NEW docs from PM@9d873547 that cited it.
 
   **Acceptance**: doc deleted; deployment-ui-architecture.md is the single SSOT for deployment-UI tier model.
 
-### Phase C.3 — Fold `launcher-script-consolidation-2026-05-07.md` into `launcher-script-ssot.md` — PARALLEL — P1
+### Phase C.3 — Fold `launcher-script-consolidation-2026-05-07.md` into `launcher-script-ssot.md` — PARALLEL — P1 — SHIPPED
 
-- [ ] [SCRIPT] P1. The migration-tracker doc is dated; once the 30 ad-hoc launchers finish migrating, the tracker
+- [x] [SCRIPT] P1. The migration-tracker doc is dated; once the 30 ad-hoc launchers finish migrating, the tracker
       becomes obsolete. The launcher-script-ssot.md already has a "Migration in flight (2026-05-07)" section that
-      captures the same data at higher level.
+      captures the same data at higher level. **SHIPPED 2026-05-08** (PM@6a6308b3 — per-launcher migration table folded
+      into launcher-script-ssot.md § "Migration in flight (2026-05-07)" under new sub-headings; tracker git rm'd; plan
+      reference rewritten in launcher_scripts_consolidation_into_deployment_service_2026_05_07.md).
 
   **Implementation**:
-  - [ ] Append the migration table from `launcher-script-consolidation-2026-05-07.md` § "Migration table" into
+  - [x] Append the migration table from `launcher-script-consolidation-2026-05-07.md` § "Migration table" into
         `launcher-script-ssot.md` § "Migration in flight".
-  - [ ] `git rm codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`.
-  - [ ] Update incoming refs (workspace-wide grep).
+  - [x] `git rm codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`.
+  - [x] Update incoming refs (workspace-wide grep — only PM-internal refs found, all rewritten).
 
   **Acceptance**: launcher SSOT doc has the full migration table; tracker deleted.
 
@@ -577,10 +588,10 @@ drift.
   - [x] `02-data/sports-data-migration.md` — DELETED. Superseded by `per-category-bucket-layouts.md` (sports section) +
         reality of shipped sports buckets. Post-plan banner (2026-05-06) already disclaimed it; no unique content needed
         migration.
-  - [x] `02-data/sports-schema-paths.md` — DELETED. GCS path SSOT lives in UAC
-        `unified_api_contracts.sports.gcs_paths` (`candidate_parquet_paths`, `SPORTS_DATA_TYPE_TO_FOLDER`,
-        `SPORTS_DATA_TYPE_LAYOUT`); SOURCE_COVERAGE_START table already documented in CLAUDE.md "Sports source coverage
-        windows" workspace rule + `availability-manifest-and-data-status.md`; phantom-audit recipe lives in
+  - [x] `02-data/sports-schema-paths.md` — DELETED. GCS path SSOT lives in UAC `unified_api_contracts.sports.gcs_paths`
+        (`candidate_parquet_paths`, `SPORTS_DATA_TYPE_TO_FOLDER`, `SPORTS_DATA_TYPE_LAYOUT`); SOURCE_COVERAGE_START
+        table already documented in CLAUDE.md "Sports source coverage windows" workspace rule +
+        `availability-manifest-and-data-status.md`; phantom-audit recipe lives in
         `availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe".
 
   **Cross-doc references rewritten** (6 files):
@@ -862,10 +873,10 @@ drift.
       `03-observability/alerting.md`) mapping all three. Other docs cite. **SHIPPED 2026-05-08** — glossary added to
       `14-playbooks/alerting/README.md` § "Severity glossary" mapping all three vocabularies (UAC `AlertSeverity`
       CRITICAL/HIGH/WARN/INFO ↔ PagerDuty P0/P1/P2/P3 ↔ routing ↔ time-to-ack ↔ examples). Cross-links added in
-      `03-observability/alerting.md` (replaces inline severity table), `14-playbooks/alerting/pagerduty-escalation-policy.md`
-      (top banner + reshape "Severity tiers" section to defer to glossary; preserves the operational P0-vs-P1
-      sub-distinction inside CRITICAL), and `14-playbooks/alerting/threshold-tuning.md` (top banner citing glossary
-      from the WARNING-only deploy step).
+      `03-observability/alerting.md` (replaces inline severity table),
+      `14-playbooks/alerting/pagerduty-escalation-policy.md` (top banner + reshape "Severity tiers" section to defer to
+      glossary; preserves the operational P0-vs-P1 sub-distinction inside CRITICAL), and
+      `14-playbooks/alerting/threshold-tuning.md` (top banner citing glossary from the WARNING-only deploy step).
 
 ### Phase F.4 — `aws_migration_cost_analysis_2026_05_07.md` extract + archive — PARALLEL — P2
 
