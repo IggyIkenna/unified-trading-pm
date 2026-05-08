@@ -268,6 +268,36 @@ carry-staked-basis codex update + integrated paper-trade smoke round-trip after 
 7. ✅ Plan checkboxes flipped per shippable unit across defi_master, defi_archetypes_canonicalisation, master plan Group
    F.
 
+**Full-execution criterion** (per PLAN_FORMAT.md § 8 + "Plans Run To Actual Completion" HARD RULE):
+
+- ✅ **Paper-trade smoke ran end-to-end on real infra (testnet wallet + real adapter codepath)**.
+  - **What ran**: `python -m strategy_service.cli batch --archetype carry_staked_basis --asset-group defi
+    --venue jitoSOL --duration 1h --paper`; matching engine returns simulated fill; downstream events flow.
+  - **Verification**: `gcloud storage ls gs://${PID}-events/events/strategy/$(date +%Y-%m-%d)/paper-smoke-*/` shows
+    STARTED + TRADE_REQUESTED + FILL_RECEIVED + POSITION_UPDATED + PNL_COMPUTED events. Sample one of each event,
+    assert non-empty payload + correct strategy_id + position-balance-monitor row in expected
+    `gs://${PID}-position-balance/...` shard.
+- ✅ **Lending-indices VM ran-to-completion on real infra**.
+  - **What ran**: `bash deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh` (or equivalent),
+    monitored until STOPPED with `rows_captured > 0`.
+  - **Verification**: post-VM `gcloud storage ls gs://${PID}-events/events/mtds/$(date +%Y-%m-%d)/mtds-lending-*/`
+    shows STARTED + per-instrument INSTRUMENT_PROCESSED events + STOPPED. Sample 3 random instruments' parquets,
+    assert `rows_captured > 0` AND `available_at` column present AND non-NaN.
+- ✅ **Pyth Hermes archive backfill VM ran-to-completion on real infra (Solana-only scope)**.
+  - **What ran**: `bash deployment-service/scripts/vm/launch-mtds-pyth-hermes-vm.sh`, monitored until STOPPED.
+  - **Verification**: pre-2023 jitoSOL parquet exists in `gs://${PID}-mtds/raw_tick_data/...`; sample probe confirms
+    non-empty rows + Pyth-specific schema columns; manifest row at `(asset_group=defi, chain=solana, source=pyth,
+    data_type=*)` shows captured.
+- ✅ **All 13 UAC drift pairs ran QG green on the actual UAC repo**.
+  - **What ran**: per-pair commit + `cd unified-api-contracts && bash scripts/quality-gates.sh`.
+  - **Verification**: 13 commits in UAC origin/live-defi-rollout each green; basedpyright + ruff + tests all pass;
+    workspace consumer audit finds zero stale references to flipped pairs.
+
+**Handoff exception(s)**:
+
+- bSOL `LST_TOKEN_GENESIS` date verification can defer to Stream A successor agent if `unified_api_contracts/sports/`
+  test fixture doesn't exist yet for this token; carryover to tomorrow's split.
+
 ---
 
 ## TAB 2 — Live pipeline + writegate Phase 5 ratchet

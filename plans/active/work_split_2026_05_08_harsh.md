@@ -479,6 +479,35 @@ code edits to Ikenna Tab 1.
 4. ✅ Sports reconciler hook wired into VM exit-step + first per-source VM cycle through validates the wire.
 5. ✅ defi_988 top-5 priority backfill VMs launched + STARTED + per-VM progress events flowing.
 
+**Full-execution criterion** (per PLAN_FORMAT.md § 8 + "Plans Run To Actual Completion" HARD RULE):
+
+- ✅ **CeFi VM drain ran-to-completion on real infra**.
+  - **What ran**: `gcloud compute instances list --filter='name~cefi-' --zones=asia-northeast1-c` shows zero RUNNING
+    cefi-{venue}-{flavor}-{ts} VMs at end-of-cycle; per-VM event stream emits STOPPED with non-empty progress.
+  - **Verification**: `gcloud storage ls gs://${PID}-events/events/mtds/$(date +%Y-%m-%d)/cefi-*/` shows STARTED +
+    INSTRUMENT_PROCESSED progress + STOPPED for each drained VM. Sample 3 random VMs: open the latest JSONL, assert
+    `event in ("STOPPED","FAILED")` with non-empty `metadata.details`.
+- ✅ **TradFi MDPS cluster validation ran on real production manifest**.
+  - **What ran**: post-drain `python -m market_data_processing_service.scripts.run_cluster_validation
+    --asset-group tradfi --start 2024-01-01 --end 2025-12-31` against `gs://central-element-323112-availability-manifest/`.
+  - **Verification**: report shows zero `MissingClusterValidationError` violations across ES.OPT 11-cluster + futures
+    chains; partial-bundle fixes (if any) shipped via separate commit referenced in the report.
+- ✅ **Cross-asset rescan `--apply-flips` ran against canonical manifest**.
+  - **What ran**: `python -m market_data_processing_service.scripts.rescan_cross_asset --apply-flips
+    --csv-out /tmp/rescan_2026_05_08.csv` after operator dry-run review.
+  - **Verification**: post-rescan `_index/availability_index.parquet` row count matches pre-rescan + flip count;
+    sample probe of 5 random row_keys confirms typed reasons (no blanks); CSV diff archived.
+- ✅ **defi_988 top-5 backfill VMs ran-to-completion on real infra (or partial coverage with named successor for the rest)**.
+  - **What ran**: `bash deployment-service/scripts/vm/launch-defi-{venue}-{flavor}-vm.sh` × 5, monitored via event
+    stream until each emits STOPPED with `rows_captured > 0`.
+  - **Verification**: per-VM events directory contains STARTED + at least N progress events / hour + STOPPED;
+    sample probe of one parquet per VM confirms non-empty rows + correct schema.
+
+**Handoff exception(s)**:
+
+- Sports reconciler hook validation can fall back to "first per-source VM cycle SCHEDULED" if no source VM completes
+  within today; carryover to tomorrow's split with explicit `**DEFERRED**` annotation.
+
 ---
 
 ## TAB 5 — Mechanical refactors + audit cluster (the dragon)
