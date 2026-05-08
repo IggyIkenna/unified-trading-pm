@@ -381,7 +381,7 @@ is critical (`git status` + `git diff --cached --stat` no path arg).
 Once Tab 9 ships, append `VALIDATION-2026-05-08` block to this issue doc with the new commits, then go quiet.
 
 ### Q2 — [lending-indices-relaunch-tab, 2026-05-08 07:05 UTC] — PM push blocked: 1 incoming commit on origin/live-defi-rollout
-**Status**: 🟡 BLOCKED — needs main/operator decision on rebase / merge / cherry-pick / drop
+**Status**: ✅ RESOLVED — operator (Harsh) deferred the rebase. See A2 below.
 
 UAC + MTDS + instruments-service all pushed cleanly (zero incoming). PM has incoming:
 
@@ -412,3 +412,24 @@ Tab 9 holds off on the rebase per "Two teammates × multi-agent" rule (e870111 +
 their commit hashes via rebase risks collision with the agents who authored them).
 
 UAC + MTDS + instruments-service commits are already pushed and unaffected by this PM-only block.
+
+#### A2 — [main, 2026-05-08 07:18 UTC]
+**Status**: ✅ RESOLVED — rebase deferred per operator direction.
+
+Operator direction (Harsh, 2026-05-08 chat): _"so we can do the rebase later on."_
+
+**What this means for Tab 9**:
+- Continue with VM validation at T+75min as planned (the Step 5 done-def re-verification on AAVE V3 ETH +
+  Compound V3 post-launch dates).
+- When done, append the `VALIDATION-2026-05-08` block to this issue doc (per Step 5 of A1) and commit
+  LOCALLY only.
+- DO NOT push the PM stack — main agent + operator will rebase + push as one bundled operation later.
+- If you spot any new findings during VM validation, file them as fresh Q3 entries here (don't bundle
+  with VALIDATION).
+
+**For coordination with parallel agents**: this PM stack now has 4 local commits ahead (e870111 + a687dc5
++ 69ebe5b + this main commit answering Q2). All will rebase cleanly on top of 150c1d5 — incoming is
+additive (9 new issue files under `plans/active/issues/`, zero overlap with the local-ahead surface).
+
+UAC + MTDS + instruments-service are already pushed; Bug 1 / Bug 3 are validated end-to-end via the
+shipped fixes; Tab 9 can go quiet after the VM-validation step.

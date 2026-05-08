@@ -27,7 +27,4 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 
 # Active pings
 
-_(empty — Tab 10 ✅ DONE verified 06:55 UTC; Tab 9 BLOCKED Q1 RESOLVED 06:55 UTC with extended scope (operator-approved). Tabs 2, 9, 11 IN FLIGHT. Tabs 12/13/14 QUEUED pending operator review.)_
-
-[2026-05-08 06:39 UTC] predictions-phase1-ingestion-tab — DONE Tab 10 — Phase 1 instruments-service half shipped (instruments-service@98bb167 + b904785, PM@7343b93 + 8526f99); Phase 2 MTDS half explicitly deferred per plan body's "Temporary states" section. See predictions_master_2026_05_07.plan.md ## DONE-2026-05-08.
-[2026-05-08 07:05 UTC] lending-indices-relaunch-tab — 🟡 BLOCKED Tab 9 (Q2): PM push blocked, 1 incoming on origin/live-defi-rollout (150c1d5 9-issue audit batch, additive). UAC + MTDS + IS pushed cleanly (UAC@6a64a56 + MTDS@c6bdf96 + IS@6ae50de — UAC SSOT corrected, handler short-circuit shipped, tests pass). Local PM has 2 foreign + Tab 9's pending issue-doc commits. Bugs 1+3 ✅ validated in issue-doc body (UAC SSOT misdiagnosis, not code bug). DEFI tarballs refreshed 07:00 UTC. VM still running (will validate UAC fix end-to-end at T+75min). Need rebase / cherry-pick / drop decision for PM. See issues/lending_indices_handler_bugs_2026_05_07.md Q2.
+_(empty — Tab 10 ✅ DONE; Tab 9 Q1 + Q2 ✅ RESOLVED (Q2 operator-deferred rebase 07:18 UTC); Bugs 1+3 ✅ validated end-to-end via UAC@6a64a56 + MTDS@c6bdf96 + IS@6ae50de (already pushed). Tab 9 continuing VM validation at T+75min. Tabs 2, 9, 11 IN FLIGHT. Tabs 12/13/14 QUEUED. PM rebase pending — 4 local-ahead commits will rebase on 150c1d5 later.)_
