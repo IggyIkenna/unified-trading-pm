@@ -1099,3 +1099,22 @@ emits 350 events in 4min covering protocol/chain/date cascade — that's the rig
   `EXPECTED_PROTOCOL_FALLBACK` + `INSTRUMENT_PROCESSED` per shipped row).
 
 **Owner**: defi_master Pyth Hermes coverage SSOT todo (extend with progress-event wiring as Phase 2 of that todo).
+
+### Runbook execution-owner assignments (codified 2026-05-08 14:36 UTC, Tab 1 main)
+
+User flagged "runbooks shipped → nobody runs them → silent rot" gap. Closing it with explicit owners:
+
+| Runbook | Owner | Cadence | Status |
+|---------|-------|---------|--------|
+| Paper-trade smoke (PM@b1bd92e6) | **operator + new Tab** to migrate colocated_engine.py | Daily once unblocked | 🚨 **P0 BLOCKED** — `colocated_engine.py:306` stale import (V1-RETIRE Phase 2 not migrated). See `plans/active/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.md`. |
+| Lending-indices VM relaunch (this doc) | Tab 1 main agent | One-shot | ✅ **DONE 14:11 UTC** (mtds-lending-indices-20260508-141147 RUNNING) |
+| Lending-indices T+90min spot-check | Tab 1 ScheduleWakeup | At 15:24 UTC | ⏳ Scheduled |
+| Pyth-archive VM launch (deployment-service@0722ac4) | Tab 1 main agent | One-shot | ✅ **DONE 14:11 UTC** (mtds-pyth-archive-20260508-141204 RUNNING + writing oracle prices) |
+| Pyth-archive T+90min spot-check | Tab 1 ScheduleWakeup | At 15:24 UTC | ⏳ Scheduled |
+| Birdeye paid-tier launcher (Item 5) | Operator decision pending (P1) | One-shot when needed | DEFERRED — Pythnet/CoinGecko cascade in current launcher sufficient |
+| Custody adapter health (Copper sandbox) | Live-only prerequisite | One-shot | DEFERRED per master plan Group F (live-only) |
+
+**Periodic-execution gap closure**: Paper-trade smoke MUST be wired to a periodic executor (cron / daily Tab) once the
+V1-RETIRE blocker is fixed. Without periodic execution, harness rot like the 2026-05-01 → 2026-05-08 silent breakage
+recurs. Recommend: daily Tab 5 (governance) item OR cron-launched smoke VM. Both options covered in master plan
+Group F item 17 success criterion.
