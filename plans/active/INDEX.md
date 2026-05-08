@@ -1,6 +1,7 @@
 # Active Plans Index
 
-**Last Updated:** 2026-04-29 (instrument catalogue + availability matrix plan added)
+**Last Updated:** 2026-05-08 (live-pipeline activation triple — features-repo consolidation + live-pipeline + GCS
+migration bundle)
 
 This is the canonical index of all active plans. Plans are organized by domain.
 
@@ -9,6 +10,39 @@ This is the canonical index of all active plans. Plans are organized by domain.
 ## Cross-cutting SSOT (priority — data plane + agents)
 
 **Read first** when touching venue routing, buckets, or market-data category maps:
+
+- [live_pipeline_mtds_mdps_features_2026_05_08.plan.md](live_pipeline_mtds_mdps_features_2026_05_08.plan.md) — **Live
+  (websocket-streaming) pipeline activation** for MTDS / MDPS / consolidated features-service across all 5 asset_groups
+  ahead of the 2026-05-23 DeFi cutover. Topology: MTDS standalone cluster (websocket-pool concerns isolated),
+  MDPS+features-asset-scoped colocated per asset_group, features-cross-cutting standalone flavor of same image. Cascade:
+  MTDS → MDPS → features-service via Redis Streams (CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED → FEATURES_COMPUTED) with
+  UTC midnight alignment end-to-end so batch ↔ live reconciliation is a `GROUP BY pipeline_mode` over the same
+  manifest. Live gap semantics extend the 4-category empty-output tree with stale-not-missing wiring via
+  ServiceEmissionPolicy.PUBLISHED_DEGRADED. Replay subsystem covers intraday- restart gap windows with smooth handoff to
+  live at the next aligned boundary. Health-API extension + alerting-service tier-up + circuit breakers wired to
+  strategy-service. Instrument-cache-delta hot-reload pattern (mirrors ApiKeyReloader; NOT a new dedicated stream). 15
+  phases, ~10d wall-clock. Pre-reqs: features_repo_consolidation Phase 7 + gcs_migration_bundle Phase 9.
+
+- [features_repo_consolidation_2026_05_08.plan.md](features_repo_consolidation_2026_05_08.plan.md) — **Pre-requisite for
+  live-pipeline.** Merge 8 separate `features-*-service` repos (calendar / commodity / cross-instrument / delta-one /
+  multi-timeframe / onchain / sports / volatility) into a single `features-service` repo with sub-packages per family,
+  ONE Docker image parameterised by `--feature-family` CLI flag, ONE flat `pyproject.toml`, ONE Health-API. NEW UAC
+  `feature_family` schema column (additive sibling-or-prefix of `feature_group` in v5 manifest). Lift 4 cross-family
+  helpers (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN write-gate) to UTL — currently
+  duplicated across 5-6 repos. Pattern matches UMI→MTDS and UCI→UTL precedents. Naming explicitly disambiguated from
+  ml_and_features_master Phase 2's feature-DATA consolidation (this is REPO consolidation). 10 phases, ~5d wall-clock
+  with parallelism.
+
+- [gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md](gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md) —
+  **Bundled overnight GCS migration** that walks every parquet ONCE (millions across asset_groups) and applies the full
+  set of pending hive-vocab + partition-column changes in a single pass so the canonical manifest is rewritten once
+  instead of N times. Three migrations bundled: (1) NEW
+  `pipeline_mode={batch_databento, batch_tardis, ..., live_websocket}` hive partition column; (2) finish the dual-vocab
+  `category=` → `asset_group=` rekey CLAUDE.md previously preserved as legacy-with-fallback; (3) sweep the 5 drift axes
+  from the 2026-05-04 phantom-audit incident (path-prefix, instrument_type casing, schema-4 empty instrument_type,
+  chain-bundle equivalence) so the 354 residual phantoms clear. Reader fallback ≤30 days post-migration then deleted.
+  Coordinates with manifest_migration_master_2026_05_07 Stage 1+2+3 (must complete first) + Stage 4 (folds in here). 9
+  phases including operator-gated VM fleet execution.
 
 - [instrument_catalogue_availability_matrix_2026_04_29.plan.md](instrument_catalogue_availability_matrix_2026_04_29.plan.md)
   — Joins **static shard-dynamics SSOT** (bucket → partition layout → schema → coverage-start → retention/cutoff →

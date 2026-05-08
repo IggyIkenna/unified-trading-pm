@@ -430,6 +430,16 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 
 ### Group F — Trading prerequisites (live-only services)
 
+> **🟢 LIVE-PIPELINE ACTIVATION 2026-05-08** — Three new plans landed 2026-05-08 cover the live-mode portion of Group F
+> items 21 (Reconciliation suite) + 22 (Trading guardrails) for MTDS / MDPS / features-service:
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) (main
+> activation, 10d), [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.plan.md)
+> (pre-req, merges 8 features-\* repos into one features-service, 3-5d), and
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.plan.md) (bundled
+> overnight GCS migration: pipeline_mode partition + category=→asset_group= rekey + drift cleanup). Codex entry:
+> [`codex/05-infrastructure/live-pipeline-architecture.md`](../../codex/05-infrastructure/live-pipeline-architecture.md).
+> Sequencing: features-repo Phase 7 + gcs-bundle Phase 9 BLOCK live-pipeline Phase 3+5 respectively.
+
 17. **Backtest fidelity** — real gas, real market impact, realistic matching engine for AMM pools / perpetuals / spots /
     transfers / atomic transfers / flash loans; cost+yield to smallest precision (codex
     `04-architecture/backtest-groups.md`, `batch-live-symmetry.md`). **Deep audit 2026-05-07**: shipped matching engine

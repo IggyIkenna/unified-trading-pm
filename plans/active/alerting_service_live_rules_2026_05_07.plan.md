@@ -18,6 +18,14 @@ owner: Ikenna (plan), Harsh (alerting-service code)
 
 # Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging
 
+> **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation 2026-05-08**
+>
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase 9 EXTENDS
+> this plan's surface with live-pipeline tier rules (cluster_pct_skipped_60s, degraded_ratio_60s, staleness_seconds
+> thresholds), a new `streaming.alerting.circuit_breaker` Redis Stream wired to strategy-service, and 3 circuit-breaker
+> actions (`stop_new_signals` / `force_exit_only` / `halt_strategy`). Coordinate ownership: this plan owns the AlertCode
+> taxonomy import + per-rule wiring; the live-pipeline plan adds the new rules + bridge.
+
 Closes the "alerting plan does not exist" anomaly flagged by the 2026-05-07 audit (see
 `_AUDIT_2026_05_07_dependency_graph.md` operator action item #1). The alerting-**service** itself already exists
 (multi-channel routing across Slack/Email/PagerDuty/Telegram, KillSwitchBus subscriber via `7b74ed8`, MarginEvent

@@ -191,6 +191,13 @@ isProject: false
 
 # MTDS Databento path-streaming successor plan (2026-05-07)
 
+> **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation 2026-05-08**
+>
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase 3 rolls
+> out MTDS websocket streaming per asset_group. The tradfi venue rollout (Phase 3.5d) coordinates with this plan's audit
+> of the Databento `get_range` shape but uses a different code path — Databento has a WS endpoint distinct from
+> `get_range`. Read this plan's audit notes before designing the tradfi WS adapter; banner mutually.
+
 ## Why this plan exists
 
 During the 2026-05-07 parallelisation investigation a Databento improvement opportunity was identified but explicitly
@@ -274,28 +281,27 @@ Code commits:
 
 - `market-tick-data-service@d8358f9` — `feat(mtds): databento path-streaming + chunked to_df (Phase 1)`
   - New private helper `DatabentoAdapter._fetch_and_stream_chunks` owns the tempfile lifecycle, chunked
-    `DBNStore.to_df(count=N)` iteration, per-chunk enrichment + `writer.write_chunk(...)` routing,
-    classified-error handling, and unconditional `try/finally` tempfile cleanup on every exit path.
+    `DBNStore.to_df(count=N)` iteration, per-chunk enrichment + `writer.write_chunk(...)` routing, classified-error
+    handling, and unconditional `try/finally` tempfile cleanup on every exit path.
   - `_fetch_timeseries_range` now accepts `path=<tempfile>` kwarg threaded through to
     `client.timeseries.get_range(...)`. Backward-compatible — existing callers (the legacy `download_batch`
-    + the `_fetch_timeseries_range` mocks in `tests/market_interface/unit/test_databento_adapter_logic.py`)
-    ignore the new kwarg.
-  - `download_batch_df` inner per-`(data_type, dataset)` body collapses from ~95 lines to ~25; the helper
-    absorbs the chunk-iteration contract while preserving the original silent-drop / `failed_per_dt`
-    side-channel semantics.
-  - Chunk size config-driven: new `MarketTickDataServiceConfig.databento_chunk_rows` field
-    (env `MTDS_DATABENTO_CHUNK_ROWS`, default 50_000).
+    - the `_fetch_timeseries_range` mocks in `tests/market_interface/unit/test_databento_adapter_logic.py`) ignore the
+      new kwarg.
+  - `download_batch_df` inner per-`(data_type, dataset)` body collapses from ~95 lines to ~25; the helper absorbs the
+    chunk-iteration contract while preserving the original silent-drop / `failed_per_dt` side-channel semantics.
+  - Chunk size config-driven: new `MarketTickDataServiceConfig.databento_chunk_rows` field (env
+    `MTDS_DATABENTO_CHUNK_ROWS`, default 50_000).
   - 5 new unit tests in `tests/unit/test_databento_path_streaming.py`:
     1. Chunked iteration emits `ceil(rows / chunk_rows)` `writer.write_chunk` calls incrementally.
-    2. `tracemalloc` current-allocation bounded across chunks (uses non-recording writer + plain enrich
-       passthrough so `MagicMock.call_args_list` doesn't masquerade as a leak).
+    2. `tracemalloc` current-allocation bounded across chunks (uses non-recording writer + plain enrich passthrough so
+       `MagicMock.call_args_list` doesn't masquerade as a leak).
     3. Tempfile unconditionally unlinked on success AND on mid-iteration exception.
     4. Writer exception classified via `_classify_databento_exception` and surfaced via `failed_per_dt`.
-    5. Bundled-shard regression guard — `instrument_type='options_chain'` survives the chunked enrich
-       pipeline so writegate Phase 1A cluster-validation in `ManifestWriter.record_captured` keeps working.
+    5. Bundled-shard regression guard — `instrument_type='options_chain'` survives the chunked enrich pipeline so
+       writegate Phase 1A cluster-validation in `ManifestWriter.record_captured` keeps working.
   - One existing test `test_partial_success_preserves_rows_and_records_failed_dt` updated:
-    `ok_store.to_df.return_value=DataFrame` → `ok_store.to_df.side_effect=lambda count=None: iter([...])`
-    to match the new chunked-iteration contract.
+    `ok_store.to_df.return_value=DataFrame` → `ok_store.to_df.side_effect=lambda count=None: iter([...])` to match the
+    new chunked-iteration contract.
 
 Plan-flip commit (PM):
 
@@ -309,10 +315,9 @@ QG Pass 1 status (`cd market-tick-data-service && bash scripts/quality-gates.sh`
   `tests/unit/test_databento_path_streaming.py tests/market_interface/unit/test_databento_adapter_logic.py`).
 - CODEX COMPLIANCE: 8 violations — all on pre-existing files I did NOT touch
   (`migrate_mtds_defi_legacy_venue_underscore.py`, `engine/orchestrator.py`, `vault_share_price_handler.py`,
-  `engine/shard_memory_profile.py`, `cli/handlers/solana_lst_archival.py`, `umi_tick_provider.py`,
-  `cli/main.py`). Per workspace QG-failure-attribution rule + the temporary 2026-05-07 → 2026-05-09
-  QG-failure-on-others'-code exception in CLAUDE.md, these don't block this commit.
+  `engine/shard_memory_profile.py`, `cli/handlers/solana_lst_archival.py`, `umi_tick_provider.py`, `cli/main.py`). Per
+  workspace QG-failure-attribution rule + the temporary 2026-05-07 → 2026-05-09 QG-failure-on-others'-code exception in
+  CLAUDE.md, these don't block this commit.
 
-Phase 2 (P2 — `asyncio.gather` outer loop), Phase 3 (P2 — UTL helper lift), and Phase 4 (P1 — real-VM
-validation) remain unshipped per the plan body's gate conditions. Phase 4 is the deployment gate (D3) for
-the master plan.
+Phase 2 (P2 — `asyncio.gather` outer loop), Phase 3 (P2 — UTL helper lift), and Phase 4 (P1 — real-VM validation) remain
+unshipped per the plan body's gate conditions. Phase 4 is the deployment gate (D3) for the master plan.

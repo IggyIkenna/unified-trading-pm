@@ -648,6 +648,15 @@ isProject: false
 
 # Instruments Live — Master Activation Plan
 
+> **🟢 SIBLING — Live-pipeline activation 2026-05-08**
+>
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase 10
+> consumes the `INSTRUMENT_CACHE_REFRESH_TRIGGER` event this plan publishes, via the new UTL
+> `InstrumentCacheDeltaReloader` helper (cache-delta hot-reload pattern). **This plan owns the publish-side** (verify or
+> add the event publication in instruments-service); **the live-pipeline plan owns the consume-side** (UTL helper +
+> per-service wiring in MTDS/MDPS/features-service). Codex pattern doc:
+> [`codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../../codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md).
+
 ## Why this plan exists
 
 The unified-trading-system already has the **architecture** for live-mode instruments — the codex SSOTs

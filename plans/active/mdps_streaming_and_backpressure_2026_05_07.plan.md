@@ -239,6 +239,15 @@ isProject: false
 
 # MDPS streaming + backpressure successor plan (2026-05-07)
 
+> **🟢 DEPENDENCY — Live-pipeline activation 2026-05-08**
+>
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase 4 RE-USES
+> the `open_candle_writer` / `close_candle_writer` UTL lifecycle this plan ships in Phase 1.1 (UTL canonical_writer
+> chunked lifecycle) for live-mode candle aggregation. Phase 4.4 of the live-pipeline plan also re-uses the RSS-pause
+> integration this plan ships in Phase 2 (ResourceProfiler.on_memory_warning wiring). **This plan's Phase 1.2 + Phase 2
+> must reach C5 before live-pipeline Phase 4 starts.** Banner removed when both Phase 1.2 and Phase 2 are flipped done
+> here.
+
 ## Why this plan exists
 
 The `mtds_per_instrument_download_api_2026_04_24.plan.md` line of work shipped a band-aid fix for an MDPS VM OOM
