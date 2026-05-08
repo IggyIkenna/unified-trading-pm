@@ -130,12 +130,25 @@ trading goal directly.
 
 ## Open questions
 
-- [ ] **Strategy catalogue completeness — what's the bar for "complete"?** Every archetype × venue × instrument-type
-      combination, OR archetype-level completeness with venue/instrument lookups deferred? Operator-pick.
-- [ ] **DART manual-trade lane scope**: is operator-only manual sufficient, or do we need a third-party broker-style
-      DART for external operators?
-- [ ] **AWS parity scope at this layer**: only DeFi-rollout coverage, or full workspace AWS coverage by May 23? Master
-      plan defaults to DeFi-only, with full coverage post-May-23.
+- [x] ✓ **Strategy catalogue completeness — RESOLVED 2026-05-08.** **Archetype-level completeness for May 23**, with
+      venue / instrument-type drill-down lookups deferred to post-cutover. The v2 catalogue
+      (`internal/architecture_v2/enums.py` 9-family / 46-archetype + `archetype_capability.py`
+      `ARCHETYPE_CAPABILITY_REGISTRY`) already covers every archetype currently traded or backtested. Only May-23 live
+      archetypes need fully-seeded `ArchetypeConfig` (CARRY_STAKED_BASIS Solana + Ethereum; CARRY_BASIS_PERP × 6 perp
+      venues; ML_DIRECTIONAL_CONTINUOUS × 3 venues OKX/Binance/Bybit). Backtest-only archetypes consume catalogue rows
+      by `(archetype, asset_group)` lookup via `is_archetype_live(archetype, asset_group)` helper. Full cross-product
+      enumeration tracked as post-cutover sweep. See `plans/active/operator_decisions_2026_05_08.md`.
+- [x] ✓ **DART manual-trade lane scope — RESOLVED 2026-05-08.** **Operator-only manual** (Ikenna + Harsh) for May 23.
+      Third-party broker-style DART (external operators executing on behalf of clients) DEFERRED post-cutover. The
+      May-23 deliverable is the 7-day live cefi_ml + DeFi run on a single client; no external operators in scope.
+      6-persona Playwright matrix per `strategy_and_dart_master:Phase 2.2` covers operator-only personas (DESK / DEV /
+      ADMIN / EXEC / RISK / OPS).
+- [x] ✓ **AWS parity scope at this layer — RESOLVED 2026-05-08.** **DeFi-only by May 23 per master plan Q&A 4
+      default**, with full-workspace AWS coverage post-cutover. By May 23: (a) DeFi-relevant data migrated to AWS S3;
+      (b) data-status working on AWS for DeFi asset_group; (c) DeFi backfill on AWS with `--force` proves batch
+      deployment side; (d) DeFi backtest examples runnable on AWS; (e) DeFi live trading deployment + monitoring on
+      AWS so the team can switch any DeFi deployment between AWS-live / AWS-batch / GCP-live / GCP-batch. Sports /
+      predictions / TradFi / CeFi data + compute remain GCP-only this cycle.
 
 ## See also
 
