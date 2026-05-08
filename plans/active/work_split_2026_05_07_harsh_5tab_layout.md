@@ -950,9 +950,12 @@ REPORT-BACK:
   `git log --oneline live-defi-rollout`.
 ````
 
-#### Tab 9 — Lending-indices VM relaunch + verify 🟡 QUEUED (operational, ~30min initial + monitor)
+#### Tab 9 — `lending-indices-relaunch-tab` 🟢 IN FLIGHT (operational, ~30min initial + monitor)
 
-**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 9 tasks"_.
+- **Started**: 2026-05-08 06:12 UTC (STARTED ping ack'd by main; clean boot, no flags).
+- **Plan-of-record**: [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md).
+- **Scope**: refresh DEFI tarballs → relaunch VM → 90s STARTED + 10-15min progress + T+30min per-VM
+  manifest spot-check → validate Bug 1 (AAVE V3 ETH) emits captured rows now.
 
 **Why now**: Tab 5 fixed the 3 lending-indices P0 bugs this morning (instruments-service@1a90185 +
 mtds@d2f365e). Relaunching the VM closes the loop with real data — proves Bug 1 reproducer (AAVE V3
@@ -1023,16 +1026,18 @@ DONE-DEFINITION:
 REPORT-BACK: 1 commit (validation note); push per conditional rule (fetch + zero incoming).
 ````
 
-#### Tab 10 — Predictions Phase 1 lifecycle ingestion 🟡 QUEUED (P1, ~6-8h, instruments-service + MTDS)
+#### Tab 10 — `predictions-phase1-ingestion-tab` 🟢 IN FLIGHT (P1, ~6-8h, instruments-service + MTDS)
 
-**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 10 tasks"_.
+- **Started**: 2026-05-08 06:13 UTC (STARTED ping ack'd by main; clean boot, no flags).
+- **Plan-of-record**: [`predictions_master_2026_05_07.plan.md`](predictions_master_2026_05_07.plan.md) Phase 1.
+- **Scope**: instruments-service writer for lifecycle timestamps (market_created_at / resolution_time /
+  settlement_time) + canonical_question_group membership + MTDS orchestrator shard-atom emit on the new
+  axis + integration tests (HOURLY canonical group cluster validation).
 
 **Why now**: Phase 1A scaffolding shipped 2026-05-07 — UAC `canonical_question_group` SSOT
 (UAC@af2bc9b), Polymarket lifecycle aliases (UAC@58cc5f8), `DATA_TYPE_TO_CLUSTER_REGISTRY`
-(UAC@bb24aba). Phase 1 ships the actual ingestion: instruments-service writes lifecycle timestamps
-(`market_created_at` / `resolution_time` / `settlement_time`) + MTDS orchestrator emits shard-atom
-keyed on `canonical_question_group`. Gates Phase 2 (adapter migration) + Phase 3 (reader/feature/strategy)
-of predictions_master entirely.
+(UAC@bb24aba). Phase 1 ships the actual ingestion. Gates Phase 2 (adapter migration) + Phase 3
+(reader/feature/strategy) of predictions_master entirely.
 
 **Spawn prompt — paste this entire block as the new tab's first message**:
 
@@ -1089,9 +1094,12 @@ DONE-DEFINITION:
 REPORT-BACK: 5-8 small commits per CLAUDE.md cadence; push per conditional rule.
 ````
 
-#### Tab 11 — Launcher consolidation D4 P2 🟡 QUEUED (mechanical, ~3-4h, deployment-service + read-only on source repos)
+#### Tab 11 — `launcher-consolidation-tab` 🟢 IN FLIGHT (mechanical, ~3-4h, deployment-service + read-only on source repos)
 
-**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 11 tasks"_.
+- **Started**: 2026-05-08 06:15 UTC (STARTED ping ack'd by main; clean boot, no flags).
+- **Plan-of-record**: [`launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md).
+- **Scope**: 10 of 30 ad-hoc launchers migrated; VM_PREFIX_TO_BUCKET updated; watchdog VM relaunch;
+  optional Deploy-Missing UI registration where applicable.
 
 **Why now**: D4 P2 in the work_split. 30 ad-hoc VM launchers under `e2e-testing/scripts/` +
 `features-*-service/scripts/` are technical debt (per CLAUDE.md "VM launcher script SSOT" rule —

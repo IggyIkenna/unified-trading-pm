@@ -27,4 +27,4 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 
 # Active pings
 
-_(empty — Tabs 4/5/6/7/8 ✅ DONE verified by main 2026-05-08 05:55–06:08 UTC. Only Tab 2 (cefi-babysit) still IN FLIGHT.)_
+_(empty — STARTED pings ack'd 2026-05-08 06:18 UTC for Tabs 9 (06:12), 10 (06:13), 11 (06:15). All clean boots, no flags. 4 tabs IN FLIGHT (2/9/10/11). Tabs 12/13/14 still QUEUED pending operator review.)_
