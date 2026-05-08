@@ -1125,12 +1125,35 @@ DONE-DEFINITION:
 REPORT-BACK: 5-8 small commits per CLAUDE.md cadence; push per conditional rule.
 ````
 
-#### Tab 11 — `launcher-consolidation-tab` 🟢 IN FLIGHT (mechanical, ~3-4h, deployment-service + read-only on source repos)
+#### Tab 11 — `launcher-consolidation-tab` ✅ DONE 2026-05-08 (mechanical, deployment-service + e2e-testing + features-sports-service)
 
-- **Started**: 2026-05-08 06:15 UTC (STARTED ping ack'd by main; clean boot, no flags).
-- **Plan-of-record**: [`launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md).
-- **Scope**: 10 of 30 ad-hoc launchers migrated; VM_PREFIX_TO_BUCKET updated; watchdog VM relaunch;
-  optional Deploy-Missing UI registration where applicable.
+- **Verified by main 2026-05-08 07:42 UTC** — all 14 cited commits exist + pushed to their respective
+  origins (deployment-service 7, e2e-testing 6, features-sports-service 1); deployment-service repo at 0/0.
+  Spawn target met (10 launcher migrations shipped, with 3 helper wrappers = 13 new files under
+  `scripts/vm/`).
+- **Code commits** (all pushed to origin per conditional rule):
+  - **deployment-service** `76f4ecc` (mtds), `fbb3673` (instruments), `0215086` (features-sports-parallel),
+    `2e1d967` (mtds-sports-odds), `fc9211e` (sports-instruments-reference), `5778811` (3 DeFi launchers
+    #6-8: dex-pools / eigenlayer-rewards / solana-drift), `ce99d43` (#9-10: cefi-migration + defi-backfill).
+  - **e2e-testing** `8daba1a` `2da6867` `deff088` `db7ace3` `43d8e49` `4f1f92b` — deprecation banners on
+    moved sources (10 banners across 6 commits).
+  - **features-sports-service** `06f6b30` — deprecation banner on `launch_parallel_backfill.sh`.
+  - **PM** `fc35b11` — Tab 11 audit + top-10 selection (Phase 0 flip).
+- **Wave-flip status (honest, partial-by-design)**: Wave A ✅ (4 scripts, common/) + Wave E ✅ (1 script,
+  features-sports/parallel-backfill); Waves B+D PARTIAL (top-10 selection cherry-picked from across these
+  waves rather than completing waves in order — sensible since deferred items are mostly known-duplicates);
+  Wave C DEFERRED (Tab 10 collision-avoid on prediction surface).
+- **Critical-path impact**: 2 of 3 missing-on-disk `_SERVICE_LAUNCHER_SCRIPTS` registry entries now backed
+  by real launchers (market-tick-data-service + instruments-service). Deploy-Missing UI button no longer
+  silently breaks for those two services.
+- **Watchdog VM**: relaunched as `vm-zombie-watchdog-20260508-121344` after all 17 new prefix entries
+  landed in `VM_PREFIX_TO_BUCKET`.
+- **Smoke tests**: every migrated launcher with `--dry-run` smoke-tested (#1-#8, #10); #9
+  (cefi-migration) `bash -n` syntax check only (no `--dry-run` flag in source).
+- **Deferred to follow-up cycles**: features-onchain launcher (no e2e-testing equivalent — needs fresh
+  build, P1); 7 DeFi launcher duplicates (delete-vs-merge reconciliation needed); 4 prediction launchers
+  (Tab 10 collision-avoid); 8 sports launchers (partially superseded by canonical equivalents); 1
+  intra-repo move; callsite-update sweep (deprecation banners cover transition window).
 
 **Why now**: D4 P2 in the work_split. 30 ad-hoc VM launchers under `e2e-testing/scripts/` +
 `features-*-service/scripts/` are technical debt (per CLAUDE.md "VM launcher script SSOT" rule —
