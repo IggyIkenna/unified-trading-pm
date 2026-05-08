@@ -395,7 +395,69 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
       liquidity, microstructure, perp_basis, options_iv) need registry entries. Source-of-truth:
       `features-cefi-service/calculators/` metadata. Coordinator Phase 4.
 
-## May-23 deliverable (folded from `cefi_ml_may_23_2026.epic` 2026-05-08)
+## Open questions
+
+### Q1 — [cefi-available-at-stamping-tab (Tab F2), 2026-05-08] — Spawn task structurally blocked: 3 facts contradict the spec
+
+**Status**: 🟡 BLOCKED — waiting for master agent + operator triage
+
+The Tab F2 spawn prompt in
+[`work_split_2026_05_08_ikenna.md`](../active/work_split_2026_05_08_ikenna.md) (fresh fan-out: instruments-service + MTDS)
+specs CeFi per-venue `available_at` stamping at `market-tick-data-service/market_tick_data_service/adapters/{venue}.py`
+across 10 venues (bybit / binance / okx / deribit / kraken / bitfinex / bitget / coinbase / gate / kucoin) using helper
+`stamp_available_at_cefi_tick(df["timestamp"], venue, data_type)` from `unified_trading_library.availability_stamping`,
+with formula `available_at = tick_ts + emission_latency_ms` per UAC SOURCE_PRIORITY.
+
+**Probe results 2026-05-08 (this agent, before any code edit)**:
+
+1. **Per-venue adapter files do NOT exist.** `market_tick_data_service/adapters/` contains only
+   `hyperliquid_s3.py` + `umi_tick_provider.py`. The 10 cefi venues listed in the spawn prompt have NO standalone
+   `{venue}.py` files. CeFi venues route through `market_interface/adapters/cefi/` which has:
+   `__init__.py / ccxt_adapter.py / databento_mbo_adapter.py / l2_book_state.py / tardis_incremental_book_adapter.py
+   / tardis_shared.py / upbit_adapter.py` — 5 source-shaped adapters, NOT 10 venue-shaped adapters.
+
+2. **`stamp_available_at_cefi_tick` does NOT exist in UTL.**
+   `unified-trading-library/unified_trading_library/availability_stamping.py` (sole module, single file — NOT a package)
+   exports 5 sports-shaped helpers only: `stamp_available_at_lineups` / `stamp_available_at_event_time` /
+   `stamp_available_at_post_match` / `stamp_available_at_offset` / `stamp_available_at_explicit`. **No CeFi/DeFi/TradFi
+   tick-shape helper exists.** This is the master-gate `[A.10]` UTL helper the spawn prompt's PRE-REQ GATE references —
+   it has not been shipped.
+
+3. **`SOURCE_PRIORITY` does NOT carry `emission_latency_ms` / `scrape_latency`.**
+   `unified_api_contracts/canonical/crosscutting/source_priority.py:84` types `SOURCE_PRIORITY` as
+   `Final[dict[tuple[str, str], list[str]]]` — value is a list of source-name strings (top-source-only per Phase 1B
+   convention), no per-source latency field. The formula `available_at = tick_ts + source_priority_scrape_latency` per
+   plan-of-record [`available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+   Phase 1 cannot be evaluated against the current UAC shape.
+
+4. **`record_captured` callsites in MTDS are in `cli/handlers/`, NOT per-venue files.** The 27+ `record_captured(`
+   callsites in `market-tick-data-service/market_tick_data_service/cli/handlers/` are mostly DeFi handlers
+   (`lst_rates_handler`, `perp_funding_handler`, `dex_swaps_handler`, etc.) plus `position_data_handler`. The CeFi
+   bar-shaped writes flow through `engine/orchestrator.py` (per writegate plan Phase 2.B Option α refactor — itself
+   listed as PENDING under Tab 2 LIVE-PIPELINE 2026-05-08 evening DONE block). There is NO 1:1 mapping
+   `(venue, data_type) -> single record_captured callsite` to wrap with a stamping call.
+
+**Why this is BIG (Findings Triage Discipline Case 5)**: contradicts a workspace SSOT (the work-split's premise about
+file layout); requires action across ≥2 repos (UAC `SOURCE_PRIORITY` shape extension + UTL helper creation + MTDS
+multi-callsite wiring); changes the work-split (Tab F2 cannot ship 10 per-venue commits as scoped). Issue doc:
+[`plans/active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`](../active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md).
+
+**What this Tab F2 agent did NOT do (per "don't edit unfamiliar files when blocked" + "Plans Run To Actual Completion"
+HARD RULEs)**: did not ship `stamp_available_at_cefi_tick` (master-gate work owned by Tab 2 LIVE-PIPELINE / writegate
+Phase 2.D); did not extend UAC `SOURCE_PRIORITY` shape (cross-cutting design = Ikenna-side); did not modify CeFi cli
+handlers / engine orchestrator (collision boundary with Tab 2 LIVE-PIPELINE per work-split § "collision-risk
+callouts").
+
+**Recommended next agent action** (when master gate clears): the actual scope per `available_at_lookahead_bias_completion_2026_05_08`
+Phase 1 P0 todo `**CeFi adapter stamping**` is to wire stamping at the writer boundary in MTDS `engine/orchestrator.py`
++ `cli/handlers/*_handler.py` (the actual record_captured callsites), NOT at non-existent per-venue files. The right
+shape is one stamping call per writer-boundary record, not 10 per-venue commits.
+
+#### A1 — [main, awaiting]
+
+**Status**: pending
+
+
 
 > **Folded epic** (operator direction 2026-05-08): May-23 deadline content originally in
 > `plans/epics/cefi_ml_may_23_2026.epic.md` is consolidated here. Archived epic:
