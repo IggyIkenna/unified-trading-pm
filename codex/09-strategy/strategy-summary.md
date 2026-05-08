@@ -18,21 +18,29 @@ reference-only.
 
 **Core mental model:** Every strategy decomposes into:
 
-| Layer                  | Count | What it captures                                                                                                                                             |
-| ---------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Families               | 8     | Orthogonal alpha styles (ML Directional, Rules Directional, Carry & Yield, Arbitrage/Structural, Market Making, Event-Driven, Vol Trading, Stat Arb/Pairs)   |
-| Archetypes             | 18    | Specific code paths within a family (e.g.`CARRY_BASIS_PERP`, `ML_DIRECTIONAL_CONTINUOUS`)                                                                    |
-| Axes of composition    | 7     | signal × edge × staking × venue × expression × hold-policy × share-class                                                                                     |
-| Cross-cutting concerns | 10    | Risk gates, venue selection, execution policies, transfers, allocator, MEV, benchmark fills, capital isolation, trade expression, venue-account coordination |
+| Layer                  | Count | What it captures                                                                                                                                                                                                                                                                                                |
+| ---------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Families               | 9     | Orthogonal alpha styles (ML Directional, Rules Directional, Carry & Yield, Arbitrage/Structural, Market Making, Event-Driven, Vol Trading, Stat Arb/Pairs, **Portfolio**). PORTFOLIO added 2026-04-25 (cross-category sleeves) per Phase 9 of `dart_ui_strategy_filtering_and_onboarding_2026_04_24.md`.        |
+| Archetypes             | 53    | Specific code paths within a family (e.g.`CARRY_BASIS_PERP`, `ML_DIRECTIONAL_CONTINUOUS`). 2026-04-25 Phase 9 expansion grew the surface from 18: VOL family 1→19, MM family 2→10 (incl. 3 DeFi LP variants), ARBITRAGE_STRUCTURAL 2→7 (incl. 4 MEV + cross-domain event arb), PORTFOLIO 0→4. **SSOT**: `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` + `ARCHETYPE_TO_FAMILY` dict — that file is canonical; this doc reflects it. |
+| Axes of composition    | 7     | signal × edge × staking × venue × expression × hold-policy × share-class                                                                                                                                                                                                                                       |
+| Cross-cutting concerns | 10    | Risk gates, venue selection, execution policies, transfers, allocator, MEV, benchmark fills, capital isolation, trade expression, venue-account coordination                                                                                                                                                   |
 
 A strategy's identity has **5 layers** : family → archetype → instance → config → derived categories. Communication with
-execution happens through a **polymorphic `StrategyInstruction`** with 11 action types (TRADE, SWAP, LEND, BORROW,
-STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL).
+execution happens through a **polymorphic `StrategyInstruction`** with 13 action types (TRADE, SWAP, LEND, BORROW,
+STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL, **CONVERT_DUST, LP_MINT/LP_BURN**) — the latter 3 added with
+the Phase 9 DeFi LP archetypes. SSOT: `unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2`.
+
+> **2026-05-08 drift correction.** Pre-2026-05-08 this doc described 8 families / 18 archetypes — those numbers were
+> the 2026-04-17 baseline before the Phase 9 expansion. The UAC enum is canonical; if this doc disagrees with
+> `unified_api_contracts/internal/architecture_v2/enums.py`, the enum wins. Refresh trigger: cross_cutting Tab 6 audit
+> (Option A path — see [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)).
 
 **Main use / why it exists:**
 
-1. **Collapse 53+ strategies into ~18 code paths** served by shared family engines — new strategies become config, not
-   new code.
+1. **Collapse 200+ legacy strategy variants into 53 code paths** served by shared family engines — new strategies
+   become config, not new code. (The 2026-04-17 baseline had 18 archetypes covering the original 53 strategies; Phase 9
+   expanded the archetype set to 53 to cover MEV, DeFi LP, full vol-surface trading, prediction MM, cross-category event
+   arb, and portfolio sleeves.)
 2. **Categories become derived labels** , not routing axes — no more `CEFI_ML_DIRECTIONAL_BTC` vs
    `TRADFI_ML_DIRECTIONAL_SPY` duplication.
 3. **Unify capital flow** across DeFi bridges, CEX wallet transfers, Unity sports pools, and TradFi tunnels via a single
@@ -47,23 +55,25 @@ a family doc then an archetype doc; operators focus on portfolio-allocator + ven
 consumes the derived-categories and share-class axes. Migration tracking for every legacy doc/strategy lives in
 [MIGRATION.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/MIGRATION.md).
 
-# The 8 Families — One-Liner Each
+# The 9 Families — One-Liner Each
 
 | #   | Family                          | Core idea                                                                                               | Example                                                                                                 |
 | --- | ------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | 1   | **ML Directional**              | A trained model predicts outcome probability; trade when model prob diverges from implied/market price. | ML model says BTC 5m up-move prob = 58%, market implies 50% → go long.                                  |
 | 2   | **Rules Directional**           | Hard-coded if/then rules on features fire signals — no model, just thresholds.                          | "If RSI < 30 AND funding < 0 → buy."                                                                    |
 | 3   | **Carry & Yield**               | Capture a rate/yield differential by holding a spread, earning funding, lending, staking, or basis.     | Long spot BTC + short perp BTC → earn positive funding.                                                 |
-| 4   | **Arbitrage / Structural Edge** | Near-risk-free payment from price dispersion or protocol mechanics.                                     | Buy on Pinnacle, lay on Betfair at better odds → locked profit; or capture a liquidation bonus on Aave. |
-| 5   | **Market Making**               | Post two-sided quotes and earn the bid-ask spread while managing inventory risk.                        | Quote Betfair EPL 1X2 at 1-tick spread; rebalance as fills arrive.                                      |
+| 4   | **Arbitrage / Structural Edge** | Near-risk-free payment from price dispersion or protocol mechanics. Includes MEV (DeFi-only).           | Buy on Pinnacle, lay on Betfair at better odds → locked profit; or capture a liquidation bonus on Aave. |
+| 5   | **Market Making**               | Post two-sided quotes and earn the bid-ask spread while managing inventory risk. Includes DeFi LP.      | Quote Betfair EPL 1X2 at 1-tick spread; rebalance as fills arrive.                                      |
 | 6   | **Event-Driven**                | Scheduled external event with measurable surprise drives the trade (earnings, CPI, fixture news).       | Buy straddle before FOMC; unwind after surprise is priced.                                              |
 | 7   | **Vol Trading**                 | Alpha comes from vol metrics themselves — IV vs RV, skew, term structure, cross-asset vol.              | Sell Deribit BTC 30d IV when it trades rich vs realized.                                                |
 | 8   | **Stat Arb / Pairs**            | Spread between two correlated underlyings mean-reverts or trends.                                       | Long GOOG / short META when z-score of spread < −2.                                                     |
+| 9   | **Portfolio**                   | Cross-category sleeves: not a single edge, but a meta-allocation across instances of the other 8 families. Added 2026-04-25 Phase 9. | A multi-strategy sleeve that runs ML Directional + Carry + Vol Trading instances in fixed weights and rebalances quarterly. |
 
 **Key rule:** one family per strategy — assigned by the _primary_ alpha source. "ML directional with a vol hedge" is
-still ML Directional; the vol leg is just risk management, not a composite.
+still ML Directional; the vol leg is just risk management, not a composite. Portfolio is the one exception: by
+construction it spans family instances (its `primary_category` is `CROSS_CATEGORY`).
 
-# The 8 Families — Pulled directly from the family docs
+# The 9 Families — Pulled directly from the family docs
 
 **1. ML Directional** —
 [families/ml-directional.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/families/ml-directional.md)
@@ -149,7 +159,27 @@ still ML Directional; the vol leg is just risk management, not a composite.
 **Distinguishing test called out in the docs:** is the edge _mechanical_ (guaranteed conditional on correct execution)
 or _statistical_ (profitable on average with spread risk)? Mechanical → Arbitrage. Statistical → Vol Trading / Stat Arb.
 
-# The 18 Archetypes — pulled from each archetype doc
+**9. Portfolio** — _added 2026-04-25, family doc pending under `architecture-v2/families/portfolio.md`_
+
+- **Alpha source:** Meta-allocation across instances of the other 8 families. The Portfolio family does NOT generate
+  its own per-trade signals — it produces `AllocationDirective` events that re-weight or activate/deactivate child
+  strategy instances based on portfolio-level objectives (risk parity, factor exposure, regime, manual mandate).
+- **Primary edge method:** Allocator-driven (closest mapping is rate-differential or rank-weighted, but at the strategy
+  level not the instrument level).
+- **Sub-patterns:** Multi-strategy sleeves, risk-parity allocation, factor-allocation overlay, tactical operator
+  override.
+- **Why it's a family, not a cross-cutting concern:** unlike the Portfolio Allocator service (which sits ABOVE all
+  strategies), Portfolio archetypes are themselves strategy instances — they receive equity, emit
+  `AllocationDirective`s to child strategies, run through the same risk-gate / kill-switch / share-class machinery as
+  any other strategy. This composability is intentional: a tactical-overlay sleeve can itself be allocated capital by
+  a higher-level allocator.
+
+# The 53 Archetypes — pulled from each archetype doc
+
+> **Per-archetype docs lag the enum.** The `architecture-v2/archetypes/` folder has 25 individual archetype docs
+> covering the 2026-04-17 baseline + 7 of the Phase 9 additions. The remaining 28 Phase 9 archetypes (mostly the new
+> VOL family variants + the 4 PORTFOLIO archetypes) are declared in the UAC enum + `STRATEGY_REGISTRY` but await full
+> per-archetype write-ups. The summary entries below cite the enum SSOT and link to docs where they exist.
 
 ## ML Directional (2)
 
@@ -213,7 +243,7 @@ allocation per (protocol, chain) → `LEND` + `BRIDGE` instructions. Gas-aware: 
 Pure staking — deposit native PoS asset into liquid staking protocol (Lido → stETH, Rocket Pool → rETH, Jito → JitoSOL,
 Marinade → mSOL), hold, exit via DEX swap or withdrawal queue. No basis leg, no leverage, no directional view.
 
-## Arbitrage / Structural (2)
+## Arbitrage / Structural (7)
 
 **`ARBITRAGE_PRICE_DISPERSION`** —
 [archetypes/arbitrage-price-dispersion.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
@@ -228,20 +258,84 @@ Monitors under-collateralised DeFi lending positions and executes liquidations t
 (typically 5-10% of seized collateral). Zero directional risk. Health-factor watcher → flash-loan + repay + seize + DEX
 swap + repay-flash-loan, all in a multicall bundle submitted via Flashbots for MEV protection.
 
-## Market Making (2)
+**`ARBITRAGE_MEV_SANDWICH`** —
+[archetypes/arbitrage-mev-sandwich.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md)
+Front-run + back-run a victim swap to capture price impact. Mempool watcher → simulate victim trade impact → submit
+buy-before + sell-after bundle via Flashbots / private RPC. DeFi-only. ETHICAL caveat: most workspaces deprioritise
+sandwich strategies on user trades; may be retained for adversarial-defence research only. **Operator review required
+before live activation.**
 
-**`MARKET_MAKING_CONTINUOUS`** —
-[archetypes/market-making-continuous.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md)
+**`ARBITRAGE_MEV_JIT_LIQUIDITY`** —
+[archetypes/arbitrage-mev-jit-liquidity.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md)
+Just-in-time concentrated liquidity provision around a pending large swap. Mint a tight Uniswap V3 position immediately
+before the victim swap, capture fees, burn position immediately after. Zero inventory carry, fee-only profit. DeFi-only.
+
+**`ARBITRAGE_MEV_BACKRUN`** —
+[archetypes/arbitrage-mev-backrun.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md)
+Submit an arb transaction immediately after a target tx that creates a price dislocation (oracle update, large swap,
+liquidation). Pure dispersion arb mechanically — distinguishes from `ARBITRAGE_PRICE_DISPERSION` by the mempool-trigger
+shape vs continuous quote-poll. DeFi-only.
+
+**`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`** —
+[archetypes/arbitrage-mev-liquidation-bundle.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md)
+MEV-bundled liquidation flow: oracle-update mempool watcher → pre-position before oracle lands → liquidate freshly
+under-collateralised positions in same block. Strictly higher-throughput than `LIQUIDATION_CAPTURE` (which polls
+on-chain health factors); both can run concurrently with non-overlapping target sets.
+
+**`ARBITRAGE_CROSS_DOMAIN_EVENT`** _(per-archetype doc pending)_ — Same real-world event listed in PREDICTION + SPORTS
+markets (e.g. "Trump wins 2028 election" on Polymarket + same line on Smarkets). Capture price dispersion across the
+two venue-domains. `primary_category=CROSS_CATEGORY`. Strategy-picked routing per leg, ATOMIC where venues support it,
+LEADER_HEDGE otherwise.
+
+## Market Making (10)
+
+**`MARKET_MAKING_CONTINUOUS`** _(legacy — retained for back-compat; new MM strategies use the granular variants below)_
+— [archetypes/market-making-continuous.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md)
 Two-sided quoting around a theoretical fair price. Covers CLOB MM (Binance/OKX/Bybit/Hyperliquid/Deribit/Betfair/Unity),
-AMM concentrated-liquidity "active LP" (Uniswap V3/V4, Orca, Aerodrome, Raydium CLMM, Joe V2), and passive full-curve
-LP. Inventory-aware skewing, delta-proxy repricer (sub-ms), kill switches on price/spread/inventory breaches. Highest
-latency budget of any archetype (40 ms, premium tier, strategy-service co-located with execution).
+AMM concentrated-liquidity "active LP" (now split into `DEFI_LP_CONCENTRATED`), and passive full-curve LP (now
+`DEFI_LP_POOL`). Inventory-aware skewing, delta-proxy repricer (sub-ms). Highest latency budget of any archetype
+(40 ms, premium tier, strategy-service co-located with execution).
 
-**`MARKET_MAKING_EVENT_SETTLED`** —
+**`MARKET_MAKING_EVENT_SETTLED`** _(legacy; new sports/prediction MM strategies use `MARKET_MAKING_PREDICTION` for
+binary clobs and the granular CEFI variants for sports exchanges)_ —
 [archetypes/market-making-event-settled.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md)
-Back + lay quoting on sports exchanges (Betfair, Smarkets, Matchbook, Betdaq) and prediction markets (Polymarket). Theo
-from sharp-book reference / vig-free consensus / model-derived / fitted mid; inventory skew; delta-proxy repricer;
-cancel quotes near event start so MM book isn't carried into the match.
+Back + lay quoting on sports exchanges (Betfair, Smarkets, Matchbook, Betdaq) and prediction markets (Polymarket).
+
+**`MARKET_MAKING_PASSIVE_SPREAD`** _(per-archetype doc pending)_ — Symmetric two-sided quotes at a fixed offset around
+a reference mid. Simplest MM shape; no inventory adaptation, no ML lean — quote-and-hold. Used as the baseline
+benchmark for more sophisticated MM variants.
+
+**`MARKET_MAKING_INVENTORY_SKEW`** _(per-archetype doc pending)_ — Symmetric quotes whose mid-offset shifts with
+current inventory: long inventory → skew quotes lower (faster fill on the sell side); short inventory → skew up.
+Avellaneda–Stoikov style. Most CLOB MM strategies are this shape with venue-specific tunings.
+
+**`MARKET_MAKING_ML_LEAN`** _(per-archetype doc pending)_ — Inventory-skew with an ML lean overlay: short-horizon
+direction model produces a per-update directional bias that nudges the mid in the predicted direction. Adverse-selection
+mitigation; leans toward the side that's likely to be the next fill.
+
+**`MARKET_MAKING_QUEUE_MICROSTRUCTURE`** _(per-archetype doc pending)_ — Quote placement informed by L2-queue state
+(queue position, order arrival rate, cancellation rate). Targets venues with deep books and meaningful queue priority
+(Binance spot, large CME futures). Sub-tick price improvement as a function of queue dynamics.
+
+**`MARKET_MAKING_PREDICTION`** _(per-archetype doc pending)_ — Two-sided quoting on prediction-market binary CLOBs
+(Polymarket YES/NO; Kalshi). Theo from sharp reference (sport sharp book), model-derived (ML probability on macro
+binaries), or vig-free consensus across multiple venues. Cancel quotes near settlement.
+
+**`DEFI_LP_CONCENTRATED`** —
+[archetypes/defi-lp-concentrated.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md)
+Active concentrated-liquidity LP on Uniswap V3 / V4 / clones (Camelot, Aerodrome, Raydium CLMM, Joe V2). Mint a tight
+range around fair, rebalance / re-mint when price drifts out of range. Routes through `LP_MINT` / `LP_BURN` actions
+(Phase 9 InstructionAction additions) → NonfungiblePositionManager.
+
+**`DEFI_LP_POOL`** —
+[archetypes/defi-lp-pool.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md)
+Passive full-curve LP (Uniswap V2 / Curve / Balancer / Aerodrome stable pools). Deposit + hold + collect fees;
+divergence loss is the carry cost. No active rebalancing.
+
+**`DEFI_LP_VAULT`** —
+[archetypes/defi-lp-vault.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md)
+LP via vault wrapper (Yearn, Beefy, Gamma, Arrakis) — vault manages the underlying position; we hold the vault token.
+Single-deposit + single-withdraw lifecycle; vault APY is the gross yield, vault fee is the carry cost.
 
 ## Event-Driven (1)
 
@@ -251,14 +345,74 @@ Schedules positioning around known external events (FOMC, CPI, NFP, OPEC, earnin
 (realized − consensus) / σ_forecasts; direction model maps surprise → per-instrument direction; emit `TRADE` at
 HIGH/EMERGENCY urgency (typically MARKET orders); flatten at `T + event_window_minutes`.
 
-## Vol Trading (1)
+## Vol Trading (19)
 
-**`VOL_TRADING_OPTIONS`** —
+The 2026-04-25 Phase 9 expansion grew Vol Trading from a single `VOL_TRADING_OPTIONS` archetype to a full surface-trading
+suite. The legacy archetype is retained for back-compat with existing Firestore + GCS records; new vol strategies use
+the granular variants below. Per-archetype docs for the 18 new variants are pending — the entries below cite the UAC
+enum SSOT only.
+
+**`VOL_TRADING_OPTIONS`** _(legacy)_ —
 [archetypes/vol-trading-options.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/vol-trading-options.md)
 Delta-hedged options expression of a vol view. Surface fitter (SVI/SSVI) → vol dislocation scanner (IV vs RV, skew
 extreme, term bowed, soft surface residuals — hard no-arb violations are routed to `ARBITRAGE_PRICE_DISPERSION`). Trade
-constructors: straddle, strangle, butterfly, calendar, risk reversal, single-leg + delta hedge (gamma scalping). P&L
-from vega/gamma/theta — not delta.
+constructors: straddle, strangle, butterfly, calendar, risk reversal, single-leg + delta hedge (gamma scalping).
+
+**`VOL_ARB_RV_IV`** _(per-archetype doc pending)_ — Realised-vs-implied vol arb. Sell IV when IV/RV ratio is rich vs
+historical; buy when cheap. Delta-hedged; P&L from vega + gamma scalping.
+
+**`VOL_SPREAD_STRUCTURES`** _(per-archetype doc pending)_ — Structured option-spread expressions of a vol view: bull
+spreads, bear spreads, condors, iron flies. Defined-risk vega expression.
+
+**`VOL_CARRY`** _(per-archetype doc pending)_ — Sell short-dated options + collect theta + delta-hedge. Pure
+theta-harvesting carry; risk = realised gamma exceeding paid premium.
+
+**`VOL_OVERLAY_COVERED_CALLS`** _(per-archetype doc pending)_ — Long underlying + short OTM calls. Income generation
+overlay on a long-only book. Common in TradFi equity overlays.
+
+**`VOL_OVERLAY_PROTECTIVE_PUT`** _(per-archetype doc pending)_ — Long underlying + long OTM puts. Tail-protection
+overlay; pays insurance premium for downside cover.
+
+**`VOL_STRADDLE`** _(per-archetype doc pending)_ — Long or short ATM straddle. Bet on realised vol vs implied; delta-
+hedged for pure vega expression.
+
+**`VOL_SYNTHETIC_DELTA`** _(per-archetype doc pending)_ — Synthetic underlying expression via long call + short put
+(or reverse) at the same strike — used when the synthetic is cheaper than direct exposure (e.g. tax-advantaged TradFi).
+
+**`VOL_MARKET_MAKING`** _(per-archetype doc pending)_ — Two-sided quoting on options markets (Deribit, CBOE). Theo
+from surface fitter; inventory-skewed by net vega + gamma. Distinct from `MARKET_MAKING_CONTINUOUS` because the
+quoted instrument has Greeks the strategy must continuously delta-hedge.
+
+**`VOL_ML_LEAN`** _(per-archetype doc pending)_ — Vol-MM with an ML overlay predicting short-horizon IV moves; tilts
+quotes asymmetrically to capture predicted direction.
+
+**`VOL_0DTE_GAMMA_SCALPING`** _(per-archetype doc pending)_ — Same-day-expiry options + intraday delta-hedging.
+Captures realised gamma on short-dated SPX/QQQ options. Highly latency-sensitive.
+
+**`VOL_0DTE_PIN_RISK`** _(per-archetype doc pending)_ — Bet on/against pin behaviour at common round-number strikes
+on 0DTE expiries. Pin risk = price gravitating toward heavy open-interest strikes near close.
+
+**`VOL_TERM_STRUCTURE_ARB`** _(per-archetype doc pending)_ — Calendar spread expression of a term-structure view.
+Long vol on cheap tenor + short vol on rich tenor. P&L from term-structure-bow normalising.
+
+**`VOL_TERM_STRUCTURE_SLOPE`** _(per-archetype doc pending)_ — Continuous expression of term-structure slope:
+front-month vs back-month vs LEAPS. Distinct from `VOL_TERM_STRUCTURE_ARB` by hold horizon (slope = continuous, arb =
+mean-reversion to a band).
+
+**`VOL_DISPERSION`** _(per-archetype doc pending)_ — Long index vol + short single-name vols (or reverse). Captures
+realised correlation differentials. Index-vol-rich-vs-single-name-vol setup is the textbook case.
+
+**`VOL_VARIANCE_SWAP`** _(per-archetype doc pending)_ — Pure variance exposure via variance swap or
+variance-replication portfolio. P&L = ∑(ln(S_t/S_{t-1}))² − strike. Delta-immune by construction.
+
+**`VOL_LEAPS_CONVEXITY`** _(per-archetype doc pending)_ — Long-dated equity options (LEAPS, 1y+ expiry). Convexity
+expression on long-horizon vol; vega large, theta small.
+
+**`VOL_CROSS_ASSET_SPREAD`** _(per-archetype doc pending)_ — Long vol on asset A vs short vol on asset B (e.g. SPX
+vol vs gold vol, BTC vol vs ETH vol). Captures cross-asset vol differentials.
+
+**`VOL_RATIO_SPREAD`** _(per-archetype doc pending)_ — Long N options at strike K + short M options at strike K′
+(N ≠ M). Custom convexity / theta-harvesting profile depending on the ratio + strike spacing.
 
 ## Stat Arb / Pairs (2)
 
@@ -274,12 +428,36 @@ Universe-wide ranking (Russell 1000, S&P 500, crypto top-50). Cross-sectional ML
 top-M, short bottom-M; equal-weight / rank-weighted / confidence-weighted. Members rotate each rebalance. "Joint
 reasoning over the whole universe — this is what distinguishes it from running N independent ML directional strategies."
 
+## Portfolio (4) _— added 2026-04-25 Phase 9_
+
+The Portfolio family adds 4 cross-category sleeve archetypes. Each is itself a strategy instance: receives equity, runs
+through risk gates, kill-switch machinery, and share-class accounting like any other strategy — but its emitted
+instructions are `AllocationDirective` events to child strategy instances rather than per-instrument `TRADE`s. Per-
+archetype docs pending.
+
+**`PORTFOLIO_MULTI_STRATEGY`** _(per-archetype doc pending)_ — Equal-weighted (or fixed-weight) multi-strategy sleeve.
+Allocates across N child strategy instances spanning multiple families (e.g. ML Directional + Carry + Vol Trading) with
+operator-mandated weights. Rebalances on a fixed cadence (daily / weekly / monthly).
+
+**`PORTFOLIO_RISK_PARITY`** _(per-archetype doc pending)_ — Risk-parity allocation across child strategy instances.
+Per-strategy realised-vol estimate → inverse-vol weighting → child equity targets. Re-runs at the rebalance cadence.
+
+**`PORTFOLIO_FACTOR_ALLOCATION`** _(per-archetype doc pending)_ — Factor-exposure allocation: declares target loadings
+on systemic factors (carry / momentum / vol / size / quality), allocates to child strategies whose realised exposures
+load onto those factors. Used for mandate-driven sleeves.
+
+**`PORTFOLIO_TACTICAL_OVERLAY`** _(per-archetype doc pending)_ — Operator/regime-driven tactical re-weighting on top
+of a base allocation. Regime classifier or operator command → per-strategy multiplier on base weight. Higher-frequency
+rebalancing than the other 3 (intraday possible).
+
 ---
 
 **Coverage note from the docs:** each archetype declares `topology_requirements` frontmatter (isolation, co-location,
-latency budget, min SLA tier). MM archetypes are the only ones needing premium tier + strategy-service isolated +
-co-located with execution (40 ms budget). Rules/yield archetypes sit on basic tier (500 ms). Everything else is standard
-tier (150 ms).
+latency budget, min SLA tier). MM archetypes (incl. all Phase 9 MM variants and `VOL_MARKET_MAKING`) are the only ones
+needing premium tier + strategy-service isolated + co-located with execution (40 ms budget). MEV archetypes need
+co-location with a private RPC / Flashbots relay. Rules/yield archetypes sit on basic tier (500 ms). Portfolio
+archetypes are higher-latency-tolerant since they re-emit allocation directives at scheduled cadences, not on each
+tick. Everything else is standard tier (150 ms).
 
 # The 7 Axes — pulled from each axis doc
 
@@ -571,14 +749,16 @@ unknown archetype/family.
 Documents the post-v1-delete shape of the strategy registry — the ONE place in Python that resolves
 `strategy_id → (name, family, category, archetype)`. v1 `StrategyFamily` (17 values), `StrategyArchetype` (13 values),
 and 55-entry `_DEFAULT_STRATEGIES` were deleted 2026-04-21. v2 registry is **derived, not hand-maintained** — generated
-from `archetype_capability_manifest.json`, flattening 18 archetypes × their cells' representative slot labels into 96
-entries. Public API signatures preserved so consumers need no call-site changes. Key v1→v2 field drift: `strategy_id`
-changed from flat ID (e.g. `DEFI_ETH_BASIS_HUF_1H`) to slot-label grammar; `execution_mode`, `strategy_type`,
-`default_timeframe` all removed (now archetype-derived).
+from `archetype_capability_manifest.json`, flattening 53 archetypes × their cells' representative slot labels (originally
+sized for 18 archetypes / 96 entries on 2026-04-20; now expanded with the Phase 9 archetype additions). Public API
+signatures preserved so consumers need no call-site changes. Key v1→v2 field drift: `strategy_id` changed from flat ID
+(e.g. `DEFI_ETH_BASIS_HUF_1H`) to slot-label grammar; `execution_mode`, `strategy_type`, `default_timeframe` all removed
+(now archetype-derived).
 
 **4. category-instrument-coverage.md** —
 [category-instrument-coverage.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/category-instrument-coverage.md)
-SSOT matrix: for every one of the 18 archetypes, every `(category, instrument_type)` cell is declared SUPPORTED /
+SSOT matrix: for every one of the 53 archetypes (originally 18 on 2026-04-20; expanded to 53 in Phase 9 — 35 new
+archetypes await their cell declarations), every `(category, instrument_type)` cell is declared SUPPORTED /
 PARTIAL / BLOCKED / N/A with representative venues, signal variant, gap reason, and fully-spelled slot-label examples.
 Category is always derived from the execution venue — the same `ARBITRAGE_PRICE_DISPERSION` engine runs CeFi, DeFi, or
 Unity event-settled markets; only venue params differ. As of 2026-04-20 snapshot: only
