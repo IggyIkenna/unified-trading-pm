@@ -1343,8 +1343,8 @@ BEFORE doing anything else, read these in order:
 
 Your agent-tag: defi-fork1-prep-audit-tab. Your tab number: 14.
 
-YOUR TASK: run a diagnostic audit on every defi_master Fork 1 data source for 3 bug classes
-that Tab 5 just fixed elsewhere:
+YOUR TASK: run a diagnostic audit on every defi_master Fork 1 data source for **4 bug
+classes** that Tab 5 + Tab 9 surfaced and partially fixed:
 
   Bug class 1: silent-zero (subgraph routing config error) — sample one day per chain per
     protocol; assert returned tick count > 0 if the chain × protocol × date is post-genesis.
@@ -1353,6 +1353,21 @@ that Tab 5 just fixed elsewhere:
   Bug class 3: launch-date floor handling — for each Fork 1 instrument, assert
     instruments-service's get_protocol_floor_date returns the UAC PROTOCOL_LAUNCH_DATES SSOT
     value, not a hard-coded floor.
+  Bug class 4 (NEW — added per Tab 9 discovery 2026-05-08): **UAC PROTOCOL_LAUNCH_DATES
+    date drift**. Tab 9 found `("ETHEREUM","AAVEV3"): "2022-03-14"` in UAC chain_env.py was
+    wrong — actual mainnet deploy was `2023-01-27` (11-month gap → 343 days of false-empty).
+    Probe-verify this for EVERY (chain, protocol) pair in PROTOCOL_LAUNCH_DATES — query the
+    matching subgraph for the earliest `*HistoryItems` event (or equivalent first-write
+    indicator). If the UAC date is more than ~14 days before the earliest on-chain event,
+    flag as a likely date-drift bug. Critical pairs to check first (high relevance to
+    May-23 archetypes):
+    * AAVEV3 / BASE, LINEA, BSC, METIS, GNOSIS — multi-chain Aave V3 cohorts beyond Tab 9's
+      already-fixed ETHEREUM.
+    * COMPOUNDV3 / ETHEREUM, ARBITRUM, BASE, OPTIMISM — multi-chain Compound V3 (Bug 2
+      surface).
+    * SPARK / ETHEREUM — Maker-spinoff lending; UAC date suspect.
+    * Any other (chain, protocol) pair in chain_env.py with a date that pre-dates the
+      protocol's general-multi-chain rollout date.
 
 Fork 1 scope (per defi_master plan body):
 - Aave V3 (Ethereum + Polygon + Arbitrum + Base — the 4 EVM chains).
@@ -1371,12 +1386,20 @@ If you find any new bugs (NOT Tab 5's already-fixed ones), file them as case-3 f
 with explicit owner pointer (Ikenna for D4 launch fork; or main for triage).
 
 DONE-DEFINITION:
-- [ ] All Fork 1 data sources sampled for the 3 bug classes.
-- [ ] plans/active/issues/defi_fork1_prep_audit_2026_05_08.md filed with per-source results.
+- [ ] All Fork 1 data sources sampled for the **4 bug classes** (incl. Bug class 4 UAC date
+      drift).
+- [ ] Per-(chain, protocol) UAC date vs subgraph-earliest-event probe results tabulated.
+- [ ] plans/active/issues/defi_fork1_prep_audit_2026_05_08.md filed with per-source results
+      + per-(chain, protocol) UAC date drift verdict.
 - [ ] Any new findings annotated in defi_master plan body with case-3 owner pointer.
+- [ ] If Bug-class-4 drifts found: file a SEPARATE issue doc per pair (or one batched doc)
+      so each can be tracked / fixed independently like Tab 9 did for AAVE V3 ETH. Do NOT
+      ship the UAC fix yourself — flag for operator + main agent to spawn a follow-up tab
+      (avoids collisions on UAC chain_env.py with Ikenna's writegate + Tab 9's PM stack).
 - [ ] DONE-2026-05-08 block at the bottom of the audit doc.
 
-REPORT-BACK: 1-2 commits (audit doc + defi_master annotations); push per conditional rule.
+REPORT-BACK: 1-3 commits (audit doc + per-pair issue docs if drifts found + defi_master
+annotations); push per conditional rule.
 ````
 
 ### ⚪ Main agent (this session) doing now
