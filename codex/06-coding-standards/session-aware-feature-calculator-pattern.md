@@ -79,4 +79,4 @@ emitted with the cross-instrument component set to NaN and a typed reason in hon
 - Venue trading calendar SSOT: `unified_api_contracts.canonical.crosscutting.venue_trading_calendar`
 - Feature service pattern (BaseCalculator): [`feature-service-pattern.md`](feature-service-pattern.md)
 - TradFi shard atom (per-root + half-day handling):
-  [`../02-data/per-category-bucket-layouts.md`](../02-data/per-category-bucket-layouts.md)
+  [`../02-data/per-asset-group-bucket-layouts.md`](../02-data/per-asset-group-bucket-layouts.md)

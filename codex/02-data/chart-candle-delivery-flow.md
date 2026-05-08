@@ -17,7 +17,7 @@ across 4 repos).
 **Cross-refs**:
 
 - `availability-manifest-and-data-status.md` — manifest schema + lifecycle
-- `per-category-bucket-layouts.md` — actual GCS hive paths per asset group
+- `per-asset-group-bucket-layouts.md` — actual GCS hive paths per asset group
 - `subscription-model.md` — domain client architecture
 - `partitioning.md` — hive `key=value` pattern + BQ external table option
 
@@ -237,7 +237,7 @@ disk but never appear in `read_availability_index` output.
 
 ### 5. GCS data layer
 
-Path conventions are SSOT in `per-category-bucket-layouts.md`.
+Path conventions are SSOT in `per-asset-group-bucket-layouts.md`.
 
 For chart candles specifically:
 

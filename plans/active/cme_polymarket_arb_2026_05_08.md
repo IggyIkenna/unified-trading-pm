@@ -121,12 +121,12 @@ todos:
       - [x] [AGENT] P1. **Codex updates**: (1) extend
         `codex/02-data/per-category-bucket-layouts.md` with the EVENT_CONTRACT shard atom shape; (2) extend
         `codex/09-strategy/architecture-v2/category-instrument-coverage.md` with the cross-venue-arb pattern;
-        (3) NEW codex doc `codex/14-playbooks/strategy/cme-polymarket-arb.md` capturing the strategy archetype
+        (3) NEW codex doc `codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md` capturing the strategy archetype
         spec, basis-calc reference, leg-balancing assumptions, kill-switch rules. **SHIPPED 2026-05-08** as STUB —
         per-category-bucket-layouts.md gained "TradFi EVENT_CONTRACT" bullet in the multi-axis correction banner
         (shard atom + cluster validation + folder-map ref); category-instrument-coverage.md Family 4
         ARBITRAGE_PRICE_DISPERSION gained "TradFi ↔ Prediction event_contract" coverage row + slot-label cluster
-        cme-polymarket-{spx|btc}-up-down-daily-usd-prod; NEW codex/14-playbooks/strategy/cme-polymarket-arb.md
+        cme-polymarket-{spx|btc}-up-down-daily-usd-prod; NEW codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md
         playbook stub with TL;DR, 9-root mapping table, basis-calc reference, leg-balancing assumptions,
         kill-switch rules, anti-patterns. Full content lands as Phases 2-5 ship.
     status: done
@@ -214,7 +214,7 @@ Q1+Q2; Phase 5 depends on Phases 2-4).
   - `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — EXTENDED Family 4
     `ARBITRAGE_PRICE_DISPERSION` coverage table with "TradFi ↔ Prediction event_contract" PARTIAL row covering
     9 CME roots; added slot-label cluster `ARBITRAGE_PRICE_DISPERSION@cme-polymarket-{spx,btc}-up-down-daily-usd-prod`.
-  - `codex/14-playbooks/strategy/cme-polymarket-arb.md` — **NEW STUB** playbook with frontmatter
+  - `codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md` — **NEW STUB** playbook with frontmatter
     `scope: [strategist, engineer]`; documents archetype name (`cme_polymarket_event_arb`), 9-root → canonical-group
     mapping table, basis-calc reference (annualised bps), leg-balancing assumptions (notional matching, expiry
     alignment, strike matching, settlement-rule equivalence), kill-switch rules (per-leg fill failure,

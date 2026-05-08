@@ -394,7 +394,7 @@ gs://ml-models/SPORTS/
 └── metadata/{version}/config.json
 ```
 
-**GCS bucket layout SSOT:** `02-data/per-category-bucket-layouts.md` (sports section). Path-construction SSOT: UAC `unified_api_contracts.sports.gcs_paths` (`candidate_parquet_paths`, `SPORTS_DATA_TYPE_TO_FOLDER`, `SPORTS_DATA_TYPE_LAYOUT`).
+**GCS bucket layout SSOT:** `02-data/per-asset-group-bucket-layouts.md` (sports section). Path-construction SSOT: UAC `unified_api_contracts.sports.gcs_paths` (`candidate_parquet_paths`, `SPORTS_DATA_TYPE_TO_FOLDER`, `SPORTS_DATA_TYPE_LAYOUT`).
 
 ---
 
@@ -479,7 +479,7 @@ gs://ml-models/SPORTS/
 - **Sports Instruments:** `01-domain/sports-instruments.md`
 - **Sports Data Sources:** `02-data/sports-data-sources.md`
 - **Sports Feature Horizons:** `04-architecture/sports-feature-horizons.md`
-- **Sports Bucket Layout:** `02-data/per-category-bucket-layouts.md` (sports section)
+- **Sports Bucket Layout:** `02-data/per-asset-group-bucket-layouts.md` (sports section)
 - **Arbitrage Integration:** `01-domain/arbitrage-strategy-integration.md`
 
 ---

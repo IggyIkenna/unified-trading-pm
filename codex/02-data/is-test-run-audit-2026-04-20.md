@@ -6,12 +6,12 @@ scope: [engineer, admin]
 
 **Purpose**: Per-service inventory of how `IS_TEST_RUN=true` (env var) → `-test-` bucket suffix is honoured. Written as
 the Phase 1 deliverable of the institutional smoke matrix plan
-(`plans/archive/institutional_smoke_matrix_2026_04_20.plan.md`). Pairs with the per-category bucket SSOT
-(`per-category-bucket-layouts.md`).
+(`plans/archive/institutional_smoke_matrix_2026_04_20.plan.md`). Pairs with the per-asset-group bucket SSOT
+(`per-asset-group-bucket-layouts.md`).
 
 **Status**: canonical reference for Phase 2 (per-service smoke scripts). Updated post-propagation.
 
-**Naming convention** (single SSOT, mirrors `per-category-bucket-layouts.md`):
+**Naming convention** (single SSOT, mirrors `per-asset-group-bucket-layouts.md`):
 
 - PROD: `{prefix}-{category_lower}-{project_id}` — e.g. `instruments-store-cefi-central-element-323112`
 - TEST: `{prefix}-{category_lower}-test-{project_id}` — e.g. `instruments-store-cefi-test-central-element-323112`
@@ -135,7 +135,7 @@ under `gs://{prefix}-{category}-test-{project_id}/...`. The Phase 6 end-to-end v
 
 ## Cross-references
 
-- Per-category bucket layouts SSOT: `codex/02-data/per-category-bucket-layouts.md`
+- Per-asset-group bucket layouts SSOT: `codex/02-data/per-asset-group-bucket-layouts.md`
 - Plan: `plans/archive/institutional_smoke_matrix_2026_04_20.plan.md`
 - UTL helper: `unified_trading_library/core/cloud_constants.py:215` (`get_write_bucket_name`)
 - MDPS dep-checker: `market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py`

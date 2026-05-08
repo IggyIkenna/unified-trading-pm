@@ -357,7 +357,7 @@ Every leaf carries a `row_key` dict. Two operator actions consume it:
 - Sibling SSOTs:
   - [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md) — manifest schema,
     rollup-vs-drilldown denominator divergence.
-  - [`per-category-bucket-layouts.md`](./per-category-bucket-layouts.md) — canonical parquet paths.
+  - [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md) — canonical parquet paths.
   - [`honest-absence-downstream-handling.md`](./honest-absence-downstream-handling.md) — NaN-handling tolerances.
   - [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) — `pipeline_mode` outermost partition column.
 - Reference incident 2026-05-07: operator DEFI screenshot showing ARBITRUM 32/54 misleading headline; root cause the

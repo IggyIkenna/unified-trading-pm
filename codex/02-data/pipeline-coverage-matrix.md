@@ -12,7 +12,7 @@ end-to-end coverage.
 **Related SSOTs:**
 
 - `codex/02-data/availability-manifest-and-data-status.md` — manifest schema + capture_status
-- `codex/02-data/per-category-bucket-layouts.md` — bucket naming
+- `codex/02-data/per-asset-group-bucket-layouts.md` — bucket naming
 - `codex/02-data/mtds-data-source-coverage-matrix.md` — MTDS-specific deeper dive
 - `codex/02-data/sports-data-source-coverage-matrix.md` — sports-specific deeper dive
 - `market-tick-data-service/market_tick_data_service/raw_tick_hive.py` — hive key SSOT
@@ -28,9 +28,9 @@ end-to-end coverage.
 
 > **SSOT pointer**: per-asset-group bucket patterns + path templates + hive-key vocabulary (canonical `asset_group=` vs
 > legacy `category=` + tradfi non-Hive shape) + per-asset-group migration status live in
-> [`per-category-bucket-layouts.md`](./per-category-bucket-layouts.md). This doc focuses on the per-service coverage
+> [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md). This doc focuses on the per-service coverage
 > matrix (which service writes which `(asset_group, data_type, day)` tuple) and the manifest index files + consolidator
-> topology below — for "what does the path look like on disk for asset_group X" consult the per-category-bucket-layouts
+> topology below — for "what does the path look like on disk for asset_group X" consult the per-asset-group-bucket-layouts
 > SSOT.
 
 ### Manifest index files (per bucket)

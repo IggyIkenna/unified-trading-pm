@@ -54,7 +54,7 @@ gs://{bucket}/{prefix}/by_date/day={date}/{additional_dimensions}/{filename}.par
 ### Path Templates by Service
 
 > **SSOT pointer**: per-service path templates + per-asset-group divergences live in
-> [`per-category-bucket-layouts.md`](./per-category-bucket-layouts.md). That doc is the canonical SSOT for bucket
+> [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md). That doc is the canonical SSOT for bucket
 > templates (cefi / tradfi / defi / sports / prediction / instruments / features / ml / strategy / execution), shard
 > atom shapes per asset_group, hive-vocab compatibility (`category=` legacy vs `asset_group=` canonical), and reader
 > fallback discipline. Consult it before adding or modifying any path-template assumption in code.

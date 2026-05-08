@@ -72,9 +72,9 @@ Hive/Presto/Athena, and migrate services incrementally with short-term dual sche
 
 > **SSOT pointer**: canonical per-asset-group path templates + hive-key vocabulary (`asset_group=` canonical vs
 > `category=` legacy) + reader fallback discipline live in
-> [`per-category-bucket-layouts.md`](./per-category-bucket-layouts.md). This section retains only the parquet+BQ
+> [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md). This section retains only the parquet+BQ
 > rationale specific to hive-compatible partitioning; for the per-service path templates and shard-atom shapes per
-> asset_group, consult the per-category-bucket-layouts SSOT.
+> asset_group, consult the per-asset-group-bucket-layouts SSOT.
 
 ### Why hive-style partitioning (parquet + BigQuery rationale)
 
@@ -94,7 +94,7 @@ because the partition key/value pairs are encoded in the directory names.
 - **More partitions → Faster queries** (scan fewer files).
 - **More partitions → Slower writes** (more directories to manage).
 - **Recommendation:** Use the per-asset-group shard-atom shapes documented in
-  [`per-category-bucket-layouts.md`](./per-category-bucket-layouts.md); they encode the workspace's chosen partition
+  [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md); they encode the workspace's chosen partition
   cardinality per asset_group + data_type.
 
 ---

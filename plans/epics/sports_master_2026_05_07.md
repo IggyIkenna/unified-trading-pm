@@ -38,7 +38,7 @@ and these docs is a review-blocking failure per `doc → plan → code`):
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
   sports-specific empty_confirmed legitimacy: instrument-day-grain empty IS legit (no fixtures today / no markets active
   is normal); paused-league windows (`KNOWN_COVERAGE_GAPS`) + pre-`SOURCE_COVERAGE_START` clip rules
-- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — sports
+- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — sports
   per-source folder layout per CLAUDE.md "Sports GCS path SSOT":
   `sports_reference/by_date/day=*/entity={F}/league={L}/{F}.parquet`;
   `candidate_parquet_paths(data_type, day, league_id)` is the canonical probe API

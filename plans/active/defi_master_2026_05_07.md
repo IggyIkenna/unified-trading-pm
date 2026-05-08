@@ -1009,7 +1009,7 @@ pushed). 3 items deferred per blockers below.
 3. **Item 3 — Stream A DERIBIT/BYBIT/OKX ETH-LST collateral acceptance flips** ✅
    - `unified-api-contracts@92eab58` — 6 venue_collateral.py rows flipped (DERIBIT stETH 7.5%; BYBIT
      stETH/wstETH/USDe/sUSDe; OKX wstETH 10%; OKX stETH unchanged-False asymmetric). 28 unit tests pass.
-   - NEW codex doc `codex/14-playbooks/defi/venue-collateral-2026-05-07.md` captures evidence trail per row + caveats +
+   - NEW codex doc `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` captures evidence trail per row + caveats +
      pending-live-API-probe follow-up.
    - `unified-trading-pm@15e9b1a3` — plan-flip + codex doc commit.
 

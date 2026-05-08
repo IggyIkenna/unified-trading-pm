@@ -14,7 +14,7 @@ matrix below.
 
 **Cross-references**:
 
-- Per-category bucket & path layouts: `codex/02-data/per-category-bucket-layouts.md`
+- Per-asset-group bucket & path layouts: `codex/02-data/per-asset-group-bucket-layouts.md`
 - Smoke matrix plan: `plans/archive/institutional_smoke_matrix_2026_04_20.plan.md` § Phase 3
 - Availability manifest schema: `codex/02-data/availability-manifest-and-data-status.md`
 - Shard-level failure isolation (shard-level, NOT pre-flight): `codex/04-architecture/shard-level-failure-isolation.md`
@@ -129,7 +129,7 @@ inherit it.
 ## 3. Per-entity coverage matrix
 
 Each adapter writes to one or more `entity=` partitions under `sports_reference/by_date/day={date}/`. Cross-reference:
-`codex/02-data/per-category-bucket-layouts.md` § "instruments-service writes — SPORTS".
+`codex/02-data/per-asset-group-bucket-layouts.md` § "instruments-service writes — SPORTS".
 
 | Adapter                       | Writes entity partitions                                                                                                       | Reads (dep)                                          |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
@@ -237,4 +237,4 @@ consistent for the caller: "either the dep is there, or the gate tells you what 
   the migration plan from `plans/active/`.
 - Changing the sports bucket naming convention → update §1 diagram and §4.4 test-bucket-divergence section.
 - New entity partition introduced under `sports_reference/by_date/` → add to §3 matrix AND to
-  `codex/02-data/per-category-bucket-layouts.md`.
+  `codex/02-data/per-asset-group-bucket-layouts.md`.

@@ -16,7 +16,7 @@ Cross-refs:
 - `codex/02-data/availability-manifest-and-data-status.md` — v5 honest-coverage schema (shard columns, `capture_status`,
   `record_empty` / `record_failed`).
 - `codex/02-data/sports-adapter-dependency-order.md` — adapter → entity mapping & T0/T1 wave order.
-- `codex/02-data/per-category-bucket-layouts.md` — per-asset_group bucket layout SSOT (sports section).
+- `codex/02-data/per-asset-group-bucket-layouts.md` — per-asset_group bucket layout SSOT (sports section).
 - UAC: `unified_api_contracts.canonical.domain.sports.league_data` — `LEAGUE_REGISTRY`, `get_prediction_leagues`,
   `get_leagues_by_classification("Features"|"Reference")`, `get_league_fixture_calendar`.
 - UAC: `unified_api_contracts.canonical.domain.sports.league_registry` —

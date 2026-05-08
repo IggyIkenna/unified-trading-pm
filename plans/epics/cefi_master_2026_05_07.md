@@ -38,7 +38,7 @@ and these docs is a review-blocking failure per `doc → plan → code`):
   CeFi `empty_confirmed` rule (only venue-level reasons legit: `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` /
   `EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PARTIAL_HALF_DAY`); zero-source-response on alive instrument-day must flip to
   `attempted_failed`
-- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — CeFi shard
+- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — CeFi shard
   matrix: spot/perp = per-instrument-per-day (35GB roots); options/futures = bundled by `options_chain` /
   `futures_chain` root; per-VM shard isolation policy
 - [`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) — MTDS

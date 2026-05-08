@@ -36,7 +36,7 @@ and these docs is a review-blocking failure per `doc → plan → code`):
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
   TradFi non-trading-day reasons (`EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PARTIAL_HALF_DAY`) and downstream
   NaN tolerances
-- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — TradFi GCS
+- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — TradFi GCS
   bucket layout + hive partition keys (per-instrument ETFs vs bundled futures/options chains)
 - [`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
   — ES.OPT 11-cluster taxonomy (ES + E1A–E5A + EW1–EW4 + EOM) and TradFi instrument coverage matrix

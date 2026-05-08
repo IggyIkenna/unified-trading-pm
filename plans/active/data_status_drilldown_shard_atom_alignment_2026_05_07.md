@@ -264,7 +264,7 @@ on whatever flags exist today as a degenerate case).
       shard-key matrix" + the writer contracts in `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`. If any
       drift, raise to user — do NOT silently proceed.
 - [ ] [audit] P0. Read 5 sample on-disk parquets (one per asset_group) + confirm the canonical path matches the shard
-      atom. Reference paths in `codex/02-data/per-category-bucket-layouts.md`.
+      atom. Reference paths in `codex/02-data/per-asset-group-bucket-layouts.md`.
 
 ### Phase 1 — deployment-api hierarchical drill-down endpoint
 
@@ -298,7 +298,7 @@ on whatever flags exist today as a degenerate case).
       supported `(service, asset_group)` from the SSOT.
 - [ ] [deployment-api] P0. Adjust `download-csv` / `download-shard-csv` to accept the full leaf row_key (currently
       hard-stops at venue, day). Resolve the row_key to the canonical parquet path via UAC SSOT
-      (per-category-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already accept
+      (per-asset-group-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already accept
       partial keys; Phase 3 wire-in is the SmartDownloadButton consumer change.
 - [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). Unit tests: 13/13 pass in `test_data_status_hierarchical.py`
       covering top-level axis routing for MTDS DEFI, filter-descent into subtree, capture-status splits, window
@@ -573,6 +573,6 @@ documentation todo already shipped at PM@372e23aa. The remaining 4 are carried h
 - `unified-trading-pm/plans/active/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` (writer-side compliance —
   drives the ground-truth shard atoms)
 - `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`
-- `unified-trading-pm/codex/02-data/per-category-bucket-layouts.md`
+- `unified-trading-pm/codex/02-data/per-asset-group-bucket-layouts.md`
 - Reference incidents: TradFi MVP partial-bundle (2026-05-06) — operator couldn't tell which ES.OPT cluster was missing
   because the panel collapsed across cluster membership; same shape as the TradFi screenshot driving this plan.
