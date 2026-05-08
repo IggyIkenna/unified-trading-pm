@@ -296,3 +296,38 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
 - Reference incident 2026-05-07: user inspected the FIXTURE_STATS schema modal in the deployment-ui data-status panel,
   observed only `fixture_id + data_available_at`, and asked whether this duplicated FIXTURES (yes, today it does —
   that's the bug).
+
+## DONE-2026-05-08 — Tab 5 cycle (Phases 1-3 + 5)
+
+Tab 5 (api-football-flattening-tab) shipped Phases 1-3 + 5 of this plan in one cycle. Phase 4 (optional historical
+reprocessor) intentionally skipped per plan body's default recommendation — forward-poll naturally fills new fixtures
+with the new shape; historical thin parquets survive harmlessly until the next league cycle re-fetches.
+
+Code commits:
+
+- `unified-api-contracts@c76e6d0` — feat(api_football): flatten fixture_stats / events / lineups / injuries. Adds
+  `_FIXTURE_STAT_TYPE_MAP` closed-set + `_safe_pct` / `_safe_float` helpers; rewrites the 4 pass-through normalizers to
+  per-row flat dicts; extends 4 SchemaContracts with full per-column ColumnSpec lists; rewrites the
+  `_sports_match_contracts.py` module docstring; ships 13 new unit tests under
+  `tests/unit/test_normalize_api_football.py`.
+- `instruments-service@539130f` — feat(api_football): wire flattened normalizers via chain.from_iterable. Updates the
+  4 fixture-handlers to compose chain.from_iterable across the per-row normalizer outputs; tightens return-type
+  annotations from `list[CanonicalX]` to `list[dict[str, object]]` (matches base-class signature + actual runtime
+  shape); drops the now-unused Canonical\* imports.
+- `unified-trading-pm@36c40a10` — plan(api_football_minimal_flattening): flip Phase 1+2+3+5 + ship codex
+  regression-guard. Adds "Expected column counts per API-Football data_type" sub-section under §2.1 of
+  `codex/02-data/sports-data-source-coverage-matrix.md` (5-row table + footnote + 2026-05-08 changelog entry); flips
+  shipped checkboxes in this plan body with commit-sha + brief evidence; marks the 2 Phase 3 smoke-test items as
+  `**DEFERRED**` with a hand-back note for operator-driven live-API + EPL forward-poll verification.
+
+Open items handed to operator:
+
+- Phase 3.B + 3.C (live-API smoke + EPL one-day forward-poll) — require API-Football credentials + recovery-mode VM
+  invocation + UI render verification. Local agent integration smoke verified the chain.from_iterable + normalizer
+  composition shape end-to-end on synthetic 2-team fixture (2 stat rows / 3 event rows / 29 lineup rows / 1 injury
+  row).
+- Phase 4 (optional historical reprocessor) — left at `- [ ]` per plan default recommendation. Re-evaluate if
+  features-sports calculators become critically blocked on historical thin rows; today's per-calculator NaN gate +
+  UTL `assert_available_at_present` already absorbs the gap.
+- Phase 5.B (plan closeout) — left at `- [ ]` until Phase 3.B + 3.C ship. The plan's `locked_by: live-defi-rollout`
+  status survives until then per workspace plan-locking rule.
