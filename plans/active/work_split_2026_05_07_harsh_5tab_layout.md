@@ -433,14 +433,26 @@ REPORT-BACK:
 - **Cadence**: 10-min monitoring sweeps; appending findings into the plan body's "Day 2 monitoring sweep"
   subsection.
 
-#### Tab 4 — `deploy-missing-tarball-refresh-tab` 🟢 IN FLIGHT (deploy_missing Phase 1, P0, ~3-4h)
+#### Tab 4 — `deploy-missing-tarball-refresh-tab` ✅ DONE 2026-05-08 (deploy_missing Phase 1, P0)
 
-- **Started**: 2026-05-08 05:11 UTC (STARTED ping ack'd by main; clean boot, no flags).
-- **Plan-of-record**: [`deploy_missing_auto_launch_2026_05_07.plan.md`](deploy_missing_auto_launch_2026_05_07.plan.md) Phase 1.
-- **Why this now**: Just-unblocked because Tab 3 landed deployment-api Phase 2 endpoints today. Phase 1 builds
-  the tarball-refresh wiring that the eventual auto-launch endpoint (Phase 2) depends on.
-- **Scope**: refresh-tarballs-for-shard-key.sh + Cloud Build trigger + deployment-api staleness-check helper.
-  Phase 0 (security review) is operator-owned, Phase 2+ are gated on Phase 0; do NOT proceed past Phase 1.
+- **Verified by main 2026-05-08 05:55 UTC** — all 9 verification checks pass (3 todos flipped, both commits
+  exist with cited files on disk, ruff clean, ruff format clean, basedpyright 0/0/0 on new file, 27/27 tests
+  pass, Phase 0/2/3/4 correctly left for operator gating, bonus IAM proposal deferred with sound rationale).
+- **Code commits** (both pushed to origin per conditional rule — zero incoming at push time):
+  - `deployment-service@a620e1f` — `refresh-tarballs-for-shard-key.sh` (CEFI/TRADFI/DEFI/SPORTS/PREDICTION/ALL
+    + structured `TARBALLS_REFRESH_*` events) + `cloud-build/refresh-tarballs.cloudbuild.yaml` (REST-invokable
+    Cloud Build trigger, 30-min timeout, E2_HIGHCPU_8).
+  - `deployment-api@faac20a` — `services/tarball_staleness.py` (`TarballStalenessChecker` with `RefreshResult`
+    dataclass; FRESH / STALE_NO_TRIGGER / REFRESHED / REFRESH_FAILED / POLL_TIMEOUT statuses; protocol-based
+    indirection over GCS Blob + Cloud Build client for testability; naive datetime raises loud) + 27/27 unit
+    tests covering bundle membership, mtime read, oldest-mtime aggregation, staleness compare,
+    trigger-then-poll orchestration, and all gate states.
+- **Plan-flip commit**: PM (this commit) flipping Tab 4 status + DONE-2026-05-08 block already in the plan body.
+- **QG status**: deployment-api Pass 1 — 2406/2406 in-scope tests pass; coverage 70.94% (gate 70%); 1
+  pre-existing failure on `test_empty_reason_breakdown.py` (writegate Phase 4.A; not Tab 4's code) — exempt
+  per CLAUDE.md temporary 2026-05-07 → 2026-05-09 QG-failure exception.
+- **What's next** (Phase 2 is gated on Phase 0 operator security review): Tab 4's `ensure_fresh()` API is
+  intentionally generic so the eventual Phase 2 endpoint just calls it; no API churn expected.
 
 **Scope clarifications** (read before opening the prompt):
 - **Tab 4 ships Phase 1 only**: `refresh-tarballs-for-shard-key.sh` + Cloud Build trigger + deployment-api
@@ -706,14 +718,19 @@ DONE-DEFINITION:
 REPORT-BACK: 5-6 small commits per CLAUDE.md cadence; conditional push.
 ````
 
-#### Tab 8 — `audit-followups-tab` 🟢 IN FLIGHT (plan hygiene, ~1h, PM only)
+#### Tab 8 — `audit-followups-tab` ✅ DONE 2026-05-08 (plan hygiene, PM only)
 
-- **Started**: 2026-05-08 05:22 UTC (STARTED ping ack'd by main; clean boot, no flags).
-- **Plan-of-record**: [`audit_followups_2026_05_07.plan.md`](audit_followups_2026_05_07.plan.md) items #1-#6.
-- **Scope**: 6 line-edit fixes — stale plan refs, archived plan listings, module path drifts, STALE markers.
-
-**Why now**: Filler-class work; pure win. 6 line-edit fixes to plan-doc anomalies surfaced in the 2026-05-07
-audit. Good first task for an idle tab.
+- **Verified by main 2026-05-08 05:56 UTC** — all 4 cited commits exist + are pushed to
+  origin/live-defi-rollout; 16 checkboxes flipped across the 6 anomalies + validation pass + follow-ups.
+- **Code commits** (PM, all pushed to origin per conditional rule):
+  - `PM@8286cf4` — fix anomaly #1 (stale defi_e2e_pipeline / leveraged_leg_controller / defi_pipeline_extension
+    refs in master plan replaced with `defi_master_2026_05_07`).
+  - `PM@8d33d97` — fix anomaly #3 (re-derive plan counts in master work-stream-G).
+  - `PM@b9593b2` — fix anomaly #5 (reconcile infrastructure_master STALE count to actual + strategy_architecture_v2
+    Phase 3 OPS items).
+  - `PM@728a63f` — flip §1-§6 + validation checkboxes + DONE-2026-05-08 block in plan body.
+- **Plan-flip**: handled in `728a63f` directly.
+- **Going quiet** per spawn protocol — won't pick up new work autonomously.
 
 **Spawn prompt — paste this entire block as the new tab's first message**:
 
