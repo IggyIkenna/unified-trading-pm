@@ -6,18 +6,50 @@ scope: [engineer]
 
 ## Consolidation status
 
-The pre-2026-05-08 layout had 5–6 separate `features-*-service` repos (features-onchain-service, features-volatility-
-service, features-cross-instrument-service, features-sports-service, features-prediction-service). The current target
-state is a single workspace repo `features-service` with sub-packages per domain
-([`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md)).
-`BaseFeatureServiceV2` becomes the per-sub-package base class within `features-service`, not the per-repo base class.
-The pattern below applies inside the consolidated repo: each sub-package owns its calculators; each calculator extends
-`BaseFeatureServiceV2`. The deployment topology
+The pre-2026-05-08 layout had **8 separate** `features-*-service` repos (features-onchain-service,
+features-volatility-service, features-cross-instrument-service, features-sports-service, features-calendar-service,
+features-commodity-service, features-delta-one-service, features-multi-timeframe-service). The current target state
+is a single workspace repo `features-service` with one sub-package per family
+([`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md) — canonical
+SSOT for the consolidated shape, the `--feature-family` CLI dispatcher, the Health-API aggregator, and the 7 UTL
+Phase 5 lifts). `BaseFeatureServiceV2` becomes the per-sub-package base class within `features-service`, not the
+per-repo base class. The pattern below applies inside the consolidated repo: each sub-package owns its calculators;
+each calculator extends `BaseFeatureServiceV2`. The deployment topology
 ([`../05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md))
 splits the consolidated repo into one VM-per-asset_group (colocated with MDPS) plus one features-cross-cutting VM.
 
 The `feature_family` axis (UAC enum) is the primary shard key inside the consolidated repo and surfaces in the data-
 status drilldown — see [`../02-data/data-status-drilldown-hierarchy.md`](../02-data/data-status-drilldown-hierarchy.md).
+
+### Adding a new feature_family
+
+1. **UAC schema first.** Add the new family to `unified_api_contracts.canonical.crosscutting.feature_family.FeatureFamily`
+   (StrEnum). Extend `FEATURE_GROUP_TO_FAMILY` with the family's owned `feature_group` keys. Ship UAC commit + bump.
+2. **Sub-package skeleton.** Create `features-service/features_service/<family>/` with `__init__.py` exporting:
+   ```python
+   def run(argv: list[str]) -> int:
+       """Entry-point invoked by the top-level CLI dispatcher.
+
+       Receives every CLI flag except --feature-family (already consumed by the
+       dispatcher). Must return an integer exit code.
+       """
+   ```
+3. **Calculator class.** Add `features-service/features_service/<family>/calculators/<X>.py` extending
+   `BaseFeatureServiceV2[Request, Result]` with the single `compute_features()` method.
+4. **Health-API freshness callback.** Add `features-service/features_service/<family>/api.py` exposing
+   `_data_freshness() -> FreshnessSnapshot`. The top-level
+   [`features_service/api/main.py`](../../../features-service/features_service/api/main.py) aggregator
+   discovers it via `importlib.util.find_spec` — no manual wiring.
+5. **Manifest writer.** Use UTL `ManifestWriter.record_captured(feature_family=<FeatureFamily>, ...)` — the
+   `feature_family` column is mandatory. Per-shard data lands at
+   `gs://features-{asset_group}-{env}/feature_family={family}/feature_group={group}/...`.
+6. **Tests.** Family-specific tests live under `features-service/tests/<family>/`. Cross-family integration
+   tests (e.g. lookahead-bias gate enforcement) stay under `features-service/tests/integration/`.
+7. **Launcher.** No new launcher needed — the consolidated `launch-features-vm.sh` accepts
+   `--feature-family <new>` automatically once the UAC enum extension lands.
+
+The dispatcher [`features_service/cli/main.py`](../../../features-service/features_service/cli/main.py) reads the
+UAC enum at startup; no per-family registration is required.
 
 ## Overview
 
