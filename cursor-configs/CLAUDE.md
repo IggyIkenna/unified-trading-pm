@@ -1696,7 +1696,18 @@ provide them.
 **CRITICAL: Agents in `--print` mode CANNOT read files from disk.** Telling them "read .cursorrules" is useless — they
 never see it. Rules MUST be pasted directly into the prompt text.
 
-**When launching ANY sub-agent or autonomous agent:**
+### SSOT shape (codified 2026-05-08)
+
+`SUB_AGENT_MANDATORY_RULES.md` is a **symlink to CLAUDE.md** in PM canonical
+(`unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md → CLAUDE.md`). The two files have **identical
+content** — sub-agents need every workspace rule the parent agent has, and the prior ~30% subset file was a perpetual
+drift hazard. Per-repo `.claude/SUB_AGENT_MANDATORY_RULES.md` symlinks (rolled out via
+`scripts/rollout-agent-symlinks.sh`) point through to the same canonical, so existing references like *"read
+SUB_AGENT_MANDATORY_RULES.md"* continue to work at every site that already used them — they now deliver the full
+workspace-rules surface, not the old subset. Sub-agent-specific framing (*"you are a sub-agent, the rules below apply
+to you"*) is added by the inject script preamble + by spawn prompts in the work-split plans, not by file content.
+
+### When launching ANY sub-agent or autonomous agent
 
 1. **For local scripts:** Use `inject-mandatory-rules.sh`:
    ```bash
@@ -1705,15 +1716,17 @@ never see it. Rules MUST be pasted directly into the prompt text.
 2. **For GHA workflows:** Load rules via `GITHUB_ENV` heredoc in a prior step, then prepend `${MANDATORY_RULES}` to the
    prompt.
 3. **For Cursor/Claude Code sub-agents (Task tool):** Paste contents of
-   `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt.
+   `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt. (Resolves to CLAUDE.md
+   content via the symlink.)
 4. **If paste is impractical:** Include at TOP: "Before any action, read
    unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly."
 5. **Always include:** WORKSPACE_ROOT path. For tests: `cd <repo> && bash scripts/quality-gates.sh` (per-repo .venv).
    Never .venv-workspace for pytest.
 6. **If rules injection fails, the agent MUST NOT proceed.** Exit with error.
 
-Never rely on sub-agents "inheriting" rules — they cannot. Always inject the full rules. **SSOT:**
-`unified-trading-pm/scripts/agents/inject-mandatory-rules.sh`
+Never rely on sub-agents "inheriting" rules — they cannot. Always inject the full rules. **SSOTs:**
+`unified-trading-pm/scripts/agents/inject-mandatory-rules.sh` (injection wrapper) +
+`unified-trading-pm/cursor-configs/CLAUDE.md` (rules content; SUB_AGENT_MANDATORY_RULES.md is a symlink alias).
 
 ## Analysis Rules
 
