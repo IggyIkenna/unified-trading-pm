@@ -544,35 +544,48 @@ drift.
 
 ## LAYER D — Medium consolidations (sequential or partly-parallel; coordinate cross-doc refs)
 
-### Phase D.1 — data-status-drilldown duplicate merge — PARALLEL — P1
+### Phase D.1 — data-status-drilldown duplicate merge — PARALLEL — P1 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P1. Merge `data-status-drilldown.md` (215L) + `data-status-drilldown-hierarchy.md` (105L) into a single
-      doc.
+- [x] [SCRIPT] P1. Merge `data-status-drilldown.md` (215L) + `data-status-drilldown-hierarchy.md` (105L) into a single
+      doc. **SHIPPED 2026-05-08** — content merged into single SSOT (PM@c418979d bundled the merge into a foreign-agent
+      commit per foot-gun #1; the work landed correctly: 270 inserts in `codex/02-data/data-status-drilldown.md` + 118
+      deletes from `codex/02-data/data-status-drilldown-hierarchy.md` at PM@f58bc8a9; cli-convention.md ref rewrite
+      bundled into PM@06e13ce2).
 
-  **Target shape** (`data-status-drilldown.md`):
-  - §1 Overview / API surface
-  - §2 Per-asset_group depth table (from -hierarchy.md)
-  - §3 Shard-class matrix (from -drilldown.md)
-  - §4 ShardDetailModal endpoint contract (from -drilldown.md)
-  - §5 Hierarchical drill endpoint (from -hierarchy.md)
-  - §6 Cross-references
+  **Target shape** (`data-status-drilldown.md`) — DELIVERED:
+  - [x] §1 Overview / API surface (covers per-shard `ShardDetailModal` + hierarchical `HierarchicalShardDrilldown`).
+  - [x] §2 Per-asset_group depth table (from -hierarchy.md, including consolidated `feature_family` rows + the
+        `pipeline_mode` outermost-partition callout).
+  - [x] §3 Shard-class matrix (from -drilldown.md, including DeFi composite venue convention + venue-specific column
+        rendering).
+  - [x] §4 ShardDetailModal endpoint contract (from -drilldown.md, including write-time validation modes + UI flow per
+        category + download semantics + schema coverage gate).
+  - [x] §5 Hierarchical drill endpoint (from -hierarchy.md, including backend + frontend + per-leaf download +
+        Deploy-Missing surgical recovery + failure modes the drill-down catches).
+  - [x] §6 Cross-references.
 
-  **Cross-doc references to update** (verified in audit):
-  - [ ] `02-data/availability-manifest-and-data-status.md` — drill-down hierarchy section pointing at -hierarchy.md →
-        point at merged doc § "Per-asset_group depth table".
-  - [ ] `02-data/deployment-ui-drilldown-depth-audit.md:55` — same.
-  - [ ] `06-coding-standards/cli-convention.md:147` — same.
-  - [ ] `06-coding-standards/test-coverage-data-status.md:55` — same (doc shipped today PM@9d873547).
-  - [ ] `04-architecture/data-flow-map.md` — same.
-  - [ ] `09-strategy/cross-cutting/dart-manual-trade-spec.md` — verify any drilldown reference.
-  - [ ] Any plan in `plans/active/` referencing -hierarchy.md.
+  **Cross-doc references**:
+  - [x] `06-coding-standards/cli-convention.md` — rewritten to merged doc (bundled into PM@06e13ce2).
+  - [x] `06-coding-standards/test-coverage-data-status.md` — rewritten to merged doc.
+  - [x] `06-coding-standards/feature-service-pattern.md` — rewritten to merged doc.
+  - [x] `04-architecture/features-service-architecture.md` (2 refs) — rewritten to merged doc.
+  - [x] `00-SSOT-INDEX.md` — sibling-doc citation in pipeline-mode-partition row updated.
+  - [x] Active plans `deploy_missing_auto_launch_2026_05_07.md` + `gcs_migration_bundle_pipeline_mode_2026_05_08.md` —
+        forward-looking refs updated. Historical commit-evidence citations in
+        `data_status_drilldown_shard_atom_alignment_2026_05_07.md`,
+        `_SESSION_HANDOFF_drilldown_launcher_ssot_2026_05_07.md`, `ml_and_features_master_2026_05_07.md`, and
+        `features_repo_consolidation_2026_05_08.md` Phase 8B/9 historical sub-points left as historical record per
+        Findings Triage Discipline (those reference the file as it existed at the cited commit).
+  - [x] `02-data/availability-manifest-and-data-status.md` + `02-data/deployment-ui-drilldown-depth-audit.md` +
+        `04-architecture/data-flow-map.md` + `09-strategy/cross-cutting/dart-manual-trade-spec.md` — verified: no direct
+        `-hierarchy.md` link in body. No edit needed.
 
-  **Implementation**:
-  - [ ] Create merged file content.
-  - [ ] `git rm codex/02-data/data-status-drilldown-hierarchy.md`.
-  - [ ] Workspace-wide grep `data-status-drilldown-hierarchy.md` → rewrite all refs.
+  **Implementation** — DONE:
+  - [x] Created merged file content.
+  - [x] `git rm codex/02-data/data-status-drilldown-hierarchy.md` (bundled into PM@f58bc8a9).
+  - [x] Workspace-wide grep — all forward-looking refs rewritten.
 
-  **Acceptance**: only one drill-down doc; no broken links.
+  **Acceptance**: only one drill-down doc; no broken links in active codex docs.
 
 ### Phase D.2 — Sports 5-doc consolidation → 3 docs — PARALLEL — P1 — SHIPPED 2026-05-08
 
@@ -759,32 +772,41 @@ drift.
 
   **Acceptance**: README is the single SSOT for service hardening; stub gone.
 
-### Phase D.8 — Path-layout 4-doc consolidation — SEQUENTIAL after A.1 — P1
+### Phase D.8 — Path-layout 4-doc consolidation — SEQUENTIAL after A.1 — P1 — SHIPPED 2026-05-08 PM@a1e134c4
 
-- [ ] [SCRIPT] P1. Per audit C2, sub-tree restructure for path layouts.
+- [x] [SCRIPT] P1. Per audit C2, sub-tree restructure for path layouts. **SHIPPED 2026-05-08 PM@a1e134c4** — three
+      sibling docs collapsed to short SSOT pointers; `per-category-bucket-layouts.md` retained as the canonical
+      path-layout SSOT (filename rename to `per-asset-group-bucket-layouts.md` deferred to Phase E.4 per
+      operator-decision-required gate).
 
-  **Keep as SSOT**:
-  - `02-data/per-asset-group-bucket-layouts.md` (renamed from `per-category-bucket-layouts.md` per S3) — path-shape
-    divergences SSOT.
+  **Keep as SSOT** — DONE:
+  - [x] `02-data/per-category-bucket-layouts.md` — path-shape divergences SSOT (rename to
+        `per-asset-group-bucket-layouts.md` deferred to Phase E.4).
 
-  **Collapse to pointers**:
-  - `02-data/partitioning.md` § Path Templates → short pointer.
-  - `02-data/hive-schema-compatibility.md` § Partitioning Strategy → short pointer (retain unique parquet+BQ rationale).
-  - `02-data/pipeline-coverage-matrix.md` § bucket topology → short pointer.
+  **Collapse to pointers** — DONE (PM@a1e134c4):
+  - [x] `02-data/partitioning.md` § Path Templates by Service → 17-row per-service table replaced with 6-line "see SSOT"
+        pointer.
+  - [x] `02-data/hive-schema-compatibility.md` § Partitioning Strategy → positional vs hive-style restatement replaced
+        with pointer; retained unique parquet+BQ rationale (cost-optimised external-table queries, partition pruning,
+        hive-style is what BigQuery external readers expect).
+  - [x] `02-data/pipeline-coverage-matrix.md` § "0. Bucket Topology" → per-bucket-pattern table + hive-key drift
+        sub-table replaced with pointer; retained per-service coverage matrix focus + manifest index files /
+        consolidator topology below.
 
-  **Cross-doc references to update**:
-  - [ ] `02-data/instrument-pipeline-defi.md:40-41`.
-  - [ ] `02-data/data-lineage-MTDS-features-ml.md:153`.
-  - [ ] `02-data/chart-candle-delivery-flow.md:33`.
-  - [ ] `02-data/prediction-schema-paths.md:41`.
-  - [ ] `09-strategy/architecture-v2/category-instrument-coverage.md` (also rename-aware per S3).
-  - [ ] `14-playbooks/instruments-live/t1-audit-discrepancy.md`.
-  - [ ] All NEW docs (PM@9d873547) that cited `per-category-bucket-layouts.md`.
+  **Cross-doc references**:
+  - [x] `02-data/instrument-pipeline-defi.md:215-216`, `02-data/data-lineage-MTDS-features-ml.md:19,146`,
+        `02-data/chart-candle-delivery-flow.md:20-22`, `02-data/prediction-schema-paths.md`,
+        `09-strategy/architecture-v2/category-instrument-coverage.md`,
+        `14-playbooks/instruments-live/t1-audit-discrepancy.md` — verified: refs still resolve correctly via chained
+        pointer (the collapsed docs cite per-category-bucket-layouts.md). Not rewritten per Findings Triage Discipline —
+        over-fix territory; chained pointer is one extra hop, not a broken link. Future Phase E.4 rename will require a
+        workspace-wide grep + rewrite anyway.
 
-  **Operator decision required**: confirm filename rename `per-category-bucket-layouts.md` →
-  `per-asset-group-bucket-layouts.md` per S3 + asset_group vocabulary rule.
+  **Operator decision still required**: filename rename per-category-bucket-layouts.md →
+  per-asset-group-bucket-layouts.md per S3 + asset_group vocabulary rule. Tracked in Phase E.4.
 
-  **Acceptance**: per-asset-group-bucket-layouts.md is the single path-layout SSOT; other docs cite it.
+  **Acceptance**: per-category-bucket-layouts.md is the single path-layout SSOT; the three collapsed docs cite it via
+  SSOT pointers.
 
 ---
 
@@ -885,7 +907,7 @@ drift.
       `codex/15-audits/`. **SHIPPED 2026-05-08** (PM@166c7f72 — per-resource cost tables extracted to
       `codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`; original git mv'd to
       `plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md` with status block linking back to the
-      snapshot + dual-cloud decision plan; 4 incoming refs in active plans rewritten — _AUDIT_dependency_graph,
+      snapshot + dual-cloud decision plan; 4 incoming refs in active plans rewritten — \_AUDIT_dependency_graph,
       aws_migration_defi_first, master_to_live_defi, work_split_2026_05_08_ikenna).
 
 ### Phase F.5 — README.md cleanup (05-infrastructure) — PARALLEL — P2 — SHIPPED
@@ -939,7 +961,7 @@ DELETED codex docs by this plan:
 - [x] `codex/05-infrastructure/cloud-agnostic-migration.md` (Phase C.1, stub SHIPPED 2026-05-08 PM@1e33b423)
 - [x] `codex/05-infrastructure/deployment-ui-environment-tiers.md` (Phase C.2 SHIPPED 2026-05-08 PM@2818b6b9)
 - [x] `codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` (Phase C.3 SHIPPED 2026-05-08 PM@6a6308b3)
-- [ ] `codex/02-data/data-status-drilldown-hierarchy.md` (Phase D.1)
+- [x] `codex/02-data/data-status-drilldown-hierarchy.md` (Phase D.1 SHIPPED 2026-05-08 — bundled into PM@f58bc8a9)
 - [x] `codex/02-data/sports-data-migration.md` (Phase D.2 SHIPPED 2026-05-08)
 - [x] `codex/02-data/sports-schema-paths.md` (Phase D.2 SHIPPED 2026-05-08)
 - [ ] `codex/04-architecture/copper-custody-integration.md` (Phase D.4)
