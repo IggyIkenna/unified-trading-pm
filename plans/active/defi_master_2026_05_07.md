@@ -929,6 +929,40 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
       ship `leveraged_funding_arb` live in the immediate post-cutover week — but build, smoke, and paper-trade
       verification for both must complete by May 23.
 
+## Open questions
+
+### Q1 — [vm-ops-tab (Tab 4 Harsh-side), 2026-05-08 ~13:00 UTC] — defi_988 priorities #3 + #4 + #5 — operator/Ikenna direction needed
+
+**Status**: 🟡 BLOCKED — operator (Harsh) routed to **Ikenna** for decision per cross-side handshake; defi `chain`-axis +
+`PROTOCOL_LAUNCH_DATES` UAC SSOT changes are governance / cross-cutting work. Tab 4 holds VM launches pending Ikenna's
+resolution.
+
+**Source audit**:
+[`plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md`](../archive/issues/defi_988_missing_dates_audit_2026_05_08.md)
+(Tab 6 yesterday's findings, archived 2026-05-08). 13,632 actionable rows total. Tab 4 (vm-ops-tab) re-read the audit +
+calibrated scope: most rows resolve via OTHER tabs / SSOT updates rather than Tab 4 VM launches. Net Tab 4 VM-launch
+scope shrunk to ~576 rows (priority #5 only) IF #5 authorized; #3 + #4 require cross-cutting decisions outside Tab 4's
+scope.
+
+**Three priorities awaiting Ikenna direction**:
+
+| Priority | Rows | Issue surface | Owner of fix | Decision needed |
+| --- | ---: | --- | --- | --- |
+| **#3** | ~6,912 | UAC `PROTOCOL_LAUNCH_DATES` tightening — some protocols' declared launch dates are too early; rows pre-actual-launch are flagged missing in manifest (would correctly become `legit_pre_protocol_launch` after tightening rather than `actually_failed`) | UAC SSOT change (Ikenna-side governance) | Authorize tightening (per-protocol date list TBD)? Coordinate with Tab 14's Day-1 audit findings (13 UAC `PROTOCOL_LAUNCH_DATES` drift pairs) for a single consolidated UAC commit. |
+| **#4** | ~759 | ASTER chain genesis date — `perp-funding` bucket has zero captured ASTER rows for 2022-11-01 → 2026-04-14 (759 dates); no `CHAIN_GENESIS_DATES` entry for ASTER OR genesis date is wrong | UAC SSOT change (Ikenna-side governance) + per-chain backfill VM | Provide ASTER chain genesis date (operator can specify), OR direct Tab 4 to source from ASTER on-chain RPC query (`eth_getBlockByNumber(1)` for chain-genesis timestamp). After date locked, Tab 4 launches backfill VM. |
+| **#5** | ~576 | `lending-indices-handler` LINEA + BSC routing config — 2 chains' lending-protocol routing not wired in handler | per-service config (Tab 4 / Tab 5 lending-indices-handler) | Authorize Tab 4 to launch backfill VMs for LINEA + BSC after routing config lands? Smallest scope, biggest win/effort ratio. |
+
+**Tab 4 recommendation**: ship #5 immediately (smallest scope, biggest win/effort ratio); defer #3 to Ikenna handshake
++ Tab 14 audit consolidation; defer #4 until ASTER chain genesis is sourced.
+
+**Cross-side handshake**: per Daily Work-Split Process split principle, UAC SSOT changes (#3 + #4) are Ikenna-side
+governance work. Tab 4 (Harsh-side) operates the backfill VMs once SSOT decisions land. Operator (Harsh) flagged this
+to Ikenna 2026-05-08 ~13:00 UTC; awaiting Ikenna's resolution either inline as A1 below or via cross-side handshake on
+Ikenna's work-split.
+
+**Tab 4 status while waiting**: continues cefi drain monitoring + mdps-tradfi audit-log query (P0 separate workstream).
+Does NOT launch any defi_988 VM until Ikenna resolves #3 + #4 + operator authorizes #5.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Pyth UNBANNED for Solana** (2026-05-06): use Hermes (batch) + PythNet (live). Other chains stay on Chainlink. See
