@@ -190,10 +190,14 @@ Until Plan D lands, ranking is single-source per pair.
 
 **Predictions migration** (Plan A): Polymarket adapter migrating from `data_type=<base_asset>`
 (BTC/ETH/SPX/FOOTBALL/OTHER) → `data_type=prediction_canonical_question_group` with shard atom
-`(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`.
-Per-market lifecycle (`market_created_at` / `resolution_time` / `settlement_time`) captured in instruments-service. MTDS
-respects lifecycle bounds. LookaheadBiasError per-market-aware. Until Plan A lands, Polymarket continues to write
-per-base_asset shards; the data_type slot in BUNDLED_DATA_TYPES is reserved.
+`(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)`.
+**`market_id` is a row-level column inside the parquet, NOT a hive-partition shard axis** (per the
+[canonical banner above](#multi-axis-correction-banner-canonical)) — HOURLY (24/day), DAILY, ELECTION groups all roll up
+to one manifest row per `(canonical_question_group, day)`; per-market detail at drill-down from parquet. Per-market
+lifecycle (`market_created_at` / `resolution_time` / `settlement_time`) captured in instruments-service. MTDS respects
+lifecycle bounds. LookaheadBiasError per-market-aware. Per-market_id cluster validation lives INSIDE the per-(cqg, day)
+parquet via UAC `PREDICTION_GROUPS` + UTL `MissingClusterValidationError`. Until Plan A lands, Polymarket continues to
+write per-base_asset shards; the data_type slot in BUNDLED_DATA_TYPES is reserved.
 
 **Sports per-(league, day) sharding** (writegate plan Phase 2.B + multi-axis correction banner above): all sports
 data_types — fixture-native (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`,

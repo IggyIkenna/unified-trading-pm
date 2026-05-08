@@ -82,20 +82,24 @@ surface as honest absence.
 ```
 instruments-store-prediction-{project}/
   by_date/day={date}/asset_group=prediction/
-    venue=POLYMARKET/data_type=MARKET_LIFECYCLE/{market_id}.parquet     ← per-market lifecycle metadata
+    venue=POLYMARKET/data_type=MARKET_LIFECYCLE/lifecycle.parquet     ← per-day lifecycle bundle (market_id is a row-level column)
 
 market-data-tick-prediction-{project}/
   raw_tick_data/by_date/day={date}/asset_group=prediction/venue=POLYMARKET/
     data_type=prediction_canonical_question_group/
       canonical_question_group={cqg}/
-        {market_id}.parquet     ← per-market CLOB ticks within canonical_question_group bundle
+        ticks.parquet     ← per-day CLOB-tick bundle for the canonical_question_group (market_id is a row-level column)
 ```
 
-**Shard atom**:
-`(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`.
-Bundled by canonical_question_group with per-market_id rows. **Cluster validation MANDATORY** (writegate Phase 1A):
-`cluster_extractor=lambda row: row["market_id"]` + `PREDICTION_GROUPS` registry per cadence (HOURLY=24/day, DAILY=1/day,
-ELECTION=1 over months). UTL guard `MissingClusterValidationError` raised if absent.
+**Shard atom** (banner-canonical per
+[`availability-manifest-and-data-status.md § Multi-axis correction banner`](./availability-manifest-and-data-status.md#multi-axis-correction-banner-canonical)):
+`(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)`.
+**`market_id` is a row-level column inside the parquet, NOT a hive-partition shard axis** — HOURLY (24/day), DAILY,
+ELECTION groups all roll up to one manifest row per `(canonical_question_group, day)`. Per-market detail at drill-down
+from parquet. Avoids ~10-100× manifest inflation. **Cluster validation MANDATORY** (writegate Phase 1A): per-market_id
+clusters live INSIDE the per-(cqg, day) parquet — `cluster_extractor=lambda row: row["market_id"]` + `PREDICTION_GROUPS`
+registry expects N market_ids per cadence (HOURLY=24/day, DAILY=1/day, ELECTION=1 over months). UTL guard
+`MissingClusterValidationError` raised if absent.
 
 ### Canonical question groups (UAC `CanonicalQuestionGroup` enum, predictions Plan A)
 
