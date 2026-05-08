@@ -36,7 +36,7 @@ isProject: false
 
 # Workspace Quickmerge Validation Plan (Dependency Order)
 
-**Order:** 1 (see master_pre_deployment_plan_chain.plan.md) **Reference:** quickmerge.sh, 00-MASTER-CICD-PLAN.md
+**Order:** 1 (see master_pre_deployment_plan_chain.md) **Reference:** quickmerge.sh, 00-MASTER-CICD-PLAN.md
 
 ---
 
@@ -44,7 +44,7 @@ isProject: false
 
 | Blocker                                      | Type          | Specific Dependency                                                                             | Resolution                                                                                                 |
 | -------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| quickmerge.sh not rolled out to all 55 repos | `[PLAN_TODO]` | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md) § todo `ci-quickmerge-rollout` | scripts/quickmerge.sh must exist in all 55 repos before this plan can run validate-workspace-quickmerge.sh |
+| quickmerge.sh not rolled out to all 55 repos | `[PLAN_TODO]` | [phase1_foundation_prep.md](phase1_foundation_prep.md) § todo `ci-quickmerge-rollout` | scripts/quickmerge.sh must exist in all 55 repos before this plan can run validate-workspace-quickmerge.sh |
 | Topological sort script not yet written      | `[PLAN_TODO]` | This plan § todo `validate-script`                                                              | validate-workspace-quickmerge.sh must be created first (todo `validate-script` in this plan)               |
 
 ---

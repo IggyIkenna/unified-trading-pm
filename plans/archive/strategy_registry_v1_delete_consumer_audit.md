@@ -1,18 +1,18 @@
 ---
-superseded_by: [strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md]
+superseded_by: [strategy_registry_v1_delete_and_consumer_migration_2026_04_21.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md](./strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md).**
+> [strategy_registry_v1_delete_and_consumer_migration_2026_04_21.md](./strategy_registry_v1_delete_and_consumer_migration_2026_04_21.md).**
 > Parent plan archived; this is its companion audit-manifest doc (already in archive/) Original scope retained for
 > history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 # v1 strategy-registry consumer audit (Wave 7 pre-audit manifest)
 
 **Status:** Completed 2026-04-21 as Phase 1 of
-`plans/active/strategy_registry_v1_delete_and_consumer_migration_2026_04_21.plan.md`.
+`plans/active/strategy_registry_v1_delete_and_consumer_migration_2026_04_21.md`.
 
 ## Shape summary
 

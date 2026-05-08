@@ -7,8 +7,8 @@ author: ikenna
 source:
   - instruments-service/instruments_service/engine/orchestrator.py:1222-1305 (per-day league enumeration)
   - instruments-service/instruments_service/engine/orchestrator.py:1245 (FIXTURES manifest read)
-  - plans/active/sports_master_2026_05_07.plan.md (Phase 3 fixture truthset 75% per master)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md (Phase 3.D.5 expected-universe enumerator)
+  - plans/active/sports_master_2026_05_07.md (Phase 3 fixture truthset 75% per master)
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md (Phase 3.D.5 expected-universe enumerator)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -18,7 +18,7 @@ locked_since: 2026-05-08
 > **Severity**: P1 — silent missing-fixture downstream gaps; doesn't block May 23 cutover but compromises
 > honest-coverage promise + per-fixture training set completeness. **Blast radius**: instruments-service
 > (orchestrator) + manifest expected-universe enumerator + features-sports-service per-fixture aggregations. **Suggested
-> owner**: `sports_master_2026_05_07.plan.md` Phase 3 (fold in as a sub-todo of fixture truthset recovery).
+> owner**: `sports_master_2026_05_07.md` Phase 3 (fold in as a sub-todo of fixture truthset recovery).
 
 ## What I found
 

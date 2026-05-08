@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.13
 """Validate codex references in T0–T2 repos and cursor rules.
 
-Phase 8: plans_to_deployable_unified_audit.plan.md (Approach A — validator only).
+Phase 8: plans_to_deployable_unified_audit.md.md (Approach A — validator only).
 - Scans PM cursor-rules (canonical) and T0–T2 .py source for CODEX:/See codex patterns
 - Validates each codex path exists in unified-trading-codex
 - Validates manifest codex_sections exist

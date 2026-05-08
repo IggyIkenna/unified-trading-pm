@@ -253,7 +253,7 @@ todos:
   # ═══════════════════════════════════════════════════════════════
   - id: g1-update-execution-plan-status
     content: |
-      - [x] [AGENT] P0. Updated uac_citadel_implementation_execution.plan.md: (1) Added NOTE about pre-existing QG failures across repos (zero new failures from Citadel). (2) Updated p3-per-source-normalize-cefi note explaining dedup is architecturally deferred (circular import prevents re-export). (3) Confirmed Phase 5 consumer migrations complete. (4) Noted remediation plan tracks remaining cleanup.
+      - [x] [AGENT] P0. Updated uac_citadel_implementation_execution.md: (1) Added NOTE about pre-existing QG failures across repos (zero new failures from Citadel). (2) Updated p3-per-source-normalize-cefi note explaining dedup is architecturally deferred (circular import prevents re-export). (3) Confirmed Phase 5 consumer migrations complete. (4) Noted remediation plan tracks remaining cleanup.
     status: done
 
   - id: g2-document-remaining-normalize-utils-role
@@ -280,9 +280,9 @@ isProject: false
 
 ## Related Documents
 
-- Original execution: `unified-trading-pm/plans/active/uac_citadel_implementation_execution.plan.md`
-- Architecture spec: `unified-trading-pm/plans/active/uac_citadel_architecture_0ccb5b9b.plan.md`
-- Implementation spec: `unified-trading-pm/plans/active/uac_citadel_implementation.plan.md`
+- Original execution: `unified-trading-pm/plans/active/uac_citadel_implementation_execution.md`
+- Architecture spec: `unified-trading-pm/plans/active/uac_citadel_architecture_0ccb5b9b.md`
+- Implementation spec: `unified-trading-pm/plans/active/uac_citadel_implementation.md`
 
 ## What's Actually Complete (from original execution)
 

@@ -556,14 +556,14 @@ Total: **~5-7 focused agent sessions** + ~$1.5k/year ongoing matrix cost.
 - Per-category bucket layouts: `codex/02-data/per-category-bucket-layouts.md` (defines what a smoke needs to write)
 - Honest-coverage manifest schema: `codex/02-data/availability-manifest-and-data-status.md`
 - VM tarball deployment: `codex/05-infrastructure/vm-tarball-deployment.md`
-- Coverage roadmap (the broader operational sequence): `plans/active/proper_coverage_roadmap_2026_04_20.plan.md`
+- Coverage roadmap (the broader operational sequence): `plans/active/proper_coverage_roadmap_2026_04_20.md`
 - Service dependency DAG: `deployment-service/configs/dependencies.yaml`
 - CLI convention: `codex/06-coding-standards/cli-convention.md`
 
 ## Handover prompt for the next agent (copy verbatim)
 
 ```
-Read this plan first: unified-trading-pm/plans/active/institutional_smoke_matrix_2026_04_20.plan.md
+Read this plan first: unified-trading-pm/plans/active/institutional_smoke_matrix_2026_04_20.md
 
 Pick the next undone P0 todo (in order: phase-1-audit-is-test-run,
 phase-1-propagate-is-test-run, phase-1-create-test-buckets,

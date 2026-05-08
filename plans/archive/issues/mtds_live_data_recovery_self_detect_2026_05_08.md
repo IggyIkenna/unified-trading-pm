@@ -4,8 +4,8 @@ created: 2026-05-08
 author: ikenna
 source:
   - market-tick-data-service/market_tick_data_service/ (live WS adapters — venue connections)
-  - plans/active/mtds_streaming_and_backpressure_2026_05_07.plan.md
-  - plans/active/master_to_live_defi_2026_05_23.plan.md (Group F+G live-only readiness — backtest fidelity,
+  - plans/active/mtds_streaming_and_backpressure_2026_05_07.md
+  - plans/active/master_to_live_defi_2026_05_23.md (Group F+G live-only readiness — backtest fidelity,
     batch-vs-live reconciliation, circuit breakers + auto-recovery)
   - CLAUDE.md "Live = batch" workspace principle
   - operator directive 2026-05-08: "live data recovery, which market tick data service needs to have embedded in it"
@@ -18,7 +18,7 @@ locked_since: 2026-05-08
 > **Severity**: P1 — Group F+G live-only readiness item; blocks May 23 paper-trade smoke if WS disconnects can silently
 > lose ticks without downstream signal. **Blast radius**: market-tick-data-service (every live adapter) + UAC
 > (CONNECTIVITY_GAP event taxonomy) + manifest schema (live-mode gap row) + downstream consumers (MDPS / features-\* /
-> execution-service). **Suggested owner**: `mtds_streaming_and_backpressure_2026_05_07.plan.md` extended scope OR new
+> execution-service). **Suggested owner**: `mtds_streaming_and_backpressure_2026_05_07.md` extended scope OR new
 > sibling plan.
 
 ## What I found

@@ -1,6 +1,6 @@
 # Tested and Deployable Gate Criteria
 
-**Canonical reference:** plans_to_deployable_unified_audit.plan.md **Sprint:** Pre-first-deployment (batch → live →
+**Canonical reference:** plans_to_deployable_unified_audit.md **Sprint:** Pre-first-deployment (batch → live →
 testnet → real)
 
 ---

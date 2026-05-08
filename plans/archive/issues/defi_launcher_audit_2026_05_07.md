@@ -3,7 +3,7 @@ title: "DeFi launcher audit — answers to the 3 operator-blocking Qs from defi_
 created: 2026-05-07
 author: harsh
 source:
-  - plans/active/defi_master_2026_05_07.plan.md (commit b8edd01 PLANNING-CRITICAL block)
+  - plans/active/defi_master_2026_05_07.md (commit b8edd01 PLANNING-CRITICAL block)
   - market-tick-data-service/market_tick_data_service/cli/handlers/{lending_indices,vault_share_price,lst_rates,gas_fee}_handler.py
   - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py
   - deployment-service/scripts/vm/launch-mtds-*-backfill-vm.sh
@@ -21,10 +21,10 @@ locked_since: 2026-05-07
 > briefly blocked tradfi / defi / prediction was resolved at PM@341bb285 (script-side root cause + 4 in-place shard
 > fixes). Q3's denominator divergence + the data-status drilldown plan's "open drifts" stop biasing the rollup as soon
 > as the rollup blob refreshes. Detail in
-> [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+> [`../writegate_honest_coverage_endtoend_2026_05_06.md`](../writegate_honest_coverage_endtoend_2026_05_06.md)
 > § Phase 3.D.4.
 
-The 2026-05-07 PM commit `b8edd01` (planning-critical correction in `defi_master_2026_05_07.plan.md`) raised three
+The 2026-05-07 PM commit `b8edd01` (planning-critical correction in `defi_master_2026_05_07.md`) raised three
 operator-actionable questions to Ikenna gating next-stage launches. This doc answers each from code-side evidence, no VM
 launches required.
 
@@ -216,7 +216,7 @@ missed by the drill-down. Today this happens for:
 - Calendar non-trading days (TradFi holidays / weekends) where the orchestrator pre-skips.
 
 **Active fix path (in flight):** the **writegate-honest-coverage Phase 2.E.2** work
-([`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md))
+([`writegate_honest_coverage_endtoend_2026_05_06.md`](../writegate_honest_coverage_endtoend_2026_05_06.md))
 mandates `record_expected_empty(reason=EXPECTED_*)` for every calendar-pre-skip case, so every expected
 `(shard_key, day)` gets a manifest row. Once that ships across all five asset_groups, both code paths converge on the
 same denominator. **Until then the drift is expected.**
@@ -256,13 +256,13 @@ percentage. Not a real coverage issue, just a UI preview truncation.
 [deployment-api@5bcea1d4](https://github.com/IggyIkenna/deployment-api/commit/5bcea1d4) handoff: pagination work in
 flight on `data_status_hierarchical.py` (`child_offset` / `child_limit` / `_MAX_CHILDREN_PER_NODE=10000` /
 underlying-column virtualization) by another agent. Listed in
-[`data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md`](../data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md)
+[`data_status_drilldown_shard_atom_alignment_2026_05_07.md`](../data_status_drilldown_shard_atom_alignment_2026_05_07.md)
 Phase 6 + handled by another agent's commit. Don't duplicate.
 
 ### Actionable todos — to be added to the existing data-status-drilldown plan
 
 The existing
-[`data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md`](../data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md)
+[`data_status_drilldown_shard_atom_alignment_2026_05_07.md`](../data_status_drilldown_shard_atom_alignment_2026_05_07.md)
 covers Phase 6 pagination + bundled-root virtualization. **The audit findings above add three deltas not covered there**
 — proposing for inclusion when that plan's owner next touches it (or as a small standalone follow-up plan if the
 operator prefers):
@@ -284,7 +284,7 @@ operator prefers):
       [`codex/02-data/availability-manifest-and-data-status.md`](../../../codex/02-data/availability-manifest-and-data-status.md)
       § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)". Closure (Half 2 — backward-fill via Phase
       3.D.4 enumerator) tracked in
-      [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+      [`../writegate_honest_coverage_endtoend_2026_05_06.md`](../writegate_honest_coverage_endtoend_2026_05_06.md)
       § Phase 3.D.4. Scan-only sweep complete 2026-05-07; `--apply-write` per asset_group pending operator gate.
 - [ ] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response so the UI
       can render a tooltip explaining where each number came from and why they may differ until writegate Phase 2.E.2

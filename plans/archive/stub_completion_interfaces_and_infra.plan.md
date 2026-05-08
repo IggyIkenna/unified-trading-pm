@@ -10,8 +10,8 @@ created: 2026-03-09
 archived: 2026-03-11
 archive_reason: >-
   All unblocked tracks complete (A-F, I, J, K, UAC — 35+ todos done). Blocked items migrated: UPI adapters (8) + UMI
-  onchain (3) → api_keys_and_auth.plan.md in plans/ai/; GH-BACKLOG items (5) →
-  phase3_service_hardening_integration.plan.md.
+  onchain (3) → api_keys_and_auth.md in plans/ai/; GH-BACKLOG items (5) →
+  phase3_service_hardening_integration.md.
 
 completion_gates:
   code: C5
@@ -133,14 +133,14 @@ only items **not specifically targeted by any other active plan**:
 
 | Already covered elsewhere — do NOT duplicate                                                                                            |
 | --------------------------------------------------------------------------------------------------------------------------------------- |
-| IBKR adapters in UMI / UTEI / UPI / URDI → `ibkr_gateway_rollout.plan.md`                                                               |
-| API-key-blocked adapters (Betfair, Pinnacle, Kalshi, Coinbase, Smarkets, Betdaq) → `api_keys_and_auth.plan.md`                          |
-| T4 service stubs (execution, features-_, risk, strategy-validation, instruments, ml-_) → `phase3_service_hardening_integration.plan.md` |
-| T5 API stubs (execution-results-api) → `phase3_service_hardening_integration.plan.md`                                                   |
-| UDC athena/bq_external readers → `phase2_library_tier_hardening.plan.md` (T3 code-rewrite)                                              |
-| Trading-agent-service l3 placeholder → `tradfi_expansion.plan.md`                                                                       |
-| Test-failure root causes RC-1 to RC-13 → `unit_tests_and_test_failure_action.plan.md`                                                   |
-| UCI GCP concrete providers (archived complete) → `uci_cloud_abstraction_complete.plan.md`                                               |
+| IBKR adapters in UMI / UTEI / UPI / URDI → `ibkr_gateway_rollout.md`                                                               |
+| API-key-blocked adapters (Betfair, Pinnacle, Kalshi, Coinbase, Smarkets, Betdaq) → `api_keys_and_auth.md`                          |
+| T4 service stubs (execution, features-_, risk, strategy-validation, instruments, ml-_) → `phase3_service_hardening_integration.md` |
+| T5 API stubs (execution-results-api) → `phase3_service_hardening_integration.md`                                                   |
+| UDC athena/bq_external readers → `phase2_library_tier_hardening.md` (T3 code-rewrite)                                              |
+| Trading-agent-service l3 placeholder → `tradfi_expansion.md`                                                                       |
+| Test-failure root causes RC-1 to RC-13 → `unit_tests_and_test_failure_action.md`                                                   |
+| UCI GCP concrete providers (archived complete) → `uci_cloud_abstraction_complete.md`                                               |
 
 ---
 
@@ -190,7 +190,7 @@ public REST endpoints (public market data only).
 **Repo:** `unified-market-interface` **File pattern:** `unified_market_interface/adapters/tradfi/<name>_adapter.py`
 
 These adapters are all open/free data sources (ECB, FRED, OFR are free public APIs; OpenBB, Barchart, Yahoo Finance have
-free tiers). HTTP keys where needed are handled by `api_keys_and_auth.plan.md § phase-2-http`; this plan covers only the
+free tiers). HTTP keys where needed are handled by `api_keys_and_auth.md § phase-2-http`; this plan covers only the
 stub bodies.
 
 ### Todos
@@ -263,7 +263,7 @@ stub bodies.
 **Repo:** `unified-trade-execution-interface` **File:** `unified_trade_execution_interface/ws_feeds.py`
 
 The file has 3 × 2 = 6 stubs for order feed connections (connect + message handler for each venue). **IBKR** is covered
-by `ibkr_gateway_rollout.plan.md`. This covers Binance, Bybit, OKX.
+by `ibkr_gateway_rollout.md`. This covers Binance, Bybit, OKX.
 
 ### Todos
 
@@ -281,7 +281,7 @@ by `ibkr_gateway_rollout.plan.md`. This covers Binance, Bybit, OKX.
 **Repo:** `unified-position-interface` **File pattern:** `unified_position_interface/adapters/<venue>.py`
 
 These adapters need authenticated REST calls to fetch balances and positions. Blocked until relevant API keys are in SM
-via `api_keys_and_auth.plan.md`. Grouped by blocker phase.
+via `api_keys_and_auth.md`. Grouped by blocker phase.
 
 **Blocked on api_keys_and_auth Phase 2 (HTTP key setup):** _(agent hit usage quota 2026-03-09, re-run needed)_
 
@@ -320,7 +320,7 @@ via `api_keys_and_auth.plan.md`. Grouped by blocker phase.
 
 **Repo:** `unified-market-interface`
 
-Blocked until keys are in SM via `api_keys_and_auth.plan.md § phase-3-keys`.
+Blocked until keys are in SM via `api_keys_and_auth.md § phase-3-keys`.
 
 - [ ] `umi-mev-impl` — `[BLOCKED: api_keys_and_auth phase-3-keys]` VERIFIED 2026-03-09: correctly marked
       BLACKLISTED_NO_ACCESS; implement once MEV provider key in SM.
@@ -335,7 +335,7 @@ Blocked until keys are in SM via `api_keys_and_auth.plan.md § phase-3-keys`.
 
 **Repo:** `unified-cloud-interface`
 
-`uci_cloud_abstraction_complete.plan.md` is archived as "all code complete" for GCP providers. These two remaining items
+`uci_cloud_abstraction_complete.md` is archived as "all code complete" for GCP providers. These two remaining items
 were not resolved:
 
 ### Todos
@@ -464,7 +464,7 @@ Track K (untracked audit TODOs) ────────────────
                                                            todo-instruments-defi-adapter-explicit-imports / todo-ml-training-model-registry-explicit-imports /
                                                            todo-execution-loader-explicit-import / todo-risk-cli-client-list ]
 
-api_keys_and_auth.plan.md phases 2–4 ─UNBLOCKS──> Track G (UPI impls) + Track H (UMI onchain)
+api_keys_and_auth.md phases 2–4 ─UNBLOCKS──> Track G (UPI impls) + Track H (UMI onchain)
 ```
 
 Tracks A–F, I, J have no external blockers and can start immediately in any order.
@@ -490,24 +490,24 @@ Each completed todo must satisfy:
 
 | Stub / TODO                                           | Location                                                 | Covered by                                                            |
 | ----------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------- |
-| IBKR adapters (UMI/UTEI/UPI/URDI)                     | `adapters/ibkr.py` × 4 repos                             | `ibkr_gateway_rollout.plan.md`                                        |
-| Betfair/Kalshi/Coinbase/Smarkets/Betdaq WS            | UTEI ws_feeds.py                                         | `api_keys_and_auth.plan.md § phase-4`                                 |
-| execution-service PostgreSQL persistence              | `engine/live/persistence/postgresql.py`                  | `phase3_service_hardening_integration.plan.md`                        |
-| execution-service config_reloaders TODOs              | `config_reloaders.py:54,72`                              | `phase3_service_hardening_integration.plan.md`                        |
-| features-delta-one futures_roll_adjuster              | `app/core/futures_roll_adjuster.py:341-346`              | `phase3_service_hardening_integration.plan.md`                        |
-| features-cross-instrument cli TODO                    | `cli/main.py:84-101`                                     | `phase3_service_hardening_integration.plan.md`                        |
-| features-multi-timeframe EventBus TODO                | `app/engine/orchestrator.py:210`                         | `phase3_service_hardening_integration.plan.md`                        |
-| risk-and-exposure compute_handler + cash reserve      | `compute_handler.py:30`, `pre_trade_check_engine.py:332` | `safety_and_risk_controls.plan.md`                                    |
-| strategy-validation-service validation logic          | `cli/main.py:107`                                        | `phase3_service_hardening_integration.plan.md`                        |
-| execution-results-api abstract services (24 stubs)    | `services/data_service_*.py` × 6 files                   | `phase3_service_hardening_integration.plan.md`                        |
-| ml-training cascade_meta_model_trainer                | `app/training/cascade_meta_model_trainer.py:44`          | `phase3_service_hardening_integration.plan.md`                        |
-| instruments-service barchart + defi_processor         | `adapter_loader.py:75,100`, `defi_processor.py:175`      | `phase3_service_hardening_integration.plan.md`                        |
-| trading-agent-service estimated_price placeholder     | `app/loops/l3_trade_decision.py`                         | `tradfi_expansion.plan.md`                                            |
-| execution-service manual_instruction_api account_id   | `api/manual_instruction_api.py`                          | `phase3_service_hardening_integration.plan.md`                        |
+| IBKR adapters (UMI/UTEI/UPI/URDI)                     | `adapters/ibkr.py` × 4 repos                             | `ibkr_gateway_rollout.md`                                        |
+| Betfair/Kalshi/Coinbase/Smarkets/Betdaq WS            | UTEI ws_feeds.py                                         | `api_keys_and_auth.md § phase-4`                                 |
+| execution-service PostgreSQL persistence              | `engine/live/persistence/postgresql.py`                  | `phase3_service_hardening_integration.md`                        |
+| execution-service config_reloaders TODOs              | `config_reloaders.py:54,72`                              | `phase3_service_hardening_integration.md`                        |
+| features-delta-one futures_roll_adjuster              | `app/core/futures_roll_adjuster.py:341-346`              | `phase3_service_hardening_integration.md`                        |
+| features-cross-instrument cli TODO                    | `cli/main.py:84-101`                                     | `phase3_service_hardening_integration.md`                        |
+| features-multi-timeframe EventBus TODO                | `app/engine/orchestrator.py:210`                         | `phase3_service_hardening_integration.md`                        |
+| risk-and-exposure compute_handler + cash reserve      | `compute_handler.py:30`, `pre_trade_check_engine.py:332` | `safety_and_risk_controls.md`                                    |
+| strategy-validation-service validation logic          | `cli/main.py:107`                                        | `phase3_service_hardening_integration.md`                        |
+| execution-results-api abstract services (24 stubs)    | `services/data_service_*.py` × 6 files                   | `phase3_service_hardening_integration.md`                        |
+| ml-training cascade_meta_model_trainer                | `app/training/cascade_meta_model_trainer.py:44`          | `phase3_service_hardening_integration.md`                        |
+| instruments-service barchart + defi_processor         | `adapter_loader.py:75,100`, `defi_processor.py:175`      | `phase3_service_hardening_integration.md`                        |
+| trading-agent-service estimated_price placeholder     | `app/loops/l3_trade_decision.py`                         | `tradfi_expansion.md`                                            |
+| execution-service manual_instruction_api account_id   | `api/manual_instruction_api.py`                          | `phase3_service_hardening_integration.md`                        |
 | UCI abstractions.py base class stubs                  | `abstractions.py:91-566`                                 | Abstract base pattern — concrete GCP impls complete per archived plan |
-| UDC athena + bq_external readers                      | `readers/athena.py`, `readers/bq_external.py`            | `phase2_library_tier_hardening.plan.md § t3-udc-code-rewrite`         |
-| UMI footystats + soccer_football adapters             | `adapters/alt_data/footystats_adapter.py`                | `api_keys_and_auth.plan.md § phase-3-keys`                            |
-| execution-service ADAPTIVE_TWAP / ALMGREN_CHRISS port | `scripts/migrate_to_library_algorithms.py:31-32`         | `phase2_library_tier_hardening.plan.md § t0-code-rewrite` (EAL)       |
+| UDC athena + bq_external readers                      | `readers/athena.py`, `readers/bq_external.py`            | `phase2_library_tier_hardening.md § t3-udc-code-rewrite`         |
+| UMI footystats + soccer_football adapters             | `adapters/alt_data/footystats_adapter.py`                | `api_keys_and_auth.md § phase-3-keys`                            |
+| execution-service ADAPTIVE_TWAP / ALMGREN_CHRISS port | `scripts/migrate_to_library_algorithms.py:31-32`         | `phase2_library_tier_hardening.md § t0-code-rewrite` (EAL)       |
 
 ---
 
@@ -564,5 +564,5 @@ These items were found during the §13.2 audit scan (2026-03-11). All are GH-BAC
       `features-delta-one-service/features_service/app/calculators/futures_basis.py:70` — mark price features commented
       out (GH-BACKLOG). Implement mark_price-based basis calculations when live mark price feed available.
 
-- [x] `mft-audit-remediation-plan-registered` — `mft_audit_full_remediation_2026_03_11.plan.md` created and registered.
+- [x] `mft-audit-remediation-plan-registered` — `mft_audit_full_remediation_2026_03_11.md` created and registered.
       All 20 tasks tracked. Wave 1 complete. Wave 2 in progress.

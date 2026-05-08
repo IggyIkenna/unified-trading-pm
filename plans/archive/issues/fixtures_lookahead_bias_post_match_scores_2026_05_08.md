@@ -11,8 +11,8 @@ source:
   - unified-api-contracts/unified_api_contracts/external/api_football/schemas.py:143-159
   - unified-api-contracts/unified_api_contracts/canonical/crosscutting/availability_semantics.py:61
   - unified-trading-library/unified_trading_library/availability_stamping.py:161-206
-  - plans/active/api_football_minimal_flattening_removal_2026_05_07.plan.md
-  - plans/active/sports_master_2026_05_07.plan.md
+  - plans/active/api_football_minimal_flattening_removal_2026_05_07.md
+  - plans/active/sports_master_2026_05_07.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -22,7 +22,7 @@ locked_since: 2026-05-08
 > **Severity**: P0 — data correctness violation in the canonical sports fixture truthset; affects every sports feature
 > compute that joins FIXTURES with score columns. **Blast radius**: instruments-service (orchestrator) + UAC
 > (api_football schema + availability_semantics) + every features-sports-service calculator that reads FIXTURES.parquet
-> for outcome data. **Suggested owner**: `sports_master_2026_05_07.plan.md` Phase 3.
+> for outcome data. **Suggested owner**: `sports_master_2026_05_07.md` Phase 3.
 
 ## What I found
 

@@ -20,7 +20,7 @@ Client demo for DeFi strategies. The user needs to manually recreate any DeFi st
 treasury → move funds → execute trades (atomic) → see instant P&L → view trade history. Strategy families page is
 blocked off for future.
 
-Assumes Phase 3 infrastructure plan (`defi_phase3_infrastructure_2026_03_30.plan.md`) is complete: CHAIN_ENV, Tenderly,
+Assumes Phase 3 infrastructure plan (`defi_phase3_infrastructure_2026_03_30.md`) is complete: CHAIN_ENV, Tenderly,
 custody, gas schema alignment.
 
 ## Demo Scenario (What the Client Sees)
@@ -351,7 +351,7 @@ All in existing trading terminal tabs. NOT strategy families (blocked).
 
 ```
 Continue from the plan at:
-unified-trading-pm/plans/active/defi_demo_e2e_workflow_2026_03_30.plan.md
+unified-trading-pm/plans/active/defi_demo_e2e_workflow_2026_03_30.md
 
 DeFi client demo: manually recreate strategies end-to-end in UI.
 Phase 1 (e2e workflows + frontend audit) is DONE. Start with Phase 3A (mock data
@@ -369,7 +369,7 @@ Key context:
 - UI config: lib/config/services/defi.config.ts
 - Custody: execution-service/execution_service/custody/
 - Treasury: position-balance-monitor-service/core/treasury_monitor.py
-- Phase 3 infra plan: plans/active/defi_phase3_infrastructure_2026_03_30.plan.md
+- Phase 3 infra plan: plans/active/defi_phase3_infrastructure_2026_03_30.md
 
 Strategy families page is BLOCKED — don't touch.
 Focus on: mock alignment → risk dimensions → delta visualisation → instant P&L.

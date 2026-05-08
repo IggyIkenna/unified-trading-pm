@@ -18,7 +18,7 @@ overview: >
 
   All other repos must meet targets above. Fix tests — do not lower thresholds.
 
-  **Paused:** superseded for active execution by `quality_gates_systemic_remediation_2026_03_16.plan.md`. Coverage
+  **Paused:** superseded for active execution by `quality_gates_systemic_remediation_2026_03_16.md`. Coverage
   targets here remain the normative reference for repo floors.
 type: infra
 epic: epic-infra

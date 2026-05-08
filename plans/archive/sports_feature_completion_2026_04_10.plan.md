@@ -3,13 +3,13 @@ title: "Sports Feature Completion — 857-Feature ML Target"
 status: active
 priority: P0
 created: 2026-04-10
-superseded_by: [sports_data_pipeline_comprehensive_2026_04_16.plan.md]
+superseded_by: [sports_data_pipeline_comprehensive_2026_04_16.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [sports_data_pipeline_comprehensive_2026_04_16.plan.md](./sports_data_pipeline_comprehensive_2026_04_16.plan.md).**
+> [sports_data_pipeline_comprehensive_2026_04_16.md](./sports_data_pipeline_comprehensive_2026_04_16.md).**
 > Some scope shipped via §12.0 Plan 6 + denormalisation §12.1; comprehensive plan + integration_04 own remainder
 > Original scope retained for history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 

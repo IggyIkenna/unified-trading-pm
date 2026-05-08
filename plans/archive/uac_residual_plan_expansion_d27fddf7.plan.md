@@ -22,7 +22,7 @@ isProject: false
 ## 1. Expand Residual Plan Phase 3 (Provider Manifest)
 
 Edit
-[unified-trading-pm/plans/active/uac_residual_refactors_provider_manifest_2026_03_14.plan.md](unified-trading-pm/plans/active/uac_residual_refactors_provider_manifest_2026_03_14.plan.md)
+[unified-trading-pm/plans/active/uac_residual_refactors_provider_manifest_2026_03_14.md](unified-trading-pm/plans/active/uac_residual_refactors_provider_manifest_2026_03_14.md)
 to add:
 
 ### 1.1 Detailed Schema Table (replace current Phase 3 bullets)
@@ -46,7 +46,7 @@ to add:
 ### 1.2 DeFi Testnet (align with defi_keys plan)
 
 Reference
-[defi_keys_data_integration_2026_03_13.plan.md](unified-trading-pm/plans/active/defi_keys_data_integration_2026_03_13.plan.md):
+[defi_keys_data_integration_2026_03_13.md](unified-trading-pm/plans/active/defi_keys_data_integration_2026_03_13.md):
 Sepolia (Alchemy), Tenderly fork RPC, Hyperliquid testnet, `wallet-dev-private-key`. Include in manifest with
 `testnet_network` and `testnet_keys_we_have`.
 

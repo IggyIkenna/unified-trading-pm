@@ -67,7 +67,7 @@ isProject: false
 
 # Plan: Deployment UI Build Selector
 
-**Status:** Active **Created:** 2026-03-11 **Parent plan:** `cicd_versioning_cloud_build_2026_03_11.plan.md` (Phase 7)
+**Status:** Active **Created:** 2026-03-11 **Parent plan:** `cicd_versioning_cloud_build_2026_03_11.md` (Phase 7)
 
 ---
 

@@ -199,7 +199,7 @@ Port SSOT: `unified-trading-pm/scripts/dev/ui-api-mapping.json` TBD values will 
 ## Cross-Plan Note: client-reporting-api Enhancement
 
 client-reporting-api enhancement (invoicing, compliance reporting, DocuSign integration, document management) is owned
-by **Plan I** (`plan_i_client_reporting_docs_2026_03_21.plan.md`). Plan C ensures client-reporting-api has proper mock
+by **Plan I** (`plan_i_client_reporting_docs_2026_03_21.md`). Plan C ensures client-reporting-api has proper mock
 mode and consistent response schemas. Plan I builds the business features on top of that foundation.
 
 ## Success Criteria

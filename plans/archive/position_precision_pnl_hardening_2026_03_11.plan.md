@@ -218,7 +218,7 @@ P5: Stream 5 — settlement backend + UI        (closes the attribution loop vis
 ### Phase E — P&L Attribution Loop Closure
 
 > ⚠️ **H2 SEQUENCING NOTE (2026-03-11):** Phase E's `UNEXPLAINED_PNL_RESIDUAL` UEI event is tracked in
-> `uei_pending_event_additions.plan.md`. Coordinate with recon_rebalancing and data_availability UEI batches to avoid
+> `uei_pending_event_additions.md`. Coordinate with recon_rebalancing and data_availability UEI batches to avoid
 > schemas.py conflicts. Also: `batch-live-reconciliation-service` changes in Phase C (`ReconStage` enum additions) must
 > be committed before `recon_rebalancing_order_recovery_2026_03_10` begins its own `ReconStage` additions — check
 > current enum state before Phase C additions to avoid duplication. Phase C items confirmed DONE 2026-03-11.

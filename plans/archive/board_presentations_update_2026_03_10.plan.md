@@ -39,7 +39,7 @@ status: superseded superseded_by: presentations_2026_03_13 superseded_date: 2026
 10 HTML presentations exist in `unified-trading-pm/presentations/`. They need updating to reflect current system state,
 traction, new clients, GCP credit situation, AWS plan, and company history. 3 new presentations are needed:
 analytics/screening, financial projections, status quo + traction. 1 DeFi-specific presentation for Elysium (covered in
-`elysium_defi_presentation_2026_03_10.plan.md`). Rehearsals: Thursday March 13 and Tuesday March 18. Board meeting:
+`elysium_defi_presentation_2026_03_10.md`). Rehearsals: Thursday March 13 and Tuesday March 18. Board meeting:
 March 31.
 
 ---
@@ -284,6 +284,6 @@ Title: "Where We Are Today" Sections:
 
 ## Dependencies
 
-- `elysium_defi_presentation_2026_03_10.plan.md` (slide 10 content)
-- `e2e_smoke_and_portable_backtests.plan.md` (backtest results for slides 02, 12)
+- `elysium_defi_presentation_2026_03_10.md` (slide 10 content)
+- `e2e_smoke_and_portable_backtests.md` (backtest results for slides 02, 12)
 - Financial figures: requires owner input for projections (slide 12)

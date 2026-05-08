@@ -83,7 +83,7 @@ isProject: false
 MTDS had 5 operations (download, collect-gas-fees, collect-solana-defi, collect-evm-defi, collect-eigenlayer-rewards)
 but data coverage was sparse. **NOTE**: evm_defi and solana_defi have been replaced by 10 normalized data types
 (dex_pools, dex_swaps, lending_indices, liquidations, perp_funding, lst_rates, oracle_prices, gas_fees, rewards,
-risk_params). See `mtds_defi_data_normalization_2026_04_14.plan.md`.
+risk_params). See `mtds_defi_data_normalization_2026_04_14.md`.
 
 **Current state:**
 

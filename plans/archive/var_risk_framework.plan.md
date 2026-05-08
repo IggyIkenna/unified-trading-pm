@@ -52,7 +52,7 @@ isProject: false
 # VaR/CVaR Risk Framework
 
 **Day:** 9–11 (March 13–15) **Scope:** risk-and-exposure-service (var_calculator.py, pre-trade integration, API
-endpoint, tests) **Blocks:** Phase 1 live trading readiness; safety_and_risk_controls.plan.md risk-test-coverage gate
+endpoint, tests) **Blocks:** Phase 1 live trading readiness; safety_and_risk_controls.md risk-test-coverage gate
 **Owner:** Person B
 
 ---

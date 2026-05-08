@@ -12,7 +12,7 @@ todos:
   - id: config-injection-codex
     content:
       "Add codex/08-workflows/config-injection.md with architecture ASCII diagram, domain schema reference, how to add a
-      new domain, service wiring pattern, UI usage guide. (Migrated from config_dynamic_injection.plan.md p4-codex.)
+      new domain, service wiring pattern, UI usage guide. (Migrated from config_dynamic_injection.md p4-codex.)
       RESOLVED 2026-03-08: File already exists at unified-trading-codex/08-workflows/config-injection.md (358 lines),
       covers all required sections: architecture ASCII, domain schemas (Instrument/Strategy/Client/Venue), adding a new
       domain, service wiring pattern, UI usage guide, anti-patterns, quality gate."
@@ -77,7 +77,7 @@ isProject: false
 
 | Blocker                                         | Type          | Specific Dependency                                                                                 | Resolution                                                                                                              |
 | ----------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Phase 0 baseline not established                | `[PLAN_TODO]` | [phase0_standards_enforcement.plan.md](phase0_standards_enforcement.plan.md) § todo `p0-gate-check` | Phase 0 records pass/fail per repo; docs audit should use that baseline to know which repos are already compliant       |
+| Phase 0 baseline not established                | `[PLAN_TODO]` | [phase0_standards_enforcement.md](phase0_standards_enforcement.md) § todo `p0-gate-check` | Phase 0 records pass/fail per repo; docs audit should use that baseline to know which repos are already compliant       |
 | docs/GCS_PATHS.md content requires bucket names | `[INFRA]`     | GCP project confirmed and buckets defined in runtime-topology.yaml                                  | GCS_PATHS.md cannot use `{project_id}` if bucket structure is not yet finalized; may document with placeholders for now |
 
 ---

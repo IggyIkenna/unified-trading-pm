@@ -3,8 +3,8 @@ title: "CeFi Tardis backfill — writegate Phase 2 findings (bundle shard shape 
 created: 2026-05-07
 author: harsh
 source:
-  - plans/active/cefi_master_2026_05_07.plan.md (in-flight section + 3-findings annotation, PM@9b1f1d5)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md (Phase 2.A residual + Phase 2.E progress events)
+  - plans/active/cefi_master_2026_05_07.md (in-flight section + 3-findings annotation, PM@9b1f1d5)
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md (Phase 2.A residual + Phase 2.E progress events)
   - cursor-configs/CLAUDE.md § "Shard-granularity SSOT" + § "No fire-and-forget VM launches"
   - gs://market-data-tick-cefi-central-element-323112/_index/per_vm/cefi-bitfinex-spot-2020-heavy-20260507-150340.parquet
   - gs://market-data-tick-cefi-central-element-323112/_index/per_vm/cefi-kraken-spot-2020-heavy-20260507-151100.parquet
@@ -146,9 +146,9 @@ Owner: Ikenna writegate Phase 2.E (per-source progress events) per work-split / 
 
 ## Cross-references
 
-- `plans/active/cefi_master_2026_05_07.plan.md` § "Tardis-venues backfill IN-FLIGHT" (PM@9b1f1d5) — operational
+- `plans/active/cefi_master_2026_05_07.md` § "Tardis-venues backfill IN-FLIGHT" (PM@9b1f1d5) — operational
   context + per-VM evidence.
-- `plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 2.A + Phase 2.E — fix lands here.
+- `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.A + Phase 2.E — fix lands here.
 - `cursor-configs/CLAUDE.md` § "Shard-granularity SSOT" — SSOT this contradicts (finding 1).
 - `cursor-configs/CLAUDE.md` § "No fire-and-forget VM launches" — SSOT this contradicts (finding 2).
 - `cursor-configs/CLAUDE.md` § "Findings Triage Discipline (HARD RULE)" — case-5 (big) escalation pathway.

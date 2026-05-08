@@ -74,11 +74,11 @@
 
 | Plan                                 | Phases              | Todos Remaining | Reference                                                            |
 | ------------------------------------ | ------------------- | --------------- | -------------------------------------------------------------------- |
-| Plan G: Auth & Entitlement           | Phase 0-4           | ~18 todos       | plans/active/plan_g_auth_entitlement_2026_03_21.plan.md              |
-| Plan I: Client Reporting & Docs      | Phase 0-6           | ~31 todos       | plans/active/plan_i_client_reporting_docs_2026_03_21.plan.md         |
-| instruments_service_completion       | Phases 3-6          | ~12 todos       | plans/active/instruments_service_completion_2026_03_21.plan.md       |
-| instruments_service_batch_validation | Phases B2, C, B4, A | ~11 todos       | plans/active/instruments_service_batch_validation_2026_03_17.plan.md |
-| instrument_data_source_separation    | All phases          | ~10 todos       | plans/active/instrument_data_source_separation_2026_03_21.plan.md    |
+| Plan G: Auth & Entitlement           | Phase 0-4           | ~18 todos       | plans/active/plan_g_auth_entitlement_2026_03_21.md              |
+| Plan I: Client Reporting & Docs      | Phase 0-6           | ~31 todos       | plans/active/plan_i_client_reporting_docs_2026_03_21.md         |
+| instruments_service_completion       | Phases 3-6          | ~12 todos       | plans/active/instruments_service_completion_2026_03_21.md       |
+| instruments_service_batch_validation | Phases B2, C, B4, A | ~11 todos       | plans/active/instruments_service_batch_validation_2026_03_17.md |
+| instrument_data_source_separation    | All phases          | ~10 todos       | plans/active/instrument_data_source_separation_2026_03_21.md    |
 
 ## What's Already Done (Don't Redo)
 

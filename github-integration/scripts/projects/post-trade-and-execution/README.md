@@ -658,7 +658,7 @@ continue using old patterns and documentation will be outdated.
 - **Epic Overview:** `unified-trading-codex/11-project-management/epics/post-trade-and-execution-epic.md`
 - **Epic Breakdown:** `unified-trading-codex/11-project-management/epic-breakdowns/epic-post-trade-and-execution.md`
 - **Infrastructure:** `~/.cursor/plans/infrastructure-updates-for-library-refactor.md`
-- **Plan:** `~/.cursor/plans/github_project_setup_cb974903.plan.md`
+- **Plan:** `~/.cursor/plans/github_project_setup_cb974903.md`
 - **Agent Prompt:** `AGENT_PROMPT.md` (quick copy-paste)
 - **Agent Workflow:** `AGENT_WORKFLOW.md` (detailed guide)
 

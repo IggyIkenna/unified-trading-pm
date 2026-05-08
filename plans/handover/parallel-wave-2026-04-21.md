@@ -1,6 +1,6 @@
 # Parallel sports / manifest program — handover (coordinator SSOT)
 
-Generated during orchestration. **Plan file paths:** `unified-trading-pm/plans/active/*_2026_04_21.plan.md`. **Codex:**
+Generated during orchestration. **Plan file paths:** `unified-trading-pm/plans/active/*_2026_04_21.md`. **Codex:**
 `unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md` §12.
 
 ## Phase 0 — preflight quality gates + baseline (2026-04-21)
@@ -58,5 +58,5 @@ Requires **`utl_manifest_migration_primitives`** = `done` and **instruments bugs
 
 ## Wave 2 / 3
 
-**Not run** — P9 gate failed. When green, execute `sports_manifest_shard_migration_cleanup_2026_04_21.plan.md` then
-`sports_data_status_fixture_level_drilldown_2026_04_21.plan.md` with the same §12.7 bundle + JSON handoff.
+**Not run** — P9 gate failed. When green, execute `sports_manifest_shard_migration_cleanup_2026_04_21.md` then
+`sports_data_status_fixture_level_drilldown_2026_04_21.md` with the same §12.7 bundle + JSON handoff.

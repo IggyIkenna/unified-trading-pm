@@ -180,7 +180,7 @@ Phase 5: Archive UMI repo                       [HUMAN — GitHub UI + workspace
 ### Success Criteria
 
 - `rg "unified_market_interface" --type py --glob '!.venv*' --glob '!**/node_modules/**'` returns zero results
-- `rg "unified-market-interface" --glob '!.venv*' --glob '!**/node_modules/**' --glob '!*.plan.md'` returns zero results
+- `rg "unified-market-interface" --glob '!.venv*' --glob '!**/node_modules/**' --glob '!*.md'` returns zero results
   (excluding this plan)
 - `cd market-tick-data-service && bash scripts/quality-gates.sh` passes
 - `cd execution-service && bash scripts/quality-gates.sh` passes

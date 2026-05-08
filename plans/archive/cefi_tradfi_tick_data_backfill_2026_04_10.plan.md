@@ -227,7 +227,7 @@ Phase 1+2 (CeFi/Tardis)    Phase 3 (TradFi)
 - [x] [AGENT] P1. Make `VM_FORCE_WINDOW` configurable in `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` —
       **SHIPPED 2026-05-05** in prior session. `FORCE_WINDOW=true` default + `--no-force-window` arg-parser flag +
       usage-string update; replaces hardcoded `VM_FORCE_WINDOW=true` at the previous line 196. Comment block points at
-      `sp500_ml_readiness_master_2026_05_05.plan.md`.
+      `sp500_ml_readiness_master_2026_05_05.md`.
 - [ ] [AGENT] P2. Yahoo Finance manifest cleanup (low-priority noise removal) — 2,211 `empty_confirmed` rows under
       `venue=YAHOO_FINANCE` (`ohlcv_24h`/`ohlcv_15m`) for 2020-2026 are an abandoned adapter, separate from canonical
       CBOE VIX (which is fully captured). Drop these rows from the manifest so deployment-UI data-status doesn't render

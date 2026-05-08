@@ -263,10 +263,10 @@ These are deliberately deferred. Each has a gating condition; do not add to MVP 
 
 ## 6. Cross-References
 
-- `cefi_tradfi_tick_data_backfill_2026_04_10.plan.md` — parent: backfill operations and VM launcher patterns.
+- `cefi_tradfi_tick_data_backfill_2026_04_10.md` — parent: backfill operations and VM launcher patterns.
 - `cme_sp_ml_signal_preaudit_2026_04_20.md` — parent: ML preaudit findings; B2 / B3 / B5 are pulled into Phase 2 here.
-- `data_pipeline_completion_2026_04_18.plan.md` — parent: MDPS Phase 5b `processed_candles` backfill scope.
-- `instruments_and_market_tick_data_completion_2026_05_01.plan.md` — parent: instrument scope decisions including ES /
+- `data_pipeline_completion_2026_04_18.md` — parent: MDPS Phase 5b `processed_candles` backfill scope.
+- `instruments_and_market_tick_data_completion_2026_05_01.md` — parent: instrument scope decisions including ES /
   MES / VIX universe membership.
 
 ## 7. Open Questions for Operator
@@ -474,5 +474,5 @@ but parallel-able among themselves.
       code lint-clean + typecheck-clean + codex-tolerant + new-tests-pass. Pre-existing failures NOT in scope: MDPS
       `test_force_flag_bypasses_manifest_lookup_skip` TypeError on stash-checked baseline (sports odds reprocess),
       ml-training E501 in unrelated parser/config/validator lines, UAC E501 in unrelated venue_mapping em-dash
-      docstring, PM validator broken-link in unrelated `sports_predictions_e2e_2026_05_05.plan.md` — pre-existing on
+      docstring, PM validator broken-link in unrelated `sports_predictions_e2e_2026_05_05.md` — pre-existing on
       stashed baseline.

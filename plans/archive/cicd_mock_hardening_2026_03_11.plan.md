@@ -4,7 +4,7 @@ overview:
   "Harden all 63 repos to Citadel-grade mock/sim/demo testability: credential-free CI gate, protocol-faithful GCP
   emulators (Pub/Sub, GCS, BigQuery), AWS moto coverage, WebSocket feed simulator, Hyperliquid responses mock, cassette
   UAC parity checks, nightly drift detection, fault injection, tick replay engine, and full demo-mode orchestration.
-  Extends production_mock_e2e_plan_d90c8f20.plan.md with 14 missing CI/CD hardening items."
+  Extends production_mock_e2e_plan_d90c8f20.md with 14 missing CI/CD hardening items."
 todos:
   - id: h5-2-cassette-parity
     content:
@@ -109,14 +109,14 @@ isProject: true
 
 # CI/CD Mock Infrastructure Hardening — Citadel-Grade
 
-**Parent plan:** [production_mock_e2e_plan_d90c8f20.plan.md](production_mock_e2e_plan_d90c8f20.plan.md) **Status:**
+**Parent plan:** [production_mock_e2e_plan_d90c8f20.md](production_mock_e2e_plan_d90c8f20.md) **Status:**
 active | **Priority:** P0–P4 phased | **Owner:** infra | **Target:** 2026-04-01
 
 ---
 
 ## Context
 
-The existing `production_mock_e2e_plan_d90c8f20.plan.md` defines the right scope (VCR cassettes, service mock replay, UI
+The existing `production_mock_e2e_plan_d90c8f20.md` defines the right scope (VCR cassettes, service mock replay, UI
 mock API, sandbox mode) but was missing critical CI/CD hermeticity: no GCP or AWS emulators, no WebSocket feed
 simulator, no mechanism to detect when real exchange APIs drift from committed cassettes, and no proof that CI makes
 zero live network calls. This plan adds the 14 hardening items needed to reach institutional-grade ("Citadel-grade")
@@ -191,12 +191,12 @@ testability.
 
 | Plan                                                     | Integration                                                      |
 | -------------------------------------------------------- | ---------------------------------------------------------------- |
-| `aws_migration.plan.md` — `codebuild-canary-run` pending | H2 (moto) gates canary                                           |
-| `mock_data_dev_project_seeding_2026_03_10.plan.md`       | H9 tick replay consumes seed fixtures; H10 demo mode mounts them |
-| `cloud_infra_bucket_auth_2026_03_10.plan.md`             | H1.2 GCS emulator enables bucket auth tests                      |
-| `institutional_hardening_2026_03_10.plan.md`             | H6 fault injection validates circuit breakers                    |
-| `phase3_service_hardening_integration.plan.md`           | H3 WS mock, H5 drift detection                                   |
-| `stub_completion_interfaces_and_infra.plan.md`           | H4.1 Hyperliquid mock unblocks DeFi stub tests                   |
+| `aws_migration.md` — `codebuild-canary-run` pending | H2 (moto) gates canary                                           |
+| `mock_data_dev_project_seeding_2026_03_10.md`       | H9 tick replay consumes seed fixtures; H10 demo mode mounts them |
+| `cloud_infra_bucket_auth_2026_03_10.md`             | H1.2 GCS emulator enables bucket auth tests                      |
+| `institutional_hardening_2026_03_10.md`             | H6 fault injection validates circuit breakers                    |
+| `phase3_service_hardening_integration.md`           | H3 WS mock, H5 drift detection                                   |
+| `stub_completion_interfaces_and_infra.md`           | H4.1 Hyperliquid mock unblocks DeFi stub tests                   |
 
 ---
 

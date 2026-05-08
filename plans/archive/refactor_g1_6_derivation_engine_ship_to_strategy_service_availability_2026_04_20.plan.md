@@ -9,7 +9,7 @@ depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.6
   - codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md
   - codex/09-strategy/architecture-v2/uac-registry-gaps.md (gaps #1, #11, #12)
-  - refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md
+  - refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md
 # Wave C — parallel with refactor_g1_2. Downstream (Wave D): refactor_g1_{7,11}.
 ---
 
@@ -62,13 +62,13 @@ access-control middleware.
 
 ## Cross-references
 
-- **Upstream (Wave B):** `refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md` — hard dep
-- **Sibling Wave C:** `refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md` — produces
+- **Upstream (Wave B):** `refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md` — hard dep
+- **Sibling Wave C:** `refactor_g1_2_instruction_schema_validation_service_2026_04_20.md` — produces
   `integration_depth` signal consumed by `cost`
-- **Wave A prerequisite:** `refactor_g1_1_phase_unification_2026_04_20.plan.md` — `phase` prop threaded through UI;
+- **Wave A prerequisite:** `refactor_g1_1_phase_unification_2026_04_20.md` — `phase` prop threaded through UI;
   `access_control` consumes it
-- **Downstream Wave D:** `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md` (consumer),
-  `refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md` (consumer)
+- **Downstream Wave D:** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` (consumer),
+  `refactor_g1_11_service_family_scope_rules_2026_04_20.md` (consumer)
 - **Stage 3C infra spec:** `codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` — the 4 formulas
 - **UAC gaps:** `codex/09-strategy/architecture-v2/uac-registry-gaps.md` #1, #11, #12
 - **Strategy v2 code (read-only):** `strategy-service/strategy_service/engine/strategies/v2/` — for `valid_pairs`
@@ -164,7 +164,7 @@ access-control middleware.
       for the allocator from the ClientAllocatorInstance fields. Both layers (`allocator_access_control` then legacy
       `validate_allocation_authorised`) run as defence-in-depth. For Wave C the validator primitive stays in place and
       `access_control()` ships as the higher-level gate for HTTP / UI call-sites. Captured as a Wave D item under
-      `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`.
+      `refactor_g1_7_restriction_profile_engine_2026_04_20.md`.
 
 ### Phase 6E — Verify + QG
 
@@ -282,7 +282,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 6A through 6E of this plan:
-`plans/active/refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`
+`plans/active/refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md`
 
 ### Read-set (mandatory)
 
@@ -366,7 +366,7 @@ Fallback per repo: manual `git add <files> && git commit -m "..." && git push or
 
 > Drafted by Wave-C kickoff sub-agent. Plan-mode only — no code edits yet; operator approval required before Phase 6A/6B
 > execution. Companion micro-plan for G1.2 is in
-> `refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md` § Micro-execution plan.
+> `refactor_g1_2_instruction_schema_validation_service_2026_04_20.md` § Micro-execution plan.
 
 ### Plan-prose drifts vs reality (verified 2026-04-20 against `live-defi-rollout`)
 

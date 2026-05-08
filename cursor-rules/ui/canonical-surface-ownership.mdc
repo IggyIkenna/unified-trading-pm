@@ -73,4 +73,4 @@ click aggregate → per-client → per-strategy → per-venue → per-instrument
 - Show a risk metric without its corresponding limit threshold
 - Embed Grafana iframes in trading/strategy/markets surfaces (link out from Ops only)
 
-SSOT: `unified-trading-pm/plans/active/ui_platform_redesign_2026_03_17.plan.md`
+SSOT: `unified-trading-pm/plans/active/ui_platform_redesign_2026_03_17.md`

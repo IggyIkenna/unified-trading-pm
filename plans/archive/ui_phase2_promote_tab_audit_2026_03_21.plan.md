@@ -3,7 +3,7 @@
 **Created:** 2026-03-21 **Type:** audit | **Status:** complete (22/22) | **Scope:** Deep audit of all UI components,
 navigation, data wiring, and UX under the Promote lifecycle tab (PROMOTE_TABS — 4 routes, NO layout wired).
 
-**Repo:** `unified-trading-system-ui` **Parent plan:** `ui_lifecycle_service_tab_cross_reference_2026_03_21.plan.md`
+**Repo:** `unified-trading-system-ui` **Parent plan:** `ui_lifecycle_service_tab_cross_reference_2026_03_21.md`
 (Phase 1)
 
 ---

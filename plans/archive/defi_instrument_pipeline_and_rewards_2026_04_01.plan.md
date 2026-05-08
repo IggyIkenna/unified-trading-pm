@@ -1,7 +1,7 @@
 ---
 name: defi-instrument-pipeline-and-rewards
 remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
-superseded_by: [consolidated_defi_data_pipeline_2026_04_15.plan.md]
+superseded_by: [consolidated_defi_data_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
 overview:
@@ -130,7 +130,7 @@ isProject: false
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [consolidated_defi_data_pipeline_2026_04_15.plan.md](./consolidated_defi_data_pipeline_2026_04_15.plan.md).** Original
+> [consolidated_defi_data_pipeline_2026_04_15.md](./consolidated_defi_data_pipeline_2026_04_15.md).** Original
 > scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
 > formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
 > evidence.
@@ -520,7 +520,7 @@ Phase 5 (E2E + Docs)
 
 ```
 Continue from the plan at:
-unified-trading-pm/plans/active/defi_instrument_pipeline_and_rewards_2026_04_01.plan.md
+unified-trading-pm/plans/active/defi_instrument_pipeline_and_rewards_2026_04_01.md
 
 Audit findings (2026-04-01):
 DONE: UAC reward types (CLAIM/SELL_REWARD), RewardSchedule, RewardPosition, EigenLayer

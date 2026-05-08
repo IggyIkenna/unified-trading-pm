@@ -12,7 +12,7 @@ repo_gates:
   - repo: instruments-service
     business: B3
 depends_on:
-  - instruments_and_market_tick_data_completion_2026_05_01.plan.md
+  - instruments_and_market_tick_data_completion_2026_05_01.md
 ---
 
 > **2026-05-06 update — Phase 1 mechanism unblocked once UTL fix lands.** This plan's flip-to-`attempted_failed`
@@ -21,7 +21,7 @@ depends_on:
 > `sports_fixtures_truthset_recovery_2026_05_06`. **Architectural fix scheduled: extend `check_shard_freshness` to treat
 > `ATTEMPTED_FAILED` as stale (default-on; opt-out via `retry_failed: bool = True` param).** Once UTL ships the fix,
 > this plan's Phase 1 flip-and-retry semantics work as originally designed; truthset DELETE pattern becomes optional.
-> Reference: `master_to_live_defi_2026_05_23.plan.md` Risk Register row "`check_shard_freshness` ignores
+> Reference: `master_to_live_defi_2026_05_23.md` Risk Register row "`check_shard_freshness` ignores
 > `capture_status`".
 
 ## Context
@@ -231,7 +231,7 @@ finish. Each source has its own data_types; reuse the breakdown query.
 - [ ] [AGENT] P2. Same for transfermarkt (`PLAYER_VALUES`, `TRANSFERMARKT_LEAGUES`).
 - [ ] [AGENT] P2. Same for sfi (`SFI_LEAGUES`, `SFI_PROGRESSIVE_STATS`, `SFI_STANDINGS`).
 - [ ] [AGENT] P2. Roll the per-source findings up into the parent epic plan
-      `instruments_and_market_tick_data_completion_2026_05_01.plan.md` Phase 1 verification.
+      `instruments_and_market_tick_data_completion_2026_05_01.md` Phase 1 verification.
 
 ## Success criteria
 

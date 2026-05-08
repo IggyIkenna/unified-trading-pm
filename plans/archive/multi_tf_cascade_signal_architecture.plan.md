@@ -42,7 +42,7 @@ todos:
       "Document required API keys in credentials-registry.yaml: Databento (databento-api-key, ~$100-500/mo), CryptoPanic
       (cryptopanic-api-key), LunarCrush (lunarcrush-api-key), CryptoQuant (cryptoquant-api-key), Coinglass
       (coinglass-api-key). DefiLlama, Yahoo Finance, FRED are free. Setup only — provisioning and live verification goes
-      to consolidated_remaining_work.plan.md."
+      to consolidated_remaining_work.md."
     status: completed
   - id: feed-all-22-groups
     content:
@@ -309,7 +309,7 @@ todos:
       "Write schema contract tests for MTF service: verify output_schemas.py columns match CrossTimeframeFeatures
       internal contract spec exactly (same field names, types, nullability). pytest only, no live I/O. This is a
       unit-level contract test, not a deployment test. Full integration and live PubSub/GCS verification goes to
-      consolidated_remaining_work.plan.md."
+      consolidated_remaining_work.md."
     status: completed
   - id: mtf-service-github-collaborators
     content:
@@ -331,9 +331,9 @@ isProject: true
 
 | Blocker                                                      | Type          | Specific Dependency                                                                                                                                                   | Resolution                                                                                                                    |
 | ------------------------------------------------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| citadel_grade_feature_architecture.plan.md not complete      | `[PLAN_TODO]` | [citadel_grade_feature_architecture.plan.md](citadel_grade_feature_architecture.plan.md) § todos `feed-all-22-groups`, `standardise-windows`, `window-ratio-features` | The cascade plan builds on top of the citadel plan's feature bank and window standardisation; those must be done first        |
-| features-multi-timeframe-service (FMTS) not created/hardened | `[PLAN_TODO]` | [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) § todo `t4c-features-layer` (FMTS entry)                                 | Multi-TF cascade requires FMTS to be a live service consuming higher-TF feature groups via PubSub/GCS                         |
-| features-delta-one-service T4-hardened                       | `[PLAN_TODO]` | [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) § todo `t4c-features-layer` (FDS entry)                                  | FDS must be green before the `add-explicit-binary-thresholds` and `replace-time-since-with-binary-horizons` changes can merge |
+| citadel_grade_feature_architecture.md not complete      | `[PLAN_TODO]` | [citadel_grade_feature_architecture.md](citadel_grade_feature_architecture.md) § todos `feed-all-22-groups`, `standardise-windows`, `window-ratio-features` | The cascade plan builds on top of the citadel plan's feature bank and window standardisation; those must be done first        |
+| features-multi-timeframe-service (FMTS) not created/hardened | `[PLAN_TODO]` | [phase3_service_hardening_integration.md](phase3_service_hardening_integration.md) § todo `t4c-features-layer` (FMTS entry)                                 | Multi-TF cascade requires FMTS to be a live service consuming higher-TF feature groups via PubSub/GCS                         |
+| features-delta-one-service T4-hardened                       | `[PLAN_TODO]` | [phase3_service_hardening_integration.md](phase3_service_hardening_integration.md) § todo `t4c-features-layer` (FDS entry)                                  | FDS must be green before the `add-explicit-binary-thresholds` and `replace-time-since-with-binary-horizons` changes can merge |
 
 ---
 
@@ -512,7 +512,7 @@ demand_zone_proximity_atr     = (close - demand_zone_top) / atr_14
 | Unit tests for HFT calculators (mock-based, no live I/O) | `hft-unit-tests`               |
 | Document required API keys in credentials-registry.yaml  | `hft-provision-api-keys-setup` |
 
-**Moved to `consolidated_remaining_work.plan.md` (deployment + hardening):**
+**Moved to `consolidated_remaining_work.md` (deployment + hardening):**
 
 | Task                                                                                              | Blocker               |
 | ------------------------------------------------------------------------------------------------- | --------------------- |
@@ -983,7 +983,7 @@ topology YAMLs, DAG diagrams, unit tests. Nothing that requires live infrastruct
 **Quality gates:** Set up (scripts created) but never run. CI runs them on merge.
 
 **Deployment, live PubSub/GCS verification, integration tests, backfill, smoke tests:** All in
-`consolidated_remaining_work.plan.md` under the "Citadel ML Feature Pipeline — Hardening, Deployment & Live
+`consolidated_remaining_work.md` under the "Citadel ML Feature Pipeline — Hardening, Deployment & Live
 Verification" section.
 
 **What is run here:** Unit tests only via `pytest`.
@@ -991,7 +991,7 @@ Verification" section.
 > **Layer 1.5 — Per-component integration tests (D2):** Per-component integration tests for FMTS and MTF calculators
 > belong in `tests/integration/` with all external deps mocked (no live GCS/PubSub). These block quickmerge
 > `--unit-only` progression and must pass before service tier promotion. They are distinct from Layer 2 post-deploy
-> tests (which go to `consolidated_remaining_work.plan.md`). See `cursor-rules/testing/integration-testing-layers.mdc`
+> tests (which go to `consolidated_remaining_work.md`). See `cursor-rules/testing/integration-testing-layers.mdc`
 > for full 5-layer strategy (Layers 0, 1, 1.5, 2, 3a/3b).
 
 **Mocking strategy:** All external API responses and internal data contracts mocked using `MagicMock(spec=...)` against

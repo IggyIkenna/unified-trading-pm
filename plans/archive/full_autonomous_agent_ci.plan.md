@@ -154,7 +154,7 @@ todos:
       (already done in setup-workspace.sh), find the plan todo(s) for this service, mark them completed, commit to the
       current PM branch, push. This allows PM to have up-to-date plan status before staging-to-main fires, eliminating
       circular reference between PM manifest updates and service repo merges. Design: add a
-      scripts/update-pm-plan-status.sh helper that takes SERVICE_NAME and TODO_ID, updates the .plan.md YAML status
+      scripts/update-pm-plan-status.sh helper that takes SERVICE_NAME and TODO_ID, updates the .md YAML status
       field, and commits to the current PM branch.
     status: completed
     notes: |

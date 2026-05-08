@@ -10,7 +10,7 @@ depends_on:
   - codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md
   - codex/14-playbooks/shared-core/same-system-principle.md
   - codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md
-  - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md
+  - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md
 # Wave D — parallel with refactor_g1_7. Downstream (Wave F): refactor_g1_4.
 # Also informs refactor_g1_14 (deck slide).
 ---
@@ -54,13 +54,13 @@ lifts them into an explicit rule file + enforcement in `access_control`.
 | Enforcement lives in `access_control()` formula | G1.6's `access_control(user, route, item, phase)` calls `check_service_family_scope(user, route)` as a pre-check before the generic gate                       | Kickoff §1.11 + G1.6 handoff                                     |
 | Declarative rule table                          | YAML at `_ssot-rules/11-service-family-scope-rules.yaml` — machine-readable. Rule 11 .md doc explains + cross-refs                                             | Kickoff §1.11                                                    |
 | Service families covered                        | `IM`, `Reg Umbrella`, `DART` (+ `DART-reporting-only` sub-family for shared reporting tool)                                                                    | Kickoff §1.11 + shared-core/client-reporting-demo-walkthrough.md |
-| SMA-vs-Pooled applies to IM + Reg, not DART     | DART clients bring their own capital infra; SMA vs Pooled is an IM / Reg structural decision                                                                   | `plans/active/share_class_architecture_2026_04_01.plan.md`       |
+| SMA-vs-Pooled applies to IM + Reg, not DART     | DART clients bring their own capital infra; SMA vs Pooled is an IM / Reg structural decision                                                                   | `plans/active/share_class_architecture_2026_04_01.md`       |
 
 ## Cross-references
 
-- **Upstream (Wave C):** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md` —
+- **Upstream (Wave C):** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md` —
   hard dep
-- **Sibling Wave D:** `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md` — parallel; both layer on top of
+- **Sibling Wave D:** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` — parallel; both layer on top of
   G1.6
 - **Downstream:** `refactor_g1_4` (persona matrix respects scope rules), `refactor_g1_14` (deck slide)
 - **Rules:** `_ssot-rules/04-dart-commercial-axes.md`, `_ssot-rules/03-same-system-principle.md`
@@ -71,7 +71,7 @@ lifts them into an explicit rule file + enforcement in `access_control`.
 - **Strategy v2 archetype declarations (read-only):** `strategy-service/strategy_service/engine/strategies/v2/` —
   informs which archetypes surface to which service families
 - **v2 cross-cutting:** `codex/09-strategy/architecture-v2/cross-cutting/`
-- **Sibling plan:** `plans/active/share_class_architecture_2026_04_01.plan.md`
+- **Sibling plan:** `plans/active/share_class_architecture_2026_04_01.md`
 
 ## Mandatory read-set
 
@@ -88,7 +88,7 @@ lifts them into an explicit rule file + enforcement in `access_control`.
 11. `strategy-service/strategy_service/engine/strategies/v2/` (read-only — archetype-by-archetype check of which
     families the archetype surfaces to)
 12. `strategy-service/strategy_service/availability/derivation.py` (landed by G1.6)
-13. `plans/active/share_class_architecture_2026_04_01.plan.md`
+13. `plans/active/share_class_architecture_2026_04_01.md`
 
 ## Out of scope
 
@@ -294,7 +294,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 11A through 11E of this plan:
-`plans/active/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md`
+`plans/active/refactor_g1_11_service_family_scope_rules_2026_04_20.md`
 
 ### Read-set (mandatory)
 
@@ -380,7 +380,7 @@ Fallback per repo: manual `git add <files> && git commit -m "..." && git push or
 ## Micro-execution plan (sub-agent Phase 1, appended 2026-04-20)
 
 > Drafted by Wave-D kickoff sub-agent. Plan-mode only — no code edits yet; operator approval required before Phase 11A.
-> Companion micro-plan for G1.7 in `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md` § Micro-execution plan.
+> Companion micro-plan for G1.7 in `refactor_g1_7_restriction_profile_engine_2026_04_20.md` § Micro-execution plan.
 
 ### Plan-vs-reality drifts (verified 2026-04-20 against `live-defi-rollout` post-Wave-C)
 

@@ -382,6 +382,6 @@ Per strategy: how it works, what it trades, key parameters, historical performan
 
 ## Dependencies
 
-- `stub_completion_interfaces_and_infra.plan.md` (UPI/UMI DeFi adapters must be complete)
-- `api_keys_and_auth.plan.md` Phase 2 (DeFi VCR cassettes needed for tests)
-- `elysium_defi_presentation_2026_03_10.plan.md` (presentation references this fork)
+- `stub_completion_interfaces_and_infra.md` (UPI/UMI DeFi adapters must be complete)
+- `api_keys_and_auth.md` Phase 2 (DeFi VCR cassettes needed for tests)
+- `elysium_defi_presentation_2026_03_10.md` (presentation references this fork)

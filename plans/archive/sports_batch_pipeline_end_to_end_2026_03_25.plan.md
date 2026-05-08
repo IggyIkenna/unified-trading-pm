@@ -1,7 +1,7 @@
 ---
 name: sports-batch-pipeline-end-to-end
 remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_04_15
-superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.plan.md]
+superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
 overview: |
@@ -118,7 +118,7 @@ todos:
         - CanonicalVenue: venue_id = SCREAMING_SNAKE_CASE (e.g. ANFIELD)
         - CanonicalReferee: referee_id = "{LASTNAME}_{INITIAL}" (e.g. ATKINSON_M)
         - CanonicalOdds: instrument_id = "{fixture_id}::{market_type}::{outcome}::{bookmaker_key}"
-        Source: sports_canonical_mapping_and_gcs_migration_2026_03_18.plan.md § Canonical ID Table
+        Source: sports_canonical_mapping_and_gcs_migration_2026_03_18.md § Canonical ID Table
     status: pending
 
   - id: p1d-mtds-sports-venue-routing
@@ -333,7 +333,7 @@ todos:
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [consolidated_sports_prediction_pipeline_2026_04_15.plan.md](./consolidated_sports_prediction_pipeline_2026_04_15.plan.md).**
+> [consolidated_sports_prediction_pipeline_2026_04_15.md](./consolidated_sports_prediction_pipeline_2026_04_15.md).**
 > Original scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
 > formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
 > evidence.

@@ -202,7 +202,7 @@ fi
 
 # ── Locked plan deletion check ──────────────────────────────────────────
 # Prevent agents from deleting locked plans without [unlock-plan] tag
-DELETED_PLANS=$(git diff --cached --diff-filter=D --name-only -- 'plans/active/*.plan.md' 2>/dev/null || :)
+DELETED_PLANS=$(git diff --cached --diff-filter=D --name-only -- 'plans/active/*.md' 2>/dev/null || :)
 if [ -n "$DELETED_PLANS" ]; then
     COMMIT_MSG=$(git log -1 --format=%B 2>/dev/null || :)
     for plan_file in $DELETED_PLANS; do

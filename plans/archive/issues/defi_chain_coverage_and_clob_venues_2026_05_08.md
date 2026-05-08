@@ -32,7 +32,7 @@ locked_since: 2026-05-08
 > template SSOT) + execution-service (cross-chain transfers + bridge routing) + features-onchain-service +
 > strategy-service (per-archetype chain constraints) + MTDS (per-chain market data) + instruments-service (CLOB-venue
 > instrument discovery) + position-balance-monitor (per-chain custody addresses). **Suggested owner**:
-> `defi_master_2026_05_07.plan.md` Phase X (new) — coordinates with
+> `defi_master_2026_05_07.md` Phase X (new) — coordinates with
 > `dex_perp_onboarding_handover_2026_05_07.HANDOVER.md` for the CLOB-venue tail.
 
 ## What I found
@@ -140,7 +140,7 @@ drift.
 - **Position-balance-monitor reconciliation broken**: a USDC balance on Hyperliquid is custodied on a different chain
   than Aave-Arbitrum-collateralized USDC. Without canonical chain_ids, position math is opaque and audit trails
   reference free-text "Hyperliquid" rather than chain_id=1337-or-whatever.
-- **Strategy-service per-archetype chain constraints**: archetypes in `master_to_live_defi_2026_05_23.plan.md`
+- **Strategy-service per-archetype chain constraints**: archetypes in `master_to_live_defi_2026_05_23.md`
   (carry_staked_basis lead + leveraged_funding_arb) may need explicit chain-allowed-list. Without it, a strategy could
   trade against a venue on a chain we don't have RPC access to.
 - **CLOB-venue instrument-catalog vacuum**: writegate v2 enumerator can't derive expected universe for these venues if
@@ -205,7 +205,7 @@ Option (a) is more honest but creates a 6th asset_group. Operator decision; defa
 ### Phase 5 — Extended unblocked
 
 Add Starknet RPC template to UAC `CHAIN_RPC_TEMPLATES`; ship historical OHLCV adapter; populate manifest. Per handover
-Item C (lifted from `consolidated_defi_data_pipeline_2026_04_15.plan.md` archive). Owns: defi_master.
+Item C (lifted from `consolidated_defi_data_pipeline_2026_04_15.md` archive). Owns: defi_master.
 
 ## Acceptance criteria
 
@@ -252,5 +252,5 @@ Item C (lifted from `consolidated_defi_data_pipeline_2026_04_15.plan.md` archive
 - Are the UAC `VENUES_BY_ASSET_GROUP` keys for these 4 venues already in place, or did the recent additions (May 7) only
   touch market_data_categories? Per memory entry on UAC@e890022 (cefi DATA_TYPES_BY_ASSET_GROUP added ohlcv_1m), the
   routing fix shipped — need to verify VENUES_BY_ASSET_GROUP is consistent.
-- Coordination with `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`: that plan touches the venue
+- Coordination with `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`: that plan touches the venue
   matrix; should the CLOB-on-chain asset_group decision fold into it?

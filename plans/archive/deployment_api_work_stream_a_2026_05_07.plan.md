@@ -57,7 +57,7 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 
 ## Why this plan exists
 
-The master plan `master_to_live_defi_2026_05_23.plan.md` audit (PM commit `12ce828a`, 2026-05-06) names
+The master plan `master_to_live_defi_2026_05_23.md` audit (PM commit `12ce828a`, 2026-05-06) names
 **work-stream-A** as one of the three keystone unblocks for the May 23 live-DeFi deadline. The codex SSOT
 `03-observability/lifecycle-events.md` already defines the event schema and bucket layout
 (`gs://{gcp_project_id}-events/events/{service}/{YYYY-MM-DD}/{vm-name}/hour={H}/*.jsonl`); what's missing is the
@@ -310,7 +310,7 @@ Phase 1 (UAC types — SEQUENTIAL prerequisite)
 ## Phase 4 — deployment-ui wiring (DEFERRED — separate sub-plan)
 
 Not in scope for this plan. The endpoints land first; UI wires up afterwards via a
-`deployment_ui_backfill_launcher_2026_05_XX.plan.md` that will:
+`deployment_ui_backfill_launcher_2026_05_XX.md` that will:
 
 - Add a `BackfillLaunchModal` to deployment-ui.
 - Add a `VMEventTail` widget that polls `/api/vm/events` and renders the live event stream.
@@ -321,7 +321,7 @@ Not in scope for this plan. The endpoints land first; UI wires up afterwards via
 - `_TASK_TO_LAUNCHER` mapping is inlined in `deployment_api/routes/backfill_launch.py` for v1 — closed set. The
   long-term shape (per the cloud-agnostic master plan) is a UAC SSOT registry mapping (asset_group, task) →
   launcher_path so AWS launchers can plug in without touching the route module. Successor plan:
-  `cloud_agnostic_launcher_registry_2026_05_XX.plan.md` (work-stream D).
+  `cloud_agnostic_launcher_registry_2026_05_XX.md` (work-stream D).
 - `_PREFIX_TO_SERVICE` in `vm_events.py` is similarly inlined for v1. Same successor plan as above.
 
 ## Risk register

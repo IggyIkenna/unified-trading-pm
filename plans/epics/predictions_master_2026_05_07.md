@@ -176,7 +176,7 @@ Covers:
 ### Manifest + parquet migration
 
 **Cross-plan coordination**: Polymarket parquet rewrite + manifest reflip is **Stage 3** of the workspace-wide manifest
-migration. See [`manifest_migration_master_2026_05_07.plan.md`](./manifest_migration_master_2026_05_07.plan.md) for
+migration. See [`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md.md) for
 sequencing DAG, VM impact, and operator gates. Key constraints: PAUSE `mtds-prediction-*` VMs during rewrite window;
 resume ONLY after MTDS Polymarket adapter migration ships (so resumed VMs write `canonical_question_group` shape, not
 legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder-method deletions complete.
@@ -230,7 +230,7 @@ legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
-**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` row C.12. Operator inspected the
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` row C.12. Operator inspected the
 deployment-ui prediction panel + saw POLYMARKET tagged "out of scope" (badge driven by UAC
 `VENUE_DATA_TYPE_CAPABILITIES` declaring `data_type=prediction_canonical_question_group` while MTDS still writes legacy
 per-base-asset shape `BTC` / `ETH` / `SPX`). Per user direction 2026-05-07: NOT actually out of scope — small Polymarket
@@ -314,7 +314,7 @@ before CME arb can link.
 ## `available_at` adapter stamping (coordinated)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.plan.md)
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md.md)
 > Phase 1. Predictions stamping is **lifecycle-bounded**: every prediction-market tick must have
 > `available_at = max(tick_ts, market_created_at)` and must NOT carry rows past `market_settlement_time`. Depends on
 > Phase 1 (canonical-question-group + lifecycle ingestion) of THIS plan AND on coordinator Phase 0 (MDPS bar boundary
@@ -340,18 +340,18 @@ before CME arb can link.
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
   `sports_master_2026_05_07`.
-- Sports half of e2e: `sports_master_2026_05_07.plan.md` (288M ODDS_API row migration + MDPS bucketing + FSS).
+- Sports half of e2e: `sports_master_2026_05_07.md` (288M ODDS_API row migration + MDPS bucketing + FSS).
 
 ## Folded plans (archived 2026-05-07)
 
-- `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md` — full migration spec; P0 todos lifted
+- `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` — full migration spec; P0 todos lifted
   above.
-- `sports_predictions_e2e_2026_05_05.plan.md` (predictions half) — ML training + arb_calculator + Group E/F gates;
+- `sports_predictions_e2e_2026_05_05.md` (predictions half) — ML training + arb_calculator + Group E/F gates;
   sports half went to `sports_master`.
-- `market_tick_data_to_100pct_2026_05_05.plan.md` (predictions slice) — full plan archived after split per asset_group.
+- `market_tick_data_to_100pct_2026_05_05.md` (predictions slice) — full plan archived after split per asset_group.
 
 ## Temporary states + their canonical follow-up plans
 

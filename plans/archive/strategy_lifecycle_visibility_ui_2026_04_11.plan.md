@@ -1,7 +1,7 @@
 ---
 name: strategy-lifecycle-visibility-ui
 remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
-superseded_by: [consolidated_strategy_and_ui_2026_04_15.plan.md]
+superseded_by: [consolidated_strategy_and_ui_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
 overview:
@@ -197,12 +197,12 @@ isProject: false
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [consolidated_strategy_and_ui_2026_04_15.plan.md](./consolidated_strategy_and_ui_2026_04_15.plan.md).** ALSO
+> [consolidated_strategy_and_ui_2026_04_15.md](./consolidated_strategy_and_ui_2026_04_15.md).** ALSO
 > superseded by archived strategy_lifecycle_maturity_model_2026_04_21 (Plan A — shipped + archived) Original scope
 > retained for history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 > **SUPERSEDED 2026-04-25 by
-> [consolidated_strategy_and_ui_2026_04_15.plan.md](./consolidated_strategy_and_ui_2026_04_15.plan.md).** Original scope
+> [consolidated_strategy_and_ui_2026_04_15.md](./consolidated_strategy_and_ui_2026_04_15.md).** Original scope
 > retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit formalises it
 > as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 

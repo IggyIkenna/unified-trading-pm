@@ -11,7 +11,7 @@ depends_on:
   - codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md
   - codex/14-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml
   - codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md
-  - refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md
+  - refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md
 # Wave C — parallel with refactor_g1_6.
 ---
 
@@ -38,9 +38,9 @@ preferential pricing and validation behaviour.
 
 ## Cross-references
 
-- **Upstream (Wave B):** `refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md` — hard dep
+- **Upstream (Wave B):** `refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md` — hard dep
   (ArchetypeCapabilityRegistry)
-- **Sibling Wave C:** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md` —
+- **Sibling Wave C:** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md` —
   consumes the integration-depth signal emitted here.
 - **Stage 3B specs (infra source of truth):** `stage-3b-instruction-schema-contract.md`, `stage-3b-uac-combo-rules.md`,
   `stage-3b-combo-rules-schema.yaml`, `stage-3b-downstream-analytics-capability-matrix.md`
@@ -223,7 +223,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 2A through 2E of this plan:
-`plans/active/refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md`
+`plans/active/refactor_g1_2_instruction_schema_validation_service_2026_04_20.md`
 
 ### Read-set (mandatory)
 
@@ -303,7 +303,7 @@ Never `--dep-branch`, never `git reset --hard`.
 
 > Drafted by Wave-C kickoff sub-agent. Plan-mode only — no code edits yet; operator approval required before Phase 2A/2B
 > execution. Companion micro-plan for G1.6 is in
-> `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md` § Micro-execution plan.
+> `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md` § Micro-execution plan.
 
 ### Plan-prose drifts vs reality (verified 2026-04-20 against `live-defi-rollout`)
 

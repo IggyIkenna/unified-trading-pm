@@ -3,7 +3,7 @@ name: Conflict Resolution Merged — Retry Promotion
 # Fires when an auto-resolve/* PR is merged.
 # If the PR body contains the AUTO_RETRY_PROMOTION marker, re-dispatches staging-validated
 # to retry the staging→main promotion that was blocked by the conflict.
-# See: wire-conflict-resolution-retry-promotion in cicd_audit_remediation_2026_03_13.plan.md
+# See: wire-conflict-resolution-retry-promotion in cicd_audit_remediation_2026_03_13.md
 
 on:
   pull_request:

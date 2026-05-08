@@ -1,8 +1,8 @@
 # Semver Version Tagging + Multi-Project per Environment
 
-**Status:** Superseded — see `cicd_versioning_cloud_build_2026_03_11.plan.md` (extends + replaces all items here)
+**Status:** Superseded — see `cicd_versioning_cloud_build_2026_03_11.md` (extends + replaces all items here)
 **Created:** 2026-03-10 **Refs:** `docs/dev-environment-vars.md`,
-`plans/archive/uci_cloud_abstraction_complete.plan.md`, `plans/archive/roadmap-batch-85pct-2026-02-11.md`
+`plans/archive/uci_cloud_abstraction_complete.md`, `plans/archive/roadmap-batch-85pct-2026-02-11.md`
 
 ---
 
@@ -97,7 +97,7 @@ Differentiate feature/dev vs staging vs prod deployments via:
 ## Dependencies
 
 - `docs/dev-environment-vars.md`: `GCP_PROJECT_ID`, `ENVIRONMENT` (development/staging/production)
-- `plans/archive/uci_cloud_abstraction_complete.plan.md`: Terraform `project_id`, `environment`
+- `plans/archive/uci_cloud_abstraction_complete.md`: Terraform `project_id`, `environment`
 - `unified-trading-pm/scripts/workspace/propagate-github-secrets.sh`: Per-repo secrets; extend for multi-project
 
 ---

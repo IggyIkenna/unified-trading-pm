@@ -115,7 +115,7 @@ D. SMOKE TEST on https://uat.odum-research.com/login. Use a fresh
 E. COMMIT memory + plan updates after smoke is green:
    - Add a memory entry recording the flip date + verification matrix.
    - Update plans/active/refactor_g2_6_staging_firebase_provisioning_
-     2026_04_20.plan.md — mark Phase A operator items [x] and Phase B
+     2026_04_20.md — mark Phase A operator items [x] and Phase B
      agent items [x]. Status update should reflect the deployed
      reality: separate odum-staging Firebase project + shared prod
      Cloud Run compute (NOT the "shared everything" model some

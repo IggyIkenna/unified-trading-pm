@@ -590,7 +590,7 @@ todos:
           If the conflict touches a planned feature, preserve the plan's
           design. Reference the plan in your PR description."
       (2) Clone PM repo in agent workflow (already done), ensure
-          plans/active/*.plan.md are read in the prompt construction step.
+          plans/active/*.md are read in the prompt construction step.
       (3) Add plan context to the PR body template: "Resolution guided by
           plan: [plan-name] §[relevant-todo-id]"
       (4) Before opening a resolution PR, check if a resolution branch already exists (see add-conflict-agent-dedup).
@@ -601,8 +601,8 @@ todos:
     content: >
       Currently there is no Telegram notification when a new plan is created or updated in PM active plans/. Human
       review of plans happens out-of-band. Fix: add a new step to rules-alignment-agent.yml or create a separate
-      plan-notification.yml that fires when plans/active/*.plan.md changes: (1) Trigger: push to PM main touching
-      plans/active/*.plan.md. (2) Read the changed plan file, extract name + overview + first 3 todos. (3) Send
+      plan-notification.yml that fires when plans/active/*.md changes: (1) Trigger: push to PM main touching
+      plans/active/*.md. (2) Read the changed plan file, extract name + overview + first 3 todos. (3) Send
       Telegram: "Plan ready for review: [plan-name]\n
           Overview: [first 200 chars]\nTodos: [count] pending\n
           Review: [link to file on GitHub]\nApprove with: /approve-plan [name]"
@@ -989,7 +989,7 @@ todos:
   - id: register-ssot-index
     content: >
       Add this plan to unified-trading-codex/00-SSOT-INDEX.md in the Plans section (after cicd_e2e_test_plan_2026_03_13
-      row). Entry format: | cicd_audit_remediation_2026_03_13.plan.md | CI/CD audit P0/P1/P2 remediation + plan-driven
+      row). Entry format: | cicd_audit_remediation_2026_03_13.md | CI/CD audit P0/P1/P2 remediation + plan-driven
       governance + human-readable versioning | unified-trading-pm/plans/active/ |
     status: done
 
@@ -1075,9 +1075,9 @@ After `diagram-regen-in-quickmerge` is complete, the following is guaranteed:
 
 ## References
 
-- `plans/active/cicd_e2e_test_plan_2026_03_13.plan.md` — test plan for all fixes
-- `plans/active/conflict_resolution_agent_2026_03_13.plan.md` — agent implementation
-- `plans/active/full_autonomous_agent_ci.plan.md` — semver-agent fix (dependency)
+- `plans/active/cicd_e2e_test_plan_2026_03_13.md` — test plan for all fixes
+- `plans/active/conflict_resolution_agent_2026_03_13.md` — agent implementation
+- `plans/active/full_autonomous_agent_ci.md` — semver-agent fix (dependency)
 - `docs/repo-management/cicd-pipeline-definition.yaml` — diagram SSOT
 - `scripts/generate-cicd-diagram.py` — diagram generator
 - `docs/repo-management/CI-CD-PIPELINE.html` — live interactive diagram

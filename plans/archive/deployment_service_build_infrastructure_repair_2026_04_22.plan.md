@@ -32,7 +32,7 @@ isProject: false
 session failed at different layers. Last successful `deployment-dashboard` AR image: 2026-02-20. Two months of
 production-blocking build rot.
 
-**Immediate consumer:** Plan 3 (`sports_scheduler_cron_activation_2026_04_21.plan.md`) Phase 6 is terraform-ready but
+**Immediate consumer:** Plan 3 (`sports_scheduler_cron_activation_2026_04_21.md`) Phase 6 is terraform-ready but
 cannot apply — the terraform `google_cloud_run_v2_job` references a `sports-scheduler` image that would be co-pushed
 with `deployment-dashboard` by the broken cloudbuild.yaml. Zero deployments possible until the pipeline is repaired.
 
@@ -195,9 +195,9 @@ The final phase MUST include:
 
 ## Cross-references
 
-- **Plan 3** (`sports_scheduler_cron_activation_2026_04_21.plan.md`) depends on Phase 4 of this plan landing. Plan 3
+- **Plan 3** (`sports_scheduler_cron_activation_2026_04_21.md`) depends on Phase 4 of this plan landing. Plan 3
   Phase 6 is the first plan to actually exercise a fresh deployment-service image in 2+ months.
-- **Plan 6** (`features_sports_pipeline_deployment_2026_04_21.plan.md`) may depend on Phase 6 of this plan —
+- **Plan 6** (`features_sports_pipeline_deployment_2026_04_21.md`) may depend on Phase 6 of this plan —
   features-sports-service Cloud Build status confirms or refutes.
 - **PLAN_FORMAT.md** § Citadel-Grade Planning Standards — this plan follows the pre-audit / phased-DAG /
   success-criteria structure.

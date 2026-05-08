@@ -526,9 +526,9 @@ All of the following must be true before Phase 2 starts:
 
 ## Cross-References
 
-- **Phase 2** (library/service tier hardening): `phase2_library_tier_hardening.plan.md`
-- **Phase 3** (service hardening + integration tests): `phase3_service_hardening_integration.plan.md`
-- **Consolidated remaining work** (full task registry): `.cursor/plans/consolidated_remaining_work.plan.md`
+- **Phase 2** (library/service tier hardening): `phase2_library_tier_hardening.md`
+- **Phase 3** (service hardening + integration tests): `phase3_service_hardening_integration.md`
+- **Consolidated remaining work** (full task registry): `.cursor/plans/consolidated_remaining_work.md`
 - **Workspace manifest**: `unified-trading-pm/workspace-manifest.json`
 - **Codex SSOT index**: `unified-trading-codex/00-SSOT-INDEX.md`
 - **Runtime topology**: `deployment-service/configs/runtime-topology.yaml`

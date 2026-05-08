@@ -55,7 +55,7 @@ trading_system_audit_prompt S4 **Owner:** Person A (parallel with Phase 0 comple
 
 | Blocker                 | Type          | Specific Dependency                                                                                 | Resolution                                                                                                  |
 | ----------------------- | ------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Phase 0 gate not passed | `[PLAN_TODO]` | [phase0_standards_enforcement.plan.md](phase0_standards_enforcement.plan.md) § todo `p0-gate-check` | Phase 0 checks Python version (>=3.13,<3.14) in pyproject.toml — required before propagation is trustworthy |
+| Phase 0 gate not passed | `[PLAN_TODO]` | [phase0_standards_enforcement.md](phase0_standards_enforcement.md) § todo `p0-gate-check` | Phase 0 checks Python version (>=3.13,<3.14) in pyproject.toml — required before propagation is trustworthy |
 
 ---
 

@@ -12,8 +12,8 @@ source:
   - instruments-service/instruments_service/engine/orchestrator.py:1997-2045 (validate_instrument_records venue-shard
     fail-all)
   - unified-api-contracts/unified_api_contracts/external/api_football/normalize.py:372-395 (minimal flattening)
-  - plans/active/api_football_minimal_flattening_removal_2026_05_07.plan.md (api_football only)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md:80-82,96,104-106 (4-pillar gate at
+  - plans/active/api_football_minimal_flattening_removal_2026_05_07.md (api_football only)
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:80-82,96,104-106 (4-pillar gate at
     record_captured)
   - operator directive 2026-05-08:
       "you wouldn't even drop instruments_service if it was to not have those columns. It would fail schema validation,
@@ -29,8 +29,8 @@ locked_since: 2026-05-08
 > lookahead / partial-bundle / minimal-flattening bugs. **Blast radius**: UAC (every domain schema must mark required
 > fields explicitly) + instruments-service write path + every external adapter normalizer (full-column capture) +
 > manifest writer (per-row `record_failed(SCHEMA_VALIDATION_FAILED)` pattern). **Suggested owner**: cross-cuts every
-> asset_group master. Recommend a workspace-wide sub-plan `hard_schema_enforcement_2026_05_08.plan.md` owned at
-> infrastructure level (`infrastructure_master_2026_05_07.plan.md`).
+> asset_group master. Recommend a workspace-wide sub-plan `hard_schema_enforcement_2026_05_08.md` owned at
+> infrastructure level (`infrastructure_master_2026_05_07.md`).
 
 ## What I found
 
@@ -84,7 +84,7 @@ can't tell:
 
 ### Q3 — Sports adapters full-column capture: GAP across api_football; OTHERS NOT AUDITED
 
-api_football confirmed (per `api_football_minimal_flattening_removal_2026_05_07.plan.md`):
+api_football confirmed (per `api_football_minimal_flattening_removal_2026_05_07.md`):
 
 - FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES — minimal flattening, drops 18-30+ columns per data_type.
 - [normalize.py:372-395](../../../unified-api-contracts/unified_api_contracts/external/api_football/normalize.py#L372-L395)
@@ -101,11 +101,11 @@ full data." Need a sweep across every sports adapter parallel to the api_footbal
 
 ### Q4 — Plan coverage: PARTIAL with workspace-wide rule MISSING
 
-- [writegate_honest_coverage_endtoend_2026_05_06.plan.md:80-82,96,104-106](../writegate_honest_coverage_endtoend_2026_05_06.plan.md#L80-L82)
+- [writegate_honest_coverage_endtoend_2026_05_06.md:80-82,96,104-106](../writegate_honest_coverage_endtoend_2026_05_06.md#L80-L82)
   — defines the 4-pillar gate at `record_captured` (row count > 0, NaN ratio, schema match, cluster coverage). Schema
   match is pillar 3 but the **specific shape of the gate (pre-row Pydantic validation + per-row
   `record_failed(SCHEMA_VALIDATION_FAILED)` on rejection) is not codified** — pillar 3 is currently aspirational.
-- `api_football_minimal_flattening_removal_2026_05_07.plan.md` — covers only api_football's 4 data_types.
+- `api_football_minimal_flattening_removal_2026_05_07.md` — covers only api_football's 4 data_types.
 - No workspace-wide rule "every adapter at write boundary MUST validate against UAC schema; failures route to
   `record_failed(SCHEMA_VALIDATION_FAILED, missing_fields=...)` per-row, not venue-wide shard fail-all."
 

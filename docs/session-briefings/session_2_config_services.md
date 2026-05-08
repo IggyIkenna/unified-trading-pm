@@ -62,12 +62,12 @@
 
 | Plan                              | Phases            | Todos Remaining                  | Reference                                                    |
 | --------------------------------- | ----------------- | -------------------------------- | ------------------------------------------------------------ |
-| Plan B: Config Hot-Reload         | Phase 0-3         | ~28 todos                        | plans/active/plan_b_config_hot_reload_2026_03_21.plan.md     |
-| Plan C: Domain Data API Readiness | Phase 0-3         | ~11 todos                        | plans/active/plan_c_domain_data_api_2026_03_21.plan.md       |
-| full_system_audit_resolution      | Phase 3 residuals | ~2 todos (P3-05, P3-06)          | plans/active/full_system_audit_resolution_2026_03_18.plan.md |
-| live_batch_alignment_audit        | Phase 6B residual | ~2 todos (QG sweep)              | plans/active/live_batch_alignment_audit_2026_03_18.plan.md   |
-| mock_data_rollout                 | Phase 4-5         | ~5 todos                         | plans/active/mock_data_rollout_2026_03_18.plan.md            |
-| production_mock_e2e               | Phases 5-6        | ~2 todos (sandbox mode, rollout) | plans/active/production_mock_e2e_plan_d90c8f20.plan.md       |
+| Plan B: Config Hot-Reload         | Phase 0-3         | ~28 todos                        | plans/active/plan_b_config_hot_reload_2026_03_21.md     |
+| Plan C: Domain Data API Readiness | Phase 0-3         | ~11 todos                        | plans/active/plan_c_domain_data_api_2026_03_21.md       |
+| full_system_audit_resolution      | Phase 3 residuals | ~2 todos (P3-05, P3-06)          | plans/active/full_system_audit_resolution_2026_03_18.md |
+| live_batch_alignment_audit        | Phase 6B residual | ~2 todos (QG sweep)              | plans/active/live_batch_alignment_audit_2026_03_18.md   |
+| mock_data_rollout                 | Phase 4-5         | ~5 todos                         | plans/active/mock_data_rollout_2026_03_18.md            |
+| production_mock_e2e               | Phases 5-6        | ~2 todos (sandbox mode, rollout) | plans/active/production_mock_e2e_plan_d90c8f20.md       |
 
 ## What's Already Done (Don't Redo)
 

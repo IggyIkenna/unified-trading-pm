@@ -212,7 +212,7 @@ Phase 4: re-run partial Stage 3 + Stage 4 historical verification
 - Compound V3 / Spark / Morpho lending-rate capture in MTDS — currently only Aave V3 rows have populated
   `aave_supply_apy`; Compound/Spark rows are all-NaN. MTDS coverage extension separate plan.
 - Pyth Solana on-chain price wiring for jitoSOL / mSOL / bSOL — handoff'd 2026-05-06 unbanning + scoped to Solana only;
-  covered by `consolidated_defi_data_pipeline_2026_04_15.plan.md` `mtds-s3-5-pyth-oracle` todo.
+  covered by `consolidated_defi_data_pipeline_2026_04_15.md` `mtds-s3-5-pyth-oracle` todo.
 - Deribit dated/options 2025+2026 backfill completion — VMs auto-stopped early; needs longer-running re-launch
   (`launch-cefi-sharded-backfill.sh ONLY="DERIBIT:2025:light DERIBIT:2026:light" FORCE=1`). Operational, not code.
 

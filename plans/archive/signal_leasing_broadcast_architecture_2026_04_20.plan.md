@@ -83,7 +83,7 @@ alongside the public marketing page. Specifically:
 
 ## Cross-references
 
-- [path_to_100m_finalization_2026_04_20.plan.md](path_to_100m_finalization_2026_04_20.plan.md) — parent context
+- [path_to_100m_finalization_2026_04_20.md](path_to_100m_finalization_2026_04_20.md) — parent context
 - `codex/14-playbooks/commercial-model/signal-leasing.md` — commercial framing (already shipped)
 - `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` — notes Signal Leasing as fourth path
 - `codex/14-playbooks/shared-core/dart-pricing-axes.md` — pricing dimensions
@@ -257,7 +257,7 @@ counterparty-endpoint state via its API (that's Phase 5 admin-surface territory,
 
 **Scope boundary (clarified 2026-04-20):** the **public marketing surface** for the Signals Service (`/signals` page,
 nav entry, `/briefings/signals-out` pillar, direction-arrow wording, cross-links to `/platform/signals-in`) is owned by
-the sister [marketing_site_restructure_2026_04_20](marketing_site_restructure_2026_04_20.plan.md) plan and is
+the sister [marketing_site_restructure_2026_04_20](marketing_site_restructure_2026_04_20.md) plan and is
 substantially **already shipped**. This plan now owns only the backend-adjacent Phase 5 components: counterparty
 observability UI + admin surface + counterparty-persona integration. Previously-listed marketing stubs are consolidated
 into a single "shipped under sister plan" entry below.

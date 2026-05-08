@@ -8,10 +8,10 @@ codex_ref: codex/14-playbooks/dart/dart-terminal-vs-research.md
 supersedes:
   codex/14-playbooks/dart/dart-terminal-vs-research.md (tile-split mechanics — shipped commits a36a9889 → 0754cd3c).
   This plan addresses the structural reasons the navigation still feels like a headache instead of FOMO.
-superseded_by: plans/active/strategy_and_dart_master_2026_05_07.plan.md
+superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md
 ---
 
-> **ARCHIVED 2026-05-07** — folded into [`strategy_and_dart_master_2026_05_07.plan.md`](../active/strategy_and_dart_master_2026_05_07.plan.md). All open todos preserved in the umbrella's Phase 1-3. This file is the historical SSOT.
+> **ARCHIVED 2026-05-07** — folded into [`strategy_and_dart_master_2026_05_07.md`](../active/strategy_and_dart_master_2026_05_07.md). All open todos preserved in the umbrella's Phase 1-3. This file is the historical SSOT.
 
 # DART UX Refactor — From Route Tree to Guided Cross-Asset Trading Cockpit
 
@@ -169,7 +169,7 @@ superseded_by: plans/active/strategy_and_dart_master_2026_05_07.plan.md
 - [ ] [HUMAN] P1. **Public website copy alignment** (§25.A.3) — homepage metadata + `_home-client.tsx`
       Hero/MarketsUniverse/EngagementRoutes/WhyOdum + DART platform page + our-story.
 
-> **Status:** Plan-of-record. Authored 2026-04-29. Supersedes `dart_terminal_research_split_2026_04_28.plan.md`
+> **Status:** Plan-of-record. Authored 2026-04-29. Supersedes `dart_terminal_research_split_2026_04_28.md`
 > (tile-split mechanics shipped; UX-level refactor is this plan's scope).
 >
 > **Source synthesis:** This plan combines two inputs:

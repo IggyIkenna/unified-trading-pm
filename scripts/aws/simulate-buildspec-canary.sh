@@ -4,7 +4,7 @@
 # Runs the equivalent of AWS CodeBuild phases locally without AWS/CodeBuild.
 #
 # Canary repos: instruments-service, unified-cloud-interface, unified-trading-library
-# Gate: All 3 exit 0. Document result in aws_migration.plan.md.
+# Gate: All 3 exit 0. Document result in aws_migration.md.
 #
 # Usage:
 #   bash scripts/aws/simulate-buildspec-canary.sh [repo]

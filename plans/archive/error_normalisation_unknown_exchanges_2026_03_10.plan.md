@@ -413,5 +413,5 @@ File: `system-integration-tests/tests/integration/test_error_normalisation.py`
 
 ## Dependencies
 
-- `api_keys_and_auth.plan.md` Phase 2–4 (need live venue keys to validate error codes in recording)
-- `phase3_service_hardening_integration.plan.md` (hardening must not conflict with catch-all pattern)
+- `api_keys_and_auth.md` Phase 2–4 (need live venue keys to validate error codes in recording)
+- `phase3_service_hardening_integration.md` (hardening must not conflict with catch-all pattern)

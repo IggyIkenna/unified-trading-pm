@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.13
 """Validate deployment checklists have phase_9_deployable_enhancements (items 38-41).
 
-GATE: plans_to_deployable_unified_audit.plan.md checklist-enhancements.
+GATE: plans_to_deployable_unified_audit.md.md checklist-enhancements.
 All service checklists must have: data_availability, gap_filling, recovery_processes, security_audit_trail.
 
 Usage:

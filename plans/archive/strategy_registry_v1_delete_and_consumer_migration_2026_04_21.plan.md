@@ -57,7 +57,7 @@ todos:
     status: completed
   - id: p7-final-qg
     content: |
-      - [x] [AGENT] P0. Run `cd unified-trading-system-ui && bash scripts/quality-gates.sh` — all green. Coverage floor may still fail at the pre-existing baseline; that's OK if delta is non-negative. Update INDEX.md (remove this plan's entry + reference completion commit). Request human unlock of parent ui_unification_v2_sanitisation_2026_04_20.plan.md. Archive both plans.
+      - [x] [AGENT] P0. Run `cd unified-trading-system-ui && bash scripts/quality-gates.sh` — all green. Coverage floor may still fail at the pre-existing baseline; that's OK if delta is non-negative. Update INDEX.md (remove this plan's entry + reference completion commit). Request human unlock of parent ui_unification_v2_sanitisation_2026_04_20.md. Archive both plans.
     status: completed
 ---
 
@@ -138,7 +138,7 @@ todos:
 
 ### References
 
-- Parent plan: `plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md`
+- Parent plan: `plans/active/ui_unification_v2_sanitisation_2026_04_20.md`
 - Wave 6 migration report: `codex/09-strategy/architecture-v2/legacy-family-migration.md` § 2.1
 - UAC STRATEGY_REGISTRY: `unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/registry.py`
 - UI coverage SSOT: `unified-trading-system-ui/lib/architecture-v2/coverage.ts` (AUTO-GEN from UAC manifest)

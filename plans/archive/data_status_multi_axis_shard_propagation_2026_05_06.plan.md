@@ -5,10 +5,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-06
 related:
   - shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-  - writegate_honest_coverage_endtoend_2026_05_06.plan.md
-  - data_status_offline_rollup_2026_05_06.plan.md
-  - feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md
-  - data_status_operations_dropdown_cli_derived_2026_05_07.plan.md
+  - writegate_honest_coverage_endtoend_2026_05_06.md
+  - data_status_offline_rollup_2026_05_06.md
+  - feature_dag_uac_ssot_and_features_coverage_2026_05_06.md
+  - data_status_operations_dropdown_cli_derived_2026_05_07.md
 ---
 
 # Data-status multi-axis shard propagation
@@ -241,7 +241,7 @@ columns):
 | Service / asset_group            | Confirm written                                                                                                                                           |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | instruments-service / DEFI       | `chain` — already done in this session via orchestrator `_write_venue` fix + 64,060-row migration                                                         |
-| instruments-service / PREDICTION | `canonical_question_group` (today encoded in `data_type`); successor plan: `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md` |
+| instruments-service / PREDICTION | `canonical_question_group` (today encoded in `data_type`); successor plan: `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` |
 | MTDS / SPORTS                    | `league_id` — audit; today MTDS sports manifest has empty `instrument_id` and may be missing `league_id` too                                              |
 | features-sports / SPORTS         | `feature_group` — audit; calculator adapter writers need to declare `feature_group=...`                                                                   |
 | features-onchain / DEFI          | `feature_group` + `chain` — audit                                                                                                                         |
@@ -373,7 +373,7 @@ migration):
     only documented exception is hive-vocab `category=` vs `asset_group=` legacy preservation. Examples:
     - Prediction `canonical_question_group`: today encoded as `data_type` (e.g. `data_type=BTC` / `data_type=ETH` /
       `data_type=SPX`) so the manifest collapses 24 hourly markets into one `BTC_UP_DOWN_HOURLY` row. Has its own
-      successor plan `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md` (multi-week
+      successor plan `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` (multi-week
       migration). DO NOT touch in Phase 1 of this plan. → Precedent migration scripts:
       [`instruments-service/scripts/migrate_local_sfi_to_canonical.py`](../../../../Code/unified-trading-system-repos/instruments-service/scripts/migrate_local_sfi_to_canonical.py),
       [`instruments-service/scripts/migrate_defi_legacy_venue_chain.py`](../../../../Code/unified-trading-system-repos/instruments-service/scripts/migrate_defi_legacy_venue_chain.py).
@@ -632,7 +632,7 @@ Successor for DEFI hyphenated-`data_type` normalisation: still read-time in depl
 - **Mixed schema versions in the manifest** (v4/v5/v6) — already on the staircase from earlier migrations. Phase 0 v6→v7
   follows the same additive pattern. No bulk re-migration needed; readers tolerate older rows via null fallback.
 - **Prediction `canonical_question_group` encoded as `data_type`** — successor:
-  `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`.
+  `predictions_canonical_question_group_polymarket_migration_2026_05_06.md`.
 
 ## What this plan does NOT do (out of scope)
 
@@ -645,17 +645,17 @@ Successor for DEFI hyphenated-`data_type` normalisation: still read-time in depl
 - **TradFi/DeFi instrument_type per-instrument migration for instruments-service**. Today's flat per-venue file is
   deliberate.
 - **Cluster validation surfacing** for bundled shards (ES.OPT 11-cluster, futures_chain, prediction
-  canonical_question_group bundles) — covered by `writegate_honest_coverage_endtoend_2026_05_06.plan.md` Phase 1A.
+  canonical_question_group bundles) — covered by `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 1A.
 - **`client_id` semantics rework**. Already in v6; keeps its multi-tenant scoping meaning. `job_id` is added alongside,
   not as a replacement.
-- **Operations-dropdown CLI derivation** — covered by `data_status_operations_dropdown_cli_derived_2026_05_07.plan.md`.
+- **Operations-dropdown CLI derivation** — covered by `data_status_operations_dropdown_cli_derived_2026_05_07.md`.
 
 ## References
 
 - Per-asset-group shard-key matrix — CLAUDE.md SSOT
 - Companion writer plan: `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`
-- Honest-coverage write-gate: `writegate_honest_coverage_endtoend_2026_05_06.plan.md`
-- Feature DAG SSOT: `feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md`
+- Honest-coverage write-gate: `writegate_honest_coverage_endtoend_2026_05_06.md`
+- Feature DAG SSOT: `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md`
 - This session's incremental fixes (already shipped, not part of this plan):
   - Coverage-summary correctness (instrument_count sum, drop date='all', drop future-dated, drop empty venues)
   - Coverage-summary axis swaps (sports → data_type, strategy → strategy_id, execution → instruction_type, ml →

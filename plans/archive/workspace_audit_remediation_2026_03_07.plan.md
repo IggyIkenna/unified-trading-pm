@@ -99,7 +99,7 @@ do to avoid breaking other audit criteria. Ordered by severity: CRITICAL → HIG
   entirely. Replaced `list[Dict] | None` at line 181 with `list[dict[str, int]] | None` — confirmed int values from
   PERIOD_CONFIGS structure. Ruff: All checks passed." status: completed
 - id: fix-ssot-index-stale-entry content: "WARN 3.1: RESOLVED 2026-03-07. Updated 00-SSOT-INDEX.md line 11:
-  trading-system-audit-prompt.md → trading_system_audit_prompt.plan.md (hyphens to underscores + .plan.md suffix)."
+  trading-system-audit-prompt.md → trading_system_audit_prompt.md (hyphens to underscores + .md suffix)."
   status: completed
 - id: fix-always-use-quickmerge-priority content: "WARN 6.1: RESOLVED 2026-03-07. Bumped always-use-quickmerge.mdc
   priority from 85 to 90." status: completed

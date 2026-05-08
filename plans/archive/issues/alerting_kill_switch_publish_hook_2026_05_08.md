@@ -3,7 +3,7 @@ title: "alerting-service KillSwitchBus publish-side hook + integration test defe
 created: 2026-05-08
 author: ikenna
 source:
-  - plans/active/alerting_service_live_rules_2026_05_07.plan.md (Phase 2)
+  - plans/active/alerting_service_live_rules_2026_05_07.md (Phase 2)
   - plans/active/work_split_2026_05_07_ikenna_5tab_layout.md (Agent 1 done definition item 2)
   - unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py (AlertRule.triggers_kill_switch
     field, UAC@d00326d)
@@ -118,9 +118,9 @@ Estimated effort: 30-45 minutes for steps 1-3, additional 15 minutes for step 4.
 
 ## Cross-references
 
-- Plan: [`alerting_service_live_rules_2026_05_07`](../alerting_service_live_rules_2026_05_07.plan.md) Phase 2
+- Plan: [`alerting_service_live_rules_2026_05_07`](../alerting_service_live_rules_2026_05_07.md) Phase 2
   (declarative half shipped) + Phase 8 (rehearsal still pending).
-- Master plan blocker: [`master_to_live_defi_2026_05_23`](../master_to_live_defi_2026_05_23.plan.md) Group F
+- Master plan blocker: [`master_to_live_defi_2026_05_23`](../master_to_live_defi_2026_05_23.md) Group F
   (kill-switch verification).
 - Work-split parent: [`work_split_2026_05_07_ikenna_5tab_layout`](../work_split_2026_05_07_ikenna_5tab_layout.md) Agent
   1 done-definition item 2 ("KillSwitchBus integration test passes") explicitly flagged.

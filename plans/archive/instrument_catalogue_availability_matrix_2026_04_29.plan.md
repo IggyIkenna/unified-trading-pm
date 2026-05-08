@@ -55,7 +55,7 @@ todos:
   - id: p0-1-pm-active-plan
     content: |
       - [x] [SCRIPT] P0. Create this PM active plan file at
-            `unified-trading-pm/plans/active/instrument_catalogue_availability_matrix_2026_04_29.plan.md`,
+            `unified-trading-pm/plans/active/instrument_catalogue_availability_matrix_2026_04_29.md`,
             mirroring the Claude plan at `~/.claude/plans/i-guess-we-can-jazzy-eagle.md`. Add link to
             `plans/active/INDEX.md` under "Cross-cutting SSOT" section.
     status: done

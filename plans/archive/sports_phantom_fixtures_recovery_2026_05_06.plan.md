@@ -168,7 +168,7 @@ isProject: false
 # Sports Phantom FIXTURES Recovery — 2026-05-06
 
 > **2026-05-06 supersession note.** Remaining open todos in this plan are either (a) **already superseded by
-> `sports_fixtures_truthset_recovery_2026_05_06.plan.md`** (which declares `supersedes_phases:` covering
+> `sports_fixtures_truthset_recovery_2026_05_06.md`** (which declares `supersedes_phases:` covering
 > `relaunch-fixtures-backfill-category-a` + `audit-and-flip-stale-empties`), or (b) **blocked by the upcoming UTL
 > `check_shard_freshness` fix** (extend to treat `ATTEMPTED_FAILED` as stale; once shipped, the DELETE-shard pattern
 > here becomes optional and flip-to-`attempted_failed` works as originally designed). The downstream-entity sweep

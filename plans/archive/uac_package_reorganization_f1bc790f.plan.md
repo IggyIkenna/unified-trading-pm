@@ -35,7 +35,7 @@ isProject: false
 
 Phase 1 executed via parallel agents. Remaining work (sports/DeFi nesting, reference data consolidation, provider
 manifest expansion) moved to
-[uac_residual_refactors_provider_manifest_2026_03_14.plan.md](uac_residual_refactors_provider_manifest_2026_03_14.plan.md).
+[uac_residual_refactors_provider_manifest_2026_03_14.md](uac_residual_refactors_provider_manifest_2026_03_14.md).
 
 **Superseded plans archived:** uac_nested_domain_deviations_9a5e89ee, uac_package_reorganization_c1c0734e.
 

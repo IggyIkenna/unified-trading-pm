@@ -4,7 +4,7 @@ created: 2026-05-07
 author: claude-session
 source:
   - manifest-consolidator-20260507-175639 VM run.log (2026-05-07 17:24 UTC + 17:28 + 17:32 UTC consolidator cycles)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md § Phase 3.D.5 Wave 2.M (migration that surfaced
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md § Phase 3.D.5 Wave 2.M (migration that surfaced
     the bug)
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -103,7 +103,7 @@ need this consolidator bug resolved before the canonical reflects them.
 
 ## Cross-references
 
-- Migration plan: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md` § Phase 3.D.5 Wave 2.M
+- Migration plan: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 3.D.5 Wave 2.M
 - Migration script: `instruments-service/scripts/reconcile_blank_error_reason_rows.py`
 - Migration commits today: UAC@e855051, UTL@68b3804a, UTL@7eca2c20, UTL@7276cca1, instruments-service@86804c7,
   deployment-service@f72686b, deployment-service@327acf4

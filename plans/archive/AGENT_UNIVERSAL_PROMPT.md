@@ -13,7 +13,7 @@ BEFORE ANY CODE, read these files IN ORDER — they are your ground truth:
 
 1. .cursor/plans/CITADEL_VISION_2026_03_22.md — the complete system vision, service architecture,
    live/batch pattern, separation of concerns, interface contracts, collection names
-2. .cursor/plans/{AGENT_N}_*_2026_03_22.plan.md — YOUR specific plan with phased todos
+2. .cursor/plans/{AGENT_N}_*_2026_03_22.md — YOUR specific plan with phased todos
 3. .cursor/plans/AGENT_PROMPTS.md — shared preamble (read the SHARED PREAMBLE section)
 4. .cursor/plans/PLAN_AMENDMENTS_2026_03_22.md — corrections and additions to original plans
 5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — mandatory coding rules
@@ -177,7 +177,7 @@ COMPLETION PROTOCOL (after EVERY todo)
 YOUR MISSION
 ═══════════════════════════════════════════════════════════════════
 
-Read your plan file: .cursor/plans/{AGENT_N}_*_2026_03_22.plan.md
+Read your plan file: .cursor/plans/{AGENT_N}_*_2026_03_22.md
 
 Execute todos in STRICT phase order (Phase 0 → Phase 1 → ...).
 Mark each todo done as you complete it.

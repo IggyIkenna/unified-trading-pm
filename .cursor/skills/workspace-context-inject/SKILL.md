@@ -15,7 +15,7 @@ prompts:
 
 - Follow all workspace cursor rules in .cursor/rules
 - Plans live in unified-trading-pm/plans/ai or unified-trading-pm/plans/active; **venue axis / asset group** SSOT:
-  `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (UAC/UTL/MDPS/MTDS first)
+  `unified-trading-pm/plans/active/venue_axis_asset_group_vocabulary_2026_04_25.md` (UAC/UTL/MDPS/MTDS first)
 - uv not pip; basedpyright not pyright; quickmerge not git push
 - Delete deprecated code; no parallel code paths
 - Search unified libraries before implementing anything new

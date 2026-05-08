@@ -9,7 +9,7 @@ archive_reason: >
 
 # MASTER CI/CD PLAN - Production-Grade Development Workflow (ARCHIVED)
 
-**Status**: ARCHIVED — superseded by `cicd_code_rollout_master_2026_03_13.plan.md` **Priority**: P0 (Foundation for all
+**Status**: ARCHIVED — superseded by `cicd_code_rollout_master_2026_03_13.md` **Priority**: P0 (Foundation for all
 development) **Estimated Time**: 8-12 hours with parallel agents **Scope**: 32 repos + Codex docs + Cursor rules
 
 ---

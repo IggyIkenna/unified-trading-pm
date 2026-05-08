@@ -48,7 +48,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 ### Day 1 — 2026-05-07
 
 - [x] [DESIGN] P0. Author UAC `AlertCode` taxonomy (StrEnum + threshold dataclass + severity-vs-alert-code separation).
-      Plan: [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.plan.md) Phase 1. Repo:
+      Plan: [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) Phase 1. Repo:
       UAC. Why nuanced: closed-set philosophy decisions; sets workspace-wide alert vocabulary for years; codex SSOTs at
       [`codex/14-playbooks/alerting/alert-code-taxonomy.md`](../../codex/14-playbooks/alerting/alert-code-taxonomy.md)
       expect this StrEnum to land here. **DONE 2026-05-07 (Agent 1)** — UAC@`d00326d` shipped + alerting plan Phase 1
@@ -56,7 +56,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       pending.
 - [x] [DESIGN] P0. writegate Phase 4.A: deployment-api typed-error rendering (UTL classifier → `error_reason` API field
       → UI typed badge). Plan:
-      [`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) Phase
+      [`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase
       4.A. Repos: UTL + deployment-api + deployment-ui. Why nuanced: cross-cutting across 3 repos; per-asset-group
       consumer-class judgments per
       [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md).
@@ -96,9 +96,9 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       ES.OPT surface.
 - [x] [COORDINATION] P1. Audit the 2 new umbrellas + master Group F+G fold-in: phase ordering reads as one plan, not 4
       stitched-together plans; critical-path callouts in
-      [`ml_and_features_master_2026_05_07`](ml_and_features_master_2026_05_07.plan.md) +
-      [`strategy_and_dart_master_2026_05_07`](strategy_and_dart_master_2026_05_07.plan.md) +
-      [`master_to_live_defi_2026_05_23`](master_to_live_defi_2026_05_23.plan.md) Group F. Repo: PM. **DONE 2026-05-07
+      [`ml_and_features_master_2026_05_07`](ml_and_features_master_2026_05_07.md) +
+      [`strategy_and_dart_master_2026_05_07`](strategy_and_dart_master_2026_05_07.md) +
+      [`master_to_live_defi_2026_05_23`](master_to_live_defi_2026_05_23.md) Group F. Repo: PM. **DONE 2026-05-07
       (Agent 5)**: ml_and_features_master critical-path § gained explicit upstream sibling-blocker callout naming
       writegate Phase 2.D `available_at` stamping. strategy_and_dart_master critical-path § gained Phase-numbering note
       (1.x archaeology vs dependency order) + fixed ambiguous "Phase 1.9 service-split fold-in" descriptor → "Phase 3-11
@@ -120,19 +120,19 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 ### Day 4 — 2026-05-10
 
 - [ ] [TRADING] P0. Launch first DeFi backfill VMs (Aave / Uniswap / LST yields / Pyth + Chainlink now ready). Plan:
-      [`defi_master_2026_05_07`](defi_master_2026_05_07.plan.md) Fork 1. Repos: MTDS + deployment-service. Why nuanced:
+      [`defi_master_2026_05_07`](defi_master_2026_05_07.md) Fork 1. Repos: MTDS + deployment-service. Why nuanced:
       May-23 priorities + risk of bad backfill choices; first run with the just-shipped Pyth Hermes + Chainlink
       multi-chain paths.
 - [ ] [INFRA-DESIGN] P1. aws_migration Phase 2: dual-bucket setup + Storage Transfer Service config + bucket-naming SSOT
-      discipline. Plan: [`aws_migration_defi_first_2026_05_07`](aws_migration_defi_first_2026_05_07.plan.md) Phase 2.
+      discipline. Plan: [`aws_migration_defi_first_2026_05_07`](aws_migration_defi_first_2026_05_07.md) Phase 2.
       Repos: deployment-service + UCI. Codex SSOT to populate:
       [`codex/05-infrastructure/cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md).
 - [ ] [COORDINATION] P1. Triage
-      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md)
+      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       (just promoted) — overlaps with defi_master Fork 1 launch decision; canonicalise venue-collateral matrix BEFORE
       the launch picks chains/protocols.
 - [x] [COORDINATION] P2. Triage
-      [`session_2026_05_07_data_status_audit_findings`](session_2026_05_07_data_status_audit_findings.plan.md) (just
+      [`session_2026_05_07_data_status_audit_findings`](session_2026_05_07_data_status_audit_findings.md) (just
       promoted) — folds into infra_master or stays standalone? Decision-only, ~30 min. **DONE 2026-05-07 (Agent 5)**:
       STANDALONE. Wrapper-tracker spans 5 owner plans (sports / predictions / defi / manifest_migration /
       infrastructure); folding into infra_master mis-attributes most findings (only B.2 + C.13 belong there) + loses
@@ -162,7 +162,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 
 - [ ] [OPS] P0. Babysit 24 cefi VMs (ETA 05-08/09): event-progression checks (`STARTED → PROCESSING → STOPPED`), kill
       zombies via `VM_PREFIX_TO_BUCKET` registry; do **not** launch new cefi work. Plan:
-      [`cefi_master_2026_05_07`](cefi_master_2026_05_07.plan.md). Monitor only. **In-flight 2026-05-07 14:00 UTC**: 37
+      [`cefi_master_2026_05_07`](cefi_master_2026_05_07.md). Monitor only. **In-flight 2026-05-07 14:00 UTC**: 37
       cefi VMs (bitfinex/bitget/kraken futures+spot 2020-2026) running in asia-northeast1-c. Sample-checked 3 VMs:
       STARTED + PROCESSING_STARTED + PROCESSING_COMPLETED events flowing, ~4 min/date pace. **Concerns**: (a)
       PROCESSING_COMPLETED events lack `rows_captured` field — violates writegate rule "adapters MUST emit row counts so
@@ -171,14 +171,14 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       T+30min after first VM hits STOPPED.
 - [x] [SCRIPT] P0. Implement UAC types for backfill launch (`BackfillLaunchRequest` / `BackfillLaunchResult` /
       `VMLifecycleEvent` / `VMEventListResult` / `BackfillLaunchTaskKind` StrEnum). Plan:
-      [`deployment_api_work_stream_a_2026_05_07`](deployment_api_work_stream_a_2026_05_07.plan.md) Phase 1. Repo: UAC.
+      [`deployment_api_work_stream_a_2026_05_07`](deployment_api_work_stream_a_2026_05_07.md) Phase 1. Repo: UAC.
       (UAC@`a70b3f6` — Ikenna shipped Phase 1 a day early; 5 models + 23-value StrEnum with per-source sports +
       per-asset_group forward-poll variants; 15 unit tests green via `.venv/bin/python -m pytest`.)
 
 ### Day 2 — 2026-05-08
 
 - [x] [SCRIPT] P0. Implement UAC `feature_group → required_inputs` SSOT (1-day pure-win; gates ml/features Phase 2
-  - ML downstream). Plan: [`ml_and_features_master_2026_05_07`](ml_and_features_master_2026_05_07.plan.md) Phase 1A.
+  - ML downstream). Plan: [`ml_and_features_master_2026_05_07`](ml_and_features_master_2026_05_07.md) Phase 1A.
     Repo: UAC. **DONE 2026-05-07** — Phase 1A largely shipped (4 commits across UAC + UTL): UAC@`4a25b07` (32
     feature_groups + 5-service registry + 6 onchain coverage_starts + 15 tests) + UAC@`2f40c9d`
     (AVAILABILITY_AT_SEMANTICS defi-vocabulary Half 1) + UAC@`7a3299a` (Half 2 — 8 of 10 deferred onchain feature_groups
@@ -187,7 +187,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
     (operator decision pending — gates features-sports consumer migration); 8-service consumer wires (Phase 2A).
 - [ ] [SCRIPT] P1. Hook `features_sports_reconcile_available_at.py` (already shipped per
       `features-sports-service@f123069`) into per-source backfill VM exit-step. Plan:
-      [`sports_master_2026_05_07`](sports_master_2026_05_07.plan.md). Repos: features-sports-service +
+      [`sports_master_2026_05_07`](sports_master_2026_05_07.md). Repos: features-sports-service +
       deployment-service.
 
 ### Day 3 — 2026-05-09
@@ -195,7 +195,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 - [ ] [SCRIPT] P0. Implement `POST /api/backfill/launch` + `GET /api/vm/events` handlers (against UAC types from D1).
       Plan: deployment_api_work_stream_a Phase 2. Repo: deployment-api.
 - [x] [SCRIPT] P1. UAC canonical_question_group SSOT (`HOURLY` / `DAILY` / `ELECTION` Polymarket+Kalshi groupings).
-      Plan: [`predictions_master_2026_05_07`](predictions_master_2026_05_07.plan.md) Phase 1. Repo: UAC. **DONE
+      Plan: [`predictions_master_2026_05_07`](predictions_master_2026_05_07.md) Phase 1. Repo: UAC. **DONE
       2026-05-07** — Phase 1A scaffolding complete (predictions audit confirmed 14/37 done, 38% progress): UAC@`5f76bd4`
       (classifier stability hash design) + UAC@`af2bc9b` (canonical-question-group SSOT + lifecycle wrapper modules) +
       UAC@`58cc5f8` (Polymarket lifecycle aliases + edge-case regression tests) + UAC@`bb24aba`
@@ -208,13 +208,13 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 
 - [ ] [SCRIPT] P0. Cross-asset manifest rescan after cefi VM drain (run `reconcile_phantom_manifest_rows_all.py` per
       asset_group; merge per-VM shards). Plan:
-      [`manifest_migration_master_2026_05_07`](manifest_migration_master_2026_05_07.plan.md) Stage 4. Repo:
+      [`manifest_migration_master_2026_05_07`](manifest_migration_master_2026_05_07.md) Stage 4. Repo:
       instruments-service scripts. **Hard prerequisite**: cefi VMs drained (D1 D2 ops).
 - [ ] [SCRIPT] P1. TradFi MDPS post-drain: ES.OPT 11-cluster validation rerun if cluster-coverage gate flagged any
-      partial bundles. Plan: [`tradfi_master_2026_05_07`](tradfi_master_2026_05_07.plan.md). Repo: MDPS.
+      partial bundles. Plan: [`tradfi_master_2026_05_07`](tradfi_master_2026_05_07.md). Repo: MDPS.
 - [ ] [SCRIPT] P2. Migrate first batch of ad-hoc VM launchers into `deployment-service/scripts/vm/` (target: 10 of 30
       launchers in this cycle; rest carry over post-May-23). Plan:
-      [`launcher_scripts_consolidation_into_deployment_service_2026_05_07`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md).
+      [`launcher_scripts_consolidation_into_deployment_service_2026_05_07`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.md).
       Repo: deployment-service.
 
 ### Day 5 — 2026-05-11
@@ -228,13 +228,13 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       `CLOUD_PROVIDER=aws     instruments-service --health-check` + bucket-name parity audit + `setup-defi-buckets.sh`
       dry-run all need execution by operator.
 - [ ] [TEST] P0. DART 6-persona Playwright matrix verification on manual-trade flow. Plan:
-      [`strategy_and_dart_master_2026_05_07`](strategy_and_dart_master_2026_05_07.plan.md) Phase 2.2. Repo:
+      [`strategy_and_dart_master_2026_05_07`](strategy_and_dart_master_2026_05_07.md) Phase 2.2. Repo:
       unified-trading-system-ui.
 - [ ] [SCRIPT] P1. ml/features Phase 3: Parquet column-pruning quick-win (1-3 day pure-win, self-contained). Plan:
       ml_and_features_master Phase 3. Repo: ml-training-service.
 - [ ] [SCRIPT] P1. `deploy_missing_auto_launch` Phase 1: implement preview→auto-launch successor (only after D3
       deployment-api endpoints land). Plan:
-      [`deploy_missing_auto_launch_2026_05_07`](deploy_missing_auto_launch_2026_05_07.plan.md). Repo: deployment-api.
+      [`deploy_missing_auto_launch_2026_05_07`](deploy_missing_auto_launch_2026_05_07.md). Repo: deployment-api.
 
 ---
 
@@ -244,9 +244,9 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       feature_dag (`canonical/crosscutting/feature_dag.py`) + Harsh D3 prediction (`predictions.py`) — **all different
       sub-modules**. Risk only on `pyproject.toml` / `__init__.py` re-exports. Mitigation: push immediately, other party
       `git pull` before next UAC edit.
-- [ ] **`writegate_honest_coverage_endtoend.plan.md` body**: Ikenna-only (D1/D2/D3). Harsh stays out.
-- [ ] **`master_to_live_defi.plan.md` body**: Ikenna-only (D5 refresh). Harsh stays out.
-- [ ] **`aws_migration_defi_first.plan.md` body**: Ikenna D4 Phase 2 + Harsh D5 Phase 0/1 = same file. Mitigation: Harsh
+- [ ] **`writegate_honest_coverage_endtoend.md` body**: Ikenna-only (D1/D2/D3). Harsh stays out.
+- [ ] **`master_to_live_defi.md` body**: Ikenna-only (D5 refresh). Harsh stays out.
+- [ ] **`aws_migration_defi_first.md` body**: Ikenna D4 Phase 2 + Harsh D5 Phase 0/1 = same file. Mitigation: Harsh
       edits only Phase 0/1 section (early in plan) with surgical `git add -p`; Ikenna edits only Phase 2; sync at EOD
       D4.
 - [ ] **`deployment-api/` source**: Harsh D1 + D3 (new endpoints) AND Ikenna D1 (typed-error rendering) — same repo,
@@ -285,14 +285,14 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       binary)
 - [ ] `predictions_master` non-Phase-1 work (P1; 14 P0 in 16 days too tight per audit)
 - [ ] `consolidated_strategy_and_ui` Phase 3 deep work (now under `strategy_and_dart_master`)
-- [ ] [`audit_followups_2026_05_07`](audit_followups_2026_05_07.plan.md) cleanup (low-priority housekeeping)
-- [ ] [`fund_administration_service_and_pooled_subscription_redemption_2026_04_20`](fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md)
+- [ ] [`audit_followups_2026_05_07`](audit_followups_2026_05_07.md) cleanup (low-priority housekeeping)
+- [ ] [`fund_administration_service_and_pooled_subscription_redemption_2026_04_20`](fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md)
       (just promoted; non-critical-path)
-- [ ] [`ml_pipeline_ui_integration_2026_04_16`](ml_pipeline_ui_integration_2026_04_16.plan.md) (just promoted;
+- [ ] [`ml_pipeline_ui_integration_2026_04_16`](ml_pipeline_ui_integration_2026_04_16.md) (just promoted;
       non-critical-path)
-- [ ] [`api_football_minimal_flattening_removal_2026_05_07`](api_football_minimal_flattening_removal_2026_05_07.plan.md)
+- [ ] [`api_football_minimal_flattening_removal_2026_05_07`](api_football_minimal_flattening_removal_2026_05_07.md)
       (just promoted; sports-pipeline plumbing — sports owner picks up post-May-23)
-- [ ] [`data_status_comprehensive_test_coverage_2026_05_07`](data_status_comprehensive_test_coverage_2026_05_07.plan.md)
+- [ ] [`data_status_comprehensive_test_coverage_2026_05_07`](data_status_comprehensive_test_coverage_2026_05_07.md)
       (just promoted; regression-test net — Harsh post-May-23 once Week 2 dust settles)
 
 ---

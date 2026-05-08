@@ -238,7 +238,7 @@ isProject: false
 
 # Cloud Infrastructure — Extended Bootstrap
 
-**Linked plans:** [cloud_infra_bucket_auth_2026_03_10.plan.md](cloud_infra_bucket_auth_2026_03_10.plan.md) (buckets, SA
+**Linked plans:** [cloud_infra_bucket_auth_2026_03_10.md](cloud_infra_bucket_auth_2026_03_10.md) (buckets, SA
 key, BQ tables)
 
 ---

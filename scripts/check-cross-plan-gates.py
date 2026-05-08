@@ -40,14 +40,14 @@ GATES: list[dict[str, str | list[str]]] = [
             "tasks can proceed. Production backfill needs API keys loaded into "
             "Secret Manager."
         ),
-        "source_plan_pattern": r"defi_keys_data_integration.*\.plan\.md$",
+        "source_plan_pattern": r"defi_keys_data_integration.*\.md\.md$",
         "source_todo_ids": [
             "secrets-verify-tardis",
             "secrets-http-vendors",
             "secrets-defi-endpoints",
             "secrets-ws-vendors",
         ],
-        "blocked_plan_pattern": r"cicd_code_rollout.*\.plan\.md$",
+        "blocked_plan_pattern": r"cicd_code_rollout.*\.md\.md$",
         "blocked_todo_ids": [
             "backfill-instruments-metadata",
             "backfill-tick-data",
@@ -62,7 +62,7 @@ GATES: list[dict[str, str | list[str]]] = [
 def find_plan_file(pattern: str) -> Path | None:
     """Find the first plan file matching the regex pattern."""
     regex = re.compile(pattern)
-    for plan_file in sorted(PLANS_DIR.glob("*.plan.md")):
+    for plan_file in sorted(PLANS_DIR.glob("*.md.md")):
         if regex.search(plan_file.name):
             return plan_file
     return None

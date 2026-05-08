@@ -26,7 +26,7 @@ locked_since: 2026-05-08
 > radius**: workspace rule (CLAUDE.md addition) + every plan that adds/removes a data_type or instrument_id (every
 > existing P0/P1 issue filed 2026-05-08 must adopt this acceptance criterion) + retro audit of historical entity
 > adds/removes. **Suggested owner**: workspace rule lands in CLAUDE.md immediately; retro audit folds into
-> `infrastructure_master_2026_05_07.plan.md`.
+> `infrastructure_master_2026_05_07.md`.
 
 ## What I found
 

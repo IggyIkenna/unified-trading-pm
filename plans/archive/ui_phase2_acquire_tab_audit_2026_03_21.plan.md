@@ -4,7 +4,7 @@
 navigation, data wiring, and UX under the Acquire lifecycle tab (DATA_TABS — 6 routes). **Completed:** 2026-03-21 |
 **Output:** `unified-trading-system-ui/docs/phase2/`
 
-**Repo:** `unified-trading-system-ui` **Parent plan:** `ui_lifecycle_service_tab_cross_reference_2026_03_21.plan.md`
+**Repo:** `unified-trading-system-ui` **Parent plan:** `ui_lifecycle_service_tab_cross_reference_2026_03_21.md`
 (Phase 1)
 
 ---

@@ -28,7 +28,7 @@ locked_since: 2026-05-08
 > half-time prediction ML). **Blast radius**: UAC (tradfi + derivatives + sports schemas) + instruments-service write
 > path (hard schema enforcement) + MTDS (roll detection + lifecycle gating) + UTL (`stamp_available_at_post_match`
 > cascade) + features-sports-service (half-time / extra-time / penalty features). **Suggested owner**: split — Q1+Q2 →
-> `tradfi_master_2026_05_07.plan.md` Phase X; Q4-Q6 → `sports_master_2026_05_07.plan.md` Phase 3 sub-plan.
+> `tradfi_master_2026_05_07.md` Phase X; Q4-Q6 → `sports_master_2026_05_07.md` Phase 3 sub-plan.
 
 ## What I found
 
@@ -161,10 +161,10 @@ MTDS write boundary, OR a dedicated pre-features stage `match_lifecycle_extracto
 
 ### Q8 — Plan coverage: MINIMAL
 
-- `sports_data_completeness_2026_04_14.plan.md` — halftime calculator wired (scores only); does NOT cover match_end_time
+- `sports_data_completeness_2026_04_14.md` — halftime calculator wired (scores only); does NOT cover match_end_time
   cascade, penalty shootout, regulation-score-vs-AET distinction.
 - `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` — names the cascade in plain English, does NOT implement.
-- `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md` — lifecycle wired (Q3),
+- `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` — lifecycle wired (Q3),
   prediction-only.
 - **No active plan** owns: futures schema addition (Q1), options expiry hard-required (Q2), sports half-time /
   extra-time / penalty timestamps (Q5), regulation-vs-AET-vs-pens score distinction (Q6), end_time cascade

@@ -61,7 +61,7 @@ todos:
     status: done
   - id: locked-plan-removal-qg-check
     content: |
-      - [x] [AGENT] P1. Add locked-plan-removal-check to PM quality-gates.sh: if git diff shows a locked plan being deleted and commit message lacks [unlock-plan], QG fails. Implementation: parse `git diff --cached --name-status` for deleted .plan.md files, check each for `locked_by:` in the old version (via `git show HEAD:<path>`), reject if present and commit message missing `[unlock-plan]`.
+      - [x] [AGENT] P1. Add locked-plan-removal-check to PM quality-gates.sh: if git diff shows a locked plan being deleted and commit message lacks [unlock-plan], QG fails. Implementation: parse `git diff --cached --name-status` for deleted .md files, check each for `locked_by:` in the old version (via `git show HEAD:<path>`), reject if present and commit message missing `[unlock-plan]`.
     status: done
   # ── Phase 4 — PM Infrastructure Breaking Change Detection (SEQUENTIAL, depends on Phase 3) ──
   - id: pm-semver-policy-agent

@@ -23,7 +23,7 @@ repo_gates:
     deployment: none
 
 depends_on:
-  - fund_administration_service_and_pooled_subscription_redemption_2026_04_20.plan.md
+  - fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---

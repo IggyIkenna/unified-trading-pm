@@ -249,9 +249,9 @@ jobs:
           # Smart loading: plans mentioning REPO_NAME get full content; others get head -250.
           ACTIVE_PLANS=""
           PLAN_NAMES=""
-          if ls unified-trading-pm/plans/active/*.plan.md 2>/dev/null | grep -q .; then
-            PLAN_NAMES=$(ls unified-trading-pm/plans/active/*.plan.md 2>/dev/null | xargs -I{} basename {} | tr '\n' ' ')
-            ACTIVE_PLANS=$(for f in unified-trading-pm/plans/active/*.plan.md; do
+          if ls unified-trading-pm/plans/active/*.md 2>/dev/null | grep -q .; then
+            PLAN_NAMES=$(ls unified-trading-pm/plans/active/*.md 2>/dev/null | xargs -I{} basename {} | tr '\n' ' ')
+            ACTIVE_PLANS=$(for f in unified-trading-pm/plans/active/*.md; do
               echo "=== $(basename "$f") ==="
               if grep -qi "$REPO_NAME" "$f" 2>/dev/null; then
                 cat "$f"  # Full content for relevant plans

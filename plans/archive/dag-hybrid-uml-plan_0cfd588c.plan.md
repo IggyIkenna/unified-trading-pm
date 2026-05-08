@@ -53,7 +53,7 @@ isProject: false
   - `unified-trading-codex/04-architecture/TOPOLOGY-DAG.md`
   - `unified-trading-codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`
   - `unified-trading-codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md`
-- Update `.cursor/plans/consolidated_remaining_work.plan.md` so DAG cleanup is explicitly before broad test execution.
+- Update `.cursor/plans/consolidated_remaining_work.md` so DAG cleanup is explicitly before broad test execution.
 
 ## Phase 1 — Remove hard dependency violations
 

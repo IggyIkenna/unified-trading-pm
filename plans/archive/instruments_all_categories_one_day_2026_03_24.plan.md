@@ -126,7 +126,7 @@ Prediction.
 
 ### 8. QG Integration Test — Secret Manager Key Names
 
-See `plans/ai/secret_manager_key_registry_qg_2026_03_24.plan.md` for the plan to add a QG check that verifies
+See `plans/ai/secret_manager_key_registry_qg_2026_03_24.md` for the plan to add a QG check that verifies
 `DATA_SOURCE_TO_SECRET` names exist in Secret Manager.
 
 ## Expected Output After All Fixes

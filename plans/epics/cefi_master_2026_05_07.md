@@ -110,11 +110,11 @@ Single source of truth for **CeFi asset_group** work toward live DeFi 2026-05-23
 
 **Not covered here** (out of asset_group scope):
 
-- TradFi (CME / CBOE / NYSE / NASDAQ) → see `tradfi_master_2026_05_07.plan.md`.
-- DeFi DEX perps (Hyperliquid / Aster / Lighter / Extended / Pacifica) → see `defi_master_2026_05_07.plan.md`. Note:
+- TradFi (CME / CBOE / NYSE / NASDAQ) → see `tradfi_master_2026_05_07.md`.
+- DeFi DEX perps (Hyperliquid / Aster / Lighter / Extended / Pacifica) → see `defi_master_2026_05_07.md`. Note:
   Lighter / Extended / Pacifica were originally scoped under `cefi_venue_universe_expansion` as "DEX perps" but they're
   DeFi by asset_group.
-- Sports / Predictions → see `sports_master_2026_05_07.plan.md` / `predictions_master_2026_05_07.plan.md`.
+- Sports / Predictions → see `sports_master_2026_05_07.md` / `predictions_master_2026_05_07.md`.
 - Cross-cutting concerns (writegate, shard-granularity, data-status, instruments+MTDS infra) → see master plan + the
   named cross-cutting plans.
 
@@ -349,7 +349,7 @@ These were originally scoped in `cefi_venue_universe_expansion`; deferring expan
 because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are already live.
 
 - [x] [DEFERRED-POST-CUTOVER] P2. Extended / Pacifica / Lighter DEX-perp venues — these are DeFi asset_group, not CeFi.
-      Move-out into `defi_master_2026_05_07.plan.md`. [AUDIT 2026-05-07: DONE — Lighter + Pacifica live OHLCV historical
+      Move-out into `defi_master_2026_05_07.md`. [AUDIT 2026-05-07: DONE — Lighter + Pacifica live OHLCV historical
       via MTDS@10aa715/51fecd5/d898985/fc53a97 + UAC@e890022 (per MEMORY entry project_dex_perp_onboarding_2026_05_07);
       Extended pending per dex_perp_onboarding_handover_2026_05_07.HANDOVER.md Item C; this todo is the move-out
       announcement which IS DONE]
@@ -357,7 +357,7 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
 ## `available_at` adapter stamping (coordinated)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.plan.md)
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md.md)
 > Phase 1. Audit 2026-05-08 found CeFi adapters lack explicit per-adapter `available_at` stamping wiring per UAC
 > `AVAILABILITY_AT_SEMANTICS`. Without it, `assert_available_at_present` in `ManifestWriter.record_captured()` is dead
 > code for cefi shards.
@@ -384,18 +384,18 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
 - Write-gate cluster:
-  [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.plan.md).
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md.md).
 - Shard granularity:
-  [`shard_granularity_ssot_propagation_2026_05_06.plan.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.plan.md).
+  [`shard_granularity_ssot_propagation_2026_05_06.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.md).
 - Sibling asset_group umbrellas: `defi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 
 ## Folded plans (archived 2026-05-07)
 
-- `cefi_venue_universe_expansion_2026_05_01.plan.md` — Tardis venues + DEX perps; CeFi todos lifted above; DEX perp
+- `cefi_venue_universe_expansion_2026_05_01.md` — Tardis venues + DEX perps; CeFi todos lifted above; DEX perp
   todos move to `defi_master`.
-- `cefi_tradfi_tick_data_backfill_2026_04_10.plan.md` — CeFi half lifted above; TradFi half lifted into `tradfi_master`.
-- `market_tick_data_to_100pct_2026_05_05.plan.md` (CeFi slice) — full plan archived after splitting per asset_group;
+- `cefi_tradfi_tick_data_backfill_2026_04_10.md` — CeFi half lifted above; TradFi half lifted into `tradfi_master`.
+- `market_tick_data_to_100pct_2026_05_05.md` (CeFi slice) — full plan archived after splitting per asset_group;
   CeFi slice is in this umbrella; other slices in their respective asset_group umbrellas.

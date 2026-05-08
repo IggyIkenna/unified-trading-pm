@@ -1,10 +1,10 @@
 ---
-superseded_by: [universe_ssot_fix_2026_04_20.plan.md]
+superseded_by: [universe_ssot_fix_2026_04_20.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25
 ---
 
-> **SUPERSEDED 2026-04-25 by [universe_ssot_fix_2026_04_20.plan.md](./universe_ssot_fix_2026_04_20.plan.md).** Phase A
+> **SUPERSEDED 2026-04-25 by [universe_ssot_fix_2026_04_20.md](./universe_ssot_fix_2026_04_20.md).** Phase A
 > bucket-naming fixes shipped; Phase B universe-SSOT was carved out into universe_ssot_fix Original scope retained for
 > history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
@@ -14,7 +14,7 @@ name: smoke-dep-chain-tactical-fixes overview: Phase A tactical fixes surfaced b
 Bucket naming convention (mostly shipped), SIT manifest filter Tier-0 vs Tier-1 semantics, path-layout SSOT
 reconciliation vs actual writes, launcher extension for SPORTS + PREDICTION, stale default date, VM auto-shutdown,
 SIGKILL/memory investigation. No architectural changes — that's Phase B
-(plans/active/universe_ssot_fix_2026_04_20.plan.md). type: mixed epic: epic-data-platform-honest-coverage status: active
+(plans/active/universe_ssot_fix_2026_04_20.md). type: mixed epic: epic-data-platform-honest-coverage status: active
 
 locked_by: live-defi-rollout locked_since: 2026-04-21
 

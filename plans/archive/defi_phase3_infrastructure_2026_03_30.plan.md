@@ -266,7 +266,7 @@ Phase 6 (DOCS — after each build phase)
 
 ```
 Continue from the plan at:
-unified-trading-pm/plans/active/defi_phase3_infrastructure_2026_03_30.plan.md
+unified-trading-pm/plans/active/defi_phase3_infrastructure_2026_03_30.md
 
 Phase 2 strategies are done (15+ variants). Phase 3 is infrastructure alignment:
 CHAIN_ENV, gas schema, Tenderly execution, pipelines, custody.

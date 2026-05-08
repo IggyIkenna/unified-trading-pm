@@ -254,7 +254,7 @@ todos:
 
   - id: b0-trigger-plan-unlock-request
     content: |
-      - [ ] [HUMAN] P0. Unlock-request for `plans/ai/trigger_based_reference_data_2026_04_13.plan.md` (locked since
+      - [ ] [HUMAN] P0. Unlock-request for `plans/ai/trigger_based_reference_data_2026_04_13.md` (locked since
         2026-04-13 by `live-defi-rollout`, currently Phase A only — UAC season-calendar foundation; Workstreams A/B/C
         substantial work remaining). Two options for the operator: (a) fold its Phase A SSOT scope into Phase A.6 of
         THIS plan and archive the trigger plan; (b) keep the trigger plan as the sports-trigger sub-plan referenced by
@@ -524,7 +524,7 @@ todos:
   - id: f3-aws-eventbridge-mirror
     content: |
       - [ ] [SCRIPT] P1. AWS EventBridge mirror of the Cloud Scheduler entries for AWS↔GCP cloud parity per
-        `master_to_live_defi_2026_05_23.plan.md` cloud-parity goal. Same payload shape; same target launcher scripts
+        `master_to_live_defi_2026_05_23.md` cloud-parity goal. Same payload shape; same target launcher scripts
         (the launchers are already cloud-agnostic per `cloud-agnostic-script-pattern.md`). Deferred for non-DeFi
         asset_groups until parity is needed; DeFi instruments-live triggers that feed `carry_staked_basis` /
         `leveraged_funding_arb` MUST have AWS parity by 2026-05-23.
@@ -537,7 +537,7 @@ todos:
 
   - id: g1-delegate-to-deployment-ui-lifecycle-tabs-plan
     content: |
-      - [ ] [AGENT] P0. **DELEGATED to `deployment_ui_lifecycle_tabs_2026_05_08.plan.md`.** All deployment-UI +
+      - [ ] [AGENT] P0. **DELEGATED to `deployment_ui_lifecycle_tabs_2026_05_08.md`.** All deployment-UI +
         deployment-api scope for the "Scheduled Jobs" tab — registry SSOT, list endpoint, three-tab restructure,
         mode-toggle prefetch, cloud-toggle UX, deploy-missing-schedulers, pause/resume — moved to that cross-cutting
         plan because it covers Batch + Scheduled + Live lifecycle classes uniformly, not just instruments-live.
@@ -545,7 +545,7 @@ todos:
         instruments-live entries declared in Phase A.3 here. Single registry entry per
         (asset_group, trigger_name) tuple. NO duplicate UI work.
     status: todo
-    note: "Delegated; see deployment_ui_lifecycle_tabs_2026_05_08.plan.md."
+    note: "Delegated; see deployment_ui_lifecycle_tabs_2026_05_08.md."
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase H — Alerting + circuit breakers (parallel to F-G; depends on A.4 + A.5)
@@ -651,7 +651,7 @@ isProject: false
 
 > **🟢 SIBLING — Live-pipeline activation 2026-05-08**
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.plan.md) Phase
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md.md) Phase
 > 10 consumes the `INSTRUMENT_CACHE_REFRESH_TRIGGER` event this plan publishes, via the new UTL
 > `InstrumentCacheDeltaReloader` helper (cache-delta hot-reload pattern). **This plan owns the publish-side** (verify or
 > add the event publication in instruments-service); **the live-pipeline plan owns the consume-side** (UTL helper +
@@ -722,20 +722,20 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 
 ## Dependencies + sibling plan references
 
-- **`master_to_live_defi_2026_05_23.plan.md`** — sibling. DeFi-live (the master plan's headline goal) does NOT depend on
+- **`master_to_live_defi_2026_05_23.md`** — sibling. DeFi-live (the master plan's headline goal) does NOT depend on
   most of this plan, but the DeFi instruments-live triggers (cefi 15-min CCXT for hedge legs on Bybit/Deribit/
   Binance/OKX/Hyperliquid/Aster, plus DeFi-onchain instruments triggers covered separately by `defi_master_2026_05_07`)
   ARE in the master critical path. Phase D + the AWS-mirror in F.3 are the parts of THIS plan that the master needs by
   2026-05-23; everything else (sports / tradfi / prediction live) is post-2026-05-23.
-- **`writegate_honest_coverage_endtoend_2026_05_06.plan.md`** — depends_on. Live-mode `record_captured` / `record_empty`
+- **`writegate_honest_coverage_endtoend_2026_05_06.md`** — depends_on. Live-mode `record_captured` / `record_empty`
   semantics inherit from writegate Phase 2.D; this plan does NOT re-derive write-gate rules.
-- **`alerting_service_live_rules_2026_05_07.plan.md`** — depends_on. Owns the rule engine; THIS plan adds the
+- **`alerting_service_live_rules_2026_05_07.md`** — depends_on. Owns the rule engine; THIS plan adds the
   instruments-live entries (Phase H.1).
-- **`deployment_api_work_stream_a_2026_05_07.plan.md`** — depends_on. Owns programmatic VM launch + event-tail
+- **`deployment_api_work_stream_a_2026_05_07.md`** — depends_on. Owns programmatic VM launch + event-tail
   endpoints; THIS plan reuses event-tail logic for the Scheduled Jobs tab (Phase G.1).
-- **`launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`** — depends_on. Owns launcher SSOT
+- **`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`** — depends_on. Owns launcher SSOT
   migration; THIS plan's Phase F.1 adds Cloud Scheduler config under the same `deployment-service/scripts/` root.
-- **`trigger_based_reference_data_2026_04_13.plan.md`** — locked sibling. Owns the sports trigger calendar design; THIS
+- **`trigger_based_reference_data_2026_04_13.md`** — locked sibling. Owns the sports trigger calendar design; THIS
   plan's Phase B references it. Operator unlock-request in B.0.
 
 ## Active issues this plan references (does NOT duplicate)
@@ -781,7 +781,7 @@ single-codepath; adding `--trigger` as a new axis is additive (Phase A.7).
 ## Out of scope (referenced but owned elsewhere)
 
 - DeFi onchain instruments live triggers (governance params, RPC discovery, contract-event indexing) → owned by
-  `defi_master_2026_05_07.plan.md`. This plan's matrix above does NOT include defi rows because the asset_group's live
+  `defi_master_2026_05_07.md`. This plan's matrix above does NOT include defi rows because the asset_group's live
   triggers are intrinsically onchain-event-driven, not wall-clock; they ride a different architecture surface.
 - Per-shard market-tick capture (MTDS market data, NOT instruments) — owned by per-asset-group MTDS plans
   (`cefi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`, `predictions_master_2026_05_07`).

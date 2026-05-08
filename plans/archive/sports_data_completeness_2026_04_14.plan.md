@@ -3,13 +3,13 @@ title: "Sports Data Completeness — Backfill, Denominators, League Breakdowns, 
 status: active
 priority: P0
 created: 2026-04-14
-superseded_by: [sports_data_pipeline_comprehensive_2026_04_16.plan.md]
+superseded_by: [sports_data_pipeline_comprehensive_2026_04_16.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [sports_data_pipeline_comprehensive_2026_04_16.plan.md](./sports_data_pipeline_comprehensive_2026_04_16.plan.md).**
+> [sports_data_pipeline_comprehensive_2026_04_16.md](./sports_data_pipeline_comprehensive_2026_04_16.md).**
 > Newer P0 covers same surface; concrete work tracked in §12.0 sports register Plans 2/4/9/11 Original scope retained
 > for history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
@@ -34,7 +34,7 @@ uncommitted changes.
 
 **Plan references:**
 
-- `plans/active/trigger_based_reference_data_2026_04_13.plan.md` — trigger-based refresh architecture
+- `plans/active/trigger_based_reference_data_2026_04_13.md` — trigger-based refresh architecture
 
 ---
 

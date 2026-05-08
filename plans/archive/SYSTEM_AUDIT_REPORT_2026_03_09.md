@@ -1,7 +1,7 @@
 # System Audit Report — 2026-03-09
 
 **Auditor:** Claude Sonnet 4.6 (automated multi-agent) **Baseline compared:** 2026-03-08 audit (Plan #30b —
-audit_remediation_2026_03_08.plan.md) **Scope:** All 59 manifest repos (workspace-manifest.json) **Code size limits
+audit_remediation_2026_03_08.md) **Scope:** All 59 manifest repos (workspace-manifest.json) **Code size limits
 applied:** MAX_FUNCTION_LINES=200 · MAX_CLASS_LINES=900 (updated this session)
 
 ---

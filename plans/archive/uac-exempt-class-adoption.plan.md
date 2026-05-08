@@ -18,7 +18,7 @@ Reference:
 - Completeness checker: `unified-api-contracts/scripts/check_uac_completeness.py`
 - SIT test: `system-integration-tests/tests/integration/test_uac_completeness.py`
 - Adoption checker: `unified-api-contracts/scripts/check_uac_adoption.py`
-- Adoption plan (separate): `orphan-uac-utilization.plan.md` (completed 2026-03-10)
+- Adoption plan (separate): `orphan-uac-utilization.md` (completed 2026-03-10)
 
 ---
 

@@ -180,7 +180,7 @@ depends_on:
 
 # codex/14-playbooks/cross-cutting/visibility-slicing.md UPDATE
 
-# plans/active/dashboard_services_grid_collapse_2026_04_21.plan.md (this file)
+# plans/active/dashboard_services_grid_collapse_2026_04_21.md (this file)
 
 # plans/active/INDEX.md INDEX
 
@@ -452,7 +452,7 @@ todos:
 
 # cross-cutting primitive, not a DART-exclusive sub-route. See
 
-# strategy_catalogue_3tier_surface_2026_04_21.plan.md for the full migration.
+# strategy_catalogue_3tier_surface_2026_04_21.md for the full migration.
 
 - id: p7-strategy-catalogue-primitive-migration content: |
   - [x] [AGENT] P1. DART tile's `strategy-catalogue` chip currently links to `/services/strategy-catalogue` (single-page

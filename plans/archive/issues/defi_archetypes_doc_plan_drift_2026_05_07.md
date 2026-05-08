@@ -3,11 +3,11 @@ title: "DeFi archetypes — doc ↔ plan drift (carry_staked_basis + leveraged_f
 created: 2026-05-07
 author: harsh
 source:
-  - plans/active/master_to_live_defi_2026_05_23.plan.md
-  - plans/active/defi_master_2026_05_07.plan.md
-  - plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md
-  - plans/archive/leveraged_leg_controller_2026_05_01.plan.md
-  - plans/archive/defi_pipeline_extension_2026_05_01.plan.md
+  - plans/active/master_to_live_defi_2026_05_23.md
+  - plans/active/defi_master_2026_05_07.md
+  - plans/archive/carry_staked_basis_structure_axis_2026_05_04.md
+  - plans/archive/leveraged_leg_controller_2026_05_01.md
+  - plans/archive/defi_pipeline_extension_2026_05_01.md
   - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md
   - codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md
   - codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md
@@ -23,7 +23,7 @@ locked_since: 2026-05-07
 > (tradfi 35,033 + sports 13,176 + cefi 119,152 + prediction 2,280 + defi 1,286,260; cefi + prediction now real impl per
 > UAC@ac218dc + instruments-service@d1c9928, no longer stubbed). Consolidator P0 briefly blocked tradfi / defi /
 > prediction merge; resolved at PM@341bb285. Detail in
-> [`../writegate_honest_coverage_endtoend_2026_05_06.plan.md`](../writegate_honest_coverage_endtoend_2026_05_06.plan.md)
+> [`../writegate_honest_coverage_endtoend_2026_05_06.md`](../writegate_honest_coverage_endtoend_2026_05_06.md)
 > § Phase 3.D.4. The archetype-canonicalisation streams below (5 streams) are NOT blocked by the data-status work and
 > proceed in parallel.
 
@@ -41,10 +41,10 @@ review-blocking" rule.
 
 **Evidence:**
 
-- [`master_to_live_defi_2026_05_23.plan.md`](../master_to_live_defi_2026_05_23.plan.md) headline: _"Both archetypes
+- [`master_to_live_defi_2026_05_23.md`](../master_to_live_defi_2026_05_23.md) headline: _"Both archetypes
   hedge on a 6-venue perp universe spanning CeFi (Bybit, Deribit, Binance, OKX) and DeFi perp DEXs (Hyperliquid, Aster)
   — all six must be live."_
-- [`defi_master_2026_05_07.plan.md`](../defi_master_2026_05_07.plan.md): _"2 DeFi perp DEXs live: Hyperliquid + Aster"_.
+- [`defi_master_2026_05_07.md`](../defi_master_2026_05_07.md): _"2 DeFi perp DEXs live: Hyperliquid + Aster"_.
   No mention of DRIFT.
 - [`carry-staked-basis.md:103-112`](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L103):
   HYPERLIQUID, BINANCE, BYBIT, OKX, DERIBIT, ASTER, GMX **all explicit `accepted=False`**. Only DRIFT accepts an LST as
@@ -79,7 +79,7 @@ Either way, the master plan + defi_master need to surface this dependency. Today
 
 **Evidence:**
 
-- [`carry_staked_basis_structure_axis_2026_05_04.plan.md`](../../archive/carry_staked_basis_structure_axis_2026_05_04.plan.md)
+- [`carry_staked_basis_structure_axis_2026_05_04.md`](../../archive/carry_staked_basis_structure_axis_2026_05_04.md)
   Phase 3a-catalog-regenerate (status: done, strategy-service `7074eee`): _"22 slots: 3 ETH-LST × 3 ETH-perp
   (HYPERLIQUID/DERIBIT/ASTER) × f∈{0.5,0.75} + 2 SOL-LST × HYPERLIQUID × f∈{0.5,0.75}"_. Phase 3b bumped catalog ceiling
   260 → 280.
@@ -107,14 +107,14 @@ note pointing at the codex doc.
 
 **Evidence:**
 
-- [`master_to_live_defi_2026_05_23.plan.md`](../master_to_live_defi_2026_05_23.plan.md): names the second DeFi archetype
+- [`master_to_live_defi_2026_05_23.md`](../master_to_live_defi_2026_05_23.md): names the second DeFi archetype
   `leveraged_funding_arb` — _"cross-venue funding-rate spread trade"_.
-- [`defi_master_2026_05_07.plan.md`](../defi_master_2026_05_07.plan.md): _"2 DeFi archetypes live:
+- [`defi_master_2026_05_07.md`](../defi_master_2026_05_07.md): _"2 DeFi archetypes live:
   `carry_staked_basis` + `leveraged_funding_arb`"_.
 - [`codex/09-strategy/architecture-v2/archetypes/`](../../../codex/09-strategy/architecture-v2/archetypes/) directory
   has 25 archetype docs. **No file named `leveraged-funding-arb.md`. No archetype named `LEVERAGED_FUNDING_ARB` in
   `StrategyArchetype` enum.**
-- [`defi_pipeline_extension_2026_05_01.plan.md`](../../archive/defi_pipeline_extension_2026_05_01.plan.md) names the
+- [`defi_pipeline_extension_2026_05_01.md`](../../archive/defi_pipeline_extension_2026_05_01.md) names the
   engine: _"the 9.34% Hyperliquid BTC short × 3 CeFi long book in `ArbitragePriceDispersionHierarchicalEngine`"_ — i.e.
   the engine actually lives under `ARBITRAGE_PRICE_DISPERSION`.
 
@@ -154,7 +154,7 @@ codex updates.
 
 **Evidence:**
 
-- [`leveraged_leg_controller_2026_05_01.plan.md`](../../archive/leveraged_leg_controller_2026_05_01.plan.md) introduces
+- [`leveraged_leg_controller_2026_05_01.md`](../../archive/leveraged_leg_controller_2026_05_01.md) introduces
   a generic delta-targeted multi-leg primitive. Phase 4 lists 11 strategy backports — `staked_basis.py`,
   `recursive_staked.py`, `basis_perp.py`, `price_dispersion.py`, `ml_directional/continuous.py`, etc. — replacing every
   bespoke `_build_legs` with `LegController.update`.
@@ -184,10 +184,10 @@ of an existing archetype.
 
 **Evidence:**
 
-- [`defi_pipeline_extension_2026_05_01.plan.md`](../../archive/defi_pipeline_extension_2026_05_01.plan.md): cross-venue
+- [`defi_pipeline_extension_2026_05_01.md`](../../archive/defi_pipeline_extension_2026_05_01.md): cross-venue
   funding arb runs at `target_leverage=1.0` today; at 3x = 18% net spread. Adds `MaxUnderlyingMove` +
   `INSTRUMENT_VOLATILITY_REGISTRY` primitive to clamp per-instrument.
-- [`leveraged_leg_controller_2026_05_01.plan.md`](../../archive/leveraged_leg_controller_2026_05_01.plan.md) Phase 1.2:
+- [`leveraged_leg_controller_2026_05_01.md`](../../archive/leveraged_leg_controller_2026_05_01.md) Phase 1.2:
   _"Promote target_leverage from per-archetype configs to StrategyInstanceDefinition"_.
 - [`arbitrage-price-dispersion.md:84-105`](../../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md#L84)
   config schema has **no `target_leverage` field** — only `max_capital_per_opp_pct: 0.05`.
@@ -321,7 +321,7 @@ the LEADER_HEDGE mode that funding arb requires.
   `carry-basis-perp.md` only.
 - Codex `carry-basis-perp.md` — keep its "Not in this archetype: cross-venue funding arb → `ARBITRAGE_PRICE_DISPERSION`"
   line; that becomes authoritative.
-- Master plan + `defi_master_2026_05_07.plan.md` — rename `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION` (with a
+- Master plan + `defi_master_2026_05_07.md` — rename `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION` (with a
   config-variant suffix where useful, e.g. `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged`).
 - Strategy-service catalog — confirm `_build_arbitrage_price_dispersion` (or equivalent) emits the
   funding-dispersion-leveraged slots; if not, add the config-variant rows.
@@ -344,7 +344,7 @@ uses leverage (i.e. all of them, since `LeveragedLegController` is workspace-wid
 ### Named successor plan
 
 Actionable todos for all of the above tracked in:
-[`plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md`](../../ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.plan.md).
+[`plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md).
 
 Plan covers four parallel streams:
 

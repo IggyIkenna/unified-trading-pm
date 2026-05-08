@@ -6,7 +6,7 @@ source:
   - instruments-service/instruments_service/engine/orchestrator.py:4768 (_fetch_footystats_odds day-level call)
   - unified-api-contracts/unified_api_contracts/canonical/domain/sports/_sports_prediction_contracts.py:198-287
     (SPORTS_ODDS_SNAPSHOT contract)
-  - plans/active/sports_master_2026_05_07.plan.md (sports_predictions_e2e folded in)
+  - plans/active/sports_master_2026_05_07.md (sports_predictions_e2e folded in)
   - CLAUDE.md "Four-category empty-output decision" category D — zero-activity bars precedent for "tradeable but
     illiquid"
 locked_by: live-defi-rollout
@@ -19,7 +19,7 @@ locked_since: 2026-05-08
 > compromises arbitrage / odds-movement features that depend on full bookmaker coverage per fixture. **Blast radius**:
 > instruments-service (orchestrator + odds_api adapter) + UAC (expected bookmaker × market sets per league tier) +
 > features-sports-service odds calculators + market-tick-data-service `SportsBucketAssignmentAdapter`. **Suggested
-> owner**: `sports_master_2026_05_07.plan.md` Phase 3 (sports_predictions_e2e half) OR new sub-plan.
+> owner**: `sports_master_2026_05_07.md` Phase 3 (sports_predictions_e2e half) OR new sub-plan.
 
 ## What I found
 

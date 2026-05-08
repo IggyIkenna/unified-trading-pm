@@ -103,7 +103,7 @@ isProject: true
 # UAC Schema Normalization — Complete Action Plan
 
 **SSOT:** unified-api-contracts/docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md **Feeds from:**
-[schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md) (Plan #0c) — any missing normalizer gaps
+[schema_contracts_full_audit.md](schema_contracts_full_audit.md) (Plan #0c) — any missing normalizer gaps
 identified in the 60-repo audit will be added to the todo list above.
 
 ---
@@ -192,8 +192,8 @@ footystats/understat/glassnode/coingecko/arkham/pyth/defillama/regulatory (P2/P3
 | Blocker                      | Type         | Resolution                                   |
 | ---------------------------- | ------------ | -------------------------------------------- |
 | VersiFi error schema unknown | `[EXTERNAL]` | Request from VersiFi or capture from sandbox |
-| API keys Phase 4 venues      | `[EXTERNAL]` | api_keys_and_auth.plan.md                    |
-| IBKR TWS VCR strategy        | `[STUB]`     | api_keys_and_auth.plan.md                    |
+| API keys Phase 4 venues      | `[EXTERNAL]` | api_keys_and_auth.md                    |
+| IBKR TWS VCR strategy        | `[STUB]`     | api_keys_and_auth.md                    |
 
 ---
 

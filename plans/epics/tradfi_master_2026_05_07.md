@@ -267,7 +267,7 @@ volume.
 Source issue archived. 26KB design RFC — operator decision 2026-05-08: **Option (a) split**. Phase 0 (catalog backfill —
 the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural fixes spanning UAC + MTDS
 
-- strategy-service + execution) land in NEW sub-plan `cme_polymarket_arb_2026_05_08.plan.md` (see Cross-references
+- strategy-service + execution) land in NEW sub-plan `cme_polymarket_arb_2026_05_08.md` (see Cross-references
   section below). Phases 1-5 are post-May-23 critical path.
 
 * [ ] [SCRIPT] P0. **Phase 0 — TradFi instruments-service backfill VM** for the 9 CME event-contract roots (ECES / ECBTC
@@ -284,7 +284,7 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 ## `available_at` adapter stamping (coordinated)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.plan.md)
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md.md)
 > Phase 1. TradFi adapters need explicit per-adapter `available_at` stamping. CME options chain + ES.OPT 11-cluster
 > bundles need per-cluster `available_at = cluster_bar_close_time` (depends on coordinator Phase 0 MDPS bar boundary
 > contract). VIX 15m sourcing layer (Barchart historical preload + Yahoo rolling + honest gap per CLAUDE.md "VIX 15m
@@ -309,7 +309,7 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `sports_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - VIX 15m layering: CLAUDE.md "VIX 15m source layering" workspace-wide rule.
@@ -317,7 +317,7 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 
 ## Folded plans (archived 2026-05-07)
 
-- `instrument_schema_cohesion_and_market_hours_2026_03_31.plan.md` — market-hours SSOT integration; P0 todos lifted.
-- `sp500_ml_readiness_master_2026_05_05.plan.md` — ES + VIX + ML pipeline; remaining work lifted.
-- `cefi_tradfi_tick_data_backfill_2026_04_10.plan.md` (TradFi half) — CeFi half went to `cefi_master`.
-- `market_tick_data_to_100pct_2026_05_05.plan.md` (TradFi slice) — full plan archived after split per asset_group.
+- `instrument_schema_cohesion_and_market_hours_2026_03_31.md` — market-hours SSOT integration; P0 todos lifted.
+- `sp500_ml_readiness_master_2026_05_05.md` — ES + VIX + ML pipeline; remaining work lifted.
+- `cefi_tradfi_tick_data_backfill_2026_04_10.md` (TradFi half) — CeFi half went to `cefi_master`.
+- `market_tick_data_to_100pct_2026_05_05.md` (TradFi slice) — full plan archived after split per asset_group.

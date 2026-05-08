@@ -7,9 +7,9 @@ author: ikenna
 source:
   - market-data-processing-service/market_data_processing_service/output_writer_service.py:194 (1440 NaN OHLC writeback
     — deprecated path)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md:2351-2430 (Wave 3.M zero-volume-bar adapter audit
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:2351-2430 (Wave 3.M zero-volume-bar adapter audit
     pending)
-  - plans/active/alerting_service_live_rules_2026_05_07.plan.md:52-203 (alert taxonomy — DEFI_FEATURE_STALE present but
+  - plans/active/alerting_service_live_rules_2026_05_07.md:52-203 (alert taxonomy — DEFI_FEATURE_STALE present but
     no TICK_STALENESS)
   - CLAUDE.md "Four-category empty-output decision" (categories A/B/C/D — D added 2026-05-07 evening)
   - CLAUDE.md "Live = batch" workspace principle
@@ -23,7 +23,7 @@ locked_since: 2026-05-08
 > smoke but blocks honest-coverage promise + production live observability. **Blast radius**:
 > market-data-processing-service (write-gate) + UAC (per-(venue, instrument, period) baseline SSOT) + alerting-service
 > (live tick-staleness consumer) + features-\* + execution-service (downstream freshness gates). **Suggested owner**:
-> writegate Phase 3.D.5 Wave 3.M+1 OR fold into `alerting_service_live_rules_2026_05_07.plan.md` Phase 1+ (cross-cuts
+> writegate Phase 3.D.5 Wave 3.M+1 OR fold into `alerting_service_live_rules_2026_05_07.md` Phase 1+ (cross-cuts
 > both).
 
 ## What I found
@@ -43,7 +43,7 @@ says ~1000 ticks is data-quality-suspected, not illiquidity. Currently:
 - No `liquidity_baseline` / `expected_tick_rate` / `rolling_tick_count` / `tick_rate_baseline` in MDPS code.
 - No `DATA_QUALITY_SUSPECTED_GAP` typed reason in `EMPTY_CONFIRMED_REASONS` closed set.
 - Search across MDPS, UAC, all active plans returned ZERO matches for these terms.
-- Wave 3.M ([writegate plan:2351-2430](../writegate_honest_coverage_endtoend_2026_05_06.plan.md#L2351-L2430)) defines
+- Wave 3.M ([writegate plan:2351-2430](../writegate_honest_coverage_endtoend_2026_05_06.md#L2351-L2430)) defines
   category D zero-volume-bar mechanism but doesn't define a 3rd state for "alive + zero ticks +
   baseline-says-shouldnt-be-zero."
 
@@ -56,7 +56,7 @@ migrated yet.
 The mirror-image of MDPS's batch validation: in live mode, watch for "instrument X hasn't produced a tick in 2× expected
 interval → STALE alert."
 
-- [alerting_service_live_rules_2026_05_07.plan.md:52-203](../alerting_service_live_rules_2026_05_07.plan.md#L52-L203)
+- [alerting_service_live_rules_2026_05_07.md:52-203](../alerting_service_live_rules_2026_05_07.md#L52-L203)
   covers `DEFI_FEATURE_STALE` (feature compute delays) and circuit-breaker codes, but NO per-(venue, instrument)
   tick-arrival freshness alert.
 - [unified-trading-library tests/unit/test_freshness_monitor.py](../../../unified-trading-library/tests/unit/test_freshness_monitor.py)

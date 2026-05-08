@@ -101,7 +101,7 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
   sports launchers + AF launcher + chain runner); UAC@`fb02104` (event_time field on CanonicalFixtureEvent — Phase 2.D)
 - **Recommendation**: KEEP ACTIVE. Heavy P0/P1 surface area + cross-plan coordination required
   (rename→writegate→fixture-recovery dedup chain). Some "ai/" plan refs (e.g.
-  `api_football_minimal_flattening_removal_2026_05_07.plan.md` for B.1) need verification — those are still in
+  `api_football_minimal_flattening_removal_2026_05_07.md` for B.1) need verification — those are still in
   `plans/ai/`. After 4 recovery VMs drain (ETA 2026-05-08), the post-recovery dedup script
   (`dedup_phantom_after_recovery.py`) is the critical-path next move. Do NOT flip B.1/C.2/C.4/C.6 to DONE — those are
   real shipped-code-pending plans.
@@ -123,7 +123,7 @@ Covers:
   - feature-store run. (Predictions ML training half lives in `predictions_master`.)
 
 **Not covered here**: predictions ML training + arb_calculator + Group E ML walk-forward (those belong in
-`predictions_master_2026_05_07.plan.md`).
+`predictions_master_2026_05_07.md`).
 
 ## Current state (2026-05-07)
 
@@ -153,13 +153,13 @@ Covers:
 ### Sports `data_available_at` → `available_at` rename (folded 2026-05-07; full DAG below)
 
 **Cross-plan coordination**: this rename is **Stage 1** of the workspace-wide manifest migration. See
-[`manifest_migration_master_2026_05_07.plan.md`](./manifest_migration_master_2026_05_07.plan.md) for the sequencing DAG,
+[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md.md) for the sequencing DAG,
 conflicts (esp. `batch_handler.py` overlap with writegate Phase 2.C), VM impact matrix, and operator pause-resume
 guidance. Stage 1 Phase 3 features-sports `batch_handler.py` rename SHOULD ship in the SAME commit as writegate Phase
 2.C `_ensure_timestamp` shim deletion (avoids two-commit churn on same lines).
 
-**Folded from `sports_data_available_at_rename_2026_05_07.plan.md`.** Original plan archived at
-`plans/archive/sports_data_available_at_rename_2026_05_07.plan.md`. Phase 1 SHIPPED via `instruments-service@8050477`
+**Folded from `sports_data_available_at_rename_2026_05_07.md`.** Original plan archived at
+`plans/archive/sports_data_available_at_rename_2026_05_07.md`. Phase 1 SHIPPED via `instruments-service@8050477`
 (migration script + 11 unit tests). Phases 2-4 below are pending operator action + atomic source-rename.
 
 **Why this matters now**: writegate plan Phase 2.C flips `LookaheadBiasError` to strict-mode workspace-wide. The flip
@@ -363,7 +363,7 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
-**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.plan.md` rows B.1 / C.2 / C.3 / C.4 / C.6 / C.7 /
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` rows B.1 / C.2 / C.3 / C.4 / C.6 / C.7 /
 C.10. Operator inspected the deployment-ui data-status panel + schema modals; the findings below all surfaced as
 sports-asset_group writer / contract / cadence issues.
 
@@ -405,7 +405,7 @@ FIXTURES for those leagues.
 
 #### B.1 — API-Football payload flattening (FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES)
 
-Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.plan.md` (5 phases). Owner-side todo:
+Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phases). Owner-side todo:
 
 - [ ] [SCRIPT] P0. UAC `unified_api_contracts/external/api_football/normalize.py:372-395` — replace 4 stub-pass-through
       normalizers (`normalize_fixture_stats`, `normalize_fixture_event`, `normalize_lineup`, `normalize_injury`) with
@@ -726,7 +726,7 @@ features silently miss bookmaker × market gaps.
 ## `available_at` + lookahead-bias coordination (2026-05-08 audit)
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.plan.md).
+> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md.md).
 > Sports is the canonical reference precedent: features-sports `_enforce_pit_sports`
 > ([data/writer.py:42-72](../../../features-sports-service/features_sports_service/data/writer.py#L42-L72)) shows the
 > writer-boundary `PointInTimeEnforcer(strict=True)` pattern other features-\* services should mirror. Sports historical
@@ -751,22 +751,22 @@ features silently miss bookmaker × market gaps.
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.plan.md`](../active/master_to_live_defi_2026_05_23.plan.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md.md).
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - Sports rename plan (KEPT ACTIVE — its own DAG):
-  [`sports_data_available_at_rename_2026_05_07.plan.md`](../archive/sports_data_available_at_rename_2026_05_07.plan.md).
+  [`sports_data_available_at_rename_2026_05_07.md`](../archive/sports_data_available_at_rename_2026_05_07.md).
 - Sports phantom-fixtures-recovery handover: `plans/ai/_sports_phantom_fixtures_recovery_handover_2026_05_06.md`.
 
 ## Folded plans (archived 2026-05-07)
 
-- `features_sports_honest_coverage_2026_05_05.plan.md` — full architecture spec; P1+ todos lifted above.
-- `sports_fixtures_truthset_recovery_2026_05_06.plan.md` — operator-triggered chain runner + audit.
-- `sports_phantom_recon_and_failure_triage_2026_05_01.plan.md` — operator decisions per source.
-- `sports_predictions_e2e_2026_05_05.plan.md` (sports half) — predictions ML training half went to `predictions_master`.
-- `market_tick_data_to_100pct_2026_05_05.plan.md` (sports slice) — full plan archived after split per asset_group.
+- `features_sports_honest_coverage_2026_05_05.md` — full architecture spec; P1+ todos lifted above.
+- `sports_fixtures_truthset_recovery_2026_05_06.md` — operator-triggered chain runner + audit.
+- `sports_phantom_recon_and_failure_triage_2026_05_01.md` — operator decisions per source.
+- `sports_predictions_e2e_2026_05_05.md` (sports half) — predictions ML training half went to `predictions_master`.
+- `market_tick_data_to_100pct_2026_05_05.md` (sports slice) — full plan archived after split per asset_group.
 
 ## Folded into this umbrella (archived 2026-05-07)
 
-- `sports_data_available_at_rename_2026_05_07.plan.md` — full 4-phase DAG lifted into the "Sports `data_available_at` →
+- `sports_data_available_at_rename_2026_05_07.md` — full 4-phase DAG lifted into the "Sports `data_available_at` →
   `available_at` rename" section above. Phase 1 SHIPPED; Phases 2-4 pending.

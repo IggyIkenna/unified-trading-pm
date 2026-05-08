@@ -31,7 +31,7 @@ refactor direction; undecided links rot and break triage discipline.
 
 ## Cross-references
 
-- **Sibling Wave A plans:** refactor*g1*{1,3,9,12,14}\_2026_04_20.plan.md
+- **Sibling Wave A plans:** refactor*g1*{1,3,9,12,14}\_2026_04_20.md
 - **Future alignment (G2):** G2.4 ML catalogue refactor — the build decisions here should not pre-empt that refactor's
   IA choices.
 - **Source of the 5 probable hrefs:** `codex/14-playbooks/page-triage/broken-links.md`
@@ -166,7 +166,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 5A through 5D of this plan:
-`plans/active/refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md`
+`plans/active/refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.md`
 
 ### Read-set (mandatory)
 

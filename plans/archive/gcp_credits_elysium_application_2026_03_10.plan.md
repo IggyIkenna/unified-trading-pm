@@ -219,5 +219,5 @@ AWS $40k credits active → migrate dev/staging workloads:
 
 ## Dependencies
 
-- `elysium_defi_lite_fork_2026_03_10.plan.md` (technical context for application)
-- `aws_migration.plan.md` (backup plan if GCP credits delayed)
+- `elysium_defi_lite_fork_2026_03_10.md` (technical context for application)
+- `aws_migration.md` (backup plan if GCP credits delayed)

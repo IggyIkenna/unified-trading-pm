@@ -35,7 +35,7 @@ of your own, push speculatively, or message Harsh directly — Tab 1 is your con
 5. **`cursor-configs/SUB_AGENT_MANDATORY_RULES.md`** — sub-agent inheritance rules (only relevant if YOU spawn
    `Task` sub-agents from inside your tab; for most tabs this is informational).
 6. **Your plan-of-record** — the specific plan named in your tab entry (e.g.
-   `cefi_master_2026_05_07.plan.md` for `cefi-babysit-tab`). This is where your todos live + where you flip
+   `cefi_master_2026_05_07.md` for `cefi-babysit-tab`). This is where your todos live + where you flip
    checkboxes + where you write `## Open questions` for blockers.
 
 ## The only 4 things you must internalise (everything else is in CLAUDE.md)

@@ -7,9 +7,9 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.6
-  - refactor_g1_1_phase_unification_2026_04_20.plan.md
-  - refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md
-  - refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md
+  - refactor_g1_1_phase_unification_2026_04_20.md
+  - refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md
+  - refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md
 # Wave G3-α — independent. Consumes G1.1 + G1.3 + G1.4 (all shipped).
 ---
 
@@ -45,9 +45,9 @@ surfaces.
 ## Mandatory read-set
 
 1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.6
-2. `refactor_g1_1_phase_unification_2026_04_20.plan.md`
-3. `refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md`
-4. `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`
+2. `refactor_g1_1_phase_unification_2026_04_20.md`
+3. `refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md`
+4. `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md`
 5. `unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing.spec.ts` — current state
 6. `unified-trading-system-ui/tests/e2e/playbooks/seed-persona.ts`
 7. `unified-trading-system-ui/lib/auth/personas.ts` — 15-20 personas post-G1.4
@@ -203,7 +203,7 @@ All must exist. STOP if missing.
 ### Task
 
 Execute every checkbox in Phases A through E of this plan:
-`plans/active/refactor_g3_6_visibility_slicing_e2e_expansion_2026_04_20.plan.md`
+`plans/active/refactor_g3_6_visibility_slicing_e2e_expansion_2026_04_20.md`
 
 ### Read-set (mandatory)
 

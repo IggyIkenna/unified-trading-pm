@@ -116,7 +116,7 @@ todos:
       - [ ] [AGENT] P0. Phase C of honest-coverage-metrics — deployment-api ingest
         of v5 columns + deployment-ui 4-state heatmap + filter toggle + retry
         action + Playwright validation. Currently dispatched (this session). Plan
-        ref: honest_coverage_metrics_2026_04_19.plan.md § phase-c-*.
+        ref: honest_coverage_metrics_2026_04_19.md § phase-c-*.
     status: todo
 
   - id: phase-4-per-service-coverage-page
@@ -151,7 +151,7 @@ isProject: true
 
 Honest-coverage-metrics Phase A + Phase B + MTDS bug fix + MDPS extension landed 2026-04-19/20. The ManifestWriter v5
 schema now lets every shard ingestion attempt be recorded as one of `captured` / `empty_confirmed` / `attempted_failed`
-per the [plan](honest_coverage_metrics_2026_04_19.plan.md). The remaining work is **operational**: actually exercise the
+per the [plan](honest_coverage_metrics_2026_04_19.md). The remaining work is **operational**: actually exercise the
 new write path across every (category × service × shard) cell so the Data Status heatmap lights up honestly.
 
 **Definition of "proper coverage" for this plan**:
@@ -329,7 +329,7 @@ Total: ~5-7 focused agent sessions over ~2 weeks elapsed time.
 ## Handover prompt for the next agent
 
 ```
-Read this plan first: unified-trading-pm/plans/active/proper_coverage_roadmap_2026_04_20.plan.md
+Read this plan first: unified-trading-pm/plans/active/proper_coverage_roadmap_2026_04_20.md
 
 Pick the next undone P0 todo (in order: phase-1-instruments-deferred, then
 phase-1-cross-cat-audit, then phase-2-prediction-backfill, then phase-3-reconcile-manifests).
@@ -345,7 +345,7 @@ particular requires real wall-clock time waiting for VMs to backfill.
 
 ## SSOT references
 
-- Phase A/B plan: `unified-trading-pm/plans/active/honest_coverage_metrics_2026_04_19.plan.md`
+- Phase A/B plan: `unified-trading-pm/plans/active/honest_coverage_metrics_2026_04_19.md`
 - Coverage matrix: `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`
 - Tarball flags: `deployment-service/scripts/vm/README.md`
 - VM launchers: `deployment-service/scripts/vm/`

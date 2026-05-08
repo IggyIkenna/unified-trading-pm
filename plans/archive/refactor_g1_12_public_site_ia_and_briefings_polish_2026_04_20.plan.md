@@ -36,7 +36,7 @@ changes, no routes added/removed, no backend.
 
 ## Cross-references
 
-- **Sibling Wave A plans:** refactor*g1*{1,3,5,9,14}\_2026_04_20.plan.md
+- **Sibling Wave A plans:** refactor*g1*{1,3,5,9,14}\_2026_04_20.md
 - **G1.3 LOCKED-VISIBLE** — sibling UI pattern; public site itself does not need LOCKED-VISIBLE (public pages are
   public) but tile components reused on `/platform` or similar surfaces do.
 - **Rules cited:** `_ssot-rules/02-tone-and-posture.md` (voice), `_ssot-rules/06-show-dont-show-discipline.md` (what to
@@ -207,7 +207,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 12A through 12D of this plan:
-`plans/active/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`
+`plans/active/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.md`
 
 ### Read-set (mandatory)
 

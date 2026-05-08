@@ -3,7 +3,7 @@ title: "DeFi 988-missing-dates audit — actionable breakdown by (chain, protoco
 created: 2026-05-08
 author: defi-988-audit-tab (Tab 6)
 source:
-  - plans/active/defi_master_2026_05_07.plan.md § "Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates
+  - plans/active/defi_master_2026_05_07.md § "Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates
     missing)"
   - unified_api_contracts/registry/chain_env.py (CHAIN_GENESIS_DATES + PROTOCOL_LAUNCH_DATES SSOTs)
   - 10 DeFi GCS manifest buckets at gs://*-{PID}/_index/availability_index.parquet (probed 2026-05-08 05:30 UTC)
@@ -15,7 +15,7 @@ locked_since: 2026-05-08
 
 > **Severity**: P1 — diagnostic-only audit; no code changes. Outputs feed Ikenna's D4 DeFi launches and Harsh's D4
 > manifest rescan to target the `carry_staked_basis` + `leveraged_funding_arb` chain set first. **Blast radius**: defi
-> asset_group only — `defi_master_2026_05_07.plan.md` is the parent. **Suggested owner**: defi_master plan (operator
+> asset_group only — `defi_master_2026_05_07.md` is the parent. **Suggested owner**: defi_master plan (operator
 > triage which findings fold into D4 backfill todos).
 
 ## Top-line numbers
@@ -168,7 +168,7 @@ The remaining captured rows (4,757) cover the live window correctly.
 
 ## Recommendation
 
-**Fold-in**: priorities #1 + #5 fold into existing `defi_master_2026_05_07.plan.md` "Lending-indices VM run-quality
+**Fold-in**: priorities #1 + #5 fold into existing `defi_master_2026_05_07.md` "Lending-indices VM run-quality
 bugs" section (which already cross-references Tab 5's plan-of-record). Priority #2 folds into the existing P0 todo on
 line 357-359. Priorities #3 and #4 are NEW work that needs operator priority decision before adding as P0 todos to
 defi_master:

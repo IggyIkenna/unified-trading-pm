@@ -3,7 +3,7 @@ name: Strategy Architecture v2 — Phases 3-11 Handoff
 status: active
 owner: iggy
 started: 2026-04-17
-depends_on: strategy_architecture_v2_2026_04_17.plan.md
+depends_on: strategy_architecture_v2_2026_04_17.md
 parent_docs: codex/09-strategy/architecture-v2/
 locked_by: live-defi-rollout
 locked_since: 2026-04-17

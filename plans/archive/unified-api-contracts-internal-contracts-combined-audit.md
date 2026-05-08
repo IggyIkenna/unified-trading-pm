@@ -11,7 +11,7 @@ isProject: false
 
 ## AC/UIC Refactor — Layout Status & QG Blockers
 
-**Plans:** [ac_package_layout_refactor_45f5eb10.plan.md](ac_package_layout_refactor_45f5eb10.plan.md)
+**Plans:** [ac_package_layout_refactor_45f5eb10.md](ac_package_layout_refactor_45f5eb10.md)
 
 | Phase                                    | Status                                                                                                      |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |

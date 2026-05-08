@@ -34,8 +34,8 @@ locked_since: 2026-05-08
 > (per-cluster expiry handling for daily binary contracts) + MTDS Databento path (binary-outcome shard atom + cluster
 > validation per (root, expiry-day)) + MDPS (binary-outcome OHLCV / mid-price candle treatment) + strategy-service
 > (cross-venue arb archetype declaration with CME + Polymarket as paired legs) + execution-service (CME ClearPort
-> connector for the TradFi leg). **Suggested owner**: split between `tradfi_master_2026_05_07.plan.md` (dedicated
-> InstrumentType + arb-leg metadata) and `predictions_master_2026_05_07.plan.md` (canonical_question_group linkage).
+> connector for the TradFi leg). **Suggested owner**: split between `tradfi_master_2026_05_07.md` (dedicated
+> InstrumentType + arb-leg metadata) and `predictions_master_2026_05_07.md` (canonical_question_group linkage).
 > Recommend a **shared sub-plan** since the value lives at the boundary.
 
 ## What I found

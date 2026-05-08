@@ -18,7 +18,7 @@ orchestrate them.
 ## Layer model
 
 ```
-master_to_live_defi_2026_05_23.plan.md   ← umbrella-of-epics (May-23 cutover master)
+master_to_live_defi_2026_05_23.md   ← umbrella-of-epics (May-23 cutover master)
         │
         ├── plans/epics/  (this dir)     ← 6 domain epics + 1 cross-cutting epic
         │       │
@@ -85,5 +85,5 @@ ships or is officially deferred. After May 23 cutover:
 - Epics whose end-state is partially shipped → split into a "shipped" archive entry + a "residual" follow-up plan in
   `plans/active/`.
 
-The May-23 cutover master (`master_to_live_defi_2026_05_23.plan.md`) tracks epic-level completion in its readiness
+The May-23 cutover master (`master_to_live_defi_2026_05_23.md`) tracks epic-level completion in its readiness
 matrix; sub-plan tactical state stays in the sub-plans.

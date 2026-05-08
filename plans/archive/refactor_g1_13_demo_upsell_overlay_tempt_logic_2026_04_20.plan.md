@@ -8,8 +8,8 @@ locked_since: 2026-04-20
 depends_on:
   - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.13
   - codex/14-playbooks/demo-ops/upsell-overlays.md
-  - refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md
-  - refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md
+  - refactor_g1_7_restriction_profile_engine_2026_04_20.md
+  - refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md
 # Wave F — parallel with refactor_g1_4. Both depend on G1.7 + G1.10.
 ---
 
@@ -35,10 +35,10 @@ transform applied between questionnaire ingestion and G1.7 `resolve_profile` exe
 
 ## Cross-references
 
-- **Upstream (Wave D):** `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md` — extends this engine
-- **Upstream (Wave E):** `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md` — consumes
+- **Upstream (Wave D):** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` — extends this engine
+- **Upstream (Wave E):** `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md` — consumes
   questionnaire response
-- **Sibling Wave F:** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md`
+- **Sibling Wave F:** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md`
 - **Demo-ops source:** `codex/14-playbooks/demo-ops/upsell-overlays.md`,
   `codex/14-playbooks/demo-ops/demo-restriction-profiles.md`,
   `codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
@@ -253,7 +253,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 13A through 13E of this plan:
-`plans/active/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md`
+`plans/active/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.md`
 
 ### Read-set (mandatory)
 

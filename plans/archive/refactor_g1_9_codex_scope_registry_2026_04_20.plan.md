@@ -35,11 +35,11 @@ customer-facing help surfaces in unified-trading-system-ui).
 
 ## Cross-references
 
-- **Sibling Wave A plans:** refactor*g1*{1,3,5,12,14}\_2026_04_20.plan.md
+- **Sibling Wave A plans:** refactor*g1*{1,3,5,12,14}\_2026_04_20.md
 - **Rules cited:** `_ssot-rules/02-tone-and-posture.md`, `_ssot-rules/06-show-dont-show-discipline.md`,
   `_ssot-rules/07-data-licensing-boundaries.md`, `_ssot-rules/09-internal-commercial-oneliners.md`
 - **SSOT index:** `codex/00-SSOT-INDEX.md`
-- **Parent stage plan:** `plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md` §3E
+- **Parent stage plan:** `plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.md` §3E
 
 ## Mandatory read-set
 
@@ -184,7 +184,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 9A through 9E of this plan:
-`plans/active/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md`
+`plans/active/refactor_g1_9_codex_scope_registry_2026_04_20.md`
 
 ### Read-set (mandatory)
 

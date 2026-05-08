@@ -1,7 +1,7 @@
 ---
 title: "Signal Leasing — Phase 1 pre-audit manifest"
 status: active
-companion_to: signal_leasing_broadcast_architecture_2026_04_20.plan.md
+companion_to: signal_leasing_broadcast_architecture_2026_04_20.md
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 ---
@@ -9,7 +9,7 @@ locked_since: 2026-04-20
 # Pre-audit manifest — signal leasing blast radius
 
 Companion to
-[active/signal_leasing_broadcast_architecture_2026_04_20.plan.md](active/signal_leasing_broadcast_architecture_2026_04_20.plan.md).
+[active/signal_leasing_broadcast_architecture_2026_04_20.md](active/signal_leasing_broadcast_architecture_2026_04_20.md).
 Built from a workspace-wide scan of 8 repos on 2026-04-20. Consume in Phases 2-10; do not re-scan.
 
 All paths are absolute under `$WORKSPACE_ROOT = /Users/ikennaigboaka/Code/unified-trading-system-repos`.
@@ -394,9 +394,9 @@ strategy is also leased externally; emission happens BEFORE execution, not inste
 - `unified-trading-pm/cursor-rules/adapters/` — optional new cursor rule `signal-broadcast-failure-isolation.mdc` if
   plan §Phase 6 decides it's worth its own rule file. Recommendation per plan: likely skip (already covered by existing
   adapter-error-classification rule).
-- `unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md` — tick Phase 1 box
+- `unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.md` — tick Phase 1 box
   - reference this manifest (done in Phase 1 wrap-up commit).
-- `unified-trading-pm/plans/active/path_to_100m_finalization_2026_04_20.plan.md` — tick linked phase if any references
+- `unified-trading-pm/plans/active/path_to_100m_finalization_2026_04_20.md` — tick linked phase if any references
   signal leasing backend enablement.
 - `unified-trading-pm/codex/14-playbooks/roadmap/plan-references.md` — add this plan to the roadmap index.
 

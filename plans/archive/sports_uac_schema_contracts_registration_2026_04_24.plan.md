@@ -355,5 +355,5 @@ registry-init race in tests. Phase 3 is **independent** of Phases 0-2 — can be
 - Availability-manifest v5 honest-coverage plan: `codex/02-data/availability-manifest-and-data-status.md`. That work is
   about **shard coverage** (did we capture?). This plan is about **column schemas** (what did we capture?). The two are
   orthogonal.
-- Sports roadmap master execution: `plans/active/sports_roadmap_master_execution_2026_04_21.plan.md` — this plan is a
+- Sports roadmap master execution: `plans/active/sports_roadmap_master_execution_2026_04_21.md` — this plan is a
   follow-up to the visibility/data-status strand of that roadmap.

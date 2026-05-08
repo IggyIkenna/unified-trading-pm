@@ -513,7 +513,7 @@ Phase 5 (Docs)
 
 ```
 Continue from the plan at:
-unified-trading-pm/plans/active/share_class_architecture_2026_04_01.plan.md
+unified-trading-pm/plans/active/share_class_architecture_2026_04_01.md
 
 Key context:
 - ShareClass concept applies to BOTH DeFi and CeFi

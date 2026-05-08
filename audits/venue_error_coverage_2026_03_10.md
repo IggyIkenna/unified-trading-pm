@@ -1,7 +1,7 @@
 # Venue Error Coverage Audit — 2026-03-10
 
 audit_date: 2026-03-10 phase: Phase 0 (read-only — no code changes) auditor: Claude Code (claude-sonnet-4-6) plan:
-unified-trading-pm/plans/active/error_normalisation_unknown_exchanges_2026_03_10.plan.md
+unified-trading-pm/plans/active/error_normalisation_unknown_exchanges_2026_03_10.md
 
 ---
 

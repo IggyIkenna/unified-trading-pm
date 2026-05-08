@@ -29,7 +29,7 @@ else
 fi
 
 # Count active plans
-active_plan_count=$(find unified-trading-pm/plans/active -name '*.plan.md' 2>/dev/null | wc -l | tr -d ' ')
+active_plan_count=$(find unified-trading-pm/plans/active -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
 emit "§9" "active plan count" "PASS" "$active_plan_count active plans"
 
 # Orphan repos: pyproject.toml exists but not in manifest

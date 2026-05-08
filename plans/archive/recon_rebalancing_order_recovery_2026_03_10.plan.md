@@ -101,7 +101,7 @@ isProject: false
 status: active priority: P0 owner: backend target: 2026-03-19
 
 > ⚠️ **M4 SEQUENCING NOTE (2026-03-11):** This plan adds 8 UEI events to `unified-events-interface/schemas.py`. These
-> events are tracked in `uei_pending_event_additions.plan.md` — coordinate all UEI additions as a single PR batch to
+> events are tracked in `uei_pending_event_additions.md` — coordinate all UEI additions as a single PR batch to
 > avoid schemas.py merge conflicts.
 >
 > **M5 UNBLOCKED (2026-03-11):** `error_normalisation_unknown_exchanges_2026_03_10` Phase 1 (P1.1
@@ -388,6 +388,6 @@ File: `system-integration-tests/tests/integration/test_recon_rebalancing.py`
 
 ## Dependencies
 
-- `stub_completion_interfaces_and_infra.plan.md` (UPI adapters needed for DeFi execution)
-- `error_normalisation_unknown_exchanges_2026_03_10.plan.md` (canonical errors in recovery logic)
-- `api_keys_and_auth.plan.md` Phase 2–4 (DeFi protocol keys for yield monitoring)
+- `stub_completion_interfaces_and_infra.md` (UPI adapters needed for DeFi execution)
+- `error_normalisation_unknown_exchanges_2026_03_10.md` (canonical errors in recovery logic)
+- `api_keys_and_auth.md` Phase 2–4 (DeFi protocol keys for yield monitoring)

@@ -34,9 +34,9 @@ depends on G1.4 completing so its new persona screenshots exist to be embedded.
 
 ## Cross-references
 
-- **Sibling Wave A plans:** refactor*g1*{1,3,5,9,12}\_2026_04_20.plan.md — all 5 directly relevant as they're the other
+- **Sibling Wave A plans:** refactor*g1*{1,3,5,9,12}\_2026_04_20.md — all 5 directly relevant as they're the other
   Wave A items that land before this deck's markdown refresh is meaningful.
-- **Wave F dependency (HTML stretch):** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md` — provides
+- **Wave F dependency (HTML stretch):** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md` — provides
   new personas → new screenshots.
 - **Source deck:** `codex/14-playbooks/presentations/target-experience-post-refactor.md`
 - **Existing screenshots:** `codex/14-playbooks/presentations/screenshots/` — 7 files (admin-dashboard.png,
@@ -49,7 +49,7 @@ depends on G1.4 completing so its new persona screenshots exist to be embedded.
 1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` (full — especially §1.14 amendment)
 2. `codex/14-playbooks/presentations/target-experience-post-refactor.md` (full — the current deck)
 3. `codex/14-playbooks/presentations/screenshots/` — list all existing screenshots
-4. All 13 sibling `plans/active/refactor_g1_*_2026_04_20.plan.md` files (to extract each item's deliverable statement
+4. All 13 sibling `plans/active/refactor_g1_*_2026_04_20.md` files (to extract each item's deliverable statement
    for slide content)
 
 ## Out of scope
@@ -86,7 +86,7 @@ depends on G1.4 completing so its new persona screenshots exist to be embedded.
 ### Phase 14C — Update deck metadata + cross-links
 
 - [x] [AGENT] P0. Update deck title, version, date to "v2 — 2026-04-20, post 14-item G1 amendment".
-- [x] [AGENT] P0. Cross-link each slide to its corresponding `plans/active/refactor_g1_*_2026_04_20.plan.md` file.
+- [x] [AGENT] P0. Cross-link each slide to its corresponding `plans/active/refactor_g1_*_2026_04_20.md` file.
 - [x] [AGENT] P0. Update any superseded table (e.g. "Phases → deliverables").
 
 ### Phase 14D — Optional HTML stretch (AFTER G1.4 lands)
@@ -123,7 +123,7 @@ depends on G1.4 completing so its new persona screenshots exist to be embedded.
 1. Deck mentions "14 G1 items" (not 9) throughout.
 2. 7 new slides present with the stated titles.
 3. Every one of the 14 G1 items has ≥1 slide reference.
-4. Every slide cross-links to its `refactor_g1_*_2026_04_20.plan.md`.
+4. Every slide cross-links to its `refactor_g1_*_2026_04_20.md`.
 5. PM QG green.
 6. (If HTML stretch landed) deck renders in a browser with screenshots visible.
 
@@ -173,7 +173,7 @@ cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm
 git checkout live-defi-rollout && git pull
 ls codex/14-playbooks/presentations/target-experience-post-refactor.md
 ls codex/14-playbooks/presentations/screenshots/   # expect 7 pngs
-ls plans/active/refactor_g1_*_2026_04_20.plan.md 2>&1 | wc -l   # expect 14 once all plans land; safe to run partial on the first 13
+ls plans/active/refactor_g1_*_2026_04_20.md 2>&1 | wc -l   # expect 14 once all plans land; safe to run partial on the first 13
 ```
 
 All must exist. STOP if any missing.
@@ -188,7 +188,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 14A through 14E of this plan (14D is optional; blocks on G1.4):
-`plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md`
+`plans/active/refactor_g1_14_presentation_deck_refresh_2026_04_20.md`
 
 ### Read-set (mandatory)
 

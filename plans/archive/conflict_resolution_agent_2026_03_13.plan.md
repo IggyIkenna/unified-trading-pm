@@ -120,7 +120,7 @@ conflict-resolution-agent.yml (unified-trading-pm)
   ├── Context read
   │     cat unified-trading-pm/AGENTS.md
   │     cat unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
-  │     cat unified-trading-pm/plans/active/*.plan.md (head -200 for token budget)
+  │     cat unified-trading-pm/plans/active/*.md (head -200 for token budget)
   │
   ├── Surface conflicts
   │     git checkout $TARGET_BRANCH

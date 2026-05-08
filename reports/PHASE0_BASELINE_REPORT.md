@@ -1,6 +1,6 @@
 # Phase 0 Baseline Report
 
-**Plan:** phase0_standards_enforcement.plan.md **Generated:** 2026-03-05 **Purpose:** Establish verified baseline before
+**Plan:** phase0_standards_enforcement.md **Generated:** 2026-03-05 **Purpose:** Establish verified baseline before
 Phase 1/2/3 hardening
 
 ---

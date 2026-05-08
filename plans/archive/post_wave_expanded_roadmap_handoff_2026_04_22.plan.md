@@ -26,7 +26,7 @@ This file is the **session-spanning handoff roadmap** — a single document that
 2026-04-22, so a fresh-context Claude can pick up without re-reading 10 sub-agent transcripts.
 
 **SSOT for sports-specific work**: `codex/02-data/sports-scheduling-and-sharding.md` §12. **SSOT for master execution
-pattern**: `plans/active/sports_roadmap_master_execution_2026_04_21.plan.md`. **SSOT for session memory**:
+pattern**: `plans/active/sports_roadmap_master_execution_2026_04_21.md`. **SSOT for session memory**:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/MEMORY.md`.
 **Active feature branch**: `live-defi-rollout` (read from `workspace-manifest.json`).
 
@@ -104,7 +104,7 @@ landed substantive work before this handoff was written.
   per-fixture trigger dispatches.
 - **Post-purge SPORTS UI sanity pass** — after Plan 9 purge-apply completes: navigate SPORTS → every data_type → confirm
   per-league rendering across 95 leagues with no stale unsharded rows.
-- **Plan archive unlocks** — `mtds_per_instrument_sentinels_2026_04_21.plan.md` (all todos flipped per earlier MEMORY)
+- **Plan archive unlocks** — `mtds_per_instrument_sentinels_2026_04_21.md` (all todos flipped per earlier MEMORY)
   awaits `[unlock-plan]` human commit.
 
 ## Known sports gaps NOT covered by any plan
@@ -185,8 +185,8 @@ landed substantive work before this handoff was written.
 If context runs out during wave-3 completion:
 
 1. **Source of truth for sports roadmap**: `codex/02-data/sports-scheduling-and-sharding.md` §12.
-2. **Master execution plan**: `plans/active/sports_roadmap_master_execution_2026_04_21.plan.md`.
-3. **Post-wave handoff (this file)**: `plans/active/post_wave_expanded_roadmap_handoff_2026_04_22.plan.md`.
+2. **Master execution plan**: `plans/active/sports_roadmap_master_execution_2026_04_21.md`.
+3. **Post-wave handoff (this file)**: `plans/active/post_wave_expanded_roadmap_handoff_2026_04_22.md`.
 4. **Memory file**:
    `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/MEMORY.md`.
 5. **Branch**: `live-defi-rollout` (from `workspace-manifest.json.active_feature_branch`).
@@ -198,7 +198,7 @@ If context runs out during wave-3 completion:
 **One-sentence wave-3 pickup dispatch:**
 
 > "Re-dispatch wave-3 sub-agents A-F sequentially (not parallel) per
-> `plans/active/post_wave_expanded_roadmap_handoff_2026_04_22.plan.md`. API rate limits forced the original parallel
+> `plans/active/post_wave_expanded_roadmap_handoff_2026_04_22.md`. API rate limits forced the original parallel
 > dispatch to fail. Start with B (Plan 13 execution) since A may already be landing; then C (Plan 11), D (Plan 12), E
 > (Plans 14/15/16 authorship), F (QG residuals). Monitor `/tmp/af-chain-progress.log` for Plan 2 chain status. Plans
 > 11/12/13 plan files already exist in `plans/active/`."
@@ -225,7 +225,7 @@ If context runs out during wave-3 completion:
 
 ## Cross-refs
 
-- Master execution: `plans/active/sports_roadmap_master_execution_2026_04_21.plan.md`
+- Master execution: `plans/active/sports_roadmap_master_execution_2026_04_21.md`
 - Wave-2 follow-ups: Plans 11 (`18bb85eb`), 12 (`e03e4ff3`), 13 (`5cf2d835`)
 - Session memory: `project_sports_roadmap_master_execution_wave_2026_04_21.md` +
   `project_sports_roadmap_wave2_crisis_and_new_plans_2026_04_22.md`

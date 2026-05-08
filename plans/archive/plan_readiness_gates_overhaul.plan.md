@@ -62,7 +62,7 @@ todos:
     status: todo
     note: ""
   - id: phase-3-verify
-    content: Verify all active .plan.md files have completion_gates + repo_gates
+    content: Verify all active .md files have completion_gates + repo_gates
     status: todo
     note: ""
 

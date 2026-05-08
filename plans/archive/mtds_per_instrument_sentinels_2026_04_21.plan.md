@@ -171,8 +171,8 @@ commit).
 - `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md` — v5 schema with `instrument_id` /
   `instrument_type` columns already present.
 - `market-tick-data-service bd24295` — Phase 6d Tier-2 sentinel orchestration (reference pattern).
-- `plans/active/availability_manifest_v4_and_data_status_2026_04_13.plan.md` — parent v4→v5 plan.
-- `plans/active/honest_coverage_metrics_2026_04_19.plan.md` — Phase B record_empty / record_failed contract.
+- `plans/active/availability_manifest_v4_and_data_status_2026_04_13.md` — parent v4→v5 plan.
+- `plans/active/honest_coverage_metrics_2026_04_19.md` — Phase B record_empty / record_failed contract.
 
 ### Wave log
 

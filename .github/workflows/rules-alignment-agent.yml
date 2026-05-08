@@ -17,7 +17,7 @@ on:
     inputs:
       plan_file:
         description:
-          "Specific plan file to check (relative path, e.g. plans/active/foo.plan.md). Leave empty to check all recent
+          "Specific plan file to check (relative path, e.g. plans/active/foo.md). Leave empty to check all recent
           changes."
         required: false
         default: ""
@@ -73,8 +73,8 @@ jobs:
       - name: Identify changed plan files
         id: changed-plans
         run: |
-          if [ -n "${{ inputs.plan_file }}" ]; then
-            CHANGED="${{ inputs.plan_file }}"
+          if [ -n "${{ inputs.md_file }}" ]; then
+            CHANGED="${{ inputs.md_file }}"
           else
             CHANGED=$(git diff HEAD~1 --name-only -- 'plans/active/' | tr '\n' ' ')
           fi

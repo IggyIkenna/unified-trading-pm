@@ -1,7 +1,7 @@
 # Unified Market Interface — Production Readiness Audit Report
 
-**Date:** 2026-03-13  
-**Scope:** unified-market-interface (library)  
+**Date:** 2026-03-13
+**Scope:** unified-market-interface (library)
 **Reference:** unified-trading-pm/plans/audit/trading_system_audit_prompt.md
 
 ---
@@ -55,7 +55,7 @@
 
 | Criterion      | Status | Evidence                                                                                                                                                                                                                                                                                                                |
 | -------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Stub count ≤10 | WARN   | 47 NotImplementedError total. Of these: ~15 in abstract base classes (api.py, base\_\*\_adapter.py, websocket/manager.py) — allowed per audit prompt. ~32 in concrete adapters (no API keys, or not-yet-implemented methods). Each concrete stub should have plan todo in stub_completion_interfaces_and_infra.plan.md. |
+| Stub count ≤10 | WARN   | 47 NotImplementedError total. Of these: ~15 in abstract base classes (api.py, base\_\*\_adapter.py, websocket/manager.py) — allowed per audit prompt. ~32 in concrete adapters (no API keys, or not-yet-implemented methods). Each concrete stub should have plan todo in stub_completion_interfaces_and_infra.md. |
 
 ---
 
@@ -67,7 +67,7 @@
 
 ## Top Blocking Findings (Remediation)
 
-1. **§13** — 32 concrete adapter NotImplementedError: Add each to stub_completion_interfaces_and_infra.plan.md or
+1. **§13** — 32 concrete adapter NotImplementedError: Add each to stub_completion_interfaces_and_infra.md or
    implement.
 2. **§2** — 4 files >900L: Documented in QUALITY_GATE_BYPASS_AUDIT §2.1; consider splitting in future.
 3. **§8** — 56 # noqa: Documented; migrate to ruff config where possible.

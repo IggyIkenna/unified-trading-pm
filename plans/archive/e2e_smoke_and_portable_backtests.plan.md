@@ -90,7 +90,7 @@ isProject: false
 
 # E2E Smoke and Portable Backtests Plan (Merged)
 
-**References:** E2E_SMOKE_PLAN.md, PORTABLE_BACKTESTS_PLAN.md, master_pre_deployment_plan_chain.plan.md **SSOT:**
+**References:** E2E_SMOKE_PLAN.md, PORTABLE_BACKTESTS_PLAN.md, master_pre_deployment_plan_chain.md **SSOT:**
 system-integration-tests/README.md, unified-trading-codex integration-testing-layers.md **Order:** Day 8–9 in execution
 sequence (Plans 7–8 in chain)
 

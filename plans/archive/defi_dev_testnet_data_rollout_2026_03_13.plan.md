@@ -27,14 +27,14 @@ todos:
     status: pending
   - id: update-dev-onboarding-plan
     content:
-      "Update unified-trading-pm/plans/active/ai/dev_environment_automated_onboarding_2026_03_10.plan.md: (1) Remove
+      "Update unified-trading-pm/plans/active/ai/dev_environment_automated_onboarding_2026_03_10.md: (1) Remove
       seed-dev-project.sh step 8 from the setup script; (2) Change all GCP_PROJECT_ID references from
       unified-trading-dev to central-element-323112; (3) Note that setup-dev-*.sh scripts are retired; (4) Add step:
       terraform apply -var=environment=dev as canonical dev provisioning."
     status: pending
   - id: update-api-keys-plan-defi
     content:
-      "Update unified-trading-pm/plans/ai/api_keys_and_auth.plan.md — add DeFi VCR todos: thegraph_aave,
+      "Update unified-trading-pm/plans/ai/api_keys_and_auth.md — add DeFi VCR todos: thegraph_aave,
       thegraph_morpho, thegraph_uniswap_v3, alchemy_eth_call, defillama_tvl, defillama_yields. Add SM gap entries:
       alchemy-api-key-testnet (Sepolia RPC), tenderly-fork-rpc-url, hyperliquid-testnet-api-credentials,
       wallet-dev-private-key."

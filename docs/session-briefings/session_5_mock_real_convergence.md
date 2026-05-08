@@ -47,8 +47,8 @@ calculator, the mock doesn't change — it has its own copy. This defeats the en
 
 | Plan   | Phases                      | Todos Remaining | Reference                                                |
 | ------ | --------------------------- | --------------- | -------------------------------------------------------- |
-| Plan B | Phase 1 (service callbacks) | ~20 todos       | plans/active/plan_b_config_hot_reload_2026_03_21.plan.md |
-| Plan C | Phase 1 (fix API mock gaps) | ~5 todos        | plans/active/plan_c_domain_data_api_2026_03_21.plan.md   |
+| Plan B | Phase 1 (service callbacks) | ~20 todos       | plans/active/plan_b_config_hot_reload_2026_03_21.md |
+| Plan C | Phase 1 (fix API mock gaps) | ~5 todos        | plans/active/plan_c_domain_data_api_2026_03_21.md   |
 
 ## What's Already Done (Don't Redo)
 

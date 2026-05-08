@@ -11,7 +11,7 @@ depends_on:
   - codex/14-playbooks/demo-ops/pre-demo-curation-rules.md
   - codex/14-playbooks/demo-ops/dart-demo-modes.md
   - codex/14-playbooks/demo-ops/demo-decision-matrix.md
-  - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md
+  - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md
 # Wave D — parallel with refactor_g1_11. Downstream (Wave E): refactor_g1_10; (Wave F): refactor_g1_{4,13}.
 ---
 
@@ -58,13 +58,13 @@ Environment-agnostic: identical engine behaviour in dev / staging / prod. Only t
 
 ## Cross-references
 
-- **Upstream (Wave C):** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md` —
+- **Upstream (Wave C):** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md` —
   hard dep (derivation engine + access_control)
-- **Sibling Wave D:** `refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md` — parallel; both depend on G1.6
-- **Downstream Wave E:** `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md` — questionnaire output
+- **Sibling Wave D:** `refactor_g1_11_service_family_scope_rules_2026_04_20.md` — parallel; both depend on G1.6
+- **Downstream Wave E:** `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md` — questionnaire output
   maps to overlays
-- **Downstream Wave F:** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md` (15-20 personas × this
-  engine), `refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md` (tempt logic extends this)
+- **Downstream Wave F:** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md` (15-20 personas × this
+  engine), `refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.md` (tempt logic extends this)
 - **G1.3 consumer:** restriction profile's per-tile state feeds `use-tile-lock-state.ts`
 - **Rules cited:** `_ssot-rules/06-show-dont-show-discipline.md`, `_ssot-rules/04-dart-commercial-axes.md`
 - **Cross-cutting:** `codex/14-playbooks/cross-cutting/visibility-slicing.md`
@@ -212,7 +212,7 @@ G1.11's scope was the UAC-layer service-family pre-check, which lands at a diffe
 `portfolio_allocator/service.py:125` in strategy-service still calls the legacy `validate_allocation_authorised()` gate.
 **Deferred to Wave E** per the 2026-04-20 Wave C/D audit — the Wave E (G1.10 questionnaire) agent should pick up the
 swap since they will already be modifying `portfolio_allocator/` surfaces for questionnaire-driven client setup. See
-`refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md` § Follow-ups / spillover.
+`refactor_g1_11_service_family_scope_rules_2026_04_20.md` § Follow-ups / spillover.
 
 ## Critical files to be modified
 
@@ -309,7 +309,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 7A through 7E of this plan:
-`plans/active/refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`
+`plans/active/refactor_g1_7_restriction_profile_engine_2026_04_20.md`
 
 ### Read-set (mandatory)
 
@@ -404,7 +404,7 @@ Fallback per repo: manual `git add <files> && git commit -m "..." && git push or
 ## Micro-execution plan (sub-agent Phase 1, appended 2026-04-20)
 
 > Drafted by Wave-D kickoff sub-agent. Plan-mode only — no code edits yet; operator approval required before Phase 7A.
-> Companion micro-plan for G1.11 in `refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md` § Micro-execution
+> Companion micro-plan for G1.11 in `refactor_g1_11_service_family_scope_rules_2026_04_20.md` § Micro-execution
 > plan.
 
 ### Plan-vs-reality drifts (verified 2026-04-20 against `live-defi-rollout` post-Wave-C)

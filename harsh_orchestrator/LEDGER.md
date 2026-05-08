@@ -59,7 +59,7 @@ descriptive; tab number is addressable. Both go in the registry entry for clarit
 #### Tab 2 — `cefi-babysit-tab` 🟢 IN FLIGHT
 - **Task**: Day-2+ OPS babysit of the cefi VMs (bitfinex/bitget/kraken ×futures+spot, all `e2-highmem-8`,
   post-`UTL@68b3804a` blank-reason fix relaunch).
-- **Plan-of-record**: [`../plans/epics/cefi_master_2026_05_07.plan.md`](../plans/epics/cefi_master_2026_05_07.plan.md) (moved to `plans/epics/` by Ikenna's `174224d` 2026-05-08 restructure).
+- **Plan-of-record**: [`../plans/epics/cefi_master_2026_05_07.md`](../plans/epics/cefi_master_2026_05_07.md) (moved to `plans/epics/` by Ikenna's `174224d` 2026-05-08 restructure).
 - **Cadence**: 10-min monitoring sweeps; appending findings into the plan body's "Day 2 monitoring sweep"
   subsection. Drain ETA tomorrow (2026-05-09).
 
@@ -144,7 +144,7 @@ daily reset.
 - **Workspace coding standards + Daily Work-Split Process spec**:
   [`../cursor-configs/CLAUDE.md`](../cursor-configs/CLAUDE.md).
 - **Active pings**: [`_agent_pings.md`](_agent_pings.md).
-- **Master plan**: [`../plans/active/master_to_live_defi_2026_05_23.plan.md`](../plans/active/master_to_live_defi_2026_05_23.plan.md).
+- **Master plan**: [`../plans/active/master_to_live_defi_2026_05_23.md`](../plans/active/master_to_live_defi_2026_05_23.md).
 - **Findings Triage Discipline**: CLAUDE.md § "Findings Triage Discipline (HARD RULE)".
 - **Push discipline (conditional rule)**: CLAUDE.md § "CI Verification After Every Push (HARD RULE)" +
   "Daily Work-Split Process" § "Conditional push (the multi-agent safety valve)".

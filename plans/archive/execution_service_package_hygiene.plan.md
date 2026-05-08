@@ -13,7 +13,7 @@ overview: |
   - test_sports_execution.py crashes collect with ImportError on missing contracts
   - test_backtest_service_split.py imports visualizer_api (a separate service — wrong repo)
 
-  References: execution_services_hygiene_refactor.plan.md (#12a)
+  References: execution_services_hygiene_refactor.md (#12a)
   Execution order: After #12a (day4-quality-gates is complete)
 todos:
   - id: fix-test-sports-collection
@@ -58,7 +58,7 @@ isProject: false
 # Execution-Service Package Hygiene Plan
 
 **Scope:** execution-service only — no cross-repo changes **Execution order:** After #12a (completed 2026-03-06)
-**Reference:** [execution_services_hygiene_refactor.plan.md](execution_services_hygiene_refactor.plan.md)
+**Reference:** [execution_services_hygiene_refactor.md](execution_services_hygiene_refactor.md)
 
 ---
 

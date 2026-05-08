@@ -79,7 +79,7 @@ todos:
       tenderly-api-key (Tenderly API key — same account),
       hyperliquid-testnet-api-credentials (JSON with api_key/secret — register at testnet.hyperliquid.xyz),
       wallet-dev-private-key (fresh wallet via `cast wallet new` — never fund on mainnet).
-      Ref: defi_dev_testnet_data_rollout_2026_03_13.plan.md § Phase 1 SM Gaps.
+      Ref: defi_dev_testnet_data_rollout_2026_03_13.md § Phase 1 SM Gaps.
     status: pending
   - id: phase-2-ws
     content: Phase 2 WS — binance, deribit, ibkr (cassette approach TBD)
@@ -91,7 +91,7 @@ todos:
     status: pending
   - id: phase-3-coinglass
     content:
-      "Coinglass heatmap API — key NOT in SM. Required by citadel_grade_feature_architecture.plan.md
+      "Coinglass heatmap API — key NOT in SM. Required by citadel_grade_feature_architecture.md
       (liquidation_levels.py). Check Tardis coverage first; if not covered, obtain Coinglass API key via coinglass.com
       and add as coinglass-api-key in Secret Manager."
     status: pending
@@ -101,7 +101,7 @@ todos:
       burned by git history exposure (workspace_audit_remediation_2026_03_07 rotate-archive-api-keys). Obtain fresh
       Polymarket credentials and store as polymarket-api-key, polymarket-api-secret, polymarket-passphrase,
       polymarket-private-key, polymarket-polyrouter-key in SM. BLOCKER: Also requires Polymarket USDC.e wallet on
-      Polygon to be funded (trading-ops task). (Migrated from strategy_expansion_five_themes.plan.md.)"
+      Polygon to be funded (trading-ops task). (Migrated from strategy_expansion_five_themes.md.)"
     status: pending
 
   - id: deribit-options-live-feed
@@ -109,7 +109,7 @@ todos:
       "Implement live Deribit options chain WebSocket feed in market-tick-data-service or dedicated adapter. Required
       for vol_surface strategy live execution. Feed should publish OptionChainSnapshot events to
       NormalizedStrikeCoordinate schema. Deribit WS cassettes (phase-2-ws) must be recorded first. BLOCKER: Deribit WS
-      credentials (phase-2-ws). (Migrated from strategy_expansion_five_themes.plan.md.)"
+      credentials (phase-2-ws). (Migrated from strategy_expansion_five_themes.md.)"
     status: pending
 
   - id: phase-4-blockers
@@ -178,7 +178,7 @@ todos:
       Checks: for each adapter in UMI/UTEI/URDI/UPI, confirms either SM secret OR free-tier flag is set.
       Gate: zero adapters without coverage classification; zero adapters with raw os.getenv() in prod source.
     status: pending
-  # ── CI/Infra Secrets (migrated from full_autonomous_agent_ci.plan.md) ──
+  # ── CI/Infra Secrets (migrated from full_autonomous_agent_ci.md) ──
   - id: bootstrap-telegram
     content: >-
       Create Telegram bot via BotFather, note token. Start conversation with bot to get chat_id. Propagation script
@@ -229,7 +229,7 @@ todos:
       to .env.dev. Gate: verify command exits 0; dev_environment_automated_onboarding phase-2 AWS doc
       (setup-dev-environment.sh step 6) unblocked. See unified-trading-pm/docs/aws-testnet-setup.md.
     status: pending
-  # ── Migrated from ibkr_gateway_rollout.plan.md (2026-03-11) ──
+  # ── Migrated from ibkr_gateway_rollout.md (2026-03-11) ──
   - id: ibkr-sm-credentials
     content: >-
       Add IBKR credentials to GCP Secret Manager as 'ibkr-account-credentials'. These are the Interactive Brokers
@@ -242,7 +242,7 @@ todos:
       Gate: gcloud secrets versions access latest --secret=ibkr-account-credentials exits 0 with valid JSON.
     status: pending
     notes: >-
-      Migrated from ibkr_gateway_rollout.plan.md (2026-03-11). Secret resource
+      Migrated from ibkr_gateway_rollout.md (2026-03-11). Secret resource
       ibkr-account-credentials CREATED in SM 2026-03-11; ibkr-gateway-sa granted secretAccessor.
       STILL REQUIRED: add credentials version — gcloud secrets versions add
       ibkr-account-credentials --data-file=- <<< '{"username":"...","password":"..."}'.
@@ -310,7 +310,7 @@ isProject: false
 
 # API Keys and Auth Plan
 
-**Consolidates:** [trading_system_audit_prompt.plan.md](trading_system_audit_prompt.plan.md) Section 10. VCR content
+**Consolidates:** [trading_system_audit_prompt.md](trading_system_audit_prompt.md) Section 10. VCR content
 inlined below (formerly VCR_CREDENTIAL_RECORDING_PLAN.md, now archived).
 
 ---
@@ -332,7 +332,7 @@ inlined below (formerly VCR_CREDENTIAL_RECORDING_PLAN.md, now archived).
 | ------------------------------------------------------------------------------ | ------------------------------------------- |
 | unified-trading-codex/07-security/secrets-management.md                        | Secret Manager SSOT; per-venue secret names |
 | unified-api-contracts vcr_endpoints.py                                         | Cassette definitions; key_env per venue     |
-| [trading_system_audit_prompt.plan.md](trading_system_audit_prompt.plan.md) §10 | Security audit checklist (10.1–10.19)       |
+| [trading_system_audit_prompt.md](trading_system_audit_prompt.md) §10 | Security audit checklist (10.1–10.19)       |
 | api-contracts/scripts/record_vcr_cassettes.py                                  | Record script                               |
 
 > **Note:** api-contracts/build/ is a stale build artifact. Ignore build/lib/api_contracts/endpoint_registry.py — the

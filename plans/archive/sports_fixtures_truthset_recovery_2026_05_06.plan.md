@@ -10,11 +10,11 @@ epic: epic-sports-honest-coverage
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-companion_plan: sports_phantom_fixtures_recovery_2026_05_06.plan.md
+companion_plan: sports_phantom_fixtures_recovery_2026_05_06.md
 supersedes_phases:
-  - sports_phantom_fixtures_recovery_2026_05_06.plan.md § relaunch-fixtures-backfill-category-a (replaced — VM-based
+  - sports_phantom_fixtures_recovery_2026_05_06.md § relaunch-fixtures-backfill-category-a (replaced — VM-based
     re-fetch was the wrong shape)
-  - sports_phantom_fixtures_recovery_2026_05_06.plan.md § audit-and-flip-stale-empties (replaced — this plan is a
+  - sports_phantom_fixtures_recovery_2026_05_06.md § audit-and-flip-stale-empties (replaced — this plan is a
     stronger version)
 
 completion_gates:
@@ -33,7 +33,7 @@ repo_gates:
     business: none
 
 depends_on:
-  - sports_phantom_fixtures_recovery_2026_05_06.plan.md # phantom DELETE done; orchestrator patch shipped
+  - sports_phantom_fixtures_recovery_2026_05_06.md # phantom DELETE done; orchestrator patch shipped
 ---
 
 # Sports FIXTURES truth-set recovery — 2026-05-06
@@ -280,7 +280,7 @@ Pattern mirrors the existing `flip_phantom_*` scripts. ~30 min implementation.
 
 - `unified-trading-pm/cursor-configs/CLAUDE.md` — workspace rules + Shard-granularity SSOT + No-fire-and-forget VM
   launches + Manifest concurrency + Sports source coverage windows + Honest absence vs fake placeholders.
-- `unified-trading-pm/plans/active/sports_phantom_fixtures_recovery_2026_05_06.plan.md` — full phantom recovery history
+- `unified-trading-pm/plans/active/sports_phantom_fixtures_recovery_2026_05_06.md` — full phantom recovery history
   (this plan supersedes 2 of its phases).
 - `unified-trading-pm/plans/active/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` — coordinate with the
   parallel architectural stream; sports per-league shard atom is
@@ -360,5 +360,5 @@ entities and same root-cause (`manifest.add(row_count=0)` vs `record_empty(row_k
 
 - footystats / understat / transfermarkt / SFI / open_meteo backfills — those have their own coverage pipelines.
 - Mapping repair: if Phase 1 surfaces canonical leagues with no af*league_id mapping, document them but defer the fix to
-  a follow-up plan (`sports_canonical_league_id_mapping_repair*\*.plan.md`).
+  a follow-up plan (`sports_canonical_league_id_mapping_repair*\*.md`).
 - The original phantom recovery's MTDS-side downstream-empty cleanup (separate plan).

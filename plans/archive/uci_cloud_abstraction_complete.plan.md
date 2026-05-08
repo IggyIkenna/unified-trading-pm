@@ -18,7 +18,7 @@ todos:
     content:
       "CloudTarget and StandardizedDomainCloudService fully deleted from UTL source and __all__. All consumers (UDC,
       UML, execution-service, market-tick-data-service, instruments-service) migrated to UCI routing_key pattern.
-      Implementation completed in topology_dag_pm_ssot.plan.md todos: udc-cloud-target-replace (completed),
+      Implementation completed in topology_dag_pm_ssot.md todos: udc-cloud-target-replace (completed),
       utl-cloud-symbols-delete (completed), service-consumers-migrate (completed), uml-model-registry-migrate
       (completed). Gate confirmed: rg 'CloudTarget|StandardizedDomainCloudService' returns zero matches in production
       source."
@@ -46,7 +46,7 @@ todos:
   - id: p2-cloud-build-configs
     content:
       "buildspec.aws.yaml distributed to all 44 qualifying repos (8 newly created, 36 already present) — FILE
-      DISTRIBUTION DONE. Canary simulated CodeBuild run tracked in aws_migration.plan.md todo codebuild-canary-run. Will
+      DISTRIBUTION DONE. Canary simulated CodeBuild run tracked in aws_migration.md todo codebuild-canary-run. Will
       be marked completed once canary run exits 0."
     status: pending
   - id: p3-terraform-gcp
@@ -70,9 +70,9 @@ todos:
     status: completed
 isProject: true
 blockedBy:
-  - plan: phase0_standards_enforcement.plan.md
+  - plan: phase0_standards_enforcement.md
     reason: "[RESOLVED 2026-03-06] Phase 0 quality gate scan passed; STEP 5.9 active; STEP 5.10/5.11 added"
-  - plan: phase2_library_tier_hardening.plan.md
+  - plan: phase2_library_tier_hardening.md
     reason:
       "[RESOLVED 2026-03-06] UTL cloud layer removal complete (p0-utl-cloud-layer status: completed; all UTL cloud
       symbols deleted)"
@@ -258,7 +258,7 @@ completed
   or type=service. CLOUD_PROVIDER env var injected by CI at build time (gcp | aws). GATE: buildspec.aws.yaml present in
   all in-scope repos; simulated CodeBuild run passes for 3 canary repos (instruments-service, unified-cloud-interface,
   unified-events-interface). NOTE: 44/44 qualifying repos have buildspec.aws.yaml (8 newly created, 36 already present).
-  File distribution DONE. Canary simulated run PENDING (tracked in topology_dag_pm_ssot.plan.md codebuild-canary-run).
+  File distribution DONE. Canary simulated run PENDING (tracked in topology_dag_pm_ssot.md codebuild-canary-run).
   status: pending
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -327,7 +327,7 @@ GATE: All repos pass STEP 5.10; zero FAIL results in workspace scan. NOTE: STEP 
 
 isProject: true blockedBy:
 
-- plan: phase0_standards_enforcement.plan.md reason: Phase 0 quality gate scan (STEP 5.9) must pass before UCI
+- plan: phase0_standards_enforcement.md reason: Phase 0 quality gate scan (STEP 5.9) must pass before UCI
   violations are added as new gate
-- plan: phase2_library_tier_hardening.plan.md reason: UTL cloud layer removal (p0-utl-cloud-layer) must complete before
+- plan: phase2_library_tier_hardening.md reason: UTL cloud layer removal (p0-utl-cloud-layer) must complete before
   library tier is locked

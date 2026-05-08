@@ -1,8 +1,8 @@
 #!/usr/bin/env python3.13
-"""Validate no broken relative links in plans/active/*.plan.md.
+"""Validate no broken relative links in plans/active/*.md.md.
 
-Phase 0b: plans_to_deployable_unified_audit.plan.md
-GATE: no broken relative links in any active plans/active/ .plan.md file.
+Phase 0b: plans_to_deployable_unified_audit.md.md
+GATE: no broken relative links in any active plans/active/ .md.md file.
 """
 
 from __future__ import annotations
@@ -25,14 +25,14 @@ def main() -> int:
     parser.add_argument("--workspace-root", type=Path, default=Path(__file__).resolve().parent.parent.parent.parent)
     args = parser.parse_args()
 
-    plans_dir: Path = cast(Path, args.plans_dir).resolve()
+    plans_dir: Path = cast(Path, args.mds_dir).resolve()
     ws_root: Path = cast(Path, args.workspace_root).resolve()
     if not plans_dir.is_dir():
         print(f"Skip: {plans_dir} not found", file=sys.stderr)
         return 0
 
     broken: list[tuple[str, str]] = []
-    for path in plans_dir.glob("*.plan.md"):
+    for path in plans_dir.glob("*.md.md"):
         content: str = path.read_text()
         for m in re.finditer(r"\]\(([^)]+)\)", content):
             link = m.group(1).strip()
@@ -64,7 +64,7 @@ def main() -> int:
         for f, link in broken:
             print(f"BROKEN: {f} -> {link}", file=sys.stderr)
         return 1
-    print("OK: No broken links in plans/active/*.plan.md")
+    print("OK: No broken links in plans/active/*.md.md")
     return 0
 
 

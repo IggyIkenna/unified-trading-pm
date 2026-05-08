@@ -28,7 +28,7 @@ todos:
       proportional slippage + multi-leg swaps — 6 fixes. RC-6: Update GCS/cloud mock targets from
       unified_cloud_services.* to unified_trading_services.* — 9 fixes. RC-3: Implement sports category detection in
       route_instruction() (check SPORTS_VENUES set, return category='sports') — 9 fixes (also tracked in
-      sports_migration_gap_fix.plan.md § B-S5)."
+      sports_migration_gap_fix.md § B-S5)."
     status: completed
     notes: |
       RESOLVED 2026-03-09: RC-3/4/5/6 all pre-resolved in prior sessions. One remaining failure was
@@ -119,7 +119,7 @@ todos:
       coverage measurements per repo (pytest --cov= --cov-report=json) and update manifest with real values. Repos with
       coverage_pct = 0 and testing_level != none (features-commodity-service, features-cross-instrument-service,
       trading-agent-service) investigate — if no tests, mark testing_level = none. Do NOT hard-code a different uniform
-      value — measure real coverage. (Migrated from workspace_audit_remediation_2026_03_07.plan.md
+      value — measure real coverage. (Migrated from workspace_audit_remediation_2026_03_07.md
       fix-coverage-pct-placeholders.)"
     status: completed
     notes:
@@ -260,7 +260,7 @@ todos:
 
 # Unit Tests and Test Failure Action Plan
 
-**Order:** 6 (see master_pre_deployment_plan_chain.plan.md) **Date:** 2026-03-03 **Status:** Assessment Complete, Fixes
+**Order:** 6 (see master_pre_deployment_plan_chain.md) **Date:** 2026-03-03 **Status:** Assessment Complete, Fixes
 Pending **Scope:** ~98 test failures + ~18 collection errors across 5 service repos
 
 ---

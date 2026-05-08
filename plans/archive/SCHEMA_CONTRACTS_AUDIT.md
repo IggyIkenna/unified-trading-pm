@@ -1,7 +1,7 @@
 # Schema Contracts Full Audit
 
 **Status:** Audit complete. Remediation in progress. **Date:** 2026-03-05 | **Last verified:** 2026-03-06 **Plan:**
-[schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md) **Scope:** All 60+ repos scanned across 10
+[schema_contracts_full_audit.md](schema_contracts_full_audit.md) **Scope:** All 60+ repos scanned across 10
 parallel agents **Audit result:** Violations catalogued. Codex/cursor rules updated. Quality gates blocking.
 **Remediation blockers remaining:**
 

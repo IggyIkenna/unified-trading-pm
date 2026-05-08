@@ -29,7 +29,7 @@ depends_on:
 todos:
   - id: uei-data-freshness-events
     content: >-
-      Add 5 data freshness events from data_availability_live_expectations_2026_03_10.plan.md Phase 2: DATA_STALE,
+      Add 5 data freshness events from data_availability_live_expectations_2026_03_10.md Phase 2: DATA_STALE,
       DATA_AVAILABILITY_RESTORED, DATA_GAP_DETECTED, FEED_UNHEALTHY, DATA_COMPLETENESS_CHECK. Payload schema for
       DATA_STALE/FEED_UNHEALTHY: source, age_seconds, max_age_seconds, asset_group, criticality, timestamp.
     status: done
@@ -37,7 +37,7 @@ todos:
 
   - id: uei-recon-rebalancing-events
     content: >-
-      Add 8 reconciliation/rebalancing events from recon_rebalancing_order_recovery_2026_03_10.plan.md Stream A+B+C+D:
+      Add 8 reconciliation/rebalancing events from recon_rebalancing_order_recovery_2026_03_10.md Stream A+B+C+D:
       POSITION_CORRECTION_DISPATCHED, POSITION_CORRECTION_FAILED, ORDER_RECOVERY_INITIATED, ORDER_RECOVERY_COMPLETED,
       ORDER_RECOVERY_FAILED, PORTFOLIO_REBALANCE_TRIGGERED, PORTFOLIO_REBALANCE_COMPLETED, DEFI_VAULT_REBALANCED.
     status: done
@@ -45,7 +45,7 @@ todos:
 
   - id: uei-pnl-residual-event
     content: >-
-      Add 1 P&L attribution event from position_precision_pnl_hardening_2026_03_11.plan.md Phase E:
+      Add 1 P&L attribution event from position_precision_pnl_hardening_2026_03_11.md Phase E:
       UNEXPLAINED_PNL_RESIDUAL — emitted hourly + AlertEvent when > 2% of total PnL.
     status: done
     note: "DONE 2026-03-11 — UNEXPLAINED_PNL_RESIDUAL in schemas.py"
@@ -135,7 +135,7 @@ UNEXPLAINED_PNL_RESIDUAL = "UNEXPLAINED_PNL_RESIDUAL"
 
 ## Dependencies
 
-- `data_availability_live_expectations_2026_03_10.plan.md` Phase 2 — waits on this plan
-- `recon_rebalancing_order_recovery_2026_03_10.plan.md` Stream A/B/C/D — waits on this plan
-- `position_precision_pnl_hardening_2026_03_11.plan.md` Phase E — waits on this plan
-- `strategy_visibility_grafana_2026_03_10.plan.md` — needs DEFI_VAULT_REBALANCED from this plan
+- `data_availability_live_expectations_2026_03_10.md` Phase 2 — waits on this plan
+- `recon_rebalancing_order_recovery_2026_03_10.md` Stream A/B/C/D — waits on this plan
+- `position_precision_pnl_hardening_2026_03_11.md` Phase E — waits on this plan
+- `strategy_visibility_grafana_2026_03_10.md` — needs DEFI_VAULT_REBALANCED from this plan

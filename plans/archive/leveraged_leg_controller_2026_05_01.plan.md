@@ -262,7 +262,7 @@ they would otherwise stay buried until the next person hit them):
    caught up.
 4. **44 deep imports across 19 SIT files**: all `from unified_trading_library.events import …` instead of top-level
    facade. Auto-fixed.
-5. **Broken markdown link in `instruments_and_market_tick_data...plan.md`**: `..` instead of `../..` was failing the
+5. **Broken markdown link in `instruments_and_market_tick_data...md`**: `..` instead of `../..` was failing the
    shared workspace-validator (step 6/6) across 3 repos simultaneously.
 6. **`features_onchain_service/test_write_gate_enforcement.py` nan_threshold stale assertion**: sibling commit `fc2333e`
    bumped 0.5 → 0.95; test wasn't updated.

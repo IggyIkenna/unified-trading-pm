@@ -20,9 +20,9 @@ owner_repos:
     unified-trading-api,
   ]
 folds_in:
-  - plans/archive/strategy_architecture_v2_finalization_2026_04_19.plan.md
-  - plans/archive/dart_ux_cockpit_refactor_2026_04_29.plan.md
-  - plans/archive/consolidated_strategy_and_ui_2026_04_15.plan.md
+  - plans/archive/strategy_architecture_v2_finalization_2026_04_19.md
+  - plans/archive/dart_ux_cockpit_refactor_2026_04_29.md
+  - plans/archive/consolidated_strategy_and_ui_2026_04_15.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -77,7 +77,7 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 ## Phase 1 — Archetype engine v2 finalization (was: strategy_architecture_v2_finalization)
 
-> Source plan: `plans/archive/strategy_architecture_v2_finalization_2026_04_19.plan.md`. Phase 1 (factory cutover Tier 2
+> Source plan: `plans/archive/strategy_architecture_v2_finalization_2026_04_19.md`. Phase 1 (factory cutover Tier 2
 > — 1a/1b/1c/1d/1e/1f), Phase 2 (shadow persistence — registry + ledger + events + codex doc + tests), Phase 7
 > (NEEDS_REVIEW resolutions), Phase 8 (test flakes), and Phase 9 (coverage matrix SSOT) are SHIPPED — see source archive
 > for [x] evidence. Phase 10 master matrix + combinatoric discovery + block-list browser + per-strategy detail +
@@ -267,7 +267,7 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 ## Phase 2 — DART operator UX cockpit (was: dart_ux_cockpit_refactor)
 
-> Source plan: `plans/archive/dart_ux_cockpit_refactor_2026_04_29.plan.md`. **Substantively shipped per audit**: 9-phase
+> Source plan: `plans/archive/dart_ux_cockpit_refactor_2026_04_29.md`. **Substantively shipped per audit**: 9-phase
 > programme (Workspace scope → Scope bar → Terminal IA → Research IA → Scope-reactive widgets → Eight starter cockpits →
 > Locked previews + system-map → Mock-mode liveness → Route-redirects + unified shell), Configuration lifecycle UI
 > surfaces (Promote / Explain / Admin), Persona-walkthrough Playwright matrix (6 personas), Phase 1A/1B foundational
@@ -316,7 +316,7 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 ## Phase 3 — Cross-domain alpha + UI walkthrough (was: consolidated_strategy_and_ui)
 
-> Source plan: `plans/archive/consolidated_strategy_and_ui_2026_04_15.plan.md`. Strategy lifecycle Phase 1 +
+> Source plan: `plans/archive/consolidated_strategy_and_ui_2026_04_15.md`. Strategy lifecycle Phase 1 +
 > microstructure features + UI health page have shipped; cross-domain alpha core is the genuinely-open net-new work.
 > Group E + F + G largely subsumed by Phase 2 above (DART cockpit) — only the parts that name distinct deliverables
 > remain.
@@ -525,6 +525,6 @@ refactor), Phase 10.7 (allocator split), Phase 11 (futures roll), and the Phase 
 
 ## Source plan archive references
 
-- [`plans/archive/strategy_architecture_v2_finalization_2026_04_19.plan.md`](../archive/strategy_architecture_v2_finalization_2026_04_19.plan.md)
-- [`plans/archive/dart_ux_cockpit_refactor_2026_04_29.plan.md`](../archive/dart_ux_cockpit_refactor_2026_04_29.plan.md)
-- [`plans/archive/consolidated_strategy_and_ui_2026_04_15.plan.md`](../archive/consolidated_strategy_and_ui_2026_04_15.plan.md)
+- [`plans/archive/strategy_architecture_v2_finalization_2026_04_19.md`](../archive/strategy_architecture_v2_finalization_2026_04_19.md)
+- [`plans/archive/dart_ux_cockpit_refactor_2026_04_29.md`](../archive/dart_ux_cockpit_refactor_2026_04_29.md)
+- [`plans/archive/consolidated_strategy_and_ui_2026_04_15.md`](../archive/consolidated_strategy_and_ui_2026_04_15.md)

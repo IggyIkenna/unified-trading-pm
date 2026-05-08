@@ -100,16 +100,16 @@ todos:
 
   - id: p4-audit-integration
     content:
-      "Update trading_system_audit_prompt.plan.md with config injection compliance checks (Sections 13.11-13.15, 14.3.8,
-      2.13, 3.15-3.16, 12.16-12.20, 17.x, 22.11) that cross-reference all citadel_audit_remediation.plan.md stream
+      "Update trading_system_audit_prompt.md with config injection compliance checks (Sections 13.11-13.15, 14.3.8,
+      2.13, 3.15-3.16, 12.16-12.20, 17.x, 22.11) that cross-reference all citadel_audit_remediation.md stream
       checks. RESOLVED 2026-03-08: All checks 13.11-13.15, 14.3.8, 2.13, 3.15-3.16 already integrated with YES answers."
     status: completed
 
 isProject: true
 blockedBy:
-  - plan: phase0_standards_enforcement.plan.md
+  - plan: phase0_standards_enforcement.md
     reason: "P0 gate must be green before P4 quality gate additions take effect in any repo."
-  - plan: uci_cloud_abstraction_complete.plan.md
+  - plan: uci_cloud_abstraction_complete.md
     reason:
       "UCI cloud-agnostic foundations (get_storage_client, get_queue_client, get_event_bus) must be complete before
       DomainConfigReloader can work."

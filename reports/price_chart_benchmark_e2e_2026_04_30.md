@@ -124,5 +124,5 @@ sized for tier-0 mock testing).
   just `BatchCandleReader` directly). Use that to isolate API-layer overhead from GCS-layer cost.
 - Pre-Unit-A baseline: `reports/price_chart_gcs_benchmark_2026_04_29.md`.
 - Post-Unit-A backend bench: `reports/price_chart_gcs_benchmark_2026_04_29_post.md`.
-- Plan: `plans/ai/price_chart_gcs_delivery_2026_04_29.plan.md`.
+- Plan: `plans/ai/price_chart_gcs_delivery_2026_04_29.md`.
 - Codex SSOT: `codex/02-data/chart-candle-delivery-flow.md`.

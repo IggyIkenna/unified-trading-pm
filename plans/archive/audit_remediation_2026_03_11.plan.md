@@ -64,8 +64,8 @@ todos:
   - id: item-a-ssot-index-registration
     content: >-
       Register 2 unregistered active plans in unified-trading-codex/00-SSOT-INDEX.md and
-      unified-trading-pm/plans/active/INDEX.md: production_mock_e2e_plan_d90c8f20.plan.md and
-      version_control_ci_cd_overhaul_2026_03_11.plan.md.
+      unified-trading-pm/plans/active/INDEX.md: production_mock_e2e_plan_d90c8f20.md and
+      version_control_ci_cd_overhaul_2026_03_11.md.
     status: done
     note: "DONE 2026-03-11. Added as plan #60 and #61 in INDEX.md; 2 new rows in SSOT-INDEX table."
 
@@ -112,11 +112,11 @@ todos:
     content: >-
       Enumerate all remaining # type: ignore in production Python source (excluding tests/, .venv*, archive/).
       Categorise as ALLOWED (third-party stubs, Protocol empty-body, hasattr-guarded union-attr, pandas generic
-      type-arg) or TODO (fixable with proper typing). Add Phase 9 to zero_baseline_typecheck_2026_03_10.plan.md with
+      type-arg) or TODO (fixable with proper typing). Add Phase 9 to zero_baseline_typecheck_2026_03_10.md with
       categorised inventory and specific todos for the 5 fixable instances.
     status: done
     note: >-
-      DONE 2026-03-11. Phase 9 appended to zero_baseline_typecheck_2026_03_10.plan.md. ~100 instances found.
+      DONE 2026-03-11. Phase 9 appended to zero_baseline_typecheck_2026_03_10.md. ~100 instances found.
       Categorised: ~95 ALLOWED (google-auth stubs, Protocol stubs, hasattr-guarded, pandas type-arg, dynamic backends,
       elysium-defi-system). 5 TODO items: funding_recon_engine.py:214, yield_recon_engine.py:280,
       instrument_processing_handlers.py:71, pnl_reader.py:63, deployment_state.py (5x reportPrivateUsage).

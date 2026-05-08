@@ -205,10 +205,10 @@ no reader sees new writes against pre-migration parquets.
 
 ## Cross-references
 
-- **Master plan Q&A 14** (HIGH-2): [`master_to_live_defi_2026_05_23.plan.md`](./master_to_live_defi_2026_05_23.plan.md)
+- **Master plan Q&A 14** (HIGH-2): [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md)
   — original decision.
 - **Writegate Phase 2.C** (the consumer of this rename):
-  [`writegate_honest_coverage_endtoend_2026_05_06.plan.md`](./writegate_honest_coverage_endtoend_2026_05_06.plan.md).
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](./writegate_honest_coverage_endtoend_2026_05_06.md).
 - **Honest absence downstream SSOT** (companion principle): `codex/02-data/honest-absence-downstream-handling.md`.
 - **Migration precedent** (idempotent column-level migration):
   `instruments-service/scripts/migrate_local_sfi_to_canonical.py`.

@@ -32,8 +32,8 @@
 
 | Plan                           | Phases    | Todos Remaining | Reference                                                   |
 | ------------------------------ | --------- | --------------- | ----------------------------------------------------------- |
-| Plan A: Registry & Schema Sync | Phase 0-3 | ~14 todos       | plans/active/plan_a_registry_schema_sync_2026_03_21.plan.md |
-| Plan H: API Consolidation      | Phase 0-6 | ~44 todos       | plans/active/plan_h_api_consolidation_2026_03_21.plan.md    |
+| Plan A: Registry & Schema Sync | Phase 0-3 | ~14 todos       | plans/active/plan_a_registry_schema_sync_2026_03_21.md |
+| Plan H: API Consolidation      | Phase 0-6 | ~44 todos       | plans/active/plan_h_api_consolidation_2026_03_21.md    |
 
 ## What's Already Done (Don't Redo)
 

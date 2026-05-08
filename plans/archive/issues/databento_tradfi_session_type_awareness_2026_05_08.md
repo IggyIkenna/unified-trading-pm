@@ -15,8 +15,8 @@ source:
     not propagated upstream)
   - features-volatility-service/features_volatility_service/core/volatility_orchestration.py:107-140 (mentions excluded
     states in comments only — calculator code does NOT consume session_type)
-  - plans/active/tradfi_master_2026_05_07.plan.md (no session-type todos)
-  - plans/active/mtds_databento_path_streaming_2026_05_07.plan.md (no session-type todos)
+  - plans/active/tradfi_master_2026_05_07.md (no session-type todos)
+  - plans/active/mtds_databento_path_streaming_2026_05_07.md (no session-type todos)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -28,8 +28,8 @@ locked_since: 2026-05-08
 > paper-trade if first DeFi archetypes don't trade TradFi-derived signals, but blocks any TradFi strategy graduation.
 > **Blast radius**: UAC (session-type taxonomy + per-venue session schedule) + MTDS Databento adapter (write-time
 > classification) + MDPS / features-\* / strategy-service / execution-service / risk-and-exposure-service (consumer
-> filtering). **Suggested owner**: `tradfi_master_2026_05_07.plan.md` Phase X (new) OR new sibling plan
-> `tradfi_session_type_awareness_2026_05_08.plan.md`.
+> filtering). **Suggested owner**: `tradfi_master_2026_05_07.md` Phase X (new) OR new sibling plan
+> `tradfi_session_type_awareness_2026_05_08.md`.
 
 ## What I found
 
@@ -65,8 +65,8 @@ is parquet-indistinguishable from a 10:30 ET regular candle.**
 
 ### Q4 — Plan coverage: COMPLETE ABSENCE
 
-Searched `tradfi_master_2026_05_07.plan.md`, `mtds_databento_path_streaming_2026_05_07.plan.md`,
-`manifest_migration_master_2026_05_07.plan.md`, `infrastructure_master_2026_05_07.plan.md` for "session", "pre-market",
+Searched `tradfi_master_2026_05_07.md`, `mtds_databento_path_streaming_2026_05_07.md`,
+`manifest_migration_master_2026_05_07.md`, `infrastructure_master_2026_05_07.md` for "session", "pre-market",
 "post-market", "extended hours", "opening auction", "closing auction" → **zero hits**. Not on any roadmap.
 
 ### Q5 — CME futures + options session structure handling: PARTIAL

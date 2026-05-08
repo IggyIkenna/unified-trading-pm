@@ -52,7 +52,7 @@ todos:
   - id: p2-codex-readme
     content:
       "Update codex/06-coding-standards/README.md TL;DR to document STEP 5.10+5.11 as hard gates. Done:
-      intent-level-api-pattern.md created; README.md updated (service_protocol_abstraction.plan.md p5-codex-update,
+      intent-level-api-pattern.md created; README.md updated (service_protocol_abstraction.md p5-codex-update,
       2026-03-05)."
     status: completed
   - id: p3-bypass-audit-file
@@ -69,7 +69,7 @@ todos:
     content:
       "In Cursor/VSCode: Cmd+Shift+P → 'Pylance: Restart Language Server'. Confirm import squiggles on
       unified_internal_contracts and sibling packages are gone across all repos after venvPath fix. (Migrated from
-      pyrightconfig_venv_fix.plan.md verify-cursor.)"
+      pyrightconfig_venv_fix.md verify-cursor.)"
     status: completed
 
   - id: fix-cloudbuild-template-drift
@@ -79,7 +79,7 @@ todos:
       quality-gates.sh: verify cloudbuild.yaml has required steps (test-in-image, vulnerability-scan, push, deploy).
       Start with canary: 3 services (execution-service, instruments-service, alerting-service). Human review required
       for service-specific variations — do NOT auto-generate all 44. (Migrated from
-      workspace_audit_remediation_2026_03_07.plan.md fix-cloudbuild-template-drift.)"
+      workspace_audit_remediation_2026_03_07.md fix-cloudbuild-template-drift.)"
     status: completed
 
   - id: p4-cloudbuild-gate
@@ -182,7 +182,7 @@ Pattern: `os\.getenv|os\.environ` Allowed ONLY in files with `# config-bootstrap
       run-all-setup.sh handles propagation automatically. Confirmed execution-service, instruments-service,
       features-delta-one-service, market-data-processing-service all have the file — 2026-03-09.)_
 - [x] `p2-codex-readme` — Update `codex/06-coding-standards/README.md` TL;DR to document STEP 5.10 + 5.11 as hard gates
-      _(Done: intent-level-api-pattern.md created; README.md updated — service_protocol_abstraction.plan.md
+      _(Done: intent-level-api-pattern.md created; README.md updated — service_protocol_abstraction.md
       p5-codex-update, 2026-03-05)_
 
 ### P3 — QUALITY_GATE_BYPASS_AUDIT.md

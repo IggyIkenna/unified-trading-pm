@@ -58,9 +58,9 @@ isProject: true
 
 ## Context
 
-No existing prod-vs-backtest reconciliation exists. The existing `e2e_smoke_and_portable_backtests.plan.md` covers only
+No existing prod-vs-backtest reconciliation exists. The existing `e2e_smoke_and_portable_backtests.md` covers only
 fixture-based CI backtests (static VCR, no live comparison) — not relevant here. Items C.3 (Backtesting API) and C.4
-(Reconciliation) in `master_pre_deployment_plan_chain.plan.md` are stub post-sprint items. This plan formalises all
+(Reconciliation) in `master_pre_deployment_plan_chain.md` are stub post-sprint items. This plan formalises all
 three.
 
 **The problem this solves:**
@@ -450,7 +450,7 @@ Add Cloud Run Job + Cloud Scheduler resources for each T+1 batch service (see sc
 ### Modified: `unified-trading-pm/`
 
 - `workspace-manifest.json` — add 2 new repos
-- `plans/active/` — move this plan here as `batch_live_recon_2026_03_10.plan.md`
+- `plans/active/` — move this plan here as `batch_live_recon_2026_03_10.md`
 
 ### New: `unified-trading-codex/05-operations/t1-batch-dag.md`
 
@@ -545,5 +545,5 @@ cd batch-audit-api && bash scripts/quality-gates.sh
 - `trading-agent-service/` — autonomous agent task dispatch
 - `alerting-service/` — PubSub → Slack
 - `deployment-service/terraform/gcp/` — Cloud Run Job + Cloud Scheduler terraform
-- `unified-trading-pm/plans/active/master_pre_deployment_plan_chain.plan.md` — C.3 + C.4 this closes
-- `unified-trading-pm/plans/active/e2e_smoke_and_portable_backtests.plan.md` — different concern (CI fixtures)
+- `unified-trading-pm/plans/active/master_pre_deployment_plan_chain.md` — C.3 + C.4 this closes
+- `unified-trading-pm/plans/active/e2e_smoke_and_portable_backtests.md` — different concern (CI fixtures)

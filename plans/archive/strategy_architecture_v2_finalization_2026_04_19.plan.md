@@ -5,18 +5,18 @@ owner: iggy
 started: 2026-04-19
 archived: 2026-05-07
 supersedes:
-  plans/active/strategy_architecture_v2_2026_04_17.plan.md (85/85 complete; this plan carries the open residuals
+  plans/active/strategy_architecture_v2_2026_04_17.md (85/85 complete; this plan carries the open residuals
   forward)
-superseded_by: plans/active/strategy_and_dart_master_2026_05_07.plan.md
+superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md
 ---
 
-> **ARCHIVED 2026-05-07** — folded into [`strategy_and_dart_master_2026_05_07.plan.md`](../active/strategy_and_dart_master_2026_05_07.plan.md). All open todos preserved in the umbrella's Phase 1-3. This file is the historical SSOT.
+> **ARCHIVED 2026-05-07** — folded into [`strategy_and_dart_master_2026_05_07.md`](../active/strategy_and_dart_master_2026_05_07.md). All open todos preserved in the umbrella's Phase 1-3. This file is the historical SSOT.
 
 # Strategy Architecture v2 — Finalization + Factory Cutover
 
 ## Context
 
-`strategy_architecture_v2_2026_04_17.plan.md` closed at 85/85. Everything the codex defined is implemented. This plan is
+`strategy_architecture_v2_2026_04_17.md` closed at 85/85. Everything the codex defined is implemented. This plan is
 the **follow-on** that carries the open operational residuals — the things that are outside the codex plan but still
 need to happen before we can fully retire the pre-v2 code path.
 
@@ -784,7 +784,7 @@ Phase 8 (test flakes) — independent; low-priority debt.
 
 ## Related prior plans + memory
 
-- **Prior plan (closed):** `plans/active/strategy_architecture_v2_2026_04_17.plan.md` (85/85 complete; same locked_by
+- **Prior plan (closed):** `plans/active/strategy_architecture_v2_2026_04_17.md` (85/85 complete; same locked_by
   branch).
 - **Codex SSOT:** `codex/09-strategy/architecture-v2/` (README + MIGRATION + 18 archetypes + 7 axes + 11 cross-cutting +
   2 architecture docs).
@@ -811,9 +811,9 @@ cutover that unblocks deletion of the legacy code fence.
 
 Start by reading, in order:
 
-1. unified-trading-pm/plans/active/strategy_architecture_v2_finalization_2026_04_19.plan.md
+1. unified-trading-pm/plans/active/strategy_architecture_v2_finalization_2026_04_19.md
    (this plan — your full task list)
-2. unified-trading-pm/plans/active/strategy_architecture_v2_2026_04_17.plan.md
+2. unified-trading-pm/plans/active/strategy_architecture_v2_2026_04_17.md
    (prior plan, 85/85 complete — what already shipped)
 3. unified-trading-pm/codex/09-strategy/architecture-v2/MIGRATION.md § 15
    ("Legacy Code Deletion Schedule") — the deletion-prereq chain
@@ -870,7 +870,7 @@ compile). Don't skip steps.
 ## Phase 3-11 implementation scope (folded from `strategy_architecture_v2_phase3_11_handoff_2026_04_17`)
 
 **Folded 2026-05-07.** Original plan archived at
-`plans/archive/strategy_architecture_v2_phase3_11_handoff_2026_04_17.plan.md`. 60 open P1 todos at archive time; key
+`plans/archive/strategy_architecture_v2_phase3_11_handoff_2026_04_17.md`. 60 open P1 todos at archive time; key
 work-streams summarised here. Refer to archive for the full per-todo detail.
 
 ### Strategy migration + execution v2

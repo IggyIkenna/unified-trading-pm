@@ -18,7 +18,7 @@ source:
     routing pending Phase 2A)
   - market-data-processing-service/.../trades_adapter.py:25 (PredictionTradesAdapter — basic OHLCV present; 4-category
     empty decision NOT fully wired)
-  - plans/active/predictions_master_2026_05_07.plan.md:69-215 (master plan, ~38% complete per 2026-05-07 audit; Phase
+  - plans/active/predictions_master_2026_05_07.md:69-215 (master plan, ~38% complete per 2026-05-07 audit; Phase
     2-5 deferred items)
   - operator screenshot 2026-05-08 — deployment-ui shows PREDICTION at 87.2% with FLAT MARKETS list
     (BNB/BTC/CRUDE_OIL/DJIA/DOGE/ETH/FOOTBALL/GOLD/HYPE/NDX/OTHER/SILVER/SOL/SPX/XRP); no per-canonical-question-group
@@ -37,7 +37,7 @@ locked_since: 2026-05-08
 > Polymarket / Kalshi adapters (full-column capture + MARKET_LIFECYCLE writer) + MTDS prediction CLOB adapters
 > (lifecycle-bounded + cluster validation) + MDPS PredictionTradesAdapter (4-category empty decision + lookahead clip) +
 > deployment-ui (3-level hierarchy + parquet download) + features-\* (LookaheadBiasError respecting per-market
-> lifecycle). **Suggested owner**: `predictions_master_2026_05_07.plan.md` Phase 2 + 5 — this issue is the consumer-side
+> lifecycle). **Suggested owner**: `predictions_master_2026_05_07.md` Phase 2 + 5 — this issue is the consumer-side
 > completion list, not a competing plan.
 
 ## What I found
@@ -170,12 +170,12 @@ Sports drilldown pattern shipped 2026-05-07 evening per memory entry:
 > deployment-api@3b0477a + LeafSchemaModal (15 tests) + LeafParquetStats Pydantic models + per-shard schema + NaN
 > ratios + available_at envelope.
 
-Same pattern needs to extend to prediction. Per `predictions_master_2026_05_07.plan.md:199`, this is BLOCKED-ON Phase
+Same pattern needs to extend to prediction. Per `predictions_master_2026_05_07.md:199`, this is BLOCKED-ON Phase
 1 + manifest reflip — both already shipped per the Q1-Q3 verdicts above, so the UI work is now unblocked.
 
 ### Q7 — Plan coverage: PARTIAL — Phase 2-5 deferrals are the gap surface
 
-`predictions_master_2026_05_07.plan.md` (38% complete per 2026-05-07 audit, line 85):
+`predictions_master_2026_05_07.md` (38% complete per 2026-05-07 audit, line 85):
 
 - ✅ Phase 1A (Q1 + Q3 classifier) shipped.
 - ⚠️ Phase 2A (MTDS adapter migrations + MARKET_LIFECYCLE writer + MDPS empty-output validation) — pending. **All 4 of
@@ -209,7 +209,7 @@ concrete todos.
 
 ## Recommended decision
 
-Five workstreams, sequenced. **All belong in `predictions_master_2026_05_07.plan.md` Phase 2-5; this issue is the
+Five workstreams, sequenced. **All belong in `predictions_master_2026_05_07.md` Phase 2-5; this issue is the
 consumer-side todo set.**
 
 ### Phase 2A — instruments-service full-column capture + MARKET_LIFECYCLE writer

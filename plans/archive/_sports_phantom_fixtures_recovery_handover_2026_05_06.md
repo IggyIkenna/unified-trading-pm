@@ -11,7 +11,7 @@ to re-discover anything.
 You are continuing work from a prior session. The plan is at:
 
 ```
-unified-trading-pm/plans/active/sports_phantom_fixtures_recovery_2026_05_06.plan.md
+unified-trading-pm/plans/active/sports_phantom_fixtures_recovery_2026_05_06.md
 ```
 
 Read it once before doing anything. It's locked to `live-defi-rollout` and has 7 todos in a phased DAG plus 3 parallel

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Dev environment smoke test.
 
-SSOT: unified-trading-pm/plans/active/dev_environment_automated_onboarding_2026_03_10.plan.md
+SSOT: unified-trading-pm/plans/active/dev_environment_automated_onboarding_2026_03_10.md.md
 Phase 4.1 — smoke-test-dev.py
 
 Checks (each prints PASS/FAIL):

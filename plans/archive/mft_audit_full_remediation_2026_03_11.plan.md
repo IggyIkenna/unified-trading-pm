@@ -104,7 +104,7 @@ todos:
     status: done
   - id: trading-critical-todos-tracked
     content:
-      "§13.2 — Add 7 trading-critical TODOs as tracked plan todos in stub_completion_interfaces_and_infra.plan.md: risk
+      "§13.2 — Add 7 trading-critical TODOs as tracked plan todos in stub_completion_interfaces_and_infra.md: risk
       batch compute, cash reserve check, BALANCER-ETH, live UMI gas estimator, roll calendar prices, mark price features"
     status: done
   - id: npm-version-drift-fixes
@@ -115,7 +115,7 @@ todos:
   - id: baseline-json-docs
     content:
       "§8.1 — Document market-data-processing-service/.basedpyright-baseline.json (8722L) in
-      QUALITY_GATE_BYPASS_AUDIT.md with status DOCUMENTED-WARN and link to zero_baseline_typecheck_2026_03_10.plan.md"
+      QUALITY_GATE_BYPASS_AUDIT.md with status DOCUMENTED-WARN and link to zero_baseline_typecheck_2026_03_10.md"
     status: done
 isProject: false
 ---

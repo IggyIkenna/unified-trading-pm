@@ -377,7 +377,7 @@ todos:
     status: in_progress
     note:
       "CR4 reached on all 6 repos (D1/D2/D3 PASS per phase2 plan). D4/D5 quickmerge pending. Sub-plan:
-      phase2_library_tier_hardening.plan.md t0-progressive-validation."
+      phase2_library_tier_hardening.md t0-progressive-validation."
 
   - id: cr-t0-cr3
     content:
@@ -394,7 +394,7 @@ todos:
       "T1 TIER: Push UTL and URDI to CR5. REQUIRES T0 all CR5. Sub-plan todos: t1-uts-code-rewrite (UTL rename),
       t1-uts-progressive-validation (D5). URDI: verify QG passes post URDI setup (t0-code-rewrite DONE)."
     status: todo
-    note: "Blocked on T0 CR5. Sub-plan: phase2_library_tier_hardening.plan.md t1-uts-progressive-validation."
+    note: "Blocked on T0 CR5. Sub-plan: phase2_library_tier_hardening.md t1-uts-progressive-validation."
     blocked_by: cr-t0-cr5
 
   - id: cr-t1-cr3
@@ -409,7 +409,7 @@ todos:
   - id: cr-t2-cr5
     content:
       "T2 TIER: Push UMI, UTEI, UML, UFC, UDEI, USEI to CR5. REQUIRES T0+T1 all CR5. Fix UMI basedpyright (67 errors —
-      extraPaths). Fix UDEI basedpyright (78 errors). Sub-plan: phase2_library_tier_hardening.plan.md t2-*."
+      extraPaths). Fix UDEI basedpyright (78 errors). Sub-plan: phase2_library_tier_hardening.md t2-*."
     status: todo
     note: "Blocked on T1 CR5."
     blocked_by: cr-t1-cr5
@@ -426,7 +426,7 @@ todos:
   - id: cr-t3-cr5
     content:
       "T3 TIER: Push UDC to CR5. REQUIRES T0+T1+T2 all CR5. Complete t3-udc-code-rewrite (UCLI migration),
-      t3-udc-progressive-validation (D5). Sub-plan: phase2_library_tier_hardening.plan.md t3-* todos."
+      t3-udc-progressive-validation (D5). Sub-plan: phase2_library_tier_hardening.md t3-* todos."
     status: todo
     note: "Blocked on T2 CR5."
     blocked_by: cr-t2-cr5
@@ -444,7 +444,7 @@ todos:
     content:
       "SERVICES FUNCTIONALITY AUDIT: Run functionality audit (§2 of trading_system_audit_prompt) against all 22 service
       repos. Identify repos at CR0 vs CR1. Create sub-tasks for any CR0 repo with incomplete stubs or missing core
-      logic. Sub-plan: phase3_service_hardening_integration.plan.md."
+      logic. Sub-plan: phase3_service_hardening_integration.md."
     status: todo
     note: "Blocked on T3 CR5. Phase 3 plan owns individual service todos."
     blocked_by: cr-t3-cr5
@@ -452,7 +452,7 @@ todos:
   - id: cr-services-cr2
     content:
       "SERVICES UNIT TESTS: All 22 service repos reach CR2 (unit tests 100% passing, coverage ≥ 70%). Fix skipped tests.
-      Re-run --cov-report=xml for audit reads. Sub-plan: phase3_service_hardening_integration.plan.md."
+      Re-run --cov-report=xml for audit reads. Sub-plan: phase3_service_hardening_integration.md."
     status: todo
     blocked_by: cr-services-cr1
 
@@ -481,7 +481,7 @@ todos:
   - id: cr-apis-cr5
     content:
       "APIS: All 7 API repos (ERA, MDA, CRA, MLIA, MLTA, TAA, BAA) reach CR5. Sub-plan:
-      phase3_service_hardening_integration.plan.md T5 section."
+      phase3_service_hardening_integration.md T5 section."
     status: todo
     blocked_by: cr-services-cr5
 
@@ -509,7 +509,7 @@ todos:
   - id: dr-services-dr3
     content:
       "DR SERVICES: Deploy all service repos to feature Cloud Run environment. Verify GET /health and GET /readiness.
-      Blocked on CR5 + cloud infra provisioned (api_keys_and_auth.plan.md)."
+      Blocked on CR5 + cloud infra provisioned (api_keys_and_auth.md)."
     status: todo
     blocked_by: cr-services-cr5
 
@@ -540,7 +540,7 @@ todos:
 
   - id: br-pnl-targets
     content:
-      "BR4/BR5 PNL: Declare domain KPIs per revenue-path repo. Run backtests (e2e_smoke_and_portable_backtests.plan.md).
+      "BR4/BR5 PNL: Declare domain KPIs per revenue-path repo. Run backtests (e2e_smoke_and_portable_backtests.md).
       Verify: strategy-service Sharpe ≥ target; execution-service alpha ≥ benchmark; pnl-attribution-service accuracy ≥
       threshold. Store backtest artifacts in GCS."
     status: todo
@@ -576,14 +576,14 @@ aggregate stage state and the tier-blocking invariants.
 
 | Scope                            | Sub-Plan                                                 | Status      |
 | -------------------------------- | -------------------------------------------------------- | ----------- |
-| T0–T3 library hardening          | `phase2_library_tier_hardening.plan.md`                  | IN_PROGRESS |
-| T4–T6 service hardening          | `phase3_service_hardening_integration.plan.md`           | PENDING     |
+| T0–T3 library hardening          | `phase2_library_tier_hardening.md`                  | IN_PROGRESS |
+| T4–T6 service hardening          | `phase3_service_hardening_integration.md`           | PENDING     |
 | UI vitest / component tests      | `ui-audit-results.md` action items                       | PENDING     |
-| SIT deployment                   | `production_mock_e2e_plan_d90c8f20.plan.md`              | IN_PROGRESS |
-| Portable backtests / PnL         | `e2e_smoke_and_portable_backtests.plan.md`               | IN_PROGRESS |
-| Cloud infra / API keys           | `api_keys_and_auth.plan.md`                              | ACTIVE      |
-| Performance testing              | `performance_testing_load_benchmarks_2026_03_10.plan.md` | PENDING     |
-| Circuit breaker + event handling | `stub_completion_interfaces_and_infra.plan.md`           | ACTIVE      |
+| SIT deployment                   | `production_mock_e2e_plan_d90c8f20.md`              | IN_PROGRESS |
+| Portable backtests / PnL         | `e2e_smoke_and_portable_backtests.md`               | IN_PROGRESS |
+| Cloud infra / API keys           | `api_keys_and_auth.md`                              | ACTIVE      |
+| Performance testing              | `performance_testing_load_benchmarks_2026_03_10.md` | PENDING     |
+| Circuit breaker + event handling | `stub_completion_interfaces_and_infra.md`           | ACTIVE      |
 
 ---
 

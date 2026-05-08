@@ -37,7 +37,7 @@ session).
 
 ## Cross-references
 
-- **Sibling Wave A plans:** refactor*g1*{1,5,9,12,14}\_2026_04_20.plan.md
+- **Sibling Wave A plans:** refactor*g1*{1,5,9,12,14}\_2026_04_20.md
 - **Wave D consumer:** refactor_g1_7_restriction_profile_engine — the engine's output maps to `lockState` per tile.
 - **Rules cited:** `_ssot-rules/06-show-dont-show-discipline.md` (LOCKED-VISIBLE vs HIDDEN-ENTIRELY section)
 - **Cross-cutting:** `codex/14-playbooks/cross-cutting/visibility-slicing.md`
@@ -218,7 +218,7 @@ All must exist. STOP if any missing.
 ### Task
 
 Execute every checkbox in Phases 3A through 3E of this plan:
-`plans/active/refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md`
+`plans/active/refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md`
 
 ### Read-set (mandatory)
 

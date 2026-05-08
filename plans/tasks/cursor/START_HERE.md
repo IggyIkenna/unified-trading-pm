@@ -48,7 +48,7 @@ enforcement) **Structure**: 1 template + 3 executable tasks
 │   └── [Other context files]
 │
 └── [root plans]     ← HISTORICAL (background reference)
-    └── service_structure_standardization_*.plan.md, etc.
+    └── service_structure_standardization_*.md, etc.
 ```
 
 ---
@@ -93,7 +93,7 @@ Each task doc explicitly references context:
 Sub-Agent prompt includes:
 "Read .cursor/plans/contexts/CODING_STANDARDS.md for patterns"
 "Reference: instruments_service/processors/cefi_processor.py (working example)"
-"See .cursor/plans/service_structure_standardization_*.plan.md for full context"
+"See .cursor/plans/service_structure_standardization_*.md for full context"
 ```
 
 **Sub-agents CAN access any plan** - you just tell them which files to read in their prompt!

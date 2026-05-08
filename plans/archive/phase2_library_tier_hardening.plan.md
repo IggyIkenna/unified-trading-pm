@@ -146,8 +146,8 @@ EXECUTED by their owning interface repos:
 
 ## Cross-References
 
-- Phase 1: `phase1_foundation_prep.plan.md` — prerequisite
-- Phase 3: `phase3_service_hardening_integration.plan.md` — follows this phase (T4–T6 services) todos:
+- Phase 1: `phase1_foundation_prep.md` — prerequisite
+- Phase 3: `phase3_service_hardening_integration.md` — follows this phase (T4–T6 services) todos:
 - id: p2-global-violation-sweep content: "Run ONCE across ALL repos after Phase 1 complete (10 agents PARALLEL). ROUND
   1: replace os.getenv()/os.environ.get()/os.environ[KEY] with UnifiedCloudConfig or get_secret_client(); fix bare
   except/silent swallows to log+reraise; print() → logger.info(); datetime.now()/utcnow() → datetime.now(timezone.utc);
@@ -287,13 +287,13 @@ EXECUTED by their owning interface repos:
 - id: t2-tests-first content: "T2 STEP B — TESTS FIRST [7 agents PARALLEL]: vcr-public-venues (UMI VCR cassettes:
   kalshi, polymarket, thegraph, defillama, fear_greed); vcr-new-adapters-public, vcr-new-adapters-cefi-sports,
   vcr-new-adapters-tradfi-altdata; p0-umi-skipped-test (unskip after p0-canonical-swap-fix); usei-v1-betfair-pinnacle
-  (USEI Betfair + Pinnacle adapters using BaseSportsAdapter protocol — BLOCKED on api_keys_and_auth.plan.md §
+  (USEI Betfair + Pinnacle adapters using BaseSportsAdapter protocol — BLOCKED on api_keys_and_auth.md §
   phase-3-keys: betfair + pinnacle keys must be in SM first)." status: done notes: | VERIFIED (2026-03-11):
   p0-canonical-swap-fix — CanonicalSwap exists in UIC (unified_internal_contracts/market_data/defi.py) and is imported
   by UMI **init**.py. Done. The 2 remaining @pytest.mark.skip in UMI (Morpho adapter) are unrelated behavioral skips
   (OSError/ValueError propagation), not UIC-related. vcr-public-venues / vcr-new-adapters-\*: MIGRATED →
-  plans/ai/api_keys_and_auth.plan.md under free-sources-audit and phase-2-http todos. VCR recording requires key
-  management context — tracked there. usei-v1-betfair-pinnacle: MIGRATED → plans/ai/api_keys_and_auth.plan.md §
+  plans/ai/api_keys_and_auth.md under free-sources-audit and phase-2-http todos. VCR recording requires key
+  management context — tracked there. usei-v1-betfair-pinnacle: MIGRATED → plans/ai/api_keys_and_auth.md §
   phase-4-blockers. T2 TESTS: ALL VERIFIED CLEAN OR MIGRATED (2026-03-11).
 - id: t2-code-rewrite content: "T2 STEP C — CODE REWRITE [7 agents PARALLEL]: p0-canonical-swap-fix (bump UIC patch +
   reinstall in UMI); vcr-urdi-parse-raw-umi-stubs (implement 12 NotImplementedError stubs in UMI);

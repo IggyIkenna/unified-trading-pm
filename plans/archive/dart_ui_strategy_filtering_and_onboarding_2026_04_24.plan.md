@@ -6,7 +6,7 @@ repos_affected:
   - unified-api-contracts
   - unified-trading-pm
 status: superseded
-superseded_by: marketing_site_three_route_consolidation_2026_04_26.plan.md
+superseded_by: marketing_site_three_route_consolidation_2026_04_26.md
 superseded_on: 2026-04-26
 current_readiness: C2
 target_readiness: C5
@@ -16,7 +16,7 @@ target_readiness: C5
 
 > **Status note (2026-04-26): SUPERSEDED.** Phases 1–3 of this plan (UAC restriction-profile axes, UI types,
 > questionnaire form, seed mapper, catalogue hydration) shipped via the Funnel Coherence rollout — see
-> `marketing_site_three_route_consolidation_2026_04_26.plan.md` Workstream E (commits `029ab371` + `c132421d`, plus the
+> `marketing_site_three_route_consolidation_2026_04_26.md` Workstream E (commits `029ab371` + `c132421d`, plus the
 > seed-mapper extension that landed alongside this supersedure tag).
 >
 > Phase 4 (Desmond demo persona + email handoff) is operator-driven and tracked via the demo-ops profile YAMLs under

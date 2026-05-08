@@ -112,7 +112,7 @@ todos:
       INDEX.md (IBKR key not in SM)."
     status: done
     notes:
-      "MIGRATED 2026-03-11 → api_keys_and_auth.plan.md todo ibkr-sm-credentials. Human action required: gcloud secrets
+      "MIGRATED 2026-03-11 → api_keys_and_auth.md todo ibkr-sm-credentials. Human action required: gcloud secrets
       create ibkr-account-credentials + add account/password JSON."
   - id: ibkr-vm-deploy
     content: >-
@@ -177,7 +177,7 @@ todos:
   - id: ibkr-index-blocker-resolve
     content:
       "After sm-credentials and mock-pattern-codex are complete: remove the IBKR blocker row from INDEX.md ('IBKR key
-      not in SM + TWS VCR strategy undefined'). Update api_keys_and_auth.plan.md phase-2-ws IBKR row to 'resolved'."
+      not in SM + TWS VCR strategy undefined'). Update api_keys_and_auth.md phase-2-ws IBKR row to 'resolved'."
     status: done
 isProject: true
 ---

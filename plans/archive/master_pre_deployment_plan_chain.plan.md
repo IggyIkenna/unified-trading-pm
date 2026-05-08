@@ -23,15 +23,15 @@ depends_on: []
 
 todos:
   - id: phase0-environment
-    content: "Phase 0 — Audit Remediation (phase0_audit_remediation.plan.md). All 5 streams complete: secrets/UCI/config (S1), UTL/FDS (S2), instruments/strategy/ml-training/deployment (S3), execution/MTDS/sports (S4), WARN cleanup (S5)."
+    content: "Phase 0 — Audit Remediation (phase0_audit_remediation.md). All 5 streams complete: secrets/UCI/config (S1), UTL/FDS (S2), instruments/strategy/ml-training/deployment (S3), execution/MTDS/sports (S4), WARN cleanup (S5)."
     status: done
-    notes: "DONE 2026-03-07. All todos in archive/phase0_audit_remediation.plan.md marked done. Grade D → remediated."
+    notes: "DONE 2026-03-07. All todos in archive/phase0_audit_remediation.md marked done. Grade D → remediated."
   - id: phase0b-audit-standards
-    content: "Phase 0b — Workspace Audit Remediation 2026-03-07 (workspace_audit_remediation_2026_03_07.plan.md). 10 FAILs + 47 WARNs resolved. Two pending items remain: fix-cloudbuild-template-drift (P4, low) and fix-coverage-pct-placeholders (P4, low)."
+    content: "Phase 0b — Workspace Audit Remediation 2026-03-07 (workspace_audit_remediation_2026_03_07.md). 10 FAILs + 47 WARNs resolved. Two pending items remain: fix-cloudbuild-template-drift (P4, low) and fix-coverage-pct-placeholders (P4, low)."
     status: done
     notes: "DONE 2026-03-07. All P0/P1/P2/P3 items completed. Two P4 (low) items remain but do not block Phase 1 or Phase 2."
   - id: phase1-foundation
-    content: "Phase 1 — Foundation & Prep (archive/phase1_foundation_prep.plan.md). Three streams: STREAM A (CI/CD: quickmerge rollout, commit-msg hooks, pipeline wiring), STREAM B (deployment structure: visualizer extract, UTD V3 four-way split, UI audit, infra merge, hybrid live seam), STREAM C (QG baseline: cursor rules, manifest schema, quality gates, Cloud Build audit, AWS parity). All todos marked done or completed."
+    content: "Phase 1 — Foundation & Prep (archive/phase1_foundation_prep.md). Three streams: STREAM A (CI/CD: quickmerge rollout, commit-msg hooks, pipeline wiring), STREAM B (deployment structure: visualizer extract, UTD V3 four-way split, UI audit, infra merge, hybrid live seam), STREAM C (QG baseline: cursor rules, manifest schema, quality gates, Cloud Build audit, AWS parity). All todos marked done or completed."
     status: done
     notes: "DONE 2026-03-06. Plan archived. All STREAM A/B/C items complete. Phase 1 done criteria met: 55 repos have quickmerge + version-bump.yml; deployment-service/api/ui/system-integration-tests split; all 3 cursor rules created; manifest schema extended; QG baseline recorded; AWS parity (buildspec.aws.yaml on all 45 repos)."
   - id: import-audit-b9-terraform
@@ -39,11 +39,11 @@ todos:
     status: done
     notes: "VERIFIED 2026-03-08. deployment-service/terraform/gcp/ contains main.tf, outputs.tf, secret_rotation.tf, variables.tf. deployment-service/terraform/aws/ contains main.tf, outputs.tf, variables.tf. Terraform files complete — B9 closed."
   - id: plans-1-2-7
-    content: "Week 1 — Workspace quickmerge validation, UI validation DUE. NOTE: Plan 7 (portable backtests) runs Days 8–9 (start of Week 2) — see e2e_smoke_and_portable_backtests.plan.md which states 'Day 8–9 in execution sequence'. Week 1 deadline applies to Plans 1–2 only."
+    content: "Week 1 — Workspace quickmerge validation, UI validation DUE. NOTE: Plan 7 (portable backtests) runs Days 8–9 (start of Week 2) — see e2e_smoke_and_portable_backtests.md which states 'Day 8–9 in execution sequence'. Week 1 deadline applies to Plans 1–2 only."
     status: in_progress
-    notes: "Plans 1–2 (quickmerge rollout + UI validation) functionally complete as part of Phase 1 Foundation. Plan 7 (portable backtests) is active in e2e_smoke_and_portable_backtests.plan.md — pending execution of backtest runs."
+    notes: "Plans 1–2 (quickmerge rollout + UI validation) functionally complete as part of Phase 1 Foundation. Plan 7 (portable backtests) is active in e2e_smoke_and_portable_backtests.md — pending execution of backtest runs."
   - id: plans-3-4
-    content: "Weeks 2–3 — Phase 2 library tier hardening: coverage 70% + strict basedpyright. INVARIANT: T0 must reach D5 green before T1 starts; T1 before T2; T2 before T3. Each tier is a full day minimum. Global violation sweep (p2-global-violation-sweep) runs ONCE across all repos before tier work begins. Realistic span: T0 Day 2, T1 Day 3, T2 Days 4–5, T3 Day 6. Person A: T0–T2 (library-heavy); Person B: T2–T3 (interface-heavy). See phase2_library_tier_hardening.plan.md INVARIANT section."
+    content: "Weeks 2–3 — Phase 2 library tier hardening: coverage 70% + strict basedpyright. INVARIANT: T0 must reach D5 green before T1 starts; T1 before T2; T2 before T3. Each tier is a full day minimum. Global violation sweep (p2-global-violation-sweep) runs ONCE across all repos before tier work begins. Realistic span: T0 Day 2, T1 Day 3, T2 Days 4–5, T3 Day 6. Person A: T0–T2 (library-heavy); Person B: T2–T3 (interface-heavy). See phase2_library_tier_hardening.md INVARIANT section."
     status: in_progress
     notes: |
       Phase 2 status (2026-03-08):
@@ -58,9 +58,9 @@ todos:
     status: pending
     notes: "Blocked on Phase 2 T0 reaching D5 green. AWS parity (buildspec.aws.yaml) already complete as part of Phase 1 (DONE 2026-03-06 — all 45 repos). Arb structure check (6a) can begin independently."
   - id: plan-9-audit
-    content: "Week 4 — Full audit (trading_system_audit_prompt.plan.md all sections PASS); live trading week SUCCESS. SUCCESS DEFINITION: (1) PnL: breakeven or better across the 5-day week (total net PnL ≥ 0); (2) Reliability: ≤3 unhandled exceptions logged across all services; zero circuit breaker trips; (3) Execution: all orders placed within 500ms of signal emission (measured via execution_alpha.json latency field); (4) Coverage: at least one completed live trade per strategy category (sports arb, CEFI ML signal, TradFi ML signal, at least one DeFi MVP); (5) Audit: trading_system_audit_prompt.plan.md achieves grade A or better (no FAIL items, ≤3 WARN)."
+    content: "Week 4 — Full audit (trading_system_audit_prompt.md all sections PASS); live trading week SUCCESS. SUCCESS DEFINITION: (1) PnL: breakeven or better across the 5-day week (total net PnL ≥ 0); (2) Reliability: ≤3 unhandled exceptions logged across all services; zero circuit breaker trips; (3) Execution: all orders placed within 500ms of signal emission (measured via execution_alpha.json latency field); (4) Coverage: at least one completed live trade per strategy category (sports arb, CEFI ML signal, TradFi ML signal, at least one DeFi MVP); (5) Audit: trading_system_audit_prompt.md achieves grade A or better (no FAIL items, ≤3 WARN)."
     status: in_progress
-    notes: "trading_system_audit_prompt.plan.md active (2026-03-08). Section 1 (manifest/versions) completed. Sections 2–10 all pending. Audit report in progress — full run pending after Phase 2 T0 green."
+    notes: "trading_system_audit_prompt.md active (2026-03-08). Section 1 (manifest/versions) completed. Sections 2–10 all pending. Audit report in progress — full run pending after Phase 2 T0 green."
   - id: branch-isolation
     content: >
       Conflict resolution via automatic branch detection from workspace-manifest.json active_feature_branch
@@ -92,16 +92,16 @@ isProject: false
 
 | Phase                  | Plan File                                      | Status      | Notes                                                                                   |
 | ---------------------- | ---------------------------------------------- | ----------- | --------------------------------------------------------------------------------------- |
-| Phase 0 — Environment  | archive/phase0_audit_remediation.plan.md       | **DONE**    | All 5 streams complete (2026-03-07)                                                     |
-| Phase 0b — Audit       | workspace_audit_remediation_2026_03_07.plan.md | **DONE**    | 10 FAILs + 47 WARNs resolved; 2 P4 items remain (non-blocking)                          |
-| Phase 1 — Foundation   | archive/phase1_foundation_prep.plan.md         | **DONE**    | All STREAM A/B/C items complete (2026-03-06); plan archived                             |
+| Phase 0 — Environment  | archive/phase0_audit_remediation.md       | **DONE**    | All 5 streams complete (2026-03-07)                                                     |
+| Phase 0b — Audit       | workspace_audit_remediation_2026_03_07.md | **DONE**    | 10 FAILs + 47 WARNs resolved; 2 P4 items remain (non-blocking)                          |
+| Phase 1 — Foundation   | archive/phase1_foundation_prep.md         | **DONE**    | All STREAM A/B/C items complete (2026-03-06); plan archived                             |
 | B9 Terraform           | (import_audit_2026_03_08 item)                 | **DONE**    | deployment-service/terraform/gcp/ + aws/ verified complete                              |
-| Phase 2 — Library Tier | phase2_library_tier_hardening.plan.md          | IN_PROGRESS | T0 D1/D2/D3 PASS; D4/D5 pending; T1–T3 not yet started (T0 invariant)                   |
-| Phase 3 — Services     | phase3_service_hardening_integration.plan.md   | PENDING     | Blocked on Phase 2 T0–T3 all green (D5)                                                 |
+| Phase 2 — Library Tier | phase2_library_tier_hardening.md          | IN_PROGRESS | T0 D1/D2/D3 PASS; D4/D5 pending; T1–T3 not yet started (T0 invariant)                   |
+| Phase 3 — Services     | phase3_service_hardening_integration.md   | PENDING     | Blocked on Phase 2 T0–T3 all green (D5)                                                 |
 | Phase 4 — Integration  | (schema robustness + layer 1 tests)            | IN_PROGRESS | Layer 0 contract tests done; Layer 1 schema robustness in plan todos; Layer 2–3 blocked |
 | Phase 5 — Pre-Deploy   | (deploy infra gates)                           | PENDING     | Blocked: deploy infrastructure not yet provisioned                                      |
-| Phase 6 — Cloud Build  | aws_migration.plan.md                          | PENDING     | buildspec.aws.yaml complete on all repos; blocked on AWS account/CodeBuild access       |
-| Phase 7 — Final Audit  | trading_system_audit_prompt.plan.md            | IN_PROGRESS | Section 1 done (2026-03-08); full audit run pending Phase 2 completion                  |
+| Phase 6 — Cloud Build  | aws_migration.md                          | PENDING     | buildspec.aws.yaml complete on all repos; blocked on AWS account/CodeBuild access       |
+| Phase 7 — Final Audit  | trading_system_audit_prompt.md            | IN_PROGRESS | Section 1 done (2026-03-08); full audit run pending Phase 2 completion                  |
 | Plan 9 — Live Trading  | (March 20 gate)                                | PENDING     | All phases must complete first                                                          |
 
 ---
@@ -188,7 +188,7 @@ Week 4 (Mar 15–20): Phase 3 service hardening begins (after all T0–T3 green)
 Live trading week: March 20
 ```
 
-> **Phase 2 invariant (from phase2_library_tier_hardening.plan.md):** Never touch tier N until tier N-1 is fully green
+> **Phase 2 invariant (from phase2_library_tier_hardening.md):** Never touch tier N until tier N-1 is fully green
 > (all D5 passes). T0→T1→T2→T3 is a hard sequential constraint — parallelism is within a tier only (repos within T0 can
 > be parallel; repos in T1 can run in parallel after ALL T0 repos pass D5). The master chain timeline above reflects
 > this constraint. Plans 3–4 (Coverage + basedpyright) map 1:1 to Phase 2 and span Weeks 2–3.
@@ -213,7 +213,7 @@ Live trading week: March 20
 - quickmerge.sh (--dep-branch, cascade)
 - always-use-quickmerge.mdc
 - feature-branch-workflow.md
-- plans_to_deployable_unified_audit.plan.md
+- plans_to_deployable_unified_audit.md
 - AWS_MIGRATION_PLAN.md
 - PORTABLE_BACKTESTS_PLAN.md
 - phase-gate-checklist.md (unified-trading-pm/docs/)

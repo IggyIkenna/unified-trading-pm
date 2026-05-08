@@ -5,7 +5,7 @@
 
 # Coding Standards (Codex) Audit Report
 
-**Plan:** coding_standards_codex_audit.plan.md **Generated:** 2026-03-04 **SSOT:**
+**Plan:** coding_standards_codex_audit.md **Generated:** 2026-03-04 **SSOT:**
 unified-trading-codex/06-coding-standards/
 
 ---
@@ -82,4 +82,4 @@ unified-trading-codex/06-coding-standards/
 
 | Blocker                          | Resolution                                           |
 | -------------------------------- | ---------------------------------------------------- |
-| Phase 0 baseline not established | phase0_standards_enforcement.plan.md § p0-gate-check |
+| Phase 0 baseline not established | phase0_standards_enforcement.md § p0-gate-check |

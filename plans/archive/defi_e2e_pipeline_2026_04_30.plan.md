@@ -178,7 +178,7 @@ Phase 5  — Hardening
 
 > **⚠️ SUPERSEDED 2026-05-05 — `CARRY_STAKED_BASIS` borrow path deleted.** The variable_borrow_rate fix above unblocked
 > `aave_borrow_apy` for CARRY_RECURSIVE_STAKED, but `CARRY_STAKED_BASIS` no longer uses that code path.
-> `carry_staked_basis_structure_axis_2026_05_04.plan.md` deleted COLLATERAL_BORROW (2026-05-04), then deleted
+> `carry_staked_basis_structure_axis_2026_05_04.md` deleted COLLATERAL_BORROW (2026-05-04), then deleted
 > SPLIT_STAKE (2026-05-05). Only **LST_AS_MARGIN** structure survives. Engine emits a 4-leg sequence
 > (SWAP+STAKE+TRANSFER+TRADE), no borrow leg. Empirical-progress entries below for
 > `DEFI_ETH_STAKED_BASIS_HYPERLIQUID_SCE_1H` describe the **pre-pivot** shape — re-verify after running against the
@@ -228,7 +228,7 @@ strategy parquets. Either CLAUDE.md is aspirational or there's a separate orches
       tracer. Net APR uplift ~4.31pp at LTV=0.85 for `{weETH, pufETH, ETHx, ankrETH}`. pufETH flips from base-loss to
       net-profit thanks to EL.
 - [x] [HUMAN_AGENT] execution-service `726e20f4` — same EL APY layered into REBASING_YIELD tracer.
-- [x] [HUMAN_AGENT] PM `defi_e2e_pipeline_2026_04_30.plan.md` — this plan.
+- [x] [HUMAN_AGENT] PM `defi_e2e_pipeline_2026_04_30.md` — this plan.
 - [x] [HUMAN_AGENT] Strategy-service quality-gates pass: 2006 tests passing, 75.10% coverage (above 74% threshold). Only
       2 pre-existing unrelated failures (test_service_startup.py uses `categories=` kwarg but ServiceCLI now expects
       `asset_group_choices=` per the asset_group vocabulary rename).

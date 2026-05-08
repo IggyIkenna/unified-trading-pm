@@ -26,8 +26,8 @@ Consumers:
 
 SSOT:
 
-* ``plans/active/questionnaire_response_sync_script_2026_04_22.plan.md``
-* ``plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`` §Deviations
+* ``plans/active/questionnaire_response_sync_script_2026_04_22.md.md``
+* ``plans/active/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md.md`` §Deviations
 """
 
 from __future__ import annotations

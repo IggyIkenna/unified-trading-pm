@@ -2,7 +2,7 @@
 # setup-dev-environment.sh — Automated dev environment setup for unified trading system.
 #
 # SSOT: unified-trading-pm/scripts/workspace/setup-dev-environment.sh
-# Plan: unified-trading-pm/plans/active/dev_environment_automated_onboarding_2026_03_10.plan.md
+# Plan: unified-trading-pm/plans/active/dev_environment_automated_onboarding_2026_03_10.md
 #
 # Run from workspace root:
 #   bash unified-trading-pm/scripts/workspace/setup-dev-environment.sh

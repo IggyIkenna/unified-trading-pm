@@ -6,7 +6,7 @@ tags: [plans, documentation, agents]
 ---
 # Plan Structure Order
 
-RULE: In .plan.md files, ALL todos and completion gates MUST appear in the frontmatter YAML block (before the closing `---`). Notes, context, architecture, Mermaid diagrams go AFTER frontmatter.
+RULE: In .md files, ALL todos and completion gates MUST appear in the frontmatter YAML block (before the closing `---`). Notes, context, architecture, Mermaid diagrams go AFTER frontmatter.
 
 WHY: The conflict-resolution-agent loads `head -250` per plan for non-relevant repos and full content for relevant repos. Todos buried after 250 lines of notes are invisible during automated conflict resolution.
 

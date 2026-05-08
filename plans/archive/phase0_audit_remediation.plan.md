@@ -1,7 +1,7 @@
 ---
 name: "Phase 0 — Audit Remediation"
 overview: |
-  Companion to phase0_standards_enforcement.plan.md. Runs IN PARALLEL with enforcement during Phase 0.
+  Companion to phase0_standards_enforcement.md. Runs IN PARALLEL with enforcement during Phase 0.
   Converts every FAIL/WARN audit finding into a concrete, ordered task with file-level evidence.
   DOES NOT replace enforcement — enforcement scans and verifies; this plan fixes what enforcement finds.
 
@@ -41,7 +41,7 @@ todos:
     status: done
 isProject: true
 blockedBy:
-  - plan: phase0_standards_enforcement.plan.md
+  - plan: phase0_standards_enforcement.md
     reason:
       "Enforcement scan identifies the FAIL/WARN items that this plan fixes. Stream 1 can begin as soon as the initial
       scan is complete — does not need full enforcement to be done."
@@ -49,7 +49,7 @@ blockedBy:
 
 # Phase 0 — Audit Remediation Plan
 
-## Relationship to phase0_standards_enforcement.plan.md
+## Relationship to phase0_standards_enforcement.md
 
 These are **two parallel Phase 0 companions, not competing plans:**
 
@@ -554,6 +554,6 @@ All of the following must be true before Phase 1 Stream A starts:
 
 ## Plan File Location
 
-Once approved, save as: `unified-trading-pm/plans/active/phase0_audit_remediation.plan.md`
+Once approved, save as: `unified-trading-pm/plans/active/phase0_audit_remediation.md`
 
 Add to INDEX.md as Day 0, blocking Phase 1 stream A.

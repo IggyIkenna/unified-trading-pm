@@ -387,8 +387,8 @@ same name + scope. Folded:
   Operational scope (manifest schema + backfill + retire + schedule across 5 asset groups) is fully covered by this
   2026-05-01 epic with tighter audit. No item-level migration needed — strict subset.
 - `data_canonicalisation_mvp_2026_04_17` (archived) — 33/67 done; Phase 3 migration scripts (CeFi/TradFi/DeFi) already
-  shipped per `plans/archive/market_tick_data_to_100pct_2026_05_05.plan.md` lines 65-67 (`migrate_*_canonical.py` exist
+  shipped per `plans/archive/market_tick_data_to_100pct_2026_05_05.md` lines 65-67 (`migrate_*_canonical.py` exist
   in MTDS; per-asset-group MTDS-to-100% slices now folded into the asset_group umbrellas `cefi_master_2026_05_07` /
   `defi_master_2026_05_07` / `tradfi_master_2026_05_07` / `sports_master_2026_05_07` / `predictions_master_2026_05_07`).
-  Residual Phase 5/6 validation belongs in `infrastructure_master_2026_05_07.plan.md` (folds in
+  Residual Phase 5/6 validation belongs in `infrastructure_master_2026_05_07.md` (folds in
   `plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`).

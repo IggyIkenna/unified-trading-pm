@@ -265,7 +265,7 @@ In the `contract-adoption-check` job, add two new steps after the existing UIC/U
 
 1. **Write `check_uic_completeness.py`** — run locally, confirm it finds the 10 known gaps
 2. **Add 10 missing UIC domain classes to `__all__`** — then run adoption checker for them (expect new orphans → follow
-   `orphan-contracts-utilization.plan.md` pattern to wire each into a service)
+   `orphan-contracts-utilization.md` pattern to wire each into a service)
 3. **Write `check_uac_completeness.py`** — run locally, baseline the gap count
 4. **Add UAC missing classes to `__all__`** — follow orphan-uac-utilization pattern
 5. **Write SIT tests** — parametrized, mirror adoption coverage tests pattern

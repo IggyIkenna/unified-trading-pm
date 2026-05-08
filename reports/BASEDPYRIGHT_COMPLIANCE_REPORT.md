@@ -1,7 +1,7 @@
 # Basedpyright Compliance Report
 
-**Plan:** strict_basedpyright_compliance.plan.md **Generated:** 2026-03-04 **SSOT:**
-`.cursor/plans/strict_basedpyright_compliance.plan.md`
+**Plan:** strict_basedpyright_compliance.md **Generated:** 2026-03-04 **SSOT:**
+`.cursor/plans/strict_basedpyright_compliance.md`
 
 ---
 
@@ -44,7 +44,7 @@
 
 ## Recommended Fixes
 
-1. **Phase 0 baseline** (phase0_standards_enforcement.plan.md): Run basedpyright on all repos, document all bypasses.
+1. **Phase 0 baseline** (phase0_standards_enforcement.md): Run basedpyright on all repos, document all bypasses.
 2. **unified-cloud-interface**: Fix reportUnknown\* by adding explicit types.
 3. **unified-reference-data-interface**: Fix TypedDict access in bybit.py (use .get() or make keys required).
 4. **unified-trading-library**: Reduce exclude list; fix types in included modules.

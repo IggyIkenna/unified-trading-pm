@@ -1,7 +1,7 @@
 ---
 name: sports-integration-04-feature-calculators-full
 remaining_todos_consolidated_into: consolidated_sports_prediction_pipeline_2026_04_15
-superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.plan.md]
+superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
 overview: |
@@ -143,7 +143,7 @@ todos:
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [consolidated_sports_prediction_pipeline_2026_04_15.plan.md](./consolidated_sports_prediction_pipeline_2026_04_15.plan.md).**
+> [consolidated_sports_prediction_pipeline_2026_04_15.md](./consolidated_sports_prediction_pipeline_2026_04_15.md).**
 > Original scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
 > formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
 > evidence.

@@ -44,7 +44,7 @@ class TestMain:
     def test_plan_with_valid_http_link(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         plans_dir = tmp_path / "plans" / "active"
         plans_dir.mkdir(parents=True)
-        plan = plans_dir / "test.plan.md"
+        plan = plans_dir / "test.md.md"
         plan.write_text("See [docs](https://example.com) for details.\n")
         monkeypatch.setattr(
             "sys.argv",
@@ -56,7 +56,7 @@ class TestMain:
     def test_plan_with_anchor_link(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         plans_dir = tmp_path / "plans" / "active"
         plans_dir.mkdir(parents=True)
-        plan = plans_dir / "test.plan.md"
+        plan = plans_dir / "test.md.md"
         plan.write_text("See [section](#my-section) for details.\n")
         monkeypatch.setattr(
             "sys.argv",
@@ -68,10 +68,10 @@ class TestMain:
     def test_plan_with_valid_relative_link(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         plans_dir = tmp_path / "plans" / "active"
         plans_dir.mkdir(parents=True)
-        other_plan = plans_dir / "other.plan.md"
+        other_plan = plans_dir / "other.md.md"
         other_plan.write_text("Other plan\n")
-        plan = plans_dir / "test.plan.md"
-        plan.write_text("See [other](other.plan.md) for details.\n")
+        plan = plans_dir / "test.md.md"
+        plan.write_text("See [other](other.md.md) for details.\n")
         monkeypatch.setattr(
             "sys.argv",
             ["validate_plan_links.py", "--plans-dir", str(plans_dir), "--workspace-root", str(tmp_path)],
@@ -82,8 +82,8 @@ class TestMain:
     def test_plan_with_broken_relative_link(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         plans_dir = tmp_path / "plans" / "active"
         plans_dir.mkdir(parents=True)
-        plan = plans_dir / "test.plan.md"
-        plan.write_text("See [missing](nonexistent.plan.md) for details.\n")
+        plan = plans_dir / "test.md.md"
+        plan.write_text("See [missing](nonexistent.md.md) for details.\n")
         monkeypatch.setattr(
             "sys.argv",
             ["validate_plan_links.py", "--plans-dir", str(plans_dir), "--workspace-root", str(tmp_path)],
@@ -97,7 +97,7 @@ class TestMain:
         # Create the repo directory so the link resolves
         repo_dir = tmp_path / "execution-service"
         repo_dir.mkdir()
-        plan = plans_dir / "test.plan.md"
+        plan = plans_dir / "test.md.md"
         plan.write_text("See [exec](execution-service/something) for details.\n")
         monkeypatch.setattr(
             "sys.argv",
@@ -112,10 +112,10 @@ class TestMain:
         archive_dir = tmp_path / "plans" / "archive"
         archive_dir.mkdir(parents=True)
         # Put an archived plan
-        archived = archive_dir / "old.plan.md"
+        archived = archive_dir / "old.md.md"
         archived.write_text("Old plan\n")
-        plan = plans_dir / "test.plan.md"
-        plan.write_text("See [old](old.plan.md) for details.\n")
+        plan = plans_dir / "test.md.md"
+        plan.write_text("See [old](old.md.md) for details.\n")
         monkeypatch.setattr(
             "sys.argv",
             ["validate_plan_links.py", "--plans-dir", str(plans_dir), "--workspace-root", str(tmp_path)],

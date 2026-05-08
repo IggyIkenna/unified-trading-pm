@@ -118,7 +118,7 @@ All core repos pass `pytest --collect-only -q`:
 ## References
 
 - **CONTRACTS_SEPARATION_AUDIT.md** — AC/UIC schema separation and migration
-- **orphan-contracts-utilization.plan.md** — Orphan schema test and utilization
+- **orphan-contracts-utilization.md** — Orphan schema test and utilization
 - **external-import-standards.mdc** — Top-level imports only
 - **agent-venv-bootstrap.mdc** — Workspace vs single-repo venv scenarios
 

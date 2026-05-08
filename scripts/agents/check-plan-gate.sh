@@ -9,7 +9,7 @@ set -euo pipefail
 # Returns 0 if ALL items matching the prefix are done, 1 otherwise.
 #
 # Example:
-#   bash scripts/agents/check-plan-gate.sh plans/active/some-plan.plan.md "phase1-"
+#   bash scripts/agents/check-plan-gate.sh plans/active/some-plan.md "phase1-"
 #
 # The script reads YAML frontmatter todos and checks items whose id starts with <prefix>.
 # A todo is "done" if it has "done: true" or "status: done".

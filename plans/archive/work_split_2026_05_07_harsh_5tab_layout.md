@@ -56,8 +56,8 @@ boot context.** Read it once before doing anything else, then read everything el
    shard-granularity SSOT, "Findings Triage Discipline (HARD RULE)", "Commit + Push + Flip Plan Checkboxes (HARD RULE)"
    — note the push half is deferred to main per "Push discipline" above).
 5. **`unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`** — sub-agent inheritance rules.
-6. Your **plan-of-record** (the plan doc named in your tab entry — e.g. `cefi_master_2026_05_07.plan.md` for
-   `cefi-babysit-tab`, `deployment_api_work_stream_a_2026_05_07.plan.md` for `deployment-api-phase2-tab`). This is where
+6. Your **plan-of-record** (the plan doc named in your tab entry — e.g. `cefi_master_2026_05_07.md` for
+   `cefi-babysit-tab`, `deployment_api_work_stream_a_2026_05_07.md` for `deployment-api-phase2-tab`). This is where
    your todos live, where you flip checkboxes as you ship, where you write `## Open questions`, and where you append
    your final `DONE-<YYYY-MM-DD>` block.
 
@@ -70,7 +70,7 @@ direction-setting + Q&A dispatch + push approval.
 1. Write the full question in your **plan-of-record's `## Open questions` section** (NOT this orchestration ledger, NOT
    the work_split). Status `🟡 BLOCKED`. Format per "Plan doc Q&A format" below.
 2. Append a one-liner to [`_agent_pings.md`](_agent_pings.md):
-   `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <5-10 word summary>; see <plan-of-record>.plan.md`.
+   `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <5-10 word summary>; see <plan-of-record>.md`.
 3. Optionally commit both LOCALLY (don't stress; if commits happen great, if not also fine — Q&A clutter is more costly
    than Q&A loss).
 4. Continue with anything you CAN do — don't block waiting. Main agent polls `_agent_pings.md` every ~1 min; answer
@@ -87,7 +87,7 @@ direction-setting + Q&A dispatch + push approval.
    `- [ ] [SCRIPT] P0. Description...` → `- [x] [SCRIPT] P0. Description... (<repo>@<sha> — <evidence>)`. Per CLAUDE.md
    HARD RULE: do this in the same logical unit as the code commit, not at end of session.
 2. **Append progress notes** to the relevant plan body section if you found something worth recording (e.g. "Day 2
-   monitoring sweep" subsection in `cefi_master.plan.md` is a good model — appended findings with a timestamp +
+   monitoring sweep" subsection in `cefi_master.md` is a good model — appended findings with a timestamp +
    observations).
 3. **Document findings per Findings Triage Discipline** (CLAUDE.md). Case 1 (in-scope) → fix in the same commit; case 2
    (adjacent to your plan) → annotate your plan body; case 3-4 (someone else's plan) → annotate their plan body with
@@ -157,8 +157,8 @@ model" below). Main agent polls the ping ledger autonomously so Harsh doesn't ha
 - **[`_agent_pings.md`](_agent_pings.md) = ephemeral doorbell.** Always 5-10 lines (active pings only). Sub-agents
   append a one-liner when they need attention; main agent removes the line when handled. Zero history kept here.
 - **Plan doc `## Open questions` = durable Q&A record, ON THE AGENT'S PLAN-OF-RECORD** (e.g. `cefi-babysit-tab` →
-  [`cefi_master_2026_05_07.plan.md`](cefi_master_2026_05_07.plan.md); `deployment-api-phase2-tab` →
-  [`deployment_api_work_stream_a_2026_05_07.plan.md`](deployment_api_work_stream_a_2026_05_07.plan.md)). Full question +
+  [`cefi_master_2026_05_07.md`](cefi_master_2026_05_07.md); `deployment-api-phase2-tab` →
+  [`deployment_api_work_stream_a_2026_05_07.md`](deployment_api_work_stream_a_2026_05_07.md)). Full question +
   answer + status marker. Never deleted — audit trail of "what did we ask + decide" lives here forever. **Do NOT write
   Qs into this orchestration ledger**
   ([`work_split_2026_05_07_harsh_5tab_layout.md`](work_split_2026_05_07_harsh_5tab_layout.md)) — that's main-agent-only
@@ -168,7 +168,7 @@ model" below). Main agent polls the ping ledger autonomously so Harsh doesn't ha
 
 ```
 [T+0]    Spawned agent hits ambiguity
-         ↓ writes Q1 in <agent's-plan-of-record>.plan.md `## Open questions` (status 🟡 BLOCKED)
+         ↓ writes Q1 in <agent's-plan-of-record>.md `## Open questions` (status 🟡 BLOCKED)
          ↓ appends one-liner to _agent_pings.md (with plan-doc pointer)
          ↓ optionally commits both LOCALLY — Q&A commits are not stressed; if they
            land in commits great, if not also fine. (Push follows the conditional
@@ -286,8 +286,8 @@ One line per active ping, in [`_agent_pings.md`](_agent_pings.md):
 Examples:
 
 ```text
-[2026-05-08 09:14 UTC] phase2-routes-tab — Q on subprocess.run timeout default; see deployment_api_work_stream_a_2026_05_07.plan.md
-[2026-05-08 09:32 UTC] dart-playwright-tab — done with personas 1-3, blocked on persona 4 fixture; see strategy_and_dart_master_2026_05_07.plan.md
+[2026-05-08 09:14 UTC] phase2-routes-tab — Q on subprocess.run timeout default; see deployment_api_work_stream_a_2026_05_07.md
+[2026-05-08 09:32 UTC] dart-playwright-tab — done with personas 1-3, blocked on persona 4 fixture; see strategy_and_dart_master_2026_05_07.md
 [2026-05-08 10:01 UTC] manifest-rescan-tab — silent-zero finding for prediction asset_group; see issues/prediction_silent_zero_2026_05_08.md
 ```
 
@@ -327,7 +327,7 @@ Status badges in the heading make scan-for-open-questions instant: 🟡 = needs 
 
 Each morning during boot, main agent:
 
-1. Sweep all `plans/active/*.plan.md` for `## Open questions` blocks. **Remove resolved Q&A entries entirely** (don't
+1. Sweep all `plans/active/*.md` for `## Open questions` blocks. **Remove resolved Q&A entries entirely** (don't
    archive — Q&A clutter is more costly than Q&A loss; the trail survives in commits/chat if it survived at all).
 2. Verify [`_agent_pings.md`](_agent_pings.md) has no stale entries (>24h without resolution = either re-prompt the
    sub-agent or escalate to Harsh as a stuck task).
@@ -420,7 +420,7 @@ REPORT-BACK:
 
 - **Task**: Day-2 OPS babysit of the 24 RUNNING cefi VMs (bitfinex/bitget/kraken ×futures+spot, all `e2-highmem-8`,
   post-`UTL@68b3804a` blank-reason fix relaunch).
-- **Plan-of-record**: [`cefi_master_2026_05_07.plan.md`](cefi_master_2026_05_07.plan.md).
+- **Plan-of-record**: [`cefi_master_2026_05_07.md`](cefi_master_2026_05_07.md).
 - **Q&A**: Q1 raised 03:54 UTC, ✅ RESOLVED 04:05 UTC (4 clarifications + bonus answered in plan doc). Q&A removed on
   resolve once Tab 2 confirms the answer was sufficient.
 - **Recent local commits** (queued for next operator-authorised push):
@@ -468,8 +468,8 @@ BEFORE doing anything else, read these in order:
      you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
   2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
   3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
-  4. plans/active/deploy_missing_auto_launch_2026_05_07.plan.md — your plan-of-record (full body).
-  5. plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.plan.md — parent plan
+  4. plans/active/deploy_missing_auto_launch_2026_05_07.md — your plan-of-record (full body).
+  5. plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md — parent plan
      (Phase 3 ships the preview-mode Deploy-Missing button; Tab 4 builds toward the auto-launch
      successor).
 
@@ -483,7 +483,7 @@ flips per shippable unit, DONE block on completion), findings triage. Read it on
 
 YOUR TASK:
 
-Implement Phase 1 (tarball-refresh wiring) of deploy_missing_auto_launch_2026_05_07.plan.md.
+Implement Phase 1 (tarball-refresh wiring) of deploy_missing_auto_launch_2026_05_07.md.
 Phase 0 (security review) is operator-owned and Phase 2+ are gated on Phase 0's IAM decisions
 — do NOT proceed past Phase 1.
 
@@ -527,7 +527,7 @@ READ-ONLY DEPS (do NOT edit):
 - unified-cloud-interface — read get_storage_client signature for GCS mtime read; do NOT modify.
 
 COLLISION BOUNDARIES:
-- Tab 2 (cefi-babysit-tab) is monitoring cefi VMs — only edits cefi_master.plan.md. ZERO overlap.
+- Tab 2 (cefi-babysit-tab) is monitoring cefi VMs — only edits cefi_master.md. ZERO overlap.
 - Ikenna's parallel work (writegate Phase 2.A residual on MDPS, alerting Phase 2 on
   alerting-service). ZERO overlap with deploy_missing surface.
 - main.py in deployment-api is touched by Tab 3 (just landed) — your helper is standalone, NOT
@@ -541,7 +541,7 @@ DONE-DEFINITION (verifiable bullets):
 - [ ] Unit tests for the helper (mock the Cloud Build poll + GCS mtime read).
 - [ ] `cd deployment-api && bash scripts/quality-gates.sh` Pass 1 green.
 - [ ] `cd deployment-service && bash scripts/quality-gates.sh` Pass 1 green.
-- [ ] Plan flips: plans/active/deploy_missing_auto_launch_2026_05_07.plan.md Phase 1 todos
+- [ ] Plan flips: plans/active/deploy_missing_auto_launch_2026_05_07.md Phase 1 todos
       `- [ ]` → `- [x]` with `<repo>@<sha>` evidence.
 - [ ] Plan-flip commit in PM with message
       `plan(deploy-missing-auto-launch): flip Phase 1 checkboxes (...)`.
@@ -551,7 +551,7 @@ REPORT-BACK:
 - Per shippable unit: code commit + plan-flip commit. Push per the conditional rule
   (`git fetch` + zero-incoming → push; any incoming → flag in plan-of-record + ping main).
 - Final: append a "DONE-2026-05-08" comment block at the bottom of
-  plans/active/deploy_missing_auto_launch_2026_05_07.plan.md body listing every code +
+  plans/active/deploy_missing_auto_launch_2026_05_07.md body listing every code +
   plan-flip commit sha. Main agent sees your commits immediately via shared .git/ +
   `git log --oneline live-defi-rollout`.
 ```
@@ -580,7 +580,7 @@ BEFORE doing anything else, read these in order:
   2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
   3. plans/active/issues/lending_indices_handler_bugs_2026_05_07.md — your plan-of-record
      (full bug evidence + suggested fixes).
-  4. plans/active/defi_master_2026_05_07.plan.md § "Lending-indices VM run-quality bugs" —
+  4. plans/active/defi_master_2026_05_07.md § "Lending-indices VM run-quality bugs" —
      parent context.
 
 Your agent-tag: lending-indices-bugfix-tab. Your tab number: 5.
@@ -631,7 +631,7 @@ BEFORE doing anything else, read these in order:
   1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
      you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
   2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
-  3. plans/active/defi_master_2026_05_07.plan.md § "Tail-chain / mid-tier protocol coverage
+  3. plans/active/defi_master_2026_05_07.md § "Tail-chain / mid-tier protocol coverage
      (DeFi data-status — 988 dates missing)" — your plan-of-record context.
   4. unified_api_contracts.canonical.crosscutting.chain_genesis SSOT (CHAIN_GENESIS_DATES).
   5. unified_api_contracts.canonical.domain.defi.protocol_launch SSOT (PROTOCOL_LAUNCH_DATES).
@@ -690,11 +690,11 @@ BEFORE doing anything else, read these in order:
   1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
      you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
   2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
-  3. plans/active/mtds_databento_path_streaming_2026_05_07.plan.md Phase 1 — your plan-of-record.
+  3. plans/active/mtds_databento_path_streaming_2026_05_07.md Phase 1 — your plan-of-record.
 
 Your agent-tag: mtds-databento-streaming-tab. Your tab number: 7.
 
-YOUR TASK: implement Phase 1 of mtds_databento_path_streaming_2026_05_07.plan.md — chunked
+YOUR TASK: implement Phase 1 of mtds_databento_path_streaming_2026_05_07.md — chunked
 streaming for Databento `get_range` responses to bound peak memory.
 
 Refactor scope (per the plan body's 5 migration steps):
@@ -740,11 +740,11 @@ BEFORE doing anything else, read these in order:
   1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
      you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
   2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
-  3. plans/active/audit_followups_2026_05_07.plan.md items #1-#6 — your plan-of-record.
+  3. plans/active/audit_followups_2026_05_07.md items #1-#6 — your plan-of-record.
 
 Your agent-tag: audit-followups-tab. Your tab number: 8.
 
-YOUR TASK: ship the 6 line-edit fixes in audit_followups_2026_05_07.plan.md (stale plan
+YOUR TASK: ship the 6 line-edit fixes in audit_followups_2026_05_07.md (stale plan
 references, archived plan listings, module path drifts, STALE markers). Each item has a
 specific file:line + the exact fix described in the plan body. Pure mechanical work.
 
@@ -794,7 +794,7 @@ BEFORE doing anything else, read these in order:
      you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
   2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
   3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
-  4. plans/active/deployment_api_work_stream_a_2026_05_07.plan.md Phase 2 — your plan-of-record.
+  4. plans/active/deployment_api_work_stream_a_2026_05_07.md Phase 2 — your plan-of-record.
 
 Your agent-tag for ping-ledger entries: `deployment-api-phase2-tab`.
 Your tab number: 3.
@@ -814,7 +814,7 @@ ORCHESTRATION RULES:
    (`git restore --staged <file>`) or stash (`git stash --keep-index`) before committing.
    Never `git add <whole-file>` if anyone else touched it — use `git add -p` for your hunks.
 2. If you hit ambiguity / a blocker / a decision that needs Harsh's strategic input:
-   a. Write the full question in plans/active/deployment_api_work_stream_a_2026_05_07.plan.md's
+   a. Write the full question in plans/active/deployment_api_work_stream_a_2026_05_07.md's
       `## Open questions` section (status 🟡 BLOCKED). That plan doc is YOUR plan-of-record —
       NOT work_split or the orchestration ledger.
    b. Append a one-liner to plans/active/_agent_pings.md with timestamp + your agent-tag
@@ -841,7 +841,7 @@ ORCHESTRATION RULES:
 
 YOUR TASK:
 
-Implement Phase 2 of plans/active/deployment_api_work_stream_a_2026_05_07.plan.md (lines 154+) —
+Implement Phase 2 of plans/active/deployment_api_work_stream_a_2026_05_07.md (lines 154+) —
 two new deployment-api endpoints. Phase 1 (UAC types) shipped at UAC@a70b3f6 — verified
 importable via:
   from unified_api_contracts.internal import (
@@ -928,7 +928,7 @@ DONE-DEFINITION (verifiable bullets):
       events, pagination round-trip.
 - [ ] `cd deployment-api && bash scripts/quality-gates.sh` Pass 1 green (excluding pre-existing
       dirty-file failures from teammates — verify via git blame; YOUR new code must be green).
-- [ ] Plan flips: plans/active/deployment_api_work_stream_a_2026_05_07.plan.md Phase 2 todos
+- [ ] Plan flips: plans/active/deployment_api_work_stream_a_2026_05_07.md Phase 2 todos
       `- [ ]` → `- [x]` with `<repo>@<sha>` evidence appended.
 - [ ] Plan-flip commit in PM (LOCAL ONLY) with message
       `plan(deployment-api-work-stream-a): flip Phase 2 checkboxes (...)` referencing every
@@ -941,7 +941,7 @@ DONE-DEFINITION (verifiable bullets):
 REPORT-BACK:
 - Per shippable unit: code commit + plan-flip commit. Push per the conditional rule.
 - Final: append a "DONE-2026-05-08" comment block at the bottom of
-  plans/active/deployment_api_work_stream_a_2026_05_07.plan.md body, listing every code +
+  plans/active/deployment_api_work_stream_a_2026_05_07.md body, listing every code +
   plan-flip commit sha. Main agent sees your commits immediately (shared .git/) via
   `git log --oneline live-defi-rollout`.
 ```
@@ -1000,7 +1000,7 @@ BEFORE doing anything else, read these in order:
      spot-check for silent-zero detection).
   3. plans/active/issues/lending_indices_handler_bugs_2026_05_07.md — the 3 P0 bugs Tab 5
      just fixed (Bugs 1 + 2 + 3); this is what we're validating.
-  4. plans/active/defi_master_2026_05_07.plan.md § "Lending-indices VM run-quality bugs" —
+  4. plans/active/defi_master_2026_05_07.md § "Lending-indices VM run-quality bugs" —
      parent context.
 
 Your agent-tag: lending-indices-relaunch-tab. Your tab number: 9.
@@ -1089,7 +1089,7 @@ BEFORE doing anything else, read these in order:
      you're a spawned tab (Tab 2+)" — workflow rules.
   2. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "Prediction market lifecycle timing"
      section (lifecycle bounds + cluster validation per canonical_question_group).
-  3. plans/active/predictions_master_2026_05_07.plan.md Phase 1 — your plan-of-record.
+  3. plans/active/predictions_master_2026_05_07.md Phase 1 — your plan-of-record.
   4. UAC SSOTs already shipped (Phase 1A): UAC@af2bc9b (canonical_question_group SSOT +
      lifecycle wrapper modules), UAC@58cc5f8 (Polymarket aliases + edge-case tests),
      UAC@bb24aba (DATA_TYPE_TO_CLUSTER_REGISTRY + PREDICTION_GROUPS empty registry).
@@ -1179,7 +1179,7 @@ BEFORE doing anything else, read these in order:
   2. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "VM launcher script SSOT (codified
      2026-05-07)" section (the SSOT rule + 4 ways scripts reach the VM + how to add a new
      launcher) + "VM Naming Convention" section (VM_PREFIX_TO_BUCKET registry).
-  3. plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md —
+  3. plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md —
      your plan-of-record.
   4. deployment-service/scripts/vm/vm_zombie_watchdog.py:113 — VM_PREFIX_TO_BUCKET dict (must
      be updated for every new launcher prefix).
@@ -1233,10 +1233,10 @@ conditional rule.
 
 - **Resolved by main + operator 2026-05-08 ~10:30 UTC** — Tab 12's Q1 (scope ambiguity) escalated to operator during
   lunch; resolved with operator pick **(b) Defer**. See A1 in
-  [`ml_and_features_master_2026_05_07.plan.md`](ml_and_features_master_2026_05_07.plan.md) `## Open questions` Q1
+  [`ml_and_features_master_2026_05_07.md`](ml_and_features_master_2026_05_07.md) `## Open questions` Q1
   for full reasoning.
 - **Why deferred (stronger than Tab 12's original (b))**: Ikenna's plan consolidation (PM@`78918e1`) shipped
-  [`features_repo_consolidation_2026_05_08.plan.md`](features_repo_consolidation_2026_05_08.plan.md) (P0, deadline
+  [`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md) (P0, deadline
   2026-05-13) which **restructures the per-service approach itself**. Phase 5 of consolidation lifts
   `assert_no_lookahead_for_feature_group` into UTL `feature_service_base/` at the consolidated `features-service`
   layer — single point, not 8 per-service wires.
@@ -1272,7 +1272,7 @@ BEFORE doing anything else, read these in order:
   2. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "Shard-granularity SSOT" section
      ([UAC] + [UTL] + [per-service] layer discipline) + "LookaheadBiasError raised loud at
      every features-* + MDPS compute, not warn-mode" rule.
-  3. plans/active/ml_and_features_master_2026_05_07.plan.md Phase 2A — your plan-of-record.
+  3. plans/active/ml_and_features_master_2026_05_07.md Phase 2A — your plan-of-record.
   4. UAC SSOT shipped (Phase 1A): UAC@4a25b07 (32 feature_groups + 5-service registry +
      6 onchain coverage_starts + 15 tests).
   5. UTL helper shipped: UTL@4354276 (assert_no_lookahead_for_feature_group helper + 9 tests).
@@ -1335,7 +1335,7 @@ You are Tab 13 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1
 BEFORE doing anything else, read these in order:
   1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
      you're a spawned tab (Tab 2+)" — workflow rules.
-  2. plans/active/deploy_missing_auto_launch_2026_05_07.plan.md — your plan-of-record;
+  2. plans/active/deploy_missing_auto_launch_2026_05_07.md — your plan-of-record;
      focus on Phase 0 (lines 126-132) + the "Pre-audit blast radius" Security-boundary
      review section (lines 49-67).
   3. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "DeFi Execution Architecture"
@@ -1368,7 +1368,7 @@ YOUR TASK: draft the Phase 0 security review proposals for operator review. 3 au
    absorbing?). Output: numeric ceilings + 429 response shape.
 
 Output landing zone: append a new section `## Phase 0 — IAM scope + audit log + rate limit
-proposal (DRAFT for operator review)` to deploy_missing_auto_launch_2026_05_07.plan.md
+proposal (DRAFT for operator review)` to deploy_missing_auto_launch_2026_05_07.md
 between the existing Phase 0 todos (line 132) and Phase 1 (line 134). Mark proposals as
 `STATUS: DRAFT — operator review pending` so they don't get mistaken for shipped decisions.
 
@@ -1417,7 +1417,7 @@ BEFORE doing anything else, read these in order:
      you're a spawned tab (Tab 2+)" — workflow rules.
   2. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "Honest absence vs fake placeholders"
      + "Four-category empty-output decision" sections.
-  3. plans/active/defi_master_2026_05_07.plan.md Fork 1 — your plan-of-record.
+  3. plans/active/defi_master_2026_05_07.md Fork 1 — your plan-of-record.
   4. plans/active/issues/lending_indices_handler_bugs_2026_05_07.md — the 3 bug shapes Tab 5
      just fixed; you're auditing for similar classes elsewhere in defi_master Fork 1.
   5. plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md — Tab 6's breakdown of

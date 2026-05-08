@@ -39,7 +39,7 @@ todos:
       databento ✅, tardis ✅, kalshi ✅, polymarket ✅, hyperliquid ✅ (in cefi_extended.py), ibkr ✅, aster ✅, upbit
       ✅. Coverage by schema type: trades ✅, tickers ✅, derivative_tickers ✅, ohlcv ✅, orderbooks ✅, instruments
       ✅, liquidations ✅, orders_fills ✅, options ✅. Kraken: not found in normalizer files — normalization orphan
-      (see uac_schema_normalization_complete.plan.md for provider coverage plan)."
+      (see uac_schema_normalization_complete.md for provider coverage plan)."
     status: completed
   - id: p1-schemas-core-boundary
     content:
@@ -157,7 +157,7 @@ todos:
       wire schemas; (2) TargetType, TrainingPeriod — same. Remediation: wire ml-training-service to import UIC Pydantic
       schemas for API/pubsub boundaries. (3) WebSocket* events — used by interface repos (not terminal services) — these
       are correctly excluded from terminal consumer grep. See orphaned-schemas plan
-      (orphan-contracts-utilization.plan.md) for follow-up adoption work."
+      (orphan-contracts-utilization.md) for follow-up adoption work."
     status: completed
   - id: p2-domain-dir-population
     content:
@@ -294,10 +294,10 @@ This plan covers four distinct concerns not addressed by existing schema plans:
 | Canonical shape quality (groupings, field consistency, optional fields) | ✓ Phase 1 | —                                                                                      |
 | UIC adoption across services (who imports what)                         | ✓ Phase 2 | —                                                                                      |
 | Cross-contract deduplication resolution                                 | ✓ Phase 3 | SCHEMA_CONTRACTS_AUDIT.md (found the violations; this plan resolves them)              |
-| SoC cursor rule + quality gate enforcement                              | ✓ Phase 4 | quality_gate_hardening.plan.md (adds STEP 5.12)                                        |
+| SoC cursor rule + quality gate enforcement                              | ✓ Phase 4 | quality_gate_hardening.md (adds STEP 5.12)                                        |
 | SCHEMA_GOVERNANCE.md codex doc                                          | ✓ Phase 5 | —                                                                                      |
-| Normalization coverage per data provider                                | —         | [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md) |
-| Schema placement violations (finding them)                              | —         | [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md)             |
+| Normalization coverage per data provider                                | —         | [uac_schema_normalization_complete.md](uac_schema_normalization_complete.md) |
+| Schema placement violations (finding them)                              | —         | [schema_contracts_full_audit.md](schema_contracts_full_audit.md)             |
 
 ---
 
@@ -491,9 +491,9 @@ done
 
 Feeds into:
 
-- [orphan-contracts-utilization.plan.md](orphan-contracts-utilization.plan.md) (plan #11) — adoption matrix informs
+- [orphan-contracts-utilization.md](orphan-contracts-utilization.md) (plan #11) — adoption matrix informs
   orphan remediation priorities
-- [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md) (plan #11b) — normalizer
+- [uac_schema_normalization_complete.md](uac_schema_normalization_complete.md) (plan #11b) — normalizer
   completeness gaps from p1-normalizer-completeness go here
-- [quality_gate_hardening.plan.md](quality_gate_hardening.plan.md) (plan #2c) — STEP 5.12 to be added per
+- [quality_gate_hardening.md](quality_gate_hardening.md) (plan #2c) — STEP 5.12 to be added per
   p4-quality-gate-step-512

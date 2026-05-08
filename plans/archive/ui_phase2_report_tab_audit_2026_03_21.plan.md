@@ -5,7 +5,7 @@ navigation, data wiring, and UX under the Report lifecycle tab (REPORTS_TABS —
 **Output:** `unified-trading-system-ui/docs/phase2/REPORT_TAB_AUDIT.md` (main results),
 `REPORT_TAB_COMPONENT_INVENTORY.md`, `REPORT_TAB_ENTITLEMENT_AUDIT.md`, `REPORT_TAB_DATA_WIRING.md`
 
-**Repo:** `unified-trading-system-ui` **Parent plan:** `ui_lifecycle_service_tab_cross_reference_2026_03_21.plan.md`
+**Repo:** `unified-trading-system-ui` **Parent plan:** `ui_lifecycle_service_tab_cross_reference_2026_03_21.md`
 (Phase 1)
 
 ---

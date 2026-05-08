@@ -99,7 +99,7 @@ jobs:
           - Be minimal and precise
 
           TASK 1 — CONTRADICTION CHECK:
-          Read every .plan.md file in ${PLAN_DIR}/. For each pair of plans that share overlapping scope (same service, same architectural area, same todo ID pattern):
+          Read every .md file in ${PLAN_DIR}/. For each pair of plans that share overlapping scope (same service, same architectural area, same todo ID pattern):
           - Check if they assign contradictory statuses (e.g. one marks a todo completed, another marks it pending with different implementation)
           - Check if they mandate contradictory architectural decisions
           Output: JSON array of contradictions: [{plan_a, plan_b, description}] or [] if none.
@@ -112,7 +112,7 @@ jobs:
           TASK 2 — ARCHIVE FULLY-COMPLETED PLANS:
           A plan is fully completed if ALL of its todos have status: completed (or it has no todos and is marked completed).
           For each fully-completed plan:
-          - Move the file from ${PLAN_DIR}/ to ${ARCHIVE_DIR}/ using: git mv plans/active/PLAN.plan.md plans/archive/PLAN.plan.md
+          - Move the file from ${PLAN_DIR}/ to ${ARCHIVE_DIR}/ using: git mv plans/active/PLAN.md plans/archive/PLAN.md
           - Update plans/active/INDEX.md to remove the plan entry
           List the plans you moved.
 
@@ -139,7 +139,7 @@ jobs:
     with:
       message: "plan-health-agent | PM plans checked"
       severity: "INFO"
-      conclusion: ${{ needs.plan-health.result }}
+      conclusion: ${{ needs.md-health.result }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets:
@@ -155,7 +155,7 @@ jobs:
       repo_name: unified-trading-pm
       workflow_name: ${{ github.workflow }}
       run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.plan-health.result }}
+      conclusion: ${{ needs.md-health.result }}
       branch: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
       details_json: '{"event": "plan-health-check"}'

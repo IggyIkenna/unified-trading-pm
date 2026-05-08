@@ -658,6 +658,6 @@ Add:
 
 ## Dependencies
 
-- `data_availability_live_expectations_2026_03_10.plan.md` (FreshnessMonitor wired in live handlers)
-- `phase3_service_hardening_integration.plan.md` (service hardening includes mode handler completion)
-- `mock_data_dev_project_seeding_2026_03_10.plan.md` (fixture data for symmetry tests)
+- `data_availability_live_expectations_2026_03_10.md` (FreshnessMonitor wired in live handlers)
+- `phase3_service_hardening_integration.md` (service hardening includes mode handler completion)
+- `mock_data_dev_project_seeding_2026_03_10.md` (fixture data for symmetry tests)

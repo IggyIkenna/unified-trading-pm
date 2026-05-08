@@ -56,7 +56,7 @@ depends_on:
 isProject: false
 ---
 
-> **ARCHIVED 2026-05-07** — folded into [`ml_and_features_master_2026_05_07.plan.md`](../active/ml_and_features_master_2026_05_07.plan.md). All open todos preserved in the umbrella's Phase 1-4. This file is the historical SSOT.
+> **ARCHIVED 2026-05-07** — folded into [`ml_and_features_master_2026_05_07.md`](../active/ml_and_features_master_2026_05_07.md). All open todos preserved in the umbrella's Phase 1-4. This file is the historical SSOT.
 
 # Feature DAG UAC SSOT + features-only coverage
 
@@ -88,7 +88,7 @@ isProject: false
 
 ## Why this exists (and what it deliberately doesn't cover)
 
-`writegate_honest_coverage_endtoend_2026_05_06.plan.md` (in-flight, locked to live-defi-rollout) is the canonical plan
+`writegate_honest_coverage_endtoend_2026_05_06.md` (in-flight, locked to live-defi-rollout) is the canonical plan
 for `LookaheadBiasError`, `available_at` write-time stamping, sports temporal rules (`stamp_available_at_*` family),
 `record_captured` write-gate integration, the 4-pillar gate (incl. cluster validation), and the UAC `BUNDLED_DATA_TYPES`
 registry. **This plan does not duplicate any of that.**
@@ -98,7 +98,7 @@ plan picks up:
 
 > "MDPS / features-\* `feature_group → required_inputs[]` DAG inlined per-service — Three services keep their local DAGs
 > (features-onchain, features-sports, features-delta-one). Lookahead-bias enforcement still runs but reads from
-> per-service DAG. Successor: `feature_dag_uac_ssot_2026_<TBD>.plan.md`"
+> per-service DAG. Successor: `feature_dag_uac_ssot_2026_<TBD>.md`"
 
 This plan is that `feature_dag_uac_ssot_2026_<TBD>` plan, plus the four features-only coverage items writegate doesn't
 touch (because writegate is scoped to raw-data shards, not features manifests).

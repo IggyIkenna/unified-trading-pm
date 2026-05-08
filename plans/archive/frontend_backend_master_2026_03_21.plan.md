@@ -252,12 +252,12 @@ Entitlement) runs in PARALLEL with Plans A-D+H (no dependencies). Plan I (Client
 
 | Plan | File                                               | Slug                            | Scope        |
 | ---- | -------------------------------------------------- | ------------------------------- | ------------ |
-| A    | `plan_a_registry_schema_sync_2026_03_21.plan.md`   | `plan-a-registry-schema-sync`   | Backend-only |
-| B    | `plan_b_config_hot_reload_2026_03_21.plan.md`      | `plan-b-config-hot-reload`      | Backend-only |
-| C    | `plan_c_domain_data_api_2026_03_21.plan.md`        | `plan-c-domain-data-api`        | Backend-only |
-| D    | `plan_d_testnet_stress_testing_2026_03_21.plan.md` | `plan-d-testnet-stress-testing` | Backend-only |
-| E    | `plan_e_ui_backend_integration_2026_03_21.plan.md` | `plan-e-ui-backend-integration` | UI-only      |
-| F    | `plan_f_ui_quality_hardening_2026_03_21.plan.md`   | `plan-f-ui-quality-hardening`   | UI-only      |
-| G    | `plan_g_auth_entitlement_2026_03_21.plan.md`       | `plan-g-auth-entitlement`       | Backend-only |
-| H    | `plan_h_api_consolidation_2026_03_21.plan.md`      | `plan-h-api-consolidation`      | Backend-only |
-| I    | `plan_i_client_reporting_docs_2026_03_21.plan.md`  | `plan-i-client-reporting-docs`  | Backend-only |
+| A    | `plan_a_registry_schema_sync_2026_03_21.md`   | `plan-a-registry-schema-sync`   | Backend-only |
+| B    | `plan_b_config_hot_reload_2026_03_21.md`      | `plan-b-config-hot-reload`      | Backend-only |
+| C    | `plan_c_domain_data_api_2026_03_21.md`        | `plan-c-domain-data-api`        | Backend-only |
+| D    | `plan_d_testnet_stress_testing_2026_03_21.md` | `plan-d-testnet-stress-testing` | Backend-only |
+| E    | `plan_e_ui_backend_integration_2026_03_21.md` | `plan-e-ui-backend-integration` | UI-only      |
+| F    | `plan_f_ui_quality_hardening_2026_03_21.md`   | `plan-f-ui-quality-hardening`   | UI-only      |
+| G    | `plan_g_auth_entitlement_2026_03_21.md`       | `plan-g-auth-entitlement`       | Backend-only |
+| H    | `plan_h_api_consolidation_2026_03_21.md`      | `plan-h-api-consolidation`      | Backend-only |
+| I    | `plan_i_client_reporting_docs_2026_03_21.md`  | `plan-i-client-reporting-docs`  | Backend-only |

@@ -39,7 +39,7 @@ todos:
       cancel_bet, place_bet). 28 unit tests (betfair_adapter: 18, pinnacle_adapter: 10) using mock objects/aioresponses.
       Added local cassettes betfair_list_market_catalogue.yaml + pinnacle_get_odds.yaml + 14 integration schema tests in
       test_vcr_betting_exchange_schemas.py. All 465 tests pass. Commits: 57a5b4b. NOTE: Live VCR cassette recording
-      remains blocked pending API keys in SM (api_keys_and_auth.plan.md phase-3-keys + phase-4-blockers) — cassettes are
+      remains blocked pending API keys in SM (api_keys_and_auth.md phase-3-keys + phase-4-blockers) — cassettes are
       manually crafted mock data."
     status: done
   - id: strategy-execution
@@ -63,8 +63,8 @@ isProject: false
 
 **Merged 2026-03-09** from:
 
-- `sports_migration_gap_fix.plan.md` (Part A complete; Part B in progress)
-- `sports_migration_phase2_full.plan.md`
+- `sports_migration_gap_fix.md` (Part A complete; Part B in progress)
+- `sports_migration_phase2_full.md`
 
 ## Completed Work (before merge)
 
@@ -100,8 +100,8 @@ isProject: false
 
 | Blocker                | Type          | Specific Dependency                          | Resolution                           |
 | ---------------------- | ------------- | -------------------------------------------- | ------------------------------------ |
-| Betfair key not in SM  | `[EXTERNAL]`  | api_keys_and_auth.plan.md § phase-4-blockers | Obtain via betfair developer program |
-| Pinnacle key not in SM | `[EXTERNAL]`  | api_keys_and_auth.plan.md § phase-3-keys     | Obtain via pinnacle.com/affiliates   |
+| Betfair key not in SM  | `[EXTERNAL]`  | api_keys_and_auth.md § phase-4-blockers | Obtain via betfair developer program |
+| Pinnacle key not in SM | `[EXTERNAL]`  | api_keys_and_auth.md § phase-3-keys     | Obtain via pinnacle.com/affiliates   |
 | USEI v1 not ready      | `[PLAN_TODO]` | usei-adapters (this plan)                    | Unblocked once API keys in SM        |
 
 ## Standards

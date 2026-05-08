@@ -252,7 +252,7 @@ Interface repo CI fails schema_validation test
 
 ### 3.4 Blocked providers
 
-Providers that need Phase 4 API keys (see `api_keys_and_auth.plan.md` § `phase-4-blockers`):
+Providers that need Phase 4 API keys (see `api_keys_and_auth.md` § `phase-4-blockers`):
 
 - betdaq, smarkets, matchbook, onexbet — schema validation tests created but skipped until keys added
 
@@ -273,9 +273,9 @@ Providers that need Phase 4 API keys (see `api_keys_and_auth.plan.md` § `phase-
 
 | This plan depends on                             | Why                                                      |
 | ------------------------------------------------ | -------------------------------------------------------- |
-| `uac_schema_normalization_complete.plan.md`      | All raw schemas must exist before versioning them        |
-| `api_keys_and_auth.plan.md` § `phase-4-blockers` | Sports provider sandboxes need credentials               |
-| `orphan-contracts-utilization.plan.md`           | Ensures all schemas reachable before health matrix built |
+| `uac_schema_normalization_complete.md`      | All raw schemas must exist before versioning them        |
+| `api_keys_and_auth.md` § `phase-4-blockers` | Sports provider sandboxes need credentials               |
+| `orphan-contracts-utilization.md`           | Ensures all schemas reachable before health matrix built |
 
 ---
 

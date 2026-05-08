@@ -253,7 +253,7 @@ Regression from prior audit (CONDITIONAL PASS → FAIL). Primary drivers:
 | Stubs    | pass as sole body         | PASS   | All verified as ABC/Protocol/exception classes                                                               |
 | Stubs    | ... as function body      | PASS   | All verified as Protocol/@abstractmethod                                                                     |
 
-**Score: WARN** — 99% tracked; reference plan: stub_completion_interfaces_and_infra.plan.md
+**Score: WARN** — 99% tracked; reference plan: stub_completion_interfaces_and_infra.md
 
 ---
 

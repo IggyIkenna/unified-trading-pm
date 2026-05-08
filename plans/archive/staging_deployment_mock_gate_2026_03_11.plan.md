@@ -229,14 +229,14 @@ todos:
 
   - id: ds6-production-mock-e2e-plan-sync
     content: |
-      Update production_mock_e2e_plan_d90c8f20.plan.md:
+      Update production_mock_e2e_plan_d90c8f20.md:
       Mark phase2-service-mock-replay and phase2-error-events as the implementation layer for
       deployment_test markers. These todos now have a concrete CI target: once markers are added
       (ds3), the deployment-smoke gate in GHA picks them up automatically.
 
       Add a note to both phase2 todos:
         "CI gate: deployment-smoke.yml on staging PRs runs these tests automatically.
-         See staging_deployment_mock_gate_2026_03_11.plan.md for the gate implementation."
+         See staging_deployment_mock_gate_2026_03_11.md for the gate implementation."
 
       This clarifies the relationship: production_mock_e2e = test CONTENT; this plan = CI WIRING.
     status: done
@@ -323,4 +323,4 @@ Each service/API repo:
 | `scripts/propagation/templates/deployment-smoke.yml` | pm           | GHA template                 |
 | `docker/docker-compose.single.yml`                   | pm           | Single-service compose stack |
 | `.github/workflows/deployment-smoke.yml`             | all 63 repos | Rolled out from template     |
-| `production_mock_e2e_plan_d90c8f20.plan.md`          | pm           | Test content (phase 2)       |
+| `production_mock_e2e_plan_d90c8f20.md`          | pm           | Test content (phase 2)       |

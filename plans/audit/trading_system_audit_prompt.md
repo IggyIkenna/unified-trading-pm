@@ -643,8 +643,8 @@ orphan repos. Cursor rules consistent with codex.
 **Audit commands:**
 
 ```bash
-# Count active .plan.md files
-ls unified-trading-pm/plans/active/*.plan.md | wc -l
+# Count active .md files
+ls unified-trading-pm/plans/active/*.md | wc -l
 
 # Check all are registered in codex SSOT-INDEX
 python3 unified-trading-pm/scripts/validate-ssot-index.py
@@ -680,7 +680,7 @@ for r in m['repos']:
 
 | Criterion                   | Requirement                                                                             |
 | --------------------------- | --------------------------------------------------------------------------------------- |
-| All plans in SSOT-INDEX     | Every `.plan.md` in `plans/active/` registered in `00-SSOT-INDEX.md`                    |
+| All plans in SSOT-INDEX     | Every `.md` in `plans/active/` registered in `00-SSOT-INDEX.md`                    |
 | No phantom SSOT entries     | Every SSOT entry has a corresponding live file                                          |
 | Manifest ↔ topology sync   | All repos in manifest present in `runtime-topology.yaml`                                |
 | Cursor rules in sync        | `unified-trading-pm/cursor-rules/` and `.cursor/rules/` have equal rule counts          |
@@ -919,7 +919,7 @@ rg 'raise NotImplementedError|# TODO|# FIXME|# HACK|# STUB|# placeholder' \
 - `WARN` — ≤10 results total; each item has an open todo in an active plan (cite plan + todo ID)
 - `FAIL` — any result with no owning active plan todo, OR total count > 10
 
-**Reference plan:** `stub_completion_interfaces_and_infra.plan.md` — covers all known interface and infrastructure
+**Reference plan:** `stub_completion_interfaces_and_infra.md` — covers all known interface and infrastructure
 stubs. Any new stub must be added to that plan or a relevant existing plan before the audit can score WARN.
 
 ---
@@ -1230,7 +1230,7 @@ grep -l 'pre_1_0_0_override\|pre-1.0.0' \
 | Approval gate flow                 | GitHub Issue → Telegram alert → `/approve` → GHA bump                  |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — 1–5 repos missing `major-bump-issue-handler.yml` (tracked in
-`major_version_bump_approval_gate_2026_03_11.plan.md`). `FAIL` — any agent that autonomously bumped a MAJOR version; OR
+`major_version_bump_approval_gate_2026_03_11.md`). `FAIL` — any agent that autonomously bumped a MAJOR version; OR
 `semver-agent.yml` triggers on `main`; OR pre-1.0.0 override absent.
 
 ---
@@ -1272,7 +1272,7 @@ python3 unified-trading-pm/scripts/check-repo-readiness.py --all
 | `.readiness-ref`            | Symlink in each repo pointing to codex canonical location                    |
 
 **Scoring:** `PASS` — all ~33 repos have YAML files; verifier exits 0. `WARN` — 1–5 repos missing YAML (tracked in
-`repo_readiness_semver_hardening_2026_03_11.plan.md`). `FAIL` — any repo reaches 1.0.0 without passing v1.0.0 gateway
+`repo_readiness_semver_hardening_2026_03_11.md`). `FAIL` — any repo reaches 1.0.0 without passing v1.0.0 gateway
 gates; OR readiness schema SSOT absent.
 
 ---
@@ -1361,7 +1361,7 @@ rg 'auto_correct_threshold_pct|auto_correct_enabled' --type py --glob '!.venv*' 
 | SIT chain test                   | Integration test verifying correction → recovery → rebalance chain    |
 
 **Scoring:** `PASS` — all components present; events emitted correctly; SIT chain test passes. `WARN` — gas cost guard
-missing but tracked in `recon_rebalancing_order_recovery_2026_03_10.plan.md`. `FAIL` — `OrderRecoveryEngine` absent; OR
+missing but tracked in `recon_rebalancing_order_recovery_2026_03_10.md`. `FAIL` — `OrderRecoveryEngine` absent; OR
 position corrections not automated; OR UEI events not emitted.
 
 ---
@@ -1412,7 +1412,7 @@ grep -A3 'on:' */github/workflows/semver-agent.yml 2>/dev/null | \
 | Staging→main merge                 | Uses `[skip ci]` to prevent re-running semver on main               |
 
 **Scoring:** `PASS` — all criteria met; lock lifecycle works. `WARN` — 1–2 Dockerfiles still use `uv pip install`
-(tracked in `cicd_versioning_cloud_build_2026_03_11.plan.md`). `FAIL` — staging lock absent; OR semver runs on main; OR
+(tracked in `cicd_versioning_cloud_build_2026_03_11.md`). `FAIL` — staging lock absent; OR semver runs on main; OR
 Dockerfile installs from URL (not lockfile).
 
 ---
@@ -1539,7 +1539,7 @@ rg 'os\.getenv.*[Kk]ey\|os\.getenv.*[Ss]ecret\|os\.getenv.*[Tt]oken' \
 | WS tests                       | Use `MockWebSocketFeed`; no live WS connections in tests                      |
 
 **Scoring:** `PASS` — all phases 1–3 complete; ENDPOINT_REGISTRY ≥55; zero hardcoded keys. `WARN` — phases 4–5
-incomplete but tracked in `api_keys_and_auth.plan.md`. `FAIL` — any hardcoded key; OR live API calls in tests; OR
+incomplete but tracked in `api_keys_and_auth.md`. `FAIL` — any hardcoded key; OR live API calls in tests; OR
 `os.getenv` fallback for secret access.
 
 ---
@@ -1588,7 +1588,7 @@ rg 'assert_feature_fresh\|assert_market_data_fresh\|DataStalenessError' \
 | SIT test                           | Injects artificial staleness; verifies `FEED_UNHEALTHY` emission                                                      |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — 1–2 data sources missing `DataFreshnessContract` (tracked in
-`data_availability_live_expectations_2026_03_10.plan.md`). `FAIL` — freshness gates absent from consuming services; OR
+`data_availability_live_expectations_2026_03_10.md`). `FAIL` — freshness gates absent from consuming services; OR
 `FEED_UNHEALTHY` not wired to alerts.
 
 ---
@@ -1689,7 +1689,7 @@ cd system-integration-tests && python3 -m pytest tests/contracts/ -v --tb=short
 - The Graph returns HTTP 200 for errors — adapters MUST parse response body for `errors` key
 
 **Scoring:** `PASS` — all checkers exit 0; SIT tests pass; all adapters classify errors through UAC. `WARN` — UAC
-curation backlog exists but tracked in `contract_completeness_checker_2026_03_10.plan.md`. `FAIL` — UIC has missing
+curation backlog exists but tracked in `contract_completeness_checker_2026_03_10.md`. `FAIL` — UIC has missing
 `__all__` entries; OR any `__all__` symbol has zero consumers; OR SIT completeness tests failing; OR any adapter makes
 external API calls without UAC error classification.
 
@@ -1736,7 +1736,7 @@ cd system-integration-tests && python3 -m pytest tests/backtests/ -v --tb=short
 | Batch-live symmetry assertion | Each backtest verifies identical output between batch and live modes |
 
 **Scoring:** `PASS` — all 4 backtests pass; Layer 3a smoke passes in <5 min; no live API calls. `WARN` — 1–2 backtests
-not yet implemented (tracked in `e2e_smoke_and_portable_backtests.plan.md`). `FAIL` — any backtest makes live API calls;
+not yet implemented (tracked in `e2e_smoke_and_portable_backtests.md`). `FAIL` — any backtest makes live API calls;
 OR batch/live outputs differ; OR Layer 0 contract tests failing.
 
 ---
@@ -2064,13 +2064,13 @@ used as format string in production adapter/service code; OR malformed format sp
   RUNTIME_TOPOLOGY_DECISIONS.md, data-catalogue._.yaml, per-service PROTOCOL\_\* env files
 - **Runtime topology (canonical SSOT):** `unified-trading-pm/configs/runtime-topology.yaml`
 - **Coverage targets:** `unified-trading-pm/cursor-rules/testing/test-coverage-targets.mdc`
-- **Stub tracker:** `unified-trading-pm/plans/active/stub_completion_interfaces_and_infra.plan.md`
+- **Stub tracker:** `unified-trading-pm/plans/active/stub_completion_interfaces_and_infra.md`
 - **Performance targets:** `unified-trading-pm/codex/06-coding-standards/performance-targets.md`
-- **Semver rules:** `unified-trading-pm/plans/active/major_version_bump_approval_gate_2026_03_11.plan.md`
+- **Semver rules:** `unified-trading-pm/plans/active/major_version_bump_approval_gate_2026_03_11.md`
 - **Readiness checklist:** `unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
 - **Data freshness contracts:** `unified-api-contracts/unified_api_contracts/internal/reference/data_freshness.py`
 - **Batch-live symmetry:** `unified-trading-pm/codex/batch-live-symmetry.md`
-- **API key phases:** `unified-trading-pm/plans/active/api_keys_and_auth.plan.md`
+- **API key phases:** `unified-trading-pm/plans/active/api_keys_and_auth.md`
 - **Previous audit reports:** `system-integration-tests/reports/audit_<date>.json`
 - **Config architecture:** `unified-trading-pm/codex/06-coding-standards/configuration-management.md`
 - **Runtime topology:** `unified-trading-pm/configs/runtime-topology.yaml`

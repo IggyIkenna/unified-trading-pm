@@ -326,6 +326,6 @@ File: `unified-trading-pm/scripts/ops/profile-cpu.sh`
 
 ## Dependencies
 
-- `phase3_service_hardening_integration.plan.md` (services must be hardened before benchmarking)
-- `e2e_smoke_and_portable_backtests.plan.md` Layer 3 (infra live for system tests)
-- `mock_data_dev_project_seeding_2026_03_10.plan.md` (fixture data for load tests)
+- `phase3_service_hardening_integration.md` (services must be hardened before benchmarking)
+- `e2e_smoke_and_portable_backtests.md` Layer 3 (infra live for system tests)
+- `mock_data_dev_project_seeding_2026_03_10.md` (fixture data for load tests)

@@ -25,7 +25,7 @@ locked_since: 2026-05-08
 > trading. **Blast radius**: instruments-service (Aave / Compound / Morpho discovery adapters) + UAC (rate-model schema
 > fields) + features-onchain-service (uses rate params for APR / utilisation features) + strategy-service (sizing
 > decisions depend on liquidation_threshold + reserve_factor) + execution-service (max-borrowable depends on
-> borrow_cap). **Suggested owner**: `defi_master_2026_05_07.plan.md` Phase X (new sub-todo).
+> borrow_cap). **Suggested owner**: `defi_master_2026_05_07.md` Phase X (new sub-todo).
 
 ## What I found
 

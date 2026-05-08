@@ -50,7 +50,7 @@ Before executing any task in this plan:
    Sports (parallel post-commercialisation). See workspace-manifest.json completion_paths section for full required repo
    lists per path.
 
-**Rename 6 repos (complete):** Tasks from rename_6_repos_consistency_328ed526.plan.md are done. Repos renamed:
+**Rename 6 repos (complete):** Tasks from rename_6_repos_consistency_328ed526.md are done. Repos renamed:
 infra→ibkr-gateway-infra, alerting-service→alerting-service, client-reporting-api→client-reporting-api,
 market-tick-data-handler→market-tick-data-service, execution-service→execution-service,
 unified-api-contracts→unified-api-contracts. SVGs validated (xmllint OK). All UMI unified_api_contracts imports updated
@@ -616,9 +616,9 @@ todos:
 
 | Phase       | File                                           | Scope                                                                                                                                              | Done When                                                                                                                           |
 | ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Phase 1** | `phase1_foundation_prep.plan.md`               | Naming cleanup, SSOT docs, CI/CD rollout to 55 repos, deployment structure split (UTD V3 → 4 repos), QG baseline audit                             | All 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live; deployment-service/api/ui/system-integration-tests repos exist |
-| **Phase 2** | `phase2_library_tier_hardening.plan.md`        | Global violation sweep, T0→T1→T2→T3 with Step A→B→C→D1→D5 per tier                                                                                 | All T0–T3 repos pass full quickmerge (D5) with act simulation                                                                       |
-| **Phase 3** | `phase3_service_hardening_integration.plan.md` | T4 services (DAG pipeline order), T5 API services, T6 UIs, integration layers (L1–L3), post-refactor sandbox deploy + L2+L3a+L3b + declare healthy | All tiers green; L3b (full e2e) passes; versions bump to 1.0.0                                                                      |
+| **Phase 1** | `phase1_foundation_prep.md`               | Naming cleanup, SSOT docs, CI/CD rollout to 55 repos, deployment structure split (UTD V3 → 4 repos), QG baseline audit                             | All 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live; deployment-service/api/ui/system-integration-tests repos exist |
+| **Phase 2** | `phase2_library_tier_hardening.md`        | Global violation sweep, T0→T1→T2→T3 with Step A→B→C→D1→D5 per tier                                                                                 | All T0–T3 repos pass full quickmerge (D5) with act simulation                                                                       |
+| **Phase 3** | `phase3_service_hardening_integration.md` | T4 services (DAG pipeline order), T5 API services, T6 UIs, integration layers (L1–L3), post-refactor sandbox deploy + L2+L3a+L3b + declare healthy | All tiers green; L3b (full e2e) passes; versions bump to 1.0.0                                                                      |
 
 > **Canonical DAG (SSOT):** workspace-manifest.json → arch_tier field per repo. T0 = AC, UIC_INT, UCI, UEI, UCLI, URDI,
 > EAL, MEL T1 = UTS T2 = UMI, UTEI, UDEI, USEI, UML, UFC, UPI T3 = UDC T4 = Services (14): IS, MTDH, MDPS, FCS, FDS,
@@ -1414,7 +1414,7 @@ All items requiring API keys, OAuth, or Secret Manager work:
 
 ## Citadel ML Feature Pipeline — Hardening, Deployment & Live Verification
 
-**Prerequisite:** All items in `.cursor/plans/multi-tf_cascade_signal_architecture_3fcd8384.plan.md` completed first.
+**Prerequisite:** All items in `.cursor/plans/multi-tf_cascade_signal_architecture_3fcd8384.md` completed first.
 That plan handles code, config, Terraform setup, API contract schemas, internal contracts, manifest, topology YAMLs, DAG
 diagrams, unit tests. This section handles everything that requires live infrastructure.
 
@@ -1509,9 +1509,9 @@ _(Gated on both services above being live and backfilled)_
     order. QUICKMERGE NOTE: quickmerge.sh has no hardcoded level numbers — safe. No changes needed. Quality gates run
     per-repo regardless of level; level only affects cascade order. STALE REFS KNOWN AT TIME OF RESTRUCTURE (fix when
     encountered):
-  - multi-tf_cascade_signal_architecture_3fcd8384.plan.md: mentions merge_level=6 for FMTS (now L7)
-  - hft_feature_pipeline_integration_70995051.plan.md: mentions merge_level=6 for FCIS (now L7)
-  - manifest_svg_checklist_alignment_8c9891ba.plan.md: mentions deployment-service/api to L5 (now L6)
+  - multi-tf_cascade_signal_architecture_3fcd8384.md: mentions merge_level=6 for FMTS (now L7)
+  - hft_feature_pipeline_integration_70995051.md: mentions merge_level=6 for FCIS (now L7)
+  - manifest_svg_checklist_alignment_8c9891ba.md: mentions deployment-service/api to L5 (now L6)
   - Any pyproject.toml or README that says "merge_level: 6" for feature services → update to 7
   - Any pyproject.toml or README that says "merge_level: 8" for UI repos → update to 9 SVG GENERATION:
   - WORKSPACE_MANIFEST_DAG.svg: regenerate with `python3 unified-trading-pm/scripts/generate_workspace_dag.py`

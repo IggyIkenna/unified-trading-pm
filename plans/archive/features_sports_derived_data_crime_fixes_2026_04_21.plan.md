@@ -297,7 +297,7 @@ Phase 0 (audit + grep downstream + read _normalize_standings)
   [`codex/06-coding-standards/validation-patterns.md`](../../codex/06-coding-standards/validation-patterns.md) +
   `.cursor/rules/standards/no-empty-fallbacks.mdc`.
 - Parent plan (declared these as out-of-scope follow-ups):
-  [`plans/active/features_sports_denormalisation_pipeline_2026_04_21.plan.md`](features_sports_denormalisation_pipeline_2026_04_21.plan.md)
+  [`plans/active/features_sports_denormalisation_pipeline_2026_04_21.md`](features_sports_denormalisation_pipeline_2026_04_21.md)
   — see PRE-AUDIT-FINDINGS § "Out-of-scope follow-ups (logged for later plans)" items 1 + 2.
 - Shipped parent commits (code to pattern-match against):
   - UAC `ef1e89f` — `FixtureFeatures` Pydantic model.

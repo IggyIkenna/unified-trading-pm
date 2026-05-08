@@ -128,7 +128,7 @@ todos:
       "Add DATA_STALE, DATA_AVAILABILITY_RESTORED, DATA_GAP_DETECTED, FEED_UNHEALTHY, DATA_COMPLETENESS_CHECK to
       unified-events-interface/schemas.py via uei_pending_event_additions plan."
     status: todo
-    note: "Blocked — must batch with other UEI event additions via uei_pending_event_additions.plan.md."
+    note: "Blocked — must batch with other UEI event additions via uei_pending_event_additions.md."
   - id: phase-3-alerting
     content:
       "Write alerting-service/rules/data_freshness_rules.py with FEED_UNHEALTHY (PagerDuty + Telegram) and DATA_STALE
@@ -258,7 +258,7 @@ def assert_market_data_fresh(venue: str, last_tick_ts: datetime) -> None:
 ## Phase 2: New UEI events
 
 > ⚠️ **H1 CONSOLIDATION NOTE (2026-03-11):** These 5 UEI events are tracked in the consolidated plan
-> `uei_pending_event_additions.plan.md` along with events from recon_rebalancing and position_precision_pnl. All UEI
+> `uei_pending_event_additions.md` along with events from recon_rebalancing and position_precision_pnl. All UEI
 > event additions must be batched into a single PR to avoid merge conflicts on schemas.py. Do not add these events
 > independently — coordinate via the consolidated plan.
 
@@ -340,6 +340,6 @@ File: `system-integration-tests/tests/integration/test_data_freshness.py`
 
 ## Dependencies
 
-- `error_normalisation_unknown_exchanges_2026_03_10.plan.md` (`DataStalenessError` follows canonical pattern)
-- `strategy_visibility_grafana_2026_03_10.plan.md` (data freshness heatmap dashboard)
-- `live_batch_protocol_completeness_2026_03_10.plan.md` (freshness monitoring is live-mode only)
+- `error_normalisation_unknown_exchanges_2026_03_10.md` (`DataStalenessError` follows canonical pattern)
+- `strategy_visibility_grafana_2026_03_10.md` (data freshness heatmap dashboard)
+- `live_batch_protocol_completeness_2026_03_10.md` (freshness monitoring is live-mode only)

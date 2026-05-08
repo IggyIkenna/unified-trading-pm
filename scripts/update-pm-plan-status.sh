@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# update-pm-plan-status.sh — Update a todo's status in a .plan.md file
+# update-pm-plan-status.sh — Update a todo's status in a .md file
 #
 # Usage:
 #   bash scripts/update-pm-plan-status.sh --service SERVICE_NAME --todo TODO_ID --status STATUS [--notes "notes text"]
@@ -99,14 +99,14 @@ elif [ -n "$SERVICE_NAME" ]; then
   # Search for plans containing SERVICE_NAME in filename
   while IFS= read -r -d '' f; do
     CANDIDATES+=("$f")
-  done < <(find "$PLANS_DIR" -name "*${SERVICE_NAME}*" -name "*.plan.md" -print0 2>/dev/null)
+  done < <(find "$PLANS_DIR" -name "*${SERVICE_NAME}*" -name "*.md" -print0 2>/dev/null)
   # Also search all plans for the todo id if no filename match
   if [ ${#CANDIDATES[@]} -eq 0 ]; then
     while IFS= read -r -d '' f; do
       if grep -q "^\s*- id: $TODO_ID" "$f" 2>/dev/null; then
         CANDIDATES+=("$f")
       fi
-    done < <(find "$PLANS_DIR" -name "*.plan.md" -print0 2>/dev/null)
+    done < <(find "$PLANS_DIR" -name "*.md" -print0 2>/dev/null)
   fi
 else
   # No service or plan — search all plans for the todo id
@@ -114,7 +114,7 @@ else
     if grep -q "^\s*- id: $TODO_ID" "$f" 2>/dev/null; then
       CANDIDATES+=("$f")
     fi
-  done < <(find "$PLANS_DIR" -name "*.plan.md" -print0 2>/dev/null)
+  done < <(find "$PLANS_DIR" -name "*.md" -print0 2>/dev/null)
 fi
 
 if [ ${#CANDIDATES[@]} -eq 0 ]; then

@@ -6,7 +6,7 @@ created: 2026-05-08
 author: defi-fork1-prep-audit-tab (Tab 14)
 source:
   - plans/active/work_split_2026_05_07_harsh_5tab_layout.md § Tab 14 spawn prompt
-  - plans/active/defi_master_2026_05_07.plan.md Fork 1 scope (carry_staked_basis + leveraged_funding_arb data sources)
+  - plans/active/defi_master_2026_05_07.md Fork 1 scope (carry_staked_basis + leveraged_funding_arb data sources)
   - plans/active/issues/lending_indices_handler_bugs_2026_05_07.md (Tab 5 + Tab 9 bug-class precedents)
   - plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md (Tab 6 actionable-rows breakdown)
   - unified-api-contracts/unified_api_contracts/registry/chain_env.py (PROTOCOL_LAUNCH_DATES + CHAIN_GENESIS_DATES)

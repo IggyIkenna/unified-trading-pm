@@ -1,6 +1,6 @@
 # Stream D: Risk Matrix & P&L Attribution — Implementation Specification
 
-**Plan**: `contracts-observability-risk-cleanup` (uac_errors_package_cleanup_2026_03_16.plan.md) **Phase**: 5, Stream D
+**Plan**: `contracts-observability-risk-cleanup` (uac_errors_package_cleanup_2026_03_16.md) **Phase**: 5, Stream D
 **Status**: Implementation spec — agents follow this, not the plan YAML summaries
 
 ---

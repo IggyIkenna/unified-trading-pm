@@ -36,8 +36,8 @@ WebSocket messages, sports odds/fixtures, alt data, etc.
 
 **Codex/PM alignment:** Confirmed against `02-data/contracts-scope-and-layout.md`,
 `05-infrastructure/contracts-integration.md`, `.cursor/rules/imports/unified-api-contracts-usage.mdc`,
-`.cursor/rules/imports/contracts-integration.mdc`. Related PM plans: `orphan-contracts-utilization.plan.md`,
-`execution_services_hygiene_refactor.plan.md`.
+`.cursor/rules/imports/contracts-integration.mdc`. Related PM plans: `orphan-contracts-utilization.md`,
+`execution_services_hygiene_refactor.md`.
 
 ```mermaid
 flowchart LR

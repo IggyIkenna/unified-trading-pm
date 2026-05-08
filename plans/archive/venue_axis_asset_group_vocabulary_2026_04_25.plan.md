@@ -50,11 +50,11 @@ isProject: false
 > **ARCHIVED 2026-05-07** — 5 main vocabulary waves (A/B/C/D/E) shipped per CLAUDE.md "Asset-group vocabulary"
 > section. The 3 remaining absorbed items folded into:
 >
-> - `venue_start_dates` deletion → [`infrastructure_master_2026_05_07.plan.md`](../active/infrastructure_master_2026_05_07.plan.md)
+> - `venue_start_dates` deletion → [`infrastructure_master_2026_05_07.md`](../active/infrastructure_master_2026_05_07.md)
 >   § "VenueMapping `venue_start_dates` cleanup"
-> - Data-status dashboard SSOT verify → [`infrastructure_master_2026_05_07.plan.md`](../active/infrastructure_master_2026_05_07.plan.md)
+> - Data-status dashboard SSOT verify → [`infrastructure_master_2026_05_07.md`](../active/infrastructure_master_2026_05_07.md)
 >   § "VenueMapping `venue_start_dates` cleanup" (paired with deletion)
-> - `poolGetSnapshots` historical TVL → [`defi_master_2026_05_07.plan.md`](../active/defi_master_2026_05_07.plan.md)
+> - `poolGetSnapshots` historical TVL → [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md)
 >   § "Tail-chain / mid-tier protocol coverage"
 >
 > Each folded item carries a `(folded from venue_axis_asset_group_vocabulary_2026_04_25)` traceability suffix.

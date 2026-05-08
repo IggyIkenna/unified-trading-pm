@@ -598,7 +598,7 @@ flowchart TB
 | SPORTS_MIGRATION_GAP_FIX               | Complete             | 14 tables, 94 leagues, 420+ features, batch fetch — verified.                                |
 | SPORTS_MIGRATION_PHASE2_FULL           | Partially superseded | TODOs 5–10 (calculators) still apply. Add batch-live, CLI, 70% coverage.                     |
 | T1_T2_MIGRATION_PATTERNS               | Aligned              | Import patterns, pyproject deps — sports follows same.                                       |
-| sports_migration_gap_fix.plan.md       | Complete             | All streams done.                                                                            |
+| sports_migration_gap_fix.md       | Complete             | All streams done.                                                                            |
 
 **This master plan** consolidates and adds: data layer separation, sports-as-adapter, batch-live symmetry, unified CLI,
 70% coverage, arbitrage+ML pipeline.
@@ -612,7 +612,7 @@ flowchart TB
   ownership
 - [instruments-domain-and-api-keys.mdc](.cursor/rules/core/instruments-domain-and-api-keys.mdc) — API keys from Secret
   Manager only
-- [sports_migration_gap_fix.plan.md](unified-trading-pm/plans/cursor-plans/sports_migration_gap_fix.plan.md)
+- [sports_migration_gap_fix.md](unified-trading-pm/plans/cursor-plans/sports_migration_gap_fix.md)
 - [SPORTS_PROVIDERS_REGISTRY.md](unified-trading-pm/docs/SPORTS_PROVIDERS_REGISTRY.md)
 - [sports-schema-paths.md](unified-trading-codex/02-data/sports-schema-paths.md) — gap fix (COMPLETE per plan)
 - [T1_T2_MIGRATION_PATTERNS.md](unified-trading-pm/plans/active/T1_T2_MIGRATION_PATTERNS.md) — migration patterns
