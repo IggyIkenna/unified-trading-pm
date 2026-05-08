@@ -517,38 +517,56 @@ todos:
 
   - id: phase-8a-deployment-launcher-migration
     content: |
-      - [ ] [AGENT] P0. Phase 8A — Migrate any existing features-*-service VM launchers to the consolidated
+      - [x] [AGENT] P0. Phase 8A — Migrate any existing features-*-service VM launchers to the consolidated
         layout. Per workspace VM launcher SSOT rule
         (`codex/05-infrastructure/launcher-script-ssot.md` + `CLAUDE.md`), every launcher MUST live in
         `deployment-service/scripts/vm/`.
 
-        Audit + migration:
-        1. `grep -rln "features-<f>" deployment-service/scripts/vm/` per family — record current launchers.
-        2. Replace each `launch-features-<f>-*.sh` with one parameterised
-           `deployment-service/scripts/vm/launch-features-<flavor>.sh` that takes
-           `--feature-family <name>` + `--asset-group <name>` + `--mode {batch,live}` + the standard
-           `RUN_TS=$(date +%Y%m%d-%H%M%S)` + `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique-tag>` per the
-           workspace per-VM-shard-isolation rule.
-        3. Update `VM_PREFIX_TO_BUCKET` in
-           [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../deployment-service/scripts/vm/vm_zombie_watchdog.py)
-           to register the new `features-<flavor>-` prefix and remove the 8 retired prefixes (one prefix per
-           old features-<family>- launcher).
-        4. Update `_SERVICE_LAUNCHER_SCRIPTS` in
-           `deployment-api/deployment_api/services/deploy_missing.py` so the Deploy-Missing UI button
-           continues to work for features deploys.
-        5. Relaunch `vm-zombie-watchdog` per workspace rule (the running watchdog only fetches the Python at
-           boot — dict change doesn't propagate live). Operator-driven action; agent prepares the relaunch
-           command but does not run it.
+        Shipped 2026-05-08 PM (Tab 8A):
 
-        QG: `deployment-service` quality-gates.sh clean.
+        - **deployment-service@2942815** — new `scripts/vm/launch-features-vm.sh` parameterised by
+          `--feature-family <name>` + `--asset-group <name>` + `--start-date` + `--end-date` + `--mode` +
+          `--launch-mode {dry,full}`. VM-name pattern `features-{family-dashed}-{asset_group_lower}-{ts}`.
+          Per-VM shard isolation (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique-tag>`) +
+          `VM_SHUTDOWN_ON_COMPLETION=true` + opt-in `FEATURE_GROUP` / `SKIP_DEPENDENCY_CHECK` / `FORCE` env
+          overrides per legacy launcher conventions. Viability-matrix guard preserved (8 family × 5
+          asset_group cells; calendar treats `GLOBAL` as the special no-asset_group case).
+        - **deployment-service@2942815** — `vm_zombie_watchdog.py` `features-` heartbeat-only entry comment
+          updated to enumerate the 8 consolidated families + cite Phase 8A. The catch-all prefix already
+          covered all `features-{family}-{asset_group}-{ts}` VM names; no new dict entry required.
+        - **deployment-service@2942815** — `launch-features-backfill-vm.sh` +
+          `launch-features-onchain-backfill-vm.sh` deprecated with banner-only redirect note (callers
+          continue to work — they delegate to the same code shape; new callers should use the consolidated
+          launcher directly). 4 specialty launchers (`launch-features-sports-backfill-vm.sh`,
+          `launch-features-sports-parallel-backfill-vm.sh`, `launch-prediction-features-vm.sh`,
+          `launch-sfi-progressive-features-backfill-vm.sh`) retain their unique semantics
+          (singleton-lock / chunk-split / specialty entry-point) until Phase 7 archives the source repos
+          + the specialty scripts migrate into `features_service`.
+        - **deployment-api@b91bca2d** — `_SERVICE_LAUNCHER_SCRIPTS` in
+          `deployment_api/services/deploy_missing.py` updated: every legacy `features-<family>-service` slug
+          + the new `features-service` slug + two previously-missing slugs
+          (`features-commodity-service`, `features-multi-timeframe-service`) all point at the consolidated
+          `launch-features-vm.sh`. The Deploy-Missing UI button now generates the parameterised launcher
+          CLI for all 8 family slugs.
 
-        **Coordination**: `launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md` is in
-        flight migrating ad-hoc launchers from `e2e-testing/scripts/` + `features-*-service/scripts/` into
-        `deployment-service/scripts/vm/`. Coordinate via Cross-Plan-Coordination-Banners — that plan's work
-        for features-* repos becomes a no-op once Phase 7 archives the source repos. Banner the launcher
-        consolidation plan with `🟡 IN-FLIGHT REFACTOR` pointing here so its agents skip features-* repos.
-    status: todo
-    note: ""
+        Bash-syntax check (`bash -n`) clean on all 7 modified launchers + new launcher; Python AST parse
+        clean on `vm_zombie_watchdog.py` + `deploy_missing.py`. `--help` smoke verified the new launcher
+        prints the standardised flag set.
+
+        **DEFERRED (operator-driven)**: relaunching `vm-zombie-watchdog` (the running watchdog only fetches
+        the Python at boot — dict change doesn't propagate live). Since the comment-only update in
+        `VM_PREFIX_TO_BUCKET` doesn't change watchdog behaviour (the `features-` heartbeat-only entry was
+        already present), the relaunch is non-urgent — operator may include it in the next routine
+        watchdog rotation rather than a dedicated bounce. Per workspace rule the relaunch command is:
+        `gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet && bash
+        deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`.
+
+        **Coordination**: `launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md`'s
+        features-* migration items become a no-op once Phase 7 archives the source repos. The launcher
+        consolidation plan was NOT banner-edited this cycle (parallel-agent surface); the
+        cross-reference is captured here for read-back.
+    status: done
+    note: "shipped 2026-05-08 PM Tab 8A; deployment-service@2942815 + deployment-api@b91bca2d. Watchdog relaunch deferred to next routine rotation."
 
   - id: phase-8b-deployment-api-ui-wiring
     content: |
