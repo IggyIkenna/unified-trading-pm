@@ -30,8 +30,13 @@ canonical feature paths; ml-inference writes canonical prediction paths) without
 
 - **Canonical bucket name** — `<domain>-<category>-central-element-323112` (prod project).
 - **Hive partitioning** — `key=value`, not `key-value`. See `partitioning.md`.
-- **Manifest shard dims (v4)** —
-  `venue, chain, data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type`.
+- **Manifest shard dims (v7 — current)** —
+  `venue, chain, data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type, fixture_id, job_id`.
+  v5 added `capture_status / error_reason / attempted_at` (honest-coverage). v6 added
+  `quote_asset / margin_type / combo_type / leg_weights` (DERIBIT inverse-vs-linear + multi-leg). v7 added `fixture_id`
+  (sports per-fixture row column) + `job_id` (ML/strategy/execution experiment-keyed services). v8 (in design) adds
+  `pipeline_mode / service_emission_state / last_emission_decision_at / expected_window_completeness_pct`. SSOT:
+  [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md).
 - **SchemaContract** — every (category, instrument_type, data_type[, timeframe, feature_group]) registered in UAC
   `internal/schemas/contracts.py::CONTRACT_REGISTRY`.
 - **Derive-on-read** — `unified_trading_library.canonical.derive_instrument_id()` computes the canonical instrument_id

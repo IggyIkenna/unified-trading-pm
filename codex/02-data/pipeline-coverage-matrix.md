@@ -77,13 +77,16 @@ parquets are backfilled with their defaults; **no migration needed for reads**.
 | Source returned 200 + zero rows | `record_empty(row_key=…, attempted_at=…)`                                   | legitimate gap (paused league, post-genesis)         |
 | Adapter raised                  | `record_failed(row_key=…, error=classify_venue_error(exc), attempted_at=…)` | error_reason classified; auto-retried by next VM run |
 
-### Manifest schema (v6 — current)
+### Manifest schema (v7 — current)
 
-`MANIFEST_SCHEMA_VERSION = 6` in
+`MANIFEST_SCHEMA_VERSION = 7` in
 [`manifest_writer.py`](../../../unified-trading-library/unified_trading_library/manifest_writer.py). Evolution: v4 → v5
-(honest-coverage Phase A, 2026-04-19) → v6 (quote_margin_combo plan, 2026-04-23). See
-[`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) for the full SSOT — this is a
-brief recap.
+(honest-coverage Phase A, 2026-04-19) → v6 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` +
+ML/strategy/execution `job_id`, UTL@`ed658e9b`). The v8 design (`pipeline_mode` + `service_emission_state` +
+`last_emission_decision_at` + `expected_window_completeness_pct`) is in
+[`manifest_v7_schema_migration_design_2026_05_08.md`](../../plans/active/manifest_v7_schema_migration_design_2026_05_08.md).
+See [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) for the full SSOT — this is
+a brief recap.
 
 `AvailabilityRecord` columns (defaults `""` unless noted):
 

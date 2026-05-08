@@ -6,39 +6,11 @@ scope: [engineer, admin]
 
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
 
-> **Multi-axis correction (2026-05-06)** — per
-> [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../../plans/active/data_status_multi_axis_shard_propagation_2026_05_06.plan.md):
-> a column belongs in the **shard atom** ONLY IF it earns it via failure isolation OR memory ceiling OR concurrency
-> orthogonality. Otherwise it's a **display axis** (row-level column for filter/group, NOT a manifest row per value).
-> This refines the per-asset-group shard atoms below:
->
-> - **Sports**: shard atom = `(asset_group=sports, venue/source, data_type, league_id, day)`. **`fixture_id` is a
->   row-level column in the parquet, NOT a shard axis** — `(league_id, day)` already bounds the per-day fixture set;
->   per-fixture detail at drill-down comes from reading the parquet, not from a separate manifest row. Avoids 10×
->   manifest inflation.
-> - **Prediction**: shard atom =
->   `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)`.
->   **`market_id` is a row-level column in the parquet, NOT a shard axis** — same rationale. HOURLY (24/day) + DAILY +
->   ELECTION groups all roll up to one manifest row per `(canonical_question_group, day)`; per-market detail at
->   drill-down from parquet.
-> - **CeFi options/futures bundles**: bundle root IS a shard axis (memory + concurrency); per-symbol within bundle is
->   parquet row (cluster validation enforces all expected per-bundle clusters covered).
-> - **DeFi `chain`** IS a shard axis (independent RPC/subgraph endpoints + failure isolation).
-> - **ML / strategy / execution**: new `job_id` v7 manifest column for experiment-keyed services. Same
->   `(model_family, training_period, job_id)` shard atom for ML training; `(strategy_id, job_id)` for strategy;
->   `(strategy_id, instruction_type, job_id)` for execution. Re-running same configs = new `job_id` (audit trail of
->   every experiment version).
-> - **instrument_type for instruments-service**: NOT a shard axis (Databento + TARDIS bulk-fetch all instrument_types
->   per venue in one call). Display axis only — row column for filter/group.
-> - **TradFi EVENT_CONTRACT (CME ECES/ECBTC/etc., post-cme_polymarket_arb_2026_05_08 Phase 1)**: shard atom =
->   `(asset_group=tradfi, venue=CME, data_type=EVENT_CONTRACT, root, resolution_date, day)`. **Bundled by
->   `(root, resolution_date)`** — a single (e.g.) `ECBTC × 2026-05-09` bundle holds all strikes × outcomes; the
->   `strike_threshold` differentiates clusters within the bundle, NOT a shard axis. Cluster validation per Phase 1A of
->   writegate: `expected_root_clusters[(root, resolution_date)] = {strike_threshold: 2}` (YES + NO contract per
->   strike), `cluster_extractor=lambda row: f"{row.strike_threshold}:{row.outcome}"`. Distinct from CME options
->   (ES.OPT etc.) which keep `instrument_type=OPTION` and the 11-cluster ES.OPT taxonomy. Linked to the equivalent
->   Polymarket `canonical_question_group` via UAC SSOT (Phase 2 — blocked on predictions-master Phase 5 backfill).
->   GCS subfolder per `INSTRUMENT_TYPE_FOLDER_MAP[EVENT_CONTRACT]` = `event_contracts`.
+> **Multi-axis correction (2026-05-06)** — shard atoms vs display axes (row-level columns) per asset_group are the SSOT
+> in
+> [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md#multi-axis-correction-banner-canonical).
+> See that doc for the full per-asset-group shard-atom matrix (sports / prediction / cefi options-futures / DeFi chain /
+> ML+strategy+execution job_id / TradFi EVENT_CONTRACT).
 
 **Purpose**: canonical reference for every upstream/downstream GCS path layout per market asset_group (formerly
 "category"). Written 2026-04-20 after the SPORTS smoke incident where MDPS + instruments-service + MTDS each had

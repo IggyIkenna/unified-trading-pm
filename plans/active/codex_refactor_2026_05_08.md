@@ -136,26 +136,44 @@ drift.
 
   **Acceptance**: no doc lists a 3-state taxonomy; no doc lists `"missing"` as a closed-set value.
 
-### Phase A.3 — CIRCUIT_BREAKER naming alignment to UAC — PARALLEL — P0
+### Phase A.3 — CIRCUIT_BREAKER naming alignment to UAC — PARALLEL — P0 — SHIPPED 2026-05-08 (PM@b257804a)
 
-- [ ] [SCRIPT] P0. Three-way naming drift: UAC `events.py:94-96` defines
+- [x] [SCRIPT] P0. Three-way naming drift: UAC `events.py:94-96` defines
       `CIRCUIT_OPEN / CIRCUIT_HALF_OPEN / CIRCUIT_CLOSED` (no `_BREAKER_` prefix). All codex docs must align to the UAC
-      names.
+      names. **DISCOVERY**: original premise was incomplete — UAC has TWO enums with intentionally different naming:
+      `LifecycleEvent` (short, no prefix) at `internal/events.py:94-96` AND `AlertCode` (with `_BREAKER_` prefix) at
+      `canonical/crosscutting/alerting/codes.py:42-45`. Both are SSOTs and don't conflict — LifecycleEvent for emitted
+      events / PubSub topics / JSONL `.event` fields; AlertCode for alerting-service routing rules / runbook code+pattern
+      fields / "correlated codes" cross-refs. Phase A.3 shipped fixes context-specific drift only.
 
-  **Files to update**:
-  - [ ] `03-observability/lifecycle-events.md:328-329` — replace `CIRCUIT_BREAKER_OPENED / CIRCUIT_BREAKER_CLOSED` with
-        `CIRCUIT_OPEN / CIRCUIT_CLOSED` + add `CIRCUIT_HALF_OPEN`.
-  - [ ] `03-observability/alerting.md:128,138,141,142` — replace `CIRCUIT_BREAKER_OPEN`, `CIRCUIT_BREAKER_BACKOFF_*`,
-        `CIRCUIT_BREAKER_DEGRADED`, `CIRCUIT_BREAKER_CLOSED`. The `BACKOFF_ESCALATED` and `DEGRADED` codes don't exist
-        in UAC — either add to UAC or rewrite the alert routing rule to use `CIRCUIT_OPEN` only.
-  - [ ] `04-architecture/alerting-batch-live.md` — verify CIRCUIT\_\* references match UAC.
-  - [ ] `04-architecture/autonomous-recovery-matrix.md` — verify CIRCUIT\_\* references match UAC.
-  - [ ] `04-architecture/kill-switch-circuit-breaker.md` — verify all CIRCUIT\_\* names match UAC.
-  - [ ] `14-playbooks/alerting/alert-code-taxonomy.md` — verify CIRCUIT\_\* taxonomy matches UAC.
-  - [ ] `14-playbooks/alerting/threshold-tuning.md` — verify any code references match.
+  **Files updated** (PM@b257804a):
+  - [x] `03-observability/lifecycle-events.md:328-329` — replaced past-tense `CIRCUIT_BREAKER_OPENED/CLOSED` with UAC
+        LifecycleEvent names `CIRCUIT_OPEN / CIRCUIT_HALF_OPEN / CIRCUIT_CLOSED`.
+  - [x] `03-observability/alerting.md:128,135,141,142` — **NO CHANGE**: these are alert routing rules; the patterns
+        match UAC AlertCode `rules.py` SSOT verbatim (`CIRCUIT_BREAKER_OPEN`, `CIRCUIT_BREAKER_BACKOFF_*`,
+        `CIRCUIT_BREAKER_DEGRADED`, `CIRCUIT_BREAKER_CLOSED` all exist as AlertCode enum members; `BACKOFF_ESCALATING`
+        is the present-tense canonical, matching `BACKOFF_*` glob).
+  - [x] `04-architecture/alerting-batch-live.md:66` — **NO CHANGE**: `event_name` field in alert record = AlertCode.
+  - [x] `04-architecture/autonomous-recovery-matrix.md:245` — `subscribe to CIRCUIT_BREAKER_OPEN` → `CIRCUIT_OPEN`
+        (PubSub subscribe = LifecycleEvent).
+  - [x] `04-architecture/kill-switch-circuit-breaker.md:116, 158, 280-283` — PubSub publish + Emits narrative + PubSub
+        Events table aligned to LifecycleEvent. Removed `CIRCUIT_BREAKER_DEGRADED / BACKOFF_ESCALATED / ORDER_THROTTLED`
+        rows (none exist in UAC `LifecycleEvent` enum). Added Lifecycle-vs-Alert taxonomy note documenting the dual SSOT.
+  - [x] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md:708` — `publishes CIRCUIT_BREAKER_OPEN` → `publishes CIRCUIT_OPEN
+        (UAC LifecycleEvent)`. (Already shipped in Phase A.5 PM@77e1978a.)
+  - [x] `14-playbooks/alerting/alert-code-taxonomy.md:82` — **NO CHANGE**: describes AlertCode pattern.
+  - [x] `14-playbooks/alerting/circuit_breaker_open.md:66-68, 81, 86, 89` — JSONL `.event` field references aligned to
+        LifecycleEvent names; title/Code/Pattern (line 2/17/32/33) preserved as `CIRCUIT_BREAKER_OPEN` (AlertCode).
+  - [x] `14-playbooks/alerting/kill_switch_venue_disconnect.md:88` — JSONL `select(.event=="...")` filter aligned to
+        `CIRCUIT_CLOSED`. Line 75 "correlated codes" `CIRCUIT_BREAKER_OPEN` preserved (AlertCode).
+  - [x] `14-playbooks/alerting/{service_degraded,defi_feature_stale,order_rejection_spike}.md` — **NO CHANGE**:
+        "correlated codes" references are AlertCode patterns, correctly aligned with UAC `codes.py` SSOT.
+  - [x] `14-playbooks/alerting/threshold-tuning.md` — verified, no CIRCUIT_BREAKER references in current file.
 
-  **Acceptance**: workspace-wide grep for `CIRCUIT_BREAKER_` returns zero hits in codex/. UAC enum members are the only
-  canonical names.
+  **Acceptance** (revised): workspace-wide grep for `CIRCUIT_BREAKER_` in codex/ returns 19 hits — all legitimate
+  AlertCode references. Zero LifecycleEvent drift remains (verified via grep of past-tense `CIRCUIT_BREAKER_OPENED`,
+  `CIRCUIT_BREAKER_HALF_OPEN`, `CIRCUIT_BREAKER_BACKOFF_ESCALATED` past-tense, `CIRCUIT_BREAKER_ORDER_THROTTLED`, and
+  JSONL `select(.event=="CIRCUIT_BREAKER...")` patterns — all return zero hits).
 
 ### Phase A.4 — Family/archetype count refresh to 9/53 — PARALLEL — P0
 
@@ -235,23 +253,29 @@ drift.
 
   **Acceptance**: no codex doc claims execution-service is live-only. ✅ verified.
 
-### Phase A.7 — features-service consolidation alignment — PARALLEL — P0
+### Phase A.7 — features-service consolidation alignment — PARALLEL — P0 — SHIPPED 2026-05-08
 
-- [ ] [SCRIPT] P0. `features_repo_consolidation_2026_05_08.md` is the SSOT — single `features-service` repo with
+- [x] [SCRIPT] P0. `features_repo_consolidation_2026_05_08.md` is the SSOT — single `features-service` repo with
       sub-packages (per asset_group + cross-cutting), single CLI surface, single launcher per cluster shape,
       `feature_family` UAC axis as primary shard key. Older codex docs claiming N separate features-\* repos are stale.
 
-  **Files to update**:
-  - [ ] `04-architecture/README.md:24-27` — "Live deployments: 7-8 standalone processes" enumeration includes
-        `features-onchain-service` standalone. Replace with "1 consolidated `features-service` repo deployed per
-        asset_group cluster + 1 cross-cutting cluster".
-  - [ ] `04-architecture/deployment-topology-diagrams.md:114-138` — Deploy 4 (Delta-One), Deploy 5 (Volatility), Deploy
-        6 (Onchain) shown as separate. Replace with single features-service deployment topology.
-  - [ ] `05-infrastructure/launcher-script-ssot.md` — verify launcher list reflects per-cluster
-        `launch-features-{asset_group}-vm.sh` not 5-6 per-repo launchers.
-  - [ ] `05-infrastructure/deployment-clusters-live-vs-batch.md` — verify cluster topology matches.
+  **Files updated**:
+  - [x] `04-architecture/README.md` — "Live deployments: 7-8 standalone processes" enumeration replaced with the
+        consolidated shape: ONE `features-service` repo (8 family sub-packages) deployed in two flavors (asset-scoped
+        colocated with MDPS + cross-cutting standalone), plus MTDS / instruments / strategy / execution. Cross-link
+        to `features-service-architecture.md` + `live-pipeline-architecture.md`.
+  - [x] `04-architecture/deployment-topology-diagrams.md` — Live Deployment section retitled (per Phase A.5 work);
+        added explicit "Deploys 4-6 collapse to one consolidated features-service" sub-block in the post-2026-05-08
+        update describing the asset-scoped + cross-cutting flavors with feature_family dispatcher contract.
+  - [x] `05-infrastructure/launcher-script-ssot.md` — verified: parallel agent already added § "features-service
+        consolidation (2026-05-08)" describing the single `launch-features-vm.sh` parameterised by
+        `--feature-family` + `--asset-group`, replacing the pre-2026-05-08 8 per-family launchers. No further drift.
+  - [x] `05-infrastructure/deployment-clusters-live-vs-batch.md` — verified: doc already uses `features-*` (now
+        meaning feature families within the consolidated repo); single passing mention of "features-sports input
+        pipeline" is harmless prose. No update needed.
 
-  **Acceptance**: no codex doc enumerates 5+ separate `features-*-service` repos as the live deployment shape.
+  **Acceptance**: no codex doc enumerates 5+ separate `features-*-service` repos as the live deployment shape. ✅
+  verified.
 
 ---
 

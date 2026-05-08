@@ -6,6 +6,8 @@ scope: [engineer, admin]
 
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
 
+## Multi-axis correction banner (canonical)
+
 > **Multi-axis correction (2026-05-06)** — per
 > [`data_status_multi_axis_shard_propagation_2026_05_06.plan.md`](../../plans/active/data_status_multi_axis_shard_propagation_2026_05_06.plan.md):
 > a column belongs in the **shard atom** ONLY IF it earns it via failure isolation OR memory ceiling OR concurrency
@@ -217,15 +219,18 @@ writegate plan.
 | CeFi / DeFi / TradFi tick-level data                                                               | `tick.timestamp + source_priority_scrape_latency` | Live = batch                                                                                                                                                                   |
 | Weather forecasts                                                                                  | forecast-issue-time                               | Distinct from forecast-target time                                                                                                                                             |
 
-## Schema v6 (current)
+## Schema v7 (current)
 
-The schema has evolved through three published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
-(quote_margin_combo plan, 2026-04-23). The current SSOT lives in
-`unified-trading-library/unified_trading_library/manifest_writer.py` — `MANIFEST_SCHEMA_VERSION = 6` and the
-`AvailabilityRecord` dataclass.
+The schema has evolved through five published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
+(quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`). The
+v8 bump (`pipeline_mode` + `service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`)
+is in design per
+[`manifest_v7_schema_migration_design_2026_05_08.md`](../../plans/active/manifest_v7_schema_migration_design_2026_05_08.md).
+The current runtime SSOT lives in `unified-trading-library/unified_trading_library/manifest_writer.py` —
+`MANIFEST_SCHEMA_VERSION = 7` and the `AvailabilityRecord` dataclass.
 
 ```python
-MANIFEST_SCHEMA_VERSION = 6
+MANIFEST_SCHEMA_VERSION = 7
 
 @dataclass
 class AvailabilityRecord:
