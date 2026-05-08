@@ -12,7 +12,7 @@ scope: [engineer]
   [`14-playbooks/testing/test-matrix.md`](../14-playbooks/testing/test-matrix.md)
 - VCR cassette policy: [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md)
 - UI functionality + API wiring:
-  [`05-infrastructure/UI-FUNCTIONALITY-REQUIREMENTS.md`](../05-infrastructure/UI-FUNCTIONALITY-REQUIREMENTS.md)
+  [`05-infrastructure/ui-functionality-requirements.md`](../05-infrastructure/ui-functionality-requirements.md)
 - UI repo quality gates rule: workspace `.claude/rules/ui.md`
 
 ---
@@ -744,6 +744,6 @@ Phase 5 — staging smoke + release readiness
 - **VCR cassette policy (cassette ownership rule):**
   [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md)
 - **UI functionality + API wiring:**
-  [`05-infrastructure/UI-FUNCTIONALITY-REQUIREMENTS.md`](../05-infrastructure/UI-FUNCTIONALITY-REQUIREMENTS.md)
+  [`05-infrastructure/ui-functionality-requirements.md`](../05-infrastructure/ui-functionality-requirements.md)
 - **Workspace UI rule:** `.claude/rules/ui.md`
 - **Strategy testing coverage plan:** `unified-trading-pm/plans/ai/ui_e2e_strategy_coverage_audit_2026_04_22.plan.md`

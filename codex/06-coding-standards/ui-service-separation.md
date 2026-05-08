@@ -58,7 +58,7 @@ trading-analytics-ui/           ← React/TypeScript — consumes execution-resu
 - UI accesses service via HTTP with Google OAuth Bearer token
 - UI repo has TypeScript quality gates only (`tsc`, `ESLint`, `playwright`)
 - Service repo has Python quality gates only (`ruff`, `basedpyright`, `pytest`)
-- Every new UI gets `.env.local.example` — see `05-infrastructure/UI-DEPENDENCY-MATRIX.md` for port assignments
+- Every new UI gets `.env.local.example` — see `05-infrastructure/ui-dependency-matrix.md` for port assignments
 
 **NEVER:**
 
@@ -85,7 +85,7 @@ trading-analytics-ui/           ← React/TypeScript — consumes execution-resu
 | `settlement-ui`          | `execution-results-api` | 8002     |
 | `client-reporting-ui`    | `client-reporting-api`  | 8003     |
 
-Full wiring details: `05-infrastructure/UI-DEPENDENCY-MATRIX.md`
+Full wiring details: `05-infrastructure/ui-dependency-matrix.md`
 
 ---
 

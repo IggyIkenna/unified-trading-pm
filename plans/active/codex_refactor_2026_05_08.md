@@ -893,16 +893,23 @@ drift.
   **Why blocked**: top-level directory rename; affects every codex doc cross-linking into 14-playbooks/ and every
   CLAUDE.md reference.
 
-### Phase E.3 — 09-strategy cross-cutting collapse — PARALLEL — P1
+### Phase E.3 — 09-strategy cross-cutting collapse — PARALLEL — P1 — SHIPPED 2026-05-08
 
-- [ ] [DOC] P2 (BLOCKED on operator approval). Per audit S2, two parallel `cross-cutting/` directories in 09-strategy:
-  - Move v2-content (`dart-manual-trade-spec`, `operational-modes-matrix`, `pnl-attribution`, `prediction-markets`,
-    `leverage-and-volatility`, `restaking-reward-economics`, `reward-lifecycle`, `rate-impact-model`) into
-    `architecture-v2/cross-cutting/`.
-  - Rename remaining `09-strategy/cross-cutting/` → `09-strategy/operational/` (5 files: onboarding-checklist,
-    client-onboarding, client-strategy-config, instrument-filtering, prediction-markets-codification-gaps).
-
-  **Why blocked**: cross-doc impact + ambiguity if other agents are mid-flight in these dirs.
+- [x] [DOC] P2. Per audit S2, two parallel `cross-cutting/` directories in 09-strategy. **SHIPPED 2026-05-08**:
+  - **Commit 1** (PM@4d23b431): moved 8 v2-content files (`dart-manual-trade-spec`, `operational-modes-matrix`,
+    `pnl-attribution`, `prediction-markets`, `leverage-and-volatility`, `restaking-reward-economics`, `reward-lifecycle`,
+    `rate-impact-model`) into `architecture-v2/cross-cutting/`. Internal-path adjustments (depth +1):
+    `../../04-architecture/X` → `../../../04-architecture/X`; `../../../plans/X` → `../../../../plans/X`;
+    `../strategy-summary.md` → `../../strategy-summary.md`; `../architecture-v2/README.md` → `../README.md` (sibling-up);
+    `../architecture-v2/archetypes/X` → `../archetypes/X`; `../cross-cutting/share-classes.md` →
+    `../../_archived_pre_v2/cross-cutting/share-classes.md` (correct broken target — was broken pre-move);
+    `../../02-data/X` → `../../../02-data/X` (prediction-markets only). 16 active docs / plans cross-ref-rewritten
+    (62 replacements). plans/archive/ untouched per workspace rule.
+  - **Commit 2** (PM@b38cb485): renamed remaining `09-strategy/cross-cutting/` → `09-strategy/operational/` (5 files:
+    onboarding-checklist, client-onboarding, client-strategy-config, instrument-filtering,
+    prediction-markets-codification-gaps). Same depth — no internal path adjustments. Sibling reference inside
+    prediction-markets-codification-gaps.md updated to `../architecture-v2/cross-cutting/prediction-markets.md`. 5
+    active docs / plans cross-ref-rewritten (10 replacements).
 
 ### Phase E.4 — Filename rename: per-category-bucket-layouts → per-asset-group-bucket-layouts — PARALLEL — P1
 
@@ -974,10 +981,15 @@ drift.
       **SHIPPED 2026-05-08** (PM@631ee9ea — verified all 6 files non-existent via ls; removed the 6 dead-link rows from
       the "Related Documents" table in 05-infrastructure/README.md; kept the 9 valid rows).
 
-### Phase F.6 — 09-strategy READMEs refresh — PARALLEL — P1
+### Phase F.6 — 09-strategy READMEs refresh — PARALLEL — P1 — SHIPPED 2026-05-08 (no-op; A.4 covered)
 
-- [ ] [SCRIPT] P1 (combines with Phase A.4). Ensure `09-strategy/README.md` and `09-strategy/architecture-v2/README.md`
-      reflect 9/53 throughout (counts already in A.4; this phase is the doc-shape pass).
+- [x] [SCRIPT] P1. Ensure `09-strategy/README.md` and `09-strategy/architecture-v2/README.md` reflect 9/53 throughout.
+      **Verified 2026-05-08** — A.4 already shipped the refresh: README.md:13 cites `9 families × 53 archetypes`,
+      architecture-v2/README.md:22-23 cite `1 of 9 families` and `1 of 53 archetypes`, and the `Total: 53 archetypes`
+      summary at line 122. The single remaining `18 archetypes` mention (line 105) is a historical-changelog reference
+      ("2026-04-17 baseline shipped 18 archetypes; the Phase 9 expansion (2026-04-25) added 35 more for full coverage")
+      which is contextually correct and must NOT be rewritten. No edits required; phase was a verification pass on top
+      of A.4.
 
 ---
 

@@ -10,7 +10,7 @@
 
 **Architectural narrative:** `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` **Protocol injection
 contract:** `unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md` **Cross-refs:**
-`05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md` · `05-infrastructure/UI-DEPENDENCY-MATRIX.md`
+`05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md` · `05-infrastructure/ui-dependency-matrix.md`
 
 **Last Updated:** 2026-03-24 (consolidated active UI/API surface: unified-trading-system-ui + deployment-ui;
 unified-trading-api + auth-api + market-data-api + client-reporting-api + deployment-api; legacy split UIs in
@@ -339,7 +339,7 @@ In production, each API is a separate Cloud Run service URL.
 - **Tier SSOT:** `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`
 - **Protocol injection:** `unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md`
 - **Library deps:** `unified-trading-codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md`
-- **UI wiring:** `unified-trading-codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md`
+- **UI wiring:** `unified-trading-codex/05-infrastructure/ui-dependency-matrix.md`
 - **Repo registry:** `unified-trading-pm/workspace-manifest.json`
 - **Runtime wiring:** `deployment-service/configs/runtime-topology.yaml`
 - **Integration testing layers:** `unified-trading-codex/06-coding-standards/integration-testing-layers.md`

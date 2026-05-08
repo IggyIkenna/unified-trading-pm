@@ -7,7 +7,7 @@ scope: [engineer, admin]
 **Last Updated:** 2026-03-24 **SSOT for repo registry:** `unified-trading-pm/workspace-manifest.json` **SSOT for API
 routes:** `deployment-api/api/routes/` (extracted from UTD V3 — see task `deployment-v3-four-way-split`)
 
-**Related:** `UI-FUNCTIONALITY-REQUIREMENTS.md` — detailed screens, features, user roles, and v0 consolidation guidance.
+**Related:** `ui-functionality-requirements.md` — detailed screens, features, user roles, and v0 consolidation guidance.
 
 ## Active product UIs (current workspace)
 

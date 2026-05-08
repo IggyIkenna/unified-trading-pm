@@ -9,7 +9,7 @@ work, implement features in **`unified-trading-system-ui`** and **`deployment-ui
 **workspace-root `archive/README.md`** are **ARCHIVED — reference only** (not in `workspace-manifest.json`
 repositories).
 
-**Last Updated:** 2026-03-24 **Related:** `UI-DEPENDENCY-MATRIX.md` (API wiring, ports), `workspace-manifest.json` (repo
+**Last Updated:** 2026-03-24 **Related:** `ui-dependency-matrix.md` (API wiring, ports), `workspace-manifest.json` (repo
 registry), `unified-trading-pm/scripts/dev/ui-api-mapping.json` (active UI/API stacks)
 
 ---
@@ -335,7 +335,7 @@ The UIs consume data produced by this 7-layer pipeline:
 
 ---
 
-## 7. Current Wired Status (from UI-DEPENDENCY-MATRIX)
+## 7. Current Wired Status (from ui-dependency-matrix)
 
 | UI Repo                   | Status     | Notes                                                     |
 | ------------------------- | ---------- | --------------------------------------------------------- |
@@ -396,7 +396,7 @@ For greenfield consolidation (historical note — largely superseded by `unified
 ## 9. References
 
 - **Archived repos (not in manifest):** workspace-root **`archive/README.md`**
-- **UI Dependency Matrix:** `05-infrastructure/UI-DEPENDENCY-MATRIX.md`
+- **UI Dependency Matrix:** `05-infrastructure/ui-dependency-matrix.md`
 - **Port mapping:** `unified-trading-pm/scripts/dev/ui-api-mapping.json`
 - **Repo registry:** `unified-trading-pm/workspace-manifest.json`
 - **Pipeline layers:** `04-architecture/pipeline-service-layers.md`
