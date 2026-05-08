@@ -77,16 +77,26 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 
 ### #3 Clients + Accounts
 
-- [x] [DESIGN+UAC] **Client model in UAC stable** — client + account-per-venue mapping schema. Owner: Ikenna T6.
-      (uac@3591037 — `canonical/domain/client/model.py` + `client.py` facade + 36 unit tests; Client + VenueAccount
-      frozen dataclasses; ClientId / AccountId TypeAliases; CLIENTS_SEED with 4 live CeFi venues + 3 DeFi chains;
-      secret-manager naming convention documented per onboarding-checklist Phase 1.2.)
+- [ ] [DESIGN+UAC] **Client model in UAC stable** — client + account-per-venue mapping schema. Owner: Ikenna T6.
+      **Resolved 2026-05-08 by Option A migration (uac@3cae1c2): existing `ClientDefinition`
+      (`internal/domain/strategy_service/client_registry.py`) + `TradingAccount` + `AccountType` + `WalletRole`
+      (`internal/domain/account.py`) + `ClientRegistry` + `AccountRegistry` are the canonical SSOTs; consumers use
+      `from unified_api_contracts.strategy import ClientDefinition, ClientRegistry`. Tab 6.B's parallel `Client` +
+      `VenueAccount` + `client.py` facade reverted (uac@3591037 partial revert — `canonical/domain/client/__init__.py`
+      + `model.py` + root `client.py` deleted; `tests/unit/test_client_model.py` deleted). The pre-existing
+      `ClientDefinition` model already covers client identity + share-classes + account_type with composite
+      `client:venue:account_label` keying via `TradingAccount`; no parallel SSOT needed. Issue doc:
+      `cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md` § Addendum.**
 - [x] [DESIGN+UAC] **Capital allocation matrix declared** — per (client, archetype, venue) entry; respected at execution
-      time. Owner: Ikenna T6. (uac@3591037 — CapitalAllocation frozen dataclass with **post_init** bounds checks;
-      AllocationViolationError + validate_allocation_respect for execution-service fail-loud at order time;
-      is_within_allocation advisory for UI gates; CAPITAL_ALLOCATION_SEED for May-23 archetype slice;
-      get_capital_allocation + is_allocation_declared lookups; ArchetypeRef TypeAlias widens to StrategyArchetype | str
-      when 6.A's catalogue lands, single-edit migration.)
+      time. Owner: Ikenna T6. (uac@3591037 → migrated to `internal/architecture_v2/capital_allocation.py` per Option A
+      migration recipe; uac@3cae1c2 — `CapitalAllocation` frozen dataclass with `__post_init__` bounds checks;
+      `AllocationViolationError` + `validate_allocation_respect` for execution-service fail-loud at order time;
+      `is_within_allocation` advisory for UI gates; `CAPITAL_ALLOCATION_SEED` for May-23 archetype slice
+      (CARRY_STAKED_BASIS / CARRY_BASIS_PERP / ML_DIRECTIONAL_CONTINUOUS); `get_capital_allocation` +
+      `is_allocation_declared` lookups; `archetype` field tightened from `ArchetypeRef = str` placeholder to canonical
+      `StrategyArchetype` enum (the pre-revert single-edit migration); 28 unit tests in
+      `tests/unit/test_capital_allocation.py`; re-exported through existing `strategy.py` facade alongside
+      `ArchetypeConfig` (uac@18bdc6e — A1's parallel work) + `ClientDefinition` + `ClientRegistry`.)
 - [ ] [SCRIPT] **Client-account-strategy tagging propagated** through every live trade + batch backtest result. Hooks
       into the strategy ID refactor sweep above. Owner: Harsh T6.
 
@@ -438,3 +448,61 @@ NOT centralised under a single UAC dataclass) is now centralised in `internal/ar
 - **unified-trading-pm@\<this-flip-commit\>** — this DONE block.
 
 Step A1 going quiet.
+
+## DONE-2026-05-08 (Step A2, Tab 6 main) — CapitalAllocation migration + Client/VenueAccount revert
+
+Sub-agent A2 executed Step 2 of Option A on the parallel-SSOT issue
+(`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md` § Addendum). Operator GREENLIT
+2026-05-08. Closes deliverable #3's Client/VenueAccount parallel-SSOT collision (un-flipped + annotated as resolved by
+Option A) + flips deliverable #3's CapitalAllocation gap closed under the migrated path.
+
+Code commits shipped:
+
+- **unified-api-contracts@3cae1c2** —
+  `feat(uac): migrate CapitalAllocation to architecture_v2 + revert parallel client SSOT — Option A`. 6 files changed,
+  388 insertions / 636 deletions. Surface: NEW
+  `unified_api_contracts/internal/architecture_v2/capital_allocation.py` (323 lines — `CapitalAllocation` frozen
+  dataclass with `__post_init__` bounds; `AllocationViolationError`; `CAPITAL_ALLOCATION_SEED` with 3 May-23 archetype
+  rows keyed on `StrategyArchetype` enum members; 4 helpers: `get_capital_allocation` /
+  `is_allocation_declared` / `is_within_allocation` / `validate_allocation_respect`; `archetype` field TIGHTENED to
+  `StrategyArchetype` enum from the pre-revert `ArchetypeRef = str` placeholder); MODIFIED
+  `unified_api_contracts/strategy.py` (added 7 re-exports for the migrated capital allocation surface; existing
+  `ClientDefinition` / `ClientRegistry` re-exports unchanged); NEW `tests/unit/test_capital_allocation.py` (28 unit
+  tests covering bounds validation, lookup helpers, fail-loud validators, seed invariants, StrategyArchetype enum
+  tightening — all 28 pass); DELETED `unified_api_contracts/canonical/domain/client/__init__.py` +
+  `unified_api_contracts/canonical/domain/client/model.py` + `unified_api_contracts/client.py` +
+  `tests/unit/test_client_model.py` (4 deletions of the parallel-SSOT files from uac@3591037).
+
+- **unified-trading-pm@\<this-flip-commit\>** — this DONE block + deliverable #3 checkbox annotations.
+
+Verification:
+
+- `cd unified-api-contracts && uv run pytest tests/unit/test_capital_allocation.py -v` — 28/28 pass.
+- `uv run basedpyright` on the 3 files in scope — 0 errors / 0 warnings / 0 notes.
+- `from unified_api_contracts.strategy import (CapitalAllocation, AllocationViolationError, CAPITAL_ALLOCATION_SEED,
+  get_capital_allocation, is_allocation_declared, is_within_allocation, validate_allocation_respect)` — facade
+  smoke-test passes.
+- No downstream consumers were importing the deleted `from unified_api_contracts.client` or
+  `unified_api_contracts.canonical.domain.client` (workspace-wide ripgrep returned only the now-deleted test file).
+
+Coordination notes with Step A1 (parallel sibling, uac@18bdc6e):
+
+- A1 shipped `internal/architecture_v2/archetype_config.py` (operational risk knobs SSOT — collateral / hedge_ratio /
+  position_cap_usd / kill_switch_drawdown_pct / kill_switch_position_breach_pct) + extended `strategy.py` with 5
+  `archetype_config` re-exports + the May-23 archetype coverage tests + the `StrategyArchetype` registry audit.
+- Step A2's `strategy.py` edits land purely additive on top of A1's commit — `capital_allocation` re-exports interleave
+  with `archetype_config` re-exports in alphabetical `__all__` order. Both close cross_cutting deliverable #1 + #3
+  under Option A.
+
+Foot-gun encountered (mitigated, logged for the next agent):
+
+- prek's auto-restore hook (foot-gun #4 codified in CLAUDE.md) wiped `strategy.py` back to its committed state TWICE
+  during Edit cycles, requiring re-Edit + bundled `git add → git commit --no-verify → git push --no-verify` chain in
+  one shell invocation per the foot-gun #4 mitigation. `--no-verify` was authorized because the auto-restore was
+  observed wiping work in this session.
+- Tab 5's foreign alerting work (`canonical/crosscutting/alerting/codes.py` + `rules.py` updates) broke conftest test
+  collection mid-session (`AlertRule.kill_switch_scope is REQUIRED for KILL_SWITCH_*`). Per the workspace QG-failure
+  exemption window (2026-05-07 → ~2026-05-09), foreign-code QG failures stay foreign — verified my own test file
+  (`test_capital_allocation.py`) on direct invocation, all 28 passed cleanly before the conftest break landed.
+
+Step A2 going quiet.
