@@ -475,8 +475,22 @@ todos:
 
         **Coordination**: `ml_and_features_master` Phase 2.UTL-LIFT closed by 5.7 above (FeatureBatchHandler).
         Cross-Plan-Coordination-Banners rule satisfied — both plans cite the same `UTL@7aba113c`.
+
+        **Wave 3b consumer migration progress (2026-05-08 PM)** — 4 of 8 families migrated to UTL primitives + F6:
+        - **multi_timeframe** — features-service@92119b77 — F6 only (no UTL primitive duplicates).
+        - **onchain** — features-service@912cab65 — local `broadcast_sink.py` + `live_data_source.py` deleted, replaced
+          with UTL canonicals (`unified_trading_library.feature_service_base.{broadcast,live_source}`); adapter facade
+          re-exports preserved for backward-compatible import surface; `cli/handlers/live_handler.py` imports UTL
+          directly; F6 callsite migrated.
+        - **sports** — features-service@f01eff1b — F6 only at 2 callsites in `cli/handlers/batch_handler.py` (no UTL
+          primitive duplicates locally).
+        - **volatility** — features-service@81e6cbb2 — local `broadcast_sink.py` + `live_data_source.py` deleted,
+          replaced with UTL canonicals; `cli/handlers/live_handler.py` imports UTL directly; F6 migrated at all 6
+          callsites in `engine/orchestrator.py`.
+
+        Sibling Wave 3b agent owns the remaining 4 families (calendar / commodity / cross_instrument / delta_one).
     status: done
-    note: "All 7 Phase 5 UTL primitives shipped 2026-05-08 (5.1=77aa1586, 5.2=3611112b, 5.3=d85e62e8, 5.4-5.5=85948c87, 5.6=0bfad836, 5.7=7aba113c, 5.8=4354276c-pre-existing). Per-family consumer migration is Wave 6+ scope (Phase 6 of this plan)."
+    note: "All 7 Phase 5 UTL primitives shipped 2026-05-08 (5.1=77aa1586, 5.2=3611112b, 5.3=d85e62e8, 5.4-5.5=85948c87, 5.6=0bfad836, 5.7=7aba113c, 5.8=4354276c-pre-existing). Wave 3b consumer migration: 4 of 8 families landed 2026-05-08 PM (multi_timeframe=92119b77, onchain=912cab65, sports=f01eff1b, volatility=81e6cbb2); calendar/commodity/cross_instrument/delta_one in flight on sibling agent. Remaining consumer wiring (3 base_calculators + 7 BuilderEntry + cross-instrument/multi-timeframe watermark fanin) is Wave 6+ scope (Phase 6 of this plan)."
 
   - id: phase-6-regression-parity-test
     content: |
