@@ -134,9 +134,14 @@ Hermes) +
 [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
 (Stream A LST collateral) + [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F.
 
-**Scope (6 items, P0-P1)**:
+**Scope (6 items, P0-P1)**: Items 3, 5, 6 already shipped (`- [x]`). Remaining 3 items (1, 2, 4) are **all PARALLEL-SAFE** —
+disjoint files (Item 1 paper-trade smoke = execution-service + strategy-service + PBM round-trip; Item 2 lending-indices
+VM relaunch = MTDS `lending_indices_handler.py` + relaunch script; Item 4 Stream A = UAC `venue_collateral.py` + new
+codex doc). Send all 3 sub-agent fan-outs in ONE message at boot. Item 1 has internal pre-reqs (MTDS VM drain +
+features-onchain Docker rebuild + 4-service QG passes) — those are verification gates inside Item 1, not
+parallelization blockers between items.
 
-- [ ] [TRADING+INTEGRATION] P0. **Paper-trade smoke completion (carry_staked_basis Solana hedge)** — execution-service +
+- [ ] [TRADING+INTEGRATION] P0. **[PARALLEL]** **Paper-trade smoke completion (carry_staked_basis Solana hedge)** — execution-service +
       strategy-service + position-balance-monitor-service end-to-end round-trip. Pre-flight checks shipped 2026-05-08
       (Pyth Hermes endpoint reachable HTTP 200 in 2.3s); blocked yesterday on (a) MTDS@d19d76c VMs drain + (b)
       features-onchain Docker rebuild + (c) 4-service QG passes. Today: verify drain status of
@@ -144,7 +149,7 @@ Hermes) +
       smoke. **Done**: paper fill lands in execution-service, position-balance-monitor reflects open position,
       strategy-service P&L attribution computed (no execution-alpha conflation per CLAUDE.md "Batch = Live"). ~3
       AI-days.
-- [ ] [TRADING] P0. **Lending-indices VM relaunch (Bug 2 + Bug 3)** — Tab 9 yesterday verified Bug 1 (UAC SSOT fix
+- [ ] [TRADING] P0. **[PARALLEL]** **Lending-indices VM relaunch (Bug 2 + Bug 3)** — Tab 9 yesterday verified Bug 1 (UAC SSOT fix
       end-to-end at AAVEV3 ETHEREUM 2023-01-27 captured rows). Bugs 2 (Compound V3 schema drift) + 3
       (instruments-store-defi 2022 metadata floor) per
       [`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md) still
@@ -160,7 +165,7 @@ Hermes) +
       merging required). **Manifest re-scan needed** post-this commit per writegate Phase 2.E reason taxonomy — moved
       dates reclassify EXPECTED_PRE_GENESIS_CHAIN ↔ SOURCE_RETURNED_ZERO rows automatically once VMs re-write per-row
       keys. ~3 AI-days.
-- [ ] [DESIGN+UAC+CODEX] P0. **Stream A — DERIBIT/BYBIT/OKX ETH-LST collateral acceptance flips** — per
+- [ ] [DESIGN+UAC+CODEX] P0. **[PARALLEL]** **Stream A — DERIBIT/BYBIT/OKX ETH-LST collateral acceptance flips** — per
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       Stream A. Live-API probe to confirm exact 2026-05-07 collateral value ratios for Deribit stETH, Bybit
       stETH/wstETH/USDe/sUSDe, OKX wstETH/stETH. Document evidence in
@@ -211,6 +216,25 @@ position-balance-monitor-service (paper-trade smoke), deployment-service `script
   metadata research. Master writes the codex evidence doc + UAC flip + tests.
 - Item 5 (Pyth archive): one Explore sub-agent to scope alternatives (Pythnet RPC + index, Birdeye archive paid, manual
   Solana RPC walk). Master picks + ships.
+
+**Sub-agent isolation table** (paste rows verbatim into each Task prompt's "files OFF-LIMITS" section):
+
+| Sub-agent ID         | Files owned (only edit these)                                                                                                                                | Files OFF-LIMITS                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| sa1.PaperSmoke-exec  | `execution-service/**/pyth_oracle_read.py` + Solana RPC reachability test                                                                                    | strategy-service config, PBM wallet/custody, MTDS shard inspection                                                                            |
+| sa1.PaperSmoke-strat | `strategy-service/**/carry_staked_basis_archetype_config.py` validation                                                                                      | execution-service Pyth read, PBM wallet/custody, MTDS shard inspection                                                                        |
+| sa1.PaperSmoke-pbm   | `position-balance-monitor-service/**/wallet_adapter.py` + custody adapter health probe                                                                       | execution-service, strategy-service, MTDS                                                                                                     |
+| sa1.PaperSmoke-mtds  | MTDS shard read-side inspection (read-only — no writes; reports findings to master)                                                                          | All write-side surfaces                                                                                                                       |
+| sa1.LendingIdx-bug2  | MTDS `lending_indices_handler.py` Compound V3 schema-drift fix + tests                                                                                       | Bug 3 metadata floor (sa1.LendingIdx-bug3 owns); UAC `chain_env.py`                                                                           |
+| sa1.LendingIdx-bug3  | `instruments-store-defi/...` 2022 metadata floor (depends on Harsh T1 catalog-aware writer-guard SHIPPED first per cross-side handshake)                     | MTDS handler (sa1.LendingIdx-bug2 owns); UAC `chain_env.py`                                                                                   |
+| sa1.LendingIdx-relch | `deployment-service/scripts/vm/launch-mtds-lending-indices-vm.sh` relaunch invocation + 90s STARTED + 10-15min progress + T+30min spot-check                 | Adapter source files (sa1.LendingIdx-bug2/3 own them)                                                                                         |
+| sa1.StreamA-deribit  | Live-API probe Deribit + Bybit collateral ratios (read-only probe, output to evidence doc)                                                                   | OKX probe (sa1.StreamA-okx owns); USDe metadata research (sa1.StreamA-usde owns); UAC matrix update (master only)                             |
+| sa1.StreamA-okx      | Live-API probe OKX wstETH/stETH collateral ratios                                                                                                            | Deribit/Bybit probe; USDe metadata research; UAC matrix update                                                                                |
+| sa1.StreamA-usde     | USDe / sUSDe metadata research (Bybit context); output to evidence doc                                                                                       | Live-API probes; UAC matrix update                                                                                                            |
+
+Master sa1 (Tab 1 orchestrator) owns: UAC `registry/venue_collateral.py` matrix flips (after sa1.StreamA-* probes
+complete) + new codex doc `unified-trading-pm/codex/14-playbooks/defi/venue-collateral-2026-05-07.md` + carry-staked-basis
+codex update + integrated paper-trade smoke round-trip after all sa1.PaperSmoke-* sub-agents green.
 
 **Collision risk**:
 
@@ -331,6 +355,63 @@ not coordinated — see cross-side).
 - Phase 5 ratchet: 1 general-purpose sub-agent to walk current manifest, compute per-(asset_group, data_type)
   honest-coverage %, populate baseline doc. Master writes the QG STEP + ratchet schedule.
 
+**Phase ordering (HARD SEQUENCE — fanned-out batches gate on prior batch completion)**:
+
+```
+Phase 0 audit (read-only)
+   │
+   ▼
+Phases 1-3 MTDS standalone cluster (per-venue VM topology + connection pool + sharding-orthogonal verification)
+   │     ↳ ships MTDS topology contract that Phases 4-7 + 12-14 read
+   ▼
+Phases 4-7 MDPS+features-asset-scoped colocated (5 asset_groups in PARALLEL + features-cross-cutting flavor)
+   │     ↳ pre-req: Phase 1-3 contract; ALSO pre-req: Harsh T2 features_repo_consolidation Phase 1-4 SHIPPED first
+   │       (cross-side handshake — wait for RESOLVED in features_repo_consolidation_2026_05_08.md)
+   ▼
+Phases 8-11 (PARALLEL within batch): replay subsystem + Redis Stream cascade + instrument-lifecycle hot-reload +
+            ServiceEmissionPolicy slice b/c consumer wiring
+   │     ↳ pre-req: Phase 4-7 contracts. Phase 11 slice b couples to manifest-read — Tab 3 v7 schema must be designed
+   │       in parallel + RESOLVED before Phase 11 ships
+   ▼
+Phases 12-14: alerting tier-up + 4-category gap tree + codex SSOT updates (PARALLEL within batch)
+```
+
+Writegate Phase 5 ratchet runs INDEPENDENTLY of live-pipeline phases (no contract coupling) — sub-agent spawns from
+day-1. `available_at` 11-link chain (Ikenna's share = links 0/3/4/5/7/8) runs INDEPENDENTLY of live-pipeline phases
+but couples to UAC `FEATURE_REQUIRED_INPUTS` + `AVAILABILITY_AT_SEMANTICS` SSOTs — those land before any consumer
+wiring (Phase 4-7 + 8-11). CeFi ML serving path (item 7) consumes Phase 5-7 + Phase 10 instrument-lifecycle
+hot-reload — sequence after Phase 8-11 ship. ML alerting design (item 8) is design-only Tab 2 work; rule wiring lands
+in Tab 5.
+
+**Sub-agent isolation table** (paste rows verbatim into each Task prompt's "files OFF-LIMITS" section):
+
+| Sub-agent ID            | Files owned (only edit these)                                                                                                                                                          | Files OFF-LIMITS                                                                                                                                                                                                                                          |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sa2.P0-audit            | `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 0 audit body only (read-only on code)                                                                              | All code surfaces                                                                                                                                                                                                                                         |
+| sa2.P1-topology         | `deployment-service/scripts/vm/launch-mtds-live-{venue}-vm.sh` per-venue VM topology design + launcher template                                                                        | MTDS adapter source files (Phase 4-7 owns); MDPS / features-\*                                                                                                                                                                                            |
+| sa2.P2-connpool         | MTDS connection-pool config + tests                                                                                                                                                    | Adapter business logic; MDPS                                                                                                                                                                                                                              |
+| sa2.P3-shard-verify     | MTDS adapters' sharding-orthogonal verification (read-only audit + write tests)                                                                                                        | MDPS; features-\*; UAC                                                                                                                                                                                                                                    |
+| sa2.P4-cefi             | `market-data-processing-service/...` + `features-service/cefi/...` colocated MDPS+features wiring for cefi flavor                                                                      | Other 4 asset_group flavors; features-cross-cutting flavor; MDPS `base_adapter.py` (HARD SEQUENCE — see cross-side handshake; wait for Harsh T2 features-consolidation rewrite + then ship live-pipeline wiring; Harsh T2 lookahead-bias wires LAST)        |
+| sa2.P4-defi             | MDPS+features-defi colocated wiring                                                                                                                                                    | Other 4 asset_group flavors; features-cross-cutting flavor                                                                                                                                                                                                |
+| sa2.P4-tradfi           | MDPS+features-tradfi colocated wiring                                                                                                                                                  | Other 4 asset_group flavors; features-cross-cutting flavor                                                                                                                                                                                                |
+| sa2.P4-sports           | MDPS+features-sports colocated wiring                                                                                                                                                  | Other 4 asset_group flavors; features-cross-cutting flavor                                                                                                                                                                                                |
+| sa2.P4-pred             | MDPS+features-prediction colocated wiring                                                                                                                                              | Other 4 asset_group flavors; features-cross-cutting flavor                                                                                                                                                                                                |
+| sa2.P7-crosscut         | features-cross-cutting separate flavor (calendar / volatility / multi-timeframe / cross-instrument)                                                                                    | Per-asset_group flavors (sa2.P4-\* own them)                                                                                                                                                                                                              |
+| sa2.P8-replay           | NEW `unified_trading_library/replay_subsystem.py` + smooth-handoff-to-live shim + tests                                                                                                | Redis Stream code (sa2.P9 owns); instrument-lifecycle hot-reload (sa2.P10); ServiceEmissionPolicy consumer wiring (sa2.P11)                                                                                                                               |
+| sa2.P9-redis            | NEW Redis Stream cascade module: `CANDLE_BOUNDARY_CROSSED` + `CANDLE_COMPUTED` event types + tests                                                                                     | Replay subsystem; instrument-lifecycle; ServiceEmissionPolicy                                                                                                                                                                                             |
+| sa2.P10-instr-hot       | NEW `unified_trading_library/instrument_lifecycle_cache_delta_reloader.py` (mirror ApiKeyReloader pattern) + tests                                                                     | Replay; Redis; ServiceEmissionPolicy                                                                                                                                                                                                                      |
+| sa2.P11-emission        | ServiceEmissionPolicy slice b/c consumer migration: `manifest-read coupling` per-service helper + per-service emission policy declarations (after slice a UAC@58c3b61)                 | UAC `service_emission_policy.py` schema (slice a — already shipped); UTL `emission_publisher.py` (slice a — already shipped); Tab 3 manifest v7 schema design (sa2.P11 reads it)                                                                          |
+| sa2.P12-alerting        | Live-pipeline alerting tier-up wiring — connect circuit-breaker rules into alerting-service                                                                                            | alerting-service rule structure (Ikenna T5 owns); KillSwitchBus (Ikenna T5 owns)                                                                                                                                                                          |
+| sa2.P13-gaptree         | 4-category gap tree applied to live + stale-not-missing rule via ServiceEmissionPolicy.PUBLISHED_DEGRADED                                                                              | Replay; ServiceEmissionPolicy schema; alerting rules                                                                                                                                                                                                      |
+| sa2.P14-codex           | Update 8 codex docs per Post-Plan-Phase Audit (`live-pipeline-architecture.md`, `replay-subsystem.md`, `pipeline-mode-partition.md`, `instrument-lifecycle-cache-delta-hot-reload.md` + 4 existing) | Plan body; code surfaces                                                                                                                                                                                                                                  |
+| sa2.WG5-ratchet         | NEW `unified_trading_library/honest_coverage_ratchet.py` + base-service.sh QG STEP + populate `codex/02-data/honest_coverage_baseline_2026_05.md`                                      | live-pipeline source; UAC; per-service emission consumers                                                                                                                                                                                                 |
+| sa2.AvailAt-MDPS        | `available_at` chain link 0 (MDPS bar timestamp) + link 3 (reader propagation)                                                                                                         | UAC `FEATURE_REQUIRED_INPUTS` (sa2.AvailAt-UAC owns); UTL `assert_available_at_present` (sa2.AvailAt-UTL owns)                                                                                                                                            |
+| sa2.AvailAt-UAC         | UAC `FEATURE_REQUIRED_INPUTS` expansion (link 4) + `AVAILABILITY_AT_SEMANTICS` coverage audit (link 5)                                                                                 | MDPS bar timestamps; UTL guard; QG static check                                                                                                                                                                                                           |
+| sa2.AvailAt-UTL         | UTL `ManifestWriter.assert_available_at_present` guard (link 7)                                                                                                                        | UAC; MDPS; QG                                                                                                                                                                                                                                             |
+| sa2.AvailAt-QG          | base-service.sh QG static check (link 8) — fail CI on missing/null available_at                                                                                                        | UAC; UTL; MDPS                                                                                                                                                                                                                                            |
+| sa2.MLLive-design       | Design doc + UAC `model_registry.py` GCS path SSOT (consumed by Harsh T2 sa2.MLLive)                                                                                                   | Harsh T2's wiring side; alerting (Ikenna T5 owns)                                                                                                                                                                                                         |
+| sa2.MLAlerting-design   | Design doc for ML-specific alerting rules (signal-staleness threshold, model-drift detection, P&L deviation, ML inference latency SLO) — DESIGN ONLY; wiring by Ikenna T5              | alerting-service code (Ikenna T5 owns); execution-service kill-switch consumers                                                                                                                                                                           |
+
 **Collision risk**:
 
 - **MDPS `base_adapter.py` / `BaseCandleAdapter`**: Tab 1 doesn't touch (DeFi adapters are different files). Harsh Tab 2
@@ -388,10 +469,15 @@ rollup-vs-drilldown denominator-divergence (codex SSOT codified 2026-05-07).
       universe; instrument lifecycle bounds applied at expected-row generation, not just write-side). Per writegate
       Phase 3.D.4 v2 deferred 2026-05-07. **Done**: v2 enumerator launches + writes per-VM shard + consolidator merges +
       every (catalog-alive instrument × applicable date × data_type) has a manifest row. ~1 AI-day.
-- [ ] [INFRA+COORDINATION] P1. **Manifest cross-asset rescan post-CeFi VM drain** — Harsh Tab 4 runs the rescan itself
-      (mechanical); Ikenna designs the rescan flip schema (which fields change, which fields stay) + handles
-      operator-approval edge cases (any rows where rescan finds disagreement with manifest go to a triage file). ~1
-      AI-day.
+- [ ] [INFRA+COORDINATION] P1. **Manifest cross-asset rescan post-CeFi VM drain** — Ownership clarified: **Ikenna T3
+      writes the rescan launcher script** (in `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` or
+      `deployment-service/scripts/vm/launch-manifest-rescan-vm.sh`) + designs the schema flip (which fields change,
+      which stay) + handles operator-approval edge cases (any rows where rescan finds disagreement with manifest go
+      to a triage file). **Harsh T4 operates the launcher** on a same-region GCE VM. Sequence: Ikenna T3 ships
+      design + launcher + announces RESOLVED in
+      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) `## Open questions`
+      → Harsh T4 runs `--dry-run` per asset_group → operator reviews CSV → Harsh T4 runs `--apply-write` → Ikenna T3
+      handles edge-case triage. ~1 AI-day.
 
 **Repos owned (collision boundary)**: instruments-service `scripts/enumerate_expected_universe.py` + per-VM launcher,
 MTDS writers (pipeline_mode dual-write), all 5 features-\* readers, deployment-api manifest readers, data-status
@@ -416,6 +502,37 @@ rescan VM operation to Harsh Tab 4.
   in a final commit after all 5 cutovers verify.
 - Manifest v7 design: 1 architecture sub-agent drafts the schema + migration script. Master reviews + ships.
 - Expected_universe v2: 1 sub-agent extends the v1 enumerator with catalog-join. Master operates the launches.
+
+**Phase ordering (HARD SEQUENCE)**: GCS Phase 0 audit → Phase 1 dual-write enable on writers → Phase 2 backfill replay
+tagging → Phase 3 reader fallback shim → Phase 4 per-service consumer cutover → Phase 5 fallback removal → Phase 6
+reconciler verification → Phase 7 codex SSOT updates. Phase 5 ONLY ships after ALL Phase 4 cutovers verify (otherwise
+consumers break). Manifest v7 design + expected_universe v2 enumerator + cross-asset rescan launcher ship in PARALLEL
+with GCS Phase 0-3 (independent contracts). v7 design must be RESOLVED before Ikenna T2 Phase 11 slice b consumes
+the per-(shard_key, day) ServiceEmissionPolicy state column.
+
+**Sub-agent isolation table** (paste rows verbatim into each Task prompt's "files OFF-LIMITS" section):
+
+| Sub-agent ID            | Files owned (only edit these)                                                                                                                                | Files OFF-LIMITS                                                                                                                                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sa3.GCS-P0-audit        | `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 0 audit body only (read-only on code)                                                  | All code surfaces                                                                                                                                                                                           |
+| sa3.GCS-P1-cefi         | MTDS writer dual-write for cefi asset_group (`pipeline_mode=batch` hive partition tag-on-write)                                                              | Other 4 asset_group writers                                                                                                                                                                                 |
+| sa3.GCS-P1-defi         | MTDS writer dual-write for defi                                                                                                                              | Other 4 asset_group writers                                                                                                                                                                                 |
+| sa3.GCS-P1-tradfi       | MTDS writer dual-write for tradfi                                                                                                                            | Other 4 asset_group writers                                                                                                                                                                                 |
+| sa3.GCS-P1-sports       | MTDS writer dual-write for sports                                                                                                                            | Other 4 asset_group writers                                                                                                                                                                                 |
+| sa3.GCS-P1-pred         | MTDS writer dual-write for prediction                                                                                                                        | Other 4 asset_group writers                                                                                                                                                                                 |
+| sa3.GCS-P2-replay       | Backfill replay tagger script (read existing parquets + tag with `pipeline_mode=batch` hive partition); idempotent + resumable + per-shard checkpointed     | Reader fallback (sa3.GCS-P3 owns); consumer cutover (sa3.GCS-P4-\* own them)                                                                                                                                |
+| sa3.GCS-P3-fallback     | NEW reader-fallback shim in MDPS / features-\* / deployment-api consumer paths (read both partitions during cutover)                                         | Writers (sa3.GCS-P1-\* own them); replay tagger                                                                                                                                                             |
+| sa3.GCS-P4-cefi         | cefi consumer cutover (per-service: features-cefi reader + deployment-api cefi data-status reader + reconciler)                                              | Other 4 asset_group consumer cutovers; writers; reader fallback shim                                                                                                                                        |
+| sa3.GCS-P4-defi         | defi consumer cutover                                                                                                                                        | Other 4 asset_group consumer cutovers                                                                                                                                                                       |
+| sa3.GCS-P4-tradfi       | tradfi consumer cutover                                                                                                                                      | Other 4 asset_group consumer cutovers                                                                                                                                                                       |
+| sa3.GCS-P4-sports       | sports consumer cutover                                                                                                                                      | Other 4 asset_group consumer cutovers                                                                                                                                                                       |
+| sa3.GCS-P4-pred         | prediction consumer cutover                                                                                                                                  | Other 4 asset_group consumer cutovers                                                                                                                                                                       |
+| sa3.GCS-P5-fb-rm        | Reader-fallback removal (final commit after ALL Phase 4 cutovers verify)                                                                                     | Anything else — this is a single mechanical removal commit                                                                                                                                                  |
+| sa3.GCS-P6-recon        | Reconciler walks manifest + cross-checks bucket layout per asset_group                                                                                       | Source code edits                                                                                                                                                                                           |
+| sa3.GCS-P7-codex        | Update 6 codex docs per Post-Plan-Phase Audit (1 NEW `codex/02-data/pipeline-mode-partition.md` + 5 UPDATE existing)                                         | Plan body; code surfaces                                                                                                                                                                                    |
+| sa3.V7-design           | NEW `unified_trading_library/manifest_v7.py` (formalise per-(shard_key, day) ServiceEmissionPolicy state column) + 1-time migration script + reader-removal of v6 fallback | UAC manifest schema (Wave 4 slice a — already shipped); Tab 2 sa2.P11 ServiceEmissionPolicy consumer wiring (sa3.V7-design ships SCHEMA, sa2.P11 reads it)                                          |
+| sa3.ExpUniv-v2          | `instruments-service/scripts/enumerate_expected_universe.py` v2 (cross-bucket join with catalog) + per-VM launcher                                           | v1 enumerator (already shipped); manifest v7 schema (sa3.V7-design owns)                                                                                                                                    |
+| sa3.Rescan-launcher     | NEW `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` rescan launcher script + design doc; triage file generator for Harsh T4 to consume | Harsh T4 operational invocation surface (Harsh runs the launcher); v6→v7 migration script (sa3.V7-design)                                                                                                   |
 
 **Collision risk**:
 
@@ -660,6 +777,22 @@ catalogue baseline).
   even if not in scope today) — output to Harsh T6 as input; (b) DART scope research across deployment-ui /
   unified-trading-system-ui to identify existing manual-action surfaces to extend vs add.
 
+**Sub-agent isolation table** (paste rows verbatim into each Task prompt's "files OFF-LIMITS" section):
+
+| Sub-agent ID         | Files owned (only edit these)                                                                                                                                        | Files OFF-LIMITS                                                                                                                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sa6.UAC-catalogue    | NEW `unified_api_contracts/canonical/strategy/catalogue.py` schema (StrategyArchetype enum + CatalogueRow dataclass + ArchetypeConfig per-family) + tests           | `canonical/strategy/ids.py` (sa6.UAC-ids owns); `canonical/strategy/cme_polymarket_arb_archetype.py` (Harsh T5 sa5.CMEPolyArb owns — same DIR but DIFFERENT file; sa6 ships catalogue first) |
+| sa6.UAC-ids          | NEW `unified_api_contracts/canonical/strategy/ids.py` (canonical naming + versioning rule + `derive_strategy_id`) + tests                                            | `canonical/strategy/catalogue.py` (sa6.UAC-catalogue owns); `canonical/client/`                                                                                                             |
+| sa6.UAC-client       | NEW `unified_api_contracts/canonical/client/model.py` (Client + accounts list + CapitalAllocation per (client, archetype, venue)) + tests                            | `canonical/strategy/`; UAC `chain_env.py` (Ikenna T1 owns)                                                                                                                                  |
+| sa6.DART-spec        | NEW `codex/09-strategy/cross-cutting/dart-manual-trade-spec.md` (5 surfaces: DeFi swap/lend/stake, CeFi orders, ML training trigger, sports bet, prediction-market)   | UAC; existing codex `operational-modes-matrix.md` (read-only reference)                                                                                                                     |
+| sa6.CatalogueRowEnum | Read-only enumeration of `(archetype, venue, instrument_type)` combos from existing codex `strategy-summary.md` 8-family / 18-archetype baseline → output spec doc   | All UAC; codex (read-only)                                                                                                                                                                  |
+| sa6.DART-research    | Read-only research across deployment-ui / unified-trading-system-ui to identify existing manual-action surfaces (extend vs add for each of 5 DART surfaces)          | All UI source; UAC                                                                                                                                                                          |
+
+Master sa6 (Tab 6 orchestrator) owns: orchestration + integration + design judgment + per-deliverable RESOLVED block
+in `cross_cutting_may_23_deliverables_2026_05_08.md` `## Open questions` so Harsh T6 can consume. UAC editor priority
+queue (per cross-side handshakes): sa6 ships NEW dirs (`canonical/strategy/`, `canonical/client/`) FIRST since they
+have zero overlap risk; subsequent UAC editors (Harsh T2 `feature_family`, Harsh T5 mechanical adds) wait per the queue.
+
 **Done-definition**:
 
 - [ ] All 4 UAC schemas merged: catalogue, IDs, client model, capital allocation
@@ -718,15 +851,42 @@ immediately + announces in plan-of-record; consuming side `git pull`s before its
       Slice b couples to assert_no_lookahead_for_feature_group; ml-features-phase2a wires it into 8 services.
       Coordinate: Harsh ships per-service wires; Ikenna reads the wires + extends ServiceEmissionPolicy state to reflect
       lookahead-bias-checked status.
+- [ ] **MDPS `base_adapter.py` 3-way collision — HARD SEQUENCE (codified 2026-05-08 audit)**: three sub-agents touch
+      this file across two operators. To prevent the documented foot-gun pattern (PM@961980db / @611b9501 / @34075d84)
+      where parallel `git add` / reset wipes staged hunks, enforce:
+      1. **Harsh T2 features-consolidation Phase 1-4 ships FIRST** — extracts features-cefi/tradfi compute paths into
+         `features-service/`, replacing existing MDPS `base_adapter.py` calls.
+      2. **Ikenna T2 sa2.P4-cefi (live-pipeline) wires SECOND** — adds pipeline_mode partition + replay subsystem
+         hooks to MDPS `base_adapter.py` AFTER Harsh T2 has finished its rewrite sweep + pushed.
+      3. **Harsh T2 sa2.PhaseAB×8 (lookahead-bias) wires THIRD** — adds `assert_no_lookahead_for_feature_group` calls
+         at compute entry, on top of the live-pipeline-wired version.
+      Each step waits for the previous step's RESOLVED block in
+      [`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md) /
+      [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md) `## Open
+      questions`. **No surgical `git add -p` in parallel** — sequence enforced via plan-of-record signaling.
 - [ ] **Harsh Tab 3 (deployment-ui-lifecycle-tabs auth re-shape) → Ikenna Tab 5 (deploy_missing audit-log
       integration)**: audit-log integration wraps the auth re-shape. Hard ordering: Harsh ships auth re-shape Phase 1;
       Ikenna ships audit-log on top.
-- [ ] **Harsh Tab 4 (per-asset_group VM ops + reconcilers) → Ikenna Tab 3 (cross-asset rescan design)**: Harsh runs the
-      rescan; Ikenna designs the schema flip. Coordinate: Ikenna ships design + ships rescan launcher script; Harsh runs
-      the launcher + reports findings; Ikenna handles edge cases.
-- [ ] **Harsh Tab 5 (mechanical refactors) → Ikenna Tab 1 (UAC drift fixes)**: Harsh's mechanical refactors might touch
-      UAC `chain_env.py` for unrelated reasons (e.g. hard_schema_enforcement column adds). If yes, surgical `git add -p`
-      to keep edits separate; Ikenna's `PROTOCOL_LAUNCH_DATES` flips never overlap with Harsh's mechanical UAC adds.
+- [ ] **Harsh Tab 4 (per-asset_group VM ops + reconcilers) → Ikenna Tab 3 (cross-asset rescan design + LAUNCHER)**:
+      Ownership clarified — **Ikenna T3 sa3.Rescan-launcher writes the rescan launcher script** (in
+      `instruments-service/scripts/` or `deployment-service/scripts/vm/`); **Harsh T4 operates it** on a same-region
+      GCE VM. Sequence: Ikenna T3 ships design + launcher + announces RESOLVED in
+      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) `## Open questions`
+      → Harsh T4 runs `--dry-run` per asset_group → operator reviews CSV → Harsh T4 runs `--apply-write` → Ikenna T3
+      handles edge-case triage file.
+- [ ] **UAC editor priority queue (codified 2026-05-08 audit)**: Up to 4+ sub-agents could touch UAC simultaneously
+      across both sides. The conditional-push rule catches collisions at push time but earlier serialization is
+      cheaper. **Priority queue (top → bottom; each waits for previous to RESOLVED in
+      `cross_cutting_may_23_deliverables_2026_05_08.md` `## Open questions`)**:
+      1. Ikenna T6 NEW dirs (`canonical/strategy/catalogue.py`, `ids.py`, `canonical/client/model.py`) — brand-new
+         files, zero overlap risk; ships first.
+      2. Ikenna T1 `chain_env.py` flips — already shipped UAC@6c873e4; remaining drift fixes in same window.
+      3. Harsh T2 sa2.P5-uac-col `feature_family` column in `canonical/feature/family.py` (NEW dir).
+      4. Harsh T5 sa5.HardSchema `canonical/manifest/schema_v6.py` column adds.
+      5. Harsh T5 sa5.APIFootball `external/api_football/normalize.py:377-381`.
+      6. Harsh T5 sa5.CMEPolyArb `canonical/strategy/cme_polymarket_arb_archetype.py` — same DIR as Ikenna T6 (#1)
+         but DIFFERENT FILE; serialize after Ikenna T6 ships catalogue + ids files so the dir state is stable.
+      Each editor pre-commit-checks `git diff --cached --name-only` matches their assigned file subset exactly.
 - [ ] **Ikenna Tab 6 (UAC strategy SSOTs + DART scope) → Harsh Tab 6 (consumer wiring + DART UI)**: cross_cutting epic
       deliverables #1-#4. **Hard ordering**: Ikenna T6 ships UAC catalogue + ID + client schemas + DART codex spec
       first; Harsh T6 consumes after. **Mitigation**: Harsh T6 can scaffold the strategy ID refactor sweep (identify
@@ -735,23 +895,26 @@ immediately + announces in plan-of-record; consuming side `git pull`s before its
 
 ## Collision-risk callouts (file-level)
 
-- **MDPS `base_adapter.py` / `BaseCandleAdapter`**: Ikenna Tab 2 wires live-pipeline; Harsh Tab 2 wires
-  ml-features-phase2a. Different layers, different methods. Pre-commit `git diff --cached --name-only` MUST show only
-  your files.
-- **UAC `chain_env.py`**: Ikenna Tab 1 (`PROTOCOL_LAUNCH_DATES`); Harsh Tab 5 might add columns for hard_schema. Use
-  `git add -p` if you both edit in the same window.
+- **MDPS `base_adapter.py` / `BaseCandleAdapter`** (3-way collision — see HARD SEQUENCE in Cross-side handshakes
+  above): Harsh T2 features-consolidation rewrite FIRST → Ikenna T2 sa2.P4-cefi live-pipeline wiring SECOND → Harsh
+  T2 sa2.PhaseAB×8 lookahead-bias wires THIRD. Sequence enforced via plan-of-record signaling, NOT parallel
+  `git add -p`.
+- **UAC** (4+ editor priority queue — see HARD QUEUE in Cross-side handshakes above): Ikenna T6 NEW dirs first →
+  Ikenna T1 drift fixes → Harsh T2 `feature_family` column → Harsh T5 schema/normalize/archetype adds in order.
+  Each editor pre-commit-checks `git diff --cached --name-only` matches assigned subset.
 - **PM master plan**: Ikenna Tab 5 ONLY writes to it; all other tabs read-only.
 - **deployment-api `auth_middleware.py`**: Harsh Tab 3 (auth re-shape) THEN Ikenna Tab 5 (audit-log). Sequence enforced.
 - **`live-defi-rollout` push race**: per CLAUDE.md conditional push rule. Pre-commit `git status` +
   `git diff --cached --stat` (no path arg) MANDATORY before EVERY commit. Use `git add -p` / `git add <specific-file>`
-  only.
+  only. Branch does NOT trigger remote CI — every shippable unit's local `bash scripts/quality-gates.sh` Pass 1 is
+  the ONLY quality gate (per top-of-file CI gate reminder).
 - **Pre-commit hook prettier reformat**: any markdown edit triggers prettier. Files you didn't author may get
   reformatted as a side-effect; this is acceptable if content is unchanged. Reference: PM@8b3f949d this morning bundled
   prettier reformats of 6 plans + 2 archive copies for this same reason.
 
 ## Daily sync points
 
-- **EOD T+0** (today, midnight UTC): Tabs 1-5 each report done-definition status to operator via plan-of-record
+- **EOD T+0** (today, midnight UTC): Tabs 1-6 each report done-definition status to operator via plan-of-record
   `## Open questions` resolved + DONE block. Operator runs `git log --oneline -25 origin/live-defi-rollout` to see the
   day's shipments.
 - **Tomorrow's daily reset**: 1 main-orchestrator-or-operator runs the daily reset per CLAUDE.md (fetch summary + Q&A
@@ -918,6 +1081,74 @@ REPORT-BACK: per CLAUDE.md HARD RULE cadence. DONE block at bottom of each plan-
 This tab runs LAST (it consumes the cycle's shipments via master refresh).
 ```
 
+### Tab 6 spawn prompt
+
+```text
+You are Tab 6 — a sub-agent spawned by Ikenna's main orchestrator agent (a separate Claude
+Code session on the SAME PC, sharing the SAME .git/ + working tree as you).
+
+BEFORE doing anything else, read in order:
+  1. unified-trading-pm/cursor-configs/CLAUDE.md — full body (workspace standards). Esp.
+     § "Daily Work-Split Process" + § "Two teammates × multiple parallel agents — don't
+     edit unfamiliar files" + § "Sub-Agents & Autonomous Agents: Full Rules Required" +
+     § "UAC Citadel Architecture".
+  2. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (symlink to CLAUDE.md;
+     same content — sub-agent framing applies to you).
+  3. plans/active/work_split_2026_05_08_ikenna.md § "TAB 6 — Cross-cutting design
+     (catalogue + IDs + clients + DART scope)" including the Sub-agent isolation table
+     (paste rows verbatim into each Task prompt).
+  4. plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (shared plan-of-record
+     with Harsh Tab 6 — you write per-deliverable RESOLVED blocks; Harsh T6 reads them).
+  5. plans/epics/cross_cutting_may_23_2026.epic.md — 5-deliverable scope (parent epic).
+  6. codex/09-strategy/strategy-summary.md — existing 8-family / 18-archetype catalogue
+     baseline (your enumeration source).
+  7. codex/09-strategy/cross-cutting/operational-modes-matrix.md — DART manual-trade lane
+     existing SSOT (extend or peer with new dart-manual-trade-spec.md).
+
+Your agent-tag: cross-cutting-design-tab. Your tab number: 6.
+
+ORCHESTRATION RULES (per CLAUDE.md § "Daily Work-Split Process" universal mechanics):
+  1. Shared working tree — no `git pull` needed between tabs; pre-commit check
+     (git status + git diff --cached --stat NO PATH ARG) mandatory before EVERY commit.
+     Use `git add -p` for shared files; never `git add -A` / `git add <whole-shared-file>`.
+  2. Plan-doc Q&A flow — write blockers into cross_cutting_may_23_deliverables_2026_05_08.md
+     `## Open questions` (status 🟡 BLOCKED), append ping in plans/active/_agent_pings.md,
+     continue with what you CAN do.
+  3. Conditional push — per shippable unit: commit locally, fetch + check incoming, zero
+     incoming → push, any incoming → flag + escalate.
+  4. Plan-flip in same logical unit as code — checkbox flip + <repo>@<sha> evidence stamped
+     in body, NOT batched at session end.
+  5. Findings Triage Discipline (HARD RULE) — case-1-to-5 routing per CLAUDE.md.
+
+CRITICAL HANDSHAKES (HARD ORDERING — Tab 6 IS THE FIRST UAC EDITOR THIS CYCLE):
+  • UAC editor priority queue (cross-side handshakes): Tab 6 ships NEW dirs
+    (`canonical/strategy/catalogue.py`, `canonical/strategy/ids.py`,
+    `canonical/client/model.py`) FIRST since they have zero overlap risk. Other UAC
+    editors (Ikenna T1 drift fixes, Harsh T2 `feature_family` column, Harsh T5 mechanical
+    adds) wait per the queue. Announce each NEW file as RESOLVED in plan-of-record
+    `## Open questions` so Harsh T6 + downstream UAC editors can proceed.
+  • Cross-side: Harsh T6 consumes your UAC schemas + DART codex spec for the implementation
+    side (refactor sweep + catalogue rows + client tagging + 5 DART manual-trade UIs +
+    catalogue UI). Per-deliverable RESOLVED gating: ship deliverable #1 (catalogue
+    schema) → Harsh T6 reads + populates rows → ship deliverable #2 (ID schema) → Harsh
+    T6 starts ID refactor sweep → ship deliverable #3 (client model) → Harsh T6 wires
+    client tagging → ship deliverable #4 (DART spec) → Harsh T6 ships 5 DART surfaces.
+  • Cross-tab within Ikenna: Tab 1 paper-trade smoke fills + Tab 5 alerting rules + Tab 5
+    master Group F refresh ALL gate on Tab 6 strategy-ID schema (Tab 6 ships first;
+    others consume).
+
+YOUR TASK: ship the 5 items in TAB 6 (strategy catalogue UAC schema + strategy ID UAC
+schema + client model UAC + DART manual-trade lane scope spec + strategy catalogue UI
+scope decision). Fan out per the Sub-agent isolation table. See
+work_split_2026_05_08_ikenna.md § "TAB 6" for full done-definition + file-ownership
+table.
+
+REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push.
+Final: append a "DONE-2026-05-08" block at the bottom of
+cross_cutting_may_23_deliverables_2026_05_08.md body listing every UAC + codex commit
+sha. Then go quiet — don't pick up new work autonomously.
+```
+
 ## Discipline reminders (every tab, every commit)
 
 Per CLAUDE.md § "Daily Work-Split Process — Universal mechanics":
@@ -955,3 +1186,30 @@ capturing the cycle's shipped work. EOD: archive this plan to `plans/archive/wor
 - Yesterday's archived split:
   [`plans/archive/work_split_2026_05_07_ikenna_5tab_layout.md`](../archive/work_split_2026_05_07_ikenna_5tab_layout.md).
 - Master plan: [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) — the durable readiness model.
+
+## VM Status — Tab 1 main launches (2026-05-08 14:11 UTC)
+
+Two VMs launched after operator green-lit "do everything" per session direction:
+
+- **mtds-lending-indices-20260508-141147** RUNNING — relaunch of lending-indices full backfill (2022-01-01 → 2026-05-07)
+  with refreshed DEFI tarball post-UAC@6c873e4. Predecessor `mtds-lending-indices-20260508-114519` (Tab 9, 7h running)
+  was deleted before relaunch — its progress was ~60% through but using OLD COMPOUND V3 dates that would have required
+  rescan. Manifest concurrency principle ensures already-captured rows skip; only empty/failed boundary days re-process
+  with corrected UAC dates.
+- **mtds-pyth-archive-20260508-141204** RUNNING — first launch of new Pyth Hermes archive backfill VM, default window
+  2022-11-01 → 2023-09-30 (jitoSOL genesis → ORACLE_COVERAGE_START boundary). Cascades Pyth Hermes (post-2023-10-01) →
+  Pythnet RPC (pre-2023-10-01) → CoinGecko fallback per oracle_prices_handler routing.
+
+**Pre-flight checks (all green 2026-05-08 14:12 UTC)**:
+
+- Pyth Hermes endpoint: HTTP 200 in 158ms.
+- Solana RPC `api.mainnet-beta.solana.com`: `getHealth` returns `ok`.
+- UAC `venue_accepts_collateral('DRIFT', 'JitoSOL')` = True; `('DRIFT', 'mSOL')` = True.
+
+**Verification cadence**: 90s STARTED + 10-15min progress events per VM (per CLAUDE.md "No fire-and-forget VM launches"
+rule). Schedule wakeup set for 14:15 UTC.
+
+**Commits this hour**:
+
+- deployment-service@0722ac4 — Pyth-archive launcher + watchdog dict prefix.
+- DEFI tarball refreshed twice (post-UAC@6c873e4 + post-deployment-service@0722ac4) — bundles VMs pull at boot.
