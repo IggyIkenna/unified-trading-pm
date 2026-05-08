@@ -950,13 +950,411 @@ REPORT-BACK:
   `git log --oneline live-defi-rollout`.
 ````
 
+#### Tab 9 — Lending-indices VM relaunch + verify 🟡 QUEUED (operational, ~30min initial + monitor)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 9 tasks"_.
+
+**Why now**: Tab 5 fixed the 3 lending-indices P0 bugs this morning (instruments-service@1a90185 +
+mtds@d2f365e). Relaunching the VM closes the loop with real data — proves Bug 1 reproducer (AAVE V3
+ETHEREUM silent-zero) actually emits non-zero rows now. Validates the fix end-to-end before Ikenna's D4
+DeFi launches depend on lending-indices working.
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 9 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules, Q&A flow, plan-doc curation duties.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "No fire-and-forget VM launches"
+     section (90s STARTED + 10-15min progress + STOPPED at exit, plus per-VM manifest shard
+     spot-check for silent-zero detection).
+  3. plans/active/issues/lending_indices_handler_bugs_2026_05_07.md — the 3 P0 bugs Tab 5
+     just fixed (Bugs 1 + 2 + 3); this is what we're validating.
+  4. plans/active/defi_master_2026_05_07.plan.md § "Lending-indices VM run-quality bugs" —
+     parent context.
+
+Your agent-tag: lending-indices-relaunch-tab. Your tab number: 9.
+
+YOUR TASK: relaunch the lending-indices backfill VM with Tab 5's fixes shipped, verify the
+Bug 1 / Bug 2 / Bug 3 reproducers actually emit captured rows now (not silent-zeros).
+
+STEPS:
+
+1. Refresh tarballs for the relevant asset_groups (DEFI primarily):
+     bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI
+   This pulls Tab 5's instruments-service@1a90185 + mtds@d2f365e into the tarball that the
+   VM will boot. Verify TARBALLS_REFRESHED event fires.
+
+2. Relaunch the lending-indices VM:
+     bash deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh
+   (Same launcher as the failed run; check it's already singleton-locked so no concurrent
+   relaunch. The previous VM mtds-lending-indices-20260507-140418 was stopped after diagnosis.)
+
+3. 90-second STARTED check:
+     gcloud storage ls gs://central-element-323112-events/events/market-tick-data-service/2026-05-08/<vm-name>/
+   Confirm hour=H partition exists. Read first JSONL, assert event=="STARTED".
+
+4. 10-15min progress check: read events under hour=H, look for INSTRUMENT_PROCESSED-class
+   events with `rows_captured` > 0. Specifically:
+   - AAVE V3 ETHEREUM (Bug 1 reproducer) — must show captured rows, not silent-zero.
+   - Compound V3 (Bug 2 reproducer) — must show captured rows, not schema error.
+   - Pre-launch-date filtering (Bug 3 reproducer) — must respect UAC PROTOCOL_LAUNCH_DATES.
+
+5. Per-VM manifest shard spot-check at T+30min:
+     gs://lending-indices-central-element-323112/_index/per_vm/<vm-name>.parquet
+   Read with pyarrow; verify capture_status distribution: expect ≥ 90% captured for the
+   ETHEREUM AAVE V3 + Compound V3 rows, NOT 100% empty_confirmed (the pre-fix shape).
+
+DONE-DEFINITION:
+- [ ] VM launched + STARTED event observed within 90s.
+- [ ] AAVE V3 ETH writes captured rows (sample at T+15min from per-VM shard).
+- [ ] Compound V3 writes captured rows (sample at T+15min).
+- [ ] Pre-launch-date dates correctly empty_confirmed[EXPECTED_PRE_GENESIS_CHAIN] or
+      record_expected_unattempted, NOT silent-zero captured.
+- [ ] Status note appended to plans/active/issues/lending_indices_handler_bugs_2026_05_07.md
+      below the existing DONE-2026-05-08 block: "VALIDATION-2026-05-08 — VM relaunched as
+      <vm-name>; sample at T+30min confirms <N> captured rows for AAVE V3 ETH, <M> for
+      Compound V3, all 3 bugs verified fixed end-to-end."
+- [ ] If ANY reproducer still silent-zeros: write a 🟡 BLOCKED entry in the issue doc's
+      `## Open questions` section + ping main; do NOT mark fixes as validated.
+
+REPORT-BACK: 1 commit (validation note); push per conditional rule (fetch + zero incoming).
+````
+
+#### Tab 10 — Predictions Phase 1 lifecycle ingestion 🟡 QUEUED (P1, ~6-8h, instruments-service + MTDS)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 10 tasks"_.
+
+**Why now**: Phase 1A scaffolding shipped 2026-05-07 — UAC `canonical_question_group` SSOT
+(UAC@af2bc9b), Polymarket lifecycle aliases (UAC@58cc5f8), `DATA_TYPE_TO_CLUSTER_REGISTRY`
+(UAC@bb24aba). Phase 1 ships the actual ingestion: instruments-service writes lifecycle timestamps
+(`market_created_at` / `resolution_time` / `settlement_time`) + MTDS orchestrator emits shard-atom
+keyed on `canonical_question_group`. Gates Phase 2 (adapter migration) + Phase 3 (reader/feature/strategy)
+of predictions_master entirely.
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 10 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "Prediction market lifecycle timing"
+     section (lifecycle bounds + cluster validation per canonical_question_group).
+  3. plans/active/predictions_master_2026_05_07.plan.md Phase 1 — your plan-of-record.
+  4. UAC SSOTs already shipped (Phase 1A): UAC@af2bc9b (canonical_question_group SSOT +
+     lifecycle wrapper modules), UAC@58cc5f8 (Polymarket aliases + edge-case tests),
+     UAC@bb24aba (DATA_TYPE_TO_CLUSTER_REGISTRY + PREDICTION_GROUPS empty registry).
+
+Your agent-tag: predictions-phase1-ingestion-tab. Your tab number: 10.
+
+YOUR TASK: implement Phase 1 lifecycle ingestion of predictions_master Phase 1 — the actual
+writer + orchestrator wiring (Phase 1A was scaffolding only).
+
+REPOS OWNED:
+- instruments-service (writer for prediction market lifecycle timestamps).
+- market-tick-data-service (orchestrator shard-atom emit; Polymarket adapter lifecycle gating
+  if shippable in Phase 1, else defer to Phase 2 per plan body).
+
+Scope (read predictions_master Phase 1 body for the full contract):
+- instruments-service Polymarket / Kalshi adapter writes per-market_id lifecycle timestamps
+  (`market_created_at`, `resolution_time`, `settlement_time`) + canonical_question_group
+  membership per the UAC SSOT.
+- MTDS orchestrator reads the lifecycle metadata + emits shard-atom keyed on
+  `(asset_group=prediction, venue, data_type, canonical_question_group, day)` per the
+  CLAUDE.md "Per-asset-group shard-key matrix" section.
+- Integration tests: a recurring HOURLY canonical group (e.g. BTC_UP_DOWN_HOURLY) cycling
+  through 24 market_ids in a day asserts cluster validation (HOURLY → 24 clusters expected).
+- Lifecycle bounds in MTDS CLOB capture: NO ticks before `market_created_at`, NO new ticks
+  after `settlement_time` (per the CLAUDE.md rule).
+
+Phase 2 + 3 are explicitly deferred per the work_split's "Defer post-May-23" + the plan's
+phase ordering — do NOT proceed past Phase 1 lifecycle ingestion in this session.
+
+DONE-DEFINITION:
+- [ ] instruments-service writes per-market_id lifecycle timestamps + canonical_question_group
+      membership; existing Polymarket / Kalshi adapter migrated.
+- [ ] MTDS orchestrator emits shard-atom on the canonical_question_group axis (verified by
+      reading the manifest shard and asserting `canonical_question_group` populated).
+- [ ] Lifecycle bounds enforced at MTDS CLOB capture (no ticks outside [created, settlement]).
+- [ ] Integration test: HOURLY canonical group cluster validation passes.
+- [ ] `cd instruments-service && bash scripts/quality-gates.sh` Pass 1 green.
+- [ ] `cd market-tick-data-service && bash scripts/quality-gates.sh` Pass 1 green.
+- [ ] Plan flips: predictions_master Phase 1 todos `- [ ]` → `- [x]` with `<repo>@<sha>`.
+- [ ] DONE-2026-05-08 block at the bottom of predictions_master plan body.
+
+REPORT-BACK: 5-8 small commits per CLAUDE.md cadence; push per conditional rule.
+````
+
+#### Tab 11 — Launcher consolidation D4 P2 🟡 QUEUED (mechanical, ~3-4h, deployment-service + read-only on source repos)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 11 tasks"_.
+
+**Why now**: D4 P2 in the work_split. 30 ad-hoc VM launchers under `e2e-testing/scripts/` +
+`features-*-service/scripts/` are technical debt (per CLAUDE.md "VM launcher script SSOT" rule —
+all launchers MUST live under `deployment-service/scripts/vm/`). Migrating 10 of 30 in this cycle
+makes Deploy-Missing UI work for those services + cleans up the workspace.
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 11 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "VM launcher script SSOT (codified
+     2026-05-07)" section (the SSOT rule + 4 ways scripts reach the VM + how to add a new
+     launcher) + "VM Naming Convention" section (VM_PREFIX_TO_BUCKET registry).
+  3. plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.plan.md —
+     your plan-of-record.
+  4. deployment-service/scripts/vm/vm_zombie_watchdog.py:113 — VM_PREFIX_TO_BUCKET dict (must
+     be updated for every new launcher prefix).
+
+Your agent-tag: launcher-consolidation-tab. Your tab number: 11.
+
+YOUR TASK: migrate 10 of 30 ad-hoc launchers from `e2e-testing/scripts/` +
+`features-*-service/scripts/` into `deployment-service/scripts/vm/`.
+
+REPOS OWNED:
+- deployment-service (target — new launchers under scripts/vm/ + VM_PREFIX_TO_BUCKET updates).
+- e2e-testing, features-sports-service, features-onchain-service (source — read-only).
+
+Selection rule (pick the 10 that matter most for May-23):
+- Anything called by an active (running) backfill or audit operation today is HIGH priority.
+- Anything referenced by a plan in plans/active/ critical-path is HIGH priority.
+- Anything that hasn't been used in 7+ days is LOW priority (defer post-May-23).
+
+For each migrated launcher:
+1. Move the script into deployment-service/scripts/vm/launch-{asset_group}-{flavor}-vm.sh.
+2. Add the VM-name prefix to VM_PREFIX_TO_BUCKET in vm_zombie_watchdog.py:113 (with the right
+   shard bucket, or None for heartbeat-only).
+3. If it should be reachable from the Deploy-Missing UI button, register it in
+   _SERVICE_LAUNCHER_SCRIPTS in deployment-api/deployment_api/services/deploy_missing.py.
+4. Smoke-test via `bash deployment-service/scripts/vm/launch-X-vm.sh --dry-run` (or equivalent
+   if the launcher doesn't have --dry-run).
+5. Add a deprecation banner to the OLD location (NOT delete — leave a comment pointing at the
+   new location for any operators with a tab open on the old path; deletion in next cycle).
+6. After updating VM_PREFIX_TO_BUCKET: relaunch the watchdog VM per CLAUDE.md "VM Naming
+   Convention" rule (the running watchdog only fetches the Python at boot).
+
+Coordination — pre-commit check is critical here (you may share working tree with other agents):
+- git status + git diff --cached --stat (no path arg) before EVERY commit.
+- Use `git add -p` for any shared files (vm_zombie_watchdog.py is shared).
+
+DONE-DEFINITION:
+- [ ] 10 launchers migrated to deployment-service/scripts/vm/.
+- [ ] VM_PREFIX_TO_BUCKET updated for each new prefix; vm_zombie_watchdog VM relaunched.
+- [ ] _SERVICE_LAUNCHER_SCRIPTS updated for any launcher that should be reachable from the UI.
+- [ ] Old locations have deprecation banner comments pointing at new paths.
+- [ ] `cd deployment-service && bash scripts/quality-gates.sh` Pass 1 green.
+- [ ] Plan flips: launcher_scripts_consolidation_into_deployment_service plan body — 10
+      checkbox flips with `<repo>@<sha>` evidence.
+- [ ] DONE-2026-05-08 block at the bottom of the plan body.
+
+REPORT-BACK: 10 small commits per CLAUDE.md cadence (1 per launcher migration); push per
+conditional rule.
+````
+
+#### Tab 12 — ml/features Phase 2A consumer wires 🟡 QUEUED (P0 once started, ~4-6h, 8 service touches)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 12 tasks"_.
+
+**Why now**: UAC `feature_group → required_inputs` SSOT shipped 2026-05-07 (UAC@4a25b07). Phase 2A
+wires the 8 features-* / MDPS / strategy services to consume it via UTL `assert_no_lookahead_for_feature_group`
+helper. Workspace-wide ratchet — once shipped, every feature compute becomes lookahead-bias-checked at runtime.
+
+**Caveat — high collision risk**: 8 service touches. Better as a SINGLE focused tab (this one) than
+parallelized. If you spawn this in parallel with Tab 11 (which also touches `vm_zombie_watchdog.py` +
+deployment-service), watch for shared-file collisions on the deployment-service repo.
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 12 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "Shard-granularity SSOT" section
+     ([UAC] + [UTL] + [per-service] layer discipline) + "LookaheadBiasError raised loud at
+     every features-* + MDPS compute, not warn-mode" rule.
+  3. plans/active/ml_and_features_master_2026_05_07.plan.md Phase 2A — your plan-of-record.
+  4. UAC SSOT shipped (Phase 1A): UAC@4a25b07 (32 feature_groups + 5-service registry +
+     6 onchain coverage_starts + 15 tests).
+  5. UTL helper shipped: UTL@4354276 (assert_no_lookahead_for_feature_group helper + 9 tests).
+
+Your agent-tag: ml-features-phase2a-tab. Your tab number: 12.
+
+YOUR TASK: wire the 8 services that compute features into the UTL
+`assert_no_lookahead_for_feature_group` helper, so every feature compute call validates inputs
+against the UAC `feature_group → required_inputs` DAG at runtime.
+
+REPOS OWNED (8 services):
+- features-onchain-service
+- features-sports-service
+- market-data-processing-service (MDPS — features-cefi / features-tradfi compute lives here)
+- strategy-service (strategy archetype compute consumes feature_groups)
+- + 4 others per the plan body — read it for the full list.
+
+For each service:
+1. Identify the per-service feature compute entry point (typically `compute_<feature_group>` or
+   a calculator class method).
+2. Add a call to `assert_no_lookahead_for_feature_group(feature_group_name, inputs, target_ts)`
+   at the top of the compute method, BEFORE any tick reads.
+3. Strict-mode raise (per CLAUDE.md rule) — NOT log-and-continue.
+4. Add a unit test that asserts the helper fires for a deliberately-stale input.
+
+Pre-commit check is CRITICAL (you're touching 8 services in 1 tab):
+- git status + git diff --cached --stat (no path arg) before EVERY commit.
+- Commit per service (8 small commits, NOT one mega-commit).
+
+DONE-DEFINITION:
+- [ ] All 8 services wired with assert_no_lookahead_for_feature_group at compute entry.
+- [ ] Per-service unit test asserting strict-mode raise on stale input.
+- [ ] `cd <repo> && bash scripts/quality-gates.sh` Pass 1 green for each of 8 repos.
+- [ ] Plan flips: ml_and_features_master Phase 2A todos `- [ ]` → `- [x]` with `<repo>@<sha>`.
+- [ ] DONE-2026-05-08 block at the bottom of ml_and_features_master plan body.
+
+REPORT-BACK: ≥8 small commits (1 per service); push per conditional rule.
+````
+
+#### Tab 13 — deploy_missing Phase 0 IAM proposal draft 🟡 QUEUED (draft-only, ~1-2h, PM only)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 13 tasks"_.
+
+**Why now**: Tab 4 deferred this to avoid pre-empting operator decisions. Drafting the proposal now lets
+operator sign off (or amend) without an extra round-trip. Unblocks deploy_missing Phase 2 (the actual
+auto-launch endpoint that uses Tab 4's tarball-staleness helper + Tab 3's deployment-api endpoints).
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 13 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules.
+  2. plans/active/deploy_missing_auto_launch_2026_05_07.plan.md — your plan-of-record;
+     focus on Phase 0 (lines 126-132) + the "Pre-audit blast radius" Security-boundary
+     review section (lines 49-67).
+  3. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "DeFi Execution Architecture"
+     interface-credential section (gives shape to least-privilege thinking).
+
+Your agent-tag: deploy-missing-iam-proposal-tab. Your tab number: 13.
+
+YOUR TASK: draft the Phase 0 security review proposals for operator review. 3 audit todos:
+
+1. **IAM scope decision**: propose the minimal IAM role for the deployment-api Cloud Run
+   service to invoke `gcloud compute instances create`. Compare:
+   - Blanket `roles/compute.instanceAdmin.v1` (too broad).
+   - Narrower custom role with only the specific permissions (compute.instances.create,
+     compute.instances.get, compute.instances.list, etc.) scoped to a specific zone +
+     image family + subnet.
+   - Per-launcher allow-listing (cross-reference `_SERVICE_LAUNCHER_SCRIPTS`).
+   Output: a proposed custom role spec (YAML stanza or equivalent) + blast-radius analysis
+   for each.
+
+2. **Audit-log shape decision**: propose the audit-log record shape for every
+   Deploy-Missing launch. At minimum: operator_email (from auth context), shard_key,
+   launch_timestamp, resulting_vm_name, launcher_script_path, asset_group, dry_run flag.
+   Decide: BigQuery table vs append-only GCS object vs Cloud Logging structured log.
+   Output: schema dataclass + storage backend recommendation + retention policy.
+
+3. **Rate-limit ceiling decision**: propose per-operator-per-hour + project-wide ceilings.
+   Cross-reference: how many real Deploy-Missing launches per day do we expect at steady
+   state? (Sample from existing manual-backfill cadence.) Add cost-vector reasoning (a
+   misbehaving operator could spawn N VMs/hr; what's the cost ceiling you're comfortable
+   absorbing?). Output: numeric ceilings + 429 response shape.
+
+Output landing zone: append a new section `## Phase 0 — IAM scope + audit log + rate limit
+proposal (DRAFT for operator review)` to deploy_missing_auto_launch_2026_05_07.plan.md
+between the existing Phase 0 todos (line 132) and Phase 1 (line 134). Mark proposals as
+`STATUS: DRAFT — operator review pending` so they don't get mistaken for shipped decisions.
+
+REPOS OWNED:
+- unified-trading-pm (plan body only — pure draft, no code).
+
+DONE-DEFINITION:
+- [ ] 3 proposals drafted with explicit options + recommendation + tradeoff analysis.
+- [ ] Each proposal marked `STATUS: DRAFT — operator review pending`.
+- [ ] Proposals cite blast-radius implications + cross-reference Phase 1's tarball-refresh
+      wiring (Tab 4's work) where relevant.
+- [ ] DONE-2026-05-08 block at the bottom of the plan body referencing the proposal section.
+
+REPORT-BACK: 1 commit (proposal section); push per conditional rule.
+````
+
+#### Tab 14 — defi_master Fork 1 prep audit 🟡 QUEUED (P0 risk mitigation, ~2-3h, diagnostic)
+
+**How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 14 tasks"_.
+
+**Why now**: Validates Tab 5's lending-indices fixes end-to-end on a sample query before Ikenna's D4 DeFi
+launches. Tab 9's relaunch validates the fix on a single VM run; Tab 14 audits the broader Fork 1 surface
+(Pyth Hermes, Chainlink multi-chain, Aave V3 Polygon/Arbitrum/Base in addition to ETH, Uniswap V3 swap
+fees, LST yields jitoSOL/mSOL/bSOL) for similar bug classes BEFORE D4 triggers a full backfill.
+
+**Spawn prompt — paste this entire block as the new tab's first message**:
+
+````text
+You are Tab 14 — a sub-agent spawned by Harsh's main orchestrator agent (Tab 1).
+
+BEFORE doing anything else, read these in order:
+  1. plans/active/work_split_2026_05_07_harsh_5tab_layout.md § "Bootstrap — read first if
+     you're a spawned tab (Tab 2+)" — workflow rules.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — esp. "Honest absence vs fake placeholders"
+     + "Four-category empty-output decision" sections.
+  3. plans/active/defi_master_2026_05_07.plan.md Fork 1 — your plan-of-record.
+  4. plans/active/issues/lending_indices_handler_bugs_2026_05_07.md — the 3 bug shapes Tab 5
+     just fixed; you're auditing for similar classes elsewhere in defi_master Fork 1.
+  5. plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md — Tab 6's breakdown of
+     13,632 actionable rows; cross-reference for known-broken paths.
+
+Your agent-tag: defi-fork1-prep-audit-tab. Your tab number: 14.
+
+YOUR TASK: run a diagnostic audit on every defi_master Fork 1 data source for 3 bug classes
+that Tab 5 just fixed elsewhere:
+
+  Bug class 1: silent-zero (subgraph routing config error) — sample one day per chain per
+    protocol; assert returned tick count > 0 if the chain × protocol × date is post-genesis.
+  Bug class 2: schema drift (GraphQL or REST query out of date) — run each Fork 1 adapter's
+    smoke method, assert no schema-mismatch errors.
+  Bug class 3: launch-date floor handling — for each Fork 1 instrument, assert
+    instruments-service's get_protocol_floor_date returns the UAC PROTOCOL_LAUNCH_DATES SSOT
+    value, not a hard-coded floor.
+
+Fork 1 scope (per defi_master plan body):
+- Aave V3 (Ethereum + Polygon + Arbitrum + Base — the 4 EVM chains).
+- Uniswap V3 swap fees (Ethereum + Arbitrum + Base + Polygon).
+- LST yields (jitoSOL + mSOL + bSOL on Solana).
+- Pyth Hermes (Solana on-chain price feeds — re-added 2026-05-06 per CLAUDE.md unbanning).
+- Chainlink (EVM chains: Arbitrum + Base + Polygon).
+- Lending-indices broader (Compound V3 across chains).
+
+This is DIAGNOSTIC ONLY — no code changes. Output is an issue doc:
+plans/active/issues/defi_fork1_prep_audit_2026_05_08.md per the Findings Triage Discipline
+issue-doc format (CLAUDE.md).
+
+If you find any new bugs (NOT Tab 5's already-fixed ones), file them as case-3 findings
+(adjacent to defi_master plan, NOT your scope to fix) — annotate defi_master plan body
+with explicit owner pointer (Ikenna for D4 launch fork; or main for triage).
+
+DONE-DEFINITION:
+- [ ] All Fork 1 data sources sampled for the 3 bug classes.
+- [ ] plans/active/issues/defi_fork1_prep_audit_2026_05_08.md filed with per-source results.
+- [ ] Any new findings annotated in defi_master plan body with case-3 owner pointer.
+- [ ] DONE-2026-05-08 block at the bottom of the audit doc.
+
+REPORT-BACK: 1-2 commits (audit doc + defi_master annotations); push per conditional rule.
+````
+
 ### ⚪ Main agent (this session) doing now
-- Daily reset complete: incoming commits summarised, ledger reset to D2, Spawn 1 queued.
-- Awaiting Harsh to open a fresh tab + paste Spawn 1 prompt.
-- Reconcile-hook (D2 P1 sports-master) deferred pending writegate Phase 2.C landing on Ikenna's
-  side AND operator decision on hook-target scope (chat thread 2026-05-08 morning).
-- Standing by to: (a) answer technical questions from spawned tabs via ping ledger,
-  (b) field new direction from Harsh, (c) sweep VM monitoring status if needed.
+- Tabs 9-14 queued (per operator request) — Tabs 9/10/11 to start now, Tabs 12/13/14 after review.
+- Standing by to: (a) ack STARTED pings + flip QUEUED → IN FLIGHT, (b) verify DONE pings + flip
+  IN FLIGHT → ✅ DONE, (c) answer any 🟡 BLOCKED Qs in plan-of-record docs, (d) field new direction.
 
 ### ✅ Done today
 - Daily reset: incoming-commit summary across PM (45) + 12 sibling repos (~95 commits) reported
