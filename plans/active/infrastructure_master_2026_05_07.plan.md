@@ -25,8 +25,10 @@ related_plans:
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)
 - **Verified**: 30 of 30 unchecked todos
-- **Mis-marked DONE → flipped**: 0 — but 4 todos newly classified as STALE (superseded by writegate /
-  data-status-drilldown plan), 9 verified actionable, 17 routed to other plans
+- **Mis-marked DONE → flipped**: 0 — 2 todos classified as STALE (verified by audit-followups Tab 8 2026-05-08:
+  Phase 0→1 handover at line 126 + MDPS-1440-NaN reproduction-test at line 130, both superseded by writegate Phase 2.A
+  + reconciler MDPS@`d3be0ef`); 9 verified actionable; 17 routed to other plans (mostly BLOCKED-ON
+  data_status_drilldown_shard_atom_alignment_2026_05_07)
 - **In-flight (running VMs)**: 24 cefi + 5 tradfi MDPS + 4 sports backfill VMs are LIVE TESTS of
   deployment-service@`456acb9` multi-axis correction shipped 2026-05-06; vm-zombie-watchdog always running. Plan does
   not gate these directly — they validate the shipped infrastructure.
