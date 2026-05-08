@@ -155,7 +155,11 @@ Phase 1 (UAC types — SEQUENTIAL prerequisite)
 
 ### 2.A — `POST /api/backfill/launch` (PARALLEL with 2.B)
 
-- [ ] [SCRIPT] P0. Create `deployment-api/deployment_api/routes/backfill_launch.py`:
+- [x] [SCRIPT] P0. Create `deployment-api/deployment_api/routes/backfill_launch.py`
+      (deployment-api@`cade1e1` — closed-set `_TASK_TO_LAUNCHER` + `_REGISTERED_VM_PREFIXES`
+      mirror of `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET`; `verify_api_key`-gated;
+      `subprocess.run(shell=False, timeout=600)`; mock_mode / dry_run short-circuit;
+      VM_LAUNCH_REQUESTED / VM_LAUNCHED / VM_LAUNCH_FAILED / LAUNCH_TIMEOUT events.):
 
   Behaviour:
   1. Auth: `verify_api_key` (X-API-Key header) — inherited via `_authenticated_router` in main.py.
@@ -190,10 +194,15 @@ Phase 1 (UAC types — SEQUENTIAL prerequisite)
   - Production guard: if `_cfg.is_mock_mode()` is True OR `request.dry_run`, the route returns a
     `BackfillLaunchResult` with `dry_run=True` and the resolved argv reflected back, without calling subprocess.
 
-- [ ] [SCRIPT] P0. Wire route into `deployment_api/main.py`: add `from .routes import backfill_launch` and
+- [x] [SCRIPT] P0. Wire route into `deployment_api/main.py`: add `from .routes import backfill_launch` and
       `_authenticated_router.include_router(backfill_launch.router, prefix="/api/backfill", tags=["Backfill"])`.
+      (deployment-api@`cade1e1` — wired alongside the existing authenticated routers.)
 
-- [ ] [SCRIPT] P0. Integration tests in `deployment-api/tests/integration/test_backfill_launch.py`:
+- [x] [SCRIPT] P0. Integration tests in `deployment-api/tests/integration/test_backfill_launch.py`
+      (shipped as `deployment-api/tests/unit/test_backfill_launch.py` per
+      deployment-api@`782cce5` — moved from `tests/integration/` so the
+      tests count toward the QG coverage gate; everything is mocked
+      anyway, so they're functionally unit-level. 11 tests pass.):
   1. Auth required — POST without X-API-Key → 401.
   2. Bad task → 400 (task value not in enum, OR task not in `_TASK_TO_LAUNCHER` mapping).
   3. Unknown vm-name prefix (i.e. one not in `VM_PREFIX_TO_BUCKET`) → 400 with helpful message.
@@ -207,7 +216,11 @@ Phase 1 (UAC types — SEQUENTIAL prerequisite)
 
 ### 2.B — `GET /api/vm/events` (PARALLEL with 2.A)
 
-- [ ] [SCRIPT] P0. Create `deployment-api/deployment_api/routes/vm_events.py`:
+- [x] [SCRIPT] P0. Create `deployment-api/deployment_api/routes/vm_events.py`
+      (deployment-api@`bae88fb` — JSONL parse + base64 page tokens + `_PREFIX_TO_SERVICE`
+      longest-prefix inference + severity-floor filter + per-blob shard-level failure
+      isolation via EVENT_FETCH_FAILED / EVENT_PARSE_FAILED log events; mock-mode
+      synthesizes 3 events for the UI smoke render.):
 
   Behaviour:
   1. Auth: `verify_api_key`.
@@ -237,10 +250,17 @@ Phase 1 (UAC types — SEQUENTIAL prerequisite)
   - 24-hour scan: bounded to <5 MB total. No streaming response needed for v1 (FastAPI defaults are fine).
   - Pagination handles the >5000-event-day case; live forward-poll VMs emit ~1 event / 30s × 24h = ~2880 / day.
 
-- [ ] [SCRIPT] P0. Wire route into `deployment_api/main.py`: add `from .routes import vm_events` and
+- [x] [SCRIPT] P0. Wire route into `deployment_api/main.py`: add `from .routes import vm_events` and
       `_authenticated_router.include_router(vm_events.router, prefix="/api/vm", tags=["VM Events"])`.
+      (deployment-api@`bae88fb` — also added to `routes/__init__.py` for
+      basedpyright import-resolution.)
 
-- [ ] [SCRIPT] P0. Integration tests in `deployment-api/tests/integration/test_vm_events.py`:
+- [x] [SCRIPT] P0. Integration tests in `deployment-api/tests/integration/test_vm_events.py`
+      (shipped as `deployment-api/tests/unit/test_vm_events.py` per
+      deployment-api@`782cce5` — same migration rationale as 2.A above. 13 tests
+      pass: validation × 4, mock-mode × 2, real-mode against `_FakeStorageClient` ×
+      7 covering empty bucket / 5-row parse / severity filter / malformed-row skip /
+      pagination round-trip / today-default / correlation-id extraction.):
   1. Auth required — GET without X-API-Key → 401.
   2. Missing vm_name → 422.
   3. Mock-mode returns synthesized `VMEventListResult` with 3 events + `truncated=False`.
@@ -262,20 +282,42 @@ Phase 1 (UAC types — SEQUENTIAL prerequisite)
 
 ## Phase 3 — Quality gates + commit + push (SEQUENTIAL)
 
-- [ ] [SCRIPT] P0. Run `cd unified-api-contracts && bash scripts/quality-gates.sh` Pass 1; commit + push directly to
+- [x] [SCRIPT] P0. Run `cd unified-api-contracts && bash scripts/quality-gates.sh` Pass 1; commit + push directly to
       `live-defi-rollout` (per CLAUDE.md "DO NOT quickmerge when local dep repos are dirty"). Commit message:
       `feat(uac): work-stream-A internal types for backfill launch + VM event tail`.
+      (Already shipped under Phase 1 as UAC@`a70b3f6` — 5 Pydantic models + 23-value
+      `BackfillLaunchTaskKind` StrEnum + 15 unit tests pass in 0.14s. Phase 3
+      restated this in the plan-template before Phase 1's early shipment was known.)
 
-- [ ] [SCRIPT] P0. Run `cd deployment-api && bash scripts/quality-gates.sh` Pass 1; commit + push directly to
+- [x] [SCRIPT] P0. Run `cd deployment-api && bash scripts/quality-gates.sh` Pass 1; commit + push directly to
       `live-defi-rollout`. Commit message: `feat(deployment-api): work-stream-A endpoints — POST /api/backfill/launch + GET /api/vm/events`.
+      (Pass 1 green — coverage 70.84% (was 69.35% before this work, gate is 70%);
+      lint clean; basedpyright clean. Four local commits on
+      `deployment-api`:`cade1e1` (route 2.A + tests + main.py wire),
+      `bae88fb` (route 2.B + tests + main.py wire),
+      `7f60c5c` (QG fixes — SIM108 ternary, two C901 complexity refactors,
+      `os.environ` AST-rule rename),
+      `782cce5` (move tests from `integration/` to `unit/` so they count toward
+      coverage + auth/sys.modules collection-order workarounds).
+      **LOCAL-ONLY**: push pending per operator instruction
+      2026-05-08 ("only commit locally, don't push unless I ask you to").
+      One pre-existing test failure remains
+      (`test_empty_reason_keys_match_closed_set_taxonomy`) — `_EMPTY_REASON_KEYS`
+      drift on another agent's `data_status_service.py:1689` against UAC's
+      `EMPTY_CONFIRMED_REASONS`; exempt per CLAUDE.md temporary 2026-05-07 → 2026-05-09
+      QG-failure exception.)
 
-- [ ] [SCRIPT] P0. Flip the matching plan checkboxes in this file + push as a separate `plan(...)` commit per the
+- [x] [SCRIPT] P0. Flip the matching plan checkboxes in this file + push as a separate `plan(...)` commit per the
       CLAUDE.md "Commit + Push + Flip Plan Checkboxes" hard rule.
+      (This commit. Push pending per same operator instruction above.)
 
 **Phase 3 success criteria:**
 
 - Two work commits pushed to `live-defi-rollout` on UAC + deployment-api.
+  → UAC@`a70b3f6` is pushed (Phase 1). Four deployment-api commits are LOCAL only
+  per operator policy.
 - One plan-flip commit pushed on PM.
+  → This commit is local only per operator policy; will push on operator signal.
 - `gh pr` not created — staying on the working branch per CLAUDE.md (VMs pull `live-defi-rollout`, not `main`).
 
 ## Phase 4 — deployment-ui wiring (DEFERRED — separate sub-plan)
@@ -315,3 +357,45 @@ that will:
 - [x] Success criteria per phase (QG, integration tests).
 - [x] Downstream consumer updates — Phase 1 (UAC) updates re-exports in `__init__.py`; Phase 2 wires routes in `main.py`.
 - [x] Single source of truth — types live in UAC `internal/deployment.py`, no per-service shadow copies; launcher mapping documented as a v1 inline with named successor plan.
+
+## DONE-2026-05-08 (Spawn 1, deployment-api-phase2-tab agent)
+
+All Phase 2 + Phase 3 todos shipped. Done-definition met (per the spawn prompt
+in `work_split_2026_05_07_harsh_5tab_layout.md` § Spawn 1):
+
+- [x] `backfill_launch.py` + `vm_events.py` shipped behind `verify_api_key`; both
+      routers wired in `deployment_api/main.py`.
+- [x] Tests green: auth, validation, dry-run, mock subprocess, fixture-based
+      events, pagination round-trip — 24 tests pass.
+- [x] `cd deployment-api && bash scripts/quality-gates.sh` Pass 1 green
+      (lint clean, basedpyright clean, coverage 70.84% — was 69.35% before;
+      gate 70%). One pre-existing failure remains, exempt — see Phase 3 note.
+- [x] Plan-flip commit (this commit) cites every code commit referenced.
+- [x] Per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" HARD RULE — five
+      separate commits across the cycle, NOT one mega-commit.
+
+### Code commits (deployment-api, all on `live-defi-rollout`)
+
+| SHA       | Description                                                                                  |
+| --------- | -------------------------------------------------------------------------------------------- |
+| `cade1e1` | feat: POST /api/backfill/launch route + 11 unit tests + main.py wire (work-stream-A 2.A)     |
+| `bae88fb` | feat: GET /api/vm/events route + 13 unit tests + routes/__init__.py + main.py wire (2.B)     |
+| `7f60c5c` | refactor: satisfy QG lint (SIM108 + 2× C901) + workspace `os.environ` AST-rule rename        |
+| `782cce5` | test: move work-stream-A tests to tests/unit/ + collection-order workarounds (auth + sys.modules) |
+
+### LOCAL-ONLY status
+
+Per operator instruction 2026-05-08 ("only commit locally, don't push unless I
+ask you to"; "don't even commit in PM repo for a while" — later lifted to
+authorize this PM plan-flip commit), all five commits (4 deployment-api + 1 PM)
+are on local `live-defi-rollout` branches. Pushes pending operator signal.
+
+### Open questions
+
+None — all Phase 2 + Phase 3 work shipped without blockers requiring operator
+input. The `_TASK_TO_LAUNCHER` registry has v1-inline closed-set behaviour
+documented in "Temporary states" with the named successor plan
+(`cloud_agnostic_launcher_registry_2026_05_XX`). The `_PREFIX_TO_SERVICE`
+inference in `vm_events.py` falls back to a 400 with explicit
+`SERVICE_INFERENCE_FAILED` if a vm_name prefix isn't registered — caller can
+override by passing `?service=` directly.
