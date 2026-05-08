@@ -1,10 +1,13 @@
 ---
-title: "🚨 P0 BLOCKER — paper-trade smoke harness stale import (get_strategy_factories) blocks ALL DeFi paper smokes"
+title: "✅ RESOLVED 2026-05-08 — paper-trade smoke harness migrated (was: P0 BLOCKER stale import)"
 created: 2026-05-08
+resolved: 2026-05-08
 author: ikenna-tab1-main
+status: resolved
+resolution_commit: e2e-testing@dfb7abe6
 source:
   - e2e-testing/scripts/defi/run-paper.sh (existing canonical paper-trade harness)
-  - e2e-testing/scripts/defi/colocated_engine.py:306 (broken import)
+  - e2e-testing/scripts/defi/colocated_engine.py:306 (broken import — FIXED)
   - strategy-service/strategy_service/cli/handlers/batch_utils.py (refactored 2026-05-01, V1-RETIRE Phase 2)
   - plans/active/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md (Tab 1 runbook)
   - plans/active/defi_master_2026_05_07.md
@@ -14,8 +17,40 @@ execution:
   owner: strategy-service maintainer + Tab 1 next session
   cadence: one-shot ~1-2 AI-days
   verifier: bash e2e-testing/scripts/defi/run-paper.sh exits 0 + writes fills to GCS
-  last_executed: "NEVER"
+  last_executed: "2026-05-08 (fix shipped; full smoke run pending operator)"
 ---
+
+## ✅ RESOLUTION 2026-05-08
+
+**Fix shipped at e2e-testing@`dfb7abe6`** ("fix(e2e-testing): paper-trade harness — migrate get_strategy_factories
+import to V2BatchHarness.from_strategy_type"). Migration shape:
+
+- `_create_strategy(strategy_id)` now calls `V2BatchHarness.from_strategy_type(strategy_id)` (registry-keyed
+  classmethod that wraps `STRATEGY_TYPE_TO_SLOT` lookup) + `harness.load_initial_positions_from_gcs()`. Returns
+  the stateful harness.
+- `_run_strategy_tick(strategy, ts, features, positions)` delegates to `harness.on_tick(candle, features, None, ts)`.
+  The harness's `on_tick` returns `list[dict[str, object]]` directly via `_envelope_to_dict`; legacy fallback paths
+  (`generate_defi_signal` / `generate_signal`) and the `_instruction_to_dict` helper deleted.
+- Two existing call sites at `colocated_engine.py:1049` + `:1160` unchanged — preserved signatures.
+
+**Smoke verification**: `python -c "import colocated_engine"` (with sibling repos on sys.path) loads cleanly. No
+ImportError. Both helpers present; deleted helper absent. AST parse green pre-commit.
+
+**Discovered audit source**: 9-agent parallel cluster audit 2026-05-08 (cluster 3 — master+defi-master May-23
+critical-path) flagged this as P0 false-positive in master Group F Item 17 with 7-day silent-rot. Fix sub-agent
+dispatched 2026-05-08 evening; resolved within session.
+
+**Outstanding follow-ups** (non-blocking):
+- `STRATEGY_CATEGORIES` table at `colocated_engine.py:77-103` is now drift-prone — strategy-service
+  `batch_utils.py:51-124` is the SSOT (more strategies + correct deletions). Flagged for e2e-testing maintainer.
+- CLAUDE.md "Peripheral Script Directories Under Primary-Consumer QG" rule needs concrete wiring of
+  `e2e-testing/scripts/defi/` into `strategy-service/scripts/quality-gates.sh` (basedpyright + ruff +
+  import-resolution). Tracked in [`runbook_execution_governance_gaps_2026_05_08.md`](runbook_execution_governance_gaps_2026_05_08.md).
+
+---
+
+# Original issue (resolved — kept for archaeology)
+
 
 # 🚨 P0 BLOCKER — paper-trade smoke harness stale import
 
