@@ -24,14 +24,20 @@ related_plans:
 
 ## Codex SSOTs
 
-This plan implements / extends the following codex documents (read these BEFORE making code changes;
-drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md) — manifest v5 schema + canonical-question-group cluster validation at `record_captured`
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) — lifecycle-bounded absence reasons for prediction shards + downstream NaN handling
-- [`codex/02-data/prediction-schema-paths.md`](../../codex/02-data/prediction-schema-paths.md) — prediction GCS path layout + canonical-question-group bundling (raw market_ids → BTC_UP_DOWN_HOURLY etc.)
-- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live pipeline guarantees (same shard atom, same fields, same `available_at` semantics across modes)
-- [`codex/09-strategy/cross-cutting/prediction-markets.md`](../../codex/09-strategy/cross-cutting/prediction-markets.md) — prediction-market lifecycle (`market_created_at` / `resolution_time` / `settlement_time`) + canonical-question-group SSOT
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+  — manifest v5 schema + canonical-question-group cluster validation at `record_captured`
+- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+  lifecycle-bounded absence reasons for prediction shards + downstream NaN handling
+- [`codex/02-data/prediction-schema-paths.md`](../../codex/02-data/prediction-schema-paths.md) — prediction GCS path
+  layout + canonical-question-group bundling (raw market_ids → BTC_UP_DOWN_HOURLY etc.)
+- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+  pipeline guarantees (same shard atom, same fields, same `available_at` semantics across modes)
+- [`codex/09-strategy/cross-cutting/prediction-markets.md`](../../codex/09-strategy/cross-cutting/prediction-markets.md)
+  — prediction-market lifecycle (`market_created_at` / `resolution_time` / `settlement_time`) + canonical-question-group
+  SSOT
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
 
@@ -116,27 +122,26 @@ Covers:
       `settlement_time` per conditionId / Kalshi ticker. [AUDIT 2026-05-07: FRESH — actionable; UAC SSOT (af2bc9b
       lifecycle wrapper) is in place but instruments-service writer not yet shipped] (instruments-service@98bb167 —
       Polymarket + Kalshi adapters expose `classify_lifecycle()` + `get_market_lifecycles()` returning per-market
-      `MarketLifecycle` rows keyed on UAC canonical_question_group; `available_from_datetime` /
-      `available_to_datetime` stamped on the emitted InstrumentRecord — orchestrator MARKET_LIFECYCLE writer pending)
+      `MarketLifecycle` rows keyed on UAC canonical_question_group; `available_from_datetime` / `available_to_datetime`
+      stamped on the emitted InstrumentRecord — orchestrator MARKET_LIFECYCLE writer pending)
 - [x] [SCRIPT] P0. New writer path in `engine/orchestrator.py` for prediction with canonical_group + lifecycle. [AUDIT
       2026-05-07: FRESH — actionable] (instruments-service@b904785 — Polymarket + Kalshi prediction writer at
       `engine/orchestrator.py:2128` now bundles by `canonical_question_group`; manifest emits
       `data_type=prediction_canonical_question_group` + `underlying={GROUP}` per UAC `BUNDLED_DATA_TYPES` SSOT.
-      MARKET_LIFECYCLE separate parquet emit deferred to Phase 2 — lifecycle metadata is already discoverable
-      via `InstrumentRecord.available_from_datetime` / `available_to_datetime` stamped in 98bb167)
+      MARKET_LIFECYCLE separate parquet emit deferred to Phase 2 — lifecycle metadata is already discoverable via
+      `InstrumentRecord.available_from_datetime` / `available_to_datetime` stamped in 98bb167)
 - [x] [SCRIPT] P0. `_extract_prediction_shard` / `_compute_prediction_shards` (orchestrator.py:2497–2524) call
       classifier; emit
       `(asset_group=prediction, venue, data_type=prediction_canonical_question_group,     canonical_question_group, market_id, day)`
       shard atom. [AUDIT 2026-05-07: FRESH — actionable] (instruments-service@b904785 — replaced with
-      `_extract_prediction_canonical_group(row)` calling
-      `classify_polymarket_to_canonical_group` / `classify_kalshi_to_canonical_group` from UAC; per-market_id
-      manifest row deferred to Phase 2 along with the bundle-level cluster-coverage gate at `record_captured`
-      that consumes `expected_market_ids_for_canonical_group` from the lifecycle reader)
+      `_extract_prediction_canonical_group(row)` calling `classify_polymarket_to_canonical_group` /
+      `classify_kalshi_to_canonical_group` from UAC; per-market_id manifest row deferred to Phase 2 along with the
+      bundle-level cluster-coverage gate at `record_captured` that consumes `expected_market_ids_for_canonical_group`
+      from the lifecycle reader)
 - [x] [TEST] P0. instruments-service unit + integration tests for lifecycle ingestion + classifier integration. [AUDIT
-      2026-05-07: FRESH — actionable] (instruments-service@98bb167 + b904785 — 14 lifecycle tests +
-      9 canonical-group shard tests; full unit suite 2267 passing post-change. Integration tests against
-      a live ManifestWriter on the orchestrator path deferred — bundled within MTDS Phase 2 cluster-gate
-      verification)
+      2026-05-07: FRESH — actionable] (instruments-service@98bb167 + b904785 — 14 lifecycle tests + 9 canonical-group
+      shard tests; full unit suite 2267 passing post-change. Integration tests against a live ManifestWriter on the
+      orchestrator path deferred — bundled within MTDS Phase 2 cluster-gate verification)
 
 ### Adapter migration (MTDS — Polymarket + Kalshi)
 
@@ -261,6 +266,49 @@ adapter migration. The two items below close the loop on the deployment-ui panel
       CLAUDE.md per-asset-group shard-key matrix. No "out of scope" badge. `OTHER` bucket visible alongside curated
       groups. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:Phase 1 ship]
 
+### Predictions completeness hierarchy + lifecycle drilldown (migrated from `predictions_completeness_hierarchy_lifecycle_drilldown_2026_05_08`)
+
+Source issue archived. 26KB consumer-side completion list — Phase 1A SSOT (canonical_question_group + lifecycle +
+classifier) shipped; Phase 2-5 consumer-side wiring incomplete. The issue is NOT a competing plan; it specifies the gap
+surfaces left by the existing predictions_master phase structure.
+
+**Cross-plan banner**: feeds `cme_polymarket_arb_2026_05_08` Phase 2 (canonical_question_group cross-link); 6 new
+canonical groups (CRUDE_OIL / GOLD / DOGE / SOL / etc. — full list in archived issue) must ship from Phase 5 below
+before CME arb can link.
+
+- [ ] [SCRIPT] P0. **instruments-service MARKET_LIFECYCLE parquet writer**. Persist `market_created_at` /
+      `resolution_time` / `settlement_time` per market_id into a separate parquet (NOT bundled into the canonical-group
+      shard). Path:
+      `gs://instruments-store-prediction-{pid}/market_lifecycle/by_canonical_group/group={g}/by_date/day={d}/...parquet`.
+      Schema: `{market_id, canonical_question_group, market_created_at, resolution_time, settlement_time, status}`.
+      Reader-side helper `unified_trading_library.predictions.lifecycle_for_market(market_id) -> MarketLifecycle`.
+- [ ] [SCRIPT] P0. **MTDS umi_tick_provider lifecycle-bounded clip**. Today MTDS captures CLOB ticks for every
+      registered market_id without bound; flip to read MARKET_LIFECYCLE first, then clip per-market: NO ticks before
+      `market_created_at`, NO new ticks after `settlement_time`. Per CLAUDE.md "Prediction market lifecycle timing" rule
+      already declared.
+- [ ] [SCRIPT] P0. **MTDS cluster validation per (canonical_question_group, day)**. HOURLY groups expect 24
+      market_ids/day; DAILY = 1; recurring election groups = 1 over months/years. Add to UAC `BUNDLED_DATA_TYPES` for
+      Polymarket/Kalshi CLOB writes; cluster-validation kwargs at `record_captured` per writegate Phase 1A.
+- [ ] [SCRIPT] P0. **MDPS PredictionTradesAdapter 4-category A/B/C/D empty-output decision wiring** (per CLAUDE.md
+      "Four-category empty-output decision" rule). Today MDPS PredictionTradesAdapter doesn't classify; add explicit
+      branches: A = source returned 0 ticks → `record_empty(reason=SOURCE_RETURNED_ZERO)`; B = ticks returned but
+      filtered out by interval_idx → `record_failed(UpstreamTimestampBiasError)`; C = malformed source fields →
+      `record_failed(MalformedTickFieldError)`; D = catalog says alive but source returned 0 → write zero-activity bars
+      per category-D rule.
+- [ ] [SCRIPT] P0. **features per-market LookaheadBiasError check**. Per CLAUDE.md prediction-lifecycle rule: feature
+      compute at time T can only consume ticks where `tick.timestamp <= T` AND `tick.market_id`'s
+      `market_created_at <= T`. Today features-cross-instrument doesn't enforce this per-market; flip to strict-mode
+      check.
+- [ ] [SCRIPT] P0. **deployment-ui 3-level hierarchy + per-shard parquet download**. Today MARKETS list is flat; flip to
+      `asset_group → canonical_question_group → cadence (HOURLY/DAILY/etc.)` 3-level drilldown matching sports + tradfi
+      pattern. Per-shard parquet download wires through existing
+      `deployment-ui/src/components/HierarchicalShardDrilldown` machinery.
+- [ ] [SCRIPT] P1. **Phase 5 — canonical-groups backfill (30+ groups beyond initial 9)**. Full list in archived issue:
+      CRUDE_OIL_UP_DOWN_DAILY, GOLD_UP_DOWN_DAILY, DOGE_UP_DOWN_DAILY, SOL_UP_DOWN_DAILY, ECRTY/ECYM/ECGC/
+      ECCL/ECNG/EC6E (CME-linked), and ~24 others. Per-group: define in UAC `PREDICTION_GROUPS`; backfill
+      instruments-service catalog + MTDS CLOB tick history; cluster-validation expected counts populated. **GATES
+      `cme_polymarket_arb_2026_05_08` Phase 2 cross-link**.
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Prediction market lifecycle timing** (CLAUDE.md): NO ticks before `market_created_at`, NO ticks after
@@ -301,13 +349,14 @@ the items below are intentional deferrals named back to this plan (Phase 2 / 3) 
   ships alongside the MTDS lifecycle reader.
 - **Per-market_id manifest rows + cluster-coverage gate** — Phase 1's writer emits one manifest row per
   `(venue, canonical_question_group, day)` bundle; per-market_id rows + `record_captured(expected_root_clusters=…)`
-  cluster-coverage gating wait for the MTDS Phase 2 lifecycle reader (`expected_market_ids_for_canonical_group`)
-  because the bundle-level cluster expectation is derived from the lifecycle table, not the instruments parquet.
-  **Successor**: this plan, Phase 2 — within the MTDS adapter-migration tier.
-- **Kalshi `KALSHI_TICKER_TO_GROUP` override seeding** — UAC override dict is empty per `unified_api_contracts/canonical/domain/predictions/classifiers.py`. Kalshi rows currently route to `OTHER`. Operator periodically reviews
-  the `OTHER_BUCKET_MEMBER_ADDED` event stream to identify recurring tickers worth promoting. **Successor**: this
-  plan, "Audit findings 2026-05-07 — folded from session wrapper" → C.12 OTHER-bucket-promotion subitem; lights up
-  once Phase 1 production data surfaces enough recurring tickers.
+  cluster-coverage gating wait for the MTDS Phase 2 lifecycle reader (`expected_market_ids_for_canonical_group`) because
+  the bundle-level cluster expectation is derived from the lifecycle table, not the instruments parquet. **Successor**:
+  this plan, Phase 2 — within the MTDS adapter-migration tier.
+- **Kalshi `KALSHI_TICKER_TO_GROUP` override seeding** — UAC override dict is empty per
+  `unified_api_contracts/canonical/domain/predictions/classifiers.py`. Kalshi rows currently route to `OTHER`. Operator
+  periodically reviews the `OTHER_BUCKET_MEMBER_ADDED` event stream to identify recurring tickers worth promoting.
+  **Successor**: this plan, "Audit findings 2026-05-07 — folded from session wrapper" → C.12 OTHER-bucket-promotion
+  subitem; lights up once Phase 1 production data surfaces enough recurring tickers.
 
 ## DONE-2026-05-08
 
@@ -319,22 +368,20 @@ adapters + classifier-based shard atom in the writer:
   `available_to_datetime` stamped on `InstrumentRecord` for downstream MTDS lifecycle gating + features-\* compute
   per-market `LookaheadBiasError`. 14 unit tests pinning canonical-question-group routing, settlement_lag derivation,
   status enum mapping, and silent-drop of unclassifiable markets.
-- instruments-service@`b904785` — feat(predictions): orchestrator emits prediction_canonical_question_group shard
-  atom. Replaces `_extract_prediction_shard(base_asset)` with classifier-based
-  `_extract_prediction_canonical_group(row)`; writer at `engine/orchestrator.py:2128` now bundles
-  Polymarket + Kalshi rows by `canonical_question_group` and emits manifest
-  `data_type=prediction_canonical_question_group` + `underlying={GROUP}` per UAC `BUNDLED_DATA_TYPES`. 9 additional
-  unit tests covering BTC/ETH HOURLY routing, OTHER fallback, Kalshi override-only path, and `_compute_prediction_shards`
-  aggregation across 24 BTC HOURLY + 1 SPX DAILY + 5 OTHER markets.
+- instruments-service@`b904785` — feat(predictions): orchestrator emits prediction_canonical_question_group shard atom.
+  Replaces `_extract_prediction_shard(base_asset)` with classifier-based `_extract_prediction_canonical_group(row)`;
+  writer at `engine/orchestrator.py:2128` now bundles Polymarket + Kalshi rows by `canonical_question_group` and emits
+  manifest `data_type=prediction_canonical_question_group` + `underlying={GROUP}` per UAC `BUNDLED_DATA_TYPES`. 9
+  additional unit tests covering BTC/ETH HOURLY routing, OTHER fallback, Kalshi override-only path, and
+  `_compute_prediction_shards` aggregation across 24 BTC HOURLY + 1 SPX DAILY + 5 OTHER markets.
 - unified-trading-pm@`7343b93` — plan(predictions-master): flip Phase 1 lifecycle-ingestion checkbox citing
   instruments-service@98bb167.
 
 Phase 2 deferrals (named per "Temporary states" above): MTDS Polymarket / Kalshi adapter lifecycle gating;
-`umi_tick_provider.py:225` + `orchestrator.py:1990-1995` data_type rename to
-`prediction_canonical_question_group`; `MARKET_LIFECYCLE` separate parquet emit; per-market_id manifest rows +
-`record_captured` cluster-coverage gate consuming `expected_market_ids_for_canonical_group` from the lifecycle
-reader.
+`umi_tick_provider.py:225` + `orchestrator.py:1990-1995` data_type rename to `prediction_canonical_question_group`;
+`MARKET_LIFECYCLE` separate parquet emit; per-market_id manifest rows + `record_captured` cluster-coverage gate
+consuming `expected_market_ids_for_canonical_group` from the lifecycle reader.
 
-QG status: ruff clean on every file Tab 10 touched; basedpyright/pre-existing diagnostics outside Tab 10's
-edited line ranges (Ikenna's QG sweep cycle 2026-05-07 → 2026-05-09 per CLAUDE.md "Findings Triage Discipline" §
-"Temporary exception"). Full instruments-service unit suite (2267 tests) green post-change.
+QG status: ruff clean on every file Tab 10 touched; basedpyright/pre-existing diagnostics outside Tab 10's edited line
+ranges (Ikenna's QG sweep cycle 2026-05-07 → 2026-05-09 per CLAUDE.md "Findings Triage Discipline" § "Temporary
+exception"). Full instruments-service unit suite (2267 tests) green post-change.

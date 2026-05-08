@@ -3030,6 +3030,63 @@ LookaheadBiasError end-to- end smoke, write-gate quartet integration test (waits
 
 ---
 
+## Migrated issues 2026-05-08
+
+### CeFi Tardis writegate findings (migrated from `cefi_tardis_writegate_findings_2026_05_07`)
+
+Source issue archived. Two workspace-rule violations in per-VM shard from the in-flight 37-VM Tardis backfill (252
+shards bitfinex/bitget/kraken futures+spot 2020-2026): (1) captured rows at bundle-level granularity (empty
+`instrument_id`) instead of per-instrument; (2) PROCESSING_COMPLETED events omit `rows_captured` field, violating "no
+fire-and-forget" SSOT. Both contradict CLAUDE.md SSOTs.
+
+**Cross-plan banner**: `cefi_master_2026_05_07` operational decision required — re-rescan vs accept-batch vs in-place
+rewrite for the 37-VM in-flight output once this section's Option A/B/C decision lands. Coordinate.
+
+- [ ] [HUMAN] P0. **Decision Option A vs B vs C** (operator). A = re-rescan all 252 shards as per-instrument from raw
+      Tardis data (clean but expensive); B = accept the bundle-shape rows + run a one-shot manifest migration that
+      splits each bundle row into per-instrument rows from the existing parquet (cheaper, reversible); C = mixed (B for
+      past output, A enforced for future VMs). Issue archived has cost-benefit per option. Decision gates the Phase 2.A
+      codification below.
+- [ ] [SCRIPT] P0. **Per-row record_failed pattern codification**. Today's CeFi Tardis adapter calls `record_captured`
+      at bundle granularity; flip to per-row per-instrument. The pattern lives in UTL + cefi-Tardis adapter; codify as
+      part of Phase 2.A non-adapter items. Cassette parity test for every venue checking the per-row vs bundle shape.
+- [ ] [SCRIPT] P0. **PROCESSING_COMPLETED + INSTRUMENT_PROCESSED event field augmentation**. Both must carry
+      `rows_captured: int` (and `rows_empty` / `rows_failed`) per CLAUDE.md "no fire-and-forget VM launches" rule.
+      Workspace-wide adapter audit for same violations across cefi/tradfi/defi MTDS handlers (the issue flagged that
+      this likely isn't isolated to Tardis — there are at least 8 MTDS handlers with similar shape that need the same
+      field added).
+- [ ] [AGENT] P0. **Codex update**: `codex/02-data/honest-absence-downstream-handling.md` § "Re-shape decision
+      codification" capturing the per-instrument-vs-bundle decision per asset_group + per data_type (this is the SSOT
+      that reflects whichever Option A/B/C the operator picks).
+
+### MDPS liquidity baseline + live tick-staleness (writegate side, migrated from `mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08`)
+
+Source issue archived. Issue has TWO halves: (1) writegate-side (this plan) — MDPS write-gate baseline consultation +
+`DATA_QUALITY_SUSPECTED_GAP` reason addition. (2) alerting-side — TICK_STALENESS event taxonomy (migrated to
+`alerting_service_live_rules_2026_05_07`). Operator decision 2026-05-08: keep both signals as complementary
+(TICK_STALENESS = MDPS-detected, downstream-side; CONNECTIVITY_GAP = MTDS-detected, upstream-side — migrated to
+`mdps_streaming_and_backpressure_2026_05_07`). The migration here covers ONLY the writegate-side work.
+
+**Cross-plan banner**: requires the upstream-side `LiveConnectivityWatchdog` from
+`mdps_streaming_and_backpressure_2026_05_07` Phase 1.1+ for end-to-end correctness — staleness without an upstream gap
+signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Phase 3 wiring.
+
+- [ ] [SCRIPT] P0. **`TickRateBaseline` dataclass + per-(venue, instrument, period) storage/refresh VM**. UAC
+      `unified_api_contracts/canonical/crosscutting/liquidity_baseline.py` declares the dataclass. Per-venue observation
+      script under `market-data-processing-service/scripts/refresh_tick_rate_baseline.py` runs nightly, writes to
+      `gs://market-data-tick-{ag}-{pid}/liquidity_baselines/by_venue/venue={v}/by_period/period={p}/...parquet`. Period
+      axis: regular session vs pre-market vs post-market vs overnight (cross-references the Databento session-type work
+      in tradfi_master Batch D — coordinate columns).
+- [ ] [SCRIPT] P0. **MDPS write-gate baseline consultation + `DATA_QUALITY_SUSPECTED_GAP` reason addition**. When MDPS
+      write-gate sees a tick-rate < threshold% of baseline for the period, route to
+      `record_failed(reason=DATA_QUALITY_SUSPECTED_GAP)`. Threshold default 20%; per-venue override available in UAC.
+      Add `DATA_QUALITY_SUSPECTED_GAP` to UAC `RecordFailedReason` enum.
+- [ ] [SCRIPT] P0. **3rd state for "baseline-says-shouldn't-be-zero"**. Today writegate Phase 3.D.5 Wave 3.M defines
+      zero-volume-bar mechanism for "venue quiet, baseline says zero is OK"; add 3rd state for "baseline says non-zero
+      expected, but observed is near-zero" → `record_failed(SUSPECTED_GAP)`.
+- [ ] [AGENT] P0. **Codex update**: extend `codex/02-data/availability-manifest-and-data-status.md` with the
+      `DATA_QUALITY_SUSPECTED_GAP` reason semantics + the 3-state-vs-2-state explanation.
+
 ## Coordination with sibling plans
 
 > **2026-05-06 update**: this plan is now the **umbrella** for the honest-coverage + shard-granularity work-package. See

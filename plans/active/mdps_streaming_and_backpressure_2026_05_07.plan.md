@@ -298,6 +298,45 @@ Phase 1 (UTL canonical_writer lifecycle + MDPS callsite migration — SEQUENTIAL
 - **Phase 4 (D3):** real-backfill VM completes a 30-day cefi shard on the standard memory tier with honest manifest
   rows; band-aid commit (deployment-service@`02ee6d6`) reverted in a follow-up commit.
 
+## Migrated issue 2026-05-08 — Live data recovery self-detect
+
+**Source**: `mtds_live_data_recovery_self_detect_2026_05_08` (archived). Live WS connectivity loss has no upstream
+detection / signal / recovery today. Gap windows silently lost; downstream can't distinguish "venue quiet" from "MTDS
+disconnected"; manifests have no `LIVE_CONNECTIVITY_GAP` rows; auto-backfill unimplemented. Violates Live=Batch
+principle (batch has 4-state capture taxonomy; live has none for outages).
+
+**Cross-plan banner**: coordinates with `alerting_service_live_rules_2026_05_07` (event-type taxonomy added there),
+`master_to_live_defi_2026_05_23` Group F+G live-only readiness, and the staleness work in
+`writegate_honest_coverage_endtoend_2026_05_06` Phase 3.D.5 Wave 3.M (downstream-detection counterpart). Operator
+decision 2026-05-08: keep both `TICK_STALENESS` (MDPS, downstream-detected) and `CONNECTIVITY_GAP` (MTDS,
+upstream-detected) as complementary signals.
+
+- [ ] [SCRIPT] P1. **`LiveConnectivityWatchdog` wrapper per venue** in MTDS. Per (venue, ws-connection): heartbeat
+      timeout detection (per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline — see calibration todo below);
+      `gap_state` tracking via state machine (`HEALTHY → STALE → GAP → RECOVERING → HEALTHY`); emit typed event on every
+      transition. Wraps existing per-venue WS adapter without touching adapter internals (decorator pattern).
+- [ ] [SCRIPT] P1. **`CONNECTIVITY_GAP_DETECTED` / `CONNECTIVITY_RECOVERED` / `CONNECTIVITY_GAP_BACKFILLED` event
+      types** added to UAC `LifecycleEventType` (alerting-service plan adds the alerting rule taxonomy; THIS plan adds
+      the event types themselves). Each carries
+      `{venue, gap_window_start, gap_window_end_or_null,     last_received_at, message_count_during_gap}`.
+- [ ] [SCRIPT] P1. **Auto-backfill on `CONNECTIVITY_RECOVERED`**: pick source per UAC `SOURCE_PRIORITY`; fill the gap
+      window via REST batch fetch; call `record_captured` per filled row; emit `CONNECTIVITY_GAP_BACKFILLED` when
+      complete. Per CLAUDE.md "Manifest concurrency principle" — read-once + per-date freshness check + CAS write.
+      Honors per-venue rate limits.
+- [ ] [SCRIPT] P1. **MDPS write-gate gap-row detection**: when MDPS reads MTDS rows and finds a manifest gap row, route
+      to `record_failed(reason=UPSTREAM_LIVE_GAP)` for the affected MDPS-output windows rather than processing
+      zero/partial inputs. Connects via the same manifest contract MDPS already reads.
+- [ ] [SCRIPT] P1. **execution-service circuit-breaker pause on `CONNECTIVITY_GAP_DETECTED`**. Per-venue +
+      per-instrument circuit-breaker; pause new orders + drain in-flight orders (do NOT cancel — let venue-side matching
+      engine resolve). Resume on `CONNECTIVITY_RECOVERED`. Reuses the kill-switch bus from `alerting_service_live_rules`
+      Phase 8.
+- [ ] [SCRIPT] P1. **Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline calibration**. 7-day observation per venue;
+      record inter-message delta distributions; pick 99th percentile as the heartbeat threshold per venue. Output: UAC
+      `VENUE_HEARTBEAT_INTERVAL: dict[VenueKey, timedelta]`.
+- [ ] [AGENT] P1. **Codex update**: extend `codex/04-architecture/batch-live-symmetry.md` with a "live=batch 4-state
+      capture parity" section explicit on how live mode emits the same 4 states as batch via the watchdog +
+      auto-backfill loop.
+
 ## Anti-patterns to avoid
 
 - **Do NOT introduce a parallel `_streaming_write_per_tf_v2` next to the existing one** — workspace "no double SSOT"

@@ -16,16 +16,14 @@ locked_since: 2026-05-07
 # CeFi Tardis backfill — writegate Phase 2 findings
 
 > **Severity**: P0 — both findings contradict workspace SSOTs in CLAUDE.md and were observed in an in-flight 37-VM
-> production run.
-> **Blast radius**: cefi asset_group (37 VMs in flight today; ~252 venue-year-instrument-type shards across
-> bitfinex/bitget/kraken futures+spot 2020-2026); writegate Phase 2.A residual + Phase 2.E surface; data-status
-> drilldown UI.
-> **Suggested owner**: Ikenna (writegate Phase 2.A + 2.E per work-split D2 P0).
+> production run. **Blast radius**: cefi asset_group (37 VMs in flight today; ~252 venue-year-instrument-type shards
+> across bitfinex/bitget/kraken futures+spot 2020-2026); writegate Phase 2.A residual + Phase 2.E surface; data-status
+> drilldown UI. **Suggested owner**: Ikenna (writegate Phase 2.A + 2.E per work-split D2 P0).
 
 ## Context
 
-37 cefi VMs were launched 2026-05-07 ~14:00 UTC in `asia-northeast1-c` covering bitfinex/bitget/kraken × futures+spot
-× 2020-2026 (`e2-highmem-2`). Sample event verification at T+30min on 3 VMs found data IS being written
+37 cefi VMs were launched 2026-05-07 ~14:00 UTC in `asia-northeast1-c` covering bitfinex/bitget/kraken × futures+spot ×
+2020-2026 (`e2-highmem-2`). Sample event verification at T+30min on 3 VMs found data IS being written
 (`instrument_count=8,310,353` ticks per bundle row), but two writegate-rule violations surfaced.
 
 ## Finding 1 — Asymmetric manifest shard shape (captured = bundle-level, empty_confirmed = per-instrument)
@@ -34,13 +32,13 @@ locked_since: 2026-05-07
 
 Per-VM manifest shard inspection on 2 VMs (200 + 250 rows) shows:
 
-| capture_status   | rows | instrument_id populated | instrument_count    |
-| ---------------- | ---- | ----------------------- | ------------------- |
-| `captured`       | 8 / 10 | **0% (empty string)** | 8,310,353 (bundle)  |
-| `empty_confirmed`| 192 / 240 | **100%** (BTCUSD, ETHUSD, ...) | 0     |
+| capture_status    | rows      | instrument_id populated        | instrument_count   |
+| ----------------- | --------- | ------------------------------ | ------------------ |
+| `captured`        | 8 / 10    | **0% (empty string)**          | 8,310,353 (bundle) |
+| `empty_confirmed` | 192 / 240 | **100%** (BTCUSD, ETHUSD, ...) | 0                  |
 
-Sample `captured` row from `cefi-bitfinex-spot-2020-heavy-20260507-150340` per-VM shard (date 2020-01-01,
-data_type book_snapshot_5):
+Sample `captured` row from `cefi-bitfinex-spot-2020-heavy-20260507-150340` per-VM shard (date 2020-01-01, data_type
+book_snapshot_5):
 
 ```python
 {'date': '2020-01-01', 'venue': 'BITFINEX-SPOT', 'data_type': 'book_snapshot_5',
@@ -82,9 +80,9 @@ per-instrument shard the SSOT requires. Concrete consequences:
    2020-01-01 = captured" but can't drill to "which 24 of 25 instruments did we actually capture?"
 2. **Phantom-audit cannot reconcile per-instrument** — `reconcile_phantom_manifest_rows_all.py` works at row-key
    granularity. Bundle-level captured rows pass without per-instrument verification.
-3. **Cluster-coverage gate is bypassed** — workspace rule "Validation gates per `record_captured` — 4 pillars" pillar
-   #4 (cluster coverage ≥ expected) cannot fire on a bundle-shaped row because there's no `instrument_id` axis to
-   count clusters against.
+3. **Cluster-coverage gate is bypassed** — workspace rule "Validation gates per `record_captured` — 4 pillars" pillar #4
+   (cluster coverage ≥ expected) cannot fire on a bundle-shaped row because there's no `instrument_id` axis to count
+   clusters against.
 4. **Same class as TradFi MVP partial-bundle** (ES.OPT 18 single-parent fills) and **MDPS 1440-NaN-OHLC** — captured
    rows at the wrong granularity that pass the rollup check but mask per-instrument absence.
 
@@ -93,14 +91,14 @@ per-instrument shard the SSOT requires. Concrete consequences:
 Owner: Ikenna writegate Phase 2.A residual (per work-split D2 P0). Two ways to land the fix:
 
 - **Option A (per-instrument captured rows — workspace SSOT-conformant)**: cefi adapter writes one captured row per
-  (venue, data_type, instrument_id, day) with the per-instrument tick count. Bundle stops existing in the manifest.
-  Most disruptive but matches CLAUDE.md SSOT directly.
+  (venue, data_type, instrument_id, day) with the per-instrument tick count. Bundle stops existing in the manifest. Most
+  disruptive but matches CLAUDE.md SSOT directly.
 - **Option B (keep the bundle row, ALSO write per-instrument rows)**: bundle-level row continues for fast rollup;
   per-instrument captured rows added underneath for drilldown + cluster validation. Doubles row count per (venue,
   data_type, day) but preserves rollup performance.
-- **Option C (pure re-shape)**: keep the row count, but populate `instrument_id` on the captured row by emitting
-  one per-instrument captured per actual instrument that captured ≥1 tick, while the empty_confirmed rows continue
-  for instruments that captured zero. This is the cleanest match to the SSOT.
+- **Option C (pure re-shape)**: keep the row count, but populate `instrument_id` on the captured row by emitting one
+  per-instrument captured per actual instrument that captured ≥1 tick, while the empty_confirmed rows continue for
+  instruments that captured zero. This is the cleanest match to the SSOT.
 
 C is most aligned with TradFi futures bundle handling. Operator + writegate-owner pick.
 
@@ -128,14 +126,14 @@ CLAUDE.md § "No fire-and-forget VM launches" requires:
 > from the event stream alone.
 
 This is a hard rule because the 2026-05-05 MDPS 1440-NaN-OHLC reference incident specifically named "absence of
-intermediate progress events with row counts" as the silent-success signal that wasn't there. The cefi adapter
-hits the same gap: PROCESSING_COMPLETED fires per date but carries no row count, and there's no per-instrument
+intermediate progress events with row counts" as the silent-success signal that wasn't there. The cefi adapter hits the
+same gap: PROCESSING_COMPLETED fires per date but carries no row count, and there's no per-instrument
 INSTRUMENT_PROCESSED event at all.
 
-Concrete consequence: if the cefi Tardis adapter regressed to silent-zero for a chain/venue combination tomorrow,
-the only way an operator would notice is by reading the per-VM manifest shard parquet directly — events alone
-would say "STARTED + PROCESSING_STARTED + PROCESSING_COMPLETED + ..." with no signal that zero rows were captured.
-This is exactly the failure mode the workspace rule was written to prevent.
+Concrete consequence: if the cefi Tardis adapter regressed to silent-zero for a chain/venue combination tomorrow, the
+only way an operator would notice is by reading the per-VM manifest shard parquet directly — events alone would say
+"STARTED + PROCESSING_STARTED + PROCESSING_COMPLETED + ..." with no signal that zero rows were captured. This is exactly
+the failure mode the workspace rule was written to prevent.
 
 ### Recommended decision
 
@@ -157,9 +155,10 @@ Owner: Ikenna writegate Phase 2.E (per-source progress events) per work-split / 
 
 ## VM-blocker assessment
 
-**NOT VM-blocking.** The 37-VM run is producing data (`instrument_count=8.3M` ticks per bundle row, 4 dates
-processed in 30 min on the sample VM). Findings 1 + 2 are about manifest shape + observability, not data loss.
-Operator decision: let the VMs run to completion (ETA ~05-08/09 per cefi_master), then either (a) re-rescan with
-the per-instrument writegate fix applied retroactively, or (b) accept bundle-shaped manifest for this 37-VM batch
-+ enforce per-instrument shape from the next backfill onward. C2 of recommendation #1 (pure re-shape) keeps
-existing data on disk usable while migrating to canonical shape.
+**NOT VM-blocking.** The 37-VM run is producing data (`instrument_count=8.3M` ticks per bundle row, 4 dates processed in
+30 min on the sample VM). Findings 1 + 2 are about manifest shape + observability, not data loss. Operator decision: let
+the VMs run to completion (ETA ~05-08/09 per cefi_master), then either (a) re-rescan with the per-instrument writegate
+fix applied retroactively, or (b) accept bundle-shaped manifest for this 37-VM batch
+
+- enforce per-instrument shape from the next backfill onward. C2 of recommendation #1 (pure re-shape) keeps existing
+  data on disk usable while migrating to canonical shape.
