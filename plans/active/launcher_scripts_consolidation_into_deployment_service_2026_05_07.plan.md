@@ -191,16 +191,86 @@ Per-script shape audit  →  Move 29 scripts to
                            ─────────────────────────────────
 ```
 
+## Tab 11 audit + top-10 selection (2026-05-08)
+
+Audit summary (Tab 11, `launcher-consolidation-tab`, 2026-05-08): cross-checked all 30 ad-hoc
+launchers against the canonical `deployment-service/scripts/vm/` inventory + the
+`_SERVICE_LAUNCHER_SCRIPTS` registry in `deployment-api/deployment_api/services/deploy_missing.py`.
+
+**Critical finding** (case-2, adjacent to plan): three entries registered in `_SERVICE_LAUNCHER_SCRIPTS`
+do NOT exist on disk under `deployment-service/scripts/vm/`. Deploy-Missing UI button is silently
+broken for those services — the operator clicks Deploy-Missing, the API resolves the path, and the
+copy-to-clipboard widget produces a `bash deployment-service/scripts/vm/launch-X.sh ...` invocation
+that fails when the operator runs it. Missing on disk: `launch-mtds-backfill-vm.sh` (registered
+line 63), `launch-instruments-backfill-vm.sh` (line 65), `launch-features-onchain-backfill-vm.sh`
+(line 66). Tab 11 fills the first two via this cycle's migrations; `launch-features-onchain-backfill-vm.sh`
+needs a fresh build (no e2e-testing equivalent), deferred to a follow-up tab.
+
+**Top 10 selection** — ordered by impact for the 2026-05-23 live-DeFi deadline. HIGH priority items
+fill missing-on-disk registry gaps + critical-path active flows; MEDIUM are DeFi launchers needed for
+the May-23 archetypes; LOW are deferred (duplicates of canonical or post-May-23 scope):
+
+| # | Source path | Destination | Priority | Rationale |
+|---|-------------|-------------|----------|-----------|
+| 1 | `e2e-testing/scripts/common/launch_mtds_category_backfill_vm.sh` | `deployment-service/scripts/vm/launch-mtds-backfill-vm.sh` | HIGH | Fills `_SERVICE_LAUNCHER_SCRIPTS` line 63 (Deploy-Missing for `market-tick-data-service`). |
+| 2 | `e2e-testing/scripts/common/launch_instruments_backfill_vms.sh` | `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh` | HIGH | Fills `_SERVICE_LAUNCHER_SCRIPTS` line 65 (Deploy-Missing for `instruments-service`). |
+| 3 | `features-sports-service/scripts/launch_parallel_backfill.sh` | `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh` | HIGH | Plan body explicitly names this destination (line 219). |
+| 4 | `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh` | `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh` | HIGH | Sports critical-path; distinct from #1 (sports odds-API specific, vs. generic CeFi/DeFi/TradFi). |
+| 5 | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh` | `deployment-service/scripts/vm/launch-sports-instruments-reference-vm.sh` | HIGH | Sports reference-data critical-path; v3 supersedes the v1/v2 launchers (those flagged LOW). |
+| 6 | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh` | `deployment-service/scripts/vm/launch-mtds-dex-pools-backfill-vm.sh` | MEDIUM | DeFi pipeline May-23; no canonical equivalent. |
+| 7 | `e2e-testing/scripts/defi/launch_eigenlayer_rewards_vm.sh` | `deployment-service/scripts/vm/launch-mtds-eigenlayer-rewards-backfill-vm.sh` | MEDIUM | DeFi pipeline May-23; no canonical equivalent. |
+| 8 | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh` | `deployment-service/scripts/vm/launch-mtds-solana-drift-backfill-vm.sh` | MEDIUM | DeFi/Solana pipeline May-23; no canonical equivalent (Solana now needed for Pyth integration). |
+| 9 | `e2e-testing/scripts/common/launch_cefi_migration_vm.sh` | `deployment-service/scripts/vm/launch-cefi-migration-vm.sh` | MEDIUM | CeFi-specific migration; complements existing `launch-canonical-migration-vm.sh`. |
+| 10 | `e2e-testing/scripts/common/launch_defi_backfill_vm.sh` | `deployment-service/scripts/vm/launch-defi-backfill-vm.sh` | MEDIUM | Generic DeFi backfill driver; no canonical equivalent. |
+
+**Deferred to follow-up tabs** (LOW or collision-risk):
+
+- `launch_gas_fees_vm.sh` / `launch_gas_fees_fleet.sh` — duplicates of canonical `launch-mtds-gas-fees-backfill-vm.sh`.
+- `launch_lst_rates_vm.sh` — duplicate of canonical `launch-mtds-lst-rates-backfill-vm.sh`.
+- `launch_lending_indices_vm.sh` — duplicate of canonical `launch-mtds-lending-indices-backfill-vm.sh`. **Tab 9 (`lending-indices-relaunch-tab`) in flight** — defer to avoid collision.
+- `launch_perp_funding_vm.sh` — duplicate; canonical `mtds-perp-funding-` prefix already in watchdog.
+- `launch_solana_gas_vm.sh` / `launch_liquidations_vm.sh` — defer post-May-23.
+- `launch_prediction_backfill_vm.sh` / `launch_prediction_features_vm.sh` / `launch_prediction_pipeline_vm.sh` / `setup-backfill-vm.sh` — **Tab 10 (`predictions-phase1-ingestion-tab`) in flight on prediction surface** — defer to avoid collision.
+- `full_api_football_sweep.sh` / `full_sports_entity_sweep.sh` — orchestrators that wrap other launchers; defer.
+- `launch_fss_features_v3.sh` / `launch_fss_features_vm.sh` / `launch_fss_phase3_backfill.sh` — partially superseded by canonical `launch-features-sports-backfill-vm.sh`; reconcile in follow-up.
+- `launch_instruments_reference_vm.sh` — superseded by the v3 form (#5 above).
+- `launch_mdps_phase3_bucketing.sh` / `launch_mdps_reprocess_vm.sh` — partially superseded by canonical `launch-mdps-sports-bucket-vm.sh`; reconcile in follow-up.
+- `launch_oddspapi_vm_backfill.sh` — odds API specific; defer post-May-23.
+- `deployment-service/scripts/deploy-dashboard-gce-vm.sh` — intra-repo move (not in e2e-testing list); defer.
+
+**Migration shape adopted** (mechanical scope per Tab 11 brief):
+
+1. **Copy** the source script content into the canonical destination (the source repo retains the file
+   for the deprecation banner; deletion ships in a follow-up cycle).
+2. **Rename** to canonical `launch-{asset_group}-{flavor}-{vm,backfill,etc}.sh` form.
+3. **Add a deprecation banner** to the OLD location (top of file, comment block) pointing at the new
+   path. Keep the old body intact — operators with terminals open on the old path get a clear redirect
+   on next invocation.
+4. **Update `VM_PREFIX_TO_BUCKET`** in `deployment-service/scripts/vm/vm_zombie_watchdog.py` for any
+   new VM-name prefix introduced (kept identical to source where possible to preserve in-flight VM
+   compatibility).
+5. **Register in `_SERVICE_LAUNCHER_SCRIPTS`** in `deploy_missing.py` if the launcher targets a service
+   that should be reachable from the Deploy-Missing UI button (#1, #2 directly, others as appropriate).
+6. **Smoke-test `--dry-run`** for any launcher that supports it; for those without `--dry-run`, syntax
+   check only (`bash -n`).
+7. **Watchdog VM relaunch** at the end of the cycle (single relaunch covers all dict edits).
+
+Out-of-scope for Tab 11 (reserved for follow-up cycles): rewriting launchers to use the canonical
+`setup-data-pipeline-vm.sh` metadata-routing pattern (current ad-hoc launchers embed full startup
+scripts via `metadata-from-file`, which is functionally equivalent but not the SSOT shape — that
+refactor is mechanical-but-larger and doesn't affect Deploy-Missing UI registry coverage).
+
 ## Phase-by-phase tasks
 
 ### Phase 0 — Per-script audit (sequential, no QG gate)
 
-- [ ] [audit] P0. For each of the 29 scripts: open the file, identify the launcher's invariants
+- [x] [audit] P0. For each of the 29 scripts: open the file, identify the launcher's invariants
       (`gcloud compute instances create` flags, env vars set, payload), and decide
       whether to keep, rename, or merge with an existing
       `deployment-service/scripts/vm/launch-*.sh`. Some are duplicates of already-in-place scripts (e.g.
       `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh` vs the canonical
-      `deployment-service/scripts/vm/launch-mtds-backfill-vm.sh`).
+      `deployment-service/scripts/vm/launch-mtds-backfill-vm.sh`). (Tab 11 audit + top-10 table above; 20
+      of 30 deferred to follow-up cycles per LOW priority + collision-avoidance rules.)
 - [ ] [audit] P0. Document the rename mapping in
       `unified-trading-pm/codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`. Each row:
       old path → new path → action (move / merge / delete).
