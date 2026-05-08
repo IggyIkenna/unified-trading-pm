@@ -1513,6 +1513,12 @@ workflow yaml become the joint SSOT — update both in lockstep so the rule stay
    `Conclusion: success` + `INFO`. If the manifest-update job itself fails, the notification also flips to ❌ so a
    degraded write never shows a green tick. (Pre-2026-05-08 the bot rendered ✅ for every successful manifest write
    regardless of the underlying repo CI state — fixed in `.github/workflows/ci-status-update.yml`.)
+7. **FAILING messages include a failure excerpt inline.** `python-quality-gates.yml` and `ui-quality-gates.yml` tee QG
+   stdout+stderr to `/tmp/qg_output.log`, capture the last 30 lines (ANSI-stripped, ~1500 char cap), base64-encode and
+   forward via `client_payload.failure_excerpt_b64`. `ci-status-update.yml`'s `build-message` job decodes +
+   HTML-escapes + appends inside a `<pre>` block under a `Failure excerpt:` heading. Operators see the actual error
+   (failing test name, lint rule, basedpyright type error) in the Telegram message body without clicking through to the
+   run logs. Excerpt only renders when `STATUS=FAILING`; greens never carry it.
 
 ### The pre-requisite: only commit YOUR work
 

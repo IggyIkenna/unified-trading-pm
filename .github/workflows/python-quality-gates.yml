@@ -27,7 +27,6 @@ on:
       TELEGRAM_BOT_TOKEN:
         required: false
 
-
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
@@ -190,7 +189,8 @@ jobs:
         shell: bash
         run: |
           export PATH="$(pwd)/.venv/bin:$PATH"
-          bash scripts/quality-gates.sh --no-fix
+          set -o pipefail
+          bash scripts/quality-gates.sh --no-fix 2>&1 | tee /tmp/qg_output.log
 
       - name: Record CI status (branch-aware lifecycle)
         if: always()
@@ -210,9 +210,16 @@ jobs:
             STATUS="FEATURE_GREEN"
           fi
 
+          # Capture failure excerpt (last 30 lines, ANSI-stripped, ~1500 char cap, base64 for JSON
+          # transport). Empty on pass; receiver only renders when STATUS=FAILING.
+          EXCERPT_B64=""
+          if [ "${STATUS}" = "FAILING" ] && [ -f /tmp/qg_output.log ]; then
+            EXCERPT_B64=$(sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' /tmp/qg_output.log | tail -n 30 | head -c 1500 | base64 | tr -d '\n')
+          fi
+
           echo "Recording ci_status=${STATUS} for ${GITHUB_REPOSITORY#*/} (branch=${TRIGGER_BRANCH})"
           curl -s -X POST \
             -H "Authorization: token ${GH_PAT}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
-            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${TRIGGER_BRANCH}\", \"sha\": \"${GITHUB_SHA}\"}}"
+            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${TRIGGER_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"${EXCERPT_B64}\"}}"
