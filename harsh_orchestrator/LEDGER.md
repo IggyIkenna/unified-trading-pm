@@ -26,7 +26,7 @@ If this conversation just started — Harsh's previous main-agent chat died, ran
 3. Run boot checklist:
    - From `unified-trading-pm/`: `git status`, `git rev-list --left-right --count HEAD...origin/live-defi-rollout`,
      `git log --oneline -5 origin/live-defi-rollout` — see local-ahead state + recent origin activity.
-   - `cat plans/active/_agent_pings.md` (now at `orchestration/_agent_pings.md`) — see active pings.
+   - `cat plans/active/_agent_pings.md` (now at `harsh_orchestrator/_agent_pings.md`) — see active pings.
    - Skim "Today's status" below for the tab registry + open questions.
 4. Ack to Harsh: _"Main agent online. State: N tabs in flight, M pings open, K local commits queued for
    push. Today's plan = X, Y, Z. Standing by."_

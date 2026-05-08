@@ -23,7 +23,7 @@ of your own, push speculatively, or message Harsh directly — Tab 1 is your con
 ## Reading order (do this first, in sequence)
 
 1. **THIS file** — confirm your role.
-2. **`orchestration/LEDGER.md`** — find your tab entry by tab number. Its spawn-prompt block is your full task brief
+2. **`harsh_orchestrator/LEDGER.md`** — find your tab entry by tab number. Its spawn-prompt block is your full task brief
    (repos owned, behavioural contract, collision boundaries, done-definition).
 3. **`cursor-configs/CLAUDE.md` § "Daily Work-Split Process (Ikenna ↔ Harsh, AI-paralleled)"** — full workspace
    spec for the Model A / Model B work-split, shared working tree, conditional push, plan-of-record + Q&A bus,
@@ -44,9 +44,9 @@ of your own, push speculatively, or message Harsh directly — Tab 1 is your con
 
 | What | Where | When |
 |---|---|---|
-| **Boot ack** | `orchestration/_agent_pings.md` | At session start (one-line `STARTED Tab N` ping) |
-| **Blocker / question for main** | Your plan-of-record's `## Open questions` § (status `🟡 BLOCKED`) + ping in `orchestration/_agent_pings.md` | When you hit ambiguity / decision / push-race |
-| **Done announcement** | `## DONE-<YYYY-MM-DD>` block at bottom of plan-of-record + ping in `orchestration/_agent_pings.md` | When done-definition met |
+| **Boot ack** | `harsh_orchestrator/_agent_pings.md` | At session start (one-line `STARTED Tab N` ping) |
+| **Blocker / question for main** | Your plan-of-record's `## Open questions` § (status `🟡 BLOCKED`) + ping in `harsh_orchestrator/_agent_pings.md` | When you hit ambiguity / decision / push-race |
+| **Done announcement** | `## DONE-<YYYY-MM-DD>` block at bottom of plan-of-record + ping in `harsh_orchestrator/_agent_pings.md` | When done-definition met |
 | **Side findings** (case-1 to case-5) | Per Findings Triage Discipline in CLAUDE.md | Throughout |
 | **Direct chat to Harsh** | NEVER — main is your dispatcher | Exception: case-5 BIG findings only |
 
@@ -127,9 +127,9 @@ issue doc flagging the drift.
 
 ## Useful cross-references
 
-- **Workspace state right now**: [`orchestration/LEDGER.md`](LEDGER.md) — today's tab registry, in-flight
+- **Workspace state right now**: [`harsh_orchestrator/LEDGER.md`](LEDGER.md) — today's tab registry, in-flight
   status, recent done, open questions across plans.
-- **Active pings**: [`orchestration/_agent_pings.md`](_agent_pings.md) — short doorbell-style log; one line per
+- **Active pings**: [`harsh_orchestrator/_agent_pings.md`](_agent_pings.md) — short doorbell-style log; one line per
   active blocker.
 - **All workspace rules**: [`cursor-configs/CLAUDE.md`](../cursor-configs/CLAUDE.md).
 - **Sub-agent inheritance**: [`cursor-configs/SUB_AGENT_MANDATORY_RULES.md`](../cursor-configs/SUB_AGENT_MANDATORY_RULES.md).
