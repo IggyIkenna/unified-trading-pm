@@ -24,6 +24,57 @@ related_plans:
 
 # CeFi Master — asset_group umbrella
 
+## Codex SSOTs
+
+This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
+
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+  — manifest v5 schema + 4-state capture taxonomy + cluster validation for bundled CeFi data_types (`options_chain` /
+  `futures_chain`)
+- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+  CeFi `empty_confirmed` rule (only venue-level reasons legit: `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` /
+  `EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PARTIAL_HALF_DAY`); zero-source-response on alive instrument-day must flip to
+  `attempted_failed`
+- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — CeFi shard
+  matrix: spot/perp = per-instrument-per-day (35GB roots); options/futures = bundled by `options_chain` /
+  `futures_chain` root; per-VM shard isolation policy
+- [`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) — MTDS
+  per-(venue, data_type) source coverage with `SOURCE_COVERAGE_START` per venue (Tardis vs Databento vs venue-native
+  REST)
+- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+  unified pipeline: same shard atom, same fields, same `available_at` semantics across modes; CeFi forward-poll +
+  backfill share one code path
+- [`codex/04-architecture/asset-class-ownership.md`](../../codex/04-architecture/asset-class-ownership.md) — CeFi venue
+  list (Bybit / Deribit / Binance / OKX / Bitfinex / Bitget / Kraken / Coinbase / Hyperliquid) + `VENUE_TO_ASSET_GROUP`
+  SSOT
+- [`codex/04-architecture/interface-credential-convention.md`](../../codex/04-architecture/interface-credential-convention.md)
+  — CeFi credentials: `get_order_adapter(venue, api_key, api_secret, ...)` keys-as-params shape; ApiKeyReloader
+  hot-reload pattern
+- [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md) — CeFi
+  backfill / forward-poll launchers MUST live under `deployment-service/scripts/vm/`; `VM_PREFIX_TO_BUCKET` registry
+  keeps zombie watchdog visibility
+
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+
+## AI-day estimate
+
+- **Total**: ~5 ai-days net (XL — 24 VMs running for backfill, ~34% of 29 todos in-flight per 2026-05-07 audit).
+- **Workstream split**:
+  - 24-VM backfill drain monitoring + per-VM 4-pillar validation: ~1.5 ai-days (passive monitoring with active
+    spot-checks, ETA 2026-05-09)
+  - Bitfinex / Bitget / Kraken Tardis venue universe expansion (UAC + adapter wiring): ~1 ai-day (mostly shipped per
+    UAC@7cb9068 / 405cbf5; integration verification + per-instrument coverage check pending)
+  - DERIBIT options + futures bundle backfill to genesis (2025/2026 light-VM relaunched 2026-05-06): ~1 ai-day
+  - BINANCE-FUTURES perps backfill manifest cleanup: ~0.5 ai-day
+  - Phantom-audit + manifest-rebuild port to CeFi (`reconcile_phantom_manifest_rows_all.py --asset-group cefi`): ~1
+    ai-day (run on same-region GCE VM per workspace rule)
+- **Parallelism factor**: ~2x (Bitfinex/Bitget/Kraken can proceed independent of DERIBIT bundle work; phantom-audit is
+  read-only and runs anywhere). **~2-3 calendar days** wall-clock.
+- **Critical path to 2026-05-23 cutover**: 4 perp venues (Bybit / Deribit / Binance / OKX) tick-data ≥99% complete +
+  forward-poll wired before May 23; the extended-backfill venues (Bitfinex/Bitget/Kraken) are P1 enabling new archetypes
+  but NOT live-trading-blocking.
+
 ## Audit 2026-05-07
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)
@@ -76,36 +127,37 @@ Single source of truth for **CeFi asset_group** work toward live DeFi 2026-05-23
 
 ### Tardis-venues backfill IN-FLIGHT (launched 2026-05-07 ~14:00 UTC, 37 VMs)
 
-37 cefi VMs running in `asia-northeast1-c` covering bitfinex/bitget/kraken × futures+spot × 2020-2026
-(`e2-highmem-2`). Sample event verification (3 VMs at T+30min): STARTED + PROCESSING_STARTED +
-PROCESSING_COMPLETED flowing properly, ~4 min/date pace.
+37 cefi VMs running in `asia-northeast1-c` covering bitfinex/bitget/kraken × futures+spot × 2020-2026 (`e2-highmem-2`).
+Sample event verification (3 VMs at T+30min): STARTED + PROCESSING_STARTED + PROCESSING_COMPLETED flowing properly, ~4
+min/date pace.
 
 **Findings from per-VM manifest spot-check (Harsh, 2026-05-07 15:35 IST)** — concerns to feed back into writegate
-+ shard-granularity follow-ups, NOT VM-blockers (the data IS being written, just the manifest shape is asymmetric):
+
+- shard-granularity follow-ups, NOT VM-blockers (the data IS being written, just the manifest shape is asymmetric):
 
 1. **Asymmetric manifest shard shape — captured rows are bundle-level, empty_confirmed rows are per-instrument.**
    Verified across 2 VMs (`cefi-bitfinex-spot-2020-heavy-...` 200 rows, `cefi-kraken-spot-2020-heavy-...` 250 rows):
    100% of `captured` rows have empty `instrument_id` + `instrument_count=8.3M` (BTC bundle), while 100% of
-   `empty_confirmed` rows have populated `instrument_id=BTCUSD/ETHUSD/...` + `instrument_count=0`. This **violates
-   the per-asset-group shard-key matrix** in CLAUDE.md "Shard-granularity SSOT" section
-   (`cefi spot/perp = (asset_group, venue, data_type, instrument_type, instrument_id, day) — per-instrument`).
-   The bundle-level captured row passes the rollup check but the data-status drilldown can't show per-instrument
-   coverage. **Owner: Ikenna writegate Phase 2.A residual** (per work-split D2). Reference incident shape: this is
-   the same class as TradFi MVP partial-bundle (ES.OPT 18 single-parent fills) and MDPS 1440-NaN-OHLC — captured
-   rows at the wrong granularity.
+   `empty_confirmed` rows have populated `instrument_id=BTCUSD/ETHUSD/...` + `instrument_count=0`. This **violates the
+   per-asset-group shard-key matrix** in CLAUDE.md "Shard-granularity SSOT" section
+   (`cefi spot/perp = (asset_group, venue, data_type, instrument_type, instrument_id, day) — per-instrument`). The
+   bundle-level captured row passes the rollup check but the data-status drilldown can't show per-instrument coverage.
+   **Owner: Ikenna writegate Phase 2.A residual** (per work-split D2). Reference incident shape: this is the same class
+   as TradFi MVP partial-bundle (ES.OPT 18 single-parent fills) and MDPS 1440-NaN-OHLC — captured rows at the wrong
+   granularity.
 
-2. **`PROCESSING_COMPLETED` event lacks `rows_captured` field.** Event details show only `date` — no row count, no
-   shard count, no duration. Workspace rule (CLAUDE.md "no fire-and-forget VM launches") says: _"Adapters MUST emit
-   per-instrument progress events with row counts so silent-success-with-zero-output is detectable from the event
-   stream alone."_ Currently silent-zero on a (venue, data_type, day) is invisible from events alone — operators
-   must read the per-VM manifest shard to verify. **Owner: MTDS adapter writegate wiring** (writegate Phase 2.E
-   per-source progress events).
+2. **`PROCESSING_COMPLETED` event lacks `rows_captured` field.** Event details show only `date` — no row count, no shard
+   count, no duration. Workspace rule (CLAUDE.md "no fire-and-forget VM launches") says: _"Adapters MUST emit
+   per-instrument progress events with row counts so silent-success-with-zero-output is detectable from the event stream
+   alone."_ Currently silent-zero on a (venue, data_type, day) is invisible from events alone — operators must read the
+   per-VM manifest shard to verify. **Owner: MTDS adapter writegate wiring** (writegate Phase 2.E per-source progress
+   events).
 
-3. **`PROCESS_CPU_SATURATED` events frequent on `e2-highmem-2` (2 vCPU).** Sample VM had 16 saturation events in
-   ~30 min (process_cpu_percent peaks at 115.9%). Workload sized too tight for instance type — book_snapshot_5
-   parsing for SPOT_PAIR universe at heavy-tier saturates 2 vCPU. **Recommendation**: future cefi heavy-tier
-   relaunches should use `e2-highmem-4` (4 vCPU) or `e2-standard-8`. Not VM-blocking now (events still flow), but
-   wall-clock could be 30-50% faster on a wider instance.
+3. **`PROCESS_CPU_SATURATED` events frequent on `e2-highmem-2` (2 vCPU).** Sample VM had 16 saturation events in ~30 min
+   (process_cpu_percent peaks at 115.9%). Workload sized too tight for instance type — book_snapshot_5 parsing for
+   SPOT_PAIR universe at heavy-tier saturates 2 vCPU. **Recommendation**: future cefi heavy-tier relaunches should use
+   `e2-highmem-4` (4 vCPU) or `e2-standard-8`. Not VM-blocking now (events still flow), but wall-clock could be 30-50%
+   faster on a wider instance.
 
 Sample-spotted concerns aside, the 37-VM sweep is producing data. Continue monitoring per CLAUDE.md verification
 protocol (90s STARTED + 10-15min progress + STOPPED at exit). Per-VM manifest shards merge into canonical via the
@@ -113,45 +165,44 @@ manifest-consolidator daemon (already running per `manifest-consolidator-...` wa
 
 ### Day 2 monitoring sweep — 2026-05-08 (24 VMs on e2-highmem-8 post-relaunch)
 
-The original 37-VM `e2-highmem-2` wave was relaunched 2026-05-07 18:48–19:01 UTC as **24 VMs on `e2-highmem-8`**,
-~3 hours after the `UTL@68b3804a` blank-reason classifier fix landed. This subsection tracks the Day 2 monitoring
-loop (10-min cadence, owned by `cefi-babysit-tab`).
+The original 37-VM `e2-highmem-2` wave was relaunched 2026-05-07 18:48–19:01 UTC as **24 VMs on `e2-highmem-8`**, ~3
+hours after the `UTL@68b3804a` blank-reason classifier fix landed. This subsection tracks the Day 2 monitoring loop
+(10-min cadence, owned by `cefi-babysit-tab`).
 
 **Fleet snapshot (2026-05-08 04:15 UTC, T+~9h)**: 24/24 RUNNING in `asia-northeast1-c`, all `e2-highmem-8`.
 Distribution: bitfinex spot (6: 2020–2025) + futures (4: 2021/22/24/25); bitget spot (1: 2025) + futures (1: 2025);
 kraken spot (7: 2020–2026) + futures (5: 2021–2025).
 
-**Liveness sweep (24/24 OK)**: every VM has last\_event\_age ≤ 1 min. Zero stalls, zero near-watchdog (the
+**Liveness sweep (24/24 OK)**: every VM has last_event_age ≤ 1 min. Zero stalls, zero near-watchdog (the
 `vm_zombie_watchdog.py` defaults are `--heartbeat-stale=15min` auto-kill, `--shard-stale=120min` fallback).
 
 **Data-quality spot-check (4 VMs across 3 venues + 2 timeframes)**:
 
-| VM                     | rows  | captured | empty | failed | blank-reason | per-instrument shape          |
-| ---------------------- | ----- | -------- | ----- | ------ | ------------ | ----------------------------- |
-| bitfinex-spot-2020     | 2762  | 100%     | 0%    | 0%     | 0            | ✓ (11 instruments × 2 dtypes) |
-| bitfinex-futures-2025  | 2537  | 100%     | 0%    | 0%     | 0            | ✓ (8 instruments × 2 dtypes)  |
-| bitget-spot-2025       | 11154 | 100%     | 0%    | 0%     | 0            | ✓ (24 instruments × 2 dtypes) |
-| kraken-spot-2020       | 6170  | 100%     | 0%    | 0%     | 0            | ✓ (13 instruments × 2 dtypes) |
+| VM                    | rows  | captured | empty | failed | blank-reason | per-instrument shape          |
+| --------------------- | ----- | -------- | ----- | ------ | ------------ | ----------------------------- |
+| bitfinex-spot-2020    | 2762  | 100%     | 0%    | 0%     | 0            | ✓ (11 instruments × 2 dtypes) |
+| bitfinex-futures-2025 | 2537  | 100%     | 0%    | 0%     | 0            | ✓ (8 instruments × 2 dtypes)  |
+| bitget-spot-2025      | 11154 | 100%     | 0%    | 0%     | 0            | ✓ (24 instruments × 2 dtypes) |
+| kraken-spot-2020      | 6170  | 100%     | 0%    | 0%     | 0            | ✓ (13 instruments × 2 dtypes) |
 
 Tight post-RED-ALERT threshold (<5% empty) trivially passes — actual is 0% empty. Zero blank-reason `empty_confirmed`
-writes (RED ALERT not triggered). All `instrument_id` columns populated; per-instrument `instrument_count` ranges
-4 → 6.7M (real per-instrument tick counts, NOT bundle-rollup 8.3M).
+writes (RED ALERT not triggered). All `instrument_id` columns populated; per-instrument `instrument_count` ranges 4 →
+6.7M (real per-instrument tick counts, NOT bundle-rollup 8.3M).
 
-**Important resolution — asymmetric shard shape no longer reproducing.** The bundle-vs-per-instrument shape
-documented in [`issues/cefi_tardis_writegate_findings_2026_05_07.md`](issues/cefi_tardis_writegate_findings_2026_05_07.md)
-Finding 1 is no longer present on the Day 2 fleet. Current shards are SSOT-conformant per-instrument shape (see
-CLAUDE.md § "Shard-granularity SSOT" cefi spot/perp matrix). Either Ikenna's writegate Phase 2.A residual landed
-overnight, or the relaunched-on-`-8` VMs use a tarball that includes the fix. Issue-doc owner should sweep + resolve
-when convenient.
+**Important resolution — asymmetric shard shape no longer reproducing.** The bundle-vs-per-instrument shape documented
+in [`issues/cefi_tardis_writegate_findings_2026_05_07.md`](issues/cefi_tardis_writegate_findings_2026_05_07.md) Finding
+1 is no longer present on the Day 2 fleet. Current shards are SSOT-conformant per-instrument shape (see CLAUDE.md §
+"Shard-granularity SSOT" cefi spot/perp matrix). Either Ikenna's writegate Phase 2.A residual landed overnight, or the
+relaunched-on-`-8` VMs use a tarball that includes the fix. Issue-doc owner should sweep + resolve when convenient.
 
 **Drain progress samples (T+~9h, % through year)**:
 
-| VM                     | dates done                   | est. progress |
-| ---------------------- | ---------------------------- | ------------- |
-| bitfinex-spot-2020     | 210 (2020-01-01 → 2020-07-29) | ~57%          |
-| bitfinex-futures-2025  | 160 (2025-03-15 → 2025-08-21) | ~44%          |
-| bitget-spot-2025       | 234 (2025-01-07 → 2025-09-12) | ~64%          |
-| kraken-spot-2020       | 261 (2020-01-01 → 2020-09-17) | ~71%          |
+| VM                    | dates done                    | est. progress |
+| --------------------- | ----------------------------- | ------------- |
+| bitfinex-spot-2020    | 210 (2020-01-01 → 2020-07-29) | ~57%          |
+| bitfinex-futures-2025 | 160 (2025-03-15 → 2025-08-21) | ~44%          |
+| bitget-spot-2025      | 234 (2025-01-07 → 2025-09-12) | ~64%          |
+| kraken-spot-2020      | 261 (2020-01-01 → 2020-09-17) | ~71%          |
 
 ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-futures-2025) may slip into 05-09 evening.
 
@@ -159,40 +210,58 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
 
 1. `PROCESS_CPU_SATURATED` events still firing on `e2-highmem-8` (~11 events / 10 min on sampled VM). Operational
    metrics show this is misleading: `process_cpu_percent=105%` on 8 vCPU is nowhere near saturated, pace 3.67 min/date
-   is *faster* than expected ~4 min, queue depth 16 in-flight oldest 40 s old is healthy. Threshold likely fires on
-   `cpu_percent > 100%` which is single-thread semantics and noise on multi-thread workloads. **Observability
-   artifact, not a data-quality risk.**
+   is _faster_ than expected ~4 min, queue depth 16 in-flight oldest 40 s old is healthy. Threshold likely fires on
+   `cpu_percent > 100%` which is single-thread semantics and noise on multi-thread workloads. **Observability artifact,
+   not a data-quality risk.**
 2. `PROCESSING_COMPLETED` still lacks `rows_captured` (writegate-findings Finding 2). Silent-zero is invisible from
    events alone — mitigated by reading per-VM shards directly. Owner remains Ikenna writegate Phase 2.E.
 
 **Iteration log** (one-line per 10-min sweep, oldest first):
 
 - 2026-05-08 04:15 UTC — sweep #1: 24/24 alive, 100% captured on 4 sampled VMs, RED ALERT not triggered. No actions.
-- 2026-05-08 04:37 UTC — sweep #2: 23/24 alive (cefi-bitfinex-futures-2021 drained normally), worst event_age 0m, sample VM cefi-kraken-futures-2021 100% captured (1252 rows, latest 2021-08-05). No actions.
-- 2026-05-08 04:46 UTC — sweep #3: 23/23 alive (no further drain), worst event_age 0m, sample VM cefi-bitfinex-spot-2023 100% captured (4766 rows, latest 2023-06-04 ≈42% through year). No actions.
-- 2026-05-08 04:54 UTC — sweep #4: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2021 100% captured (3192 rows, latest 2021-04-22 ≈31% through year). No actions.
-- 2026-05-08 05:04 UTC — sweep #5: 23/23 alive, worst event_age 0m, sample VM cefi-bitget-futures-2025 100% captured (6617 rows, latest 2025-05-24 ≈40% through year). No actions.
-- 2026-05-08 05:15 UTC — sweep #6: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2023 100% captured (6924 rows, latest 2023-06-22 ≈47% through year). No actions.
-- 2026-05-08 05:24 UTC — sweep #7: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2026 100% captured (4215 rows, latest 2026-04-16 ≈83% through partial-year window). No actions.
-- 2026-05-08 05:35 UTC — sweep #8: 22/23 alive (cefi-kraken-futures-2025 drained normally — 2nd completion), worst event_age 0m, sample VM cefi-bitget-futures-2025 100% captured (6950 rows, latest 2025-05-31 ≈42% through year). No actions.
-- 2026-05-08 05:45 UTC — sweep #9: 21/22 alive at sweep, then 20/24 by 05:46 UTC recheck (cefi-kraken-futures-2023 + cefi-kraken-spot-2021 both drained in close succession — 3rd + 4th completions); worst event_age 0m, sample VM cefi-kraken-futures-2021 100% captured (1438 rows, latest 2021-09-05 ≈68% through year). 20/24 = 83%, above 80% commit trigger. No actions.
-- 2026-05-08 05:55 UTC — sweep #10: 20/24 alive (83%, no further drain), worst event_age 0m, sample VM cefi-bitfinex-futures-2025 100% captured (2997 rows, latest 2025-09-19 ≈72% through year). No actions.
-- 2026-05-08 06:05 UTC — sweep #11: 20/24 alive (83%, no further drain), worst event_age 0m, sample VM cefi-kraken-spot-2023 100% captured (7440 rows, latest 2023-07-04 ≈51% through year). No actions.
-- 2026-05-08 06:15 UTC — sweep #12: 20/24 alive (83%, no drain), worst event_age 0m, sample VM cefi-kraken-futures-2024 100% captured (2052 rows, latest 2024-12-19 ≈97% through year — close to its drain). No actions.
-- 2026-05-08 06:25 UTC — sweep #13: 20/24 alive (83%, no drain), worst event_age 0m, sample VM cefi-bitfinex-spot-2024 100% captured (4796 rows, latest 2024-06-07 ≈43% through year). No actions.
-- 2026-05-08 06:35 UTC — sweep #14: 20/24 alive (83%, no drain), worst event_age 0m, sample VM cefi-kraken-spot-2026 100% captured (4841 rows, latest 2026-05-01 ≈97% through partial-year window — closest to drain). No actions.
-- 2026-05-08 06:45 UTC — sweep #15: 19/24 alive (cefi-kraken-futures-2024 drained — 5th completion, was at ≈97% per sweep #12), worst event_age 0m, sample VM cefi-bitfinex-spot-2025 100% captured (4896 rows, latest 2025-06-11 ≈44% through year). **Fleet at 79.16% — crossed below 80% commit trigger.** Iteration-log catch-up commit follows.
+- 2026-05-08 04:37 UTC — sweep #2: 23/24 alive (cefi-bitfinex-futures-2021 drained normally), worst event_age 0m, sample
+  VM cefi-kraken-futures-2021 100% captured (1252 rows, latest 2021-08-05). No actions.
+- 2026-05-08 04:46 UTC — sweep #3: 23/23 alive (no further drain), worst event_age 0m, sample VM cefi-bitfinex-spot-2023
+  100% captured (4766 rows, latest 2023-06-04 ≈42% through year). No actions.
+- 2026-05-08 04:54 UTC — sweep #4: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2021 100% captured (3192
+  rows, latest 2021-04-22 ≈31% through year). No actions.
+- 2026-05-08 05:04 UTC — sweep #5: 23/23 alive, worst event_age 0m, sample VM cefi-bitget-futures-2025 100% captured
+  (6617 rows, latest 2025-05-24 ≈40% through year). No actions.
+- 2026-05-08 05:15 UTC — sweep #6: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2023 100% captured (6924
+  rows, latest 2023-06-22 ≈47% through year). No actions.
+- 2026-05-08 05:24 UTC — sweep #7: 23/23 alive, worst event_age 0m, sample VM cefi-kraken-spot-2026 100% captured (4215
+  rows, latest 2026-04-16 ≈83% through partial-year window). No actions.
+- 2026-05-08 05:35 UTC — sweep #8: 22/23 alive (cefi-kraken-futures-2025 drained normally — 2nd completion), worst
+  event_age 0m, sample VM cefi-bitget-futures-2025 100% captured (6950 rows, latest 2025-05-31 ≈42% through year). No
+  actions.
+- 2026-05-08 05:45 UTC — sweep #9: 21/22 alive at sweep, then 20/24 by 05:46 UTC recheck (cefi-kraken-futures-2023 +
+  cefi-kraken-spot-2021 both drained in close succession — 3rd + 4th completions); worst event_age 0m, sample VM
+  cefi-kraken-futures-2021 100% captured (1438 rows, latest 2021-09-05 ≈68% through year). 20/24 = 83%, above 80% commit
+  trigger. No actions.
+- 2026-05-08 05:55 UTC — sweep #10: 20/24 alive (83%, no further drain), worst event_age 0m, sample VM
+  cefi-bitfinex-futures-2025 100% captured (2997 rows, latest 2025-09-19 ≈72% through year). No actions.
+- 2026-05-08 06:05 UTC — sweep #11: 20/24 alive (83%, no further drain), worst event_age 0m, sample VM
+  cefi-kraken-spot-2023 100% captured (7440 rows, latest 2023-07-04 ≈51% through year). No actions.
+- 2026-05-08 06:15 UTC — sweep #12: 20/24 alive (83%, no drain), worst event_age 0m, sample VM cefi-kraken-futures-2024
+  100% captured (2052 rows, latest 2024-12-19 ≈97% through year — close to its drain). No actions.
+- 2026-05-08 06:25 UTC — sweep #13: 20/24 alive (83%, no drain), worst event_age 0m, sample VM cefi-bitfinex-spot-2024
+  100% captured (4796 rows, latest 2024-06-07 ≈43% through year). No actions.
+- 2026-05-08 06:35 UTC — sweep #14: 20/24 alive (83%, no drain), worst event_age 0m, sample VM cefi-kraken-spot-2026
+  100% captured (4841 rows, latest 2026-05-01 ≈97% through partial-year window — closest to drain). No actions.
+- 2026-05-08 06:45 UTC — sweep #15: 19/24 alive (cefi-kraken-futures-2024 drained — 5th completion, was at ≈97% per
+  sweep #12), worst event_age 0m, sample VM cefi-bitfinex-spot-2025 100% captured (4896 rows, latest 2025-06-11 ≈44%
+  through year). **Fleet at 79.16% — crossed below 80% commit trigger.** Iteration-log catch-up commit follows.
 
 ## Critical path
 
-| Workstream                                                | Status                            | Source plan / commit                                                 |
-| --------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------- |
-| 4 CeFi perp venues live (Bybit / Deribit / Binance / OKX) | INSTRUMENTS LIVE; tick-data ~60%  | `cefi_tradfi_tick_data_backfill`                                     |
-| DERIBIT options + futures bundles backfilled to genesis   | 2024 done; 2025/2026 in flight    | `cefi_tradfi_tick_data_backfill` (2025/2026 VMs running 2026-05-06+) |
-| BINANCE-FUTURES perps backfill                            | partial; manifest cleanup pending | `cefi_tradfi_tick_data_backfill`                                     |
-| Bitfinex / Bitget / Kraken Tardis venues                  | NOT STARTED                       | `cefi_venue_universe_expansion`                                      |
-| CeFi MTDS shards to 100%                                  | partial                           | `market_tick_data_to_100pct` (CeFi slice)                            |
-| Phantom-audit + manifest-rebuild for CeFi                 | partial — TradFi port pending     | `cefi_tradfi_tick_data_backfill` (CeFi half)                         |
+| Workstream                                                | Status                            | Source plan / commit                                                 | Success gate                                                                                                                                                                                             |
+| --------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4 CeFi perp venues live (Bybit / Deribit / Binance / OKX) | INSTRUMENTS LIVE; tick-data ~60%  | `cefi_tradfi_tick_data_backfill`                                     | Per-venue per-data*type per-day shard ≥99% captured for 2024-01-01 → today; `perp_funding` populated continuously; forward-poll launcher emits `STARTED`+`PROCESSING*\*` events for each venue           |
+| DERIBIT options + futures bundles backfilled to genesis   | 2024 done; 2025/2026 in flight    | `cefi_tradfi_tick_data_backfill` (2025/2026 VMs running 2026-05-06+) | All `options_chain` / `futures_chain` bundles record_captured with `expected_root_clusters` validation passing per-day (cluster coverage gate per CLAUDE.md "Cluster validation MANDATORY")              |
+| BINANCE-FUTURES perps backfill                            | partial; manifest cleanup pending | `cefi_tradfi_tick_data_backfill`                                     | Manifest reconciliation drops phantom rows; per-instrument-per-day coverage ≥99% on all live perps                                                                                                       |
+| Bitfinex / Bitget / Kraken Tardis venues                  | NOT STARTED                       | `cefi_venue_universe_expansion`                                      | All 3 venues × spot+futures × 2020-2026 backfilled; per-VM 4-pillar validation green (row count > 0, NaN ratio in tolerance, schema match, cluster coverage where applicable); zero silent-zero captures |
+| CeFi MTDS shards to 100%                                  | partial                           | `market_tick_data_to_100pct` (CeFi slice)                            | data-status drilldown shows ≥99% coverage % per (venue, data_type); residual gaps stamped with typed `EMPTY_CONFIRMED_REASONS`                                                                           |
+| Phantom-audit + manifest-rebuild for CeFi                 | partial — TradFi port pending     | `cefi_tradfi_tick_data_backfill` (CeFi half)                         | `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` reports <0.5% phantom rate (per 2026-05-04 99.7% reduction precedent); residual classified by drift axis                           |
 
 ## Consolidated todos (lifted from folded children)
 
