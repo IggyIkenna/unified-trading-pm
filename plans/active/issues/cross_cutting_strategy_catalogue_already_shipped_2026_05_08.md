@@ -161,3 +161,66 @@ deliverables #1 + #2 todos to reflect the extension-not-greenfield path.
 - "Single Source of Truth" — Citadel-Grade Planning Standards § 7.
 - "No Technical Debt" — Citadel-Grade Planning Standards § 3.
 - "Two teammates × multiple parallel agents — don't edit unfamiliar files" — both halves of CLAUDE.md.
+
+## Addendum 2026-05-08 — Tab 6.B (Client model + capital allocation) overlap
+
+> **Severity addendum**: P0 — Tab 6.B shipped before Tab 6.A's finding surfaced. Same root cause (greenfield design vs
+> existing v2 SSOTs); same fix shape under Option A.
+
+**What 6.B shipped** (`uac@3591037` `feat(uac): client model + capital allocation matrix SSOT — cross_cutting #3`,
+pushed to live-defi-rollout):
+
+- `unified_api_contracts/canonical/domain/client/__init__.py` — empty package marker
+- `unified_api_contracts/canonical/domain/client/model.py` — `Client` + `VenueAccount` + `CapitalAllocation` +
+  `CLIENTS_SEED` + `CAPITAL_ALLOCATION_SEED` + `AllocationViolationError` + 6 helper functions
+- `unified_api_contracts/client.py` — NEW root facade re-exporting the public API
+- `tests/unit/test_client_model.py` — 36 unit tests passing
+
+**The parallel-SSOT overlap.** Searched 2026-05-08 post-ship — 2 of the 3 schemas duplicate existing UAC v2 SSOTs:
+
+| 6.B-shipped symbol                                         | Existing UAC equivalent (pre-existing)                                                                                                                                                                                                                                                                                       | Status                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Client` (canonical/domain/client/model.py:155)            | `ClientDefinition` (`internal/domain/strategy_service/client_registry.py:36`) — frozen dataclass `client_id` / `name` / `entity` / `account_type` / `share_classes` / `is_active` / `seed`. **Re-exported through live `unified_api_contracts/strategy.py:97`**.                                                             | **PARALLEL SSOT.** Existing model is consumed by `RecordEnricher.stamp_client_name`, the trading-api routes, `generate_ui_reference_data` (UI pipeline), and the architecture-v2 derivation chain. 6.B's `Client` would split the `client_id → display name` resolution path across two SSOTs. The UAC `ClientRegistry` is the canonical workspace surface.             |
+| `VenueAccount` (canonical/domain/client/model.py:126)      | `TradingAccount` + `AccountType` + `WalletRole` (`internal/domain/account.py:16+72`) — frozen dataclass with composite key `{client_id}:{venue}:{account_label}`, `AccountType` enum (CEFI_EXCHANGE / DEFI_WALLET / TRADFI_BROKER / SPORTS_BOOKMAKER / PREDICTION_MARKET), `WalletRole` enum (TREASURY / TRADING / RESERVE). | **PARALLEL SSOT.** Existing model "flows through execution → position → risk → P&L so every service agrees on what 'an account' is." 6.B's `VenueAccount` (`venue` + `account_id` + `is_subaccount` + `parent_account_id`) misses `WalletRole` (treasury / trading / reserve), the granular `AccountType` taxonomy across asset_groups, and the composite-key contract. |
+| `CapitalAllocation` (canonical/domain/client/model.py:193) | **No equivalent.** Closest is `internal/domain/strategy_service/client_config.py` `ClientStrategyOverride` + `ClientConfigRegistry` (per-(client, strategy) config overrides) — but no per-(client, archetype, venue) capital allocation matrix with bounds-validated position cap + drawdown cap.                           | **GENUINE GAP** — 6.B's contribution here closes it. Right shape per Option A: lift `CapitalAllocation` + `validate_allocation_respect` + `is_within_allocation` into `internal/architecture_v2/capital_allocation.py` (alongside `client_registry.py`) and re-export through existing `strategy.py` facade — NOT through a new `client.py` facade.                     |
+
+**Why this matters.** Same workspace HARD RULE collisions as the original Tab 6.A finding above: "Single Source of
+Truth" (parallel `Client` + parallel `VenueAccount`); "System-First Architecture" (greenfield `canonical/domain/client/`
+parallel to existing `internal/domain/strategy_service/client_registry.py` + `internal/domain/account.py`); "No
+Technical Debt" (Citadel-Grade § 3 — duplicate dataclasses + competing facade re-exports `client.py` vs `strategy.py`).
+Reference incidents in MEMORY.md auto-memory: this is the same parallel-SSOT-debt pattern the workspace has burned on 3+
+times previously.
+
+**Recommended decision (extends Option A above).** When the operator picks Option A:
+
+1. Migrate `CapitalAllocation` + `AllocationViolationError` + `validate_allocation_respect` + `is_within_allocation` +
+   `CAPITAL_ALLOCATION_SEED` from `unified_api_contracts/canonical/domain/client/model.py` →
+   `unified_api_contracts/internal/architecture_v2/capital_allocation.py` (sibling to `client_registry.py`).
+2. Re-export those 5 symbols through existing `unified_api_contracts/strategy.py` facade (alongside the existing
+   `ClientDefinition` / `ClientRegistry` re-exports).
+3. Delete `unified_api_contracts/canonical/domain/client/__init__.py` + `model.py` + `unified_api_contracts/client.py`
+   (the 3 net-new parallel-SSOT files).
+4. Migrate `tests/unit/test_client_model.py` → `tests/unit/test_capital_allocation.py` updating imports to the new path
+   (the `CapitalAllocation` test cases stand; `Client` + `VenueAccount` test cases get deleted).
+5. Re-shape `CapitalAllocation.archetype: ArchetypeRef = str` → `archetype: StrategyArchetype` (tightening the
+   placeholder string type to the existing UAC enum). 6.B used `type ArchetypeRef = str` PEP-695 alias as an explicit
+   migration point — single-edit widening.
+6. Update the deliverable #3 [DESIGN+UAC] checkboxes in `cross_cutting_may_23_deliverables_2026_05_08.md` to reflect the
+   partial revert: keep "Capital allocation matrix declared" flipped (genuine gap closed) + un-flip "Client model in UAC
+   stable" (parallel SSOT — work already covered by existing `ClientRegistry` re-export).
+
+**Until operator triages**: 6.B's `uac@3591037` + plan-flip `pm@366c66a4` stand on `live-defi-rollout`. Foreign agents
+should NOT consume `from unified_api_contracts.client import Client` or `VenueAccount` — those imports will be reverted
+under Option A. Consumers needing client identity should continue using
+`from unified_api_contracts.strategy import ClientDefinition, ClientRegistry`. Consumers needing capital allocation
+should defer until the migration to `strategy.py` re-export lands.
+
+**Reference**: 6.B's commits + report:
+
+- `uac@3591037` — `feat(uac): client model + capital allocation matrix SSOT — cross_cutting #3`
+- `pm@366c66a4` — `docs(plans): cross_cutting Tab 6.B — ship client model + capital allocation UAC`
+
+The parallel agent landed cleanly per the workspace cadence; the issue is upstream of 6.B (the Tab 6 main agent's spawn
+prompt didn't pre-audit existing UAC v2 SSOTs before delegating). Same root cause as Tab 6.A's finding above — the codex
+`strategy-summary.md` 8-family / 18-archetype baseline is stale and the Tab 6 plan-body was drafted against it without
+auditing `unified_api_contracts/strategy.py` + `internal/architecture_v2/` + `internal/domain/strategy_service/`.

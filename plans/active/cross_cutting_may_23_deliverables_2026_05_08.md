@@ -256,3 +256,62 @@ The [BUILD] subitems for deliverables #1 (catalogue UI build) + #4 (5 DART manua
 Harsh T6 per cross-side handshake. The strategy_id grammar this spec consumes is owned by Tab 6.A (currently 🟡 BLOCKED
 pending operator triage of
 [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)).
+
+## DONE-2026-05-08 (Tab 6 main) — cycle close
+
+Tab 6 main agent dispatched 3 parallel sub-agents per work-split plan
+[`work_split_2026_05_08_ikenna.md`](work_split_2026_05_08_ikenna.md) § "TAB 6 — Cross-cutting design". Cycle outcome:
+
+| Sub-agent      | Scope                                                      | Status                                | Commits                                                                                                                                              |
+| -------------- | ---------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **6.A**        | UAC strategy catalogue + IDs (#1+#2)                       | 🟡 BLOCKED — case-5 BIG finding filed | `pm@6ab7a0d8` (issue doc); zero UAC code shipped (intentional)                                                                                       |
+| **6.B**        | UAC client model + cap allocation (#3)                     | ⚠️ SHIPPED with parallel-SSOT debt    | `uac@3591037` + `pm@366c66a4`                                                                                                                        |
+| **6.C**        | DART codex doc + UI scope (#4 + #1 [DESIGN] BUILD subitem) | ✅ SHIPPED clean                      | `pm@ab595616` (DART doc) + `pm@2a0d105d` (peer-doc cross-link, parallel-agent commit) + `pm@b6a93b25` (plan flip + UI scope assignment + DONE block) |
+| **Tab 6 main** | Issue-doc consolidation + this DONE block                  | ✅ SHIPPED                            | `pm@<this-commit>` (issue doc 6.B addendum + Tab 6 main DONE block)                                                                                  |
+
+**Done-definition vs work-split plan TAB 6 § "Done-definition":**
+
+- ☐ **All 4 UAC schemas merged: catalogue, IDs, client model, capital allocation** — _partial._ Catalogue + IDs (6.A's
+  scope) BLOCKED on operator Option A/B/C call (the work was already shipped under existing UAC v2 SSOTs; net-new code
+  would have created parallel-SSOT debt). Client model (6.B's scope) shipped as parallel SSOT to existing
+  `ClientDefinition` + `TradingAccount` — needs partial revert per Option A. Capital allocation (genuine gap) shipped
+  cleanly + needs migration to `internal/architecture_v2/capital_allocation.py` per Option A.
+- ✅ **DART scope codex doc shipped (operator-confirmed) + Harsh T6 has executable spec** — `pm@ab595616` (314 lines, 8
+  sections, all 11 StrategyInstruction action types + all 18 codex archetypes). Plan open questions #2 + #4 resolved per
+  defaults.
+- ✅ **Strategy catalogue UI scope assigned** — refined: route is in **trading-UI**
+  (`unified-trading-system-ui/lib/architecture-v2/`), NOT deployment-UI. Plan open question #1 resolved.
+- ◐ **Plan-of-record `## Open questions` resolved or escalated** — Q1 + Q2 + Q4 resolved by 6.C; Q3 (versioning rule)
+  remains BLOCKED on Tab 6.A operator triage; new findings raised (none — all surfaced into the issue doc instead).
+- ✅ **DONE block appended to plan-of-record citing every UAC + codex commit sha** — 6.B + 6.C wrote their own DONE
+  blocks; this Tab 6 main DONE block consolidates the cycle outcome.
+
+**Cross-side handoff status (Ikenna T6 → Harsh T6):**
+
+- Deliverable #1 [SCRIPT] catalogue rows / [SCRIPT] per-archetype venue matrix / [SCRIPT] per-archetype config
+  parameters (Harsh T6) — **BLOCKED** until operator triages Option A; right shape becomes "audit existing
+  `STRATEGY_REGISTRY` + `ARCHETYPE_CAPABILITY_REGISTRY` for May-23 live archetype rows; add missing rows + the new
+  `ArchetypeConfig` operational risk knobs."
+- Deliverable #2 [SCRIPT] strategy ID registry populated / [SCRIPT] strategy ID refactor sweep (Harsh T6) — **BLOCKED**
+  on same operator call; under Option A the existing `format_strategy_id` / `parse_strategy_id` 6-axis grammar is the
+  target.
+- Deliverable #3 [SCRIPT] client-account-strategy tagging propagated (Harsh T6) — partially unblocked: tagging schema
+  consumes existing `ClientDefinition` + `TradingAccount` (per Option A migration), and `CapitalAllocation` once
+  re-exported from `strategy.py` facade. Pending Option A migration per issue doc addendum.
+- Deliverable #4 [BUILD] 5 DART manual surfaces (Harsh T6) — UNBLOCKED. Spec lives at
+  [`codex/09-strategy/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/cross-cutting/dart-manual-trade-spec.md).
+  Strategy ID attribution per spec § 5 defers to whichever grammar Option A produces (existing 6-axis grammar expected).
+- Deliverable #1 [BUILD] strategy catalogue UI (Harsh T6) — UNBLOCKED in scope (route + filter axes + acceptance
+  criteria declared above § "Strategy catalogue UI route — scope assignment"); the consumer-side data shape depends on
+  Option A's `ArchetypeConfig` schema landing.
+
+**Operator action requested (Tab 6 main):** triage
+[`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
+with Option A vs B vs C call. Recommended: **Option A — extend existing v2 SSOTs**. Under Option A the cycle's remaining
+work is well-bounded: ship `ArchetypeConfig` in `internal/architecture_v2/archetype_config.py` (1-2 AI-days); migrate
+Tab 6.B's `CapitalAllocation` to `internal/architecture_v2/capital_allocation.py` + revert `Client` + `VenueAccount` (1
+AI-day); refresh codex `strategy-summary.md` to 9-family / 46-archetype (0.5 AI-days); audit `STRATEGY_REGISTRY` for
+May-23 live archetype completeness (1 AI-day). Total ~3-4 AI-days to fully close cross_cutting deliverables #1 + #2 + #3
+— well within the May-23 deadline if Option A picked promptly.
+
+Tab 6 main going quiet.
