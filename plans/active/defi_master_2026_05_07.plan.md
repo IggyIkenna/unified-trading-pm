@@ -477,6 +477,17 @@ the canonical RESOLVED block. Code commits:
 After tarball refresh (`bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group DEFI`) the
 lending-indices VM is ready to re-launch. Operator-owned step.
 
+**Audit 2026-05-08 (Tab 14, defi-fork1-prep-audit-tab)**: 4-bug-class diagnostic audit ran across the full Fork 1
+data-source surface BEFORE Ikenna's D4 launches. Results filed at
+[`issues/defi_fork1_prep_audit_2026_05_08.md`](issues/defi_fork1_prep_audit_2026_05_08.md). TL;DR: Bug classes 1-3 are
+✅ no new findings (Tab 5 + Tab 9's shipped cascade + UAC SSOT cascade is structurally correct). **Bug class 4 — UAC
+PROTOCOL_LAUNCH_DATES drift — found 13 of 17 probed pairs DRIFT > ±3 days.** Recommend operator spawn 4 sequential
+fix tabs (A: AAVEV3 6 chains; B: COMPOUNDV3 4 chains; C: UNISWAPV3 3 chains; D: SPARK ETH + bSOL UAC entry) all
+mirroring Tab 9's shape. Pyth Hermes archive coverage start ≈ 2023-10-01 (no SSOT); jitoSOL pre-2023-10 oracle-USD
+backfill blocked. bSOL is in Tab 14 brief as a Fork 1 LST yield but absent from UAC `LST_TOKEN_GENESIS` — coverage
+gap. **Owner**: operator triage (case-5 big finding per CLAUDE.md Findings Triage Discipline; cross-repo UAC + MTDS +
+instruments-service; on May-23 critical path).
+
 **Verification recipe used to find these** (do this WITHIN 10-15 MIN of any backfill VM launch — don't wait for /loop):
 
 ```bash
