@@ -1022,8 +1022,8 @@ VM pending operator decision).
   AAVEV3 6 chains (OPTIMISM 142d data loss; POLYGON 4d; AVALANCHE 4d; BASE 13d; LINEA 138d; BSC 293d) + COMPOUNDV3 4
   chains (ETH 12d; ARB 21d; BASE 22d; OPT 51d) + UNISWAPV3 3 chains (ARB 91d; OPT 35d; BASE 9d; subgraphs index
   pre-public-launch testnet/devnet blocks) + SPARK/ETHEREUM added at 2023-03-07 + bSOL at 2022-11-24 conservative
-  floor + POLYGON/COMPOUNDV3 removed (no subgraph) + 4-pair `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended.
-  19/19 tests pass.
+  floor + POLYGON/COMPOUNDV3 removed (no subgraph) + 4-pair `_PRE_GENESIS_SUBGRAPH_INDEXED_ALLOWLIST` extended. 19/19
+  tests pass.
 - UAC@3adee82 — `feat(uac): ORACLE_COVERAGE_START SSOT — pyth_hermes archive at 2023-10-01`. NEW
   `_defi_oracle_coverage.py` module declaring per-oracle archive coverage start dates. 5 unit tests pass. Consumers:
   MTDS oracle_prices_handler short-circuit pre-archive Hermes fetches; deployment-api / data-status clip
@@ -1032,18 +1032,19 @@ VM pending operator decision).
 **PM code commits**:
 
 - PM@b1bd92e6 — `docs(plans): paper-trade smoke runbook for carry_staked_basis Solana hedge`. NEW
-  `plans/active/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md` with 11 pre-flight checks +
-  4-service mesh wiring + 14-step round-trip + verification queries + 6 failure-mode triage + done-definition.
-  Source: Tab 1 sub-agent Plan-mode design pass.
-- PM@15e9b1a3 (parallel agent's bundled commit) — `docs(plans): defi_master + work_split flips for Tab 1 Items 1+2 +
-  Stream A codex evidence`. Bundles Tab 1 main's plan flips with parallel agent's Stream A codex evidence doc.
+  `plans/active/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md` with 11 pre-flight checks + 4-service
+  mesh wiring + 14-step round-trip + verification queries + 6 failure-mode triage + done-definition. Source: Tab 1
+  sub-agent Plan-mode design pass.
+- PM@15e9b1a3 (parallel agent's bundled commit) —
+  `docs(plans): defi_master + work_split flips for Tab 1 Items 1+2 + Stream A codex evidence`. Bundles Tab 1 main's plan
+  flips with parallel agent's Stream A codex evidence doc.
 
 **Runbooks shipped (operator-driven execution)**:
 
 - Item 1: paper-trade smoke runbook — operator runs on region-co-located GCE VM with GCP creds + Solana RPC.
-- Item 2: lending-indices VM relaunch runbook — operator runs `create-code-tarballs.sh --asset-group DEFI` then
-  relaunch lending-indices VM, T+90min spot-check at COMPOUND V3 launch boundaries (ARB 2023-05-04 / BASE 2023-08-26 /
-  OPT 2024-04-06).
+- Item 2: lending-indices VM relaunch runbook — operator runs `create-code-tarballs.sh --asset-group DEFI` then relaunch
+  lending-indices VM, T+90min spot-check at COMPOUND V3 launch boundaries (ARB 2023-05-04 / BASE 2023-08-26 / OPT
+  2024-04-06).
 
 **Pending operator decisions**:
 
@@ -1065,9 +1066,36 @@ VM pending operator decision).
 2. **2026-05-08 13:55 UTC** (UAC) — Parallel-agent prek-stash race repeatedly absorbed foreign agent staging into Tab
    1's commit cycles. Resolution: heredoc-create + `--no-verify` commit per workspace rule "live-defi-rollout direct
    push".
-3. **2026-05-08 13:30 UTC** (UAC) — Circular import `MarketStatus` in `internal.domain.market_tick_data.sports`
-   blocked all UAC test runs; fixed by parallel agent at UAC@02b2c32 (`fix(uac): reorder __init__.py — load alerting
-   after errors+domain to break circular import`).
+3. **2026-05-08 13:30 UTC** (UAC) — Circular import `MarketStatus` in `internal.domain.market_tick_data.sports` blocked
+   all UAC test runs; fixed by parallel agent at UAC@02b2c32
+   (`fix(uac): reorder __init__.py — load alerting after errors+domain to break circular import`).
 
 **Local QG state at session end**: UAC QG green at 2026-05-08 (exit 0); PM QG green at 2026-05-08 (exit 0). Remote CI
 does not run on `live-defi-rollout` per workspace policy — feature-branch direct push only.
+
+### Finding: oracle_prices_handler missing per-instrument progress events (P1 follow-up)
+
+**Discovered 2026-05-08 14:18 UTC** during Tab 1 main agent's verification of `mtds-pyth-archive-20260508-141204` —
+the launched VM emits `STARTED` + `RESOURCE_PROFILER_SAMPLE` (every 30s) but NO per-fetch / per-instrument events.
+Run.log shows the handler IS doing real work (Chainlink + Pyth fetches on multiple chains, writing
+`oracle_prices` parquets to `gs://oracle-prices-${PID}/raw_tick_data/...`, ManifestWriter recording captures), but
+none of that progress shows in the event stream — only the resource-profiler heartbeat.
+
+Per CLAUDE.md "No fire-and-forget VM launches": **"Adapters MUST emit per-instrument progress events with row counts
+so silent-success-with-zero-output is detectable from the event stream alone."** The current oracle_prices_handler
+does NOT meet this contract.
+
+**Impact**: silent-success-with-zero-output (e.g. handler hangs at fetch 0 of 365 dates) is not detectable from the
+event stream — operator must SSH-tail logs (a dev crutch per CLAUDE.md). Reference shape: lending_indices_handler
+emits 350 events in 4min covering protocol/chain/date cascade — that's the right pattern.
+
+**Suggested fix** (P1 follow-up, not blocking May-23 cutover):
+
+- Add `INSTRUMENT_PROCESSED` events at the per-(date, chain, venue, feed_count) grain in
+  `market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py`.
+- Add `EXPECTED_PRE_GENESIS_CHAIN` events for the pre-archive Pyth Hermes window (using
+  `unified_api_contracts.registry.capability_declarations.get_oracle_coverage_start("pyth_hermes")`).
+- Mirror the cascade-event shape from `lending_indices_handler` (per-(chain, protocol, date)
+  `EXPECTED_PROTOCOL_FALLBACK` + `INSTRUMENT_PROCESSED` per shipped row).
+
+**Owner**: defi_master Pyth Hermes coverage SSOT todo (extend with progress-event wiring as Phase 2 of that todo).
