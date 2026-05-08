@@ -32,3 +32,4 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 # Active pings
 
 [2026-05-08 21:21 UTC] wave-8-basefc-validationflip — DONE audit; 74 calcs (not 12), paradigm split, 3-step migration; NO code shipped (foreign WIP on UTL registry.py + scope multi-day); successor plan needed post-Phase-6; see plans/active/issues/basefc_validation_flip_audit_2026_05_08.md (PM@142f7289)
+[2026-05-09 00:18 UTC] instruments-preflight-gate-tab F0 — DONE A.9 + A.10 SHIPPED (UAC@a07711d facade + UAC@8f89ec4 module + UTL@db0f4364 helper); F2 cefi-available-at-stamping-tab UNBLOCKED — `from unified_trading_library.instruments_preflight import run_preflight, PreflightFailedError, UTLManifestReader`; see plans/epics/instruments_live_master_2026_05_08.md § A.9 + A.10

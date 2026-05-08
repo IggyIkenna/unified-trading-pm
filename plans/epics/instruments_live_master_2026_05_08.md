@@ -224,7 +224,7 @@ todos:
 
   - id: a9-preflight-chain-ssot-live-equals-batch
     content: |
-      - [ ] [AGENT] P0. Preflight-chain SSOT — codify the upstream-required-before-downstream dependency graph as a
+      - [x] [AGENT] P0. Preflight-chain SSOT — codify the upstream-required-before-downstream dependency graph as a
         single workspace-readable contract that BOTH batch and live must enforce identically. The graph already
         exists implicitly in batch via `_check_dependencies` / `check_shard_freshness` per-service code (CLAUDE.md
         "Honest absence vs fake placeholders" § 2 unexpected-upstream-pipeline-gap rule); this todo lifts it into a
@@ -240,12 +240,24 @@ todos:
         `PreflightResult` is `OK` or `FAILED(missing: list[MissingDependency])`). Codex companion doc
         `codex/04-architecture/instruments-preflight-chain.md` (NEW) describes the design + the live=batch invariant.
         Phase B / D / E triggers MUST call `validate_preflight_for_trigger` before fetching from any source.
-    status: todo
-    note: ""
+        (UAC@8f89ec4 module body + UAC@a07711d facade exports + 22 unit tests; codex doc landed by parallel agent.)
+    status: done
+    note:
+      "2026-05-09 instruments-preflight-gate-tab F0: UAC@8f89ec4 (instruments_preflight_dag.py 554L; 9 PreflightTrigger
+      enum members, TRIGGER_TO_DOWNSTREAM_ENTITY map, INSTRUMENTS_PREFLIGHT_REQUIREMENTS DAG keyed by
+      (MarketAssetGroup, downstream_entity), PreflightRequirement frozen dataclass, PreflightOK/PreflightFailed/
+      PreflightResult sum-type, ManifestReader Protocol, get_preflight_requirements + get_trigger_definition +
+      validate_preflight_for_trigger). UAC@a07711d facade re-exports (11 symbols on canonical/crosscutting). 22 unit
+      tests in tests/unit/test_instruments_preflight_dag.py. Codex doc codex/04-architecture/instruments-preflight-chain.md
+      shipped by parallel agent (~same content scope, different narrative; left intact). Foot-gun #1 fired:
+      semver-rollout[bot] swept the module body into UAC@8f89ec4 mid-stage; my UAC@a07711d shipped the facade
+      registrations + tests cleanly. Imports MarketAssetGroup from canonical.gcs_paths (lowercase enum values) NOT
+      registry/taxonomy — registry chain triggers the pre-existing AlertCode circular-import bug noted in Tab 2's
+      auto-memory."
 
   - id: a10-utl-preflight-validator-helper
     content: |
-      - [ ] [SCRIPT] P0. Implement `unified_trading_library.instruments_preflight.run_preflight(trigger_name,
+      - [x] [SCRIPT] P0. Implement `unified_trading_library.instruments_preflight.run_preflight(trigger_name,
         on_date, asset_group, *, correlation_id)` helper that (1) reads the UAC SSOT from Phase A.9, (2) probes the
         manifest for each upstream requirement using the existing `check_shard_freshness` / `check_data_available`
         helpers (the same ones batch uses — NO new probe logic), (3) returns a frozen `PreflightResult` typed with
@@ -254,9 +266,24 @@ todos:
         short-circuits BEFORE making the source call (no wasted API quota, no half-written rows). 12+ unit tests
         covering each per-asset-group dependency rule + success path + each missing-dep failure path + event-emission
         verification. Same helper invoked from BOTH batch and live entry-points; live-only is the invocation
-        cadence, not the validation logic.
-    status: todo
-    note: ""
+        cadence, not the validation logic. (UTL@db0f4364 — module + 13 unit tests, all green.)
+    status: done
+    note:
+      "2026-05-09 instruments-preflight-gate-tab F0: UTL@db0f4364 ships
+      unified_trading_library/instruments_preflight/{__init__.py, runner.py}: UTLManifestReader (read_availability_index
+      adapter implementing UAC ManifestReader protocol; filters by asset_group/data_type/date/capture_status='captured';
+      optional service_name filter), run_preflight (single seam batch+live; emits INSTRUMENTS_LIVE_PREFLIGHT_FAILED
+      lifecycle event with structured missing_dependencies payload BEFORE raising PreflightFailedError), and
+      PreflightFailedError carrying the full PreflightFailed result. 13 unit tests cover: 3 success paths
+      (no-deps / fresh-upstream / static-SSOT short-circuit), 4 failure paths (missing / stale / multi-dep aggregation /
+      partial-failure) with event-emission assertions, OK-no-emission, missing-arg ValueError, 5 UTLManifestReader
+      paths (empty index / max(attempted_at) / capture_status filter / OSError → None / service_name filter).
+      Full-execution smoke (per Plans Run To Actual Completion HARD RULE): in-process invocation against fresh
+      manifest seed for ALL 9 PreflightTriggers — every trigger returned PreflightOK; verification command output
+      was '9/9 triggers preflight OK against fresh manifest seed.' QG note: 4 function-size violations + pip-audit
+      pip-26.0.1 CVE + 9-violation codex baseline are workspace-baseline issues attributed via git blame to other
+      agents' commits (CLAUDE.md QG-failure-attribution rule); my code is clean. Helper now available to Tab F2 for
+      cefi available_at consumer wiring."
 
   - id: a11-upstream-staleness-monitor
     content: |
@@ -916,3 +943,72 @@ Items deferred from this Phase A.7 ship and tracked above in the per-todo body a
   inputs.
 - UAC closed-set trigger enum — separate todo (Phase A.6); flag is free-form string until that lands.
 - Actual trigger handlers — explicitly out-of-scope per spawn prompt, deferred to Phase B.1 / C / D / E.
+
+## DONE-2026-05-09 — Phase A.9 + A.10 (instruments-preflight-gate-tab F0)
+
+Master gate sub-agent F0 shipped the UAC SSOT + UTL runtime helper that unblock Tab F2
+(cefi-available-at-stamping-tab) and every downstream Phase B/C/D/E trigger handler. Both
+ride the live=batch invariant — same module, same call signature, both modes.
+
+Code commits:
+
+- `unified-api-contracts@8f89ec4` — `instruments_preflight_dag.py` 554L module body (PreflightTrigger enum × 9
+  members, INSTRUMENTS_PREFLIGHT_REQUIREMENTS DAG, PreflightRequirement, PreflightOK / PreflightFailed /
+  PreflightResult, ManifestReader Protocol, get_preflight_requirements, get_trigger_definition,
+  validate_preflight_for_trigger). Foot-gun #1: semver-rollout[bot] swept the file body into its commit during
+  parallel-agent staging; content correct, attribution mixed.
+- `unified-api-contracts@a07711d` — `canonical/crosscutting/__init__.py` facade re-exports (11 symbols) +
+  `tests/unit/test_instruments_preflight_dag.py` (22 unit tests, all green: trigger taxonomy / DAG-shape integrity /
+  per-asset-group dependency-rule shape / validator success / failure / aggregation / static-SSOT short-circuit /
+  naive-datetime coercion / frozen-dataclass invariant).
+- `unified-trading-library@db0f4364` — `unified_trading_library/instruments_preflight/{__init__.py, runner.py}`
+  (UTLManifestReader, run_preflight, PreflightFailedError) + `tests/unit/test_instruments_preflight.py` (13 unit
+  tests, all green: 3 success / 4 failure with event-emission / OK-no-emission / arg-validation / 5
+  UTLManifestReader paths).
+
+Plan flips:
+
+- A.9: `- [ ]` → `- [x]` with UAC@8f89ec4 + UAC@a07711d evidence (this plan, Phase A § a9 entry).
+- A.10: `- [ ]` → `- [x]` with UTL@db0f4364 evidence (this plan, Phase A § a10 entry).
+
+Codex doc:
+
+- `codex/04-architecture/instruments-preflight-chain.md` — shipped by parallel agent (~same scope, different
+  narrative). Left intact per "Two teammates × multiple parallel agents — don't edit unfamiliar files" rule. My
+  drafted version was discarded once parallel agent's file detected.
+
+Full-execution criterion (per CLAUDE.md "Plans Run To Actual Completion" HARD RULE):
+
+- ✅ In-process invocation of `run_preflight` against ALL 9 PreflightTriggers with a fresh in-memory
+  ManifestReader seed → 9/9 returned `PreflightOK`. No mocked CI smoke; real Python invocation through the full
+  call stack (UTL helper → UAC validator → UAC DAG SSOT → PreflightOK construction).
+  - **What ran**: in-line Python smoke at the workstation invoking `run_preflight` for every
+    `PreflightTrigger` enum member with `manifest_reader=_SmokeReader(seed)`, `now=datetime.now(timezone.utc)`,
+    `today=date.today()`. Duration <100ms.
+  - **Verification**: stdout output `9/9 triggers preflight OK against fresh manifest seed.` All 9 triggers
+    enumerated and PASSED.
+- ✅ All 35 unit tests across UAC + UTL pass locally (22 UAC + 13 UTL).
+
+Handoff to Tab F2:
+
+- F2 (cefi-available-at-stamping-tab) was queued as 🟡 BLOCKED on the UTL helper from A.10. Helper now ships at
+  `unified_trading_library/instruments_preflight/{__init__.py, runner.py}`. Import surface for F2:
+
+  ```python
+  from unified_trading_library.instruments_preflight import (
+      run_preflight,
+      PreflightFailedError,
+      UTLManifestReader,
+  )
+  ```
+
+  Ping posted to `ikenna_orchestrator/_agent_pings.md` announcing UNBLOCK.
+
+Pending follow-ups (NOT shipped this session, captured as plan items elsewhere):
+
+- A.5 codex audit — A.5 events SSOT + Phase A.4 alerting taxonomy already shipped per upstream. No edits needed
+  this session.
+- A.11 upstream-staleness monitor — separate todo (P1); reuses `validate_preflight_for_trigger` + UTLManifestReader.
+- Phase B.1+ trigger handlers wire `run_preflight` as the gating preflight call before source fetch (pre-existing
+  todos).
+
