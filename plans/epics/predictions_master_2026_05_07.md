@@ -93,9 +93,123 @@ Covers:
   documented; Phase 1 lifecycle ingestion writer + Phase 2 reader/feature/strategy migration NOT yet shipped.
 - **UAC `PREDICTION_GROUPS`**: empty registry (`{}`) per CLAUDE.md "Temporary state"; canonical-question-group registry
   seeding pending Phase 1.
-- **MTDS POLYMARKET adapter**: writes `data_type=<base_asset>` legacy shape; needs migration to
-  `data_type=prediction_canonical_question_group` per CLAUDE.md "Prediction market lifecycle timing" rule.
+- **MTDS POLYMARKET + KALSHI adapters**: write per-row `data_type="trades"` (canonical, aligned with CeFi) via
+  `polymarket_adapter.py:531` + `kalshi_adapter.py:256` — NOT the legacy `<base_asset>` shape claimed earlier (that
+  was migrated away from previously per Tab 1 sub-agent investigation 2026-05-08). The remaining Phase 2 gap is at
+  the manifest-bundling layer: shards need re-bundling by `canonical_question_group` per UAC `BUNDLED_DATA_TYPES`
+  SSOT, mirroring `instruments-service@b904785` `engine/orchestrator.py:2133-2186` pattern. See § "Open questions"
+  Q1 for the re-scope decision.
+- **MTDS UMI tick provider routing**: caller-side legacy `category="prediction_market"` kwarg dropped from
+  `umi_tick_provider.py:264-279` (mtds@`3f631b9` 2026-05-08). Factory-internal `VENUE_REGISTRY` tag rename deferred
+  to `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` Waves C/D ([UAC] cross-cutting scope).
 - **288M ODDS_API legacy row migration**: scoped per `sports_predictions_e2e`; sports half tracked in `sports_master`.
+
+## Open questions
+
+### Q1 — [instruments-live-tab, 2026-05-08 11:30 UTC] — Re-scope of "Replace POLYMARKET writer" todo (line 159)
+
+**Status**: ✅ RESOLVED — operator picked option (a) at 2026-05-08 ~14:30 UTC. See A1 below.
+
+The Phase 2 todo "Replace POLYMARKET writer (`orchestrator.py:1990–1995`): old `data_type = <base_asset>` → new
+`data_type = prediction_canonical_question_group`" was investigated by Tab 1's umi-rename sub-agent (mtds@`3f631b9`
+adjacent investigation, 2026-05-08). Finding: the original framing as a string rename is wrong.
+
+**Concrete state on disk:**
+- No per-`base_asset` writer exists in MTDS source. The legacy `data_type=BTC|ETH|SPX` shape was migrated away from
+  previously. Current MTDS prediction adapters (`market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py:531`
+  + `kalshi_adapter.py:256`) write per-row `data_type="trades"` (canonical, aligned with CeFi) via the standard
+  `PartitionedTickWriter` path.
+- The plan-referenced `market-tick-data-service/market_tick_data_service/engine/orchestrator.py:1990–1995` is the
+  bookmaker-odds writer (`venue=bookmaker / instrument_type=odds / data_type=trades / league_id=...`), NOT a
+  POLYMARKET writer. The plan's file:line ref is stale.
+- The orchestrator's prediction-shard manifest aggregation at `orchestrator.py:2084-2238` uses `data_type_key="trades"`
+  from per-row data — neither legacy `<base_asset>` nor canonical `prediction_canonical_question_group`.
+
+**The actual canonical fix** (mirroring `instruments-service@b904785` `engine/orchestrator.py:2133-2186` shape):
+manifest-level shard re-bundling by `canonical_question_group` — writing
+`data_type=prediction_canonical_question_group` + `underlying=<canonical_group>` per UAC `BUNDLED_DATA_TYPES` SSOT
+(`UAC@bb24aba` already added `DATA_TYPE_TO_CLUSTER_REGISTRY` incl `PREDICTION_GROUPS`), with cluster-validation
+kwargs at `record_captured`. This is non-trivial DESIGN work — writer-level grouping over per-row trade data, not a
+string rename.
+
+**Implicit acknowledgment in plan body**: line 146 ("Integration tests against a live ManifestWriter on the
+orchestrator path deferred — bundled within MTDS Phase 2 cluster-gate verification") already concedes this is
+deferred design work. The "[SCRIPT] P0. Replace POLYMARKET writer" framing is misleading.
+
+**Decision needed**:
+
+(a) **Manifest re-bundling lands in MTDS orchestrator** — mirror instruments-service@b904785: bundle Polymarket /
+Kalshi rows into one `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)`
+manifest row per canonical group; per-row tick `data_type="trades"` stays as-is on disk; manifest layer is the
+re-bundling surface. Cluster gate counts `market_id`s active per (canonical_question_group, day). [Likely answer per
+the per-asset-group shard-key matrix in CLAUDE.md.]
+
+(b) **Stay implicit via the per-row `data_type="trades"`** with `canonical_question_group` attached as a separate
+manifest column — does NOT match the per-asset-group shard-key matrix in CLAUDE.md, but is closer to current state.
+
+(c) Other re-scope.
+
+Most likely answer is (a) but it's [UAC] + [UTL] + [per-service] cross-cutting design work, which per the Daily
+Work-Split Process split principle is Ikenna-side. Tab 1 (Harsh-side) can ship the per-service writer migration once
+the cross-cutting helper signature is locked.
+
+**Tab 1 status while waiting**: Polymarket adapter lifecycle gating (`polymarket_adapter.py:454-602`) + Kalshi
+adapter lifecycle gating (`kalshi_adapter.py:242-269`) are the SIBLING todos that don't depend on this Q — they
+could ship in parallel once the multi-agent collision risk on `kalshi_adapter.py` (already in basedpyright
+diagnostics from a concurrent agent's edits) is resolved by main agent. Tab 1 holding pending main's direction on
+which adapter sub-agent is safe to spawn.
+
+#### A1 — [main, 2026-05-08 ~14:30 UTC]
+
+**Status**: ✅ RESOLVED — operator (Harsh) confirmed option **(a)** is the correct shape.
+
+**Decision**: ship the MTDS-side migration mirroring the `instruments-service@b904785`
+[`engine/orchestrator.py:2133-2186`](../../instruments-service/instruments_service/engine/orchestrator.py) shape.
+Manifest-layer re-bundling by `canonical_question_group`:
+
+- Per-row tick `data_type="trades"` stays unchanged on disk (no parquet schema migration; aligned with CeFi).
+- MTDS orchestrator groups Polymarket + Kalshi tick rows by `canonical_question_group` (via UAC
+  `classify_polymarket_to_canonical_group` / `classify_kalshi_to_canonical_group` SSOT).
+- One manifest row per `(asset_group=prediction, venue, data_type=prediction_canonical_question_group,
+  canonical_question_group, day)` bundle, with `underlying=<canonical_group>` (analogous to options-chain
+  root-bucketing).
+- Cluster-validation gate at `record_captured` counts `market_id`s active per `(canonical_question_group, day)`
+  per `expected_market_ids_for_canonical_group` from the lifecycle reader. UAC `BUNDLED_DATA_TYPES` /
+  `DATA_TYPE_TO_CLUSTER_REGISTRY` SSOT (`UAC@bb24aba`) already declares `PREDICTION_GROUPS` — half the
+  cross-cutting helper is already in place.
+
+**Cross-side ordering**: this is cross-cutting [UAC] + [UTL] + [per-service] design work. Per the Daily Work-Split
+Process split principle, the cross-cutting helper signature (UAC `BUNDLED_DATA_TYPES` completeness check + UTL
+`record_captured` cluster-coverage kwargs for `prediction_canonical_question_group`) is **Ikenna-side**. Tab 1
+(Harsh-side) ships the **per-service migration** in MTDS orchestrator once that helper signature is locked.
+Operator will flag this to Ikenna via the cross-side handshake protocol.
+
+**Tab 1 immediate actions**:
+
+1. **Resume Phase 2 adapter-level lifecycle gating in parallel** (independent of this Q1 — already partly on disk
+   via uncommitted Tab 1 WIP in MTDS):
+   - Polymarket adapter (`polymarket_adapter.py:454-602`) lifecycle gating per UAC
+     `classify_polymarket_to_canonical_group` + per-market `available_from_datetime`/`available_to_datetime` from
+     `instruments-service@98bb167` lifecycle ingestion.
+   - Kalshi adapter (`kalshi_adapter.py:242-269`) lifecycle gating — same shape.
+   - 2 untracked unit-test files already on disk
+     (`test_polymarket_adapter_lifecycle_gating.py` + `test_kalshi_adapter_lifecycle_gating.py`).
+   - Multi-agent collision risk on `kalshi_adapter.py` per Tab 1's flag: main confirms current dirty WIP IS Tab 1's
+     own (4 modified MTDS files + 2 untracked tests verified post-pull). No concurrent-agent diagnostics block;
+     proceed.
+
+2. **Defer the writer migration to next cycle** until Ikenna locks the cross-cutting helper signature. When
+   that lands (Ikenna will announce via cross-side handshake on this plan-of-record's `## Open questions` § or via
+   the work-split's cross-side handshake table), Tab 1 spawns a fresh sub-agent for the MTDS orchestrator-bundling
+   layer migration mirroring `instruments-service@b904785`.
+
+3. **UMI tick provider rename** (`umi_tick_provider.py:225` data_type rename) ships in parallel with adapter
+   gating — independent of writer migration; ship it.
+
+**Decision rationale**: option (a) matches CLAUDE.md "Per-asset-group shard-key matrix → Prediction"
+(`(asset_group=prediction, venue, data_type, canonical_question_group, day)`) which is the workspace SSOT;
+option (b) would have left a permanent semantic mismatch between the manifest layer and the shard-key matrix and
+would not have supported cluster-validation cleanly; option (c) was open but not preferred per the SSOT.
 
 ## Critical path
 
@@ -150,16 +264,87 @@ Covers:
 - [ ] [SCRIPT] P0. Polymarket adapter (`polymarket_adapter.py:454–602`): read lifecycle from instruments-service; reject
       ticks outside `[market_created_at, settlement_time]` window per CLAUDE.md "Prediction market lifecycle timing"
       rule. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:lifecycle-ingestion writer in instruments-service (Phase
-      1)]
+      1) → BLOCKER CLEARED 2026-05-08 by instruments-service@`98bb167` + `b904785`]
+      **WIP-READY ON-DISK 2026-05-08 (Tab 1 instruments-live-tab — pending main-agent commit + push)**:
+      `market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py` (~268-line diff vs HEAD)
+      adds frozen `_LifecycleBounds` dataclass + `_load_lifecycles_from_gcs(date)` static method reading
+      `instrument_availability/by_date/day=…/venue=POLYMARKET/instruments.parquet` (the same parquet
+      `_load_instruments_from_gcs` reads) extracting `available_from_datetime` (= `market_created_at`) +
+      `available_to_datetime` (= `settlement_time`) per `condition_id`; `download_batch` now drops ticks with
+      `tick_ts < market_created_at` or `tick_ts >= settlement_time` per market and counts the rejected counts in a
+      summary log line; emits `canonical_question_group` column derived via UAC
+      `classify_polymarket_to_canonical_group(title, slug, event_slug, outcome, condition_id)` (sub-classifier
+      output → `OTHER` for unrecognised); stamps per-row `available_at = max(ts_event, market_created_at)` (the
+      `created_floor` clamp) per CLAUDE.md "available_at is per-row, write-time, equal to live-pipeline-arrival"
+      rule; `_coerce_to_aware_utc` helper handles parquet/JSON/`pd.NaT` lifecycle-cell coercion (covered by 1
+      dedicated test). 7 dedicated regression tests in
+      `tests/unit/test_polymarket_adapter_lifecycle_gating.py` (260 lines, 7/7 GREEN under
+      `pytest tests/unit/test_polymarket_adapter_lifecycle_gating.py -v`): pre-creation 1d / 1min before, post-
+      settlement, in-window with `available_at` stamp, `canonical_question_group` column emit, no-lifecycle =
+      no-gating graceful-degrade, `_coerce_to_aware_utc` ISO/`pd.Timestamp`/datetime/None/NaT handling. **Cluster-
+      validation kwargs at `record_captured` for the bundled `prediction_canonical_question_group` data_type**
+      DEFERRED to Q1 → option (a) writer migration (Ikenna-side cross-cutting helper signature lock first); Phase 2
+      adapter-level work scope correctly stops at the per-row column emission + lifecycle gate.
 - [ ] [SCRIPT] P0. Kalshi adapter (`kalshi_adapter.py:242–269`): same migration. [AUDIT 2026-05-07: BLOCKED-ON
-      predictions_master:Phase 1 lifecycle ingestion]
-- [ ] [SCRIPT] P0. `umi_tick_provider.py:225`: replace `category="prediction_market"` with `asset_group="prediction"` +
+      predictions_master:Phase 1 lifecycle ingestion → BLOCKER CLEARED 2026-05-08 by instruments-service@`98bb167`]
+      **WIP-READY ON-DISK 2026-05-08 (Tab 1 — pending main-agent commit + push)**:
+      `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py` (~233-line diff vs HEAD)
+      adds module-level `_coerce_datetime` + `_extract_lifecycles_from_dataframe` + `_extract_lifecycles_from_records`
+      helpers + `_load_lifecycles_from_gcs(date) -> dict[ticker, (created, settlement)]` (replaces legacy
+      `_load_tickers_from_gcs` which is retained as a one-line legacy wrapper); reads
+      `instrument_availability/by_date/day=…/venue=KALSHI/instruments.parquet` (parquet path) with JSON fallback
+      (`instruments.json` / `.jsonl`); `download_batch` now drops ticks with `tick_ts < market_created_at` or
+      `tick_ts >= settlement_time` per ticker and counts rejected; emits `canonical_question_group` column via
+      UAC `classify_kalshi_to_canonical_group(ticker)` (`KALSHI_TICKER_TO_GROUP` override-only registry currently
+      empty per CLAUDE.md "Synthetic OTHER bucket" rule, so most rows route to `CanonicalQuestionGroup.OTHER` —
+      that's the valid catch-all bucket); stamps per-row `available_at = max(tick_ts, market_created_at)`
+      (`created_floor` clamp); CLI-passed `instrument_ids` short-circuit to `(None, None)` lifecycle = no gating
+      (caller-decision matching the polymarket short-circuit shape). 9 dedicated regression tests in
+      `tests/unit/test_kalshi_adapter_lifecycle_gating.py` (357 lines, 9/9 GREEN under
+      `pytest tests/unit/test_kalshi_adapter_lifecycle_gating.py -v`): pre-creation 1d / 1min, post-settlement,
+      in-window with `available_at`, `available_at` floored to `market_created_at`, `OTHER` canonical-group
+      capture, no-gating-when-instrument_ids-passed, lifecycle-loader-reads-parquet-columns, per-market filter
+      applies independently (3 tickers — active / pre-creation-bound / post-settlement-bound — each gated by its
+      own market's lifecycle, not a global window). Same Phase-2-scope-stops-at-per-row-emission discipline as
+      Polymarket (writer migration deferred).
+- [x] [SCRIPT] P0. `umi_tick_provider.py:225`: replace `category="prediction_market"` with `asset_group="prediction"` +
       `data_type="prediction_canonical_question_group"`. [AUDIT 2026-05-07: FRESH — actionable; UAC@bb24aba already
-      added DATA_TYPE_TO_CLUSTER_REGISTRY incl PREDICTION_GROUPS]
+      added DATA_TYPE_TO_CLUSTER_REGISTRY incl PREDICTION_GROUPS] (mtds@`3f631b9` 2026-05-08 by Tab 1 umi-rename
+      sub-agent — caller-side legacy `category="prediction_market"` kwarg dropped from `umi_tick_provider.py:264-279`
+      `get_adapter()` call in the prediction-venue (POLYMARKET/KALSHI) branch; mock assertion in
+      `tests/unit/test_umi_tick_provider_routes.py:157` updated; 3 prediction-routing tests pass. Factory-internal
+      `VENUE_REGISTRY` tag rename `prediction_market` → `prediction` deferred to
+      `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` Waves C/D per CLAUDE.md "Asset-group vocabulary" rule —
+      that rename touches the adapter factory's venue-registry (cross-cutting, [UAC] layer) which is Ikenna-side
+      design scope; the caller-side fix was Harsh-side mechanical scope.)
 - [ ] [SCRIPT] P0. Replace POLYMARKET writer (`orchestrator.py:1990–1995`): old `data_type = <base_asset>` → new
       `data_type = prediction_canonical_question_group`. [AUDIT 2026-05-07: FRESH — actionable]
+      **PHANTOM-PARTIAL finding 2026-05-08 (Tab 1 umi-rename sub-agent, sha mtds@`3f631b9` adjacent investigation)**:
+      No per-`base_asset` writer exists in MTDS source. The legacy `data_type=BTC|ETH|SPX` shape was migrated away
+      from previously; current MTDS prediction adapters write per-row `data_type="trades"` via the standard
+      `PartitionedTickWriter` path (per `polymarket_adapter.py:531` + `kalshi_adapter.py:256`). The plan-referenced
+      `engine/orchestrator.py:1990–1995` is the bookmaker-odds writer, not a POLYMARKET writer. The intended canonical
+      fix — manifest-level shard re-bundling by `canonical_question_group`, writing
+      `data_type=prediction_canonical_question_group` + `underlying=<canonical_group>` per UAC `BUNDLED_DATA_TYPES`,
+      with cluster-validation kwargs at `record_captured` mirroring `instruments-service@b904785`
+      `engine/orchestrator.py:2133-2186` pattern — is non-trivial DESIGN work (writer-level grouping over per-row
+      trade data, not a string rename). Plan-body line 146 already declares "Integration tests against a live
+      ManifestWriter on the orchestrator path deferred — bundled within MTDS Phase 2 cluster-gate verification" — so
+      the deferred sub-design is implicitly tracked. **Re-scope this todo**: kept `[ ]` because the canonical fix
+      isn't shipped; the original "string rename" framing is wrong. Need Ikenna-side design call on whether the
+      manifest re-bundling lands here (MTDS orchestrator) or stays implicit via the per-row `data_type="trades"`
+      shape with `canonical_question_group` attached as a separate manifest column. Flagged for plan-of-record Q&A
+      not chat — see `## Open questions` below.
 - [ ] [TEST] P0. MTDS unit tests: lifecycle gating (pre-created tick rejected, post-settled tick rejected); cluster
       validation per `(canonical_question_group, day)`. [AUDIT 2026-05-07: BLOCKED-ON above adapter migrations]
+      **WIP-READY ON-DISK 2026-05-08 (Tab 1 — pending main-agent commit + push)**: 16 lifecycle-gating tests covering
+      both adapters (7 polymarket + 9 kalshi, all GREEN under `pytest -v` — see WIP-READY annotations on the two
+      adapter todos above for the per-test list). Cluster-validation tests for the bundled
+      `prediction_canonical_question_group` data_type are NOT included in this Phase 2 scaffold because the
+      cluster-coverage gate at `record_captured` is the deferred orchestrator-level work tracked in Q1 (option
+      (a) writer migration) — that landing will add cluster-validation tests in MTDS at the orchestrator layer,
+      mirroring `instruments-service@b904785`'s 9 canonical-group shard tests. Lifecycle-gating half is fully
+      covered.
 
 ### Reader / feature / strategy migration
 
@@ -176,10 +361,10 @@ Covers:
 ### Manifest + parquet migration
 
 **Cross-plan coordination**: Polymarket parquet rewrite + manifest reflip is **Stage 3** of the workspace-wide manifest
-migration. See [`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for
-sequencing DAG, VM impact, and operator gates. Key constraints: PAUSE `mtds-prediction-*` VMs during rewrite window;
-resume ONLY after MTDS Polymarket adapter migration ships (so resumed VMs write `canonical_question_group` shape, not
-legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder-method deletions complete.
+migration. See [`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for sequencing
+DAG, VM impact, and operator gates. Key constraints: PAUSE `mtds-prediction-*` VMs during rewrite window; resume ONLY
+after MTDS Polymarket adapter migration ships (so resumed VMs write `canonical_question_group` shape, not legacy
+per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder-method deletions complete.
 
 - [ ] [SCRIPT] P0. New script `mtds_migrate_polymarket_per_base_asset_to_canonical_group.py` (in scripts/). [AUDIT
       2026-05-07: BLOCKED-ON manifest_migration_master_2026_05_07:Stage 3 + writegate Phase 2.A]
@@ -230,11 +415,11 @@ legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
-**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` row C.12. Operator inspected the
-deployment-ui prediction panel + saw POLYMARKET tagged "out of scope" (badge driven by UAC
-`VENUE_DATA_TYPE_CAPABILITIES` declaring `data_type=prediction_canonical_question_group` while MTDS still writes legacy
-per-base-asset shape `BTC` / `ETH` / `SPX`). Per user direction 2026-05-07: NOT actually out of scope — small Polymarket
-dataset means full migration is feasible in one VM run.
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` row C.12. Operator inspected the deployment-ui
+prediction panel + saw POLYMARKET tagged "out of scope" (badge driven by UAC `VENUE_DATA_TYPE_CAPABILITIES` declaring
+`data_type=prediction_canonical_question_group` while MTDS still writes legacy per-base-asset shape `BTC` / `ETH` /
+`SPX`). Per user direction 2026-05-07: NOT actually out of scope — small Polymarket dataset means full migration is
+feasible in one VM run.
 
 #### C.12 — POLYMARKET "out of scope" badge resolution + synthetic OTHER bucket
 
@@ -331,30 +516,50 @@ before CME arb can link.
 
 ## May-23 deliverable (folded from `prediction_markets_may_23_2026.epic` 2026-05-08)
 
-> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/prediction_markets_may_23_2026.epic.md`. Archived: [`plans/archive/prediction_markets_may_23_2026.epic.md`](../archive/prediction_markets_may_23_2026.epic.md).
+> **Folded epic** (operator direction 2026-05-08): consolidated from
+> `plans/epics/prediction_markets_may_23_2026.epic.md`. Archived:
+> [`plans/archive/prediction_markets_may_23_2026.epic.md`](../archive/prediction_markets_may_23_2026.epic.md).
 
-**Why:** Prediction-markets ship **full backtest** for May 23 — features → strategy → execution all backtest, no live. Like sports ML, end-to-end pipeline coverage at every layer; unlike S&P prediction which only goes to ML training. Cross-asset features (S&P, sports, crypto) consumed since prediction-markets often resolve based on outcomes other features predict.
+**Why:** Prediction-markets ship **full backtest** for May 23 — features → strategy → execution all backtest, no live.
+Like sports ML, end-to-end pipeline coverage at every layer; unlike S&P prediction which only goes to ML training.
+Cross-asset features (S&P, sports, crypto) consumed since prediction-markets often resolve based on outcomes other
+features predict.
 
 ### End-state at May 23 (success criteria)
 
-- [ ] **Polymarket backtest** runs end-to-end through unified pipeline for at least one canonical-question-group archetype (BTC up-down hourly OR SPX up-down daily OR similar).
+- [ ] **Polymarket backtest** runs end-to-end through unified pipeline for at least one canonical-question-group
+      archetype (BTC up-down hourly OR SPX up-down daily OR similar).
 - [ ] **Kalshi backtest** runs for at least one event family (e.g. CPI prints, FOMC outcomes).
 - [ ] **Opinion Trade backtest** runs for at least one event family.
-- [ ] **CME event futures arbitrage backtest** runs for at least one cross-venue pair (e.g. CME inflation event future vs Kalshi CPI market).
-- [ ] **Prediction data pipeline clean**: instruments (per-market lifecycle: market_created_at / resolution_time / settlement_time) + tick data (CLOB captures respecting lifecycle bounds) + features (canonical-question-group bundle SSOT).
-- [ ] **Cross-asset features wired**: S&P features, sports features, crypto features all consumable by prediction strategies as inputs.
-- [ ] **LookaheadBiasError strict** at every features compute — feature compute at time T can only consume ticks where `tick.timestamp ≤ T AND tick.market_id`'s `market_created_at ≤ T` (CLAUDE.md "Prediction market lifecycle timing" SSOT).
-- [ ] **Cluster validation MANDATORY** for `prediction_canonical_question_group` bundle data_type at `record_captured` (UAC `BUNDLED_DATA_TYPES` includes prediction).
+- [ ] **CME event futures arbitrage backtest** runs for at least one cross-venue pair (e.g. CME inflation event future
+      vs Kalshi CPI market).
+- [ ] **Prediction data pipeline clean**: instruments (per-market lifecycle: market_created_at / resolution_time /
+      settlement_time) + tick data (CLOB captures respecting lifecycle bounds) + features (canonical-question-group
+      bundle SSOT).
+- [ ] **Cross-asset features wired**: S&P features, sports features, crypto features all consumable by prediction
+      strategies as inputs.
+- [ ] **LookaheadBiasError strict** at every features compute — feature compute at time T can only consume ticks where
+      `tick.timestamp ≤ T AND tick.market_id`'s `market_created_at ≤ T` (CLAUDE.md "Prediction market lifecycle timing"
+      SSOT).
+- [ ] **Cluster validation MANDATORY** for `prediction_canonical_question_group` bundle data_type at `record_captured`
+      (UAC `BUNDLED_DATA_TYPES` includes prediction).
 - [ ] **Strategy + execution layers PROGRESSED** through unified pipeline — backtest end-to-end, no inline settlement.
 
 ### IN/OUT scope
 
-- **IN**: full backtest of 4 prediction-market archetypes (Polymarket / Kalshi / Opinion Trade / CME event futures arb); prediction-market data pipeline (instrument lifecycle 3 timestamps per market_id, CLOB tick capture, canonical-question-group bundle aggregation); cross-asset feature consumption (S&P / sports / crypto); strategy + execution backtest through unified pipeline.
-- **OUT**: live trading; live tick capture; production deployment of any prediction strategy; full canonical-question-group SSOT for every market_id (cover at minimum the archetypes in scope; remaining mappings post-May-23).
+- **IN**: full backtest of 4 prediction-market archetypes (Polymarket / Kalshi / Opinion Trade / CME event futures arb);
+  prediction-market data pipeline (instrument lifecycle 3 timestamps per market_id, CLOB tick capture,
+  canonical-question-group bundle aggregation); cross-asset feature consumption (S&P / sports / crypto); strategy +
+  execution backtest through unified pipeline.
+- **OUT**: live trading; live tick capture; production deployment of any prediction strategy; full
+  canonical-question-group SSOT for every market_id (cover at minimum the archetypes in scope; remaining mappings
+  post-May-23).
 
 ### Cross-epic handshakes
 
-- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue (4 prediction archetypes × all canonical-question-groups + venues enumerated). Cross-asset features depend on `tradfi_master` (S&P features) + `sports_master` (sports features) + DeFi/CeFi crypto features (`defi_master` + `cefi_master`).
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue (4 prediction archetypes × all
+  canonical-question-groups + venues enumerated). Cross-asset features depend on `tradfi_master` (S&P features) +
+  `sports_master` (sports features) + DeFi/CeFi crypto features (`defi_master` + `cefi_master`).
 - **Shares with:** Cross-asset features pipeline shared with all other ML/backtest deliverables.
 
 ### Open questions
@@ -393,8 +598,8 @@ before CME arb can link.
 
 - `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` — full migration spec; P0 todos lifted
   above.
-- `sports_predictions_e2e_2026_05_05.md` (predictions half) — ML training + arb_calculator + Group E/F gates;
-  sports half went to `sports_master`.
+- `sports_predictions_e2e_2026_05_05.md` (predictions half) — ML training + arb_calculator + Group E/F gates; sports
+  half went to `sports_master`.
 - `market_tick_data_to_100pct_2026_05_05.md` (predictions slice) — full plan archived after split per asset_group.
 
 ## Temporary states + their canonical follow-up plans
