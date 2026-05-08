@@ -33,10 +33,18 @@ strategy → execution) must work in live mode for the three target venues.
 - [ ] **Live model lifecycle**: hot-reload of model artefacts without service restart; model-version traceability per
       trade; model-drift alerting wired through alerting-service.
 - [ ] **Live alerting active**: signal-staleness + execution-quality + P&L deviation + position breaches alert through
-      alerting-service.
+      alerting-service. **Taxonomy shipped 2026-05-08 at UAC@6c4784f** (Tab 5 Item 6) — 6 ML AlertCodes
+      (`KILL_SWITCH_ML_MODEL_FAILURE` / `ML_SIGNAL_STALENESS` / `ML_MODEL_DRIFT_DETECTED` / `ML_PNL_DEVIATION` /
+      `ML_INFERENCE_LATENCY_BREACH` / `ML_MODEL_VERSION_MISMATCH`) + 5 thresholds + 6 rules. Producer wiring
+      DEFERRED to alerting plan Phase 3 (BLOCKED on UAC envelope `code: AlertCode` field gap).
 - [ ] **Kill switches + circuit breakers** wired per archetype: position-limit breach, P&L drawdown threshold,
-      signal-staleness, model-drift detection.
+      signal-staleness, model-drift detection. **`KILL_SWITCH_ML_MODEL_FAILURE` taxonomy shipped 2026-05-08 at
+      UAC@6c4784f**, `kill_switch_scope=ARCHETYPE` semantics documented in
+      `codex/14-playbooks/alerting/alert-code-taxonomy.md`. Service wiring still pending (alerting plan Phase 2
+      kill-switch publisher hook + execution-service halt-pump consumer).
 - [ ] **DART manual override**: operator can pause / override / replicate any ML-driven trade as a manual trade.
+      DEFERRED — lives in `strategy_and_dart_master_2026_05_07.md` Phase 2.2; out of scope for the alerting taxonomy
+      ship.
 
 ## What's IN scope
 

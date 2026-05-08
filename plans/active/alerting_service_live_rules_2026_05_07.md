@@ -152,6 +152,19 @@ default-factory.
       master_to_live_defi → issues/manifest_consolidator_arrow_typeerror) that are pre-existing PM repo state owned by
       other agents per CLAUDE.md QG-failure-attribution rule — UAC content gates (lint / format / tests / typecheck /
       codex / dead-code) all green.
+- [x] [SCRIPT] P1. **ML lifecycle alerting taxonomy extension (2026-05-08, cefi_ml_may_23_2026.epic Tab 5 Item 6).**
+      Shipped UAC@6c4784f. Adds 6 AlertCode members (`KILL_SWITCH_ML_MODEL_FAILURE`, `ML_SIGNAL_STALENESS`,
+      `ML_MODEL_DRIFT_DETECTED`, `ML_PNL_DEVIATION`, `ML_INFERENCE_LATENCY_BREACH`, `ML_MODEL_VERSION_MISMATCH`); 5
+      `ALERT_THRESHOLDS` keys (`ml_signal_staleness_minutes`=5, `ml_model_drift_psi`=0.20, `ml_pnl_deviation_bps`=200,
+      `ml_inference_latency_p99_ms`=500, `ml_model_version_mismatch_minutes`=0); 2 new `ThresholdUnit` members
+      (`MILLISECONDS`, `PSI`); 6 explicit `AlertRule` entries in `LIVE_ALERT_RULES`; 7 new sanity tests (38 total, 31 →
+      38). KILL_SWITCH_ML_MODEL_FAILURE rule SHIPPED WITHOUT `kill_switch_scope=` because Sub-A's parallel
+      `kill_switch_scope` field is mid-flight; comment in rules.py marks the dependency. When Sub-A lands,
+      KILL_SWITCH_ML_MODEL_FAILURE MUST be updated to `kill_switch_scope=KillSwitchScope.ARCHETYPE`. Codex doc
+      `codex/14-playbooks/alerting/alert-code-taxonomy.md` updated with new ML category section + KillSwitchScope
+      mapping table extension. Producer-side wiring (ml-inference-service / strategy-service / ml-training-service)
+      DEFERRED to Phase 3 (currently BLOCKED on UAC envelope `code: AlertCode` field gap). DART manual-pause / override
+      / replicate UI for ML trades DEFERRED to `strategy_and_dart_master` Phase 2.2.
 
 ### Phase 2 — Service migration to UAC SSOT (1 day, **PARALLEL** with Phase 1 once Phase 1 lands)
 
