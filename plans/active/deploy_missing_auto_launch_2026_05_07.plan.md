@@ -34,6 +34,26 @@ related:
 
 # Deploy-Missing auto-launch (preview -> auto)
 
+## Open questions
+
+### Q1 — [deploy-missing-iam-proposal-tab, 2026-05-08 07:30 UTC] — Push blocked: 2 incoming on origin/live-defi-rollout
+**Status**: 🟡 BLOCKED — main + operator pick rebase / merge / cherry-pick / drop
+
+PM origin/live-defi-rollout advanced by 2 commits (`98f1e16` plan(work_split):
+codify UAC chain_env.py SSOT handshake, `6e952b6` docs(plans): file issue 13 —
+hardcoded on-chain-derivable values) while Tab 13 was drafting the proposal
+section. My local commit landed at `<TBD-this-commit>` on top of `33d56f8`
+which is now 2 behind origin; fast-forward to origin is clean (origin only
+moved forward, no diverged history when I started). Per Bootstrap §
+"Push discipline" conditional-push rule I have NOT pushed. Recommended
+resolution: rebase the single proposal-doc commit onto `origin/live-defi-rollout`
+(`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`)
+— the proposal section only touches
+`plans/active/deploy_missing_auto_launch_2026_05_07.plan.md` + `_agent_pings.md`,
+neither of which the 2 incoming commits modified, so the rebase should be
+trivial. Alternatively cherry-pick if main agent prefers a clean linear
+history with the 2 incoming first.
+
 ## Why
 
 Drilldown plan Phase 3 ships Deploy-Missing in **preview mode**: the operator clicks the button on a leaf shard,
@@ -131,7 +151,353 @@ Operations sign-off on:           →   create-code-tarballs.sh -> Cloud Build t
       shard_key, launch timestamp, resulting VM name).
 - [ ] [audit] P0. Rate-limit ceiling decision (per-operator, per-hour, project-wide).
 
-### Phase 1 — Tarball-refresh wiring
+### Phase 0 — IAM scope + audit log + rate limit proposal (DRAFT for operator review)
+
+> **STATUS: DRAFT — operator review pending.** Drafted 2026-05-08 by Tab 13
+> (`deploy-missing-iam-proposal-tab`). All numbers + role shapes are starting points,
+> not shipped decisions. Operator amends + signs off; Phase 2 wiring (line 159+) +
+> the matching closure of the three Phase 0 audit todos are gated on that sign-off.
+> No code changes in this section — pure design proposal.
+
+This section answers the three Phase 0 audit todos in proposal form so the
+operator can review concrete options + amend before the security-boundary
+sign-off lands. Each proposal: options matrix → recommendation → blast-radius
+analysis → cross-references to Phase 1's tarball-refresh wiring (deployment-api
+`tarball_staleness.py` from `deployment-api@faac20a`) and Phase 2's auto-launch
+endpoint where the decisions land.
+
+#### Proposal 1 — IAM scope (custom role spec + scoping)
+
+**STATUS: DRAFT — operator review pending.**
+
+The deployment-api Cloud Run service today runs under
+`${PROJECT_NUMBER}-compute@developer.gserviceaccount.com`. Adding the ability to
+spawn GCE VMs requires granting GCE-launch permissions. Three shapes:
+
+**Option A — Blanket `roles/compute.instanceAdmin.v1`.**
+
+- Permissions surface: full GCE instance lifecycle including arbitrary subnets,
+  VPCs, image families, machine types across the entire project.
+- Blast radius if the API is compromised: attacker spawns arbitrary VMs in any
+  zone/subnet, picks any image (incl. attacker-controlled if they can also push
+  to Artifact Registry), and exfiltrates via VM metadata.
+- **Verdict: REJECT.** Violates least privilege; no scoping.
+
+**Option B — Custom role with minimal permissions, resource-scoped (RECOMMENDED).**
+
+Proposed custom role `roles/customDeployMissingLauncher` (project-level binding):
+
+```yaml
+title: "Deploy-Missing VM Launcher"
+description: |
+  Minimum permissions for the deployment-api Cloud Run service to spawn
+  pre-registered backfill VMs via the Deploy-Missing flow.
+stage: GA
+includedPermissions:
+  # GCE instance lifecycle (zone-scoped via IAM condition)
+  - compute.instances.create
+  - compute.instances.get
+  - compute.instances.list
+  - compute.instances.delete           # idempotency: kill prior same-shard-key VMs
+  - compute.instances.setMetadata      # startup-script delivery
+  - compute.instances.setLabels        # shard_key / correlation_id labelling
+
+  # Disk + subnet dependencies the launcher reads
+  - compute.disks.create
+  - compute.disks.get
+  - compute.subnetworks.use
+  - compute.subnetworks.useExternalIp
+  - compute.networks.get
+  - compute.machineTypes.get
+  - compute.zones.get
+
+  # Read-only image use (specific family only — NOT compute.images.list)
+  - compute.images.useReadOnly
+
+  # ServiceAccount actAs (the launched VM's runtime SA, NOT the default compute SA)
+  - iam.serviceAccounts.actAs
+
+  # Cloud Build trigger for tarball refresh (Phase 1: deployment-api@faac20a
+  # `TarballStalenessChecker.trigger_refresh` + `poll_build` paths)
+  - cloudbuild.builds.create
+  - cloudbuild.builds.get
+  - cloudbuild.builds.list
+
+  # GCS event verification (no-fire-and-forget rule — wait for STARTED event
+  # in gs://{pid}-events/events/{service}/...)
+  - storage.objects.get
+  - storage.objects.list
+```
+
+IAM-condition scoping (binding-level, NOT in the role itself):
+
+- **Zone**: `resource.name.startsWith("projects/${PID}/zones/asia-northeast1-c/")`
+  — workspace zone per `VM_PREFIX_TO_BUCKET` precedent in
+  `deployment-service/scripts/vm/vm_zombie_watchdog.py`.
+- **Subnet**: `resource.name == "projects/${PID}/regions/asia-northeast1/subnetworks/default"`.
+- **Image family**: `compute.images.useReadOnly` granted only on the registered
+  image family `unified-trading-debian-12` hosted in the project (not blanket
+  `projects/debian-cloud/...` or any third-party project).
+- **`iam.serviceAccounts.actAs`**: granted only on a dedicated runtime SA
+  `deploy-missing-vm-runtime@${PID}.iam.gserviceaccount.com` — NOT the default
+  compute SA. The runtime SA itself has only the bucket-write + events-write
+  perms each backfill VM needs. Compromise of the deployment-api SA cannot
+  pivot to a higher-privilege runtime SA.
+
+Blast radius if Option B is compromised:
+
+- Attacker spawns VMs only in `asia-northeast1-c` on the registered subnet using
+  the registered image, running as the registered low-privilege runtime SA.
+- Cost vector: capped by the rate-limit ceiling (Proposal 3) — N VMs/hour =
+  ~$N × $0.50/hour at e2-standard-4 base.
+- Code-execution vector: the registered image is workspace-controlled; a
+  privilege-escalation pivot would require also compromising Artifact Registry
+  push access (separate IAM surface, not granted here).
+- Data-exfil vector: runtime SA writes to known GCS buckets; bucket-level
+  IAM + Cloud Audit Logs catch unexpected writes.
+
+**Option C — API-layer per-launcher allow-listing (defence in depth, ADDITIVE on top of B).**
+
+The `_SERVICE_LAUNCHER_SCRIPTS` registry in
+`deployment-api/deployment_api/services/deploy_missing.py:62-72` is already a
+9-entry allow-list of approved launcher script paths
+(`deployment-service/scripts/vm/launch-{mtds,mdps,instruments,features,…}-backfill-vm.sh`).
+Phase 2's endpoint MUST resolve the launcher path through this dict and reject
+any request whose `(service, asset_group)` doesn't map to an entry. The
+existing `DeployMissingError` raise on missing launcher (line 181) is the
+correct shape; extend it to also reject if the resolved path doesn't begin
+with the canonical `deployment-service/scripts/vm/` prefix (catches a
+configuration-injection attack against the dict).
+
+**Recommendation: B + C combined, NOT either-or.** B is the IAM floor — the
+Cloud Run SA literally cannot do more than the role permits, regardless of
+code bugs. C is the API-layer defence — even with full IAM, a request can't
+invoke an unregistered launcher because the API short-circuits before
+`subprocess.run()`. C is already 80% in place via the existing
+`_SERVICE_LAUNCHER_SCRIPTS` dict.
+
+**Cross-references**:
+
+- Phase 1 (`deployment-api@faac20a` — `tarball_staleness.py`) requires
+  `cloudbuild.builds.{create,get,list}` per the `cloudbuild_v1.CloudBuildClient`
+  Protocol-mocked invocation. Custom role above includes them.
+- Phase 2 line 161 (`POST /api/data-status/deploy-missing-launch`) is the call
+  site that gets the role binding. Phase 2 line 168 (`Rate limiter middleware`)
+  enforces Proposal 3.
+- `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py` must learn the new prefix
+  (e.g. `mtds-shard-key-`) per the workspace VM Naming Convention rule, and
+  the watchdog VM must be relaunched after the dict edit.
+
+#### Proposal 2 — Audit-log shape (schema + storage + retention)
+
+**STATUS: DRAFT — operator review pending.**
+
+Every Deploy-Missing launch produces one audit record. The record captures:
+who launched it, what shard, what outcome, and how long it took.
+
+Proposed dataclass (lives in `deployment_api/services/deploy_missing_audit.py`,
+imported by the Phase 2 endpoint):
+
+```python
+@dataclass(frozen=True)
+class DeployMissingAuditRecord:
+    """Single audit row per Deploy-Missing launch attempt.
+
+    Written synchronously to BigQuery (primary), mirrored to Cloud Logging
+    (live tail), and exported daily to GCS cold tier (compliance retention).
+    """
+
+    # Identity
+    record_id: str             # UUIDv4
+    schema_version: str = "v1"
+
+    # Operator + auth context (from authenticated session)
+    operator_email: str        # Firebase JWT 'email' claim
+    operator_uid: str          # Firebase JWT 'sub' claim
+    auth_method: str           # "firebase_jwt" | "iap_jwt" | "service_account_token"
+
+    # Request context
+    received_at: datetime      # UTC, request entry
+    source_ip: str             # X-Forwarded-For first hop (client IP, not LB)
+    request_id: str            # propagated Cloud Run trace header
+
+    # Target shard (full breadcrumb so audit row alone reproduces the launch)
+    service: str               # e.g. "market-tick-data-service"
+    asset_group: str           # cefi | defi | tradfi | sports | prediction
+    row_key: dict[str, str]    # full canonical row_key per shard-granularity SSOT
+    shard_key: str             # 6-field pipe form (correlation_id basis)
+    launcher_script_path: str  # resolved from _SERVICE_LAUNCHER_SCRIPTS
+
+    # Outcome
+    dry_run: bool
+    decision: str              # "LAUNCHED" | "RATE_LIMITED" | "IDEMPOTENT_HIT"
+                               # | "TARBALL_STALE_REFRESH" | "REJECTED_INVALID_SHARD"
+                               # | "REJECTED_UNREGISTERED_LAUNCHER" | "REJECTED_AUTH"
+    rejection_reason: str | None
+    resulting_vm_name: str | None
+    resulting_vm_zone: str | None
+
+    # Tarball-refresh chain (Phase 1 link)
+    tarball_was_stale: bool
+    cloud_build_id: str | None  # populated when TarballStalenessChecker.trigger_refresh fired
+
+    # Timing
+    completed_at: datetime
+    duration_ms: int
+
+    # Correlation (matches DEPLOY_MISSING_VM_LAUNCHED event correlation_id)
+    correlation_id: str        # = shard_key
+```
+
+Storage backends compared:
+
+| Backend                  | Schema enforce | Ad-hoc query        | Retention default | Cost @ 200 records/day |
+|--------------------------|----------------|---------------------|-------------------|------------------------|
+| **BigQuery table** ★     | YES            | SQL                 | configurable       | ~$0.02/month (storage) |
+| Append-only GCS object   | NO             | needs ETL           | configurable       | ~$0.001/month          |
+| Cloud Logging structured | NO             | LogQL (limited SQL) | 30d default        | free under quota       |
+
+**Recommendation**: BigQuery primary, Cloud Logging mirror, GCS cold tier.
+
+- **BigQuery primary**: table `${PID}.deploy_missing_audit.launches`, partitioned
+  by `DATE(received_at)`, clustered on `(operator_uid, decision)`. Schema
+  enforced at insert. Insert via `bigquery.Client.insert_rows_json()` with
+  exponential-backoff retry on quota errors. **Retention 90 days** via
+  partition expiration (`partition_expiration_days=90`).
+- **Cloud Logging mirror**: same record emitted as a structured log with
+  `severity=NOTICE`, log name `deploy-missing-audit`. Powers the live-tail
+  panel for ops dashboards (humans watch). 30-day retention default kept.
+- **GCS cold tier**: daily Cloud Scheduler → Cloud Function exports the day's
+  BigQuery partition to `gs://${PID}-audit-cold/deploy_missing/{YYYY}/{MM}/{DD}.jsonl`.
+  **Retention 5 years** (object lifecycle policy) — covers the longest
+  plausible compliance window for institutional-grade ops logs.
+
+Write-failure policy: BigQuery insert is **synchronous and blocking** — the
+endpoint returns 500 + does NOT spawn a VM if the audit write fails. No
+unaudited launches under any condition. (The Cloud Logging mirror is
+fire-and-forget; if it fails the BigQuery row is still authoritative.)
+
+**Cross-references**:
+
+- Phase 2 line 165 (`DEPLOY_MISSING_VM_LAUNCHED` event emission) shares the
+  `correlation_id = shard_key` so audit + event streams join cleanly on shard.
+- Phase 2 line 166 (90s STARTED-event wait) — audit record updates
+  `decision="LAUNCHED"` only after the STARTED event lands; if the wait times
+  out, audit row gets a follow-up update with `decision="LAUNCHED_BUT_STALLED"`
+  + `rejection_reason="STARTED event not observed within 90s"`.
+- The `no-fire-and-forget VM launches` rule + `Per-VM observability` block in
+  the Pre-audit section get satisfied by this audit record + the existing
+  events-bucket discipline.
+
+#### Proposal 3 — Rate-limit ceilings + 429 response shape
+
+**STATUS: DRAFT — operator review pending.**
+
+Cadence sample (from existing manual-backfill operator behaviour):
+
+- ~3 active operators expected at steady state (Harsh, Ikenna, +1 future).
+- Manual backfill launches today: 1–10/day per operator (estimate from VM
+  prefix grep across the last 30 days; numbers may be lower-bounded by
+  ad-hoc sweeps).
+- Deploy-Missing leaf-shard click cadence (post Phase 2): a typical morning
+  data-quality sweep clicks 5–50 leaves per operator. Each click = 1 VM.
+
+Proposed ceilings:
+
+| Scope                          | Limit  | Window | Rationale                                                            |
+|--------------------------------|--------|--------|----------------------------------------------------------------------|
+| **Per-operator-per-hour** ★    | 30     | 1h     | 1 click every 2min sustained — generous for sweeps, trips on abuse  |
+| **Per-operator-per-day**       | 200    | 24h    | Daily rollover; protects against compromised account in long window  |
+| **Project-wide-per-hour**      | 100    | 1h     | Caps team-wide chain reaction even if multiple operators spike       |
+| **Per-shard-key idempotency**  | 1 active | 6h   | Same shard_key with running/starting VM → return existing; not new   |
+
+Cost-vector reasoning:
+
+- MTDS backfill VM ≈ $0.50/hour (e2-standard-4). Average runtime ~30min/shard
+  ≈ $0.25/shard-launch.
+- 100 launches/hour project-wide ceiling = ~$25/hour absolute. Worst case
+  sustained = $600/day. Inside the team operating-budget tolerance.
+- Compromised single-operator account: capped at $7.50/hour (30 × $0.25).
+  Alert fires at 80% of per-hour ceiling = 24 launches → operator in <1h. 
+
+Per-shard-key idempotency (Phase 2 todo line 162) is **separate** from rate
+limit — it returns the existing VM rather than counting against the ceiling.
+Two operators clicking the same leaf at the same second → first wins, second
+gets a 200 OK with the running VM's name + correlation_id, neither
+counter-decrement.
+
+429 response shape:
+
+```json
+{
+  "error": "rate_limited",
+  "scope": "operator_per_hour",
+  "limit": 30,
+  "current": 30,
+  "window_start": "2026-05-08T06:00:00Z",
+  "window_end": "2026-05-08T07:00:00Z",
+  "retry_after_seconds": 1837,
+  "operator_email": "harsh@…"
+}
+```
+
+`scope ∈ {"operator_per_hour", "operator_per_day", "project_per_hour"}` —
+which ceiling tripped is part of the response so the operator UI can render
+"you've hit YOUR cap" vs "team has hit shared cap".
+
+HTTP headers (always present, even on 200 responses, so UI can render
+"23/30 used this hour" hints):
+
+- `Retry-After: 1837` (seconds until next available token; 0 if not rate-limited)
+- `X-RateLimit-Limit: 30`
+- `X-RateLimit-Remaining: 7`
+- `X-RateLimit-Reset: 1746644400` (epoch seconds)
+- `X-RateLimit-Scope: operator_per_hour` (which scope the headers describe)
+
+State backend: token-bucket counters in Firestore at
+`/_state/deploy_missing_rate_limits/{operator_uid}_{hour_window}` (and
+`_project_{hour_window}`). 24h TTL on each doc. Multi-replica Cloud Run
+shares state via Firestore transactions; no in-memory cache that desyncs.
+
+Audit-log integration: every 429 generates a `decision="RATE_LIMITED"` record
+per Proposal 2 (so the audit trail captures attempted-but-rejected launches
+too — important for distinguishing "operator tried but capped" from "operator
+didn't try"). `rejection_reason` carries the scope.
+
+Alert thresholds:
+
+- 80% of any per-hour ceiling tripped: warn-level alert to ops Slack channel.
+- Project-wide ceiling tripped twice in 24h: page on-call (signal of
+  team-coordination break OR compromise).
+
+**Cross-references**:
+
+- Phase 2 line 168 (`Rate limiter middleware`) is the implementation point.
+- Audit Proposal 2: rate-limit decisions ARE audit records.
+- IAM Proposal 1: the IAM ceiling is a hard floor (cannot launch outside
+  registered scope); the rate-limit ceiling is a soft floor (caps frequency
+  even within registered scope).
+
+#### Open questions (operator decisions)
+
+These need explicit operator sign-off before Phase 2 wires the proposals into
+code. None are blocking the Phase 1 work that already shipped.
+
+1. **Custom-role granularity**: accept Option B as drafted (zone + subnet +
+   image family + dedicated runtime SA scoping), OR tighten further (e.g.
+   short-lived per-launch role bindings via Workload Identity Federation
+   short-lived tokens)? Tightening adds complexity; B as drafted is
+   institutional-grade for our scale.
+2. **Audit retention**: 90d hot / 5y cold matches institutional ops norms; if
+   a stricter compliance requirement applies (e.g. SOC2 specific retention),
+   override the values.
+3. **Rate-limit ceilings**: 30/hr per-operator + 100/hr project-wide are
+   starting points, not measured-from-data. Once Phase 2 ships and we have
+   a week of real cadence, recalibrate from observed P95.
+4. **Alert routing**: Slack channel name + on-call rotation for the 80% +
+   2x-trip thresholds — operator picks the destinations.
+
+
 
 - [x] [deployment-service] P0. New script
       `deployment-service/scripts/vm/refresh-tarballs-for-shard-key.sh <asset_group>` that wraps
@@ -268,3 +634,48 @@ just calls it; no API churn expected.
 review is the gating activity, and a unilateral IAM proposal from a sub-agent without
 operator alignment risks pre-empting the security review's decisions. Tab can pick this
 up after the operator names a target IAM granularity.
+
+## DONE-2026-05-08 — Phase 0 IAM scope + audit log + rate limit proposal (DRAFT)
+
+Tab 13 (`deploy-missing-iam-proposal-tab`) drafted the three Phase 0 audit
+proposals in proposal form for operator review. **No code changes** — proposal
+section only, marked `STATUS: DRAFT — operator review pending` so it's not
+mistaken for shipped decisions. Phase 0 audit todos (lines 128-132) remain
+`- [ ]` until the operator signs off on the proposals.
+
+**Section landed**: new `### Phase 0 — IAM scope + audit log + rate limit
+proposal (DRAFT for operator review)` block between the original Phase 0
+todos and Phase 1, containing:
+
+- **Proposal 1 (IAM scope)** — 3 options matrix (blanket
+  `roles/compute.instanceAdmin.v1` rejected; custom role `roles/customDeployMissingLauncher`
+  recommended with YAML spec + IAM-condition zone/subnet/image-family/runtime-SA
+  scoping; per-launcher allow-listing via existing `_SERVICE_LAUNCHER_SCRIPTS`
+  as defence-in-depth). Recommendation: B + C combined.
+- **Proposal 2 (audit-log shape)** — `DeployMissingAuditRecord` dataclass
+  schema + 3-backend comparison (BigQuery primary, Cloud Logging mirror, GCS
+  cold tier) + 90d/5y retention recommendation + synchronous-blocking write
+  policy (no unaudited launches).
+- **Proposal 3 (rate-limit ceilings)** — 30/hr per-operator + 200/day
+  per-operator + 100/hr project-wide + per-shard-key idempotency; 429
+  response JSON + headers shape; Firestore-backed counters for multi-replica
+  Cloud Run state sharing; cost-vector + alert-threshold reasoning.
+- **Open questions (operator decisions)** — 4 explicit decisions surfaced
+  for sign-off (custom-role granularity, audit retention numbers, rate-limit
+  ceilings recalibration plan, alert routing).
+
+Each proposal cross-references Phase 1's tarball-refresh wiring
+(`deployment-api@faac20a` `tarball_staleness.py`) + Phase 2's auto-launch
+endpoint (lines 161-168) so the implementation seam is explicit.
+
+**Plan-flip commit**: PM@<TBD-this-commit>.
+
+**What's next**: operator reviews proposals + amends; on sign-off, the three
+Phase 0 audit todos flip `- [x]` and Phase 2 wiring proceeds with the
+custom-role binding + `DeployMissingAuditRecord` table + rate-limiter
+middleware as specified.
+
+**Push status**: PM origin had 2 incoming commits (`8a73644`, `150c1d5`)
+when this tab booted. Per the conditional-push rule (Bootstrap §
+"Push discipline"), local commit landed but push deferred — flagged in
+`## Open questions` for main + operator to resolve the rebase path.

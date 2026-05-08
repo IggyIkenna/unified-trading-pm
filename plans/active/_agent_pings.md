@@ -27,4 +27,4 @@ Full lifecycle + format spec: plans/active/work_split_2026_05_07_harsh_5tab_layo
 
 # Active pings
 
-_(empty — Tab 10 ✅ DONE; Tab 9 Q1 + Q2 ✅ RESOLVED (Q2 operator-deferred rebase 07:18 UTC); Bugs 1+3 ✅ validated end-to-end via UAC@6a64a56 + MTDS@c6bdf96 + IS@6ae50de (already pushed). Tab 9 continuing VM validation at T+75min. Tabs 2, 9, 11 IN FLIGHT. Tabs 12/13/14 QUEUED. PM rebase pending — 4 local-ahead commits will rebase on 150c1d5 later.)_
+[2026-05-08 07:30 UTC] deploy-missing-iam-proposal-tab — Tab 13 DRAFT shipped (3 proposals + DONE block); push blocked on PM (2 incoming) — see deploy_missing_auto_launch_2026_05_07.plan.md ## Open questions Q1
