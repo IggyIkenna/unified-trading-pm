@@ -38,9 +38,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
-SCOPE_ENUM: Final[frozenset[str]] = frozenset(
-    {"sales", "engineer", "admin", "prospect", "investor"}
-)
+SCOPE_ENUM: Final[frozenset[str]] = frozenset({"sales", "engineer", "admin", "prospect", "investor"})
 DEFAULT_SCOPE: Final[tuple[str, ...]] = ("engineer", "admin")
 FRONTMATTER_DELIM: Final[str] = "---"
 
@@ -55,9 +53,7 @@ def find_pm_root(start: Path) -> Path:
     for candidate in (current, *current.parents):
         if (candidate / "codex" / "00-SSOT-INDEX.md").is_file():
             return candidate
-    raise SystemExit(
-        f"could not locate PM repo root starting from {start} — expected to find codex/00-SSOT-INDEX.md"
-    )
+    raise SystemExit(f"could not locate PM repo root starting from {start} — expected to find codex/00-SSOT-INDEX.md")
 
 
 def iter_codex_docs(pm_root: Path) -> list[Path]:
@@ -73,9 +69,7 @@ def iter_codex_docs(pm_root: Path) -> list[Path]:
 
 def extract_frontmatter(text: str) -> str | None:
     """Return the YAML block between two `---` lines at the very top, or None."""
-    if not text.startswith(FRONTMATTER_DELIM + "\n") and not text.startswith(
-        FRONTMATTER_DELIM + "\r\n"
-    ):
+    if not text.startswith(FRONTMATTER_DELIM + "\n") and not text.startswith(FRONTMATTER_DELIM + "\r\n"):
         return None
     # Split on newlines, consume the opening ---
     lines = text.splitlines()
@@ -90,9 +84,7 @@ def extract_frontmatter(text: str) -> str | None:
     return None
 
 
-_SCOPE_INLINE_RE = re.compile(
-    r"^scope:\s*\[\s*(?P<items>[^\]]*)\s*\]\s*$", re.MULTILINE
-)
+_SCOPE_INLINE_RE = re.compile(r"^scope:\s*\[\s*(?P<items>[^\]]*)\s*\]\s*$", re.MULTILINE)
 _SCOPE_BLOCK_HEADER_RE = re.compile(r"^scope:\s*$", re.MULTILINE)
 _YAML_LIST_ITEM_RE = re.compile(r"^\s+-\s+(?P<item>\S+)\s*$")
 
@@ -114,7 +106,7 @@ def parse_scope_field(frontmatter: str, path: Path) -> list[str] | None:
         return None
 
     # Consume following indented list items
-    tail = frontmatter[block_header.end():]
+    tail = frontmatter[block_header.end() :]
     items: list[str] = []
     for line in tail.splitlines():
         if not line.strip():
@@ -124,9 +116,7 @@ def parse_scope_field(frontmatter: str, path: Path) -> list[str] | None:
         item_match = _YAML_LIST_ITEM_RE.match(line)
         if item_match is None:
             # Non-list content under scope: — malformed
-            raise ScopeParseError(
-                f"{path}: malformed block-list under `scope:` (line: {line!r})"
-            )
+            raise ScopeParseError(f"{path}: malformed block-list under `scope:` (line: {line!r})")
         items.append(item_match.group("item").strip().strip("'\""))
 
     # Also reject scalar form (scope: engineer on one line)
@@ -134,9 +124,7 @@ def parse_scope_field(frontmatter: str, path: Path) -> list[str] | None:
     if scalar_match is not None and not scalar_match.group("val").startswith("["):
         # Only raise if we did NOT also match a block header — block header
         # matches `scope:` with nothing after, scalar would have content.
-        raise ScopeParseError(
-            f"{path}: `scope:` must be an array (got scalar: {scalar_match.group('val')!r})"
-        )
+        raise ScopeParseError(f"{path}: `scope:` must be an array (got scalar: {scalar_match.group('val')!r})")
 
     return items
 
@@ -144,10 +132,7 @@ def parse_scope_field(frontmatter: str, path: Path) -> list[str] | None:
 def validate_scopes(scopes: list[str], path: Path) -> None:
     unknown = [s for s in scopes if s not in SCOPE_ENUM]
     if unknown:
-        raise ScopeParseError(
-            f"{path}: unknown scope value(s) {unknown!r} — "
-            f"must be subset of {sorted(SCOPE_ENUM)}"
-        )
+        raise ScopeParseError(f"{path}: unknown scope value(s) {unknown!r} — must be subset of {sorted(SCOPE_ENUM)}")
 
 
 def classify_doc(path: Path, pm_root: Path, verbose: bool) -> tuple[list[str], bool]:
@@ -184,9 +169,7 @@ def classify_doc(path: Path, pm_root: Path, verbose: bool) -> tuple[list[str], b
     return scopes, False
 
 
-def build_manifest(
-    pm_root: Path, verbose: bool, fail_on_default: bool
-) -> tuple[dict[str, list[str]], list[Path]]:
+def build_manifest(pm_root: Path, verbose: bool, fail_on_default: bool) -> tuple[dict[str, list[str]], list[Path]]:
     """Walk codex, build the per-audience manifest, return also the list of
     docs that lacked explicit scope (for the coverage checker)."""
     manifest: dict[str, list[str]] = {audience: [] for audience in sorted(SCOPE_ENUM)}
@@ -252,15 +235,9 @@ def main(argv: list[str] | None = None) -> int:
 
     here = Path(__file__).resolve().parent
     pm_root = args.root.resolve() if args.root is not None else find_pm_root(here)
-    output = (
-        args.output
-        if args.output is not None
-        else pm_root / "codex/14-playbooks/_generated/scope-manifest.json"
-    )
+    output = args.output if args.output is not None else pm_root / "codex/14-playbooks/_generated/scope-manifest.json"
 
-    manifest, uncovered = build_manifest(
-        pm_root, verbose=args.verbose, fail_on_default=args.check_only
-    )
+    manifest, uncovered = build_manifest(pm_root, verbose=args.verbose, fail_on_default=args.check_only)
 
     if args.check_only:
         # build_manifest already exited on errors; if we got here, all covered.

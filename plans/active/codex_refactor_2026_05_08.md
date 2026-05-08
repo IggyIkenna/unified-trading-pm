@@ -183,14 +183,14 @@ drift.
         SSOT.
   - [x] `04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md:708` — `publishes CIRCUIT_BREAKER_OPEN` →
         `publishes CIRCUIT_OPEN     (UAC LifecycleEvent)`. (Already shipped in Phase A.5 PM@77e1978a.)
-  - [x] `14-playbooks/alerting/alert-code-taxonomy.md:82` — **NO CHANGE**: describes AlertCode pattern.
-  - [x] `14-playbooks/alerting/circuit_breaker_open.md:66-68, 81, 86, 89` — JSONL `.event` field references aligned to
+  - [x] `15-runbooks/alerting/alert-code-taxonomy.md:82` — **NO CHANGE**: describes AlertCode pattern.
+  - [x] `15-runbooks/alerting/circuit_breaker_open.md:66-68, 81, 86, 89` — JSONL `.event` field references aligned to
         LifecycleEvent names; title/Code/Pattern (line 2/17/32/33) preserved as `CIRCUIT_BREAKER_OPEN` (AlertCode).
-  - [x] `14-playbooks/alerting/kill_switch_venue_disconnect.md:88` — JSONL `select(.event=="...")` filter aligned to
+  - [x] `15-runbooks/alerting/kill_switch_venue_disconnect.md:88` — JSONL `select(.event=="...")` filter aligned to
         `CIRCUIT_CLOSED`. Line 75 "correlated codes" `CIRCUIT_BREAKER_OPEN` preserved (AlertCode).
-  - [x] `14-playbooks/alerting/{service_degraded,defi_feature_stale,order_rejection_spike}.md` — **NO CHANGE**:
+  - [x] `15-runbooks/alerting/{service_degraded,defi_feature_stale,order_rejection_spike}.md` — **NO CHANGE**:
         "correlated codes" references are AlertCode patterns, correctly aligned with UAC `codes.py` SSOT.
-  - [x] `14-playbooks/alerting/threshold-tuning.md` — verified, no CIRCUIT_BREAKER references in current file.
+  - [x] `15-runbooks/alerting/threshold-tuning.md` — verified, no CIRCUIT_BREAKER references in current file.
 
   **Acceptance** (revised): workspace-wide grep for `CIRCUIT_BREAKER_` in codex/ returns 19 hits — all legitimate
   AlertCode references. Zero LifecycleEvent drift remains (verified via grep of past-tense `CIRCUIT_BREAKER_OPENED`,
@@ -615,7 +615,7 @@ drift.
   **Cross-doc references rewritten** (6 files):
   - [x] `04-architecture/sports-integration-plan.md` — both refs (line 410 `Migration scripts:` + line 495
         `## References`) repointed to `02-data/per-asset-group-bucket-layouts.md` + UAC `gcs_paths` SSOT.
-  - [x] `14-playbooks/backfill-completion-playbook.md:166` — repointed to UAC `gcs_paths` SSOT + phantom-audit recipe in
+  - [x] `15-runbooks/backfill-completion-playbook.md:166` — repointed to UAC `gcs_paths` SSOT + phantom-audit recipe in
         `availability-manifest-and-data-status.md`.
   - [x] `05-infrastructure/vm-tarball-deployment.md:402` — manifest consolidator cross-ref repointed to
         `availability-manifest-and-data-status.md`.
@@ -695,7 +695,7 @@ drift.
   **Cross-doc references to update**:
   - [ ] `09-strategy/architecture-v2/archetypes/carry-staked-basis.md:33` — references UAC venue_collateral; verify path
         still works.
-  - [ ] `14-playbooks/defi/venue-collateral-2026-05-07.md` — should cross-link to custody-providers doc (and to
+  - [ ] `16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` — should cross-link to custody-providers doc (and to
         `04-architecture/copper-custody-integration.md` was reverted by linter — verify final state).
   - [ ] `plans/active/master_to_live_defi_2026_05_23.md` Group F item 19 — references both copper + ceffu docs.
   - [ ] `04-architecture/interface-credential-convention.md` — references credential injection per provider.
@@ -846,7 +846,7 @@ drift.
   - [x] `02-data/instrument-pipeline-defi.md:215-216`, `02-data/data-lineage-MTDS-features-ml.md:19,146`,
         `02-data/chart-candle-delivery-flow.md:20-22`, `02-data/prediction-schema-paths.md`,
         `09-strategy/architecture-v2/category-instrument-coverage.md`,
-        `14-playbooks/instruments-live/t1-audit-discrepancy.md` — verified: refs still resolve correctly via chained
+        `15-runbooks/instruments-live/t1-audit-discrepancy.md` — verified: refs still resolve correctly via chained
         pointer (the collapsed docs cite per-category-bucket-layouts.md). Not rewritten per Findings Triage Discipline —
         over-fix territory; chained pointer is one extra hop, not a broken link. Future Phase E.4 rename will require a
         workspace-wide grep + rewrite anyway.
@@ -897,24 +897,32 @@ drift.
 
 - [x] [DOC] P2. Per audit S2, two parallel `cross-cutting/` directories in 09-strategy. **SHIPPED 2026-05-08**:
   - **Commit 1** (PM@4d23b431): moved 8 v2-content files (`dart-manual-trade-spec`, `operational-modes-matrix`,
-    `pnl-attribution`, `prediction-markets`, `leverage-and-volatility`, `restaking-reward-economics`, `reward-lifecycle`,
-    `rate-impact-model`) into `architecture-v2/cross-cutting/`. Internal-path adjustments (depth +1):
-    `../../04-architecture/X` → `../../../04-architecture/X`; `../../../plans/X` → `../../../../plans/X`;
-    `../strategy-summary.md` → `../../strategy-summary.md`; `../architecture-v2/README.md` → `../README.md` (sibling-up);
-    `../architecture-v2/archetypes/X` → `../archetypes/X`; `../cross-cutting/share-classes.md` →
+    `pnl-attribution`, `prediction-markets`, `leverage-and-volatility`, `restaking-reward-economics`,
+    `reward-lifecycle`, `rate-impact-model`) into `architecture-v2/cross-cutting/`. Internal-path adjustments (depth
+    +1): `../../04-architecture/X` → `../../../04-architecture/X`; `../../../plans/X` → `../../../../plans/X`;
+    `../strategy-summary.md` → `../../strategy-summary.md`; `../architecture-v2/README.md` → `../README.md`
+    (sibling-up); `../architecture-v2/archetypes/X` → `../archetypes/X`; `../cross-cutting/share-classes.md` →
     `../../_archived_pre_v2/cross-cutting/share-classes.md` (correct broken target — was broken pre-move);
-    `../../02-data/X` → `../../../02-data/X` (prediction-markets only). 16 active docs / plans cross-ref-rewritten
-    (62 replacements). plans/archive/ untouched per workspace rule.
+    `../../02-data/X` → `../../../02-data/X` (prediction-markets only). 16 active docs / plans cross-ref-rewritten (62
+    replacements). plans/archive/ untouched per workspace rule.
   - **Commit 2** (PM@b38cb485): renamed remaining `09-strategy/cross-cutting/` → `09-strategy/operational/` (5 files:
     onboarding-checklist, client-onboarding, client-strategy-config, instrument-filtering,
     prediction-markets-codification-gaps). Same depth — no internal path adjustments. Sibling reference inside
     prediction-markets-codification-gaps.md updated to `../architecture-v2/cross-cutting/prediction-markets.md`. 5
     active docs / plans cross-ref-rewritten (10 replacements).
 
-### Phase E.4 — Filename rename: per-category-bucket-layouts → per-asset-group-bucket-layouts — PARALLEL — P1
+### Phase E.4 — Filename rename: per-category-bucket-layouts → per-asset-group-bucket-layouts — PARALLEL — P1 — SHIPPED 2026-05-08
 
-- [ ] [DOC] P1 (BLOCKED on operator approval). Per audit S3 + workspace asset_group vocabulary rule. The file body uses
-      both `category` and `asset_group` inconsistently. Rename + body-sweep.
+- [x] [DOC] P1. Per audit S3 + workspace asset_group vocabulary rule. The file body uses both `category` and
+      `asset_group` inconsistently. Rename + body-sweep. **SHIPPED 2026-05-08** — `git mv` rename
+      `codex/02-data/per-category-bucket-layouts.md` → `codex/02-data/per-asset-group-bucket-layouts.md` + body sweep
+      (table headers `Category` → `Asset-group`; legacy-vs-canonical hive-key clarifications added inline; legacy
+      `category=` preservation note retained per workspace asset-group-vocabulary rule). Workspace-wide cross-doc
+      rewrites: 21 active doc / plan files updated (15 codex docs across 02-data/, 04-architecture/, 06-coding-standards/
+      + the POST_PLAN_REALITY scoreboard; 6 plan files in plans/active/ and plans/epics/). `plans/active/codex_refactor`
+      historical Phase E.4 references retained as audit trail; `plans/archive/`, `plans/ai/`, `plans/handover/` and the
+      auto-generated `_generated/scope-manifest.json` left untouched per scope; `codex/15-runbooks/` and the
+      `codex/16-strategy-playbooks/` move are foreign in-flight reorgs not in scope of this rename.
 
 ### Phase E.5 — Audit-style doc moves out of 06-coding-standards — PARALLEL — P1 — SHIPPED 2026-05-08
 
@@ -962,20 +970,20 @@ drift.
       self-refs in the two renamed docs themselves. Cross-refs in `plans/active/master_to_live_defi_2026_05_23.md` and
       `codex/08-workflows/local-dev.md` were already lowercase from earlier-session work absorbed into HEAD. Foot-gun
       #1/#3 attribution: parallel-agent commits hijacked the staged set during repeated HEAD resets through the session
-      (~5 reset events observed in reflog); content landed correctly, attribution muddled per the workspace
-      "Two teammates × multiple parallel agents" footnote.
+      (~5 reset events observed in reflog); content landed correctly, attribution muddled per the workspace "Two
+      teammates × multiple parallel agents" footnote.
 
 ### Phase F.3 — Severity tier glossary — PARALLEL — P1
 
 - [x] [SCRIPT] P1. Per audit (14-playbooks A): codex enum (CRITICAL/HIGH/WARN/INFO) vs PagerDuty (P0/P1/P2/P3) vs
-      `AlertSeverity.WARN` (Python). Add a single glossary table at top of `14-playbooks/alerting/README.md` (or
+      `AlertSeverity.WARN` (Python). Add a single glossary table at top of `15-runbooks/alerting/README.md` (or
       `03-observability/alerting.md`) mapping all three. Other docs cite. **SHIPPED 2026-05-08** — glossary added to
-      `14-playbooks/alerting/README.md` § "Severity glossary" mapping all three vocabularies (UAC `AlertSeverity`
+      `15-runbooks/alerting/README.md` § "Severity glossary" mapping all three vocabularies (UAC `AlertSeverity`
       CRITICAL/HIGH/WARN/INFO ↔ PagerDuty P0/P1/P2/P3 ↔ routing ↔ time-to-ack ↔ examples). Cross-links added in
       `03-observability/alerting.md` (replaces inline severity table),
-      `14-playbooks/alerting/pagerduty-escalation-policy.md` (top banner + reshape "Severity tiers" section to defer to
+      `15-runbooks/alerting/pagerduty-escalation-policy.md` (top banner + reshape "Severity tiers" section to defer to
       glossary; preserves the operational P0-vs-P1 sub-distinction inside CRITICAL), and
-      `14-playbooks/alerting/threshold-tuning.md` (top banner citing glossary from the WARNING-only deploy step).
+      `15-runbooks/alerting/threshold-tuning.md` (top banner citing glossary from the WARNING-only deploy step).
 
 ### Phase F.4 — `aws_migration_cost_analysis_2026_05_07.md` extract + archive — PARALLEL — P2 — SHIPPED
 
@@ -1057,9 +1065,9 @@ DELETED codex docs by this plan:
 - [ ] `codex/04-architecture/batch-live-pipeline.md` (Phase D.6, replaced)
 - [ ] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6, replaced)
 - [ ] Some/all 12 stub files in `codex/06-coding-standards/` (Phase B.4, per-file decision)
-- [ ] Topology 7-doc cluster (Phase E.1, IF approved): `RUNTIME_TOPOLOGY_DECISIONS.md`, `TIER-ARCHITECTURE.md`,
+- [ ] Topology 7-doc cluster (Phase E.1, IF approved): `RUNTIME_TOPOLOGY_DECISIONS.md`, `tier-and-import-architecture.md`,
       `service-family-scope.md`, `deployment-topology-diagrams.md`, `pipeline-service-layers.md`,
-      `api-services-cluster.md`, `PROTOCOL-INJECTION.md`.
+      `api-services-cluster.md`, `tier-and-import-architecture.md`.
 
 ---
 

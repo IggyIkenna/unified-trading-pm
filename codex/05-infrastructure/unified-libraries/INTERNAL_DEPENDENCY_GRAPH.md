@@ -338,7 +338,7 @@ See task `deployment-v3-four-way-split` and SSOT `06-coding-standards/integratio
 
 ## References
 
-- **Tier architecture SSOT:** [`04-architecture/TIER-ARCHITECTURE.md`](../../04-architecture/TIER-ARCHITECTURE.md)
+- **Tier architecture SSOT:** [`04-architecture/tier-and-import-architecture.md`](../../04-architecture/tier-and-import-architecture.md)
 - **Library quick-reference:** [`LIBRARY-DEPENDENCY-MATRIX.md`](./LIBRARY-DEPENDENCY-MATRIX.md)
 - **Machine-readable manifest:**
   [`unified-trading-pm/workspace-manifest.json`](../../../../unified-trading-pm/workspace-manifest.json)

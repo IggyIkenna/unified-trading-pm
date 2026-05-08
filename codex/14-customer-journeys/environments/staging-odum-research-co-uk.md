@@ -26,14 +26,14 @@ pre-production validation.
 
 ## Data isolation from production
 
-| Resource             | Staging                                                                                                                                                                    | Production               |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Resource             | Staging                                                                                                                                                                     | Production               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
 | GCP project          | staging GCP project (per [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md)) | production GCP project   |
-| Pub/Sub topics       | prefixed `staging-`                                                                                                                                                        | no prefix                |
-| BigQuery datasets    | `staging_<domain>`                                                                                                                                                         | `<domain>`               |
-| GCS buckets          | `odum-staging-<name>`                                                                                                                                                      | `odum-<name>`            |
-| Firebase             | `odum-staging` (target)                                                                                                                                                    | `central-element-323112` |
-| Secret Manager scope | staging secrets only                                                                                                                                                       | production secrets only  |
+| Pub/Sub topics       | prefixed `staging-`                                                                                                                                                         | no prefix                |
+| BigQuery datasets    | `staging_<domain>`                                                                                                                                                          | `<domain>`               |
+| GCS buckets          | `odum-staging-<name>`                                                                                                                                                       | `odum-<name>`            |
+| Firebase             | `odum-staging` (target)                                                                                                                                                     | `central-element-323112` |
+| Secret Manager scope | staging secrets only                                                                                                                                                        | production secrets only  |
 
 ## Demo account lifecycle on staging
 

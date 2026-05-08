@@ -8,8 +8,8 @@
 - `deployment-service/configs/runtime-topology.yaml` — runtime wiring: topics, storage, modes, co-location rules
 - `unified-trading-pm/TOPOLOGY-DAG.md` — human-readable Mermaid diagram (this file)
 
-**Architectural narrative:** `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` **Protocol injection
-contract:** `unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md` **Cross-refs:**
+**Architectural narrative:** `unified-trading-codex/04-architecture/tier-and-import-architecture.md` **Protocol injection
+contract:** `unified-trading-codex/04-architecture/tier-and-import-architecture.md` **Cross-refs:**
 `05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md` · `05-infrastructure/ui-dependency-matrix.md`
 
 **Last Updated:** 2026-03-24 (consolidated active UI/API surface: unified-trading-system-ui + deployment-ui;
@@ -164,7 +164,7 @@ flowchart TB
     end
 
     subgraph MGMT["📋 Management & Standards"]
-        CODEX["unified-trading-codex\nArchitecture SSOT · Coding standards\nSchema governance · Tier rules\nPROTOCOL-INJECTION.md"]
+        CODEX["unified-trading-codex\nArchitecture SSOT · Coding standards\nSchema governance · Tier rules\ntier-and-import-architecture.md"]
         PM["unified-trading-pm\nworkspace-manifest.json SSOT\nTOPOLOGY-DAG.md (this file)\ncredentials-registry.yaml\nplans/active/ · cursor-rules/"]
     end
 
@@ -336,8 +336,8 @@ In production, each API is a separate Cloud Run service URL.
 
 ## References
 
-- **Tier SSOT:** `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`
-- **Protocol injection:** `unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md`
+- **Tier SSOT:** `unified-trading-codex/04-architecture/tier-and-import-architecture.md`
+- **Protocol injection:** `unified-trading-codex/04-architecture/tier-and-import-architecture.md`
 - **Library deps:** `unified-trading-codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md`
 - **UI wiring:** `unified-trading-codex/05-infrastructure/ui-dependency-matrix.md`
 - **Repo registry:** `unified-trading-pm/workspace-manifest.json`

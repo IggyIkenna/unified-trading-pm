@@ -137,7 +137,7 @@ companion demo is scheduled through [`../demo-ops/demo-decision-matrix.md`](../d
 - Shared reporting core: [../shared-core/shared-reporting-core.md](../shared-core/shared-reporting-core.md)
 - Org / fund entity model:
   [../shared-core/org-fund-client-entity-model.md](../shared-core/org-fund-client-entity-model.md)
-- SMA vs Pooled: [../../14-playbooks/cross-cutting/sma-vs-pooled.md](../../14-playbooks/cross-cutting/sma-vs-pooled.md)
+- SMA vs Pooled: [../../14-customer-journeys/playbook-concepts/sma-vs-pooled.md](../../14-customer-journeys/playbook-concepts/sma-vs-pooled.md)
 - IM commercial model:
   [../commercial-model/im-vs-reg-reporting-logic.md](../commercial-model/im-vs-reg-reporting-logic.md)
 - Demo restriction profile (IM): [../demo-ops/demo-restriction-profiles.md](../demo-ops/demo-restriction-profiles.md)

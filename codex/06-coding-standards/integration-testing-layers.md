@@ -9,7 +9,7 @@ scope: [engineer]
 - Repo registry: `unified-trading-pm/workspace-manifest.json`
 - Plan: `unified-trading-pm/plans/cursor-plans/consolidated_remaining_work.plan.md`
 - Cursor rule: `.cursor/rules/integration-testing-layers.mdc`
-- Tier architecture: `04-architecture/TIER-ARCHITECTURE.md`
+- Tier architecture: `04-architecture/tier-and-import-architecture.md`
 - Topology DAG: `04-architecture/TOPOLOGY-DAG.md`
 
 ---

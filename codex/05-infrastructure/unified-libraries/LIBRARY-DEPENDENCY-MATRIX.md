@@ -9,7 +9,7 @@ scope: [engineer, admin]
 
 > ⚠️ **THIS IS NOT THE TIER SSOT.**
 >
-> **Authoritative tier model:** [`04-architecture/TIER-ARCHITECTURE.md`](../../04-architecture/TIER-ARCHITECTURE.md) —
+> **Authoritative tier model:** [`04-architecture/tier-and-import-architecture.md`](../../04-architecture/tier-and-import-architecture.md) —
 > defines the full 5-tier system (T0 pure leaves → T1 service runtime → T2 domain interfaces → T3 domain data client →
 > T4/service)
 >
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 > `arch_tier`, `dependencies`, `completion_paths`, `tier_rules` per repo
 >
 > This document covers the **library layer only** (T0–T3) — which library imports which, and why. For services and UIs,
-> see `04-architecture/TIER-ARCHITECTURE.md`.
+> see `04-architecture/tier-and-import-architecture.md`.
 
 **Last updated:** 2026-02-28
 

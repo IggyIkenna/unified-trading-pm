@@ -1047,8 +1047,8 @@ uses real Firebase prod personas, and submits to production sinks. Dev ↔ stagi
 
 ### G1 plan cross-references (per slide)
 
-| Slide(s)           | G1 item                                   | Plan file                                                                                                                                                                                                    |
-| ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Slide(s)           | G1 item                                   | Plan file                                                                                                                                                                                                     |
+| ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 9 (phase-binding)  | G1.1 Phase unification                    | [`refactor_g1_1_phase_unification_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_1_phase_unification_2026_04_20.plan.md)                                                                             |
 | 6 (access_control) | G1.2 Instruction-schema validation        | [`refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md)                                     |
 | 8 (LOCKED-VISIBLE) | G1.3 LOCKED-VISIBLE UI service-tile mode  | [`refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md`](../../../plans/archive/refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md)                                         |

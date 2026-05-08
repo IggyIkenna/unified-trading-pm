@@ -5,22 +5,22 @@ scope: [engineer, admin]
 # CeFi ML Live-Serving Architecture
 
 > **STATUS** — Design doc landed 2026-05-08 by Tab 2 of Ikenna's 6-tab work-split, in service of the
-> [`cefi_ml_may_23_2026.epic.md`](../../../plans/archive/cefi_ml_may_23_2026.epic.md) success criteria
-> "Live ML inference active" + "Model-version traceability per trade". Wiring lands on the Harsh side
-> per the cross-side handshake; this doc is the contract.
+> [`cefi_ml_may_23_2026.epic.md`](../../../plans/archive/cefi_ml_may_23_2026.epic.md) success criteria "Live ML
+> inference active" + "Model-version traceability per trade". Wiring lands on the Harsh side per the cross-side
+> handshake; this doc is the contract.
 
 ## TL;DR
 
 Live ML inference for the May-23 CeFi LIVE archetype runs on the SAME features-service compute path as batch (per
-[`batch-live-architecture.md`](../../04-architecture/batch-live-architecture.md) (single SSOT) — no parallel ML inference path). Three
-durable artefacts make this work:
+[`batch-live-architecture.md`](../../04-architecture/batch-live-architecture.md) (single SSOT) — no parallel ML
+inference path). Three durable artefacts make this work:
 
 1. **Model artefact registry** — UAC SSOT for `gs://uts-models-{cloud}/{asset_group}/{family}/{version}/model.{ext}`
    path templates per (asset_group, model_family). UTL `model_registry.py` reads + caches.
 2. **Hot-reload of model artefacts** — mirror the
    [`InstrumentLifecycleCacheDeltaReloader`](../../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
-   pattern: subscribe to `streaming.models.refresh_trigger`, diff registry, hot-reload affected models without
-   service restart.
+   pattern: subscribe to `streaming.models.refresh_trigger`, diff registry, hot-reload affected models without service
+   restart.
 3. **Model-version traceability per trade** — every `FEATURE_COMPUTED` event + every strategy decision tag includes
    `model_version` + `model_artefact_uri` so the audit trail covers every signal back to the deterministic artefact.
 
@@ -38,8 +38,9 @@ MODEL_PATH_TEMPLATES: dict[tuple[AssetGroup, str], str] = {
 }
 ```
 
-`{cloud}` is filled at read-time from `UnifiedCloudConfig().cloud_provider` per workspace cloud-agnostic rule. `{version}`
-is the semver of the model artefact (separate from service semver — model artefacts have their own versioning).
+`{cloud}` is filled at read-time from `UnifiedCloudConfig().cloud_provider` per workspace cloud-agnostic rule.
+`{version}` is the semver of the model artefact (separate from service semver — model artefacts have their own
+versioning).
 
 ## Live-serving flow
 
@@ -97,8 +98,8 @@ from unified_trading_library.instrument_lifecycle_cache_delta_reloader import (
 
 Subscribed by the features-service compute worker; diffs new vs old model registry; on `added` / `modified` model
 artefacts, downloads the new artefact + atomically swaps the in-memory model. `removed` models stop emitting features
-for that model_family. The reloader carries the same `(CatalogDelta, snapshot)` shape the instrument-lifecycle one
-uses, so the two share test fixtures.
+for that model_family. The reloader carries the same `(CatalogDelta, snapshot)` shape the instrument-lifecycle one uses,
+so the two share test fixtures.
 
 ## Model-version traceability per trade
 
@@ -116,8 +117,8 @@ grouping fills by `model_version` + summing realised P&L.
 ## Anti-patterns
 
 - **Don't load model artefacts from local disk.** Always via the registry — local disk drifts.
-- **Don't bypass hot-reload.** Restarting features-service to swap a model breaks the live cascade — replay catches
-  up but the gap is pageable.
+- **Don't bypass hot-reload.** Restarting features-service to swap a model breaks the live cascade — replay catches up
+  but the gap is pageable.
 - **Don't omit `model_version` from any downstream event.** Audit trail requires it everywhere.
 - **Don't bake the model into the Docker image.** Image is service-version; model is a separate artefact lifecycle.
 - **Don't use a different inference path for batch vs live.** Same code, same registry, same model_version stamping —
@@ -126,9 +127,10 @@ grouping fills by `model_version` + summing realised P&L.
 ## Cross-references
 
 - Epic: [`cefi_ml_may_23_2026.epic.md`](../../../plans/archive/cefi_ml_may_23_2026.epic.md)
-- Plan: [`live_pipeline_mtds_mdps_features_2026_05_08`](../../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+- Plan:
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
 - Sibling: [`ml-alerting-rules.md`](../alerting/ml-alerting-rules.md)
-- Foundation:
-  [`../../04-architecture/batch-live-architecture.md`](../../04-architecture/batch-live-architecture.md) (single SSOT),
+- Foundation: [`../../04-architecture/batch-live-architecture.md`](../../04-architecture/batch-live-architecture.md)
+  (single SSOT),
   [`../../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md),
   [`../../05-infrastructure/live-pipeline-architecture.md`](../../05-infrastructure/live-pipeline-architecture.md)

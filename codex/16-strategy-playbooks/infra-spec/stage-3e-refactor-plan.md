@@ -6,8 +6,8 @@ scope: [engineer, admin]
 
 > **Purpose.** The authoritative post-Stage-3 refactor backlog. Every gap surfaced in
 > [`stage-3a-current-infra-audit.md`](stage-3a-current-infra-audit.md) has a refactor item here. Every item names enough
-> context that a future author (human or agent) can spawn a follow-up `plans/active/*.md` against it without
-> re-doing the Stage 3 analysis.
+> context that a future author (human or agent) can spawn a follow-up `plans/active/*.md` against it without re-doing
+> the Stage 3 analysis.
 >
 > **Parent plan:**
 > [`plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
@@ -705,16 +705,16 @@ G3 — later (polish + automation)
 Some G1/G2 items fold existing active plans. Those plans either become sub-phases of new umbrella plans (per "Proposed
 follow-up plan" column) or are retired once their scope is absorbed.
 
-| Existing plan                                                                                                                                        | Status after Stage 3E                                  |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [user_management_merge_2026_03_23.plan.md](../../../plans/ai/user_management_merge_2026_03_23.plan.md)                                           | Folded into 2.1 (JWT claims) + 2.2 (API keys)          |
-| [share_class_architecture_2026_04_01.plan.md](../../../plans/archive/share_class_architecture_2026_04_01.plan.md)                                     | Folded into 2.8 (fund/business_unit registry)          |
-| [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md)     | Referenced by 2.6 (staging Firebase)                   |
-| [defi_demo_e2e_workflow_2026_03_30.plan.md](../../../plans/archive/defi_demo_e2e_workflow_2026_03_30.plan.md)                                         | Referenced by 1.4 + 2.7 (demo personas + provisioning) |
-| [platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md](../../../plans/ai/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md) | Folded into 2.10 (Phase 10.7 allocator split)          |
-| [five_space_ia_execution_child_plan_2026_04_17.md](../../../plans/active/five_space_ia_execution_child_plan_2026_04_17.md)                           | Referenced by 2.6 (ticket #12 is staging Firebase)     |
-| [coverage_ratchet_policy_2026_04_19.plan.md](../../../plans/archive/coverage_ratchet_policy_2026_04_19.plan.md)                                       | Independent — runs in parallel                         |
-| [coverage_uplift_bottom5_2026_04_19.plan.md](../../../plans/ai/coverage_uplift_bottom5_2026_04_19.plan.md)                                       | Independent — runs in parallel                         |
+| Existing plan                                                                                                                                     | Status after Stage 3E                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [user_management_merge_2026_03_23.plan.md](../../../plans/ai/user_management_merge_2026_03_23.plan.md)                                            | Folded into 2.1 (JWT claims) + 2.2 (API keys)          |
+| [share_class_architecture_2026_04_01.plan.md](../../../plans/archive/share_class_architecture_2026_04_01.plan.md)                                 | Folded into 2.8 (fund/business_unit registry)          |
+| [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md) | Referenced by 2.6 (staging Firebase)                   |
+| [defi_demo_e2e_workflow_2026_03_30.plan.md](../../../plans/archive/defi_demo_e2e_workflow_2026_03_30.plan.md)                                     | Referenced by 1.4 + 2.7 (demo personas + provisioning) |
+| [platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md](../../../plans/ai/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md)  | Folded into 2.10 (Phase 10.7 allocator split)          |
+| [five_space_ia_execution_child_plan_2026_04_17.md](../../../plans/active/five_space_ia_execution_child_plan_2026_04_17.md)                        | Referenced by 2.6 (ticket #12 is staging Firebase)     |
+| [coverage_ratchet_policy_2026_04_19.plan.md](../../../plans/archive/coverage_ratchet_policy_2026_04_19.plan.md)                                   | Independent — runs in parallel                         |
+| [coverage_uplift_bottom5_2026_04_19.plan.md](../../../plans/ai/coverage_uplift_bottom5_2026_04_19.plan.md)                                        | Independent — runs in parallel                         |
 
 ---
 

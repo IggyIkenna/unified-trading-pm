@@ -10,7 +10,7 @@ sprint begins. **Cross-refs:**
 - Plan: `unified-trading-pm/plans/archive/phase0_standards_enforcement.plan.md`
 - Quality gates: `unified-trading-pm/codex/06-coding-standards/quality-gates.md`
 - Integration testing layers: `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md`
-- Tier architecture: `04-architecture/TIER-ARCHITECTURE.md`
+- Tier architecture: `04-architecture/tier-and-import-architecture.md`
 - Workspace manifest: `unified-trading-pm/workspace-manifest.json`
 
 ---

@@ -79,7 +79,7 @@ See `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md`
 
 | Topic                                      | Location                                                                  |
 | ------------------------------------------ | ------------------------------------------------------------------------- |
-| Tier architecture (T0–T3 dependency rules) | `unified-trading-pm/codex/04-architecture/TIER-ARCHITECTURE.md`              |
+| Tier architecture (T0–T3 dependency rules) | `unified-trading-pm/codex/04-architecture/tier-and-import-architecture.md`              |
 | Integration testing layers (0–3)           | `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md` |
 | Deploy-shards CLI reference                | `deployment-service/docs/cli.md`                                          |
 | Workspace topology DAG (all 63 repos)      | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg`                           |

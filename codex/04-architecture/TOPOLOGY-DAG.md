@@ -19,5 +19,5 @@ scope: [engineer, admin]
 | Human-readable tier diagram | `unified-trading-pm/TOPOLOGY-DAG.md`                          | Full Mermaid flowchart — T0→services→UIs→infra  |
 | Code DAG (machine-readable) | `unified-trading-pm/workspace-manifest.json`                  | Tier membership, version pins, merge order      |
 | Runtime wiring              | `deployment-service/configs/runtime-topology.yaml`            | Topics, storage, co-location rules per service  |
-| Tier architecture narrative | `unified-trading-pm/codex/04-architecture/TIER-ARCHITECTURE.md`  | Why the tiers exist; import rules; enforcement  |
-| Protocol injection contract | `unified-trading-pm/codex/04-architecture/PROTOCOL-INJECTION.md` | How libraries resolve live vs batch, GCP vs AWS |
+| Tier architecture narrative | `unified-trading-pm/codex/04-architecture/tier-and-import-architecture.md`  | Why the tiers exist; import rules; enforcement  |
+| Protocol injection contract | `unified-trading-pm/codex/04-architecture/tier-and-import-architecture.md` | How libraries resolve live vs batch, GCP vs AWS |

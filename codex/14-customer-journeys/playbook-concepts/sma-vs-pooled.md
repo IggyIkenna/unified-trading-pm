@@ -86,8 +86,8 @@ change (with deep ops involvement).
 
 ## Related plans
 
-- [share_class_architecture_2026_04_01.plan.md](../../../plans/archive/share_class_architecture_2026_04_01.plan.md) — the
-  detailed implementation
+- [share_class_architecture_2026_04_01.plan.md](../../../plans/archive/share_class_architecture_2026_04_01.plan.md) —
+  the detailed implementation
 
 ## Related codex
 

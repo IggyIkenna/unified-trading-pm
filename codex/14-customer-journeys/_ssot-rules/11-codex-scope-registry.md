@@ -6,7 +6,7 @@ scope: [engineer, admin, sales]
 
 > **Status:** active — Stage 3E G1.9 landing commit. **Parent plan:**
 > `plans/archive/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md`. **Spec reference:**
-> `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.9.
+> `codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.9.
 
 ## Why this rule exists
 
@@ -123,11 +123,11 @@ can override if it genuinely serves a different audience.
 | `14-playbooks/playbooks/`                  | `[engineer, admin, sales]`    | Impl-layer click paths                                                                      |
 | `14-playbooks/authentication/`             | `[engineer, admin]`           | Auth runbooks                                                                               |
 | `14-playbooks/environments/`               | `[engineer, admin]`           | Per-env config                                                                              |
-| `14-playbooks/cross-cutting/`              | `[engineer, admin, sales]`    | Concepts used across playbooks; visibility-slicing is the key cross-cutting doc             |
+| `14-customer-journeys/playbook-concepts/`              | `[engineer, admin, sales]`    | Concepts used across playbooks; visibility-slicing is the key cross-cutting doc             |
 | `14-playbooks/page-triage/`                | `[engineer, admin]`           | 177-page classification — internal-only                                                     |
 | `14-playbooks/testing/`                    | `[engineer, admin]`           | Playwright coverage                                                                         |
 | `14-playbooks/roadmap/`                    | `[engineer, admin, sales]`    | Follow-up waves — visible to sales for commercial planning                                  |
-| `14-playbooks/infra-spec/`                 | `[engineer, admin]`           | Infra audit + refactor plan — engineering-owned                                             |
+| `16-strategy-playbooks/infra-spec/`                 | `[engineer, admin]`           | Infra audit + refactor plan — engineering-owned                                             |
 | `14-playbooks/presentations/`              | `[engineer, admin, investor]` | Target-state deck — investor-briefing-ready                                                 |
 | `14-playbooks/information-architecture.md` | `[engineer, admin, sales]`    | IA hub — all internal                                                                       |
 | `14-playbooks/audiences-and-journeys.md`   | `[engineer, admin, sales]`    | Matrix of audiences × journeys                                                              |

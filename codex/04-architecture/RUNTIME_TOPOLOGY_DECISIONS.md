@@ -504,7 +504,7 @@ that input (gracefully). Required upstream data = service fails fast with clear 
 - **Visual diagram:** `unified-trading-pm/codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`
 - **Machine-readable SSOT:** `unified-trading-pm/configs/runtime-topology.yaml`
 - **Code DAG (tiers + versions):** `unified-trading-pm/workspace-manifest.json`
-- **Tier rules:** `unified-trading-pm/codex/04-architecture/TIER-ARCHITECTURE.md`
+- **Tier rules:** `unified-trading-pm/codex/04-architecture/tier-and-import-architecture.md`
 - **Library deps:** `unified-trading-pm/codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md`
 - **Integration testing:** `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md`
 - **Event logging:** `unified-trading-pm/codex/03-observability/lifecycle-events.md`

@@ -3,10 +3,10 @@
 # This YAML is the data shape the eventual UAC PR ships. Stage 3C's derivation
 # engine reads from `combo_registry.yaml` (or an equivalent protobuf/avro) whose
 # structure matches this sketch. Companion prose spec:
-#   codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md
+#   codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md
 #
 # Validation target:
-#   python -c "import yaml; yaml.safe_load(open('codex/14-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml'))"
+#   python -c "import yaml; yaml.safe_load(open('codex/16-strategy-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml'))"
 #
 # When UAC ships the real registry, this file becomes a fixture under
 # `unified-api-contracts/tests/fixtures/combo_registry/` and the live registry
