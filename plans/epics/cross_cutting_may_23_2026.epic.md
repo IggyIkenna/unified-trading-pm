@@ -158,4 +158,4 @@ trading goal directly.
 - [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) (the 8-family / 18-archetype
   catalogue baseline)
 - [`codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
-- [`codex/09-strategy/cross-cutting/onboarding-checklist.md`](../../codex/09-strategy/cross-cutting/onboarding-checklist.md)
+- [`codex/09-strategy/operational/onboarding-checklist.md`](../../codex/09-strategy/operational/onboarding-checklist.md)

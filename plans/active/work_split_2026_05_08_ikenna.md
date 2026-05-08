@@ -771,7 +771,7 @@ catalogue baseline).
 - [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) — shared
   plan-of-record (you write to its `## Open questions` for blockers; Harsh T6 reads it)
 - [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — existing catalogue baseline
-- [`codex/09-strategy/cross-cutting/onboarding-checklist.md`](../../codex/09-strategy/cross-cutting/onboarding-checklist.md)
+- [`codex/09-strategy/operational/onboarding-checklist.md`](../../codex/09-strategy/operational/onboarding-checklist.md)
   — strategy onboarding flow (your schemas wire into this)
 - [`codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
   — DART manual-trade lane SSOT (extend or peer doc)
