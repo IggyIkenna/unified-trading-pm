@@ -80,8 +80,12 @@ depends_on:
 todos:
   - id: phase-0-pre-audit-gcs-state
     content: |
-      - [ ] [AGENT] P0. Phase 0 — Pre-audit GCS state across every bucket the workspace writes to.
-        SOLO; blocks all later phases.
+      - [x] [AGENT] P0. Phase 0 — Pre-audit GCS state across every bucket the workspace writes to.
+        SOLO; blocks all later phases. (unified-trading-pm@0cc633c8 — pre-audit doc shipped at
+        plans/active/issues/gcs_migration_bundle_preaudit_2026_05_08.md; counts +
+        per-bucket runs deferred to operator on a same-region asia-northeast1-c GCE VM
+        per CLAUDE.md phantom-audit recipe — append `## Run results — YYYY-MM-DD` section
+        at the bottom of the issue doc per pass.)
 
         Output: `unified-trading-pm/plans/active/issues/gcs_migration_bundle_preaudit_2026_05_08.md` enumerating:
         (a) every workspace GCS bucket (`gs://{pid}-raw-tick`, `gs://{pid}-features`, `gs://{pid}-instrument-data`,
