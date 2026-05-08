@@ -112,9 +112,12 @@ Covers:
 - [x] [AUDIT] P0. Classifier stability hash design — pending; audit-3 documented existing classifier shape but hash
       design not finalized. [AUDIT 2026-05-07: DONE — UAC@5f76bd4 (CLASSIFIER_STABILITY_HASH for prediction-market
       reclassification gating)]
-- [ ] [SCRIPT] P0. Lifecycle ingestion in instruments-service: capture `market_created_at`, `resolution_time`,
+- [x] [SCRIPT] P0. Lifecycle ingestion in instruments-service: capture `market_created_at`, `resolution_time`,
       `settlement_time` per conditionId / Kalshi ticker. [AUDIT 2026-05-07: FRESH — actionable; UAC SSOT (af2bc9b
-      lifecycle wrapper) is in place but instruments-service writer not yet shipped]
+      lifecycle wrapper) is in place but instruments-service writer not yet shipped] (instruments-service@98bb167 —
+      Polymarket + Kalshi adapters expose `classify_lifecycle()` + `get_market_lifecycles()` returning per-market
+      `MarketLifecycle` rows keyed on UAC canonical_question_group; `available_from_datetime` /
+      `available_to_datetime` stamped on the emitted InstrumentRecord — orchestrator MARKET_LIFECYCLE writer pending)
 - [ ] [SCRIPT] P0. New writer path in `engine/orchestrator.py` for prediction with canonical_group + lifecycle. [AUDIT
       2026-05-07: FRESH — actionable]
 - [ ] [SCRIPT] P0. `_extract_prediction_shard` / `_compute_prediction_shards` (orchestrator.py:2497–2524) call
