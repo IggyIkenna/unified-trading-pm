@@ -1,0 +1,199 @@
+---
+title: Wave 3.X residual SSOTs + classifier extensions + reconcilers — 2026-05-08
+type: sub-plan
+status: active
+created: 2026-05-08
+deadline: 2026-05-23
+parent_plan: writegate_honest_coverage_endtoend_2026_05_06.md
+locked_by: live-defi-rollout
+locked_since: 2026-05-08
+---
+
+# Wave 3.X residual SSOTs + classifier extensions + reconcilers
+
+## Why this plan exists
+
+The 25-dimension audit captured during the writegate Phase 3.D.5 Wave 3.X work (operator msgs 6-10) surfaced a set of
+**residual SSOTs and classifier extensions** that don't fit cleanly inside the writegate plan body — they're greenfield
+UAC additions, UTL extensions, and one-time reconciler scripts that compose with but don't depend on the Wave 4
+emission-policy work.
+
+Operator greenlight 2026-05-08: ship these in parallel with Wave 4 slice (b/c). None block each other; none block
+Wave 4. The work splits into 5 tracks, each with its own owner-and-blast-radius shape.
+
+## Tracks (parallel; no inter-track dependencies)
+
+### Track A — Calendar SSOTs (UAC, ~1.5 days)
+
+**Why**: `EXPECTED_PARTIAL_HALF_DAY` + `EXPECTED_OUTSIDE_TRADING_HOURS` are members of the `EmptyConfirmedReason`
+taxonomy (UAC@145457e), but the SSOTs the classifier needs to fire those reasons don't exist yet. Without them, the
+classifier silently falls through to `SOURCE_RETURNED_ZERO` for legitimate half-day / outside-hours shards — producing
+incorrect operator dashboards and ML training NaN-fill mistakes.
+
+**Files to create**:
+
+- [ ] [UAC] P0. NEW `unified_api_contracts/registry/half_day_sessions.py` —
+      `HALF_DAY_SESSIONS:     dict[str, set[date]]` mapping venue → set of dates that are half-day sessions per
+      published exchange calendars. Seed with CME (Thanksgiving Friday + Christmas Eve), NYSE / NASDAQ (same dates),
+      CBOE (same), Eurex (Christmas Eve). Helper: `is_half_day_session(venue: str, day: date) -> bool`. Cite
+      source-of-truth published calendars in module docstring (CME holiday schedule URL, NYSE holiday schedule URL).
+- [ ] [UAC] P0. NEW `unified_api_contracts/registry/venue_session_hours.py` —
+      `VENUE_SESSION_HOURS:     dict[tuple[str, int], tuple[time, time]]` keyed by `(venue, weekday_isoweek_0_to_6)` →
+      `(open_utc, close_utc)` tuple. Seed with the major venues whose intraday shards we capture: CME GLBX (Sun
+      22:00-Fri 22:00 ETH), NYSE (13:30-20:00 weekdays), NASDAQ (same), CBOE (13:30-20:15 weekdays for VIX), 24/7 venues
+      (binance / bybit / okx / kraken / etc. → `(00:00, 23:59:59)` all 7 weekdays). Helper:
+      `is_within_venue_session_hours(venue: str, ts: datetime) -> bool`. Compose with `half_day_sessions` so a half-day
+      is a SHORTENED session, not a fully closed day.
+- [ ] [TEST] P0. UAC unit tests for both registries: half-day boolean per venue × date matrix; session-hour bounds
+      checks per venue × weekday × representative timestamp; closed-set drift guard against `EmptyConfirmedReason`
+      members `EXPECTED_PARTIAL_HALF_DAY` + `EXPECTED_OUTSIDE_TRADING_HOURS`.
+- [ ] [UTL] P0. Extend `unified_trading_library/legacy_reason_classifier.py` to consume both registries: when input
+      shard's day is a half-day → emit `EXPECTED_PARTIAL_HALF_DAY`; when intra-day shard timestamp falls outside the
+      venue session hours → emit `EXPECTED_OUTSIDE_TRADING_HOURS`. Closed-set drift guard.
+- [ ] [TEST] P0. UTL classifier tests: half-day day for ES.OPT venue → reason matches; weekend for venue NYSE →
+      EXPECTED_WEEKEND (existing rule); pre-market timestamp for NYSE shard → EXPECTED_OUTSIDE_TRADING_HOURS.
+
+### Track B — Sports per-source coverage SSOTs (UAC, ~2 days)
+
+**Why**: sports adapters write `empty_confirmed` shards for legitimate per-source-doesn't-cover-this-league cases
+(Understat covers EPL/LaLiga/SerieA/Bundesliga/Ligue1 only; transfermarkt has per-country transfer windows; footystats
+has per-league season boundaries). Without per-source SSOTs, the classifier emits `SOURCE_RETURNED_ZERO` and the
+data-status UI flags every Understat shard for La Liga as a possible coverage hole — false-positive noise.
+
+**Files to create**:
+
+- [ ] [UAC] P0. NEW `unified_api_contracts/canonical/domain/sports/understat_coverage.py` —
+      `UNDERSTAT_COVERED_LEAGUES: frozenset[str]` containing the 5 league_ids Understat actually covers (per published
+      Understat coverage). Helper: `does_understat_cover(league_id: str) -> bool`. Cite source: scrape of Understat's
+      per-league index page as of 2026-05-08.
+- [ ] [UAC] P0. NEW `unified_api_contracts/canonical/domain/sports/transfer_windows.py` —
+      `TRANSFER_WINDOWS:     dict[str, list[tuple[date, date]]]` keyed by country_code → list of (window_open,
+      window_close) ranges per the country's published transfer registration windows (FIFA + national-FA rules). Seed
+      with EU countries (England, Spain, Italy, Germany, France) + USA (MLS-specific summer/winter windows) + Japan
+      (J.League windows). Helper: `is_within_transfer_window(country_code: str, day: date) -> bool`.
+- [ ] [UAC] P0. EXTEND `unified_api_contracts/sports/provider_league_ids.py` — add `season_start: date` +
+      `season_end: date` fields to the existing `FOOTYSTATS_SEASON_IDS` dict entries. Source: footystats per-league
+      season pages. Helpers: `get_footystats_season_bounds(league_id: str, season: str) -> tuple[date, date]` +
+      `is_within_footystats_season(league_id: str, season: str, day: date) -> bool`. Composes with the existing
+      `SOURCE_COVERAGE_START` clip — pre-season days within the source's coverage window get the new
+      `EXPECTED_PRE_SEASON` reason; post-season days get `EXPECTED_POST_SEASON`.
+- [ ] [UTL] P0. Extend `legacy_reason_classifier.py::_classify_sports` to consume the three new SSOTs: source ==
+      Understat AND league not in covered set → `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`; source == transfermarkt AND day
+      outside transfer window → `EXPECTED_OUTSIDE_TRANSFER_WINDOW`; source == footystats AND day outside season bounds →
+      `EXPECTED_PRE_SEASON` or `EXPECTED_POST_SEASON` per which side of the window.
+- [ ] [TEST] P0. UAC tests cover each new SSOT's seeded entries + helper boolean correctness; UTL classifier tests cover
+      each new EXPECTED\_\* reason firing for the right (source, league_id, day) shape; closed-set drift guard.
+
+### Track C — Reconciler script (instruments-service, ~1 day)
+
+**Why**: shards classified pre-2026-05-07 as `empty_confirmed` with blank `error_reason` (the silent-fallback bug
+cleaned up by Wave 2 of writegate Phase 3.D.5) included MANY shards that should now be classified with one of the new
+typed reasons (`EXPECTED_PARTIAL_HALF_DAY` / `EXPECTED_OUTSIDE_TRADING_HOURS` / `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`
+/ `EXPECTED_OUTSIDE_TRANSFER_WINDOW` / `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON`). The 2026-05-07
+reconcile_blank_error_reason_rows.py migration only flipped them to a default reason; with Track A + B SSOTs landed this
+reconciler can re-classify them with the now-available typed reasons.
+
+**File**:
+
+- [ ] [instruments-service] P0. NEW `instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py` — walks the
+      canonical manifest, finds
+      `(capture_status=empty_confirmed AND error_reason ∈ {SOURCE_RETURNED_ZERO,     EXPECTED_INSTRUMENT_NOT_LISTED})`
+      rows that were stamped during the 2026-05-07 sweep, re-runs them through the now-extended
+      `classify_blank_reason_row()` with Track A + B SSOTs available, and where the extended classifier returns a
+      more-specific typed reason (e.g. `EXPECTED_PARTIAL_HALF_DAY` instead of `SOURCE_RETURNED_ZERO`), stamps the new
+      reason on the row. Same shape as the existing reconciler scripts: `--asset-group` flag, `--apply-flips` gate
+      (default scan-only), `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=` per-VM-shard isolation protocol, RECONCILER\_\*
+      events, CSV audit, `--max-flips-per-run` halt safety.
+- [ ] [TEST] P0. Smoke-test on a synthetic manifest with planted `SOURCE_RETURNED_ZERO` rows for half-day-CME-shards →
+      reconciler finds them, scan-only mode reports the proposed new reasons, `--apply-flips` mode flips them.
+- [ ] [DOCS] P0. Codex audit-ledger update under
+      `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md` § "Reason taxonomy" — note the
+      reconciler is the canonical mechanism for legacy reason upgrades whenever a new EXPECTED\_\* reason is added to
+      UAC `EmptyConfirmedReason`.
+
+### Track D — Wave 3.M zero-activity-bar adapter audit (every per-shard adapter; ~2 days)
+
+**Why**: operator directive 2026-05-07 (msg 8) added the 4-category empty-output decision matrix to CLAUDE.md, with case
+D being "source returned zero BUT instruments-service catalog says alive AND day within venue market hours → write
+zero-activity bars + record_captured". Wave 2 of writegate Phase 3.D.5 shipped the catalog-aware classifier at the
+manifest level; Wave 3.M extends the same logic to the WRITE side so adapters emit shape-correct zero-activity-bars
+instead of writing nothing.
+
+**Audit scope** (every per-shard adapter):
+
+- [ ] [MTDS] P0. Audit MTDS adapters (`market_tick_data_service/adapters/*.py`) for the case-A vs case-D split. For each
+      adapter, when source returns zero AND the catalog-aware guard reports the instrument alive: replace the current
+      `record_empty()` call with a per-data*type zero-activity-bar emission per the table in CLAUDE.md "Four-category
+      empty-output decision" rule. Per-data_type bar shape: -
+      `ohlcv*\*`→ O=H=L=C=prior_LTP, volume=0, trade_count=0, available_at=window_close.     -`trades`→ empty parquet (0 rows is correct; manifest carries`record_captured`with row_count=0 + a       zero-activity flag column).     -`book_snapshot_5`→ carry-forward last bid/ask at all 5 levels, mid=last_mid, spread=last_spread.     -`derivative_ticker`
+      → carry-forward last open_interest / mark_price / index_price.
+- [ ] [MDPS] P0. Audit MDPS calculators for the same case-D handling at the candle-aggregation boundary.
+- [ ] [features-* (8 services)] P1. Audit each features service's calculators per same shape — especially the
+      sports/prediction case-D-with-bookmaker-odds-carry-forward.
+- [ ] [TEST] P0. Per-adapter smoke tests: synthetic instrument-alive-but-source-zero day → zero-activity-bar with
+      correct shape; instrument-not-yet-listed day → record_empty with EXPECTED_INSTRUMENT_NOT_LISTED (existing rule);
+      pre-genesis-chain day for DeFi → record_empty with EXPECTED_PRE_GENESIS_CHAIN.
+- [ ] [DOCS] P0. Codex update to `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` §
+      "Zero-activity-bar shape" — table of bar-shape per data_type, with explicit pre-LTP-carry-forward semantics + the
+      volatility-smile use case (operator-flagged: every strike must be visible even on zero-volume days for
+      cross-instrument analysis).
+
+### Track E — Wave 3.S sports per-source rules (sports services, ~3 days)
+
+**Why**: sports adapters need per-source rules for things that don't fit the per-day capture/empty model — match-end
+detection cascade for `available_at` stamping, lineup pre-match carry-forward semantics, odds-snapshot freshness
+windows. These overlap with Track A+B SSOTs (which provide the structural denominator) but are about the write-time
+stamping logic.
+
+**Files / changes**:
+
+- [ ] [UTL] P0. Extend `availability_stamping.stamp_available_at_*` family with the four sports stamp helpers per the
+      CLAUDE.md "available_at is per-row, write-time" rule: -
+      `stamp_available_at_lineups(kickoff: datetime) -> datetime` returns `kickoff - 60min` (conservative — clip earlier
+      leaks per operator directive). - `stamp_available_at_injuries(report_time: datetime) -> datetime` per-row event
+      time. -
+      `stamp_available_at_post_match(match_end_time: datetime | None, kickoff: datetime,       source_cascade: list[str]) -> datetime`
+      — cascade detection per CLAUDE.md (api_football native → SFI progressive freeze → footystats / understat →
+      low-confidence `kickoff + 120min` fallback). Returns the first non-None match_end_time it finds; the cascade order
+      is the source-priority order from UAC. - `stamp_available_at_odds_snapshot(snapshot_time: datetime) -> datetime`
+      returns publication time per snapshot.
+- [ ] [features-sports] P0. Wire the new stamp helpers at the sports calculator emission boundaries that currently emit
+      blank or read-time-derived `available_at` columns.
+- [ ] [TEST] P0. Unit tests cover each stamp helper's edge cases + a regression test on a synthetic post-match shard
+      that verifies the cascade falls through to `kickoff + 120min` only when all upstream cascades are empty.
+- [ ] [DOCS] P0. Codex update to `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` adding the 4
+      sports stamping rules to the existing temporal-availability table.
+
+## Success criteria
+
+- Tracks A + B + C land in lockstep — Track C reconciler depends on A+B SSOTs being available. Sequence: A & B in
+  parallel (~2 days each), then C (~1 day).
+- Tracks D + E land in parallel with A/B/C — independent.
+- All 5 tracks shipped + green QG by ~2026-05-15 (1 week from this plan creation; gives 1-week buffer to the 2026-05-23
+  live-DeFi cutover).
+- Workspace-wide QG passes after each track.
+- Memory entry per shipped track per the workspace memory model.
+
+## Coordination with other plans
+
+- **Wave 4 slice (b/c)** in
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) — runs in
+  parallel; no dependencies between this plan and Wave 4. The classifier extensions in tracks A+B make more shards
+  classify as `empty_confirmed` (vs `attempted_failed`) which improves the completeness_fraction denominator the Wave 4
+  helper computes — but that's strictly improvement, not a hard dependency.
+- **`master_to_live_defi_2026_05_23.md`** — this plan is a Group D (Coverage & shard) feeder; tracks A+B clear
+  false-positive coverage holes in the operator-facing dashboards before the May-23 cutover.
+- **`master_readiness_data_status.md` / `data_status_drilldown_shard_atom_alignment_2026_05_07.md`** — tracks A+B
+  populate denominators that the data-status UI consumes; track C reconciler back-fills history so existing drilldown
+  views light up the new typed reasons retroactively.
+
+## Why this isn't folded into the writegate plan
+
+The writegate plan is already 3221 lines covering the cross-cutting Phase 3.D.5 architecture work. These residuals are
+independent SSOT additions + classifier extensions + a one-time reconciler — they don't fit the writegate plan's
+"phase-by-phase honest-coverage rollout" narrative. Spinning them into a sub-plan keeps the writegate plan focused on
+its through-line + makes track ownership cleaner per the daily work-split process.
+
+## Open questions
+
+(none currently — operator greenlight 2026-05-08 covered the full track set)

@@ -2780,19 +2780,229 @@ Downstream reads parquet + events identically — no batch-specific or live-spec
   completeness). They co-exist: a zero-volume bar IS valid input data (`captured`), so downstream's policy fires
   PUBLISHED_OK on it.
 
-**Suggested first slice (multi-day undertaking — gate on operator approval):**
+**Slices: (a) shipped, (b) and (c) GREENLIT 2026-05-08 by operator.**
 
-(a) **SHIPPED 2026-05-08** — UAC@58c3b61 + UTL@1a7e1d4b. Schema floor in place: UAC `ServiceEmissionPolicy` enum +
-19-row seed dict + 4-name `EmissionLifecycleEvent` enum; UTL `publish_with_policy()` + frozen `EmissionDecision`
-dataclass + 48 unit tests (30 UAC + 18 UTL). No consumer wiring; pure additive. Manifest-read coupling intentionally
-deferred to slice (b) — caller passes `completeness_fraction` for now. (b) Wire ONE service end-to-end as
-proof-of-concept (e.g., MDPS `ohlcv_1h` STRICT_FAIL + PARTIAL_OK on the historical re-emission path). ~2 days. Includes
-the manifest-read helper that computes `completeness_fraction` from upstream
-`(captured / empty_confirmed / attempted_failed / expected_unattempted)` row counts over a given upstream-window
-enumeration. (c) Per-service rollout: each service-team picks up its row of the policy table + wires
-`publish_with_policy` at emission boundary. Multi-week.
+#### Slice (a) — Schema floor (SHIPPED 2026-05-08)
 
-Operator-decision queue: slice (a) shipped; ready for (b) on operator green-light.
+UAC@58c3b61 + UTL@1a7e1d4b + PM@0e2eb08e. `ServiceEmissionPolicy` enum + 19-row seed dict + 4-name
+`EmissionLifecycleEvent` enum; UTL `publish_with_policy()` + frozen `EmissionDecision` dataclass + 48 unit tests (30
+UAC + 18 UTL). No consumer wiring; pure additive. Manifest-read coupling intentionally deferred to slice (b) — caller
+passes `completeness_fraction` for now.
+
+#### Slice (b) — MDPS `ohlcv_1h` end-to-end POC (GREENLIT 2026-05-08; ~2 days)
+
+**Goal**: prove the slice-(a) schema floor works end-to-end on ONE real service emission boundary so per-service rollout
+(slice c) has a battle-tested template to copy. MDPS `ohlcv_1h` is the chosen POC: it has both real-time current-bar
+emission (STRICT_FAIL when current minute upstream is missing) AND historical re-emission (PARTIAL_OK with
+completeness_fraction). Two distinct policies for the same data_type validates the `:current` / `:historical` slice
+shape codified in slice (a)'s seed dict.
+
+**Phase 5.1 — UTL `manifest_completeness.py` helper (P0, ~4hr)**
+
+- [ ] [UTL] P0. NEW `unified_trading_library/manifest_completeness.py` —
+      `compute_completeness_fraction(upstream_window: list[UpstreamWindowKey], manifest_reader: ManifestReader,     *, window_start_utc: datetime, window_end_utc: datetime) -> CompletenessReadout`.
+      Returns a frozen `CompletenessReadout` dataclass with `fraction: float`,
+      `incomplete_window: list[Mapping[str,str]]`, `total_expected: int`, `total_captured: int`,
+      `total_empty_confirmed: int`, `total_attempted_failed: int`, `total_expected_unattempted: int`. Each
+      `UpstreamWindowKey` is `Mapping[str,str]` matching the manifest row_key shape (asset_group / venue / data_type /
+      instrument_id / day / etc.). Helper queries the manifest once per call via the existing `ManifestReader`
+      interface, applies
+      `(captured + empty_confirmed) / (captured + empty_confirmed +     attempted_failed + expected_unattempted)` per
+      the workspace coverage formula, and emits the `incomplete_window` list as the rows where
+      `capture_status != captured AND capture_status != empty_confirmed`. Empty-confirmed rows DO count toward
+      completeness (operator directive: empty-confirmed is honest absence, not a gap from the consumer's perspective;
+      only `attempted_failed` + `expected_unattempted` reduce completeness).
+- [ ] [UTL] P0. Wire `manifest_completeness.compute_completeness_fraction` to the existing `manifest_consolidator`'s
+      cached canonical-manifest read so consecutive calls within a 60s window don't burn redundant GCS reads (per the
+      workspace "Manifest concurrency principle" rule). 60s TTL; explicit `force_refresh=True` kwarg for tests.
+- [ ] [UTL] P0. NEW `unified_trading_library/emission_publisher.py::publish_with_manifest_lookup()` convenience wrapper
+      that combines `compute_completeness_fraction()` + `publish_with_policy()` into one call. Caller flow:
+      `publish_with_manifest_lookup(service=, output_data_type=, row_key=, upstream_dependencies=[...],     window_start_utc=, window_end_utc=, manifest_reader=)`
+      — helper computes the fraction, calls publish_with_policy, returns the `EmissionDecision`. The pure
+      `publish_with_policy()` from slice (a) stays available for callers that compute completeness via a non-manifest
+      path (synthetic backtests, replay engines).
+- [ ] [TEST] P0. 12-15 unit tests for `manifest_completeness`: empty upstream window, all-captured, all-empty_confirmed,
+      mixed states, attempted_failed reduces fraction, expected_unattempted reduces fraction, incomplete_window list
+      shape matches contract, TTL cache hit / miss, force_refresh bypass, manifest-read failure raises (not silently
+      returns 0.0), and the publish_with_manifest_lookup integration smoke (one captured + one attempted_failed →
+      PUBLISHED_DEGRADED for PARTIAL_OK policy).
+
+**Phase 5.2 — UAC manifest schema columns (P1, ~2hr — additive)**
+
+- [ ] [UAC] P1. Add two new columns to UAC manifest schema: `completeness_fraction` (Float64 nullable) +
+      `incomplete_window` (string nullable, JSON-encoded). Backwards-compat via nullable defaults. MTDS raw-capture rows
+      write null (n/a — manifest layer is upstream-state, not service-output-layer); derived-service rows populate them
+      via the publish_with_policy emission. Update `unified_api_contracts.canonical.crosscutting.manifest_schema` (or
+      wherever the manifest column declaration lives — verify via grep) + the consolidator's column-coercion table so
+      legacy parquets without these columns read as `null`/`null` without raising.
+- [ ] [TEST] P1. UAC manifest-schema parity test reads a legacy parquet without the new columns + a new parquet with
+      them; both load via `pa.parquet` reader without error; legacy one carries null values, new one carries populated.
+
+**Phase 5.3 — MDPS adapter wire-in: `ohlcv_1h:current` (P0, ~3hr)**
+
+- [ ] [MDPS] P0. Wire `publish_with_manifest_lookup()` at the MDPS `ohlcv_1h` real-time emission boundary. Source-of-
+      truth file: `market_data_pipeline_service/calculators/ohlcv_calculator.py` (verify path; if differs, locate via
+      grep for the `ohlcv_1h` emission). The boundary is wherever the calculator currently calls
+      `ManifestWriter.record_captured` for `ohlcv_1h:current`. Replace inline with: build the `upstream_dependencies`
+      list (60 × `ohlcv_1m` shards spanning the hour window), call
+      `publish_with_manifest_lookup(service="market-data-pipeline-service",     output_data_type="ohlcv_1m:current"  # NOTE: emission DAG, not the OUTPUT data_type — see flow below)`,
+      branch on `decision.should_publish_row`. **EMISSION FLOW**: when `should_publish_row=True` → call existing
+      `record_captured()` PLUS write `completeness_fraction` + `incomplete_window` into the parquet row PLUS write them
+      into the manifest row. When `should_publish_row=False` → DO NOT call `record_captured` (no parquet, no manifest
+      row); the publisher emits `STALE_DATA` event so the operator sees heartbeat-only state.
+- [ ] [TEST] P0. MDPS unit tests: 60/60 `ohlcv_1m:current` upstream captured → MDPS emits `ohlcv_1h:current` row +
+      `PUBLISHED_OK` event; 58/60 captured + 2 attempted_failed → STRICT_FAIL → no row + `STALE_DATA` event + heartbeat
+      continues; 60/60 captured but operator-induced manifest-read failure → propagates as exception (not silent
+      fallback). Assert no parquet on disk in the STRICT_FAIL case.
+
+**Phase 5.4 — MDPS adapter wire-in: `ohlcv_1h:historical` (P0, ~3hr)**
+
+- [ ] [MDPS] P0. Wire the same helper at the historical re-emission path (the backfill orchestrator that walks
+      historical hour windows). Same shape but with `output_data_type="ohlcv_1h:historical"`. Decision matrix flips to
+      PARTIAL_OK on gaps → row IS written with `completeness_fraction < 1.0` + `incomplete_window` populated +
+      `PUBLISHED_DEGRADED` event. The emission column drift case is the canonical test: a backfill of a 30-day window
+      where 1.7% of upstream `ohlcv_1m` is `attempted_failed` produces 30 `ohlcv_1h:historical` rows with mixed
+      `completeness_fraction` per hour, 1 of which has fraction < 1.0 + a populated incomplete_window list.
+- [ ] [TEST] P0. End-to-end test that walks 30 days of historical `ohlcv_1h` for one (venue, instrument_id) pair given a
+      synthetic upstream manifest with planted gaps; assert each hour's completeness_fraction matches the planted gap
+      shape, that incomplete_window lists are correct, and that PUBLISHED_DEGRADED events fire only on gap-hours.
+
+**Phase 5.5 — deployment-api / deployment-ui surfaces the new columns (P1, ~3hr)**
+
+- [ ] [deployment-api] P1. `/leaf-stats` endpoint already reads parquet column stats per Phase 4.A — extend
+      `LeafParquetStats` Pydantic model with `completeness_fraction_envelope` (min / max / null_count / mean) +
+      `incomplete_window_present_count` (int — how many rows have non-empty list). Helper extracts both at parquet-read
+      time. Already-tested via the existing leaf-stats Phase 4.A.3 unit tests; extend with one new case asserting the
+      envelope on a synthetic mixed-completeness parquet.
+- [ ] [deployment-ui] P1. `LeafSchemaModal` (already shipped Phase 4.B.3) renders the new envelope as a 4th block after
+      the `available_at` envelope. Color coding: green when all rows have fraction=1.0, amber when 0.95 ≤ mean < 1.0,
+      red when mean < 0.95 (per the existing `nanRatioColor` palette inverted). Also surface
+      `incomplete_window_present_count` so operators can see how many emissions in the parquet had gaps without drilling
+      into individual rows.
+
+**Phase 5.6 — Codex SSOT entry + CLAUDE.md key-rule (P0, ~2hr)**
+
+- [ ] [DOCS] P0. CLAUDE.md NEW Key Rule entry "Service-output emission policy" between "Cluster validation MANDATORY"
+      and "available_at is per-row, write-time" rules. Body cites: 4 policies + 4 lifecycle events + the
+      `(service, output_data_type)` SSOT location
+      (`unified_api_contracts.canonical.crosscutting.service_emission_policy`) + the `publish_with_policy()` UTL
+      helper + the writegate plan for the architecture detail. ≤ 25 lines per the existing rule-block density.
+- [ ] [DOCS] P0. NEW `unified-trading-pm/codex/02-data/service-output-emission-semantics.md` — full architecture
+      document. Sections: (1) Three stacked layers diagram (manifest 4-state → service emission policy → service output
+      completeness); (2) The 4 policies with worked examples per asset_group; (3) The 4 lifecycle events with heartbeat
+      semantics + downstream branching; (4) Per-(service, output_data_type) seed table mirroring UAC SSOT; (5)
+      `publish_with_policy()` + `publish_with_manifest_lookup()` + `manifest_completeness.compute_completeness_fraction`
+      API reference; (6) Batch = live symmetry guarantee + worked examples; (7) Anti-patterns; (8) Per-service rollout
+      playbook (= the slice-c sub-plan template, see Phase 6 below).
+
+**Phase 5.7 — Slice-(b) ship-gate + flip checkboxes (P0, ~30min)**
+
+- [ ] [PM] P0. Once Phase 5.1-5.6 land + QG green: flip slice-(b) checkbox on the writegate plan; commit + push the plan
+      flip per the workspace "Commit + Push + Flip Plan Checkboxes" HARD RULE. Memory entry update for slice-(b)
+      shipping (mirror the slice-(a) memory entry shape).
+
+#### Slice (c) — Per-service rollout (GREENLIT 2026-05-08; multi-week, ~3-5 weeks)
+
+**Strategy**: each service-team owns one row of the per-(service, output*data_type) policy table. Per-service tickets
+follow the Phase 5.3-5.4 MDPS template with surface-area scoped to that service's emission boundaries. The slice-(b)
+codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-team's per-service plan files into
+`plans/active/wave4_emission_rollout*{service}\_2026_05_NN.md` as a sub-plan that consumes this writegate plan.
+
+**Phase 6.1 — MTDS raw capture (n/a per policy table — `record_captured` covers it; ~4hr verify)**
+
+- [ ] [MTDS] P0. Audit MTDS adapters to confirm raw-capture writes do NOT call `publish_with_policy` (they shouldn't —
+      manifest 4-state is sufficient for raw capture; no derived/aggregated output). Document the n/a boundary in the
+      per-service codex playbook so service-team owners don't mistakenly add it. Catch any drift in the audit: adapters
+      that do compute a derived output (e.g. `ohlcv_1m` aggregated from `trades`) DO need wire-in — and
+      `(market-tick-data-service, ohlcv_1m:from_trades)` would need a seed dict entry.
+
+**Phase 6.2 — MDPS remaining data_types (P0, ~2 days)**
+
+- [ ] [MDPS] P0. Wire `publish_with_manifest_lookup()` at every other MDPS emission boundary listed in the policy seed
+      dict: `ohlcv_1m:current` / `ohlcv_1m:historical` / `ohlcv_24h` / `book_snapshot_5`. Same shape as Phase 5.3 / 5.4.
+      Each emission gets unit + integration tests mirroring the `ohlcv_1h` template.
+- [ ] [MDPS] P1. Audit MDPS for OTHER calculators that emit derived/aggregated outputs not yet in the policy seed (e.g.
+      trade-flow imbalance metrics, microstructure features) — extend the UAC seed dict per finding. Each addition = one
+      PR touching UAC + one PR touching MDPS + one PR flipping plan checkboxes.
+
+**Phase 6.3 — features-volatility (P0, ~3 days)**
+
+- [ ] [features-volatility] P0. Wire `publish_with_manifest_lookup()` at every features-volatility emission per the seed
+      dict: `high_low_24h` (PARTIAL_OK) / `vol_30d` (NAN_FILL) / `realised_vol_intraday` (PARTIAL_OK). Plus an audit
+      pass for OTHER feature_groups not yet in the seed (z-score normalisation, rolling correlation, etc.) — extend seed
+      dict per finding. NAN_FILL boundary: ensure parquet rows with NaN values still carry a valid
+      `completeness_fraction` (NaN cells contribute to incomplete_window per the column they affect, but the row IS
+      written; tree-based ML models tolerate NaN per CLAUDE.md "Honest absence vs fake placeholders").
+
+**Phase 6.4 — features-cross-instrument (P0, ~3 days)**
+
+- [ ] [features-cross-instrument] P0. Wire at `paired_spec` (STRICT_FAIL — leak-risk-sensitive) + `pairwise_correlation`
+      (NAN_FILL). The STRICT_FAIL case is critical: a paired_spec row written when ONE leg has stale upstream is a
+      leak-bias trap that produces confidently-wrong signal. Validate with a dedicated test: synthetic upstream where
+      leg A is fully captured but leg B has 1% gaps → assert NO `paired_spec` row is written for the affected window +
+      STALE_DATA event fires.
+
+**Phase 6.5 — Other features-\* services (P1, ~5 days bundled)**
+
+- [ ] [features-onchain-defi] P1. Audit for derived emissions (LST yield curves, gas-fee aggregates, vault-state
+      summaries). Extend seed dict per finding. Wire publish_with_policy.
+- [ ] [features-sports] P1. Audit + wire (fixture-stat aggregates, transfer-window features, line-movement metrics).
+- [ ] [features-prediction] P1. Audit + wire (canonical-question-group bundle metrics, market-mid time-series).
+- [ ] [features-microstructure] P1. Audit + wire (book-imbalance, trade-flow toxicity, etc.).
+
+**Phase 6.6 — ml-training + ml-inference (P0, ~3 days)**
+
+- [ ] [ml-training] P0. Wire at the model-version-emission boundary: BLOCK_CRITICAL policy means a partial-coverage
+      training run does NOT publish a model_version artifact + fires a P0 alert. Operator must manually triage. The P0
+      alert routes via alerting-service per CLAUDE.md alerting rules. Smoke test: synthetic missing-feature day in
+      training window → no model_version published + alert fired + heartbeat continues.
+- [ ] [ml-inference] P0. Wire at the per-strategy-signal emission boundary: STRICT_FAIL policy means a stale-feature
+      window produces no signal + STALE_DATA event. Strategy sees no signal → defers entry per its own handling.
+
+**Phase 6.7 — strategy-service + execution-service + position-balance + risk (P0, ~5 days)**
+
+- [ ] [strategy-service] P0. Wire at the per-archetype-signal emission boundary (STRICT_FAIL). Includes both the
+      live-mode signal generation AND the batch-mode replay path — same shape per the Batch=Live rule.
+- [ ] [execution-service] P0. Wire at TWO boundaries: `order_intent` emission (STRICT_FAIL) + `fill_confirmation`
+      emission (BLOCK_CRITICAL). Order intent without current signal = wrong order; fill confirmation without complete
+      venue-side state = position-truth violation.
+- [ ] [position-balance-monitor-service] P0. Wire at `portfolio_state` emission (BLOCK_CRITICAL). No partial truth
+      tolerated; missing venue balance → block + alert + manual triage.
+- [ ] [risk-and-exposure-service] P0. Wire at `risk_state` emission (BLOCK_CRITICAL). Same.
+
+**Phase 6.8 — instruments-service catalog snapshot (P0, ~1 day)**
+
+- [ ] [instruments-service] P0. Wire at the catalog-snapshot emission (PARTIAL_OK — best-effort union of multiple
+      sources). Per-source partial coverage is normal; the publish records the per-source breakdown in the
+      `incomplete_window` field so consumers can branch on which source is missing.
+
+**Phase 6.9 — Slice-(c) workspace-wide audit + ship-gate (P0, ~2 days)**
+
+- [ ] [QG] P0. NEW QG STEP that statically walks every service repo's calculator/adapter source tree + asserts every
+      `record_captured()` callsite for a derived-output data_type ALSO has a paired `publish_with_policy()` /
+      `publish_with_manifest_lookup()` call within the same function. Catches drift where a service-team adds a new
+      derived output without wiring the emission policy. Closed-set check against UAC `SERVICE_OUTPUT_POLICIES`.
+- [ ] [PM] P0. Workspace-wide flip-plan-checkboxes sweep: confirm every Phase 6.1-6.8 service has ALL rows of its slice
+      in `SERVICE_OUTPUT_POLICIES` + every emission boundary wires the helper + every per-service plan checkbox is
+      flipped with commit-sha evidence. Final memory entry: slice-(c) shipping for the year-of-the-tiger archive.
+
+**Coordination with prior waves + cross-plan banners**
+
+- **Wave 1+2.M (shipped 2026-05-07)** — manifest 4-state. Wave 4 reads the manifest to decide its own emission policy.
+  They compose: manifest is upstream-state SSOT; Wave 4 is downstream-publish-decision SSOT.
+- **Wave 3 cross-service cascade** — Wave 4 IS the formalisation of the cascade. Wave 3's tasks for MDPS / features / ml
+  / strategy / execution propagation are the per-service consumers of Wave 4's policy SSOT.
+- **Wave 3.M zero-activity-bars** — different concern. Wave 3.M is about the WRITE-side (adapter writes zero-vol bars
+  during expected market hours). Wave 4 is about the READ-side (consumer service decides what to publish given upstream
+  completeness). They co-exist: a zero-volume bar IS valid input data (`captured`), so downstream's policy fires
+  PUBLISHED_OK on it.
+- **Wave 3.X residuals** — companion plan [`wave3x_residual_ssots_2026_05_08.md`](wave3x_residual_ssots_2026_05_08.md)
+  covers the orphan SSOTs + classifier extensions + reconciler scripts. Slice (b/c) does NOT depend on those residuals;
+  per-service rollout can proceed in parallel.
+
+**Slice-(b) cross-plan banner**: while slice (b) is in flight, downstream service-teams should NOT pre-emptively wire
+`publish_with_policy()` per slice-(c) — wait for slice (b) to validate the publish_with_manifest_lookup helper shape.
+Pre-emptive wiring before the helper API stabilises = rework risk.
 
 ---
 
