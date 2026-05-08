@@ -179,15 +179,33 @@ todos:
 
   - id: a7-instruments-service-cli-mode-trigger-axis
     content: |
-      - [ ] [SCRIPT] P0. Extend instruments-service CLI per `codex/06-coding-standards/cli-convention.md`: keep
+      - [x] [SCRIPT] P0. Extend instruments-service CLI per `codex/06-coding-standards/cli-convention.md`: keep
         existing `--asset-group` + `--mode` (batch|live), ADD `--trigger <trigger-name>` (closed set per-asset-group;
         UAC-defined enum). Single CLI codepath; `--mode live --trigger <name>` selects which entity-type subset to
         refresh + which source adapter to invoke. NO new entry-points. NO new modules with parallel logic. Same
         `_check_dependencies` + `_should_skip_date` + `record_captured/record_empty/record_failed` semantics; live-mode
         differs only in (a) source adapter pick and (b) lookback window (live = "now" instead of historical date).
         Update `instruments-service/docs/ARCHITECTURE.md` with a "live-mode CLI invocation matrix" table.
-    status: todo
-    note: ""
+
+        **Shipped 2026-05-09 (instruments-service@5d511e6 — Tab F1):** added `--trigger` argparse arg via
+        `_add_instruments_extra_args` in `instruments_service/cli/main.py`; wired through
+        `_wire_cli_filters_from_args` onto `handler._trigger_name` so downstream Phase B.1+ trigger dispatch can route
+        on it. Free-form string until UAC closed-set enum lands (Phase A.6); fail-loud validation deferred to Phase
+        B.1+ dispatcher per the plan's "downstream validates the name" semantics. 9 unit tests in
+        `tests/unit/cli/test_trigger_axis.py` (5x parametrised parser asserts across cefi/defi/sports/prediction
+        trigger names + default-None under batch + full preflight wire-through + absent-trigger leaves field None +
+        legacy-Namespace getattr-fallback). All 17 CLI tests green; ruff clean; basedpyright delta = +5 errors all
+        identical-pattern to existing `getattr(self.args, ...)` callsites at lines 85-117 of the handler (per-workspace
+        QG cleanup sweep window 2026-05-07 → ~2026-05-09).
+
+        **DEFERRED (sub-item, P2):** ARCHITECTURE.md "live-mode CLI invocation matrix" table — separate in-scope add
+        but the doc is a busy file with foreign-agent touch-risk this session; the table belongs in a follow-up commit
+        once Phase A.6 UAC enum + Phase B.1+ dispatcher land so the matrix has stable inputs. Tracked here; ships
+        alongside Phase B.1's first trigger handler.
+    status: done
+    note:
+      "2026-05-09 instruments-cli-trigger-tab shipped instruments-service@5d511e6: argparse arg + handler wire + 9 unit
+      tests. ARCHITECTURE.md matrix deferred to Phase B.1 ship cycle."
 
   - id: a8-utl-manifest-writer-live-mode-available-at-stamping
     content: |
@@ -200,7 +218,9 @@ todos:
         per-row stamping, null-cell still raises LookaheadBiasError, sports B.1 shard shape with
         `available_at = announced_at`. All green.)
     status: done
-    note: "UTL@1f115bc6 2026-05-08 sports-fixtures-repoll-tab; verified: existing assert_available_at_present gate at manifest_writer.py:2153 already enforces presence; no new functionality required."
+    note:
+      "UTL@1f115bc6 2026-05-08 sports-fixtures-repoll-tab; verified: existing assert_available_at_present gate at
+      manifest_writer.py:2153 already enforces presence; no new functionality required."
 
   - id: a9-preflight-chain-ssot-live-equals-batch
     content: |
@@ -654,8 +674,8 @@ isProject: false
 
 > **🟢 SIBLING — Live-pipeline activation 2026-05-08**
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md) Phase
-> 10 consumes the `INSTRUMENT_CACHE_REFRESH_TRIGGER` event this plan publishes, via the new UTL
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 10
+> consumes the `INSTRUMENT_CACHE_REFRESH_TRIGGER` event this plan publishes, via the new UTL
 > `InstrumentCacheDeltaReloader` helper (cache-delta hot-reload pattern). **This plan owns the publish-side** (verify or
 > add the event publication in instruments-service); **the live-pipeline plan owns the consume-side** (UTL helper +
 > per-service wiring in MTDS/MDPS/features-service). Codex pattern doc:
@@ -664,13 +684,13 @@ isProject: false
 ## Why this plan exists
 
 The unified-trading-system already has the **architecture** for live-mode instruments — the codex SSOTs
-(`batch-live-architecture.md`, `backfill-and-live-startup.md`, `live-deployment-monitoring.md`, `alerting-batch-live.md`,
-`sports-live-odds-connectivity.md`, `deployment-clusters-live-vs-batch.md`, `runtime-tiers-and-deployment.md`, the
-per-asset-group instruments-service docs in `instruments-service/docs/`) collectively express the target state already.
-What's MISSING is the **activation surface**: which scheduler fires which trigger, which adapter is the live-source,
-which UI surfaces let an operator monitor it, and which audit job proves live=batch after the fact. This plan owns the
-activation surface, references the SSOTs for design intent, and references the active issues for data-correctness
-sub-deltas.
+(`batch-live-architecture.md`, `backfill-and-live-startup.md`, `live-deployment-monitoring.md`,
+`alerting-batch-live.md`, `sports-live-odds-connectivity.md`, `deployment-clusters-live-vs-batch.md`,
+`runtime-tiers-and-deployment.md`, the per-asset-group instruments-service docs in `instruments-service/docs/`)
+collectively express the target state already. What's MISSING is the **activation surface**: which scheduler fires which
+trigger, which adapter is the live-source, which UI surfaces let an operator monitor it, and which audit job proves
+live=batch after the fact. This plan owns the activation surface, references the SSOTs for design intent, and references
+the active issues for data-correctness sub-deltas.
 
 ## Principles (not new — restating from codex SSOTs for plan-anchored visibility)
 
@@ -725,8 +745,8 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 
 ## Dependencies + sibling plan references
 
-- **`master_to_live_defi_2026_05_23.md`** — sibling. DeFi-live (the master plan's headline goal) does NOT depend on
-  most of this plan, but the DeFi instruments-live triggers (cefi 15-min CCXT for hedge legs on Bybit/Deribit/
+- **`master_to_live_defi_2026_05_23.md`** — sibling. DeFi-live (the master plan's headline goal) does NOT depend on most
+  of this plan, but the DeFi instruments-live triggers (cefi 15-min CCXT for hedge legs on Bybit/Deribit/
   Binance/OKX/Hyperliquid/Aster, plus DeFi-onchain instruments triggers covered separately by `defi_master_2026_05_07`)
   ARE in the master critical path. Phase D + the AWS-mirror in F.3 are the parts of THIS plan that the master needs by
   2026-05-23; everything else (sports / tradfi / prediction live) is post-2026-05-23.
@@ -734,10 +754,10 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
   semantics inherit from writegate Phase 2.D; this plan does NOT re-derive write-gate rules.
 - **`alerting_service_live_rules_2026_05_07.md`** — depends_on. Owns the rule engine; THIS plan adds the
   instruments-live entries (Phase H.1).
-- **`deployment_api_work_stream_a_2026_05_07.md`** — depends_on. Owns programmatic VM launch + event-tail
-  endpoints; THIS plan reuses event-tail logic for the Scheduled Jobs tab (Phase G.1).
-- **`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`** — depends_on. Owns launcher SSOT
-  migration; THIS plan's Phase F.1 adds Cloud Scheduler config under the same `deployment-service/scripts/` root.
+- **`deployment_api_work_stream_a_2026_05_07.md`** — depends_on. Owns programmatic VM launch + event-tail endpoints;
+  THIS plan reuses event-tail logic for the Scheduled Jobs tab (Phase G.1).
+- **`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`** — depends_on. Owns launcher SSOT migration;
+  THIS plan's Phase F.1 adds Cloud Scheduler config under the same `deployment-service/scripts/` root.
 - **`trigger_based_reference_data_2026_04_13.md`** — locked sibling. Owns the sports trigger calendar design; THIS
   plan's Phase B references it. Operator unlock-request in B.0.
 
@@ -762,17 +782,17 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 
 ## Codex doc updates this plan owns
 
-| Codex doc                                                     | Update                                                                                     | Phase |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----- |
-| `04-architecture/instruments-live-architecture.md` (NEW)      | Single entry-point + routing matrix + cadence/trigger/source per (asset_group, entity)     | A.1   |
-| `04-architecture/batch-live-architecture.md`                      | Add "Instruments are reference data" section explicit on same-path + T+1-as-audit          | A.2   |
-| `04-architecture/instruments-preflight-chain.md` (NEW)        | Preflight DAG SSOT + live=batch invariant + UTL helper contract                            | A.9   |
-| `05-infrastructure/runtime-tiers-and-deployment.md`           | Add "Instruments-live Cloud Scheduler topology" section listing all scheduled entries      | A.3   |
-| `04-architecture/alerting-batch-live.md`                      | Add "Instruments-live failure rules" section (7 typed failure modes including 2 preflight) | A.4   |
-| `02-data/pipeline-coverage-matrix.md`                         | Add live-source row per (asset_group, data_type)                                           | C.1   |
-| `00-SSOT-INDEX.md`                                            | Add row pointing to `instruments-live-architecture.md`                                     | A.1   |
+| Codex doc                                                    | Update                                                                                     | Phase |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ----- |
+| `04-architecture/instruments-live-architecture.md` (NEW)     | Single entry-point + routing matrix + cadence/trigger/source per (asset_group, entity)     | A.1   |
+| `04-architecture/batch-live-architecture.md`                 | Add "Instruments are reference data" section explicit on same-path + T+1-as-audit          | A.2   |
+| `04-architecture/instruments-preflight-chain.md` (NEW)       | Preflight DAG SSOT + live=batch invariant + UTL helper contract                            | A.9   |
+| `05-infrastructure/runtime-tiers-and-deployment.md`          | Add "Instruments-live Cloud Scheduler topology" section listing all scheduled entries      | A.3   |
+| `04-architecture/alerting-batch-live.md`                     | Add "Instruments-live failure rules" section (7 typed failure modes including 2 preflight) | A.4   |
+| `02-data/pipeline-coverage-matrix.md`                        | Add live-source row per (asset_group, data_type)                                           | C.1   |
+| `00-SSOT-INDEX.md`                                           | Add row pointing to `instruments-live-architecture.md`                                     | A.1   |
 | `15-runbooks/instruments-live/t1-audit-discrepancy.md` (NEW) | Operator playbook for T+1 audit discrepancies                                              | I.3   |
-| `instruments-service/docs/ARCHITECTURE.md`                    | Add live-mode CLI invocation matrix table                                                  | A.7   |
+| `instruments-service/docs/ARCHITECTURE.md`                   | Add live-mode CLI invocation matrix table                                                  | A.7   |
 
 ## Architectural conflicts found in instruments-service repo
 
@@ -839,8 +859,8 @@ Phase G (deployment-UI tab)  ║  Phase H (alerting + circuit breakers, parallel
 
 ## SSOT references
 
-- `codex/04-architecture/batch-live-architecture.md` — live=batch, same path, T+1 is audit (single SSOT — replaces former
-  batch-live-pipeline.md + batch-live-symmetry.md)
+- `codex/04-architecture/batch-live-architecture.md` — live=batch, same path, T+1 is audit (single SSOT — replaces
+  former batch-live-pipeline.md + batch-live-symmetry.md)
 - `codex/04-architecture/backfill-and-live-startup.md` — live startup pattern
 - `codex/04-architecture/alerting-batch-live.md` — alerting rules
 - `codex/04-architecture/sports-live-odds-connectivity.md` — sports live ingest reference
@@ -868,3 +888,31 @@ This plan follows `unified-trading-pm/plans/PLAN_FORMAT.md`:
 - No technical debt: source-switch is one routing point per asset_group, not a parallel codepath.
 - Downstream consumer audits scoped per phase.
 - Single source of truth: codex doc updates listed in the table above; plan REFERENCES the docs, does NOT duplicate.
+
+## DONE-2026-05-09 — Phase A.7 (Tab F1)
+
+Tab F1 (agent-tag `instruments-cli-trigger-tab`, spawn from `work_split_2026_05_08_ikenna.md`) shipped Phase A.7's
+`--trigger` axis on the instruments-service CLI:
+
+- **instruments-service@5d511e6** — `feat(cli): add --trigger live-mode flag to instruments-service CLI`. 3 files / 283
+  insertions: `instruments_service/cli/main.py` (argparse arg via `_add_instruments_extra_args`),
+  `instruments_service/cli/instruments_handler.py` (`handler._trigger_name` field + `_wire_cli_filters_from_args` wire),
+  `tests/unit/cli/test_trigger_axis.py` (9 unit tests — 5x parametrised parser asserts across canonical trigger names +
+  default-None batch + preflight wire-through + absent-trigger None + legacy-Namespace getattr-fallback).
+
+Verification:
+
+- Local pytest: 17/17 CLI tests pass (including 9 new + 8 pre-existing rolling-window).
+- Local ruff: 3/3 files clean (lint + format).
+- Local basedpyright: pre-existing 1329-error workspace state on origin (per CLAUDE.md QG-cleanup window 2026-05-07 →
+  ~2026-05-09); my changes add 5 errors all identical-pattern to existing `getattr(self.args, ...)` callsites at
+  handler.py:85-117. Sweep absorbs them.
+- Conditional push: `git rev-list --left-right --count HEAD...origin/live-defi-rollout` = `0 0` post-push.
+
+Items deferred from this Phase A.7 ship and tracked above in the per-todo body annotation:
+
+- ARCHITECTURE.md "live-mode CLI invocation matrix" table — DEFERRED to Phase B.1's first trigger-handler ship.
+  Justification: doc is busy + foreign-agent touch-risk; matrix needs stable Phase A.6 UAC enum + Phase B.1+ dispatcher
+  inputs.
+- UAC closed-set trigger enum — separate todo (Phase A.6); flag is free-form string until that lands.
+- Actual trigger handlers — explicitly out-of-scope per spawn prompt, deferred to Phase B.1 / C / D / E.
