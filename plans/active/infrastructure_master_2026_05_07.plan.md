@@ -25,10 +25,10 @@ related_plans:
 
 - **Audit run**: 2026-05-07 (parallel-agent pass)
 - **Verified**: 30 of 30 unchecked todos
-- **Mis-marked DONE → flipped**: 0 — 2 todos classified as STALE (verified by audit-followups Tab 8 2026-05-08:
-  Phase 0→1 handover at line 126 + MDPS-1440-NaN reproduction-test at line 130, both superseded by writegate Phase 2.A
-  + reconciler MDPS@`d3be0ef`); 9 verified actionable; 17 routed to other plans (mostly BLOCKED-ON
-  data_status_drilldown_shard_atom_alignment_2026_05_07)
+- **Mis-marked DONE → flipped**: 0 — 2 todos classified as STALE (verified by audit-followups Tab 8 2026-05-08: Phase
+  0→1 handover at line 126 + MDPS-1440-NaN reproduction-test at line 130, both superseded by writegate Phase 2.A
+  - reconciler MDPS@`d3be0ef`); 9 verified actionable; 17 routed to other plans (mostly BLOCKED-ON
+    data_status_drilldown_shard_atom_alignment_2026_05_07)
 - **In-flight (running VMs)**: 24 cefi + 5 tradfi MDPS + 4 sports backfill VMs are LIVE TESTS of
   deployment-service@`456acb9` multi-axis correction shipped 2026-05-06; vm-zombie-watchdog always running. Plan does
   not gate these directly — they validate the shipped infrastructure.
@@ -224,8 +224,8 @@ reconcilers + `mtds-s4-10` rescan complete.
 ### VenueMapping `venue_start_dates` cleanup (folded-in 2026-05-07 from `venue_axis_asset_group_vocabulary_2026_04_25`)
 
 The asset-group vocabulary plan absorbed two SSOT-cleanup items from the archived `venue_availability_ssot_2026_03_25`
-plan that ride on shard-axis infrastructure (venue start-date semantics + dashboard consumption). Both belong here
-since they touch the manifest / data-status SSOT chain, not the asset_group rename itself.
+plan that ride on shard-axis infrastructure (venue start-date semantics + dashboard consumption). Both belong here since
+they touch the manifest / data-status SSOT chain, not the asset_group rename itself.
 
 - [ ] [AGENT] P0. Delete `venue_start_dates` from `VenueMapping` (old format) — replace with the canonical venue+date
       shape (per the source plan's design doc). [AUDIT 2026-05-07: FRESH — actionable; 8+ deployment-service test sites
@@ -233,9 +233,9 @@ since they touch the manifest / data-status SSOT chain, not the asset_group rena
       `tests/unit/test_shard_calculator.py:486/513/543/577/623`, `test_shard_optimization.py:80/107/137/171`); deletion
       is a real ~10-file change] (folded from venue_axis_asset_group_vocabulary_2026_04_25)
 - [ ] [AGENT] P2. Data-status dashboard checks against same SSOT — confirm dashboard reads venue start dates from the
-      canonical source post-cleanup. [AUDIT 2026-05-07: BLOCKED-ON infrastructure_master:VenueMapping-venue_start_dates-deletion;
-      cannot verify dashboard SSOT consumption until `venue_start_dates` is deleted from VenueMapping] (folded from
-      venue_axis_asset_group_vocabulary_2026_04_25)
+      canonical source post-cleanup. [AUDIT 2026-05-07: BLOCKED-ON
+      infrastructure_master:VenueMapping-venue_start_dates-deletion; cannot verify dashboard SSOT consumption until
+      `venue_start_dates` is deleted from VenueMapping] (folded from venue_axis_asset_group_vocabulary_2026_04_25)
 
 ### Streaming-finalize follow-ups (folded-in 2026-05-07 from `streaming_finalize_lift_and_downsize_2026_05_06`)
 
@@ -376,5 +376,5 @@ venue, data_type) combination so Phase 3 can verify the fix is comprehensive (no
   P1+ todos lifted above.
 - `deployment_service_build_infrastructure_repair_2026_04_22.plan.md` — Cloud Build + UTL base-image rebuild.
 - `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` — 2 absorbed SSOT-cleanup items (`venue_start_dates` deletion
-  + dashboard SSOT verify) lifted above; `poolGetSnapshots` historical-TVL item folded into `defi_master_2026_05_07`;
-  Waves A/B/C/D/E vocabulary migration shipped per CLAUDE.md "Asset-group vocabulary" section.
+  - dashboard SSOT verify) lifted above; `poolGetSnapshots` historical-TVL item folded into `defi_master_2026_05_07`;
+    Waves A/B/C/D/E vocabulary migration shipped per CLAUDE.md "Asset-group vocabulary" section.
