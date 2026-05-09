@@ -1,5 +1,7 @@
 ---
-title: "P0/P1 substantial work surfaced by 2026-05-08 9-agent audit (Aster connector / 2yr backtest / MDPS streaming / 18 MTDS VMs)"
+title:
+  "P0/P1 substantial work surfaced by 2026-05-08 9-agent audit (Aster connector / 2yr backtest / MDPS streaming / 18
+  MTDS VMs)"
 created: 2026-05-08
 author: 9-agent-audit-2026-05-08
 status: open
@@ -19,13 +21,29 @@ execution:
 
 # 4 P0/P1 items surfaced by 9-agent audit needing operator triage
 
-> **Severity**: P0 for items #1-3 (May-23 critical-path); P1 for #4 (operational hygiene). **Blast radius**: leveraged_funding_arb live-trading + paper-trade smoke + live-pipeline Phase 4. **Suggested owner**: operator triage; cannot auto-assign.
+> **Severity**: P0 for items #1-3 (May-23 critical-path); P1 for #4 (operational hygiene). **Blast radius**:
+> leveraged_funding_arb live-trading + paper-trade smoke + live-pipeline Phase 4. **Suggested owner**: operator triage;
+> cannot auto-assign.
 
-This doc collects the 4 substantial-work findings the 9-agent audit surfaced that are too big to silently fix and need explicit operator decisions on owner + scope. The audit's mechanical false-negative fixes shipped in batches 1+2+3 (PM@a370911b + PM@daf844e8 + PM@c6ced960) and the paper-trade smoke harness was repaired in-session (e2e-testing@dfb7abe6). The 4 items below are NOT yet shipped + need operator decision.
+This doc collects the 4 substantial-work findings the 9-agent audit surfaced that are too big to silently fix and need
+explicit operator decisions on owner + scope. The audit's mechanical false-negative fixes shipped in batches 1+2+3
+(PM@a370911b + PM@daf844e8 + PM@c6ced960) and the paper-trade smoke harness was repaired in-session
+(e2e-testing@dfb7abe6). The 4 items below are NOT yet shipped + need operator decision.
 
 ---
 
-## Item 1 — Aster execution connector does NOT exist (P0, leveraged_funding_arb live-trading blocker)
+## Item 1 — Aster execution connector — ✅ RESOLVED 2026-05-09 (execution-service@25a1d561)
+
+> **Status update 2026-05-09**: Connector shipped at `execution-service@25a1d561`. File:
+> `execution-service/execution_service/defi_execution/protocols/aster.py` (550+ lines, full Binance Futures-compat REST
+> + HMAC-SHA256 signing + paper-trade + 4 UAC schema parsing helpers). Tests:
+> `execution-service/tests/defi_execution/unit/test_aster_connector.py` (30 tests, all green). Registered in
+> `defi_execution/protocols/__init__.py` + `defi_execution/__init__.py`. UAC schemas already existed
+> (`unified_api_contracts.external.aster.schemas`); UAC capability registry already declared `"aster"` PERPS protocol.
+> Open follow-ups (NOT blockers, will land in defi_master Fork 2): live REST POST transport (this connector returns the
+> prepared signed shape; httpx POST owned by execution-service runtime layer per Hyperliquid pattern) + Tenderly fork
+> integration test for end-to-end signed-flow validation. Master Group F Item 20 CeFi-testnet column can flip to ◐ once
+> the runtime POST + integration test land.
 
 ### What
 
@@ -34,19 +52,26 @@ This doc collects the 4 substantial-work findings the 9-agent audit surfaced tha
 > Hedge legs across 6 perp venues (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster)
 
 Verified state of execution-service connectors:
-- ✅ Bybit, Deribit, Binance, OKX — `execution-service/execution_service/trade_execution/adapters/{bybit_ccxt,deribit_ccxt,binance_ccxt,okx_ccxt}.py` all exist
+
+- ✅ Bybit, Deribit, Binance, OKX —
+  `execution-service/execution_service/trade_execution/adapters/{bybit_ccxt,deribit_ccxt,binance_ccxt,okx_ccxt}.py` all
+  exist
 - ✅ Hyperliquid — `execution-service/execution_service/defi_execution/protocols/hyperliquid.py` exists
 - ❌ **Aster — NO connector anywhere in execution-service** (grep `class AsterConnector` returns 0 hits)
 
 ### Why it matters
 
-Without an Aster connector, the 6-venue hedge universe is 5-venue and `leveraged_funding_arb` cannot ship live. Master Group F Item 20 (live testnet replicates prod) is logged as "CeFi side has not been validated end-to-end" — this is more severe: the connector is not just unvalidated, it doesn't exist.
+Without an Aster connector, the 6-venue hedge universe is 5-venue and `leveraged_funding_arb` cannot ship live. Master
+Group F Item 20 (live testnet replicates prod) is logged as "CeFi side has not been validated end-to-end" — this is more
+severe: the connector is not just unvalidated, it doesn't exist.
 
 ### Recommended decision
 
-(a) **Author Aster connector** in execution-service — needs Aster API spec + auth + sandbox, ~1-2 days work. Add to defi_master Fork 2 (leveraged_funding_arb branch).
+(a) **Author Aster connector** in execution-service — needs Aster API spec + auth + sandbox, ~1-2 days work. Add to
+defi_master Fork 2 (leveraged_funding_arb branch).
 
-(b) **Drop Aster from the 6-venue universe + reduce to 5 venues** — operator decision; CLAUDE.md master-plan promise needs to update.
+(b) **Drop Aster from the 6-venue universe + reduce to 5 venues** — operator decision; CLAUDE.md master-plan promise
+needs to update.
 
 Recommended: (a) — operator-driven scope decision. Open item on defi_master_2026_05_07.md DEX-perp adapters section.
 
@@ -62,19 +87,27 @@ Recommended: (a) — operator-driven scope decision. Open item on defi_master_20
 
 ### What
 
-Master plan Item 18: "2-year batch backtest run — completed across config grid; P&L variance per archetype configuration captured so the live-trading config is informed, not guessed."
+Master plan Item 18: "2-year batch backtest run — completed across config grid; P&L variance per archetype configuration
+captured so the live-trading config is informed, not guessed."
 
-Verified state: `strategy-service/scripts/` has `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` (tracing/simulation, NOT config-grid sweep). No `run_2yr_config_grid_backtest.py`.
+Verified state: `strategy-service/scripts/` has `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py`
+(tracing/simulation, NOT config-grid sweep). No `run_2yr_config_grid_backtest.py`.
 
 ### Why it matters
 
-Live-trading config (gas thresholds, slippage caps, position sizing per archetype) needs P&L variance distribution from a config-grid sweep over 2 years of data — not single-config tracing. Without the runner the live-config is judgment-based instead of evidence-based.
+Live-trading config (gas thresholds, slippage caps, position sizing per archetype) needs P&L variance distribution from
+a config-grid sweep over 2 years of data — not single-config tracing. Without the runner the live-config is
+judgment-based instead of evidence-based.
 
 ### Recommended decision
 
-Author `strategy-service/scripts/run_2yr_config_grid_backtest.py` — sweeps parameter space (e.g. position-size grid × max-drawdown grid × slippage-cap grid) for `carry_staked_basis` + `leveraged_funding_arb`; emits P&L variance + Sharpe + max-drawdown distribution per archetype config dimension; writes to `gs://strategy-results-{pid}/backtests/config_grid_2yr/<archetype>/<run_id>/`. ~2-3 days work + 8-12h grid runtime.
+Author `strategy-service/scripts/run_2yr_config_grid_backtest.py` — sweeps parameter space (e.g. position-size grid ×
+max-drawdown grid × slippage-cap grid) for `carry_staked_basis` + `leveraged_funding_arb`; emits P&L variance + Sharpe +
+max-drawdown distribution per archetype config dimension; writes to
+`gs://strategy-results-{pid}/backtests/config_grid_2yr/<archetype>/<run_id>/`. ~2-3 days work + 8-12h grid runtime.
 
-Owner: strategy-service maintainer + Ikenna (config-grid design ownership). Add to strategy_and_dart_master_2026_05_07.md.
+Owner: strategy-service maintainer + Ikenna (config-grid design ownership). Add to
+strategy_and_dart_master_2026_05_07.md.
 
 ### Exit criteria
 
@@ -89,9 +122,11 @@ Owner: strategy-service maintainer + Ikenna (config-grid design ownership). Add 
 
 ### What
 
-`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4 is gated on UTL primitives + MDPS wiring per `mdps_streaming_and_backpressure_2026_05_07.md` Phase 1.1 + Phase 2.
+`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4 is gated on UTL primitives + MDPS wiring per
+`mdps_streaming_and_backpressure_2026_05_07.md` Phase 1.1 + Phase 2.
 
 Verified state (cluster 8 audit grep):
+
 - ❌ `open_candle_writer` — 0 hits in unified-trading-library
 - ❌ `close_candle_writer` — 0 hits
 - ❌ `ResourceProfiler.on_memory_warning` wiring — 0 hits in MDPS source
@@ -101,13 +136,18 @@ These are explicitly named as STRICT BLOCKER for live-pipeline Phase 4 in the li
 
 ### Why it matters
 
-Live-pipeline Phase 4 (MDPS live mode) cannot start without the open/close candle writer primitives + backpressure wiring. The mdps_streaming plan declares this dependency explicitly. Live-pipeline is Group F item 21+22 prereq for the May-23 cutover.
+Live-pipeline Phase 4 (MDPS live mode) cannot start without the open/close candle writer primitives + backpressure
+wiring. The mdps_streaming plan declares this dependency explicitly. Live-pipeline is Group F item 21+22 prereq for the
+May-23 cutover.
 
 ### Recommended decision
 
-Tab 2 (live-pipeline) was 10-commit-shipped 2026-05-08 evening but ONLY for UTL primitives that DON'T cover the MDPS-specific streaming layer (StreamingHealthSnapshot / batch_live_reconciler / honest_coverage_ratchet are utility classes, not the open/close candle writer). The mdps_streaming plan Phase 1.1 needs explicit owner.
+Tab 2 (live-pipeline) was 10-commit-shipped 2026-05-08 evening but ONLY for UTL primitives that DON'T cover the
+MDPS-specific streaming layer (StreamingHealthSnapshot / batch_live_reconciler / honest_coverage_ratchet are utility
+classes, not the open/close candle writer). The mdps_streaming plan Phase 1.1 needs explicit owner.
 
-Owner candidates: (a) Tab 2 next session if live-pipeline plan body extends scope; (b) MDPS-dedicated tab in next work-split; (c) Harsh implement-from-spec if Ikenna pre-designs.
+Owner candidates: (a) Tab 2 next session if live-pipeline plan body extends scope; (b) MDPS-dedicated tab in next
+work-split; (c) Harsh implement-from-spec if Ikenna pre-designs.
 
 ### Exit criteria
 
@@ -123,24 +163,33 @@ Owner candidates: (a) Tab 2 next session if live-pipeline plan body extends scop
 
 ### What
 
-Per session memory entry 2026-05-07: "MTDS parallelization fix shipped 2026-05-07 — 18 VMs awaiting bounce-sweep. UTL@50ad40ef ParallelPerSymbolRunner + 12 tests; MTDS@28db65a Tardis swap...".
+Per session memory entry 2026-05-07: "MTDS parallelization fix shipped 2026-05-07 — 18 VMs awaiting bounce-sweep.
+UTL@50ad40ef ParallelPerSymbolRunner + 12 tests; MTDS@28db65a Tardis swap...".
 
 Verified state (cluster 8 probe 2026-05-08):
+
 - 0 MTDS bounce-sweep VMs running per `gcloud compute instances list --filter="name~mtds-"`
-- Currently only 2 MTDS VMs running (`mtds-gas-fees`, `mtds-lending-indices`) — these are forward-poll/backfill, NOT the bounce-sweep validation set
+- Currently only 2 MTDS VMs running (`mtds-gas-fees`, `mtds-lending-indices`) — these are forward-poll/backfill, NOT the
+  bounce-sweep validation set
 - The "wiring agent dispatched at session end" for RSS-pause integration is unverifiable — no evidence it landed
 
 ### Why it matters
 
-The parallelization fix is shipped to source but the validation that it actually works at scale (18 VMs concurrently with shard-isolation) was never run. Per "Plans Run To Actual Completion" HARD RULE, code-shipped without operationally-shipped is silent rot.
+The parallelization fix is shipped to source but the validation that it actually works at scale (18 VMs concurrently
+with shard-isolation) was never run. Per "Plans Run To Actual Completion" HARD RULE, code-shipped without
+operationally-shipped is silent rot.
 
 ### Recommended decision
 
-(a) **Run the bounce-sweep**: launch 18 MTDS backfill VMs with the new `ParallelPerSymbolRunner` + per-VM-shard isolation; verify event stream + manifest growth + RSS-pause integration via memory-warning trigger. Operator-runnable; no cross-side dependency.
+(a) **Run the bounce-sweep**: launch 18 MTDS backfill VMs with the new `ParallelPerSymbolRunner` + per-VM-shard
+isolation; verify event stream + manifest growth + RSS-pause integration via memory-warning trigger. Operator-runnable;
+no cross-side dependency.
 
-(b) **Document as deferred-post-cutover** if the bounce-sweep isn't on May-23 critical path — the existing 9 cefi heavy-backfill VMs are running fine; bounce-sweep is parity validation for a future scaling event.
+(b) **Document as deferred-post-cutover** if the bounce-sweep isn't on May-23 critical path — the existing 9 cefi
+heavy-backfill VMs are running fine; bounce-sweep is parity validation for a future scaling event.
 
-Recommended: (b) for this cycle (focus on May-23); track as P1 in `mtds_databento_path_streaming_2026_05_07.md` Phase 4 (real-VM validation gap is already noted there).
+Recommended: (b) for this cycle (focus on May-23); track as P1 in `mtds_databento_path_streaming_2026_05_07.md` Phase 4
+(real-VM validation gap is already noted there).
 
 ### Exit criteria
 
@@ -151,12 +200,12 @@ Recommended: (b) for this cycle (focus on May-23); track as P1 in `mtds_databent
 
 ## Cross-item summary
 
-| # | Item | P | Blocks May-23? | Recommended owner |
-|---|------|---|----------------|-------------------|
-| 1 | Aster connector | P0 | YES (leveraged_funding_arb) | defi_master Fork 2 + execution-service maintainer |
-| 2 | 2yr config-grid backtest runner | P0 | YES (Group F Item 18) | strategy_and_dart_master + Ikenna |
-| 3 | MDPS streaming primitives | P0 | YES (live_pipeline Phase 4) | live_pipeline next session OR MDPS-dedicated tab |
-| 4 | 18 MTDS bounce-sweep VMs | P1 | NO | mtds_databento Phase 4 (defer-post-cutover OK) |
+| #   | Item                            | P   | Blocks May-23?              | Recommended owner                                 |
+| --- | ------------------------------- | --- | --------------------------- | ------------------------------------------------- |
+| 1   | Aster connector                 | P0  | YES (leveraged_funding_arb) | defi_master Fork 2 + execution-service maintainer |
+| 2   | 2yr config-grid backtest runner | P0  | YES (Group F Item 18)       | strategy_and_dart_master + Ikenna                 |
+| 3   | MDPS streaming primitives       | P0  | YES (live_pipeline Phase 4) | live_pipeline next session OR MDPS-dedicated tab  |
+| 4   | 18 MTDS bounce-sweep VMs        | P1  | NO                          | mtds_databento Phase 4 (defer-post-cutover OK)    |
 
 ## Cross-references
 
