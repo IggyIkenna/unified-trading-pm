@@ -329,6 +329,14 @@ in plan order).
 
 ## Phase A — strategy-service catalog: add `funding-rate-dispersion` config variant
 
+### Phase A commit ledger
+
+| Commit | Status | sha                | Shipped                                                                                                              |
+| ------ | ------ | ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| 1      | ✅     | strategy-service@24f8494 | `dispersion_type` dispatcher + `BTC_FUNDING_RATE_DISPERSION` slot stub + `STRATEGY_CATEGORIES` row + dispatcher tests |
+| 2      | ✅     | strategy-service@0b4ef0e | `arbitrage_structural/funding_rate_dispersion.py` helper module (5 exports + 25 unit tests)                          |
+| 3      | ⬜     | _pending_          | Engine 8-step loop wire-in (`_on_tick_funding_rate_dispersion` consumes the helper) + integration tests              |
+
 - [ ] [strategy-service] P1. Add the canonical BTC/USDT slot entry (ETH/USDT + SOL/USDT + top-10 enumeration ship in
       A.6) to `strategy-service/strategy_service/engine/strategies/v2/archetype_slot_resolver.py` per the existing
       pattern (e.g. after the current ARBITRAGE_PRICE_DISPERSION rows ~L225–L811). The slot wires the **6-venue
@@ -666,6 +674,84 @@ All 6 open questions resolved 2026-05-09 → no operator-blocked deferrals. Carr
 
 If A.6 ships within this plan's lifetime, that row collapses to "no carryover" and this section is trimmed at archive
 time per the "Plan Archival" HARD RULE migration discipline.
+
+## Open questions
+
+### Q1 — [agent-arb-fundrate-cde, 2026-05-09 14:50 UTC] — Phase C blocked on Tab 5 tracer
+
+**Status**: 🟡 BLOCKED — waiting for Tab 5 to ship `scripts/trace_arbitrage_price_dispersion.py`
+
+Phase C (pnl-attribution-service ARBITRAGE_PRICE_DISPERSION bucket) cannot meet its Full-execution criterion until Phase
+B (`trace_arbitrage_price_dispersion.py`) ships with end-to-end tracer output for a 1-week window. As of 2026-05-09 PM
+Tab 5 has shipped Phase A Commit 1 (dispatcher + slot stub at strategy-service@24f8494) but neither the helper module
+selection logic nor the tracer. Per CLAUDE.md "Plans Run To Actual Completion" HARD RULE, shipping the pnl-attribution
+code with smoke-only verification is banned — the bucket must be populated by a real-infra tracer run consuming real
+backfilled MTDS + features data.
+
+**Decision pending**: who picks up Phase B + C handoff once Tab 5's tracer commit lands? Either Tab 5 continues into B+C
+(natural continuation) or a new tab spawns to take B+C.
+
+## Deferred work after 2026-05-09 (agent-arb-fundrate-cde) session
+
+The 2026-05-09 PM session shipped Phase E (codex updates resolving the circular cross-ref + canonical funding-rate-
+dispersion example slot enumeration in both `arbitrage-price-dispersion.md` and `category-instrument-coverage.md` § 11)
+and the matching parent-plan flip for the codex P0 (L155-157 → `[x]` at PM@5fe5eabd). Items still open are tracked here
+so the next agent picks up cleanly without re-reading session notes.
+
+| Phase / item                          | Status as of 2026-05-09 PM   | Successor / blocker                                                                                                                                                       |
+| ------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase A — strategy-service slot       | `helper-shipped`             | Tab 5 in-flight; Commit 1 (dispatcher + slot stub) at strategy-service@24f8494; remaining: helper module selection logic + 6 unit tests + A.6 multi-asset + A.7 allocator |
+| Phase B — tracer script               | `blocked-after-Phase-A.2`    | Tab 5 ongoing per Phase A.2 (helper module). Tracer ships once selection logic exists                                                                                     |
+| Phase C — pnl-attribution archetype   | `blocked-after-Phase-B`      | Real-infra run consumes tracer output for 2024 W1 window; Plans-Run-To-Actual-Completion HARD RULE forbids smoke-only ship                                                |
+| Phase D — Stream B gate close         | `blocked-after-Phase-A/B/C`  | Codex P0 (L155-157 in parent plan) flipped this session at PM@5fe5eabd + parent-plan annotation commit; full gate close awaits A/B/C completion                           |
+| Phase E — codex SSOT updates          | `done` (PM@5fe5eabd shipped) | n/a — codex circular ref resolved + funding-rate-dispersion example slot enumerated in both arbitrage-price-dispersion.md + category-instrument-coverage.md § 11          |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **Workspace-wide `leveraged_funding_arb` rename sweep**: per Stream B gate, several active plans (defi_master,
+  master_to_live_defi_2026_05_23, instruments_live_master, strategy_and_dart_master, live_pipeline_mtds_mdps_features)
+  + question docs reference `leveraged_funding_arb` as a standalone archetype name. Filed as case-3 finding in
+  [`plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
+  for owner triage.
+
+## DONE-2026-05-09 (agent-arb-fundrate-cde)
+
+Session: Phase E (codex SSOT updates) shipped end-to-end; Phase D partial (codex P0 flipped, full gate close blocked on
+Phases A/B/C); Phase C blocked on Tab 5 tracer (per "Plans Run To Actual Completion" HARD RULE — no smoke-only ship).
+
+Code commits:
+
+- PM@5fe5eabd — `docs(codex): resolve arbitrage-price-dispersion ↔ carry-basis-perp circular ref + add
+  funding-rate-dispersion example slots`. Edited 2 codex files: removed the circular CARRY_BASIS_PERP redirect from
+  `arbitrage-price-dispersion.md` § "Not in this archetype"; added the canonical funding-rate-dispersion example slot
+  pair (BTC + ETH USDT) with operator-confirmed config block to `arbitrage-price-dispersion.md` § "Example instances";
+  added the same canonical multi-venue slot shape to `category-instrument-coverage.md` § 11 Representative slot_labels.
+  Both verify gates pass: zero hits for the circular regex; ≥1 hit for `funding-rate-dispersion`.
+
+Parent-plan flips (next commit, bundled with finalisation-plan body update + this DONE block + issue doc):
+
+- [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+  L155-157 codex P0 → `[x]` with PM@5fe5eabd evidence + verify-gate citation.
+- L175-189 (3 sister Stream B todos): NOT flipped (work not complete) but **STATUS** annotation appended to each row
+  documenting Tab 5 progress (Phase A.1 commit 24f8494 = helper-shipped) + the blocker chain (B blocked on A.2; C
+  blocked on B; D-gate blocked on A/B/C).
+
+This-plan body updates (next commit):
+
+- New `## Open questions` Q1 documenting Tab 5 tracer dependency (🟡 BLOCKED).
+- New `## Deferred work after 2026-05-09 (agent-arb-fundrate-cde) session` scoreboard.
+- This DONE-2026-05-09 block.
+
+Issue doc shipped (next commit, case-3 finding):
+
+- `plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` — workspace `rg
+  'leveraged_funding_arb' --type py --type md` returns matches across ~5 active plans + question docs that use the
+  legacy name as a standalone archetype label. Per Stream B gate, these need rename to `ARBITRAGE_PRICE_DISPERSION`
+  (with `funding-rate-dispersion` config variant) or annotation as historical context. Owner triage required because
+  the references span multiple plan-of-record owners.
+
+EOD-audit: every deferral in the scoreboard above has a grep-target — Q1 (this plan body), Phase A/B/C/D (this plan
+body), workspace rename sweep (issue doc cited above). No grep-miss deferrals.
 
 ## Cross-references
 
