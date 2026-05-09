@@ -166,10 +166,12 @@ operator-approved option (a) — ship per plan-of-record.
   `market-data-processing-service/market_data_processing_service/app/core/live_workers.py:1118-1164` (per plan-of-
   record line 87). Substantial refactor of the per-timeframe accumulator pattern; tests `(N batches × M rows) →
   exactly ONE record_captured per (timeframe, shard)` shape.
-- ❌ MTDS `LiveConnectivityWatchdog` — Phase 1's "Migrated issue 2026-05-08" item. Module location per conflict-issue
-  proposal: `market-tick-data-service/market_tick_data_service/market_interface/connectivity_watchdog.py`.
-  Heartbeat tracker per (venue, data_type), state machine
-  (`HEALTHY → STALE → GAP → RECOVERING → HEALTHY`), emits the 3-event family this session shipped.
+- ✅ MTDS `LiveConnectivityWatchdog` — SHIPPED 2026-05-09 mtds@`91e21cd`. Module at
+  `market-tick-data-service/market_tick_data_service/market_interface/connectivity_watchdog.py` (249 lines) +
+  `tests/unit/test_connectivity_watchdog.py` (16 tests). Heartbeat tracker per (venue, data_type), simplified state
+  machine (`HEALTHY ↔ GAP` — STALE/RECOVERING are intermediate ticks not separate states), emits the 3-event family
+  via `log_event(LifecycleEventType.CONNECTIVITY_GAP_DETECTED.value, …)`. Adapter wire-in (heartbeat() calls in CCXT /
+  Databento / etc. WS adapters) is a follow-up todo for adapter maintainers — out of scope here.
 - ❌ `ResourceProfiler.on_memory_warning` wiring — Phase 2 of plan-of-record. Depends on Phase 1.2 callsite migration
   per the plan's execution DAG; cannot ship in isolation.
 - ❌ Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline — separate `[SCRIPT] P1` todo in plan-of-record (7-day
@@ -206,7 +208,7 @@ work-split; (c) Harsh implement-from-spec if Ikenna pre-designs.
 - MDPS `app/core/live_workers.py` consumes them — ❌ STILL OPEN (Phase 1.2 callsite migration)
 - `ResourceProfiler.on_memory_warning` wired in MDPS — ❌ STILL OPEN (Phase 2; depends on Phase 1.2)
 - `CONNECTIVITY_GAP_DETECTED` event type in UAC — ✅ SHIPPED 2026-05-09 UAC@`4bd84e7c`
-- `LiveConnectivityWatchdog` in MTDS — ❌ STILL OPEN
+- `LiveConnectivityWatchdog` in MTDS — ✅ SHIPPED 2026-05-09 mtds@`91e21cd`
 - live-pipeline Phase 4 unblocks — ❌ STILL BLOCKED until UTL primitives + MDPS wiring land
 
 ---
