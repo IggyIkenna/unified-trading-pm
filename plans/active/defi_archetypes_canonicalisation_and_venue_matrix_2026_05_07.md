@@ -95,7 +95,10 @@ short hedge). `ASTER` is USDT/USDF/asBNB only.
       `unified-trading-pm/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` with screenshot/URL evidence per
       venue. Bandit-clean, no hardcoded creds; use public endpoints where available, manual UI screenshot otherwise.
       Citadel-grade evidence per row before the matrix flip.
-- [ ] [UAC] P0. Update `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` matrix entries:
+- [x] [UAC] P0. Update `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` matrix entries.
+      **VERIFIED 2026-05-09 audit** — Stream A flip comments confirmed at venue_collateral.py:138 (DERIBIT stETH +
+      7.5% haircut), :159+ (BYBIT entries), :173 (OKX wstETH); plus rows at lines 162/164/167/170 for
+      BYBIT stETH/wstETH/USDe/sUSDe with appropriate haircuts.
   - Flip `("DERIBIT", "stETH", accepted=False)` →
     `(accepted=True, haircut_pct=Decimal("0.075"), margin_type="PORTFOLIO", notes="X:PM cross-collateral, offsets ETH-perp directly (2026-01-13 haircut cut from 15→7.5%)")`.
   - Flip `("BYBIT", "stETH", accepted=False)` →
@@ -108,18 +111,22 @@ short hedge). `ASTER` is USDT/USDF/asBNB only.
   - Update the comment block at line 103–113 to reflect the corrected understanding; remove the "NO production ETH-perp
     venue accepts" claim.
   - Add 2026-05-07 plan reference in the comment block.
-- [ ] [UAC] P0. Add unit tests covering the 5+ flipped rows:
+- [x] [UAC] P0. Add unit tests covering the 5+ flipped rows:
       `tests/unit/test_venue_collateral.py::test_lst_acceptance_2026_05_07` verifying
-      `venue_accepts_collateral("DERIBIT", "stETH") is True`, etc.
-- [ ] [codex] P0. Update
+      `venue_accepts_collateral("DERIBIT", "stETH") is True`, etc. **VERIFIED 2026-05-09 audit** — tests at
+      `tests/unit/test_venue_collateral.py:76-108` confirm DERIBIT stETH + BYBIT stETH/wstETH/USDe/sUSDe + OKX wstETH
+      acceptance post-Stream A flip.
+- [x] [codex] P0. Update
       [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) "Today's
       matrix" table (lines 101–112): replace the single DRIFT row with the corrected multi-venue table (DRIFT +
       Deribit + Bybit + OKX); update the slot count from 2 to ~10 (3 ETH-LSTs × 3 ETH-perp-venues + DRIFT/JitoSOL +
       DRIFT/mSOL); update the "Honest — DRIFT is the only venue" sentence to reflect the corrected reality. Update Phase
-      7a status from "operator audit pending" → "shipped 2026-05-07 — see plan".
-- [ ] [codex] P0. Update
+      7a status from "operator audit pending" → "shipped 2026-05-07 — see plan". **VERIFIED 2026-05-09 audit** —
+      multi-venue table at carry-staked-basis.md:95-103 (DRIFT + DERIBIT + BYBIT + OKX rows).
+- [x] [codex] P0. Update
       [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) lines 124–130
-      (Catalog axis): bump "2 slots today" → "N slots today (post-Stream A flip)".
+      (Catalog axis): bump "2 slots today" → "N slots today (post-Stream A flip)". **VERIFIED 2026-05-09 audit** —
+      "Effective slot count post-Stream A flip = ~7" at carry-staked-basis.md:110-112.
 - [ ] [strategy-service] P1. Confirm `_build_carry_staked_basis` in `target_universe/catalog.py` regenerates the
       expanded slot list automatically from the corrected matrix (per the codex SSOT design). If hardcoded anywhere,
       remove the hardcode. **DEFERRED to next strategy-service touch**: low risk because regeneration is on import.
@@ -138,27 +145,33 @@ already supports LEADER_HEDGE mode.
 
 **Tasks**
 
-- [ ] [codex] P0. Update
+- [x] [codex] P0. Update
       [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md):
       promote "Funding-rate dispersion arb | LEADER_HEDGE" from one-line "Supported scenarios" mention to first-class
       sub-section with its own config-schema variant. Document the cross-venue funding mechanic, the leverage
-      multiplier, and the volatility-cap clamp.
+      multiplier, and the volatility-cap clamp. **VERIFIED 2026-05-09 audit** — Funding-rate dispersion arb at
+      arbitrage-price-dispersion.md:28, LEADER_HEDGE detail at :48-53/70-75, FUNDING_DISPERSION enum at :80, mode
+      switch at :92.
 - [ ] [codex] P0. Resolve circular cross-reference: in `arbitrage-price-dispersion.md` "Not in this archetype" section,
       remove the line pointing at `CARRY_BASIS_PERP` for funding arb. Leave the paired authoritative claim in
       `carry-basis-perp.md` only.
-- [ ] [codex] P0. Update [`carry-basis-perp.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md)
+- [x] [codex] P0. Update [`carry-basis-perp.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md)
       "Not in this archetype" section: keep the line "Cross-venue perp spread arbitrage (funding-rate differential
       between two perp venues for the same asset) — `ARBITRAGE_PRICE_DISPERSION`" but reword it to be authoritative
-      rather than circular.
-- [ ] [PM-plan] P0. Edit [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md): rename
+      rather than circular. **VERIFIED 2026-05-09 audit** — line at carry-basis-perp.md:138-139.
+- [x] [PM-plan] P0. Edit [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md): rename
       `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION` (with config variant
       `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged` where useful). Update the "Both archetypes" headline to
-      use the canonical name.
+      use the canonical name. **SHIPPED 2026-05-09** — global rename applied (13 occurrences) in the master plan
+      bundled with this same PM batch commit.
 - [x] [PM-plan] P0. Edit [`defi_master_2026_05_07.md`](./defi_master_2026_05_07.md): same rename. ✓ shipped 2026-05-08
       (PM plan-flip alongside the audit-driven batch). L152-153 "2 DeFi archetypes live" now uses
       `ARBITRAGE_PRICE_DISPERSION` with config variant note + cross-ref to this plan.
-- [ ] [UAC] P1. Verify `StrategyArchetype` enum in UAC: confirm `ARBITRAGE_PRICE_DISPERSION` exists and that
+- [x] [UAC] P1. Verify `StrategyArchetype` enum in UAC: confirm `ARBITRAGE_PRICE_DISPERSION` exists and that
       `LEVERAGED_FUNDING_ARB` is **not** in the enum. If absent, no enum change needed; if mistakenly added, remove.
+      **VERIFIED 2026-05-09 audit** — `ARBITRAGE_PRICE_DISPERSION = "ARBITRAGE_PRICE_DISPERSION"` at
+      `internal/architecture_v2/enums.py:68`; family mapping at :132; rank-feature at :213. No `LEVERAGED_FUNDING_ARB`
+      in enum (correct). No enum change needed.
 - [ ] [strategy-service] P1. Confirm catalog has rows for the funding-dispersion-leveraged variant under
       `ARBITRAGE_PRICE_DISPERSION` archetype prefix. If not, add. **DEFERRED to strategy-service feature work**; tracker
       only here so the task isn't lost.
