@@ -131,49 +131,119 @@ anywhere in the workspace except parent plan + this plan + archived issue + code
 **Sequencing note:** A → B → C is strictly sequential (each consumes the prior phase's artefact). E (codex) is
 independent of B+C and can run in parallel as soon as A's slot label is decided. D is the last gate.
 
-## Open questions / operator decisions needed
+## Open questions / operator decisions
 
-These items genuinely require operator triage; do NOT invent answers — write the slot stub with placeholders and mark
-the phase as `🟡 BLOCKED` in the plan-of-record's `## Open questions` section until resolved:
+### ✅ All 6 resolved 2026-05-09 (operator); plan ships Phase A with confirmed values, no placeholders
 
-1. **Config-variant slug naming.** Confirm `funding-rate-dispersion` is the canonical slug (vs
-   `cross-venue-funding-spread` / `funding-rate-dispersion`). The 2026-05-07 operator decision in the parent plan used
-   `funding-rate-dispersion`; this plan defaults to that unless operator overrides.
-2. **Perp-venue pair for the live cutover.** `master_to_live_defi_2026_05_23.md` declares 6 hedge venues (Bybit,
-   Deribit, Binance, OKX, Hyperliquid, Aster). Which 2 form the funding-spread leg pair for the cutover slot? Default
-   proposal: Bybit + Hyperliquid (highest funding-rate dispersion historically per features-perp-funding observations);
-   confirm before locking the slot.
-3. **Leverage cap (Stream D `target_leverage`).** What's the max leverage the funding-rate-dispersion variant can
-   take? Default proposal: `target_leverage = 3.0` matching the conservative end of `LeveragedLegController`'s declared
-   range; confirm before live cutover.
-4. **Volatility-cap clamp value.** The `arbitrage-price-dispersion.md` codex doc references a vol-cap clamp on the
-   leverage multiplier. What's the threshold (e.g. clamp leverage to 1.0 when realised-vol exceeds N% over M days)?
-   Default proposal: clamp at 60-day realised vol > 80%.
-5. **`bidirectional_funding` flag default.** Existing slots at L371/L383 use `"bidirectional_funding": "true"` as a
-   string. Should the funding-rate-dispersion slot inherit this? Default proposal: yes — the spread strategy
-   captures both signs.
+1. **Config-variant slug naming → `funding-rate-dispersion`.** Drops the `-leveraged` suffix; leverage is orthogonal
+   (Stream D `target_leverage` config field, not part of the dispersion-type slug). All references in this plan + every
+   downstream codex / strategy-service / pnl-attribution-service / tracer artefact use `funding-rate-dispersion`.
+2. **Venue selection model → dynamic best-long + best-short across the full 6-venue universe** (Bybit, Deribit, Binance,
+   OKX, Hyperliquid, Aster). NOT a fixed venue pair. The strategy's whole alpha is selecting per cycle which two
+   venues offer the widest funding-rate spread; pre-locking a pair would defeat the strategy. **Implication for the
+   slot:**
+   - Slot label uses a multi-venue universe descriptor, not two specific venue names. Proposed shape:
+     `ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-<asset>-<currency>-prod`
+     (e.g. `ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-btc-usdt-prod` for the BTC/USDT instance).
+   - Slot config includes `venue_universe: [bybit, deribit, binance, okx, hyperliquid, aster]` + a per-cycle
+     selector (`best_long_venue` + `best_short_venue` resolved dynamically by the engine from features-perp-funding's
+     latest funding-rate snapshot per venue).
+   - `ArbitragePriceDispersionEngine` (or the hierarchical sibling) needs to support venue-universe + dynamic-pair
+     selection if it doesn't already; if it doesn't, Phase A spawns a subclass
+     `ArbitragePriceDispersionFundingRateEngine` that wraps the universe iteration + best-pair selection.
 
-Until items 1+2 are resolved, Phase A ships with stub slot (clearly-marked PLACEHOLDER strings) + a Phase A.6 follow-up
-todo to update the slot label + venue pair once operator confirms.
+3. **Leverage cap → `target_leverage = 5.0`.** 5× max (operator override of the 3× conservative default). Slot config
+   field `target_leverage: "5.0"`. Live-cutover risk discipline relies on the vol-cap clamp (Q4) + position-balance-
+   monitor + kill-switch wiring rather than a low static cap.
+4. **Volatility-cap clamp → short-term realised-vol features (NOT 60-day).** Use `features-volatility-service`'s
+   short-window outputs: `realized_vol_5` / `realized_vol_10` / `realized_vol_20` (5/10/20 bar annualized close-to-
+   close, computed at
+   [`features_volatility_service/calculators/realized_vol_calculator.py`](../../../features-volatility-service/features_volatility_service/calculators/realized_vol_calculator.py)).
+   Proposed shape: clamp `target_leverage → 1.0` when **`realized_vol_20` (1h candles, ≈ 20h trailing) exceeds 80%
+   annualized OR `vol_regime_zscore_20` > 2.0** (the latter adapts to per-asset baseline rather than using a fixed
+   threshold). The engine reads these from features-volatility's parquet output per the existing reader pattern. Slot
+   config:
+   ```python
+   "vol_cap_clamp_feature": "realized_vol_20",
+   "vol_cap_clamp_timeframe": "1h",
+   "vol_cap_clamp_threshold_pct": "80.0",
+   "vol_cap_clamp_zscore_feature": "vol_regime_zscore_20",
+   "vol_cap_clamp_zscore_threshold": "2.0",
+   "vol_cap_clamp_target_leverage": "1.0",
+   "vol_cap_clamp_combine": "any",  # OR — clamp if EITHER threshold is breached
+   ```
+5. **`bidirectional_funding` → `true`.** Capture both signs of the funding-rate spread (operator confirmed: doesn't
+   matter whether `funding(long_venue) − funding(short_venue)` is positive or negative).
+6. **Sign-match entry filter (NEW — operator-added 2026-05-09).** Only enter when the **price-spread sign matches the
+   funding-spread sign** between the two selected venues. Rationale: collecting funding while price spread mean-reverts
+   in your favour stacks two edges; collecting funding while price spread widens against you eats P&L. Slot config:
+   ```python
+   "entry_filter_sign_match": "price_spread == funding_spread",  # only enter if signs match
+   ```
+   Engine logic (Phase A engine wiring): every funding cycle, after picking `best_long_venue` (argmax(funding_rate))
+   and `best_short_venue` (argmin(funding_rate)), compute `price_spread = mid_price(long_venue) − mid_price(short_venue)`
+   and `funding_spread = funding_rate(long_venue) − funding_rate(short_venue)`. Enter ONLY if
+   `sign(price_spread) == sign(funding_spread)`; otherwise skip the cycle (no entry, no fees burned).
 
 ## Phase A — strategy-service catalog: add `funding-rate-dispersion` config variant
 
-- [ ] [strategy-service] P1. Add slot entry to
+- [ ] [strategy-service] P1. Add slot entry (start with BTC/USDT, ETH/USDT in A.6) to
       `strategy-service/strategy_service/engine/strategies/v2/archetype_slot_resolver.py` per the existing pattern (e.g.
-      after the current ARBITRAGE_PRICE_DISPERSION rows ~L225–L811):
+      after the current ARBITRAGE_PRICE_DISPERSION rows ~L225–L811). The slot wires the **6-venue universe** with
+      dynamic best-long/best-short selection (NOT a fixed venue pair) + sign-match entry filter + short-term-vol
+      clamp:
 
       ```python
       Slot(
           archetype=StrategyArchetype.ARBITRAGE_PRICE_DISPERSION,
-          slot_label="ARBITRAGE_PRICE_DISPERSION@funding-rate-dispersion",
-          asset_group=MarketAssetGroup.DEFI,  # or CEFI depending on funding-leg venues
-          # ... per-slot config: leverage, perp-pair venues, hedge-leg ratios, etc.
+          slot_label="ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-btc-usdt-prod",
+          asset_group=MarketAssetGroup.CEFI,  # all 6 perp venues are CEFI
+          config={
+              # Q1 + Q2 — dispersion type + venue universe
+              "dispersion_type": "funding-rate-dispersion",
+              "asset": "BTC",
+              "quote_currency": "USDT",
+              "venue_universe": ["bybit", "deribit", "binance", "okx", "hyperliquid", "aster"],
+              "venue_selection_mode": "dynamic-best-long-short",  # per funding cycle (~8h)
+              # Q3 — leverage cap
+              "target_leverage": "5.0",
+              # Q4 — vol-cap clamp using short-term realised-vol features
+              "vol_cap_clamp_feature": "realized_vol_20",            # 20-bar annualized close-to-close
+              "vol_cap_clamp_timeframe": "1h",                       # 1h candles → ~20h trailing window
+              "vol_cap_clamp_threshold_pct": "80.0",                 # raw rv threshold
+              "vol_cap_clamp_zscore_feature": "vol_regime_zscore_20",
+              "vol_cap_clamp_zscore_threshold": "2.0",               # 2σ above 60-bar mean
+              "vol_cap_clamp_combine": "any",                        # OR — clamp if EITHER breached
+              "vol_cap_clamp_target_leverage": "1.0",
+              # Q5 — bidirectional funding capture
+              "bidirectional_funding": "true",
+              # Q6 — sign-match entry filter
+              "entry_filter_sign_match": "price_spread == funding_spread",
+          },
       ),
       ```
 
-- [ ] [strategy-service] P1. Slot consumed by `ArbitragePriceDispersionEngine` factory entry at `factory.py:66`. Confirm
-      the engine handles the funding-rate-dispersion config (cross-venue funding-rate spread between two perp
-      venues). If a new engine subclass is needed, add `ArbitragePriceDispersionFundingLeveragedEngine`.
+- [ ] [strategy-service] P1. Slot consumed by `ArbitragePriceDispersionEngine` factory entry at `factory.py:66`.
+      Audit the existing engine + `ArbitragePriceDispersionHierarchicalEngine` for `venue_universe` + dynamic-pair
+      selection support. Two outcomes possible:
+      - **(a)** Existing engine already supports the `venue_universe` + dynamic-best-pair pattern (LEADER_HEDGE mode at
+        `price_dispersion_hierarchical.py:105` is closest fit). Wire the new slot config through; no new subclass.
+      - **(b)** Engine doesn't support dynamic pair selection from a >2-venue universe. Spawn
+        `ArbitragePriceDispersionFundingRateEngine` subclass that, every funding cycle (~8h):
+        1. Reads per-venue funding-rate snapshot from features-perp-funding (latest tick per venue in `venue_universe`).
+        2. Selects `best_long_venue = argmax(funding_rate)`, `best_short_venue = argmin(funding_rate)`.
+        3. Reads latest mid-prices for the pair from MTDS perp tick data.
+        4. Computes `funding_spread = funding_rate(long_venue) − funding_rate(short_venue)` and `price_spread =
+           mid_price(long_venue) − mid_price(short_venue)`.
+        5. **Sign-match entry filter (Q6):** if `sign(price_spread) != sign(funding_spread)` → SKIP this cycle (no
+           entry, no fees burned). Emit a trace event `SIGN_MISMATCH_SKIP` with both signs for observability.
+        6. Reads `realized_vol_20` + `vol_regime_zscore_20` from features-volatility for the asset.
+        7. **Vol-cap clamp (Q4):** if `realized_vol_20 > 80%` OR `vol_regime_zscore_20 > 2.0` → clamp
+           `target_leverage` from configured 5.0 down to 1.0. Emit `VOL_CAP_CLAMPED` trace event.
+        8. Emits the leg pair through `LegController.update` per the May-2026 leg-controller refactor with the
+           clamp-adjusted leverage.
+
+      Document the chosen branch (a vs b) inline in the commit message + the slot doc-string.
 
 - [ ] [strategy-service] P1. Tests:
       `tests/unit/test_archetype_slot_resolver.py::test_arbitrage_price_dispersion_funding_leveraged_slot_exists`. QG
@@ -185,9 +255,10 @@ todo to update the slot label + venue pair once operator confirms.
       `python -c "from strategy_service.engine.strategies.v2.factory import ARCHETYPE_TO_ENGINE; assert     StrategyArchetype.ARBITRAGE_PRICE_DISPERSION in ARCHETYPE_TO_ENGINE"`
       exits 0.
 
-- [ ] [strategy-service] P1. **A.6 follow-up** — once operator answers Open Questions 1-5, swap PLACEHOLDER strings in
-      the slot for the confirmed slug + venue pair + leverage cap + vol-cap clamp + `bidirectional_funding` flag. Re-run
-      QG. Commit + push as a separate `feat(strategies):` commit referencing the open-question resolution.
+- [ ] [strategy-service] P1. **A.6 follow-up — extend to ETH/USDT slot.** Once BTC/USDT slot ships green, add
+      `ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-eth-usdt-prod` (same shape, asset=`ETH`). Verify
+      both slots resolve in `archetype_slot_resolver`; both consumed by the engine factory entry. Re-run QG. Commit +
+      push as a separate `feat(strategies):` commit.
 
 **Code gates**: C4 — `bash strategy-service/scripts/quality-gates.sh` Pass 1 green (basedpyright + ruff + tests). C5 —
 landed on `live-defi-rollout` per workspace dirty-deps rule (`git push origin live-defi-rollout` directly).
@@ -294,9 +365,23 @@ Phase E may run in parallel with Phases B/C (no upstream dependency on artefacts
 
 - [ ] [codex] P0. In the same `arbitrage-price-dispersion.md` "Example instances" section (after L159
       `ARBITRAGE_PRICE_DISPERSION@multi-cex-btc-funding-usdt-prod`), add a new sub-section showing the
-      `funding-rate-dispersion` config variant slot label format the strategy-service catalog uses, e.g.:
-      `     Funding-rate dispersion (leveraged variant — Stream B 2026-05-07):       ARBITRAGE_PRICE_DISPERSION@<venue1>-<venue2>-<asset>-funding-leveraged-<currency>-prod       # config: target_leverage=<N>, vol_cap_clamp=<M>%, bidirectional_funding=true     `
-      Wire to the actual slot label once Open Question 1+2 land.
+      `funding-rate-dispersion` config variant slot-label shape that strategy-service uses. Per Q2 resolution
+      2026-05-09 the slot is **multi-venue universe + dynamic-best-pair selection**, NOT a fixed venue pair:
+
+      ```
+      Funding-rate dispersion (multi-venue universe + dynamic best-long/best-short — Stream B 2026-05-07):
+        ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-btc-usdt-prod
+        ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-eth-usdt-prod
+        # config (operator-confirmed 2026-05-09):
+        #   venue_universe         = [bybit, deribit, binance, okx, hyperliquid, aster]
+        #   venue_selection_mode   = dynamic-best-long-short        (per funding cycle, ~8h)
+        #   target_leverage        = 5.0
+        #   vol_cap_clamp_feature  = realized_vol_20 (1h candles)   (short-term, NOT 60-day)
+        #   vol_cap_clamp_threshold_pct = 80.0  OR  vol_regime_zscore_20 > 2.0  (any breach → clamp)
+        #   vol_cap_clamp_target_leverage = 1.0
+        #   bidirectional_funding  = true                           (capture both spread signs)
+        #   entry_filter_sign_match = price_spread == funding_spread (skip cycle if signs differ)
+      ```
 
 - [ ] [codex] P1. Touch-check
       [`codex/09-strategy/architecture-v2/category-instrument-coverage.md § 11`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md):
@@ -362,14 +447,14 @@ the SAME logical unit as the code commit per Half 2.
 
 ## Deferred work after this plan ships (per CLAUDE.md "Plan Archival" HARD RULE)
 
-If A.6 (operator-decision-driven slot finalisation) is still pending at archive time:
+All 6 open questions resolved 2026-05-09 → no operator-blocked deferrals. Carryover candidates:
 
-| Phase / item                 | Status                              | Successor / blocker                                                                                             |
-| ---------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Phase A.6 — placeholder swap | `blocked` until Open Q 1-5 land     | Operator triage; resumes with confirmed slug + venue pair + caps                                                |
-| Live cutover dry-run         | `deferred-after-2026-05-23-cutover` | `master_to_live_defi_2026_05_23.md` Group F item 17 (paper-trade smoke) consumes this archetype's tracer output |
+| Phase / item                                   | Status                              | Successor / blocker                                                                                             |
+| ---------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Phase A.6 — ETH/USDT slot extension            | `todo` (unblocked; ships post-A)    | Same plan; small follow-up commit after BTC/USDT slot is green                                                  |
+| Live cutover dry-run (paper-trade integration) | `deferred-after-2026-05-23-cutover` | `master_to_live_defi_2026_05_23.md` Group F item 17 (paper-trade smoke) consumes this archetype's tracer output |
 
-If A.6 lands during this plan's lifetime, the table collapses to "no carryover" and this section is deleted at archive
+If A.6 ships within this plan's lifetime, that row collapses to "no carryover" and this section is trimmed at archive
 time per the "Plan Archival" HARD RULE migration discipline.
 
 ## Cross-references
