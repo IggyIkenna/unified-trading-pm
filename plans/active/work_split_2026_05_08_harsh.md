@@ -505,8 +505,16 @@ code edits to Ikenna Tab 1.
 
 **Handoff exception(s)**:
 
-- Sports reconciler hook validation can fall back to "first per-source VM cycle SCHEDULED" if no source VM completes
-  within today; carryover to tomorrow's split with explicit `**DEFERRED**` annotation.
+- Sports reconciler hook validation: **DEFERRED-WITH-NAMED-VERIFICATION-RECIPE 2026-05-09**. Audit confirmed the
+  reconciler script exists (`features-sports-service/scripts/features_sports_reconcile_available_at.py`) but is NOT
+  YET wired into any VM launcher — none of the sports launchers under
+  `deployment-service/scripts/vm/launch-{features-sports,sfi,footystats,sports-*}-*.sh` invoke it as exit-step.
+  **Successor scope**: extend a sports VM launcher's `BACKFILL_CMD` (or extend `setup-data-pipeline-vm.sh` post-backfill
+  branch) to invoke the reconciler before VM auto-shutdown. Verification recipe per
+  `features_sports_reconcile_available_at.py` docstring: scan-only first (CSV report to `$TMPDIR`), then operator
+  reviews + lifts `--apply-flips` cap. Tracked as a follow-up; either folded into a new
+  `sports_master_2026_05_07` Phase 5 todo OR a new
+  `sports_reconciler_hook_wiring_<date>.md` plan filed as named successor before next sports VM cycle.
 
 ---
 

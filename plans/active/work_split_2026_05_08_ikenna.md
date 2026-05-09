@@ -296,8 +296,10 @@ carry-staked-basis codex update + integrated paper-trade smoke round-trip after 
 
 **Handoff exception(s)**:
 
-- bSOL `LST_TOKEN_GENESIS` date verification can defer to Stream A successor agent if `unified_api_contracts/sports/`
-  test fixture doesn't exist yet for this token; carryover to tomorrow's split.
+- ~~bSOL `LST_TOKEN_GENESIS` date verification can defer to Stream A successor agent~~ ✓ **CLOSED 2026-05-09**:
+  audit confirmed bSOL is already in
+  `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_lst.py:47` with date
+  `"2022-11-24"` (BlazeStake / SolBlaze conservative floor). No further action.
 
 ---
 
