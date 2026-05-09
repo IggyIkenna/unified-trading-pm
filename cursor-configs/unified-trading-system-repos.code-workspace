@@ -38,32 +38,7 @@
     },
     {
       "path": "alerting-service"
-    },
-    {
-      "path": "features-calendar-service"
-    },
-    {
-      "path": "features-commodity-service"
-    },
-    {
-      "path": "features-cross-instrument-service"
-    },
-    {
-      "path": "features-delta-one-service"
-    },
-    {
-      "path": "features-multi-timeframe-service"
-    },
-    {
-      "path": "features-onchain-service"
-    },
-    {
-      "path": "features-sports-service"
-    },
-    {
-      "path": "features-volatility-service"
-    },
-    {
+    },    {
       "path": "features-service"
     },
     {
