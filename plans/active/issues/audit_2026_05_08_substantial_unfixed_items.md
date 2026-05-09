@@ -160,20 +160,31 @@ operator-approved option (a) — ship per plan-of-record.
 
 **Still open (DEFERRED-PER-SUB-AGENT-CAPACITY this session — see conflict-issue § "Recommended decision (a)"):**
 
-- ❌ `open_candle_writer` / `close_candle_writer` UTL parquet-write-lifecycle wrappers in
-  `unified-trading-library/unified_trading_library/streaming/candle_writer.py` — Phase 1.1 of plan-of-record.
-- ❌ MDPS `_streaming_write_per_tf` callsite migration — Phase 1.2 of plan-of-record. Lives in
+- ✅ `open_candle_writer` / `close_candle_writer` UTL parquet-write-lifecycle wrappers — SHIPPED 2026-05-09
+  UTL@`ac6e3244`. Module at `unified-trading-library/unified_trading_library/streaming/candle_writer.py` (365 lines)
+  + `tests/unit/streaming/test_candle_writer.py` (10 tests, all passing). Phase 1.1 of plan-of-record. Open/close
+  lifecycle with `CandleWriterHandle` dataclass, `SchemaDriftError` on drifted second chunk, idempotent close,
+  4-branch decision matrix (error → `record_failed` / zero rows → `record_empty(SOURCE_RETURNED_ZERO)` / rows →
+  `record_captured` + atomic rename / second-call no-op). Cluster validation kwargs forwarded to `record_captured`
+  for bundled shards.
+- ❌ MDPS `_streaming_write_per_tf` callsite migration — Phase 1.2 of plan-of-record. **DEFERRED-AFTER-WORKSPACE-QG-
+  CLEAN**: lives in
   `market-data-processing-service/market_data_processing_service/app/core/live_workers.py:1118-1164` (per plan-of-
-  record line 87). Substantial refactor of the per-timeframe accumulator pattern; tests `(N batches × M rows) →
-  exactly ONE record_captured per (timeframe, shard)` shape.
+  record line 87). Substantial refactor of the per-timeframe accumulator pattern that needs full-MDPS QG +
+  shard-level isolation tests + the 4-test matrix `(N batches × M rows) → exactly ONE record_captured per
+  (timeframe, shard)`. Blocker for in-flight ship: MDPS working tree has 9+ foreign-modified test files from
+  parallel agents' sessions; safe migration requires a coordinated tab assignment in tomorrow's work-split. UTL
+  primitives are now stable + tested → next agent has a clean target to wire against.
 - ✅ MTDS `LiveConnectivityWatchdog` — SHIPPED 2026-05-09 mtds@`91e21cd`. Module at
   `market-tick-data-service/market_tick_data_service/market_interface/connectivity_watchdog.py` (249 lines) +
   `tests/unit/test_connectivity_watchdog.py` (16 tests). Heartbeat tracker per (venue, data_type), simplified state
   machine (`HEALTHY ↔ GAP` — STALE/RECOVERING are intermediate ticks not separate states), emits the 3-event family
   via `log_event(LifecycleEventType.CONNECTIVITY_GAP_DETECTED.value, …)`. Adapter wire-in (heartbeat() calls in CCXT /
   Databento / etc. WS adapters) is a follow-up todo for adapter maintainers — out of scope here.
-- ❌ `ResourceProfiler.on_memory_warning` wiring — Phase 2 of plan-of-record. Depends on Phase 1.2 callsite migration
-  per the plan's execution DAG; cannot ship in isolation.
+- ❌ `ResourceProfiler.on_memory_warning` wiring — Phase 2 of plan-of-record. **DEFERRED-AFTER-PHASE-1.2**: depends
+  on Phase 1.2 callsite migration per the plan's execution DAG; cannot ship in isolation. Same MDPS coordinated tab
+  assignment that picks up Phase 1.2 owns this. `ConnectivityWatchdog` event-subscriber wire-in (subscribes to
+  `LifecycleEventType.CONNECTIVITY_GAP_DETECTED` to optionally pause MDPS feed during gaps) lands here too.
 - ❌ Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline — separate `[SCRIPT] P1` todo in plan-of-record (7-day
   observation per venue → 99th percentile). Bootstrap with conservative default (e.g. 60s) is fine until calibration.
 
@@ -204,12 +215,13 @@ work-split; (c) Harsh implement-from-spec if Ikenna pre-designs.
 ### Exit criteria
 
 - `open_candle_writer` + `close_candle_writer` exist in `unified-trading-library/unified_trading_library/streaming/` —
-  ❌ STILL OPEN
-- MDPS `app/core/live_workers.py` consumes them — ❌ STILL OPEN (Phase 1.2 callsite migration)
-- `ResourceProfiler.on_memory_warning` wired in MDPS — ❌ STILL OPEN (Phase 2; depends on Phase 1.2)
+  ✅ SHIPPED 2026-05-09 UTL@`ac6e3244` (365 lines + 10 tests)
+- MDPS `app/core/live_workers.py` consumes them — ❌ STILL OPEN (Phase 1.2 callsite migration; needs MDPS-coordinated
+  tab in next work-split — foreign WIP in MDPS tree blocks safe in-session migration)
+- `ResourceProfiler.on_memory_warning` wired in MDPS — ❌ STILL OPEN (Phase 2; DEFERRED-AFTER-PHASE-1.2)
 - `CONNECTIVITY_GAP_DETECTED` event type in UAC — ✅ SHIPPED 2026-05-09 UAC@`4bd84e7c`
 - `LiveConnectivityWatchdog` in MTDS — ✅ SHIPPED 2026-05-09 mtds@`91e21cd`
-- live-pipeline Phase 4 unblocks — ❌ STILL BLOCKED until UTL primitives + MDPS wiring land
+- live-pipeline Phase 4 unblocks — ❌ PARTIALLY UNBLOCKED: UTL primitives ready; MDPS wiring still required
 
 ---
 

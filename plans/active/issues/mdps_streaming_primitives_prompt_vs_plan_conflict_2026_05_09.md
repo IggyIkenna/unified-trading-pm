@@ -4,7 +4,7 @@ title:
   issue #3 P0)"
 created: 2026-05-09
 author: agent-mdps-streaming-spawn
-status: resolved-partial-2026-05-09
+status: resolved-utl-shipped-2026-05-09
 source:
   - plans/active/issues/audit_2026_05_08_substantial_unfixed_items.md § Item 3
   - plans/active/mdps_streaming_and_backpressure_2026_05_07.md Phase 1.1
@@ -14,17 +14,30 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-09
 ---
 
-> **RESOLUTION 2026-05-09**: Operator approved option (a) — ship per plan-of-record. Follow-up agent shipped the
-> **UAC SSOT half** as a clean independent unit (UAC@`4bd84e7c` — 3 typed `LifecycleEventType` members +
-> 3 Pydantic detail models + 3 typed event wrappers + 12 unit tests in
-> `tests/internal/unit/test_connectivity_gap_event_taxonomy.py`). The remaining 4 deliverables (UTL `open_candle_writer`
-> / `close_candle_writer`, MDPS Phase 1.2 callsite migration, MTDS `LiveConnectivityWatchdog`, MDPS Phase 2
-> ResourceProfiler wiring) are still open per audit-issue-3 § "Update 2026-05-09 — UAC SSOT shipped, code wiring still
-> open" — they are full-QG-cycle items in 3 different repos with foreign-WIP-in-shared-tree complications, and the
-> MDPS Phase 1.2 callsite migration alone is a substantial 1100+ line file refactor that's not safe to bundle with the
-> SSOT commit. The plan-of-record contract on `open_candle_writer` / `close_candle_writer` (parquet-write-lifecycle
-> wrappers, NOT trade aggregator) stands as the canonical shape for the next agent to implement against; this issue
-> resolved the contract-shape ambiguity but did not ship all the code.
+> **RESOLUTION 2026-05-09 (extended later same day)**: Operator approved option (a) — ship per plan-of-record. The
+> contract-shape ambiguity is closed and the UTL Phase 1.1 deliverable is now SHIPPED:
+>
+> - ✅ **UAC SSOT half** — UAC@`4bd84e7c` (3 typed `LifecycleEventType` members + 3 Pydantic detail models + 3 typed
+>   event wrappers + 12 unit tests in `tests/internal/unit/test_connectivity_gap_event_taxonomy.py`).
+> - ✅ **MTDS LiveConnectivityWatchdog** — mtds@`91e21cd` (249 lines + 16 tests).
+> - ✅ **UTL open/close candle writer (Phase 1.1)** — UTL@`ac6e3244` (365 lines at
+>   `unified_trading_library/streaming/candle_writer.py` + 340 lines / 10 tests at
+>   `tests/unit/streaming/test_candle_writer.py`). Implements the plan-of-record contract verbatim:
+>   `CandleWriterHandle` dataclass with `chunk_count` / `total_rows` / `schema_fingerprint` / `closed`;
+>   `open_candle_writer(...)` opens tempfile-backed `StreamingParquetWriter`; `write_chunk(...)` pins fingerprint on
+>   first chunk + raises `SchemaDriftError` on drifted second chunk; `close_candle_writer(...)` is idempotent + routes
+>   to `record_failed` / `record_empty(SOURCE_RETURNED_ZERO)` / `record_captured` per the 4-branch decision matrix +
+>   atomic-rename to final parquet path on success. Cluster validation kwargs are forwarded to `record_captured` for
+>   bundled shards (`options_chain` / `futures_chain` / `prediction_canonical_question_group` / sports fixture
+>   bundles).
+>
+> The remaining 2 deliverables — MDPS Phase 1.2 callsite migration in `live_workers.py:1118-1164` + MDPS Phase 2
+> `ResourceProfiler.on_memory_warning` wiring (DEFERRED-AFTER-PHASE-1.2 per the plan's execution DAG) — are still open
+> per audit-issue-3 § "Still open." They need a coordinated MDPS-dedicated tab in the next work-split: the migration is
+> a substantial 1100+ line file refactor that needs full-MDPS QG + shard-level isolation tests + the 4-test matrix `(N
+> batches × M rows) → exactly ONE record_captured per (timeframe, shard)`, and the MDPS working tree at the time of
+> this session had 9+ foreign-modified test files from parallel agents — safe migration requires the working tree to be
+> coherent. UTL primitives are stable + tested → the next agent has a clean target to wire against.
 
 # MDPS streaming primitives — spawn-prompt vs plan-of-record contract conflict
 

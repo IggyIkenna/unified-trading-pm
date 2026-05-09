@@ -36,7 +36,7 @@ depends_on: []
 todos:
   - id: phase-1-incremental-flush-utl-helper
     content: |
-      - [ ] [AGENT] P1. Phase 1.1 — Add open/write_chunk/close lifecycle at the canonical_writer level so MDPS can stream candles without losing shard atomicity.
+      - [x] [AGENT] P1. Phase 1.1 — Add open/write_chunk/close lifecycle at the canonical_writer level so MDPS can stream candles without losing shard atomicity. **SHIPPED 2026-05-09 UTL@`ac6e3244`** — `unified-trading-library/unified_trading_library/streaming/candle_writer.py` (365 lines: `open_candle_writer` / `write_chunk` / `close_candle_writer` / `CandleWriterHandle` dataclass / `SchemaDriftError`) + `tests/unit/streaming/test_candle_writer.py` (10 tests passing). Idempotent close, 4-branch decision matrix (error → `record_failed` / zero-rows → `record_empty(SOURCE_RETURNED_ZERO)` / rows → `record_captured` + atomic rename / second call no-op). Cluster-validation kwargs forwarded to `record_captured` for bundled shards. Phase 1.2 (MDPS callsite migration) + Phase 2 (`ResourceProfiler.on_memory_warning`) remain open — see `plans/active/issues/audit_2026_05_08_substantial_unfixed_items.md` Item #3 § "Still open" for blocker citation.
 
       Current shape (the wall the previous agent hit):
       `unified-trading-library/.../canonical_writer.py:write_candle_parquet(...)` constructs a fresh
@@ -258,11 +258,11 @@ isProject: false
 
 ## Why this plan exists
 
-The `mtds_per_instrument_download_api_2026_04_24.md` line of work shipped a band-aid fix for an MDPS VM OOM
-regression on 2026-05-07: deployment-service@`02ee6d6` bumps the launcher memory tier so MDPS VMs don't OOM under the
-current eager-read + eager-write code path. That lets the May 23 cutover proceed, but it's strictly a tactical fix — the
-durable solution is a streaming flush + read-side iterator + admission control, none of which were safely deliverable in
-the audit budget the parent session had.
+The `mtds_per_instrument_download_api_2026_04_24.md` line of work shipped a band-aid fix for an MDPS VM OOM regression
+on 2026-05-07: deployment-service@`02ee6d6` bumps the launcher memory tier so MDPS VMs don't OOM under the current
+eager-read + eager-write code path. That lets the May 23 cutover proceed, but it's strictly a tactical fix — the durable
+solution is a streaming flush + read-side iterator + admission control, none of which were safely deliverable in the
+audit budget the parent session had.
 
 Per CLAUDE.md "Temporary state must have a named successor plan (no silent fix later)" — this plan IS the named
 successor. The band-aid is **temporary state**; this plan is the **canonical follow-up plan** that makes the band-aid
