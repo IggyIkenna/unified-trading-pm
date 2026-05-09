@@ -67,18 +67,57 @@ each area against this benchmark.
 
 ## Question
 
+### Operator directives (received during this question doc's drafting — pinned)
+
+- **2026-05-09 ikenna**: *"agent paralel flow is the ssot we will do this for forseeable future needs to ebe tight"* —
+  multi-parallel-agent flow IS the workspace SSOT. Do NOT propose removing it. **Do** propose tightening its foot-guns.
+  This re-shapes Block A3 (the audit re-frames around tightening, not replacing) and **PROMOTES D3 (per-agent
+  worktrees)** as the structural fix that makes the SSOT tight.
+- **2026-05-09 ikenna**: *"UTS needs to be a commoon soot codbebas with hooks to do eevrythihg with mim duploiacte
+  thread but full flexibility"* — the target architecture IS a **single common-SSOT codebase with hooks for
+  extensibility**, minimum duplicate code paths, full flexibility via plugin / extension points. This is a DIRECTLY
+  DECIDED answer to Block A1 (the recommendation is now "monorepo + plugin hooks", not "audit whether to consolidate").
+  The plan-extraction work for A1 becomes "design + execute the consolidation + hook architecture" not "decide whether
+  to consolidate."
+- **2026-05-09 ikenna**: *"the rest of your question you can answer with the code understanding... plug and gaps with
+  active plan updates"* — fill the audit findings myself based on code understanding (don't gate on operator answers
+  for the remaining blocks); when gaps surface, raise them as updates against active plans rather than as new question
+  doc cycles.
+
 ### Block A — Repo + codebase shape
 
-A1. **Repo split at 35 — earning its cost?** 35 git repos in the workspace today (down from ~65 historically as URDI /
-UTEI / and others merged) is still a meaningful coordination overhead for a 2-3-person team. The split was justified
-historically by parallel-CI throughput + per-domain ownership boundaries, but with current team size the symptoms remain
-visible: dirty-deps quickmerge bans, force-sync danger, version-skew risk, per-repo workflow template rollouts, "where
-does X live?" cognitive load, QG bypass loopholes per repo, dual SSOTs from canonical/external-source splits,
-multi-agent shared-tree foot-guns (the 4 documented in CLAUDE.md). Are 35 repos earning their cost today? Concretely:
-which 5-10 logical packages would survive in a clean rewrite, and what's the migration cost vs benefit? Is there a "pull
-bottom-tier libraries (UAC, UTL, UCI, UEI) into a single `unified-trading-core` package + collapse all `*_service` repos
-into 1 `unified-trading-services` monorepo with sub-packages" path that compresses ~30 of the 35 to ~3-5 and recovers
-months of force-sync / quickmerge / dependency-bump time?
+A1. **Repo split at 35 — earning its cost?** 35 git repos in the workspace today (27 active + 8 archived after the
+features-* consolidation 2026-05-08; ground truth = `workspace-manifest.json` `repositories` keys). The split was
+justified historically by parallel-CI throughput + per-domain ownership boundaries, but with current team size the
+symptoms remain visible: dirty-deps quickmerge bans, force-sync danger, version-skew risk, per-repo workflow template
+rollouts, "where does X live?" cognitive load, QG bypass loopholes per repo, dual SSOTs from canonical/external-source
+splits, multi-agent shared-tree foot-guns (the 4 documented in CLAUDE.md). Are 27 active repos earning their cost
+today? Concretely: which 5-10 logical packages would survive in a clean rewrite, and what's the migration cost vs
+benefit?
+
+> **DECIDED 2026-05-09 (operator directive)**: target shape is **single common-SSOT codebase + hooks for extensibility,
+> minimum duplicate threads, full flexibility**. The audit work for A1 is no longer "should we consolidate?" — it's
+> **"design + execute the monorepo + hook architecture"**. Concrete shape (to be refined in the spawned plan):
+>
+> - **One `unified-trading-system` repo** (or 2-3 max) with internal sub-packages along the existing T0/T1/T2/T3 tier
+>   model (`core/contracts/`, `core/library/`, `interfaces/market/`, `interfaces/execution/`, `services/strategy/`,
+>   `services/features/`, `services/execution/`, etc.). Same dependency-DAG, vastly less coordination overhead.
+> - **Hooks pattern** for per-domain / per-archetype / per-venue extensibility — adapter registries (already exist in
+>   UAC `external/<source>/`), strategy-archetype registries (already exist in UAC `registry/`), feature-family
+>   registries (already exist in features-service after consolidation), execution-mode registries (already exist in
+>   `ManualExecutionMode`/`ServiceEmissionPolicy`). Lift these into a uniform "extension point" pattern so adding a
+>   new venue / archetype / feature is a single registry entry + a single adapter file, not a new repo.
+> - **Migration sequence** (to be detailed in spawned plan): (1) UAC + UTL + UCI + UEI collapse into
+>   `unified-trading-core/` sub-package, (2) all `interfaces/*` (market, execution, sports, prediction adapters)
+>   collapse into `unified-trading-interfaces/` sub-package, (3) all `*_service` repos collapse into
+>   `unified-trading-services/` with sub-packages per service, (4) UI repos consolidate via the same pattern.
+>   End-state: ~3-5 logical packages instead of 27 active repos.
+> - **Coordination win**: removes dirty-deps quickmerge bans, force-sync danger, version-skew risk, per-repo workflow
+>   template rollouts, the per-repo cursor-rules / CLAUDE.md symlinks, the per-repo QG-bypass-audit YAMLs.
+> - **Open audit questions for plan extraction**: timing vs May-23 cutover (consolidation IS the cutover-gating work
+>   if done pre-May-23, OR a post-cutover refactor); incremental vs big-bang migration; CI/CD shape under monorepo
+>   (single QG pipeline vs per-package); hooks-pattern formalization (which existing registries are the canonical
+>   extension surface vs which need lifting).
 
 A2. **Codex inflation + codex staleness** — ~150 docs across 9 sub-trees + ~1500 lines of `CLAUDE.md` rules + per-repo
 `CLAUDE.md` symlinks + `SUB_AGENT_MANDATORY_RULES.md` aliasing the full content. Each new agent (sub-agent or fresh
@@ -93,12 +132,15 @@ detailed reference accessed on-demand, vs the current "everything is mandatory" 
 codex re-derivation from authoritative state** (workspace-manifest.json owns repo count → codex auto-pulls from it
 instead of hard-coding)?
 
-A3. **CLAUDE.md as procedural rule book vs architectural spec** — the file has more lines about HOW to commit
-(pre-commit check, foot-guns #1-#4, prek auto-revert race, conditional push, plan-flip-as-you-ship, pathspec commit
-form) than about WHAT to build. Every rule is justified by an incident, but the meta-pattern is "treat the symptom of
-multi-agent shared-tree collisions" rather than "remove the cause" (single-agent-per-repo + per-feature branches with PR
-review = the institutional norm; multi-agent on a shared `live-defi-rollout` with quickmerge band-aids is bespoke). Is
-the multi-agent-per-tree workflow earning its velocity vs simpler 1-agent-per-feature-branch hygiene? If a fresh
+A3. **CLAUDE.md as procedural rule book under the parallel-agent SSOT — what tightens further?** The file has more
+lines about HOW to commit (pre-commit check, foot-guns #1-#4, prek auto-revert race, conditional push,
+plan-flip-as-you-ship, pathspec commit form) than about WHAT to build. **Operator directive 2026-05-09**: parallel-agent
+flow IS the workspace SSOT for the foreseeable future + needs to be tight. So the audit re-frames around tightening,
+not removing. Open questions: which procedural rules earn their cost (the pre-commit-check + pathspec-commit-form +
+EOD-scoreboard discipline catch real foot-gun fires daily — KEEP); which rules are workarounds for the underlying
+shared-tree race that **D3 below would eliminate structurally** (foot-gun #1 / #2 / #3 / #4 all stem from the same
+shared-`.git/` + shared-working-tree shape); which rules drift between text + behaviour as agents accumulate; which
+rules a fresh agent ACTUALLY reads vs which exist as documentation-only governance theatre? If a fresh
 operator sat down today, which CLAUDE.md sections would they need to follow, and which would be artefacts of accumulated
 parallelism? **The sibling question doc `paper_vs_live_workflow_maturity_2026_05_08.md` overlaps here** — that doc
 focuses on the operational paper/live workflow; this question is the upstream "is the agent-coordination shape itself
