@@ -173,12 +173,19 @@ already supports LEADER_HEDGE mode.
       `internal/architecture_v2/enums.py:68`; family mapping at :132; rank-feature at :213. No `LEVERAGED_FUNDING_ARB`
       in enum (correct). No enum change needed.
 - [ ] [strategy-service] P1. Confirm catalog has rows for the funding-dispersion-leveraged variant under
-      `ARBITRAGE_PRICE_DISPERSION` archetype prefix. If not, add. **DEFERRED to strategy-service feature work**; tracker
-      only here so the task isn't lost.
+      `ARBITRAGE_PRICE_DISPERSION` archetype prefix. If not, add. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**:
+      audit 2026-05-09 confirmed 6 ARBITRAGE_PRICE_DISPERSION slots exist in `archetype_slot_resolver.py` (Aave /
+      Aave-Compound × 3 chains / Polymarket-Binance / Unity-Betfair-Matchbook) but NO `funding-dispersion-leveraged`
+      config variant. Tracked as Phase A in
+      [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](arbitrage_price_dispersion_finalisation_2026_05_09.md).
 - [ ] [tracer-scripts] P1. Confirm `scripts/trace_arbitrage_price_dispersion.py` (or equivalent) handles the
-      funding-dispersion-leveraged variant. **DEFERRED**.
+      funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
+      2026-05-09 confirmed only `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` exist in
+      `strategy-service/scripts/`; no ARBITRAGE_PRICE_DISPERSION tracer. Tracked as Phase B in successor plan.
 - [ ] [P&L attribution] P1. Confirm `pnl-attribution-service` rows attribute under `ARBITRAGE_PRICE_DISPERSION` for the
-      funding-dispersion-leveraged variant. **DEFERRED**.
+      funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
+      2026-05-09 confirmed zero `ARBITRAGE_PRICE_DISPERSION` references in `pnl_attribution_service/` source (only
+      sports test fixtures use lowercase `"arbitrage"` string). Tracked as Phase C in successor plan.
 
 **Gate:** Codex doc/code/plans all use `ARBITRAGE_PRICE_DISPERSION` (with config variant) for
 funding-dispersion-leveraged. No remaining references to `leveraged_funding_arb` as a standalone archetype except in
