@@ -83,7 +83,15 @@ Recommended: (a) — operator-driven scope decision. Open item on defi_master_20
 
 ---
 
-## Item 2 — 2-year config-grid backtest runner does NOT exist (P0, master Group F Item 18)
+## Item 2 — 2-year config-grid backtest runner — **SHIPPED 2026-05-09 (strategy-service@`3dea3c7`); RESOLVED-PENDING-OPERATOR-RUN**
+
+> **Status update 2026-05-09**: script + 22 unit tests shipped; smoke verified on both archetypes; basedpyright + ruff
+> clean. The full 2-yr grid run (~8-12h) is operator-scheduled — launch command documented in the script docstring.
+> Master Group F Item 18 line item flipped to `[x]` with the same evidence. The remaining work is purely operational:
+> launch the full grid on a same-region GCE VM and read the resulting per-archetype `summary.parquet` to inform live
+> config selection.
+
+## Item 2 — Original triage (2026-05-08, kept for archaeology) — 2-year config-grid backtest runner does NOT exist (P0, master Group F Item 18)
 
 ### What
 
