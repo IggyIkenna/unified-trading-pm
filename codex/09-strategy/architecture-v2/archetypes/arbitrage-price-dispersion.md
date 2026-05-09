@@ -157,6 +157,18 @@ Cross-category:
 
 Funding-rate dispersion:
   ARBITRAGE_PRICE_DISPERSION@multi-cex-btc-funding-usdt-prod
+
+Funding-rate dispersion (multi-venue universe + dynamic best-long/best-short — Stream B 2026-05-07):
+  ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod
+  ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod
+  # config (operator-confirmed 2026-05-09; dispersion_type = "funding-rate-dispersion"):
+  #   venue_universe         = [bybit, deribit, binance, okx, hyperliquid, aster]
+  #   venue_selection_mode   = dynamic-best-long-short  (per funding cycle, ~8h)
+  #   target_leverage        = 5.0
+  #   vol_cap_clamp_feature  = realized_vol_20 (1h candles)
+  #   vol_cap_clamp_threshold_pct = 80.0  OR  vol_regime_zscore_20 > 2.0
+  #   bidirectional_funding  = true
+  #   entry_filter_sign_match = price_spread == funding_spread (skip cycle if signs differ)
 ```
 
 ## Migration from legacy
@@ -170,7 +182,6 @@ Funding-rate dispersion:
 
 ## Not in this archetype
 
-- **Funding-rate arbitrage between perp venues** (bidirectional funding capture) — `CARRY_BASIS_PERP` (cross-venue mode)
 - **Liquidation snipe during cascades** — `LIQUIDATION_CAPTURE`
 - **Cross-strategy capital rebalancing** (move capital to a better strategy) — portfolio-allocator service, not a
   strategy

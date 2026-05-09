@@ -822,6 +822,12 @@ ARBITRAGE_PRICE_DISPERSION@hyperliquid-binance-eth-perp-usdt-prod
 ARBITRAGE_PRICE_DISPERSION@multi-cex-btc-funding-usdt-prod
 ARBITRAGE_PRICE_DISPERSION@multi-cex-eth-funding-usdt-prod
 
+# CeFi perp (funding-rate dispersion — multi-venue universe + dynamic best-long/best-short, Stream B 2026-05-07)
+# Canonical strategy-service slot shape per arbitrage_price_dispersion_finalisation_2026_05_09 Phase A.
+# venue_universe = [bybit, deribit, binance, okx, hyperliquid, aster]; venue_selection_mode = dynamic-best-long-short.
+ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod
+ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod
+
 # DEX-native L2/L1 perp dispersion (added 2026-05-07; thin DEX liquidity → wide spreads vs CeFi)
 ARBITRAGE_PRICE_DISPERSION@hyperliquid-lighter-btc-perp-usdc-prod
 ARBITRAGE_PRICE_DISPERSION@hyperliquid-pacifica-btc-perp-usdc-prod
