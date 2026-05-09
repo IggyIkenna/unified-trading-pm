@@ -766,3 +766,35 @@ body), workspace rename sweep (issue doc cited above). No grep-miss deferrals.
   — codex SSOT updated by Phase E
 - [`codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md)
   — paired authoritative claim survives here after Phase E circular-ref fix
+
+## DONE-2026-05-09 (agent-arb-fundrate-c2) — Phase A Commit 2 helper module shipped
+
+Pure-function helper module + 25 unit tests landed; engine wire-in (Commit 3) remains pending.
+
+- **strategy-service@0b4ef0e** —
+  `feat(strategies): funding-rate-dispersion helper module — 3 modes + sign-match + min-spread + vol-clamp filters`.
+  870 insertions across 2 files: new
+  `strategy_service/engine/strategies/v2/arbitrage_structural/funding_rate_dispersion.py` (5 exports —
+  `PairSelectionMode`, `FilterDropReason`, `VenuePair`, `VolCapClampConfig`, `ClampedLeverage` value types +
+  `enumerate_pairs`, `apply_sign_match_filter`, `apply_min_spread_filter`, `apply_vol_cap_clamp` pure functions); new
+  `tests/unit/engine/strategies/v2/test_arbitrage_structural_funding_rate_dispersion.py` (25 tests covering all 3 Layer
+  1 modes × sign-match filter × min-spread filter × vol-cap clamp × output frozen-dataclass invariants). Repo QG green
+  on the new files (basedpyright 0/0/0, ruff check + format clean after C901-driven `enumerate_pairs` refactor into
+  `_build_candidate_pair` / `_enumerate_all_candidates` / `_select_by_mode` helpers, pytest 25/25).
+- **unified-trading-pm@<this-commit>** — Phase A commit ledger added (Commit 1 ✅ / Commit 2 ✅ / Commit 3 ⬜) +
+  this DONE block.
+
+**Status of Phase A todos after this session.**
+
+| Phase A item                                              | Status as of 2026-05-09  | Successor / blocker                                                      |
+| --------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------ |
+| BTC/USDT slot entry                                       | `done` (24f8494)         | Commit 1 — slot + dispatcher stub                                        |
+| Engine 8-step loop wire-in                                | `helper-shipped` (0b4ef0e + this) | Commit 3 — `_on_tick_funding_rate_dispersion` consumes the helper module |
+| A.7 — multi-pair allocator audit                          | `todo` (`- [ ]`)         | Open after Commit 3                                                      |
+| Mode-coverage tests for engine                            | `todo` (`- [ ]`)         | Engine integration tests ship with Commit 3 — distinct from this commit's helper-module unit tests |
+| Slot resolver test (`test_..._funding_rate_slot_exists`)  | `todo` (`- [ ]`)         | Open                                                                     |
+| VERIFY P0 — grep + factory check                          | `todo` (`- [ ]`)         | Open after Commit 3                                                      |
+| A.6 — multi-asset slot enumeration                        | `todo` (`- [ ]`)         | Open after Commit 3                                                      |
+
+No new findings raised this session. No banner updates required (the Phase A commit ledger inside this plan is the
+in-flight signpost for parallel agents).
