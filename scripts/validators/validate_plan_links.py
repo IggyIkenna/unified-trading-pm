@@ -62,6 +62,14 @@ def main() -> int:
                     candidates.append((base / plan_md_path).resolve())
             target = next((c for c in candidates if c.exists()), candidates[0])
             if not target.exists():
+                # Workspace-repo-prefix tolerance: if the FIRST path segment
+                # of the link resolves to an existing directory under ws_root,
+                # treat the link as valid (the inner path may not yet exist
+                # but the repo-prefix is well-formed). Lets plans reference
+                # not-yet-created files inside known sibling repos.
+                first_segment = link_path.lstrip("./").split("/", 1)[0]
+                if first_segment and (ws_root / first_segment).is_dir():
+                    continue
                 broken.append((str(path.relative_to(plans_dir.parent)), link))
 
     if broken:
