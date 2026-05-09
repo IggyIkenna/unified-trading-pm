@@ -89,7 +89,16 @@ todos:
 
   - id: a2-vm-naming-convention-extension
     content: |
-      - [x] [SCRIPT] P0. **DONE 2026-05-08 (deployment-service + PM CLAUDE.md edits)**. Extend `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict
+      - [ ] [SCRIPT] P0. **CORRECTION 2026-05-09 audit (cluster 6 retry)** — was incorrectly flipped `[x]`
+        but `vm_zombie_watchdog.py` was NEVER actually committed. Verified 2026-05-09: the file at
+        `deployment-service/scripts/vm/vm_zombie_watchdog.py` has NO `VmPrefixSpec` import, no
+        `LifecycleClass` import, dict shape is still legacy `dict[str, str | None]` (line 113),
+        none of the 9 reserved live/exp prefixes appear. Plan body's own DONE block flagged
+        "uncommitted in this session; main agent commits centrally per operator direction" — but
+        the central commit never landed. **DEFERRED**: vm_zombie_watchdog.py edits drafted but
+        never committed; carryover to next session. This is the canonical "Plans Run To Actual
+        Completion" HARD RULE violation pattern (code-shipped vs operationally-shipped).
+        Original todo: Extend `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict
         shape from `{prefix: bucket}` to `{prefix: VmPrefixSpec(bucket=..., lifecycle_class=...)}` where
         `VmPrefixSpec` is a typed UAC dataclass (Phase A.1). Migration: existing prefixes get explicit tags —
         backfill / migration / smoke / forward-poll / consolidator → `EPHEMERAL_BATCH`; manifest-consolidator-60s
@@ -475,7 +484,7 @@ isProject: false
 
 | Phase | Scope                                                                                                                                         | Status                                                   | Evidence                                                                                                                                                                |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A     | Foundation — UAC SSOTs + codex docs + VM-naming-convention extend                                                                             | ✅ 5 of 5 SHIPPED                                        | A.1 + A.5: UAC@ba94d05 · A.3: PM@ebe5cc09 · A.4: PM@eb8a96ca · A.2: deployment-service watchdog migration + PM CLAUDE.md naming rule update + plan-flip in this commit. |
+| A     | Foundation — UAC SSOTs + codex docs + VM-naming-convention extend                                                                             | ⏳ 4 of 5 SHIPPED (A.2 deferred)                          | A.1 + A.5: UAC@ba94d05 · A.3: PM@ebe5cc09 · A.4: PM@eb8a96ca · A.2: **CORRECTED 2026-05-09 — was flipped [x] but vm_zombie_watchdog.py never committed; carryover to next session**. |
 | B     | UI re-shape — 6-tab shell + Monitor 4-sub-tabs + Data-Status mode-toggle + LiveFreshnessPanel + StreamingLogsPanel + LifecyclePrefetchContext | ⏳ PENDING (gated on Open Q1)                            | Not started. Phase A.2 unblocks (live + exp prefixes reserved).                                                                                                         |
 | C     | deployment-api endpoints — 4 Monitor routes + streaming-logs route                                                                            | ⏳ PENDING (gated on Phase A complete)                   | Not started.                                                                                                                                                            |
 | D     | Scheduler registry SSOT (env-scoped) + deploy-missing-schedulers + pause/resume                                                               | ⏳ PENDING (gated on Phase A.1 LifecycleClass)           | Not started.                                                                                                                                                            |

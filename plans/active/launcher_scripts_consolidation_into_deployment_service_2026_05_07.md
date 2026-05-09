@@ -428,7 +428,7 @@ watchdog only loads VM_PREFIX_TO_BUCKET at boot.
 | market-tick-data-service          | launch-mtds-backfill-vm.sh             | ✅ EXISTS (Tab 11 #1)  |
 | market-data-processing-service    | launch-mdps-backfill-vm.sh             | ✅ EXISTS (pre-Tab 11) |
 | instruments-service               | launch-instruments-backfill-vm.sh      | ✅ EXISTS (Tab 11 #2)  |
-| features-onchain-service          | launch-features-onchain-backfill-vm.sh | ❌ MISSING (deferred)  |
+| features-onchain-service          | launch-features-onchain-backfill-vm.sh | ✅ EXISTS (verified 2026-05-09 audit — file landed at `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh`) |
 | features-delta-one-service        | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11) |
 | features-volatility-service       | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11) |
 | features-cross-instrument-service | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11) |
