@@ -454,7 +454,7 @@ in plan order).
       `python -c "from strategy_service.engine.strategies.v2.factory import ARCHETYPE_TO_ENGINE; assert     StrategyArchetype.ARBITRAGE_PRICE_DISPERSION in ARCHETYPE_TO_ENGINE"`
       exits 0.
 
-- [ ] [strategy-service] P1. **A.6 follow-up — multi-asset slot enumeration (BTC + ETH + SOL day 1, plus top-10
+- [x] [strategy-service] P1. **A.6 follow-up — multi-asset slot enumeration (BTC + ETH + SOL day 1, plus top-10
       coverage-gated).** Operator direction 2026-05-09: BTC, ETH, SOL all in scope from day 1 + remaining top-10 coins
       where we have full CeFi CLOB + OI + funding-rate data across at least 2 venues in `venue_universe`. Steps: 1.
       **Data-coverage probe script** — `strategy-service/scripts/probe_funding_rate_dispersion_coverage.py` reads
@@ -470,7 +470,12 @@ in plan order).
       (BTC/ETH/SOL) + ~3-7 additional top-10 coins = ~6-10 slots day 1. 5. **VERIFY** —
       `python -c "from strategy_service.engine.strategies.v2.archetype_slot_resolver import        resolve_all_slots; arb = [s for s in resolve_all_slots() if 'multi-perp-funding-rate-dispersion' in        s.slot_label]; assert len(arb) >= 3"`
       exits 0; coverage probe CSV non-empty; top-10 enumeration commit message lists every shipped asset + the venues
-      clipped per asset.
+      clipped per asset. **DONE-2026-05-09 (agent-arb-fundrate-c6)**: strategy-service@1107ab7 (probe script — 421
+      lines) + strategy-service@d01661e (8 new slots: ETH+SOL @ 6-venue + XRP/DOGE/BNB/ADA/AVAX @ 4-venue +
+      TRX @ 3-venue + 7 new tests in `TestArbitragePriceDispersionFundingRateMultiAssetSlots`). Probe run 2026-05-09:
+      9 qualifying assets (BTC/ETH/SOL/XRP/DOGE/BNB/ADA/AVAX × 4 venues; TRX × 3 venues; TON skipped). Total
+      funding-rate-disp slots in resolver: 9 (≥3 floor met). QG: 38 resolver tests pass; basedpyright + ruff clean
+      on all owned files. CSV at `/tmp/funding_rate_dispersion_coverage.csv`.
 
       Re-run QG. Commit + push as a separate `feat(strategies):` commit. (Probe script is reusable for future
       asset universe expansions.)
@@ -668,7 +673,7 @@ All 6 open questions resolved 2026-05-09 → no operator-blocked deferrals. Carr
 
 | Phase / item                                   | Status                              | Successor / blocker                                                                                             |
 | ---------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Phase A.6 — ETH/SOL slots + top-10 enumeration | `todo` (unblocked; ships post-A)    | Same plan; data-coverage probe + slot enumeration commits after BTC/USDT slot is green                          |
+| Phase A.6 — ETH/SOL slots + top-10 enumeration | `done` (strategy-service@1107ab7 + @d01661e shipped 2026-05-09) | n/a — 9 funding-rate-disp slots ship; probe CSV at `/tmp/funding_rate_dispersion_coverage.csv`                  |
 | Phase A.7 — allocator multi-pair verification  | `todo` (unblocked; ships post-A)    | Same plan; extend allocator only if branch (b) per A.7 audit                                                    |
 | Live cutover dry-run (paper-trade integration) | `deferred-after-2026-05-23-cutover` | `master_to_live_defi_2026_05_23.md` Group F item 17 (paper-trade smoke) consumes this archetype's tracer output |
 
@@ -794,7 +799,57 @@ Pure-function helper module + 25 unit tests landed; engine wire-in (Commit 3) re
 | Mode-coverage tests for engine                            | `todo` (`- [ ]`)         | Engine integration tests ship with Commit 3 — distinct from this commit's helper-module unit tests |
 | Slot resolver test (`test_..._funding_rate_slot_exists`)  | `todo` (`- [ ]`)         | Open                                                                     |
 | VERIFY P0 — grep + factory check                          | `todo` (`- [ ]`)         | Open after Commit 3                                                      |
-| A.6 — multi-asset slot enumeration                        | `todo` (`- [ ]`)         | Open after Commit 3                                                      |
+| A.6 — multi-asset slot enumeration                        | `done` (1107ab7 + d01661e) | 8 new slots (ETH/SOL @ 6-venue + 5 × 4-venue + TRX @ 3-venue) + probe script + 7 new tests; 9 total funding-rate-disp slots in resolver |
 
 No new findings raised this session. No banner updates required (the Phase A commit ledger inside this plan is the
 in-flight signpost for parallel agents).
+
+## DONE-2026-05-09 (agent-arb-fundrate-c6) — Phase A.6
+
+Multi-asset funding-rate-dispersion slot enumeration shipped via 2 strategy-service commits + plan flip:
+
+- **strategy-service@1107ab7** — `feat(scripts): add probe_funding_rate_dispersion_coverage.py for asset-universe enumeration`
+  - 421 LOC probe reads CeFi tick + perp-funding manifests via UTL `read_availability_index`; emits CSV
+    `(asset, venue, has_clob, has_open_interest, has_funding_rate, coverage_start_date)`.
+  - CLI: `--asset-universe top-10|<list>`, `--venues`, `--output`, `--bucket`, `--perp-funding-bucket`, `--project-id`.
+  - Tardis `derivative_ticker` treated as joint signal for funding_rate + open_interest (matches Tardis schema).
+- **strategy-service@d01661e** — `feat(strategies): add funding-rate-dispersion ETH/SOL slots + top-10 coverage-gated enumeration`
+  - 8 new slots in `archetype_slot_resolver.py` (ETH + SOL @ 6-venue day-1 priority; XRP/DOGE/BNB/ADA/AVAX @ 4-venue
+    probe-confirmed; TRX @ 3-venue clipped). Total funding-rate-disp slots in resolver: **9** (≥3 floor met).
+  - 8 new strategy-type entries in `batch_utils.STRATEGY_CATEGORIES` (all CEFI).
+  - 7 new tests in `TestArbitragePriceDispersionFundingRateMultiAssetSlots` (slot floor / 6-venue day-1 universe /
+    4-venue clip / 3-venue clip / TON-absent / dispatch-tag uniformity / config uniformity vs canonical BTC).
+  - Slots built via private `_funding_rate_dispersion_slot(asset, venue_universe, *, initial_equity)` helper —
+    keeps Layer 1 + Layer 2 + sign-match + vol-clamp config uniform across assets.
+
+**Probe-CSV summary** (run 2026-05-09 against gs://market-data-tick-cefi-central-element-323112 +
+gs://perp-funding-central-element-323112):
+
+| Asset | Qualifying venues          | Slot universe shipped         |
+| ----- | -------------------------- | ----------------------------- |
+| BTC   | bybit/deribit/binance/okx  | 6-venue (day-1 priority)      |
+| ETH   | bybit/deribit/binance/okx  | 6-venue (day-1 priority)      |
+| SOL   | bybit/deribit/binance/okx  | 6-venue (day-1 priority)      |
+| XRP   | bybit/deribit/binance/okx  | 4-venue                       |
+| DOGE  | bybit/deribit/binance/okx  | 4-venue                       |
+| BNB   | bybit/deribit/binance/okx  | 4-venue                       |
+| ADA   | bybit/deribit/binance/okx  | 4-venue                       |
+| AVAX  | bybit/deribit/binance/okx  | 4-venue                       |
+| TRX   | bybit/deribit/binance      | 3-venue (no OKX TRX-perp)     |
+| TON   | none                       | not shipped                   |
+
+The 6-venue universe on BTC/ETH/SOL exceeds probe-confirmed coverage (Hyperliquid + Aster perp-funding consolidator
+stale at probe-time). Engine's dynamic best-long/best-short selector will pick those venues up automatically once the
+consolidator catches up — operator-locked priority assets don't clip.
+
+**QG status**: 38/38 resolver tests pass; basedpyright + ruff clean on all owned files; coverage 80.34% (floor 74%).
+One pre-existing unrelated test failure in `test_target_universe.py::test_slot_count` (foreign agent code per
+`git log -- strategy_service/engine/strategies/v2/target_universe/` — commit `e4a0cdd`); not mine.
+
+**VERIFY** (per Phase A.6 step 5):
+```
+python -c "from strategy_service.engine.strategies.v2.archetype_slot_resolver import STRATEGY_TYPE_TO_SLOT; \
+  arb=[k for k in STRATEGY_TYPE_TO_SLOT if 'funding-rate-disp' in STRATEGY_TYPE_TO_SLOT[k].slot_label]; \
+  print(len(arb)); assert len(arb) >= 3"
+```
+→ **9** ✅ (≥3 floor met).
