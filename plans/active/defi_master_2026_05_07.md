@@ -25,6 +25,15 @@ related_plans:
 
 # DeFi Master — asset_group umbrella
 
+> **🟡 IN-FLIGHT REFACTOR — paper-vs-live workflow maturity (folded into master Group F/G 2026-05-09)**: UAC additive
+> `ExecutionTarget` / `ExecutionTrigger` enums + `decompose()` helper + `paper_target_registry` SSOT + per-chain paper
+> primitive (Tenderly fork EVM; Solana devnet for jitoSOL/mSOL/bSOL legs of `carry_staked_basis`) all compose with this
+> plan's DeFi work. **BE AWARE** when touching DeFi connectors / chain RPC config / Aave / Uniswap / flash-loan
+> receiver: paper-mode wiring goes through `paper_target_registry[chain]` — don't hardcode fork URLs or testnet
+> endpoints. SSOT: [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md) § "Folded paper-vs-live
+> workflow maturity" + [`codex/05-infrastructure/per-venue-paper-policy.md`](../../codex/05-infrastructure/per-venue-paper-policy.md).
+> Question doc: [`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../questions/paper_vs_live_workflow_maturity_2026_05_08.md).
+
 ## Codex SSOTs
 
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
@@ -36,14 +45,14 @@ and these docs is a review-blocking failure per `doc → plan → code`):
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
   per-asset-group `empty_confirmed` legitimacy rule (DeFi: only venue-level reasons legit; instrument-day source-zero
   must flip to `attempted_failed`); DeFi pre-genesis chain reasons + downstream NaN handling
-- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — DeFi GCS bucket
-  layout + `chain=` hive partition axis + per-protocol shard atom
+- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — DeFi GCS
+  bucket layout + `chain=` hive partition axis + per-protocol shard atom
 - [`codex/02-data/instrument-pipeline-defi.md`](../../codex/02-data/instrument-pipeline-defi.md) — DeFi
   instruments-service catalog (per-(chain, protocol, instrument_id) lifecycle) + LST_TOKEN_TO_PROTOCOL_ASSET SSOT
 - [`codex/02-data/defi-data-types-catalog.md`](../../codex/02-data/defi-data-types-catalog.md) — DeFi data_type
   enumeration (lending_rates / lst_yields / oracle_prices / vault_share_prices / perp_funding / ohlcv / dex_swaps)
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
-  unified pipeline (same shard atom, same fields, same `available_at` semantics); applies to DeFi end-to-end
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
+  batch=live unified pipeline (same shard atom, same fields, same `available_at` semantics); applies to DeFi end-to-end
 - [`codex/04-architecture/flash-loan-receiver.md`](../../codex/04-architecture/flash-loan-receiver.md) — Aave V3 flash
   loan deployment + `connect()` validation; required for `carry_staked_basis` recursive-staking unwind path
 - [`codex/04-architecture/interface-credential-convention.md`](../../codex/04-architecture/interface-credential-convention.md)
@@ -151,9 +160,9 @@ Single source of truth for **DeFi asset_group** work toward live DeFi 2026-05-23
 Covers:
 
 - **2 DeFi archetypes live**: `carry_staked_basis` (lead — recursive LST staking + perp short hedge) +
-  `ARBITRAGE_PRICE_DISPERSION` (config variant `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged` —
-  cross-venue funding spread; renamed from legacy `leveraged_funding_arb` per Stream B canonicalisation
-  2026-05-07, see [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)).
+  `ARBITRAGE_PRICE_DISPERSION` (config variant `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged` — cross-venue
+  funding spread; renamed from legacy `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07, see
+  [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)).
   7-day continuous run on real wallet.
 - **2 DeFi perp DEXs live**: Hyperliquid + Aster. Plus historical-replay backfill for Lighter / Extended / Pacifica
   (originally scoped under CeFi venue expansion but they are DeFi by asset_group).
@@ -179,8 +188,7 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 > pass-through. Consolidator P0 (`ArrowTypeError` on `instrument_count`) that briefly blocked the merge was resolved at
 > PM@341bb285 (script-side root cause + in-place shard fix). The 988-dates-missing rollup-vs-drilldown panel signal
 > closes for DeFi as soon as the rollup blob refreshes; operator spot-check pending. Detail in
-> [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
-> 3.D.4.
+> [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase 3.D.4.
 
 - **2 DeFi archetypes** live spec'd; backtest pipeline working per `consolidated_defi_data_pipeline` Phase 6
   verifications.
@@ -223,12 +231,11 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       (Chainlink Arb/Base/Optimism/Polygon via \_CHAINLINK_FEEDS_BY_CHAIN) 2026-05-07
 - [ ] [HUMAN+AGENT] P0. mtds-s4-10-rescan-all-manifests: Re-scan ALL availability indexes after migrations. **Cross-plan
       coordination**: this is **Stage 4** (final sweep) of the workspace-wide manifest migration. See
-      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) — MUST run
-      AFTER all Stage 3 streams complete (Stage 3.A 1440-NaN flip + 3.B available_at backfill + 3.C pre-v6 cleanup +
-      Predictions Polymarket migration + Sports ODDS_API re-key). Running mid-flight produces inconsistent state across
-      services. NO VM pause needed — consolidator handles concurrent writes per CLAUDE.md
-      `§ Manifest     concurrency principle`. [AUDIT 2026-05-07: BLOCKED-ON manifest_migration_master_2026_05_07:Stage
-      3]
+      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) — MUST run AFTER all
+      Stage 3 streams complete (Stage 3.A 1440-NaN flip + 3.B available_at backfill + 3.C pre-v6 cleanup + Predictions
+      Polymarket migration + Sports ODDS_API re-key). Running mid-flight produces inconsistent state across services. NO
+      VM pause needed — consolidator handles concurrent writes per CLAUDE.md `§ Manifest     concurrency principle`.
+      [AUDIT 2026-05-07: BLOCKED-ON manifest_migration_master_2026_05_07:Stage 3]
 - [ ] [HUMAN+AGENT] P0. defi-e2e-validate: DeFi pipeline E2E — run full batch, verify features-onchain reads correctly.
       [AUDIT 2026-05-07: FRESH — actionable; gates Group F]
 - [ ] [HUMAN+AGENT] P0. defi-coverage-validate: DeFi full coverage — run each handler locally for 1 day, verify GCS.
@@ -577,8 +584,8 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
    intentionally paused or has been broken.
 4. **`launch-mtds-perp-funding-backfill-vm.sh`** — **CORRECTION 2026-05-08 audit**: launcher EXISTS at
    `deployment-service/scripts/vm/launch-mtds-perp-funding-backfill-vm.sh`. Earlier "missing" claim is stale.
-   `leveraged_funding_arb` blocker around perp-funding capture is therefore not a missing-launcher issue;
-   re-scope to "verify launcher is wired into `_SERVICE_LAUNCHER_SCRIPTS` registry + `VM_PREFIX_TO_BUCKET` watchdog".
+   `leveraged_funding_arb` blocker around perp-funding capture is therefore not a missing-launcher issue; re-scope to
+   "verify launcher is wired into `_SERVICE_LAUNCHER_SCRIPTS` registry + `VM_PREFIX_TO_BUCKET` watchdog".
 
 **Single-VM launch recommendation** (unchanged from earlier):
 
@@ -614,9 +621,9 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
-**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` row C.9. Operator inspected DEFI pool
-drilldown after the 4-candidate-probe fix shipped (deployment-api@`0384eab`); AAVE_V3-ARBITRUM still surfaces "no schema
-yet" with 0 on-disk parquets across all 4 layout candidates even though the manifest claims `1781/1785 captured`.
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` row C.9. Operator inspected DEFI pool drilldown
+after the 4-candidate-probe fix shipped (deployment-api@`0384eab`); AAVE_V3-ARBITRUM still surfaces "no schema yet" with
+0 on-disk parquets across all 4 layout candidates even though the manifest claims `1781/1785 captured`.
 
 #### C.9 — AAVE_V3-ARBITRUM phantom rows reconcile
 
@@ -975,7 +982,8 @@ Does NOT launch any defi_988 VM until Ikenna resolves #3 + #4 + operator authori
 
 - **Pyth UNBANNED for Solana** (2026-05-06): use Hermes (batch) + PythNet (live). Other chains stay on Chainlink. See
   CLAUDE.md "Removed providers" → "Pyth — UNBANNED" entry.
-- **Live = batch**: same code path; matching engine for backtests. See `codex/04-architecture/batch-live-architecture.md` (single SSOT).
+- **Live = batch**: same code path; matching engine for backtests. See
+  `codex/04-architecture/batch-live-architecture.md` (single SSOT).
 - **`chain` is a first-class shard axis** for DeFi (per CLAUDE.md per-asset-group shard-key matrix).
 
 ## Cross-references
@@ -1015,8 +1023,8 @@ pushed). 3 items deferred per blockers below.
 3. **Item 3 — Stream A DERIBIT/BYBIT/OKX ETH-LST collateral acceptance flips** ✅
    - `unified-api-contracts@92eab58` — 6 venue_collateral.py rows flipped (DERIBIT stETH 7.5%; BYBIT
      stETH/wstETH/USDe/sUSDe; OKX wstETH 10%; OKX stETH unchanged-False asymmetric). 28 unit tests pass.
-   - NEW codex doc `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` captures evidence trail per row + caveats +
-     pending-live-API-probe follow-up.
+   - NEW codex doc `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` captures evidence trail per row +
+     caveats + pending-live-API-probe follow-up.
    - `unified-trading-pm@15e9b1a3` — plan-flip + codex doc commit.
 
 ### Deferred per blockers

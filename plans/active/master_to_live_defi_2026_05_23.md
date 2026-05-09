@@ -597,11 +597,165 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
       preceding "qg" item plus the cluster e2e tests being passable on a representative day's data. _(folded from
       consolidated_operational_validation_2026_04_15)_
 
+#### Folded paper-vs-live workflow maturity (from `paper_vs_live_workflow_maturity_2026_05_08.md` question doc)
+
+These todos were folded in 2026-05-09 from the paper-vs-live workflow maturity question doc (operator decisions
+2026-05-09 settled 10 plan-shape forks; question doc:
+[`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../questions/paper_vs_live_workflow_maturity_2026_05_08.md)).
+They extend items 17 (Backtest fidelity) / 18 (2-year batch backtest run) / 20 (Live testnet replicates prod) / 21
+(Reconciliation suite) / 22 (Trading guardrails) / 23 (DART manual-trade gate, Group G) with the paper-mode plumbing
+prerequisites the May-23 cutover requires.
+
+**Conceptual framing (operator-pinned)**: pricing has no real "paper" concept (just right data); mock-data is for risk
+simulations + dev fixtures (not paper-trading); batch / paper / live differ ONLY at the execution layer — strategy /
+risk / P&L / position-balance / alerting / instructions identical across all four cells. The closed-set 4-cell mode
+matrix decomposes as `(ExecutionTarget, ExecutionTrigger)`:
+
+| Named mode | ExecutionTarget           | ExecutionTrigger | Notes                                                                     |
+| ---------- | ------------------------- | ---------------- | ------------------------------------------------------------------------- |
+| Backtest   | `simulation` only         | automated        | Historical replay forces simulation — no testnet for past dates.          |
+| Paper      | `simulation` OR `testnet` | automated        | Real-time data + simulated/testnet matching. Live data, no real money.    |
+| Live       | `live_venue`              | automated        | Real venue + real capital + automated execution.                          |
+| Manual     | `live_venue`              | **manual**       | Real trades + real endpoints; only the trigger differs (operator-driven). |
+
+**UAC enum decision (Settled #2)**: keep `OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }` as canonical (closest to
+existing code; 6 consumer files migrated); add additive `ExecutionTarget { SIMULATION, TESTNET, LIVE_VENUE }` +
+`ExecutionTrigger { AUTOMATED, MANUAL }` enums + `decompose(mode) → (target, trigger)` derived helper. NO replacement of
+the existing enum. Anti-patterns deleted: execution-service `paper_trade: bool`, sports `_PAPER_VENUE_KEYS` string-set.
+
+**Per-venue policy (Settled #3)**: simulate-first floor for every venue (matching engine is the universal paper-mode
+fallback); testnet upgrade where API + credentials exist (Deribit testnet known viable; Tenderly fork covers EVM DeFi;
+Solana via devnet/localnet/surfnet for `carry_staked_basis` jitoSOL/mSOL/bSOL legs; sports `PaperBettingAdapter` is the
+canonical simulator example). UAC `paper_target_registry: dict[chain | venue, testnet_or_fork_primitive]` codifies the
+per-target upgrade path.
+
+**Items extended**:
+
+- **Item 17 (Backtest fidelity)**:
+  - [ ] [AGENT] P0. `pvl-p17a-uac-enum-consolidation`: UAC `internal/modes.py` additive change — keep `OperationalMode`
+        single 4-value enum; add `ExecutionTarget` + `ExecutionTrigger` enums + `decompose()` helper; deprecate
+        `TestingStage` as parallel enum (collapse `LIVE_TESTNET` to `(target=TESTNET, trigger=AUTOMATED)`); pyproject /
+        `__init__.py` exports updated. NO breaking change to existing 6 consumer call-sites. _(folded from
+        paper_vs_live_workflow_maturity_2026_05_08)_
+  - [ ] [AGENT] P0. `pvl-p17b-paper-trade-bool-deletion`: Delete `paper_trade: bool` field from execution-service
+        `service_config.py` + alias `PAPER_TRADE | DEFI_PAPER_TRADE`; migrate 4 consumer call-sites
+        (`execution_service/cli/handlers/__init__.py`, `engine/transfers/factory.py`, `engine/transfers/mock_adapter.py`,
+        `tests/unit/test_operational_mode_validation.py`) to read `OperationalMode` directly. _(folded from
+        paper_vs_live_workflow_maturity_2026_05_08)_
+  - [ ] [AGENT] P0. `pvl-p17c-paper-venue-keys-deletion`: Delete `_PAPER_VENUE_KEYS = ("paper", "betfair", "matchbook")`
+        from `execution-service/execution_service/sports_execution/routing.py:16-25`; migrate routing logic to read
+        `OperationalMode.PAPER` + sports-specific paper-venue resolver. _(folded from
+        paper_vs_live_workflow_maturity_2026_05_08)_
+  - [ ] [AGENT] P0. `pvl-p17d-instruction-envelope-mode-field`: Lift `mode: OperationalMode` into UAC strategy
+        instruction envelope schema; boot-time injection at execution-service becomes default-fallback when an
+        instruction omits the field. Enables A/B execution lanes + cleaner reconciliation per-mode. _(folded from
+        paper_vs_live_workflow_maturity_2026_05_08)_
+
+- **Item 18 (2-year batch backtest run)**:
+  - [ ] [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the May-23
+        lead pair (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant per
+        [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](./arbitrage_price_dispersion_finalisation_2026_05_09.md))
+        against real DeFi venues + Tenderly fork (EVM legs) + Solana devnet (Solana legs) + matching-engine simulation
+        (perp hedge legs without testnet). Event-stream verified per "no fire-and-forget VM launches" rule. NOT an
+        operator-actionable close-out — the run actually ships per "Plans Run To Actual Completion" HARD RULE. _(folded
+        from paper_vs_live_workflow_maturity_2026_05_08)_
+  - [ ] [AGENT] P1. `pvl-p18b-archetype-paper-runnable-matrix`: Populate per-archetype 4-state taxonomy (paper-runnable /
+        paper-shippable / backtest-only / stub) for every archetype in
+        `strategy-service/strategy_service/portfolio_allocator/archetypes.py`. Codified in
+        `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` (NEW). _(folded from
+        paper_vs_live_workflow_maturity_2026_05_08)_
+
+- **Item 20 (Live testnet replicates prod)**:
+  - [ ] [AGENT] P0. `pvl-p20a-paper-target-registry`: UAC `paper_target_registry` SSOT — `dict[chain | venue, target]`
+        per-target upgrade path. EVM chains → Tenderly fork; Solana → devnet (or localnet/surfnet — pick the one with
+        the fullest fork-state semantics for jitoSOL/mSOL/bSOL); Deribit → testnet endpoint; sports → PaperBettingAdapter;
+        prediction → matching-engine simulation. Default for unmapped target = matching-engine simulation. _(folded from
+        paper_vs_live_workflow_maturity_2026_05_08)_
+  - [ ] [AGENT] P0. `pvl-p20b-cefi-perp-testnet-audit`: Audit testnet API + credential availability for the 5 CeFi perp
+        venues without testnet routing today (Bybit, Binance, OKX, Hyperliquid, Aster); wire testnet endpoints where
+        available (matching `paper_target_registry`); fall back to matching-engine simulation per Settled #3. Deribit
+        testnet integration confirmed already viable per existing `venues/deribit.py` reference. _(folded from
+        paper_vs_live_workflow_maturity_2026_05_08)_
+  - [ ] [AGENT] P0. `pvl-p20c-solana-paper-wiring`: Wire Solana devnet (or localnet/surfnet) for paper-mode jitoSOL /
+        mSOL / bSOL execution; integrate with `carry_staked_basis` paper-mode evidence run. Pyth via Hermes for prices
+        (already unbanned); LST yields via DeFi connectors against the testnet/fork primitive. _(folded from
+        paper_vs_live_workflow_maturity_2026_05_08)_
+
+- **Item 21 (Reconciliation suite)**:
+  - [ ] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔ paper
+        ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3); codify
+        per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than batch-vs-live since
+        same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity); closed-set
+        failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
+        paper_vs_live_workflow_maturity_2026_05_08)_
+
+- **Item 22 (Trading guardrails)** — composes with `alerting_service_live_rules_2026_05_07`:
+  - [ ] [AGENT] P1. `pvl-p22a-mode-tagged-alerts`: Alerting-service rules consume `mode: OperationalMode` from
+        instruction envelope (per `pvl-p17d`); per-mode alert thresholds (paper-mode looser than live; manual-mode wakes
+        operator vs paging on-call). _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
+
+- **Item 23 (DART manual-trade gate, Group G)** — see Group G section below for full DART scope (`pvl-p23a` /
+  `pvl-p23b` / `pvl-p23c`).
+
+**Codex SSOTs touched** (5 NEW + 1 UPDATE):
+
+- `codex/04-architecture/operational-modes.md` — **NEW** — pins single-enum SSOT + decompose helper + 4-cell matrix +
+  per-axis routing rules + composability with `RuntimeMode`.
+- `codex/04-architecture/paper-vs-live-execution-seam.md` — **NEW** — pins execution-only-seam principle,
+  pricing-no-paper, mock-vs-paper boundary (operator-discipline; not enforced).
+- `codex/04-architecture/batch-live-architecture.md` — **UPDATE** — extend existing SSOT with paper-mode positioning
+  (batch ⊂ paper ⊂ live in terms of code-path; only fill source differs).
+- `codex/05-infrastructure/per-venue-paper-policy.md` — **NEW** — simulate-first + testnet-fallback policy +
+  `paper_target_registry` SSOT.
+- `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` — **NEW** — per-archetype 4-state
+  matrix + paper-runnable gate set.
+- `codex/14-customer-journeys/dart/mode-toggle.md` — **NEW** — DART 3-way visualization + manual gate UI shape; composes
+  with item 23.
+
+**Cross-plan banners** (mutual; ship with this fold-in):
+
+- [`defi_master_2026_05_07.md`](./defi_master_2026_05_07.md) — Tenderly fork + per-chain `paper_target_registry` compose
+  with DeFi master.
+- [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](./arbitrage_price_dispersion_finalisation_2026_05_09.md) —
+  funding-rate-dispersion variant is half of the May-23 paper-mode evidence run; banner mutual.
+
+**Estimated scope**: ~12-18 AI-days total. UAC additive enum + decompose helper + instruction envelope mode field +
+`TestingStage` deprecation: ~1-2d. `paper_trade: bool` + `_PAPER_VENUE_KEYS` deletion + 6 consumer file migration: ~1d.
+Per-venue testnet wire-up audit + simulate-first matching engine adapter pass + Deribit testnet integration: ~3-5d.
+Solana devnet + `paper_target_registry` + non-EVM chain coverage: ~2d. DART 3-way visualization (side-by-side + per-mode
++ manual gate UI) wired to real backend: ~3-5d. Per-archetype paper-runnable evidence runs: ~2-3d (real-infra). 3-way
+recon stage extension: ~1-2d. 5 codex SSOT NEW stubs + 1 UPDATE: ~1-2d.
+
 ### Group G — Operator UX (live-only)
 
 23. **DART manual-trade gate** — DART terminal in UTS-UI visualizes the strategy archetype end-to-end; operator first
     puts trades on manually → backend executes through the same path as automation → monitor for the gate window → flip
     switch to automation (codex `09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`)
+
+#### Folded paper-vs-live DART scope (from `paper_vs_live_workflow_maturity_2026_05_08.md` — operator-confirmed
+pre-cutover scope)
+
+Operator decision 2026-05-09 (Settled #4 + #5): manual gate + DART 3-way visualization both ship pre-cutover, wired to
+real backend (not mock). Together with item 23 above, the canonical DART operator surface looks like:
+
+- [ ] [AGENT] P0. `pvl-p23a-dart-3way-visualization`: DART surface in `unified-trading-system-ui` renders three views
+      for any strategy archetype: (a) **side-by-side comparison** — batch / paper / live P&L curves, fills blotter,
+      events, position trajectory, risk metrics in a tri-pane or stacked-line-series canvas; (b) **separate per-mode
+      views** — pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current paper/live to add batch);
+      (c) **shared filter scope** — asset_group / instrument_type / strategy_family / archetype filters apply across
+      all three lanes simultaneously. Wired to **real backend** (not mock fixtures): each lane reads from the
+      mode-tagged event stream + parquet results. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
+- [ ] [AGENT] P0. `pvl-p23b-dart-mode-data-api`: `deployment-api` (or strategy-service) endpoint
+      `GET /strategy/{id}/runs?mode=batch|paper|live` returns the mode-tagged event/fill/P&L bundle for DART to render.
+      Single API surface (per workspace pattern) — DART doesn't talk to three different endpoints. Composes with
+      `pvl-p17d-instruction-envelope-mode-field`. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
+- [ ] [AGENT] P0. `pvl-p23c-manual-trade-gate-ui`: DART surfaces a per-trade manual approval affordance for
+      `OperationalMode.MANUAL` strategies — operator sees pre-trade risk preview (margin, position-limit, worst-case
+      loss) + approve/deny/timeout per instruction. Approval emits `MANUAL_APPROVED` event → execution-service unholds
+      from manual-pending queue → fill at live venue. Composes with execution-service's pre-execution gate at the
+      manual-pending queue boundary; closed-set timeout policy (cancel-with-audit | escalate | hold) per-strategy
+      config. **DART is the canonical operator surface**; fallback approval channels (Telegram interactive button,
+      email-with-confirm-link, Slack) ship as a P1 follow-up. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
 
 > Per-service yamls in `codex/10-audit/repos/<service>.yaml` get extended to track items 4–23. Items 1–3 already in the
 > existing repo readiness yaml are inherited.

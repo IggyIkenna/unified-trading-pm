@@ -36,6 +36,17 @@ isProject: false
 
 # ARBITRAGE_PRICE_DISPERSION canonicalisation finalisation
 
+> **🟡 IN-FLIGHT REFACTOR — paper-vs-live workflow maturity (folded into master Group F 2026-05-09)**: this plan's
+> `funding-rate-dispersion` variant is half of the May-23 paper-mode evidence run (`pvl-p18a` in
+> [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md) § "Folded paper-vs-live workflow maturity"
+> — pairs with `carry_staked_basis`). **BE AWARE** when scoping Phase A (slot wiring) + Phase B (tracer): tracer must
+> emit per-instrument progress events with mode tag (`OperationalMode` field per `pvl-p17d` instruction-envelope mode
+> field), and the funding-rate-dispersion config must be paper-runnable end-to-end ≥3 days before May-23 cutover.
+> Question doc:
+> [`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../questions/paper_vs_live_workflow_maturity_2026_05_08.md).
+> Codex SSOTs: [`codex/04-architecture/operational-modes.md`](../../codex/04-architecture/operational-modes.md) +
+> [`codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md`](../../codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md).
+
 > **Why this plan exists.** Stream B of
 > [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
 > declared the canonicalisation gate: _"Codex doc/code/plans all use `ARBITRAGE_PRICE_DISPERSION` (with config variant)
@@ -200,10 +211,55 @@ capital to highest-ranked opportunity | | `equal-weight` | Equal split across to
 
 ## Open questions / operator decisions
 
+### Q11 — [agent-arb-fundrate-c3, 2026-05-09 14:30 UTC] — Tab 2 Commit 2 helper module not shipped; Commit 3 (engine wire-in) precondition unmet
+
+**Status**: 🟡 BLOCKED — waiting for Tab 2 to ship `arbitrage_structural/funding_rate_dispersion.py`
+
+Spawn-prompt precondition for Phase A Commit 3 (engine wire-in): "Confirm
+`arbitrage_structural/funding_rate_dispersion.py` exists" + "test_arbitrage_structural_funding_rate_dispersion.py is
+green." If either is missing, STOP and ping operator + don't start.
+
+State on `live-defi-rollout` (verified 2026-05-09 14:30 UTC):
+
+- ✅ Tab 2 Commit 1 shipped at strategy-service@`24f8494` ("ARBITRAGE_PRICE_DISPERSION dispersion_type dispatcher +
+  funding-rate slot stub"). The dispatcher exists at
+  [`price_dispersion.py:90-112`](../../../strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/price_dispersion.py)
+  with `_on_tick_funding_rate_dispersion` returning `[]` (stub).
+- ❌ Tab 2 Commit 2 NOT shipped.
+  `strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/funding_rate_dispersion.py` does not
+  exist. No `tests/.../test_arbitrage_structural_funding_rate_dispersion*.py` file present.
+
+Commit 3 (engine wire-in) replaces the stub at `_on_tick_funding_rate_dispersion` (lines 201-225 of price_dispersion.py)
+with real logic that **calls the Tab 2 helper**'s `enumerate_pairs` / `apply_sign_match_filter` / vol-cap clamp public
+surface. Without the helper:
+
+- I don't know the helper's exact signatures
+  (`enumerate_pairs(features, venue_universe, mode, k, min_spread, max_pairs, ...)` return type — `list[Pair]`?
+  `list[dict]`? `list[FundingRatePair]` dataclass?).
+- I don't know the trace-event shape Tab 2 chose (`SIGN_MISMATCH_SKIP` / `BELOW_MIN_SPREAD_SKIP` / `VOL_CAP_CLAMPED` —
+  emitted via `attestations` field, via `self.emit_event(...)`, via a helper-internal callback?).
+- Implementing Commit 3 against guessed shapes guarantees rework when Commit 2 lands; verifying tests against guessed
+  shapes is impossible.
+
+Phase A.7 (allocator audit at `portfolio_allocator/archetypes.py:678,729`) is **independently runnable** without the
+helper — it touches the cross-slot ranker, not the engine. Could ship A.7 first while Tab 2 finishes Commit 2.
+
+**Asks**:
+
+1. Confirm Tab 2 is still in flight on Commit 2 (helper module + helper tests). If Tab 2 is paused / blocked, surface so
+   we can decide single-tab serialisation.
+2. Decision: ship A.7 (allocator audit) now in parallel, OR wait for Tab 2 Commit 2 then ship Commit 3 + A.7 together?
+   Plan body presents A.7 as part of Phase A (after Commit 2's helper); doing A.7 first is fine semantically since the
+   allocator only sees `AtomicInstruction` shapes from the engine, not engine-internal helpers — but the plan's
+   sequencing was "Commit 1 → 2 → 3 → A.7."
+
+**Action while blocked**: holding off on Commit 3 + A.7 per "STOP and ping operator" precondition. Will resume
+immediately on operator direction (either "ship A.7 now" → A.7 first; or "Tab 2 Commit 2 just landed" → Commit 3 + A.7
+in plan order).
+
 ### ✅ All 10 resolved 2026-05-09 (operator); plan ships Phase A with confirmed values, no placeholders
 
 (Original Q1-Q6 plus Q7-Q10 added during Layer 1 + Layer 2 + asset-universe + min-spread discussion.)
-
 
 1. **Config-variant slug naming → `funding-rate-dispersion`.** Drops the `-leveraged` suffix; leverage is orthogonal
    (Stream D `target_leverage` config field, not part of the dispersion-type slug). All references in this plan + every
@@ -255,29 +311,29 @@ capital to highest-ranked opportunity | | `equal-weight` | Equal split across to
    and `funding_spread = funding_rate(long_venue) − funding_rate(short_venue)`. Enter ONLY if
    `sign(price_spread) == sign(funding_spread)`; otherwise skip the cycle (no entry, no fees burned).
 7. **Layer 1 selection modes — all 3 ship configurable from day 1, nothing hardcoded.** Slot exposes
-   `pair_selection_mode ∈ {"single-best", "top-k", "all-above-threshold"}` + supporting knobs
-   (`pair_selection_k`, `min_spread_threshold_bps`, `max_concurrent_pairs_per_slot`). Engine implements all 3
-   branches; tests cover all 3. Default = `single-best` — operator can flip per slot via config without code change.
+   `pair_selection_mode ∈ {"single-best", "top-k", "all-above-threshold"}` + supporting knobs (`pair_selection_k`,
+   `min_spread_threshold_bps`, `max_concurrent_pairs_per_slot`). Engine implements all 3 branches; tests cover all 3.
+   Default = `single-best` — operator can flip per slot via config without code change.
 8. **Layer 2 weighting → `spread-proportional` with 40% per-slot cap; everything configurable.** Operator direction
    2026-05-09: nothing hardcoded; all axes (`weight_mode`, `max_capital_pct_per_slot`, `max_capital_pct_per_pair`,
    `rebalance_threshold_bps`) configurable on the allocator. Defaults: `spread-proportional` / 40% / 25% / 20bps.
-   `ArbitragePriceDispersionRankAllocator` already exists; Phase A.7 verifies (or extends) it for
-   multi-pair-per-slot semantics.
-9. **Min-spread threshold → 5bps net of cost.** Operator-confirmed 2026-05-09. Round-trip CEX perp cost ~3-4bps;
-   5bps minimum keeps us above noise. Configurable per slot (`min_spread_threshold_bps`).
-10. **Asset universe day 1 → BTC + ETH + SOL guaranteed; top-10 enumerated by data-coverage gate.** Operator
-    direction 2026-05-09: BTC/ETH/SOL day-1 priority assets, plus other top-10 coins where we have full CeFi CLOB +
-    OI + funding-rate data across ≥2 venues in `venue_universe`. Phase A.6 ships the data-coverage probe script +
-    enumerates all qualifying slots. Slot venue universe is **clipped per asset** — an asset listed on only 4 of 6
-    venues gets a 4-venue slot, not a 6-venue slot.
+   `ArbitragePriceDispersionRankAllocator` already exists; Phase A.7 verifies (or extends) it for multi-pair-per-slot
+   semantics.
+9. **Min-spread threshold → 5bps net of cost.** Operator-confirmed 2026-05-09. Round-trip CEX perp cost ~3-4bps; 5bps
+   minimum keeps us above noise. Configurable per slot (`min_spread_threshold_bps`).
+10. **Asset universe day 1 → BTC + ETH + SOL guaranteed; top-10 enumerated by data-coverage gate.** Operator direction
+    2026-05-09: BTC/ETH/SOL day-1 priority assets, plus other top-10 coins where we have full CeFi CLOB + OI +
+    funding-rate data across ≥2 venues in `venue_universe`. Phase A.6 ships the data-coverage probe script + enumerates
+    all qualifying slots. Slot venue universe is **clipped per asset** — an asset listed on only 4 of 6 venues gets a
+    4-venue slot, not a 6-venue slot.
 
 ## Phase A — strategy-service catalog: add `funding-rate-dispersion` config variant
 
 - [ ] [strategy-service] P1. Add the canonical BTC/USDT slot entry (ETH/USDT + SOL/USDT + top-10 enumeration ship in
       A.6) to `strategy-service/strategy_service/engine/strategies/v2/archetype_slot_resolver.py` per the existing
-      pattern (e.g. after the current ARBITRAGE_PRICE_DISPERSION rows ~L225–L811). The slot wires the
-      **6-venue universe** with dynamic best-long/best-short selection (NOT a fixed venue pair) + Layer 1 + Layer 2
-      knobs + sign-match entry filter + short-term-vol clamp; engine implements all 3 Layer 1 modes day 1:
+      pattern (e.g. after the current ARBITRAGE_PRICE_DISPERSION rows ~L225–L811). The slot wires the **6-venue
+      universe** with dynamic best-long/best-short selection (NOT a fixed venue pair) + Layer 1 + Layer 2 knobs +
+      sign-match entry filter + short-term-vol clamp; engine implements all 3 Layer 1 modes day 1:
 
       ```python
       Slot(
@@ -321,12 +377,12 @@ capital to highest-ranked opportunity | | `equal-weight` | Equal split across to
       decision (2026-05-09 audit):** `ARCHETYPE_ENGINE_REGISTRY` maps each `StrategyArchetype` to **exactly one engine
       class** — a subclass cannot be wired in without breaking that invariant. Therefore: **branch (i) — dispatcher
       pattern in the existing engine.** `ArbitragePriceDispersionEngine.on_tick` reads `dispersion_type` from
-      `self.params` and dispatches:
-      - `dispersion_type == "price-dispersion"` (or unset, default) → existing `_best_buy_sell_pair` path; preserves all
-        prior behaviour for the 6 existing slots (`aave-usdc`, `polymarket-binance`, `unity-betfair-matchbook`, etc.).
-      - `dispersion_type == "funding-rate-dispersion"` → new path implemented as a sibling helper module
-        `arbitrage_structural/funding_rate_dispersion.py` with pure-function selection + filter logic, called from the
-        engine. Helper handles the 8-step loop below; engine wraps it into `StrategyInstructionEnvelope` emission.
+      `self.params` and dispatches: - `dispersion_type == "price-dispersion"` (or unset, default) → existing
+      `_best_buy_sell_pair` path; preserves all prior behaviour for the 6 existing slots (`aave-usdc`,
+      `polymarket-binance`, `unity-betfair-matchbook`, etc.). - `dispersion_type == "funding-rate-dispersion"` → new
+      path implemented as a sibling helper module `arbitrage_structural/funding_rate_dispersion.py` with pure-function
+      selection + filter logic, called from the engine. Helper handles the 8-step loop below; engine wraps it into
+      `StrategyInstructionEnvelope` emission.
 
       Why this shape (not a subclass): (1) factory invariant — single engine class per archetype enum; (2) System-First
       / No-Double-SSOT — extend the existing engine rather than introduce a parallel class; (3) feature consumption is
@@ -358,17 +414,16 @@ capital to highest-ranked opportunity | | `equal-weight` | Equal split across to
 
       Document the chosen branch (a vs b) inline in the commit message + the slot doc-string.
 
-- [ ] [strategy-service] P1. **A.7 — verify `ArbitragePriceDispersionRankAllocator` handles multi-pair-per-slot**.
-      Audit
+- [ ] [strategy-service] P1. **A.7 — verify `ArbitragePriceDispersionRankAllocator` handles multi-pair-per-slot**. Audit
       [`portfolio_allocator/archetypes.py:678,729`](../../../strategy-service/strategy_service/portfolio_allocator/archetypes.py#L678).
       With Layer 1 modes `top-k` / `all-above-threshold`, the engine surfaces N pairs per slot per cycle (not 1). The
-      allocator must rank + weight across all (slot × pair) opportunities, not just (slot, 1-best-pair). Branch:
-      - **(a)** Allocator already ranks at the (slot, opportunity) granularity — wire `weight_mode:
-        "spread-proportional"` + `max_capital_pct_per_slot: 40.0` + `max_capital_pct_per_pair: 25.0` +
-        `rebalance_threshold_bps: 20.0` + a unit test exercising 3 slots × 3 pairs each = 9 opportunities ranked
-        correctly across the 4 weight modes.
-      - **(b)** Allocator only handles 1-opportunity-per-slot. Extend it to multi-opportunity-per-slot. Do NOT
-        downgrade Layer 1 modes — operator direction is all 3 modes ship configurable from day 1.
+      allocator must rank + weight across all (slot × pair) opportunities, not just (slot, 1-best-pair). Branch: -
+      **(a)** Allocator already ranks at the (slot, opportunity) granularity — wire
+      `weight_mode:       "spread-proportional"` + `max_capital_pct_per_slot: 40.0` + `max_capital_pct_per_pair: 25.0` +
+      `rebalance_threshold_bps: 20.0` + a unit test exercising 3 slots × 3 pairs each = 9 opportunities ranked correctly
+      across the 4 weight modes. - **(b)** Allocator only handles 1-opportunity-per-slot. Extend it to
+      multi-opportunity-per-slot. Do NOT downgrade Layer 1 modes — operator direction is all 3 modes ship configurable
+      from day 1.
 
       Tests: `tests/unit/test_arbitrage_price_dispersion_rank_allocator.py` covering all 4 weight modes
       (`spread-proportional` / `rank-proportional` / `winner-takes-all` / `equal-weight`) + per-slot + per-pair caps
@@ -376,9 +431,9 @@ capital to highest-ranked opportunity | | `equal-weight` | Equal split across to
 
 - [ ] [strategy-service] P1. **Mode-coverage tests for the engine** —
       `tests/unit/test_arbitrage_price_dispersion_funding_rate_engine.py` exercises all 3 `pair_selection_mode` values
-      (`single-best`, `top-k`, `all-above-threshold`) against a fixture with 6 mock venues + known funding rates +
-      known mid prices. Asserts: correct pair count surfaced per mode; sign-match filter drops the right pairs;
-      min-spread filter drops the right pairs; vol-cap clamp triggers when threshold breached; `SIGN_MISMATCH_SKIP` /
+      (`single-best`, `top-k`, `all-above-threshold`) against a fixture with 6 mock venues + known funding rates + known
+      mid prices. Asserts: correct pair count surfaced per mode; sign-match filter drops the right pairs; min-spread
+      filter drops the right pairs; vol-cap clamp triggers when threshold breached; `SIGN_MISMATCH_SKIP` /
       `BELOW_MIN_SPREAD_SKIP` / `VOL_CAP_CLAMPED` trace events emitted in the right places.
 
 - [ ] [strategy-service] P1. Tests:
@@ -392,24 +447,22 @@ capital to highest-ranked opportunity | | `equal-weight` | Equal split across to
       exits 0.
 
 - [ ] [strategy-service] P1. **A.6 follow-up — multi-asset slot enumeration (BTC + ETH + SOL day 1, plus top-10
-      coverage-gated).** Operator direction 2026-05-09: BTC, ETH, SOL all in scope from day 1 + remaining top-10
-      coins where we have full CeFi CLOB + OI + funding-rate data across at least 2 venues in `venue_universe`. Steps:
-      1. **Data-coverage probe script** — `strategy-service/scripts/probe_funding_rate_dispersion_coverage.py` reads
-         instruments-service catalog + MTDS manifest + features-perp-funding parquet, emits a CSV of
-         `(asset, venue, has_clob, has_open_interest, has_funding_rate, coverage_start_date)` for the top-10 by 30-day
-         volume (universe sourced from instruments-service top-N ranking). Filter: only assets with ≥2 venues passing
-         all 3 data checks qualify for a slot.
-      2. **Slot enumeration** — for each qualifying asset, add a slot to `archetype_slot_resolver.py`:
-         `ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-<asset>-usdt-prod`. Same config shape as
-         BTC/USDT (Phase A), with `venue_universe` clipped to the venues where THAT asset has full data coverage
-         (an asset listed on only 4 of 6 venues gets a 4-venue slot, not a 6-venue slot).
-      3. **BTC/ETH/SOL slots are guaranteed day 1** even if probe shows partial coverage — they're the master plan's
-         priority assets. Probe results determine which OTHER top-10 coins also ship day 1.
-      4. **Slot count expectation** — 3 (BTC/ETH/SOL) + ~3-7 additional top-10 coins = ~6-10 slots day 1.
-      5. **VERIFY** — `python -c "from strategy_service.engine.strategies.v2.archetype_slot_resolver import
-         resolve_all_slots; arb = [s for s in resolve_all_slots() if 'multi-perp-funding-rate-dispersion' in
-         s.slot_label]; assert len(arb) >= 3"` exits 0; coverage probe CSV non-empty; top-10 enumeration commit
-         message lists every shipped asset + the venues clipped per asset.
+      coverage-gated).** Operator direction 2026-05-09: BTC, ETH, SOL all in scope from day 1 + remaining top-10 coins
+      where we have full CeFi CLOB + OI + funding-rate data across at least 2 venues in `venue_universe`. Steps: 1.
+      **Data-coverage probe script** — `strategy-service/scripts/probe_funding_rate_dispersion_coverage.py` reads
+      instruments-service catalog + MTDS manifest + features-perp-funding parquet, emits a CSV of
+      `(asset, venue, has_clob, has_open_interest, has_funding_rate, coverage_start_date)` for the top-10 by 30-day
+      volume (universe sourced from instruments-service top-N ranking). Filter: only assets with ≥2 venues passing all 3
+      data checks qualify for a slot. 2. **Slot enumeration** — for each qualifying asset, add a slot to
+      `archetype_slot_resolver.py`: `ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-<asset>-usdt-prod`.
+      Same config shape as BTC/USDT (Phase A), with `venue_universe` clipped to the venues where THAT asset has full
+      data coverage (an asset listed on only 4 of 6 venues gets a 4-venue slot, not a 6-venue slot). 3. **BTC/ETH/SOL
+      slots are guaranteed day 1** even if probe shows partial coverage — they're the master plan's priority assets.
+      Probe results determine which OTHER top-10 coins also ship day 1. 4. **Slot count expectation** — 3
+      (BTC/ETH/SOL) + ~3-7 additional top-10 coins = ~6-10 slots day 1. 5. **VERIFY** —
+      `python -c "from strategy_service.engine.strategies.v2.archetype_slot_resolver import        resolve_all_slots; arb = [s for s in resolve_all_slots() if 'multi-perp-funding-rate-dispersion' in        s.slot_label]; assert len(arb) >= 3"`
+      exits 0; coverage probe CSV non-empty; top-10 enumeration commit message lists every shipped asset + the venues
+      clipped per asset.
 
       Re-run QG. Commit + push as a separate `feat(strategies):` commit. (Probe script is reusable for future
       asset universe expansions.)
@@ -585,17 +638,17 @@ operator-decision items in Open Questions (which are A.6 follow-ups, not handoff
 
 ## Repos touched + commit-evidence target
 
-| Repo                    | Phase | Expected commit shape                                                                              | Code gate |
-| ----------------------- | ----- | -------------------------------------------------------------------------------------------------- | --------- |
-| strategy-service        | A     | `feat(strategies): add ARBITRAGE_PRICE_DISPERSION funding-rate-dispersion engine + BTC/USDT slot`  | C5        |
-| strategy-service        | A.6   | `feat(strategies): add funding-rate-dispersion ETH/SOL slots + top-10 coverage-gated enumeration`  | C5        |
-| strategy-service        | A.6   | `feat(scripts): add probe_funding_rate_dispersion_coverage.py for asset-universe enumeration`      | C5        |
-| strategy-service        | A.7   | `feat(allocator): wire ArbitragePriceDispersionRankAllocator for multi-pair-per-slot opportunities`| C5        |
-| strategy-service        | B     | `feat(scripts): add trace_arbitrage_price_dispersion.py`                                           | C5        |
-| pnl-attribution-service | C     | `feat(pnl-attribution): add ARBITRAGE_PRICE_DISPERSION archetype bucket`                           | C5        |
+| Repo                    | Phase | Expected commit shape                                                                               | Code gate |
+| ----------------------- | ----- | --------------------------------------------------------------------------------------------------- | --------- |
+| strategy-service        | A     | `feat(strategies): add ARBITRAGE_PRICE_DISPERSION funding-rate-dispersion engine + BTC/USDT slot`   | C5        |
+| strategy-service        | A.6   | `feat(strategies): add funding-rate-dispersion ETH/SOL slots + top-10 coverage-gated enumeration`   | C5        |
+| strategy-service        | A.6   | `feat(scripts): add probe_funding_rate_dispersion_coverage.py for asset-universe enumeration`       | C5        |
+| strategy-service        | A.7   | `feat(allocator): wire ArbitragePriceDispersionRankAllocator for multi-pair-per-slot opportunities` | C5        |
+| strategy-service        | B     | `feat(scripts): add trace_arbitrage_price_dispersion.py`                                            | C5        |
+| pnl-attribution-service | C     | `feat(pnl-attribution): add ARBITRAGE_PRICE_DISPERSION archetype bucket`                            | C5        |
 | unified-trading-pm      | E     | `docs(codex): resolve arbitrage-price-dispersion ↔ carry-basis-perp circular ref`                  | n/a       |
-| unified-trading-pm      | E     | `docs(codex): add funding-rate-dispersion example slot to ARBITRAGE_PRICE_DISPERSION`              | n/a       |
-| unified-trading-pm      | D     | `docs(plans): close Stream B gate in defi_archetypes_canonicalisation`                             | n/a       |
+| unified-trading-pm      | E     | `docs(codex): add funding-rate-dispersion example slot to ARBITRAGE_PRICE_DISPERSION`               | n/a       |
+| unified-trading-pm      | D     | `docs(plans): close Stream B gate in defi_archetypes_canonicalisation`                              | n/a       |
 
 **Commit cadence note** (per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" HARD RULE Half 1): each row above is a
 single shippable unit; commit + push per row, do not batch across rows. Plan-flip in this plan + parent plan ships in
