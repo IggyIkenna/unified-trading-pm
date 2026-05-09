@@ -1,7 +1,9 @@
 ---
-title: "UAC + UTL QG blocked by foreign breakage as of 2026-05-08 PM"
+title: "✅ RESOLVED 2026-05-09 — UAC + UTL QG blockers cleared (was: blocked by foreign breakage 2026-05-08 PM)"
 created: 2026-05-08
+resolved: 2026-05-09
 author: tab2-live-pipeline
+status: resolved
 source:
   - unified-api-contracts/unified_api_contracts/registry/capability_declarations/__init__.py:17,75
   - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py
@@ -9,6 +11,19 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
+
+## ✅ RESOLUTION 2026-05-09
+
+Both blockers verified cleared on origin per cluster 9 retry audit 2026-05-09:
+- `ORACLE_COVERAGE_START` no longer referenced in `__init__.py`; UAC import succeeds.
+- EN DASH at `thresholds.py:60` — fixed in same UAC sweep.
+
+UAC + UTL QG runs collect cleanly. Issue ready for archive.
+
+---
+
+# Original issue (resolved — kept for archaeology)
+
 
 # UAC + UTL QG blocked by foreign breakage as of 2026-05-08 PM
 

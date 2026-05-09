@@ -1,12 +1,25 @@
 ---
-title: "PM validate_plan_links.py crashes — 'Namespace' object has no attribute 'mds_dir'"
+title: "✅ RESOLVED 2026-05-09 — PM validate_plan_links.py mds_dir AttributeError fixed (verified 2026-05-09 audit)"
 created: 2026-05-08
+resolved: 2026-05-09
 author: agent-5-tab5-orchestrator
+status: resolved
 source:
-  - unified-trading-pm/scripts/validators/validate_plan_links.py:28
+  - unified-trading-pm/scripts/validators/validate_plan_links.py:28 (now reads args.plans_dir correctly)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
+
+## ✅ RESOLUTION 2026-05-09
+
+Per cluster 9 retry audit 2026-05-09: `validate_plan_links.py:24` now uses `args.plans_dir` (correct attribute name);
+no `mds_dir` reference exists in the script. Step 6 PRODUCTION READINESS VALIDATORS no longer crashes with the
+AttributeError. Issue ready for archive.
+
+---
+
+# Original issue (resolved — kept for archaeology)
+
 
 # PM validate_plan_links.py crashes during production-readiness QG step
 

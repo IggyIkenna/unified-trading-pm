@@ -1,9 +1,10 @@
 ---
 title:
-  "cross_cutting_may_23_deliverables Items #1 + #2 are already shipped under UAC architecture_v2 — plan body redesigns
-  parallel SSOTs"
+  "✅ RESOLVED 2026-05-09 — Option A migration shipped (was: parallel SSOTs in cross_cutting_may_23_deliverables Items #1 + #2)"
 created: 2026-05-08
+resolved: 2026-05-09
 author: uac-strategy-catalogue-ids-tab6a
+status: resolved
 source:
   - plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (deliverables #1 + #2)
   - plans/epics/cross_cutting_may_23_2026.epic.md (epic deliverables #1 + #2)
@@ -18,11 +19,26 @@ source:
   - unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/registry.py (STRATEGY_REGISTRY +
     StrategyDefinition + StrategyRegistry + Category + ExecutionMode)
   - unified-api-contracts/unified_api_contracts/_instrument_enums.py (InstrumentType — 24 members)
+  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/capital_allocation.py (NEW; CapitalAllocation migrated)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 operator_decision: option_a_extend_v2
 operator_decision_date: 2026-05-08
 ---
+
+## ✅ RESOLUTION 2026-05-09
+
+Per cluster 9 retry audit 2026-05-09: Option A migration verified shipped on origin. Parallel `canonical/domain/client/`
+greenfield package reverted; `CapitalAllocation` + `AllocationViolationError` + `validate_allocation_respect` +
+`is_within_allocation` + `CAPITAL_ALLOCATION_SEED` migrated into `internal/architecture_v2/capital_allocation.py`
+sibling to `client_registry.py`. Tests migrated. `client.py` root facade re-exports from architecture_v2 path.
+
+Issue P0 BLOCKER status no longer applies; Option A shipped per operator decision. Issue ready for archive.
+
+---
+
+# Original issue (resolved — kept for archaeology)
+
 
 # cross_cutting_may_23_deliverables Items #1 + #2 are already shipped under UAC architecture_v2 — plan body redesigns parallel SSOTs
 

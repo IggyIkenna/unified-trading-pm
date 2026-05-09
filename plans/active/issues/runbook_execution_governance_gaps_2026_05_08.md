@@ -1,9 +1,11 @@
 ---
-title: "🚨 P0 — 4 governance gaps that allow silent rot of operator-runnable runbooks + harnesses"
+title: "✅ PARTIAL-RESOLVED 2026-05-09 — 4 HARD RULES codified; retroactive sweeps tracked in session_loose_ends"
 created: 2026-05-08
+partial_resolved: 2026-05-09
 author: ikenna-tab1-main
+status: partial-resolved
 source:
-  - plans/active/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.md (the rot we just caught)
+  - plans/active/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.md (RESOLVED 2026-05-08)
   - cursor-configs/CLAUDE.md § "Citadel-Grade Planning Standards"
   - cursor-configs/CLAUDE.md § "VM launcher script SSOT (codified 2026-05-07)"
   - cursor-configs/CLAUDE.md § "No fire-and-forget VM launches"
@@ -15,8 +17,28 @@ execution:
   owner: Tab 5 (governance) — meta doc
   cadence: one-shot
   verifier: session_loose_ends_2026_05_08.md items 3-7 all flip to DONE
-  last_executed: "2026-05-08 (HARD RULES codified PM@1d74f617; retroactive sweeps pending)"
+  last_executed: "2026-05-08 (HARD RULES codified PM@1d74f617; retroactive sweeps tracked in session_loose_ends_2026_05_08.md items 3-7)"
 ---
+
+## ✅ PARTIAL-RESOLUTION 2026-05-09
+
+Per cluster 9 retry audit 2026-05-09: 4 HARD RULES codified in CLAUDE.md (verified):
+- Citadel-Grade Planning § 6 extension (Downstream Consumer Updates includes peripheral scripts)
+- Runbook Execution-Owner SSOT
+- Peripheral Script Directories Under Primary-Consumer QG
+- Master Plan Continuous-Verification Column
+
+The runbook this issue surfaced (paper-trade smoke harness) has been resolved 2026-05-08 (e2e-testing@dfb7abe6).
+Retroactive sweeps (per-service QG wiring of e2e-testing/scripts/ peripheral dirs + master plan continuous-verification
+column population) tracked in `session_loose_ends_2026_05_08.md` items 3-7.
+
+This issue is **conceptually resolved at the codification layer**; the retroactive-sweep work flows through the
+named successor doc. Issue ready for archive once session_loose_ends items 3-7 flip to DONE.
+
+---
+
+# Original issue (codified — kept for archaeology)
+
 
 # 🚨 4 governance gaps — runbook silent-rot
 
