@@ -126,14 +126,14 @@ strategy_and_dart_master_2026_05_07.md.
 
 ---
 
-## Item 3 — MDPS streaming primitives unshipped (P0, blocks live_pipeline Phase 4)
+## Item 3 — MDPS streaming primitives unshipped (P0, blocks live_pipeline Phase 4) — PARTIAL 2026-05-09
 
 ### What
 
 `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4 is gated on UTL primitives + MDPS wiring per
 `mdps_streaming_and_backpressure_2026_05_07.md` Phase 1.1 + Phase 2.
 
-Verified state (cluster 8 audit grep):
+Verified state (cluster 8 audit grep, 2026-05-08):
 
 - ❌ `open_candle_writer` — 0 hits in unified-trading-library
 - ❌ `close_candle_writer` — 0 hits
@@ -141,6 +141,48 @@ Verified state (cluster 8 audit grep):
 - ❌ `LiveConnectivityWatchdog` / `CONNECTIVITY_GAP_DETECTED` — 0 hits in MTDS or UAC
 
 These are explicitly named as STRICT BLOCKER for live-pipeline Phase 4 in the live_pipeline plan banner.
+
+### Update 2026-05-09 — UAC SSOT shipped, code wiring still open
+
+Per [`mdps_streaming_primitives_prompt_vs_plan_conflict_2026_05_09.md`](mdps_streaming_primitives_prompt_vs_plan_conflict_2026_05_09.md)
+operator-approved option (a) — ship per plan-of-record.
+
+**Shipped this session (2026-05-09):**
+
+- ✅ `LifecycleEventType.CONNECTIVITY_GAP_DETECTED` / `CONNECTIVITY_RECOVERED` / `CONNECTIVITY_GAP_BACKFILLED` —
+  UAC@`4bd84e7c` (`unified_api_contracts/internal/events.py`) — 3 typed event-type members + 3 Pydantic detail models
+  (`ConnectivityGapDetectedDetails` / `ConnectivityRecoveredDetails` / `ConnectivityGapBackfilledDetails`) + 3 typed
+  event wrappers + 12 unit tests in `tests/internal/unit/test_connectivity_gap_event_taxonomy.py`. The `classification`
+  field on `ConnectivityGapDetectedDetails` is a closed-set Literal (`WS_DISCONNECT` / `STALE_HEARTBEAT` /
+  `API_TIMEOUT` / `UNKNOWN`) so adapters can't accidentally emit untyped strings. This is the alerting-service /
+  reconciler / auto-backfill SSOT — downstream consumers can now type their event-stream subscriptions against
+  these wrappers without inventing local types.
+
+**Still open (DEFERRED-PER-SUB-AGENT-CAPACITY this session — see conflict-issue § "Recommended decision (a)"):**
+
+- ❌ `open_candle_writer` / `close_candle_writer` UTL parquet-write-lifecycle wrappers in
+  `unified-trading-library/unified_trading_library/streaming/candle_writer.py` — Phase 1.1 of plan-of-record.
+- ❌ MDPS `_streaming_write_per_tf` callsite migration — Phase 1.2 of plan-of-record. Lives in
+  `market-data-processing-service/market_data_processing_service/app/core/live_workers.py:1118-1164` (per plan-of-
+  record line 87). Substantial refactor of the per-timeframe accumulator pattern; tests `(N batches × M rows) →
+  exactly ONE record_captured per (timeframe, shard)` shape.
+- ❌ MTDS `LiveConnectivityWatchdog` — Phase 1's "Migrated issue 2026-05-08" item. Module location per conflict-issue
+  proposal: `market-tick-data-service/market_tick_data_service/market_interface/connectivity_watchdog.py`.
+  Heartbeat tracker per (venue, data_type), state machine
+  (`HEALTHY → STALE → GAP → RECOVERING → HEALTHY`), emits the 3-event family this session shipped.
+- ❌ `ResourceProfiler.on_memory_warning` wiring — Phase 2 of plan-of-record. Depends on Phase 1.2 callsite migration
+  per the plan's execution DAG; cannot ship in isolation.
+- ❌ Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline — separate `[SCRIPT] P1` todo in plan-of-record (7-day
+  observation per venue → 99th percentile). Bootstrap with conservative default (e.g. 60s) is fine until calibration.
+
+**Why this session shipped only the SSOT half:** Each of the 5 deliverables is a separate full-QG cycle in a
+different repo (UTL / UAC / MTDS / MDPS×2). The MDPS Phase 1.2 callsite migration alone is a substantial refactor of
+a 1100+ line file that needs schema-drift detection across chunks + shard-level failure isolation + 4-test matrix
+verification — not safe in a parallel-agent slot with foreign WIP in the shared working tree (UTL had 9 foreign-
+modified files from a parallel agent's session at start). The UAC SSOT extension is the cleanest, smallest, and
+most-independent of the 5 — it has zero downstream wire-in dependency for landing the SSOT, alerting-service +
+reconciler can now subscribe by type, and the next agent picking up the remaining items has a typed event surface to
+implement against rather than inventing one.
 
 ### Why it matters
 
@@ -159,11 +201,13 @@ work-split; (c) Harsh implement-from-spec if Ikenna pre-designs.
 
 ### Exit criteria
 
-- `open_candle_writer` + `close_candle_writer` exist in `unified-trading-library/unified_trading_library/streaming/`
-- MDPS `app/core/live_workers.py` consumes them
-- `ResourceProfiler.on_memory_warning` wired in MDPS
-- `CONNECTIVITY_GAP_DETECTED` event type in UAC + `LiveConnectivityWatchdog` in MTDS
-- live-pipeline Phase 4 unblocks
+- `open_candle_writer` + `close_candle_writer` exist in `unified-trading-library/unified_trading_library/streaming/` —
+  ❌ STILL OPEN
+- MDPS `app/core/live_workers.py` consumes them — ❌ STILL OPEN (Phase 1.2 callsite migration)
+- `ResourceProfiler.on_memory_warning` wired in MDPS — ❌ STILL OPEN (Phase 2; depends on Phase 1.2)
+- `CONNECTIVITY_GAP_DETECTED` event type in UAC — ✅ SHIPPED 2026-05-09 UAC@`4bd84e7c`
+- `LiveConnectivityWatchdog` in MTDS — ❌ STILL OPEN
+- live-pipeline Phase 4 unblocks — ❌ STILL BLOCKED until UTL primitives + MDPS wiring land
 
 ---
 

@@ -4,7 +4,7 @@ title:
   issue #3 P0)"
 created: 2026-05-09
 author: agent-mdps-streaming-spawn
-status: open
+status: resolved-partial-2026-05-09
 source:
   - plans/active/issues/audit_2026_05_08_substantial_unfixed_items.md § Item 3
   - plans/active/mdps_streaming_and_backpressure_2026_05_07.md Phase 1.1
@@ -13,6 +13,18 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 ---
+
+> **RESOLUTION 2026-05-09**: Operator approved option (a) — ship per plan-of-record. Follow-up agent shipped the
+> **UAC SSOT half** as a clean independent unit (UAC@`4bd84e7c` — 3 typed `LifecycleEventType` members +
+> 3 Pydantic detail models + 3 typed event wrappers + 12 unit tests in
+> `tests/internal/unit/test_connectivity_gap_event_taxonomy.py`). The remaining 4 deliverables (UTL `open_candle_writer`
+> / `close_candle_writer`, MDPS Phase 1.2 callsite migration, MTDS `LiveConnectivityWatchdog`, MDPS Phase 2
+> ResourceProfiler wiring) are still open per audit-issue-3 § "Update 2026-05-09 — UAC SSOT shipped, code wiring still
+> open" — they are full-QG-cycle items in 3 different repos with foreign-WIP-in-shared-tree complications, and the
+> MDPS Phase 1.2 callsite migration alone is a substantial 1100+ line file refactor that's not safe to bundle with the
+> SSOT commit. The plan-of-record contract on `open_candle_writer` / `close_candle_writer` (parquet-write-lifecycle
+> wrappers, NOT trade aggregator) stands as the canonical shape for the next agent to implement against; this issue
+> resolved the contract-shape ambiguity but did not ship all the code.
 
 # MDPS streaming primitives — spawn-prompt vs plan-of-record contract conflict
 
