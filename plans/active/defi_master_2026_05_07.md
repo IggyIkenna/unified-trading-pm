@@ -31,8 +31,10 @@ related_plans:
 > plan's DeFi work. **BE AWARE** when touching DeFi connectors / chain RPC config / Aave / Uniswap / flash-loan
 > receiver: paper-mode wiring goes through `paper_target_registry[chain]` — don't hardcode fork URLs or testnet
 > endpoints. SSOT: [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md) § "Folded paper-vs-live
-> workflow maturity" + [`codex/05-infrastructure/per-venue-paper-policy.md`](../../codex/05-infrastructure/per-venue-paper-policy.md).
-> Question doc: [`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../questions/paper_vs_live_workflow_maturity_2026_05_08.md).
+> workflow maturity" +
+> [`codex/05-infrastructure/per-venue-paper-policy.md`](../../codex/05-infrastructure/per-venue-paper-policy.md).
+> Question doc:
+> [`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../questions/paper_vs_live_workflow_maturity_2026_05_08.md).
 
 ## Codex SSOTs
 

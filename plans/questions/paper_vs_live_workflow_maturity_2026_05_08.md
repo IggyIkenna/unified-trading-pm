@@ -24,20 +24,21 @@ related_plans:
 
 ## Settled (operator decisions 2026-05-09)
 
-Ten plan-shape forks resolved. Question doc now drives a concrete plan extraction; this section is the at-a-glance summary, with detail folded into the relevant blocks below.
+Ten plan-shape forks resolved. Question doc now drives a concrete plan extraction; this section is the at-a-glance
+summary, with detail folded into the relevant blocks below.
 
-| # | Decision                              | Resolution                                                                                                                                                                                                                                                                                                  |
-| - | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 | Plan extraction path                  | **Fold into `master_to_live_defi_2026_05_23.md` Group F items 17 / 18** (and 21 for recon). Comprehensively spec the items via this doc's content; don't ship a parallel standalone plan.                                                                                                                  |
-| 2 | Enum shape commitment                 | **Closest to existing code**: keep UAC `OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }` as canonical (single 4-value enum already used by 6 consumer files across `execution-service` + `unified-trading-system-ui`). Add a derived helper `(target, trigger) ← Mode` for routing / recon / UI clarity. NO new `ExecutionTarget` / `ExecutionTrigger` enums; the helper is a pure function over the existing enum. Drop the "wrong shape" verdict in B1 below — it overcorrected. |
-| 3 | Per-venue testnet policy              | **Simulate-first, testnet as fallback / upgrade where it exists.** Matching engine is the floor for every venue (CeFi perps, DeFi, sports, prediction). Where a venue exposes a testnet API + credentials, wire it as an upgrade path. Sports `PaperBettingAdapter` shape is the canonical simulator example. |
-| 4 | Manual gate scope for May-23          | **Ships pre-cutover.** Manual execution must be triggerable via the unified-trading-system UI hooked up to backend. Block H is in scope.                                                                                                                                                                    |
-| 5 | DART 3-way visualization scope        | **Ships pre-cutover, both views.** Side-by-side comparison view AND separate batch / paper / live views, both wired to real backend (not mock). Block G is in scope.                                                                                                                                       |
-| 6 | `leveraged_funding_arb` status        | **Stale terminology.** No `LEVERAGED_FUNDING_ARB` symbol exists. The actual archetype is `StrategyArchetype.ARBITRAGE_PRICE_DISPERSION` with a `funding-rate-dispersion` variant. Owned by `plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md`. Cross-linked in `related_plans:` frontmatter. The May-23 lead pair is `carry_staked_basis` + the `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant — paper-runnable evidence run scopes against THAT archetype, not a fictional `LEVERAGED_FUNDING_ARB`. |
-| 7 | `TestingStage` merge                  | **Merge.** `TestingStage.LIVE_TESTNET` collapses to `(target=TESTNET, trigger=AUTOMATED)` derived view. Don't keep TestingStage as a parallel progression-ladder enum; the (target, trigger) decomposition expresses the same information.                                                                  |
-| 8 | Solana paper analogue                 | **Use the Solana equivalent (devnet / localnet / surfnet — operator-agnostic; pick the one with the fullest fork-state semantics for jitoSOL / mSOL / bSOL).** Same rule for any other non-EVM chain that doesn't have Tenderly: use that chain's native testnet/fork primitive. The plan needs a per-chain `paper_target_registry` in UAC: `chain → testnet/fork primitive`. |
-| 9 | Instruction-layer mode-routing        | **UAC instruction envelope carries mode.** Lift `mode` (the `OperationalMode` enum value) into the UAC instruction schema. Enables A/B execution lanes, cleaner reconciliation, mode-tagged event audit trails. Boot-time injection at execution-service becomes a default-fallback when an instruction omits the field. |
-| 10 | Mock-vs-paper boundary enforcement    | **No enforcement.** Operator-discipline only. The combinations `(paper_trade=true, CLOUD_MOCK_MODE=true)` and similar are legitimate — UI dev rendering against mock backend with paper-shaped data is a real use case. No hard refusal at execution-service boot. Block I drops the proposed boundary check. |
+| #   | Decision                           | Resolution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Plan extraction path               | **Fold into `master_to_live_defi_2026_05_23.md` Group F items 17 / 18** (and 21 for recon). Comprehensively spec the items via this doc's content; don't ship a parallel standalone plan.                                                                                                                                                                                                                                                                                                                                            |
+| 2   | Enum shape commitment              | **Closest to existing code**: keep UAC `OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }` as canonical (single 4-value enum already used by 6 consumer files across `execution-service` + `unified-trading-system-ui`). Add a derived helper `(target, trigger) ← Mode` for routing / recon / UI clarity. NO new `ExecutionTarget` / `ExecutionTrigger` enums; the helper is a pure function over the existing enum. Drop the "wrong shape" verdict in B1 below — it overcorrected.                                                 |
+| 3   | Per-venue testnet policy           | **Simulate-first, testnet as fallback / upgrade where it exists.** Matching engine is the floor for every venue (CeFi perps, DeFi, sports, prediction). Where a venue exposes a testnet API + credentials, wire it as an upgrade path. Sports `PaperBettingAdapter` shape is the canonical simulator example.                                                                                                                                                                                                                        |
+| 4   | Manual gate scope for May-23       | **Ships pre-cutover.** Manual execution must be triggerable via the unified-trading-system UI hooked up to backend. Block H is in scope.                                                                                                                                                                                                                                                                                                                                                                                             |
+| 5   | DART 3-way visualization scope     | **Ships pre-cutover, both views.** Side-by-side comparison view AND separate batch / paper / live views, both wired to real backend (not mock). Block G is in scope.                                                                                                                                                                                                                                                                                                                                                                 |
+| 6   | `leveraged_funding_arb` status     | **Stale terminology.** No `LEVERAGED_FUNDING_ARB` symbol exists. The actual archetype is `StrategyArchetype.ARBITRAGE_PRICE_DISPERSION` with a `funding-rate-dispersion` variant. Owned by `plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md`. Cross-linked in `related_plans:` frontmatter. The May-23 lead pair is `carry_staked_basis` + the `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant — paper-runnable evidence run scopes against THAT archetype, not a fictional `LEVERAGED_FUNDING_ARB`. |
+| 7   | `TestingStage` merge               | **Merge.** `TestingStage.LIVE_TESTNET` collapses to `(target=TESTNET, trigger=AUTOMATED)` derived view. Don't keep TestingStage as a parallel progression-ladder enum; the (target, trigger) decomposition expresses the same information.                                                                                                                                                                                                                                                                                           |
+| 8   | Solana paper analogue              | **Use the Solana equivalent (devnet / localnet / surfnet — operator-agnostic; pick the one with the fullest fork-state semantics for jitoSOL / mSOL / bSOL).** Same rule for any other non-EVM chain that doesn't have Tenderly: use that chain's native testnet/fork primitive. The plan needs a per-chain `paper_target_registry` in UAC: `chain → testnet/fork primitive`.                                                                                                                                                        |
+| 9   | Instruction-layer mode-routing     | **UAC instruction envelope carries mode.** Lift `mode` (the `OperationalMode` enum value) into the UAC instruction schema. Enables A/B execution lanes, cleaner reconciliation, mode-tagged event audit trails. Boot-time injection at execution-service becomes a default-fallback when an instruction omits the field.                                                                                                                                                                                                             |
+| 10  | Mock-vs-paper boundary enforcement | **No enforcement.** Operator-discipline only. The combinations `(paper_trade=true, CLOUD_MOCK_MODE=true)` and similar are legitimate — UI dev rendering against mock backend with paper-shaped data is a real use case. No hard refusal at execution-service boot. Block I drops the proposed boundary check.                                                                                                                                                                                                                        |
 
 ## Intent
 
@@ -153,7 +154,11 @@ B1. UAC `internal/modes.py:69-96` declares THREE enums today:
 - `OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }` — per-service instruction mode
 - `TestingStage { MOCK, HISTORICAL, LIVE_MOCK, LIVE_TESTNET, STAGING, LIVE_REAL }` — strategy progression gates
 
-**Verdict per operator decision 2026-05-09 (Settled #2 + #7)**: keep `OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }` as canonical — closest-to-existing-code wins. Single 4-value enum already in use by `execution-service` (cli/handlers + engine/transfers/factory + engine/transfers/mock_adapter + tests/unit/test_operational_mode_validation) and `unified-trading-system-ui` (context/internal-contracts/schemas/modes). 6 consumer files; rewriting them for a fresh two-enum schema is more churn than the conceptual cleanliness is worth.
+**Verdict per operator decision 2026-05-09 (Settled #2 + #7)**: keep `OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }`
+as canonical — closest-to-existing-code wins. Single 4-value enum already in use by `execution-service` (cli/handlers +
+engine/transfers/factory + engine/transfers/mock_adapter + tests/unit/test_operational_mode_validation) and
+`unified-trading-system-ui` (context/internal-contracts/schemas/modes). 6 consumer files; rewriting them for a fresh
+two-enum schema is more churn than the conceptual cleanliness is worth.
 
 **The two-axis decomposition (A5) is preserved as a derived view**, additive to UAC — not a replacement:
 
@@ -179,11 +184,19 @@ def decompose(mode: OperationalMode) -> tuple[ExecutionTarget, ExecutionTrigger]
     }[mode]
 ```
 
-Routing / recon / UI code uses `decompose(mode)` to switch on `target` or `trigger` independently; the on-disk + on-wire surface stays the single `OperationalMode` enum. **Anti-patterns A + B (execution-service `paper_trade: bool` and sports `_PAPER_VENUE_KEYS` string-set) still get deleted** — they're competing surfaces for the same single enum; the consolidation is independent of the two-axis-vs-single-enum question.
+Routing / recon / UI code uses `decompose(mode)` to switch on `target` or `trigger` independently; the on-disk + on-wire
+surface stays the single `OperationalMode` enum. **Anti-patterns A + B (execution-service `paper_trade: bool` and sports
+`_PAPER_VENUE_KEYS` string-set) still get deleted** — they're competing surfaces for the same single enum; the
+consolidation is independent of the two-axis-vs-single-enum question.
 
-**`TestingStage` decision (Settled #7)**: merge. `TestingStage.LIVE_TESTNET` collapses to `(target=TESTNET, trigger=AUTOMATED)` derived view; deprecate `TestingStage` as a separate enum. Other `TestingStage` values (MOCK / HISTORICAL / LIVE_MOCK / STAGING / LIVE_REAL) are progression-ladder labels that get re-expressed via `OperationalMode` + a separate `progression_stage` field if still needed (likely UI-only).
+**`TestingStage` decision (Settled #7)**: merge. `TestingStage.LIVE_TESTNET` collapses to
+`(target=TESTNET, trigger=AUTOMATED)` derived view; deprecate `TestingStage` as a separate enum. Other `TestingStage`
+values (MOCK / HISTORICAL / LIVE_MOCK / STAGING / LIVE_REAL) are progression-ladder labels that get re-expressed via
+`OperationalMode` + a separate `progression_stage` field if still needed (likely UI-only).
 
-**`RuntimeMode { LIVE, BATCH }`** stays as service-transport orthogonal axis — it composes with `OperationalMode` (a `RuntimeMode.LIVE` streaming service can run `OperationalMode.PAPER` against a Tenderly fork). Confirm in plan body that no consumer conflates the two.
+**`RuntimeMode { LIVE, BATCH }`** stays as service-transport orthogonal axis — it composes with `OperationalMode` (a
+`RuntimeMode.LIVE` streaming service can run `OperationalMode.PAPER` against a Tenderly fork). Confirm in plan body that
+no consumer conflates the two.
 
 B2. **Anti-pattern detected**: execution-service `service_config.py` declares a separate `paper_trade: bool` field
 (alias `PAPER_TRADE | DEFI_PAPER_TRADE`). This is a competing surface to `OperationalMode.PAPER`. Sports has yet another
@@ -587,68 +600,111 @@ and the recon is invalid. Is this enforced?
 
   → captured as the two-axis taxonomy in § Intent + § Block A5 + Block A6 + § Block B (UAC enum verdict) + § Block H.
 
-- **Ten plan-shape forks settled (operator, 2026-05-09 msg 3)**: see § "Settled (operator decisions 2026-05-09)" at the top of this doc. Highlights:
-  1. Fold into `master_to_live_defi_2026_05_23.md` Group F items 17/18 (and 21 for recon) — comprehensively spec'd; no parallel standalone plan.
-  2. Enum shape: closest-to-existing-code → keep `OperationalMode` single 4-value enum, add additive `ExecutionTarget` / `ExecutionTrigger` enums + a `decompose()` derived helper. Earlier "wrong shape" verdict in B1 dropped.
-  3. Per-venue policy: simulate-first (matching engine floor for every venue), testnet as fallback / upgrade where API + credentials exist.
+- **Ten plan-shape forks settled (operator, 2026-05-09 msg 3)**: see § "Settled (operator decisions 2026-05-09)" at the
+  top of this doc. Highlights:
+  1. Fold into `master_to_live_defi_2026_05_23.md` Group F items 17/18 (and 21 for recon) — comprehensively spec'd; no
+     parallel standalone plan.
+  2. Enum shape: closest-to-existing-code → keep `OperationalMode` single 4-value enum, add additive `ExecutionTarget` /
+     `ExecutionTrigger` enums + a `decompose()` derived helper. Earlier "wrong shape" verdict in B1 dropped.
+  3. Per-venue policy: simulate-first (matching engine floor for every venue), testnet as fallback / upgrade where API +
+     credentials exist.
   4. Manual gate: ships pre-cutover, executable via unified-trading-system UI hooked to backend.
-  5. DART: ships pre-cutover, both views (side-by-side comparison + separate batch / paper / live), wired to real backend.
-  6. `leveraged_funding_arb` is stale terminology — the archetype is `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion` variant), owned by `arbitrage_price_dispersion_finalisation_2026_05_09.md`; cross-link added to `related_plans:`.
+  5. DART: ships pre-cutover, both views (side-by-side comparison + separate batch / paper / live), wired to real
+     backend.
+  6. `leveraged_funding_arb` is stale terminology — the archetype is `ARBITRAGE_PRICE_DISPERSION`
+     (`funding-rate-dispersion` variant), owned by `arbitrage_price_dispersion_finalisation_2026_05_09.md`; cross-link
+     added to `related_plans:`.
   7. `TestingStage`: merge — collapses to `(target, trigger)` derived view; deprecate as separate enum.
-  8. Solana paper analogue: use Solana equivalent (devnet / localnet / surfnet); same rule for any non-EVM chain without Tenderly. UAC needs a per-chain `paper_target_registry` mapping `chain → testnet/fork primitive`.
-  9. Instruction-layer mode-routing: lift `mode` into UAC instruction envelope; boot-time injection becomes default-fallback when an instruction omits the field.
-  10. Mock-vs-paper boundary: no enforcement — operator-discipline only. `(paper_trade=true, CLOUD_MOCK_MODE=true)` is a legitimate combination (e.g. UI dev rendering).
+  8. Solana paper analogue: use Solana equivalent (devnet / localnet / surfnet); same rule for any non-EVM chain without
+     Tenderly. UAC needs a per-chain `paper_target_registry` mapping `chain → testnet/fork primitive`.
+  9. Instruction-layer mode-routing: lift `mode` into UAC instruction envelope; boot-time injection becomes
+     default-fallback when an instruction omits the field.
+  10. Mock-vs-paper boundary: no enforcement — operator-discipline only. `(paper_trade=true, CLOUD_MOCK_MODE=true)` is a
+      legitimate combination (e.g. UI dev rendering).
 
 ## Iteration log
 
-| Date       | Author   | Change                                                                                                                                                                                                                                                                                              |
-| ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-05-08 | agent    | Initial draft — question + 10 blocks + audit findings pre-populated from workspace audit (Explore × 2 sub-agents, parallel).                                                                                                                                                                        |
-| 2026-05-08 | operator | Refined taxonomy: live and paper effectively same for execution apart from matching (real vs simulation/testnet); backtest = same code path, always simulation; manual = real trades + real endpoints + manual triggers; deployment / account / VM redundancy is operator config.                   |
-| 2026-05-08 | agent    | Two-axis taxonomy folded into § Intent + Block A (A5/A6) + Block B1 (UAC enum verdict — `OperationalMode` has wrong shape, `MANUAL` is trigger axis not peer mode) + Block B3 (settled) + Block H (full re-shape: pre-execution gate canonical, manual UX channels, deployment-redundancy options). |
-| 2026-05-09 | operator | Ten plan-shape forks settled in one pass — see § "Settled (operator decisions 2026-05-09)" header. Master fold-in confirmed; enum-shape pivots to single-enum-with-derived-helper; simulate-first + testnet-fallback policy; manual gate + DART 3-way both ship pre-cutover; `leveraged_funding_arb` resolved as stale terminology; TestingStage merge; Solana via native testnet; instruction envelope carries mode; no mock-vs-paper enforcement. |
-| 2026-05-09 | agent    | Settled section added at top of doc; B1 verdict re-written (single-enum-with-decompose-helper closest to existing code); frontmatter `related_codex` re-flagged as NEW (neither doc on disk); `arbitrage_price_dispersion_finalisation_2026_05_09.md` cross-linked in `related_plans`; status: `audit-in-progress` → `iterating`; Plan-shape decisions section updated for master fold-in path. |
+| Date       | Author   | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-08 | agent    | Initial draft — question + 10 blocks + audit findings pre-populated from workspace audit (Explore × 2 sub-agents, parallel).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2026-05-08 | operator | Refined taxonomy: live and paper effectively same for execution apart from matching (real vs simulation/testnet); backtest = same code path, always simulation; manual = real trades + real endpoints + manual triggers; deployment / account / VM redundancy is operator config.                                                                                                                                                                                                                                                                                                                                                            |
+| 2026-05-08 | agent    | Two-axis taxonomy folded into § Intent + Block A (A5/A6) + Block B1 (UAC enum verdict — `OperationalMode` has wrong shape, `MANUAL` is trigger axis not peer mode) + Block B3 (settled) + Block H (full re-shape: pre-execution gate canonical, manual UX channels, deployment-redundancy options).                                                                                                                                                                                                                                                                                                                                          |
+| 2026-05-09 | operator | Ten plan-shape forks settled in one pass — see § "Settled (operator decisions 2026-05-09)" header. Master fold-in confirmed; enum-shape pivots to single-enum-with-derived-helper; simulate-first + testnet-fallback policy; manual gate + DART 3-way both ship pre-cutover; `leveraged_funding_arb` resolved as stale terminology; TestingStage merge; Solana via native testnet; instruction envelope carries mode; no mock-vs-paper enforcement.                                                                                                                                                                                          |
+| 2026-05-09 | agent    | Settled section added at top of doc; B1 verdict re-written (single-enum-with-decompose-helper closest to existing code); frontmatter `related_codex` re-flagged as NEW (neither doc on disk); `arbitrage_price_dispersion_finalisation_2026_05_09.md` cross-linked in `related_plans`; status: `audit-in-progress` → `iterating`; Plan-shape decisions section updated for master fold-in path.                                                                                                                                                                                                                                              |
 | 2026-05-09 | agent    | Plan spawned. Master plan `master_to_live_defi_2026_05_23.md` extended with "Folded paper-vs-live workflow maturity" sub-section under Group F + Group G item 23 sub-items (13 todos: pvl-p17a..d / p18a..b / p20a..c / p21a / p22a / p23a..c). 5 codex SSOT NEW stubs created (operational-modes, paper-vs-live-execution-seam, per-venue-paper-policy, archetype-paper-readiness, dart-mode-toggle). Cross-plan banners added on `defi_master_2026_05_07.md` + `arbitrage_price_dispersion_finalisation_2026_05_09.md`; 5 question-doc banners deferred (parallel-agent untracked WIP). Question doc status: `iterating` → `plan-spawned`. |
 
 ## Plan-shape decisions (settled 2026-05-09)
 
-- **Plan extraction path**: **fold into `plans/active/master_to_live_defi_2026_05_23.md` Group F** — comprehensively spec items 17 (Backtest fidelity), 18 (2-year batch backtest run), and 21 (Reconciliation suite). Add new sub-items where this doc's blocks add scope not currently covered:
-  - **17.A** — UAC enum consolidation (delete `paper_trade: bool`, delete `_PAPER_VENUE_KEYS`, add additive `ExecutionTarget` + `ExecutionTrigger` enums + `decompose()` helper, lift `mode` into UAC instruction envelope, deprecate `TestingStage` as parallel enum).
-  - **17.B** — per-venue paper policy: simulate-first floor for all 6 perp venues + DeFi + sports + prediction; testnet upgrade where API + credentials exist (Deribit testnet known viable; others audit + wire). UAC `paper_target_registry: dict[chain, testnet_or_fork_primitive]` for non-EVM chains (Solana via devnet/localnet/surfnet for `carry_staked_basis` jitoSOL/mSOL/bSOL legs).
-  - **17.C** — per-archetype paper-runnable matrix populated for the May-23 lead pair (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion`); 4-state taxonomy (paper-runnable / paper-shippable / backtest-only / stub). Cross-link `arbitrage_price_dispersion_finalisation_2026_05_09.md` for the funding-arb archetype (NOT a fictional `LEVERAGED_FUNDING_ARB`).
-  - **17.D** — strategy-instruction-layer mode-routing: `mode: OperationalMode` field added to UAC instruction envelope; boot-time injection becomes default-fallback.
-  - **18.A** — paper-mode evidence run (≥3 continuous days) for the lead pair against real DeFi venues + Tenderly fork (EVM legs) + Solana devnet (Solana legs) + matching-engine simulation (perp hedge legs absent testnet). Event-stream verified per "no fire-and-forget VM launches" rule.
-  - **21.A** — extend batch-vs-live recon to 3-way (batch ↔ paper ↔ live) with codified per-pair tolerances + closed-set failure-routing policy.
-  - **23.A** (Group G — operator UX) — DART 3-way visualization in unified-trading-system-ui: side-by-side comparison view + separate per-mode views, both wired to real backend (not mock). Manual gate UI affordance executable via unified-trading-system-ui hooked to execution-service.
+- **Plan extraction path**: **fold into `plans/active/master_to_live_defi_2026_05_23.md` Group F** — comprehensively
+  spec items 17 (Backtest fidelity), 18 (2-year batch backtest run), and 21 (Reconciliation suite). Add new sub-items
+  where this doc's blocks add scope not currently covered:
+  - **17.A** — UAC enum consolidation (delete `paper_trade: bool`, delete `_PAPER_VENUE_KEYS`, add additive
+    `ExecutionTarget` + `ExecutionTrigger` enums + `decompose()` helper, lift `mode` into UAC instruction envelope,
+    deprecate `TestingStage` as parallel enum).
+  - **17.B** — per-venue paper policy: simulate-first floor for all 6 perp venues + DeFi + sports + prediction; testnet
+    upgrade where API + credentials exist (Deribit testnet known viable; others audit + wire). UAC
+    `paper_target_registry: dict[chain, testnet_or_fork_primitive]` for non-EVM chains (Solana via
+    devnet/localnet/surfnet for `carry_staked_basis` jitoSOL/mSOL/bSOL legs).
+  - **17.C** — per-archetype paper-runnable matrix populated for the May-23 lead pair (`carry_staked_basis` +
+    `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion`); 4-state taxonomy (paper-runnable / paper-shippable /
+    backtest-only / stub). Cross-link `arbitrage_price_dispersion_finalisation_2026_05_09.md` for the funding-arb
+    archetype (NOT a fictional `LEVERAGED_FUNDING_ARB`).
+  - **17.D** — strategy-instruction-layer mode-routing: `mode: OperationalMode` field added to UAC instruction envelope;
+    boot-time injection becomes default-fallback.
+  - **18.A** — paper-mode evidence run (≥3 continuous days) for the lead pair against real DeFi venues + Tenderly fork
+    (EVM legs) + Solana devnet (Solana legs) + matching-engine simulation (perp hedge legs absent testnet). Event-stream
+    verified per "no fire-and-forget VM launches" rule.
+  - **21.A** — extend batch-vs-live recon to 3-way (batch ↔ paper ↔ live) with codified per-pair tolerances +
+    closed-set failure-routing policy.
+  - **23.A** (Group G — operator UX) — DART 3-way visualization in unified-trading-system-ui: side-by-side comparison
+    view + separate per-mode views, both wired to real backend (not mock). Manual gate UI affordance executable via
+    unified-trading-system-ui hooked to execution-service.
 
-- **Plan type**: mixed (UAC schema additive + execution-service consolidation + UI + per-venue infra + 3-way recon + codex SSOTs).
-- **Owner side**: both. Ikenna leads UAC enum work (additive change → derived helper → instruction envelope mode field → master plan re-spec) + codex SSOTs + DART UI shape decisions. Harsh leads per-venue testnet wire-up + per-archetype paper-runnable evidence runs + 3-way recon implementation.
+- **Plan type**: mixed (UAC schema additive + execution-service consolidation + UI + per-venue infra + 3-way recon +
+  codex SSOTs).
+- **Owner side**: both. Ikenna leads UAC enum work (additive change → derived helper → instruction envelope mode field →
+  master plan re-spec) + codex SSOTs + DART UI shape decisions. Harsh leads per-venue testnet wire-up + per-archetype
+  paper-runnable evidence runs + 3-way recon implementation.
 - **Codex SSOTs touched** (4 NEW + 2 UPDATE):
-  - `codex/04-architecture/operational-modes.md` — **NEW** (does not exist on disk) — pins single-enum + decomposition helper + 4-cell mode matrix + per-axis routing rules.
-  - `codex/04-architecture/batch-equals-live-pipeline.md` — **NEW** (does not exist on disk) — pins SSOT that strategy / risk / P&L / position / alerting / instructions are identical across modes.
-  - `codex/04-architecture/paper-vs-live-execution-seam.md` — NEW — pins the execution-only-seam, pricing-no-paper, mock-vs-paper boundary (operator-discipline, not enforced).
+  - `codex/04-architecture/operational-modes.md` — **NEW** (does not exist on disk) — pins single-enum + decomposition
+    helper + 4-cell mode matrix + per-axis routing rules.
+  - `codex/04-architecture/batch-equals-live-pipeline.md` — **NEW** (does not exist on disk) — pins SSOT that strategy /
+    risk / P&L / position / alerting / instructions are identical across modes.
+  - `codex/04-architecture/paper-vs-live-execution-seam.md` — NEW — pins the execution-only-seam, pricing-no-paper,
+    mock-vs-paper boundary (operator-discipline, not enforced).
   - `codex/12-strategies/archetype-paper-readiness.md` — NEW — per-archetype 4-state matrix.
-  - `codex/05-infrastructure/per-venue-paper-policy.md` — NEW — simulate-first + testnet-fallback policy + paper_target_registry.
+  - `codex/05-infrastructure/per-venue-paper-policy.md` — NEW — simulate-first + testnet-fallback policy +
+    paper_target_registry.
   - `codex/14-customer-journeys/dart-mode-toggle.md` — NEW — DART 3-way visualization + manual gate UI shape.
 
 - **Cross-plan dependencies + banner additions**:
-  - `master_to_live_defi_2026_05_23.md` — fold-in target. Group F items 17/18/21 + Group G item 23 expand per § "Plan-shape decisions" above.
-  - `arbitrage_price_dispersion_finalisation_2026_05_09.md` — paper-runnable evidence run for funding-rate-dispersion variant lands here (cross-banner on master 17.C).
+  - `master_to_live_defi_2026_05_23.md` — fold-in target. Group F items 17/18/21 + Group G item 23 expand per §
+    "Plan-shape decisions" above.
+  - `arbitrage_price_dispersion_finalisation_2026_05_09.md` — paper-runnable evidence run for funding-rate-dispersion
+    variant lands here (cross-banner on master 17.C).
   - `defi_master_2026_05_07.md` — Tenderly fork policy + per-chain paper_target_registry compose with DeFi master.
-  - `promote_workflow_backtest_to_paper_to_live_2026_05_08.md` — promote workflow assumes the plumbing this plan ships; banner mutual.
-  - `risk_simulations_limits_alerting_2026_05_08.md` — explicitly carves mock-data risk-sim OUT of paper scope; cross-link only.
+  - `promote_workflow_backtest_to_paper_to_live_2026_05_08.md` — promote workflow assumes the plumbing this plan ships;
+    banner mutual.
+  - `risk_simulations_limits_alerting_2026_05_08.md` — explicitly carves mock-data risk-sim OUT of paper scope;
+    cross-link only.
   - `mock_data_pipeline_benchmarking_2026_05_08.md` — orthogonal; cross-link only.
-  - `api_keys_wallets_accounts_readiness_2026_05_08.md` — per-venue paper credentials in scope (testnet API keys + Tenderly tokens + Solana devnet wallets); banner mutual.
-  - `disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md` — 3-way recon failure-routing policy composes here.
+  - `api_keys_wallets_accounts_readiness_2026_05_08.md` — per-venue paper credentials in scope (testnet API keys +
+    Tenderly tokens + Solana devnet wallets); banner mutual.
+  - `disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md` — 3-way recon failure-routing policy composes
+    here.
 
 - **Estimated scope (master fold-in shape)**: ~12-18 AI-days total.
-  - UAC additive enum work + decompose helper + instruction envelope mode field + TestingStage deprecation: ~1-2d (Ikenna).
+  - UAC additive enum work + decompose helper + instruction envelope mode field + TestingStage deprecation: ~1-2d
+    (Ikenna).
   - `paper_trade: bool` + `_PAPER_VENUE_KEYS` deletion + 6 consumer file migration: ~1d (Ikenna).
-  - Per-venue testnet wire-up audit + simulate-first matching engine adapter pass + Deribit testnet integration: ~3-5d (Harsh).
+  - Per-venue testnet wire-up audit + simulate-first matching engine adapter pass + Deribit testnet integration: ~3-5d
+    (Harsh).
   - Solana devnet + paper_target_registry + non-EVM chain coverage: ~2d (Harsh).
   - DART 3-way visualization (side-by-side + per-mode + manual gate UI) wired to real backend: ~3-5d (both).
-  - Per-archetype paper-runnable evidence runs (carry_staked_basis + funding-rate-dispersion variant, ≥3 days each): ~2-3d (Harsh, real-infra).
-  - 3-way recon stage (batch-paper + paper-live extensions to existing batch-live-reconciliation-service): ~1-2d (Harsh).
+  - Per-archetype paper-runnable evidence runs (carry_staked_basis + funding-rate-dispersion variant, ≥3 days each):
+    ~2-3d (Harsh, real-infra).
+  - 3-way recon stage (batch-paper + paper-live extensions to existing batch-live-reconciliation-service): ~1-2d
+    (Harsh).
   - 6 codex SSOT NEW docs: ~1-2d (Ikenna).
 
 ## Plan extraction record

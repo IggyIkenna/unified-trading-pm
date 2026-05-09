@@ -639,9 +639,9 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_
   - [ ] [AGENT] P0. `pvl-p17b-paper-trade-bool-deletion`: Delete `paper_trade: bool` field from execution-service
         `service_config.py` + alias `PAPER_TRADE | DEFI_PAPER_TRADE`; migrate 4 consumer call-sites
-        (`execution_service/cli/handlers/__init__.py`, `engine/transfers/factory.py`, `engine/transfers/mock_adapter.py`,
-        `tests/unit/test_operational_mode_validation.py`) to read `OperationalMode` directly. _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_
+        (`execution_service/cli/handlers/__init__.py`, `engine/transfers/factory.py`,
+        `engine/transfers/mock_adapter.py`, `tests/unit/test_operational_mode_validation.py`) to read `OperationalMode`
+        directly. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
   - [ ] [AGENT] P0. `pvl-p17c-paper-venue-keys-deletion`: Delete `_PAPER_VENUE_KEYS = ("paper", "betfair", "matchbook")`
         from `execution-service/execution_service/sports_execution/routing.py:16-25`; migrate routing logic to read
         `OperationalMode.PAPER` + sports-specific paper-venue resolver. _(folded from
@@ -652,15 +652,15 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_
 
 - **Item 18 (2-year batch backtest run)**:
-  - [ ] [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the May-23
-        lead pair (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant per
+  - [ ] [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the
+        May-23 lead pair (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant per
         [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](./arbitrage_price_dispersion_finalisation_2026_05_09.md))
         against real DeFi venues + Tenderly fork (EVM legs) + Solana devnet (Solana legs) + matching-engine simulation
         (perp hedge legs without testnet). Event-stream verified per "no fire-and-forget VM launches" rule. NOT an
         operator-actionable close-out — the run actually ships per "Plans Run To Actual Completion" HARD RULE. _(folded
         from paper_vs_live_workflow_maturity_2026_05_08)_
-  - [ ] [AGENT] P1. `pvl-p18b-archetype-paper-runnable-matrix`: Populate per-archetype 4-state taxonomy (paper-runnable /
-        paper-shippable / backtest-only / stub) for every archetype in
+  - [ ] [AGENT] P1. `pvl-p18b-archetype-paper-runnable-matrix`: Populate per-archetype 4-state taxonomy (paper-runnable
+        / paper-shippable / backtest-only / stub) for every archetype in
         `strategy-service/strategy_service/portfolio_allocator/archetypes.py`. Codified in
         `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` (NEW). _(folded from
         paper_vs_live_workflow_maturity_2026_05_08)_
@@ -668,9 +668,9 @@ per-target upgrade path.
 - **Item 20 (Live testnet replicates prod)**:
   - [ ] [AGENT] P0. `pvl-p20a-paper-target-registry`: UAC `paper_target_registry` SSOT — `dict[chain | venue, target]`
         per-target upgrade path. EVM chains → Tenderly fork; Solana → devnet (or localnet/surfnet — pick the one with
-        the fullest fork-state semantics for jitoSOL/mSOL/bSOL); Deribit → testnet endpoint; sports → PaperBettingAdapter;
-        prediction → matching-engine simulation. Default for unmapped target = matching-engine simulation. _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_
+        the fullest fork-state semantics for jitoSOL/mSOL/bSOL); Deribit → testnet endpoint; sports →
+        PaperBettingAdapter; prediction → matching-engine simulation. Default for unmapped target = matching-engine
+        simulation. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
   - [ ] [AGENT] P0. `pvl-p20b-cefi-perp-testnet-audit`: Audit testnet API + credential availability for the 5 CeFi perp
         venues without testnet routing today (Bybit, Binance, OKX, Hyperliquid, Aster); wire testnet endpoints where
         available (matching `paper_target_registry`); fall back to matching-engine simulation per Settled #3. Deribit
@@ -682,11 +682,11 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_
 
 - **Item 21 (Reconciliation suite)**:
-  - [ ] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔ paper
-        ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3); codify
-        per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than batch-vs-live since
-        same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity); closed-set
-        failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
+  - [ ] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔
+        paper ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3);
+        codify per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than
+        batch-vs-live since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity);
+        closed-set failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
         paper_vs_live_workflow_maturity_2026_05_08)_
 
 - **Item 22 (Trading guardrails)** — composes with `alerting_service_live_rules_2026_05_07`:
@@ -694,8 +694,8 @@ per-target upgrade path.
         instruction envelope (per `pvl-p17d`); per-mode alert thresholds (paper-mode looser than live; manual-mode wakes
         operator vs paging on-call). _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
 
-- **Item 23 (DART manual-trade gate, Group G)** — see Group G section below for full DART scope (`pvl-p23a` /
-  `pvl-p23b` / `pvl-p23c`).
+- **Item 23 (DART manual-trade gate, Group G)** — see Group G section below for full DART scope (`pvl-p23a` / `pvl-p23b`
+  / `pvl-p23c`).
 
 **Codex SSOTs touched** (5 NEW + 1 UPDATE):
 
@@ -723,8 +723,9 @@ per-target upgrade path.
 `TestingStage` deprecation: ~1-2d. `paper_trade: bool` + `_PAPER_VENUE_KEYS` deletion + 6 consumer file migration: ~1d.
 Per-venue testnet wire-up audit + simulate-first matching engine adapter pass + Deribit testnet integration: ~3-5d.
 Solana devnet + `paper_target_registry` + non-EVM chain coverage: ~2d. DART 3-way visualization (side-by-side + per-mode
-+ manual gate UI) wired to real backend: ~3-5d. Per-archetype paper-runnable evidence runs: ~2-3d (real-infra). 3-way
-recon stage extension: ~1-2d. 5 codex SSOT NEW stubs + 1 UPDATE: ~1-2d.
+
+- manual gate UI) wired to real backend: ~3-5d. Per-archetype paper-runnable evidence runs: ~2-3d (real-infra). 3-way
+  recon stage extension: ~1-2d. 5 codex SSOT NEW stubs + 1 UPDATE: ~1-2d.
 
 ### Group G — Operator UX (live-only)
 
@@ -733,6 +734,7 @@ recon stage extension: ~1-2d. 5 codex SSOT NEW stubs + 1 UPDATE: ~1-2d.
     switch to automation (codex `09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`)
 
 #### Folded paper-vs-live DART scope (from `paper_vs_live_workflow_maturity_2026_05_08.md` — operator-confirmed
+
 pre-cutover scope)
 
 Operator decision 2026-05-09 (Settled #4 + #5): manual gate + DART 3-way visualization both ship pre-cutover, wired to
@@ -741,10 +743,10 @@ real backend (not mock). Together with item 23 above, the canonical DART operato
 - [ ] [AGENT] P0. `pvl-p23a-dart-3way-visualization`: DART surface in `unified-trading-system-ui` renders three views
       for any strategy archetype: (a) **side-by-side comparison** — batch / paper / live P&L curves, fills blotter,
       events, position trajectory, risk metrics in a tri-pane or stacked-line-series canvas; (b) **separate per-mode
-      views** — pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current paper/live to add batch);
-      (c) **shared filter scope** — asset_group / instrument_type / strategy_family / archetype filters apply across
-      all three lanes simultaneously. Wired to **real backend** (not mock fixtures): each lane reads from the
-      mode-tagged event stream + parquet results. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
+      views** — pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current paper/live to add batch); (c)
+      **shared filter scope** — asset*group / instrument_type / strategy_family / archetype filters apply across all
+      three lanes simultaneously. Wired to **real backend** (not mock fixtures): each lane reads from the mode-tagged
+      event stream + parquet results. *(folded from paper*vs_live_workflow_maturity_2026_05_08)*
 - [ ] [AGENT] P0. `pvl-p23b-dart-mode-data-api`: `deployment-api` (or strategy-service) endpoint
       `GET /strategy/{id}/runs?mode=batch|paper|live` returns the mode-tagged event/fill/P&L bundle for DART to render.
       Single API surface (per workspace pattern) — DART doesn't talk to three different endpoints. Composes with
@@ -974,11 +976,11 @@ a Group F item; ownership routes to the named agent/tab.
       archetypes; emit P&L variance distribution per archetype config dimension (lookback / leverage / hedge-ratio /
       rebalance-freq). Gates Group F item 18 ("2-year batch backtest run"). Owner: Agent 4 (DeFi launch + paper-trade
       smoke). **SHIPPED 2026-05-09 — strategy-service@`3dea3c7`** (893-line runner + 581-line tests = 22 tests passing,
-      basedpyright + ruff clean, smoke verified on both archetypes). 5-dim grid per archetype: shared
-      (position_size_pct / max_drawdown_threshold / slippage_cap_bps) + carry_staked_basis-specific
-      (leverage_multiplier, hedge_threshold_bps) / dispersion-specific (target_leverage,
-      funding_spread_threshold_bps). Density modes: coarse=243 / medium=3,125 / fine=16,807 configs/archetype. Output
-      shape: `gs://strategy-store-{pid}/backtests/config_grid_2yr/{archetype}/{run_id}/{per_config,summary}.parquet`.
+      basedpyright + ruff clean, smoke verified on both archetypes). 5-dim grid per archetype: shared (position_size_pct
+      / max_drawdown_threshold / slippage_cap_bps) + carry_staked_basis-specific (leverage_multiplier,
+      hedge_threshold_bps) / dispersion-specific (target_leverage, funding_spread_threshold_bps). Density modes:
+      coarse=243 / medium=3,125 / fine=16,807 configs/archetype. Output shape:
+      `gs://strategy-store-{pid}/backtests/config_grid_2yr/{archetype}/{run_id}/{per_config,summary}.parquet`.
       **DEFERRED** (operational): full 2-yr grid run (~8-12h on a same-region GCE VM) is operator-scheduled — launch
       command in `run_2yr_config_grid_backtest.py` docstring. RESOLVED-PENDING-OPERATOR-RUN.
 - [ ] [AGENT] P0. **Ship batch-live-reconciliation-service minimum-viable scaffold** with per-archetype P&L diff

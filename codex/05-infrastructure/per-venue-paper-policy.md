@@ -62,6 +62,7 @@ PAPER_TARGET_REGISTRY: Mapping[ChainOrVenue, PaperTarget] = {
 ```
 
 The `PaperTarget` enum closed set:
+
 - `MATCHING_ENGINE` — execution-service matching engine simulates fills.
 - `TENDERLY_FORK` — EVM Virtual TestNet fork (per `flash-loan-receiver.md`).
 - `SOLANA_DEVNET` (or `SOLANA_LOCALNET` / `SOLANA_SURFNET` per `pvl-p20c` audit).
@@ -73,9 +74,9 @@ The `PaperTarget` enum closed set:
 
 ### CeFi (spot + perp)
 
-Simulate via L2 CeFi matcher by default. Testnet upgrade per `paper_target_registry` where the venue exposes one.
-Audit `pvl-p20b` enumerates which of the 5 unwired perp venues (Bybit / Binance / OKX / Hyperliquid / Aster) actually
-expose testnets the workspace can use.
+Simulate via L2 CeFi matcher by default. Testnet upgrade per `paper_target_registry` where the venue exposes one. Audit
+`pvl-p20b` enumerates which of the 5 unwired perp venues (Bybit / Binance / OKX / Hyperliquid / Aster) actually expose
+testnets the workspace can use.
 
 ### DeFi (EVM)
 
@@ -92,9 +93,9 @@ primitive.
 
 ### Sports
 
-`PaperBettingAdapter` ships at
-`execution-service/execution_service/sports_execution/adapters/paper/paper_betting.py` with full bet placement /
-cancellation / settlement simulation. Canonical simulator example for the workspace; the L0 Sports TOB matcher composes.
+`PaperBettingAdapter` ships at `execution-service/execution_service/sports_execution/adapters/paper/paper_betting.py`
+with full bet placement / cancellation / settlement simulation. Canonical simulator example for the workspace; the L0
+Sports TOB matcher composes.
 
 ### Prediction
 
@@ -119,7 +120,7 @@ banner mutual.
 - [`../04-architecture/operational-modes.md`](../04-architecture/operational-modes.md) — the canonical mode SSOT.
 - [`../04-architecture/paper-vs-live-execution-seam.md`](../04-architecture/paper-vs-live-execution-seam.md) — pins the
   execution-only seam.
-- [`../04-architecture/flash-loan-receiver.md`](../04-architecture/flash-loan-receiver.md) — Aave V3 flash loan deployment
-  validates `connect()` against fork; same shape extends to Tenderly fork validation.
+- [`../04-architecture/flash-loan-receiver.md`](../04-architecture/flash-loan-receiver.md) — Aave V3 flash loan
+  deployment validates `connect()` against fork; same shape extends to Tenderly fork validation.
 - [`../04-architecture/chain-environment-resolution.md`](../04-architecture/chain-environment-resolution.md) — per-chain
   RPC + fork URL resolution.

@@ -15,7 +15,8 @@ This entry exists so the codex SSOT index can reference it and agents can discov
 
 The version cascade is the automated chain that keeps `workspace-manifest.json` consistent after any repo merges a
 change to main (or staging). It is **selective** — only repos that actually import the changed repo receive a
-`dependency-update` dispatch. Most changes affect fewer than 10 of the 62 repos in the workspace.
+`dependency-update` dispatch. Most changes affect fewer than 10 of the active workspace repos (count derives from
+`workspace-manifest.json` `repositories` keys excluding `archived_into`).
 
 ## Three-Tier Model
 
@@ -38,7 +39,7 @@ When repo R bumps version:
 3. Each dependent updates constraint; if it then bumps → its dependents cascade next
 4. Repos with no path to R in the dependency graph are never touched
 
-This means: a T2 library change cascades to its T3/T4 dependents only — not to all 62 repos.
+This means: a T2 library change cascades to its T3/T4 dependents only — not to all active repos.
 
 ## Stability Definition
 

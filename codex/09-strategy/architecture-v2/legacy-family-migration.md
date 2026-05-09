@@ -65,11 +65,10 @@ time):
 **Why deferred:** these are all consumed in lockstep by the v1 strategy-registry + v1-style UI views. Unilaterally
 renaming `"Basis Trade"` → `"Carry & Yield · Carry Basis Perp"` without simultaneously regenerating the fixture +
 updating the display components would break ~400 tests and break the v1 trading page. Per plan header convention
-"clean-break when all 60+ repos are available; temporary co-existence when not", and per the explicit comment in
+"clean-break when all active repos are available; temporary co-existence when not", and per the explicit comment in
 `legacy-mapping.ts`, this is a Phase 11 deliverable.
 
-**Tracking:** add a follow-up plan `plans/active/strategy_fixture_v2_regeneration_<date>.md` when Phase 11 work
-begins.
+**Tracking:** add a follow-up plan `plans/active/strategy_fixture_v2_regeneration_<date>.md` when Phase 11 work begins.
 
 ### 1.3 Intentional v1 identifiers — NOT TARGETS
 

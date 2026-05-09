@@ -1,13 +1,17 @@
 ---
 name: paper-vs-live-execution-seam
-overview: Pins the principle that batch / paper / live differ ONLY at the execution layer — strategy / risk / P&L / position / alerting / instructions are identical across modes. Pricing has no real "paper" concept (just right data); mock-data is for risk simulations + dev fixtures (NOT paper-trading); mock-vs-paper is operator-discipline only (no enforcement).
+overview:
+  Pins the principle that batch / paper / live differ ONLY at the execution layer — strategy / risk / P&L / position /
+  alerting / instructions are identical across modes. Pricing has no real "paper" concept (just right data); mock-data
+  is for risk simulations + dev fixtures (NOT paper-trading); mock-vs-paper is operator-discipline only (no
+  enforcement).
 type: codex-ssot
 status: stub
 created: 2026-05-09
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in: plans/active/master_to_live_defi_2026_05_23.md  # Group F items 17/20
+implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 17/20
 ---
 
 # Paper-vs-live execution seam
@@ -38,9 +42,10 @@ Pub/Sub feed. Same upstream, same shape. **Don't introduce paper-specific data s
 
 ### 2. Mock data is for risk simulations + dev fixtures, NOT paper-trading
 
-`CLOUD_MOCK_MODE=true` / `VITE_MOCK_API=true` / `MOCK_STATE_MODE=interactive` are dev-mode flags. Risk simulations
-(drop the underlying 30%, spike funding to 100bps/8h, simulate a venue freeze, simulate a chain reorg) live in a separate
-surface owned by [`risk_simulations_limits_alerting_2026_05_08.md`](../../plans/questions/risk_simulations_limits_alerting_2026_05_08.md).
+`CLOUD_MOCK_MODE=true` / `VITE_MOCK_API=true` / `MOCK_STATE_MODE=interactive` are dev-mode flags. Risk simulations (drop
+the underlying 30%, spike funding to 100bps/8h, simulate a venue freeze, simulate a chain reorg) live in a separate
+surface owned by
+[`risk_simulations_limits_alerting_2026_05_08.md`](../../plans/questions/risk_simulations_limits_alerting_2026_05_08.md).
 
 Mock-data ≠ paper-trading. Conflating them is an anti-pattern.
 

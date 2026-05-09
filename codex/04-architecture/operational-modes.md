@@ -1,27 +1,30 @@
 ---
 name: operational-modes
-overview: SSOT for the workspace's operating-mode taxonomy — single canonical `OperationalMode` enum + additive `(ExecutionTarget, ExecutionTrigger)` two-axis decomposition + composability with `RuntimeMode`. Resolves drift across UAC + execution-service + sports-routing + UI.
+overview:
+  SSOT for the workspace's operating-mode taxonomy — single canonical `OperationalMode` enum + additive
+  `(ExecutionTarget, ExecutionTrigger)` two-axis decomposition + composability with `RuntimeMode`. Resolves drift across
+  UAC + execution-service + sports-routing + UI.
 type: codex-ssot
 status: stub
 created: 2026-05-09
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in: plans/active/master_to_live_defi_2026_05_23.md  # Group F items 17/18/20/21/22/23 + Group G item 23
+implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 17/18/20/21/22/23 + Group G item 23
 ---
 
 # Operational modes — single SSOT
 
-> **Stub doc.** Pinned shape ahead of code; full content fills in as `master_to_live_defi_2026_05_23.md` Group F sub-items
-> `pvl-p17a` / `pvl-p17b` / `pvl-p17c` / `pvl-p17d` ship.
+> **Stub doc.** Pinned shape ahead of code; full content fills in as `master_to_live_defi_2026_05_23.md` Group F
+> sub-items `pvl-p17a` / `pvl-p17b` / `pvl-p17c` / `pvl-p17d` ship.
 
 ## TL;DR
 
-The workspace has ONE operating-mode SSOT: `unified_api_contracts.internal.modes.OperationalMode { LIVE, MANUAL,
-BACKTEST, PAPER }`. Everything else (the additive `ExecutionTarget` / `ExecutionTrigger` enums, the `decompose()` helper,
-the `paper_target_registry`) is derived from or composes with this single enum. Anti-patterns (`paper_trade: bool` field
-in execution-service, `_PAPER_VENUE_KEYS` string-set in sports routing, parallel `TestingStage.LIVE_TESTNET` enum) are
-deleted.
+The workspace has ONE operating-mode SSOT:
+`unified_api_contracts.internal.modes.OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }`. Everything else (the additive
+`ExecutionTarget` / `ExecutionTrigger` enums, the `decompose()` helper, the `paper_target_registry`) is derived from or
+composes with this single enum. Anti-patterns (`paper_trade: bool` field in execution-service, `_PAPER_VENUE_KEYS`
+string-set in sports routing, parallel `TestingStage.LIVE_TESTNET` enum) are deleted.
 
 ## Closed-set 4-cell mode matrix
 

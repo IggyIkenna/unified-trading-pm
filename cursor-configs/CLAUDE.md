@@ -516,9 +516,9 @@ Read these before making ANY code changes:
   prefix in `VM_PREFIX_TO_BUCKET`; register the script in `_SERVICE_LAUNCHER_SCRIPTS` if it should be reachable from the
   Deploy-Missing UI button. **Migration in flight (2026-05-07):** 30 ad-hoc launchers under `e2e-testing/scripts/`
   - `features-sports-service/scripts/` + the intra-repo `deployment-service/scripts/deploy-dashboard-gce-vm.sh` pending
-    migration. Plan: `plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`. Until plan
-    ships, Deploy-Missing UI button degrades to "no launcher registered" for those services; operators run the ad-hoc
-    script manually. SSOTs: `codex/05-infrastructure/launcher-script-ssot.md` +
+    migration. Plan: `plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`. Until plan ships,
+    Deploy-Missing UI button degrades to "no launcher registered" for those services; operators run the ad-hoc script
+    manually. SSOTs: `codex/05-infrastructure/launcher-script-ssot.md` +
     `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **Singleton-locked launchers** — Adapters with shared API keys / per-IP rate limits use a singleton-lock pattern in
   the launcher (refuses launch if a same-prefix VM is RUNNING in the zone; `--force` bypass). Currently:
@@ -557,31 +557,32 @@ Read these before making ANY code changes:
     agents' just-landed work) into your working tree, and your subsequent commits absorb their content as if it were
     yours.
   - **Never run `git checkout -- <file>` to revert a tool's modifications on a foreign-owned dirty file.**
-    `git checkout --` discards ALL working-tree changes for that file — including the foreign agent's uncommitted
-    WIP, not just the tool's output. **It is unrecoverable**: not in reflog (working-tree only), not in stash, not
-    in fsck. The right recoveries when a tool (ruff / prettier / formatter / sed-style refactor) modifies foreign
-    files alongside your owned files:
-    - **(a) Scope the tool to YOUR files** before running. `ruff check <my-file1> <my-file2>` not `ruff check .`.
-      Same for prettier / sed / formatters. Audit `git status --porcelain` first; pass only YOUR paths to the
-      tool's argv.
-    - **(b) Stash foreign-modified files BEFORE the tool runs.** `git stash push --keep-index -- <foreign-file1>
-      <foreign-file2>`. Run the tool. Commit your auto-fixes. `git stash pop` restores their WIP.
+    `git checkout --` discards ALL working-tree changes for that file — including the foreign agent's uncommitted WIP,
+    not just the tool's output. **It is unrecoverable**: not in reflog (working-tree only), not in stash, not in fsck.
+    The right recoveries when a tool (ruff / prettier / formatter / sed-style refactor) modifies foreign files alongside
+    your owned files:
+    - **(a) Scope the tool to YOUR files** before running. `ruff check <my-file1> <my-file2>` not `ruff check .`. Same
+      for prettier / sed / formatters. Audit `git status --porcelain` first; pass only YOUR paths to the tool's argv.
+    - **(b) Stash foreign-modified files BEFORE the tool runs.**
+      `git stash push --keep-index -- <foreign-file1> <foreign-file2>`. Run the tool. Commit your auto-fixes.
+      `git stash pop` restores their WIP.
     - **(c) Accept that you can't auto-fix foreign code.** Skip those files. Open an issue doc citing the foreign
       breakage; their owner agent fixes on their own commits per "QG failure attribution" rule.
     - **(d) If you've ALREADY mass-modified the tree and need to scope your commit**, use pathspec form:
       `git commit --only -- <my-file1> <my-file2>` (commits ONLY those paths, leaves working-tree foreign mods
-      untouched), THEN `git checkout -- <foreign-file>` is STILL banned — you'd lose their unstaged WIP. The
-      correct followup is to leave the foreign-modified files in working tree as-is and let the foreign agent
-      reconcile via their own next pull.
+      untouched), THEN `git checkout -- <foreign-file>` is STILL banned — you'd lose their unstaged WIP. The correct
+      followup is to leave the foreign-modified files in working tree as-is and let the foreign agent reconcile via
+      their own next pull.
 
-    Reference incident **2026-05-08 Foot-gun #2**: ruff cleanup sub-agent ran `ruff check . --fix --unsafe-fixes`
-    on the whole features-service tree; ruff modified 116 files including 12 with foreign agent's uncommitted WIP.
-    Sub-agent then used `git checkout -- <file>` per-file to revert ruff's modifications on the 12 dirty files,
-    intending to preserve the foreign agent's edits. The `git checkout --` actually discarded BOTH ruff's fix AND
-    the foreign agent's WIP — ~12 files of Phase 4-5 consolidation work lost from disk; not recoverable. Issue doc:
+    Reference incident **2026-05-08 Foot-gun #2**: ruff cleanup sub-agent ran `ruff check . --fix --unsafe-fixes` on the
+    whole features-service tree; ruff modified 116 files including 12 with foreign agent's uncommitted WIP. Sub-agent
+    then used `git checkout -- <file>` per-file to revert ruff's modifications on the 12 dirty files, intending to
+    preserve the foreign agent's edits. The `git checkout --` actually discarded BOTH ruff's fix AND the foreign agent's
+    WIP — ~12 files of Phase 4-5 consolidation work lost from disk; not recoverable. Issue doc:
     [`plans/active/issues/foot_gun_2_features_service_uncommitted_wip_clobbered_2026_05_08.md`](../plans/active/issues/foot_gun_2_features_service_uncommitted_wip_clobbered_2026_05_08.md).
-    The right behaviour would have been (a): pass only the staged-clean files to ruff, OR (b): stash the 12 dirty
-    files before running ruff. Codified 2026-05-08 PM after operator surfaced the incident.
+    The right behaviour would have been (a): pass only the staged-clean files to ruff, OR (b): stash the 12 dirty files
+    before running ruff. Codified 2026-05-08 PM after operator surfaced the incident.
+
   - **If a quickmerge stash conflict happens**, resolve by reading the specific file and editing surgically, NOT by
     mass-resetting the working tree. Mass resets pull in 20+ files of noise from old stashes that then look like "your"
     changes.
@@ -1795,7 +1796,9 @@ Plans MUST define execution phases with clear dependencies:
 - Clean breaks: old implementation deleted, new implementation in place, consumers updated
 - **Exception**: When working on a single repo without all downstream siblings available, backwards compatibility IS
   allowed temporarily. Document it as a follow-up todo.
-- When all 60+ repos are available (full workspace): zero technical debt, update everything
+- When all active repos are available (full workspace; count derives from `workspace-manifest.json` `repositories`
+  keys excluding `archived_into` — currently 27 active after features-* consolidation 2026-05-08): zero technical debt,
+  update everything
 
 ### 4. Parallelization
 

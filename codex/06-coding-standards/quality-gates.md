@@ -195,7 +195,7 @@ architecture. See
 
 | Environment            | What it owns                                                              | Used by                                                                       | Rule                                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `.venv-workspace`      | Union of all ~62 repo deps; pinned `ruff==0.15.0`, `basedpyright==1.38.2` | IDE cross-repo IntelliSense; `RUFF_CMD` in QG templates                       | **Never** used as `PYTHON_CMD` or `BASEDPYRIGHT_CMD` in QG — it has extra packages that mask missing dep declarations |
+| `.venv-workspace`      | Union of all active repo deps (count derives from `workspace-manifest.json` `repositories` keys excluding `archived_into`; **27 active as of 2026-05-09** after features-* consolidation); pinned `ruff==0.15.0`, `basedpyright==1.38.2` | IDE cross-repo IntelliSense; `RUFF_CMD` in QG templates                       | **Never** used as `PYTHON_CMD` or `BASEDPYRIGHT_CMD` in QG — it has extra packages that mask missing dep declarations |
 | `.venv` (per-repo)     | Exact deps from `pyproject.toml` + `[dev]`                                | QG `PYTHON_CMD`, `BASEDPYRIGHT_CMD`, pytest, bandit; CI/GHA `agent-audit.yml` | **Always** the source of truth for type-checking and test execution                                                   |
 | GHA runner (container) | Fresh install from `pyproject.toml` on every run                          | `overnight-agent-orchestrator` → `agent-audit.yml`; CI quality gates          | No `.venv-workspace` — QG template falls through to `.venv` (correct)                                                 |
 
@@ -254,8 +254,9 @@ Step 4: validate all repos aligned
 Step 5: generate workspace-requirements.txt → commit to PM  ← planned
 ```
 
-Step 5 generates `unified-trading-pm/configs/workspace-requirements.txt` (union of all 62 repos' deps via
-`uv pip compile`). Developers then run `sync-workspace-venv.sh` to pull the refreshed union. Conflicts in
+Step 5 generates `unified-trading-pm/configs/workspace-requirements.txt` (union of all active repos' deps via
+`uv pip compile`; active count derives from `workspace-manifest.json` `repositories` keys excluding `archived_into`).
+Developers then run `sync-workspace-venv.sh` to pull the refreshed union. Conflicts in
 `uv pip compile` signal a version cascade violation and fail the alignment job.
 
 ---

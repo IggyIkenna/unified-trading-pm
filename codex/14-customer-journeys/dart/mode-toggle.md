@@ -1,13 +1,16 @@
 ---
 name: dart-mode-toggle
-overview: SSOT for the DART operator surface — 3-way mode visualization (batch / paper / live), per-strategy event/fill/P&L rendering wired to real backend, and the manual-trade gate UI for `OperationalMode.MANUAL` strategies. Composes with the existing `dart-scope-bar.tsx` cockpit + `execution-mode-toggle.tsx` mode pills.
+overview:
+  SSOT for the DART operator surface — 3-way mode visualization (batch / paper / live), per-strategy event/fill/P&L
+  rendering wired to real backend, and the manual-trade gate UI for `OperationalMode.MANUAL` strategies. Composes with
+  the existing `dart-scope-bar.tsx` cockpit + `execution-mode-toggle.tsx` mode pills.
 type: codex-ssot
 status: stub
 created: 2026-05-09
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in: plans/active/master_to_live_defi_2026_05_23.md  # Group G item 23 + sub-items pvl-p23a / pvl-p23b / pvl-p23c
+implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group G item 23 + sub-items pvl-p23a / pvl-p23b / pvl-p23c
 ---
 
 # DART mode toggle — 3-way visualization + manual gate
