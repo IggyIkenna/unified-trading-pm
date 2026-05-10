@@ -70,15 +70,15 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 - [`codex/09-strategy/architecture-v2/`](../../codex/09-strategy/architecture-v2/) — strategy v2 SSOT (README +
   MIGRATION + 18 archetypes + 7 axes + 11 cross-cutting + 2 architecture docs)
-- [`codex/14-customer-journeys/dart/`](../../codex/14-customer-journeys/dart/) — DART terminal vs research playbook (paired SSOT for the
-  cockpit refactor)
+- [`codex/14-customer-journeys/dart/`](../../codex/14-customer-journeys/dart/) — DART terminal vs research playbook
+  (paired SSOT for the cockpit refactor)
 - [`codex/04-architecture/shadow-deployment-pattern.md`](../../codex/04-architecture/shadow-deployment-pattern.md) —
   shadow window contract for archetype builds
 
 ## Phase 1 — Archetype engine v2 finalization (was: strategy_architecture_v2_finalization)
 
-> Source plan: `plans/archive/strategy_architecture_v2_finalization_2026_04_19.md`. Phase 1 (factory cutover Tier 2
-> — 1a/1b/1c/1d/1e/1f), Phase 2 (shadow persistence — registry + ledger + events + codex doc + tests), Phase 7
+> Source plan: `plans/archive/strategy_architecture_v2_finalization_2026_04_19.md`. Phase 1 (factory cutover Tier 2 —
+> 1a/1b/1c/1d/1e/1f), Phase 2 (shadow persistence — registry + ledger + events + codex doc + tests), Phase 7
 > (NEEDS_REVIEW resolutions), Phase 8 (test flakes), and Phase 9 (coverage matrix SSOT) are SHIPPED — see source archive
 > for [x] evidence. Phase 10 master matrix + combinatoric discovery + block-list browser + per-strategy detail +
 > reusable chip primitives + service landing page + 45 vitest are SHIPPED. Phase 10.5 UAC registry + events + watchdog +
@@ -197,7 +197,9 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 > `codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`.
 >
 > **May-23 gating clarification** (deep audit 2026-05-07): the May-23 lead archetype `carry_staked_basis` (and
-> hedging-leg `leveraged_funding_arb`) are perp-based — NO `-dated-` slot is on the May-23 critical path. Phase 1.8 roll
+> hedging-leg `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy `leveraged_funding_arb` per
+> Stream B canonicalisation 2026-05-07)) are perp-based — NO `-dated-` slot is on the May-23 critical path. Phase 1.8
+> roll
 > mechanism is **advisory pre-May-23, hard prerequisite post-May-23** (when the first `-dated-` archetype goes live).
 > Stays P1, but does NOT gate the May-23 cutover.
 
@@ -316,10 +318,9 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 ## Phase 3 — Cross-domain alpha + UI walkthrough (was: consolidated_strategy_and_ui)
 
-> Source plan: `plans/archive/consolidated_strategy_and_ui_2026_04_15.md`. Strategy lifecycle Phase 1 +
-> microstructure features + UI health page have shipped; cross-domain alpha core is the genuinely-open net-new work.
-> Group E + F + G largely subsumed by Phase 2 above (DART cockpit) — only the parts that name distinct deliverables
-> remain.
+> Source plan: `plans/archive/consolidated_strategy_and_ui_2026_04_15.md`. Strategy lifecycle Phase 1 + microstructure
+> features + UI health page have shipped; cross-domain alpha core is the genuinely-open net-new work. Group E + F + G
+> largely subsumed by Phase 2 above (DART cockpit) — only the parts that name distinct deliverables remain.
 
 ### 3.1 Group A — Cross-domain alpha: UAC + UTL schemas & engines (genuinely-open net-new)
 

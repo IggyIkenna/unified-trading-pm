@@ -244,11 +244,11 @@ todos:
     status: done
     note:
       "2026-05-09 instruments-preflight-gate-tab F0: UAC@8f89ec4 (instruments_preflight_dag.py 554L; 9 PreflightTrigger
-      enum members, TRIGGER_TO_DOWNSTREAM_ENTITY map, INSTRUMENTS_PREFLIGHT_REQUIREMENTS DAG keyed by
-      (MarketAssetGroup, downstream_entity), PreflightRequirement frozen dataclass, PreflightOK/PreflightFailed/
-      PreflightResult sum-type, ManifestReader Protocol, get_preflight_requirements + get_trigger_definition +
-      validate_preflight_for_trigger). UAC@a07711d facade re-exports (11 symbols on canonical/crosscutting). 22 unit
-      tests in tests/unit/test_instruments_preflight_dag.py. Codex doc codex/04-architecture/instruments-preflight-chain.md
+      enum members, TRIGGER_TO_DOWNSTREAM_ENTITY map, INSTRUMENTS_PREFLIGHT_REQUIREMENTS DAG keyed by (MarketAssetGroup,
+      downstream_entity), PreflightRequirement frozen dataclass, PreflightOK/PreflightFailed/ PreflightResult sum-type,
+      ManifestReader Protocol, get_preflight_requirements + get_trigger_definition + validate_preflight_for_trigger).
+      UAC@a07711d facade re-exports (11 symbols on canonical/crosscutting). 22 unit tests in
+      tests/unit/test_instruments_preflight_dag.py. Codex doc codex/04-architecture/instruments-preflight-chain.md
       shipped by parallel agent (~same content scope, different narrative; left intact). Foot-gun #1 fired:
       semver-rollout[bot] swept the module body into UAC@8f89ec4 mid-stage; my UAC@a07711d shipped the facade
       registrations + tests cleanly. Imports MarketAssetGroup from canonical.gcs_paths (lowercase enum values) NOT
@@ -274,16 +274,16 @@ todos:
       adapter implementing UAC ManifestReader protocol; filters by asset_group/data_type/date/capture_status='captured';
       optional service_name filter), run_preflight (single seam batch+live; emits INSTRUMENTS_LIVE_PREFLIGHT_FAILED
       lifecycle event with structured missing_dependencies payload BEFORE raising PreflightFailedError), and
-      PreflightFailedError carrying the full PreflightFailed result. 13 unit tests cover: 3 success paths
-      (no-deps / fresh-upstream / static-SSOT short-circuit), 4 failure paths (missing / stale / multi-dep aggregation /
-      partial-failure) with event-emission assertions, OK-no-emission, missing-arg ValueError, 5 UTLManifestReader
-      paths (empty index / max(attempted_at) / capture_status filter / OSError → None / service_name filter).
-      Full-execution smoke (per Plans Run To Actual Completion HARD RULE): in-process invocation against fresh
-      manifest seed for ALL 9 PreflightTriggers — every trigger returned PreflightOK; verification command output
-      was '9/9 triggers preflight OK against fresh manifest seed.' QG note: 4 function-size violations + pip-audit
-      pip-26.0.1 CVE + 9-violation codex baseline are workspace-baseline issues attributed via git blame to other
-      agents' commits (CLAUDE.md QG-failure-attribution rule); my code is clean. Helper now available to Tab F2 for
-      cefi available_at consumer wiring."
+      PreflightFailedError carrying the full PreflightFailed result. 13 unit tests cover: 3 success paths (no-deps /
+      fresh-upstream / static-SSOT short-circuit), 4 failure paths (missing / stale / multi-dep aggregation /
+      partial-failure) with event-emission assertions, OK-no-emission, missing-arg ValueError, 5 UTLManifestReader paths
+      (empty index / max(attempted_at) / capture_status filter / OSError → None / service_name filter). Full-execution
+      smoke (per Plans Run To Actual Completion HARD RULE): in-process invocation against fresh manifest seed for ALL 9
+      PreflightTriggers — every trigger returned PreflightOK; verification command output was '9/9 triggers preflight OK
+      against fresh manifest seed.' QG note: 4 function-size violations + pip-audit pip-26.0.1 CVE + 9-violation codex
+      baseline are workspace-baseline issues attributed via git blame to other agents' commits (CLAUDE.md
+      QG-failure-attribution rule); my code is clean. Helper now available to Tab F2 for cefi available_at consumer
+      wiring."
 
   - id: a11-upstream-staleness-monitor
     content: |
@@ -357,7 +357,9 @@ todos:
         VM in Phase F.1; cross-region GCS timeouts from laptop limited live-API run to single-day single-league
         scope per CLAUDE.md "Always run on a same-region GCE VM".)
     status: done
-    note: "instruments-service@c53ec64 2026-05-09 sports-fixtures-repoll-tab; full-execution verified live api-football → real GCS write for 1 (day, league) shard with correct available_at semantics."
+    note:
+      "instruments-service@c53ec64 2026-05-09 sports-fixtures-repoll-tab; full-execution verified live api-football →
+      real GCS write for 1 (day, league) shard with correct available_at semantics."
 
   - id: b2-fixture-end-time-cascade-readiness
     content: |
@@ -593,7 +595,8 @@ todos:
         `master_to_live_defi_2026_05_23.md` cloud-parity goal. Same payload shape; same target launcher scripts
         (the launchers are already cloud-agnostic per `cloud-agnostic-script-pattern.md`). Deferred for non-DeFi
         asset_groups until parity is needed; DeFi instruments-live triggers that feed `carry_staked_basis` /
-        `leveraged_funding_arb` MUST have AWS parity by 2026-05-23.
+        `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy `leveraged_funding_arb` per Stream
+        B canonicalisation 2026-05-07) MUST have AWS parity by 2026-05-23.
     status: todo
     note: ""
 
@@ -962,25 +965,24 @@ Items deferred from this Phase A.7 ship and tracked above in the per-todo body a
 
 ## DONE-2026-05-09 — Phase A.9 + A.10 (instruments-preflight-gate-tab F0)
 
-Master gate sub-agent F0 shipped the UAC SSOT + UTL runtime helper that unblock Tab F2
-(cefi-available-at-stamping-tab) and every downstream Phase B/C/D/E trigger handler. Both
-ride the live=batch invariant — same module, same call signature, both modes.
+Master gate sub-agent F0 shipped the UAC SSOT + UTL runtime helper that unblock Tab F2 (cefi-available-at-stamping-tab)
+and every downstream Phase B/C/D/E trigger handler. Both ride the live=batch invariant — same module, same call
+signature, both modes.
 
 Code commits:
 
-- `unified-api-contracts@8f89ec4` — `instruments_preflight_dag.py` 554L module body (PreflightTrigger enum × 9
-  members, INSTRUMENTS_PREFLIGHT_REQUIREMENTS DAG, PreflightRequirement, PreflightOK / PreflightFailed /
-  PreflightResult, ManifestReader Protocol, get_preflight_requirements, get_trigger_definition,
-  validate_preflight_for_trigger). Foot-gun #1: semver-rollout[bot] swept the file body into its commit during
-  parallel-agent staging; content correct, attribution mixed.
+- `unified-api-contracts@8f89ec4` — `instruments_preflight_dag.py` 554L module body (PreflightTrigger enum × 9 members,
+  INSTRUMENTS_PREFLIGHT_REQUIREMENTS DAG, PreflightRequirement, PreflightOK / PreflightFailed / PreflightResult,
+  ManifestReader Protocol, get_preflight_requirements, get_trigger_definition, validate_preflight_for_trigger). Foot-gun
+  #1: semver-rollout[bot] swept the file body into its commit during parallel-agent staging; content correct,
+  attribution mixed.
 - `unified-api-contracts@a07711d` — `canonical/crosscutting/__init__.py` facade re-exports (11 symbols) +
   `tests/unit/test_instruments_preflight_dag.py` (22 unit tests, all green: trigger taxonomy / DAG-shape integrity /
   per-asset-group dependency-rule shape / validator success / failure / aggregation / static-SSOT short-circuit /
   naive-datetime coercion / frozen-dataclass invariant).
 - `unified-trading-library@db0f4364` — `unified_trading_library/instruments_preflight/{__init__.py, runner.py}`
-  (UTLManifestReader, run_preflight, PreflightFailedError) + `tests/unit/test_instruments_preflight.py` (13 unit
-  tests, all green: 3 success / 4 failure with event-emission / OK-no-emission / arg-validation / 5
-  UTLManifestReader paths).
+  (UTLManifestReader, run_preflight, PreflightFailedError) + `tests/unit/test_instruments_preflight.py` (13 unit tests,
+  all green: 3 success / 4 failure with event-emission / OK-no-emission / arg-validation / 5 UTLManifestReader paths).
 
 Plan flips:
 
@@ -989,20 +991,20 @@ Plan flips:
 
 Codex doc:
 
-- `codex/04-architecture/instruments-preflight-chain.md` — shipped by parallel agent (~same scope, different
-  narrative). Left intact per "Two teammates × multiple parallel agents — don't edit unfamiliar files" rule. My
-  drafted version was discarded once parallel agent's file detected.
+- `codex/04-architecture/instruments-preflight-chain.md` — shipped by parallel agent (~same scope, different narrative).
+  Left intact per "Two teammates × multiple parallel agents — don't edit unfamiliar files" rule. My drafted version was
+  discarded once parallel agent's file detected.
 
 Full-execution criterion (per CLAUDE.md "Plans Run To Actual Completion" HARD RULE):
 
-- ✅ In-process invocation of `run_preflight` against ALL 9 PreflightTriggers with a fresh in-memory
-  ManifestReader seed → 9/9 returned `PreflightOK`. No mocked CI smoke; real Python invocation through the full
-  call stack (UTL helper → UAC validator → UAC DAG SSOT → PreflightOK construction).
-  - **What ran**: in-line Python smoke at the workstation invoking `run_preflight` for every
-    `PreflightTrigger` enum member with `manifest_reader=_SmokeReader(seed)`, `now=datetime.now(timezone.utc)`,
-    `today=date.today()`. Duration <100ms.
-  - **Verification**: stdout output `9/9 triggers preflight OK against fresh manifest seed.` All 9 triggers
-    enumerated and PASSED.
+- ✅ In-process invocation of `run_preflight` against ALL 9 PreflightTriggers with a fresh in-memory ManifestReader seed
+  → 9/9 returned `PreflightOK`. No mocked CI smoke; real Python invocation through the full call stack (UTL helper → UAC
+  validator → UAC DAG SSOT → PreflightOK construction).
+  - **What ran**: in-line Python smoke at the workstation invoking `run_preflight` for every `PreflightTrigger` enum
+    member with `manifest_reader=_SmokeReader(seed)`, `now=datetime.now(timezone.utc)`, `today=date.today()`. Duration
+    <100ms.
+  - **Verification**: stdout output `9/9 triggers preflight OK against fresh manifest seed.` All 9 triggers enumerated
+    and PASSED.
 - ✅ All 35 unit tests across UAC + UTL pass locally (22 UAC + 13 UTL).
 
 Handoff to Tab F2:
@@ -1022,8 +1024,8 @@ Handoff to Tab F2:
 
 Pending follow-ups (NOT shipped this session, captured as plan items elsewhere):
 
-- A.5 codex audit — A.5 events SSOT + Phase A.4 alerting taxonomy already shipped per upstream. No edits needed
-  this session.
+- A.5 codex audit — A.5 events SSOT + Phase A.4 alerting taxonomy already shipped per upstream. No edits needed this
+  session.
 - A.11 upstream-staleness monitor — separate todo (P1); reuses `validate_preflight_for_trigger` + UTLManifestReader.
 - Phase B.1+ trigger handlers wire `run_preflight` as the gating preflight call before source fetch (pre-existing
   todos).
@@ -1038,15 +1040,14 @@ Tab F4 of `plans/active/work_split_2026_05_08_ikenna.md` shipped two scope items
 
 Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
 
-- A.8 — 4 unit tests pass under `pytest tests/unit/test_manifest_writer_live_mode_available_at.py`. No new
-  functionality required (existing `assert_available_at_present` gate at
-  `unified_trading_library/manifest_writer.py:2153` already enforces presence under live invocation).
+- A.8 — 4 unit tests pass under `pytest tests/unit/test_manifest_writer_live_mode_available_at.py`. No new functionality
+  required (existing `assert_available_at_present` gate at `unified_trading_library/manifest_writer.py:2153` already
+  enforces presence under live invocation).
 - B.1 — trigger ran end-to-end against live api-football API + real GCS write 2026-05-08 23:22 UTC for
   `today=2026-05-09 league=BRASILEIRAO lookahead_days=0 VM_NAME=tab-f4-laptop-2026-05-09 MANIFEST_PER_VM_SHARDS=true`.
   Result: `{"2026-05-09/BRAZIL_SERIE_A": 2}`. On-disk parquet at
   `gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2026-05-09/entity=fixtures/league=BRAZIL_SERIE_A/fixtures.parquet`
   contains 2 rows with `available_at` populated and `kickoff_utc - 7d` semantics verified (e.g. Coritiba vs
-  Internacional kickoff `2026-05-09T19:00:00+00:00` → `available_at = 2026-05-02 19:00:00+00:00`). Manifest per-VM
-  shard row at `_index/per_vm/tab-f4-laptop-2026-05-09.parquet`: `capture_status=captured`, `data_type=FIXTURES`,
+  Internacional kickoff `2026-05-09T19:00:00+00:00` → `available_at = 2026-05-02 19:00:00+00:00`). Manifest per-VM shard
+  row at `_index/per_vm/tab-f4-laptop-2026-05-09.parquet`: `capture_status=captured`, `data_type=FIXTURES`,
   `league_id=BRAZIL_SERIE_A`, `instrument_count=2`.
-

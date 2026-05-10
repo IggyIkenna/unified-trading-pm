@@ -38,15 +38,15 @@ and these docs is a review-blocking failure per `doc → plan → code`):
   CeFi `empty_confirmed` rule (only venue-level reasons legit: `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` /
   `EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PARTIAL_HALF_DAY`); zero-source-response on alive instrument-day must flip to
   `attempted_failed`
-- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — CeFi shard
-  matrix: spot/perp = per-instrument-per-day (35GB roots); options/futures = bundled by `options_chain` /
+- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — CeFi
+  shard matrix: spot/perp = per-instrument-per-day (35GB roots); options/futures = bundled by `options_chain` /
   `futures_chain` root; per-VM shard isolation policy
 - [`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) — MTDS
   per-(venue, data_type) source coverage with `SOURCE_COVERAGE_START` per venue (Tardis vs Databento vs venue-native
   REST)
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
-  unified pipeline: same shard atom, same fields, same `available_at` semantics across modes; CeFi forward-poll +
-  backfill share one code path
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
+  batch=live unified pipeline: same shard atom, same fields, same `available_at` semantics across modes; CeFi
+  forward-poll + backfill share one code path
 - [`codex/04-architecture/asset-class-ownership.md`](../../codex/04-architecture/asset-class-ownership.md) — CeFi venue
   list (Bybit / Deribit / Binance / OKX / Bitfinex / Bitget / Kraken / Coinbase / Hyperliquid) + `VENUE_TO_ASSET_GROUP`
   SSOT
@@ -102,7 +102,8 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 Single source of truth for **CeFi asset_group** work toward live DeFi 2026-05-23. Covers:
 
 - **4 CeFi perp venues live by May 23**: Bybit, Deribit, Binance, OKX. Hedge legs for the 2 DeFi archetypes
-  (`carry_staked_basis` + `leveraged_funding_arb`).
+  (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`); the latter renamed from legacy
+  `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07).
 - **CeFi extended tick-data backfill**: Bitfinex, Bitget, Kraken (Tardis-served).
 - **CeFi options + futures bundles**: DERIBIT options/futures, BINANCE-FUTURES perps.
 - **MTDS coverage to 100% for the CeFi slice** (per-instrument-per-day for spot/perp; bundled-by-root for
@@ -401,20 +402,20 @@ because the 4 critical-path perp venues (Bybit / Deribit / Binance / OKX) are al
 
 **Status**: 🟡 BLOCKED — waiting for master agent + operator triage
 
-The Tab F2 spawn prompt in
-[`work_split_2026_05_08_ikenna.md`](../active/work_split_2026_05_08_ikenna.md) (fresh fan-out: instruments-service + MTDS)
-specs CeFi per-venue `available_at` stamping at `market-tick-data-service/market_tick_data_service/adapters/{venue}.py`
-across 10 venues (bybit / binance / okx / deribit / kraken / bitfinex / bitget / coinbase / gate / kucoin) using helper
+The Tab F2 spawn prompt in [`work_split_2026_05_08_ikenna.md`](../active/work_split_2026_05_08_ikenna.md) (fresh
+fan-out: instruments-service + MTDS) specs CeFi per-venue `available_at` stamping at
+`market-tick-data-service/market_tick_data_service/adapters/{venue}.py` across 10 venues (bybit / binance / okx /
+deribit / kraken / bitfinex / bitget / coinbase / gate / kucoin) using helper
 `stamp_available_at_cefi_tick(df["timestamp"], venue, data_type)` from `unified_trading_library.availability_stamping`,
 with formula `available_at = tick_ts + emission_latency_ms` per UAC SOURCE_PRIORITY.
 
 **Probe results 2026-05-08 (this agent, before any code edit)**:
 
-1. **Per-venue adapter files do NOT exist.** `market_tick_data_service/adapters/` contains only
-   `hyperliquid_s3.py` + `umi_tick_provider.py`. The 10 cefi venues listed in the spawn prompt have NO standalone
-   `{venue}.py` files. CeFi venues route through `market_interface/adapters/cefi/` which has:
-   `__init__.py / ccxt_adapter.py / databento_mbo_adapter.py / l2_book_state.py / tardis_incremental_book_adapter.py
-   / tardis_shared.py / upbit_adapter.py` — 5 source-shaped adapters, NOT 10 venue-shaped adapters.
+1. **Per-venue adapter files do NOT exist.** `market_tick_data_service/adapters/` contains only `hyperliquid_s3.py` +
+   `umi_tick_provider.py`. The 10 cefi venues listed in the spawn prompt have NO standalone `{venue}.py` files. CeFi
+   venues route through `market_interface/adapters/cefi/` which has:
+   `__init__.py / ccxt_adapter.py / databento_mbo_adapter.py / l2_book_state.py / tardis_incremental_book_adapter.py / tardis_shared.py / upbit_adapter.py`
+   — 5 source-shaped adapters, NOT 10 venue-shaped adapters.
 
 2. **`stamp_available_at_cefi_tick` does NOT exist in UTL.**
    `unified-trading-library/unified_trading_library/availability_stamping.py` (sole module, single file — NOT a package)
@@ -427,7 +428,8 @@ with formula `available_at = tick_ts + emission_latency_ms` per UAC SOURCE_PRIOR
    `unified_api_contracts/canonical/crosscutting/source_priority.py:84` types `SOURCE_PRIORITY` as
    `Final[dict[tuple[str, str], list[str]]]` — value is a list of source-name strings (top-source-only per Phase 1B
    convention), no per-source latency field. The formula `available_at = tick_ts + source_priority_scrape_latency` per
-   plan-of-record [`available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+   plan-of-record
+   [`available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
    Phase 1 cannot be evaluated against the current UAC shape.
 
 4. **`record_captured` callsites in MTDS are in `cli/handlers/`, NOT per-venue files.** The 27+ `record_captured(`
@@ -445,19 +447,18 @@ multi-callsite wiring); changes the work-split (Tab F2 cannot ship 10 per-venue 
 **What this Tab F2 agent did NOT do (per "don't edit unfamiliar files when blocked" + "Plans Run To Actual Completion"
 HARD RULEs)**: did not ship `stamp_available_at_cefi_tick` (master-gate work owned by Tab 2 LIVE-PIPELINE / writegate
 Phase 2.D); did not extend UAC `SOURCE_PRIORITY` shape (cross-cutting design = Ikenna-side); did not modify CeFi cli
-handlers / engine orchestrator (collision boundary with Tab 2 LIVE-PIPELINE per work-split § "collision-risk
-callouts").
+handlers / engine orchestrator (collision boundary with Tab 2 LIVE-PIPELINE per work-split § "collision-risk callouts").
 
-**Recommended next agent action** (when master gate clears): the actual scope per `available_at_lookahead_bias_completion_2026_05_08`
-Phase 1 P0 todo `**CeFi adapter stamping**` is to wire stamping at the writer boundary in MTDS `engine/orchestrator.py`
-+ `cli/handlers/*_handler.py` (the actual record_captured callsites), NOT at non-existent per-venue files. The right
-shape is one stamping call per writer-boundary record, not 10 per-venue commits.
+**Recommended next agent action** (when master gate clears): the actual scope per
+`available_at_lookahead_bias_completion_2026_05_08` Phase 1 P0 todo `**CeFi adapter stamping**` is to wire stamping at
+the writer boundary in MTDS `engine/orchestrator.py`
+
+- `cli/handlers/*_handler.py` (the actual record_captured callsites), NOT at non-existent per-venue files. The right
+  shape is one stamping call per writer-boundary record, not 10 per-venue commits.
 
 #### A1 — [main, awaiting]
 
 **Status**: pending
-
-
 
 > **Folded epic** (operator direction 2026-05-08): May-23 deadline content originally in
 > `plans/epics/cefi_ml_may_23_2026.epic.md` is consolidated here. Archived epic:
@@ -550,20 +551,20 @@ Discipline" Case 5 BIG. **No code shipped — only doc landings.**
 
 Commits shipped:
 
-- PM@c3b5e070 — `docs(plans): cefi available_at Tab F2 blocked — file structural mismatch flagged`. 3 files,
-  260 insertions: new § "Open questions" Q1 on this plan + new
+- PM@c3b5e070 — `docs(plans): cefi available_at Tab F2 blocked — file structural mismatch flagged`. 3 files, 260
+  insertions: new § "Open questions" Q1 on this plan + new
   [`plans/active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`](../active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md)
-  + cross-side ping in [`plans/active/_agent_pings.md`](../active/_agent_pings.md).
+  - cross-side ping in [`plans/active/_agent_pings.md`](../active/_agent_pings.md).
 - PM@&lt;next sha&gt; — this DONE block append.
 
-What this session did NOT do (per "don't edit unfamiliar files when blocked" + "Plans Run To Actual Completion"
-HARD RULEs):
+What this session did NOT do (per "don't edit unfamiliar files when blocked" + "Plans Run To Actual Completion" HARD
+RULEs):
 
 - did NOT ship `stamp_available_at_cefi_tick` UTL helper (master-gate A.10; needs UAC SOURCE_PRIORITY shape extension
   first; Tab 2 LIVE-PIPELINE / writegate Phase 2.D collision boundary).
 - did NOT extend UAC `SOURCE_PRIORITY` shape with per-source `emission_latency_ms` field (cross-cutting design call =
   Ikenna-side).
-- did NOT modify any MTDS source code (cli/handlers/_*.py / engine/orchestrator.py / market_interface/adapters/cefi/_).
+- did NOT modify any MTDS source code (cli/handlers/_\*.py / engine/orchestrator.py / market_interface/adapters/cefi/_).
 - did NOT create per-venue adapter files (the spawn prompt's premise is wrong; reshape to per-callsite is the
   recommended next-agent action per issue-doc § "Recommended decision").
 
@@ -579,8 +580,8 @@ Items still open (deferrals already captured as plan todos before this DONE bloc
   is the unticked half) + new issue-doc § "Recommended decision (2)".
 - **Per-callsite wiring at writer boundary** — captured in
   [`available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
-  Phase 1 P0 "CeFi adapter stamping" todo + new issue-doc § "Recommended decision (3)" + cefi_master § "Open
-  questions" Q1.
+  Phase 1 P0 "CeFi adapter stamping" todo + new issue-doc § "Recommended decision (3)" + cefi_master § "Open questions"
+  Q1.
 
 Next agent picks up at: master-gate clear (UAC SOURCE_PRIORITY field + UTL `stamp_available_at_cefi_tick` shipped) →
 re-read issue-doc § "Recommended decision" → mechanically wire ~5-7 callsites at writer boundary in MTDS
