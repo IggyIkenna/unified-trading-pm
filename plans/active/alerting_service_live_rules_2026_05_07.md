@@ -130,8 +130,9 @@ default-factory.
       (BPS_OF_ONE / RATIO / USD / MINUTES / COUNT_PER_MINUTE), `default_value` (Decimal), `per_archetype_overrides`,
       `source_doc` citation, `description`. Resolves audit 2026-05-07 §3 #5 AAVE-bps ambiguity by pinning
       `defi_aave_utilization_spike_bps` unit to `BPS_OF_ONE` with citation to Aave V3 InterestRateStrategy
-      `optimalUsageRatio=0.95     RAY` for WETH/USDC/USDT/DAI. Per-archetype override added for `leveraged_funding_arb`
-      (9000 bps_of_one = 90%, tighter signal). Shipped UAC@d00326d.
+      `optimalUsageRatio=0.95     RAY` for WETH/USDC/USDT/DAI. Per-archetype override added for
+      `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy `leveraged_funding_arb` per Stream B
+      canonicalisation 2026-05-07) (9000 bps_of_one = 90%, tighter signal). Shipped UAC@d00326d.
 - [x] [SCRIPT] P0. Threshold defaults seeded with these initial values (verified by Phase 7 quietness baseline; see §
       "Threshold seeding rationale"). Shipped UAC@d00326d:
   - `defi_health_factor_critical`: 1.05 (Aave HF; below 1.0 triggers liquidation; 5% buffer)
@@ -184,7 +185,9 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
 - [x] [AGENT] P0. `alerting-service/alerting_service/rules/defi_rules.py` — replaced hardcoded
       `_AAVE_UTILIZATION_THRESHOLD = Decimal("0.95")` with UAC `ALERT_THRESHOLDS["defi_aave_utilization_spike_bps"]`
       lookup. New helper `_aave_utilization_threshold_ratio(archetype)` normalises bps_of_one (UAC unit) → ratio +
-      respects per-archetype overrides (`leveraged_funding_arb` fires at 90% vs default 95%). `check_aave_utilization()`
+      respects per-archetype overrides (`ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy
+      `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07) fires at 90% vs default 95%).
+      `check_aave_utilization()`
       now accepts optional `archetype` parameter; alert payload includes `threshold_ratio` + `archetype` for operator
       transparency. Shipped alerting-service@b025e83. NOTE: `circuit_breaker.py` was scoped in the original todo, but
       audit found no inline thresholds there — its only constants are sliding-window / cooldown / threshold counts which
@@ -193,7 +196,8 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
 - [x] [AGENT] P0. `alerting-service/tests/unit/test_uac_routing_rules_consumption.py` — 37 tests covering: (a)
       byte-equivalence of `_default_routing_rules()` vs `[r.to_routing_dict() for r in LIVE_ALERT_RULES]`; (b) every
       legacy pattern still routed (KILL*SWITCH*_, CIRCUIT*BREAKER*_, DEFI*\*, MARGIN*_, etc); (c) AAVE threshold reads
-      UAC + per-archetype overrides apply (`leveraged_funding_arb` fires at 91%, default doesn't); (d)
+      UAC + per-archetype overrides apply (`ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) fires at 91%,
+      default doesn't); (d)
       `check_aave_utilization` fires correctly above/below thresholds; (e) KILL*SWITCH*_ family
       CRITICAL+PagerDuty+`triggers_kill_switch=True`; (f) CROSS_CLOUD_EGRESS_DETECTED PagerDuty-routed. All 37 green.
       Shipped alerting-service@b025e83.
@@ -356,8 +360,8 @@ them. Citation per value:
   without firing on chop. Subject to Phase 7 tuning.
 - `defi_aave_utilization_spike_bps=9500` — Aave pool-yield curves inflect sharply at 95%+ utilization (the "kink" in the
   interest-rate model). Above this, default carry strategy assumptions break.
-- `defi_funding_rate_flip_bps_5m=100` — 1%-APR flip in 5min == regime-change signal for `leveraged_funding_arb`
-  archetype.
+- `defi_funding_rate_flip_bps_5m=100` — 1%-APR flip in 5min == regime-change signal for `ARBITRAGE_PRICE_DISPERSION`
+  (`funding-rate-dispersion`) archetype.
 - `defi_feature_stale_minutes=15` — `carry_staked_basis` LST yields update on epoch boundary (≈12min Solana, ≈12sec
   Ethereum); 15min is a generous lower bound.
 - `balance_drift_usd=1000` — operator-confirmed acceptable noise for the initial wallet (operator action: confirm in
@@ -445,7 +449,7 @@ pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in t
 - `master_to_live_defi_2026_05_23:Group G` — DART operator UX includes Active Alerts panel.
 - `defi_master_2026_05_07:carry_staked_basis live wiring` — needs `DEFI_HEALTH_FACTOR_CRITICAL` + `DEFI_WEETH_DEPEG` +
   `DEFI_FEATURE_STALE` rules live.
-- `defi_master_2026_05_07:leveraged_funding_arb` — needs `DEFI_FUNDING_RATE_FLIP`.
+- `defi_master_2026_05_07:ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) — needs `DEFI_FUNDING_RATE_FLIP`.
 - `dart_ux_cockpit_refactor_2026_04_29:Layer-2-badges` — Active Alerts widget shares badges + maturity flags.
 
 ## Coordination notes
@@ -550,7 +554,8 @@ pass.
 - **In-flight (running VMs)**: none
 - **Blocked by**: nothing
 - **Blocks**: master_to_live_defi:work-stream-E, master_to_live_defi:Group-F, master_to_live_defi:Group-G,
-  defi_master:carry_staked_basis-live, defi_master:leveraged_funding_arb, dart_ux_cockpit:Layer-2-badges
+  defi_master:carry_staked_basis-live, defi_master:ARBITRAGE_PRICE_DISPERSION-funding-rate-dispersion,
+  dart_ux_cockpit:Layer-2-badges
 - **Last meaningful commit**: this plan ships as the keystone unblock.
 - **Recommendation**: kickoff immediately after Harsh review of Phase 1 taxonomy.
 
