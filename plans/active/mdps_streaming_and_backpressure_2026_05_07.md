@@ -81,9 +81,86 @@ todos:
     status: todo
     note: ""
 
+  - id: phase-1-2a-canonical-writer-manifest-verb-unification
+    content: |
+      - [x] [AGENT] P0. Phase 1.2A — Unify `canonical_writer.write_candle_parquet` manifest verb v4→v5
+        (`manifest.add` → `record_captured`). **SHIPPED 2026-05-10**
+        MDPS@`afdb754` — `market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py`
+        success path now calls `manifest_writer.record_captured(row_key=..., df=candles_df, category=..., ...)`
+        instead of legacy v4 `manifest_writer.add(...)`. Eliminates the dual-SSOT collision flagged in
+        `plans/active/issues/mdps_phase_1_2_phase_2_deferral_2026_05_10.md` — without this unification,
+        Phase 1.2B (`_streaming_write_per_tf` migration via UTL `close_candle_writer`) would have produced
+        two manifest shapes in production depending on which orchestration path emitted the row, breaking
+        honest-coverage rollups + data-status drilldown.
+
+      What shipped:
+      1. **`write_candle_parquet` success path migrated** — replaced inline `manifest.add(...)` block
+         (lines 299-345 pre-migration) with `record_captured(row_key, df=candles_df, category,
+         instrument_type, data_type, venue, row_count, timeframe, league_id, chain, underlying,
+         instrument_id, attempted_at)`. The `df=candles_df` kwarg drives the 4-pillar write-gate
+         validation (row count > 0, NaN ratio, schema match, cluster coverage for bundled types).
+      2. **`_emit_status_for_shard` v5 contract compliance** — fixed pre-existing latent bug where
+         `record_empty(row_key=row_key)` was called WITHOUT a typed reason (would raise
+         `LegacyBlankErrorReasonError` per UTL@68b3804a). Now passes
+         `reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO.value` + `attempted_at=datetime.now(UTC)`
+         on both empty + failed paths.
+      3. **Module docstring updated** — v4 → v5 reference in the file header + Phase 1.2A migration
+         provenance citation.
+      4. **Tests** — 4 new + 9 total passing in
+         `tests/unit/test_canonical_writer_record_helpers.py`:
+         - `test_write_candle_parquet_calls_record_captured_not_add` (success path uses `record_captured`,
+           NOT legacy `add`).
+         - `test_write_candle_parquet_empty_df_skips_manifest_write` (empty df returns None without
+           manifest write — caller emits `record_empty_for_shard` upstream).
+         - `test_record_empty_for_shard_passes_typed_reason` (typed
+           `SOURCE_RETURNED_ZERO` reason from `EMPTY_CONFIRMED_REASONS` enforced).
+         - `test_record_failed_for_shard_passes_attempted_at` (audit-trail stamp present).
+
+      Discovery / known follow-up: **MDPS does NOT currently stamp `available_at` on candle DataFrames**.
+      `record_captured` calls `assert_available_at_present(df)` which raises `LookaheadBiasError` if
+      missing. This is the correct fail-loud behaviour per workspace
+      "available_at is per-row, write-time" rule, but production callers will hit this until
+      `available_at` stamping ships in MDPS candle generation paths. **DEFERRED** — captured as
+      Phase 1.2A.1 below; MUST land before MDPS resumes production runs OR Phase 1.2B ships.
+
+      Workspace-grep audit (Citadel § 6 Downstream Consumer Updates):
+      - **In-scope (this phase) ✅**: `canonical_writer.py:313` migrated.
+      - **Out-of-scope (other plans)**: Many services still use legacy v4 `writer.add(...)` —
+        `market-data-processing-service/scripts/reprocess_sports_odds.py:563,570`,
+        `deployment-service/scripts/rebuild_sports_manifest.py:208`,
+        `features-delta-one-service/.../engine/orchestrator.py:316,322`,
+        `features-volatility-service/.../engine/orchestrator.py:198,204,270,276,651,657`,
+        `features-multi-timeframe-service/.../engine/orchestrator.py:254,261`,
+        `features-cross-instrument-service/.../cli/handlers/batch_handler.py:472,479`,
+        `features-commodity-service/.../cli/handlers/batch_handler.py:275`,
+        `features-service/features_service/{calendar,onchain,volatility}/engine/...`,
+        `instruments-service/.../engine/orchestrator.py:6561`,
+        `strategy-service/.../engine/core/cloud_strategy_storage.py:197,276,355`. These are tracked
+        under writegate Phase 2.E + features_repo_consolidation residual sweeps; NOT in scope here.
+    status: done
+    note: |
+      "2026-05-10 phase-1-2a-agent shipped: canonical_writer.py v4→v5 manifest verb migration +
+      _emit_status_for_shard v5 contract compliance + 4 new tests + plan flip. Unblocks Phase 1.2B."
+
+  - id: phase-1-2a-1-mdps-available-at-stamping
+    content: |
+      - [ ] [AGENT] P0. Phase 1.2A.1 — Stamp `available_at` on every MDPS candle DataFrame before
+        `write_candle_parquet`. **DEFERRED** — surfaced by Phase 1.2A migration; required for
+        production candle writes once Phase 1.2A code lands. `record_captured` calls
+        `assert_available_at_present(df)` which raises `LookaheadBiasError` on missing column.
+        Per CLAUDE.md "available_at is per-row, write-time" rule + UAC `AVAILABILITY_AT_SEMANTICS`
+        SSOT: each candle row's `available_at` = bar close + source-priority scrape latency for
+        CeFi/DeFi/TradFi tick-derived candles. Site: `candle_write_mixin.py` /
+        `live_workers._streaming_write_per_tf` (the per-timeframe DataFrame materialisation point).
+        Until this ships, MDPS production candle writes will fail loudly at the manifest write step
+        — that IS the workspace-rule-correct fail mode, but operations are blocked. Successor:
+        Phase 1.2A.1 is a hard-gate blocker for both production resumption + Phase 1.2B.
+    status: todo
+    note: ""
+
   - id: phase-1-mdps-streaming-callsite
     content: |
-      - [ ] [AGENT] P1. Phase 1.2 — Migrate MDPS `_streaming_write_per_tf` to the new lifecycle.
+      - [ ] [AGENT] P1. Phase 1.2 (now Phase 1.2B) — Migrate MDPS `_streaming_write_per_tf` to the new lifecycle.
 
       Site: `market-data-processing-service/.../live_workers.py:1118-1164` (the `_streaming_write_per_tf`
       accumulator pattern). Current behaviour: accumulates a per-timeframe dict-of-lists in memory across the
