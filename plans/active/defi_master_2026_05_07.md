@@ -988,7 +988,49 @@ Ikenna's work-split.
 **Tab 4 status while waiting**: continues cefi drain monitoring + mdps-tradfi audit-log query (P0 separate workstream).
 Does NOT launch any defi_988 VM until Ikenna resolves #3 + #4 + operator authorizes #5.
 
-## Anti-patterns + workspace-rule cross-references
+#### Re-spawn brief — 2026-05-10 (Tab K stalled at web-research; new approach for the next agent)
+
+Tab K was spawned 2026-05-10 to research priorities #3 + #4 + #5 via WebFetch + block explorers. **Stalled at 600s
+with no progress** (Anthropic stream-watchdog killed the task before any commit). Discoveries before stall (don't
+re-do):
+
+- **`PROTOCOL_LAUNCH_DATES` already exists** at
+  [`unified-api-contracts/unified_api_contracts/registry/chain_env.py:144`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py#L144)
+  with the closed-set helper `get_protocol_launch_date(chain, protocol)`.
+- **`CHAIN_GENESIS_DATES` already exists** at
+  [`unified-api-contracts/unified_api_contracts/registry/chain_env.py:91`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py#L91)
+  — the 23 chains workspace currently tracks.
+- **`_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`** at
+  [`chain_env.py:264`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py#L264) tracks the
+  ~30 (chain, protocol) pairs whose launch dates are unknown. **Q1 priority #3 = fill these entries** (move pairs
+  from PENDING → PROTOCOL_LAUNCH_DATES with researched dates + remove from PENDING).
+- **ASTER is a PROTOCOL on BSC, not a chain** (per CoinGecko `asset_platform=binance-smart-chain` for `aster-2`).
+  Q1 priority #4 should add `("BSC", "ASTER")` to PROTOCOL_LAUNCH_DATES, NOT add a CHAIN_GENESIS_DATES["ASTER"]
+  entry (which would conflict with the chain-vs-protocol axis). Conservative date: 2024-09-01 (Aster DEX launched
+  on BNB Chain ~Q3 2024 per public news; first on-chain event verifiable via BscScan). Adding even the conservative
+  date eliminates 759 false missing dates by tightening the denominator from BSC genesis (2020-08-29).
+
+**Re-spawn approach** (avoid the web-research stall pattern that killed Tab K):
+
+1. **Use SUBGRAPH_IDS not WebFetch** — for each pending (chain, protocol), the workspace's existing The Graph
+   subgraph mapping in `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py`
+   `SUBGRAPH_IDS` dict has the subgraph endpoint. Query the subgraph's earliest event timestamp directly via
+   `gql` — this is workspace-internal, no web research, no rate-limit risk.
+2. **For pairs without subgraph** (e.g. some lending protocols on emerging chains): query the chain's RPC for the
+   protocol's contract deployment block via `eth_getTransactionReceipt(deployment_tx)`. Contract addresses are in
+   the workspace's `unified-config-interface/contracts/` registry.
+3. **For ASTER specifically**: query BscScan API (`https://api.bscscan.com/api?module=account&action=txlist&address=<ASTER_PERPS_ROUTER>`)
+   for first transaction. ASTER perps router address available from `unified_api_contracts/registry/capability_declarations/_defi.py`
+   `aster` capability declaration.
+
+**Q1 priority #5 (LINEA + BSC `lending-indices-handler` routing config)**: search for
+`lending-indices-handler` source via `grep -rn "lending_indices\|lending-indices" market-tick-data-service/` —
+likely a handler under `market_tick_data_service/cli/handlers/` or `market_tick_data_service/adapters/`. Add
+LINEA + BSC routing entries; pattern follows existing chains' entries in the same handler. Tab 4 (Harsh-side)
+launches backfill VMs once routing lands.
+
+**Capture Discoveries As Plan Todos compliance**: this brief is the discovery + recommended approach; the actual
+fill work goes into the next agent's commit batch with per-pair entries flipped here as Q1 sub-decisions resolve.
 
 - **Pyth UNBANNED for Solana** (2026-05-06): use Hermes (batch) + PythNet (live). Other chains stay on Chainlink. See
   CLAUDE.md "Removed providers" → "Pyth — UNBANNED" entry.

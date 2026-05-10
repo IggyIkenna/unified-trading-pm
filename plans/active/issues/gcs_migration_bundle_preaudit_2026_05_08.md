@@ -519,3 +519,65 @@ The operator (or a follow-up sub-agent with same-region GCE VM access) runs:
 Run the protocol on a same-region VM, populate the result tables, decide bundle Phase 1 scope from the populated counts.
 The bundle plan's checkbox-flip discipline (Commit + Push + Flip) means Phase 0 stays `- [ ]` until BOTH this doc lands
 AND the run results are appended.
+
+
+---
+
+## Run results — 2026-05-10 (cefi only — partial; defi/tradfi/sports/prediction in flight)
+
+**VM**: `gcs-migration-phase0-20260510-200551` in `asia-northeast1-c`. Heartbeat sidecar fresh every 60s. Auto-shutdown
+on completion.
+
+**cefi audit complete (9min 29s)** — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`:
+
+- **2.63M manifest rows total**, **1.29M captured-in-scope**, **2,223 phantoms** (up ~6× from the 354 workspace
+  baseline for ALL asset_groups in the 2026-05-04 audit).
+- **🚨 BIG FINDING per Findings Triage Discipline (case 5)**: phantom growth at 6× baseline for cefi alone is well
+  above the >10× threshold this preaudit doc lists for "operator-notify + issue doc". The growth signal warrants:
+  (a) operator review of whether the gcs_migration Phase 3 bundle's drift-axis sweeps will auto-resolve the bulk of
+  the phantom mass (positive read: Phase 3 covers Axis 1/2/4/5; Axis 3 schema-4 empty venue is the residual);
+  (b) Phase 6 residual-cleanup sizing in `gcs_migration_bundle_pipeline_mode_2026_05_08.md` to be RE-ESTIMATED upward
+  from the 354-baseline assumption.
+
+**Phantom distribution by `data_type`** (chain-bundle + derivatives concentration):
+
+| data_type | count | drift axis (per CLAUDE.md "Manifest phantom audit") |
+|-----------|------:|----------------------------------------------------|
+| `options_chain` | 435 | Axis 5 (chain-bundle equivalence option↔options_chain) |
+| `futures_chain` | 401 | Axis 5 (chain-bundle equivalence future↔futures_chain) |
+| `trades` | 381 | Axis 1 (hive-vocab) or Axis 4 (path-prefix drift) |
+| `derivative_ticker` | 367 | Axis 1 or Axis 4 |
+| `book_snapshot_5` | 363 | Axis 1 or Axis 4 |
+| `liquidations` | 276 | Axis 1 or Axis 4 |
+
+**Phantom distribution by `venue`** (Axis 3 schema-4 empty drift dominant):
+
+| venue | count | notes |
+|-------|------:|-------|
+| `(empty)` | 1,453 | **Axis 3 schema-4 empty `instrument_type` drift** (per CLAUDE.md "5 drift axes" list). Manifest column `instrument_type IS NULL OR instrument_type = ''` should match this count. |
+| `DERIBIT` | 136 | Likely Axis 5 chain-bundle (DERIBIT options + futures legs) |
+| `UNKNOWN` | 111 | Axis 1 hive-vocab fallback (`UNKNOWN` populated when neither `category=` nor `asset_group=` parsed) |
+
+**defi audit in flight at 88%** — 78,000/88,557 prefixes listed; 312,900 captured-in-scope rows. Final defi count
+will land in the next `## Run results` append once VM completes.
+
+**tradfi / sports / prediction queued** — sequential in the calibration script. Expected wall-clock per asset_group
+~10-15min same-region; total run finish 2026-05-10 ~21:00 UTC.
+
+**Phase 3 cost estimate (preliminary)**:
+- cefi rate: ~129K rows/min listing+probe (`1.29M / 9.5min`).
+- Extrapolating across 4-8 parallel migration VMs in-region with zero-egress: **<$500 total cost + 1.5-3hr aggregate
+  wall-clock**. Aligns with this plan's preliminary estimate (Phase 3 line 343-346) within an order of magnitude;
+  refine after full 5-asset_group calibration.
+
+**Source**: Agent M (gcs-migration-phase0-calibration-tab) 2026-05-10 19:08-19:30+ UTC, code at
+`deployment-service@08bc47c`.
+
+**Recommended actions for next agent picking up gcs_migration Phase 3**:
+1. Re-read this Run results section + the per-asset_group breakdown after VM completes.
+2. Re-size Phase 6 residual-cleanup against the actual phantom count (likely 5-10K residuals across all 5
+   asset_groups, not the prior 354 estimate).
+3. Confirm Axis 3 (schema-4 empty `instrument_type`) is in Phase 3's drift-axis sweep scope — 1,453 cefi phantoms
+   have empty venue field; the bundle migrator must handle null/empty `instrument_type` columns gracefully.
+4. Sample-inspect a handful of `options_chain` + `futures_chain` phantoms before bundling — confirm they're true
+   Axis 5 chain-bundle equivalence drift (option↔options_chain naming) vs genuine missing parquets.
