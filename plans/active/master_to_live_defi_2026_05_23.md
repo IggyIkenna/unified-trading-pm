@@ -646,10 +646,15 @@ per-target upgrade path.
         from `execution-service/execution_service/sports_execution/routing.py:16-25`; migrate routing logic to read
         `OperationalMode.PAPER` + sports-specific paper-venue resolver. _(folded from
         paper_vs_live_workflow_maturity_2026_05_08)_
-  - [ ] [AGENT] P0. `pvl-p17d-instruction-envelope-mode-field`: Lift `mode: OperationalMode` into UAC strategy
-        instruction envelope schema; boot-time injection at execution-service becomes default-fallback when an
-        instruction omits the field. Enables A/B execution lanes + cleaner reconciliation per-mode. _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_
+  - [ ] [AGENT] P0. `pvl-p17d-instruction-envelope-mode-field`: Lift `mode: OperationalMode` into the canonical
+        `StrategyInstruction` envelope at
+        [`unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/instruction.py:184`](../../unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/instruction.py#L184)
+        (canonical envelope) AND audit the 7 sub-instruction types in the same file (`TransferInstruction` L594 /
+        `PredictionBetInstruction` L657 / `SportsBetInstruction` L705 / `SportsExchangeOrderInstruction` L753 /
+        `FuturesRollInstruction` L803 / `OptionsComboInstruction` L846) to confirm whether they nest inside
+        `StrategyInstruction` (single mode field at envelope) or are peers (each carries its own mode field). Boot-time
+        injection at execution-service becomes default-fallback when an instruction omits the field. Enables A/B
+        execution lanes + cleaner reconciliation per-mode. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
 
 - **Item 18 (2-year batch backtest run)**:
   - [ ] [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the
@@ -696,6 +701,67 @@ per-target upgrade path.
 
 - **Item 23 (DART manual-trade gate, Group G)** — see Group G section below for full DART scope (`pvl-p23a` / `pvl-p23b`
   / `pvl-p23c`).
+
+**Phased execution DAG** (Citadel-Grade § 2 — explicit ordering + QG gates between phases):
+
+```
+Phase 1 (foundation; blocking)                                    [≤1d, Ikenna]
+  └─ pvl-p17a — UAC additive enums + decompose() helper
+        QG gate: UAC quality-gates.sh green; no consumer breakage
+
+Phase 2 (parallel after Phase 1)                                  [~2-3d combined]
+  ├─ pvl-p17b — paper_trade: bool deletion (4 consumer migrations)
+  ├─ pvl-p17c — _PAPER_VENUE_KEYS deletion (sports routing migration)
+  ├─ pvl-p17d — instruction envelope mode field
+  └─ pvl-p20a — paper_target_registry SSOT
+        QG gate: UAC + execution-service + sports-execution all green;
+                  workspace grep shows zero residual paper_trade / _PAPER_VENUE_KEYS
+
+Phase 3 (parallel after Phase 2)                                  [~5-7d combined]
+  ├─ pvl-p20b — 5 perp venue testnet audit + wire-up
+  ├─ pvl-p20c — Solana paper wiring
+  ├─ pvl-p21a — 3-way recon (batch ↔ paper ↔ live)
+  ├─ pvl-p22a — mode-tagged alerts
+  └─ pvl-p23b — mode-data API
+        QG gate: deployment-api / strategy-service / batch-live-recon-service /
+                  alerting-service all green; per-pair recon dry-run within tolerance
+
+Phase 4 (parallel after pvl-p23b)                                 [~3-5d combined]
+  ├─ pvl-p23a — DART 3-way visualization (real backend)
+  └─ pvl-p23c — manual-trade gate UI + ManualTradeGateDialog
+        QG gate: unified-trading-system-ui green; Playwright e2e covers DART
+                  comparison view + manual-approval flow
+
+Phase 5 (final, depends on Phases 1-4)                            [~2-3d real-infra]
+  ├─ pvl-p18a — paper-mode evidence run ≥3 days (lead pair)
+  └─ pvl-p18b — archetype paper-runnable matrix populate
+        Done gate: event-stream verified per "no fire-and-forget VM launches" rule;
+                    matrix populated for May-23 lead pair + ≥1 other archetype
+```
+
+Cross-phase parallelism: `pvl-p17a` (Phase 1) is the ONLY blocking item; everything else fans out to maximum
+parallelism across 4-5 agents per phase. Phase 5 depends on the union of every prior phase being green (paper-mode
+evidence run is the integration test for the whole architecture).
+
+**Done-definition + verification per sub-item** (Citadel-Grade § 5 + "Plans Run To Actual Completion" HARD RULE — every
+item names what "done" looks like + the exact verification command/check):
+
+| Item        | Done when                                                                                                                                                                                                                                                                                                                                          | Verification                                                                                                                                                                                                                            |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pvl-p17a`  | `from unified_api_contracts.internal.modes import ExecutionTarget, ExecutionTrigger, decompose` works; 4 unit tests cover the 4-cell mapping; `__init__.py` exports updated.                                                                                                                                                                       | `cd unified-api-contracts && bash scripts/quality-gates.sh` green; `python -c "from unified_api_contracts.internal.modes import decompose, OperationalMode; assert decompose(OperationalMode.MANUAL)[1].name == 'MANUAL'"`.              |
+| `pvl-p17b`  | `paper_trade` field deleted from `execution-service/execution_service/service_config.py`; alias `PAPER_TRADE \| DEFI_PAPER_TRADE` removed; 4 call-sites read `OperationalMode` directly.                                                                                                                                                            | `cd execution-service && bash scripts/quality-gates.sh` green; `grep -rn 'paper_trade' execution_service/ --include='*.py'` returns 0 matches outside docstring/comment context.                                                         |
+| `pvl-p17c`  | `_PAPER_VENUE_KEYS` deleted from `sports_execution/routing.py:16-25`; routing reads `OperationalMode.PAPER` + sports-specific paper-venue resolver.                                                                                                                                                                                                | `grep -rn '_PAPER_VENUE_KEYS' execution-service/ --include='*.py'` returns 0; sports execution unit tests pass; `cd execution-service && bash scripts/quality-gates.sh` green.                                                          |
+| `pvl-p17d`  | `mode: OperationalMode` field added to `StrategyInstruction` (and sub-types per the audit determination); execution-service consumer reads it; boot-time injection becomes default-fallback when omitted.                                                                                                                                          | UAC + execution-service QG green; integration test covers (a) instruction with mode field → routed correctly, (b) instruction without mode field → falls back to boot config.                                                            |
+| `pvl-p18a`  | Paper-mode end-to-end run completed ≥3 continuous days for `carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` lead pair against real DeFi venues + Tenderly fork (EVM) + Solana devnet + matching engine (perp legs). NOT operator-actionable.                                                                            | `gcloud storage ls gs://${PID}-events/events/strategy-service/<YYYY-MM-DD>/<vm-name>/` shows STARTED + per-instrument progress + STOPPED with non-empty metadata for each of the ≥3 days; sample parquet inspection shows real fills.    |
+| `pvl-p18b`  | `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` matrix populated for every archetype in `strategy_service/portfolio_allocator/archetypes.py` with 4-state classification.                                                                                                                                           | Matrix table has ≥1 row per archetype found in `archetypes.py`; states match the closed set; lead pair shows `paper-runnable` post-`pvl-p18a`.                                                                                          |
+| `pvl-p20a`  | UAC `unified_api_contracts/internal/paper_target_registry.py` ships with `PAPER_TARGET_REGISTRY` mapping + `PaperTarget` enum + ≥11 venues mapped + `__init__.py` exports.                                                                                                                                                                         | `python -c "from unified_api_contracts.internal.paper_target_registry import PAPER_TARGET_REGISTRY; assert PAPER_TARGET_REGISTRY['solana'].name == 'SOLANA_DEVNET'"`; UAC QG green.                                                       |
+| `pvl-p20b`  | Audit report published as table in `codex/05-infrastructure/per-venue-paper-policy.md` showing each of 5 perp venues' testnet status (available + creds path / unavailable); testnet endpoints wired where viable; matching-engine fallback for the rest.                                                                                          | Codex doc has 5 venue rows; for any venue marked "available", `paper_target_registry[venue]` matches the testnet target and execution-service has a working adapter constructor pointing at the testnet endpoint.                       |
+| `pvl-p20c`  | Solana paper target chosen (devnet OR localnet OR surfnet — pick committed in codex doc); execution-service Solana adapter reads from `paper_target_registry["solana"]`; `carry_staked_basis` paper-run can fetch jitoSOL/mSOL/bSOL prices via Pyth Hermes against the testnet primitive.                                                          | `python -c "<solana adapter init test>"` works; sample run emits `INSTRUMENT_PROCESSED` events for jitoSOL with non-zero rows.                                                                                                          |
+| `pvl-p21a`  | `batch-live-reconciliation-service` ships `paper_live_recon.py` + `batch_paper_recon.py` stages; `models/deviation_thresholds.py` has per-pair tolerance constants; closed-set failure-routing policy implemented.                                                                                                                                | Dry-run on lead-pair window emits 3 reports (batch-live, paper-live, batch-paper) with per-pair deviations within tolerance; service QG green.                                                                                          |
+| `pvl-p22a`  | Alerting-service rules consume `mode: OperationalMode` from event metadata; per-mode threshold logic in ≥1 alert rule; integration test covers mode-tagged event → mode-aware alert decision.                                                                                                                                                     | `cd alerting-service && bash scripts/quality-gates.sh` green; integration test in `tests/integration/test_mode_aware_alerts.py` (or similar) passes.                                                                                    |
+| `pvl-p23a`  | DART terminal in `unified-trading-system-ui` renders 3-way batch/paper/live comparison view for ≥1 archetype; wired to real backend (not mock-API); shared filter scope applies across lanes; Playwright e2e covers the comparison rendering.                                                                                                      | `cd unified-trading-system-ui && CI=true npm test -- --run` green; Playwright run shows 3-pane render with real data per lane.                                                                                                          |
+| `pvl-p23b`  | `GET /strategy/{id}/runs?mode=batch\|paper\|live` endpoint live on `deployment-api` (or strategy-service); returns mode-tagged event/fill/P&L bundle; 3 unit tests (one per mode) pass.                                                                                                                                                            | `curl http://localhost:8004/strategy/<id>/runs?mode=paper` returns 200 with non-empty body; deployment-api QG green.                                                                                                                    |
+| `pvl-p23c`  | `ManualTradeGateDialog` component renders pre-trade preview (margin / position-limit / worst-case loss) + approve / deny / timeout buttons; emits `MANUAL_APPROVED` / `MANUAL_REJECTED` events; execution-service unholds from manual-pending queue on approval; Playwright e2e covers the approve flow end-to-end against a real testnet trade. | Playwright e2e green; event-stream shows `MANUAL_APPROVED` followed by fill confirmation event from venue testnet.                                                                                                                      |
 
 **Codex SSOTs touched** (5 NEW + 1 UPDATE):
 
@@ -768,38 +834,38 @@ real backend (not mock). Together with item 23 above, the canonical DART operato
 
 Per CLAUDE.md "Master Plan Continuous-Verification Column" HARD RULE: every Group A–G item MUST declare its periodic
 verification path between checkpoint deadlines. Items where `Last verified` is older than the cadence trigger a P0
-alerting rule (Tab 5 governance owns the alert). `manual` cadence = live-only operator-judgment items with no
-continuous verifier.
+alerting rule (Tab 5 governance owns the alert). `manual` cadence = live-only operator-judgment items with no continuous
+verifier.
 
 **Owner notation**: `cron:<vm-name>` = recurring VM via deployment-service launcher. `QG:<repo>` = enforced via
 `scripts/quality-gates.sh` on every PR. `Tab:<role>` = daily Tab assignment in current work-split. `manual` = operator
 sign-off.
 
-| # | Group | Cutover success criterion (one-line from § Per-service readiness checklist) | Continuous Verification | Last verified |
-|---|-------|------------------------------------------------------------------------------|-------------------------|---------------|
-| 1 | A · Code health | `bash scripts/quality-gates.sh` two-pass clean per repo | `QG:per-repo` on every PR; pre-shippable-unit local before push | 2026-05-10 |
-| 2 | A · Code health | Branch landed `live-defi-rollout` → main via SIT | `QG:semver-agent` on merge | 2026-05-10 |
-| 3 | A · Code health | `feat:` / `fix:` / `feat!:` semver triggers version bump | `QG:semver-agent` on merge | 2026-05-10 |
-| 4 | B · Data correctness | Representative `(asset_group, data_type, day)` triples produce valid parquet end-to-end | `cron:cefi-fwd-` + `defi-fwd-` + `tradfi-fwd-` + `sports-fwd-` + `prediction-fwd-` forward-poll VMs | 2026-05-09 |
-| 5 | B · Data correctness | `record_{captured,empty,failed}` with `expected_root_clusters` + `cluster_extractor` for bundled types | `QG:UTL` STEP 5.64 AST-walk on every PR + manifest spot-check | 2026-05-09 |
-| 6 | B · Data correctness | `DependencyError(fail_fast=True)` at boundary; honest absence categories A/B/C/D | `cron:manifest-consolidator-` + writegate-honest-coverage Phase 5 ratchet | 2026-05-09 |
-| 7 | B · Data correctness | Domain types in UAC, runtime utilities in UTL (UAC/UTL abstraction) | `QG:per-repo` import-surface-enforcement on every PR | 2026-05-10 |
-| 8 | B · Data correctness | Parquet schema matches UAC contract per `record_captured` (4-pillar item 3) | `QG:per-repo` write-gate helper on every PR | 2026-05-10 |
-| 9 | C · Runtime parity | Hot reload typed; `ApiKeyReloader` for Secret Manager creds | `QG:per-service` STEP 5.34 typed-config-reloaders + STEP 5.61 ServiceBootstrap | 2026-05-10 |
-| 10 | C · Runtime parity | Batch = live: same code path; only fill source differs | `manual` (architecture invariant) + `cron:batch-vs-live-recon-` (Wave-2 Phase 12 follow-up) | NEVER |
-| 11 | C · Runtime parity | AWS + GCP parity: both VM launch paths green; `CLOUD_PROVIDER` toggle | Tab 4 (Harsh-side) + AWS Phase 1 smoke; daily until cutover | 2026-05-09 |
-| 12 | D · Coverage & shard | Deployment-UI rollup matches on-disk truth-set per asset-group canonical shard axis | `cron:deployment-api` Cloud Run rollup endpoint + UI smoke | 2026-05-09 |
-| 13 | D · Coverage & shard | Shard granularity correct per CLAUDE.md per-asset-group matrix | `cron:reconcile_phantom_manifest_rows_all` (weekly per asset_group) + writegate Phase 5 ratchet | 2026-05-08 |
-| 14 | D · Coverage & shard | ≥2 years representative history captured (full-window backfill) | `cron:expected-universe-enumerator-` + manifest spot-check at coverage horizon | 2026-05-09 |
-| 15 | E · Operability | UTS-UI surfaces visible (`/ops/admin/...` route exists or in-scope) | `QG:unified-trading-system-ui` route smoke + DART persona Playwright | 2026-05-09 |
-| 16 | E · Operability | Deployment-UI launch + GCS log streaming; backfill / restart / forward-poll launchable from UI | `cron:vm-zombie-watchdog-` + deployment-UI heartbeat | 2026-05-10 |
-| 17 | F · Trading prereqs | Backtest fidelity: real gas, real market impact, realistic matching engine + cost+yield precision | `cron:mtds-paper-smoke-` + `simulation_scenarios_topology_price_shocks` Phase 9 (NOT YET RUNNING) | NEVER |
-| 18 | F · Trading prereqs | 2-year batch backtest run: completed across config grid; P&L variance per archetype | `cron:strategy-2yr-grid-backfill-` (script SHIPPED strategy-service@3dea3c7; full-run operator-pending) | NEVER |
-| 19 | F · Trading prereqs | Treasury / custody integration: Copper for DeFi, CEFFU for Binance | `manual` (operator sign-off; live-only) | NEVER |
-| 20 | F · Trading prereqs | Live testnet replicates prod: AWS+GCP, full pipeline, Aster+Hyperliquid+EVM connectors | `cron:dex-perp-onboarding-` + paper-trade smoke runbook | NEVER |
-| 21 | F · Trading prereqs | Reconciliation suite: batch-vs-live + P&L attribution + execution-alpha measurement | `cron:batch-vs-live-recon-` (live-pipeline plan Phase 12 — helper SHIPPED UTL@908b1647; cron-pending) | NEVER |
-| 22 | F · Trading prereqs | Trading guardrails: circuit breakers + kill switches + alerting + auto-recovery | `cron:alerting-paging-targets-` + alerting Phase 4-9 (operator-driven, scheduling-pending) | NEVER |
-| 23 | G · Operator UX | DART manual-trade gate end-to-end visualization | `manual` (operator-driven; `cross_cutting_may_23_deliverables` items #4 + #5 ship pre-cutover) | NEVER |
+| #   | Group                | Cutover success criterion (one-line from § Per-service readiness checklist)                            | Continuous Verification                                                                                 | Last verified |
+| --- | -------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------- |
+| 1   | A · Code health      | `bash scripts/quality-gates.sh` two-pass clean per repo                                                | `QG:per-repo` on every PR; pre-shippable-unit local before push                                         | 2026-05-10    |
+| 2   | A · Code health      | Branch landed `live-defi-rollout` → main via SIT                                                       | `QG:semver-agent` on merge                                                                              | 2026-05-10    |
+| 3   | A · Code health      | `feat:` / `fix:` / `feat!:` semver triggers version bump                                               | `QG:semver-agent` on merge                                                                              | 2026-05-10    |
+| 4   | B · Data correctness | Representative `(asset_group, data_type, day)` triples produce valid parquet end-to-end                | `cron:cefi-fwd-` + `defi-fwd-` + `tradfi-fwd-` + `sports-fwd-` + `prediction-fwd-` forward-poll VMs     | 2026-05-09    |
+| 5   | B · Data correctness | `record_{captured,empty,failed}` with `expected_root_clusters` + `cluster_extractor` for bundled types | `QG:UTL` STEP 5.64 AST-walk on every PR + manifest spot-check                                           | 2026-05-09    |
+| 6   | B · Data correctness | `DependencyError(fail_fast=True)` at boundary; honest absence categories A/B/C/D                       | `cron:manifest-consolidator-` + writegate-honest-coverage Phase 5 ratchet                               | 2026-05-09    |
+| 7   | B · Data correctness | Domain types in UAC, runtime utilities in UTL (UAC/UTL abstraction)                                    | `QG:per-repo` import-surface-enforcement on every PR                                                    | 2026-05-10    |
+| 8   | B · Data correctness | Parquet schema matches UAC contract per `record_captured` (4-pillar item 3)                            | `QG:per-repo` write-gate helper on every PR                                                             | 2026-05-10    |
+| 9   | C · Runtime parity   | Hot reload typed; `ApiKeyReloader` for Secret Manager creds                                            | `QG:per-service` STEP 5.34 typed-config-reloaders + STEP 5.61 ServiceBootstrap                          | 2026-05-10    |
+| 10  | C · Runtime parity   | Batch = live: same code path; only fill source differs                                                 | `manual` (architecture invariant) + `cron:batch-vs-live-recon-` (Wave-2 Phase 12 follow-up)             | NEVER         |
+| 11  | C · Runtime parity   | AWS + GCP parity: both VM launch paths green; `CLOUD_PROVIDER` toggle                                  | Tab 4 (Harsh-side) + AWS Phase 1 smoke; daily until cutover                                             | 2026-05-09    |
+| 12  | D · Coverage & shard | Deployment-UI rollup matches on-disk truth-set per asset-group canonical shard axis                    | `cron:deployment-api` Cloud Run rollup endpoint + UI smoke                                              | 2026-05-09    |
+| 13  | D · Coverage & shard | Shard granularity correct per CLAUDE.md per-asset-group matrix                                         | `cron:reconcile_phantom_manifest_rows_all` (weekly per asset_group) + writegate Phase 5 ratchet         | 2026-05-08    |
+| 14  | D · Coverage & shard | ≥2 years representative history captured (full-window backfill)                                        | `cron:expected-universe-enumerator-` + manifest spot-check at coverage horizon                          | 2026-05-09    |
+| 15  | E · Operability      | UTS-UI surfaces visible (`/ops/admin/...` route exists or in-scope)                                    | `QG:unified-trading-system-ui` route smoke + DART persona Playwright                                    | 2026-05-09    |
+| 16  | E · Operability      | Deployment-UI launch + GCS log streaming; backfill / restart / forward-poll launchable from UI         | `cron:vm-zombie-watchdog-` + deployment-UI heartbeat                                                    | 2026-05-10    |
+| 17  | F · Trading prereqs  | Backtest fidelity: real gas, real market impact, realistic matching engine + cost+yield precision      | `cron:mtds-paper-smoke-` + `simulation_scenarios_topology_price_shocks` Phase 9 (NOT YET RUNNING)       | NEVER         |
+| 18  | F · Trading prereqs  | 2-year batch backtest run: completed across config grid; P&L variance per archetype                    | `cron:strategy-2yr-grid-backfill-` (script SHIPPED strategy-service@3dea3c7; full-run operator-pending) | NEVER         |
+| 19  | F · Trading prereqs  | Treasury / custody integration: Copper for DeFi, CEFFU for Binance                                     | `manual` (operator sign-off; live-only)                                                                 | NEVER         |
+| 20  | F · Trading prereqs  | Live testnet replicates prod: AWS+GCP, full pipeline, Aster+Hyperliquid+EVM connectors                 | `cron:dex-perp-onboarding-` + paper-trade smoke runbook                                                 | NEVER         |
+| 21  | F · Trading prereqs  | Reconciliation suite: batch-vs-live + P&L attribution + execution-alpha measurement                    | `cron:batch-vs-live-recon-` (live-pipeline plan Phase 12 — helper SHIPPED UTL@908b1647; cron-pending)   | NEVER         |
+| 22  | F · Trading prereqs  | Trading guardrails: circuit breakers + kill switches + alerting + auto-recovery                        | `cron:alerting-paging-targets-` + alerting Phase 4-9 (operator-driven, scheduling-pending)              | NEVER         |
+| 23  | G · Operator UX      | DART manual-trade gate end-to-end visualization                                                        | `manual` (operator-driven; `cross_cutting_may_23_deliverables` items #4 + #5 ship pre-cutover)          | NEVER         |
 
 ### Items with `Last verified: NEVER` (T-13 alerts)
 
