@@ -74,36 +74,34 @@ Both are valid per CLAUDE.md "Daily Work-Split Process". Convention follows the 
 ### Tab registry
 
 #### Tab 1 — `instruments-live-tab` 🟢 IN FLIGHT — Q1 ✅ RESOLVED 14:30 UTC; Phase 2 adapter work resuming
-- **Status (last update 2026-05-08 ~14:30 UTC)**: Phase 1 instruments-service half ✅ SHIPPED. Q1 RESOLVED —
-  operator picked option (a): manifest-layer re-bundling by `canonical_question_group` mirroring
-  `instruments-service@b904785` shape. **Tab 1 immediate actions**: (1) resume Phase 2 adapter-level lifecycle
-  gating (Polymarket + Kalshi adapters + UMI tick provider rename — all independent of writer migration); (2)
-  defer the MTDS writer migration to next cycle until Ikenna locks cross-cutting [UAC]+[UTL] helper signature
-  (operator will flag via cross-side handshake).
+
+- **Status (last update 2026-05-08 ~14:30 UTC)**: Phase 1 instruments-service half ✅ SHIPPED. Q1 RESOLVED — operator
+  picked option (a): manifest-layer re-bundling by `canonical_question_group` mirroring `instruments-service@b904785`
+  shape. **Tab 1 immediate actions**: (1) resume Phase 2 adapter-level lifecycle gating (Polymarket + Kalshi adapters +
+  UMI tick provider rename — all independent of writer migration); (2) defer the MTDS writer migration to next cycle
+  until Ikenna locks cross-cutting [UAC]+[UTL] helper signature (operator will flag via cross-side handshake).
 - **DONE 2026-05-08**:
-  - `instruments-service@98bb167` — feat(predictions) per-market lifecycle ingestion in Polymarket+Kalshi
-    adapters + 14 unit tests.
-  - `instruments-service@b904785` — orchestrator emits `prediction_canonical_question_group` shard atom + 9
-    unit tests + ManifestWriter cluster gate consuming UAC `BUNDLED_DATA_TYPES`.
+  - `instruments-service@98bb167` — feat(predictions) per-market lifecycle ingestion in Polymarket+Kalshi adapters + 14
+    unit tests.
+  - `instruments-service@b904785` — orchestrator emits `prediction_canonical_question_group` shard atom + 9 unit tests +
+    ManifestWriter cluster gate consuming UAC `BUNDLED_DATA_TYPES`.
   - `unified-trading-pm@7343b93` — plan-flip Phase 1 lifecycle-ingestion checkbox.
-- **✅ RESOLVED Q1 in `plans/epics/predictions_master_2026_05_07.md` § Open questions** (operator picked
-  option (a) 14:30 UTC): manifest-layer re-bundling by `canonical_question_group` mirroring
-  `instruments-service@b904785` shape. Per-row tick `data_type="trades"` stays unchanged on disk; manifest
-  layer bundles Polymarket+Kalshi rows per `(asset_group=prediction, venue, data_type=prediction_canonical_question_group,
-  canonical_question_group, day)` with cluster-validation gate counting market_ids active per
-  (canonical_question_group, day). **Cross-side ordering**: cross-cutting [UAC]+[UTL] helper signature is
-  Ikenna-side — operator will flag to Ikenna; Tab 1 ships per-service migration once helper locked. Writer
-  migration DEFERRED to next cycle.
-- **Phase 2 deferrals (named successor)**: MTDS Polymarket/Kalshi adapter lifecycle gating;
-  `umi_tick_provider.py:225` data_type rename; `MARKET_LIFECYCLE` separate parquet emit; per-market_id
-  manifest rows with cluster-coverage gate.
+- **✅ RESOLVED Q1 in `plans/epics/predictions_master_2026_05_07.md` § Open questions** (operator picked option (a)
+  14:30 UTC): manifest-layer re-bundling by `canonical_question_group` mirroring `instruments-service@b904785` shape.
+  Per-row tick `data_type="trades"` stays unchanged on disk; manifest layer bundles Polymarket+Kalshi rows per
+  `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)` with
+  cluster-validation gate counting market_ids active per (canonical_question_group, day). **Cross-side ordering**:
+  cross-cutting [UAC]+[UTL] helper signature is Ikenna-side — operator will flag to Ikenna; Tab 1 ships per-service
+  migration once helper locked. Writer migration DEFERRED to next cycle.
+- **Phase 2 deferrals (named successor)**: MTDS Polymarket/Kalshi adapter lifecycle gating; `umi_tick_provider.py:225`
+  data_type rename; `MARKET_LIFECYCLE` separate parquet emit; per-market_id manifest rows with cluster-coverage gate.
 
 - **Theme**: Instruments-live + lifecycle ingestion (Phase A-E across 5 asset_groups + Predictions Phase 2+3
   - catalog-aware writer-guard).
 - **Plan-of-record**:
   [`../plans/epics/instruments_live_master_2026_05_08.md`](../plans/epics/instruments_live_master_2026_05_08.md)
-  - [`../plans/epics/predictions_master_2026_05_07.md`](../plans/epics/predictions_master_2026_05_07.md) Phase
-    2+3. Note: `instruments_and_market_tick_data_completion_2026_05_01` was archived 2026-05-08
+  - [`../plans/epics/predictions_master_2026_05_07.md`](../plans/epics/predictions_master_2026_05_07.md) Phase 2+3.
+    Note: `instruments_and_market_tick_data_completion_2026_05_01` was archived 2026-05-08
     (`plans/archive/instruments_and_market_tick_data_completion_2026_05_01.plan.md`); writer-guard work item rolled into
     Tab 1's scope per work-split.
 - **AI-day budget**: ~10.
@@ -122,36 +120,36 @@ Both are valid per CLAUDE.md "Daily Work-Split Process". Convention follows the 
   Instruments-live + lifecycle ingestion".
 
 #### Tab 2 — `features-consolidation-tab` 🟢 IN FLIGHT — Phase 0+1A+1B+2A SHIPPED; Phase 2B push-pending
+
 - **Status (last update 2026-05-08 EOD)**: Phase 0 pre-audit + Phase 1A UAC FeatureFamily enum + Phase 1B UTL
-  ManifestWriter feature_family kwarg + Phase 2A PARTIAL evidence ✅ SHIPPED. Phase 2B local skeleton
-  committed locally; remote ready at `git@github.com:CosmicTrader/features-service.git`; **push pending
-  operator authorization** + workspace-manifest entry registration.
+  ManifestWriter feature_family kwarg + Phase 2A PARTIAL evidence ✅ SHIPPED. Phase 2B local skeleton committed locally;
+  remote ready at `git@github.com:CosmicTrader/features-service.git`; **push pending operator authorization** +
+  workspace-manifest entry registration.
 - **DONE 2026-05-08** (5 commits + 1 local-only):
-  - `unified-trading-pm@1de574b4` — Phase 0 pre-audit manifest (1286 lines / 152 KB; 503 py source files; 11
-    ext imports + 51 string refs).
-  - `unified-api-contracts@7f63ca3` — Phase 1A `FeatureFamily(StrEnum)` + `FEATURE_GROUP_TO_FAMILY` registry;
-    83 feature_groups mapped, no cross-family collisions, 9 unit tests.
-  - `unified-trading-library@c16cef3` — Phase 1B `ManifestWriter feature_family` kwarg +
-    `MissingFeatureFamilyError` gate; 4 record_* methods; 10 unit tests; production-safe.
-  - `unified-trading-pm@0c8800b8` — Phase 2A PARTIAL evidence + F8 audit finding (rebased equivalent of
-    original local commit `6eba7e4a`).
-  - `features-service@1f2bc16` — Phase 2B LOCAL skeleton (31 files / 5425 lines / 46 deps unioned / smoke +
-    2/2 tests + basedpyright clean). **Push pending**.
-- **F9 audit finding flagged**: features-service repo created under `CosmicTrader` org rather than
-  `IggyIkenna` convention used by every other workspace repo — operator authorized this temporarily;
-  long-term ownership transfer to IggyIkenna planned.
+  - `unified-trading-pm@1de574b4` — Phase 0 pre-audit manifest (1286 lines / 152 KB; 503 py source files; 11 ext
+    imports + 51 string refs).
+  - `unified-api-contracts@7f63ca3` — Phase 1A `FeatureFamily(StrEnum)` + `FEATURE_GROUP_TO_FAMILY` registry; 83
+    feature_groups mapped, no cross-family collisions, 9 unit tests.
+  - `unified-trading-library@c16cef3` — Phase 1B `ManifestWriter feature_family` kwarg + `MissingFeatureFamilyError`
+    gate; 4 record\_\* methods; 10 unit tests; production-safe.
+  - `unified-trading-pm@0c8800b8` — Phase 2A PARTIAL evidence + F8 audit finding (rebased equivalent of original local
+    commit `6eba7e4a`).
+  - `features-service@1f2bc16` — Phase 2B LOCAL skeleton (31 files / 5425 lines / 46 deps unioned / smoke + 2/2 tests +
+    basedpyright clean). **Push pending**.
+- **F9 audit finding flagged**: features-service repo created under `CosmicTrader` org rather than `IggyIkenna`
+  convention used by every other workspace repo — operator authorized this temporarily; long-term ownership transfer to
+  IggyIkenna planned.
 - **Pending operator action items** (per plan body's "Phase 2 hand-off" section):
   1. ✅ Empty GitHub remote created.
-  2. ⏸ Register `features-service` in PM `workspace-manifest.json` (use `CosmicTrader` URL until F9
-     resolved).
+  2. ⏸ Register `features-service` in PM `workspace-manifest.json` (use `CosmicTrader` URL until F9 resolved).
   3. ⏸ Push `features-svc@1f2bc16` to origin (main agent timing).
 
 - **Theme**: Features-repo consolidation Phase 0-7 (deadline 2026-05-13 = 5 days) + ml/features Phase 2A/2B 8-service
   `assert_no_lookahead_for_feature_group` wires + Phase 3 parquet column-pruning.
 - **Plan-of-record**:
   [`../plans/active/features_repo_consolidation_2026_05_08.md`](../plans/active/features_repo_consolidation_2026_05_08.md)
-  - [`../plans/epics/ml_and_features_master_2026_05_07.md`](../plans/epics/ml_and_features_master_2026_05_07.md)
-    Phase 2A/2B + 3.
+  - [`../plans/epics/ml_and_features_master_2026_05_07.md`](../plans/epics/ml_and_features_master_2026_05_07.md) Phase
+    2A/2B + 3.
 - **Read-also (cross-side dep surface)**:
   [`../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
   (Ikenna Tab 2's plan — Phase 4-7 wires the consolidated features repo).
@@ -173,34 +171,33 @@ Both are valid per CLAUDE.md "Daily Work-Split Process". Convention follows the 
   Features-repo consolidation + ml/features wiring".
 
 #### Tab 3 — `deployment-ui-tab` 🟡 PARTIAL — Q1 ✅ RESOLVED 14:50 UTC (template-edit-shipped, rollout pending Ikenna)
-- **Status (last update 2026-05-08 EOD)**: Phase A foundation 4 of 5 SHIPPED (A.1 + A.3 + A.4 + A.5); A.2
-  ⚠️ DEFERRED to next Tab 3 session per operator priority direction. Phases B-H + BB ⏳ PENDING (gated on
-  A.2 + Q1 resolution). **Earlier scope-vs-estimate concern** (~37 todos / 8 phases / 6 repos vs work-split
-  ~10 AI-day estimate) was implicitly resolved by operator picking Phase A foundation only this session.
+
+- **Status (last update 2026-05-08 EOD)**: Phase A foundation 4 of 5 SHIPPED (A.1 + A.3 + A.4 + A.5); A.2 ⚠️ DEFERRED to
+  next Tab 3 session per operator priority direction. Phases B-H + BB ⏳ PENDING (gated on A.2 + Q1 resolution).
+  **Earlier scope-vs-estimate concern** (~37 todos / 8 phases / 6 repos vs work-split ~10 AI-day estimate) was
+  implicitly resolved by operator picking Phase A foundation only this session.
 - **DONE 2026-05-08** (4 commits):
-  - `unified-api-contracts@ba94d05` — Phase A.1 + A.5: `LifecycleClass(StrEnum)` 4 closed members +
-    `VmPrefixSpec` frozen dataclass + 4 helpers + `CloudTarget(StrEnum)` GCP/AWS + `EnvironmentTier(StrEnum)`
-    DEV/STAGING/PROD + hostname/env resolvers; 8 files / 817 lines / 43 unit tests; facade re-exports at 3
-    levels.
-  - `unified-trading-pm@ebe5cc09` — Phase A.3: NEW codex `deployment-ui-architecture.md` SSOT (318 lines /
-    13 H2 sections) capturing 6 top-level tabs + 4 Monitor sub-tabs + 4 orthogonal axes (lifecycle / cloud /
-    env / service) + env-resolution-by-domain + cross-mode prefetch policy + auth-always-available contract.
-  - `unified-trading-pm@eb8a96ca` — Phase A.4: codex `batch-live-symmetry.md` `## UX surface` section
-    (+42 lines) documenting identical UX shape with single-difference Data-Status mode-toggle.
+  - `unified-api-contracts@ba94d05` — Phase A.1 + A.5: `LifecycleClass(StrEnum)` 4 closed members + `VmPrefixSpec`
+    frozen dataclass + 4 helpers + `CloudTarget(StrEnum)` GCP/AWS + `EnvironmentTier(StrEnum)` DEV/STAGING/PROD +
+    hostname/env resolvers; 8 files / 817 lines / 43 unit tests; facade re-exports at 3 levels.
+  - `unified-trading-pm@ebe5cc09` — Phase A.3: NEW codex `deployment-ui-architecture.md` SSOT (318 lines / 13 H2
+    sections) capturing 6 top-level tabs + 4 Monitor sub-tabs + 4 orthogonal axes (lifecycle / cloud / env / service) +
+    env-resolution-by-domain + cross-mode prefetch policy + auth-always-available contract.
+  - `unified-trading-pm@eb8a96ca` — Phase A.4: codex `batch-live-symmetry.md` `## UX surface` section (+42 lines)
+    documenting identical UX shape with single-difference Data-Status mode-toggle.
   - `unified-trading-pm@4d6f2731` — plan-flip Phase A foundation + Open Q1 entry.
-- **🟡 BLOCKED Q1 case-5 BIG in `plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md` § Open questions**:
-  STEP 5.11 + 5.12 of workspace QG template (`unified-trading-pm/codex/06-coding-standards/quality-gates-template.sh:357,374`)
-  list `CloudTarget` as banned protocol-specific symbol; Phase A.5 makes `CloudTarget` UAC SSOT. Once Phase
-  B+ consumers import `CloudTarget` from UAC, every consumer's QG fires. **Recommendation**: option (1) —
-  add UAC-source-dir exemption to STEP 5.11 + 5.12 then propagate via `rollout-quality-gates-unified.py`.
-  Phase A.5 sub-agent flagged the same finding + same fix in commit message. **Routing**: Ikenna or main
-  governance call. **Blast radius if unresolved**: Phase B+ consumers fail QG locally on import line; CI
-  unaffected (feature-branch pushes don't trigger CI). Deferred routing OK ~1-2 days; should land before
-  Phase B starts wiring `CloudTarget` consumers.
-- **Carryover for next Tab 3 session**: A.2 typed-spec migration (mechanical; A.1 dataclass shape locked) +
-  Q1 routing landing + Phase B fan-out (8 PARALLEL items: 6-tab shell + Monitor 4-sub-tab structure +
-  Data-Status mode toggle + LiveFreshnessPanel + StreamingLogsPanel + LifecyclePrefetchContext + scope
-  reduction + Deploy-fresh-only).
+- **🟡 BLOCKED Q1 case-5 BIG in `plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md` § Open questions**: STEP
+  5.11 + 5.12 of workspace QG template
+  (`unified-trading-pm/codex/06-coding-standards/quality-gates-template.sh:357,374`) list `CloudTarget` as banned
+  protocol-specific symbol; Phase A.5 makes `CloudTarget` UAC SSOT. Once Phase B+ consumers import `CloudTarget` from
+  UAC, every consumer's QG fires. **Recommendation**: option (1) — add UAC-source-dir exemption to STEP 5.11 + 5.12 then
+  propagate via `rollout-quality-gates-unified.py`. Phase A.5 sub-agent flagged the same finding + same fix in commit
+  message. **Routing**: Ikenna or main governance call. **Blast radius if unresolved**: Phase B+ consumers fail QG
+  locally on import line; CI unaffected (feature-branch pushes don't trigger CI). Deferred routing OK ~1-2 days; should
+  land before Phase B starts wiring `CloudTarget` consumers.
+- **Carryover for next Tab 3 session**: A.2 typed-spec migration (mechanical; A.1 dataclass shape locked) + Q1 routing
+  landing + Phase B fan-out (8 PARALLEL items: 6-tab shell + Monitor 4-sub-tab structure + Data-Status mode toggle +
+  LiveFreshnessPanel + StreamingLogsPanel + LifecyclePrefetchContext + scope reduction + Deploy-fresh-only).
 
 - **Theme**: Deployment-UI lifecycle tabs Phase A-E (UAC SSOT + 4 tab refactors + cloud-toggle + auth +
   env-resolution) + deploy_missing Phase 1+2 (Phase 2 gated on Ikenna Tab 5 IAM decision).
@@ -227,32 +224,32 @@ Both are valid per CLAUDE.md "Daily Work-Split Process". Convention follows the 
   Deployment-UI lifecycle tabs + deploy_missing".
 
 #### Tab 4 — `vm-ops-tab` 🟢 IN FLIGHT — cefi sweep #40 SHIPPED; mdps-tradfi P0 issue filed; data-loss recovered
-- **Status (last update 2026-05-08 ~11:54 UTC)**: cefi drain monitoring continuing (no blocking finding at
-  probe time). Recovered from Tab 5 `pull --rebase` data-loss event ~11:40-11:43 UTC (auto-stash conflict on
-  renamed paths silently dropped 23 sweep entries + tradfi annotation + boot-ack ping; recovered from
-  conversation memory + pushed as `a736910a`).
+
+- **Status (last update 2026-05-08 ~11:54 UTC)**: cefi drain monitoring continuing (no blocking finding at probe time).
+  Recovered from Tab 5 `pull --rebase` data-loss event ~11:40-11:43 UTC (auto-stash conflict on renamed paths silently
+  dropped 23 sweep entries + tradfi annotation + boot-ack ping; recovered from conversation memory + pushed as
+  `a736910a`).
 - **DONE 2026-05-08**:
   - cefi sweeps #16-#40 (condensed iteration log appended into `cefi_master_2026_05_07.plan.md` body).
-  - `unified-trading-pm@a736910a` (now rebased to `971c7a1f` post-pull) — `ops(tab4): cefi sweep #40 +
-    tradfi issue-doc update — wall-clock-cap hypothesis disproven`. Local-ahead, push pending operator
-    authorization.
+  - `unified-trading-pm@a736910a` (now rebased to `971c7a1f` post-pull) —
+    `ops(tab4): cefi sweep #40 + tradfi issue-doc update — wall-clock-cap hypothesis disproven`. Local-ahead, push
+    pending operator authorization.
   - **Filed P0 issue doc**: `plans/active/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md` — 4
     mdps-tradfi-{2021,2022,2023,2024} VMs silent-exited 2026-05-07 ~14:00 UTC within a 3-min window with NO
     `STOPPED`/`FAILED` events, mid-processing (validation / processing-started / processing-completed /
-    persistence-started). GCE instance records fully deleted. mdps-tradfi-2025 (different launch batch) is
-    STILL RUNNING at T+30h+ — wall-clock-cap hypothesis DISPROVEN. **Hypothesis ranking**: (1) external
-    force-kill at exactly 14:00 UTC (zombie watchdog batched cull / host maintenance / coordinated operator
-    action — strongest signal: 3-min coordinated exit); (2) workload-specific OOM (less likely given
-    coordinated timing); (3) preemption (rare for non-spot 4-of-4 simultaneous); (4) scheduled job kill
-    (cron culling stale-looking VMs).
+    persistence-started). GCE instance records fully deleted. mdps-tradfi-2025 (different launch batch) is STILL RUNNING
+    at T+30h+ — wall-clock-cap hypothesis DISPROVEN. **Hypothesis ranking**: (1) external force-kill at exactly 14:00
+    UTC (zombie watchdog batched cull / host maintenance / coordinated operator action — strongest signal: 3-min
+    coordinated exit); (2) workload-specific OOM (less likely given coordinated timing); (3) preemption (rare for
+    non-spot 4-of-4 simultaneous); (4) scheduled job kill (cron culling stale-looking VMs).
 - **Open / handshakes**:
-  - **No 🟡 BLOCKED Q on plan body** — TradFi MDPS partial-drain is in issue doc (operator triage), not
-    blocking ambiguity. defi_988 priority #3 + #4 are ⚪ DEFERRED (require operator direction on archetype
-    scope) but Tab 4 has plenty of in-scope work without them.
-  - **Cross-tab handshake**: Tab 5 ships any new launcher prefix in `VM_PREFIX_TO_BUCKET` BEFORE Tab 4
-    launches a VM with that prefix. Cefi drain done → Tab 5 data_status integration tests rerun.
-  - **Cross-side handshake**: cefi drain report goes to Ikenna Tab 5 (master plan refresh) at EOD;
-    cross-asset rescan: Ikenna Tab 3 designs schema flip + ships rescan launcher, Tab 4 operates it.
+  - **No 🟡 BLOCKED Q on plan body** — TradFi MDPS partial-drain is in issue doc (operator triage), not blocking
+    ambiguity. defi_988 priority #3 + #4 are ⚪ DEFERRED (require operator direction on archetype scope) but Tab 4 has
+    plenty of in-scope work without them.
+  - **Cross-tab handshake**: Tab 5 ships any new launcher prefix in `VM_PREFIX_TO_BUCKET` BEFORE Tab 4 launches a VM
+    with that prefix. Cefi drain done → Tab 5 data_status integration tests rerun.
+  - **Cross-side handshake**: cefi drain report goes to Ikenna Tab 5 (master plan refresh) at EOD; cross-asset rescan:
+    Ikenna Tab 3 designs schema flip + ships rescan launcher, Tab 4 operates it.
 
 - **Theme**: Per-asset_group VM ops + reconcilers + targeted backfill — cefi drain monitoring (absorbs yesterday's
   `cefi-babysit-tab` carryover) + TradFi MDPS post-drain ES.OPT 11-cluster validation + cross-asset manifest rescan +
@@ -267,9 +264,9 @@ Both are valid per CLAUDE.md "Daily Work-Split Process". Convention follows the 
 - **Carryover note (CRITICAL — read before starting)**: a stale `cefi-babysit-tab` Cursor / Claude Code session from
   yesterday may still be running on this PC, with uncommitted edits to `plans/epics/cefi_master_2026_05_07.plan.md`
   (sweeps #16-#36 of the iteration log; 16/24 alive, 67% drained as of 10:15 UTC sweep #36, no blank-reason RED ALERT
-  triggered). FIRST ACTION: `git status` — if `cefi_master.md` is dirty, those edits are the prior session's WIP.
-  **Do NOT clobber.** Default action: commit them yourself with attribution to the prior tab's iteration log + push (Tab
-  4 absorbs the cefi monitoring scope today, so the WIP is in your scope to ship). Otherwise: ping operator via
+  triggered). FIRST ACTION: `git status` — if `cefi_master.md` is dirty, those edits are the prior session's WIP. **Do
+  NOT clobber.** Default action: commit them yourself with attribution to the prior tab's iteration log + push (Tab 4
+  absorbs the cefi monitoring scope today, so the WIP is in your scope to ship). Otherwise: ping operator via
   `_agent_pings.md` and wait for direction.
 - **Tab-specific CLAUDE.md sections to focus on**: § "VM tarball deployment", § "VM Naming Convention", §
   "Singleton-locked launchers", § "No fire-and-forget VM launches", § "Manifest concurrency principle", § "Manifest
@@ -288,29 +285,28 @@ Both are valid per CLAUDE.md "Daily Work-Split Process". Convention follows the 
   Per-asset_group VM ops + reconcilers + targeted backfill".
 
 #### Tab 5 — `mechanical-refactor-tab` 🟢 IN FLIGHT — 5 of 7 plans shipped partial; hard_schema fully BLOCKED
+
 - **Status (last update 2026-05-08 EOD)**: 5 of 7 plans have DONE blocks for today's cycle; 1 plan
   (`hard_schema_enforcement`) fully BLOCKED per frontmatter `blocked_by: tradfi-master-2026-05-07`; 1 plan
-  (`mtds_databento_path_streaming`) Phase 1 already done by Tab 7 yesterday + Phases 2-3 P2-optional + Phase
-  4 = Tab 4 ops territory. **Tab 5 also caused a data-loss event** for Tab 4 + main agent ~11:35-11:43 UTC
-  via `pull --rebase` auto-stash on shared dirty tree — driver of the new git HARD RULE codified after.
+  (`mtds_databento_path_streaming`) Phase 1 already done by Tab 7 yesterday + Phases 2-3 P2-optional + Phase 4 = Tab 4
+  ops territory. **Tab 5 also caused a data-loss event** for Tab 4 + main agent ~11:35-11:43 UTC via `pull --rebase`
+  auto-stash on shared dirty tree — driver of the new git HARD RULE codified after.
 - **DONE 2026-05-08** (per plan):
-  - **launcher_consolidation**: Tab 5 follow-up cycle (1 fresh launcher + Phase 2 unit test + Phase 4 codex
-    doc) on top of Tab 11 yesterday's 10-of-30 cycle.
-  - **data_status_comprehensive_test_coverage**: Wave 1 — 5 of 30 todos shipped (deployment-api regression
-    net).
+  - **launcher_consolidation**: Tab 5 follow-up cycle (1 fresh launcher + Phase 2 unit test + Phase 4 codex doc) on top
+    of Tab 11 yesterday's 10-of-30 cycle.
+  - **data_status_comprehensive_test_coverage**: Wave 1 — 5 of 30 todos shipped (deployment-api regression net).
   - **mtds_databento_path_streaming**: Phase 1 already shipped Tab 7 yesterday; today's cycle marked
     no-additional-shippable-scope.
-  - **mtds_per_instrument_download_api**: Phase 1.5 chain axis only (prediction `canonical_question_group`
-    axis DEFERRED — collides with Tab 1's Predictions Phase 3 reader migration).
-  - **api_football_minimal_flattening_removal**: Phases 1-3 + 5 shipped (`unified-trading-pm@36c40a10`
-    flips + `1966b572` DONE block; rebased equivalents on origin).
-  - **cme_polymarket_arb**: Phase 1 EVENT_CONTRACT enum + codex stub only; Phases 2-5 BLOCKED on
-    predictions_master Phase 5 + tradfi_master (`unified-trading-pm@2d7fb6bf`).
-- **⚪ BLOCKED**: `hard_schema_enforcement_2026_05_08.md` — frontmatter `blocked_by:
-  tradfi-master-2026-05-07` (sequenced AFTER tradfi_master Q1+Q2 per operator decision 2026-05-08). Tab 5
-  cannot ship anything here this cycle.
-- **No 🟡 BLOCKED Q on plan bodies** — Tab 5 made closed-set decisions about deferrals based on existing
-  plan-body annotations + frontmatter blocks, not ambiguity that needed main routing.
+  - **mtds_per_instrument_download_api**: Phase 1.5 chain axis only (prediction `canonical_question_group` axis DEFERRED
+    — collides with Tab 1's Predictions Phase 3 reader migration).
+  - **api_football_minimal_flattening_removal**: Phases 1-3 + 5 shipped (`unified-trading-pm@36c40a10` flips +
+    `1966b572` DONE block; rebased equivalents on origin).
+  - **cme_polymarket_arb**: Phase 1 EVENT_CONTRACT enum + codex stub only; Phases 2-5 BLOCKED on predictions_master
+    Phase 5 + tradfi_master (`unified-trading-pm@2d7fb6bf`).
+- **⚪ BLOCKED**: `hard_schema_enforcement_2026_05_08.md` — frontmatter `blocked_by: tradfi-master-2026-05-07`
+  (sequenced AFTER tradfi_master Q1+Q2 per operator decision 2026-05-08). Tab 5 cannot ship anything here this cycle.
+- **No 🟡 BLOCKED Q on plan bodies** — Tab 5 made closed-set decisions about deferrals based on existing plan-body
+  annotations + frontmatter blocks, not ambiguity that needed main routing.
 
 - **Theme**: 7 plans of mechanical / parallel-safe / scoped refactor — launcher consolidation 20-of-30 + data-status
   tests (5 cats × 6 repos = 30 todos) + databento Phases 2-4 + per-instrument Phase 1.5 + hard_schema migrations × 5
@@ -328,8 +324,8 @@ Both are valid per CLAUDE.md "Daily Work-Split Process". Convention follows the 
      (Phases 1-5 mechanical migration scripts per asset_group).
   6. [`../plans/active/api_football_minimal_flattening_removal_2026_05_07.md`](../plans/active/api_football_minimal_flattening_removal_2026_05_07.md)
      (16 todos; UAC normalize.py:377-381 fix + re-fetch VM + manifest flip).
-  7. [`../plans/active/cme_polymarket_arb_2026_05_08.md`](../plans/active/cme_polymarket_arb_2026_05_08.md) (6
-     phases; new archetype RFC).
+  7. [`../plans/active/cme_polymarket_arb_2026_05_08.md`](../plans/active/cme_polymarket_arb_2026_05_08.md) (6 phases;
+     new archetype RFC).
 - **AI-day budget**: ~12.
 - **Tab-specific CLAUDE.md sections to focus on**: § "VM launcher script SSOT", § "Manifest migration, NOT fallback", §
   "Per-asset-group shard-key matrix".
@@ -349,75 +345,75 @@ Both are valid per CLAUDE.md "Daily Work-Split Process". Convention follows the 
 
 ### 🟢 All 5 tabs booted; status snapshot above per Tab N entry
 
-Tabs 1, 2, 3, 4, 5 all booted today between 11:13-13:19 UTC. Per-tab status (DONE blocks + BLOCKED Qs +
-deferrals) embedded in each Tab N entry above.
+Tabs 1, 2, 3, 4, 5 all booted today between 11:13-13:19 UTC. Per-tab status (DONE blocks + BLOCKED Qs + deferrals)
+embedded in each Tab N entry above.
 
 ### ⚪ Main agent (this session) doing now
 
 - Polling [`_agent_pings.md`](_agent_pings.md) ~1 min while operator active.
 - Holding all push/pull/rebase ops per the new HARD RULE (`AGENT_ONBOARDING.md` § 🚨 HARD RULE).
-- Standing by to: (a) ack STARTED pings + flip QUEUED → IN FLIGHT, (b) verify DONE pings + flip IN FLIGHT
-  → ✅ DONE, (c) answer 🟡 BLOCKED Qs in plan-of-record, (d) field new direction from Harsh, (e) flag any
-  push-race or rebase situation, (f) escalate case-5 BIG findings.
+- Standing by to: (a) ack STARTED pings + flip QUEUED → IN FLIGHT, (b) verify DONE pings + flip IN FLIGHT → ✅ DONE, (c)
+  answer 🟡 BLOCKED Qs in plan-of-record, (d) field new direction from Harsh, (e) flag any push-race or rebase
+  situation, (f) escalate case-5 BIG findings.
 
 ### ❓ Open questions across active plans (operator decisions pending)
 
-| Tab | Plan | Q | Status | Action needed |
-|-----|------|---|--------|---------------|
-| Tab 1 | `predictions_master_2026_05_07.md` Q1 | "Replace POLYMARKET writer" todo re-scope — manifest-layer re-bundling by canonical_question_group mirroring `instruments-service@b904785` | ✅ RESOLVED 14:30 UTC | Tab 1 ships adapter gating now; writer migration deferred until Ikenna locks helper signature |
-| Tab 3 | `deployment_ui_lifecycle_tabs_2026_05_08.md` Q1 ⚠️ case-5 BIG | STEP 5.11+5.12 QG template lists `CloudTarget` as banned but Phase A.5 makes it UAC SSOT | ✅ RESOLVED 14:50 UTC (template edit shipped locally with narrow per-file exemption `!**/canonical/crosscutting/cloud_target.py`); rollout routed to Ikenna | Ikenna runs `scripts/propagation/rollout-quality-gates-unified.py` OR amends fix shape; UAC clean locally; Phase B+ consumer repos unblock when rollout propagates |
-| Tab 4 | `issues/mdps_tradfi_silent_partial_drain_2026_05_08.md` | All 4 hypotheses ruled out; leading hypothesis = manual `gcloud delete` 2026-05-07 14:00 UTC. Tab 4 running Cloud Logging audit-log query first per operator direction; will update plan doc with findings | 🟡 IN FLIGHT (Tab 4 querying) | Wait for Tab 4's audit-log findings; then decide (a) relaunch with `--clip-after` vs (b) accept partial |
-| Tab 4 | `defi_master_2026_05_07.md` Q1 — defi_988 priorities #3 + #4 + #5 | UAC SSOT changes (`PROTOCOL_LAUNCH_DATES` tightening + ASTER chain genesis) + lending-indices LINEA/BSC routing config | 🟡 BLOCKED — routed to Ikenna for decision per cross-side handshake | Ikenna-side governance call; operator flagged 2026-05-08 ~13:00 UTC. Tab 4 holds defi_988 VM launches until Ikenna resolves |
-| Tab 2 | `features_repo_consolidation_2026_05_08.md` F9 | features-service repo created under `CosmicTrader` rather than `IggyIkenna` workspace convention; transfer planned per operator | Operator confirmed | Future transfer + workspace-manifest registration step |
+| Tab   | Plan                                                              | Q                                                                                                                                                                                                          | Status                                                                                                                                                      | Action needed                                                                                                                                                      |
+| ----- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tab 1 | `predictions_master_2026_05_07.md` Q1                             | "Replace POLYMARKET writer" todo re-scope — manifest-layer re-bundling by canonical_question_group mirroring `instruments-service@b904785`                                                                 | ✅ RESOLVED 14:30 UTC                                                                                                                                       | Tab 1 ships adapter gating now; writer migration deferred until Ikenna locks helper signature                                                                      |
+| Tab 3 | `deployment_ui_lifecycle_tabs_2026_05_08.md` Q1 ⚠️ case-5 BIG     | STEP 5.11+5.12 QG template lists `CloudTarget` as banned but Phase A.5 makes it UAC SSOT                                                                                                                   | ✅ RESOLVED 14:50 UTC (template edit shipped locally with narrow per-file exemption `!**/canonical/crosscutting/cloud_target.py`); rollout routed to Ikenna | Ikenna runs `scripts/propagation/rollout-quality-gates-unified.py` OR amends fix shape; UAC clean locally; Phase B+ consumer repos unblock when rollout propagates |
+| Tab 4 | `issues/mdps_tradfi_silent_partial_drain_2026_05_08.md`           | All 4 hypotheses ruled out; leading hypothesis = manual `gcloud delete` 2026-05-07 14:00 UTC. Tab 4 running Cloud Logging audit-log query first per operator direction; will update plan doc with findings | 🟡 IN FLIGHT (Tab 4 querying)                                                                                                                               | Wait for Tab 4's audit-log findings; then decide (a) relaunch with `--clip-after` vs (b) accept partial                                                            |
+| Tab 4 | `defi_master_2026_05_07.md` Q1 — defi_988 priorities #3 + #4 + #5 | UAC SSOT changes (`PROTOCOL_LAUNCH_DATES` tightening + ASTER chain genesis) + lending-indices LINEA/BSC routing config                                                                                     | 🟡 BLOCKED — routed to Ikenna for decision per cross-side handshake                                                                                         | Ikenna-side governance call; operator flagged 2026-05-08 ~13:00 UTC. Tab 4 holds defi_988 VM launches until Ikenna resolves                                        |
+| Tab 2 | `features_repo_consolidation_2026_05_08.md` F9                    | features-service repo created under `CosmicTrader` rather than `IggyIkenna` workspace convention; transfer planned per operator                                                                            | Operator confirmed                                                                                                                                          | Future transfer + workspace-manifest registration step                                                                                                             |
 
 ### ✅ Done today (2026-05-08 D2 — afternoon 5-tab cycle)
 
 **13 commits across 4 repos** (some local-ahead pending push):
 
-| Repo | Sha | Tab | What |
-|------|-----|-----|------|
-| instruments-service | `98bb167` | Tab 1 | Predictions Phase 1: Polymarket+Kalshi adapter lifecycle ingestion + 14 unit tests |
-| instruments-service | `b904785` | Tab 1 | Orchestrator emits prediction_canonical_question_group shard atom + 9 unit tests |
-| unified-api-contracts | `7f63ca3` | Tab 2 | FeatureFamily enum + FEATURE_GROUP_TO_FAMILY registry + 9 unit tests |
-| unified-trading-library | `c16cef3` | Tab 2 | ManifestWriter feature_family kwarg + MissingFeatureFamilyError gate + 10 unit tests |
-| unified-api-contracts | `ba94d05` | Tab 3 | LifecycleClass + CloudTarget + EnvironmentTier UAC SSOTs + 43 unit tests (8 files / 817 lines) |
-| features-service | `1f2bc16` | Tab 2 | LOCAL skeleton (31 files / 5425 lines / 46 deps unioned) — **PUSH PENDING** |
-| unified-trading-pm | `7343b93` | Tab 1 | Plan-flip Phase 1 lifecycle-ingestion |
-| unified-trading-pm | `1de574b4` | Tab 2 | Phase 0 pre-audit manifest (1286 lines) |
-| unified-trading-pm | `0c8800b8` | Tab 2 | Phase 2A PARTIAL evidence + F8 audit finding (rebased equiv of original `6eba7e4a`) |
-| unified-trading-pm | `ebe5cc09` | Tab 3 | NEW codex `deployment-ui-architecture.md` SSOT (318 lines) |
-| unified-trading-pm | `eb8a96ca` | Tab 3 | codex `batch-live-symmetry.md` UX surface section (+42 lines) |
-| unified-trading-pm | `4d6f2731` | Tab 3 | Plan-flip Phase A foundation + Open Q1 |
-| unified-trading-pm | `36c40a10` + `1966b572` | Tab 5 | api_football Phases 1-3+5 flips + DONE block |
-| unified-trading-pm | `2d7fb6bf` | Tab 5 | cme_polymarket Phase 1 flips + codex stub |
-| unified-trading-pm | `971c7a1f` | Tab 4 | cefi sweep #40 + tradfi issue-doc — **LOCAL-AHEAD, PUSH PENDING** |
+| Repo                    | Sha                     | Tab   | What                                                                                           |
+| ----------------------- | ----------------------- | ----- | ---------------------------------------------------------------------------------------------- |
+| instruments-service     | `98bb167`               | Tab 1 | Predictions Phase 1: Polymarket+Kalshi adapter lifecycle ingestion + 14 unit tests             |
+| instruments-service     | `b904785`               | Tab 1 | Orchestrator emits prediction_canonical_question_group shard atom + 9 unit tests               |
+| unified-api-contracts   | `7f63ca3`               | Tab 2 | FeatureFamily enum + FEATURE_GROUP_TO_FAMILY registry + 9 unit tests                           |
+| unified-trading-library | `c16cef3`               | Tab 2 | ManifestWriter feature_family kwarg + MissingFeatureFamilyError gate + 10 unit tests           |
+| unified-api-contracts   | `ba94d05`               | Tab 3 | LifecycleClass + CloudTarget + EnvironmentTier UAC SSOTs + 43 unit tests (8 files / 817 lines) |
+| features-service        | `1f2bc16`               | Tab 2 | LOCAL skeleton (31 files / 5425 lines / 46 deps unioned) — **PUSH PENDING**                    |
+| unified-trading-pm      | `7343b93`               | Tab 1 | Plan-flip Phase 1 lifecycle-ingestion                                                          |
+| unified-trading-pm      | `1de574b4`              | Tab 2 | Phase 0 pre-audit manifest (1286 lines)                                                        |
+| unified-trading-pm      | `0c8800b8`              | Tab 2 | Phase 2A PARTIAL evidence + F8 audit finding (rebased equiv of original `6eba7e4a`)            |
+| unified-trading-pm      | `ebe5cc09`              | Tab 3 | NEW codex `deployment-ui-architecture.md` SSOT (318 lines)                                     |
+| unified-trading-pm      | `eb8a96ca`              | Tab 3 | codex `batch-live-symmetry.md` UX surface section (+42 lines)                                  |
+| unified-trading-pm      | `4d6f2731`              | Tab 3 | Plan-flip Phase A foundation + Open Q1                                                         |
+| unified-trading-pm      | `36c40a10` + `1966b572` | Tab 5 | api_football Phases 1-3+5 flips + DONE block                                                   |
+| unified-trading-pm      | `2d7fb6bf`              | Tab 5 | cme_polymarket Phase 1 flips + codex stub                                                      |
+| unified-trading-pm      | `971c7a1f`              | Tab 4 | cefi sweep #40 + tradfi issue-doc — **LOCAL-AHEAD, PUSH PENDING**                              |
 
-Plus: Tab 5 launcher_consolidation 1 fresh launcher + Phase 2 unit test + Phase 4 codex doc; Tab 5
-data_status Wave 1 (5 of 30 todos); Tab 5 mtds_per_instrument Phase 1.5 chain axis; Tab 4 cefi sweeps
-#16-#40 condensed iteration log into cefi_master plan body.
+Plus: Tab 5 launcher_consolidation 1 fresh launcher + Phase 2 unit test + Phase 4 codex doc; Tab 5 data_status Wave 1 (5
+of 30 todos); Tab 5 mtds_per_instrument Phase 1.5 chain axis; Tab 4 cefi sweeps #16-#40 condensed iteration log into
+cefi_master plan body.
 
 ### 📦 Push-pending (local-ahead, awaiting operator authorization)
 
-| Repo | Sha | Owner | Awaiting |
-|------|-----|-------|----------|
-| unified-trading-pm | `0c8800b8` (Tab 2 Phase 2A) — already rebased equivalent of `6eba7e4a` on origin, push state needs verification | Tab 2 | Per Tab 2's plan body section: ✅ pushed |
-| unified-trading-pm | `971c7a1f` (Tab 4 cefi sweep #40 + tradfi issue-doc) | Tab 4 | Operator authorize push |
-| features-service | `1f2bc16` (Tab 2 Phase 2B local skeleton) | Tab 2 | Operator authorize push to `CosmicTrader/features-service`; workspace-manifest entry registration first |
-| harsh_orchestrator | `LEDGER.md` + `AGENT_ONBOARDING.md` (this session's main-agent edits) | Main | Operator authorize commit + push |
+| Repo               | Sha                                                                                                             | Owner | Awaiting                                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------- |
+| unified-trading-pm | `0c8800b8` (Tab 2 Phase 2A) — already rebased equivalent of `6eba7e4a` on origin, push state needs verification | Tab 2 | Per Tab 2's plan body section: ✅ pushed                                                                |
+| unified-trading-pm | `971c7a1f` (Tab 4 cefi sweep #40 + tradfi issue-doc)                                                            | Tab 4 | Operator authorize push                                                                                 |
+| features-service   | `1f2bc16` (Tab 2 Phase 2B local skeleton)                                                                       | Tab 2 | Operator authorize push to `CosmicTrader/features-service`; workspace-manifest entry registration first |
+| harsh_orchestrator | `LEDGER.md` + `AGENT_ONBOARDING.md` (this session's main-agent edits)                                           | Main  | Operator authorize commit + push                                                                        |
 
 ---
 
 ## Plan rename — PULLED 2026-05-08 PM (workspace-wide notice)
 
-**Status**: `.plan.md → .md` rename + cross-reference rewrite have all landed on origin and been pulled
-locally. Ikenna's commit chain: `aa72177` (rename, 34 files) → `994da1b` (.md.md double-suffix damage fix) →
-`cca954f` (workspace-wide cross-reference rewrite) → `79adb5b` (Phase C codified .md filename convention) →
-`4ad5714` (Phase B fold of 6 May-23 epics into masters) → `c76bc78` (reconcile 2026-05-08 daily splits with
-plans/epics/ restructure). All on `live-defi-rollout`.
+**Status**: `.plan.md → .md` rename + cross-reference rewrite have all landed on origin and been pulled locally.
+Ikenna's commit chain: `aa72177` (rename, 34 files) → `994da1b` (.md.md double-suffix damage fix) → `cca954f`
+(workspace-wide cross-reference rewrite) → `79adb5b` (Phase C codified .md filename convention) → `4ad5714` (Phase B
+fold of 6 May-23 epics into masters) → `c76bc78` (reconcile 2026-05-08 daily splits with plans/epics/ restructure). All
+on `live-defi-rollout`.
 
 **For spawned tabs**: use `.md` paths (no `.plan.md` segment) when referencing files in `plans/active/` or
-`plans/epics/`. `plans/archive/` + `plans/ai/` continue to use `.plan.md` (frozen historical state). The
-LEDGER above uses the new `.md` paths consistently.
+`plans/epics/`. `plans/archive/` + `plans/ai/` continue to use `.plan.md` (frozen historical state). The LEDGER above
+uses the new `.md` paths consistently.
 
 ## Daily reset (each morning)
 

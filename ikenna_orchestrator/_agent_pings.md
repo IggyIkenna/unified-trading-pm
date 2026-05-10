@@ -37,7 +37,7 @@ plans/active/issues/basefc_validation_flip_audit_2026_05_08.md (PM@142f7289) [20
 instruments-preflight-gate-tab F0 — DONE A.9 + A.10 SHIPPED (UAC@a07711d facade + UAC@8f89ec4 module + UTL@db0f4364
 helper); F2 cefi-available-at-stamping-tab UNBLOCKED —
 `from unified_trading_library.instruments_preflight import run_preflight, PreflightFailedError, UTLManifestReader`; see
-plans/epics/instruments_live_master_2026_05_08.md § A.9 + A.10 [2026-05-10 06:00 UTC] agent-arb-fundrate-c3 —
-✅ DONE Phase A Commit 3 + A.7; Q11 RESOLVED. Engine 8-step loop at strategy-service@04c0d52; allocator multi-pair
-branch (b) at strategy-service@de9b4b0; PM plan flips at PM@4184c112 + this commit. Phase A complete; Phase B
-unblocked next. See plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md.
+plans/epics/instruments_live_master_2026_05_08.md § A.9 + A.10 [2026-05-10 06:00 UTC] agent-arb-fundrate-c3 — ✅ DONE
+Phase A Commit 3 + A.7; Q11 RESOLVED. Engine 8-step loop at strategy-service@04c0d52; allocator multi-pair branch (b) at
+strategy-service@de9b4b0; PM plan flips at PM@4184c112 + this commit. Phase A complete; Phase B unblocked next. See
+plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md.
