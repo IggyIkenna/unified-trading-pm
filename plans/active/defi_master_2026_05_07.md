@@ -65,7 +65,8 @@ and these docs is a review-blocking failure per `doc → plan → code`):
 - [`codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
   — May-23 lead archetype (recursive LST staking + perp short hedge)
 - [`codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
-  — May-23 hedge archetype (`leveraged_funding_arb` config variant — cross-venue funding-rate dispersion)
+  — May-23 hedge archetype: `ARBITRAGE_PRICE_DISPERSION` with `funding-rate-dispersion` config variant (cross-venue
+  funding-rate dispersion; renamed from legacy `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07)
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
 
@@ -208,7 +209,7 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 | Workstream                                                                      | Status                                                         | Source                                                   | Success gate                                                                                                                                                 |
 | ------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `carry_staked_basis` archetype live (≥7 continuous days)                        | spec done; execution wiring pending                            | master plan + carry_staked_basis_structure_axis archived | 7 continuous days on real wallet with PnL row per day in `pnl-store-{pid}/by_strategy/CARRY_STAKED_BASIS/...`; `min_health_factor` honoured every snapshot   |
-| `leveraged_funding_arb` archetype live                                          | scoped; cross-venue funding spread integration pending         | `consolidated_defi_data_pipeline`                        | Cross-venue funding signal generates fills on ≥2 perp venues over 24h; PnL row present in `by_strategy/LEVERAGED_FUNDING_ARB/...`                            |
+| `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) archetype live         | scoped; cross-venue funding spread integration pending         | `consolidated_defi_data_pipeline`                        | Cross-venue funding signal generates fills on ≥2 perp venues over 24h; PnL row present in `by_strategy/ARBITRAGE_PRICE_DISPERSION/...`                       |
 | Hyperliquid + Aster perp DEX live                                               | instruments + market-data live; execution validated on testnet | `consolidated_defi_data_pipeline`                        | `execution-service` testnet smoke ships 1 round-trip per venue; mainnet gated on Copper sandbox                                                              |
 | 988 dates missing in DeFi shards (per data-status panel)                        | manifest gap; per-chain breakdown above                        | `consolidated_defi_data_pipeline` (Phase 6 reverify)     | Post-`Stage 4 rescan-all-manifests`, per-chain coverage row reads 100% within `(genesis, today)` clip; remaining gaps stamped `EXPECTED_PRE_GENESIS_CHAIN`   |
 | Tail chains 25% coverage (Aurora / Celo / Fantom / Mantle / Metis / Moonbeam)   | per-chain protocols incomplete                                 | `consolidated_defi_data_pipeline`                        | Each tail chain shows ≥4/4 protocols captured for at least 1 sample day post-protocol-launch; rest stamped `EXPECTED_PRE_VENUE_LAUNCH`                       |
@@ -425,8 +426,8 @@ these venues.
 
 - [ ] [AGENT] P0. Tail chains 25% coverage diagnosis: Aurora / Celo / Fantom / Mantle / Metis / Moonbeam each have 1
       protocol live; per-chain protocol expansion deferred-post-cutover unless `carry_staked_basis` /
-      `leveraged_funding_arb` requires those chains. [AUDIT 2026-05-07: FRESH — actionable diagnostic only; expansion
-      deferred]
+      `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) requires those chains. [AUDIT 2026-05-07: FRESH —
+      actionable diagnostic only; expansion deferred]
 - [ ] [AGENT] P0. Mid-tier 60% coverage: Arb / Avax / Base / BSC / Linea / Op / Polygon — 32/53 protocols. Per-protocol
       backfill needed for 21 protocols/chain. Subgraph schema-mismatch fixes for PancakeSwap V3, SushiSwap V3, Aerodrome
       V3, Camelot V3 (per `defi_e2e_pipeline`). [AUDIT 2026-05-07: FRESH — actionable; UAC@0169a0a PROTOCOL_LAUNCH_DATES
@@ -586,8 +587,9 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
    intentionally paused or has been broken.
 4. **`launch-mtds-perp-funding-backfill-vm.sh`** — **CORRECTION 2026-05-08 audit**: launcher EXISTS at
    `deployment-service/scripts/vm/launch-mtds-perp-funding-backfill-vm.sh`. Earlier "missing" claim is stale.
-   `leveraged_funding_arb` blocker around perp-funding capture is therefore not a missing-launcher issue; re-scope to
-   "verify launcher is wired into `_SERVICE_LAUNCHER_SCRIPTS` registry + `VM_PREFIX_TO_BUCKET` watchdog".
+   `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) blocker around perp-funding capture is therefore not a
+   missing-launcher issue; re-scope to "verify launcher is wired into `_SERVICE_LAUNCHER_SCRIPTS` registry +
+   `VM_PREFIX_TO_BUCKET` watchdog".
 
 **Single-VM launch recommendation** (unchanged from earlier):
 
@@ -722,8 +724,8 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
       emit record_captured per instrument.
 - [ ] [SCRIPT] P0. **Phase 3 — strategy-service `allowed_chains` constraint enforcement.** Per-archetype config gains
       `allowed_chains: list[ChainKind]`; strategy refuses to size positions on chains outside the list.
-      carry_staked_basis defaults: ETHEREUM + SOLANA + ARBITRUM. leveraged_funding_arb defaults: all 6 perp venues'
-      chains.
+      carry_staked_basis defaults: ETHEREUM + SOLANA + ARBITRUM. `ARBITRAGE_PRICE_DISPERSION`
+      (`funding-rate-dispersion`) defaults: all 6 perp venues' chains.
 - [ ] [HUMAN] P1. **Phase 4 — asset_group classification decision (operator).** CLOB-on-chain venues (Lighter / Pacifica
       / Extended) sit at the boundary between DeFi (on-chain settlement) and CeFi (centralised order book matching). Two
       options: (a) extend DeFi asset_group to include them (current default; minor mental tension); (b) new `clob_dex`
@@ -917,8 +919,9 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
   rules, auto-recovery); 6-venue perp universe (CeFi 4 + DeFi DEX 2) + CME futures + ETF spot + DeFi spot DEXs (LST
   oracles); AWS↔GCP parity proof at live-trading layer (single archetype, not full scale); DART manual-trade lane for
   3-day manual → 7-day automated default; live observability + event streaming.
-- **OUT (post-May-23)**: full strategy mesh launch (only carry archetypes; `leveraged_funding_arb` CAN slip if Week 3
-  tight per master plan risk register); full AWS scale (single-archetype proof only); ML-driven DeFi archetypes (DeFi
+- **OUT (post-May-23)**: full strategy mesh launch (only carry archetypes; `ARBITRAGE_PRICE_DISPERSION`
+  (`funding-rate-dispersion`) CAN slip if Week 3 tight per master plan risk register); full AWS scale
+  (single-archetype proof only); ML-driven DeFi archetypes (DeFi
   stays rules-based this cycle); other archetype families (price-arb, prediction, sports — own deliverables in
   respective masters).
 
@@ -936,14 +939,15 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 
 - [x] ✓ **Manual-trade gating duration — RESOLVED 2026-05-08 (master Q&A 5).** **3 days manual → 7 days automated** with
       kill-switch monitoring throughout. Stagger ≥1 day across archetypes (`carry_staked_basis` first,
-      `leveraged_funding_arb` second). Acceptance gate = `strategy_and_dart_master:Phase 2.2` Playwright matrix. See
-      `plans/active/operator_decisions_2026_05_08.md`.
+      `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) second). Acceptance gate =
+      `strategy_and_dart_master:Phase 2.2` Playwright matrix. See `plans/active/operator_decisions_2026_05_08.md`.
 - [x] ✓ **research-service repo decision — RESOLVED 2026-05-08 (master Q&A 6).** **Fold into deployment-api** for May 23
       scope.
-- [x] ✓ **`leveraged_funding_arb` strict P0 — RESOLVED 2026-05-08.** **Strict P0 — both archetypes required.** If
-      `leveraged_funding_arb` slips at the live-cutover gate, fall back to carry-only for the 7-day live window AND ship
-      `leveraged_funding_arb` live in the immediate post-cutover week — but build, smoke, and paper-trade verification
-      for both must complete by May 23.
+- [x] ✓ **`ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) strict P0 — RESOLVED 2026-05-08.** **Strict P0 —
+      both archetypes required.** If the funding-rate-dispersion archetype (renamed from legacy `leveraged_funding_arb`
+      per Stream B canonicalisation 2026-05-07) slips at the live-cutover gate, fall back to carry-only for the 7-day
+      live window AND ship the funding-rate-dispersion archetype live in the immediate post-cutover week — but build,
+      smoke, and paper-trade verification for both must complete by May 23.
 
 ## Open questions
 
