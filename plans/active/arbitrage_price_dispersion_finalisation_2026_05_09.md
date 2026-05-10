@@ -213,8 +213,8 @@ capital to highest-ranked opportunity | | `equal-weight` | Equal split across to
 
 ### Q11 — [agent-arb-fundrate-c3, 2026-05-09 14:30 UTC] — Tab 2 Commit 2 helper module not shipped; Commit 3 (engine wire-in) precondition unmet
 
-**Status**: ✅ RESOLVED — Tab 2 shipped Commit 2 at strategy-service@0b4ef0e on 2026-05-09; Commit 3 + A.7 shipped
-in plan order at strategy-service@04c0d52 + strategy-service@de9b4b0 (this same session).
+**Status**: ✅ RESOLVED — Tab 2 shipped Commit 2 at strategy-service@0b4ef0e on 2026-05-09; Commit 3 + A.7 shipped in
+plan order at strategy-service@04c0d52 + strategy-service@de9b4b0 (this same session).
 
 Spawn-prompt precondition for Phase A Commit 3 (engine wire-in): "Confirm
 `arbitrage_structural/funding_rate_dispersion.py` exists" + "test_arbitrage_structural_funding_rate_dispersion.py is
@@ -332,11 +332,11 @@ in plan order).
 
 ### Phase A commit ledger
 
-| Commit | Status | sha                | Shipped                                                                                                              |
-| ------ | ------ | ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Commit | Status | sha                      | Shipped                                                                                                               |
+| ------ | ------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | 1      | ✅     | strategy-service@24f8494 | `dispersion_type` dispatcher + `BTC_FUNDING_RATE_DISPERSION` slot stub + `STRATEGY_CATEGORIES` row + dispatcher tests |
-| 2      | ✅     | strategy-service@0b4ef0e | `arbitrage_structural/funding_rate_dispersion.py` helper module (5 exports + 25 unit tests)                          |
-| 3      | ✅     | strategy-service@04c0d52 | Engine 8-step loop wire-in (`_on_tick_funding_rate_dispersion` consumes the helper) + 13 integration tests           |
+| 2      | ✅     | strategy-service@0b4ef0e | `arbitrage_structural/funding_rate_dispersion.py` helper module (5 exports + 25 unit tests)                           |
+| 3      | ✅     | strategy-service@04c0d52 | Engine 8-step loop wire-in (`_on_tick_funding_rate_dispersion` consumes the helper) + 13 integration tests            |
 
 - [ ] [strategy-service] P1. Add the canonical BTC/USDT slot entry (ETH/USDT + SOL/USDT + top-10 enumeration ship in
       A.6) to `strategy-service/strategy_service/engine/strategies/v2/archetype_slot_resolver.py` per the existing
@@ -470,16 +470,16 @@ in plan order).
 
 - [x] [strategy-service] P1. **Mode-coverage tests for the engine** —
       `tests/unit/engine/strategies/v2/test_arbitrage_price_dispersion_funding_rate_engine.py` exercises all 3
-      `pair_selection_mode` values (`single-best`, `top-k`, `all-above-threshold`) against a fixture with 6 mock venues
-      + known funding rates + known mid prices. Asserts: correct pair count surfaced per mode; sign-match filter drops
-      the right pairs; min-spread filter drops the right pairs; vol-cap clamp triggers when threshold breached;
+      `pair_selection_mode` values (`single-best`, `top-k`, `all-above-threshold`) against a fixture with 6 mock
+      venues + known funding rates + known mid prices. Asserts: correct pair count surfaced per mode; sign-match filter
+      drops the right pairs; min-spread filter drops the right pairs; vol-cap clamp triggers when threshold breached;
       `SIGN_MISMATCH_SKIP` / `BELOW_MIN_SPREAD_SKIP` / `VOL_CAP_CLAMPED` trace events emitted via `logger.info` per
       dropped pair, plus per-cycle drop counts on the emitted instruction's `attestations`. **DONE-2026-05-09
       (agent-arb-fundrate-c3)**: shipped at strategy-service@04c0d52 — 13 tests cover SINGLE_BEST + TOP_K +
       ALL_ABOVE_THRESHOLD modes (including a loose-threshold variant that surfaces 5 pairs against a 6-venue universe),
-      sign-match drops on inverted-mid fixtures, min-spread filter drops at threshold 8bps, vol-cap fires on RV breach
-      + zscore breach + calm regime, missing-funding-rates short-circuit, and cycle-counts attestations. All 88
-      adjacent tests stay green.
+      sign-match drops on inverted-mid fixtures, min-spread filter drops at threshold 8bps, vol-cap fires on RV breach +
+      zscore breach + calm regime, missing-funding-rates short-circuit, and cycle-counts attestations. All 88 adjacent
+      tests stay green.
 
 - [ ] [strategy-service] P1. Tests:
       `tests/unit/test_archetype_slot_resolver.py::test_arbitrage_price_dispersion_funding_rate_slot_exists`. QG green.
@@ -509,11 +509,11 @@ in plan order).
       `python -c "from strategy_service.engine.strategies.v2.archetype_slot_resolver import        resolve_all_slots; arb = [s for s in resolve_all_slots() if 'multi-perp-funding-rate-dispersion' in        s.slot_label]; assert len(arb) >= 3"`
       exits 0; coverage probe CSV non-empty; top-10 enumeration commit message lists every shipped asset + the venues
       clipped per asset. **DONE-2026-05-09 (agent-arb-fundrate-c6)**: strategy-service@1107ab7 (probe script — 421
-      lines) + strategy-service@d01661e (8 new slots: ETH+SOL @ 6-venue + XRP/DOGE/BNB/ADA/AVAX @ 4-venue +
-      TRX @ 3-venue + 7 new tests in `TestArbitragePriceDispersionFundingRateMultiAssetSlots`). Probe run 2026-05-09:
-      9 qualifying assets (BTC/ETH/SOL/XRP/DOGE/BNB/ADA/AVAX × 4 venues; TRX × 3 venues; TON skipped). Total
-      funding-rate-disp slots in resolver: 9 (≥3 floor met). QG: 38 resolver tests pass; basedpyright + ruff clean
-      on all owned files. CSV at `/tmp/funding_rate_dispersion_coverage.csv`.
+      lines) + strategy-service@d01661e (8 new slots: ETH+SOL @ 6-venue + XRP/DOGE/BNB/ADA/AVAX @ 4-venue + TRX @
+      3-venue + 7 new tests in `TestArbitragePriceDispersionFundingRateMultiAssetSlots`). Probe run 2026-05-09: 9
+      qualifying assets (BTC/ETH/SOL/XRP/DOGE/BNB/ADA/AVAX × 4 venues; TRX × 3 venues; TON skipped). Total
+      funding-rate-disp slots in resolver: 9 (≥3 floor met). QG: 38 resolver tests pass; basedpyright + ruff clean on
+      all owned files. CSV at `/tmp/funding_rate_dispersion_coverage.csv`.
 
       Re-run QG. Commit + push as a separate `feat(strategies):` commit. (Probe script is reusable for future
       asset universe expansions.)
@@ -549,30 +549,29 @@ prints non-None Slot.
 - [x] [strategy-service] P1. Cross-reference: extend `trace_all_carry_archetypes.py` to optionally invoke
       `trace_arbitrage_price_dispersion.py` for the cross-venue funding-spread variant. Don't fold the dispersion tracer
       INTO the carry tracer — different families. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: at
-      strategy-service@2fdf7e8 added `--include-funding-rate-dispersion` flag + subprocess invocation of the new
-      tracer; carry-tracer's parquet flow stays untouched, dispersion CSVs land under
-      `{output_dir}/funding_rate_dispersion/` per the "different families" guidance.
+      strategy-service@2fdf7e8 added `--include-funding-rate-dispersion` flag + subprocess invocation of the new tracer;
+      carry-tracer's parquet flow stays untouched, dispersion CSVs land under `{output_dir}/funding_rate_dispersion/`
+      per the "different families" guidance.
 
 - [x] [VERIFY] P0.
       `python strategy-service/scripts/trace_arbitrage_price_dispersion.py --mode batch     --start-date 2024-01-01 --end-date 2024-01-07 --config-variant funding-rate-dispersion --asset-group cefi`
-      runs to completion + emits non-empty CSV/parquet output. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**:
-      ran end-to-end against `central-element-323112` GCS for 2024-W1 from strategy-service@2fdf7e8 working tree;
-      `wc -l` reports 48 total candidate rows across 9 per-slot CSVs + summary; 3 EMIT rows total (ETH=2 +
-      SOL=1; BTC=0 — all daily-mean spreads sat below the operator-confirmed 5bps threshold + flipped to
-      `BELOW_MIN_SPREAD_SKIP`); cumulative simulated P&L $200.63. Sample row from
-      `bybit-...-sol-usdt-v5-prod.csv` 2024-01-02: `EMIT,bybit,hyperliquid,funding_spread_bps=6.025,
-      net_spread_bps=6.025,simulated_pnl_usd=45.19`. Note: scope amended to `--asset-group cefi` (was originally
-      drafted as `defi`); the funding-rate-dispersion slots in `_CEFI` are CEFI by construction since all 6 perp
-      venues fall under the CeFi asset_group per slot config.
+      runs to completion + emits non-empty CSV/parquet output. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: ran
+      end-to-end against `central-element-323112` GCS for 2024-W1 from strategy-service@2fdf7e8 working tree; `wc -l`
+      reports 48 total candidate rows across 9 per-slot CSVs + summary; 3 EMIT rows total (ETH=2 + SOL=1; BTC=0 — all
+      daily-mean spreads sat below the operator-confirmed 5bps threshold + flipped to `BELOW_MIN_SPREAD_SKIP`);
+      cumulative simulated P&L $200.63. Sample row from `bybit-...-sol-usdt-v5-prod.csv` 2024-01-02:
+      `EMIT,bybit,hyperliquid,funding_spread_bps=6.025,     net_spread_bps=6.025,simulated_pnl_usd=45.19`. Note: scope
+      amended to `--asset-group cefi` (was originally drafted as `defi`); the funding-rate-dispersion slots in `_CEFI`
+      are CEFI by construction since all 6 perp venues fall under the CeFi asset_group per slot config.
 
 - [x] [strategy-service] P1. Tests: `tests/unit/scripts/test_trace_arbitrage_price_dispersion.py` — verify CLI flags
       accepted, dry-run path emits a header row, error path raises `SystemExit(2)` on missing required flag.
       **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at strategy-service@2fdf7e8 — 11 tests cover the full
-      surface (CLI flag acceptance, `--dry-run` header-only summary, missing required `--start-date` rc=2, inverted
-      date window rc=2, `--mode live` rc=2 not-yet-implemented, `--config-variant cross-venue-spread` rc=0 reserved,
-      slot enumeration ≥3 with BTC/ETH/SOL day-1 invariant, canonical config keys per slot, helper-sequence
-      end-to-end with mocked features producing ≥1 EMIT row, `< 2 venues` no-op cycle, summary aggregation). All
-      11 tests green; basedpyright + ruff clean on the tracer + tests + edited umbrella runner.
+      surface (CLI flag acceptance, `--dry-run` header-only summary, missing required `--start-date` rc=2, inverted date
+      window rc=2, `--mode live` rc=2 not-yet-implemented, `--config-variant cross-venue-spread` rc=0 reserved, slot
+      enumeration ≥3 with BTC/ETH/SOL day-1 invariant, canonical config keys per slot, helper-sequence end-to-end with
+      mocked features producing ≥1 EMIT row, `< 2 venues` no-op cycle, summary aggregation). All 11 tests green;
+      basedpyright + ruff clean on the tracer + tests + edited umbrella runner.
 
 **Code gates**: C4 — strategy-service `quality-gates.sh` Pass 1 green including the new test file. C5 — landed on
 `live-defi-rollout`.
@@ -636,16 +635,20 @@ archetype-bucket check passes.
 
 Phase E may run in parallel with Phases B/C (no upstream dependency on artefacts) but MUST land before Phase D.
 
-- [ ] [codex] P0. Resolve circular cross-reference at
+- [x] [codex] P0. Resolve circular cross-reference at
       [`codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md:171-179`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md):
       remove the line _"Funding-rate arbitrage between perp venues (bidirectional funding capture) — `CARRY_BASIS_PERP`
       (cross-venue mode)"_ from the "Not in this archetype" section. The 2026-05-07 operator decision sent
       funding-rate-spread-as-price-dispersion HERE (ARBITRAGE_PRICE_DISPERSION with `funding-rate-dispersion` config
       variant); the redirect to CARRY_BASIS_PERP is the legacy framing. Leave the paired authoritative claim in
       [`carry-basis-perp.md:138-139`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md) only. This
-      closes the parent plan's pending P0 codex todo at line 155-157.
+      closes the parent plan's pending P0 codex todo at line 155-157. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**:
+      shipped at PM@5fe5eabd. Verified via `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'
+      codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md` → zero hits. Paired authoritative
+      claim survives at `carry-basis-perp.md:135-136`: _"Cross-venue perp spread arbitrage (funding-rate differential
+      between two perp venues for the same asset) — `ARBITRAGE_PRICE_DISPERSION`"_.
 
-- [ ] [codex] P0. In the same `arbitrage-price-dispersion.md` "Example instances" section (after L159
+- [x] [codex] P0. In the same `arbitrage-price-dispersion.md` "Example instances" section (after L159
       `ARBITRAGE_PRICE_DISPERSION@multi-cex-btc-funding-usdt-prod`), add a new sub-section showing the
       `funding-rate-dispersion` config variant slot-label shape that strategy-service uses. Per Q2 resolution 2026-05-09
       the slot is **multi-venue universe + dynamic-best-pair selection**, NOT a fixed venue pair:
@@ -665,15 +668,28 @@ Phase E may run in parallel with Phases B/C (no upstream dependency on artefacts
         #   entry_filter_sign_match = price_spread == funding_spread (skip cycle if signs differ)
       ```
 
-- [ ] [codex] P1. Touch-check
+      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at PM@5fe5eabd. Note: the slot label canonicalised
+      in codex uses the actual strategy-service shape
+      `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod`
+      (per `_funding_rate_dispersion_slot()` builder in `archetype_slot_resolver.py`), not the abstract
+      `multi-perp-funding-rate-dispersion-btc-usdt-prod` placeholder used in the plan body. The codex example block
+      at `arbitrage-price-dispersion.md:161-172` matches the live resolver.
+
+- [x] [codex] P1. Touch-check
       [`codex/09-strategy/architecture-v2/category-instrument-coverage.md § 11`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md):
       ensure the funding-rate-dispersion variant is enumerated under ARBITRAGE_PRICE_DISPERSION's coverage matrix.
+      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at PM@5fe5eabd. Coverage matrix § 11 row "CeFi perp"
+      already calls out `price + funding-rate` as the signal variant; representative slot_labels block (L825-829)
+      enumerates the canonical funding-rate-disp slots for BTC + ETH with the strategy-service-resolver shape +
+      cross-link to `arbitrage_price_dispersion_finalisation_2026_05_09 Phase A`.
 
-- [ ] [VERIFY] P0.
+- [x] [VERIFY] P0.
       `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'     codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
       returns zero hits (the circular pointer is gone).
       `rg 'funding-rate-dispersion'     codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
-      returns ≥ 1 hit.
+      returns ≥ 1 hit. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: ran both grep checks 2026-05-10 evening.
+      First returns 0 hits (zero CARRY_BASIS_PERP↔funding cross-references in the dispersion doc); second returns
+      ≥ 1 hit (the example slot block at L161-172). Phase E full-execution criterion met.
 
 **Full-execution criterion**: codex docs reflect the new SSOT (single authoritative claim in `carry-basis-perp.md`;
 canonical example in `arbitrage-price-dispersion.md`). **What ran**: surgical edits + workspace grep verification.
@@ -733,11 +749,11 @@ the SAME logical unit as the code commit per Half 2.
 
 All 6 open questions resolved 2026-05-09 → no operator-blocked deferrals. Carryover candidates:
 
-| Phase / item                                   | Status                              | Successor / blocker                                                                                             |
-| ---------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Phase / item                                   | Status                                                          | Successor / blocker                                                                                             |
+| ---------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Phase A.6 — ETH/SOL slots + top-10 enumeration | `done` (strategy-service@1107ab7 + @d01661e shipped 2026-05-09) | n/a — 9 funding-rate-disp slots ship; probe CSV at `/tmp/funding_rate_dispersion_coverage.csv`                  |
-| Phase A.7 — allocator multi-pair verification  | `todo` (unblocked; ships post-A)    | Same plan; extend allocator only if branch (b) per A.7 audit                                                    |
-| Live cutover dry-run (paper-trade integration) | `deferred-after-2026-05-23-cutover` | `master_to_live_defi_2026_05_23.md` Group F item 17 (paper-trade smoke) consumes this archetype's tracer output |
+| Phase A.7 — allocator multi-pair verification  | `todo` (unblocked; ships post-A)                                | Same plan; extend allocator only if branch (b) per A.7 audit                                                    |
+| Live cutover dry-run (paper-trade integration) | `deferred-after-2026-05-23-cutover`                             | `master_to_live_defi_2026_05_23.md` Group F item 17 (paper-trade smoke) consumes this archetype's tracer output |
 
 If A.6 ships within this plan's lifetime, that row collapses to "no carryover" and this section is trimmed at archive
 time per the "Plan Archival" HARD RULE migration discipline.
@@ -765,21 +781,21 @@ dispersion example slot enumeration in both `arbitrage-price-dispersion.md` and 
 and the matching parent-plan flip for the codex P0 (L155-157 → `[x]` at PM@5fe5eabd). Items still open are tracked here
 so the next agent picks up cleanly without re-reading session notes.
 
-| Phase / item                          | Status as of 2026-05-09 PM   | Successor / blocker                                                                                                                                                       |
-| ------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase A — strategy-service slot       | `done`                       | Commit 1 (dispatcher + slot stub) at strategy-service@24f8494; Commit 2 (helper module + 25 tests) at strategy-service@0b4ef0e; Commit 3 (engine 8-step loop + 13 tests) at strategy-service@04c0d52; A.6 (multi-asset enumeration + 9 funding-rate-disp slots) at strategy-service@1107ab7 + d01661e; A.7 (allocator multi-pair-per-slot wiring + 14 tests) at strategy-service@de9b4b0 |
-| Phase B — tracer script               | `todo` (Phase A unblocked)   | Phase A complete → tracer can ship next. No upstream blocker remains.                                                                                                     |
-| Phase C — pnl-attribution archetype   | `blocked-after-Phase-B`      | Real-infra run consumes tracer output for 2024 W1 window; Plans-Run-To-Actual-Completion HARD RULE forbids smoke-only ship                                                |
-| Phase D — Stream B gate close         | `blocked-after-Phase-B/C`    | Codex P0 (L155-157 in parent plan) flipped 2026-05-09 PM at PM@5fe5eabd; full gate close awaits B/C completion                                                            |
-| Phase E — codex SSOT updates          | `done` (PM@5fe5eabd shipped) | n/a — codex circular ref resolved + funding-rate-dispersion example slot enumerated in both arbitrage-price-dispersion.md + category-instrument-coverage.md § 11          |
+| Phase / item                        | Status as of 2026-05-09 PM   | Successor / blocker                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase A — strategy-service slot     | `done`                       | Commit 1 (dispatcher + slot stub) at strategy-service@24f8494; Commit 2 (helper module + 25 tests) at strategy-service@0b4ef0e; Commit 3 (engine 8-step loop + 13 tests) at strategy-service@04c0d52; A.6 (multi-asset enumeration + 9 funding-rate-disp slots) at strategy-service@1107ab7 + d01661e; A.7 (allocator multi-pair-per-slot wiring + 14 tests) at strategy-service@de9b4b0 |
+| Phase B — tracer script             | `todo` (Phase A unblocked)   | Phase A complete → tracer can ship next. No upstream blocker remains.                                                                                                                                                                                                                                                                                                                    |
+| Phase C — pnl-attribution archetype | `blocked-after-Phase-B`      | Real-infra run consumes tracer output for 2024 W1 window; Plans-Run-To-Actual-Completion HARD RULE forbids smoke-only ship                                                                                                                                                                                                                                                               |
+| Phase D — Stream B gate close       | `blocked-after-Phase-B/C`    | Codex P0 (L155-157 in parent plan) flipped 2026-05-09 PM at PM@5fe5eabd; full gate close awaits B/C completion                                                                                                                                                                                                                                                                           |
+| Phase E — codex SSOT updates        | `done` (PM@5fe5eabd shipped) | n/a — codex circular ref resolved + funding-rate-dispersion example slot enumerated in both arbitrage-price-dispersion.md + category-instrument-coverage.md § 11                                                                                                                                                                                                                         |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
 - **Workspace-wide `leveraged_funding_arb` rename sweep**: per Stream B gate, several active plans (defi_master,
   master_to_live_defi_2026_05_23, instruments_live_master, strategy_and_dart_master, live_pipeline_mtds_mdps_features)
-  + question docs reference `leveraged_funding_arb` as a standalone archetype name. Filed as case-3 finding in
-  [`plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
-  for owner triage.
+  - question docs reference `leveraged_funding_arb` as a standalone archetype name. Filed as case-3 finding in
+    [`plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
+    for owner triage.
 
 ## DONE-2026-05-09 (agent-arb-fundrate-cde)
 
@@ -788,12 +804,13 @@ Phases A/B/C); Phase C blocked on Tab 5 tracer (per "Plans Run To Actual Complet
 
 Code commits:
 
-- PM@5fe5eabd — `docs(codex): resolve arbitrage-price-dispersion ↔ carry-basis-perp circular ref + add
-  funding-rate-dispersion example slots`. Edited 2 codex files: removed the circular CARRY_BASIS_PERP redirect from
-  `arbitrage-price-dispersion.md` § "Not in this archetype"; added the canonical funding-rate-dispersion example slot
-  pair (BTC + ETH USDT) with operator-confirmed config block to `arbitrage-price-dispersion.md` § "Example instances";
-  added the same canonical multi-venue slot shape to `category-instrument-coverage.md` § 11 Representative slot_labels.
-  Both verify gates pass: zero hits for the circular regex; ≥1 hit for `funding-rate-dispersion`.
+- PM@5fe5eabd —
+  `docs(codex): resolve arbitrage-price-dispersion ↔ carry-basis-perp circular ref + add funding-rate-dispersion example slots`.
+  Edited 2 codex files: removed the circular CARRY_BASIS_PERP redirect from `arbitrage-price-dispersion.md` § "Not in
+  this archetype"; added the canonical funding-rate-dispersion example slot pair (BTC + ETH USDT) with
+  operator-confirmed config block to `arbitrage-price-dispersion.md` § "Example instances"; added the same canonical
+  multi-venue slot shape to `category-instrument-coverage.md` § 11 Representative slot_labels. Both verify gates pass:
+  zero hits for the circular regex; ≥1 hit for `funding-rate-dispersion`.
 
 Parent-plan flips (next commit, bundled with finalisation-plan body update + this DONE block + issue doc):
 
@@ -811,11 +828,11 @@ This-plan body updates (next commit):
 
 Issue doc shipped (next commit, case-3 finding):
 
-- `plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` — workspace `rg
-  'leveraged_funding_arb' --type py --type md` returns matches across ~5 active plans + question docs that use the
+- `plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` — workspace
+  `rg 'leveraged_funding_arb' --type py --type md` returns matches across ~5 active plans + question docs that use the
   legacy name as a standalone archetype label. Per Stream B gate, these need rename to `ARBITRAGE_PRICE_DISPERSION`
-  (with `funding-rate-dispersion` config variant) or annotation as historical context. Owner triage required because
-  the references span multiple plan-of-record owners.
+  (with `funding-rate-dispersion` config variant) or annotation as historical context. Owner triage required because the
+  references span multiple plan-of-record owners.
 
 EOD-audit: every deferral in the scoreboard above has a grep-target — Q1 (this plan body), Phase A/B/C/D (this plan
 body), workspace rename sweep (issue doc cited above). No grep-miss deferrals.
@@ -823,21 +840,23 @@ body), workspace rename sweep (issue doc cited above). No grep-miss deferrals.
 ## DONE-2026-05-09 (agent-arb-fundrate-c3)
 
 Session: Phase A Commit 3 (engine 8-step loop wire-in) + Phase A.7 (allocator multi-pair-per-slot wiring, branch b)
-shipped end-to-end. Phase A is now fully complete (all 5 component shippable units across A.0/A.1/A.2/A.3/A.6/A.7
-landed across this + prior sessions); Phase B unblocked next.
+shipped end-to-end. Phase A is now fully complete (all 5 component shippable units across A.0/A.1/A.2/A.3/A.6/A.7 landed
+across this + prior sessions); Phase B unblocked next.
 
 Code commits:
 
-- strategy-service@04c0d52 — `feat(strategies): funding-rate-dispersion engine wire-in — 8-step loop with sign-match +
-  min-spread + vol-clamp` (Phase A Commit 3). Replaces the Commit 1 stub at `_on_tick_funding_rate_dispersion` with the
-  full 8-step loop calling the Commit 2 helper. 13 engine tests cover all 3 Layer-1 modes against a 6-venue universe +
-  sign-match drops + min-spread filter + vol-cap clamp on RV breach + zscore breach + cycle-counts attestations +
-  missing-funding-rates short-circuit. Refactored into 5 helper methods to keep the top-level dispatch under McCabe-7.
-- strategy-service@de9b4b0 — `feat(allocator): ArbitragePriceDispersionRankAllocator multi-opportunity-per-slot wiring
-  (branch b)` (Phase A.7). Allocator now ranks at the (slot, pair) granularity via composite ids
-  `"<slot_id>::<long>__<short>"`; new constructor knobs `weight_mode` (4 modes) + `max_capital_pct_per_slot` +
-  `max_capital_pct_per_pair` + `rebalance_threshold_bps` + `previous_weights` for churn suppression. Caps are HARD
-  bounds — residual stays in cash, no renormalisation. 14 allocator tests; full allocator suite at 63 tests green.
+- strategy-service@04c0d52 —
+  `feat(strategies): funding-rate-dispersion engine wire-in — 8-step loop with sign-match + min-spread + vol-clamp`
+  (Phase A Commit 3). Replaces the Commit 1 stub at `_on_tick_funding_rate_dispersion` with the full 8-step loop calling
+  the Commit 2 helper. 13 engine tests cover all 3 Layer-1 modes against a 6-venue universe + sign-match drops +
+  min-spread filter + vol-cap clamp on RV breach + zscore breach + cycle-counts attestations + missing-funding-rates
+  short-circuit. Refactored into 5 helper methods to keep the top-level dispatch under McCabe-7.
+- strategy-service@de9b4b0 —
+  `feat(allocator): ArbitragePriceDispersionRankAllocator multi-opportunity-per-slot wiring (branch b)` (Phase A.7).
+  Allocator now ranks at the (slot, pair) granularity via composite ids `"<slot_id>::<long>__<short>"`; new constructor
+  knobs `weight_mode` (4 modes) + `max_capital_pct_per_slot` + `max_capital_pct_per_pair` + `rebalance_threshold_bps` +
+  `previous_weights` for churn suppression. Caps are HARD bounds — residual stays in cash, no renormalisation. 14
+  allocator tests; full allocator suite at 63 tests green.
 
 PM plan-flip commits (next):
 
@@ -845,9 +864,8 @@ PM plan-flip commits (next):
   Commit-3 row in the commit table + engine 8-step loop todo + mode-coverage tests todo + VERIFY P0 (also corrected the
   `ARCHETYPE_TO_ENGINE` typo to `ARCHETYPE_ENGINE_REGISTRY`).
 - PM@<this-commit> — `docs(plans): arb-price-dispersion Phase A.7 + Phase A done; Q11 RESOLVED`. Flipped A.7 todo with
-  branch (b) DONE block; flipped Q11 status from BLOCKED to RESOLVED; updated the prior-session scoreboard's Phase A
-  row from `helper-shipped` to `done` + Phase B from `blocked-after-Phase-A.2` to `todo` (unblocked); added this DONE
-  block.
+  branch (b) DONE block; flipped Q11 status from BLOCKED to RESOLVED; updated the prior-session scoreboard's Phase A row
+  from `helper-shipped` to `done` + Phase B from `blocked-after-Phase-A.2` to `todo` (unblocked); added this DONE block.
 
 QG note: 1401 passed, 1 failed on `tests/unit/engine/strategies/v2/test_target_universe.py:242` slot-count drift blamed
 to 51a9f5af (semver-rollout[bot] 2026-05-05) — not my code; per workspace "QG failure attribution" rule.
@@ -874,29 +892,29 @@ sweep (issue doc cited above), Q11 ✅ RESOLVED. No grep-miss deferrals.
 Pure-function helper module + 25 unit tests landed; engine wire-in (Commit 3) remains pending.
 
 - **strategy-service@0b4ef0e** —
-  `feat(strategies): funding-rate-dispersion helper module — 3 modes + sign-match + min-spread + vol-clamp filters`.
-  870 insertions across 2 files: new
-  `strategy_service/engine/strategies/v2/arbitrage_structural/funding_rate_dispersion.py` (5 exports —
-  `PairSelectionMode`, `FilterDropReason`, `VenuePair`, `VolCapClampConfig`, `ClampedLeverage` value types +
-  `enumerate_pairs`, `apply_sign_match_filter`, `apply_min_spread_filter`, `apply_vol_cap_clamp` pure functions); new
-  `tests/unit/engine/strategies/v2/test_arbitrage_structural_funding_rate_dispersion.py` (25 tests covering all 3 Layer
-  1 modes × sign-match filter × min-spread filter × vol-cap clamp × output frozen-dataclass invariants). Repo QG green
-  on the new files (basedpyright 0/0/0, ruff check + format clean after C901-driven `enumerate_pairs` refactor into
-  `_build_candidate_pair` / `_enumerate_all_candidates` / `_select_by_mode` helpers, pytest 25/25).
-- **unified-trading-pm@<this-commit>** — Phase A commit ledger added (Commit 1 ✅ / Commit 2 ✅ / Commit 3 ⬜) +
-  this DONE block.
+  `feat(strategies): funding-rate-dispersion helper module — 3 modes + sign-match + min-spread + vol-clamp filters`. 870
+  insertions across 2 files: new `strategy_service/engine/strategies/v2/arbitrage_structural/funding_rate_dispersion.py`
+  (5 exports — `PairSelectionMode`, `FilterDropReason`, `VenuePair`, `VolCapClampConfig`, `ClampedLeverage` value
+  types + `enumerate_pairs`, `apply_sign_match_filter`, `apply_min_spread_filter`, `apply_vol_cap_clamp` pure
+  functions); new `tests/unit/engine/strategies/v2/test_arbitrage_structural_funding_rate_dispersion.py` (25 tests
+  covering all 3 Layer 1 modes × sign-match filter × min-spread filter × vol-cap clamp × output frozen-dataclass
+  invariants). Repo QG green on the new files (basedpyright 0/0/0, ruff check + format clean after C901-driven
+  `enumerate_pairs` refactor into `_build_candidate_pair` / `_enumerate_all_candidates` / `_select_by_mode` helpers,
+  pytest 25/25).
+- **unified-trading-pm@<this-commit>** — Phase A commit ledger added (Commit 1 ✅ / Commit 2 ✅ / Commit 3 ⬜) + this
+  DONE block.
 
 **Status of Phase A todos after this session.**
 
-| Phase A item                                              | Status as of 2026-05-09  | Successor / blocker                                                      |
-| --------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------ |
-| BTC/USDT slot entry                                       | `done` (24f8494)         | Commit 1 — slot + dispatcher stub                                        |
-| Engine 8-step loop wire-in                                | `helper-shipped` (0b4ef0e + this) | Commit 3 — `_on_tick_funding_rate_dispersion` consumes the helper module |
-| A.7 — multi-pair allocator audit                          | `todo` (`- [ ]`)         | Open after Commit 3                                                      |
-| Mode-coverage tests for engine                            | `todo` (`- [ ]`)         | Engine integration tests ship with Commit 3 — distinct from this commit's helper-module unit tests |
-| Slot resolver test (`test_..._funding_rate_slot_exists`)  | `todo` (`- [ ]`)         | Open                                                                     |
-| VERIFY P0 — grep + factory check                          | `todo` (`- [ ]`)         | Open after Commit 3                                                      |
-| A.6 — multi-asset slot enumeration                        | `done` (1107ab7 + d01661e) | 8 new slots (ETH/SOL @ 6-venue + 5 × 4-venue + TRX @ 3-venue) + probe script + 7 new tests; 9 total funding-rate-disp slots in resolver |
+| Phase A item                                             | Status as of 2026-05-09           | Successor / blocker                                                                                                                     |
+| -------------------------------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| BTC/USDT slot entry                                      | `done` (24f8494)                  | Commit 1 — slot + dispatcher stub                                                                                                       |
+| Engine 8-step loop wire-in                               | `helper-shipped` (0b4ef0e + this) | Commit 3 — `_on_tick_funding_rate_dispersion` consumes the helper module                                                                |
+| A.7 — multi-pair allocator audit                         | `todo` (`- [ ]`)                  | Open after Commit 3                                                                                                                     |
+| Mode-coverage tests for engine                           | `todo` (`- [ ]`)                  | Engine integration tests ship with Commit 3 — distinct from this commit's helper-module unit tests                                      |
+| Slot resolver test (`test_..._funding_rate_slot_exists`) | `todo` (`- [ ]`)                  | Open                                                                                                                                    |
+| VERIFY P0 — grep + factory check                         | `todo` (`- [ ]`)                  | Open after Commit 3                                                                                                                     |
+| A.6 — multi-asset slot enumeration                       | `done` (1107ab7 + d01661e)        | 8 new slots (ETH/SOL @ 6-venue + 5 × 4-venue + TRX @ 3-venue) + probe script + 7 new tests; 9 total funding-rate-disp slots in resolver |
 
 No new findings raised this session. No banner updates required (the Phase A commit ledger inside this plan is the
 in-flight signpost for parallel agents).
@@ -905,92 +923,98 @@ in-flight signpost for parallel agents).
 
 Multi-asset funding-rate-dispersion slot enumeration shipped via 2 strategy-service commits + plan flip:
 
-- **strategy-service@1107ab7** — `feat(scripts): add probe_funding_rate_dispersion_coverage.py for asset-universe enumeration`
+- **strategy-service@1107ab7** —
+  `feat(scripts): add probe_funding_rate_dispersion_coverage.py for asset-universe enumeration`
   - 421 LOC probe reads CeFi tick + perp-funding manifests via UTL `read_availability_index`; emits CSV
     `(asset, venue, has_clob, has_open_interest, has_funding_rate, coverage_start_date)`.
   - CLI: `--asset-universe top-10|<list>`, `--venues`, `--output`, `--bucket`, `--perp-funding-bucket`, `--project-id`.
   - Tardis `derivative_ticker` treated as joint signal for funding_rate + open_interest (matches Tardis schema).
-- **strategy-service@d01661e** — `feat(strategies): add funding-rate-dispersion ETH/SOL slots + top-10 coverage-gated enumeration`
+- **strategy-service@d01661e** —
+  `feat(strategies): add funding-rate-dispersion ETH/SOL slots + top-10 coverage-gated enumeration`
   - 8 new slots in `archetype_slot_resolver.py` (ETH + SOL @ 6-venue day-1 priority; XRP/DOGE/BNB/ADA/AVAX @ 4-venue
     probe-confirmed; TRX @ 3-venue clipped). Total funding-rate-disp slots in resolver: **9** (≥3 floor met).
   - 8 new strategy-type entries in `batch_utils.STRATEGY_CATEGORIES` (all CEFI).
   - 7 new tests in `TestArbitragePriceDispersionFundingRateMultiAssetSlots` (slot floor / 6-venue day-1 universe /
     4-venue clip / 3-venue clip / TON-absent / dispatch-tag uniformity / config uniformity vs canonical BTC).
-  - Slots built via private `_funding_rate_dispersion_slot(asset, venue_universe, *, initial_equity)` helper —
-    keeps Layer 1 + Layer 2 + sign-match + vol-clamp config uniform across assets.
+  - Slots built via private `_funding_rate_dispersion_slot(asset, venue_universe, *, initial_equity)` helper — keeps
+    Layer 1 + Layer 2 + sign-match + vol-clamp config uniform across assets.
 
 **Probe-CSV summary** (run 2026-05-09 against gs://market-data-tick-cefi-central-element-323112 +
 gs://perp-funding-central-element-323112):
 
-| Asset | Qualifying venues          | Slot universe shipped         |
-| ----- | -------------------------- | ----------------------------- |
-| BTC   | bybit/deribit/binance/okx  | 6-venue (day-1 priority)      |
-| ETH   | bybit/deribit/binance/okx  | 6-venue (day-1 priority)      |
-| SOL   | bybit/deribit/binance/okx  | 6-venue (day-1 priority)      |
-| XRP   | bybit/deribit/binance/okx  | 4-venue                       |
-| DOGE  | bybit/deribit/binance/okx  | 4-venue                       |
-| BNB   | bybit/deribit/binance/okx  | 4-venue                       |
-| ADA   | bybit/deribit/binance/okx  | 4-venue                       |
-| AVAX  | bybit/deribit/binance/okx  | 4-venue                       |
-| TRX   | bybit/deribit/binance      | 3-venue (no OKX TRX-perp)     |
-| TON   | none                       | not shipped                   |
+| Asset | Qualifying venues         | Slot universe shipped     |
+| ----- | ------------------------- | ------------------------- |
+| BTC   | bybit/deribit/binance/okx | 6-venue (day-1 priority)  |
+| ETH   | bybit/deribit/binance/okx | 6-venue (day-1 priority)  |
+| SOL   | bybit/deribit/binance/okx | 6-venue (day-1 priority)  |
+| XRP   | bybit/deribit/binance/okx | 4-venue                   |
+| DOGE  | bybit/deribit/binance/okx | 4-venue                   |
+| BNB   | bybit/deribit/binance/okx | 4-venue                   |
+| ADA   | bybit/deribit/binance/okx | 4-venue                   |
+| AVAX  | bybit/deribit/binance/okx | 4-venue                   |
+| TRX   | bybit/deribit/binance     | 3-venue (no OKX TRX-perp) |
+| TON   | none                      | not shipped               |
 
 The 6-venue universe on BTC/ETH/SOL exceeds probe-confirmed coverage (Hyperliquid + Aster perp-funding consolidator
 stale at probe-time). Engine's dynamic best-long/best-short selector will pick those venues up automatically once the
 consolidator catches up — operator-locked priority assets don't clip.
 
-**QG status**: 38/38 resolver tests pass; basedpyright + ruff clean on all owned files; coverage 80.34% (floor 74%).
-One pre-existing unrelated test failure in `test_target_universe.py::test_slot_count` (foreign agent code per
+**QG status**: 38/38 resolver tests pass; basedpyright + ruff clean on all owned files; coverage 80.34% (floor 74%). One
+pre-existing unrelated test failure in `test_target_universe.py::test_slot_count` (foreign agent code per
 `git log -- strategy_service/engine/strategies/v2/target_universe/` — commit `e4a0cdd`); not mine.
 
 **VERIFY** (per Phase A.6 step 5):
+
 ```
 python -c "from strategy_service.engine.strategies.v2.archetype_slot_resolver import STRATEGY_TYPE_TO_SLOT; \
   arb=[k for k in STRATEGY_TYPE_TO_SLOT if 'funding-rate-disp' in STRATEGY_TYPE_TO_SLOT[k].slot_label]; \
   print(len(arb)); assert len(arb) >= 3"
 ```
+
 → **9** ✅ (≥3 floor met).
 
 ## DONE-2026-05-10 (agent-arb-fundrate-cde re-audit) — parent-plan slot row flipped + status refresh
 
-Re-audit run after parallel-agent activity. Tab 5's c2/c3/c6 agents shipped Phase A end-to-end during 2026-05-09
-evening / 2026-05-10 morning while this tab was waiting on the tracer dependency. Phase A is now complete; no other
-phase shipped since the previous DONE-2026-05-09 (cde) block.
+Re-audit run after parallel-agent activity. Tab 5's c2/c3/c6 agents shipped Phase A end-to-end during 2026-05-09 evening
+/ 2026-05-10 morning while this tab was waiting on the tracer dependency. Phase A is now complete; no other phase
+shipped since the previous DONE-2026-05-09 (cde) block.
 
 Re-audit findings:
 
 - **Phase A (catalog + engine + allocator + multi-asset enumeration)**: ✅ DONE end-to-end. 5 strategy-service commits
   (24f8494 + 0b4ef0e + 04c0d52 + 1107ab7 + d01661e + de9b4b0) + 1 lint-fix follow-up (e3e0962). 9 funding-rate-disp
   slots in resolver covering BTC/ETH/SOL day-1 priority + 6 additional top-10 coverage-gated assets. Engine 8-step loop
-  + 4-mode allocator + sign-match + min-spread + vol-cap clamp all wired and tested.
+  - 4-mode allocator + sign-match + min-spread + vol-cap clamp all wired and tested.
 - **Phase B (tracer)**: still NOT shipped. `scripts/trace_arbitrage_price_dispersion.py` does not exist in
   `strategy-service/scripts/` (verified via `ls scripts/trace_*.py` 2026-05-10). Tab 5 ended at A.7. No tracer agent
   spawned yet. Status flips from `blocked-after-Phase-A.2` → `todo` (unblocked).
 - **Phase C (pnl-attribution)**: still blocked-after-Phase-B per "Plans Run To Actual Completion" HARD RULE.
 - **Phase D (Stream B gate close)**: codex P0 already shipped (PM@5fe5eabd + L155-157 flipped at PM@06467d62). Strategy-
   service slot todo (parent plan L181) flipped this re-audit commit since Phase A is now complete. Tracer + pnl-
-  attribution rows remain `[ ]` pending Phase B/C; full gate close also still pending the workspace `leveraged_funding_arb`
-  rename sweep (issue doc `leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` — owner triage outstanding).
+  attribution rows remain `[ ]` pending Phase B/C; full gate close also still pending the workspace
+  `leveraged_funding_arb` rename sweep (issue doc `leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` — owner
+  triage outstanding).
 - **Phase E (codex)**: ✅ done at PM@5fe5eabd.
 
 Plan-flip commits this re-audit:
 
-- PM@<this-commit> — `docs(plans): arb-price-dispersion re-audit — flip parent-plan slot row to done; refresh tracer +
-  pnl status to 2026-05-10`. Flipped `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` L181 strategy-
-  service slot todo to `[x]` with the 5-commit Phase A evidence chain. Refreshed L193 tracer + L200 pnl-attribution
-  STATUS lines to 2026-05-10 (B = `todo, unblocked`; C = `blocked-after-Phase-B`).
+- PM@<this-commit> —
+  `docs(plans): arb-price-dispersion re-audit — flip parent-plan slot row to done; refresh tracer + pnl status to 2026-05-10`.
+  Flipped `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` L181 strategy- service slot todo to `[x]`
+  with the 5-commit Phase A evidence chain. Refreshed L193 tracer + L200 pnl-attribution STATUS lines to 2026-05-10 (B =
+  `todo, unblocked`; C = `blocked-after-Phase-B`).
 - This DONE block.
 
 EOD-audit: every still-deferred item has a grep-target — Phase B (this plan + parent plan L193), Phase C (this plan +
-parent plan L200), Phase D-gate (this plan body Phase D + workspace rename issue doc), workspace rename sweep (issue
-doc `leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`). No grep-miss deferrals.
+parent plan L200), Phase D-gate (this plan body Phase D + workspace rename issue doc), workspace rename sweep (issue doc
+`leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`). No grep-miss deferrals.
 
 **Recommendation for next agent**: spawn `agent-arb-fundrate-b` to ship Phase B (tracer) — Phase A unblocked it; tracer
 modeled on `trace_carry_staked_basis.py` per the plan body; can run end-to-end against real backfilled MTDS + features
 data for the 2024 W1 window. Phase C (pnl-attribution) chains immediately after — same agent or parallel.
 
-**SUPERSEDING FINDING (2026-05-10 PM, agent-arb-fundrate-c2 P0 case-5)**: Phase B is blocked on UPSTREAM data gaps,
-not just on agent pickup. Real-GCS probe 2026-05-10 found: (a) aster has no perp_funding directory at all in
+**SUPERSEDING FINDING (2026-05-10 PM, agent-arb-fundrate-c2 P0 case-5)**: Phase B is blocked on UPSTREAM data gaps, not
+just on agent pickup. Real-GCS probe 2026-05-10 found: (a) aster has no perp_funding directory at all in
 `gs://perp-funding-{pid}/perp_funding/`; (b) okx-futures raw_tick_data starts 2025-01 in market-data-tick-cefi (no 2024
 coverage); (c) `features-delta-one-cefi` `by_date` partitions are sporadic across all years — NO contiguous 1-week
 window exists for the verify run. Issue doc:
@@ -1003,55 +1027,59 @@ with smoke-only + flag (banned by Plans-Run-To-Actual-Completion HARD RULE). Pha
 chain is unchanged but the root blocker is upstream data, not the tracer agent.
 
 **SUPERSEDING-FINDING UPDATE (2026-05-10 evening, agent-arb-fundrate-tracer)**: Phase B's blocker partially refuted by
-correcting the venue-path probe. (1) **OKX**: perp instruments live under `venue=OKX-SWAP/` (not `OKX-FUTURES/` —
-that holds dated futures only) and have `2024-01-01..` coverage. (2) **HYPERLIQUID**: perp ticks AND funding rates
-are co-located under `venue=HYPERLIQUID/instrument_type=perpetual/data_type=derivative_ticker/` in the CeFi tardis
-bucket, NOT only in `gs://perp-funding-{pid}/`. With the corrected venue map, the tracer ran end-to-end against real
-backfilled data for 2024-01-01..2024-01-07 and produced 3 EMIT rows (ETH=2 + SOL=1; cumulative simulated P&L $200.63)
-+ full skip-reason coverage (BELOW_MIN_SPREAD_SKIP / SIGN_MISMATCH_SKIP / MISSING_MID_PRICE_SKIP). The original C2
-P0 finding still stands for **aster** (genuinely no perp data in 2024-W1) + **bitget** (similarly absent for the
-window) + the per-cycle granularity that features-delta-one would unlock — those remain upstream gaps. But the
-core Phase B Full-execution criterion (≥1 signal row from the requested window) is met by the corrected tracer.
+correcting the venue-path probe. (1) **OKX**: perp instruments live under `venue=OKX-SWAP/` (not `OKX-FUTURES/` — that
+holds dated futures only) and have `2024-01-01..` coverage. (2) **HYPERLIQUID**: perp ticks AND funding rates are
+co-located under `venue=HYPERLIQUID/instrument_type=perpetual/data_type=derivative_ticker/` in the CeFi tardis bucket,
+NOT only in `gs://perp-funding-{pid}/`. With the corrected venue map, the tracer ran end-to-end against real backfilled
+data for 2024-01-01..2024-01-07 and produced 3 EMIT rows (ETH=2 + SOL=1; cumulative simulated P&L $200.63)
+
+- full skip-reason coverage (BELOW_MIN_SPREAD_SKIP / SIGN_MISMATCH_SKIP / MISSING_MID_PRICE_SKIP). The original C2 P0
+  finding still stands for **aster** (genuinely no perp data in 2024-W1) + **bitget** (similarly absent for the
+  window) + the per-cycle granularity that features-delta-one would unlock — those remain upstream gaps. But the core
+  Phase B Full-execution criterion (≥1 signal row from the requested window) is met by the corrected tracer.
 
 ## DONE-2026-05-10 (agent-arb-fundrate-tracer)
 
 Phase B shipped end-to-end. Code commits + run evidence:
 
-* strategy-service@2fdf7e8 — `feat(scripts): add trace_arbitrage_price_dispersion.py for funding-rate-dispersion
-  strategy tracing` (3 files, +1306 lines): 658-line tracer + extension to `trace_all_carry_archetypes.py`
-  (`--include-funding-rate-dispersion` flag + subprocess invocation) + 11-test unit suite covering CLI / dry-run /
-  inverted dates / live-mode rc=2 / cross-venue-spread no-op / slot enumeration / config keys / helper end-to-end /
-  `< 2 venues` no-op / summary aggregation.
+- strategy-service@2fdf7e8 —
+  `feat(scripts): add trace_arbitrage_price_dispersion.py for funding-rate-dispersion strategy tracing` (3 files, +1306
+  lines): 658-line tracer + extension to `trace_all_carry_archetypes.py` (`--include-funding-rate-dispersion` flag +
+  subprocess invocation) + 11-test unit suite covering CLI / dry-run / inverted dates / live-mode rc=2 /
+  cross-venue-spread no-op / slot enumeration / config keys / helper end-to-end / `< 2 venues` no-op / summary
+  aggregation.
 
-* **Tracer end-to-end run** (Full-execution criterion per CLAUDE.md "Plans Run To Actual Completion"):
+- **Tracer end-to-end run** (Full-execution criterion per CLAUDE.md "Plans Run To Actual Completion"):
+
   ```
   python strategy-service/scripts/trace_arbitrage_price_dispersion.py \
     --mode batch --start-date 2024-01-01 --end-date 2024-01-07 \
     --config-variant funding-rate-dispersion --asset-group cefi \
     --output-dir /tmp/arb_trace_2024_w1/
   ```
+
   CSV output:
   - `wc -l /tmp/arb_trace_2024_w1/all_slots_summary.csv` → **10 lines** (header + 9 slot rows).
   - `wc -l /tmp/arb_trace_2024_w1/per_slot/*.csv` → **48 total candidate rows** across 9 per-slot CSVs.
-  - **EMIT row count: 3** (ETH=2 days + SOL=1 day; BTC slot's daily-mean spread sat below the 5bps operator
-    threshold for all 7 days → all `BELOW_MIN_SPREAD_SKIP`).
+  - **EMIT row count: 3** (ETH=2 days + SOL=1 day; BTC slot's daily-mean spread sat below the 5bps operator threshold
+    for all 7 days → all `BELOW_MIN_SPREAD_SKIP`).
   - **Cumulative simulated P&L: $200.63** (ETH $155.44 + SOL $45.19).
   - Sample SOL row 2024-01-02:
-    `EMIT,bybit,hyperliquid,long_funding_rate=0.000785,short_funding_rate=0.000182,funding_spread_bps=6.025,
-    price_spread_bps=0.335,net_spread_bps=6.025,target_leverage=5.0,clamped_leverage=5.0,was_clamped=False,
-    simulated_pnl_usd=45.19`. Non-zero `funding_spread_bps`; full filter coverage.
+    `EMIT,bybit,hyperliquid,long_funding_rate=0.000785,short_funding_rate=0.000182,funding_spread_bps=6.025, price_spread_bps=0.335,net_spread_bps=6.025,target_leverage=5.0,clamped_leverage=5.0,was_clamped=False, simulated_pnl_usd=45.19`.
+    Non-zero `funding_spread_bps`; full filter coverage.
 
-* **Quality gates** (Pass 1): basedpyright + ruff clean on the 3 owned files (`scripts/trace_arbitrage_price_dispersion.py`,
-  `scripts/trace_all_carry_archetypes.py`, `tests/unit/scripts/test_trace_arbitrage_price_dispersion.py`); 11/11
-  new unit tests pass; pre-existing failure in `test_target_universe.py::TestCarryStakedBasisStructureAxis::test_slot_count`
-  (commit 51a9f5af 2026-05-05, foreign agent's code per QG-failure-attribution rule — continued staging + push).
+- **Quality gates** (Pass 1): basedpyright + ruff clean on the 3 owned files
+  (`scripts/trace_arbitrage_price_dispersion.py`, `scripts/trace_all_carry_archetypes.py`,
+  `tests/unit/scripts/test_trace_arbitrage_price_dispersion.py`); 11/11 new unit tests pass; pre-existing failure in
+  `test_target_universe.py::TestCarryStakedBasisStructureAxis::test_slot_count` (commit 51a9f5af 2026-05-05, foreign
+  agent's code per QG-failure-attribution rule — continued staging + push).
 
 EOD-audit: every still-deferred item has a grep-target in active plans — Phase C (this plan body Phase C unchanged),
 Phase D-gate (this plan body Phase D unchanged), workspace rename sweep (issue doc unchanged + parent plan), aster +
 bitget upstream backfill (this plan body's superseding-finding update + the C2 issue doc). No grep-miss deferrals.
 
-**Recommendation for next agent**: Phase C (pnl-attribution-service ARBITRAGE_PRICE_DISPERSION rows) consumes the
-tracer output the same way carry tracer feeds carry P&L attribution. The 1-week window's CSVs are ready under
+**Recommendation for next agent**: Phase C (pnl-attribution-service ARBITRAGE_PRICE_DISPERSION rows) consumes the tracer
+output the same way carry tracer feeds carry P&L attribution. The 1-week window's CSVs are ready under
 `/tmp/arb_trace_2024_w1/` (operator's workstation only — re-run on the next agent's machine if working from
-deployment-api / Cloud Run). Aster + bitget upstream backfill remains a separate issue doc track + does not block
-Phase C since the tracer already produces non-empty EMIT rows from the available venues.
+deployment-api / Cloud Run). Aster + bitget upstream backfill remains a separate issue doc track + does not block Phase
+C since the tracer already produces non-empty EMIT rows from the available venues.
