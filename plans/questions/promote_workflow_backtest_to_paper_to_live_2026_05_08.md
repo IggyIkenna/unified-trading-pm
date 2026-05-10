@@ -2,7 +2,7 @@
 name: promote-workflow-backtest-to-paper-to-live
 overview: End-to-end re-audit of the promote workflow — backtest is scored + ranked, operator picks a candidate via UI button click → API → "candidate" status → next paper-trading deployment → live production. Re-walk every code path, DART UI surface, configuration shape, event stream, service interaction, approval gate, rollback affordance.
 type: question
-status: iterating
+status: plan-spawned
 created: 2026-05-08
 audit_completed: 2026-05-10
 operator: ikenna
@@ -484,6 +484,7 @@ I1 could Ikenna run carry_staked_basis through the full workflow today? I2 servi
 | 2026-05-08 | agent (claude) | Initial draft per operator request — re-audit promote workflow end-to-end. |
 | 2026-05-09 | agent (claude) | Operator direction "no shortcuts, full completion before May-23". Fanned out 5 parallel audit agents (4 returned: A+G / C+F / D+E / H+I; B covered by D+E coverage of UI surface). |
 | 2026-05-10 | agent (claude) | Audit findings synthesized; status `drafting → iterating`; 2 spawned plans drafted (May-23 cutover CLI path + post-cutover UI pipeline). |
+| 2026-05-10 (PM) | agent (claude) | Operator pivot: ship UI promote pipeline alongside CLI for May-23. May-23 plan extended with 6 UI track phases (U1-U6); post-cutover plan reframed to EXTEND minimal-UI shipments rather than build from scratch; master plan banners refreshed. Status `iterating → plan-spawned` (both plans committed; execution multi-session). |
 
 ## Plan-shape decisions (filled before plan extraction)
 
