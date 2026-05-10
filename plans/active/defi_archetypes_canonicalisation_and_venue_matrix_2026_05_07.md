@@ -192,16 +192,17 @@ already supports LEADER_HEDGE mode.
       script at strategy-service@1107ab7 + ETH/SOL + 7 additional top-10 coverage-gated slots at
       strategy-service@d01661e); A.7 allocator multi-pair-per-slot wiring (4 weight modes + per-slot/per-pair caps +
       churn suppression + 14 tests) at strategy-service@de9b4b0.
-- [ ] [tracer-scripts] P1. Confirm `scripts/trace_arbitrage_price_dispersion.py` (or equivalent) handles the
+- [x] [tracer-scripts] P1. Confirm `scripts/trace_arbitrage_price_dispersion.py` (or equivalent) handles the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed only `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` exist in
-      `strategy-service/scripts/`; no ARBITRAGE_PRICE_DISPERSION tracer. Tracked as Phase B in successor plan. **STATUS
-      2026-05-10 PM (blocked-on-upstream-data)**: Phase A is complete (Tab 5 shipped A.1/A.2/A.3/A.6/A.7 across
-      strategy-service@24f8494/0b4ef0e/04c0d52/1107ab7/d01661e/de9b4b0) but Phase B is blocked on UPSTREAM data gaps per
-      `agent-arb-fundrate-c2` P0 case-5 finding 2026-05-10:
-      [`plans/active/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md).
-      Real-GCS probe: aster has no perp_funding directory; okx-futures raw starts 2025-01; features-delta-one-cefi has
-      no contiguous 1-week window for any year. Operator triage required.
+      `strategy-service/scripts/`; no ARBITRAGE_PRICE_DISPERSION tracer. Tracked as Phase B in successor plan.
+      **SHIPPED 2026-05-10 (agent-arb-fundrate-tracer)**: Phase B end-to-end at strategy-service@2fdf7e8 (658-line
+      tracer + extension to `trace_all_carry_archetypes.py` + 11-test unit suite). Real-infra run against 2024-W1
+      window produced 3 EMIT rows + $200.63 simulated P&L (ETH=2 days $155.44 + SOL=1 day $45.19; BTC slot below 5bps
+      threshold all 7 days). The `agent-arb-fundrate-c2` P0 upstream-data finding
+      ([`issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md))
+      did not block the run — tracer produces non-empty output from the available venues; aster + bitget upstream
+      backfill remains a separate issue doc track.
 - [ ] [P&L attribution] P1. Confirm `pnl-attribution-service` rows attribute under `ARBITRAGE_PRICE_DISPERSION` for the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed zero `ARBITRAGE_PRICE_DISPERSION` references in `pnl_attribution_service/` source (only
@@ -223,6 +224,20 @@ already supports LEADER_HEDGE mode.
 **Gate:** Codex doc/code/plans all use `ARBITRAGE_PRICE_DISPERSION` (with config variant) for
 funding-dispersion-leveraged. No remaining references to `leveraged_funding_arb` as a standalone archetype except in
 this plan + the issue file (as historical context).
+
+**Gate status 2026-05-10 (mostly-closed for rename; full close still gated on Phases B+C of finalisation plan)**: bulk
+rename sweep shipped 2026-05-10 PM across 5 PM commits (PM@071070f5 defi_master + PM@0334ad3d alerting_service_live_rules
++ PM@23c20411 simulation_scenarios + PM@30d96b08 3 epic plans + PM@476f00f9 6 tail tracked plans). All TRACKED
+forward-looking active + epic plans renamed; historical-context annotations preserved per gate phrasing. Residuals
+(NOT shipped): 2 UNTRACKED foreign-WIP files (`manifest_schema_final_gate_2026_05_09.md` +
+`defi_recursive_borrow_archetypes_2026_05_10.md`) skipped per workspace foot-gun rules; 2 audit-snapshot docs
+(`_AUDIT_2026_05_07_dependency_graph.md` + `issues/audit_2026_05_08_substantial_unfixed_items.md`) left as historical
+context (snapshot semantics — refs are recording past audit findings). Tracker:
+[`plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
+§ "RESOLUTION 2026-05-10". Stream B's 3 sister-todo deferrals: L181 strategy-service slot ✅ done; L195 tracer ✅ done
+2026-05-10 PM (agent-arb-fundrate-tracer at strategy-service@2fdf7e8 with real-infra 2024-W1 run); L205 P&L
+attribution 🟡 unblocked-todo (next agent picks up — tracer output ready under `/tmp/arb_trace_2024_w1/`). Once Phase C
+ships, Stream B fully closes.
 
 ---
 

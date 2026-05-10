@@ -6,13 +6,14 @@ overview:
   source, and every auxiliary service, scoped per mode (paper / batch / live). Answers "could the operator launch the
   full system end-to-end today against real infra without a credential gap blocking any path."
 type: question
-status: iterating
+status: plan-spawned
 created: 2026-05-08
 last_audit: 2026-05-09
+plan_spawned: 2026-05-10
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-spawned_plan: null
+spawned_plan: plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md
 related_codex:
   - codex/04-architecture/interface-credential-convention.md
   - codex/06-coding-standards/config-reloader-pattern.md
@@ -745,4 +746,16 @@ Implementation-shape questions resolved by audit (no operator input needed):
 
 ## Plan extraction record
 
-(Empty — fills when the plan ships.)
+- **Plan path**: [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+- **Spawned**: 2026-05-10
+- **Status**: 9-phase execution plan, ~38-57 AI-days, deadline 2026-05-23.
+- **Self-contained**: plan body embeds all credential surfaces + sub-residuals + audit findings + pre-audit manifest + execution DAG + cross-phase coordination + cross-plan dependencies + per-phase success criteria + continuous-verification cadence. **No need to re-read this question doc to execute the plan.**
+- **Code shipped during extraction**: `deployment-service@9943e7c9` extends rotation-tracking SSOT with 8 venues + 5 data sources (closes part of R4 + R6).
+- **Single open operator-decision** (R9 sub-(a)): HSM-grade signing tier — Fireblocks (recommended) vs Copper-hot-wallet vs KMS-blob. Plan assumes Fireblocks at Phase 3.C; swap target if (b) or (c) chosen.
+- **Question doc status closes** when: all 9 plan phases ship + Phase 9 codex SSOTs durable + master plan continuous-verification column populated + pre-cutover sign-off gate passes.
+
+## Iteration log addendum
+
+| Date | Author | Change |
+| ---- | ------ | ------ |
+| 2026-05-10 | main agent | Plan spawned at `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`. Status → plan-spawned. Question doc retains audit archaeology + sub-residual reasoning; plan body is the executable surface. |

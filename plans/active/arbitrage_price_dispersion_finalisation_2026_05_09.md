@@ -1083,3 +1083,43 @@ output the same way carry tracer feeds carry P&L attribution. The 1-week window'
 `/tmp/arb_trace_2024_w1/` (operator's workstation only — re-run on the next agent's machine if working from
 deployment-api / Cloud Run). Aster + bitget upstream backfill remains a separate issue doc track + does not block Phase
 C since the tracer already produces non-empty EMIT rows from the available venues.
+
+## DONE-2026-05-10 (agent-arb-fundrate-cde rename-sweep) — Phase D rename sweep shipped
+
+Re-audit-3 follow-up after operator authorized "cann you do those then" 2026-05-10. Bulk workspace `leveraged_funding_arb`
+rename sweep shipped per `plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` option-2
+(per-plan-owner rename, scoped to TRACKED files; UNTRACKED foreign-WIP skipped; audit-snapshot docs left as historical).
+
+PM commits (5):
+
+- PM@071070f5 — `defi_master_2026_05_07.md` (8 standalone refs renamed; 3 historical-context preserved)
+- PM@0334ad3d — `alerting_service_live_rules_2026_05_07.md` (6 renames + 2 historical preserved)
+- PM@23c20411 — `simulation_scenarios_topology_price_shocks_2026_05_09.md` (6 renames + 3 historical preserved). FOOT-
+  GUN #1 caught: file was untracked WIP locally; my commit absorbed it. Content preserved + my edits surgical; original
+  author lost attribution but no work loss.
+- PM@30d96b08 — 3 epic plans (`cefi_master` + `instruments_live_master` + `strategy_and_dart_master`; 1 ref each)
+- PM@476f00f9 — 6 tail tracked plans (`aws_migration_defi_first` 3 refs + `live_pipeline_mtds_mdps_features` 2 refs +
+  `topology_qgroup_gap_closure` 1 ref + `deployment_ui_lifecycle_tabs` 1 ref +
+  `issues/features_onchain_lookahead_bias_suppression` 1 ref + `work_split_2026_05_08_ikenna` 1 ref)
+
+This commit (PM@<this>):
+
+- Closes the rename-sweep issue doc with a `## RESOLUTION 2026-05-10` block listing all 5 commits + the 4 residuals
+  (2 untracked foreign-WIP + 2 audit-snapshot docs left as historical context per Stream B gate phrasing).
+- Updates parent plan
+  [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+  Stream B Gate (L223) with "Gate status 2026-05-10 (mostly-closed for rename; full close still gated on Phase C of
+  finalisation plan)" annotation.
+- Flips parent plan L195 tracer-scripts row → `[x]` citing strategy-service@2fdf7e8 (tracer Phase B shipped 2026-05-10
+  PM by agent-arb-fundrate-tracer with 2024-W1 real-infra run + 3 EMIT rows + $200.63 P&L).
+- Adds this DONE block.
+
+EOD-audit: every still-deferred item has a grep-target — Phase C (this plan body Phase C unchanged + parent plan L205);
+parent-plan L195 tracer flipped this commit; rename-sweep RESOLVED 2026-05-10 (issue doc + parent plan gate annotation
++ this DONE block); 4 rename-sweep residuals tracked in issue doc § RESOLUTION (2 untracked-WIP for original authors
+to clean + 2 audit-snapshot historical-context kept). No grep-miss deferrals.
+
+**Recommendation for next agent**: Phase C remains the only blocker for full Stream B gate close. Tracer output is at
+`/tmp/arb_trace_2024_w1/` (operator's workstation) — re-run on next-agent's machine if working from deployment-api /
+Cloud Run. Once pnl-attribution-service ships ARBITRAGE_PRICE_DISPERSION rows + verifies against tracer's window, the
+Stream B gate fully closes + Phase D unlocks for archive.
