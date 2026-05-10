@@ -5,12 +5,13 @@ overview:
   Internal-strategy vs external-strategy (via client-supplied API keys). Is it solved end-to-end and could PnL
   attribution be offered as a standalone service?
 type: question
-status: drafting
+status: plan-spawned
 created: 2026-05-08
+plan_spawned: 2026-05-10
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-spawned_plan: null
+spawned_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md
 related_codex:
   - codex/04-architecture/separation-of-concerns.md
 related_plans:
@@ -142,8 +143,13 @@ simulations (capital-at-risk for stress scenarios). Is there a shared per-client
 computing per-client metrics independently?
 
 C2. How does it interact with **alerting**? Client-facing alerts (NAV drawdown breach, daily PnL threshold) vs
-operator-facing alerts (reconciliation drift between reported NAV vs ground-truth NAV). What's the routing
-(client-Firebase-channel vs Telegram operator channel)?
+operator-facing alerts (reconciliation drift between reported NAV vs ground-truth NAV). The current `AlertChannel`
+enum (UAC@d00326d) has 5 channels — `PAGERDUTY` / `TELEGRAM` / `SLACK` / `EMAIL` / `LOG_ONLY` — **none client-facing**.
+For per-client alerts, do we extend `AlertChannel` with `FIREBASE_CLIENT` / `EMAIL_CLIENT` / `IN_APP_CLIENT` (one
+canonical enum), or route per-client alerts via a separate service that consumes the same `AlertCode` taxonomy (two
+parallel surfaces)? Per-client subscription preferences (which alert types the client wants) — wired or out of scope?
+See sibling [`risk_simulations_limits_alerting_2026_05_08.md`](risk_simulations_limits_alerting_2026_05_08.md) Block
+C5 for the parallel framing of this question.
 
 C3. How does it interact with **custody / treasury** (Copper + CEFFU per master plan Group F item 19)? NAV must
 include custody-held assets + venue-margin assets + on-chain wallet assets. Is there a unified treasury view, or is

@@ -6,12 +6,13 @@ overview:
   (block vs monitor vs test). Owner of the canonical circuit-breaker rule taxonomy + the mock-data-as-stress-test
   surface that downstream plans consume.
 type: question
-status: drafting
+status: plan-spawned
 created: 2026-05-08
+plan_spawned: 2026-05-10
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-spawned_plan: null
+spawned_plan: plans/active/risk_simulations_limits_alerting_2026_05_10.md
 related_codex:
   - codex/04-architecture/kill-switch-circuit-breaker.md
   - codex/04-architecture/separation-of-concerns.md
@@ -27,6 +28,17 @@ related_plans:
 ---
 
 # Risk monitor + risk simulations + risk alerts + pre-flight risk checks — end-to-end wire-up question
+
+> **🟡 SSOT-RECONCILIATION FINDING (2026-05-10).** Spawned plan
+> [`plans/active/risk_simulations_limits_alerting_2026_05_10.md`](../active/risk_simulations_limits_alerting_2026_05_10.md)
+> proposes a new `RiskRuleConsequence` (BLOCK / SCALE_DOWN / MONITOR / TEST_ONLY) enum that may be SSOT contamination
+> from this question doc's first-pass reconstruction (which invented BLOCK / MONITOR / TEST taxonomy not present in
+> any workspace SSOT). Workspace already has 5 canonical risk SSOTs (4-layer risk-gates / 3 circuit-breaker actions /
+> 5 kill-switch trigger types / ErrorAction / 39-code AlertCode); spawned plan body cites none. See
+> [`plans/active/issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md`](../active/issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md)
+> for finding + 2-framing operator-decision matrix. Block D body of THIS question doc inherits the same first-pass
+> framing — readers should treat the {BLOCK / MONITOR / TEST} mentions as DRAFT-INFERENCE, not canonical, until the
+> issue doc closes.
 
 > **Reconstruction note (2026-05-10).** The original draft of this doc (created 2026-05-08) was lost — never committed
 > + erased from disk during parallel-agent activity. Re-spawned per
