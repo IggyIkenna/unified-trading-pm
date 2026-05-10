@@ -216,6 +216,18 @@ todos:
     content: |
       - [ ] [AGENT] P1. Phase 1.2 (now Phase 1.2B) — Migrate MDPS `_streaming_write_per_tf` to the new lifecycle.
 
+      **DEFERRED 2026-05-10 PM** — chain-agent re-attempted Phase 1.2B and surfaced a new dual-SSOT collision concern
+      that the spec'd shape creates. Phase 1.2A (MDPS@`afdb754`) successfully unified the manifest verb across the
+      chain-bundle and per-instrument paths (both emit `record_captured`); shipping Phase 1.2B as-spec'd would
+      RE-INTRODUCE a dual-SSOT — this time at the lifecycle layer (chain-bundle on UTL `open/write/close` lifecycle vs
+      per-instrument on `write_candle_parquet`'s one-shot lifecycle). Pre-requisite UTL fix shipped: UTL@`6ce59900`
+      exports `open_candle_writer / write_chunk / close_candle_writer / SchemaDriftError / CandleWriterHandle` from
+      the streaming facade (was deep-path only). Architectural concern + 3 resolution options (A: migrate
+      `write_candle_parquet` internally; B: ship as-spec'd accept temp dual-SSOT with named successor; C: re-scope
+      Phase 1.2B+2 to a new lifecycle-unification plan) tracked in
+      [`plans/active/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md).
+      Operator triage decision required before next attempt.
+
       Site: `market-data-processing-service/.../live_workers.py:1118-1164` (the `_streaming_write_per_tf`
       accumulator pattern). Current behaviour: accumulates a per-timeframe dict-of-lists in memory across the
       whole shard, then materialises one giant DataFrame at the end and shoves it through
@@ -249,12 +261,25 @@ todos:
           their own `record_captured`.
 
       QG: `cd market-data-processing-service && bash scripts/quality-gates.sh` clean.
-    status: todo
-    note: ""
+    status: blocked
+    note: |
+      "2026-05-10 PM chain-agent attempted; blocker = dual-SSOT lifecycle collision flagged in
+      issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md (Case 5 BIG finding per Findings Triage).
+      Pre-requisite UTL@`6ce59900` shipped (streaming facade re-exports). Architectural decision (Options A/B/C in
+      issue doc) required before next attempt; resumes when operator picks resolution path."
 
   - id: phase-2-resource-profiler-wiring
     content: |
       - [ ] [AGENT] P1. Phase 2 — Wire MDPS to ResourceProfiler.on_memory_warning for admission control.
+
+      **DEFERRED-AFTER-PHASE-1.2B 2026-05-10 PM** — plan execution DAG line ~423 ("Phase 2 has dep only on Phase 1.2
+      callsite") gates Phase 2 on Phase 1.2B landing. Phase 1.2B blocked on architectural decision per
+      [`issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md);
+      Phase 2 inherits the same gate. The "in-flight workers continue running" semantic for the admission-control
+      gate relies on Phase 1.2B's streaming flush state — shipping Phase 2 alone would gate new submits but in-flight
+      workers would still hold full-DF state in memory (weaker memory relief than the plan promises). UTL primitives
+      `ResourceProfiler.add_memory_warning_callback` (UTL@`3a204c03`) + `ParallelPerSymbolRunner` (UTL@`50ad40ef`)
+      already exist; the MDPS-side consumer wire-in is the deferred scope.
 
       Audit finding (verified by previous agent via `grep -r "ResourceProfiler|on_memory_warning"` in MDPS source
       = 0 hits): MDPS does NOT currently subscribe to memory warnings, so it has no backpressure path when a
@@ -288,8 +313,11 @@ todos:
       (4) in-flight shards complete cleanly after pause is engaged (no kill).
 
       QG: MDPS quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: deferred-after-phase-1-2b
+    note: |
+      "2026-05-10 PM chain-agent did not attempt; blocker = Phase 1.2B blocked on architectural decision per
+      issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md; plan execution DAG gates Phase 2 on Phase 1.2B
+      callsite. Resumes when Phase 1.2B unblocks."
 
   - id: phase-3-row-group-iterator-read
     content: |
@@ -498,7 +526,37 @@ upstream-detected) as complementary signals.
 - **Do NOT try to kill in-flight workers on memory warning** — Phase 2 explicitly gates only NEW submissions; killing
   in-flight loses the streaming flush state from Phase 1.
 
+## Deferred work after 2026-05-10 PM chain-agent session
+
+The 2026-05-10 PM chain-agent session shipped UTL@`6ce59900` (streaming facade re-exports of `open_candle_writer` /
+`write_chunk` / `close_candle_writer` / `SchemaDriftError` / `CandleWriterHandle` — pre-requisite for any MDPS consumer
+wire-in) and surfaced a Case 5 BIG architectural concern that blocks Phase 1.2B + Phase 2 from shipping cleanly under
+the spec'd shape. Items still open are tracked here so the next agent picks up cleanly.
+
+| Phase / item                                                          | Status as of 2026-05-10 PM           | Successor / blocker                                                                                                                                                                                                                              |
+| --------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Phase 1.2B — `_streaming_write_per_tf` migration to UTL lifecycle     | `blocked` (checkbox `- [ ]`)         | DEFERRED-PENDING-OPERATOR-TRIAGE per [`issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md). Three resolution options (A/B/C) in issue doc. ~6 AI-hours total. |
+| Phase 2 — ResourceProfiler.on_memory_warning + ConnectivityWatchdog   | `deferred-after-phase-1-2b` (`- [ ]`) | DEFERRED-AFTER-PHASE-1.2B per plan execution DAG. UTL primitives exist (UTL@`3a204c03` `add_memory_warning_callback` + UTL@`50ad40ef` `ParallelPerSymbolRunner`); MDPS consumer wire-in is the scope.                                              |
+| Phase 4 — End-to-end backfill VM validation + retire band-aid mem-bump | `todo` (`- [ ]`)                     | DEFERRED-AFTER-PHASES-1.2B-AND-2 per plan execution DAG. Real-infra run requirement per "Plans Run To Actual Completion" HARD RULE.                                                                                                              |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **Live-pipeline Phase 4** (`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4) inherits the dual-SSOT
+  collision risk via the live aggregator's `write_candle_parquet` integration point. Resolution Option A in the issue
+  doc (`write_candle_parquet`-internal lifecycle migration) is the cleanest unblock — the live aggregator then calls
+  `open_candle_writer` directly with the existing canonical_writer plumbing.
+- **MDPS Phase 1.2 + Phase 2 deferral 2026-05-10 (morning issue doc)**:
+  [`issues/mdps_phase_1_2_phase_2_deferral_2026_05_10.md`](issues/mdps_phase_1_2_phase_2_deferral_2026_05_10.md)
+  remains open as the prior session's deferral record; the new PM issue doc is the lifecycle-shape follow-up.
+- **Audit Item #3** (`issues/audit_2026_05_08_substantial_unfixed_items.md`) tracks the original audit finding that
+  spawned both deferral cycles. Still PARTIALLY-RESOLVED (Phase 1.2A + 1.2A.1 shipped; Phase 1.2B + Phase 2 + Phase 4
+  pending architectural decision + execution).
+
 ## Temporary states + their canonical follow-up plans
 
-This plan ITSELF is the successor for the deployment-service@`02ee6d6` band-aid memory bump. No further temporary state
-is introduced by this plan — Phases 1+2+3 are the final shape; Phase 4 retires the band-aid.
+This plan ITSELF is the successor for the deployment-service@`02ee6d6` band-aid memory bump. The dual-SSOT lifecycle
+collision concern surfaced 2026-05-10 PM is tracked in
+[`plans/active/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md);
+on operator triage of resolution Options A/C, a new `mdps_canonical_writer_lifecycle_unification_2026_05_NN.md` plan
+becomes the successor for Phase 1.2B + Phase 2 + Phase 4. No further temporary state is introduced by this plan —
+Phases 1+2+3 are the final shape; Phase 4 retires the band-aid.

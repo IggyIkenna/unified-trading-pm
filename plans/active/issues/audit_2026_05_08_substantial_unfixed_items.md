@@ -127,7 +127,21 @@ strategy_and_dart_master_2026_05_07.md.
 
 ---
 
-## Item 3 — MDPS streaming primitives unshipped (P0, blocks live_pipeline Phase 4) — PARTIAL 2026-05-09; PARTIAL-AGAIN 2026-05-10 (Phase 1.2A + Phase 1.2A.1 shipped; Phase 1.2B + Phase 2 still open)
+## Item 3 — MDPS streaming primitives unshipped (P0, blocks live_pipeline Phase 4) — PARTIAL 2026-05-09; PARTIAL-AGAIN 2026-05-10 (Phase 1.2A + Phase 1.2A.1 + UTL@`6ce59900` facade re-export shipped; Phase 1.2B + Phase 2 BLOCKED on architectural decision per `issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`)
+
+> **2026-05-10 PM-second update**: Dedicated MDPS-tab agent re-attempted Phase 1.2B and surfaced a NEW Case 5 BIG
+> architectural concern — shipping Phase 1.2B as-spec'd would create a dual-SSOT lifecycle collision (chain-bundle path
+> on UTL `open/write/close` lifecycle vs per-instrument path on `write_candle_parquet`'s one-shot lifecycle), undoing
+> the spirit of Phase 1.2A's manifest-verb unification. Pre-requisite UTL fix shipped: UTL@`6ce59900` exports
+> `open_candle_writer` / `write_chunk` / `close_candle_writer` / `SchemaDriftError` / `CandleWriterHandle` from the
+> streaming facade (was deep-path only). Architectural concern + 3 resolution options (A: migrate
+> `write_candle_parquet` internally; B: ship as-spec'd accept temp dual-SSOT with named successor; C: re-scope Phase
+> 1.2B+2 to a new lifecycle-unification plan) tracked in
+> [`mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md).
+> **Operator triage decision required before next attempt.** Phase 2 inherits the same gate per plan execution DAG
+> (Phase 2 has dep on Phase 1.2 callsite — the "in-flight workers continue running" semantic relies on Phase 1.2B's
+> streaming flush state). Plan body updated 2026-05-10 PM with structured `blocked` / `deferred-after-phase-1-2b`
+> annotations + deferred-work scoreboard.
 
 > **2026-05-10 PM update**: Phase 1.2A.1 SHIPPED — the production-blocking
 > `available_at` stamping landed at MDPS@`1cdcda7`. `write_candle_parquet`

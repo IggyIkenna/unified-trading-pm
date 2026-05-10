@@ -22,6 +22,16 @@ execution:
 
 # MDPS Phase 1.2 + Phase 2 deferral — second-pass attempt 2026-05-10
 
+> **2026-05-10 PM-second SUPERSEDED-BY**: this issue's "remaining scope is the per-batch chunking refactor… not blocked
+> by SSOT" framing was wrong. The PM-second chain-agent re-attempted Phase 1.2B and discovered that the spec'd shape
+> creates a NEW dual-SSOT lifecycle collision — the chain-bundle path migrating to UTL `open/write/close` lifecycle
+> while the per-instrument path keeps `write_candle_parquet`'s one-shot lifecycle WOULD undo Phase 1.2A's
+> verb-unification spirit at the lifecycle layer. Pre-requisite UTL fix shipped: UTL@`6ce59900` (streaming facade
+> re-exports). Architectural concern + 3 resolution options now tracked in
+> [`mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md)
+> — that issue doc is the active SSOT for Phase 1.2B + Phase 2 next steps. This issue stays open as the prior session's
+> deferral record (Phase 1.2A + 1.2A.1 RESOLVED here per below; Phase 1.2B + 2 redirected to the new issue doc).
+
 > **2026-05-10 PM RESOLVED-PARTIAL**: Phase 1.2A SHIPPED MDPS@`afdb754` (v5
 > manifest verb migration eliminated the dual-SSOT collision). Phase
 > 1.2A.1 SHIPPED MDPS@`1cdcda7` (write-time `available_at` stamping
