@@ -54,8 +54,8 @@
 
 ## Plans Covered
 
-| Plan                                 | Phases    | Todos Remaining | Reference                                                            |
-| ------------------------------------ | --------- | --------------- | -------------------------------------------------------------------- |
+| Plan                                 | Phases    | Todos Remaining | Reference                                                       |
+| ------------------------------------ | --------- | --------------- | --------------------------------------------------------------- |
 | Plan D: Testnet & Stress Testing     | Phase 0-6 | ~26 todos       | plans/active/plan_d_testnet_stress_testing_2026_03_21.md        |
 | fixed_grid_config_refactor           | Phase 1-5 | ~25 todos       | plans/active/fixed_grid_config_refactor_2026_03_21.md           |
 | uniform_ml_pipeline_sports_migration | Phase 1-5 | ~40+ todos      | plans/active/uniform_ml_pipeline_sports_migration_2026_03_20.md |

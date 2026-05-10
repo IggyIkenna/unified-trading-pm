@@ -35,23 +35,23 @@ git commit -- path/to/my/file -m "..."  # commits ONLY this path's worktree stat
 ```
 
 That single change dissolves 90% of the multi-agent commit pain — no stash dance, no `git restore --staged`, no
-foreign-bundling risk. **Reach for stash + restore-staged ceremony only when the pathspec form genuinely can't
-express your commit.**
+foreign-bundling risk. **Reach for stash + restore-staged ceremony only when the pathspec form genuinely can't express
+your commit.**
 
 ## DO NOT do these (anti-patterns, all observed to lose work or scramble state)
 
-| Don't                                                | Why                                                                                                                   | Do instead                                                                          |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `git add .` / `git add -A`                           | Sweeps in foreign uncommitted work, `.env` files, large binaries                                                      | `git add -- <specific-paths>`                                                       |
-| `git stash --keep-index --include-untracked`         | Combination INVERTS the staged set in some versions — your staged file ends up unstaged, foreign untracked end up staged. Observed 2026-05-08. | `git commit -- <my-file>` (pathspec form) — no stash needed                         |
-| `git restore --staged .`                             | Mass-unstage drops YOUR staged work too when concurrent agents are mid-staging. Observed 2026-05-08.                  | `git restore --staged <specific-foreign-file>` by name only                         |
-| `git stash drop <index>` blindly                     | Concurrent agents can insert NEW stashes at index 0 between your stash list read and your drop. Observed 2026-05-08.  | Read stash NAME (`git stash list`) before drop; use `git stash drop stash@{<name>}` — or dump first: `git stash show -p stash@{N} > /tmp/stash-N.patch` |
-| `git checkout origin/<branch> -- .`                  | Pulls foreign just-landed work into your tree as if yours                                                              | If you need a clean file, `git checkout HEAD -- <file>` (single path)               |
-| `--no-verify` / `git commit --no-verify`             | Skips pre-commit hooks (banned by workspace rule)                                                                     | Fix the hook failure root cause                                                     |
-| `SKIP_BRANCH_DRIFT=1 git commit ...`                 | The `check-branch-drift.sh` hook explicitly says "Human-only — agents MUST NOT use this override"                     | `git pull origin <branch>` then retry the commit                                    |
-| `git push --force` to main / staging                 | Overwrites remote-only work (e.g. semver-agent version bumps)                                                         | Investigate divergence; never force-push shared branches                            |
-| Manual version bumps (`pyproject.toml`, etc.)        | semver-agent handles bumps on merge to main                                                                           | Use conventional commit prefixes; semver-agent does the rest                        |
-| `--amend` on any commit                              | Pre-commit hook failure means commit DIDN'T happen — `--amend` modifies the PREVIOUS commit                            | Create a new commit                                                                 |
+| Don't                                         | Why                                                                                                                                            | Do instead                                                                                                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `git add .` / `git add -A`                    | Sweeps in foreign uncommitted work, `.env` files, large binaries                                                                               | `git add -- <specific-paths>`                                                                                                                           |
+| `git stash --keep-index --include-untracked`  | Combination INVERTS the staged set in some versions — your staged file ends up unstaged, foreign untracked end up staged. Observed 2026-05-08. | `git commit -- <my-file>` (pathspec form) — no stash needed                                                                                             |
+| `git restore --staged .`                      | Mass-unstage drops YOUR staged work too when concurrent agents are mid-staging. Observed 2026-05-08.                                           | `git restore --staged <specific-foreign-file>` by name only                                                                                             |
+| `git stash drop <index>` blindly              | Concurrent agents can insert NEW stashes at index 0 between your stash list read and your drop. Observed 2026-05-08.                           | Read stash NAME (`git stash list`) before drop; use `git stash drop stash@{<name>}` — or dump first: `git stash show -p stash@{N} > /tmp/stash-N.patch` |
+| `git checkout origin/<branch> -- .`           | Pulls foreign just-landed work into your tree as if yours                                                                                      | If you need a clean file, `git checkout HEAD -- <file>` (single path)                                                                                   |
+| `--no-verify` / `git commit --no-verify`      | Skips pre-commit hooks (banned by workspace rule)                                                                                              | Fix the hook failure root cause                                                                                                                         |
+| `SKIP_BRANCH_DRIFT=1 git commit ...`          | The `check-branch-drift.sh` hook explicitly says "Human-only — agents MUST NOT use this override"                                              | `git pull origin <branch>` then retry the commit                                                                                                        |
+| `git push --force` to main / staging          | Overwrites remote-only work (e.g. semver-agent version bumps)                                                                                  | Investigate divergence; never force-push shared branches                                                                                                |
+| Manual version bumps (`pyproject.toml`, etc.) | semver-agent handles bumps on merge to main                                                                                                    | Use conventional commit prefixes; semver-agent does the rest                                                                                            |
+| `--amend` on any commit                       | Pre-commit hook failure means commit DIDN'T happen — `--amend` modifies the PREVIOUS commit                                                    | Create a new commit                                                                                                                                     |
 
 ## Workflow
 
@@ -358,13 +358,13 @@ git log -1 --format='%h %s'
 
 ## Workspace anti-patterns (banned — observed to lose work or scramble state 2026-05-08)
 
-| Anti-pattern                                              | What goes wrong                                                                                | Use instead                                                                              |
-| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `git stash --keep-index --include-untracked`              | INVERTS staged set in some prek+git versions — staged file unstaged, foreign untracked staged  | `git commit -- <my-file>` pathspec form (no stash needed)                                |
-| `git restore --staged .` (mass-unstage)                   | Drops YOUR own staged work when concurrent agents are mid-staging                              | `git restore --staged <specific-file>` by name only                                      |
-| `git stash drop <index>` blindly                          | Concurrent agents insert NEW stashes at index 0 between your `list` read and `drop` call       | Read NAME first; dump via `git stash show -p stash@{N} > /tmp/stash-N.patch` before drop |
-| `SKIP_BRANCH_DRIFT=1`                                     | `check-branch-drift.sh` script: "agents MUST NOT use this override"                            | `git pull origin <branch>` then retry the commit                                         |
-| `git checkout origin/<branch> -- .`                       | Pulls foreign just-landed work into your tree as if yours                                       | `git checkout HEAD -- <single-file>` for targeted reset                                  |
+| Anti-pattern                                 | What goes wrong                                                                               | Use instead                                                                              |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `git stash --keep-index --include-untracked` | INVERTS staged set in some prek+git versions — staged file unstaged, foreign untracked staged | `git commit -- <my-file>` pathspec form (no stash needed)                                |
+| `git restore --staged .` (mass-unstage)      | Drops YOUR own staged work when concurrent agents are mid-staging                             | `git restore --staged <specific-file>` by name only                                      |
+| `git stash drop <index>` blindly             | Concurrent agents insert NEW stashes at index 0 between your `list` read and `drop` call      | Read NAME first; dump via `git stash show -p stash@{N} > /tmp/stash-N.patch` before drop |
+| `SKIP_BRANCH_DRIFT=1`                        | `check-branch-drift.sh` script: "agents MUST NOT use this override"                           | `git pull origin <branch>` then retry the commit                                         |
+| `git checkout origin/<branch> -- .`          | Pulls foreign just-landed work into your tree as if yours                                     | `git checkout HEAD -- <single-file>` for targeted reset                                  |
 
 **Pathspec form is the dance-free default for multi-agent staging collisions:**
 
@@ -373,10 +373,10 @@ git commit -- path/to/my/file -m "..."         # commits ONLY this path's worktr
 git commit --only -- path/to/my/file -m "..."  # explicit form, same semantics — `--only` is default with paths
 ```
 
-**Foot-gun #4 escalation** (per CLAUDE.md § "Foot-gun #4 — auto-revert hook racing your edits"): when `Edit`
-succeeds but file is unmodified after, OR commit lands under wrong author with empty diff, OR `Restored working
-tree changes from .../prek/patches/` appears in commit output — bundle Edit → stage → commit → push into ONE
-Bash call:
+**Foot-gun #4 escalation** (per CLAUDE.md § "Foot-gun #4 — auto-revert hook racing your edits"): when `Edit` succeeds
+but file is unmodified after, OR commit lands under wrong author with empty diff, OR
+`Restored working tree changes from .../prek/patches/` appears in commit output — bundle Edit → stage → commit → push
+into ONE Bash call:
 
 ```bash
 git add <my-file> \
@@ -385,17 +385,17 @@ git add <my-file> \
   && git push origin <branch>
 ```
 
-`--no-verify` is operator-authorized for this specific failure mode per 2026-05-08 direction _"fix to keep your
-work"_ — do NOT use it outside foot-gun #4 conditions.
+`--no-verify` is operator-authorized for this specific failure mode per 2026-05-08 direction _"fix to keep your work"_ —
+do NOT use it outside foot-gun #4 conditions.
 
 **Reference incidents (2026-05-08 ikenna_orchestrator bootstrap session):**
 
-- `git stash --keep-index --include-untracked` inverted the staged set: staged `_agent_pings.md` ended up
-  unstaged, 19 foreign files appeared in the index after stash pop.
+- `git stash --keep-index --include-untracked` inverted the staged set: staged `_agent_pings.md` ended up unstaged, 19
+  foreign files appeared in the index after stash pop.
 - `git restore --staged .` (mass) dropped CLAUDE.md edit alongside foreign files; had to be re-applied.
-- Wrong-stash drop: `claude-codex-sync-park-foreign-prek-2026-05-08` was at index 0 where MY stash had been
-  seconds earlier (concurrent agent inserted between read + drop). Recovery SHA preserved in
-  `git fsck --unreachable`: `09c3ad0af469ad3421c9d3e7621513c45d673040`.
+- Wrong-stash drop: `claude-codex-sync-park-foreign-prek-2026-05-08` was at index 0 where MY stash had been seconds
+  earlier (concurrent agent inserted between read + drop). Recovery SHA preserved in `git fsck --unreachable`:
+  `09c3ad0af469ad3421c9d3e7621513c45d673040`.
 
 ## See also
 

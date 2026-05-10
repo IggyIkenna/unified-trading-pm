@@ -60,8 +60,8 @@
 
 ## Plans Covered
 
-| Plan                              | Phases            | Todos Remaining                  | Reference                                                    |
-| --------------------------------- | ----------------- | -------------------------------- | ------------------------------------------------------------ |
+| Plan                              | Phases            | Todos Remaining                  | Reference                                               |
+| --------------------------------- | ----------------- | -------------------------------- | ------------------------------------------------------- |
 | Plan B: Config Hot-Reload         | Phase 0-3         | ~28 todos                        | plans/active/plan_b_config_hot_reload_2026_03_21.md     |
 | Plan C: Domain Data API Readiness | Phase 0-3         | ~11 todos                        | plans/active/plan_c_domain_data_api_2026_03_21.md       |
 | full_system_audit_resolution      | Phase 3 residuals | ~2 todos (P3-05, P3-06)          | plans/active/full_system_audit_resolution_2026_03_18.md |

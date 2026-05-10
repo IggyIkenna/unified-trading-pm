@@ -1062,8 +1062,8 @@ Edit template in PM (feat/* branch)
       commits + quickmerges each repo (idempotent — skip if already up-to-date)
 ```
 
-**Composite Action Inheritance (WIP — `composite_action_qg_inheritance_2026_03_12.md`):** Service repos reference
-PM composite actions — changes in PM actions take effect for all repos on next CI run without re-rollout:
+**Composite Action Inheritance (WIP — `composite_action_qg_inheritance_2026_03_12.md`):** Service repos reference PM
+composite actions — changes in PM actions take effect for all repos on next CI run without re-rollout:
 
 ```yaml
 # Target shape for per-repo quality-gates.yml (~20 lines):
@@ -1321,32 +1321,32 @@ See: `plans/active/cicd_code_rollout_master_2026_03_13.md` reverse-dep todos for
 
 ## References
 
-| Doc                                                                         | Purpose                                                                          |
-| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| **This doc**                                                                | Full CI/CD flow SSOT                                                             |
-| `docs/repo-management/CI-CD-PIPELINE.svg`                                   | Visual pipeline diagram (regenerate: `python3 scripts/generate-cicd-diagram.py`) |
-| `docs/repo-management/cicd-pipeline-definition.yaml`                        | YAML data source for diagram — edit this to change the diagram                   |
-| `docs/repo-management/version-cascade-flow.md`                              | Deep-dive: selective cascade mechanics, version bump chain                       |
-| `scripts/repo-management/README-ALIGNMENT-AND-SETUP.md`                     | Phase 1–2 detail                                                                 |
-| `docs/repo-management/sync-to-main-flow.md`                                 | Phase 3 detail                                                                   |
-| `scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`                           | Internal alignment                                                               |
-| `scripts/repo-management/check-dep-alignment.py`                            | Dep reconciliation gate (Phase 4)                                                |
-| `scripts/hooks/pre-push`                                                    | Git pre-push hook for dep check on staging pushes                                |
-| `.github/workflows/sit-gate.yml`                                            | Sets staging lock at SIT start                                                   |
-| `.github/workflows/sit-unlock.yml`                                          | Clears staging lock on SIT failure                                               |
-| `.github/workflows/cloud-build-router.yml`                                  | Routes qg-passed to correct GCP Cloud Build project                              |
-| `.github/workflows/conflict-resolution-agent.yml`                           | Autonomous conflict resolution (implementation pending)                          |
-| `.github/workflows/overnight-agent-orchestrator.yml`                        | Nightly T0→T1→T2→T3 agent audits                                                 |
-| `scripts/validation/validate-cloudbuild.py`                                 | Cloud Build YAML syntax validator                                                |
-| `scripts/validation/validate-buildspec.py`                                  | CodeBuild YAML syntax validator                                                  |
-| `scripts/propagation/templates/`                                            | GHA workflow templates propagated to all repos                                   |
-| `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`                               | Sub-agent rule file — paste at top of every agent prompt                         |
-| `scripts/rollout-agent-symlinks.sh`                                         | Rolls out .claude/CLAUDE.md + AGENTS.md symlinks to all 62 repos                 |
-| `scripts/setup-workspace-from-manifest.sh`                                  | Manifest-driven dep checkout + ephemeral cursor rules setup                      |
-| `scripts/generate-cicd-diagram.py`                                          | Diagram generator (YAML → SVG + HTML)                                            |
+| Doc                                                                    | Purpose                                                                          |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **This doc**                                                           | Full CI/CD flow SSOT                                                             |
+| `docs/repo-management/CI-CD-PIPELINE.svg`                              | Visual pipeline diagram (regenerate: `python3 scripts/generate-cicd-diagram.py`) |
+| `docs/repo-management/cicd-pipeline-definition.yaml`                   | YAML data source for diagram — edit this to change the diagram                   |
+| `docs/repo-management/version-cascade-flow.md`                         | Deep-dive: selective cascade mechanics, version bump chain                       |
+| `scripts/repo-management/README-ALIGNMENT-AND-SETUP.md`                | Phase 1–2 detail                                                                 |
+| `docs/repo-management/sync-to-main-flow.md`                            | Phase 3 detail                                                                   |
+| `scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`                      | Internal alignment                                                               |
+| `scripts/repo-management/check-dep-alignment.py`                       | Dep reconciliation gate (Phase 4)                                                |
+| `scripts/hooks/pre-push`                                               | Git pre-push hook for dep check on staging pushes                                |
+| `.github/workflows/sit-gate.yml`                                       | Sets staging lock at SIT start                                                   |
+| `.github/workflows/sit-unlock.yml`                                     | Clears staging lock on SIT failure                                               |
+| `.github/workflows/cloud-build-router.yml`                             | Routes qg-passed to correct GCP Cloud Build project                              |
+| `.github/workflows/conflict-resolution-agent.yml`                      | Autonomous conflict resolution (implementation pending)                          |
+| `.github/workflows/overnight-agent-orchestrator.yml`                   | Nightly T0→T1→T2→T3 agent audits                                                 |
+| `scripts/validation/validate-cloudbuild.py`                            | Cloud Build YAML syntax validator                                                |
+| `scripts/validation/validate-buildspec.py`                             | CodeBuild YAML syntax validator                                                  |
+| `scripts/propagation/templates/`                                       | GHA workflow templates propagated to all repos                                   |
+| `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`                          | Sub-agent rule file — paste at top of every agent prompt                         |
+| `scripts/rollout-agent-symlinks.sh`                                    | Rolls out .claude/CLAUDE.md + AGENTS.md symlinks to all 62 repos                 |
+| `scripts/setup-workspace-from-manifest.sh`                             | Manifest-driven dep checkout + ephemeral cursor rules setup                      |
+| `scripts/generate-cicd-diagram.py`                                     | Diagram generator (YAML → SVG + HTML)                                            |
 | `plans/active/conflict_resolution_agent_2026_03_13.md`                 | Conflict resolution agent implementation plan                                    |
 | `plans/active/work/cicd/composite_action_qg_inheritance_2026_03_12.md` | Composite GHA action inheritance plan                                            |
-| `scripts/propagation/templates/staging-version-gate.yml`                    | Per-repo staging version gate template (propagated to all repos)                 |
-| `terraform/environments/`                                                   | GCP project provisioning (dev/staging/prod)                                      |
-| **Codex**                                                                   | `06-coding-standards/setup-standards.md`, `dependency-management.md`             |
-| **Cursor rules**                                                            | `dependency-alignment-and-setup-flow.mdc`, `always-use-quickmerge.mdc`           |
+| `scripts/propagation/templates/staging-version-gate.yml`               | Per-repo staging version gate template (propagated to all repos)                 |
+| `terraform/environments/`                                              | GCP project provisioning (dev/staging/prod)                                      |
+| **Codex**                                                              | `06-coding-standards/setup-standards.md`, `dependency-management.md`             |
+| **Cursor rules**                                                       | `dependency-alignment-and-setup-flow.mdc`, `always-use-quickmerge.mdc`           |

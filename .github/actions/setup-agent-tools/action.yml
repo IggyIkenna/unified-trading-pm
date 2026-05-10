@@ -1,10 +1,8 @@
 name: Setup Agent CI Tools
 description: >
-  Install Node.js + Claude Code CLI globally so agent workflows
-  (plan-alignment-agent, agent-audit, etc.) can call `claude` from any
-  step. Replaces the per-repo inline install pattern that was added when
-  this composite action was missing — see features-delta-one-service /
-  strategy-service / features-sports-service prior fixes (2026-05-07).
+  Install Node.js + Claude Code CLI globally so agent workflows (plan-alignment-agent, agent-audit, etc.) can call
+  `claude` from any step. Replaces the per-repo inline install pattern that was added when this composite action was
+  missing — see features-delta-one-service / strategy-service / features-sports-service prior fixes (2026-05-07).
 
 inputs:
   node-version:

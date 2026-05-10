@@ -72,8 +72,8 @@
 
 ## Plans Covered
 
-| Plan                                 | Phases              | Todos Remaining | Reference                                                            |
-| ------------------------------------ | ------------------- | --------------- | -------------------------------------------------------------------- |
+| Plan                                 | Phases              | Todos Remaining | Reference                                                       |
+| ------------------------------------ | ------------------- | --------------- | --------------------------------------------------------------- |
 | Plan G: Auth & Entitlement           | Phase 0-4           | ~18 todos       | plans/active/plan_g_auth_entitlement_2026_03_21.md              |
 | Plan I: Client Reporting & Docs      | Phase 0-6           | ~31 todos       | plans/active/plan_i_client_reporting_docs_2026_03_21.md         |
 | instruments_service_completion       | Phases 3-6          | ~12 todos       | plans/active/instruments_service_completion_2026_03_21.md       |

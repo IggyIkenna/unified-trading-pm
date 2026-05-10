@@ -251,8 +251,8 @@ For local act runs, ensure `.act-secrets` has `GH_PAT=`. Status 400 = token lack
 ## 5c. Telegram Notification Flow (CI Status Update bot)
 
 Every QG run on every repo emits a Telegram message via the `ci-status-update.yml` → `notify-telegram.yml` chain. The
-message reflects the **underlying repo's CI state**, not the meta-job's delivery result, and includes an inline
-failure excerpt on red.
+message reflects the **underlying repo's CI state**, not the meta-job's delivery result, and includes an inline failure
+excerpt on red.
 
 ### End-to-end flow
 
@@ -317,8 +317,8 @@ View run
 | Message body          | `build-message` job — base format + optional `<pre>` excerpt block (only when STATUS=FAILING + non-empty). |
 | `View run`            | Dispatch run URL (the `ci-status-update` workflow run, not the source-repo QG run).                        |
 
-If the manifest-update job itself fails (rare — commit-conflict or similar), severity/conclusion also flip to ❌
-so a degraded write never shows a green tick.
+If the manifest-update job itself fails (rare — commit-conflict or similar), severity/conclusion also flip to ❌ so a
+degraded write never shows a green tick.
 
 ### Failure excerpt mechanics
 
@@ -328,35 +328,35 @@ so a degraded write never shows a green tick.
   EXCERPT_B64=$(sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' /tmp/qg_output.log | tail -n 30 | head -c 1500 | base64 | tr -d '\n')
   ```
   and adds it to the dispatch payload. Empty string on green.
-- **Receiver** (`ci-status-update.yml` `build-message` job): `base64 -d` decode → `sed` HTML-escape (`&` → `&amp;`,
-  `<` → `&lt;`, `>` → `&gt;`) → wrap in `<pre>...</pre>` under a `<b>Failure excerpt (last lines of QG output):</b>`
-  heading → export as job output `message`. Double-checks `STATUS=FAILING` so a stale field on a green dispatch
-  can't append a body block.
+- **Receiver** (`ci-status-update.yml` `build-message` job): `base64 -d` decode → `sed` HTML-escape (`&` → `&amp;`, `<`
+  → `&lt;`, `>` → `&gt;`) → wrap in `<pre>...</pre>` under a `<b>Failure excerpt (last lines of QG output):</b>` heading
+  → export as job output `message`. Double-checks `STATUS=FAILING` so a stale field on a green dispatch can't append a
+  body block.
 - **Backwards compatible.** Dispatchers that don't set `failure_excerpt_b64` (older forks, one-off `gh api` curls)
   render exactly as before — message body unchanged.
 
 ### Caps + caveats
 
-- **Length**: 30 lines, ~1500 chars. Telegram's HTML mode allows ~4096 chars total; the 1500 cap leaves headroom for
-  the heading + run URL + future fields. Verbose pytest tracebacks may show only the tail — full context is one
-  click away on `View run`.
-- **HTML mode**: Telegram parses `<pre>`, `<b>`, `<a href>` per Bot API HTML rules. `&`, `<`, `>` MUST be escaped
-  before embedding user-controlled text or the message rejects with `Bad Request: can't parse entities`. The
-  `build-message` job handles this; if you add new fields, escape them too.
+- **Length**: 30 lines, ~1500 chars. Telegram's HTML mode allows ~4096 chars total; the 1500 cap leaves headroom for the
+  heading + run URL + future fields. Verbose pytest tracebacks may show only the tail — full context is one click away
+  on `View run`.
+- **HTML mode**: Telegram parses `<pre>`, `<b>`, `<a href>` per Bot API HTML rules. `&`, `<`, `>` MUST be escaped before
+  embedding user-controlled text or the message rejects with `Bad Request: can't parse entities`. The `build-message`
+  job handles this; if you add new fields, escape them too.
 - **Singletons**: `notify-telegram.yml` is a reusable workflow. Other workflows (`schema-changed-handler.yml`,
   `staging-to-main.yml`, etc.) call it with their own `conclusion: ${{ needs.X.result }}` — those are correct because
-  the message body there reports their own job's outcome. Only meta-notifiers (workflows that announce ANOTHER
-  repo's state) need the field-derivation pattern from `ci-status-update.yml`.
+  the message body there reports their own job's outcome. Only meta-notifiers (workflows that announce ANOTHER repo's
+  state) need the field-derivation pattern from `ci-status-update.yml`.
 
 ### Where to edit each piece
 
-| Want to change                                    | Edit                                                                                |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Capture more / less log lines on failure          | `python-quality-gates.yml` + `ui-quality-gates.yml` `Record CI status` step (`tail -n N`, `head -c CAP`) |
-| Add a new field to the message body               | `ci-status-update.yml` `build-message` job + sender's `client_payload` JSON         |
-| Change emoji ↔ status mapping                     | `ci-status-update.yml` `notify.with.severity` + `.conclusion` expressions           |
-| Change Telegram channel / formatting              | `notify-telegram.yml` (HTML build + curl)                                           |
-| Add a new dispatcher (non-QG meta-notifier)       | New workflow → call `notify-telegram.yml`; mirror `ci-status-update.yml` pattern    |
+| Want to change                              | Edit                                                                                                     |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Capture more / less log lines on failure    | `python-quality-gates.yml` + `ui-quality-gates.yml` `Record CI status` step (`tail -n N`, `head -c CAP`) |
+| Add a new field to the message body         | `ci-status-update.yml` `build-message` job + sender's `client_payload` JSON                              |
+| Change emoji ↔ status mapping              | `ci-status-update.yml` `notify.with.severity` + `.conclusion` expressions                                |
+| Change Telegram channel / formatting        | `notify-telegram.yml` (HTML build + curl)                                                                |
+| Add a new dispatcher (non-QG meta-notifier) | New workflow → call `notify-telegram.yml`; mirror `ci-status-update.yml` pattern                         |
 
 History: `Conclusion: success` previously rendered for every `FAILING` repo (the meta-job's manifest write succeeded
 even when the underlying CI was red); fixed PM@dca9b3ee 2026-05-08. Failure excerpt added PM@df286502 2026-05-08.

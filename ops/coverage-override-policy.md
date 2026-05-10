@@ -114,8 +114,8 @@ To change:
 
 - [quickmerge.sh — canonical][qm] — lines parsing `--admin-override-coverage` and the Phase-3 QG capture/detect/gate
   block
-- [coverage_ratchet_policy_2026_04_19.md](../plans/active/coverage_ratchet_policy_2026_04_19.md) — the ratchet
-  that sets each repo's `MIN_COVERAGE`
+- [coverage_ratchet_policy_2026_04_19.md](../plans/active/coverage_ratchet_policy_2026_04_19.md) — the ratchet that sets
+  each repo's `MIN_COVERAGE`
 - [coverage-floor-guard.sh](../scripts/coverage-floor-guard.sh) — system-floor governance (70) + per-repo exception
   files
 
