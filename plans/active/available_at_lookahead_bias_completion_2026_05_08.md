@@ -9,27 +9,24 @@ locked_since: 2026-05-08
 name: available-at-lookahead-bias-completion-2026-05-08
 title: "available_at + lookahead-bias master — SINGLE OWNER for all stamping work"
 folds_in:
-  - api_football_minimal_flattening_removal_2026_05_07  # Phase 3 stamping wiring scope
-  - wave3x_residual_ssots_2026_05_08                    # Track E sports stamping helpers
-  - sports_master_2026_05_07                            # Phase 1-2 per-adapter wiring scope
+  - api_football_minimal_flattening_removal_2026_05_07 # Phase 3 stamping wiring scope
+  - wave3x_residual_ssots_2026_05_08 # Track E sports stamping helpers
+  - sports_master_2026_05_07 # Phase 1-2 per-adapter wiring scope
   # Implicit children (no separate plan): every CeFi/DeFi/TradFi tick adapter that needs
   # tick.timestamp + UAC SOURCE_PRIORITY scrape latency stamping per CLAUDE.md
   # "available_at semantics".
 overview: >-
-  **SINGLE-OWNER UMBRELLA for all `available_at` stamping work across the workspace** (codified
-  2026-05-08 per operator direction "same with available_at ownership do the same"). Stamping
-  helpers do NOT execute in isolation — the source-specific stamping rule (UAC SSOT) +
-  per-adapter `available_at` column write + UTL `record_captured` enforcement
-  (`assert_available_at_present`) co-evolve as one atomic unit per asset_group. Audit 2026-05-08
-  found ~60% chain coverage with the gaps being implicit (assumed to roll downhill from one
-  master plan to the next) rather than explicitly owned. This plan makes every chain link
-  explicit, references the existing owners where coverage is real, and owns the gap items
-  directly. Chain has 11 links: (0) MDPS bar timestamp + available_at semantics, (1)
-  per-asset-group adapter stamping, (2) historical parquet backfill, (3) reader propagation,
-  (4) UAC FEATURE_REQUIRED_INPUTS expansion, (5) UAC AVAILABILITY_AT_SEMANTICS coverage audit,
-  (6) calculator/writer-boundary enforcement (Tab 12), (7) ManifestWriter
-  assert_available_at_present guard, (8) QG static check, (9) e2e integration test, (10)
-  honest-empty parquet safeguard. Audit fully detailed in body \xA7 "Audit 2026-05-08".
+  **SINGLE-OWNER UMBRELLA for all `available_at` stamping work across the workspace** (codified 2026-05-08 per operator
+  direction "same with available_at ownership do the same"). Stamping helpers do NOT execute in isolation — the
+  source-specific stamping rule (UAC SSOT) + per-adapter `available_at` column write + UTL `record_captured` enforcement
+  (`assert_available_at_present`) co-evolve as one atomic unit per asset_group. Audit 2026-05-08 found ~60% chain
+  coverage with the gaps being implicit (assumed to roll downhill from one master plan to the next) rather than
+  explicitly owned. This plan makes every chain link explicit, references the existing owners where coverage is real,
+  and owns the gap items directly. Chain has 11 links: (0) MDPS bar timestamp + available_at semantics, (1)
+  per-asset-group adapter stamping, (2) historical parquet backfill, (3) reader propagation, (4) UAC
+  FEATURE_REQUIRED_INPUTS expansion, (5) UAC AVAILABILITY_AT_SEMANTICS coverage audit, (6) calculator/writer-boundary
+  enforcement (Tab 12), (7) ManifestWriter assert_available_at_present guard, (8) QG static check, (9) e2e integration
+  test, (10) honest-empty parquet safeguard. Audit fully detailed in body \xA7 "Audit 2026-05-08".
 
 type: mixed
 epic: epic-code-completion
@@ -257,11 +254,22 @@ todos:
       `defi_master_2026_05_07` referencing this plan. **Coordinator:** this plan tracks completion; ship in
       `defi_master`.
 
-- [ ] [SCRIPT] P0. **CeFi adapter stamping**. Per-adapter `available_at` stamping for: Bybit, Binance, OKX, Deribit,
+- [x] [SCRIPT] P0. **CeFi adapter stamping**. Per-adapter `available_at` stamping for: Bybit, Binance, OKX, Deribit,
       Bitfinex, Bitget, Coinbase, Hyperliquid, Kraken, Aster — across ohlcv*\*, trades, funding_rate, perp*\*,
       options_chain, futures_chain. For tick-level: `available_at = tick_timestamp + source_priority_scrape_latency` per
       UAC `SOURCE_PRIORITY`. For bar data: depends on Phase 0 (MDPS-side stamping). Add Phase-2-equivalent todos to
       `cefi_master_2026_05_07` referencing this plan.
+      Shipped MTDS@4a00bd5 + UAC@e197173 + UTL@29555212. Per the F2 issue doc reshape (per-callsite at writer
+      boundary, NOT 10 per-venue files), MTDS today routes cefi tick data through `PartitionedTickWriter` (not
+      direct UTL `record_captured` callsites), so the right wiring lives at `engine/orchestrator.py` write-chunk
+      time. `PartitionedTickWriter.write_chunk` now stamps `available_at = timestamp + emission_latency_ms_for_source(primary_source)`
+      via `stamp_available_at_cefi_tick(...)` when asset_group=="cefi" and the df lacks the column. Primary source
+      resolved per UAC `SOURCE_PRIORITY[("cefi", data_type)]` (Tardis = 50ms canonical CeFi tick source). Bar-data
+      stamping still depends on Phase 0 MDPS bar-boundary contract. Already-stamped dfs preserved; unregistered
+      (cefi, data_type) skipped silently. 5 unit tests at
+      `market-tick-data-service/tests/unit/test_partitioned_writer_cefi_available_at.py`. Issue doc resolved:
+      `plans/active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`.
+      status: done
 
 - [ ] [SCRIPT] P0. **TradFi adapter stamping**. Per-adapter `available_at` stamping for: Databento (futures + ETFs +
       options), Polygon, Yahoo Finance (VIX 15m fallback), Barchart historical preload. CME options chain + ES.OPT

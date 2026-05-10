@@ -71,6 +71,15 @@ manifest_schema_final_gate_2026_05_09 + launcher_scripts_consolidation Phase 0/1
 annotations + 2026-05-10 audit-session deferred-work scoreboard added to work_split_2026_05_08_ikenna.md. Cross-side
 note for Harsh: no Harsh-side dependencies created; pure Ikenna-side governance hygiene.
 
+[2026-05-10 14:35 UTC] mtds-utl-completion-tab — ℹ️ INFO (no ack required): Wave-2 Phase 1 + 3 first item + F2-v2
+item 2 SHIPPED. UTL@ef47c81b `record_captured_from_counts` streaming-writer companion + 11 tests; MTDS@a2f8d80
+prediction `canonical_question_group` bundle finalize using new helper + 5 tests; MTDS@4a00bd5 cefi `available_at`
+per-row stamping at `PartitionedTickWriter.write_chunk` boundary via `stamp_available_at_cefi_tick` (Tardis = 50ms
+emission latency) + 5 tests. Plan flips: `wave2_polymarket_record_captured_from_counts_2026_05_09` Phase 1 + Phase 3
+first item flipped done; `predictions_master_2026_05_07` Q2 ✅ RESOLVED with shipped option (δ);
+`available_at_lookahead_bias_completion_2026_05_08` Phase 1 P0 CeFi adapter stamping flipped done; F2 issue doc
+`cefi_available_at_spawn_task_structural_mismatch_2026_05_08` resolved-banner added.
+
 <!--
 Resolved pings (cleared 2026-05-08 ~14:30 UTC by main orchestrator on operator's behalf):
 
