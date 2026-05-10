@@ -1589,6 +1589,92 @@ commit, not from another agent's dirty files that got bundled into the staging s
   watcher set 5 min after the LAST push is sufficient. CI runs the full HEAD; older commits' results don't matter if the
   latest is green.
 
+## Grep-Then-Read, Not Grep-Then-Conclude (HARD RULE codified 2026-05-10)
+
+When auditing / scanning / answering "does X exist in the codebase" / "is feature Y shipped" questions: **a literal grep
+with 0 hits is NEVER sufficient to conclude the feature is missing.** Many features are resolved at runtime via patterns
+where the literal name does NOT appear in the source: regex-based dispatch, StrEnum value lookups, factory registries,
+dynamic attribute access, plugin discovery, configuration-driven wiring. A grep-then-conclude audit will report
+false-negatives that waste cycles re-auditing + dispatching agents to "fix" already-shipped work.
+
+### Reference incident (2026-05-08 → 2026-05-10 9-agent audit closure)
+
+Cluster 9 audit reported 4 findings as "missing" based on literal grep with 0 hits. Three of the four were already
+shipped via runtime-resolved patterns:
+
+- **defi_archetypes Stream B ARBITRAGE_PRICE_DISPERSION**: cluster reported "zero references" in
+  `pnl-attribution-service`. Reality: `pnl_attribution_service/engine/archetype_aggregator.py:59` uses
+  `_SLOT_PREFIX_RE` regex + `:65` `_FUNDING_RATE_DISP_MARKER` — generic routing matches at runtime; the literal string
+  `"ARBITRAGE_PRICE_DISPERSION"` is never a substring in source.
+- **CeFi testnet wiring**: cluster reported "no testnet-specific branch paths or env toggles found." Reality: all 5
+  CCXT adapters had `testnet: bool = False` constructor param routing to `set_sandbox_mode(True)` — present in source
+  but the audit grep used `testnet` as a token and conflated config-flag location with implementation.
+- **Master plan Continuous-Verification column**: cluster reported "ABSENT" + recommended building it. Reality: the
+  column was shipped at PM@`1d74f617` (master plan lines 767-825); the audit's grep didn't read far enough into the
+  file to see it past the 1000-line top-of-file block.
+- **DART backend manual-trade endpoints**: cluster spec said "build `/api/dart/manual-trade` + `/api/dart/preview` from
+  scratch." Reality: `execution-service/execution_service/api/manual_instruction_api.py` (682 lines) +
+  `preview_routes.py` (320 lines) + `manual_schemas.py` + `preview_schemas.py` + `ManualOperationHandler` all already
+  shipped. Build agent re-audited + cancelled the redundant scope.
+
+Each of these wasted between ~5min (re-audit) and ~2hr (dispatched implementation agent then cancelled). Aggregate
+across the 9-agent audit: ~6-10 hours of avoidable cycles. Codifying the methodology prevents recurrence.
+
+### The discipline (mandatory for every audit / scan / "does X exist" question)
+
+1. **Run the literal grep first** — fast filter. `grep -rn "<exact-token>" --include='*.py' <scope>`.
+2. **If 0 hits OR very few hits, escalate to read** — open the candidate consumer files + adjacent factory / dispatcher
+   / registry modules. Spend 2-5 minutes reading the surrounding code.
+3. **Look for these runtime-resolution patterns** before concluding "missing":
+   - **Regex-based dispatch**: `re.compile(...)` patterns that match by structure rather than literal name (e.g.
+     `_SLOT_PREFIX_RE`, `_FUNDING_RATE_DISP_MARKER`, route patterns in FastAPI/Flask).
+   - **StrEnum / Literal value lookups**: registries keyed by enum member where the literal value is referenced only as
+     `EnumName.MEMBER.value` — literal grep on the string value misses these.
+   - **Factory / plugin registries**: dict-keyed dispatchers (`{"venue_name": VenueClass}`); the literal venue name may
+     only appear in the registry seed, not in the consumer code path.
+   - **Dynamic attribute access**: `getattr(obj, name)` / `setattr` / `__getattr__` hooks — the attribute name is a
+     runtime variable, not a literal.
+   - **Configuration-driven wiring**: YAML / JSON / `.env` config that maps string keys to behaviour at startup; the
+     literal key only appears in the config file, not in code.
+   - **Re-export chains**: `from .submodule import X` followed by `__all__ = ["X"]` — consumer code may import `X`
+     from the root facade, never mentioning the submodule.
+4. **For each runtime-resolution candidate found, verify the actual behaviour**:
+   - Read the dispatch logic + trace the runtime path for the symbol in question.
+   - Grep for the dispatch pattern itself (e.g. `grep -rn "_SLOT_PREFIX_RE\|_FUNDING_RATE_DISP_MARKER"`) — usually
+     surfaces the runtime wiring in 1-2 hits.
+   - If the runtime path resolves the symbol correctly, the feature IS shipped — flip your conclusion from "missing"
+     to "shipped via runtime-resolution at <file:line>".
+5. **When uncertain, ASK rather than CONCLUDE.** A 1-line operator question ("does ARBITRAGE_PRICE_DISPERSION ship via
+   regex routing in pnl-attribution?") is cheaper than dispatching an agent to re-implement already-shipped work.
+6. **For master-plan-scale documents (>50KB)**: read past the executive summary. Big plans bury concrete delivery
+   evidence deeper than the introductory grep window. Use `wc -l <file>` to gauge document size; for >1000-line plans,
+   chunked Reads with `offset` are mandatory before claiming "not present."
+
+### Composes with
+
+- `Findings Triage Discipline` (below) — case-1-to-5 routing assumes the finding is real; this rule is the prerequisite
+  step that verifies the finding before triage.
+- `Citadel-Grade Planning § 1 Pre-Audit Before Execution` — pre-audit blast radius requires the same grep-then-read
+  rigour; lit grep with 0 hits on a removed symbol does NOT mean "no consumer affected." Read the runtime-resolution
+  candidates.
+- `Plans must capture full codebase impact upfront` — full impact enumeration depends on this rule firing during the
+  pre-audit pass.
+- `AST-walk QG STEP 5.65` (`unified-trading-pm/scripts/quality_gates/check_removed_symbols.py`) — codifies the
+  grep-then-read pattern as runtime enforcement for removed-symbol detection: it parses the AST + walks attribute
+  accesses (not just literal substring matches) to catch the regression class this rule is designed to prevent.
+
+### Anti-patterns (banned)
+
+- **"Grep returned 0 hits → feature missing"** without reading neighbouring files. The 4 reference incidents above are
+  all instances of this anti-pattern.
+- **"Spec says build X" without verifying X doesn't already ship.** Spawn-prompts to implementation agents must include
+  "verify via grep-then-read that the feature doesn't already exist" as STEP 0 before any code authoring.
+- **Reading only the executive summary of a >50KB plan** then concluding work is missing. The plan body is the
+  authoritative state record; the summary is just the index.
+- **Re-implementing already-shipped work because the audit was misframed.** If you discover mid-implementation that the
+  feature already exists, STOP, document the misframing as a finding, withdraw the redundant scope. Per CLAUDE.md
+  "Plans Run To Actual Completion" — duplicate-effort builds are a form of technical debt.
+
 ## Findings Triage Discipline (HARD RULE)
 
 When you discover an issue mid-task — a QG failure on someone else's code, a silent bug in a sample data row, a doc/code
@@ -1796,8 +1882,8 @@ Plans MUST define execution phases with clear dependencies:
 - Clean breaks: old implementation deleted, new implementation in place, consumers updated
 - **Exception**: When working on a single repo without all downstream siblings available, backwards compatibility IS
   allowed temporarily. Document it as a follow-up todo.
-- When all active repos are available (full workspace; count derives from `workspace-manifest.json` `repositories`
-  keys excluding `archived_into` — currently 27 active after features-* consolidation 2026-05-08): zero technical debt,
+- When all active repos are available (full workspace; count derives from `workspace-manifest.json` `repositories` keys
+  excluding `archived_into` — currently 27 active after features-\* consolidation 2026-05-08): zero technical debt,
   update everything
 
 ### 4. Parallelization
