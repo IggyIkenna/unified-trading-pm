@@ -25,9 +25,9 @@ execution:
 **Fix shipped at e2e-testing@`dfb7abe6`** ("fix(e2e-testing): paper-trade harness — migrate get_strategy_factories
 import to V2BatchHarness.from_strategy_type"). Migration shape:
 
-- `_create_strategy(strategy_id)` now calls `V2BatchHarness.from_strategy_type(strategy_id)` (registry-keyed
-  classmethod that wraps `STRATEGY_TYPE_TO_SLOT` lookup) + `harness.load_initial_positions_from_gcs()`. Returns
-  the stateful harness.
+- `_create_strategy(strategy_id)` now calls `V2BatchHarness.from_strategy_type(strategy_id)` (registry-keyed classmethod
+  that wraps `STRATEGY_TYPE_TO_SLOT` lookup) + `harness.load_initial_positions_from_gcs()`. Returns the stateful
+  harness.
 - `_run_strategy_tick(strategy, ts, features, positions)` delegates to `harness.on_tick(candle, features, None, ts)`.
   The harness's `on_tick` returns `list[dict[str, object]]` directly via `_envelope_to_dict`; legacy fallback paths
   (`generate_defi_signal` / `generate_signal`) and the `_instruction_to_dict` helper deleted.
@@ -41,16 +41,17 @@ critical-path) flagged this as P0 false-positive in master Group F Item 17 with 
 dispatched 2026-05-08 evening; resolved within session.
 
 **Outstanding follow-ups** (non-blocking):
+
 - `STRATEGY_CATEGORIES` table at `colocated_engine.py:77-103` is now drift-prone — strategy-service
   `batch_utils.py:51-124` is the SSOT (more strategies + correct deletions). Flagged for e2e-testing maintainer.
 - CLAUDE.md "Peripheral Script Directories Under Primary-Consumer QG" rule needs concrete wiring of
   `e2e-testing/scripts/defi/` into `strategy-service/scripts/quality-gates.sh` (basedpyright + ruff +
-  import-resolution). Tracked in [`runbook_execution_governance_gaps_2026_05_08.md`](runbook_execution_governance_gaps_2026_05_08.md).
+  import-resolution). Tracked in
+  [`runbook_execution_governance_gaps_2026_05_08.md`](runbook_execution_governance_gaps_2026_05_08.md).
 
 ---
 
 # Original issue (resolved — kept for archaeology)
-
 
 # 🚨 P0 BLOCKER — paper-trade smoke harness stale import
 
@@ -80,13 +81,13 @@ operator (or this Tab 1 agent) actually attempted to execute the runbook.
 ## Why it matters
 
 1. **May-23 lead-archetype gating**: paper-trade smoke is the success criterion for `master_to_live_defi_2026_05_23.md`
-   Group F item 17 + Group G item 23 (DART manual-trade gate). Without it, May-23 LIVE-on-real-wallet milestone has
-   no end-to-end proof that strategy → execution → PBM → risk wiring works.
-2. **Cross-cutting failure**: blocks every DeFi strategy — not just `carry_staked_basis`. Affects Fork 1 + Fork 2 +
-   any DeFi archetype operator wants to paper-test.
-3. **Silent rot signal**: 7 days of un-detected breakage matches the gap pattern user flagged
-   ("runbooks shipped + nobody runs them + harness rots"). Need an operator-runnable smoke executed periodically (cron
-   or daily Tab assignment) to catch this class of regression.
+   Group F item 17 + Group G item 23 (DART manual-trade gate). Without it, May-23 LIVE-on-real-wallet milestone has no
+   end-to-end proof that strategy → execution → PBM → risk wiring works.
+2. **Cross-cutting failure**: blocks every DeFi strategy — not just `carry_staked_basis`. Affects Fork 1 + Fork 2 + any
+   DeFi archetype operator wants to paper-test.
+3. **Silent rot signal**: 7 days of un-detected breakage matches the gap pattern user flagged ("runbooks shipped +
+   nobody runs them + harness rots"). Need an operator-runnable smoke executed periodically (cron or daily Tab
+   assignment) to catch this class of regression.
 
 ## Recommended fix
 
@@ -113,13 +114,14 @@ e2e-testing/scripts/defi/colocated_engine.py file is outside Tab 1's clear conte
 ## Recommended decision
 
 1. **Operator immediate**: assign a Tab to migrate `colocated_engine.py` to the new dispatch shape. ~1-2 AI-days.
-2. **Add periodic execution**: cron-wakeup or daily Tab assignment to actually run the paper-trade smoke. Catches
-   silent rot like this.
-3. **Catalog reference**: paper-trade smoke listed as Group F item 17 success criterion → must be actually green
-   before May-23.
+2. **Add periodic execution**: cron-wakeup or daily Tab assignment to actually run the paper-trade smoke. Catches silent
+   rot like this.
+3. **Catalog reference**: paper-trade smoke listed as Group F item 17 success criterion → must be actually green before
+   May-23.
 
 Cross-references:
 
 - Tab 1 paper-trade runbook: `plans/active/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md`
 - Tab 1 work-split: `plans/active/work_split_2026_05_08_ikenna.md` § "TAB 1 Item 1"
-- Strategy-service V1-RETIRE: search commit history `git log --all --oneline -- strategy-service/strategy_service/cli/handlers/batch_utils.py`
+- Strategy-service V1-RETIRE: search commit history
+  `git log --all --oneline -- strategy-service/strategy_service/cli/handlers/batch_utils.py`
