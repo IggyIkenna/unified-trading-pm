@@ -106,8 +106,8 @@ Kill Switch Activated (manual or automatic)
 ### Ownership
 
 - **Per-venue state machine**: `execution-service/engine/circuit_breaker.py`
-- **Cross-service propagation**: `alerting-service` subscribes to execution-service events and publishes
-  `CIRCUIT_OPEN` (UAC `LifecycleEvent`) to `circuit-breaker-commands` topic.
+- **Cross-service propagation**: `alerting-service` subscribes to execution-service events and publishes `CIRCUIT_OPEN`
+  (UAC `LifecycleEvent`) to `circuit-breaker-commands` topic.
 
 ### States
 
@@ -267,24 +267,25 @@ before any action."
 
 ## PubSub Events
 
-| Event                               | Published by      | Severity | Subscribers                    |
-| ----------------------------------- | ----------------- | -------- | ------------------------------ |
-| `KILL_SWITCH_ACTIVATED`             | execution-service | CRITICAL | All services, alerting         |
-| `KILL_SWITCH_DEACTIVATED`           | execution-service | INFO     | All services, alerting         |
-| `KILL_SWITCH_AUTO_DEACTIVATED`      | execution-service | WARNING  | All services, alerting         |
-| `KILL_SWITCH_BLOCKED_STARTUP`       | execution-service | CRITICAL | Alerting                       |
-| `CIRCUIT_OPEN`                      | execution-service | ERROR    | Alerting, all services         |
-| `CIRCUIT_HALF_OPEN`                 | execution-service | WARNING  | Alerting                       |
-| `CIRCUIT_CLOSED`                    | execution-service | INFO     | Alerting, all services         |
-| `POSITION_DRIFT_DETECTED`           | PBMS              | HIGH     | Alerting, UI                   |
-| `UNHEDGED_POSITION_ALERT`           | execution-service | CRITICAL | Alerting                       |
-| `MULTI_LEG_COMPENSATION_FAILED`     | execution-service | CRITICAL | Alerting                       |
+| Event                           | Published by      | Severity | Subscribers            |
+| ------------------------------- | ----------------- | -------- | ---------------------- |
+| `KILL_SWITCH_ACTIVATED`         | execution-service | CRITICAL | All services, alerting |
+| `KILL_SWITCH_DEACTIVATED`       | execution-service | INFO     | All services, alerting |
+| `KILL_SWITCH_AUTO_DEACTIVATED`  | execution-service | WARNING  | All services, alerting |
+| `KILL_SWITCH_BLOCKED_STARTUP`   | execution-service | CRITICAL | Alerting               |
+| `CIRCUIT_OPEN`                  | execution-service | ERROR    | Alerting, all services |
+| `CIRCUIT_HALF_OPEN`             | execution-service | WARNING  | Alerting               |
+| `CIRCUIT_CLOSED`                | execution-service | INFO     | Alerting, all services |
+| `POSITION_DRIFT_DETECTED`       | PBMS              | HIGH     | Alerting, UI           |
+| `UNHEDGED_POSITION_ALERT`       | execution-service | CRITICAL | Alerting               |
+| `MULTI_LEG_COMPENSATION_FAILED` | execution-service | CRITICAL | Alerting               |
 
 > **Lifecycle vs Alert taxonomy.** The events above are UAC `LifecycleEvent` enum members emitted via `log_event()`. The
 > alerting-service derives UAC `AlertCode` taxonomy from these (`CIRCUIT_BREAKER_OPEN`, `CIRCUIT_BREAKER_DEGRADED`,
-> `CIRCUIT_BREAKER_CLOSED`, `CIRCUIT_BREAKER_BACKOFF_ESCALATING`) for routing rules — see `03-observability/alerting.md`.
-> The two enums have different naming on purpose: lifecycle events are short-form (`CIRCUIT_OPEN`); AlertCodes prefix
-> with the subsystem (`CIRCUIT_BREAKER_*`) for pattern-routing in `alerting-service/notifiers/router.py`.
+> `CIRCUIT_BREAKER_CLOSED`, `CIRCUIT_BREAKER_BACKOFF_ESCALATING`) for routing rules — see
+> `03-observability/alerting.md`. The two enums have different naming on purpose: lifecycle events are short-form
+> (`CIRCUIT_OPEN`); AlertCodes prefix with the subsystem (`CIRCUIT_BREAKER_*`) for pattern-routing in
+> `alerting-service/notifiers/router.py`.
 
 ---
 

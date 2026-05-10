@@ -239,5 +239,6 @@ This is documented in the testing progression.
 
 - **Implementation:** `strategy-service/engine/strategies/sports/market_making.py`
 - **Betfair adapter:** `execution-service/adapters/exchanges/betfair.py`
-- **Betfair market data:** `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py`
+- **Betfair market data:**
+  `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py`
 - **Hard rules:** [config-architecture.md](../cross-cutting/config-architecture.md)

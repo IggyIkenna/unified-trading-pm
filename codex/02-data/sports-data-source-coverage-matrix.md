@@ -71,10 +71,10 @@ dates resolved per league via `get_league_fixture_calendar(league_id, start, end
 #### Expected column counts per API-Football data_type (regression guard, codified 2026-05-08)
 
 After the api_football minimal-flattening removal (plan:
-`plans/active/api_football_minimal_flattening_removal_2026_05_07.md`,
-UAC@c76e6d0 + instruments-service@539130f), every API-Football per-fixture parquet on disk must carry the expanded
-column shape declared in `unified_api_contracts/internal/schemas/_sports_match_contracts.py`. A future regression to
-the prior "minimal flattening" shape (only `fixture_id + data_available_at`) is caught by this row-count gate:
+`plans/active/api_football_minimal_flattening_removal_2026_05_07.md`, UAC@c76e6d0 + instruments-service@539130f), every
+API-Football per-fixture parquet on disk must carry the expanded column shape declared in
+`unified_api_contracts/internal/schemas/_sports_match_contracts.py`. A future regression to the prior "minimal
+flattening" shape (only `fixture_id + data_available_at`) is caught by this row-count gate:
 
 | data_type         | Expected column count\* | UAC SchemaContract       | Symbol column | Row grain                       |
 | ----------------- | ----------------------: | ------------------------ | ------------- | ------------------------------- |
@@ -86,8 +86,8 @@ the prior "minimal flattening" shape (only `fixture_id + data_available_at`) is 
 
 \* Includes `data_available_at`. Authoritative column lists live in the SchemaContract definitions; this table is a
 fast-glance regression catch — if a future audit shows fewer columns than listed here for any of these data_types, a
-normalizer or adapter regression has dropped fields. Legitimate additions to the column count (new stat type, new
-event field) require updating both the SchemaContract and this table in lockstep.
+normalizer or adapter regression has dropped fields. Legitimate additions to the column count (new stat type, new event
+field) require updating both the SchemaContract and this table in lockstep.
 
 ### 2.2 FootyStats-sourced entities (source key = `footystats`)
 
@@ -205,10 +205,10 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
 
 ## 4. Open questions / follow-ups
 
-- **ODDS duplication — RESOLVED 2026-05-07** (C.2 audit per
-  `plans/ai/session_2026_05_07_data_status_audit_findings.md` row C.2). The data-status panel surfaces
-  `data_type=ODDS` in instruments-service AND `odds_horizon_bucket` in MTDS as separate panels, which had felt
-  redundant. Investigation outcome: they are **not duplicates**, they serve different purposes and SHOULD coexist:
+- **ODDS duplication — RESOLVED 2026-05-07** (C.2 audit per `plans/ai/session_2026_05_07_data_status_audit_findings.md`
+  row C.2). The data-status panel surfaces `data_type=ODDS` in instruments-service AND `odds_horizon_bucket` in MTDS as
+  separate panels, which had felt redundant. Investigation outcome: they are **not duplicates**, they serve different
+  purposes and SHOULD coexist:
   - **`ODDS` in instruments-service** = pre-match snapshot from FootyStats `get_fixture_odds_snapshot()`
     (`instruments-service/instruments_service/engine/orchestrator.py:4760-4900`). Captures opening odds across 68
     markets at fetch time. PIT semantics: `data_available_at = kickoff - 72h` (FootyStats publishes ~3 days before
@@ -219,7 +219,7 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
     T-4h, T-2h, T-1h, T-10m, T-0). Coverage start per
     [`availability-manifest-and-data-status.md` § Source coverage start dates (canonical)](./availability-manifest-and-data-status.md#source-coverage-start-dates-canonical--source_coverage_start-ssot)
     (UAC `unified_api_contracts.sports.SOURCE_COVERAGE_START` runtime SSOT). Used by execution-service for live trading
-    + features-sports for movement features (CLV, steam, late-money).
+    - features-sports for movement features (CLV, steam, late-money).
   - **api_football `/odds`** is NOT used by instruments-service. The footystats_odds adapter has `get_odds()` defined as
     a deprecated stub that logs "use get_fixture_odds_snapshot() instead" — there is no api_football odds path.
   - **Decision**: keep both in their current homes. NO migration. The data-status panel SHOULD render them under their
@@ -261,6 +261,6 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
   regression guard. Plan `plans/active/api_football_minimal_flattening_removal_2026_05_07.md` shipped flattening for
   FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES (UAC@c76e6d0 + instruments-service@539130f). Prior
   parquets carried only `fixture_id + data_available_at` (the "minimal flattening" known limitation called out in the
-  `_sports_match_contracts.py` module docstring); the new normalizers expand to 11–23 columns per data_type matching
-  the extended SchemaContract shapes. A future audit that finds the column count below the table values means a
-  normalizer / adapter regression has dropped fields.
+  `_sports_match_contracts.py` module docstring); the new normalizers expand to 11–23 columns per data_type matching the
+  extended SchemaContract shapes. A future audit that finds the column count below the table values means a normalizer /
+  adapter regression has dropped fields.

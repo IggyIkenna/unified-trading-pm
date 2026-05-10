@@ -8,8 +8,8 @@ scope: [admin, engineer]
 > per-resource cost tables from
 > [`aws_migration_cost_analysis_2026_05_07.md`](../../plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md)
 > for ongoing reference; the "defer AWS to Q3 2026" recommendation is replaced by the dual-cloud decision in
-> [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
-> § "Operator answers" + Phase 0. The cost numbers below remain valid as a research artefact (list pricing 2026-Q1).
+> [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md) §
+> "Operator answers" + Phase 0. The cost numbers below remain valid as a research artefact (list pricing 2026-Q1).
 >
 > **Pricing flag**: list pricing as of 2026-Q1, sourced from public pricing pages and workspace invoice snapshots.
 > Verify against actuals (GCP billing console + AWS Cost Explorer pricing API) before any commitment.
@@ -156,8 +156,8 @@ odum-portal) are hot-path interactive.
 ## Firebase (Identity Platform + Firestore + Storage + Auth + Hosting)
 
 Used for the unified-trading-system-ui authentication tier (Tier 0 emulator suite + staging + prod). Documented across
-`codex/14-customer-journeys/authentication/firebase-local.md` + workspace dev tiers. Auto-included in the GCP project. Identity
-Platform pricing kicks in above 50k MAU; Firestore charges per read/write/storage.
+`codex/14-customer-journeys/authentication/firebase-local.md` + workspace dev tiers. Auto-included in the GCP project.
+Identity Platform pricing kicks in above 50k MAU; Firestore charges per read/write/storage.
 
 ---
 

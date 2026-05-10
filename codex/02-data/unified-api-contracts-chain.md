@@ -162,28 +162,28 @@ def test_tardis_trade_validates():
 
 ## Consumer Version Requirements
 
-| Consumer                                                        | unified-api-contracts Dep | SDK Deps (if any)              | check_sdk_version_alignment |
-| --------------------------------------------------------------- | ------------------------- | ------------------------------ | --------------------------- |
-| market-tick-data-service/market_tick_data_service/market_interface                                        | >=1.1.0                   | databento, tardis-client, ccxt | Required                    |
-| execution-service (formerly unified-trade-execution-interface)  | >=1.0.0,<2.0.0            | ccxt, ib_insync                | Required                    |
-| instruments-service (formerly unified-reference-data-interface) | >=0.1.0                   | ccxt                           | Required                    |
-| unified-cloud-interface                                         | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| unified-trading-services                                        | >=1.1.0                   | —                              | Optional                    |
-| market-tick-data-service                                        | >=1.0.0,<2.0.0            | databento, tardis-client       | Required                    |
-| instruments-service                                             | >=1.0.0,<2.0.0            | ccxt                           | Required                    |
-| execution-service                                               | (path)                    | —                              | Optional                    |
-| pnl-attribution-service                                         | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| ml-inference-service                                            | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| ml-training-service                                             | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| features-volatility-service                                     | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| features-onchain-service                                        | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| position-balance-monitor-service                                | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| features-calendar-service                                       | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| features-delta-one-service                                      | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| risk-and-exposure-service                                       | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| strategy-service                                                | (path)                    | —                              | Optional                    |
-| alerting-service                                                | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| market-data-processing-service                                  | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| Consumer                                                           | unified-api-contracts Dep | SDK Deps (if any)              | check_sdk_version_alignment |
+| ------------------------------------------------------------------ | ------------------------- | ------------------------------ | --------------------------- |
+| market-tick-data-service/market_tick_data_service/market_interface | >=1.1.0                   | databento, tardis-client, ccxt | Required                    |
+| execution-service (formerly unified-trade-execution-interface)     | >=1.0.0,<2.0.0            | ccxt, ib_insync                | Required                    |
+| instruments-service (formerly unified-reference-data-interface)    | >=0.1.0                   | ccxt                           | Required                    |
+| unified-cloud-interface                                            | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| unified-trading-services                                           | >=1.1.0                   | —                              | Optional                    |
+| market-tick-data-service                                           | >=1.0.0,<2.0.0            | databento, tardis-client       | Required                    |
+| instruments-service                                                | >=1.0.0,<2.0.0            | ccxt                           | Required                    |
+| execution-service                                                  | (path)                    | —                              | Optional                    |
+| pnl-attribution-service                                            | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| ml-inference-service                                               | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| ml-training-service                                                | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| features-volatility-service                                        | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| features-onchain-service                                           | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| position-balance-monitor-service                                   | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| features-calendar-service                                          | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| features-delta-one-service                                         | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| risk-and-exposure-service                                          | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| strategy-service                                                   | (path)                    | —                              | Optional                    |
+| alerting-service                                                   | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| market-data-processing-service                                     | >=1.0.0,<2.0.0            | —                              | Optional                    |
 
 ---
 
@@ -192,7 +192,8 @@ def test_tardis_trade_validates():
 See `05-infrastructure/unified-libraries/archive/LIBRARY-DEPENDENCY-MATRIX.md` for the archived full list. Key
 consumers:
 
-- **market-tick-data-service/market_tick_data_service/market_interface** — market data adapters (Tardis, Databento, Binance, CCXT)
+- **market-tick-data-service/market_tick_data_service/market_interface** — market data adapters (Tardis, Databento,
+  Binance, CCXT)
 - **execution-service (formerly unified-trade-execution-interface)** — order execution (Binance, OKX, Bybit, IBKR)
 - **instruments-service (formerly unified-reference-data-interface)** — instruments, CCXT
 - **unified-cloud-interface** — GCP/AWS SDK schemas

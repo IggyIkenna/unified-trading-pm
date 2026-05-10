@@ -30,26 +30,26 @@ from partial transcripts + direct re-audit.
 
 ### Summary Scorecard
 
-| #   | Repo                               | Tier | Grade | Pyright (src)                     | Coverage                            | QG Status                                                                                                 |
-| --- | ---------------------------------- | ---- | ----- | --------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| 1   | unified-cloud-interface            | T0   | B+    | A (0 errors)                      | B (87%, gate 70%)                   | FAILING — 85 ruff (70×E501, 2×C901)                                                                       |
-| 2   | matching-engine-library            | T0   | B+    | A (0 errors)                      | A (88.9%, gate 88%)                 | FAILING — 3×E501 (amm.py:537, trade_matcher.py:120, test_amm.py:210)                                      |
-| 3   | instruments-service                | T1   | B+    | C (0 src / 58 test)               | A (91.4%, gate 87%)                 | FAILING — 4 violations (test >900 lines, 2× backward-compat shims)                                        |
-| 4   | unified-api-contracts              | T0   | B     | A (0 errors)                      | B (81%, gate 80%)                   | B — gate mismatch: script enforces 70%, pyproject says 80%                                                |
-| 5   | unified-trading-library            | T0   | B     | B (1 test error)                  | C (97%, gate 99%)                   | FAILING — coverage gap + REPO_ARCH_TIER wiring broken → tier checks skip in CI                            |
-| 6   | position-balance-monitor-service   | T2   | B     | A (0 src / 30 test)               | B (84%, gate 70%)                   | FAILING — hardcoded absolute path in VCR test, gate too low                                               |
-| 7   | unified-api-contracts (internal/)  | T0   | C+    | D (56 errors)                     | A (100%, gate 99%)                  | FAILING — type-check step fails on schema_definition.py                                                   |
-| 8   | unified-trading-library | T2   | C+    | D (23 errors, stale bypass audit) | A (92.6%, gate 93%)                 | FAILING — 1×E501 in base.py blocks step 1; steps 3–6 never run                                            |
-| 9   | unified-ml-interface               | T2   | C+    | D (38 src errors)                 | A (92.1%, gate 91%)                 | FAILING — 12 ruff (C901×1, E501×2)                                                                        |
-| 10  | unified-trading-library            | T1   | C     | D (391 errors)                    | C (76.1%, gate 70%)                 | FAILING — 87 ruff errors blocked at lint step                                                             |
-| 11  | unified-defi-exec-interface        | T2   | C     | D (133 errors)                    | B (88.8%, gate 88%)                 | FAILING — 4 ruff (N806 + E501)                                                                            |
-| 12  | unified-trade-exec-interface       | T2   | C-    | pending                           | C (76.1%, gate 72%)                 | FAILING — 40 ruff; C901 in upbit_ccxt.get_fills (complexity 13); coverage_boost.py 483 lines              |
-| 13  | unified-domain-client              | T3   | C-    | pending                           | C (77.8%, gate 70%)                 | FAILING — 35 ruff (E501); `# pyright: reportUnknownVariableType=false` in **init**.py                     |
-| 14  | execution-algo-library             | T0   | D     | C (0 src / 157 test)              | D (72%, gate 95%)                   | FAILING at step 1 — C901 violations block all CI; almgren_chriss 18%, sor_dex 41%                         |
-| 15  | unified-config-interface           | T1   | D     | D (55 errors)                     | D (74.5%, below gate 77%)           | FAILING — 42 ruff; os.getenv in 3 source files (\_env_bootstrap.py, **init**.py, topology_reader.py)      |
-| 16  | unified-sports-exec-interface      | T2   | D     | F (193 errors)                    | C (77.3%, gate 73%)                 | FAILING — 17 ruff; C901 in polymarket.py (complexity 10); gate too low at 73%                             |
-| 17  | system-integration-tests           | int  | D     | D (97 errors)                     | F (12.4% — only HTTP endpoint hits) | FAILING — format error; no threshold set; only health-check smoke tests                                   |
-| 18  | market-tick-data-service/market_tick_data_service/market_interface           | T2   | F     | F (7,757 errors)                  | C (70.3%, gate 70%)                 | FAILING — 60 ruff; 14 test*coverage_boost*\* files gaming coverage; os.getenv in config.py + constants.py |
+| #   | Repo                                                               | Tier | Grade | Pyright (src)                     | Coverage                            | QG Status                                                                                                 |
+| --- | ------------------------------------------------------------------ | ---- | ----- | --------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | unified-cloud-interface                                            | T0   | B+    | A (0 errors)                      | B (87%, gate 70%)                   | FAILING — 85 ruff (70×E501, 2×C901)                                                                       |
+| 2   | matching-engine-library                                            | T0   | B+    | A (0 errors)                      | A (88.9%, gate 88%)                 | FAILING — 3×E501 (amm.py:537, trade_matcher.py:120, test_amm.py:210)                                      |
+| 3   | instruments-service                                                | T1   | B+    | C (0 src / 58 test)               | A (91.4%, gate 87%)                 | FAILING — 4 violations (test >900 lines, 2× backward-compat shims)                                        |
+| 4   | unified-api-contracts                                              | T0   | B     | A (0 errors)                      | B (81%, gate 80%)                   | B — gate mismatch: script enforces 70%, pyproject says 80%                                                |
+| 5   | unified-trading-library                                            | T0   | B     | B (1 test error)                  | C (97%, gate 99%)                   | FAILING — coverage gap + REPO_ARCH_TIER wiring broken → tier checks skip in CI                            |
+| 6   | position-balance-monitor-service                                   | T2   | B     | A (0 src / 30 test)               | B (84%, gate 70%)                   | FAILING — hardcoded absolute path in VCR test, gate too low                                               |
+| 7   | unified-api-contracts (internal/)                                  | T0   | C+    | D (56 errors)                     | A (100%, gate 99%)                  | FAILING — type-check step fails on schema_definition.py                                                   |
+| 8   | unified-trading-library                                            | T2   | C+    | D (23 errors, stale bypass audit) | A (92.6%, gate 93%)                 | FAILING — 1×E501 in base.py blocks step 1; steps 3–6 never run                                            |
+| 9   | unified-ml-interface                                               | T2   | C+    | D (38 src errors)                 | A (92.1%, gate 91%)                 | FAILING — 12 ruff (C901×1, E501×2)                                                                        |
+| 10  | unified-trading-library                                            | T1   | C     | D (391 errors)                    | C (76.1%, gate 70%)                 | FAILING — 87 ruff errors blocked at lint step                                                             |
+| 11  | unified-defi-exec-interface                                        | T2   | C     | D (133 errors)                    | B (88.8%, gate 88%)                 | FAILING — 4 ruff (N806 + E501)                                                                            |
+| 12  | unified-trade-exec-interface                                       | T2   | C-    | pending                           | C (76.1%, gate 72%)                 | FAILING — 40 ruff; C901 in upbit_ccxt.get_fills (complexity 13); coverage_boost.py 483 lines              |
+| 13  | unified-domain-client                                              | T3   | C-    | pending                           | C (77.8%, gate 70%)                 | FAILING — 35 ruff (E501); `# pyright: reportUnknownVariableType=false` in **init**.py                     |
+| 14  | execution-algo-library                                             | T0   | D     | C (0 src / 157 test)              | D (72%, gate 95%)                   | FAILING at step 1 — C901 violations block all CI; almgren_chriss 18%, sor_dex 41%                         |
+| 15  | unified-config-interface                                           | T1   | D     | D (55 errors)                     | D (74.5%, below gate 77%)           | FAILING — 42 ruff; os.getenv in 3 source files (\_env_bootstrap.py, **init**.py, topology_reader.py)      |
+| 16  | unified-sports-exec-interface                                      | T2   | D     | F (193 errors)                    | C (77.3%, gate 73%)                 | FAILING — 17 ruff; C901 in polymarket.py (complexity 10); gate too low at 73%                             |
+| 17  | system-integration-tests                                           | int  | D     | D (97 errors)                     | F (12.4% — only HTTP endpoint hits) | FAILING — format error; no threshold set; only health-check smoke tests                                   |
+| 18  | market-tick-data-service/market_tick_data_service/market_interface | T2   | F     | F (7,757 errors)                  | C (70.3%, gate 70%)                 | FAILING — 60 ruff; 14 test*coverage_boost*\* files gaming coverage; os.getenv in config.py + constants.py |
 
 **Critical headline: 0 of 18 repos have a passing quality gate.**
 
@@ -433,8 +433,8 @@ quickly." Repos needing gate raises:
 
 - unified-cloud-interface (70% → 85%), position-balance-monitor-service (70% → 80%), unified-defi-exec-if (88% threshold
   is fine but margin is thin), unified-domain-client (70% → 80%), unified-trade-exec-if (72% → 80%),
-  unified-sports-exec-if (73% → 80%), market-tick-data-service/market_tick_data_service/market_interface (70% → 80%), unified-trading-library (70% → 80%),
-  unified-domain-client (70% → 80%)
+  unified-sports-exec-if (73% → 80%), market-tick-data-service/market_tick_data_service/market_interface (70% → 80%),
+  unified-trading-library (70% → 80%), unified-domain-client (70% → 80%)
 
 ### Systemic Issue 3 — Coverage Gaming
 
@@ -478,22 +478,22 @@ T0 repos.
 
 The following fix commits landed after the audit was captured (via `git log --oneline`):
 
-| Repo                               | Fix Commit                                                                                     | Coverage                                                                 |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| unified-api-contracts              | `419627a fix: resolve QG violations`                                                           | Likely fixes ruff; 5 undefined-name binance errors may remain            |
-| unified-api-contracts (internal/)  | `fa9e7e0 fix: resolve QG violations - coverage/lint/type/compliance`                           | schema_definition.py errors may still be present (TypedDict fix complex) |
-| unified-cloud-interface            | `88286fc fix: resolve QG violations - aws.py type errors and test failures`                    | Partial fix; 85 ruff errors likely reduced                               |
-| unified-config-interface           | `ab2ab37 fix: resolve QG violations - type/compliance`                                         | Type fixes; 42 E501 violations may remain                                |
-| execution-algo-library             | `a259570 fix: update before downstream merge`                                                  | C901 status unknown; coverage gap likely unchanged                       |
-| matching-engine-library            | `d30cc28 fix: update before downstream merge`                                                  | 3 E501 status unknown                                                    |
-| market-tick-data-service/market_tick_data_service/market_interface           | `be3f1d5 fix: resolve QG violations - F401 unused imports` + `baffc15 fix: failing tests/lint` | Partial; 7,757 pyright errors unchanged                                  |
-| unified-trade-exec-interface       | `b940daa fix: resolve QG violations - coverage`                                                | Coverage improved; C901 in upbit_ccxt status unknown                     |
-| position-balance-monitor-service   | `d9f3d91 fix: resolve QG violations - lint/format`                                             | Likely green                                                             |
-| unified-sports-exec-interface      | `0342b2a fix: resolve QG violations - lint/format`                                             | Likely partial; 193 pyright errors unchanged                             |
-| unified-trading-library | `a107088 fix: resolve QG violations - coverage/lint/type/compliance`                           | Likely fixed 1 E501 blocker                                              |
-| unified-domain-client              | `6ac1669 fix: resolve QG violations - coverage/lint`                                           | Likely partial                                                           |
-| instruments-service                | `37a5e5c fix: resolve QG violations - basedpyright import resolution and lint`                 | Import resolution fixed; 4 QG violations may remain                      |
-| unified-trading-library            | `31c882e fix: resolve QG violations` + `631f028 fix: remove T2 optional deps`                  | 87 ruff likely reduced; 391 pyright errors unchanged                     |
+| Repo                                                               | Fix Commit                                                                                     | Coverage                                                                 |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| unified-api-contracts                                              | `419627a fix: resolve QG violations`                                                           | Likely fixes ruff; 5 undefined-name binance errors may remain            |
+| unified-api-contracts (internal/)                                  | `fa9e7e0 fix: resolve QG violations - coverage/lint/type/compliance`                           | schema_definition.py errors may still be present (TypedDict fix complex) |
+| unified-cloud-interface                                            | `88286fc fix: resolve QG violations - aws.py type errors and test failures`                    | Partial fix; 85 ruff errors likely reduced                               |
+| unified-config-interface                                           | `ab2ab37 fix: resolve QG violations - type/compliance`                                         | Type fixes; 42 E501 violations may remain                                |
+| execution-algo-library                                             | `a259570 fix: update before downstream merge`                                                  | C901 status unknown; coverage gap likely unchanged                       |
+| matching-engine-library                                            | `d30cc28 fix: update before downstream merge`                                                  | 3 E501 status unknown                                                    |
+| market-tick-data-service/market_tick_data_service/market_interface | `be3f1d5 fix: resolve QG violations - F401 unused imports` + `baffc15 fix: failing tests/lint` | Partial; 7,757 pyright errors unchanged                                  |
+| unified-trade-exec-interface                                       | `b940daa fix: resolve QG violations - coverage`                                                | Coverage improved; C901 in upbit_ccxt status unknown                     |
+| position-balance-monitor-service                                   | `d9f3d91 fix: resolve QG violations - lint/format`                                             | Likely green                                                             |
+| unified-sports-exec-interface                                      | `0342b2a fix: resolve QG violations - lint/format`                                             | Likely partial; 193 pyright errors unchanged                             |
+| unified-trading-library                                            | `a107088 fix: resolve QG violations - coverage/lint/type/compliance`                           | Likely fixed 1 E501 blocker                                              |
+| unified-domain-client                                              | `6ac1669 fix: resolve QG violations - coverage/lint`                                           | Likely partial                                                           |
+| instruments-service                                                | `37a5e5c fix: resolve QG violations - basedpyright import resolution and lint`                 | Import resolution fixed; 4 QG violations may remain                      |
+| unified-trading-library                                            | `31c882e fix: resolve QG violations` + `631f028 fix: remove T2 optional deps`                  | 87 ruff likely reduced; 391 pyright errors unchanged                     |
 
 **Assessment:** Most repos received partial QG fixes. The deeper issues (high pyright error counts, coverage gaming
 files, schema duplication) are architectural and not addressed by `fix:` commits.
@@ -602,7 +602,7 @@ Separate 10-agent audit covering workspace governance, not per-repo code quality
 
 | Finding                                                                                                                | Status |
 | ---------------------------------------------------------------------------------------------------------------------- | ------ |
-| `unified-trading-pm/codex/pyrightconfig.json` uses `"basic"` mode — the standards repo is not strict                      | FAIL   |
+| `unified-trading-pm/codex/pyrightconfig.json` uses `"basic"` mode — the standards repo is not strict                   | FAIL   |
 | `unified-trading-library/pyrightconfig.json` sets `reportAny: "none"` — nullifies enforcement for foundational library | FAIL   |
 | 0 instances of `typing.List`/`typing.Dict` — PEP 585 built-ins used everywhere                                         | PASS   |
 | 80 Protocol definitions for duck typing                                                                                | PASS   |

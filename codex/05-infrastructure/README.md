@@ -7,8 +7,8 @@ scope: [engineer, admin]
 ## TL;DR
 
 - **Infrastructure as Code**: all infrastructure is managed by Terraform. No manual resource creation via console.
-- **Cloud-agnostic**: GCP is the primary cloud (project `central-element-323112`, region `asia-northeast1`). AWS is the secondary
-  cloud (`ap-northeast-1`). The `CLOUD_PROVIDER` env var switches at runtime.
+- **Cloud-agnostic**: GCP is the primary cloud (project `central-element-323112`, region `asia-northeast1`). AWS is the
+  secondary cloud (`ap-northeast-1`). The `CLOUD_PROVIDER` env var switches at runtime.
 - **Docker everywhere**: every service is a Docker container. Multi-stage builds with `unified-trading-services` as a
   build dependency.
 - **Dual CI/CD**: Cloud Build builds and pushes Docker images on merge to main. GitHub Actions runs quality gates on PRs
@@ -63,12 +63,12 @@ Layer 6: Deployment Orchestration
 
 | Setting            | Value                                                                      |
 | ------------------ | -------------------------------------------------------------------------- |
-| Project ID         | `central-element-323112`                                                             |
+| Project ID         | `central-element-323112`                                                   |
 | Region             | `asia-northeast1` (Tokyo)                                                  |
 | Failover regions   | `europe-west1`, `us-central1`                                              |
 | Container Registry | `asia-northeast1-docker.pkg.dev/{project_id}/{repository}/{service}:{tag}` |
 | Bucket naming      | `{domain}-{category_lower}-{project_id}`                                   |
-| Terraform state    | `gs://terraform-state-central-element-323112/`                                       |
+| Terraform state    | `gs://terraform-state-central-element-323112/`                             |
 
 ### AWS (Secondary) [PLANNED]
 

@@ -32,8 +32,8 @@ scope: [engineer, admin]
 
 ## Import Surface Rules
 
-See `unified-trading-pm/codex/02-data/contracts-scope-and-layout.md` section UAC Citadel Architecture for the full import
-surface specification.
+See `unified-trading-pm/codex/02-data/contracts-scope-and-layout.md` section UAC Citadel Architecture for the full
+import surface specification.
 
 ## Quality Gate Enforcement
 

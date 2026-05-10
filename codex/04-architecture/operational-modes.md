@@ -5,8 +5,9 @@ overview:
   `(ExecutionTarget, ExecutionTrigger)` two-axis decomposition + composability with `RuntimeMode`. Resolves drift across
   UAC + execution-service + sports-routing + UI.
 type: codex-ssot
-status: stub
+status: canonical (extracted from master plan 2026-05-10)
 created: 2026-05-09
+last_reviewed: 2026-05-10
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
@@ -15,8 +16,9 @@ implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 17
 
 # Operational modes — single SSOT
 
-> **Stub doc.** Pinned shape ahead of code; full content fills in as `master_to_live_defi_2026_05_23.md` Group F
-> sub-items `pvl-p17a` / `pvl-p17b` / `pvl-p17c` / `pvl-p17d` ship.
+> **Canonical 2026-05-10.** This doc is the workspace SSOT for the operating-mode taxonomy; consumer-site migration of
+> the deleted anti-patterns is owned by `master_to_live_defi_2026_05_23.md` Group F sub-items `pvl-p17a` / `pvl-p17b` /
+> `pvl-p17c` / `pvl-p17d`. Plan continues to own the implementation phasing; this doc owns the contract.
 
 ## TL;DR
 

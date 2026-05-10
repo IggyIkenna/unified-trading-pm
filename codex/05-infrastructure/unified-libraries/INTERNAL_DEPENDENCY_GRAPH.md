@@ -266,11 +266,11 @@ graph TB
 Service pyproject.toml files should declare all direct dependencies explicitly. Known gaps from prior audit (2026-02-19,
 still unresolved):
 
-| Service                  | Gap                                                                        | Status              |
-| ------------------------ | -------------------------------------------------------------------------- | ------------------- |
-| execution-service        | `execution-algo-library` used but not in pyproject.toml                    | ⚠️ pending          |
-| market-tick-data-service | `market-tick-data-service/market_tick_data_service/market_interface` used but relied on transitive install           | ⚠️ pending          |
-| All services             | UCI, UEI often not explicitly declared — rely on UTS transitive re-exports | ⚠️ accepted pattern |
+| Service                  | Gap                                                                                                        | Status              |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------- |
+| execution-service        | `execution-algo-library` used but not in pyproject.toml                                                    | ⚠️ pending          |
+| market-tick-data-service | `market-tick-data-service/market_tick_data_service/market_interface` used but relied on transitive install | ⚠️ pending          |
+| All services             | UCI, UEI often not explicitly declared — rely on UTS transitive re-exports                                 | ⚠️ accepted pattern |
 
 **Rule:** All direct `from unified_X import ...` calls must have `unified-X` in pyproject.toml `dependencies`.
 Transitive-only is acceptable only for UCLI and UIC_INT (which services never import directly; only UTS does).
@@ -279,11 +279,11 @@ Transitive-only is acceptable only for UCLI and UIC_INT (which services never im
 
 ## Known Violations Requiring Resolution
 
-| Violation                                                                 | Location                           | Task ID                          | Priority |
-| ------------------------------------------------------------------------- | ---------------------------------- | -------------------------------- | -------- |
+| Violation                                                                 | Location                                                                     | Task ID                          | Priority |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------- | -------- |
 | T2→T3 import: UMI imports UDC                                             | `market-tick-data-service/market_tick_data_service/market_interface/` source | `cohesion-umi-udc-dep-violation` | P1       |
-| MEL tier mismatch: DAG shows as T2 but T0 behavior                        | DAG SVG visual                     | `dag-mel-tier-mismatch`          | P1       |
-| Non-canonical venue names: "binance" (lowercase) in 100+ production files | multiple services                  | `venue-name-canonicalization`    | P1       |
+| MEL tier mismatch: DAG shows as T2 but T0 behavior                        | DAG SVG visual                                                               | `dag-mel-tier-mismatch`          | P1       |
+| Non-canonical venue names: "binance" (lowercase) in 100+ production files | multiple services                                                            | `venue-name-canonicalization`    | P1       |
 
 ---
 
@@ -338,7 +338,8 @@ See task `deployment-v3-four-way-split` and SSOT `06-coding-standards/integratio
 
 ## References
 
-- **Tier architecture SSOT:** [`04-architecture/tier-and-import-architecture.md`](../../04-architecture/tier-and-import-architecture.md)
+- **Tier architecture SSOT:**
+  [`04-architecture/tier-and-import-architecture.md`](../../04-architecture/tier-and-import-architecture.md)
 - **Library quick-reference:** [`LIBRARY-DEPENDENCY-MATRIX.md`](./LIBRARY-DEPENDENCY-MATRIX.md)
 - **Machine-readable manifest:**
   [`unified-trading-pm/workspace-manifest.json`](../../../../unified-trading-pm/workspace-manifest.json)

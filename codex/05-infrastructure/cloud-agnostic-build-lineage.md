@@ -2,7 +2,9 @@
 title: Cloud-Agnostic Build Lineage
 status: planned
 created: 2026-05-07
-authoritative_for: How Docker images, VM tarballs, and code tarballs are built, tagged, and tracked across BOTH GCP Artifact Registry and AWS ECR so that a single git SHA produces parity-verified artifacts on both clouds.
+authoritative_for:
+  How Docker images, VM tarballs, and code tarballs are built, tagged, and tracked across BOTH GCP Artifact Registry and
+  AWS ECR so that a single git SHA produces parity-verified artifacts on both clouds.
 referenced_by:
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/aws_migration_defi_first_2026_05_07.md
@@ -14,14 +16,14 @@ related:
 
 # Cloud-Agnostic Build Lineage
 
-> **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in
-> as the work shipped by the referencing plan progresses.
+> **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as
+> the work shipped by the referencing plan progresses.
 
 ## Purpose
 
-Define the SSOT for how a single git commit on `live-defi-rollout` (or `main`) produces a deterministic set of
-artifacts — Docker images, VM tarballs, code tarballs — pushed to BOTH GCP Artifact Registry and AWS ECR / S3. Any
-artifact running in production must trace back to a known git SHA + builder run on both clouds.
+Define the SSOT for how a single git commit on `live-defi-rollout` (or `main`) produces a deterministic set of artifacts
+— Docker images, VM tarballs, code tarballs — pushed to BOTH GCP Artifact Registry and AWS ECR / S3. Any artifact
+running in production must trace back to a known git SHA + builder run on both clouds.
 
 ## Scope
 
@@ -36,15 +38,22 @@ artifact running in production must trace back to a known git SHA + builder run 
 1. **Artifact taxonomy** — Docker images, VM tarballs, code tarballs, contract bundles. Per-asset-group flavor matrix.
 2. **Build sources** — GitHub Actions (primary), GCP Cloud Build (legacy), AWS CodeBuild (parity). Trigger conventions.
 3. **Tag conventions** — `<sha>` immutable + `latest` floating. Per-cloud registry path templates.
-4. **Lineage metadata schema** — JSONL record per artifact: `{sha, repo, builder, build_ts, gcp_uri, aws_uri, digest_gcp, digest_aws}`.
-5. **Parity verification** — `verify-build-parity.sh` runs `docker manifest inspect` on both clouds, asserts digest equality.
-6. **VM launchers** — how `setup-data-pipeline-vm.sh` resolves cloud-specific tarball URI from the registry's lineage record.
+4. **Lineage metadata schema** — JSONL record per artifact:
+   `{sha, repo, builder, build_ts, gcp_uri, aws_uri, digest_gcp, digest_aws}`.
+5. **Parity verification** — `verify-build-parity.sh` runs `docker manifest inspect` on both clouds, asserts digest
+   equality.
+6. **VM launchers** — how `setup-data-pipeline-vm.sh` resolves cloud-specific tarball URI from the registry's lineage
+   record.
 7. **Rollback procedure** — pin a service to an older SHA across both clouds; verify pin held after a redeploy.
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.md) work-stream F, [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
-- **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md), [`launcher-script-ssot`](./launcher-script-ssot.md), [`cloud-agnostic-script-pattern`](./cloud-agnostic-script-pattern.md).
+- **Plan(s) implementing this:**
+  [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.md) work-stream F,
+  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
+- **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md),
+  [`launcher-script-ssot`](./launcher-script-ssot.md),
+  [`cloud-agnostic-script-pattern`](./cloud-agnostic-script-pattern.md).
 - **Code:** `deployment-service/scripts/vm/create-code-tarballs.sh`, `.github/workflows/build-and-push-*.yml`.
 
 ## Open questions

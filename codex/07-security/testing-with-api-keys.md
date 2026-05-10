@@ -59,15 +59,15 @@ Never commit credentials. See `07-security/secrets-management.md`.
 
 Status of VCR cassettes per interface. All interfaces must reach `complete` before Phase 5 deployment gate.
 
-| Interface                                 | Venues Covered                                    | Cassette Location                          | Status  |
-| ----------------------------------------- | ------------------------------------------------- | ------------------------------------------ | ------- |
-| UMI (market-tick-data-service/market_tick_data_service/market_interface)            | binance, deribit, coinbase, hyperliquid           | `unified-api-contracts/mocks/umi/`         | pending |
-| UTEI (unified-trade-execution-interface)  | binance, deribit, ibkr                            | `unified-api-contracts/mocks/utei/`        | pending |
-| URDI (unified-reference-data-interface)   | databento, polygon                                | `unified-api-contracts/mocks/urdi/`        | pending |
-| UPI (unified-position-interface)          | binance, ibkr                                     | `unified-api-contracts/mocks/upi/`         | pending |
-| USEI (unified-sports-execution-interface) | betfair, pinnacle, polymarket                     | `unified-api-contracts/mocks/usei/`        | pending |
-| UDEI (unified-defi-execution-interface)   | aave, uniswap, thegraph                           | `unified-api-contracts/mocks/udei/`        | pending |
-| UCI (unified-cloud-interface)             | gcp (sm, gcs, bq, pubsub), aws (sm, s3, dynamodb) | `unified-cloud-interface/tests/cassettes/` | pending |
+| Interface                                                                | Venues Covered                                    | Cassette Location                          | Status  |
+| ------------------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------ | ------- |
+| UMI (market-tick-data-service/market_tick_data_service/market_interface) | binance, deribit, coinbase, hyperliquid           | `unified-api-contracts/mocks/umi/`         | pending |
+| UTEI (unified-trade-execution-interface)                                 | binance, deribit, ibkr                            | `unified-api-contracts/mocks/utei/`        | pending |
+| URDI (unified-reference-data-interface)                                  | databento, polygon                                | `unified-api-contracts/mocks/urdi/`        | pending |
+| UPI (unified-position-interface)                                         | binance, ibkr                                     | `unified-api-contracts/mocks/upi/`         | pending |
+| USEI (unified-sports-execution-interface)                                | betfair, pinnacle, polymarket                     | `unified-api-contracts/mocks/usei/`        | pending |
+| UDEI (unified-defi-execution-interface)                                  | aave, uniswap, thegraph                           | `unified-api-contracts/mocks/udei/`        | pending |
+| UCI (unified-cloud-interface)                                            | gcp (sm, gcs, bq, pubsub), aws (sm, s3, dynamodb) | `unified-cloud-interface/tests/cassettes/` | pending |
 
 **Cassette requirements per venue:** at minimum one cassette per endpoint called in normal operation (instrument list,
 order submit, position query, market data snapshot).

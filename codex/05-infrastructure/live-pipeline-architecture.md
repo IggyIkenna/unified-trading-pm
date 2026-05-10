@@ -15,10 +15,10 @@ scope: [engineer, admin]
 ## TL;DR
 
 Three-tier live pipeline: **MTDS → MDPS → features-service**. Same code path as batch (per
-[`batch-live-architecture.md`](../04-architecture/batch-live-architecture.md) (single SSOT) — the live activation does NOT introduce a new
-data path; it only swaps the trigger source from Cloud Scheduler to Redis Stream events). UTC midnight alignment
-end-to-end ensures batch ↔ live reconciliation is a `GROUP BY pipeline_mode` over the same manifest. Service-start
-order doesn't matter — every service syncs at the next aligned candle boundary.
+[`batch-live-architecture.md`](../04-architecture/batch-live-architecture.md) (single SSOT) — the live activation does
+NOT introduce a new data path; it only swaps the trigger source from Cloud Scheduler to Redis Stream events). UTC
+midnight alignment end-to-end ensures batch ↔ live reconciliation is a `GROUP BY pipeline_mode` over the same manifest.
+Service-start order doesn't matter — every service syncs at the next aligned candle boundary.
 
 ## Topology
 
@@ -116,8 +116,8 @@ table.
 Three tiers of severity, each consuming `StreamingHealthSnapshot` fields. Tier 2 + 3 are wired through Tab 5's
 KillSwitchBus rule structure (alerting-service `triggers_kill_switch=True` flag); tier 1 is page-only.
 
-| Tier | Trigger condition                                                      | Source field                                | Action                                                     |
-| ---- | ---------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------- |
+| Tier | Trigger condition                                                      | Source field                                | Action                                                      |
+| ---- | ---------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------- |
 | 1    | `last_event_age_seconds > 30` OR `zero_activity_bar_rate > 0.05`       | `StreamingHealthSnapshot`                   | Page on-call (tier 1 alerting-service rule, no kill)        |
 | 2    | `consumer_lag_pending > 1000` for 60s OR `last_event_age_seconds > 60` | `StreamingHealthSnapshot` + duration window | KILL_SWITCH_STREAM_LAG → halts all execution-service trades |
 | 3    | No events on any active shard for > 5min                               | Cross-shard aggregate                       | KILL_SWITCH_PIPELINE_DEAD → halts all strategies + alerts   |
@@ -154,15 +154,15 @@ VM-name prefixes registered in `VM_PREFIX_TO_BUCKET`: `mtds-live-`, `mdps-featur
 
 Concrete UTL helpers landed for the May-23 cutover:
 
-| UTL module                                                                                              | Purpose                                                                                                                          | Plan phase                |
-| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `unified_trading_library.streaming.compute_streaming_health` + `StreamingHealthSnapshot`                | Health-API `data_freshness` snapshot — last-event-age, consumer-lag, replay-watermark, zero-activity-bar rate                    | Phase 8 (UTL@d08c50c3)    |
-| `unified_trading_library.streaming.StreamPublisher` / `StreamConsumerGroup`                             | Redis Streams XADD + MAXLEN producer + XREADGROUP + XACK + XAUTOCLAIM consumer (Pydantic-event-agnostic)                         | Phase 2A (UTL@f24e651b)   |
-| `unified_trading_library.streaming.ReplayPublisher` / `ReplayWatermarkKV`                               | Replay-cascade publisher preserving original `period_end` + per-shard watermark KV guarding double-publish                       | Phase 2C (UTL@f24e651b)   |
-| `unified_trading_library.streaming.UTCAlignedScheduler` / `BoundaryTick`                                | UTC-aligned timeframe scheduler firing on closed boundaries with grace window (NTP-tolerant)                                     | Phase 2B (UTL@8c67df5d)   |
-| `unified_trading_library.instrument_lifecycle_cache_delta_reloader.InstrumentLifecycleCacheDeltaReloader` | Hot-reload primitive mirroring `ApiKeyReloader` — diffs catalog snapshots + dispatches `(CatalogDelta, snapshot)` callbacks      | Phase 10 (UTL@54d658e8)   |
-| `unified_trading_library.honest_coverage_ratchet.assert_no_regression` + `compute_coverage_table`       | Workspace QG ratchet — fails CI on per-(asset_group, data_type) coverage regression > 0.5pp OR floor breach (default 99pp)       | Writegate Phase 5 (UTL@59996210) |
-| `unified_trading_library.batch_live_reconciler.reconcile_shard` + `BatchLiveReconciliationReport`       | Master-plan Group F readiness gate — proves batch=live for the cutover; verdicts MATCH / ROW_COUNT / SCHEMA / VALUE mismatch     | Phase 12 (UTL@908b1647)   |
+| UTL module                                                                                                | Purpose                                                                                                                      | Plan phase                       |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `unified_trading_library.streaming.compute_streaming_health` + `StreamingHealthSnapshot`                  | Health-API `data_freshness` snapshot — last-event-age, consumer-lag, replay-watermark, zero-activity-bar rate                | Phase 8 (UTL@d08c50c3)           |
+| `unified_trading_library.streaming.StreamPublisher` / `StreamConsumerGroup`                               | Redis Streams XADD + MAXLEN producer + XREADGROUP + XACK + XAUTOCLAIM consumer (Pydantic-event-agnostic)                     | Phase 2A (UTL@f24e651b)          |
+| `unified_trading_library.streaming.ReplayPublisher` / `ReplayWatermarkKV`                                 | Replay-cascade publisher preserving original `period_end` + per-shard watermark KV guarding double-publish                   | Phase 2C (UTL@f24e651b)          |
+| `unified_trading_library.streaming.UTCAlignedScheduler` / `BoundaryTick`                                  | UTC-aligned timeframe scheduler firing on closed boundaries with grace window (NTP-tolerant)                                 | Phase 2B (UTL@8c67df5d)          |
+| `unified_trading_library.instrument_lifecycle_cache_delta_reloader.InstrumentLifecycleCacheDeltaReloader` | Hot-reload primitive mirroring `ApiKeyReloader` — diffs catalog snapshots + dispatches `(CatalogDelta, snapshot)` callbacks  | Phase 10 (UTL@54d658e8)          |
+| `unified_trading_library.honest_coverage_ratchet.assert_no_regression` + `compute_coverage_table`         | Workspace QG ratchet — fails CI on per-(asset_group, data_type) coverage regression > 0.5pp OR floor breach (default 99pp)   | Writegate Phase 5 (UTL@59996210) |
+| `unified_trading_library.batch_live_reconciler.reconcile_shard` + `BatchLiveReconciliationReport`         | Master-plan Group F readiness gate — proves batch=live for the cutover; verdicts MATCH / ROW_COUNT / SCHEMA / VALUE mismatch | Phase 12 (UTL@908b1647)          |
 
 UAC top-level facade extended at UAC@b02335d to surface `PipelineMode` + `is_batch` / `is_live` / `source_string_for` /
 `pipeline_mode_for_source` per Citadel Import Rules. UTL streaming package facade extended at UTL@858f3c84 to publish
@@ -181,8 +181,7 @@ UAC top-level facade extended at UAC@b02335d to surface `PipelineMode` + `is_bat
 
 - Plan:
   [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
-- Pre-req plan:
-  [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md)
+- Pre-req plan: [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md)
 - Pre-req plan:
   [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - Sibling docs: [`replay-subsystem.md`](./replay-subsystem.md),

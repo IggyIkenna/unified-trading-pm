@@ -44,8 +44,8 @@ Internal cost column stays codex-private per rule 08.
 
 **Implementation:**
 
-- **SSOT:** `codex/14-customer-journeys/commercial-model/pricing-building-blocks.md` (locked ranges today; finance-committed
-  point values land inline once signed off).
+- **SSOT:** `codex/14-customer-journeys/commercial-model/pricing-building-blocks.md` (locked ranges today;
+  finance-committed point values land inline once signed off).
 - **Loader (new):** `unified-trading-pm/scripts/propagation/sync-pricing-tables-to-uac.{sh,py}` — parses the markdown
   table, emits `unified-api-contracts/unified_api_contracts/internal/architecture_v2/pricing_manifest.json`. Pattern
   mirrors G1.8 archetype-capability-manifest.json.

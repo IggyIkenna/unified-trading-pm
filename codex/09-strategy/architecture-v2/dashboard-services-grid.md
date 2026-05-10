@@ -7,7 +7,8 @@ scope: [engineer]
 **Status:** canonical (2026-04-21) **Owner:** UI + Strategy Architecture v2 **SSOT for:**
 `unified-trading-system-ui/lib/config/services.ts`, `lib/auth/persona-dashboard-shape.ts`,
 `app/(platform)/dashboard/page.tsx` **Cross-refs:** [`dart-tab-structure.md`](./dart-tab-structure.md) ·
-[`restriction-policy.md`](./restriction-policy.md) · `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` ·
+[`restriction-policy.md`](./restriction-policy.md) ·
+`codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` ·
 `codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md`
 
 ---
@@ -217,9 +218,10 @@ counterparty-outbound stays at the top level (it's a commercial product), the la
 - [`dart-exclusive-research-fork.md`](./dart-exclusive-research-fork.md) — Plan D. DART exclusive subscription + client
   research fork + joint Odum-client version governance. DART tile gains `subscriptions` + `versions` chips; Admin & Ops
   tile gains `strategy-version-approvals` chip.
-- `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` — visibility-slicing doctrine (hidden / locked / visible
-  three-state enum across the product).
-- `codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md` — tempt-logic (padlocked-visible) for prospect personas.
+- `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` — visibility-slicing doctrine (hidden / locked /
+  visible three-state enum across the product).
+- `codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md` — tempt-logic (padlocked-visible) for prospect
+  personas.
 
 ---
 

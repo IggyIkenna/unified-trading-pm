@@ -8,8 +8,9 @@ ssot_for: prediction_market_codification_gaps
 # Prediction markets — codification gaps
 
 > Scoped register of implementation gaps needed to bring prediction markets (Polymarket, Kalshi) to parity with CeFi,
-> DeFi, and TradFi venues in the registries. Doctrine lives in [`prediction-markets.md`](../architecture-v2/cross-cutting/prediction-markets.md); this
-> file lists what is missing from the code/config surface.
+> DeFi, and TradFi venues in the registries. Doctrine lives in
+> [`prediction-markets.md`](../architecture-v2/cross-cutting/prediction-markets.md); this file lists what is missing
+> from the code/config surface.
 >
 > **This is the gaps SSOT for prediction-market integration.** `prediction-markets.md` cites this file in place of
 > inline TODO-CODIFY blocks. Close a gap by deleting it from this register and landing the corresponding UAC / UIC /
@@ -32,9 +33,9 @@ Owner: UIC + features-cross-instrument. Consumed by: prediction-arb strategy + f
 ## G2 — Instrument ID convention
 
 Canonical `{VENUE}:{MARKET_TYPE}:{EVENT_SLUG}@{OUTCOME}` pattern (see
-[`prediction-markets.md` §Instrument ID Convention](../architecture-v2/cross-cutting/prediction-markets.md#instrument-id-convention)) is not in UIC's
-instrument ID rules. `CanonicalPredictionMarket` in `prediction_mapping.py` generates deterministic IDs that don't match
-the standard instrument-key format.
+[`prediction-markets.md` §Instrument ID Convention](../architecture-v2/cross-cutting/prediction-markets.md#instrument-id-convention))
+is not in UIC's instrument ID rules. `CanonicalPredictionMarket` in `prediction_mapping.py` generates deterministic IDs
+that don't match the standard instrument-key format.
 
 Required: add the pattern to `unified-config-interface` instrument-ID rules; back-fill existing prediction-market IDs.
 

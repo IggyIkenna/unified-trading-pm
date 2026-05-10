@@ -20,17 +20,17 @@ scope: [engineer, admin]
   **PubSub** for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution signals,
   alerting). Both are async message buses, not REST/RPC — the "no network hops" rule applies to synchronous HTTP/REST
   calls between services, not async messaging.
-- **Live deployments** (post-2026-05-08, per
-  [`features-service-architecture.md`](features-service-architecture.md) + the live-pipeline activation): one
-  consolidated **`features-service`** repo (8 family sub-packages: calendar, commodity, cross_instrument, delta_one,
-  multi_timeframe, onchain, sports, volatility) deployed in two flavors — **asset-scoped** colocated with MDPS per
-  asset_group cluster + **cross-cutting** standalone for cross-asset / cross-venue features. Plus: (1) MTDS cluster
-  (sharded by v5 shard atom), (2) instruments-service, (3) strategy-service, (4) execution-service (per-client).
-  Pre-2026-05-08 the features tier was 5-6 separate repos (features-calendar / features-delta-one /
-  features-volatility / features-onchain / features-sports / features-multi-timeframe) — all consolidated as part of
-  the live-pipeline pre-requisite. See [runtime-deployment-topology.md](runtime-deployment-topology.md) for visuals
-  + [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) for the
-  full topology + Redis Stream cascade contract.
+- **Live deployments** (post-2026-05-08, per [`features-service-architecture.md`](features-service-architecture.md) +
+  the live-pipeline activation): one consolidated **`features-service`** repo (8 family sub-packages: calendar,
+  commodity, cross_instrument, delta_one, multi_timeframe, onchain, sports, volatility) deployed in two flavors —
+  **asset-scoped** colocated with MDPS per asset_group cluster + **cross-cutting** standalone for cross-asset /
+  cross-venue features. Plus: (1) MTDS cluster (sharded by v5 shard atom), (2) instruments-service, (3)
+  strategy-service, (4) execution-service (per-client). Pre-2026-05-08 the features tier was 5-6 separate repos
+  (features-calendar / features-delta-one / features-volatility / features-onchain / features-sports /
+  features-multi-timeframe) — all consolidated as part of the live-pipeline pre-requisite. See
+  [runtime-deployment-topology.md](runtime-deployment-topology.md) for visuals
+  - [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) for the
+    full topology + Redis Stream cascade contract.
 - **Sync**: HTTP/REST only for the deployment API and health checks. Never for data flow.
 - **Scaling**: horizontal via sharding (category x venue x date = one container); vertical via VM sizing. Each shard is
   a fully independent unit of work.
@@ -46,7 +46,8 @@ scope: [engineer, admin]
 ## Pipeline DAG
 
 The 13 pipeline services (12 original + features-sports-service) form a directed acyclic graph with strict topological
-ordering. **Mermaid source (machine-readable):** `unified-trading-pm/codex/04-architecture/runtime-deployment-topology.md`
+ordering. **Mermaid source (machine-readable):**
+`unified-trading-pm/codex/04-architecture/runtime-deployment-topology.md`
 
 ```
 Layer 1: Data I/O (root services -- no upstream dependencies)
@@ -255,13 +256,13 @@ processing date, not wall-clock time.
 
 ## Related Documents
 
-| Document                                                           | Description                                                                              |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Document                                                         | Description                                                                              |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | [runtime-deployment-topology.md](runtime-deployment-topology.md) | Visual diagrams: batch (12 containers) vs live (7-8 deployments with package embedding)  |
-| [scaling.md](scaling.md)                                           | Horizontal sharding model, vertical scaling, client isolation                            |
-| [concurrency.md](concurrency.md)                                   | MAX_WORKERS, adaptive resource management, CPU vs I/O-bound, batch/live parallelism      |
-| [communication-patterns.md](communication-patterns.md)             | GCS batch bus, embedded live streaming, HTTP control plane                               |
-| [compute.md](compute.md)                                           | VM vs Cloud Run decision matrix, resource allocation                                     |
-| [BATCH-LIVE-SYMMETRY.md](BATCH-LIVE-SYMMETRY.md)                   | Batch vs live distinction: transport, calculation, forbidden patterns, anti-drift guards |
-| [batch/README.md](batch/README.md)                                 | Job-based execution model, shard-per-container                                           |
-| [live/README.md](live/README.md)                                   | Long-running processes, per-client isolation                                             |
+| [scaling.md](scaling.md)                                         | Horizontal sharding model, vertical scaling, client isolation                            |
+| [concurrency.md](concurrency.md)                                 | MAX_WORKERS, adaptive resource management, CPU vs I/O-bound, batch/live parallelism      |
+| [communication-patterns.md](communication-patterns.md)           | GCS batch bus, embedded live streaming, HTTP control plane                               |
+| [compute.md](compute.md)                                         | VM vs Cloud Run decision matrix, resource allocation                                     |
+| [BATCH-LIVE-SYMMETRY.md](BATCH-LIVE-SYMMETRY.md)                 | Batch vs live distinction: transport, calculation, forbidden patterns, anti-drift guards |
+| [batch/README.md](batch/README.md)                               | Job-based execution model, shard-per-container                                           |
+| [live/README.md](live/README.md)                                 | Long-running processes, per-client isolation                                             |

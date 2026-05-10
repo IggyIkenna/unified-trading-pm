@@ -303,16 +303,16 @@ Deploy form. The new shape makes "fresh" and "re-run" structurally distinct:
   — the active plan that owns the activation work this doc captures.
 - [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](../../plans/active/deploy_missing_auto_launch_2026_05_07.md)
   — Phase 2 of that plan wires into the Monitor → Backfill row's Deploy-Missing button.
-- [`plans/epics/instruments_live_master_2026_05_08.md`](../../plans/epics/instruments_live_master_2026_05_08.md)
-  — Phase G of that plan delegates UI scope here.
-- [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) —
-  the 6 long-lived deployment clusters DeFi-live needs by 2026-05-23 are entered into the Phase E live-cluster registry
-  on first commit; staging deploy + drain test are part of master's D3 gate.
+- [`plans/epics/instruments_live_master_2026_05_08.md`](../../plans/epics/instruments_live_master_2026_05_08.md) — Phase
+  G of that plan delegates UI scope here.
+- [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) — the 6
+  long-lived deployment clusters DeFi-live needs by 2026-05-23 are entered into the Phase E live-cluster registry on
+  first commit; staging deploy + drain test are part of master's D3 gate.
 
 ## Plan provenance
 
 Codified by Phase A.3 of
-[`deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md).
-That plan owns the activation work; this doc is the SSOT for the UX shape the activation produces. As later plan phases
-ship, this doc gains concrete file paths + screenshots; today's stub captures the design upfront so mid-plan agents read
-the SSOT, not the old service-axis-organised topology.
+[`deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md). That plan
+owns the activation work; this doc is the SSOT for the UX shape the activation produces. As later plan phases ship, this
+doc gains concrete file paths + screenshots; today's stub captures the design upfront so mid-plan agents read the SSOT,
+not the old service-axis-organised topology.

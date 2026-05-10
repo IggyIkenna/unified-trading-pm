@@ -1,7 +1,7 @@
 ---
 scope: infrastructure
 status: stable
-last_reviewed: 2026-05-07
+last_reviewed: 2026-05-10
 ---
 
 # VM launcher script SSOT — `deployment-service/scripts/vm/`
@@ -81,8 +81,8 @@ the tarball.
 
 Bake the launcher set into a Docker image cached in Artifact Registry / ECR. The deployment-api would pull + run a
 per-shard launch container rather than `gcloud compute instances create`-ing a fresh VM each time. Tracked in
-[`deploy_missing_auto_launch_2026_05_07.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md); out of
-scope today.
+[`deploy_missing_auto_launch_2026_05_07.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md); out of scope
+today.
 
 ## Adding a new launcher
 
@@ -123,9 +123,16 @@ directory) and faster to refresh.
 **Architecture SSOT**:
 [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
 
-## Migration in flight (2026-05-07)
+## Migration status (2026-05-10): 10 shipped Tab 11 + 20 deferred
 
-29 ad-hoc VM launchers + 1 dashboard launcher live outside `deployment-service/scripts/vm/`:
+The pre-2026-05-08 baseline of 29 ad-hoc VM launchers + 1 dashboard launcher outside `deployment-service/scripts/vm/`
+has been substantially migrated. Per
+[`plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](../../plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
+DONE-2026-05-08 block: **10 launchers shipped Tab 11** (with 17 new VM_PREFIX_TO_BUCKET entries + watchdog VM relaunch);
+the remaining **20 launchers are deferred** per documented per-launcher reasons (duplicates of canonical launchers,
+collision-risk with in-flight tabs, partial supersession by canonical equivalents).
+
+Source repo bucket counts (baseline 30):
 
 | Source                             | Count  | Pattern                                                |
 | ---------------------------------- | ------ | ------------------------------------------------------ |
@@ -137,23 +144,73 @@ directory) and faster to refresh.
 | `deployment-service/scripts/`      | 1      | `deploy-dashboard-gce-vm.sh` (move into `scripts/vm/`) |
 | **Total**                          | **30** |                                                        |
 
-### Per-launcher migration table
+### Shipped 2026-05-08 (Tab 11 — 10 launchers)
 
-Folded in from `launcher-script-consolidation-2026-05-07.md` (deleted by `codex_refactor_2026_05_08.md` Phase C.3).
+| #   | Old path                                                         | New canonical path under `deployment-service/scripts/vm/`                      | Status + commit                                              |
+| --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| 1   | `e2e-testing/scripts/common/launch_mtds_category_backfill_vm.sh` | `launch-mtds-backfill-vm.sh`                                                   | shipped — deployment-service@76f4ecc + e2e-testing@8daba1a   |
+| 2   | `e2e-testing/scripts/common/launch_instruments_backfill_vms.sh`  | `launch-instruments-backfill-vm.sh`                                            | shipped — deployment-service@fbb3673 + e2e-testing@2da6867   |
+| 3   | `features-sports-service/scripts/launch_parallel_backfill.sh`    | `launch-features-sports-parallel-backfill-vm.sh`                               | shipped — deployment-service@0215086 + features-sports@06f6b30 |
+| 4   | `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh`          | `launch-mtds-sports-odds-backfill-vm.sh`                                       | shipped — deployment-service@2e1d967 + e2e-testing@deff088   |
+| 5   | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh`  | `launch-sports-instruments-reference-vm.sh`                                    | shipped — deployment-service@fc9211e + e2e-testing@db7ace3   |
+| 6   | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh`                | `launch-mtds-dex-pools-backfill-vm.sh`                                         | shipped — deployment-service@5778811 + e2e-testing@43d8e49   |
+| 7   | `e2e-testing/scripts/defi/launch_eigenlayer_rewards_vm.sh`       | `launch-mtds-eigenlayer-rewards-backfill-vm.sh`                                | shipped — deployment-service@5778811 + e2e-testing@43d8e49   |
+| 8   | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`             | `launch-mtds-solana-drift-backfill-vm.sh`                                      | shipped — deployment-service@5778811 + e2e-testing@43d8e49   |
+| 9   | `e2e-testing/scripts/common/launch_cefi_migration_vm.sh`         | `launch-cefi-migration-vm.sh`                                                  | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b   |
+| 10  | `e2e-testing/scripts/common/launch_defi_backfill_vm.sh`          | `launch-defi-backfill-vm.sh`                                                   | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b   |
+
+**Migration shape** (each row): copy source → canonical destination, rename to canonical form, deprecation banner on
+old path, register new prefix in `VM_PREFIX_TO_BUCKET`, smoke-test `--dry-run` (or `bash -n` syntax check),
+single-relaunch of watchdog VM at end of cycle. **Watchdog VM** relaunched as `vm-zombie-watchdog-20260508-121344` after
+all 17 new prefix entries landed.
+
+### Deferred (20 launchers — documented reasons)
+
+| Old path                                                                                                                  | Deferred reason                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `e2e-testing/scripts/defi/launch_gas_fees_vm.sh`                                                                          | DEFERRED — duplicate of canonical `launch-mtds-gas-fees-backfill-vm.sh`; reconcile in delete-vs-merge follow-up.                                     |
+| `e2e-testing/scripts/defi/launch_gas_fees_fleet.sh`                                                                       | DEFERRED — duplicate (fleet wrapper) of canonical `launch-mtds-gas-fees-backfill-vm.sh`.                                                             |
+| `e2e-testing/scripts/defi/launch_lst_rates_vm.sh`                                                                         | DEFERRED — duplicate of canonical `launch-mtds-lst-rates-backfill-vm.sh`.                                                                            |
+| `e2e-testing/scripts/defi/launch_lending_indices_vm.sh`                                                                   | DEFERRED — duplicate of canonical `launch-mtds-lending-indices-backfill-vm.sh`; **Tab 9 (`lending-indices-relaunch-tab`) in flight** — collision risk. |
+| `e2e-testing/scripts/defi/launch_perp_funding_vm.sh`                                                                      | DEFERRED — duplicate; canonical `mtds-perp-funding-` prefix already in watchdog.                                                                     |
+| `e2e-testing/scripts/defi/launch_solana_gas_vm.sh`                                                                        | DEFERRED — defer post-May-23 cutover.                                                                                                                |
+| `e2e-testing/scripts/defi/launch_liquidations_vm.sh`                                                                      | DEFERRED — defer post-May-23 cutover.                                                                                                                |
+| `e2e-testing/scripts/prediction/launch_prediction_backfill_vm.sh`                                                         | DEFERRED — **Tab 10 (`predictions-phase1-ingestion-tab`) in flight** on prediction surface; collision risk.                                          |
+| `e2e-testing/scripts/prediction/launch_prediction_features_vm.sh`                                                         | DEFERRED — collision with Tab 10 in flight on prediction surface.                                                                                    |
+| `e2e-testing/scripts/prediction/launch_prediction_pipeline_vm.sh`                                                         | DEFERRED — collision with Tab 10 in flight on prediction surface.                                                                                    |
+| `e2e-testing/scripts/prediction/setup-backfill-vm.sh`                                                                     | DEFERRED — collision with Tab 10 in flight on prediction surface.                                                                                    |
+| `e2e-testing/scripts/sports/full_api_football_sweep.sh`                                                                   | DEFERRED — orchestrator that wraps other launchers; defer.                                                                                           |
+| `e2e-testing/scripts/sports/full_sports_entity_sweep.sh`                                                                  | DEFERRED — orchestrator that wraps other launchers; defer.                                                                                           |
+| `e2e-testing/scripts/sports/launch_fss_features_v3.sh`                                                                    | DEFERRED — partially superseded by canonical `launch-features-sports-backfill-vm.sh`; reconcile in follow-up.                                        |
+| `e2e-testing/scripts/sports/launch_fss_features_vm.sh`                                                                    | DEFERRED — partially superseded by canonical `launch-features-sports-backfill-vm.sh`; reconcile in follow-up.                                        |
+| `e2e-testing/scripts/sports/launch_fss_phase3_backfill.sh`                                                                | DEFERRED — partially superseded by canonical `launch-features-sports-backfill-vm.sh`; reconcile in follow-up.                                        |
+| `e2e-testing/scripts/sports/launch_instruments_reference_vm.sh`                                                           | DEFERRED — superseded by v3 form (#5 above).                                                                                                         |
+| `e2e-testing/scripts/sports/launch_mdps_phase3_bucketing.sh`                                                              | DEFERRED — partially superseded by canonical `launch-mdps-sports-bucket-vm.sh`; reconcile in follow-up.                                              |
+| `e2e-testing/scripts/sports/launch_mdps_reprocess_vm.sh`                                                                  | DEFERRED — partially superseded by canonical `launch-mdps-sports-bucket-vm.sh`; reconcile in follow-up.                                              |
+| `e2e-testing/scripts/sports/launch_oddspapi_vm_backfill.sh`                                                               | DEFERRED — odds API specific; defer post-May-23 cutover.                                                                                             |
+
+**Intra-repo move not in the e2e-testing list** (separate item):
+`deployment-service/scripts/deploy-dashboard-gce-vm.sh` → `deployment-service/scripts/vm/launch-dashboard-vm.sh`.
+DEFERRED — already inside deployment-service repo so callsite drift risk is contained; intra-repo move ships in a
+follow-up cycle.
+
+**Per-asset-group rename intentions for follow-up cycles** (canonical-shape patterns; not single migrations):
 
 | Old path                                                             | New path under `deployment-service/scripts/vm/`        | Status                                    |
 | -------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------- |
-| `e2e-testing/scripts/launch-cefi-backfill.sh`                        | `launch-cefi-{venue}-{flavor}-vm.sh`                   | (per-venue migration)                     |
-| `e2e-testing/scripts/launch-tradfi-backfill.sh`                      | `launch-tradfi-{root}-{flavor}-vm.sh`                  | (per-root migration)                      |
-| `e2e-testing/scripts/launch-sports-backfill.sh`                      | `launch-sports-{source}-vm.sh`                         | shipped                                   |
-| `e2e-testing/scripts/launch-prediction-backfill.sh`                  | `launch-prediction-{venue}-vm.sh`                      | shipped                                   |
-| `e2e-testing/scripts/launch-defi-backfill.sh`                        | `launch-defi-{chain}-{flavor}-vm.sh`                   | (per-chain migration)                     |
+| `e2e-testing/scripts/launch-cefi-backfill.sh`                        | `launch-cefi-{venue}-{flavor}-vm.sh`                   | per-venue migration pattern               |
+| `e2e-testing/scripts/launch-tradfi-backfill.sh`                      | `launch-tradfi-{root}-{flavor}-vm.sh`                  | per-root migration pattern                |
+| `e2e-testing/scripts/launch-sports-backfill.sh`                      | `launch-sports-{source}-vm.sh`                         | shipped (canonical sports launchers)      |
+| `e2e-testing/scripts/launch-prediction-backfill.sh`                  | `launch-prediction-{venue}-vm.sh`                      | shipped (canonical prediction launchers)  |
+| `e2e-testing/scripts/launch-defi-backfill.sh`                        | `launch-defi-{chain}-{flavor}-vm.sh`                   | per-chain migration pattern               |
 | `features-onchain-service/scripts/launch-*.sh`                       | `launch-features-onchain-vm.sh` (or asset-scoped)      | folds into features-service consolidation |
 | `features-volatility-service/scripts/launch-*.sh`                    | `launch-features-volatility-vm.sh`                     | folds into features-service consolidation |
 | `features-cross-instrument-service/scripts/launch-*.sh`              | `launch-features-cross-instrument-vm.sh`               | folds into features-service consolidation |
 | `features-sports-service/scripts/launch-*.sh`                        | `launch-features-sports-vm.sh`                         | folds into features-service consolidation |
 | `features-prediction-service/scripts/launch-*.sh`                    | `launch-features-prediction-vm.sh`                     | folds into features-service consolidation |
-| `deployment-service/scripts/deploy-dashboard-gce-vm.sh` (intra-repo) | `deployment-service/scripts/vm/launch-dashboard-vm.sh` | intra-repo move                           |
+| `deployment-service/scripts/deploy-dashboard-gce-vm.sh` (intra-repo) | `deployment-service/scripts/vm/launch-dashboard-vm.sh` | intra-repo move (deferred)                |
+
+> **Folded in from `launcher-script-consolidation-2026-05-07.md`** (deleted by `codex_refactor_2026_05_08.md` Phase C.3).
 
 Once a row is migrated:
 
@@ -199,7 +256,7 @@ Until the plan ships:
 - CLAUDE.md "VM tarball deployment" — `create-code-tarballs.sh --all` + boot path.
 - CLAUDE.md "VM Naming Convention" — `VM_PREFIX_TO_BUCKET` registry.
 - [`codex/05-infrastructure/vm-tarball-deployment.md`](vm-tarball-deployment.md) — tarball mechanics.
-- [`plans/ai/deploy_missing_auto_launch_2026_05_07.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md)
-  — preview → auto-launch successor.
-- [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
-  — bigger AWS S3 / ECR / EC2-launcher work.
+- [`plans/ai/deploy_missing_auto_launch_2026_05_07.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md) —
+  preview → auto-launch successor.
+- [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md) —
+  bigger AWS S3 / ECR / EC2-launcher work.

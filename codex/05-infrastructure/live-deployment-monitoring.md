@@ -2,7 +2,10 @@
 title: Live Deployment Monitoring
 status: planned
 created: 2026-05-07
-authoritative_for: Per-archetype event cadence + heartbeat thresholds + cross-cloud event-stream parity expectations for live (non-batch) trading deployments. Defines the contract between a running VM/Cloud Run service and the unified-events-interface so silent stalls are visible within minutes.
+authoritative_for:
+  Per-archetype event cadence + heartbeat thresholds + cross-cloud event-stream parity expectations for live (non-batch)
+  trading deployments. Defines the contract between a running VM/Cloud Run service and the unified-events-interface so
+  silent stalls are visible within minutes.
 referenced_by:
   - plans/active/master_to_live_defi_2026_05_23.md
 related:
@@ -13,8 +16,8 @@ related:
 
 # Live Deployment Monitoring
 
-> **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in
-> as the work shipped by the referencing plan progresses.
+> **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as
+> the work shipped by the referencing plan progresses.
 
 ## Purpose
 
@@ -40,13 +43,15 @@ events to the same downstream consumers via the unified-events-interface).
 4. **Stall-detection alerting** — alerting-service rules consume the event stream and emit AlertCode on heartbeat-miss.
 5. **Pre-launch verification protocol** — per the workspace "no fire-and-forget VM launches" rule; covered also under
    live-deployment monitoring runbook.
-6. **Cross-cloud parity verification** — once both clouds are live, periodic reconciliation of "did GCP and AWS see
-   the same events for the same correlation_id?".
+6. **Cross-cloud parity verification** — once both clouds are live, periodic reconciliation of "did GCP and AWS see the
+   same events for the same correlation_id?".
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.md) work-stream B.
-- **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md), [`alerting/operator-playbook`](../15-runbooks/alerting/operator-playbook.md).
+- **Plan(s) implementing this:**
+  [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.md) work-stream B.
+- **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md),
+  [`alerting/operator-playbook`](../15-runbooks/alerting/operator-playbook.md).
 - **Code:** `unified-trading-library/events/`, `unified-events-interface/`, alerting-service (TBD).
 
 ## Open questions
@@ -54,4 +59,5 @@ events to the same downstream consumers via the unified-events-interface).
 - What is the canonical heartbeat event for each strategy archetype? (need product-level decision)
 - How do we surface event-stream parity-failure (GCP saw event X, AWS didn't) without false-positives during failover?
 - Should heartbeat thresholds live in UAC `LIVE_HEARTBEAT_THRESHOLDS` dict or per-service config?
-- When a VM is intentionally idle (e.g. between trading windows), how do we distinguish "alive but quiet" from "stalled"?
+- When a VM is intentionally idle (e.g. between trading windows), how do we distinguish "alive but quiet" from
+  "stalled"?

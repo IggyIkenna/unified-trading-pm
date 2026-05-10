@@ -28,10 +28,10 @@ end-to-end coverage.
 
 > **SSOT pointer**: per-asset-group bucket patterns + path templates + hive-key vocabulary (canonical `asset_group=` vs
 > legacy `category=` + tradfi non-Hive shape) + per-asset-group migration status live in
-> [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md). This doc focuses on the per-service coverage
-> matrix (which service writes which `(asset_group, data_type, day)` tuple) and the manifest index files + consolidator
-> topology below — for "what does the path look like on disk for asset_group X" consult the per-asset-group-bucket-layouts
-> SSOT.
+> [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md). This doc focuses on the per-service
+> coverage matrix (which service writes which `(asset_group, data_type, day)` tuple) and the manifest index files +
+> consolidator topology below — for "what does the path look like on disk for asset_group X" consult the
+> per-asset-group-bucket-layouts SSOT.
 
 ### Manifest index files (per bucket)
 
@@ -173,8 +173,9 @@ CeFi options underlyings filtered to BTC/ETH only (`CEFI_OPTIONS_UNDERLYINGS`).
 > **Coverage-start values**: see
 > [`availability-manifest-and-data-status.md` § Source coverage start dates (canonical)](./availability-manifest-and-data-status.md#source-coverage-start-dates-canonical--source_coverage_start-ssot)
 > (UAC `unified_api_contracts.sports.SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START` runtime SSOT). Sources covered:
-> `api_football`, `footystats`, `understat`, `transfermarkt`, `soccer_football_info`, `open_meteo`. Per-`(source, data_type)`
-> overrides for SFI_PROGRESSIVE_STATS and api_football per-fixture data_types live in the same canonical table.
+> `api_football`, `footystats`, `understat`, `transfermarkt`, `soccer_football_info`, `open_meteo`.
+> Per-`(source, data_type)` overrides for SFI_PROGRESSIVE_STATS and api_football per-fixture data_types live in the same
+> canonical table.
 
 ### PREDICTION
 

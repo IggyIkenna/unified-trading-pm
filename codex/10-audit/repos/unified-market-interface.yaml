@@ -66,7 +66,9 @@ code_readiness:
 
   cr5_quickmerge:
     status: "not_assessed"
-    criteria: "bash scripts/quickmerge.sh merged to feat/code-readiness-market-tick-data-service/market_tick_data_service/market_interface or main via cascade"
+    criteria:
+      "bash scripts/quickmerge.sh merged to
+      feat/code-readiness-market-tick-data-service/market_tick_data_service/market_interface or main via cascade"
     branch: null
     ci_url: null
     merged_to_main: false

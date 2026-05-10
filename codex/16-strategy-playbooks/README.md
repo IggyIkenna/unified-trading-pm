@@ -24,8 +24,8 @@ playbooks the implementer reads BEFORE building, and the operator reads to under
 - **`defi/`** — DeFi-specific runbooks. Currently includes the venue-collateral playbook for Aave + Uniswap +
   Hyperliquid hedge-leg orchestration. Future additions: per-protocol operational notes, custody-flow playbooks,
   cross-chain bridging procedures.
-- **`strategy/`** — Per-archetype strategy playbooks. Currently includes the CME ↔ Polymarket arbitrage archetype design
-  doc. Future additions: per-archetype playbooks for each strategy in `09-strategy/architecture-v2/archetypes/`.
+- **`strategy/`** — Per-archetype strategy playbooks. Currently includes the CME ↔ Polymarket arbitrage archetype
+  design doc. Future additions: per-archetype playbooks for each strategy in `09-strategy/architecture-v2/archetypes/`.
 - **`ml/`** — ML lifecycle playbooks. Currently includes the CeFi ML live-serving playbook. Future additions: feature-
   engineering playbooks per asset_group, model-promotion procedures, drift-detection runbooks.
 - **`infra-spec/`** — Multi-stage infrastructure refactor specs (the Stage 3a-3e series). Captures the canonical infra
@@ -50,8 +50,8 @@ playbooks the implementer reads BEFORE building, and the operator reads to under
 Every playbook in this section MUST:
 
 1. Cite the canonical architecture surface in `09-strategy/architecture-v2/` (for strategy playbooks),
-   `04-architecture/` (for cross-cutting architectural concerns), or `05-infrastructure/` (for infra-stage docs) as
-   the upstream SSOT. The playbook here is the operational walkthrough; the architecture doc is the contract.
+   `04-architecture/` (for cross-cutting architectural concerns), or `05-infrastructure/` (for infra-stage docs) as the
+   upstream SSOT. The playbook here is the operational walkthrough; the architecture doc is the contract.
 2. If a playbook references an alert code or runbook trigger, link to the corresponding runbook in
    [`codex/15-runbooks/`](../15-runbooks/README.md).
 3. If a playbook describes a customer-visible flow (onboarding, demo, restriction-profile), link to the corresponding

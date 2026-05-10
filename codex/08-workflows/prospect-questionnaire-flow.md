@@ -232,8 +232,8 @@ that middleware fails, the token confirm alone is not a security boundary.
 
 The four `/api/onboarding/*` route handlers do not appear on any nav surface (they're fetched programmatically from the
 Documents panel). They are in the orphan-audit whitelist under the `API-HANDLER` category per
-[`orphan-audit.md` § Whitelist Triage Rule](../04-architecture/orphan-audit.md#whitelist-triage-rule). Both `list` and `delete` were added
-2026-04-21 alongside this plan. `reset` was deleted (replaced by the per-doc `delete` endpoint).
+[`orphan-audit.md` § Whitelist Triage Rule](../04-architecture/orphan-audit.md#whitelist-triage-rule). Both `list` and
+`delete` were added 2026-04-21 alongside this plan. `reset` was deleted (replaced by the per-doc `delete` endpoint).
 
 ---
 

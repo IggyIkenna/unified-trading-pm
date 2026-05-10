@@ -6,8 +6,9 @@ overview:
   is for risk simulations + dev fixtures (NOT paper-trading); mock-vs-paper is operator-discipline only (no
   enforcement).
 type: codex-ssot
-status: stub
+status: canonical (extracted from master plan + question doc 2026-05-10)
 created: 2026-05-09
+last_reviewed: 2026-05-10
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
@@ -16,7 +17,11 @@ implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 17
 
 # Paper-vs-live execution seam
 
-> **Stub doc.** Full content fills in as `master_to_live_defi_2026_05_23.md` Group F sub-items ship.
+> **Canonical 2026-05-10.** Per-venue paper-target policy + simulate-first-floor / testnet-upgrade-where-credentials-
+> exist mechanics live in [`../05-infrastructure/per-venue-paper-policy.md`](../05-infrastructure/per-venue-paper-policy.md)
+> (the `paper_target_registry` SSOT). Solana paper for non-EVM uses devnet / localnet / surfnet per the same registry.
+> Consumer-site implementation (Group F sub-items `pvl-p17a` / `pvl-p17b` / `pvl-p17c` / `pvl-p17d` / `pvl-p20a..c`)
+> owned by `master_to_live_defi_2026_05_23.md`.
 
 ## TL;DR
 

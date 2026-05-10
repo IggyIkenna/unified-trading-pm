@@ -336,8 +336,8 @@ added without a manifest entry.
 **Question answered:** Does the canonical click path for each playbook work correctly for each persona, with visibility
 slicing applied?
 
-This layer already has an SSOT at [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md). This section
-delegates — do not duplicate. The rule from that SSOT stands:
+This layer already has an SSOT at [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md).
+This section delegates — do not duplicate. The rule from that SSOT stands:
 
 > When a playbook doc changes, the matching Playwright spec MUST be updated in the same PR.
 
@@ -623,8 +623,8 @@ blocked until the UI is updated in the same PR (monorepo pattern).
 
 ## Coverage Gates
 
-Extends the rule from [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md) ("every playbook doc has a
-matching spec"):
+Extends the rule from [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md) ("every
+playbook doc has a matching spec"):
 
 | Coverage requirement                                                | Where enforced                                                           |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------ |

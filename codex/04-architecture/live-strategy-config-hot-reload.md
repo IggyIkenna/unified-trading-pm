@@ -7,8 +7,8 @@ scope: [engineer, admin]
 ## Why hot-reload matters
 
 A live strategy runs continuously. Operators tune sizing, gating, risk caps, and venue-routing parameters mid-session
-based on observed P&L attribution. Restarting strategy-service to pick up a config change loses in-memory state
-(open positions, pending orders, in-flight signals), forces an order rebuild, and creates a window where strategy and
+based on observed P&L attribution. Restarting strategy-service to pick up a config change loses in-memory state (open
+positions, pending orders, in-flight signals), forces an order rebuild, and creates a window where strategy and
 execution disagree on what's working. Hot-reload eliminates the restart.
 
 ## Pattern (same shape as ApiKeyReloader)

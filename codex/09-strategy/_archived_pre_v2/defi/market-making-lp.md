@@ -503,6 +503,7 @@ User (UI)
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_amm_lp.py`
 - **Matching engine (simulation):** `matching-engine-library/hooks.py` (V4 hooks)
-- **Pool data adapters:** `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/uniswap_v3_adapter.py`
+- **Pool data adapters:**
+  `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/uniswap_v3_adapter.py`
 - **Venue capabilities:** `VENUE_CAPABILITIES.PROVIDE_LIQUIDITY` in `venue_constants.py`
 - **Hard rules:** [config-architecture.md](../cross-cutting/config-architecture.md)

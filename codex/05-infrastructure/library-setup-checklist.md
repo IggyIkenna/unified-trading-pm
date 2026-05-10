@@ -61,8 +61,8 @@ unified-trading-library
 
 ### Tier 2: Depends on Tier 0 Only
 
-**Examples:** market-tick-data-service/market_tick_data_service/market_interface, execution-service (formerly unified-trade-execution-interface),
-unified-domain-client
+**Examples:** market-tick-data-service/market_tick_data_service/market_interface, execution-service (formerly
+unified-trade-execution-interface), unified-domain-client
 
 **Allowed Dependencies:**
 

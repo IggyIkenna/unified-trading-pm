@@ -97,17 +97,17 @@ Called at service startup to catch misconfigured venue names before they cause d
 
 The following venues were removed from UAC and all adapters:
 
-| Removed                                  | Reason                                  |
-| ---------------------------------------- | --------------------------------------- |
-| Bitstamp                                 | Low volume, removed from strategy scope |
-| Elysium, Arkham, Bloxroute, Infura       | Deleted providers                       |
+| Removed                            | Reason                                  |
+| ---------------------------------- | --------------------------------------- |
+| Bitstamp                           | Low volume, removed from strategy scope |
+| Elysium, Arkham, Bloxroute, Infura | Deleted providers                       |
 
 Do not add these back to any adapter or venue mapping.
 
 **Pyth — UNBANNED 2026-05-06** (Solana-only). Originally listed above as a deleted provider; re-added for Solana
-on-chain price feeds (LST yields jitoSOL / mSOL / bSOL). Chainlink covers EVM-only chains (Arb / Base / Polygon);
-Pyth fills the Solana gap via Hermes (HTTPS pull) for batch and PythNet (Solana RPC) for live. Scope is
-Solana-only — other chains continue using Chainlink. SSOT: CLAUDE.md "Pyth — UNBANNED 2026-05-06" rule.
+on-chain price feeds (LST yields jitoSOL / mSOL / bSOL). Chainlink covers EVM-only chains (Arb / Base / Polygon); Pyth
+fills the Solana gap via Hermes (HTTPS pull) for batch and PythNet (Solana RPC) for live. Scope is Solana-only — other
+chains continue using Chainlink. SSOT: CLAUDE.md "Pyth — UNBANNED 2026-05-06" rule.
 
 ## Adding a New Venue
 

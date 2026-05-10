@@ -62,9 +62,10 @@ Layer 3:   Pipeline Smoke & E2E       (system-integration-tests, needs GCP sandb
 **VCR-based integration test execution:**
 
 VCR-based integration tests do NOT run standalone from AC. They EXECUTE from within the owning interface repos
-(`unified-cloud-interface`, `market-tick-data-service/market_tick_data_service/market_interface`, `instruments-service` (reference data — formerly
-unified-reference-data-interface)), which declare `unified-api-contracts` as a dependency and provide the normalization
-layer under test. This ensures the cassette replays are exercised against the actual adapter code, not in isolation.
+(`unified-cloud-interface`, `market-tick-data-service/market_tick_data_service/market_interface`, `instruments-service`
+(reference data — formerly unified-reference-data-interface)), which declare `unified-api-contracts` as a dependency and
+provide the normalization layer under test. This ensures the cassette replays are exercised against the actual adapter
+code, not in isolation.
 
 See `vcr-cassette-pattern.md` for the full VCR cassette workflow (recording, storage locations, replay pattern in
 interface repos).
@@ -74,8 +75,8 @@ interface repos).
 **Credentials needed:** None
 
 **Trigger:** Every quickmerge of AC (canonical or internal subpackage), or any owning interface repo
-(`unified-cloud-interface`, `market-tick-data-service/market_tick_data_service/market_interface`, `instruments-service` (reference data — formerly
-unified-reference-data-interface)). Part of STEP B at TIER 0 in the meta-flow.
+(`unified-cloud-interface`, `market-tick-data-service/market_tick_data_service/market_interface`, `instruments-service`
+(reference data — formerly unified-reference-data-interface)). Part of STEP B at TIER 0 in the meta-flow.
 
 **Implementation pattern:**
 

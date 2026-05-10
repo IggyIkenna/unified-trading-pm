@@ -5,18 +5,25 @@ overview:
   rendering wired to real backend, and the manual-trade gate UI for `OperationalMode.MANUAL` strategies. Composes with
   the existing `dart-scope-bar.tsx` cockpit + `execution-mode-toggle.tsx` mode pills.
 type: codex-ssot
-status: stub
+status: stub (ownership split clarified 2026-05-10)
 created: 2026-05-09
+last_reviewed: 2026-05-10
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group G item 23 + sub-items pvl-p23a / pvl-p23b / pvl-p23c
+implements_in:
+  - plans/active/master_to_live_defi_2026_05_23.md # Group G item 23 — conceptual model + readiness gating (sub-items pvl-p23a / pvl-p23b / pvl-p23c)
+  - plans/active/promote_workflow_may23_cli_path_2026_05_10.md # Phases U5 (pvl-p23a DART 3-way) + U6 (pvl-p23c manual-trade gate UI) — actual UI surfaces
 ---
 
 # DART mode toggle — 3-way visualization + manual gate
 
-> **Stub doc.** Full content fills in as `master_to_live_defi_2026_05_23.md` Group G sub-items `pvl-p23a` / `pvl-p23b` /
-> `pvl-p23c` ship.
+> **Stub doc — ownership split (clarified 2026-05-10).** The conceptual model + readiness gating live in
+> `master_to_live_defi_2026_05_23.md` Group G item 23 (sub-items `pvl-p23a` / `pvl-p23b` / `pvl-p23c`). The **actual UI
+> surfaces** (DART 3-way visualization + ManualTradeGateDialog component + execution-service unhold path + Playwright
+> e2e) ship via `promote_workflow_may23_cli_path_2026_05_10.md` **Phases U5 + U6**. Stub fill-in happens via BOTH plans
+> together — master plan owns the contract; promote-workflow plan owns the implementation. (Mode-data API endpoint
+> `pvl-p23b` ships via the same promote-workflow plan **Phase U2**.)
 
 ## TL;DR
 

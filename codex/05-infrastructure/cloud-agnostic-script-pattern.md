@@ -111,14 +111,16 @@ the SSOT. Inline `f"gs://{bucket}/..."` / `f"s3://{bucket}/..."` formatting is a
 
 Every workload sits in exactly one of four tiers. Tier choice is part of the workload's design, not a runtime guess.
 
-| Tier | Name | Examples | Selection mechanism |
-| --- | --- | --- | --- |
-| 1 | Always-GCP | BigQuery analytics queries, Vertex AI training jobs, Pub/Sub subscriptions backing GCP-only operators, GCS-only legacy buckets pending S3 backfill | Hardcoded — workload imports `google.cloud.*` directly with no AWS branch. Lint rule whitelists Tier-1 modules. |
-| 2 | Always-AWS | Tenderly-fork RPC integration tests, Polymarket archive S3 (no GCP equivalent), AWS Secrets Manager DeFi wallet keys post-Phase-4 mirror, ECS Fargate runtime config | Hardcoded — workload imports `boto3` directly with no GCP branch. Lint rule whitelists Tier-2 modules. |
-| 3 | Cloud-agnostic via UCI factory | Most workspace services (MTDS, MDPS, instruments-service, features-\*, strategy-service, execution-service). Default tier. | Runtime selection by `CLOUD_PROVIDER` env (default `gcp`). All cloud SDK access flows through `unified_trading_library.cloud_interface.factory`. |
-| 4 | Dual-cloud-active | Backfills + manifest writers + reconcilers that run against BOTH clouds simultaneously per the 2026-05-07 operator decision: _"dual-cloud-active is the steady state, not transitional"_ (see `aws_migration_defi_first_2026_05_07.md` §"Operator answers — Phase 0 inputs"). | Per-shard fan-out: each shard write computes both `gs://...` and `s3://...` URIs and writes both. Read path picks one cloud per request via `STORAGE_READ_CLOUD_PROVIDER` env (defaults to `CLOUD_PROVIDER`). |
+| Tier | Name                           | Examples                                                                                                                                                                                                                                                                      | Selection mechanism                                                                                                                                                                                           |
+| ---- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Always-GCP                     | BigQuery analytics queries, Vertex AI training jobs, Pub/Sub subscriptions backing GCP-only operators, GCS-only legacy buckets pending S3 backfill                                                                                                                            | Hardcoded — workload imports `google.cloud.*` directly with no AWS branch. Lint rule whitelists Tier-1 modules.                                                                                               |
+| 2    | Always-AWS                     | Tenderly-fork RPC integration tests, Polymarket archive S3 (no GCP equivalent), AWS Secrets Manager DeFi wallet keys post-Phase-4 mirror, ECS Fargate runtime config                                                                                                          | Hardcoded — workload imports `boto3` directly with no GCP branch. Lint rule whitelists Tier-2 modules.                                                                                                        |
+| 3    | Cloud-agnostic via UCI factory | Most workspace services (MTDS, MDPS, instruments-service, features-\*, strategy-service, execution-service). Default tier.                                                                                                                                                    | Runtime selection by `CLOUD_PROVIDER` env (default `gcp`). All cloud SDK access flows through `unified_trading_library.cloud_interface.factory`.                                                              |
+| 4    | Dual-cloud-active              | Backfills + manifest writers + reconcilers that run against BOTH clouds simultaneously per the 2026-05-07 operator decision: _"dual-cloud-active is the steady state, not transitional"_ (see `aws_migration_defi_first_2026_05_07.md` §"Operator answers — Phase 0 inputs"). | Per-shard fan-out: each shard write computes both `gs://...` and `s3://...` URIs and writes both. Read path picks one cloud per request via `STORAGE_READ_CLOUD_PROVIDER` env (defaults to `CLOUD_PROVIDER`). |
 
-**Tier 3 is the default for new code.** Don't reach for Tier 1 / Tier 2 unless the workload is genuinely tied to a single cloud's primitive. Tier 4 is opt-in for cross-cloud parity workloads — turning Tier 3 into Tier 4 is a per-workload decision recorded in the workload's plan-of-record, not a global toggle.
+**Tier 3 is the default for new code.** Don't reach for Tier 1 / Tier 2 unless the workload is genuinely tied to a
+single cloud's primitive. Tier 4 is opt-in for cross-cloud parity workloads — turning Tier 3 into Tier 4 is a
+per-workload decision recorded in the workload's plan-of-record, not a global toggle.
 
 ## Bucket-naming SSOT — UTL `cloud_interface.bucket_naming` (4.2)
 
@@ -138,13 +140,20 @@ uri = resolve_bucket_uri(cloud="aws", kind="events", path="2026-05-08/foo.parque
 
 5-point contract:
 
-1. **`deployment-service/configs/cloud-providers.yaml` is the data SSOT.** `bucket_naming.py` is the lookup logic. Never duplicate the per-cloud bucket templates anywhere else.
-2. **Asset-group keys are lowercase in the public API** (`"cefi"`, `"defi"`, `"tradfi"`, `"sports"`, `"prediction"`) per CLAUDE.md asset-group vocabulary exception. The yaml internal keys are uppercase; the resolver bridges.
-3. **No silent fallback** — `BucketNamingError` raised on any unknown `(cloud, asset_group, kind)`. Per CLAUDE.md "no try/except fallback imports".
-4. **Inline `f"gs://..."` / `f"s3://..."` formatting is a violation.** Migrate to `resolve_bucket_uri`. Companion `seed_writer.py` refactor 2026-05-08 ships the `_format_uri()` cache pattern as the in-class precedent.
-5. **`constants.py:BUCKET_PREFIXES` is deprecated.** Drifted hardcode that pre-dates the yaml SSOT. Follow-up to delegate `constants.get_bucket_name()` into `bucket_naming.resolve_bucket_name()` is tracked under `aws_migration_defi_first_2026_05_07.md` Phase 1.5.A.
+1. **`deployment-service/configs/cloud-providers.yaml` is the data SSOT.** `bucket_naming.py` is the lookup logic. Never
+   duplicate the per-cloud bucket templates anywhere else.
+2. **Asset-group keys are lowercase in the public API** (`"cefi"`, `"defi"`, `"tradfi"`, `"sports"`, `"prediction"`) per
+   CLAUDE.md asset-group vocabulary exception. The yaml internal keys are uppercase; the resolver bridges.
+3. **No silent fallback** — `BucketNamingError` raised on any unknown `(cloud, asset_group, kind)`. Per CLAUDE.md "no
+   try/except fallback imports".
+4. **Inline `f"gs://..."` / `f"s3://..."` formatting is a violation.** Migrate to `resolve_bucket_uri`. Companion
+   `seed_writer.py` refactor 2026-05-08 ships the `_format_uri()` cache pattern as the in-class precedent.
+5. **`constants.py:BUCKET_PREFIXES` is deprecated.** Drifted hardcode that pre-dates the yaml SSOT. Follow-up to
+   delegate `constants.get_bucket_name()` into `bucket_naming.resolve_bucket_name()` is tracked under
+   `aws_migration_defi_first_2026_05_07.md` Phase 1.5.A.
 
-Workspace anti-pattern sweep (~70 unmarked `f"gs://"` + `f"s3://"` sites + ~30 module-level `BUCKET = "..."` constants + ~600 launcher-script literals): tracked under `cloud-agnostic-audit-2026-05-07.md` § "Inline-string bucket-name audit".
+Workspace anti-pattern sweep (~70 unmarked `f"gs://"` + `f"s3://"` sites + ~30 module-level `BUCKET = "..."` constants +
+~600 launcher-script literals): tracked under `cloud-agnostic-audit-2026-05-07.md` § "Inline-string bucket-name audit".
 
 ## Dual-bucket dual-write rule (4.3)
 
@@ -169,14 +178,18 @@ def dual_write(*, kind: str, asset_group: str, path: str, payload: bytes) -> Non
 
 Failure-mode resolution (operator decision 2026-05-07):
 
-| GCP write | AWS write | Action |
-| --- | --- | --- |
-| ✓ | ✓ | `record_captured` in manifest as normal. |
-| ✓ | ✗ | Raise `DualWriteIncompleteError`. Do NOT record manifest. Alert fires (`DUAL_WRITE_PARTIAL_FAILURE`). |
-| ✗ | ✓ | Same — hard fail, no manifest record, alert. |
-| ✗ | ✗ | Same — hard fail, no manifest record, alert. |
+| GCP write | AWS write | Action                                                                                                |
+| --------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| ✓         | ✓         | `record_captured` in manifest as normal.                                                              |
+| ✓         | ✗         | Raise `DualWriteIncompleteError`. Do NOT record manifest. Alert fires (`DUAL_WRITE_PARTIAL_FAILURE`). |
+| ✗         | ✓         | Same — hard fail, no manifest record, alert.                                                          |
+| ✗         | ✗         | Same — hard fail, no manifest record, alert.                                                          |
 
-**Rationale**: a partial-success silent record creates the worst kind of phantom — the manifest says `captured` but only one cloud has the data. Downstream reads that hit the missing cloud return empty placeholders (the 2026-05-05 MDPS 1440-NaN-bars-per-day class of bug). Hard fail forces the operator to pick one of: (a) re-run the write loop after fixing the failed cloud's outage, (b) explicitly downgrade the workload to single-cloud Tier 3, (c) flip the failed cloud's bucket to maintenance for the day and accept the gap.
+**Rationale**: a partial-success silent record creates the worst kind of phantom — the manifest says `captured` but only
+one cloud has the data. Downstream reads that hit the missing cloud return empty placeholders (the 2026-05-05 MDPS
+1440-NaN-bars-per-day class of bug). Hard fail forces the operator to pick one of: (a) re-run the write loop after
+fixing the failed cloud's outage, (b) explicitly downgrade the workload to single-cloud Tier 3, (c) flip the failed
+cloud's bucket to maintenance for the day and accept the gap.
 
 ## Storage Transfer Service config pattern (4.4)
 
@@ -206,15 +219,22 @@ aws datasync create-task \
   --options "VerifyMode=ONLY_FILES_TRANSFERRED,Atime=NONE,Mtime=PRESERVE,Uid=NONE,Gid=NONE"
 ```
 
-**Validation invariant** post-transfer: row-count parity ≤0.01% drift per shard via `gsutil du` ↔ `aws s3 ls --summarize` cross-check. Drift > 0.01% triggers re-transfer for the affected shards. Cost model: STS is free for GCS→S3 (S3 charges egress on the pull side); DataSync has per-GB pricing (~$0.0125/GB transferred). Total cost for DeFi-only initial transfer per the AWS plan §"Cost calculus" is operator-budgeted under the credit allocation.
+**Validation invariant** post-transfer: row-count parity ≤0.01% drift per shard via `gsutil du` ↔
+`aws s3 ls --summarize` cross-check. Drift > 0.01% triggers re-transfer for the affected shards. Cost model: STS is free
+for GCS→S3 (S3 charges egress on the pull side); DataSync has per-GB pricing (~$0.0125/GB transferred). Total cost for
+DeFi-only initial transfer per the AWS plan §"Cost calculus" is operator-budgeted under the credit allocation.
 
 ## Per-asset_group migration sequencing (4.5)
 
-Migration order to AWS (gated on `master_to_live_defi_2026_05_23.md` Group F + `aws_migration_defi_first_2026_05_07.md` Phase 5-6):
+Migration order to AWS (gated on `master_to_live_defi_2026_05_23.md` Group F + `aws_migration_defi_first_2026_05_07.md`
+Phase 5-6):
 
-1. **`defi`** — first. May-23 cutover dependency. Phase 2 buckets created at `deployment-service@7da2f3d`. Phase 5 transfer + Phase 6 ECS Fargate deploy gate the cutover.
-2. **`cefi-instruments`** — second. DeFi archetypes hedge across 6 CeFi perp venues; CeFi instruments reference data is on the May-23 critical path even though CeFi tick data stays GCP-resident.
-3. **`cefi`-historical / `tradfi` / `sports` / `prediction`** — Phase 9 (post-May-23). Opportunistic credit-utilisation. No deadline pressure.
+1. **`defi`** — first. May-23 cutover dependency. Phase 2 buckets created at `deployment-service@7da2f3d`. Phase 5
+   transfer + Phase 6 ECS Fargate deploy gate the cutover.
+2. **`cefi-instruments`** — second. DeFi archetypes hedge across 6 CeFi perp venues; CeFi instruments reference data is
+   on the May-23 critical path even though CeFi tick data stays GCP-resident.
+3. **`cefi`-historical / `tradfi` / `sports` / `prediction`** — Phase 9 (post-May-23). Opportunistic credit-utilisation.
+   No deadline pressure.
 
 Per-asset_group migration checklist (apply for each asset_group):
 
@@ -266,8 +286,8 @@ is (per the AWS migration plan Phase 1.5):
 
 ## Cross-references
 
-- **Plan(s) implementing this:**
-  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md) Phase 1.5 + Phase 2.
+- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
+  Phase 1.5 + Phase 2.
 - **Related codex SSOTs:** [`cloud-agnostic-audit-2026-05-07`](./cloud-agnostic-audit-2026-05-07.md),
   [`cloud-agnostic-build-lineage`](./cloud-agnostic-build-lineage.md).
 - **Code:**

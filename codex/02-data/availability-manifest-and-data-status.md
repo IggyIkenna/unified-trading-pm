@@ -172,6 +172,22 @@ caller code or assuming the legacy contract:
 - A 4th typed error for the future NaN-ratio gate: `NanRatioExceededError(column, observed_ratio, threshold)` — landing
   in Plan B (UTL/UAC lift triple) which lifts `instruments-service _validate_predictions_null_rates` to a UTL helper.
 
+**Streaming-writer companion — `record_captured_from_counts` (shipped UTL@`ef47c81b` per
+[`wave2_polymarket_record_captured_from_counts_2026_05_09.md`](../../plans/active/wave2_polymarket_record_captured_from_counts_2026_05_09.md):49-60).**
+`ManifestWriter.record_captured_from_counts(row_key, total_rows, expected_root_clusters, cluster_extractor, observed_clusters, available_at_envelope)`
+is the streaming-writer-friendly variant of `record_captured`. Accepts `total_rows` (int) + `cluster_counts`
+(`observed_clusters` mapping) + `available_at_envelope` (UTC timestamp) instead of a pandas DataFrame — used by
+streaming writers (PartitionedTickWriter et al) that need to satisfy the BUNDLED_DATA_TYPES cluster validation gate
+without reconstructing per-row DataFrames at finalize time. Internally calls the same `_check_cluster_coverage` private
+gate + `assert_available_at_present` on the envelope timestamp + writes the manifest row. Failure modes mirror
+`record_captured`: under-coverage → `record_failed(ClusterCoverageError)`, missing/null envelope → `LookaheadBiasError`,
+empty observed → `record_empty(SOURCE_RETURNED_ZERO)`. 11 unit tests at
+`tests/unit/test_manifest_writer_record_captured_from_counts.py` cover full-coverage success, under-coverage routing,
+None/NaT/naive envelope, total_rows=0, unknown row_key column, multiple-call idempotency, non-UTC tz acceptance,
+feature_group sibling-presence guard, attempted_at honored. Long-term plan deletes the legacy `add()` path entirely once
+every bundled-shard callsite migrates (Wave-2 Phases 3-4); reviewers reject any new `add()` callsite for bundled
+data_types post-migration.
+
 **Bundled data_types (cluster validation mandatory):**
 
 - `options_chain` — registry: `OPTIONS_CLUSTERS` (ES.OPT 11-cluster taxonomy seed; lifted from instruments-service to
@@ -203,11 +219,12 @@ write per-base_asset shards; the data_type slot in BUNDLED_DATA_TYPES is reserve
 data_types — fixture-native (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`,
 `FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES` when fixture-scoped) AND day-aggregate (`STANDINGS`, `LEAGUES`,
 `TEAMS`, etc.) — shard at `(asset_group=sports, source, data_type, league_id, day)`. **`fixture_id` is a row-level
-column inside the parquet, NOT a hive-partition shard axis** (per the [canonical banner above](#multi-axis-correction-banner-canonical))
-— per-fixture detail at drill-down comes from reading the parquet rows, not from a separate manifest row. Avoids ~10×
-manifest inflation. Per-fixture cluster validation enforced via UAC `SPORTS_FIXTURE_CLUSTERS` + UTL
-`MissingClusterValidationError` (see banner) — clusters are checked INSIDE the per-(league, day) parquet at write time.
-ML predictions remain fixture-level because features-sports-service reads the parquet rows.
+column inside the parquet, NOT a hive-partition shard axis** (per the
+[canonical banner above](#multi-axis-correction-banner-canonical)) — per-fixture detail at drill-down comes from reading
+the parquet rows, not from a separate manifest row. Avoids ~10× manifest inflation. Per-fixture cluster validation
+enforced via UAC `SPORTS_FIXTURE_CLUSTERS` + UTL `MissingClusterValidationError` (see banner) — clusters are checked
+INSIDE the per-(league, day) parquet at write time. ML predictions remain fixture-level because features-sports-service
+reads the parquet rows.
 
 **`available_at` stamping per source** (writegate plan Phase 1B `AVAILABILITY_AT_SEMANTICS` registry):
 
@@ -224,15 +241,22 @@ ML predictions remain fixture-level because features-sports-service reads the pa
 | CeFi / DeFi / TradFi tick-level data                                                               | `tick.timestamp + source_priority_scrape_latency` | Live = batch                                                                                                                                                                   |
 | Weather forecasts                                                                                  | forecast-issue-time                               | Distinct from forecast-target time                                                                                                                                             |
 
-## Schema v7 (current)
+## Schema v8 (current; ratified 2026-05-09)
 
-The schema has evolved through five published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
-(quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`). The
-v8 bump (`pipeline_mode` + `service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`)
-is in design per
-[`manifest_v7_schema_migration_design_2026_05_08.md`](../../plans/active/manifest_v7_schema_migration_design_2026_05_08.md).
-The current runtime SSOT lives in `unified-trading-library/unified_trading_library/manifest_writer.py` —
-`MANIFEST_SCHEMA_VERSION = 7` and the `AvailabilityRecord` dataclass.
+The schema has evolved through six published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
+(quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8
+(maximalist final gate per
+[`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md):8-15) which
+adds 3 emission-tracking columns: **`service_emission_state`** (closed-set `ServiceEmissionStateEnum`:
+`PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`), **`last_emission_decision_at`**
+(ISO-8601 UTC timestamp of the most recent `publish_with_policy()` decision for this row), and
+**`expected_window_completeness_pct`** (0.0-100.0 fraction of the expected per-row window that was actually populated;
+denominator-aware coverage metric). The `pipeline_mode` column shipped earlier as part of the
+`gcs_migration_bundle_pipeline_mode_2026_05_08` work and is preserved in v8. v7 is **legacy (in-flight migration; 30-day
+grace window per the final-gate plan)** — `read_availability_index()` backfills missing v8 columns to defaults until the
+~2026-06-15 reader-fallback deletion cutoff. The current runtime SSOT lives in
+`unified-trading-library/unified_trading_library/manifest_writer.py` — `MANIFEST_SCHEMA_VERSION = 8` and the
+`AvailabilityRecord` dataclass.
 
 ```python
 MANIFEST_SCHEMA_VERSION = 7
@@ -308,6 +332,16 @@ class AvailabilityRecord:
     # See codex/02-data/pipeline-mode-partition.md for the full SSOT.
     # ─────────────────────────────────────────────────────────────────────
     pipeline_mode: str | None = None  # "batch_databento" | "batch_tardis" | … | "live_websocket" | None (pre-migration)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # v8 — emission tracking (manifest_schema_final_gate_2026_05_09)
+    # Records what the publish-boundary helper decided for this row at the
+    # most recent `publish_with_policy()` call. Closed-set 4-value enum per
+    # UAC `ServiceEmissionStateEnum`; ratified 2026-05-09; frozen until cutover.
+    # ─────────────────────────────────────────────────────────────────────
+    service_emission_state: str | None = None  # "PUBLISHED_OK" | "PUBLISHED_DEGRADED" | "STALE_DATA_HEARTBEAT_ONLY" | "BLOCKED" | None (pre-migration)
+    last_emission_decision_at: str | None = None  # ISO-8601 UTC timestamp of last publish_with_policy decision
+    expected_window_completeness_pct: float | None = None  # 0.0-100.0 fraction of expected per-row window populated
 ```
 
 ### Column Rules
@@ -336,9 +370,10 @@ class AvailabilityRecord:
 
 ### Backward Compatibility
 
-`read_availability_index()` handles older index versions transparently — missing v5/v6 columns are backfilled with their
-defaults (`captured` for capture*status, `""` for the rest). No migration needed for reads. Writes produce v6 entries
-that coexist with older entries until re-scanned by a `rebuild*\*\_manifest.py` pass.
+`read_availability_index()` handles older index versions transparently — missing v5/v6/v7/v8 columns are backfilled with
+their defaults (`captured` for capture*status, `""` for legacy string columns, `None` for v8 emission columns). No
+migration needed for reads. Writes produce v8 entries that coexist with older entries until re-scanned by a `rebuild*\*\_manifest.py` pass. The v7 → v8 reader-fallback chain is bounded — deletion target ~2026-06-15 (30-day grace
+window) per the final-gate plan's "no double SSOT" closure rule.
 
 ## Per-Service Shard Dimension Matrix
 
@@ -525,17 +560,17 @@ Sources have launch dates. Data-status must clip pre-launch dates from expected 
 render as `missing`. Adapters use `clip_dates_to_source_coverage(source, start, end, data_type=...)` and pass
 `source_key=` through helpers like `_sports_expected_dates_for_league`.
 
-| Source                                     | `data_types` covered                                                                                                                            | `coverage_start` |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------: |
-| `api_football`                             | LEAGUES, TEAMS, VENUES, FIXTURES, INJURIES, STANDINGS                                                                                           |       2018-01-01 |
-| `api_football` (override)                  | FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, PLAYER_STATS                                                                                    |       2020-06-06 |
-| `footystats`                               | MATCHES, footystats_odds, footystats_predictions                                                                                                |       2019-01-01 |
-| `understat`                                | XG                                                                                                                                              |       2015-01-16 |
-| `transfermarkt`                            | PLAYER_VALUES                                                                                                                                   |       2019-01-01 |
-| `soccer_football_info` (override)          | SFI_PROGRESSIVE_STATS                                                                                                                           |       2020-01-01 |
-| `open_meteo`                               | WEATHER                                                                                                                                         |       2019-03-02 |
-| `odds_api`                                 | odds (MTDS `odds_horizon_bucket`)                                                                                                               |       2020-06-06 |
-| `mdps_odds_horizon_bucket`                 | bucketed odds movement                                                                                                                          |       2020-06-06 |
+| Source                            | `data_types` covered                                         | `coverage_start` |
+| --------------------------------- | ------------------------------------------------------------ | ---------------: |
+| `api_football`                    | LEAGUES, TEAMS, VENUES, FIXTURES, INJURIES, STANDINGS        |       2018-01-01 |
+| `api_football` (override)         | FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, PLAYER_STATS |       2020-06-06 |
+| `footystats`                      | MATCHES, footystats_odds, footystats_predictions             |       2019-01-01 |
+| `understat`                       | XG                                                           |       2015-01-16 |
+| `transfermarkt`                   | PLAYER_VALUES                                                |       2019-01-01 |
+| `soccer_football_info` (override) | SFI_PROGRESSIVE_STATS                                        |       2020-01-01 |
+| `open_meteo`                      | WEATHER                                                      |       2019-03-02 |
+| `odds_api`                        | odds (MTDS `odds_horizon_bucket`)                            |       2020-06-06 |
+| `mdps_odds_horizon_bucket`        | bucketed odds movement                                       |       2020-06-06 |
 
 **Per-`(source, data_type)` overrides** live in `DATA_TYPE_COVERAGE_START`. Currently:
 
@@ -721,10 +756,10 @@ reference, OR a default initialisation that was never overwritten when the manif
 implies SOME data exists; reality is none). Operators waste time investigating phantom progress that has no on-disk
 evidence and no manifest evidence.
 
-**Action**: file under `infrastructure_master_2026_05_07.md` § Data-status multi-axis follow-up — the rollup worker
-must derive `dates_found` from the same source as `capture_status_counts` (the manifest), not from the expected
-denominator. Without this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading. Owner:
-data-status multi-axis stream.
+**Action**: file under `infrastructure_master_2026_05_07.md` § Data-status multi-axis follow-up — the rollup worker must
+derive `dates_found` from the same source as `capture_status_counts` (the manifest), not from the expected denominator.
+Without this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading. Owner: data-status
+multi-axis stream.
 
 When adding a new adapter, document any path duality here BEFORE merging the writer — silent dual-schemas are the
 canonical phantom-audit blast radius.
@@ -790,6 +825,29 @@ manifest entry**; the enumerator covers the **rows that have no manifest entry a
 | TradFi      | `venue_trading_calendar` × instruments-service catalog × `DATA_TYPES_BY_ASSET_GROUP['tradfi']` × dates                                                                         |
 | CeFi        | Instrument lifecycle (`available_from`, `available_to`, `expiry`) × venue × `DATA_TYPES_BY_ASSET_GROUP['cefi']` × dates                                                        |
 | Prediction  | Market lifecycle (`market_created_at`, `settlement_time`) × canonical_question_group registry × `DATA_TYPES_BY_ASSET_GROUP['prediction']` × dates                              |
+
+#### Expected-universe enumerator: v1 (shipped) vs v2 (in-flight design)
+
+The enumerator has two grain levels — v1 captures venue-grain coverage; v2 cross-joins the instruments-service catalog
+to capture per-instrument lifecycle bounds. Both share the same SSOT inputs (UAC `*_LAUNCH_DATES` /
+`*_GENESIS_DATES` / `SOURCE_COVERAGE_START` / `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS`); v2 adds the second SSOT
+half (per CLAUDE.md "Two SSOTs for the manifest's expected universe": instruments-service catalog × dates × data_types
+cross-product applied at expected-row generation, not just at write-side).
+
+- **v1 (shipped 2026-05-07)** — venue-grain expected universe; ~1.4M rows merged into canonical across all 5
+  asset_groups (numbers above). Walks UAC SSOTs to enumerate every `(asset_group, venue, data_type, day)` row that
+  SHOULD exist; pre-skips per-source / per-chain / per-calendar windows; emits `record_expected_empty(reason=EXPECTED_*)`
+  for everything in the gap. Implementation:
+  `instruments-service/scripts/enumerate_expected_universe.py` + per-VM launcher.
+- **v2 (in-flight design)** — instrument-grain expected universe; ~190M row estimate. Designed in
+  [`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md):39-73
+  (folded into `manifest_evolution_master_2026_05_08` umbrella; sequenced AFTER v8 schema in gate G3). v2 cross-joins
+  v1's `(asset_group, venue, data_type, day)` axis with the instruments-service catalog's per-instrument lifecycle
+  (cefi `available_from` / `available_to`, prediction `market_created_at` / `settlement_time`, defi
+  `protocol_launch_date`, sports per-fixture). v2 plan body owns the canonical per-asset-group grain matrix (cefi
+  spot/perp per-instrument; cefi options/futures per-root; tradfi futures/options per-root; tradfi ETFs per-instrument;
+  defi per-protocol-or-instrument; sports per-fixture for fixture-native data_types; prediction per-canonical_question_group)
+  — point at the plan as SSOT for the v2 grain matrix until v2 lands.
 
 ### Architectural framing — why `empty_confirmed + EXPECTED_*` is identical to "not_attempted" placeholder
 

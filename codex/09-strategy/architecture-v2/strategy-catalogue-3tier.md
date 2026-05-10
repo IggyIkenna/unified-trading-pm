@@ -31,8 +31,8 @@ view modes across admin + client surfaces. One component, four view modes, three
 **Why one component.** Tiers differ only in which rows are visible, which columns/actions render, and whether mutations
 are allowed. Every tier shares the same `<FamilyArchetypePicker>`, venue-set chip, maturity-phase badge, product-routing
 badge, and live P&L spark. Single primitive → uniform grammar → easier refactoring → orphan audit (see
-[`../../04-architecture/orphan-audit.md`](../../04-architecture/orphan-audit.md)) sees one page per viewMode,
-all reachable.
+[`../../04-architecture/orphan-audit.md`](../../04-architecture/orphan-audit.md)) sees one page per viewMode, all
+reachable.
 
 ---
 
@@ -383,8 +383,8 @@ authoritative admin surface — there is no separate "admin catalogue editor" pa
 - [`strategy-questionnaire-mapping.md`](./strategy-questionnaire-mapping.md) — 11-axis → filter derivation SSOT.
 - [`../../08-workflows/client-onboarding.md`](../../08-workflows/client-onboarding.md) — 7-step client onboarding
   sequence; Explore tab is step 4's landing surface.
-- [`../../04-architecture/commercial-service-families.md`](../../04-architecture/commercial-service-families.md) — DART Full vs
-  Signals-In feature matrix + locked-section design + DemoPlanToggle.
+- [`../../04-architecture/commercial-service-families.md`](../../04-architecture/commercial-service-families.md) — DART
+  Full vs Signals-In feature matrix + locked-section design + DemoPlanToggle.
 - [`../../06-coding-standards/strategy-display-conventions.md`](../../06-coding-standards/strategy-display-conventions.md)
   — never-render-raw-IDs rule + archetype / family bespoke names used in every card.
 - [`../../../plans/archive/strategy_catalogue_3tier_surface_2026_04_21.plan.md`](../../../plans/archive/strategy_catalogue_3tier_surface_2026_04_21.plan.md)
@@ -396,5 +396,4 @@ authoritative admin surface — there is no separate "admin catalogue editor" pa
   primitive, not a 6th tile.
 - [`../../14-customer-journeys/shared-core/odum-paper-client-zero.md`](../../14-customer-journeys/shared-core/odum-paper-client-zero.md)
   — the series source for FOMO tearsheets.
-- [`../../04-architecture/orphan-audit.md`](../../04-architecture/orphan-audit.md) — policy this surface
-  complies with.
+- [`../../04-architecture/orphan-audit.md`](../../04-architecture/orphan-audit.md) — policy this surface complies with.

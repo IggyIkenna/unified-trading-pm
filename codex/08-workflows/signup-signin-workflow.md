@@ -13,11 +13,11 @@ current vs target state of what the UI actually implements.
 
 - [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) — the questionnaire form itself (axes,
   submission, envelope).
-- [`../14-customer-journeys/authentication/firebase-staging.md`](../14-customer-journeys/authentication/firebase-staging.md) /
-  [`firebase-production.md`](../14-customer-journeys/authentication/firebase-production.md) — Firebase project setup, roles, and
-  Firestore rules.
-- [`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md) —
-  the briefings access-code gate (separate from the main client sign-in).
+- [`../14-customer-journeys/authentication/firebase-staging.md`](../14-customer-journeys/authentication/firebase-staging.md)
+  / [`firebase-production.md`](../14-customer-journeys/authentication/firebase-production.md) — Firebase project setup,
+  roles, and Firestore rules.
+- [`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md)
+  — the briefings access-code gate (separate from the main client sign-in).
 
 ---
 

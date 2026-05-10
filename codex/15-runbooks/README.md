@@ -17,15 +17,14 @@ related:
 This section is the SSOT for **live-trading on-call runbooks** — the procedures the on-call operator follows when an
 alert fires, when a daily T+1 audit surfaces a discrepancy, when a smoke test must be run before promoting a build, or
 when a backfill VM has finished and needs sign-off. Every runbook here is **operator-runnable**: it has a clear trigger,
-a step-by-step procedure, an explicit done-definition, and (per workspace HARD RULE
-"Runbook Execution-Owner SSOT") a declared periodic-execution path so the runbook doesn't silently rot against an
-evolving codebase.
+a step-by-step procedure, an explicit done-definition, and (per workspace HARD RULE "Runbook Execution-Owner SSOT") a
+declared periodic-execution path so the runbook doesn't silently rot against an evolving codebase.
 
 ## What lives here
 
-- **`alerting/`** — Per-alert-code runbooks (kill-switch armed, defi health-factor critical, position drift,
-  preflight failed, balance drift, etc.) plus the alerting-vocabulary glossary, PagerDuty escalation policy, threshold-
-  tuning procedure, and rehearsal procedure. The SSOT for "the page just fired — what do I do" workflows.
+- **`alerting/`** — Per-alert-code runbooks (kill-switch armed, defi health-factor critical, position drift, preflight
+  failed, balance drift, etc.) plus the alerting-vocabulary glossary, PagerDuty escalation policy, threshold- tuning
+  procedure, and rehearsal procedure. The SSOT for "the page just fired — what do I do" workflows.
 - **`instruments-live/`** — Daily T+1 audit runbook for the instruments-live coverage check (catalog ↔ manifest ↔
   parquet reconciliation). Includes the discrepancy-resolution flow.
 - **`smoke-testing-playbook.md`** — Pre-promotion smoke test procedure: which harnesses to run before promoting a build
@@ -64,8 +63,8 @@ Every runbook in this section MUST:
 2. Add the frontmatter `execution:` block with all 4 fields populated (placeholder `last_executed: NEVER` is fine for
    one-shots).
 3. Cross-link from `codex/00-SSOT-INDEX.md` § runbooks if the runbook is workspace-critical.
-4. Add a row to the master plan readiness checklist's "Continuous Verification" column if the runbook backs a
-   May-23 success criterion.
+4. Add a row to the master plan readiness checklist's "Continuous Verification" column if the runbook backs a May-23
+   success criterion.
 
 ## History
 

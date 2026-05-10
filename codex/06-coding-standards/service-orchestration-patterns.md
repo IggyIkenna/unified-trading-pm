@@ -571,7 +571,10 @@ List only repos you directly `from X import` in production code. If a dep comes 
   "dependencies": [
     { "name": "unified-trading-library", "note": "framework: ServiceBootstrap, DataSink, ManifestWriter" },
     { "name": "unified-api-contracts", "note": "domain types: VenueMapping, tardis_to_venue" },
-    { "name": "market-tick-data-service/market_tick_data_service/market_interface", "note": "direct: get_market_adapter() in adapter layer" },
+    {
+      "name": "market-tick-data-service/market_tick_data_service/market_interface",
+      "note": "direct: get_market_adapter() in adapter layer"
+    },
     { "name": "unified-config-interface", "note": "bootstrap: service_config extends UnifiedCloudConfig" }
   ]
 }

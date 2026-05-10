@@ -253,12 +253,12 @@ Each segment is logged with the correlation_id, enabling latency attribution acr
 
 ## SSOT References
 
-| Concept            | SSOT                     | Location                                                  |
-| ------------------ | ------------------------ | --------------------------------------------------------- |
-| Circuit breaker    | execution-service        | `execution-service/execution_service/engine/`             |
-| WebSocket adapters | UMI                      | `market-tick-data-service/market_tick_data_service/market_interface/unified_market_interface/`      |
-| Feature freshness  | strategy-service         | `strategy-service/strategy_service/monitors/`             |
-| Latency metrics    | Per-service Prometheus   | Each service's `/metrics` endpoint                        |
-| Correlation ID     | unified-trading-library  | `unified_trading_library.events/correlation.py`           |
-| RPC URL templates  | UAC registry             | `unified-api-contracts/registry/capability_declarations/` |
-| DeFi block times   | features-onchain-service | Chain-specific feature calculators                        |
+| Concept            | SSOT                     | Location                                                                                       |
+| ------------------ | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| Circuit breaker    | execution-service        | `execution-service/execution_service/engine/`                                                  |
+| WebSocket adapters | UMI                      | `market-tick-data-service/market_tick_data_service/market_interface/unified_market_interface/` |
+| Feature freshness  | strategy-service         | `strategy-service/strategy_service/monitors/`                                                  |
+| Latency metrics    | Per-service Prometheus   | Each service's `/metrics` endpoint                                                             |
+| Correlation ID     | unified-trading-library  | `unified_trading_library.events/correlation.py`                                                |
+| RPC URL templates  | UAC registry             | `unified-api-contracts/registry/capability_declarations/`                                      |
+| DeFi block times   | features-onchain-service | Chain-specific feature calculators                                                             |

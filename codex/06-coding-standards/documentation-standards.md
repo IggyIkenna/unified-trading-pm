@@ -160,8 +160,8 @@ Schema governance documentation lives in:
   internal messaging contracts
 - **Schema governance:** [02-data/schema-governance.md](../02-data/schema-governance.md) — Validation integration point,
   DRY/SoC enforcement, STEP 5.12 quality gate
-- **Schema contract audit:** `unified-trading-pm/plans/archive/schema_governance_full_audit.plan.md` — Full audit results
-  for UAC normalization quality, UIC utilization, cross-contract deduplication
+- **Schema contract audit:** `unified-trading-pm/plans/archive/schema_governance_full_audit.plan.md` — Full audit
+  results for UAC normalization quality, UIC utilization, cross-contract deduplication
 
 Service docs (`docs/SCHEMA_VALIDATION.md`) must reference the canonical schemas used, not redefine them.
 

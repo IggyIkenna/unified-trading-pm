@@ -71,29 +71,29 @@ Both endpoints branch on the codex per-asset_group shard-axis matrix declared in
 
 Matches the workspace SSOT in CLAUDE.md "Per-asset-group shard-key matrix".
 
-| Service / asset_group               | Drill-down (top → leaf)                                                                       |
-| ----------------------------------- | --------------------------------------------------------------------------------------------- |
-| `instruments-service`               | `venue → date` (cefi/tradfi); `venue → chain → date` (defi)                                   |
-| MTDS CeFi spot/perp                 | `venue → data_type → instrument_type → instrument_id → date`                                  |
-| MTDS CeFi options/futures           | `venue → data_type → instrument_type → root → date` (bundled)                                 |
-| MTDS TradFi futures                 | `venue → data_type → instrument_type → root → date` (bundled)                                 |
-| MTDS TradFi options                 | `venue → data_type → instrument_type → root → date` (11-cluster ES.OPT)                       |
-| MTDS DeFi                           | `venue → chain → instrument_id → data_type → date`                                            |
-| MTDS sports                         | `data_type → league_id → date`                                                                |
-| MTDS prediction                     | `venue → canonical_question_group → data_type → date`                                         |
+| Service / asset_group               | Drill-down (top → leaf)                                                                                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `instruments-service`               | `venue → date` (cefi/tradfi); `venue → chain → date` (defi)                                                                                                   |
+| MTDS CeFi spot/perp                 | `venue → data_type → instrument_type → instrument_id → date`                                                                                                  |
+| MTDS CeFi options/futures           | `venue → data_type → instrument_type → root → date` (bundled)                                                                                                 |
+| MTDS TradFi futures                 | `venue → data_type → instrument_type → root → date` (bundled)                                                                                                 |
+| MTDS TradFi options                 | `venue → data_type → instrument_type → root → date` (11-cluster ES.OPT)                                                                                       |
+| MTDS DeFi                           | `venue → chain → instrument_id → data_type → date`                                                                                                            |
+| MTDS sports                         | `data_type → league_id → date`                                                                                                                                |
+| MTDS prediction                     | `venue → canonical_question_group → data_type → date`                                                                                                         |
 | `features-service` (consolidated)   | `feature_family → <per-family axes below>` (the 8 family rows below collapse to sub-package paths inside ONE service; `feature_family` is the outermost axis) |
-| ↳ `feature_family=delta_one`        | `feature_family → venue [→ chain] → feature_group → timeframe → instrument_id → date`         |
-| ↳ `feature_family=onchain`          | `feature_family → venue → chain → feature_group → protocol_id → timeframe → date` (DeFi only) |
-| ↳ `feature_family=sports`           | `feature_family → feature_group → league_id → date`                                           |
-| ↳ `feature_family=calendar`         | `feature_family → feature_group → timeframe → date` (asset-group=shared)                      |
-| ↳ `feature_family=cross_instrument` | `feature_family → venue [→ chain] → feature_group → timeframe → date`                         |
-| ↳ `feature_family=volatility`       | `feature_family → venue → feature_group → timeframe → instrument_id → date`                   |
-| ↳ `feature_family=commodity`        | `feature_family → venue → feature_group → root → timeframe → date` (futures-bundled)          |
-| ↳ `feature_family=multi_timeframe`  | `feature_family → venue [→ chain] → feature_group → timeframe → instrument_id → date`         |
+| ↳ `feature_family=delta_one`        | `feature_family → venue [→ chain] → feature_group → timeframe → instrument_id → date`                                                                         |
+| ↳ `feature_family=onchain`          | `feature_family → venue → chain → feature_group → protocol_id → timeframe → date` (DeFi only)                                                                 |
+| ↳ `feature_family=sports`           | `feature_family → feature_group → league_id → date`                                                                                                           |
+| ↳ `feature_family=calendar`         | `feature_family → feature_group → timeframe → date` (asset-group=shared)                                                                                      |
+| ↳ `feature_family=cross_instrument` | `feature_family → venue [→ chain] → feature_group → timeframe → date`                                                                                         |
+| ↳ `feature_family=volatility`       | `feature_family → venue → feature_group → timeframe → instrument_id → date`                                                                                   |
+| ↳ `feature_family=commodity`        | `feature_family → venue → feature_group → root → timeframe → date` (futures-bundled)                                                                          |
+| ↳ `feature_family=multi_timeframe`  | `feature_family → venue [→ chain] → feature_group → timeframe → instrument_id → date`                                                                         |
 
 > **`feature_family` is the outermost axis for features-service drilldowns** (added 2026-05-08 per
-> [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md) Phase 1A). The
-> 8 previously-separate `features-*-service` repos are sub-packages of the consolidated
+> [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md) Phase 1A).
+> The 8 previously-separate `features-*-service` repos are sub-packages of the consolidated
 > [`features-service`](../../../features-service/); the data-status drilldown surfaces `feature_family` (the UAC
 > `FeatureFamily` StrEnum: `onchain` / `volatility` / `cross_instrument` / `sports` / `calendar` / `commodity` /
 > `delta_one` / `multi_timeframe`) as the top-level shard axis so operators see the consolidated repo's coverage
@@ -292,8 +292,7 @@ Aggregate counts at every non-leaf node reflect the FULL subtree below it (so th
 
 ### Frontend
 
-Component:
-[`HierarchicalShardDrilldown.tsx`](../../../deployment-ui/src/components/HierarchicalShardDrilldown.tsx).
+Component: [`HierarchicalShardDrilldown.tsx`](../../../deployment-ui/src/components/HierarchicalShardDrilldown.tsx).
 
 - Top-level fetch on mount with `expand_to_depth=1`.
 - Each non-leaf row lazy-loads its children on first expand by re-calling the endpoint with the parent's `row_key` as

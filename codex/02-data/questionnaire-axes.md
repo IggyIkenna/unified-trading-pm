@@ -176,7 +176,7 @@ Enforced in `QuestionnaireResponse.model_validate`:
   — derivation rules for the Explore tab filter.
 - [`../08-workflows/client-onboarding.md`](../08-workflows/client-onboarding.md) — 7-step client sequence in which the
   questionnaire is step 3.
-- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) — demo provider
-  preseeds questionnaire payloads by persona id for email-based login.
-- [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md) — `service_family` gates
-  tile visibility via rule 12.
+- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) —
+  demo provider preseeds questionnaire payloads by persona id for email-based login.
+- [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md) —
+  `service_family` gates tile visibility via rule 12.

@@ -162,11 +162,12 @@ typically don't see the strategy catalogue at all. Rule 12 enforces the route-al
 
 - [`../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md)
   — machine-readable YAML; UAC-enforced at `access_control()`.
-- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) — operator
-  checklist for provisioning a new demo client pair (Base + Full personas + questionnaire preseed + profile YAML).
+- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) —
+  operator checklist for provisioning a new demo client pair (Base + Full personas + questionnaire preseed + profile
+  YAML).
 - [`../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml)
-  - [`desmond-signals-in.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-signals-in.yaml) — canonical worked example
-    (real client).
+  - [`desmond-signals-in.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-signals-in.yaml) — canonical worked
+    example (real client).
 - [`../08-workflows/client-onboarding.md`](../08-workflows/client-onboarding.md) — 7-step sequence in which this matrix
   is exposed to the prospect (step 4 exploration, step 6 call).
 - [`../06-coding-standards/strategy-display-conventions.md`](../06-coding-standards/strategy-display-conventions.md) §5

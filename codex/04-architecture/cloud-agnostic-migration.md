@@ -14,8 +14,8 @@ All cloud I/O (storage, secrets, queues) must go through the abstraction layer p
 inside `providers/gcp.py` and `providers/aws.py` may use cloud-specific prefixes (`GCSStorageClient`,
 `S3StorageClient`), but these must never appear in public re-exports or abstract class names.
 
-See also: `04-architecture/tier-and-import-architecture.md` § Naming Conventions (lines 91–96) for the canonical one-liner
-statement of this rule.
+See also: `04-architecture/tier-and-import-architecture.md` § Naming Conventions (lines 91–96) for the canonical
+one-liner statement of this rule.
 
 ---
 

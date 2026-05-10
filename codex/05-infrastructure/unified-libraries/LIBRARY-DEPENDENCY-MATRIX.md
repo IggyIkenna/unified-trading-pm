@@ -9,8 +9,9 @@ scope: [engineer, admin]
 
 > ⚠️ **THIS IS NOT THE TIER SSOT.**
 >
-> **Authoritative tier model:** [`04-architecture/tier-and-import-architecture.md`](../../04-architecture/tier-and-import-architecture.md) —
-> defines the full 5-tier system (T0 pure leaves → T1 service runtime → T2 domain interfaces → T3 domain data client →
+> **Authoritative tier model:**
+> [`04-architecture/tier-and-import-architecture.md`](../../04-architecture/tier-and-import-architecture.md) — defines
+> the full 5-tier system (T0 pure leaves → T1 service runtime → T2 domain interfaces → T3 domain data client →
 > T4/service)
 >
 > **Machine-readable SSOT:**
@@ -81,8 +82,9 @@ scope: [engineer, admin]
 | service | T0 + T1 + T2 + T3               | Never imports another service                             |
 | api/ui  | T0 only (no internal libs)      | Call services via REST/SSE only                           |
 
-> ⚠️ **Known violation:** `market-tick-data-service/market_tick_data_service/market_interface` currently imports `unified-domain-client` (T2→T3 lateral). Must be
-> removed — tracked as `cohesion-umi-udc-dep-violation` in consolidated plan.
+> ⚠️ **Known violation:** `market-tick-data-service/market_tick_data_service/market_interface` currently imports
+> `unified-domain-client` (T2→T3 lateral). Must be removed — tracked as `cohesion-umi-udc-dep-violation` in consolidated
+> plan.
 
 ---
 
@@ -118,11 +120,11 @@ All three paths converge on T0 libs. Python loads each package once.
 
 ## Tier 2 Library Quick-Reference
 
-| Library                            | Package                              | Key exports                                                                                                                         | Imports (T0+T1)                              |
-| ---------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| market-tick-data-service/market_tick_data_service/market_interface           | `unified_market_interface`           | `CanonicalTick`, `BaseWebSocketClient`, `VenueRateLimiter`, venue WS adapters (Binance, OKX, Deribit, Bybit, Hyperliquid, Coinbase) | UTS, UCI, AC ⚠️ also imports UDC (violation) |
-| unified-ml-interface               | `unified_ml_interface`               | ML model protocols, `CrossValidationResult`, `ModelDegradationAlert`, prediction schemas                                            | UTS, UCI                                     |
-| unified-trading-library | `unified_feature_calculator_library` | `FeatureCalculatorRegistry`, `BaseFeatureService`, `FeatureStalenessConfig`                                                         | UTS, UCI                                     |
+| Library                                                            | Package                              | Key exports                                                                                                                         | Imports (T0+T1)                              |
+| ------------------------------------------------------------------ | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| market-tick-data-service/market_tick_data_service/market_interface | `unified_market_interface`           | `CanonicalTick`, `BaseWebSocketClient`, `VenueRateLimiter`, venue WS adapters (Binance, OKX, Deribit, Bybit, Hyperliquid, Coinbase) | UTS, UCI, AC ⚠️ also imports UDC (violation) |
+| unified-ml-interface                                               | `unified_ml_interface`               | ML model protocols, `CrossValidationResult`, `ModelDegradationAlert`, prediction schemas                                            | UTS, UCI                                     |
+| unified-trading-library                                            | `unified_feature_calculator_library` | `FeatureCalculatorRegistry`, `BaseFeatureService`, `FeatureStalenessConfig`                                                         | UTS, UCI                                     |
 
 NOTE: The following T2 repos have been merged into services (no longer standalone libraries):
 
@@ -167,35 +169,35 @@ future/scaffolded service.
 UCLI=unified-cloud-interface, AC=unified-api-contracts (incl. AC_INT=unified_api_contracts.internal subpackage),
 UIC=unified-internal-contracts (ELIMINATED — merged into UAC internal/), URDI=unified-reference-data-interface
 (ELIMINATED — merged into instruments-service), EAL=execution-algo-library, MEL=matching-engine-library,
-UMI=market-tick-data-service/market_tick_data_service/market_interface, UTEI=unified-trade-execution-interface (ELIMINATED — merged into execution-service),
-UDEI=unified-defi-execution-interface (ELIMINATED — merged into execution-service),
-USEI=unified-sports-execution-interface (ELIMINATED — merged into execution-service), UML=unified-ml-interface,
-UFC=unified-trading-library, UPI=unified-position-interface (ELIMINATED — merged into
+UMI=market-tick-data-service/market_tick_data_service/market_interface, UTEI=unified-trade-execution-interface
+(ELIMINATED — merged into execution-service), UDEI=unified-defi-execution-interface (ELIMINATED — merged into
+execution-service), USEI=unified-sports-execution-interface (ELIMINATED — merged into execution-service),
+UML=unified-ml-interface, UFC=unified-trading-library, UPI=unified-position-interface (ELIMINATED — merged into
 position-balance-monitor-service), UDC=unified-domain-client
 
 ---
 
 ## Library Usage Count (by consumer count)
 
-| Library                                      | Services using | Service list                                                                           |
-| -------------------------------------------- | :------------: | -------------------------------------------------------------------------------------- |
-| **UTS** (unified-trading-services)           |       17       | All                                                                                    |
-| **UCI** (unified-config-interface)           |       17       | All                                                                                    |
-| **UEI** (unified-trading-library)            |       17       | All (via UTS re-export)                                                                |
-| **UDC** (unified-domain-client)              |       13       | instruments, MTDH, MDPS, FDS, FVS, FOS, FSS, MLTR, MLIN, STR, EXEC, PNL, PBM, RAE, SVS |
-| **UMI** (market-tick-data-service/market_tick_data_service/market_interface)           |       5        | instruments, MTDH, MDPS, FDS, FVS, STR, EXEC                                           |
-| **UFC** (unified-trading-library) |       5        | FCS, FDS, FVS, FOS, FSS                                                                |
-| **UML** (unified-ml-interface)               |       3        | MLTR, MLIN, STR                                                                        |
-| **EAL** (execution-algo-library)             |       1        | execution-service                                                                      |
-| **MEL** (matching-engine-library)            |       1        | execution-service                                                                      |
-| **AC** (unified-api-contracts)               |       1        | execution-service (direct); others via UMI transitively                                |
-| ~~UTEI~~ (ELIMINATED)                        |       —        | Merged into execution-service                                                          |
-| ~~UDEI~~ (ELIMINATED)                        |       —        | Merged into execution-service                                                          |
-| ~~USEI~~ (ELIMINATED)                        |       —        | Merged into execution-service                                                          |
-| ~~URDI~~ (ELIMINATED)                        |       —        | Merged into instruments-service                                                        |
-| ~~UPI~~ (ELIMINATED)                         |       —        | Merged into position-balance-monitor-service                                           |
-| **UCLI** (unified-cloud-interface)           |    0 direct    | All get via UTS transitively                                                           |
-| **AC_INT** (unified_api_contracts.internal)  |    0 direct    | Via UTS transitively (part of unified-api-contracts)                                   |
+| Library                                                                      | Services using | Service list                                                                           |
+| ---------------------------------------------------------------------------- | :------------: | -------------------------------------------------------------------------------------- |
+| **UTS** (unified-trading-services)                                           |       17       | All                                                                                    |
+| **UCI** (unified-config-interface)                                           |       17       | All                                                                                    |
+| **UEI** (unified-trading-library)                                            |       17       | All (via UTS re-export)                                                                |
+| **UDC** (unified-domain-client)                                              |       13       | instruments, MTDH, MDPS, FDS, FVS, FOS, FSS, MLTR, MLIN, STR, EXEC, PNL, PBM, RAE, SVS |
+| **UMI** (market-tick-data-service/market_tick_data_service/market_interface) |       5        | instruments, MTDH, MDPS, FDS, FVS, STR, EXEC                                           |
+| **UFC** (unified-trading-library)                                            |       5        | FCS, FDS, FVS, FOS, FSS                                                                |
+| **UML** (unified-ml-interface)                                               |       3        | MLTR, MLIN, STR                                                                        |
+| **EAL** (execution-algo-library)                                             |       1        | execution-service                                                                      |
+| **MEL** (matching-engine-library)                                            |       1        | execution-service                                                                      |
+| **AC** (unified-api-contracts)                                               |       1        | execution-service (direct); others via UMI transitively                                |
+| ~~UTEI~~ (ELIMINATED)                                                        |       —        | Merged into execution-service                                                          |
+| ~~UDEI~~ (ELIMINATED)                                                        |       —        | Merged into execution-service                                                          |
+| ~~USEI~~ (ELIMINATED)                                                        |       —        | Merged into execution-service                                                          |
+| ~~URDI~~ (ELIMINATED)                                                        |       —        | Merged into instruments-service                                                        |
+| ~~UPI~~ (ELIMINATED)                                                         |       —        | Merged into position-balance-monitor-service                                           |
+| **UCLI** (unified-cloud-interface)                                           |    0 direct    | All get via UTS transitively                                                           |
+| **AC_INT** (unified_api_contracts.internal)                                  |    0 direct    | Via UTS transitively (part of unified-api-contracts)                                   |
 
 ---
 

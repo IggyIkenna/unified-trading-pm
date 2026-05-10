@@ -7,31 +7,30 @@ scope: [engineer, ml-engineer, admin]
 ## Why a separate manifest
 
 The data manifest (`unified_trading_library.manifest_writer.ManifestWriter`) is the SSOT for "what data exists and at
-what state" — keyed by `(asset_group, venue, chain, data_type, instrument_type, ..., day)`. Models are not data; a
-model is a **fitted artifact** plus the training context (input features, hyperparameters, seed, training window).
-Training artifacts have a different lifecycle (created → validated → champion → retired) and a different identity
-(model_family + version + training_period) than data shards. Tracking them in the data manifest mixes axes and breaks
-both schemas.
+what state" — keyed by `(asset_group, venue, chain, data_type, instrument_type, ..., day)`. Models are not data; a model
+is a **fitted artifact** plus the training context (input features, hyperparameters, seed, training window). Training
+artifacts have a different lifecycle (created → validated → champion → retired) and a different identity (model_family +
+version + training_period) than data shards. Tracking them in the data manifest mixes axes and breaks both schemas.
 
 This doc names the **ML manifest** that lives alongside the data manifest.
 
 ## ML manifest schema
 
-| Column                | Type              | Description                                                                       |
-| --------------------- | ----------------- | --------------------------------------------------------------------------------- |
-| job_id                | str               | Unique per training run (`<model_family>__<training_period>__<git_sha>__<seed>`)  |
-| model_family          | str               | UAC enum (e.g. `xgb_directional_5m`, `lightgbm_volatility_15m`)                   |
-| version               | str               | Semver; bumped per re-fit                                                         |
-| training_period       | str               | `YYYY-MM-DD..YYYY-MM-DD`                                                          |
-| inputs_feature_groups | list[str]         | UAC `feature_group` enum members consumed                                         |
-| hyperparameters       | str (json)        | Frozen at training-start                                                          |
-| seed                  | int               | Reproducibility seed                                                              |
-| status                | enum              | `training` / `validated` / `champion` / `shadow` / `retired`                      |
-| started_at            | timestamp         | Training start                                                                    |
-| completed_at          | timestamp         | Training end (nullable while running)                                             |
-| validation_metrics    | str (json)        | Out-of-sample backtest metrics                                                    |
-| artifact_uri          | str               | GCS URI of the fitted model artifact                                              |
-| git_sha               | str               | Git SHA of the training code                                                      |
+| Column                | Type       | Description                                                                      |
+| --------------------- | ---------- | -------------------------------------------------------------------------------- |
+| job_id                | str        | Unique per training run (`<model_family>__<training_period>__<git_sha>__<seed>`) |
+| model_family          | str        | UAC enum (e.g. `xgb_directional_5m`, `lightgbm_volatility_15m`)                  |
+| version               | str        | Semver; bumped per re-fit                                                        |
+| training_period       | str        | `YYYY-MM-DD..YYYY-MM-DD`                                                         |
+| inputs_feature_groups | list[str]  | UAC `feature_group` enum members consumed                                        |
+| hyperparameters       | str (json) | Frozen at training-start                                                         |
+| seed                  | int        | Reproducibility seed                                                             |
+| status                | enum       | `training` / `validated` / `champion` / `shadow` / `retired`                     |
+| started_at            | timestamp  | Training start                                                                   |
+| completed_at          | timestamp  | Training end (nullable while running)                                            |
+| validation_metrics    | str (json) | Out-of-sample backtest metrics                                                   |
+| artifact_uri          | str        | GCS URI of the fitted model artifact                                             |
+| git_sha               | str        | Git SHA of the training code                                                     |
 
 Path: `gs://{pid}-ml-artifacts/manifest/_index/ml_manifest.parquet`.
 
@@ -73,5 +72,4 @@ system is concerned.
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
 - Strategy summary: [`../09-strategy/strategy-summary.md`](../09-strategy/strategy-summary.md)
 - Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)
-- Live config hot-reload (champion swap):
-  [`live-strategy-config-hot-reload.md`](live-strategy-config-hot-reload.md)
+- Live config hot-reload (champion swap): [`live-strategy-config-hot-reload.md`](live-strategy-config-hot-reload.md)

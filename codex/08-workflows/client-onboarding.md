@@ -48,10 +48,10 @@ Partnership / request access code" sends to `/contact`. See
 
 ### Step 2 — Deep Dive review (briefings + docs + Our Story + FAQ)
 
-| Actor  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ikenna | (Channel B / warm hand-off only) Sends 1-3 briefing links + per-path access code tailored to the prospect's stated shape. Typical bundles: (a) **IM candidate** → `/briefings/investment-management`; (b) **AR candidate** → `/briefings/regulatory`; (c) **DART Signals-In candidate** → `/briefings/dart-signals-in`; (d) **DART Full candidate** → `/briefings/dart-full`. Channel A skips this.                                                              |
-| Client | Lands on a Deep Dive route (`/briefings/*`, `/docs`, `/our-story`, `/faq`). Sees `<BriefingAccessGate>` with the brief questionnaire embedded inline. Either fills it (cold inbound, channel A) or expands "I already have an access code" disclosure and pastes the code Ikenna sent (warm hand-off, channel B).                                                                                                                                                |
+| Actor  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ikenna | (Channel B / warm hand-off only) Sends 1-3 briefing links + per-path access code tailored to the prospect's stated shape. Typical bundles: (a) **IM candidate** → `/briefings/investment-management`; (b) **AR candidate** → `/briefings/regulatory`; (c) **DART Signals-In candidate** → `/briefings/dart-signals-in`; (d) **DART Full candidate** → `/briefings/dart-full`. Channel A skips this.                                                                              |
+| Client | Lands on a Deep Dive route (`/briefings/*`, `/docs`, `/our-story`, `/faq`). Sees `<BriefingAccessGate>` with the brief questionnaire embedded inline. Either fills it (cold inbound, channel A) or expands "I already have an access code" disclosure and pastes the code Ikenna sent (warm hand-off, channel B).                                                                                                                                                                |
 | System | `<BriefingAccessGate>` embeds `<QuestionnaireForm compact returnPath={pathname} />`. On submit OR correct code paste: `setBriefingSessionActive()` → `odum-briefing-session = "1"` in `localStorage`. Same session covers every Deep Dive route. Email-back fires with code + Next-steps block + Calendly + Strategy Evaluation pointer. See [`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md). |
 
 The questionnaire-on-the-gate flow means most prospects now combine Steps 2 + 3 in a single submission — they fill the
@@ -122,19 +122,19 @@ this step on a case-by-case basis at Step 6 — but the default is "fill it befo
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Ikenna | 45-60 min call. Walks the prospect through their filtered universe on the staging UI, toggles DART Full vs Signals-In if relevant, confirms mandate shape (IM vs DART vs Reg Umbrella vs combo), pricing framework, regulatory posture, onboarding timeline. |
 | Client | Confirms scope or raises a specific reservation. Outcome of the call is either a named next commitment (mandate signing, onboarding kickoff date, deeper session on one surface) or a specific gap sales addresses directly.                                 |
-| System | Sales records call outcome in `account-intelligence-record` (see [`../14-customer-journeys/demo-ops/account-intelligence-record.md`](../14-customer-journeys/demo-ops/account-intelligence-record.md)) + `meeting-history-and-interest-tracking` entry.                      |
+| System | Sales records call outcome in `account-intelligence-record` (see [`../14-customer-journeys/demo-ops/account-intelligence-record.md`](../14-customer-journeys/demo-ops/account-intelligence-record.md)) + `meeting-history-and-interest-tracking` entry.      |
 
 "Interesting, let's keep in touch" is **not** an outcome. The call is designed to resolve — follow-up is orchestrated by
-[`post-demo-followup-orchestration.md`](../14-customer-journeys/demo-ops/post-demo-followup-orchestration.md) if the commitment
-isn't in the meeting.
+[`post-demo-followup-orchestration.md`](../14-customer-journeys/demo-ops/post-demo-followup-orchestration.md) if the
+commitment isn't in the meeting.
 
 ### Step 7 — Production onboarding
 
-| Actor  | Action                                                                                                                                                                                                                                                                                                                          |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Actor  | Action                                                                                                                                                                                                                                                                                                                                        |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Ikenna | Approves signup in `/admin/organizations/[id]`. Sets entitlements (per resolved commercial path — see [`commercial-service-families.md`](../04-architecture/commercial-service-families.md)). Uploads or collects regulatory docs via `/api/onboarding/upload` (see [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) §5). |
-| Client | Completes signup form → Firebase Auth user created (initially disabled, `pending_approval`). After Ikenna approves, logs in with real credentials → lands on dashboard gated to paid entitlements.                                                                                                                              |
-| System | `user-management-api` creates `Firebase Auth` user + Firestore `/users/{uid}` profile; attaches `questionnaire_response_id` from the envelope. `unified-trading-api` reads entitlements; `services/*` tabs render per entitlement + service-family-scope. `DemoPlanToggle` no longer renders (it's demo-provider-only).         |
+| Client | Completes signup form → Firebase Auth user created (initially disabled, `pending_approval`). After Ikenna approves, logs in with real credentials → lands on dashboard gated to paid entitlements.                                                                                                                                            |
+| System | `user-management-api` creates `Firebase Auth` user + Firestore `/users/{uid}` profile; attaches `questionnaire_response_id` from the envelope. `unified-trading-api` reads entitlements; `services/*` tabs render per entitlement + service-family-scope. `DemoPlanToggle` no longer renders (it's demo-provider-only).                       |
 
 Post-onboarding, the client operates the same staging UI they demo'd. Same components, same data shapes — only the
 auth + data provenance differ (see
@@ -150,10 +150,10 @@ auth + data provenance differ (see
   — 11-axis → catalogue-filter derivation.
 - [`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md)
   — Reality / FOMO tab roles, admin universe / editor surfaces.
-- [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md) — DART Full vs Signals-In
-  feature matrix, locked-section design, demo plan toggle.
-- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) — staging demo
-  persona onboarding checklist.
+- [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md) — DART Full
+  vs Signals-In feature matrix, locked-section design, demo plan toggle.
+- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) —
+  staging demo persona onboarding checklist.
 - [`../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml)
-  - [`desmond-signals-in.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-signals-in.yaml) — worked example (real
-    client).
+  - [`desmond-signals-in.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-signals-in.yaml) — worked example
+    (real client).

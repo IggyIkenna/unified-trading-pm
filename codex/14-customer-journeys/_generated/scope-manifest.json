@@ -773,7 +773,10 @@
     "codex/README.md",
     "codex/validators/QUICK_REFERENCE.md"
   ],
-  "investor": ["codex/14-customer-journeys/glossary.md", "codex/14-customer-journeys/presentations/target-experience-post-refactor.md"],
+  "investor": [
+    "codex/14-customer-journeys/glossary.md",
+    "codex/14-customer-journeys/presentations/target-experience-post-refactor.md"
+  ],
   "prospect": [
     "codex/14-customer-journeys/experience/README.md",
     "codex/14-customer-journeys/experience/TEMPLATE.md",

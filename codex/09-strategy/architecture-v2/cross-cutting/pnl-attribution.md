@@ -39,6 +39,57 @@ Batch P&L (official):
   OVERRIDES live P&L where they differ
 ```
 
+### 4. Factor × layer dual axis — closed sets stay decoupled
+
+Every `PnLAttribution` row is tagged with TWO orthogonal axes:
+
+- **`factor: PnLFactor`** — the **economic driver** (DELTA / FUNDING / BASIS / CARRY / FEES / SLIPPAGE / etc., closed
+  set in [§ Canonical Attribution Factors](#canonical-attribution-factors) below). Answers "what moved the price."
+- **`layer: PnLLayer`** — the **system layer** that contributed (`STRATEGY` | `EXECUTION`, closed set). Answers "which
+  part of the stack is responsible — the signal or the fill."
+
+The two axes do NOT live in the same enum. Mixing them (e.g. `STRATEGY_ALPHA` as a sibling of `DELTA` and `FEES` in one
+flat enum) double-counts: `STRATEGY_ALPHA + EXECUTION_ALPHA` already sums to total P&L by construction, so adding
+`SLIPPAGE`, `FEES`, etc. as siblings double-books them. Keep the two enums independent.
+
+**Layer derivation** (per [`batch-live-architecture.md §5 + §6`](../../../04-architecture/batch-live-architecture.md)):
+
+- `STRATEGY` rows = factor decomposition computed against `BatchExecutionMode.BENCHMARK` matching-engine fills (always
+  fill at requested price; zero execution alpha by definition). Captures what the strategy's signal earned assuming
+  perfect execution.
+- `EXECUTION` rows = factor decomposition of `(live_or_SIMULATED_fill_pnl − BENCHMARK_fill_pnl)`. Captures what the
+  execution layer added or lost relative to the idealised fill: realised vs modelled slippage, latency, queue
+  position, adverse selection, size impact, partial fills, fee surprises.
+
+**Invariant** (UTL helper enforces; see § Decomposition Invariants below):
+
+```
+sum(rows where layer=STRATEGY)             = strategy_alpha_total
+sum(rows where layer=EXECUTION)            = execution_alpha_total
+sum(rows over both layers, all factors)    = realised_total_pnl
+```
+
+`STRATEGY_ALPHA` and `EXECUTION_ALPHA` are **derived sum-by-layer views**, NOT enum members. Aggregators expose them
+as computed fields on rollups; storage stays factor × layer.
+
+**Per-factor layer profile** (which layer each factor typically populates):
+
+| Factor                                 | Layer profile        | Notes                                                                      |
+| -------------------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| `DELTA`                                | STRATEGY (mostly)    | Position-side; tiny EXECUTION residual when fill price ≠ requested price   |
+| `FUNDING`                              | STRATEGY (entirely)  | Position-side; fill-price-independent                                      |
+| `BASIS`                                | STRATEGY (entirely)  | Convergence/divergence of holdings; not execution-driven                   |
+| `CARRY` + sub-factors                  | STRATEGY (entirely)  | Yield/rate accrual on held collateral                                      |
+| `GREEKS`                               | STRATEGY (mostly)    | Sensitivity-driven; small EXECUTION residual via fill-price delta on delta |
+| `SETTLEMENT`                           | STRATEGY (entirely)  | Contract expiry / event resolution                                         |
+| `SLIPPAGE`                             | EXECUTION (entirely) | Definition: fill_price − benchmark_price. Layer = EXECUTION                |
+| `FEES`                                 | Both                 | STRATEGY = modelled fee schedule; EXECUTION = surprise (rate change, etc.) |
+| `REBATE`                               | Both                 | STRATEGY = modelled maker rebate; EXECUTION = surprise                     |
+| `LIQUIDATION`                          | EXECUTION (entirely) | Liquidation penalty/bonus is execution outcome                             |
+| `REWARD_REALISATION_SLIPPAGE`          | EXECUTION (entirely) | Dust-conversion router slippage residual                                   |
+| `FX`                                   | STRATEGY (entirely)  | Currency conversion at settlement                                          |
+| `RESIDUAL`                             | Either               | Unexplained; investigate when > 1%                                         |
+
 ## Canonical Attribution Factors
 
 ### Factor Hierarchy
@@ -360,19 +411,95 @@ Threshold: 1% of gross P&L or $1,000, whichever is larger.
 
 ## PnLAttribution Schema
 
+Per Hard Rule #4 (factor × layer dual axis), every attribution row carries BOTH `factor` and `layer`. The schema below
+is the row-level shape; `factors: dict[str, Decimal]` is the rollup view (used by the per-fill helpers in this doc and
+by reporting aggregators that don't need the layer split).
+
 ```python
 # unified_api_contracts.internal (simplified)
+class PnLLayer(StrEnum):
+    STRATEGY  = "STRATEGY"   # benchmark-mode matching-engine fills (always-fill at requested price)
+    EXECUTION = "EXECUTION"  # residual: live_or_simulated_fill_pnl − benchmark_fill_pnl
+
+class PnLFactor(StrEnum):
+    DELTA                       = "DELTA"
+    FUNDING                     = "FUNDING"
+    BASIS                       = "BASIS"
+    CARRY                       = "CARRY"
+    CARRY_BASE                  = "CARRY_BASE"
+    CARRY_AVS_CONTINUOUS        = "CARRY_AVS_CONTINUOUS"
+    CARRY_ISSUER_SEASONAL       = "CARRY_ISSUER_SEASONAL"
+    REWARD_REALISATION_SLIPPAGE = "REWARD_REALISATION_SLIPPAGE"
+    GREEKS                      = "GREEKS"
+    FEES                        = "FEES"
+    SLIPPAGE                    = "SLIPPAGE"
+    SETTLEMENT                  = "SETTLEMENT"
+    LIQUIDATION                 = "LIQUIDATION"
+    REBATE                      = "REBATE"
+    FX                          = "FX"
+    RESIDUAL                    = "RESIDUAL"
+
+@dataclass(frozen=True)
+class PnLAttributionRow:
+    strategy_id: str
+    client_id: str
+    instrument_id: str
+    archetype_id: str | None           # populated when row belongs to an archetype-tagged trade
+    timestamp: datetime
+    period: str                        # "fill", "funding_8h", "daily", "settlement"
+    factor: PnLFactor                  # economic-driver axis
+    layer: PnLLayer                    # system-layer axis
+    amount: Decimal                    # signed P&L attributable to (factor, layer) for this row
+    metadata: PnLMetadata              # fill_id, venue, benchmark_price, etc.
+
 @dataclass
 class PnLAttribution:
+    """Aggregated rollup view — sum of PnLAttributionRows over a (strategy, client, period) bucket."""
     strategy_id: str
     client_id: str
     instrument_id: str
     timestamp: datetime
-    period: str                        # "fill", "funding_8h", "daily", "settlement"
-    factors: dict[str, Decimal]        # factor_name → P&L amount
-    total_pnl: Decimal                 # sum of all factors
-    metadata: PnLMetadata              # fill_id, venue, benchmark_price, etc.
+    period: str
+    factors: dict[PnLFactor, Decimal]              # factor → sum across both layers
+    factors_by_layer: dict[
+        tuple[PnLFactor, PnLLayer], Decimal
+    ]                                              # (factor, layer) → P&L amount
+    total_pnl: Decimal                             # sum of all (factor, layer) cells
+    strategy_alpha_total: Decimal                  # derived: sum where layer=STRATEGY
+    execution_alpha_total: Decimal                 # derived: sum where layer=EXECUTION
+    metadata: PnLMetadata
 ```
+
+## Decomposition Invariants
+
+The UTL helper `unified_trading_library.pnl_attribution.invariants.assert_decomposition_invariants()` enforces these
+on every per-day per-client rollup. Failure raises loud — never silent placeholder.
+
+```
+1. sum(rows over both layers, all factors) == realised_total_pnl       (closed-set coverage)
+2. sum(rows where layer=STRATEGY) == strategy_alpha_total               (BENCHMARK matching engine sum)
+3. sum(rows where layer=EXECUTION) == execution_alpha_total             (live − BENCHMARK residual)
+4. RESIDUAL factor magnitude < 1% of |total_pnl|                        (else escalate per § Reconciliation Checks)
+5. Every row's factor ∈ PnLFactor closed set; every row's layer ∈ PnLLayer closed set
+   (no ad-hoc "OTHER", no wrapper enum members like STRATEGY_ALPHA/EXECUTION_ALPHA)
+```
+
+## Plan-vs-codex factor name mapping
+
+The following pre-codex names are NOT canonical. Plans drafting attribution emitters must map them to the canonical
+factor + layer per this table. Adding a new factor requires the formal route: PR amends `PnLFactor` enum + extends the
+[Factor Definitions](#factor-definitions) table + extends the [per-archetype relevance](#per-archetype-factor-relevance)
+matrix.
+
+| Pre-codex name        | Canonical mapping                                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `STRATEGY_ALPHA`      | Derived view: `sum(layer=STRATEGY)`. Not a factor; not an enum member.                                      |
+| `EXECUTION_ALPHA`     | Derived view: `sum(layer=EXECUTION)`. Not a factor; not an enum member.                                     |
+| `FINANCING`           | `factor=CARRY` with sub-factor metadata (lending/borrow rate accrual). If the borrow side needs its own bucket distinct from yield CARRY, formally add `BORROW_INTEREST` to `PnLFactor` enum (PR + matrix update). |
+| `BORROW`              | Same as `FINANCING` — collapse to `CARRY` (or formal `BORROW_INTEREST` factor add).                         |
+| `REBALANCE`           | NOT a factor. Each rebalance fill decomposes into `DELTA` + `SLIPPAGE` + `FEES` per existing canonical set. `REBALANCE` belongs in `PnLMetadata.fill_reason` (fill metadata), not the attribution axis. |
+| `HWM_CRYSTALLIZATION` | NOT in `PnLAttributionRow`. Performance-fee crystallization is recognised via a separate `FeeRecognitionRow` table emitted by `wallet_treasury_client_flow_2026_05_10` Phase 5.G's `PerformanceFeeCrystallizedEvent`. `FeeRecognitionRow` joins into the NAV waterfall but does NOT participate in factor × layer decomposition (it's a fee accounting event, not a P&L driver). |
+| `STRATEGY_ALPHA + EXECUTION_ALPHA + SLIPPAGE + FEES + ...` flat enum | Hard Rule #4 violation. Two axes (factor, layer) — not one flat union. |
 
 ## Share Class P&L
 

@@ -93,25 +93,25 @@ Validator rejects:
 When backfilling (Phase 9C), apply these defaults per top-level directory. Each is a rebuttable default — a specific doc
 can override if it genuinely serves a different audience.
 
-| Codex subdir                               | Default scope                 | Rationale                                                                                   |
-| ------------------------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------- |
-| `00-SSOT-INDEX.md`                         | `[engineer, admin]`           | Navigation index for internal readers                                                       |
-| `00-getting-started/`                      | `[engineer]`                  | New-engineer onboarding                                                                     |
-| `01-domain/`                               | `[engineer]`                  | Instrument schemas, domain types                                                            |
-| `02-data/`                                 | `[engineer, admin]`           | Data catalogues, schema governance, availability manifests                                  |
-| `02-venues/`                               | `[engineer, admin]`           | Per-venue adapter notes                                                                     |
-| `03-observability/`                        | `[engineer, admin]`           | Events, lifecycle, logging                                                                  |
-| `03-services/`                             | `[engineer]`                  | Service specs                                                                               |
-| `04-architecture/`                         | `[engineer, admin]`           | Tier architecture, topology, separation of concerns                                         |
-| `05-infrastructure/`                       | `[engineer, admin]`           | Deployment, CI/CD, secrets, auth setup                                                      |
-| `06-coding-standards/`                     | `[engineer]`                  | Code conventions                                                                            |
-| `07-security/`                             | `[engineer, admin]`           | Secrets, auth, compliance                                                                   |
-| `08-workflows/`                            | `[engineer, admin]`           | Local dev, quickmerge, quality gates                                                        |
-| `09-strategy/`                             | `[engineer, admin]`           | Strategy engine internals; catalogue-strategy.md specifically is `[engineer, admin, sales]` |
-| `10-audit/`                                | `[engineer, admin]`           | Audit reports, compliance checklists                                                        |
-| `11-project-management/`                   | `[engineer, admin]`           | Plan registry, planning standards                                                           |
-| `12-agent-workflow/`                       | `[engineer]`                  | Sub-agent rules                                                                             |
-| `13-codex-governance/`                     | `[engineer, admin]`           | Codex rules                                                                                 |
+| Codex subdir                                       | Default scope                 | Rationale                                                                                   |
+| -------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------- |
+| `00-SSOT-INDEX.md`                                 | `[engineer, admin]`           | Navigation index for internal readers                                                       |
+| `00-getting-started/`                              | `[engineer]`                  | New-engineer onboarding                                                                     |
+| `01-domain/`                                       | `[engineer]`                  | Instrument schemas, domain types                                                            |
+| `02-data/`                                         | `[engineer, admin]`           | Data catalogues, schema governance, availability manifests                                  |
+| `02-venues/`                                       | `[engineer, admin]`           | Per-venue adapter notes                                                                     |
+| `03-observability/`                                | `[engineer, admin]`           | Events, lifecycle, logging                                                                  |
+| `03-services/`                                     | `[engineer]`                  | Service specs                                                                               |
+| `04-architecture/`                                 | `[engineer, admin]`           | Tier architecture, topology, separation of concerns                                         |
+| `05-infrastructure/`                               | `[engineer, admin]`           | Deployment, CI/CD, secrets, auth setup                                                      |
+| `06-coding-standards/`                             | `[engineer]`                  | Code conventions                                                                            |
+| `07-security/`                                     | `[engineer, admin]`           | Secrets, auth, compliance                                                                   |
+| `08-workflows/`                                    | `[engineer, admin]`           | Local dev, quickmerge, quality gates                                                        |
+| `09-strategy/`                                     | `[engineer, admin]`           | Strategy engine internals; catalogue-strategy.md specifically is `[engineer, admin, sales]` |
+| `10-audit/`                                        | `[engineer, admin]`           | Audit reports, compliance checklists                                                        |
+| `11-project-management/`                           | `[engineer, admin]`           | Plan registry, planning standards                                                           |
+| `12-agent-workflow/`                               | `[engineer]`                  | Sub-agent rules                                                                             |
+| `13-codex-governance/`                             | `[engineer, admin]`           | Codex rules                                                                                 |
 | `14-customer-journeys/README.md`                   | `[engineer, admin, sales]`    | Playbook hub overview                                                                       |
 | `14-customer-journeys/glossary.md`                 | `[sales, prospect, investor]` | Canonical DART / IM / Reg Umbrella definitions — prospect-safe                              |
 | `14-customer-journeys/_ssot-rules/`                | `[engineer, admin, sales]`    | Rules govern experience layer — sales reads too                                             |
@@ -123,19 +123,19 @@ can override if it genuinely serves a different audience.
 | `14-customer-journeys/playbooks/`                  | `[engineer, admin, sales]`    | Impl-layer click paths                                                                      |
 | `14-customer-journeys/authentication/`             | `[engineer, admin]`           | Auth runbooks                                                                               |
 | `14-customer-journeys/environments/`               | `[engineer, admin]`           | Per-env config                                                                              |
-| `14-customer-journeys/playbook-concepts/`              | `[engineer, admin, sales]`    | Concepts used across playbooks; visibility-slicing is the key cross-cutting doc             |
+| `14-customer-journeys/playbook-concepts/`          | `[engineer, admin, sales]`    | Concepts used across playbooks; visibility-slicing is the key cross-cutting doc             |
 | `14-customer-journeys/page-triage/`                | `[engineer, admin]`           | 177-page classification — internal-only                                                     |
 | `14-customer-journeys/testing/`                    | `[engineer, admin]`           | Playwright coverage                                                                         |
 | `14-customer-journeys/roadmap/`                    | `[engineer, admin, sales]`    | Follow-up waves — visible to sales for commercial planning                                  |
-| `16-strategy-playbooks/infra-spec/`                 | `[engineer, admin]`           | Infra audit + refactor plan — engineering-owned                                             |
+| `16-strategy-playbooks/infra-spec/`                | `[engineer, admin]`           | Infra audit + refactor plan — engineering-owned                                             |
 | `14-customer-journeys/presentations/`              | `[engineer, admin, investor]` | Target-state deck — investor-briefing-ready                                                 |
 | `14-customer-journeys/information-architecture.md` | `[engineer, admin, sales]`    | IA hub — all internal                                                                       |
 | `14-customer-journeys/audiences-and-journeys.md`   | `[engineer, admin, sales]`    | Matrix of audiences × journeys                                                              |
-| `DEPRECATED_UIS_NOTICE.md`                 | `[engineer, admin]`           | Internal deprecation note                                                                   |
-| `QUALITY_GATE_BYPASS_AUDIT.md`             | `[engineer, admin]`           | Internal audit                                                                              |
-| `GLOSSARY.md`                              | `[engineer, admin]`           | Workspace glossary                                                                          |
-| `README.md`                                | `[engineer, admin]`           | Codex root README                                                                           |
-| `validators/`                              | `[engineer]`                  | Validator specs                                                                             |
+| `DEPRECATED_UIS_NOTICE.md`                         | `[engineer, admin]`           | Internal deprecation note                                                                   |
+| `QUALITY_GATE_BYPASS_AUDIT.md`                     | `[engineer, admin]`           | Internal audit                                                                              |
+| `GLOSSARY.md`                                      | `[engineer, admin]`           | Workspace glossary                                                                          |
+| `README.md`                                        | `[engineer, admin]`           | Codex root README                                                                           |
+| `validators/`                                      | `[engineer]`                  | Validator specs                                                                             |
 
 Exceptions to the defaults must be documented inline (one-line comment above the frontmatter or in the doc's intro
 paragraph) so future readers understand why a specific doc breaks the pattern.
@@ -231,8 +231,8 @@ Data, Analytics, Research & Trading — Odum's DIY platform track ...
    ```
 2. **Downstream consumers.** Sales-collateral generators, help-drawer surfaces in `unified-trading-system-ui`, and
    investor-briefing PDFs read the manifest and filter codex paths by the requested audience before embedding content.
-3. **CI gate.** `codex/14-customer-journeys/_tools/check-scope-coverage.sh` fails loud if any codex doc is missing `scope:`
-   frontmatter — wired into `unified-trading-pm/scripts/quality-gates.sh`.
+3. **CI gate.** `codex/14-customer-journeys/_tools/check-scope-coverage.sh` fails loud if any codex doc is missing
+   `scope:` frontmatter — wired into `unified-trading-pm/scripts/quality-gates.sh`.
 
 ## What this rule does NOT do
 

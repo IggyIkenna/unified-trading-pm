@@ -101,22 +101,22 @@ of operations: **doc → plan → code**.
   _first_, then write/change code.
 - **After changing X** — update the same SSOTs (and the matching plan) so the doc stays the source of truth.
 
-| If you change…                      | Update these SSOTs                                                                                                                                                                                                                                                |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| If you change…                      | Update these SSOTs                                                                                                                                                                                                                                                   |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Manifest schema                     | `02-data/availability-manifest-and-data-status.md` · `02-data/shard-granularity-cefi.md` · `02-data/sports-scheduling-and-sharding.md` · `02-data/prediction-schema-paths.md` · `02-data/per-asset-group-bucket-layouts.md` · UTL `manifest_writer.py` · `CLAUDE.md` |
-| Batch/live equivalence              | `04-architecture/batch-live-architecture.md` (single SSOT — replaces former `batch-live-pipeline.md` + `batch-live-symmetry.md`) · `backtest-groups.md` · `CLAUDE.md`                                                                                                                                                                                                                                          |
-| Cloud-agnostic VM/build             | `04-architecture/cloud-agnostic-migration.md` · `05-infrastructure/vm-tarball-deployment.md` · `05-infrastructure/cloud-agnostic-build-lineage.md` (new) · launchers + `_code_builds_aws.py` · `CLAUDE.md`                                                        |
-| Strategy archetype config           | `09-strategy/strategy-summary.md` · `09-strategy/architecture-v2/` · `09-strategy/operational/onboarding-checklist.md` · the archetype-specific sub-plan                                                                                                        |
-| Custody / treasury                  | `04-architecture/custody-providers.md` (single SSOT — Copper + CEFFU + LocalKey + Mock) · `wallet-hierarchy-and-capital-flow.md` · `unified-config-interface/testnet_contracts.py`                                                                                |
-| Live observability                  | `03-observability/lifecycle-events.md` · `coordination-events.md` · `04-architecture/alerting-batch-live.md` · `autonomous-recovery-matrix.md` · `05-infrastructure/live-deployment-monitoring.md` (new) · UAC `internal/events.py` · `CLAUDE.md`                 |
-| P&L attribution / B-vs-L recon      | `09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` · `batch-live-reconciliation-service` plan · pnl-attribution-service plan                                                                                                                                          |
-| Service readiness                   | `codex/10-audit/repos/<service>.yaml` · `REPO_READINESS_CHECKLIST.yaml` · the master plan's matrix                                                                                                                                                                |
-| Operational modes / DART            | `09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` · `04-architecture/research-service-and-dart-integration.md` (new)                                                                                                                                        |
-| ML experiment lifecycle             | `04-architecture/ml-experiment-lifecycle.md` (new) · `02-data/data-lineage-MTDS-features-ml.md`                                                                                                                                                                   |
-| Hot-reload semantics                | `06-coding-standards/config-reloader-pattern.md` · `04-architecture/live-strategy-config-hot-reload.md` (new) · `CLAUDE.md`                                                                                                                                       |
-| Service infrastructure requirements | `06-coding-standards/service-structure-standards.md` · `base-service.sh` STEP 5.x · `CLAUDE.md`                                                                                                                                                                   |
-| Asset-group vocabulary              | `CLAUDE.md` · UAC `market_data_categories` · `venue_axis_asset_group_vocabulary_2026_04_25` plan                                                                                                                                                                  |
-| Lookahead bias / available_at       | UAC `availability_semantics` · UTL `availability_stamping.py` · `02-data/availability-manifest-and-data-status.md` § available_at · `POST_PLAN_REALITY_2026_05_06.md` Principle 5 · `CLAUDE.md`                                                                   |
+| Batch/live equivalence              | `04-architecture/batch-live-architecture.md` (single SSOT — replaces former `batch-live-pipeline.md` + `batch-live-symmetry.md`) · `backtest-groups.md` · `CLAUDE.md`                                                                                                |
+| Cloud-agnostic VM/build             | `04-architecture/cloud-agnostic-migration.md` · `05-infrastructure/vm-tarball-deployment.md` · `05-infrastructure/cloud-agnostic-build-lineage.md` (new) · launchers + `_code_builds_aws.py` · `CLAUDE.md`                                                           |
+| Strategy archetype config           | `09-strategy/strategy-summary.md` · `09-strategy/architecture-v2/` · `09-strategy/operational/onboarding-checklist.md` · the archetype-specific sub-plan                                                                                                             |
+| Custody / treasury                  | `04-architecture/custody-providers.md` (single SSOT — Copper + CEFFU + LocalKey + Mock) · `wallet-hierarchy-and-capital-flow.md` · `unified-config-interface/testnet_contracts.py`                                                                                   |
+| Live observability                  | `03-observability/lifecycle-events.md` · `coordination-events.md` · `04-architecture/alerting-batch-live.md` · `autonomous-recovery-matrix.md` · `05-infrastructure/live-deployment-monitoring.md` (new) · UAC `internal/events.py` · `CLAUDE.md`                    |
+| P&L attribution / B-vs-L recon      | `09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` · `batch-live-reconciliation-service` plan · pnl-attribution-service plan                                                                                                                             |
+| Service readiness                   | `codex/10-audit/repos/<service>.yaml` · `REPO_READINESS_CHECKLIST.yaml` · the master plan's matrix                                                                                                                                                                   |
+| Operational modes / DART            | `09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` · `04-architecture/research-service-and-dart-integration.md` (new)                                                                                                                           |
+| ML experiment lifecycle             | `04-architecture/ml-experiment-lifecycle.md` (new) · `02-data/data-lineage-MTDS-features-ml.md`                                                                                                                                                                      |
+| Hot-reload semantics                | `06-coding-standards/config-reloader-pattern.md` · `04-architecture/live-strategy-config-hot-reload.md` (new) · `CLAUDE.md`                                                                                                                                          |
+| Service infrastructure requirements | `06-coding-standards/service-structure-standards.md` · `base-service.sh` STEP 5.x · `CLAUDE.md`                                                                                                                                                                      |
+| Asset-group vocabulary              | `CLAUDE.md` · UAC `market_data_categories` · `venue_axis_asset_group_vocabulary_2026_04_25` plan                                                                                                                                                                     |
+| Lookahead bias / available_at       | UAC `availability_semantics` · UTL `availability_stamping.py` · `02-data/availability-manifest-and-data-status.md` § available_at · `POST_PLAN_REALITY_2026_05_06.md` Principle 5 · `CLAUDE.md`                                                                      |
 
 **Agent rule.** Before merging any change in scope of one of the rows above:
 
@@ -154,17 +154,28 @@ The 7-group readiness applies to:
 - ml-inference-service
 - strategy-service
 - execution-service
-- position-balance-monitor-service — work folded into [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md) (live-mode wiring) + Group F readiness items 17/18/19 of master plan
-- risk-and-exposure-service — work folded into [`alerting_service_live_rules_2026_05_07`](../../plans/active/alerting_service_live_rules_2026_05_07.md) Phase 9 circuit-breaker integration + Group F readiness items 17/19 of master plan
-- pnl-attribution-service — work folded into [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 12 batch-live reconciler + Group F readiness item 21 of master plan
-- alerting-service ✓ [`alerting_service_live_rules_2026_05_07`](../../plans/active/alerting_service_live_rules_2026_05_07.md) (P0, deadline 2026-05-23 — circuit breakers + paging + ServiceEmissionPolicy tier-up)
-- batch-live-reconciliation-service — work folded into [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 12 + Group F readiness item 21 of master plan; UTL `batch_live_reconciler` already shipped per UTL@908b1647
+- position-balance-monitor-service — work folded into
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  (live-mode wiring) + Group F readiness items 17/18/19 of master plan
+- risk-and-exposure-service — work folded into
+  [`alerting_service_live_rules_2026_05_07`](../../plans/active/alerting_service_live_rules_2026_05_07.md) Phase 9
+  circuit-breaker integration + Group F readiness items 17/19 of master plan
+- pnl-attribution-service — work folded into
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  Phase 12 batch-live reconciler + Group F readiness item 21 of master plan
+- alerting-service ✓
+  [`alerting_service_live_rules_2026_05_07`](../../plans/active/alerting_service_live_rules_2026_05_07.md) (P0, deadline
+  2026-05-23 — circuit breakers + paging + ServiceEmissionPolicy tier-up)
+- batch-live-reconciliation-service — work folded into
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  Phase 12 + Group F readiness item 21 of master plan; UTL `batch_live_reconciler` already shipped per UTL@908b1647
 
-> **Audit refresh 2026-05-08**: 5 service rows above previously read "⚠ NO PLAN" — that was technically accurate
-> (no DEDICATED plan files for 4 of 5 services) but operationally misleading. The work for these 5 services lives in
-> the cross-cutting umbrella plans cited above. alerting-service IS dedicated. The other 4 do not need their own plan
-> files; their phases are explicit todos in the named umbrellas. Reviewers should follow those links to find the
-> actual phase / todo / gate ownership.
+> **Audit refresh 2026-05-08**: 5 service rows above previously read "⚠ NO PLAN" — that was technically accurate (no
+> DEDICATED plan files for 4 of 5 services) but operationally misleading. The work for these 5 services lives in the
+> cross-cutting umbrella plans cited above. alerting-service IS dedicated. The other 4 do not need their own plan files;
+> their phases are explicit todos in the named umbrellas. Reviewers should follow those links to find the actual phase /
+> todo / gate ownership.
+
 - deployment-api
 - deployment-service
 - deployment-ui

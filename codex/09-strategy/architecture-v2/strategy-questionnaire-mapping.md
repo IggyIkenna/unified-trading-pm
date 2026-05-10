@@ -152,8 +152,8 @@ that will clear the bar after more runtime. Sales uses this axis in step 6 of on
 - `instrument_types`, `venue_scope` — stored but not applied. The Explore tab shows archetype-level tiles; per-instance
   venue/instrument drill-downs happen on the reporting page after click-through.
 - `service_family` — gates which service tiles are visible (see
-  [`../../04-architecture/commercial-service-families.md`](../../04-architecture/commercial-service-families.md)), not the catalogue
-  filter itself.
+  [`../../04-architecture/commercial-service-families.md`](../../04-architecture/commercial-service-families.md)), not
+  the catalogue filter itself.
 - `fund_structure` — contract-shape axis (SMA / Pooled / NA); affects onboarding, not catalogue.
 - All Reg-Umbrella axes — regulatory framing; captured for sales handoff, not for filter derivation.
 

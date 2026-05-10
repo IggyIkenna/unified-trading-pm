@@ -94,8 +94,8 @@ because the partition key/value pairs are encoded in the directory names.
 - **More partitions → Faster queries** (scan fewer files).
 - **More partitions → Slower writes** (more directories to manage).
 - **Recommendation:** Use the per-asset-group shard-atom shapes documented in
-  [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md); they encode the workspace's chosen partition
-  cardinality per asset_group + data_type.
+  [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md); they encode the workspace's chosen
+  partition cardinality per asset_group + data_type.
 
 ---
 

@@ -262,8 +262,8 @@ Each item below has:
 - **Current state.** Service-family constraints (which audiences can observe / report / research / promote /
   admin-catalogue) exist as prose in Stage 2 docs. No rule file, no YAML, no UAC function. `access_control()` pre-check
   does not consult scope rules — scope is implicit in persona-level entitlement arrays.
-- **Target state.** Rule 12 at `codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.{md,yaml}` codifies:
-  observe ∈ {DART}; reporting ∈ {IM, DART-reporting-only, Reg Umbrella}; research / promote ∈ {full-DART};
+- **Target state.** Rule 12 at `codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.{md,yaml}`
+  codifies: observe ∈ {DART}; reporting ∈ {IM, DART-reporting-only, Reg Umbrella}; research / promote ∈ {full-DART};
   strategy-catalogue-admin ∈ {admin, IM-desk}. New UAC function
   `check_service_family_scope(audience, service_family, activity) -> ScopeDecision` consumed as a pre-check inside
   `access_control()` (G1.6). 6-value internal `ServiceFamily` enum
@@ -321,9 +321,9 @@ Each item below has:
 
 ### 1.14 Presentation deck refresh + HTML stretch (2026-04-20 amendment)
 
-- **Current state.** `codex/14-customer-journeys/presentations/target-experience-post-refactor.md` drafted against the 9-item G1
-  enumeration; missing slides for items 1.10-1.14 and the 2026-04-20 amendment's cross-cutting lessons (MCP Playwright
-  discipline, dev/staging parity). No HTML reveal.js wrapper.
+- **Current state.** `codex/14-customer-journeys/presentations/target-experience-post-refactor.md` drafted against the
+  9-item G1 enumeration; missing slides for items 1.10-1.14 and the 2026-04-20 amendment's cross-cutting lessons (MCP
+  Playwright discipline, dev/staging parity). No HTML reveal.js wrapper.
 - **Target state.** Markdown deck refreshed for the 14-item G1 surface + 7 new slides (G1.10 questionnaire, G1.11 scope
   rules, G1.12 public-site IA, G1.13 tempt-logic, G1.4 persona matrix, MCP Playwright discipline, dev/staging parity).
   Optional reveal.js HTML wrapper at `target-experience-post-refactor.html` — HTML stretch depends on G1.4 personas
@@ -573,8 +573,8 @@ Each item below has:
 ### 3.3 Briefings-content CMS migration
 
 - **Current state.** pb2 briefing docs (`briefings-hub.md`, `dart-briefing.md`, `regulatory-umbrella-briefing.md`,
-  `im-decision-journey.md`) live as markdown in `codex/14-customer-journeys/experience/`. Updates require PR + merge + deploy.
-  Sales cannot iterate briefing content without engineering.
+  `im-decision-journey.md`) live as markdown in `codex/14-customer-journeys/experience/`. Updates require PR + merge +
+  deploy. Sales cannot iterate briefing content without engineering.
 - **Target state.** Briefing content lives in a headless CMS (Contentful / Sanity / Notion API); UI renders from CMS.
   Markdown in codex becomes the canonical draft + audit source; CMS mirrors it with managed-revision workflow for sales.
 - **Blast radius.** New `briefings-content-service` (thin CMS wrapper), UI `/briefings/*` routes read from it,
@@ -601,11 +601,11 @@ Each item below has:
 
 ### 3.5 Codex-sync + playbook consistency agents
 
-- **Current state.** `codex/14-customer-journeys/` is hand-maintained. When rules change, 40+ docs may drift. No automated
-  parity checker between `_ssot-rules/` and downstream docs.
+- **Current state.** `codex/14-customer-journeys/` is hand-maintained. When rules change, 40+ docs may drift. No
+  automated parity checker between `_ssot-rules/` and downstream docs.
 - **Target state.** `playbook-consistency-agent` (part of `plan-health-agent` family) runs on merges to
-  `codex/14-customer-journeys/` — verifies rule citations still point to live sections, verifies experience playbook grammar (9
-  sections per rule 01), verifies demo-restriction-profile references are valid.
+  `codex/14-customer-journeys/` — verifies rule citations still point to live sections, verifies experience playbook
+  grammar (9 sections per rule 01), verifies demo-restriction-profile references are valid.
 - **Blast radius.** Agents repo (existing infrastructure), GHA workflow.
 - **Blockers.** None — additive.
 - **Group.** G3

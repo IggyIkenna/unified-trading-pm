@@ -25,14 +25,14 @@ Agent operating procedures for the Unified Trading System. Authoritative agent r
 
 ## Superseded Content (now in cursor rules)
 
-| Was here                     | Now in                                                                             |
-| ---------------------------- | ---------------------------------------------------------------------------------- |
-| WORKFLOW_OVERVIEW            | `sub-agent-workflow-standard.mdc` + `agents-follow-cursor-rules.mdc`               |
-| TASK_TEMPLATE                | `unified-trading-pm/plans/tasks/cursor/START_HERE.md`                              |
-| TASK_CLASSIFICATION          | `ai-task-classification.mdc`                                                       |
-| WORKER_AGENT_INSTRUCTIONS    | `agents-follow-cursor-rules.mdc`                                                   |
-| LOCAL_VS_CLOUD_ORCHESTRATION | `parallel-agent-execution.mdc`                                                     |
-| QUICK_REFERENCE              | `anti-patterns-quick-reference.mdc`                                                |
+| Was here                     | Now in                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| WORKFLOW_OVERVIEW            | `sub-agent-workflow-standard.mdc` + `agents-follow-cursor-rules.mdc`                  |
+| TASK_TEMPLATE                | `unified-trading-pm/plans/tasks/cursor/START_HERE.md`                                 |
+| TASK_CLASSIFICATION          | `ai-task-classification.mdc`                                                          |
+| WORKER_AGENT_INSTRUCTIONS    | `agents-follow-cursor-rules.mdc`                                                      |
+| LOCAL_VS_CLOUD_ORCHESTRATION | `parallel-agent-execution.mdc`                                                        |
+| QUICK_REFERENCE              | `anti-patterns-quick-reference.mdc`                                                   |
 | cloud-orchestration-spec.md  | Moved to `unified-trading-pm/codex/04-architecture/cloud-agent-orchestration-spec.md` |
 
 ---

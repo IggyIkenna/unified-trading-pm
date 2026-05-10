@@ -41,8 +41,8 @@ mock/real semantics, hot reload, zombie process prevention.
 
 **Cross-repo operational modes:** For the canonical env-axis matrix (including `DATA_MODE`, `TESTNET_MODE`, migration
 from `CLOUD_MOCK_MODE`, and Layer 3 SIT expectations), see
-[operational-modes-matrix.md](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md). This guide focuses on
-`dev-start.sh` presets and UI-specific toggles.
+[operational-modes-matrix.md](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md). This guide
+focuses on `dev-start.sh` presets and UI-specific toggles.
 
 ---
 

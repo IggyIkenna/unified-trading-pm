@@ -2,7 +2,9 @@
 title: DeFi Bucket Sizes (point-in-time 2026-05-07)
 status: planned
 created: 2026-05-07
-authoritative_for: Per-bucket size estimate (DeFi instruments, MTDS, MDPS, manifests) at a snapshot point 2026-05-07. Feeds the AWS S3 cost projection + the cross-cloud migration time estimate (storage transfer hours).
+authoritative_for:
+  Per-bucket size estimate (DeFi instruments, MTDS, MDPS, manifests) at a snapshot point 2026-05-07. Feeds the AWS S3
+  cost projection + the cross-cloud migration time estimate (storage transfer hours).
 referenced_by:
   - plans/active/aws_migration_defi_first_2026_05_07.md
 related:
@@ -17,9 +19,9 @@ related:
 
 ## Purpose
 
-Snapshot every DeFi-related bucket's total size + object count + age distribution as of 2026-05-07. This data drives
-two decisions: (a) AWS S3 cost projection for the migration target, and (b) the storage-transfer time estimate for
-the cutover plan.
+Snapshot every DeFi-related bucket's total size + object count + age distribution as of 2026-05-07. This data drives two
+decisions: (a) AWS S3 cost projection for the migration target, and (b) the storage-transfer time estimate for the
+cutover plan.
 
 ## Scope
 
@@ -35,8 +37,8 @@ the cutover plan.
 1. **Audit methodology** — `gcloud storage du -s -h gs://<bucket>` per-bucket; iceberg of objects under hive partitions
    sampled rather than enumerated for very large prefixes.
 2. **Bucket inventory** — full list of DeFi buckets with project + region.
-3. **Size table** — `bucket_name, project, region, total_bytes, object_count, oldest_object_date, newest_object_date,
-   est_growth_per_day_gb`.
+3. **Size table** —
+   `bucket_name, project, region, total_bytes, object_count, oldest_object_date, newest_object_date, est_growth_per_day_gb`.
 4. **AWS S3 cost projection** — `total_bytes × $0.023/GB/month (Standard) + $0.0125/GB/month (IA)`; cross-region
    transfer-out estimate at cutover.
 5. **Storage-transfer plan** — gsutil rsync vs Storage Transfer Service vs Snowball; time-to-transfer estimates.
@@ -44,8 +46,10 @@ the cutover plan.
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
-- **Related codex SSOTs:** [`cloud-agnostic-build-lineage`](../05-infrastructure/cloud-agnostic-build-lineage.md), [`availability-manifest-and-data-status`](../02-data/availability-manifest-and-data-status.md).
+- **Plan(s) implementing this:**
+  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
+- **Related codex SSOTs:** [`cloud-agnostic-build-lineage`](../05-infrastructure/cloud-agnostic-build-lineage.md),
+  [`availability-manifest-and-data-status`](../02-data/availability-manifest-and-data-status.md).
 - **Code:** TBD audit helper — likely a `gcloud storage du` wrapper script that materialises the table.
 
 ## Open questions

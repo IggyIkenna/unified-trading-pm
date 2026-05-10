@@ -14,8 +14,9 @@ whether `record_empty` is expected.
 Cross-refs:
 
 - `codex/02-data/availability-manifest-and-data-status.md` — §Layer 2 table + v5 honest-coverage schema + UAC
-  denominator accessors. **Also the canonical literal-values mirror for `SOURCE_COVERAGE_START` / `DATA_TYPE_COVERAGE_START`**
-  (sports + `odds_api` source coverage starts) — this doc cross-links, never redeclares the dates.
+  denominator accessors. **Also the canonical literal-values mirror for `SOURCE_COVERAGE_START` /
+  `DATA_TYPE_COVERAGE_START`** (sports + `odds_api` source coverage starts) — this doc cross-links, never redeclares the
+  dates.
 - `codex/02-data/sports-data-source-coverage-matrix.md` — sibling (SPORTS instruments-service).
 - `codex/02-data/per-asset-group-bucket-layouts.md` — MTDS GCS path layouts per asset_group.
 - `codex/02-data/partitioning.md` — Hive partitioning (venue / date / data_type / instrument_type / chain / league_id).

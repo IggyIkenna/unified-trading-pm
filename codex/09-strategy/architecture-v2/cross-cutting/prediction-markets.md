@@ -19,21 +19,21 @@ are simultaneously a data source, an execution venue, and an arbitrage surface.
 
 **Substantial infrastructure is already built:**
 
-| Component                              | Status      | File                                                                                                     |
-| -------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------- |
-| Polymarket market data adapter         | IMPLEMENTED | `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py`                                     |
-| Kalshi market data adapter             | IMPLEMENTED | `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`                                         |
-| Polymarket schemas (Pydantic)          | IMPLEMENTED | `unified-api-contracts/external/polymarket/schemas.py`                                                   |
-| Kalshi schemas (Pydantic)              | IMPLEMENTED | `unified-api-contracts/external/kalshi/schemas.py`                                                       |
-| Polymarket arb schemas                 | IMPLEMENTED | `unified-api-contracts/external/polymarket/arb_schemas.py`                                               |
-| Polymarket CLOB execution              | IMPLEMENTED | `execution-service/adapters/exchanges/polymarket_clob.py`                                                |
-| Kalshi execution adapter               | IMPLEMENTED | `execution-service/adapters/exchanges/kalshi.py`                                                         |
-| PredictionArbStrategy                  | IMPLEMENTED | `strategy-service/engine/strategies/prediction_arb/prediction_arb_strategy.py`                           |
-| Prediction mapping / categorisation    | IMPLEMENTED | `strategy-service/engine/strategies/prediction/prediction_mapping.py`                                    |
-| Cross-venue arb schemas (UAC internal) | IMPLEMENTED | `unified-api-contracts/unified_api_contracts/internal/domain/prediction_market/prediction_market_arb.py` |
-| Polymarket crowd sentiment feature     | IMPLEMENTED | `features-cross-instrument-service/calculators/polymarket_crowd_sentiment_calculator.py`                 |
-| Execution handler                      | IMPLEMENTED | `execution-service/engine/handlers/prediction_handler.py`                                                |
-| VCR cassettes                          | EXIST       | `unified-api-contracts/tests/`                                                                           |
+| Component                              | Status      | File                                                                                                           |
+| -------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| Polymarket market data adapter         | IMPLEMENTED | `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py` |
+| Kalshi market data adapter             | IMPLEMENTED | `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`     |
+| Polymarket schemas (Pydantic)          | IMPLEMENTED | `unified-api-contracts/external/polymarket/schemas.py`                                                         |
+| Kalshi schemas (Pydantic)              | IMPLEMENTED | `unified-api-contracts/external/kalshi/schemas.py`                                                             |
+| Polymarket arb schemas                 | IMPLEMENTED | `unified-api-contracts/external/polymarket/arb_schemas.py`                                                     |
+| Polymarket CLOB execution              | IMPLEMENTED | `execution-service/adapters/exchanges/polymarket_clob.py`                                                      |
+| Kalshi execution adapter               | IMPLEMENTED | `execution-service/adapters/exchanges/kalshi.py`                                                               |
+| PredictionArbStrategy                  | IMPLEMENTED | `strategy-service/engine/strategies/prediction_arb/prediction_arb_strategy.py`                                 |
+| Prediction mapping / categorisation    | IMPLEMENTED | `strategy-service/engine/strategies/prediction/prediction_mapping.py`                                          |
+| Cross-venue arb schemas (UAC internal) | IMPLEMENTED | `unified-api-contracts/unified_api_contracts/internal/domain/prediction_market/prediction_market_arb.py`       |
+| Polymarket crowd sentiment feature     | IMPLEMENTED | `features-cross-instrument-service/calculators/polymarket_crowd_sentiment_calculator.py`                       |
+| Execution handler                      | IMPLEMENTED | `execution-service/engine/handlers/prediction_handler.py`                                                      |
+| VCR cassettes                          | EXIST       | `unified-api-contracts/tests/`                                                                                 |
 
 **What's NOT wired:**
 
@@ -95,8 +95,8 @@ where `tick.timestamp <= T` AND `tick.market_id`'s `market_created_at <= T`.
 
 For BUNDLED prediction data_types, `ManifestWriter.record_captured` requires `expected_root_clusters` +
 `cluster_extractor` per the workspace cluster-validation rule
-([`../../../02-data/availability-manifest-and-data-status.md`](../../../02-data/availability-manifest-and-data-status.md) §
-"Cluster validation MANDATORY at record_captured"). Per `(canonical_question_group, day)`: HOURLY → 24 expected
+([`../../../02-data/availability-manifest-and-data-status.md`](../../../02-data/availability-manifest-and-data-status.md)
+§ "Cluster validation MANDATORY at record_captured"). Per `(canonical_question_group, day)`: HOURLY → 24 expected
 market_ids, DAILY → 1, ELECTION → 1 spanning weeks/months. Under-coverage triggers `record_failed(ClusterCoverageError)`
 instead of `record_captured`.
 
@@ -336,8 +336,10 @@ registry wiring (G5), Kalshi testnet (G6), and historical data pipeline (G7).
 
 ## References
 
-- **Polymarket adapters:** `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py`
-- **Kalshi adapters:** `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`
+- **Polymarket adapters:**
+  `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py`
+- **Kalshi adapters:**
+  `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`
 - **Execution:** `execution-service/adapters/exchanges/polymarket_clob.py`
 - **Strategy:** `strategy-service/engine/strategies/prediction_arb/prediction_arb_strategy.py`
 - **Features:** `features-cross-instrument-service/calculators/polymarket_crowd_sentiment_calculator.py`

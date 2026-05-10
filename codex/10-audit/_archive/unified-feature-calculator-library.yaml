@@ -62,8 +62,7 @@ code_readiness:
 
   cr5_quickmerge:
     status: "not_assessed"
-    criteria:
-      "bash scripts/quickmerge.sh merged to feat/code-readiness-unified-trading-library or main via cascade"
+    criteria: "bash scripts/quickmerge.sh merged to feat/code-readiness-unified-trading-library or main via cascade"
     branch: null
     ci_url: null
     merged_to_main: false

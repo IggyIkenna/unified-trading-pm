@@ -68,7 +68,7 @@ treated as derivative.
 
 | Domain                  | SSOT Doc                                                      | What It Defines                                                                                                                 | Checklist Items                   |
 | ----------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| **Batch-live symmetry** | `04-architecture/batch-live-architecture.md`                      | 4 seams pattern (data source, data sink, persistence thread, trigger), mode-agnostic engine, 90% code sharing                   | BASE-28, BASE-29, ARC-01          |
+| **Batch-live symmetry** | `04-architecture/batch-live-architecture.md`                  | 4 seams pattern (data source, data sink, persistence thread, trigger), mode-agnostic engine, 90% code sharing                   | BASE-28, BASE-29, ARC-01          |
 | **Config management**   | `06-coding-standards/README.md#configuration`                 | UnifiedCloudConfig inheritance chain, BaseConfig → UnifiedCloudConfig → ServiceConfig, no `os.getenv()`                         | BASE-01, COD-01                   |
 | **Event logging**       | `03-observability/lifecycle-events.md`                        | 11 required lifecycle events (STARTED, VALIDATION, CONFIG_LOADED, etc.), timing metadata, per-service events                    | BASE-02, OBS-01                   |
 | **Hardening standards** | `.cursor/rules/hardening-standards.mdc`                       | No fallback imports, no bare except, fail-loud principles, explicit missing data handling                                       | HARDENING-01 through HARDENING-06 |
@@ -362,7 +362,7 @@ python scripts/validate-alignment.py --check-drift
 | BASE-22 (MVP coverage)                | `mvp-universe.yaml` + `venues.yaml`                       | Operational + MVP |
 | BASE-23 (Data catalogue)              | `data-catalogue.{service}.yaml`                           | Operational       |
 | BASE-24 through BASE-27 (CI/CD)       | Codex `06-coding-standards/quality-gates.md`              | Standards         |
-| BASE-28, BASE-29 (Deployment)         | Codex `04-architecture/batch-live-architecture.md`            | Standards         |
+| BASE-28, BASE-29 (Deployment)         | Codex `04-architecture/batch-live-architecture.md`        | Standards         |
 | BASE-30, BASE-31 (Libraries)          | Codex `05-infrastructure/unified-libraries/`              | Standards         |
 | BASE-32 (Security)                    | Codex `07-security/secrets-management.md`                 | Standards         |
 | HARDENING-01 through HARDENING-06     | Codex + `.cursor/rules/hardening-standards.mdc`           | Standards         |
