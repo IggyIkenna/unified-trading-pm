@@ -17,6 +17,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
 
+> **🔴 SUPERSEDED 2026-05-10 by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md)**
+> — the no-fallback maximalist path supersedes this plan's 30-day grace strategy. See final-gate plan Phase 1.A for
+> ratified `ServiceEmissionStateEnum` + Phase 7 for migration sequencing. This file remains in `plans/active/` for
+> design archaeology only; **not actionable**. Per Audit B governance sweep 2026-05-10.
+
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
 > This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
@@ -26,8 +31,8 @@ locked_since: 2026-05-08
 >
 > Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
 >
-> This plan's phases land in gate(s): **G4** (v8 schema atomic rename + immutable service_emission_state — fallback grace period REJECTED per CLAUDE.md SSOT)
-
+> This plan's phases land in gate(s): **G4** (v8 schema atomic rename + immutable service_emission_state — fallback
+> grace period REJECTED per CLAUDE.md SSOT)
 
 # Manifest v7 → v8 schema migration — design (2026-05-08, Tab 3 separate scope)
 
