@@ -520,6 +520,12 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
     toggles found in execution-service yet. Per-venue testnet wiring pending — verify each connector's testnet endpoint
     list before live cutover. Tenderly fork fixtures shipped per `execution-service/tests/integration/conftest.py` (per
     `CLAUDE.md` "DeFi integration tests" rule) — DeFi side has the testbed, CeFi side has not been validated end-to-end.
+    **Mainnet FlashLoanReceiver shipped 2026-05-10** (UAC@`abb8e5f0` — `config/testnet_contracts.yaml` chain_id=1
+    section): contract at `0x42c005e2Bc545a49B50Fee3E76B8558348CAAb4c`, tx
+    `0x09a4f9f08cd0cc211d5f825d713de3cf56f20938f1a781f16aaae703708a0925` block 25066462, gas 521102, bytecode 2157 bytes
+    verified on-chain via `eth_getCode`; SM secret `flash-loan-receiver-mainnet` mirrors Sepolia pattern. Closes the
+    live-Aave-flash-loan blocker for `carry_staked_basis` recursive-staking unwind — `AaveConnector.connect()` now passes
+    its `eth_getCode` validation on chain_id=1 against the registry-resolved address.
 21. **Reconciliation suite** — batch-vs-live reconciliation working (codex
     `09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` + `batch-live-reconciliation-service`); P&L
     attribution decomposed per source; per-trade reconciliation. **Deep audit 2026-05-07**: pnl-attribution-service

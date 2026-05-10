@@ -82,7 +82,11 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
     research; Lighter + Pacifica OHLCV shipped per MEMORY)
   - 4-service QG pass (strategy / execution / risk-and-exposure / features-onchain): ~1 ai-day
   - 8-archetype Phase 1 batch e2e + CARRY_RECURSIVE_STAKED PnL row: ~2 ai-days
-  - Copper sandbox + flash-loan-receiver deploy on testnet: ~1 ai-day
+  - Copper sandbox: ~0.5 ai-day (FlashLoanReceiver mainnet deploy ✅ shipped 2026-05-10 at
+    `0x42c005e2Bc545a49B50Fee3E76B8558348CAAb4c` — tx `0x09a4f9f08cd0cc211d5f825d713de3cf56f20938f1a781f16aaae703708a0925`,
+    block 25066462, gas 521102, bytecode 2157 bytes verified via `eth_getCode`; UAC@abb8e5f0 registered chain_id=1 in
+    `config/testnet_contracts.yaml`; SM secret `flash-loan-receiver-mainnet` mirrors Sepolia pattern; closes the live-Aave-flash-loan
+    blocker for `carry_staked_basis` recursive-staking unwind)
   - Operational drift fixes (PROTOCOL_LAUNCH_DATES coverage — Tab 14 reported 13 of 17 protocols missing): ~1 ai-day
 - **Parallelism factor**: ~3x (workstreams largely independent — oracle / DEX-perp / archetype gates / Copper can
   proceed in parallel agents), so **~3-4 calendar days wall-clock** if 3-4 agents in parallel + operator approvals on
