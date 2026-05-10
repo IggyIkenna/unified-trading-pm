@@ -750,7 +750,7 @@ In approximate priority order (P0 = blocking; P1 = degrades cutover quality; P2 
 | 3 | **Pyth historical backfill not yet run** for Solana LST yields (Hermes wired since 2023-10-01 coverage, first run pending) | P0 | needs scheduled VM launch |
 | 4 | **Lighter / Pacifica / Extended DEX-perp backfill not run** (OHLCV code shipped, contract-address + ABI parsing pending) | P0 | cefi_venue_universe_expansion plan |
 | 5 | **Aster connector incomplete** (only error-handling code, no trade execution) | P0 | execution-service own plan |
-| 6 | **Flashbots relay STUBBED** at execution-service `defi_execution/mev/flashbots.py` line 1 ("falls back to direct submission with logging until paid Flashbots subscription"). PrivateMempool path is wired (rpc.flashbots.net) which covers most use cases but Flashbots-bundle path is dead | P0 if archetype requires bundle-submission; P1 otherwise | new MEV-relay-paid-tier plan or accept private-mempool-only |
+| 6 | **Flashbots Bundle Relay STUBBED** (`defi_execution/mev/flashbots.py` line 1: "falls back to direct submission with logging until paid Flashbots subscription"). RESOLVED operator-side 2026-05-10: bundle relay (`eth_sendBundle` for atomic multi-tx) is NOT needed for May-23 archetypes — Aave flash loans are single-tx atomic by design (FlashLoanReceiver does borrow→use→repay in one EVM call); cross-chain carry legs can't bundle anyway. Free public Flashbots Protect path (`rpc.flashbots.net`, no auth signer) IS wired via `PrivateMempoolProvider` and covers sandwich + front-run protection. Bundle relay only needed if we move to searcher-style atomic-multi-tx arbitrage (post-May-23) | RESOLVED — out of scope for May-23 | n/a (post-May-23 plan if searcher strategies later) |
 | 7 | **Solana MEV protection (Jito bundle submission) NOT in mev_router.py** policy registry | P0 if Solana-leg requires MEV protection; P1 otherwise | new Solana-MEV plan |
 | 8 | **EigenLayer connector status ambiguous** (claimed shipped 2026-03-13 but not in current execution-service code) | P1 (not in May-23 scope per defi_master); needs verification anyway | follow-up audit |
 | 9 | **Multi-chain Aave V3** (9 non-Ethereum chains declared in UAC but zero instruments + zero MTDS + zero connectors) | P0 if cross-chain leg required; P1 otherwise | new multi-chain Aave plan |
@@ -766,7 +766,7 @@ In approximate priority order (P0 = blocking; P1 = degrades cutover quality; P2 
 | 19 | **Codex doc duplication / drift** (`07-security/mev-protection.md` vs `04-architecture/mev-protection.md` vs `09-strategy/architecture-v2/cross-cutting/mev-protection.md`) | P2 codex hygiene | codex SSOT consolidation pass |
 | 20 | **`canonical/domain/prediction/` + `canonical/domain/predictions/` dual modules** | P2 SSOT cleanup | UAC consolidation |
 | 21 | **Per-venue maintenance-margin / initial-margin tier tables** (B6 last bullet — needed for pre-flight margin check) | P1 if pre-flight margin enforcement required for May-23 | margin-tier SSOT plan |
-| 22 | **CoinGecko / off-chain price feeds** (per operator note: oracles are sufficient) | RESOLVED — out of scope unless arb-vs-oracle reconciliation specifically needs it | n/a |
+| 22 | **CoinGecko / off-chain price feeds** — RESOLVED operator-side 2026-05-10: arb-vs-oracle reconciliation is **implied by any price-arb strategy itself** (the strategy IS the cross-check between oracle + venue mid; if spread > funding/gas/slippage envelope, fire or refuse). A separate reconciliation pipeline would be doing the same cross-check on a different timer. Off-chain feeds (CoinGecko / CMC) are FULLY OUT OF SCOPE — no separate reconciliation surface needed | RESOLVED — out of scope | n/a |
 
 ### Items NOT verified in this audit pass (flagged for follow-up)
 
@@ -788,13 +788,36 @@ In approximate priority order (P0 = blocking; P1 = degrades cutover quality; P2 
 
 ## Operator notes / answers
 
-**On C3 — off-chain price feeds (CoinGecko / CMC) — operator prior 2026-05-09:**
-"i dunno why we need that if we have oracle". Recorded prior: Chainlink (EVM) + Pyth Hermes (Solana / cross-chain) +
-on-tape venue mids are the canonical price surface. CoinGecko / CMC are NOT captured + NOT in plan. The narrow case
-where an off-chain feed adds value is **arb-vs-oracle reconciliation** (catching a stale or manipulated oracle by
-cross-checking against an independent off-chain mid). Decision: defer to "arb-vs-oracle reconciliation" sub-question
-in any spawned plan — if reconciliation is needed, source is operator-decision-time (CoinGecko / CMC API / venue mid
-average); if not, off-chain feeds are out of scope.
+**On C3 — off-chain price feeds (CoinGecko / CMC) — operator prior 2026-05-09 + RESOLUTION 2026-05-10:**
+- 2026-05-09: "i dunno why we need that if we have oracle". Initial recorded prior: Chainlink (EVM) + Pyth Hermes
+  (Solana / cross-chain) + on-tape venue mids are the canonical price surface; CoinGecko / CMC NOT captured + NOT in
+  plan. Narrow potential case: arb-vs-oracle reconciliation (catching stale or manipulated oracle).
+- 2026-05-10 RESOLUTION: arb-vs-oracle reconciliation is **implied by any price-arb strategy itself** — the strategy
+  IS the cross-check between oracle and venue mid (if oracle X vs venue Y spread > funding+gas+slippage envelope,
+  strategy fires or refuses). A separate reconciliation pipeline would be doing the same cross-check on a different
+  timer. **CoinGecko / CMC / off-chain feeds FULLY OUT OF SCOPE.** No separate reconciliation surface needed. Drop
+  the original C3 last-bullet sub-question entirely.
+
+**On C4 / Cat-5 / Blocker #6 — Flashbots clarification 2026-05-10:**
+The audit conflated two distinct Flashbots offerings — important to disambiguate:
+1. **Flashbots Protect (`rpc.flashbots.net`)** — public-facing **private RPC endpoint**. Free, no auth signer
+   subscription. Tx goes to Flashbots block builders directly, bypassing public mempool. Provides sandwich +
+   front-run protection. **WIRED** via `execution-service/execution_service/defi_execution/mev/private_mempool.py`
+   (`PrivateMempoolProvider`). Adequate for May-23 archetypes.
+2. **Flashbots Bundle Relay (`relay.flashbots.net` + `eth_sendBundle`)** — paid auth-signer subscription. Used for
+   **atomic multi-tx bundles** where multiple txs must execute together or the whole bundle reverts. Used by MEV
+   searchers / atomic arbitrage strategies. **STUBBED** in `flashbots.py` line 1: "falls back to direct submission
+   with logging until paid Flashbots subscription".
+
+**For May-23 archetypes, the bundle relay is NOT needed**:
+- `carry_staked_basis`: legs span chains (Solana LST + EVM borrow + CeFi perp) — cannot bundle across chains anyway.
+- `leveraged_funding_arb`: collateral rotation is single-tx swaps each — no atomic multi-tx requirement.
+- **Aave flash loans are single-tx atomic by Aave design** — `FlashLoanReceiver.sol` handles borrow→use→repay in one
+  EVM call (one tx). Flashbots Bundle Relay does NOT add anything that Aave's atomic flash loan doesn't already give.
+
+Bundle relay would only be needed if/when we move to **searcher-style atomic-multi-tx arbitrage** (e.g. atomic
+liquidation + swap + repay across multiple protocols where each leg is a separate tx in the same block). That's
+post-May-23 if scoped at all. Blocker #6 downgraded RESOLVED — out of scope for May-23.
 
 **On A1 — UAC dual-prediction modules** (`canonical/domain/prediction/` + `canonical/domain/predictions/`) and Cat-2
 **Radiant orphan adapter** (instruments-service has it, UAC doesn't) — both flagged for SSOT-cleanup pass; need
@@ -813,6 +836,7 @@ CLAUDE.md.
 | ---- | ------ | ------ |
 | 2026-05-08 | ikenna + main agent | Initial draft created |
 | 2026-05-09 | main agent (audit pass 1) | 6-category Explore audit (vaults / lending / LSTs / restaking-LRTs / perp DEXes / DEXes) + Block A/B-extended/C/D/E findings folded in. CoinGecko prior recorded. 22-blocker priority list drafted. Items pending follow-up enumerated. |
+| 2026-05-10 | ikenna + main agent | (a) CoinGecko/off-chain feeds FULLY OUT OF SCOPE — arb-vs-oracle reconciliation implied by any price-arb strategy itself. (b) Flashbots clarified: Flashbots Protect public RPC (sandwich-protection) WIRED, Bundle Relay (paid auth-signer for atomic multi-tx) STUBBED but NOT needed for May-23 (Aave flash loans are single-tx atomic by design; cross-chain carry legs can't bundle). Blocker #6 + #22 downgraded RESOLVED. |
 
 ## Plan-shape decisions (filled before plan extraction)
 
