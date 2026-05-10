@@ -355,6 +355,51 @@ locked_since: 2026-03-16       # ISO date when lock was set
 
 ---
 
+## Daily Work-Split Plan Shape (codified 2026-05-10)
+
+Every daily work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`) MUST include a **slot↔theme
+assignment table** that pins which permanent worktree slot owns which theme today. The slot is the durable identity
+(`.tabs/<N>/<repo>/` on branch `tab/<operator>/<N>`); the theme rotates daily per the operator's load-balancing.
+
+Required section in every daily work-split plan:
+
+```markdown
+## Today's slot assignments
+
+| Slot | Theme                       | Plan-of-record                                                |
+| ---- | --------------------------- | ------------------------------------------------------------- |
+| 1    | main orchestrator + on-call | (this LEDGER)                                                 |
+| 2    | cefi-master                 | plans/active/cefi_master_2026_05_07.md                        |
+| 3    | writegate Wave 4 slice (b)  | plans/active/writegate_honest_coverage_endtoend_2026_05_06.md |
+| 4    | (idle)                      | —                                                             |
+```
+
+**Slot-reset discipline.** When a slot's theme changes from yesterday's, the operator MUST run
+`bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>` BEFORE work begins, to verify clean state
+
+- rebase the slot's branch onto `origin/live-defi-rollout`. Pinned to the daily work-split plan's "Daily reset"
+  checklist.
+
+**Mirror in operator orchestrator LEDGER.** The same slot↔theme table must appear in the operator's
+`<operator>_orchestrator/LEDGER.md` "Today's slot assignments" section as the bootstrap-read source for fresh tab
+agents.
+
+**Spawn prompts reference the slot path.** Every spawn-prompt block in the work-split plan MUST cite the spawned tab's
+worktree path: `Your slot is <N>. Your worktree is at ${WORKSPACE_ROOT}/.tabs/<N>/`.
+
+SSOTs:
+
+- Codex doc: [`codex/05-infrastructure/per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md) — the
+  3-tier hierarchy + fixed-slot model + slot-reset discipline.
+- Reconciliation:
+  [`codex/05-infrastructure/plan-aware-merge-resolution.md`](../codex/05-infrastructure/plan-aware-merge-resolution.md)
+  — slot-master merge resolution protocol.
+- Plan that codified it: [`plans/active/per_agent_worktrees_2026_05_10.md`](active/per_agent_worktrees_2026_05_10.md).
+
+Reviewers reject daily work-split plans without the slot↔theme table.
+
+---
+
 ## SSOT References
 
 - This file: `unified-trading-pm/plans/PLAN_FORMAT.md`
@@ -363,6 +408,8 @@ locked_since: 2026-03-16       # ISO date when lock was set
 - Workflow: `unified-trading-pm/cursor-rules/workflow/plans-to-deployable-workflow.mdc`
 - Sub-agent rules: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` §9
 - INDEX: `unified-trading-pm/plans/active/INDEX.md`
+- Per-tab worktrees: `unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md`
+- Plan-aware merge resolution: `unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md`
 
 ```
 

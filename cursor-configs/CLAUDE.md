@@ -1188,6 +1188,12 @@ batch shippable units across a session waiting for a "natural pause."
 
 ### The mandatory pre-commit check (catches accidental bundling)
 
+> **Under per-slot worktrees (2026-05-10):** cross-slot foot-guns #1–#3 are unrepresentable by construction — each slot
+> has its own `.git/index`. **Within a slot**, sub-agents share the index, so the discipline below remains MANDATORY for
+> any multi-sub-agent fan-out. Foot-gun #4 (prek auto-restore) is mitigated via per-slot `PREK_CACHE_DIR` but the
+> bundled Edit→add→commit→push pattern below remains the right default. See
+> [`codex/05-infrastructure/per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md).
+
 Before EVERY `git commit` in any repo where another agent might have staged or modified files in parallel, run:
 
 ```bash
@@ -1603,15 +1609,15 @@ Cluster 9 audit reported 4 findings as "missing" based on literal grep with 0 hi
 shipped via runtime-resolved patterns:
 
 - **defi_archetypes Stream B ARBITRAGE_PRICE_DISPERSION**: cluster reported "zero references" in
-  `pnl-attribution-service`. Reality: `pnl_attribution_service/engine/archetype_aggregator.py:59` uses
-  `_SLOT_PREFIX_RE` regex + `:65` `_FUNDING_RATE_DISP_MARKER` — generic routing matches at runtime; the literal string
+  `pnl-attribution-service`. Reality: `pnl_attribution_service/engine/archetype_aggregator.py:59` uses `_SLOT_PREFIX_RE`
+  regex + `:65` `_FUNDING_RATE_DISP_MARKER` — generic routing matches at runtime; the literal string
   `"ARBITRAGE_PRICE_DISPERSION"` is never a substring in source.
-- **CeFi testnet wiring**: cluster reported "no testnet-specific branch paths or env toggles found." Reality: all 5
-  CCXT adapters had `testnet: bool = False` constructor param routing to `set_sandbox_mode(True)` — present in source
-  but the audit grep used `testnet` as a token and conflated config-flag location with implementation.
+- **CeFi testnet wiring**: cluster reported "no testnet-specific branch paths or env toggles found." Reality: all 5 CCXT
+  adapters had `testnet: bool = False` constructor param routing to `set_sandbox_mode(True)` — present in source but the
+  audit grep used `testnet` as a token and conflated config-flag location with implementation.
 - **Master plan Continuous-Verification column**: cluster reported "ABSENT" + recommended building it. Reality: the
-  column was shipped at PM@`1d74f617` (master plan lines 767-825); the audit's grep didn't read far enough into the
-  file to see it past the 1000-line top-of-file block.
+  column was shipped at PM@`1d74f617` (master plan lines 767-825); the audit's grep didn't read far enough into the file
+  to see it past the 1000-line top-of-file block.
 - **DART backend manual-trade endpoints**: cluster spec said "build `/api/dart/manual-trade` + `/api/dart/preview` from
   scratch." Reality: `execution-service/execution_service/api/manual_instruction_api.py` (682 lines) +
   `preview_routes.py` (320 lines) + `manual_schemas.py` + `preview_schemas.py` + `ManualOperationHandler` all already
@@ -1636,14 +1642,14 @@ across the 9-agent audit: ~6-10 hours of avoidable cycles. Codifying the methodo
      runtime variable, not a literal.
    - **Configuration-driven wiring**: YAML / JSON / `.env` config that maps string keys to behaviour at startup; the
      literal key only appears in the config file, not in code.
-   - **Re-export chains**: `from .submodule import X` followed by `__all__ = ["X"]` — consumer code may import `X`
-     from the root facade, never mentioning the submodule.
+   - **Re-export chains**: `from .submodule import X` followed by `__all__ = ["X"]` — consumer code may import `X` from
+     the root facade, never mentioning the submodule.
 4. **For each runtime-resolution candidate found, verify the actual behaviour**:
    - Read the dispatch logic + trace the runtime path for the symbol in question.
    - Grep for the dispatch pattern itself (e.g. `grep -rn "_SLOT_PREFIX_RE\|_FUNDING_RATE_DISP_MARKER"`) — usually
      surfaces the runtime wiring in 1-2 hits.
-   - If the runtime path resolves the symbol correctly, the feature IS shipped — flip your conclusion from "missing"
-     to "shipped via runtime-resolution at <file:line>".
+   - If the runtime path resolves the symbol correctly, the feature IS shipped — flip your conclusion from "missing" to
+     "shipped via runtime-resolution at <file:line>".
 5. **When uncertain, ASK rather than CONCLUDE.** A 1-line operator question ("does ARBITRAGE_PRICE_DISPERSION ship via
    regex routing in pnl-attribution?") is cheaper than dispatching an agent to re-implement already-shipped work.
 6. **For master-plan-scale documents (>50KB)**: read past the executive summary. Big plans bury concrete delivery
@@ -1672,8 +1678,8 @@ across the 9-agent audit: ~6-10 hours of avoidable cycles. Codifying the methodo
 - **Reading only the executive summary of a >50KB plan** then concluding work is missing. The plan body is the
   authoritative state record; the summary is just the index.
 - **Re-implementing already-shipped work because the audit was misframed.** If you discover mid-implementation that the
-  feature already exists, STOP, document the misframing as a finding, withdraw the redundant scope. Per CLAUDE.md
-  "Plans Run To Actual Completion" — duplicate-effort builds are a form of technical debt.
+  feature already exists, STOP, document the misframing as a finding, withdraw the redundant scope. Per CLAUDE.md "Plans
+  Run To Actual Completion" — duplicate-effort builds are a form of technical debt.
 
 ## Findings Triage Discipline (HARD RULE)
 
@@ -2066,6 +2072,61 @@ Master plan refresh PRs that don't update the `Last verified` column for changed
 - `Findings Triage Discipline` — when a continuous verifier surfaces a regression, it's a Case 5 big finding by default
   (since master plan items are by definition on the May-23 critical path).
 
+## Per-Tab Worktrees — 3-tier parallel-agent isolation (codified 2026-05-10)
+
+Each operator (Ikenna / Harsh) runs N parallel agent "tabs" — each isolated in its own `git worktree` at
+`.tabs/<N>/<repo>/` on a permanent branch `tab/<operator>/<N>`. **Slot is durable; theme rotates daily** via the
+operator's work-split plan.
+
+**3-tier hierarchy:**
+
+- **Tier 1 — Operator (Ikenna ⊥ Harsh):** separate machines.
+- **Tier 2 — Slot (per worktree):** `.tabs/<N>/<repo>/` on branch `tab/<operator>/<N>`. Per-slot `PREK_CACHE_DIR` via
+  auto-generated `.envrc`. Slot count operator-declared at `--init`.
+- **Tier 3 — Sub-agent (within one slot):** shares the slot's worktree; slot master partitions fan-out + reconciles
+  in-session.
+
+**Bootstrap (one-time per operator):**
+
+```bash
+bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8     # provision 8 slots
+bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --add-slot 9         # grow fleet by one
+bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot 3       # between themes: clean + rebase
+bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --list               # show configured slots
+```
+
+**Reconciliation (per shippable unit):**
+
+```bash
+bash unified-trading-pm/scripts/dev/slot-master-rebase.sh                       # fetch + rebase + classify conflicts
+```
+
+The helper emits `[CONFLICT]` blocks with shape classification (`append-section` / `checkbox-flip` / `paragraph-rewrite`
+/ `code` / `unknown`); slot master auto-resolves trivial shapes + escalates semantic ones per the plan-aware merge
+resolution protocol.
+
+**Foot-gun mitigations vs. shared-tree model:**
+
+| Foot-gun                            | Status under per-slot model                                                |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| #1 foreign work bundled in          | **Unrepresentable.** No other slot can touch your `.git/index`.            |
+| #2 `--cached --stat <path>` masking | **Unrepresentable.** Only your hunks are in your index.                    |
+| #3 concurrent reset wipe            | **Unrepresentable.** No other slot can move your HEAD.                     |
+| #4 prek auto-restore race           | **Mitigated** via `PREK_CACHE_DIR` per-slot. prek patches stay slot-local. |
+
+Within-slot collisions (sub-agents sharing the slot's worktree) remain possible — the "mandatory pre-commit check"
+discipline in the "Commit + Push + Flip Plan Checkboxes" section still applies WITHIN a slot. Master agents partition
+sub-agent fan-out by repo/dir at spawn time to minimise within-slot overlap.
+
+**SSOTs:**
+
+- [`codex/05-infrastructure/per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md) — canonical 3-tier
+  model + slot-vs-theme decoupling + bootstrap recipe + slot-reset discipline.
+- [`codex/05-infrastructure/plan-aware-merge-resolution.md`](../codex/05-infrastructure/plan-aware-merge-resolution.md)
+  — slot-master reconciliation protocol with closed conflict-shape taxonomy.
+- Plan that codified it:
+  [`plans/active/per_agent_worktrees_2026_05_10.md`](../plans/active/per_agent_worktrees_2026_05_10.md).
+
 ## Daily Work-Split Process (Ikenna ↔ Harsh, AI-paralleled)
 
 **Main orchestrator bootstrap pointer (read first if you are a fresh main-agent session).** If you are running as a main
@@ -2151,15 +2212,13 @@ sections; Model B uses a "Today's status → Tab registry" with dynamic entries.
 
 ### Universal mechanics (apply to BOTH models)
 
-**Shared working tree (CRITICAL).** All Claude Code / Cursor sessions on one operator's machine share the same `.git/`
-
-- working tree + index. A local commit by any tab moves HEAD for every tab immediately. There is **no `git pull` step
-  needed between tabs on the same PC**. But: the **index (staged changes) is shared too** — if tab A runs
-  `git add foo.py` and tab B runs `git status` one second later, tab B sees `foo.py` staged. This is the foot-gun behind
-  every "I lost my staged work" incident in the workspace history. Pre-commit check (`git status` +
-  `git diff --cached --stat` no path arg) is **mandatory before EVERY commit** — see "Commit + Push + Flip Plan
-  Checkboxes" § "The mandatory pre-commit check." Use `git add -p` / `git add <specific-file>` for your hunks; never
-  `git add -A` / `git add .` / `git add <whole-shared-file>`.
+**Per-slot worktrees (CRITICAL — supersedes shared-working-tree model 2026-05-10).** Each tab runs in its own per-slot
+worktree at `${WORKSPACE_ROOT}/.tabs/<N>/` on branch `tab/<operator>/<N>` — cross-slot races on `.git/index` + working
+tree are unrepresentable by construction. See "Per-Tab Worktrees" section above + the codex SSOT
+[`per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md). **Within a slot**, sub-agents share the
+slot's worktree + index — so the pre-commit check + `git add -p` discipline (see "Commit + Push + Flip Plan Checkboxes"
+§ "The mandatory pre-commit check") still applies for within-slot multi-sub-agent fan-out. Master agents partition
+sub-agent fan-out by repo/dir at spawn time to minimise within-slot overlap.
 
 **Conditional push (the multi-agent safety valve).** Per the per-shippable-unit cadence in "Commit + Push + Flip Plan
 Checkboxes," every shippable unit gets a local commit. Before pushing, every agent runs:
@@ -2238,22 +2297,30 @@ orchestration preamble below so the spawned agent knows it's a delegate, not a p
 
 ```text
 You are Tab N — a sub-agent spawned by <operator>'s main orchestrator agent (Tab 1, a separate
-Claude Code session on the SAME PC, sharing the SAME .git/ + working tree as you).
+Claude Code session on the SAME machine).
+
+Your slot is <N>. Your worktree is at ${WORKSPACE_ROOT}/.tabs/<N>/ on branch tab/<operator>/<N>.
+All work happens INSIDE that worktree — opening Cursor / Claude Code there gives you an isolated
+.git/index from every other slot. Today's theme for slot <N>: <theme>.
 
 BEFORE doing anything else, read in order:
   1. <today's work-split plan> § "Bootstrap — read first if you're a spawned tab" — workflow rules.
-  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards + this Daily
-     Work-Split Process section.
-  3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
-  4. <PLAN-OF-RECORD-PATH> — your plan-of-record with todos + done-definition.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards (Per-Tab Worktrees
+     section + Daily Work-Split Process section).
+  3. unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md — 3-tier isolation model.
+  4. unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md — reconciliation
+     protocol when your push surfaces a rebase conflict.
+  5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
+  6. <PLAN-OF-RECORD-PATH> — your plan-of-record with todos + done-definition.
 
 Your agent-tag for ping-ledger entries: <agent-tag>.
 Your tab number: N (matches the entry header in the work-split plan).
 
 ORCHESTRATION RULES:
-  1. Shared working tree — no `git pull` needed between tabs; pre-commit check
-     (git status + git diff --cached --stat NO PATH ARG) mandatory before EVERY commit.
-     Use `git add -p` for shared files; never `git add -A` / `git add <whole-shared-file>`.
+  1. Per-slot worktree — cross-slot races unrepresentable. WITHIN your slot, sub-agents you spawn
+     share your worktree's .git/index, so pre-commit check (git status + git diff --cached --stat
+     NO PATH ARG) still mandatory before EVERY commit. Use `git add -p` for shared files; never
+     `git add -A` / `git add <whole-shared-file>`.
   2. Plan-doc Q&A flow — write blockers into <PLAN-OF-RECORD>'s `## Open questions` (status
      🟡 BLOCKED), append ping in _agent_pings.md, continue with what you CAN do.
   3. Conditional push — per shippable unit: commit locally, fetch + check incoming, zero
@@ -2286,10 +2353,17 @@ don't pick up new work autonomously.
    Verify `_agent_pings.md` has no orphan lines.
 4. **Draft today's two work-split plans** (one Ikenna, one Harsh) using the plan-shape template below. Pull in carryover
    items from yesterday's partials. Add new items that emerged from incoming pings or audit findings. Size to ~25-50
-   AI-days per side (5 parallel agents × 5-10 days solo each).
-5. Report to operator: "Today's plan = X, Y, Z. Ikenna split has N items / M AI-days, Harsh split has P items / Q
-   AI-days. Ping ledger has K entries open. Local commits ready to push: J (or zero)."
-6. Wait for operator direction. Push the daily-reset commit per the conditional rule.
+   AI-days per side (5 parallel agents × 5-10 days solo each). Each plan MUST include a `## Today's slot assignments`
+   table per `plans/PLAN_FORMAT.md` § "Daily Work-Split Plan Shape".
+5. **Slot-reset sweep** (per "Per-Tab Worktrees" section above): for every slot whose theme changed from yesterday's
+   assignment, run `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>` to verify clean state +
+   rebase the slot's branch onto `origin/live-defi-rollout`. Aborts if dirty — operator commits / pushes / discards
+   before retry.
+6. Mirror today's slot↔theme table into the operator's `<operator>_orchestrator/LEDGER.md` "Today's slot assignments"
+   section (fresh tab-agents read this on bootstrap).
+7. Report to operator: "Today's plan = X, Y, Z. Ikenna split has N items / M AI-days, Harsh split has P items / Q
+   AI-days. Ping ledger has K entries open. Local commits ready to push: J (or zero). Slot-resets done: <list>."
+8. Wait for operator direction. Push the daily-reset commit per the conditional rule.
 
 ### Daily work-split plan shape
 
