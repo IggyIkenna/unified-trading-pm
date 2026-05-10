@@ -36,7 +36,7 @@ These 4 HARD RULES landed in CLAUDE.md (`PM@1d74f617`) but the actual enforcemen
 | 4   | `strategy-service/scripts/quality-gates.sh` NOT WIRED with `e2e-testing/scripts/defi/` basedpyright step                                         | strategy-service maintainer | one-shot ~0.5 AI-days | Catches `colocated_engine.py`-class import drift at PR time      |
 | 5   | `features-sports-service` QG NOT WIRED with `e2e-testing/scripts/sports/`                                                                        | features-sports maintainer  | one-shot ~0.5 AI-days | Same shape as #4                                                 |
 | 6   | `mtds` QG NOT WIRED with `e2e-testing/scripts/prediction/`                                                                                       | mtds maintainer             | one-shot ~0.5 AI-days | Same shape as #4                                                 |
-| 7   | CLAUDE.md § 6 EXTENDED has NO QG STEP (today: reviewer-enforced; need AST-walk like QG STEP 5.64)                                                | Tab 5 (governance)          | one-shot ~2 AI-days   | base-service.sh AST-walk for removed public symbols              |
+| 7   | ✅ DONE 2026-05-10 (PM@2414e86f) — STEP 5.65 AST-walk shipped + 18 unit tests + manifest SSOT + codex doc                                        | Tab 5 (governance)          | one-shot ~2 AI-days   | check_removed_symbols.py + removed_symbols_manifest.yaml; 0 ERROR / 1 WARN on smoke |
 
 ## P1 deferred (operator decision pending or non-blocking)
 
@@ -80,19 +80,27 @@ Governance HARD RULE retroactive sweeps shipped 2026-05-10 by Tab 5 (governance)
   (`e2e-testing/scripts/sports/`) limits scan to `.py` files (the dir contains `.sh` launchers + `.md` docs).
 - **Item 6 — mtds QG.** ✅ **DONE.** Wired `e2e-testing/scripts/prediction/` peripheral dir into MTDS QG via
   `market-tick-data-service@7362b84`.
-- **Item 7 — CLAUDE.md § 6 EXTENDED AST-walk QG STEP.** ⏳ **STILL OPEN.** Today reviewer-enforced (workspace-grep audit
-  table required in plans). The base-service.sh AST-walk implementation (modeled on QG STEP 5.64
-  `record_captured(`-callsite walker) is a deeper governance build (~2 AI-days). Recommend Tab 5 next session.
+- **Item 7 — CLAUDE.md § 6 EXTENDED AST-walk QG STEP.** ✅ **DONE 2026-05-10 (PM@2414e86f).** STEP 5.65 shipped as
+  modeled on QG STEP 5.64. Components: `unified-trading-pm/scripts/quality_gates/check_removed_symbols.py` (AST walker
+  with strict receiver-name match, ProcessPoolExecutor parallelism, `--scope` flag for per-repo invocation),
+  `removed_symbols_manifest.yaml` (workspace SSOT — 3 seed entries: V1-RETIRE `get_strategy_factories`,
+  `canonical.domain.client` Option-A revert, `ManifestWriter.add` pending_removal),
+  `test_check_removed_symbols.py` (18 unit tests covering manifest schema validation, 3 import patterns,
+  attribute-access receiver matching, false-positive negative cases, walker venv exclusions, unparseable-file
+  resilience), base-service.sh STEP 5.65 wired between 5.64 and 5.66, codex/06-coding-standards/quality-gates.md
+  updated with cross-reference table row + dedicated section. Smoke run: 0 ERROR (zero false positives), 1 genuine
+  WARN at `market-tick-data-service/.../migrate_deribit_margin_split_v6.py:175` for `manifest_writer.add(...)` —
+  already flagged by team via `# pyright: ignore[reportAttributeAccessIssue]` comment; pending_removal status
+  correctly reflects in-flight writegate Phase 1.2A migration. Per-repo scoped run completes in ~4s.
 
 ## Recommended decision (UPDATED 2026-05-10)
 
-**Closed-out items**: 3, 4, 5 (rerouted to features-service), 6.
+**Closed-out items**: 3, 4, 5 (rerouted to features-service), 6, **7 (PM@2414e86f, 2026-05-10)**.
 
 **Remaining for next sessions**:
 
 - **Item 1** — strategy-service maintainer + Tab 1 — `colocated_engine.py:306` ImportError; ~1-2 AI-days.
 - **Item 2** — operator — watchdog VM relaunch (1 command).
-- **Item 7** — Tab 5 (governance) — base-service.sh AST-walk for `§ 6 EXTENDED`; ~2 AI-days.
 - **Items 8-11** — operator decision / next-session triage (P1 deferred; non-blocking).
 - **Item 12** — Tab 1 main, scheduled wakeup.
 
