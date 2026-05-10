@@ -37,19 +37,19 @@ related_codex:
 
 ## Why this plan exists
 
-The May-23 cutover plan ([`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md)) ships the May-23 deadline via the **operator-CLI path** because the UI-driven workflow + cross-service auto-registration + candidate manifest is too large to land in 13 days. This plan picks up everything DEFERRED from May-23 and ships it over 4-6 weeks (target 2026-07-04, ~6 weeks post-cutover).
+The May-23 cutover plan ([`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md)) ships dual-track for May-23: CLI primary safety-net + **minimal-but-real UI promote pipeline** (Promote button → backend → MinimalCandidateManifest → DART manual-trade gate → paper/live VM auto-launch). The minimal UI ships as Phases U1-U6 of the May-23 plan. **This plan EXTENDS the minimal UI into the full UI workflow** + ships everything else DEFERRED from May-23: heavy state-machine consolidation, full pinned-shas CandidateManifest, cross-service auto-registration, ranking surface, drift detection, full per-archetype config schemas, operational modes consolidation. Target completion 2026-07-04 (~6 weeks post-cutover).
 
 **Scope** (the May-23 plan's "Temporary states + canonical follow-up plans" section enumerates these):
 1. State machine consolidation (4 competing UAC SSOTs → 1 canonical).
-2. `CandidateManifest` UAC type with pinned shas + model refs + features manifest version + venue keys ref + chain RPC URLs ref.
+2. **EXTENDS May-23 Phase U1**: full `CandidateManifest` UAC type with pinned shas + model refs + features manifest version + venue keys ref + chain RPC URLs ref (May-23 plan ships `MinimalCandidateManifest` with placeholder `Optional` fields; this plan populates them).
 3. Event taxonomy consolidation (UTL bare-string strategy events → UAC `LifecycleEventType`; add missing promote/candidate/lifecycle-pause events).
 4. Per-archetype Pydantic config schemas (5 of 53 → all 53).
 5. Drift detection cron + alerting.
 6. Cross-service auto-registration on promote (risk / alerting / position-balance / pnl-attribution).
 7. Continuous backtest cron.
 8. Backtest persistence + ranking surface (`BacktestResultWriter` + lift `GroupBMetrics` to UAC + `RankedCandidate` UAC type + `rank_candidates()` helper + ranking API endpoint).
-9. Promote API backend endpoint + pre-flight pipeline (wire Promote UI's `onPromote` callback to real backend).
-10. DART 3-way visualization + manual-trade gate UI (`pvl-p23a/b/c`).
+9. **EXTENDS May-23 Phases U3+U4**: full pre-flight pipeline (May-23 ships minimal pre-flight gates; this plan adds per-deployment alerting auto-rule generation + auto-register risk profile + cross-service handlers).
+10. **EXTENDS May-23 Phases U5+U6**: full DART experience (May-23 ships pvl-p23a 3-way + pvl-p23c manual-trade gate for the lead pair; this plan extends to all archetypes + advanced features like multi-archetype comparison + signal explainability + per-trade audit drill-down).
 11. Operational modes consolidation (`pvl-p17a-d`).
 12. CEFFU custody non-stub (if Binance institutional flow opens; otherwise stays DEFERRED).
 
@@ -113,11 +113,11 @@ Phase 12 (codex SSOT batch)             ── runs alongside, codex per phase p
 - **What ran**: workspace QG green on UAC + strategy-service + unified-trading-api after migrations; PATCH endpoint smoke-test verifies synchronous event emission via gcloud event-stream tail.
 - **Verification**: `rg "StrategyMaturity\b" --type py --glob '!.venv*' --glob '!build'` returns 0 active hits (only deprecated-shim + tests); `rg "StrategyLifecycleStage" --type py --glob '!.venv*' --glob '!build'` returns 0 active hits; `gcloud storage cat gs://${PID}-events/events/unified-trading-api/<today>/.../event.jsonl` shows `STRATEGY_LIFECYCLE_CHANGED` within 1s of PATCH.
 
-## Phase 2 — `CandidateManifest` UAC type + provenance capture (P0, ~3-5d, SEQUENTIAL after Phase 1)
+## Phase 2 — Full `CandidateManifest` enrichment (P0, ~3-5d, SEQUENTIAL after Phase 1)
 
-**Why**: Audit Block C5 — biggest single gap. Promotion to live without a frozen all-shas manifest = no rollback target, no incident forensics, no reproducibility. `StrategyVersion` only stores `config_diff` deltas, not full pinned state.
+**Why**: Audit Block C5 — biggest single gap. Promotion to live without a frozen all-shas manifest = no rollback target, no incident forensics, no reproducibility. `StrategyVersion` only stores `config_diff` deltas, not full pinned state. May-23 plan Phase U1 ships `MinimalCandidateManifest` with placeholder `Optional` fields for pinned shas / model refs / features manifest version / chain RPC pins. **This phase populates those fields** and adds the rollback runbook.
 
-- [ ] [AGENT] P0. **NEW UAC `CandidateManifest`** Pydantic type at `unified_api_contracts/internal/domain/strategy_service/candidate_manifest.py`. Captures:
+- [ ] [AGENT] P0. **EXTEND `MinimalCandidateManifest` to full `CandidateManifest`** (rename in place; backward-compatible because all new fields are `Optional` with `default=None` already from May-23). At `unified_api_contracts/internal/domain/strategy_service/candidate_manifest.py`. Captures (full set):
   - `manifest_id: str` (UUID).
   - `strategy_instance_id: str`.
   - `version_id: str` (links to `StrategyVersion`).
@@ -295,9 +295,9 @@ Phase 12 (codex SSOT batch)             ── runs alongside, codex per phase p
 - **What ran**: workspace QG green; integration test runs backtest → manifest row present → ranking endpoint returns top-10 → UI page renders.
 - **Verification**: GCS path + manifest row + endpoint response + UI screenshot.
 
-## Phase 9 — Promote API backend endpoint + pre-flight pipeline (P0, ~5-8d, SEQUENTIAL after Phases 1+2+3+8)
+## Phase 9 — Full pre-flight pipeline + cross-service handlers (P0, ~5-8d, SEQUENTIAL after Phases 1+2+3+6+8)
 
-**Why**: Audit Block B3 + E2 — NO `/promote/{strategy_id}/{run_id}` endpoint exists anywhere. Promote UI's `useRecordPromoteWorkflow()` is mock-only.
+**Why**: Audit Block B3 + E2 — May-23 Phase U3 ships `POST /promote/{strategy_id}/{manifest_id}` endpoint with **minimal pre-flight** (Copper sandbox / venue keys / alerting / kill-switch / recon — gates against existing services). **This phase ships the full pre-flight pipeline** + cross-service handlers (Phase 6 sibling): per-deployment alerting auto-rule generation + auto-register risk profile + position-balance-monitor account registration + pnl-attribution version_id wiring all triggered from the promote endpoint.
 
 - [ ] [AGENT] P0. **Backend `POST /promote/{strategy_id}/{run_id}` endpoint** in `deployment-api/deployment_api/services/promote.py` (NEW file).
   - Body: `{target_status: StrategyMaturityPhase, promoter: str, reason: str, candidate_manifest_id?: str}`.
@@ -320,15 +320,16 @@ Phase 12 (codex SSOT batch)             ── runs alongside, codex per phase p
 
 **Phase 9 done definition**: Promote UI button click hits real backend; pre-flight enforced; events fire; UI converges; integration test green.
 
-## Phase 10 — DART 3-way visualization + manual-trade gate UI (P0, ~5-8d, SEQUENTIAL after Phase 9)
+## Phase 10 — Full DART experience extension (P0, ~5-8d, SEQUENTIAL after Phase 9)
 
-**Why**: Audit Block E1 — DART manual-trade gate is master plan G23 + line 1292 todo. Per-trade gate is aspirational.
+**Why**: Audit Block E1 — DART manual-trade gate is master plan G23 + line 1292 todo. May-23 plan Phases U2 (`pvl-p23b` mode-data API) + U5 (`pvl-p23a` 3-way visualization for lead pair) + U6 (`pvl-p23c` per-trade manual-trade gate UI) ship the cutover-blocker subset. **This phase extends to all archetypes + advanced operator features.**
 
-- [ ] [AGENT] P0. **`pvl-p23a` 3-way batch ↔ paper ↔ live visualization** in DART UI.
-- [ ] [AGENT] P0. **`pvl-p23b` deployment-api endpoint** `GET /strategy/{id}/runs?mode=batch|paper|live` returning the run series per mode.
-- [ ] [AGENT] P0. **`pvl-p23c` per-trade manual-trade gate UI** — operator confirms each trade (one-click confirm) for the first 3 days of any new live deployment per master plan G23 design; full automation enabled day 4+.
+- [ ] [AGENT] P0. **DART 3-way visualization extends to all archetypes** (May-23 ships lead pair only).
+- [ ] [AGENT] P0. **DART signal explainability** — drill-down into per-feature contribution to a signal (multi-archetype comparison view).
+- [ ] [AGENT] P0. **DART per-trade audit drill-down** — operator can click any executed trade + see full lineage (signal → instruction → execution → fill).
 - [ ] [AGENT] P0. **Per-strategy pause / kill-switch UI buttons** wired to backend `/pause` + kill-switch bus.
 - [ ] [AGENT] P0. **`/retire` endpoint + UI button** — retires strategy gracefully; emits `STRATEGY_LIVE_RETIRED`.
+- [ ] [AGENT] P0. **Multi-archetype DART comparison** — side-by-side per archetype P&L + fills + risk metrics in one canvas (extends pvl-p23a single-archetype shape).
 
 **Phase 10 codex deliverables**:
 - NEW `codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow.
