@@ -178,30 +178,31 @@ already supports LEADER_HEDGE mode.
       **VERIFIED 2026-05-09 audit** — `ARBITRAGE_PRICE_DISPERSION = "ARBITRAGE_PRICE_DISPERSION"` at
       `internal/architecture_v2/enums.py:68`; family mapping at :132; rank-feature at :213. No `LEVERAGED_FUNDING_ARB`
       in enum (correct). No enum change needed.
-- [ ] [strategy-service] P1. Confirm catalog has rows for the funding-dispersion-leveraged variant under
+- [x] [strategy-service] P1. Confirm catalog has rows for the funding-dispersion-leveraged variant under
       `ARBITRAGE_PRICE_DISPERSION` archetype prefix. If not, add.
       **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit 2026-05-09 confirmed 6
       ARBITRAGE_PRICE_DISPERSION slots exist in `archetype_slot_resolver.py` (Aave / Aave-Compound × 3 chains /
       Polymarket-Binance / Unity-Betfair-Matchbook) but NO `funding-dispersion-leveraged` config variant. Tracked as
       Phase A in
       [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](arbitrage_price_dispersion_finalisation_2026_05_09.md).
-      **STATUS 2026-05-09 PM (helper-shipped)**: Phase A Commit 1 shipped at strategy-service@24f8494 — dispatcher
-      (`ArbitragePriceDispersionEngine` branches on `dispersion_type`) + `BTC_FUNDING_RATE_DISPERSION` slot stub with
-      operator-confirmed config (6-venue universe / 5x leverage / vol-cap clamp / sign-match filter). Engine selection
-      logic (helper module, 3 Layer 1 modes), tests, A.6 multi-asset enumeration (ETH/SOL + top-10 coverage probe), and
-      A.7 allocator wiring still pending in finalisation plan Phase A (Tab 5 ongoing).
+      **SHIPPED 2026-05-09 (Tab 5 c2/c3/c6)**: Phase A complete end-to-end across 5 commits: A.1 dispatcher + slot stub
+      at strategy-service@24f8494; A.2 helper module (3 modes + filters + 25 tests) at strategy-service@0b4ef0e; A.3
+      engine 8-step loop wire-in (+ 13 engine tests) at strategy-service@04c0d52; A.6 multi-asset enumeration (probe
+      script at strategy-service@1107ab7 + ETH/SOL + 7 additional top-10 coverage-gated slots at
+      strategy-service@d01661e); A.7 allocator multi-pair-per-slot wiring (4 weight modes + per-slot/per-pair caps +
+      churn suppression + 14 tests) at strategy-service@de9b4b0.
 - [ ] [tracer-scripts] P1. Confirm `scripts/trace_arbitrage_price_dispersion.py` (or equivalent) handles the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed only `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` exist in
       `strategy-service/scripts/`; no ARBITRAGE_PRICE_DISPERSION tracer. Tracked as Phase B in successor plan.
-      **STATUS 2026-05-09 PM (blocked-after-strategy-service-Phase-B)**: tracer not shipped yet — Tab 5 has shipped
-      dispatcher + slot stub at strategy-service@24f8494 but the engine selection logic + tracer (Phase B) still
-      pending. Tab 5 in-flight.
+      **STATUS 2026-05-10 (todo, unblocked)**: Phase A is now complete (Tab 5 shipped A.1/A.2/A.3/A.6/A.7 across
+      strategy-service@24f8494/0b4ef0e/04c0d52/1107ab7/d01661e/de9b4b0); the tracer can ship next. Awaiting next agent
+      to pick up Phase B + C handoff.
 - [ ] [P&L attribution] P1. Confirm `pnl-attribution-service` rows attribute under `ARBITRAGE_PRICE_DISPERSION` for the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed zero `ARBITRAGE_PRICE_DISPERSION` references in `pnl_attribution_service/` source (only
       sports test fixtures use lowercase `"arbitrage"` string). Tracked as Phase C in successor plan.
-      **STATUS 2026-05-09 PM (blocked-after-Phase-B)**: pnl-attribution work is gated on the tracer's real-infra output
+      **STATUS 2026-05-10 (blocked-after-Phase-B)**: pnl-attribution work is gated on the tracer's real-infra output
       (per "Plans Run To Actual Completion" HARD RULE — pnl-attribution real-infra run consumes tracer output for the
       1-week 2024 W1 window). Picks up immediately when Tab 5's tracer ships.
 

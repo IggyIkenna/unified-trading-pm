@@ -926,3 +926,41 @@ python -c "from strategy_service.engine.strategies.v2.archetype_slot_resolver im
   print(len(arb)); assert len(arb) >= 3"
 ```
 → **9** ✅ (≥3 floor met).
+
+## DONE-2026-05-10 (agent-arb-fundrate-cde re-audit) — parent-plan slot row flipped + status refresh
+
+Re-audit run after parallel-agent activity. Tab 5's c2/c3/c6 agents shipped Phase A end-to-end during 2026-05-09
+evening / 2026-05-10 morning while this tab was waiting on the tracer dependency. Phase A is now complete; no other
+phase shipped since the previous DONE-2026-05-09 (cde) block.
+
+Re-audit findings:
+
+- **Phase A (catalog + engine + allocator + multi-asset enumeration)**: ✅ DONE end-to-end. 5 strategy-service commits
+  (24f8494 + 0b4ef0e + 04c0d52 + 1107ab7 + d01661e + de9b4b0) + 1 lint-fix follow-up (e3e0962). 9 funding-rate-disp
+  slots in resolver covering BTC/ETH/SOL day-1 priority + 6 additional top-10 coverage-gated assets. Engine 8-step loop
+  + 4-mode allocator + sign-match + min-spread + vol-cap clamp all wired and tested.
+- **Phase B (tracer)**: still NOT shipped. `scripts/trace_arbitrage_price_dispersion.py` does not exist in
+  `strategy-service/scripts/` (verified via `ls scripts/trace_*.py` 2026-05-10). Tab 5 ended at A.7. No tracer agent
+  spawned yet. Status flips from `blocked-after-Phase-A.2` → `todo` (unblocked).
+- **Phase C (pnl-attribution)**: still blocked-after-Phase-B per "Plans Run To Actual Completion" HARD RULE.
+- **Phase D (Stream B gate close)**: codex P0 already shipped (PM@5fe5eabd + L155-157 flipped at PM@06467d62). Strategy-
+  service slot todo (parent plan L181) flipped this re-audit commit since Phase A is now complete. Tracer + pnl-
+  attribution rows remain `[ ]` pending Phase B/C; full gate close also still pending the workspace `leveraged_funding_arb`
+  rename sweep (issue doc `leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` — owner triage outstanding).
+- **Phase E (codex)**: ✅ done at PM@5fe5eabd.
+
+Plan-flip commits this re-audit:
+
+- PM@<this-commit> — `docs(plans): arb-price-dispersion re-audit — flip parent-plan slot row to done; refresh tracer +
+  pnl status to 2026-05-10`. Flipped `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` L181 strategy-
+  service slot todo to `[x]` with the 5-commit Phase A evidence chain. Refreshed L193 tracer + L200 pnl-attribution
+  STATUS lines to 2026-05-10 (B = `todo, unblocked`; C = `blocked-after-Phase-B`).
+- This DONE block.
+
+EOD-audit: every still-deferred item has a grep-target — Phase B (this plan + parent plan L193), Phase C (this plan +
+parent plan L200), Phase D-gate (this plan body Phase D + workspace rename issue doc), workspace rename sweep (issue
+doc `leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`). No grep-miss deferrals.
+
+**Recommendation for next agent**: spawn `agent-arb-fundrate-b` to ship Phase B (tracer) — Phase A unblocked it; tracer
+modeled on `trace_carry_staked_basis.py` per the plan body; can run end-to-end against real backfilled MTDS + features
+data for the 2024 W1 window. Phase C (pnl-attribution) chains immediately after — same agent or parallel.
