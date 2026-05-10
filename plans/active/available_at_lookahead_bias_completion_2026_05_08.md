@@ -268,7 +268,7 @@ todos:
       depends on Phase 0 MDPS bar-boundary contract. Already-stamped dfs preserved; unregistered (cefi, data_type)
       skipped silently. 5 unit tests at
       `market-tick-data-service/tests/unit/test_partitioned_writer_cefi_available_at.py`. Issue doc resolved:
-      `plans/active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`. status: done
+      `plans/archive/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`. status: done
 
 - [ ] [SCRIPT] P0. **TradFi adapter stamping**. Per-adapter `available_at` stamping for: Databento (futures + ETFs +
       options), Polygon, Yahoo Finance (VIX 15m fallback), Barchart historical preload. CME options chain + ES.OPT
@@ -499,8 +499,8 @@ remain `- [ ]`. Phases 0/2/4/5/6/7/8/9/10 untouched this session.
 
 ## Audit-2026-05-10 finding — post-cutover Phase: lift `available_at` to schema-level invariant
 
-**Source**: [`plans/active/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md`](issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md)
-+ sibling [`block_b_audit_findings`](issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md) Block B5.
+**Source**: [`plans/archive/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md`](../archive/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md)
++ sibling [`block_b_audit_findings`](../archive/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md) Block B5.
 
 **Finding**: today's two-layer enforcement is (1) opt-in stamping helpers in
 [`unified_trading_library/availability_stamping.py`](../../../unified-trading-library/unified_trading_library/availability_stamping.py)

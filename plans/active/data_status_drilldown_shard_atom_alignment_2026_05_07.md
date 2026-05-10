@@ -540,7 +540,7 @@ documentation todo already shipped at PM@372e23aa. The remaining 4 are carried h
       default `instrument_limit = 200` (matches drilldown UI page size); return `total_instruments_unfiltered: int` so
       the UI can render "showing N–M of T" + a load-more button. Bump cap from 30 → 200 (or remove with explicit
       pagination). Distinct from the hierarchical drilldown's `instrument_id` axis (Phase 6) — this is the venue-detail
-      panel sample. Source: [`issues/defi_launcher_audit_2026_05_07.md`](./issues/defi_launcher_audit_2026_05_07.md) §
+      panel sample. Source: [`../archive/issues/defi_launcher_audit_2026_05_07.md`](./issues/defi_launcher_audit_2026_05_07.md) §
       Q5 todo 1.
 - [ ] **[deployment-ui]** P1. `VenueDetailPanel.tsx:200-208` — add pagination controls to the `top_instruments`
       rendering. When `total_instruments_unfiltered > top_instruments.length`, render "Show more (N remaining)" + count

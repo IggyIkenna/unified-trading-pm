@@ -834,7 +834,7 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
 - **Workspace-wide `leveraged_funding_arb` rename sweep**: per Stream B gate, several active plans (defi_master,
   master_to_live_defi_2026_05_23, instruments_live_master, strategy_and_dart_master, live_pipeline_mtds_mdps_features)
   - question docs reference `leveraged_funding_arb` as a standalone archetype name. Filed as case-3 finding in
-    [`plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
+    [`plans/archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](../archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
     for owner triage.
 
 ## DONE-2026-05-09 (agent-arb-fundrate-cde)
@@ -868,7 +868,7 @@ This-plan body updates (next commit):
 
 Issue doc shipped (next commit, case-3 finding):
 
-- `plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` — workspace
+- `plans/archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` — workspace
   `rg 'leveraged_funding_arb' --type py --type md` returns matches across ~5 active plans + question docs that use the
   legacy name as a standalone archetype label. Per Stream B gate, these need rename to `ARBITRAGE_PRICE_DISPERSION`
   (with `funding-rate-dispersion` config variant) or annotation as historical context. Owner triage required because the
@@ -1058,7 +1058,7 @@ just on agent pickup. Real-GCS probe 2026-05-10 found: (a) aster has no perp_fun
 `gs://perp-funding-{pid}/perp_funding/`; (b) okx-futures raw_tick_data starts 2025-01 in market-data-tick-cefi (no 2024
 coverage); (c) `features-delta-one-cefi` `by_date` partitions are sporadic across all years — NO contiguous 1-week
 window exists for the verify run. Issue doc:
-[`plans/active/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md).
+[`plans/archive/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](../archive/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md).
 Phase B's `todo (unblocked)` status above is technically wrong — it's `blocked-on-upstream-data` (UPSTREAM SERVICES:
 MTDS aster perp-funding handler + okx-futures raw backfill + features-delta-one-cefi continuous backfill). Operator
 triage required on disposition: (a) backfill upstream data (slow, costs); (b) scope-adjust verify window to a
@@ -1127,7 +1127,7 @@ C since the tracer already produces non-empty EMIT rows from the available venue
 ## DONE-2026-05-10 (agent-arb-fundrate-cde rename-sweep) — Phase D rename sweep shipped
 
 Re-audit-3 follow-up after operator authorized "cann you do those then" 2026-05-10. Bulk workspace `leveraged_funding_arb`
-rename sweep shipped per `plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` option-2
+rename sweep shipped per `plans/archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` option-2
 (per-plan-owner rename, scoped to TRACKED files; UNTRACKED foreign-WIP skipped; audit-snapshot docs left as historical).
 
 PM commits (5):

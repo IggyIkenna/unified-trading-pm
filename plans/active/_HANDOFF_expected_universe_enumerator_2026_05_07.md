@@ -153,9 +153,9 @@ agents seeing the plans know there's a VM in flight on this work.
 - [ ] [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) — note in the
       data-correctness section.
 - [ ] [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) — note in DeFi-specific section.
-- [ ] [`plans/active/issues/defi_launcher_audit_2026_05_07.md`](issues/defi_launcher_audit_2026_05_07.md) —
+- [ ] [`plans/archive/issues/defi_launcher_audit_2026_05_07.md`](../archive/issues/defi_launcher_audit_2026_05_07.md) —
       cross-reference at top noting the rollup-drilldown denominator gap is being closed.
-- [ ] [`plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`](issues/defi_archetypes_doc_plan_drift_2026_05_07.md)
+- [ ] [`plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`](../archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md)
       — note that data-status convergence work is in flight (separate from the archetype canonicalisation streams
       already covered in this issue).
 - [ ] [`plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
@@ -171,7 +171,7 @@ active PM plan, that's fine."_ The following items are **already in active plans
 
 #### A. From the data-status audit (`d0f521b4`):
 
-5 todos in [`plans/active/issues/defi_launcher_audit_2026_05_07.md`](issues/defi_launcher_audit_2026_05_07.md) §
+5 todos in [`plans/archive/issues/defi_launcher_audit_2026_05_07.md`](../archive/issues/defi_launcher_audit_2026_05_07.md) §
 "Actionable todos — to be added to the existing data-status-drilldown plan". Confirm they're carried into
 [`plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md):
 

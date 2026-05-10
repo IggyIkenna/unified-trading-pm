@@ -13,7 +13,7 @@ related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/wallet_treasury_client_flow_2026_05_10.md
   - plans/active/risk_simulations_limits_alerting_2026_05_10.md
-  - plans/active/promote_workflow_backtest_to_live_2026_05_10.md
+  - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 related_codex:
   - codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md
   - codex/04-architecture/batch-live-architecture.md
@@ -242,7 +242,7 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 - `wallet_treasury_client_flow_2026_05_10` — share-class subscription contracts compose with this plan's
   `ClientShareClass`.
 - `risk_simulations_limits_alerting_2026_05_10` — per-client risk limits join on `client_id`.
-- `promote_workflow_backtest_to_live_2026_05_10` — promote events emit per-client when archetype goes live.
+- `promote_workflow_may23_cli_path_2026_05_10` — promote events emit per-client when archetype goes live.
 - `simulation_scenarios_topology_price_shocks_2026_05_09` — synthetic scenarios run against demo client to validate PnL
   bounding under shock.
 

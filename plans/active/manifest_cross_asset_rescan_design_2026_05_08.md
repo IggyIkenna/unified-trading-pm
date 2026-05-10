@@ -162,5 +162,5 @@ Per CLAUDE.md "Post-Plan-Phase Codex Audit HARD RULE":
 - `manifest_migration_master_2026_05_07` — parent. Stage 4 includes this rescan.
 - `writegate_honest_coverage_endtoend_2026_05_06` Phase 4 (typed-error rendering) — consumes `error_reason` populated by
   class A flips during the rescan.
-- `manifest_v7_schema_migration_design_2026_05_08` (sibling Tab 3 design) — rescan must respect new v8 immutable columns
-  (`service_emission_state`).
+- `manifest_schema_final_gate_2026_05_09` (consolidated v8 SSOT — supersedes archived `manifest_v7_schema_migration_design_2026_05_08`) — rescan must respect new v8 immutable columns
+  (`service_emission_state`). Note: v8 plan's Phase 3 bundles cross-asset rescan class-A auto-fixes into the same parquet walk; this design doc is the SSOT for the rescan semantics.

@@ -338,7 +338,7 @@ todos:
         column updates on the SAME row_key. Re-poll today's fixtures every fire because intra-day cancellation is
         possible. Write to the same `sports_reference/by_date/day=<announcement-date>/entity=fixtures/...` path as
         batch. References active issue
-        `plans/active/issues/fixtures_postponed_cancelled_lifecycle_2026_05_08.md` for the lifecycle column shape;
+        `plans/archive/issues/fixtures_postponed_cancelled_lifecycle_2026_05_08.md` for the lifecycle column shape;
         does NOT re-derive. Trigger-name: `sports.fixtures.daily_repoll`. Cadence: 1×/day (configurable).
         (instruments-service@c53ec64 — `instruments_service/triggers/sports_fixtures_daily_repoll.py` + 8 unit tests
         in `tests/unit/triggers/test_sports_fixtures_daily_repoll.py`. Reuses `_flatten_canonical_fixture_for_disk`
@@ -365,7 +365,7 @@ todos:
     content: |
       - [ ] [SCRIPT] P0. Fixture `end_time` cascade for live-mode: when a fixture status flips to `finished`, the
         live-mode trigger MUST stamp `end_time` (per the existing schema work in active issue
-        `plans/active/issues/instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08.md`). Live-mode uses the
+        `plans/archive/issues/instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08.md`). Live-mode uses the
         same `end_time` cascade UTL helper that batch uses; do NOT introduce a parallel cascade. Verify via T+1 audit
         (Phase I) that live-stamped `end_time` matches what batch would have stamped on the same fixture-day. References
         the issue; does NOT re-derive the cascade rules.
@@ -468,7 +468,7 @@ todos:
   - id: c4-tradfi-databento-session-type-instrument-pre-launch
     content: |
       - [ ] [AGENT] P1. Reference active issue
-        `plans/active/issues/databento_tradfi_session_type_awareness_2026_05_08.md` for any TradFi schema corrections
+        `plans/archive/issues/databento_tradfi_session_type_awareness_2026_05_08.md` for any TradFi schema corrections
         needed before live-mode source-switch can be enabled. The live adapter MUST emit identical session-type
         annotations (RTH / ETH / GLBX) as the batch adapter. This todo is "verify + reference"; the issue owns the
         fix.
@@ -498,7 +498,7 @@ todos:
         CCXT-supported per CLAUDE.md DEX onboarding section). Schema MUST match Tardis batch output identically:
         same per-instrument-per-day OHLCV, `available_at` per-row at write-time, same shard atom. Source-priority:
         `--mode live` → CCXT, `--mode batch` → Tardis. References active issue
-        `plans/active/issues/mtds_live_data_recovery_self_detect_2026_05_08.md` for self-recovery pattern.
+        `plans/archive/issues/mtds_live_data_recovery_self_detect_2026_05_08.md` for self-recovery pattern.
     status: todo
     note: ""
 
@@ -546,7 +546,7 @@ todos:
         `resolution_time` → `settlement_time`) are upserts. Write to same instruments-service prediction path as
         batch. Trigger-name: `prediction.market_discovery.15m`. Lifecycle bound enforcement at consumer side
         (per active issue
-        `plans/active/issues/predictions_completeness_hierarchy_lifecycle_drilldown_2026_05_08.md`). For 5-min /
+        `plans/archive/issues/predictions_completeness_hierarchy_lifecycle_drilldown_2026_05_08.md`). For 5-min /
         hourly recurring groups, the 15-min discovery cadence captures all upcoming markets within the group's
         rolling forward window — no need for tighter cadence given liquidity profiles.
     status: todo
@@ -809,21 +809,21 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 
 ## Active issues this plan references (does NOT duplicate)
 
-- `plans/active/issues/instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08.md` — schema requirements for
+- `plans/archive/issues/instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08.md` — schema requirements for
   futures expiry, options expiry, fixtures end_time. Phase B.2 references; issue owns the cascade rules.
-- `plans/active/issues/fixtures_postponed_cancelled_lifecycle_2026_05_08.md` — fixture lifecycle column shape. Phase B.1
+- `plans/archive/issues/fixtures_postponed_cancelled_lifecycle_2026_05_08.md` — fixture lifecycle column shape. Phase B.1
   references; issue owns the column shape.
-- `plans/active/issues/fixtures_lookahead_bias_post_match_scores_2026_05_08.md` — `available_at` for post-match scores.
+- `plans/archive/issues/fixtures_lookahead_bias_post_match_scores_2026_05_08.md` — `available_at` for post-match scores.
   Phase B.1 + B.2 references; issue owns the bias rule.
-- `plans/active/issues/manifest_cleanup_on_entity_add_remove_2026_05_08.md` — manifest reconciliation when entities are
+- `plans/archive/issues/manifest_cleanup_on_entity_add_remove_2026_05_08.md` — manifest reconciliation when entities are
   added/removed (e.g. promotion/relegation, new market_id). Phase B.3 + E.1 reference; issue owns the cleanup rules.
-- `plans/active/issues/predictions_completeness_hierarchy_lifecycle_drilldown_2026_05_08.md` — lifecycle drilldown for
+- `plans/archive/issues/predictions_completeness_hierarchy_lifecycle_drilldown_2026_05_08.md` — lifecycle drilldown for
   predictions. Phase E.1 references; issue owns the lifecycle taxonomy.
-- `plans/active/issues/sports_per_fixture_anchored_cascade_2026_05_08.md` — fixture-anchored cascade for sports. Phase
+- `plans/archive/issues/sports_per_fixture_anchored_cascade_2026_05_08.md` — fixture-anchored cascade for sports. Phase
   B.5 + B.6 reference.
-- `plans/active/issues/mtds_live_data_recovery_self_detect_2026_05_08.md` — self-recovery for missed live fires. Phase
+- `plans/archive/issues/mtds_live_data_recovery_self_detect_2026_05_08.md` — self-recovery for missed live fires. Phase
   D.1 references; issue owns the recovery pattern.
-- `plans/active/issues/databento_tradfi_session_type_awareness_2026_05_08.md` — TradFi session-type schema fix. Phase
+- `plans/archive/issues/databento_tradfi_session_type_awareness_2026_05_08.md` — TradFi session-type schema fix. Phase
   C.4 references.
 
 ## Codex doc updates this plan owns

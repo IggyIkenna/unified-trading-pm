@@ -430,7 +430,7 @@ these venues.
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
 > **Audit 2026-05-08 (Tab 6, defi-988-audit-tab)**: per-(chain, protocol, data_type) breakdown + top-5 priority list
-> filed at [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md).
+> filed at [`../archive/issues/defi_988_missing_dates_audit_2026_05_08.md`](../archive/issues/defi_988_missing_dates_audit_2026_05_08.md).
 > TL;DR: 1.3M non-captured rows across 10 DeFi buckets but **99% are SSOT-correct pre-genesis/pre-launch clipping**;
 > only **13,632 rows / 2,234 distinct dates are actionable**. Top concentrations: (1) Tab 5 lending-indices fixes
 > resolve ~2.4k; (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot V3) resolve ~1.4k; (3) UAC
@@ -543,7 +543,7 @@ AAVEV3/COMPOUNDV3/etc. across all chains. Investigation target: `instruments-ser
 its launch-date floor handling.
 
 **RESOLVED 2026-05-08 — Tab 5 (lending-indices-bugfix-tab)**: All three bugs fixed.
-[`issues/lending_indices_handler_bugs_2026_05_07.md`](issues/lending_indices_handler_bugs_2026_05_07.md) carries the
+[`../archive/issues/lending_indices_handler_bugs_2026_05_07.md`](../archive/issues/lending_indices_handler_bugs_2026_05_07.md) carries the
 canonical RESOLVED block. Code commits:
 
 - `instruments-service@1a90185` — Bug 3: `get_protocol_floor_date()` consults UAC `PROTOCOL_LAUNCH_DATES` SSOT first;
@@ -558,7 +558,7 @@ lending-indices VM is ready to re-launch. Operator-owned step.
 
 **Audit 2026-05-08 (Tab 14, defi-fork1-prep-audit-tab)**: 4-bug-class diagnostic audit ran across the full Fork 1
 data-source surface BEFORE Ikenna's D4 launches. Results filed at
-[`issues/defi_fork1_prep_audit_2026_05_08.md`](issues/defi_fork1_prep_audit_2026_05_08.md). TL;DR: Bug classes 1-3 are
+[`../archive/issues/defi_fork1_prep_audit_2026_05_08.md`](../archive/issues/defi_fork1_prep_audit_2026_05_08.md). TL;DR: Bug classes 1-3 are
 ✅ no new findings (Tab 5 + Tab 9's shipped cascade + UAC SSOT cascade is structurally correct). **Bug class 4 — UAC
 PROTOCOL_LAUNCH_DATES drift — found 13 of 17 probed pairs DRIFT > ±3 days.** Recommend operator spawn 4 sequential fix
 tabs (A: AAVEV3 6 chains; B: COMPOUNDV3 4 chains; C: UNISWAPV3 3 chains; D: SPARK ETH + bSOL UAC entry) all mirroring
@@ -1149,7 +1149,7 @@ VM pending operator decision).
 **PM code commits**:
 
 - PM@b1bd92e6 — `docs(plans): paper-trade smoke runbook for carry_staked_basis Solana hedge`. NEW
-  `plans/active/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md` with 11 pre-flight checks + 4-service
+  `plans/archive/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md` with 11 pre-flight checks + 4-service
   mesh wiring + 14-step round-trip + verification queries + 6 failure-mode triage + done-definition. Source: Tab 1
   sub-agent Plan-mode design pass.
 - PM@15e9b1a3 (parallel agent's bundled commit) —
@@ -1223,7 +1223,7 @@ User flagged "runbooks shipped → nobody runs them → silent rot" gap. Closing
 
 | Runbook                                             | Owner                                                 | Cadence              | Status                                                                                                                                                                                 |
 | --------------------------------------------------- | ----------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Paper-trade smoke (PM@b1bd92e6)                     | **operator + new Tab** to migrate colocated_engine.py | Daily once unblocked | 🚨 **P0 BLOCKED** — `colocated_engine.py:306` stale import (V1-RETIRE Phase 2 not migrated). See `plans/active/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.md`. |
+| Paper-trade smoke (PM@b1bd92e6)                     | **operator + new Tab** to migrate colocated_engine.py | Daily once unblocked | 🚨 **P0 BLOCKED** — `colocated_engine.py:306` stale import (V1-RETIRE Phase 2 not migrated). See `plans/archive/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.plan.md`. |
 | Lending-indices VM relaunch (this doc)              | Tab 1 main agent                                      | One-shot             | ✅ **DONE 14:11 UTC** (mtds-lending-indices-20260508-141147 RUNNING)                                                                                                                   |
 | Lending-indices T+90min spot-check                  | Tab 1 ScheduleWakeup                                  | At 15:24 UTC         | ⏳ Scheduled                                                                                                                                                                           |
 | Pyth-archive VM launch (deployment-service@0722ac4) | Tab 1 main agent                                      | One-shot             | ✅ **DONE 14:11 UTC** (mtds-pyth-archive-20260508-141204 RUNNING + writing oracle prices)                                                                                              |

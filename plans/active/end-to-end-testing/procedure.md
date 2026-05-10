@@ -249,7 +249,7 @@ uses `asyncio.run()`.
 
 When an issue is found:
 
-1. Add it to `plans/active/issues/service_control_surface_issues_2026_03_21.md`
+1. Add it to `plans/archive/issues/service_control_surface_issues_2026_03_21.md`
 2. Note the service, severity, root cause, and fix approach
 3. Add audit checklist for other services
 4. Fix in the current service

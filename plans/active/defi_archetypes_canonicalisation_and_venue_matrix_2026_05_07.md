@@ -3,7 +3,7 @@ title: "DeFi archetypes canonicalisation + venue-collateral matrix correction (m
 created: 2026-05-07
 author: claude-session
 source:
-  - plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md (Harsh audit + 2026-05-07 PM operator follow-up)
+  - plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md (Harsh audit + 2026-05-07 PM operator follow-up)
   - unified-api-contracts/unified_api_contracts/registry/venue_collateral.py (stale SSOT)
   - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md
   - codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md
@@ -46,7 +46,7 @@ related_archetypes:
 >    `attempted_failed` (anti-pattern).
 
 This plan ships the doc + plan + code corrections raised by the 2026-05-07 operator review of
-[`plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`](issues/defi_archetypes_doc_plan_drift_2026_05_07.md).
+[`plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`](../archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md).
 Each stream below is independently shippable. Streams A–D run in parallel; Stream E is the integration sweep that pulls
 everything together for the master plan.
 
@@ -200,7 +200,7 @@ already supports LEADER_HEDGE mode.
       tracer + extension to `trace_all_carry_archetypes.py` + 11-test unit suite). Real-infra run against 2024-W1
       window produced 3 EMIT rows + $200.63 simulated P&L (ETH=2 days $155.44 + SOL=1 day $45.19; BTC slot below 5bps
       threshold all 7 days). The `agent-arb-fundrate-c2` P0 upstream-data finding
-      ([`issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md))
+      ([`../archive/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](../archive/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md))
       did not block the run — tracer produces non-empty output from the available venues; aster + bitget upstream
       backfill remains a separate issue doc track.
 - [x] [P&L attribution] P1. Confirm `pnl-attribution-service` rows attribute under `ARBITRAGE_PRICE_DISPERSION` for the
@@ -228,9 +228,9 @@ PM@476f00f9 6 tail tracked plans). All TRACKED forward-looking active + epic pla
 annotations preserved per gate phrasing. Residuals (NOT shipped, accepted): 2 UNTRACKED foreign-WIP files
 (`manifest_schema_final_gate_2026_05_09.md` + `defi_recursive_borrow_archetypes_2026_05_10.md`) skipped per workspace
 foot-gun rules; 2 audit-snapshot docs (`_AUDIT_2026_05_07_dependency_graph.md` +
-`issues/audit_2026_05_08_substantial_unfixed_items.md`) left as historical context (snapshot semantics — refs are
+`../archive/issues/audit_2026_05_08_substantial_unfixed_items.md`) left as historical context (snapshot semantics — refs are
 recording past audit findings). Tracker:
-[`plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
+[`plans/archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](../archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
 § "RESOLUTION 2026-05-10". **Stream B's 3 sister-todo deferrals — all ✅ done**: (1) L181 strategy-service slot ✅ Phase A
 end-to-end across 6 commits (strategy-service@24f8494 dispatcher + @0b4ef0e helper + @04c0d52 engine + @1107ab7 probe +
 @d01661e multi-asset + @de9b4b0 allocator + @e3e0962 QG-clean Literal fix); (2) L195 tracer ✅ Phase B at

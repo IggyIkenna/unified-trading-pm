@@ -16,7 +16,7 @@ related_plans:
   - plans/active/defi_master_2026_05_07.md
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/alerting_service_live_rules_2026_05_07.md
-  - plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md
+  - plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md
 related_codex:
   - codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md
   - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md

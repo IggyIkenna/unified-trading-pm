@@ -404,7 +404,7 @@ asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work
 [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) Stage 4 (rescan)
 
 - [`sports_master_2026_05_07.md`](../epics/sports_master_2026_05_07.md) (per-source reconciler hook) +
-  [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md).
+  [`../archive/issues/defi_988_missing_dates_audit_2026_05_08.md`](../archive/issues/defi_988_missing_dates_audit_2026_05_08.md).
 
 **Scope (4 items, P0-P1)**:
 
@@ -432,7 +432,7 @@ asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work
       VM completes; flips manifest captured → attempted_failed[error="MISSING_AVAILABLE_AT"] on parquets with absent or
       100% null available_at column. ~1 AI-day.
 - [ ] [SCRIPT] P0. **defi_988 13,632 actionable rows targeted backfill** — Tab 6 yesterday's audit (PM@fc52188 →
-      [`issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md))
+      [`../archive/issues/defi_988_missing_dates_audit_2026_05_08.md`](../archive/issues/defi_988_missing_dates_audit_2026_05_08.md))
       identified the top-5 priority list. Launch targeted backfill VMs per (chain, protocol, data_type) tuple. Per
       CLAUDE.md "Singleton-locked launchers" + "VM Naming Convention" + "No fire-and-forget VM launches". Use
       rescan-aware skip per CLAUDE.md "Manifest concurrency principle" so concurrent VMs don't re-do work. ~2 AI-days.
@@ -451,7 +451,7 @@ code edits to Ikenna Tab 1.
 - [`plans/epics/tradfi_master_2026_05_07.md`](../epics/tradfi_master_2026_05_07.md)
 - [`plans/epics/manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) Stage 4
 - [`plans/epics/sports_master_2026_05_07.md`](../epics/sports_master_2026_05_07.md) Tab 3B
-- [`plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md`](issues/defi_988_missing_dates_audit_2026_05_08.md)
+- [`plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md`](../archive/issues/defi_988_missing_dates_audit_2026_05_08.md)
 
 **Sub-agent fan-out**:
 
@@ -944,7 +944,7 @@ BEFORE doing anything else, read in order:
   4. plans/epics/tradfi_master_2026_05_07.md (TradFi MDPS post-drain).
   5. plans/epics/manifest_migration_master_2026_05_07.md Stage 4 (rescan).
   6. plans/epics/sports_master_2026_05_07.md (per-source reconciler hook).
-  7. plans/active/issues/defi_988_missing_dates_audit_2026_05_08.md (top-5 priority list).
+  7. plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md (top-5 priority list).
 
 Your agent-tag: vm-ops-tab. Your tab number: 4.
 

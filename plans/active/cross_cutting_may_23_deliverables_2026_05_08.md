@@ -50,7 +50,7 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
       missing slot-label rows shipped (`uac@18bdc6e8` content; A3 sub-agent; see DONE-A3 block + `pm@9d873547`).
       Reverted Tab 6.B's parallel-SSOT shipment (`Client` + `VenueAccount` + `client.py` deleted via `uac@3cae1c2`; A2
       sub-agent). See
-      [`issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
+      [`../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)
       for full mapping table + Option A migration recipe.
 - [ ] [SCRIPT] **Catalogue rows populated** for every archetype family known to be in scope: carry (3 sub-types:
       staked-basis / vanilla-basis / cross-venue), price-arb (3 sub-types: same-day-expiry / ETF↔future / cross-venue),
@@ -232,7 +232,7 @@ The [SCRIPT] **Client-account-strategy tagging propagated** sub-todo (Harsh T6) 
   - `archetype`: per `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` (currently 46 members
     after the 2026-04-25 PORTFOLIO + MEV + VOL expansions; codex `strategy-summary.md` 18-archetype baseline is stale
     per
-    [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)).
+    [`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)).
   - `venue`: per `STRATEGY_REGISTRY` row's venue field (per-venue rows already populated).
   - `live_vs_backtest`: derived from `archetype_capability.CoverageStatus` (`SUPPORTED` = live; `PARTIAL` / `BLOCKED` =
     backtest-only this cycle).
@@ -285,7 +285,7 @@ pass prettier/QG.
 The [BUILD] subitems for deliverables #1 (catalogue UI build) + #4 (5 DART manual surfaces) remain pending — owned by
 Harsh T6 per cross-side handshake. The strategy_id grammar this spec consumes is owned by Tab 6.A (currently 🟡 BLOCKED
 pending operator triage of
-[`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)).
+[`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)).
 
 ## DONE-2026-05-08 (Tab 6 main) — cycle close
 
@@ -336,7 +336,7 @@ Tab 6 main agent dispatched 3 parallel sub-agents per work-split plan
   Option A's `ArchetypeConfig` schema landing.
 
 **Operator action requested (Tab 6 main):** triage
-[`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
+[`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)
 with Option A vs B vs C call. Recommended: **Option A — extend existing v2 SSOTs**. Under Option A the cycle's remaining
 work is well-bounded: ship `ArchetypeConfig` in `internal/architecture_v2/archetype_config.py` (1-2 AI-days); migrate
 Tab 6.B's `CapitalAllocation` to `internal/architecture_v2/capital_allocation.py` + revert `Client` + `VenueAccount` (1
@@ -426,7 +426,7 @@ Step A3 going quiet.
 
 Sub-agent A1 (`uac-archetype-config-stepA1`) shipped the operator-greenlit Option A genuine-gap closure (operational
 risk-knob SSOT) per issue doc
-[`cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
+[`cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)
 § "Recommended decision" — the one new schema the issue doc identified as a genuine gap (operational risk knobs NOT
 centralised under a single UAC dataclass) is now centralised in `internal/architecture_v2/archetype_config.py`.
 
@@ -474,7 +474,7 @@ Step A1 going quiet.
 ## DONE-2026-05-08 (Step A2, Tab 6 main) — CapitalAllocation migration + Client/VenueAccount revert
 
 Sub-agent A2 executed Step 2 of Option A on the parallel-SSOT issue
-(`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md` § Addendum). Operator GREENLIT
+(`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md` § Addendum). Operator GREENLIT
 2026-05-08. Closes deliverable #3's Client/VenueAccount parallel-SSOT collision (un-flipped + annotated as resolved by
 Option A) + flips deliverable #3's CapitalAllocation gap closed under the migrated path.
 
@@ -601,7 +601,7 @@ items unblocked).
 
 ### Issue doc closeout
 
-[`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
+[`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)
 — BIG case-5 finding from 6.A is now RESOLVED. Recommended decision (Option A) executed in full. Issue doc retained in
 `plans/active/issues/` as durable record; can be archived in next daily ledger sweep.
 
@@ -643,7 +643,7 @@ Harsh's daily work_split.** No durable-record gaps. Open questions are now all `
   plan's outputs (`ArchetypeConfig.archetype_kill_switch_thresholds` per Tab 5 alerting; `CapitalAllocation` per
   `defi_master` + `cefi_master`; `format_strategy_id` per all).
 - **Issue doc**
-  [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
+  [`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)
   — RESOLVED. Recommended Option A executed in full. Eligible for archive at next daily ledger sweep.
 - **Codex SSOT** [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — refreshed
   `pm@d6d0cd57` to canonical 9-family / 53-archetype shape. Closes the codex SSOT drift root cause that caused this plan

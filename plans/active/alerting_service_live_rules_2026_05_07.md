@@ -231,6 +231,13 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
       body + defi_rules.py threshold migration + new test file). Per CLAUDE.md "Two teammates × multiple parallel
       agents" rule + work-split Agent-1 ownership of alerting Phase 2, ship-first-review-after is the institutional
       default.
+- [ ] [AGENT] P0. **Phase 2.X — `AlertRule.pattern` → `event_pattern` rename follow-up PR.** UAC@d00326d shipped the
+      Pydantic field as `pattern`; codex SSOT [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md)
+      § "Alerting-Service Routing Rules" (lines 116-149) uses `event_pattern`. Codex is SSOT for target structure per
+      workspace rule. Rename surface: UAC `unified_api_contracts/canonical/crosscutting/alerting/rules.py` (Pydantic
+      field + every constructor in seed dict) + UAC tests + alerting-service consumer (config.py default-factory body
+      + any `.pattern` attribute access) + tests. Single logical-unit commit; no compatibility shim. Owns the IN-FLIGHT
+      REFACTOR banner at top of this plan — banner clears when this todo flips `[x]`.
 
 ### Phase 3 — Producer migration to UAC closed-set codes (2 days, parallel across services)
 
@@ -711,13 +718,13 @@ operator-decision finding (Sub-B), 1 hit usage cap mid-Wave-2 (Sub-G — partial
 ### Findings raised
 
 - **Case-5 (resolved)**: alerting Phase 3 envelope schema gap — issue doc at
-  `plans/active/issues/alerting_phase3_envelope_schema_gap_2026_05_08.md` § "RESOLVED 2026-05-08"; Option A operator
+  `plans/archive/issues/alerting_phase3_envelope_schema_gap_2026_05_08.plan.md` § "RESOLVED 2026-05-08"; Option A operator
   decision triggered the resolution chain landed under "Phase 3 producer-side" above.
 - **Case-3 (foreign QG)**: UAC `test_no_eth_perp_venue_accepts_eth_lst_today` — issue doc filed at
-  `plans/active/issues/uac_qg_test_no_eth_perp_venue_accepts_eth_lst_today_2026_05_08.md` (Stream A territory, Tab 1
+  `plans/active/issues/uac_qg_test_no_eth_perp_venue_accepts_eth_lst_today_2026_05_08.md` (Stream A territory, Tab 1 (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
   owner). Pre-existing; pushed past per CLAUDE.md "QG failure attribution".
 - **Case-3 (foreign QG)**: PM `validate_plan_links.py` AttributeError — issue doc at
-  `plans/active/issues/pm_validate_plan_links_attribute_error_2026_05_08.md`. Workspace-wide validator infrastructure
+  `plans/archive/issues/pm_validate_plan_links_attribute_error_2026_05_08.plan.md`. Workspace-wide validator infrastructure
   bug; PM-scripts-maintainer owner.
 
 ### Foot-guns observed

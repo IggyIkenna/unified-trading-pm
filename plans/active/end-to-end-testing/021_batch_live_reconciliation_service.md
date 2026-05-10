@@ -191,7 +191,7 @@ Batch-live-reconciliation-service uses GCS for reading upstream data and writing
 
 ## Issues Found
 
-(logged in `plans/active/issues/service_control_surface_issues_2026_03_21.md`)
+(logged in `plans/archive/issues/service_control_surface_issues_2026_03_21.md`)
 
 | Issue | Severity | Fixed? |
 | ----- | -------- | ------ |

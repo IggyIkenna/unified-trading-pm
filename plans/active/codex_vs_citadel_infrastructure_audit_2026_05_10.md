@@ -40,7 +40,7 @@ into successor plans before the audit closes.
 4. Pre-cutover items shipped (architecture clean-ups that compose with the live-DeFi cutover; e.g. dead-code deletion
    on cutover hot path).
 5. Post-cutover items filed as new active plans before this plan archives — no orphan recommendations.
-6. Audit sign-off doc: `plans/active/issues/codex_vs_citadel_audit_signoff_2026_05_22.md` operator-reviewed.
+6. Audit sign-off doc: `plans/active/issues/codex_vs_citadel_audit_signoff_2026_05_22.md` operator-reviewed. (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
 
 ### Non-goals (post-cutover)
 
@@ -129,7 +129,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
 
 ## Phase 6 — Audit sign-off doc (Day 13, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **6.A `plans/active/issues/codex_vs_citadel_audit_signoff_2026_05_22.md`.** Aggregate findings, per-area summary, disposition counts, links to per-area issue docs + immediate/pre-cutover commit shas + post-cutover plan filings.
+- [ ] [AGENT] P0. **6.A `plans/active/issues/codex_vs_citadel_audit_signoff_2026_05_22.md`.** Aggregate findings, per-area summary, disposition counts, links to per-area issue docs + immediate/pre-cutover commit shas + post-cutover plan filings. (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
 - [ ] [AGENT] P0. **6.B Operator sign-off.** Operator reviews + approves; doc status flips to `signed-off`.
 
 **Full-execution criterion**: sign-off doc exists; operator approved; counts add up (immediate + pre-cutover + post-cutover == total).

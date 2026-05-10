@@ -285,7 +285,7 @@ and doesn't affect Deploy-Missing UI registry coverage).
       "Per-launcher migration table" (folded in from the deleted `launcher-script-consolidation-2026-05-07.md` tracker
       via codex_refactor Phase C.3). Each row: old path → new path → action (move / merge / delete). (evidence:
       PM@1d74f617 — CLAUDE.md governance HARD RULES + codex/05-infrastructure/launcher-script-ssot.md migration table
-      shipped Tab 1 main 2026-05-08 per `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
+      shipped Tab 1 main 2026-05-08 per `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
 
 ### Phase 1 — Migrate scripts in waves
 
@@ -298,19 +298,19 @@ and doesn't affect Deploy-Missing UI registry coverage).
       shipped 3 of 10: deployment-service@5778811
       (launch-mtds-{dex-pools,eigenlayer-rewards,solana-drift}-backfill-vm.sh). Tab 1 main "do everything" 2026-05-08
       shipped remaining 7 wrappers as e2e-testing@d824cb6 + e2e-testing@989b7fb per
-      `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE" — Phase 1 total: 15 wrappers.)
+      `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE" — Phase 1 total: 15 wrappers.)
 - [x] [deployment-service] P0. Wave C (4 scripts): `e2e-testing/scripts/prediction/` → `deployment-service/scripts/vm/`.
       (Tab 1 main "do everything" 2026-05-08 — wrappers landed as part of e2e-testing@d824cb6 + e2e-testing@989b7fb
       Phase 1 batch + canonical `launch-mtds-prediction-features-vm.sh` shipped as part of Phase 2 NEW canonical
       launchers deployment-service@6936f9e + Phase 3 prediction_pipeline orchestrator e2e-testing@e3a9cf2 per
-      `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
+      `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
 - [x] [deployment-service] P0. Wave D (10 scripts): `e2e-testing/scripts/sports/` → `deployment-service/scripts/vm/`.
       Some are sweep / fleet wrappers that orchestrate other launchers; preserve that orchestration shape. (Tab 11
       shipped 2 of 10: deployment-service@2e1d967 launch-mtds-sports-odds-backfill-vm.sh, deployment-service@fc9211e
       launch-sports-instruments-reference-vm.sh. Tab 1 main "do everything" 2026-05-08 shipped remaining 8 — sports
       wrappers in e2e-testing@d824cb6/989b7fb Phase 1 batch; sports_full_sweep + sports_entity_sweep orchestrators
       deployment-service@5cea036 + e2e-testing@e3a9cf2 Phase 3 per
-      `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
+      `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
 - [x] [deployment-service] P0. Wave E (1 script): `features-sports-service/scripts/launch_parallel_backfill.sh` →
       `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh`. (Tab 11, 2026-05-08,
       deployment-service@0215086.)
@@ -318,7 +318,7 @@ and doesn't affect Deploy-Missing UI registry coverage).
       hooks, and dev-tier scripts that referenced the moved paths. (Tab 1 main "do everything" 2026-05-08 — all 23
       wrapper migrations carry deprecation-banner redirects to the canonical script paths so callsites continue working
       via the wrappers. Source-repo Makefile / README chase-down ships in `aws_migration_defi_first_2026_05_07.md` Phase
-      N as part of the bigger documentation sweep; tracked in `issues/vm_launcher_consolidation_audit_2026_05_08.md` §
+      N as part of the bigger documentation sweep; tracked in `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` §
       "Remaining manual cleanup".)
 - [x] [deployment-service] P0. Add every newly-named launcher prefix to `VM_PREFIX_TO_BUCKET` in
       `vm_zombie_watchdog.py`. **Relaunch the watchdog VM** after the dict edit (see CLAUDE.md "VM Naming Convention").
@@ -326,14 +326,14 @@ and doesn't affect Deploy-Missing UI registry coverage).
       launchers shipped that cycle. Tab 1 main "do everything" 2026-05-08 added 7 more prefixes for Phase 2/3 canonicals
       — deployment-dashboard-vm, mtds-liquidations-backfill, prediction-features-, mtds-gas-fees-solana,
       sports-full-sweep-, sports-entity-, prediction-pipeline-) per
-      `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "By the numbers" → 7 NEW watchdog dict prefixes.)
+      `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "By the numbers" → 7 NEW watchdog dict prefixes.)
 
 ### Phase 2 — deployment-api launcher registry
 
 - [ ] [deployment-api] P0. Extend `_SERVICE_LAUNCHER_SCRIPTS` in `deploy_missing.py` so every newly-migrated script is
       reachable from the Deploy-Missing UI button. This unblocks the operator workflow: any leaf in the hierarchical
       drill-down can deploy-missing without falling back to "manual recovery" placeholders. **DEFERRED-PER-AUDIT
-      2026-05-10**: tracked in `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "Remaining manual cleanup" → "VM
+      2026-05-10**: tracked in `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "Remaining manual cleanup" → "VM
       launches via deployment-api". Pending Tab 5 governance handshake; safe deferral because the migrated launchers
       still run from operator workstation manually.
 
@@ -375,7 +375,7 @@ and doesn't affect Deploy-Missing UI registry coverage).
       `gcloud compute instances create` outside `deployment-service/scripts/vm/`. (PM@<this-commit> — 2026-05-10
       governance hygiene sweep flipped Phases 0+1+4 closed; Phase 2 + Phase 3 carry DEFERRED-PER-AUDIT /
       DEFERRED-AFTER-AWS-PHASE-1 annotations citing successor plans. Audit doc
-      `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE" is the rollup of the actual
+      `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE" is the rollup of the actual
       migration work — 23 wrappers + 8 NEW canonicals + 3 Cloud Run + 1 intra-repo + 7 watchdog prefixes shipped Tab 1
       main 2026-05-08 + Tab 11 2026-05-08.)
 

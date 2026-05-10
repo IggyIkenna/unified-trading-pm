@@ -69,7 +69,7 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 ## Tab 4 finding 2026-05-08 — MDPS-tradfi 4-VM silent partial drain (pre-cluster-validation)
 
 **Big finding** filed as full issue doc:
-[`plans/active/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md`](../active/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md).
+[`plans/archive/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md`](../archive/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md).
 
 Summary: probed 2026-05-08 11:25 UTC for Tab 4 ES.OPT 11-cluster validation work-split task. The 5 mdps-tradfi VMs split
 across two launch batches:

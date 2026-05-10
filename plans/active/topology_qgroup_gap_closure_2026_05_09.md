@@ -59,7 +59,7 @@ locked_since: 2026-05-09
 | GAP-18  | Q5.c                   | this plan Phase 8 (folds into `master_to_live_defi` Group F item 21)                        | P0 — recon service + cron + 7-day|
 | WATCH-1 | Q1.1.d                 | `features_repo_consolidation_2026_05_08.md` Phase 7 (May-13)                                | P0 — push pending operator       |
 | WATCH-2 | Q1.2.b                 | `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 5 + writegate Phase 2.D              | P0 — soft-blocker banner missing |
-| ISSUE-1 | Q3.2.d                 | `plans/active/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` (issue doc) | P0 — code fix required           |
+| ISSUE-1 | Q3.2.d                 | `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` (issue doc) | P0 — code fix required           |
 
 ---
 
@@ -162,7 +162,7 @@ master_to_live_defi Group F todo flipped.
 violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
 - [ ] [AGENT] P0. **ISSUE-1**: File issue doc at
-      `plans/active/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` (covered by this plan's Phase 0
+      `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` (covered by this plan's Phase 0
       below). Then fix: `features-onchain-service/features_onchain_service/app/core/feature_writer.py:125-131` — remove
       `contextlib.suppress(LookaheadBiasError)` wrapper around `PointInTimeEnforcer(strict=True)`. Investigate WHY
       suppression was added (likely upstream `available_at` stamping gap from writegate Phase 2.D) and either fix
@@ -175,7 +175,7 @@ violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
 ## Phase 0 — File ISSUE-1 issue doc (immediate, today)
 
-- [ ] [AGENT] P0. Create `plans/active/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` per CLAUDE.md
+- [ ] [AGENT] P0. Create `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` per CLAUDE.md
       "Findings Triage Discipline" Case-1 issue-doc format. Includes severity (P0), file:line evidence, why it matters,
       recommended fix path. Done = file landed in issues folder.
 

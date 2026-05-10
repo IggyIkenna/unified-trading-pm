@@ -96,7 +96,7 @@ todos:
   - id: phase-0-pre-audit-live-pipeline
     content: |
       - [x] [AGENT] P0. Phase 0 — Pre-audit manifest for the live pipeline. Produce
-        `unified-trading-pm/plans/active/issues/live_pipeline_preaudit_2026_05_08.md` enumerating:
+        `unified-trading-pm/plans/archive/issues/live_pipeline_preaudit_2026_05_08.md` enumerating:
         (a) every existing MTDS adapter that already has a websocket / streaming code path (not all venues do —
             CCXT REST-only venues need a poll fallback), and per-venue connection-pool / rate-limit / IP-redundancy
             constraints (CloudFront cooldowns for Lighter / Pacifica per `feedback_lighter_pacifica_cloudfront_quirks`,
@@ -193,7 +193,7 @@ todos:
 
         QG: UAC quality-gates.sh clean.
     status: done
-    note: "UAC@8bc3f2a (PipelineMode SSOT) + UAC@b643c9a (Phase 1 streaming events: CandleBoundaryCrossedEvent / CandleComputedEvent / InstrumentCacheRefreshTriggerEvent + EmissionOutcome closed-set + parse_timeframe + 17 unit tests) + UAC@b02335d (top-level facade: PipelineMode + is_batch / is_live / source_string_for / pipeline_mode_for_source surfaced from `unified_api_contracts` per Citadel Import Rules). Module at `unified_api_contracts/events/streaming.py`. CandleComputedEvent carries BOTH `emission_policy` (POLICY) AND orthogonal `emission_outcome` (OUTCOME — PUBLISHED_OK / PUBLISHED_DEGRADED / STALE_DATA / BLOCKED). All events default `pipeline_mode` to LIVE_WEBSOCKET. **QG state 2026-05-08 PM (RESOLVED)**: foreign blockers cleared — ORACLE_COVERAGE_START shipped at UAC@3adee82 (Tab 1 DeFi-launch); EN DASH at alerting/thresholds.py:60 already replaced by HYPHEN-MINUS. Issue `plans/active/issues/uac_utl_qg_blockers_2026_05_08.md` marked RESOLVED."
+    note: "UAC@8bc3f2a (PipelineMode SSOT) + UAC@b643c9a (Phase 1 streaming events: CandleBoundaryCrossedEvent / CandleComputedEvent / InstrumentCacheRefreshTriggerEvent + EmissionOutcome closed-set + parse_timeframe + 17 unit tests) + UAC@b02335d (top-level facade: PipelineMode + is_batch / is_live / source_string_for / pipeline_mode_for_source surfaced from `unified_api_contracts` per Citadel Import Rules). Module at `unified_api_contracts/events/streaming.py`. CandleComputedEvent carries BOTH `emission_policy` (POLICY) AND orthogonal `emission_outcome` (OUTCOME — PUBLISHED_OK / PUBLISHED_DEGRADED / STALE_DATA / BLOCKED). All events default `pipeline_mode` to LIVE_WEBSOCKET. **QG state 2026-05-08 PM (RESOLVED)**: foreign blockers cleared — ORACLE_COVERAGE_START shipped at UAC@3adee82 (Tab 1 DeFi-launch); EN DASH at alerting/thresholds.py:60 already replaced by HYPHEN-MINUS. Issue `plans/archive/issues/uac_utl_qg_blockers_2026_05_08.plan.md` marked RESOLVED."
 
   - id: phase-2a-utl-redis-streams-client
     content: |
@@ -240,7 +240,7 @@ todos:
 
         QG: UTL quality-gates.sh clean.
     status: done
-    note: "UTL@f24e651b — `unified_trading_library/streaming/redis_stream.py` (StreamPublisher + StreamConsumerGroup; XADD + MAXLEN ~ + XREADGROUP + XACK + XAUTOCLAIM + idempotent XGROUP CREATE) + `replay.py`. 6 unit tests via fakeredis. Event-class-agnostic (generic BaseModel TypeVar). fakeredis>=2.20 added to pyproject (flat-deps). `redis>=5.0` already present. Companion UTL@87134364 added pipeline_mode kwarg to ManifestWriter (gcs_migration plan Phase 1B). UTL QG blocked by foreign UAC breakage at conftest import — see `plans/active/issues/uac_utl_qg_blockers_2026_05_08.md`."
+    note: "UTL@f24e651b — `unified_trading_library/streaming/redis_stream.py` (StreamPublisher + StreamConsumerGroup; XADD + MAXLEN ~ + XREADGROUP + XACK + XAUTOCLAIM + idempotent XGROUP CREATE) + `replay.py`. 6 unit tests via fakeredis. Event-class-agnostic (generic BaseModel TypeVar). fakeredis>=2.20 added to pyproject (flat-deps). `redis>=5.0` already present. Companion UTL@87134364 added pipeline_mode kwarg to ManifestWriter (gcs_migration plan Phase 1B). UTL QG blocked by foreign UAC breakage at conftest import — see `plans/archive/issues/uac_utl_qg_blockers_2026_05_08.plan.md`."
 
   - id: phase-2b-utl-utc-aligned-scheduler
     content: |
@@ -827,7 +827,7 @@ todos:
               (Reconciliation suite) for the live-pipeline portion.
 
         QG: batch-live-reconciliation-service quality-gates.sh clean; reconciliation report committed under
-        `unified-trading-pm/plans/active/issues/live_pipeline_reconciliation_2026_05_XX.md` for audit
+        `unified-trading-pm/plans/active/issues/live_pipeline_reconciliation_2026_05_XX.md` for audit (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
         trail.
     status: helper-shipped
     note: "UTL@908b1647 — `unified_trading_library/batch_live_reconciler.py` ships `reconcile_shard(asset_group, venue, data_type, instrument_id, day, batch_rows, live_rows, row_comparator)` returning a frozen `BatchLiveReconciliationReport` with verdict ∈ {MATCH, ROW_COUNT_MISMATCH, SCHEMA_MISMATCH, VALUE_MISMATCH}. Default `ohlcv_close_within(rel_tolerance=1e-4)` row comparator handles None + zero-baseline. 9 unit tests cover all four verdict paths + custom-comparator + comparator edge cases + frozen-dataclass immutability. **Helper is the primitive**; the deployment-api scheduled job + 7-day live-vs-batch run + reconciliation report commit (12.4) DEFER to after Phase 3/4/5/6/7 ship 7 continuous days of live-mode parquet (currently DEFERRED-AFTER-FEATURES-CONSOLIDATION per Harsh Tab 2 dependency). When 7 days are captured, the same helper runs in batch-live-reconciliation-service to produce the cutover gate."
@@ -1014,7 +1014,7 @@ Read these BEFORE making code changes — drift = review-blocking failure per `d
 
 ## Pre-audit manifest
 
-Phase 0 produces `unified-trading-pm/plans/active/issues/live_pipeline_preaudit_2026_05_08.md`. Subsequent phases
+Phase 0 produces `unified-trading-pm/plans/archive/issues/live_pipeline_preaudit_2026_05_08.md`. Subsequent phases
 reference that artifact for the per-adapter / per-consumer / per-event surface. This plan body does NOT pre-emit the
 audit — Phase 0 IS the audit.
 
@@ -1061,7 +1061,7 @@ phase has a `Success gate:` row below. A phase counts DONE only when its gate is
 
 | Phase | Theme                                                    | Success gate (verifiable at phase boundary)                                                                                                                                                                                                                                    |
 | ----- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0     | Pre-audit (SOLO, blocks everything)                      | Pre-audit doc filed at `plans/active/issues/live_pipeline_pre_audit_2026_05_08.md` listing every (asset_group, venue, data_type) gap + every consumer of every features-\* repo + every parquet-write callsite touching pipeline_mode                                          |
+| 0     | Pre-audit (SOLO, blocks everything)                      | Pre-audit doc filed at `plans/archive/issues/live_pipeline_preaudit_2026_05_08.md` listing every (asset_group, venue, data_type) gap + every consumer of every features-\* repo + every parquet-write callsite touching pipeline_mode                                          |
 | 1     | UAC streaming events                                     | UAC `crosscutting/streaming_events.py` defines `CANDLE_BOUNDARY_CROSSED` + `CANDLE_COMPUTED` + `INSTRUMENT_CACHE_REFRESH_TRIGGER` Pydantic models with frozen=True; 100% test coverage on construction + roundtrip; `from unified_api_contracts.crosscutting import ...` works |
 | 2A    | UTL Redis Streams client                                 | UTL `redis_streams_client.py` ships with `XADD` + `XREAD` + `XACK` + `XGROUP` + MAXLEN trim wrappers; integration test via `redis-py-cluster` harness green; thread-safe under 4-worker concurrency                                                                            |
 | 2B    | UTL UTC-aligned scheduler                                | UTL `utc_aligned_scheduler.py` blocks until next aligned boundary (15s / 1m / 15m / 1h / 1d); unit tests cover boundary-crossing + clock-skew + DST; partial-candle emit anti-pattern test fails the right way                                                                 |

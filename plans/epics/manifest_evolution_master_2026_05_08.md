@@ -13,7 +13,7 @@ folds_in:
   - hard_schema_enforcement_2026_05_08 # Phase 5 SCHEMA_VALIDATION_FAILED + cluster validation AST guard
   - wave3x_residual_ssots_2026_05_08 # Tracks A (HALF_DAY_SESSIONS) + D (zero-activity-bar audit)
   - expected_universe_v2_design_2026_05_08 # per-instrument enumerator
-  - manifest_v7_schema_migration_design_2026_05_08 # v8 schema bump (atomic rename + immutable service_emission_state)
+  - manifest_schema_final_gate_2026_05_09 # CONSOLIDATED v8 SSOT — bundled 5-migration parquet walk + slice b ServiceEmissionStateEnum closed-set + atomic rename (supersedes manifest_v7_schema_migration_design_2026_05_08, archived)
   - manifest_cross_asset_rescan_design_2026_05_08 # cross-asset --apply-flips reconciler
   - gcs_migration_bundle_pipeline_mode_2026_05_08 # pipeline_mode hive partition + writer adoption + GCS layout
 companion_to:
@@ -80,7 +80,7 @@ advancing while the third lagged.
 | [`hard_schema_enforcement_2026_05_08`](../active/hard_schema_enforcement_2026_05_08.md)                         | QG STEP 5.66 AST guard + `SCHEMA_VALIDATION_FAILED` enum addition + workspace cluster-validation enforcement                                                       | Draft                                                                    | G2 (cluster validation) + G7 (workspace audit)                                                  |
 | [`wave3x_residual_ssots_2026_05_08`](../active/wave3x_residual_ssots_2026_05_08.md)                             | Tracks A (UAC `HALF_DAY_SESSIONS` + `EXPECTED_PARTIAL_HALF_DAY` reason) + D (zero-activity-bar audit per CLAUDE.md 4-category rule)                                | 5-track parallel plan; A + D in scope here                               | G1 (reason taxonomy — Track A) + G2 (cluster validation overlap — Track D zero-activity-bar)    |
 | [`expected_universe_v2_design_2026_05_08`](../active/expected_universe_v2_design_2026_05_08.md)                 | Per-instrument-grain enumerator (v2 supersedes v1 venue-grain); pre-populates `expected_unattempted` rows from instruments-service catalog                         | Draft (Q3 launch-vs-v8 sequencing pending)                               | G3 (enumerator launch) — sequenced AFTER G4 v8 schema                                           |
-| [`manifest_v7_schema_migration_design_2026_05_08`](../active/manifest_v7_schema_migration_design_2026_05_08.md) | v8 schema bump: immutable `service_emission_state` column + atomic rename + ONE-TIME migration (no fallback grace per CLAUDE.md "Manifest migration NOT fallback") | Draft (BLOCKED on slice b ServiceEmissionStateEnum closed-set per audit) | G4 (v8 schema atomic rename)                                                                    |
+| [`manifest_schema_final_gate_2026_05_09`](../active/manifest_schema_final_gate_2026_05_09.md)                   | **CONSOLIDATED v8 SSOT.** One-shot maximalist plan: bundled Phase 3 parquet walk does FIVE migrations in ONE pass — pipeline_mode hive partition + category→asset_group rekey + 5 drift-axis fixes + v8 NULL-column backfill (`service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`) + cross-asset rescan class-A auto-fixes. Closed-set `ServiceEmissionStateEnum` ratified inline. Supersedes archived `manifest_v7_schema_migration_design_2026_05_08`. | Active (P0; deadline 2026-05-23)                                          | G4 (v8 schema atomic rename) + G5 (rescan apply-flips overlap — bundled in same parquet walk)   |
 | [`manifest_cross_asset_rescan_design_2026_05_08`](../active/manifest_cross_asset_rescan_design_2026_05_08.md)   | Cross-asset-group `--apply-flips` reconciler against full manifest; runs AFTER v8 schema lands so `service_emission_state` column exists                           | Draft                                                                    | G5 (rescan apply-flips)                                                                         |
 | [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)   | `pipeline_mode=` hive partition adoption (overnight migration of millions of parquets) + writer kwarg sweep (workspace `record_captured` callsites)                | Draft                                                                    | G6 (pipeline_mode partition + writer adoption) + G7 (workspace audit)                           |
 
@@ -150,7 +150,7 @@ all asset_groups; coverage % at each drilldown level computes correctly per CLAU
 ### G4 — v8 schema migration (atomic rename + immutable service_emission_state)
 
 - **Schema axis**: v8 manifest column set adds immutable `service_emission_state ∈ ServiceEmissionStateEnum` (closed
-  set: `PUBLISHED_OK`, `PUBLISHED_DEGRADED`, `STALE_DATA_HEARTBEAT_ONLY`, `BLOCKED` per UAC@58c3b61 ServiceEmissionPolicy slice (a); name ratified 2026-05-10 cross-plan audit Q1 — uses full `STALE_DATA_HEARTBEAT_ONLY` per Policy B larger-set-wins rule, matching `manifest_schema_final_gate_2026_05_09.md` § Phase 1.A and `manifest_v7_schema_migration_design_2026_05_08.md` § line 66).
+  set: `PUBLISHED_OK`, `PUBLISHED_DEGRADED`, `STALE_DATA_HEARTBEAT_ONLY`, `BLOCKED` per UAC@58c3b61 ServiceEmissionPolicy slice (a); name ratified 2026-05-10 cross-plan audit Q1 — uses full `STALE_DATA_HEARTBEAT_ONLY` per Policy B larger-set-wins rule, matching `manifest_schema_final_gate_2026_05_09.md` § Phase 1.A which is the consolidated v8 SSOT — see `plans/archive/manifest_v7_schema_migration_design_2026_05_08.plan.md` § line 66 for archived predecessor).
 - **Writer axis**: `ManifestWriter.record_captured(service_emission_state=...)` now REQUIRED kwarg; default-value
   protocol REJECTED — every callsite must declare. Migration script (one-time) populates `service_emission_state` for
   all v7-shaped legacy rows from a per-(service, output_data_type) seed dict.
@@ -298,7 +298,7 @@ If you're touching one umbrella's schema, check the other before shipping.
 
 ## Audit-2026-05-10 finding — post-cutover Wave: lift cross-cutting per-data_type view to typed registry
 
-**Source**: [`plans/active/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md`](../active/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md)
+**Source**: [`plans/archive/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md`](../archive/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md)
 Block B2.
 
 **Finding**: UAC `external/` has 73 source sub-directories (per-source flat layout: `__init__.py` + `examples/` +

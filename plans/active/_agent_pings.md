@@ -52,7 +52,7 @@ see predictions_master_2026_05_07.md.
 
 [2026-05-08 ~now UTC] cefi-available-at-stamping-tab (Tab F2) — 🟡 BLOCKED on master gate A.10 UTL helper + UAC
 SOURCE_PRIORITY shape; structural mismatch (per-venue file premise, missing latency field, missing helper) doc'd in
-[issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md](issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md)
+[../archive/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md](../archive/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md)
 
 - cefi_master_2026_05_07.md § "Open questions" Q1; recommends Phase 1 reshape per-callsite-not-per-venue; no code edits
   made; awaiting triage.

@@ -4,7 +4,7 @@ status: active
 created: 2026-05-10
 deadline: pre-cutover (P1 — silent operational failure surface; first-write failures on new consolidated services)
 horizon: 1-2 day scope-bounded
-spawned_from: plans/active/issues/bucket_name_ssot_triple_drift_2026_05_10.md (archived 2026-05-10)
+spawned_from: plans/archive/issues/bucket_name_ssot_triple_drift_2026_05_10.md (archived 2026-05-10)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 execution:

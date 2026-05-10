@@ -218,10 +218,10 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
 
 - [ ] [HUMAN] P0. Phase 0.A — Run gcs_migration Phase 0 pre-audit on a same-region `asia-northeast1-c` GCE VM.
       Calibrates Phase 7 wall-clock + per-bucket parquet count + drift histogram. Output: append
-      `## Run results — 2026-05-09` to `plans/active/issues/gcs_migration_bundle_preaudit_2026_05_08.md`. Gates Phase 7
+      `## Run results — 2026-05-09` to `plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md`. Gates Phase 7
       launch.
 - [ ] [HUMAN] P0. Phase 0.B — Run `measure-honest-coverage.py` on production manifests for writegate Phase 5
-      PRE-baseline. Output: per-data_type coverage % cells in `plans/active/honest_coverage_baseline_2026_05.md`. Gates
+      PRE-baseline. Output: per-data_type coverage % cells in `codex/02-data/honest_coverage_baseline_2026_05.md`. Gates
       Phase 12 ratchet POST-baseline comparison.
 
 ### Phase 1 — UAC v8 schema-bump (May 9-11, PARALLEL with Phase 2/3)
@@ -350,7 +350,7 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag>` per asset_group; phantom
       count MUST be 0 (was 354 residual pre-bundle).
 - [ ] [HUMAN] P0. Phase 7.G — Operator sign-off per asset_group at
-      `plans/active/issues/gcs_migration_bundle_signoff_2026_05_08.md` once Phase 7.F gate green.
+      `plans/active/issues/gcs_migration_bundle_signoff_2026_05_08.md` once Phase 7.F gate green. (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
 - **Done-definition**: 5/5 asset_groups signed off + zero phantoms + bundled walk metrics emitted (5 drift-class
   histograms + bytes-moved + wall-clock per asset_group).
 
@@ -415,7 +415,7 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - [ ] [HUMAN+AGENT] P0. Phase 12.B — Batch-vs-live recon per master plan F18. Run the `batch_live_reconciler`
       (UTL@908b1647) helper; compare batch P&L vs live P&L over the same window; delta < 5bps tolerance.
 - [ ] [HUMAN] P0. Phase 12.C — writegate Phase 5 ratchet POST-baseline measurement; `measure-honest-coverage.py` re-runs
-      against post-backfill manifest. Lock ratchet in `plans/active/honest_coverage_baseline_2026_05.md` with ±0.5pp
+      against post-backfill manifest. Lock ratchet in `codex/02-data/honest_coverage_baseline_2026_05.md` with ±0.5pp
       tolerance + monthly cadence + 99% floor.
 - **Done-definition**: paper-trade smoke green + recon delta <5bps + ratchet locked.
 
@@ -443,8 +443,7 @@ Plans to banner (closed list, sweep on Phase 0 launch):
 
 - `live_pipeline_mtds_mdps_features_2026_05_08.md`
 - `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
-- `manifest_v7_schema_migration_design_2026_05_08.md`
-- `manifest_cross_asset_rescan_design_2026_05_08.md`
+- `manifest_cross_asset_rescan_design_2026_05_08.md`  (sibling design doc; v7 predecessor `manifest_v7_schema_migration_design_2026_05_08.md` archived 2026-05-09 as this v8 plan supersedes it)
 - `writegate_honest_coverage_endtoend_2026_05_06.md`
 - `features_repo_consolidation_2026_05_08.md`
 - `available_at_lookahead_bias_completion_2026_05_08.md`
@@ -621,7 +620,7 @@ BEFORE doing anything else, read in order:
      section.
   3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
   4. unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md — your plan-of-record.
-  5. unified-trading-pm/plans/active/issues/features_repo_consolidation_preaudit_2026_05_08.md — the 1286-
+  5. unified-trading-pm/plans/archive/issues/features_repo_consolidation_preaudit_2026_05_08.md — the 1286-
      line audit artifact with the 11 external import lines + 51 string refs + 6 lift candidates.
   6. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md § "Phase 11" — the May-16
      hard-deadline blocker that depends on you finishing.

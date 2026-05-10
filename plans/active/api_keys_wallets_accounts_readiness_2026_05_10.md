@@ -8,7 +8,7 @@ horizon: scope-bounded
 spawned_from: plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md
 companion_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/epics/defi_master_2026_05_07.md
+  - plans/active/defi_master_2026_05_07.md
   - plans/epics/cefi_master_2026_05_07.md
   - plans/epics/infrastructure_master_2026_05_07.md
 locked_by: live-defi-rollout
@@ -589,7 +589,7 @@ Per `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in same logic
 
 - **Master plan** `plans/active/master_to_live_defi_2026_05_23.md` Groups F+G — this plan populates the
   continuous-verification column for credential-dependent gates.
-- **DeFi master** `plans/epics/defi_master_2026_05_07.md` — Phase 4 mainnet wallet + multi-wallet + flash-loan-receiver
+- **DeFi master** `plans/active/defi_master_2026_05_07.md` — Phase 4 mainnet wallet + multi-wallet + flash-loan-receiver
   per chain composes; pre-archive jitoSOL gap (2022-11-01 → 2023-10-01) tracked there.
 - **CeFi master** `plans/epics/cefi_master_2026_05_07.md` — Phase 2 native adapters + per-scope key separation composes.
 - **Infrastructure master** `plans/epics/infrastructure_master_2026_05_07.md` — Phase 1 AWS parity is largest
@@ -597,7 +597,7 @@ Per `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in same logic
 - **Sibling question docs** `client_reporting_pnl_attribution_2026_05_08.md` +
   `risk_simulations_limits_alerting_2026_05_08.md` — Phase 3.D treasury rollup feeds client-reporting; Phase 7
   per-archetype subset feeds per-archetype risk limits.
-- **Runbook governance** `plans/active/issues/runbook_execution_governance_gaps_2026_05_08.md` — Phase 8.A audit script
+- **Runbook governance** `plans/archive/issues/runbook_execution_governance_gaps_2026_05_08.md` — Phase 8.A audit script
   needs `execution.owner` declaration per HARD RULE.
 
 ## Pre-audit manifest (per Citadel-Grade Planning § 1)

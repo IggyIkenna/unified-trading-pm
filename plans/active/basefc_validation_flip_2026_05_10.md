@@ -4,7 +4,7 @@ status: active
 created: 2026-05-10
 deadline: post-cutover (P1 — type-safety hardening, not correctness blocker)
 horizon: 1-2 week scope-bounded
-spawned_from: plans/active/issues/basefc_validation_flip_audit_2026_05_08.md (archived 2026-05-10)
+spawned_from: plans/archive/issues/basefc_validation_flip_audit_2026_05_08.md (archived 2026-05-10)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 execution:

@@ -20,7 +20,7 @@ related_codex:
   - codex/04-architecture/tenderly-execution-provider.md
   - codex/02-data/availability-manifest-and-data-status.md
 related_plans:
-  - plans/epics/defi_master_2026_05_07.md
+  - plans/active/defi_master_2026_05_07.md
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/defi_simulation_realism_2026_05_10.md
   - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
@@ -31,9 +31,10 @@ related_plans:
 
 ## Why this plan exists
 
-The 2026-05-08 catalogue audit (`plans/questions/defi_readiness_catalogue_2026_05_08.md`) surfaced 22 P-tagged
-blockers across 6 DeFi-primitive categories (vaults / lending / LST / restaking-LRT / perp DEX / spot DEX) plus chain
-primitives (gas / oracles / MEV / Tenderly / RPC redundancy). Operator directive 2026-05-10 closes Gate 1
+The 2026-05-08 catalogue audit (since consumed; spawned this plan + `defi_simulation_realism_2026_05_10` +
+`cross_asset_group_catalogue_audit_2026_05_10`) surfaced 22 P-tagged blockers across 6 DeFi-primitive categories
+(vaults / lending / LST / restaking-LRT / perp DEX / spot DEX) plus chain primitives (gas / oracles / MEV / Tenderly /
+RPC redundancy). Operator directive 2026-05-10 closes Gate 1
 maximalist: "alli in scope for may 23 pls" — every primitive mentioned anywhere in CLAUDE.md / UAC / codex / plans
 that is currently zero-or-partial is now P0 May-23 scope, not deferred.
 
@@ -51,9 +52,10 @@ discipline (UAC owns every contract; service code consumes only the declared sha
 
 ## Pre-audit reference
 
-Full pre-audit lives in [`plans/questions/defi_readiness_catalogue_2026_05_08.md`](../questions/defi_readiness_catalogue_2026_05_08.md)
-§ "Audit findings (audit pass 1 — 2026-05-09)" + 6-category sub-audit. Do NOT re-audit at execution time — read the
-question doc, then start Phase 1.
+The 2026-05-08 question doc was fully consumed when this plan + sibling spawned plans landed; the 22-blocker pre-audit
+content is folded into the per-category sections below + into `defi_simulation_realism_2026_05_10` +
+`cross_asset_group_catalogue_audit_2026_05_10`. Do NOT re-audit at execution time — read the per-category sections, then
+start Phase 1.
 
 Concrete pre-audit deltas (the 22-blocker list condensed by category, with file:line citations from the audit):
 

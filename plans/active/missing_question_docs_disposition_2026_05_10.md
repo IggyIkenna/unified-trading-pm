@@ -4,7 +4,7 @@ status: active
 created: 2026-05-10
 deadline: pre-cutover (P0 — May-23 plans cite ghost SSOTs)
 horizon: 0.5-day operator-decision then 1-2 day execution
-spawned_from: plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md (archived 2026-05-10)
+spawned_from: plans/archive/issues/missing_question_docs_orphan_references_2026_05_10.md (archived 2026-05-10)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 execution:

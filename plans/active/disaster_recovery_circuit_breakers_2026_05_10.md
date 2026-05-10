@@ -15,7 +15,8 @@ related_plans:
   - plans/active/risk_simulations_limits_alerting_2026_05_10.md
   - plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
   - plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md
-  - plans/active/defi_readiness_catalogue_2026_05_10.md
+  - plans/active/defi_catalogue_chain_primitives_2026_05_10.md
+  - plans/active/defi_simulation_realism_2026_05_10.md
 related_codex:
   - codex/04-architecture/kill-switch-circuit-breaker.md
   - codex/04-architecture/autonomous-recovery-matrix.md

@@ -14,7 +14,7 @@ related_plans:
   - plans/active/disaster_recovery_circuit_breakers_2026_05_10.md
   - plans/active/alerting_service_live_rules_2026_05_07.md
   - plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
-  - plans/active/promote_workflow_backtest_to_live_2026_05_10.md
+  - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 related_codex:
   - codex/04-architecture/kill-switch-circuit-breaker.md
   - codex/04-architecture/capital-efficiency-patterns.md
@@ -28,7 +28,7 @@ related_codex:
 > § "§ 7 SSOT reconciliation seam (Framing 1)" below. Phase 1 unblocked; Phase 1.A MUST cite the seam in every
 > Pydantic docstring + Phase 7 codex doc must include the seam diagram verbatim. Reviewers reject Phase 1 PR if seam
 > citations missing. Issue
-> [`risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md`](issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md)
+> [`risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md`](../archive/issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md)
 > closed.
 
 ## Why this plan exists
@@ -238,7 +238,7 @@ EXTENSION includes this seam diagram verbatim.
 - `disaster_recovery_circuit_breakers_2026_05_10` — risk rule fire → breaker arm path; banner reciprocal.
 - `simulation_scenarios_topology_price_shocks_2026_05_09` — Phase 8 consumes those primitives; banner reciprocal.
 - `alerting_service_live_rules_2026_05_07` — `RiskRuleFiredEvent` is alerting consumer.
-- `promote_workflow_backtest_to_live_2026_05_10` — gate evaluator reads pre-flight pass/fail.
+- `promote_workflow_may23_cli_path_2026_05_10` — gate evaluator reads pre-flight pass/fail.
 
 ## Deferred work after 2026-05-10 plan-creation session
 

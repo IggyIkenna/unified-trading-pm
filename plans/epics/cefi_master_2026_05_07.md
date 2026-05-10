@@ -193,7 +193,7 @@ writes (RED ALERT not triggered). All `instrument_id` columns populated; per-ins
 6.7M (real per-instrument tick counts, NOT bundle-rollup 8.3M).
 
 **Important resolution — asymmetric shard shape no longer reproducing.** The bundle-vs-per-instrument shape documented
-in [`issues/cefi_tardis_writegate_findings_2026_05_07.md`](issues/cefi_tardis_writegate_findings_2026_05_07.md) Finding
+in [`../archive/issues/cefi_tardis_writegate_findings_2026_05_07.md`](../archive/issues/cefi_tardis_writegate_findings_2026_05_07.md) Finding
 1 is no longer present on the Day 2 fleet. Current shards are SSOT-conformant per-instrument shape (see CLAUDE.md §
 "Shard-granularity SSOT" cefi spot/perp matrix). Either Ikenna's writegate Phase 2.A residual landed overnight, or the
 relaunched-on-`-8` VMs use a tarball that includes the fix. Issue-doc owner should sweep + resolve when convenient.
@@ -442,7 +442,7 @@ with formula `available_at = tick_ts + emission_latency_ms` per UAC SOURCE_PRIOR
 **Why this is BIG (Findings Triage Discipline Case 5)**: contradicts a workspace SSOT (the work-split's premise about
 file layout); requires action across ≥2 repos (UAC `SOURCE_PRIORITY` shape extension + UTL helper creation + MTDS
 multi-callsite wiring); changes the work-split (Tab F2 cannot ship 10 per-venue commits as scoped). Issue doc:
-[`plans/active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`](../active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md).
+[`plans/archive/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`](../archive/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md).
 
 **What this Tab F2 agent did NOT do (per "don't edit unfamiliar files when blocked" + "Plans Run To Actual Completion"
 HARD RULEs)**: did not ship `stamp_available_at_cefi_tick` (master-gate work owned by Tab 2 LIVE-PIPELINE / writegate
@@ -553,7 +553,7 @@ Commits shipped:
 
 - PM@c3b5e070 — `docs(plans): cefi available_at Tab F2 blocked — file structural mismatch flagged`. 3 files, 260
   insertions: new § "Open questions" Q1 on this plan + new
-  [`plans/active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`](../active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md)
+  [`plans/archive/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`](../archive/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md)
   - cross-side ping in [`plans/active/_agent_pings.md`](../active/_agent_pings.md).
 - PM@&lt;next sha&gt; — this DONE block append.
 

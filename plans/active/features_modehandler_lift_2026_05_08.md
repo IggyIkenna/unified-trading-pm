@@ -25,7 +25,7 @@ migrated_from: feature_batch_handler_abc_zero_consumers_2026_05_08.md (issue doc
 ## What this is
 
 Successor plan capturing **option α** from the Phase 10 sub-agent's FeatureBatchHandler investigation
-(`plans/active/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.md`). Originally option β (delete dead UTL
+(`plans/archive/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.plan.md`). Originally option β (delete dead UTL
 FeatureBatchHandler) shipped 2026-05-08 PM at UTL@2162eee5, closing the workspace-SSOT violation. **This plan captures
 the architectural follow-up**: lift the local 4-family `ModeHandler` ABC into UTL canonical so future features-\* batch
 handlers have a real SSOT to inherit from.
@@ -85,7 +85,7 @@ Estimated effort: 2-3 days for one focused agent.
 
    Force-fit would either (a) widen the ABC absorbing 16-arg signatures + multi-feature_group iteration + cross-factor
    gating (diluting contract to nothing — same wall the original `FeatureBatchHandler` lift hit, per
-   [`plans/active/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.md`](issues/feature_batch_handler_abc_zero_consumers_2026_05_08.md)),
+   [`plans/archive/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.plan.md`](../archive/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.plan.md)),
    OR (b) rewrite the family's compute pipeline (327-498 LOC each) to map onto the per-shard 1-frame abstraction.
    Neither is a small refactor; both touch live production paths under May-23 deadline pressure. **If a future
    bare-class family grows to need shared lifecycle, adoption is a small refactor (subclass + register resource +

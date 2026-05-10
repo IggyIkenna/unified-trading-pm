@@ -325,7 +325,7 @@ After a successful batch compute, verify the downstream API serves correct data:
 
 ## Issues Found
 
-(logged in `plans/active/issues/service_control_surface_issues_2026_03_21.md`)
+(logged in `plans/archive/issues/service_control_surface_issues_2026_03_21.md`)
 
 | Issue | Severity | Fixed? |
 | ----- | -------- | ------ |

@@ -132,15 +132,17 @@ canonical manifest post-v2.
   toward venue-sharding so a single VM doesn't burn a full Tardis catalog read just to enumerate.
 - Q2 — read-time denominator query: pyarrow scans 190M rows in ~30s on a same-region VM. Cache the denominator in redis
   with 24h TTL? Or compute live per-request? Defer to deployment-api scope.
-- Q3 — operator-decision: launch v2 NOW or AFTER manifest v6→v7→v8 schema migration? v8 adds `service_emission_state` +
-  2 sibling columns; if v2 lands first, v8 migration walks 190M rows; if v8 lands first, v2 enumerator writes the new
-  columns immediately. Lean toward v8 first (smaller working set on the migration walk).
+- Q3 — **RESOLVED 2026-05-10** (per `manifest_evolution_master_2026_05_08.md` § G3: "Decision: launch AFTER G4" + this
+  plan's frontmatter line 29 "sequenced AFTER G4 v8 schema"). v8 schema migration runs first (read-once + write-once +
+  blocking via `manifest_schema_final_gate_2026_05_09` consolidated v8 SSOT); v2 enumerator launches AFTER on the v8
+  manifest, writing `service_emission_state` + 2 sibling columns directly. Avoids doubling compute cost of running v2
+  pre-v8 then re-running post-v8.
 
 ## Cross-plan coordination
 
 - `manifest_migration_master_2026_05_07` — Stage 4 includes residual sweeps that overlap with v2 launch. Coordinate
   banner during v2 launch window.
-- `manifest_v7_schema_migration_design_2026_05_08` (sibling Tab 3 design) — both designs touch manifest schema +
+- `manifest_schema_final_gate_2026_05_09` (consolidated v8 SSOT — supersedes archived `manifest_v7_schema_migration_design_2026_05_08`) — both plans touch manifest schema +
   enumeration. v2 launch should happen AFTER v8 migration for write-side simplicity.
 - `live_pipeline_mtds_mdps_features_2026_05_08` Phase 12 — batch-vs-live reconciliation needs the v2 expected universe
   to compute a meaningful completeness denominator per shard atom.

@@ -222,7 +222,7 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
       [`cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md) § 4.2. **NEW
       BLOCKER SURFACED**: bucket-name SSOT triple-drift between `setup-defi-buckets.sh` purpose-specific shape vs
       `BUCKET_PREFIXES` per-kind shape vs `UnifiedCloudConfig` per-field env-vars — operator triage call needed. Filed
-      at [`issues/aws_phase_1_smoke_blockers_2026_05_08.md`](issues/aws_phase_1_smoke_blockers_2026_05_08.md).
+      at [`../archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md`](../archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md).
 - [ ] [SCRIPT] P0. Every service that reads/writes parquet MUST call UCI bucket-resolver, NOT inline string formatting.
       `grep -rn "f\"gs://\|f'gs://\|f\"s3://\|f's3://" --include="*.py"` to find anti-patterns. Fix to
       `cloud_interface.factory.get_bucket(category=..., asset_group=..., env=...)`. **PARTIAL 2026-05-08** (Tab 4):
@@ -754,10 +754,10 @@ first-attempt codex doc edits; re-applied serially.
   (2026-05-08)" with 5 subsections (gs:// literal classification, yaml parity check confirming zero drift, SUFFIX drift
   resolution to keep both shapes hidden behind resolver, companion follow-ups, AWS Phase 1 smoke readiness 🟢/🟡
   ratings).
-- Issue doc: `plans/active/issues/aws_phase_1_smoke_blockers_2026_05_08.md` — bucket-name SSOT triple-drift surfaced;
+- Issue doc: `plans/archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md` — bucket-name SSOT triple-drift surfaced;
   operator triage call between (a) rename buckets, (b) refactor `BUCKET_PREFIXES`, (c) accept per-purpose model. Tab 4
   recommends (c). Includes paste-ready band-aid smoke recipe.
-- Issue doc: `plans/active/issues/utl_qg_failures_post_pipeline_mode_2026_05_08.md` — UTL
+- Issue doc: `plans/archive/issues/utl_qg_failures_post_pipeline_mode_2026_05_08.md` — UTL
   `bash scripts/quality-gates.sh` red on `live-defi-rollout` with 25 failures + 2 errors; ALL traced via `git log` to
   other agents' commits (87134364 manifest_writer pipeline_mode, 8c67df5d utc_aligned_scheduler, f24e651b streaming,
   68b3804a record_empty blank-reason). Tab 4's UTL@780a9575 commit attribution-clean per CLAUDE.md "QG failure

@@ -177,7 +177,7 @@ structure regardless.
 
 ## Issues Found
 
-(log in `plans/issues/service_control_surface_issues_2026_03_21.md`)
+(log in `plans/archive/issues/service_control_surface_issues_2026_03_21.md`)
 
 | Issue | Severity | Fixed? |
 | ----- | -------- | ------ |

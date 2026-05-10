@@ -82,12 +82,12 @@ todos:
     content: |
       - [x] [AGENT] P0. Phase 0 — Pre-audit GCS state across every bucket the workspace writes to.
         SOLO; blocks all later phases. (unified-trading-pm@0cc633c8 — pre-audit doc shipped at
-        plans/active/issues/gcs_migration_bundle_preaudit_2026_05_08.md; counts +
+        plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md; counts +
         per-bucket runs deferred to operator on a same-region asia-northeast1-c GCE VM
         per CLAUDE.md phantom-audit recipe — append `## Run results — YYYY-MM-DD` section
         at the bottom of the issue doc per pass.)
 
-        Output: `unified-trading-pm/plans/active/issues/gcs_migration_bundle_preaudit_2026_05_08.md` enumerating:
+        Output: `unified-trading-pm/plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md` enumerating:
         (a) every workspace GCS bucket (`gs://{pid}-raw-tick`, `gs://{pid}-features`, `gs://{pid}-instrument-data`,
             `gs://{pid}-sports-reference`, `gs://{pid}-events`, etc.) — pull from
             `unified-cloud-interface` bucket registry + `deployment-service/configs/clusters/*.yaml`;
@@ -336,7 +336,7 @@ todos:
            asset_group; phantom count must be 0 (was 354 residual pre-migration; the bundle fixes the 5 drift
            axes that were the source of those 354 phantoms).
         7. Per-asset-group migration sign-off: operator marks each asset_group complete in
-           `unified-trading-pm/plans/active/issues/gcs_migration_bundle_signoff_2026_05_08.md` once Phase 3.6
+           `unified-trading-pm/plans/active/issues/gcs_migration_bundle_signoff_2026_05_08.md` once Phase 3.6 (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
            gate is green. Down-stream services bounced (MTDS/MDPS/features VMs) only after sign-off so they
            pick up the new manifest schema.
 
@@ -458,7 +458,7 @@ todos:
 
         QG: instruments-service quality-gates.sh clean (the script lives there per workspace history). Phantom
         count = 0 reported per asset_group + committed under
-        `unified-trading-pm/plans/active/issues/gcs_migration_bundle_phantom_signoff_2026_05_08.md`.
+        `unified-trading-pm/plans/active/issues/gcs_migration_bundle_phantom_signoff_2026_05_08.md`. (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
     status: todo
     note: ""
 
@@ -594,7 +594,7 @@ Read these BEFORE making code changes — drift = review-blocking failure per `d
 
 ## Pre-audit manifest
 
-Phase 0 produces `unified-trading-pm/plans/active/issues/gcs_migration_bundle_preaudit_2026_05_08.md`. Subsequent phases
+Phase 0 produces `unified-trading-pm/plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md`. Subsequent phases
 reference it for: (a) bucket inventory; (b) per-bucket parquet count + cost estimate; (c) per-bucket drift-class
 histogram; (d) manifest current shape; (e) phantom-row baseline; (f) coordination with `manifest_migration_master` Stage
 4; (g) total cost + wall-clock; (h) snapshot strategy.
@@ -728,7 +728,7 @@ Phases shipped on `live-defi-rollout`:
 - Cross-asset rescan launcher script + watchdog dict update (sub-agent rate-limited; design doc shipped at `cc67e904`).
 
 **Foot-gun #3 incidents this session (4 total — see
-[`issues/foot_gun_3_double_strike_2026_05_08.md`](issues/foot_gun_3_double_strike_2026_05_08.md)):**
+[`../archive/issues/foot_gun_3_double_strike_2026_05_08.md`](../archive/issues/foot_gun_3_double_strike_2026_05_08.md)):**
 
 1. PM@`784f2bfe` — sub-agent's commit message says "Phase 0 pre-audit doc" but actual diff is +58 lines to Tab 1's
    defi_master_2026_05_07.md (foreign content under sub-agent's message).

@@ -15,7 +15,7 @@ related_plans:
   - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
   - plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md
   - plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md
-  - plans/epics/defi_master_2026_05_07.md
+  - plans/active/defi_master_2026_05_07.md
   - plans/epics/strategy_and_dart_master_2026_05_07.md
 related_codex:
   - codex/09-strategy/operational/cli-promote-paths.md

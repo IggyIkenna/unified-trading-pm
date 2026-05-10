@@ -20,7 +20,7 @@ related_plans:
   - plans/active/defi_catalogue_chain_primitives_2026_05_10.md
   - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
   - plans/questions/risk_simulations_limits_alerting_2026_05_08.md
-  - plans/epics/defi_master_2026_05_07.md
+  - plans/active/defi_master_2026_05_07.md
   - plans/active/master_to_live_defi_2026_05_23.md
 ---
 
