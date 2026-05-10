@@ -36,6 +36,62 @@ related_codex:
 
 # Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
 
+> **🟡 SCOPE-COMPRESSED 2026-05-10 (T-13 to cutover)** — operator review of Audit C Finding C-5 (56 todos / 0 done at
+> T-13, well-designed but unstarted) ratified Citadel-grade compression: ship the **MINIMUM VIABLE adversarial gate**
+> that covers the 2 LIVE archetypes (`carry_staked_basis` + `leveraged_funding_arb`) under their 6 highest-likelihood
+> failure modes, run end-to-end through real execution-service matching-engine adversarial mode, with per-scenario
+> expected-outcome assertion. **Defer the broader regression matrix + per-asset-group scenario library + UI integration
+> + 7-layer wire-in to the post-cutover successor plan
+> [`simulation_scenarios_post_cutover_2026_06_01.md`](simulation_scenarios_post_cutover_2026_06_01.md)** (NEW, sibling
+> plan, ~6-9 weeks scope including the deferred Phases 4-9 of this plan body).
+>
+> **Pre-cutover compressed scope (~3-5 AI-days, ~15 todos)**:
+>
+> 1. UAC `ScenarioOverlay` Pydantic dataclass + `ScenarioOutcomeAssertion` closed-enum — minimal subset (5 mutation
+>    types + 3 outcome categories). Phase 1 todos 1.A-1.C scoped down; 1.D-1.F deferred.
+> 2. UTL `ScenarioOverlayApplier` + `ScenarioOutcomeChecker` — single-layer (execution-service matching-engine adversarial
+>    mode) NOT 7-layer. Phase 2 todos 2.A-2.B + 2.D scoped down; 2.C / 2.E / 2.F deferred.
+> 3. **Single wire-in** — execution-service `matching_engine/` adversarial mode (per Phase 3.E) + position-balance +
+>    risk + alerting consumers (per Phase 3.F). Phases 3.A / 3.B / 3.C / 3.D / 3.G deferred (MTDS / MDPS / features /
+>    strategy taps + manifest scenario_id column = post-cutover infra).
+> 4. **6 critical-path scenarios** for the 2 LIVE archetypes (subset of Phase 4):
+>    - `defi_oracle_deviation_30sigma` — Chainlink/Pyth stale or wild; direct hit on `carry_staked_basis` LST yields.
+>    - `defi_gas_surge_50x` — Ethereum gas spike; affects `carry_staked_basis` rebalance economics.
+>    - `cefi_funding_spike_10x` — perp funding rate jump; direct hit on `leveraged_funding_arb`.
+>    - `cefi_venue_circuit_breaker_trip` — Bybit/Binance halts; affects perp leg.
+>    - `defi_liquidity_drain_lending_pool` — Aave/Morpho utilization spike → can't borrow; affects deleverage path.
+>    - `cross_venue_staleness_perp_60s` — one perp venue feed stale > 60s; hedge-leg consistency.
+> 5. Per-archetype matrix: 2 archetypes × 6 scenarios = **12 cells** (Phase 5 scoped to 12 cells, not full per-archetype
+>    matrix). DONE = all 12 PASS. Phase 5.A/5.B/5.C scoped down accordingly.
+> 6. Skip Phases 6 (broader backtest harness CLI), 7 (codex sweep), 8 (rehearsal), 9 (full per-asset_group regression).
+>    All migrated to successor plan.
+>
+> **What this gates pre-cutover**: master plan Group F item 17 (backtest fidelity) + item 22 (trading guardrails). The
+> 12-cell matrix passing = "we know what the 2 LIVE archetypes do under the 6 most likely live failure modes." That's
+> the May-23 hard-gate; broader coverage is post-cutover.
+>
+> **What gets DEFERRED to successor plan** (preserved per Plan Archival HARD RULE):
+> - Full per-asset_group scenario library (Phase 4 ≥34 scenarios — only 6 ship pre-cutover).
+> - 7-layer wire-in (Phases 3.A / 3.B / 3.C / 3.D / 3.G — MTDS / MDPS / features / strategy / manifest taps).
+> - Backtest harness CLI integration (Phase 6).
+> - Codex sweep + DART manual-trade rehearsal (Phases 7-8).
+> - Full per-asset_group regression matrix on real VMs across every archetype (Phase 9).
+>
+> **Phase status under compression** (for reviewers walking this plan):
+>
+> | Phase | Pre-cutover scope | Status |
+> | ----- | ------------------ | ------ |
+> | 0 — Pre-audit | Sub-agent fan-out per todos 0.A-0.C | `todo` (3 AI-hours) |
+> | 1 — UAC contracts | 1.A + 1.B + 1.C only (scoped to 5 mutations + 3 outcomes) | `todo` (1 AI-day) |
+> | 2 — UTL primitives | 2.A + 2.B + 2.D only (single-layer applier) | `todo` (1 AI-day) |
+> | 3 — Wire-ins | 3.E + 3.F only (execution-engine adversarial + risk/alerting consumers) | `todo` (1 AI-day) |
+> | 4 — Scenario library | 6 scenarios from above bullet (~1 each) | `todo` (1 AI-day) |
+> | 5 — Matrix | 12-cell scope (not full per-archetype matrix) | `todo` (0.5 AI-day) |
+> | 6 / 7 / 8 / 9 | DEFERRED post-cutover | `deferred-after-simulation_scenarios_post_cutover_2026_06_01` |
+>
+> Total compressed scope: ~4-5 AI-days. Fits T-13 with margin. Successor plan picks up immediately post-cutover for the
+> broader 9-phase coverage.
+
 ## Why this plan exists
 
 The May-23 live-DeFi cutover gates on Group F items 17 (paper-trade smoke), 18 (2-yr batch backtest), 20 (circuit
