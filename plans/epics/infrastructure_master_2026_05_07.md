@@ -61,9 +61,9 @@ related_plans:
 - **Anomalies**:
   - "MDPS 1440-NaN reproduction path" todo is STALE (superseded by writegate Phase 2.A and reconciler `d3be0ef`) —
     should be flipped to STALE marker not pursued.
-  - The B.2 drilldown plan is in `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md` (its own
-    active plan), NOT in `plans/ai/` as the prose says — it was promoted on 2026-05-07 per PM commit `d968b5d3`.
-    Reference text in plan body is now outdated.
+  - The B.2 drilldown plan is in `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md` (its own active
+    plan), NOT in `plans/ai/` as the prose says — it was promoted on 2026-05-07 per PM commit `d968b5d3`. Reference text
+    in plan body is now outdated.
   - "Schema modal works at every leaf" todo is verified live in deployment-ui — `SchemaModal` is wired
     (deployment-ui@`7309b56`/`537d468`), but the per-leaf coverage matrix audit is the real gating step.
   - Cloud Build status (Phases 3-7) — recent commits `e10a6ce` (deployment-api: "unbreak Cloud Build (red since 04-29)")
@@ -119,8 +119,8 @@ Covers:
 
 **Cross-plan coordination**: this umbrella's raw-tables migration + `_ensure_timestamp` shim deletion are **Stage 4** of
 the workspace-wide manifest migration. See
-[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for sequencing DAG,
-conflicts, VM impact (per-table mini-pauses for sports FWD on raw-tables migration), and operator gates. Constraints:
+[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for sequencing DAG, conflicts, VM
+impact (per-table mini-pauses for sports FWD on raw-tables migration), and operator gates. Constraints:
 `_ensure_timestamp` shim DELETE is GATED on raw-tables migration completion; raw-tables migration runs AFTER Stage 3
 reconcilers + `mtds-s4-10` rescan complete.
 
@@ -267,16 +267,16 @@ deployment-service launcher downsize) shipped Items 1/3/5; Item 4 (DEX historica
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
-**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` rows B.2 + C.13 (added 2026-05-07 from
-operator screenshot). Operator surfaced two related drill-down issues during the deployment-ui walkthrough: (1) the
-hierarchy depth doesn't match the codex shard-key matrix per asset_group, and (2) drill-down terminates at different
-depths for different (service, venue, data_type) combinations — some land at per-day download icons + schema modal
-(working correctly), others stop one level short (broken).
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` rows B.2 + C.13 (added 2026-05-07 from operator
+screenshot). Operator surfaced two related drill-down issues during the deployment-ui walkthrough: (1) the hierarchy
+depth doesn't match the codex shard-key matrix per asset_group, and (2) drill-down terminates at different depths for
+different (service, venue, data_type) combinations — some land at per-day download icons + schema modal (working
+correctly), others stop one level short (broken).
 
 #### B.2 — Drill-down hierarchy must match codex shard-key matrix per asset_group
 
-Plan in `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md` (5 phases — promoted from
-`plans/ai/` to `plans/active/` on 2026-05-07 per PM commit `d968b5d3`). Owner-side todos:
+Plan in `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md` (5 phases — promoted from `plans/ai/` to
+`plans/active/` on 2026-05-07 per PM commit `d968b5d3`). Owner-side todos:
 
 - [ ] [AGENT] P0. **Phase 1 audit** — walk the deployment-ui data-status panel for each (service, asset_group) and
       compare the rendered drill-down hierarchy against the codex shard-key matrix in CLAUDE.md
@@ -398,8 +398,8 @@ without the cleanup-script output attached.
 
 ### Hard schema enforcement at write boundary (NEW sub-plan reference)
 
-NEW sub-plan: `hard_schema_enforcement_2026_05_08.md` (sibling to this master) — workspace-wide hard schema
-enforcement at the write boundary. Operator decision 2026-05-08: SEQUENCE rather than bundle with futures-expiry work —
+NEW sub-plan: `hard_schema_enforcement_2026_05_08.md` (sibling to this master) — workspace-wide hard schema enforcement
+at the write boundary. Operator decision 2026-05-08: SEQUENCE rather than bundle with futures-expiry work —
 futures-expiry (tradfi_master Batch D) ships first, then this workspace-wide enforcement second. Detail lives in the
 sub-plan; this section is a pointer.
 
@@ -438,8 +438,8 @@ sub-plan; this section is a pointer.
 - `shard_granularity_ssot_propagation_2026_05_06.md` — full per-service propagation spec; P0 todos lifted above.
 - `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` — paired executor handover (per-service verify / fix /
   lift / build checklist); referenced for execution detail.
-- `data_status_multi_axis_shard_propagation_2026_05_06.md` — multi-axis breakdowns + filter params + v7 manifest;
-  P1+ todos lifted above.
+- `data_status_multi_axis_shard_propagation_2026_05_06.md` — multi-axis breakdowns + filter params + v7 manifest; P1+
+  todos lifted above.
 - `deployment_service_build_infrastructure_repair_2026_04_22.md` — Cloud Build + UTL base-image rebuild.
 - `venue_axis_asset_group_vocabulary_2026_04_25.md` — 2 absorbed SSOT-cleanup items (`venue_start_dates` deletion
   - dashboard SSOT verify) lifted above; `poolGetSnapshots` historical-TVL item folded into `defi_master_2026_05_07`;

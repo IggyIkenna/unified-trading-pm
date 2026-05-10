@@ -195,20 +195,20 @@ Ikenna touches DeFi adapters), deployment-ui (instruments-live tab integration; 
 
 **Sub-agent isolation table** (paste rows verbatim into each Task prompt's "files OFF-LIMITS" section):
 
-| Sub-agent ID      | Files owned (only edit these)                                                                                                                                | Files OFF-LIMITS                                                                                                                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| sa1.PhaseA-cefi   | `deployment-service/scripts/cloud-scheduler/cefi_audit_job.py` + `cloud-scheduler-cefi.yaml`; deployment-ui cefi tab content fragment                        | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                                |
-| sa1.PhaseB-defi   | `deployment-service/scripts/cloud-scheduler/defi_audit_job.py` + `cloud-scheduler-defi.yaml`; deployment-ui defi tab content fragment                        | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                                |
-| sa1.PhaseC-tradfi | `deployment-service/scripts/cloud-scheduler/tradfi_audit_job.py` + `cloud-scheduler-tradfi.yaml`; deployment-ui tradfi tab content fragment                  | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                                |
-| sa1.PhaseD-sports | `deployment-service/scripts/cloud-scheduler/sports_audit_job.py` + `cloud-scheduler-sports.yaml`; deployment-ui sports tab content fragment                  | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                                |
-| sa1.PhaseE-pred   | `deployment-service/scripts/cloud-scheduler/prediction_audit_job.py` + `cloud-scheduler-prediction.yaml`; deployment-ui prediction tab content fragment      | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                                |
-| sa1.PredP2-poly   | `market-tick-data-service/market_tick_data_service/adapters/polymarket_*.py` + lifecycle gating tests                                                        | Kalshi adapter, UMI tick provider, MDPS readers                                                                                                                                                        |
-| sa1.PredP2-kalshi | `market-tick-data-service/market_tick_data_service/adapters/kalshi_*.py` + lifecycle gating tests                                                            | Polymarket adapter, UMI tick provider, MDPS readers                                                                                                                                                    |
-| sa1.PredP2-umi    | `market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py:225` + `orchestrator.py:1990-1995` rename; manifest writer row_key migration | Polymarket / Kalshi adapter bodies                                                                                                                                                                     |
-| sa1.PredP3-feat   | `features-onchain-service` prediction calculator + tests                                                                                                     | strategy-service archetype consumers, MDPS reader fallback                                                                                                                                             |
-| sa1.PredP3-strat  | strategy-service prediction archetype consumers + tests                                                                                                      | features-onchain calculator, MDPS reader fallback                                                                                                                                                      |
-| sa1.PredP3-read   | MDPS reader fallback for prediction shard atom + tests                                                                                                       | features calculator, strategy archetype consumers                                                                                                                                                      |
-| sa1.WriterGuard   | `market-tick-data-service/market_tick_data_service/adapters/base_adapter.py` catalog-aware route (writer-guard hook only); per-adapter wire-in tests         | MDPS `base_adapter.py` (Ikenna T2 + Harsh T2 own different layers there); features-\* repos (Harsh T2 features-consolidation owns); UAC `chain_env.py` `PROTOCOL_LAUNCH_DATES` (Ikenna T1 owns)        |
+| Sub-agent ID      | Files owned (only edit these)                                                                                                                                 | Files OFF-LIMITS                                                                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sa1.PhaseA-cefi   | `deployment-service/scripts/cloud-scheduler/cefi_audit_job.py` + `cloud-scheduler-cefi.yaml`; deployment-ui cefi tab content fragment                         | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                         |
+| sa1.PhaseB-defi   | `deployment-service/scripts/cloud-scheduler/defi_audit_job.py` + `cloud-scheduler-defi.yaml`; deployment-ui defi tab content fragment                         | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                         |
+| sa1.PhaseC-tradfi | `deployment-service/scripts/cloud-scheduler/tradfi_audit_job.py` + `cloud-scheduler-tradfi.yaml`; deployment-ui tradfi tab content fragment                   | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                         |
+| sa1.PhaseD-sports | `deployment-service/scripts/cloud-scheduler/sports_audit_job.py` + `cloud-scheduler-sports.yaml`; deployment-ui sports tab content fragment                   | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                         |
+| sa1.PhaseE-pred   | `deployment-service/scripts/cloud-scheduler/prediction_audit_job.py` + `cloud-scheduler-prediction.yaml`; deployment-ui prediction tab content fragment       | All other asset_group audit jobs / scheduler configs / UI tab fragments                                                                                                                         |
+| sa1.PredP2-poly   | `market-tick-data-service/market_tick_data_service/adapters/polymarket_*.py` + lifecycle gating tests                                                         | Kalshi adapter, UMI tick provider, MDPS readers                                                                                                                                                 |
+| sa1.PredP2-kalshi | `market-tick-data-service/market_tick_data_service/adapters/kalshi_*.py` + lifecycle gating tests                                                             | Polymarket adapter, UMI tick provider, MDPS readers                                                                                                                                             |
+| sa1.PredP2-umi    | `market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py:225` + `orchestrator.py:1990-1995` rename; manifest writer row_key migration | Polymarket / Kalshi adapter bodies                                                                                                                                                              |
+| sa1.PredP3-feat   | `features-onchain-service` prediction calculator + tests                                                                                                      | strategy-service archetype consumers, MDPS reader fallback                                                                                                                                      |
+| sa1.PredP3-strat  | strategy-service prediction archetype consumers + tests                                                                                                       | features-onchain calculator, MDPS reader fallback                                                                                                                                               |
+| sa1.PredP3-read   | MDPS reader fallback for prediction shard atom + tests                                                                                                        | features calculator, strategy archetype consumers                                                                                                                                               |
+| sa1.WriterGuard   | `market-tick-data-service/market_tick_data_service/adapters/base_adapter.py` catalog-aware route (writer-guard hook only); per-adapter wire-in tests          | MDPS `base_adapter.py` (Ikenna T2 + Harsh T2 own different layers there); features-\* repos (Harsh T2 features-consolidation owns); UAC `chain_env.py` `PROTOCOL_LAUNCH_DATES` (Ikenna T1 owns) |
 
 **Collision risk**:
 
@@ -299,24 +299,24 @@ import paths to compile). Phase 3 column-pruning is independent and can fan out 
 
 **Sub-agent isolation table** (paste rows verbatim into each Task prompt's "files OFF-LIMITS" section):
 
-| Sub-agent ID            | Files owned (only edit these)                                                                                                  | Files OFF-LIMITS                                                                                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sa2.P0-audit            | Phase 0 audit body in `features_repo_consolidation_2026_05_08.md` only (no code edits)                                         | All code surfaces (Phase 0 is read-only)                                                                                                                                  |
-| sa2.P1-scaffold         | NEW `features-service/` repo skeleton (`pyproject.toml`, `src/features_service/__init__.py`, `tests/`)                         | All 8 source features-\* repos; consumer repos                                                                                                                            |
-| sa2.P2-extract-onchain  | `features-onchain-service/*` → `features-service/src/features_service/onchain/*` move + tests                                  | Other 7 source features-\* repos; consumer repos                                                                                                                          |
-| sa2.P2-extract-sports   | `features-sports-service/*` → `features-service/src/features_service/sports/*` move + tests                                    | Other 7 source features-\* repos; consumer repos                                                                                                                          |
-| sa2.P2-extract-vol      | `features-volatility-service/*` → `features-service/src/features_service/volatility/*` move + tests                            | Other 7 source features-\* repos; consumer repos                                                                                                                          |
-| sa2.P2-extract-cross    | `features-cross-instrument-service/*` → `features-service/src/features_service/cross_instrument/*` move + tests                | Other 7 source features-\* repos; consumer repos                                                                                                                          |
-| sa2.P2-extract-other    | Remaining 4 features-\* source repos (commodity, calendar, delta-one, multi-timeframe) → `features-service/*` move + tests     | The 4 already-extracted source repos; consumer repos                                                                                                                      |
-| sa2.P3-rewrite          | Import-rewrite sweep across ~20 downstream consumer repos (mechanical `from features_X import` → `from features_service.X import`) | features-service/ source dirs; UAC; UTL                                                                                                                              |
-| sa2.P4-perSource×N      | Per-source consumer migration (one sub-agent per source) — touches ONLY its source's calculator-call sites                     | Other sources' migration sites; new repo source                                                                                                                           |
-| sa2.P5-uac-col          | UAC `feature_family` column add: `unified_api_contracts/canonical/feature/family.py` + tests                                   | Other UAC dirs (Ikenna T1 PROTOCOL_LAUNCH_DATES, Ikenna T6 strategy/, client/; Harsh T5 mechanical adds — all separate files)                                             |
-| sa2.P6-deprec           | Deprecation banners on 8 source repos' `README.md` + final commit citing migration sha                                         | features-service/ source; consumer repos                                                                                                                                  |
-| sa2.P7-codex            | `codex/04-architecture/features-service-consolidation.md` (NEW); update 5 existing codex docs per Post-Plan-Phase Audit        | Plan body; code repos                                                                                                                                                     |
-| sa2.PhaseAB×8           | Each of 8 services' compute-entry adds `assert_no_lookahead_for_feature_group` — ONE sub-agent per service                     | Other 7 services; UTL helper itself (already shipped); MDPS `base_adapter.py` live-pipeline layer (Ikenna T2)                                                             |
-| sa2.ColPrune            | `ml-training-service` parquet-read profiler + column-pruning patch + memory measurement                                        | features-service repos; UAC; UTL                                                                                                                                          |
-| sa2.MLLive              | `features-service/src/features_service/ml_inference/handler.py` + integration test wiring (joint with Ikenna T2 design)        | Strategy-service archetype consumers; execution-service; alerting-service                                                                                                 |
-| sa2.spP-bt              | sp_prediction backtest pipeline runner script + report output dir                                                              | Strategy-service archetype source; UAC; features-service                                                                                                                  |
+| Sub-agent ID           | Files owned (only edit these)                                                                                                      | Files OFF-LIMITS                                                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| sa2.P0-audit           | Phase 0 audit body in `features_repo_consolidation_2026_05_08.md` only (no code edits)                                             | All code surfaces (Phase 0 is read-only)                                                                                      |
+| sa2.P1-scaffold        | NEW `features-service/` repo skeleton (`pyproject.toml`, `src/features_service/__init__.py`, `tests/`)                             | All 8 source features-\* repos; consumer repos                                                                                |
+| sa2.P2-extract-onchain | `features-onchain-service/*` → `features-service/src/features_service/onchain/*` move + tests                                      | Other 7 source features-\* repos; consumer repos                                                                              |
+| sa2.P2-extract-sports  | `features-sports-service/*` → `features-service/src/features_service/sports/*` move + tests                                        | Other 7 source features-\* repos; consumer repos                                                                              |
+| sa2.P2-extract-vol     | `features-volatility-service/*` → `features-service/src/features_service/volatility/*` move + tests                                | Other 7 source features-\* repos; consumer repos                                                                              |
+| sa2.P2-extract-cross   | `features-cross-instrument-service/*` → `features-service/src/features_service/cross_instrument/*` move + tests                    | Other 7 source features-\* repos; consumer repos                                                                              |
+| sa2.P2-extract-other   | Remaining 4 features-\* source repos (commodity, calendar, delta-one, multi-timeframe) → `features-service/*` move + tests         | The 4 already-extracted source repos; consumer repos                                                                          |
+| sa2.P3-rewrite         | Import-rewrite sweep across ~20 downstream consumer repos (mechanical `from features_X import` → `from features_service.X import`) | features-service/ source dirs; UAC; UTL                                                                                       |
+| sa2.P4-perSource×N     | Per-source consumer migration (one sub-agent per source) — touches ONLY its source's calculator-call sites                         | Other sources' migration sites; new repo source                                                                               |
+| sa2.P5-uac-col         | UAC `feature_family` column add: `unified_api_contracts/canonical/feature/family.py` + tests                                       | Other UAC dirs (Ikenna T1 PROTOCOL_LAUNCH_DATES, Ikenna T6 strategy/, client/; Harsh T5 mechanical adds — all separate files) |
+| sa2.P6-deprec          | Deprecation banners on 8 source repos' `README.md` + final commit citing migration sha                                             | features-service/ source; consumer repos                                                                                      |
+| sa2.P7-codex           | `codex/04-architecture/features-service-consolidation.md` (NEW); update 5 existing codex docs per Post-Plan-Phase Audit            | Plan body; code repos                                                                                                         |
+| sa2.PhaseAB×8          | Each of 8 services' compute-entry adds `assert_no_lookahead_for_feature_group` — ONE sub-agent per service                         | Other 7 services; UTL helper itself (already shipped); MDPS `base_adapter.py` live-pipeline layer (Ikenna T2)                 |
+| sa2.ColPrune           | `ml-training-service` parquet-read profiler + column-pruning patch + memory measurement                                            | features-service repos; UAC; UTL                                                                                              |
+| sa2.MLLive             | `features-service/src/features_service/ml_inference/handler.py` + integration test wiring (joint with Ikenna T2 design)            | Strategy-service archetype consumers; execution-service; alerting-service                                                     |
+| sa2.spP-bt             | sp_prediction backtest pipeline runner script + report output dir                                                                  | Strategy-service archetype source; UAC; features-service                                                                      |
 
 **Collision risk**:
 
@@ -418,10 +418,10 @@ asset_groups + targeted defi_988 backfill. Mechanical run-script-and-verify work
       if any flag. ~1 AI-day.
 - [ ] [SCRIPT] P0. **Cross-asset manifest rescan post-CeFi drain (Stage 4 of manifest_migration_master)** — Ownership
       split (codified 2026-05-08 audit): **Ikenna T3 sa3.Rescan-launcher writes the rescan launcher script** (in
-      `instruments-service/scripts/` or `deployment-service/scripts/vm/`); **Harsh T4 operates it** on a same-region
-      GCE VM. Sequence: (1) Ikenna T3 ships launcher + announces RESOLVED in
-      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) `## Open
-      questions`; (2) Tab 4 here pulls + runs `--dry-run` per asset_group
+      `instruments-service/scripts/` or `deployment-service/scripts/vm/`); **Harsh T4 operates it** on a same-region GCE
+      VM. Sequence: (1) Ikenna T3 ships launcher + announces RESOLVED in
+      [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md)
+      `## Open     questions`; (2) Tab 4 here pulls + runs `--dry-run` per asset_group
       (`reconcile_phantom_manifest_rows_all.py --asset-group {cefi|defi|tradfi|prediction|sports} --dry-run` per
       CLAUDE.md "Manifest phantom audit"); (3) operator reviews CSV; (4) Tab 4 runs `--apply-write`; (5) Ikenna T3
       handles edge cases / triage file. Banner-add to 5+ active plans on launch + banner-remove on completion. ~1.5
@@ -488,33 +488,35 @@ code edits to Ikenna Tab 1.
     INSTRUMENT_PROCESSED progress + STOPPED for each drained VM. Sample 3 random VMs: open the latest JSONL, assert
     `event in ("STOPPED","FAILED")` with non-empty `metadata.details`.
 - ✅ **TradFi MDPS cluster validation ran on real production manifest**.
-  - **What ran**: post-drain `python -m market_data_processing_service.scripts.run_cluster_validation
-    --asset-group tradfi --start 2024-01-01 --end 2025-12-31` against `gs://central-element-323112-availability-manifest/`.
+  - **What ran**: post-drain
+    `python -m market_data_processing_service.scripts.run_cluster_validation --asset-group tradfi --start 2024-01-01 --end 2025-12-31`
+    against `gs://central-element-323112-availability-manifest/`.
   - **Verification**: report shows zero `MissingClusterValidationError` violations across ES.OPT 11-cluster + futures
     chains; partial-bundle fixes (if any) shipped via separate commit referenced in the report.
 - ✅ **Cross-asset rescan `--apply-flips` ran against canonical manifest**.
-  - **What ran**: `python -m market_data_processing_service.scripts.rescan_cross_asset --apply-flips
-    --csv-out /tmp/rescan_2026_05_08.csv` after operator dry-run review.
-  - **Verification**: post-rescan `_index/availability_index.parquet` row count matches pre-rescan + flip count;
-    sample probe of 5 random row_keys confirms typed reasons (no blanks); CSV diff archived.
-- ✅ **defi_988 top-5 backfill VMs ran-to-completion on real infra (or partial coverage with named successor for the rest)**.
+  - **What ran**:
+    `python -m market_data_processing_service.scripts.rescan_cross_asset --apply-flips --csv-out /tmp/rescan_2026_05_08.csv`
+    after operator dry-run review.
+  - **Verification**: post-rescan `_index/availability_index.parquet` row count matches pre-rescan + flip count; sample
+    probe of 5 random row_keys confirms typed reasons (no blanks); CSV diff archived.
+- ✅ **defi_988 top-5 backfill VMs ran-to-completion on real infra (or partial coverage with named successor for the
+  rest)**.
   - **What ran**: `bash deployment-service/scripts/vm/launch-defi-{venue}-{flavor}-vm.sh` × 5, monitored via event
     stream until each emits STOPPED with `rows_captured > 0`.
-  - **Verification**: per-VM events directory contains STARTED + at least N progress events / hour + STOPPED;
-    sample probe of one parquet per VM confirms non-empty rows + correct schema.
+  - **Verification**: per-VM events directory contains STARTED + at least N progress events / hour + STOPPED; sample
+    probe of one parquet per VM confirms non-empty rows + correct schema.
 
 **Handoff exception(s)**:
 
 - Sports reconciler hook validation: **DEFERRED-WITH-NAMED-VERIFICATION-RECIPE 2026-05-09**. Audit confirmed the
-  reconciler script exists (`features-sports-service/scripts/features_sports_reconcile_available_at.py`) but is NOT
-  YET wired into any VM launcher — none of the sports launchers under
+  reconciler script exists (`features-sports-service/scripts/features_sports_reconcile_available_at.py`) but is NOT YET
+  wired into any VM launcher — none of the sports launchers under
   `deployment-service/scripts/vm/launch-{features-sports,sfi,footystats,sports-*}-*.sh` invoke it as exit-step.
   **Successor scope**: extend a sports VM launcher's `BACKFILL_CMD` (or extend `setup-data-pipeline-vm.sh` post-backfill
   branch) to invoke the reconciler before VM auto-shutdown. Verification recipe per
   `features_sports_reconcile_available_at.py` docstring: scan-only first (CSV report to `$TMPDIR`), then operator
-  reviews + lifts `--apply-flips` cap. Tracked as a follow-up; either folded into a new
-  `sports_master_2026_05_07` Phase 5 todo OR a new
-  `sports_reconciler_hook_wiring_<date>.md` plan filed as named successor before next sports VM cycle.
+  reviews + lifts `--apply-flips` cap. Tracked as a follow-up; either folded into a new `sports_master_2026_05_07` Phase
+  5 todo OR a new `sports_reconciler_hook_wiring_<date>.md` plan filed as named successor before next sports VM cycle.
 
 ---
 
@@ -598,29 +600,29 @@ sub-agents + master integration.
 each Task prompt; pre-commit `git diff --cached --name-only` MUST match the "Files owned" cell exactly. Every cell here
 is a contract.
 
-| Sub-agent ID         | Files owned (only edit these)                                                                                                                                                                                  | Files OFF-LIMITS                                                                                                                                                                                                                                |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sa5.LaunchCons       | `deployment-service/scripts/vm/launch-*.sh` NEW files (20 migrations); `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict additions; `deployment-api/services/deploy_missing.py` `_SERVICE_LAUNCHER_SCRIPTS` registry adds | Existing launchers Tab 4 invokes (DO NOT delete originals until Tab 4 confirms cutover); Ikenna T1 launchers (DeFi Pyth Hermes etc.); MDPS / MTDS adapters                                                                                      |
-| sa5.DSTests          | `data-status/tests/**` NEW; `deployment-api/tests/data_status/**` NEW; `deployment-ui/src/__tests__/data-status/**` NEW; sister test dirs in 3 other repos per `data_status_comprehensive_test_coverage` plan   | All non-test source files; Tab 3 deployment-ui live components (only edit `__tests__/` siblings); Ikenna T5 audit-log code                                                                                                                      |
-| sa5.MTDS-pathstream  | `market-tick-data-service/market_tick_data_service/adapters/databento_adapter.py` chunked-streaming methods + `tests/adapters/test_databento_path_streaming.py` + memory profiler script                       | MTDS `umi_tick_provider.py` (sa5.MTDS-perInstr owns); MTDS prediction adapters (Tab 1 owns); MTDS DeFi adapters (Ikenna T1 owns); UAC                                                                                                           |
-| sa5.MTDS-perInstr    | `market-tick-data-service/market_tick_data_service/api/per_instrument_download.py` chain axis add + `tests/api/test_per_instrument_chain_axis.py`                                                              | MTDS adapters (sa5.MTDS-pathstream + Tab 1 + Ikenna T1 own different ones); UAC; UTL                                                                                                                                                            |
-| sa5.HardSchema       | `instruments-service/scripts/migrate_<asset_group>_to_hard_schema.py` NEW (5 migration scripts, one per asset_group); UAC `canonical/manifest/schema_v6.py` column adds (NOT `chain_env.py`)                   | UAC `canonical/crosscutting/chain_env.py` (Ikenna T1 owns `PROTOCOL_LAUNCH_DATES`); UAC `canonical/strategy/` + `canonical/client/` (Ikenna T6 owns); existing manifest reader fallback paths                                                   |
-| sa5.APIFootball      | UAC `external/api_football/normalize.py:377-381` + tests; sports re-fetch VM launcher; sports manifest flip migration script                                                                                   | Other UAC paths; sports backfill VMs Tab 4 launches (sa5 ships re-fetch launcher; Tab 4 may also launch sports VMs — coordinate via plan-of-record); features-sports-service                                                                    |
-| sa5.CMEPolyArb       | UAC `canonical/strategy/cme_polymarket_arb_archetype.py` NEW + tests; strategy-service archetype config; execution-service route entry + DART persona test                                                     | UAC `canonical/strategy/catalogue.py` + `ids.py` (Ikenna T6 owns the catalogue + ID schema; sa5.CMEPolyArb consumes after Ikenna T6 RESOLVED); other archetype configs                                                                          |
-| sa5.PredMkts-bt      | prediction_markets backtest pipeline runner script + report output dir                                                                                                                                         | Strategy-service archetype source; UAC; features-service; MTDS prediction adapters (depends on Tab 1 P2+P3 — wait for Tab 1 RESOLVED before running)                                                                                            |
-| sa5.SportsML-bt      | sports_ml backtest pipeline runner script + report output dir                                                                                                                                                  | Strategy-service archetype source; UAC; features-sports-service (Harsh T2 features-consolidation owns); api_football_minimal_flattening (sa5.APIFootball must finish first); Tab 4 sports reconciler (must finish first)                        |
-| sa5.PriceArb-bt      | price_arbitrage backtest pipeline runner script + report output dir                                                                                                                                            | Strategy-service archetype source; UAC; MDPS TradFi shards (Tab 4 ES.OPT 11-cluster validation must finish first)                                                                                                                               |
+| Sub-agent ID        | Files owned (only edit these)                                                                                                                                                                                                                            | Files OFF-LIMITS                                                                                                                                                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| sa5.LaunchCons      | `deployment-service/scripts/vm/launch-*.sh` NEW files (20 migrations); `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict additions; `deployment-api/services/deploy_missing.py` `_SERVICE_LAUNCHER_SCRIPTS` registry adds | Existing launchers Tab 4 invokes (DO NOT delete originals until Tab 4 confirms cutover); Ikenna T1 launchers (DeFi Pyth Hermes etc.); MDPS / MTDS adapters                                                               |
+| sa5.DSTests         | `data-status/tests/**` NEW; `deployment-api/tests/data_status/**` NEW; `deployment-ui/src/__tests__/data-status/**` NEW; sister test dirs in 3 other repos per `data_status_comprehensive_test_coverage` plan                                            | All non-test source files; Tab 3 deployment-ui live components (only edit `__tests__/` siblings); Ikenna T5 audit-log code                                                                                               |
+| sa5.MTDS-pathstream | `market-tick-data-service/market_tick_data_service/adapters/databento_adapter.py` chunked-streaming methods + `tests/adapters/test_databento_path_streaming.py` + memory profiler script                                                                 | MTDS `umi_tick_provider.py` (sa5.MTDS-perInstr owns); MTDS prediction adapters (Tab 1 owns); MTDS DeFi adapters (Ikenna T1 owns); UAC                                                                                    |
+| sa5.MTDS-perInstr   | `market-tick-data-service/market_tick_data_service/api/per_instrument_download.py` chain axis add + `tests/api/test_per_instrument_chain_axis.py`                                                                                                        | MTDS adapters (sa5.MTDS-pathstream + Tab 1 + Ikenna T1 own different ones); UAC; UTL                                                                                                                                     |
+| sa5.HardSchema      | `instruments-service/scripts/migrate_<asset_group>_to_hard_schema.py` NEW (5 migration scripts, one per asset_group); UAC `canonical/manifest/schema_v6.py` column adds (NOT `chain_env.py`)                                                             | UAC `canonical/crosscutting/chain_env.py` (Ikenna T1 owns `PROTOCOL_LAUNCH_DATES`); UAC `canonical/strategy/` + `canonical/client/` (Ikenna T6 owns); existing manifest reader fallback paths                            |
+| sa5.APIFootball     | UAC `external/api_football/normalize.py:377-381` + tests; sports re-fetch VM launcher; sports manifest flip migration script                                                                                                                             | Other UAC paths; sports backfill VMs Tab 4 launches (sa5 ships re-fetch launcher; Tab 4 may also launch sports VMs — coordinate via plan-of-record); features-sports-service                                             |
+| sa5.CMEPolyArb      | UAC `canonical/strategy/cme_polymarket_arb_archetype.py` NEW + tests; strategy-service archetype config; execution-service route entry + DART persona test                                                                                               | UAC `canonical/strategy/catalogue.py` + `ids.py` (Ikenna T6 owns the catalogue + ID schema; sa5.CMEPolyArb consumes after Ikenna T6 RESOLVED); other archetype configs                                                   |
+| sa5.PredMkts-bt     | prediction_markets backtest pipeline runner script + report output dir                                                                                                                                                                                   | Strategy-service archetype source; UAC; features-service; MTDS prediction adapters (depends on Tab 1 P2+P3 — wait for Tab 1 RESOLVED before running)                                                                     |
+| sa5.SportsML-bt     | sports_ml backtest pipeline runner script + report output dir                                                                                                                                                                                            | Strategy-service archetype source; UAC; features-sports-service (Harsh T2 features-consolidation owns); api_football_minimal_flattening (sa5.APIFootball must finish first); Tab 4 sports reconciler (must finish first) |
+| sa5.PriceArb-bt     | price_arbitrage backtest pipeline runner script + report output dir                                                                                                                                                                                      | Strategy-service archetype source; UAC; MDPS TradFi shards (Tab 4 ES.OPT 11-cluster validation must finish first)                                                                                                        |
 
 **Within-sub-agent fan-outs** (sub-sub-agents must each get their own row in their parent sub-agent's Task prompt):
 
-- sa5.LaunchCons spawns 20 sub-sub-agents (one per launcher migration). Each owns ONE NEW `launch-X-vm.sh` file +
-  ONE `VM_PREFIX_TO_BUCKET` dict-entry add. After every batch of ≤5 prefix adds, master sa5.LaunchCons relaunches the
+- sa5.LaunchCons spawns 20 sub-sub-agents (one per launcher migration). Each owns ONE NEW `launch-X-vm.sh` file + ONE
+  `VM_PREFIX_TO_BUCKET` dict-entry add. After every batch of ≤5 prefix adds, master sa5.LaunchCons relaunches the
   watchdog VM (CLAUDE.md "VM Naming Convention" rule).
 - sa5.DSTests spawns up to 30 sub-sub-agents (5 test categories × 6 repos). Each owns ONE test file in ONE repo;
   sub-sub-agents within the same repo must NOT touch the same `conftest.py` or shared fixture file simultaneously —
   sequence by category within each repo.
-- Other sa5.* may sub-fan-out per-asset_group or per-leg as their parent plan dictates; same isolation discipline:
-  one file per sub-sub-agent, every prompt cites the parent's "Files owned" subset.
+- Other sa5.\* may sub-fan-out per-asset_group or per-leg as their parent plan dictates; same isolation discipline: one
+  file per sub-sub-agent, every prompt cites the parent's "Files owned" subset.
 
 **Collision risk**:
 
@@ -712,20 +714,20 @@ lifecycle-tabs on shared route shell — different page routes, no overlap).
 
 **Sub-agent isolation table** (paste rows verbatim into each Task prompt's "files OFF-LIMITS" section):
 
-| Sub-agent ID         | Files owned (only edit these)                                                                                                                                                                                  | Files OFF-LIMITS                                                                                                                                                                            |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sa6.IDsweep-signal   | `execution-service/**/order_submission.py` + `**/fill_ingestion.py` strategy_id callsites; `strategy-service/**/signal_generation.py` strategy_id; `ml-inference-service/**/inference_output.py` strategy_id   | UAC `canonical/strategy/` (Ikenna T6 owns); pnl-attr / batch-live-recon / PBM (sa6.IDsweep-attr owns); alerting-service rule structure (Ikenna T5 owns)                                     |
-| sa6.IDsweep-attr     | `pnl-attribution-service/**/per_fill_attribution.py` + `batch-live-reconciliation-service/**/per_trade_diff.py` + `position-balance-monitor-service/**/position_tag.py` strategy_id callsites                  | execution / strategy / ml-inference signal-fill path (sa6.IDsweep-signal owns); UAC; alerting-service                                                                                       |
-| sa6.IDsweep-alerting | `alerting-service` rule output `strategy_id` field add (only after Ikenna T5 ships the rule shell)                                                                                                             | alerting-service rule structure / publish hook / KillSwitchBus (Ikenna T5 owns); UAC                                                                                                        |
-| sa6.IDsweep-deploy   | `deployment-api/**/deploy_missing.py` strategy_id filter param + UI surface                                                                                                                                    | deployment-api auth_middleware (Tab 3 owns); deployment-api launch endpoint (Tab 3 owns); deployment-ui live tabs (Tab 3 owns)                                                              |
-| sa6.Catalogue-rows   | UAC `canonical/strategy/catalogue.py` row population (consumes Ikenna T6 schema after RESOLVED) + `tests/test_catalogue_rows.py`                                                                               | UAC `canonical/strategy/catalogue.py` schema/dataclass (Ikenna T6 owns); UAC `canonical/strategy/ids.py`; UAC `canonical/client/`                                                           |
-| sa6.ClientTag        | execution-service entry-point allocation enforcement (`(client_id, account_id, strategy_id)` tuple propagation + reject-if-breach); per-fill / per-trade tagging in attribution + reconciliation services      | UAC `canonical/client/` schema (Ikenna T6 owns); strategy-service signal generation surface (sa6.IDsweep-signal owns)                                                                       |
-| sa6.DART-defi        | unified-trading-system-ui DART DeFi swap/lend/borrow/stake surfaces per chain × protocol + Playwright smoke                                                                                                    | DART CeFi / ML / sports / prediction surfaces (other sa6.DART-\* own them); deployment-ui (Tab 3 owns)                                                                                      |
-| sa6.DART-cefi        | unified-trading-system-ui DART CeFi order placement (limit / market / stop) across Bybit / Deribit / Binance / OKX + Playwright smoke                                                                          | Other DART surfaces; deployment-ui                                                                                                                                                          |
-| sa6.DART-ml          | unified-trading-system-ui DART ML training trigger (pause / resume / retrain) per ML archetype + Playwright smoke                                                                                              | Other DART surfaces; deployment-ui; ml-training-service ML control endpoints (just call them, do not edit them)                                                                             |
-| sa6.DART-sports      | unified-trading-system-ui DART sports bet placement for backtest exec validation + Playwright smoke                                                                                                            | Other DART surfaces; deployment-ui                                                                                                                                                          |
-| sa6.DART-pred        | unified-trading-system-ui DART prediction-market trade for backtest + Playwright smoke                                                                                                                         | Other DART surfaces; deployment-ui                                                                                                                                                          |
-| sa6.CatalogueUI      | unified-trading-system-ui (or deployment-ui per Ikenna T6 route assignment) catalogue UI page (filter by asset_group / archetype / venue / live-vs-backtest) + tests                                           | DART manual-trade surfaces; deployment-ui lifecycle tabs (Tab 3 owns)                                                                                                                       |
+| Sub-agent ID         | Files owned (only edit these)                                                                                                                                                                                | Files OFF-LIMITS                                                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sa6.IDsweep-signal   | `execution-service/**/order_submission.py` + `**/fill_ingestion.py` strategy_id callsites; `strategy-service/**/signal_generation.py` strategy_id; `ml-inference-service/**/inference_output.py` strategy_id | UAC `canonical/strategy/` (Ikenna T6 owns); pnl-attr / batch-live-recon / PBM (sa6.IDsweep-attr owns); alerting-service rule structure (Ikenna T5 owns) |
+| sa6.IDsweep-attr     | `pnl-attribution-service/**/per_fill_attribution.py` + `batch-live-reconciliation-service/**/per_trade_diff.py` + `position-balance-monitor-service/**/position_tag.py` strategy_id callsites                | execution / strategy / ml-inference signal-fill path (sa6.IDsweep-signal owns); UAC; alerting-service                                                   |
+| sa6.IDsweep-alerting | `alerting-service` rule output `strategy_id` field add (only after Ikenna T5 ships the rule shell)                                                                                                           | alerting-service rule structure / publish hook / KillSwitchBus (Ikenna T5 owns); UAC                                                                    |
+| sa6.IDsweep-deploy   | `deployment-api/**/deploy_missing.py` strategy_id filter param + UI surface                                                                                                                                  | deployment-api auth_middleware (Tab 3 owns); deployment-api launch endpoint (Tab 3 owns); deployment-ui live tabs (Tab 3 owns)                          |
+| sa6.Catalogue-rows   | UAC `canonical/strategy/catalogue.py` row population (consumes Ikenna T6 schema after RESOLVED) + `tests/test_catalogue_rows.py`                                                                             | UAC `canonical/strategy/catalogue.py` schema/dataclass (Ikenna T6 owns); UAC `canonical/strategy/ids.py`; UAC `canonical/client/`                       |
+| sa6.ClientTag        | execution-service entry-point allocation enforcement (`(client_id, account_id, strategy_id)` tuple propagation + reject-if-breach); per-fill / per-trade tagging in attribution + reconciliation services    | UAC `canonical/client/` schema (Ikenna T6 owns); strategy-service signal generation surface (sa6.IDsweep-signal owns)                                   |
+| sa6.DART-defi        | unified-trading-system-ui DART DeFi swap/lend/borrow/stake surfaces per chain × protocol + Playwright smoke                                                                                                  | DART CeFi / ML / sports / prediction surfaces (other sa6.DART-\* own them); deployment-ui (Tab 3 owns)                                                  |
+| sa6.DART-cefi        | unified-trading-system-ui DART CeFi order placement (limit / market / stop) across Bybit / Deribit / Binance / OKX + Playwright smoke                                                                        | Other DART surfaces; deployment-ui                                                                                                                      |
+| sa6.DART-ml          | unified-trading-system-ui DART ML training trigger (pause / resume / retrain) per ML archetype + Playwright smoke                                                                                            | Other DART surfaces; deployment-ui; ml-training-service ML control endpoints (just call them, do not edit them)                                         |
+| sa6.DART-sports      | unified-trading-system-ui DART sports bet placement for backtest exec validation + Playwright smoke                                                                                                          | Other DART surfaces; deployment-ui                                                                                                                      |
+| sa6.DART-pred        | unified-trading-system-ui DART prediction-market trade for backtest + Playwright smoke                                                                                                                       | Other DART surfaces; deployment-ui                                                                                                                      |
+| sa6.CatalogueUI      | unified-trading-system-ui (or deployment-ui per Ikenna T6 route assignment) catalogue UI page (filter by asset_group / archetype / venue / live-vs-backtest) + tests                                         | DART manual-trade surfaces; deployment-ui lifecycle tabs (Tab 3 owns)                                                                                   |
 
 **Done-definition**:
 
@@ -775,25 +777,24 @@ Mirror-image entries appear in [`work_split_2026_05_08_ikenna.md`](work_split_20
       lookahead-bias-checked status.
 - [ ] **MDPS `base_adapter.py` 3-way collision — HARD SEQUENCE (codified 2026-05-08 audit)**: three sub-agents touch
       this file across two operators. To prevent the documented foot-gun pattern (PM@961980db / @611b9501 / @34075d84)
-      where parallel `git add` / reset wipes staged hunks, enforce:
-      1. **Harsh T2 features-consolidation Phase 1-4 ships FIRST** — extracts features-cefi/tradfi compute paths into
-         `features-service/`, replacing existing MDPS `base_adapter.py` calls. Master sa2.P3-rewrite is the only writer
-         in this window.
-      2. **Ikenna T2 sa2.P4-cefi (live-pipeline) wires SECOND** — adds pipeline_mode partition + replay subsystem
-         hooks to MDPS `base_adapter.py` AFTER Harsh T2 has finished its rewrite sweep + pushed.
-      3. **Harsh T2 sa2.PhaseAB×8 (lookahead-bias) wires THIRD** — adds `assert_no_lookahead_for_feature_group` calls
-         at compute entry, on top of the live-pipeline-wired version.
+      where parallel `git add` / reset wipes staged hunks, enforce: 1. **Harsh T2 features-consolidation Phase 1-4 ships
+      FIRST** — extracts features-cefi/tradfi compute paths into `features-service/`, replacing existing MDPS
+      `base_adapter.py` calls. Master sa2.P3-rewrite is the only writer in this window. 2. **Ikenna T2 sa2.P4-cefi
+      (live-pipeline) wires SECOND** — adds pipeline_mode partition + replay subsystem hooks to MDPS `base_adapter.py`
+      AFTER Harsh T2 has finished its rewrite sweep + pushed. 3. **Harsh T2 sa2.PhaseAB×8 (lookahead-bias) wires THIRD**
+      — adds `assert_no_lookahead_for_feature_group` calls at compute entry, on top of the live-pipeline-wired version.
       Each step waits for the previous step's RESOLVED block in
       [`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md) /
-      [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md) `## Open
-      questions`. **No surgical `git add -p` in parallel** — sequence enforced via plan-of-record signaling.
+      [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md)
+      `## Open     questions`. **No surgical `git add -p` in parallel** — sequence enforced via plan-of-record
+      signaling.
 - [ ] **Harsh Tab 3 (deployment-ui-lifecycle-tabs auth re-shape) → Ikenna Tab 5 (deploy_missing audit-log
       integration)**: audit-log integration wraps the auth re-shape. Hard ordering: Harsh ships auth re-shape Phase D;
       Ikenna ships audit-log on top.
 - [ ] **Harsh Tab 4 (per-asset_group VM ops + reconcilers) → Ikenna Tab 3 (cross-asset rescan design + LAUNCHER)**:
       Ownership clarified — **Ikenna T3 sa3.Rescan-launcher writes the rescan launcher script** (in
-      `instruments-service/scripts/` or `deployment-service/scripts/vm/`); **Harsh T4 operates it** on a same-region
-      GCE VM. Sequence: Ikenna T3 ships design + launcher + announces RESOLVED in
+      `instruments-service/scripts/` or `deployment-service/scripts/vm/`); **Harsh T4 operates it** on a same-region GCE
+      VM. Sequence: Ikenna T3 ships design + launcher + announces RESOLVED in
       [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) `## Open questions`
       → Harsh T4 runs `--dry-run` per asset_group → operator reviews CSV → Harsh T4 runs `--apply-write` → Ikenna T3
       handles edge-case triage file.
@@ -803,16 +804,15 @@ Mirror-image entries appear in [`work_split_2026_05_08_ikenna.md`](work_split_20
       T1 already-shipped `chain_env.py` `PROTOCOL_LAUNCH_DATES`; Ikenna T6 NEW `canonical/strategy/catalogue.py` +
       `ids.py` + `canonical/client/model.py`). The conditional-push rule catches collisions at push time but earlier
       serialization is cheaper. **Priority queue (top → bottom; each waits for previous to RESOLVED in
-      cross_cutting_may_23_deliverables_2026_05_08.md `## Open questions`)**:
-      1. Ikenna T6 NEW dirs (`canonical/strategy/catalogue.py`, `ids.py`, `canonical/client/model.py`) — brand-new
-         files, zero overlap risk; ships first.
-      2. Ikenna T1 `chain_env.py` flips — already shipped UAC@6c873e4; remaining drift fixes in same window.
-      3. Harsh T2 sa2.P5-uac-col `feature_family` column in `canonical/feature/family.py` (NEW dir).
-      4. Harsh T5 sa5.HardSchema `canonical/manifest/schema_v6.py` column adds.
-      5. Harsh T5 sa5.APIFootball `external/api_football/normalize.py:377-381`.
-      6. Harsh T5 sa5.CMEPolyArb `canonical/strategy/cme_polymarket_arb_archetype.py` — same DIR as Ikenna T6 (#1)
-         but DIFFERENT FILE; serialize after Ikenna T6 ships catalogue + ids files so the dir state is stable.
-      Each editor pre-commit-checks `git diff --cached --name-only` matches their assigned file subset exactly.
+      cross_cutting_may_23_deliverables_2026_05_08.md `## Open questions`)**: 1. Ikenna T6 NEW dirs
+      (`canonical/strategy/catalogue.py`, `ids.py`, `canonical/client/model.py`) — brand-new files, zero overlap risk;
+      ships first. 2. Ikenna T1 `chain_env.py` flips — already shipped UAC@6c873e4; remaining drift fixes in same
+      window. 3. Harsh T2 sa2.P5-uac-col `feature_family` column in `canonical/feature/family.py` (NEW dir). 4. Harsh T5
+      sa5.HardSchema `canonical/manifest/schema_v6.py` column adds. 5. Harsh T5 sa5.APIFootball
+      `external/api_football/normalize.py:377-381`. 6. Harsh T5 sa5.CMEPolyArb
+      `canonical/strategy/cme_polymarket_arb_archetype.py` — same DIR as Ikenna T6 (#1) but DIFFERENT FILE; serialize
+      after Ikenna T6 ships catalogue + ids files so the dir state is stable. Each editor pre-commit-checks
+      `git diff --cached --name-only` matches their assigned file subset exactly.
 - [ ] **Ikenna Tab 6 (UAC strategy SSOTs + DART scope) → Harsh Tab 6 (consumer wiring + DART UI)**: cross_cutting epic
       deliverables #1-#4. **Hard ordering**: Ikenna T6 ships UAC catalogue + ID + client schemas + DART codex spec
       first; Harsh T6 consumes after. **Mitigation**: Harsh T6 can scaffold the strategy ID refactor sweep (identify
@@ -823,22 +823,22 @@ Mirror-image entries appear in [`work_split_2026_05_08_ikenna.md`](work_split_20
 
 - **deployment-service `scripts/vm/` directory**: Tab 4 (launches existing) + Tab 5 (creates new) share the dir.
   Different files. Pre-commit `git diff --cached --name-only` verifies. Tab 5 ships any new prefix in
-  `VM_PREFIX_TO_BUCKET` BEFORE Tab 4 launches with that prefix; Tab 5 relaunches the watchdog VM after every batch
-  of prefix adds (CLAUDE.md "VM Naming Convention").
+  `VM_PREFIX_TO_BUCKET` BEFORE Tab 4 launches with that prefix; Tab 5 relaunches the watchdog VM after every batch of
+  prefix adds (CLAUDE.md "VM Naming Convention").
 - **MDPS `base_adapter.py`** (3-way collision — see HARD SEQUENCE in Cross-side handshakes above): Harsh T2
   features-consolidation rewrite FIRST → Ikenna T2 sa2.P4-cefi live-pipeline wiring SECOND → Harsh T2 sa2.PhaseAB×8
   lookahead-bias wires THIRD. Sequence enforced via plan-of-record signaling, NOT parallel `git add -p`.
-- **UAC** (4+ editor priority queue — see HARD QUEUE in Cross-side handshakes above): Ikenna T6 NEW dirs first →
-  Ikenna T1 drift fixes → Harsh T2 `feature_family` column → Harsh T5 schema/normalize/archetype adds in order.
-  Each editor pre-commit-checks `git diff --cached --name-only` matches assigned subset exactly.
+- **UAC** (4+ editor priority queue — see HARD QUEUE in Cross-side handshakes above): Ikenna T6 NEW dirs first → Ikenna
+  T1 drift fixes → Harsh T2 `feature_family` column → Harsh T5 schema/normalize/archetype adds in order. Each editor
+  pre-commit-checks `git diff --cached --name-only` matches assigned subset exactly.
 - **deployment-api `auth_middleware.py` + new launch endpoint**: Tab 3 (auth re-shape + new launch endpoint) + Ikenna
   Tab 5 (audit-log on top). Sequence enforced.
 - **8 features-\* source repos**: Tab 2 (consolidation source repos). Tab 4 wires hook into features-sports exit-step
   (one of the 8). Coordinate during Phase 4 import-path migration.
 - **`live-defi-rollout` push race**: per CLAUDE.md conditional push rule. Pre-commit `git status` +
   `git diff --cached --stat` (no path arg) MANDATORY before EVERY commit. Use `git add -p` / `git add <specific-file>`
-  only. Branch does NOT trigger remote CI — every shippable unit's local `bash scripts/quality-gates.sh` Pass 1 is
-  the ONLY quality gate (per top-of-file CI gate reminder).
+  only. Branch does NOT trigger remote CI — every shippable unit's local `bash scripts/quality-gates.sh` Pass 1 is the
+  ONLY quality gate (per top-of-file CI gate reminder).
 
 ## Daily sync points
 

@@ -27,10 +27,12 @@ related_plans:
 
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
 >
-> **Phase 1-2 stamping refs ONLY** (sports adapter `available_at` per-source cascade: lineups / fixture_events / injuries / pre-match odds / post-match xG+stats / weather forecast-issue) are folded into the available_at umbrella. Other sports_master scope (backfills, source coverage, league enumeration) remains owned here.
+> **Phase 1-2 stamping refs ONLY** (sports adapter `available_at` per-source cascade: lineups / fixture_events /
+> injuries / pre-match odds / post-match xG+stats / weather forecast-issue) are folded into the available_at umbrella.
+> Other sports_master scope (backfills, source coverage, league enumeration) remains owned here.
 >
-> Stamping owner: [`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
-
+> Stamping owner:
+> [`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
 
 # Sports Master — asset_group umbrella
 
@@ -49,8 +51,8 @@ and these docs is a review-blocking failure per `doc → plan → code`):
   per-source folder layout per CLAUDE.md "Sports GCS path SSOT":
   `sports_reference/by_date/day=*/entity={F}/league={L}/{F}.parquet`;
   `candidate_parquet_paths(data_type, day, league_id)` is the canonical probe API
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
-  unified pipeline: same shard atom, same fields, same `available_at` semantics; sports lineups stamped at
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
+  batch=live unified pipeline: same shard atom, same fields, same `available_at` semantics; sports lineups stamped at
   `kickoff − 60min`, fixture_stats / understat at `match_end_time`, weather at forecast-issue-time
 - [`codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md`](../../codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md)
   — ML-directional event-settled archetype (sports prediction)
@@ -108,10 +110,9 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
   sports launchers + AF launcher + chain runner); UAC@`fb02104` (event_time field on CanonicalFixtureEvent — Phase 2.D)
 - **Recommendation**: KEEP ACTIVE. Heavy P0/P1 surface area + cross-plan coordination required
   (rename→writegate→fixture-recovery dedup chain). Some "ai/" plan refs (e.g.
-  `api_football_minimal_flattening_removal_2026_05_07.md` for B.1) need verification — those are still in
-  `plans/ai/`. After 4 recovery VMs drain (ETA 2026-05-08), the post-recovery dedup script
-  (`dedup_phantom_after_recovery.py`) is the critical-path next move. Do NOT flip B.1/C.2/C.4/C.6 to DONE — those are
-  real shipped-code-pending plans.
+  `api_football_minimal_flattening_removal_2026_05_07.md` for B.1) need verification — those are still in `plans/ai/`.
+  After 4 recovery VMs drain (ETA 2026-05-08), the post-recovery dedup script (`dedup_phantom_after_recovery.py`) is the
+  critical-path next move. Do NOT flip B.1/C.2/C.4/C.6 to DONE — those are real shipped-code-pending plans.
 
 ## Scope
 
@@ -160,10 +161,10 @@ Covers:
 ### Sports `data_available_at` → `available_at` rename (folded 2026-05-07; full DAG below)
 
 **Cross-plan coordination**: this rename is **Stage 1** of the workspace-wide manifest migration. See
-[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for the sequencing DAG,
-conflicts (esp. `batch_handler.py` overlap with writegate Phase 2.C), VM impact matrix, and operator pause-resume
-guidance. Stage 1 Phase 3 features-sports `batch_handler.py` rename SHOULD ship in the SAME commit as writegate Phase
-2.C `_ensure_timestamp` shim deletion (avoids two-commit churn on same lines).
+[`manifest_migration_master_2026_05_07.md`](./manifest_migration_master_2026_05_07.md) for the sequencing DAG, conflicts
+(esp. `batch_handler.py` overlap with writegate Phase 2.C), VM impact matrix, and operator pause-resume guidance. Stage
+1 Phase 3 features-sports `batch_handler.py` rename SHOULD ship in the SAME commit as writegate Phase 2.C
+`_ensure_timestamp` shim deletion (avoids two-commit churn on same lines).
 
 **Folded from `sports_data_available_at_rename_2026_05_07.md`.** Original plan archived at
 `plans/archive/sports_data_available_at_rename_2026_05_07.md`. Phase 1 SHIPPED via `instruments-service@8050477`
@@ -370,8 +371,8 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
-**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` rows B.1 / C.2 / C.3 / C.4 / C.6 / C.7 /
-C.10. Operator inspected the deployment-ui data-status panel + schema modals; the findings below all surfaced as
+**Source**: `plans/ai/session_2026_05_07_data_status_audit_findings.md` rows B.1 / C.2 / C.3 / C.4 / C.6 / C.7 / C.10.
+Operator inspected the deployment-ui data-status panel + schema modals; the findings below all surfaced as
 sports-asset_group writer / contract / cadence issues.
 
 #### Bonus — FootyStats per-season league-id drift-detection automation (filed 2026-05-07)
@@ -748,30 +749,45 @@ features silently miss bookmaker × market gaps.
 
 ## May-23 deliverable (folded from `sports_ml_may_23_2026.epic` 2026-05-08)
 
-> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/sports_ml_may_23_2026.epic.md`. Archived: [`plans/archive/sports_ml_may_23_2026.epic.md`](../archive/sports_ml_may_23_2026.epic.md).
+> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/sports_ml_may_23_2026.epic.md`.
+> Archived: [`plans/archive/sports_ml_may_23_2026.epic.md`](../archive/sports_ml_may_23_2026.epic.md).
 
-**Why:** Sports ML prediction ships **backtest-only** for May 23 — but unlike S&P prediction (data → ML training only), this goes **all the way through strategy backtest + execution backtest** as well. ML signal + strategy + execution all backtest in the unified pipeline. No live trading. Bugs/backfills/schema fixes inclusive at every layer.
+**Why:** Sports ML prediction ships **backtest-only** for May 23 — but unlike S&P prediction (data → ML training only),
+this goes **all the way through strategy backtest + execution backtest** as well. ML signal + strategy + execution all
+backtest in the unified pipeline. No live trading. Bugs/backfills/schema fixes inclusive at every layer.
 
 ### End-state at May 23 (success criteria)
 
 - [ ] **Sports ML model trains end-to-end in batch** on representative history.
-- [ ] **Strategy backtest** of ML signal runs end-to-end through unified pipeline (no standalone backtest engine, no inline settlement) — strategy interacts with PBM + R&E + execution-service per `Batch = Live` rule.
-- [ ] **Execution backtest** runs through matching engine (Sports L0 TOB matcher, per matching_engine SSOT) — simulated fills with accurate slippage / commission / latency / venue liquidity, NOT face-value odds.
-- [ ] **Sports data pipeline clean** end-to-end: instruments (URDI sports/) + odds (api_football, footystats, odds_api) + features (features-sports) — no phantom rows, no NaN placeholders, manifest 100% honest, `available_at` correctly stamped per row.
+- [ ] **Strategy backtest** of ML signal runs end-to-end through unified pipeline (no standalone backtest engine, no
+      inline settlement) — strategy interacts with PBM + R&E + execution-service per `Batch = Live` rule.
+- [ ] **Execution backtest** runs through matching engine (Sports L0 TOB matcher, per matching_engine SSOT) — simulated
+      fills with accurate slippage / commission / latency / venue liquidity, NOT face-value odds.
+- [ ] **Sports data pipeline clean** end-to-end: instruments (URDI sports/) + odds (api_football, footystats,
+      odds_api) + features (features-sports) — no phantom rows, no NaN placeholders, manifest 100% honest,
+      `available_at` correctly stamped per row.
 - [ ] **Honest-coverage baseline** for sports manifest: ratchet established + monitored.
 - [ ] **Phantom recovery complete** for sports fixtures (truthset rebuild + capture-status reclassification).
 - [ ] **Strategy + execution layers fixed where needed** — bugs across ML + strategy + execution caught this cycle.
 
 ### IN/OUT scope
 
-- **IN**: full backtest pipeline (instruments → odds → features → ML training → ML inference → strategy → execution → PBM → R&E → P&L attribution); sports backfill end-to-end (api_football / footystats / transfermarkt / understat / soccer_football_info / open_meteo / odds_api / MDPS odds horizon bucket); sports phantom-recovery + honest-coverage close-outs; `available_at` rename + per-row stamping (kickoff−60min for lineups, event-time for events, match_end_time for post-match); execution backtest with L0 TOB matcher (real fills); 2-year-equivalent backtest config grid.
-- **OUT**: live trading; live odds capture (forward-poll continues but not gating); multiple ML archetypes (one is the bar); production deployment.
+- **IN**: full backtest pipeline (instruments → odds → features → ML training → ML inference → strategy → execution →
+  PBM → R&E → P&L attribution); sports backfill end-to-end (api_football / footystats / transfermarkt / understat /
+  soccer_football_info / open_meteo / odds_api / MDPS odds horizon bucket); sports phantom-recovery + honest-coverage
+  close-outs; `available_at` rename + per-row stamping (kickoff−60min for lineups, event-time for events, match_end_time
+  for post-match); execution backtest with L0 TOB matcher (real fills); 2-year-equivalent backtest config grid.
+- **OUT**: live trading; live odds capture (forward-poll continues but not gating); multiple ML archetypes (one is the
+  bar); production deployment.
 
 ### Cross-epic handshakes
 
-- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue (sports ML archetype + venues), infrastructure baseline, UI replication of backtest harness.
-- **Shares with:** `cefi_ml`, `sp_prediction`, `prediction_markets` (now folded into respective masters) share ML lifecycle (training pipeline, model registry, drift detection, batch backtest harness).
-- **Provides to:** `predictions_master` (folded `prediction_markets`) may consume sports ML signals as inputs to sports-betting prediction-market strategies (Polymarket fixture markets).
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue (sports ML archetype + venues), infrastructure
+  baseline, UI replication of backtest harness.
+- **Shares with:** `cefi_ml`, `sp_prediction`, `prediction_markets` (now folded into respective masters) share ML
+  lifecycle (training pipeline, model registry, drift detection, batch backtest harness).
+- **Provides to:** `predictions_master` (folded `prediction_markets`) may consume sports ML signals as inputs to
+  sports-betting prediction-market strategies (Polymarket fixture markets).
 
 ### Open questions
 
@@ -784,8 +800,8 @@ features silently miss bookmaker × market gaps.
       fixture metadata. MLS + all-leagues DEFERRED post-cutover.
 - [x] ✓ **Bookmaker scope — RESOLVED 2026-05-08.** **odds_api closing prices for May-23 batch backtest** (consensus
       market-implied probability at kickoff, no leakage since stamped `available_at = kickoff`). Top-5 bookmakers by
-      EXPECTED_BOOKMAKER_MARKET_SETS coverage (Bet365 + Pinnacle + 1xBet + Marathonbet + William Hill). Slippage:
-      1% over closing for liquid markets, 3% for thin. MDPS odds horizon bucket DEFERRED with in-play archetype.
+      EXPECTED_BOOKMAKER_MARKET_SETS coverage (Bet365 + Pinnacle + 1xBet + Marathonbet + William Hill). Slippage: 1%
+      over closing for liquid markets, 3% for thin. MDPS odds horizon bucket DEFERRED with in-play archetype.
 
 ## Anti-patterns + workspace-rule cross-references
 

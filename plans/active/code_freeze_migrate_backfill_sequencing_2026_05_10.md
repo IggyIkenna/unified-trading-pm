@@ -1,0 +1,379 @@
+---
+title: Code-freeze → migrate → backfill sequencing master (May-23 cutover orchestration umbrella)
+type: orchestration-umbrella
+status: active
+created: 2026-05-10
+deadline: 2026-05-23
+horizon: cutover-bounded
+locked_by: live-defi-rollout
+locked_since: 2026-05-10
+companion_to:
+  - plans/active/master_to_live_defi_2026_05_23.md
+  - plans/epics/manifest_evolution_master_2026_05_08.md
+  - plans/epics/manifest_migration_master_2026_05_07.md
+  - plans/active/available_at_lookahead_bias_completion_2026_05_08.md
+---
+
+# Code-freeze → migrate → backfill sequencing master
+
+## Why this plan exists
+
+Operator framing 2026-05-10: _"Imagine before doing any manifest, migration or cloud schema migrations or data migrations on physical files we first wanna get all the code in services and the UAC and UTL work done so that we won't have to migrate again later. Can we prioritise plan items which get us there so that after that's all done we can migrate manifest and gcs and then after that we can resume backfills for instruments up until features service for everything."_
+
+This plan is the **execution-sequencing umbrella** for the May-23 cutover. It does NOT duplicate scope from existing plans — it indexes them, sequences them into a strict three-phase model, and closes the gaps the audit surfaced. The durable readiness model lives in
+[`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md); the schema/writer/data-layout co-evolution gates live in
+[`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md); the migration coordinator lives in
+[`plans/epics/manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md). This plan composes them along the time axis.
+
+The principle: **code shape decisions → migration → backfill, in that order, no doubling back.** Every migration of physical files (manifest schema bump, GCS hive-vocab rekey, OHLCV legacy filename → per-instrument rename, pipeline_mode partition addition, AWS cloud-parity bundle) is **one-shot**. If a code-shape decision lands AFTER a physical migration runs, the workspace pays the re-migration tax — millions of parquets walked twice, manifest rewritten twice, backfill VMs idle waiting, May-23 deadline at risk.
+
+## The three-phase model
+
+```
+─────────────────────────────────────────────────────────────────────────────
+ PHASE 1 — Code-complete first       (deadline:  2026-05-15 hard freeze)
+─────────────────────────────────────────────────────────────────────────────
+   UAC schema columns + enums + registries finalized
+   UTL helpers (ManifestWriter, EmissionPublisher, AvailabilityStamping) finalized
+   Service writer code (MTDS / MDPS / features-service / instruments-service /
+                        strategy / execution / risk / position-balance / alerting)
+                       reflects final shape
+   ServiceEmissionPolicy seed dict finalized
+   error_reason taxonomy frozen (EMPTY_CONFIRMED_REASONS closed set)
+   BUNDLED_DATA_TYPES + DATA_TYPE_TO_CLUSTER_REGISTRY finalized
+   pipeline_mode hive partition column declared
+   feature_family schema column declared
+   available_at per-source semantics finalized (SOURCE_PRIORITY)
+   instrument lifecycle cache-delta hot-reload landed
+   features-* repos consolidated into single features-service
+
+                                  ↓ Phase 1 freeze gate ↓
+
+─────────────────────────────────────────────────────────────────────────────
+ PHASE 2 — One-shot physical migrations    (window: 2026-05-15 → 2026-05-19)
+─────────────────────────────────────────────────────────────────────────────
+   2.0  Pre-migration VM drain + state freeze (GAP — formalized below)
+   2.1  Manifest v5/v6/v7 → v8 atomic rename + service_emission_state column
+        (schema declared in writegate slice (b) Phase 5.1; rename + apply-flips
+         executed via manifest_cross_asset_rescan_design — design intentionally
+         split, not a missing file)
+   2.2  GCS bundled migration: pipeline_mode partition + category=→asset_group=
+        rekey + 5-axis drift sweep (path-prefix / instrument_type casing /
+        schema-4 empty / chain-bundle equivalence) — single walk, all changes
+   2.3  OHLCV legacy filename → per-instrument rename reconcile
+   2.4  AWS DeFi-first cloud-parity migration (GCS → S3 transfer + Glue/Athena)
+   2.5  Manifest cross-asset rescan with --apply-flips (post-schema, post-data)
+
+                                  ↓ Phase 2 freeze gate ↓
+
+─────────────────────────────────────────────────────────────────────────────
+ PHASE 3 — Resume backfills end-to-end    (window: 2026-05-19 → 2026-05-23)
+─────────────────────────────────────────────────────────────────────────────
+   3.1  Instruments-service catalogue forward-fill (5 asset_groups)
+   3.2  MTDS multi-venue backfill VM relaunch (15 CeFi venues + TradFi + DeFi
+        + Sports + Predictions)
+   3.3  MDPS bar reprocessor relaunch (per-asset-group)
+   3.4  Features-service compute relaunch (cross-instrument + per-family)
+   3.5  ML training + inference relaunch
+   3.6  Strategy archetype paper-trade smoke (DeFi 2 archetypes + CeFi/TradFi/
+        Sports/Predictions)
+   3.7  7-day continuous live-DeFi run on real wallet (final cutover gate)
+─────────────────────────────────────────────────────────────────────────────
+```
+
+Each phase has a **freeze gate**: nothing in phase N+1 starts until phase N is operationally complete (not just code-shipped). Per CLAUDE.md HARD RULE _"Plans Run To Actual Completion, Not Smoke-Test Green"_, "shipped" means data on real infrastructure with verification probes, not just a green QG.
+
+## Phase 1 — Code-complete inventory
+
+Plans in this section MUST run to ✅ shipped before Phase 2 starts. The umbrella enforcer is
+[`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md) gates **G1 (reason taxonomy) → G2 (cluster validation) → G3 (enumerator launch)**; this section indexes the plans those gates consume.
+
+### Phase 1.A — UAC + UTL foundation (writegate / honest coverage)
+
+- [ ] [PLAN] P0. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** — UTL `ManifestWriter.record_captured()` 4-pillar gate signature, typed-error taxonomy (`EMPTY_CONFIRMED_REASONS`), cluster validation kwargs, ServiceEmissionPolicy seed dict, 37-callsite MDPS/MTDS writer migration. **Status check**: Wave 4 slice (a) shipped (UAC@58c3b61 + UTL@1a7e1d4b + PM@0e2eb08e); slice (b) Phase 5.1-5.7 (~2d MDPS ohlcv_1h POC + manifest_completeness helper + UAC manifest schema columns + deployment-api/ui surface) PLANNED 2026-05-08; slice (c) Phase 6.1-6.9 (~3-5wk per-service rollout) PLANNED. **Phase 1 blocker**: slice (b) MUST land before Phase 2.1 manifest schema bump can rename/freeze.
+- [ ] [PLAN] P0. **`plans/active/wave3x_residual_ssots_2026_05_08.md`** — 5 parallel tracks for residual UAC SSOTs. Track A (HALF_DAY_SESSIONS + VENUE_SESSION_HOURS) shipped UAC@bdc84ed. Tracks B/C/D/E open (sports per-source SSOTs / reconcilers / zero-activity-bar audit / sports availability stamping cascade).
+- [ ] [PLAN] P0. **`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`** — Sister umbrella for stamping work. Per-source `available_at` semantics + UTL `stamp_available_at_*` helpers + LookaheadBiasError gate strict-mode rollout across every features-* calculator. **Phase 1 blocker**: every per-source stamping helper must be final before Phase 3 backfills emit their first new row (otherwise re-stamping at Phase 3 = re-write of Phase 2 migrated parquets).
+- [ ] [PLAN] P1. **`plans/active/expected_universe_v2_design_2026_05_08.md`** — Per-instrument-grain enumerator (v2 supersedes v1 venue-grain). DRAFT. Pre-populates `expected_unattempted` rows from instruments-service catalogue. Gate G3 of `manifest_evolution_master`. May be deferred behind Phase 2.1 v7 schema bump per audit Q3.
+
+### Phase 1.B — Schema + writer hardening
+
+- [ ] [PLAN] P0. **`plans/active/hard_schema_enforcement_2026_05_08.md`** — Workspace-wide hard schema enforcement at write boundary; flips required fields nullable→required across asset_groups (base_currency / quote_currency / chain_id / contract_address / decimals / fixture_id / futures_expiry). **Sequenced AFTER** `tradfi_master` Q1+Q2 futures-expiry ships (avoids mass-fail-during-transit per existing plan body). **Phase 1 blocker**: SCHEMA_VALIDATION_FAILED enum extension lands here; needed before Phase 2.5 cross-asset rescan can flip rows.
+- [ ] [PLAN] P0. **`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`** — Collapse 3-layer drift (yaml config + per-family config.py + UTL resolver) to one UAC SSOT. **Phase 1 blocker**: bucket-name resolution code must be final before Phase 2.4 AWS migration writes.
+
+### Phase 1.C — Live-pipeline activation code
+
+- [ ] [PLAN] P0. **`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`** — Live (websocket-streaming) pipeline activation for MTDS → MDPS → features-service across 5 asset_groups. NEW UAC `ServiceEmissionPolicy` schema column, `pipeline_mode` hive partition, `PipelineMode` facade. Health-API extension + circuit-breaker wiring. Instrument-cache-delta hot-reload. Replay subsystem. **Tab 2 PM/evening 2026-05-08 progress**: 4 UTL primitives shipped (streaming facade / StreamingHealthSnapshot / InstrumentLifecycleCacheDeltaReloader / batch_live_reconciler); MTDS/MDPS/features service-wiring deferred post-features-consolidation. **Phase 1 blocker**: Phase 0-3 (UAC + UTL foundations) done; Phase 4-5 (per-asset-group cascade) requires features_repo_consolidation Phase 7.
+- [ ] [PLAN] P0. **`plans/active/features_repo_consolidation_2026_05_08.md`** — Merge 8 separate features-* repos into single features-service with sub-packages. NEW UAC `feature_family` schema column. Lift 4 cross-family helpers into UTL. **Deadline 2026-05-13**. **Phase 1 blocker**: Phase 7 (consolidated features-service deployable) must land before live-pipeline Phase 4-5 can wire MDPS↔features in-process handoff. Backfill-side: Phase 3.4 features-service compute relaunch in this plan reads from single consolidated repo, not the 8 archived ones.
+- [ ] [PLAN] P1. **`plans/active/basefc_validation_flip_2026_05_10.md`** — Mandatory `ClassVar` enforcement across 75 feature calculators (paradigm-split rollout). Deadline 2026-05-20.
+- [ ] [PLAN] P1. **`plans/active/mdps_streaming_and_backpressure_2026_05_07.md`** — MDPS streaming + backpressure successor (awaits live-pipeline Phase 0-3).
+- [ ] [PLAN] P1. **`plans/active/mtds_databento_path_streaming_2026_05_07.md`** — MTDS Databento path-streaming successor.
+
+### Phase 1.D — Service code: alerting / risk / strategy / DART
+
+- [ ] [PLAN] P0. **`plans/active/alerting_service_live_rules_2026_05_07.md`** — Production rule SSOT + thresholds + paging logic for live pipeline. Sub-E codex doc category for ML alerting rules (deferred per Tab 5 EOD-summary 2026-05-08; tracked in
+      [`feedback_capture_discoveries_as_plan_todos_immediately.md`](../../) auto-memory).
+- [ ] [PLAN] P0. **`plans/active/risk_simulations_limits_alerting_2026_05_10.md`** — Risk rule taxonomy + per-archetype/venue/account/client limits + alerting wire + pre-flight check API. Parent: strategy_and_dart_master.
+- [ ] [PLAN] P0. **`plans/active/disaster_recovery_circuit_breakers_2026_05_10.md`** — Disaster recovery + reconciliation + circuit breakers + kill switches (cutover MVP). Parent: master_to_live_defi.
+- [ ] [PLAN] P1. **`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`** — Promote workflow May-23 dual-track cutover (CLI primary + minimal UI parallel).
+- [ ] [PLAN] P1. **`plans/active/topology_qgroup_gap_closure_2026_05_09.md`** — Topology Q-group GAP closure (18 GAPs + 2 WATCH + 1 ISSUE before May-23).
+
+### Phase 1.E — DeFi-specific code (chain primitives + archetypes)
+
+- [ ] [PLAN] P0. **`plans/active/defi_catalogue_chain_primitives_2026_05_10.md`** — DeFi catalogue + chain primitives (chain genesis dates, protocol launch dates, token metadata). Parent: defi_master.
+- [ ] [PLAN] P0. **`plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md`** — ARBITRAGE_PRICE_DISPERSION canonicalisation + strategy-service catalog + tracer + P&L attribution. Parent: defi_master.
+- [ ] [PLAN] P0. **`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`** — Recursive-borrow archetype definitions for carry_staked_basis (Phase 9). PLANNED. Parent: defi_master.
+- [ ] [PLAN] P0. **`plans/active/defi_simulation_realism_2026_05_10.md`** — DeFi matching engine extension + risk-modeling enhancements. Parent: defi_master.
+- [ ] [PLAN] P0. **`plans/active/cme_polymarket_arb_2026_05_08.md`** — InstrumentType.EVENT_CONTRACT enum + linked_canonical_question_group cross-link + MTDS binary-outcome shard atom + cme_polymarket_event_arb strategy archetype.
+
+### Phase 1.F — Cross-cutting code
+
+- [ ] [PLAN] P0. **`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`** — Cross-cutting 6-tab restructure (Deploy / Monitor / Data Status / Builds / Readiness / Config). NEW UAC `LifecycleClass` enum + `EnvironmentTier` enum. Parent: cross_cutting_may_23_2026.epic.
+- [ ] [PLAN] P0. **`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`** — Full credential provisioning for May-23 live-DeFi cutover.
+- [ ] [PLAN] P0. **`plans/active/wallet_treasury_client_flow_2026_05_10.md`** — Wallet / treasury / client lifecycle MVP.
+- [ ] [PLAN] P1. **`plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md`** — Client reporting + PnL attribution MVP.
+
+### Phase 1 freeze gate (✅ to flip Phase 2 startable)
+
+The freeze gate fires when ALL of the following are true. The umbrella `manifest_evolution_master` G2 gate is the technical enforcer; this section is the operator-readable checklist.
+
+- [ ] **Schema columns frozen**: UAC manifest schema for v8 (incl. `service_emission_state`, `pipeline_mode`, `feature_family`) reviewed + merged + tagged. No further column adds. Column declaration is owned by writegate slice (b) Phase 5.1 (NOT a separate `manifest_v8_schema_migration_design` file — design intentionally bundled per operator direction "manifest, code, and data migrate in the same group plan to avoid collision risk").
+- [ ] **error_reason taxonomy closed**: `EMPTY_CONFIRMED_REASONS` final set declared in UAC; `LegacyBlankErrorReasonError` rejecting any blank reason at write boundary (already shipped UTL@68b3804a per CLAUDE.md). New reason additions require explicit P0 RFC + this plan re-opens.
+- [ ] **All 37 MDPS/MTDS callsites migrated** to `ManifestWriter.record_captured(...) / record_empty(...) / record_failed(...) / record_expected_unattempted(...)`. AST sweep (writegate plan QG STEP 5.64) green workspace-wide.
+- [ ] **ServiceEmissionPolicy seed dict locked**: 19+ rows covering MDPS / features / ml-training / ml-inference / strategy / execution / position-balance / risk / instruments / alerting (+ any added during Phase 1).
+- [ ] **available_at per-row stamping wired** at every write boundary; LookaheadBiasError strict-mode green at every features-* calculator.
+- [ ] **features_repo_consolidation Phase 7** done — single features-service repo deployable; 8 child repos archived.
+- [ ] **bucket_name SSOT** — single UAC bucket_config registry; all per-service config.py duplicates deleted.
+- [ ] **Workspace QG green** across UAC + UTL + every service repo; basedpyright clean; no `# type: ignore` masking architectural violations.
+- [ ] **Codex SSOTs updated** per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — every doc that the Phase 1 plans should have touched is current.
+
+## Phase 2 — One-shot physical migrations
+
+Plans in this section run AFTER Phase 1 freeze gate. They MUST run to operational completion (not just code-shipped) per CLAUDE.md _"Plans Run To Actual Completion"_ HARD RULE. The umbrella enforcer is `manifest_evolution_master` gate **G4 (v8 schema atomic rename) + G5 (rescan apply-flips)**; the migration coordinator is `manifest_migration_master_2026_05_07`.
+
+### Phase 2.0 — Pre-migration VM drain + state freeze (GAP — to formalize)
+
+**Status: GAP. No active plan owns this today.** Per audit, 37 in-flight backfill VMs (writegate audit 2026-05-07) need a clean drain + state freeze before Phase 2.1 starts. If VMs are still writing during a manifest schema migration, every concurrent CAS write produces drift between writer-version-N and writer-version-N+1 rows — silent data corruption.
+
+**Disposition** (per AskUserQuestion answer 2026-05-10): add as a pre-phase to `plans/epics/manifest_migration_master_2026_05_07.md` Stage 1, NOT a standalone plan.
+
+- [ ] [SCRIPT] P0. **GAP-2.0.A** — Add **Stage 0 pre-drain phase** to
+      [`plans/epics/manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) ahead of Stage 1. Body content:
+  1. Inventory every running backfill VM via the per-prefix watchdog
+     (`deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registry — bare `gcloud compute instances list` filtered by prefix).
+  2. For each running VM, inspect last STARTED→PROGRESS→STOPPED event in `gs://${PID}-events/events/${service}/${YYYY-MM-DD}/${vm_name}/hour=*/*.jsonl` per CLAUDE.md "No fire-and-forget VM launches" HARD RULE.
+  3. Send SIGTERM to each VM's runner via launcher's `--graceful-stop` flag (fall back to gcloud auto-shutdown if launcher lacks the flag).
+  4. Wait for STOPPED event with non-empty progress metadata; verify last-written shard finalized (parquet exists at canonical path + manifest row landed in `_index/per_vm/<vm-name>.parquet`).
+  5. Run manifest consolidator one final time so all per-VM shards merge into canonical `_index/availability_index.parquet` before schema migration touches it.
+  6. Snapshot canonical manifest to `_index/snapshots/pre_migration_2026_05_15.parquet` (read-only audit trail; recoverable in case Phase 2.1 atomic rename fails).
+  7. Lock `live-defi-rollout` branch from launching new backfill VMs until Phase 2 completes (operator-enforced; no technical gate).
+- [ ] [AGENT] P0. **GAP-2.0.B** — Confirm Stage 0 covers BOTH GCP + AWS VM fleets (per `aws_migration_defi_first_2026_05_07.md` 5 in-flight cross-cloud rsync jobs from 2026-05-08 Tab 4 close-out). AWS-side VM drain has its own watchdog + event-stream surface; same recipe applies.
+- [ ] [DOC] P0. **GAP-2.0.C** — Update CLAUDE.md "No fire-and-forget VM launches" HARD RULE with "Pre-migration drain" sub-section pointing at Stage 0.
+
+### Phase 2.1 — Manifest v5/v6/v7 → v8 atomic rename
+
+The v8 schema target + flip semantics are **intentionally split across two existing plans, not a missing file**. Per operator direction 2026-05-08 ("manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution; don't allow execution in isolation"), the v8 design lives in:
+
+- **Schema column declaration** — `writegate_honest_coverage_endtoend_2026_05_06.md` slice (b) Phase 5.1 ("UAC manifest schema columns").
+- **Rescan flip schema + apply-flips execution** — `manifest_cross_asset_rescan_design_2026_05_08.md` (class A mutable / class B immutable / class C triage closed sets, per-asset-group rules, concurrency safety).
+
+There is therefore no "v8 schema design" gap; the plan items here promote the existing pieces to execution shape:
+
+- [ ] [PLAN] P0. **`plans/active/manifest_cross_asset_rescan_design_2026_05_08.md`** — Cross-asset-group `--apply-flips` reconciler. **Disposition**: promote draft → active execution plan. The plan today has:
+  1. **Class A mutable** flips (`capture_status` / `error_reason` / `attempted_at` / `path` reconciled to disk truth).
+  2. **Class B immutable** columns the rescan respects but does NOT flip (`pipeline_mode` / `available_at` / `service_emission_state` set at write-time, not by walk).
+  3. **Class C triage** disagreements routed to operator review at `gs://{pid}-rescan-triage/{run_id}/triage.jsonl`.
+  4. Per-asset-group rules respecting `venue_trading_calendar` / `PROTOCOL_LAUNCH_DATES` / `SOURCE_COVERAGE_START` / market lifecycle.
+  5. Phantom audit integration (target: 0 phantoms across 5 asset_groups; baseline 354 from 2026-05-04).
+     The plan still needs:
+  - Atomic rename procedure: per-VM shard tree → consolidator merges with v8 schema → atomic mv `_index/availability_index_v8.parquet` over `_index/availability_index.parquet` → reader fallback grace period DELETED in same commit per CLAUDE.md "Manifest migration, NOT fallback" rule.
+  - Verification probe: read 100 random rows post-rename; assert all v8 columns populated; assert ZERO rows with v5/v6/v7 shape; assert reader-fallback path raises `ManifestSchemaError` on any pre-v8 input.
+  - Launcher script (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`; queued per the existing plan body).
+  - `cross_asset_rescan.py` Python (Harsh Tab 4 scope per existing plan body).
+- [ ] [PLAN] P0. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** slice (b) Phase 5.1 — UAC manifest schema column declaration for v8. **Phase 2 entry blocker**: column set must be final before the rescan plan can write rows in v8 shape.
+- [ ] [PLAN] P1. **`plans/active/expected_universe_v2_design_2026_05_08.md`** — Promote draft to active execution plan if launched in Phase 2 (per audit Q3 sequencing-vs-v8 decision). If deferred behind v8, defer to Phase 3.
+
+### Phase 2.2 — GCS bundled migration: pipeline_mode + category-rekey + drift sweep
+
+- [ ] [PLAN] P0. **`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`** — BUNDLED overnight GCS migration. **CRITICAL CONSTRAINT**: this plan walks every parquet ONCE; it MUST include all Phase 2 GCS-touching changes in the same walk. Bundled changes:
+  1. NEW `pipeline_mode={batch_databento, batch_tardis, ..., live_websocket}` hive partition column.
+  2. Finish dual-vocab `category=` → `asset_group=` rekey; legacy reader fallback DELETED.
+  3. Sweep 5 drift axes from 2026-05-04 phantom-audit (path-prefix / instrument_type casing / schema-4 empty instrument_type / chain-bundle equivalence / hive-vocab `category=`/`asset_group=`).
+  4. **NEW (closed gap 2)**: OHLCV legacy filename → per-instrument file rename (see GAP-2.3 below).
+- [ ] [SCRIPT] P0. **GAP-2.2.A** — Verify `gcs_migration_bundle_pipeline_mode` Phase 2 enumerates ALL Phase 1 schema columns (must include `service_emission_state` + `feature_family` if Phase 2.1 v7 lands first). Cross-reference with `manifest_cross_asset_rescan_design`. Update `gcs_migration_bundle_pipeline_mode` Phase 2 body if any column missing.
+- [ ] [DOC] P1. **GAP-2.2.B** — Update CLAUDE.md "Honest absence vs fake placeholders" HARD RULE with reference to Phase 2.2 single-walk discipline. Reviewers should reject any post-Phase-2 plan that proposes another whole-corpus walk.
+
+### Phase 2.3 — OHLCV legacy filename → per-instrument rename reconcile (GAP)
+
+**Status: GAP. Scattered across `gcs_migration_bundle` Phase 2 + per-service writer plans; no single owner.** Per CLAUDE.md "Honest absence vs fake placeholders" reference incident 2026-05-05 — MDPS reader expected legacy `ticks.parquet` while MTDS evolved to per-instrument `{instrument_id}.parquet`; silent placeholder rows hid the drift for years.
+
+**Disposition** (per AskUserQuestion answer 2026-05-10): add as Phase 2 sub-step inside `gcs_migration_bundle_pipeline_mode_2026_05_08.md` (closest existing plan), NOT a standalone plan. Bundles into the same one-walk migration so manifest only rewrites once.
+
+- [ ] [SCRIPT] P0. **GAP-2.3.A** — Append Phase 2.X "OHLCV legacy filename rename" sub-section to
+      [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.md) Phase 2. Body:
+  1. Inventory every parquet path matching legacy `ticks.parquet` under MTDS + MDPS + features-* GCS roots (audit script using existing `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` HTTP-pool-tuned listing pattern).
+  2. For each legacy path, rename to per-instrument shape `{instrument_id}.parquet` (extract instrument_id from row data, NOT path heuristic — paths can be misleading per the 2026-05-05 incident).
+  3. Update manifest row_keys for renamed files (atomic per-row rewrite via consolidator; safe because Phase 2.1 v7 schema migration runs before this).
+  4. Verification: post-rename, ZERO `ticks.parquet` paths exist; manifest row count delta ZERO (rename is path-only, not schema or data); `instrument_id` column populated in every renamed parquet.
+- [ ] [SCRIPT] P1. **GAP-2.3.B** — Audit features-* readers for `ticks.parquet` literal path references (the 2026-05-05 silent-placeholder bug had MDPS reader hardcoded to legacy filename); flag any consumer that would break post-rename. Fix sites in same logical unit as Phase 2.3.A.
+
+### Phase 2.4 — AWS DeFi-first cloud-parity migration
+
+- [ ] [PLAN] P0. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — AWS Migration DeFi-First. **Status (per Tab 4 PM@4a3c157d 2026-05-08)**: Phase 1 smoke against real AWS S3 GREEN; Phase 2 10 buckets created on real S3; Phase 5 KICKED OFF (5 cross-cloud rsync jobs at 14:20 UTC 2026-05-08); Glue/Athena Phase 5b ENABLED. Remaining: full bundle backfill + AWS-side manifest consolidator + AWS-side data-status UI.
+- [ ] [SCRIPT] P0. **GAP-2.4.A** — Verify `aws_migration_defi_first` migration writes use the same Phase 1.B `bucket_name_ssot_canonicalisation` resolver. If AWS-side resolver was wired pre-Phase-1, double-check the SSOT is in sync now (CLAUDE.md "Two teammates × multiple parallel agents" + bucket-name SSOT triple-drift incident from Tab 4 close-out).
+
+### Phase 2.5 — Manifest cross-asset rescan with --apply-flips
+
+- [ ] [PLAN] P0. **`plans/active/manifest_cross_asset_rescan_design_2026_05_08.md`** (continuation from Phase 2.1) — Run `--apply-flips` against full migrated manifest. This is Phase 5 of `manifest_migration_master`. Catches:
+  - 1440-NaN flip (any MDPS empty-placeholder rows → `attempted_failed` with `MalformedTickFieldError`).
+  - Partial-bundle reflip (any cluster-coverage-violated bundles → `attempted_failed` with `ClusterCoverageError`).
+  - Pre-v7 cleanup (any straggler rows in pre-v7 shape → `attempted_failed` with `SCHEMA_VALIDATION_FAILED`).
+  - GCS available_at backfill (rows with NULL `available_at` get stamped via `stamp_available_at_*` based on per-source semantics from Phase 1).
+
+### Phase 2 freeze gate (✅ to flip Phase 3 startable)
+
+- [ ] **Manifest schema is v8** workspace-wide; every row populated; reader fallback for v5/v6/v7 deleted; ZERO drift in 4-state taxonomy at every coverage drilldown level.
+- [ ] **GCS bundled migration complete**: `pipeline_mode` partition added; `category=` rekey done; 5 drift axes swept; OHLCV legacy filenames renamed; ZERO regressions on a 100-shard random read sample.
+- [ ] **AWS cross-cloud parity**: every DeFi-relevant bucket has S3 mirror; Glue catalog crawled; Athena query returns expected rows on `paper-vs-live` smoke.
+- [ ] **`--apply-flips` rescan complete**: every shard with drift state flipped to correct manifest state; verification probe (random 100 shards) shows manifest matches on-disk truth.
+- [ ] **Manifest snapshot saved** at `_index/snapshots/post_migration_2026_05_19.parquet` (recovery point before Phase 3 backfill writes start).
+- [ ] **No backfill VMs launched** during Phase 2 window. (Operator-enforced lock.)
+
+## Phase 3 — Resume backfills end-to-end
+
+Plans in this section run AFTER Phase 2 freeze gate. They are the actual data-population step against final-state code + final-state schema + final-state on-disk layout. The umbrella enforcer is `master_to_live_defi_2026_05_23` Group D (Coverage & shard) + Group F (Trading prerequisites — live-only).
+
+### Phase 3.1 — Instruments-service catalogue forward-fill
+
+- [ ] [PLAN] P0. **`plans/epics/instruments_live_master_2026_05_08.md`** — Instruments-service live activation across 5 asset_groups. Per-asset-group cadence: TradFi 15-min Polygon/Yahoo, CeFi 15-min CCXT, Sports trigger-driven (daily fixture re-poll + season-roll + transfer-window + weather), Predictions 15-min market-discovery. Cloud Scheduler driver + new "Scheduled Jobs" deployment-UI tab. **Phase 3 entry**: Phase F (live activation) starts after Phase 2 freeze; until then stays in Phase A-E (preflight DAG).
+
+### Phase 3.2 — MTDS multi-venue backfill VM relaunch
+
+- [ ] [SCRIPT] P0. **MTDS-3.2.A** — Relaunch CeFi backfill VMs (15 venues — Bybit / Binance / OKX / Bitfinex / Bitget / Kraken / Deribit / Hyperliquid / Aster + others per `cefi_master_2026_05_07` Phase 1A). Per-VM shard isolation enforced (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`). Watch event-stream per CLAUDE.md "No fire-and-forget VM launches" HARD RULE.
+- [ ] [SCRIPT] P0. **MTDS-3.2.B** — Relaunch TradFi backfill VMs (Databento — ES.OPT 11-cluster + futures-chains + ETFs per `tradfi_master_2026_05_07` Phase 1).
+- [ ] [SCRIPT] P0. **MTDS-3.2.C** — Relaunch DeFi backfill VMs (Pyth Solana + Chainlink EVM oracle prices + DEX-perp forward-poll Hyperliquid/Aster + Lighter/Pacifica/Extended replay per `defi_master_2026_05_07` Phase 9).
+- [ ] [SCRIPT] P0. **MTDS-3.2.D** — Relaunch Sports backfill VMs (af / fs / sfi / us per `sports_master_2026_05_07` Phase 1; OPERATOR-GATED pending Stage 1 sports rename completion in Phase 1.D).
+- [ ] [SCRIPT] P0. **MTDS-3.2.E** — Relaunch Predictions backfill VMs (Polymarket + Kalshi per `predictions_master_2026_05_07` Phase 1; canonical_question_group rekey already in Phase 2.2).
+
+### Phase 3.3 — MDPS bar reprocessor relaunch
+
+- [ ] [SCRIPT] P0. **MDPS-3.3.A** — Relaunch MDPS reprocessors per asset_group, reading from migrated MTDS shards. Use Phase 1.C live-pipeline in-process MDPS↔features handoff if features-repo-consolidation Phase 7 done; else fall back to standalone MDPS VMs.
+- [ ] [SCRIPT] P0. **MDPS-3.3.B** — Verify zero 1440-NaN-bar regressions via post-launch sampling (10 random instrument-days; assert OHLC populated OR catalog says instrument-not-listed; per CLAUDE.md "Honest absence vs fake placeholders" rule).
+
+### Phase 3.4 — Features-service compute relaunch
+
+- [ ] [SCRIPT] P0. **FEAT-3.4.A** — Relaunch consolidated features-service compute (single repo per Phase 1.C consolidation). All 5 asset_groups + cross-instrument calculators. LookaheadBiasError strict-mode green.
+- [ ] [SCRIPT] P0. **FEAT-3.4.B** — Verify per-feature-family output shapes match Phase 1.C schema declarations; post-launch sampling 100 random feature rows per family.
+
+### Phase 3.5 — ML training + inference relaunch
+
+- [ ] [PLAN] P0. **`plans/epics/ml_and_features_master_2026_05_07.md`** Phase 1A-2E — UAC feature-DAG SSOT + features-service writers + pre-join consolidation. **Critical path subset only**; Phase 4 (ML model lifecycle) is mostly post-May-23.
+- [ ] [SCRIPT] P0. **ML-3.5.A** — Relaunch ml-training jobs against migrated features. Sanity replay on 3 representative shards per `ml_and_features_master` Phase 5.
+- [ ] [SCRIPT] P0. **ML-3.5.B** — Relaunch ml-inference for live-pipeline serving. Tier-up alerting per `alerting_service_live_rules_2026_05_07`.
+
+### Phase 3.6 — Strategy archetype paper-trade smoke
+
+- [ ] [PLAN] P0. **`plans/active/defi_master_2026_05_07.md`** Phase 9-10 — DeFi 2 archetypes paper-trade smoke (carry_staked_basis + ARBITRAGE_PRICE_DISPERSION).
+- [ ] [PLAN] P0. **`plans/epics/strategy_and_dart_master_2026_05_07.md`** — Strategy archetype paper-trade smoke for CeFi / TradFi / Sports / Predictions; DART manual-trade UI live for human override.
+- [ ] [PLAN] P1. **`plans/active/batch_live_symmetry_2026_05_10.md`** — 8-tab design symmetry (May-23 cutover-blocking subset).
+
+### Phase 3.7 — 7-day continuous live-DeFi run on real wallet
+
+- [ ] [PLAN] P0. **`plans/active/defi_master_2026_05_07.md`** Phase 11+ — 7-day continuous run gate on real wallet. **Final cutover gate per master plan Group F-G live-only items.**
+
+### Phase 3 freeze gate (✅ to declare May-23 cutover ready)
+
+Per CLAUDE.md _"Plans Run To Actual Completion"_, gate fires only when:
+
+- [ ] All 5 asset_group backfills shipped and verified (manifest captured rows match expected; sample parquets show real OHLC, not placeholders).
+- [ ] Features-service compute green at every feature_family for every asset_group.
+- [ ] ML training shipped; inference serving live with alerting tier-up green.
+- [ ] All archetype paper-trade smokes green.
+- [ ] DeFi 2 archetypes ≥7 continuous days live on real wallet (final cutover gate).
+- [ ] Codex SSOTs reflect final state.
+
+## Anti-sequencing audit (plans that risk forcing re-migration)
+
+Per AskUserQuestion answer 2026-05-10: explicit list of active plans whose work, if shipped after Phase 2 freeze, would force a second migration walk. Each gets an explicit decision: **ship before Phase 2 freeze, or defer post-cutover.**
+
+| Plan                                                                                                                       | Risk shape                                                                                                                                                              | Decision                                                                                                                                              |
+| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wave3x_residual_ssots_2026_05_08.md` Track D (zero-activity-bar adapter audit)                                            | If audit finds new shard atom dimension or new error reason needed → manifest schema bump → another Phase 2.1                                                           | **Ship before Phase 2 freeze (Phase 1.A).** Audit must complete; new findings either land in Phase 1 schema or are deferred post-cutover.             |
+| `wave3x_residual_ssots_2026_05_08.md` Track E (sports availability_at stamping cascade)                                    | If stamping rules change post-Phase 2.5 → re-stamping requires manifest column rewrite                                                                                  | **Ship before Phase 1 freeze (Phase 1.A).** Folded into `available_at_lookahead_bias_completion`.                                                     |
+| `expected_universe_v2_design_2026_05_08.md` (per-instrument-grain enumerator)                                              | v2 changes manifest row count semantics (instrument-grain expected_unattempted rows) → if launched post-Phase-2 needs another consolidator pass                         | **Defer behind Phase 2.1 v7 schema bump per audit Q3.** Either ship in Phase 1.A OR defer post-cutover; do NOT ship between Phase 2.1 and 2.5.        |
+| `arbitrage_price_dispersion_finalisation_2026_05_09.md` (canonical group changes)                                          | If new canonical_question_group landed post-Phase-2.2 rekey → second rekey walk                                                                                         | **Ship before Phase 1 freeze (Phase 1.E).** Predictions canonical groups MUST be final by Phase 2.2 entry.                                            |
+| `cme_polymarket_arb_2026_05_08.md` (InstrumentType.EVENT_CONTRACT)                                                         | New InstrumentType enum value affects shard atom keys → manifest column population shape changes                                                                        | **Ship before Phase 1 freeze (Phase 1.E).** New enum value MUST land in v7 schema declaration.                                                        |
+| `hard_schema_enforcement_2026_05_08.md` (nullable→required flips per asset_group)                                          | If required-field flip lands post-Phase-2 → mass-fail-during-transit; row state transitions retroactively                                                               | **Sequenced AFTER tradfi_master Q1+Q2 futures-expiry per existing plan body, but BEFORE Phase 2.5 cross-asset rescan.** Phase 1.B ownership.          |
+| `aws_migration_defi_first_2026_05_07.md` Phase 5 cross-cloud rsync (running 2026-05-08)                                    | If GCP-side schema migrates AFTER AWS rsync runs → AWS S3 has stale-shape parquets diverging from GCP                                                                   | **Ship Phase 5 GCP→S3 rsync AFTER Phase 2.2 GCS bundled migration completes.** Stop in-flight rsync if mid-Phase-2; restart post-2.2.                 |
+| `simulation_scenarios_topology_price_shocks_2026_05_09.md`                                                                 | If simulation harness writes simulated parquets to same buckets → could conflict with Phase 2.2 single-walk discipline                                                  | **Confirm simulation outputs go to dedicated `*-sim-*` buckets per `bucket_name_ssot_canonicalisation`.** Otherwise defer simulation runs to Phase 3. |
+| `mock_data_pipeline_benchmarking_2026_05_10.md`                                                                            | Same as above (synthetic-data harness writes)                                                                                                                           | **Confirm mock buckets isolated.** Defer benchmarking runs to Phase 3 if not.                                                                         |
+| `wave2_polymarket_record_captured_from_counts_2026_05_09.md`                                                               | Wave-2 Polymarket SSOT migration changes how `record_captured` row counts populated for prediction shards → manifest row population shape changes for prediction venues | **Already PLANNED + DEFERRED per current plan body.** Confirm not slipping into Phase 2 window.                                                       |
+| `data_status_drilldown_shard_atom_alignment_2026_05_07.md` + `data_status_comprehensive_test_coverage_2026_05_07.md`       | UI work; if drives changes to manifest writer code post-freeze → re-migration                                                                                           | **Ship UI parts before/after Phase 2 freely; any writer-code changes MUST land in Phase 1.**                                                          |
+| `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`                                                          | Canonicalisation may add new strategy_id values to manifest — affects shard atom                                                                                        | **Ship before Phase 1 freeze (Phase 1.E).**                                                                                                           |
+| `mtds_per_instrument_download_api_2026_04_24.md`                                                                           | Currently flagged "post-May-23"; safe                                                                                                                                   | **Defer post-cutover.** No Phase 2 risk.                                                                                                              |
+| `simulation_scenarios_post_cutover_2026_06_01.md` + `fund_administration_service_and_pooled_subscription_redemption_*.md` | Already planned post-cutover                                                                                                                                            | **No risk.**                                                                                                                                          |
+
+**Rule**: any plan touching manifest schema / writer code / GCS path templates / hive-vocab keys / parquet column shapes / shard atom keys / error-reason taxonomy must surface in this audit before Phase 2 freeze. New plans created during Phase 1 must be added to this audit at creation time. Reviewers reject any plan that lands Phase 1.X scope after the freeze gate fires.
+
+## Codex SSOT updates (per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE)
+
+This plan is itself an orchestration umbrella; the codex SSOTs it touches are the cross-cutting ones already listed in CLAUDE.md. Per the hard rule, every Phase boundary in this plan triggers a codex audit pass. Specifically:
+
+- [ ] [DOC] P0. After Phase 1 freeze gate fires: walk every codex doc the Phase 1 plans touch (per their own Codex SSOT update phases). Verify the doc layer reflects the frozen schema state. List per-plan-phase in `unified-trading-pm/codex/` is owned by each consumed plan; this plan does not duplicate.
+- [ ] [DOC] P0. After Phase 2 freeze gate fires: update [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md) "v8 schema" section to be the canonical post-migration shape; remove v5/v6/v7 fallback documentation. Update [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) reason taxonomy section to closed-set state. Update [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) with Phase 3 backfill VM relaunch sequencing. Add new codex stub `codex/02-data/cross-asset-rescan-protocol.md` (also listed in the rescan plan's Codex SSOT updates).
+- [ ] [DOC] P0. After Phase 3 freeze gate fires: master plan
+      [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group D + F + G readiness columns flip to ✅ green for every asset_group on the cutover critical path.
+
+## Cross-plan coordination banners (per CLAUDE.md HARD RULE)
+
+This plan introduces a workspace-wide sequencing constraint. Per CLAUDE.md "Cross-Plan Coordination Banners" rule, the following plans MUST receive a banner pointing back here in a follow-up commit:
+
+- [ ] [DOC] P0. **`plans/active/master_to_live_defi_2026_05_23.md`** — top-of-file `> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing**` banner pointing here. BE AWARE tag.
+- [ ] [DOC] P0. **`plans/epics/manifest_evolution_master_2026_05_08.md`** — same banner. BLOCK tag (Phase 2 cannot start before this plan's Phase 1 freeze gate).
+- [ ] [DOC] P0. **`plans/epics/manifest_migration_master_2026_05_07.md`** — same banner. BLOCK tag for Stage 1 onwards (must wait Phase 2.0 pre-drain).
+- [ ] [DOC] P0. **`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`** — banner notes that Phase 2.X (OHLCV rename) and verification of all Phase 1 schema columns are gap-closure work to land in this plan.
+- [ ] [DOC] P0. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — banner notes Phase 5 cross-cloud rsync sequencing constraint vs Phase 2.2.
+- [ ] [DOC] P1. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** — banner notes its slice (b) + slice (c) are Phase 1 freeze blockers.
+- [ ] [DOC] P1. **`plans/active/features_repo_consolidation_2026_05_08.md`** — banner notes Phase 7 is Phase 1 freeze blocker.
+- [ ] [DOC] P1. **`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`** — banner notes its Phase 4-5 cascade depends on features-repo-consolidation Phase 7 + Phase 2 GCS bundled migration.
+- [ ] [DOC] P1. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — banner specifies bucket-name SSOT alignment dependency.
+
+## Done definition
+
+The plan is done when ALL of the following are true:
+
+- ✅ Phase 1 freeze gate fired with verifiable evidence (workspace QG green; AST sweep of `record_captured` callsites green; ServiceEmissionPolicy seed dict locked; bucket_name SSOT consolidated; features-repo Phase 7 archived).
+- ✅ Phase 2 freeze gate fired with verifiable evidence (manifest v7 workspace-wide; `pipeline_mode` partition added everywhere; `category=` rekey done; OHLCV legacy filenames renamed; AWS cross-cloud parity green; `--apply-flips` rescan complete).
+- ✅ Phase 3 freeze gate fired with verifiable evidence (all 5 asset_group backfills shipped and verified; features-service compute green; ML training + inference live; archetype paper-trade smokes green; DeFi 2 archetypes ≥7 continuous days live on real wallet).
+- ✅ All anti-sequencing audit decisions resolved (every plan listed has shipped per its decision OR is explicitly deferred post-cutover).
+- ✅ All gap closures landed (GAP-2.0 VM drain + GAP-2.2 / GAP-2.3 / GAP-2.4 sub-step additions to existing plans).
+- ✅ All cross-plan coordination banners landed.
+- ✅ Codex SSOTs updated per "Post-Plan-Phase Codex Audit" HARD RULE.
+
+**Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE):
+
+- ✅ The May-23 cutover master plan's Group F-G readiness columns are green for every asset_group on the critical path.
+  - **What ran**: every Phase 3.X backfill VM fleet to natural shutdown; manifest-verified row counts; sample-inspected parquets per asset_group.
+  - **Verification**: `gcloud storage ls gs://${PID}-events/events/.../{YYYY-MM-DD}/...` shows STARTED + progress + STOPPED; `gcloud storage cat gs://.../availability_index.parquet` shows v7 schema everywhere; sample parquet read returns populated rows (no NaN placeholders).
+- ✅ Live-DeFi 7-day continuous run shipped per `defi_master_2026_05_07` Phase 11+.
+
+**Handoff exception(s)**: Post-cutover plans (`simulation_scenarios_post_cutover_2026_06_01.md` etc.) explicitly deferred per anti-sequencing audit; out of scope for this plan.
+
+## Temporary states + their canonical follow-up plans
+
+- **`expected_universe_v2_design_2026_05_08.md` deferred behind Phase 2.1 v8 schema bump** — successor: this plan's Phase 2.1 entry. Re-evaluate after Phase 2.1 ships whether v2 enumerator runs in Phase 2.X or post-cutover.
+- **v8 schema design intentionally split across two plans (NOT a missing file)** — column declaration owned by `writegate_honest_coverage_endtoend_2026_05_06.md` slice (b) Phase 5.1; rescan flip schema + apply-flips execution owned by `manifest_cross_asset_rescan_design_2026_05_08.md`. Per operator direction 2026-05-08 ("manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution; don't allow execution in isolation"). Reviewers reject any new "v8-schema-design" standalone plan — the split is canonical.
+- **GAP-2.0 VM drain + state freeze procedure** — successor: addition to `manifest_migration_master_2026_05_07.md` Stage 0 per disposition.
+- **GAP-2.3 OHLCV legacy filename rename** — successor: addition to `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 2.X per disposition.
+
+## Composes with
+
+- CLAUDE.md "Plans Run To Actual Completion, Not Smoke-Test Green" HARD RULE — every phase gate requires operational evidence, not smoke-test green.
+- CLAUDE.md "Capture Discoveries As Plan Todos Immediately" HARD RULE — gap closures captured in this plan vs scattered across chat / auto-memory.
+- CLAUDE.md "Cross-Plan Coordination Banners" HARD RULE — banner-add tasks listed above.
+- CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — codex updates per phase boundary.
+- CLAUDE.md "Plans must capture full codebase impact upfront" HARD RULE — full impact surface enumerated via the Phase 1.A-F + Phase 2.0-2.5 + Phase 3.1-3.7 inventory.
+- CLAUDE.md "Plan Archival" HARD RULE — at archive time, every deferred item migrates to an active home.
+- CLAUDE.md "Citadel-Grade Planning Standards § 1 Pre-Audit" — pre-audit shipped as the audit report at top of this session; this plan is the captured output.
+- `master_to_live_defi_2026_05_23.md` — the readiness model; this plan is the time-axis sequencing of how the readiness model fills in.
+- `manifest_evolution_master_2026_05_08.md` — the schema-axis enforcer; this plan is the time-axis enforcer.
+- `manifest_migration_master_2026_05_07.md` — the migration-stage coordinator; this plan adds Stage 0 (VM drain) and Phase 3 (backfill resumption) as bookends.

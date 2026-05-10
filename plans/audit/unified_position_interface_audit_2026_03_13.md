@@ -1,24 +1,22 @@
 # unified-position-interface — Production Readiness Audit Report
 
-**Date:** 2026-03-13
-**Scope:** unified-position-interface (library, arch_tier T2)
-**Auditor:** Automated scriptable audit + manual review
-**Reference:** `unified-trading-pm/plans/audit/trading_system_audit_prompt.md`
+**Date:** 2026-03-13 **Scope:** unified-position-interface (library, arch_tier T2) **Auditor:** Automated scriptable
+audit + manual review **Reference:** `unified-trading-pm/plans/audit/trading_system_audit_prompt.md`
 
 ---
 
 ## Executive Summary
 
-| Section           | Grade       | Notes                                                                       |
-| ----------------- | ----------- | --------------------------------------------------------------------------- |
-| §2 Code Quality   | PASS        | QG stub ≤50L, no os.getenv, basedpyright strict                             |
-| §3 Security       | PASS        | No hardcoded secrets, no verify=False                                       |
-| §4 Architecture   | PASS        | No cross-service imports, cloud SDK confined                                |
-| §6 Observability  | N/A         | Library — no health/readiness endpoints required                            |
-| §8 Technical Debt | PASS        | No type:ignore, no baselines, no ImportError fallbacks                      |
-| §11 Coverage      | PASS        | MIN_COVERAGE=87, fail_under aligned, cov-fail-under wired                   |
+| Section           | Grade       | Notes                                                                  |
+| ----------------- | ----------- | ---------------------------------------------------------------------- |
+| §2 Code Quality   | PASS        | QG stub ≤50L, no os.getenv, basedpyright strict                        |
+| §3 Security       | PASS        | No hardcoded secrets, no verify=False                                  |
+| §4 Architecture   | PASS        | No cross-service imports, cloud SDK confined                           |
+| §6 Observability  | N/A         | Library — no health/readiness endpoints required                       |
+| §8 Technical Debt | PASS        | No type:ignore, no baselines, no ImportError fallbacks                 |
+| §11 Coverage      | PASS        | MIN_COVERAGE=87, fail_under aligned, cov-fail-under wired              |
 | §13 No Stubs      | CONDITIONAL | 10 NotImplementedError (at threshold); tracked in api_keys_and_auth.md |
-| §27 VCR Cassettes | PASS        | 1 cassette in tests/mocks/binance/position_risk.yaml                        |
+| §27 VCR Cassettes | PASS        | 1 cassette in tests/mocks/binance/position_risk.yaml                   |
 
 ---
 
@@ -42,9 +40,9 @@
 
 ### §13 No Unimplemented Stubs
 
-| Criterion          | Status | Evidence                                           |
-| ------------------ | ------ | -------------------------------------------------- |
-| Stub count ≤10     | WARN   | 10 total (at threshold)                            |
+| Criterion          | Status | Evidence                                      |
+| ------------------ | ------ | --------------------------------------------- |
+| Stub count ≤10     | WARN   | 10 total (at threshold)                       |
 | Plan todo coverage | WARN   | UPI adapters migrated to api_keys_and_auth.md |
 
 **Remaining stubs (10):**

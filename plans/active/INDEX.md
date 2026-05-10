@@ -116,7 +116,8 @@ reference + examples for testing any DeFi strategy
 
 **Detailed Plans:**
 
-- [defi-strategy-ui-verification.md](../ai/defi-strategy-ui-verification.plan.md) — Phase 1: Verify UI widgets with mocked data
+- [defi-strategy-ui-verification.md](../ai/defi-strategy-ui-verification.plan.md) — Phase 1: Verify UI widgets with
+  mocked data
 - [defi-strategy-e2e-automation.md](defi-strategy-e2e-automation.md) — Full pipeline: UI verification → test generation
   → execution → regression protection
 

@@ -20,6 +20,16 @@ owner: Ikenna (plan), Harsh (alerting-service code)
 
 # Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging
 
+> **🟡 IN-FLIGHT REFACTOR — AlertRule field renamed `pattern` → `event_pattern` 2026-05-10 PM**
+>
+> The `AlertRule` Pydantic field originally spec'd as `pattern` is renamed to `event_pattern` to align with the codex
+> SSOT in [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md) § "Alerting-Service Routing
+> Rules" (lines 116-149) where every routing-rule entry uses the `event_pattern` key. Codex is SSOT for target
+> structure per workspace rule. Implementation agents picking up this plan MUST use `event_pattern` in UAC + Pydantic
+> + tests + any downstream consumer. The already-shipped UAC@d00326d (`AlertRule.pattern`,
+> `unified_api_contracts/canonical/crosscutting/alerting/rules.py`) requires a follow-up rename PR; any downstream
+> plan or service that wired against `pattern` must rename in the same logical unit when consuming.
+
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation 2026-05-08**
 >
 > [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 9 EXTENDS this
@@ -128,9 +138,9 @@ default-factory.
 - [x] [SCRIPT] P0. Add `AlertChannel` StrEnum: `PAGERDUTY`, `TELEGRAM`, `SLACK`, `EMAIL`, `LOG_ONLY`. Shipped
       UAC@d00326d.
 - [x] [SCRIPT] P0. Add `AlertRule` Pydantic model with
-      `code: AlertCode, severity: AlertSeverity,     channels: tuple[AlertChannel, ...], pattern: str (fnmatch), runbook_doc: str,     threshold_key: str | None, triggers_kill_switch: bool, description: str`.
+      `code: AlertCode, severity: AlertSeverity,     channels: tuple[AlertChannel, ...], event_pattern: str (fnmatch), runbook_doc: str,     threshold_key: str | None, triggers_kill_switch: bool, description: str`.
       Construction-time validators (`UnknownAlertCodeError` / `UnknownThresholdKeyError`) fail loud on unknown code,
-      unknown threshold_key, KILL_SWITCH-flag-on-non-KILL_SWITCH-code, empty channels, empty pattern.
+      unknown threshold_key, KILL_SWITCH-flag-on-non-KILL_SWITCH-code, empty channels, empty event_pattern.
       `to_routing_dict()` renders the legacy default-factory shape so Phase 2 migration is byte-equivalent. Shipped
       UAC@d00326d.
 - [x] [SCRIPT] P0. Add `LIVE_ALERT_RULES: tuple[AlertRule, ...]` SSOT in
@@ -158,8 +168,8 @@ default-factory.
   - `margin_threshold_breach_bps`: 200 (2% from initial-margin-call line; broker-defined)
   - `position_drift_bps`: 100 (1% from target weight; rebalance trigger)
 - [x] [SCRIPT] P0. UAC sanity tests in `tests/internal/unit/test_alerting_taxonomy.py` (31 tests): every
-      `AlertRule.threshold_key` in `ALERT_THRESHOLDS`; every `AlertRule.pattern` matches at least one `AlertCode`;
-      catch-all `*` last; no duplicate `(pattern, severity)` pairs; `KILL_SWITCH_*` codes carry
+      `AlertRule.threshold_key` in `ALERT_THRESHOLDS`; every `AlertRule.event_pattern` matches at least one `AlertCode`;
+      catch-all `*` last; no duplicate `(event_pattern, severity)` pairs; `KILL_SWITCH_*` codes carry
       `triggers_kill_switch=True`; CRITICAL-severity rules include PagerDuty channel; plan-required 15 codes present;
       `to_routing_dict()` legacy-shape parity; AAVE-bps unit explicit; `AlertSeverity.to_legacy_filter()` round-trip.
       All 31 green. Shipped UAC@d00326d.

@@ -32,17 +32,16 @@ locked_since: 2026-05-07
 
 > **🟡 IN-FLIGHT REFACTOR — features-\* repo consolidation + live-pipeline activation 2026-05-08**
 >
-> [`features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md) merges the 8
-> separate features-\*-service repos into a single `features-service` repo with sub-packages per family. Phase 5 of that
-> plan lifts 4 cross-family helpers (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN
-> write-gate) into UTL — overlaps with this plan's Phase 2.UTL-LIFT (FeatureBatchHandler lift). Coordinate ownership:
-> this plan owns FeatureBatchHandler; consolidation plan owns the 4 helpers; banner mutually to avoid double-lift.
+> [`features_repo_consolidation_2026_05_08`](../active/features_repo_consolidation_2026_05_08.md) merges the 8 separate
+> features-\*-service repos into a single `features-service` repo with sub-packages per family. Phase 5 of that plan
+> lifts 4 cross-family helpers (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN write-gate)
+> into UTL — overlaps with this plan's Phase 2.UTL-LIFT (FeatureBatchHandler lift). Coordinate ownership: this plan owns
+> FeatureBatchHandler; consolidation plan owns the 4 helpers; banner mutually to avoid double-lift.
 >
-> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md) builds
-> on the consolidated repo for live-mode features compute. This plan's batch features compute work continues in
-> parallel. Naming disambiguation: "features consolidation" in THIS plan = feature-DATA consolidation (pre-joined wide
-> parquet for ml-training reads); features_repo_consolidation = REPO consolidation. Different scopes; both ship
-> pre-May-23.
+> [`live_pipeline_mtds_mdps_features_2026_05_08`](../active/live_pipeline_mtds_mdps_features_2026_05_08.md) builds on
+> the consolidated repo for live-mode features compute. This plan's batch features compute work continues in parallel.
+> Naming disambiguation: "features consolidation" in THIS plan = feature-DATA consolidation (pre-joined wide parquet for
+> ml-training reads); features_repo_consolidation = REPO consolidation. Different scopes; both ship pre-May-23.
 
 > **Consolidation 2026-05-07**: this umbrella folds 4 previously-standalone plans
 > (`feature_dag_uac_ssot_and_features_coverage` / `features_consolidation_and_drilldown` /
@@ -94,10 +93,11 @@ Read these BEFORE making code changes; drift between code and these docs is a re
   calcs); the consolidation join boundary + DuckDB lazy-join must preserve these semantics.
 - [`codex/02-data/data-status-drilldown-hierarchy.md`](../../codex/02-data/data-status-drilldown-hierarchy.md) —
   drill-down hierarchy SSOT for the deployment-ui feature-group route + per-feature-group parquet download endpoint.
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
-  symmetry; ml-training (batch) + ml-inference (live) MUST share the same feature-read path + same calibration.
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — code-path
-  symmetry contract; strategy signal consumption + decision policy engine cannot diverge between modes.
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
+  batch=live symmetry; ml-training (batch) + ml-inference (live) MUST share the same feature-read path + same
+  calibration.
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
+  code-path symmetry contract; strategy signal consumption + decision policy engine cannot diverge between modes.
 - [`codex/06-coding-standards/feature-service-pattern.md`](../../codex/06-coding-standards/feature-service-pattern.md) —
   features-\* service pattern; the UTL `FeatureBatchHandler` base lifts the boilerplate the doc describes.
 - [`codex/06-coding-standards/quality-gates.md`](../../codex/06-coding-standards/quality-gates.md) — QG discipline for
@@ -145,9 +145,9 @@ Phase 5 (phantom audit + sanity replay)
 
 **Upstream sibling-blocker.** Phase 2A consumer migration depends on adapter-side `available_at` write-time stamping
 landing across the per-source MDPS / MTDS / features-input adapter surface. That stamping work is owned by
-[`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase
-2.D (per-source `stamp_available_at_*` helpers). Coordinate cadence with Agent 2 (writegate tab) — partial coverage
-exists today; the Phase 2A `assert_no_lookahead_for_feature_group` helper silently no-ops on adapters that haven't been
+[`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 2.D
+(per-source `stamp_available_at_*` helpers). Coordinate cadence with Agent 2 (writegate tab) — partial coverage exists
+today; the Phase 2A `assert_no_lookahead_for_feature_group` helper silently no-ops on adapters that haven't been
 migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progressing.
 
 - **Phase 1A** (UAC `FEATURE_REQUIRED_INPUTS` SSOT): 1-day pure-win, gates writegate's `LookaheadBiasError`
@@ -247,10 +247,10 @@ so whichever direction the operator picks, the next agent (or this one) can ship
 proposal: the per-service wire-in approach itself is no longer the plan.
 
 **Why deferred** — Ikenna's plan-consolidation work (PM@`78918e1` 2026-05-08) shipped a new plan
-[`features_repo_consolidation_2026_05_08.md`](../active/features_repo_consolidation_2026_05_08.md) (P0,
-deadline 2026-05-13) that **restructures the entire features-\* layer**: merges all 8 features-\*-service repos into a
-single `features-service` repo with sub-packages per family. As part of that consolidation, **Phase 5 lifts 4
-cross-family helpers into UTL** — including the exact one Tab 12 was wiring:
+[`features_repo_consolidation_2026_05_08.md`](../active/features_repo_consolidation_2026_05_08.md) (P0, deadline
+2026-05-13) that **restructures the entire features-\* layer**: merges all 8 features-\*-service repos into a single
+`features-service` repo with sub-packages per family. As part of that consolidation, **Phase 5 lifts 4 cross-family
+helpers into UTL** — including the exact one Tab 12 was wiring:
 
 > "(c) **`LookaheadBiasError` strict-mode gate** — per-row enforcement that `input.available_at <= target_ts - horizon`.
 > Currently fires in 3 of 8 features-\* repos with subtle differences in horizon resolution; **lift into a single
@@ -487,13 +487,12 @@ respectively).
 - [ ] [AGENT] P0. **Row-group pruning** in `gcs_feature_reader.py:_download_parquet`. Replace
       `pd.read_parquet(io.BytesIO(parquet_bytes))` with `pyarrow.parquet.ParquetFile(...).read(filters=...)` or
       `pyarrow.dataset.dataset(...).to_table(filter=...)`. Push date-range filter (already known at the call site) to
-      row-group min/max pruning.
-      **DEFERRED** (2026-05-08 Wave-3 Tab ML-TRAIN): not shipped this cycle. The column push-down item below already
-      switched the per-shard read to `pyarrow.parquet.ParquetFile.read(columns=...)`, so the structural prerequisite is
-      in place. Adding row-group filters at the same boundary is a small follow-up but per-shard parquets are
-      single-day already (one date per file), so row-group pruning's biggest win would land if MTDS / features-\* ever
-      consolidate to multi-day parquet files. Captured for the next 3A iteration; today's column push-down delivers
-      the bulk of the read-perf win.
+      row-group min/max pruning. **DEFERRED** (2026-05-08 Wave-3 Tab ML-TRAIN): not shipped this cycle. The column
+      push-down item below already switched the per-shard read to `pyarrow.parquet.ParquetFile.read(columns=...)`, so
+      the structural prerequisite is in place. Adding row-group filters at the same boundary is a small follow-up but
+      per-shard parquets are single-day already (one date per file), so row-group pruning's biggest win would land if
+      MTDS / features-\* ever consolidate to multi-day parquet files. Captured for the next 3A iteration; today's column
+      push-down delivers the bulk of the read-perf win.
 - [x] [AGENT] P0. **Column push-down**. `FeatureDataAdapter.read_features(columns=...)` already exists; thread `columns`
       argument all the way through `ParallelGCSFeatureReader._download_parquet` so only requested columns are
       deserialised. Evidence: ml-training-service@365f710 — `columns: list[str] | None` threaded through
@@ -502,17 +501,16 @@ respectively).
       `FeatureDataAdapter.load`, `CloudFeatureProvider._load_delta_one_frames` / `_load_mtf_frames` /
       `_query_gcs_features` / `_query_defi_features` / `query_features` all accept + forward `columns=`;
       `final_training_handler` and `hyperparam_grid_handler` pass their Stage-1 `selected_features` down. Real-shape
-      profile (152 files × 1440 rows × 50 features × 5-projected): wall-clock 2.66× faster, dataframe bytes -65.7%,
-      peak Python-heap alloc -27.3%. Wider parquets (200 cols × 10 projected): 3.04× wall-clock, -52.6% alloc, -87%
-      df bytes.
+      profile (152 files × 1440 rows × 50 features × 5-projected): wall-clock 2.66× faster, dataframe bytes -65.7%, peak
+      Python-heap alloc -27.3%. Wider parquets (200 cols × 10 projected): 3.04× wall-clock, -52.6% alloc, -87% df bytes.
 - [x] [AGENT] P0. **Tests**: synthetic 365-day per-instrument parquet with 50 feature columns. Assert reading 38 days ×
-      5 columns is at least 4× faster than reading all data + filtering. Evidence: ml-training-service@365f710
-      — 10 unit tests in `tests/unit/test_gcs_feature_reader_column_pushdown.py` covering keeps-only-requested,
+      5 columns is at least 4× faster than reading all data + filtering. Evidence: ml-training-service@365f710 — 10 unit
+      tests in `tests/unit/test_gcs_feature_reader_column_pushdown.py` covering keeps-only-requested,
       identity-cols-retained, heterogeneous-schema-drop, zero-overlap-short-circuit, value-equivalence,
       `IDENTITY_COLUMNS`-pinned-to-provider-set, and parameterised wall-clock + dataframe-size benchmarks across 3
-      column-ratio shapes. Multi-file 4× wall-clock target hit by the harness at
-      `scripts/profile_column_pushdown.py` (wider-parquet runs); per-unit-shard test asserts ≥1.3× to absorb CI
-      noise — see the size-ratio assertions for the deterministic checks.
+      column-ratio shapes. Multi-file 4× wall-clock target hit by the harness at `scripts/profile_column_pushdown.py`
+      (wider-parquet runs); per-unit-shard test asserts ≥1.3× to absorb CI noise — see the size-ratio assertions for the
+      deterministic checks.
 
 ### 3B — DuckDB lazy joins
 

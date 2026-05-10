@@ -69,8 +69,8 @@ placeholders (`TBD — Odum finance to populate`); structure is locked, numbers 
 3. `codex/14-playbooks/experience/TEMPLATE.md`
 
 **Impl-layer docs (to reference, not duplicate):** 4. `codex/14-playbooks/playbooks/*.md` — all 9 current playbooks
-(impl layer) 5. `codex/14-customer-journeys/playbook-concepts/*.md` — 10 files 6. `codex/14-playbooks/authentication/*.md`,
-`environments/*.md`
+(impl layer) 5. `codex/14-customer-journeys/playbook-concepts/*.md` — 10 files 6.
+`codex/14-playbooks/authentication/*.md`, `environments/*.md`
 
 **Taxonomy sources:** 7. `codex/09-strategy/architecture-v2/README.md` 8.
 `codex/09-strategy/architecture-v2/category-instrument-coverage.md` 9.
@@ -131,8 +131,8 @@ Files that Stage 2 creates AND Stage 3 consumes. Every file MUST cite `_ssot-rul
       (research/paper/live) is orthogonal to maturity** — a LIVE_ALLOCATED strategy can still be viewed in research
       phase when a researcher re-runs it over historical data.
 - [ ] [AGENT] P0. `shared-core/org-fund-client-entity-model.md` — the org → fund(Pooled/SMA) → clients → API-keys
-      hierarchy. Transcludes from `codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md` + `sma-vs-pooled.md` but
-      re-framed for experience layer.
+      hierarchy. Transcludes from `codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md` +
+      `sma-vs-pooled.md` but re-framed for experience layer.
 - [ ] [AGENT] P0. `shared-core/shared-reporting-core.md` — the client-reporting surface that pb3a and pb3b share.
       Content from `cross-cutting/client-reporting.md` rewritten experience-layer style.
 - [ ] [AGENT] P0. `shared-core/strategy-origin-vs-stack-depth.md` — the DART 2-axis commercial model (rule 04) written

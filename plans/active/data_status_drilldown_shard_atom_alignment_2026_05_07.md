@@ -51,8 +51,8 @@ related:
 > (apply-write completion) + PM@341bb285 (consolidator P0 resolution). Consolidator cycles 18:07-18:14 UTC merged all 5
 > per-VM shards. Rollup-vs-drilldown denominator gap closure is now observable on all 5 asset_groups; operator-side
 > spot-check pending. Detail in
-> [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
-> 3.D.4 banner.
+> [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md) § Phase 3.D.4
+> banner.
 
 ## Why
 
@@ -298,8 +298,8 @@ on whatever flags exist today as a degenerate case).
       supported `(service, asset_group)` from the SSOT.
 - [ ] [deployment-api] P0. Adjust `download-csv` / `download-shard-csv` to accept the full leaf row_key (currently
       hard-stops at venue, day). Resolve the row_key to the canonical parquet path via UAC SSOT
-      (per-asset-group-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already accept
-      partial keys; Phase 3 wire-in is the SmartDownloadButton consumer change.
+      (per-asset-group-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already
+      accept partial keys; Phase 3 wire-in is the SmartDownloadButton consumer change.
 - [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). Unit tests: 13/13 pass in `test_data_status_hierarchical.py`
       covering top-level axis routing for MTDS DEFI, filter-descent into subtree, capture-status splits, window
       clipping, empty manifest, uncovered asset_group fallback, supported-pairs enumeration.

@@ -15,6 +15,8 @@ related_plans:
   - plans/active/risk_simulations_limits_alerting_2026_05_10.md
   - plans/active/promote_workflow_backtest_to_live_2026_05_10.md
 related_codex:
+  - codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md
+  - codex/04-architecture/batch-live-architecture.md
   - codex/04-architecture/backtest-groups.md
   - codex/09-strategy/strategy-summary.md
   - codex/04-architecture/capital-efficiency-patterns.md
@@ -39,10 +41,14 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 ### In scope (must ship by 2026-05-23)
 
 1. UAC client-reporting contracts: `ClientId`, `ClientShareClass`, `ClientPosition`, `ClientPnLEntry`, `ClientNAV`,
-   `PnLAttributionRow` (strategy / execution / funding / fee / slippage / financing), `ClientReportingMode`.
+   `PnLAttributionRow` (factor × layer dual-axis per `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
+   Hard Rule #4 — `factor: PnLFactor` from the canonical 16-factor set + `layer: PnLLayer ∈ {STRATEGY, EXECUTION}`;
+   `STRATEGY_ALPHA` / `EXECUTION_ALPHA` are derived sum-by-layer views, NOT enum members), `ClientReportingMode`.
 2. PnL attribution emitter: subscribes to position-balance + execution + funding + fee event streams; joins on
    correlation + per-trade lineage; emits `PnLAttributionRow` parquet per (client, archetype, day) at
-   `gs://{pid}-client-reports/`.
+   `gs://{pid}-client-reports/`. Uses BENCHMARK matching-engine replay (per
+   `codex/04-architecture/batch-live-architecture.md §5/§6`) to derive the STRATEGY layer; live or SIMULATED fills minus
+   BENCHMARK = EXECUTION layer.
 3. client-reporting-api routes: `/api/clients/{id}/nav`, `/{id}/pnl`, `/{id}/positions`, `/{id}/attribution`.
 4. deployment-ui ClientReporting tab: NAV time-series, PnL waterfall, per-archetype attribution, per-leg drilldown.
 5. Demo client seed: 1 internal demo client with both cutover archetypes subscribed; full flow works end-to-end on real
@@ -55,7 +61,7 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 - Multi-client invoicing engine + fee crystallization across share classes — owned by separate post-cutover plan.
 - External-strategy-via-API-keys flow PnL attribution — owned by `wallet_treasury_client_flow` post-cutover phase.
 - Tax reporting / regulatory disclosures — multi-quarter, separate plan.
-<!-- Performance fee high-water-mark accounting pulled into May-23 scope per operator direction 2026-05-10; owned by `wallet_treasury_client_flow_2026_05_10` Phase 4.C-D + Phase 5.F-I (HWM ledger + crystallization). This plan's `PnLAttributionRow` gains a `HWM_CRYSTALLIZATION` component to attribute the perf-fee accrual to the correct period. -->
+<!-- Performance fee high-water-mark accounting pulled into May-23 scope per operator direction 2026-05-10; owned by `wallet_treasury_client_flow_2026_05_10` Phase 4.C-D + Phase 5.F-I (HWM ledger + crystallization). HWM crystallization is recognised via a NEW `FeeRecognitionRow` table emitted from `wallet_treasury_client_flow` Phase 5.G's `PerformanceFeeCrystallizedEvent` — NOT as a `PnLAttributionRow.factor` value (per pnl-attribution.md Hard Rule #4 + the plan-vs-codex factor name mapping table; HWM crystallization is fee accounting, not a P&L driver). The deployment-ui ClientReporting tab Phase 5.C2 reads `FeeRecognitionRow` directly from the wallet plan's emit and joins it into the NAV waterfall view. -->
 
 ## Pre-audit / blast radius
 
@@ -93,14 +99,28 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
       `ClientReportingMode ∈ {DEMO, PAPER, LIVE}`.
 - [ ] [AGENT] P0. **1.B `ClientPosition` + `ClientPnLEntry` + `ClientNAV` Pydantic dataclasses.** Per-position lineage
       (archetype_id, strategy_leg_id, trade_id, venue, instrument, qty, mark, cost-basis, realized-pnl, unrealized-pnl).
-- [ ] [AGENT] P0. **1.C `PnLAttributionRow` closed-component decomposition.** Components: `STRATEGY_ALPHA`,
-      `EXECUTION_ALPHA`, `SLIPPAGE`, `FEES`, `FUNDING`, `FINANCING`, `BORROW`, `REBALANCE`, `HWM_CRYSTALLIZATION` (added
-      2026-05-10 — attributes per-period perf-fee crystallization to the correct period; sourced from
-      `PerformanceFeeCrystallizedEvent` per `wallet_treasury_client_flow_2026_05_10` Phase 5.G). Per-row sums to per-day
-      client PnL.
+- [ ] [AGENT] P0. **1.C `PnLAttributionRow` factor × layer dual-axis** (per
+      `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` Hard Rule #4 + § PnLAttribution Schema +
+      § Plan-vs-codex factor name mapping). Row carries `factor: PnLFactor` (canonical 16-factor closed set: `DELTA` /
+      `FUNDING` / `BASIS` / `CARRY` / `CARRY_BASE` / `CARRY_AVS_CONTINUOUS` / `CARRY_ISSUER_SEASONAL` /
+      `REWARD_REALISATION_SLIPPAGE` / `GREEKS` / `FEES` / `SLIPPAGE` / `SETTLEMENT` / `LIQUIDATION` / `REBATE` / `FX` /
+      `RESIDUAL`) + `layer: PnLLayer ∈ {STRATEGY, EXECUTION}` + `amount: Decimal`. **NEW UAC enum to add this plan**:
+      `PnLLayer` (codex update happens in Phase 7.B by extending the existing pnl-attribution.md doc; do NOT create a
+      new codex doc). **Banned**: flat enum mixing factor + layer (`STRATEGY_ALPHA` / `EXECUTION_ALPHA` /
+      `HWM_CRYSTALLIZATION` as enum members); these are derived sum-by-layer views or live in a separate table.
+      Pre-codex names mapped per the codex § Plan-vs-codex factor name mapping table: `FINANCING` / `BORROW` →
+      `factor=CARRY` (sub-factor metadata); `REBALANCE` → not a factor (`PnLMetadata.fill_reason` instead);
+      `HWM_CRYSTALLIZATION` → separate `FeeRecognitionRow` table (NEW UAC type owned by
+      `wallet_treasury_client_flow_2026_05_10` Phase 4.C extension — see this plan's Phase 5.C2 + cross-plan banner).
 - [ ] [AGENT] P0. **1.D Registry seed.** `registry/client_share_classes.py` with the demo share class + the live-DeFi
       cutover share class.
-- [ ] [AGENT] P0. **1.E Tests.** ≥20 unit tests; round-trip + decomposition-sum invariant + per-mode coverage.
+- [ ] [AGENT] P0. **1.E Tests** (per codex § Decomposition Invariants). ≥20 unit tests covering: round-trip
+      serialisation, factor closed-set assertion (every row's `factor ∈ PnLFactor`), layer closed-set assertion
+      (`layer ∈ PnLLayer`), per-mode coverage, **factor × layer dual-axis invariants**:
+      `sum(rows over both layers, all factors) == realised_total_pnl`,
+      `sum(rows where layer=STRATEGY) == strategy_alpha_total` (matches BENCHMARK matching-engine sum from
+      execution-service), `sum(rows where layer=EXECUTION) == execution_alpha_total` (live − BENCHMARK residual),
+      `RESIDUAL` factor magnitude `< 1% of |total_pnl|`. Loud failure on violation; no silent placeholder.
 
 **Full-execution criterion**: UAC PR pushed; QG green; round-trip test passes.
 
@@ -112,8 +132,13 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 - [ ] [AGENT] P0. **2.B `pnl_attribution/emitter.py`.** Per (client, archetype, day) parquet emit at
       `gs://{pid}-client-reports/{client_id}/{archetype}/{YYYY-MM-DD}/attribution.parquet`. Reuses Tab 4's
       `bucket_naming.py` SSOT.
-- [ ] [AGENT] P0. **2.C Decomposition-sum invariant check.** UTL helper: per-day per-client
-      `sum(PnLAttributionRow.amount) == ClientNAV.delta`. Fails loud on violation.
+- [ ] [AGENT] P0. **2.C Decomposition-sum invariant check** — UTL helper at
+      `unified_trading_library.pnl_attribution.invariants.assert_decomposition_invariants()` (canonical name fixed by
+      codex § Decomposition Invariants). Per-day per-client enforces all 5 invariants: closed-set coverage
+      (`sum(rows, all factors, both layers) == realised_total_pnl == ClientNAV.delta`), STRATEGY-layer sum =
+      strategy_alpha_total (BENCHMARK matching-engine sum), EXECUTION-layer sum = execution_alpha_total (live −
+      BENCHMARK residual), RESIDUAL `< 1% of |total_pnl|`, every row's `factor ∈ PnLFactor` and `layer ∈ PnLLayer`
+      closed sets. Fails loud on violation.
 - [ ] [AGENT] P0. **2.D Tests.** ≥30 unit tests; mocked event streams; invariant assertion.
 
 **Full-execution criterion**: UTL PR pushed; QG green; integration test on stub streams emits non-empty parquet.
@@ -123,8 +148,14 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 - [ ] [AGENT] P0. **3.A position-balance emit-with-lineage.** Every position event carries
       `(client_id, archetype_id, strategy_leg_id, trade_id)`. Backfill via existing correlation_id where available;
       gap-fill via execution-service trade lineage.
-- [ ] [AGENT] P0. **3.B execution-service per-client decomposition.** Matching engine emits per-trade `STRATEGY_ALPHA` +
-      `EXECUTION_ALPHA` already (CLAUDE.md). Extend to emit `SLIPPAGE` / `FEES` / `FUNDING` / `FINANCING` separately.
+- [ ] [AGENT] P0. **3.B execution-service per-client factor × layer emit.** Matching engine already runs in BENCHMARK
+      and SIMULATED (or live) modes per `codex/04-architecture/batch-live-architecture.md §5`. Wire emit so every fill
+      produces `PnLAttributionRow`s tagged with `layer=STRATEGY` (factor decomposition of BENCHMARK fill) AND
+      `layer=EXECUTION` (factor decomposition of `(live_or_SIMULATED − BENCHMARK)` residual). Per-factor split per
+      codex § Factor × layer dual axis table: `SLIPPAGE` rows are entirely `layer=EXECUTION`; `DELTA` / `FUNDING` /
+      `BASIS` / `CARRY` / `GREEKS` / `SETTLEMENT` / `FX` rows are mostly `layer=STRATEGY`; `FEES` / `REBATE` split
+      per modelled-vs-surprise. Banned: emitting `STRATEGY_ALPHA` / `EXECUTION_ALPHA` as factor names (they're derived
+      sum-by-layer aggregates). `FINANCING` mapped to `factor=CARRY` per codex name-mapping table.
 - [ ] [AGENT] P0. **3.C Funding + fee + financing aux emit.** MTDS funding events + execution fee events + custody
       financing events all gain `client_id` via subscription mapping.
 
@@ -149,7 +180,10 @@ Run revision.
 - [ ] [AGENT] P0. **5.C2 HWM crystallization timeline.** Per share-class HWM-vs-NAV chart with crystallization-event
       markers; per-period perf-fee summary card (period_start / period_end / hwm_at_start / hwm_at_end / gross_pnl /
       perf_fee_amount / perf_fee_rate). Reads from `wallet_treasury_client_flow_2026_05_10` Phase 5.F audit log +
-      `PerformanceFeeCrystallizedEvent` stream.
+      `PerformanceFeeCrystallizedEvent` stream + the NEW `FeeRecognitionRow` parquet that Phase 4.C of the wallet plan
+      emits. **Joins INTO the NAV waterfall view as a separate row class** (NOT a `PnLAttributionRow.factor` value);
+      keeps factor × layer attribution decoupled from fee-recognition accounting per codex
+      `pnl-attribution.md` Hard Rule #4 + § Plan-vs-codex factor name mapping.
 - [ ] [AGENT] P0. **5.D Operator-MVP.** Demo client visible by default; switcher for future clients.
 - [ ] [AGENT] P0. **5.E Playwright smoke.** End-to-end test confirms tab loads + cards render against live API.
 
@@ -167,13 +201,24 @@ Run revision.
 ## Phase 7 — Codex SSOTs (Day 11, ~0.5 AI-day)
 
 - [ ] [AGENT] P0. **7.A NEW `codex/04-architecture/client-reporting-architecture.md`.** Per-client lineage flow,
-      attribution decomposition, parquet shape.
-- [ ] [AGENT] P0. **7.B NEW `codex/04-architecture/pnl-attribution-decomposition.md`.** Component closed enum, sum
-      invariant, per-archetype expected ranges.
+      attribution rollup view, parquet shape (per (client, archetype, day)). Cross-links to
+      `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` for the underlying factor × layer model
+      (do NOT duplicate the factor closed set here; reference it).
+- [x] **7.B UPDATE existing `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`** — DONE 2026-05-10
+      (this plan-creation session). Extended the existing canonical SSOT with: Hard Rule #4 (factor × layer dual axis,
+      enums stay decoupled), § Layer Decomposition profile table per factor, § Decomposition Invariants (5 invariants
+      enforced by UTL helper), expanded § PnLAttribution Schema with `PnLLayer` enum + `PnLAttributionRow` factor ×
+      layer dataclass + `factors_by_layer` rollup field + derived `strategy_alpha_total` / `execution_alpha_total`,
+      § Plan-vs-codex factor name mapping (closes the contradiction between this plan's pre-canonical names and the
+      codex 16-factor closed set). **Did NOT create the previously-planned NEW
+      `pnl-attribution-decomposition.md` doc** — would have duplicated the canonical SSOT and created codex drift; per
+      codex governance "extend existing doc, don't fork."
 - [ ] [AGENT] P0. **7.C UPDATE `backtest-groups.md`** — attribution emit applies to backtest groups.
-- [ ] [AGENT] P0. **7.D UPDATE `strategy-summary.md`** — strategy alpha vs execution alpha cross-link.
+- [ ] [AGENT] P0. **7.D UPDATE `strategy-summary.md`** — cross-link to `pnl-attribution.md § 4` (factor × layer dual
+      axis) for strategy-alpha vs execution-alpha framing; do NOT inline the explanation (lives in pnl-attribution.md).
 
-**Full-execution criterion**: 2 NEW + 2 UPDATE; cross-references resolve.
+**Full-execution criterion**: 1 NEW (client-reporting-architecture.md) + 3 UPDATE (pnl-attribution.md DONE, plus
+backtest-groups + strategy-summary); cross-references resolve. **No new codex doc forking the pnl-attribution SSOT.**
 
 ## Phase 8 — Real-VM cutover run (Days 11-12, ~1 AI-day)
 
@@ -203,12 +248,22 @@ Run revision.
 
 ## Deferred work after 2026-05-10 plan-creation session
 
-| Item                                                     | Status                        | Successor / blocker                                                                                                                                                                                                            |
-| -------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Multi-client invoicing engine + fee crystallization      | DEFERRED-PER-USER             | Post-cutover; spans weeks; separate plan to be filed                                                                                                                                                                           |
-| External-strategy-via-API-keys PnL attribution           | DEFERRED                      | `wallet_treasury_client_flow_2026_05_10` post-cutover phase                                                                                                                                                                    |
-| Tax reporting / regulatory disclosures                   | DEFERRED-PER-USER             | Multi-quarter; compliance plan owns it                                                                                                                                                                                         |
-| ~~Performance fee high-water-mark across share classes~~ | **PULLED FORWARD 2026-05-10** | Now in scope per operator direction; HWM ledger + crystallization owned by `wallet_treasury_client_flow_2026_05_10` Phase 4.C-D + 5.F-I; this plan adds `HWM_CRYSTALLIZATION` component (Phase 1.C) + UI timeline (Phase 5.C2) |
+| Item                                                     | Status                        | Successor / blocker                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Multi-client invoicing engine + fee crystallization      | DEFERRED-PER-USER             | Post-cutover; spans weeks; separate plan to be filed                                                                                                                                                                                                                                                                                                                 |
+| External-strategy-via-API-keys PnL attribution           | DEFERRED                      | `wallet_treasury_client_flow_2026_05_10` post-cutover phase                                                                                                                                                                                                                                                                                                          |
+| Tax reporting / regulatory disclosures                   | DEFERRED-PER-USER             | Multi-quarter; compliance plan owns it                                                                                                                                                                                                                                                                                                                               |
+| ~~Performance fee high-water-mark across share classes~~ | **PULLED FORWARD 2026-05-10** | Now in scope per operator direction; HWM ledger + crystallization owned by `wallet_treasury_client_flow_2026_05_10` Phase 4.C-D + 5.F-I. **Recognition surface revised 2026-05-10 PM**: emits a NEW `FeeRecognitionRow` table from wallet plan (NOT a `PnLAttributionRow.factor` value); this plan's UI tab Phase 5.C2 reads it as a separate row class joined into the NAV waterfall view. |
+| Pre-codex factor names in plan body (`STRATEGY_ALPHA` / `EXECUTION_ALPHA` / `FINANCING` / `BORROW` / `REBALANCE` / `HWM_CRYSTALLIZATION`) | RESOLVED 2026-05-10 PM | Mapped to canonical 16-factor + `PnLLayer` axis per codex `pnl-attribution.md § Plan-vs-codex factor name mapping`. No new factor enum members added in this plan; if `BORROW_INTEREST` ever needs its own bucket distinct from `CARRY` it follows the formal codex PR route (amend `PnLFactor` enum + matrix update). |
+
+## Temporary states + their canonical follow-up plans
+
+- **`PnLLayer` UAC enum + `factors_by_layer` rollup field** — landed in this plan's Phase 1.C (UAC) +
+  `unified_trading_library.pnl_attribution.invariants` (UTL Phase 2.C). Codex `pnl-attribution.md` already updated
+  in-place 2026-05-10 PM (Phase 7.B `[x]` DONE) to make the dual-axis canonical.
+- **`FeeRecognitionRow` UAC type + emit** — owned by `wallet_treasury_client_flow_2026_05_10` Phase 4.C extension (a
+  cross-plan banner has been added to that plan; the plan's Phase 4.C now emits both `HighWaterMarkLedgerRow` AND
+  `FeeRecognitionRow`).
 
 ## Done definition
 

@@ -143,12 +143,12 @@ trading goal directly.
       May-23 deliverable is the 7-day live cefi_ml + DeFi run on a single client; no external operators in scope.
       6-persona Playwright matrix per `strategy_and_dart_master:Phase 2.2` covers operator-only personas (DESK / DEV /
       ADMIN / EXEC / RISK / OPS).
-- [x] ✓ **AWS parity scope at this layer — RESOLVED 2026-05-08.** **DeFi-only by May 23 per master plan Q&A 4
-      default**, with full-workspace AWS coverage post-cutover. By May 23: (a) DeFi-relevant data migrated to AWS S3;
-      (b) data-status working on AWS for DeFi asset_group; (c) DeFi backfill on AWS with `--force` proves batch
-      deployment side; (d) DeFi backtest examples runnable on AWS; (e) DeFi live trading deployment + monitoring on
-      AWS so the team can switch any DeFi deployment between AWS-live / AWS-batch / GCP-live / GCP-batch. Sports /
-      predictions / TradFi / CeFi data + compute remain GCP-only this cycle.
+- [x] ✓ **AWS parity scope at this layer — RESOLVED 2026-05-08.** **DeFi-only by May 23 per master plan Q&A 4 default**,
+      with full-workspace AWS coverage post-cutover. By May 23: (a) DeFi-relevant data migrated to AWS S3; (b)
+      data-status working on AWS for DeFi asset_group; (c) DeFi backfill on AWS with `--force` proves batch deployment
+      side; (d) DeFi backtest examples runnable on AWS; (e) DeFi live trading deployment + monitoring on AWS so the team
+      can switch any DeFi deployment between AWS-live / AWS-batch / GCP-live / GCP-batch. Sports / predictions / TradFi
+      / CeFi data + compute remain GCP-only this cycle.
 
 ## See also
 

@@ -285,14 +285,13 @@ related deployment-api PR.
 
 ## References
 
-- `data_status_drilldown_shard_atom_alignment_2026_05_07.md` — the drill-down plan whose Phase 6 ship motivates
-  this regression net.
-- `aws_migration_defi_first_2026_05_07.md` — Category E AWS work depends on the unified storage facade shipped
-  there.
+- `data_status_drilldown_shard_atom_alignment_2026_05_07.md` — the drill-down plan whose Phase 6 ship motivates this
+  regression net.
+- `aws_migration_defi_first_2026_05_07.md` — Category E AWS work depends on the unified storage facade shipped there.
 - `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md` — Category D (Deploy-Missing per-service
   routing) extends as new launchers register.
-- `deploy_missing_auto_launch_2026_05_07.md` — when auto-launch ships, Category D extends with security- boundary
-  tests (rate-limiter, audit-log, IAM-scope assertions).
+- `deploy_missing_auto_launch_2026_05_07.md` — when auto-launch ships, Category D extends with security- boundary tests
+  (rate-limiter, audit-log, IAM-scope assertions).
 - CLAUDE.md "Per-asset-group shard-key matrix" — golden source for the SSOT alignment tests.
 - CLAUDE.md "VM launcher script SSOT" — golden source for the Deploy-Missing routing tests.
 - Reference incidents listed in "Why" — every one becomes a named regression test in Category F.

@@ -680,7 +680,7 @@ for r in m['repos']:
 
 | Criterion                   | Requirement                                                                             |
 | --------------------------- | --------------------------------------------------------------------------------------- |
-| All plans in SSOT-INDEX     | Every `.md` in `plans/active/` registered in `00-SSOT-INDEX.md`                    |
+| All plans in SSOT-INDEX     | Every `.md` in `plans/active/` registered in `00-SSOT-INDEX.md`                         |
 | No phantom SSOT entries     | Every SSOT entry has a corresponding live file                                          |
 | Manifest ↔ topology sync   | All repos in manifest present in `runtime-topology.yaml`                                |
 | Cursor rules in sync        | `unified-trading-pm/cursor-rules/` and `.cursor/rules/` have equal rule counts          |
@@ -919,8 +919,8 @@ rg 'raise NotImplementedError|# TODO|# FIXME|# HACK|# STUB|# placeholder' \
 - `WARN` — ≤10 results total; each item has an open todo in an active plan (cite plan + todo ID)
 - `FAIL` — any result with no owning active plan todo, OR total count > 10
 
-**Reference plan:** `stub_completion_interfaces_and_infra.md` — covers all known interface and infrastructure
-stubs. Any new stub must be added to that plan or a relevant existing plan before the audit can score WARN.
+**Reference plan:** `stub_completion_interfaces_and_infra.md` — covers all known interface and infrastructure stubs. Any
+new stub must be added to that plan or a relevant existing plan before the audit can score WARN.
 
 ---
 
@@ -1272,8 +1272,8 @@ python3 unified-trading-pm/scripts/check-repo-readiness.py --all
 | `.readiness-ref`            | Symlink in each repo pointing to codex canonical location                    |
 
 **Scoring:** `PASS` — all ~33 repos have YAML files; verifier exits 0. `WARN` — 1–5 repos missing YAML (tracked in
-`repo_readiness_semver_hardening_2026_03_11.md`). `FAIL` — any repo reaches 1.0.0 without passing v1.0.0 gateway
-gates; OR readiness schema SSOT absent.
+`repo_readiness_semver_hardening_2026_03_11.md`). `FAIL` — any repo reaches 1.0.0 without passing v1.0.0 gateway gates;
+OR readiness schema SSOT absent.
 
 ---
 
@@ -1539,8 +1539,8 @@ rg 'os\.getenv.*[Kk]ey\|os\.getenv.*[Ss]ecret\|os\.getenv.*[Tt]oken' \
 | WS tests                       | Use `MockWebSocketFeed`; no live WS connections in tests                      |
 
 **Scoring:** `PASS` — all phases 1–3 complete; ENDPOINT_REGISTRY ≥55; zero hardcoded keys. `WARN` — phases 4–5
-incomplete but tracked in `api_keys_and_auth.md`. `FAIL` — any hardcoded key; OR live API calls in tests; OR
-`os.getenv` fallback for secret access.
+incomplete but tracked in `api_keys_and_auth.md`. `FAIL` — any hardcoded key; OR live API calls in tests; OR `os.getenv`
+fallback for secret access.
 
 ---
 
@@ -1689,9 +1689,9 @@ cd system-integration-tests && python3 -m pytest tests/contracts/ -v --tb=short
 - The Graph returns HTTP 200 for errors — adapters MUST parse response body for `errors` key
 
 **Scoring:** `PASS` — all checkers exit 0; SIT tests pass; all adapters classify errors through UAC. `WARN` — UAC
-curation backlog exists but tracked in `contract_completeness_checker_2026_03_10.md`. `FAIL` — UIC has missing
-`__all__` entries; OR any `__all__` symbol has zero consumers; OR SIT completeness tests failing; OR any adapter makes
-external API calls without UAC error classification.
+curation backlog exists but tracked in `contract_completeness_checker_2026_03_10.md`. `FAIL` — UIC has missing `__all__`
+entries; OR any `__all__` symbol has zero consumers; OR SIT completeness tests failing; OR any adapter makes external
+API calls without UAC error classification.
 
 ---
 
@@ -1736,8 +1736,8 @@ cd system-integration-tests && python3 -m pytest tests/backtests/ -v --tb=short
 | Batch-live symmetry assertion | Each backtest verifies identical output between batch and live modes |
 
 **Scoring:** `PASS` — all 4 backtests pass; Layer 3a smoke passes in <5 min; no live API calls. `WARN` — 1–2 backtests
-not yet implemented (tracked in `e2e_smoke_and_portable_backtests.md`). `FAIL` — any backtest makes live API calls;
-OR batch/live outputs differ; OR Layer 0 contract tests failing.
+not yet implemented (tracked in `e2e_smoke_and_portable_backtests.md`). `FAIL` — any backtest makes live API calls; OR
+batch/live outputs differ; OR Layer 0 contract tests failing.
 
 ---
 

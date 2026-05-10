@@ -32,8 +32,8 @@ trades, no cursor; on-chain replay infeasible because the sequencers commit aggr
 
 ## What strategy archetypes fit them
 
-Updated [`category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md) with
-new rows + slot labels for:
+Updated [`category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
+with new rows + slot labels for:
 
 ### 1. `CARRY_BASIS_PERP` — long spot + short DEX perp (or vice versa) for funding-rate carry
 

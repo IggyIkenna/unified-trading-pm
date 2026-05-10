@@ -27,6 +27,28 @@ related_codex:
 
 # Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)
 
+> **🟡 IN-FLIGHT REFACTOR — `vm_zombie_watchdog.py` shape evolving + launcher-registry SSOT dependency** (added 2026-05-10 cross-plan audit fix)
+>
+> **VmPrefixSpec dict-shape migration**: Phase 1 below adds 2 prefixes (`strategy-paper-` + `strategy-live-`) to
+> `deployment-service/scripts/vm/vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET` dict. The dict's shape is being migrated
+> from `dict[str, str | None]` to `dict[str, VmPrefixSpec]` by
+> [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 (currently
+> deferred per its banner — `vm_zombie_watchdog.py` edits drafted but never committed; carryover to next session).
+>
+> **Sequencing**: lifecycle Phase A.2 SHOULD land before this plan's Phase 1 to avoid re-shaping the same dict twice. If
+> lifecycle A.2 hasn't shipped at this plan's Phase 1 execution time, this plan's Phase 1 ships under the legacy
+> `dict[str, str | None]` shape and a follow-up sub-todo (`1.X DEFERRED-AFTER-LIFECYCLE-A2`) wraps the 2 entries in
+> `VmPrefixSpec` once A.2 lands.
+>
+> **Launcher-registry SSOT dependency** (per CLAUDE.md "VM launcher script SSOT" HARD RULE): the new
+> `launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh` scripts ship under `deployment-service/scripts/vm/` per
+> SSOT. The Deploy-Missing UI button surface for these launchers requires
+> [`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
+> Phase 2 (`_SERVICE_LAUNCHER_SCRIPTS` registry extension in `deployment-api/deployment_api/services/deploy_missing.py`)
+> — currently DEFERRED-PER-AUDIT 2026-05-10 in that plan. **Until Phase 2 lands, operators run the strategy launchers
+> manually** (acceptable for cutover; not a blocker). A `DEFERRED-AFTER-CONSOLIDATION-PHASE2` sub-todo lives in Phase 1
+> below to capture the registry-wire-in as a follow-up.
+
 > **🟢 OPERATOR-PICKS-TRACK AT CUTOVER — RATIFIED 2026-05-10 cross-plan audit Q12.** Both CLI track (Phases 1-10) and UI
 > track (Phases U1-U6) ship live by 2026-05-23. **At each cutover-run boundary, operator picks ONE track for that run**
 > (CLI is the operational floor; UI is the upgrade ramp). Both paths enforce identical gates (custody connected / venue
@@ -137,6 +159,25 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
   - Probe: `gcloud storage ls gs://${PID}-events/events/strategy-service/$(date +%Y-%m-%d)/strategy-paper-carry_staked_basis-*/` — directory exists with `hour=*` partition.
   - Read first JSONL, assert `event=="STARTED"`.
   - 10min recheck for new events with row counts (per CLAUDE.md *"No fire-and-forget VM launches"*).
+
+- [ ] [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** once
+      [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 ships
+      (`VM_PREFIX_TO_BUCKET` dict-shape migration from `dict[str, str | None]` → `dict[str, VmPrefixSpec]` + 9 reserved
+      live/exp prefixes). Convert `"strategy-paper-": None` → `"strategy-paper-": VmPrefixSpec(bucket=None,
+      lifecycle_class=LONG_LIVED_LIVE)` and same for `strategy-live-`. Tag `LONG_LIVED_LIVE` per the lifecycle taxonomy
+      (continuous strategy cluster — not EPHEMERAL). **DEFERRED-AFTER-LIFECYCLE-A2** — sequencing per top-of-file banner.
+      Successor gate: lifecycle Phase A.2 commit lands + `VmPrefixSpec` type importable from
+      `deployment-service/scripts/vm/vm_zombie_watchdog.py`.
+
+- [ ] [AGENT] P1. **1.Y DEFERRED-AFTER-CONSOLIDATION-PHASE2 — register strategy launchers in
+      `_SERVICE_LAUNCHER_SCRIPTS`** so the Deploy-Missing UI button surfaces them. Owner plan:
+      [`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
+      Phase 2 (currently DEFERRED-PER-AUDIT 2026-05-10). Add `launch-strategy-paper-vm.sh` +
+      `launch-strategy-live-vm.sh` entries to `deployment-api/deployment_api/services/deploy_missing.py`
+      `_SERVICE_LAUNCHER_SCRIPTS` dict so operators can deploy via Deploy-Missing UI button instead of running scripts
+      manually from workstation. **DEFERRED-AFTER-CONSOLIDATION-PHASE2** — gates on launcher_scripts_consolidation Phase
+      2 shipping. Acceptable to ship Phase 1 without this; operators run launchers manually until then (see top-of-file
+      IN-FLIGHT REFACTOR banner).
 
 **Phase 1 done definition** (per *"Plans Run To Actual Completion"* HARD RULE):
 - ✅ Both launchers exist in `deployment-service/scripts/vm/` with the canonical shape.

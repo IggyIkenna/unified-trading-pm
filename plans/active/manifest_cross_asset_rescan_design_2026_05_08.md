@@ -28,7 +28,6 @@ locked_since: 2026-05-08
 >
 > This plan's phases land in gate(s): **G5** (rescan --apply-flips against full v8 manifest)
 
-
 # Manifest cross-asset rescan — design (2026-05-08, Tab 3 separate scope)
 
 > Item 5 of Tab 3 in [`work_split_2026_05_08_ikenna.md`](work_split_2026_05_08_ikenna.md). Tab 3 (Ikenna) designs the

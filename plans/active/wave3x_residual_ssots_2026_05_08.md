@@ -242,21 +242,23 @@ Code, tests, ruff, basedpyright all green; full-execution criterion met locally 
 
 **Code commits:**
 
-- `unified-api-contracts@bdc84ed` — `feat(uac): half_day_sessions + venue_session_hours SSOTs (wave3x Track A)` —
-  4 files, 608 insertions. Modules + 33 unit tests. Foreign-dirty UAC files (`tests/internal/unit/test_instruments_live_event_taxonomy.py` /
+- `unified-api-contracts@bdc84ed` — `feat(uac): half_day_sessions + venue_session_hours SSOTs (wave3x Track A)` — 4
+  files, 608 insertions. Modules + 33 unit tests. Foreign-dirty UAC files
+  (`tests/internal/unit/test_instruments_live_event_taxonomy.py` /
   `tests/unit/test_archetype_capability_may_23_coverage.py` / `unified_api_contracts/__init__.py`) untouched per
   workspace foreign-WIP rule.
 
 **Plan-flip commit:**
 
-- `unified-trading-pm@72bf558e` — `docs(plans): wave3x Track A — UAC half_day_sessions + venue_session_hours SSOTs
-  shipped` — Track A's 3 P0 UAC todos flipped to `[x]`. Pathspec-scoped (`git commit --only -- <path>`) to leave the
-  ~50 foreign-dirty PM codex docs untouched.
+- `unified-trading-pm@72bf558e` —
+  `docs(plans): wave3x Track A — UAC half_day_sessions + venue_session_hours SSOTs shipped` — Track A's 3 P0 UAC todos
+  flipped to `[x]`. Pathspec-scoped (`git commit --only -- <path>`) to leave the ~50 foreign-dirty PM codex docs
+  untouched.
 
 **Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):**
 
-- `cd unified-api-contracts && .venv/bin/python -m pytest tests/unit/test_half_day_sessions.py
-  tests/unit/test_venue_session_hours.py -v` → **33 passed in 3.75s**.
+- `cd unified-api-contracts && .venv/bin/python -m pytest tests/unit/test_half_day_sessions.py tests/unit/test_venue_session_hours.py -v`
+  → **33 passed in 3.75s**.
 - `.venv/bin/python -m ruff check <new-files>` → **All checks passed!**
 - `.venv/bin/python -m basedpyright <new-files>` → **0 errors, 0 warnings, 0 notes**.
 - `.venv/bin/python -m ruff format <new-files>` → no reformats needed.
@@ -265,10 +267,10 @@ Code, tests, ruff, basedpyright all green; full-execution criterion met locally 
 
 **Deferred items still open in this plan (not Tab H scope):**
 
-- Track A `[UTL]` classifier extension (`unified_trading_library/legacy_reason_classifier.py` to consume both new
-  UAC SSOTs + emit `EXPECTED_PARTIAL_HALF_DAY` / `EXPECTED_OUTSIDE_TRADING_HOURS`) — `- [ ]` in plan body. Status:
-  `helper-shipped` for UAC dependencies; UTL wire-in is the natural next step. Successor: any Tab/agent picking up
-  Track A's UTL half. Not blocked — UAC SSOTs are now consumable.
+- Track A `[UTL]` classifier extension (`unified_trading_library/legacy_reason_classifier.py` to consume both new UAC
+  SSOTs + emit `EXPECTED_PARTIAL_HALF_DAY` / `EXPECTED_OUTSIDE_TRADING_HOURS`) — `- [ ]` in plan body. Status:
+  `helper-shipped` for UAC dependencies; UTL wire-in is the natural next step. Successor: any Tab/agent picking up Track
+  A's UTL half. Not blocked — UAC SSOTs are now consumable.
 - Track A `[TEST]` UTL classifier tests — paired with the UTL extension above.
 - Tracks B / C / D / E — independent of Track A; not picked up this session.
 

@@ -36,8 +36,8 @@ and these docs is a review-blocking failure per `doc → plan → code`):
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
   TradFi non-trading-day reasons (`EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PARTIAL_HALF_DAY`) and downstream
   NaN tolerances
-- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — TradFi GCS
-  bucket layout + hive partition keys (per-instrument ETFs vs bundled futures/options chains)
+- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — TradFi
+  GCS bucket layout + hive partition keys (per-instrument ETFs vs bundled futures/options chains)
 - [`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
   — ES.OPT 11-cluster taxonomy (ES + E1A–E5A + EW1–EW4 + EOM) and TradFi instrument coverage matrix
 
@@ -71,24 +71,24 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 **Big finding** filed as full issue doc:
 [`plans/active/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md`](../active/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md).
 
-Summary: probed 2026-05-08 11:25 UTC for Tab 4 ES.OPT 11-cluster validation work-split task. The 5 mdps-tradfi VMs
-split across two launch batches:
+Summary: probed 2026-05-08 11:25 UTC for Tab 4 ES.OPT 11-cluster validation work-split task. The 5 mdps-tradfi VMs split
+across two launch batches:
 
-- **Batch 1** (`mdps-tradfi-{2021,2022,2023,2024}-20260506-125828`): 4 exited 2026-05-07 ~14:00 UTC after ~25h
-  runtime. **None emitted `STOPPED` or `FAILED` event.** GCE instances fully deleted. Last event per VM was
-  mid-processing (`VALIDATION_STARTED` / `PROCESSING_STARTED` / `PROCESSING_COMPLETED` / `PERSISTENCE_STARTED`) —
-  partial windows: 2021 reached 2021-08-13 (8/12 months), 2024 reached 2024-05-31 (5/12 months). Coordinated 3-min
-  exit window suggests external force-kill (wall-clock cap / watchdog / preemption).
+- **Batch 1** (`mdps-tradfi-{2021,2022,2023,2024}-20260506-125828`): 4 exited 2026-05-07 ~14:00 UTC after ~25h runtime.
+  **None emitted `STOPPED` or `FAILED` event.** GCE instances fully deleted. Last event per VM was mid-processing
+  (`VALIDATION_STARTED` / `PROCESSING_STARTED` / `PROCESSING_COMPLETED` / `PERSISTENCE_STARTED`) — partial windows: 2021
+  reached 2021-08-13 (8/12 months), 2024 reached 2024-05-31 (5/12 months). Coordinated 3-min exit window suggests
+  external force-kill (wall-clock cap / watchdog / preemption).
 - **Batch 2** (`mdps-tradfi-2025-20260507-135207`): created 2026-05-07 05:52 UTC, still RUNNING at probe time.
-  Approaching its 25h mark around 2026-05-08 ~07:00 UTC — vulnerable to same fate (likely already happened by
-  current time 11:42 UTC; needs verification).
+  Approaching its 25h mark around 2026-05-08 ~07:00 UTC — vulnerable to same fate (likely already happened by current
+  time 11:42 UTC; needs verification).
 
 **Tab 4 ES.OPT 11-cluster validation rerun is gated**: cluster-coverage check against incomplete window can't
 distinguish "missing because not-yet-processed" from "missing because cluster validation missed it". Re-run after
 diagnosis + relaunch + clean drain. **Manifest evidence**: tradfi MDPS service rows = 4082 total (vs MTDS 96088); 28
 ohlcv 2024 rows; on-disk `processed_candles/by_date/day=2024-01-02/timeframe={15s/1m/5m/15m/1h/4h/24h}/` exists but
-manifest under-counts. `options_chain` has 291 rows (~41% coverage 2023-05 → 2026-01), all `underlying=""` empty,
-all CME — single-row-per-day suggests bundle-summary shape (cluster validation NOT visible at manifest grain).
+manifest under-counts. `options_chain` has 291 rows (~41% coverage 2023-05 → 2026-01), all `underlying=""` empty, all
+CME — single-row-per-day suggests bundle-summary shape (cluster validation NOT visible at manifest grain).
 
 Operator notification + recovery sequencing live in the issue doc.
 
@@ -293,8 +293,8 @@ volume.
 Source issue archived. 26KB design RFC — operator decision 2026-05-08: **Option (a) split**. Phase 0 (catalog backfill —
 the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural fixes spanning UAC + MTDS
 
-- strategy-service + execution) land in NEW sub-plan `cme_polymarket_arb_2026_05_08.md` (see Cross-references
-  section below). Phases 1-5 are post-May-23 critical path.
+- strategy-service + execution) land in NEW sub-plan `cme_polymarket_arb_2026_05_08.md` (see Cross-references section
+  below). Phases 1-5 are post-May-23 critical path.
 
 * [ ] [SCRIPT] P0. **Phase 0 — TradFi instruments-service backfill VM** for the 9 CME event-contract roots (ECES / ECBTC
       / ECRTY / ECYM / ECGC / ECCL / ECNG / EC6E / ECNQ — full list in archived issue). VM launcher under
@@ -326,26 +326,39 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 
 ## May-23 deliverable A — S&P prediction (folded from `sp_prediction_may_23_2026.epic` 2026-05-08)
 
-> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/sp_prediction_may_23_2026.epic.md`. Archived: [`plans/archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md).
+> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/sp_prediction_may_23_2026.epic.md`.
+> Archived: [`plans/archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md).
 
-**Why:** TradFi ML deliverable for May 23 — S&P swing high/low ML model (re-using C5 model shape) trained end-to-end in batch from SP futures + Bitcoin + calendar features. Batch-only; no live trading, no live tick collection. Every layer of the data pipeline must work end-to-end in batch; bugs/backfills/schema fixes inclusive at every layer.
+**Why:** TradFi ML deliverable for May 23 — S&P swing high/low ML model (re-using C5 model shape) trained end-to-end in
+batch from SP futures + Bitcoin + calendar features. Batch-only; no live trading, no live tick collection. Every layer
+of the data pipeline must work end-to-end in batch; bugs/backfills/schema fixes inclusive at every layer.
 
 ### End-state at May 23 (success criteria)
 
 - [ ] **S&P swing high/low ML model trains end-to-end in batch** on representative 2-year history.
-- [ ] **Feature inputs complete**: SP futures (ES + MES + micros on CME) + Bitcoin features + calendar features (holidays, half-days, expiries, FOMC, NFP, CPI).
-- [ ] **Instrument data clean** for ES/MES/Bitcoin futures across training window — manifest 100% honest, no empty placeholders, no phantom captured rows, no stale schema parquets.
+- [ ] **Feature inputs complete**: SP futures (ES + MES + micros on CME) + Bitcoin features + calendar features
+      (holidays, half-days, expiries, FOMC, NFP, CPI).
+- [ ] **Instrument data clean** for ES/MES/Bitcoin futures across training window — manifest 100% honest, no empty
+      placeholders, no phantom captured rows, no stale schema parquets.
 - [ ] **MTDS tick data clean** for ES/MES/BTC futures + S&P spot index + ETF references.
-- [ ] **MDPS bar data clean** — no 1440-NaN-OHLCV regression, every (venue, data_type, day) bar populated or honestly empty.
-- [ ] **Features pipeline clean** — features-tradfi (or post-consolidation features-service) emits feature parquets without NaN-blanket placeholders; `available_at` correctly stamped per row; LookaheadBiasError strict-mode passes.
-- [ ] **ML training pipeline clean** — model trains with no skipped windows, no silent NaN-substitution, no leaked future data; reproducible from a single config + random seed.
-- [ ] **Strategy + execution layers PROGRESSED, not gated** — bugs fixed where possible; gating success = clean ML training, not full strategy/execution coverage.
+- [ ] **MDPS bar data clean** — no 1440-NaN-OHLCV regression, every (venue, data_type, day) bar populated or honestly
+      empty.
+- [ ] **Features pipeline clean** — features-tradfi (or post-consolidation features-service) emits feature parquets
+      without NaN-blanket placeholders; `available_at` correctly stamped per row; LookaheadBiasError strict-mode passes.
+- [ ] **ML training pipeline clean** — model trains with no skipped windows, no silent NaN-substitution, no leaked
+      future data; reproducible from a single config + random seed.
+- [ ] **Strategy + execution layers PROGRESSED, not gated** — bugs fixed where possible; gating success = clean ML
+      training, not full strategy/execution coverage.
 - [ ] **Backtest harness wired** — 2-year config grid runner per master plan Group F item 18.
 
 ### IN/OUT scope (S&P prediction)
 
-- **IN**: full ML data pipeline (instruments → MTDS → MDPS → features → ML training); all bugs/backfills/schema fixes/NaN-placeholder cleanups/manifest reconcilers/`available_at` stamping fixes/LookaheadBias strict-mode wiring; 2-year batch backtest config grid; calendar features (FOMC, NFP, CPI); Bitcoin cross-asset features; TradFi infra cleanup (ES.OPT 11-cluster validation, ETF backfill, futures continuous-contract rolling).
-- **OUT**: live trading, live tick collection, live instrument refresh, strategy catalogue completeness for this archetype (still applies via cross_cutting), production deployment of model.
+- **IN**: full ML data pipeline (instruments → MTDS → MDPS → features → ML training); all bugs/backfills/schema
+  fixes/NaN-placeholder cleanups/manifest reconcilers/`available_at` stamping fixes/LookaheadBias strict-mode wiring;
+  2-year batch backtest config grid; calendar features (FOMC, NFP, CPI); Bitcoin cross-asset features; TradFi infra
+  cleanup (ES.OPT 11-cluster validation, ETF backfill, futures continuous-contract rolling).
+- **OUT**: live trading, live tick collection, live instrument refresh, strategy catalogue completeness for this
+  archetype (still applies via cross_cutting), production deployment of model.
 
 ### Open questions (S&P prediction)
 
@@ -353,48 +366,62 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
       `ml_and_features_master:Phase 4A/B`. May-23 deliverable is data + ML pipeline shipping end-to-end on
       representative sample (per master Q&A 7); model architecture R&D is post-cutover.
 - [x] ✓ **Calendar feature inputs — RESOLVED 2026-05-08.** **Minimum FOMC + NFP + CPI** for May-23 backtest. PCE +
-      retail sales DEFERRED post-cutover. Source: existing `unified-features-interface` calendar adapter; events
-      stamped `available_at = release_time`. Feature shape: binary `event_active` window flags (T-1d / T-0d / T+1d) +
-      numeric surprise vs. consensus.
+      retail sales DEFERRED post-cutover. Source: existing `unified-features-interface` calendar adapter; events stamped
+      `available_at = release_time`. Feature shape: binary `event_active` window flags (T-1d / T-0d / T+1d) + numeric
+      surprise vs. consensus.
 - [x] ✓ **Bitcoin features granularity — RESOLVED 2026-05-08.** **Hourly** for May-23 backtest. Source: Binance + OKX
-      BTC perp `ohlcv_1h` from CeFi MTDS (already shipped). Daily loses intraday signal; 15-min over-fits the S&P
-      daily horizon. Hourly is the sweet spot. CeFi adapter + data path already in place.
+      BTC perp `ohlcv_1h` from CeFi MTDS (already shipped). Daily loses intraday signal; 15-min over-fits the S&P daily
+      horizon. Hourly is the sweet spot. CeFi adapter + data path already in place.
 
 ---
 
 ## May-23 deliverable B — Price arbitrage (folded from `price_arbitrage_may_23_2026.epic` 2026-05-08)
 
-> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/price_arbitrage_may_23_2026.epic.md`. Archived: [`plans/archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md).
+> **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/price_arbitrage_may_23_2026.epic.md`.
+> Archived: [`plans/archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md).
 
-**Why:** Price-arbitrage archetype family ships **backtest-only** for May 23 — CME same-day-expiry arb (ES/MES/micros, BTC futures variants) + ETF↔future arb (SPY/IVV/VOO vs ES) + cross-venue ETF arb. Carry-family was lifted out per operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_master`.
+**Why:** Price-arbitrage archetype family ships **backtest-only** for May 23 — CME same-day-expiry arb (ES/MES/micros,
+BTC futures variants) + ETF↔future arb (SPY/IVV/VOO vs ES) + cross-venue ETF arb. Carry-family was lifted out per
+operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_master`.
 
 ### End-state at May 23 (success criteria)
 
 - [ ] **Full backtest of CME same-day-expiry arb** (ES vs MES + variants, BTC futures variants) on 2-year history.
 - [ ] **Full backtest of ETF↔future arb** for the SP500 ETF set (SPY/IVV/VOO) vs ES futures.
 - [ ] **Full backtest of cross-venue ETF arb** wherever ETFs are tradable.
-- [ ] **Backtest fidelity**: real matching engine, real fees, real exchange-specific microstructure (CME tick rules, ETF NBBO, half-day calendar). Per master plan Group F item 17.
-- [ ] **Strategy + execution layers PROGRESSED, not gated** — exercise unified pipeline so live activation seam is small.
+- [ ] **Backtest fidelity**: real matching engine, real fees, real exchange-specific microstructure (CME tick rules, ETF
+      NBBO, half-day calendar). Per master plan Group F item 17.
+- [ ] **Strategy + execution layers PROGRESSED, not gated** — exercise unified pipeline so live activation seam is
+      small.
 - [ ] **TradFi data pipeline clean** for all required instruments across backtest window.
 - [ ] **2-year batch backtest config grid** for both arb archetypes — P&L variance per config dimension captured.
 
 ### IN/OUT scope (price arbitrage)
 
-- **IN**: same-day-expiry arb on CME (ES/MES/micros + BTC futures); ETF↔future arb (SPY/IVV/VOO vs ES); cross-venue ETF combos; TradFi ETF backfill + futures continuous-contract rolling; backtest fidelity (matching engine + fees + microstructure); strategy + execution exercised via unified pipeline.
-- **OUT**: live trading; carry-family archetypes (moved to `defi_master` live_defi_rollout deliverable); spot-vs-perp crypto carry (also in `defi_master`); production deployment of arb signal.
+- **IN**: same-day-expiry arb on CME (ES/MES/micros + BTC futures); ETF↔future arb (SPY/IVV/VOO vs ES); cross-venue ETF
+  combos; TradFi ETF backfill + futures continuous-contract rolling; backtest fidelity (matching engine + fees +
+  microstructure); strategy + execution exercised via unified pipeline.
+- **OUT**: live trading; carry-family archetypes (moved to `defi_master` live_defi_rollout deliverable); spot-vs-perp
+  crypto carry (also in `defi_master`); production deployment of arb signal.
 
 ### Open questions (price arbitrage)
 
-- [ ] **Cross-venue ETF universe**: which non-CME venues for ETF leg? US-listed ETF + CME future is obvious; international? CFD venues?
+- [ ] **Cross-venue ETF universe**: which non-CME venues for ETF leg? US-listed ETF + CME future is obvious;
+      international? CFD venues?
 - [ ] **Backtest window**: 2-year confirmed, or shorter to focus on recent regime?
 
 ---
 
 ## Cross-epic handshakes (both deliverables)
 
-- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue completeness (S&P + price-arb archetypes × all venue combos enumerated even if not launching this cycle).
-- **Shares with:** `cefi_ml_may_23_2026` (now in `cefi_master`) shares ML lifecycle infrastructure (training pipeline, model registry, features-service consolidation). Both S&P and price-arb deliverables share ES/MES + ETF instrument + MTDS data — same TradFi backfill clean.
-- **Provides to:** `prediction_markets_may_23_2026` (now in `predictions_master`) may consume S&P features as cross-asset inputs (SPX-up-down canonical question groups). Carry archetypes in `defi_master` lift backtest fidelity work from price-arb's matching-engine + fee + calendar coverage.
+- **Depends on:** `cross_cutting_may_23_2026` for strategy catalogue completeness (S&P + price-arb archetypes × all
+  venue combos enumerated even if not launching this cycle).
+- **Shares with:** `cefi_ml_may_23_2026` (now in `cefi_master`) shares ML lifecycle infrastructure (training pipeline,
+  model registry, features-service consolidation). Both S&P and price-arb deliverables share ES/MES + ETF instrument +
+  MTDS data — same TradFi backfill clean.
+- **Provides to:** `prediction_markets_may_23_2026` (now in `predictions_master`) may consume S&P features as
+  cross-asset inputs (SPX-up-down canonical question groups). Carry archetypes in `defi_master` lift backtest fidelity
+  work from price-arb's matching-engine + fee + calendar coverage.
 
 ## Anti-patterns + workspace-rule cross-references
 

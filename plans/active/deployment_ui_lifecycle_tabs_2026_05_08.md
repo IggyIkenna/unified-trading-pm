@@ -481,6 +481,26 @@ isProject: false
 > [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.md) Phase 8B surfaces a new
 > `feature_family` drilldown axis in DataStatusTab. Mutually banner.
 
+> **🟢 CROSS-PLAN COORDINATION — `vm_zombie_watchdog.py` VmPrefixSpec migration** (added 2026-05-10 cross-plan audit fix)
+>
+> **Phase A.2 deferred** (see Phase A `a2-vm-naming-convention-extension` todo below — `[ ]` checkbox; was incorrectly
+> flipped `[x]` and corrected 2026-05-09 retry audit; `vm_zombie_watchdog.py` edits drafted but never committed).
+> **Phases B-E gated on A.2**: the lifecycle-tab UX surfaces below all assume the VmPrefixSpec dict shape + lifecycle
+> helpers shipped by A.2.
+>
+> **Cross-plan write to the same dict**:
+> [`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md) Phase 1 ALSO writes
+> to `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET` dict — adding 2 prefixes (`strategy-paper-` + `strategy-live-`).
+> **Merge order when both land**: A.2 ships `VmPrefixSpec` structure + 9 reserved live/exp prefixes FIRST; THEN promote
+> Phase 1 adds the 2 strategy prefixes. If promote Phase 1 ships first (lifecycle A.2 still deferred), promote ships
+> under the legacy `dict[str, str | None]` shape and a follow-up sub-todo in promote Phase 1
+> (`1.X DEFERRED-AFTER-LIFECYCLE-A2`) wraps the 2 entries in `VmPrefixSpec` once A.2 lands.
+>
+> **Phase B.1 tab-count revision**: when A.2 ships, also revise Phase B.1's tab list from **6 tabs to 7 tabs** (add
+> Kill-switch tab per
+> [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md) Phase 7.B — see
+> banner already added there 2026-05-10 PM at lines 37-43 of that plan).
+
 ## Status — Phase progression (last update 2026-05-08, EOD — Phase A foundation 5/5 ✅ SHIPPED)
 
 | Phase | Scope                                                                                                                                         | Status                                                   | Evidence                                                                                                                                                                             |

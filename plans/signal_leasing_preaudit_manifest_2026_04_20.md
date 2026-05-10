@@ -396,8 +396,8 @@ strategy is also leased externally; emission happens BEFORE execution, not inste
   adapter-error-classification rule).
 - `unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.md` — tick Phase 1 box
   - reference this manifest (done in Phase 1 wrap-up commit).
-- `unified-trading-pm/plans/active/path_to_100m_finalization_2026_04_20.md` — tick linked phase if any references
-  signal leasing backend enablement.
+- `unified-trading-pm/plans/active/path_to_100m_finalization_2026_04_20.md` — tick linked phase if any references signal
+  leasing backend enablement.
 - `unified-trading-pm/codex/14-playbooks/roadmap/plan-references.md` — add this plan to the roadmap index.
 
 **REFERENCES (no change):**

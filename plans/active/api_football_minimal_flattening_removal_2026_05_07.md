@@ -38,10 +38,13 @@ related:
 
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
 >
-> Per operator direction this session — `available_at` stamping wiring (Phase 3 scope: fixture_stats → match_end_time / fixture_events → event_time / lineups → kickoff−60min / injuries → report_time) executes as part of the umbrella's per-asset_group cascade — NOT in isolation. Source-specific stamping rule (UAC SSOT) + per-adapter `available_at` column write + UTL `record_captured` enforcement co-evolve.
+> Per operator direction this session — `available_at` stamping wiring (Phase 3 scope: fixture_stats → match_end_time /
+> fixture_events → event_time / lineups → kickoff−60min / injuries → report_time) executes as part of the umbrella's
+> per-asset_group cascade — NOT in isolation. Source-specific stamping rule (UAC SSOT) + per-adapter `available_at`
+> column write + UTL `record_captured` enforcement co-evolve.
 >
-> Stamping owner: [`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md)
-
+> Stamping owner:
+> [`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md)
 
 # api_football minimal-flattening removal
 
@@ -202,8 +205,8 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
       `formation` only. Extend to: one row per (team, player) — flatten
       `startXI: [{player.id, .name,     .number, .pos, .grid}]` AND `substitutes: [...]` AND coach. Columns: `team_id`,
       `team_name`, `formation`, `coach_id`, `coach_name`, `player_id`, `player_name`, `player_number`, `player_pos`
-      (G/D/M/F), `player_grid` (e.g. "4:1"), `is_starter` (bool). (UAC@c76e6d0 — coach NOT emitted as own row;
-      stamped on every (team, player) row to preserve grain.)
+      (G/D/M/F), `player_grid` (e.g. "4:1"), `is_starter` (bool). (UAC@c76e6d0 — coach NOT emitted as own row; stamped
+      on every (team, player) row to preserve grain.)
 - [x] [UAC] P0. `normalize_api_football_injury(raw) -> dict`. Flatten the 4 nested struct columns (`player`, `team`,
       `fixture`, `league`) into top-level: `player_id`, `player_name`, `player_photo`, `player_type`, `player_reason`,
       `team_id`, `team_name`, `fixture_id`, `league_id`, `league_season`. Returns single dict (one injury report = one
@@ -232,7 +235,7 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
       `list(itertools.chain.from_iterable(normalize_*(row, fixture_id) for row in raw_rows))` for the 3 list-returning
       normalizers (stats, events, lineups). INJURIES stays single-dict per row. (instruments-service@539130f — also
       tightens return-type annotations from `list[CanonicalX]` to `list[dict[str, object]]` to match the actual runtime
-      shape + base-class signature, drops unused Canonical* imports.)
+      shape + base-class signature, drops unused Canonical\* imports.)
 - [ ] [instruments-service] P0. **DEFERRED** — operator-driven smoke test: pick one recently-played fixture
       (af_fixture_id from a captured FIXTURES row), call each handler against the live API-Football endpoint with a
       single-fixture `--recovery-fixture-ids` invocation, verify the resulting parquet has the expected per-row shape.
@@ -317,8 +320,8 @@ Code commits:
   per-row flat dicts; extends 4 SchemaContracts with full per-column ColumnSpec lists; rewrites the
   `_sports_match_contracts.py` module docstring; ships 13 new unit tests under
   `tests/unit/test_normalize_api_football.py`.
-- `instruments-service@539130f` — feat(api_football): wire flattened normalizers via chain.from_iterable. Updates the
-  4 fixture-handlers to compose chain.from_iterable across the per-row normalizer outputs; tightens return-type
+- `instruments-service@539130f` — feat(api_football): wire flattened normalizers via chain.from_iterable. Updates the 4
+  fixture-handlers to compose chain.from_iterable across the per-row normalizer outputs; tightens return-type
   annotations from `list[CanonicalX]` to `list[dict[str, object]]` (matches base-class signature + actual runtime
   shape); drops the now-unused Canonical\* imports.
 - `unified-trading-pm@36c40a10` — plan(api_football_minimal_flattening): flip Phase 1+2+3+5 + ship codex
@@ -331,10 +334,9 @@ Open items handed to operator:
 
 - Phase 3.B + 3.C (live-API smoke + EPL one-day forward-poll) — require API-Football credentials + recovery-mode VM
   invocation + UI render verification. Local agent integration smoke verified the chain.from_iterable + normalizer
-  composition shape end-to-end on synthetic 2-team fixture (2 stat rows / 3 event rows / 29 lineup rows / 1 injury
-  row).
+  composition shape end-to-end on synthetic 2-team fixture (2 stat rows / 3 event rows / 29 lineup rows / 1 injury row).
 - Phase 4 (optional historical reprocessor) — left at `- [ ]` per plan default recommendation. Re-evaluate if
-  features-sports calculators become critically blocked on historical thin rows; today's per-calculator NaN gate +
-  UTL `assert_available_at_present` already absorbs the gap.
+  features-sports calculators become critically blocked on historical thin rows; today's per-calculator NaN gate + UTL
+  `assert_available_at_present` already absorbs the gap.
 - Phase 5.B (plan closeout) — left at `- [ ]` until Phase 3.B + 3.C ship. The plan's `locked_by: live-defi-rollout`
   status survives until then per workspace plan-locking rule.

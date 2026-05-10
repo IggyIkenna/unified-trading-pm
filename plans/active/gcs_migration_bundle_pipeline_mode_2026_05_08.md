@@ -541,8 +541,8 @@ isProject: false
 >
 > Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
 >
-> This plan's phases land in gate(s): **G6** (pipeline_mode= hive partition + writer kwarg adoption) + **G7** (workspace audit)
-
+> This plan's phases land in gate(s): **G6** (pipeline_mode= hive partition + writer kwarg adoption) + **G7** (workspace
+> audit)
 
 # GCS migration bundle — pipeline_mode partition + category→asset_group rekey + drift cleanup (2026-05-08)
 

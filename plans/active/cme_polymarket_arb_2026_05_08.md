@@ -157,8 +157,8 @@ corresponding section of the archived RFC.
 
 ## Sibling plan relationships
 
-- `tradfi_master_2026_05_07.md` — owns Phase 0 (catalog backfill); blocks Phase 1 here (need the catalog rows
-  before the EVENT_CONTRACT classifier has anything to classify).
+- `tradfi_master_2026_05_07.md` — owns Phase 0 (catalog backfill); blocks Phase 1 here (need the catalog rows before the
+  EVENT_CONTRACT classifier has anything to classify).
 - `predictions_master_2026_05_07.md` — owns canonical_question_group backfill for the 6 new groups
   (ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E); blocks Phase 2 cross-link.
 - `writegate_honest_coverage_endtoend_2026_05_06.md` — Phase 1A bundled-data-type cluster validation; Phase 3 here
@@ -181,54 +181,54 @@ intent, plan owns activation); pre-audit complete via the source RFC archived to
 
 ## DONE-2026-05-08 — Tab 5 cycle (Phase 1 + codex stub only; Phases 2-5 blocked)
 
-Tab: `cme-polymarket-phase1-tab` (Harsh-side, Tab 5 sub-agent under
-`mechanical-refactor-tab` parent). Scope per task spec: Phase 1 + codex updates only.
-Phases 2-5 deferred to subsequent cycles per blocker analysis (Phase 2 blocked on
-`predictions-master-2026-05-07` Phase 5; Phases 3-4 blocked on `tradfi_master_2026_05_07`
-Q1+Q2; Phase 5 depends on Phases 2-4).
+Tab: `cme-polymarket-phase1-tab` (Harsh-side, Tab 5 sub-agent under `mechanical-refactor-tab` parent). Scope per task
+spec: Phase 1 + codex updates only. Phases 2-5 deferred to subsequent cycles per blocker analysis (Phase 2 blocked on
+`predictions-master-2026-05-07` Phase 5; Phases 3-4 blocked on `tradfi_master_2026_05_07` Q1+Q2; Phase 5 depends on
+Phases 2-4).
 
 ### Code commits
 
 - **uac@b95d146** — `feat(uac): add InstrumentType.EVENT_CONTRACT + Databento BAG classifier`
-  - `unified_api_contracts/_instrument_enums.py` — `InstrumentType.EVENT_CONTRACT` enum value (cycle-free SSOT
-    location; re-exported via canonical/domain + facade).
+  - `unified_api_contracts/_instrument_enums.py` — `InstrumentType.EVENT_CONTRACT` enum value (cycle-free SSOT location;
+    re-exported via canonical/domain + facade).
   - `unified_api_contracts/external/databento/normalize.py` — extended `_instrument_class_to_type` to accept
-    `raw_symbol`; dispatches `BAG` (current Databento encoding) or `O` (legacy) on EC\* root prefix to
-    `EVENT_CONTRACT`. Plain `BAG` without EC\* root → `COMBO`. Both `normalize_databento_definition` and
-    `normalize_databento_symbol` updated to pass `raw_symbol`.
+    `raw_symbol`; dispatches `BAG` (current Databento encoding) or `O` (legacy) on EC\* root prefix to `EVENT_CONTRACT`.
+    Plain `BAG` without EC\* root → `COMBO`. Both `normalize_databento_definition` and `normalize_databento_symbol`
+    updated to pass `raw_symbol`.
   - `unified_api_contracts/registry/venue_constants.py` — added `EVENT_CONTRACT` to `INSTRUMENT_TYPES_BY_VENUE[CME]`
-    + `INSTRUMENT_TYPE_FOLDER_MAP["EVENT_CONTRACT"] = "event_contracts"`.
-  - `tests/integration/test_registry_completeness.py` — 4 new tests: `test_cme_event_contract_bag_maps_to_event_contract`
-    (BAG+EC\* → EVENT_CONTRACT, both BAG and legacy O encodings); `test_regular_option_still_classifies_as_option`
-    (vanilla ES.OPT/SPX.OPT preserved); `test_regular_future_still_classifies_as_future` (F instrument_class
-    unaffected by EC\* root); `test_bag_without_event_contract_root_maps_to_combo` (generic BAG → COMBO).
+    - `INSTRUMENT_TYPE_FOLDER_MAP["EVENT_CONTRACT"] = "event_contracts"`.
+  - `tests/integration/test_registry_completeness.py` — 4 new tests:
+    `test_cme_event_contract_bag_maps_to_event_contract` (BAG+EC\* → EVENT_CONTRACT, both BAG and legacy O encodings);
+    `test_regular_option_still_classifies_as_option` (vanilla ES.OPT/SPX.OPT preserved);
+    `test_regular_future_still_classifies_as_future` (F instrument_class unaffected by EC\* root);
+    `test_bag_without_event_contract_root_maps_to_combo` (generic BAG → COMBO).
 
 ### Plan-flip + codex commits
 
-- **pm@&lt;next sha&gt;** — `plan(cme-polymarket-arb): flip Phase 1 + codex-update checkboxes; ship codex stubs`
-  (this commit — flips Phase 1 and codex-update todos, extends 2 codex docs, creates 1 NEW codex playbook stub,
-  appends this DONE block).
-  - `codex/02-data/per-asset-group-bucket-layouts.md` — EXTENDED multi-axis correction banner with
-    "TradFi EVENT_CONTRACT" shard atom bullet (root, resolution_date, day) + cluster validation kwargs +
-    GCS subfolder reference.
-  - `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — EXTENDED Family 4
-    `ARBITRAGE_PRICE_DISPERSION` coverage table with "TradFi ↔ Prediction event_contract" PARTIAL row covering
-    9 CME roots; added slot-label cluster `ARBITRAGE_PRICE_DISPERSION@cme-polymarket-{spx,btc}-up-down-daily-usd-prod`.
+- **pm@&lt;next sha&gt;** — `plan(cme-polymarket-arb): flip Phase 1 + codex-update checkboxes; ship codex stubs` (this
+  commit — flips Phase 1 and codex-update todos, extends 2 codex docs, creates 1 NEW codex playbook stub, appends this
+  DONE block).
+  - `codex/02-data/per-asset-group-bucket-layouts.md` — EXTENDED multi-axis correction banner with "TradFi
+    EVENT_CONTRACT" shard atom bullet (root, resolution_date, day) + cluster validation kwargs + GCS subfolder
+    reference.
+  - `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — EXTENDED Family 4 `ARBITRAGE_PRICE_DISPERSION`
+    coverage table with "TradFi ↔ Prediction event_contract" PARTIAL row covering 9 CME roots; added slot-label cluster
+    `ARBITRAGE_PRICE_DISPERSION@cme-polymarket-{spx,btc}-up-down-daily-usd-prod`.
   - `codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md` — **NEW STUB** playbook with frontmatter
     `scope: [strategist, engineer]`; documents archetype name (`cme_polymarket_event_arb`), 9-root → canonical-group
     mapping table, basis-calc reference (annualised bps), leg-balancing assumptions (notional matching, expiry
-    alignment, strike matching, settlement-rule equivalence), kill-switch rules (per-leg fill failure,
-    mid-position resolution divergence, liquidity floor, per-trade clip), DART manual-trade gate (live-only),
-    anti-patterns (don't skip canonical-question-group cross-link, don't treat ECBTC as vanilla option, don't
-    reuse ES.OPT cluster taxonomy, don't trade without paper-trade soak). Full content TBD as Phases 2-5 ship.
+    alignment, strike matching, settlement-rule equivalence), kill-switch rules (per-leg fill failure, mid-position
+    resolution divergence, liquidity floor, per-trade clip), DART manual-trade gate (live-only), anti-patterns (don't
+    skip canonical-question-group cross-link, don't treat ECBTC as vanilla option, don't reuse ES.OPT cluster taxonomy,
+    don't trade without paper-trade soak). Full content TBD as Phases 2-5 ship.
 
 ### Findings raised during the cycle
 
-- **Case-1 (in-scope)**: `INSTRUMENT_TYPE_FOLDER_MAP` test in `test_registry_completeness.py` failed initially
-  on missing EVENT_CONTRACT key. Fixed in same commit by seeding folder name `event_contracts`. No external
-  finding required.
-- **Case-3 / Case-4**: zero. Phase 1 changes are additive (new enum value + new classifier branch); existing
-  `OPTION` consumers unaffected because the EC\* override is gated on the EC\* root prefix.
+- **Case-1 (in-scope)**: `INSTRUMENT_TYPE_FOLDER_MAP` test in `test_registry_completeness.py` failed initially on
+  missing EVENT_CONTRACT key. Fixed in same commit by seeding folder name `event_contracts`. No external finding
+  required.
+- **Case-3 / Case-4**: zero. Phase 1 changes are additive (new enum value + new classifier branch); existing `OPTION`
+  consumers unaffected because the EC\* override is gated on the EC\* root prefix.
 
 ### What is NOT in this cycle (still `- [ ]`)
 
@@ -237,5 +237,5 @@ Q1+Q2; Phase 5 depends on Phases 2-4).
 - Phase 4 — instruments-service per-cluster expiry handling for daily binaries.
 - Phase 5 — strategy-service `cme_polymarket_event_arb` archetype + execution-service CME ClearPort connector.
 - Re-classification migration of existing on-disk manifest rows from `instrument_type=OPTION` to
-  `instrument_type=EVENT_CONTRACT` for the 9 EC\* roots — deferred until Phase 3 ships (manifest migration shape
-  same as `migrate_local_sfi_to_canonical.py` precedent per CLAUDE.md "Manifest migration, NOT fallback" rule).
+  `instrument_type=EVENT_CONTRACT` for the 9 EC\* roots — deferred until Phase 3 ships (manifest migration shape same as
+  `migrate_local_sfi_to_canonical.py` precedent per CLAUDE.md "Manifest migration, NOT fallback" rule).

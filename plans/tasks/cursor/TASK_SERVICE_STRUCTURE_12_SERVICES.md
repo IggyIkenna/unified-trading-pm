@@ -1,7 +1,7 @@
 # Task: Service Structure Standardization (12 Services)
 
-**Source plan**: `.cursor/plans/service_structure_standardization_4a4b3ff3.md` **Scope**: All 14 Python services
-EXCEPT instruments-service and market-tick-data-handler → **12 services**.
+**Source plan**: `.cursor/plans/service_structure_standardization_4a4b3ff3.md` **Scope**: All 14 Python services EXCEPT
+instruments-service and market-tick-data-handler → **12 services**.
 
 **Codex refs**:
 

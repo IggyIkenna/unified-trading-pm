@@ -330,16 +330,16 @@ mtds@7643a5c + e8a6903).
 Operator picked option (δ) per `wave2_polymarket_record_captured_from_counts_2026_05_09.md` Phase 1 + 3:
 
 1. UTL helper `record_captured_from_counts(...)` shipped at UTL@ef47c81b — accepts pre-aggregated `total_rows`,
-   `observed_clusters`, `available_at_envelope: pd.Timestamp` instead of df. Same 4-pillar gate (cluster
-   coverage + available_at presence + row-count > 0); routes under-coverage to `record_failed(ClusterCoverageError)`,
-   zero-rows to `record_empty(SOURCE_RETURNED_ZERO)`.
-2. MTDS orchestrator finalize-loop branch shipped at MTDS@a2f8d80 — per-venue
-   `prediction_cluster_counts_by_venue` + `prediction_envelope_by_venue` accumulators feed into
-   `record_captured_from_counts` per `(canonical_question_group, processing_date, venue)`. Envelope =
+   `observed_clusters`, `available_at_envelope: pd.Timestamp` instead of df. Same 4-pillar gate (cluster coverage +
+   available_at presence + row-count > 0); routes under-coverage to `record_failed(ClusterCoverageError)`, zero-rows to
+   `record_empty(SOURCE_RETURNED_ZERO)`.
+2. MTDS orchestrator finalize-loop branch shipped at MTDS@a2f8d80 — per-venue `prediction_cluster_counts_by_venue` +
+   `prediction_envelope_by_venue` accumulators feed into `record_captured_from_counts` per
+   `(canonical_question_group, processing_date, venue)`. Envelope =
    `max(per-row available_at) + emission_latency_ms_for_source("polymarket_clob")` (200ms per UAC@e197173).
-3. CLAUDE.md "Cluster validation MANDATORY" rule untouched — the new path satisfies the gate via the unified
-   helper, not via an exception clause. Wave-2 plan tracks Phase 4 (legacy `add()` deletion) as the future SSOT
-   cleanup so the double-SSOT collapses cleanly post-cutover.
+3. CLAUDE.md "Cluster validation MANDATORY" rule untouched — the new path satisfies the gate via the unified helper, not
+   via an exception clause. Wave-2 plan tracks Phase 4 (legacy `add()` deletion) as the future SSOT cleanup so the
+   double-SSOT collapses cleanly post-cutover.
 
 ## Critical path
 

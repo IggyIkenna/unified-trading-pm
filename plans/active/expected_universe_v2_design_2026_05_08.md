@@ -28,7 +28,6 @@ locked_since: 2026-05-08
 >
 > This plan's phases land in gate(s): **G3** (per-instrument enumerator launch — sequenced AFTER G4 v8 schema)
 
-
 # Expected_universe v2 enumerator — design (2026-05-08, Tab 3 separate scope)
 
 > Item 4 of Tab 3 in [`work_split_2026_05_08_ikenna.md`](work_split_2026_05_08_ikenna.md). v2 extends the v1 enumerator
