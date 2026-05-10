@@ -34,6 +34,19 @@ locked_since: 2026-05-07
 > finalization), DART operator UX cockpit, and cross-domain alpha + UI walkthrough. Source plans archived with ARCHIVED
 > banner; all open todos preserved in Phase 1-3 below.
 
+> **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the audit-driven
+> promote workflow plans
+> ([`promote_workflow_may23_cli_path_2026_05_10`](../active/promote_workflow_may23_cli_path_2026_05_10.md) dual-track
+> + [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](../active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+> extension) ship the cutover-blocker UI track that this umbrella's DART scope depends on. **BE AWARE** when touching
+> `unified-trading-system-ui/components/promote/*` (Promote workflow context + flow modal — owned by May-23 plan
+> Phase U4 wiring), `unified-trading-system-ui/components/shell/dart-scope-bar.tsx` (3-way visualization owner is
+> May-23 Phase U5 = `pvl-p23a`), or any `ManualTradeGateDialog` work (May-23 Phase U6 = `pvl-p23c`). Post-cutover plan
+> Phase 1 also consolidates 4 competing UAC lifecycle SSOTs (`StrategyMaturityPhase` chosen canonical) — coordinate
+> Phase 1 strategy-service `availability/store.py` migration with this umbrella's archetype lifecycle Phase 1 work.
+> Question doc:
+> [`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md).
+
 ## Scope
 
 This umbrella is the SSOT for three previously-parallel work-streams that all converge on the operator surface and the

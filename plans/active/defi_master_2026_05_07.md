@@ -36,6 +36,16 @@ related_plans:
 > Question doc:
 > [`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../questions/paper_vs_live_workflow_maturity_2026_05_08.md).
 
+> **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the May-23 cutover for
+> `carry_staked_basis` (DeFi lead archetype) lands via dual-track promote workflow:
+> [`promote_workflow_may23_cli_path_2026_05_10.md`](./promote_workflow_may23_cli_path_2026_05_10.md) (CLI primary +
+> minimal UI parallel) + [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+> (full UI extension post-cutover). **BE AWARE** when touching `e2e-testing/scripts/defi/run-paper.sh` /
+> `run-live.sh` / `colocated_engine.py` (CLI track owners) OR Copper custody (Phase 4.A operational verification owner)
+> OR Tenderly fork (Phase 4.D validation owner) OR Solana devnet wiring for jitoSOL/mSOL/bSOL (Phase 4.C `pvl-p20c`
+> owner). Question doc:
+> [`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md).
+
 ## Codex SSOTs
 
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code

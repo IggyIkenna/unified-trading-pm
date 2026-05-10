@@ -28,6 +28,19 @@ owner: Ikenna (plan), Harsh (alerting-service code)
 > actions (`stop_new_signals` / `force_exit_only` / `halt_strategy`). Coordinate ownership: this plan owns the AlertCode
 > taxonomy import + per-rule wiring; the live-pipeline plan adds the new rules + bridge.
 
+> **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the
+> [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md) UI track Phase U3
+> ships a `POST /promote/{strategy_id}/{manifest_id}` endpoint with a **minimal pre-flight pipeline** that probes
+> alerting paging targets configured in Secret Manager — this composes directly with this plan's Phase 4 paging-target
+> wiring + Phase 7 quietness 48h staging dry-run + Phase 8 live rehearsal. **BE AWARE** when changing Secret Manager
+> paths for Telegram bot tokens / PagerDuty integration keys: the promote workflow's pre-flight reads from the same
+> paths. Post-cutover plan
+> ([`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md))
+> Phase 6.B adds **per-deployment alerting auto-rule generation** (consumes `STRATEGY_PROMOTED_TO_LIVE` event +
+> generates `LIVE_ALERT_RULES_DYNAMIC` registry separate from the static `LIVE_ALERT_RULES` this plan owns) — coordinate
+> ownership boundary so static + dynamic rules don't conflict. Question doc:
+> [`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md).
+
 Closes the "alerting plan does not exist" anomaly flagged by the 2026-05-07 audit (see
 `_AUDIT_2026_05_07_dependency_graph.md` operator action item #1). The alerting-**service** itself already exists
 (multi-channel routing across Slack/Email/PagerDuty/Telegram, KillSwitchBus subscriber via `7b74ed8`, MarginEvent
