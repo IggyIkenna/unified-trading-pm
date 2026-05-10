@@ -1,0 +1,559 @@
+---
+name: mock-data-pipeline-benchmarking
+overview:
+  Can we benchmark feature-processing / ML / strategy-backtest / execution-backtest bottlenecks on a VM today using
+  synthetic mock data — without first completing the full multi-year market-tick backfill? Audits whether schemas,
+  generators, and harnesses already exist or what's missing. **Strict reuse principle**: use `e2e-testing` +
+  `deployment-service` + service repos as-is; non-prod buckets but same bucket structure as prod; same code paths as
+  much as possible. NO parallel mock-stack.
+type: question
+status: drafting
+created: 2026-05-10
+operator: ikenna
+locked_by: live-defi-rollout
+locked_since: 2026-05-10
+spawned_plan: null
+related_codex:
+  - codex/02-data/contracts-scope-and-layout.md
+  - codex/02-data/availability-manifest-and-data-status.md
+  - codex/02-data/honest-absence-downstream-handling.md
+  - codex/04-architecture/batch-live-architecture.md
+  - codex/04-architecture/shard-level-failure-isolation.md
+  - codex/05-infrastructure/runtime-tiers-and-deployment.md
+  - codex/05-infrastructure/vm-tarball-deployment.md
+  - codex/05-infrastructure/launcher-script-ssot.md
+  - codex/05-infrastructure/live-pipeline-architecture.md
+  - codex/06-coding-standards/quality-gates.md
+related_plans:
+  - plans/active/master_to_live_defi_2026_05_23.md
+  - plans/epics/ml_and_features_master_2026_05_07.md
+  - plans/epics/strategy_and_dart_master_2026_05_07.md
+  - plans/epics/infrastructure_master_2026_05_07.md
+  - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
+  - plans/active/features_repo_consolidation_2026_05_08.md
+related_questions:
+  - plans/questions/batch_live_design_symmetry_2026_05_08.md
+  - plans/questions/topology_features_strategy_ml_execution_2026_05_08.md
+  - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
+  - plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md
+---
+
+# Mock-data pipeline benchmarking — feature / ML / strategy / execution-backtest bottleneck audit
+
+## Intent
+
+The May-23 cutover requires that **a 2-year batch backtest run completes inside an operationally-acceptable window**
+(master plan Group F item 18) and that **paper-trade smoke runs end-to-end without bottlenecking** (Group F item 17).
+Today we don't know what those run-times actually are. Each downstream consumer (features-* / ml-training / ml-inference
+/ strategy-service co-located with position-balance + risk + execution-service in matching-engine mode) has been built
+incrementally; nobody has measured "given a representative day's worth of input data, how long does this stage take on a
+VM, what's the per-stage CPU / memory / IO profile, and where's the bottleneck."
+
+The blocker for measuring this today is **input data**: the canonical answer would be "run the full pipeline on a real
+backfilled day from disk." But the backfills are partial, mid-flight, or post-cutover-only across several asset_groups.
+Waiting for backfill completion to start measuring downstream throughput is the wrong sequencing — by the time the data
+lands, we discover (a) features-volatility takes 8 hours per day on the chosen VM shape, (b) ml-training OOMs at the
+chosen instance size, (c) strategy-backtest is single-threaded for a known-fixable reason. Each of those is a 1-week
+post-cutover surprise we can pre-empt by benchmarking on synthetic data NOW.
+
+The question is whether the workspace can already drive every downstream consumer end-to-end with synthetic data — same
+parquet schema, same `data_type`, same `available_at` semantics, same shard-key matrix per asset_group, same row counts
+per day, same NaN ratios, same empty-confirmed reason distribution. If yes: spin up VMs and measure. If no: identify
+what's missing and ship that as a pre-cutover prerequisite.
+
+This is a different question from `master_to_live_defi_2026_05_23.md` Group F item 18 (which assumes real backfill
+data); this is the **synthetic-data path** that lets us de-risk the same Group F gate weeks earlier.
+
+## Guiding principle — reuse, don't fork
+
+**The mock-data path is NOT a parallel stack.** It uses what's already in the workspace, with the absolute minimum new
+code on top:
+
+- **`e2e-testing` repo** — the existing harnesses (`scripts/defi/colocated_engine.py`, sports / prediction harnesses,
+  any other end-to-end runners) are the entry-point. Extend, don't re-author.
+- **`deployment-service` VM launchers** — per the workspace VM-launcher SSOT, every benchmark VM launches via
+  `deployment-service/scripts/vm/launch-*-vm.sh`. Add a `launch-benchmark-vm.sh` if missing; do NOT spin VMs from outside
+  the SSOT.
+- **Service repos as-is** — every service (features-* / ml-* / strategy-service / execution-service / position-balance /
+  risk / mtds / mdps / instruments) runs the exact same code path under benchmark as it does under prod. NO benchmark
+  forks of service code, NO `if benchmark_mode:` branches, NO mock-mode shims inside service business logic. The seam
+  is at data-source + bucket-name, not inside the service.
+- **Non-prod buckets, same bucket structure** — benchmark runs read / write to a separate bucket suffix (e.g.
+  `<prefix>-benchmark-` instead of `<prefix>-` for prod) but with **the exact same internal hive partitioning, parquet
+  schema, manifest layout, and path templates**. Per CLAUDE.md "VM Naming Convention" + the `VM_PREFIX_TO_BUCKET`
+  registry, this is a 1-line registry addition + a `--bucket-suffix benchmark` flag through `UnifiedCloudConfig`, not a
+  reader-side fork.
+- **Same code paths as much as possible** — a benchmark VM running features-volatility loads the same Python module,
+  same UAC contracts, same UTL helpers, same `ManifestWriter`, same `ApiKeyReloader`, same shard-level-failure-isolation
+  loop as prod. The data it consumes is synthetic + the bucket it writes to is benchmark-suffixed; everything else is
+  byte-for-byte identical to prod.
+
+**Why the reuse discipline matters.**
+
+1. **Bottleneck attribution.** A benchmark that runs through a parallel stack measures the parallel stack's bottlenecks,
+   not prod's. The whole exercise is wasted if the answer doesn't transfer.
+2. **Drift.** Per CLAUDE.md "Two teammates × multiple parallel agents" — a parallel stack rots faster than the prod
+   stack because nobody runs it as their day job. By cutover week, the mock stack is N commits behind prod and the
+   benchmark numbers are stale before they're reported.
+3. **Citadel-grade § 7 SSOT discipline.** "Types/schemas belong in ONE place." The same applies to harness logic, VM
+   launchers, manifest writers, reader fallbacks. A second mock-stack-only path violates the SSOT discipline by
+   construction.
+4. **Compose with existing rules.** "Plans Run To Actual Completion, Not Smoke-Test Green" applies — a benchmark that
+   runs through a parallel stack is smoke-test-green-but-not-real. The reuse discipline IS the realness gate.
+
+**The narrow exception** — synthetic-data **generators** are net-new code by definition. They live in a single SSOT
+module (`unified-trading-library/synthetic_data/` or under a designated package), produce parquets that satisfy the
+exact UAC schema contract, and write to non-prod buckets with the same path templates as prod. The generator IS the
+parallel-stack surface, scoped to data production only — every consumer downstream of the bucket runs prod code.
+
+Three concrete reasons for raising this question now:
+
+1. **De-risk the May-23 deadline.** If features-volatility or ml-training has a sub-linear bottleneck (e.g.
+   single-threaded NumPy compute, GIL contention, IO-thrash on small parquet files), discovering it 1 week before
+   cutover is a crisis; discovering it 4 weeks before is solvable. Mock-data benchmarking shifts the discovery curve
+   left.
+2. **Backfills are mid-flight + uneven.** TradFi has data; CeFi has data; DeFi backfills are incomplete (Solana LST
+   yields, on-chain fees, funding rates partial); sports + prediction lifecycles are still being canonicalized. Waiting
+   for symmetry is a multi-week stall on benchmarking that doesn't need real data.
+3. **VM-shape sizing is a P0 cost decision.** Before we provision the production fleet, we need to know "is
+   `c2-standard-16` enough for features-volatility, or do we need `c2-standard-32` / `c3-highcpu-44`?" Mock-data
+   benchmarking is the cheapest way to answer.
+
+The audit is not "grep for mock fixtures." It's **"can the operator launch a VM today using
+`deployment-service/scripts/vm/launch-benchmark-vm.sh`, with the existing service code unmodified, reading synthetic
+data from a `*-benchmark-*` bucket with the same hive structure as prod, drive features → ML → strategy →
+execution-backtest end-to-end, measure per-stage wall-clock + CPU + memory + IO, and produce a per-stage bottleneck
+report — without backfilling a single byte of real market data and without forking any service code path."** Every gap
+is a pre-cutover prerequisite.
+
+## Question
+
+### Block A — Schema knowledge: do we know enough to generate the right shape?
+
+A1. **Per-data_type input schema — feature consumers.** For every `(asset_group, data_type)` that any features-* service
+consumes, do we have a canonical schema declaration in UAC describing exactly the parquet columns + types +
+cardinalities a mock generator must produce? Specifically:
+
+- **CeFi tick data** — `ticks`, `ohlcv_1m`, `ohlcv_15m`, `ohlcv_1h`, `funding_rate`, `open_interest`, `liquidations`,
+  `book_top`, `trades` per venue + instrument_type (spot / perpetual / option / future).
+- **DeFi data** — `gas_fees`, `lst_rates`, `vault_metrics`, `lending_indices`, `dex_swaps`, `pool_state`,
+  `oracle_prices` per chain + protocol.
+- **TradFi data** — `ohlcv_1m`, `ohlcv_15m`, `options_chain` (per ES.OPT 11-cluster taxonomy), `futures_chain`, ETF tick
+  / quote.
+- **Sports data** — `fixtures`, `lineups`, `injuries`, `fixture_events`, `fixture_stats`, `player_stats`,
+  `odds_snapshot`, `odds_movement`, `arbitrage`, `weather`, `understat_xg`, `sfi_progressive`.
+- **Prediction data** — CLOB ticks per `canonical_question_group`, market lifecycle (`market_created_at` /
+  `resolution_time` / `settlement_time`), per-market_id state.
+
+A2. **Per-feature-group input contract.** For every feature_group declared in UAC's `feature_group → required_inputs`
+DAG (referenced by CLAUDE.md "shard-granularity SSOT"), do we know the EXACT inputs (data_types + shard atoms + temporal
+window) the feature compute reads? If the DAG exists in code but not in a parsable SSOT, mock-data generation can't be
+fully automated.
+
+A3. **Per-ML-pipeline input contract.** For every ML training pipeline + inference pipeline (model_family declared in
+UAC), do we know which feature_groups feed it + which target / label columns exist + per-window cardinality?
+
+A4. **Per-strategy / archetype input contract.** For every strategy archetype (`carry_staked_basis`,
+`leveraged_funding_arb`, sports archetypes, prediction archetypes), do we know the exact features + market data the
+signal generator reads?
+
+A5. **Execution-service backtest input contract.** The execution-service matching engine consumes simulated orders +
+tick history. For the matching engine in batch / paper mode:
+
+- What's the exact tick history schema it reads (per venue + instrument_type)?
+- What metadata about the venue (fee tier, liquidity profile, latency model) does it need?
+- What order-stream shape does the strategy → execution boundary produce?
+
+A6. **`available_at` write-time discipline in mock data.** Per CLAUDE.md "available_at is a write-time column, never
+derived at read-time" + per-source stamping rules. Mock generators MUST stamp `available_at` correctly, or
+`LookaheadBiasError` will fire on every features compute. Audit: do we have per-source stamping helpers
+(`unified_trading_library.availability_stamping.stamp_available_at_*`) wired into generators?
+
+A7. **Honest-absence + 4-state taxonomy in mock data.** Per CLAUDE.md, every shard's manifest row is one of `captured` /
+`empty_confirmed` / `attempted_failed` / `expected_unattempted`, and parquet rows reflect honest gaps. Mock generators
+must produce a representative mix — not just 100%-captured days — or downstream NaN-handling code paths are never
+exercised under benchmark.
+
+A8. **Schema versioning + drift.** Has the schema for any data_type changed in the last 6 months (column added /
+dropped / renamed)? If yes, are mock generators version-aware?
+
+### Block B — Reuse audit: existing e2e-testing + deployment-service + service-repo surface
+
+B1. **`e2e-testing` repo inventory — what's already there?** Per CLAUDE.md "Peripheral Script Directories Under
+Primary-Consumer QG" the `e2e-testing/scripts/` tree contains harnesses imported by primary consumers. Audit each
+sub-directory for benchmark-relevant shape:
+
+- `e2e-testing/scripts/defi/colocated_engine.py` — paper-trade harness for the colocated DeFi engine. Does it support
+  synthetic-data injection? Does it emit per-stage timing? Per CLAUDE.md it had a `get_strategy_factories` import-rot
+  incident — is it currently green?
+- `e2e-testing/scripts/sports/` — sports end-to-end harnesses.
+- `e2e-testing/scripts/prediction/` — prediction harnesses.
+- Any per-asset_group harness, per-archetype harness, per-service smoke harness.
+
+For each: (a) what it does today, (b) whether it can drive on synthetic input, (c) whether it emits structured event
+timing per stage.
+
+B2. **`deployment-service/scripts/vm/` launchers — what's already there?** Per CLAUDE.md "VM launcher script SSOT" every
+launcher lives here. Audit:
+
+- Existing launcher patterns (`launch-cefi-*-vm.sh`, `launch-tradfi-*-vm.sh`, `launch-mtds-*-backfill-vm.sh`,
+  `launch-sfi-forward-poll.sh`, `launch-vm-zombie-watchdog.sh`, etc.).
+- Tarball / tarball-from-local / sibling-clone modes — which is right for benchmark VMs (probably tarball-from-local
+  during dev iteration, tarball for CI).
+- Singleton-lock pattern — benchmark VMs probably want singleton-lock per benchmark-name to avoid two simultaneous runs
+  clobbering shared mock buckets.
+- `VM_PREFIX_TO_BUCKET` watchdog dict — needs `benchmark-` prefix entry pointing at non-prod bucket.
+- Event-stream verification per `No fire-and-forget VM launches` HARD RULE — the benchmark launcher must emit STARTED +
+  per-stage progress + STOPPED.
+
+B3. **Service-repo benchmark / profile entrypoints.** Per service, audit for existing benchmark scripts:
+
+- features-* services — `scripts/benchmark/*.py`, `scripts/profile/*.py`, perf tests under `tests/perf/`.
+- ml-training-service — per-model-family training profile.
+- ml-inference-service — per-batch inference latency / throughput.
+- strategy-service — per-archetype signal-generation timing.
+- execution-service matching-engine — fill-simulation throughput.
+- position-balance-monitor — position-update latency under load.
+- risk-and-exposure-service — pre-flight risk-check latency.
+- mtds — adapter throughput per venue (the recent `ParallelPerSymbolRunner` work has implicit timing measurement).
+- mdps — bar-aggregation throughput per (venue, data_type).
+
+For each: (a) entrypoint exists / partial / missing, (b) whether it consumes the SSOT generator surface (Block C) or
+ad-hoc fixtures.
+
+B4. **Synthetic-data generator inventory — workspace-wide.** What synthetic-data generators exist today?
+
+- **CeFi tick generators** — random walk + tick discretization + bid-ask spread + trade-flow.
+- **OHLCV bar generators** — bars from ticks + corner cases (gaps, halts).
+- **Funding / OI / liquidation generators** — periodic event streams.
+- **DeFi data generators** — gas-price walks, LST rate walks, lending-index curves, pool-state evolutions, oracle-price
+  feeds.
+- **TradFi options-chain generators** — Black-Scholes-driven IV surfaces + 11-cluster ES.OPT shape.
+- **Sports data generators** — fixture schedule + per-fixture event timeline + per-fixture odds curve.
+- **Prediction CLOB generators** — order-book snapshots + canonical-question-group lifecycles.
+- **Order / fill stream generators** — execution-service input.
+- **Feature-output generators** — synthetic feature parquets to test ML / strategy independent of upstream feature
+  compute.
+
+For each: file location, current realism axis, parametric scaling support, schema-version awareness.
+
+B5. **Coverage gaps — which data_types have NO generator today?** Per the inventory in B4, enumerate every
+`(asset_group, data_type)` with no synthetic generator. These are pre-benchmark blockers.
+
+B6. **Realism axis — how realistic do generators need to be?** Bottleneck benchmarking has different realism needs than
+correctness testing:
+
+- **CPU-bound bottleneck measurement** — needs realistic row counts + column types + cardinalities + per-day shard
+  distribution. Doesn't need realistic price dynamics.
+- **Memory-bound bottleneck measurement** — needs realistic per-shard parquet file sizes + group-by cardinalities.
+- **IO-bound bottleneck measurement** — needs realistic shard-count-per-day + parquet-file-count + GCS / S3 listing
+  depth.
+- **Algorithmic-correctness benchmarking** — needs realistic dynamics (autocorrelation, vol clustering, fat tails).
+
+Most bottleneck work is in the first three buckets. Audit: which axis does each existing generator target?
+
+B7. **Per-shard-key parametric scaling.** For benchmarking VM shape, generators must dial up / down:
+
+- Number of instruments per (venue, day) — small (5) / medium (50) / large (500).
+- Tick density per instrument-day — sparse (1k/day) / medium (100k/day) / dense (10M/day).
+- Number of feature_groups computed per day.
+- Feature window-length (rolling-N-bars where N varies).
+
+Audit: are existing generators parametric on these axes, or do they hard-code shapes?
+
+B8. **Realistic NaN / missing-data ratios.** Per CLAUDE.md "honest absence" — DeFi has empty_confirmed days
+(pre-genesis), sports has paused-league windows, prediction has pre-market-creation windows. Mock generators must
+reproduce these distributions.
+
+B9. **Cross-source merge behaviour for mock data.** Per CLAUDE.md `SOURCE_PRIORITY` + multi-source merge. Some
+data_types have multiple sources. Do generators support multi-source mode (produce 2+ source streams that merge per
+priority order)?
+
+### Block C — Bucket + path SSOT for non-prod runs
+
+C1. **Bucket-suffix discipline — `*-benchmark-*` namespace.** Per the reuse principle, benchmark runs use separate
+buckets but the same internal structure. Audit:
+
+- Current `UTL@bucket_naming.py` SSOT (per Tab 4 work `UTL@780a9575`) — does it already support a `--bucket-suffix` /
+  `--env benchmark` knob?
+- `UnifiedCloudConfig` mediation — is the bucket-prefix selection threaded through UCI such that a single env-var flips
+  every consumer + writer atomically, or is bucket-naming spread across many call-sites?
+- Per asset_group, per cloud (GCP + AWS) — list of benchmark buckets needed (one per prod bucket today, OR a single
+  benchmark bucket covering all asset_groups for the duration of the experiment).
+
+C2. **Path templates + hive partitioning — same as prod.** The on-disk shape inside the benchmark buckets MUST match
+prod byte-for-byte:
+
+- Hive partitioning vocab (`asset_group=` canonical, `category=` legacy preserved).
+- `data_type=`, `venue=`, `chain=`, `instrument_type=`, `day=YYYY-MM-DD`, `instrument_id=` (or chain-bundle for bundled
+  data_types).
+- Manifest path templates (`_index/availability_index.parquet`, `_index/per_vm/{vm_name}.parquet`).
+- Per-asset_group reader fallback paths — `category=` legacy first-then-canonical, etc.
+
+If any consumer reads via hardcoded path (not the UTL helper), the benchmark-bucket variant won't be found.
+
+C3. **Bucket provisioning + lifecycle.** Who provisions the benchmark buckets, on what cadence?
+
+- One-time at benchmark-run start, torn down after the run completes (cheap, but loses regression-tracking history).
+- Persistent benchmark buckets per asset_group, retained with lifecycle policies (1-week / 1-month TTL on parquets).
+- Per-experiment buckets with a UUID suffix for parallel benchmark runs.
+
+C4. **Reader-side bucket-suffix awareness.** Consumers (features-* / ml-* / strategy / execution / position-balance /
+risk) must read from `*-benchmark-*` when in benchmark mode. Audit:
+
+- Does every consumer read bucket via UCI (the right path) or via `os.environ` + hardcoded prefix?
+- Per the rule "no `os.getenv()` for credentials" — does the same discipline extend to bucket-name resolution?
+- Hot-reload / runtime-flip — can a single env-var on the benchmark VM redirect every read + write to the benchmark
+  bucket without code changes?
+
+C5. **Manifest-bucket parity.** The availability manifest IS the SSOT for "what data exists." Benchmark runs need a
+benchmark-bucket manifest with the same schema as prod, populated by the synthetic-data generators (which call
+`record_captured` / `record_empty` / `record_failed` / `record_expected_unattempted` exactly as prod adapters do). No
+fork of `ManifestWriter`, no shortcut "just put the parquets there and fake the manifest."
+
+### Block D — End-to-end harness reuse
+
+D1. **`e2e-testing` harness extension over fork.** For each existing harness, the benchmark variant is a `--mode
+benchmark` flag (or equivalent) that:
+
+- Switches data source from real-bucket to benchmark-bucket (single env-var per C4).
+- Wraps each stage in a timing span (per D3).
+- Emits structured events on the same event-stream contract as prod harnesses.
+- Auto-shutdowns the VM with results uploaded to a benchmark-results bucket.
+
+NO new harness files unless absolutely necessary. NO copy-paste of `colocated_engine.py` to
+`colocated_engine_benchmark.py`.
+
+D2. **Single benchmark-runner entrypoint.** Define ONE script (location TBD —
+`deployment-service/scripts/vm/run-pipeline-benchmark.sh` OR `e2e-testing/scripts/benchmark/run-pipeline-benchmark.sh`)
+that:
+
+- Takes `--asset-group` + `--archetype` + `--mode {paper,batch}` + `--scale {small,medium,large,custom-spec}` flags.
+- Routes to the appropriate existing `e2e-testing` harness with the right env-vars set.
+- Emits per-stage events with timing.
+- Aggregates a bottleneck report.
+
+D3. **Profiling instrumentation — additive, not invasive.** Per the reuse principle, profiling lives outside service
+code:
+
+- `cProfile` / `py-spy` / `austin` attached at process boundary by the launcher (no `import cProfile` inside
+  features-volatility business logic).
+- `memray` / `memory_profiler` attached at process boundary.
+- IO counters from `/proc/<pid>/io` polled by a watchdog goroutine in the launcher script.
+- OpenTelemetry spans via the existing event-stream contract — service emits `STAGE_STARTED` / `STAGE_COMPLETED` events
+  with per-stage metadata; the bottleneck report aggregator parses these from the event stream.
+
+If service code needs to be modified to emit per-stage events, that's a prod-relevant improvement (same event in prod
+benefits observability) — ship it as a service-side change with the benchmark consumer, not as a benchmark fork.
+
+D4. **VM-launch chain reuse.** The benchmark VM launches via `deployment-service/scripts/vm/launch-benchmark-vm.sh` (new
+script, but pattern-matched to existing launchers). VM behaviour:
+
+- Pulls tarball per CLAUDE.md "VM tarball deployment" — same tarball as prod.
+- Sets `CLOUD_PROVIDER` + `BUCKET_SUFFIX=benchmark` (or equivalent) — single env-var diff vs prod.
+- Sets `VM_NAME=benchmark-<asset_group>-<archetype>-<scale>-<RUN_TS>` per VM Naming Convention.
+- Registers prefix `benchmark-` in `VM_PREFIX_TO_BUCKET` watchdog dict pointing at benchmark events bucket.
+- Auto-shutdowns at benchmark completion + emits `STOPPED` event with full result link.
+
+### Block E — Bottleneck taxonomy: what are we measuring?
+
+E1. **Per-stage wall-clock breakdown.** For each downstream stage, the canonical bottleneck-classification axes:
+
+- **CPU-bound** — single-threaded compute, GIL contention, NumPy / Pandas operation cost.
+- **Memory-bound** — peak RSS, swap thrashing, GC pause time.
+- **IO-bound** — parquet read latency, GCS / S3 listing depth, per-file open/close cost.
+- **Network-bound** — cross-cloud reads (AWS ↔ GCP), Pub/Sub latency.
+- **Algorithmic** — known O(N²) loops, redundant recomputation, no-vectorization Pandas anti-patterns.
+
+E2. **Per-stage scaling characteristics.** How does each stage scale with: number of instruments, tick density per
+instrument, number of feature_groups, number of strategies, number of clients (per the client-flow question doc)?
+
+E3. **Per-stage VM-shape recommendation.** Output of the benchmark: per stage, the recommended (instance-shape,
+parallelism degree, memory headroom) for the production fleet. Feeds deployment-service VM provisioning + cost
+forecasting.
+
+E4. **Bottleneck remediation backlog.** Findings from benchmark runs feed a backlog: "features-volatility is
+single-threaded, fixable via Numba; ml-training is IO-bound, fixable via parquet pre-cache; strategy-backtest has GIL
+contention, fixable via process-pool fan-out." Each becomes a P0 / P1 / P2 todo folded into the appropriate epic plan.
+
+### Block F — End-to-end audit recipe — verifying the system today
+
+F1. **One-stop benchmark entrypoint script.** Script that, run from a benchmark VM, executes the full per-stage
+benchmark suite + emits a bottleneck report (covered in D2).
+
+F2. **Owner declaration per `Runbook Execution-Owner SSOT` HARD RULE.** This script needs an `execution.owner`:
+
+- Owner — which Tab / cron / service maintainer.
+- Cadence — pre-cutover one-shot, plus weekly continuous-verification post-cutover.
+- Verifier — explicit threshold per stage (e.g. "features-volatility per-day < 30min on c2-standard-16").
+- `last_executed` — populated once the benchmark runs.
+
+F3. **Per-mode benchmark variants.**
+
+- **Paper mode** — exercises full live-pipeline shape with synthetic upstream data.
+- **Batch mode** — exercises 2-year backtest shape on compressed synthetic data (e.g. 7 days of high-density mock data
+  simulating 2 years of bottleneck pressure).
+- **Live mode** — pre-cutover, can't truly benchmark without real venues; defer to `paper_vs_live_workflow_maturity` Q.
+
+F4. **Per-archetype benchmark variants.** Per archetype, drives only the relevant feature_groups + ML pipelines +
+strategy.
+
+F5. **Continuous-verification path.** Per the `Master Plan Continuous-Verification Column` HARD RULE, the benchmark
+output feeds a per-stage threshold gate. If features-volatility regression-detects at +30% wall-clock vs baseline, P0
+alert.
+
+F6. **Pre-cutover gate — May-23 sign-off.** Define the explicit benchmark-readiness gate:
+
+- Per-stage benchmark green per F2 thresholds.
+- VM-shape decisions ratified per stage.
+- Bottleneck remediation backlog items P0-tagged for fix-before-May-23, P1+ deferred to post-cutover.
+
+### Block G — Composability with adjacent question docs
+
+G1. **Composes with `batch_live_design_symmetry_2026_05_08.md`.** The reuse principle in this doc is the operational
+expression of batch=live design symmetry — benchmark runs through the same code paths as prod, only fill-source +
+bucket-suffix differ.
+
+G2. **Composes with `topology_features_strategy_ml_execution_2026_05_08.md`.** The runtime topology decisions there
+constrain benchmark targets — we benchmark the colocated configurations in the topology doc, not arbitrary fan-outs.
+
+G3. **Composes with `paper_vs_live_workflow_maturity_2026_05_08.md`.** Paper mode (G1 there) is a benchmark target; the
+maturity gates inform what "ready to benchmark" means.
+
+G4. **Composes with `api_keys_wallets_accounts_readiness_2026_05_08.md`.** Mock-data benchmarking requires NO live venue
+/ wallet credentials — the credential-light path that lets us measure compute throughput before credentials block.
+
+G5. **Composes with `disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md`.** Circuit-breaker latency under
+load is itself a benchmark stage; reconciliation throughput on synthetic data is a benchmark target.
+
+G6. **Composes with `defi_readiness_catalogue_2026_05_08.md`.** The DeFi data catalogue defines what data_types exist;
+the benchmark suite needs mock generators per cataloged DeFi data_type.
+
+G7. **Composes with `live_pipeline_mtds_mdps_features_2026_05_08.md` + `features_repo_consolidation_2026_05_08.md`.**
+The live-pipeline architecture decisions become benchmark VM-shape targets; features-consolidation must land before the
+unified features benchmark surface is well-defined.
+
+## What "answered" looks like
+
+- A canonical plan exists in `plans/active/mock_data_pipeline_benchmarking_<date>.md`. The plan has per-Block phases:
+  Block B (reuse audit + generator gap-fill), Block C (bucket SSOT + non-prod path discipline), Block D (harness
+  extension), Block E (bottleneck taxonomy SSOT), Block F (audit-recipe + entrypoint script).
+- A codex SSOT in `codex/05-infrastructure/synthetic-data-benchmarking.md` (NEW) describes the workspace approach:
+  reuse-not-fork principle + per-asset_group generator inventory + bucket-suffix SSOT + parametric axes + bottleneck
+  taxonomy + benchmark-runner architecture + per-stage thresholds.
+- A workspace-wide benchmark-runner exists at the right SSOT location (TBD per D2 — likely
+  `deployment-service/scripts/vm/launch-benchmark-vm.sh` + `e2e-testing/scripts/benchmark/run-pipeline-benchmark.sh`),
+  runnable per `--asset-group` + `--archetype` + `--mode` + `--scale` flag.
+- Per-asset_group + per-data_type mock generators exist in a single SSOT module
+  (`unified-trading-library/synthetic_data/` candidate), parametric on B7 axes, schema-version-aware per A8, calling
+  `ManifestWriter.record_*` exactly as prod adapters do.
+- Each downstream service (features / ml-training / ml-inference / strategy / execution-matching-engine /
+  position-balance / risk) has a `scripts/benchmark/` entrypoint that consumes the SSOT generator surface + emits
+  structured-event timing per stage (per D3 — additive instrumentation, no service-side forks).
+- The benchmark-runner launches via `deployment-service/scripts/vm/launch-benchmark-vm.sh` per the workspace VM-launcher
+  SSOT, with event-stream verification per `No fire-and-forget VM launches` HARD RULE.
+- Benchmark buckets are provisioned per C1-C3, with the same internal structure as prod buckets (hive vocab + path
+  templates + manifest layout). Reader/writer code paths are identical to prod modulo a single bucket-suffix env-var.
+- Initial benchmark runs against representative mock data are complete; per-stage bottleneck report exists as a codex
+  appendix or PM-archived artifact.
+- Bottleneck remediation backlog exists as P0 / P1 / P2 items folded into appropriate epic plans (ml_and_features_master,
+  strategy_and_dart_master, infrastructure_master).
+- Per-stage thresholds + continuous-verification path are wired into the master plan's continuous-verification column
+  for relevant Group F items (item 17 paper-trade smoke runtime, item 18 batch backtest runtime).
+- Service-readiness checklist gates per the master plan's per-service matrix get a "benchmark-passed" sub-gate.
+- **Reuse-not-fork audit passes**: zero benchmark-only forks of service business logic; zero `if benchmark_mode:`
+  branches inside services; bucket-suffix is the only env-var diff between benchmark + prod runs of the same code path.
+
+## Audit findings (to be filled by audit pass)
+
+For each sub-question above (A1-A8, B1-B9, C1-C5, D1-D4, E1-E4, F1-F6, G1-G7):
+
+- **Code state**: <which repos / files / line numbers contain generators / harnesses / benchmarks today; what's missing>
+- **Reuse state**: <does the existing harness / launcher / service code already support the reuse principle, or does it
+  hardcode prod-only paths>
+- **Schema state**: <UAC schema declaration completeness per data_type; DAG SSOT status>
+- **Generator state**: <per data_type, generator exists / partial / missing; parametric axes coverage; manifest-writer
+  parity>
+- **Harness state**: <per service, benchmark entrypoint exists / partial / missing; profiling instrumentation; reuse vs
+  fork>
+- **Bucket state**: <bucket-suffix discipline status; UnifiedCloudConfig mediation; reader-side bucket-suffix awareness>
+- **VM-launch state**: <launcher exists / missing; event-stream wiring status; VM_PREFIX_TO_BUCKET registry>
+- **Run state**: <when last benchmark was actually run end-to-end against synthetic data; outcome; per-stage timings>
+- **Threshold state**: <do per-stage bottleneck thresholds exist anywhere; if yes, where>
+- **Codex state**: <which codex docs cover this surface today; gaps>
+- **Gap analysis**: <what's missing for the "answered" criteria; concrete pre-cutover blockers; pre-requisite ordering>
+
+## Operator notes / answers
+
+- **2026-05-10 — operator direction (this doc's framing)**: "Use `e2e-testing`, `deployment-service`, and the service
+  repos — use what's there when we can. Of course not the same buckets as prod, but same bucket structure. As much of
+  the same code paths as possible." Codified in this doc's `## Guiding principle — reuse, don't fork` section as the
+  primary constraint on benchmark architecture.
+
+Operator clarifications likely needed during iteration:
+
+- Realism-axis target — do we need axis-1/2/3 (cheap parametric for bottleneck-only), axis-4 (calibrated dynamics for
+  algorithmic correctness), or both?
+- Pre-cutover priority ordering — which stage's benchmark is most important (features vs ML vs strategy vs
+  execution-backtest)?
+- VM-shape budget — per-stage cost ceiling.
+- Continuous-verification cadence post-cutover — daily / weekly / per-PR.
+- Benchmark-bucket lifecycle — ephemeral per-run, persistent per-asset_group, or per-experiment UUID-suffixed.
+- Synthetic-vs-real-data trade-off — when real backfills land per asset_group, do we switch the benchmark to real data,
+  or keep synthetic for reproducibility?
+
+## Iteration log
+
+| Date       | Author              | Change                                                                                |
+| ---------- | ------------------- | ------------------------------------------------------------------------------------- |
+| 2026-05-08 | ikenna + main agent | Initial draft created (later lost — uncommitted)                                      |
+| 2026-05-10 | ikenna + main agent | Recreated with `## Guiding principle — reuse, don't fork` section per operator direction; reframed Block B as "Reuse audit"; added Block C (bucket+path SSOT for non-prod runs); added Block D (end-to-end harness reuse); reuse-not-fork audit added to "What 'answered' looks like" |
+
+## Plan-shape decisions (filled before plan extraction)
+
+- **Plan name + path**: TBD (likely `plans/active/mock_data_pipeline_benchmarking_<date>.md`, possibly with sub-plan
+  fan-out per stage)
+- **Plan type**: `code` (generators + harness extensions) + `infra` (benchmark VM launcher + non-prod bucket
+  provisioning + result storage) + `business` (threshold-setting + bottleneck remediation prioritization)
+- **Owner side**: likely both — Ikenna for threshold-setting + bottleneck remediation prioritization + VM-shape
+  decisions, Harsh for generator implementation + harness extensions + benchmark-runner script + bucket SSOT wiring +
+  result-aggregation pipeline
+- **Codex SSOTs touched**:
+  - `codex/05-infrastructure/synthetic-data-benchmarking.md` — NEW — workspace SSOT (reuse principle + generator
+    architecture + bucket-suffix SSOT + bottleneck taxonomy + benchmark-runner)
+  - `codex/02-data/contracts-scope-and-layout.md` — UPDATE — link to per-data_type generator inventory
+  - `codex/05-infrastructure/runtime-tiers-and-deployment.md` — UPDATE — benchmark-VM tier + per-stage shape
+    recommendations
+  - `codex/05-infrastructure/vm-tarball-deployment.md` — UPDATE — benchmark-VM launcher pattern
+  - `codex/05-infrastructure/launcher-script-ssot.md` — UPDATE — `launch-benchmark-vm.sh` registration
+  - `codex/04-architecture/batch-live-architecture.md` — UPDATE — benchmark-mode-as-batch-mode-with-synthetic-input
+    framing
+  - `codex/06-coding-standards/quality-gates.md` — UPDATE — per-service benchmark entrypoint as a soft-gate
+- **Cross-plan dependencies**:
+  - `plans/active/master_to_live_defi_2026_05_23.md` — Group F items 17 + 18 reference benchmark thresholds for sign-off
+  - `plans/epics/ml_and_features_master_2026_05_07.md` — features + ML benchmarking sits under this epic
+  - `plans/epics/strategy_and_dart_master_2026_05_07.md` — strategy + execution-backtest benchmarking sits under this
+    epic
+  - `plans/epics/infrastructure_master_2026_05_07.md` — VM launcher + benchmark-runner + non-prod bucket provisioning
+    sits under this epic
+  - `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` — live-pipeline shape constrains benchmark target
+    topology
+  - `plans/active/features_repo_consolidation_2026_05_08.md` — features consolidation is a prerequisite for unified
+    features benchmark surface
+  - `plans/questions/batch_live_design_symmetry_2026_05_08.md` — reuse principle is the operational expression of the
+    symmetry SSOT
+  - `plans/questions/topology_features_strategy_ml_execution_2026_05_08.md` — topology decisions become benchmark
+    targets
+  - `plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md` — paper-mode benchmark variant
+  - `plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md` — credential-light path
+  - `plans/questions/disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md` — circuit-breaker latency as
+    benchmark stage
+  - `plans/questions/defi_readiness_catalogue_2026_05_08.md` — DeFi data catalogue feeds generator gap-list
+- **Estimated scope**: Medium — ~5-8 AI-days for generator gap-fill + harness extensions + bucket SSOT wiring +
+  benchmark-runner script + initial run + bottleneck report + codex SSOT. Breakdown: Block B (reuse audit +
+  generators) ~2-3d, Block C (bucket SSOT) ~1d, Block D (harness extensions + launcher) ~1-2d, Block E (taxonomy
+  SSOT) ~0.5d, Block F (entrypoint + run) ~1d, Codex docs + cross-plan threading ~0.5-1d.
+
+## Plan extraction record
+
+(Empty — fills when the plan ships.)
