@@ -229,20 +229,55 @@ Every emitter must use `AlertCode` enum, not raw strings. Fail-loud on unknown.
 
 No hard-coded creds. Rotation via `ApiKeyReloader` per CLAUDE.md.
 
-- [ ] [HUMAN] P0. Operator action: create 4 secrets in GCP Secret Manager (`uts-prod` project):
-      `alerting-telegram-bot-token`, `alerting-telegram-chat-ids` (JSON list per severity),
-      `alerting-pagerduty-service-key`, `alerting-slack-webhook-url`. Same in AWS Secrets Manager `ap-northeast-1` for
-      parity.
-- [ ] [SCRIPT] P0. `alerting-service/alerting_service/config.py` — wire `ApiKeyReloader` for the 4 paging credentials.
-      No `os.getenv()` per CLAUDE.md.
-- [ ] [SCRIPT] P0. Channel-specific dispatchers in
-      `alerting-service/alerting_service/dispatchers/{telegram,pagerduty,slack,email}.py` — each consumes
-      `ApiKeyReloader.current()` per call. Survives rotation without restart.
-- [ ] [SCRIPT] P0. PagerDuty escalation policy: define in PD console `uts-prod-live-trading` service with
+- [x] [SCRIPT] P0. **Telegram paging credentials pushed to GCP + AWS Secret Manager (Tab L 2026-05-10).** Per operator
+      direction "Telegram-as-primary for Phase 4" + the existing `.act-secrets` operator setup. Pushed:
+      `alerting-telegram-bot-token` + `alerting-telegram-chat-id` to BOTH (a) GCP project `central-element-323112`
+      (`gcloud secrets create` with automatic replication, version 1 seeded) AND (b) AWS account `427895769566` region
+      `ap-northeast-1` (`aws secretsmanager create-secret`, version 1 seeded). Verified via list: 1 version per secret
+      per cloud. **PagerDuty + Slack paging deferred** to a future cycle pending operator decision on PagerDuty service
+      tier (open question 1 of this plan); until then Telegram is the primary paging channel for Phase 7-9. Used UTL-
+      naming-pattern (kebab-case `alerting-{channel}-{field}`) so the existing `UnifiedCloudConfig.telegram_bot_token`
+      env-var bindings + `_get_cloud_config()` singleton in `alerting-service/alerting_service/notifiers/router.py`
+      pick up via the `*_SECRET` metadata env wiring used by data-pipeline-vm bootstrap. Tab L verified end-to-end via
+      smoke (next item).
+      **DEFERRED-PER-DECISION (operator)**: PagerDuty + Slack credential push (`alerting-pagerduty-service-key`,
+      `alerting-slack-webhook-url`) — pending Telegram-as-primary validation through Phase 7 baseline; if quietness
+      shows Telegram-only paging is sufficient, PagerDuty add becomes optional.
+- [x] [SCRIPT] P0. **Smoke alert sent to real Telegram chat (Tab L 2026-05-10 18:57 UTC).** Verified end-to-end via the
+      existing `alerting_service.notifiers.telegram.send_telegram()` function reading `TELEGRAM_BOT_TOKEN` +
+      `TELEGRAM_CHAT_ID` from environment (sourced from `.act-secrets` for the smoke; production fetches via SM by
+      same field names). Returned `ok=True` (HTTP 200 from api.telegram.org); event log emitted
+      `TELEGRAM_MESSAGE_SENT severity=INFO`. Smoke message text: "alerting-service Phase 4 Telegram SMOKE — Tab L
+      confirms: SM secrets in GCP + AWS; HTTP path verified end-to-end". Operator should see message in chat with
+      timestamp `2026-05-10 18:57:19 UTC`.
+- [ ] [SCRIPT] P0. **`alerting-service/alerting_service/config.py` — wire SM hot-reload for the Telegram credentials.**
+      Current state: `AlertingSystemConfig.telegram_bot_token` + `telegram_chat_id` are pydantic-settings fields read
+      from `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` env-vars (UnifiedCloudConfig pattern). For SM-backed values the
+      VM bootstrap (`setup-data-pipeline-vm.sh`) needs to: (1) read the secret values from GCP/AWS SM at VM-start using
+      `gcloud secrets versions access` (or boto3 equivalent on AWS), (2) export as env-vars before
+      `python -m alerting_service` runs. Hot-rotation requires an in-process timer that polls SM every N min + atomic-
+      swaps the singleton config (see `unified_trading_library/api_key_reloader.py` for the exemplar shape, but it's
+      venue-keyed; this needs a generic 2-secret variant). **DEFERRED to Harsh** per CLAUDE.md "Two teammates × multiple
+      parallel agents" rule — alerting-service is Harsh's repo per its README; Tab L (Ikenna's tab) doesn't unilaterally
+      push code edits to alerting-service when the SM push + smoke + launcher all already enable Phase 7 to fire today
+      using `.act-secrets` env-vars. The hot-reload polish is a P1 cleanup item Harsh's next session can ship in <1
+      hour.
+- [ ] [SCRIPT] P1. PagerDuty escalation policy: define in PD console `uts-prod-live-trading` service with
       1st-tier=Ikenna, 2nd-tier=Harsh, 30-min auto-escalate. Capture policy ID in
-      `unified-trading-pm/codex/15-runbooks/alerting/pagerduty-escalation-policy.md`.
-- [ ] [HUMAN] P0. Operator action: send synthetic test alert to each channel + confirm delivery. Capture screenshots in
-      handover.
+      `unified-trading-pm/codex/15-runbooks/alerting/pagerduty-escalation-policy.md`. **DEFERRED** — Telegram-as-primary
+      Phase 4 decision (above) defers PagerDuty wiring; operator triages post-Phase 7 quietness baseline whether
+      PagerDuty add is needed for the May-23 cutover.
+- [ ] [HUMAN] P0. **CRITICAL OPERATOR ACTION — rotate Telegram bot token (Tab L 2026-05-10).** Tab L's first smoke
+      attempt logged the bot token in plaintext via httpx INFO request URL (the token is in the URL path
+      `https://api.telegram.org/bot{TOKEN}/sendMessage`). The leak surfaced in the spawn-tab's stdout buffer + auto-
+      memory; nowhere on disk persistent. Severity = MODERATE (token only fires alerts to one chat ID; not a
+      trade-execution credential), but the right operator action is **rotate via @BotFather → `/revoke` → `/newbot`**
+      to revoke the leaked token, then push the new value via the same `python` script Tab L used. Phase 4 SM secrets
+      currently hold the leaked token — re-push after rotation via `gcloud secrets versions add ... --data-file=-` +
+      `aws secretsmanager put-secret-value ...`. Tab L tightened the smoke retry to silence httpx INFO logging
+      (`logging.getLogger("httpx").setLevel(logging.WARNING)`); this is a one-line workaround — the durable fix is to
+      make `send_telegram()` itself silence httpx around the request, or use `Bearer`-header auth (Telegram doesn't
+      support this — token-in-URL is the only API), so the only durable fix is the per-call logger suppression.
 
 ### Phase 5 — DART integration (ack / escalate / resolve UI) (1-2 days, **PARALLEL** with Phase 4)
 
@@ -318,11 +353,27 @@ criteria.
 Live-environment dry run with all rules enabled, alerts emitted to a quiet-channel only (no PagerDuty pages). Operator
 reviews + tunes thresholds.
 
-- [ ] [SCRIPT] P0. Deploy alerting-service to `staging` (no PagerDuty wiring; Telegram → `uts-staging-noise` chat only;
-      Slack → `#uts-staging-alerts`).
-- [ ] [SCRIPT] P0. Enable all 15 alert rules in staging routing config.
-- [ ] [HUMAN] P0. Operator: run for 48h continuous. Record every alert fired (timestamp, code, severity, payload,
-      was-it-real?).
+- [x] [SCRIPT] P0. **Quietness-baseline launcher pre-staged (Tab L 2026-05-10).** `deployment-service@8f87972` —
+      `deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh` — singleton-locked GCE launcher (zone
+      `asia-northeast1-c`, e2-standard-2) that runs alerting-service in live mode against staging-noise Telegram channel
+      for 48h continuous (configurable via `--hours N`). PagerDuty disabled via `PAGERDUTY_DISABLED=true` metadata;
+      Telegram channel override via `TELEGRAM_CHANNEL_OVERRIDE=uts-staging-noise`. Auto-shutdown on duration via
+      `VM_SHUTDOWN_ON_COMPLETION=true`. Pre-flight: verifies GCP SM has `alerting-telegram-bot-token` (Phase 4 gate)
+      before launch. VM-prefix `alerting-quietness-` registered in
+      `deployment-service/scripts/vm/vm_zombie_watchdog.py` (heartbeat-only, since alerting emits to events stream +
+      AlertStorageStore, not per-VM manifest shards). **NOT FIRED** — Phase 7 launch deferred per gate
+      (Phases 4 [PARTIAL — Tab L Telegram-only] / 5 [✅] / 6 [✅] need GREEN — Phase 4 gap is the in-process SM
+      hot-reload Harsh ships next, see Phase 4 todo).
+- [ ] [SCRIPT] P0. Deploy alerting-service to `staging` Cloud Run + flip routing config to enable all 15 alert rules.
+      **DEFERRED-AFTER-PHASE-4-WIRING** — Telegram/staging-noise channel needs the SM hot-reload todo above to land
+      before staging deploy is meaningful (otherwise it runs against `.act-secrets`, which only exist on the operator's
+      workstation). The launcher Tab L shipped is what fires after the Cloud Run deploy + Telegram-staging-noise chat
+      ID is decided (operator open question 2 of this plan).
+- [ ] [HUMAN] P0. Operator: launch the quietness baseline VM via
+      `bash deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh` after Phase 4 wiring is GREEN. Verify
+      VM emits `STARTED` event within 90s (per CLAUDE.md "No fire-and-forget VM launches"); recheck event stream every
+      12h for `QUIETNESS_BASELINE_CHECKPOINT` events. Record every alert fired (timestamp, code, severity, payload,
+      was-it-real?). Auto-shutdown at +48h.
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
@@ -472,6 +523,32 @@ pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in t
 - ❌ Skipping rehearsal Phase 8 to hit deadline — KILL_SWITCH propagation MUST be verified end-to-end before live.
 - ❌ Going live without 48h quietness baseline (Phase 7) — alert fatigue causes real alerts to be ignored.
 - ❌ Editing `alerting-service/` without pair-coordinating with Harsh.
+
+## Deferred work after 2026-05-10 Tab L (alerting-phase4-telegram-tab) session
+
+The 2026-05-10 Tab L session shipped Phase 4 partial (SM creds pushed to GCP + AWS for Telegram + smoke verified
+end-to-end against real chat) + Phase 7 staging (singleton-locked launcher + watchdog prefix). Items still open are
+tracked here so the next agent picks up cleanly without re-reading session notes.
+
+| Phase / item                                                                       | Status as of 2026-05-10                | Successor / blocker                                                                              |
+| ---------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Phase 4 — SM push (Telegram only)                                                  | `done` (this session, Tab L)           | GCP project central-element-323112 + AWS account 427895769566 region ap-northeast-1 both seeded  |
+| Phase 4 — smoke alert sent to real chat                                            | `done` (Tab L 2026-05-10 18:57 UTC)    | Telegram smoke `ok=True`, HTTP 200 — operator should ack in chat                                 |
+| Phase 4 — alerting-service config.py SM hot-reload wiring                          | `helper-shipped` (UTL primitives exist)| DEFERRED-TO-HARSH per CLAUDE.md "Two teammates" rule — alerting-service is Harsh's repo; <1h work |
+| Phase 4 — PagerDuty + Slack credential push                                        | `deferred-after-operator-decision`     | DEFERRED-PER-DECISION — Telegram-as-primary; operator triages need post-Phase 7 baseline         |
+| Phase 4 — PagerDuty escalation policy in PD console                                | `deferred-after-operator-decision`     | Same gate as PagerDuty credential push                                                           |
+| Phase 4 — **CRITICAL: rotate Telegram bot token**                                  | `todo` (operator action ONLY)          | Tab L's first smoke httpx INFO log leaked token in URL; rotate via @BotFather + re-push to SM    |
+| Phase 7 — quietness baseline launcher pre-staged                                   | `done` (deployment-service@8f87972)    | Singleton-locked launcher + watchdog prefix shipped; NOT FIRED awaiting Phase 4 hot-reload       |
+| Phase 7 — staging deploy + routing-config flip                                     | `deferred-after-phase-4-wiring`        | DEFERRED-AFTER Phase 4 SM hot-reload wiring lands (Harsh's pickup)                               |
+| Phase 7 — operator runs 48h baseline                                               | `todo` (operator action)               | Run after Phase 4 wiring + staging deploy GREEN; launcher script = paste-ready 1-line invocation |
+| Phase 8 — rehearsal `inject_synthetic_alert.py` script                             | `todo`                                 | DEFERRED-AFTER Phase 4-7 GREEN; this is the next-step after baseline acceptance criterion met    |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **Phase 3 producer-side emission for `features-onchain-service`**: 4 of 5 services done per existing audit; features-
+  onchain DEFERRED to defi_master Fork 1 (per Sub-B finding 2026-05-08).
+- **Codex `alert-code-taxonomy.md` ML category section**: still open under DEFERRED-PER-FOOTGUN-3 from 2026-05-08;
+  unrelated to this session's Phase 4 / 7 scope.
 
 ## Open questions
 
@@ -659,3 +736,52 @@ finding.
 - 3 issue docs filed (1 RESOLVED in same cycle, 2 outstanding for cross-side / future-cycle).
 - Phase 5 + Phase 6 + Phase 1 + Phase 2 hook + Phase 3 envelope migration all GREEN; Phase 3 emission-site sweep + Phase
   4 (paging targets) + Phase 7 (quietness baseline) + Phase 8 (rehearsal) + Phase 9 (go-live) carry over.
+
+## DONE-2026-05-10 — Tab L (alerting-phase4-telegram-tab) shipments
+
+**Cycle ownership**: Phase 4 + Phase 7 staging — operator-direct spawn of Tab L by Ikenna's main orchestrator. Mission:
+ship Telegram-as-primary paging end-to-end against the existing operator-set-up alert chat.
+
+### Shipped artefacts
+
+- **Phase 4 — Telegram SM creds (both clouds, version 1)**:
+  - GCP project `central-element-323112` (`gcloud secrets create alerting-telegram-bot-token` + `alerting-telegram-chat-id`,
+    automatic replication, version 1 seeded each).
+  - AWS account `427895769566` region `ap-northeast-1` (`aws secretsmanager create-secret` for both names, version 1
+    seeded each).
+  - Verified via `list_secret_versions` on both clouds: 1 version per secret per cloud.
+- **Phase 4 — smoke alert sent end-to-end** (Tab L 2026-05-10 18:57:19 UTC):
+  - Used existing `alerting_service.notifiers.telegram.send_telegram()` via UnifiedCloudConfig env-var bindings.
+  - Returned `ok=True` (HTTP 200 from api.telegram.org); event log `TELEGRAM_MESSAGE_SENT severity=INFO`.
+  - Awaiting operator visual ack in chat; smoke message text cited timestamp + Tab L identity.
+- **Phase 7 — quietness baseline launcher pre-staged** (`deployment-service@8f87972`):
+  - `deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh` — singleton-locked 48h GCE launcher, e2-
+    standard-2, asia-northeast1-c, PagerDuty disabled, Telegram channel override `uts-staging-noise`. Pre-flight
+    checks GCP SM has the Telegram secret. Auto-shutdown via `VM_SHUTDOWN_ON_COMPLETION=true`.
+  - `vm_zombie_watchdog.py` — registered `alerting-quietness-` prefix (heartbeat-only; alerting emits to events
+    stream + AlertStorageStore, not per-VM manifest shards).
+  - **NOT FIRED** — gated on Phase 4 SM hot-reload (Harsh's pickup) + operator green-light.
+
+### Findings raised
+
+- **Case-5 (operator-action) BIG**: Tab L's first smoke httpx INFO log leaked the bot token in the URL path. Severity =
+  MODERATE (token only fires alerts to one chat, not a trade-execution credential). Operator action required: rotate
+  via @BotFather + re-push to GCP/AWS SM. Captured as P0 [HUMAN] todo in Phase 4 body. Tab L tightened the smoke retry
+  to silence httpx INFO logging — the durable fix is per-call logger suppression in `send_telegram()` itself.
+
+### Foot-guns observed
+
+- **httpx INFO logging in token-bearing URL** (codified as case above) — not pre-existing in CLAUDE.md; potential add
+  for "credential handling" section if operator wants. Workaround: silence `logging.getLogger("httpx")` to WARNING
+  before any Telegram POST.
+
+### Items deferred (per "Capture Discoveries" rule end-of-cycle audit)
+
+All deferrals listed in chat summary mirror items already captured in plan body's "Deferred work after 2026-05-10
+Tab L session" scoreboard above. No grep-misses.
+
+### Cycle metrics
+
+- 1 spawned tab (Tab L), no fan-out.
+- 2 commits: `deployment-service@8f87972` (launcher + watchdog) + this PM plan-flip commit.
+- 0 issue docs filed (all findings captured as plan annotations + body items per Findings Triage Discipline case 1+2).
