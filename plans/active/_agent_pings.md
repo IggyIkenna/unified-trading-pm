@@ -38,11 +38,13 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-_(operator pass 2026-05-08 ~14:30 UTC resolved 3 active pings + 27 plan-level open questions across master + 6 epics
-+ 4 active sub-plans + 1 issue doc in one sweep. All resolutions landed in `plans/active/operator_decisions_2026_05_08.md`
-AND back-flipped into per-plan `## Open questions` sections as ✅ RESOLVED. Tab 12 Q1 ✅ RESOLVED ~10:30 UTC; operator
-picked (b) Defer per features_repo_consolidation_2026_05_08 absorption. All 12 spawned tabs ✅ DONE today (3, 4, 5, 6,
-7, 8, 9, 10, 11, 12, 13, 14). Only Tab 2 (cefi-babysit) still IN FLIGHT.)_
+\_(operator pass 2026-05-08 ~14:30 UTC resolved 3 active pings + 27 plan-level open questions across master + 6 epics
+
+- 4 active sub-plans + 1 issue doc in one sweep. All resolutions landed in
+  `plans/active/operator_decisions_2026_05_08.md` AND back-flipped into per-plan `## Open questions` sections as ✅
+  RESOLVED. Tab 12 Q1 ✅ RESOLVED ~10:30 UTC; operator picked (b) Defer per features*repo_consolidation_2026_05_08
+  absorption. All 12 spawned tabs ✅ DONE today (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14). Only Tab 2 (cefi-babysit)
+  still IN FLIGHT.)*
 
 [2026-05-08 13:34 UTC] ikenna-main — predictions cluster contract fully shipped UAC+UTL (honest_coverage.py:188 +
 lifecycle.py:103 + manifest_writer.py:1948); Harsh Tab 1 MTDS writer migration unblocked, no Ikenna-side work pending;
@@ -51,13 +53,23 @@ see predictions_master_2026_05_07.md.
 [2026-05-08 ~now UTC] cefi-available-at-stamping-tab (Tab F2) — 🟡 BLOCKED on master gate A.10 UTL helper + UAC
 SOURCE_PRIORITY shape; structural mismatch (per-venue file premise, missing latency field, missing helper) doc'd in
 [issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md](issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md)
-+ cefi_master_2026_05_07.md § "Open questions" Q1; recommends Phase 1 reshape per-callsite-not-per-venue; no code
-edits made; awaiting triage.
+
+- cefi_master_2026_05_07.md § "Open questions" Q1; recommends Phase 1 reshape per-callsite-not-per-venue; no code edits
+  made; awaiting triage.
 
 [2026-05-09 00:02 UTC] polymarket-rebundling-tab (Tab F5) — 🟡 BLOCKED on UTL `record_captured(df)` contract vs MTDS
 streaming-finalize-loop (counts-only); architectural call needed (α CME-OPTIONS precedent / β UTL helper / γ bundle df
 plumb / δ ship α + Wave-2 successor); see predictions_master_2026_05_07.md § "Open questions" Q2 (PM@d1539f37); no code
 shipped; working tree clean on MTDS.
+
+[2026-05-10 14:25 UTC] pm-governance-hygiene-tab — ℹ️ INFO (no ack required): 2026-05-10 PM-only governance sweep
+shipped 13 commits: archive operator_decisions_2026_05_08 (lifecycle deadline 2026-05-09 passed) + 7 resolved issue
+docs archived (uac_utl_qg_blockers / mdps_streaming_primitives_prompt_vs_plan_conflict / alerting_phase3_envelope /
+cross_cutting_strategy_catalogue / feature_batch_handler_abc / pm_validate_plan_links / paper_trade_smoke_blocker) +
+alerting Q1 back-flip ✅ RESOLVED + manifest_v7_schema_migration_design SUPERSEDED banner pointing to
+manifest_schema_final_gate_2026_05_09 + launcher_scripts_consolidation Phase 0/1/4 flips with Phase 2/3 deferred
+annotations + 2026-05-10 audit-session deferred-work scoreboard added to work_split_2026_05_08_ikenna.md. Cross-side
+note for Harsh: no Harsh-side dependencies created; pure Ikenna-side governance hygiene.
 
 <!--
 Resolved pings (cleared 2026-05-08 ~14:30 UTC by main orchestrator on operator's behalf):
@@ -75,4 +87,3 @@ Resolved pings (cleared 2026-05-08 ~14:30 UTC by main orchestrator on operator's
   APPROVED per issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08 frontmatter `operator_decision:
   option_a_extend_v2`. Tab 6.A UNBLOCKED.
 -->
-
