@@ -18,13 +18,18 @@ orchestrate them.
 ## Layer model
 
 ```
-master_to_live_defi_2026_05_23.md   ← umbrella-of-epics (May-23 cutover master)
+master_to_live_defi_2026_05_23.md       ← umbrella-of-epics (May-23 cutover master, lives in plans/active/)
         │
-        ├── plans/epics/  (this dir)     ← 6 domain epics + 1 cross-cutting epic
+        ├── plans/epics/  (this dir)         ← 1 cross-cutting epic (.epic.md) + 10 granular masters (.md)
+        │       │                              (cefi / tradfi / sports / predictions / ml_and_features /
+        │       │                               strategy_and_dart / infrastructure / manifest_migration /
+        │       │                               manifest_evolution / instruments_live)
         │       │
         │       └─ each references ↓
         │
-        └── plans/active/                ← granular masters + sub-plans (defi_master, cefi_master, ml_and_features_master, etc.)
+        └── plans/active/                    ← granular sub-plans + defi_master (operator-pinned exception
+                │                              kept in active/ per 2026-05-08 — mid-flight + parallel-agent
+                │                              sensitivity)
                 │
                 └─ each references ↓
                        (codex/, code, scripts/)
