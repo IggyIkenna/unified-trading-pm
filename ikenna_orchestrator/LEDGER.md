@@ -54,6 +54,34 @@ number is addressable. Both go in the registry entry for clarity.
 
 ---
 
+## Today's slot assignments
+
+> **Per-tab worktree model** (codified 2026-05-10, see
+> [`../codex/05-infrastructure/per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md)). Each slot is a
+> permanent worktree at `${WORKSPACE_ROOT}/.tabs/<N>/` on branch `tab/ikennaigboaka/<N>`. Slot is durable identity;
+> theme rotates daily. Before reassigning a slot to a new theme, run
+> `bash scripts/dev/setup-tab-worktrees.sh --reset-slot <N>` (verify clean + rebase onto `origin/live-defi-rollout`).
+
+**Slot count:** 8 (initial provisioning; grow with `--add-slot <N>` when peak parallel work exceeds capacity).
+
+| Slot | Theme                       | Plan-of-record / scope                                         |
+| ---- | --------------------------- | -------------------------------------------------------------- |
+| 1    | main orchestrator + on-call | (this LEDGER) — direction-setting + Q&A dispatch + ping triage |
+| 2    | (unassigned)                | —                                                              |
+| 3    | (unassigned)                | —                                                              |
+| 4    | (unassigned)                | —                                                              |
+| 5    | (unassigned)                | —                                                              |
+| 6    | (unassigned)                | —                                                              |
+| 7    | (unassigned)                | —                                                              |
+| 8    | (unassigned)                | —                                                              |
+
+The daily work-split plan (`plans/active/work_split_<YYYY_MM_DD>_ikenna.md`) is the authoritative source for today's
+themes. This LEDGER's table mirrors that assignment for fresh tab-agents bootstrapping outside chat scrollback. When the
+work-split plan flips a slot to a new theme, the operator (or main orchestrator) updates the row above + runs
+`--reset-slot <N>` before the new theme begins.
+
+---
+
 ## Today's status (2026-05-08)
 
 ### Working model

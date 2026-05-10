@@ -69,6 +69,33 @@ Both are valid per CLAUDE.md "Daily Work-Split Process". Convention follows the 
 
 ---
 
+## Today's slot assignments
+
+> **Per-tab worktree model** (codified 2026-05-10, see
+> [`../codex/05-infrastructure/per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md)). Each slot is a
+> permanent worktree at `${WORKSPACE_ROOT}/.tabs/<N>/` on branch `tab/<harsh-user>/<N>` (replace `<harsh-user>` with the
+> actual `$USER` on Harsh's machine — set via `--operator` flag if needed). Slot is durable identity; theme rotates
+> daily. Before reassigning a slot to a new theme, run `bash scripts/dev/setup-tab-worktrees.sh --reset-slot <N>`
+> (verify clean + rebase onto `origin/live-defi-rollout`).
+
+**Slot count:** TBD (Harsh declares at first `--init`; recommended 6-8 to start).
+
+| Slot | Theme                       | Plan-of-record / scope                                         |
+| ---- | --------------------------- | -------------------------------------------------------------- |
+| 1    | main orchestrator + on-call | (this LEDGER) — direction-setting + Q&A dispatch + ping triage |
+| 2    | (unassigned)                | —                                                              |
+| 3    | (unassigned)                | —                                                              |
+| 4    | (unassigned)                | —                                                              |
+| 5    | (unassigned)                | —                                                              |
+| 6    | (unassigned)                | —                                                              |
+
+The daily work-split plan (`plans/active/work_split_<YYYY_MM_DD>_harsh.md`) is the authoritative source for today's
+themes. This LEDGER's table mirrors that assignment for fresh tab-agents bootstrapping outside chat scrollback. When the
+work-split plan flips a slot to a new theme, Harsh (or main orchestrator) updates the row above + runs
+`--reset-slot <N>` before the new theme begins.
+
+---
+
 ## Today's status (2026-05-08 D2 — afternoon reset for new 5-tab work-split)
 
 ### Tab registry
