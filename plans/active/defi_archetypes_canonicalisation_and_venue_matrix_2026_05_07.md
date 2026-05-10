@@ -156,11 +156,12 @@ already supports LEADER_HEDGE mode.
       remove the line pointing at `CARRY_BASIS_PERP` for funding arb. Leave the paired authoritative claim in
       `carry-basis-perp.md` only. **SHIPPED 2026-05-09** at PM@5fe5eabd (Phase E of
       [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](arbitrage_price_dispersion_finalisation_2026_05_09.md)).
-      Verify gates: `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'
-      codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md` returns zero hits; `rg
-      'funding-rate-dispersion'` on the same file returns 1 hit. Same commit also added the canonical
-      `funding-rate-dispersion` example slot pair (BTC + ETH USDT, 6-venue universe + dynamic best-long/best-short) to
-      both `arbitrage-price-dispersion.md` § "Example instances" and `category-instrument-coverage.md` § 11.
+      Verify gates:
+      `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'     codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
+      returns zero hits; `rg     'funding-rate-dispersion'` on the same file returns 1 hit. Same commit also added the
+      canonical `funding-rate-dispersion` example slot pair (BTC + ETH USDT, 6-venue universe + dynamic
+      best-long/best-short) to both `arbitrage-price-dispersion.md` § "Example instances" and
+      `category-instrument-coverage.md` § 11.
 - [x] [codex] P0. Update [`carry-basis-perp.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md)
       "Not in this archetype" section: keep the line "Cross-venue perp spread arbitrage (funding-rate differential
       between two perp venues for the same asset) — `ARBITRAGE_PRICE_DISPERSION`" but reword it to be authoritative
@@ -194,20 +195,30 @@ already supports LEADER_HEDGE mode.
 - [ ] [tracer-scripts] P1. Confirm `scripts/trace_arbitrage_price_dispersion.py` (or equivalent) handles the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed only `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` exist in
-      `strategy-service/scripts/`; no ARBITRAGE_PRICE_DISPERSION tracer. Tracked as Phase B in successor plan.
-      **STATUS 2026-05-10 PM (blocked-on-upstream-data)**: Phase A is complete (Tab 5 shipped A.1/A.2/A.3/A.6/A.7
-      across strategy-service@24f8494/0b4ef0e/04c0d52/1107ab7/d01661e/de9b4b0) but Phase B is blocked on UPSTREAM data
-      gaps per `agent-arb-fundrate-c2` P0 case-5 finding 2026-05-10:
+      `strategy-service/scripts/`; no ARBITRAGE_PRICE_DISPERSION tracer. Tracked as Phase B in successor plan. **STATUS
+      2026-05-10 PM (blocked-on-upstream-data)**: Phase A is complete (Tab 5 shipped A.1/A.2/A.3/A.6/A.7 across
+      strategy-service@24f8494/0b4ef0e/04c0d52/1107ab7/d01661e/de9b4b0) but Phase B is blocked on UPSTREAM data gaps per
+      `agent-arb-fundrate-c2` P0 case-5 finding 2026-05-10:
       [`plans/active/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md).
       Real-GCS probe: aster has no perp_funding directory; okx-futures raw starts 2025-01; features-delta-one-cefi has
       no contiguous 1-week window for any year. Operator triage required.
 - [ ] [P&L attribution] P1. Confirm `pnl-attribution-service` rows attribute under `ARBITRAGE_PRICE_DISPERSION` for the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed zero `ARBITRAGE_PRICE_DISPERSION` references in `pnl_attribution_service/` source (only
-      sports test fixtures use lowercase `"arbitrage"` string). Tracked as Phase C in successor plan.
-      **STATUS 2026-05-10 (blocked-after-Phase-B)**: pnl-attribution work is gated on the tracer's real-infra output
-      (per "Plans Run To Actual Completion" HARD RULE — pnl-attribution real-infra run consumes tracer output for the
-      1-week 2024 W1 window). Picks up immediately when Tab 5's tracer ships.
+      sports test fixtures use lowercase `"arbitrage"` string). Tracked as Phase C in successor plan. **STATUS
+      2026-05-10 (blocked-after-Phase-B)**: pnl-attribution work is gated on the tracer's real-infra output (per "Plans
+      Run To Actual Completion" HARD RULE — pnl-attribution real-infra run consumes tracer output for the 1-week 2024 W1
+      window). Picks up immediately when Tab 5's tracer ships. **ARCHITECTURE VERIFIED 2026-05-10**: re-audit shows
+      `pnl_attribution_service/engine/archetype_aggregator.py` IS in fact wired for `ARBITRAGE_PRICE_DISPERSION` —
+      `_SLOT_PREFIX_RE = r"^([A-Z][A-Z0-9_]+)@"` parses any archetype prefix from slot labels generically (L59), AND
+      `_FUNDING_RATE_DISP_MARKER = "-funding-rate-disp-"` (L65) matches strategy-service's
+      `archetype_slot_resolver._funding_rate_dispersion_slot()` slot label format
+      `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod`. Once
+      tracer output flows, rows already route to `by_strategy/ARBITRAGE_PRICE_DISPERSION/...` with
+      `config_variant="funding-rate-dispersion"`. The 2026-05-09 audit's "zero references" was a grep miss — the
+      regex is generic so `ARBITRAGE_PRICE_DISPERSION` doesn't appear as a literal string but is matched at runtime.
+      Pure architecture is complete; checkbox stays `[ ]` until the tracer's real-infra output validates the path
+      end-to-end per "Plans Run To Actual Completion" rule.
 
 **Gate:** Codex doc/code/plans all use `ARBITRAGE_PRICE_DISPERSION` (with config variant) for
 funding-dispersion-leveraged. No remaining references to `leveraged_funding_arb` as a standalone archetype except in

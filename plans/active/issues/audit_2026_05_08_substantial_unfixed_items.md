@@ -352,4 +352,118 @@ Two adjacent live-trading observability + testnet items surfaced during the
   column: ✗ → ◐. Full end-to-end signed-flow validation against real
   testnet credentials remains operator-driven (live-only readiness
   item per master plan).
+
+### Item #9 — CEFFU custody section population — ✅ STUB SHIPPED 2026-05-10
+
+- **execution-service@90aa381a** — `CeffuCustodyProvider` stub at
+  `execution_service/custody/ceffu.py` (172 lines): constructor with
+  `api_key` / `api_secret` / `organization_id` / `sandbox` parity with
+  Copper, HMAC-SHA256 `_sign_request()` skeleton (header naming
+  `<TBD-OPERATOR-PROVIDES-API-SPEC>`), all 4 async protocol methods
+  (`sign_transaction` / `get_balance` / `create_transfer` /
+  `list_wallets`) raise
+  `NotImplementedError("CEFFU API spec pending — operator must confirm institutional REST endpoints + auth shape + sandbox base URL")`
+  with explicit reference to codex doc + master Group F Item 19.
+- **execution-service@90aa381a** — Factory registration in
+  `execution_service/custody/factory.py`: `provider="ceffu"` (case-
+  insensitive) routes to `CeffuCustodyProvider`. Factory-level case
+  added between `copper` and the unknown-provider warning fallback.
+- **execution-service@90aa381a** — 11 unit tests at
+  `tests/unit/custody/test_ceffu_provider.py` covering construction
+  (sandbox flag toggle, default to production), HMAC signing skeleton
+  produces valid headers, factory routing (lowercase + uppercase),
+  and `NotImplementedError("CEFFU API spec pending")` contract on
+  every async method.
+- **unified-trading-pm@33ef64b4** —
+  `codex/04-architecture/custody-providers.md` § 2.4
+  `CeffuCustodyProvider` expanded from STUB / PENDING placeholder to a
+  fully populated section mirroring Copper § 2.3 shape: architecture
+  overview (OES bilateral mirror flow client → CEFFU → Binance Futures
+  → daily settlement), 6-step onboarding runbook, expected REST
+  endpoint catalogue with explicit `<TBD-OPERATOR-PROVIDES-API-SPEC>`
+  markers, HMAC signing skeleton + header-naming TBD, sandbox/staging
+  subsection, daily operational flow (settlement window + margin
+  recall), risk controls (credit-utilisation cap +
+  automatic margin recall + withdrawal whitelist + rate-limit/backoff
+  via UAC `classify_venue_error`), implementation reference table,
+  configuration + testing subsections, expanded open-questions list.
+  § 1 factory-routing table, § 6 Security, § 7 Testing all updated for
+  the new stub-shipped state.
+- **Master Group F Item 19** (Copper + CEFFU treasury) — Copper side
+  remains live; CEFFU side advances from "STUB / PLANNED" to
+  "stub-shipped, API spec pending". Continuous-verification stays
+  "manual sign-off only" (live-only operator-judgment item) per
+  CLAUDE.md "Master Plan Continuous-Verification Column" rule. The
+  envelope unblocks deployment configs + position-balance-monitor
+  wiring for Binance institutional flow before the REST surface is
+  confirmed; once operator provides the API spec, the stub becomes a
+  tightly-scoped diff (header rename + base URL fill + per-method body
+  wiring) rather than an architecture change.
+
+### Item #7 — defi_archetypes Stream B deferred items — ✅ ARCHITECTURE COMPLETE; OPERATIONAL RUN UPSTREAM-BLOCKED
+
+- **Stream B § strategy-service catalog (funding-dispersion-leveraged
+  variant)** — ✅ already shipped 2026-05-09 across 6 commits per
+  defi_archetypes plan body L182-194:
+  - `strategy-service@24f8494` (Phase A.1 dispatcher + slot stub).
+  - `strategy-service@0b4ef0e` (Phase A.2 helper module — 3 modes +
+    filters + 25 tests).
+  - `strategy-service@04c0d52` (Phase A.3 engine 8-step loop wire-in +
+    13 engine tests).
+  - `strategy-service@1107ab7` + `strategy-service@d01661e` (Phase A.6
+    multi-asset enumeration probe + ETH/SOL + 7 top-10 coverage-gated
+    slots).
+  - `strategy-service@de9b4b0` (Phase A.7 allocator multi-pair-per-slot
+    wiring — 4 weight modes + per-slot/per-pair caps + churn
+    suppression + 14 tests).
+
+  Catalog row presence verified 2026-05-10 at
+  `archetype_slot_resolver.py:740-770` (BTC slot
+  `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod`)
+  + generic builder at L76-97 (`_funding_rate_dispersion_slot(asset)`
+  for ETH/SOL/etc.).
+
+- **Stream B § tracer (P1)** — ❌ blocked on upstream raw-perp-funding
+  + features-delta-one-cefi backfill gaps tracked in
+  [`arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](arb_price_dispersion_phase_b_data_blockers_2026_05_10.md).
+  No contiguous 1-week 2024-W1 window exists across the 6-venue
+  universe (aster has no perp_funding directory; okx-futures raw starts
+  2025-01; features-delta-one-cefi has no contiguous window for any
+  year). Operator triage required on (a) backfill scope vs (b) verify-
+  window scope-adjust vs (c) ship-code-without-verify-and-flag.
+  `strategy-service/scripts/trace_arbitrage_price_dispersion.py` does
+  NOT exist; only `trace_carry_staked_basis.py` +
+  `trace_all_carry_archetypes.py`. Per "Plans Run To Actual Completion"
+  HARD RULE, tracer code without tracer-runs-to-completion is not
+  shippable as ✅.
+
+- **Stream B § P&L attribution (P1)** — ❌ blocked-after-tracer.
+  **Architecture verification 2026-05-10**: re-audit corrects
+  2026-05-09's "zero references" finding —
+  `pnl_attribution_service/engine/archetype_aggregator.py` IS in fact
+  wired for `ARBITRAGE_PRICE_DISPERSION` via generic regex parsing.
+  L59 `_SLOT_PREFIX_RE = r"^([A-Z][A-Z0-9_]+)@"` matches any archetype
+  prefix from slot labels. L65 `_FUNDING_RATE_DISP_MARKER =
+  "-funding-rate-disp-"` matches strategy-service's
+  `archetype_slot_resolver._funding_rate_dispersion_slot()` slot label
+  format. The literal string `ARBITRAGE_PRICE_DISPERSION` doesn't
+  appear in source code — it's matched at runtime by the generic
+  regex. The 2026-05-09 grep miss was an artefact of the search
+  pattern, not a missing implementation. Once tracer output flows,
+  rows route to
+  `gs://${PNL_OUTPUT_BUCKET}/by_strategy/ARBITRAGE_PRICE_DISPERSION/...`
+  with `config_variant="funding-rate-dispersion"` automatically. Pure
+  architecture is complete; checkbox stays `[ ]` until tracer's real-
+  infra output validates the path end-to-end per "Plans Run To Actual
+  Completion" rule.
+
+- **unified-trading-pm@<this-batch>** — defi_archetypes Stream B
+  P&L attribution todo body extended with the architecture-verified
+  annotation pointing at
+  `pnl_attribution_service/engine/archetype_aggregator.py:59 / :65`.
+
+- **Master Group F Item 17-18** (paper-trade smoke + batch-vs-live
+  recon) — Stream B contributes the funding-dispersion-leveraged
+  archetype variant; stays operator-blocked on upstream-data triage
+  per the data-blockers issue doc.
 - runbook_execution_governance_gaps_2026_05_08.md (related: peripheral QG wiring rule)
