@@ -45,7 +45,8 @@ Operator confirmed in-conversation; folded into plan as binding constraints:
    total; DeFi + CeFi-instruments scope at full utilization fits comfortably under the credit budget.
 2. **Restrictions**: **probably no service / region / account locks**. Phase 1 smoke test will surface any account-level
    service quotas if they exist.
-3. **Scope**: **DeFi-first PLUS CeFi-instruments**. DeFi archetypes (`carry_staked_basis`, `leveraged_funding_arb`)
+3. **Scope**: **DeFi-first PLUS CeFi-instruments**. DeFi archetypes (`carry_staked_basis`, `ARBITRAGE_PRICE_DISPERSION`
+   (`funding-rate-dispersion`; renamed from legacy `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07))
    hedge across 6 CeFi perp venues (Bybit / Deribit / Binance / OKX / Hyperliquid / Aster), so CeFi-instruments
    reference data is on the critical path. CeFi historical tick data stays GCP-resident (Phase 9 deferred). Note:
    existing AWS buckets already cover `unified-trading-instruments-cefi-427895769566`, so no new bucket creation needed
@@ -440,8 +441,9 @@ Operator verifies parity.
 
 - [ ] [HUMAN] P0. Cutover decision: switch `CLOUD_PROVIDER=aws` for the 6 DeFi-live services. GCP-DeFi pipeline keeps
       running in shadow mode (writes-only, no reads from strategy/execution).
-- [ ] [HUMAN] P0. Live trading: the carry_staked_basis lead + leveraged_funding_arb archetypes go live on AWS-prod for
-      the 7-day soak (per master plan).
+- [ ] [HUMAN] P0. Live trading: the carry_staked_basis lead + ARBITRAGE_PRICE_DISPERSION (funding-rate-dispersion;
+      renamed from legacy leveraged_funding_arb per Stream B canonicalisation 2026-05-07) archetypes go live on
+      AWS-prod for the 7-day soak (per master plan).
 - [ ] [SCRIPT] P0. Hourly health check on AWS-DeFi services. Manifest write rate, P&L attribution, position drift,
       alerting fire rate (per `alerting_service_live_rules_2026_05_07.md` Phase 8 rehearsal).
 - [ ] [HUMAN] P0. After 7 days continuous on AWS, GCP-DeFi shadow can be archived (move to coldline / Glacier).
@@ -512,7 +514,7 @@ sports/predictions/tradfi/cefi GCP-resident until post-deadline rollout.
 
 - `master_to_live_defi_2026_05_23:Group D` (cloud parity verification).
 - `master_to_live_defi_2026_05_23:Group F` (live trading prereqs include AWS deployment if DeFi-on-AWS mandate stands).
-- `defi_master_2026_05_07:carry_staked_basis-live` + `leveraged_funding_arb`.
+- `defi_master_2026_05_07:carry_staked_basis-live` + `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`).
 - `alerting_service_live_rules_2026_05_07:Phase 4` (paging credentials must land in AWS Secrets Manager too).
 
 ## Coordination notes
@@ -603,37 +605,36 @@ pattern bug. New CLAUDE.md HARD RULE "Plans Run To Actual Completion, Not Smoke-
 All rsync jobs have completed overnight (last log timestamps 00:36-01:04 May 9). Per-bucket final state of 12 DeFi
 destination buckets verified via `aws s3 ls --recursive --summarize`:
 
-| AWS bucket                                              | GCS source                                        | Source has data | Final state                                                                  | AWS objects (FINAL) | AWS size            |
-| ------------------------------------------------------- | ------------------------------------------------- | --------------- | ---------------------------------------------------------------------------- | ------------------- | ------------------- |
-| `unified-trading-evm-defi-prod-427895769566`            | `gs://evm-defi-central-element-323112`            | yes             | ✅ COMPLETE                                                                   | 30,114              | 2.25 GB             |
-| `unified-trading-dex-pools-prod-427895769566`           | `gs://dex-pools-central-element-323112`           | yes             | ✅ COMPLETE                                                                   | 122,110             | 2.92 GB             |
-| `unified-trading-instruments-defi-427895769566`         | `gs://instruments-store-defi-central-element-323112` | yes          | ✅ COMPLETE                                                                   | 64,571              | 1.85 GB             |
-| `unified-trading-market-data-defi-427895769566`         | `gs://market-data-tick-defi-central-element-323112` | yes         | ✅ COMPLETE                                                                   | 56,376              | 4.71 GB             |
-| `unified-trading-events-prod-427895769566`              | `gs://central-element-323112-events`              | yes (4.8M+)     | ✅ RESOLVED: skipped — go-forward only per Live=Batch judgment 2026-05-09     | 0 (intentional)     | 0                   |
-| `unified-trading-solana-defi-prod-427895769566`         | `gs://solana-defi-central-element-323112`         | yes             | ✅ COMPLETE (corrective rsync 21:29 BST → finished overnight)                 | 5,037               | 1.58 GB             |
-| `unified-trading-dex-swaps-prod-427895769566`           | `gs://dex-swaps-central-element-323112`           | yes             | ✅ COMPLETE (corrective rsync 21:29 BST → finished 00:53)                     | 68,703              | 23.51 GB            |
-| `unified-trading-config-store-prod-427895769566`        | `gs://config-store-central-element-323112`        | yes             | ✅ COMPLETE (corrective rsync 21:29 BST → finished cleanly)                   | 9                   | 24 KB               |
-| `unified-trading-eigenlayer-rewards-prod-427895769566`  | `gs://eigenlayer-rewards-central-element-323112`  | NO (empty bucket) | ✅ Skipped — source legitimately empty                                       | 0 (correct)         | 0                   |
-| `unified-trading-pnl-store-defi-prod-427895769566`      | `gs://pnl-store-central-element-323112-defi`      | NO (empty bucket) | ✅ Skipped — pre-trade, no PnL events yet                                    | 0 (correct)         | 0                   |
-| `unified-trading-positions-store-defi-prod-427895769566` | `gs://positions-store-central-element-323112-defi` | NO (empty bucket) | ✅ Skipped — pre-trade, no positions events yet                              | 0 (correct)         | 0                   |
-| `unified-trading-risk-store-defi-prod-427895769566`     | `gs://risk-store-central-element-323112-defi`     | NO (empty bucket) | ✅ Skipped — pre-trade, no risk events yet                                   | 0 (correct)         | 0                   |
+| AWS bucket                                               | GCS source                                           | Source has data   | Final state                                                               | AWS objects (FINAL) | AWS size |
+| -------------------------------------------------------- | ---------------------------------------------------- | ----------------- | ------------------------------------------------------------------------- | ------------------- | -------- |
+| `unified-trading-evm-defi-prod-427895769566`             | `gs://evm-defi-central-element-323112`               | yes               | ✅ COMPLETE                                                               | 30,114              | 2.25 GB  |
+| `unified-trading-dex-pools-prod-427895769566`            | `gs://dex-pools-central-element-323112`              | yes               | ✅ COMPLETE                                                               | 122,110             | 2.92 GB  |
+| `unified-trading-instruments-defi-427895769566`          | `gs://instruments-store-defi-central-element-323112` | yes               | ✅ COMPLETE                                                               | 64,571              | 1.85 GB  |
+| `unified-trading-market-data-defi-427895769566`          | `gs://market-data-tick-defi-central-element-323112`  | yes               | ✅ COMPLETE                                                               | 56,376              | 4.71 GB  |
+| `unified-trading-events-prod-427895769566`               | `gs://central-element-323112-events`                 | yes (4.8M+)       | ✅ RESOLVED: skipped — go-forward only per Live=Batch judgment 2026-05-09 | 0 (intentional)     | 0        |
+| `unified-trading-solana-defi-prod-427895769566`          | `gs://solana-defi-central-element-323112`            | yes               | ✅ COMPLETE (corrective rsync 21:29 BST → finished overnight)             | 5,037               | 1.58 GB  |
+| `unified-trading-dex-swaps-prod-427895769566`            | `gs://dex-swaps-central-element-323112`              | yes               | ✅ COMPLETE (corrective rsync 21:29 BST → finished 00:53)                 | 68,703              | 23.51 GB |
+| `unified-trading-config-store-prod-427895769566`         | `gs://config-store-central-element-323112`           | yes               | ✅ COMPLETE (corrective rsync 21:29 BST → finished cleanly)               | 9                   | 24 KB    |
+| `unified-trading-eigenlayer-rewards-prod-427895769566`   | `gs://eigenlayer-rewards-central-element-323112`     | NO (empty bucket) | ✅ Skipped — source legitimately empty                                    | 0 (correct)         | 0        |
+| `unified-trading-pnl-store-defi-prod-427895769566`       | `gs://pnl-store-central-element-323112-defi`         | NO (empty bucket) | ✅ Skipped — pre-trade, no PnL events yet                                 | 0 (correct)         | 0        |
+| `unified-trading-positions-store-defi-prod-427895769566` | `gs://positions-store-central-element-323112-defi`   | NO (empty bucket) | ✅ Skipped — pre-trade, no positions events yet                           | 0 (correct)         | 0        |
+| `unified-trading-risk-store-defi-prod-427895769566`      | `gs://risk-store-central-element-323112-defi`        | NO (empty bucket) | ✅ Skipped — pre-trade, no risk events yet                                | 0 (correct)         | 0        |
 
-**Total migrated**: 346,920 objects / 36.83 GB across 7 active-data buckets. 4 pre-trade buckets correctly empty.
-1 events bucket resolved as go-forward only (operational telemetry, not data-pipeline data).
+**Total migrated**: 346,920 objects / 36.83 GB across 7 active-data buckets. 4 pre-trade buckets correctly empty. 1
+events bucket resolved as go-forward only (operational telemetry, not data-pipeline data).
 
 **Root cause analysis of 7-empty Cluster 7 finding**:
 
-- 4 of 7 "empty" buckets had legitimately-empty GCS sources (eigenlayer / pnl / positions / risk) — pre-trade
-  state, nothing to copy. These will populate once DeFi paper-trade flows start emitting events. NOT a migration
-  bug.
-- 3 of 7 "empty" buckets had GCS source data but no rsync had been launched (solana / dex-swaps / config-store —
-  not in the original 5-job batch). Corrective rsync launched 21:29 BST.
+- 4 of 7 "empty" buckets had legitimately-empty GCS sources (eigenlayer / pnl / positions / risk) — pre-trade state,
+  nothing to copy. These will populate once DeFi paper-trade flows start emitting events. NOT a migration bug.
+- 3 of 7 "empty" buckets had GCS source data but no rsync had been launched (solana / dex-swaps / config-store — not in
+  the original 5-job batch). Corrective rsync launched 21:29 BST.
 - 1 of 7 "empty" buckets (`events`) had its rsync DIE at the listing phase with a DNS resolution failure on
-  `storage.googleapis.com` (likely network blip). The events source has 4.8M+ objects per the listing log; PID
-  39415 spent 3+ hours listing before dying with zero copy ops. **NOT corrective-restarted automatically** because
-  re-listing 4.8M objects from scratch is a 3+ hour blocking operation; operator should consider running this from
-  a same-region GCE VM (Tokyo→Tokyo) instead of laptop to avoid DNS instability + cut listing time. See Open
-  questions for operator below.
+  `storage.googleapis.com` (likely network blip). The events source has 4.8M+ objects per the listing log; PID 39415
+  spent 3+ hours listing before dying with zero copy ops. **NOT corrective-restarted automatically** because re-listing
+  4.8M objects from scratch is a 3+ hour blocking operation; operator should consider running this from a same-region
+  GCE VM (Tokyo→Tokyo) instead of laptop to avoid DNS instability + cut listing time. See Open questions for operator
+  below.
 
 **Corrective rsync jobs launched 2026-05-08 21:29 BST** (3 PIDs):
 
@@ -641,34 +642,34 @@ destination buckets verified via `aws s3 ls --recursive --summarize`:
   copying actively (kamino entries flowing).
 - `gs://dex-swaps-central-element-323112/` → `s3://unified-trading-dex-swaps-prod-427895769566/` (PID 61592) — in
   listing phase as of 21:30.
-- `gs://config-store-central-element-323112/` → `s3://unified-trading-config-store-prod-427895769566/` (PID 61593)
-  — copying actively (instruments-service config entries).
+- `gs://config-store-central-element-323112/` → `s3://unified-trading-config-store-prod-427895769566/` (PID 61593) —
+  copying actively (instruments-service config entries).
 
 All 3 use the same shape as the original 5: `nohup gcloud storage rsync gs://X s3://Y --recursive`, logs in
 `/tmp/tab4-rsync-logs/`, PIDs registered in `_pids.txt`.
 
 **Events bucket — RESOLVED 2026-05-09 per institutional judgment + Live=Batch principle**:
 
-Events GCS bucket holds operational event-stream telemetry (VM STARTED / progress / STOPPED events) — NOT
-data-pipeline market data. Live=Batch principle applies to market data producing identical schemas; event logs are
-operational telemetry produced by VMs as they run.
+Events GCS bucket holds operational event-stream telemetry (VM STARTED / progress / STOPPED events) — NOT data-pipeline
+market data. Live=Batch principle applies to market data producing identical schemas; event logs are operational
+telemetry produced by VMs as they run.
 
 Decision: **events bucket on AWS is go-forward only**. Rationale:
 
-1. The 4.8M GCS-side events are about GCP VM operations (mtds-* / instr-* / cefi-* / mdps-* etc. running in
-   `central-element-323112`). They're not informative for AWS-side workloads — those will produce their own event
-   stream as AWS-side VMs run.
-2. Re-launching the rsync from a same-region GCE VM is 3+ hours blocking + listing 4.8M objects DNS-instability
-   prone. The operational benefit of having historical GCP-side events on AWS is zero (they wouldn't be queried
-   for AWS-side analysis).
+1. The 4.8M GCS-side events are about GCP VM operations (mtds-_ / instr-_ / cefi-_ / mdps-_ etc. running in
+   `central-element-323112`). They're not informative for AWS-side workloads — those will produce their own event stream
+   as AWS-side VMs run.
+2. Re-launching the rsync from a same-region GCE VM is 3+ hours blocking + listing 4.8M objects DNS-instability prone.
+   The operational benefit of having historical GCP-side events on AWS is zero (they wouldn't be queried for AWS-side
+   analysis).
 3. CLAUDE.md "No fire-and-forget VM launches" rule mandates that every VM launch emits structured events to
    `gs://{pid}-events/...`; the AWS analogue is `s3://unified-trading-events-prod-427895769566/...` with the same
    contract. This auto-populates as soon as AWS-side VMs run with the new emission target.
 
-Phase 5 events row therefore reads "**Skipped — go-forward only per Live=Batch principle (operational telemetry,
-not pipeline data)**" not "DIED 0 objects". The bucket exists + is writeable + IAM policy allows S3 write; the
-launch-on-AWS workflow needs to set the events emission target to the AWS bucket when running AWS-side workloads.
-That wire-in lives in `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` `EVENTS_BUCKET` env var.
+Phase 5 events row therefore reads "**Skipped — go-forward only per Live=Batch principle (operational telemetry, not
+pipeline data)**" not "DIED 0 objects". The bucket exists + is writeable + IAM policy allows S3 write; the launch-on-AWS
+workflow needs to set the events emission target to the AWS bucket when running AWS-side workloads. That wire-in lives
+in `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` `EVENTS_BUCKET` env var.
 
 ### Phase 5b — Hive-compatible AWS Glue + Athena (per operator clarification)
 

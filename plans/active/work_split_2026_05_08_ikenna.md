@@ -684,8 +684,9 @@ readiness narrative + alert wiring + IAM/audit-log/rate-limit operator decisions
       execution-service halt-on-event behaviour verified. ~1.5 AI-days.
 - [ ] [ARCHITECTURE+DESIGN] P0. **Alerting Phase 2 — `CROSS_CLOUD_EGRESS_DETECTED` rule + AAVE utilization-spike
       threshold value** — audit §3 #5 flagged AAVE threshold ambiguous; resolve via DeFi-team judgment call
-      (per-archetype: `leveraged_funding_arb` 9000 bps_of_one (90%) vs default 9500 (95%) per UAC@d00326d) + lock as
-      documented decision. ~1 AI-day.
+      (per-archetype: `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy
+      `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07) 9000 bps_of_one (90%) vs default 9500 (95%) per
+      UAC@d00326d) + lock as documented decision. ~1 AI-day.
 - [ ] [ARCHITECTURE] P0. **Alerting Phase 3-9** — per the audit, only 14/53 = 26% of alerting plan complete. Phase 3
       paging-target Secret Manager rotation. Phase 4 DART terminal wiring. Phase 5 dashboards. Phase 6 drill cadence.
       Phase 7 quietness baseline runtime SLO. Phase 8 rehearsal procedure. Phase 9 post-rehearsal iteration. ~3 AI-days.
@@ -961,34 +962,33 @@ immediately + announces in plan-of-record; consuming side `git pull`s before its
 
 ## Deferred work after 2026-05-10 audit session
 
-The 2026-05-10 PM governance hygiene sweep (this audit session, agent-tag
-`pm-governance-hygiene-tab`) shipped 13 PM-only governance ships: archive of operator_decisions
-(lifecycle deadline passed) + 7 resolved issue docs + alerting Q1 back-flip + manifest_v7
-SUPERSEDED banner + launcher_scripts plan-flip + arbitrage Q11 verification + this scoreboard.
-Items still open from prior cycles + cross-tab dependencies are tracked here so the next
-agent picks up cleanly without re-reading session notes.
+The 2026-05-10 PM governance hygiene sweep (this audit session, agent-tag `pm-governance-hygiene-tab`) shipped 13
+PM-only governance ships: archive of operator_decisions (lifecycle deadline passed) + 7 resolved issue docs + alerting
+Q1 back-flip + manifest_v7 SUPERSEDED banner + launcher_scripts plan-flip + arbitrage Q11 verification + this
+scoreboard. Items still open from prior cycles + cross-tab dependencies are tracked here so the next agent picks up
+cleanly without re-reading session notes.
 
-| Phase / item                                                         | Status as of 2026-05-10                                    | Successor / blocker                                                                                                                                       |
-| -------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| cefi_master Q1 — helper-shipped pending owner flip                   | `helper-shipped`                                           | Owner picks up + flips checkbox to `[x]` once consumer wire-in audit completes                                                                            |
-| predictions_master Q2 — design-shipped                               | `design-shipped`                                           | Pickup agent wires consumer per design contract; flip on wire-in landing                                                                                  |
-| `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1       | `design-ready`                                             | Owner agent implements per design; ratchets writegate Phase 5                                                                                             |
-| `simulation_scenarios_topology_price_shocks_2026_05_09.md`           | `operator-needs-decision`                                  | Operator triages topology choice; agent picks up post-decision                                                                                            |
-| Master plan Continuous Verification matrix per HARD RULE 2026-05-08  | `in-flight (main agent shipping bbc35344 this session)`    | Main agent finishes the per-row Continuous Verification column; reviewers gate refresh PRs on it (see CLAUDE.md "Master Plan Continuous-Verification Column") |
-| F6 deeper-df-flow refactor                                           | `operator-needs-decision`                                  | See `issues/f6_df_flow_refactor_blocked_by_available_at_2026_05_08.md` + `f6_record_captured_requires_df_features_consolidation_2026_05_08.md`            |
-| defi_master Q1                                                       | `operator-needs-decision`                                  | Operator triage; defi_master_2026_05_07.md Q&A surface                                                                                                    |
-| alerting Phase 4-9                                                   | `operator-needs-scheduling`                                | PagerDuty + Telegram chat structure operator decisions ratified per `operator_decisions_2026_05_08.md`; Phase 4-9 implementation pending operator scheduling |
-| F2-v2 item 2 — in-flight Tab G                                       | `in-flight`                                                | Tab G's session in flight; carryover via Tab G's DONE block                                                                                               |
-| Wave-2 Phase 1+3 — in-flight Tab G                                   | `in-flight`                                                | Same — carryover via Tab G                                                                                                                                |
-| writegate Phase 4.A — in-flight Tab H                                | `in-flight`                                                | Tab H's session in flight                                                                                                                                 |
-| `wave3x_residual_ssots_2026_05_08.md` Track A — in-flight Tab H      | `in-flight`                                                | Same — carryover via Tab H                                                                                                                                |
+| Phase / item                                                        | Status as of 2026-05-10                                 | Successor / blocker                                                                                                                                           |
+| ------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cefi_master Q1 — helper-shipped pending owner flip                  | `helper-shipped`                                        | Owner picks up + flips checkbox to `[x]` once consumer wire-in audit completes                                                                                |
+| predictions_master Q2 — design-shipped                              | `design-shipped`                                        | Pickup agent wires consumer per design contract; flip on wire-in landing                                                                                      |
+| `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1      | `design-ready`                                          | Owner agent implements per design; ratchets writegate Phase 5                                                                                                 |
+| `simulation_scenarios_topology_price_shocks_2026_05_09.md`          | `operator-needs-decision`                               | Operator triages topology choice; agent picks up post-decision                                                                                                |
+| Master plan Continuous Verification matrix per HARD RULE 2026-05-08 | `in-flight (main agent shipping bbc35344 this session)` | Main agent finishes the per-row Continuous Verification column; reviewers gate refresh PRs on it (see CLAUDE.md "Master Plan Continuous-Verification Column") |
+| F6 deeper-df-flow refactor                                          | `operator-needs-decision`                               | See `issues/f6_df_flow_refactor_blocked_by_available_at_2026_05_08.md` + `f6_record_captured_requires_df_features_consolidation_2026_05_08.md`                |
+| defi_master Q1                                                      | `operator-needs-decision`                               | Operator triage; defi_master_2026_05_07.md Q&A surface                                                                                                        |
+| alerting Phase 4-9                                                  | `operator-needs-scheduling`                             | PagerDuty + Telegram chat structure operator decisions ratified per `operator_decisions_2026_05_08.md`; Phase 4-9 implementation pending operator scheduling  |
+| F2-v2 item 2 — in-flight Tab G                                      | `in-flight`                                             | Tab G's session in flight; carryover via Tab G's DONE block                                                                                                   |
+| Wave-2 Phase 1+3 — in-flight Tab G                                  | `in-flight`                                             | Same — carryover via Tab G                                                                                                                                    |
+| writegate Phase 4.A — in-flight Tab H                               | `in-flight`                                             | Tab H's session in flight                                                                                                                                     |
+| `wave3x_residual_ssots_2026_05_08.md` Track A — in-flight Tab H     | `in-flight`                                             | Same — carryover via Tab H                                                                                                                                    |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
 - **Phase 2 (deployment-api launcher registry)** + **Phase 3 (UI cloud-toggle audit)** of
-  `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`:
-  DEFERRED-PER-AUDIT / DEFERRED-AFTER-AWS-PHASE-1 annotations added this session; pending Tab 5 governance
-  + `aws_migration_defi_first_2026_05_07.md` Phase N execution.
+  `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`: DEFERRED-PER-AUDIT /
+  DEFERRED-AFTER-AWS-PHASE-1 annotations added this session; pending Tab 5 governance
+  - `aws_migration_defi_first_2026_05_07.md` Phase N execution.
 
 ## Defer post-cutover (BOTH must NOT touch)
 

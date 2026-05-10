@@ -340,8 +340,9 @@ todos:
         lifecycle_class=LONG_LIVED_LIVE, cloud_target, environment_tier, deployment_kind:
         cloud_run|gke|eks|ecs_service, target_ref, asset_group, archetype_owners, health_endpoint,
         expected_replicas, drain_timeout)`. Phase 1 entries: 6 perp venues × 1 live-MTDS each (live + staging
-        for May-23), 1 live-strategy per archetype (carry_staked_basis + leveraged_funding_arb), 1 live-execution
-        per cloud, 1 position-balance, 1 risk, 1 alerting. Same SSOT discipline as scheduler registry.
+        for May-23), 1 live-strategy per archetype (carry_staked_basis + ARBITRAGE_PRICE_DISPERSION
+        (funding-rate-dispersion; renamed from legacy leveraged_funding_arb per Stream B canonicalisation 2026-05-07)),
+        1 live-execution per cloud, 1 position-balance, 1 risk, 1 alerting. Same SSOT discipline as scheduler registry.
 
   - id: e2-live-cluster-deploy-and-lifecycle-actions
     content: |
@@ -482,17 +483,17 @@ isProject: false
 
 ## Status — Phase progression (last update 2026-05-08, EOD — Phase A foundation 5/5 ✅ SHIPPED)
 
-| Phase | Scope                                                                                                                                         | Status                                                   | Evidence                                                                                                                                                                |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A     | Foundation — UAC SSOTs + codex docs + VM-naming-convention extend                                                                             | ⏳ 4 of 5 SHIPPED (A.2 deferred)                          | A.1 + A.5: UAC@ba94d05 · A.3: PM@ebe5cc09 · A.4: PM@eb8a96ca · A.2: **CORRECTED 2026-05-09 — was flipped [x] but vm_zombie_watchdog.py never committed; carryover to next session**. |
-| B     | UI re-shape — 6-tab shell + Monitor 4-sub-tabs + Data-Status mode-toggle + LiveFreshnessPanel + StreamingLogsPanel + LifecyclePrefetchContext | ⏳ PENDING (gated on Open Q1)                            | Not started. Phase A.2 unblocks (live + exp prefixes reserved).                                                                                                         |
-| C     | deployment-api endpoints — 4 Monitor routes + streaming-logs route                                                                            | ⏳ PENDING (gated on Phase A complete)                   | Not started.                                                                                                                                                            |
-| D     | Scheduler registry SSOT (env-scoped) + deploy-missing-schedulers + pause/resume                                                               | ⏳ PENDING (gated on Phase A.1 LifecycleClass)           | Not started.                                                                                                                                                            |
-| E     | Live-cluster registry SSOT (env-scoped) + lifecycle action endpoints                                                                          | ⏳ PENDING (gated on Phase A.1)                          | Not started.                                                                                                                                                            |
-| BB    | Experiment tracker (greenfield) — UAC registry + UTL helper + Monitor sub-tab                                                                 | ⏳ PENDING                                               | Not started.                                                                                                                                                            |
-| H     | Env-tier hosting infra — codex doc + api env-aware config + UI env badge + staging/prod domain deploy                                         | ⏳ PENDING (gated on Phase A.5 EnvironmentTier — landed) | Phase A.5 unblocks; remaining items not started.                                                                                                                        |
-| F     | UX polish — cloud-toggle loading + mode-toggle instant + CLAUDE.md naming-rule update                                                         | ⏳ PENDING (gated on Phase A.2 + B.7)                    | Not started.                                                                                                                                                            |
-| G     | Final validation — workspace QG sweep + D3 staging + B6 operator sign-off                                                                     | ⏳ PENDING (gated on all phases)                         | Not started.                                                                                                                                                            |
+| Phase | Scope                                                                                                                                         | Status                                                   | Evidence                                                                                                                                                                             |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A     | Foundation — UAC SSOTs + codex docs + VM-naming-convention extend                                                                             | ⏳ 4 of 5 SHIPPED (A.2 deferred)                         | A.1 + A.5: UAC@ba94d05 · A.3: PM@ebe5cc09 · A.4: PM@eb8a96ca · A.2: **CORRECTED 2026-05-09 — was flipped [x] but vm_zombie_watchdog.py never committed; carryover to next session**. |
+| B     | UI re-shape — 6-tab shell + Monitor 4-sub-tabs + Data-Status mode-toggle + LiveFreshnessPanel + StreamingLogsPanel + LifecyclePrefetchContext | ⏳ PENDING (gated on Open Q1)                            | Not started. Phase A.2 unblocks (live + exp prefixes reserved).                                                                                                                      |
+| C     | deployment-api endpoints — 4 Monitor routes + streaming-logs route                                                                            | ⏳ PENDING (gated on Phase A complete)                   | Not started.                                                                                                                                                                         |
+| D     | Scheduler registry SSOT (env-scoped) + deploy-missing-schedulers + pause/resume                                                               | ⏳ PENDING (gated on Phase A.1 LifecycleClass)           | Not started.                                                                                                                                                                         |
+| E     | Live-cluster registry SSOT (env-scoped) + lifecycle action endpoints                                                                          | ⏳ PENDING (gated on Phase A.1)                          | Not started.                                                                                                                                                                         |
+| BB    | Experiment tracker (greenfield) — UAC registry + UTL helper + Monitor sub-tab                                                                 | ⏳ PENDING                                               | Not started.                                                                                                                                                                         |
+| H     | Env-tier hosting infra — codex doc + api env-aware config + UI env badge + staging/prod domain deploy                                         | ⏳ PENDING (gated on Phase A.5 EnvironmentTier — landed) | Phase A.5 unblocks; remaining items not started.                                                                                                                                     |
+| F     | UX polish — cloud-toggle loading + mode-toggle instant + CLAUDE.md naming-rule update                                                         | ⏳ PENDING (gated on Phase A.2 + B.7)                    | Not started.                                                                                                                                                                         |
+| G     | Final validation — workspace QG sweep + D3 staging + B6 operator sign-off                                                                     | ⏳ PENDING (gated on all phases)                         | Not started.                                                                                                                                                                         |
 
 **Open blockers** (tracked in `## Open questions` § below):
 
@@ -619,14 +620,13 @@ four coordinates visible + togglable without conflating them.
 
 ## Sibling plan relationships
 
-- `instruments_live_master_2026_05_08.md` — sibling. Phase G of that plan delegates UI scope here. Cross-link both
-  ways.
-- `master_to_live_defi_2026_05_23.md` — sibling. The 6 long-lived deployment clusters that DeFi-live needs by
-  May-23 are entered into Phase E.1 registry on first commit; staging deploy + drain test are part of master's D3 gate.
+- `instruments_live_master_2026_05_08.md` — sibling. Phase G of that plan delegates UI scope here. Cross-link both ways.
+- `master_to_live_defi_2026_05_23.md` — sibling. The 6 long-lived deployment clusters that DeFi-live needs by May-23 are
+  entered into Phase E.1 registry on first commit; staging deploy + drain test are part of master's D3 gate.
 - `deployment_api_work_stream_a_2026_05_07.plan.md` — depends_on. Owns programmatic VM launch + event-tail; reused for
   live-clusters' SSE stream.
-- `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md` — depends_on. Owns the launcher SSOT
-  migration; Phase D.2 deploy-missing-schedulers writes scheduler-deploy commands into the same
+- `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md` — depends_on. Owns the launcher SSOT migration;
+  Phase D.2 deploy-missing-schedulers writes scheduler-deploy commands into the same
   `deployment-service/scripts/scheduler/` root.
 - `infrastructure_master_2026_05_07.md` — depends_on. Existing UI iteration cadence.
 - `firebase-split-topology.md` (codex SSOT, not a plan) — Phase H env-tier hosting follows the same pattern this doc
@@ -684,8 +684,8 @@ Phase G (workspace QG + D3 staging + B6 operator sign-off)
 - Replacing the existing service-axis sidebar — operator still navigates by service within each tab.
 - Building NEW long-lived clusters — registry entries Phase E.1 are operator-curated; service code is owned by
   per-service plans.
-- Cloud Scheduler config files themselves — those are `instruments_live_master_2026_05_08.md` Phase F.1 scope. THIS
-  plan owns the UI surface that lists / deploys / pauses them, NOT the YAML content.
+- Cloud Scheduler config files themselves — those are `instruments_live_master_2026_05_08.md` Phase F.1 scope. THIS plan
+  owns the UI surface that lists / deploys / pauses them, NOT the YAML content.
 - Building a model registry or full MLflow-equivalent — Phase BB experiment tracker is intentionally file-system + GCS
   only, not a relational store. If MLflow becomes warranted, it's a separate plan.
 

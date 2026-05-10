@@ -529,8 +529,10 @@ todos:
              (a) `cross_instrument.lst_yield_vs_eth_spot` — needed for `carry_staked_basis` archetype.
                  Inputs: defi.uniswap_v3.eth_usdt + defi.lido.steth_yield + defi.jito.jitosol_yield (Solana,
                  Pyth-routed per CLAUDE.md DeFi pipeline section) + defi.marinade.msol_yield;
-             (b) `cross_instrument.perp_funding_vs_spot_basis` — needed for `leveraged_funding_arb`
-                 archetype. Inputs: cefi.bybit.btcusdt_perp_funding + cefi.bybit.btcusdt_spot +
+             (b) `cross_instrument.perp_funding_vs_spot_basis` — needed for `ARBITRAGE_PRICE_DISPERSION`
+                 (`funding-rate-dispersion`; renamed from legacy `leveraged_funding_arb` per Stream B
+                 canonicalisation 2026-05-07) archetype. Inputs: cefi.bybit.btcusdt_perp_funding +
+                 cefi.bybit.btcusdt_spot +
                  cefi.binance.btcusdt_perp_funding + cefi.binance.btcusdt_spot.
              Both must be live + emitting CandleComputed at 15s cadence by 2026-05-21 (smoke + tune
              window).
@@ -938,7 +940,9 @@ isProject: false
 ## Why this plan exists
 
 Master plan (`master_to_live_defi_2026_05_23.md`) target: two DeFi archetypes (`carry_staked_basis` lead +
-`leveraged_funding_arb`) live on a real wallet ≥7 continuous days by 2026-05-23. The underlying pipeline is currently
+`ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy `leveraged_funding_arb` per Stream B
+canonicalisation 2026-05-07)) live on a real wallet ≥7 continuous days by 2026-05-23. The underlying pipeline is
+currently
 batch-only — nothing streams. Live-mode is a non-trivial activation that touches MTDS / MDPS / features-service (newly
 consolidated per `features_repo_consolidation_2026_05_08`) plus the deployment-UI / alerting-service / strategy-service
 consumer chain. This plan is the activation surface.
@@ -970,10 +974,10 @@ The architecture honors that rule:
 
 Read these BEFORE making code changes — drift = review-blocking failure per `doc → plan → code`:
 
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — code-path
-  symmetry contract.
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — pipeline
-  trigger + cascade architecture.
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
+  code-path symmetry contract.
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
+  pipeline trigger + cascade architecture.
 - [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
   — manifest schema + 4-state taxonomy + reason taxonomy (`EXPECTED_*` / `SOURCE_RETURNED_ZERO`).
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
