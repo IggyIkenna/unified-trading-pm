@@ -335,7 +335,7 @@ in plan order).
 | ------ | ------ | ------------------ | -------------------------------------------------------------------------------------------------------------------- |
 | 1      | ✅     | strategy-service@24f8494 | `dispersion_type` dispatcher + `BTC_FUNDING_RATE_DISPERSION` slot stub + `STRATEGY_CATEGORIES` row + dispatcher tests |
 | 2      | ✅     | strategy-service@0b4ef0e | `arbitrage_structural/funding_rate_dispersion.py` helper module (5 exports + 25 unit tests)                          |
-| 3      | ⬜     | _pending_          | Engine 8-step loop wire-in (`_on_tick_funding_rate_dispersion` consumes the helper) + integration tests              |
+| 3      | ✅     | strategy-service@04c0d52 | Engine 8-step loop wire-in (`_on_tick_funding_rate_dispersion` consumes the helper) + 13 integration tests           |
 
 - [ ] [strategy-service] P1. Add the canonical BTC/USDT slot entry (ETH/USDT + SOL/USDT + top-10 enumeration ship in
       A.6) to `strategy-service/strategy_service/engine/strategies/v2/archetype_slot_resolver.py` per the existing
@@ -380,7 +380,7 @@ in plan order).
       ),
       ```
 
-- [ ] [strategy-service] P1. Slot consumed by `ArbitragePriceDispersionEngine` factory entry at
+- [x] [strategy-service] P1. Slot consumed by `ArbitragePriceDispersionEngine` factory entry at
       [`factory.py:66`](../../../strategy-service/strategy_service/engine/strategies/v2/factory.py#L66). **Architectural
       decision (2026-05-09 audit):** `ARCHETYPE_ENGINE_REGISTRY` maps each `StrategyArchetype` to **exactly one engine
       class** — a subclass cannot be wired in without breaking that invariant. Therefore: **branch (i) — dispatcher
@@ -422,6 +422,15 @@ in plan order).
 
       Document the chosen branch (a vs b) inline in the commit message + the slot doc-string.
 
+      **DONE-2026-05-09 (agent-arb-fundrate-c3)**: shipped at strategy-service@04c0d52
+      ("feat(strategies): funding-rate-dispersion engine wire-in — 8-step loop with sign-match + min-spread + vol-clamp").
+      Engine 8-step loop replaces the Commit 1 stub at `_on_tick_funding_rate_dispersion`; 5 helper methods
+      (`_read_funding_rate_inputs`, `_select_funding_rate_pairs`, `_log_drops`, `_apply_clamp_to_survivors`,
+      `_build_instructions_for_clamped_pairs`) keep the top-level dispatch under the McCabe-7 complexity gate. Trace
+      events for `SIGN_MISMATCH_SKIP` / `BELOW_MIN_SPREAD_SKIP` / `VOL_CAP_CLAMPED` go via `logger.info` since the v2
+      base engine has no separate event-emission helper; per-cycle drop/clamp counts also stamped onto each emitted
+      `AtomicInstruction`'s `attestations` field.
+
 - [ ] [strategy-service] P1. **A.7 — verify `ArbitragePriceDispersionRankAllocator` handles multi-pair-per-slot**. Audit
       [`portfolio_allocator/archetypes.py:678,729`](../../../strategy-service/strategy_service/portfolio_allocator/archetypes.py#L678).
       With Layer 1 modes `top-k` / `all-above-threshold`, the engine surfaces N pairs per slot per cycle (not 1). The
@@ -437,22 +446,29 @@ in plan order).
       (`spread-proportional` / `rank-proportional` / `winner-takes-all` / `equal-weight`) + per-slot + per-pair caps
       + rebalance-threshold-bps churn suppression.
 
-- [ ] [strategy-service] P1. **Mode-coverage tests for the engine** —
-      `tests/unit/test_arbitrage_price_dispersion_funding_rate_engine.py` exercises all 3 `pair_selection_mode` values
-      (`single-best`, `top-k`, `all-above-threshold`) against a fixture with 6 mock venues + known funding rates + known
-      mid prices. Asserts: correct pair count surfaced per mode; sign-match filter drops the right pairs; min-spread
-      filter drops the right pairs; vol-cap clamp triggers when threshold breached; `SIGN_MISMATCH_SKIP` /
-      `BELOW_MIN_SPREAD_SKIP` / `VOL_CAP_CLAMPED` trace events emitted in the right places.
+- [x] [strategy-service] P1. **Mode-coverage tests for the engine** —
+      `tests/unit/engine/strategies/v2/test_arbitrage_price_dispersion_funding_rate_engine.py` exercises all 3
+      `pair_selection_mode` values (`single-best`, `top-k`, `all-above-threshold`) against a fixture with 6 mock venues
+      + known funding rates + known mid prices. Asserts: correct pair count surfaced per mode; sign-match filter drops
+      the right pairs; min-spread filter drops the right pairs; vol-cap clamp triggers when threshold breached;
+      `SIGN_MISMATCH_SKIP` / `BELOW_MIN_SPREAD_SKIP` / `VOL_CAP_CLAMPED` trace events emitted via `logger.info` per
+      dropped pair, plus per-cycle drop counts on the emitted instruction's `attestations`. **DONE-2026-05-09
+      (agent-arb-fundrate-c3)**: shipped at strategy-service@04c0d52 — 13 tests cover SINGLE_BEST + TOP_K +
+      ALL_ABOVE_THRESHOLD modes (including a loose-threshold variant that surfaces 5 pairs against a 6-venue universe),
+      sign-match drops on inverted-mid fixtures, min-spread filter drops at threshold 8bps, vol-cap fires on RV breach
+      + zscore breach + calm regime, missing-funding-rates short-circuit, and cycle-counts attestations. All 88
+      adjacent tests stay green.
 
 - [ ] [strategy-service] P1. Tests:
       `tests/unit/test_archetype_slot_resolver.py::test_arbitrage_price_dispersion_funding_rate_slot_exists`. QG green.
       Commit + push.
 
-- [ ] [VERIFY] P0. From within strategy-service repo:
+- [x] [VERIFY] P0. From within strategy-service repo:
       `grep -n "funding-rate-dispersion" strategy_service/engine/strategies/v2/archetype_slot_resolver.py` returns ≥ 1
       hit;
-      `python -c "from strategy_service.engine.strategies.v2.factory import ARCHETYPE_TO_ENGINE; assert     StrategyArchetype.ARBITRAGE_PRICE_DISPERSION in ARCHETYPE_TO_ENGINE"`
-      exits 0.
+      `python -c "from strategy_service.engine.strategies.v2.factory import ARCHETYPE_ENGINE_REGISTRY; assert     StrategyArchetype.ARBITRAGE_PRICE_DISPERSION in ARCHETYPE_ENGINE_REGISTRY"`
+      exits 0. (Symbol name corrected from `ARCHETYPE_TO_ENGINE` to `ARCHETYPE_ENGINE_REGISTRY` per the actual export.)
+      **DONE-2026-05-09 (agent-arb-fundrate-c3)**: grep returns 7 hits; registry assert exits 0.
 
 - [x] [strategy-service] P1. **A.6 follow-up — multi-asset slot enumeration (BTC + ETH + SOL day 1, plus top-10
       coverage-gated).** Operator direction 2026-05-09: BTC, ETH, SOL all in scope from day 1 + remaining top-10 coins
