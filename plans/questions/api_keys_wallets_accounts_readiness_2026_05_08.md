@@ -746,16 +746,22 @@ Implementation-shape questions resolved by audit (no operator input needed):
 
 ## Plan extraction record
 
-- **Plan path**: [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+- **Plan path**:
+  [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../active/api_keys_wallets_accounts_readiness_2026_05_10.md)
 - **Spawned**: 2026-05-10
 - **Status**: 9-phase execution plan, ~38-57 AI-days, deadline 2026-05-23.
-- **Self-contained**: plan body embeds all credential surfaces + sub-residuals + audit findings + pre-audit manifest + execution DAG + cross-phase coordination + cross-plan dependencies + per-phase success criteria + continuous-verification cadence. **No need to re-read this question doc to execute the plan.**
-- **Code shipped during extraction**: `deployment-service@9943e7c9` extends rotation-tracking SSOT with 8 venues + 5 data sources (closes part of R4 + R6).
-- **Single open operator-decision** (R9 sub-(a)): HSM-grade signing tier — Fireblocks (recommended) vs Copper-hot-wallet vs KMS-blob. Plan assumes Fireblocks at Phase 3.C; swap target if (b) or (c) chosen.
-- **Question doc status closes** when: all 9 plan phases ship + Phase 9 codex SSOTs durable + master plan continuous-verification column populated + pre-cutover sign-off gate passes.
+- **Self-contained**: plan body embeds all credential surfaces + sub-residuals + audit findings + pre-audit manifest +
+  execution DAG + cross-phase coordination + cross-plan dependencies + per-phase success criteria +
+  continuous-verification cadence. **No need to re-read this question doc to execute the plan.**
+- **Code shipped during extraction**: `deployment-service@9943e7c9` extends rotation-tracking SSOT with 8 venues + 5
+  data sources (closes part of R4 + R6).
+- **Single open operator-decision** (R9 sub-(a)): HSM-grade signing tier — Fireblocks (recommended) vs Copper-hot-wallet
+  vs KMS-blob. Plan assumes Fireblocks at Phase 3.C; swap target if (b) or (c) chosen.
+- **Question doc status closes** when: all 9 plan phases ship + Phase 9 codex SSOTs durable + master plan
+  continuous-verification column populated + pre-cutover sign-off gate passes.
 
 ## Iteration log addendum
 
-| Date | Author | Change |
-| ---- | ------ | ------ |
+| Date       | Author     | Change                                                                                                                                                                                                         |
+| ---------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-05-10 | main agent | Plan spawned at `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`. Status → plan-spawned. Question doc retains audit archaeology + sub-residual reasoning; plan body is the executable surface. |
