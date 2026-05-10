@@ -87,7 +87,7 @@ Frozen dataclass controlling provider selection and credentials:
 | `"mock"`          | `MockCustodyProvider`                | None                                       |
 | `"local_key"`     | `LocalKeyCustodyProvider`            | `private_key`, `rpc_url`                   |
 | `"copper"`        | `CopperCustodyProvider`              | `api_key`, `api_secret`, `organization_id` |
-| `"ceffu"`         | `CeffuCustodyProvider` (planned)     | `api_key`, `api_secret`, `organization_id` |
+| `"ceffu"`         | `CeffuCustodyProvider` (stub-shipped, methods raise) | `api_key`, `api_secret`, `organization_id` |
 | unknown           | `MockCustodyProvider` (with warning) | None                                       |
 
 Imports for `local_key`, `copper`, and `ceffu` are deferred (inside the routing branch) to avoid importing `web3` or
@@ -253,13 +253,15 @@ HTTP timeouts: 30s for signing/transfers, 10s for balance queries and wallet lis
 - **Multi-approve**: Large transfers require N-of-M human approvals
 - **Time locks**: Withdrawals to new addresses delayed 24h
 
-### §2.4 CeffuCustodyProvider — PLANNED
+### §2.4 CeffuCustodyProvider — STUB SHIPPED, API spec pending
 
-> **STATUS: STUB / PLANNED.** Created 2026-05-07 as a deep-audit follow-up to
-> [`../../plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) Group F
-> item 19 (Treasury / custody integration). Section content is pending — owners are whoever owns Binance institutional
-> wiring (defi_master Fork 1 hedging-leg + master plan Group F item 19). Sub-headings below mirror the Copper section so
-> the two can be read side-by-side once populated.
+> **STATUS: STUB SHIPPED 2026-05-10.** `CeffuCustodyProvider` exists in
+> `execution-service/execution_service/custody/ceffu.py` with a fully-wired constructor, factory registration,
+> HMAC-SHA256 signing skeleton, and async-method stubs that raise `NotImplementedError("CEFFU API spec pending — ...")`.
+> The pluggable interface envelope is in place so the eventual real implementation drops in as a tightly-scoped diff.
+> Real REST endpoints + sandbox URL + sub-account model are pending operator confirmation per the open questions below.
+> Master plan Group F Item 19 reflects: stub-shipped (CeFi institutional flow envelope reachable from factory) +
+> live-only run-to-completion blocked on operator-provided API spec.
 
 CEFFU (formerly Binance Custody) is the **institutional custody provider for Binance perp / spot exposure** in the
 6-venue perp universe (Bybit / Deribit / Binance / OKX / Hyperliquid / Aster). The same pluggable `CustodyProvider`
@@ -271,6 +273,9 @@ interface used for Copper applies here — switching providers is a config chang
   provider AWS-compat is a precondition for the dual-cloud-active steady state).
 - Native integration with Binance institutional flow (deposit/withdrawal via Binance APIs without bridging from a
   separate MPC provider).
+- Off-exchange settlement (OES) — institutional clients hold collateral at CEFFU custody accounts and trade on Binance
+  Futures with that collateral as margin. Collateral never leaves custody; daily settlement of P&L mirrors back to CEFFU
+  per the bilateral / triparty model.
 - Sub-account model maps cleanly to per-strategy wallet hierarchy (see
   [`wallet-hierarchy-and-capital-flow.md`](wallet-hierarchy-and-capital-flow.md)).
 
@@ -281,32 +286,136 @@ interface used for Copper applies here — switching providers is a config chang
 - (Out of scope) Bybit, Deribit, OKX use their own institutional custody — Hyperliquid + Aster are on-chain-direct (no
   CEFFU equivalent, wallets sit at the smart-contract level).
 
-#### Authentication / API architecture — PENDING
+#### Architecture overview
 
-> CEFFU API auth shape, request signing, endpoint catalogue. Mirror the Copper subsection (Authentication, Core
-> Endpoints, Wallet Types, Transaction Signing Flow, Supported Chains, Transfer Policies) when content authors populate.
-> Reference: <https://www.ceffu.com/docs> (validate against current CEFFU institutional-API documentation).
+End-to-end flow for a Binance institutional position backed by CEFFU OES:
 
-#### CeffuCustodyProvider — PENDING
+```
+Client → CEFFU custody account → Binance Futures (via OES bilateral mirror)
+                                       │
+                                       ├── Strategy issues order via execution-service
+                                       │
+                                       ├── Position entered on Binance Futures
+                                       │   (collateral remains at CEFFU; mirror credit at Binance)
+                                       │
+                                       └── Daily mark-to-market + P&L settlement
+                                            ↑
+                                            └── CEFFU adjusts custody balance to reflect
+                                                realised + unrealised P&L (settlement window)
+```
 
-> `CeffuCustodyProvider` class in `execution-service/execution_service/custody/`. Mirror the Copper subsection
-> (Constructor / Methods / Factory). The pluggable `CustodyProvider` interface in
-> `unified-config-interface/testnet_contracts.py` drives the factory pattern.
+The custody-side balance at CEFFU is the source of truth for available collateral; the venue-side margin at Binance is
+a mirror. position-balance-monitor reads custody balance per `(venue=binance, asset)` from the CEFFU provider and
+reconciles against Binance's reported margin to detect mirror drift.
 
-#### Testing — PENDING
+#### Onboarding flow (operator runbook)
 
-> Mock mode + integration tests + VCR cassettes — mirror Copper's `tests/integration/test_copper_custody_provider.py`
-> shape under `tests/integration/test_ceffu_custody_provider.py`. Per CLAUDE.md "Testing Infrastructure" rule:
-> credential-free local tests via `CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`; cassette parity test in
-> `unified-api-contracts/tests/test_cassette_schema_parity.py`.
+1. **Binance institutional account.** Operator signs the Binance Institutional Services agreement, opening an OES-
+   eligible Binance Futures account. CEFFU is named as the off-exchange custodian.
+2. **CEFFU institutional account.** Operator signs the CEFFU custody agreement, receives institutional account ID +
+   API credentials (HMAC key + secret, parity expectations with Copper). CEFFU enables the OES bilateral mirror to the
+   Binance account opened in step 1.
+3. **Sandbox onboarding.** Operator requests CEFFU sandbox credentials separately. Sandbox base URL +
+   sub-account-model details are <TBD-OPERATOR-PROVIDES-API-SPEC> — populate once received.
+4. **Secret Manager wiring.** Credentials stored under `ceffu-api-key` / `ceffu-api-secret` / `ceffu-org-id` (production)
+   and `ceffu-sandbox-api-key` / `ceffu-sandbox-api-secret` (staging/test). `ApiKeyReloader` from UTL handles hot-reload
+   per workspace standard.
+5. **execution-service config flip.** Set `CUSTODY_PROVIDER=ceffu` for the Binance institutional execution flow;
+   non-Binance CeFi + DeFi continue routing through Copper. Wallet mapping in
+   `gs://wallet-config-{pid}/wallet_mapping.json` declares `custodian: ceffu` for Binance treasury + trading sub-
+   accounts.
+6. **Dry-run + paper-trade.** Sandbox flow validates onboarding before any production capital moves. Master plan
+   Group F Item 19 paper-trade smoke validates this end-to-end.
 
-#### Configuration — PENDING
+#### API integration — PENDING SPEC
 
-> Environment variables, Secret Manager keys, per-strategy wallet mapping. Mirror Copper subsection. CEFFU credentials
-> should follow the workspace HMAC-SHA256 pattern + `ApiKeyReloader` from UTL (per CLAUDE.md "Service Infrastructure
-> Requirements" rule).
+The exact REST endpoint catalogue is <TBD-OPERATOR-PROVIDES-API-SPEC>. Expected shape (mirror Copper § 2.3.5 once
+confirmed):
 
-#### Open questions (CEFFU content authors)
+| Capability         | Expected method | Path                                | Notes                                              |
+| ------------------ | --------------- | ----------------------------------- | -------------------------------------------------- |
+| Balance query      | GET             | `/<TBD>/accounts/{id}/balances`     | Per token, per chain                               |
+| Collateral move    | POST            | `/<TBD>/oes/transfers`              | Custody → Binance margin and reverse               |
+| Settlement query   | GET             | `/<TBD>/oes/settlements?from&to`    | Daily P&L reconciliation                           |
+| Sign transaction   | POST            | `/<TBD>/orders` + `/<TBD>/sign`     | Parity with Copper's two-step MPC signing          |
+| List sub-accounts  | GET             | `/<TBD>/accounts`                   | Sub-account-per-strategy model decision pending    |
+
+#### Authentication / signing — skeleton in place, header names TBD
+
+`CeffuCustodyProvider._sign_request()` currently uses HMAC-SHA256 over `{timestamp_ms}{METHOD}{path}{body}` and emits
+Copper-style headers (`ApiKey` / `Signature` / `Timestamp` / `Content-Type`). This is a placeholder shape — the final
+header naming convention is <TBD-OPERATOR-PROVIDES-API-SPEC> (CEFFU may use `X-CEFFU-*` style or a different signing
+canonicalisation). The skeleton is wired in advance so the eventual real wiring is a header-rename diff plus a base-URL
+fill, not an architecture change.
+
+#### Sandbox / staging — PENDING
+
+Sandbox base URL: `<TBD-OPERATOR-PROVIDES-API-SPEC>`. Sandbox credentials are kept separate in Secret Manager
+(`ceffu-sandbox-api-key` / `ceffu-sandbox-api-secret`) so paper-trade smokes never accidentally hit production. Set
+`CustodyConfig.sandbox=True` to route to sandbox at provider construction.
+
+#### Daily operational flow
+
+| Phase             | Time (UTC)               | Action                                                                                  |
+| ----------------- | ------------------------ | --------------------------------------------------------------------------------------- |
+| Mark-to-market    | Continuous (per Binance) | Binance recalculates margin per tick; mirror credit at CEFFU updates intraday           |
+| Settlement window | <TBD> daily              | CEFFU finalises end-of-day P&L; custody balance adjusted; alerting-service confirms     |
+| Margin recall     | On threshold breach      | Position-balance-monitor triggers transfer from CEFFU treasury → Binance trading sub-account |
+| Reconciliation    | Post-settlement          | batch-vs-live reconciler asserts `custody_balance + position_unrealised == ledger_total`    |
+
+The exact settlement window timing is <TBD-OPERATOR-PROVIDES-API-SPEC> — populate once CEFFU confirms.
+
+#### Risk controls
+
+- **Credit-utilisation cap** — kill-switch rule fires when `position_notional / custody_balance > threshold` per the
+  alerting-service `LIVE_RISK_KILL_SWITCH` ruleset (see [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md)).
+- **Automatic margin recall threshold** — position-balance-monitor triggers proactive collateral transfer when the
+  Binance-side margin ratio drops below `recall_threshold` (default 1.5x maintenance).
+- **Withdrawal whitelist** — destination addresses must be pre-approved. Whitelist management is API-driven vs operator-
+  driven via the CEFFU dashboard: <TBD-OPERATOR-PROVIDES-API-SPEC> — populate once the CEFFU account model is confirmed.
+- **Rate-limit + backoff** — every CEFFU API call routes through UAC `classify_venue_error()` per workspace adapter
+  rule; transient 5xx + 429 retried with exponential backoff; 4xx auth/whitelist errors surface as `ADAPTER_FETCH_FAILED`
+  events without retry (per the no-fire-and-forget principle).
+
+#### CeffuCustodyProvider implementation reference
+
+`execution-service/execution_service/custody/ceffu.py` (stub shipped 2026-05-10):
+
+| Component            | Status                | Detail                                                                                          |
+| -------------------- | --------------------- | ----------------------------------------------------------------------------------------------- |
+| Constructor          | ✅ Wired              | Accepts `api_key` / `api_secret` / `organization_id` / `sandbox` parity with Copper             |
+| `_sign_request`      | ✅ Skeleton wired     | HMAC-SHA256 placeholder; final header names + canonicalisation pending API spec                 |
+| `sign_transaction`   | ❌ NotImplementedError | Raises with operator-action prompt + reference to this codex doc                                |
+| `get_balance`        | ❌ NotImplementedError | Same                                                                                            |
+| `create_transfer`    | ❌ NotImplementedError | Same                                                                                            |
+| `list_wallets`       | ❌ NotImplementedError | Same                                                                                            |
+| Factory registration | ✅ Live               | `get_custody_provider(CustodyConfig(provider="ceffu", ...))` returns `CeffuCustodyProvider`     |
+
+Tests: `execution-service/tests/unit/custody/test_ceffu_provider.py` — 11 tests covering construction + factory
+registration + every async method's NotImplementedError contract.
+
+#### Configuration
+
+| Variable           | Default                       | Description                                            |
+| ------------------ | ----------------------------- | ------------------------------------------------------ |
+| `CUSTODY_PROVIDER` | `mock`                        | Set to `ceffu` for Binance institutional flow         |
+| `CEFFU_API_URL`    | `<TBD-OPERATOR-PROVIDES-API-SPEC>` | Production endpoint; sandbox toggled via `sandbox=True` |
+
+Secret Manager keys are listed in §8 Configuration below alongside Copper's.
+
+#### Testing
+
+- **Mock mode** — `MockCustodyProvider` covers every test path that doesn't specifically exercise CEFFU's signing
+  surface; CEFFU is only constructed when integration tests are explicitly tagged with `@pytest.mark.allow_network` and
+  CEFFU sandbox credentials are wired in CI.
+- **Stub-state unit tests** — every async method's NotImplementedError contract is asserted in
+  `tests/unit/custody/test_ceffu_provider.py` so a future agent can't silently flip a method to a partial implementation
+  without paired test updates.
+- **Sandbox integration tests** — `tests/integration/test_ceffu_custody_provider.py` is **PENDING** until CEFFU sandbox
+  credentials + API spec land. Cassette path will be `tests/cassettes/ceffu/{sign,balance}.yaml` validated via
+  `unified-api-contracts/tests/test_cassette_schema_parity.py`.
+
+#### Open questions (CEFFU content authors / operator triage)
 
 - [ ] Does CEFFU expose a sub-account-per-strategy model out-of-the-box, or do we manage strategy-attribution ourselves
       at the application layer (PBMS) on top of a single CEFFU account?
@@ -316,6 +425,9 @@ interface used for Copper applies here — switching providers is a config chang
       latency) or is it global edge-cached?
 - [ ] What's the cost / fee model? (Copper charges by AUM band; CEFFU's institutional pricing is bespoke per client.)
 - [ ] Withdrawal whitelist management — is it API-driven or operator-driven via the CEFFU dashboard?
+- [ ] Daily settlement window timing — what UTC hour does CEFFU finalise end-of-day P&L?
+- [ ] Exact REST endpoint paths + authentication header naming convention (Copper-style vs CEFFU-specific).
+- [ ] Sandbox base URL for staging-only paper-trade smokes.
 
 ---
 
@@ -397,8 +509,11 @@ and example JSON.
 
 - **Copper MPC**: Private keys are split across multiple parties (Copper, client, backup) and never reassembled. Signing
   requires coordinated multi-party computation. Sub-2-second signing latency.
-- **CEFFU (planned)**: Binance-institutional MPC equivalent. Same security model as Copper from the consumer's POV;
-  exact key-shard topology + signing latency pending CEFFU integration spec.
+- **CEFFU (stub-shipped, API spec pending)**: Binance-institutional MPC for OES (off-exchange settlement). Same security
+  model as Copper from the consumer's POV; exact key-shard topology + signing latency pending CEFFU integration spec.
+  Provider envelope + factory registration + HMAC signing skeleton are wired in `execution_service/custody/ceffu.py`;
+  async methods raise `NotImplementedError("CEFFU API spec pending")` until the operator confirms REST endpoints +
+  sandbox URL + sub-account model.
 - **LocalKeyCustodyProvider**: Raw private key in memory. Acceptable for development against Tenderly forks or testnets.
   Never use in production.
 - **MockCustodyProvider**: Deterministic SHA256 signatures. No cryptographic security. Test-only.
@@ -427,7 +542,10 @@ Against Copper **sandbox environment**:
 - Real MPC signing but on testnet wallets
 - Skipped if sandbox credentials unavailable
 
-CEFFU integration tests pending integration spec.
+CEFFU integration tests pending integration spec — `tests/integration/test_ceffu_custody_provider.py` will mirror the
+Copper integration shape once sandbox credentials + REST endpoints are confirmed (see § 2.4 Open questions). Stub-state
+unit tests covering construction + factory registration + NotImplementedError contracts already live at
+`tests/unit/custody/test_ceffu_provider.py`.
 
 ### VCR cassettes
 
