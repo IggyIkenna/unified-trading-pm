@@ -2,7 +2,15 @@
 scope: [engineer, admin]
 ---
 
-# Cross-Cutting: MEV Protection
+# Cross-Cutting: MEV Protection (strategy-side)
+
+> **CANONICAL location for the protection mechanism**: [`codex/04-architecture/mev-protection.md`](../../../04-architecture/mev-protection.md).
+> This doc is the **strategy-side narrative** scope-narrowed 2026-05-10 per
+> `cross_asset_group_catalogue_audit_2026_05_10` Phase 4 codex consolidation. Read the canonical for "what is MEV /
+> threat model / protection mechanisms / provider implementations / error codes". Read THIS doc for
+> "per-strategy MEV policy YAML + per-chain rules + per-action-type mapping + monitoring metrics".
+>
+> If editing the implementation / threat model / provider behaviour, edit the canonical, NOT this doc.
 
 > **What it is:** The DeFi-specific execution policy for routing transactions to avoid miner/validator extractable value
 > (frontrunning, sandwich attacks, backrunning). MEV protection is a _submission-mode_ choice per transaction,
