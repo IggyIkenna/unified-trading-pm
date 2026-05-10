@@ -36,14 +36,15 @@ explicit operator decisions on owner + scope. The audit's mechanical false-negat
 
 > **Status update 2026-05-09**: Connector shipped at `execution-service@25a1d561`. File:
 > `execution-service/execution_service/defi_execution/protocols/aster.py` (550+ lines, full Binance Futures-compat REST
-> + HMAC-SHA256 signing + paper-trade + 4 UAC schema parsing helpers). Tests:
-> `execution-service/tests/defi_execution/unit/test_aster_connector.py` (30 tests, all green). Registered in
-> `defi_execution/protocols/__init__.py` + `defi_execution/__init__.py`. UAC schemas already existed
-> (`unified_api_contracts.external.aster.schemas`); UAC capability registry already declared `"aster"` PERPS protocol.
-> Open follow-ups (NOT blockers, will land in defi_master Fork 2): live REST POST transport (this connector returns the
-> prepared signed shape; httpx POST owned by execution-service runtime layer per Hyperliquid pattern) + Tenderly fork
-> integration test for end-to-end signed-flow validation. Master Group F Item 20 CeFi-testnet column can flip to ◐ once
-> the runtime POST + integration test land.
+>
+> - HMAC-SHA256 signing + paper-trade + 4 UAC schema parsing helpers). Tests:
+>   `execution-service/tests/defi_execution/unit/test_aster_connector.py` (30 tests, all green). Registered in
+>   `defi_execution/protocols/__init__.py` + `defi_execution/__init__.py`. UAC schemas already existed
+>   (`unified_api_contracts.external.aster.schemas`); UAC capability registry already declared `"aster"` PERPS protocol.
+>   Open follow-ups (NOT blockers, will land in defi_master Fork 2): live REST POST transport (this connector returns
+>   the prepared signed shape; httpx POST owned by execution-service runtime layer per Hyperliquid pattern) + Tenderly
+>   fork integration test for end-to-end signed-flow validation. Master Group F Item 20 CeFi-testnet column can flip to
+>   ◐ once the runtime POST + integration test land.
 
 ### What
 
@@ -126,7 +127,19 @@ strategy_and_dart_master_2026_05_07.md.
 
 ---
 
-## Item 3 — MDPS streaming primitives unshipped (P0, blocks live_pipeline Phase 4) — PARTIAL 2026-05-09
+## Item 3 — MDPS streaming primitives unshipped (P0, blocks live_pipeline Phase 4) — PARTIAL 2026-05-09; second-pass-deferred 2026-05-10
+
+> **2026-05-10 update**: chain agent re-attempted Phase 1.2 + Phase 2 today and surfaced a **semantic dual-SSOT
+> collision** between UTL `close_candle_writer` (uses `record_captured` v5 verb) and existing
+> `canonical_writer.write_candle_parquet` (uses `manifest_writer.add(...)` v4 verb) that the original plan-of-record
+> did not capture. Migrating `_streaming_write_per_tf` alone would land MDPS production with two manifest-write SSOTs —
+> banned by CLAUDE.md "No double SSOT". Right migration shape requires Phase 1.2.A (manifest verb unify in
+> `write_candle_parquet`) BEFORE Phase 1.2.B (the originally-scoped `_streaming_write_per_tf` migration). Plan-of-
+> record body needs refresh + a workspace-grep audit table per "Citadel-Grade Planning § 6 Downstream Consumer Updates"
+> before the next agent can safely pick up. Full evidence + recommended decision in
+> [`mdps_phase_1_2_phase_2_deferral_2026_05_10.md`](mdps_phase_1_2_phase_2_deferral_2026_05_10.md). The 2026-05-09
+> "DEFERRED-AFTER-WORKSPACE-QG-CLEAN" rationale below understates the blocker — the dual-SSOT issue is architectural,
+> not operational.
 
 ### What
 
@@ -144,7 +157,8 @@ These are explicitly named as STRICT BLOCKER for live-pipeline Phase 4 in the li
 
 ### Update 2026-05-09 — UAC SSOT shipped, code wiring still open
 
-Per [`mdps_streaming_primitives_prompt_vs_plan_conflict_2026_05_09.md`](mdps_streaming_primitives_prompt_vs_plan_conflict_2026_05_09.md)
+Per
+[`mdps_streaming_primitives_prompt_vs_plan_conflict_2026_05_09.md`](mdps_streaming_primitives_prompt_vs_plan_conflict_2026_05_09.md)
 operator-approved option (a) — ship per plan-of-record.
 
 **Shipped this session (2026-05-09):**
@@ -153,49 +167,49 @@ operator-approved option (a) — ship per plan-of-record.
   UAC@`4bd84e7c` (`unified_api_contracts/internal/events.py`) — 3 typed event-type members + 3 Pydantic detail models
   (`ConnectivityGapDetectedDetails` / `ConnectivityRecoveredDetails` / `ConnectivityGapBackfilledDetails`) + 3 typed
   event wrappers + 12 unit tests in `tests/internal/unit/test_connectivity_gap_event_taxonomy.py`. The `classification`
-  field on `ConnectivityGapDetectedDetails` is a closed-set Literal (`WS_DISCONNECT` / `STALE_HEARTBEAT` /
-  `API_TIMEOUT` / `UNKNOWN`) so adapters can't accidentally emit untyped strings. This is the alerting-service /
-  reconciler / auto-backfill SSOT — downstream consumers can now type their event-stream subscriptions against
-  these wrappers without inventing local types.
+  field on `ConnectivityGapDetectedDetails` is a closed-set Literal (`WS_DISCONNECT` / `STALE_HEARTBEAT` / `API_TIMEOUT`
+  / `UNKNOWN`) so adapters can't accidentally emit untyped strings. This is the alerting-service / reconciler /
+  auto-backfill SSOT — downstream consumers can now type their event-stream subscriptions against these wrappers without
+  inventing local types.
 
 **Still open (DEFERRED-PER-SUB-AGENT-CAPACITY this session — see conflict-issue § "Recommended decision (a)"):**
 
 - ✅ `open_candle_writer` / `close_candle_writer` UTL parquet-write-lifecycle wrappers — SHIPPED 2026-05-09
   UTL@`ac6e3244`. Module at `unified-trading-library/unified_trading_library/streaming/candle_writer.py` (365 lines)
-  + `tests/unit/streaming/test_candle_writer.py` (10 tests, all passing). Phase 1.1 of plan-of-record. Open/close
-  lifecycle with `CandleWriterHandle` dataclass, `SchemaDriftError` on drifted second chunk, idempotent close,
-  4-branch decision matrix (error → `record_failed` / zero rows → `record_empty(SOURCE_RETURNED_ZERO)` / rows →
-  `record_captured` + atomic rename / second-call no-op). Cluster validation kwargs forwarded to `record_captured`
-  for bundled shards.
+  - `tests/unit/streaming/test_candle_writer.py` (10 tests, all passing). Phase 1.1 of plan-of-record. Open/close
+    lifecycle with `CandleWriterHandle` dataclass, `SchemaDriftError` on drifted second chunk, idempotent close,
+    4-branch decision matrix (error → `record_failed` / zero rows → `record_empty(SOURCE_RETURNED_ZERO)` / rows →
+    `record_captured` + atomic rename / second-call no-op). Cluster validation kwargs forwarded to `record_captured` for
+    bundled shards.
 - ❌ MDPS `_streaming_write_per_tf` callsite migration — Phase 1.2 of plan-of-record. **DEFERRED-AFTER-WORKSPACE-QG-
-  CLEAN**: lives in
-  `market-data-processing-service/market_data_processing_service/app/core/live_workers.py:1118-1164` (per plan-of-
-  record line 87). Substantial refactor of the per-timeframe accumulator pattern that needs full-MDPS QG +
-  shard-level isolation tests + the 4-test matrix `(N batches × M rows) → exactly ONE record_captured per
-  (timeframe, shard)`. Blocker for in-flight ship: MDPS working tree has 9+ foreign-modified test files from
-  parallel agents' sessions; safe migration requires a coordinated tab assignment in tomorrow's work-split. UTL
-  primitives are now stable + tested → next agent has a clean target to wire against.
+  CLEAN**: lives in `market-data-processing-service/market_data_processing_service/app/core/live_workers.py:1118-1164`
+  (per plan-of- record line 87). Substantial refactor of the per-timeframe accumulator pattern that needs full-MDPS QG +
+  shard-level isolation tests + the 4-test matrix
+  `(N batches × M rows) → exactly ONE record_captured per (timeframe, shard)`. Blocker for in-flight ship: MDPS working
+  tree has 9+ foreign-modified test files from parallel agents' sessions; safe migration requires a coordinated tab
+  assignment in tomorrow's work-split. UTL primitives are now stable + tested → next agent has a clean target to wire
+  against.
 - ✅ MTDS `LiveConnectivityWatchdog` — SHIPPED 2026-05-09 mtds@`91e21cd`. Module at
   `market-tick-data-service/market_tick_data_service/market_interface/connectivity_watchdog.py` (249 lines) +
   `tests/unit/test_connectivity_watchdog.py` (16 tests). Heartbeat tracker per (venue, data_type), simplified state
-  machine (`HEALTHY ↔ GAP` — STALE/RECOVERING are intermediate ticks not separate states), emits the 3-event family
-  via `log_event(LifecycleEventType.CONNECTIVITY_GAP_DETECTED.value, …)`. Adapter wire-in (heartbeat() calls in CCXT /
+  machine (`HEALTHY ↔ GAP` — STALE/RECOVERING are intermediate ticks not separate states), emits the 3-event family via
+  `log_event(LifecycleEventType.CONNECTIVITY_GAP_DETECTED.value, …)`. Adapter wire-in (heartbeat() calls in CCXT /
   Databento / etc. WS adapters) is a follow-up todo for adapter maintainers — out of scope here.
-- ❌ `ResourceProfiler.on_memory_warning` wiring — Phase 2 of plan-of-record. **DEFERRED-AFTER-PHASE-1.2**: depends
-  on Phase 1.2 callsite migration per the plan's execution DAG; cannot ship in isolation. Same MDPS coordinated tab
+- ❌ `ResourceProfiler.on_memory_warning` wiring — Phase 2 of plan-of-record. **DEFERRED-AFTER-PHASE-1.2**: depends on
+  Phase 1.2 callsite migration per the plan's execution DAG; cannot ship in isolation. Same MDPS coordinated tab
   assignment that picks up Phase 1.2 owns this. `ConnectivityWatchdog` event-subscriber wire-in (subscribes to
   `LifecycleEventType.CONNECTIVITY_GAP_DETECTED` to optionally pause MDPS feed during gaps) lands here too.
 - ❌ Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline — separate `[SCRIPT] P1` todo in plan-of-record (7-day
   observation per venue → 99th percentile). Bootstrap with conservative default (e.g. 60s) is fine until calibration.
 
-**Why this session shipped only the SSOT half:** Each of the 5 deliverables is a separate full-QG cycle in a
-different repo (UTL / UAC / MTDS / MDPS×2). The MDPS Phase 1.2 callsite migration alone is a substantial refactor of
-a 1100+ line file that needs schema-drift detection across chunks + shard-level failure isolation + 4-test matrix
-verification — not safe in a parallel-agent slot with foreign WIP in the shared working tree (UTL had 9 foreign-
-modified files from a parallel agent's session at start). The UAC SSOT extension is the cleanest, smallest, and
-most-independent of the 5 — it has zero downstream wire-in dependency for landing the SSOT, alerting-service +
-reconciler can now subscribe by type, and the next agent picking up the remaining items has a typed event surface to
-implement against rather than inventing one.
+**Why this session shipped only the SSOT half:** Each of the 5 deliverables is a separate full-QG cycle in a different
+repo (UTL / UAC / MTDS / MDPS×2). The MDPS Phase 1.2 callsite migration alone is a substantial refactor of a 1100+ line
+file that needs schema-drift detection across chunks + shard-level failure isolation + 4-test matrix verification — not
+safe in a parallel-agent slot with foreign WIP in the shared working tree (UTL had 9 foreign- modified files from a
+parallel agent's session at start). The UAC SSOT extension is the cleanest, smallest, and most-independent of the 5 — it
+has zero downstream wire-in dependency for landing the SSOT, alerting-service + reconciler can now subscribe by type,
+and the next agent picking up the remaining items has a typed event surface to implement against rather than inventing
+one.
 
 ### Why it matters
 
