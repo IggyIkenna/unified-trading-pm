@@ -455,7 +455,8 @@
         "standard"
       ],
       "archived_into": "features-service",
-      "archive_date": "2026-05-08"
+      "archive_date": "2026-05-08",
+      "local_path": "archive/features-calendar-service"
     },
     "features-commodity-service": {
       "type": "service",
@@ -509,7 +510,8 @@
         "tradfi"
       ],
       "archived_into": "features-service",
-      "archive_date": "2026-05-08"
+      "archive_date": "2026-05-08",
+      "local_path": "archive/features-commodity-service"
     },
     "features-cross-instrument-service": {
       "type": "service",
@@ -563,7 +565,8 @@
         "standard"
       ],
       "archived_into": "features-service",
-      "archive_date": "2026-05-08"
+      "archive_date": "2026-05-08",
+      "local_path": "archive/features-cross-instrument-service"
     },
     "features-delta-one-service": {
       "type": "service",
@@ -616,7 +619,8 @@
         "standard"
       ],
       "archived_into": "features-service",
-      "archive_date": "2026-05-08"
+      "archive_date": "2026-05-08",
+      "local_path": "archive/features-delta-one-service"
     },
     "features-multi-timeframe-service": {
       "type": "service",
@@ -670,7 +674,8 @@
         "standard"
       ],
       "archived_into": "features-service",
-      "archive_date": "2026-05-08"
+      "archive_date": "2026-05-08",
+      "local_path": "archive/features-multi-timeframe-service"
     },
     "features-onchain-service": {
       "type": "service",
@@ -723,7 +728,8 @@
         "standard"
       ],
       "archived_into": "features-service",
-      "archive_date": "2026-05-08"
+      "archive_date": "2026-05-08",
+      "local_path": "archive/features-onchain-service"
     },
     "features-sports-service": {
       "type": "service",
@@ -776,7 +782,8 @@
         "standard"
       ],
       "archived_into": "features-service",
-      "archive_date": "2026-05-08"
+      "archive_date": "2026-05-08",
+      "local_path": "archive/features-sports-service"
     },
     "features-volatility-service": {
       "type": "service",
@@ -829,7 +836,8 @@
         "standard"
       ],
       "archived_into": "features-service",
-      "archive_date": "2026-05-08"
+      "archive_date": "2026-05-08",
+      "local_path": "archive/features-volatility-service"
     },
     "features-service": {
       "type": "service",
@@ -1118,7 +1126,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1429,7 +1437,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1617,7 +1625,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",

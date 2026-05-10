@@ -8,8 +8,8 @@
 - `deployment-service/configs/runtime-topology.yaml` — runtime wiring: topics, storage, modes, co-location rules
 - `unified-trading-pm/TOPOLOGY-DAG.md` — human-readable Mermaid diagram (this file)
 
-**Architectural narrative:** `unified-trading-codex/04-architecture/tier-and-import-architecture.md` **Protocol injection
-contract:** `unified-trading-codex/04-architecture/tier-and-import-architecture.md` **Cross-refs:**
+**Architectural narrative:** `unified-trading-codex/04-architecture/tier-and-import-architecture.md` **Protocol
+injection contract:** `unified-trading-codex/04-architecture/tier-and-import-architecture.md` **Cross-refs:**
 `05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md` · `05-infrastructure/ui-dependency-matrix.md`
 
 **Last Updated:** 2026-03-24 (consolidated active UI/API surface: unified-trading-system-ui + deployment-ui;
@@ -90,16 +90,8 @@ flowchart TB
         subgraph L2["Layer 2 · Market Data Processing"]
             MDPS["market-data-processing-service\nUMI + UDC"]
         end
-        subgraph L3["Layer 3 · Features  (per-instrument × per-TF)"]
-            FCS["features-calendar-service\nUFC"]
-            FDS["features-delta-one-service\nUMI + UDC + UFC"]
-            FVS["features-volatility-service\nUMI + UDC + UFC"]
-            FOS["features-onchain-service\nUDEI + UDC + UFC\nAave · Uniswap · Curve"]
-            FSS["features-sports-service\nUSEI + UDC + UFC\nAPI-Football · Betfair · Pinnacle"]
-        end
-        subgraph L4["Layer 4 · Aggregation  (cross-instrument L3a + multi-timeframe L3b)"]
-            FCIS["features-cross-instrument-service\nUFC + UDC\nL3a: Many instruments × 1 TF\nRegime · Cross-venue · RV/IV · Cross-asset corr"]
-            FMTS["features-multi-timeframe-service\nUFC + UDC\nL3b: 1 instrument × many TFs\ntf_momentum · tf_structure · tf_vol · tf_session"]
+        subgraph L3["Layer 3 + 4 · features-service (consolidated 2026-05-08 — 8 families as sub-packages, single Docker image, --feature-family CLI dispatcher)"]
+            FS["features-service\nfeatures_service.{calendar,commodity,cross_instrument,delta_one,multi_timeframe,onchain,sports,volatility}\nUMI + UDC + UFC + UDEI + USEI\nLayer 3a per-instrument × per-TF (calendar/commodity/delta_one/onchain/sports/volatility)\nLayer 3b cross_instrument: Many instruments × 1 TF (regime · cross-venue · RV/IV · cross-asset corr)\nLayer 3c multi_timeframe: 1 instrument × many TFs (tf_momentum · tf_structure · tf_vol · tf_session)\nLegacy 8 features-*-service repos archived 2026-05-08 → archive/ (subtree-merged)"]
         end
         subgraph L5["Layer 5 · ML Pipeline"]
             MLTR["ml-training-service\nUML + UDC"]

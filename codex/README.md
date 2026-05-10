@@ -41,7 +41,7 @@ extends it, per-service captures what is unique.
 | `11-project-management/` | Issue tracking, roadmaps (batch/live production), priority matrix, milestones                                   |
 | `12-agent-workflow/`     | AI agent workflow guides, task templates, sub-agent patterns                                                    |
 | `13-codex-governance/`   | SSOT boundary rules, section registry, governance README                                                        |
-| `14-customer-journeys/`          | **Customer playbook SSOT**: 3 audiences × 3 environments × 3 auth tiers × 4 catalogues + 177-page triage matrix |
+| `14-customer-journeys/`  | **Customer playbook SSOT**: 3 audiences × 3 environments × 3 auth tiers × 4 catalogues + 177-page triage matrix |
 
 ### Start Here
 
@@ -80,11 +80,7 @@ flowchart TB
     end
 
     subgraph features["Feature Layer"]
-        calendar[features-calendar-service]
-        delta[features-delta-one-service]
-        vol[features-volatility-service]
-        onchain[features-onchain-service]
-        sports[features-sports-service]
+        fs[features-service<br/>8 families: calendar · commodity · cross_instrument<br/>delta_one · multi_timeframe · onchain · sports · volatility<br/>consolidated 2026-05-08]
     end
 
     subgraph ml["ML Layer"]
