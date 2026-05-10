@@ -84,7 +84,18 @@ Recommended: (a) — operator-driven scope decision. Open item on defi_master_20
 
 ---
 
-## Item 2 — 2-year config-grid backtest runner — **SHIPPED 2026-05-09 (strategy-service@`3dea3c7`); RESOLVED-PENDING-OPERATOR-RUN**
+## Item 2 — 2-year config-grid backtest runner — **OPERATIONALLY LAUNCHED 2026-05-10 (deployment-service@`06f0a54` + `5914c83`); RUN IN PROGRESS**
+
+> **Status update 2026-05-10**: VM launcher chain shipped; both archetype VMs RUNNING in `asia-northeast1-c` per the
+> chain in `strategy_2yr_grid_run_launcher_authoring_2026_05_10.md`:
+>
+> - `strategy-backtest-grid-carry-staked-basis-20260510-195855` (RUNNING; runner past V2 instance registration phase)
+> - `strategy-backtest-grid-arbitrage-price-dispersi-20260510-195914` (RUNNING; runner past V2 instance registration phase)
+>
+> ETA: ~8-12h per archetype = ~24h total wall-clock. On completion both VMs auto-shutdown via shutdown-script;
+> `summary.parquet` lands at `gs://strategy-store-central-element-323112/backtests/config_grid_2yr/{archetype}/{run_id}/`.
+> Full operational closure (per Plans Run To Actual Completion HARD RULE) requires verifying parquet rows + sample
+> inspection AFTER the runners finish; current state = "code shipped + operationally-launched + monitoring in flight."
 
 > **Status update 2026-05-09**: script + 22 unit tests shipped; smoke verified on both archetypes; basedpyright + ruff
 > clean. The full 2-yr grid run (~8-12h) is operator-scheduled — launch command documented in the script docstring.

@@ -509,7 +509,16 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
     (position_size_pct / max_drawdown_threshold / slippage_cap_bps + 2 archetype-specific dims) at coarse / medium /
     fine density (243 / 3,125 / 16,807 configs/archetype). Replays each (archetype, config) cell through V2BatchHarness
     per "Batch = Live" principle. Smoke verified locally on both archetypes. RESOLVED-PENDING-OPERATOR-RUN: full 2-yr
-    grid run (~8-12h) is operator-scheduled — launch command in script docstring.
+    grid run (~8-12h) is operator-scheduled — launch command in script docstring. **2026-05-10 update — OPERATIONALLY
+    LAUNCHED** (deployment-service@`06f0a54` shipped `launch-strategy-backtest-grid-vm.sh` + `setup-data-pipeline-vm.sh`
+    `strategy-backtest-grid` VM_TASK branch + `vm_zombie_watchdog.py` prefix registration; `5914c83` script-path
+    invocation fix). 2 GCE VMs RUNNING in `asia-northeast1-c`:
+    `strategy-backtest-grid-carry-staked-basis-20260510-195855` +
+    `strategy-backtest-grid-arbitrage-price-dispersi-20260510-195914`. Both runners past V2 instance registration phase
+    per `gs://deployment-scripts-central-element-323112/vm-logs/{vm-name}/run.log`; ETA ~8-12h per archetype. Output
+    will land at `gs://strategy-store-central-element-323112/backtests/config_grid_2yr/{archetype}/{run_id}/`. Final
+    operational closure (parquet row inspection + sample read) lands when the runners finish per
+    `strategy_2yr_grid_run_launcher_authoring_2026_05_10.md`.
 19. **Treasury / custody integration** — Copper for DeFi side; CEFFU for Binance institutional flow; cross-wallet
     transfer paths verified. Single SSOT: `codex/04-architecture/custody-providers.md` (folded 2026-05-08, replaces the
     former per-provider docs). **Deep audit 2026-05-07 / merged 2026-05-08**: Copper section is full; CEFFU section is
@@ -898,7 +907,7 @@ sign-off.
 | 15  | E · Operability      | UTS-UI surfaces visible (`/ops/admin/...` route exists or in-scope)                                    | `QG:unified-trading-system-ui` route smoke + DART persona Playwright                                    | 2026-05-09    |
 | 16  | E · Operability      | Deployment-UI launch + GCS log streaming; backfill / restart / forward-poll launchable from UI         | `cron:vm-zombie-watchdog-` + deployment-UI heartbeat                                                    | 2026-05-10    |
 | 17  | F · Trading prereqs  | Backtest fidelity: real gas, real market impact, realistic matching engine + cost+yield precision      | `cron:mtds-paper-smoke-` + `simulation_scenarios_topology_price_shocks` Phase 9 (NOT YET RUNNING)       | NEVER         |
-| 18  | F · Trading prereqs  | 2-year batch backtest run: completed across config grid; P&L variance per archetype                    | `cron:strategy-2yr-grid-backfill-` (script SHIPPED strategy-service@3dea3c7; full-run operator-pending) | NEVER         |
+| 18  | F · Trading prereqs  | 2-year batch backtest run: completed across config grid; P&L variance per archetype                    | `cron:strategy-backtest-grid-` (launcher SHIPPED deployment-service@06f0a54+5914c83; 2 VMs RUNNING 2026-05-10) | 2026-05-10    |
 | 19  | F · Trading prereqs  | Treasury / custody integration: Copper for DeFi, CEFFU for Binance                                     | `manual` (operator sign-off; live-only)                                                                 | NEVER         |
 | 20  | F · Trading prereqs  | Live testnet replicates prod: AWS+GCP, full pipeline, Aster+Hyperliquid+EVM connectors                 | `cron:dex-perp-onboarding-` + paper-trade smoke runbook                                                 | NEVER         |
 | 21  | F · Trading prereqs  | Reconciliation suite: batch-vs-live + P&L attribution + execution-alpha measurement                    | `cron:batch-vs-live-recon-` (live-pipeline plan Phase 12 — helper SHIPPED UTL@908b1647; cron-pending)   | NEVER         |

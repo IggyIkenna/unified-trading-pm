@@ -2,20 +2,54 @@
 title: "2-yr config-grid backtest VM launcher authoring + Item #4 bounce-sweep scope decision (operator triage)"
 created: 2026-05-10
 author: agent-task-2026-05-10-vm-launches
-status: open
+status: resolved-pending-completion
 source:
   - audit_2026_05_08_substantial_unfixed_items.md Item #2 (RESOLVED-PENDING-OPERATOR-RUN) + Item #4 (recommended deferral)
   - master_to_live_defi_2026_05_23.md Group F Item 18 (already flipped [x])
   - strategy-service@3dea3c7 — run_2yr_config_grid_backtest.py shipped
-  - deployment-service/scripts/vm/setup-data-pipeline-vm.sh (no routing branch for ad-hoc Python scripts)
+  - deployment-service@06f0a54 — launcher + setup-vm routing branch + watchdog dict prefix shipped 2026-05-10
+  - deployment-service@5914c83 — script-path invocation fix shipped 2026-05-10
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 execution:
-  owner: operator triage → next strategy/deployment-service tab
+  owner: agent-task-2026-05-10-vm-launches (option α executed)
   cadence: one-shot (script execution); review at next daily-split sweep
   verifier: per-archetype `gs://strategy-store-{pid}/backtests/config_grid_2yr/<archetype>/<run_id>/{per_config,summary}.parquet` exists with non-empty rows + sample row inspection passes
-  last_executed: "NEVER"
+  last_executed: "2026-05-10 (launched; running)"
 ---
+
+## RESOLUTION 2026-05-10 — option (α) executed
+
+Both items shipped per the chain below. The 2 backtest VMs are RUNNING in `asia-northeast1-c`:
+
+- `strategy-backtest-grid-carry-staked-basis-20260510-195855` — STATUS=RUNNING.
+- `strategy-backtest-grid-arbitrage-price-dispersi-20260510-195914` — STATUS=RUNNING.
+
+Run logs at `gs://deployment-scripts-central-element-323112/vm-logs/{vm-name}/run.log` show both runners
+past the V2 instance registration phase (slot subscription per archetype). Heartbeat blobs present at
+`gs://deployment-scripts-central-element-323112/vm-heartbeat/{vm-name}.txt`. Auto-shutdown configured.
+
+ETA for completion: ~8-12h per archetype (medium grid, 2-yr replay window).
+
+Final exit-criteria closure (writing per-config / summary.parquet to
+`gs://strategy-store-central-element-323112/backtests/config_grid_2yr/{archetype}/{run_id}/`) lands when the
+runners finish. Operator should reverify event-stream emission + parquet row inspection at that point and
+then close this issue + flip master Group F Item 18 evidence cite to reference the actual run_id.
+
+### Code shipped this session
+
+- **deployment-service@`06f0a54`** — `launch-strategy-backtest-grid-vm.sh` (new, 232 LOC) +
+  `setup-data-pipeline-vm.sh` `strategy-backtest-grid` VM_TASK branch + `vm_zombie_watchdog.py`
+  `strategy-backtest-grid-` prefix registration (heartbeat-only).
+- **deployment-service@`5914c83`** — fix: invoke as `python scripts/run_2yr_config_grid_backtest.py` (script
+  path) not `python -m strategy_service.scripts.run_...` (module path). The repo's `scripts/` directory is
+  not part of the `strategy_service` package (no `__init__.py`); first launch attempt failed with
+  ModuleNotFoundError, fixed in second launch.
+
+### Item #4 — formally deferred per audit doc recommendation
+
+No work this session. Tracking remains at
+`mtds_databento_path_streaming_2026_05_07.md` Phase 4 per audit recommendation (b).
 
 # 2-yr config-grid backtest operational completion + Item #4 bounce-sweep deferral
 
