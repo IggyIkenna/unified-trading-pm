@@ -552,3 +552,39 @@ Two adjacent live-trading observability + testnet items surfaced during the
   archetype variant; stays operator-blocked on upstream-data triage
   per the data-blockers issue doc.
 - runbook_execution_governance_gaps_2026_05_08.md (related: peripheral QG wiring rule)
+
+### Item #10 — DART manual-trade UI build — ◐ PARTIAL-SHIPPED 2026-05-10 (option-c narrow scope)
+
+**Status**: ◐ PARTIAL-SHIPPED via option-c narrow scope; full Phase C refactor deferred.
+
+The DART terminal landing page + the 2 genuinely greenfield UI surfaces shipped at
+`unified-trading-system-ui@64660edd`:
+
+- `components/dart/trade-monitor.tsx` (~190 lines, 8 unit tests) — polling instruction-status monitor against
+  `/api/instructions/{id}/status` (5s default cadence, last-good-snapshot preservation on transient errors).
+- `components/dart/automation-toggle.tsx` (~190 lines, 10 unit tests) — OperationalMode toggle hitting
+  `/api/archetypes/{id}/operational-mode`; renders MANUAL → PAPER → LIVE forward graph + LIVE → MANUAL kill-switch;
+  surfaces 409s verbatim from the route shipped at strategy-service@`8bdc19c1`.
+- `app/(platform)/services/dart/terminal/page.tsx` (~150 lines) — operator landing page; enumerates
+  `ARCHETYPE_METADATA` (UAC mirror) + mounts AutomationToggle per archetype row; renders TradeMonitor when
+  `?instruction=<id>` URL param is present; links to existing `manual-trading-panel` Sheet (`/services/trading/overview`).
+- `tests/e2e/playbooks/dart-cockpit/phase-c-terminal-flow.spec.ts` (5 Playwright specs).
+
+**Why option-c, not full Phase C** — the 2026-05-08 9-agent audit ("Grep-Then-Read" reference incident) flagged that
+`ManualTradeForm` / `TradePreview` / `ExecutionDispatch` surfaces already exist as the `manual-trading-panel` Sheet
+under `unified-trading-system-ui/components/trading/manual/` (1,256 lines). Option-c verified-via-grep-then-read +
+shipped only the 3 genuinely-greenfield surfaces; the Sheet → route refactor + ExecutionDispatch endpoint rename
+defer to a dedicated successor plan once operator triages whether the existing Sheet pattern is sufficient for
+May-23 cutover.
+
+**Phase C remainder — DEFERRED**:
+
+- ManualTradeForm + TradePreview + ExecutionDispatch route refactor (Sheet → dedicated route).
+- Per-instruction monitor route `/dart/terminal/[instructionId]/page.tsx` (current option-c uses URL param shape).
+- Full submit → preview → confirm → monitor e2e Playwright spec.
+
+**Reference**: [`dart_manual_trade_ui_build_2026_05_10.md`](dart_manual_trade_ui_build_2026_05_10.md) Phase C section
+annotated with the PARTIAL-RESOLVED-VIA-OPTION-C status + the deferred items.
+
+**Composes with**: master plan Group G Item 23 (DART manual-trade gate) flips ◐ status —
+terminal landing surface shipped, full UX flow refactor deferred.

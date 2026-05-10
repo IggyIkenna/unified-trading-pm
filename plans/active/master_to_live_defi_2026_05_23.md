@@ -903,7 +903,7 @@ sign-off.
 | 20  | F · Trading prereqs  | Live testnet replicates prod: AWS+GCP, full pipeline, Aster+Hyperliquid+EVM connectors                 | `cron:dex-perp-onboarding-` + paper-trade smoke runbook                                                 | NEVER         |
 | 21  | F · Trading prereqs  | Reconciliation suite: batch-vs-live + P&L attribution + execution-alpha measurement                    | `cron:batch-vs-live-recon-` (live-pipeline plan Phase 12 — helper SHIPPED UTL@908b1647; cron-pending)   | NEVER         |
 | 22  | F · Trading prereqs  | Trading guardrails: circuit breakers + kill switches + alerting + auto-recovery                        | `cron:alerting-paging-targets-` + alerting Phase 4-9 (operator-driven, scheduling-pending)              | NEVER         |
-| 23  | G · Operator UX      | DART manual-trade gate end-to-end visualization                                                        | `manual` (operator-driven; `cross_cutting_may_23_deliverables` items #4 + #5 ship pre-cutover)          | NEVER         |
+| 23  | G · Operator UX      | DART manual-trade gate end-to-end visualization                                                        | `manual` (operator-driven; `cross_cutting_may_23_deliverables` items #4 + #5 ship pre-cutover); **◐ terminal entry shipped 2026-05-10** (`unified-trading-system-ui@64660edd` — TradeMonitor + AutomationToggle + terminal landing per option-c narrow scope; full UX flow refactor DEFERRED to successor plan per `dart_manual_trade_ui_build_2026_05_10.md` Phase C remainder section) | 2026-05-10    |
 
 ### Items with `Last verified: NEVER` (T-13 alerts)
 
