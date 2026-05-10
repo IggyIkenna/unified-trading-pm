@@ -295,4 +295,61 @@ Recommended: (b) for this cycle (focus on May-23); track as P1 in `mtds_databent
 - mdps_streaming_and_backpressure_2026_05_07.md Phase 1.1 + 2
 - live_pipeline_mtds_mdps_features_2026_05_08.md Phase 4
 - mtds_databento_path_streaming_2026_05_07.md Phase 4
+
+---
+
+## 2026-05-10 follow-up shipments — adapter-wire items #5 + #11
+
+Two adjacent live-trading observability + testnet items surfaced during the
+2026-05-08 audit triage (separate from items #1-#4 above). Both shipped
+2026-05-10 as paired UAC SSOT + per-service wire-in:
+
+### Item #5 — MTDS adapter heartbeat wire-in — ✅ SHIPPED-PARTIAL 2026-05-10
+
+- **UAC@b05a032** — `VENUE_HEARTBEAT_THRESHOLDS` SSOT (5 venue-classes;
+  per-(venue, data_type) override registry empty by default until live
+  telemetry populates) +
+  `unified_api_contracts/canonical/crosscutting/venue_thresholds.py`
+  + `get_heartbeat_threshold()` helper.
+- **MTDS@c09a0e2** — `LiveConnectivityWatchdog` lifecycle wired into
+  `market_tick_data_service/api/main.py` via FastAPI `startup` /
+  `shutdown` event handlers. `get_watchdog()` module-level accessor
+  returns the singleton (or `None` in batch mode); 6 unit tests in
+  `tests/unit/test_api_watchdog_lifecycle.py`.
+- **DEFERRED**: per-adapter `watchdog.heartbeat()` callsites across the
+  ~10 heterogeneous adapter shapes (CCXT / Tardis / Databento /
+  Hyperliquid / Aster / Polymarket / Kalshi / odds-api / Yahoo / etc.).
+  Mechanical work: each WS-message handler / REST-poll completion adds:
+
+  ```python
+  from market_tick_data_service.api.main import get_watchdog
+  watchdog = get_watchdog()
+  if watchdog is not None:
+      watchdog.heartbeat(self.venue, self.data_type, datetime.now(UTC))
+  ```
+
+  Successor: extend this issue doc with a per-adapter Phase 2 once the
+  next operator-driven wave triages it (likely a Tab in tomorrow's
+  `work_split_*_harsh.md` since the per-adapter pattern is mechanical
+  + per-spec per the daily-split principle).
+
+### Item #11 — CeFi testnet wiring — ✅ SHIPPED 2026-05-10
+
+- **Pre-existing wiring (verified)**: 5 CeFi CCXT adapters
+  (Binance / Bybit / OKX / Deribit / Coinbase) + Hyperliquid CCXT all
+  carry `testnet: bool = False` constructor flag → CCXT
+  `set_sandbox_mode(True)` when set; flag plumbed through
+  `_get_exchange()` for all.
+- **UAC@b05a032** — `VENUE_TESTNET_URLS` SSOT (6 venues with REST + WS
+  endpoints + per-venue notes documenting CCXT sandbox-mode behaviour
+  + edge cases like Coinbase Advanced Trade having no public testnet).
+- **execution-service@59ce802a** — 7 smoke unit tests in
+  `tests/unit/test_testnet_wiring.py` mocking CCXT at
+  `ccxt.async_support` module level. Verifies testnet=True triggers
+  set_sandbox_mode(True) for all 5 CCXT adapters; default testnet=False
+  is the safe-default; UAC SSOT round-trips correctly.
+- **Master Group F Item 20** (live testnet replicates prod) CeFi
+  column: ✗ → ◐. Full end-to-end signed-flow validation against real
+  testnet credentials remains operator-driven (live-only readiness
+  item per master plan).
 - runbook_execution_governance_gaps_2026_05_08.md (related: peripheral QG wiring rule)
