@@ -62,12 +62,23 @@ window if Phase 1 starts immediately.
 
 ## Architectural decisions (locked from 2026-05-09 research)
 
-> **AD-1**. Both families = **CONFIG VARIANTS of `CARRY_RECURSIVE_STAKED`** (UAC enum stays at 8 archetypes; no new enum
-> value). Extends 2026-05-07 precedent. Justification: the recursion mechanics, share-class semantics, and kill-switch
-> surface (drawdown 0.05 / breach 0.03 per
+> **AD-1 — FLIPPED 2026-05-10 cross-plan audit Q10 (Policy B larger-set-wins).** Both families = **NEW UAC
+> `StrategyArchetype` enum members** (extending from 8 → 11 archetypes; was originally "config variants of
+> `CARRY_RECURSIVE_STAKED`" — that approach REJECTED in favor of explicit enum members per the larger-set rule + to
+> match codex doc Stream C "all 11 archetypes" language). UAC PR owned by
+> [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+> Stream C (per Q10 most-comprehensive-owner ratification; Stream C already ships the codex doc backport for "all 11
+> archetypes" so the enum-extension PR is the natural co-shipment). Strategy-service factory routing updates to dispatch
+> per archetype enum member (not per config-variant lookup). Justification for the flip: explicit enum is clearer for
+> downstream consumers (deployment-UI archetype dropdown, allocator subclass routing, kill-switch per-archetype scoping,
+> archetype-readiness matrix per master plan); config-variant shape conflates orthogonal axes (`perp_leg_enabled` is a
+> structural difference, not a config tuning knob). Justification for original AD-1: the recursion mechanics, share-class
+> semantics, and kill-switch surface (drawdown 0.05 / breach 0.03 per
 > [`archetype_config.py:169-177`](../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_config.py#L169-L177))
-> are identical to the existing `CARRY_RECURSIVE_STAKED`. Family 1 sets `perp_leg_enabled=False`; Family 2 sets
-> `perp_leg_enabled=True` + `perp_venue` + `target_net_delta`.
+> were thought identical — but Family 2's perp leg adds a distinct risk surface (funding-sign-flip, perp-venue outage,
+> cross-venue delta drift) that warrants explicit enum-level visibility. Family 1 = new enum member
+> `CARRY_RECURSIVE_BORROW_LENDING_ONLY`; Family 2 = new enum member `CARRY_RECURSIVE_BORROW_PERP_HEDGED`. Plus one more
+> archetype TBD by Stream C (the third of the 8→11 expansion — TBD in Stream C UAC PR).
 
 > **AD-2**. The recursion is **purely lending-side**. Perp leg (Family 2) is a single matched short, separately
 > USDC-margined. Hyperliquid / Bybit / OKX are USDC-margin-only — borrowed ETH cannot be posted as perp margin without
@@ -154,7 +165,24 @@ touched by this plan, enumerated.
 **Full-execution criterion:** Q-doc commit references AD-1 through AD-6; 4 banners visible at top of named plans;
 operator ack visible in chat or commit co-authoring metadata.
 
-## Phase 1 — Prerequisite: lending-rate backfill (Bug 1/2/3 fix + multi-protocol capture) (~5 AI-days, P0, gates everything)
+## Phase 1 — Prerequisite: lending-rate backfill — REFRAMED 2026-05-10 cross-plan audit Q11
+
+> **🔴 OWNERSHIP TRANSFERRED** to [`defi_catalogue_chain_primitives_2026_05_10.md`](defi_catalogue_chain_primitives_2026_05_10.md)
+> Phase 1 (UAC SSOT) + Phase 3 (MTDS adapter rewrites + Bug 1/2/3 fixes + production backfill VM). Catalogue plan is the
+> comprehensive multi-protocol/multi-chain UAC + MTDS scope (most-comprehensive-owner rule); this plan was carrying
+> duplicate scope. Phase 1 here becomes a **PASSIVE BLOCKER GATE**: recursive-borrow Phase 9 (backtest) blocks on
+> defi_catalogue Phase 3 shipping. Banner the catalogue plan with
+> `🔴 BLOCKER FOR recursive-borrow Phase 9 — lending-indices data must be backfilled ≥1y of historical Aave V3 + Compound V3 before recursive-borrow backtest can produce signal`.
+> The original Phase 1 todo content below is RETAINED only as a checklist for the catalogue plan agent (who will fold
+> these specific items into catalogue Phase 1/3) — but the todos themselves DO NOT execute here. Catalogue plan owns
+> ship + verify; this plan consumes via Phase 9 backtest replay.
+
+**Reframed Phase 1 done definition (this plan's POV)**: catalogue plan Phase 3 manifest reports `captured` for Aave V3
+Ethereum + Compound V3 Ethereum/Arbitrum/Base SUPPLY_APY / BORROW_APY / UTILISATION across 2022-03-01 → present at
+day-grain; sample parquet probe confirms non-zero rates per day; instruments-service catalog reports the corresponding
+instrument-day rows as alive. **Then** this plan's Phase 2+ unblocks.
+
+(Original Phase 1 detail retained below as spec hint for catalogue plan; do NOT execute these here.)
 
 The `lending-indices DEFERRED` note in
 [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)

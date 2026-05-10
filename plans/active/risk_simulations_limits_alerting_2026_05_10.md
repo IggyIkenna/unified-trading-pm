@@ -146,9 +146,10 @@ EXTENSION includes this seam diagram verbatim.
 - [ ] [AGENT] P0. **1.B `RiskRuleTrigger` typed conditions.** Closed-union: `MaxPositionSize`, `MaxDrawdown`, `MaxLeverage`, `MaxConcentration`, `MaxCorrelation`, `SlippageBudgetExceeded`, `FundingCostCeiling`, `GasBudgetExceeded`, `CapitalAtRiskCeiling`, `MaxOI`, `MaxGrossExposure`, `MaxDailyLoss`, plus extension closed-enum for unique-archetype rules.
 - [ ] [AGENT] P0. **1.C `RiskRule` Pydantic dataclass.** `(rule_id, scope, applies_to, trigger, consequence, alerting_severity)` + method `kill_switch_scope() -> KillSwitchScope` per the seam diagram orthogonality declaration. Docstring cites the seam diagram.
 - [ ] [AGENT] P0. **1.D Tests.** ≥30 unit tests, including 4 seam-diagram-conformance tests (one per `RiskRuleConsequence` value verifying the event(s) emitted match the cross-product table).
-- [ ] [AGENT] P0. **1.E AlertCode closed-set extension.** Add `RISK_RULE_BLOCKED`, `RISK_RULE_SCALED_DOWN`, `RISK_RULE_MONITOR_FIRED`, `RISK_RULE_TEST_ONLY_ROUTED` to UAC@d00326d `AlertCode` enum (39 → 43 closed-set). Coordinate ownership with [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md) (its closed-set is the seed; this plan extends). Tests assert no shadowing of existing codes.
+- [ ] [AGENT] P0. **1.E AlertCode closed-set extension — RATIFIED 2026-05-10 cross-plan audit Q6 (Policy B larger-set-wins).** Add `RISK_RULE_BLOCKED`, `RISK_RULE_SCALED_DOWN`, `RISK_RULE_MONITOR_FIRED`, `RISK_RULE_TEST_ONLY_ROUTED` to UAC@d00326d `AlertCode` enum. **Plus 2 NEW kill-switch recovery codes per Q8 ratification**: `KILL_SWITCH_AUTO_RECOVERED` + `KILL_SWITCH_MANUAL_UNKILLED` (distinct alert events per Policy B — kill-switch supports BOTH manual-unkill AND auto-cooldown recovery modes per per-action defaults; see Phase 1.F below). Total growth: 39 → 45 closed-set. Coordinate ownership with [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md) (its closed-set is the seed; this plan extends). Tests assert no shadowing of existing codes; `grep -rn "RISK_RULE_\|KILL_SWITCH_AUTO_RECOVERED\|KILL_SWITCH_MANUAL_UNKILLED" unified-api-contracts/` returns zero pre-existing references.
+- [ ] [AGENT] P0. **1.F `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` SSOT — RATIFIED 2026-05-10 cross-plan audit Q8.** Add `BreakerRecoveryMode` closed set `{manual_unkill, auto_cooldown}` to UAC. Add `BREAKER_RECOVERY_DEFAULTS: dict[BreakerAction, BreakerRecoveryMode]` mapping per-action defaults: `BLOCK_NEW → auto_cooldown` (least-restrictive; auto-resume safe when metric clears), `CANCEL_OPEN → manual_unkill` (cancelled orders are gone; auto-recovery doesn't restore), `SCALE_DOWN → auto_cooldown` (partial unwind has natural inverse), `KILL_ALL → manual_unkill` (full unwind needs operator sign-off). Plus `cooldown_seconds: int | None` on `BreakerConfig` (None when manual). Tests assert defaults dict matches per-action semantics. Coordinate with [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md) Phase 1.A which owns `BreakerConfig` extension.
 
-**Full-execution criterion**: UAC PR pushed; QG green; AlertCode closed-set grows from 39 → 43 with no shadowing; every Pydantic docstring cites the seam diagram + 5 canonical SSOTs.
+**Full-execution criterion**: UAC PR pushed; QG green; AlertCode closed-set grows from 39 → 45 with no shadowing; `BreakerRecoveryMode` + `BREAKER_RECOVERY_DEFAULTS` shipped; every Pydantic docstring cites the seam diagram + 5 canonical SSOTs.
 
 ## Phase 2 — Per-axis limit registry (Days 3-5, ~2 AI-days, 6 parallel sub-agents)
 
@@ -201,6 +202,18 @@ EXTENSION includes this seam diagram verbatim.
 - [ ] [AGENT] P0. **7.A NEW `codex/04-architecture/risk-rule-taxonomy.md`.** Taxonomy, scope axis, consequence closed enum.
 - [ ] [AGENT] P0. **7.B NEW `codex/04-architecture/risk-preflight-flow.md`.** Order-submission flow, scale-down semantics, block semantics.
 - [ ] [AGENT] P0. **7.C UPDATE `kill-switch-circuit-breaker.md`** — risk-rule fire → breaker arm cross-link.
+- [ ] [AGENT] P0. **7.E NEW `codex/04-architecture/risk-breaker-seam.md` — RATIFIED 2026-05-10 cross-plan audit Q9.**
+      Document the distinct-enums-with-escalation-seam architecture: `RiskRuleConsequence` (per-rule-firing taxonomy)
+      and `BreakerAction` (per-venue state-machine taxonomy) are SEPARATE enums by design — different triggers, different
+      layers. The seam: when N consecutive `RiskRuleConsequence.SCALE_DOWN` consequences fire on same
+      `(venue, asset_group)` within window W, risk-controller emits `BREAKER_ESCALATION_REQUESTED` event consumed by
+      execution-service breaker (which then transitions per its state machine into DEGRADED or OPEN). UAC SSOT
+      `RISK_TO_BREAKER_ESCALATION_MAP: dict[(RiskRuleConsequence, int, timedelta), BreakerAction]` declares the
+      escalation thresholds. Doc explains layering (Layer 2 risk → Layer 4 breaker), why naming collision is intentional
+      (both use SCALE_DOWN vocabulary because the operator-facing concept is the same), and operational implications
+      (risk-controller can fire WITHOUT breaker firing; breaker can fire WITHOUT risk-controller — they're independent
+      layers that ESCALATE through the seam, not duplicate). Cross-links the seam diagram + cross-product table from
+      this plan body.
 - [ ] [AGENT] P0. **7.D UPDATE `capital-efficiency-patterns.md`** — per-archetype capital-at-risk ceiling cross-link.
 
 **Full-execution criterion**: 2 NEW + 2 UPDATE; cross-references resolve.

@@ -20,9 +20,28 @@ related_codex:
   - codex/04-architecture/kill-switch-circuit-breaker.md
   - codex/04-architecture/autonomous-recovery-matrix.md
   - codex/04-architecture/mev-protection.md
+  - codex/03-observability/alerting.md
+  - codex/04-architecture/capital-efficiency-patterns.md
 ---
 
 # Disaster recovery + reconciliation + circuit breakers + kill switches — cutover-MVP
+
+> **🟡 IN-FLIGHT REFACTOR — § 7 SSOT reconciliation seam mandate adopted 2026-05-10 PM.** This plan touches the same 5
+> canonical risk SSOTs as
+> [`risk_simulations_limits_alerting_2026_05_10.md:44-81`](risk_simulations_limits_alerting_2026_05_10.md) (kill-switch
+> taxonomy / 8-event lifecycle / circuit-breaker / alerting rules / strategy kill-switch behaviour). Per the risk
+> plan's § 7 mandate, every Phase 1 Pydantic class docstring in this plan MUST include a "§ 7 SSOT reconciliation"
+> subsection identifying which of the 5 SSOTs the class composes with + how the seam is preserved. Reviewer rejects
+> Phase 1 PRs that omit it.
+>
+> **🟢 CROSS-PLAN COORDINATION — Phase 7.B kill-switch tab vs `deployment_ui_lifecycle_tabs_2026_05_08.md` 6-tab shell.**
+> Phase 7.B below ships a NEW deployment-ui kill-switch tab. The lifecycle plan
+> ([`deployment_ui_lifecycle_tabs_2026_05_08.md:152-160`](deployment_ui_lifecycle_tabs_2026_05_08.md)) currently
+> declares a 6-tab shell (Deploy / Monitor / Data Status / Builds / Readiness / Config). Decision 2026-05-10 PM:
+> kill-switch lands as the **7th lifecycle-managed tab** (NOT folded into Monitor — kill-switches are safety-critical
+> and need top-level visibility per CLAUDE.md "Service Infrastructure Requirements"). The lifecycle plan's Phase B.1
+> table will be revised to 7 tabs when this plan's Phase 7.B ships; sequencing handled in lifecycle plan's cross-plan
+> coordination banner. Until then both plans hold their scope; no other consumer of either plan is blocked.
 
 ## Why this plan exists
 
@@ -91,6 +110,16 @@ archetypes are deferred post-cutover.
 ## Phase 1 — UAC breaker + kill-switch taxonomy (Days 2-4, ~2 AI-days)
 
 - [ ] [AGENT] P0. **1.A `CircuitBreakerId` + `BreakerScope` + `BreakerTrigger` + `BreakerAction` enums.** Closed sets.
+      **Plus `BreakerRecoveryMode` closed enum `{manual_unkill, auto_cooldown}` + `BREAKER_RECOVERY_DEFAULTS` SSOT —
+      RATIFIED 2026-05-10 cross-plan audit Q8 (both modes wired; per-action config picks default).** Per-action defaults
+      mapping: `BLOCK_NEW → auto_cooldown` (least-restrictive; auto-resume safe when metric clears),
+      `CANCEL_OPEN → manual_unkill` (cancelled orders are gone — auto-recovery doesn't restore),
+      `SCALE_DOWN → auto_cooldown` (partial unwind has natural inverse),
+      `KILL_ALL → manual_unkill` (full unwind needs operator sign-off). `BreakerConfig.recovery_mode` overrides default
+      per-breaker; `cooldown_seconds: int | None` (None when manual). Wiring coordinated with
+      [`risk_simulations_limits_alerting_2026_05_10.md`](risk_simulations_limits_alerting_2026_05_10.md) Phase 1.F (UAC
+      shipping). Plus 2 NEW AlertCodes shipped via that plan: `KILL_SWITCH_AUTO_RECOVERED` + `KILL_SWITCH_MANUAL_UNKILLED`
+      — distinct alert events (Policy B larger-set-wins).
 - [ ] [AGENT] P0. **1.B Per-archetype breaker registry seed.** ≥10 breakers per cutover archetype (oracle deviation, RPC outage, gas surge, position-limit, drawdown, liquidation cascade, venue outage, custody disconnect, manifest phantom, batch-live divergence).
 - [ ] [AGENT] P0. **1.C `KillSwitchId` registry.** Closed enum: `KILL_ALL_LIVE`, `KILL_PER_ARCHETYPE_<name>`, `KILL_PER_VENUE_<name>`, `KILL_PER_ASSET_GROUP_<name>`.
 - [ ] [AGENT] P0. **1.D Provenance closed enum.** `KillSwitchProvenance ∈ {OPERATOR_MANUAL, BREAKER_AUTO, SCENARIO_SYNTHETIC, SCHEDULED_DRILL}`.
@@ -131,7 +160,13 @@ archetypes are deferred post-cutover.
 
 ## Phase 5 — Auto-recovery rules (Days 10-11, ~1 AI-day)
 
-- [ ] [AGENT] P0. **5.A Per-breaker recovery rule.** Each `BreakerRecoveryRule` declared with named guard (e.g. "oracle deviation < 5σ for 5min" → auto-disarm).
+- [ ] [AGENT] P0. **5.A Per-breaker recovery rule.** Each `BreakerRecoveryRule` declared with named guard (e.g. "oracle
+      deviation < 5σ for 5min" → auto-disarm). **Two recovery modes wired (Q8 ratification)**: (1) `manual_unkill` —
+      breaker armed state persists until operator action via deployment-UI or `kill-switch unkill` CLI; recovery emits
+      `KILL_SWITCH_MANUAL_UNKILLED` alert with `unkilled_by_operator_id`. (2) `auto_cooldown` — guard predicate
+      re-evaluated every `cooldown_seconds`; on N consecutive green readings the breaker auto-disarms; emits
+      `KILL_SWITCH_AUTO_RECOVERED` alert with `recovered_after_seconds` + guard-evaluation trail. Per-action defaults
+      drive selection per Phase 1.A `BREAKER_RECOVERY_DEFAULTS`; per-breaker override via `BreakerConfig.recovery_mode`.
 - [ ] [AGENT] P0. **5.B Recovery test matrix.** Per breaker × per recovery rule, integration test exercises the recovery path.
 
 **Full-execution criterion**: ≥10 recovery rules per archetype; recovery test matrix green.
@@ -156,6 +191,14 @@ archetypes are deferred post-cutover.
 - [ ] [AGENT] P0. **8.B NEW `codex/04-architecture/kill-switch-event-bus.md`.**
 - [ ] [AGENT] P0. **8.C UPDATE `kill-switch-circuit-breaker.md`** — wired to new taxonomy + bus.
 - [ ] [AGENT] P0. **8.D UPDATE `autonomous-recovery-matrix.md`** — per-breaker recovery rule cross-link.
+- [ ] [AGENT] P0. **8.F NEW `codex/04-architecture/risk-breaker-seam.md` (co-owned with risk_simulations Phase 7.E
+      per Q9 ratification 2026-05-10).** Distinct-enums-with-escalation-seam architecture: `RiskRuleConsequence` and
+      `BreakerAction` are SEPARATE enums (different triggers, different layers). Seam: N consecutive
+      `RiskRuleConsequence.SCALE_DOWN` fires on same `(venue, asset_group)` within window W →
+      `BREAKER_ESCALATION_REQUESTED` event consumed by execution-service breaker. UAC SSOT
+      `RISK_TO_BREAKER_ESCALATION_MAP` declares thresholds. Breaker state machine subscribes to the event +
+      transitions per its own rules (Phase 4.B execution-service integration). Per-action `BreakerRecoveryMode`
+      (Phase 1.A) wires both manual + auto-cooldown paths.
 - [ ] [AGENT] P0. **8.E UPDATE `mev-protection.md`** — MEV-driven breaker entry.
 
 **Full-execution criterion**: 2 NEW + 3 UPDATE; cross-references resolve.
@@ -177,7 +220,11 @@ archetypes are deferred post-cutover.
 ## Cross-plan coordination
 
 - `simulation_scenarios_topology_price_shocks_2026_05_09` — synthetic scenarios drive the chaos-drill cron + Phase 9 drill.
-- `risk_simulations_limits_alerting_2026_05_10` — risk rule taxonomy is the upstream vocabulary; this plan consumes + composes.
+- `risk_simulations_limits_alerting_2026_05_10` — risk rule taxonomy is the upstream vocabulary; this plan consumes +
+  composes via the **risk-breaker escalation seam (Q9 ratification 2026-05-10)**: distinct enums
+  (`RiskRuleConsequence` ≠ `BreakerAction`), coupled by `BREAKER_ESCALATION_REQUESTED` event + UAC
+  `RISK_TO_BREAKER_ESCALATION_MAP`. Phase 1.A here ships `BreakerConfig.recovery_mode` + `cooldown_seconds`; risk plan
+  Phase 1.F ships `BreakerRecoveryMode` + `BREAKER_RECOVERY_DEFAULTS` UAC. Banner mutually with explicit Q8 + Q9 tags.
 - `alerting_service_live_rules_2026_05_07` — breaker + kill-switch events route through alerting; banner reciprocal.
 
 ## Deferred work after 2026-05-10 plan-creation session

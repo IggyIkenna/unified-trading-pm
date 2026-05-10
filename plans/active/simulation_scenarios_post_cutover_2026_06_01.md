@@ -84,10 +84,21 @@ Pick up the deferred wire-ins from pre-cutover plan Phase 3:
 
 ### Phase 2 — Full per-asset_group scenario library (P0, ~6 AI-days, parallel sub-agents per asset_group)
 
+> **🟢 SCENARIO DEDUPE RULE — RATIFIED 2026-05-10 cross-plan audit L2.** Scenarios marked "(already in pre-cutover)"
+> below are NOT re-implemented here — they live in
+> [`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md)
+> Phase 4 and ship by May-23. This plan ONLY adds the post-cutover-only scenarios (those without the "already in
+> pre-cutover" annotation). Re-implementing would create duplicate scenario_id collisions in the scenario registry.
+> Pre-cutover plan owns the 6 May-23 critical-path scenarios for `carry_staked_basis` + `leveraged_funding_arb`
+> archetypes; this plan extends the matrix to the broader regression set post-cutover.
+
 - [ ] [AGENT] P0. **4.A CeFi (≥8 scenarios)** — `cefi_tick_gap_15min`, `cefi_funding_spike_10x` (already in pre-cutover),
       `cefi_venue_circuit_breaker_trip` (already in pre-cutover), `cefi_book_thin`, `cefi_perp_basis_inversion`,
       `cefi_options_chain_partial_strikes`, `cefi_liquidation_cascade`, `cefi_funding_settlement_skew`.
       **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 4.A.
+      **SCOPE HERE (post-cutover only)**: `cefi_tick_gap_15min`, `cefi_book_thin`, `cefi_perp_basis_inversion`,
+      `cefi_options_chain_partial_strikes`, `cefi_liquidation_cascade`, `cefi_funding_settlement_skew`. The other 2
+      scenarios ship via the pre-cutover plan; this plan only references them for the regression matrix.
       status: todo
 
 - [ ] [AGENT] P0. **4.B DeFi (≥8 scenarios)** — `defi_oracle_deviation_30sigma` (already in pre-cutover), `defi_gas_surge_50x`

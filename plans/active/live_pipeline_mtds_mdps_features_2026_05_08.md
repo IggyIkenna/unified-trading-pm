@@ -953,6 +953,19 @@ The architecture honors that rule:
 - **Storage**: same parquet schema, same `available_at` semantics, same row-key shape; only the `pipeline_mode`
   hive-partition column differs (`pipeline_mode=live_websocket` vs `pipeline_mode=batch_*`). Reconciliation is a SQL
   `GROUP BY pipeline_mode` over the same manifest.
+- **Manifest shard atom (live = batch, day-grain) — ratified 2026-05-10 cross-plan audit Q4 per CLAUDE.md
+  "Shard-granularity SSOT (CRITICAL)" + "Live = batch" rules.** Live `live_aggregator.py` emits per-window
+  `CandleComputedEvent` as an OPERATIONAL mechanic (Redis Stream signal for downstream MDPS/features cascade), but the
+  manifest write boundary is identical to batch: ONE `record_captured(row_key=(asset_group, venue, data_type,
+  instrument_type, instrument_id, day, timeframe), ...)` per shard-day, fired at UTC-midnight close via a per-shard
+  consolidator that aggregates the day's per-window candles into a single parquet finalize. Per-window candles are
+  emitted to Redis but NOT to the manifest as separate rows — this preserves single-atom SSOT across (writer atomicity,
+  manifest row_key, data-status rollup, downstream pre-flight gate, deployment-UI drill-down). Reader logic does NOT
+  branch on `pipeline_mode` for atom shape. Cluster-validation gates (bundled shards: options_chain / futures_chain /
+  prediction canonical-question-group / sports fixture bundle) run identically batch + live. Banned anti-pattern: a
+  live `record_captured` row_key like `(venue, day, timeframe, window)` that adds an extra dimension — that's the same
+  class of bug as the legacy `category=` / `asset_group=` drift (see CLAUDE.md "Shard-granularity SSOT" reference
+  incidents 2026-05-05 MDPS NaN-bars + 2026-05-06 TradFi MVP partial-bundle).
 - **Cascade**: MTDS → MDPS → features ordered identically batch + live; only the trigger source differs (Cloud Scheduler
   / on-demand for batch; Redis Stream events for live).
 - **UTC midnight alignment**: enforced end-to-end. Batch always produces full aligned candles; live blocks until the
@@ -1099,9 +1112,13 @@ phase has a `Success gate:` row below. A phase counts DONE only when its gate is
 - **`features_repo_consolidation_2026_05_08`** — STRICT BLOCKER: Phase 7 of that plan (8 source repos archived,
   consolidated repo deployable) must land before Phase 5 here. Banner that plan with
   `🟢 BLOCKER FOR live_pipeline Phase 5 — must reach Phase 7 before downstream features wiring`.
-- **`gcs_migration_bundle_pipeline_mode_2026_05_08`** — STRICT BLOCKER: Phase 4 of that plan (intra-day flush contract)
-  must define the live-side write path. Phases 3 + 4 + 5 here read the contract from the migration plan; banner
-  mutually.
+- **`gcs_migration_bundle_pipeline_mode_2026_05_08`** — STRICT BLOCKER on TWO axes (cross-plan audit Q5 ratified
+  2026-05-10 — most-comprehensive-owner rule):
+  - **🔴 Phase 1A owns the `PipelineMode` UAC enum SSOT.** The migration plan ships the column + enum atomically (it
+    walks every parquet ONCE to add the hive partition); Phase 1 here CONSUMES the shipped enum. Banner that plan with
+    `🔴 OWNS PipelineMode enum SSOT — live_pipeline Phase 1 BLOCKED until shipped` and add explicit Phase-1-here gate.
+  - **🔴 Phase 4 of that plan (intra-day flush contract)** must define the live-side write path; Phases 3 + 4 + 5 here
+    read the contract from the migration plan.
 - **`alerting_service_live_rules_2026_05_07`** — Phase 9 here EXTENDS that plan's surface with live-pipeline tier
   rules + circuit-breaker bridge. Banner mutually.
 - **`writegate_honest_coverage_endtoend_2026_05_06`** — provides the 4-state manifest taxonomy + reason taxonomy +

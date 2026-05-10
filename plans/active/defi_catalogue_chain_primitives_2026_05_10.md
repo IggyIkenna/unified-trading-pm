@@ -110,8 +110,26 @@ Phase-1 + Phase-7 are sequential gates; Phases 2-6 maximally parallel across pro
 
 Owner: ikenna (cross-cutting design); harsh implements per protocol once contracts land.
 
+> **🔴 BLOCKER FOR recursive-borrow Phase 9 — RATIFIED 2026-05-10 cross-plan audit Q11**
+>
+> This plan is the **canonical owner of lending-indices fix scope** (Bug 1 Aave V3 silent-zero / Bug 2 Compound V3
+> multi-chain subgraph / Bug 3 instruments-store 2022 metadata floor) per most-comprehensive-owner rule. The
+> [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) plan reframes its
+> Phase 1 as a passive blocker gate consuming THIS plan's Phase 3 capture output. Phase 9 (backtest) of recursive-borrow
+> cannot start until this plan's Phase 3 reports `captured` for Aave V3 Ethereum + Compound V3 Ethereum/Arbitrum/Base
+> SUPPLY_APY / BORROW_APY / UTILISATION across 2022-03-01 → present at day-grain.
+>
+> Add explicit todos to Phase 1 (UAC data_type enums) + Phase 3 (MTDS adapter rewrites + backfill VM) below.
+
 Success criterion: every protocol added in this plan has a UAC entry that downstream consumers (instruments-service /
 MTDS / execution-service) compile against. UAC QG green. No service code references a protocol not declared in UAC.
+
+- [ ] [AGENT] P0. **1-LENDING — Lending-indices UAC enums (folded in from recursive-borrow Phase 1 per Q11 ratification
+      2026-05-10)**. Add `SUPPLY_APY` / `BORROW_APY` / `UTILISATION` / `LIQUIDATION_THRESHOLD` / `EMODE_PARAMS` to
+      `data_type` enum in `canonical/domain/market_data/data_types.py`. Update `BUNDLED_DATA_TYPES` if any are bundled
+      per protocol (utilisation per pool may be). Wire into manifest schema `data_type` column validation. Coordinate
+      with [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) Phase 1
+      reframed-as-blocker section — that plan no longer ships these; this plan ships them as part of Phase 1.
 
 - [ ] [AGENT] P0. **1A — Extend `defi_venue_capabilities.py`** (`unified-api-contracts/unified_api_contracts/registry/`)
       with entries for: Yearn, Convex, Beefy, Pendle, Idle, Balancer (verify already present), Sushi V2+V3,
@@ -226,6 +244,27 @@ Per-protocol todo template (instantiated 27 times):
 ## Phase 3 — MTDS adapter buildout (PARALLEL × 27, depends on Phase 2 per protocol; ~30-45 AI-days)
 
 Owner: harsh + parallel agents per protocol.
+
+> **🔴 LENDING-INDICES PRIORITY (Q11 ratification 2026-05-10)** — Aave V3 Ethereum + Compound V3
+> Ethereum/Arbitrum/Base lending-rate adapters are P0 critical-path (gates recursive-borrow Phase 9 backtest). Three
+> bugs to fix (folded in from recursive-borrow Phase 1 reframe):
+>
+> - [ ] [MTDS] P0. **3-LENDING.1 — Bug 1: Aave V3 Ethereum silent-zero**. Audit `adapters/aave_v3_lending_rates.py`:
+>       when subgraph returns zero rows, current behaviour writes `empty_confirmed`. Per CLAUDE.md "Honest absence vs
+>       fake placeholders" — should classify per the 4-category tree: if catalog says alive AND day in coverage,
+>       attempt failed → `record_failed` with typed reason; only legitimate empties get `empty_confirmed`.
+> - [ ] [MTDS] P0. **3-LENDING.2 — Bug 2: Compound V3 multi-chain subgraph routing**. Compound V3 has separate subgraphs
+>       per chain (Ethereum / Arbitrum / Base). Adapter must dispatch per chain; per-chain failures are isolated.
+> - [ ] [MTDS] P0. **3-LENDING.3 — Bug 3: instruments-store 2022 metadata floor**. Aave V3 mainnet launched
+>       2022-03-01; instruments-store currently lacks pre-March-2022 dates as `expected_unattempted`. Add
+>       `LENDING_INDICES_COVERAGE_START` per (protocol, chain) to UAC.
+> - [ ] [VM] P0. **3-LENDING.4 — Lending-indices backfill VM**.
+>       `deployment-service/scripts/vm/launch-defi-lending-indices-backfill-vm.sh` (new launcher per VM-launcher-SSOT
+>       rule). Per CLAUDE.md "Plans Run To Actual Completion" — backfill VM must run to completion with manifest-verified
+>       coverage 2022-03-01 → present before Phase 3 reports done. Recursive-borrow Phase 9 gates on this.
+> - [ ] [SCRIPT] P0. **3-LENDING.5 — Manifest reconciler one-shot**.
+>       `instruments-service/scripts/reconcile_lending_indices_phantom.py` to clean any phantom-captured rows from
+>       pre-fix runs.
 
 Success criterion: per protocol, an MTDS adapter at
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/<protocol>_adapter.py` (or

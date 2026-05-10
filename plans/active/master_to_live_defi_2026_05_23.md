@@ -284,9 +284,19 @@ consolidation target post-cutover.
    plans: `carry_staked_basis_structure_axis_2026_05_04` and `defi_master_2026_05_07` (umbrella that folds in
    `defi_pipeline_extension_2026_05_01` + `leveraged_leg_controller_2026_05_01` + `defi_e2e_pipeline_2026_04_30` per the
    2026-05-07 consolidation).
-2. ✓ **CeFi/DeFi perp venue scope — six venues live: Bybit, Deribit, Binance, OKX, Hyperliquid, Aster.** Hyperliquid +
-   Aster are DeFi perp DEXs but live alongside the CeFi venues. CEFFU manual handoff acceptable for Binance flows on
-   May 23.
+2. ✓ **CeFi/DeFi perp venue scope — six venues live, split per-archetype (REFINED 2026-05-10 cross-plan audit L1 per
+   defi_archetypes_canonicalisation Stream E correction).** Hyperliquid + Aster are DeFi perp DEXs but live alongside
+   the CeFi venues. CEFFU manual handoff acceptable for Binance flows on May 23.
+   - **`carry_staked_basis` LST-as-margin support** (3 venues — ETH-LST-margin capable): **Deribit + Bybit + OKX**.
+     Hyperliquid + Binance + Aster do NOT accept ETH-LST as margin, so they cannot host the carry_staked_basis hedge
+     leg.
+   - **`ARBITRAGE_PRICE_DISPERSION` funding-arb hedge** (all 6 venues for cross-venue funding spread): Bybit, Deribit,
+     Binance, OKX, Hyperliquid, Aster.
+   - **`leveraged_funding_arb` (now config variant `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged`)**: same
+     6-venue set as plain ARBITRAGE_PRICE_DISPERSION; leverage applied per-venue per margin-tier table SSOT.
+   - **`carry_recursive_borrow` perp-hedged variant**: Hyperliquid (DEX) + Bybit (CeFi) — explicit 2-venue bound per
+     [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) AD-5; other
+     perp venues post-cutover.
 3. ✓ **Custody scope — Copper wired for DeFi side; CEFFU manual for Binance side acceptable.** Codex SSOT exists for
    Copper; CEFFU doc is a gap (work-stream F).
 4. ✓ **AWS proof scope — full cloud-parity proof:** (a) cost analysis of GCS data → estimate AWS migration cost; (b)

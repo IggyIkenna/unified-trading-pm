@@ -27,6 +27,18 @@ related_codex:
 
 # Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)
 
+> **🟢 OPERATOR-PICKS-TRACK AT CUTOVER — RATIFIED 2026-05-10 cross-plan audit Q12.** Both CLI track (Phases 1-10) and UI
+> track (Phases U1-U6) ship live by 2026-05-23. **At each cutover-run boundary, operator picks ONE track for that run**
+> (CLI is the operational floor; UI is the upgrade ramp). Both paths enforce identical gates (custody connected / venue
+> keys present / alerting wired / kill-switch armed / risk limits set / recon green / paper-evidence ≥3d) so either
+> selection is safe. **G23 (DART manual-trade gate)** scope split with
+> [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) #4: cross_cutting
+> owns *design + DART surface*; this plan's Phase U6 (pvl-p23c) owns *testnet wiring + go-live gate enforcement*. After
+> cutover, UI evolution continues via
+> [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+> Phase 9 (full pre-flight pipeline) which EXTENDS this plan's Phase U3 to the canonical UI path; CLI track persists as
+> long-term operational floor for ops/runbooks.
+
 ## Why this plan exists
 
 The promote workflow audit (`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`, completed 2026-05-10) found that the **UI-driven promote pipeline is 100% mock** (9 lifecycle sub-pages exist, `onPromote` callback unimplemented, no backend endpoint, no paper/live VM launcher, no candidate manifest, 4 competing lifecycle SSOTs, no ranking surface). **But the operator-CLI path is genuinely capable**: [`e2e-testing/scripts/defi/run-paper.sh`](../../../e2e-testing/scripts/defi/run-paper.sh) + [`run-live.sh`](../../../e2e-testing/scripts/defi/run-live.sh) + [`colocated_engine.py`](../../../e2e-testing/scripts/defi/colocated_engine.py) (1343 lines) integrate strategy + execution + position + P&L + risk in shared memory; auto-detect DeFi/CeFi/TradFi/Sports; support Tenderly fork (paper) + Copper MPC (live); run `--continuous`.

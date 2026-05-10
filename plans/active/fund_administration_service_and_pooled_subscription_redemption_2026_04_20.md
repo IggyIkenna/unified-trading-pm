@@ -57,6 +57,20 @@ depends_on: []
 
 # Context
 
+> **🟢 SCOPE CLARIFICATION — RATIFIED 2026-05-10 cross-plan audit L4.** Two areas where May-10 plans pulled scope
+> forward from this plan:
+> - **Performance-fee HWM accounting** (originally fund_administration's settlement scope) → pulled into
+>   [`wallet_treasury_client_flow_2026_05_10.md`](wallet_treasury_client_flow_2026_05_10.md) Phase 5.G for May-23
+>   cutover (operator direction 2026-05-10). `PerformanceFeeCrystallizedEvent` is shipped by wallet_treasury; this plan
+>   inherits the event for pooled-fund-level NAV+HWM ledger consolidation post-cutover (no re-implementation needed).
+> - **Per-client treasury rollup endpoint** → owned by
+>   [`api_keys_wallets_accounts_readiness_2026_05_10.md`](api_keys_wallets_accounts_readiness_2026_05_10.md) Phase 3.D
+>   (canonical multi-source rollup) + wallet_treasury Phase 6.A (per-client attribution layer).
+>
+> **This plan REMAINS canonical for**: fund-level (vs client-level) NAV calc, pooled subscription/redemption flow,
+> qualified-custodian (Copper/CEFFU) booking, AIFMD/regulatory disclosures, audit/tax reporting, multi-fund accounting.
+> Those domains have NOT been pulled forward and stay post-cutover (Group H+).
+
 > **Cross-plan position 2026-05-08**: this plan is **POST-2026-05-23 P2**. Fund administration + pooled subscription /
 > redemption is institutional infrastructure that does **NOT** block the May-23 live-DeFi cutover. The cutover model is
 > single-wallet operator-funded; pooled subscription is a Q3 2026 follow-on. Owner: Ikenna (operator + governance); not
@@ -93,10 +107,10 @@ venue accounts and do not touch this rail.
 
 SSOTs now reflecting the correction:
 
-- `codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` — custody model per path; Odum never custodies;
-  POD is the fund administrator; Copper (and equivalents) named as qualified custodians.
-- `codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — Pooled subscription/redemption rail; portal
-  surface; contract surface sketch (this plan is its implementation).
+- `codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` — custody model per path; Odum never
+  custodies; POD is the fund administrator; Copper (and equivalents) named as qualified custodians.
+- `codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — Pooled subscription/redemption rail;
+  portal surface; contract surface sketch (this plan is its implementation).
 
 ## Existing primitives to reuse (not rebuild)
 

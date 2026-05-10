@@ -35,6 +35,13 @@ related_codex:
 
 # Promote Workflow — Post-cutover UI pipeline + state-machine consolidation
 
+> **🟢 OPERATOR-PICKS-TRACK AT CUTOVER — RATIFIED 2026-05-10 cross-plan audit Q12.** Both CLI track + UI track ship by
+> May-23 per [`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md). At cutover
+> boundary, operator picks ONE track per run. This plan extends the UI track post-cutover (target 2026-07-04) into the
+> canonical path; CLI track persists as operational floor for ops/runbooks (NOT deprecated by this plan). Phase 9 here
+> (full pre-flight pipeline) extends May-23 Phase U3 into the full state-machine-driven pre-flight; semantically a
+> superset, not a replacement of the minimal version.
+
 ## Why this plan exists
 
 The May-23 cutover plan ([`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md)) ships dual-track for May-23: CLI primary safety-net + **minimal-but-real UI promote pipeline** (Promote button → backend → MinimalCandidateManifest → DART manual-trade gate → paper/live VM auto-launch). The minimal UI ships as Phases U1-U6 of the May-23 plan. **This plan EXTENDS the minimal UI into the full UI workflow** + ships everything else DEFERRED from May-23: heavy state-machine consolidation, full pinned-shas CandidateManifest, cross-service auto-registration, ranking surface, drift detection, full per-archetype config schemas, operational modes consolidation. Target completion 2026-07-04 (~6 weeks post-cutover).

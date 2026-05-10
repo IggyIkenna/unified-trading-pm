@@ -280,6 +280,31 @@ controller layer).
 **Gate:** All 11 archetype docs reference `LegController.update`. None describe legs as "hand-built" without flagging
 that as a deferred-backport state.
 
+### Stream C extension — UAC `StrategyArchetype` enum 8 → 11 (RATIFIED 2026-05-10 cross-plan audit Q10)
+
+Per Policy B (larger-set-wins) + most-comprehensive-owner rule: Stream C owns the UAC enum-extension PR that grows
+`StrategyArchetype` from 8 → 11 members. Codex doc Stream C already references "all 11 archetypes"; the UAC enum lags.
+Co-shipping the enum extension with the doc rewrites closes the doc-code drift.
+
+- [ ] [UAC] P0. **C-enum.1**: Audit current `StrategyArchetype` enum in
+      `unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_config.py`. Enumerate the existing
+      8 members + the 3 new members. Confirm 3 new members are: `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (per
+      [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) Family 1),
+      `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2), and TBD-3rd (sweep codex archetype docs +
+      [`defi_master_2026_05_07.md`](defi_master_2026_05_07.md) archetype list to identify the 11th — likely a sports /
+      prediction / cross-venue archetype already documented but not in UAC).
+- [ ] [UAC] P0. **C-enum.2**: Ship `StrategyArchetype` enum extension PR: 8 → 11 members. Per-member dataclass spec
+      (drawdown / breach / collateral_unit / kill_switch_scope). Tests: every member round-trips through Pydantic; every
+      member has a matching factory in strategy-service `engine/strategies/v2/factory.py` (factory stubs OK for
+      members deferred behind code backport).
+- [ ] [UAC] P0. **C-enum.3**: Downstream consumer sweep — strategy-service factory routing, deployment-UI archetype
+      dropdown, allocator subclass registry, alerting per-archetype kill-switch routing, archetype-readiness matrix in
+      master plan. Per CLAUDE.md "Citadel-Grade § 6 Downstream Consumer Updates" — workspace-wide grep for the enum +
+      explicit fix per consumer.
+- [ ] [PM] P0. **C-enum.4**: Update [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md)
+      AD-1: flip from "stays at 8 + config variants" to "extends to 11 + new members"; banner that plan with
+      `🟢 BLOCKER FOR recursive-borrow Phase 2+ — UAC enum extension to 11 must ship before strategy-service factory wires recursive-borrow variants`.
+
 ---
 
 ## Stream D — `target_leverage` / `target_net_delta` config schema extensions

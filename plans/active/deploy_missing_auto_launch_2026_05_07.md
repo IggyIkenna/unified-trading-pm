@@ -34,6 +34,13 @@ related:
 
 # Deploy-Missing auto-launch (preview -> auto)
 
+> **🟢 FOLD-IN CONFIRMED — RATIFIED 2026-05-10 cross-plan audit L3.** This plan **stays as an independent
+> implementation surface** (Phases 0-4 own concrete tarball-refresh + auto-launch endpoint + IAM/audit-log details);
+> [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) is the **UI umbrella** that
+> exposes this plan's runtime-execution surface. The two plans coexist by ownership split: lifecycle-tabs owns
+> *UI tab structure + auth-flow re-shape*; this plan owns *endpoint + tarball + auto-launch backend*. Cross-references
+> between both plans stand; neither absorbs the other.
+
 > **Fold-into-umbrella banner 2026-05-08**: this plan's Phase 1+2 (tarball-refresh + auto-launch endpoint) is a child of
 > the [`deployment_ui_lifecycle_tabs_2026_05_08`](deployment_ui_lifecycle_tabs_2026_05_08.md) umbrella per the
 > 2026-05-08 audit (Crit 6 GAP — completion-pointer). Per the umbrella's plan body, the Deploy-Missing auto-launch is
@@ -58,19 +65,19 @@ section. My local commit landed at `1f0ad01` on top of `33d56f8` which is now 2 
 clean (origin only moved forward, no diverged history when I started). Per Bootstrap § "Push discipline"
 conditional-push rule I have NOT pushed. Recommended resolution: rebase the single proposal-doc commit onto
 `origin/live-defi-rollout` (`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`) — the proposal
-section only touches `plans/active/deploy_missing_auto_launch_2026_05_07.md` + `_agent_pings.md`, neither of which
-the 2 incoming commits modified, so the rebase should be trivial. Alternatively cherry-pick if main agent prefers a
-clean linear history with the 2 incoming first.
+section only touches `plans/active/deploy_missing_auto_launch_2026_05_07.md` + `_agent_pings.md`, neither of which the 2
+incoming commits modified, so the rebase should be trivial. Alternatively cherry-pick if main agent prefers a clean
+linear history with the 2 incoming first.
 
 ## Operator decision summary
 
 > **✅ STATUS: APPROVED 2026-05-08 — all 3 recommendations greenlit.** Decision 1 = **B + C combined** (custom role
 > `roles/customDeployMissingLauncher` IAM-scoped to zone `asia-northeast1-c` + subnet `default` + image family
-> `unified-trading-debian-12` + dedicated runtime SA, AND API-layer `_SERVICE_LAUNCHER_SCRIPTS` allow-listing).
-> Decision 2 = **BigQuery primary + Cloud Logging mirror + GCS cold tier + sync-blocking write + 90d hot / 5y cold
-> retention**. Decision 3 = **30/op/hr + 200/op/day + 100/proj/hr + 1 active per shard_key for 6h** rate ceilings,
-> Firestore counters, alerts to `#uts-prod-alerts`. On-call: Ikenna primary / Harsh backup until cefi_ml live ≥7d.
-> Phase 2 wiring is **UNBLOCKED**. See `plans/active/operator_decisions_2026_05_08.md` for the full pickup record.
+> `unified-trading-debian-12` + dedicated runtime SA, AND API-layer `_SERVICE_LAUNCHER_SCRIPTS` allow-listing). Decision
+> 2 = **BigQuery primary + Cloud Logging mirror + GCS cold tier + sync-blocking write + 90d hot / 5y cold retention**.
+> Decision 3 = **30/op/hr + 200/op/day + 100/proj/hr + 1 active per shard_key for 6h** rate ceilings, Firestore
+> counters, alerts to `#uts-prod-alerts`. On-call: Ikenna primary / Harsh backup until cefi_ml live ≥7d. Phase 2 wiring
+> is **UNBLOCKED**. See `plans/active/operator_decisions_2026_05_08.md` for the full pickup record.
 
 > **Earlier status (preserved for archaeology)**: AWAITING OPERATOR SIGN-OFF — drafted 2026-05-08 by Tab 5 sub-agent F
 > (`deploy-missing-phase0-facilitation`).
@@ -275,13 +282,13 @@ Operations sign-off on:           →   create-code-tarballs.sh -> Cloud Build t
 
 ### Phase 0 — Security review (sequential, no QG gate)
 
-- [x] [audit] P0. Security review with operations on the deployment-api -> gcloud IAM scope. **✅ APPROVED 2026-05-08
-      — Option B + C combined per § "Operator decision summary" → Decision 1.**
+- [x] [audit] P0. Security review with operations on the deployment-api -> gcloud IAM scope. **✅ APPROVED 2026-05-08 —
+      Option B + C combined per § "Operator decision summary" → Decision 1.**
 - [x] [audit] P0. Audit-log shape decision. **✅ APPROVED 2026-05-08 — BigQuery primary + Cloud Logging mirror + GCS
       cold tier + sync-blocking write + 90d hot / 5y cold retention per § "Operator decision summary" → Decision 2.**
-- [x] [audit] P0. Rate-limit ceiling decision. **✅ APPROVED 2026-05-08 — 30/op/hr + 200/op/day + 100/proj/hr + 1
-      active per shard_key for 6h, Firestore-backed counter state, alerts to `#uts-prod-alerts` per § "Operator
-      decision summary" → Decision 3.**
+- [x] [audit] P0. Rate-limit ceiling decision. **✅ APPROVED 2026-05-08 — 30/op/hr + 200/op/day + 100/proj/hr + 1 active
+      per shard_key for 6h, Firestore-backed counter state, alerts to `#uts-prod-alerts` per § "Operator decision
+      summary" → Decision 3.**
 
 ### Phase 0 — IAM scope + audit log + rate limit proposal (DRAFT for operator review)
 
@@ -660,8 +667,8 @@ that already shipped.
 
 ## References
 
-- Parent plan: `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md` (Phase 3 ships preview; this
-  plan ships the auto-launch successor).
+- Parent plan: `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md` (Phase 3 ships preview; this plan
+  ships the auto-launch successor).
 - Existing infrastructure:
   - `deployment-service/scripts/vm/create-code-tarballs.sh` (tarball refresh).
   - `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` (VM bootstrap).

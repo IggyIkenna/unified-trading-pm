@@ -221,10 +221,16 @@ plan-todo coverage + 2 at-risk items needing daily watch.
       matching-engine respects it under BATCH+always-fill. Done = UAC enum + per-action mapping + pytest green +
       `strategy_and_dart_master_2026_05_07.md` Phase 1.9 todo `- [x]`.
 - [ ] [AGENT] P0. **GAP-17 (Q4.2.e)**: Ship explicit auto-recovery wiring contract — kill-switch publish hook is
-      SHIPPED (UAC@3793310 + alerting@8eda37c) but recovery coordination is unpinned. Decision: codify "kill = STOP,
-      manual unkill required (no auto-recovery for live trading)" OR "auto-recovery after N min cooldown if metrics
-      return to range." Done = decision in `codex/04-architecture/kill-switch-circuit-breaker.md` + pytest covering
-      both states + `master_to_live_defi_2026_05_23.md` Group F item 22 todo `- [x]`.
+      SHIPPED (UAC@3793310 + alerting@8eda37c). **DECIDED 2026-05-10 cross-plan audit Q8 — BOTH MODES WIRED, per-action
+      config picks default.** Manual-unkill is the default for `KILL_ALL` + `CANCEL_OPEN` (high-impact actions need
+      operator sign-off); auto-cooldown is the default for `BLOCK_NEW` + `SCALE_DOWN` (reversible / least-restrictive).
+      Per-breaker `BreakerConfig.recovery_mode` overrides. `BREAKER_RECOVERY_DEFAULTS` SSOT lives in UAC per
+      [`risk_simulations_limits_alerting_2026_05_10.md`](risk_simulations_limits_alerting_2026_05_10.md) Phase 1.F;
+      wiring lives in [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md)
+      Phase 1.A + Phase 5.A. Two distinct AlertCodes: `KILL_SWITCH_AUTO_RECOVERED` + `KILL_SWITCH_MANUAL_UNKILLED`. Done
+      = decision recorded in `codex/04-architecture/kill-switch-circuit-breaker.md` (per Q8 ratification — both modes
+      documented) + pytest covering both states across all 4 BreakerAction × 2 BreakerRecoveryMode = 8 combos +
+      `master_to_live_defi_2026_05_23.md` Group F item 22 todo `- [x]`.
 - [ ] [AGENT] P0. **GAP-18 (Q5.c)**: Ship `batch-live-reconciliation-service` code-complete + cron + 7-day
       live-vs-batch run BEFORE May-23. Today: helper UTL@908b1647 SHIPPED, service scaffolded but NOT code-complete
       (per master plan line 521-530 audit), cron-pending. Backwards-from-May-23: cron must launch by **2026-05-16** to

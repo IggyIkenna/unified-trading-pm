@@ -146,7 +146,7 @@ all asset_groups; coverage % at each drilldown level computes correctly per CLAU
 ### G4 — v8 schema migration (atomic rename + immutable service_emission_state)
 
 - **Schema axis**: v8 manifest column set adds immutable `service_emission_state ∈ ServiceEmissionStateEnum` (closed
-  set: `PUBLISHED_OK`, `PUBLISHED_DEGRADED`, `STALE_DATA`, `BLOCKED` per UAC@58c3b61 ServiceEmissionPolicy slice (a)).
+  set: `PUBLISHED_OK`, `PUBLISHED_DEGRADED`, `STALE_DATA_HEARTBEAT_ONLY`, `BLOCKED` per UAC@58c3b61 ServiceEmissionPolicy slice (a); name ratified 2026-05-10 cross-plan audit Q1 — uses full `STALE_DATA_HEARTBEAT_ONLY` per Policy B larger-set-wins rule, matching `manifest_schema_final_gate_2026_05_09.md` § Phase 1.A and `manifest_v7_schema_migration_design_2026_05_08.md` § line 66).
 - **Writer axis**: `ManifestWriter.record_captured(service_emission_state=...)` now REQUIRED kwarg; default-value
   protocol REJECTED — every callsite must declare. Migration script (one-time) populates `service_emission_state` for
   all v7-shaped legacy rows from a per-(service, output_data_type) seed dict.

@@ -323,13 +323,19 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
     strategy-execution end-to-end target (HSM signing adds 100-500ms; verify under load).
   - **Sub-residual**: HD-wallet derivation under Fireblocks-protected master key → N×M wallets per R7 derive cleanly.
 
-- [ ] [AGENT] P0. **3.D — Treasury rollup view.** Combine custody balance (Copper + CEFFU) + venue margin balances +
-      on-chain wallet balances into unified-NAV view. Extends
-      `position-balance-monitor-service/.../core/treasury_monitor.py`. Composes with client-reporting question doc.
-      Per-archetype-per-chain wallet rollup ties into R7 multi-wallet.
+- [ ] [AGENT] P0. **3.D — Treasury rollup view — CANONICAL OWNER (ratified 2026-05-10 cross-plan audit Q7 per
+      most-comprehensive-owner rule).** Combine custody balance (Copper + CEFFU) + venue margin balances + on-chain
+      wallet balances into unified-NAV view. Extends `position-balance-monitor-service/.../core/treasury_monitor.py`.
+      Composes with client-reporting question doc. Per-archetype-per-chain wallet rollup ties into R7 multi-wallet.
+      **Endpoint surface owned here**: `/api/treasury/rollup` (multi-source unified NAV) + `/treasury/nav?client_id=<id>`.
+      [`wallet_treasury_client_flow_2026_05_10.md`](wallet_treasury_client_flow_2026_05_10.md) Phase 5.B + 6.A
+      `/api/clients/{id}/treasury` becomes a CONSUMER (per-client attribution layer over this canonical multi-source
+      rollup). The two endpoints differ by axis: this owns the source-axis (Copper / CEFFU / venue / on-chain); wallet
+      plan owns the client-attribution axis on top.
   - **Verification**: deployment-api `/treasury/nav?client_id=<id>` returns correct NAV at time T =
     `Σ (custody_balance × mark_price)` + `Σ (venue_margin × mark_price)` + `Σ (on_chain × mark_price)` summed without
-    double-counting.
+    double-counting. Cross-check vs wallet plan's `/api/clients/{id}/treasury` returning same totals with per-client
+    decomposition (NAV reconciles across both endpoints).
 
 **Phase 3 done definition** (full-execution criterion):
 
@@ -343,7 +349,13 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 ## Phase 4 — DeFi mainnet + testnet provisioning — Day 3-13
 
 - [ ] [HUMAN+AGENT] P0. **4.A — Production wallets per chain × per archetype (multi-wallet R7).** N archetypes × M
-      chains = N×M wallets. For May-23: `carry_staked_basis` + `leveraged_funding_arb` (≥2 archetypes) × 5 chains
+      chains = N×M wallets. For May-23: `carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION` (config variant
+      `funding_rate_dispersion` — canonical name per
+      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md:37-40`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+      and codex
+      [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
+      §28+§48-53; superseded the legacy `leveraged_funding_arb` standalone-archetype name 2026-05-09) — ≥2 archetypes ×
+      5 chains
       (Ethereum, Arbitrum, Base, Polygon, Solana) = ≥10 mainnet wallets. HD-wallet derivation under Fireblocks master
       seed (per Phase 3.C). UAC type extension: `archetype_id → wallet_address_per_chain` mapping.
   - **Sub-residuals captured**: per-wallet nonce queue management; per-wallet RPC rate-limit sub-budget; cross-archetype
@@ -468,9 +480,14 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
 
 - [ ] [AGENT] P0. **7.B — Per-archetype credential subset checklist.** YAML at
       `unified-api-contracts/config/credentials_per_archetype.yaml`. Per archetype: minimum-viable credential subset to
-      run live. Archetypes in scope per R4: `carry_staked_basis`, `leveraged_funding_arb`, sports archetypes
+      run live. Archetypes in scope per R4: `carry_staked_basis`, `ARBITRAGE_PRICE_DISPERSION` (canonical archetype;
+      DeFi/CeFi cutover use the `funding_rate_dispersion` config variant per
+      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md:37-40`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+      — superseded the legacy `leveraged_funding_arb` standalone-archetype name; the prediction cutover use the
+      cross-venue price-dispersion config variant of the same archetype), sports archetypes
       (`MARKET_MAKING_EVENT_SETTLED`, `ML_DIRECTIONAL_EVENT_SETTLED`, `RULES_DIRECTIONAL_EVENT_SETTLED`), prediction
-      archetypes (`ARBITRAGE_PRICE_DISPERSION`, `EVENT_DRIVEN`).
+      archetypes (`EVENT_DRIVEN` standalone; price-dispersion variant is the same `ARBITRAGE_PRICE_DISPERSION` row above
+      keyed by `(archetype, config_variant)` not duplicated as a separate row).
 
 **Phase 7 done definition** (full-execution criterion):
 

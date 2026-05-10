@@ -415,6 +415,17 @@ isProject: false
 > must reach C5 before live-pipeline Phase 4 starts.** Banner removed when both Phase 1.2 and Phase 2 are flipped done
 > here.
 
+> **🟢 SHARD-ATOM SSOT — live inherits batch atom (ratified 2026-05-10 cross-plan audit Q4)**
+>
+> Per CLAUDE.md "Shard-granularity SSOT (CRITICAL)" + "Live = batch" rules: the live aggregator that consumes this
+> plan's `open_candle_writer` / `close_candle_writer` lifecycle emits ONE `record_captured` per shard-day
+> `(asset_group, venue, data_type, instrument_type, instrument_id, day, timeframe)` — IDENTICAL atom to the batch
+> chunked-write path Phase 1.2B migrates. Per-window `CandleComputedEvent`s are Redis-Stream operational signals, NOT
+> manifest rows. The per-shard consolidator that aggregates the day's per-window candles into a single parquet finalize
+> at UTC-midnight close is the equivalent of batch's chunked-write-then-finalize sequence. Banned: live `record_captured`
+> row_key shapes that add a `window` dimension (same drift-bug class as legacy `category=` / `asset_group=` per
+> 2026-05-04 phantom-audit incident).
+
 ## Why this plan exists
 
 The `mtds_per_instrument_download_api_2026_04_24.md` line of work shipped a band-aid fix for an MDPS VM OOM regression

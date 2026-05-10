@@ -23,6 +23,14 @@ related_codex:
 
 # Wallet / treasury / client lifecycle MVP
 
+> **🟡 IN-FLIGHT REFACTOR — `FeeRecognitionRow` UAC type added 2026-05-10 PM.** Per
+> `client_reporting_pnl_attribution_mvp_2026_05_10` Phase 1.C + codex
+> [`pnl-attribution.md § Plan-vs-codex factor name mapping`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md),
+> HWM crystallization is recognised via a NEW `FeeRecognitionRow` table emitted by THIS plan's Phase 4.C — NOT as a
+> `PnLAttributionRow.factor` value. Phase 4.C below was extended to declare the type + emit it from Phase 5.G's
+> `PerformanceFeeCrystallizedEvent`. The client-reporting-mvp plan's UI tab Phase 5.C2 reads this directly. Be aware
+> when touching Phase 4.C / Phase 5.G shapes — the factor × layer attribution decoupling is a workspace-wide rule.
+
 ## Why this plan exists
 
 May-23 cutover gates on the operator being able to: onboard 1 demo client end-to-end (deposit + KYC stub + API keys +
@@ -146,10 +154,17 @@ allocate + settle on stub data.
 - [ ] [AGENT] P0. **4.A `TradeSettledEvent` per trade.** Emitted within named SLA of execution fill.
 - [ ] [AGENT] P0. **4.B Per-day fee accrual.** UTL `post_trade/settler.py` aggregates per-client fees daily; emits
       `FeeAccruedEvent`.
-- [ ] [AGENT] P0. **4.C UAC HWM contracts.** `HighWaterMarkLedgerRow` Pydantic —
+- [ ] [AGENT] P0. **4.C UAC HWM + FeeRecognition contracts.** `HighWaterMarkLedgerRow` Pydantic —
       `(client_id, share_class_id, as_of, nav, prior_peak_nav, delta, crystallization_due)`. `CrystallizationCadence`
       closed enum: `DAILY / WEEKLY / MONTHLY / QUARTERLY`. Per-share-class `crystallization_cadence` declared in
-      `registry/client_share_classes.py` + per-share-class `perf_fee_rate: Decimal`.
+      `registry/client_share_classes.py` + per-share-class `perf_fee_rate: Decimal`. **NEW `FeeRecognitionRow` Pydantic
+      type added 2026-05-10 PM** (per cross-plan banner above + codex `pnl-attribution.md § Plan-vs-codex factor name
+      mapping`) — `(client_id, share_class_id, period_start, period_end, recognition_type ∈ {PERFORMANCE_FEE_CRYSTALLIZATION,
+      MANAGEMENT_FEE, FLAT_FEE, ...}, amount, recognized_at, source_event_id)`. Phase 5.G's
+      `PerformanceFeeCrystallizedEvent` emits one `FeeRecognitionRow` per crystallization (including zero-fee
+      underwater case). Stored at `gs://{pid}-client-statements/{client_id}/fee_recognition/{YYYY-MM-DD}/*.parquet`.
+      `FeeRecognitionRow` is the SSOT for fee accounting; `PnLAttributionRow` (in `client_reporting_pnl_attribution_mvp`)
+      keeps its factor × layer dual axis decoupled — fee recognition does NOT participate in attribution decomposition.
 - [ ] [AGENT] P0. **4.D HWM-aware per-trade ledger update.** Per-trade NAV update feeds the HWM ledger row; flat-fee is
       the per-trade base, HWM-driven crystallization is the per-period top-up.
 
@@ -184,7 +199,9 @@ aggregate matches sum-of-trades; HWM ledger row updated per trade with `delta = 
       period boundary per share-class `crystallization_cadence`, emit `PerformanceFeeCrystallizedEvent` with
       `(client_id, share_class_id, period_start, period_end, hwm_at_start, hwm_at_end, gross_pnl, perf_fee_amount, perf_fee_rate)`.
       Underwater client (HWM didn't increase) emits the event with `perf_fee_amount = 0` so reconciliation has the
-      explicit zero-row.
+      explicit zero-row. **Also emits a `FeeRecognitionRow`** (per Phase 4.C extension; `recognition_type =
+      PERFORMANCE_FEE_CRYSTALLIZATION`, `amount = perf_fee_amount`, `source_event_id = <event uuid>`) so the
+      client_reporting plan's UI tab Phase 5.C2 can render the NAV waterfall fee marker without re-deriving it.
 - [ ] [AGENT] P0. **5.H HWM invariant assertion.** UTL helper: `hwm_at_end ≥ hwm_at_start` always; `perf_fee_amount > 0`
       only when `hwm_at_end > hwm_at_start`. Period-boundary crystallization fires exactly once per (client,
       share_class, period). Fails loud on violation.
@@ -199,8 +216,14 @@ emitted daily including HWM section.
 
 ## Phase 6 — deployment-api + ui Treasury tab (Days 10-11, ~1 AI-day)
 
-- [ ] [AGENT] P0. **6.A `/api/clients/{id}/treasury` endpoint.** Returns
-      `(treasury_sources, custody_ping_results, allocations, last_settled)`.
+- [ ] [AGENT] P0. **6.A `/api/clients/{id}/treasury` endpoint — CONSUMER ROLE (ratified 2026-05-10 cross-plan audit Q7
+      per most-comprehensive-owner rule).** Per-client attribution view. Consumes the canonical multi-source rollup
+      shipped by [`api_keys_wallets_accounts_readiness_2026_05_10.md`](api_keys_wallets_accounts_readiness_2026_05_10.md)
+      Phase 3.D — `/api/treasury/rollup` (Copper + CEFFU + venue + on-chain unified NAV). This endpoint layers per-client
+      attribution (subscription % × source NAV) ON TOP of the canonical rollup; does NOT re-fetch source balances. Reads
+      `(treasury_sources, custody_ping_results, allocations, last_settled)` from PBM state populated by api_keys Phase 3.
+      NAV reconciliation invariant: `Σ over all clients of /api/clients/{id}/treasury.nav == /api/treasury/rollup.nav` —
+      tested in Phase 6.D Playwright smoke + an additional cross-endpoint reconciliation test.
 - [ ] [AGENT] P0. **6.B `/api/clients/{id}/subscriptions` endpoint.** Per-client share-class subscription list.
 - [ ] [AGENT] P0. **6.C deployment-ui Treasury tab.** Per-client view: subscriptions + allocations + custody pings +
       post-trade history + withdrawal request button.
