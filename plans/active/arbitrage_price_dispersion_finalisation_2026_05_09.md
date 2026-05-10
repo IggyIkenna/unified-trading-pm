@@ -964,3 +964,16 @@ doc `leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`). No grep-miss 
 **Recommendation for next agent**: spawn `agent-arb-fundrate-b` to ship Phase B (tracer) — Phase A unblocked it; tracer
 modeled on `trace_carry_staked_basis.py` per the plan body; can run end-to-end against real backfilled MTDS + features
 data for the 2024 W1 window. Phase C (pnl-attribution) chains immediately after — same agent or parallel.
+
+**SUPERSEDING FINDING (2026-05-10 PM, agent-arb-fundrate-c2 P0 case-5)**: Phase B is blocked on UPSTREAM data gaps,
+not just on agent pickup. Real-GCS probe 2026-05-10 found: (a) aster has no perp_funding directory at all in
+`gs://perp-funding-{pid}/perp_funding/`; (b) okx-futures raw_tick_data starts 2025-01 in market-data-tick-cefi (no 2024
+coverage); (c) `features-delta-one-cefi` `by_date` partitions are sporadic across all years — NO contiguous 1-week
+window exists for the verify run. Issue doc:
+[`plans/active/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md).
+Phase B's `todo (unblocked)` status above is technically wrong — it's `blocked-on-upstream-data` (UPSTREAM SERVICES:
+MTDS aster perp-funding handler + okx-futures raw backfill + features-delta-one-cefi continuous backfill). Operator
+triage required on disposition: (a) backfill upstream data (slow, costs); (b) scope-adjust verify window to a
+contiguous-coverage range (probably 2025-Q3 onwards if features-delta-one-cefi catches up there); (c) ship tracer code
+with smoke-only + flag (banned by Plans-Run-To-Actual-Completion HARD RULE). Phase C remains blocked-after-Phase-B; the
+chain is unchanged but the root blocker is upstream data, not the tracer agent.

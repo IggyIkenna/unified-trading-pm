@@ -195,9 +195,12 @@ already supports LEADER_HEDGE mode.
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed only `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` exist in
       `strategy-service/scripts/`; no ARBITRAGE_PRICE_DISPERSION tracer. Tracked as Phase B in successor plan.
-      **STATUS 2026-05-10 (todo, unblocked)**: Phase A is now complete (Tab 5 shipped A.1/A.2/A.3/A.6/A.7 across
-      strategy-service@24f8494/0b4ef0e/04c0d52/1107ab7/d01661e/de9b4b0); the tracer can ship next. Awaiting next agent
-      to pick up Phase B + C handoff.
+      **STATUS 2026-05-10 PM (blocked-on-upstream-data)**: Phase A is complete (Tab 5 shipped A.1/A.2/A.3/A.6/A.7
+      across strategy-service@24f8494/0b4ef0e/04c0d52/1107ab7/d01661e/de9b4b0) but Phase B is blocked on UPSTREAM data
+      gaps per `agent-arb-fundrate-c2` P0 case-5 finding 2026-05-10:
+      [`plans/active/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md).
+      Real-GCS probe: aster has no perp_funding directory; okx-futures raw starts 2025-01; features-delta-one-cefi has
+      no contiguous 1-week window for any year. Operator triage required.
 - [ ] [P&L attribution] P1. Confirm `pnl-attribution-service` rows attribute under `ARBITRAGE_PRICE_DISPERSION` for the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed zero `ARBITRAGE_PRICE_DISPERSION` references in `pnl_attribution_service/` source (only
