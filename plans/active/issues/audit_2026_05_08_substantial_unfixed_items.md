@@ -304,7 +304,7 @@ Two adjacent live-trading observability + testnet items surfaced during the
 2026-05-08 audit triage (separate from items #1-#4 above). Both shipped
 2026-05-10 as paired UAC SSOT + per-service wire-in:
 
-### Item #5 — MTDS adapter heartbeat wire-in — ✅ SHIPPED-PARTIAL 2026-05-10
+### Item #5 — MTDS adapter heartbeat wire-in — ✅ RESOLVED 2026-05-10
 
 - **UAC@b05a032** — `VENUE_HEARTBEAT_THRESHOLDS` SSOT (5 venue-classes;
   per-(venue, data_type) override registry empty by default until live
@@ -316,22 +316,43 @@ Two adjacent live-trading observability + testnet items surfaced during the
   `shutdown` event handlers. `get_watchdog()` module-level accessor
   returns the singleton (or `None` in batch mode); 6 unit tests in
   `tests/unit/test_api_watchdog_lifecycle.py`.
-- **DEFERRED**: per-adapter `watchdog.heartbeat()` callsites across the
-  ~10 heterogeneous adapter shapes (CCXT / Tardis / Databento /
-  Hyperliquid / Aster / Polymarket / Kalshi / odds-api / Yahoo / etc.).
-  Mechanical work: each WS-message handler / REST-poll completion adds:
-
-  ```python
-  from market_tick_data_service.api.main import get_watchdog
-  watchdog = get_watchdog()
-  if watchdog is not None:
-      watchdog.heartbeat(self.venue, self.data_type, datetime.now(UTC))
-  ```
-
-  Successor: extend this issue doc with a per-adapter Phase 2 once the
-  next operator-driven wave triages it (likely a Tab in tomorrow's
-  `work_split_*_harsh.md` since the per-adapter pattern is mechanical
-  + per-spec per the daily-split principle).
+- **MTDS@4faef39** — Per-adapter `watchdog.heartbeat()` callsites
+  shipped across the streaming/WS + REST-poll adapter surface. New
+  SSOT helper `market_tick_data_service/market_interface/heartbeat_helper.py`
+  exposes `emit_heartbeat(venue, data_type)` — adapters import it (no
+  per-call `get_watchdog()` boilerplate) and the helper resolves the
+  singleton + no-ops in batch mode. Wire-ins:
+  - `defi/live/hyperliquid_ws.py` — per yielded WS message (channel →
+    data_type: allMids → mids / l2Book → orderbook / userFundings →
+    funding).
+  - `defi/live/onchain_event_poller.py` — per successful block-poll
+    cycle (data_type=onchain_event); empty log windows still heartbeat
+    since the upstream RPC is responsive.
+  - `defi_live/alchemy_adapter.py` — per successfully normalized
+    mined_tx / log message inside `normalize_ws_message()`.
+  - `defi_live/thegraph_ws_adapter.py` — per successfully normalized
+    liquidity_pool / lending_rate GraphQL message.
+  - `cefi/ccxt_adapter.py` — per successful `fetch_ticker` /
+    `fetch_order_book` / `fetch_ohlcv` / `fetch_trades` /
+    `fetch_funding_rate` / `fetch_open_interest` REST poll
+    (data_type=ticker|orderbook|ohlcv|trades|funding|open_interest);
+    venue=`self.exchange_id.upper()`. Covers Binance / Bybit / OKX /
+    Deribit / Coinbase / Kraken / Hyperliquid (all CCXT-backed).
+  - `prediction/polymarket_adapter.py` — per successful `get_markets` /
+    `get_prices` REST poll (data_type=markets|prediction_clob).
+  - `prediction/kalshi_adapter.py` — per successful trades-page REST
+    poll inside cursor pagination loop.
+- **Tests**: `tests/unit/test_adapter_watchdog_wiring.py` — 13 unit
+  tests covering helper no-op + recording + error-swallowing
+  semantics, Alchemy / TheGraph / CCXT adapter wire-in points, and
+  per-(venue, data_type) state isolation.
+- **Skipped (REST-only batch / historical adapters with no live-mode
+  meaning)**: Yahoo VIX 15m, open-meteo weather, Databento (batch
+  historical), Tardis (batch historical), DeFi REST adapters
+  (Aave / Uniswap / Curve / Balancer / Morpho / Ethena / etc. — these
+  use `BaseDefiAdapter`'s per-shard `record_captured` boundary which
+  is the batch-equivalent of heartbeat), sports adapters (no WS path
+  in MTDS currently), TradFi (FRED / ECB / OFR / IBKR / OpenBB).
 
 ### Item #11 — CeFi testnet wiring — ✅ SHIPPED 2026-05-10
 
