@@ -63,22 +63,28 @@ plumb / δ ship α + Wave-2 successor); see predictions_master_2026_05_07.md § 
 shipped; working tree clean on MTDS.
 
 [2026-05-10 14:25 UTC] pm-governance-hygiene-tab — ℹ️ INFO (no ack required): 2026-05-10 PM-only governance sweep
-shipped 13 commits: archive operator_decisions_2026_05_08 (lifecycle deadline 2026-05-09 passed) + 7 resolved issue
-docs archived (uac_utl_qg_blockers / mdps_streaming_primitives_prompt_vs_plan_conflict / alerting_phase3_envelope /
+shipped 13 commits: archive operator_decisions_2026_05_08 (lifecycle deadline 2026-05-09 passed) + 7 resolved issue docs
+archived (uac_utl_qg_blockers / mdps_streaming_primitives_prompt_vs_plan_conflict / alerting_phase3_envelope /
 cross_cutting_strategy_catalogue / feature_batch_handler_abc / pm_validate_plan_links / paper_trade_smoke_blocker) +
 alerting Q1 back-flip ✅ RESOLVED + manifest_v7_schema_migration_design SUPERSEDED banner pointing to
 manifest_schema_final_gate_2026_05_09 + launcher_scripts_consolidation Phase 0/1/4 flips with Phase 2/3 deferred
 annotations + 2026-05-10 audit-session deferred-work scoreboard added to work_split_2026_05_08_ikenna.md. Cross-side
 note for Harsh: no Harsh-side dependencies created; pure Ikenna-side governance hygiene.
 
-[2026-05-10 14:35 UTC] mtds-utl-completion-tab — ℹ️ INFO (no ack required): Wave-2 Phase 1 + 3 first item + F2-v2
-item 2 SHIPPED. UTL@ef47c81b `record_captured_from_counts` streaming-writer companion + 11 tests; MTDS@a2f8d80
-prediction `canonical_question_group` bundle finalize using new helper + 5 tests; MTDS@4a00bd5 cefi `available_at`
-per-row stamping at `PartitionedTickWriter.write_chunk` boundary via `stamp_available_at_cefi_tick` (Tardis = 50ms
-emission latency) + 5 tests. Plan flips: `wave2_polymarket_record_captured_from_counts_2026_05_09` Phase 1 + Phase 3
-first item flipped done; `predictions_master_2026_05_07` Q2 ✅ RESOLVED with shipped option (δ);
+[2026-05-10 14:35 UTC] mtds-utl-completion-tab — ℹ️ INFO (no ack required): Wave-2 Phase 1 + 3 first item + F2-v2 item 2
+SHIPPED. UTL@ef47c81b `record_captured_from_counts` streaming-writer companion + 11 tests; MTDS@a2f8d80 prediction
+`canonical_question_group` bundle finalize using new helper + 5 tests; MTDS@4a00bd5 cefi `available_at` per-row stamping
+at `PartitionedTickWriter.write_chunk` boundary via `stamp_available_at_cefi_tick` (Tardis = 50ms emission latency) + 5
+tests. Plan flips: `wave2_polymarket_record_captured_from_counts_2026_05_09` Phase 1 + Phase 3 first item flipped done;
+`predictions_master_2026_05_07` Q2 ✅ RESOLVED with shipped option (δ);
 `available_at_lookahead_bias_completion_2026_05_08` Phase 1 P0 CeFi adapter stamping flipped done; F2 issue doc
 `cefi_available_at_spawn_task_structural_mismatch_2026_05_08` resolved-banner added.
+
+[2026-05-10 19:10 UTC] features-service-consolidation-push-tab — features-service@d3d6e286 pushed to
+`IggyIkenna/features-service` `live-defi-rollout` (sync 0 0). Skeleton + 8 sub-package subtree merges + 10-workflow
+.github/workflows scaffolding all live. Workspace-manifest already registered (line 880). Phase 2 + Phase 3 first wave
+of `features_repo_consolidation_2026_05_08.md` flipped done. Unblocks Phase 4-9 (cross-family lifts / parity / archival
+/ codex / final QG sweep) as needed.
 
 <!--
 Resolved pings (cleared 2026-05-08 ~14:30 UTC by main orchestrator on operator's behalf):
