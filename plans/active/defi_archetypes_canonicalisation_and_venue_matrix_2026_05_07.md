@@ -222,19 +222,25 @@ already supports LEADER_HEDGE mode.
 funding-dispersion-leveraged. No remaining references to `leveraged_funding_arb` as a standalone archetype except in
 this plan + the issue file (as historical context).
 
-**Gate status 2026-05-10 (mostly-closed for rename; full close still gated on Phases B+C of finalisation plan)**: bulk
-rename sweep shipped 2026-05-10 PM across 5 PM commits (PM@071070f5 defi_master + PM@0334ad3d alerting_service_live_rules
-+ PM@23c20411 simulation_scenarios + PM@30d96b08 3 epic plans + PM@476f00f9 6 tail tracked plans). All TRACKED
-forward-looking active + epic plans renamed; historical-context annotations preserved per gate phrasing. Residuals
-(NOT shipped): 2 UNTRACKED foreign-WIP files (`manifest_schema_final_gate_2026_05_09.md` +
-`defi_recursive_borrow_archetypes_2026_05_10.md`) skipped per workspace foot-gun rules; 2 audit-snapshot docs
-(`_AUDIT_2026_05_07_dependency_graph.md` + `issues/audit_2026_05_08_substantial_unfixed_items.md`) left as historical
-context (snapshot semantics — refs are recording past audit findings). Tracker:
+**Gate status 2026-05-10 ✅ FULLY CLOSED**: bulk rename sweep shipped 2026-05-10 PM across 5 PM commits (PM@071070f5
+defi_master + PM@0334ad3d alerting_service_live_rules + PM@23c20411 simulation_scenarios + PM@30d96b08 3 epic plans +
+PM@476f00f9 6 tail tracked plans). All TRACKED forward-looking active + epic plans renamed; historical-context
+annotations preserved per gate phrasing. Residuals (NOT shipped, accepted): 2 UNTRACKED foreign-WIP files
+(`manifest_schema_final_gate_2026_05_09.md` + `defi_recursive_borrow_archetypes_2026_05_10.md`) skipped per workspace
+foot-gun rules; 2 audit-snapshot docs (`_AUDIT_2026_05_07_dependency_graph.md` +
+`issues/audit_2026_05_08_substantial_unfixed_items.md`) left as historical context (snapshot semantics — refs are
+recording past audit findings). Tracker:
 [`plans/active/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
-§ "RESOLUTION 2026-05-10". Stream B's 3 sister-todo deferrals: L181 strategy-service slot ✅ done; L195 tracer ✅ done
-2026-05-10 PM (agent-arb-fundrate-tracer at strategy-service@2fdf7e8 with real-infra 2024-W1 run); L205 P&L
-attribution 🟡 unblocked-todo (next agent picks up — tracer output ready under `/tmp/arb_trace_2024_w1/`). Once Phase C
-ships, Stream B fully closes.
+§ "RESOLUTION 2026-05-10". **Stream B's 3 sister-todo deferrals — all ✅ done**: (1) L181 strategy-service slot ✅ Phase A
+end-to-end across 6 commits (strategy-service@24f8494 dispatcher + @0b4ef0e helper + @04c0d52 engine + @1107ab7 probe +
+@d01661e multi-asset + @de9b4b0 allocator + @e3e0962 QG-clean Literal fix); (2) L195 tracer ✅ Phase B at
+strategy-service@2fdf7e8 + peripheral-QG @e87a84a, real-infra 2024-W1 run produced 3 EMIT / $200.63 simulated P&L; (3)
+L205 P&L attribution ✅ Phase C at pnl-attribution-service@f5dcf63 + operational run 2026-05-10 wrote 7 daily parquets
+(29 total rows across `gs://pnl-attribution-output/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-{01..07}.parquet`;
+sample 2024-01-02 = 9 rows including ETH `deribit→hyperliquid` $64.04 + SOL `bybit→hyperliquid` $45.19 EMIT pairs).
+Successor finalisation plan
+[`arbitrage_price_dispersion_finalisation_2026_05_09.md`](arbitrage_price_dispersion_finalisation_2026_05_09.md)
+shipped 100% end-to-end (Phases A/B/C/D/E all done with operational evidence). Stream B gate fully closed.
 
 ---
 
