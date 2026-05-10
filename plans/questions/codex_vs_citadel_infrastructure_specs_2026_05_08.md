@@ -4,12 +4,13 @@ overview:
   Fresh-eyes audit — what would an alpha-and-error-free-optimised non-HFT combination trading system look like, and
   where does the current codex / repo / runtime architecture diverge from that ideal?
 type: question
-status: drafting
+status: plan-spawned
 created: 2026-05-08
+plan_spawned: 2026-05-10
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-spawned_plan: null
+spawned_plan: plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
 related_codex:
   - codex/00-SSOT-INDEX.md
   - codex/04-architecture/separation-of-concerns.md
@@ -69,31 +70,30 @@ each area against this benchmark.
 
 ### Operator directives (received during this question doc's drafting — pinned)
 
-- **2026-05-09 ikenna**: *"agent paralel flow is the ssot we will do this for forseeable future needs to ebe tight"* —
+- **2026-05-09 ikenna**: _"agent paralel flow is the ssot we will do this for forseeable future needs to ebe tight"_ —
   multi-parallel-agent flow IS the workspace SSOT. Do NOT propose removing it. **Do** propose tightening its foot-guns.
   This re-shapes Block A3 (the audit re-frames around tightening, not replacing) and **PROMOTES D3 (per-agent
   worktrees)** as the structural fix that makes the SSOT tight.
-- **2026-05-09 ikenna**: *"UTS needs to be a commoon soot codbebas with hooks to do eevrythihg with mim duploiacte
-  thread but full flexibility"* — the target architecture IS a **single common-SSOT codebase with hooks for
+- **2026-05-09 ikenna**: _"UTS needs to be a commoon soot codbebas with hooks to do eevrythihg with mim duploiacte
+  thread but full flexibility"_ — the target architecture IS a **single common-SSOT codebase with hooks for
   extensibility**, minimum duplicate code paths, full flexibility via plugin / extension points. This is a DIRECTLY
   DECIDED answer to Block A1 (the recommendation is now "monorepo + plugin hooks", not "audit whether to consolidate").
   The plan-extraction work for A1 becomes "design + execute the consolidation + hook architecture" not "decide whether
   to consolidate."
-- **2026-05-09 ikenna**: *"the rest of your question you can answer with the code understanding... plug and gaps with
-  active plan updates"* — fill the audit findings myself based on code understanding (don't gate on operator answers
-  for the remaining blocks); when gaps surface, raise them as updates against active plans rather than as new question
-  doc cycles.
+- **2026-05-09 ikenna**: _"the rest of your question you can answer with the code understanding... plug and gaps with
+  active plan updates"_ — fill the audit findings myself based on code understanding (don't gate on operator answers for
+  the remaining blocks); when gaps surface, raise them as updates against active plans rather than as new question doc
+  cycles.
 
 ### Block A — Repo + codebase shape
 
 A1. **Repo split at 35 — earning its cost?** 35 git repos in the workspace today (27 active + 8 archived after the
-features-* consolidation 2026-05-08; ground truth = `workspace-manifest.json` `repositories` keys). The split was
+features-\* consolidation 2026-05-08; ground truth = `workspace-manifest.json` `repositories` keys). The split was
 justified historically by parallel-CI throughput + per-domain ownership boundaries, but with current team size the
 symptoms remain visible: dirty-deps quickmerge bans, force-sync danger, version-skew risk, per-repo workflow template
 rollouts, "where does X live?" cognitive load, QG bypass loopholes per repo, dual SSOTs from canonical/external-source
-splits, multi-agent shared-tree foot-guns (the 4 documented in CLAUDE.md). Are 27 active repos earning their cost
-today? Concretely: which 5-10 logical packages would survive in a clean rewrite, and what's the migration cost vs
-benefit?
+splits, multi-agent shared-tree foot-guns (the 4 documented in CLAUDE.md). Are 27 active repos earning their cost today?
+Concretely: which 5-10 logical packages would survive in a clean rewrite, and what's the migration cost vs benefit?
 
 > **DECIDED 2026-05-09 (operator directive)**: target shape is **single common-SSOT codebase + hooks for extensibility,
 > minimum duplicate threads, full flexibility**. The audit work for A1 is no longer "should we consolidate?" — it's
@@ -105,19 +105,19 @@ benefit?
 > - **Hooks pattern** for per-domain / per-archetype / per-venue extensibility — adapter registries (already exist in
 >   UAC `external/<source>/`), strategy-archetype registries (already exist in UAC `registry/`), feature-family
 >   registries (already exist in features-service after consolidation), execution-mode registries (already exist in
->   `ManualExecutionMode`/`ServiceEmissionPolicy`). Lift these into a uniform "extension point" pattern so adding a
->   new venue / archetype / feature is a single registry entry + a single adapter file, not a new repo.
+>   `ManualExecutionMode`/`ServiceEmissionPolicy`). Lift these into a uniform "extension point" pattern so adding a new
+>   venue / archetype / feature is a single registry entry + a single adapter file, not a new repo.
 > - **Migration sequence** (to be detailed in spawned plan): (1) UAC + UTL + UCI + UEI collapse into
 >   `unified-trading-core/` sub-package, (2) all `interfaces/*` (market, execution, sports, prediction adapters)
 >   collapse into `unified-trading-interfaces/` sub-package, (3) all `*_service` repos collapse into
->   `unified-trading-services/` with sub-packages per service, (4) UI repos consolidate via the same pattern.
->   End-state: ~3-5 logical packages instead of 27 active repos.
+>   `unified-trading-services/` with sub-packages per service, (4) UI repos consolidate via the same pattern. End-state:
+>   ~3-5 logical packages instead of 27 active repos.
 > - **Coordination win**: removes dirty-deps quickmerge bans, force-sync danger, version-skew risk, per-repo workflow
 >   template rollouts, the per-repo cursor-rules / CLAUDE.md symlinks, the per-repo QG-bypass-audit YAMLs.
-> - **Open audit questions for plan extraction**: timing vs May-23 cutover (consolidation IS the cutover-gating work
->   if done pre-May-23, OR a post-cutover refactor); incremental vs big-bang migration; CI/CD shape under monorepo
->   (single QG pipeline vs per-package); hooks-pattern formalization (which existing registries are the canonical
->   extension surface vs which need lifting).
+> - **Open audit questions for plan extraction**: timing vs May-23 cutover (consolidation IS the cutover-gating work if
+>   done pre-May-23, OR a post-cutover refactor); incremental vs big-bang migration; CI/CD shape under monorepo (single
+>   QG pipeline vs per-package); hooks-pattern formalization (which existing registries are the canonical extension
+>   surface vs which need lifting).
 
 A2. **Codex inflation + codex staleness** — ~150 docs across 9 sub-trees + ~1500 lines of `CLAUDE.md` rules + per-repo
 `CLAUDE.md` symlinks + `SUB_AGENT_MANDATORY_RULES.md` aliasing the full content. Each new agent (sub-agent or fresh
@@ -132,19 +132,18 @@ detailed reference accessed on-demand, vs the current "everything is mandatory" 
 codex re-derivation from authoritative state** (workspace-manifest.json owns repo count → codex auto-pulls from it
 instead of hard-coding)?
 
-A3. **CLAUDE.md as procedural rule book under the parallel-agent SSOT — what tightens further?** The file has more
-lines about HOW to commit (pre-commit check, foot-guns #1-#4, prek auto-revert race, conditional push,
-plan-flip-as-you-ship, pathspec commit form) than about WHAT to build. **Operator directive 2026-05-09**: parallel-agent
-flow IS the workspace SSOT for the foreseeable future + needs to be tight. So the audit re-frames around tightening,
-not removing. Open questions: which procedural rules earn their cost (the pre-commit-check + pathspec-commit-form +
-EOD-scoreboard discipline catch real foot-gun fires daily — KEEP); which rules are workarounds for the underlying
-shared-tree race that **D3 below would eliminate structurally** (foot-gun #1 / #2 / #3 / #4 all stem from the same
-shared-`.git/` + shared-working-tree shape); which rules drift between text + behaviour as agents accumulate; which
-rules a fresh agent ACTUALLY reads vs which exist as documentation-only governance theatre? If a fresh
-operator sat down today, which CLAUDE.md sections would they need to follow, and which would be artefacts of accumulated
-parallelism? **The sibling question doc `paper_vs_live_workflow_maturity_2026_05_08.md` overlaps here** — that doc
-focuses on the operational paper/live workflow; this question is the upstream "is the agent-coordination shape itself
-earning its cost?"
+A3. **CLAUDE.md as procedural rule book under the parallel-agent SSOT — what tightens further?** The file has more lines
+about HOW to commit (pre-commit check, foot-guns #1-#4, prek auto-revert race, conditional push, plan-flip-as-you-ship,
+pathspec commit form) than about WHAT to build. **Operator directive 2026-05-09**: parallel-agent flow IS the workspace
+SSOT for the foreseeable future + needs to be tight. So the audit re-frames around tightening, not removing. Open
+questions: which procedural rules earn their cost (the pre-commit-check + pathspec-commit-form + EOD-scoreboard
+discipline catch real foot-gun fires daily — KEEP); which rules are workarounds for the underlying shared-tree race that
+**D3 below would eliminate structurally** (foot-gun #1 / #2 / #3 / #4 all stem from the same shared-`.git/` +
+shared-working-tree shape); which rules drift between text + behaviour as agents accumulate; which rules a fresh agent
+ACTUALLY reads vs which exist as documentation-only governance theatre? If a fresh operator sat down today, which
+CLAUDE.md sections would they need to follow, and which would be artefacts of accumulated parallelism? **The sibling
+question doc `paper_vs_live_workflow_maturity_2026_05_08.md` overlaps here** — that doc focuses on the operational
+paper/live workflow; this question is the upstream "is the agent-coordination shape itself earning its cost?"
 
 A4. **Repo organisation by "tier + interface + service" vs "by domain bounded context"** — current shape is library-
 centric (T0 contracts → T1 utility → T2 interfaces → T3 services), which is a clean dependency-DAG but cuts across
@@ -186,11 +185,11 @@ verification"? **Composes with sibling question `backfill_manifest_schema_freeze
 about freezing the current schema; this question is about whether the underlying SSOT model is shaped right.
 
 B4. **`live = batch` principle is correct, implementation is brittle** — the principle is repeated across multiple codex
-docs because consumers keep reintroducing bespoke shapes (live-only data_types, separate field sets, distinct
+docs because consumers keep reintroducing bespoke shapes (live-only data*types, separate field sets, distinct
 `available_at` derivation). Type-level enforcement: a single `Pipeline[ModeT]` runtime where `ModeT in {Batch, Live}` is
 a generic parameter; the only mode-conditional code is a 4-seam `Source[ModeT]` / `Output[ModeT]` injector; every other
 line is mode-agnostic by construction (impossible to write `if mode == "live": ...`). Today the principle is prose;
-better would be a base class that _can't_ be written wrong. What's the cost of refactoring strategy-service /
+better would be a base class that \_can't* be written wrong. What's the cost of refactoring strategy-service /
 features-service / execution-service to that shape, and what's the saved governance + reconciler-writing time over 6-12
 months? **Composes with sibling question `batch_live_design_symmetry_2026_05_08.md`** — that doc audits the existing
 wire-up surface; this question asks whether the principle should be language-enforced rather than prose-asserted.
@@ -208,11 +207,11 @@ C1. **No first-class "research → paper → live" flow for the alpha researcher
 wrapper. The end-to-end "I have an idea, here's a notebook, hit deploy" path doesn't exist as a single workflow. The
 researcher today must understand: ServiceEmissionPolicy, manifest writers, write-gates, shard-granularity SSOT, hive
 partitions, batch=live seams, UAC schema placement, instrument lifecycle hot-reload, the 5 axes of operational mode
-(env_canon.py), the ML experiment lifecycle, the strategy registry-v2 axes, restriction-policy, archetype declaration in
+(env*canon.py), the ML experiment lifecycle, the strategy registry-v2 axes, restriction-policy, archetype declaration in
 UAC, etc. — before they can backtest a new signal. Citadel-grade non-HFT shops invest heavily in **researcher leverage**
 (one researcher should ship 5-10 ideas/month; today the friction predicts <1/month). What's the researcher-experience
 equivalent of `dev-tiers.sh --tier 0`? What's the "I'm a researcher with a hypothesis, here's the golden path" doc that
-_doesn't exist today_?
+\_doesn't exist today*?
 
 C2. **No alpha attribution stack at the architecture level** — `pnl-attribution` is in scope of the client-reporting
 question doc as a P&L _reporting_ concern. The deeper alpha-attribution question is missing entirely:
@@ -444,6 +443,280 @@ The audit MUST resist the temptation to KEEP everything by default. Every SSOT +
      re-add Elysium / Bloxroute). Different from the stale-repo-count case.
 
   The work is **<1 day of one agent's time**, ships as a single PM commit + a CI step, and pays back permanently.
+
+  **Update 2026-05-09**: parts (1) + (3) shipped (PM@b9c93a38 + PM@96fbd444 — codex stale-string sweep; manifest +
+  `.code-workspace` cleanup of archived features-* leakage; 27-active-repo count now consistent across all three
+  surfaces). Part (2) — the QG ADD-GATE step — still pending; track in active plan during plan extraction.
+
+### B1 — Honest-coverage taxonomy as runtime convention vs as type system (filled 2026-05-10)
+
+- **Code state**: `unified-trading-library/unified_trading_library/manifest_writer.py` is **4360 lines** in a single
+  module. The 4-state honest-coverage taxonomy is enforced by **4 separate methods** on the `ManifestWriter` class
+  (line 1053):
+  - `record_captured(...)` — line 1968 — write a parquet + index a `captured` row.
+  - `record_empty(row_key=..., reason=...)` — line 1397 — index an `empty_confirmed` row; reason MUST be from the
+    closed-set `EMPTY_CONFIRMED_REASONS` frozenset (UAC) or raises `LegacyBlankErrorReasonError` (line 1463) or
+    `UnknownEmptyConfirmedReasonError` (line 1467).
+  - `record_failed(row_key=..., error=..., attempted_at=...)` — line 1595.
+  - `record_expected_unattempted(row_key=..., attempted_at=...)` — line 1542.
+  - Plus `record_captured_from_counts(...)` variant — line 2222.
+
+  The 4-state outcome is exposed as a `CaptureStatus` `str`-enum (line 134) with 4 members (`CAPTURED` /
+  `EMPTY_CONFIRMED` / `ATTEMPTED_FAILED` / `EXPECTED_UNATTEMPTED`). The enforcement is **runtime**, not type-level —
+  there are 6 distinct exception classes (`MissingClusterValidationError` line 173, `MissingFeatureFamilyError` line
+  204, `UpstreamTimestampBiasError` line 259, `MalformedTickFieldError` line 308, `UnknownEmptyConfirmedReasonError`
+  line 349, `ClusterCoverageError` line 379) plus `LookaheadBiasError` from the `point_in_time` module — each fires
+  when the adapter calls the wrong method shape or passes invalid arguments. None of these would compile-fail; they
+  all raise at runtime, after the bad call has been written.
+
+  The 4 separate methods means an adapter author can call `record_captured(...)` on a parquet that's actually empty,
+  and the only thing that catches it is one of the runtime `*Error` classes if the validation gates trigger — which
+  they don't always (the 2026-05-05 MDPS 1440-NaN-OHLC-bars-per-day-for-years incident is the canonical case where
+  `record_captured` accepted thousands of empty rows because the writer's row-count gate didn't fire on
+  `O=H=L=C=None`).
+
+- **Codex state**: ~6 codex docs cover this surface:
+  - `codex/02-data/availability-manifest-and-data-status.md` — manifest schema + 4-state taxonomy SSOT.
+  - `codex/02-data/honest-absence-downstream-handling.md` — downstream NaN-handling per category + reason taxonomy
+    (codified 2026-05-07).
+  - `codex/02-data/expected-absence-backfill-runbook.md` — per-source absence-classification rules.
+  - `codex/02-data/hive-schema-compatibility.md` — manifest hive partition shape.
+  - `codex/02-data/manifest-migration-coordination.md` — multi-writer coordination protocol.
+  - `cursor-configs/CLAUDE.md` (~6 separate sections) — 4-category empty-output decision rule, write-gate validation,
+    cluster validation, available_at semantics, etc. Many of these rules grew incrementally — each in response to a
+    specific incident (TradFi MVP partial-bundle, MDPS 1440-NaN, RED ALERT silent-fallback). Volume: roughly **400
+    lines of CLAUDE.md alone** are dedicated to honest-coverage discipline + its enforcement protocol.
+
+  **Cross-reference cost**: the 4-state taxonomy is referenced by name in ~30 codex docs and ~50 plan files
+  (frequency-of-use). Every agent reading any one of those reads the closed-set vocabulary; every adapter author has
+  to know which of 4 record methods + ~10 typed reasons is correct for their case.
+
+- **Operational state**: this is the area with the highest fire-rate of the entire system. Documented incidents
+  caught by the runtime-convention layer (only after the fact):
+  - 2026-05-05 MDPS 1440-NaN-OHLC-bars-per-day-for-years (silent-success-with-empty-output for years before
+    hand-inspection caught it).
+  - 2026-05-06 TradFi MVP ES.OPT 18-dates-with-single-parent-fills (partial-bundle marked `captured`).
+  - 2026-05-07 RED ALERT: 5 CeFi VMs writing 96-100% empty rows with all blank reasons
+    (bitfinex/bitget/kraken — silent fallback to legacy blank-reason path before `LegacyBlankErrorReasonError`
+    landed via UTL@68b3804a).
+  - 2026-04-29 phantom audit: 167k fake PLAYER_VALUES denorm rows + 15k legacy phantoms.
+  - 2026-05-04 phantom audit: 130,897 false-positive phantoms across CeFi (path-prefix + chain-bundle drift; real
+    residual = 354 after 5-axis reconciler).
+  - 2026-05-07 MTDS partial-bundle Databento: bundled `ohlcv_1m;trades` lost ohlcv on 429 marked complete.
+
+  These are 6 documented *significant* incidents over 30 days, each requiring a multi-day fire-fight + a new codex
+  rule + a new reconciler script. The runtime-convention layer **caught them late, but did catch them** — that's the
+  pattern. Net team-hour cost over the last 90 days: easily **>2 weeks** of senior-agent time on writegate /
+  reconciler / phantom-audit work.
+
+- **Alpha-relevance**: **indirect but high-leverage**. Bad data → bad features → bad strategies → bad PnL. The 4-state
+  taxonomy is on the alpha critical path: every honest-coverage incident has either (a) directly corrupted backtest
+  history (lookahead bias from missing `available_at`) or (b) wasted weeks of researcher / engineer time on
+  fire-fighting instead of alpha work. The discipline is necessary; the *shape* of the discipline is the audit
+  question.
+
+- **Citadel-benchmark gap**: a Citadel-grade system would model the 4 outcomes as a **discriminated union ADT** —
+  `AdapterResult` is one of `Captured(parquet_path: Path, row_count: int, available_at_envelope: tuple[datetime,
+  datetime], cluster_coverage: ClusterCoverage)` | `EmptyConfirmed(reason: EmptyConfirmedReason, attempted_at:
+  datetime)` | `Failed(error: VenueError, attempted_at: datetime)` | `ExpectedUnattempted(attempted_at: datetime)`.
+  The adapter's `fetch_and_write` method returns this ADT; the manifest writer takes one as input; you can't write
+  `captured` for an empty result because you can't construct `Captured(row_count=0)` — the dataclass `__post_init__`
+  raises (or even better, `row_count: PositiveInt` from pydantic). Per-case validation is per-variant: `Captured`
+  validates row count + NaN ratio + cluster coverage + schema match; `EmptyConfirmed` validates reason in closed set;
+  etc. The 6 runtime exception classes collapse into ~3 type-level invariants enforced by construction.
+
+  Composes naturally with operator's directive **"common SSOT codebase + hooks + min duplicate thread + full
+  flexibility"**: the ADT is the single SSOT for "outcome shape"; per-data-type / per-source customisation happens via
+  the `cluster_coverage: ClusterCoverage` and `reason: EmptyConfirmedReason` extension points — same hook pattern as
+  UAC adapter registries.
+
+- **Recommendation**: **LIFT (high-priority, post-cutover)**.
+  1. **NEW**: UAC `unified_api_contracts.canonical.crosscutting.honest_coverage` — define `AdapterResult` as a sealed
+     discriminated-union dataclass (Python `match` statement support; pydantic validators per-variant). 4 dataclasses,
+     ~150 LoC total.
+  2. **NEW**: UTL `manifest_writer.write_result(result: AdapterResult, row_key: dict[str, str]) -> None` — single
+     entry point that pattern-matches on the variant and dispatches to the existing internal write paths. Old 4
+     `record_*` methods kept as deprecated shims for one release cycle, then deleted.
+  3. **MIGRATE**: every adapter (~30 across MTDS / instruments-service / features-service / sports adapters / DeFi
+     adapters) updated to return `AdapterResult` instead of calling `record_*` directly. The `unified-trading-system`
+     monorepo (Block A1 DECIDED-YES) makes this a single PR instead of 30.
+  4. **DELETE**: 4 of the 6 runtime exception classes (`MissingClusterValidationError`, `MalformedTickFieldError`,
+     `UnknownEmptyConfirmedReasonError`, `ClusterCoverageError`) become unconstructible — the variants enforce them
+     by-shape. `LookaheadBiasError` + `UpstreamTimestampBiasError` survive (genuine cross-cutting timing concerns).
+  5. **REDUCE**: ~400 lines of CLAUDE.md honest-coverage discipline collapses to **~50 lines**: the ADT shape +
+     "always return AdapterResult, never call record_* directly" + 1 link to the codex doc. The remaining 350 lines of
+     incident-driven rules become unnecessary because the types prevent the bug class.
+  6. **GATE**: workspace-wide grep step in QG fails CI if `record_captured(`, `record_empty(`, `record_failed(`,
+     `record_expected_unattempted(` appear in any adapter source after the migration deadline.
+
+  **Cost**: ~3-5 AI-days for the UAC + UTL + 1-2 reference adapter + tests; +1-2 AI-days per adapter family for the
+  migration sweep (parallelisable). **Saved cost**: every future honest-coverage incident class is type-level
+  unrepresentable; ~2 weeks/quarter of fire-fighting recovered; ~350 lines of CLAUDE.md governance overhead deleted.
+  **Timing**: post-May-23 cutover (the existing runtime convention works for the cutover; the lift is the
+  permanence-improvement); ride with the Block A1 monorepo migration so it lands as one architectural slice.
+
+  **Active plan update**: file new plan
+  `plans/active/honest_coverage_adt_lift_<date>.md` (post-cutover work) OR fold into the spawned monorepo
+  consolidation plan as a Phase under `unified-trading-core/contracts/` redesign.
+
+### B2 — Per-source colocation vs per-(asset_group, data_type) colocation (filled 2026-05-10)
+
+- **Code state**: UAC `unified_api_contracts/external/` has **73 source sub-directories**. Each follows a flat
+  per-source layout: `__init__.py` + `examples/` + `mocks/` + `normalize.py` + `schemas.py`. The 73 are NOT 1:1 with
+  the ~53 venues — extra ~20 are data-providers (databento, tardis, alchemy, defillama, cryptoquant, barchart,
+  coinglass, etc.) + macro-data feeds + auxiliary services. Cross-cutting "per-data_type" view today comes from prose
+  matrices (`mtds-data-source-coverage-matrix.md` + sports sibling) cross-linked to UAC registry helpers
+  (`VenueMapping.all_*_venues`, `get_expected_data_types_for_venue`, `get_venue_data_type_start_date`).
+
+- **Codex state**: 2 prose matrix docs (~500 lines each) hand-typed; cross-link to registry helpers but ARE prose.
+  Drift risk: 2026-04-20 phantom-audit incident (false 26% sports ODDS phantom) was matrix-doc / registry-code drift.
+
+- **Operational state**: per-source colocation works for "add a source" (1 PR / 1 dir / 1 registry entry). Strains on
+  cross-cutting audits — every reconciler has to enumerate sources + read schemas + normalize into per-data_type
+  view. ~5 documented incidents involved cross-cutting drift not catchable from any single source's view.
+
+- **Alpha-relevance**: indirect (bad coverage denominators → bad expectations).
+
+- **Citadel-benchmark gap**: keep per-source colocation (natural physical shape); generate per-data_type view from a
+  **typed registry** rather than prose matrix. Each source declares emitted data_types as
+  `SOURCE_EMITS: dict[DataType, EmissionSpec]` next to its `schemas.py`; UAC exposes
+  `data_type_coverage(dt)` derived helper; matrix doc becomes generated artefact. Composes with operator's "common
+  SSOT codebase + hooks + min duplicate" — `EmissionSpec` is the extension hook, per-source files are hook impls,
+  cross-cutting view is derived not duplicated.
+
+- **Recommendation**: **KEEP per-source colocation; LIFT cross-cutting view to typed-registry-derived**.
+  1. **NEW**: UAC `data_type_registry.py` — typed cross-cutting registry; per-source `external/{source}/registry.py`
+     declares emissions.
+  2. **NEW**: `data_type_coverage(data_type)` + `sources_for(venue, data_type)` derived helpers replace the prose
+     matrix as SSOT.
+  3. **NEW**: `scripts/render-coverage-matrix.py` generates the matrix doc from registry at PM QG time; commits the
+     rendered .md; QG asserts no manual edits to the rendered file.
+  4. **MIGRATE**: 73 source dirs each get a `registry.py` (current implicit knowledge in adapter code becomes
+     typed-explicit).
+  5. **DELETE**: prose matrix doc once rendered version is canonical.
+
+  **Cost**: ~2-3 AI-days for registry + 1-2 reference migrations + render script; +1 AI-day per source family for
+  migration sweep. **Saved cost**: drift-induced phantom incidents go away by construction. **Timing**: post-cutover;
+  ride with monorepo migration.
+
+  **Active plan update**: extend `manifest_evolution_master_2026_05_08` with a Wave for the cross-cutting registry
+  lift, OR file as Phase under the spawned monorepo plan
+  (`plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md`).
+
+### B3 — Manifest as side-effect-of-write vs as pre-flight planner + post-flight verifier (filled 2026-05-10)
+
+- **Code state**: today's manifest is written as side-effect by adapters via the 4 `record_*` methods (B1 above).
+  `record_expected_unattempted` (line 1542) is the **early form of the planner-side** — pre-flight enumerator
+  pre-populates expected rows; adapters supersede them with `record_captured` / `record_empty` / `record_failed` as
+  they run.
+
+  **Operator has already started this transition.**
+  `plans/active/expected_universe_v2_design_2026_05_08.md` (status: draft, folded into
+  `manifest_evolution_master_2026_05_08` umbrella) is the canonical "manifest = pre-flight plan + post-flight
+  verification" plan. Per the plan frontmatter: *"manifest, code, and data migrate in the same group plan to avoid
+  collision risk; force batch execution; don't allow execution in isolation."*
+
+- **Codex state**: covered by `availability-manifest-and-data-status.md` § "Two SSOTs for the manifest's expected
+  universe" + `pipeline-coverage-matrix.md`. The "expected universe = catalog × dates × data_types" model is already
+  documented; gap is in implementation.
+
+- **Operational state**: 4 documented phantom-audit incidents in 30 days are the manifestation of "writer-as-SSOT
+  means audit-after-the-fact."
+
+- **Alpha-relevance**: indirect (bad coverage denominators → bad expectations).
+
+- **Citadel-benchmark gap**: NONE conceptually — operator's existing plan sketches the right shape. Gap is execution.
+
+- **Recommendation**: **ALIGN — follow operator's existing plan**. No new audit recommendation; track v2 enumerator
+  landing + audit whether it actually replaces writer-as-SSOT vs sits alongside. **Zero new active plan updates
+  needed for B3** — operator's already on it.
+
+### B4 — `live = batch` principle: prose vs type-level enforcement (filled 2026-05-10)
+
+- **Code state**: grep for `mode == "live"` / `mode == "batch"` / `pipeline_mode == ...` across strategy-service +
+  features-service + market-tick-data-service: **only 11 occurrences**. Lower than expected given the volume of doc
+  + plan content asserting the principle. Suggests principle is mostly enforced; the 11 are likely legitimate seam
+  dispatchers (data source / output sink / live-trigger vs batch-trigger).
+
+- **Codex state**: `codex/04-architecture/batch-live-architecture.md` (436 lines) is the SSOT — folded from 2 prior
+  separate docs per `codex_refactor_2026_05_08`. Volume substantial (~500 lines) but earned.
+
+- **Operational state**: low fire-rate in past 90 days. Principle is mostly self-enforcing.
+
+- **Alpha-relevance**: **direct** — bad batch=live correspondence = backtest results don't predict live PnL = wasted
+  research cycles.
+
+- **Citadel-benchmark gap**: small. Principle mostly enforced; type-level enforcement (B4 original critique) is
+  overkill for 11 remaining mode-branches. Bigger win is **structural**: per Block A1 consolidation, the `Pipeline`
+  base class lives in `unified-trading-core/runtime/` as a shared primitive every service inherits, not 5+
+  copy-paste implementations across service repos.
+
+- **Recommendation**: **KEEP — light touch**.
+  1. **NEW**: spot-check the 11 mode-conditional branches; classify legitimate-seam vs mode-leakage; fix in place if
+     leakage (single PR).
+  2. **NEW**: in spawned monorepo plan, `Pipeline` base class lives in `core/runtime/` as shared primitive — use
+     consolidation as opportunity to enforce seam shape via subclassing / dependency injection rather than generic
+     type parameter.
+  3. **GATE**: optional QG step that greps `if.*mode\s*==\s*` patterns in service source + WARNs (not fails).
+
+  **Cost**: ~1 AI-day for audit + spot-fix sweep. **Saved cost**: small but non-zero. **Timing**: post-cutover;
+  rides with monorepo consolidation.
+
+  **Active plan update**: NONE NEEDED — track as informal item in the monorepo plan when spawned.
+
+### B5 — `available_at` as write-time stamp vs schema-level invariant (filled 2026-05-10)
+
+- **Code state**: `unified_trading_library/availability_stamping.py` is **330 lines** — substantial helper module
+  with per-source stamping rules (sports `kickoff − 60min`, fixture_events `event_time`, post-match
+  `match_end_time`, pre-match odds publication time, weather forecast-issue-time, tick-level
+  `tick.timestamp + scrape_latency`). `manifest_writer.assert_available_at_present` (line 72) is the runtime gate;
+  missing/null `available_at` raises `LookaheadBiasError`.
+
+  Two enforcement layers exist: (1) stamping helpers — opt-in by adapter author; (2) runtime gate — catches
+  missing-stamp at write time, not earlier. Gap: gate is at write time, not at row-construction time. An adapter
+  that constructs rows in memory without stamping doesn't fail until the writer tries to record them. Worse: an
+  adapter that stamps with the WRONG rule (e.g. `event_time` for a post-match stat that should use
+  `match_end_time`) never fails — silent lookahead bias.
+
+- **Codex state**: `codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` + sports-specific stamping
+  rules in CLAUDE.md "Shard-granularity SSOT" section + ~5 plans + the `available_at_lookahead_bias_completion_*`
+  active plan. Substantial cross-referencing across multiple files. Drift risk: per-source stamping rules codified
+  across multiple files; adding a new source means updating helper + doc + remembering the rule.
+
+- **Operational state**: lookahead-bias incidents have surfaced in 3+ documented cases (carry-tracer, sports lineup
+  leakage, sports fixture stats). Runtime gate catches missing-stamp; doesn't catch wrong-rule.
+
+- **Alpha-relevance**: **direct + critical**. Lookahead bias = invalid backtest = invalid alpha. Every minute of
+  lookahead in features = potentially $X of phantom alpha that won't materialise live. **The single highest-priority
+  Block-B item.**
+
+- **Citadel-benchmark gap**: a Citadel-grade system would model `available_at` as a **type-level required field on
+  every row** with a per-source `AvailabilityRule` Protocol that the row constructor invokes — adapter literally
+  cannot construct a row without computing the stamp. Today it's a runtime gate.
+
+  Concretely: row base class in UAC requires `available_at: datetime` field; pydantic validator on every row class
+  invokes the row's source's `AvailabilityRule.stamp(row)` automatically. `AvailabilityRule` becomes a typed
+  primitive in UAC: `class AvailabilityRule(Protocol): def stamp(self, row: dict) -> datetime: ...` with per-source
+  implementations. Adding a new source = adding one `AvailabilityRule` impl; the row constructor calls
+  `rule.stamp(row)` automatically.
+
+- **Recommendation**: **LIFT (post-cutover, high-leverage)**.
+  1. **NEW**: UAC `availability_rule.py` — `AvailabilityRule` Protocol + per-source implementations (lift from
+     `availability_stamping.py`).
+  2. **NEW**: row base class in UAC requires `available_at: datetime` via pydantic validator that calls the row's
+     source's `AvailabilityRule.stamp(row)` automatically.
+  3. **MIGRATE**: per-source row classes inherit from the base; `stamp_available_at_*` opt-in helpers become
+     unnecessary (auto-applied via validator).
+  4. **DELETE**: 330 lines of `availability_stamping.py` collapse to ~50 lines (per-source rule impls only).
+  5. **REDUCE**: cross-referenced CLAUDE.md + codex doc surface for `available_at` rules collapses to one canonical
+     UAC reference.
+
+  **Cost**: ~2-3 AI-days. **Saved cost**: lookahead-bias incident class becomes type-level unrepresentable; ~1 week
+  of fire-fight per surfaced incident saved. **Timing**: post-cutover; ride with monorepo + B1 ADT lift (composes —
+  the `Captured(...)` ADT variant takes a row collection that's already stamped).
+
+  **Active plan update**: extend the active `available_at_lookahead_bias_completion_2026_05_08.md` plan with a
+  post-cutover Phase for the type-level lift.
 
 ## Operator notes / answers
 
