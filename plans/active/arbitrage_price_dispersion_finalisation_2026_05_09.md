@@ -587,20 +587,49 @@ against real backfilled MTDS + features data for a 1-week window; produces a CSV
 
 ## Phase C — pnl-attribution-service rows for ARBITRAGE_PRICE_DISPERSION
 
-- [ ] [pnl-attribution-service] P1. Add `StrategyArchetype.ARBITRAGE_PRICE_DISPERSION` handling to the service's
+- [x] [pnl-attribution-service] P1. Add `StrategyArchetype.ARBITRAGE_PRICE_DISPERSION` handling to the service's
       archetype-aware P&L aggregator. Today the service has zero `ARBITRAGE_PRICE_DISPERSION` references in
       `pnl_attribution_service/` source. Likely surfaces: - Per-archetype P&L bucket (alongside `CARRY_STAKED_BASIS`,
       etc.) - Per-config-variant breakdown (`funding-rate-dispersion` vs other variants) - Output path:
       `gs://pnl-attribution-{pid}/by_strategy/ARBITRAGE_PRICE_DISPERSION/...`
+      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at pnl-attribution-service@f5dcf63 — new
+      `pnl_attribution_service/engine/archetype_aggregator.py` ships
+      `parse_slot_label` / `annotate_archetype_columns` / `aggregate_by_archetype` / `write_archetype_buckets`. The
+      slot-label-prefix parser (regex `^([A-Z][A-Z0-9_]+)@`) is the cross-repo SSOT contract — strategy-service is NOT
+      a dep of pnl-attribution-service (avoids circular dep edge); funding-rate-dispersion variant detected via the
+      `-funding-rate-disp-` marker that strategy-service's `_funding_rate_dispersion_slot()` builder embeds in slot
+      labels. Output path: `gs://${PNL_OUTPUT_BUCKET}/by_strategy/<archetype>/config_variant=<variant>/year=Y/month=M/<date>.parquet`.
 
-- [ ] [pnl-attribution-service] P1. Tests:
+- [x] [pnl-attribution-service] P1. Tests:
       `tests/unit/test_archetype_pnl.py::test_arbitrage_price_dispersion_attribution`. Verify P&L bucket exists +
       attributes correctly given mock fills.
+      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at pnl-attribution-service@f5dcf63 — 17 tests cover
+      the full surface (parse_slot_label happy-path / unparseable / lowercase rejection;
+      annotate_archetype_columns backfill / upstream-respect / unknown-fallback / empty-frame / slot_label-precedence;
+      aggregate_by_archetype grouping / empty-frame; write_archetype_buckets path-shape / empty-no-uploads /
+      pnl-fallback / unknown-bucket-isolation; the named
+      `test_arbitrage_price_dispersion_attribution` invariant — feeds 3-slot mock fills, asserts the
+      ARBITRAGE_PRICE_DISPERSION + funding-rate-dispersion bucket lands at the canonical path with archetype +
+      config_variant + simulated_pnl_usd populated). All 17 tests green; basedpyright + ruff clean.
 
-- [ ] [VERIFY] P0. After tracer (Phase B) emits rows for the 1-week window:
+- [x] [VERIFY] P0. After tracer (Phase B) emits rows for the 1-week window:
       `gcloud storage ls gs://${PID}-pnl-attribution/by_strategy/ARBITRAGE_PRICE_DISPERSION/...` returns non-empty;
       sample probe of one row confirms `archetype="ARBITRAGE_PRICE_DISPERSION"` + `config_variant=...` columns
       populated.
+      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: ran pnl-attribution-service's new
+      `scripts/aggregate_archetype_pnl_from_tracer.py` against the tracer's `/tmp/arb_trace_2024_w1/` output:
+      `python scripts/aggregate_archetype_pnl_from_tracer.py     --tracer-output-dir /tmp/arb_trace_2024_w1/ --as-of-date 2024-01-07     --gcs-bucket pnl-attribution-central-element-323112`. Bucket
+      `gs://pnl-attribution-central-element-323112` provisioned 2026-05-10 (asia-northeast1, uniform-bucket-level-
+      access). Output:
+      `gs://pnl-attribution-central-element-323112/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-07.parquet`
+      — 3 EMIT rows (ETH=2 days $64.04 + $91.40; SOL=1 day $45.19); cumulative `simulated_pnl_usd = $200.63` matching
+      the tracer's emitted P&L envelope EXACTLY (zero-execution-alpha matching engine semantics per CLAUDE.md
+      "Batch = Live"). Sample row from
+      `gs://...funding-rate-dispersion/.../2024-01-07.parquet`:
+      `archetype="ARBITRAGE_PRICE_DISPERSION"`, `config_variant="funding-rate-dispersion"`,
+      `strategy_id="ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod"`,
+      `simulated_pnl_usd=64.04`, `status="EMIT"`, `leg1_venue="deribit"`, `leg2_venue="hyperliquid"`. Schema-required
+      columns (timestamp / archetype / config_variant / strategy_id / simulated_pnl_usd) all populated.
 
 **Code gates**: C4 — pnl-attribution-service `quality-gates.sh` Pass 1 green. C5 — landed on `live-defi-rollout`.
 **Business gate**: B4 — batch tracer P&L envelope per `funding-rate-dispersion` slot matches the simulated-fills P&L
@@ -620,16 +649,27 @@ archetype-bucket check passes.
 
 ## Phase D — Stream B gate close
 
-- [ ] [PM-plan] P0. After Phases A+B+C+E all ship: re-check Stream B gate in
+- [x] [PM-plan] P0. After Phases A+B+C+E all ship: re-check Stream B gate in
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       § Gate (line 168-170). Workspace grep `rg 'leveraged_funding_arb' --type py --type md` returns only: - the source
       plan + this finalisation plan + the original issue doc (historical context) - codex doc historical references with
-      explicit "renamed to ARBITRAGE_PRICE_DISPERSION" annotations - archive/\* commits (frozen historical state)
+      explicit "renamed to ARBITRAGE_PRICE_DISPERSION" annotations - archive/\* commits (frozen historical state).
+      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: workspace-wide grep confirms gate criteria met. ZERO Python
+      references (`rg 'leveraged_funding_arb' --type py` returns no hits — the workspace has no live code using the
+      legacy name). 54 markdown references remain, all historical-context per the gate phrasing: parent plan + this
+      finalisation plan + active issue doc + epic plans + codex runbooks (with explicit "renamed to
+      ARBITRAGE_PRICE_DISPERSION" annotations) + archive/* commits.
 
-- [ ] [PM-plan] P0. Flip the 3 deferred Stream B sister todos (lines 175-188) + the codex circular-ref P0 (lines
+- [x] [PM-plan] P0. Flip the 3 deferred Stream B sister todos (lines 175-188) + the codex circular-ref P0 (lines
       155-157) in defi_archetypes plan from `[ ]` to `[x]` with this plan's commit shas as evidence. Per CLAUDE.md
       "Commit + Push + Flip" HARD RULE Half 2, the flip ships in a `docs(plans):` PM commit referencing each phase's
       code commits. Archive defi_archetypes plan only if Streams A/C/D/E are also complete; otherwise leave active.
+      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: 4 deferred Stream B sister todos already flipped in
+      defi_archetypes parent plan across prior agent commits + this commit's flip of L206 P&L attribution to `[x]`
+      (citing pnl-attribution-service@f5dcf63). Codex circular-ref P0 (L155-157) flipped at PM@5fe5eabd. Parent plan
+      defi_archetypes stays active per "Archive defi_archetypes plan only if Streams A/C/D/E are also complete"
+      condition — Streams A (venue-collateral matrix) / C / D / E in that plan are independent of Stream B + tracked
+      separately.
 
 ## Phase E — codex SSOT updates (per "Post-Plan-Phase Codex Audit" HARD RULE)
 

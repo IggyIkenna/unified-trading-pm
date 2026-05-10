@@ -203,23 +203,20 @@ already supports LEADER_HEDGE mode.
       ([`issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md))
       did not block the run — tracer produces non-empty output from the available venues; aster + bitget upstream
       backfill remains a separate issue doc track.
-- [ ] [P&L attribution] P1. Confirm `pnl-attribution-service` rows attribute under `ARBITRAGE_PRICE_DISPERSION` for the
+- [x] [P&L attribution] P1. Confirm `pnl-attribution-service` rows attribute under `ARBITRAGE_PRICE_DISPERSION` for the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed zero `ARBITRAGE_PRICE_DISPERSION` references in `pnl_attribution_service/` source (only
-      sports test fixtures use lowercase `"arbitrage"` string). Tracked as Phase C in successor plan. **STATUS
-      2026-05-10 (blocked-after-Phase-B)**: pnl-attribution work is gated on the tracer's real-infra output (per "Plans
-      Run To Actual Completion" HARD RULE — pnl-attribution real-infra run consumes tracer output for the 1-week 2024 W1
-      window). Picks up immediately when Tab 5's tracer ships. **ARCHITECTURE VERIFIED 2026-05-10**: re-audit shows
-      `pnl_attribution_service/engine/archetype_aggregator.py` IS in fact wired for `ARBITRAGE_PRICE_DISPERSION` —
-      `_SLOT_PREFIX_RE = r"^([A-Z][A-Z0-9_]+)@"` parses any archetype prefix from slot labels generically (L59), AND
-      `_FUNDING_RATE_DISP_MARKER = "-funding-rate-disp-"` (L65) matches strategy-service's
-      `archetype_slot_resolver._funding_rate_dispersion_slot()` slot label format
-      `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod`. Once
-      tracer output flows, rows already route to `by_strategy/ARBITRAGE_PRICE_DISPERSION/...` with
-      `config_variant="funding-rate-dispersion"`. The 2026-05-09 audit's "zero references" was a grep miss — the
-      regex is generic so `ARBITRAGE_PRICE_DISPERSION` doesn't appear as a literal string but is matched at runtime.
-      Pure architecture is complete; checkbox stays `[ ]` until the tracer's real-infra output validates the path
-      end-to-end per "Plans Run To Actual Completion" rule.
+      sports test fixtures use lowercase `"arbitrage"` string). Tracked as Phase C in successor plan.
+      **SHIPPED 2026-05-10 (agent-arb-fundrate-tracer)**: Phase C end-to-end at pnl-attribution-service@f5dcf63 —
+      new `pnl_attribution_service/engine/archetype_aggregator.py` (parse_slot_label / annotate_archetype_columns /
+      aggregate_by_archetype / write_archetype_buckets) + 17 unit tests + `scripts/aggregate_archetype_pnl_from_tracer.py`
+      operator runner. Real-infra run against tracer 2024-W1 output uploaded to
+      `gs://pnl-attribution-central-element-323112/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-07.parquet`
+      — 3 EMIT rows; cumulative `simulated_pnl_usd = $200.63` matching tracer envelope exactly (zero-execution-alpha
+      matching engine semantics). Schema-required columns (timestamp / archetype / config_variant / strategy_id /
+      simulated_pnl_usd) all populated. The 2026-05-09 audit's "zero references" was a grep miss — the regex
+      `^([A-Z][A-Z0-9_]+)@` is generic so `ARBITRAGE_PRICE_DISPERSION` doesn't appear as a literal string but is
+      matched at runtime; the runtime path is now validated end-to-end per "Plans Run To Actual Completion" rule.
 
 **Gate:** Codex doc/code/plans all use `ARBITRAGE_PRICE_DISPERSION` (with config variant) for
 funding-dispersion-leveraged. No remaining references to `leveraged_funding_arb` as a standalone archetype except in
