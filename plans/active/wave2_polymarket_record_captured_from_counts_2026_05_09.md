@@ -53,14 +53,17 @@ plan" rule, this file IS that named successor.
 
 ### Phase 1 — UTL helper authoring (P0, ~1 AI-day)
 
-- [ ] [SCRIPT] P0. Author `unified_trading_library.manifest_writer.ManifestWriter.record_captured_from_counts(...)`
+- [x] [SCRIPT] P0. Author `unified_trading_library.manifest_writer.ManifestWriter.record_captured_from_counts(...)`
       accepting `(row_key, total_rows, expected_root_clusters, cluster_extractor, observed_clusters, available_at_envelope)`
       kwargs instead of a pandas DataFrame. Internally calls the existing `_check_cluster_coverage` private gate +
       `assert_available_at_present` on the envelope timestamp + writes the manifest row. 8+ unit tests covering: full
       coverage success, under-coverage → `record_failed(ClusterCoverageError)`, missing envelope → `LookaheadBiasError`,
       empty observed → `record_empty`, BUNDLED_DATA_TYPES enforcement.
-      status: todo
-      note: ""
+      Shipped UTL@ef47c81b — 11 unit tests at `tests/unit/test_manifest_writer_record_captured_from_counts.py` cover
+      full-coverage success, under-coverage routing, None/NaT/naive envelope, total_rows=0 → `record_empty(SOURCE_RETURNED_ZERO)`,
+      unknown row_key column, multiple-call idempotency, non-UTC tz acceptance, feature_group sibling-presence guard,
+      attempted_at honored.
+      status: done
 
 ### Phase 2 — Deprecation banner on legacy `add()` (P0, ~0.5 AI-day)
 
