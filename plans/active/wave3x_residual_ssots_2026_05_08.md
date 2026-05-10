@@ -11,10 +11,13 @@ locked_since: 2026-05-08
 
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
 >
-> **Track E ONLY** (4 sports stamping helpers `stamp_available_at_lineups` / `stamp_available_at_injuries` / `stamp_available_at_post_match_cascade` / `stamp_available_at_odds_snapshot`) is folded into the available_at umbrella. **Tracks A + D** are folded into the `manifest_evolution_master` umbrella (above). Track E executes as part of the available_at umbrella's per-asset_group cascade — NOT in isolation.
+> **Track E ONLY** (4 sports stamping helpers `stamp_available_at_lineups` / `stamp_available_at_injuries` /
+> `stamp_available_at_post_match_cascade` / `stamp_available_at_odds_snapshot`) is folded into the available_at
+> umbrella. **Tracks A + D** are folded into the `manifest_evolution_master` umbrella (above). Track E executes as part
+> of the available_at umbrella's per-asset_group cascade — NOT in isolation.
 >
-> Stamping owner: [`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md)
-
+> Stamping owner:
+> [`plans/active/available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md)
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -25,8 +28,8 @@ locked_since: 2026-05-08
 >
 > Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
 >
-> This plan's phases land in gate(s): **G1** (Track A — UAC HALF_DAY_SESSIONS + EXPECTED_PARTIAL_HALF_DAY) + **G2** (Track D — zero-activity-bar audit)
-
+> This plan's phases land in gate(s): **G1** (Track A — UAC HALF_DAY_SESSIONS + EXPECTED_PARTIAL_HALF_DAY) + **G2**
+> (Track D — zero-activity-bar audit)
 
 # Wave 3.X residual SSOTs + classifier extensions + reconcilers
 
@@ -51,21 +54,33 @@ incorrect operator dashboards and ML training NaN-fill mistakes.
 
 **Files to create**:
 
-- [ ] [UAC] P0. NEW `unified_api_contracts/registry/half_day_sessions.py` —
-      `HALF_DAY_SESSIONS:     dict[str, set[date]]` mapping venue → set of dates that are half-day sessions per
-      published exchange calendars. Seed with CME (Thanksgiving Friday + Christmas Eve), NYSE / NASDAQ (same dates),
-      CBOE (same), Eurex (Christmas Eve). Helper: `is_half_day_session(venue: str, day: date) -> bool`. Cite
-      source-of-truth published calendars in module docstring (CME holiday schedule URL, NYSE holiday schedule URL).
-- [ ] [UAC] P0. NEW `unified_api_contracts/registry/venue_session_hours.py` —
-      `VENUE_SESSION_HOURS:     dict[tuple[str, int], tuple[time, time]]` keyed by `(venue, weekday_isoweek_0_to_6)` →
-      `(open_utc, close_utc)` tuple. Seed with the major venues whose intraday shards we capture: CME GLBX (Sun
-      22:00-Fri 22:00 ETH), NYSE (13:30-20:00 weekdays), NASDAQ (same), CBOE (13:30-20:15 weekdays for VIX), 24/7 venues
-      (binance / bybit / okx / kraken / etc. → `(00:00, 23:59:59)` all 7 weekdays). Helper:
-      `is_within_venue_session_hours(venue: str, ts: datetime) -> bool`. Compose with `half_day_sessions` so a half-day
-      is a SHORTENED session, not a fully closed day.
-- [ ] [TEST] P0. UAC unit tests for both registries: half-day boolean per venue × date matrix; session-hour bounds
+- [x] [UAC] P0. NEW `unified_api_contracts/registry/half_day_sessions.py` —
+      `HALF_DAY_SESSIONS: dict[str, frozenset[date]]` mapping venue → frozenset of dates that are half-day sessions per
+      published exchange calendars. Seeded NYSE / NASDAQ / CBOE / NYSE_ARCA / AMEX / CME / ICE / FX with US-equity
+      half-day calendar (Black Friday + eligible Christmas Eve + eligible July 3) for 2020-2028; EUREX / DTB with
+      Christmas Eve + New Year's Eve. Helpers `is_half_day_session(venue, day)` + `get_half_day_dates(venue)`. Cites
+      source-of-truth URLs in module docstring (CME / NYSE / CBOE / Eurex official calendars). **SHIPPED 2026-05-10
+      UAC@bdc84ed**.
+- [x] [UAC] P0. NEW `unified_api_contracts/registry/venue_session_hours.py` —
+      `VENUE_SESSION_HOURS: dict[tuple[str, int], tuple[time, time]]` keyed by `(venue, weekday_0_to_6)` →
+      `(open_utc, close_utc)` tuple (matching `datetime.weekday()` convention). Seeded NYSE / NASDAQ / NYSE_ARCA / AMEX
+      (Mon-Fri 13:30-20:00 UTC EDT), CBOE (Mon-Fri 13:30-20:15 UTC for VIX), CME GLBX (Mon-Fri post-midnight 00:00-21:00
+      UTC + Sun pre-midnight 22:00-23:59:59 UTC, with classifier-side compose for the wrap), ICE / FX aliases, EUREX /
+      DTB (Mon-Fri 07:00-20:00 UTC CEST). 24/7 venues (binance / bybit / okx / kraken / etc.) intentionally absent — the
+      `is_within_venue_session_hours` helper falls through to `True` for any venue not in the registry, matching
+      existing `session_times.is_trading_hours` 24/7 default. Helpers `is_within_venue_session_hours(venue, ts)` +
+      `get_session_window(venue, weekday)` + `is_venue_registered(venue)`. Coexists with `session_times.SessionWindow`
+      (different read pattern — flat-keyed for classifier hot path vs dataclass for orchestrator open/close datetime
+      derivation; not double-SSOT). Half-day shortening composition documented in module docstring (caller narrows close
+      time per published early-close calendar; varies by event so not seeded here). **SHIPPED 2026-05-10 UAC@bdc84ed**.
+- [x] [TEST] P0. UAC unit tests for both registries: half-day boolean per venue × date matrix; session-hour bounds
       checks per venue × weekday × representative timestamp; closed-set drift guard against `EmptyConfirmedReason`
-      members `EXPECTED_PARTIAL_HALF_DAY` + `EXPECTED_OUTSIDE_TRADING_HOURS`.
+      members `EXPECTED_PARTIAL_HALF_DAY` + `EXPECTED_OUTSIDE_TRADING_HOURS`. **SHIPPED 2026-05-10 UAC@bdc84ed**: 33
+      tests across `tests/unit/test_half_day_sessions.py` (14) + `tests/unit/test_venue_session_hours.py` (19); all
+      pass. Coverage: known-half-day-true / regular-day-false / full-holiday-not-half-day / 24/7-venue-false /
+      case-insensitive; in-session / pre-market / post-close / weekend / 24/7-default-True / naive-tz / boundary
+      open-inclusive / close-exclusive / CBOE 20:15 close / registry membership; both enum drift guards. Ruff +
+      basedpyright clean.
 - [ ] [UTL] P0. Extend `unified_trading_library/legacy_reason_classifier.py` to consume both registries: when input
       shard's day is a half-day → emit `EXPECTED_PARTIAL_HALF_DAY`; when intra-day shard timestamp falls outside the
       venue session hours → emit `EXPECTED_OUTSIDE_TRADING_HOURS`. Closed-set drift guard.
@@ -85,15 +100,14 @@ data-status UI flags every Understat shard for La Liga as a possible coverage ho
       `UNDERSTAT_COVERED_LEAGUES: frozenset[str]` containing the 5 league_ids Understat actually covers (per published
       Understat coverage). Helper: `does_understat_cover(league_id: str) -> bool`. Cite source: scrape of Understat's
       per-league index page as of 2026-05-08.
-- [ ] [UAC] P0. EXTEND `unified_api_contracts/canonical/domain/sports/transfer_windows.py` —
-      **CORRECTION 2026-05-08 audit**: file already EXISTS with a different API (`is_transfer_window_open` /
-      `get_transfer_windows_for_year` / `most_recent_window_close`). Re-scoped: ADD
-      `TRANSFER_WINDOWS: dict[str, list[tuple[date, date]]]` keyed by country_code → list of (window_open,
-      window_close) ranges per the country's published transfer registration windows (FIFA + national-FA rules) +
-      `is_within_transfer_window(country_code: str, day: date) -> bool` helper. Seed
-      with EU countries (England, Spain, Italy, Germany, France) + USA (MLS-specific summer/winter windows) + Japan
-      (J.League windows). Wire `legacy_reason_classifier` to the new dict (existing API remains for callers that
-      need year-scoped queries).
+- [ ] [UAC] P0. EXTEND `unified_api_contracts/canonical/domain/sports/transfer_windows.py` — **CORRECTION 2026-05-08
+      audit**: file already EXISTS with a different API (`is_transfer_window_open` / `get_transfer_windows_for_year` /
+      `most_recent_window_close`). Re-scoped: ADD `TRANSFER_WINDOWS: dict[str, list[tuple[date, date]]]` keyed by
+      country_code → list of (window_open, window_close) ranges per the country's published transfer registration
+      windows (FIFA + national-FA rules) + `is_within_transfer_window(country_code: str, day: date) -> bool` helper.
+      Seed with EU countries (England, Spain, Italy, Germany, France) + USA (MLS-specific summer/winter windows) + Japan
+      (J.League windows). Wire `legacy_reason_classifier` to the new dict (existing API remains for callers that need
+      year-scoped queries).
 - [ ] [UAC] P0. EXTEND `unified_api_contracts/sports/provider_league_ids.py` — add `season_start: date` +
       `season_end: date` fields to the existing `FOOTYSTATS_SEASON_IDS` dict entries. Source: footystats per-league
       season pages. Helpers: `get_footystats_season_bounds(league_id: str, season: str) -> tuple[date, date]` +
