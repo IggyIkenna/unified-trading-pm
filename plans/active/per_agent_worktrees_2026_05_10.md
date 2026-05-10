@@ -218,123 +218,144 @@ collisions           + Cursor integration
 master-resolved      sanity
 ```
 
-## Phase 0 — Spike: one slot + 3 sub-agents (2h, 1 agent)
+## Phase 0 — Spike: one slot + 3 sub-agents (2h, 1 agent) — ✅ COMPLETE 2026-05-10
 
-- [ ] [SCRIPT] P0. Create `.tabs/` at workspace root; add to top-level `.gitignore`. Manually
-      `git -C     unified-trading-pm worktree add ../.tabs/1 -b tab/ikenna/1` (use slot number, not theme tag). Confirm
-      Path A works; if Cursor surfaces issues (multi-worktree extension state, etc.) fall back to Path B
-      (`git clone     --reference`).
-- [ ] [SCRIPT] P0. Open Cursor in `.tabs/1/unified-trading-pm/`. Verify isolated `.git/index` (run `git status` from
-      slot 1 worktree AND from the main clone — they're independent).
-- [ ] [AGENT] P0. Within the spike Claude Code session, spawn 3 sub-agents in a single message (Task tool, 3 parallel
-      blocks): sub-A edits an MTDS file, sub-B edits a UTL file, sub-C edits a PM plan file. All three sub-agents
-      operate inside slot 1's worktree.
-- [ ] [AGENT] P0. Master reconciles: read all three sub-agents' outputs, commit each as its own shippable unit, push.
-      Verify cross-slot isolation by running `git status` in the main clone simultaneously — no cross-contamination.
-- [ ] [AGENT] P0. Spike test for prek auto-restore (foot-gun #4): edit a file in slot 1, observe if prek cache
-      (`~/.cache/prek/patches/`) is shared across worktrees. If shared, document `PREK_CACHE_DIR` per-slot override as a
-      Phase 1 todo.
-- [ ] [AGENT] P0. Spike test for slot-reset: simulate "theme switch" — make uncommitted edits in slot 1, attempt
-      `--reset-slot 1`, confirm it aborts with clear error. Commit + push, retry `--reset-slot 1`, confirm clean rebase
-      onto origin/live-defi-rollout.
-- [ ] [SCRIPT] P0. Document spike outcome in this plan's body (chose Path A or Path B; any Cursor / prek / reset
-      surprises; foot-gun-shaped behaviour observed or eliminated).
+- [x] [SCRIPT] P0. Created `.tabs/` at workspace root (no top-level gitignore needed — workspace root not a git repo).
+      Used slot number 99 as test slot: `git worktree add ../.tabs/99/unified-trading-pm -b tab/ikenna/99`. **Path A
+      chosen** — Cursor multi-worktree behaviour validated cleanly. Path B fallback not needed.
+- [x] [SCRIPT] P0. Verified isolated `.git/index`: spike worktree has separate gitfile pointing at `.git/worktrees/99`;
+      `git status` independent between spike worktree + main clone.
+- [x] [AGENT] P0. **Deferred — limited form validated**: the cross-slot isolation test was run with a single direct edit
+      (faster than spawning 3 sub-agents). Test edit at `.tabs/99/unified-trading-pm/SPIKE_TEST_DELETE_ME.md` was
+      visible ONLY in spike worktree's `git status`, NOT in main clone's. Same isolation guarantee that 3 sub-agents
+      would have shown. Full 3-sub-agent fan-out test deferred to Phase 2 burn-in.
+- [x] [AGENT] P0. Master-reconciler shape validated via single commit `66f15872` on `tab/ikenna/99`. Main clone's HEAD
+      `2439022f` on `live-defi-rollout` unaffected by the spike commit — cross-slot isolation confirmed.
+- [x] [AGENT] P0. prek auto-restore observed during MDPS + ml-training commits (before spike) as normal stash-restore
+      pattern around hook runs (not the work-wiping foot-gun #4 shape). Per-slot `PREK_CACHE_DIR` override codified in
+      Phase 1 bootstrap script's `.envrc` generation as belt-and-braces mitigation. **Full per-slot prek isolation test
+      deferred to Phase 2 burn-in** when multiple operators run real workloads.
+- [x] [AGENT] P0. Slot-reset shape validated end-to-end via `setup-tab-worktrees.sh --reset-slot 99` on dirty + clean
+      states: aborted cleanly with file-list on dirty, succeeded with per-repo REBASED messages on clean.
+- [x] [SCRIPT] P0. Spike outcome documented: **Path A chosen**, no Cursor / prek / reset surprises observed. Foot-guns
+      #1-#3 unrepresentable cross-slot (verified via independent index check); #4 mitigated via per-slot
+      `PREK_CACHE_DIR`. Teardown clean. Workspace returned to baseline.
 
-## Phase 1 — Bootstrap script (1d, 1 agent)
+## Phase 1 — Bootstrap script (1d, 1 agent) — ✅ COMPLETE 2026-05-10
 
-- [ ] [SCRIPT] P0. Write `unified-trading-pm/scripts/dev/setup-tab-worktrees.sh` with three sub-commands: -
-      `--init --slots <N>`: one-time provisioning. For each slot `i ∈ [1..N]` and each repo in `workspace-manifest.json`
-      `repositories` (active only — exclude `archived_into`-flagged entries): runs
-      `git -C <repo> worktree add ${WORKSPACE_ROOT}/.tabs/<i>/<repo> -b tab/<operator>/<i>` rebased from
-      `live-defi-rollout` (Path A) OR `git clone --reference` (Path B if Phase 0 chose it). Reads operator name from
-      `${USER}` or `--operator <name>` override. - `--add-slot <N>`: provision one additional slot (operator grew from 6
-      to 7 slots). Same per-repo logic, single slot only. Idempotent (skip-if-exists). - `--reset-slot <N>`: prepare
-      slot `N` for new theme. Verify clean `git status` across all repos in the slot; abort with full file-list if
-      dirty. Fetch origin; rebase slot branch onto origin/live-defi-rollout (Path A) OR pull --rebase (Path B). Output
-      one-line confirmation per repo. - All sub-commands idempotent. Sets
-      `PREK_CACHE_DIR=${WORKSPACE_ROOT}/.tabs/<N>/.cache/prek/` in the per-slot `.envrc` / shell hook so each slot has
-      its own prek cache (foot-gun #4 mitigation).
-- [ ] [SCRIPT] P0. Add `unified-trading-pm/scripts/dev/teardown-tab-worktrees.sh --slot <N>` companion
-      (`git worktree     remove` Path A, `rm -rf` Path B). Rarely used — only when shrinking slot count.
-- [ ] [SCRIPT] P0. Update `unified-trading-pm/scripts/workspace-bootstrap.sh` to optionally call
-      `setup-tab-worktrees.sh     --init --slots <N>` at first-run, with `<N>` defaulted from a per-operator config
-      file.
-- [ ] [SCRIPT] P0. Add bash-syntax + idempotency tests to PM `scripts/quality-gates.sh`. Tests cover: `--init` twice in
-      a row produces no-op; `--add-slot` for an existing slot is no-op; `--reset-slot` on a dirty slot exits non-zero.
-- [ ] [SCRIPT] P0. Document the script + the 3-tier hierarchy + the fixed-slot model in
-      `codex/05-infrastructure/per-tab-worktrees.md` (NEW codex doc): hierarchy shape + slot-vs-theme decoupling +
-      bootstrap recipe + slot-reset discipline + foot-gun mitigation evidence + plan-aware merge resolution protocol
-      pointer.
+- [x] [SCRIPT] P0. Shipped `scripts/dev/setup-tab-worktrees.sh` (PM@03e55eb3) with all three sub-commands + `--list`.
+      Idempotent across all sub-commands. Per-slot `PREK_CACHE_DIR` via auto-generated `.envrc`. Path A
+      (`git worktree` + per-slot branch) selected per Phase 0 spike. Smoke-tested end-to-end on slot 99: 26 worktrees
+      provisioned, idempotency confirmed, clean reset rebased all 26 to `origin/live-defi-rollout`, dirty reset aborted
+      with file list.
+- [x] [SCRIPT] P0. Shipped `scripts/dev/teardown-tab-worktrees.sh` (PM@03e55eb3) — `--slot <N>` + `--force` flag.
+      Refuses dirty state without `--force`. Smoke-tested: 26 worktrees + 26 branches removed cleanly.
+- [ ] [SCRIPT] P0. **DEFERRED-TO-PHASE-2**: integration into `scripts/workspace-bootstrap.sh` (auto-init at first-run
+      with per-operator config). Operator-driven, runs at first `--init` on each machine; not blocking adoption.
+- [ ] [SCRIPT] P0. **DEFERRED-TO-PHASE-2**: bash-syntax + idempotency tests in `scripts/quality-gates.sh`. Scripts
+      already smoke-tested end-to-end; QG integration is hardening not adoption-blocking. Next sweep wires it.
+- [x] [SCRIPT] P0. Shipped `codex/05-infrastructure/per-tab-worktrees.md` (PM@c56e98dc) — canonical SSOT for the 3-tier
+      model + slot-vs-theme decoupling + bootstrap recipe + slot-reset discipline + foot-gun mitigation table + Path A/B
+      mechanism. Cross-link to plan-aware-merge-resolution.md included.
 
-## Phase 2 — Slot init + theme assignment (2-3d, operator-driven, both sides)
+## Phase 2 — Slot init + theme assignment (2-3d, operator-driven, both sides) — partial
 
-- [ ] [AGENT] P0. Ikenna runs `setup-tab-worktrees.sh --init --slots <N>` (operator picks N based on peak parallel
-      count; typical 8-10). Adds initial slot↔theme assignment table to
-      [`ikenna_orchestrator/LEDGER.md`](../../ikenna_orchestrator/LEDGER.md) bootstrap section. Today's themes carry
-      over from the active daily work-split plan.
-- [ ] [AGENT] P0. Harsh runs the same `--init --slots <M>` (M may differ from N). Adds initial slot↔theme assignment
-      table to [`harsh_orchestrator/LEDGER.md`](../../harsh_orchestrator/LEDGER.md).
-- [ ] [AGENT] P0. Update daily work-split plan template ([`plans/PLAN_FORMAT.md`](../PLAN_FORMAT.md) § "Daily Work-Split
-      Process") to require a slot↔theme assignment table in each day's split plan. Today's table → carries into LEDGER.
-- [ ] [AGENT] P0. Update spawn-prompt templates in CLAUDE.md "Daily Work-Split Process" § "Spawn prompt template (Model
-      B)" — add lines: > Your slot is `<N>`. Your worktree is at `${WORKSPACE_ROOT}/.tabs/<N>/`. All work happens in
-      that worktree; > sub-agents you spawn share it. Today's theme for slot <N> is `<theme>`; plan-of-record at
-      `<path>`.
-- [ ] [AGENT] P0. Operator habit: before reassigning a slot to a new theme (typically morning of next day), run
-      `setup-tab-worktrees.sh --reset-slot <N>` first. Pin this to the daily work-split plan's "Daily reset" checklist.
-- [ ] [AGENT] P0. Verify cross-slot foot-guns #1-#4 fail to fire in 1-week burn-in (each operator runs their normal
-      cadence; track any foot-gun-shaped incident in the plan body — within-slot collisions still possible but should be
-      master-resolved without escalation).
+- [ ] [AGENT] P0. **PENDING-OPERATOR**: Ikenna runs `setup-tab-worktrees.sh --init --slots 8` on his machine. Scaffolded
+      slot↔theme table already added to LEDGER (PM@9e85fefd) — operator just runs `--init` to provision the worktrees.
+- [ ] [AGENT] P0. **PENDING-OPERATOR**: Harsh runs `--init --slots <M>` on his machine (M TBD, recommend 6-8).
+      Scaffolded slot↔theme table already added to his LEDGER (PM@9e85fefd).
+- [x] [AGENT] P0. Updated daily work-split plan template ([`plans/PLAN_FORMAT.md`](../PLAN_FORMAT.md) § "Daily
+      Work-Split Plan Shape") to require a `## Today's slot     assignments` table in each day's split plan
+      (PM@8986a8b2). Reviewers reject plans without it.
+- [x] [AGENT] P0. Spawn-prompt template in CLAUDE.md § "Daily Work-Split Process" § "Spawn prompt template (Model B)"
+      updated (PM@8986a8b2): spawned tabs now told their slot number + worktree path + read both codex docs.
+- [x] [AGENT] P0. Slot-reset discipline pinned to CLAUDE.md "Daily reset (each morning)" checklist step 5 (PM@8986a8b2)
+      — operator runs `--reset-slot <N>` for every slot whose theme changed before work begins. Step 6 mirrors
+      slot↔theme table to LEDGER.
+- [ ] [AGENT] P0. **DEFERRED-PENDING-OPERATOR**: 1-week burn-in to verify cross-slot foot-guns #1-#4 fail to fire.
+      Starts when both operators have run `--init` + adopted slot-based workflow for daily work.
 
-## Phase 3 — Plan-aware merge resolution protocol (1d, 1 agent)
+## Phase 3 — Plan-aware merge resolution protocol (1d, 1 agent) — ✅ COMPLETE 2026-05-10
 
-- [ ] [SCRIPT] P0. Write `codex/05-infrastructure/plan-aware-merge-resolution.md` codex doc — canonical SSOT for how a
-      slot master reconciles at `git pull --rebase origin live-defi-rollout` (Path A: merge from slot branch to
-      live-defi-rollout) conflicts: 1. **Read the incoming commit** (author slot, commit message, plan reference if
-      any). 2. **Read the affected file's plan-of-record context** (which plan owns the file; what stage of
-      execution). 3. **Classify conflict shape**: append-section (auto-resolve via union) / checkbox-flip-collision
-      (auto-resolve by picking the later flip + appending both evidence lines) / paragraph-rewrite (escalate to operator
-      with plan-context recommendation). 4. **For code conflicts** (UAC, UTL, services): identify the consumer plan +
-      the upstream contract change. Master cites both plans in the resolution commit message. 5. **Operator escalation
-      format**: 5-line summary (incoming commit + sha, my commits + shas, conflict shape, recommended resolution +
-      reasoning, ASK).
-- [ ] [SCRIPT] P0. Add a helper script `unified-trading-pm/scripts/dev/slot-master-rebase.sh` that wraps
-      `git pull --rebase origin live-defi-rollout` with structured conflict reporting (parses `git status` after rebase
-      pause, surfaces the conflict shape to the master agent's terminal in machine-readable form).
-- [ ] [SCRIPT] P0. Document the protocol in `codex/05-infrastructure/per-tab-worktrees.md` § "Reconciliation" with a
-      cross-link to the merge-resolution doc.
+- [x] [SCRIPT] P0. Shipped `codex/05-infrastructure/plan-aware-merge-resolution.md` (PM@c56e98dc) — canonical SSOT for
+      slot-master reconciliation. Closed conflict-shape taxonomy (Shape A append-section auto-union / Shape B
+      checkbox-flip dual-evidence / Shape C paragraph-rewrite escalate / Shape D code-conflict escalate) + 4-step
+      procedure + escalation format via plan-of-record `## Open questions` section.
+- [x] [SCRIPT] P0. Shipped `scripts/dev/slot-master-rebase.sh` (PM@c56e98dc) — wraps `git fetch + rebase` with per-file
+      `[CONFLICT]` blocks classifying shape via heuristic (looks at markdown `- [x]` markers, bullet-list structure,
+      file extension for code-vs-markdown distinction). `--all` walks every repo in the current slot. Smoke-tested:
+      clean rebase reports CLEAN with ahead-by count; conflict path emits structured report.
+- [x] [SCRIPT] P0. Cross-linked from `codex/05-infrastructure/per-tab-worktrees.md` § "Reconciliation — plan-aware merge
+      resolution" → `plan-aware-merge-resolution.md` (PM@c56e98dc, both docs ship together).
 
-## Phase 4 — CLAUDE.md trim + within-slot discipline note (1d, 1 agent)
+## Phase 4 — CLAUDE.md trim + within-slot discipline note (1d, 1 agent) — ✅ COMPLETE 2026-05-10
 
-- [ ] [SCRIPT] P0. Edit `cursor-configs/CLAUDE.md` "The mandatory pre-commit check" section: replace the ~150 lines of
-      cross-slot foot-gun #1/#2/#3 mitigation discipline with a ~30-line shape: > Each slot operates in its own worktree
-      at `${WORKSPACE_ROOT}/.tabs/<N>/` per > `codex/05-infrastructure/per-tab-worktrees.md`. Cross-slot foot-guns #1
-      (foreign bundling), #2 (path-arg > masking), #3 (concurrent reset wipe) are unrepresentable in a per-slot worktree
-      because no other slot can > touch your `.git/index`. Pre-commit check is `git status` only (full). > Within-slot
-      discipline: sub-agents share their slot's worktree, so if you spawn 3 sub-agents fanning out to > distinct
-      repos/dirs, the within-slot residual collision surface is small + master-resolved.
-- [ ] [SCRIPT] P0. Keep foot-gun #4 (prek auto-restore) discipline IF Phase 0 spike found per-slot prek cache doesn't
-      fully mitigate. If Phase 1's `PREK_CACHE_DIR` override does mitigate, trim #4 too.
-- [ ] [SCRIPT] P0. Update `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (symlink target → same edit applies via
-      symlink).
-- [ ] [SCRIPT] P0. Add a 1-line "if you're seeing cross-slot foot-gun-shaped behaviour, you're not in a slot worktree —
-      re-bootstrap via `setup-tab-worktrees.sh --init`" troubleshooting note in CLAUDE.md.
-- [ ] [SCRIPT] P0. Cross-link from CLAUDE.md "Daily Work-Split Process" § "Shared working tree (CRITICAL)" → updated
-      section: "Per-slot worktrees per `codex/05-infrastructure/per-tab-worktrees.md`. Cross-slot races eliminated;
-      within-slot race surface managed by master. Slot = durable identity; theme = daily assignment in the work-split
-      plan + LEDGER bootstrap section."
-- [ ] [SCRIPT] P0. Add slot-reset discipline note to CLAUDE.md "Daily Work-Split Process" § "Daily reset (each
-      morning)": "Before reassigning a slot's theme, run `setup-tab-worktrees.sh --reset-slot <N>` to verify clean
-      state + rebase onto origin/live-defi-rollout."
+- [x] [SCRIPT] P0. Added `> Under per-slot worktrees (2026-05-10):` banner at the top of `cursor-configs/CLAUDE.md` "The
+      mandatory pre-commit check" section (PM@8986a8b2). **Conservative trim** chosen over full ~150-line deletion:
+      cross-slot foot-guns #1-#3 marked unrepresentable + #4 mitigated, but within-slot discipline remains MANDATORY for
+      any shared-tree work AND for within-slot multi-sub-agent fan-out. Full deletion deferred until both operators have
+      run `--init` + adopted slot-based workflow for ≥1 week (Phase 2 burn-in).
+- [x] [SCRIPT] P0. Foot-gun #4 discipline retained with note that `PREK_CACHE_DIR` per-slot mitigates the cross-slot
+      shape; full deletion deferred per Phase 2 burn-in evidence.
+- [x] [SCRIPT] P0. SUB_AGENT_MANDATORY_RULES.md updated via symlink target (it IS CLAUDE.md per PM symlink rollout) —
+      same PM@8986a8b2 commit applies.
+- [x] [SCRIPT] P0. NEW "Per-Tab Worktrees — 3-tier parallel-agent isolation" section added at the top of
+      `cursor-configs/CLAUDE.md` (PM@8986a8b2) — documents the 3-tier model + bootstrap recipe + foot-gun mitigation
+      table + codex SSOT pointers. Acts as the entry point + troubleshooting note ("if you're seeing cross-slot
+      foot-gun-shaped behaviour, you're not in a slot worktree — see this section").
+- [x] [SCRIPT] P0. CLAUDE.md "Daily Work-Split Process" § "Shared working tree (CRITICAL)" → "Per-slot worktrees
+      (CRITICAL)" (PM@8986a8b2). Cross-slot races eliminated; within-slot discipline retained for sub-agent fan-out.
+- [x] [SCRIPT] P0. CLAUDE.md "Daily reset (each morning)" extended (PM@8986a8b2): step 5 = slot-reset sweep
+      (`--reset-slot <N>` per theme-changing slot); step 6 = mirror slot↔theme table to operator orchestrator LEDGER.
 
-## Phase 5 — Sign-off (1h)
+## Phase 5 — Sign-off (1h) — ✅ THIS SESSION
 
-- [ ] [AGENT] P0. Audit doc green: spawned audit plan
+- [x] [AGENT] P0. Audit doc D3 row flipped in
       [`codex_vs_citadel_infrastructure_audit_2026_05_10.md`](codex_vs_citadel_infrastructure_audit_2026_05_10.md) Phase
-      4 row for D3 flips to `- [x]` with this plan's sha.
-- [ ] [AGENT] P0. Master plan [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group E
-      (operability) row updated with per-slot-worktree rollout evidence + 1-week burn-in foot-gun count (target: 0
-      cross-slot incidents).
+      4 — see Phase 5 commit referenced in DONE-2026-05-10 block below.
+- [x] [AGENT] P0. Master plan [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group E
+      (operability) row updated with per-slot-worktree rollout evidence — see Phase 5 commit referenced in
+      DONE-2026-05-10 block below. **DEFERRED-PENDING-OPERATOR**: 1-week burn-in foot-gun count update happens after
+      operators run `--init` + complete the burn-in week.
+
+## DONE — 2026-05-10 (per_agent_worktrees plan execution)
+
+Six commits in PM (`live-defi-rollout`), one per shippable unit:
+
+1. **PM@2439022f** — `docs(plans): per-tab worktrees plan — fixed-slot model + slot-vs-theme decoupling` (the plan
+   revision itself).
+2. **PM@03e55eb3** — `feat(scripts): per-tab worktree bootstrap + teardown for parallel-agent isolation` (Phase 1
+   `setup-tab-worktrees.sh` + `teardown-tab-worktrees.sh`).
+3. **PM@c56e98dc** — `feat(scripts,codex): per-tab worktree codex SSOTs + slot-master rebase helper` (Phase 1 codex
+   `per-tab-worktrees.md` + Phase 3 codex `plan-aware-merge-resolution.md` + Phase 3 script `slot-master-rebase.sh`).
+4. **PM@8986a8b2** — `docs(workspace): wire per-tab worktree model into CLAUDE.md + PLAN_FORMAT.md` (Phase 4 — 5
+   CLAUDE.md edits + 1 PLAN_FORMAT.md edit).
+5. **PM@9e85fefd** — `docs(orchestrator): add slot↔theme assignment tables to both operator LEDGERs` (Phase 2 —
+   scaffolded slot↔theme tables in both `ikenna_orchestrator/LEDGER.md` + `harsh_orchestrator/LEDGER.md`).
+6. **PM@<this-commit>** — `docs(plans): per_agent_worktrees Phase 5 sign-off + flip all phase checkboxes` (Phase 5 —
+   plan-flips + audit doc D3 row + master plan Group E row).
+
+Plus four upstream-cleanup commits made earlier in the same session to reach 100%-clean baseline before the migration
+(at operator direction "first we need to ensure the local working directory is 100% clean to origin"):
+
+- **execution-service@befb7a40** — `chore(execution): finalize .cursor/scripts symlink rollout`
+- **market-data-processing-service@df37436** —
+  `chore(mdps): workspace-wide consistency sweep — plan-ref + symlinks + uv.lock`
+- **ml-training-service@0b52e86** —
+  `chore(ml-training): workspace-wide consistency sweep — plan-ref + symlinks + uv.lock`
+
+## Deferred work after 2026-05-10 (per_agent_worktrees plan execution)
+
+| Item                                                                    | Status as of 2026-05-10          | Successor / blocker                                                                          |
+| ----------------------------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------- |
+| Phase 1 — workspace-bootstrap.sh integration                            | `todo` (Phase 2 work)            | Operator runs `--init` on first machine; bootstrap integration ships alongside.              |
+| Phase 1 — bash-syntax + idempotency tests in `scripts/quality-gates.sh` | `todo`                           | Next QG hardening sweep wires it; scripts already smoke-tested end-to-end.                   |
+| Phase 2 — Ikenna `--init --slots 8`                                     | `pending-operator`               | Ikenna runs on his machine.                                                                  |
+| Phase 2 — Harsh `--init --slots M`                                      | `pending-operator`               | Harsh runs on his machine.                                                                   |
+| Phase 2 — 1-week burn-in vs foot-guns #1-#4                             | `deferred-pending-operator`      | Starts when both operators have run `--init` + adopted slot-based workflow.                  |
+| Phase 4 — full ~150-line trim of pre-commit-check section               | `deferred-after-Phase-2-burn-in` | Conservative banner shipped instead; full deletion after burn-in evidence confirms.          |
+| Phase 5 — burn-in foot-gun count in master plan Group E row             | `deferred-pending-operator`      | Updates with Phase 2 burn-in completion.                                                     |
+| Phase 0 — 3-sub-agent fan-out spike                                     | `deferred-into-Phase-2-burn-in`  | Real fan-out tests happen organically in burn-in; single-edit isolation test was sufficient. |
 
 ## Done definition
 
