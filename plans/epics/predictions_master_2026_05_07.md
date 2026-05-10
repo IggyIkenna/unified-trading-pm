@@ -35,8 +35,8 @@ and these docs is a review-blocking failure per `doc → plan → code`):
   lifecycle-bounded absence reasons for prediction shards + downstream NaN handling
 - [`codex/02-data/prediction-schema-paths.md`](../../codex/02-data/prediction-schema-paths.md) — prediction GCS path
   layout + canonical-question-group bundling (raw market_ids → BTC_UP_DOWN_HOURLY etc.)
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) — batch=live
-  pipeline guarantees (same shard atom, same fields, same `available_at` semantics across modes)
+- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
+  batch=live pipeline guarantees (same shard atom, same fields, same `available_at` semantics across modes)
 - [`codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md`](../../codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md)
   — prediction-market lifecycle (`market_created_at` / `resolution_time` / `settlement_time`) + canonical-question-group
   SSOT
@@ -94,14 +94,14 @@ Covers:
 - **UAC `PREDICTION_GROUPS`**: empty registry (`{}`) per CLAUDE.md "Temporary state"; canonical-question-group registry
   seeding pending Phase 1.
 - **MTDS POLYMARKET + KALSHI adapters**: write per-row `data_type="trades"` (canonical, aligned with CeFi) via
-  `polymarket_adapter.py:531` + `kalshi_adapter.py:256` — NOT the legacy `<base_asset>` shape claimed earlier (that
-  was migrated away from previously per Tab 1 sub-agent investigation 2026-05-08). The remaining Phase 2 gap is at
-  the manifest-bundling layer: shards need re-bundling by `canonical_question_group` per UAC `BUNDLED_DATA_TYPES`
-  SSOT, mirroring `instruments-service@b904785` `engine/orchestrator.py:2133-2186` pattern. See § "Open questions"
-  Q1 for the re-scope decision.
+  `polymarket_adapter.py:531` + `kalshi_adapter.py:256` — NOT the legacy `<base_asset>` shape claimed earlier (that was
+  migrated away from previously per Tab 1 sub-agent investigation 2026-05-08). The remaining Phase 2 gap is at the
+  manifest-bundling layer: shards need re-bundling by `canonical_question_group` per UAC `BUNDLED_DATA_TYPES` SSOT,
+  mirroring `instruments-service@b904785` `engine/orchestrator.py:2133-2186` pattern. See § "Open questions" Q1 for the
+  re-scope decision.
 - **MTDS UMI tick provider routing**: caller-side legacy `category="prediction_market"` kwarg dropped from
-  `umi_tick_provider.py:264-279` (mtds@`3f631b9` 2026-05-08). Factory-internal `VENUE_REGISTRY` tag rename deferred
-  to `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` Waves C/D ([UAC] cross-cutting scope).
+  `umi_tick_provider.py:264-279` (mtds@`3f631b9` 2026-05-08). Factory-internal `VENUE_REGISTRY` tag rename deferred to
+  `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` Waves C/D ([UAC] cross-cutting scope).
 - **288M ODDS_API legacy row migration**: scoped per `sports_predictions_e2e`; sports half tracked in `sports_master`.
 
 ## Open questions
@@ -115,34 +115,37 @@ The Phase 2 todo "Replace POLYMARKET writer (`orchestrator.py:1990–1995`): old
 adjacent investigation, 2026-05-08). Finding: the original framing as a string rename is wrong.
 
 **Concrete state on disk:**
+
 - No per-`base_asset` writer exists in MTDS source. The legacy `data_type=BTC|ETH|SPX` shape was migrated away from
-  previously. Current MTDS prediction adapters (`market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py:531`
-  + `kalshi_adapter.py:256`) write per-row `data_type="trades"` (canonical, aligned with CeFi) via the standard
-  `PartitionedTickWriter` path.
+  previously. Current MTDS prediction adapters
+  (`market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py:531`
+  - `kalshi_adapter.py:256`) write per-row `data_type="trades"` (canonical, aligned with CeFi) via the standard
+    `PartitionedTickWriter` path.
 - The plan-referenced `market-tick-data-service/market_tick_data_service/engine/orchestrator.py:1990–1995` is the
-  bookmaker-odds writer (`venue=bookmaker / instrument_type=odds / data_type=trades / league_id=...`), NOT a
-  POLYMARKET writer. The plan's file:line ref is stale.
+  bookmaker-odds writer (`venue=bookmaker / instrument_type=odds / data_type=trades / league_id=...`), NOT a POLYMARKET
+  writer. The plan's file:line ref is stale.
 - The orchestrator's prediction-shard manifest aggregation at `orchestrator.py:2084-2238` uses `data_type_key="trades"`
   from per-row data — neither legacy `<base_asset>` nor canonical `prediction_canonical_question_group`.
 
 **The actual canonical fix** (mirroring `instruments-service@b904785` `engine/orchestrator.py:2133-2186` shape):
 manifest-level shard re-bundling by `canonical_question_group` — writing
 `data_type=prediction_canonical_question_group` + `underlying=<canonical_group>` per UAC `BUNDLED_DATA_TYPES` SSOT
-(`UAC@bb24aba` already added `DATA_TYPE_TO_CLUSTER_REGISTRY` incl `PREDICTION_GROUPS`), with cluster-validation
-kwargs at `record_captured`. This is non-trivial DESIGN work — writer-level grouping over per-row trade data, not a
-string rename.
+(`UAC@bb24aba` already added `DATA_TYPE_TO_CLUSTER_REGISTRY` incl `PREDICTION_GROUPS`), with cluster-validation kwargs
+at `record_captured`. This is non-trivial DESIGN work — writer-level grouping over per-row trade data, not a string
+rename.
 
-**Implicit acknowledgment in plan body**: line 146 ("Integration tests against a live ManifestWriter on the
-orchestrator path deferred — bundled within MTDS Phase 2 cluster-gate verification") already concedes this is
-deferred design work. The "[SCRIPT] P0. Replace POLYMARKET writer" framing is misleading.
+**Implicit acknowledgment in plan body**: line 146 ("Integration tests against a live ManifestWriter on the orchestrator
+path deferred — bundled within MTDS Phase 2 cluster-gate verification") already concedes this is deferred design work.
+The "[SCRIPT] P0. Replace POLYMARKET writer" framing is misleading.
 
 **Decision needed**:
 
-(a) **Manifest re-bundling lands in MTDS orchestrator** — mirror instruments-service@b904785: bundle Polymarket /
-Kalshi rows into one `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)`
-manifest row per canonical group; per-row tick `data_type="trades"` stays as-is on disk; manifest layer is the
-re-bundling surface. Cluster gate counts `market_id`s active per (canonical_question_group, day). [Likely answer per
-the per-asset-group shard-key matrix in CLAUDE.md.]
+(a) **Manifest re-bundling lands in MTDS orchestrator** — mirror instruments-service@b904785: bundle Polymarket / Kalshi
+rows into one
+`(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)` manifest
+row per canonical group; per-row tick `data_type="trades"` stays as-is on disk; manifest layer is the re-bundling
+surface. Cluster gate counts `market_id`s active per (canonical_question_group, day). [Likely answer per the
+per-asset-group shard-key matrix in CLAUDE.md.]
 
 (b) **Stay implicit via the per-row `data_type="trades"`** with `canonical_question_group` attached as a separate
 manifest column — does NOT match the per-asset-group shard-key matrix in CLAUDE.md, but is closer to current state.
@@ -150,14 +153,14 @@ manifest column — does NOT match the per-asset-group shard-key matrix in CLAUD
 (c) Other re-scope.
 
 Most likely answer is (a) but it's [UAC] + [UTL] + [per-service] cross-cutting design work, which per the Daily
-Work-Split Process split principle is Ikenna-side. Tab 1 (Harsh-side) can ship the per-service writer migration once
-the cross-cutting helper signature is locked.
+Work-Split Process split principle is Ikenna-side. Tab 1 (Harsh-side) can ship the per-service writer migration once the
+cross-cutting helper signature is locked.
 
-**Tab 1 status while waiting**: Polymarket adapter lifecycle gating (`polymarket_adapter.py:454-602`) + Kalshi
-adapter lifecycle gating (`kalshi_adapter.py:242-269`) are the SIBLING todos that don't depend on this Q — they
-could ship in parallel once the multi-agent collision risk on `kalshi_adapter.py` (already in basedpyright
-diagnostics from a concurrent agent's edits) is resolved by main agent. Tab 1 holding pending main's direction on
-which adapter sub-agent is safe to spawn.
+**Tab 1 status while waiting**: Polymarket adapter lifecycle gating (`polymarket_adapter.py:454-602`) + Kalshi adapter
+lifecycle gating (`kalshi_adapter.py:242-269`) are the SIBLING todos that don't depend on this Q — they could ship in
+parallel once the multi-agent collision risk on `kalshi_adapter.py` (already in basedpyright diagnostics from a
+concurrent agent's edits) is resolved by main agent. Tab 1 holding pending main's direction on which adapter sub-agent
+is safe to spawn.
 
 #### A1 — [main, 2026-05-08 ~14:30 UTC]
 
@@ -170,174 +173,173 @@ Manifest-layer re-bundling by `canonical_question_group`:
 - Per-row tick `data_type="trades"` stays unchanged on disk (no parquet schema migration; aligned with CeFi).
 - MTDS orchestrator groups Polymarket + Kalshi tick rows by `canonical_question_group` (via UAC
   `classify_polymarket_to_canonical_group` / `classify_kalshi_to_canonical_group` SSOT).
-- One manifest row per `(asset_group=prediction, venue, data_type=prediction_canonical_question_group,
-  canonical_question_group, day)` bundle, with `underlying=<canonical_group>` (analogous to options-chain
-  root-bucketing).
-- Cluster-validation gate at `record_captured` counts `market_id`s active per `(canonical_question_group, day)`
-  per `expected_market_ids_for_canonical_group` from the lifecycle reader. UAC `BUNDLED_DATA_TYPES` /
-  `DATA_TYPE_TO_CLUSTER_REGISTRY` SSOT (`UAC@bb24aba`) already declares `PREDICTION_GROUPS` — half the
-  cross-cutting helper is already in place.
+- One manifest row per
+  `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)`
+  bundle, with `underlying=<canonical_group>` (analogous to options-chain root-bucketing).
+- Cluster-validation gate at `record_captured` counts `market_id`s active per `(canonical_question_group, day)` per
+  `expected_market_ids_for_canonical_group` from the lifecycle reader. UAC `BUNDLED_DATA_TYPES` /
+  `DATA_TYPE_TO_CLUSTER_REGISTRY` SSOT (`UAC@bb24aba`) already declares `PREDICTION_GROUPS` — half the cross-cutting
+  helper is already in place.
 
 **Cross-side ordering**: this is cross-cutting [UAC] + [UTL] + [per-service] design work. Per the Daily Work-Split
 Process split principle, the cross-cutting helper signature (UAC `BUNDLED_DATA_TYPES` completeness check + UTL
 `record_captured` cluster-coverage kwargs for `prediction_canonical_question_group`) is **Ikenna-side**. Tab 1
-(Harsh-side) ships the **per-service migration** in MTDS orchestrator once that helper signature is locked.
-Operator will flag this to Ikenna via the cross-side handshake protocol.
+(Harsh-side) ships the **per-service migration** in MTDS orchestrator once that helper signature is locked. Operator
+will flag this to Ikenna via the cross-side handshake protocol.
 
 **Tab 1 immediate actions**:
 
-1. **Resume Phase 2 adapter-level lifecycle gating in parallel** (independent of this Q1 — already partly on disk
-   via uncommitted Tab 1 WIP in MTDS):
+1. **Resume Phase 2 adapter-level lifecycle gating in parallel** (independent of this Q1 — already partly on disk via
+   uncommitted Tab 1 WIP in MTDS):
    - Polymarket adapter (`polymarket_adapter.py:454-602`) lifecycle gating per UAC
      `classify_polymarket_to_canonical_group` + per-market `available_from_datetime`/`available_to_datetime` from
      `instruments-service@98bb167` lifecycle ingestion.
    - Kalshi adapter (`kalshi_adapter.py:242-269`) lifecycle gating — same shape.
-   - 2 untracked unit-test files already on disk
-     (`test_polymarket_adapter_lifecycle_gating.py` + `test_kalshi_adapter_lifecycle_gating.py`).
-   - Multi-agent collision risk on `kalshi_adapter.py` per Tab 1's flag: main confirms current dirty WIP IS Tab 1's
-     own (4 modified MTDS files + 2 untracked tests verified post-pull). No concurrent-agent diagnostics block;
-     proceed.
+   - 2 untracked unit-test files already on disk (`test_polymarket_adapter_lifecycle_gating.py` +
+     `test_kalshi_adapter_lifecycle_gating.py`).
+   - Multi-agent collision risk on `kalshi_adapter.py` per Tab 1's flag: main confirms current dirty WIP IS Tab 1's own
+     (4 modified MTDS files + 2 untracked tests verified post-pull). No concurrent-agent diagnostics block; proceed.
 
-2. **Defer the writer migration to next cycle** until Ikenna locks the cross-cutting helper signature. When
-   that lands (Ikenna will announce via cross-side handshake on this plan-of-record's `## Open questions` § or via
-   the work-split's cross-side handshake table), Tab 1 spawns a fresh sub-agent for the MTDS orchestrator-bundling
-   layer migration mirroring `instruments-service@b904785`.
+2. **Defer the writer migration to next cycle** until Ikenna locks the cross-cutting helper signature. When that lands
+   (Ikenna will announce via cross-side handshake on this plan-of-record's `## Open questions` § or via the work-split's
+   cross-side handshake table), Tab 1 spawns a fresh sub-agent for the MTDS orchestrator-bundling layer migration
+   mirroring `instruments-service@b904785`.
 
-3. **UMI tick provider rename** (`umi_tick_provider.py:225` data_type rename) ships in parallel with adapter
-   gating — independent of writer migration; ship it.
+3. **UMI tick provider rename** (`umi_tick_provider.py:225` data_type rename) ships in parallel with adapter gating —
+   independent of writer migration; ship it.
 
 **Decision rationale**: option (a) matches CLAUDE.md "Per-asset-group shard-key matrix → Prediction"
-(`(asset_group=prediction, venue, data_type, canonical_question_group, day)`) which is the workspace SSOT;
-option (b) would have left a permanent semantic mismatch between the manifest layer and the shard-key matrix and
-would not have supported cluster-validation cleanly; option (c) was open but not preferred per the SSOT.
+(`(asset_group=prediction, venue, data_type, canonical_question_group, day)`) which is the workspace SSOT; option (b)
+would have left a permanent semantic mismatch between the manifest layer and the shard-key matrix and would not have
+supported cluster-validation cleanly; option (c) was open but not preferred per the SSOT.
 
 ### Q2 — [polymarket-rebundling-tab (Tab F5), 2026-05-08 ~21:30 UTC] — UTL contract gap blocks A1 option (a) implementation as specified
 
-**Status**: 🟡 BLOCKED — UTL `record_captured` contract is incompatible with the orchestrator-finalize-loop bundling
-shape; need operator architectural call before shipping.
+**Status**: ✅ RESOLVED 2026-05-09 — option (δ) shipped: UTL@ef47c81b + MTDS@a2f8d80. See A2 below.
 
 **Context**: Tab F5 (this tab) was spawned to ship the MTDS orchestrator-side migration mirroring
 `instruments-service@b904785` per A1 option (a). Pre-req gate confirmed: UAC `BUNDLED_DATA_TYPES` includes
 `prediction_canonical_question_group` (UAC@b02335d via cross-side ping `[2026-05-08 13:34 UTC] ikenna-main`); UAC
-`PREDICTION_GROUPS` registry fully populated with 9 canonical groups; UAC
-`expected_market_ids_for_canonical_group` shipped at
-`unified_api_contracts.canonical.domain.predictions.lifecycle:103`; UTL `_check_cluster_coverage` +
+`PREDICTION_GROUPS` registry fully populated with 9 canonical groups; UAC `expected_market_ids_for_canonical_group`
+shipped at `unified_api_contracts.canonical.domain.predictions.lifecycle:103`; UTL `_check_cluster_coverage` +
 `check_cluster_coverage_from_counts` + `MissingClusterValidationError` shipped at
 `unified-trading-library/unified_trading_library/manifest_writer.py:1862, 1901, 173`.
 
-**The architectural gap surfaced during code-walk**: the contract for
-`ManifestWriter.record_captured(...)` (UTL `manifest_writer.py:1968`) requires:
+**The architectural gap surfaced during code-walk**: the contract for `ManifestWriter.record_captured(...)` (UTL
+`manifest_writer.py:1968`) requires:
 
 1. A non-empty pandas `df` (used by `_check_cluster_coverage` to extract per-row clusters via
    `df[symbol_column].astype(str).map(cluster_extractor)` at L1961-1963);
-2. The `df` to carry an `available_at` column (enforced via `assert_available_at_present(df)` at
-   L2153, raising `LookaheadBiasError` if missing).
+2. The `df` to carry an `available_at` column (enforced via `assert_available_at_present(df)` at L2153, raising
+   `LookaheadBiasError` if missing).
 
-**Why this blocks the orchestrator-finalize-loop bundling path**: in `mtds@market_tick_data_service/engine/orchestrator.py`
-the finalize-loop (line 2084 onwards) iterates `shard_counts: dict[tuple[str, ...], int]` — a
-COUNTS-only aggregate. The original tick DataFrames have already been streamed to per-instrument
-parquets via `PartitionedTickWriter` (line 891 onwards) and discarded. Reconstructing a
-synthetic `df` with the per-row `available_at` semantics for the bundle would require either
-(a) re-reading every per-condition_id parquet that was written that day (potentially 100s of MB
-of GCS round-trips per (venue, day, group) bundle, defeating the streaming-write architecture),
-or (b) plumbing the original ticks through the writer and into a memory-resident bundle df
-(reverts the OOM fix that motivated `PartitionedTickWriter` at line 906-909).
+**Why this blocks the orchestrator-finalize-loop bundling path**: in
+`mtds@market_tick_data_service/engine/orchestrator.py` the finalize-loop (line 2084 onwards) iterates
+`shard_counts: dict[tuple[str, ...], int]` — a COUNTS-only aggregate. The original tick DataFrames have already been
+streamed to per-instrument parquets via `PartitionedTickWriter` (line 891 onwards) and discarded. Reconstructing a
+synthetic `df` with the per-row `available_at` semantics for the bundle would require either (a) re-reading every
+per-condition_id parquet that was written that day (potentially 100s of MB of GCS round-trips per (venue, day, group)
+bundle, defeating the streaming-write architecture), or (b) plumbing the original ticks through the writer and into a
+memory-resident bundle df (reverts the OOM fix that motivated `PartitionedTickWriter` at line 906-909).
 
-The CME-OPTIONS chain-bundle precedent at `orchestrator.py:2186-2217` sidesteps this exact
-problem by:
+The CME-OPTIONS chain-bundle precedent at `orchestrator.py:2186-2217` sidesteps this exact problem by:
 
-1. Using the legacy `writer_manifest.add(...)` path (NOT `record_captured`) for the bundle
-   manifest row;
-2. Calling `ManifestWriter.check_cluster_coverage_from_counts(observed=cluster_counts,
-   expected_root_clusters=cluster_expected)` BEFORE `add()` to gate against partial-bundle
-   misses (routing to `record_failed(ClusterCoverageError)` on miss, falling through to `add()` on
-   pass);
-3. The legacy `add()` path neither requires `df` nor enforces `BUNDLED_DATA_TYPES` (only
-   `record_captured` does the `MissingClusterValidationError` raise at L2122-2128 — `add()`
-   bypasses it).
+1. Using the legacy `writer_manifest.add(...)` path (NOT `record_captured`) for the bundle manifest row;
+2. Calling
+   `ManifestWriter.check_cluster_coverage_from_counts(observed=cluster_counts, expected_root_clusters=cluster_expected)`
+   BEFORE `add()` to gate against partial-bundle misses (routing to `record_failed(ClusterCoverageError)` on miss,
+   falling through to `add()` on pass);
+3. The legacy `add()` path neither requires `df` nor enforces `BUNDLED_DATA_TYPES` (only `record_captured` does the
+   `MissingClusterValidationError` raise at L2122-2128 — `add()` bypasses it).
 
 This precedent IS the natural shape for the prediction bundle (counts already present in
-`PartitionedTickWriter._row_counts` keyed per condition_id; classifier output is per-row
-already-known; `expected_market_ids_for_canonical_group` returns `set[str]`; can be converted
-to `{condition_id: PREDICTION_GROUPS[group]["_per_market_min_rows"]}` for
-`check_cluster_coverage_from_counts`).
+`PartitionedTickWriter._row_counts` keyed per condition_id; classifier output is per-row already-known;
+`expected_market_ids_for_canonical_group` returns `set[str]`; can be converted to
+`{condition_id: PREDICTION_GROUPS[group]["_per_market_min_rows"]}` for `check_cluster_coverage_from_counts`).
 
-**HOWEVER**, mirroring the CME-OPTIONS precedent for the prediction bundle creates a documented
-SSOT-vs-precedent tension:
+**HOWEVER**, mirroring the CME-OPTIONS precedent for the prediction bundle creates a documented SSOT-vs-precedent
+tension:
 
-- **CLAUDE.md "Cluster validation MANDATORY at `record_captured` for bundled shards"** says
-  "**QG STEP 5.64 statically walks every `record_captured(` callsite + asserts the kwargs are
-  passed when the literal data_type is bundled**". The CME-OPTIONS path uses `add()` not
-  `record_captured` for `data_type="trades"` (which is NOT in `BUNDLED_DATA_TYPES`), so it
-  technically isn't violating the rule today. But for prediction we'd be calling `add(data_type=
-  "prediction_canonical_question_group")` for a data_type that IS in `BUNDLED_DATA_TYPES` — a
-  call shape the future-QG static walk would flag as a violation.
-- **CLAUDE.md "No double SSOT in data-saving methodology"** says "Where two paths produce the
-  same outcome, one is deleted." The orchestrator-finalize-loop has TWO bundle-validating paths
-  today: (1) the `record_captured(data_type=…, expected_root_clusters=…, cluster_extractor=…)`
-  path which IS the "right shape" but requires df+available_at; (2) the
-  `check_cluster_coverage_from_counts → add()` path which is a counts-only path used for
-  CME-OPTIONS and clearly the only path that works with the streaming-finalize architecture.
-  The "right shape" path is unreachable for the orchestrator finalize loop without an
-  architectural change.
+- **CLAUDE.md "Cluster validation MANDATORY at `record_captured` for bundled shards"** says "**QG STEP 5.64 statically
+  walks every `record_captured(` callsite + asserts the kwargs are passed when the literal data_type is bundled**". The
+  CME-OPTIONS path uses `add()` not `record_captured` for `data_type="trades"` (which is NOT in `BUNDLED_DATA_TYPES`),
+  so it technically isn't violating the rule today. But for prediction we'd be calling
+  `add(data_type= "prediction_canonical_question_group")` for a data_type that IS in `BUNDLED_DATA_TYPES` — a call shape
+  the future-QG static walk would flag as a violation.
+- **CLAUDE.md "No double SSOT in data-saving methodology"** says "Where two paths produce the same outcome, one is
+  deleted." The orchestrator-finalize-loop has TWO bundle-validating paths today: (1) the
+  `record_captured(data_type=…, expected_root_clusters=…, cluster_extractor=…)` path which IS the "right shape" but
+  requires df+available_at; (2) the `check_cluster_coverage_from_counts → add()` path which is a counts-only path used
+  for CME-OPTIONS and clearly the only path that works with the streaming-finalize architecture. The "right shape" path
+  is unreachable for the orchestrator finalize loop without an architectural change.
 
 **The architectural decision needed**: which option is canonical?
 
 (α) **Mirror CME-OPTIONS precedent** — call `check_cluster_coverage_from_counts(...)` then
-`add(data_type="prediction_canonical_question_group", underlying=<group>, …)`. Ships today; no
-UTL changes needed; matches existing chain-bundle precedent. **Tradeoff**: future QG STEP 5.64
-AST-walk flags this as a violation of the "Cluster validation MANDATORY at `record_captured`"
-rule. CLAUDE.md would need an explicit "exception for orchestrator-finalize-loop bundles where
-df is unavailable" clause, OR option (β/γ) ships in parallel.
+`add(data_type="prediction_canonical_question_group", underlying=<group>, …)`. Ships today; no UTL changes needed;
+matches existing chain-bundle precedent. **Tradeoff**: future QG STEP 5.64 AST-walk flags this as a violation of the
+"Cluster validation MANDATORY at `record_captured`" rule. CLAUDE.md would need an explicit "exception for
+orchestrator-finalize-loop bundles where df is unavailable" clause, OR option (β/γ) ships in parallel.
 
 (β) **Lift a new UTL helper `record_captured_from_counts(...)` that accepts**:
-   - `row_key` + `data_type` + `expected_root_clusters` + `cluster_observed: Mapping[str, int]`
-     instead of `df` + `cluster_extractor`;
-   - An `available_at_envelope: tuple[datetime, datetime]` (min, max across the bundled rows)
-     stamped at write-time by the orchestrator from per-instrument parquets' tick timestamp +
-     scrape latency, instead of `assert_available_at_present(df)`.
-   - Internally calls `check_cluster_coverage_from_counts` + the existing schema-validation +
-     manifest-row-emit but skips the df-required gates.
 
-   This unifies the "right shape" with the streaming-finalize architecture; CME-OPTIONS would
-   migrate to it too. **Tradeoff**: cross-cutting [UTL] design work — Ikenna-side. Adds 1-2
-   days to the prediction-bundle ship surface.
+- `row_key` + `data_type` + `expected_root_clusters` + `cluster_observed: Mapping[str, int]` instead of `df` +
+  `cluster_extractor`;
+- An `available_at_envelope: tuple[datetime, datetime]` (min, max across the bundled rows) stamped at write-time by the
+  orchestrator from per-instrument parquets' tick timestamp + scrape latency, instead of
+  `assert_available_at_present(df)`.
+- Internally calls `check_cluster_coverage_from_counts` + the existing schema-validation + manifest-row-emit but skips
+  the df-required gates.
 
-(γ) **Plumb a synthetic bundle df through the orchestrator** — `PartitionedTickWriter` keeps a
-   minimal "bundle ledger" (per-(asset_group, venue, group) lightweight df with columns
-   `[symbol/condition_id, available_at]` only — N rows per cluster, NOT N rows per tick) so the
-   finalize loop can pass it to `record_captured`. **Tradeoff**: per-shard memory cost grows
-   proportional to cluster count (HOURLY=24, DAILY=1 → trivial). Schema stays unified. Ships in
-   1 day on Ikenna-side once the writer extension lands.
+This unifies the "right shape" with the streaming-finalize architecture; CME-OPTIONS would migrate to it too.
+**Tradeoff**: cross-cutting [UTL] design work — Ikenna-side. Adds 1-2 days to the prediction-bundle ship surface.
 
-(δ) **Ship α now + open a Wave-2 successor plan to consolidate to β or γ**. Predictions writer
-   migration unblocks immediately; the SSOT-vs-precedent reconciliation lands as a separate
-   workstream. Per CLAUDE.md "Temporary state must have a named successor plan" rule.
+(γ) **Plumb a synthetic bundle df through the orchestrator** — `PartitionedTickWriter` keeps a minimal "bundle ledger"
+(per-(asset_group, venue, group) lightweight df with columns `[symbol/condition_id, available_at]` only — N rows per
+cluster, NOT N rows per tick) so the finalize loop can pass it to `record_captured`. **Tradeoff**: per-shard memory cost
+grows proportional to cluster count (HOURLY=24, DAILY=1 → trivial). Schema stays unified. Ships in 1 day on Ikenna-side
+once the writer extension lands.
 
-**Recommendation from Tab F5**: option (δ) — ship α now per the CME-OPTIONS precedent (which is
-already running in production for ES.OPT bundles + presumably under scrutiny each release),
-with a `## Temporary states` entry in this plan citing a new
-`utl_record_captured_from_counts_for_streaming_bundles_2026_05_09.md` (or similar) successor
-plan that lifts options β/γ to the unified path. Tab F5 stops here pending the architectural
-call from the operator OR Ikenna-main. Predictions Phase 2 deferred work continues unblocked
-(adapter lifecycle gating already shipped per mtds@7643a5c + e8a6903).
+(δ) **Ship α now + open a Wave-2 successor plan to consolidate to β or γ**. Predictions writer migration unblocks
+immediately; the SSOT-vs-precedent reconciliation lands as a separate workstream. Per CLAUDE.md "Temporary state must
+have a named successor plan" rule.
+
+**Recommendation from Tab F5**: option (δ) — ship α now per the CME-OPTIONS precedent (which is already running in
+production for ES.OPT bundles + presumably under scrutiny each release), with a `## Temporary states` entry in this plan
+citing a new `utl_record_captured_from_counts_for_streaming_bundles_2026_05_09.md` (or similar) successor plan that
+lifts options β/γ to the unified path. Tab F5 stops here pending the architectural call from the operator OR
+Ikenna-main. Predictions Phase 2 deferred work continues unblocked (adapter lifecycle gating already shipped per
+mtds@7643a5c + e8a6903).
 
 **Tab F5 stop posture**:
+
 - Confirmed UAC + UTL pre-reqs (cross-side ping ack + code-walk verified).
 - Read instruments-service@b904785 + 98bb167 reference impl (writer + lifecycle adapter).
-- Mapped MTDS orchestrator finalize-loop architecture (line 2071-2238 + PartitionedTickWriter
-  line 891-1192).
+- Mapped MTDS orchestrator finalize-loop architecture (line 2071-2238 + PartitionedTickWriter line 891-1192).
 - Identified UTL contract gap (described above).
-- Did NOT ship code (per "Clear context = implement, don't ask" rule has explicit exception:
-  "Don't apply when... the operation is destructive beyond what was authorized"; here, shipping
-  α without operator buy-in on the SSOT tension is the architectural-debt equivalent of
-  destructive).
+- Did NOT ship code (per "Clear context = implement, don't ask" rule has explicit exception: "Don't apply when... the
+  operation is destructive beyond what was authorized"; here, shipping α without operator buy-in on the SSOT tension is
+  the architectural-debt equivalent of destructive).
 - Foot-gun #4 (prek auto-revert) NOT observed this session.
 - Working tree clean on MTDS (zero edits made).
 
-#### A2 — [pending main / operator]
+#### A2 — [main, 2026-05-09 ~14:30 UTC]
 
-**Awaiting operator architectural call on (α) / (β) / (γ) / (δ).**
+**Status**: ✅ RESOLVED — option (δ) chosen.
+
+Operator picked option (δ) per `wave2_polymarket_record_captured_from_counts_2026_05_09.md` Phase 1 + 3:
+
+1. UTL helper `record_captured_from_counts(...)` shipped at UTL@ef47c81b — accepts pre-aggregated `total_rows`,
+   `observed_clusters`, `available_at_envelope: pd.Timestamp` instead of df. Same 4-pillar gate (cluster
+   coverage + available_at presence + row-count > 0); routes under-coverage to `record_failed(ClusterCoverageError)`,
+   zero-rows to `record_empty(SOURCE_RETURNED_ZERO)`.
+2. MTDS orchestrator finalize-loop branch shipped at MTDS@a2f8d80 — per-venue
+   `prediction_cluster_counts_by_venue` + `prediction_envelope_by_venue` accumulators feed into
+   `record_captured_from_counts` per `(canonical_question_group, processing_date, venue)`. Envelope =
+   `max(per-row available_at) + emission_latency_ms_for_source("polymarket_clob")` (200ms per UAC@e197173).
+3. CLAUDE.md "Cluster validation MANDATORY" rule untouched — the new path satisfies the gate via the unified
+   helper, not via an exception clause. Wave-2 plan tracks Phase 4 (legacy `add()` deletion) as the future SSOT
+   cleanup so the double-SSOT collapses cleanly post-cutover.
 
 ## Critical path
 
@@ -391,11 +393,11 @@ call from the operator OR Ikenna-main. Predictions Phase 2 deferred work continu
 
 - [x] [SCRIPT] P0. Polymarket adapter (`polymarket_adapter.py:454–602`): read lifecycle from instruments-service; reject
       ticks outside `[market_created_at, settlement_time]` window per CLAUDE.md "Prediction market lifecycle timing"
-      rule. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:lifecycle-ingestion writer in instruments-service (Phase
-      1) → BLOCKER CLEARED 2026-05-08 by instruments-service@`98bb167` + `b904785`] **SHIPPED mtds@`7643a5c`**
+      rule. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:lifecycle-ingestion writer in instruments-service (Phase 1)
+      → BLOCKER CLEARED 2026-05-08 by instruments-service@`98bb167` + `b904785`] **SHIPPED mtds@`7643a5c`**
       "feat(predictions): Polymarket adapter per-market lifecycle gating + tests" — `_LifecycleBounds` at
-      `polymarket_adapter.py:135` + `_load_lifecycles_from_gcs` at `:834` confirmed on origin.
-      **WIP-READY ON-DISK 2026-05-08 (Tab 1 instruments-live-tab — pending main-agent commit + push)**:
+      `polymarket_adapter.py:135` + `_load_lifecycles_from_gcs` at `:834` confirmed on origin. **WIP-READY ON-DISK
+      2026-05-08 (Tab 1 instruments-live-tab — pending main-agent commit + push)**:
       `market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py` (~268-line diff vs HEAD)
       adds frozen `_LifecycleBounds` dataclass + `_load_lifecycles_from_gcs(date)` static method reading
       `instrument_availability/by_date/day=…/venue=POLYMARKET/instruments.parquet` (the same parquet
@@ -403,42 +405,41 @@ call from the operator OR Ikenna-main. Predictions Phase 2 deferred work continu
       `available_to_datetime` (= `settlement_time`) per `condition_id`; `download_batch` now drops ticks with
       `tick_ts < market_created_at` or `tick_ts >= settlement_time` per market and counts the rejected counts in a
       summary log line; emits `canonical_question_group` column derived via UAC
-      `classify_polymarket_to_canonical_group(title, slug, event_slug, outcome, condition_id)` (sub-classifier
-      output → `OTHER` for unrecognised); stamps per-row `available_at = max(ts_event, market_created_at)` (the
-      `created_floor` clamp) per CLAUDE.md "available_at is per-row, write-time, equal to live-pipeline-arrival"
-      rule; `_coerce_to_aware_utc` helper handles parquet/JSON/`pd.NaT` lifecycle-cell coercion (covered by 1
-      dedicated test). 7 dedicated regression tests in
-      `tests/unit/test_polymarket_adapter_lifecycle_gating.py` (260 lines, 7/7 GREEN under
-      `pytest tests/unit/test_polymarket_adapter_lifecycle_gating.py -v`): pre-creation 1d / 1min before, post-
-      settlement, in-window with `available_at` stamp, `canonical_question_group` column emit, no-lifecycle =
-      no-gating graceful-degrade, `_coerce_to_aware_utc` ISO/`pd.Timestamp`/datetime/None/NaT handling. **Cluster-
-      validation kwargs at `record_captured` for the bundled `prediction_canonical_question_group` data_type**
-      DEFERRED to Q1 → option (a) writer migration (Ikenna-side cross-cutting helper signature lock first); Phase 2
-      adapter-level work scope correctly stops at the per-row column emission + lifecycle gate.
+      `classify_polymarket_to_canonical_group(title, slug, event_slug, outcome, condition_id)` (sub-classifier output →
+      `OTHER` for unrecognised); stamps per-row `available_at = max(ts_event, market_created_at)` (the `created_floor`
+      clamp) per CLAUDE.md "available_at is per-row, write-time, equal to live-pipeline-arrival" rule;
+      `_coerce_to_aware_utc` helper handles parquet/JSON/`pd.NaT` lifecycle-cell coercion (covered by 1 dedicated test).
+      7 dedicated regression tests in `tests/unit/test_polymarket_adapter_lifecycle_gating.py` (260 lines, 7/7 GREEN
+      under `pytest tests/unit/test_polymarket_adapter_lifecycle_gating.py -v`): pre-creation 1d / 1min before, post-
+      settlement, in-window with `available_at` stamp, `canonical_question_group` column emit, no-lifecycle = no-gating
+      graceful-degrade, `_coerce_to_aware_utc` ISO/`pd.Timestamp`/datetime/None/NaT handling. **Cluster- validation
+      kwargs at `record_captured` for the bundled `prediction_canonical_question_group` data_type** DEFERRED to Q1 →
+      option (a) writer migration (Ikenna-side cross-cutting helper signature lock first); Phase 2 adapter-level work
+      scope correctly stops at the per-row column emission + lifecycle gate.
 - [x] [SCRIPT] P0. Kalshi adapter (`kalshi_adapter.py:242–269`): same migration. [AUDIT 2026-05-07: BLOCKED-ON
       predictions_master:Phase 1 lifecycle ingestion → BLOCKER CLEARED 2026-05-08 by instruments-service@`98bb167`]
       **SHIPPED mtds@`e8a6903`** "feat(predictions): Kalshi adapter per-market lifecycle gating + tests" —
-      `_load_lifecycles_from_gcs` at `kalshi_adapter.py:369` confirmed on origin.
-      **WIP-READY ON-DISK 2026-05-08 (Tab 1 — pending main-agent commit + push)**:
-      `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py` (~233-line diff vs HEAD)
-      adds module-level `_coerce_datetime` + `_extract_lifecycles_from_dataframe` + `_extract_lifecycles_from_records`
+      `_load_lifecycles_from_gcs` at `kalshi_adapter.py:369` confirmed on origin. **WIP-READY ON-DISK 2026-05-08 (Tab 1
+      — pending main-agent commit + push)**:
+      `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py` (~233-line diff vs HEAD) adds
+      module-level `_coerce_datetime` + `_extract_lifecycles_from_dataframe` + `_extract_lifecycles_from_records`
       helpers + `_load_lifecycles_from_gcs(date) -> dict[ticker, (created, settlement)]` (replaces legacy
       `_load_tickers_from_gcs` which is retained as a one-line legacy wrapper); reads
       `instrument_availability/by_date/day=…/venue=KALSHI/instruments.parquet` (parquet path) with JSON fallback
       (`instruments.json` / `.jsonl`); `download_batch` now drops ticks with `tick_ts < market_created_at` or
-      `tick_ts >= settlement_time` per ticker and counts rejected; emits `canonical_question_group` column via
-      UAC `classify_kalshi_to_canonical_group(ticker)` (`KALSHI_TICKER_TO_GROUP` override-only registry currently
-      empty per CLAUDE.md "Synthetic OTHER bucket" rule, so most rows route to `CanonicalQuestionGroup.OTHER` —
-      that's the valid catch-all bucket); stamps per-row `available_at = max(tick_ts, market_created_at)`
-      (`created_floor` clamp); CLI-passed `instrument_ids` short-circuit to `(None, None)` lifecycle = no gating
-      (caller-decision matching the polymarket short-circuit shape). 9 dedicated regression tests in
+      `tick_ts >= settlement_time` per ticker and counts rejected; emits `canonical_question_group` column via UAC
+      `classify_kalshi_to_canonical_group(ticker)` (`KALSHI_TICKER_TO_GROUP` override-only registry currently empty per
+      CLAUDE.md "Synthetic OTHER bucket" rule, so most rows route to `CanonicalQuestionGroup.OTHER` — that's the valid
+      catch-all bucket); stamps per-row `available_at = max(tick_ts, market_created_at)` (`created_floor` clamp);
+      CLI-passed `instrument_ids` short-circuit to `(None, None)` lifecycle = no gating (caller-decision matching the
+      polymarket short-circuit shape). 9 dedicated regression tests in
       `tests/unit/test_kalshi_adapter_lifecycle_gating.py` (357 lines, 9/9 GREEN under
       `pytest tests/unit/test_kalshi_adapter_lifecycle_gating.py -v`): pre-creation 1d / 1min, post-settlement,
-      in-window with `available_at`, `available_at` floored to `market_created_at`, `OTHER` canonical-group
-      capture, no-gating-when-instrument_ids-passed, lifecycle-loader-reads-parquet-columns, per-market filter
-      applies independently (3 tickers — active / pre-creation-bound / post-settlement-bound — each gated by its
-      own market's lifecycle, not a global window). Same Phase-2-scope-stops-at-per-row-emission discipline as
-      Polymarket (writer migration deferred).
+      in-window with `available_at`, `available_at` floored to `market_created_at`, `OTHER` canonical-group capture,
+      no-gating-when-instrument_ids-passed, lifecycle-loader-reads-parquet-columns, per-market filter applies
+      independently (3 tickers — active / pre-creation-bound / post-settlement-bound — each gated by its own market's
+      lifecycle, not a global window). Same Phase-2-scope-stops-at-per-row-emission discipline as Polymarket (writer
+      migration deferred).
 - [x] [SCRIPT] P0. `umi_tick_provider.py:225`: replace `category="prediction_market"` with `asset_group="prediction"` +
       `data_type="prediction_canonical_question_group"`. [AUDIT 2026-05-07: FRESH — actionable; UAC@bb24aba already
       added DATA_TYPE_TO_CLUSTER_REGISTRY incl PREDICTION_GROUPS] (mtds@`3f631b9` 2026-05-08 by Tab 1 umi-rename
@@ -447,39 +448,36 @@ call from the operator OR Ikenna-main. Predictions Phase 2 deferred work continu
       `tests/unit/test_umi_tick_provider_routes.py:157` updated; 3 prediction-routing tests pass. Factory-internal
       `VENUE_REGISTRY` tag rename `prediction_market` → `prediction` deferred to
       `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` Waves C/D per CLAUDE.md "Asset-group vocabulary" rule —
-      that rename touches the adapter factory's venue-registry (cross-cutting, [UAC] layer) which is Ikenna-side
-      design scope; the caller-side fix was Harsh-side mechanical scope.)
+      that rename touches the adapter factory's venue-registry (cross-cutting, [UAC] layer) which is Ikenna-side design
+      scope; the caller-side fix was Harsh-side mechanical scope.)
 - [ ] [SCRIPT] P0. Replace POLYMARKET writer (`orchestrator.py:1990–1995`): old `data_type = <base_asset>` → new
-      `data_type = prediction_canonical_question_group`. [AUDIT 2026-05-07: FRESH — actionable]
-      **PHANTOM-PARTIAL finding 2026-05-08 (Tab 1 umi-rename sub-agent, sha mtds@`3f631b9` adjacent investigation)**:
-      No per-`base_asset` writer exists in MTDS source. The legacy `data_type=BTC|ETH|SPX` shape was migrated away
-      from previously; current MTDS prediction adapters write per-row `data_type="trades"` via the standard
-      `PartitionedTickWriter` path (per `polymarket_adapter.py:531` + `kalshi_adapter.py:256`). The plan-referenced
-      `engine/orchestrator.py:1990–1995` is the bookmaker-odds writer, not a POLYMARKET writer. The intended canonical
-      fix — manifest-level shard re-bundling by `canonical_question_group`, writing
-      `data_type=prediction_canonical_question_group` + `underlying=<canonical_group>` per UAC `BUNDLED_DATA_TYPES`,
-      with cluster-validation kwargs at `record_captured` mirroring `instruments-service@b904785`
-      `engine/orchestrator.py:2133-2186` pattern — is non-trivial DESIGN work (writer-level grouping over per-row
-      trade data, not a string rename). Plan-body line 146 already declares "Integration tests against a live
-      ManifestWriter on the orchestrator path deferred — bundled within MTDS Phase 2 cluster-gate verification" — so
-      the deferred sub-design is implicitly tracked. **Re-scope this todo**: kept `[ ]` because the canonical fix
-      isn't shipped; the original "string rename" framing is wrong. Need Ikenna-side design call on whether the
-      manifest re-bundling lands here (MTDS orchestrator) or stays implicit via the per-row `data_type="trades"`
-      shape with `canonical_question_group` attached as a separate manifest column. Flagged for plan-of-record Q&A
-      not chat — see `## Open questions` below.
+      `data_type = prediction_canonical_question_group`. [AUDIT 2026-05-07: FRESH — actionable] **PHANTOM-PARTIAL
+      finding 2026-05-08 (Tab 1 umi-rename sub-agent, sha mtds@`3f631b9` adjacent investigation)**: No per-`base_asset`
+      writer exists in MTDS source. The legacy `data_type=BTC|ETH|SPX` shape was migrated away from previously; current
+      MTDS prediction adapters write per-row `data_type="trades"` via the standard `PartitionedTickWriter` path (per
+      `polymarket_adapter.py:531` + `kalshi_adapter.py:256`). The plan-referenced `engine/orchestrator.py:1990–1995` is
+      the bookmaker-odds writer, not a POLYMARKET writer. The intended canonical fix — manifest-level shard re-bundling
+      by `canonical_question_group`, writing `data_type=prediction_canonical_question_group` +
+      `underlying=<canonical_group>` per UAC `BUNDLED_DATA_TYPES`, with cluster-validation kwargs at `record_captured`
+      mirroring `instruments-service@b904785` `engine/orchestrator.py:2133-2186` pattern — is non-trivial DESIGN work
+      (writer-level grouping over per-row trade data, not a string rename). Plan-body line 146 already declares
+      "Integration tests against a live ManifestWriter on the orchestrator path deferred — bundled within MTDS Phase 2
+      cluster-gate verification" — so the deferred sub-design is implicitly tracked. **Re-scope this todo**: kept `[ ]`
+      because the canonical fix isn't shipped; the original "string rename" framing is wrong. Need Ikenna-side design
+      call on whether the manifest re-bundling lands here (MTDS orchestrator) or stays implicit via the per-row
+      `data_type="trades"` shape with `canonical_question_group` attached as a separate manifest column. Flagged for
+      plan-of-record Q&A not chat — see `## Open questions` below.
 - [x] [TEST] P0. MTDS unit tests: lifecycle gating (pre-created tick rejected, post-settled tick rejected); cluster
       validation per `(canonical_question_group, day)`. [AUDIT 2026-05-07: BLOCKED-ON above adapter migrations]
-      **SHIPPED mtds@`7643a5c` + mtds@`e8a6903`** — 16 lifecycle-gating tests on origin (lifecycle-gating half
-      complete; cluster-validation tests for the bundled `prediction_canonical_question_group` data_type remain
-      deferred to the orchestrator-level Q1 option (a) writer migration).
-      **WIP-READY ON-DISK 2026-05-08 (Tab 1 — pending main-agent commit + push)**: 16 lifecycle-gating tests covering
-      both adapters (7 polymarket + 9 kalshi, all GREEN under `pytest -v` — see WIP-READY annotations on the two
-      adapter todos above for the per-test list). Cluster-validation tests for the bundled
-      `prediction_canonical_question_group` data_type are NOT included in this Phase 2 scaffold because the
-      cluster-coverage gate at `record_captured` is the deferred orchestrator-level work tracked in Q1 (option
-      (a) writer migration) — that landing will add cluster-validation tests in MTDS at the orchestrator layer,
-      mirroring `instruments-service@b904785`'s 9 canonical-group shard tests. Lifecycle-gating half is fully
-      covered.
+      **SHIPPED mtds@`7643a5c` + mtds@`e8a6903`** — 16 lifecycle-gating tests on origin (lifecycle-gating half complete;
+      cluster-validation tests for the bundled `prediction_canonical_question_group` data_type remain deferred to the
+      orchestrator-level Q1 option (a) writer migration). **WIP-READY ON-DISK 2026-05-08 (Tab 1 — pending main-agent
+      commit + push)**: 16 lifecycle-gating tests covering both adapters (7 polymarket + 9 kalshi, all GREEN under
+      `pytest -v` — see WIP-READY annotations on the two adapter todos above for the per-test list). Cluster-validation
+      tests for the bundled `prediction_canonical_question_group` data_type are NOT included in this Phase 2 scaffold
+      because the cluster-coverage gate at `record_captured` is the deferred orchestrator-level work tracked in Q1
+      (option (a) writer migration) — that landing will add cluster-validation tests in MTDS at the orchestrator layer,
+      mirroring `instruments-service@b904785`'s 9 canonical-group shard tests. Lifecycle-gating half is fully covered.
 
 ### Reader / feature / strategy migration
 
@@ -703,15 +701,15 @@ features predict.
       `BTC_UP_DOWN_HOURLY` (24/day; HOURLY lifecycle), `SPX_UP_DOWN_DAILY` (1/day; cross-asset feed for tradfi S&P
       prediction), `BTC_UP_DOWN_DAILY` (1/day; cross-asset feed for cefi_ml diagnostic calibration). ELECTION + CPI
       DEFERRED post-cutover. See `plans/active/operator_decisions_2026_05_08.md`.
-- [x] ✓ **CME event futures inventory — RESOLVED 2026-05-08.** **OUT for May-23 cross-venue arb.** The price-arb
-      May-23 deliverable per `tradfi_master:deliverable B` covers FUTURES products (CME same-day-expiry + ETF↔future
-      + cross-venue ETF). CME event-contracts (binary outcomes) need a separate MTDS adapter + instruments-service
-      catalog work; defer post-cutover. ONE cross-venue arb cell IN: Polymarket `SPX_UP_DOWN_DAILY` ↔ S&P
-      futures-implied probability (single cell, runs on existing Polymarket + Databento ES1, no new adapter) — track
-      as P1 inside this plan.
-- [x] ✓ **Opinion Trade integration depth — RESOLVED 2026-05-08.** **OUT for May 23.** No Opinion Trade integration
-      this cycle (neither static historical nor live venue connector). Backtest-only per master Q&A 7; Polymarket +
-      Kalshi static historical sufficient for the 3 picked canonical groups. Re-evaluate post-cutover.
+- [x] ✓ **CME event futures inventory — RESOLVED 2026-05-08.** **OUT for May-23 cross-venue arb.** The price-arb May-23
+      deliverable per `tradfi_master:deliverable B` covers FUTURES products (CME same-day-expiry + ETF↔future +
+      cross-venue ETF). CME event-contracts (binary outcomes) need a separate MTDS adapter + instruments-service catalog
+      work; defer post-cutover. ONE cross-venue arb cell IN: Polymarket `SPX_UP_DOWN_DAILY` ↔ S&P futures-implied
+      probability (single cell, runs on existing Polymarket + Databento ES1, no new adapter) — track as P1 inside this
+      plan.
+- [x] ✓ **Opinion Trade integration depth — RESOLVED 2026-05-08.** **OUT for May 23.** No Opinion Trade integration this
+      cycle (neither static historical nor live venue connector). Backtest-only per master Q&A 7; Polymarket + Kalshi
+      static historical sufficient for the 3 picked canonical groups. Re-evaluate post-cutover.
 
 ## Anti-patterns + workspace-rule cross-references
 

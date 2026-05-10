@@ -75,13 +75,21 @@ plan" rule, this file IS that named successor.
 
 ### Phase 3 — MTDS callsite migration (P0, ~1-2 AI-days)
 
-- [ ] [SCRIPT] P0. Migrate the prediction finalize-loop branch (item 1b from F5-v2 spawn — currently deferred from
+- [x] [SCRIPT] P0. Migrate the prediction finalize-loop branch (item 1b from F5-v2 spawn — currently deferred from
       MTDS@a1edc18) to use `record_captured_from_counts` from the start. Walks `self._prediction_cluster_counts` +
       `self._prediction_available_at_max` + emits one bundled manifest row per `canonical_question_group` per
       `(processing_date, venue)`. 4+ unit tests covering: full coverage HOURLY (24 markets), partial coverage DAILY (1
       market), ELECTION single-market, lifecycle-bounded skip.
-      status: todo
-      note: ""
+      Shipped MTDS@a2f8d80 — per-venue accumulators (`prediction_cluster_counts_by_venue` +
+      `prediction_envelope_by_venue`) populated from `PartitionedTickWriter` properties; finalize-loop branch emits
+      one bundled `data_type=prediction_canonical_question_group` row per `(canonical_question_group, processing_date,
+      venue)` via UTL@ef47c81b `record_captured_from_counts`. Envelope = `max(per-row available_at) +
+      emission_latency_ms_for_source("polymarket_clob")` (200ms). 5 unit tests at
+      `tests/unit/test_polymarket_bundling_finalize.py` cover full-coverage HOURLY (24 markets), partial-coverage
+      DAILY → `record_failed`, ELECTION single-market, lifecycle-bounded skip, non-prediction writers leave
+      accumulators empty. **TEMPORARY**: expected market_id set = observed until MARKET_LIFECYCLE wiring ships per
+      `predictions_master_2026_05_07` Phase 1.
+      status: done
 
 - [ ] [SCRIPT] P0. Migrate the CME-OPTIONS legacy callsite at
       [`market_tick_data_service/engine/orchestrator.py:2295-2356`](../../../market-tick-data-service/market_tick_data_service/engine/orchestrator.py#L2295-L2356)
