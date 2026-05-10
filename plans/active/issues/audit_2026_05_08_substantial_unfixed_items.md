@@ -127,9 +127,25 @@ strategy_and_dart_master_2026_05_07.md.
 
 ---
 
-## Item 3 — MDPS streaming primitives unshipped (P0, blocks live_pipeline Phase 4) — PARTIAL 2026-05-09; second-pass-deferred 2026-05-10
+## Item 3 — MDPS streaming primitives unshipped (P0, blocks live_pipeline Phase 4) — PARTIAL 2026-05-09; PARTIAL-AGAIN 2026-05-10 (Phase 1.2A + Phase 1.2A.1 shipped; Phase 1.2B + Phase 2 still open)
 
-> **2026-05-10 update**: chain agent re-attempted Phase 1.2 + Phase 2 today and surfaced a **semantic dual-SSOT
+> **2026-05-10 PM update**: Phase 1.2A.1 SHIPPED — the production-blocking
+> `available_at` stamping landed at MDPS@`1cdcda7`. `write_candle_parquet`
+> now stamps `available_at = bar_close + emission_latency` on every candle
+> DataFrame before `record_captured` + `StreamingParquetWriter.write_chunk`,
+> so MDPS production candle writes no longer raise `LookaheadBiasError` at
+> `assert_available_at_present`. Phase 1.2B
+> (`_streaming_write_per_tf` lifecycle migration to UTL `open_candle_writer`/
+> `write_chunk`/`close_candle_writer`) AND Phase 2 (`ResourceProfiler.on_memory_warning`
+> wiring + `ConnectivityWatchdog` consumer) remain DEFERRED — Phase 1.2B is
+> a structural refactor of `live_workers._process_chain_bundle_streaming` +
+> `_streaming_process_slice_timeframes` + `_streaming_write_per_tf` that
+> requires a focused MDPS-coordinated tab assignment per the plan's
+> execution DAG (1100+ line file, 4-test matrix including memory ceiling
+> regression + cross-tf shard isolation). Phase 2 explicitly depends on
+> Phase 1.2B per the DAG (cannot ship in isolation).
+
+> **2026-05-10 AM update**: chain agent re-attempted Phase 1.2 + Phase 2 today and surfaced a **semantic dual-SSOT
 > collision** between UTL `close_candle_writer` (uses `record_captured` v5 verb) and existing
 > `canonical_writer.write_candle_parquet` (uses `manifest_writer.add(...)` v4 verb) that the original plan-of-record
 > did not capture. Migrating `_streaming_write_per_tf` alone would land MDPS production with two manifest-write SSOTs —
@@ -139,7 +155,9 @@ strategy_and_dart_master_2026_05_07.md.
 > before the next agent can safely pick up. Full evidence + recommended decision in
 > [`mdps_phase_1_2_phase_2_deferral_2026_05_10.md`](mdps_phase_1_2_phase_2_deferral_2026_05_10.md). The 2026-05-09
 > "DEFERRED-AFTER-WORKSPACE-QG-CLEAN" rationale below understates the blocker — the dual-SSOT issue is architectural,
-> not operational.
+> not operational. **Phase 1.2A landed 2026-05-10 morning at MDPS@`afdb754` —
+> v5 manifest verb migration, eliminates the dual-SSOT collision.** Phase
+> 1.2A.1 (this PM) closes the production-write blocker.
 
 ### What
 
@@ -181,14 +199,46 @@ operator-approved option (a) — ship per plan-of-record.
     4-branch decision matrix (error → `record_failed` / zero rows → `record_empty(SOURCE_RETURNED_ZERO)` / rows →
     `record_captured` + atomic rename / second-call no-op). Cluster validation kwargs forwarded to `record_captured` for
     bundled shards.
-- ❌ MDPS `_streaming_write_per_tf` callsite migration — Phase 1.2 of plan-of-record. **DEFERRED-AFTER-WORKSPACE-QG-
-  CLEAN**: lives in `market-data-processing-service/market_data_processing_service/app/core/live_workers.py:1118-1164`
-  (per plan-of- record line 87). Substantial refactor of the per-timeframe accumulator pattern that needs full-MDPS QG +
+- ✅ Phase 1.2A — `canonical_writer.write_candle_parquet` v5 manifest-verb
+  migration — SHIPPED 2026-05-10 MDPS@`afdb754`. Replaces legacy v4
+  `manifest.add(...)` with v5 `record_captured(...)` so the MDPS write
+  path matches the UTL streaming-candle-writer's verb shape; eliminates
+  the dual-SSOT collision that blocked Phase 1.2B (would have produced
+  two manifest shapes in production depending on which orchestration
+  path emitted the row).
+- ✅ Phase 1.2A.1 — write-time `available_at` stamping in
+  `canonical_writer.write_candle_parquet` — SHIPPED 2026-05-10
+  MDPS@`1cdcda7`. Adds `_stamp_candle_available_at()` helper invoked at
+  the head of `write_candle_parquet` (single chokepoint) so every candle
+  DataFrame carries `available_at = bar_close + emission_latency` before
+  reaching `StreamingParquetWriter.write_chunk` AND
+  `ManifestWriter.record_captured`. Closes the production blocker:
+  without this, every production candle write raised
+  `LookaheadBiasError` at `assert_available_at_present`. Per-source
+  emission latency lookups via UAC `EMISSION_LATENCY_MS_BY_SOURCE`
+  (tardis=50ms / databento=10ms / onchain_subgraph=60s / polymarket_clob=200ms /
+  onchain_rpc=200ms). Bridge dict
+  `_MDPS_SOURCE_DATA_TYPE_TO_PRIORITY_KEY` maps MDPS-specific
+  source_data_type strings (book_snapshot_5, derivative_ticker,
+  dex_pool_swaps, lst_rates, ...) to UAC SOURCE_PRIORITY data_type axis.
+  9 new tests in `tests/unit/test_canonical_writer_record_helpers.py`
+  (18 total passing, 0 failures).
+- ❌ Phase 1.2B — MDPS `_streaming_write_per_tf` callsite migration — Phase 1.2 of plan-of-record. **DEFERRED-AFTER-WORKSPACE-QG-
+  CLEAN + DEFERRED-TO-NEXT-MDPS-FOCUSED-TAB**: lives in `market-data-processing-service/market_data_processing_service/app/core/live_workers.py:1142-1188`
+  (per plan-of-record line 163-198). Substantial refactor of the per-timeframe accumulator pattern that needs full-MDPS QG +
   shard-level isolation tests + the 4-test matrix
-  `(N batches × M rows) → exactly ONE record_captured per (timeframe, shard)`. Blocker for in-flight ship: MDPS working
-  tree has 9+ foreign-modified test files from parallel agents' sessions; safe migration requires a coordinated tab
-  assignment in tomorrow's work-split. UTL primitives are now stable + tested → next agent has a clean target to wire
-  against.
+  `(N batches × M rows) → exactly ONE record_captured per (timeframe, shard)`. Genuine architectural depth:
+  to achieve the per-batch memory win the plan promises (peak memory ≈
+  one timeframe-batch in flight, NOT all-day-all-timeframes accumulated),
+  the migration must also restructure `_process_chain_bundle_streaming`
+  (open per-tf handles at start) +
+  `_streaming_process_slice_timeframes` (write_chunk on each slice
+  instead of appending to `candles_by_tf` list dict). UTL primitives
+  (`open_candle_writer` / `write_chunk` / `close_candle_writer`) are
+  stable + tested → next agent has a clean target to wire against.
+  Phase 1.2A.1 unblocks production writes regardless, so 1.2B is now a
+  pure performance / memory-budget improvement, not a correctness
+  blocker.
 - ✅ MTDS `LiveConnectivityWatchdog` — SHIPPED 2026-05-09 mtds@`91e21cd`. Module at
   `market-tick-data-service/market_tick_data_service/market_interface/connectivity_watchdog.py` (249 lines) +
   `tests/unit/test_connectivity_watchdog.py` (16 tests). Heartbeat tracker per (venue, data_type), simplified state

@@ -144,19 +144,73 @@ todos:
 
   - id: phase-1-2a-1-mdps-available-at-stamping
     content: |
-      - [ ] [AGENT] P0. Phase 1.2A.1 — Stamp `available_at` on every MDPS candle DataFrame before
-        `write_candle_parquet`. **DEFERRED** — surfaced by Phase 1.2A migration; required for
-        production candle writes once Phase 1.2A code lands. `record_captured` calls
-        `assert_available_at_present(df)` which raises `LookaheadBiasError` on missing column.
-        Per CLAUDE.md "available_at is per-row, write-time" rule + UAC `AVAILABILITY_AT_SEMANTICS`
-        SSOT: each candle row's `available_at` = bar close + source-priority scrape latency for
-        CeFi/DeFi/TradFi tick-derived candles. Site: `candle_write_mixin.py` /
-        `live_workers._streaming_write_per_tf` (the per-timeframe DataFrame materialisation point).
-        Until this ships, MDPS production candle writes will fail loudly at the manifest write step
-        — that IS the workspace-rule-correct fail mode, but operations are blocked. Successor:
-        Phase 1.2A.1 is a hard-gate blocker for both production resumption + Phase 1.2B.
-    status: todo
-    note: ""
+      - [x] [AGENT] P0. Phase 1.2A.1 — Stamp `available_at` on every MDPS candle DataFrame before
+        `write_candle_parquet`. **SHIPPED 2026-05-10**
+        MDPS@`1cdcda7` — `market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py`
+        adds `_stamp_candle_available_at()` helper invoked at the head of
+        `write_candle_parquet` (single chokepoint) so every candle DataFrame
+        carries `available_at = bar_close + emission_latency` before reaching
+        `StreamingParquetWriter.write_chunk` AND `ManifestWriter.record_captured`.
+        Eliminates the production blocker flagged as a Phase 1.2A discovery:
+        without this, `assert_available_at_present(df)` raised `LookaheadBiasError`
+        on every production candle write.
+
+      What shipped:
+      1. `_stamp_candle_available_at(df, asset_group, source_data_type, timeframe)` —
+         single chokepoint helper. Idempotent (preserves upstream-stamped values).
+         Resolves the UAC `SOURCE_PRIORITY` primary source via
+         `_resolve_primary_source_for_candle` (bridge dict
+         `_MDPS_SOURCE_DATA_TYPE_TO_PRIORITY_KEY` maps MDPS-specific
+         source_data_type strings — `book_snapshot_5`, `derivative_ticker`,
+         `dex_pool_swaps`, `lst_rates`, etc. — to the UAC SOURCE_PRIORITY
+         data_type axis where they diverge; CeFi `trades`/`ohlcv_1m` resolve
+         directly without a bridge entry). Computes
+         `available_at = timestamp + tf_delta + emission_latency_ms_for_source(primary_source)`
+         per the workspace `Live = batch` + `available_at is per-row, write-time`
+         rules. Per-source latency lookups: tardis=50ms (CeFi),
+         databento=10ms (TradFi), onchain_subgraph=60s (DeFi default),
+         onchain_rpc=200ms (DeFi RPC reads), polymarket_clob=200ms (Prediction).
+      2. Integer epoch-ms timestamp coercion mirrors
+         `candle_write_mixin._coerce_int_timestamp_column` (unit inferred from
+         magnitude: ns >1e18, us >1e15, ms >1e12, else s) so the MDPS
+         internal `timestamp` column is correctly bridged regardless of
+         dtype on entry.
+      3. `write_candle_parquet` wires the helper after `_normalise_timeframe`
+         and BEFORE `StreamingParquetWriter.write_chunk` — `available_at`
+         lands BOTH in the on-disk parquet (downstream features-* + MDPS
+         read-time consumers see live-equivalent timestamps) AND in the df
+         forwarded to `record_captured`. The 4-pillar write-gate validation
+         inside `record_captured` (row count > 0, NaN ratio, schema match,
+         cluster coverage for bundled types) sees the stamped df.
+      4. **Tests — 9 new** in
+         `tests/unit/test_canonical_writer_record_helpers.py`:
+         - per-asset-group stamping correctness (cefi trades 1m, tradfi
+           ohlcv_1m databento, defi dex_pool_swaps onchain_subgraph 15m);
+         - idempotency when upstream already stamped (preserves their values);
+         - integer epoch-ms timestamp coercion (real 2026-04-15 epoch ms);
+         - empty df adds typed `available_at` column for schema-axis
+           consistency;
+         - missing `timestamp` column raises `ValueError`;
+         - unmapped `(asset_group, source_data_type)` raises `KeyError`
+           (closed-set fail-loud per UAC's round-trip rule);
+         - end-to-end `write_candle_parquet` stamps `available_at` in BOTH
+           `record_captured` df AND `StreamingParquetWriter.write_chunk`.
+
+      All 18 tests in `test_canonical_writer_record_helpers.py` pass
+      (9 pre-existing + 9 new). Phase 1.2B and Phase 2 unblocked.
+
+      Discovery / known follow-up: When the live streaming aggregator
+      ships in `live_pipeline_mtds_mdps_features_2026_05_08` Phase 4, it
+      may pre-stamp `available_at` at tick-aggregation time (live mode
+      `available_at` = bar-close-actual-emission, not the synthesized
+      bar-close + estimated latency). The idempotency check preserves
+      that upstream stamp — no further changes needed in this writer
+      when the live path lands.
+    status: done
+    note: |
+      "2026-05-10 phase-1-2a-1-agent shipped: _stamp_candle_available_at helper +
+      _MDPS_SOURCE_DATA_TYPE_TO_PRIORITY_KEY bridge + integer-epoch coercion +
+      9 new tests + plan flip. Unblocks Phase 1.2B + Phase 2 + production resumption."
 
   - id: phase-1-mdps-streaming-callsite
     content: |

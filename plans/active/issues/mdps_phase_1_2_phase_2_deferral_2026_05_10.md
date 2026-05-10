@@ -22,6 +22,20 @@ execution:
 
 # MDPS Phase 1.2 + Phase 2 deferral — second-pass attempt 2026-05-10
 
+> **2026-05-10 PM RESOLVED-PARTIAL**: Phase 1.2A SHIPPED MDPS@`afdb754` (v5
+> manifest verb migration eliminated the dual-SSOT collision). Phase
+> 1.2A.1 SHIPPED MDPS@`1cdcda7` (write-time `available_at` stamping
+> closes the production-write blocker). Phase 1.2B (`_streaming_write_per_tf`
+> structural migration to UTL `open_candle_writer`/`write_chunk`/`close_candle_writer`
+> lifecycle) AND Phase 2 (`ResourceProfiler.on_memory_warning` wiring)
+> remain DEFERRED to the next MDPS-focused tab — not blocked by SSOT or
+> correctness; remaining scope is the per-batch chunking refactor for
+> the memory-budget improvement Phase 1.2B promises (peak memory ≈ one
+> timeframe-batch in flight, NOT all-day-all-timeframes accumulated).
+> Phase 1.2A.1 means production candle writes can resume on the band-aid
+> memory-tier launcher (`deployment-service@02ee6d6`) without raising
+> `LookaheadBiasError` — the band-aid retirement waits on Phase 1.2B + Phase 4.
+
 > **Severity**: P0 — blocks live-pipeline Phase 4 + the May-23 cutover (Group F items 21+22 prereq).
 >
 > **Blast radius**: market-data-processing-service production candle write path; downstream live-pipeline; unified
