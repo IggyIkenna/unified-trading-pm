@@ -12,20 +12,19 @@ locked_since: 2026-05-08
 
 ## ✅ RESOLUTION 2026-05-09
 
-Per cluster 9 retry audit 2026-05-09: `validate_plan_links.py:24` now uses `args.plans_dir` (correct attribute name);
-no `mds_dir` reference exists in the script. Step 6 PRODUCTION READINESS VALIDATORS no longer crashes with the
+Per cluster 9 retry audit 2026-05-09: `validate_plan_links.py:24` now uses `args.plans_dir` (correct attribute name); no
+`mds_dir` reference exists in the script. Step 6 PRODUCTION READINESS VALIDATORS no longer crashes with the
 AttributeError. Issue ready for archive.
 
 ---
 
 # Original issue (resolved — kept for archaeology)
 
-
 # PM validate_plan_links.py crashes during production-readiness QG step
 
-> **Severity**: P2 — workspace-wide QG infrastructure issue. Every service repo's `bash scripts/quality-gates.sh`
-> Step 6 "PRODUCTION READINESS VALIDATORS" fails on this AttributeError. **Blast radius**: every service running QG
-> on `live-defi-rollout`. **Suggested owner**: PM scripts maintainer.
+> **Severity**: P2 — workspace-wide QG infrastructure issue. Every service repo's `bash scripts/quality-gates.sh` Step 6
+> "PRODUCTION READINESS VALIDATORS" fails on this AttributeError. **Blast radius**: every service running QG on
+> `live-defi-rollout`. **Suggested owner**: PM scripts maintainer.
 
 ## What I found
 
@@ -44,15 +43,15 @@ Traceback (most recent call last):
 AttributeError: 'Namespace' object has no attribute 'mds_dir'
 ```
 
-The `args.mds_dir` reference at line 28 is broken — argparse never populates that attribute under whatever flag set
-the validator was invoked with.
+The `args.mds_dir` reference at line 28 is broken — argparse never populates that attribute under whatever flag set the
+validator was invoked with.
 
 ## Why it matters
 
 - Every service's `bash scripts/quality-gates.sh` Step 6 fails with this exact traceback. Local QG signal is therefore
   unreliable (every push needs a manual "is this MY failure?" check).
-- Per CLAUDE.md "QG failure attribution" rule, agents are continuing to push past it (alerting-service, UAC, others
-  this cycle). This is correct behaviour but pollutes the failure-mode signal.
+- Per CLAUDE.md "QG failure attribution" rule, agents are continuing to push past it (alerting-service, UAC, others this
+  cycle). This is correct behaviour but pollutes the failure-mode signal.
 - Likely a recent rename of `mds_dir` → some other arg name (`md_dir`?) without updating call-sites.
 
 ## Recommended decision
