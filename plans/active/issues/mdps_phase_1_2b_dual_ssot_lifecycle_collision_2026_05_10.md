@@ -218,8 +218,18 @@ landing.
 - Phase 1.2B + Phase 2 + Phase 4 ship under whichever plan owns them post-decision. — `[ ]` open
 - Live-pipeline Phase 4 banner removable. — `[ ]` open
 
+## Extension issue (2026-05-10 evening)
+
+> **EXTENSION**: A subsequent agent attempted Option A and discovered a GCS-upload semantics gap — UTL
+> `close_candle_writer` finalizes locally + `shutil.move`s, but `write_candle_parquet` consumers all upload to GCS.
+> See [`mdps_option_a_gcs_upload_semantics_gap_2026_05_10.md`](mdps_option_a_gcs_upload_semantics_gap_2026_05_10.md)
+> for the audit + R1 (MDPS-level wrapper) vs R2 (extend UTL `close_candle_writer` with GCS upload) decision matrix.
+> Phase 1.2B + Phase 2 remain DEFERRED pending operator triage of Option A's R1 vs R2 sub-decision.
+
 ## Cross-references
 
+- [`mdps_option_a_gcs_upload_semantics_gap_2026_05_10.md`](mdps_option_a_gcs_upload_semantics_gap_2026_05_10.md) — the
+  extension issue capturing Option A's internal architectural sub-decision (R1 MDPS-local vs R2 UTL-extension).
 - [`mdps_phase_1_2_phase_2_deferral_2026_05_10.md`](mdps_phase_1_2_phase_2_deferral_2026_05_10.md) — the prior deferral
   this issue continues (Phase 1.2A unified the manifest verb; this issue is the lifecycle-shape follow-up).
 - [`mdps_streaming_and_backpressure_2026_05_07.md`](../mdps_streaming_and_backpressure_2026_05_07.md) — plan-of-record;
