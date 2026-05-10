@@ -112,6 +112,7 @@ Rules (Quick Reference)" / "Service Infrastructure Requirements".
 | 5.61 | ServiceBootstrap presence              | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Service Infrastructure Requirements — ServiceBootstrap (STEP 5.61)"       |
 | 5.62 | Health API + `make_health_router`      | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Service Infrastructure Requirements — Health API (STEP 5.62)"             |
 | 5.64 | bundled-shard cluster validation AST   | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Cluster validation MANDATORY at `record_captured` for bundled shards"     |
+| 5.65 | removed-symbol AST-walk                | [STEP 5.65: Removed-Symbol AST-Walk](#step-565-removed-symbol-ast-walk-citadel--6-extended)                                    | `scripts/quality_gates/check_removed_symbols.py` (driver)        | "Citadel-Grade Planning Standards § 6 Downstream Consumer Updates"         |
 | 5.66 | per-VM shard isolation envvar AST walk | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Per-VM shard isolation for concurrent backfills"                          |
 
 When a STEP appears in CI output (e.g. `STEP 5.62 FAILED: api/main.py missing make_health_router`), open the enforcement
@@ -193,11 +194,11 @@ architecture. See
 
 ### Three Environments, Three Purposes
 
-| Environment            | What it owns                                                              | Used by                                                                       | Rule                                                                                                                  |
-| ---------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `.venv-workspace`      | Union of all active repo deps (count derives from `workspace-manifest.json` `repositories` keys excluding `archived_into`; **27 active as of 2026-05-09** after features-* consolidation); pinned `ruff==0.15.0`, `basedpyright==1.38.2` | IDE cross-repo IntelliSense; `RUFF_CMD` in QG templates                       | **Never** used as `PYTHON_CMD` or `BASEDPYRIGHT_CMD` in QG — it has extra packages that mask missing dep declarations |
-| `.venv` (per-repo)     | Exact deps from `pyproject.toml` + `[dev]`                                | QG `PYTHON_CMD`, `BASEDPYRIGHT_CMD`, pytest, bandit; CI/GHA `agent-audit.yml` | **Always** the source of truth for type-checking and test execution                                                   |
-| GHA runner (container) | Fresh install from `pyproject.toml` on every run                          | `overnight-agent-orchestrator` → `agent-audit.yml`; CI quality gates          | No `.venv-workspace` — QG template falls through to `.venv` (correct)                                                 |
+| Environment            | What it owns                                                                                                                                                                                                                              | Used by                                                                       | Rule                                                                                                                  |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `.venv-workspace`      | Union of all active repo deps (count derives from `workspace-manifest.json` `repositories` keys excluding `archived_into`; **27 active as of 2026-05-09** after features-\* consolidation); pinned `ruff==0.15.0`, `basedpyright==1.38.2` | IDE cross-repo IntelliSense; `RUFF_CMD` in QG templates                       | **Never** used as `PYTHON_CMD` or `BASEDPYRIGHT_CMD` in QG — it has extra packages that mask missing dep declarations |
+| `.venv` (per-repo)     | Exact deps from `pyproject.toml` + `[dev]`                                                                                                                                                                                                | QG `PYTHON_CMD`, `BASEDPYRIGHT_CMD`, pytest, bandit; CI/GHA `agent-audit.yml` | **Always** the source of truth for type-checking and test execution                                                   |
+| GHA runner (container) | Fresh install from `pyproject.toml` on every run                                                                                                                                                                                          | `overnight-agent-orchestrator` → `agent-audit.yml`; CI quality gates          | No `.venv-workspace` — QG template falls through to `.venv` (correct)                                                 |
 
 ### Tool Resolution Rules (Enforced in QG Templates)
 
@@ -256,8 +257,8 @@ Step 5: generate workspace-requirements.txt → commit to PM  ← planned
 
 Step 5 generates `unified-trading-pm/configs/workspace-requirements.txt` (union of all active repos' deps via
 `uv pip compile`; active count derives from `workspace-manifest.json` `repositories` keys excluding `archived_into`).
-Developers then run `sync-workspace-venv.sh` to pull the refreshed union. Conflicts in
-`uv pip compile` signal a version cascade violation and fail the alignment job.
+Developers then run `sync-workspace-venv.sh` to pull the refreshed union. Conflicts in `uv pip compile` signal a version
+cascade violation and fail the alignment job.
 
 ---
 
@@ -415,6 +416,80 @@ classifications.
 - Cursor rules (`strict-quality-gates.mdc`, `quality-gates-audit-factors.mdc`) enforce documentation
 - Setup checklists require creating this file as part of repo scaffolding
 - Quarterly workspace-wide scans update the codex aggregate
+
+---
+
+## STEP 5.65: Removed-Symbol AST-Walk (Citadel § 6 EXTENDED)
+
+Enforces CLAUDE.md
+[**Citadel-Grade Planning Standards § 6 Downstream Consumer Updates (extended 2026-05-08)**](../../cursor-configs/CLAUDE.md):
+when a refactor REMOVES or RENAMES a publicly-imported Python symbol — function, class, constant, module path — every
+workspace consumer must be updated in the same plan. The rule applies to shared libraries (UAC, UTL, UCI, UEI) AND to
+any service / peripheral repo whose public symbol is imported elsewhere.
+
+**Reference incident (2026-05-01 → 2026-05-08, 7-day silent rot)**: strategy-service V1-RETIRE Phase 2 removed
+`get_strategy_factories` from `strategy_service.cli.handlers.batch_utils`. The peripheral consumer at
+`e2e-testing/scripts/defi/colocated_engine.py:306` continued importing it; QG never ran on that script (it lived outside
+any service's `quality-gates.sh`); the operator only discovered the breakage when running the harness manually a week
+later. STEP 5.65 closes that gap.
+
+### How it works
+
+1. **Manifest of removed symbols** — `unified-trading-pm/scripts/quality_gates/removed_symbols_manifest.yaml` is the
+   workspace SSOT. Each entry declares:
+   - `symbol`: fully-qualified dotted path (`module.submodule.name`).
+   - `removed_at`: ISO date the refactor commit landed.
+   - `removed_by_commit`: short SHA of the refactor commit.
+   - `successor`: replacement symbol path, or `"DELETED — no successor"`.
+   - `reason`: 1-line plan reference (e.g. "V1-RETIRE Phase 2", "writegate Phase 2.A").
+   - `status`: `removed` (errors / fail CI) | `pending_removal` (warnings — scheduled for migration but live callsites
+     remain in flight) | `renamed` (alias of `removed`).
+2. **AST walker** —
+   [`unified-trading-pm/scripts/quality_gates/check_removed_symbols.py`](../../scripts/quality_gates/check_removed_symbols.py)
+   parses every `.py` file in scope (excluding `.venv*` / `node_modules` / `build` / `__pycache__` / `dist` / archived
+   trees). It checks three patterns per file:
+   - `from <module> import <name>` where `<module>.<name>` matches a manifest entry.
+   - `import <module>` where `<module>` is a removed module path.
+   - Attribute access `<Receiver>.<method>(...)` where `<method>` is the last component of a manifest entry whose symbol
+     has ≥3 dotted components (`module.Class.method` form), AND the receiver name matches the class name
+     case-insensitively (or as snake_case — e.g. `manifest_writer.add` matches `ManifestWriter.add`). The strict
+     receiver-match rule eliminates false positives like `set.add()` / `args.client` / `list.append()`.
+3. **QG wiring** — `scripts/quality-gates-base/base-service.sh` STEP 5.65 invokes the checker scoped to the calling
+   repo. `removed` findings fail QG (exit 1); `pending_removal` findings surface as warnings (exit 0, informational
+   only). A workspace-wide sweep (no `--scope`) can be run from the workspace root to verify cross-repo cleanliness
+   before landing a refactor.
+
+### Adding a new manifest entry (when YOUR plan removes a public symbol)
+
+In the same logical unit as the refactor commit (per
+[**Commit + Push + Flip Plan Checkboxes**](../../cursor-configs/CLAUDE.md) HARD RULE):
+
+1. Land the refactor + update every downstream consumer YOU can find via `git grep <symbol>` (Citadel § 6 Pre-Audit).
+2. Add an entry to `removed_symbols_manifest.yaml` with the 6 required fields above.
+3. Run `python unified-trading-pm/scripts/quality_gates/check_removed_symbols.py` from workspace root and confirm zero
+   `[ERROR]` findings — any remaining error means a consumer was missed in step 1; fix it before pushing.
+4. Commit the manifest update alongside the refactor.
+
+### Maintenance burden + cadence
+
+- The manifest grows over time but never shrinks except via deliberate cleanup of `pending_removal → removed → archive`
+  transitions. Workspace-wide sweep cadence: every Plans Run To Actual Completion / Post-Plan-Phase Codex Audit pass
+  reviews recent entries for status promotion.
+- Adding the manifest schema to a service's QG via STEP 5.65 takes ~4 seconds per repo of overhead (per the smoke run on
+  `strategy-service`); workspace-wide scan completes in <2 min on a multi-core dev machine via the `ProcessPoolExecutor`
+  parallelism.
+- When `pending_removal` migrates to `removed` (the successor migration plan ships), no manifest schema change is needed
+  — just edit `status:` to `removed`. Reviewers at that PR confirm zero remaining workspace callsites in the QG output.
+
+### Composes with
+
+- [**Peripheral Script Directories Under Primary-Consumer QG**](../../cursor-configs/CLAUDE.md) — STEP 5.65 covers
+  whatever Python files appear in the scoped scan; the peripheral-script rule ensures peripheral dirs (e.g.
+  `e2e-testing/scripts/`) are wired to a primary-consumer service's QG so STEP 5.65 actually runs over them.
+- [**Runbook Execution-Owner SSOT**](../../cursor-configs/CLAUDE.md) — STEP 5.65 catches static-import drift; the
+  execution-owner SSOT catches runtime drift (e.g. external API changes).
+- QG STEP 5.64 (bundled-shard cluster validation AST-walk) is the implementation precedent — STEP 5.65 follows the same
+  `ast.walk()` shape applied to a different symbol-detection problem.
 
 ---
 

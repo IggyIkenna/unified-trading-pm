@@ -1372,6 +1372,51 @@ else
     log_success "STEP 5.64: skipped (SOURCE_DIR not set or not a directory)"
 fi
 
+# STEP 5.65 — Removed-symbol AST-walk (Citadel-Grade Planning § 6 EXTENDED)
+#
+# Enforces CLAUDE.md "Citadel-Grade Planning Standards § 6 Downstream
+# Consumer Updates (extended 2026-05-08 to cover non-library refactors)":
+# every workspace consumer must update its imports/usages when a public
+# symbol is REMOVED or RENAMED by a refactor.
+#
+# The check runs `unified-trading-pm/scripts/quality_gates/check_removed_symbols.py`
+# against the calling repo's source tree. Manifest entries with
+# `status: removed` fail CI; `status: pending_removal` entries surface
+# as warnings (informational, non-blocking) until their successor
+# migration plan ships.
+#
+# Reference incident: 2026-05-01 → 2026-05-08 silent rot of
+# `e2e-testing/scripts/defi/colocated_engine.py` (broken import of
+# strategy-service's removed `get_strategy_factories`). Caught at
+# runtime 7 days later by an operator running the harness manually;
+# this AST-walk would have caught it on the next PR in <1 minute.
+#
+# Adding a new entry to the manifest: see the file header in
+# `unified-trading-pm/scripts/quality_gates/removed_symbols_manifest.yaml`
+# — required keys, status enum, when-to-add discipline.
+_REMOVED_SYMBOLS_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_removed_symbols.py"
+if [ -f "$_REMOVED_SYMBOLS_CHECKER" ]; then
+    # Run scoped to the calling repo so per-repo QG only sees its own
+    # consumers; the workspace-wide sweep is run separately (e.g. via
+    # the CI cron, or `python <checker>` from workspace root).
+    _REPO_REL_TO_WORKSPACE=$(basename "$REPO_ROOT")
+    _WORKSPACE_ROOT="$(dirname "$REPO_ROOT")"
+    if python "$_REMOVED_SYMBOLS_CHECKER" \
+            --workspace-root "$_WORKSPACE_ROOT" \
+            --scope "$_REPO_REL_TO_WORKSPACE" \
+            --workers 1 >/tmp/removed_symbols_qg.log 2>&1; then
+        log_success "STEP 5.65: No references to removed symbols (Citadel § 6 EXTENDED)"
+    else
+        log_fail "STEP 5.65: Repo references symbols listed as 'removed' in unified-trading-pm/scripts/quality_gates/removed_symbols_manifest.yaml. Update consumers per the documented successor:"
+        cat /tmp/removed_symbols_qg.log
+        log_fail "         Manifest: unified-trading-pm/scripts/quality_gates/removed_symbols_manifest.yaml"
+        log_fail "         Recheck: python unified-trading-pm/scripts/quality_gates/check_removed_symbols.py --scope $_REPO_REL_TO_WORKSPACE"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.65: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)

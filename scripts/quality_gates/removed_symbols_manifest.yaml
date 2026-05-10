@@ -1,0 +1,85 @@
+# Removed-symbols manifest — workspace SSOT for AST-walk QG enforcement.
+#
+# Purpose
+# -------
+# When a refactor REMOVES or RENAMES a publicly-imported Python symbol
+# (function, class, constant, module path), every downstream consumer
+# across the workspace must be updated in the same plan.
+#
+# Per CLAUDE.md "Citadel-Grade Planning Standards § 6 Downstream Consumer
+# Updates (extended 2026-05-08 to cover non-library refactors)":
+#
+#   > grep across the workspace for the removed/renamed symbol is
+#   > mandatory; the AST-walk pattern from QG STEP 5.64 (workspace-wide
+#   > callsite enumeration) is the canonical implementation shape.
+#
+# This manifest drives the runtime enforcement (`check_removed_symbols.py`
+# + base-service.sh STEP 5.66): every entry below is grepped against
+# every Python source file in the workspace at QG time. Any consumer
+# that still imports/accesses a removed symbol fails CI fast with a
+# pointer to the documented `successor:`.
+#
+# How to add an entry
+# -------------------
+# When YOUR plan removes or renames a public symbol:
+#   1. Land the refactor + update every downstream consumer YOU can find
+#      via `git grep` (Citadel § 6 Pre-Audit step).
+#   2. Add an entry below with:
+#      - `symbol`: fully-qualified dotted path (`module.submodule.name`)
+#      - `removed_at`: ISO date the refactor commit landed
+#      - `removed_by_commit`: short SHA of the refactor commit
+#      - `successor`: fully-qualified dotted path to the replacement, OR
+#        `"DELETED — no successor"` if the symbol is gone for good
+#      - `reason`: 1-line plan reference (e.g. "V1-RETIRE Phase 2",
+#        "Option A revert", "writegate Phase 2.A")
+#      - `status`: one of `removed` (gone — fail on any reference) /
+#        `pending_removal` (deprecated, still has callsites in flight —
+#        warning only) / `renamed` (replacement exists at successor path)
+#   3. Commit the manifest update in the SAME logical unit as the
+#      refactor commit (per "Commit + Push + Flip" HARD RULE).
+#
+# Schema validation
+# -----------------
+# `check_removed_symbols.py --validate-manifest` parses this file and
+# rejects malformed entries (missing required keys, invalid status enum,
+# malformed dates).
+#
+# Anti-patterns
+# -------------
+# - DON'T add an entry for a symbol that was MOVED but not renamed —
+#   moves don't break consumers IF the old import path still resolves
+#   via re-export. Only entries where the OLD path actively breaks an
+#   import belong here.
+# - DON'T add stdlib or third-party symbols. This file tracks
+#   workspace-internal symbol removals only.
+# - DON'T leave `pending_removal` entries indefinitely. They convert to
+#   `removed` once Phase 1.2A (or equivalent successor plan) lands.
+
+removed_symbols:
+  - symbol: "strategy_service.cli.handlers.batch_utils.get_strategy_factories"
+    removed_at: 2026-05-01
+    removed_by_commit: "<v1-retire-phase-2>"
+    successor: "strategy_service.cli.handlers.batch_utils.V2BatchHarness.from_strategy_type"
+    reason: "V1-RETIRE Phase 2 — strategy-service v1 batch harness retired in favour of V2BatchHarness."
+    status: removed
+
+  - symbol: "unified_api_contracts.canonical.domain.client"
+    removed_at: 2026-05-08
+    removed_by_commit: "<option-a-revert>"
+    successor: "unified_api_contracts.internal.architecture_v2.capital_allocation"
+    reason:
+      "Option A revert 2026-05-08 — canonical.domain.client/* was provisional; durable home is
+      internal.architecture_v2.*."
+    status: removed
+
+  # Pending-removal: deprecated API still has live callsites; the
+  # writegate Phase 1.2A migration sweep will remove them in flight.
+  # Treated as warning-only by the QG until status flips to `removed`.
+  - symbol: "unified_trading_library.manifest.ManifestWriter.add"
+    removed_at: 2026-05-08
+    removed_by_commit: "<writegate-phase-2-pending>"
+    successor: "unified_trading_library.manifest.ManifestWriter.record_captured (or .record_empty / .record_failed)"
+    reason:
+      "writegate Phase 2.A — `.add()` does not enforce the 4-state taxonomy (captured / empty_confirmed /
+      attempted_failed / expected_unattempted). Phase 1.2A migrates remaining callsites."
+    status: pending_removal
