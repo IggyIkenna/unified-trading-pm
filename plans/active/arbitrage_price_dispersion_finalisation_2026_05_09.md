@@ -213,7 +213,8 @@ capital to highest-ranked opportunity | | `equal-weight` | Equal split across to
 
 ### Q11 — [agent-arb-fundrate-c3, 2026-05-09 14:30 UTC] — Tab 2 Commit 2 helper module not shipped; Commit 3 (engine wire-in) precondition unmet
 
-**Status**: 🟡 BLOCKED — waiting for Tab 2 to ship `arbitrage_structural/funding_rate_dispersion.py`
+**Status**: ✅ RESOLVED — Tab 2 shipped Commit 2 at strategy-service@0b4ef0e on 2026-05-09; Commit 3 + A.7 shipped
+in plan order at strategy-service@04c0d52 + strategy-service@de9b4b0 (this same session).
 
 Spawn-prompt precondition for Phase A Commit 3 (engine wire-in): "Confirm
 `arbitrage_structural/funding_rate_dispersion.py` exists" + "test_arbitrage_structural_funding_rate_dispersion.py is
@@ -431,7 +432,7 @@ in plan order).
       base engine has no separate event-emission helper; per-cycle drop/clamp counts also stamped onto each emitted
       `AtomicInstruction`'s `attestations` field.
 
-- [ ] [strategy-service] P1. **A.7 — verify `ArbitragePriceDispersionRankAllocator` handles multi-pair-per-slot**. Audit
+- [x] [strategy-service] P1. **A.7 — verify `ArbitragePriceDispersionRankAllocator` handles multi-pair-per-slot**. Audit
       [`portfolio_allocator/archetypes.py:678,729`](../../../strategy-service/strategy_service/portfolio_allocator/archetypes.py#L678).
       With Layer 1 modes `top-k` / `all-above-threshold`, the engine surfaces N pairs per slot per cycle (not 1). The
       allocator must rank + weight across all (slot × pair) opportunities, not just (slot, 1-best-pair). Branch: -
@@ -442,9 +443,30 @@ in plan order).
       multi-opportunity-per-slot. Do NOT downgrade Layer 1 modes — operator direction is all 3 modes ship configurable
       from day 1.
 
-      Tests: `tests/unit/test_arbitrage_price_dispersion_rank_allocator.py` covering all 4 weight modes
-      (`spread-proportional` / `rank-proportional` / `winner-takes-all` / `equal-weight`) + per-slot + per-pair caps
-      + rebalance-threshold-bps churn suppression.
+      Tests: `tests/unit/portfolio_allocator/test_arbitrage_price_dispersion_rank_allocator.py` covering all 4 weight
+      modes (`spread-proportional` / `rank-proportional` / `winner-takes-all` / `equal-weight`) + per-slot + per-pair
+      caps + rebalance-threshold-bps churn suppression.
+
+      **DONE-2026-05-09 (agent-arb-fundrate-c3) — branch (b) shipped at strategy-service@de9b4b0**
+      ("feat(allocator): ArbitragePriceDispersionRankAllocator multi-opportunity-per-slot wiring (branch b)"). Audit
+      verdict: pre-A.7 the allocator handled exactly 1 opportunity per slot (one `StrategyInputSeries` row per
+      `strategy_instance_id`); branch (b) extends it. Universe representation: each (slot, pair) row carries a
+      composite id `"<slot_id>::<long>__<short>"`. Single-row-per-slot legacy callers (no `::`) still work — the slot
+      id is the full `strategy_instance_id` and the per-slot cap is a no-op. New constructor knobs (operator-direction
+      defaults, all overridable):
+      - `weight_mode` ∈ {`spread-proportional`, `rank-proportional`, `winner-takes-all`, `equal-weight`}; default
+        `spread-proportional` preserves prior behaviour.
+      - `max_capital_pct_per_slot` (operator default 40%) — HARD-bound sum of weights for one slot's pairs; residual to
+        cash, no renormalisation.
+      - `max_capital_pct_per_pair` (operator default 25%) — HARD-bound on any individual pair's weight.
+      - `rebalance_threshold_bps` + `previous_weights` — churn suppression: when max delta vs `previous_weights` stays
+        at or below the threshold (in bps), the allocator returns the previous weights unchanged.
+
+      14 tests cover all 4 modes against a 9-row (3 slot × 3 pair) universe, the single-pair backward-compat path,
+      per-pair cap (winner-takes-all clamp + spread-proportional dominator clamp), per-slot cap (no-bind happy path +
+      slot-dominator binding), churn suppression (within-threshold suppress + above-threshold pass-through +
+      no-baseline disabled), invalid `weight_mode` fail-loud, and `min_apy_bps` threshold. Total allocator suite: 63
+      tests green.
 
 - [x] [strategy-service] P1. **Mode-coverage tests for the engine** —
       `tests/unit/engine/strategies/v2/test_arbitrage_price_dispersion_funding_rate_engine.py` exercises all 3
@@ -721,10 +743,10 @@ so the next agent picks up cleanly without re-reading session notes.
 
 | Phase / item                          | Status as of 2026-05-09 PM   | Successor / blocker                                                                                                                                                       |
 | ------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase A — strategy-service slot       | `helper-shipped`             | Tab 5 in-flight; Commit 1 (dispatcher + slot stub) at strategy-service@24f8494; remaining: helper module selection logic + 6 unit tests + A.6 multi-asset + A.7 allocator |
-| Phase B — tracer script               | `blocked-after-Phase-A.2`    | Tab 5 ongoing per Phase A.2 (helper module). Tracer ships once selection logic exists                                                                                     |
+| Phase A — strategy-service slot       | `done`                       | Commit 1 (dispatcher + slot stub) at strategy-service@24f8494; Commit 2 (helper module + 25 tests) at strategy-service@0b4ef0e; Commit 3 (engine 8-step loop + 13 tests) at strategy-service@04c0d52; A.6 (multi-asset enumeration + 9 funding-rate-disp slots) at strategy-service@1107ab7 + d01661e; A.7 (allocator multi-pair-per-slot wiring + 14 tests) at strategy-service@de9b4b0 |
+| Phase B — tracer script               | `todo` (Phase A unblocked)   | Phase A complete → tracer can ship next. No upstream blocker remains.                                                                                                     |
 | Phase C — pnl-attribution archetype   | `blocked-after-Phase-B`      | Real-infra run consumes tracer output for 2024 W1 window; Plans-Run-To-Actual-Completion HARD RULE forbids smoke-only ship                                                |
-| Phase D — Stream B gate close         | `blocked-after-Phase-A/B/C`  | Codex P0 (L155-157 in parent plan) flipped this session at PM@5fe5eabd + parent-plan annotation commit; full gate close awaits A/B/C completion                           |
+| Phase D — Stream B gate close         | `blocked-after-Phase-B/C`    | Codex P0 (L155-157 in parent plan) flipped 2026-05-09 PM at PM@5fe5eabd; full gate close awaits B/C completion                                                            |
 | Phase E — codex SSOT updates          | `done` (PM@5fe5eabd shipped) | n/a — codex circular ref resolved + funding-rate-dispersion example slot enumerated in both arbitrage-price-dispersion.md + category-instrument-coverage.md § 11          |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
@@ -773,6 +795,41 @@ Issue doc shipped (next commit, case-3 finding):
 
 EOD-audit: every deferral in the scoreboard above has a grep-target — Q1 (this plan body), Phase A/B/C/D (this plan
 body), workspace rename sweep (issue doc cited above). No grep-miss deferrals.
+
+## DONE-2026-05-09 (agent-arb-fundrate-c3)
+
+Session: Phase A Commit 3 (engine 8-step loop wire-in) + Phase A.7 (allocator multi-pair-per-slot wiring, branch b)
+shipped end-to-end. Phase A is now fully complete (all 5 component shippable units across A.0/A.1/A.2/A.3/A.6/A.7
+landed across this + prior sessions); Phase B unblocked next.
+
+Code commits:
+
+- strategy-service@04c0d52 — `feat(strategies): funding-rate-dispersion engine wire-in — 8-step loop with sign-match +
+  min-spread + vol-clamp` (Phase A Commit 3). Replaces the Commit 1 stub at `_on_tick_funding_rate_dispersion` with the
+  full 8-step loop calling the Commit 2 helper. 13 engine tests cover all 3 Layer-1 modes against a 6-venue universe +
+  sign-match drops + min-spread filter + vol-cap clamp on RV breach + zscore breach + cycle-counts attestations +
+  missing-funding-rates short-circuit. Refactored into 5 helper methods to keep the top-level dispatch under McCabe-7.
+- strategy-service@de9b4b0 — `feat(allocator): ArbitragePriceDispersionRankAllocator multi-opportunity-per-slot wiring
+  (branch b)` (Phase A.7). Allocator now ranks at the (slot, pair) granularity via composite ids
+  `"<slot_id>::<long>__<short>"`; new constructor knobs `weight_mode` (4 modes) + `max_capital_pct_per_slot` +
+  `max_capital_pct_per_pair` + `rebalance_threshold_bps` + `previous_weights` for churn suppression. Caps are HARD
+  bounds — residual stays in cash, no renormalisation. 14 allocator tests; full allocator suite at 63 tests green.
+
+PM plan-flip commits (next):
+
+- PM@4184c112 — `docs(plans): arb-price-dispersion Phase A Commit 3 — engine 8-step loop wired`. Flipped Phase A
+  Commit-3 row in the commit table + engine 8-step loop todo + mode-coverage tests todo + VERIFY P0 (also corrected the
+  `ARCHETYPE_TO_ENGINE` typo to `ARCHETYPE_ENGINE_REGISTRY`).
+- PM@<this-commit> — `docs(plans): arb-price-dispersion Phase A.7 + Phase A done; Q11 RESOLVED`. Flipped A.7 todo with
+  branch (b) DONE block; flipped Q11 status from BLOCKED to RESOLVED; updated the prior-session scoreboard's Phase A
+  row from `helper-shipped` to `done` + Phase B from `blocked-after-Phase-A.2` to `todo` (unblocked); added this DONE
+  block.
+
+QG note: 1401 passed, 1 failed on `tests/unit/engine/strategies/v2/test_target_universe.py:242` slot-count drift blamed
+to 51a9f5af (semver-rollout[bot] 2026-05-05) — not my code; per workspace "QG failure attribution" rule.
+
+EOD-audit: every deferral in the updated scoreboard has a grep-target — Phase B/C/D (this plan body), workspace rename
+sweep (issue doc cited above), Q11 ✅ RESOLVED. No grep-miss deferrals.
 
 ## Cross-references
 
