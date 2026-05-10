@@ -29,16 +29,15 @@ related_plans:
 
 # Risk monitor + risk simulations + risk alerts + pre-flight risk checks — end-to-end wire-up question
 
-> **🟡 SSOT-RECONCILIATION FINDING (2026-05-10).** Spawned plan
+> **🟢 SSOT-RECONCILIATION CLOSED — Framing 1 picked by operator 2026-05-10.** Spawned plan
 > [`plans/active/risk_simulations_limits_alerting_2026_05_10.md`](../active/risk_simulations_limits_alerting_2026_05_10.md)
-> proposes a new `RiskRuleConsequence` (BLOCK / SCALE_DOWN / MONITOR / TEST_ONLY) enum that may be SSOT contamination
-> from this question doc's first-pass reconstruction (which invented BLOCK / MONITOR / TEST taxonomy not present in
-> any workspace SSOT). Workspace already has 5 canonical risk SSOTs (4-layer risk-gates / 3 circuit-breaker actions /
-> 5 kill-switch trigger types / ErrorAction / 39-code AlertCode); spawned plan body cites none. See
-> [`plans/active/issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md`](../active/issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md)
-> for finding + 2-framing operator-decision matrix. Block D body of THIS question doc inherits the same first-pass
-> framing — readers should treat the {BLOCK / MONITOR / TEST} mentions as DRAFT-INFERENCE, not canonical, until the
-> issue doc closes.
+> § "§ 7 SSOT reconciliation seam (Framing 1)" canonicalises `RiskRuleConsequence` (BLOCK / SCALE_DOWN / MONITOR /
+> TEST_ONLY) as a NEW abstraction at Layer 2 of the existing 4-layer risk-gates model — composing with all 5 canonical
+> workspace SSOTs (4-layer risk-gates / 3 circuit-breaker actions / 5 kill-switch trigger types / ErrorAction /
+> AlertCode 39→43 closed set). Block D body of THIS question doc has DRAFT-INFERENCE framing superseded by the spawned
+> plan's seam diagram — read the spawned plan section as canonical, not Block D here. Issue
+> [`risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md`](../active/issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md)
+> closed.
 
 > **Reconstruction note (2026-05-10).** The original draft of this doc (created 2026-05-08) was lost — never committed
 > + erased from disk during parallel-agent activity. Re-spawned per

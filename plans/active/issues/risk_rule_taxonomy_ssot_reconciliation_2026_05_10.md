@@ -116,12 +116,34 @@ references the same.
 
 ## Disposition tracking
 
-- [ ] Spawned plan author reads this issue doc + adds § 7 SSOT reconciliation section to plan body BEFORE Phase 1
-      Day 2-3 UAC contract design.
-- [ ] Operator picks Framing 1 (layered extension) or Framing 2 (contamination retirement).
-- [ ] Plan body cites the 5 canonical SSOTs explicitly with the abstraction-layer seam declared.
-- [ ] Question doc archaeology banner added (this issue doc's existence flagged in question doc top + iteration log).
-- [ ] Issue doc closes when reconciliation lands in spawned plan body.
+- [x] Spawned plan author reads this issue doc + adds § 7 SSOT reconciliation section to plan body BEFORE Phase 1
+      Day 2-3 UAC contract design. **Done — section added to plan body 2026-05-10.**
+- [x] **Operator picks Framing 1 (legitimate layered extension; declare seam diagram) — 2026-05-10.**
+- [x] Plan body cites the 5 canonical SSOTs explicitly with the abstraction-layer seam declared. **Done — § "§ 7 SSOT
+      reconciliation seam (Framing 1)" section added with full cross-product table + orthogonality declarations vs
+      ErrorAction + AlertCode + RiskRuleScope×KillSwitchScope.**
+- [x] Question doc archaeology banner added (this issue doc's existence flagged in question doc top + iteration log).
+      **Done in earlier commit PM@a9bda198.**
+- [x] Phase 1.A/1.C/1.E discipline-tasks updated in spawned plan to enforce seam-diagram citation in docstrings + 4
+      new AlertCodes added to UAC closed set (39 → 43).
+- [x] Issue doc closes — disposition record below.
+
+**Status: closed** (2026-05-10, executor: main-orchestrator-agent).
+
+**Operator decision: Framing 1.** `RiskRuleConsequence` is a NEW abstraction at a NEW layer (per-rule per-instruction
+pre-flight decision evaluated at Layer 2 of the existing 4-layer risk-gates model). Composes with all 5 canonical
+workspace risk SSOTs per the seam diagram in the spawned plan's `## § 7 SSOT reconciliation seam (Framing 1)` section.
+Phase 1 unblocked.
+
+**Phase 1 readiness checklist (next agent picking up Phase 1.A):**
+
+1. Read the seam diagram in `risk_simulations_limits_alerting_2026_05_10.md` § "§ 7 SSOT reconciliation seam".
+2. Phase 1.A docstrings cite the diagram + 5 canonical SSOTs by codex path.
+3. Phase 1.E adds 4 new AlertCodes to UAC@d00326d closed set (39 → 43): `RISK_RULE_BLOCKED`, `RISK_RULE_SCALED_DOWN`,
+   `RISK_RULE_MONITOR_FIRED`, `RISK_RULE_TEST_ONLY_ROUTED`. Coordinate with `alerting_service_live_rules_2026_05_07`
+   author so closed-set extension lands in single PR.
+4. Phase 1.D test suite includes 4 seam-conformance tests (one per `RiskRuleConsequence` value).
+5. Phase 7 codex doc EXTENSION of `kill-switch-circuit-breaker.md` includes the seam diagram verbatim.
 
 ## Composes with
 

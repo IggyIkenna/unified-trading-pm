@@ -22,15 +22,14 @@ related_codex:
 
 # Risk rule taxonomy + per-archetype/venue/account/client limits + pre-flight checks
 
-> **🟡 IN-FLIGHT REFACTOR — § 7 SSOT RECONCILIATION REQUIRED BEFORE PHASE 1 (2026-05-10).** Phase 1 ships UAC contracts
-> introducing a new `RiskRuleConsequence` (BLOCK / SCALE_DOWN / MONITOR / TEST_ONLY) enum without reconciling against
-> 5 existing canonical workspace risk SSOTs (4-layer risk-gates / 3 circuit-breaker actions / 5 kill-switch trigger
-> types / ErrorAction / 39-code AlertCode). See
-> [`plans/active/issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md`](issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md)
-> — operator must pick Framing 1 (legitimate layered extension; declare seam diagram) or Framing 2 (retire
-> `RiskRuleConsequence` as contamination from question-doc first-pass reconstruction). Pre-Phase-1 reconciliation is
-> doc-edit cost; post-Phase-1 reconciliation is multi-repo refactor cost. Do not start Phase 1 UAC contract design
-> until this finding closes.
+> **🟢 § 7 SSOT RECONCILIATION CLOSED — Framing 1 (legitimate layered extension) picked by operator 2026-05-10.**
+> `RiskRuleConsequence` is a new pre-flight rule-decision abstraction at Layer 2 of the existing 4-layer risk-gates
+> model — distinct from + composing with the 5 canonical workspace risk SSOTs. Seam diagram codified in
+> § "§ 7 SSOT reconciliation seam (Framing 1)" below. Phase 1 unblocked; Phase 1.A MUST cite the seam in every
+> Pydantic docstring + Phase 7 codex doc must include the seam diagram verbatim. Reviewers reject Phase 1 PR if seam
+> citations missing. Issue
+> [`risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md`](issues/risk_rule_taxonomy_ssot_reconciliation_2026_05_10.md)
+> closed.
 
 ## Why this plan exists
 
@@ -39,8 +38,53 @@ SSOT, scoped per archetype × per venue × per account × per asset_group × per
 (BLOCK / SCALE_DOWN / MONITOR / TEST_ONLY). Today the rules live partially in risk-and-exposure-service code, partially
 in alerting-service rules.py, partially in operator memory. This plan ships the unified UAC taxonomy, the per-axis limit
 declarations for the 2 cutover archetypes, the pre-flight check API every order goes through before submission, and the
-alerting wire on every rule fire. Multi-strategy-family limits + per-share-class limits + multi-quarter risk-model
-calibration deferred post-cutover.
+alerting wire on every rule fire. **Multi-strategy-family limit aggregation pulled into May-23 scope per operator
+direction 2026-05-10** (Phase 2 extends with `StrategyFamilyId` registry + family-aggregate rules). Per-share-class
+limits + multi-quarter risk-model calibration remain post-cutover.
+
+## § 7 SSOT reconciliation seam (Framing 1 — picked 2026-05-10)
+
+`RiskRuleConsequence` is a NEW abstraction at a NEW layer — **per-rule per-instruction pre-flight decision** evaluated
+at Layer 2 of the 4-layer risk-gates model. It does NOT replace any existing canonical SSOT; it COMPOSES with all 5.
+This section is the canonical seam diagram every Phase 1+ UAC contract docstring + Phase 7 codex doc must cite.
+
+### Cross-product table — `RiskRuleConsequence` × 5 canonical SSOTs
+
+| Consequence    | Risk-gates Layer (per [`risk-gates.md`](../../codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md)) | Event(s) emitted (per the 8-event lifecycle SSOT) | Composes with kill-switch trigger (5-set per [`kill-switch-circuit-breaker.md`](../../codex/04-architecture/kill-switch-circuit-breaker.md)) | Composes with circuit-breaker action (3-set per [`alerting_service_live_rules`](alerting_service_live_rules_2026_05_07.md)) | Composes with strategy kill-switch behaviour (4-set) | AlertCode mapping (UAC@d00326d) |
+| -------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------- |
+| `BLOCK`        | Layer 2 (risk-and-exposure-service)                                                                         | `INSTRUCTION_REJECTED_RISK` + `RiskRuleFiredEvent` (sev: HIGH or CRITICAL) | If rule has `triggers_kill_switch: true` AND fires per-rule threshold count → engages `DAILY_LOSS_BREACH` / `MAX_DRAWDOWN_BREACH` / `DATA_STALE` per `RiskRuleTrigger` type | Aggregated BLOCK rate ≥ 60% across N instructions → execution-service circuit-breaker may transition CLOSED→DEGRADED→OPEN per per-venue failure-rate threshold; on transition emits `stop_new_signals` (DEGRADED) / `force_exit_only` (OPEN) / `halt_strategy` (cascade per autonomous-recovery-matrix) | If kill-switch engaged: `STOP_NEW_ONLY` (default) / `FAST_UNWIND` (if MAX_DRAWDOWN_BREACH) / `SLOW_UNWIND` (operator override) / `DELTA_HEDGE` (if cross-venue still open) | Reuse existing `PREFLIGHT_FAILED` for generic case; new `RISK_RULE_BLOCKED` (proposed addition to closed set in Phase 1.E) if granular per-rule alerts needed |
+| `SCALE_DOWN`   | Layer 2 (rule decision) → Layer 3 (execution-service applies size adjustment)                              | `INSTRUCTION_ACCEPTED_PREFLIGHT` (with `size_adjusted: true` annotation) → `RESIZED_EXECUTION` at Layer 3 + `RiskRuleFiredEvent` (sev: WARN) | Does NOT trigger kill-switch (size-adjusted instruction proceeds; no breach state)                                                          | Does NOT trigger circuit-breaker (instruction is approved, just smaller)                                                    | Strategy continues normally with reduced size        | New `RISK_RULE_SCALED_DOWN` (Phase 1.E proposed addition to UAC@d00326d closed set) |
+| `MONITOR`      | Layer 2 (passthrough; advisory)                                                                            | `INSTRUCTION_ACCEPTED_PREFLIGHT` (no modification) + `RiskRuleFiredEvent` (sev: INFO or WARN) | Does NOT trigger kill-switch                                                                                                                | Does NOT trigger circuit-breaker                                                                                            | Strategy continues normally                          | New `RISK_RULE_MONITOR_FIRED` (Phase 1.E proposed addition) |
+| `TEST_ONLY`    | Layer 2 (route-divert; tags instruction with `mode=TEST`) → Layer 3 routes to matching engine              | `INSTRUCTION_ACCEPTED_PREFLIGHT` (with `mode=TEST` annotation) → `ORDER_SUBMITTED` to matching engine instead of live venue + `RiskRuleFiredEvent` (sev: INFO) | Does NOT trigger kill-switch                                                                                                                | Does NOT trigger circuit-breaker (no live venue contact)                                                                    | Strategy continues; fills are simulated, not real    | New `RISK_RULE_TEST_ONLY_ROUTED` (Phase 1.E proposed addition) |
+
+### Orthogonality declarations
+
+- **vs ErrorAction taxonomy** (`RETRY` / `RECONNECT` / `SKIP` / `FAIL` per
+  [`autonomous-recovery-matrix.md`](../../codex/04-architecture/autonomous-recovery-matrix.md)): `RiskRuleConsequence`
+  is a **pre-flight rule decision at Layer 2** (before instruction reaches venue); ErrorAction is a **post-venue-error
+  classification at Layer 4** (after venue rejects an attempt). They don't overlap; both can apply to the same
+  instruction lifecycle:
+  - Layer 2 may BLOCK → instruction never reaches venue → no ErrorAction ever fires.
+  - Layer 2 may approve (any non-BLOCK) → Layer 4 venue may reject → ErrorAction classifies the venue rejection (and
+    may transition the venue circuit-breaker per the failure-rate threshold).
+- **vs AlertCode + AlertSeverity + AlertChannel SSOT** (UAC@d00326d, 39 closed codes per
+  [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md)): every
+  `RiskRuleFiredEvent` MUST cite an `AlertCode` from the closed set + an `AlertSeverity` + the `AlertRule` declares
+  `AlertChannel` routing + `triggers_kill_switch: bool`. **Phase 1.E adds 4 new AlertCodes** (`RISK_RULE_BLOCKED`,
+  `RISK_RULE_SCALED_DOWN`, `RISK_RULE_MONITOR_FIRED`, `RISK_RULE_TEST_ONLY_ROUTED`) to the closed set, growing it
+  from 39 → 43. Reviewers MUST verify these additions extend the closed set + don't shadow existing codes (e.g.
+  `PREFLIGHT_FAILED` continues to fire for generic pre-flight check failures NOT routed through the rule engine).
+- **vs `RiskRuleScope` × `KillSwitchScope`**: `RiskRuleScope` (per-archetype / per-venue / per-account / per-client /
+  per-asset_group / global) is the rule-applicability axis; `KillSwitchScope` (entity_type / strategy_type / venue /
+  instrument_id) is the kill-switch-blast-radius axis. A rule fired at scope=per-venue with `triggers_kill_switch:
+  true` engages a kill-switch with `KillSwitchScope=venue=<that_venue>`. Phase 1.D `RiskRule` Pydantic dataclass MUST
+  declare the mapping function `RiskRule.kill_switch_scope() -> KillSwitchScope`.
+
+### Phase 1.A discipline
+
+Every Phase 1.A Pydantic class docstring MUST include a "§ 7 SSOT reconciliation" subsection that links to this seam
+diagram + names the canonical SSOTs the type composes with. Phase 7 codex doc `kill-switch-circuit-breaker.md`
+EXTENSION includes this seam diagram verbatim.
 
 ## Scope + non-goals
 
@@ -62,7 +106,7 @@ calibration deferred post-cutover.
 
 ### Non-goals (post-cutover)
 
-- Multi-strategy-family limit aggregation across 50+ archetypes — post-cutover; cutover scopes 2 archetypes.
+<!-- Multi-strategy-family limit aggregation pulled into May-23 scope per operator direction 2026-05-10. See Phase 2.G-I + § In-scope item updates. -->
 - Per-share-class limit decomposition (multi-fund accounting) — post-cutover.
 - Multi-quarter risk-model calibration (Bayesian / GARCH / VaR sims) — post-cutover; cutover uses static thresholds.
 - Per-counterparty credit risk modeling — post-cutover.
@@ -98,12 +142,13 @@ calibration deferred post-cutover.
 
 ## Phase 1 — UAC risk rule taxonomy (Days 2-3, ~1.5 AI-days)
 
-- [ ] [AGENT] P0. **1.A `RiskRuleId` + `RiskRuleScope` + `RiskRuleConsequence` enums.** Closed sets.
+- [ ] [AGENT] P0. **1.A `RiskRuleId` + `RiskRuleScope` + `RiskRuleConsequence` enums.** Closed sets. **EVERY enum docstring MUST include a "§ 7 SSOT reconciliation" subsection citing the seam diagram in this plan body + the 5 canonical SSOTs by codex path.** Reviewers reject 1.A PR without seam citation.
 - [ ] [AGENT] P0. **1.B `RiskRuleTrigger` typed conditions.** Closed-union: `MaxPositionSize`, `MaxDrawdown`, `MaxLeverage`, `MaxConcentration`, `MaxCorrelation`, `SlippageBudgetExceeded`, `FundingCostCeiling`, `GasBudgetExceeded`, `CapitalAtRiskCeiling`, `MaxOI`, `MaxGrossExposure`, `MaxDailyLoss`, plus extension closed-enum for unique-archetype rules.
-- [ ] [AGENT] P0. **1.C `RiskRule` Pydantic dataclass.** `(rule_id, scope, applies_to, trigger, consequence, alerting_severity)`.
-- [ ] [AGENT] P0. **1.D Tests.** ≥30 unit tests.
+- [ ] [AGENT] P0. **1.C `RiskRule` Pydantic dataclass.** `(rule_id, scope, applies_to, trigger, consequence, alerting_severity)` + method `kill_switch_scope() -> KillSwitchScope` per the seam diagram orthogonality declaration. Docstring cites the seam diagram.
+- [ ] [AGENT] P0. **1.D Tests.** ≥30 unit tests, including 4 seam-diagram-conformance tests (one per `RiskRuleConsequence` value verifying the event(s) emitted match the cross-product table).
+- [ ] [AGENT] P0. **1.E AlertCode closed-set extension.** Add `RISK_RULE_BLOCKED`, `RISK_RULE_SCALED_DOWN`, `RISK_RULE_MONITOR_FIRED`, `RISK_RULE_TEST_ONLY_ROUTED` to UAC@d00326d `AlertCode` enum (39 → 43 closed-set). Coordinate ownership with [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md) (its closed-set is the seed; this plan extends). Tests assert no shadowing of existing codes.
 
-**Full-execution criterion**: UAC PR pushed; QG green.
+**Full-execution criterion**: UAC PR pushed; QG green; AlertCode closed-set grows from 39 → 43 with no shadowing; every Pydantic docstring cites the seam diagram + 5 canonical SSOTs.
 
 ## Phase 2 — Per-axis limit registry (Days 3-5, ~2 AI-days, 6 parallel sub-agents)
 
@@ -113,8 +158,11 @@ calibration deferred post-cutover.
 - [ ] [AGENT] P0. **2.D Per-client rules.** `registry/risk_rules/client.py` — cutover demo client.
 - [ ] [AGENT] P0. **2.E Per-asset_group rules.** `registry/risk_rules/asset_group.py` — DeFi + CeFi cutover-relevant.
 - [ ] [AGENT] P0. **2.F Global rules.** `registry/risk_rules/global.py` — workspace-wide kill conditions.
+- [ ] [AGENT] P0. **2.G `StrategyFamilyId` closed enum + family registry.** `unified_api_contracts/canonical/crosscutting/strategy_family.py`: `StrategyFamilyId` (closed enum: `FUNDING_ARB_FAMILY` / `BASIS_CARRY_FAMILY` / `LST_LEVERAGE_FAMILY` / `OPTIONS_VOL_FAMILY` / `SPORTS_MM_FAMILY` / `PREDICTION_MM_FAMILY` / `STAT_ARB_FAMILY` / extension-closed-enum for cutover-relevant additions). Per-family `members: frozenset[ArchetypeId]` (cutover archetypes both fall into specific families: `carry_staked_basis` → `LST_LEVERAGE_FAMILY`; `ARBITRAGE_PRICE_DISPERSION` → `FUNDING_ARB_FAMILY`).
+- [ ] [AGENT] P0. **2.H Family-aggregate rules.** `registry/risk_rules/strategy_family.py` — per-family rules: `FAMILY_GROSS_EXPOSURE_CAP`, `FAMILY_NET_EXPOSURE_CAP`, `FAMILY_DRAWDOWN_CAP`, `FAMILY_CAPITAL_AT_RISK_CEILING`, `FAMILY_CONCENTRATION_PER_VENUE`, `FAMILY_CORRELATION_WITH_OTHER_FAMILY` (cross-family correlation surveillance: e.g. all LST-family + funding-arb-family share oracle-risk exposure on Pyth Solana). Each family declares ≥6 rules.
+- [ ] [AGENT] P0. **2.I Family-aggregate evaluator.** UTL `risk/family_aggregator.py`: rolls up per-archetype state into per-family state (sum-of-positions per family + max-drawdown across family + cross-family correlation matrix from rolling returns). Feeds rule_evaluator at family scope. Recomputes per fill event + per-minute cron.
 
-**Full-execution criterion**: registry has ≥30 total rules; per-archetype helper returns full rule set; tests pass.
+**Full-execution criterion**: registry has ≥30 archetype-scope + ≥12 family-scope rules; family-aggregator computes per-family state on stub events with correctness invariant `sum(archetype_state) == family_state`; per-family helper returns full rule set; tests pass.
 
 ## Phase 3 — UTL pre-flight + rule evaluator (Days 5-7, ~2 AI-days)
 
@@ -183,7 +231,7 @@ calibration deferred post-cutover.
 
 | Item                                                | Status              | Successor / blocker                                                       |
 | --------------------------------------------------- | ------------------- | ------------------------------------------------------------------------- |
-| Multi-strategy-family limit aggregation             | DEFERRED-PER-USER   | Post-cutover                                                              |
+| ~~Multi-strategy-family limit aggregation~~         | **PULLED FORWARD 2026-05-10** | Now in scope per operator direction; see Phase 2.G-I (UAC `StrategyFamilyId` + family registry + UTL aggregator) |
 | Per-share-class limit decomposition                 | DEFERRED-PER-USER   | Post-cutover                                                              |
 | Multi-quarter risk-model calibration (VaR / GARCH)  | DEFERRED-PER-USER   | Post-cutover                                                              |
 | Per-counterparty credit risk modeling               | DEFERRED-PER-USER   | Post-cutover                                                              |
