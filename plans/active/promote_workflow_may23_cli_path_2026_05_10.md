@@ -1,6 +1,13 @@
 ---
 name: promote-workflow-may23-dual-track
-overview: Dual-track promote workflow for the May-23 live-DeFi cutover. PRIMARY = operator-CLI path (run-paper.sh + run-live.sh + colocated_engine.py) hardened for safety-net certainty. SECONDARY = minimal-but-real UI promote pipeline (Promote button → backend → minimal CandidateManifest → DART manual-trade gate UI) shipping in parallel so operator can drive cutover via UI with CLI as fallback. Both archetypes (carry_staked_basis lead + ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion hedge) running ≥7 continuous days on real custody + real venues + real wallet. Heavy state-machine consolidation + full pinned-shas CandidateManifest + cross-service auto-registration deferred to post-cutover plan.
+overview:
+  Dual-track promote workflow for the May-23 live-DeFi cutover. PRIMARY = operator-CLI path (run-paper.sh + run-live.sh
+  + colocated_engine.py) hardened for safety-net certainty. SECONDARY = minimal-but-real UI promote pipeline (Promote
+  button → backend → minimal CandidateManifest → DART manual-trade gate UI) shipping in parallel so operator can drive
+  cutover via UI with CLI as fallback. Both archetypes (carry_staked_basis lead +
+  ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion hedge) running ≥7 continuous days on real custody + real venues +
+  real wallet. Heavy state-machine consolidation + full pinned-shas CandidateManifest + cross-service auto-registration
+  deferred to post-cutover plan.
 type: plan
 status: active
 created: 2026-05-10
@@ -27,7 +34,8 @@ related_codex:
 
 # Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)
 
-> **🟡 IN-FLIGHT REFACTOR — `vm_zombie_watchdog.py` shape evolving + launcher-registry SSOT dependency** (added 2026-05-10 cross-plan audit fix)
+> **🟡 IN-FLIGHT REFACTOR — `vm_zombie_watchdog.py` shape evolving + launcher-registry SSOT dependency** (added
+> 2026-05-10 cross-plan audit fix)
 >
 > **VmPrefixSpec dict-shape migration**: Phase 1 below adds 2 prefixes (`strategy-paper-` + `strategy-live-`) to
 > `deployment-service/scripts/vm/vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET` dict. The dict's shape is being migrated
@@ -55,7 +63,7 @@ related_codex:
 > keys present / alerting wired / kill-switch armed / risk limits set / recon green / paper-evidence ≥3d) so either
 > selection is safe. **G23 (DART manual-trade gate)** scope split with
 > [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) #4: cross_cutting
-> owns *design + DART surface*; this plan's Phase U6 (pvl-p23c) owns *testnet wiring + go-live gate enforcement*. After
+> owns _design + DART surface_; this plan's Phase U6 (pvl-p23c) owns _testnet wiring + go-live gate enforcement_. After
 > cutover, UI evolution continues via
 > [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 > Phase 9 (full pre-flight pipeline) which EXTENDS this plan's Phase U3 to the canonical UI path; CLI track persists as
@@ -63,37 +71,56 @@ related_codex:
 
 ## Why this plan exists
 
-The promote workflow audit (`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`, completed 2026-05-10) found that the **UI-driven promote pipeline is 100% mock** (9 lifecycle sub-pages exist, `onPromote` callback unimplemented, no backend endpoint, no paper/live VM launcher, no candidate manifest, 4 competing lifecycle SSOTs, no ranking surface). **But the operator-CLI path is genuinely capable**: [`e2e-testing/scripts/defi/run-paper.sh`](../../../e2e-testing/scripts/defi/run-paper.sh) + [`run-live.sh`](../../../e2e-testing/scripts/defi/run-live.sh) + [`colocated_engine.py`](../../../e2e-testing/scripts/defi/colocated_engine.py) (1343 lines) integrate strategy + execution + position + P&L + risk in shared memory; auto-detect DeFi/CeFi/TradFi/Sports; support Tenderly fork (paper) + Copper MPC (live); run `--continuous`.
+The promote workflow audit (`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`, completed
+2026-05-10) found that the **UI-driven promote pipeline is 100% mock** (9 lifecycle sub-pages exist, `onPromote`
+callback unimplemented, no backend endpoint, no paper/live VM launcher, no candidate manifest, 4 competing lifecycle
+SSOTs, no ranking surface). **But the operator-CLI path is genuinely capable**:
+[`e2e-testing/scripts/defi/run-paper.sh`](../../../e2e-testing/scripts/defi/run-paper.sh) +
+[`run-live.sh`](../../../e2e-testing/scripts/defi/run-live.sh) +
+[`colocated_engine.py`](../../../e2e-testing/scripts/defi/colocated_engine.py) (1343 lines) integrate strategy +
+execution + position + P&L + risk in shared memory; auto-detect DeFi/CeFi/TradFi/Sports; support Tenderly fork (paper) +
+Copper MPC (live); run `--continuous`.
 
-**Strategic call (revised 2026-05-10 per operator direction)**: dual-track. **CLI = primary** (safety net — guaranteed-shippable May-23 path). **Minimal-but-real UI = secondary** (operator-preferred surface — ships in parallel; if UI promote button drives cutover successfully, that's the operator path; CLI is the belt-and-braces fallback). The UI track ships **only the minimum viable** (Promote button → backend → minimal CandidateManifest → DART manual-trade gate) — heavy state-machine consolidation + full pinned-shas CandidateManifest + cross-service auto-registration + ranking surface + drift detection stay in [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](promote_workflow_post_cutover_ui_pipeline_2026_05_10.md).
+**Strategic call (revised 2026-05-10 per operator direction)**: dual-track. **CLI = primary** (safety net —
+guaranteed-shippable May-23 path). **Minimal-but-real UI = secondary** (operator-preferred surface — ships in parallel;
+if UI promote button drives cutover successfully, that's the operator path; CLI is the belt-and-braces fallback). The UI
+track ships **only the minimum viable** (Promote button → backend → minimal CandidateManifest → DART manual-trade gate)
+— heavy state-machine consolidation + full pinned-shas CandidateManifest + cross-service auto-registration + ranking
+surface + drift detection stay in
+[`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](promote_workflow_post_cutover_ui_pipeline_2026_05_10.md).
 
-**No shortcuts** means both tracks must enforce every gate the audit identified (custody connected / venue keys present / alerting wired / kill-switch armed / risk limits set / recon green / paper-evidence ≥3d) — CLI track via pre-flight script, UI track via backend pre-flight pipeline. Cutover runs without operator improvising mid-run.
+**No shortcuts** means both tracks must enforce every gate the audit identified (custody connected / venue keys present
+/ alerting wired / kill-switch armed / risk limits set / recon green / paper-evidence ≥3d) — CLI track via pre-flight
+script, UI track via backend pre-flight pipeline. Cutover runs without operator improvising mid-run.
 
-Per CLAUDE.md HARD RULE *"Plans Run To Actual Completion, Not Smoke-Test Green"*: every phase's done-definition includes a **Full-execution criterion** with the actual command + machine + duration + verification probe + observed output. Phases marked PARALLEL run concurrently; phases marked SEQUENTIAL gate on the prior phase's QG.
+Per CLAUDE.md HARD RULE _"Plans Run To Actual Completion, Not Smoke-Test Green"_: every phase's done-definition includes
+a **Full-execution criterion** with the actual command + machine + duration + verification probe + observed output.
+Phases marked PARALLEL run concurrently; phases marked SEQUENTIAL gate on the prior phase's QG.
 
 ## Pre-audit manifest
 
-Per Citadel-Grade § 1, the audit (Question doc `## Audit findings` section) is the pre-audit. Concrete files this plan touches:
+Per Citadel-Grade § 1, the audit (Question doc `## Audit findings` section) is the pre-audit. Concrete files this plan
+touches:
 
-| File | Repo | Action |
-|------|------|--------|
-| `deployment-service/scripts/vm/launch-strategy-paper-vm.sh` | deployment-service | NEW (Phase 1) |
-| `deployment-service/scripts/vm/launch-strategy-live-vm.sh` | deployment-service | NEW (Phase 1) |
-| `deployment-service/scripts/vm/vm_zombie_watchdog.py` | deployment-service | UPDATE — register `strategy-paper-` + `strategy-live-` prefixes in `VM_PREFIX_TO_BUCKET` (Phase 1) |
-| `e2e-testing/scripts/defi/preflight-cutover.sh` | e2e-testing | NEW (Phase 2) |
-| `e2e-testing/scripts/defi/run-paper.sh` | e2e-testing | UPDATE — call preflight-cutover.sh as required gate (Phase 2) |
-| `e2e-testing/scripts/defi/run-live.sh` | e2e-testing | UPDATE — call preflight-cutover.sh as required gate (Phase 2) |
-| `strategy-service/scripts/run_2yr_config_grid_backtest.py` | strategy-service | UPDATE — write to canonical PATH_REGISTRY path + emit manifest row (Phase 3) |
-| `unified-trading-library/unified_trading_library/config_interface/paths/registry.py` | UTL | VERIFY — `backtest_results/strategy_id={strategy_id}/run_id={run_id}/` is canonical; reader shape mismatch blocked at lift (Phase 3) |
-| `unified-trading-library/unified_trading_library/domain/execution_client.py` | UTL | UPDATE — fix path mismatch with PATH_REGISTRY (Phase 3) |
-| `execution-service/execution_service/custody/copper.py` | execution-service | OPERATIONAL — first live-signing dry-run on testnet (Phase 4.A) |
-| `execution-service/execution_service/venues/initializer.py` + 5 venue adapters | execution-service | UPDATE — testnet-mode constructor for Bybit/Binance/OKX/Hyperliquid/Aster (Phase 4.B) |
-| `execution-service/execution_service/defi_execution/connectors/solana_*.py` | execution-service | NEW — Solana paper analogue for LST yield archetypes (Phase 4.C) |
-| `batch-live-reconciliation-service/` | batch-live-reconciliation-service | NEW — minimum-viable per-archetype P&L diff + per-trade fill comparison + cron VM (Phase 5.A) |
-| `alerting-service/alerting_service/notifiers/router.py` + Secret Manager paths | alerting-service | UPDATE — Phase 4 paging targets wired (Phase 5.B) |
-| 13 codex docs (Phase 7) | unified-trading-pm | NEW + UPDATE per Phase 7 enumeration |
-| `unified-trading-pm/cursor-configs/CLAUDE.md` | unified-trading-pm | UPDATE — add "Promote Workflow Path" key rule (Phase 7) |
-| `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md` | unified-trading-pm | UPDATE — `Last verified` columns + new pvl-p17e/p23d/p23e sub-todos + cross-reference (Phase 9) |
+| File                                                                                 | Repo                              | Action                                                                                                                               |
+| ------------------------------------------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `deployment-service/scripts/vm/launch-strategy-paper-vm.sh`                          | deployment-service                | NEW (Phase 1)                                                                                                                        |
+| `deployment-service/scripts/vm/launch-strategy-live-vm.sh`                           | deployment-service                | NEW (Phase 1)                                                                                                                        |
+| `deployment-service/scripts/vm/vm_zombie_watchdog.py`                                | deployment-service                | UPDATE — register `strategy-paper-` + `strategy-live-` prefixes in `VM_PREFIX_TO_BUCKET` (Phase 1)                                   |
+| `e2e-testing/scripts/defi/preflight-cutover.sh`                                      | e2e-testing                       | NEW (Phase 2)                                                                                                                        |
+| `e2e-testing/scripts/defi/run-paper.sh`                                              | e2e-testing                       | UPDATE — call preflight-cutover.sh as required gate (Phase 2)                                                                        |
+| `e2e-testing/scripts/defi/run-live.sh`                                               | e2e-testing                       | UPDATE — call preflight-cutover.sh as required gate (Phase 2)                                                                        |
+| `strategy-service/scripts/run_2yr_config_grid_backtest.py`                           | strategy-service                  | UPDATE — write to canonical PATH_REGISTRY path + emit manifest row (Phase 3)                                                         |
+| `unified-trading-library/unified_trading_library/config_interface/paths/registry.py` | UTL                               | VERIFY — `backtest_results/strategy_id={strategy_id}/run_id={run_id}/` is canonical; reader shape mismatch blocked at lift (Phase 3) |
+| `unified-trading-library/unified_trading_library/domain/execution_client.py`         | UTL                               | UPDATE — fix path mismatch with PATH_REGISTRY (Phase 3)                                                                              |
+| `execution-service/execution_service/custody/copper.py`                              | execution-service                 | OPERATIONAL — first live-signing dry-run on testnet (Phase 4.A)                                                                      |
+| `execution-service/execution_service/venues/initializer.py` + 5 venue adapters       | execution-service                 | UPDATE — testnet-mode constructor for Bybit/Binance/OKX/Hyperliquid/Aster (Phase 4.B)                                                |
+| `execution-service/execution_service/defi_execution/connectors/solana_*.py`          | execution-service                 | NEW — Solana paper analogue for LST yield archetypes (Phase 4.C)                                                                     |
+| `batch-live-reconciliation-service/`                                                 | batch-live-reconciliation-service | NEW — minimum-viable per-archetype P&L diff + per-trade fill comparison + cron VM (Phase 5.A)                                        |
+| `alerting-service/alerting_service/notifiers/router.py` + Secret Manager paths       | alerting-service                  | UPDATE — Phase 4 paging targets wired (Phase 5.B)                                                                                    |
+| 13 codex docs (Phase 7)                                                              | unified-trading-pm                | NEW + UPDATE per Phase 7 enumeration                                                                                                 |
+| `unified-trading-pm/cursor-configs/CLAUDE.md`                                        | unified-trading-pm                | UPDATE — add "Promote Workflow Path" key rule (Phase 7)                                                                              |
+| `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md`                  | unified-trading-pm                | UPDATE — `Last verified` columns + new pvl-p17e/p23d/p23e sub-todos + cross-reference (Phase 9)                                      |
 
 ## Execution DAG (CLI track + UI track in parallel)
 
@@ -124,28 +151,37 @@ Phase U6 (pvl-p23c manual-trade gate UI)                        ─┘
 Phase 7 (codex SSOTs)         ──── runs alongside; codex updates ride with each phase per Post-Plan-Phase Codex Audit HARD RULE
 ```
 
-QG gate between every phase; next phase cannot start until prior phase QG passes (per Citadel-Grade § 2). UI Track gates: U1 → U3 → U4 (sequential); U2 → U5 (sequential); U6 sequential after U4. UI track + CLI track converge at Phase 6 (paper evidence runnable from EITHER path) and Phase 8 (live dry-run validates BOTH paths).
+QG gate between every phase; next phase cannot start until prior phase QG passes (per Citadel-Grade § 2). UI Track
+gates: U1 → U3 → U4 (sequential); U2 → U5 (sequential); U6 sequential after U4. UI track + CLI track converge at Phase 6
+(paper evidence runnable from EITHER path) and Phase 8 (live dry-run validates BOTH paths).
 
 ## Phase 1 — Launcher script SSOT for paper + live VMs (P0, ~1d, SEQUENTIAL — gates everything)
 
-**Why first**: Audit Block D2 + E3 + E7 all blocked on missing launchers. Per CLAUDE.md *"VM launcher script SSOT"* HARD RULE every gcloud / aws ec2 launcher MUST live under `deployment-service/scripts/vm/`. Without these, no compliant paper/live deployment exists.
+**Why first**: Audit Block D2 + E3 + E7 all blocked on missing launchers. Per CLAUDE.md _"VM launcher script SSOT"_ HARD
+RULE every gcloud / aws ec2 launcher MUST live under `deployment-service/scripts/vm/`. Without these, no compliant
+paper/live deployment exists.
 
 - [ ] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-paper-vm.sh`**.
   - VM-name pattern: `strategy-paper-{archetype}-{ts}` per CLAUDE.md VM Naming Convention.
   - Boots VM with `setup-data-pipeline-vm.sh` tarball mode (default; production path).
-  - Boot script: `cd /opt/code/e2e-testing && bash scripts/defi/run-paper.sh --archetype $ARCHETYPE --candidate-version $CANDIDATE_VERSION --tick-interval 3600 --continuous`.
-  - Singleton-locked per `(archetype, environment)` to prevent thundering herd (per CLAUDE.md *"Singleton-locked launchers"*).
+  - Boot script:
+    `cd /opt/code/e2e-testing && bash scripts/defi/run-paper.sh --archetype $ARCHETYPE --candidate-version $CANDIDATE_VERSION --tick-interval 3600 --continuous`.
+  - Singleton-locked per `(archetype, environment)` to prevent thundering herd (per CLAUDE.md _"Singleton-locked
+    launchers"_).
   - Env required: `MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=$VM_NAME`, `RUN_TS="$(date +%Y%m%d-%H%M%S)"`.
-  - Done: launcher exists; smoke-launch with `--dry-run` returns valid gcloud command; smoke-launch with real `--mode paper` for 90s emits STARTED event in `gs://${PID}-events/events/strategy-service/...` partition.
+  - Done: launcher exists; smoke-launch with `--dry-run` returns valid gcloud command; smoke-launch with real
+    `--mode paper` for 90s emits STARTED event in `gs://${PID}-events/events/strategy-service/...` partition.
 
 - [ ] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-live-vm.sh`**.
   - VM-name pattern: `strategy-live-{archetype}-{ts}`.
   - Same shape as paper launcher but invokes `run-live.sh` with `--mode live`.
-  - **Additional pre-flight**: refuses launch if `--dry-run-live-cutover-passed` flag absent in launch metadata (forces operator to run Phase 8 dry-run before any real-capital launch).
+  - **Additional pre-flight**: refuses launch if `--dry-run-live-cutover-passed` flag absent in launch metadata (forces
+    operator to run Phase 8 dry-run before any real-capital launch).
   - Singleton-locked per `(archetype, environment)`.
   - Done: launcher exists; `--dry-run` returns valid command; pre-flight refuses launch without metadata flag.
 
-- [ ] [AGENT] P0. **Register prefixes in `VM_PREFIX_TO_BUCKET`** at [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../../deployment-service/scripts/vm/vm_zombie_watchdog.py).
+- [ ] [AGENT] P0. **Register prefixes in `VM_PREFIX_TO_BUCKET`** at
+      [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../../deployment-service/scripts/vm/vm_zombie_watchdog.py).
   - Add `"strategy-paper-": None` (heartbeat-only — paper VMs don't write to a shard bucket).
   - Add `"strategy-live-": None` (same — live VMs emit events but don't write data shards).
   - Per CLAUDE.md: a VM whose prefix is not in the dict is invisible to the zombie watchdog.
@@ -155,19 +191,22 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
   - `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`
   - Per CLAUDE.md: running watchdog only fetches Python at boot.
 
-- [ ] [SCRIPT] P0. **Smoke-launch each launcher** with `--dry-run` (printed gcloud command), then with `--mode paper` for ≥90s, then verify events.
-  - Probe: `gcloud storage ls gs://${PID}-events/events/strategy-service/$(date +%Y-%m-%d)/strategy-paper-carry_staked_basis-*/` — directory exists with `hour=*` partition.
+- [ ] [SCRIPT] P0. **Smoke-launch each launcher** with `--dry-run` (printed gcloud command), then with `--mode paper`
+      for ≥90s, then verify events.
+  - Probe:
+    `gcloud storage ls gs://${PID}-events/events/strategy-service/$(date +%Y-%m-%d)/strategy-paper-carry_staked_basis-*/`
+    — directory exists with `hour=*` partition.
   - Read first JSONL, assert `event=="STARTED"`.
-  - 10min recheck for new events with row counts (per CLAUDE.md *"No fire-and-forget VM launches"*).
+  - 10min recheck for new events with row counts (per CLAUDE.md _"No fire-and-forget VM launches"_).
 
 - [ ] [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** once
       [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 ships
       (`VM_PREFIX_TO_BUCKET` dict-shape migration from `dict[str, str | None]` → `dict[str, VmPrefixSpec]` + 9 reserved
-      live/exp prefixes). Convert `"strategy-paper-": None` → `"strategy-paper-": VmPrefixSpec(bucket=None,
-      lifecycle_class=LONG_LIVED_LIVE)` and same for `strategy-live-`. Tag `LONG_LIVED_LIVE` per the lifecycle taxonomy
-      (continuous strategy cluster — not EPHEMERAL). **DEFERRED-AFTER-LIFECYCLE-A2** — sequencing per top-of-file banner.
-      Successor gate: lifecycle Phase A.2 commit lands + `VmPrefixSpec` type importable from
-      `deployment-service/scripts/vm/vm_zombie_watchdog.py`.
+      live/exp prefixes). Convert `"strategy-paper-": None` →
+      `"strategy-paper-": VmPrefixSpec(bucket=None,     lifecycle_class=LONG_LIVED_LIVE)` and same for `strategy-live-`.
+      Tag `LONG_LIVED_LIVE` per the lifecycle taxonomy (continuous strategy cluster — not EPHEMERAL).
+      **DEFERRED-AFTER-LIFECYCLE-A2** — sequencing per top-of-file banner. Successor gate: lifecycle Phase A.2 commit
+      lands + `VmPrefixSpec` type importable from `deployment-service/scripts/vm/vm_zombie_watchdog.py`.
 
 - [ ] [AGENT] P1. **1.Y DEFERRED-AFTER-CONSOLIDATION-PHASE2 — register strategy launchers in
       `_SERVICE_LAUNCHER_SCRIPTS`** so the Deploy-Missing UI button surfaces them. Owner plan:
@@ -179,28 +218,36 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
       2 shipping. Acceptable to ship Phase 1 without this; operators run launchers manually until then (see top-of-file
       IN-FLIGHT REFACTOR banner).
 
-**Phase 1 done definition** (per *"Plans Run To Actual Completion"* HARD RULE):
+**Phase 1 done definition** (per _"Plans Run To Actual Completion"_ HARD RULE):
+
 - ✅ Both launchers exist in `deployment-service/scripts/vm/` with the canonical shape.
 - ✅ `VM_PREFIX_TO_BUCKET` includes both prefixes.
 - ✅ vm-zombie-watchdog VM bounced; new instance running.
 - ✅ Real paper-VM launched + STARTED + STOPPED events observed in event archive.
 
 **Full-execution criterion**:
-- **What ran**: `bash deployment-service/scripts/vm/launch-strategy-paper-vm.sh --archetype carry_staked_basis --tick-interval 3600 --continuous=false --max-runtime 300` on operator workstation; VM `strategy-paper-carry_staked_basis-<ts>` ran for 5 minutes then auto-shutdown.
+
+- **What ran**:
+  `bash deployment-service/scripts/vm/launch-strategy-paper-vm.sh --archetype carry_staked_basis --tick-interval 3600 --continuous=false --max-runtime 300`
+  on operator workstation; VM `strategy-paper-carry_staked_basis-<ts>` ran for 5 minutes then auto-shutdown.
 - **Verification**:
   - `gcloud compute instances list --filter="name~strategy-paper-carry_staked_basis-"` showed RUNNING then absent.
-  - `gcloud storage ls gs://${PID}-events/events/strategy-service/<today>/strategy-paper-carry_staked_basis-*/` returned `hour=*/` directories.
+  - `gcloud storage ls gs://${PID}-events/events/strategy-service/<today>/strategy-paper-carry_staked_basis-*/` returned
+    `hour=*/` directories.
   - First JSONL = `event=="STARTED"`, last JSONL = `event in {"STOPPED","FAILED"}`.
 
-**Phase 1 QG**: workspace QG runs clean on deployment-service. Launcher bash-syntax check passes (per `codex/05-infrastructure/launcher-script-ssot.md`).
+**Phase 1 QG**: workspace QG runs clean on deployment-service. Launcher bash-syntax check passes (per
+`codex/05-infrastructure/launcher-script-ssot.md`).
 
 ## Phase 2 — Operator pre-flight checklist (P0, ~0.5d, SEQUENTIAL after Phase 1)
 
-**Why**: Audit Block H6 + Block I1 step 8/9 — no pre-flight check exists today; operator improvises. Without this gate, the live cutover can launch with missing custody / missing API keys / unwired alerting and silently degrade.
+**Why**: Audit Block H6 + Block I1 step 8/9 — no pre-flight check exists today; operator improvises. Without this gate,
+the live cutover can launch with missing custody / missing API keys / unwired alerting and silently degrade.
 
 - [ ] [AGENT] P0. **Write `e2e-testing/scripts/defi/preflight-cutover.sh`** that probes:
   - Copper credential present in Secret Manager + sandbox sign-test passes (HMAC handshake + poll loop completes).
-  - All 6 perp venue API keys present in Secret Manager + read-write scope verified per venue (Bybit / Binance / OKX / Hyperliquid / Aster / Deribit).
+  - All 6 perp venue API keys present in Secret Manager + read-write scope verified per venue (Bybit / Binance / OKX /
+    Hyperliquid / Aster / Deribit).
   - Solana wallet funded with ≥0.01 SOL native gas (probe via RPC `getBalance`).
   - Tenderly fork seat available (probe Tenderly API).
   - All chain RPCs reachable (`eth_chainId` per chain in `CHAIN_RPC_TEMPLATES`).
@@ -209,59 +256,89 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
   - Composes with `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` credential matrix.
   - Done: each probe exits 0/1; aggregate report printed; refuses to exit 0 if any P0 probe fails.
 
-- [ ] [AGENT] P0. **Update `e2e-testing/scripts/defi/run-paper.sh`** + **`run-live.sh`** to call `preflight-cutover.sh --mode paper` / `--mode live` as required pre-flight gate (refuses to start if pre-flight non-zero).
+- [ ] [AGENT] P0. **Update `e2e-testing/scripts/defi/run-paper.sh`** + **`run-live.sh`** to call
+      `preflight-cutover.sh --mode paper` / `--mode live` as required pre-flight gate (refuses to start if pre-flight
+      non-zero).
 
-- [ ] [SCRIPT] P0. **Run preflight-cutover.sh on operator workstation** for both paper + live mode against carry_staked_basis. Resolve any failing probes by either fixing config OR explicitly waiving (write `--waive-<probe>` flag with operator-justification).
+- [ ] [SCRIPT] P0. **Run preflight-cutover.sh on operator workstation** for both paper + live mode against
+      carry_staked_basis. Resolve any failing probes by either fixing config OR explicitly waiving (write
+      `--waive-<probe>` flag with operator-justification).
 
 **Phase 2 done definition**:
+
 - ✅ `preflight-cutover.sh` exists, all 8 probes implemented.
 - ✅ `run-paper.sh` + `run-live.sh` invoke as required gate.
 - ✅ Operator-run report shows all 8 probes green for paper + all 8 for live, OR explicit waivers documented.
 
 **Full-execution criterion**:
-- **What ran**: `bash e2e-testing/scripts/defi/preflight-cutover.sh --mode paper --archetype carry_staked_basis` on operator workstation.
+
+- **What ran**: `bash e2e-testing/scripts/defi/preflight-cutover.sh --mode paper --archetype carry_staked_basis` on
+  operator workstation.
 - **Verification**: report shows 8 probes; all green OR each amber/red has documented waiver in commit message.
 
 ## Phase 3 — F18 2-year config-grid backtest run (P0, operator-action ~8-12h wall-clock, SEQUENTIAL after Phase 1)
 
-**Why**: Audit Block A1 + master plan F18. 2-year backtest is operator-pending; informs the live-config selection. Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results are invisible to downstream consumers.
+**Why**: Audit Block A1 + master plan F18. 2-year backtest is operator-pending; informs the live-config selection.
+Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results are invisible to downstream consumers.
 
-- [ ] [AGENT] P0. **Resolve path drift**: pick `backtest_results/strategy_id={strategy_id}/run_id={run_id}/` (PATH_REGISTRY) as canonical. Update [`unified-trading-library/.../domain/execution_client.py:199-296`](../../../unified-trading-library/unified_trading_library/domain/execution_client.py#L199-L296) reader to honor PATH_REGISTRY (currently uses `backtest_results/{run_id}/` — silent mismatch). Migrate 2yr-grid script (`backtests/config_grid_2yr/{archetype}/{run_id}/`) to canonical OR keep separate sub-prefix `backtest_results/grid_2yr/{archetype}/{run_id}/`.
+- [ ] [AGENT] P0. **Resolve path drift**: pick `backtest_results/strategy_id={strategy_id}/run_id={run_id}/`
+      (PATH_REGISTRY) as canonical. Update
+      [`unified-trading-library/.../domain/execution_client.py:199-296`](../../../unified-trading-library/unified_trading_library/domain/execution_client.py#L199-L296)
+      reader to honor PATH_REGISTRY (currently uses `backtest_results/{run_id}/` — silent mismatch). Migrate 2yr-grid
+      script (`backtests/config_grid_2yr/{archetype}/{run_id}/`) to canonical OR keep separate sub-prefix
+      `backtest_results/grid_2yr/{archetype}/{run_id}/`.
 
 - [ ] [AGENT] P0. **Update `strategy-service/scripts/run_2yr_config_grid_backtest.py`** to:
   - Write to canonical PATH_REGISTRY path.
-  - Emit `record_captured` manifest row per `(archetype, run_id, asset_group)` per CLAUDE.md *"Honest absence vs fake placeholders"* HARD RULE.
-  - Validate `GroupBMetrics` schema on output rows (4-pillar gate per CLAUDE.md "Cluster validation MANDATORY at `record_captured`").
+  - Emit `record_captured` manifest row per `(archetype, run_id, asset_group)` per CLAUDE.md _"Honest absence vs fake
+    placeholders"_ HARD RULE.
+  - Validate `GroupBMetrics` schema on output rows (4-pillar gate per CLAUDE.md "Cluster validation MANDATORY at
+    `record_captured`").
   - Honor `--candidate-emit` flag that auto-promotes top-K results to `ConfigRegistry` for paper-mode pickup.
 
 - [ ] [SCRIPT] P0. **Operator runs the 2yr backtest** for both archetypes:
-  - `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype carry_staked_basis --candidate-emit --top-k 3` (background, ~6h)
-  - `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype "ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion" --candidate-emit --top-k 3` (background, ~6h, parallel)
-  - Operator inspects ranking output + picks lead config for each archetype + records `candidate_version` in plan completion notes.
+  - `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype carry_staked_basis --candidate-emit --top-k 3`
+    (background, ~6h)
+  - `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype "ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion" --candidate-emit --top-k 3`
+    (background, ~6h, parallel)
+  - Operator inspects ranking output + picks lead config for each archetype + records `candidate_version` in plan
+    completion notes.
 
 **Phase 3 done definition**:
+
 - ✅ Path drift resolved + reader updated.
 - ✅ 2yr backtest runs landed; each archetype has 3 candidate configs ranked by Sharpe + max_drawdown.
 - ✅ `candidate_version` recorded for each archetype.
 
 **Full-execution criterion**:
-- **What ran**: 2 background runs, each ~6h, on operator workstation OR a long-running GCE VM `strategy-backtest-2yr-{ts}`.
-- **Verification**: `gcloud storage ls gs://${PID}-config/backtest_results/strategy_id=carry_staked_basis/run_id=*/` returns parquet files; sample-inspect parquet shows non-NaN rows; manifest has `record_captured` rows for both archetypes.
+
+- **What ran**: 2 background runs, each ~6h, on operator workstation OR a long-running GCE VM
+  `strategy-backtest-2yr-{ts}`.
+- **Verification**: `gcloud storage ls gs://${PID}-config/backtest_results/strategy_id=carry_staked_basis/run_id=*/`
+  returns parquet files; sample-inspect parquet shows non-NaN rows; manifest has `record_captured` rows for both
+  archetypes.
 
 ## Phase 4 — Custody + perp testnet hardening (P0, ~2-3d, PARALLEL sub-phases, SEQUENTIAL after Phase 1)
 
 ### 4.A — F19 Copper sub-account provisioned + first live-signing dry-run
 
 - [ ] [SCRIPT] P0. **Operator provisions Copper sub-account** for the May-23 cutover wallet (testnet first).
-- [ ] [SCRIPT] P0. **First live-signing dry-run** via [`execution-service/execution_service/custody/copper.py`](../../../execution-service/execution_service/custody/copper.py) HMAC-SHA256 sign + poll loop on testnet.
+- [ ] [SCRIPT] P0. **First live-signing dry-run** via
+      [`execution-service/execution_service/custody/copper.py`](../../../execution-service/execution_service/custody/copper.py)
+      HMAC-SHA256 sign + poll loop on testnet.
   - Probe: signed transaction returned within poll-interval; on-chain confirmation observed.
-- [ ] [AGENT] P0. **Verify CEFFU stays STUB-status with explicit doc** in `codex/04-architecture/custody-providers.md` (per master plan Q&A 3 deferral). Manual handoff procedure for Binance flows documented.
+- [ ] [AGENT] P0. **Verify CEFFU stays STUB-status with explicit doc** in `codex/04-architecture/custody-providers.md`
+      (per master plan Q&A 3 deferral). Manual handoff procedure for Binance flows documented.
 
 ### 4.B — pvl-p20b 5 perp venue testnet wiring
 
-- [ ] [AGENT] P0. **Audit current testnet support** for Bybit / Binance / OKX / Hyperliquid / Aster in `execution-service/execution_service/venues/initializer.py` + `execution-service/execution_service/defi_execution/connectors/cefi_base.py`.
-- [ ] [AGENT] P0. **Implement testnet-mode constructor** for each missing venue. Pattern: `--testnet` flag → swap base URL + use testnet-scoped credentials from Secret Manager `paper/<venue>/<env>` namespace.
-- [ ] [SCRIPT] P0. **Smoke-test each testnet** with read-only API call (e.g. `get_account_info`) to verify credential + endpoint pair.
+- [ ] [AGENT] P0. **Audit current testnet support** for Bybit / Binance / OKX / Hyperliquid / Aster in
+      `execution-service/execution_service/venues/initializer.py` +
+      `execution-service/execution_service/defi_execution/connectors/cefi_base.py`.
+- [ ] [AGENT] P0. **Implement testnet-mode constructor** for each missing venue. Pattern: `--testnet` flag → swap base
+      URL + use testnet-scoped credentials from Secret Manager `paper/<venue>/<env>` namespace.
+- [ ] [SCRIPT] P0. **Smoke-test each testnet** with read-only API call (e.g. `get_account_info`) to verify credential +
+      endpoint pair.
 
 ### 4.C — pvl-p20c Solana paper analogue
 
@@ -269,20 +346,24 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
   - Pyth Hermes for prices (per CLAUDE.md unbanned 2026-05-06).
   - Solana devnet RPC URL in `CHAIN_RPC_TEMPLATES`.
   - Devnet wallet provisioning via standard CLI.
-- [ ] [SCRIPT] P0. **Smoke-test Solana paper** by running `colocated_engine.py --strategy-id carry_staked_basis --execution-provider solana_devnet` for 10min.
+- [ ] [SCRIPT] P0. **Smoke-test Solana paper** by running
+      `colocated_engine.py --strategy-id carry_staked_basis --execution-provider solana_devnet` for 10min.
 
 ### 4.D — Tenderly fork validated end-to-end for `carry_staked_basis`
 
-- [ ] [SCRIPT] P0. **Tenderly fork dry-run** for carry_staked_basis lead archetype on EVM side (Aave staking + perp short hedge).
+- [ ] [SCRIPT] P0. **Tenderly fork dry-run** for carry_staked_basis lead archetype on EVM side (Aave staking + perp
+      short hedge).
   - Verify mock fills produce expected P&L decomposition.
 
 **Phase 4 done definition**:
+
 - ✅ Copper sub-account provisioned + first live-signing succeeded on testnet.
 - ✅ All 5 perp venue testnets reachable + sign-readable.
 - ✅ Solana devnet wiring works end-to-end for LST archetypes.
 - ✅ Tenderly fork validated for carry_staked_basis EVM legs.
 
 **Full-execution criterion**:
+
 - **What ran**: 4 parallel sub-phase verification commands; outputs captured in plan completion notes.
 - **Verification**: per-sub-phase probe outputs preserved in `plans/active/issues/` if any failed.
 
@@ -290,19 +371,23 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
 
 ### 5.A — F21 batch-live-reconciliation-service minimum-viable shipment
 
-- [ ] [AGENT] P0. **Stand up `batch-live-reconciliation-service`** as a Cloud Run service (or GCE cron VM `batch-live-recon-{ts}`).
+- [ ] [AGENT] P0. **Stand up `batch-live-reconciliation-service`** as a Cloud Run service (or GCE cron VM
+      `batch-live-recon-{ts}`).
   - Reads batch backtest output (PATH_REGISTRY canonical) + live event-stream paper/live runs.
   - Computes per-archetype P&L diff + per-trade fill comparison.
   - Emits `BATCH_LIVE_RECON_DRIFT` event when drift > 5bps.
   - Daily cadence; alerting rule wires to Telegram + PagerDuty.
-- [ ] [AGENT] P0. **Wire UTL `batch_live_reconciler` helper** ([`UTL@908b1647`](../../../unified-trading-library/unified_trading_library/batch_live_reconciler.py)) into the new service.
+- [ ] [AGENT] P0. **Wire UTL `batch_live_reconciler` helper**
+      ([`UTL@908b1647`](../../../unified-trading-library/unified_trading_library/batch_live_reconciler.py)) into the new
+      service.
 - [ ] [SCRIPT] P0. **First recon dry-run** against carry_staked_basis paper run.
 
 ### 5.B — F22 Phase 4 alerting paging-target Secret Manager wiring
 
 - [ ] [SCRIPT] P0. **Provision Telegram bot tokens** for the May-23 alerting channel.
 - [ ] [SCRIPT] P0. **Provision PagerDuty integration key** (or skip if Telegram-only for cutover).
-- [ ] [AGENT] P0. **Update `alerting-service/alerting_service/notifiers/router.py`** to read paging targets from Secret Manager paths defined in master plan F22 spec.
+- [ ] [AGENT] P0. **Update `alerting-service/alerting_service/notifiers/router.py`** to read paging targets from Secret
+      Manager paths defined in master plan F22 spec.
 
 ### 5.C — F22 Phase 7 quietness 48h staging dry-run
 
@@ -310,9 +395,11 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
 
 ### 5.D — F22 Phase 8 live rehearsal
 
-- [ ] [SCRIPT] P0. **Live rehearsal** — run alerting-service against carry_staked_basis paper run for 24h; verify alerts fire correctly on synthetic kill-switch trip.
+- [ ] [SCRIPT] P0. **Live rehearsal** — run alerting-service against carry_staked_basis paper run for 24h; verify alerts
+      fire correctly on synthetic kill-switch trip.
 
 **Phase 5 done definition**:
+
 - ✅ batch-live-recon-service running, daily cadence, drift alerts wired.
 - ✅ Alerting paging targets in Secret Manager + router reads them.
 - ✅ 48h staging dry-run quiet.
@@ -322,7 +409,8 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
 
 ## Phase 6 — Paper-mode evidence run (P0, operator-monitored ≥3 continuous days, SEQUENTIAL after Phase 3 + 4 + 5)
 
-**Why**: Audit Block I1 step 6 + master plan `pvl-p18a`. Without ≥3d paper evidence on the lead pair, no live promotion can be operator-justified.
+**Why**: Audit Block I1 step 6 + master plan `pvl-p18a`. Without ≥3d paper evidence on the lead pair, no live promotion
+can be operator-justified.
 
 - [ ] [SCRIPT] P0. **Launch paper VM** for carry_staked_basis with the candidate config selected in Phase 3.
   - `bash deployment-service/scripts/vm/launch-strategy-paper-vm.sh --archetype carry_staked_basis --candidate-version <version>`.
@@ -331,27 +419,36 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
   - Daily event-stream verification (STARTED + per-tick progress events + per-fill events).
   - Daily reconciliation report green from Phase 5.A service.
   - No `STRATEGY_PAPER_FAILED` (when event type ships) OR equivalent stale-data signal.
-  - Per CLAUDE.md *"No fire-and-forget VM launches"* — active verification protocol.
+  - Per CLAUDE.md _"No fire-and-forget VM launches"_ — active verification protocol.
 
 **Phase 6 done definition**:
-- ✅ Both archetypes ran paper-mode for ≥3 continuous days (target ≥7 for the May-23 cutover; ≥3 is the gate to unlock Phase 8 live dry-run).
+
+- ✅ Both archetypes ran paper-mode for ≥3 continuous days (target ≥7 for the May-23 cutover; ≥3 is the gate to unlock
+  Phase 8 live dry-run).
 - ✅ Per-day event-archive confirmation.
 - ✅ Per-day recon report shows drift within tolerance.
 - ✅ No silent failures.
 
 **Full-execution criterion**:
+
 - **What ran**: 2 paper VMs running for ≥72h continuous each, with operator-checked event streams.
-- **Verification**: `gcloud storage ls gs://${PID}-events/events/strategy-service/` shows continuous JSONL files for the full run; manifest has per-tick captured rows.
+- **Verification**: `gcloud storage ls gs://${PID}-events/events/strategy-service/` shows continuous JSONL files for the
+  full run; manifest has per-tick captured rows.
 
 ## UI Track — Phases U1-U6 (P0, ~6-8 AI-days combined, PARALLEL with Phases 4+5+6)
 
-**Why this track**: Operator preference (2026-05-10) is to ship a UI promote pipeline alongside the CLI path so the May-23 cutover can be driven from the Promote UI button + DART manual-trade gate, with CLI as belt-and-braces. Scope is **strictly minimum viable** — heavy state-machine consolidation + full pinned-shas CandidateManifest + cross-service auto-registration stay in `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`.
+**Why this track**: Operator preference (2026-05-10) is to ship a UI promote pipeline alongside the CLI path so the
+May-23 cutover can be driven from the Promote UI button + DART manual-trade gate, with CLI as belt-and-braces. Scope is
+**strictly minimum viable** — heavy state-machine consolidation + full pinned-shas CandidateManifest + cross-service
+auto-registration stay in `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`.
 
 ### Phase U1 — Minimal CandidateManifest (Firestore persistence) (P0, ~1-2d)
 
-**Scope**: Just enough to round-trip a config across the promote workflow. NOT the full pinned-shas treatment (no commit shas, no model refs, no features manifest version — those are post-cutover Phase 2).
+**Scope**: Just enough to round-trip a config across the promote workflow. NOT the full pinned-shas treatment (no commit
+shas, no model refs, no features manifest version — those are post-cutover Phase 2).
 
-- [ ] [AGENT] P0. **NEW UAC `MinimalCandidateManifest`** Pydantic type at `unified_api_contracts/internal/domain/strategy_service/candidate_manifest.py`. Captures (May-23 subset only):
+- [ ] [AGENT] P0. **NEW UAC `MinimalCandidateManifest`** Pydantic type at
+      `unified_api_contracts/internal/domain/strategy_service/candidate_manifest.py`. Captures (May-23 subset only):
   - `manifest_id: str` (UUID).
   - `strategy_instance_id: str`.
   - `version_id: str | None` (links to `StrategyVersion`).
@@ -362,38 +459,54 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
   - `created_at: datetime`.
   - `created_by: str`.
   - `reason: str` (operator-supplied).
-  - **Future-extension placeholders** (typed as `Optional`, populated post-cutover): `pinned_shas: dict[str, str] | None = None`, `model_refs: list[ModelRef] | None = None`, `features_manifest_version: str | None = None`, `chain_rpc_pins: dict[str, str] | None = None`. Lets post-cutover Phase 2 enrich without UAC schema break.
-- [ ] [AGENT] P0. **Firestore `strategy_candidate_manifests` collection** for persistence. Schema matches `MinimalCandidateManifest`.
-- [ ] [AGENT] P0. **UTL `CandidateManifestStore`** wrapper around Firestore — read/write helpers; emits `STRATEGY_PROMOTED_TO_CANDIDATE` (via existing UTL bare-string event constants — UAC migration is post-cutover Phase 3).
+  - **Future-extension placeholders** (typed as `Optional`, populated post-cutover):
+    `pinned_shas: dict[str, str] | None = None`, `model_refs: list[ModelRef] | None = None`,
+    `features_manifest_version: str | None = None`, `chain_rpc_pins: dict[str, str] | None = None`. Lets post-cutover
+    Phase 2 enrich without UAC schema break.
+- [ ] [AGENT] P0. **Firestore `strategy_candidate_manifests` collection** for persistence. Schema matches
+      `MinimalCandidateManifest`.
+- [ ] [AGENT] P0. **UTL `CandidateManifestStore`** wrapper around Firestore — read/write helpers; emits
+      `STRATEGY_PROMOTED_TO_CANDIDATE` (via existing UTL bare-string event constants — UAC migration is post-cutover
+      Phase 3).
 
 **U1 codex deliverables**:
-- NEW `codex/04-architecture/live-deployment-manifest.md` — minimal-shape SSOT for May-23; post-cutover Phase 2 extends with pinned shas. Cross-references both plans.
+
+- NEW `codex/04-architecture/live-deployment-manifest.md` — minimal-shape SSOT for May-23; post-cutover Phase 2 extends
+  with pinned shas. Cross-references both plans.
 
 **U1 done definition**:
+
 - ✅ UAC type ships; QG green.
 - ✅ Firestore collection live (verified by writing + reading a manifest manually).
 - ✅ `STRATEGY_PROMOTED_TO_CANDIDATE` event fires from store.
 
-**Full-execution criterion**: `python -c "from unified_api_contracts.internal.domain.strategy_service.candidate_manifest import MinimalCandidateManifest; m = MinimalCandidateManifest(...); print(m.json())"` works; Firestore write + read cycle succeeds against real GCP project.
+**Full-execution criterion**:
+`python -c "from unified_api_contracts.internal.domain.strategy_service.candidate_manifest import MinimalCandidateManifest; m = MinimalCandidateManifest(...); print(m.json())"`
+works; Firestore write + read cycle succeeds against real GCP project.
 
 ### Phase U2 — pvl-p23b mode-data API endpoint (P0, ~1-2d)
 
 **Scope**: Master plan `pvl-p23b` — `GET /strategy/{id}/runs?mode=batch|paper|live` endpoint in `deployment-api`.
 
-- [ ] [AGENT] P0. **NEW endpoint** `GET /strategy/{strategy_id}/runs?mode={batch|paper|live}` in `deployment-api/deployment_api/services/strategy_runs.py` (NEW file).
+- [ ] [AGENT] P0. **NEW endpoint** `GET /strategy/{strategy_id}/runs?mode={batch|paper|live}` in
+      `deployment-api/deployment_api/services/strategy_runs.py` (NEW file).
   - Reads from PATH_REGISTRY canonical `backtest_results/strategy_id={strategy_id}/run_id={run_id}/` for batch.
   - Reads from `events/strategy-service/.../` event archive for paper + live runs.
   - Returns mode-tagged event/fill/P&L bundle.
 - [ ] [AGENT] P0. **3 unit tests** (one per mode) in deployment-api.
-- [ ] [SCRIPT] P0. **Smoke test** against real Phase 3 backtest output: `curl http://localhost:8004/strategy/carry_staked_basis/runs?mode=batch` returns 200 with non-empty body.
+- [ ] [SCRIPT] P0. **Smoke test** against real Phase 3 backtest output:
+      `curl http://localhost:8004/strategy/carry_staked_basis/runs?mode=batch` returns 200 with non-empty body.
 
-**U2 done definition**: deployment-api QG green; smoke test passes for all 3 modes (batch from Phase 3, paper from Phase 6, live from Phase 10).
+**U2 done definition**: deployment-api QG green; smoke test passes for all 3 modes (batch from Phase 3, paper from Phase
+6, live from Phase 10).
 
 ### Phase U3 — POST /promote endpoint + minimal pre-flight pipeline (P0, ~1-2d, SEQUENTIAL after U1)
 
-**Scope**: Backend POST endpoint with **minimal pre-flight** (subset of Phase 9 in post-cutover plan; the full pre-flight pipeline ships there).
+**Scope**: Backend POST endpoint with **minimal pre-flight** (subset of Phase 9 in post-cutover plan; the full
+pre-flight pipeline ships there).
 
-- [ ] [AGENT] P0. **NEW `POST /promote/{strategy_id}/{candidate_manifest_id}` endpoint** in `deployment-api/deployment_api/services/promote.py` (NEW file).
+- [ ] [AGENT] P0. **NEW `POST /promote/{strategy_id}/{candidate_manifest_id}` endpoint** in
+      `deployment-api/deployment_api/services/promote.py` (NEW file).
   - Body: `{target_phase: StrategyMaturityPhase, promoter: str, reason: str}`.
   - Reads `MinimalCandidateManifest` from Firestore.
   - Pre-flight checks (MINIMUM viable for May-23 — full pipeline post-cutover):
@@ -402,36 +515,55 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
     - Alerting paging targets configured — composes with Phase 5.B.
     - Kill-switch YAML loaded — composes with Phase 4.D.
     - Recon green for last 24h (target_phase=LIVE_EARLY only) — composes with Phase 5.A.
-  - On pass: emits `STRATEGY_PROMOTED_TO_PAPER` (target_phase=PAPER_1D) OR `STRATEGY_PROMOTED_TO_LIVE` (target_phase=LIVE_EARLY) via UTL bare-string events (UAC migration is post-cutover).
+  - On pass: emits `STRATEGY_PROMOTED_TO_PAPER` (target_phase=PAPER_1D) OR `STRATEGY_PROMOTED_TO_LIVE`
+    (target_phase=LIVE_EARLY) via UTL bare-string events (UAC migration is post-cutover).
   - On fail: 412 Precondition Failed with failed-gates list; emits `STRATEGY_PROMOTE_REJECTED` event.
-- [ ] [AGENT] P0. **Auth gate**: Firebase custom claim `execution-full` required (existing pattern from `LiveConfirmDialog`).
-- [ ] [AGENT] P0. **Sync vs async**: 200 OK with new state for sync (pre-flight passes synchronously); endpoint also enqueues VM-launch job (consumed by next paper/live VM cycle from Phase 1 launchers).
+- [ ] [AGENT] P0. **Auth gate**: Firebase custom claim `execution-full` required (existing pattern from
+      `LiveConfirmDialog`).
+- [ ] [AGENT] P0. **Sync vs async**: 200 OK with new state for sync (pre-flight passes synchronously); endpoint also
+      enqueues VM-launch job (consumed by next paper/live VM cycle from Phase 1 launchers).
 
-**U3 done definition**: endpoint exists; pre-flight gates wire to existing services; smoke test promotes a candidate from PAPER_1D → LIVE_EARLY with all gates green.
+**U3 done definition**: endpoint exists; pre-flight gates wire to existing services; smoke test promotes a candidate
+from PAPER_1D → LIVE_EARLY with all gates green.
 
-**Full-execution criterion**: `curl -X POST http://localhost:8004/promote/carry_staked_basis/<manifest_id> -H "Authorization: Bearer <token>" -d '{...}'` returns 200; event archive shows `STRATEGY_PROMOTED_TO_LIVE` within 1s.
+**Full-execution criterion**:
+`curl -X POST http://localhost:8004/promote/carry_staked_basis/<manifest_id> -H "Authorization: Bearer <token>" -d '{...}'`
+returns 200; event archive shows `STRATEGY_PROMOTED_TO_LIVE` within 1s.
 
 ### Phase U4 — Promote UI wired to real backend (P0, ~1-2d, SEQUENTIAL after U3)
 
 **Scope**: Replace the React in-memory `PromoteWorkflowProvider` with real backend calls.
 
-- [ ] [AGENT] P0. **Update [`unified-trading-system-ui/components/promote/promote-workflow-context.tsx`](../../../unified-trading-system-ui/components/promote/promote-workflow-context.tsx)** — `useRecordPromoteWorkflow()` callback now POSTs to `/promote/{strategy_id}/{manifest_id}` (Phase U3 endpoint).
-- [ ] [AGENT] P0. **Update [`unified-trading-system-ui/components/promote/promote-flow-modal.tsx`](../../../unified-trading-system-ui/components/promote/promote-flow-modal.tsx)** — `onPromote: (targetStage) => Promise<void>` resolves on backend response; UI shows optimistic state then converges via SSE/event-stream subscription to lifecycle events.
-- [ ] [AGENT] P0. **Replace mock fixtures** in 9 lifecycle sub-pages (`app/(platform)/services/promote/(lifecycle)/*`) — read from real backend (Phase U2 endpoint for runs + Phase U1 store for manifests).
+- [ ] [AGENT] P0. **Update
+      [`unified-trading-system-ui/components/promote/promote-workflow-context.tsx`](../../../unified-trading-system-ui/components/promote/promote-workflow-context.tsx)**
+      — `useRecordPromoteWorkflow()` callback now POSTs to `/promote/{strategy_id}/{manifest_id}` (Phase U3 endpoint).
+- [ ] [AGENT] P0. **Update
+      [`unified-trading-system-ui/components/promote/promote-flow-modal.tsx`](../../../unified-trading-system-ui/components/promote/promote-flow-modal.tsx)**
+      — `onPromote: (targetStage) => Promise<void>` resolves on backend response; UI shows optimistic state then
+      converges via SSE/event-stream subscription to lifecycle events.
+- [ ] [AGENT] P0. **Replace mock fixtures** in 9 lifecycle sub-pages (`app/(platform)/services/promote/(lifecycle)/*`) —
+      read from real backend (Phase U2 endpoint for runs + Phase U1 store for manifests).
 - [ ] [AGENT] P0. **Promote, Demote, Override actions** all wire to backend.
-- [ ] [SCRIPT] P0. **Playwright e2e test** — operator clicks Promote button → backend receives → event fires → UI converges.
+- [ ] [SCRIPT] P0. **Playwright e2e test** — operator clicks Promote button → backend receives → event fires → UI
+      converges.
 
-**U4 done definition**: `cd unified-trading-system-ui && CI=true npm test -- --run` green; Playwright e2e shows real promote round-trip.
+**U4 done definition**: `cd unified-trading-system-ui && CI=true npm test -- --run` green; Playwright e2e shows real
+promote round-trip.
 
-**Full-execution criterion**: operator-driven manual promote of a Phase 3 backtest candidate → paper deployment auto-launches via Phase 1 launcher → STARTED event observable in event archive within 90s.
+**Full-execution criterion**: operator-driven manual promote of a Phase 3 backtest candidate → paper deployment
+auto-launches via Phase 1 launcher → STARTED event observable in event archive within 90s.
 
 ### Phase U5 — pvl-p23a DART 3-way visualization (P0, ~3-5d, SEQUENTIAL after U2)
 
-**Scope**: Master plan `pvl-p23a` — DART surface in UTS-UI renders three views for any strategy archetype (batch / paper / live) wired to real backend.
+**Scope**: Master plan `pvl-p23a` — DART surface in UTS-UI renders three views for any strategy archetype (batch / paper
+/ live) wired to real backend.
 
-- [ ] [AGENT] P0. **Side-by-side comparison** — batch / paper / live P&L curves, fills blotter, events, position trajectory, risk metrics in tri-pane canvas.
-- [ ] [AGENT] P0. **Per-mode views** pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current paper/live to add batch).
-- [ ] [AGENT] P0. **Shared filter scope** — asset_group / instrument_type / strategy_family / archetype filters apply across all three lanes simultaneously.
+- [ ] [AGENT] P0. **Side-by-side comparison** — batch / paper / live P&L curves, fills blotter, events, position
+      trajectory, risk metrics in tri-pane canvas.
+- [ ] [AGENT] P0. **Per-mode views** pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current
+      paper/live to add batch).
+- [ ] [AGENT] P0. **Shared filter scope** — asset_group / instrument_type / strategy_family / archetype filters apply
+      across all three lanes simultaneously.
 - [ ] [AGENT] P0. **Wired to real backend** (not mock fixtures) — each lane reads from Phase U2 mode-data API.
 - [ ] [SCRIPT] P0. **Playwright e2e** covers comparison rendering with real data per lane.
 
@@ -439,71 +571,108 @@ QG gate between every phase; next phase cannot start until prior phase QG passes
 
 ### Phase U6 — pvl-p23c manual-trade gate UI (P0, ~2-3d, SEQUENTIAL after U4)
 
-**Scope**: Master plan `pvl-p23c` — `ManualTradeGateDialog` component + execution-service unhold path. **Cutover-blocker for Group G item 23.**
+**Scope**: Master plan `pvl-p23c` — `ManualTradeGateDialog` component + execution-service unhold path. **Cutover-blocker
+for Group G item 23.**
 
 - [ ] [AGENT] P0. **`ManualTradeGateDialog` component** in unified-trading-system-ui:
   - Renders pre-trade preview (margin / position-limit / worst-case loss / venue / instrument / size / direction).
   - Approve / Deny / Timeout (default 30s) buttons.
   - Emits `MANUAL_APPROVED` / `MANUAL_REJECTED` events via deployment-api.
-- [ ] [AGENT] P0. **execution-service unhold path** — strategy-service emits instruction in `MANUAL` mode → execution-service holds in manual-pending queue → on `MANUAL_APPROVED` event, unholds and executes; on `MANUAL_REJECTED` or timeout, drops + emits cancellation.
-- [ ] [SCRIPT] P0. **Playwright e2e** — operator-approve flow against real testnet trade (uses Phase 4.B perp testnet wiring).
+- [ ] [AGENT] P0. **execution-service unhold path** — strategy-service emits instruction in `MANUAL` mode →
+      execution-service holds in manual-pending queue → on `MANUAL_APPROVED` event, unholds and executes; on
+      `MANUAL_REJECTED` or timeout, drops + emits cancellation.
+- [ ] [SCRIPT] P0. **Playwright e2e** — operator-approve flow against real testnet trade (uses Phase 4.B perp testnet
+      wiring).
 
-**U6 done definition**: Playwright e2e green; event-stream shows `MANUAL_APPROVED` followed by fill confirmation event from venue testnet.
+**U6 done definition**: Playwright e2e green; event-stream shows `MANUAL_APPROVED` followed by fill confirmation event
+from venue testnet.
 
 ### UI Track overall done definition
 
 - ✅ All 6 UI track phases completed.
-- ✅ Operator can drive the full promote workflow from the UI (click promote → CandidateManifest persists → paper deploy auto-launches → DART 3-way shows live data → click promote-to-live → live deploy auto-launches → first 3 days of trades pass through ManualTradeGateDialog).
-- ✅ UI Track + CLI Track converge at Phase 6 (paper evidence runnable from EITHER path) and Phase 8 (live dry-run validates BOTH paths).
-- ✅ If UI track ships clean, May-23 cutover runs UI-primary + CLI-fallback. If UI track hits a P0 blocker, fallback to CLI-primary; UI ships post-cutover anyway.
+- ✅ Operator can drive the full promote workflow from the UI (click promote → CandidateManifest persists → paper deploy
+  auto-launches → DART 3-way shows live data → click promote-to-live → live deploy auto-launches → first 3 days of
+  trades pass through ManualTradeGateDialog).
+- ✅ UI Track + CLI Track converge at Phase 6 (paper evidence runnable from EITHER path) and Phase 8 (live dry-run
+  validates BOTH paths).
+- ✅ If UI track ships clean, May-23 cutover runs UI-primary + CLI-fallback. If UI track hits a P0 blocker, fallback to
+  CLI-primary; UI ships post-cutover anyway.
 
 **UI Track Full-execution criterion**:
-- **What ran**: end-to-end UI-driven promote run for `carry_staked_basis` — operator clicks Promote in UI, paper VM auto-launches via Phase 1 launcher, DART 3-way renders real paper data, after ≥3d operator clicks Promote-to-live, live VM auto-launches, first 3 days of trades pass through ManualTradeGateDialog.
-- **Verification**: Promote button → backend → event archive → VM launch → STARTED event chain observable end-to-end without operator touching CLI.
+
+- **What ran**: end-to-end UI-driven promote run for `carry_staked_basis` — operator clicks Promote in UI, paper VM
+  auto-launches via Phase 1 launcher, DART 3-way renders real paper data, after ≥3d operator clicks Promote-to-live,
+  live VM auto-launches, first 3 days of trades pass through ManualTradeGateDialog.
+- **Verification**: Promote button → backend → event archive → VM launch → STARTED event chain observable end-to-end
+  without operator touching CLI.
 
 ## Phase 7 — Codex SSOTs (May-23 subset, P0, runs alongside per Post-Plan-Phase Codex Audit HARD RULE)
 
 These codex docs ride with the phases that produce them — NOT batched at plan-end.
 
-- [ ] [AGENT] P0. **NEW** `codex/09-strategy/operational/cli-promote-paths.md` — `run-paper.sh` + `run-live.sh` as CLI track SSOT; per-mode operator pre-flight checklist; ships with Phase 2.
-- [ ] [AGENT] P0. **NEW** `codex/04-architecture/promote-workflow-architecture.md` — covers BOTH May-23 tracks (CLI primary + minimal UI parallel); full UI consolidation + state-machine + cross-service auto-registration deferred to post-cutover plan; ships with Phase 7.
-- [ ] [AGENT] P0. **NEW** `codex/05-infrastructure/strategy-vm-launcher-shape.md` — paper-VM + live-VM launcher convention; ships with Phase 1.
-- [ ] [AGENT] P0. **NEW** `codex/04-architecture/live-deployment-manifest.md` — `MinimalCandidateManifest` shape (May-23 subset); post-cutover Phase 2 enriches with pinned shas; ships with Phase U1.
-- [ ] [AGENT] P0. **NEW** `codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow; ships with Phase U5+U6.
-- [ ] [AGENT] P0. **NEW** `codex/14-customer-journeys/promote-pipeline-backend.md` — `/promote/{strategy_id}/{manifest_id}` API + minimal pre-flight gates (May-23 subset); post-cutover Phase 9 extends with full pre-flight pipeline; ships with Phase U3.
-- [ ] [AGENT] P0. **UPDATE** `codex/04-architecture/custody-providers.md` — populate Copper operational verification result; CEFFU subsections explicitly DEFERRED with named successor (post-cutover plan); ships with Phase 4.A.
-- [ ] [AGENT] P0. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — add strategy-paper / strategy-live launcher patterns; ships with Phase 1.
+- [ ] [AGENT] P0. **NEW** `codex/09-strategy/operational/cli-promote-paths.md` — `run-paper.sh` + `run-live.sh` as CLI
+      track SSOT; per-mode operator pre-flight checklist; ships with Phase 2.
+- [ ] [AGENT] P0. **NEW** `codex/04-architecture/promote-workflow-architecture.md` — covers BOTH May-23 tracks (CLI
+      primary + minimal UI parallel); full UI consolidation + state-machine + cross-service auto-registration deferred
+      to post-cutover plan; ships with Phase 7.
+- [ ] [AGENT] P0. **NEW** `codex/05-infrastructure/strategy-vm-launcher-shape.md` — paper-VM + live-VM launcher
+      convention; ships with Phase 1.
+- [ ] [AGENT] P0. **NEW** `codex/04-architecture/live-deployment-manifest.md` — `MinimalCandidateManifest` shape (May-23
+      subset); post-cutover Phase 2 enriches with pinned shas; ships with Phase U1.
+- [ ] [AGENT] P0. **NEW** `codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow; ships
+      with Phase U5+U6.
+- [ ] [AGENT] P0. **NEW** `codex/14-customer-journeys/promote-pipeline-backend.md` —
+      `/promote/{strategy_id}/{manifest_id}` API + minimal pre-flight gates (May-23 subset); post-cutover Phase 9
+      extends with full pre-flight pipeline; ships with Phase U3.
+- [ ] [AGENT] P0. **UPDATE** `codex/04-architecture/custody-providers.md` — populate Copper operational verification
+      result; CEFFU subsections explicitly DEFERRED with named successor (post-cutover plan); ships with Phase 4.A.
+- [ ] [AGENT] P0. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — add strategy-paper / strategy-live
+      launcher patterns; ships with Phase 1.
 - [ ] [AGENT] P0. **UPDATE** CLAUDE.md — add **"Promote Workflow Path"** key rule:
-  - "May-23 cutover = dual-track. PRIMARY = operator-CLI via `e2e-testing/scripts/defi/run-paper.sh` + `run-live.sh` + `colocated_engine.py` (safety net). SECONDARY = UI promote pipeline (Promote button → POST /promote → MinimalCandidateManifest → paper/live VM auto-launch → DART manual-trade gate first 3d). Heavy state-machine consolidation + full pinned-shas CandidateManifest + cross-service auto-registration ships post-cutover per `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`. Do NOT enrich `MinimalCandidateManifest` with pinned shas / model refs / features manifest version before May-23 — those are post-cutover scope and adding them prematurely creates UAC schema churn."
+  - "May-23 cutover = dual-track. PRIMARY = operator-CLI via `e2e-testing/scripts/defi/run-paper.sh` + `run-live.sh` +
+    `colocated_engine.py` (safety net). SECONDARY = UI promote pipeline (Promote button → POST /promote →
+    MinimalCandidateManifest → paper/live VM auto-launch → DART manual-trade gate first 3d). Heavy state-machine
+    consolidation + full pinned-shas CandidateManifest + cross-service auto-registration ships post-cutover per
+    `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`. Do NOT enrich `MinimalCandidateManifest`
+    with pinned shas / model refs / features manifest version before May-23 — those are post-cutover scope and adding
+    them prematurely creates UAC schema churn."
   - Cross-reference both plans + question doc.
 
 ## Phase 8 — Live cutover dry-run (BOTH paths, P0, operator-action, SEQUENTIAL after Phase 6 + UI Track)
 
-**Why**: Audit Block I1 step 8. Verify all 9 reality-check steps pass for the lead archetype via BOTH the CLI path and the UI path before any real-capital launch.
+**Why**: Audit Block I1 step 8. Verify all 9 reality-check steps pass for the lead archetype via BOTH the CLI path and
+the UI path before any real-capital launch.
 
-- [ ] [SCRIPT] P0. **CLI path dry-run**: `bash e2e-testing/scripts/defi/run-live.sh --dry-run --archetype carry_staked_basis`.
+- [ ] [SCRIPT] P0. **CLI path dry-run**:
+      `bash e2e-testing/scripts/defi/run-live.sh --dry-run --archetype carry_staked_basis`.
   - No actual fills.
   - Real wallet handshake (Copper sign request, but no broadcast).
   - Real venue handshake (auth + balance check, no order submit).
   - Real custody handshake.
   - Verify all 9 reality-check steps from Block I1 pass.
-- [ ] [SCRIPT] P0. **UI path dry-run**: operator opens DART 3-way visualization (Phase U5), clicks Promote-to-live in UI (Phase U4) on Phase 3 candidate, observes:
+- [ ] [SCRIPT] P0. **UI path dry-run**: operator opens DART 3-way visualization (Phase U5), clicks Promote-to-live in UI
+      (Phase U4) on Phase 3 candidate, observes:
   - POST /promote/.../{manifest_id} returns 200 with target_phase=LIVE_EARLY.
   - Pre-flight gates pass (Copper sandbox sign-test / venue keys / alerting / kill-switch / recon).
   - Live VM auto-launches via Phase 1 launcher with `--dry-run` flag passed through (no real fills).
   - DART 3-way renders the new live lane.
-  - ManualTradeGateDialog (Phase U6) appears on first synthetic trade signal; operator clicks Approve; trade unholds + dry-run executes.
+  - ManualTradeGateDialog (Phase U6) appears on first synthetic trade signal; operator clicks Approve; trade unholds +
+    dry-run executes.
   - Verify all 9 reality-check steps from Block I1 pass via UI path too.
-- [ ] [SCRIPT] P0. **Set the `--dry-run-live-cutover-passed` flag** in launch metadata so live launcher accepts subsequent real-mode launches (CLI flag + Firebase claim alternative for UI path).
+- [ ] [SCRIPT] P0. **Set the `--dry-run-live-cutover-passed` flag** in launch metadata so live launcher accepts
+      subsequent real-mode launches (CLI flag + Firebase claim alternative for UI path).
 
 **Phase 8 done definition**:
+
 - ✅ CLI dry-run completes without error; all 9 I1 reality-check steps pass via CLI.
 - ✅ UI dry-run completes without error; all 9 I1 reality-check steps pass via UI.
 - ✅ Launch metadata flag set for both tracks.
 
 **Full-execution criterion**:
+
 - **What ran**: 2 dry-runs (CLI + UI) on operator workstation against carry_staked_basis lead archetype.
-- **Verification**: CLI dry-run report green; UI dry-run produces matching event-stream chain; flag persisted to GCS metadata bucket.
+- **Verification**: CLI dry-run report green; UI dry-run produces matching event-stream chain; flag persisted to GCS
+  metadata bucket.
 
 ## Phase 9 — Master plan refresh (P0, ~0.5d, SEQUENTIAL after Phase 8)
 
@@ -515,54 +684,88 @@ These codex docs ride with the phases that produce them — NOT batched at plan-
     - `pvl-p23e-live-deployment-events` — DEFERRED to post-cutover plan.
   - Add cross-reference to this plan + post-cutover plan in master plan body (Group F + G sections).
 
-- [ ] [AGENT] P0. **Update CLAUDE.md "Master Plan Continuous-Verification Column"** — verify the new continuous-verification rows for F17/F18/F19/F20/F21/F22/G23 reference the actual cron / Tab / QG that runs between checkpoints (per Master Plan Continuous-Verification Column HARD RULE).
+- [ ] [AGENT] P0. **Update CLAUDE.md "Master Plan Continuous-Verification Column"** — verify the new
+      continuous-verification rows for F17/F18/F19/F20/F21/F22/G23 reference the actual cron / Tab / QG that runs
+      between checkpoints (per Master Plan Continuous-Verification Column HARD RULE).
 
 ## Phase 10 — Live cutover go (P0, operator-action, SEQUENTIAL after Phase 9)
 
-**Operator picks track for go**: UI primary (per operator preference if UI track shipped clean per Phase 8) OR CLI fallback (if UI track hit a P0 blocker). Both produce identical event-stream + downstream behavior — only the trigger differs.
+**Operator picks track for go**: UI primary (per operator preference if UI track shipped clean per Phase 8) OR CLI
+fallback (if UI track hit a P0 blocker). Both produce identical event-stream + downstream behavior — only the trigger
+differs.
 
 - [ ] [SCRIPT] P0. **Operator launches LIVE** for both archetypes via PREFERRED track:
-  - **UI path** (preferred if Phase U-track green): operator opens Promote UI → selects candidate manifest for each archetype → clicks Promote-to-live → backend pre-flight + auto-launches VM → DART 3-way renders live lane.
-  - **CLI fallback**: `bash deployment-service/scripts/vm/launch-strategy-live-vm.sh --archetype carry_staked_basis --candidate-version <version>` + same for `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion`.
-- [ ] [SCRIPT] P0. **DART manual-trade window — first 3 days**: operator-monitored every trade signal (per master plan G23 + line 1292 design). Operator-confirms each trade via existing CLI; full UI manual-trade gate is post-cutover.
+  - **UI path** (preferred if Phase U-track green): operator opens Promote UI → selects candidate manifest for each
+    archetype → clicks Promote-to-live → backend pre-flight + auto-launches VM → DART 3-way renders live lane.
+  - **CLI fallback**:
+    `bash deployment-service/scripts/vm/launch-strategy-live-vm.sh --archetype carry_staked_basis --candidate-version <version>` +
+    same for `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion`.
+- [ ] [SCRIPT] P0. **DART manual-trade window — first 3 days**: operator-monitored every trade signal (per master plan
+      G23 + line 1292 design). Operator-confirms each trade via existing CLI; full UI manual-trade gate is post-cutover.
 - [ ] [SCRIPT] P0. **Day 4-7+ automation**: kill-switch + DART pause/override available; automation enabled for fills.
-- [ ] [SCRIPT] P0. **Continuous monitoring**: daily reconciliation report; daily event-archive verification; alerting on-call.
+- [ ] [SCRIPT] P0. **Continuous monitoring**: daily reconciliation report; daily event-archive verification; alerting
+      on-call.
 
 **Phase 10 done definition**:
+
 - ✅ Both archetypes in LIVE_RUNNING for ≥7 continuous days by 2026-05-23.
 - ✅ Service-readiness checklist Group F items 17-22 + G item 23 green for both.
-- ✅ Question doc `plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md` flips status `iterating → closed` (first end-to-end run shipped).
+- ✅ Question doc `plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md` flips status
+  `iterating → closed` (first end-to-end run shipped).
 
 **Full-execution criterion**:
-- **What ran**: 2 live VMs running ≥7 continuous days; operator-confirmed trades for first 3 days; automated for days 4-7+.
-- **Verification**: continuous event-archive presence; per-day reconciliation green; live P&L attribution captured per-archetype; no kill-switch trips OR all trips diagnosed + resolved within SLA.
+
+- **What ran**: 2 live VMs running ≥7 continuous days; operator-confirmed trades for first 3 days; automated for days
+  4-7+.
+- **Verification**: continuous event-archive presence; per-day reconciliation green; live P&L attribution captured
+  per-archetype; no kill-switch trips OR all trips diagnosed + resolved within SLA.
 
 ## Done definition (overall plan)
 
 - ✅ All 10 phases (CLI track) + 6 UI track phases completed.
-- ✅ May-23 cutover live with both archetypes ≥7 continuous days, driven via UI primary OR CLI fallback (operator's choice based on Phase 8 dry-run results).
+- ✅ May-23 cutover live with both archetypes ≥7 continuous days, driven via UI primary OR CLI fallback (operator's
+  choice based on Phase 8 dry-run results).
 - ✅ Master plan readiness matrix refreshed.
 - ✅ All 7 NEW codex docs shipped + 3 UPDATE codex docs reflect actual state.
 - ✅ CLAUDE.md "Promote Workflow Path" key rule added (dual-track shape).
 - ✅ Question doc closes (status: closed).
 
 **Full-execution criterion (overall)**:
-- **What ran**: end-to-end live cutover for May-23 lead pair via DUAL-TRACK — CLI hardened end-to-end + minimal UI shipped end-to-end + Phase 8 dry-run validates BOTH; operator picks track for Phase 10 go.
-- **Verification**: full event-archive trail from backtest → CandidateManifest → paper → live cutover for both archetypes via the chosen track; recon green per-day; P&L attribution captured; Promote UI button + DART manual-trade gate functional even if not used in production.
+
+- **What ran**: end-to-end live cutover for May-23 lead pair via DUAL-TRACK — CLI hardened end-to-end + minimal UI
+  shipped end-to-end + Phase 8 dry-run validates BOTH; operator picks track for Phase 10 go.
+- **Verification**: full event-archive trail from backtest → CandidateManifest → paper → live cutover for both
+  archetypes via the chosen track; recon green per-day; P&L attribution captured; Promote UI button + DART manual-trade
+  gate functional even if not used in production.
 
 ## Temporary states + canonical follow-up plans
 
-- **Minimal CandidateManifest only (no pinned shas / model refs / features manifest version)**: this plan ships `MinimalCandidateManifest` (Phase U1) with placeholder `Optional` fields. Full enrichment deferred to `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` Phase 2 (`CandidateManifest` UAC type with full pinning).
-- **Minimal pre-flight pipeline (no per-deployment alerting auto-rule generation, no auto-register risk profile)**: this plan ships pre-flight gates that compose with existing services. Full pre-flight pipeline + cross-service auto-registration deferred to post-cutover plan Phase 6 + 9.
-- **CEFFU custody STUB**: deferred per master plan Q&A 3. Post-cutover plan picks up if Binance institutional flow opens.
-- **4 lifecycle SSOTs not consolidated**: deferred to post-cutover plan Phase 1 (state-machine consolidation). May-23 plan uses `StrategyMaturityPhase` per existing canonical, doesn't refactor the other 3.
-- **Promote / candidate / lifecycle-pause events not in UAC `LifecycleEventType`**: deferred to post-cutover plan Phase 3. May-23 plan uses UTL bare-string events (`STRATEGY_PROMOTED_TO_CANDIDATE` / `STRATEGY_PROMOTED_TO_PAPER` / `STRATEGY_PROMOTED_TO_LIVE`) — works functionally; UAC enum membership ships post-cutover.
-- **Per-archetype Pydantic config schemas (G2 — only 5 of 53 seeded)**: deferred to post-cutover plan Phase 4. May-23 lead pair has seeded ArchetypeConfig already.
+- **Minimal CandidateManifest only (no pinned shas / model refs / features manifest version)**: this plan ships
+  `MinimalCandidateManifest` (Phase U1) with placeholder `Optional` fields. Full enrichment deferred to
+  `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` Phase 2 (`CandidateManifest` UAC type with full
+  pinning).
+- **Minimal pre-flight pipeline (no per-deployment alerting auto-rule generation, no auto-register risk profile)**: this
+  plan ships pre-flight gates that compose with existing services. Full pre-flight pipeline + cross-service
+  auto-registration deferred to post-cutover plan Phase 6 + 9.
+- **CEFFU custody STUB**: deferred per master plan Q&A 3. Post-cutover plan picks up if Binance institutional flow
+  opens.
+- **4 lifecycle SSOTs not consolidated**: deferred to post-cutover plan Phase 1 (state-machine consolidation). May-23
+  plan uses `StrategyMaturityPhase` per existing canonical, doesn't refactor the other 3.
+- **Promote / candidate / lifecycle-pause events not in UAC `LifecycleEventType`**: deferred to post-cutover plan
+  Phase 3. May-23 plan uses UTL bare-string events (`STRATEGY_PROMOTED_TO_CANDIDATE` / `STRATEGY_PROMOTED_TO_PAPER` /
+  `STRATEGY_PROMOTED_TO_LIVE`) — works functionally; UAC enum membership ships post-cutover.
+- **Per-archetype Pydantic config schemas (G2 — only 5 of 53 seeded)**: deferred to post-cutover plan Phase 4. May-23
+  lead pair has seeded ArchetypeConfig already.
 - **Drift detection**: deferred to post-cutover plan Phase 5.
-- **Cross-service auto-registration on promote (H1-H3)**: deferred to post-cutover plan Phase 6. May-23 plan operator-registers via separate API calls.
-- **Continuous backtest cron**: deferred to post-cutover plan Phase 7. May-23 plan = one-shot 2yr backtest run via Phase 3.
-- **Backtest persistence + ranking surface (full)**: deferred to post-cutover plan Phase 8. May-23 plan = canonical PATH_REGISTRY + Phase 3 backtest output is sufficient for cutover; full ranking + champion store + RankedCandidate UAC ships post-cutover.
-- **Operational modes consolidation (`pvl-p17a-d`)**: deferred to post-cutover plan Phase 11. May-23 plan tolerates the 3 anti-patterns (`paper_trade: bool`, `_PAPER_VENUE_KEYS`, parallel TestingStage enum) — refactor is post-cutover.
+- **Cross-service auto-registration on promote (H1-H3)**: deferred to post-cutover plan Phase 6. May-23 plan
+  operator-registers via separate API calls.
+- **Continuous backtest cron**: deferred to post-cutover plan Phase 7. May-23 plan = one-shot 2yr backtest run via
+  Phase 3.
+- **Backtest persistence + ranking surface (full)**: deferred to post-cutover plan Phase 8. May-23 plan = canonical
+  PATH_REGISTRY + Phase 3 backtest output is sufficient for cutover; full ranking + champion store + RankedCandidate UAC
+  ships post-cutover.
+- **Operational modes consolidation (`pvl-p17a-d`)**: deferred to post-cutover plan Phase 11. May-23 plan tolerates the
+  3 anti-patterns (`paper_trade: bool`, `_PAPER_VENUE_KEYS`, parallel TestingStage enum) — refactor is post-cutover.
 - **Multi-tenant client-id flow (H4)**: deferred to Tier 3 post-launch.
 
 ## Composes with
@@ -573,7 +776,8 @@ These codex docs ride with the phases that produce them — NOT batched at plan-
 - CLAUDE.md "Singleton-locked launchers" — paper + live launchers per-archetype singleton-locked.
 - CLAUDE.md "Master Plan Continuous-Verification Column" — Phase 9 refresh.
 - CLAUDE.md "Post-Plan-Phase Codex Audit" — Phase 7 codex docs ride with their phases.
-- CLAUDE.md "Citadel-Grade Planning Standards" — pre-audit + phased DAG + parallelization + success criteria + downstream consumer updates + SSOT discipline.
+- CLAUDE.md "Citadel-Grade Planning Standards" — pre-audit + phased DAG + parallelization + success criteria +
+  downstream consumer updates + SSOT discipline.
 - `plans/active/master_to_live_defi_2026_05_23.md` — this plan executes the Group F/G live-only items.
 - `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` — Phase 2 pre-flight composes with credential matrix.
 - `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` — companion plan for everything deferred.

@@ -159,9 +159,9 @@ Item 1, not parallelization blockers between items.
 - [ ] [TRADING] P0. **[PARALLEL]** **Lending-indices VM relaunch (Bug 2 + Bug 3)** — Tab 9 yesterday verified Bug 1 (UAC
       SSOT fix end-to-end at AAVEV3 ETHEREUM 2023-01-27 captured rows). Bugs 2 (Compound V3 schema drift) + 3
       (instruments-store-defi 2022 metadata floor) per
-      [`../archive/issues/lending_indices_handler_bugs_2026_05_07.md`](../archive/issues/lending_indices_handler_bugs_2026_05_07.md) still
-      pending. Today: **fix both bugs end-to-end + relaunch + 90s STARTED + 10-15min progress + T+30min per-VM manifest
-      spot-check**. Per CLAUDE.md "No fire-and-forget VM launches". ~2 AI-days.
+      [`../archive/issues/lending_indices_handler_bugs_2026_05_07.md`](../archive/issues/lending_indices_handler_bugs_2026_05_07.md)
+      still pending. Today: **fix both bugs end-to-end + relaunch + 90s STARTED + 10-15min progress + T+30min per-VM
+      manifest spot-check**. Per CLAUDE.md "No fire-and-forget VM launches". ~2 AI-days.
 - [x] [DESIGN+UAC] P0. **4 UAC `PROTOCOL_LAUNCH_DATES` drift fix sub-tabs A/B/C/D** — **SHIPPED** UAC@6c873e4 (Batches
       A/B/C/D bundled in one commit per single-file no-collision-window opportunity; 13 drift pairs flipped;
       SPARK/ETHEREUM added at 2023-03-07 + removed from PENDING; POLYGON/COMPOUNDV3 removed and moved to PENDING since
@@ -208,8 +208,8 @@ position-balance-monitor-service (paper-trade smoke), deployment-service `script
 - [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) (full body — long)
 - [`plans/archive/issues/lending_indices_handler_bugs_2026_05_07.md`](../archive/issues/lending_indices_handler_bugs_2026_05_07.md)
 - [`plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md`](../archive/issues/defi_988_missing_dates_audit_2026_05_08.md)
-- [`plans/archive/issues/defi_fork1_prep_audit_2026_05_08.md`](../archive/issues/defi_fork1_prep_audit_2026_05_08.md) (Tab 14
-  output: 13 of 17 pairs drift)
+- [`plans/archive/issues/defi_fork1_prep_audit_2026_05_08.md`](../archive/issues/defi_fork1_prep_audit_2026_05_08.md)
+  (Tab 14 output: 13 of 17 pairs drift)
 - [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F+G
 
 **Sub-agent fan-out**:
@@ -975,7 +975,7 @@ cleanly without re-reading session notes.
 | `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1      | `design-ready`                                          | Owner agent implements per design; ratchets writegate Phase 5                                                                                                 |
 | `simulation_scenarios_topology_price_shocks_2026_05_09.md`          | `operator-needs-decision`                               | Operator triages topology choice; agent picks up post-decision                                                                                                |
 | Master plan Continuous Verification matrix per HARD RULE 2026-05-08 | `in-flight (main agent shipping bbc35344 this session)` | Main agent finishes the per-row Continuous Verification column; reviewers gate refresh PRs on it (see CLAUDE.md "Master Plan Continuous-Verification Column") |
-| F6 deeper-df-flow refactor                                          | `operator-needs-decision`                               | See `../archive/issues/f6_df_flow_refactor_blocked_by_available_at_2026_05_08.md` + `f6_record_captured_requires_df_features_consolidation_2026_05_08.md`                |
+| F6 deeper-df-flow refactor                                          | `operator-needs-decision`                               | See `../archive/issues/f6_df_flow_refactor_blocked_by_available_at_2026_05_08.md` + `f6_record_captured_requires_df_features_consolidation_2026_05_08.md`     |
 | defi_master Q1                                                      | `operator-needs-decision`                               | Operator triage; defi_master_2026_05_07.md Q&A surface                                                                                                        |
 | alerting Phase 4-9                                                  | `operator-needs-scheduling`                             | PagerDuty + Telegram chat structure operator decisions ratified per `operator_decisions_2026_05_08.md`; Phase 4-9 implementation pending operator scheduling  |
 | F2-v2 item 2 — in-flight Tab G                                      | `in-flight`                                             | Tab G's session in flight; carryover via Tab G's DONE block                                                                                                   |

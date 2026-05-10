@@ -39,11 +39,11 @@ related_plans:
 > **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the May-23 cutover for
 > `carry_staked_basis` (DeFi lead archetype) lands via dual-track promote workflow:
 > [`promote_workflow_may23_cli_path_2026_05_10.md`](./promote_workflow_may23_cli_path_2026_05_10.md) (CLI primary +
-> minimal UI parallel) + [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
-> (full UI extension post-cutover). **BE AWARE** when touching `e2e-testing/scripts/defi/run-paper.sh` /
-> `run-live.sh` / `colocated_engine.py` (CLI track owners) OR Copper custody (Phase 4.A operational verification owner)
-> OR Tenderly fork (Phase 4.D validation owner) OR Solana devnet wiring for jitoSOL/mSOL/bSOL (Phase 4.C `pvl-p20c`
-> owner). Question doc:
+> minimal UI parallel) +
+> [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+> (full UI extension post-cutover). **BE AWARE** when touching `e2e-testing/scripts/defi/run-paper.sh` / `run-live.sh` /
+> `colocated_engine.py` (CLI track owners) OR Copper custody (Phase 4.A operational verification owner) OR Tenderly fork
+> (Phase 4.D validation owner) OR Solana devnet wiring for jitoSOL/mSOL/bSOL (Phase 4.C `pvl-p20c` owner). Question doc:
 > [`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md).
 
 ## Codex SSOTs
@@ -93,10 +93,11 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
   - 4-service QG pass (strategy / execution / risk-and-exposure / features-onchain): ~1 ai-day
   - 8-archetype Phase 1 batch e2e + CARRY_RECURSIVE_STAKED PnL row: ~2 ai-days
   - Copper sandbox: ~0.5 ai-day (FlashLoanReceiver mainnet deploy ✅ shipped 2026-05-10 at
-    `0x42c005e2Bc545a49B50Fee3E76B8558348CAAb4c` — tx `0x09a4f9f08cd0cc211d5f825d713de3cf56f20938f1a781f16aaae703708a0925`,
-    block 25066462, gas 521102, bytecode 2157 bytes verified via `eth_getCode`; UAC@abb8e5f0 registered chain_id=1 in
-    `config/testnet_contracts.yaml`; SM secret `flash-loan-receiver-mainnet` mirrors Sepolia pattern; closes the live-Aave-flash-loan
-    blocker for `carry_staked_basis` recursive-staking unwind)
+    `0x42c005e2Bc545a49B50Fee3E76B8558348CAAb4c` — tx
+    `0x09a4f9f08cd0cc211d5f825d713de3cf56f20938f1a781f16aaae703708a0925`, block 25066462, gas 521102, bytecode 2157
+    bytes verified via `eth_getCode`; UAC@abb8e5f0 registered chain_id=1 in `config/testnet_contracts.yaml`; SM secret
+    `flash-loan-receiver-mainnet` mirrors Sepolia pattern; closes the live-Aave-flash-loan blocker for
+    `carry_staked_basis` recursive-staking unwind)
   - Operational drift fixes (PROTOCOL_LAUNCH_DATES coverage — Tab 14 reported 13 of 17 protocols missing): ~1 ai-day
 - **Parallelism factor**: ~3x (workstreams largely independent — oracle / DEX-perp / archetype gates / Copper can
   proceed in parallel agents), so **~3-4 calendar days wall-clock** if 3-4 agents in parallel + operator approvals on
@@ -430,7 +431,8 @@ these venues.
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
 > **Audit 2026-05-08 (Tab 6, defi-988-audit-tab)**: per-(chain, protocol, data_type) breakdown + top-5 priority list
-> filed at [`../archive/issues/defi_988_missing_dates_audit_2026_05_08.md`](../archive/issues/defi_988_missing_dates_audit_2026_05_08.md).
+> filed at
+> [`../archive/issues/defi_988_missing_dates_audit_2026_05_08.md`](../archive/issues/defi_988_missing_dates_audit_2026_05_08.md).
 > TL;DR: 1.3M non-captured rows across 10 DeFi buckets but **99% are SSOT-correct pre-genesis/pre-launch clipping**;
 > only **13,632 rows / 2,234 distinct dates are actionable**. Top concentrations: (1) Tab 5 lending-indices fixes
 > resolve ~2.4k; (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot V3) resolve ~1.4k; (3) UAC
@@ -543,8 +545,8 @@ AAVEV3/COMPOUNDV3/etc. across all chains. Investigation target: `instruments-ser
 its launch-date floor handling.
 
 **RESOLVED 2026-05-08 — Tab 5 (lending-indices-bugfix-tab)**: All three bugs fixed.
-[`../archive/issues/lending_indices_handler_bugs_2026_05_07.md`](../archive/issues/lending_indices_handler_bugs_2026_05_07.md) carries the
-canonical RESOLVED block. Code commits:
+[`../archive/issues/lending_indices_handler_bugs_2026_05_07.md`](../archive/issues/lending_indices_handler_bugs_2026_05_07.md)
+carries the canonical RESOLVED block. Code commits:
 
 - `instruments-service@1a90185` — Bug 3: `get_protocol_floor_date()` consults UAC `PROTOCOL_LAUNCH_DATES` SSOT first;
   AAVE V3 ETHEREUM floor corrected from 2023-01-27 (legacy) to 2022-03-14 (UAC mainnet deploy).
@@ -558,14 +560,14 @@ lending-indices VM is ready to re-launch. Operator-owned step.
 
 **Audit 2026-05-08 (Tab 14, defi-fork1-prep-audit-tab)**: 4-bug-class diagnostic audit ran across the full Fork 1
 data-source surface BEFORE Ikenna's D4 launches. Results filed at
-[`../archive/issues/defi_fork1_prep_audit_2026_05_08.md`](../archive/issues/defi_fork1_prep_audit_2026_05_08.md). TL;DR: Bug classes 1-3 are
-✅ no new findings (Tab 5 + Tab 9's shipped cascade + UAC SSOT cascade is structurally correct). **Bug class 4 — UAC
-PROTOCOL_LAUNCH_DATES drift — found 13 of 17 probed pairs DRIFT > ±3 days.** Recommend operator spawn 4 sequential fix
-tabs (A: AAVEV3 6 chains; B: COMPOUNDV3 4 chains; C: UNISWAPV3 3 chains; D: SPARK ETH + bSOL UAC entry) all mirroring
-Tab 9's shape. Pyth Hermes archive coverage start ≈ 2023-10-01 (no SSOT); jitoSOL pre-2023-10 oracle-USD backfill
-blocked. bSOL is in Tab 14 brief as a Fork 1 LST yield but absent from UAC `LST_TOKEN_GENESIS` — coverage gap.
-**Owner**: operator triage (case-5 big finding per CLAUDE.md Findings Triage Discipline; cross-repo UAC + MTDS +
-instruments-service; on May-23 critical path).
+[`../archive/issues/defi_fork1_prep_audit_2026_05_08.md`](../archive/issues/defi_fork1_prep_audit_2026_05_08.md). TL;DR:
+Bug classes 1-3 are ✅ no new findings (Tab 5 + Tab 9's shipped cascade + UAC SSOT cascade is structurally correct).
+**Bug class 4 — UAC PROTOCOL_LAUNCH_DATES drift — found 13 of 17 probed pairs DRIFT > ±3 days.** Recommend operator
+spawn 4 sequential fix tabs (A: AAVEV3 6 chains; B: COMPOUNDV3 4 chains; C: UNISWAPV3 3 chains; D: SPARK ETH + bSOL UAC
+entry) all mirroring Tab 9's shape. Pyth Hermes archive coverage start ≈ 2023-10-01 (no SSOT); jitoSOL pre-2023-10
+oracle-USD backfill blocked. bSOL is in Tab 14 brief as a Fork 1 LST yield but absent from UAC `LST_TOKEN_GENESIS` —
+coverage gap. **Owner**: operator triage (case-5 big finding per CLAUDE.md Findings Triage Discipline; cross-repo UAC +
+MTDS + instruments-service; on May-23 critical path).
 
 **Verification recipe used to find these** (do this WITHIN 10-15 MIN of any backfill VM launch — don't wait for /loop):
 
@@ -934,10 +936,9 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
   oracles); AWS↔GCP parity proof at live-trading layer (single archetype, not full scale); DART manual-trade lane for
   3-day manual → 7-day automated default; live observability + event streaming.
 - **OUT (post-May-23)**: full strategy mesh launch (only carry archetypes; `ARBITRAGE_PRICE_DISPERSION`
-  (`funding-rate-dispersion`) CAN slip if Week 3 tight per master plan risk register); full AWS scale
-  (single-archetype proof only); ML-driven DeFi archetypes (DeFi
-  stays rules-based this cycle); other archetype families (price-arb, prediction, sports — own deliverables in
-  respective masters).
+  (`funding-rate-dispersion`) CAN slip if Week 3 tight per master plan risk register); full AWS scale (single-archetype
+  proof only); ML-driven DeFi archetypes (DeFi stays rules-based this cycle); other archetype families (price-arb,
+  prediction, sports — own deliverables in respective masters).
 
 ### Cross-epic handshakes
 
@@ -957,11 +958,11 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
       `strategy_and_dart_master:Phase 2.2` Playwright matrix. See `plans/active/operator_decisions_2026_05_08.md`.
 - [x] ✓ **research-service repo decision — RESOLVED 2026-05-08 (master Q&A 6).** **Fold into deployment-api** for May 23
       scope.
-- [x] ✓ **`ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) strict P0 — RESOLVED 2026-05-08.** **Strict P0 —
-      both archetypes required.** If the funding-rate-dispersion archetype (renamed from legacy `leveraged_funding_arb`
-      per Stream B canonicalisation 2026-05-07) slips at the live-cutover gate, fall back to carry-only for the 7-day
-      live window AND ship the funding-rate-dispersion archetype live in the immediate post-cutover week — but build,
-      smoke, and paper-trade verification for both must complete by May 23.
+- [x] ✓ **`ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) strict P0 — RESOLVED 2026-05-08.** **Strict P0 — both
+      archetypes required.** If the funding-rate-dispersion archetype (renamed from legacy `leveraged_funding_arb` per
+      Stream B canonicalisation 2026-05-07) slips at the live-cutover gate, fall back to carry-only for the 7-day live
+      window AND ship the funding-rate-dispersion archetype live in the immediate post-cutover week — but build, smoke,
+      and paper-trade verification for both must complete by May 23.
 
 ## Open questions
 
@@ -1000,9 +1001,8 @@ Does NOT launch any defi_988 VM until Ikenna resolves #3 + #4 + operator authori
 
 #### Re-spawn brief — 2026-05-10 (Tab K stalled at web-research; new approach for the next agent)
 
-Tab K was spawned 2026-05-10 to research priorities #3 + #4 + #5 via WebFetch + block explorers. **Stalled at 600s
-with no progress** (Anthropic stream-watchdog killed the task before any commit). Discoveries before stall (don't
-re-do):
+Tab K was spawned 2026-05-10 to research priorities #3 + #4 + #5 via WebFetch + block explorers. **Stalled at 600s with
+no progress** (Anthropic stream-watchdog killed the task before any commit). Discoveries before stall (don't re-do):
 
 - **`PROTOCOL_LAUNCH_DATES` already exists** at
   [`unified-api-contracts/unified_api_contracts/registry/chain_env.py:144`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py#L144)
@@ -1011,36 +1011,37 @@ re-do):
   [`unified-api-contracts/unified_api_contracts/registry/chain_env.py:91`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py#L91)
   — the 23 chains workspace currently tracks.
 - **`_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`** at
-  [`chain_env.py:264`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py#L264) tracks the
-  ~30 (chain, protocol) pairs whose launch dates are unknown. **Q1 priority #3 = fill these entries** (move pairs
-  from PENDING → PROTOCOL_LAUNCH_DATES with researched dates + remove from PENDING).
-- **ASTER is a PROTOCOL on BSC, not a chain** (per CoinGecko `asset_platform=binance-smart-chain` for `aster-2`).
-  Q1 priority #4 should add `("BSC", "ASTER")` to PROTOCOL_LAUNCH_DATES, NOT add a CHAIN_GENESIS_DATES["ASTER"]
-  entry (which would conflict with the chain-vs-protocol axis). Conservative date: 2024-09-01 (Aster DEX launched
-  on BNB Chain ~Q3 2024 per public news; first on-chain event verifiable via BscScan). Adding even the conservative
-  date eliminates 759 false missing dates by tightening the denominator from BSC genesis (2020-08-29).
+  [`chain_env.py:264`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py#L264) tracks the ~30
+  (chain, protocol) pairs whose launch dates are unknown. **Q1 priority #3 = fill these entries** (move pairs from
+  PENDING → PROTOCOL_LAUNCH_DATES with researched dates + remove from PENDING).
+- **ASTER is a PROTOCOL on BSC, not a chain** (per CoinGecko `asset_platform=binance-smart-chain` for `aster-2`). Q1
+  priority #4 should add `("BSC", "ASTER")` to PROTOCOL_LAUNCH_DATES, NOT add a CHAIN_GENESIS_DATES["ASTER"] entry
+  (which would conflict with the chain-vs-protocol axis). Conservative date: 2024-09-01 (Aster DEX launched on BNB Chain
+  ~Q3 2024 per public news; first on-chain event verifiable via BscScan). Adding even the conservative date eliminates
+  759 false missing dates by tightening the denominator from BSC genesis (2020-08-29).
 
 **Re-spawn approach** (avoid the web-research stall pattern that killed Tab K):
 
-1. **Use SUBGRAPH_IDS not WebFetch** — for each pending (chain, protocol), the workspace's existing The Graph
-   subgraph mapping in `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py`
-   `SUBGRAPH_IDS` dict has the subgraph endpoint. Query the subgraph's earliest event timestamp directly via
-   `gql` — this is workspace-internal, no web research, no rate-limit risk.
+1. **Use SUBGRAPH_IDS not WebFetch** — for each pending (chain, protocol), the workspace's existing The Graph subgraph
+   mapping in `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py` `SUBGRAPH_IDS`
+   dict has the subgraph endpoint. Query the subgraph's earliest event timestamp directly via `gql` — this is
+   workspace-internal, no web research, no rate-limit risk.
 2. **For pairs without subgraph** (e.g. some lending protocols on emerging chains): query the chain's RPC for the
-   protocol's contract deployment block via `eth_getTransactionReceipt(deployment_tx)`. Contract addresses are in
-   the workspace's `unified-config-interface/contracts/` registry.
-3. **For ASTER specifically**: query BscScan API (`https://api.bscscan.com/api?module=account&action=txlist&address=<ASTER_PERPS_ROUTER>`)
-   for first transaction. ASTER perps router address available from `unified_api_contracts/registry/capability_declarations/_defi.py`
-   `aster` capability declaration.
+   protocol's contract deployment block via `eth_getTransactionReceipt(deployment_tx)`. Contract addresses are in the
+   workspace's `unified-config-interface/contracts/` registry.
+3. **For ASTER specifically**: query BscScan API
+   (`https://api.bscscan.com/api?module=account&action=txlist&address=<ASTER_PERPS_ROUTER>`) for first transaction.
+   ASTER perps router address available from `unified_api_contracts/registry/capability_declarations/_defi.py` `aster`
+   capability declaration.
 
-**Q1 priority #5 (LINEA + BSC `lending-indices-handler` routing config)**: search for
-`lending-indices-handler` source via `grep -rn "lending_indices\|lending-indices" market-tick-data-service/` —
-likely a handler under `market_tick_data_service/cli/handlers/` or `market_tick_data_service/adapters/`. Add
-LINEA + BSC routing entries; pattern follows existing chains' entries in the same handler. Tab 4 (Harsh-side)
-launches backfill VMs once routing lands.
+**Q1 priority #5 (LINEA + BSC `lending-indices-handler` routing config)**: search for `lending-indices-handler` source
+via `grep -rn "lending_indices\|lending-indices" market-tick-data-service/` — likely a handler under
+`market_tick_data_service/cli/handlers/` or `market_tick_data_service/adapters/`. Add LINEA + BSC routing entries;
+pattern follows existing chains' entries in the same handler. Tab 4 (Harsh-side) launches backfill VMs once routing
+lands.
 
-**Capture Discoveries As Plan Todos compliance**: this brief is the discovery + recommended approach; the actual
-fill work goes into the next agent's commit batch with per-pair entries flipped here as Q1 sub-decisions resolve.
+**Capture Discoveries As Plan Todos compliance**: this brief is the discovery + recommended approach; the actual fill
+work goes into the next agent's commit batch with per-pair entries flipped here as Q1 sub-decisions resolve.
 
 - **Pyth UNBANNED for Solana** (2026-05-06): use Hermes (batch) + PythNet (live). Other chains stay on Chainlink. See
   CLAUDE.md "Removed providers" → "Pyth — UNBANNED" entry.
@@ -1149,9 +1150,9 @@ VM pending operator decision).
 **PM code commits**:
 
 - PM@b1bd92e6 — `docs(plans): paper-trade smoke runbook for carry_staked_basis Solana hedge`. NEW
-  `plans/archive/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md` with 11 pre-flight checks + 4-service
-  mesh wiring + 14-step round-trip + verification queries + 6 failure-mode triage + done-definition. Source: Tab 1
-  sub-agent Plan-mode design pass.
+  `plans/archive/issues/paper_trade_smoke_carry_staked_basis_runbook_2026_05_08.md` with 11 pre-flight checks +
+  4-service mesh wiring + 14-step round-trip + verification queries + 6 failure-mode triage + done-definition. Source:
+  Tab 1 sub-agent Plan-mode design pass.
 - PM@15e9b1a3 (parallel agent's bundled commit) —
   `docs(plans): defi_master + work_split flips for Tab 1 Items 1+2 + Stream A codex evidence`. Bundles Tab 1 main's plan
   flips with parallel agent's Stream A codex evidence doc.
@@ -1221,15 +1222,15 @@ event stream — operator must SSH-tail logs (a dev crutch per CLAUDE.md). Refer
 
 User flagged "runbooks shipped → nobody runs them → silent rot" gap. Closing it with explicit owners:
 
-| Runbook                                             | Owner                                                 | Cadence              | Status                                                                                                                                                                                 |
-| --------------------------------------------------- | ----------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runbook                                             | Owner                                                 | Cadence              | Status                                                                                                                                                                                       |
+| --------------------------------------------------- | ----------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Paper-trade smoke (PM@b1bd92e6)                     | **operator + new Tab** to migrate colocated_engine.py | Daily once unblocked | 🚨 **P0 BLOCKED** — `colocated_engine.py:306` stale import (V1-RETIRE Phase 2 not migrated). See `plans/archive/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.plan.md`. |
-| Lending-indices VM relaunch (this doc)              | Tab 1 main agent                                      | One-shot             | ✅ **DONE 14:11 UTC** (mtds-lending-indices-20260508-141147 RUNNING)                                                                                                                   |
-| Lending-indices T+90min spot-check                  | Tab 1 ScheduleWakeup                                  | At 15:24 UTC         | ⏳ Scheduled                                                                                                                                                                           |
-| Pyth-archive VM launch (deployment-service@0722ac4) | Tab 1 main agent                                      | One-shot             | ✅ **DONE 14:11 UTC** (mtds-pyth-archive-20260508-141204 RUNNING + writing oracle prices)                                                                                              |
-| Pyth-archive T+90min spot-check                     | Tab 1 ScheduleWakeup                                  | At 15:24 UTC         | ⏳ Scheduled                                                                                                                                                                           |
-| Birdeye paid-tier launcher (Item 5)                 | Operator decision pending (P1)                        | One-shot when needed | DEFERRED — Pythnet/CoinGecko cascade in current launcher sufficient                                                                                                                    |
-| Custody adapter health (Copper sandbox)             | Live-only prerequisite                                | One-shot             | DEFERRED per master plan Group F (live-only)                                                                                                                                           |
+| Lending-indices VM relaunch (this doc)              | Tab 1 main agent                                      | One-shot             | ✅ **DONE 14:11 UTC** (mtds-lending-indices-20260508-141147 RUNNING)                                                                                                                         |
+| Lending-indices T+90min spot-check                  | Tab 1 ScheduleWakeup                                  | At 15:24 UTC         | ⏳ Scheduled                                                                                                                                                                                 |
+| Pyth-archive VM launch (deployment-service@0722ac4) | Tab 1 main agent                                      | One-shot             | ✅ **DONE 14:11 UTC** (mtds-pyth-archive-20260508-141204 RUNNING + writing oracle prices)                                                                                                    |
+| Pyth-archive T+90min spot-check                     | Tab 1 ScheduleWakeup                                  | At 15:24 UTC         | ⏳ Scheduled                                                                                                                                                                                 |
+| Birdeye paid-tier launcher (Item 5)                 | Operator decision pending (P1)                        | One-shot when needed | DEFERRED — Pythnet/CoinGecko cascade in current launcher sufficient                                                                                                                          |
+| Custody adapter health (Copper sandbox)             | Live-only prerequisite                                | One-shot             | DEFERRED per master plan Group F (live-only)                                                                                                                                                 |
 
 **Periodic-execution gap closure**: Paper-trade smoke MUST be wired to a periodic executor (cron / daily Tab) once the
 V1-RETIRE blocker is fixed. Without periodic execution, harness rot like the 2026-05-01 → 2026-05-08 silent breakage

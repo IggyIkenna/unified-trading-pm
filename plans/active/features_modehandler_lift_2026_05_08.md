@@ -25,10 +25,10 @@ migrated_from: feature_batch_handler_abc_zero_consumers_2026_05_08.md (issue doc
 ## What this is
 
 Successor plan capturing **option α** from the Phase 10 sub-agent's FeatureBatchHandler investigation
-(`plans/archive/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.plan.md`). Originally option β (delete dead UTL
-FeatureBatchHandler) shipped 2026-05-08 PM at UTL@2162eee5, closing the workspace-SSOT violation. **This plan captures
-the architectural follow-up**: lift the local 4-family `ModeHandler` ABC into UTL canonical so future features-\* batch
-handlers have a real SSOT to inherit from.
+(`plans/archive/issues/feature_batch_handler_abc_zero_consumers_2026_05_08.plan.md`). Originally option β (delete dead
+UTL FeatureBatchHandler) shipped 2026-05-08 PM at UTL@2162eee5, closing the workspace-SSOT violation. **This plan
+captures the architectural follow-up**: lift the local 4-family `ModeHandler` ABC into UTL canonical so future
+features-\* batch handlers have a real SSOT to inherit from.
 
 ## Why P2 / post-2026-05-23
 

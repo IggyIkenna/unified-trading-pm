@@ -24,11 +24,12 @@ owner: Ikenna (plan), Harsh (alerting-service code)
 >
 > The `AlertRule` Pydantic field originally spec'd as `pattern` is renamed to `event_pattern` to align with the codex
 > SSOT in [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md) § "Alerting-Service Routing
-> Rules" (lines 116-149) where every routing-rule entry uses the `event_pattern` key. Codex is SSOT for target
-> structure per workspace rule. Implementation agents picking up this plan MUST use `event_pattern` in UAC + Pydantic
-> + tests + any downstream consumer. The already-shipped UAC@d00326d (`AlertRule.pattern`,
-> `unified_api_contracts/canonical/crosscutting/alerting/rules.py`) requires a follow-up rename PR; any downstream
-> plan or service that wired against `pattern` must rename in the same logical unit when consuming.
+> Rules" (lines 116-149) where every routing-rule entry uses the `event_pattern` key. Codex is SSOT for target structure
+> per workspace rule. Implementation agents picking up this plan MUST use `event_pattern` in UAC + Pydantic
+>
+> - tests + any downstream consumer. The already-shipped UAC@d00326d (`AlertRule.pattern`,
+>   `unified_api_contracts/canonical/crosscutting/alerting/rules.py`) requires a follow-up rename PR; any downstream
+>   plan or service that wired against `pattern` must rename in the same logical unit when consuming.
 
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation 2026-05-08**
 >
@@ -210,18 +211,16 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
       lookup. New helper `_aave_utilization_threshold_ratio(archetype)` normalises bps_of_one (UAC unit) → ratio +
       respects per-archetype overrides (`ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy
       `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07) fires at 90% vs default 95%).
-      `check_aave_utilization()`
-      now accepts optional `archetype` parameter; alert payload includes `threshold_ratio` + `archetype` for operator
-      transparency. Shipped alerting-service@b025e83. NOTE: `circuit_breaker.py` was scoped in the original todo, but
-      audit found no inline thresholds there — its only constants are sliding-window / cooldown / threshold counts which
-      are operational-tuning knobs (not risk thresholds owned by UAC). DEFERRED unless a future audit surfaces a real
-      threshold drift candidate.
+      `check_aave_utilization()` now accepts optional `archetype` parameter; alert payload includes `threshold_ratio` +
+      `archetype` for operator transparency. Shipped alerting-service@b025e83. NOTE: `circuit_breaker.py` was scoped in
+      the original todo, but audit found no inline thresholds there — its only constants are sliding-window / cooldown /
+      threshold counts which are operational-tuning knobs (not risk thresholds owned by UAC). DEFERRED unless a future
+      audit surfaces a real threshold drift candidate.
 - [x] [AGENT] P0. `alerting-service/tests/unit/test_uac_routing_rules_consumption.py` — 37 tests covering: (a)
       byte-equivalence of `_default_routing_rules()` vs `[r.to_routing_dict() for r in LIVE_ALERT_RULES]`; (b) every
       legacy pattern still routed (KILL*SWITCH*_, CIRCUIT*BREAKER*_, DEFI*\*, MARGIN*_, etc); (c) AAVE threshold reads
       UAC + per-archetype overrides apply (`ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) fires at 91%,
-      default doesn't); (d)
-      `check_aave_utilization` fires correctly above/below thresholds; (e) KILL*SWITCH*_ family
+      default doesn't); (d) `check_aave_utilization` fires correctly above/below thresholds; (e) KILL*SWITCH*_ family
       CRITICAL+PagerDuty+`triggers_kill_switch=True`; (f) CROSS_CLOUD_EGRESS_DETECTED PagerDuty-routed. All 37 green.
       Shipped alerting-service@b025e83.
 - [x] [QG] P0. `cd alerting-service && bash scripts/quality-gates.sh` PASSED — all 6/6 gates green (auto-fix / lint /
@@ -232,12 +231,13 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
       agents" rule + work-split Agent-1 ownership of alerting Phase 2, ship-first-review-after is the institutional
       default.
 - [ ] [AGENT] P0. **Phase 2.X — `AlertRule.pattern` → `event_pattern` rename follow-up PR.** UAC@d00326d shipped the
-      Pydantic field as `pattern`; codex SSOT [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md)
-      § "Alerting-Service Routing Rules" (lines 116-149) uses `event_pattern`. Codex is SSOT for target structure per
-      workspace rule. Rename surface: UAC `unified_api_contracts/canonical/crosscutting/alerting/rules.py` (Pydantic
-      field + every constructor in seed dict) + UAC tests + alerting-service consumer (config.py default-factory body
-      + any `.pattern` attribute access) + tests. Single logical-unit commit; no compatibility shim. Owns the IN-FLIGHT
-      REFACTOR banner at top of this plan — banner clears when this todo flips `[x]`.
+      Pydantic field as `pattern`; codex SSOT
+      [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md) § "Alerting-Service Routing
+      Rules" (lines 116-149) uses `event_pattern`. Codex is SSOT for target structure per workspace rule. Rename
+      surface: UAC `unified_api_contracts/canonical/crosscutting/alerting/rules.py` (Pydantic field + every constructor
+      in seed dict) + UAC tests + alerting-service consumer (config.py default-factory body + any `.pattern` attribute
+      access) + tests. Single logical-unit commit; no compatibility shim. Owns the IN-FLIGHT REFACTOR banner at top of
+      this plan — banner clears when this todo flips `[x]`.
 
 ### Phase 3 — Producer migration to UAC closed-set codes (2 days, parallel across services)
 
@@ -267,23 +267,22 @@ No hard-coded creds. Rotation via `ApiKeyReloader` per CLAUDE.md.
       per cloud. **PagerDuty + Slack paging deferred** to a future cycle pending operator decision on PagerDuty service
       tier (open question 1 of this plan); until then Telegram is the primary paging channel for Phase 7-9. Used UTL-
       naming-pattern (kebab-case `alerting-{channel}-{field}`) so the existing `UnifiedCloudConfig.telegram_bot_token`
-      env-var bindings + `_get_cloud_config()` singleton in `alerting-service/alerting_service/notifiers/router.py`
-      pick up via the `*_SECRET` metadata env wiring used by data-pipeline-vm bootstrap. Tab L verified end-to-end via
-      smoke (next item).
-      **DEFERRED-PER-DECISION (operator)**: PagerDuty + Slack credential push (`alerting-pagerduty-service-key`,
-      `alerting-slack-webhook-url`) — pending Telegram-as-primary validation through Phase 7 baseline; if quietness
-      shows Telegram-only paging is sufficient, PagerDuty add becomes optional.
+      env-var bindings + `_get_cloud_config()` singleton in `alerting-service/alerting_service/notifiers/router.py` pick
+      up via the `*_SECRET` metadata env wiring used by data-pipeline-vm bootstrap. Tab L verified end-to-end via smoke
+      (next item). **DEFERRED-PER-DECISION (operator)**: PagerDuty + Slack credential push
+      (`alerting-pagerduty-service-key`, `alerting-slack-webhook-url`) — pending Telegram-as-primary validation through
+      Phase 7 baseline; if quietness shows Telegram-only paging is sufficient, PagerDuty add becomes optional.
 - [x] [SCRIPT] P0. **Smoke alert sent to real Telegram chat (Tab L 2026-05-10 18:57 UTC).** Verified end-to-end via the
       existing `alerting_service.notifiers.telegram.send_telegram()` function reading `TELEGRAM_BOT_TOKEN` +
-      `TELEGRAM_CHAT_ID` from environment (sourced from `.act-secrets` for the smoke; production fetches via SM by
-      same field names). Returned `ok=True` (HTTP 200 from api.telegram.org); event log emitted
+      `TELEGRAM_CHAT_ID` from environment (sourced from `.act-secrets` for the smoke; production fetches via SM by same
+      field names). Returned `ok=True` (HTTP 200 from api.telegram.org); event log emitted
       `TELEGRAM_MESSAGE_SENT severity=INFO`. Smoke message text: "alerting-service Phase 4 Telegram SMOKE — Tab L
       confirms: SM secrets in GCP + AWS; HTTP path verified end-to-end". Operator should see message in chat with
       timestamp `2026-05-10 18:57:19 UTC`.
 - [ ] [SCRIPT] P0. **`alerting-service/alerting_service/config.py` — wire SM hot-reload for the Telegram credentials.**
       Current state: `AlertingSystemConfig.telegram_bot_token` + `telegram_chat_id` are pydantic-settings fields read
-      from `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` env-vars (UnifiedCloudConfig pattern). For SM-backed values the
-      VM bootstrap (`setup-data-pipeline-vm.sh`) needs to: (1) read the secret values from GCP/AWS SM at VM-start using
+      from `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` env-vars (UnifiedCloudConfig pattern). For SM-backed values the VM
+      bootstrap (`setup-data-pipeline-vm.sh`) needs to: (1) read the secret values from GCP/AWS SM at VM-start using
       `gcloud secrets versions access` (or boto3 equivalent on AWS), (2) export as env-vars before
       `python -m alerting_service` runs. Hot-rotation requires an in-process timer that polls SM every N min + atomic-
       swaps the singleton config (see `unified_trading_library/api_key_reloader.py` for the exemplar shape, but it's
@@ -301,8 +300,8 @@ No hard-coded creds. Rotation via `ApiKeyReloader` per CLAUDE.md.
       attempt logged the bot token in plaintext via httpx INFO request URL (the token is in the URL path
       `https://api.telegram.org/bot{TOKEN}/sendMessage`). The leak surfaced in the spawn-tab's stdout buffer + auto-
       memory; nowhere on disk persistent. Severity = MODERATE (token only fires alerts to one chat ID; not a
-      trade-execution credential), but the right operator action is **rotate via @BotFather → `/revoke` → `/newbot`**
-      to revoke the leaked token, then push the new value via the same `python` script Tab L used. Phase 4 SM secrets
+      trade-execution credential), but the right operator action is **rotate via @BotFather → `/revoke` → `/newbot`** to
+      revoke the leaked token, then push the new value via the same `python` script Tab L used. Phase 4 SM secrets
       currently hold the leaked token — re-push after rotation via `gcloud secrets versions add ... --data-file=-` +
       `aws secretsmanager put-secret-value ...`. Tab L tightened the smoke retry to silence httpx INFO logging
       (`logging.getLogger("httpx").setLevel(logging.WARNING)`); this is a one-line workaround — the durable fix is to
@@ -389,16 +388,15 @@ reviews + tunes thresholds.
       for 48h continuous (configurable via `--hours N`). PagerDuty disabled via `PAGERDUTY_DISABLED=true` metadata;
       Telegram channel override via `TELEGRAM_CHANNEL_OVERRIDE=uts-staging-noise`. Auto-shutdown on duration via
       `VM_SHUTDOWN_ON_COMPLETION=true`. Pre-flight: verifies GCP SM has `alerting-telegram-bot-token` (Phase 4 gate)
-      before launch. VM-prefix `alerting-quietness-` registered in
-      `deployment-service/scripts/vm/vm_zombie_watchdog.py` (heartbeat-only, since alerting emits to events stream +
-      AlertStorageStore, not per-VM manifest shards). **NOT FIRED** — Phase 7 launch deferred per gate
-      (Phases 4 [PARTIAL — Tab L Telegram-only] / 5 [✅] / 6 [✅] need GREEN — Phase 4 gap is the in-process SM
-      hot-reload Harsh ships next, see Phase 4 todo).
+      before launch. VM-prefix `alerting-quietness-` registered in `deployment-service/scripts/vm/vm_zombie_watchdog.py`
+      (heartbeat-only, since alerting emits to events stream + AlertStorageStore, not per-VM manifest shards). **NOT
+      FIRED** — Phase 7 launch deferred per gate (Phases 4 [PARTIAL — Tab L Telegram-only] / 5 [✅] / 6 [✅] need GREEN
+      — Phase 4 gap is the in-process SM hot-reload Harsh ships next, see Phase 4 todo).
 - [ ] [SCRIPT] P0. Deploy alerting-service to `staging` Cloud Run + flip routing config to enable all 15 alert rules.
       **DEFERRED-AFTER-PHASE-4-WIRING** — Telegram/staging-noise channel needs the SM hot-reload todo above to land
       before staging deploy is meaningful (otherwise it runs against `.act-secrets`, which only exist on the operator's
-      workstation). The launcher Tab L shipped is what fires after the Cloud Run deploy + Telegram-staging-noise chat
-      ID is decided (operator open question 2 of this plan).
+      workstation). The launcher Tab L shipped is what fires after the Cloud Run deploy + Telegram-staging-noise chat ID
+      is decided (operator open question 2 of this plan).
 - [ ] [HUMAN] P0. Operator: launch the quietness baseline VM via
       `bash deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh` after Phase 4 wiring is GREEN. Verify
       VM emits `STARTED` event within 90s (per CLAUDE.md "No fire-and-forget VM launches"); recheck event stream every
@@ -560,18 +558,18 @@ The 2026-05-10 Tab L session shipped Phase 4 partial (SM creds pushed to GCP + A
 end-to-end against real chat) + Phase 7 staging (singleton-locked launcher + watchdog prefix). Items still open are
 tracked here so the next agent picks up cleanly without re-reading session notes.
 
-| Phase / item                                                                       | Status as of 2026-05-10                | Successor / blocker                                                                              |
-| ---------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Phase 4 — SM push (Telegram only)                                                  | `done` (this session, Tab L)           | GCP project central-element-323112 + AWS account 427895769566 region ap-northeast-1 both seeded  |
-| Phase 4 — smoke alert sent to real chat                                            | `done` (Tab L 2026-05-10 18:57 UTC)    | Telegram smoke `ok=True`, HTTP 200 — operator should ack in chat                                 |
-| Phase 4 — alerting-service config.py SM hot-reload wiring                          | `helper-shipped` (UTL primitives exist)| DEFERRED-TO-HARSH per CLAUDE.md "Two teammates" rule — alerting-service is Harsh's repo; <1h work |
-| Phase 4 — PagerDuty + Slack credential push                                        | `deferred-after-operator-decision`     | DEFERRED-PER-DECISION — Telegram-as-primary; operator triages need post-Phase 7 baseline         |
-| Phase 4 — PagerDuty escalation policy in PD console                                | `deferred-after-operator-decision`     | Same gate as PagerDuty credential push                                                           |
-| Phase 4 — **CRITICAL: rotate Telegram bot token**                                  | `todo` (operator action ONLY)          | Tab L's first smoke httpx INFO log leaked token in URL; rotate via @BotFather + re-push to SM    |
-| Phase 7 — quietness baseline launcher pre-staged                                   | `done` (deployment-service@8f87972)    | Singleton-locked launcher + watchdog prefix shipped; NOT FIRED awaiting Phase 4 hot-reload       |
-| Phase 7 — staging deploy + routing-config flip                                     | `deferred-after-phase-4-wiring`        | DEFERRED-AFTER Phase 4 SM hot-reload wiring lands (Harsh's pickup)                               |
-| Phase 7 — operator runs 48h baseline                                               | `todo` (operator action)               | Run after Phase 4 wiring + staging deploy GREEN; launcher script = paste-ready 1-line invocation |
-| Phase 8 — rehearsal `inject_synthetic_alert.py` script                             | `todo`                                 | DEFERRED-AFTER Phase 4-7 GREEN; this is the next-step after baseline acceptance criterion met    |
+| Phase / item                                              | Status as of 2026-05-10                 | Successor / blocker                                                                               |
+| --------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Phase 4 — SM push (Telegram only)                         | `done` (this session, Tab L)            | GCP project central-element-323112 + AWS account 427895769566 region ap-northeast-1 both seeded   |
+| Phase 4 — smoke alert sent to real chat                   | `done` (Tab L 2026-05-10 18:57 UTC)     | Telegram smoke `ok=True`, HTTP 200 — operator should ack in chat                                  |
+| Phase 4 — alerting-service config.py SM hot-reload wiring | `helper-shipped` (UTL primitives exist) | DEFERRED-TO-HARSH per CLAUDE.md "Two teammates" rule — alerting-service is Harsh's repo; <1h work |
+| Phase 4 — PagerDuty + Slack credential push               | `deferred-after-operator-decision`      | DEFERRED-PER-DECISION — Telegram-as-primary; operator triages need post-Phase 7 baseline          |
+| Phase 4 — PagerDuty escalation policy in PD console       | `deferred-after-operator-decision`      | Same gate as PagerDuty credential push                                                            |
+| Phase 4 — **CRITICAL: rotate Telegram bot token**         | `todo` (operator action ONLY)           | Tab L's first smoke httpx INFO log leaked token in URL; rotate via @BotFather + re-push to SM     |
+| Phase 7 — quietness baseline launcher pre-staged          | `done` (deployment-service@8f87972)     | Singleton-locked launcher + watchdog prefix shipped; NOT FIRED awaiting Phase 4 hot-reload        |
+| Phase 7 — staging deploy + routing-config flip            | `deferred-after-phase-4-wiring`         | DEFERRED-AFTER Phase 4 SM hot-reload wiring lands (Harsh's pickup)                                |
+| Phase 7 — operator runs 48h baseline                      | `todo` (operator action)                | Run after Phase 4 wiring + staging deploy GREEN; launcher script = paste-ready 1-line invocation  |
+| Phase 8 — rehearsal `inject_synthetic_alert.py` script    | `todo`                                  | DEFERRED-AFTER Phase 4-7 GREEN; this is the next-step after baseline acceptance criterion met     |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
@@ -718,14 +716,15 @@ operator-decision finding (Sub-B), 1 hit usage cap mid-Wave-2 (Sub-G — partial
 ### Findings raised
 
 - **Case-5 (resolved)**: alerting Phase 3 envelope schema gap — issue doc at
-  `plans/archive/issues/alerting_phase3_envelope_schema_gap_2026_05_08.plan.md` § "RESOLVED 2026-05-08"; Option A operator
-  decision triggered the resolution chain landed under "Phase 3 producer-side" above.
-- **Case-3 (foreign QG)**: UAC `test_no_eth_perp_venue_accepts_eth_lst_today` — issue doc filed at
-  `plans/active/issues/uac_qg_test_no_eth_perp_venue_accepts_eth_lst_today_2026_05_08.md` (Stream A territory, Tab 1 (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
-  owner). Pre-existing; pushed past per CLAUDE.md "QG failure attribution".
+  `plans/archive/issues/alerting_phase3_envelope_schema_gap_2026_05_08.plan.md` § "RESOLVED 2026-05-08"; Option A
+  operator decision triggered the resolution chain landed under "Phase 3 producer-side" above.
+- **Case-3 (foreign QG, RESOLVED upstream)**: UAC `test_no_eth_perp_venue_accepts_eth_lst_today` shipped at
+  `unified-api-contracts/tests/unit/test_defi_registries.py:361`. Pre-existing QG-failure finding (Stream A territory,
+  Tab 1 owner) was resolved upstream when the test landed; no separate issue doc needed. Per CLAUDE.md "QG failure
+  attribution" agents continued past at the time.
 - **Case-3 (foreign QG)**: PM `validate_plan_links.py` AttributeError — issue doc at
-  `plans/archive/issues/pm_validate_plan_links_attribute_error_2026_05_08.plan.md`. Workspace-wide validator infrastructure
-  bug; PM-scripts-maintainer owner.
+  `plans/archive/issues/pm_validate_plan_links_attribute_error_2026_05_08.plan.md`. Workspace-wide validator
+  infrastructure bug; PM-scripts-maintainer owner.
 
 ### Foot-guns observed
 
@@ -775,8 +774,8 @@ ship Telegram-as-primary paging end-to-end against the existing operator-set-up 
 ### Shipped artefacts
 
 - **Phase 4 — Telegram SM creds (both clouds, version 1)**:
-  - GCP project `central-element-323112` (`gcloud secrets create alerting-telegram-bot-token` + `alerting-telegram-chat-id`,
-    automatic replication, version 1 seeded each).
+  - GCP project `central-element-323112` (`gcloud secrets create alerting-telegram-bot-token` +
+    `alerting-telegram-chat-id`, automatic replication, version 1 seeded each).
   - AWS account `427895769566` region `ap-northeast-1` (`aws secretsmanager create-secret` for both names, version 1
     seeded each).
   - Verified via `list_secret_versions` on both clouds: 1 version per secret per cloud.
@@ -786,18 +785,18 @@ ship Telegram-as-primary paging end-to-end against the existing operator-set-up 
   - Awaiting operator visual ack in chat; smoke message text cited timestamp + Tab L identity.
 - **Phase 7 — quietness baseline launcher pre-staged** (`deployment-service@8f87972`):
   - `deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh` — singleton-locked 48h GCE launcher, e2-
-    standard-2, asia-northeast1-c, PagerDuty disabled, Telegram channel override `uts-staging-noise`. Pre-flight
-    checks GCP SM has the Telegram secret. Auto-shutdown via `VM_SHUTDOWN_ON_COMPLETION=true`.
-  - `vm_zombie_watchdog.py` — registered `alerting-quietness-` prefix (heartbeat-only; alerting emits to events
-    stream + AlertStorageStore, not per-VM manifest shards).
+    standard-2, asia-northeast1-c, PagerDuty disabled, Telegram channel override `uts-staging-noise`. Pre-flight checks
+    GCP SM has the Telegram secret. Auto-shutdown via `VM_SHUTDOWN_ON_COMPLETION=true`.
+  - `vm_zombie_watchdog.py` — registered `alerting-quietness-` prefix (heartbeat-only; alerting emits to events stream +
+    AlertStorageStore, not per-VM manifest shards).
   - **NOT FIRED** — gated on Phase 4 SM hot-reload (Harsh's pickup) + operator green-light.
 
 ### Findings raised
 
 - **Case-5 (operator-action) BIG**: Tab L's first smoke httpx INFO log leaked the bot token in the URL path. Severity =
-  MODERATE (token only fires alerts to one chat, not a trade-execution credential). Operator action required: rotate
-  via @BotFather + re-push to GCP/AWS SM. Captured as P0 [HUMAN] todo in Phase 4 body. Tab L tightened the smoke retry
-  to silence httpx INFO logging — the durable fix is per-call logger suppression in `send_telegram()` itself.
+  MODERATE (token only fires alerts to one chat, not a trade-execution credential). Operator action required: rotate via
+  @BotFather + re-push to GCP/AWS SM. Captured as P0 [HUMAN] todo in Phase 4 body. Tab L tightened the smoke retry to
+  silence httpx INFO logging — the durable fix is per-call logger suppression in `send_telegram()` itself.
 
 ### Foot-guns observed
 
@@ -807,8 +806,8 @@ ship Telegram-as-primary paging end-to-end against the existing operator-set-up 
 
 ### Items deferred (per "Capture Discoveries" rule end-of-cycle audit)
 
-All deferrals listed in chat summary mirror items already captured in plan body's "Deferred work after 2026-05-10
-Tab L session" scoreboard above. No grep-misses.
+All deferrals listed in chat summary mirror items already captured in plan body's "Deferred work after 2026-05-10 Tab L
+session" scoreboard above. No grep-misses.
 
 ### Cycle metrics
 

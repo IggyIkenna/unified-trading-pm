@@ -142,7 +142,8 @@ canonical manifest post-v2.
 
 - `manifest_migration_master_2026_05_07` — Stage 4 includes residual sweeps that overlap with v2 launch. Coordinate
   banner during v2 launch window.
-- `manifest_schema_final_gate_2026_05_09` (consolidated v8 SSOT — supersedes archived `manifest_v7_schema_migration_design_2026_05_08`) — both plans touch manifest schema +
-  enumeration. v2 launch should happen AFTER v8 migration for write-side simplicity.
+- `manifest_schema_final_gate_2026_05_09` (consolidated v8 SSOT — supersedes archived
+  `manifest_v7_schema_migration_design_2026_05_08`) — both plans touch manifest schema + enumeration. v2 launch should
+  happen AFTER v8 migration for write-side simplicity.
 - `live_pipeline_mtds_mdps_features_2026_05_08` Phase 12 — batch-vs-live reconciliation needs the v2 expected universe
   to compute a meaningful completeness denominator per shard atom.

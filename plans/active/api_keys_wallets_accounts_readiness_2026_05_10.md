@@ -327,7 +327,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       most-comprehensive-owner rule).** Combine custody balance (Copper + CEFFU) + venue margin balances + on-chain
       wallet balances into unified-NAV view. Extends `position-balance-monitor-service/.../core/treasury_monitor.py`.
       Composes with client-reporting question doc. Per-archetype-per-chain wallet rollup ties into R7 multi-wallet.
-      **Endpoint surface owned here**: `/api/treasury/rollup` (multi-source unified NAV) + `/treasury/nav?client_id=<id>`.
+      **Endpoint surface owned here**: `/api/treasury/rollup` (multi-source unified NAV) +
+      `/treasury/nav?client_id=<id>`.
       [`wallet_treasury_client_flow_2026_05_10.md`](wallet_treasury_client_flow_2026_05_10.md) Phase 5.B + 6.A
       `/api/clients/{id}/treasury` becomes a CONSUMER (per-client attribution layer over this canonical multi-source
       rollup). The two endpoints differ by axis: this owns the source-axis (Copper / CEFFU / venue / on-chain); wallet
@@ -355,9 +356,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       and codex
       [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
       §28+§48-53; superseded the legacy `leveraged_funding_arb` standalone-archetype name 2026-05-09) — ≥2 archetypes ×
-      5 chains
-      (Ethereum, Arbitrum, Base, Polygon, Solana) = ≥10 mainnet wallets. HD-wallet derivation under Fireblocks master
-      seed (per Phase 3.C). UAC type extension: `archetype_id → wallet_address_per_chain` mapping.
+      5 chains (Ethereum, Arbitrum, Base, Polygon, Solana) = ≥10 mainnet wallets. HD-wallet derivation under Fireblocks
+      master seed (per Phase 3.C). UAC type extension: `archetype_id → wallet_address_per_chain` mapping.
   - **Sub-residuals captured**: per-wallet nonce queue management; per-wallet RPC rate-limit sub-budget; cross-archetype
     rebalancing flow; per-wallet protocol-approval pre-signing.
 

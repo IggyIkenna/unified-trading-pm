@@ -195,28 +195,29 @@ already supports LEADER_HEDGE mode.
 - [x] [tracer-scripts] P1. Confirm `scripts/trace_arbitrage_price_dispersion.py` (or equivalent) handles the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed only `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` exist in
-      `strategy-service/scripts/`; no ARBITRAGE_PRICE_DISPERSION tracer. Tracked as Phase B in successor plan.
-      **SHIPPED 2026-05-10 (agent-arb-fundrate-tracer)**: Phase B end-to-end at strategy-service@2fdf7e8 (658-line
-      tracer + extension to `trace_all_carry_archetypes.py` + 11-test unit suite). Real-infra run against 2024-W1
-      window produced 3 EMIT rows + $200.63 simulated P&L (ETH=2 days $155.44 + SOL=1 day $45.19; BTC slot below 5bps
-      threshold all 7 days). The `agent-arb-fundrate-c2` P0 upstream-data finding
+      `strategy-service/scripts/`; no ARBITRAGE_PRICE_DISPERSION tracer. Tracked as Phase B in successor plan. **SHIPPED
+      2026-05-10 (agent-arb-fundrate-tracer)**: Phase B end-to-end at strategy-service@2fdf7e8 (658-line tracer +
+      extension to `trace_all_carry_archetypes.py` + 11-test unit suite). Real-infra run against 2024-W1 window produced
+      3 EMIT rows + $200.63 simulated P&L (ETH=2 days $155.44 + SOL=1 day $45.19; BTC slot below 5bps threshold all 7
+      days). The `agent-arb-fundrate-c2` P0 upstream-data finding
       ([`../archive/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md`](../archive/issues/arb_price_dispersion_phase_b_data_blockers_2026_05_10.md))
       did not block the run — tracer produces non-empty output from the available venues; aster + bitget upstream
       backfill remains a separate issue doc track.
 - [x] [P&L attribution] P1. Confirm `pnl-attribution-service` rows attribute under `ARBITRAGE_PRICE_DISPERSION` for the
       funding-dispersion-leveraged variant. **DEFERRED-TO-arbitrage_price_dispersion_finalisation_2026_05_09**: audit
       2026-05-09 confirmed zero `ARBITRAGE_PRICE_DISPERSION` references in `pnl_attribution_service/` source (only
-      sports test fixtures use lowercase `"arbitrage"` string). Tracked as Phase C in successor plan.
-      **SHIPPED 2026-05-10 (agent-arb-fundrate-tracer)**: Phase C end-to-end at pnl-attribution-service@f5dcf63 —
-      new `pnl_attribution_service/engine/archetype_aggregator.py` (parse_slot_label / annotate_archetype_columns /
-      aggregate_by_archetype / write_archetype_buckets) + 17 unit tests + `scripts/aggregate_archetype_pnl_from_tracer.py`
-      operator runner. Real-infra run against tracer 2024-W1 output uploaded to
+      sports test fixtures use lowercase `"arbitrage"` string). Tracked as Phase C in successor plan. **SHIPPED
+      2026-05-10 (agent-arb-fundrate-tracer)**: Phase C end-to-end at pnl-attribution-service@f5dcf63 — new
+      `pnl_attribution_service/engine/archetype_aggregator.py` (parse*slot_label / annotate_archetype_columns /
+      aggregate_by_archetype / write_archetype_buckets) + 17 unit tests +
+      `scripts/aggregate_archetype_pnl_from_tracer.py` operator runner. Real-infra run against tracer 2024-W1 output
+      uploaded to
       `gs://pnl-attribution-central-element-323112/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-07.parquet`
       — 3 EMIT rows; cumulative `simulated_pnl_usd = $200.63` matching tracer envelope exactly (zero-execution-alpha
       matching engine semantics). Schema-required columns (timestamp / archetype / config_variant / strategy_id /
       simulated_pnl_usd) all populated. The 2026-05-09 audit's "zero references" was a grep miss — the regex
-      `^([A-Z][A-Z0-9_]+)@` is generic so `ARBITRAGE_PRICE_DISPERSION` doesn't appear as a literal string but is
-      matched at runtime; the runtime path is now validated end-to-end per "Plans Run To Actual Completion" rule.
+      `^([A-Z]A-Z0-9*]+)@`is generic so`ARBITRAGE_PRICE_DISPERSION` doesn't appear as a literal string but is matched at
+      runtime; the runtime path is now validated end-to-end per "Plans Run To Actual Completion" rule.
 
 **Gate:** Codex doc/code/plans all use `ARBITRAGE_PRICE_DISPERSION` (with config variant) for
 funding-dispersion-leveraged. No remaining references to `leveraged_funding_arb` as a standalone archetype except in
@@ -228,19 +229,20 @@ PM@476f00f9 6 tail tracked plans). All TRACKED forward-looking active + epic pla
 annotations preserved per gate phrasing. Residuals (NOT shipped, accepted): 2 UNTRACKED foreign-WIP files
 (`manifest_schema_final_gate_2026_05_09.md` + `defi_recursive_borrow_archetypes_2026_05_10.md`) skipped per workspace
 foot-gun rules; 2 audit-snapshot docs (`_AUDIT_2026_05_07_dependency_graph.md` +
-`../archive/issues/audit_2026_05_08_substantial_unfixed_items.md`) left as historical context (snapshot semantics — refs are
-recording past audit findings). Tracker:
+`../archive/issues/audit_2026_05_08_substantial_unfixed_items.md`) left as historical context (snapshot semantics — refs
+are recording past audit findings). Tracker:
 [`plans/archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md`](../archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md)
-§ "RESOLUTION 2026-05-10". **Stream B's 3 sister-todo deferrals — all ✅ done**: (1) L181 strategy-service slot ✅ Phase A
-end-to-end across 6 commits (strategy-service@24f8494 dispatcher + @0b4ef0e helper + @04c0d52 engine + @1107ab7 probe +
-@d01661e multi-asset + @de9b4b0 allocator + @e3e0962 QG-clean Literal fix); (2) L195 tracer ✅ Phase B at
+§ "RESOLUTION 2026-05-10". **Stream B's 3 sister-todo deferrals — all ✅ done**: (1) L181 strategy-service slot ✅ Phase
+A end-to-end across 6 commits (strategy-service@24f8494 dispatcher + @0b4ef0e helper + @04c0d52 engine + @1107ab7
+probe + @d01661e multi-asset + @de9b4b0 allocator + @e3e0962 QG-clean Literal fix); (2) L195 tracer ✅ Phase B at
 strategy-service@2fdf7e8 + peripheral-QG @e87a84a, real-infra 2024-W1 run produced 3 EMIT / $200.63 simulated P&L; (3)
 L205 P&L attribution ✅ Phase C at pnl-attribution-service@f5dcf63 + operational run 2026-05-10 wrote 7 daily parquets
-(29 total rows across `gs://pnl-attribution-output/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-{01..07}.parquet`;
+(29 total rows across
+`gs://pnl-attribution-output/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-{01..07}.parquet`;
 sample 2024-01-02 = 9 rows including ETH `deribit→hyperliquid` $64.04 + SOL `bybit→hyperliquid` $45.19 EMIT pairs).
 Successor finalisation plan
-[`arbitrage_price_dispersion_finalisation_2026_05_09.md`](arbitrage_price_dispersion_finalisation_2026_05_09.md)
-shipped 100% end-to-end (Phases A/B/C/D/E all done with operational evidence). Stream B gate fully closed.
+[`arbitrage_price_dispersion_finalisation_2026_05_09.md`](arbitrage_price_dispersion_finalisation_2026_05_09.md) shipped
+100% end-to-end (Phases A/B/C/D/E all done with operational evidence). Stream B gate fully closed.
 
 ---
 
@@ -295,14 +297,15 @@ Co-shipping the enum extension with the doc rewrites closes the doc-code drift.
       prediction / cross-venue archetype already documented but not in UAC).
 - [ ] [UAC] P0. **C-enum.2**: Ship `StrategyArchetype` enum extension PR: 8 → 11 members. Per-member dataclass spec
       (drawdown / breach / collateral_unit / kill_switch_scope). Tests: every member round-trips through Pydantic; every
-      member has a matching factory in strategy-service `engine/strategies/v2/factory.py` (factory stubs OK for
-      members deferred behind code backport).
+      member has a matching factory in strategy-service `engine/strategies/v2/factory.py` (factory stubs OK for members
+      deferred behind code backport).
 - [ ] [UAC] P0. **C-enum.3**: Downstream consumer sweep — strategy-service factory routing, deployment-UI archetype
       dropdown, allocator subclass registry, alerting per-archetype kill-switch routing, archetype-readiness matrix in
       master plan. Per CLAUDE.md "Citadel-Grade § 6 Downstream Consumer Updates" — workspace-wide grep for the enum +
       explicit fix per consumer.
-- [ ] [PM] P0. **C-enum.4**: Update [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md)
-      AD-1: flip from "stays at 8 + config variants" to "extends to 11 + new members"; banner that plan with
+- [ ] [PM] P0. **C-enum.4**: Update
+      [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) AD-1: flip from
+      "stays at 8 + config variants" to "extends to 11 + new members"; banner that plan with
       `🟢 BLOCKER FOR recursive-borrow Phase 2+ — UAC enum extension to 11 must ship before strategy-service factory wires recursive-borrow variants`.
 
 ---

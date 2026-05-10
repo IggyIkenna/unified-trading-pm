@@ -349,8 +349,13 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - [ ] [HUMAN+AGENT] P0. Phase 7.F — Per-asset-group QA gate: re-run
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag>` per asset_group; phantom
       count MUST be 0 (was 354 residual pre-bundle).
-- [ ] [HUMAN] P0. Phase 7.G — Operator sign-off per asset_group at
-      `plans/active/issues/gcs_migration_bundle_signoff_2026_05_08.md` once Phase 7.F gate green. (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
+- [ ] [HUMAN] P0. Phase 7.G — Operator sign-off per asset_group recorded inline below this todo (5 sub-checkboxes,
+      one per asset_group: cefi / defi / tradfi / sports / prediction) once Phase 7.F gate green.
+  - [ ] cefi signed off — date: ____ — operator: ____
+  - [ ] defi signed off — date: ____ — operator: ____
+  - [ ] tradfi signed off — date: ____ — operator: ____
+  - [ ] sports signed off — date: ____ — operator: ____
+  - [ ] prediction signed off — date: ____ — operator: ____
 - **Done-definition**: 5/5 asset_groups signed off + zero phantoms + bundled walk metrics emitted (5 drift-class
   histograms + bytes-moved + wall-clock per asset_group).
 
@@ -443,7 +448,8 @@ Plans to banner (closed list, sweep on Phase 0 launch):
 
 - `live_pipeline_mtds_mdps_features_2026_05_08.md`
 - `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
-- `manifest_cross_asset_rescan_design_2026_05_08.md`  (sibling design doc; v7 predecessor `manifest_v7_schema_migration_design_2026_05_08.md` archived 2026-05-09 as this v8 plan supersedes it)
+- `manifest_cross_asset_rescan_design_2026_05_08.md` (sibling design doc; v7 predecessor
+  `manifest_v7_schema_migration_design_2026_05_08.md` archived 2026-05-09 as this v8 plan supersedes it)
 - `writegate_honest_coverage_endtoend_2026_05_06.md`
 - `features_repo_consolidation_2026_05_08.md`
 - `available_at_lookahead_bias_completion_2026_05_08.md`
@@ -457,7 +463,7 @@ This plan is done IFF every bullet below is verified on real GCS infra (not dry-
 
 - ✅ UAC + UTL + every consumer repo at v8-final commit shipped + QG green per `repo_gates`.
 - ✅ Bundled gcs Phase 3 walk completed across all 5 asset_groups (cefi / defi / tradfi / sports / prediction) —
-  per-asset-group sign-off in `gcs_migration_bundle_signoff_2026_05_08.md`.
+  per-asset-group sign-off recorded inline at Phase 7.G sub-checkboxes above.
 - ✅ Cross-asset rescan triage review complete — every class-C row resolved.
 - ✅ MTDS backfill ran to natural completion per asset_group; sample-parquet inspection passes per CLAUDE.md "Honest
   absence vs fake placeholders" rule.

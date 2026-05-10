@@ -18,7 +18,12 @@ supersedes_recommendation:
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) sequences this plan's **Phase 5 cross-cloud rsync AFTER `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 2** GCS bundled migration. Stop in-flight rsync if it crosses the Phase 2 window; restart post-2.2. Also: confirm AWS-side bucket-name resolution uses the same Phase 1.B `bucket_name_ssot_canonicalisation_2026_05_10` UAC SSOT as GCP-side (per Tab 4 close-out 2026-05-08 bucket-name SSOT triple-drift incident — yaml config + per-family config.py + UTL resolver previously diverged).
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> sequences this plan's **Phase 5 cross-cloud rsync AFTER `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 2** GCS
+> bundled migration. Stop in-flight rsync if it crosses the Phase 2 window; restart post-2.2. Also: confirm AWS-side
+> bucket-name resolution uses the same Phase 1.B `bucket_name_ssot_canonicalisation_2026_05_10` UAC SSOT as GCP-side
+> (per Tab 4 close-out 2026-05-08 bucket-name SSOT triple-drift incident — yaml config + per-family config.py + UTL
+> resolver previously diverged).
 
 # AWS Migration — DeFi-First, May-23 Critical Path
 
@@ -222,7 +227,8 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
       [`cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md) § 4.2. **NEW
       BLOCKER SURFACED**: bucket-name SSOT triple-drift between `setup-defi-buckets.sh` purpose-specific shape vs
       `BUCKET_PREFIXES` per-kind shape vs `UnifiedCloudConfig` per-field env-vars — operator triage call needed. Filed
-      at [`../archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md`](../archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md).
+      at
+      [`../archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md`](../archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md).
 - [ ] [SCRIPT] P0. Every service that reads/writes parquet MUST call UCI bucket-resolver, NOT inline string formatting.
       `grep -rn "f\"gs://\|f'gs://\|f\"s3://\|f's3://" --include="*.py"` to find anti-patterns. Fix to
       `cloud_interface.factory.get_bucket(category=..., asset_group=..., env=...)`. **PARTIAL 2026-05-08** (Tab 4):
@@ -446,8 +452,8 @@ Operator verifies parity.
 - [ ] [HUMAN] P0. Cutover decision: switch `CLOUD_PROVIDER=aws` for the 6 DeFi-live services. GCP-DeFi pipeline keeps
       running in shadow mode (writes-only, no reads from strategy/execution).
 - [ ] [HUMAN] P0. Live trading: the carry_staked_basis lead + ARBITRAGE_PRICE_DISPERSION (funding-rate-dispersion;
-      renamed from legacy leveraged_funding_arb per Stream B canonicalisation 2026-05-07) archetypes go live on
-      AWS-prod for the 7-day soak (per master plan).
+      renamed from legacy leveraged_funding_arb per Stream B canonicalisation 2026-05-07) archetypes go live on AWS-prod
+      for the 7-day soak (per master plan).
 - [ ] [SCRIPT] P0. Hourly health check on AWS-DeFi services. Manifest write rate, P&L attribution, position drift,
       alerting fire rate (per `alerting_service_live_rules_2026_05_07.md` Phase 8 rehearsal).
 - [ ] [HUMAN] P0. After 7 days continuous on AWS, GCP-DeFi shadow can be archived (move to coldline / Glacier).

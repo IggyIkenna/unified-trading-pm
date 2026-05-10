@@ -474,9 +474,9 @@ Step A1 going quiet.
 ## DONE-2026-05-08 (Step A2, Tab 6 main) — CapitalAllocation migration + Client/VenueAccount revert
 
 Sub-agent A2 executed Step 2 of Option A on the parallel-SSOT issue
-(`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md` § Addendum). Operator GREENLIT
-2026-05-08. Closes deliverable #3's Client/VenueAccount parallel-SSOT collision (un-flipped + annotated as resolved by
-Option A) + flips deliverable #3's CapitalAllocation gap closed under the migrated path.
+(`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md` § Addendum). Operator
+GREENLIT 2026-05-08. Closes deliverable #3's Client/VenueAccount parallel-SSOT collision (un-flipped + annotated as
+resolved by Option A) + flips deliverable #3's CapitalAllocation gap closed under the migrated path.
 
 Code commits shipped:
 

@@ -811,8 +811,8 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 
 - `plans/archive/issues/instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08.md` — schema requirements for
   futures expiry, options expiry, fixtures end_time. Phase B.2 references; issue owns the cascade rules.
-- `plans/archive/issues/fixtures_postponed_cancelled_lifecycle_2026_05_08.md` — fixture lifecycle column shape. Phase B.1
-  references; issue owns the column shape.
+- `plans/archive/issues/fixtures_postponed_cancelled_lifecycle_2026_05_08.md` — fixture lifecycle column shape. Phase
+  B.1 references; issue owns the column shape.
 - `plans/archive/issues/fixtures_lookahead_bias_post_match_scores_2026_05_08.md` — `available_at` for post-match scores.
   Phase B.1 + B.2 references; issue owns the bias rule.
 - `plans/archive/issues/manifest_cleanup_on_entity_add_remove_2026_05_08.md` — manifest reconciliation when entities are

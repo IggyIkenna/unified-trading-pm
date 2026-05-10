@@ -826,9 +826,9 @@ todos:
               backfill + reconciliation green. This satisfies master plan Group F item 21
               (Reconciliation suite) for the live-pipeline portion.
 
-        QG: batch-live-reconciliation-service quality-gates.sh clean; reconciliation report committed under
-        `unified-trading-pm/plans/active/issues/live_pipeline_reconciliation_2026_05_XX.md` for audit (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
-        trail.
+        QG: batch-live-reconciliation-service quality-gates.sh clean; reconciliation report ships as a runtime
+        artefact via `manifest_schema_final_gate_2026_05_09` Phase 12.B (`batch_live_reconciler` UTL@908b1647 helper
+        run + delta-< 5bps tolerance check); no separate issue doc required.
     status: helper-shipped
     note: "UTL@908b1647 — `unified_trading_library/batch_live_reconciler.py` ships `reconcile_shard(asset_group, venue, data_type, instrument_id, day, batch_rows, live_rows, row_comparator)` returning a frozen `BatchLiveReconciliationReport` with verdict ∈ {MATCH, ROW_COUNT_MISMATCH, SCHEMA_MISMATCH, VALUE_MISMATCH}. Default `ohlcv_close_within(rel_tolerance=1e-4)` row comparator handles None + zero-baseline. 9 unit tests cover all four verdict paths + custom-comparator + comparator edge cases + frozen-dataclass immutability. **Helper is the primitive**; the deployment-api scheduled job + 7-day live-vs-batch run + reconciliation report commit (12.4) DEFER to after Phase 3/4/5/6/7 ship 7 continuous days of live-mode parquet (currently DEFERRED-AFTER-FEATURES-CONSOLIDATION per Harsh Tab 2 dependency). When 7 days are captured, the same helper runs in batch-live-reconciliation-service to produce the cutover gate."
 
@@ -937,7 +937,11 @@ isProject: false
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) sequences this plan's **Phase 4-5 per-asset-group cascade** AFTER (a) `features_repo_consolidation_2026_05_08` Phase 7 (Phase 1 freeze blocker) and (b) `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 2 GCS bundled migration (Phase 2 freeze gate). Phase 0-3 UAC + UTL foundations stay in Phase 1 (already partly shipped Tab 2 PM/evening 2026-05-08 — 4 UTL primitives landed); Phase 4-15 cannot start until Phase 2 freeze fires.
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> sequences this plan's **Phase 4-5 per-asset-group cascade** AFTER (a) `features_repo_consolidation_2026_05_08` Phase 7
+> (Phase 1 freeze blocker) and (b) `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 2 GCS bundled migration (Phase
+> 2 freeze gate). Phase 0-3 UAC + UTL foundations stay in Phase 1 (already partly shipped Tab 2 PM/evening 2026-05-08 —
+> 4 UTL primitives landed); Phase 4-15 cannot start until Phase 2 freeze fires.
 
 # Live pipeline (MTDS / MDPS / features-service) for 2026-05-23 DeFi cutover
 
@@ -946,10 +950,9 @@ isProject: false
 Master plan (`master_to_live_defi_2026_05_23.md`) target: two DeFi archetypes (`carry_staked_basis` lead +
 `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy `leveraged_funding_arb` per Stream B
 canonicalisation 2026-05-07)) live on a real wallet ≥7 continuous days by 2026-05-23. The underlying pipeline is
-currently
-batch-only — nothing streams. Live-mode is a non-trivial activation that touches MTDS / MDPS / features-service (newly
-consolidated per `features_repo_consolidation_2026_05_08`) plus the deployment-UI / alerting-service / strategy-service
-consumer chain. This plan is the activation surface.
+currently batch-only — nothing streams. Live-mode is a non-trivial activation that touches MTDS / MDPS /
+features-service (newly consolidated per `features_repo_consolidation_2026_05_08`) plus the deployment-UI /
+alerting-service / strategy-service consumer chain. This plan is the activation surface.
 
 Per CLAUDE.md "Live = batch" rule, live and batch share 99% of the code path; only the execution-fill source differs.
 The architecture honors that rule:
@@ -960,16 +963,17 @@ The architecture honors that rule:
 - **Manifest shard atom (live = batch, day-grain) — ratified 2026-05-10 cross-plan audit Q4 per CLAUDE.md
   "Shard-granularity SSOT (CRITICAL)" + "Live = batch" rules.** Live `live_aggregator.py` emits per-window
   `CandleComputedEvent` as an OPERATIONAL mechanic (Redis Stream signal for downstream MDPS/features cascade), but the
-  manifest write boundary is identical to batch: ONE `record_captured(row_key=(asset_group, venue, data_type,
-  instrument_type, instrument_id, day, timeframe), ...)` per shard-day, fired at UTC-midnight close via a per-shard
-  consolidator that aggregates the day's per-window candles into a single parquet finalize. Per-window candles are
-  emitted to Redis but NOT to the manifest as separate rows — this preserves single-atom SSOT across (writer atomicity,
-  manifest row_key, data-status rollup, downstream pre-flight gate, deployment-UI drill-down). Reader logic does NOT
-  branch on `pipeline_mode` for atom shape. Cluster-validation gates (bundled shards: options_chain / futures_chain /
-  prediction canonical-question-group / sports fixture bundle) run identically batch + live. Banned anti-pattern: a
-  live `record_captured` row_key like `(venue, day, timeframe, window)` that adds an extra dimension — that's the same
-  class of bug as the legacy `category=` / `asset_group=` drift (see CLAUDE.md "Shard-granularity SSOT" reference
-  incidents 2026-05-05 MDPS NaN-bars + 2026-05-06 TradFi MVP partial-bundle).
+  manifest write boundary is identical to batch: ONE
+  `record_captured(row_key=(asset_group, venue, data_type, instrument_type, instrument_id, day, timeframe), ...)` per
+  shard-day, fired at UTC-midnight close via a per-shard consolidator that aggregates the day's per-window candles into
+  a single parquet finalize. Per-window candles are emitted to Redis but NOT to the manifest as separate rows — this
+  preserves single-atom SSOT across (writer atomicity, manifest row_key, data-status rollup, downstream pre-flight gate,
+  deployment-UI drill-down). Reader logic does NOT branch on `pipeline_mode` for atom shape. Cluster-validation gates
+  (bundled shards: options_chain / futures_chain / prediction canonical-question-group / sports fixture bundle) run
+  identically batch + live. Banned anti-pattern: a live `record_captured` row_key like `(venue, day, timeframe, window)`
+  that adds an extra dimension — that's the same class of bug as the legacy `category=` / `asset_group=` drift (see
+  CLAUDE.md "Shard-granularity SSOT" reference incidents 2026-05-05 MDPS NaN-bars + 2026-05-06 TradFi MVP
+  partial-bundle).
 - **Cascade**: MTDS → MDPS → features ordered identically batch + live; only the trigger source differs (Cloud Scheduler
   / on-demand for batch; Redis Stream events for live).
 - **UTC midnight alignment**: enforced end-to-end. Batch always produces full aligned candles; live blocks until the

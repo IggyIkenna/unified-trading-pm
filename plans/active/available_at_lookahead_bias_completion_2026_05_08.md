@@ -499,34 +499,36 @@ remain `- [ ]`. Phases 0/2/4/5/6/7/8/9/10 untouched this session.
 
 ## Audit-2026-05-10 finding — post-cutover Phase: lift `available_at` to schema-level invariant
 
-**Source**: [`plans/archive/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md`](../archive/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md)
-+ sibling [`block_b_audit_findings`](../archive/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md) Block B5.
+**Source**:
+[`plans/archive/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md`](../archive/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md)
+
+- sibling [`block_b_audit_findings`](../archive/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md) Block B5.
 
 **Finding**: today's two-layer enforcement is (1) opt-in stamping helpers in
 [`unified_trading_library/availability_stamping.py`](../../../unified-trading-library/unified_trading_library/availability_stamping.py)
-(330 lines) + (2) runtime gate `manifest_writer.assert_available_at_present` (line 72) that raises
-`LookaheadBiasError` for missing/null. **Gap**: gate catches missing-stamp at write time, not at row-construction
-time; **worse**, an adapter that stamps with the WRONG rule (e.g. `event_time` for a post-match stat that should use
-`match_end_time`) never fails — silent lookahead bias. This is the single highest-priority Block-B item per the
-audit (direct alpha-relevance — every minute of lookahead = phantom alpha).
+(330 lines) + (2) runtime gate `manifest_writer.assert_available_at_present` (line 72) that raises `LookaheadBiasError`
+for missing/null. **Gap**: gate catches missing-stamp at write time, not at row-construction time; **worse**, an adapter
+that stamps with the WRONG rule (e.g. `event_time` for a post-match stat that should use `match_end_time`) never fails —
+silent lookahead bias. This is the single highest-priority Block-B item per the audit (direct alpha-relevance — every
+minute of lookahead = phantom alpha).
 
 **Recommended post-cutover Phase to file** (NEW phase under this plan, post-May-23):
 
-- [ ] [SCRIPT] P1. **NEW** UAC `availability_rule.py` — `AvailabilityRule` Protocol + per-source implementations
-      lifted from `availability_stamping.py`.
+- [ ] [SCRIPT] P1. **NEW** UAC `availability_rule.py` — `AvailabilityRule` Protocol + per-source implementations lifted
+      from `availability_stamping.py`.
 - [ ] [SCRIPT] P1. **NEW** row base class in UAC requires `available_at: datetime` field; pydantic validator on every
       row class invokes the row's source's `AvailabilityRule.stamp(row)` automatically.
 - [ ] [SCRIPT] P1. **MIGRATE** per-source row classes inherit from the base; `stamp_available_at_*` opt-in helpers
       become unnecessary (auto-applied via validator).
 - [ ] [SCRIPT] P1. **DELETE** 330 lines of `availability_stamping.py` collapse to ~50 lines (per-source rule impls
       only).
-- [ ] [SCRIPT] P1. **REDUCE** cross-referenced CLAUDE.md + codex doc surface for `available_at` rules collapses to
-      one canonical UAC reference.
+- [ ] [SCRIPT] P1. **REDUCE** cross-referenced CLAUDE.md + codex doc surface for `available_at` rules collapses to one
+      canonical UAC reference.
 
 **Cost**: ~2-3 AI-days. **Saved cost**: lookahead-bias incident class becomes type-level unrepresentable; ~1 week of
 fire-fight per surfaced incident saved. **Composes with**: Block B1 ADT lift (the `Captured(...)` ADT variant takes a
 row collection that's already stamped) + monorepo migration (Block A1 DECIDED-YES). Timing: post-cutover; ride with
 those structural changes as one architectural slice.
 
-**Plan status**: this annotation is FYI for plan owner — NEW phase not yet wired into the phased DAG above. Plan
-owner decides whether to fold into Phase 11+ here OR file standalone post-cutover.
+**Plan status**: this annotation is FYI for plan owner — NEW phase not yet wired into the phased DAG above. Plan owner
+decides whether to fold into Phase 11+ here OR file standalone post-cutover.

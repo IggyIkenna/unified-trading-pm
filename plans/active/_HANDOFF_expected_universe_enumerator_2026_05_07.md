@@ -171,7 +171,8 @@ active PM plan, that's fine."_ The following items are **already in active plans
 
 #### A. From the data-status audit (`d0f521b4`):
 
-5 todos in [`plans/archive/issues/defi_launcher_audit_2026_05_07.md`](../archive/issues/defi_launcher_audit_2026_05_07.md) §
+5 todos in
+[`plans/archive/issues/defi_launcher_audit_2026_05_07.md`](../archive/issues/defi_launcher_audit_2026_05_07.md) §
 "Actionable todos — to be added to the existing data-status-drilldown plan". Confirm they're carried into
 [`plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md):
 

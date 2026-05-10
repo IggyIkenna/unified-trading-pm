@@ -591,23 +591,22 @@ against real backfilled MTDS + features data for a 1-week window; produces a CSV
       archetype-aware P&L aggregator. Today the service has zero `ARBITRAGE_PRICE_DISPERSION` references in
       `pnl_attribution_service/` source. Likely surfaces: - Per-archetype P&L bucket (alongside `CARRY_STAKED_BASIS`,
       etc.) - Per-config-variant breakdown (`funding-rate-dispersion` vs other variants) - Output path:
-      `gs://pnl-attribution-{pid}/by_strategy/ARBITRAGE_PRICE_DISPERSION/...`
-      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at pnl-attribution-service@f5dcf63 — new
-      `pnl_attribution_service/engine/archetype_aggregator.py` ships
-      `parse_slot_label` / `annotate_archetype_columns` / `aggregate_by_archetype` / `write_archetype_buckets`. The
-      slot-label-prefix parser (regex `^([A-Z][A-Z0-9_]+)@`) is the cross-repo SSOT contract — strategy-service is NOT
-      a dep of pnl-attribution-service (avoids circular dep edge); funding-rate-dispersion variant detected via the
-      `-funding-rate-disp-` marker that strategy-service's `_funding_rate_dispersion_slot()` builder embeds in slot
-      labels. Output path: `gs://${PNL_OUTPUT_BUCKET}/by_strategy/<archetype>/config_variant=<variant>/year=Y/month=M/<date>.parquet`.
+      `gs://pnl-attribution-{pid}/by_strategy/ARBITRAGE_PRICE_DISPERSION/...` **DONE-2026-05-10
+      (agent-arb-fundrate-tracer)**: shipped at pnl-attribution-service@f5dcf63 — new
+      `pnl_attribution_service/engine/archetype_aggregator.py` ships `parse_slot_label` / `annotate_archetype_columns` /
+      `aggregate_by_archetype` / `write_archetype_buckets`. The slot-label-prefix parser (regex `^([A-Z][A-Z0-9_]+)@`)
+      is the cross-repo SSOT contract — strategy-service is NOT a dep of pnl-attribution-service (avoids circular dep
+      edge); funding-rate-dispersion variant detected via the `-funding-rate-disp-` marker that strategy-service's
+      `_funding_rate_dispersion_slot()` builder embeds in slot labels. Output path:
+      `gs://${PNL_OUTPUT_BUCKET}/by_strategy/<archetype>/config_variant=<variant>/year=Y/month=M/<date>.parquet`.
 
 - [x] [pnl-attribution-service] P1. Tests:
       `tests/unit/test_archetype_pnl.py::test_arbitrage_price_dispersion_attribution`. Verify P&L bucket exists +
-      attributes correctly given mock fills.
-      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at pnl-attribution-service@f5dcf63 — 17 tests cover
-      the full surface (parse_slot_label happy-path / unparseable / lowercase rejection;
-      annotate_archetype_columns backfill / upstream-respect / unknown-fallback / empty-frame / slot_label-precedence;
-      aggregate_by_archetype grouping / empty-frame; write_archetype_buckets path-shape / empty-no-uploads /
-      pnl-fallback / unknown-bucket-isolation; the named
+      attributes correctly given mock fills. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at
+      pnl-attribution-service@f5dcf63 — 17 tests cover the full surface (parse_slot_label happy-path / unparseable /
+      lowercase rejection; annotate_archetype_columns backfill / upstream-respect / unknown-fallback / empty-frame /
+      slot_label-precedence; aggregate_by_archetype grouping / empty-frame; write_archetype_buckets path-shape /
+      empty-no-uploads / pnl-fallback / unknown-bucket-isolation; the named
       `test_arbitrage_price_dispersion_attribution` invariant — feeds 3-slot mock fills, asserts the
       ARBITRAGE_PRICE_DISPERSION + funding-rate-dispersion bucket lands at the canonical path with archetype +
       config_variant + simulated_pnl_usd populated). All 17 tests green; basedpyright + ruff clean.
@@ -615,17 +614,15 @@ against real backfilled MTDS + features data for a 1-week window; produces a CSV
 - [x] [VERIFY] P0. After tracer (Phase B) emits rows for the 1-week window:
       `gcloud storage ls gs://${PID}-pnl-attribution/by_strategy/ARBITRAGE_PRICE_DISPERSION/...` returns non-empty;
       sample probe of one row confirms `archetype="ARBITRAGE_PRICE_DISPERSION"` + `config_variant=...` columns
-      populated.
-      **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: ran pnl-attribution-service's new
+      populated. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: ran pnl-attribution-service's new
       `scripts/aggregate_archetype_pnl_from_tracer.py` against the tracer's `/tmp/arb_trace_2024_w1/` output:
-      `python scripts/aggregate_archetype_pnl_from_tracer.py     --tracer-output-dir /tmp/arb_trace_2024_w1/ --as-of-date 2024-01-07     --gcs-bucket pnl-attribution-central-element-323112`. Bucket
-      `gs://pnl-attribution-central-element-323112` provisioned 2026-05-10 (asia-northeast1, uniform-bucket-level-
-      access). Output:
+      `python scripts/aggregate_archetype_pnl_from_tracer.py     --tracer-output-dir /tmp/arb_trace_2024_w1/ --as-of-date 2024-01-07     --gcs-bucket pnl-attribution-central-element-323112`.
+      Bucket `gs://pnl-attribution-central-element-323112` provisioned 2026-05-10 (asia-northeast1,
+      uniform-bucket-level- access). Output:
       `gs://pnl-attribution-central-element-323112/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-07.parquet`
       — 3 EMIT rows (ETH=2 days $64.04 + $91.40; SOL=1 day $45.19); cumulative `simulated_pnl_usd = $200.63` matching
-      the tracer's emitted P&L envelope EXACTLY (zero-execution-alpha matching engine semantics per CLAUDE.md
-      "Batch = Live"). Sample row from
-      `gs://...funding-rate-dispersion/.../2024-01-07.parquet`:
+      the tracer's emitted P&L envelope EXACTLY (zero-execution-alpha matching engine semantics per CLAUDE.md "Batch =
+      Live"). Sample row from `gs://...funding-rate-dispersion/.../2024-01-07.parquet`:
       `archetype="ARBITRAGE_PRICE_DISPERSION"`, `config_variant="funding-rate-dispersion"`,
       `strategy_id="ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod"`,
       `simulated_pnl_usd=64.04`, `status="EMIT"`, `leg1_venue="deribit"`, `leg2_venue="hyperliquid"`. Schema-required
@@ -658,7 +655,7 @@ archetype-bucket check passes.
       references (`rg 'leveraged_funding_arb' --type py` returns no hits — the workspace has no live code using the
       legacy name). 54 markdown references remain, all historical-context per the gate phrasing: parent plan + this
       finalisation plan + active issue doc + epic plans + codex runbooks (with explicit "renamed to
-      ARBITRAGE_PRICE_DISPERSION" annotations) + archive/* commits.
+      ARBITRAGE_PRICE_DISPERSION" annotations) + archive/\* commits.
 
 - [x] [PM-plan] P0. Flip the 3 deferred Stream B sister todos (lines 175-188) + the codex circular-ref P0 (lines
       155-157) in defi_archetypes plan from `[ ]` to `[x]` with this plan's commit shas as evidence. Per CLAUDE.md
@@ -679,14 +676,15 @@ Phase E may run in parallel with Phases B/C (no upstream dependency on artefacts
       [`codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md:171-179`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md):
       remove the line _"Funding-rate arbitrage between perp venues (bidirectional funding capture) — `CARRY_BASIS_PERP`
       (cross-venue mode)"_ from the "Not in this archetype" section. The 2026-05-07 operator decision sent
-      funding-rate-spread-as-price-dispersion HERE (ARBITRAGE_PRICE_DISPERSION with `funding-rate-dispersion` config
+      funding-rate-spread-as-price-dispersion HERE (ARBITRAGE*PRICE_DISPERSION with `funding-rate-dispersion` config
       variant); the redirect to CARRY_BASIS_PERP is the legacy framing. Leave the paired authoritative claim in
       [`carry-basis-perp.md:138-139`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md) only. This
       closes the parent plan's pending P0 codex todo at line 155-157. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**:
-      shipped at PM@5fe5eabd. Verified via `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'
-      codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md` → zero hits. Paired authoritative
-      claim survives at `carry-basis-perp.md:135-136`: _"Cross-venue perp spread arbitrage (funding-rate differential
-      between two perp venues for the same asset) — `ARBITRAGE_PRICE_DISPERSION`"_.
+      shipped at PM@5fe5eabd. Verified via
+      `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'     codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
+      → zero hits. Paired authoritative claim survives at `carry-basis-perp.md:135-136`: *"Cross-venue perp spread
+      arbitrage (funding-rate differential between two perp venues for the same asset) —
+      `ARBITRAGE_PRICE_DISPERSION`"\_.
 
 - [x] [codex] P0. In the same `arbitrage-price-dispersion.md` "Example instances" section (after L159
       `ARBITRAGE_PRICE_DISPERSION@multi-cex-btc-funding-usdt-prod`), add a new sub-section showing the
@@ -727,9 +725,9 @@ Phase E may run in parallel with Phases B/C (no upstream dependency on artefacts
       `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'     codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
       returns zero hits (the circular pointer is gone).
       `rg 'funding-rate-dispersion'     codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
-      returns ≥ 1 hit. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: ran both grep checks 2026-05-10 evening.
-      First returns 0 hits (zero CARRY_BASIS_PERP↔funding cross-references in the dispersion doc); second returns
-      ≥ 1 hit (the example slot block at L161-172). Phase E full-execution criterion met.
+      returns ≥ 1 hit. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: ran both grep checks 2026-05-10 evening. First
+      returns 0 hits (zero CARRY_BASIS_PERP↔funding cross-references in the dispersion doc); second returns ≥ 1 hit
+      (the example slot block at L161-172). Phase E full-execution criterion met.
 
 **Full-execution criterion**: codex docs reflect the new SSOT (single authoritative claim in `carry-basis-perp.md`;
 canonical example in `arbitrage-price-dispersion.md`). **What ran**: surgical edits + workspace grep verification.
@@ -1126,9 +1124,10 @@ C since the tracer already produces non-empty EMIT rows from the available venue
 
 ## DONE-2026-05-10 (agent-arb-fundrate-cde rename-sweep) — Phase D rename sweep shipped
 
-Re-audit-3 follow-up after operator authorized "cann you do those then" 2026-05-10. Bulk workspace `leveraged_funding_arb`
-rename sweep shipped per `plans/archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` option-2
-(per-plan-owner rename, scoped to TRACKED files; UNTRACKED foreign-WIP skipped; audit-snapshot docs left as historical).
+Re-audit-3 follow-up after operator authorized "cann you do those then" 2026-05-10. Bulk workspace
+`leveraged_funding_arb` rename sweep shipped per
+`plans/archive/issues/leveraged_funding_arb_workspace_rename_sweep_2026_05_09.md` option-2 (per-plan-owner rename,
+scoped to TRACKED files; UNTRACKED foreign-WIP skipped; audit-snapshot docs left as historical).
 
 PM commits (5):
 
@@ -1144,8 +1143,8 @@ PM commits (5):
 
 This commit (PM@<this>):
 
-- Closes the rename-sweep issue doc with a `## RESOLUTION 2026-05-10` block listing all 5 commits + the 4 residuals
-  (2 untracked foreign-WIP + 2 audit-snapshot docs left as historical context per Stream B gate phrasing).
+- Closes the rename-sweep issue doc with a `## RESOLUTION 2026-05-10` block listing all 5 commits + the 4 residuals (2
+  untracked foreign-WIP + 2 audit-snapshot docs left as historical context per Stream B gate phrasing).
 - Updates parent plan
   [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
   Stream B Gate (L223) with "Gate status 2026-05-10 (mostly-closed for rename; full close still gated on Phase C of
@@ -1156,8 +1155,9 @@ This commit (PM@<this>):
 
 EOD-audit: every still-deferred item has a grep-target — Phase C (this plan body Phase C unchanged + parent plan L205);
 parent-plan L195 tracer flipped this commit; rename-sweep RESOLVED 2026-05-10 (issue doc + parent plan gate annotation
-+ this DONE block); 4 rename-sweep residuals tracked in issue doc § RESOLUTION (2 untracked-WIP for original authors
-to clean + 2 audit-snapshot historical-context kept). No grep-miss deferrals.
+
+- this DONE block); 4 rename-sweep residuals tracked in issue doc § RESOLUTION (2 untracked-WIP for original authors to
+  clean + 2 audit-snapshot historical-context kept). No grep-miss deferrals.
 
 **Recommendation for next agent**: Phase C remains the only blocker for full Stream B gate close. Tracer output is at
 `/tmp/arb_trace_2024_w1/` (operator's workstation) — re-run on next-agent's machine if working from deployment-api /

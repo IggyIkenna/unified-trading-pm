@@ -28,7 +28,12 @@ isProject: false
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
 >
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md) pins this epic's gates to a strict time-axis order: **Phase 2 (G3-G5 schema + writer code + GCS data layout) cannot start until the sequencing plan's Phase 1 freeze gate fires.** Schema-axis enforcer (this plan) composes with time-axis enforcer (sequencing plan); both gate together. Anti-sequencing audit in the sequencing plan flags 13 plans by re-migration risk — reviewers reject any plan that lands manifest-schema-affecting scope after the Phase 2 freeze gate fires.
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> pins this epic's gates to a strict time-axis order: **Phase 2 (G3-G5 schema + writer code + GCS data layout) cannot
+> start until the sequencing plan's Phase 1 freeze gate fires.** Schema-axis enforcer (this plan) composes with
+> time-axis enforcer (sequencing plan); both gate together. Anti-sequencing audit in the sequencing plan flags 13 plans
+> by re-migration risk — reviewers reject any plan that lands manifest-schema-affecting scope after the Phase 2 freeze
+> gate fires.
 
 # Manifest evolution master — schema + writer code + GCS data layout co-evolve (3-axis batch invariant)
 
@@ -74,15 +79,15 @@ advancing while the third lagged.
 
 ## Folded sub-plans
 
-| Child plan                                                                                                      | Scope                                                                                                                                                              | Status (2026-05-08)                                                      | Gate(s) it lands in                                                                             |
-| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| [`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)   | Reason taxonomy expansion (Phase 2.E) + cluster-validation guard (3.D.5) + ServiceEmissionPolicy slice (a) shipped UAC@58c3b61                                     | Wave 4 slice (a) shipped; slices (b)/(c) planned                         | G1 (reason taxonomy) + G2 (cluster validation) + G7 (service emission policy + workspace audit) |
-| [`hard_schema_enforcement_2026_05_08`](../active/hard_schema_enforcement_2026_05_08.md)                         | QG STEP 5.66 AST guard + `SCHEMA_VALIDATION_FAILED` enum addition + workspace cluster-validation enforcement                                                       | Draft                                                                    | G2 (cluster validation) + G7 (workspace audit)                                                  |
-| [`wave3x_residual_ssots_2026_05_08`](../active/wave3x_residual_ssots_2026_05_08.md)                             | Tracks A (UAC `HALF_DAY_SESSIONS` + `EXPECTED_PARTIAL_HALF_DAY` reason) + D (zero-activity-bar audit per CLAUDE.md 4-category rule)                                | 5-track parallel plan; A + D in scope here                               | G1 (reason taxonomy — Track A) + G2 (cluster validation overlap — Track D zero-activity-bar)    |
-| [`expected_universe_v2_design_2026_05_08`](../active/expected_universe_v2_design_2026_05_08.md)                 | Per-instrument-grain enumerator (v2 supersedes v1 venue-grain); pre-populates `expected_unattempted` rows from instruments-service catalog                         | Draft (Q3 launch-vs-v8 sequencing pending)                               | G3 (enumerator launch) — sequenced AFTER G4 v8 schema                                           |
-| [`manifest_schema_final_gate_2026_05_09`](../active/manifest_schema_final_gate_2026_05_09.md)                   | **CONSOLIDATED v8 SSOT.** One-shot maximalist plan: bundled Phase 3 parquet walk does FIVE migrations in ONE pass — pipeline_mode hive partition + category→asset_group rekey + 5 drift-axis fixes + v8 NULL-column backfill (`service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`) + cross-asset rescan class-A auto-fixes. Closed-set `ServiceEmissionStateEnum` ratified inline. Supersedes archived `manifest_v7_schema_migration_design_2026_05_08`. | Active (P0; deadline 2026-05-23)                                          | G4 (v8 schema atomic rename) + G5 (rescan apply-flips overlap — bundled in same parquet walk)   |
-| [`manifest_cross_asset_rescan_design_2026_05_08`](../active/manifest_cross_asset_rescan_design_2026_05_08.md)   | Cross-asset-group `--apply-flips` reconciler against full manifest; runs AFTER v8 schema lands so `service_emission_state` column exists                           | Draft                                                                    | G5 (rescan apply-flips)                                                                         |
-| [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)   | `pipeline_mode=` hive partition adoption (overnight migration of millions of parquets) + writer kwarg sweep (workspace `record_captured` callsites)                | Draft                                                                    | G6 (pipeline_mode partition + writer adoption) + G7 (workspace audit)                           |
+| Child plan                                                                                                    | Scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Status (2026-05-08)                              | Gate(s) it lands in                                                                             |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| [`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md) | Reason taxonomy expansion (Phase 2.E) + cluster-validation guard (3.D.5) + ServiceEmissionPolicy slice (a) shipped UAC@58c3b61                                                                                                                                                                                                                                                                                                                                                                   | Wave 4 slice (a) shipped; slices (b)/(c) planned | G1 (reason taxonomy) + G2 (cluster validation) + G7 (service emission policy + workspace audit) |
+| [`hard_schema_enforcement_2026_05_08`](../active/hard_schema_enforcement_2026_05_08.md)                       | QG STEP 5.66 AST guard + `SCHEMA_VALIDATION_FAILED` enum addition + workspace cluster-validation enforcement                                                                                                                                                                                                                                                                                                                                                                                     | Draft                                            | G2 (cluster validation) + G7 (workspace audit)                                                  |
+| [`wave3x_residual_ssots_2026_05_08`](../active/wave3x_residual_ssots_2026_05_08.md)                           | Tracks A (UAC `HALF_DAY_SESSIONS` + `EXPECTED_PARTIAL_HALF_DAY` reason) + D (zero-activity-bar audit per CLAUDE.md 4-category rule)                                                                                                                                                                                                                                                                                                                                                              | 5-track parallel plan; A + D in scope here       | G1 (reason taxonomy — Track A) + G2 (cluster validation overlap — Track D zero-activity-bar)    |
+| [`expected_universe_v2_design_2026_05_08`](../active/expected_universe_v2_design_2026_05_08.md)               | Per-instrument-grain enumerator (v2 supersedes v1 venue-grain); pre-populates `expected_unattempted` rows from instruments-service catalog                                                                                                                                                                                                                                                                                                                                                       | Draft (Q3 launch-vs-v8 sequencing pending)       | G3 (enumerator launch) — sequenced AFTER G4 v8 schema                                           |
+| [`manifest_schema_final_gate_2026_05_09`](../active/manifest_schema_final_gate_2026_05_09.md)                 | **CONSOLIDATED v8 SSOT.** One-shot maximalist plan: bundled Phase 3 parquet walk does FIVE migrations in ONE pass — pipeline_mode hive partition + category→asset_group rekey + 5 drift-axis fixes + v8 NULL-column backfill (`service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`) + cross-asset rescan class-A auto-fixes. Closed-set `ServiceEmissionStateEnum` ratified inline. Supersedes archived `manifest_v7_schema_migration_design_2026_05_08`. | Active (P0; deadline 2026-05-23)                 | G4 (v8 schema atomic rename) + G5 (rescan apply-flips overlap — bundled in same parquet walk)   |
+| [`manifest_cross_asset_rescan_design_2026_05_08`](../active/manifest_cross_asset_rescan_design_2026_05_08.md) | Cross-asset-group `--apply-flips` reconciler against full manifest; runs AFTER v8 schema lands so `service_emission_state` column exists                                                                                                                                                                                                                                                                                                                                                         | Draft                                            | G5 (rescan apply-flips)                                                                         |
+| [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../active/gcs_migration_bundle_pipeline_mode_2026_05_08.md) | `pipeline_mode=` hive partition adoption (overnight migration of millions of parquets) + writer kwarg sweep (workspace `record_captured` callsites)                                                                                                                                                                                                                                                                                                                                              | Draft                                            | G6 (pipeline_mode partition + writer adoption) + G7 (workspace audit)                           |
 
 The seven children together cover schema + writer + data layout. No isolated execution.
 
@@ -150,7 +155,11 @@ all asset_groups; coverage % at each drilldown level computes correctly per CLAU
 ### G4 — v8 schema migration (atomic rename + immutable service_emission_state)
 
 - **Schema axis**: v8 manifest column set adds immutable `service_emission_state ∈ ServiceEmissionStateEnum` (closed
-  set: `PUBLISHED_OK`, `PUBLISHED_DEGRADED`, `STALE_DATA_HEARTBEAT_ONLY`, `BLOCKED` per UAC@58c3b61 ServiceEmissionPolicy slice (a); name ratified 2026-05-10 cross-plan audit Q1 — uses full `STALE_DATA_HEARTBEAT_ONLY` per Policy B larger-set-wins rule, matching `manifest_schema_final_gate_2026_05_09.md` § Phase 1.A which is the consolidated v8 SSOT — see `plans/archive/manifest_v7_schema_migration_design_2026_05_08.plan.md` § line 66 for archived predecessor).
+  set: `PUBLISHED_OK`, `PUBLISHED_DEGRADED`, `STALE_DATA_HEARTBEAT_ONLY`, `BLOCKED` per UAC@58c3b61
+  ServiceEmissionPolicy slice (a); name ratified 2026-05-10 cross-plan audit Q1 — uses full `STALE_DATA_HEARTBEAT_ONLY`
+  per Policy B larger-set-wins rule, matching `manifest_schema_final_gate_2026_05_09.md` § Phase 1.A which is the
+  consolidated v8 SSOT — see `plans/archive/manifest_v7_schema_migration_design_2026_05_08.plan.md` § line 66 for
+  archived predecessor).
 - **Writer axis**: `ManifestWriter.record_captured(service_emission_state=...)` now REQUIRED kwarg; default-value
   protocol REJECTED — every callsite must declare. Migration script (one-time) populates `service_emission_state` for
   all v7-shaped legacy rows from a per-(service, output_data_type) seed dict.
@@ -298,7 +307,8 @@ If you're touching one umbrella's schema, check the other before shipping.
 
 ## Audit-2026-05-10 finding — post-cutover Wave: lift cross-cutting per-data_type view to typed registry
 
-**Source**: [`plans/archive/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md`](../archive/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md)
+**Source**:
+[`plans/archive/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md`](../archive/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md)
 Block B2.
 
 **Finding**: UAC `external/` has 73 source sub-directories (per-source flat layout: `__init__.py` + `examples/` +
@@ -306,9 +316,9 @@ Block B2.
 view today comes from prose matrix docs
 ([`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) +
 [`sports-data-source-coverage-matrix.md`](../../codex/02-data/sports-data-source-coverage-matrix.md), each ~500 lines)
-hand-typed + cross-linked to UAC registry helpers. **Drift risk**: 2026-04-20 phantom-audit incident (false 26%
-sports ODDS phantom) was matrix-doc / registry-code drift. ~5 documented incidents involved cross-cutting drift not
-catchable from any single source's view.
+hand-typed + cross-linked to UAC registry helpers. **Drift risk**: 2026-04-20 phantom-audit incident (false 26% sports
+ODDS phantom) was matrix-doc / registry-code drift. ~5 documented incidents involved cross-cutting drift not catchable
+from any single source's view.
 
 **Recommendation**: KEEP per-source colocation (natural physical shape); LIFT cross-cutting view to typed-registry-
 derived. Composes with operator's "common SSOT codebase + hooks + min duplicate" directive (Block A1 DECIDED-YES).
@@ -316,19 +326,19 @@ derived. Composes with operator's "common SSOT codebase + hooks + min duplicate"
 **Recommended post-cutover Wave to file under this master**:
 
 - [ ] [SCRIPT] P1. **NEW** UAC `data_type_registry.py` — typed cross-cutting registry; per-source
-      `external/{source}/registry.py` declares emissions as
-      `SOURCE_EMITS: dict[DataType, EmissionSpec]` next to `schemas.py`.
-- [ ] [SCRIPT] P1. **NEW** derived helpers `data_type_coverage(data_type)` + `sources_for(venue, data_type)` replace
-      the prose matrix as SSOT.
+      `external/{source}/registry.py` declares emissions as `SOURCE_EMITS: dict[DataType, EmissionSpec]` next to
+      `schemas.py`.
+- [ ] [SCRIPT] P1. **NEW** derived helpers `data_type_coverage(data_type)` + `sources_for(venue, data_type)` replace the
+      prose matrix as SSOT.
 - [ ] [SCRIPT] P1. **NEW** `scripts/render-coverage-matrix.py` generates the matrix doc from registry at PM QG time;
       commits the rendered .md artefact for human reading; QG asserts no manual edits to the rendered file.
 - [ ] [SCRIPT] P1. **MIGRATE** 73 source dirs each get a `registry.py` (current implicit knowledge in adapter code
       becomes typed-explicit).
 - [ ] [SCRIPT] P1. **DELETE** prose matrix doc once rendered version is canonical (~6 months after registry lands).
 
-**Cost**: ~2-3 AI-days for registry + render script + 1-2 reference migrations; +1 AI-day per source family for
-sweep. **Saved cost**: every drift-induced phantom incident goes away by construction (registry IS the matrix; can't
-drift). **Timing**: post-cutover; rides with monorepo consolidation (Block A1).
+**Cost**: ~2-3 AI-days for registry + render script + 1-2 reference migrations; +1 AI-day per source family for sweep.
+**Saved cost**: every drift-induced phantom incident goes away by construction (registry IS the matrix; can't drift).
+**Timing**: post-cutover; rides with monorepo consolidation (Block A1).
 
-**Plan status**: FYI for master-plan owner — NEW Wave not yet wired into the master's wave sequence. Master-plan
-owner decides whether to fold into existing waves OR file standalone post-cutover.
+**Plan status**: FYI for master-plan owner — NEW Wave not yet wired into the master's wave sequence. Master-plan owner
+decides whether to fold into existing waves OR file standalone post-cutover.

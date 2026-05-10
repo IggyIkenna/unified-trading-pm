@@ -422,9 +422,9 @@ isProject: false
 > `(asset_group, venue, data_type, instrument_type, instrument_id, day, timeframe)` — IDENTICAL atom to the batch
 > chunked-write path Phase 1.2B migrates. Per-window `CandleComputedEvent`s are Redis-Stream operational signals, NOT
 > manifest rows. The per-shard consolidator that aggregates the day's per-window candles into a single parquet finalize
-> at UTC-midnight close is the equivalent of batch's chunked-write-then-finalize sequence. Banned: live `record_captured`
-> row_key shapes that add a `window` dimension (same drift-bug class as legacy `category=` / `asset_group=` per
-> 2026-05-04 phantom-audit incident).
+> at UTC-midnight close is the equivalent of batch's chunked-write-then-finalize sequence. Banned: live
+> `record_captured` row_key shapes that add a `window` dimension (same drift-bug class as legacy `category=` /
+> `asset_group=` per 2026-05-04 phantom-audit incident).
 
 ## Why this plan exists
 
@@ -544,24 +544,24 @@ The 2026-05-10 PM chain-agent session shipped UTL@`6ce59900` (streaming facade r
 wire-in) and surfaced a Case 5 BIG architectural concern that blocks Phase 1.2B + Phase 2 from shipping cleanly under
 the spec'd shape. Items still open are tracked here so the next agent picks up cleanly.
 
-| Phase / item                                                          | Status as of 2026-05-10 PM           | Successor / blocker                                                                                                                                                                                                                              |
-| --------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Phase 1.2B — `_streaming_write_per_tf` migration to UTL lifecycle     | `blocked` (checkbox `- [ ]`)         | DEFERRED-PENDING-OPERATOR-TRIAGE per [`../archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](../archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md). Three resolution options (A/B/C) in issue doc. ~6 AI-hours total. |
-| Phase 2 — ResourceProfiler.on_memory_warning + ConnectivityWatchdog   | `deferred-after-phase-1-2b` (`- [ ]`) | DEFERRED-AFTER-PHASE-1.2B per plan execution DAG. UTL primitives exist (UTL@`3a204c03` `add_memory_warning_callback` + UTL@`50ad40ef` `ParallelPerSymbolRunner`); MDPS consumer wire-in is the scope.                                              |
-| Phase 4 — End-to-end backfill VM validation + retire band-aid mem-bump | `todo` (`- [ ]`)                     | DEFERRED-AFTER-PHASES-1.2B-AND-2 per plan execution DAG. Real-infra run requirement per "Plans Run To Actual Completion" HARD RULE.                                                                                                              |
+| Phase / item                                                           | Status as of 2026-05-10 PM            | Successor / blocker                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Phase 1.2B — `_streaming_write_per_tf` migration to UTL lifecycle      | `blocked` (checkbox `- [ ]`)          | DEFERRED-PENDING-OPERATOR-TRIAGE per [`../archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](../archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md). Three resolution options (A/B/C) in issue doc. ~6 AI-hours total. |
+| Phase 2 — ResourceProfiler.on_memory_warning + ConnectivityWatchdog    | `deferred-after-phase-1-2b` (`- [ ]`) | DEFERRED-AFTER-PHASE-1.2B per plan execution DAG. UTL primitives exist (UTL@`3a204c03` `add_memory_warning_callback` + UTL@`50ad40ef` `ParallelPerSymbolRunner`); MDPS consumer wire-in is the scope.                                                                    |
+| Phase 4 — End-to-end backfill VM validation + retire band-aid mem-bump | `todo` (`- [ ]`)                      | DEFERRED-AFTER-PHASES-1.2B-AND-2 per plan execution DAG. Real-infra run requirement per "Plans Run To Actual Completion" HARD RULE.                                                                                                                                      |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
-- **Live-pipeline Phase 4** (`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4) inherits the dual-SSOT
-  collision risk via the live aggregator's `write_candle_parquet` integration point. Resolution Option A in the issue
-  doc (`write_candle_parquet`-internal lifecycle migration) is the cleanest unblock — the live aggregator then calls
+- **Live-pipeline Phase 4** (`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4) inherits the dual-SSOT collision
+  risk via the live aggregator's `write_candle_parquet` integration point. Resolution Option A in the issue doc
+  (`write_candle_parquet`-internal lifecycle migration) is the cleanest unblock — the live aggregator then calls
   `open_candle_writer` directly with the existing canonical_writer plumbing.
 - **MDPS Phase 1.2 + Phase 2 deferral 2026-05-10 (morning issue doc)**:
   [`../archive/issues/mdps_phase_1_2_phase_2_deferral_2026_05_10.md`](../archive/issues/mdps_phase_1_2_phase_2_deferral_2026_05_10.md)
   remains open as the prior session's deferral record; the new PM issue doc is the lifecycle-shape follow-up.
-- **Audit Item #3** (`../archive/issues/audit_2026_05_08_substantial_unfixed_items.md`) tracks the original audit finding that
-  spawned both deferral cycles. Still PARTIALLY-RESOLVED (Phase 1.2A + 1.2A.1 shipped; Phase 1.2B + Phase 2 + Phase 4
-  pending architectural decision + execution).
+- **Audit Item #3** (`../archive/issues/audit_2026_05_08_substantial_unfixed_items.md`) tracks the original audit
+  finding that spawned both deferral cycles. Still PARTIALLY-RESOLVED (Phase 1.2A + 1.2A.1 shipped; Phase 1.2B + Phase
+  2 + Phase 4 pending architectural decision + execution).
 
 ## Temporary states + their canonical follow-up plans
 
@@ -569,5 +569,5 @@ This plan ITSELF is the successor for the deployment-service@`02ee6d6` band-aid 
 collision concern surfaced 2026-05-10 PM is tracked in
 [`plans/archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](../archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md);
 on operator triage of resolution Options A/C, a new `mdps_canonical_writer_lifecycle_unification_2026_05_NN.md` plan
-becomes the successor for Phase 1.2B + Phase 2 + Phase 4. No further temporary state is introduced by this plan —
-Phases 1+2+3 are the final shape; Phase 4 retires the band-aid.
+becomes the successor for Phase 1.2B + Phase 2 + Phase 4. No further temporary state is introduced by this plan — Phases
+1+2+3 are the final shape; Phase 4 retires the band-aid.

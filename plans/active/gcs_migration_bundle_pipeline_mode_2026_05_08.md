@@ -335,10 +335,10 @@ todos:
            `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag>` per
            asset_group; phantom count must be 0 (was 354 residual pre-migration; the bundle fixes the 5 drift
            axes that were the source of those 354 phantoms).
-        7. Per-asset-group migration sign-off: operator marks each asset_group complete in
-           `unified-trading-pm/plans/active/issues/gcs_migration_bundle_signoff_2026_05_08.md` once Phase 3.6 (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
-           gate is green. Down-stream services bounced (MTDS/MDPS/features VMs) only after sign-off so they
-           pick up the new manifest schema.
+        7. Per-asset-group migration sign-off: operator marks each asset_group complete inline as a checkbox in
+           this plan's Phase 3 done-definition (NOT a separate issue doc) once Phase 3.6 phantom gate is green.
+           Down-stream services bounced (MTDS/MDPS/features VMs) only after sign-off so they pick up the new
+           manifest schema. Composes with `manifest_schema_final_gate_2026_05_09` Phase 7.G inline operator sign-off.
 
         Estimated wall-clock (back-of-envelope, refined by Phase 0 § (g)): cefi 8h, defi 4h, tradfi 6h,
         sports 12h (largest by file count), prediction 2h. Run sports overnight starting 2026-05-13 evening
@@ -457,8 +457,8 @@ todos:
         ownership — that plan's agents run their stages first, this phase's agent picks up the residual.
 
         QG: instruments-service quality-gates.sh clean (the script lives there per workspace history). Phantom
-        count = 0 reported per asset_group + committed under
-        `unified-trading-pm/plans/active/issues/gcs_migration_bundle_phantom_signoff_2026_05_08.md`. (file consumed; folded into parent plan during 2026-05-08/2026-05-10 issues sweep)
+        count = 0 reported per asset_group + recorded inline in this plan's Phase 6 done-definition (NOT a separate
+        issue doc). Composes with `manifest_schema_final_gate_2026_05_09` Phase 7.F phantom gate.
     status: todo
     note: ""
 
@@ -546,7 +546,13 @@ isProject: false
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase 2.X folds the **OHLCV legacy filename → per-instrument file rename** (extract `instrument_id` from row data, NOT path heuristic per 2026-05-05 silent-placeholder incident) into this plan's single-walk discipline. Also: confirm Phase 2 schema column set enumerates ALL Phase 1 columns from `writegate_honest_coverage_endtoend_2026_05_06` slice (b) Phase 5.1 (`service_emission_state` + `pipeline_mode` + `feature_family`) before this plan's walk starts. Single-walk discipline is the constraint — reviewers reject any post-Phase-2 plan that proposes another whole-corpus walk.
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> Phase 2.X folds the **OHLCV legacy filename → per-instrument file rename** (extract `instrument_id` from row data, NOT
+> path heuristic per 2026-05-05 silent-placeholder incident) into this plan's single-walk discipline. Also: confirm
+> Phase 2 schema column set enumerates ALL Phase 1 columns from `writegate_honest_coverage_endtoend_2026_05_06` slice
+> (b) Phase 5.1 (`service_emission_state` + `pipeline_mode` + `feature_family`) before this plan's walk starts.
+> Single-walk discipline is the constraint — reviewers reject any post-Phase-2 plan that proposes another whole-corpus
+> walk.
 
 # GCS migration bundle — pipeline_mode partition + category→asset_group rekey + drift cleanup (2026-05-08)
 
@@ -594,8 +600,8 @@ Read these BEFORE making code changes — drift = review-blocking failure per `d
 
 ## Pre-audit manifest
 
-Phase 0 produces `unified-trading-pm/plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md`. Subsequent phases
-reference it for: (a) bucket inventory; (b) per-bucket parquet count + cost estimate; (c) per-bucket drift-class
+Phase 0 produces `unified-trading-pm/plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md`. Subsequent
+phases reference it for: (a) bucket inventory; (b) per-bucket parquet count + cost estimate; (c) per-bucket drift-class
 histogram; (d) manifest current shape; (e) phantom-row baseline; (f) coordination with `manifest_migration_master` Stage
 4; (g) total cost + wall-clock; (h) snapshot strategy.
 

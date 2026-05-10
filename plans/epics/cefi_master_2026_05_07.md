@@ -193,10 +193,12 @@ writes (RED ALERT not triggered). All `instrument_id` columns populated; per-ins
 6.7M (real per-instrument tick counts, NOT bundle-rollup 8.3M).
 
 **Important resolution — asymmetric shard shape no longer reproducing.** The bundle-vs-per-instrument shape documented
-in [`../archive/issues/cefi_tardis_writegate_findings_2026_05_07.md`](../archive/issues/cefi_tardis_writegate_findings_2026_05_07.md) Finding
-1 is no longer present on the Day 2 fleet. Current shards are SSOT-conformant per-instrument shape (see CLAUDE.md §
-"Shard-granularity SSOT" cefi spot/perp matrix). Either Ikenna's writegate Phase 2.A residual landed overnight, or the
-relaunched-on-`-8` VMs use a tarball that includes the fix. Issue-doc owner should sweep + resolve when convenient.
+in
+[`../archive/issues/cefi_tardis_writegate_findings_2026_05_07.md`](../archive/issues/cefi_tardis_writegate_findings_2026_05_07.md)
+Finding 1 is no longer present on the Day 2 fleet. Current shards are SSOT-conformant per-instrument shape (see
+CLAUDE.md § "Shard-granularity SSOT" cefi spot/perp matrix). Either Ikenna's writegate Phase 2.A residual landed
+overnight, or the relaunched-on-`-8` VMs use a tarball that includes the fix. Issue-doc owner should sweep + resolve
+when convenient.
 
 **Drain progress samples (T+~9h, % through year)**:
 
