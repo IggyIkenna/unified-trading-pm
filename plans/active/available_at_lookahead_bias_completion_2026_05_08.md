@@ -485,3 +485,15 @@ This plan is a **coordinator**. Banners must be added to:
 - **`assert_no_lookahead_for_feature_group` already takes `pl.DataFrame` + `target_ts`** — both are in scope at the
   writer boundary. No UTL contract change needed.
 - **Cross-plan coordination banners** are part of every plan-touch in this epic; add them as you go.
+
+---
+
+## DONE-2026-05-10 — mtds-utl-completion-tab session
+
+| Item                                                            | Status                       | Commits                                                                                |
+| --------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
+| Phase 1 P0 — CeFi adapter stamping                              | `done` (writer-boundary path)| market-tick-data-service@4a00bd5 (writer stamping + 5 tests); plan-flip PM@2372071b    |
+| F2 issue doc resolution (cefi_available_at structural mismatch) | `done`                       | PM@2372071b (resolved-banner added at top of issue doc)                                |
+
+This session shipped the cefi half of Phase 1 P0; DeFi/TradFi/Predictions/Sports adapter stamping items in Phase 1
+remain `- [ ]`. Phases 0/2/4/5/6/7/8/9/10 untouched this session.

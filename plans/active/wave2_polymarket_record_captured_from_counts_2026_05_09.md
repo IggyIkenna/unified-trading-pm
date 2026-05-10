@@ -156,3 +156,21 @@ Per CLAUDE.md "Plans Run To Actual Completion, Not Smoke-Test Green":
   the workspace.
 - **Don't** treat this plan as urgent during May-23 cutover prep — option α is correctness-equivalent for the cutover
   window. This Wave-2 is post-cutover hygiene.
+
+## DONE-2026-05-10 — mtds-utl-completion-tab session
+
+Phases 1 + 3 first item shipped. Phases 2 + 3-rest + 4 + 5 deferred to follow-up sessions per the plan's natural sequence
+(`add()` deprecation banner is a post-Phase-3 sweep; CME-OPTIONS migration + workspace-wide audit + `add()` deletion +
+QG enforcement + codex docs all sequenced after the predictions-bundle path proves itself in production).
+
+| Item                                    | Status                                              | Commits                                                |
+| --------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
+| Phase 1 — UTL helper                    | `done`                                              | unified-trading-library@ef47c81b (helper + 11 tests)   |
+| Phase 2 — Deprecation banner on add()   | `todo` (DEFERRED-AFTER-Phase-3-rest)                | (not shipped this session)                             |
+| Phase 3 — MTDS prediction finalize      | `done` (1 of 3 todos)                               | market-tick-data-service@a2f8d80 (finalize + 5 tests)  |
+| Phase 3 — CME-OPTIONS migration         | `todo` (post-cutover; existing precedent works)     | (not shipped this session)                             |
+| Phase 3 — Workspace add() callsite audit| `todo` (post-cutover sweep)                         | (not shipped this session)                             |
+| Phase 4 — Legacy add() deletion         | `todo` (sequenced behind Phase 3 P1 audit)          | (not shipped this session)                             |
+| Phase 5 — Codex SSOT updates            | `todo` (sequenced behind Phase 4)                   | (not shipped this session)                             |
+
+Plan-flip commits: PM@8d44424a (Phase 1) + PM@75e768a6 (Phase 3 first item + predictions Q2 resolution).
