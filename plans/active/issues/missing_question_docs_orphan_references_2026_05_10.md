@@ -125,7 +125,33 @@ file-collision surface.
 
 ## Disposition tracking
 
-- [ ] Operator picks (a) / (b) / (c) / (d).
-- [ ] Selected disposition executed (re-spawn / fold-in / strip / hybrid).
-- [ ] All 8 cross-references updated to consistent state.
-- [ ] Issue doc closes.
+- [x] Operator picks **disposition (a) — re-spawn all three** per direction "whatever is institutional grade Citadel
+      and per claude md" (2026-05-10). Citadel-grade § 7 SSOT bans multi-topic docs (README convention "One topic per
+      doc"), so fold-in (b) violates SSOT discipline. Re-spawn at original slug+date means **zero orphan-ref sweep
+      needed** (the 8 references resolve as-is).
+- [x] Selected disposition executed:
+  - PM@b015db97 — `client_reporting_pnl_attribution_2026_05_08.md` re-spawned (high-fidelity from conversation
+    context: Block A1-B5 preserved + Block C synthesized).
+  - PM@6e504f0b — `risk_simulations_limits_alerting_2026_05_08.md` re-spawned (low-fidelity reconstruction;
+    operator-review flag in body + iteration log + operator-note section).
+  - PM@6ef6ad4b — `plans/questions/README.md` re-spawned (high-fidelity from conversation context + lifecycle § 1
+    + Conventions + Composes-with extended to ban future loss events; backlog table refreshed to current 12 docs).
+- [x] All 8 cross-references resolve. **Zero ref-sweep required** because re-spawn preserved slug+date — the 8
+      orphan-citing files were already correct; they're just no longer orphans.
+- [x] Reconstruction notes in both re-spawned question docs flag operator review for framing-drift before audit pass
+      consumes content as canonical (especially `risk_simulations_limits_alerting` which is lower-fidelity).
+- [x] **Issue doc closed.** Status flipped to closed; locked_by retained until operator confirms reconstructions are
+      acceptable.
+
+**Status: closed** (2026-05-10, executor: main-orchestrator-agent, executor commits PM@b015db97 + PM@6e504f0b +
+PM@6ef6ad4b).
+
+**Operator follow-up (non-blocking):**
+
+1. Review `risk_simulations_limits_alerting_2026_05_08.md` body + iteration-log Operator-note section. The 4-surface
+   framing (monitor / simulations / alerts / preflight) + the {BLOCK / MONITOR / TEST} action taxonomy are the
+   reconstructor's best inference from references — flag any framing drift vs original intent.
+2. Spot-check `client_reporting_pnl_attribution_2026_05_08.md` Block C (cross-cutting integration). Block A + B were
+   preserved verbatim from yesterday's conversation; Block C was new content synthesized from the original framing
+   line.
+3. README backlog statuses for `iterating` / `audit-in-progress` are inferred from commit history — confirm or correct.
