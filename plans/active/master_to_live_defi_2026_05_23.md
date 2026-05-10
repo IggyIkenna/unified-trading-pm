@@ -790,29 +790,38 @@ item names what "done" looks like + the exact verification command/check):
   with DeFi master.
 - [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](./arbitrage_price_dispersion_finalisation_2026_05_09.md) —
   funding-rate-dispersion variant is half of the May-23 paper-mode evidence run; banner mutual.
-- [`promote_workflow_may23_cli_path_2026_05_10.md`](./promote_workflow_may23_cli_path_2026_05_10.md) — **NEW (2026-05-10)** — operator-CLI
-  promote-path hardening for the May-23 cutover. Spawned from the promote-workflow re-audit
+- [`promote_workflow_may23_cli_path_2026_05_10.md`](./promote_workflow_may23_cli_path_2026_05_10.md) — **NEW (2026-05-10), pivoted dual-track 2026-05-10 PM** —
+  May-23 promote workflow shipped DUAL-TRACK per operator preference (2026-05-10 PM): **PRIMARY = operator-CLI**
+  (run-paper.sh + run-live.sh + colocated_engine.py — safety net) + **SECONDARY = minimal-but-real UI promote
+  pipeline** (Promote button → POST /promote → MinimalCandidateManifest → DART manual-trade gate → paper/live VM
+  auto-launch). Spawned from the promote-workflow re-audit
   ([`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md))
-  which found the UI promote workflow is 100% mock + no `/promote` backend exists + no paper/live VM launchers in
-  `deployment-service/scripts/vm/`. May-23 path = operator-CLI via `e2e-testing/scripts/defi/run-paper.sh` +
-  `run-live.sh` + `colocated_engine.py`. The plan extends Group F items 17/18/19/20/21/22 + Group G item 23 with
-  three new sub-items the audit surfaced:
+  which found the UI promote workflow was 100% mock + no `/promote` backend + no paper/live VM launchers in
+  `deployment-service/scripts/vm/`. The plan extends Group F items 17/18/19/20/21/22 + Group G item 23 with
+  these new sub-items the audit surfaced:
   - `pvl-p17e-launcher-scripts` — write `launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh` in
     `deployment-service/scripts/vm/` per CLAUDE.md *VM launcher script SSOT* HARD RULE; register `strategy-paper-` +
-    `strategy-live-` prefixes in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET`. **P0 cutover-blocker.**
-  - `pvl-p23d-promote-api-and-preflight` — backend `POST /promote/{strategy_id}/{run_id}` endpoint + pre-flight
-    pipeline (custody / venue keys / alerting / kill-switch / risk / recon). **DEFERRED to post-cutover plan**
-    ([`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
-    Phase 9). May-23 uses operator-CLI bypass.
-  - `pvl-p23e-live-deployment-events` — UAC `LIVE_DEPLOYMENT_STARTED` + `LIVE_DEPLOYMENT_STOPPED` event types +
-    per-launch event-verification protocol scoped to live trading. **DEFERRED to post-cutover plan** Phase 3.
-    May-23 uses standard `ServiceBootstrap` STARTED/STOPPED.
+    `strategy-live-` prefixes in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET`. **P0 cutover-blocker for both tracks.**
+  - `pvl-p17f-minimal-candidate-manifest` — `MinimalCandidateManifest` UAC type with placeholder Optional fields for
+    pinned shas / model refs / features manifest version (full enrichment shipped post-cutover Phase 2). **P0 May-23
+    (Phase U1 of CLI plan).**
+  - `pvl-p23d-promote-api-MINIMAL` — backend `POST /promote/{strategy_id}/{manifest_id}` endpoint + minimal pre-flight
+    pipeline (Copper sandbox / venue keys / alerting / kill-switch / recon — composes with existing services). **P0
+    May-23 (Phase U3 of CLI plan).** Full pre-flight + cross-service auto-registration in
+    [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+    Phase 9.
+  - `pvl-p23e-live-deployment-events-MINIMAL` — May-23 uses UTL bare-string events (`STRATEGY_PROMOTED_TO_PAPER` /
+    `STRATEGY_PROMOTED_TO_LIVE`); UAC `LifecycleEventType` enum membership + per-launch event-verification protocol
+    scoped to live trading deferred to post-cutover Phase 3. **P0 May-23 minimal subset.**
 - [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md) — **NEW (2026-05-10)** —
-  picks up everything DEFERRED from the May-23 cutover plan: state-machine consolidation (4 UAC SSOTs → 1 canonical) +
-  `CandidateManifest` UAC type + 8 new event types + per-archetype Pydantic config schemas (5 of 53 → all 53) + drift
-  detection cron + cross-service auto-registration + continuous backtest cron + backtest persistence + ranking surface +
-  promote API backend + DART 3-way + manual-trade gate UI + `pvl-p17a-d` operational modes consolidation. Target
-  completion 2026-07-04 (~6 weeks post-cutover).
+  EXTENDS May-23 dual-track minimal-UI shipments. Picks up everything DEFERRED from the May-23 cutover plan:
+  state-machine consolidation (4 UAC SSOTs → 1 canonical) + `CandidateManifest` enrichment (Phase 2 populates the
+  May-23 `MinimalCandidateManifest` placeholder Optional fields) + 8 new event types + per-archetype Pydantic config
+  schemas (5 of 53 → all 53) + drift detection cron + cross-service auto-registration on promote + continuous backtest
+  cron + backtest persistence + ranking surface + full pre-flight pipeline (Phase 9 extends May-23 Phase U3 minimal) +
+  full DART experience extension (Phase 10 extends May-23 Phases U5+U6 from lead pair to all archetypes + advanced
+  operator features) + `pvl-p17a-d` operational modes consolidation. Target completion 2026-07-04 (~6 weeks
+  post-cutover).
 
 **Estimated scope**: ~12-18 AI-days total. UAC additive enum + decompose helper + instruction envelope mode field +
 `TestingStage` deprecation: ~1-2d. `paper_trade: bool` + `_PAPER_VENUE_KEYS` deletion + 6 consumer file migration: ~1d.
