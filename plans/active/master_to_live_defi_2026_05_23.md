@@ -764,6 +764,67 @@ real backend (not mock). Together with item 23 above, the canonical DART operato
 
 ---
 
+## Continuous Verification matrix — 23 items (per HARD RULE codified 2026-05-08)
+
+Per CLAUDE.md "Master Plan Continuous-Verification Column" HARD RULE: every Group A–G item MUST declare its periodic
+verification path between checkpoint deadlines. Items where `Last verified` is older than the cadence trigger a P0
+alerting rule (Tab 5 governance owns the alert). `manual` cadence = live-only operator-judgment items with no
+continuous verifier.
+
+**Owner notation**: `cron:<vm-name>` = recurring VM via deployment-service launcher. `QG:<repo>` = enforced via
+`scripts/quality-gates.sh` on every PR. `Tab:<role>` = daily Tab assignment in current work-split. `manual` = operator
+sign-off.
+
+| # | Group | Cutover success criterion (one-line from § Per-service readiness checklist) | Continuous Verification | Last verified |
+|---|-------|------------------------------------------------------------------------------|-------------------------|---------------|
+| 1 | A · Code health | `bash scripts/quality-gates.sh` two-pass clean per repo | `QG:per-repo` on every PR; pre-shippable-unit local before push | 2026-05-10 |
+| 2 | A · Code health | Branch landed `live-defi-rollout` → main via SIT | `QG:semver-agent` on merge | 2026-05-10 |
+| 3 | A · Code health | `feat:` / `fix:` / `feat!:` semver triggers version bump | `QG:semver-agent` on merge | 2026-05-10 |
+| 4 | B · Data correctness | Representative `(asset_group, data_type, day)` triples produce valid parquet end-to-end | `cron:cefi-fwd-` + `defi-fwd-` + `tradfi-fwd-` + `sports-fwd-` + `prediction-fwd-` forward-poll VMs | 2026-05-09 |
+| 5 | B · Data correctness | `record_{captured,empty,failed}` with `expected_root_clusters` + `cluster_extractor` for bundled types | `QG:UTL` STEP 5.64 AST-walk on every PR + manifest spot-check | 2026-05-09 |
+| 6 | B · Data correctness | `DependencyError(fail_fast=True)` at boundary; honest absence categories A/B/C/D | `cron:manifest-consolidator-` + writegate-honest-coverage Phase 5 ratchet | 2026-05-09 |
+| 7 | B · Data correctness | Domain types in UAC, runtime utilities in UTL (UAC/UTL abstraction) | `QG:per-repo` import-surface-enforcement on every PR | 2026-05-10 |
+| 8 | B · Data correctness | Parquet schema matches UAC contract per `record_captured` (4-pillar item 3) | `QG:per-repo` write-gate helper on every PR | 2026-05-10 |
+| 9 | C · Runtime parity | Hot reload typed; `ApiKeyReloader` for Secret Manager creds | `QG:per-service` STEP 5.34 typed-config-reloaders + STEP 5.61 ServiceBootstrap | 2026-05-10 |
+| 10 | C · Runtime parity | Batch = live: same code path; only fill source differs | `manual` (architecture invariant) + `cron:batch-vs-live-recon-` (Wave-2 Phase 12 follow-up) | NEVER |
+| 11 | C · Runtime parity | AWS + GCP parity: both VM launch paths green; `CLOUD_PROVIDER` toggle | Tab 4 (Harsh-side) + AWS Phase 1 smoke; daily until cutover | 2026-05-09 |
+| 12 | D · Coverage & shard | Deployment-UI rollup matches on-disk truth-set per asset-group canonical shard axis | `cron:deployment-api` Cloud Run rollup endpoint + UI smoke | 2026-05-09 |
+| 13 | D · Coverage & shard | Shard granularity correct per CLAUDE.md per-asset-group matrix | `cron:reconcile_phantom_manifest_rows_all` (weekly per asset_group) + writegate Phase 5 ratchet | 2026-05-08 |
+| 14 | D · Coverage & shard | ≥2 years representative history captured (full-window backfill) | `cron:expected-universe-enumerator-` + manifest spot-check at coverage horizon | 2026-05-09 |
+| 15 | E · Operability | UTS-UI surfaces visible (`/ops/admin/...` route exists or in-scope) | `QG:unified-trading-system-ui` route smoke + DART persona Playwright | 2026-05-09 |
+| 16 | E · Operability | Deployment-UI launch + GCS log streaming; backfill / restart / forward-poll launchable from UI | `cron:vm-zombie-watchdog-` + deployment-UI heartbeat | 2026-05-10 |
+| 17 | F · Trading prereqs | Backtest fidelity: real gas, real market impact, realistic matching engine + cost+yield precision | `cron:mtds-paper-smoke-` + `simulation_scenarios_topology_price_shocks` Phase 9 (NOT YET RUNNING) | NEVER |
+| 18 | F · Trading prereqs | 2-year batch backtest run: completed across config grid; P&L variance per archetype | `cron:strategy-2yr-grid-backfill-` (script SHIPPED strategy-service@3dea3c7; full-run operator-pending) | NEVER |
+| 19 | F · Trading prereqs | Treasury / custody integration: Copper for DeFi, CEFFU for Binance | `manual` (operator sign-off; live-only) | NEVER |
+| 20 | F · Trading prereqs | Live testnet replicates prod: AWS+GCP, full pipeline, Aster+Hyperliquid+EVM connectors | `cron:dex-perp-onboarding-` + paper-trade smoke runbook | NEVER |
+| 21 | F · Trading prereqs | Reconciliation suite: batch-vs-live + P&L attribution + execution-alpha measurement | `cron:batch-vs-live-recon-` (live-pipeline plan Phase 12 — helper SHIPPED UTL@908b1647; cron-pending) | NEVER |
+| 22 | F · Trading prereqs | Trading guardrails: circuit breakers + kill switches + alerting + auto-recovery | `cron:alerting-paging-targets-` + alerting Phase 4-9 (operator-driven, scheduling-pending) | NEVER |
+| 23 | G · Operator UX | DART manual-trade gate end-to-end visualization | `manual` (operator-driven; `cross_cutting_may_23_deliverables` items #4 + #5 ship pre-cutover) | NEVER |
+
+### Items with `Last verified: NEVER` (T-13 alerts)
+
+Per the HARD RULE: items where `Last verified` < cadence-implied-recency = P0 alert. Below 7 items have NEVER ran a
+continuous verifier; **these are the May-23 critical-path execution risks**:
+
+- **C10** (Batch=live recon) — architecture invariant; cron lands with Wave-2 Phase 12 follow-up.
+- **F17** (Backtest fidelity) — depends on `simulation_scenarios_topology_price_shocks` Phase 9 — currently 0 of 56
+  todos done; operator decision pending on scope (per Audit C Finding C-5).
+- **F18** (2-yr config-grid backtest) — script SHIPPED (strategy-service@3dea3c7) but operator-scheduled run not yet
+  fired (~8-12h wall-clock).
+- **F19** (Copper / CEFFU treasury) — manual operator sign-off; no automation possible pre-cutover.
+- **F20** (Live testnet replicates prod) — DEX perp onboarding + paper-trade smoke runbook gate.
+- **F21** (Reconciliation suite) — UTL `batch_live_reconciler` SHIPPED at @908b1647 but cron-pending.
+- **F22** (Trading guardrails) — alerting Phase 4-9 operator-driven; scheduling pending per Audit C Finding C-3.
+
+### Reviewer enforcement
+
+Master plan refresh PRs that don't update `Last verified` for changed items are review-blocked. Items where
+`Last verified` is older than the declared cadence trigger a P0 alerting rule (Tab 5 governance owns the alert; codex
+companion `codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md` will mirror this matrix in next sweep — currently
+foreign-dirty so deferred to owner agent's next commit).
+
+---
+
 ## Service readiness matrix — current snapshot
 
 Tier-1 services — every item must be ✓ by May 23. Group-level rollup (full 23-item detail in per-service yamls).
