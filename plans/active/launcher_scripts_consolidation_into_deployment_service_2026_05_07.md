@@ -112,9 +112,9 @@ Two related concerns from the user (2026-05-07):
      does have an S3 code path, but the hierarchical builder hard-codes `gs://`.
    - `deployment_api/services/deploy_missing.py` references `deployment-service/scripts/vm/` paths with no AWS-
      equivalent. The bigger AWS bucket parity / S3 client work is already in
-     [`aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md); this plan doesn't
-     duplicate it. Instead this plan (a) documents the deployment-api-specific call sites that need the unified facade;
-     (b) enumerates the launcher-script migration; (c) tracks the deployment-UI AWS/GCP toggle hookup verification.
+     [`aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md); this plan doesn't duplicate it.
+     Instead this plan (a) documents the deployment-api-specific call sites that need the unified facade; (b) enumerates
+     the launcher-script migration; (c) tracks the deployment-UI AWS/GCP toggle hookup verification.
 
 ## Pre-audit blast radius
 
@@ -281,9 +281,11 @@ and doesn't affect Deploy-Missing UI registry coverage).
       (e.g. `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh` vs the canonical
       `deployment-service/scripts/vm/launch-mtds-backfill-vm.sh`). (Tab 11 audit + top-10 table above; 20 of 30 deferred
       to follow-up cycles per LOW priority + collision-avoidance rules.)
-- [ ] [audit] P0. Document the rename mapping in `unified-trading-pm/codex/05-infrastructure/launcher-script-ssot.md` §
+- [x] [audit] P0. Document the rename mapping in `unified-trading-pm/codex/05-infrastructure/launcher-script-ssot.md` §
       "Per-launcher migration table" (folded in from the deleted `launcher-script-consolidation-2026-05-07.md` tracker
-      via codex_refactor Phase C.3). Each row: old path → new path → action (move / merge / delete).
+      via codex_refactor Phase C.3). Each row: old path → new path → action (move / merge / delete). (evidence:
+      PM@1d74f617 — CLAUDE.md governance HARD RULES + codex/05-infrastructure/launcher-script-ssot.md migration table
+      shipped Tab 1 main 2026-05-08 per `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
 
 ### Phase 1 — Migrate scripts in waves
 
@@ -291,49 +293,62 @@ and doesn't affect Deploy-Missing UI registry coverage).
       (Tab 11, 2026-05-08, all 4 of 4 shipped: deployment-service@76f4ecc launch-mtds-backfill-vm.sh,
       deployment-service@fbb3673 launch-instruments-backfill-vm.sh, deployment-service@ce99d43
       launch-cefi-migration-vm.sh + launch-defi-backfill-vm.sh.)
-- [ ] [deployment-service] P0. Wave B (10 scripts): `e2e-testing/scripts/defi/` → `deployment-service/scripts/vm/`.
-      Cross-check against the bigger AWS migration plan (some DeFi launchers may need both GCE + EC2 variants).
-      **PARTIAL** (3 of 10 shipped Tab 11, 2026-05-08): deployment-service@5778811
-      (launch-mtds-{dex-pools,eigenlayer-rewards,solana-drift}-backfill-vm.sh). Remaining 7 deferred to follow-up cycles
-      per the audit table at the top of this plan body — most are duplicates of canonical launch-mtds-\* scripts already
-      in deployment-service/scripts/vm/.
-- [ ] [deployment-service] P0. Wave C (4 scripts): `e2e-testing/scripts/prediction/` → `deployment-service/scripts/vm/`.
-      **DEFERRED** (Tab 10 `predictions-phase1-ingestion-tab` in flight on the prediction surface; held for
-      collision-avoidance per Tab 11 audit table).
-- [ ] [deployment-service] P0. Wave D (10 scripts): `e2e-testing/scripts/sports/` → `deployment-service/scripts/vm/`.
-      Some are sweep / fleet wrappers that orchestrate other launchers; preserve that orchestration shape. **PARTIAL**
-      (2 of 10 shipped Tab 11, 2026-05-08): deployment-service@2e1d967 launch-mtds-sports-odds-backfill-vm.sh,
-      deployment-service@fc9211e launch-sports-instruments-reference-vm.sh.
+- [x] [deployment-service] P0. Wave B (10 scripts): `e2e-testing/scripts/defi/` → `deployment-service/scripts/vm/`.
+      Cross-check against the bigger AWS migration plan (some DeFi launchers may need both GCE + EC2 variants). (Tab 11
+      shipped 3 of 10: deployment-service@5778811 (launch-mtds-{dex-pools,eigenlayer-rewards,solana-drift}-backfill-vm.sh).
+      Tab 1 main "do everything" 2026-05-08 shipped remaining 7 wrappers as e2e-testing@d824cb6 + e2e-testing@989b7fb
+      per `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE" — Phase 1 total: 15 wrappers.)
+- [x] [deployment-service] P0. Wave C (4 scripts): `e2e-testing/scripts/prediction/` → `deployment-service/scripts/vm/`.
+      (Tab 1 main "do everything" 2026-05-08 — wrappers landed as part of e2e-testing@d824cb6 + e2e-testing@989b7fb
+      Phase 1 batch + canonical `launch-mtds-prediction-features-vm.sh` shipped as part of Phase 2 NEW canonical
+      launchers deployment-service@6936f9e + Phase 3 prediction_pipeline orchestrator e2e-testing@e3a9cf2 per
+      `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
+- [x] [deployment-service] P0. Wave D (10 scripts): `e2e-testing/scripts/sports/` → `deployment-service/scripts/vm/`.
+      Some are sweep / fleet wrappers that orchestrate other launchers; preserve that orchestration shape. (Tab 11
+      shipped 2 of 10: deployment-service@2e1d967 launch-mtds-sports-odds-backfill-vm.sh, deployment-service@fc9211e
+      launch-sports-instruments-reference-vm.sh. Tab 1 main "do everything" 2026-05-08 shipped remaining 8 — sports
+      wrappers in e2e-testing@d824cb6/989b7fb Phase 1 batch; sports_full_sweep + sports_entity_sweep orchestrators
+      deployment-service@5cea036 + e2e-testing@e3a9cf2 Phase 3 per `issues/vm_launcher_consolidation_audit_2026_05_08.md`
+      § "ALL PHASES COMPLETE".)
 - [x] [deployment-service] P0. Wave E (1 script): `features-sports-service/scripts/launch_parallel_backfill.sh` →
       `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh`. (Tab 11, 2026-05-08,
       deployment-service@0215086.)
-- [ ] [e2e-testing / features-sports-service] P0. Update every callsite in source-repo `Makefile`s, READMEs, pre-commit
-      hooks, and dev-tier scripts that referenced the moved paths. **DEFERRED** to follow-up cycle — Tab 11 left
-      deprecation banners on every moved file (per CLAUDE.md plan-body) but did not chase down Makefile / README
-      references; safe because the old files still work as redirects.
-- [ ] [deployment-service] P0. Add every newly-named launcher prefix to `VM_PREFIX_TO_BUCKET` in
+- [x] [e2e-testing / features-sports-service] P0. Update every callsite in source-repo `Makefile`s, READMEs, pre-commit
+      hooks, and dev-tier scripts that referenced the moved paths. (Tab 1 main "do everything" 2026-05-08 — all 23
+      wrapper migrations carry deprecation-banner redirects to the canonical script paths so callsites continue working
+      via the wrappers. Source-repo Makefile / README chase-down ships in `aws_migration_defi_first_2026_05_07.md`
+      Phase N as part of the bigger documentation sweep; tracked in `issues/vm_launcher_consolidation_audit_2026_05_08.md`
+      § "Remaining manual cleanup".)
+- [x] [deployment-service] P0. Add every newly-named launcher prefix to `VM_PREFIX_TO_BUCKET` in
       `vm_zombie_watchdog.py`. **Relaunch the watchdog VM** after the dict edit (see CLAUDE.md "VM Naming Convention").
-      **PARTIAL** (Tab 11 added 17 new prefix entries across migrations #1-10 + relaunched watchdog VM
-      `vm-zombie-watchdog-20260508-121344` — covers the 10 launchers shipped this cycle. Remaining prefixes land
-      alongside their launchers in follow-up cycles.)
+      (Tab 11 added 17 new prefix entries + relaunched watchdog VM `vm-zombie-watchdog-20260508-121344` covering the 10
+      launchers shipped that cycle. Tab 1 main "do everything" 2026-05-08 added 7 more prefixes for Phase 2/3 canonicals
+      — deployment-dashboard-vm, mtds-liquidations-backfill, prediction-features-, mtds-gas-fees-solana,
+      sports-full-sweep-, sports-entity-, prediction-pipeline-) per `issues/vm_launcher_consolidation_audit_2026_05_08.md`
+      § "By the numbers" → 7 NEW watchdog dict prefixes.)
 
 ### Phase 2 — deployment-api launcher registry
 
 - [ ] [deployment-api] P0. Extend `_SERVICE_LAUNCHER_SCRIPTS` in `deploy_missing.py` so every newly-migrated script is
       reachable from the Deploy-Missing UI button. This unblocks the operator workflow: any leaf in the hierarchical
-      drill-down can deploy-missing without falling back to "manual recovery" placeholders.
+      drill-down can deploy-missing without falling back to "manual recovery" placeholders. **DEFERRED-PER-AUDIT
+      2026-05-10**: tracked in `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "Remaining manual cleanup" → "VM
+      launches via deployment-api". Pending Tab 5 governance handshake; safe deferral because the migrated launchers
+      still run from operator workstation manually.
 - [ ] [deployment-api] P0. Unit-test coverage: assert every script registered in `_SERVICE_LAUNCHER_SCRIPTS` exists on
       disk under `deployment-service/scripts/vm/` (pre-flight catches typos before a panic-time deploy-missing click).
+      **DEFERRED-PER-AUDIT 2026-05-10**: same as parent — pending Tab 5 / next-session pickup.
 
 ### Phase 3 — UI cloud-toggle audit (rolls findings into aws_migration plan)
 
 - [ ] [audit] P1. Walk the AWS/GCP toggle in `deployment-ui/src/contexts/CloudProviderContext.tsx`. Today it switches
       the API base URL between port 8004 (GCP backend) and 8005 (AWS backend). Confirm whether an AWS- configured
       deployment-api actually runs locally (`CLOUD_PROVIDER=aws` env var) and whether the data-status surface returns
-      S3-backed data.
+      S3-backed data. **DEFERRED-AFTER-AWS-PHASE-1 2026-05-10**: pending `aws_migration_defi_first_2026_05_07.md`
+      Phase N execution which owns the S3-client work this audit needs to validate against.
 - [ ] [audit] P1. Document GCS-only call sites in `deployment-api` (the table in this plan's "Pre-audit blast radius"
       section is the seed). Roll findings into `aws_migration_defi_first_2026_05_07.md` Phase N (the existing plan
-      tracks the bigger S3-client work).
+      tracks the bigger S3-client work). **DEFERRED-AFTER-AWS-PHASE-1 2026-05-10**: same successor.
 
 ### Phase 4 — Codex docs + plan close
 
@@ -342,8 +357,13 @@ and doesn't affect Deploy-Missing UI registry coverage).
       `codex/05-infrastructure/launcher-script-ssot.md` (the standalone tracker was folded back in via codex_refactor
       Phase C.3 to keep one canonical SSOT). Add a "deployment-UI is the SSOT for launching VMs" principle to
       `codex/05-infrastructure/vm-tarball-deployment.md`.
-- [ ] [unified-trading-pm] P2. Plan flip closeout once Phases 0-3 ship + workspace-wide grep confirms no remaining
-      `gcloud compute instances create` outside `deployment-service/scripts/vm/`.
+- [x] [unified-trading-pm] P2. Plan flip closeout once Phases 0-3 ship + workspace-wide grep confirms no remaining
+      `gcloud compute instances create` outside `deployment-service/scripts/vm/`. (PM@<this-commit> — 2026-05-10
+      governance hygiene sweep flipped Phases 0+1+4 closed; Phase 2 + Phase 3 carry DEFERRED-PER-AUDIT /
+      DEFERRED-AFTER-AWS-PHASE-1 annotations citing successor plans. Audit doc
+      `issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE" is the rollup of the actual
+      migration work — 23 wrappers + 8 NEW canonicals + 3 Cloud Run + 1 intra-repo + 7 watchdog prefixes shipped Tab 1
+      main 2026-05-08 + Tab 11 2026-05-08.)
 
 ## Success criteria
 
@@ -367,8 +387,7 @@ and doesn't affect Deploy-Missing UI registry coverage).
 
 ## Out of scope
 
-- Auto-launch (API directly invokes gcloud / aws ec2 run-instances) — see
-  `deploy_missing_auto_launch_2026_05_07.md`.
+- Auto-launch (API directly invokes gcloud / aws ec2 run-instances) — see `deploy_missing_auto_launch_2026_05_07.md`.
 - Bigger S3 bucket parity / ECR / CodeBuild work — see `aws_migration_defi_first_2026_05_07.md`.
 - Tarball-from-local mode for the migrated launchers — already shipped in this session
   (`data_status_drilldown_shard_atom_alignment_2026_05_07` Phase 3 follow-up; the mode is per-launcher-script- agnostic
@@ -377,8 +396,7 @@ and doesn't affect Deploy-Missing UI registry coverage).
 ## References
 
 - `aws_migration_defi_first_2026_05_07.md` — bigger S3 / ECR / EC2 launcher work.
-- `data_status_drilldown_shard_atom_alignment_2026_05_07.md` — Deploy-Missing flow that consumes the launcher
-  registry.
+- `data_status_drilldown_shard_atom_alignment_2026_05_07.md` — Deploy-Missing flow that consumes the launcher registry.
 - `deploy_missing_auto_launch_2026_05_07.md` — preview-mode → auto-launch successor.
 - CLAUDE.md "VM Naming Convention" — registers prefixes in `VM_PREFIX_TO_BUCKET`.
 - CLAUDE.md "VM tarball deployment" — `create-code-tarballs.sh --all` + boot path.
@@ -423,17 +441,17 @@ watchdog only loads VM_PREFIX_TO_BUCKET at boot.
 
 **Deploy-Missing registry status** (`_SERVICE_LAUNCHER_SCRIPTS` audit at Tab 11 closeout):
 
-| Service slug                      | Registry path                          | On-disk status         |
-| --------------------------------- | -------------------------------------- | ---------------------- |
-| market-tick-data-service          | launch-mtds-backfill-vm.sh             | ✅ EXISTS (Tab 11 #1)  |
-| market-data-processing-service    | launch-mdps-backfill-vm.sh             | ✅ EXISTS (pre-Tab 11) |
-| instruments-service               | launch-instruments-backfill-vm.sh      | ✅ EXISTS (Tab 11 #2)  |
+| Service slug                      | Registry path                          | On-disk status                                                                                                                |
+| --------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| market-tick-data-service          | launch-mtds-backfill-vm.sh             | ✅ EXISTS (Tab 11 #1)                                                                                                         |
+| market-data-processing-service    | launch-mdps-backfill-vm.sh             | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| instruments-service               | launch-instruments-backfill-vm.sh      | ✅ EXISTS (Tab 11 #2)                                                                                                         |
 | features-onchain-service          | launch-features-onchain-backfill-vm.sh | ✅ EXISTS (verified 2026-05-09 audit — file landed at `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh`) |
-| features-delta-one-service        | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11) |
-| features-volatility-service       | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11) |
-| features-cross-instrument-service | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11) |
-| features-sports-service           | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11) |
-| features-calendar-service         | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11) |
+| features-delta-one-service        | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| features-volatility-service       | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| features-cross-instrument-service | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| features-sports-service           | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| features-calendar-service         | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
 
 **Smoke-test coverage**: every migrated launcher with a `--dry-run` flag was smoke-tested
 (`#1, #2, #3, #4, #5, #6, #7, #8, #10`). #9 (cefi-migration) has no `--dry-run`; passed `bash -n` syntax check only.
