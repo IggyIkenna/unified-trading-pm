@@ -23,6 +23,10 @@ overview:
   start writing code in the affected area.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) is the time-axis sequencing umbrella for May-23. This master is the **readiness-state SSOT**; the sequencing plan is the **time-axis SSOT**. Read both before scheduling work — the sequencing plan pins Phase 1 code-complete (deadline 2026-05-15) → Phase 2 one-shot physical migrations (window 2026-05-15→2026-05-19) → Phase 3 resume backfills end-to-end (window 2026-05-19→2026-05-23) and includes an anti-sequencing audit table flagging 13 plans by re-migration risk.
+
 # May-23 Cutover Master — Live DeFi Trading by 2026-05-23
 
 ## Epics index (May-23 cutover, restructured 2026-05-08)

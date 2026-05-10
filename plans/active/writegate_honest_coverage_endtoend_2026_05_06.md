@@ -29,6 +29,10 @@ status: drafted
 > This plan's phases land in gate(s): **G1** (reason taxonomy) + **G2** (cluster validation) + **G7**
 > (ServiceEmissionPolicy + workspace audit)
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) elevates this plan's **slice (b) Phase 5.1 (UAC manifest schema columns)** + **slice (c) Phase 6.1-6.9 (per-service rollout)** to **Phase 1 freeze blockers**. Schema column declaration here gates Phase 2.1 v8 atomic rename — there is no separate `manifest_v8_schema_migration_design` file because the design is intentionally split between this plan's slice (b) (column declaration) and `manifest_cross_asset_rescan_design_2026_05_08` (flip semantics + apply-flips execution). Reviewers reject any new "v8-schema-design" standalone plan; the split is canonical per operator direction 2026-05-08.
+
 # Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)
 
 ## Audit 2026-05-07

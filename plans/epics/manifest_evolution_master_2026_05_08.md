@@ -26,6 +26,10 @@ todos: []
 isProject: false
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md) pins this epic's gates to a strict time-axis order: **Phase 2 (G3-G5 schema + writer code + GCS data layout) cannot start until the sequencing plan's Phase 1 freeze gate fires.** Schema-axis enforcer (this plan) composes with time-axis enforcer (sequencing plan); both gate together. Anti-sequencing audit in the sequencing plan flags 13 plans by re-migration risk — reviewers reject any plan that lands manifest-schema-affecting scope after the Phase 2 freeze gate fires.
+
 # Manifest evolution master — schema + writer code + GCS data layout co-evolve (3-axis batch invariant)
 
 > **🟡 SINGLE-OWNER UMBRELLA — codified 2026-05-08.** Seven previously-isolated manifest-touching plans now batch

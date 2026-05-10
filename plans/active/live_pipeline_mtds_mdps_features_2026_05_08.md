@@ -935,6 +935,10 @@ todos:
 isProject: false
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) sequences this plan's **Phase 4-5 per-asset-group cascade** AFTER (a) `features_repo_consolidation_2026_05_08` Phase 7 (Phase 1 freeze blocker) and (b) `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 2 GCS bundled migration (Phase 2 freeze gate). Phase 0-3 UAC + UTL foundations stay in Phase 1 (already partly shipped Tab 2 PM/evening 2026-05-08 — 4 UTL primitives landed); Phase 4-15 cannot start until Phase 2 freeze fires.
+
 # Live pipeline (MTDS / MDPS / features-service) for 2026-05-23 DeFi cutover
 
 ## Why this plan exists

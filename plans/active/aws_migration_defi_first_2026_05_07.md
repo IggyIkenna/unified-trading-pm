@@ -16,6 +16,10 @@ supersedes_recommendation:
   - plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) sequences this plan's **Phase 5 cross-cloud rsync AFTER `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 2** GCS bundled migration. Stop in-flight rsync if it crosses the Phase 2 window; restart post-2.2. Also: confirm AWS-side bucket-name resolution uses the same Phase 1.B `bucket_name_ssot_canonicalisation_2026_05_10` UAC SSOT as GCP-side (per Tab 4 close-out 2026-05-08 bucket-name SSOT triple-drift incident — yaml config + per-family config.py + UTL resolver previously diverged).
+
 # AWS Migration — DeFi-First, May-23 Critical Path
 
 Supersedes the "defer to Q3 2026" recommendation in

@@ -544,6 +544,10 @@ isProject: false
 > This plan's phases land in gate(s): **G6** (pipeline_mode= hive partition + writer kwarg adoption) + **G7** (workspace
 > audit)
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase 2.X folds the **OHLCV legacy filename → per-instrument file rename** (extract `instrument_id` from row data, NOT path heuristic per 2026-05-05 silent-placeholder incident) into this plan's single-walk discipline. Also: confirm Phase 2 schema column set enumerates ALL Phase 1 columns from `writegate_honest_coverage_endtoend_2026_05_06` slice (b) Phase 5.1 (`service_emission_state` + `pipeline_mode` + `feature_family`) before this plan's walk starts. Single-walk discipline is the constraint — reviewers reject any post-Phase-2 plan that proposes another whole-corpus walk.
+
 # GCS migration bundle — pipeline_mode partition + category→asset_group rekey + drift cleanup (2026-05-08)
 
 ## Why this plan exists

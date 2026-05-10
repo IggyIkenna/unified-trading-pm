@@ -816,6 +816,10 @@ todos:
 isProject: false
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) elevates this plan's **Phase 7 (consolidated features-service deployable; 8 child repos archived)** to **Phase 1 freeze blocker**. Phase 7 must land before the sequencing plan's Phase 1 freeze gate fires AND before `live_pipeline_mtds_mdps_features_2026_05_08` Phase 4-5 cascade can start. Deadline 2026-05-13 stays — sequencing plan composes with this deadline rather than overriding it.
+
 # features-\* repo consolidation (2026-05-08)
 
 ## Why this plan exists
