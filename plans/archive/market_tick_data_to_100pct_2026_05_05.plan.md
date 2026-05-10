@@ -1620,8 +1620,8 @@ PM repo doc-only fast-path: plan changes target `main` directly (per workspace C
 
 ## Context
 
-Sibling plan to [`instruments_to_100pct_eod_2026_05_04.md`](instruments_to_100pct_eod_2026_05_04.md). Same
-shape, different service.
+Sibling plan to [`instruments_to_100pct_eod_2026_05_04.md`](instruments_to_100pct_eod_2026_05_04.md). Same shape,
+different service.
 
 - **Service**: `market-tick-data-service` only — raw tick downloads. Not instruments-service (covered by sibling), not
   market-data-processing-service (downstream candle generation, separate plan).
@@ -1651,8 +1651,8 @@ shards we need a different verification path. See Phase 0 below.
 
 Two compounding orchestrator bugs were diagnosed + fixed during the Phase 2 CeFi gap audit and they materially change
 how this plan should be executed. Sibling plan with the full diagnosis:
-[`cefi_phase2_gap_audit_2026_05_01.md`](cefi_phase2_gap_audit_2026_05_01.md) § "2026-05-05 fix landed —
-BUG-X1 + BUG-X2".
+[`cefi_phase2_gap_audit_2026_05_01.md`](cefi_phase2_gap_audit_2026_05_01.md) § "2026-05-05 fix landed — BUG-X1 +
+BUG-X2".
 
 ### BUG-X1 — instrument_id vocabulary mismatch (Tier-3 sentinel false-positives)
 
@@ -1793,8 +1793,8 @@ rows vs genuinely-missing.
 
 ### Cross-reference
 
-- Diagnosis + fix detail: [`cefi_phase2_gap_audit_2026_05_01.md`](cefi_phase2_gap_audit_2026_05_01.md) §
-  "2026-05-05 fix landed — BUG-X1 + BUG-X2".
+- Diagnosis + fix detail: [`cefi_phase2_gap_audit_2026_05_01.md`](cefi_phase2_gap_audit_2026_05_01.md) § "2026-05-05 fix
+  landed — BUG-X1 + BUG-X2".
 - MTDS commit: `fe5cc2c` on `live-defi-rollout` (PR #106 to staging).
 - UAC commit: `82d7d50` on `live-defi-rollout` (PR #44 to staging).
 
@@ -1851,11 +1851,10 @@ MTDS download requires the instruments-service catalogue to be honest for the `(
 about to backfill. If the catalogue is incomplete or wrong, MTDS will either skip valid days (catalogue says no
 instruments tradeable) or fan out against bad symbols (catalogue lists instruments that never traded).
 
-- [ ] [HUMAN] P0. Confirm sibling
-      [`instruments_to_100pct_eod_2026_05_04.md`](instruments_to_100pct_eod_2026_05_04.md) Phase 3
-      verification has passed for the asset groups we're about to backfill (CEFI/TRADFI/DEFI/PREDICTION/SPORTS each ≥99%
-      under secondary-cutoff). If an AG is still red on instruments-side, defer that AG's MTDS backfill until it's clean
-      — running MTDS against an incomplete catalogue burns API quota for nothing.
+- [ ] [HUMAN] P0. Confirm sibling [`instruments_to_100pct_eod_2026_05_04.md`](instruments_to_100pct_eod_2026_05_04.md)
+      Phase 3 verification has passed for the asset groups we're about to backfill (CEFI/TRADFI/DEFI/PREDICTION/SPORTS
+      each ≥99% under secondary-cutoff). If an AG is still red on instruments-side, defer that AG's MTDS backfill until
+      it's clean — running MTDS against an incomplete catalogue burns API quota for nothing.
 
 ## Cutoffs (per playbook + UAC `coverage_starts.py`)
 
@@ -2255,8 +2254,8 @@ Per-protocol-per-chain inception dates from `DEFI_SOURCE_COVERAGE_START`. DeFi M
 - [ ] [HUMAN] P0. Confirm Phase 0 defi MTDS gap (review `<tmpdir>/mtds-recon-defi.log`).
 - [ ] [HUMAN] P0. **Cloud Run DeFi collection job** is the canonical batch path for swaps/liquidity (NOT a VM). Verify
       it's healthy + re-trigger any failed runs. Cross-check with the consolidated DeFi pipeline plan
-      ([`consolidated_defi_data_pipeline_2026_04_15.md`](consolidated_defi_data_pipeline_2026_04_15.md)) for
-      the canonical operations workflow.
+      ([`consolidated_defi_data_pipeline_2026_04_15.md`](consolidated_defi_data_pipeline_2026_04_15.md)) for the
+      canonical operations workflow.
 - [ ] [HUMAN] P0. **Cloud Run Jobs `:latest` pin gotcha** — Cloud Run Jobs lock onto an AR digest at create time and
       ignore subsequent `:latest` pushes. After any MTDS image push, run
       `gcloud run jobs update <NAME> --image=...:latest --region=...` for each affected job to force the new digest (per
@@ -2321,8 +2320,8 @@ per-league partitions. The lift is mostly MDPS-side, not fetch-side."
       Naming Convention") — make sure the prefix is the one in `VM_PREFIX_TO_BUCKET` for the chosen launcher.
 - [ ] [HUMAN] P1. For genuine fetch gaps, the odds-API has its own backfill path — coordinate with the sports-side agent
       / sibling plan. **Do not** launch parallel sports VMs while
-      [`instruments_to_100pct_eod_2026_05_04.md`](instruments_to_100pct_eod_2026_05_04.md) sports work is
-      mid-flight; partition collisions will cause manifest noise.
+      [`instruments_to_100pct_eod_2026_05_04.md`](instruments_to_100pct_eod_2026_05_04.md) sports work is mid-flight;
+      partition collisions will cause manifest noise.
 
 ## Phase 3 — Verify (parallel)
 
@@ -2404,8 +2403,7 @@ owns), `launch-mdps-backfill-vm.sh` / `launch-mdps-sharded-backfill.sh` (downstr
 
 ## Out of scope (for _this_ plan — covered by sibling plans / parent epic)
 
-- instruments-service backfill
-  ([`instruments_to_100pct_eod_2026_05_04.md`](instruments_to_100pct_eod_2026_05_04.md)).
+- instruments-service backfill ([`instruments_to_100pct_eod_2026_05_04.md`](instruments_to_100pct_eod_2026_05_04.md)).
 - MDPS candle generation / odds-horizon-bucket processing (separate plan; many sports gaps live there).
 - deployment-ui drilldown bug fixes (parent epic Phase 0 — CSV download, day-shard scroll, schema modal, unified
   MTDS+MDPS view).

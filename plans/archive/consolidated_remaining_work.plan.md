@@ -614,8 +614,8 @@ todos:
 
 ### Phase Index (execute in order — do NOT start phase N until phase N-1 is fully done)
 
-| Phase       | File                                           | Scope                                                                                                                                              | Done When                                                                                                                           |
-| ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Phase       | File                                      | Scope                                                                                                                                              | Done When                                                                                                                           |
+| ----------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | **Phase 1** | `phase1_foundation_prep.md`               | Naming cleanup, SSOT docs, CI/CD rollout to 55 repos, deployment structure split (UTD V3 → 4 repos), QG baseline audit                             | All 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live; deployment-service/api/ui/system-integration-tests repos exist |
 | **Phase 2** | `phase2_library_tier_hardening.md`        | Global violation sweep, T0→T1→T2→T3 with Step A→B→C→D1→D5 per tier                                                                                 | All T0–T3 repos pass full quickmerge (D5) with act simulation                                                                       |
 | **Phase 3** | `phase3_service_hardening_integration.md` | T4 services (DAG pipeline order), T5 API services, T6 UIs, integration layers (L1–L3), post-refactor sandbox deploy + L2+L3a+L3b + declare healthy | All tiers green; L3b (full e2e) passes; versions bump to 1.0.0                                                                      |
@@ -1414,8 +1414,8 @@ All items requiring API keys, OAuth, or Secret Manager work:
 
 ## Citadel ML Feature Pipeline — Hardening, Deployment & Live Verification
 
-**Prerequisite:** All items in `.cursor/plans/multi-tf_cascade_signal_architecture_3fcd8384.md` completed first.
-That plan handles code, config, Terraform setup, API contract schemas, internal contracts, manifest, topology YAMLs, DAG
+**Prerequisite:** All items in `.cursor/plans/multi-tf_cascade_signal_architecture_3fcd8384.md` completed first. That
+plan handles code, config, Terraform setup, API contract schemas, internal contracts, manifest, topology YAMLs, DAG
 diagrams, unit tests. This section handles everything that requires live infrastructure.
 
 ### HFT Features — Deploy & Verify

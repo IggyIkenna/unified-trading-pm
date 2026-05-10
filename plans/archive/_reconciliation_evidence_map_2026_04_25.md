@@ -79,8 +79,7 @@ These have unambiguous superseder declarations already in their frontmatter — 
 
 ## G1 / G2 / G3 baseline (2026-04-25)
 
-- **G1 (14 plans)**: ALL ARCHIVED on a prior pass — `plans/archive/refactor_g1_*.md`. None present in
-  `plans/active/`.
+- **G1 (14 plans)**: ALL ARCHIVED on a prior pass — `plans/archive/refactor_g1_*.md`. None present in `plans/active/`.
 - **G2 (11 plans, 185 total todos)**: 6 done (3.2%) per raw checkbox grep. Full evidence in chunk-AD agent output.
 - **G3 (5 plans, 58 total todos)**: 5 done (8.6%) per raw checkbox grep. Full evidence in chunk-AE agent output.
 
@@ -1354,25 +1353,25 @@ These have unambiguous superseder declarations already in their frontmatter — 
 
 | Plan                                                                  | Orphan reason                                       | Better home?                                                |
 | --------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------- |
-| defi-strategy-e2e-automation.md                                  | 446-line workflow guide, no checkboxes/frontmatter  | codex/14-playbooks/ or codex/08-workflows/                  |
+| defi-strategy-e2e-automation.md                                       | 446-line workflow guide, no checkboxes/frontmatter  | codex/14-playbooks/ or codex/08-workflows/                  |
 | defi-strategy-testing-quickstart.md                                   | 301-line quickstart guide, no checkboxes            | codex/08-workflows/                                         |
 | five_space_ia_audit_matrix_2026_04_17.md                              | 64-line audit table input                           | codex/05-infrastructure/ or plans/audits/                   |
 | portal_local_smoke_checklist_2026_04_19.md                            | Repeatable checklist with ☐/☑ glyphs               | codex/14-playbooks/ or scripts/                             |
-| hybrid_sampler_5s_resolution_2026_03_30.md                       | Stalled since 2026-03-30; no commits matching scope | candidate archive                                           |
+| hybrid_sampler_5s_resolution_2026_03_30.md                            | Stalled since 2026-03-30; no commits matching scope | candidate archive                                           |
 | ml_pipeline_ui_e2e_browser_validation_AGENT_PROMPT.md                 | Pure agent dispatch prompt                          | archive                                                     |
 | ml_pipeline_ui_integration_2026_04_16_AGENT_PROMPT.md                 | Pure agent dispatch prompt                          | archive                                                     |
 | fund_administration_phase6_plus_followups_FINISHER_DISPATCH_PROMPT.md | Pure agent dispatch prompt; work shipped via parent | archive                                                     |
-| refactor_g3_3_briefings_cms_migration_2026_04_20.md              | 0/12, gated on G1.12; no progress                   | keep open (verify still relevant given marketing site work) |
-| refactor_g3_4_dart_rebrand_trademark_check_2026_04_20.md         | 0/14, no code work; legal/marketing                 | keep open (operator-gated)                                  |
-| refactor_g3_5_codex_sync_consistency_agents_2026_04_20.md        | 0/11, agent-build work not started                  | keep open                                                   |
-| sports_live_streaming_viz_2026_04_15.md                          | No checkboxes, no lock, no evidence                 | candidate archive or restructure                            |
+| refactor_g3_3_briefings_cms_migration_2026_04_20.md                   | 0/12, gated on G1.12; no progress                   | keep open (verify still relevant given marketing site work) |
+| refactor_g3_4_dart_rebrand_trademark_check_2026_04_20.md              | 0/14, no code work; legal/marketing                 | keep open (operator-gated)                                  |
+| refactor_g3_5_codex_sync_consistency_agents_2026_04_20.md             | 0/11, agent-build work not started                  | keep open                                                   |
+| sports_live_streaming_viz_2026_04_15.md                               | No checkboxes, no lock, no evidence                 | candidate archive or restructure                            |
 | strategy_registry_v1_delete_consumer_audit.md                         | Manifest doc whose parent already in archive/       | move to archive/                                            |
 | (also) marketing_site_audit_manifest_2026_04_20.md                    | Companion manifest, parent unlocked                 | move to archive/ alongside parent                           |
 
 ## "Needs human review" (unclear classifications)
 
-| Plan                                                     | Question to resolve                                                                                             |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Plan                                                | Question to resolve                                                                                             |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | citadel_per_service_remediation_2026_03_24.md       | 0/149 untouched while parent shows 19/30 — retire as superseded by per-repo work, or audit each of 20 services? |
 | sports_live_streaming_viz_2026_04_15.md             | Restructure with checkboxes + locked_by, or archive?                                                            |
 | refactor_g3_3_briefings_cms_migration_2026_04_20.md | Still relevant given marketing site already iterates on briefings?                                              |

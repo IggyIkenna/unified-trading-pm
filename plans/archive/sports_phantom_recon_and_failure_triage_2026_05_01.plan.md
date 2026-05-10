@@ -21,8 +21,7 @@ depends_on:
 > `sports_fixtures_truthset_recovery_2026_05_06`. **Architectural fix scheduled: extend `check_shard_freshness` to treat
 > `ATTEMPTED_FAILED` as stale (default-on; opt-out via `retry_failed: bool = True` param).** Once UTL ships the fix,
 > this plan's Phase 1 flip-and-retry semantics work as originally designed; truthset DELETE pattern becomes optional.
-> Reference: `master_to_live_defi_2026_05_23.md` Risk Register row "`check_shard_freshness` ignores
-> `capture_status`".
+> Reference: `master_to_live_defi_2026_05_23.md` Risk Register row "`check_shard_freshness` ignores `capture_status`".
 
 ## Context
 

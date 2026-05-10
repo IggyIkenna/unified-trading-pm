@@ -85,8 +85,8 @@ isProject: false
 Services can run in `CLOUD_MOCK_MODE=true` (no real GCS) or with VCR cassettes (no live API calls). However, no
 systematic seeded dataset exists that: (a) covers all 4 asset classes (CeFi, DeFi, TradFi, Sports), (b) spans enough
 history to test feature pipelines (1 year minimum), (c) is schema-validated against UAC/UIC, (d) is committed/scripted
-so any developer gets a complete system immediately. VCR cassettes from `api_keys_and_auth.md` cover real-time
-venue calls. This plan covers the batch/historical layer. Goal: `bash seed-dev-project.sh --quick` gives any developer a
+so any developer gets a complete system immediately. VCR cassettes from `api_keys_and_auth.md` cover real-time venue
+calls. This plan covers the batch/historical layer. Goal: `bash seed-dev-project.sh --quick` gives any developer a
 complete, schema-valid dataset in the GCP dev project within 5 minutes, zero live API calls.
 
 ---

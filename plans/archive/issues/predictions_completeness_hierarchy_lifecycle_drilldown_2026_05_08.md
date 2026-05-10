@@ -18,8 +18,8 @@ source:
     routing pending Phase 2A)
   - market-data-processing-service/.../trades_adapter.py:25 (PredictionTradesAdapter — basic OHLCV present; 4-category
     empty decision NOT fully wired)
-  - plans/active/predictions_master_2026_05_07.md:69-215 (master plan, ~38% complete per 2026-05-07 audit; Phase
-    2-5 deferred items)
+  - plans/active/predictions_master_2026_05_07.md:69-215 (master plan, ~38% complete per 2026-05-07 audit; Phase 2-5
+    deferred items)
   - operator screenshot 2026-05-08 — deployment-ui shows PREDICTION at 87.2% with FLAT MARKETS list
     (BNB/BTC/CRUDE_OIL/DJIA/DOGE/ETH/FOOTBALL/GOLD/HYPE/NDX/OTHER/SILVER/SOL/SPX/XRP); no per-canonical-question-group
     hierarchy, no per-shard parquet download
@@ -170,8 +170,8 @@ Sports drilldown pattern shipped 2026-05-07 evening per memory entry:
 > deployment-api@3b0477a + LeafSchemaModal (15 tests) + LeafParquetStats Pydantic models + per-shard schema + NaN
 > ratios + available_at envelope.
 
-Same pattern needs to extend to prediction. Per `predictions_master_2026_05_07.md:199`, this is BLOCKED-ON Phase
-1 + manifest reflip — both already shipped per the Q1-Q3 verdicts above, so the UI work is now unblocked.
+Same pattern needs to extend to prediction. Per `predictions_master_2026_05_07.md:199`, this is BLOCKED-ON Phase 1 +
+manifest reflip — both already shipped per the Q1-Q3 verdicts above, so the UI work is now unblocked.
 
 ### Q7 — Plan coverage: PARTIAL — Phase 2-5 deferrals are the gap surface
 

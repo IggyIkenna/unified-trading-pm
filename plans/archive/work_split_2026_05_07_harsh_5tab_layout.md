@@ -57,9 +57,9 @@ boot context.** Read it once before doing anything else, then read everything el
    — note the push half is deferred to main per "Push discipline" above).
 5. **`unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`** — sub-agent inheritance rules.
 6. Your **plan-of-record** (the plan doc named in your tab entry — e.g. `cefi_master_2026_05_07.md` for
-   `cefi-babysit-tab`, `deployment_api_work_stream_a_2026_05_07.md` for `deployment-api-phase2-tab`). This is where
-   your todos live, where you flip checkboxes as you ship, where you write `## Open questions`, and where you append
-   your final `DONE-<YYYY-MM-DD>` block.
+   `cefi-babysit-tab`, `deployment_api_work_stream_a_2026_05_07.md` for `deployment-api-phase2-tab`). This is where your
+   todos live, where you flip checkboxes as you ship, where you write `## Open questions`, and where you append your
+   final `DONE-<YYYY-MM-DD>` block.
 
 **Your role**: you are Tab N, a SCOPED IMPLEMENTER. You execute a specific task end-to-end, ship it, and stop. You do
 NOT take on adjacent work, spawn sub-agents of your own, or push to origin. The main agent (Tab 1) handles
@@ -158,9 +158,9 @@ model" below). Main agent polls the ping ledger autonomously so Harsh doesn't ha
   append a one-liner when they need attention; main agent removes the line when handled. Zero history kept here.
 - **Plan doc `## Open questions` = durable Q&A record, ON THE AGENT'S PLAN-OF-RECORD** (e.g. `cefi-babysit-tab` →
   [`cefi_master_2026_05_07.md`](cefi_master_2026_05_07.md); `deployment-api-phase2-tab` →
-  [`deployment_api_work_stream_a_2026_05_07.md`](deployment_api_work_stream_a_2026_05_07.md)). Full question +
-  answer + status marker. Never deleted — audit trail of "what did we ask + decide" lives here forever. **Do NOT write
-  Qs into this orchestration ledger**
+  [`deployment_api_work_stream_a_2026_05_07.md`](deployment_api_work_stream_a_2026_05_07.md)). Full question + answer +
+  status marker. Never deleted — audit trail of "what did we ask + decide" lives here forever. **Do NOT write Qs into
+  this orchestration ledger**
   ([`work_split_2026_05_07_harsh_5tab_layout.md`](work_split_2026_05_07_harsh_5tab_layout.md)) — that's main-agent-only
   writing surface. (Codified 2026-05-08 after `cefi-babysit-tab` initially put their Qs in the wrong doc.)
 
@@ -327,8 +327,8 @@ Status badges in the heading make scan-for-open-questions instant: 🟡 = needs 
 
 Each morning during boot, main agent:
 
-1. Sweep all `plans/active/*.md` for `## Open questions` blocks. **Remove resolved Q&A entries entirely** (don't
-   archive — Q&A clutter is more costly than Q&A loss; the trail survives in commits/chat if it survived at all).
+1. Sweep all `plans/active/*.md` for `## Open questions` blocks. **Remove resolved Q&A entries entirely** (don't archive
+   — Q&A clutter is more costly than Q&A loss; the trail survives in commits/chat if it survived at all).
 2. Verify [`_agent_pings.md`](_agent_pings.md) has no stale entries (>24h without resolution = either re-prompt the
    sub-agent or escalate to Harsh as a stuck task).
 
@@ -1233,18 +1233,18 @@ conditional rule.
 
 - **Resolved by main + operator 2026-05-08 ~10:30 UTC** — Tab 12's Q1 (scope ambiguity) escalated to operator during
   lunch; resolved with operator pick **(b) Defer**. See A1 in
-  [`ml_and_features_master_2026_05_07.md`](ml_and_features_master_2026_05_07.md) `## Open questions` Q1
-  for full reasoning.
+  [`ml_and_features_master_2026_05_07.md`](ml_and_features_master_2026_05_07.md) `## Open questions` Q1 for full
+  reasoning.
 - **Why deferred (stronger than Tab 12's original (b))**: Ikenna's plan consolidation (PM@`78918e1`) shipped
-  [`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md) (P0, deadline
-  2026-05-13) which **restructures the per-service approach itself**. Phase 5 of consolidation lifts
-  `assert_no_lookahead_for_feature_group` into UTL `feature_service_base/` at the consolidated `features-service`
-  layer — single point, not 8 per-service wires.
+  [`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md) (P0, deadline 2026-05-13)
+  which **restructures the per-service approach itself**. Phase 5 of consolidation lifts
+  `assert_no_lookahead_for_feature_group` into UTL `feature_service_base/` at the consolidated `features-service` layer
+  — single point, not 8 per-service wires.
 - **Tab 12 deliverable preserved**: the per-service compute-boundary inventory map (what Tab 12 worked on during the
   lunch-break wait) is durable input for `features_repo_consolidation_2026_05_08` Phase 0 pre-audit + Phase 5 lift.
   Cross-reference from the consolidation plan to consume.
-- **Started**: 2026-05-08 07:41 UTC; **Q1 raised**: 07:50 UTC; **Q1 resolved**: ~10:30 UTC. **Going quiet** per
-  spawn protocol.
+- **Started**: 2026-05-08 07:41 UTC; **Q1 raised**: 07:50 UTC; **Q1 resolved**: ~10:30 UTC. **Going quiet** per spawn
+  protocol.
 
 **How to start**: open a fresh Claude Code tab, tell that agent _"work on Tab 12 tasks"_.
 

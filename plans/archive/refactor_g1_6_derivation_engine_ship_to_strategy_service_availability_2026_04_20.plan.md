@@ -63,8 +63,8 @@ access-control middleware.
 ## Cross-references
 
 - **Upstream (Wave B):** `refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md` — hard dep
-- **Sibling Wave C:** `refactor_g1_2_instruction_schema_validation_service_2026_04_20.md` — produces
-  `integration_depth` signal consumed by `cost`
+- **Sibling Wave C:** `refactor_g1_2_instruction_schema_validation_service_2026_04_20.md` — produces `integration_depth`
+  signal consumed by `cost`
 - **Wave A prerequisite:** `refactor_g1_1_phase_unification_2026_04_20.md` — `phase` prop threaded through UI;
   `access_control` consumes it
 - **Downstream Wave D:** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` (consumer),
@@ -365,8 +365,8 @@ Fallback per repo: manual `git add <files> && git commit -m "..." && git push or
 ## Micro-execution plan (sub-agent Phase 1, appended 2026-04-20)
 
 > Drafted by Wave-C kickoff sub-agent. Plan-mode only — no code edits yet; operator approval required before Phase 6A/6B
-> execution. Companion micro-plan for G1.2 is in
-> `refactor_g1_2_instruction_schema_validation_service_2026_04_20.md` § Micro-execution plan.
+> execution. Companion micro-plan for G1.2 is in `refactor_g1_2_instruction_schema_validation_service_2026_04_20.md` §
+> Micro-execution plan.
 
 ### Plan-prose drifts vs reality (verified 2026-04-20 against `live-defi-rollout`)
 

@@ -83,10 +83,9 @@ isProject: false
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [consolidated_defi_data_pipeline_2026_04_15.md](./consolidated_defi_data_pipeline_2026_04_15.md).** Original
-> scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
-> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
-> evidence.
+> [consolidated_defi_data_pipeline_2026_04_15.md](./consolidated_defi_data_pipeline_2026_04_15.md).** Original scope
+> retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit formalises it
+> as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 # MEV Protection & Execution Enhancements
 

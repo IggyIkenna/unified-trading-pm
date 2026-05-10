@@ -19,9 +19,8 @@ e2e + real PnL attribution before ANY live-mode work makes sense — this set of
 ## Read first (before any action)
 
 1. `unified-trading-pm/plans/active/defi_master_2026_05_07.md` — 35 open P0 todos, the asset-group umbrella.
-2. `unified-trading-pm/plans/archive/carry_tracer_phase_9_catalog_paired_dispersion_2026_05_06.md` — Phase 9
-   closeout doc with the handoff section (kernel + resolver shipped, follow-ups in the "Handoff for next agent"
-   section).
+2. `unified-trading-pm/plans/archive/carry_tracer_phase_9_catalog_paired_dispersion_2026_05_06.md` — Phase 9 closeout
+   doc with the handoff section (kernel + resolver shipped, follow-ups in the "Handoff for next agent" section).
 3. `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` — Tier 1 + 2 writer migration
    done; remaining gates land in Phase 2.B / 4.
 4. `unified-trading-pm/plans/active/infrastructure_master_2026_05_07.md`
@@ -83,14 +82,13 @@ hive vocab category= ↔ asset_group=) - expected-absence backfill reconciler pe
 cefi/defi/tradfi/sports/prediction) Each reconciler is dry-runnable + idempotent; run once on 1 asset_group in dry mode,
 verify output, then promote.
 
-B3. **Manifest v6 → v7 migration propagation.** Per `manifest_migration_master_2026_05_07.md`. Writer side mostly
-done; reader side needs catch-up. Audit every reader (deployment-api, features-\*, strategy-service archetype runs) for
-v6 schema dependency + migrate to v7 superset.
+B3. **Manifest v6 → v7 migration propagation.** Per `manifest_migration_master_2026_05_07.md`. Writer side mostly done;
+reader side needs catch-up. Audit every reader (deployment-api, features-\*, strategy-service archetype runs) for v6
+schema dependency + migrate to v7 superset.
 
-B4. **UAC feature_group → required_inputs DAG SSOT.** Per
-`feature_dag_uac_ssot_and_features_coverage_2026_05_06.md`. Currently per-service; the LookaheadBiasError check
-needs the DAG to fire workspace-wide. Lift to UAC; per-service dispatchers consume the SSOT; QG step asserts no service
-has its own DAG copy.
+B4. **UAC feature_group → required_inputs DAG SSOT.** Per `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md`.
+Currently per-service; the LookaheadBiasError check needs the DAG to fire workspace-wide. Lift to UAC; per-service
+dispatchers consume the SSOT; QG step asserts no service has its own DAG copy.
 
 **Phase B verification gate:** Workspace-wide manifest sweep — every asset_group's data-status panel shows reasons
 populated for every empty/expected-empty cell. No `__legacy__` synthetic key bucket should have rows that should have a
@@ -99,8 +97,8 @@ baseline from the 2026-05-04 incident (354).
 
 ### Phase C · Strategy + execution code path (the "and beyond")
 
-C1. **strategy-service v2 finalization.** Per `strategy_architecture_v2_finalization_2026_04_19.md`. Phases shipped
-per memory (signal-broadcast 8/8); remaining closeouts + archetype-by-archetype QG + tests. Land basedpyright clean.
+C1. **strategy-service v2 finalization.** Per `strategy_architecture_v2_finalization_2026_04_19.md`. Phases shipped per
+memory (signal-broadcast 8/8); remaining closeouts + archetype-by-archetype QG + tests. Land basedpyright clean.
 
 C2. **DeFi e2e pipeline gates** (defi_master 4 service QGs). `quality-gates.sh` clean on: - strategy-service (v2
 finalization unblocks this) - execution-service - risk-and-exposure-service - features-onchain-service (verify after A1
@@ -184,15 +182,14 @@ reference-only historical context.
 
 Primary active SSOTs for this work:
 
-- `unified-trading-pm/plans/active/defi_master_2026_05_07.md` — DeFi headline plan (DEX perp follow-ups, carry
-  tracer verification gates, e2e pipeline, oracle, custody, tail-chain coverage, MTDS DeFi slice)
+- `unified-trading-pm/plans/active/defi_master_2026_05_07.md` — DeFi headline plan (DEX perp follow-ups, carry tracer
+  verification gates, e2e pipeline, oracle, custody, tail-chain coverage, MTDS DeFi slice)
 - `unified-trading-pm/plans/active/feature_dag_uac_ssot_and_features_coverage_2026_05_06.md` — UAC DAG SSOT + UTL
   helper + per-service wiring
 - `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` — honest-absence write side
 - `unified-trading-pm/plans/active/manifest_migration_master_2026_05_07.md` — manifest v6→v7 reader migration +
   reconcilers
 - `unified-trading-pm/plans/active/strategy_architecture_v2_finalization_2026_04_19.md` — strategy v2 closeouts
-- `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md` — live cutover master + work-stream
-  coordination
+- `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md` — live cutover master + work-stream coordination
 
 PM commit landing the consolidation: `2cd3bbaf` (plan: close session-2 handoff gaps in active plans).

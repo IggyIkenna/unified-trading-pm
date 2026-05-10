@@ -22,20 +22,19 @@ locked_since: 2026-05-09
 > - ✅ **MTDS LiveConnectivityWatchdog** — mtds@`91e21cd` (249 lines + 16 tests).
 > - ✅ **UTL open/close candle writer (Phase 1.1)** — UTL@`ac6e3244` (365 lines at
 >   `unified_trading_library/streaming/candle_writer.py` + 340 lines / 10 tests at
->   `tests/unit/streaming/test_candle_writer.py`). Implements the plan-of-record contract verbatim:
->   `CandleWriterHandle` dataclass with `chunk_count` / `total_rows` / `schema_fingerprint` / `closed`;
->   `open_candle_writer(...)` opens tempfile-backed `StreamingParquetWriter`; `write_chunk(...)` pins fingerprint on
->   first chunk + raises `SchemaDriftError` on drifted second chunk; `close_candle_writer(...)` is idempotent + routes
->   to `record_failed` / `record_empty(SOURCE_RETURNED_ZERO)` / `record_captured` per the 4-branch decision matrix +
->   atomic-rename to final parquet path on success. Cluster validation kwargs are forwarded to `record_captured` for
->   bundled shards (`options_chain` / `futures_chain` / `prediction_canonical_question_group` / sports fixture
->   bundles).
+>   `tests/unit/streaming/test_candle_writer.py`). Implements the plan-of-record contract verbatim: `CandleWriterHandle`
+>   dataclass with `chunk_count` / `total_rows` / `schema_fingerprint` / `closed`; `open_candle_writer(...)` opens
+>   tempfile-backed `StreamingParquetWriter`; `write_chunk(...)` pins fingerprint on first chunk + raises
+>   `SchemaDriftError` on drifted second chunk; `close_candle_writer(...)` is idempotent + routes to `record_failed` /
+>   `record_empty(SOURCE_RETURNED_ZERO)` / `record_captured` per the 4-branch decision matrix + atomic-rename to final
+>   parquet path on success. Cluster validation kwargs are forwarded to `record_captured` for bundled shards
+>   (`options_chain` / `futures_chain` / `prediction_canonical_question_group` / sports fixture bundles).
 >
 > The remaining 2 deliverables — MDPS Phase 1.2 callsite migration in `live_workers.py:1118-1164` + MDPS Phase 2
 > `ResourceProfiler.on_memory_warning` wiring (DEFERRED-AFTER-PHASE-1.2 per the plan's execution DAG) — are still open
 > per audit-issue-3 § "Still open." They need a coordinated MDPS-dedicated tab in the next work-split: the migration is
-> a substantial 1100+ line file refactor that needs full-MDPS QG + shard-level isolation tests + the 4-test matrix `(N
-> batches × M rows) → exactly ONE record_captured per (timeframe, shard)`, and the MDPS working tree at the time of
+> a substantial 1100+ line file refactor that needs full-MDPS QG + shard-level isolation tests + the 4-test matrix
+> `(N batches × M rows) → exactly ONE record_captured per (timeframe, shard)`, and the MDPS working tree at the time of
 > this session had 9+ foreign-modified test files from parallel agents — safe migration requires the working tree to be
 > coherent. UTL primitives are stable + tested → the next agent has a clean target to wire against.
 
@@ -43,9 +42,8 @@ locked_since: 2026-05-09
 
 > **Severity**: P0 — blocks audit issue #3 (live_pipeline Phase 4 unblock). **Blast radius**: UTL +
 > market-data-processing-service + market-tick-data-service + unified-api-contracts; affects 2 active plans
-> (`mdps_streaming_and_backpressure_2026_05_07.md`,
-> `live_pipeline_mtds_mdps_features_2026_05_08.md`). **Suggested owner**: operator triage — direction needed before any
-> code lands.
+> (`mdps_streaming_and_backpressure_2026_05_07.md`, `live_pipeline_mtds_mdps_features_2026_05_08.md`). **Suggested
+> owner**: operator triage — direction needed before any code lands.
 
 ## What I found
 
@@ -85,10 +83,10 @@ This is a **trade-by-trade OHLCV aggregator** — incrementally builds bar state
 >   — opens a `StreamingParquetWriter`, returns an opaque handle (NamedTuple or small dataclass) holding the writer
 >   instance + the shard row_key + a `total_rows: int` accumulator.
 > - `close_candle_writer(handle: CandleWriterHandle, *, manifest_writer: ManifestWriter, attempted_at: datetime)` —
->   flushes + closes the parquet, then performs the SINGLE `record_captured` (or `record_empty` if `total_rows == 0`,
->   or `record_failed(...)` if the close raised). Idempotent on second call (no-op).
-> - The existing `write_candle_parquet` is a one-shot convenience wrapper that does
->   `open → write_chunk(df) → close` for callers that already have a fully-materialised DataFrame.
+>   flushes + closes the parquet, then performs the SINGLE `record_captured` (or `record_empty` if `total_rows == 0`, or
+>   `record_failed(...)` if the close raised). Idempotent on second call (no-op).
+> - The existing `write_candle_parquet` is a one-shot convenience wrapper that does `open → write_chunk(df) → close` for
+>   callers that already have a fully-materialised DataFrame.
 
 This is a **parquet write-lifecycle wrapper** around the existing `StreamingParquetWriter`. Each `write_chunk(df)` takes
 already-aggregated DataFrame chunks (the per-tf OHLCV bars MDPS already aggregates from upstream MTDS ticks). It owns
@@ -99,13 +97,12 @@ validation kwargs for bundled shards.
 
 1. **`live_pipeline_mtds_mdps_features_2026_05_08` Phase 4 explicitly cross-references the plan-of-record's contract:**
 
-   > **Coordination**: `mdps_streaming_and_backpressure_2026_05_07` Phase 1 ships the
-   > `open_candle_writer` / `close_candle_writer` UTL lifecycle. Phase 4 of THIS plan re-uses that lifecycle for live
-   > aggregation writes (same shard atomicity contract, same per-VM tempfile + rename, same single-`record_captured`
-   > per shard).
+   > **Coordination**: `mdps_streaming_and_backpressure_2026_05_07` Phase 1 ships the `open_candle_writer` /
+   > `close_candle_writer` UTL lifecycle. Phase 4 of THIS plan re-uses that lifecycle for live aggregation writes (same
+   > shard atomicity contract, same per-VM tempfile + rename, same single-`record_captured` per shard).
 
-   The "shard atomicity contract / per-VM tempfile + rename / single-`record_captured` per shard" language describes
-   the **parquet-write-lifecycle wrapper**, NOT a trade aggregator. A trade aggregator does not own a tempfile + rename;
+   The "shard atomicity contract / per-VM tempfile + rename / single-`record_captured` per shard" language describes the
+   **parquet-write-lifecycle wrapper**, NOT a trade aggregator. A trade aggregator does not own a tempfile + rename;
    `StreamingParquetWriter` does.
 
 2. **Phase 4 of the live-pipeline plan describes the trade aggregator separately** as a `live_aggregator.py` module
@@ -120,7 +117,6 @@ validation kwargs for bundled shards.
    backpressure).
 
 3. **The plan-of-record's tests enumerate the parquet-lifecycle behaviour explicitly** (Phase 1.1 tests #1-6):
-
    - "open → write_chunk × N → close yields one parquet with N×rows; manifest has exactly ONE captured row"
    - "schema drift across chunks — second `write_chunk` with a different column set raises `SchemaDriftError`"
    - "bundled-shard cluster validation — `close_candle_writer` without `expected_root_clusters` for an `options_chain`
@@ -144,13 +140,14 @@ validation kwargs for bundled shards.
 - **Prompt Step 2 (UAC `CONNECTIVITY_GAP_DETECTED`)**: prompt says "extend
   `unified-api-contracts/unified_api_contracts/events/streaming.py`". Plan-of-record (in
   `mdps_streaming_and_backpressure` § "Migrated issue 2026-05-08 — Live data recovery self-detect") says: "added to UAC
-  `LifecycleEventType` ... each carries `{venue, gap_window_start, gap_window_end_or_null, last_received_at, message_count_during_gap}`".
-  These are different UAC modules — `events/streaming.py` is the new Phase-4 streaming event package
-  (CandleBoundaryCrossedEvent / CandleComputedEvent), `LifecycleEventType` is the workspace-wide lifecycle StrEnum.
-  Plan adds a 3-event family (`CONNECTIVITY_GAP_DETECTED` / `CONNECTIVITY_RECOVERED` / `CONNECTIVITY_GAP_BACKFILLED`),
-  prompt says only one event. Plan adds a `classification` Literal field that the prompt design also has — partial
-  alignment. **This delta is reconcilable** (probably plan is right + add to LifecycleEventType so existing event-stream
-  subscribers don't need a new code path), but worth confirming.
+  `LifecycleEventType` ... each carries
+  `{venue, gap_window_start, gap_window_end_or_null, last_received_at, message_count_during_gap}`". These are different
+  UAC modules — `events/streaming.py` is the new Phase-4 streaming event package (CandleBoundaryCrossedEvent /
+  CandleComputedEvent), `LifecycleEventType` is the workspace-wide lifecycle StrEnum. Plan adds a 3-event family
+  (`CONNECTIVITY_GAP_DETECTED` / `CONNECTIVITY_RECOVERED` / `CONNECTIVITY_GAP_BACKFILLED`), prompt says only one event.
+  Plan adds a `classification` Literal field that the prompt design also has — partial alignment. **This delta is
+  reconcilable** (probably plan is right + add to LifecycleEventType so existing event-stream subscribers don't need a
+  new code path), but worth confirming.
 - **Prompt Step 3 (MTDS `LiveConnectivityWatchdog`)**: aligns with plan-of-record's `[SCRIPT] P1` todo. Module location
   (`market_tick_data_service/market_interface/connectivity_watchdog.py`) is reasonable; plan doesn't pin it.
 - **Prompt Step 4 (MDPS `ResourceProfiler.on_memory_warning` wiring)**: matches plan-of-record Phase 2. **But Phase 2
@@ -212,8 +209,8 @@ This is the path that aligns 4 repos + 2 plans + the audit issue with no archite
 
 ### (b) Ship per spawn-prompt (NOT recommended without re-spec)
 
-If the prompt's trade-aggregator design IS what the operator wants, then both plans-of-record need to be re-spec'd
-first because their cross-references will break:
+If the prompt's trade-aggregator design IS what the operator wants, then both plans-of-record need to be re-spec'd first
+because their cross-references will break:
 
 - `mdps_streaming_and_backpressure_2026_05_07` Phase 1.1 + 1.2 + Phase 4 cross-references rewritten;
 - `live_pipeline_mtds_mdps_features_2026_05_08` Phase 4 § "Coordination" rewritten + lines 425-449 + 1107-1108;

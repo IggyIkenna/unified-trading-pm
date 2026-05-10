@@ -34,8 +34,8 @@ todos:
     status: pending
   - id: update-api-keys-plan-defi
     content:
-      "Update unified-trading-pm/plans/ai/api_keys_and_auth.md — add DeFi VCR todos: thegraph_aave,
-      thegraph_morpho, thegraph_uniswap_v3, alchemy_eth_call, defillama_tvl, defillama_yields. Add SM gap entries:
+      "Update unified-trading-pm/plans/ai/api_keys_and_auth.md — add DeFi VCR todos: thegraph_aave, thegraph_morpho,
+      thegraph_uniswap_v3, alchemy_eth_call, defillama_tvl, defillama_yields. Add SM gap entries:
       alchemy-api-key-testnet (Sepolia RPC), tenderly-fork-rpc-url, hyperliquid-testnet-api-credentials,
       wallet-dev-private-key."
     status: pending

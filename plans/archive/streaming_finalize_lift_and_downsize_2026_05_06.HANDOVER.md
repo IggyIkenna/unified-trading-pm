@@ -490,9 +490,9 @@ green. Future adapters (Databento, DEX replay) reuse via
 ### Item 4 — DEX historical replay — PLAN SHIPPED
 
 Multi-day implementation work; concrete plan at
-`unified-trading-pm/plans/active/dex_historical_replay_lighter_extended_pacifica_2026_05_07.md`. Covers all three
-venues (LIGHTER-ZKSYNC, EXTENDED-STARKNET, PACIFICA-SOLANA) with per-venue research items, schema-parity validation,
-manifest concurrency principle, and cost budgets. Lighter via The Graph subgraph is the canonical greenfield path.
+`unified-trading-pm/plans/active/dex_historical_replay_lighter_extended_pacifica_2026_05_07.md`. Covers all three venues
+(LIGHTER-ZKSYNC, EXTENDED-STARKNET, PACIFICA-SOLANA) with per-venue research items, schema-parity validation, manifest
+concurrency principle, and cost budgets. Lighter via The Graph subgraph is the canonical greenfield path.
 
 ### Reference commits — Session 2026-05-07
 

@@ -1,5 +1,5 @@
-> **Note:** Active task tracking has moved to `consolidated_remaining_work.md`. This document retains historical
-> context and completed-milestone records.
+> **Note:** Active task tracking has moved to `consolidated_remaining_work.md`. This document retains historical context
+> and completed-milestone records.
 
 # Roadmap: Live Production (45.7% → 90.0%)
 

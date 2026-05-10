@@ -14,7 +14,9 @@ deadline: 2026-05-23
 
 # Epic — Live DeFi Rollout (May 23 2026)
 
-> **🔴 SUPERSEDED 2026-05-08** — folded into [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md) § "May-23 deliverable" per operator direction (3-layer master+epic+cutover-master collapses to 2-layer). This file is archived; content remains verbatim for archaeology. **Edit the master, not this file.**
+> **🔴 SUPERSEDED 2026-05-08** — folded into [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md) §
+> "May-23 deliverable" per operator direction (3-layer master+epic+cutover-master collapses to 2-layer). This file is
+> archived; content remains verbatim for archaeology. **Edit the master, not this file.**
 
 ## Why this epic exists
 
@@ -68,8 +70,8 @@ CeFi + DeFi spot/perp/future combos and the live infra is what actually unlocks 
 
 ## Sub-plans this epic consumes
 
-| Path                                                                                                                                                                              | Role                                                                                                             | Status |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------ |
+| Path                                                                                                                                                                         | Role                                                                                                             | Status |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------ |
 | [`active/defi_master_2026_05_07`](../active/defi_master_2026_05_07.md)                                                                                                       | DeFi pipeline umbrella (folds defi_e2e + defi_pipeline_extension + leveraged_leg + carry_staked_basis archetype) | Active |
 | [`active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)                           | DeFi archetype canonicalisation + venue matrix                                                                   | Active |
 | [`active/aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)                                                                             | AWS↔GCP parity for DeFi-first migration (data + batch + live-trading layer)                                     | Active |

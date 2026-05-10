@@ -46,8 +46,8 @@ todos:
   - id: p2-cloud-build-configs
     content:
       "buildspec.aws.yaml distributed to all 44 qualifying repos (8 newly created, 36 already present) — FILE
-      DISTRIBUTION DONE. Canary simulated CodeBuild run tracked in aws_migration.md todo codebuild-canary-run. Will
-      be marked completed once canary run exits 0."
+      DISTRIBUTION DONE. Canary simulated CodeBuild run tracked in aws_migration.md todo codebuild-canary-run. Will be
+      marked completed once canary run exits 0."
     status: pending
   - id: p3-terraform-gcp
     content:
@@ -327,7 +327,7 @@ GATE: All repos pass STEP 5.10; zero FAIL results in workspace scan. NOTE: STEP 
 
 isProject: true blockedBy:
 
-- plan: phase0_standards_enforcement.md reason: Phase 0 quality gate scan (STEP 5.9) must pass before UCI
-  violations are added as new gate
+- plan: phase0_standards_enforcement.md reason: Phase 0 quality gate scan (STEP 5.9) must pass before UCI violations are
+  added as new gate
 - plan: phase2_library_tier_hardening.md reason: UTL cloud layer removal (p0-utl-cloud-layer) must complete before
   library tier is locked

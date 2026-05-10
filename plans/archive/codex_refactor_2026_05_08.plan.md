@@ -5,7 +5,9 @@ asset_group: cross-cutting
 type: doc-only
 status: archived
 archived: 2026-05-08
-archived_reason: All 35 + 4 residual phases shipped; G.1 audit P0+P1 closed via Phase H; P2 nice-to-haves explicitly deferred per audit § 5.
+archived_reason:
+  All 35 + 4 residual phases shipped; G.1 audit P0+P1 closed via Phase H; P2 nice-to-haves explicitly deferred per audit
+  § 5.
 created: 2026-05-08
 last_updated: 2026-05-08
 deadline: 2026-05-23

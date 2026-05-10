@@ -4,8 +4,8 @@ created: 2026-05-07
 author: claude-session
 source:
   - manifest-consolidator-20260507-175639 VM run.log (2026-05-07 17:24 UTC + 17:28 + 17:32 UTC consolidator cycles)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md § Phase 3.D.5 Wave 2.M (migration that surfaced
-    the bug)
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md § Phase 3.D.5 Wave 2.M (migration that surfaced the
+    bug)
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---

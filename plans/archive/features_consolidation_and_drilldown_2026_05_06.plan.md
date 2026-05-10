@@ -62,22 +62,24 @@ depends_on:
 isProject: false
 ---
 
-> **ARCHIVED 2026-05-07** — folded into [`ml_and_features_master_2026_05_07.md`](../active/ml_and_features_master_2026_05_07.md). All open todos preserved in the umbrella's Phase 1-4. This file is the historical SSOT.
+> **ARCHIVED 2026-05-07** — folded into
+> [`ml_and_features_master_2026_05_07.md`](../active/ml_and_features_master_2026_05_07.md). All open todos preserved in
+> the umbrella's Phase 1-4. This file is the historical SSOT.
 
 # Features consolidation + drill-down (P2/P3 follow-ons)
 
 ## Codex SSOTs
 
-This plan implements / extends the following codex documents (read these BEFORE making code changes;
-drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
 
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
   downstream NaN handling at consolidation join boundary (rolling-window denominator adjustment, propagated NaN through
   cross-instrument calcs)
 - [`codex/02-data/data-lineage-MTDS-features-ml.md`](../../codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
   features → ML lineage; consolidation layer sits between features-\* writers + ml-training reader
-- [`codex/02-data/data-status-drilldown-hierarchy.md`](../../codex/02-data/data-status-drilldown-hierarchy.md) — drill-down
-  hierarchy SSOT for the deployment-ui feature-group route + per-feature-group parquet download endpoint
+- [`codex/02-data/data-status-drilldown-hierarchy.md`](../../codex/02-data/data-status-drilldown-hierarchy.md) —
+  drill-down hierarchy SSOT for the deployment-ui feature-group route + per-feature-group parquet download endpoint
 - [`codex/06-coding-standards/feature-service-pattern.md`](../../codex/06-coding-standards/feature-service-pattern.md) —
   features-\* service pattern; the UTL `FeatureBatchHandler` base class lifts the boilerplate the doc describes
 

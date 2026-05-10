@@ -151,8 +151,8 @@ isProject: true
 
 Honest-coverage-metrics Phase A + Phase B + MTDS bug fix + MDPS extension landed 2026-04-19/20. The ManifestWriter v5
 schema now lets every shard ingestion attempt be recorded as one of `captured` / `empty_confirmed` / `attempted_failed`
-per the [plan](honest_coverage_metrics_2026_04_19.md). The remaining work is **operational**: actually exercise the
-new write path across every (category × service × shard) cell so the Data Status heatmap lights up honestly.
+per the [plan](honest_coverage_metrics_2026_04_19.md). The remaining work is **operational**: actually exercise the new
+write path across every (category × service × shard) cell so the Data Status heatmap lights up honestly.
 
 **Definition of "proper coverage" for this plan**:
 

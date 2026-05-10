@@ -34,12 +34,11 @@ locked_since: 2026-05-08
 > Phase 2.E `EXPECTED_PRE_GENESIS_CHAIN` taxonomy); P1 for the broader 49-entry table + LTV fallbacks; P2 for
 > e2e-testing fixtures. **Blast radius**: UAC `chain_env.py` (49 launch-date entries) + features-onchain-service (LTV
 > fallbacks) + execution-service (address constants — milder, mostly correct) + e2e-testing (block-number fixtures) +
-> new `unified-trading-pm/scripts/onchain_truth/` SSOT generator. **Suggested owner**: `defi_master_2026_05_07.md`
-> Phase X (new). Composes with: `defi_protocol_governance_parameters_refresh_2026_05_08.md` (overlaps on Aave rate
-> params at the consumer side), `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.E (the
-> `EXPECTED_PRE_GENESIS_CHAIN` taxonomy that depends on correct launch dates), and
-> `mtds_streaming_and_backpressure_2026_05_07.md` (the lending-indices VM uses these dates for pre-launch skip
-> decisions).
+> new `unified-trading-pm/scripts/onchain_truth/` SSOT generator. **Suggested owner**: `defi_master_2026_05_07.md` Phase
+> X (new). Composes with: `defi_protocol_governance_parameters_refresh_2026_05_08.md` (overlaps on Aave rate params at
+> the consumer side), `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.E (the `EXPECTED_PRE_GENESIS_CHAIN`
+> taxonomy that depends on correct launch dates), and `mtds_streaming_and_backpressure_2026_05_07.md` (the
+> lending-indices VM uses these dates for pre-launch skip decisions).
 
 ## What I found
 

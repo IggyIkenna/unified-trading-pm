@@ -287,14 +287,14 @@ EXECUTED by their owning interface repos:
 - id: t2-tests-first content: "T2 STEP B — TESTS FIRST [7 agents PARALLEL]: vcr-public-venues (UMI VCR cassettes:
   kalshi, polymarket, thegraph, defillama, fear_greed); vcr-new-adapters-public, vcr-new-adapters-cefi-sports,
   vcr-new-adapters-tradfi-altdata; p0-umi-skipped-test (unskip after p0-canonical-swap-fix); usei-v1-betfair-pinnacle
-  (USEI Betfair + Pinnacle adapters using BaseSportsAdapter protocol — BLOCKED on api_keys_and_auth.md §
-  phase-3-keys: betfair + pinnacle keys must be in SM first)." status: done notes: | VERIFIED (2026-03-11):
-  p0-canonical-swap-fix — CanonicalSwap exists in UIC (unified_internal_contracts/market_data/defi.py) and is imported
-  by UMI **init**.py. Done. The 2 remaining @pytest.mark.skip in UMI (Morpho adapter) are unrelated behavioral skips
-  (OSError/ValueError propagation), not UIC-related. vcr-public-venues / vcr-new-adapters-\*: MIGRATED →
-  plans/ai/api_keys_and_auth.md under free-sources-audit and phase-2-http todos. VCR recording requires key
-  management context — tracked there. usei-v1-betfair-pinnacle: MIGRATED → plans/ai/api_keys_and_auth.md §
-  phase-4-blockers. T2 TESTS: ALL VERIFIED CLEAN OR MIGRATED (2026-03-11).
+  (USEI Betfair + Pinnacle adapters using BaseSportsAdapter protocol — BLOCKED on api_keys_and_auth.md § phase-3-keys:
+  betfair + pinnacle keys must be in SM first)." status: done notes: | VERIFIED (2026-03-11): p0-canonical-swap-fix —
+  CanonicalSwap exists in UIC (unified_internal_contracts/market_data/defi.py) and is imported by UMI **init**.py. Done.
+  The 2 remaining @pytest.mark.skip in UMI (Morpho adapter) are unrelated behavioral skips (OSError/ValueError
+  propagation), not UIC-related. vcr-public-venues / vcr-new-adapters-\*: MIGRATED → plans/ai/api_keys_and_auth.md under
+  free-sources-audit and phase-2-http todos. VCR recording requires key management context — tracked there.
+  usei-v1-betfair-pinnacle: MIGRATED → plans/ai/api_keys_and_auth.md § phase-4-blockers. T2 TESTS: ALL VERIFIED CLEAN OR
+  MIGRATED (2026-03-11).
 - id: t2-code-rewrite content: "T2 STEP C — CODE REWRITE [7 agents PARALLEL]: p0-canonical-swap-fix (bump UIC patch +
   reinstall in UMI); vcr-urdi-parse-raw-umi-stubs (implement 12 NotImplementedError stubs in UMI);
   lib-phase2-udc-rename-step1 (add unified_domain_client/ re-export package to UDC for dual publish);

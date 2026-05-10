@@ -60,8 +60,7 @@ isProject: true
 
 No existing prod-vs-backtest reconciliation exists. The existing `e2e_smoke_and_portable_backtests.md` covers only
 fixture-based CI backtests (static VCR, no live comparison) — not relevant here. Items C.3 (Backtesting API) and C.4
-(Reconciliation) in `master_pre_deployment_plan_chain.md` are stub post-sprint items. This plan formalises all
-three.
+(Reconciliation) in `master_pre_deployment_plan_chain.md` are stub post-sprint items. This plan formalises all three.
 
 **The problem this solves:**
 

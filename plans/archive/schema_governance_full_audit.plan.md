@@ -156,8 +156,8 @@ todos:
       TrainingJobRequest/TrainingJobResult — ml-training-service uses local UMI @dataclass versions, not UIC Pydantic
       wire schemas; (2) TargetType, TrainingPeriod — same. Remediation: wire ml-training-service to import UIC Pydantic
       schemas for API/pubsub boundaries. (3) WebSocket* events — used by interface repos (not terminal services) — these
-      are correctly excluded from terminal consumer grep. See orphaned-schemas plan
-      (orphan-contracts-utilization.md) for follow-up adoption work."
+      are correctly excluded from terminal consumer grep. See orphaned-schemas plan (orphan-contracts-utilization.md)
+      for follow-up adoption work."
     status: completed
   - id: p2-domain-dir-population
     content:
@@ -289,13 +289,13 @@ doc (existing):** `unified-trading-codex/02-data/schema-governance.md` ✅ updat
 
 This plan covers four distinct concerns not addressed by existing schema plans:
 
-| Concern                                                                 | This Plan | Related Existing Plan                                                                  |
-| ----------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------- |
-| Canonical shape quality (groupings, field consistency, optional fields) | ✓ Phase 1 | —                                                                                      |
-| UIC adoption across services (who imports what)                         | ✓ Phase 2 | —                                                                                      |
-| Cross-contract deduplication resolution                                 | ✓ Phase 3 | SCHEMA_CONTRACTS_AUDIT.md (found the violations; this plan resolves them)              |
-| SoC cursor rule + quality gate enforcement                              | ✓ Phase 4 | quality_gate_hardening.md (adds STEP 5.12)                                        |
-| SCHEMA_GOVERNANCE.md codex doc                                          | ✓ Phase 5 | —                                                                                      |
+| Concern                                                                 | This Plan | Related Existing Plan                                                        |
+| ----------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------- |
+| Canonical shape quality (groupings, field consistency, optional fields) | ✓ Phase 1 | —                                                                            |
+| UIC adoption across services (who imports what)                         | ✓ Phase 2 | —                                                                            |
+| Cross-contract deduplication resolution                                 | ✓ Phase 3 | SCHEMA_CONTRACTS_AUDIT.md (found the violations; this plan resolves them)    |
+| SoC cursor rule + quality gate enforcement                              | ✓ Phase 4 | quality_gate_hardening.md (adds STEP 5.12)                                   |
+| SCHEMA_GOVERNANCE.md codex doc                                          | ✓ Phase 5 | —                                                                            |
 | Normalization coverage per data provider                                | —         | [uac_schema_normalization_complete.md](uac_schema_normalization_complete.md) |
 | Schema placement violations (finding them)                              | —         | [schema_contracts_full_audit.md](schema_contracts_full_audit.md)             |
 
@@ -491,9 +491,8 @@ done
 
 Feeds into:
 
-- [orphan-contracts-utilization.md](orphan-contracts-utilization.md) (plan #11) — adoption matrix informs
-  orphan remediation priorities
-- [uac_schema_normalization_complete.md](uac_schema_normalization_complete.md) (plan #11b) — normalizer
-  completeness gaps from p1-normalizer-completeness go here
-- [quality_gate_hardening.md](quality_gate_hardening.md) (plan #2c) — STEP 5.12 to be added per
-  p4-quality-gate-step-512
+- [orphan-contracts-utilization.md](orphan-contracts-utilization.md) (plan #11) — adoption matrix informs orphan
+  remediation priorities
+- [uac_schema_normalization_complete.md](uac_schema_normalization_complete.md) (plan #11b) — normalizer completeness
+  gaps from p1-normalizer-completeness go here
+- [quality_gate_hardening.md](quality_gate_hardening.md) (plan #2c) — STEP 5.12 to be added per p4-quality-gate-step-512

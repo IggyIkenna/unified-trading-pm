@@ -12,10 +12,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-06
 companion_plan: sports_phantom_fixtures_recovery_2026_05_06.md
 supersedes_phases:
-  - sports_phantom_fixtures_recovery_2026_05_06.md § relaunch-fixtures-backfill-category-a (replaced — VM-based
-    re-fetch was the wrong shape)
-  - sports_phantom_fixtures_recovery_2026_05_06.md § audit-and-flip-stale-empties (replaced — this plan is a
-    stronger version)
+  - sports_phantom_fixtures_recovery_2026_05_06.md § relaunch-fixtures-backfill-category-a (replaced — VM-based re-fetch
+    was the wrong shape)
+  - sports_phantom_fixtures_recovery_2026_05_06.md § audit-and-flip-stale-empties (replaced — this plan is a stronger
+    version)
 
 completion_gates:
   code: C5
@@ -280,8 +280,8 @@ Pattern mirrors the existing `flip_phantom_*` scripts. ~30 min implementation.
 
 - `unified-trading-pm/cursor-configs/CLAUDE.md` — workspace rules + Shard-granularity SSOT + No-fire-and-forget VM
   launches + Manifest concurrency + Sports source coverage windows + Honest absence vs fake placeholders.
-- `unified-trading-pm/plans/active/sports_phantom_fixtures_recovery_2026_05_06.md` — full phantom recovery history
-  (this plan supersedes 2 of its phases).
+- `unified-trading-pm/plans/active/sports_phantom_fixtures_recovery_2026_05_06.md` — full phantom recovery history (this
+  plan supersedes 2 of its phases).
 - `unified-trading-pm/plans/active/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` — coordinate with the
   parallel architectural stream; sports per-league shard atom is
   `(asset_group=sports, source, data_type, league_id, fixture_id, day)`.

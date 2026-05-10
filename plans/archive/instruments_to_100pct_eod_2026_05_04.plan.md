@@ -1339,8 +1339,7 @@ on next launch), but the launches haven't happened. Resume tomorrow once the env
 
 ## Context
 
-Scope of _this_ plan is narrower than the parent epic
-(`instruments_and_market_tick_data_completion_2026_05_01.md`):
+Scope of _this_ plan is narrower than the parent epic (`instruments_and_market_tick_data_completion_2026_05_01.md`):
 
 - **Service**: `instruments-service` only — instrument-definition shards, not market-tick or market-data-processing.
 - **Asset groups**: all five — `cefi`, `tradfi`, `sports`, `prediction`, `defi`.
@@ -1614,8 +1613,8 @@ scripts default is `false`). With `force=true`, the orchestrator re-fetches ever
 
 ## Phase 4 — Sign-off + plan close
 
-- [ ] [HUMAN] P0. Update parent epic (`instruments_and_market_tick_data_completion_2026_05_01.md`) progress notes:
-      mark instruments-service slice complete, link to this plan.
+- [ ] [HUMAN] P0. Update parent epic (`instruments_and_market_tick_data_completion_2026_05_01.md`) progress notes: mark
+      instruments-service slice complete, link to this plan.
 - [ ] [HUMAN] P0. Brief Ikenna on results vs the EOD target.
 - [ ] [AGENT] P2. Mark this plan complete and move to `plans/archive/`.
 

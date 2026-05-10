@@ -9,7 +9,9 @@ type: mixed
 epic: epic-code-completion
 status: archived
 archived_on: 2026-05-07
-archive_reason: 5 main vocabulary waves (A/B/C/D/E) shipped; 3 absorbed items folded into infrastructure_master + defi_master umbrellas
+archive_reason:
+  5 main vocabulary waves (A/B/C/D/E) shipped; 3 absorbed items folded into infrastructure_master + defi_master
+  umbrellas
 
 completion_gates:
   code: C3
@@ -47,32 +49,34 @@ depends_on: []
 isProject: false
 ---
 
-> **ARCHIVED 2026-05-07** — 5 main vocabulary waves (A/B/C/D/E) shipped per CLAUDE.md "Asset-group vocabulary"
-> section. The 3 remaining absorbed items folded into:
+> **ARCHIVED 2026-05-07** — 5 main vocabulary waves (A/B/C/D/E) shipped per CLAUDE.md "Asset-group vocabulary" section.
+> The 3 remaining absorbed items folded into:
 >
-> - `venue_start_dates` deletion → [`infrastructure_master_2026_05_07.md`](../active/infrastructure_master_2026_05_07.md)
->   § "VenueMapping `venue_start_dates` cleanup"
-> - Data-status dashboard SSOT verify → [`infrastructure_master_2026_05_07.md`](../active/infrastructure_master_2026_05_07.md)
->   § "VenueMapping `venue_start_dates` cleanup" (paired with deletion)
-> - `poolGetSnapshots` historical TVL → [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md)
->   § "Tail-chain / mid-tier protocol coverage"
+> - `venue_start_dates` deletion →
+>   [`infrastructure_master_2026_05_07.md`](../active/infrastructure_master_2026_05_07.md) § "VenueMapping
+>   `venue_start_dates` cleanup"
+> - Data-status dashboard SSOT verify →
+>   [`infrastructure_master_2026_05_07.md`](../active/infrastructure_master_2026_05_07.md) § "VenueMapping
+>   `venue_start_dates` cleanup" (paired with deletion)
+> - `poolGetSnapshots` historical TVL → [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md) § "Tail-chain
+>   / mid-tier protocol coverage"
 >
-> Each folded item carries a `(folded from venue_axis_asset_group_vocabulary_2026_04_25)` traceability suffix.
-> This file is the historical SSOT for the asset_group vocabulary migration.
+> Each folded item carries a `(folded from venue_axis_asset_group_vocabulary_2026_04_25)` traceability suffix. This file
+> is the historical SSOT for the asset_group vocabulary migration.
 
 # Venue axis (asset group) vocabulary
 
 ## Codex SSOTs
 
-This plan implements / extends the following SSOT documents (read these BEFORE making code changes;
-drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+This plan implements / extends the following SSOT documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
 
 - [`cursor-configs/CLAUDE.md`](../../cursor-configs/CLAUDE.md) § "Asset-group vocabulary" — primary SSOT for the
   vocabulary rules (CLI flag `--asset-group`, env vars `VM_ASSET_GROUP` / `MDPS_ASSET_GROUP`, Python symbols
   `VENUES_BY_ASSET_GROUP` / `DATA_TYPES_BY_ASSET_GROUP` / `MarketAssetGroup`, hive-key `asset_group=` canonical vs
   legacy `category=`, the lowercase dict-key exception)
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md) —
-  manifest hive partition keys (`asset_group=` canonical, `category=` legacy) + reader fallback discipline
+- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+  — manifest hive partition keys (`asset_group=` canonical, `category=` legacy) + reader fallback discipline
 - [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — per-asset-group
   bucket layout + path templates the vocabulary touches
 

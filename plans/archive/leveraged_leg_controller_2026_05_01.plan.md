@@ -262,8 +262,8 @@ they would otherwise stay buried until the next person hit them):
    caught up.
 4. **44 deep imports across 19 SIT files**: all `from unified_trading_library.events import …` instead of top-level
    facade. Auto-fixed.
-5. **Broken markdown link in `instruments_and_market_tick_data...md`**: `..` instead of `../..` was failing the
-   shared workspace-validator (step 6/6) across 3 repos simultaneously.
+5. **Broken markdown link in `instruments_and_market_tick_data...md`**: `..` instead of `../..` was failing the shared
+   workspace-validator (step 6/6) across 3 repos simultaneously.
 6. **`features_onchain_service/test_write_gate_enforcement.py` nan_threshold stale assertion**: sibling commit `fc2333e`
    bumped 0.5 → 0.95; test wasn't updated.
 
@@ -517,10 +517,10 @@ pnl-attribution-service all green), five operator-asked items shipped in a singl
       runtime SA `unified_trading` already has the secretmanager + storage roles. Wrapper command computes
       `--date $(yesterday-utc)` at runtime so the job always picks up the just-closed UTC day.
 - [x] **Phase E** — Production smoke runbook.
-      `unified-trading-pm/codex/14-customer-journeys/playbook-concepts/lst-seasonal-rewards-smoke.md` walks through Secret Manager
-      key checklist (9 keys: ALCHEMY/HELIUS + 7 Etherscan-clones), per-archetype holding_wallet audit, ad-hoc
-      `gcloud run jobs execute` smoke + log diagnosis, parquet round-trip via `ParquetDustLoader`, the credential-free
-      SIT, cron enable + 24h first-fire monitoring, and rollback (`gcloud scheduler jobs pause`).
+      `unified-trading-pm/codex/14-customer-journeys/playbook-concepts/lst-seasonal-rewards-smoke.md` walks through
+      Secret Manager key checklist (9 keys: ALCHEMY/HELIUS + 7 Etherscan-clones), per-archetype holding_wallet audit,
+      ad-hoc `gcloud run jobs execute` smoke + log diagnosis, parquet round-trip via `ParquetDustLoader`, the
+      credential-free SIT, cron enable + 24h first-fire monitoring, and rollback (`gcloud scheduler jobs pause`).
 
 Outstanding (not shipped this session — not load-bearing):
 

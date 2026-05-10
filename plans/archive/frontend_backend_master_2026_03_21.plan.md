@@ -250,8 +250,8 @@ Entitlement) runs in PARALLEL with Plans A-D+H (no dependencies). Plan I (Client
 
 ## Plan File References
 
-| Plan | File                                               | Slug                            | Scope        |
-| ---- | -------------------------------------------------- | ------------------------------- | ------------ |
+| Plan | File                                          | Slug                            | Scope        |
+| ---- | --------------------------------------------- | ------------------------------- | ------------ |
 | A    | `plan_a_registry_schema_sync_2026_03_21.md`   | `plan-a-registry-schema-sync`   | Backend-only |
 | B    | `plan_b_config_hot_reload_2026_03_21.md`      | `plan-b-config-hot-reload`      | Backend-only |
 | C    | `plan_c_domain_data_api_2026_03_21.md`        | `plan-c-domain-data-api`        | Backend-only |

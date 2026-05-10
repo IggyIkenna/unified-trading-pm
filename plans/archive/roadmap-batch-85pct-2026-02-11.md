@@ -1,5 +1,5 @@
-> **Note:** Active task tracking has moved to `consolidated_remaining_work.md`. This document retains historical
-> context and completed-milestone records.
+> **Note:** Active task tracking has moved to `consolidated_remaining_work.md`. This document retains historical context
+> and completed-milestone records.
 
 # Roadmap: Batch Production (49.0% → 85.0%)
 

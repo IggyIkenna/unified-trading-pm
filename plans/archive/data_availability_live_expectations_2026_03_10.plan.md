@@ -258,8 +258,8 @@ def assert_market_data_fresh(venue: str, last_tick_ts: datetime) -> None:
 ## Phase 2: New UEI events
 
 > ⚠️ **H1 CONSOLIDATION NOTE (2026-03-11):** These 5 UEI events are tracked in the consolidated plan
-> `uei_pending_event_additions.md` along with events from recon_rebalancing and position_precision_pnl. All UEI
-> event additions must be batched into a single PR to avoid merge conflicts on schemas.py. Do not add these events
+> `uei_pending_event_additions.md` along with events from recon_rebalancing and position_precision_pnl. All UEI event
+> additions must be batched into a single PR to avoid merge conflicts on schemas.py. Do not add these events
 > independently — coordinate via the consolidated plan.
 
 ### P2.1 — Add to unified-events-interface/schemas.py

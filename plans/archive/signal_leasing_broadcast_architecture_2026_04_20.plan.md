@@ -257,10 +257,10 @@ counterparty-endpoint state via its API (that's Phase 5 admin-surface territory,
 
 **Scope boundary (clarified 2026-04-20):** the **public marketing surface** for the Signals Service (`/signals` page,
 nav entry, `/briefings/signals-out` pillar, direction-arrow wording, cross-links to `/platform/signals-in`) is owned by
-the sister [marketing_site_restructure_2026_04_20](marketing_site_restructure_2026_04_20.md) plan and is
-substantially **already shipped**. This plan now owns only the backend-adjacent Phase 5 components: counterparty
-observability UI + admin surface + counterparty-persona integration. Previously-listed marketing stubs are consolidated
-into a single "shipped under sister plan" entry below.
+the sister [marketing_site_restructure_2026_04_20](marketing_site_restructure_2026_04_20.md) plan and is substantially
+**already shipped**. This plan now owns only the backend-adjacent Phase 5 components: counterparty observability UI +
+admin surface + counterparty-persona integration. Previously-listed marketing stubs are consolidated into a single
+"shipped under sister plan" entry below.
 
 - [x] [AGENT] P0. Public marketing surface (signals.html / signals/page.tsx / nav entry / platform 3-card fix /
       `/briefings/signals-out` pillar) — **shipped under marketing_site_restructure**. No further work here.

@@ -329,9 +329,9 @@ isProject: true
 
 ## Blockers
 
-| Blocker                                                      | Type          | Specific Dependency                                                                                                                                                   | Resolution                                                                                                                    |
-| ------------------------------------------------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| citadel_grade_feature_architecture.md not complete      | `[PLAN_TODO]` | [citadel_grade_feature_architecture.md](citadel_grade_feature_architecture.md) § todos `feed-all-22-groups`, `standardise-windows`, `window-ratio-features` | The cascade plan builds on top of the citadel plan's feature bank and window standardisation; those must be done first        |
+| Blocker                                                      | Type          | Specific Dependency                                                                                                                                         | Resolution                                                                                                                    |
+| ------------------------------------------------------------ | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| citadel_grade_feature_architecture.md not complete           | `[PLAN_TODO]` | [citadel_grade_feature_architecture.md](citadel_grade_feature_architecture.md) § todos `feed-all-22-groups`, `standardise-windows`, `window-ratio-features` | The cascade plan builds on top of the citadel plan's feature bank and window standardisation; those must be done first        |
 | features-multi-timeframe-service (FMTS) not created/hardened | `[PLAN_TODO]` | [phase3_service_hardening_integration.md](phase3_service_hardening_integration.md) § todo `t4c-features-layer` (FMTS entry)                                 | Multi-TF cascade requires FMTS to be a live service consuming higher-TF feature groups via PubSub/GCS                         |
 | features-delta-one-service T4-hardened                       | `[PLAN_TODO]` | [phase3_service_hardening_integration.md](phase3_service_hardening_integration.md) § todo `t4c-features-layer` (FDS entry)                                  | FDS must be green before the `add-explicit-binary-thresholds` and `replace-time-since-with-binary-horizons` changes can merge |
 
@@ -983,16 +983,16 @@ topology YAMLs, DAG diagrams, unit tests. Nothing that requires live infrastruct
 **Quality gates:** Set up (scripts created) but never run. CI runs them on merge.
 
 **Deployment, live PubSub/GCS verification, integration tests, backfill, smoke tests:** All in
-`consolidated_remaining_work.md` under the "Citadel ML Feature Pipeline — Hardening, Deployment & Live
-Verification" section.
+`consolidated_remaining_work.md` under the "Citadel ML Feature Pipeline — Hardening, Deployment & Live Verification"
+section.
 
 **What is run here:** Unit tests only via `pytest`.
 
 > **Layer 1.5 — Per-component integration tests (D2):** Per-component integration tests for FMTS and MTF calculators
 > belong in `tests/integration/` with all external deps mocked (no live GCS/PubSub). These block quickmerge
 > `--unit-only` progression and must pass before service tier promotion. They are distinct from Layer 2 post-deploy
-> tests (which go to `consolidated_remaining_work.md`). See `cursor-rules/testing/integration-testing-layers.mdc`
-> for full 5-layer strategy (Layers 0, 1, 1.5, 2, 3a/3b).
+> tests (which go to `consolidated_remaining_work.md`). See `cursor-rules/testing/integration-testing-layers.mdc` for
+> full 5-layer strategy (Layers 0, 1, 1.5, 2, 3a/3b).
 
 **Mocking strategy:** All external API responses and internal data contracts mocked using `MagicMock(spec=...)` against
 canonical schemas:

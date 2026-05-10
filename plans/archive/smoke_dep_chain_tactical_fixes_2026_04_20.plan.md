@@ -13,8 +13,8 @@ reconciliation_date: 2026-04-25
 name: smoke-dep-chain-tactical-fixes overview: Phase A tactical fixes surfaced by 2026-04-20 institutional smoke canary.
 Bucket naming convention (mostly shipped), SIT manifest filter Tier-0 vs Tier-1 semantics, path-layout SSOT
 reconciliation vs actual writes, launcher extension for SPORTS + PREDICTION, stale default date, VM auto-shutdown,
-SIGKILL/memory investigation. No architectural changes — that's Phase B
-(plans/active/universe_ssot_fix_2026_04_20.md). type: mixed epic: epic-data-platform-honest-coverage status: active
+SIGKILL/memory investigation. No architectural changes — that's Phase B (plans/active/universe_ssot_fix_2026_04_20.md).
+type: mixed epic: epic-data-platform-honest-coverage status: active
 
 locked_by: live-defi-rollout locked_since: 2026-04-21
 

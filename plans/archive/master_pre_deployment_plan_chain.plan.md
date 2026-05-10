@@ -90,19 +90,19 @@ isProject: false
 
 ## Phase Status Summary (as of 2026-03-08)
 
-| Phase                  | Plan File                                      | Status      | Notes                                                                                   |
-| ---------------------- | ---------------------------------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| Phase                  | Plan File                                 | Status      | Notes                                                                                   |
+| ---------------------- | ----------------------------------------- | ----------- | --------------------------------------------------------------------------------------- |
 | Phase 0 — Environment  | archive/phase0_audit_remediation.md       | **DONE**    | All 5 streams complete (2026-03-07)                                                     |
 | Phase 0b — Audit       | workspace_audit_remediation_2026_03_07.md | **DONE**    | 10 FAILs + 47 WARNs resolved; 2 P4 items remain (non-blocking)                          |
 | Phase 1 — Foundation   | archive/phase1_foundation_prep.md         | **DONE**    | All STREAM A/B/C items complete (2026-03-06); plan archived                             |
-| B9 Terraform           | (import_audit_2026_03_08 item)                 | **DONE**    | deployment-service/terraform/gcp/ + aws/ verified complete                              |
+| B9 Terraform           | (import_audit_2026_03_08 item)            | **DONE**    | deployment-service/terraform/gcp/ + aws/ verified complete                              |
 | Phase 2 — Library Tier | phase2_library_tier_hardening.md          | IN_PROGRESS | T0 D1/D2/D3 PASS; D4/D5 pending; T1–T3 not yet started (T0 invariant)                   |
 | Phase 3 — Services     | phase3_service_hardening_integration.md   | PENDING     | Blocked on Phase 2 T0–T3 all green (D5)                                                 |
-| Phase 4 — Integration  | (schema robustness + layer 1 tests)            | IN_PROGRESS | Layer 0 contract tests done; Layer 1 schema robustness in plan todos; Layer 2–3 blocked |
-| Phase 5 — Pre-Deploy   | (deploy infra gates)                           | PENDING     | Blocked: deploy infrastructure not yet provisioned                                      |
+| Phase 4 — Integration  | (schema robustness + layer 1 tests)       | IN_PROGRESS | Layer 0 contract tests done; Layer 1 schema robustness in plan todos; Layer 2–3 blocked |
+| Phase 5 — Pre-Deploy   | (deploy infra gates)                      | PENDING     | Blocked: deploy infrastructure not yet provisioned                                      |
 | Phase 6 — Cloud Build  | aws_migration.md                          | PENDING     | buildspec.aws.yaml complete on all repos; blocked on AWS account/CodeBuild access       |
 | Phase 7 — Final Audit  | trading_system_audit_prompt.md            | IN_PROGRESS | Section 1 done (2026-03-08); full audit run pending Phase 2 completion                  |
-| Plan 9 — Live Trading  | (March 20 gate)                                | PENDING     | All phases must complete first                                                          |
+| Plan 9 — Live Trading  | (March 20 gate)                           | PENDING     | All phases must complete first                                                          |
 
 ---
 
@@ -188,10 +188,10 @@ Week 4 (Mar 15–20): Phase 3 service hardening begins (after all T0–T3 green)
 Live trading week: March 20
 ```
 
-> **Phase 2 invariant (from phase2_library_tier_hardening.md):** Never touch tier N until tier N-1 is fully green
-> (all D5 passes). T0→T1→T2→T3 is a hard sequential constraint — parallelism is within a tier only (repos within T0 can
-> be parallel; repos in T1 can run in parallel after ALL T0 repos pass D5). The master chain timeline above reflects
-> this constraint. Plans 3–4 (Coverage + basedpyright) map 1:1 to Phase 2 and span Weeks 2–3.
+> **Phase 2 invariant (from phase2_library_tier_hardening.md):** Never touch tier N until tier N-1 is fully green (all
+> D5 passes). T0→T1→T2→T3 is a hard sequential constraint — parallelism is within a tier only (repos within T0 can be
+> parallel; repos in T1 can run in parallel after ALL T0 repos pass D5). The master chain timeline above reflects this
+> constraint. Plans 3–4 (Coverage + basedpyright) map 1:1 to Phase 2 and span Weeks 2–3.
 
 ---
 

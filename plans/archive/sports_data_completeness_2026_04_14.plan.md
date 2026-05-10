@@ -9,9 +9,9 @@ reconciliation_date: 2026-04-25
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [sports_data_pipeline_comprehensive_2026_04_16.md](./sports_data_pipeline_comprehensive_2026_04_16.md).**
-> Newer P0 covers same surface; concrete work tracked in §12.0 sports register Plans 2/4/9/11 Original scope retained
-> for history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
+> [sports_data_pipeline_comprehensive_2026_04_16.md](./sports_data_pipeline_comprehensive_2026_04_16.md).** Newer P0
+> covers same surface; concrete work tracked in §12.0 sports register Plans 2/4/9/11 Original scope retained for
+> history. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 # Sports Data Completeness
 

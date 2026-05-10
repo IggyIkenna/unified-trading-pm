@@ -57,8 +57,8 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 
 ## Why this plan exists
 
-The master plan `master_to_live_defi_2026_05_23.md` audit (PM commit `12ce828a`, 2026-05-06) names
-**work-stream-A** as one of the three keystone unblocks for the May 23 live-DeFi deadline. The codex SSOT
+The master plan `master_to_live_defi_2026_05_23.md` audit (PM commit `12ce828a`, 2026-05-06) names **work-stream-A** as
+one of the three keystone unblocks for the May 23 live-DeFi deadline. The codex SSOT
 `03-observability/lifecycle-events.md` already defines the event schema and bucket layout
 (`gs://{gcp_project_id}-events/events/{service}/{YYYY-MM-DD}/{vm-name}/hour={H}/*.jsonl`); what's missing is the
 deployment-api surface so the deployment-UI / DART terminal / on-call operator can:

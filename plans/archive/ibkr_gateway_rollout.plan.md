@@ -112,8 +112,8 @@ todos:
       INDEX.md (IBKR key not in SM)."
     status: done
     notes:
-      "MIGRATED 2026-03-11 → api_keys_and_auth.md todo ibkr-sm-credentials. Human action required: gcloud secrets
-      create ibkr-account-credentials + add account/password JSON."
+      "MIGRATED 2026-03-11 → api_keys_and_auth.md todo ibkr-sm-credentials. Human action required: gcloud secrets create
+      ibkr-account-credentials + add account/password JSON."
   - id: ibkr-vm-deploy
     content: >-
       Apply Terraform to provision the GCE VM running IB Gateway. Steps: (1) cd ibkr-gateway-infra/terraform &&

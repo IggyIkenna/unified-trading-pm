@@ -41,7 +41,10 @@ source_plans:
 isProject: false
 ---
 
-> **ARCHIVED 2026-05-07** — folded into [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md) Group F (live-trading) + Group G (operator UX). All 11 open todos preserved in master with `(folded from consolidated_operational_validation_2026_04_15)` traceability suffix. This file is the historical SSOT.
+> **ARCHIVED 2026-05-07** — folded into
+> [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md) Group F (live-trading) + Group G
+> (operator UX). All 11 open todos preserved in master with
+> `(folded from consolidated_operational_validation_2026_04_15)` traceability suffix. This file is the historical SSOT.
 
 > **Reconciliation note (2026-04-25):** YAML `todos:` block converted to canonical Cursor markdown checkboxes per
 > `PLAN_FORMAT.md`. 2 todos flipped to `[x]` with cited commit evidence; 11 remain open. See
@@ -51,15 +54,15 @@ isProject: false
 
 ## Codex SSOTs
 
-This plan implements / extends the following codex documents (read these BEFORE making code changes;
-drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
 
 - [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md) — alerting baseline (severity matrix,
   routing, escalation) — the operational-validation gates assert against this contract
 - [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md) — batch vs live
   alerting symmetry; cluster E2E + scheduling-gap tests must exercise both modes
-- [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../../codex/05-infrastructure/runtime-tiers-and-deployment.md) —
-  runtime-tier matrix (Tier 0/1/2 local + staging + prod) — pipeline scheduling + QG sweeps run per tier
+- [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../../codex/05-infrastructure/runtime-tiers-and-deployment.md)
+  — runtime-tier matrix (Tier 0/1/2 local + staging + prod) — pipeline scheduling + QG sweeps run per tier
 - [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — manual-trade
   booking + reconciliation contract that the trade-booking QG validates
 

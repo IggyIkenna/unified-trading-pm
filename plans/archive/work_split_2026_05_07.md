@@ -48,16 +48,16 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 ### Day 1 — 2026-05-07
 
 - [x] [DESIGN] P0. Author UAC `AlertCode` taxonomy (StrEnum + threshold dataclass + severity-vs-alert-code separation).
-      Plan: [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) Phase 1. Repo:
-      UAC. Why nuanced: closed-set philosophy decisions; sets workspace-wide alert vocabulary for years; codex SSOTs at
+      Plan: [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) Phase 1. Repo: UAC.
+      Why nuanced: closed-set philosophy decisions; sets workspace-wide alert vocabulary for years; codex SSOTs at
       [`codex/14-playbooks/alerting/alert-code-taxonomy.md`](../../codex/14-playbooks/alerting/alert-code-taxonomy.md)
       expect this StrEnum to land here. **DONE 2026-05-07 (Agent 1)** — UAC@`d00326d` shipped + alerting plan Phase 1
       checkbox flips per PM@`7624ab21`. Phase 2-9 of alerting plan (KillSwitchBus rule wiring + consumer wiring)
       pending.
 - [x] [DESIGN] P0. writegate Phase 4.A: deployment-api typed-error rendering (UTL classifier → `error_reason` API field
       → UI typed badge). Plan:
-      [`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase
-      4.A. Repos: UTL + deployment-api + deployment-ui. Why nuanced: cross-cutting across 3 repos; per-asset-group
+      [`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase 4.A.
+      Repos: UTL + deployment-api + deployment-ui. Why nuanced: cross-cutting across 3 repos; per-asset-group
       consumer-class judgments per
       [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md).
       **DONE 2026-05-07 (Agent 2)** — deployment-ui@`a7384a0` (TypedReasonBadges + FailurePillarStack components + 24
@@ -124,8 +124,8 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       May-23 priorities + risk of bad backfill choices; first run with the just-shipped Pyth Hermes + Chainlink
       multi-chain paths.
 - [ ] [INFRA-DESIGN] P1. aws_migration Phase 2: dual-bucket setup + Storage Transfer Service config + bucket-naming SSOT
-      discipline. Plan: [`aws_migration_defi_first_2026_05_07`](aws_migration_defi_first_2026_05_07.md) Phase 2.
-      Repos: deployment-service + UCI. Codex SSOT to populate:
+      discipline. Plan: [`aws_migration_defi_first_2026_05_07`](aws_migration_defi_first_2026_05_07.md) Phase 2. Repos:
+      deployment-service + UCI. Codex SSOT to populate:
       [`codex/05-infrastructure/cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md).
 - [ ] [COORDINATION] P1. Triage
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
@@ -162,13 +162,13 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 
 - [ ] [OPS] P0. Babysit 24 cefi VMs (ETA 05-08/09): event-progression checks (`STARTED → PROCESSING → STOPPED`), kill
       zombies via `VM_PREFIX_TO_BUCKET` registry; do **not** launch new cefi work. Plan:
-      [`cefi_master_2026_05_07`](cefi_master_2026_05_07.md). Monitor only. **In-flight 2026-05-07 14:00 UTC**: 37
-      cefi VMs (bitfinex/bitget/kraken futures+spot 2020-2026) running in asia-northeast1-c. Sample-checked 3 VMs:
-      STARTED + PROCESSING_STARTED + PROCESSING_COMPLETED events flowing, ~4 min/date pace. **Concerns**: (a)
-      PROCESSING_COMPLETED events lack `rows_captured` field — violates writegate rule "adapters MUST emit row counts so
-      silent-zero is detectable from event stream"; (b) frequent `PROCESS_CPU_SATURATED` events on e2-highmem-2 (2 vCPU)
-      suggest workload sized too tight for instance type. **Next**: data-quality spot-check via per-VM manifest shard at
-      T+30min after first VM hits STOPPED.
+      [`cefi_master_2026_05_07`](cefi_master_2026_05_07.md). Monitor only. **In-flight 2026-05-07 14:00 UTC**: 37 cefi
+      VMs (bitfinex/bitget/kraken futures+spot 2020-2026) running in asia-northeast1-c. Sample-checked 3 VMs: STARTED +
+      PROCESSING_STARTED + PROCESSING_COMPLETED events flowing, ~4 min/date pace. **Concerns**: (a) PROCESSING_COMPLETED
+      events lack `rows_captured` field — violates writegate rule "adapters MUST emit row counts so silent-zero is
+      detectable from event stream"; (b) frequent `PROCESS_CPU_SATURATED` events on e2-highmem-2 (2 vCPU) suggest
+      workload sized too tight for instance type. **Next**: data-quality spot-check via per-VM manifest shard at T+30min
+      after first VM hits STOPPED.
 - [x] [SCRIPT] P0. Implement UAC types for backfill launch (`BackfillLaunchRequest` / `BackfillLaunchResult` /
       `VMLifecycleEvent` / `VMEventListResult` / `BackfillLaunchTaskKind` StrEnum). Plan:
       [`deployment_api_work_stream_a_2026_05_07`](deployment_api_work_stream_a_2026_05_07.md) Phase 1. Repo: UAC.
@@ -178,31 +178,30 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 ### Day 2 — 2026-05-08
 
 - [x] [SCRIPT] P0. Implement UAC `feature_group → required_inputs` SSOT (1-day pure-win; gates ml/features Phase 2
-  - ML downstream). Plan: [`ml_and_features_master_2026_05_07`](ml_and_features_master_2026_05_07.md) Phase 1A.
-    Repo: UAC. **DONE 2026-05-07** — Phase 1A largely shipped (4 commits across UAC + UTL): UAC@`4a25b07` (32
-    feature_groups + 5-service registry + 6 onchain coverage_starts + 15 tests) + UAC@`2f40c9d`
-    (AVAILABILITY_AT_SEMANTICS defi-vocabulary Half 1) + UAC@`7a3299a` (Half 2 — 8 of 10 deferred onchain feature_groups
-    lifted) + UTL@`d7902f6` (`ManifestFreshnessCache` + 17 tests) + UTL@`4354276c`
-    (`assert_no_lookahead_for_feature_group` helper + 9 tests). **REMAINING**: sports vocabulary alignment Phase 1A.3
-    (operator decision pending — gates features-sports consumer migration); 8-service consumer wires (Phase 2A).
+  - ML downstream). Plan: [`ml_and_features_master_2026_05_07`](ml_and_features_master_2026_05_07.md) Phase 1A. Repo:
+    UAC. **DONE 2026-05-07** — Phase 1A largely shipped (4 commits across UAC + UTL): UAC@`4a25b07` (32 feature_groups +
+    5-service registry + 6 onchain coverage_starts + 15 tests) + UAC@`2f40c9d` (AVAILABILITY_AT_SEMANTICS
+    defi-vocabulary Half 1) + UAC@`7a3299a` (Half 2 — 8 of 10 deferred onchain feature_groups lifted) + UTL@`d7902f6`
+    (`ManifestFreshnessCache` + 17 tests) + UTL@`4354276c` (`assert_no_lookahead_for_feature_group` helper + 9 tests).
+    **REMAINING**: sports vocabulary alignment Phase 1A.3 (operator decision pending — gates features-sports consumer
+    migration); 8-service consumer wires (Phase 2A).
 - [ ] [SCRIPT] P1. Hook `features_sports_reconcile_available_at.py` (already shipped per
       `features-sports-service@f123069`) into per-source backfill VM exit-step. Plan:
-      [`sports_master_2026_05_07`](sports_master_2026_05_07.md). Repos: features-sports-service +
-      deployment-service.
+      [`sports_master_2026_05_07`](sports_master_2026_05_07.md). Repos: features-sports-service + deployment-service.
 
 ### Day 3 — 2026-05-09
 
 - [ ] [SCRIPT] P0. Implement `POST /api/backfill/launch` + `GET /api/vm/events` handlers (against UAC types from D1).
       Plan: deployment_api_work_stream_a Phase 2. Repo: deployment-api.
 - [x] [SCRIPT] P1. UAC canonical_question_group SSOT (`HOURLY` / `DAILY` / `ELECTION` Polymarket+Kalshi groupings).
-      Plan: [`predictions_master_2026_05_07`](predictions_master_2026_05_07.md) Phase 1. Repo: UAC. **DONE
-      2026-05-07** — Phase 1A scaffolding complete (predictions audit confirmed 14/37 done, 38% progress): UAC@`5f76bd4`
-      (classifier stability hash design) + UAC@`af2bc9b` (canonical-question-group SSOT + lifecycle wrapper modules) +
-      UAC@`58cc5f8` (Polymarket lifecycle aliases + edge-case regression tests) + UAC@`bb24aba`
-      (DATA_TYPE_TO_CLUSTER_REGISTRY seeded + PREDICTION_GROUPS empty registry) + UAC@`a901e91` (vault-venue canonical
-      names + Polymarket CLOB coverage). **REMAINING**: Phase 1 lifecycle ingestion (instruments-service writer +
-      orchestrator shard-atom emit + integration tests); Phase 2 adapter migration (Polymarket + Kalshi lifecycle
-      gating; UMI tick provider replacement; legacy writer purge); Phase 3 reader/feature/strategy.
+      Plan: [`predictions_master_2026_05_07`](predictions_master_2026_05_07.md) Phase 1. Repo: UAC. **DONE 2026-05-07**
+      — Phase 1A scaffolding complete (predictions audit confirmed 14/37 done, 38% progress): UAC@`5f76bd4` (classifier
+      stability hash design) + UAC@`af2bc9b` (canonical-question-group SSOT + lifecycle wrapper modules) + UAC@`58cc5f8`
+      (Polymarket lifecycle aliases + edge-case regression tests) + UAC@`bb24aba` (DATA_TYPE_TO_CLUSTER_REGISTRY
+      seeded + PREDICTION_GROUPS empty registry) + UAC@`a901e91` (vault-venue canonical names + Polymarket CLOB
+      coverage). **REMAINING**: Phase 1 lifecycle ingestion (instruments-service writer + orchestrator shard-atom emit +
+      integration tests); Phase 2 adapter migration (Polymarket + Kalshi lifecycle gating; UMI tick provider
+      replacement; legacy writer purge); Phase 3 reader/feature/strategy.
 
 ### Day 4 — 2026-05-10
 

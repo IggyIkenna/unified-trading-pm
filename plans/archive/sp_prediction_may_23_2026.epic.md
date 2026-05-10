@@ -14,7 +14,9 @@ deadline: 2026-05-23
 
 # Epic — S&P Prediction (CME) (May 23 2026)
 
-> **🔴 SUPERSEDED 2026-05-08** — folded into [`tradfi_master_2026_05_07.md`](./tradfi_master_2026_05_07.md) § "May-23 deliverable A — S&P prediction" per operator direction. This file is archived; content remains verbatim for archaeology. **Edit the master, not this file.**
+> **🔴 SUPERSEDED 2026-05-08** — folded into [`tradfi_master_2026_05_07.md`](./tradfi_master_2026_05_07.md) § "May-23
+> deliverable A — S&P prediction" per operator direction. This file is archived; content remains verbatim for
+> archaeology. **Edit the master, not this file.**
 
 ## Why this epic exists
 
@@ -66,8 +68,8 @@ can progress (where we can fix things, we still fix them) but are not gating for
 
 ## Sub-plans this epic consumes
 
-| Path                                                                                                                                        | Role                                                                                               | Status |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------ |
+| Path                                                                                                                                   | Role                                                                                               | Status |
+| -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------ |
 | [`tradfi_master_2026_05_07`](./tradfi_master_2026_05_07.md)                                                                            | TradFi data pipeline umbrella (instruments + MTDS + MDPS + features for ES/MES/ETFs/SPX)           | Active |
 | [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.md)                                                          | ML lifecycle + features umbrella (training pipeline, calendar features, Bitcoin cross-asset feats) | Active |
 | [`active/instruments_and_market_tick_data_completion_2026_05_01`](../active/instruments_and_market_tick_data_completion_2026_05_01..md | Instruments + MTDS completion (full backfill, manifest honesty)                                    | Active |

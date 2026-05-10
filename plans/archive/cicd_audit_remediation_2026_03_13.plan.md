@@ -602,8 +602,8 @@ todos:
       Currently there is no Telegram notification when a new plan is created or updated in PM active plans/. Human
       review of plans happens out-of-band. Fix: add a new step to rules-alignment-agent.yml or create a separate
       plan-notification.yml that fires when plans/active/*.md changes: (1) Trigger: push to PM main touching
-      plans/active/*.md. (2) Read the changed plan file, extract name + overview + first 3 todos. (3) Send
-      Telegram: "Plan ready for review: [plan-name]\n
+      plans/active/*.md. (2) Read the changed plan file, extract name + overview + first 3 todos. (3) Send Telegram:
+      "Plan ready for review: [plan-name]\n
           Overview: [first 200 chars]\nTodos: [count] pending\n
           Review: [link to file on GitHub]\nApprove with: /approve-plan [name]"
       (4) Human replies /approve-plan [name] → plan-approval.yml marks plan

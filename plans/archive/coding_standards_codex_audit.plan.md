@@ -48,8 +48,8 @@ isProject: false
 
 ## Blockers
 
-| Blocker                                | Type          | Specific Dependency                                                                                    | Resolution                                                                                                                                                                   |
-| -------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Blocker                                | Type          | Specific Dependency                                                                          | Resolution                                                                                                                                                                   |
+| -------------------------------------- | ------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Phase 0 baseline not established       | `[PLAN_TODO]` | [phase0_standards_enforcement.md](phase0_standards_enforcement.md) § todo `p0-gate-check`    | Phase 0 must complete first so violations are catalogued; this plan then fixes them systematically                                                                           |
 | quality-gates.sh missing from 12 repos | `[PLAN_TODO]` | [phase1_foundation_prep.md](phase1_foundation_prep.md) § todo `ci-add-missing-quality-gates` | 12 repos (unified-api-contracts, unified-events-interface, unified-reference-data-interface, alerting-service, etc.) need quality-gates.sh before this audit can run on them |
 
@@ -70,8 +70,8 @@ isProject: false
 Config, UTC, imports, error handling, typing, quality gates, setup.sh, batch-live pattern.
 
 > **Ownership note — bare excepts:** execution-service bare excepts (201) were remediated in
-> `execution_services_hygiene_refactor.md` (day3-bare-excepts, status: completed). **Exclude execution-service from
-> this plan's bare except audit scope and count.** All other repos are in scope for bare except remediation here.
+> `execution_services_hygiene_refactor.md` (day3-bare-excepts, status: completed). **Exclude execution-service from this
+> plan's bare except audit scope and count.** All other repos are in scope for bare except remediation here.
 
 > **Hook runner:** When referencing pre-commit or CI hooks in this plan, always specify `prek` as the hook runner (not
 > raw pre-commit or custom shell scripts). Per `.cursorrules` workspace standard.

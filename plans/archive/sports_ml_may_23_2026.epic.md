@@ -14,7 +14,9 @@ deadline: 2026-05-23
 
 # Epic — Sports ML (May 23 2026)
 
-> **🔴 SUPERSEDED 2026-05-08** — folded into [`sports_master_2026_05_07.md`](./sports_master_2026_05_07.md) § "May-23 deliverable" per operator direction. This file is archived; content remains verbatim for archaeology. **Edit the master, not this file.**
+> **🔴 SUPERSEDED 2026-05-08** — folded into [`sports_master_2026_05_07.md`](./sports_master_2026_05_07.md) § "May-23
+> deliverable" per operator direction. This file is archived; content remains verbatim for archaeology. **Edit the
+> master, not this file.**
 
 ## Why this epic exists
 
@@ -63,8 +65,8 @@ fixes are inclusive at every layer.
 
 ## Sub-plans this epic consumes
 
-| Path                                                                                                                                | Role                                                                       | Status |
-| ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------ |
+| Path                                                                                                                           | Role                                                                       | Status |
+| ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ------ |
 | [`sports_master_2026_05_07`](./sports_master_2026_05_07.md)                                                                    | Sports umbrella (data pipeline + features + ML + strategy + execution)     | Active |
 | [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.md)                                                  | ML lifecycle + features umbrella                                           | Active |
 | [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.md)                                              | Strategy v2 + DART manual-trade lane                                       | Active |

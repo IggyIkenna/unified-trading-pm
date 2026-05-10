@@ -33,14 +33,16 @@ depends_on: []
 isProject: false
 ---
 
-> **ARCHIVED 2026-05-07** — folded into [`ml_and_features_master_2026_05_07.md`](../active/ml_and_features_master_2026_05_07.md). All open todos preserved in the umbrella's Phase 1-4. This file is the historical SSOT.
+> **ARCHIVED 2026-05-07** — folded into
+> [`ml_and_features_master_2026_05_07.md`](../active/ml_and_features_master_2026_05_07.md). All open todos preserved in
+> the umbrella's Phase 1-4. This file is the historical SSOT.
 
 # ML training feature-read perf — surgical wins
 
 ## Codex SSOTs
 
-This plan implements / extends the following codex documents (read these BEFORE making code changes;
-drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
 
 - [`codex/02-data/data-lineage-MTDS-features-ml.md`](../../codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
   features → ml-training reader lineage; this plan reduces wall-clock at the ml-training read boundary
@@ -106,8 +108,7 @@ Three bottleneck files:
 
 2-4× faster ML training feature read with surgical changes to one service. No new architecture, no new microservices.
 The feature-store consolidation layer (single pre-joined wide-table parquet per `(asset_group, day)`) that would give
-5-10× is sibling plan `features_consolidation_and_drilldown_2026_05_06.md` and is sequenced after this one
-stabilises.
+5-10× is sibling plan `features_consolidation_and_drilldown_2026_05_06.md` and is sequenced after this one stabilises.
 
 ## Pre-audit manifest
 

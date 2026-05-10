@@ -310,8 +310,8 @@ isProject: false
 
 # API Keys and Auth Plan
 
-**Consolidates:** [trading_system_audit_prompt.md](trading_system_audit_prompt.md) Section 10. VCR content
-inlined below (formerly VCR_CREDENTIAL_RECORDING_PLAN.md, now archived).
+**Consolidates:** [trading_system_audit_prompt.md](trading_system_audit_prompt.md) Section 10. VCR content inlined below
+(formerly VCR_CREDENTIAL_RECORDING_PLAN.md, now archived).
 
 ---
 
@@ -328,12 +328,12 @@ inlined below (formerly VCR_CREDENTIAL_RECORDING_PLAN.md, now archived).
 
 ## SSOT References
 
-| Document                                                                       | Purpose                                     |
-| ------------------------------------------------------------------------------ | ------------------------------------------- |
-| unified-trading-codex/07-security/secrets-management.md                        | Secret Manager SSOT; per-venue secret names |
-| unified-api-contracts vcr_endpoints.py                                         | Cassette definitions; key_env per venue     |
+| Document                                                             | Purpose                                     |
+| -------------------------------------------------------------------- | ------------------------------------------- |
+| unified-trading-codex/07-security/secrets-management.md              | Secret Manager SSOT; per-venue secret names |
+| unified-api-contracts vcr_endpoints.py                               | Cassette definitions; key_env per venue     |
 | [trading_system_audit_prompt.md](trading_system_audit_prompt.md) §10 | Security audit checklist (10.1–10.19)       |
-| api-contracts/scripts/record_vcr_cassettes.py                                  | Record script                               |
+| api-contracts/scripts/record_vcr_cassettes.py                        | Record script                               |
 
 > **Note:** api-contracts/build/ is a stale build artifact. Ignore build/lib/api_contracts/endpoint_registry.py — the
 > live source is api_contracts/vcr_endpoints.py.

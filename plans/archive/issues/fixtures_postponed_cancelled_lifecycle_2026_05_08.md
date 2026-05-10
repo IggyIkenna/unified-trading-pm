@@ -23,8 +23,8 @@ locked_since: 2026-05-08
 > **Severity**: P1 — affects fixtures truthset accuracy; cascades to FIXTURE_STATS / ODDS / PREDICTIONS coverage %
 > calculations and downstream feature compute that filters by `status_long`. **Blast radius**: instruments-service
 > (orchestrator) + UAC (api_football normalize + status taxonomy) + features-sports-service consumers + manifest
-> expected-universe enumerator. **Suggested owner**: `sports_master_2026_05_07.md` Phase 3 (fixture truthset
-> recovery, currently 75% per master plan).
+> expected-universe enumerator. **Suggested owner**: `sports_master_2026_05_07.md` Phase 3 (fixture truthset recovery,
+> currently 75% per master plan).
 
 ## What I found
 

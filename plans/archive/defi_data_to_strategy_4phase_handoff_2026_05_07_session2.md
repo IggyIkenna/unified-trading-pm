@@ -153,8 +153,7 @@ features-cross-instrument-service/
 ## Reference paths
 
 - Original 4-phase handoff: `unified-trading-pm/plans/ai/defi_data_to_strategy_4phase_handoff_2026_05_07.md`
-- Phase 9 archived plan:
-  `unified-trading-pm/plans/archive/carry_tracer_phase_9_catalog_paired_dispersion_2026_05_06.md`
+- Phase 9 archived plan: `unified-trading-pm/plans/archive/carry_tracer_phase_9_catalog_paired_dispersion_2026_05_06.md`
 - DEX perp handover: `unified-trading-pm/plans/active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`
 - Resolver:
   `features-cross-instrument-service/features_cross_instrument_service/app/calculators/futures_roll_resolver.py`
@@ -169,27 +168,27 @@ reference-only; **new agents should read `unified-trading-pm/plans/active/` for 
 
 Mapping:
 
-| Section here                                                                                                                                  | Active plan SSOT                                                                                         |
-| --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| A1 features-onchain VM rerun + parquet verify                                                                                                 | `defi_master_2026_05_07.md` § Carry tracer verification gates (Phase A) — SHIPPED                   |
-| A4 tracer shim deletion                                                                                                                       | `defi_master_2026_05_07.md` (referenced via strategy@666dc2d) — SHIPPED                             |
-| A5 DERIBIT light VMs                                                                                                                          | `defi_master_2026_05_07.md` (operational) — SHIPPED                                                 |
-| A2 / A3 carry tracer Phase 9 (futures_roll_resolver, catalog_pair_builder, paired_dispatch, UAC catalog SSOT, UAC build_instrument_id wiring) | `defi_master_2026_05_07.md` (commit refs in Audit 2026-05-07 section) — SHIPPED                     |
-| Phase A verification gate                                                                                                                     | `defi_master_2026_05_07.md` § Carry tracer verification gates — PARTIAL                             |
-| Phase D verification gate (full Stage 4 historical)                                                                                           | `defi_master_2026_05_07.md` § Carry tracer verification gates — FRESH                               |
-| B4 part 1 UTL helper                                                                                                                          | `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md` Phase 2A — SHIPPED                       |
-| B4 part 2 per-service wiring + adapter-stamping prereq                                                                                        | `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md` Phase 2A — FRESH                         |
-| B1 writegate Phase 2.B orchestrator pre-skip                                                                                                  | `writegate_honest_coverage_endtoend_2026_05_06.md`                                                  |
+| Section here                                                                                                                                  | Active plan SSOT                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| A1 features-onchain VM rerun + parquet verify                                                                                                 | `defi_master_2026_05_07.md` § Carry tracer verification gates (Phase A) — SHIPPED              |
+| A4 tracer shim deletion                                                                                                                       | `defi_master_2026_05_07.md` (referenced via strategy@666dc2d) — SHIPPED                        |
+| A5 DERIBIT light VMs                                                                                                                          | `defi_master_2026_05_07.md` (operational) — SHIPPED                                            |
+| A2 / A3 carry tracer Phase 9 (futures_roll_resolver, catalog_pair_builder, paired_dispatch, UAC catalog SSOT, UAC build_instrument_id wiring) | `defi_master_2026_05_07.md` (commit refs in Audit 2026-05-07 section) — SHIPPED                |
+| Phase A verification gate                                                                                                                     | `defi_master_2026_05_07.md` § Carry tracer verification gates — PARTIAL                        |
+| Phase D verification gate (full Stage 4 historical)                                                                                           | `defi_master_2026_05_07.md` § Carry tracer verification gates — FRESH                          |
+| B4 part 1 UTL helper                                                                                                                          | `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md` Phase 2A — SHIPPED                  |
+| B4 part 2 per-service wiring + adapter-stamping prereq                                                                                        | `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md` Phase 2A — FRESH                    |
+| B1 writegate Phase 2.B orchestrator pre-skip                                                                                                  | `writegate_honest_coverage_endtoend_2026_05_06.md`                                             |
 | B2 reconcilers                                                                                                                                | `writegate_honest_coverage_endtoend_2026_05_06.md` + `manifest_migration_master_2026_05_07.md` |
-| B3 manifest v6→v7 reader                                                                                                                      | `manifest_migration_master_2026_05_07.md`                                                           |
-| C1 strategy v2 finalization                                                                                                                   | `strategy_architecture_v2_finalization_2026_04_19.md`                                               |
-| C2 4-service QGs                                                                                                                              | `defi_master_2026_05_07.md` § DeFi e2e pipeline gates                                               |
-| C3 CARRY_RECURSIVE_STAKED batch e2e                                                                                                           | `defi_master_2026_05_07.md` § DeFi e2e pipeline gates                                               |
-| C4 features-onchain Docker rebuild                                                                                                            | `defi_master_2026_05_07.md` § DeFi e2e pipeline gates                                               |
-| D1 MTDS DeFi 100%                                                                                                                             | `defi_master_2026_05_07.md` § MTDS DeFi slice                                                       |
-| D2 tail-chain coverage                                                                                                                        | `defi_master_2026_05_07.md` § Tail-chain                                                            |
-| D3 Lighter / Extended / Pacifica historical                                                                                                   | `defi_master_2026_05_07.md` § Lighter / Extended / Pacifica historical replay                       |
-| D4 Pyth / Chainlink oracle                                                                                                                    | `defi_master_2026_05_07.md` § Oracle prices + chain expansion                                       |
-| DEX perp follow-ups (Items A-F from HANDOVER)                                                                                                 | `defi_master_2026_05_07.md` § DEX perp forward-poll handlers + collateral matrix                    |
+| B3 manifest v6→v7 reader                                                                                                                      | `manifest_migration_master_2026_05_07.md`                                                      |
+| C1 strategy v2 finalization                                                                                                                   | `strategy_architecture_v2_finalization_2026_04_19.md`                                          |
+| C2 4-service QGs                                                                                                                              | `defi_master_2026_05_07.md` § DeFi e2e pipeline gates                                          |
+| C3 CARRY_RECURSIVE_STAKED batch e2e                                                                                                           | `defi_master_2026_05_07.md` § DeFi e2e pipeline gates                                          |
+| C4 features-onchain Docker rebuild                                                                                                            | `defi_master_2026_05_07.md` § DeFi e2e pipeline gates                                          |
+| D1 MTDS DeFi 100%                                                                                                                             | `defi_master_2026_05_07.md` § MTDS DeFi slice                                                  |
+| D2 tail-chain coverage                                                                                                                        | `defi_master_2026_05_07.md` § Tail-chain                                                       |
+| D3 Lighter / Extended / Pacifica historical                                                                                                   | `defi_master_2026_05_07.md` § Lighter / Extended / Pacifica historical replay                  |
+| D4 Pyth / Chainlink oracle                                                                                                                    | `defi_master_2026_05_07.md` § Oracle prices + chain expansion                                  |
+| DEX perp follow-ups (Items A-F from HANDOVER)                                                                                                 | `defi_master_2026_05_07.md` § DEX perp forward-poll handlers + collateral matrix               |
 
 This doc is preserved as historical context for the multi-session Phase 9 / 4-phase work.

@@ -54,14 +54,13 @@ lifts them into an explicit rule file + enforcement in `access_control`.
 | Enforcement lives in `access_control()` formula | G1.6's `access_control(user, route, item, phase)` calls `check_service_family_scope(user, route)` as a pre-check before the generic gate                       | Kickoff §1.11 + G1.6 handoff                                     |
 | Declarative rule table                          | YAML at `_ssot-rules/11-service-family-scope-rules.yaml` — machine-readable. Rule 11 .md doc explains + cross-refs                                             | Kickoff §1.11                                                    |
 | Service families covered                        | `IM`, `Reg Umbrella`, `DART` (+ `DART-reporting-only` sub-family for shared reporting tool)                                                                    | Kickoff §1.11 + shared-core/client-reporting-demo-walkthrough.md |
-| SMA-vs-Pooled applies to IM + Reg, not DART     | DART clients bring their own capital infra; SMA vs Pooled is an IM / Reg structural decision                                                                   | `plans/active/share_class_architecture_2026_04_01.md`       |
+| SMA-vs-Pooled applies to IM + Reg, not DART     | DART clients bring their own capital infra; SMA vs Pooled is an IM / Reg structural decision                                                                   | `plans/active/share_class_architecture_2026_04_01.md`            |
 
 ## Cross-references
 
-- **Upstream (Wave C):** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md` —
-  hard dep
-- **Sibling Wave D:** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` — parallel; both layer on top of
-  G1.6
+- **Upstream (Wave C):** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md` — hard
+  dep
+- **Sibling Wave D:** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` — parallel; both layer on top of G1.6
 - **Downstream:** `refactor_g1_4` (persona matrix respects scope rules), `refactor_g1_14` (deck slide)
 - **Rules:** `_ssot-rules/04-dart-commercial-axes.md`, `_ssot-rules/03-same-system-principle.md`
 - **Shared-core:** `shared-core/same-system-principle.md`, `shared-core/client-reporting-demo-walkthrough.md`,

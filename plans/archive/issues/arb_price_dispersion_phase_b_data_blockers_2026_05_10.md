@@ -1,5 +1,7 @@
 ---
-title: "ARBITRAGE_PRICE_DISPERSION Phase B tracer cannot run-to-completion — upstream data + features gaps across 6 perp venues"
+title:
+  "ARBITRAGE_PRICE_DISPERSION Phase B tracer cannot run-to-completion — upstream data + features gaps across 6 perp
+  venues"
 created: 2026-05-10
 author: agent-arb-fundrate-c2
 source:
@@ -23,14 +25,14 @@ Probed real GCS infra on 2026-05-10 before writing the tracer. The plan's Full-e
 `--start-date 2024-01-01 --end-date 2024-01-07` across the 6-venue universe (bybit, deribit, binance, okx, hyperliquid,
 aster). Coverage table:
 
-| Venue           | Source pipeline                                   | 2024-01-01 raw | 2024-W1 raw | 2025-06-01 raw | features-delta-one-cefi by_date contiguous? |
-| --------------- | ------------------------------------------------- | -------------- | ----------- | -------------- | ------------------------------------------- |
-| bybit           | Tardis derivative_ticker (`venue=BYBIT/`)         | ✅             | (probable)  | ❌             | ❌ (only 2022-11 → sparse 2024 / 2025)      |
-| binance-futures | Tardis derivative_ticker (`venue=BINANCE-FUTURES/`) | ✅           | (probable)  | ❌             | ❌                                          |
-| deribit         | Tardis derivative_ticker (`venue=DERIBIT/`)       | ✅             | ✅          | ✅             | ❌                                          |
-| okx-futures     | Tardis derivative_ticker (`venue=OKX-FUTURES/`)   | ❌             | ❌          | ❌ (starts 2025-01) | ❌                                       |
-| hyperliquid     | perp_funding handler (`gs://perp-funding-{pid}/perp_funding/hyperliquid/`) | ✅ | ✅ | ✅ | ❌ |
-| aster           | (no perp_funding directory at all)                | ❌             | ❌          | ❌             | ❌                                          |
+| Venue           | Source pipeline                                                            | 2024-01-01 raw | 2024-W1 raw | 2025-06-01 raw      | features-delta-one-cefi by_date contiguous? |
+| --------------- | -------------------------------------------------------------------------- | -------------- | ----------- | ------------------- | ------------------------------------------- |
+| bybit           | Tardis derivative_ticker (`venue=BYBIT/`)                                  | ✅             | (probable)  | ❌                  | ❌ (only 2022-11 → sparse 2024 / 2025)      |
+| binance-futures | Tardis derivative_ticker (`venue=BINANCE-FUTURES/`)                        | ✅             | (probable)  | ❌                  | ❌                                          |
+| deribit         | Tardis derivative_ticker (`venue=DERIBIT/`)                                | ✅             | ✅          | ✅                  | ❌                                          |
+| okx-futures     | Tardis derivative_ticker (`venue=OKX-FUTURES/`)                            | ❌             | ❌          | ❌ (starts 2025-01) | ❌                                          |
+| hyperliquid     | perp_funding handler (`gs://perp-funding-{pid}/perp_funding/hyperliquid/`) | ✅             | ✅          | ✅                  | ❌                                          |
+| aster           | (no perp_funding directory at all)                                         | ❌             | ❌          | ❌                  | ❌                                          |
 
 Sample probes (run from this session):
 
@@ -77,9 +79,9 @@ Phase B blocks Phase C (pnl-attribution archetype bucket consumes Phase B's trac
 B gate close) which blocks the master plan's `pvl-p18a` paper-vs-live evidence pair. Net: ARBITRAGE_PRICE_DISPERSION
 half of the master plan's "2 DeFi archetypes live" deliverable is silently degraded.
 
-Ancillary finding: `trace_carry_staked_basis.py` `_VENUE_FUNDING_SOURCE` mapping uses `BYBIT-FUTURES` /
-`BITGET-FUTURES` etc., but on disk the hive partition is `venue=BYBIT/` (no `-FUTURES` suffix). Running the carry
-tracer against 2024-01-01 likely silent-zeroes for these venues too. Worth a separate audit pass.
+Ancillary finding: `trace_carry_staked_basis.py` `_VENUE_FUNDING_SOURCE` mapping uses `BYBIT-FUTURES` / `BITGET-FUTURES`
+etc., but on disk the hive partition is `venue=BYBIT/` (no `-FUTURES` suffix). Running the carry tracer against
+2024-01-01 likely silent-zeroes for these venues too. Worth a separate audit pass.
 
 ## Recommended decision
 
@@ -105,5 +107,5 @@ regardless of Phase B's path.
 
 - master_to_live_defi_2026_05_23.md Group F Item 17–18 (paper-trade smoke + batch-vs-live recon).
 - arbitrage_price_dispersion_finalisation_2026_05_09.md Phase B done definition.
-- (potential) launcher_scripts_consolidation_into_deployment_service_2026_05_07.md if a new aster funding-rate
-  backfill VM launcher is needed.
+- (potential) launcher_scripts_consolidation_into_deployment_service_2026_05_07.md if a new aster funding-rate backfill
+  VM launcher is needed.

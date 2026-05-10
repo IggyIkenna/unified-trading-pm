@@ -96,6 +96,6 @@ complexity (relay private keys, bundle simulation, reorg protection).
 
 ## Trigger to un-pause
 
-Operator sees Phase 8 of `defi_pipeline_extension_2026_05_01.md` publish a comprehensive 14-archetype results
-table; the SANDWICH row's `theoretical_profit_per_month_usd` clears the 3x cost-cover gate above for two consecutive
-months. Operator removes `status: paused` from the frontmatter and starts Phase 1 work.
+Operator sees Phase 8 of `defi_pipeline_extension_2026_05_01.md` publish a comprehensive 14-archetype results table; the
+SANDWICH row's `theoretical_profit_per_month_usd` clears the 3x cost-cover gate above for two consecutive months.
+Operator removes `status: paused` from the frontmatter and starts Phase 1 work.

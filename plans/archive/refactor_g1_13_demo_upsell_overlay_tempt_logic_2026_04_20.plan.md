@@ -36,8 +36,8 @@ transform applied between questionnaire ingestion and G1.7 `resolve_profile` exe
 ## Cross-references
 
 - **Upstream (Wave D):** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` — extends this engine
-- **Upstream (Wave E):** `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md` — consumes
-  questionnaire response
+- **Upstream (Wave E):** `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md` — consumes questionnaire
+  response
 - **Sibling Wave F:** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md`
 - **Demo-ops source:** `codex/14-playbooks/demo-ops/upsell-overlays.md`,
   `codex/14-playbooks/demo-ops/demo-restriction-profiles.md`,

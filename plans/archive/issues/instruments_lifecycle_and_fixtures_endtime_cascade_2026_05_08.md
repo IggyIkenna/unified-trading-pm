@@ -164,8 +164,7 @@ MTDS write boundary, OR a dedicated pre-features stage `match_lifecycle_extracto
 - `sports_data_completeness_2026_04_14.md` — halftime calculator wired (scores only); does NOT cover match_end_time
   cascade, penalty shootout, regulation-score-vs-AET distinction.
 - `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` — names the cascade in plain English, does NOT implement.
-- `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` — lifecycle wired (Q3),
-  prediction-only.
+- `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` — lifecycle wired (Q3), prediction-only.
 - **No active plan** owns: futures schema addition (Q1), options expiry hard-required (Q2), sports half-time /
   extra-time / penalty timestamps (Q5), regulation-vs-AET-vs-pens score distinction (Q6), end_time cascade
   implementation (Q4 + Q7).

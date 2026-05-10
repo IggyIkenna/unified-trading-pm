@@ -323,4 +323,4 @@ Each service/API repo:
 | `scripts/propagation/templates/deployment-smoke.yml` | pm           | GHA template                 |
 | `docker/docker-compose.single.yml`                   | pm           | Single-service compose stack |
 | `.github/workflows/deployment-smoke.yml`             | all 63 repos | Rolled out from template     |
-| `production_mock_e2e_plan_d90c8f20.md`          | pm           | Test content (phase 2)       |
+| `production_mock_e2e_plan_d90c8f20.md`               | pm           | Test content (phase 2)       |

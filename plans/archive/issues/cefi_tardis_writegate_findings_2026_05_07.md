@@ -146,8 +146,8 @@ Owner: Ikenna writegate Phase 2.E (per-source progress events) per work-split / 
 
 ## Cross-references
 
-- `plans/active/cefi_master_2026_05_07.md` § "Tardis-venues backfill IN-FLIGHT" (PM@9b1f1d5) — operational
-  context + per-VM evidence.
+- `plans/active/cefi_master_2026_05_07.md` § "Tardis-venues backfill IN-FLIGHT" (PM@9b1f1d5) — operational context +
+  per-VM evidence.
 - `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` Phase 2.A + Phase 2.E — fix lands here.
 - `cursor-configs/CLAUDE.md` § "Shard-granularity SSOT" — SSOT this contradicts (finding 1).
 - `cursor-configs/CLAUDE.md` § "No fire-and-forget VM launches" — SSOT this contradicts (finding 2).

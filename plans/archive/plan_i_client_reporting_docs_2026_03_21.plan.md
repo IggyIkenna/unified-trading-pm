@@ -369,6 +369,6 @@ Phase 6: Mock Data + QG (SEQUENTIAL)
 
 ## Plan File References
 
-| Plan | File                                              | Slug                           |
-| ---- | ------------------------------------------------- | ------------------------------ |
+| Plan | File                                         | Slug                           |
+| ---- | -------------------------------------------- | ------------------------------ |
 | I    | `plan_i_client_reporting_docs_2026_03_21.md` | `plan-i-client-reporting-docs` |

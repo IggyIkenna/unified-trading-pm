@@ -104,8 +104,8 @@ landed substantive work before this handoff was written.
   per-fixture trigger dispatches.
 - **Post-purge SPORTS UI sanity pass** — after Plan 9 purge-apply completes: navigate SPORTS → every data_type → confirm
   per-league rendering across 95 leagues with no stale unsharded rows.
-- **Plan archive unlocks** — `mtds_per_instrument_sentinels_2026_04_21.md` (all todos flipped per earlier MEMORY)
-  awaits `[unlock-plan]` human commit.
+- **Plan archive unlocks** — `mtds_per_instrument_sentinels_2026_04_21.md` (all todos flipped per earlier MEMORY) awaits
+  `[unlock-plan]` human commit.
 
 ## Known sports gaps NOT covered by any plan
 
@@ -198,10 +198,10 @@ If context runs out during wave-3 completion:
 **One-sentence wave-3 pickup dispatch:**
 
 > "Re-dispatch wave-3 sub-agents A-F sequentially (not parallel) per
-> `plans/active/post_wave_expanded_roadmap_handoff_2026_04_22.md`. API rate limits forced the original parallel
-> dispatch to fail. Start with B (Plan 13 execution) since A may already be landing; then C (Plan 11), D (Plan 12), E
-> (Plans 14/15/16 authorship), F (QG residuals). Monitor `/tmp/af-chain-progress.log` for Plan 2 chain status. Plans
-> 11/12/13 plan files already exist in `plans/active/`."
+> `plans/active/post_wave_expanded_roadmap_handoff_2026_04_22.md`. API rate limits forced the original parallel dispatch
+> to fail. Start with B (Plan 13 execution) since A may already be landing; then C (Plan 11), D (Plan 12), E (Plans
+> 14/15/16 authorship), F (QG residuals). Monitor `/tmp/af-chain-progress.log` for Plan 2 chain status. Plans 11/12/13
+> plan files already exist in `plans/active/`."
 
 ## Success criteria (this plan — post-wave roadmap completion)
 

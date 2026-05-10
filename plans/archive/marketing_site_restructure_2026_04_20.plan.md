@@ -89,8 +89,7 @@ Per the locked rule-04 matrix + Signal Leasing 4th-path:
 ## Cross-references
 
 - Parent: [path_to_100m_finalization_2026_04_20.md](path_to_100m_finalization_2026_04_20.md)
-- Sibling:
-  [signal_leasing_broadcast_architecture_2026_04_20.md](signal_leasing_broadcast_architecture_2026_04_20.md)
+- Sibling: [signal_leasing_broadcast_architecture_2026_04_20.md](signal_leasing_broadcast_architecture_2026_04_20.md)
 - Locked commercial model: `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`, `dart-pricing-axes.md`,
   `im-profit-share-structures.md`
 - Strategy codex: `codex/09-strategy/architecture-v2/category-instrument-coverage.md` +

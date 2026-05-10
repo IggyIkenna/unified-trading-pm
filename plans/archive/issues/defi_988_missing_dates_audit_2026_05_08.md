@@ -15,8 +15,8 @@ locked_since: 2026-05-08
 
 > **Severity**: P1 — diagnostic-only audit; no code changes. Outputs feed Ikenna's D4 DeFi launches and Harsh's D4
 > manifest rescan to target the `carry_staked_basis` + `leveraged_funding_arb` chain set first. **Blast radius**: defi
-> asset_group only — `defi_master_2026_05_07.md` is the parent. **Suggested owner**: defi_master plan (operator
-> triage which findings fold into D4 backfill todos).
+> asset_group only — `defi_master_2026_05_07.md` is the parent. **Suggested owner**: defi_master plan (operator triage
+> which findings fold into D4 backfill todos).
 
 ## Top-line numbers
 
@@ -168,9 +168,9 @@ The remaining captured rows (4,757) cover the live window correctly.
 
 ## Recommendation
 
-**Fold-in**: priorities #1 + #5 fold into existing `defi_master_2026_05_07.md` "Lending-indices VM run-quality
-bugs" section (which already cross-references Tab 5's plan-of-record). Priority #2 folds into the existing P0 todo on
-line 357-359. Priorities #3 and #4 are NEW work that needs operator priority decision before adding as P0 todos to
+**Fold-in**: priorities #1 + #5 fold into existing `defi_master_2026_05_07.md` "Lending-indices VM run-quality bugs"
+section (which already cross-references Tab 5's plan-of-record). Priority #2 folds into the existing P0 todo on line
+357-359. Priorities #3 and #4 are NEW work that needs operator priority decision before adding as P0 todos to
 defi_master:
 
 - **#3** (UAC SSOT tightening): low-risk doc-level fix; recommend ship in Harsh's main-agent session as a small commit

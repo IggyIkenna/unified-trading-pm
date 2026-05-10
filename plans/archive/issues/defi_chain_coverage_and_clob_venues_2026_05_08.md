@@ -32,8 +32,8 @@ locked_since: 2026-05-08
 > template SSOT) + execution-service (cross-chain transfers + bridge routing) + features-onchain-service +
 > strategy-service (per-archetype chain constraints) + MTDS (per-chain market data) + instruments-service (CLOB-venue
 > instrument discovery) + position-balance-monitor (per-chain custody addresses). **Suggested owner**:
-> `defi_master_2026_05_07.md` Phase X (new) — coordinates with
-> `dex_perp_onboarding_handover_2026_05_07.HANDOVER.md` for the CLOB-venue tail.
+> `defi_master_2026_05_07.md` Phase X (new) — coordinates with `dex_perp_onboarding_handover_2026_05_07.HANDOVER.md` for
+> the CLOB-venue tail.
 
 ## What I found
 

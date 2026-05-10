@@ -933,10 +933,9 @@ isProject: false
 ---
 
 > **SUPERSEDED 2026-04-25 by
-> [consolidated_defi_data_pipeline_2026_04_15.md](./consolidated_defi_data_pipeline_2026_04_15.md).** Original
-> scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit
-> formalises it as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for
-> evidence.
+> [consolidated_defi_data_pipeline_2026_04_15.md](./consolidated_defi_data_pipeline_2026_04_15.md).** Original scope
+> retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit formalises it
+> as canonical `superseded_by:` and adds this banner. See `_reconciliation_evidence_map_2026_04_25.md` for evidence.
 
 ## Execution DAG
 
@@ -1166,9 +1165,9 @@ venue={V}/instrument_type=options_chain/data_type=options_chain/underlying={U}/t
 
   - id: s9-10-footystats-season-automation content: |
     - [ ] [AGENT] S9. Implement FootyStats season ID auto-refresh. Plan exists at
-          trigger_based_reference_data_2026_04_13.md. Need: season_dates.py, get_reference_refresh_dates(),
-          auto-fetch new season IDs from FootyStats /league-list endpoint at season boundaries. status: todo note:
-          "Currently manual UAC update per season."
+          trigger_based_reference_data_2026_04_13.md. Need: season_dates.py, get_reference_refresh_dates(), auto-fetch
+          new season IDs from FootyStats /league-list endpoint at season boundaries. status: todo note: "Currently
+          manual UAC update per season."
 
   - id: s9-11-final-manifest-rescan content: |
     - [ ] [HUMAN] S9. Final manifest rescan after all enrichment backfills complete. Captures all new data from

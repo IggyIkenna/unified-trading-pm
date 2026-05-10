@@ -46,23 +46,23 @@ two launch batches:
 
 ## 2026-05-08 11:54 UTC follow-up — wall-clock-cap hypothesis DISPROVEN
 
-`mdps-tradfi-2025` STILL RUNNING at T+30h (created 2026-05-07 05:52 UTC, current 2026-05-08 11:54 UTC). It crossed
-the 25h mark at ~2026-05-08 06:52 UTC and did NOT exit. **This rules out a clean wall-clock cap as the root cause of
-Batch 1's coordinated 14:00 UTC exit.** Updated hypothesis ranking:
+`mdps-tradfi-2025` STILL RUNNING at T+30h (created 2026-05-07 05:52 UTC, current 2026-05-08 11:54 UTC). It crossed the
+25h mark at ~2026-05-08 06:52 UTC and did NOT exit. **This rules out a clean wall-clock cap as the root cause of Batch
+1's coordinated 14:00 UTC exit.** Updated hypothesis ranking:
 
 1. **External force-kill at exactly 14:00 UTC** — consistent with `vm_zombie_watchdog` batched cull cycle, host
    maintenance window, or coordinated operator action. The 3-min coordinated exit timing is the strongest signal; a
    per-VM resource cap would scatter the exit times.
 2. **Workload-specific OOM** — Batch 1's 4 VMs may have been processing heavier date ranges than Batch 2's 2025
    single-year shard. Less likely given the coordinated 14:00 UTC timing (OOM doesn't synchronise across VMs).
-3. **Preemption** — possible but a 4-of-4 simultaneous preemption is rare for non-spot instances; would need to
-   verify preemptible flag in launcher.
-4. **Scheduled job kill** — cron/scheduler running at 14:00 UTC daily that culls stale-looking VMs. Worth grepping
-   for `13:5*` / `14:00` cron entries in deployment-service.
+3. **Preemption** — possible but a 4-of-4 simultaneous preemption is rare for non-spot instances; would need to verify
+   preemptible flag in launcher.
+4. **Scheduled job kill** — cron/scheduler running at 14:00 UTC daily that culls stale-looking VMs. Worth grepping for
+   `13:5*` / `14:00` cron entries in deployment-service.
 
-Diagnosis priority: pull `vm_zombie_watchdog` event stream for 2026-05-07 13:55-14:05 UTC + grep deployment-service
-for any 14:00 UTC scheduled job. mdps-tradfi-2025 acts as a control case (different launch batch, ~17h offset from
-Batch 1's launch); its eventual exit pattern will further constrain the hypothesis.
+Diagnosis priority: pull `vm_zombie_watchdog` event stream for 2026-05-07 13:55-14:05 UTC + grep deployment-service for
+any 14:00 UTC scheduled job. mdps-tradfi-2025 acts as a control case (different launch batch, ~17h offset from Batch 1's
+launch); its eventual exit pattern will further constrain the hypothesis.
 
 ## Why it matters
 

@@ -109,18 +109,17 @@ isProject: true
 
 # CI/CD Mock Infrastructure Hardening — Citadel-Grade
 
-**Parent plan:** [production_mock_e2e_plan_d90c8f20.md](production_mock_e2e_plan_d90c8f20.md) **Status:**
-active | **Priority:** P0–P4 phased | **Owner:** infra | **Target:** 2026-04-01
+**Parent plan:** [production_mock_e2e_plan_d90c8f20.md](production_mock_e2e_plan_d90c8f20.md) **Status:** active |
+**Priority:** P0–P4 phased | **Owner:** infra | **Target:** 2026-04-01
 
 ---
 
 ## Context
 
-The existing `production_mock_e2e_plan_d90c8f20.md` defines the right scope (VCR cassettes, service mock replay, UI
-mock API, sandbox mode) but was missing critical CI/CD hermeticity: no GCP or AWS emulators, no WebSocket feed
-simulator, no mechanism to detect when real exchange APIs drift from committed cassettes, and no proof that CI makes
-zero live network calls. This plan adds the 14 hardening items needed to reach institutional-grade ("Citadel-grade")
-testability.
+The existing `production_mock_e2e_plan_d90c8f20.md` defines the right scope (VCR cassettes, service mock replay, UI mock
+API, sandbox mode) but was missing critical CI/CD hermeticity: no GCP or AWS emulators, no WebSocket feed simulator, no
+mechanism to detect when real exchange APIs drift from committed cassettes, and no proof that CI makes zero live network
+calls. This plan adds the 14 hardening items needed to reach institutional-grade ("Citadel-grade") testability.
 
 **CRCD = CI/CD** — this plan directly addresses all CI/CD sim-vs-real API call gaps.
 
@@ -189,8 +188,8 @@ testability.
 
 ## Integration with Related Plans
 
-| Plan                                                     | Integration                                                      |
-| -------------------------------------------------------- | ---------------------------------------------------------------- |
+| Plan                                                | Integration                                                      |
+| --------------------------------------------------- | ---------------------------------------------------------------- |
 | `aws_migration.md` — `codebuild-canary-run` pending | H2 (moto) gates canary                                           |
 | `mock_data_dev_project_seeding_2026_03_10.md`       | H9 tick replay consumes seed fixtures; H10 demo mode mounts them |
 | `cloud_infra_bucket_auth_2026_03_10.md`             | H1.2 GCS emulator enables bucket auth tests                      |

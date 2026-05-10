@@ -4,8 +4,8 @@ title:
 created: 2026-05-07
 author: harsh
 source:
-  - plans/active/defi_master_2026_05_07.md § "Lending-indices VM run-quality bugs (discovered 2026-05-07 mid-run,
-    VM stopped after diagnosis)"
+  - plans/active/defi_master_2026_05_07.md § "Lending-indices VM run-quality bugs (discovered 2026-05-07 mid-run, VM
+    stopped after diagnosis)"
   - VM `mtds-lending-indices-20260507-140418` (stopped 2026-05-07 ~15:30 IST after diagnosis)
   - gs://lending-indices-central-element-323112/_index/per_vm/mtds-lending-indices-20260507-140418.parquet
   - gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260507-140418/run.log
@@ -37,10 +37,9 @@ locked_since: 2026-05-07
 
 This issue doc is **retroactively filed** per the
 [Findings Triage Discipline (HARD RULE)](../../cursor-configs/CLAUDE.md) shipped at PM@`c8e0e0f`. The bugs were
-discovered + fully documented in [`defi_master_2026_05_07.md`](../defi_master_2026_05_07.md) earlier today
-(2026-05-07), but the new rule requires **big findings to land in BOTH chat AND issues/ folder**, not just plan
-annotations. This doc points at the canonical detail in `defi_master` and re-states the severity + blast-radius for the
-issues triage cycle.
+discovered + fully documented in [`defi_master_2026_05_07.md`](../defi_master_2026_05_07.md) earlier today (2026-05-07),
+but the new rule requires **big findings to land in BOTH chat AND issues/ folder**, not just plan annotations. This doc
+points at the canonical detail in `defi_master` and re-states the severity + blast-radius for the issues triage cycle.
 
 ## Summary
 
@@ -183,8 +182,8 @@ Owner: defi_master Fork 1 (lending-indices handler) + instruments-service DeFi i
 4. Re-launch the VM with `--apply-write` after fixes shipped + tarballs refreshed.
 
 Detailed bug descriptions + per-(venue, chain) evidence + verification recipe live in
-[`defi_master_2026_05_07.md`](../defi_master_2026_05_07.md) § "Lending-indices VM run-quality bugs"
-(authoritative source — this issue doc is a triage-pointer, not the canonical detail).
+[`defi_master_2026_05_07.md`](../defi_master_2026_05_07.md) § "Lending-indices VM run-quality bugs" (authoritative
+source — this issue doc is a triage-pointer, not the canonical detail).
 
 ---
 

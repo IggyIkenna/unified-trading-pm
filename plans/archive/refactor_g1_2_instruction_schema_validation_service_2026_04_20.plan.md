@@ -40,8 +40,8 @@ preferential pricing and validation behaviour.
 
 - **Upstream (Wave B):** `refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md` — hard dep
   (ArchetypeCapabilityRegistry)
-- **Sibling Wave C:** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md` —
-  consumes the integration-depth signal emitted here.
+- **Sibling Wave C:** `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md` — consumes
+  the integration-depth signal emitted here.
 - **Stage 3B specs (infra source of truth):** `stage-3b-instruction-schema-contract.md`, `stage-3b-uac-combo-rules.md`,
   `stage-3b-combo-rules-schema.yaml`, `stage-3b-downstream-analytics-capability-matrix.md`
 - **Rule 10:** `_ssot-rules/10-strategy-instruction-schema-principles.md`

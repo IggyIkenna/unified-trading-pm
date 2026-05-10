@@ -238,14 +238,14 @@ Backward-compat: omitted params → today's behaviour.
 For per-(service, asset_group) writers, also confirm the **shard axes** column populates correctly (already-existing
 columns):
 
-| Service / asset_group            | Confirm written                                                                                                                                           |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| instruments-service / DEFI       | `chain` — already done in this session via orchestrator `_write_venue` fix + 64,060-row migration                                                         |
+| Service / asset_group            | Confirm written                                                                                                                                      |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| instruments-service / DEFI       | `chain` — already done in this session via orchestrator `_write_venue` fix + 64,060-row migration                                                    |
 | instruments-service / PREDICTION | `canonical_question_group` (today encoded in `data_type`); successor plan: `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` |
-| MTDS / SPORTS                    | `league_id` — audit; today MTDS sports manifest has empty `instrument_id` and may be missing `league_id` too                                              |
-| features-sports / SPORTS         | `feature_group` — audit; calculator adapter writers need to declare `feature_group=...`                                                                   |
-| features-onchain / DEFI          | `feature_group` + `chain` — audit                                                                                                                         |
-| features-calendar / SHARED       | `feature_group` (per-source) — audit; today single-bucket but feature_group may be empty                                                                  |
+| MTDS / SPORTS                    | `league_id` — audit; today MTDS sports manifest has empty `instrument_id` and may be missing `league_id` too                                         |
+| features-sports / SPORTS         | `feature_group` — audit; calculator adapter writers need to declare `feature_group=...`                                                              |
+| features-onchain / DEFI          | `feature_group` + `chain` — audit                                                                                                                    |
+| features-calendar / SHARED       | `feature_group` (per-source) — audit; today single-bucket but feature_group may be empty                                                             |
 
 ### deployment-api
 
@@ -373,8 +373,8 @@ migration):
     only documented exception is hive-vocab `category=` vs `asset_group=` legacy preservation. Examples:
     - Prediction `canonical_question_group`: today encoded as `data_type` (e.g. `data_type=BTC` / `data_type=ETH` /
       `data_type=SPX`) so the manifest collapses 24 hourly markets into one `BTC_UP_DOWN_HOURLY` row. Has its own
-      successor plan `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` (multi-week
-      migration). DO NOT touch in Phase 1 of this plan. → Precedent migration scripts:
+      successor plan `predictions_canonical_question_group_polymarket_migration_2026_05_06.md` (multi-week migration).
+      DO NOT touch in Phase 1 of this plan. → Precedent migration scripts:
       [`instruments-service/scripts/migrate_local_sfi_to_canonical.py`](../../../../Code/unified-trading-system-repos/instruments-service/scripts/migrate_local_sfi_to_canonical.py),
       [`instruments-service/scripts/migrate_defi_legacy_venue_chain.py`](../../../../Code/unified-trading-system-repos/instruments-service/scripts/migrate_defi_legacy_venue_chain.py).
 

@@ -574,11 +574,11 @@ aggregate stage state and the tier-blocking invariants.
 
 ## Sub-Plans (Own the Implementation)
 
-| Scope                            | Sub-Plan                                                 | Status      |
-| -------------------------------- | -------------------------------------------------------- | ----------- |
+| Scope                            | Sub-Plan                                            | Status      |
+| -------------------------------- | --------------------------------------------------- | ----------- |
 | T0–T3 library hardening          | `phase2_library_tier_hardening.md`                  | IN_PROGRESS |
 | T4–T6 service hardening          | `phase3_service_hardening_integration.md`           | PENDING     |
-| UI vitest / component tests      | `ui-audit-results.md` action items                       | PENDING     |
+| UI vitest / component tests      | `ui-audit-results.md` action items                  | PENDING     |
 | SIT deployment                   | `production_mock_e2e_plan_d90c8f20.md`              | IN_PROGRESS |
 | Portable backtests / PnL         | `e2e_smoke_and_portable_backtests.md`               | IN_PROGRESS |
 | Cloud infra / API keys           | `api_keys_and_auth.md`                              | ACTIVE      |

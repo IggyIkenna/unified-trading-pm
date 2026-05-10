@@ -45,8 +45,8 @@ todos:
 
   - id: uei-pnl-residual-event
     content: >-
-      Add 1 P&L attribution event from position_precision_pnl_hardening_2026_03_11.md Phase E:
-      UNEXPLAINED_PNL_RESIDUAL — emitted hourly + AlertEvent when > 2% of total PnL.
+      Add 1 P&L attribution event from position_precision_pnl_hardening_2026_03_11.md Phase E: UNEXPLAINED_PNL_RESIDUAL
+      — emitted hourly + AlertEvent when > 2% of total PnL.
     status: done
     note: "DONE 2026-03-11 — UNEXPLAINED_PNL_RESIDUAL in schemas.py"
 

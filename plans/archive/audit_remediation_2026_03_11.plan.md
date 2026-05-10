@@ -116,8 +116,8 @@ todos:
       categorised inventory and specific todos for the 5 fixable instances.
     status: done
     note: >-
-      DONE 2026-03-11. Phase 9 appended to zero_baseline_typecheck_2026_03_10.md. ~100 instances found.
-      Categorised: ~95 ALLOWED (google-auth stubs, Protocol stubs, hasattr-guarded, pandas type-arg, dynamic backends,
+      DONE 2026-03-11. Phase 9 appended to zero_baseline_typecheck_2026_03_10.md. ~100 instances found. Categorised: ~95
+      ALLOWED (google-auth stubs, Protocol stubs, hasattr-guarded, pandas type-arg, dynamic backends,
       elysium-defi-system). 5 TODO items: funding_recon_engine.py:214, yield_recon_engine.py:280,
       instrument_processing_handlers.py:71, pnl_reader.py:63, deployment_state.py (5x reportPrivateUsage).
 

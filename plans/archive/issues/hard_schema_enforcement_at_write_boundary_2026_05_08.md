@@ -13,8 +13,7 @@ source:
     fail-all)
   - unified-api-contracts/unified_api_contracts/external/api_football/normalize.py:372-395 (minimal flattening)
   - plans/active/api_football_minimal_flattening_removal_2026_05_07.md (api_football only)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:80-82,96,104-106 (4-pillar gate at
-    record_captured)
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:80-82,96,104-106 (4-pillar gate at record_captured)
   - operator directive 2026-05-08:
       "you wouldn't even drop instruments_service if it was to not have those columns. It would fail schema validation,
       and that source of truth is held in unified API contracts ... we should be grabbing every column of the schema and

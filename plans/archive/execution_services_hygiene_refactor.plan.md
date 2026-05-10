@@ -61,10 +61,9 @@ isProject: true
 
 # Execution-Service Hygiene & Refactor Plan
 
-**Scope:** execution-service (EXEC) — T4 BATCH E in phase3_service_hardening_integration.md **Execution order:**
-Day 3 → Day 4 **Reference:**
-[phase3_service_hardening_integration.md](phase3_service_hardening_integration.md) — t4e-strategy-execution
-todo
+**Scope:** execution-service (EXEC) — T4 BATCH E in phase3_service_hardening_integration.md **Execution order:** Day 3 →
+Day 4 **Reference:** [phase3_service_hardening_integration.md](phase3_service_hardening_integration.md) —
+t4e-strategy-execution todo
 
 **Schema normalization:** UAC as normalization layer; interfaces return canonical only. See schema normalization
 completion plan.

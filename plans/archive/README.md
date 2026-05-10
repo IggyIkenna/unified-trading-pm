@@ -4,11 +4,11 @@ Plans in this folder have been superseded by the canonical **Plans to Deployable
 
 ## Superseded (2026-03-04)
 
-| File                                                | Superseded by                               |
-| --------------------------------------------------- | ------------------------------------------- |
+| File                                           | Superseded by                          |
+| ---------------------------------------------- | -------------------------------------- |
 | `pm_codex_drift_zero_architecture_2d72151d.md` | `plans_to_deployable_unified_audit.md` |
-| `other_alignment_plan.md`                           | `plans_to_deployable_unified_audit.md` |
-| `PM_CODEX_VS_OTHER_ALIGNMENT_DIFF.md`               | `plans_to_deployable_unified_audit.md` |
+| `other_alignment_plan.md`                      | `plans_to_deployable_unified_audit.md` |
+| `PM_CODEX_VS_OTHER_ALIGNMENT_DIFF.md`          | `plans_to_deployable_unified_audit.md` |
 
 **Canonical plan:** `unified-trading-pm/plans/active/plans_to_deployable_unified_audit.md`
 
@@ -25,15 +25,15 @@ Plans in this folder have been superseded by the canonical **Plans to Deployable
 | T1_T2_MIGRATION_PATTERNS.md               | Merged into phase plans                                 |
 | WORKFLOW_DIAGRAM.md                       | Superseded by plans_to_deployable_unified_audit         |
 | WORKFLOW_RESIDUAL_ITEMS.md                | Superseded by plans_to_deployable_unified_audit         |
-| consolidated_remaining_work.md       | Sprint items extracted; mega-plan archived              |
+| consolidated_remaining_work.md            | Sprint items extracted; mega-plan archived              |
 
 ## Newly Archived (2026-03-04)
 
 | File                                                       | Superseded by / Merged into                                                |
 | ---------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `sports_migration_gap_fix.md`                         | SPORTS_MIGRATION_GAP_FIX.md                                                |
-| `dag-hybrid-uml-plan_0cfd588c.md`                     | phase1 + plans_to_deployable                                               |
-| `strict_quality_gate_alignment_1e0e839a.md`           | phase2 + STRICT_BASEDPYRIGHT                                               |
+| `sports_migration_gap_fix.md`                              | SPORTS_MIGRATION_GAP_FIX.md                                                |
+| `dag-hybrid-uml-plan_0cfd588c.md`                          | phase1 + plans_to_deployable                                               |
+| `strict_quality_gate_alignment_1e0e839a.md`                | phase2 + STRICT_BASEDPYRIGHT                                               |
 | `FULL_AUDIT_PLAN.md`                                       | trading-system-audit + TESTED_AND_DEPLOYABLE                               |
 | `REPO_AUDIT_CHECKLIST.md`                                  | plans_to_deployable phase 6                                                |
 | `TESTED_AND_DEPLOYABLE_GATE_CRITERIA.md`                   | plans_to_deployable §§ 8–9 (Phase 9 Tested Gate, Phase 10 Deployable Gate) |
@@ -48,9 +48,9 @@ Plans in this folder have been superseded by the canonical **Plans to Deployable
 
 ## Archived (2026-03-06 — PM Completeness Audit)
 
-| File                                               | Reason                                                                                                                                                                     |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `visualizer_to_analytics_ui_port.md`          | COMPLETE — all todos `status: completed`; UI port done                                                                                                                     |
+| File                                          | Reason                                                                                                                                                                |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visualizer_to_analytics_ui_port.md`          | COMPLETE — all todos `status: completed`; UI port done                                                                                                                |
 | `schema_normalization_completion_01858c38.md` | Superseded by `uac_schema_normalization_complete.md`; `todos: []`, was an early draft                                                                                 |
 | `uac_full_schema_normalization_20cdacd7.md`   | Superseded by `uac_schema_normalization_complete.md`; `todos: []`, spec doc only                                                                                      |
 | `uac_full_schema_normalization_62fb98b4.md`   | Superseded by `uac_schema_normalization_complete.md`; `todos: []`, spec doc only; `generate_schema_audit_matrix.py` already lives in `unified-api-contracts/scripts/` |

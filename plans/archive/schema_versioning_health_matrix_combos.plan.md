@@ -271,8 +271,8 @@ Providers that need Phase 4 API keys (see `api_keys_and_auth.md` § `phase-4-blo
 
 ## Dependencies
 
-| This plan depends on                             | Why                                                      |
-| ------------------------------------------------ | -------------------------------------------------------- |
+| This plan depends on                        | Why                                                      |
+| ------------------------------------------- | -------------------------------------------------------- |
 | `uac_schema_normalization_complete.md`      | All raw schemas must exist before versioning them        |
 | `api_keys_and_auth.md` § `phase-4-blockers` | Sports provider sandboxes need credentials               |
 | `orphan-contracts-utilization.md`           | Ensures all schemas reachable before health matrix built |

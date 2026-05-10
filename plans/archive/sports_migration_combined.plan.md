@@ -98,11 +98,11 @@ isProject: false
 
 ## Blockers
 
-| Blocker                | Type          | Specific Dependency                          | Resolution                           |
-| ---------------------- | ------------- | -------------------------------------------- | ------------------------------------ |
+| Blocker                | Type          | Specific Dependency                     | Resolution                           |
+| ---------------------- | ------------- | --------------------------------------- | ------------------------------------ |
 | Betfair key not in SM  | `[EXTERNAL]`  | api_keys_and_auth.md § phase-4-blockers | Obtain via betfair developer program |
 | Pinnacle key not in SM | `[EXTERNAL]`  | api_keys_and_auth.md § phase-3-keys     | Obtain via pinnacle.com/affiliates   |
-| USEI v1 not ready      | `[PLAN_TODO]` | usei-adapters (this plan)                    | Unblocked once API keys in SM        |
+| USEI v1 not ready      | `[PLAN_TODO]` | usei-adapters (this plan)               | Unblocked once API keys in SM        |
 
 ## Standards
 

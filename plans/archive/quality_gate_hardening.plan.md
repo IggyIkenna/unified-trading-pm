@@ -182,8 +182,8 @@ Pattern: `os\.getenv|os\.environ` Allowed ONLY in files with `# config-bootstrap
       run-all-setup.sh handles propagation automatically. Confirmed execution-service, instruments-service,
       features-delta-one-service, market-data-processing-service all have the file — 2026-03-09.)_
 - [x] `p2-codex-readme` — Update `codex/06-coding-standards/README.md` TL;DR to document STEP 5.10 + 5.11 as hard gates
-      _(Done: intent-level-api-pattern.md created; README.md updated — service_protocol_abstraction.md
-      p5-codex-update, 2026-03-05)_
+      _(Done: intent-level-api-pattern.md created; README.md updated — service_protocol_abstraction.md p5-codex-update,
+      2026-03-05)_
 
 ### P3 — QUALITY_GATE_BYPASS_AUDIT.md
 

@@ -38,7 +38,9 @@ source_plans:
 isProject: false
 ---
 
-> **ARCHIVED 2026-05-07** — folded into [`ml_and_features_master_2026_05_07.plan.md`](../active/ml_and_features_master_2026_05_07.plan.md). All open todos preserved in the umbrella's Phase 1-4. This file is the historical SSOT.
+> **ARCHIVED 2026-05-07** — folded into
+> [`ml_and_features_master_2026_05_07.plan.md`](../active/ml_and_features_master_2026_05_07.plan.md). All open todos
+> preserved in the umbrella's Phase 1-4. This file is the historical SSOT.
 
 > **Reconciliation note (2026-04-25):** YAML `todos:` block converted to canonical Cursor markdown checkboxes per
 > `PLAN_FORMAT.md`. 6 todos flipped to `[x]` with cited commit evidence; 18 remain open. See
@@ -48,8 +50,8 @@ isProject: false
 
 ## Codex SSOTs
 
-This plan implements / extends the following codex documents (read these BEFORE making code changes;
-drift between code and these docs is a review-blocking failure per `doc → plan → code`):
+This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
+and these docs is a review-blocking failure per `doc → plan → code`):
 
 - [`codex/02-data/data-lineage-MTDS-features-ml.md`](../../codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
   features → ml-training/ml-inference lineage; calibration / Bayesian tuning / hierarchical inference all sit on this

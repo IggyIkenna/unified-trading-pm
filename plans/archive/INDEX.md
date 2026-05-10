@@ -10,31 +10,31 @@ uac_citadel_remediation, ui_api_alerting_observability_2026_03_14) **Per-repo re
 
 ### 1. CI/CD & Code Rollout Master
 
-**File:** [cicd_code_rollout_master_2026_03_13.md](cicd_code_rollout_master_2026_03_13.md) **Type:** mixed |
-**Status:** active (76/92 done) | **Scope:** Pipeline bug fixes, citadel hardening, workflow rollout to 67 repos,
-library tier completion (T0→T3), service/UI hardening, deployment infra, 1.0.0 stability gate.
+**File:** [cicd_code_rollout_master_2026_03_13.md](cicd_code_rollout_master_2026_03_13.md) **Type:** mixed | **Status:**
+active (76/92 done) | **Scope:** Pipeline bug fixes, citadel hardening, workflow rollout to 67 repos, library tier
+completion (T0→T3), service/UI hardening, deployment infra, 1.0.0 stability gate.
 
 ### 2. CI/CD E2E Testing & Validation
 
-**File:** [cicd_e2e_testing_master_2026_03_13.md](cicd_e2e_testing_master_2026_03_13.md) **Type:** infra |
-**Status:** active (0/54, blocked by Plan 1 Phase 3+) | **Scope:** Validate every CI/CD path. 8 phases from static
-validation to golden path E2E.
+**File:** [cicd_e2e_testing_master_2026_03_13.md](cicd_e2e_testing_master_2026_03_13.md) **Type:** infra | **Status:**
+active (0/54, blocked by Plan 1 Phase 3+) | **Scope:** Validate every CI/CD path. 8 phases from static validation to
+golden path E2E.
 
 ### 3. DeFi Keys & Data Integration
 
-**File:** [defi_keys_data_integration_2026_03_13.md](defi_keys_data_integration_2026_03_13.md) **Type:** mixed
-| **Status:** active (0/21, mostly human) | **Scope:** 30 vendor API keys, VCR cassettes, data freshness SLAs for 33
+**File:** [defi_keys_data_integration_2026_03_13.md](defi_keys_data_integration_2026_03_13.md) **Type:** mixed |
+**Status:** active (0/21, mostly human) | **Scope:** 30 vendor API keys, VCR cassettes, data freshness SLAs for 33
 venues, production backfill pipeline.
 
 ### 4. Presentations
 
-**File:** [presentations_2026_03_13.md](presentations_2026_03_13.md) **Type:** business | **Status:** active
-(0/6, human) | **Deadlines:** Rehearsal 2: March 18 | Board meeting: March 31
+**File:** [presentations_2026_03_13.md](presentations_2026_03_13.md) **Type:** business | **Status:** active (0/6,
+human) | **Deadlines:** Rehearsal 2: March 18 | Board meeting: March 31
 
 ### 5. Website Master
 
-**File:** [website_master_2026_03_13.md](website_master_2026_03_13.md) **Type:** business | **Status:** active
-(0/5) | **Blocked by:** Plan 4 (presentations)
+**File:** [website_master_2026_03_13.md](website_master_2026_03_13.md) **Type:** business | **Status:** active (0/5) |
+**Blocked by:** Plan 4 (presentations)
 
 ---
 
@@ -42,21 +42,21 @@ venues, production backfill pipeline.
 
 ### 6. Strategy System Citadel Master
 
-**File:** [strategy_system_citadel_master_2026_03_15.md](strategy_system_citadel_master_2026_03_15.md)
-**Type:** mixed | **Status:** active (~22/44 done after Wave 2-3) | **Scope:** Strategy universe expansion, config
-system N10, events canonicalization, UI/API completeness, testing framework, dependency tracking.
+**File:** [strategy_system_citadel_master_2026_03_15.md](strategy_system_citadel_master_2026_03_15.md) **Type:** mixed |
+**Status:** active (~22/44 done after Wave 2-3) | **Scope:** Strategy universe expansion, config system N10, events
+canonicalization, UI/API completeness, testing framework, dependency tracking.
 
 ### 7. Sports Hub — Residual Actions
 
-**File:** [sports_hub_residual_actions_2026_03_15.md](sports_hub_residual_actions_2026_03_15.md) **Type:**
-human | **Status:** active (2/12) | **Scope:** All human work: Secret Manager credentials, Playwright CSS selectors,
-CAPTCHA, GeoComply.
+**File:** [sports_hub_residual_actions_2026_03_15.md](sports_hub_residual_actions_2026_03_15.md) **Type:** human |
+**Status:** active (2/12) | **Scope:** All human work: Secret Manager credentials, Playwright CSS selectors, CAPTCHA,
+GeoComply.
 
 ### 8. UI Trader Acceptance Testing
 
-**File:** [ui_trader_acceptance_testing_2026_03_15.md](ui_trader_acceptance_testing_2026_03_15.md) **Type:**
-human+agent | **Status:** active (0/36) | **Scope:** Smoke tests, visual audit, layout fixes, API mock validation,
-stress scenarios, trader sign-off.
+**File:** [ui_trader_acceptance_testing_2026_03_15.md](ui_trader_acceptance_testing_2026_03_15.md) **Type:** human+agent
+| **Status:** active (0/36) | **Scope:** Smoke tests, visual audit, layout fixes, API mock validation, stress scenarios,
+trader sign-off.
 
 ### 14. UI Lifecycle ↔ Service Tab Cross-Reference Audit (Phase 1)
 
@@ -67,9 +67,8 @@ stress scenarios, trader sign-off.
 
 ### 15. UI Phase 2a: Acquire Tab Deep Audit
 
-**File:** [ui_phase2_acquire_tab_audit_2026_03_21.md](ui_phase2_acquire_tab_audit_2026_03_21.md) **Type:**
-audit | **Status:** active (0/24) | **Scope:** Component inventory, navigation, data wiring, UX for DATA_TABS (6
-routes).
+**File:** [ui_phase2_acquire_tab_audit_2026_03_21.md](ui_phase2_acquire_tab_audit_2026_03_21.md) **Type:** audit |
+**Status:** active (0/24) | **Scope:** Component inventory, navigation, data wiring, UX for DATA_TABS (6 routes).
 
 ### 16. UI Phase 2b: Build Tab Deep Audit
 
@@ -79,39 +78,39 @@ orphan sub-pages).
 
 ### 17. UI Phase 2c: Promote Tab Deep Audit
 
-**File:** [ui_phase2_promote_tab_audit_2026_03_21.md](ui_phase2_promote_tab_audit_2026_03_21.md) **Type:**
-audit | **Status:** active (0/22) | **Scope:** Structural issues (no layout wired), component inventory, navigation for
+**File:** [ui_phase2_promote_tab_audit_2026_03_21.md](ui_phase2_promote_tab_audit_2026_03_21.md) **Type:** audit |
+**Status:** active (0/22) | **Scope:** Structural issues (no layout wired), component inventory, navigation for
 PROMOTE_TABS (4 routes).
 
 ### 18. UI Phase 2d: Run Tab Deep Audit
 
-**File:** [ui_phase2_run_tab_audit_2026_03_21.md](ui_phase2_run_tab_audit_2026_03_21.md) **Type:** audit |
-**Status:** active (0/28) | **Scope:** Component inventory, navigation, data wiring for TRADING_TABS (6) +
-EXECUTION_TABS (5) + standalone pages.
+**File:** [ui_phase2_run_tab_audit_2026_03_21.md](ui_phase2_run_tab_audit_2026_03_21.md) **Type:** audit | **Status:**
+active (0/28) | **Scope:** Component inventory, navigation, data wiring for TRADING_TABS (6) + EXECUTION_TABS (5) +
+standalone pages.
 
 ### 19. UI Phase 2e: Observe Tab Deep Audit
 
-**File:** [ui_phase2_observe_tab_audit_2026_03_21.md](ui_phase2_observe_tab_audit_2026_03_21.md) **Type:**
-audit | **Status:** active (0/22) | **Scope:** Structural issues (no layout wired), component inventory for OBSERVE_TABS
-(5 routes split across trading layout and standalone).
+**File:** [ui_phase2_observe_tab_audit_2026_03_21.md](ui_phase2_observe_tab_audit_2026_03_21.md) **Type:** audit |
+**Status:** active (0/22) | **Scope:** Structural issues (no layout wired), component inventory for OBSERVE_TABS (5
+routes split across trading layout and standalone).
 
 ### 20. UI Phase 2f: Manage Tab Deep Audit
 
-**File:** [ui_phase2_manage_tab_audit_2026_03_21.md](ui_phase2_manage_tab_audit_2026_03_21.md) **Type:** audit
-| **Status:** active (0/20) | **Scope:** Route group mismatch (pages in (ops) not (platform)), component inventory for
+**File:** [ui_phase2_manage_tab_audit_2026_03_21.md](ui_phase2_manage_tab_audit_2026_03_21.md) **Type:** audit |
+**Status:** active (0/20) | **Scope:** Route group mismatch (pages in (ops) not (platform)), component inventory for
 MANAGE_TABS (5 routes).
 
 ### 21. UI Phase 2g: Report Tab Deep Audit
 
-**File:** [ui_phase2_report_tab_audit_2026_03_21.md](ui_phase2_report_tab_audit_2026_03_21.md) **Type:** audit
-| **Status:** active (0/20) | **Scope:** Component inventory, navigation, data wiring, entitlement consistency for
+**File:** [ui_phase2_report_tab_audit_2026_03_21.md](ui_phase2_report_tab_audit_2026_03_21.md) **Type:** audit |
+**Status:** active (0/20) | **Scope:** Component inventory, navigation, data wiring, entitlement consistency for
 REPORTS_TABS (5 routes).
 
 ### 22. UI Phase 3: Cross-Reference & Consistency Audit
 
-**File:** [ui_phase3_cross_reference_audit_2026_03_21.md](ui_phase3_cross_reference_audit_2026_03_21.md)
-**Type:** audit | **Status:** active (0/20) | **Scope:** Shared route behavior, shared component verification, domain
-lane accuracy, navigation consistency, entitlement gaps across all lifecycle tabs. Depends on Phase 1 + Phase 2.
+**File:** [ui_phase3_cross_reference_audit_2026_03_21.md](ui_phase3_cross_reference_audit_2026_03_21.md) **Type:** audit
+| **Status:** active (0/20) | **Scope:** Shared route behavior, shared component verification, domain lane accuracy,
+navigation consistency, entitlement gaps across all lifecycle tabs. Depends on Phase 1 + Phase 2.
 
 ---
 
@@ -119,36 +118,36 @@ lane accuracy, navigation consistency, entitlement gaps across all lifecycle tab
 
 ### 9. Quality Gates Full Fix
 
-**File:** [quality_gates_full_fix_2026_03_10.md](quality_gates_full_fix_2026_03_10.md) **Type:** infra |
-**Status:** active — resumed from archive (incomplete todos) (~11/22 done) | **Scope:** Systematically fix all failing
-tests and coverage gaps across all repos; no bypasses; T0–T3 libs ≥80%, services/APIs ≥70%.
+**File:** [quality_gates_full_fix_2026_03_10.md](quality_gates_full_fix_2026_03_10.md) **Type:** infra | **Status:**
+active — resumed from archive (incomplete todos) (~11/22 done) | **Scope:** Systematically fix all failing tests and
+coverage gaps across all repos; no bypasses; T0–T3 libs ≥80%, services/APIs ≥70%.
 
 ### 10. Registry Completeness — Implementation Detail
 
-**File:** [registry_completeness_implementation_detail.md](registry_completeness_implementation_detail.md)
-**Type:** code | **Status:** active — resumed from archive (incomplete todos) (~1/30 done) | **Scope:** Add missing
-instrument types, sports market granularity (BTTS end-to-end), BetSide/CommissionModel enums, and consumer adoption
-across 11 repos; enum consolidation with UCI re-exports from UAC.
+**File:** [registry_completeness_implementation_detail.md](registry_completeness_implementation_detail.md) **Type:**
+code | **Status:** active — resumed from archive (incomplete todos) (~1/30 done) | **Scope:** Add missing instrument
+types, sports market granularity (BTTS end-to-end), BetSide/CommissionModel enums, and consumer adoption across 11
+repos; enum consolidation with UCI re-exports from UAC.
 
 ### 11. Production Mock E2E
 
-**File:** [production_mock_e2e_plan_d90c8f20.md](production_mock_e2e_plan_d90c8f20.md) **Type:** infra |
-**Status:** active — resumed from archive (incomplete todos) (~13/26 done) | **Scope:** Bring all 60+ repos to
-production-standard mock E2E testability — libraries via UAC/UIC validation and VCR cassettes; services/APIs via mock
-data replay and load checks; UIs via mock API and smoke tests.
+**File:** [production_mock_e2e_plan_d90c8f20.md](production_mock_e2e_plan_d90c8f20.md) **Type:** infra | **Status:**
+active — resumed from archive (incomplete todos) (~13/26 done) | **Scope:** Bring all 60+ repos to production-standard
+mock E2E testability — libraries via UAC/UIC validation and VCR cassettes; services/APIs via mock data replay and load
+checks; UIs via mock API and smoke tests.
 
 ### 12. User Management Platform
 
-**File:** [user_management_platform_2026_03_13.md](user_management_platform_2026_03_13.md) **Type:** code |
-**Status:** active — resumed from archive (incomplete todos); unique scope not covered by other active plans |
-**Scope:** New `user-management-ui` repo — full lifecycle user management (onboard/modify/off-board) with provisioning
-for GitHub, Slack, M365, GCP IAM, and website portal per role.
+**File:** [user_management_platform_2026_03_13.md](user_management_platform_2026_03_13.md) **Type:** code | **Status:**
+active — resumed from archive (incomplete todos); unique scope not covered by other active plans | **Scope:** New
+`user-management-ui` repo — full lifecycle user management (onboard/modify/off-board) with provisioning for GitHub,
+Slack, M365, GCP IAM, and website portal per role.
 
 ### 13. Quality Gates Systemic Remediation (2026-03-16)
 
-**File:** [quality_gates_systemic_remediation_2026_03_16.md](quality_gates_systemic_remediation_2026_03_16.md)
-**Type:** infra | **Status:** active (new) | **Scope:** Systemic remediation of all quality gate failures identified in
-the 2026-03-16 audit — covers type errors, coverage gaps, lint violations, and codex compliance across all tiers.
+**File:** [quality_gates_systemic_remediation_2026_03_16.md](quality_gates_systemic_remediation_2026_03_16.md) **Type:**
+infra | **Status:** active (new) | **Scope:** Systemic remediation of all quality gate failures identified in the
+2026-03-16 audit — covers type errors, coverage gaps, lint violations, and codex compliance across all tiers.
 
 ---
 

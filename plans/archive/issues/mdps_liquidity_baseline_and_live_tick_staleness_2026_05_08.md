@@ -9,8 +9,8 @@ source:
     — deprecated path)
   - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:2351-2430 (Wave 3.M zero-volume-bar adapter audit
     pending)
-  - plans/active/alerting_service_live_rules_2026_05_07.md:52-203 (alert taxonomy — DEFI_FEATURE_STALE present but
-    no TICK_STALENESS)
+  - plans/active/alerting_service_live_rules_2026_05_07.md:52-203 (alert taxonomy — DEFI_FEATURE_STALE present but no
+    TICK_STALENESS)
   - CLAUDE.md "Four-category empty-output decision" (categories A/B/C/D — D added 2026-05-07 evening)
   - CLAUDE.md "Live = batch" workspace principle
 locked_by: live-defi-rollout
@@ -23,8 +23,7 @@ locked_since: 2026-05-08
 > smoke but blocks honest-coverage promise + production live observability. **Blast radius**:
 > market-data-processing-service (write-gate) + UAC (per-(venue, instrument, period) baseline SSOT) + alerting-service
 > (live tick-staleness consumer) + features-\* + execution-service (downstream freshness gates). **Suggested owner**:
-> writegate Phase 3.D.5 Wave 3.M+1 OR fold into `alerting_service_live_rules_2026_05_07.md` Phase 1+ (cross-cuts
-> both).
+> writegate Phase 3.D.5 Wave 3.M+1 OR fold into `alerting_service_live_rules_2026_05_07.md` Phase 1+ (cross-cuts both).
 
 ## What I found
 
@@ -56,9 +55,9 @@ migrated yet.
 The mirror-image of MDPS's batch validation: in live mode, watch for "instrument X hasn't produced a tick in 2× expected
 interval → STALE alert."
 
-- [alerting_service_live_rules_2026_05_07.md:52-203](../alerting_service_live_rules_2026_05_07.md#L52-L203)
-  covers `DEFI_FEATURE_STALE` (feature compute delays) and circuit-breaker codes, but NO per-(venue, instrument)
-  tick-arrival freshness alert.
+- [alerting_service_live_rules_2026_05_07.md:52-203](../alerting_service_live_rules_2026_05_07.md#L52-L203) covers
+  `DEFI_FEATURE_STALE` (feature compute delays) and circuit-breaker codes, but NO per-(venue, instrument) tick-arrival
+  freshness alert.
 - [unified-trading-library tests/unit/test_freshness_monitor.py](../../../unified-trading-library/tests/unit/test_freshness_monitor.py)
   has DATA_STALE event but tied to feature compute delays, not tick arrival.
 - [data_status_extended.py:29-423](../../../deployment-service/deployment_service/cli/utils/data_status_extended.py#L29-L423)

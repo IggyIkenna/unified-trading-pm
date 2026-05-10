@@ -284,8 +284,8 @@ what a perfect mempool observer could have captured. The live execution requires
 - **Bundle relay** — Flashbots / Eden / bloXroute relay to land the bundle atomically.
 - **Reorg protection** — bundle simulation pre-submission to avoid reverts.
 
-These are tracked in a separate Phase 9 plan (`mempool_feed_integration_2026_06_01.md`) which this plan **creates a
-stub for** but does not execute. The theoretical tracer publishes a per-day "leave on table" number so the business can
+These are tracked in a separate Phase 9 plan (`mempool_feed_integration_2026_06_01.md`) which this plan **creates a stub
+for** but does not execute. The theoretical tracer publishes a per-day "leave on table" number so the business can
 decide whether the mempool data subscription cost is justified.
 
 ## Volatility-leverage primitive — design
@@ -618,8 +618,8 @@ def clamp_to_venue_capabilities(venue, instrument, target_leverage):
 ### Phase 9 — Mempool feed integration (DEFERRED)
 
 - id: p9-1-stub-plan content: |
-  - [ ] [AGENT] P3. Create plans/active/mempool_feed_integration_2026_06_01.md stub with: scope (Flashbots Protect
-        / MEV-share / Alchemy private mempool / Bloxroute re-add evaluation), cost analysis (subscription tiers), bundle
+  - [ ] [AGENT] P3. Create plans/active/mempool_feed_integration_2026_06_01.md stub with: scope (Flashbots Protect /
+        MEV-share / Alchemy private mempool / Bloxroute re-add evaluation), cost analysis (subscription tiers), bundle
         relay design, reorg protection, decision criteria (theoretical profit > 12 mo subscription cost). Stub only —
         execution gated on Phase 8 closeout AND business decision. status: todo
 

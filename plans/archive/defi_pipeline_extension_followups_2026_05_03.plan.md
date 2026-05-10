@@ -203,8 +203,8 @@ Phase 7 — Closeout (SEQUENTIAL after all phases)
 
 ## What this plan does NOT do
 
-- Does NOT add the live MEV sandwich engine — gated on the separate `mempool_feed_integration_2026_06_01.md` stub
-  (still paused).
+- Does NOT add the live MEV sandwich engine — gated on the separate `mempool_feed_integration_2026_06_01.md` stub (still
+  paused).
 - Does NOT extend coverage to non-EVM chains beyond Solana — Bitcoin / Cosmos / Polkadot are out of scope until the
   business case clears.
 - Does NOT add new data types to MTDS beyond `vault_share_price` — the existing `dex_pools` / `gas_fees` taxonomy covers
@@ -344,9 +344,9 @@ Phase 7 — Closeout (SEQUENTIAL after all phases)
   - [x] [AGENT] P2. Memory updated: phase-1 / phase-2 / phase-4 / phase-5 / phase-6 / closeout entries plus the index
         pointer. status: done.
 - id: p7-3-parent-plan-flip content: |
-  - [x] [AGENT] P2. Parent plan `defi_pipeline_extension_2026_05_01.md` items resolved by this follow-up are
-        documented in the closeout memory; the parent plan's own status is governed by its own status field — no
-        cross-plan flip required. status: done.
+  - [x] [AGENT] P2. Parent plan `defi_pipeline_extension_2026_05_01.md` items resolved by this follow-up are documented
+        in the closeout memory; the parent plan's own status is governed by its own status field — no cross-plan flip
+        required. status: done.
 - id: p7-4-gate content: |
   - [x] [AGENT] P2. GATE — all 7 phases done, plan unlocked for archival. status: done.
 

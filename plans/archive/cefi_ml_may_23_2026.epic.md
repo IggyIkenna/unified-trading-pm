@@ -67,8 +67,8 @@ strategy → execution) must work in live mode for the three target venues.
 
 ## Sub-plans this epic consumes
 
-| Path                                                                                                                | Role                                                                                     | Status |
-| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------ |
+| Path                                                                                                             | Role                                                                                     | Status |
+| ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------ |
 | [`cefi_master_2026_05_07`](./cefi_master_2026_05_07.md)                                                          | CeFi venue + pipeline umbrella (Bybit / Deribit / Binance / OKX / others)                | Active |
 | [`ml_and_features_master_2026_05_07`](./ml_and_features_master_2026_05_07.md)                                    | ML lifecycle + features umbrella (training/inference, model registry, hot-reload, drift) | Active |
 | [`strategy_and_dart_master_2026_05_07`](./strategy_and_dart_master_2026_05_07.md)                                | Strategy v2 + DART manual-trade lane                                                     | Active |

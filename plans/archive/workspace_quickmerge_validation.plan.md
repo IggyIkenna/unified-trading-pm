@@ -42,10 +42,10 @@ isProject: false
 
 ## Blockers
 
-| Blocker                                      | Type          | Specific Dependency                                                                             | Resolution                                                                                                 |
-| -------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Blocker                                      | Type          | Specific Dependency                                                                   | Resolution                                                                                                 |
+| -------------------------------------------- | ------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | quickmerge.sh not rolled out to all 55 repos | `[PLAN_TODO]` | [phase1_foundation_prep.md](phase1_foundation_prep.md) § todo `ci-quickmerge-rollout` | scripts/quickmerge.sh must exist in all 55 repos before this plan can run validate-workspace-quickmerge.sh |
-| Topological sort script not yet written      | `[PLAN_TODO]` | This plan § todo `validate-script`                                                              | validate-workspace-quickmerge.sh must be created first (todo `validate-script` in this plan)               |
+| Topological sort script not yet written      | `[PLAN_TODO]` | This plan § todo `validate-script`                                                    | validate-workspace-quickmerge.sh must be created first (todo `validate-script` in this plan)               |
 
 ---
 

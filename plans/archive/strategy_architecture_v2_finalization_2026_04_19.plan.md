@@ -5,20 +5,21 @@ owner: iggy
 started: 2026-04-19
 archived: 2026-05-07
 supersedes:
-  plans/active/strategy_architecture_v2_2026_04_17.md (85/85 complete; this plan carries the open residuals
-  forward)
+  plans/active/strategy_architecture_v2_2026_04_17.md (85/85 complete; this plan carries the open residuals forward)
 superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md
 ---
 
-> **ARCHIVED 2026-05-07** — folded into [`strategy_and_dart_master_2026_05_07.md`](../active/strategy_and_dart_master_2026_05_07.md). All open todos preserved in the umbrella's Phase 1-3. This file is the historical SSOT.
+> **ARCHIVED 2026-05-07** — folded into
+> [`strategy_and_dart_master_2026_05_07.md`](../active/strategy_and_dart_master_2026_05_07.md). All open todos preserved
+> in the umbrella's Phase 1-3. This file is the historical SSOT.
 
 # Strategy Architecture v2 — Finalization + Factory Cutover
 
 ## Context
 
-`strategy_architecture_v2_2026_04_17.md` closed at 85/85. Everything the codex defined is implemented. This plan is
-the **follow-on** that carries the open operational residuals — the things that are outside the codex plan but still
-need to happen before we can fully retire the pre-v2 code path.
+`strategy_architecture_v2_2026_04_17.md` closed at 85/85. Everything the codex defined is implemented. This plan is the
+**follow-on** that carries the open operational residuals — the things that are outside the codex plan but still need to
+happen before we can fully retire the pre-v2 code path.
 
 ### What already shipped (reference, do not re-do)
 

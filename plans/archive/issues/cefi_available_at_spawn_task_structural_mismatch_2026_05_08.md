@@ -27,10 +27,10 @@ locked_since: 2026-05-08
 > **Status**: ✅ RESOLVED 2026-05-09 by UAC@e197173 (`EMISSION_LATENCY_MS_BY_SOURCE`) + UTL@29555212
 > (`stamp_available_at_cefi_tick`) + MTDS@4a00bd5 (PartitionedTickWriter writer-boundary stamping). The reshape
 > recommended below was applied: not 10 per-venue commits but a single writer-boundary integration in
-> `PartitionedTickWriter.write_chunk` that stamps `available_at = timestamp + emission_latency_ms_for_source(primary_source)`
-> for cefi shards before the parquet lands on disk. Primary source resolved per UAC
-> `SOURCE_PRIORITY[("cefi", data_type)]` (Tardis canonical = 50ms). 5 unit tests at
-> `market-tick-data-service/tests/unit/test_partitioned_writer_cefi_available_at.py`. Bar-data stamping still
+> `PartitionedTickWriter.write_chunk` that stamps
+> `available_at = timestamp + emission_latency_ms_for_source(primary_source)` for cefi shards before the parquet lands
+> on disk. Primary source resolved per UAC `SOURCE_PRIORITY[("cefi", data_type)]` (Tardis canonical = 50ms). 5 unit
+> tests at `market-tick-data-service/tests/unit/test_partitioned_writer_cefi_available_at.py`. Bar-data stamping still
 > depends on Phase 0 MDPS bar-boundary contract. Plan checkbox flipped at
 > `plans/active/available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 P0 CeFi adapter stamping.
 
