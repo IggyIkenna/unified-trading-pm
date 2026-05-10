@@ -1,6 +1,7 @@
 ---
 title:
-  "✅ RESOLVED 2026-05-09 — Option A migration shipped (was: parallel SSOTs in cross_cutting_may_23_deliverables Items #1 + #2)"
+  "✅ RESOLVED 2026-05-09 — Option A migration shipped (was: parallel SSOTs in cross_cutting_may_23_deliverables Items
+  #1 + #2)"
 created: 2026-05-08
 resolved: 2026-05-09
 author: uac-strategy-catalogue-ids-tab6a
@@ -19,7 +20,8 @@ source:
   - unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/registry.py (STRATEGY_REGISTRY +
     StrategyDefinition + StrategyRegistry + Category + ExecutionMode)
   - unified-api-contracts/unified_api_contracts/_instrument_enums.py (InstrumentType — 24 members)
-  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/capital_allocation.py (NEW; CapitalAllocation migrated)
+  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/capital_allocation.py (NEW; CapitalAllocation
+    migrated)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 operator_decision: option_a_extend_v2
@@ -39,23 +41,23 @@ Issue P0 BLOCKER status no longer applies; Option A shipped per operator decisio
 
 # Original issue (resolved — kept for archaeology)
 
-
 # cross_cutting_may_23_deliverables Items #1 + #2 are already shipped under UAC architecture_v2 — plan body redesigns parallel SSOTs
 
 > **✅ OPERATOR DECISION 2026-05-08 — OPTION A APPROVED.** Extend existing UAC `internal/architecture_v2/` +
 > `internal/domain/strategy_service/` SSOTs; re-export through existing `strategy.py` facade. Reverse the parallel
 > `canonical/domain/client/` greenfield package shipped in `uac@3591037` (delete `canonical/domain/client/__init__.py`
-> + `model.py` + root `client.py` facade); migrate `CapitalAllocation` + `AllocationViolationError` +
-> `validate_allocation_respect` + `is_within_allocation` + `CAPITAL_ALLOCATION_SEED` into
-> `internal/architecture_v2/capital_allocation.py` (sibling to `client_registry.py`); re-export through `strategy.py`.
-> Migrate `tests/unit/test_client_model.py` → `tests/unit/test_capital_allocation.py` (CapitalAllocation tests stand;
-> `Client` + `VenueAccount` test cases deleted). NEW P0 todo to seed `ArchetypeConfig` in
-> `internal/architecture_v2/archetype_config.py` for May-23 live archetypes (CARRY_STAKED_BASIS Solana + Ethereum;
-> CARRY_BASIS_PERP × 6 perp venues; ML_DIRECTIONAL_CONTINUOUS for OKX + Binance + Bybit) with `{collateral, hedge_ratio,
-> position_cap_usd, kill_switch_drawdown_pct, kill_switch_position_breach_pct}` fields. Update codex
-> `strategy-summary.md` 8-family / 18-archetype baseline → 9-family / 46-archetype shape per current registry. Tab 6.A
-> is **UNBLOCKED** under Option A scope. See `plans/active/operator_decisions_2026_05_08.md` § "Detail — strategy
-> catalogue Option A migration sequencing" for the 7-step pickup recipe.
+>
+> - `model.py` + root `client.py` facade); migrate `CapitalAllocation` + `AllocationViolationError` +
+>   `validate_allocation_respect` + `is_within_allocation` + `CAPITAL_ALLOCATION_SEED` into
+>   `internal/architecture_v2/capital_allocation.py` (sibling to `client_registry.py`); re-export through `strategy.py`.
+>   Migrate `tests/unit/test_client_model.py` → `tests/unit/test_capital_allocation.py` (CapitalAllocation tests stand;
+>   `Client` + `VenueAccount` test cases deleted). NEW P0 todo to seed `ArchetypeConfig` in
+>   `internal/architecture_v2/archetype_config.py` for May-23 live archetypes (CARRY_STAKED_BASIS Solana + Ethereum;
+>   CARRY_BASIS_PERP × 6 perp venues; ML_DIRECTIONAL_CONTINUOUS for OKX + Binance + Bybit) with
+>   `{collateral, hedge_ratio, position_cap_usd, kill_switch_drawdown_pct, kill_switch_position_breach_pct}` fields.
+>   Update codex `strategy-summary.md` 8-family / 18-archetype baseline → 9-family / 46-archetype shape per current
+>   registry. Tab 6.A is **UNBLOCKED** under Option A scope. See `plans/active/operator_decisions_2026_05_08.md` §
+>   "Detail — strategy catalogue Option A migration sequencing" for the 7-step pickup recipe.
 
 > **Severity**: P0 — Sub-agent (Tab 6.A) was assigned to ship UAC SSOTs that already exist in a more complete shape, and
 > the plan-of-record specifies dataclass + helper names that would create duplicate (and contradictory) SSOTs in the
