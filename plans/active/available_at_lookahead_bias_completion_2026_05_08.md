@@ -258,18 +258,17 @@ todos:
       Bitfinex, Bitget, Coinbase, Hyperliquid, Kraken, Aster — across ohlcv*\*, trades, funding_rate, perp*\*,
       options_chain, futures_chain. For tick-level: `available_at = tick_timestamp + source_priority_scrape_latency` per
       UAC `SOURCE_PRIORITY`. For bar data: depends on Phase 0 (MDPS-side stamping). Add Phase-2-equivalent todos to
-      `cefi_master_2026_05_07` referencing this plan.
-      Shipped MTDS@4a00bd5 + UAC@e197173 + UTL@29555212. Per the F2 issue doc reshape (per-callsite at writer
-      boundary, NOT 10 per-venue files), MTDS today routes cefi tick data through `PartitionedTickWriter` (not
-      direct UTL `record_captured` callsites), so the right wiring lives at `engine/orchestrator.py` write-chunk
-      time. `PartitionedTickWriter.write_chunk` now stamps `available_at = timestamp + emission_latency_ms_for_source(primary_source)`
-      via `stamp_available_at_cefi_tick(...)` when asset_group=="cefi" and the df lacks the column. Primary source
-      resolved per UAC `SOURCE_PRIORITY[("cefi", data_type)]` (Tardis = 50ms canonical CeFi tick source). Bar-data
-      stamping still depends on Phase 0 MDPS bar-boundary contract. Already-stamped dfs preserved; unregistered
-      (cefi, data_type) skipped silently. 5 unit tests at
+      `cefi_master_2026_05_07` referencing this plan. Shipped MTDS@4a00bd5 + UAC@e197173 + UTL@29555212. Per the F2
+      issue doc reshape (per-callsite at writer boundary, NOT 10 per-venue files), MTDS today routes cefi tick data
+      through `PartitionedTickWriter` (not direct UTL `record_captured` callsites), so the right wiring lives at
+      `engine/orchestrator.py` write-chunk time. `PartitionedTickWriter.write_chunk` now stamps
+      `available_at = timestamp + emission_latency_ms_for_source(primary_source)` via
+      `stamp_available_at_cefi_tick(...)` when asset_group=="cefi" and the df lacks the column. Primary source resolved
+      per UAC `SOURCE_PRIORITY[("cefi", data_type)]` (Tardis = 50ms canonical CeFi tick source). Bar-data stamping still
+      depends on Phase 0 MDPS bar-boundary contract. Already-stamped dfs preserved; unregistered (cefi, data_type)
+      skipped silently. 5 unit tests at
       `market-tick-data-service/tests/unit/test_partitioned_writer_cefi_available_at.py`. Issue doc resolved:
-      `plans/active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`.
-      status: done
+      `plans/active/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`. status: done
 
 - [ ] [SCRIPT] P0. **TradFi adapter stamping**. Per-adapter `available_at` stamping for: Databento (futures + ETFs +
       options), Polygon, Yahoo Finance (VIX 15m fallback), Barchart historical preload. CME options chain + ES.OPT
@@ -490,10 +489,44 @@ This plan is a **coordinator**. Banners must be added to:
 
 ## DONE-2026-05-10 — mtds-utl-completion-tab session
 
-| Item                                                            | Status                       | Commits                                                                                |
-| --------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
-| Phase 1 P0 — CeFi adapter stamping                              | `done` (writer-boundary path)| market-tick-data-service@4a00bd5 (writer stamping + 5 tests); plan-flip PM@2372071b    |
-| F2 issue doc resolution (cefi_available_at structural mismatch) | `done`                       | PM@2372071b (resolved-banner added at top of issue doc)                                |
+| Item                                                            | Status                        | Commits                                                                             |
+| --------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------- |
+| Phase 1 P0 — CeFi adapter stamping                              | `done` (writer-boundary path) | market-tick-data-service@4a00bd5 (writer stamping + 5 tests); plan-flip PM@2372071b |
+| F2 issue doc resolution (cefi_available_at structural mismatch) | `done`                        | PM@2372071b (resolved-banner added at top of issue doc)                             |
 
 This session shipped the cefi half of Phase 1 P0; DeFi/TradFi/Predictions/Sports adapter stamping items in Phase 1
 remain `- [ ]`. Phases 0/2/4/5/6/7/8/9/10 untouched this session.
+
+## Audit-2026-05-10 finding — post-cutover Phase: lift `available_at` to schema-level invariant
+
+**Source**: [`plans/active/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md`](issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md)
++ sibling [`block_b_audit_findings`](issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md) Block B5.
+
+**Finding**: today's two-layer enforcement is (1) opt-in stamping helpers in
+[`unified_trading_library/availability_stamping.py`](../../../unified-trading-library/unified_trading_library/availability_stamping.py)
+(330 lines) + (2) runtime gate `manifest_writer.assert_available_at_present` (line 72) that raises
+`LookaheadBiasError` for missing/null. **Gap**: gate catches missing-stamp at write time, not at row-construction
+time; **worse**, an adapter that stamps with the WRONG rule (e.g. `event_time` for a post-match stat that should use
+`match_end_time`) never fails — silent lookahead bias. This is the single highest-priority Block-B item per the
+audit (direct alpha-relevance — every minute of lookahead = phantom alpha).
+
+**Recommended post-cutover Phase to file** (NEW phase under this plan, post-May-23):
+
+- [ ] [SCRIPT] P1. **NEW** UAC `availability_rule.py` — `AvailabilityRule` Protocol + per-source implementations
+      lifted from `availability_stamping.py`.
+- [ ] [SCRIPT] P1. **NEW** row base class in UAC requires `available_at: datetime` field; pydantic validator on every
+      row class invokes the row's source's `AvailabilityRule.stamp(row)` automatically.
+- [ ] [SCRIPT] P1. **MIGRATE** per-source row classes inherit from the base; `stamp_available_at_*` opt-in helpers
+      become unnecessary (auto-applied via validator).
+- [ ] [SCRIPT] P1. **DELETE** 330 lines of `availability_stamping.py` collapse to ~50 lines (per-source rule impls
+      only).
+- [ ] [SCRIPT] P1. **REDUCE** cross-referenced CLAUDE.md + codex doc surface for `available_at` rules collapses to
+      one canonical UAC reference.
+
+**Cost**: ~2-3 AI-days. **Saved cost**: lookahead-bias incident class becomes type-level unrepresentable; ~1 week of
+fire-fight per surfaced incident saved. **Composes with**: Block B1 ADT lift (the `Captured(...)` ADT variant takes a
+row collection that's already stamped) + monorepo migration (Block A1 DECIDED-YES). Timing: post-cutover; ride with
+those structural changes as one architectural slice.
+
+**Plan status**: this annotation is FYI for plan owner — NEW phase not yet wired into the phased DAG above. Plan
+owner decides whether to fold into Phase 11+ here OR file standalone post-cutover.
