@@ -30,6 +30,12 @@ related_codex:
   - codex/05-infrastructure/strategy-vm-launcher-shape.md
   - codex/04-architecture/custody-providers.md
   - codex/05-infrastructure/launcher-script-ssot.md
+estimate_class: design
+estimate_baseline_ai_days: 7.0
+estimate_calibrated_ai_days: 4.2
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~6-8). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)

@@ -44,6 +44,12 @@ related:
   - deploy_missing_auto_launch_2026_05_07.md
 todos: []
 isProject: false
+estimate_class: refactor
+estimate_baseline_ai_days: TBD
+estimate_calibrated_ai_days: TBD
+estimate_calibration_note: |
+  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (refactor, multiplier 0.4×).
+  Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 # Launcher-script consolidation + deployment-api cloud-agnostic audit

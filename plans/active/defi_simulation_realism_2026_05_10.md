@@ -26,6 +26,12 @@ related_plans:
   - plans/questions/risk_simulations_limits_alerting_2026_05_08.md
   - plans/active/defi_master_2026_05_07.md
   - plans/active/master_to_live_defi_2026_05_23.md
+estimate_class: design
+estimate_baseline_ai_days: 53.5
+estimate_calibrated_ai_days: 32.1
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~2-3, ~10-15, ~5-8, ~8-12, + 4 more). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # DeFi simulation realism — matching engine + risk modeling extension

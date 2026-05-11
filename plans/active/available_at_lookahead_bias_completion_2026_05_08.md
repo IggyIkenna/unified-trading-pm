@@ -102,6 +102,12 @@ related:
   - master-to-live-defi-2026-05-23
 
 isProject: false
+estimate_class: design
+estimate_baseline_ai_days: 2.5
+estimate_calibrated_ai_days: 1.5
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~2-3). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # `available_at` + Lookahead-Bias Completion — Plan

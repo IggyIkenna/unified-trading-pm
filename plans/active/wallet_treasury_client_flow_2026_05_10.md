@@ -19,6 +19,12 @@ related_codex:
   - codex/04-architecture/interface-credential-convention.md
   - codex/04-architecture/capital-efficiency-patterns.md
   - codex/04-architecture/flash-loan-receiver.md
+estimate_class: design
+estimate_baseline_ai_days: 14.8
+estimate_calibrated_ai_days: 8.8
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~3, ~2, + 7 more). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Wallet / treasury / client lifecycle MVP

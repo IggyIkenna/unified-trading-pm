@@ -21,6 +21,12 @@ related_codex:
   - codex/09-strategy/strategy-summary.md
   - codex/04-architecture/capital-efficiency-patterns.md
   - codex/02-data/honest-absence-downstream-handling.md
+estimate_class: design
+estimate_baseline_ai_days: 10.8
+estimate_calibrated_ai_days: 6.5
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~2, ~2, + 6 more). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Client reporting + PnL attribution MVP

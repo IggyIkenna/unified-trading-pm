@@ -27,6 +27,12 @@ related_codex:
   - codex/09-strategy/strategy-summary.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
+estimate_class: design
+estimate_baseline_ai_days: 70.5
+estimate_calibrated_ai_days: 42.3
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~17, ~11, ~14, ~0.5, + 13 more). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # DeFi recursive-borrow archetypes — Family 1 + Family 2 implementation

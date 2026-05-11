@@ -14,6 +14,12 @@ gates:
   - master_to_live_defi_2026_05_23:Group-F
 supersedes_recommendation:
   - plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md
+estimate_class: infra
+estimate_baseline_ai_days: TBD
+estimate_calibrated_ai_days: TBD
+estimate_calibration_note: |
+  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
+  Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)

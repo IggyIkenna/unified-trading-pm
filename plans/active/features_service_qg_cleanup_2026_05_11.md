@@ -7,6 +7,12 @@ migrated_from: features_repo_consolidation_2026_05_08.md
 owner: harsh (slot 2)
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
+estimate_class: refactor
+estimate_baseline_ai_days: TBD
+estimate_calibrated_ai_days: TBD
+estimate_calibration_note: |
+  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (refactor, multiplier 0.4×).
+  Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 # features-service QG-codex cleanup + full parity run + org transfer

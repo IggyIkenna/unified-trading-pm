@@ -23,6 +23,12 @@ related_plans:
   - plans/epics/tradfi_master_2026_05_07.md
   - plans/epics/sports_master_2026_05_07.md
   - plans/epics/predictions_master_2026_05_07.md
+estimate_class: research
+estimate_baseline_ai_days: 26.0
+estimate_calibrated_ai_days: 31.2
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~5-8, ~5-10, ~1-2, + 2 more). Class inferred from filename (research, multiplier 1.2×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Cross-asset-group catalogue audit + SSOT cleanup + manifest coverage UI surface

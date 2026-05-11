@@ -12,6 +12,12 @@ execution:
   cadence: one-shot, post-features-consolidation Phase 6 parity-green
   verifier: ruff + basedpyright clean across features-service after UTL flip; integration smoke green per family
   last_executed: NEVER
+estimate_class: design
+estimate_baseline_ai_days: TBD
+estimate_calibrated_ai_days: TBD
+estimate_calibration_note: |
+  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 # BaseFeatureCalculator validation flip

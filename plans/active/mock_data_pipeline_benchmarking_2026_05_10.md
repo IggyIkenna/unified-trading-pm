@@ -19,6 +19,12 @@ related_codex:
   - codex/05-infrastructure/runtime-tiers-and-deployment.md
   - codex/05-infrastructure/vm-tarball-deployment.md
   - codex/06-coding-standards/performance-targets.md
+estimate_class: design
+estimate_baseline_ai_days: 11.8
+estimate_calibrated_ai_days: 7.0
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~2, ~2, + 5 more). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Mock-data pipeline benchmarking

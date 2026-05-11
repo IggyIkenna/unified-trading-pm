@@ -17,6 +17,12 @@ related_plans:
   - strategy_and_dart_master_2026_05_07
   - defi_master_2026_05_07
   - cefi_master_2026_05_07
+estimate_class: design
+estimate_baseline_ai_days: 51.5
+estimate_calibrated_ai_days: 30.9
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10, ~12, ~22, ~1-2, + 4 more). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Cross-cutting May-23 deliverables — catalogue / IDs / clients / DART (2026-05-08)

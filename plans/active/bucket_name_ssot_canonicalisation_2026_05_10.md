@@ -22,6 +22,12 @@ execution:
     bucket name returns 200 from `gcloud storage ls` / `aws s3 ls`; flat-bucket data migrated to env-tiered buckets with
     ≤0.01% drift; flat buckets archived
   last_executed: NEVER
+estimate_class: refactor
+estimate_baseline_ai_days: 25.0
+estimate_calibrated_ai_days: 10.0
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10-13, ~3, ~5-7, ~0.5, + 2 more). Class inferred from filename (refactor, multiplier 0.4×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Bucket-name SSOT canonicalisation

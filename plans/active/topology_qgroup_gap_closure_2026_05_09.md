@@ -13,6 +13,12 @@ consumes:
   - plans/active/defi_master_2026_05_07.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
+estimate_class: research
+estimate_baseline_ai_days: TBD
+estimate_calibrated_ai_days: TBD
+estimate_calibration_note: |
+  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (research, multiplier 1.2×).
+  Owner agent: fill baseline + multiply × 1.2 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 # Topology Q-group GAP closure — 18 GAPs + 2 WATCH + 1 ISSUE before 2026-05-23

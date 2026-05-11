@@ -84,6 +84,12 @@ related_plans:
   - plans/questions/backfill_manifest_schema_freeze_gate_2026_05_08.md
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/epics/manifest_migration_master_2026_05_07.md
+estimate_class: design
+estimate_baseline_ai_days: 3.5
+estimate_calibrated_ai_days: 2.1
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-4). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)

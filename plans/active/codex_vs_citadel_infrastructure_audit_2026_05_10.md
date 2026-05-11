@@ -16,6 +16,12 @@ related_codex:
   - codex/00-SSOT-INDEX.md
   - codex/06-coding-standards/README.md
   - codex/04-architecture/
+estimate_class: research
+estimate_baseline_ai_days: 13.0
+estimate_calibrated_ai_days: 15.6
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.25, ~4, ~1, ~3, + 4 more). Class inferred from filename (research, multiplier 1.2×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Codex vs Citadel-grade infrastructure audit

@@ -10,6 +10,12 @@ parent: master_to_live_defi_2026_05_23
 created: 2026-05-08
 shipped: 2026-05-08
 migrated_from: feature_batch_handler_abc_zero_consumers_2026_05_08.md (issue doc)
+estimate_class: design
+estimate_baseline_ai_days: TBD
+estimate_calibrated_ai_days: TBD
+estimate_calibration_note: |
+  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 # Features ModeHandler ABC lift — successor plan

@@ -25,6 +25,12 @@ related_codex:
   - codex/04-architecture/mev-protection.md
   - codex/03-observability/alerting.md
   - codex/04-architecture/capital-efficiency-patterns.md
+estimate_class: design
+estimate_baseline_ai_days: 12.8
+estimate_calibrated_ai_days: 7.6
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~1, ~2, ~1, ~3, + 7 more). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Disaster recovery + reconciliation + circuit breakers + kill switches — cutover-MVP

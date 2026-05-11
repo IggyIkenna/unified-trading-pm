@@ -9,6 +9,12 @@ companion_to: plans/active/simulation_scenarios_topology_price_shocks_2026_05_09
 migrated_from: simulation_scenarios_topology_price_shocks_2026_05_09.md (Phase 4-9 broader scope deferred 2026-05-10 per Audit C Finding C-5)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
+estimate_class: infra
+estimate_baseline_ai_days: 19.0
+estimate_calibrated_ai_days: 15.2
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~5, ~6, ~2, ~1, + 2 more). Class inferred from filename (infra, multiplier 0.8×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Simulation scenarios — post-cutover broader regression matrix

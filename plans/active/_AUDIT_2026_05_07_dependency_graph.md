@@ -4,6 +4,12 @@ audit_run: 2026-05-07
 scope: all active plans + 37 running VMs
 status: durable-reference
 last_update: 2026-05-07T11:30Z
+estimate_class: research
+estimate_baseline_ai_days: TBD
+estimate_calibrated_ai_days: TBD
+estimate_calibration_note: |
+  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (research, multiplier 1.2×).
+  Owner agent: fill baseline + multiply × 1.2 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 # Active Plan Audit — 2026-05-07

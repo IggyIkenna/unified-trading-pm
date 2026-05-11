@@ -12,6 +12,12 @@ companion_to:
   - plans/epics/manifest_evolution_master_2026_05_08.md
   - plans/epics/manifest_migration_master_2026_05_07.md
   - plans/active/available_at_lookahead_bias_completion_2026_05_08.md
+estimate_class: infra
+estimate_baseline_ai_days: 202.5
+estimate_calibrated_ai_days: 162.0
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~145-260). Class inferred from filename (infra, multiplier 0.8×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Code-freeze → migrate → backfill sequencing master

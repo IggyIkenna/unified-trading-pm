@@ -13,6 +13,12 @@ companion_plans:
   - plans/epics/infrastructure_master_2026_05_07.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
+estimate_class: design
+estimate_baseline_ai_days: 107.5
+estimate_calibrated_ai_days: 64.5
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~50-70, ~38-57). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # API keys + wallets + accounts readiness — May-23 cutover plan

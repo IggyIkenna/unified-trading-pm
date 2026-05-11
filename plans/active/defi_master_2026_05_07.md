@@ -21,6 +21,12 @@ related_plans:
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
   - shard_granularity_ssot_propagation_2026_05_06
+estimate_class: design
+estimate_baseline_ai_days: 23.5
+estimate_calibrated_ai_days: 14.1
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10-12, ~1.5, ~2.5, ~2, + 5 more). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # DeFi Master — asset_group umbrella

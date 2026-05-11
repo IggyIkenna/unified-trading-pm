@@ -9,6 +9,12 @@ companion_to: plans/epics/predictions_master_2026_05_07.md
 migrated_from: predictions_master_2026_05_07.md Q2/A2 option δ
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
+estimate_class: design
+estimate_baseline_ai_days: 4.5
+estimate_calibrated_ai_days: 2.7
+estimate_calibration_note: |
+  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~1, ~0.5, ~1-2, ~1, + 1 more). Class inferred from filename (design, multiplier 0.6×).
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 # Wave-2 — Polymarket / Kalshi `record_captured_from_counts` proper SSOT migration
