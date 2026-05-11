@@ -808,13 +808,14 @@ operational follow-up half for slot 6's `manifest_schema_final_gate_2026_05_09` 
 | --------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Tarball refresh (CORE 4 + instruments-service + MDPS) to `gs://deployment-scripts-{pid}/code/` | `done` (2026-05-11) | All 6 tarballs at `2026-05-11T14:23-25Z`. Refreshed via `bash deployment-service/scripts/vm/create-code-tarballs.sh --include instruments-service --include market-data-processing-service`. |
 | Watchdog VM relaunch — picks up new `cross-asset-rescan-` prefix in `VM_PREFIX_TO_BUCKET`     | `done` (2026-05-11) | Old: `vm-zombie-watchdog-20260511-141810` deleted. New: `vm-zombie-watchdog-20260511-152717` RUNNING; verified 2 successful 5-min polls (14:33:32 + 14:38:37) finding watchable VMs + 0 zombies. |
-| Phase 3.D cross-asset-rescan VM kickoff (instruments-service rescan)                           | `running` (2026-05-11) | `cross-asset-rescan-20260511-153940` RUNNING in `asia-northeast1-c` (e2-standard-4); dry-run mode (no manifest mutations); `asset_group=cross_asset_all`. Output: `gs://central-element-323112-rescan-triage/20260511-153940/triage.jsonl` (when complete). Events: `gs://central-element-323112-events/events/instruments-service/{date}/cross-asset-rescan-20260511-153940/`. |
+| Phase 3.D cross-asset-rescan VM kickoff (instruments-service rescan)                           | ❌ `failed` (2026-05-11) | `cross-asset-rescan-20260511-153940` FAILED at argparse + auto-shutdown — `instruments_service.cli` has no `cross_asset_rescan` operation registered (`--operation` only accepts `{instruments}`). The launcher's invocation `python -m instruments_service --operation cross_asset_rescan ...` matches the docstring contract at `instruments-service/scripts/cross_asset_rescan.py:25-32` but the CLI dispatcher entry is missing. Phase 3.D operational close-out blocked on slot 6 dispatcher fix. **Issue doc**: [`plans/active/issues/phase_3d_rescan_cli_dispatcher_gap_2026_05_11.md`](issues/phase_3d_rescan_cli_dispatcher_gap_2026_05_11.md). |
 
-> **🟢 VM RUNNING — cross-asset-rescan-20260511-153940 (dry-run, ETA 2-8h)**: Phase 3.D rescan VM walking
-> availability manifests across all 5 asset_groups to detect manifest↔disk drift. Class A drifts will be reported to
-> stdout; class C ambiguity routed to `gs://central-element-323112-rescan-triage/20260511-153940/triage.jsonl` for
-> Phase 8 triage review (slot 6 / manifest_schema_final_gate Phase 8 owner). No mutation; safe to ignore until
-> triage.jsonl appears.
+> **❌ VM FAILED — cross-asset-rescan-20260511-153940 (auto-shutdown 14:42 UTC)**: Phase 3.D rescan VM failed at
+> startup with `argparse error: argument --operation: invalid choice: 'cross_asset_rescan' (choose from instruments)`.
+> CLI dispatcher gap — slot 6's Phase 3.A launcher + Phase 3.D rescan script SHIPPED but the dispatcher entry that
+> translates `--operation cross_asset_rescan` into a call to `scripts/cross_asset_rescan.main()` was not registered.
+> Routing: slot 6 (manifest_schema_final_gate Phase 3.D owner) per issue doc + cross-side ping. Until dispatcher fix
+> lands, no rescan run can succeed + Phase 8 triage review is blocked.
 
 **Plan-of-record for Phase 3.D / Phase 8 triage**: `plans/active/manifest_schema_final_gate_2026_05_09.md` (slot 6
 ownership). Cross-side ping in `plans/active/_agent_pings.md` notifies slot 6 + workspace of the rescan kickoff.
