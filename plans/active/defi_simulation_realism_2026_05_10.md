@@ -103,10 +103,20 @@ Phases 2-7 are maximally parallel after Phase 1 lands UAC contracts.
 
 Owner: ikenna (cross-cutting design); harsh implements.
 
-- [ ] [AGENT] P0. **1A — `PoolShape` enum** in UAC `internal/domain/defi/`. Members: `UNISWAP_V2`, `UNISWAP_V3`,
-      `UNISWAP_V4_HOOK`, `CURVE_STABLE`, `CURVE_CRYPTO`, `BALANCER_WEIGHTED`, `BALANCER_BOOSTED`, `BALANCER_COMPOSABLE`,
-      `SOLANA_CLMM` (Raydium / Orca shared), `SOLANA_AMM` (Raydium V4 standard pool), `JUPITER_ROUTE_AGGREGATOR`,
-      `1INCH_AGGREGATOR`, `0X_AGGREGATOR`. Each pool instrument metadata gets a `pool_shape: PoolShape` field.
+- [ ] [AGENT] P0. **1A — `PoolShape` enum** in UAC `internal/domain/defi/`. **Member list (post-Day-1
+      slot-6 amendment 2026-05-11)**: `UNISWAP_V2`, `UNISWAP_V3`, `UNISWAP_V4_HOOK`, `CURVE_STABLE`,
+      `CURVE_CRYPTO`, `BALANCER_WEIGHTED`, `BALANCER_BOOSTED`, `BALANCER_COMPOSABLE`, `SOLANA_CLMM`
+      (Raydium / Orca shared), `SOLANA_AMM` (Raydium V4 standard pool), `JUPITER_ROUTE_AGGREGATOR`,
+      `1INCH_AGGREGATOR`, `0X_AGGREGATOR`, **NEW `SOLIDLY_FORK`** (shared matcher for Velodrome V2 +
+      Aerodrome + Equalizer / Thena / Ramses; `(chain_id, factory_address)` discriminator inside the
+      matcher; cubic-stable + xy=k-volatile branches via `stable: bool` pool flag), **NEW
+      `SOLIDLY_CL_FORK`** (shared matcher for Velodrome Slipstream + Aerodrome Slipstream V3-tick CL
+      pools; same `(chain, factory)` discriminator pattern). Total: 15 members. Each pool instrument
+      metadata gets a `pool_shape: PoolShape` field. **Rationale for shared `SOLIDLY_FORK` over
+      per-fork members**: Solidly-fork cubic + xy=k math is byte-for-byte identical across all forks
+      (verified Day-1 sub-agent fan-out 2026-05-11); enum explosion as new forks emerge would force
+      stale per-fork dispatch updates without functional benefit. Per-fork golden fixture rows live in
+      codex per-shape sample-pool/fixture matrix table.
 - [ ] [AGENT] P0. **1B — `LendingMarketState` Pydantic model** for rate-impact sim inputs. Fields: `total_supply`,
       `total_borrow`, `optimal_utilization_rate`, `interest_rate_model_params` (kink-style: base / slope1 / slope2 /
       reserve_factor), `liquidityIndex`, `variableBorrowIndex`. Used by both backtest replay + live pre-trade estimate.
@@ -124,8 +134,15 @@ Owner: ikenna (cross-cutting design); harsh implements.
       `leg_short`, `target_ratio`, `realized_ratio`, `peg_drift_bps`, `last_adjustment_at`.
 - [ ] [AGENT] P0. **1G — UAC QG green** post-Phase-1.
 
-**Codex SSOT update (Phase 1 boundary)** — stub `codex/04-architecture/amm-slippage-simulation.md` (NEW) with section
-headers for Phases 2-8 deliverables; full content lands at each phase boundary.
+**Codex SSOT update (Phase 1 boundary)** — `codex/04-architecture/amm-slippage-simulation.md` exists since
+2026-05-10 with Phases 2-8 content stubs. **Day-1 slot-6 ship 2026-05-11 (PM@`3b76a5ef`)**: extended with
+NEW section #10 Solidly-fork (Velodrome + Aerodrome math + Slipstream out-of-scope note) + NEW
+"Per-shape sample pools + golden fixture seeds" matrix table (10 rows × 7 columns covering all V1-V10
+shapes with sample pool addresses, fee model, validation threshold, pool-class status) + corrected gap
+analysis (V2/V3/V4 pool classes EXIST in `amm.py`; gap is `AMMMatcher` dispatcher hardcoding V2 +
+7 missing pool classes) + cross-chain L2 deployment hazard note + Solidly-fork update protocol footer.
+Full per-shape AMM family matrix research sourced from 7-parallel-sub-agent fan-out 2026-05-11
+(Uniswap V2/V3/V4 + Curve stable + Balancer weighted + Velodrome ve(3,3) + Aerodrome).
 
 **Full-execution criterion**:
 
