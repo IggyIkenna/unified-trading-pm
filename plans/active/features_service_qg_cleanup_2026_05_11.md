@@ -277,11 +277,68 @@ dataclasses are NOT schema-prov-flagged.** C noted 2 uncommitted onchain files (
 empty-fallback note**: many `sports/` sites (A) + `onchain/` sites (B) still flag; plus `volatility/` + `sports/` +
 `onchain/` `mock_data_provider.py` need the same `# noqa: qg-empty-fallback` treatment as C's 4 (left for B/A).
 
-**Status as of 2026-05-11 (A + C landed, B running)**: features-service QG `Codex compliance FAILED: 9 violations` (down
-from 16), and all 9 are in `sports/` (A's deferred items + remaining `_sync_runners.py` asyncio + sports empty-fallbacks
-+ Q-FOR-IKENNA rows) or `onchain/`/`volatility/` (sub-agent B's, still running). Slot 2 master: waits for B → verify
-pass (basedpyright on changed dirs + fresh QG) → conditional-push all of A+B+C's commits + Phase 1.2e (group-1 UAC move +
-group-2 markers/dedup) → flip parent Phase 4.6 when QG green.
+**Session-3 sub-agent results — Sub-agent B (`onchain/**` + `volatility/**`) LANDED 2026-05-11** (9 commits; ALL B-task
+items done — 1 `Q-FOR-IKENNA` (`resolve_rpc_url`, folded into Q4 below), `onchain` empty-fallbacks deferred per the
+plan's per-family scoping of row (d)): `24655bd5` onchain/volatility quick wins (mock_data_provider import hoist;
+`mtds_canonical_reader.py` deep→facade UAC import; `scanner_factories.py` `# Q-FOR-IKENNA` comment for `resolve_rpc_url`;
+`volatility/cli/parser.py` hardcoded-category comment reword). `1f4b1bae` **hoist onchain `web3`/`solana`/`solders` SDK
+imports to module top — the PROPER root fix: added them to `pyproject.toml` `[project.dependencies]` + regen `uv.lock` +
+deleted the banned `try/except ImportError` fallbacks in `default_factories.py`** (onchain genuinely depends on these; not
+a lazy-import-behind-flag case). `f070bdc8` split `volatility/engine/orchestrator.py` 941L → 429L (extract
+`VolatilityOrchestrationService` → `engine/feature_group_service.py`; shared manifest logic → `engine/manifest_helpers.py`;
+decompose `process_options_chains`/`process_futures_chains`/`process_feature_group`). `815355f7` split
+`onchain/engine/orchestrator.py` 1256L → 896L (class <900L; `_calculate_lending_features` 206L → `engine/lending_features.py`;
+LST APY path → `engine/lst_features.py`; decompose `process_feature_group` 130L, `_process_lst_yields` 86L,
+`_process_daily_feature_group` 89L). `098ab4fd` decompose volatility methods (`volatility_calculator.calculate_features`
+52L, `calculate_term_structure` 52L, `volatility/cli batch_handler._check_dependencies` 53L). `89bba5fd` decompose onchain
+CLI methods (`main.py:ComputeHandler.run` 117L → `_RunArgs`/`_dispatch_and_run`; `batch_handler` `_check_dependencies` 66L,
+`_ingest_and_process` 119L, `run` 55L; hoist `run_mock_pipeline`). `8fe2ff48` decompose `onchain/app/core/feature_writer.py`
+(`write_features` 138L, `_enforce_point_in_time` 51L, `write_seasonal_rewards` 92L). `ce92cc59` decompose
+`onchain/app/core/data_loader.py` (`_resolve_mtds_parquet_files` 97L, `load_rate_indices` 52L). `e9472c06` decompose
+onchain calculators + validity-engine (`get_block_definitions` 58L; `eigen._fetch_from_defillama` 60L; `protocol.fetch_data`
+56L; `lst_staking.calculate_features` 64L; `aave_rate_impact.calculate_features` 63L). **Cleared**: onchain imports-inside
+(default_factories web3/solana/solders + mock_data_provider numpy/MockScenario), `mtds_canonical_reader` deep import,
+volatility/cli/parser hardcoded-categories comment, ALL onchain/volatility file-size + method-size + class-size violations
+(AST-verified clean). basedpyright net-improved on every B file (orchestrator.py 32→13, feature_writer 8→4, calculators
+33→25; the new `lending_features.py`/`lst_features.py`/`manifest_helpers.py`/`feature_group_service.py` are basedpyright-clean).
+**Sub-agent B DEFERRED**: ~17 onchain empty-string/dict/list fallbacks (`chain_event_scanners.py`, `parquet_dust_loader.py`,
+`pool_invariant_drift_calculator.py`, `concentrated_liquidity_il_realised_calculator.py`, `lst_staking_calculator.py`,
+`scanner_factories.py` — `str(row.get("X",""))` / `.get("weights",[])` raw-RPC-event-dict patterns; per-site required-vs-honest-absence
+analysis needed; out of B's 8-task scope per plan row (d)); plus `volatility/`/`onchain/` `mock_data_provider.py` need the
+same `# noqa: qg-empty-fallback` config-bootstrap markers C applied to its 4. Schema-prov models (`OnchainFeatureRequest`/
+`OnchainFeatureResult`/`OnChainFeatures`/`Volatility*`/`OptionQuote`/`VolSurface*`/`Dependency*`/`FeatureProcessingResult`)
+left untouched per spawn instructions (Phase 1.2e).
+
+**Status as of 2026-05-11 (A + B + C all LANDED; 28 commits pushed to `live-defi-rollout` features-service @`e4b10570`,
+rebased onto `8f03ceeb` Layer-2 bucket-migration; import sanity verified — 17 key modules import clean)**: features-service
+QG re-ran → **`Codex compliance FAILED: 9 violations`** (was 16). **Cleared by A+B+C**: `os.getenv/os.environ` (✅), STEP
+5.12b (hardcoded `gs://` URIs, ✅), STEP 5.23 (deep UAC `canonical.*` import, ✅), STEP 5.30 (hardcoded categories, ✅),
+"Direct cloud SDK imports found" codex-compliance row (gcs_reader `from google.cloud import storage`, ✅), backward-compat-comment
+(✅), Files>900L (✅ — 6 → 0), most imports-inside (28 → **4** remaining), and the bulk of func-size (~55 → A's ~5 deferred
+sports ones). **The remaining 9** (precise): (a) `asyncio.run() in loop` — `sports/cli/_sync_runners.py` [A-deferred];
+(b) `Imports inside functions` — 4 sites: `sports/cli/handlers/_fetch_runner.py:117 from datetime import datetime` +
+`sports/cli/handlers/batch_handler.py` ×3 [A-deferred]; (c) `Empty string fallback` — sports + onchain sites [A/B-deferred];
+(d) `Empty dict/list fallback` — sports + onchain sites [A/B-deferred]; (e) `Schema provenance` — the ~40 model defs INCL
+the new `_`-prefixed helper dataclasses A/B/C created during decomposition (`delta_one/app/calculators/fibonacci.py:_RetracementArrays`/
+`_ExtensionArrays` from C; any from the sports/onchain/volatility splits) + the un-triaged `delta_one/models.py:ProcessingRequest`/
+`ProcessingResult`/`InstrumentInfo` — Phase 1.2e must `# CORRECT-LOCAL` all the service-internal ones in addition to the
+Q3-A1 list; (f) `Deep unified lib imports` — `sports/calculators/odds_prob_space.py: from unified_api_contracts.sports import BookmakerTier, classify_bookmaker`
+(A's new split module — pre-existing import relocated, not introduced) + `gcs_normalizers.py`/`coverage_gate.py`/`cli/handlers/batch_handler.py`
+`.sports`-facade rows + `scanner_factories.py: resolve_rpc_url` [Q4 + Q4b — NOT slot-2's, Ikenna/slot-1]; (g) `Function/class/method size exceeded`
+— A's ~5 deferred sports decomps [A-deferred]; (h) STEP 5.10 — `scripts/sports/backfill_fixture_features_manifest.py` `from google.cloud import storage`
+[Q5 — NOT slot-2's, Ikenna/slot-1]; (i) one more category (likely a broad-except / STEP 5.x — not on the critical path, re-derive next run).
+**So: 2 of the 9 are Ikenna/slot-1's (Q4-deep-lib + Q5-STEP-5.10); 7 are slot-2's carry-forward.** **Remaining work (carry-forward — next slot-2 session, multi-step; QG won't be green until ALL of
+these land + Q4/Q5 fixed by Ikenna)**: (1) A's deferred sports func-decomps (`sports/cli/handlers/batch_handler.py:run() 416L`,
+`team_form.compute_team_form() 357L`, `h2h_calculator.compute_h2h() 272L`, `player_lineup_calculator.compute_player_lineup_features() 219L`,
+`feature_builder_registry._build_registry() 389L`, `_fetch_runner.py` import-inside + batch_handler ×3 deferred imports +
+`_sync_runners.py` asyncio-in-loop + broad-except flags) — own sub-agent; (2) empty-string/dict/list fallbacks across
+`sports/` (~many) + `onchain/` (~17) + the `volatility/`/`onchain/`/`sports/` `mock_data_provider.py` `# noqa` markers —
+own sub-agent (per-site required-vs-honest-absence reading); (3) **Phase 1.2e** (group-1 schema-prov → UAC.internal +
+group-2 `# CORRECT-LOCAL` markers + `Dependency*` UTL-dedup + `FeatureProcessingResult` double-def collapse + `PubSubMessage`
+rename); (4) **Phase 1.5** (lift `_get_workspace_root()` ×8 → one UTL helper); (5) Q4 + Q5 fixed by Ikenna/slot-1 (the
+3 `.sports`-facade rows + `resolve_rpc_url` + the `scripts/sports/...` STEP-5.10 row are NOT slot-2 violations). When ALL
+of (1)-(5) land → QG green → flip parent `features_repo_consolidation_2026_05_08.md` Phase 4.6 `[x]` + remove the
+DEFERRED→successor pointer.
 
 **Row e (schema-provenance ~38 `features_service/` models) — sub-phase decision (2026-05-11 slot 2):** deferred to its
 own sub-phase (Phase 1.2e below) — it's a UAC + features-service **cross-repo** refactor, and the file-split sub-agents
@@ -634,6 +691,16 @@ top-level. Recommendation: (a) — the `.{domain}` facade IS the documented surf
 entire sports/market/execution/etc. namespace at top level. (`coverage_gate.py` + `batch_handler.py` were already at
 `.sports` before A's session — pre-existing, not introduced by the consolidation.) **Until decided, these 3 rows keep QG
 red for features-service — but they're not features-service violations.**
+
+**Q4b (related — from sub-agent B, 2026-05-11): `resolve_rpc_url` only reachable via the deep path `unified_api_contracts.registry.chain_env`.**
+`features_service/onchain/collectors/scanner_factories.py` does `from unified_api_contracts.registry.chain_env import resolve_rpc_url`
+— `resolve_rpc_url` is NOT re-exported at the bare `unified_api_contracts` facade nor at `unified_api_contracts.defi` (B
+verified). Unlike Q4 proper, `registry.chain_env` IS a genuinely deep path (not a `.{domain}` facade), so the *right* fix
+is **UAC re-exports `resolve_rpc_url`** at `unified_api_contracts/__init__.py` or the `.defi` facade (per CLAUDE.md: "RPC
+URL templates: `CHAIN_RPC_TEMPLATES` in UAC `registry/capability_declarations/_defi.py` — SSOT for all chain→RPC mappings.
+execution-service DeFi connectors import from UAC, never define their own" — so `resolve_rpc_url` SHOULD have a facade
+surface). UAC-side change → Ikenna/slot-1. B left the deep import + a `# Q-FOR-IKENNA` comment in
+`scanner_factories.py`. **Until decided, this 1 row keeps QG red — not a features-service violation.**
 
 ### Q5 — [harsh-features-consolidation-tab (via sub-agent A), 2026-05-11] — QG STEP 5.10 (direct cloud SDK) should exclude `scripts/`
 
