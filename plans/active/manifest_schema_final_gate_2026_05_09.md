@@ -94,6 +94,10 @@ estimate_calibration_note: |
 
 # Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) sequences this plan's **Phase 1 (v8 schema-bump)** as a Phase 1 freeze-gate item and **Phase 7 (gcs bundled walk May 13-15)** as Phase 2.1 + 2.2 of the cutover window. Per operator decision 2026-05-11 commit `39ab61e5` (resolving codex_audit F3 ambiguity), THIS plan is the canonical v8 column owner; writegate slice (b) Phase 5.2 ("UAC manifest schema columns") is SUPERSEDED. Phase 4.MTDS 🟡 BLOCKED 2026-05-12 on 3 PipelineMode operator findings (PM@`237d00b7` + `a5e5aa4d` + `6ede1e01`) — Phase 4.DEFAULT-REMOVAL chains. Reader contract: scan top-of-file banners before touching manifest v8 columns / writer / reader / `pipeline_mode` / `service_emission_state` / cross-asset rescan code paths.
+
 > **Operator direction (verbatim, 2026-05-09).** _"i want the best manifest before may 23rd not a partial one all the
 > items done."_ + _"yeah do all this v8 should not be deferred should be done"_ + ratification of the 7-item E3 launcher
 > checklist verbatim.

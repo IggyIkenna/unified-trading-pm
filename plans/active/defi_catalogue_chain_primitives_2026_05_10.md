@@ -38,6 +38,10 @@ estimate_calibration_note: |
 
 # DeFi catalogue + chain primitives buildout (May-23 cutover)
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) § "Anti-sequencing audit" row 334 flags this plan as a Phase 1.E freeze-gate critical-path item. NEW UAC `data_type` enums (`SUPPLY_APY` / `BORROW_APY` / `UTILISATION` / `LIQUIDATION_THRESHOLD` / `EMODE_PARAMS` — shipped uac@`d02cce2` per slot 5 audit 2026-05-11) MUST be referenced in `manifest_schema_final_gate_2026_05_09.md` v8 schema declaration BEFORE Phase 1 freeze 2026-05-15. ALL_DEFI_VENUES 74→99 venue declarations shipped uac@`495d262` (slot 5 2026-05-11). Phase 1A still open: per-protocol `SourceCapability` objects + Solana Jito MEV + per-venue margin-tier table + LST_TOKEN_TO_PROTOCOL_ASSET verify. Phase 1 (UAC SSOT extensions) is the SEQUENTIAL gate for Phases 2-6 fan-out. Reader contract: scan top-of-file banners before touching `data_type` column / `BUNDLED_DATA_TYPES` registry / chain primitives / `PROTOCOL_LAUNCH_DATES` / venue-capability tables.
+
 ## Why this plan exists
 
 The 2026-05-08 catalogue audit (since consumed; spawned this plan + `defi_simulation_realism_2026_05_10` +

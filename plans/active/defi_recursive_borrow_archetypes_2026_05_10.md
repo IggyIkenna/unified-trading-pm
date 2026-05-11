@@ -37,6 +37,10 @@ estimate_calibration_note: |
 
 # DeFi recursive-borrow archetypes — Family 1 + Family 2 implementation
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) § "Anti-sequencing audit" rows 333 + 334 flag this plan as a Phase 1.E freeze-gate critical-path item. AD-1 flip 2026-05-10 + cross-plan audit Q10 ratification — NEW UAC `StrategyArchetype` enum values (`CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`) MUST land in `manifest_schema_final_gate_2026_05_09.md` v8 schema declaration BEFORE Phase 1 freeze 2026-05-15 (slot 5 grep 2026-05-11 confirmed NEITHER value present in UAC `internal/architecture_v2/enums.py:31-118`). Ownership transferred to `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07` Stream C per most-comprehensive-owner rule. Reader contract: scan top-of-file banners before touching the strategy_id shard-atom column / archetype enum / v8 schema declaration.
+
 > **🟢 PHASE 1 BLOCKER STATUS REFRESHED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)** — Per
 > [`defi_catalogue_chain_primitives_2026_05_10.md`](defi_catalogue_chain_primitives_2026_05_10.md) Phase 3 §
 > "PHASE 3 LENDING-INDICES SPEC FOR slot 5 (Family-1) HANDSHAKE — published 2026-05-12", lending-indices data

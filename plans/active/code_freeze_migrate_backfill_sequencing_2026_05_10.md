@@ -556,15 +556,21 @@ This plan is itself an orchestration umbrella; the codex SSOTs it touches are th
 
 This plan introduces a workspace-wide sequencing constraint. Per CLAUDE.md "Cross-Plan Coordination Banners" rule, the following plans MUST receive a banner pointing back here in a follow-up commit:
 
-- [ ] [DOC] P0. **`plans/active/master_to_live_defi_2026_05_23.md`** — top-of-file `> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing**` banner pointing here. BE AWARE tag.
-- [ ] [DOC] P0. **`plans/epics/manifest_evolution_master_2026_05_08.md`** — same banner. BLOCK tag (Phase 2 cannot start before this plan's Phase 1 freeze gate).
-- [ ] [DOC] P0. **`plans/epics/manifest_migration_master_2026_05_07.md`** — same banner. BLOCK tag for Stage 1 onwards (must wait Phase 2.0 pre-drain).
-- [ ] [DOC] P0. **`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`** — banner notes that Phase 2.X (OHLCV rename) and verification of all Phase 1 schema columns are gap-closure work to land in this plan.
-- [ ] [DOC] P0. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — banner notes Phase 5 cross-cloud rsync sequencing constraint vs Phase 2.2.
-- [ ] [DOC] P1. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** — banner notes its slice (b) + slice (c) are Phase 1 freeze blockers.
-- [ ] [DOC] P1. **`plans/active/features_repo_consolidation_2026_05_08.md`** — banner notes Phase 7 is Phase 1 freeze blocker.
-- [ ] [DOC] P1. **`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`** — banner notes its Phase 4-5 cascade depends on features-repo-consolidation Phase 7 + Phase 2 GCS bundled migration.
-- [ ] [DOC] P1. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — banner specifies bucket-name SSOT alignment dependency.
+- [x] [DOC] P0. **`plans/active/master_to_live_defi_2026_05_23.md`** — top-of-file `> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing**` banner pointing here. BE AWARE tag. **✅ Verified by slot 5 audit 2026-05-11 + slot 3 re-verify 2026-05-12** — banner at line 41.
+- [x] [DOC] P0. **`plans/epics/manifest_evolution_master_2026_05_08.md`** — same banner. BLOCK tag (Phase 2 cannot start before this plan's Phase 1 freeze gate). **✅ Verified — banner at line 29.**
+- [x] [DOC] P0. **`plans/epics/manifest_migration_master_2026_05_07.md`** — same banner. BLOCK tag for Stage 1 onwards (must wait Phase 2.0 pre-drain). **✅ Verified — banner at line 27.**
+- [x] [DOC] P0. **`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`** — banner notes that Phase 2.X (OHLCV rename) and verification of all Phase 1 schema columns are gap-closure work to land in this plan. **✅ Verified — banner at line 552.**
+- [x] [DOC] P0. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — banner notes Phase 5 cross-cloud rsync sequencing constraint vs Phase 2.2. **✅ Verified by slot 1 PM@`1b9e6451` (2026-05-11) — banner at line 25.**
+- [x] [DOC] P1. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** — banner notes its slice (b) + slice (c) are Phase 1 freeze blockers. **✅ Verified — banner at line 38.**
+- [x] [DOC] P1. **`plans/active/features_repo_consolidation_2026_05_08.md`** — banner notes Phase 7 is Phase 1 freeze blocker. **✅ Verified — banner at line 942** (note: Phase 7 ✅ SHIPPED 2026-05-11 per slot 3 audit; banner remains BLOCK tag for archival reference but obligation discharged).
+- [x] [DOC] P1. **`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`** — banner notes its Phase 4-5 cascade depends on features-repo-consolidation Phase 7 + Phase 2 GCS bundled migration. **✅ Verified — banner at line 1042.**
+- [x] [DOC] P1. **`plans/active/aws_migration_defi_first_2026_05_07.md`** — banner specifies bucket-name SSOT alignment dependency. **✅ Same as banner above — single banner at line 25 covers both Phase 5 sequencing + bucket-name SSOT dependency.**
+- [x] [DOC] P1. **`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`** — BE-AWARE banner per slot 5 (b+) audit (env-tier UI surface already shipped pre-2026-05-11). **✅ Verified by slot 5 PM@`8ea02ccd` 2026-05-11 + slot 3 re-verify 2026-05-12 — banner at line 480.**
+- [x] [DOC] P1. **`plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md`** — BE-AWARE banner citing anti-sequencing audit Phase 2.2 single-walk discipline risk. **✅ Verified by slot 5 PM@`8ea02ccd` 2026-05-11 + slot 3 re-verify 2026-05-12 — banner at line 45.**
+- [x] [DOC] P1. **`plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md`** — BE-AWARE banner citing bucket-name SSOT (b+) requirement. **✅ Verified by slot 5 PM@`8ea02ccd` 2026-05-11 + slot 3 re-verify 2026-05-12 — banner at line 34.**
+- [x] [DOC] P0. **NEW — `plans/active/manifest_schema_final_gate_2026_05_09.md`** — BLOCK tag (per operator decision `39ab61e5` this plan is canonical v8 owner; Phase 1 = freeze-gate item; Phase 7 = Phase 2.1+2.2 of cutover). **✅ Added by slot 3 audit 2026-05-12 — banner at top-of-file after frontmatter close (line 96 area).**
+- [x] [DOC] P0. **NEW — `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`** — BLOCK tag (per anti-sequencing audit row 333; new `StrategyArchetype` enum values must land in v8 declaration before 2026-05-15 freeze; Stream C ownership). **✅ Added by slot 3 audit 2026-05-12.**
+- [x] [DOC] P0. **NEW — `plans/active/defi_catalogue_chain_primitives_2026_05_10.md`** — BLOCK tag (per anti-sequencing audit row 334; new `data_type` enums + 25 venue entries must reference v8 declaration before 2026-05-15 freeze). **✅ Added by slot 3 audit 2026-05-12.**
 
 ## Done definition
 
