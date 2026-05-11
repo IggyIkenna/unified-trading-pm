@@ -207,7 +207,13 @@ this plan and **Q4** below (operator decision).
       sign-off land — both operator-gated. **(b)+(c) written up as Q7 in § Open questions 2026-05-11 (slot 4, this
       session)** with the full shape-mismatch table + slot-4 recs (b-i = align GCP to symmetric
       `{kind}-defi-{env}-{pid}`; c-i = env-tier `events` as a dedicated Phase-2.6 sub-step / c-ii = document as 3rd
-      permitted env-less exception); routed cross-side to Ikenna. Yaml unchanged pending operator answer."
+      permitted env-less exception); routed cross-side to Ikenna. **OPERATOR DECISION 2026-05-11 PM (Q7(c) RESOLVED)**:
+      events bucket goes **env-tiered (option c-i)**. Implication: `gs://{pid}-events-{env}/events/{service}/...` per
+      env; deployment-service yaml + UTL `resolve_bucket_name` need `events` flipped to env-tiered shape (Phase 2.6
+      sub-step). **Watchdog architecture follow-up (P1)**: vm_zombie_watchdog.py reads from single `{pid}-events` today;
+      with env-tiered events, either (i) single watchdog reads all 3 env buckets concurrently, or (ii) 3 per-env
+      watchdog VMs if throughput is too much for one machine. Operator direction 2026-05-11 PM: 'depends on throughput'.
+      **Q7(b)** `pnl-store-defi` / `positions-store-defi` / `risk-store-defi` shape-alignment remains operator-pending."
 - [x] **[SCRIPT] P0**. **Phase 0f — VM launcher scripts read `DEPLOYMENT_ENV` (Phase 1 code-complete scope).** Audit
       every script under `deployment-service/scripts/vm/` for hardcoded bucket references; ensure each launcher reads
       `DEPLOYMENT_ENV` from env / CLI flag and passes it to the VM via `metadata` so the VM's bucket-resolution call
@@ -1130,14 +1136,20 @@ re-sequenced to Phase 2.6.
 
 ### Q7 — [harsh-bucket-and-adapter-tab, 2026-05-11] — env-less-GCP-entries remainder: `pnl-store-defi`/`positions-store-defi`/`risk-store-defi` shape-alignment + `events` env-tier sign-off (both operator-gated)
 
-**Status**: 🟡 BLOCKED — needs operator/Ikenna calls (bucket-naming SSOT decisions → Ikenna per the work-split). These
-are the last two pieces of the env-less-GCP-entries sub-todo; the DeFi-raw (`dex-*`/`*-defi`) + `config-store` half
-shipped @deployment-service`070c897`+UTL`5058381` (+ the §-header comment now lists exactly these as the residual
-env-less GCP kinds). Slot 4 cannot decide them — both involve a name change (= a Phase-2.6 data migration) and `events`
-is high-blast-radius.
+**Status**: 🟡 PARTIAL — Q7(c) `events` env-tier ✅ RESOLVED 2026-05-11 PM (operator: env-tiered, option c-i); Q7(b)
+pnl/positions/risk shape-alignment still open (Ikenna call).
 
-**(b) `pnl-store-defi` / `positions-store-defi` / `risk-store-defi` — shape-alignment, not just an env-tier add.** The
-GCP yaml today (`cloud-providers.yaml:147-149`):
+**Q7(c) `events` — RESOLVED 2026-05-11 PM (operator: env-tiered).** Events bucket goes env-tiered:
+`gs://{pid}-events-{env}/events/{service}/...`. yaml flip + UTL `resolve_bucket_name` env-tier extension queues as a
+Phase 2.6 sub-step (data migration is mostly write-new-and-archive-old since events are append-only). **Watchdog
+architecture follow-up (P1)**: `vm_zombie_watchdog.py` reads from single `{pid}-events` today; under env-tiered events
+either (i) single watchdog reads all 3 env buckets concurrently or (ii) 3 per-env watchdog VMs if throughput is too much
+for one machine. Operator direction: 'depends on throughput'. Tracked as a NEW P1 follow-up todo below — not blocking
+Phase 2.6 cutover (watchdog continues working until events buckets migrate; can decouple the watchdog refactor from the
+events-bucket migration timing).
+
+**Q7(b) `pnl-store-defi` / `positions-store-defi` / `risk-store-defi` — shape-alignment, not just an env-tier add.**
+Still operator-gated. The GCP yaml today (`cloud-providers.yaml:147-149`):
 
 | kind                   | GCP today                                | AWS today                                                                        | shape mismatch                                                                            |
 | ---------------------- | ---------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -1403,3 +1415,47 @@ items is shipped:
 
 Going quiet — Phase-1 scope DONE; the above carries to the Phase-2.6 cutover (slot 4's window) + Ikenna slot 8 (Phase
 0f) + Ikenna/operator (Q7).
+
+## DONE-2026-05-12 — ikenna-bucket-prereq-tab (slot 8) — Phase 0f + Q7(c) close-out
+
+- ✅ **Phase 0f shipped** — 72 launchers env-aware (5-sub-agent parallel fan-out). Commits FF'd to
+  `live-defi-rollout`: `deployment-service@13ef741a` (15 MTDS) + `a2037d2` (19 sports) + `68ad99f` + `e60ae2c` (17
+  cefi/defi/tradfi/prediction) + `ecea78f3` (9 features/ml/strategy/infra) + `5676048` (12 migration/recon/smoke
+  + `setup-data-pipeline-vm.sh` VM-side bootstrap). Pattern from `launch-mdps-features-live.sh` (DEPLOYMENT_ENV default
+  + `--env` CLI flag + closed-set validation + metadata propagation + GCE label). Backward compat preserved via
+  `DEPLOYMENT_ENV=prod` default. PM plan-flip: `pm@96077adf`.
+- ✅ **Phase 0h verified** — `sync-buckets-prod-to-{env,staging,dev}.sh` confirmed shipped by Harsh slot 4 pre-handoff
+  (plan body line 258 already `status: done`). No Ikenna action needed.
+- ✅ **Q7(c) events env-tier RESOLVED** — operator decision 2026-05-11 PM: events bucket goes env-tiered (option c-i).
+  yaml flip + UTL `resolve_bucket_name` extension queue as Phase 2.6 sub-step. Q7(c) flipped to ✅ RESOLVED in this
+  plan body § Open questions.
+- ✅ **Watchdog architecture P1 follow-up filed** —
+  [`plans/active/issues/watchdog_env_tiered_events_architecture_2026_05_11.md`](issues/watchdog_env_tiered_events_architecture_2026_05_11.md).
+  Recommend option (i) single-watchdog-with-multi-bucket fan-in as default (lower-cost; smaller code change);
+  instrument post-cutover; split to option (ii) per-env watchdogs only if throughput data shows it's needed. Picks up
+  in next-cycle work-split after Phase 2.6 ships.
+- **Q7(b)** `pnl-store-defi` / `positions-store-defi` / `risk-store-defi` shape-alignment — still operator-pending;
+  not slot 8 to decide.
+
+**Tier 2 carry-forward (rescan + design promotion)** — also shipped by parallel agents while slot 8 was on Phase 0f
+fan-out; slot 8 follow-up was the plan-status flip:
+
+- ✅ **Phase 3.A** — `deployment-service@<see manifest_schema_final_gate Phase 3.A>` —
+  `launch-cross-asset-rescan-vm.sh` shipped (singleton-locked, asia-northeast1-c, per-VM shard isolation, WORKERS=64,
+  HTTP_POOL_SIZE=128, tarball + tarball-from-local). Verified on disk.
+- ✅ **Phase 3.B** — `cross-asset-rescan-` prefix added to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`
+  (line 374, value `None` per "log-only" semantics). Watchdog VM relaunched (latest at 2026-05-11T14:18 UTC; current
+  state STOPPING — auto-recycle cycle).
+- ✅ **Phase 3.C** — Launcher registered in
+  `deployment_api/services/deploy_missing.py` `_SERVICE_LAUNCHER_SCRIPTS` (line 88,
+  `"cross-asset-rescan": f"{_VM_SCRIPT_DIR}/launch-cross-asset-rescan-vm.sh"`).
+- ✅ **Phase 3.D** — `instruments-service/scripts/cross_asset_rescan.py` shipped (333 lines): cross-asset dispatch,
+  per-VM shard isolation, Class A auto-flips (`PARQUET_NAN_RATIO_EXCEEDED` / `PARTIAL_BUNDLE` / `SCHEMA_DRIFT` /
+  `PHANTOM_PATH_MISSING`), Class C triage JSONL stream to `gs://{pid}-rescan-triage/{run_id}/triage.jsonl`, lifecycle
+  events.
+- ✅ **Rescan-design plan** promoted DRAFT → active —
+  `manifest_cross_asset_rescan_design_2026_05_08.md` frontmatter flipped (`status: active`, `last_updated: 2026-05-12`).
+- **Operational follow-up (P1 pending)** — actual rescan VM run is Phase 2.6 post-migration validation work; not
+  triggered in this cycle.
+
+All Tier 2 sub-phases now reflected as `[x]` in `manifest_schema_final_gate_2026_05_09.md:310/315/322/324`.

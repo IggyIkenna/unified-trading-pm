@@ -4,10 +4,10 @@ type: plan
 plan_type: design
 asset_group: cross-cutting
 owner: ikenna
-status: draft
+status: active
 priority: P1
 created: 2026-05-08
-last_updated: 2026-05-08
+last_updated: 2026-05-12
 parent: manifest_migration_master_2026_05_07
 related_plans:
   - manifest_migration_master_2026_05_07
