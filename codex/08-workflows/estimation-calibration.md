@@ -80,6 +80,49 @@ Most plans omit this field — the daily work-split is the operator's actual dec
 plan can't predict it upfront. Use only when the plan EXPLICITLY decomposes into independent phases that
 operators routinely fan out across slots (master plans, multi-domain umbrella plans, batch backfills).
 
+### Per-plan parallelism declaration — phase-level serial-vs-parallel
+
+The slot divisor only applies to phases that ACTUALLY parallelise. A plan with 4 sequential phases (Phase 2 needs
+Phase 1's artefact) cannot collapse below the serial-floor wall-clock of `sum(per-phase calibrated_ai_days)`, no
+matter how many slots are available.
+
+Plans that declare `effective_concurrent_slots > 1` SHOULD also annotate per-phase parallelism in the body:
+
+```markdown
+## Phase 1 — Foundation (SERIAL — Phases 2/3/4 depend on this; ~2 AI-days calibrated)
+## Phase 2 — Domain A handler (PARALLEL with Phase 3, Phase 4; ~3 AI-days calibrated)
+## Phase 3 — Domain B handler (PARALLEL with Phase 2, Phase 4; ~3 AI-days calibrated)
+## Phase 4 — Domain C handler (PARALLEL with Phase 2, Phase 3; ~3 AI-days calibrated)
+## Phase 5 — Integration (SERIAL — needs Phases 2/3/4; ~2 AI-days calibrated)
+```
+
+Wall-clock floor for the above: `2 (Phase 1) + max(3,3,3) (Phases 2/3/4 fan out at 3+ slots) + 2 (Phase 5) = 7
+days`, NOT `13 / 3 ≈ 4.3 days`. The class-multiplier compresses each phase's effort; the slot divisor compresses
+ACROSS phases that ACTUALLY parallelise; the serial-floor bounds both.
+
+When in doubt, mark a phase SERIAL — over-parallelising leads to half-finished phases that block their dependents
+when the slot frees up.
+
+### Cross-plan slot contention — the work-split layer
+
+A single plan's `effective_concurrent_slots` is the UPPER BOUND assuming the operator allocates that many slots
+to it. In reality, the workspace is running ~50-100 active plans across both operators × 8 slots each, and slot
+allocation is competitive. The `plans/active/work_split_<YYYY_MM_DD>_ikenna.md` + `..._harsh.md` files are the
+operator's daily decision on:
+
+- Which plans get slots this cycle.
+- Which slot/sub-agent works on which plan-phase.
+- Cross-tab handshakes (when slot 2 needs slot 5's output before starting).
+- Cross-side handshakes (when Ikenna's slot 7 needs Harsh's slot 3's artefact).
+
+Wall-clock estimate for a plan in a given cycle = `phase_serial_floor + max_concurrent_phase_calibrated /
+slots_actually_allocated_this_cycle`. The plan's `effective_concurrent_slots` is the *capacity* number; the
+work-split's slot allocation is the *realised* number.
+
+When estimating "will this plan ship by deadline X", read the plan's parallelism declaration AND check whether
+the current/upcoming work-split actually allocates the needed slots. The plan-level estimate is necessary but not
+sufficient — without the work-split allocation, you're estimating in a vacuum.
+
 ### Don't double-discount
 
 If you set `effective_concurrent_slots: 4` for a plan, the wall-clock prediction is `calibrated / 4`, NOT

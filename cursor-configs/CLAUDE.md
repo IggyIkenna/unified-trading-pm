@@ -744,9 +744,16 @@ substantive update — **do NOT mass-sweep** (collision risk per Findings Triage
 
 **AI-day vs wall-clock**: `class_multiplier` measures **intra-slot** compression (sub-agent fan-out within one
 slot). The workspace also runs **multi-slot parallelism** — up to 8 slots per operator (16 workspace-wide). For
-plans that parallelise across slots, `wall_clock_days = calibrated_ai_days / effective_concurrent_slots`, bounded
-by the serial-dependency floor (phases with hard ordering cannot parallelise). DON'T double-discount: the class
-multiplier already captures intra-slot fan-out; the slot divisor is on top, not instead.
+plans that parallelise across slots, `wall_clock_days = phase_serial_floor + max_concurrent_phase / effective_concurrent_slots`,
+bounded by the serial-dependency floor (phases with hard ordering cannot parallelise). DON'T double-discount: the
+class multiplier already captures intra-slot fan-out; the slot divisor is on top, not instead. Plans that declare
+`effective_concurrent_slots > 1` SHOULD annotate per-phase `(SERIAL — depends on...)` / `(PARALLEL with phases X/Y)`
+so the floor is computable.
+
+**Cross-plan slot contention**: a plan's `effective_concurrent_slots` is the *capacity* number; the daily
+`work_split_<YYYY_MM_DD>_ikenna.md` + `..._harsh.md` files are the operator's *realised* slot allocation across
+~50-100 active plans competing for capacity. Wall-clock estimates are necessary but not sufficient without checking
+the work-split allocation for the cycle in question.
 
 **Retrospective ledger** at `codex/08-workflows/estimation-retrospective-ledger.md` — every plan archive appends a row
 (`Plan | Class | Calibrated | Actual | Ratio | Notes`). When 8+ rows land for a class with median ratio drifting
