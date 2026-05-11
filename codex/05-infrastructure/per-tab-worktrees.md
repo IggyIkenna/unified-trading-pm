@@ -64,6 +64,196 @@ bash unified-trading-pm/scripts/dev/teardown-tab-worktrees.sh --slot 9
 After `--init`, every active repo in `workspace-manifest.json` has a worktree at `.tabs/<N>/<repo>/` for each slot. The
 operator opens Cursor at `.tabs/<N>/` and the tab is isolated.
 
+## Operator setup recipe (paste-ready)
+
+This section is the operator runbook — paste-ready commands + verification probes for each step. Works identically for
+Ikenna and Harsh; the only operator-specific detail is the choice of slot count N (see step 1).
+
+> **Precondition.** Workspace already bootstrapped via
+> [`scripts/workspace/workspace-bootstrap.sh`](../../scripts/workspace/workspace-bootstrap.sh) — i.e. all 26 active
+> sibling repos are cloned under `$WORKSPACE_ROOT`, `.venv-workspace` exists, and `git status` is clean across every
+> repo on `live-defi-rollout`. Confirm with:
+>
+> ```bash
+> cd "$WORKSPACE_ROOT"
+> for r in $(python3 -c "import json; d=json.load(open('unified-trading-pm/workspace-manifest.json')); print('\n'.join(k for k,v in d['repositories'].items() if not v.get('archived_into')))"); do
+>     [ -d "$r/.git" ] || { echo "MISSING: $r"; continue; }
+>     dirty=$(git -C "$r" status --porcelain | wc -l | tr -d ' ')
+>     [ "$dirty" != "0" ] && echo "DIRTY:   $r ($dirty files)"
+> done
+> echo "(empty output = workspace clean and ready)"
+> ```
+>
+> If anything's dirty, commit/push or stash before running `--init`. Slot worktrees branch off
+> `origin/live-defi-rollout` (or a local-existing slot branch); leaving uncommitted state in the main clone DOES NOT
+> propagate into the new slots, but it's good hygiene to start clean.
+
+### Step 1 — pick N (slot count)
+
+Rule of thumb: **N = peak concurrent Cursor / Claude Code tabs you expect to run**, +1-2 headroom for surge days.
+
+| Operator | Recommended N | Rationale                                                            |
+| -------- | ------------- | -------------------------------------------------------------------- |
+| Ikenna   | 8             | Cross-cutting design + governance; typically 5-6 active tabs daily.  |
+| Harsh    | 6-8           | Implementation-from-spec; tab count varies by daily work-split size. |
+
+You can grow later with `--add-slot <N>`. Don't undersize — empty slots cost ~10 MB of metadata each (Git worktrees
+share `.git/objects` with the main clone). Oversizing costs nothing operationally.
+
+### Step 2 — run `--init`
+
+```bash
+cd "$WORKSPACE_ROOT"
+bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8
+```
+
+For Harsh (or anyone with a non-default `$USER`), set the branch prefix explicitly if you want a different naming:
+
+```bash
+bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 6 --operator harsh
+# → branches will be tab/harsh/1, tab/harsh/2, ..., tab/harsh/6
+```
+
+Default behaviour reads `$USER` from the environment, so on Harsh's machine `$USER=harsh` (or similar) is picked up
+automatically; the `--operator` flag is for override only.
+
+**Expected output** (excerpt — full output is one block per slot × 26 repos):
+
+```
+[setup-tab-worktrees] Initialising 8 slots for operator 'harsh' under /Users/harsh/Code/.../.tabs/
+[setup-tab-worktrees] Provisioning slot 1 (branch tab/harsh/1) ...
+[setup-tab-worktrees]   ENV  slot 1 .envrc written (PREK_CACHE_DIR=.../prek)
+[setup-tab-worktrees]   ADD  alerting-service → /Users/.../.tabs/1/alerting-service (branch tab/harsh/1)
+...
+[setup-tab-worktrees]   SKIP user-management-ui (no sibling clone at ...)
+[setup-tab-worktrees] Provisioning slot 2 (branch tab/harsh/2) ...
+...
+[setup-tab-worktrees] Done. 8 slots ready. Next: assign themes via the daily work-split plan + harsh_orchestrator/LEDGER.md slot↔theme table.
+```
+
+Runtime: ~30s per slot on a typical Mac (network-free; worktrees share git objects with the main clone). 8 slots ≈ 3-4
+minutes total.
+
+### Step 3 — verification probes
+
+After `--init` returns, run these in order:
+
+```bash
+# Probe 1 — all N slots provisioned with one worktree per active repo on the right branch.
+bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --list
+# Expected: "slot 1: branch=tab/<op>/1 head=<sha>" through "slot N: branch=tab/<op>/N head=<sha>"
+# All HEADs should equal the current live-defi-rollout tip.
+
+# Probe 2 — git worktree list for PM shows N+1 entries (main clone + N slots).
+git -C unified-trading-pm worktree list
+# Expected: main clone line + N lines under .tabs/<N>/unified-trading-pm
+
+# Probe 3 — each slot's .envrc declares PREK_CACHE_DIR + SLOT_NUMBER.
+cat .tabs/1/.envrc
+# Expected:
+#   export UNIFIED_TRADING_WORKSPACE_ROOT=".../.tabs/1"
+#   export PREK_CACHE_DIR=".../.tabs/1/.cache/prek"
+#   export SLOT_NUMBER="1"
+#   export SLOT_OPERATOR="<your-user>"
+
+# Probe 4 — isolated index check: edit a file in slot 1, confirm main clone is unaffected.
+echo "spike" > .tabs/1/unified-trading-pm/SPIKE_DELETE_ME.md
+git -C .tabs/1/unified-trading-pm status --porcelain   # should show ?? SPIKE_DELETE_ME.md
+git -C unified-trading-pm status --porcelain           # should be empty
+rm .tabs/1/unified-trading-pm/SPIKE_DELETE_ME.md       # clean up
+```
+
+If any probe fails, re-run `--init` (idempotent) or fall back to manual `git worktree add` per the script's logic.
+
+### Step 4 — update orchestrator LEDGER slot↔theme table
+
+Open `<operator>_orchestrator/LEDGER.md` and update the `## Today's slot assignments` table with today's themes per the
+daily work-split plan. Example for Harsh:
+
+```markdown
+## Today's slot assignments
+
+**Slot count:** 6 (set 2026-05-11; grow with `--add-slot <N>` if peak parallel work exceeds).
+
+| Slot | Theme                    | Plan-of-record / scope                                         |
+| ---- | ------------------------ | -------------------------------------------------------------- |
+| 1    | main orchestrator        | (this LEDGER) — direction-setting + Q&A dispatch + ping triage |
+| 2    | mtds prediction smoke    | plans/active/predictions_master_2026_05_07.md                  |
+| 3    | features-onchain Phase 5 | plans/active/features_repo_consolidation_2026_05_08.md         |
+| 4    | (idle)                   | —                                                              |
+| 5    | (idle)                   | —                                                              |
+| 6    | (idle)                   | —                                                              |
+```
+
+The daily work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`) is the authoritative source for the
+theme assignments. The LEDGER mirrors it so fresh tab-agents bootstrap with the mapping in hand.
+
+### Step 5 — open Cursor at a slot
+
+For each tab you want to spawn:
+
+```bash
+# Open Cursor at the slot's workspace dir (NOT the main workspace root).
+code "$WORKSPACE_ROOT/.tabs/<N>"
+# OR for Claude Code:
+cd "$WORKSPACE_ROOT/.tabs/<N>" && claude
+```
+
+The slot's `.envrc` will load `PREK_CACHE_DIR` + `SLOT_NUMBER` if you have direnv installed (otherwise source it
+manually or set the env vars explicitly). Cursor's TypeScript server + file indexer cache per-workspace-path, so the
+first open warms the cache; subsequent opens are instant.
+
+### Step 6 — daily theme rotation
+
+When the daily work-split plan reassigns slot `<N>` to a new theme:
+
+```bash
+# 1. From WITHIN the slot's worktree, commit + push any leftover WIP.
+cd "$WORKSPACE_ROOT/.tabs/<N>/<repo-of-leftover-wip>"
+# Use the per-shippable-unit commit cadence per CLAUDE.md "Commit + Push + Flip" rule.
+
+# 2. From the workspace root, reset the slot to clean state on origin/live-defi-rollout.
+cd "$WORKSPACE_ROOT"
+bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>
+# → verifies clean status across all 26 repos in the slot
+# → fetches origin
+# → rebases tab/<operator>/<N> onto origin/live-defi-rollout
+# Aborts with file list if dirty; operator commits / stashes / discards before retry.
+
+# 3. Update the orchestrator LEDGER slot↔theme table (manual edit) with the new theme.
+
+# 4. The tab agent in that slot picks up the new theme on its next message — no Cursor restart needed.
+```
+
+Pinned to the daily work-split plan's "Daily reset" checklist (per [`CLAUDE.md`](../../cursor-configs/CLAUDE.md) §
+"Daily Work-Split Process" § "Daily reset (each morning)" steps 5-6).
+
+### Step 7 — troubleshooting
+
+| Symptom                                                               | Likely cause                                                                       | Fix                                                                                                                                                     |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--init` reports `SKIP <repo>` for an unexpected repo                 | Repo not cloned as sibling under `$WORKSPACE_ROOT`                                 | Re-run `bash scripts/workspace/workspace-bootstrap.sh --skip-fresh` to clone missing repos; then re-run `--init` (idempotent).                          |
+| `--reset-slot <N>` aborts with "dirty file(s)" + an unfamiliar file   | Foreign-agent WIP OR runtime artifact (e.g. `.local-dev-cache/`, `catboost_info/`) | Per CLAUDE.md "Two teammates" rule: do NOT `git checkout --` foreign WIP. For runtime artifacts: discard with `git checkout --`. For WIP: commit/stash. |
+| Cross-slot foot-gun-shaped behaviour (foreign work bundled)           | You're not in a slot worktree — main clone state leaked                            | `cd $WORKSPACE_ROOT/.tabs/<N>/` and start fresh. Confirm with `git rev-parse --show-toplevel` → should resolve to a path under `.tabs/<N>/`.            |
+| prek auto-restore wipes your edits mid-session                        | Per-slot `PREK_CACHE_DIR` not exported (direnv not loading `.envrc`)               | Manually: `source $WORKSPACE_ROOT/.tabs/<N>/.envrc` before any commit, OR install direnv + run `direnv allow`.                                          |
+| `git worktree add` fails with "already checked out at .../.tabs/<N>/" | Stale worktree entry after a manual `rm -rf .tabs/<N>/`                            | `git -C <repo> worktree prune` to clean the registry, then re-run `--add-slot <N>`.                                                                     |
+| Branch `tab/<op>/<N>` already exists with diverged history            | Slot was previously used + branched off an older `live-defi-rollout`               | `setup-tab-worktrees.sh --reset-slot <N>` rebases onto current origin/live-defi-rollout (assuming clean state).                                         |
+| `git rebase` produces conflicts during `--reset-slot`                 | The slot has commits not on `live-defi-rollout` (genuinely-divergent slot)         | Manual resolution: enter the slot, resolve conflicts, `git rebase --continue`, push the slot branch. Then re-run `--reset-slot` if needed.              |
+
+### Ikenna's provisioning evidence (2026-05-10/11)
+
+Ikenna's machine provisioned 8 slots successfully via this recipe:
+
+```
+slot 1: branch=tab/ikennaigboaka/1 head=6a6ae73b
+slot 2: branch=tab/ikennaigboaka/2 head=6a6ae73b
+...
+slot 8: branch=tab/ikennaigboaka/8 head=6a6ae73b
+```
+
+26 active repos × 8 slots = 208 worktrees provisioned. All 4 verification probes green. The same recipe applies to Harsh
+— only `$USER` (or `--operator` override) and chosen slot count `N` differ.
+
 ## Slot is durable; theme is daily
 
 The mapping of slot ↔ theme lives in **two** places, both daily-updated:

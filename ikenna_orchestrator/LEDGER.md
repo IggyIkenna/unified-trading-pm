@@ -62,7 +62,9 @@ number is addressable. Both go in the registry entry for clarity.
 > theme rotates daily. Before reassigning a slot to a new theme, run
 > `bash scripts/dev/setup-tab-worktrees.sh --reset-slot <N>` (verify clean + rebase onto `origin/live-defi-rollout`).
 
-**Slot count:** 8 (initial provisioning; grow with `--add-slot <N>` when peak parallel work exceeds capacity).
+**Slot count:** 8 (provisioned 2026-05-11 via `setup-tab-worktrees.sh --init --slots 8`; grow with `--add-slot <N>` if
+peak parallel work exceeds). All 26 active repos × 8 slots = 208 worktrees on branches `tab/ikennaigboaka/1` through
+`tab/ikennaigboaka/8`, each at head `6a6ae73b` at provisioning time.
 
 | Slot | Theme                       | Plan-of-record / scope                                         |
 | ---- | --------------------------- | -------------------------------------------------------------- |

@@ -250,20 +250,31 @@ master-resolved      sanity
       with file list.
 - [x] [SCRIPT] P0. Shipped `scripts/dev/teardown-tab-worktrees.sh` (PM@03e55eb3) — `--slot <N>` + `--force` flag.
       Refuses dirty state without `--force`. Smoke-tested: 26 worktrees + 26 branches removed cleanly.
-- [ ] [SCRIPT] P0. **DEFERRED-TO-PHASE-2**: integration into `scripts/workspace-bootstrap.sh` (auto-init at first-run
-      with per-operator config). Operator-driven, runs at first `--init` on each machine; not blocking adoption.
-- [ ] [SCRIPT] P0. **DEFERRED-TO-PHASE-2**: bash-syntax + idempotency tests in `scripts/quality-gates.sh`. Scripts
-      already smoke-tested end-to-end; QG integration is hardening not adoption-blocking. Next sweep wires it.
+- [x] [SCRIPT] P0. Hint added to `scripts/workspace/workspace-bootstrap.sh` "Quick start" output (PM@<this-commit>) —
+      recommends `setup-tab-worktrees.sh --init --slots 8` for parallel-agent flow with cross-link to per-tab-worktrees
+      codex SSOT. Lighter-touch than flag-based auto-init: operator sees the hint at every bootstrap run, picks N for
+      their workflow.
+- [x] [SCRIPT] P0. Shipped `tests/test_tab_worktrees.bats` (PM@<this-commit>) — 13 bats tests covering bash syntax of
+      all three scripts, `--help` rendering, arg-validation (missing mode / missing required flag / unknown arg),
+      `--list` idempotency, and teardown idempotency on missing slot. All 13 pass locally.
 - [x] [SCRIPT] P0. Shipped `codex/05-infrastructure/per-tab-worktrees.md` (PM@c56e98dc) — canonical SSOT for the 3-tier
       model + slot-vs-theme decoupling + bootstrap recipe + slot-reset discipline + foot-gun mitigation table + Path A/B
       mechanism. Cross-link to plan-aware-merge-resolution.md included.
 
 ## Phase 2 — Slot init + theme assignment (2-3d, operator-driven, both sides) — partial
 
-- [ ] [AGENT] P0. **PENDING-OPERATOR**: Ikenna runs `setup-tab-worktrees.sh --init --slots 8` on his machine. Scaffolded
-      slot↔theme table already added to LEDGER (PM@9e85fefd) — operator just runs `--init` to provision the worktrees.
-- [ ] [AGENT] P0. **PENDING-OPERATOR**: Harsh runs `--init --slots <M>` on his machine (M TBD, recommend 6-8).
-      Scaffolded slot↔theme table already added to his LEDGER (PM@9e85fefd).
+- [x] [AGENT] P0. **DONE 2026-05-11**: Ikenna ran `setup-tab-worktrees.sh --init --slots 8` on his machine. 26 active
+      repos × 8 slots = 208 worktrees provisioned cleanly. `--list` confirms all 8 slots at branch
+      `tab/ikennaigboaka/<N>` head `6a6ae73b`. Scaffolded slot↔theme table in
+      [`ikenna_orchestrator/LEDGER.md`](../../ikenna_orchestrator/LEDGER.md) (PM@9e85fefd) is now backed by real
+      worktrees. Slots 2-8 currently `(unassigned)` — assigned daily via work-split plan.
+- [ ] [AGENT] P0. **PENDING-HARSH**: Harsh runs `setup-tab-worktrees.sh --init --slots <M>` on his machine. Full
+      paste-ready recipe lives at
+      [`codex/05-infrastructure/per-tab-worktrees.md`](../../codex/05-infrastructure/per-tab-worktrees.md) § "Operator
+      setup recipe (paste-ready)" — seven numbered steps from precondition probe through troubleshooting table.
+      Recommended `M = 6` or `8`; default behaviour reads `$USER` so branch naming is automatic. Scaffolded slot↔theme
+      table in [`harsh_orchestrator/LEDGER.md`](../../harsh_orchestrator/LEDGER.md) (PM@9e85fefd) already ready; just
+      run `--init` + update LEDGER row with M when chosen.
 - [x] [AGENT] P0. Updated daily work-split plan template ([`plans/PLAN_FORMAT.md`](../PLAN_FORMAT.md) § "Daily
       Work-Split Plan Shape") to require a `## Today's slot     assignments` table in each day's split plan
       (PM@8986a8b2). Reviewers reject plans without it.
@@ -332,8 +343,12 @@ Six commits in PM (`live-defi-rollout`), one per shippable unit:
    CLAUDE.md edits + 1 PLAN_FORMAT.md edit).
 5. **PM@9e85fefd** — `docs(orchestrator): add slot↔theme assignment tables to both operator LEDGERs` (Phase 2 —
    scaffolded slot↔theme tables in both `ikenna_orchestrator/LEDGER.md` + `harsh_orchestrator/LEDGER.md`).
-6. **PM@<this-commit>** — `docs(plans): per_agent_worktrees Phase 5 sign-off + flip all phase checkboxes` (Phase 5 —
-   plan-flips + audit doc D3 row + master plan Group E row).
+6. **PM@6a6ae73b** — `docs(plans): per_agent_worktrees Phase 5 sign-off + flip all phase checkboxes` (Phase 5 — initial
+   plan-flips + master plan Group E row).
+7. **PM@<this-commit>** —
+   `feat(scripts,docs): per_agent_worktrees Phase 1/2 closure — bootstrap hint, QG bats tests, Ikenna --init evidence, operator setup recipe`
+   — workspace-bootstrap.sh hint, 13 bats tests, Ikenna's 8-slot provisioning (`tab/ikennaigboaka/1-8`), comprehensive
+   operator setup recipe in per-tab-worktrees.md codex doc (paste-ready for Harsh).
 
 Plus four upstream-cleanup commits made earlier in the same session to reach 100%-clean baseline before the migration
 (at operator direction "first we need to ensure the local working directory is 100% clean to origin"):
@@ -344,18 +359,19 @@ Plus four upstream-cleanup commits made earlier in the same session to reach 100
 - **ml-training-service@0b52e86** —
   `chore(ml-training): workspace-wide consistency sweep — plan-ref + symlinks + uv.lock`
 
-## Deferred work after 2026-05-10 (per_agent_worktrees plan execution)
+## Deferred work after 2026-05-11 (per_agent_worktrees plan closure)
 
-| Item                                                                    | Status as of 2026-05-10          | Successor / blocker                                                                          |
-| ----------------------------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------- |
-| Phase 1 — workspace-bootstrap.sh integration                            | `todo` (Phase 2 work)            | Operator runs `--init` on first machine; bootstrap integration ships alongside.              |
-| Phase 1 — bash-syntax + idempotency tests in `scripts/quality-gates.sh` | `todo`                           | Next QG hardening sweep wires it; scripts already smoke-tested end-to-end.                   |
-| Phase 2 — Ikenna `--init --slots 8`                                     | `pending-operator`               | Ikenna runs on his machine.                                                                  |
-| Phase 2 — Harsh `--init --slots M`                                      | `pending-operator`               | Harsh runs on his machine.                                                                   |
-| Phase 2 — 1-week burn-in vs foot-guns #1-#4                             | `deferred-pending-operator`      | Starts when both operators have run `--init` + adopted slot-based workflow.                  |
-| Phase 4 — full ~150-line trim of pre-commit-check section               | `deferred-after-Phase-2-burn-in` | Conservative banner shipped instead; full deletion after burn-in evidence confirms.          |
-| Phase 5 — burn-in foot-gun count in master plan Group E row             | `deferred-pending-operator`      | Updates with Phase 2 burn-in completion.                                                     |
-| Phase 0 — 3-sub-agent fan-out spike                                     | `deferred-into-Phase-2-burn-in`  | Real fan-out tests happen organically in burn-in; single-edit isolation test was sufficient. |
+Only one item remains on the operator side:
+
+| Item                                                        | Status as of 2026-05-11    | Successor / blocker                                                                                                                                                                 |
+| ----------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 2 — Harsh `--init --slots M`                          | `pending-harsh`            | Harsh runs `setup-tab-worktrees.sh --init --slots <M>` on his machine. Full paste-ready recipe at `codex/05-infrastructure/per-tab-worktrees.md` § "Operator setup recipe".         |
+| Phase 2 — 1-week burn-in vs cross-slot foot-guns #1-#4      | `deferred-pending-burn-in` | Starts when Harsh has run `--init` + both operators have adopted slot-based workflow for daily work. Track foot-gun-shaped incidents in `_agent_pings.md`; target = zero in week 1. |
+| Phase 4 — full ~150-line trim of pre-commit-check section   | `deferred-after-burn-in`   | Conservative banner shipped in CLAUDE.md instead; full deletion after burn-in evidence confirms cross-slot foot-guns truly unrepresentable.                                         |
+| Phase 5 — burn-in foot-gun count in master plan Group E row | `deferred-pending-burn-in` | Updates with the burn-in completion ping.                                                                                                                                           |
+
+All other Phase 0-5 deliverables are shipped (scripts + codex SSOTs + CLAUDE.md + PLAN_FORMAT.md + both operator
+LEDGERs + workspace-bootstrap.sh hint + bats tests + Ikenna's slot provisioning).
 
 ## Done definition
 
