@@ -27,4 +27,4 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-_(no active pings — slots 2 + 3 STARTED acks received 2026-05-11 + flipped to 🟢 IN FLIGHT in LEDGER registry; ping lines swept by slot 1 per protocol. Spawned tabs append STARTED/blocker/DONE one-liners here.)_
+[2026-05-11 06:52 UTC] harsh-workspace-qg-tab — STARTED slot 6 (plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
