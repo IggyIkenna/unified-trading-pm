@@ -269,24 +269,42 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       name templates" PASSES; basedpyright on the 8 touched source files = 0 NEW errors; ruff clean; scoped pytest = 0
       NEW failures. **DEFERRED sub-items** (split below): cross_instrument/multi_timeframe `get_output_bucket` (yaml
       gap) + the `dependency_checker.py` inline `bucket_template` strings.
-- [ ] **[SCRIPT] P1**. **DEFERRED (split off from #2) — BLOCKED 2026-05-11 (slot 4 cont.) on a bucket-name-length design
-      decision** — `cross_instrument` + `multi_timeframe`: (a) add `features-cross-instrument` +
-      `features-multi-timeframe` kinds to `deployment-service/configs/cloud-providers.yaml` (env-tiered per (b+);
-      buckets evidently exist on disk — config.py templates route to them); then (b) finish migrating
-      `cross_instrument/config.py` + `multi_timeframe/config.py` `get_output_bucket()` →
-      `resolve_bucket(kind="features-cross-instrument"/"features-multi-timeframe", asset_group=...)` (their
-      `output_bucket_template` Field defaults stay in code, with the existing pointer comments). status: blocked — note:
-      "2026-05-11 slot 4 (cont.) — BLOCKER: `features-cross-instrument` (25 chars) / `features-multi-timeframe` (24) are
-      too long for `{prefix}-{ag}-${DEPLOYMENT_ENV}-${PROJECT_ID}` under the 63-char bucket-name limit on BOTH clouds
-      for the longer combos — AWS `unified-trading-features-cross-instrument-prediction-staging-{12-digit-account}` ≈ 73
-      (over by 10), even `...-cefi-prod-...` ≈ 64 (over by 1); GCP `...-prediction-staging-central-element-323112` ≈ 67
-      (over). Needs OPERATOR/IKENNA design call (work-split: bucket-naming SSOT → Ikenna). Options: (i) shorter bucket
-      name aliased to the kind in yaml (`features-xinstr-{ag}-{env}-{pid}` — resolver hides the map; but existing
-      `features-cross-instrument-{ag}-{pid}` on-disk buckets need a rename+env-tier migration); (ii) drop
-      `unified-trading-` prefix for these 2 on AWS (`features-cross-instrument-{ag}-{env}-{account}` ≈ 53 fits — but
-      breaks the AWS naming convention); (iii) keep these 2 env-LESS like `terraform-state` (violates (b+) but the
-      env-less name ≈ 59 fits); (iv) GCP env-tiered + AWS env-less (asymmetric). See § Open questions Q5. Slot 1: route
-      a cross-side ping to Ikenna."
+- [x] **[SCRIPT] P1**. **DEFERRED (split off from #2) — ✅ DONE 2026-05-11 (slot 4 cont. 3, Q5/A5 resolved)** —
+      `cross_instrument` + `multi_timeframe`: (a) added the short alias kinds `features-xinstrument` (for
+      `features-cross-instrument`) + `features-mtf` (for `features-multi-timeframe`) to
+      `deployment-service/configs/cloud-providers.yaml` — 5 per-AG entries each (CEFI/TRADFI/DEFI/PREDICTION/SPORTS),
+      env-tiered with `${DEPLOYMENT_ENV_SHORT}`, both clouds (per Q5/A5 Option 1 / Scope A: the long names overflow the
+      63-char GCS/S3 cap under the env-tiered template; aliases live ONLY in bucket templates, workspace vocab
+      unchanged); (b) UTL `bucket_naming._KIND_ALIASES` bridges the consumer-facing long kinds → the short yaml keys
+      (consumers' call sites unchanged); (c) `${DEPLOYMENT_ENV}` → `${DEPLOYMENT_ENV_SHORT}` (3-char form
+      `dev`/`stg`/`prd`) across every env-tiered yaml entry + `-prediction-` → `-pred-` in every prediction-related
+      bucket-name STRING (keys unchanged), plus matching `${DEPLOYMENT_ENV_SHORT}` support in BOTH yaml-readers
+      (`deployment_service.config.env_substitutor` + UTL `bucket_naming`); (d) `cross_instrument/config.py` +
+      `multi_timeframe/config.py` `get_output_bucket()` now
+      `return resolve_bucket(kind="features-cross-instrument"/     "features-multi-timeframe", asset_group=...)` — the
+      `output_bucket_template` Field + the `OUTPUT_BUCKET_TEMPLATE` env-override alias deleted; (e) parity test
+      `test_bucket_naming.py` updated (snapshot `${DEPLOYMENT_ENV_SHORT}` + `-pred-`; `_FEATURES_PIPELINE_KINDS`
+      live-yaml pin gains `features-xinstrument`/`features-mtf` + the consumer aliases + the `*-pred-` prefixes; all
+      `-staging-` expectations → `-stg-`). All env-tiered names verified ≤63 chars (worst:
+      `unified-trading-features-xinstrument-tradfi-stg-{12-digit}` = 60). status: done — evidence: UTL@`4ee24b5`
+      (resolver `_KIND_ALIASES` + `${DEPLOYMENT_ENV_SHORT}`) + deployment-service@`008e371` (`env_substitutor`
+      `${DEPLOYMENT_ENV_SHORT}`) + deployment-service@`f81d043` (yaml sweep) + UTL@`e3dd846` (parity test) +
+      features-service@`e980ecfd` (config.py migration). On-disk flat→env-tiered + the 2 alias-kind renames migrate in
+      code_freeze Phase 2.6 (2026-05-15→05-19). **FOLLOW-UP (P2, DEFERRED)**: drop the now-stale
+      `OUTPUT_BUCKET_TEMPLATE` refs from
+      `features-service/features_service/cross_instrument/docs/{CONFIGURATION,DEPLOYMENT_GUIDE}.md` +
+      `features-service/features_service/multi_timeframe/.env.example` (docs only, no code impact — left to a
+      features-service-docs sweep so this commit doesn't double-format foreign docs).
+- [ ] **[SCRIPT] P2**. **DEFERRED (follow-up to the cross_instrument/multi_timeframe migration above)** — drop the
+      now-stale `OUTPUT_BUCKET_TEMPLATE` env-var refs from
+      `features-service/features_service/cross_instrument/docs/CONFIGURATION.md` (`output_bucket_template` row) +
+      `cross_instrument/docs/DEPLOYMENT_GUIDE.md` (`OUTPUT_BUCKET_TEMPLATE` table row) + `multi_timeframe/.env.example`
+      (`# OUTPUT_BUCKET_TEMPLATE=...` line) — the Field + env-override alias were deleted @features-service`e980ecfd`;
+      `get_output_bucket` now routes through
+      `resolve_bucket(kind="features-cross-instrument"/     "features-multi-timeframe", ...)` (the yaml SSOT). status:
+      todo — note: "2026-05-11 slot 4 — docs-only, no code impact (a reader who sets `OUTPUT_BUCKET_TEMPLATE` would just
+      have it silently ignored); deferred to a features-service-docs sweep so the migration commit doesn't double-format
+      foreign docs (prettier churn on `.md`)."
 - [ ] **[SCRIPT] P1**. **DEFERRED (split off from #2)** — migrate the `dependency_checker.py` inline `"bucket_template"`
       strings (`features-service/features_service/{delta_one,onchain,volatility}/.../dependency_checker.py` — the
       `"bucket_template": "market-data-tick-{asset_group_lower}-{project_id}"` etc. + the
@@ -315,7 +333,16 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       delegating paths. Pre-audit done (slot 4): ~36+ consumers across instruments-service (~16 files) /
       execution-service (~13) / deployment-service (~7) / PM scripts — grep
       `get_bucket_name\|BUCKET_PREFIXES\|get_instruments_bucket\|     get_market_data_bucket\|get_execution_bucket\|get_strategy_bucket\|get_features_calendar_bucket\|get_write_bucket_name`
-      — enumerate fully + basedpyright each consumer repo after the delegate lands (Citadel § 6)."
+      — enumerate fully + basedpyright each consumer repo after the delegate lands (Citadel § 6). **⚠️ Q6 (slot 4 cont.
+      3, 2026-05-11) — sequencing concern, needs Ikenna/operator before this lands**: after Phase 0e the yaml's Group-A
+      entries (`market-data`, `instruments-store`, `features-calendar`) are env-tiered
+      (`market-data-tick-{ag}-${DEPLOYMENT_ENV_SHORT}-{pid}` etc.); the on-disk buckets stay FLAT
+      (`market-data-tick-{ag}-{pid}`) until code*freeze Phase 2.6 (2026-05-15→05-19). The 'safe gap' that makes Done-def
+      #2's
+      `features-*`migration OK (nothing writes`features-_`between now and Phase 3, QG is mock) does **NOT**     extend to Group-A — instruments-service backfills + MTDS captures write`market-data`/`instruments-store`buckets     continuously. So a naive`get_bucket_name('market_data',
+      ...)`→`resolve_bucket_name(kind='market-data',
+      ...)`     delegate landing NOW re-points those consumers to non-existent env-tiered names → first-write-failure (the exact     bug this plan exists to prevent). Options: (i) the delegate keeps Group-A domains     (`instruments`/`market_data`/`features_calendar`) returning the FLAT name until Phase 2.6, then flips with the     migration; (ii) defer the whole delegate to the Phase-2.6 window; (iii) confirm instruments-service/MTDS set the     per-domain     `{DOMAIN}\_GCS_BUCKET[_{AG}]` override     to the flat names during the transition (then the override pre-check shields them). Group-B domains     (`features*\*`/`ml*\*`/`execution`/`strategy`)
+      are unaffected (the safe gap covers them). See § Open questions Q6. Slot 1: route a cross-side ping to Ikenna."
 - [ ] **[SCRIPT] P1**. Workspace QG step (the inline-`f"gs://{bucket}/..."`/`f"s3://{bucket}/..."` formatter ratchet)
       AST-walks for these formatters; fails CI if any new ones land outside the resolver. **Design (slot 4
       2026-05-11)**: baseline-ratchet shape (count current `gs://`/`s3://` f-strings WITHOUT a `# noqa: gs-uri` marker
@@ -739,46 +766,128 @@ resolver, and the on-disk migration is a Phase-2.6 line item anyway. But this is
 
 #### A5 — [ikenna-main → slot 4, 2026-05-11] — operator decision: **Option 1 (aliased shorter kind names) — Scope A (bucket-template-only rename)** ✅ RESOLVED
 
-**Operator decision 2026-05-11** (via slot 1 main): Option 1 from the enumerated options — shorter alias for the 2 overflowing kinds in the yaml, resolver hides the rename from consumers. Scope A: rename lives **only in bucket templates**; workspace vocab stays unchanged (no CLAUDE.md "asset-group vocabulary" rule change, no workspace-wide `prediction → pred` migration).
+**Operator decision 2026-05-11** (via slot 1 main): Option 1 from the enumerated options — shorter alias for the 2
+overflowing kinds in the yaml, resolver hides the rename from consumers. Scope A: rename lives **only in bucket
+templates**; workspace vocab stays unchanged (no CLAUDE.md "asset-group vocabulary" rule change, no workspace-wide
+`prediction → pred` migration).
 
 **Concrete aliases** (per slot 1 audit + operator approval):
 
-| Original name (consumer-facing kind, unchanged) | Bucket-template alias (yaml on-disk) | Length | AWS-worst-case (tradfi/sports + stg) |
-|---|---|---|---|
-| `features-cross-instrument` | `features-xinstrument` | 20 chars | **61 chars** ✓ (2 char headroom) |
-| `features-multi-timeframe` | `features-mtf` | 12 chars | **53 chars** ✓ (10 char headroom) |
+| Original name (consumer-facing kind, unchanged) | Bucket-template alias (yaml on-disk) | Length   | AWS-worst-case (tradfi/sports + stg) |
+| ----------------------------------------------- | ------------------------------------ | -------- | ------------------------------------ |
+| `features-cross-instrument`                     | `features-xinstrument`               | 20 chars | **61 chars** ✓ (2 char headroom)     |
+| `features-multi-timeframe`                      | `features-mtf`                       | 12 chars | **53 chars** ✓ (10 char headroom)    |
 
-**Companion bucket-template-only short forms** (per Scope A — slot 1 audit confirmed all buckets fit ≤63 chars workspace-wide with this set):
+**Companion bucket-template-only short forms** (per Scope A — slot 1 audit confirmed all buckets fit ≤63 chars
+workspace-wide with this set):
 
-- `${DEPLOYMENT_ENV}` substitution in bucket templates uses **3-char form** (`dev` / `stg` / `prd`) — workspace vocab can keep `development` / `staging` / `prod` in env vars + plans + code. Add `${DEPLOYMENT_ENV_SHORT}` env var (or have the resolver translate `staging → stg` / `prod → prd` / `development → dev` internally) so yaml templates use the short form without forcing the workspace-wide rename.
-- Dedicated `*-prediction` yaml keys + per-AG dict's `PREDICTION:` entries use **`pred`** in the bucket-name string — but `asset_group="prediction"` stays canonical per CLAUDE.md asset-group rule. Resolver translates `asset_group="prediction"` → `pred` in the bucket template substitution.
+- `${DEPLOYMENT_ENV}` substitution in bucket templates uses **3-char form** (`dev` / `stg` / `prd`) — workspace vocab
+  can keep `development` / `staging` / `prod` in env vars + plans + code. Add `${DEPLOYMENT_ENV_SHORT}` env var (or have
+  the resolver translate `staging → stg` / `prod → prd` / `development → dev` internally) so yaml templates use the
+  short form without forcing the workspace-wide rename.
+- Dedicated `*-prediction` yaml keys + per-AG dict's `PREDICTION:` entries use **`pred`** in the bucket-name string —
+  but `asset_group="prediction"` stays canonical per CLAUDE.md asset-group rule. Resolver translates
+  `asset_group="prediction"` → `pred` in the bucket template substitution.
 
 **Why Scope A (not Scope B / workspace-wide rename)**:
-- Solves the actual problem (63-char overflow) with minimum blast radius (~5-10 file changes: yaml + resolver + 2-3 env-var setters).
-- Workspace vocab readability preserved (`prediction` / `staging` / `prod` / `development` everywhere except IN bucket names).
-- CLAUDE.md "asset-group vocabulary" rule unchanged — `prediction` stays the canonical lowercase identifier; `pred` is bucket-template-only.
-- Resolver bridges the two — consumers still call `resolve_bucket(kind="features-cross-instrument", asset_group="prediction", env="staging")` but the on-disk bucket comes out as `unified-trading-features-xinstrument-pred-stg-{account}`.
+
+- Solves the actual problem (63-char overflow) with minimum blast radius (~5-10 file changes: yaml + resolver + 2-3
+  env-var setters).
+- Workspace vocab readability preserved (`prediction` / `staging` / `prod` / `development` everywhere except IN bucket
+  names).
+- CLAUDE.md "asset-group vocabulary" rule unchanged — `prediction` stays the canonical lowercase identifier; `pred` is
+  bucket-template-only.
+- Resolver bridges the two — consumers still call
+  `resolve_bucket(kind="features-cross-instrument", asset_group="prediction", env="staging")` but the on-disk bucket
+  comes out as `unified-trading-features-xinstrument-pred-stg-{account}`.
 
 **Slot 4 implementation scope** (Phase 0e remaining items / yaml-gap sub-todo unblocked):
 
 1. **Yaml updates** (`deployment-service/configs/cloud-providers.yaml`):
-   - Rename `features-cross-instrument` yaml key → `features-xinstrument`; add 5 per-AG entries (CEFI/TRADFI/DEFI/PREDICTION/SPORTS) following the existing `features-delta-one` shape (env-tiered + per-AG).
+   - Rename `features-cross-instrument` yaml key → `features-xinstrument`; add 5 per-AG entries
+     (CEFI/TRADFI/DEFI/PREDICTION/SPORTS) following the existing `features-delta-one` shape (env-tiered + per-AG).
    - Rename `features-multi-timeframe` yaml key → `features-mtf`; same 5-AG shape.
-   - Switch `${DEPLOYMENT_ENV}` → `${DEPLOYMENT_ENV_SHORT}` in bucket templates (or implement the resolver translation, whichever is simpler — your call).
-   - For per-AG `PREDICTION` entries + dedicated `*-prediction` flat keys: change the bucket-name string portion from `-prediction-` → `-pred-`.
+   - Switch `${DEPLOYMENT_ENV}` → `${DEPLOYMENT_ENV_SHORT}` in bucket templates (or implement the resolver translation,
+     whichever is simpler — your call).
+   - For per-AG `PREDICTION` entries + dedicated `*-prediction` flat keys: change the bucket-name string portion from
+     `-prediction-` → `-pred-`.
 2. **Resolver updates** (`unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py`):
    - Translate consumer-facing `kind="features-cross-instrument"` → yaml key `features-xinstrument` (alias map).
    - Translate consumer-facing `kind="features-multi-timeframe"` → yaml key `features-mtf`.
-   - Translate `asset_group="prediction"` → bucket-template string `pred` (when substituting into the bucket name string, NOT when looking up the per-AG dict key — dict key stays `PREDICTION` per yaml convention).
-   - Translate `env=staging/prod/development` → `stg/prd/dev` when substituting `${DEPLOYMENT_ENV_SHORT}` (or set the env var accordingly upstream).
-3. **Parity test update** (`unified-trading-library/tests/unit/test_cloud_providers_yaml_parity.py`): refresh snapshot to match the new short-form bucket-template values; add new per-AG entries for `features-xinstrument` + `features-mtf` (resolves the yaml-gap sub-todo Done-def #2 item (a)).
-4. **Phase 2.6 migration (2026-05-15→05-19)**: existing on-disk `features-cross-instrument-{ag}-{pid}` (env-less, ~59 char names) get renamed + env-tier added during the bundled GCS/S3 migration window. Same migration script that's already planned for the (b+) flat→env-tiered transition handles these 2 kinds as additional renames.
+   - Translate `asset_group="prediction"` → bucket-template string `pred` (when substituting into the bucket name
+     string, NOT when looking up the per-AG dict key — dict key stays `PREDICTION` per yaml convention).
+   - Translate `env=staging/prod/development` → `stg/prd/dev` when substituting `${DEPLOYMENT_ENV_SHORT}` (or set the
+     env var accordingly upstream).
+3. **Parity test update** (`unified-trading-library/tests/unit/test_cloud_providers_yaml_parity.py`): refresh snapshot
+   to match the new short-form bucket-template values; add new per-AG entries for `features-xinstrument` +
+   `features-mtf` (resolves the yaml-gap sub-todo Done-def #2 item (a)).
+4. **Phase 2.6 migration (2026-05-15→05-19)**: existing on-disk `features-cross-instrument-{ag}-{pid}` (env-less, ~59
+   char names) get renamed + env-tier added during the bundled GCS/S3 migration window. Same migration script that's
+   already planned for the (b+) flat→env-tiered transition handles these 2 kinds as additional renames.
 
-**Audit confirmation** (slot 1 audit 2026-05-11): with this aliasing + companion short forms, every bucket name workspace-wide fits ≤63 chars. Worst-case combos verified: `features-xinstrument-tradfi-stg` = 61 chars (AWS); `features-mtf-tradfi-stg` = 53 chars; all other env-tiered kinds ≤60 chars; all Group-A non-env-tiered kinds ≤47 chars. No other overflow risks lurking.
+**Audit confirmation** (slot 1 audit 2026-05-11): with this aliasing + companion short forms, every bucket name
+workspace-wide fits ≤63 chars. Worst-case combos verified: `features-xinstrument-tradfi-stg` = 61 chars (AWS);
+`features-mtf-tradfi-stg` = 53 chars; all other env-tiered kinds ≤60 chars; all Group-A non-env-tiered kinds ≤47 chars.
+No other overflow risks lurking.
 
 **Cross-side ping to slot 4 filed in `plans/active/_agent_pings.md`** (same commit as this answer).
 
-**Status**: ✅ RESOLVED — slot 4 unblocked on the cross_instrument/multi_timeframe yaml-gap sub-todo (= Done-def #2 item (a)) + the broader Phase 0e env-tier roll-out. Phase 2.6 migration scope grows by 2 additional kind renames (low marginal cost since the migration script is already planned).
+**Status**: ✅ RESOLVED — slot 4 unblocked on the cross_instrument/multi_timeframe yaml-gap sub-todo (= Done-def #2 item
+(a)) + the broader Phase 0e env-tier roll-out. Phase 2.6 migration scope grows by 2 additional kind renames (low
+marginal cost since the migration script is already planned).
+
+**SHIPPED 2026-05-11 (slot 4 cont. 3)** — implemented per A5 with `${DEPLOYMENT_ENV_SHORT}` as an explicit yaml var
+(both `deployment_service.config.env_substitutor` + UTL `bucket_naming` compute the 3-char form from `DEPLOYMENT_ENV`):
+UTL@`4ee24b5` (resolver `_KIND_ALIASES` + `${DEPLOYMENT_ENV_SHORT}` substitution) + deployment-service@`008e371`
+(`env_substitutor` `${DEPLOYMENT_ENV_SHORT}`) + deployment-service@`f81d043` (yaml sweep — `${DEPLOYMENT_ENV}`→
+`${DEPLOYMENT_ENV_SHORT}` everywhere, `-prediction-`→`-pred-` in bucket-name strings, added `features-xinstrument`/
+`features-mtf` 5-per-AG both clouds, §-header rewrite) + UTL@`e3dd846` (parity test) + features-service@`e980ecfd`
+(cross_instrument/multi_timeframe `get_output_bucket` → `resolve_bucket`). One deviation from A5 item 2's literal text:
+the `asset_group="prediction"` → `pred` translation is done by writing the yaml templates with `pred` directly (not a
+resolver-side translation) — simpler + correct (the dict KEY stays `PREDICTION`; only the bucket-name STRING uses
+`pred`).
+
+### Q6 — [harsh-bucket-and-adapter-tab, 2026-05-11 (cont. 3)] — Done-def #3 delegate would re-point Group-A bucket consumers to non-existent env-tiered names if it lands before Phase 2.6
+
+**Status**: 🟡 BLOCKED — needs an Ikenna/operator sequencing decision before the Done-def #3 legacy `get_bucket_name`
+delegate lands.
+
+After Phase 0e the yaml's Group-A entries (`market-data` →
+`market-data-tick-{ag}-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}`, `instruments-store` →
+`instruments-store-{ag}-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}`, `features-calendar`) are env-tiered, but the on-disk
+buckets stay FLAT (`market-data-tick-{ag}-{pid}` etc.) until code*freeze Phase 2.6 (2026-05-15→05-19, which provisions
+the env-tiered buckets + migrates the data). The "safe gap" that makes Done-def #2's
+`features-*`migration OK — \_nothing writes`features-_`buckets between now and code_freeze Phase 3 backfills, and QG
+runs in mock mode (emulator auto-creates buckets)_ — does **NOT** extend to Group-A: instruments-service backfills +
+MTDS captures write`market-data`/`instruments-store`buckets **continuously**.
+So`get_bucket_name('market_data', 'CEFI')`/`get_market_data_bucket('cefi')`/`get_instruments_bucket(...)`delegating
+to`resolve_bucket_name(...)`NOW would re-point those continuously-running consumers to env-tiered names that don't exist
+on disk → first-write-failure (the exact bug this plan exists to prevent). Done-def #2's L2`config.py`migration was safe
+because features-service's`features-\*`writes are in the "safe gap"; the legacy`get_bucket_name` consumer base includes
+instruments-service + MTDS Group-A writes which are NOT.
+
+**Options** (pick one — Ikenna/operator call per the work-split: bucket-naming SSOT decisions → Ikenna):
+
+1. **Transitional delegate** — the `get_bucket_name` delegate keeps the Group-A domains (`instruments` / `market_data` /
+   `features_calendar`) returning the FLAT name (`{prefix}-{ag}-{pid}` / `{prefix}-{pid}`) until Phase 2.6, then a
+   follow-up flips them to `resolve_bucket_name` in the SAME window as the flat→env-tiered data migration. Group-B
+   domains (`features_*` / `ml_*` / `execution` / `strategy`) delegate to `resolve_bucket_name` now (they're in the safe
+   gap; `execution` was already env-tiered via the old `get_bucket_name` Group-B path so no change).
+2. **Defer the whole delegate to the Phase-2.6 window** — land the `get_bucket_name` → `resolve_bucket_name` delegate
+   (all domains) as part of Phase 2.6, alongside the flat→env-tiered provisioning + data migration + the write-pause
+   cutover. Cleaner (one flip, no transitional state) but pushes Done-def #3 from Phase-1-code-complete to Phase 2.6.
+3. **Confirm the per-domain env-override shield** — if instruments-service + MTDS already set `INSTRUMENTS_GCS_BUCKET` /
+   `MARKET_DATA_GCS_BUCKET[_{AG}]` (or equivalents) to the flat names in their runtime configs, the delegate's
+   env-override pre-check (`get_bucket_name` already has it) returns the flat name regardless of the yaml → safe to
+   delegate all domains now. Needs a probe of instruments-service + MTDS configs to confirm; fragile if the override
+   isn't set everywhere.
+
+Slot 4's lean recommendation: option 1 (transitional delegate) — Group-B delegates now (matches the (b+) "code-first,
+physical-migration-second" sequence + the Done-def #2 precedent), Group-A flips with Phase 2.6. But this is Ikenna's
+call. **Until resolved, slot 4 does NOT land the Done-def #3 delegate** (the riskiest item; warrants the sequencing
+decision first). Slot 1: route a cross-side ping to Ikenna.
+
+#### A6 — [pending Ikenna/operator]
 
 ## Deferred work after 2026-05-11 slot 4 session
 
@@ -794,8 +903,8 @@ audit. Items still open are tracked here so the next agent picks up cleanly.
 | Phase 0 (re-shaped: yaml-correctness fixes only) — add prediction/sports keys + uncomment GCP features-calendar + doc shape conventions | `done` ([x] partial) — deployment-service@`a7eba4f` + UTL@`2118b1e` (parity test) | The bucket PROVISIONING + flat-bucket DATA MIGRATION + reader/writer repoint is `code_freeze` Phase 2.6 (2026-05-15→05-19) — NOT slot 4's to execute now (per option (b) "code-first, physical-migration-second"). `aws s3 ls` probe still pending (no AWS CLI on the slot machine — `ml-*`/`strategy`/`execution` confirmed env-tiered on GCP). `-test-` variant canonicalisation = a Phase-0 sub-item flagged for operator OK on the canonical shape.                                                                                                                                                                          |
 | Done-def #2 — migrate per-family `config.py` `*_bucket_template` → resolver                                                             | `done` ([x]) — features-service@`8f03ceeb` (sub-agent fan-out)                    | DEFERRED sub-items split off: (a) cross_instrument/multi_timeframe `get_output_bucket` — **BLOCKED on Q5** (the `features-cross-instrument`/`features-multi-timeframe` bucket names overflow the 63-char limit under the (b+) env-tier template — needs an Ikenna design call); (b) `dependency_checker.py` inline templates (blocked on UTL `BaseDependencyChecker` migration + `test_mode`-infra rewrite + ~6-test blast radius — note: after Phase 0e the `market-data` probe template now DRIFTS from the env-tiered yaml; must land in the Phase-2.6 window or via the UTL migration).                                      |
 | **Phase 0e** — env-tier the Group-A bucket kinds in yaml + parity test                                                                  | `done` ([x]) — deployment-service@`a5c2082` + UTL@`ba6089c`                       | `market-data`/`instruments-store`/`features-calendar`/`market-data-tick-prediction`/`instruments-store-prediction` env-tiered on both clouds; §-header comment updated; all names verified ≤63 chars. Remaining env-less GCP entries (`dex-*`/`*-defi` raw, `pnl-store-defi`/etc shape-alignment, `events`/`config-store`) split into a new `- [ ]` sub-todo (the DeFi-raw ones are a clean add; `pnl-store-defi`/etc need a shape decision; `events` is operator-gated due to workspace-wide `{pid}-events` refs). code-first per code_freeze sequencing — provisioning + flat-bucket migration = Phase 2.6 (2026-05-15→05-19). |
-| cross_instrument/multi_timeframe yaml-gap sub-todo (the last loose end of Done-def #2)                                                  | `blocked` ([ ]) — Q5                                                              | The `features-cross-instrument` (25 chars) / `features-multi-timeframe` (24) bucket names overflow the 63-char limit under `{prefix}-{ag}-${DEPLOYMENT_ENV}-${PROJECT_ID}` for the longer combos (`prediction`+`staging`, + AWS `unified-trading-` prefix). Needs operator/Ikenna design call — see § Open questions Q5 (4 options: aliased shorter name / drop `unified-trading-` for these 2 / keep env-less / asymmetric). Slot 1: route a cross-side ping to Ikenna.                                                                                                                                                         |
-| Done-def #3 — delegate legacy `get_bucket_name` + `BUCKET_PREFIXES` → resolver                                                          | `todo` ([ ])                                                                      | No hard gate (UTL-only) but ships after #2 (now done) — needs the workspace-consumer pre-audit fully enumerated (~36+ files across instruments-service / execution-service / deployment-service / PM scripts) + basedpyright each consumer repo (Citadel § 6).                                                                                                                                                                                                                                                                                                                                                                   |
+| cross_instrument/multi_timeframe yaml-gap sub-todo (the last loose end of Done-def #2)                                                  | `done` ([x]) — Q5/A5 resolved + implemented 2026-05-11 (slot 4 cont. 3)           | Q5/A5 Option 1 / Scope A: short alias kinds `features-xinstrument`/`features-mtf` in the yaml + UTL `_KIND_ALIASES` bridge + `${DEPLOYMENT_ENV_SHORT}` 3-char form everywhere + `-pred-` bucket-name strings + config.py `get_output_bucket` → `resolve_bucket`. Evidence: UTL@`4ee24b5` + deployment-service@`008e371` + deployment-service@`f81d043` + UTL@`e3dd846` + features-service@`e980ecfd`. Follow-up (P2, deferred): drop stale `OUTPUT_BUCKET_TEMPLATE` doc refs (features-service-docs sweep).                                                                                                                      |
+| Done-def #3 — delegate legacy `get_bucket_name` + `BUCKET_PREFIXES` → resolver                                                          | `blocked` ([ ]) — Q6 (sequencing)                                                 | No hard gate (UTL-only) but **now blocked on Q6** (Ikenna sequencing call): a naive delegate landing before Phase 2.6 re-points Group-A consumers (instruments-service / MTDS — `market-data`/`instruments-store`, written continuously) to non-existent env-tiered names → first-write-failure. Options: (i) transitional delegate (Group-B now, Group-A flips with Phase 2.6 — slot 4 rec); (ii) defer whole delegate to Phase 2.6; (iii) confirm per-domain env-override shield. See § Open questions Q6. Pre-audit done (~36+ consumers). Slot 1: route a cross-side ping to Ikenna.                                         |
 | Done-def #4 — extend parity test                                                                                                        | `done` ([x]) — UTL@`e8dc6e3` (+ UTL@`2118b1e` Phase-0 follow-up)                  | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Done-def #5 — QG STEP 5.68 (`f"gs://..."` ratchet)                                                                                      | `todo` ([ ])                                                                      | DEFERRED-AFTER #2 (done) + #3 (else ratchet baseline bakes in to-be-removed inline templates); design written in § Pre-audit manifest → "QG STEP 5.6X design"; STEP **5.68** (5.66 reserved for multi-process-launcher, 5.67 taken by slot 6 — confirm 5.68 free in `base-service.sh`).                                                                                                                                                                                                                                                                                                                                          |
 | Done-def #6 — plan-flip cite + grep audit table (zero drift)                                                                            | `blocked` ([ ])                                                                   | DEFERRED-AFTER #3 + #5 + the Phase-2.6 provisioning/migration (then verify drift ≤0.01% per bucket + zero readers still hit flat names).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -880,3 +989,30 @@ Q5. **Workspace observation (not slot-4-owned)**: `import unified_trading_librar
 `unified_api_contracts/__init__.py` doesn't export — a UTL→UAC drift mid-flight (almost certainly the `available_at`
 bar-boundary work; flagged in slot_4.md ping for visibility). Going quiet — next session picks up Done-def #3 + the
 env-less-GCP-entries sub-todo (DeFi-raw first).
+
+## DONE-2026-05-11 (cont. 3) — harsh-bucket-and-adapter-tab (slot 4), Q5/A5 implementation session
+
+| Item                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Status | Commits                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------- |
+| UTL `bucket_naming` — `_KIND_ALIASES` map (`features-cross-instrument`→`features-xinstrument`, `features-multi-timeframe`→`features-mtf`; applied in `resolve_bucket_name`) + `${DEPLOYMENT_ENV_SHORT}` substitution in `_substitute_env_vars` (3-char form `dev`/`stg`/`prd`/`test`/`ci` from `DEPLOYMENT_ENV`, default `prod`→`prd`; unknown → `BucketNamingError`)                                                                                                                                         | `done` | unified-trading-library@`4ee24b5`         |
+| deployment-service `env_substitutor` — matching `${DEPLOYMENT_ENV_SHORT}` support (same map; `ValueError` on unknown) so both yaml-readers produce identical bucket names from `cloud-providers.yaml`                                                                                                                                                                                                                                                                                                         | `done` | deployment-service@`008e371`              |
+| `cloud-providers.yaml` Q5/A5 sweep — `${DEPLOYMENT_ENV}`→`${DEPLOYMENT_ENV_SHORT}` (~82 occ, both clouds); `-prediction-`→`-pred-` in 14 prediction-related bucket-name STRINGS (keys unchanged); added `features-xinstrument` + `features-mtf` (5 per-AG each, env-tiered, both clouds); §-header comment rewritten (the `${DEPLOYMENT_ENV_SHORT}` convention + the `pred` rule + the kind aliases). All env-tiered names ≤63 chars (worst 60). yaml parses; prettier-clean                                  | `done` | deployment-service@`f81d043`              |
+| parity test `test_bucket_naming.py` — `_SNAPSHOT_YAML` → `${DEPLOYMENT_ENV_SHORT}` + `-pred-`; all snapshot-test expectations `-staging-`→`-stg-` + `-prediction-`→`-pred-`; `_FEATURES_PIPELINE_KINDS` live-yaml pin gains `features-xinstrument`/`features-mtf` + `features-cross-instrument`/`features-multi-timeframe` (consumer aliases → SHORT-prefix resolved bucket) + `*-pred-` prefixes for the prediction kinds; `test_resolver_reads_live_env_each_call` assertions → `-stg-`/`-prd-`. ruff-clean | `done` | unified-trading-library@`e3dd846`         |
+| features-service `cross_instrument/config.py` + `multi_timeframe/config.py` — deleted the `output_bucket_template` Field + `OUTPUT_BUCKET_TEMPLATE` alias; `get_output_bucket` → `resolve_bucket(kind="features-cross-instrument"/"features-multi-timeframe", asset_group=...)` (resolver aliases to `features-xinstrument`/`features-mtf`). No tests reference the removed Field. ruff-clean                                                                                                                 | `done` | features-service@`e980ecfd`               |
+| Plan flips (cross_instrument/multi_timeframe yaml-gap sub-todo `[x]`; Done-def #3 NOTE + scoreboard `blocked`-on-Q6) + Q6 added to § Open questions + Q5 SHIPPED note + this DONE block                                                                                                                                                                                                                                                                                                                       | `done` | PM@`<this commit>` (references the above) |
+
+**Still open after the Q5/A5 session:** **Done-def #3** (legacy `get_bucket_name`+`BUCKET_PREFIXES` delegate) — now
+**BLOCKED on Q6** (Ikenna sequencing call: the delegate landing before Phase 2.6 re-points Group-A consumers to
+non-existent env-tiered names — slot 4 rec = transitional delegate, Group-B now / Group-A flips with Phase 2.6); the
+env-less-GCP-entries sub-todo (DeFi-raw `dex-*`/`*-defi` first — clean `${DEPLOYMENT_ENV_SHORT}` add;
+`pnl-store-defi`/etc shape-decision + `events`/`config-store` operator-gated); Done-def #5 (QG STEP 5.68 ratchet — after
+#2 done + #3); Done-def #6 (audit table — after #3 + #5 + Phase 2.6); the `dependency_checker.py` sub-todo (blocked on
+UTL `BaseDependencyChecker` migration + `test_mode`-infra rewrite); Phase 0 `aws s3 ls` probe + `-test-` canonical-shape
+operator OK; Phase 0f (VM-launcher env-awareness); Phase 0g (UI-env-tier verify — already shipped per codex); Phase 0h
+(sync-script); Phase 0c/0d (= code_freeze Phase 2.6, 2026-05-15→05-19). **Cross-side (slot 1's action)**: route a
+cross-side ping to Ikenna re **Q6** (Done-def #3 sequencing) — bucket-naming SSOT decisions → Ikenna per the work-split.
+The prior cross-side asks (Ikenna slot 3 — sports `available_at` Phase 1 todo + 2 design Qs; Q5) are ✅ resolved.
+**Workspace observation (not slot-4-owned, unchanged)**: `import unified_trading_library` broken on
+`origin/live-defi-rollout` (`availability_stamping.py:83` → `BAR_TIMEFRAME_SECONDS` not exported from UAC `__init__.py`)
+— blocks running the UTL parity test locally; the test is logically consistent with the resolver + yaml. Going quiet —
+next session picks up Done-def #3 (pending Q6) + the env-less-GCP-entries sub-todo (DeFi-raw first).
