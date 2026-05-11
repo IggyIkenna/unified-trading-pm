@@ -171,6 +171,108 @@ touched by this plan, enumerated.
 **Full-execution criterion:** Q-doc commit references AD-1 through AD-6; 4 banners visible at top of named plans;
 operator ack visible in chat or commit co-authoring metadata.
 
+## Family 1 topology design — per-chain × per-lender SSOT (2026-05-12 slot 5)
+
+> **Design owner:** ikenna slot 5 / agent-tag `ikenna-recursive-borrow-tab` (2026-05-12).
+> **Source:** 3-sub-agent parallel research fan-out (Ethereum + Arbitrum + Base) reconciled below. Each per-chain
+> ground-truth report cited in commit message; raw outputs in slot 5 transcript.
+> **Status:** DESIGN-SHIPPED. Consumed by Phase 2 (UAC schema), Phase 3 (strategy-service factory + catalog), Phase 9
+> (backtest cell selection). **Does NOT block on defi_catalogue Phase 3** — design proceeds independent; backfill
+> dependency surfaces only at backtest replay.
+
+### Workspace ground truth (existing, do not duplicate)
+
+- `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py:76-78` — `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2) enum members ALREADY SHIPPED. AD-1 PR scope shrinks accordingly.
+- `unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py:54-119` — `AAVE_V3_ETHEREUM_RESERVES` ships **10 reserves** (USDC, USDT, DAI, WETH, WBTC, WSTETH, WEETH, CBETH, LINK, AAVE) — NOT 8 as claimed in plan body intro; correct on next plan-body sweep.
+- `defi_reserve_params.py:126-143` — `AAVE_V3_EMODE_CATEGORIES`: ETH_CORRELATED (id=1, 0.93/0.95, {WETH, WEETH, WSTETH, CBETH}) + STABLECOIN (id=2, 0.97/0.975, {USDC, USDT, DAI}).
+- `defi_reserve_params.py:302-340` — `COMPOUND_V3_ETHEREUM_RESERVES` (USDC market collaterals).
+- `defi_reserve_params.py:352-389` — `MORPHO_BLUE_ETHEREUM_RESERVES` (6 curated-vault defaults at uniform LLTV=0.86).
+
+### 🚨 P0 silent correctness bug found mid-design (Findings Triage — adjacent to my plan)
+
+- [ ] [UAC] **P0 — `defi_reserve_params.py:175` `get_reserve_params(asset, chain="ETHEREUM")` accepts the `chain` arg but ignores it.** Any non-Ethereum caller silently receives Ethereum params. Wire `chain` to dispatch through `_CHAIN_RESERVES: dict[str, dict[str, ReserveParams]]` lookup. Same fix needed for `get_compound_reserve_params(asset)` (`defi_reserve_params.py:393`) — Compound V3 is per-market AND per-chain; current signature is single-market Ethereum-only. **Same fix needed for `_ASSET_EMODE_MAP` / `get_emode_category(asset)` / `get_emode_params(collateral, debt)`** — currently single global map (line 146-149); cross-chain support requires `(chain, asset)` keying. Without this fix Family 1 cannot route correctly to Arbitrum or Base cells.
+
+### Per-chain × per-lender ReserveParams matrix (proposed UAC additions)
+
+| Chain × Lender | Status in UAC | P0 dict addition | Notes |
+| -------------- | ------------- | ---------------- | ----- |
+| Aave V3 Ethereum | ✅ 10 reserves shipped | Extend with `RETH` + admit to ETH_CORRELATED E-Mode | Family 1 primary on Ethereum |
+| Spark Ethereum | ❌ NOT in UAC | NEW `SPARK_ETHEREUM_RESERVES` mirroring Aave shape; SparkLend ETH E-Mode `max_ltv≈0.90, lt≈0.93` (low-confidence) | Aave-fork; sDAI / WETH / wstETH / rETH key reserves |
+| Morpho Blue Ethereum | ⚠️ uniform LLTV=0.86 collapsed | Per-market overrides (e.g., `(WSTETH, WETH, Chainlink-ER) → LLTV=0.945`) via `get_morpho_market_lltv(market_id)` accessor | wstETH/WETH Morpho cell is the highest-LLTV Family 1 cell available (0.945 vs Aave's E-Mode 0.93) |
+| Aave V3 Arbitrum | ❌ NOT in UAC | NEW `AAVE_V3_ARBITRUM_RESERVES` (11 reserves: USDC, USDC.E, USDT, DAI, WETH, WBTC, WSTETH, WEETH, RETH, ARB, LINK) + chain-specific E-Mode (NO CBETH on Arbitrum) | Family 1 primary on Arbitrum; values low-medium confidence pending app.aave.com verification |
+| Radiant V2 Arbitrum | ❌ NOT in UAC | **DEFERRED** post-May-23 | October 2024 multisig exploit; TVL collapsed; not safe for live capital. Keep launch-date entry for batch data continuity only |
+| Compound V3 Arbitrum | ❌ NOT in UAC | NEW `COMPOUND_V3_ARBITRUM_USDC_E_RESERVES` + `..._USDC_RESERVES` (two distinct markets per chain) | Compound V3 is per-market AND per-chain |
+| Aave V3 Base | ❌ NOT in UAC | NEW `AAVE_V3_BASE_RESERVES` (7 reserves: USDC, USDBC, WETH, CBBTC, WSTETH, WEETH, CBETH) + chain-specific E-Mode (Base has CBETH, NO USDT/DAI) | Family 1 primary on Base; thinner liquidity than Eth/Arb — borrow-side caps may bind before LTV |
+| Compound V3 Base | ❌ NOT in UAC | NEW `COMPOUND_V3_BASE_RESERVES` (USDC market: WETH, cbETH, wstETH, cbBTC) | Base launched 2023-08; ≤30mo history bounds backfill viability |
+| Moonwell Base | ❌ NOT in UAC / NOT in `PROTOCOL_LAUNCH_DATES` | P2 — add only if May-23 cut warrants | Compound V2 fork; ~$180M TVL; WELL+USDC dual rewards; lower borrow caps |
+| Aerodrome Base | n/a — DEX only | OUT OF SCOPE Family 1 | ve(3,3) AMM, not a lender; routes to Family 5/6 archetypes |
+
+### Top-cell shortlist for May-23 cutover (ranked by `expected_apr × confidence`)
+
+Cell ID convention: `<lender>_<chain>_<collateral>_<debt>_<mode>`. Decimal LTVs are e-mode where applicable.
+
+| Rank | Cell ID | LTV (mode) | Expected APR pre-gas | Confidence | Notes |
+| ---- | ------- | ---------- | -------------------- | ---------- | ----- |
+| 1 | `aave_v3_ethereum_wsteth_weth_emode` | 0.93 ETH_CORRELATED | 6-10% net | HIGH | Canonical Lido leveraged staking. Stake APY ~3.0-3.5%; WETH borrow ~2.0-2.8%; ~14× leverage. Deepest liquidity. |
+| 2 | `morpho_ethereum_wsteth_weth_market_0945` | 0.945 (per-market LLTV) | 8-12% net | MED-HIGH | Highest-LTV Family 1 cell. Curated by Steakhouse / Gauntlet / MEV Capital. Tighter HF buffer. |
+| 3 | `aave_v3_arbitrum_wsteth_weth_emode` | 0.93 | 6-18% net | HIGH (cells), LOW (exact params) | Cheaper Arbitrum gas → persistent driver default; recursion_depth_max=10. Aave V3 Arbitrum LTV params pending verification. |
+| 4 | `aave_v3_base_cbeth_weth_emode` | 0.93 (low-conf) | ~3-3.5% leveraged spread | MED | Base-native LST (no bridge risk); Coinbase counterparty surface. Base Aave V3 E-Mode LTV unverified. |
+| 5 | `morpho_ethereum_susde_usdc_market_086` | 0.86 (per-market) | 15-25% net | MED | Ethena sUSDe yield + USDC borrow spread; highest cash APR but highest depeg/yield-decay risk; cooldown adds unwind latency. |
+| 6 | `aave_v3_ethereum_weeth_weth_emode` | 0.93 | 5-15% cash + EIGEN/ETHFI points | MED | Points are non-cash; discount appropriately. ether.fi PendleOracle dependency. |
+| 7 | `aave_v3_base_wsteth_weth_emode` | 0.93 (low-conf) | ~3.2-3.8% leveraged spread | MED-HIGH | Lido yield mirrored to Base via canonical bridge; bridge-risk surface; cheapest gas in scope. |
+
+### Per-cell config parameter defaults (chain-overridable)
+
+```yaml
+defaults:
+  ltv_target: liquidation_threshold - 0.05        # 5% safety buffer below liquidation
+  rebalance_threshold_lower_hf: 1.10              # trigger partial unwind
+  rebalance_threshold_upper_hf: 1.50              # trigger roll-up (only if profitable post-gas)
+  slippage_tolerance_bps: 50                      # per-swap, cross-asset only
+  oracle_staleness_max_seconds: 86400             # 24h Chainlink heartbeat
+chain_overrides:
+  ethereum:
+    gas_budget_usd_per_loop_iter: 25              # mainnet — flash-loan path preferred at depth ≥5 or size ≥ $50k
+    recursion_depth_max: 8                        # gas crossover for persistent driver
+  arbitrum:
+    gas_budget_usd_per_loop_iter: 0.50            # L2 sequencer + L1 calldata
+    recursion_depth_max: 10                       # cheap gas → more iters before saturation
+    health_factor_target_min: 1.30                # L2 finality 1 block; lower reorg surface
+  base:
+    gas_budget_usd_per_loop_iter: 0.20            # cheapest in scope
+    recursion_depth_max: 12
+    bridge_dependency_assets: ["WSTETH", "WEETH"]  # bridge-risk surface flagged to risk-and-exposure-service
+```
+
+### Cross-cell risk surface taxonomy (feeds Phase 8 alerting)
+
+- **Counterparty:** `cbETH` (Coinbase Custody); `USDbC` (Coinbase bridged USDC, deprecating); `weETH` (ether.fi multisig).
+- **Bridge:** `wstETH on Arbitrum/Base` (Lido canonical bridge); `weETH on Arbitrum/Base` (native ether.fi bridge).
+- **Oracle:** Chainlink {wstETH/ETH, weETH/eETH, cbETH/ETH, rETH/ETH} exchange-rate feeds; Morpho per-market oracle wrappers; ether.fi PendleOracle.
+- **Liquidity / cap:** Aave V3 Base borrow caps may bind before LTV; Morpho per-market supply-and-borrow caps independent of Aave; Compound V3 per-market base-asset cap.
+- **Asset-specific:** USDbC deprecation (Base); USDC.e deprecation (Arbitrum); Radiant V2 protocol-pause (Arbitrum, post-Oct 2024 exploit).
+
+### Workspace finding-triage discharge (per HARD RULE)
+
+These items land in this plan (in-scope adjacent + P0 unblocker):
+
+- [ ] [UAC] **P0**. Fix `get_reserve_params(asset, chain)` to actually use `chain` arg (see 🚨 callout above) — gates Phase 2 schema work.
+- [ ] [UAC] **P0**. Add `AAVE_V3_ARBITRUM_RESERVES` + `AAVE_V3_ARBITRUM_EMODE_CATEGORIES` to `defi_reserve_params.py`. All cells must declare `chain="ARBITRUM"` keying and `(low-confidence — verify app.aave.com Arbitrum)` markers on each numeric field.
+- [ ] [UAC] **P0**. Add `AAVE_V3_BASE_RESERVES` + `AAVE_V3_BASE_EMODE_CATEGORIES` to `defi_reserve_params.py`. Same low-confidence marking convention.
+- [ ] [UAC] **P0**. Update `defi_reserve_params.py` module docstring (line 1-22) — claims "verified against on-chain getConfiguration() 2026-03-29" but 12+ Aave V3 ETH reserves are missing; refresh audit date OR scope the claim.
+- [ ] [UAC] **P0**. Backfill `ARCHETYPE_CONFIG_SEED` in `internal/architecture_v2/archetype_config.py` with `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` rows. Without these the enum is shipped but the seed dict raises `KeyError` at runtime via `get_archetype_config()`. Suggested Family 1 defaults: `collateral_currency="USDC"`, `hedge_ratio=None`, `position_cap_usd=15_000.0`, `kill_switch_drawdown_pct=0.04`, `kill_switch_position_breach_pct=0.025`.
+- [ ] [UAC] **P1**. Extend `AAVE_V3_ETHEREUM_RESERVES` with `RETH` (proposed `max_ltv=0.745, liquidation_threshold=0.79, liquidation_bonus=0.075, reserve_factor=0.15`); admit `RETH` to ETH_CORRELATED E-Mode `assets` frozenset.
+- [ ] [UAC] **P1**. Investigate adding 12+ missing Aave V3 Ethereum reserves (OSETH, RSETH, WEETHS, LUSD, FRAX, SDAI, USDS, PYUSD, USDE, SUSDE, CRVUSD, GHO). SUSDE + GHO are top-3 cell candidates so this is unblocker for cell-selection ranking refinement.
+- [ ] [UAC] **P1**. Add `COMPOUND_V3_ARBITRUM_USDC_E_RESERVES` + `COMPOUND_V3_ARBITRUM_USDC_RESERVES` (two distinct Arbitrum markets) + `COMPOUND_V3_BASE_RESERVES`.
+- [ ] [UAC] **P2**. Add `SPARK_ETHEREUM_RESERVES` (Aave-fork; needs Spark in May-23 scope confirmation from operator — plan body lists Spark in-scope but UAC has no dict).
+- [ ] [UAC] **P2**. Document Morpho per-market LLTV overrides — either dict keyed by `(collateral, debt, oracle)` tuples OR `get_morpho_market_lltv(market_id)` accessor with on-chain fallback.
+- [ ] [UAC] **P2**. Add `USDC.E` / `USDBC` symbol distinction to `defi_reserve_params.py` keys — bridged-vs-native USDC need separate entries on Arbitrum + Base. Cross-chain symbol hygiene.
+
+These items annotate other plans (Findings Triage — fits another active plan):
+
+- **Annotation needed** in `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3 (lending-indices fix): instruments-service must emit per-(chain, protocol) reserve listings for ARBITRUM Aave V3 (`USDC`, `USDC.E`, `USDT`, `DAI`, `WETH`, `WBTC`, `WSTETH`, `WEETH`, `RETH`, `ARB`, `LINK`) and BASE Aave V3 (`USDC`, `USDBC`, `WETH`, `CBBTC`, `WSTETH`, `WEETH`, `CBETH`) — without these the MTDS `lending_indices` adapter has no instrument universe for non-Ethereum chains.
+- **Annotation needed** in `defi_master_2026_05_07.md`: `UniswapConnector.swap_exact_input` SwapRouter02 address `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45` is **Ethereum mainnet**. Base + Arbitrum SwapRouter02 addresses differ — Family 1 loop unwinds on those chains need separate connector config.
+
 ## Phase 1 — Prerequisite: lending-rate backfill — REFRAMED 2026-05-10 cross-plan audit Q11
 
 > **🔴 OWNERSHIP TRANSFERRED** to
