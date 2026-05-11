@@ -55,9 +55,9 @@ with explicit handshake).
 | 3    | available_at completion Phase 0 (bar boundary contract) + Phase 4-5 audits            | [available_at_lookahead_bias_completion_2026_05_08.md](available_at_lookahead_bias_completion_2026_05_08.md)                   | ~4            |
 | 4    | live pipeline Phase 4-5 design-ahead (gated) + Phase 11 deployment-UI live tab design | [live_pipeline_mtds_mdps_features_2026_05_08.md](live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 4-5 + 11                | ~3            |
 | 5    | DeFi Phase 1.E sequencing readiness + cross-plan coordination                         | [code_freeze_migrate_backfill_sequencing_2026_05_10.md](code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase 1.E audit | ~3            |
-| 6    | (reserve) — spawn for mid-cycle finding                                               | —                                                                                                                              | —             |
-| 7    | (reserve) — spawn for mid-cycle finding                                               | —                                                                                                                              | —             |
-| 8    | (reserve) — spawn for mid-cycle finding                                               | —                                                                                                                              | —             |
+| 6    | **CRITICAL PATH** — manifest_schema_final_gate Phase 1 (UAC v8 schema columns + ServiceEmissionPolicy next_state + EXPECTED_KNOWN_SOURCE_GAP enum) — newly canonical per F3 decision 2026-05-11; gate item #1 unblock | [manifest_schema_final_gate_2026_05_09.md](manifest_schema_final_gate_2026_05_09.md) Phase 1 | ~3 (aggressive) |
+| 7    | Phase 1.D blockers — alerting + risk + DR (3 plans, sub-agent fan-out)               | [alerting_service_live_rules_2026_05_07.md](alerting_service_live_rules_2026_05_07.md) Phase 1 + [risk_simulations_limits_alerting_2026_05_10.md](risk_simulations_limits_alerting_2026_05_10.md) + [disaster_recovery_circuit_breakers_2026_05_10.md](disaster_recovery_circuit_breakers_2026_05_10.md) | ~5 (aggressive)              |
+| 8    | writegate slice (c) Phase 6.1-6.9 — 37-callsite migration (no longer deferred per operator 2026-05-11 aggressive May-15 push) | [writegate_honest_coverage_endtoend_2026_05_06.md](writegate_honest_coverage_endtoend_2026_05_06.md) slice (c) | ~5 (aggressive)              |
 
 **Total active scope: ~15 AI-days across 4 thematic slots over a 4-day cycle.** Beefier than thin per CLAUDE.md sizing —
 under-utilisation is fine, mid-cycle collision is not.
@@ -553,6 +553,149 @@ were already shipped via runtime-resolved patterns.
 YOUR TASK: full task brief in this work-split § "Slot 5".
 
 REPORT-BACK: same as slot 2.
+```
+
+### Slot 5 RE-TASK (after DeFi 1.E audit done ~half day) — hard_schema + available_at DeFi/TradFi/Predictions
+
+Once slot 5's DeFi 1.E audit lands (it's quick — ~half day), pull aggressive Phase 1 items in:
+
+- **`hard_schema_enforcement_2026_05_08.md` Phase 1** — currently `blocked_by: tradfi-master-2026-05-07`. Slot 5 unblocks by either: (a) coordinating tradfi futures-expiry fields landing first, or (b) shipping the schema flips with conditional-required (allow null until tradfi ships, then flip required). Workspace-wide enforcement via UAC schema additions + `record_failed(SCHEMA_VALIDATION_FAILED)` enum extension. ~2 AI-day aggressive.
+- **`available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 — DeFi + TradFi + Predictions per-adapter stamping** — currently deferred to defi_master / tradfi_master / predictions_master per the plan body. Slot 5 PULLS THESE IN per operator 2026-05-11 aggressive May-15 push. Same shape as Ikenna slot 3's Phase 0 + Harsh slot 4's sports stamping (already shipped MTDS@c186ecb): identify per-adapter write boundary, wire `stamp_available_at_*` UTL helpers from Wave3x Track E. ~2-3 AI-day across 3 asset_groups.
+
+```text
+You are Tab 5 (RE-TASK) — slot 5 finished DeFi Phase 1.E audit; now picking up aggressive Phase 1 closure items per operator decision 2026-05-11 (no items deferred past May-15 freeze gate; we don't want to re-migrate post-freeze).
+
+Your slot is 5. Your worktree is at ${WORKSPACE_ROOT}/.tabs/5/ on branch tab/ikennaigboaka/5.
+
+NEW theme: hard_schema_enforcement Phase 1 (unblock vs tradfi) + available_at completion Phase 1 DeFi/TradFi/Predictions per-adapter wiring (no longer deferred to asset_group masters per operator aggressive push).
+
+Read in order:
+  1. plans/active/work_split_2026_05_11_ikenna.md § "Slot 5 RE-TASK" — full task brief (this section).
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
+  3. unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md.
+  4. unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md.
+  5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md.
+  6. plans/active/hard_schema_enforcement_2026_05_08.md — first plan-of-record.
+  7. plans/active/available_at_lookahead_bias_completion_2026_05_08.md — second plan-of-record (Phase 1 DeFi/TradFi/Predictions halves currently deferred per line 250-278).
+  8. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — sequencing umbrella.
+
+Your agent-tag: ikenna-aggressive-may15-tab.
+
+ORCHESTRATION RULES: same as slot 2 spawn prompt.
+
+Cross-side coordination: ping Harsh main when ready to coordinate with tradfi_master Q1+Q2 (futures-expiry fields) — aim for parallel land, not sequential.
+
+YOUR TASK: ship hard_schema_enforcement Phase 1 + available_at Phase 1 DeFi/TradFi/Predictions adapter wiring by 2026-05-15. Follow shipped-precedent shapes: CeFi adapter stamping MTDS@4a00bd5 + sports stamping MTDS@c186ecb.
+
+REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push. Final DONE-2026-05-11 block + EOD-audit. Then go quiet.
+```
+
+### Slot 6 spawn prompt (NEW — manifest_schema_final_gate Phase 1, CRITICAL PATH)
+
+```text
+You are Tab 6 — NEW spawn 2026-05-11 (Ikenna's reserve slot 6 activated for Phase 1 freeze-gate critical path).
+
+Your slot is 6. Your worktree is at ${WORKSPACE_ROOT}/.tabs/6/ on branch tab/ikennaigboaka/6.
+
+YOUR JOB IS THE WORKSPACE'S MOST CRITICAL PATH for the 2026-05-15 Phase 1 freeze gate. Per operator F3 decision PM@39ab61e5: `manifest_schema_final_gate_2026_05_09.md` is the canonical owner of v8 manifest schema columns (writegate slice (b) Phase 5.2 SUPERSEDED). Without your work, Phase 2.1 (manifest atomic v8 rename, window 2026-05-15→05-19) cannot start.
+
+Theme: manifest_schema_final_gate Phase 1 — UAC v8 schema columns (`service_emission_state`, `pipeline_mode`, `feature_family`) + ServiceEmissionPolicy `next_state(...)` resolver + EXPECTED_KNOWN_SOURCE_GAP enum value (operator approved 2026-05-11).
+
+BEFORE doing anything else, read in order:
+  1. unified-trading-pm/plans/active/work_split_2026_05_11_ikenna.md § "Slot 6 spawn prompt" — this section.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards (especially "Availability manifest v5 (honest-coverage)" + the new "Bucket-name SSOT operator decision (b+)" key rule).
+  3. unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md.
+  4. unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md.
+  5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md.
+  6. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md — your plan-of-record (Phase 1.A + 1.B + 1.C are your scope).
+  7. unified-trading-pm/plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — sequencing umbrella; Phase 2.1 depends on you.
+  8. unified-trading-pm/plans/active/issues/wave3x_track_d_findings_2026_05_11.md § TL;DR point 2 — EXPECTED_KNOWN_SOURCE_GAP enum context (VIX 15m gap + sports KNOWN_COVERAGE_GAPS use cases).
+
+Your agent-tag: ikenna-v8-schema-tab.
+
+ORCHESTRATION RULES (full text in CLAUDE.md):
+  1. Per-slot worktree isolation; pre-commit check (git status + git diff --cached --stat NO PATH ARG).
+  2. Plan-doc Q&A: 🟡 BLOCKED → manifest_schema_final_gate plan's `## Open questions` + ping in unified-trading-pm/ikenna_orchestrator/_agent_pings.md.
+  3. Conditional push per shippable unit.
+  4. Plan-flip in same logical unit as code.
+  5. Findings Triage Discipline HARD RULE.
+  6. CROSS-SIDE PING MANDATORY when v8 schema columns shipped — Harsh slot 6 (workspace QG sweep) + Harsh slot 4 (bucket_name_ssot Phase 0c provisioning) need the schema landed before they can finalize.
+
+YOUR TASK:
+- Phase 1.A: ratify slice (b) spec inline in the plan body (consume writegate slice b Phase 5.1 design content — it's there, just integrate).
+- Phase 1.B: extend `service_emission_policy.py` with `next_state(...)` resolver mapping current_state + event → next_state.
+- Phase 1.C: declare manifest schema columns in `unified-api-contracts/canonical/crosscutting/manifest_schema.py` (NEW or extend) — `service_emission_state`, `pipeline_mode`, `feature_family` per the spec.
+- ADDITIONAL: add `EXPECTED_KNOWN_SOURCE_GAP` to UAC `EmptyConfirmedReason` enum + 1 unit test (operator-approved 2026-05-11; mid-history accepted gaps for VIX 15m + sports KNOWN_COVERAGE_GAPS).
+
+Skip Phase 2/3/4 — those are downstream consumer-side work for other slots / next cycles.
+
+REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push. Final DONE-2026-05-11 block in manifest_schema_final_gate plan body. EOD-audit per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit clause". Then go quiet.
+
+This is THE critical-path slot for May-15 freeze. Ship fast.
+```
+
+### Slot 7 spawn prompt (NEW — Phase 1.D: alerting + risk + DR, 3 plans parallel)
+
+```text
+You are Tab 7 — NEW spawn 2026-05-11 (Ikenna's reserve slot 7 activated for Phase 1.D blockers).
+
+Your slot is 7. Your worktree is at ${WORKSPACE_ROOT}/.tabs/7/ on branch tab/ikennaigboaka/7.
+
+Theme: Phase 1.D blockers — 3 plans in parallel via sub-agent fan-out (you are the master, send 3 Task tool blocks in ONE message at boot per CLAUDE.md "Sub-agent fan-out (within each tab, both models)" rule).
+
+Your 3 plans-of-record:
+  1. plans/active/alerting_service_live_rules_2026_05_07.md (~26 open todos out of 56 total — 30 done)
+  2. plans/active/risk_simulations_limits_alerting_2026_05_10.md (~40 open todos, none done)
+  3. plans/active/disaster_recovery_circuit_breakers_2026_05_10.md (~41 open todos, none done)
+
+BEFORE doing anything else, read in order:
+  1. plans/active/work_split_2026_05_11_ikenna.md § "Slot 7 spawn prompt" — this section.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md.
+  3. unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md.
+  4. unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md.
+  5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md.
+  6-8. Three plans-of-record above.
+  9. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md Phase 1.D (your sequencing umbrella).
+
+Your agent-tag: ikenna-phase-1d-tab.
+
+ORCHESTRATION RULES: same as slot 2 spawn prompt.
+
+YOUR TASK: ship Phase 1 closure across the 3 plans by 2026-05-15. Per CLAUDE.md "Sub-agent fan-out": send 3 Task tool blocks in ONE message at boot — one sub-agent per plan. Each sub-agent ships its plan's Phase 1 / Phase 0 items, commits + push, plan-flip in same logical unit. You synthesise + commit master pings + cross-side coordination + per-plan DONE blocks.
+
+If any plan's Phase 1 scope is too big for 4-day window, prioritise: alerting > risk > DR (alerting is closest to "live trading prerequisite"; risk + DR are Group F/G items that compound on alerting).
+
+REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push. Final DONE-2026-05-11 block in EACH of the 3 plans' bodies. EOD-audit. Then go quiet.
+```
+
+### Slot 8 spawn prompt (NEW — writegate slice (c) 37-callsite migration)
+
+```text
+You are Tab 8 — NEW spawn 2026-05-11 (Ikenna's reserve slot 8 activated for writegate slice (c) full migration; no longer deferred per operator 2026-05-11 aggressive May-15 push).
+
+Your slot is 8. Your worktree is at ${WORKSPACE_ROOT}/.tabs/8/ on branch tab/ikennaigboaka/8.
+
+Theme: writegate slice (c) Phase 6.1-6.9 — full 37-callsite migration of MDPS + MTDS adapters from legacy `record_*` shapes to `record_captured` / `record_empty` / `record_failed` / `record_expected_unattempted` 4-pillar gate. Operator 2026-05-11: no longer deferred to Phase 2 buffer; lands by 2026-05-15.
+
+BEFORE doing anything else, read in order:
+  1. plans/active/work_split_2026_05_11_ikenna.md § "Slot 8 spawn prompt" — this section.
+  2. unified-trading-pm/cursor-configs/CLAUDE.md (especially "Availability manifest v5 (honest-coverage)" + "Honest absence vs fake placeholders" + "Four-category empty-output decision").
+  3. unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md.
+  4. unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md.
+  5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md.
+  6. plans/active/writegate_honest_coverage_endtoend_2026_05_06.md slice (c) Phase 6.1-6.9 — your plan-of-record.
+  7. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md gate item #3 (37 callsites — your scope).
+  8. plans/active/issues/wave3x_track_d_findings_2026_05_11.md § P0-2 (MDPS dead write-gate context — coordinates with your work).
+
+Your agent-tag: ikenna-writegate-slicec-tab.
+
+ORCHESTRATION RULES: same as slot 2 spawn prompt + ALSO:
+  - Sub-agent fan-out heavy: 37 callsites split across 8 services (MDPS / MTDS adapters per asset_group). Send 8 Task tool blocks in ONE message at boot — one sub-agent per service. Each sub-agent migrates its callsites, commits + push, plan-flip.
+  - You synthesise + drive cross-service coordination (some callsites depend on UAC enum additions from slot 6 — coordinate via plan-of-record).
+
+YOUR TASK: ship slice (c) Phase 6.1-6.9 by 2026-05-15. 37 callsites is aggressive in 4 days but per operator velocity feedback (workspace shipped a lot in 0.5 days) it's achievable with 8 parallel sub-agents.
+
+REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push. Final DONE-2026-05-11 block in writegate plan body slice (c). EOD-audit. Then go quiet.
 ```
 
 ## Daily sync points
