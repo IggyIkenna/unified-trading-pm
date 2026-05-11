@@ -414,6 +414,39 @@ absorb idle Day-2-4 capacity. Per-slot Day-2-4 extensions:
 will account for whatever lands in Day-2-4 extension. Don't pull Cycle 2 cutover scope forward (sequentially blocked
 on Phase 1 closure).
 
+## 🟢 SCOPE EXTENSION 2 — Cycle 2 PREP work (2026-05-13/14/15 backfill)
+
+**Observed 2026-05-12 EOD**: 5 of 7 Ikenna slots ✅ FULL CYCLE CLOSE on Day 1 (slot 2 17-commit defi_catalogue; slot 4
+api_keys_wallets full-cycle; slot 5 defi_recursive_borrow Phases 1-11+12; slot 6 defi_simulation_realism Phases 1-5
++ Phase 9C/9D; slot 8 11-ship-lots / ~12 cal AI-days). Slot 3 still on Day-2 P0 PipelineMode sweep. Slot 7 active on
+scenarios.
+
+**Cycle 1 calendar-time-remaining = 3 days (2026-05-13 / 14 / 15)** of capacity for slots already closed. Cycle 2
+cutover EXECUTION is sequentially blocked on Phase 1 closure (2026-05-15), but Cycle 2 **PREP** work CAN happen
+pre-freeze. Per-slot Day-3-4 layer:
+
+| Slot | Cycle 2 PREP layer (pre-cutover; safe to ship pre-freeze) |
+|---|---|
+| 2 | (a) Bucket provisioning script review + dry-run (no actual creates) per `code_freeze` Phase 2.6 step 1; (b) per-bucket migration order + sizing tables per `bucket_name_ssot_canonicalisation` Phase 0c; (c) **DefiManifestRecorder ManifestFreshnessCache wire-in P1** — ship NOW (not Cycle-2 blocked, operator-confirmed bug). |
+| 3 | (after PipelineMode sweep closes Day-2): (a) workspace-wide cutover runbook polish per Phase 2.6 dry-run; (b) per-VM-prefix rsync sizing tables; (c) manifest re-sync scheduling matrix; (d) write-pause coordination protocol — 5-min p99 latency design across 7 services. |
+| 4 | (after Day-2-4 plan closes): (a) Copper KYB onboarding checklist closure (operator-pending if R9 still open); (b) Fireblocks integration spec (Phase 4+); (c) kill-switch wallet-tier wiring (Phase 5+). |
+| 5 | (after Phase 12 backtest harness + Phase 4-6 impl): (a) per-archetype paper-trade smoke harness (Phase 13 design); (b) reserve list `client_reporting_pnl_attribution_mvp` ship; (c) DeFi Family 3+ archetype topology design (Cycle 6 prep). |
+| 6 | (after Phase 6-7 + 9C/9D): (a) matching-engine integration spec (Phase 10+); (b) `mock_data_pipeline_benchmarking` reserve ship; (c) AMM family matrix Cycle 2 verification readiness (post-Harsh-4 connector ship). |
+| 7 | (after Phase 3-5 + risk/DR fold-in): (a) scenario-runner integration spec (Phase 6+); (b) live-monitor dashboard prep for Cycle 5 (Phase 13 monitor mode); (c) cutover communication template + rollback procedure documentation. |
+| 8 | (parallel with manifest Phase 3 consumer sweep): (a) DART manual surfaces post-cutover UI verification readiness; (b) `codex_vs_citadel_infrastructure_audit_2026_05_10` ship; (c) per_agent_worktrees Phase 4.5 R1/R2/R3 design spec (no code yet — design for Cycle 6 implementation). |
+
+**Cycle 6 design-ahead** (pull-forward for slots with capacity to spare):
+- `expected_universe_v2_design_2026_05_08` enumerator implementation spec (was BLOCKED on v8; unblocks Cycle 1)
+- `per_agent_worktrees_2026_05_10.md` Phase 4.5 P1 detailed implementation plan (per Ikenna input shipped earlier today)
+- Reserve list audit + per-plan pickup-precedence refinement
+
+**Allocation principle (updated)**: Cycle 1 directly-named scope → Cycle 1 scope-extensions → reserve list →
+**Cycle 2 PREP** (pre-cutover, NOT execution) → Cycle 6 design-ahead → P1 bugs. NO Cycle 2 EXECUTION (gate-locked).
+
+**Day-of cadence**: at 2026-05-13 EOD, slot 1 main reviews who has shipped Cycle 1 + scope extensions + decides per-slot
+which Cycle 2 PREP work to assign Day 3 morning. Same review at 2026-05-14 EOD for Day 4. Master goal: arrive at
+2026-05-15 freeze gate with **maximum pre-cutover prep banked** so 2026-05-16 cutover execution can launch fast.
+
 ## Coordination + cleanup
 
 After all slots post their STATUS-2026-05-11 lines, slot 1 (main) sweeps the ping ledger:
