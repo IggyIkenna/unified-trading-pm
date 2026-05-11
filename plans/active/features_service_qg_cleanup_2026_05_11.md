@@ -248,12 +248,39 @@ output shapes → `unified_api_contracts.internal.domain.features.<family>`; ser
   over-flag service-internal plumbing? → narrower "domain" heuristic in `check_schema_provenance.py`). **NEEDS
   OPERATOR/IKENNA CONFIRMATION** before the relocation sub-agent runs — flagged in Open questions Q3 below.
 
-- [ ] [AGENT] P0. Phase 1.2e — Relocate the ~38 `features_service/` schema-provenance models per the triage above
-      (group 1 mandatory; group 2 pending Q3). Lands AFTER sub-agents A/B/C. UAC side: add
-      `unified_api_contracts/canonical/domain/features/<family>.py` (or extend existing) + facade re-export at
-      `unified_api_contracts.internal.domain.features.<family>` (or `unified_api_contracts.internal`). features-service
-      side: replace local definitions with `from unified_api_contracts.internal import <Model>` + update all consumers.
-      QG `❌ Schema provenance` clears. Own commits on UAC + features-service.
+- [ ] [AGENT] P0. Phase 1.2e — Resolve the ~38 `features_service/` schema-provenance flags per Q3 A1 (RESOLVED
+      2026-05-11). Lands AFTER sub-agents A/B/C land their commits (A/B/C touch many of the same files —
+      `volatility/engine/orchestrator.py` has `FeatureProcessingResult` + a >900L split; `cross_instrument/engine/orchestrator.py`
+      has `OrchestratorResult`/`ShardResult` + a `run() 105L` decomp; `sports/engine/feature_expectations.py` has
+      `PITViolation`/`ValidationViolation` + the `:383` import hoist — doing both in parallel would race).
+      **Group 1 — MOVE to `unified_api_contracts.internal.domain.features.<family>`** (genuine domain I/O consumed by
+      strategy-service / execution-service / deployment-api schema-view): the per-family `*FeatureRequest`/`*FeatureResult`
+      pairs (delta_one/volatility/cross_instrument/sports/onchain), `OptionQuote`/`VolSurfaceTermStructureRecord`/
+      `VolatilitySurfacePoint`, `OnChainFeatures`, `CrossAssetSportsSignal`/`SportFinancialLink`, `OddsHTSnapshot`,
+      `FeatureMetadata`/`FeatureStatistics`/`InstrumentInfo`, per-family `config.py:Parameters` → UAC side: add
+      `unified_api_contracts/canonical/domain/features/<family>.py` (or extend) + facade re-export at
+      `unified_api_contracts.internal.domain.features.<family>` (or bare `unified_api_contracts.internal`); features-service
+      side: replace local defs with `from unified_api_contracts.internal import <Model>` + update consumers.
+      **Group 2 — NO UAC moves** (per Q3 A1 operator rule — features-service-only consumers): (a) STAY LOCAL with a
+      `# CORRECT-LOCAL` marker on the `class` line (`base-service.sh:790/804/1049+` exempt `# CORRECT-LOCAL`) — most
+      already have it; ADD it to `PITViolation`/`ValidationViolation` (sports/engine/feature_expectations.py),
+      `LookbackValidationReport` (delta_one/app/core/dependency_checker.py), `FeatureProcessingResult`/`OrchestratorResult`/
+      `ShardResult` (per-family orchestrators), `CrossInstrumentConfig` (cross_instrument/app/calculators/cross_instrument_dynamics.py),
+      `PubSubMessage` (delta_one/app/pubsub/subscriber.py); already-marked: `HealthResponse`, `_WeatherRow` (stays local —
+      parquet-row shape), `SubscriberStats`, `FeatureRegistryEntry`, `SteamDetectorConfig`/`SteamMoveSignal`. (b) DEDUP
+      AGAINST UTL — `DependencyFailure`/`DependencyStatus`/`DependencyReport`/`DependencyError` in BOTH
+      `volatility/core/dependency_checker.py` AND `delta_one/app/core/dependency_checker.py` are byte-identical to
+      `unified_trading_library/core/dependency_checker.py` → replace local defs with
+      `from unified_trading_library.core.dependency_checker import DependencyError, DependencyStatus, DependencyFailure, DependencyReport`
+      + delete the dead code (`LookbackValidationReport` in the delta_one file stays local per (a)). (c) MOVE TO UAC —
+      NONE for group 2.
+      **2 within-repo cleanups (Phase 1.2e sub-items, not schema-prov-driven but adjacent):** (i) `FeatureProcessingResult`
+      is defined TWICE in features-service (`volatility/engine/orchestrator.py` + `volatility/core/orchestration_service.py`)
+      → collapse to ONE definition + import the other site. (ii) `PubSubMessage` (delta_one TypedDict) name-clashes with
+      UAC's existing `external/gcp/pubsub.py:PubSubMessage` (different layer) → recommend renaming the features-service one
+      `DeltaOnePipelineMessage`. QG `❌ Schema provenance` + `❌ Deep unified lib imports` clear. Own commits on UAC +
+      features-service. If a `# CORRECT-LOCAL`-tagged or imported-from-UTL line still flags → QG-check bug, route to
+      slot-1 (Q1.x shape), do NOT edit `check_schema_provenance.py`.
 
 ## Open questions
 
