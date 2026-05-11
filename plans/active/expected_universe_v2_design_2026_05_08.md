@@ -1,18 +1,19 @@
 ---
 name: expected-universe-v2-design-2026-05-08
 type: plan
-plan_type: design
+plan_type: execution
 asset_group: cross-cutting
 owner: ikenna
-status: draft
+status: active
 priority: P1
 created: 2026-05-08
-last_updated: 2026-05-08
+last_updated: 2026-05-11
 parent: writegate_honest_coverage_endtoend_2026_05_06
 related_plans:
   - writegate_honest_coverage_endtoend_2026_05_06
   - gcs_migration_bundle_pipeline_mode_2026_05_08
   - manifest_migration_master_2026_05_07
+  - manifest_schema_final_gate_2026_05_09
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 estimate_class: design
@@ -22,6 +23,11 @@ estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
+
+> **🟡 BLOCKED-ON G4 v8 SCHEMA** — execution can't start until `manifest_schema_final_gate_2026_05_09` ships the
+> atomic v7→v8 rename + `record_captured(service_emission_state=)` MANDATORY enforcement. Per the umbrella's gate
+> sequence, this plan's enumerator launch (G3) runs ONCE on the v8 manifest, NOT pre-v8 then re-run post-v8. Design
+> + execution phases below are paste-ready; flip `status:` to `in-progress` when G4 lands.
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -153,3 +159,111 @@ canonical manifest post-v2.
   happen AFTER v8 migration for write-side simplicity.
 - `live_pipeline_mtds_mdps_features_2026_05_08` Phase 12 — batch-vs-live reconciliation needs the v2 expected universe
   to compute a meaningful completeness denominator per shard atom.
+
+## Execution phases (promoted to active 2026-05-11)
+
+> **Gate**: every phase below assumes G4 v8 schema has landed (`record_captured(service_emission_state=)` MANDATORY,
+> v7 paths grep-zero). When G4 lands, flip the banner above + `status:` to `in-progress` + start Phase 1.
+
+### Phase 1 — v2 enumerator implementation (P1, ~1 day)
+
+- [ ] [SCRIPT] P1. Extend `instruments-service/scripts/enumerate_expected_universe.py` with `enumerate_v2()` function
+      per the design § Implementation. Signature: `enumerate_v2(*, asset_group, catalog: InstrumentCatalog, date_axis:
+      list[date], data_types: list[str]) -> Iterator[ExpectedRow]`. Cross-joins v1's date axis with catalog's per-
+      instrument lifecycle, respecting per-asset_group lifecycle rules (cefi instrument-listing `active_from`/`active_to`,
+      prediction market `market_created_at`/`settlement_time`, defi protocol-launch `PROTOCOL_LAUNCH_DATES`, sports
+      per-fixture lifecycle).
+- [ ] [SCRIPT] P1. Add CLI flag `--enumerator-version v1|v2` (default v2 once G4 lands). v1 stays callable via flag for
+      diff-debug.
+- [ ] [SCRIPT] P1. Unit test: `tests/test_enumerate_expected_universe.py` covers per-asset-group lifecycle rules with
+      synthetic catalog + date axis. Asserts: cefi instrument delisted on 2024-06-01 → no rows after; prediction market
+      `settlement_time=2024-12-31` → no rows in 2025; defi protocol `PROTOCOL_LAUNCH_DATES[(arbitrum, aave-v3)]=
+      2022-03-16` → no rows before.
+- [ ] [SCRIPT] P1. Integration test: real instruments-service catalog read (~50K cefi instruments) × 100-day axis × 3
+      data_types → asserts ~15M rows enumerated within 60s on a same-region VM. Assert no v1 row missing from v2 output
+      (v2 is strict superset).
+
+### Phase 2 — Per-VM launcher + watchdog registration (P1, ~0.5 day)
+
+- [ ] [SCRIPT] P1. New launcher `deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh` per the workspace
+      launcher SSOT. Args: `--asset-group <cefi|defi|tradfi|sports|prediction>` (sharding axis); `--clip-after <date>`
+      optional. Sets `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=expected-universe-v2-{asset_group}-{RUN_TS}`. Reads
+      `DEPLOYMENT_ENV` per bucket-name-SSOT rule.
+- [ ] [SCRIPT] P1. Register `expected-universe-v2-` prefix in `deployment-service/scripts/vm/vm_zombie_watchdog.py`
+      `VM_PREFIX_TO_BUCKET` dict (per "VM Naming Convention" rule). Bucket: the manifest's per-VM shard bucket.
+      **After dict edit, RELAUNCH watchdog VM**.
+- [ ] [SCRIPT] P1. Singleton-lock pattern in launcher: refuses launch if same-asset-group VM already RUNNING in zone
+      (catalog reads are sequential per asset_group; thundering-herd protection — per `launch-sfi-forward-poll.sh`
+      precedent).
+
+### Phase 3 — Q1-resolution: sharding strategy (P1, ~0.25 day)
+
+- [ ] [DECISION] P1. Resolve plan Q1: cefi spot/perp v2 = 180M rows → shard by venue (one VM per venue) per the design
+      bias toward "single VM doesn't burn full catalog read just to enumerate". Verify on a same-region test VM that
+      bybit-only enumeration completes in <30 min wall-clock. Document the venue-sharding decision in the plan body +
+      codex SSOT before Phase 4 launch.
+
+### Phase 4 — Production launch (P1, ~0.5 day wall-clock; 2-4 hrs per asset_group)
+
+- [ ] [VM] P1. Launch v2 enumerator VMs per asset_group (~10 total: 7 cefi venues + 1 defi + 1 tradfi + 1 sports + 1
+      prediction). Apply CLAUDE.md "No fire-and-forget VM launches" rule: verify STARTED event within 60s + ≥1 progress
+      event per hour + STOPPED/FAILED at exit per VM. Total wall-clock ~3-4 hrs running in parallel.
+- [ ] [VM] P1. Manifest consolidator daemon merges per-VM shards into canonical manifest. Expected: ~190M rows in
+      `_index/availability_index.parquet`.
+- [ ] [VERIFY] P1. Post-run verification (per "Plans Run To Actual Completion" HARD RULE):
+      ```bash
+      gsutil ls gs://{pid}-events/events/instruments-service/{today}/expected-universe-v2-*/   # STARTED+STOPPED for every VM
+      python -c "import pyarrow.parquet as pq; t = pq.read_table('gs://{manifest_bucket}/_index/availability_index.parquet', columns=['capture_status']); from collections import Counter; print(Counter(t['capture_status'].to_pylist()))"
+      # expect: expected_unattempted count ~190M; captured + empty_confirmed + attempted_failed unchanged
+      ```
+- [ ] [VERIFY] P1. Per-asset-group spot-check: sample 100 random `(instrument_id, day)` pairs per asset_group; assert
+      lifecycle bounds enforced (no rows pre-`active_from` / post-`active_to` for cefi; no rows pre-genesis for defi;
+      etc.).
+
+### Phase 5 — Codex SSOT updates (P1, ~0.25 day) — per "Post-Plan-Phase Codex Audit" HARD RULE
+
+- [ ] [CODEX] P1. UPDATE `codex/02-data/availability-manifest-and-data-status.md` § "Expected universe": extend to
+      describe v1 (venue-grain) vs v2 (instrument-grain), with the per-asset-group grain table from this plan body.
+      Reference: this plan + the umbrella `manifest_evolution_master_2026_05_08.md` G3.
+- [ ] [CODEX] P1. UPDATE `codex/02-data/honest-absence-downstream-handling.md`: add note that v2's
+      `record_expected_unattempted` rows at instrument grain mean honest-coverage % calculations have a 100× larger
+      denominator. Downstream consumers (deployment-api data-status drilldown, features-* pre-flight, ML training row
+      counts) need to handle the volume via column-projection + duckdb-style aggregates.
+- [ ] [CODEX] P1. UPDATE `unified-trading-pm/codex/05-infrastructure/launcher-script-ssot.md`: register the new
+      `launch-expected-universe-v2-vm.sh` launcher + the `expected-universe-v2-` watchdog prefix.
+
+## Done definition (per "Plans Run To Actual Completion" HARD RULE)
+
+**Code gates**:
+- ✅ `instruments-service/scripts/enumerate_expected_universe.py` extended with `enumerate_v2()`; unit + integration
+  tests pass; basedpyright clean; ruff clean.
+- ✅ `deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh` shipped per launcher SSOT; watchdog dict updated;
+  watchdog VM relaunched.
+- ✅ codex docs (3 listed in Phase 5) updated in same logical unit as the operational launch.
+
+**Operational gates** (the load-bearing half — code-shipped ≠ operationally-shipped):
+- ✅ All ~10 v2-enumerator VMs ran to completion. STARTED + ≥1 hourly progress + STOPPED in event stream per VM.
+- ✅ Canonical manifest contains ~190M `expected_unattempted` rows at instrument grain.
+- ✅ Per-asset-group spot-check (100 random pairs) confirms lifecycle bounds enforced.
+- ✅ Downstream consumer smoke (deployment-api data-status drilldown / features-* pre-flight / ML training denominator)
+  runs against the 190M-row manifest without timeout — confirms readers handled the 100× scale-up.
+
+**Full-execution criterion**:
+- ✅ ~190M `expected_unattempted` rows on canonical manifest at instrument grain across all 5 asset_groups.
+  - **What ran**: `launch-expected-universe-v2-vm.sh --asset-group {X}` × 10 VMs (7 cefi venues + 1 defi + 1 tradfi +
+    1 sports + 1 prediction). Duration: ~3-4 hrs parallel wall-clock.
+  - **Verification**: `pq.read_table(canonical_manifest, columns=['capture_status'])` Counter shows
+    `expected_unattempted` ≈ 190M; per-asset-group spot-check passes lifecycle bounds.
+
+**Handoff exception(s)**: none — this plan ships its own operation; no downstream takes over.
+
+## Prerequisites (BLOCKING — won't start Phase 1 until satisfied)
+
+1. **G4 v8 schema landed** per `manifest_schema_final_gate_2026_05_09.md`. Verifier: `record_captured()` callsites
+   workspace-wide require `service_emission_state=` kwarg; v7 reader fallback grep returns zero hits.
+2. **PROTOCOL_LAUNCH_DATES SSOT complete** for DeFi. Verifier: `uac@<sha>` has all (chain, protocol) launch dates
+   either confirmed or routed via `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`. Currently slot 5 shipped 12 confident
+   pairs + 13 pending @uac@495d262.
+3. **instruments-service catalog read endpoint live**. Verifier: `python -c "from instruments_service.catalog import
+   InstrumentCatalog; c = InstrumentCatalog.from_canonical_bucket(); print(len(c.all_instruments()))"` returns >0 for
+   each asset_group.
