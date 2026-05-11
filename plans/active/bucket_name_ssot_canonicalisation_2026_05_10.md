@@ -202,18 +202,43 @@ this plan and **Q4** below (operator decision).
       session)** with the full shape-mismatch table + slot-4 recs (b-i = align GCP to symmetric
       `{kind}-defi-{env}-{pid}`; c-i = env-tier `events` as a dedicated Phase-2.6 sub-step / c-ii = document as 3rd
       permitted env-less exception); routed cross-side to Ikenna. Yaml unchanged pending operator answer."
-- [ ] **[SCRIPT] P0**. **Phase 0f — VM launcher scripts read `DEPLOYMENT_ENV` (Phase 1 code-complete scope).** Audit
-      every script under `deployment-service/scripts/vm/` (~30 launchers per CLAUDE.md "VM launcher script SSOT") for
-      hardcoded bucket references; ensure each launcher reads `DEPLOYMENT_ENV` from env / CLI flag and passes it to the
-      VM via `metadata` so the VM's bucket-resolution call lands on the right env-tiered bucket. Default to
-      `DEPLOYMENT_ENV=prod` for production launches, `DEPLOYMENT_ENV=staging` for staging launches, etc. Add a
-      `--env <prod|staging|dev>` CLI flag to each launcher OR centralise via a single helper script that every launcher
-      sources. Workspace QG step (companion to STEP 5.69) AST-walks launcher scripts for bucket references not flowing
-      through the env-aware helper. status: todo — note: "Phase 1 code-complete scope; ~30 launchers; bulk audit + bulk
-      edit. **2026-05-11 operator direction: ABSORBED by Ikenna slot 8** (Harsh leaving ~3hr → 'moving faster than
-      planned'; both Phase 0f + Phase 0h carry-forward → Ikenna slot 8). Slot 4 did NOT start Phase 0f (no code). Ikenna
-      slot 8 spawn brief: `ikenna_orchestrator/_agent_pings.md` `[main → slot 8]` (PM@`c0d10139`). It's a Phase-2.6
-      cutover prereq."
+- [x] **[SCRIPT] P0**. **Phase 0f — VM launcher scripts read `DEPLOYMENT_ENV` (Phase 1 code-complete scope).** Audit
+      every script under `deployment-service/scripts/vm/` for hardcoded bucket references; ensure each launcher reads
+      `DEPLOYMENT_ENV` from env / CLI flag and passes it to the VM via `metadata` so the VM's bucket-resolution call
+      lands on the right env-tiered bucket. Default to `DEPLOYMENT_ENV=prod` for production launches,
+      `DEPLOYMENT_ENV=staging` for staging launches, etc. Add a `--env <prod|staging|dev>` CLI flag to each launcher.
+      Workspace QG step (companion to STEP 5.69) AST-walks launcher scripts for bucket references not flowing through
+      the env-aware helper. status: done — note: "Phase 1 code-complete scope. **SHIPPED 2026-05-12** (Ikenna slot 8
+      absorbed; Harsh slot 4 had not started). Actual scope = **72 launchers** (not ~30 — full audit). Fanned out 5
+      parallel sub-agents under slot 8 main, each handling ~12-19 launchers. Pattern applied uniformly per the canonical
+      template at `deployment-service/scripts/vm/launch-mdps-features-live.sh`: `DEPLOYMENT_ENV="${DEPLOYMENT_ENV:-prod}"`
+      default + `--env <prod|staging|dev>` CLI flag + closed-set validation + `DEPLOYMENT_ENV=${DEPLOYMENT_ENV}`
+      metadata propagation + `env="${DEPLOYMENT_ENV}"` GCE label + header banner citing this plan as SSOT.
+      Commits (all FF'd to `live-defi-rollout`):
+      [`deployment-service@13ef741a`](../../../market-data-processing-service) (sub-A — 15 MTDS backfill launchers;
+      restructured 6 positional-arg parsers into proper while-loops with `POSITIONAL[]` arrays; added `--labels` to 9
+      file-based launchers previously lacking them);
+      [`deployment-service@a2037d2`](../../../market-data-processing-service) (sub-B — 19 sports launchers incl.
+      api-football, footystats, sfi, understat, transfermarkt, openmeteo, sports-*; pre-pass arg-stripping for 3
+      forward-poll launchers with positional args; helper-function injection for sfi/sports-manifest-rescan chunked
+      fan-out);
+      [`deployment-service@68ad99f`](../../../market-data-processing-service) +
+      [`deployment-service@e60ae2c`](../../../market-data-processing-service) (sub-C — 17 cefi/defi/tradfi/prediction
+      launchers; `launch-cefi-massive-rollout.sh` propagates DEPLOYMENT_ENV via `_common_meta()` so all 364 spawned VMs
+      inherit env; `launch-cefi-sharded-backfill.sh` via `launch_cefi_shard` + `launch_tradfi_shard` helpers;
+      `launch-tier3-cefi-backfill.sh` via `create_vm()` so Phase 1 + Phase 2 VMs both carry env);
+      [`deployment-service@ecea78f3`](../../../market-data-processing-service) (sub-D — 9 features/ml/strategy/infra
+      launchers incl. `launch-vm-zombie-watchdog.sh`);
+      [`deployment-service@5676048`](../../../market-data-processing-service) (sub-E — 12 migration/recon/smoke
+      launchers; **special-case** `setup-data-pipeline-vm.sh` reads `DEPLOYMENT_ENV` from VM metadata via
+      `curl ... attributes/DEPLOYMENT_ENV` since it's the VM-side bootstrap, not a launcher).
+      All 72 files pass `bash -n` syntax check. Foot-gun #4 (prek auto-restore + `semver-rollout[bot]` author signature)
+      observed in sub-A/B/C/D/E mid-session; mitigated via bundled `git add && commit --no-verify && push --no-verify`
+      pattern per CLAUDE.md; `git show --stat HEAD` per commit verified all expected insertions present, no work lost.
+      Backward compat preserved: default `DEPLOYMENT_ENV=prod` means existing launches without `--env` behave
+      identically to pre-Phase-0f. Cloud Run deployment-api + manifest consolidator continue reading current flat
+      buckets — env-tiered reader-repoint is Phase 2.6 cutover work (GAP-2.4.D). **PREREQ cleared for Phase 2.6
+      cutover 2026-05-15→05-19.**"
 - [x] **[AGENT] P0**. **Phase 0g — verify deployment UI env-tier resolution (already shipped).** ✅ VERIFIED via
       [`codex/05-infrastructure/deployment-ui-architecture.md`](../../codex/05-infrastructure/deployment-ui-architecture.md)
       § "Environment tier (line 33-47, 119-140)": deployment UI env tier is RESOLVED FROM `window.location.hostname`
