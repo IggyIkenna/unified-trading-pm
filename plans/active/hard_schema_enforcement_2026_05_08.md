@@ -72,8 +72,17 @@ todos:
           - **Predictions**: ALREADY hard-required per Phase 1A of writegate — no change needed; serves as
             reference for the rest.
         Per-flip: one-shot manifest migration script back-fills + flips schema in a single PR.
-        **PARTIAL FOUNDATION 2026-05-11 by slot 5 (ikenna-aggressive-may15-tab, RE-TASK) — RecordFailedReason
-        taxonomy + SCHEMA_VALIDATION_FAILED enum value shipped at uac@`3157f45`** (sister enum to
+        **PARTIAL FOUNDATION + 3 ASSET-GROUP RULES SHIPPED 2026-05-11 by slot 5 (ikenna-aggressive-may15-tab,
+        RE-TASK)**: foundation (RecordFailedReason taxonomy + SCHEMA_VALIDATION_FAILED enum value) shipped at
+        uac@`3157f45`; per-asset-group `InstrumentRecord` model_validator shipped uac@`37d1ddb` enforcing 3 closed-set
+        rules: (1) CeFi spot/perp (SPOT_PAIR / PERPETUAL) → `base_asset` + `quote_asset` non-empty; (2) DeFi on-chain
+        (POOL / LENDING / LST / YIELD_BEARING / A_TOKEN / DEBT_TOKEN / STAKING / SPOT_ASSET — 8 types) → `pool_address`
+        OR `base_asset_contract_address` non-empty; (3) EVENT_CONTRACT → `expiry` non-null. Two new module-level
+        constants exposed: `CEFI_PAIR_INSTRUMENT_TYPES` + `DEFI_ONCHAIN_INSTRUMENT_TYPES` (downstream callers can
+        check `instrument.instrument_type in CEFI_PAIR_INSTRUMENT_TYPES` directly). 10/10 smoke tests pass —
+        validator raises `ValueError` for empty/null required fields per rule; downstream MTDS / instruments-service
+        adapters' per-row try/except routes them to
+        `record_failed(reason=RecordFailedReason.SCHEMA_VALIDATION_FAILED)` (already shipped (sister enum to
         `EmptyConfirmedReason` per the existing `honest_coverage.py` shape). 8 closed-set members covering schema
         violation / upstream timestamp bias / malformed tick field / upstream subgraph zero / cluster coverage
         violation / malformed row key / classified venue error / unclassified adapter error. Foundational for
