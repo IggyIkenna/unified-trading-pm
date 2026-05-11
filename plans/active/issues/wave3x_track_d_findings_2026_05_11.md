@@ -73,8 +73,14 @@ affected); only the orchestrator's CeFi/sports/tradfi sentinel path is broken.
   knows it — e.g. `is_non_trading_day` → `EXPECTED_HOLIDAY`/`EXPECTED_WEEKEND`/`EXPECTED_PARTIAL_HALF_DAY`). Also: stop
   swallowing the manifest-write exception in the wrapping `except` — a `LegacyBlankErrorReasonError` should be loud, not
   "non-blocking".
-- **Owner**: writegate Phase 2.E (per-service writer migration) + Harsh slot 5 (live-pipeline touches MTDS orchestrator)
-  OR a fast standalone fix. Cross-cutting; NOT slot-3's repo to fix per the Track D read-only brief.
+- **Owner**: ✅ **SHIPPED 2026-05-11 by Harsh slot 6** — `market-tick-data-service@3da026d`: the 4 `record_empty` callsites
+  now pass `reason="SOURCE_RETURNED_ZERO"`; an `except (LegacyBlankErrorReasonError, UnknownEmptyConfirmedReasonError):
+  raise` was added before the swallowing `except` so manifest-contract violations are loud, not "non-blocking". Verified
+  ruff-clean + zero new basedpyright + 12 sentinel tests pass. (Originally routed to writegate Phase 2.E + slot 5; operator
+  moved it to slot 6's added scope 2026-05-11 — slot 5 / the writegate Phase 2.E owner: P0-1 is DONE, nothing pending.
+  The deeper "every `(shard_key, day)` in the expected universe gets a manifest row" item (TradFi non-trading-day
+  pre-skip emits `record_expected_empty(reason=EXPECTED_HOLIDAY/...)`) is still writegate Phase 2.E scope — slot 6's fix
+  was scoped to the missing-`reason=` + exception-swallowing, not the full expected-universe-row coverage.)
 - **Related**: D3 also flagged that MTDS emits **no** `record_expected_empty` / `record_expected_unattempted` anywhere —
   TradFi non-trading-day pre-skip just `continue`s with no manifest row, contrary to CLAUDE.md "every `(shard_key, day)`
   in the expected universe gets a manifest row." Same fix surface (writegate Phase 2.E).

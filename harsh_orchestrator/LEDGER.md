@@ -205,9 +205,16 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 - **Full task brief**: [`../plans/active/work_split_2026_05_11_harsh.md`](../plans/active/work_split_2026_05_11_harsh.md)
   § "Slot 2 — Features-repo consolidation Phase 4-7".
 
-#### Slot 3 — `harsh-wave3x-tab` 🟢 IN FLIGHT — Track D ✅ + Track B ✅ done; continuing Tracks C + E
+#### Slot 3 — `harsh-wave3x-tab` ✅ DONE — all 5 Wave3x tracks shipped (A-UTL/B/C/D-audit/E); FREE for reassignment
 
-- **Status (2026-05-11)**: 🟢 IN FLIGHT. **Track D ✅** — zero-activity-bar adapter audit complete; anti-seq verdict =
+- **Status (2026-05-11, latest)**: ✅ **DONE all 5 Wave3x tracks** (PM@`553e57c4` + `1f55b265`): A-UTL+B classifier
+  extensions UTL@`3fbc6b3` + UAC@`7c8b5ad`; C `reconcile_legacy_blank_to_typed_reason.py` + 5-manifest dry-run
+  instruments-service@`485c57b`; D audit (findings doc + P0 bugs escalated [P0-1/P0-2 shipped by slot 6], case-D impl
+  deferred post-cutover, `EXPECTED_KNOWN_SOURCE_GAP` → Ikenna slot 5); E 3 stamping helpers + codex UTL@`2ab3685`.
+  PM plan flips + DONE-2026-05-11 block + deferred-work scoreboard. Track E features-sports wire-in deferred to slot 4
+  + Ikenna slot 3. **Going quiet — slot 3 is FREE for reassignment** (candidates: slot-5-adjacent pre-gate prep, or a
+  new item, or stay idle — operator's load-balance call).
+- **Earlier status (2026-05-11)**: 🟢 IN FLIGHT. **Track D ✅** — zero-activity-bar adapter audit complete; anti-seq verdict =
   NO new manifest schema dimension forced (the 2026-05-15 freeze gate is NOT blocked by Track D); findings filed in
   [`../plans/active/issues/wave3x_track_d_findings_2026_05_11.md`](../plans/active/issues/wave3x_track_d_findings_2026_05_11.md)
   (1 candidate new `EmptyConfirmedReason` `EXPECTED_KNOWN_SOURCE_GAP` → Ikenna slot 5 decision, cross-side-pinged; case-D
@@ -309,9 +316,22 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 - **Full task brief**: [`../plans/active/work_split_2026_05_11_harsh.md`](../plans/active/work_split_2026_05_11_harsh.md)
   § "Slot 5 — Live pipeline Phase 3-5 service wiring".
 
-#### Slot 6 — `harsh-workspace-qg-tab` 🟢 IN FLIGHT — booted 2026-05-11 06:52 UTC (PM@`cfeb79fc`); codex audit + QG static baseline done; Track-D P0 fixes ADDED to scope
+#### Slot 6 — `harsh-workspace-qg-tab` 🟢 IN FLIGHT — codex audit ✅ + QG baseline ✅ + Track-D P0-1/P0-2/P0-3 ✅; back to freeze-gate-8/9 + phantom-audit cadence
 
-- **Status (2026-05-11)**: 🟢 IN FLIGHT. Done so far: codex SSOT audit pass (freeze-gate-9 inventory: 25 plans / 91
+- **Status (2026-05-11, latest)**: Track-D P0 batch ✅ DONE — **P0-1** `market-tick-data-service@3da026d` (4 `record_empty`
+  callsites get `reason="SOURCE_RETURNED_ZERO"` + `except (LegacyBlankErrorReasonError, UnknownEmptyConfirmedReasonError):
+  raise` before the swallowing `except`; ruff-clean + 12 sentinel tests pass); **P0-2 slot-6 half** PM@`a4512ed3` (QG
+  STEP 5.67 — `check_banned_placeholder_methods.py` + `banned_placeholder_methods_baseline.yaml`; AST-walk for the
+  banned NaN-placeholder / bypass-`record_captured` patterns; baseline-aware shrinking ratchet — 8 known MDPS
+  occurrences are pending_removal WARNINGS, new ones fail CI; the P0-2 *code* fixes stay writegate Phase 2.A + slot 5);
+  **P0-3** commodity phantom-row classified + captured + owner-routed (slot 5 + writegate; the fix is features-service =
+  slot-2 territory; no separate issue doc). Phantom audit (P1) deferred to a GCE same-region VM (laptop run impractical
+  — cross-region listing 18× slower); 2026-05-04 baseline (354 residual) stands. **Flagged to slot 1**: `bash
+  scripts/quality-gates.sh` from a slot worktree resolves the wrong repo root (runs PM's tests when PM is a sibling
+  worktree) — affects every slot's pre-push QG; issue doc `plans/active/issues/slot_worktree_qg_repo_root_resolution_2026_05_11.md`,
+  cross-side-pinged Ikenna. Now: back to freeze-gate-8/9 (validate slot-2-to-5 shippable units) + the phantom-audit
+  cadence; standing by for the Ikenna-slot-2 writegate-v8-schema cross-side handshake.
+- **Earlier status (2026-05-11)**: 🟢 IN FLIGHT. Done so far: codex SSOT audit pass (freeze-gate-9 inventory: 25 plans / 91
   codex docs / 58 present / 33 pending; F2 → routed to slot 2; F3 v8-schema-owner ambiguity → cross-side-pinged Ikenna;
   see [`../plans/active/issues/codex_audit_2026_05_11.md`](../plans/active/issues/codex_audit_2026_05_11.md)) + QG static
   baseline (ruff 20/22 clean — features-service 13×I001 mid-consolidation-churn by slot 2; SIT 4×C901 pre-existing; 0
@@ -349,10 +369,10 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 
 - **Slot 1** (this session) — online (orchestrator, runs in the main clone, not `.tabs/1/`).
 - **Slot 2** `harsh-features-consolidation-tab` — 🟢 IN FLIGHT (Phase 7 ✅; Phase 4.1-4.5 ✅; 4.6 QG-green blocked → Q1).
-- **Slot 3** `harsh-wave3x-tab` — 🟢 IN FLIGHT (Track D ✅ + Track B ✅; continuing C + E; Track D escalation cross-side-pinged).
+- **Slot 3** `harsh-wave3x-tab` — ✅ DONE (all 5 Wave3x tracks A-UTL/B/C/D-audit/E shipped; FREE for reassignment).
 - **Slot 4** `harsh-bucket-and-adapter-tab` — 🟢 IN FLIGHT (bucket-SSOT canonical layer = yaml decided; PARTIAL GATE on the rest).
 - **Slot 5** `harsh-live-pipeline-impl-tab` — ⚪ QUEUED; hold ~1 day (gated on slot 2 Phase 7 *deployable* + Ikenna slot 4 design). `--reset-slot 5` before spawn.
-- **Slot 6** `harsh-workspace-qg-tab` — 🟢 IN FLIGHT (codex audit + QG baseline ✅; Track-D P0 fixes added to scope).
+- **Slot 6** `harsh-workspace-qg-tab` — 🟢 IN FLIGHT (codex audit + QG baseline ✅; Track-D P0-1/2/3 ✅; back to freeze-gate-8/9 + phantom-audit cadence; flagged the slot-worktree-QG-repo-root bug).
 
 ### ⚪ Main agent (this session) doing now
 
@@ -386,6 +406,9 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 | unified-api-contracts | (slot 3) | 3 | Wave3x Track B UAC sports SSOTs (`UNDERSTAT_COVERED_LEAGUES` + `TRANSFER_WINDOWS` + footystats season bounds) shipped + 3 checkboxes flipped (PM@`e5d82a15`-area). |
 | unified-trading-pm | (slot 4) | 4 | bucket-name SSOT — canonical layer decided = yaml; parity-test todo flipped; pre-audit manifest added (PM@`59e92b18`). |
 | unified-trading-pm | (slot 6) | 6 | codex SSOT audit pass (freeze-gate-9 inventory + F2/F3) + QG static baseline; 2 issue docs filed (`codex_audit_2026_05_11.md` + `qg_sweep_2026_05_11.md`) (PM@`04ed9203`+`e8cbe46b`). |
+| market-tick-data-service / unified-trading-pm | (slot 6) | 6 | Track-D P0-1 fix MTDS@`3da026d` (record_empty reason= + loud manifest-contract exceptions); P0-2 QG STEP 5.67 PM@`a4512ed3` (banned-placeholder-method AST-walk, baseline-ratchet); P0-3 commodity phantom-row classified + owner-routed. |
+| unified-api-contracts / unified-trading-library / instruments-service | (slot 3) | 3 | Wave3x ALL DONE — Track A-UTL+B classifier extensions UTL@`3fbc6b3`+UAC@`7c8b5ad`; Track C reconciler `reconcile_legacy_blank_to_typed_reason.py` instruments-service@`485c57b`; Track D audit (findings doc); Track E 3 stamping helpers UTL@`2ab3685` (PM flips @`553e57c4`+`1f55b265`). |
+| unified-trading-pm + (workspace .tabs/) | (this commit) | 1 | Track D doc P0-1 owner pointer fixed (shipped by slot 6, not slot 5); filed `issues/slot_worktree_qg_repo_root_resolution_2026_05_11.md` + cross-side-pinged Ikenna; `.code-workspace` backfilled into all 6 slots (Ikenna action item); LEDGER slot 3 ✅ DONE + slot 6 status. |
 | unified-trading-pm | (this commit) | 1 | NEW `features_service_qg_cleanup_2026_05_11.md` (QG-codex cleanup + full parity run [blocked_by code_freeze Phase 3] + F9 transfer; owner slot 2); slot 2 Q1 ✅ RESOLVED (A1 in features_repo_consolidation); Phase 4.6/6 annotated DEFERRED→successor; per-slot ping file bidirectional (`[main → slot N]` channel — README + AGENT_ONBOARDING + spawn prompts + CLAUDE.md updated). |
 | features-service / UTL / unified-trading-pm | (slot 2) | 2 | features-svc Phase 4.1-4.5 verified + shipped (test files `c11cafcd`; UTL facade re-exports `e7975fe`; import-rewrite `a308a273` → 0 deep-import violations); Phase 7 checkbox flipped `[x]` (8 repos archived); F2 no-op / F6 Option C / F7 N/A confirmed (PM@`9d91b2f4`). |
 
