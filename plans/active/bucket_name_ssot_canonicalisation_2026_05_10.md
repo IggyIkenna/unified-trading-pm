@@ -43,20 +43,76 @@ Three layers each claim to be the bucket-name SSOT; each produces a _different_ 
 The 2026-05-08 partial-mitigation at UTL@`780a9575` shipped the resolver but did NOT migrate Layer 2's per-family
 config.py templates onto it. Workspace partially-shifted-but-not-yet-canonicalised state.
 
+## FINDING 2026-05-11 (slot 4) — the yaml SSOT contradicts the provisioned features-\* infra (migration-blocking)
+
+> **Severity**: P1 / migration-blocking — not a same-day operational outage (the L2 config.py templates are what's
+> actually used in prod today, and they match reality), but a naive "migrate config.py onto `resolve_bucket_name` as-is"
+> would re-create the exact first-write-failure class this plan exists to prevent. **Blast radius**: every features-\* /
+> ml-\* bucket-writing service + `setup-buckets.sh`. **Owner**: needs an operator decision (Q4 below — a "bucket-naming
+> SSOT decision" per the work-split split-principle = Ikenna/operator territory).
+
+GCP probe (2026-05-11, project `central-element-323112`, `gcloud storage buckets list`):
+
+| yaml entry (current)                                                                                                          | resolver would produce (DEPLOYMENT_ENV=prod)             | bucket that ACTUALLY exists                                                                                                                                 | verdict                                                                                                      |
+| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `features-delta-one.CEFI = features-delta-one-cefi-${DEPLOYMENT_ENV}-${GCP_PROJECT_ID}`                                       | `features-delta-one-cefi-prod-central-element-323112` ❌ | `features-delta-one-cefi-central-element-323112` (no env)                                                                                                   | **yaml WRONG** (spurious env tier)                                                                           |
+| (yaml has only CEFI/TRADFI/DEFI for `features-delta-one`)                                                                     | —                                                        | also exist: `features-delta-one-prediction-...`, `features-delta-one-sports-...`                                                                            | **yaml MISSING keys**                                                                                        |
+| `features-onchain.CEFI = features-onchain-cefi-${DEPLOYMENT_ENV}-${GCP_PROJECT_ID}` / `.DEFI = ...defi-${DEPLOYMENT_ENV}-...` | `features-onchain-cefi-prod-...` ❌                      | `features-onchain-central-element-323112` (FLAT — no AG, no env) + `features-onchain-defi-central-element-323112` (per-AG=defi, no env)                     | **yaml WRONG** (L2's "shared" + "defi" shapes are right)                                                     |
+| `features-volatility.CEFI = ...cefi-${DEPLOYMENT_ENV}-...` (CEFI/TRADFI only)                                                 | `features-volatility-cefi-prod-...` ❌                   | `features-volatility-{cefi,defi,prediction,sports,tradfi}-central-element-323112` (per-AG, no env)                                                          | **yaml WRONG + MISSING keys**                                                                                |
+| `features-sports = features-sports-${DEPLOYMENT_ENV}-${GCP_PROJECT_ID}`                                                       | `features-sports-prod-...` ❌                            | `features-sports-central-element-323112` (flat, no env)                                                                                                     | **yaml WRONG** (spurious env)                                                                                |
+| `features-prediction = features-prediction-${DEPLOYMENT_ENV}-...`                                                             | `features-prediction-prod-...` ❌                        | _(no `features-prediction-*` bucket on GCP at all)_ + `features-cross-instrument-prediction-central-element-323112` exists                                  | **bucket NOT PROVISIONED** / yaml-vs-reality unknown                                                         |
+| `features-calendar` (GCP entry commented out)                                                                                 | (raises Unknown kind)                                    | `features-calendar-central-element-323112` (flat) — IT EXISTS                                                                                               | **yaml should UNCOMMENT** (the AWS-only allowlist entry from UTL@`e8dc6e3` is stale once GCP entry is added) |
+| `instruments-store.CEFI = instruments-store-cefi-${GCP_PROJECT_ID}` (no env)                                                  | `instruments-store-cefi-central-element-323112` ✅       | `instruments-store-cefi-central-element-323112` ✅ (+ `-test-` variant `instruments-store-cefi-test-...`)                                                   | **yaml CORRECT** (env-less); `-test-` not modelled                                                           |
+| `market-data.CEFI = market-data-tick-cefi-${GCP_PROJECT_ID}` (no env)                                                         | `market-data-tick-cefi-central-element-323112` ✅        | `market-data-tick-cefi-central-element-323112` ✅ (+ inconsistent `-test-` variants: `market-data-tick-cefi-test-...` AND `market-data-tick-test-cefi-...`) | **yaml CORRECT** (env-less); `-test-` shapes inconsistent on disk                                            |
+
+**Net**: the yaml's Group-B env-tier convention (`features_*`, `ml_*`, `strategy`, `execution` get `${DEPLOYMENT_ENV}`)
+is **aspirational, not provisioned** — at least for the GCP `features-*` buckets, which are all flat. Either the prod
+buckets are misnamed (should have a `-prod-` tier) or the yaml is wrong (should drop the tier). For a P1-pre-cutover
+migration these MUST agree before the config.py migration lands; the safest fix is to make the yaml match reality (drop
+the env tier from GCP `features-*`), since renaming buckets = data migration = much riskier. This is now **Phase 0** of
+this plan and **Q4** below (operator decision).
+
 ## Done definition
 
 - [x] **[AGENT] P1**. Decide canonical SSOT layer. Options: (a) Yaml is canonical; lift all per-family `config.py`
       templates onto `bucket_naming.resolve_bucket_name()` calls (drops the local templates; `${DEPLOYMENT_ENV}` suffix
       gains universal coverage); (b) Per-family configs are canonical; remove `${DEPLOYMENT_ENV}` from yaml entries
-      (drops env axis workspace-wide). **DECISION 2026-05-11 (slot 4, per the plan's own recommendation): (a) — yaml
-      SSOT is canonical.** Rationale: (1) preserves the env axis for prod/staging/dev/test isolation; (2) yaml already
-      has full GCP↔AWS asymmetry handling (the `tick-` infix on GCP `market-data`, AWS-only `features-calendar`) which
-      the per-family templates do NOT model; (3) the UTL resolver `bucket_naming.resolve_bucket_name` already reads the
-      yaml — so (a) just _removes_ duplicate layers, no new SSOT. The collapse targets are: per-family `config.py`
-      `*_bucket_template` Field defaults → `resolve_bucket_name()` calls (Layer 2), AND the legacy
-      `cloud_interface.constants.get_bucket_name` + `BUCKET_PREFIXES` dict → delegate to `resolve_bucket_name()` (Layer
-      3 — the resolver docstring already flags this as "a follow-up step"). See § "Pre-audit manifest" below for the
-      full 4-layer drift map + per-layer migration recipe.
+      (drops env axis workspace-wide). **DECISION 2026-05-11 (slot 4): (a) — yaml SSOT is canonical AS THE ARCHITECTURAL
+      DIRECTION**, BUT **a Phase 0 yaml-vs-provisioned-infra reconciliation is now a hard prerequisite** — see the
+      FINDING below + the new Phase 0 todo. Rationale for (a): (1) keeps the env axis available for
+      prod/staging/dev/test isolation; (2) yaml already models GCP↔AWS asymmetries (`tick-` infix on GCP `market-data`,
+      AWS-only `features-calendar`) the per-family templates don't; (3) the UTL resolver already reads the yaml — so (a)
+      just _removes_ duplicate layers, no new SSOT. **Caveat (FINDING 2026-05-11)**: the on-disk GCP features-_ buckets
+      (`features-delta-one-cefi-central-element-323112`, `features-onchain-central-element-323112`,
+      `features-sports-...`, `features-volatility-{cefi,defi,...}-...`, `features-calendar-...`) are FLAT — **no
+      `${DEPLOYMENT_ENV}` tier** — so the current yaml `features-delta-one-cefi-${DEPLOYMENT_ENV}-${GCP_PROJECT_ID}`
+      resolves to a bucket that doesn't exist (`...cefi-prod-...`); the L2 config.py templates
+      (`features-delta-one-{ag}-{pid}`, no env) are the ones that match reality. A naive "config.py →
+      resolve_bucket_name as-is" migration would re-create the exact first-write-failure bug this plan exists to
+      prevent. So (a) holds, but the yaml needs a fix-forward FIRST (drop the spurious env tier from GCP features-_ OR
+      provision the env-tiered buckets — operator decision; plus add the missing `prediction`/`sports` keys for
+      `features-delta-one`/`features-volatility`/`features-onchain`/`instruments-store`/ `market-data`, add the GCP
+      `features-calendar` entry, and resolve the `-test-` variant naming inconsistency
+      `instruments-store-cefi-test-{pid}` vs `market-data-tick-test-cefi-{pid}`). Collapse targets unchanged: L2
+      config.py `*_bucket_template` Field defaults → `resolve_bucket_name()`; legacy
+      `cloud_interface.constants.get_bucket_name` + `BUCKET_PREFIXES` → delegate to `resolve_bucket_name()`. See §
+      "Pre-audit manifest" + § "FINDING 2026-05-11" below.
+- [ ] **[AGENT] P0**. **Phase 0 — reconcile `deployment-service/configs/cloud-providers.yaml` with the provisioned
+      features-\* / instruments-store / market-data infra (NEW — surfaced by the 2026-05-11 slot-4 GCP bucket probe).**
+      MUST land before the L2 config.py migration (else the migration produces resolver-derived bucket names that don't
+      exist on disk). Steps: (1) probe GCP (done — see § FINDING) + AWS (`aws s3 ls` — couldn't run from slot, needs a
+      machine with the AWS CLI / ADC) for the actual bucket names; (2) operator decision: drop the spurious
+      `${DEPLOYMENT_ENV}` tier from GCP features-\* yaml entries to match reality, OR provision the env-tiered buckets +
+      migrate data to match the yaml (the riskier path; default to (drop)); (3) add the missing per-asset_group keys
+      (`prediction`/`sports` for `features-delta-one`/`features-volatility`/`features-onchain`/`instruments-store`/
+      `market-data` — those buckets exist on disk but aren't in the yaml); (4) add the GCP `features-calendar` entry
+      (the bucket exists: `features-calendar-central-element-323112`; the yaml has it commented out — uncomment + fix);
+      (5) decide whether/how the resolver models the `-test-` E2E variant (current on-disk shapes are inconsistent:
+      `instruments-store-cefi-test-{pid}` puts `test` after AG, `market-data-tick-test-cefi-{pid}` puts it before AG);
+      (6) update the parity test (UTL@`e8dc6e3`'s `_FEATURES_PIPELINE_KINDS` + `_KNOWN_YAML_ASYMMETRIES`) to match; (7)
+      verify each resolver-derived name `gcloud storage ls`-exists. status: blocked — note: "2026-05-11 slot 4 —
+      surfaced via GCP probe; needs an operator decision on (drop env tier) vs (provision env-tiered buckets) — see §
+      Open questions Q4 (🔴 P0)."
 - [ ] **[SCRIPT] P1**. Migrate per-family `features-service/features_service/{family}/config.py` `*_bucket_template`
       Field defaults to call `bucket_naming.resolve_bucket_name(...)` lazily at runtime (delete the
       `Field(default="...")` template + repoint `get_*_bucket(...)` method bodies). **GATED** on Harsh slot 2
@@ -301,3 +357,80 @@ call `assert_no_lookahead_for_feature_group`, same plan). None of 5.66/5.67/5.68
 `5.69` for the `f"gs://..."` ratchet unless slot 1 reassigns. (Flagging only so two parallel plans don't both grab the
 same number — `available_at_lookahead_bias_completion_2026_05_08.md` is the _other_ slot-4 plan-of-record this cycle so
 I can keep them coordinated, but if a third plan also touches base-service.sh numbering, slot 1 should arbitrate.)
+
+### Q4 — [harsh-bucket-and-adapter-tab, 2026-05-11 07:13 UTC] — 🔴 P0: cloud-providers.yaml features-\* env-tier is aspirational, not provisioned — drop the tier from the yaml, or provision the env-tiered buckets?
+
+**Status**: 🟡 BLOCKED — needs an operator decision; **migration-blocking** for the L2 config.py migration; routed via
+ping with `🔴 P0` marker.
+
+GCP probe (2026-05-11, project `central-element-323112`): the `features-*` buckets that ACTUALLY EXIST are FLAT — no
+`${DEPLOYMENT_ENV}` tier — but the yaml entries
+(`features-delta-one.CEFI = features-delta-one-cefi-${DEPLOYMENT_ENV}-${GCP_PROJECT_ID}`, etc.) carry the tier (the
+yaml's "Group B — derived data, per-env" convention). So
+`resolve_bucket_name(kind="features-delta-one", asset_group="cefi")` with `DEPLOYMENT_ENV=prod` →
+`features-delta-one-cefi-prod-central-element-323112` → **doesn't exist**. The L2 config.py templates
+(`features-delta-one-{ag}-{pid}`, no env) are the ones that match the provisioned buckets. Full evidence table in §
+"FINDING 2026-05-11" above. Also surfaced: yaml is missing `prediction`/`sports` keys for several kinds (the buckets
+exist on disk); GCP `features-calendar` bucket exists but the yaml entry is commented out; the `-test-` E2E variant
+naming is inconsistent on disk (`instruments-store-cefi-test-{pid}` vs `market-data-tick-test-cefi-{pid}`).
+
+**Options**: (a) **Make the yaml match reality** — drop `${DEPLOYMENT_ENV}` from the GCP `features-*` (+ `ml-*` if same
+issue — not yet probed) entries; add the missing `prediction`/`sports` keys; uncomment GCP `features-calendar`; pick a
+canonical `-test-` variant shape + model it. Low-risk (no bucket renames / data migration). Loses the prod/staging/dev
+isolation for features-* buckets (but it was never actually provisioned, so nothing changes operationally). (b) **Make
+reality match the yaml** — provision the env-tiered buckets (`features-delta-one-cefi-prod-{pid}`, etc.) + migrate the
+existing flat-bucket data into them + repoint every reader/writer. High-risk (data migration across N buckets). (c)
+**Hybrid** — keep the env tier for *future* env-isolated buckets (ml-models, strategy, execution if those ARE env-tiered
+on disk — not yet probed) but drop it for features-* where it's clearly aspirational-only.
+
+**Recommendation**: (a) — match the yaml to reality. The "live = batch, prod/staging/dev isolation" intent is laudable
+but the features-_ buckets were never provisioned with the tier, so encoding it in the SSOT is a lie that bites the
+moment anything resolves via `resolve_bucket_name`. If env-isolation for features-_ buckets is genuinely wanted later,
+that's a separate "provision + migrate" plan, not a blocker for this one. But this is a "bucket-naming SSOT decision"
+per the work-split split-principle = operator/Ikenna call. **Until answered**: the L2 config.py migration (done-def
+todo) + Phase 0 stay blocked; I've done all the no-gate prep (parity test, pre-audit manifest, this finding,
+sports-adapter audit).
+
+## Deferred work after 2026-05-11 slot 4 session
+
+The 2026-05-11 `harsh-bucket-and-adapter-tab` (slot 4) session shipped: the parity-test extension (UTL@`e8dc6e3`), the
+canonical-layer decision (a, with a Phase-0 caveat), the full 4-layer pre-audit manifest + per-layer migration recipe +
+QG STEP 5.69 design, the FINDING that the yaml features-\* env-tier is unprovisioned, and the
+[`issues/mtds_sports_available_at_wiring_2026_05_11.md`](issues/mtds_sports_available_at_wiring_2026_05_11.md) sports
+audit. Items still open are tracked here so the next agent picks up cleanly.
+
+| Item                                                                           | Status as of 2026-05-11                                                  | Successor / blocker                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Done-def #1 — decide canonical layer                                           | `done` ([x]) — (a) yaml canonical + Phase-0 caveat                       | —                                                                                                                                                                                                                                                                                                                                                      |
+| Done-def #1.5 — **Phase 0** reconcile yaml ↔ provisioned features-\* infra    | `blocked` ([ ])                                                          | DEFERRED-AFTER-Q4 (operator decision: drop env tier vs provision env-tiered buckets); also needs an `aws s3 ls` probe (no AWS CLI on the slot machine)                                                                                                                                                                                                 |
+| Done-def #2 — migrate per-family `config.py` `*_bucket_template` → resolver    | `blocked` ([ ])                                                          | DEFERRED-AFTER Phase 0 + DEFERRED-AFTER Q2 (slot-1 green-light to proceed against consolidated state, or slot-2 "Phase 4 done" ping — slot 2 has now verified Phase 4.1-4.5 done + Phase 7 [x]; the residual blocker is the forward-collision with slot 2's 4.6 codex-cleanup workstream + Q2 not yet answered)                                        |
+| Done-def #3 — delegate legacy `get_bucket_name` + `BUCKET_PREFIXES` → resolver | `todo` ([ ])                                                             | No hard gate (UTL-only) but ships after #2 + needs a workspace-consumer pre-audit (~36+ files across instruments-service / execution-service / deployment-service / PM scripts grep `get_bucket_name\|BUCKET_PREFIXES\|get_*_bucket\|get_write_bucket_name` — list in commit body)                                                                     |
+| Done-def #4 — extend parity test                                               | `done` ([x]) — UTL@`e8dc6e3`                                             | —                                                                                                                                                                                                                                                                                                                                                      |
+| Done-def #5 — QG STEP 5.69 (`f"gs://..."` ratchet)                             | `todo` ([ ])                                                             | DEFERRED-AFTER #2 (else ratchet baseline bakes in un-migrated sites); design written in § Pre-audit manifest → "QG STEP 5.6X design"; STEP number pending Q3                                                                                                                                                                                           |
+| Done-def #6 — plan-flip cite + grep audit table (zero drift)                   | `blocked` ([ ])                                                          | DEFERRED-AFTER #2 + #3 + #5                                                                                                                                                                                                                                                                                                                            |
+| Sports-adapter `available_at` (the other slot-4 half)                          | `audit-shipped` — `issues/mtds_sports_available_at_wiring_2026_05_11.md` | DEFERRED-AFTER slot-3 wave3x Track E ship (UTL helpers final shape) + Q-A in the issue doc (odds `available_at` = bm_time vs +latency — Ikenna slot 3 / sports_master call). NOT hard-gated on Ikenna slot 3 Phase 0 (that's for MDPS-derived bar data). The wiring itself is small (~few lines in `_process_sports_venue_with_leagues` + ~3-5 tests). |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **`available_at` per-adapter stamping for CeFi-bar / DeFi / TradFi / Predictions** — open in
+  [`available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md) Phase 1
+  (CeFi tick stamping shipped MTDS@`4a00bd5`; the rest are TRACKED/owned by the respective `*_master` plans). Not slot-4
+  scope.
+- **The `-test-` E2E bucket variant naming inconsistency** on disk (`instruments-store-cefi-test-{pid}` vs
+  `market-data-tick-test-cefi-{pid}`) — folded into this plan's new Phase 0 step (5) above.
+
+## DONE-2026-05-11 — harsh-bucket-and-adapter-tab (slot 4) session
+
+| Item                                                                                                           | Status                      | Commits                                                                                           |
+| -------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| Done-def #4 — extend yaml-vs-resolver parity test (features-\*/sports/tradfi/prediction) + fix RED parity test | `done`                      | unified-trading-library@`e8dc6e3`; plan-flip PM@`59e92b18`                                        |
+| Done-def #1 — decide canonical SSOT layer = (a) yaml (with Phase-0 caveat)                                     | `done`                      | PM@`59e92b18` (decision in plan body)                                                             |
+| § Pre-audit manifest (4-layer drift map + L2/L3 migration recipes + QG STEP 5.69 design)                       | `done`                      | PM@`59e92b18`                                                                                     |
+| § Open questions Q1 (resolver location UAC-vs-UTL), Q2 (proceed-with-config.py-now?), Q3 (STEP number)         | `done` (raised, 🟡 BLOCKED) | PM@`59e92b18`                                                                                     |
+| § FINDING 2026-05-11 (yaml features-\* env-tier unprovisioned) + Phase 0 todo + Q4 (🔴 P0)                     | `done`                      | PM@`<this commit>`                                                                                |
+| `issues/mtds_sports_available_at_wiring_2026_05_11.md` — MTDS-slice sports `available_at` wiring audit         | `done`                      | PM@`7c088961`                                                                                     |
+| Boot ack ping                                                                                                  | `done`                      | PM@`eb52b83b` (then moved to `harsh_orchestrator/pings/slot_4.md` per the 2026-05-11 ledger-move) |
+
+**No-gate prep complete. Remaining items (#1.5 Phase 0 / #2 config.py migration / #3 legacy-delegate / #5 QG STEP / #6
+audit-table / sports wiring) all gated on operator/slot-1 decisions (Q2, Q4) or upstream slots (slot-3 wave3x Track E).
+Going quiet — next session picks up once Q2/Q4 answered and/or Track E lands.**
