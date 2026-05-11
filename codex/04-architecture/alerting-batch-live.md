@@ -110,3 +110,37 @@ SSOTs:
 - Coalesce impl: `alerting-service/alerting_service/notifiers/router.py` (`_COALESCE_WINDOW_SECONDS`,
   `_COALESCED_EVENT_NAMES`, `_check_coalesce_window`).
 - Tests: `alerting-service/tests/unit/notifiers/test_router_coalesce.py` (22 unit tests covering all coalesce shapes).
+
+## Live-Pipeline Alert Tier Table
+
+The live-pipeline cascade (MTDS → MDPS → features-service via Redis Streams; see
+[`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)) emits
+`StreamingHealthSnapshot` per shard. Alerting-service reads the snapshot via the Health-API `data_freshness` callback +
+applies three tiers of rules:
+
+| Tier | Trigger condition                                                      | Source field                                | Severity   | Action                                                                                |
+| ---- | ---------------------------------------------------------------------- | ------------------------------------------- | ---------- | ------------------------------------------------------------------------------------- |
+| 1    | `last_event_age_seconds > 30` OR `zero_activity_bar_rate > 0.05`       | `StreamingHealthSnapshot` (per shard)       | `warning`  | Page on-call (PagerDuty/Telegram); no kill switch                                     |
+| 2    | `consumer_lag_pending > 1000` for 60s OR `last_event_age_seconds > 60` | `StreamingHealthSnapshot` + duration window | `critical` | `KILL_SWITCH_STREAM_LAG` → execution-service `force_exit_only` action                 |
+| 3    | No events on any active shard for > 5min                               | Cross-shard aggregate                       | `critical` | `KILL_SWITCH_PIPELINE_DEAD` → all strategies `halt_strategy`; operator manual restart |
+
+### Circuit-breaker action set
+
+Three actions wired from alerting-service to strategy-service via a dedicated `streaming.alerting.circuit_breaker` Redis
+Stream — execution-service subscribes to the same stream + enforces fills:
+
+- **`stop_new_signals`** — strategy refuses NEW signal generation; in-flight EXIT signals continue. Used for Tier 1
+  degradation (warning-level) when paired with `triggers_kill_switch=False`.
+- **`force_exit_only`** — strategy still computes but only EMITS exit instructions; execution-service rejects any
+  non-exit instruction. Default for Tier 2.
+- **`halt_strategy`** — strategy stops emitting completely; execution-service flushes the order book + cancels working
+  orders. Default for Tier 3; operator-only un-halt via signed restart event.
+
+Action selection is per alerting-service rule (`triggers_kill_switch=True` + `action=...`). The shape mirrors
+`StreamingHealthSnapshot` field names verbatim so rule changes are a deliberate, reviewable delta.
+
+### Compose with batch-mode replay
+
+Batch mode replays the same `StreamingHealthSnapshot` event stream through `route_event()` with the SAME rules — verify
+Tier 1-3 thresholds before promotion. Live alerts that would have fired (or didn't) during a past incident are
+reproducible via batch replay against the historical event-stream parquet.

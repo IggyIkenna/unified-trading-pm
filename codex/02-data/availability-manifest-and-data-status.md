@@ -375,7 +375,8 @@ class AvailabilityRecord:
 
 `read_availability_index()` handles older index versions transparently — missing v5/v6/v7/v8 columns are backfilled with
 their defaults (`captured` for capture*status, `""` for legacy string columns, `None` for v8 emission columns). No
-migration needed for reads. Writes produce v8 entries that coexist with older entries until re-scanned by a `rebuild*\*\_manifest.py` pass. The v7 → v8 reader-fallback chain is bounded — deletion target ~2026-06-15 (30-day grace
+migration needed for reads. Writes produce v8 entries that coexist with older entries until re-scanned by a
+`rebuild*\*\_manifest.py` pass. The v7 → v8 reader-fallback chain is bounded — deletion target ~2026-06-15 (30-day grace
 window) per the final-gate plan's "no double SSOT" closure rule.
 
 ## Per-Service Shard Dimension Matrix
@@ -620,6 +621,32 @@ identical whether the source was silent or the pipeline had never run. `write_wi
   `reconcile_phantom_manifest_rows.py` is sports-only) is the inverse process: scans canonical GCS paths, compares vs
   `captured` rows, flips drift to `attempted_failed`.
 
+#### Live-pipeline 4-state taxonomy examples (pipeline_mode=live_websocket)
+
+The same 4-state taxonomy applies to live-pipeline writes. The discriminator is the `pipeline_mode` column (v8 schema):
+batch writes use `pipeline_mode in {batch_databento, batch_tardis, ...}`; live writes use
+`pipeline_mode in {live_websocket, live_rest}`. Per-state semantics in live mode:
+
+| State                | `pipeline_mode`  | `capture_status`   | Live-mode trigger                                                                                                                                                                                  |
+| -------------------- | ---------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ingested**         | `live_websocket` | `captured`         | MTDS WS adapter received trades for the window → MDPS aggregated → wrote candle parquet + `record_captured`.                                                                                       |
+| **Zero-activity**    | `live_websocket` | `captured`         | WS connected, catalog says instrument alive, zero trades in window → `O=H=L=C=prior_LTP, vol=0, trade_count=0` (per 4-category empty-output decision D). Manifest row carries real bar count.      |
+| **Expected-empty**   | `live_websocket` | `empty_confirmed`  | WS connected, catalog says instrument delisted/non-trading on this day → no candle row; `error_reason ∈ EMPTY_CONFIRMED_REASONS` (e.g. `EXPECTED_INSTRUMENT_DELISTED`, `EXPECTED_PAUSED_LEAGUE`).  |
+| **Attempted-failed** | `live_websocket` | `attempted_failed` | WS disconnected mid-window beyond grace OR WS-dead-cascade exceeded N consecutive windows → `data_freshness=STALE` candle written + `error_reason=LIVE_WS_DEAD` (or similar typed reason).         |
+| **Missing**          | (no row)         | —                  | Live VM crashed / restarted mid-day → gap window has no manifest row. Replay subsystem fills the gap (see [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md)). |
+
+**Pipeline-mode partition is canonical** for separating batch vs live shard accounting. Coverage % per
+`(asset_group, data_type, day)` is computed per pipeline_mode slice — batch coverage and live coverage are reported
+separately to avoid masking a live gap with batch backfill (or vice versa). See
+[`pipeline-mode-partition.md`](pipeline-mode-partition.md) for the partition column SSOT.
+
+**Drilldown UI reads pipeline_mode**: `GET /api/data-status/live` pivots manifest rows where
+`pipeline_mode = 'live_websocket'` (or `'live_rest'`) and joins per-shard `StreamingHealthSnapshot` via the deployment-
+api Health-API HTTP join (see
+[`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) §
+"Health-API + alerting integration"). The deployment-ui `<LiveDataStatusTab/>` (since deployment-ui@`5738237`) renders
+the resulting rows with per-row `capture_status` badges + per-row staleness badges (WARN ≥ 30s, CRIT ≥ 60s).
+
 ### Phantom audit — re-runnable recipe
 
 **Script SSOT:** `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (multi-asset-group; the older
@@ -832,24 +859,24 @@ manifest entry**; the enumerator covers the **rows that have no manifest entry a
 #### Expected-universe enumerator: v1 (shipped) vs v2 (in-flight design)
 
 The enumerator has two grain levels — v1 captures venue-grain coverage; v2 cross-joins the instruments-service catalog
-to capture per-instrument lifecycle bounds. Both share the same SSOT inputs (UAC `*_LAUNCH_DATES` /
-`*_GENESIS_DATES` / `SOURCE_COVERAGE_START` / `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS`); v2 adds the second SSOT
-half (per CLAUDE.md "Two SSOTs for the manifest's expected universe": instruments-service catalog × dates × data_types
-cross-product applied at expected-row generation, not just at write-side).
+to capture per-instrument lifecycle bounds. Both share the same SSOT inputs (UAC `*_LAUNCH_DATES` / `*_GENESIS_DATES` /
+`SOURCE_COVERAGE_START` / `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS`); v2 adds the second SSOT half (per CLAUDE.md
+"Two SSOTs for the manifest's expected universe": instruments-service catalog × dates × data_types cross-product applied
+at expected-row generation, not just at write-side).
 
 - **v1 (shipped 2026-05-07)** — venue-grain expected universe; ~1.4M rows merged into canonical across all 5
-  asset_groups (numbers above). Walks UAC SSOTs to enumerate every `(asset_group, venue, data_type, day)` row that
-  SHOULD exist; pre-skips per-source / per-chain / per-calendar windows; emits `record_expected_empty(reason=EXPECTED_*)`
-  for everything in the gap. Implementation:
-  `instruments-service/scripts/enumerate_expected_universe.py` + per-VM launcher.
+  asset*groups (numbers above). Walks UAC SSOTs to enumerate every `(asset_group, venue, data_type, day)` row that
+  SHOULD exist; pre-skips per-source / per-chain / per-calendar windows; emits
+  `record_expected_empty(reason=EXPECTED*\*)`for everything in the gap. Implementation:`instruments-service/scripts/enumerate_expected_universe.py` +
+  per-VM launcher.
 - **v2 (in-flight design)** — instrument-grain expected universe; ~190M row estimate. Designed in
   [`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md):39-73
   (folded into `manifest_evolution_master_2026_05_08` umbrella; sequenced AFTER v8 schema in gate G3). v2 cross-joins
-  v1's `(asset_group, venue, data_type, day)` axis with the instruments-service catalog's per-instrument lifecycle
-  (cefi `available_from` / `available_to`, prediction `market_created_at` / `settlement_time`, defi
-  `protocol_launch_date`, sports per-fixture). v2 plan body owns the canonical per-asset-group grain matrix (cefi
-  spot/perp per-instrument; cefi options/futures per-root; tradfi futures/options per-root; tradfi ETFs per-instrument;
-  defi per-protocol-or-instrument; sports per-fixture for fixture-native data_types; prediction per-canonical_question_group)
+  v1's `(asset_group, venue, data_type, day)` axis with the instruments-service catalog's per-instrument lifecycle (cefi
+  `available_from` / `available_to`, prediction `market_created_at` / `settlement_time`, defi `protocol_launch_date`,
+  sports per-fixture). v2 plan body owns the canonical per-asset-group grain matrix (cefi spot/perp per-instrument; cefi
+  options/futures per-root; tradfi futures/options per-root; tradfi ETFs per-instrument; defi
+  per-protocol-or-instrument; sports per-fixture for fixture-native data_types; prediction per-canonical_question_group)
   — point at the plan as SSOT for the v2 grain matrix until v2 lands.
 
 ### Architectural framing — why `empty_confirmed + EXPECTED_*` is identical to "not_attempted" placeholder

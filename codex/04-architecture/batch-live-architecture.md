@@ -396,7 +396,68 @@ Detail: [`instruments-live-architecture.md`](instruments-live-architecture.md) +
 
 ---
 
-## §10 References + cross-refs
+## §10 Live-pipeline timing semantics (UTC alignment + cascade rule)
+
+The MTDS → MDPS → features-service cascade preserves batch=live by three timing invariants. The full design contract
+lives in [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md); the
+rules below are the architectural commitments every live consumer + reader must honour.
+
+### §10.1 UTC midnight alignment
+
+All timeframe boundaries are **UTC-aligned by construction**. Live consumers never emit partial windows on startup; they
+wait for the next aligned boundary and start there. A 15s timeframe service booting at `14:23:07.4Z` emits its first
+candle at `14:23:16.0Z` covering window `[14:23:00, 14:23:15)`. A 1m service booting at `14:23:07.4Z` emits its first
+candle at `14:24:01.0Z` covering window `[14:23:00, 14:24:00)`. The window definition is identical to batch — batch jobs
+over the same minute compute the same `[14:23:00, 14:24:00)` window from the same ticks. Live = batch by construction.
+
+The UTL primitive `unified_trading_library.streaming.UTCAlignedScheduler` (+ `BoundaryTick` event) is the SSOT for the
+alignment rule + grace-window NTP tolerance (default 500ms).
+
+### §10.2 Service-start-order independence
+
+Any service can boot in any order; they all sync at the next aligned boundary. MTDS booting at `14:23:07Z` + MDPS
+booting at `14:23:30Z` + features-service booting at `14:23:55Z` all emit their first events at the next aligned
+boundary for their respective timeframes — no startup handshake, no synchronization barrier. Mid-day restart of any
+single service loses some live data; the replay subsystem
+([`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md)) fills the gap. The downstream
+service sees a stable `period_end` watermark on every event regardless of which upstream service booted first.
+
+### §10.3 Multi-timeframe cascade rule (4×15s → 1m, never tick-replay)
+
+The 1m candle MUST derive from 4× 15s candles emitted by the cascade, NOT from raw ticks re-aggregated. The same rule
+applies recursively up the timeframe DAG:
+
+| Parent timeframe | Child timeframe | Fanout (children per parent) |
+| ---------------- | --------------- | ---------------------------- |
+| 1m               | 15s             | 4                            |
+| 5m               | 1m              | 5                            |
+| 15m              | 5m              | 3                            |
+| 1h               | 15m             | 4                            |
+| 1d               | 1h              | 24                           |
+
+`MDPSStreamingAggregator._feed_cascade_buffer` (UTL@`58bfbbeb`, integrated UTL@`5d3eddd`) buffers child candles per
+`(asset_group, venue, instrument_id, parent_timeframe)` key + waits for `parent_fanout` child events before computing
+the parent candle. Bypassing the cascade (e.g. tick-replay for the 1m candle while 15s is also derived from ticks)
+diverges live from batch (batch uses cascade) and produces silent OHLCV drift across the timeframe DAG.
+
+The 4-category gap semantics (FRESH / ZERO_ACTIVITY_BAR / no-emit / STALE / WS-dead-cascade) attach per-child; the
+cascade buffer aggregates the per-child flags into the parent according to the `data_freshness` propagation table in
+[`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) § "Live gap
+semantics — stale-not-missing." `PUBLISHED_DEGRADED` on any child → `PUBLISHED_DEGRADED` on parent (degraded propagates
+up); pure carry-forward across all 4 children → `data_freshness=STALE` on parent.
+
+### §10.4 Cross-cutting features fan-in
+
+The cross-cutting features-service consumer (`CrossCuttingFeaturesRunner`, UTL@`58bfbbeb`) subscribes to MULTIPLE
+asset_groups' `streaming.{ag}.features_computed` streams + uses `WatermarkAlignmentFanin` (UTL@`858f3c84`) to align
+events at a common `period_end` boundary with a default 500ms intra-zone grace window. Tier-2 + Tier-3 alerting
+thresholds (per [`alerting-batch-live.md`](alerting-batch-live.md) § "Live-Pipeline Alert Tier Table") fire if grace
+expires without all expected streams contributing — degraded propagation (per-stream STALE) propagates without blocking,
+clock-skew falls back to conservative latest-watermark (never emit beyond the slowest stream's watermark).
+
+---
+
+## §11 References + cross-refs
 
 - **Live pipeline architecture**:
   [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) (MTDS

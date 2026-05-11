@@ -97,6 +97,48 @@ hints when services are down.
 
 ---
 
+## Live-pipeline VM topology (2026-05-08 cutover)
+
+The live pipeline (MTDS → MDPS → features-service via Redis Streams) deploys as **three per-asset-group VM types plus
+two singleton VMs**. Full architecture in [`live-pipeline-architecture.md`](live-pipeline-architecture.md). Launcher
+SSOT under `deployment-service/scripts/vm/` per the VM launcher script SSOT rule.
+
+| VM type                            | Launcher                                     | VM-name prefix        | Scope                                                        | Watchdog dict entry                          |
+| ---------------------------------- | -------------------------------------------- | --------------------- | ------------------------------------------------------------ | -------------------------------------------- |
+| **MTDS live**                      | `launch-mtds-live-{asset_group}.sh`          | `mtds-live-`          | Per asset_group; one VM per cluster                          | `VM_PREFIX_TO_BUCKET["mtds-live-"]`          |
+| **MDPS + features (asset-scoped)** | `launch-mdps-features-live-{asset_group}.sh` | `mdps-features-live-` | Per asset_group; one VM per cluster                          | `VM_PREFIX_TO_BUCKET["mdps-features-live-"]` |
+| **Features cross-cutting**         | `launch-features-cross-cutting.sh`           | `features-xc-`        | Singleton; subscribes to ALL asset_groups                    | `VM_PREFIX_TO_BUCKET["features-xc-"]`        |
+| **Replay cascade**                 | `launch-replay-cascade.sh`                   | `replay-`             | Singleton; bridges batch→live on restart                     | `VM_PREFIX_TO_BUCKET["replay-"]`             |
+| **Alerting service**               | unchanged batch-live wiring                  | n/a (existing)        | Singleton; consumes `StreamingHealthSnapshot` via Health-API | n/a (existing)                               |
+
+Per-asset-group expansion (5 asset_groups × 2 VM types = 10 VMs at full cluster bootstrap):
+
+| asset_group  | MTDS VM                     | MDPS+features VM                     |
+| ------------ | --------------------------- | ------------------------------------ |
+| `cefi`       | `mtds-live-cefi-{ts}`       | `mdps-features-live-cefi-{ts}`       |
+| `defi`       | `mtds-live-defi-{ts}`       | `mdps-features-live-defi-{ts}`       |
+| `tradfi`     | `mtds-live-tradfi-{ts}`     | `mdps-features-live-tradfi-{ts}`     |
+| `sports`     | `mtds-live-sports-{ts}`     | `mdps-features-live-sports-{ts}`     |
+| `prediction` | `mtds-live-prediction-{ts}` | `mdps-features-live-prediction-{ts}` |
+
+The MTDS + MDPS+features pair per asset_group is the unit of **per-asset-group live capture**. The cross-cutting VM
+subscribes to every `streaming.{ag}.features_computed` stream and emits cross-instrument features (e.g.
+`cross_instrument.lst_yield_vs_eth_spot`). The replay VM is a separate process (NOT folded into MTDS) that bridges batch
+sources → Redis Streams on mid-day restart per the watermark-KV handoff in [`replay-subsystem.md`](replay-subsystem.md).
+
+**Deployment-stack co-location.** Each per-asset-group VM pair shares the same project / network / region for sub-ms
+Redis Stream latency. The cross-cutting VM lives in the same region but has fan-in latency budget (default 500ms grace
+window per `WatermarkAlignmentFanin`). Region pinning per asset_group follows the workspace bucket-name SSOT
+(`asia-northeast1` for GCP, `ap-northeast-1` for AWS — same-metro Tokyo for cross-cloud).
+
+**Operational mode mapping.** Live-pipeline VMs run as mode-3 **Live Fleet Management** above —
+`deploy-shards live start --service mtds-live-cefi` etc. Mode-4 **Cluster Bootstrap** spins all 10 per-asset-group VMs +
+2 singletons in one action; mode-1 **Thermal Batch** is the batch-mode equivalent (no live VMs running, all parquet
+writes via `pipeline_mode in {batch_databento, batch_tardis, ...}` per
+[`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md)).
+
+---
+
 ## 4 Operational Modes
 
 ### 1. Thermal Batch (one-shot pipeline)
