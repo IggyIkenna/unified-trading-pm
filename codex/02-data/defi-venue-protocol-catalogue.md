@@ -6,7 +6,17 @@ scope: [engineer, admin]
 
 > SSOT for the cross-chain × cross-protocol × cross-asset DeFi catalogue. Maps every protocol the system trades or
 > reads against to its UAC entry, instruments-service catalog adapter, MTDS capture adapter, and execution-service
-> connector. Last updated 2026-05-10 (defi_catalogue_chain_primitives_2026_05_10 Phase 1J).
+> connector. Last updated 2026-05-12 (defi_catalogue_chain_primitives_2026_05_10 Phase 1J refresh by slot 2
+> `ikenna-defi-catalogue-tab`).
+>
+> **2026-05-12 refresh deltas**: (a) corrected stale UAC SSOT path references from non-existent
+> `defi_venue_capabilities.py` → actual `defi_venues.py` (per slot 5's 2026-05-11 finding at uac@`495d262`);
+> (b) Lending § Aave V3 Ethereum silent-zero row marked CLOSED AS STALE FRAMING per slot 3 audit 2026-05-11 +
+> slot 2 verification 2026-05-12 (data exists on-disk; consolidator fix shipped); (c) Restaking § Renzo (ezETH) +
+> KelpDAO (rsETH) UAC + LST mapping rows flipped ✅ (UAC@`961af767` extended `LST_TOKEN_TO_PROTOCOL_ASSET`);
+> (d) Phase 1D Solana MEV cell flipped ✅ — `MevSubmissionMode.JITO_BUNDLE` shipped at UAC@`5241fad0` +
+> execution-service@`38710bef`; (e) Phase 1B slot 5 chain × protocol matrix shipping confirmed at uac@`458f17d`
+> (45/46 PROTOCOL_LAUNCH_DATES pairs). Remaining ◐ /✗ statuses reflect Phase 2+3+4 buildout not yet complete.
 
 ## How to read this doc
 
@@ -25,16 +35,22 @@ plans, it must appear here — if it doesn't, that's a finding (file an issue do
 - 🔍 **VERIFY** — claimed shipped but unverified in current codebase. Treat as ✗ until verification ships.
 
 **Axis legend**: UAC = entry in
-[`registry/defi_venue_capabilities.py`](../../../unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py)
-+ supporting registries; INSTR = instruments-service adapter at `reference_data/adapters/defi/`; MTDS = market-tick-
-data-service adapter at `market_interface/adapters/defi/` (or sibling); EXEC = execution-service connector at
-`defi_execution/protocols/`.
+[`registry/defi_venues.py`](../../../unified-api-contracts/unified_api_contracts/registry/defi_venues.py)
+(canonical SSOT for `ALL_DEFI_VENUES` + per-venue chain support) +
+[`registry/chain_env.py`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py)
+(`PROTOCOL_LAUNCH_DATES` per `(chain, protocol)`) +
+[`registry/defi_reserve_params.py`](../../../unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py)
+(per-asset risk params for lending) + supporting registries; INSTR = instruments-service adapter at
+`reference_data/adapters/defi/`; MTDS = market-tick-data-service adapter at `market_interface/adapters/defi/`
+(or sibling); EXEC = execution-service connector at `defi_execution/protocols/`. **Note 2026-05-12**: plan
+references to `defi_venue_capabilities.py` are STALE — that file does not exist; canonical lives at
+`defi_venues.py` per slot 5's 2026-05-11 verification.
 
 ## Lending protocols
 
 | Protocol | Chains | UAC | INSTR | MTDS | EXEC | Notes |
 | -------- | ------ | --- | ----- | ---- | ---- | ----- |
-| **Aave V3 Ethereum** | Ethereum | ✅ | ✅ (10 reserves × 2 tokens = 20 instruments) | ◐ silent-zero bug 0/343 shards [writegate Phase 2.A] | ✅ flash-loan + borrow/lend/repay; Sepolia validated | Reference flash-loan receiver per [`flash-loan-receiver.md`](../04-architecture/flash-loan-receiver.md). Coverage start 2022-03-16 |
+| **Aave V3 Ethereum** | Ethereum | ✅ | ✅ (10 reserves × 2 tokens = 20 instruments) | ✅ captured 2022-03-16 → 2026-05-07 (silent-zero CLOSED AS STALE FRAMING 2026-05-11 slot 3 audit + 2026-05-12 slot 2 verification per `defi_master_2026_05_07.md` DONE-2026-05-12 block; data exists on-disk, consolidator fix shipped at deployment-service@`ad4d448` + slot 6@`2a76a2a`). Recent-days catch-up `2026-05-07..today` pending 5-10min scoped VM. | ✅ flash-loan + borrow/lend/repay; Sepolia validated | Reference flash-loan receiver per [`flash-loan-receiver.md`](../04-architecture/flash-loan-receiver.md). Coverage start 2022-03-16 |
 | **Aave V3 multi-chain** | Arbitrum, Avalanche, Base, BSC, Linea, Optimism, Polygon, Scroll, ZkSync (9 chains) | ✅ | ✗ | ✗ | ✗ | All 9 chains P0 buildout [`defi_catalogue_chain_primitives` Phase 2/3/4 — parallel-agent J] |
 | **Compound V3** | Ethereum, Arbitrum, Base, Optimism, Polygon, Scroll | ✅ | ◐ Ethereum only | ✗ | ✗ | Multi-chain buildout deferred until Phase 2/3/4 |
 | **Spark** | Ethereum (live 2024-01-01) | ✅ ghost (UAC declares but downstream zero) | ✗ | ✗ | ✗ | Phase 2/3/4 — parallel-agent I |
@@ -83,8 +99,8 @@ data-service adapter at `market_interface/adapters/defi/` (or sibling); EXEC = e
 | **EigenLayer** | (delegation, no token) | Ethereum | ✅ (rewards + staking_yields) | ✗ | ✗ | 🔍 claimed shipped 2026-03-13 but not in current `execution-service/venues/` or `defi_execution/protocols/` | Phase 4 verify-or-rebuild |
 | **Symbiotic** | (vault) | Ethereum | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent L |
 | **Karak** | (vault) | Ethereum, Arbitrum | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent M |
-| **Renzo** | ezETH | Ethereum, Arbitrum | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent M |
-| **KelpDAO** | rsETH | Ethereum | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent N |
+| **Renzo** | ezETH | Ethereum, Arbitrum | ✅ (UAC@`495d262` venue entry + UAC@`961af767` LST mapping (RENZO, ETH)) | ✗ | ✗ | ✗ | Phase 2/3/4 — parallel-agent M. Reserve params + INSTR/MTDS/EXEC adapters pending. |
+| **KelpDAO** | rsETH | Ethereum | ✅ (UAC@`495d262` venue entry + UAC@`961af767` LST mapping (KELPDAO, ETH)) | ✗ | ✗ | ✗ | Phase 2/3/4 — parallel-agent N. Reserve params + INSTR/MTDS/EXEC adapters pending. |
 | **Puffer** | (vault) | Ethereum | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent N |
 | **Jito restaking (Solana)** | (vault) | Solana | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent O |
 
@@ -130,7 +146,7 @@ axis (CLOB-style data shape, regardless of on-chain settlement). Captures wired 
 | Linea | 2023-07-11 | Alchemy | Phase 5B | sequencer | Sequencer | Aave V3 |
 | Scroll | 2023-10-17 | Alchemy | Phase 5B | sequencer | Sequencer | Aave V3 / Compound V3 |
 | ZkSync Era | 2023-03-24 | Alchemy | Phase 5B | sequencer | Sequencer | Aave V3 / Lighter |
-| Solana | 2020-03-16 | Helius | Alchemy + public Solana RPC (Phase 5B) | priority-fees-lamports + compute-unit-price | Jito bundle submission [Phase 5A] | Jito (LST) / Marinade / Solblaze / Raydium / Orca / Jupiter agg / Drift / Pacifica / Kamino / Jito restaking |
+| Solana | 2020-03-16 | Helius | Alchemy + public Solana RPC (Phase 5B) | priority-fees-lamports + compute-unit-price | ✅ Jito bundle submission via `MevSubmissionMode.JITO_BUNDLE` UAC enum + `_DEFAULT_POLICIES[JITO_BUNDLE]` in `execution-service/v2/mev_router.py` (Phase 1D shipped 2026-05-12 UAC@`5241fad0` + execution-service@`38710bef`; `endpoint_ref=jito_bundle_rpc`, `max_block_delay=2`, `bundle_mode=private`). Block-engine RPC endpoint resolved via UCI/Secret Manager at dispatch. | Jito (LST) / Marinade / Solblaze / Raydium / Orca / Jupiter agg / Drift / Pacifica / Kamino / Jito restaking |
 | StarkNet | n/a (L2) | Voyager / Alchemy | Phase 5B | n/a | Sequencer | Extended |
 
 Other chains in `CHAIN_GENESIS_DATES` (Celo / Aurora / Fantom / Mantle / Gnosis / Metis / Moonbeam / Blast / Mode /
