@@ -722,39 +722,50 @@ shipping with the Fork-1 prep batches below).
       cause). ~0.8k blank rows pending decision.
 - [ ] [SCRIPT] P0. **Priority #5 — Lending-indices LINEA/BSC routing config.** Distinct workstream from priority #1
       (which is Ethereum-AAVEV3 UAC fix).
-      `status: backfill-running` — **the "routing config absent" framing was STALE** (grep-then-conclude error in the
-      2026-05-08 audit): `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` have been wired since UAC@`2db3c8e` (Mar 2026);
-      `get_supported_chains_for_protocol("aave_v3")` already includes LINEA+BSC; UAC launch dates corrected at
-      UAC@`6c873e4` (`("LINEA","AAVEV3")="2025-02-11"`, `("BSC","AAVEV3")="2024-01-23"`); `lending_indices` ∈
-      `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date short-circuit
-      (MTDS@`c6bdf96`) fires correctly. On-disk parquets verified REAL (LINEA `aave_v3/LINEA/date=2025-03-01` = 475 rows
-      USDC/WETH reserves; BSC `aave_v3/BSC/date=2024-06-01` = 316 rows Cake/BTCB/USDT/USDC/WBNB/ETH/FDUSD), not
-      1440-NaN placeholders. **The actual gap was operational**: the `lending-indices-{pid}` canonical
-      `_index/availability_index.parquet` was stale vs the per-VM shards (the `mtds-lending-indices-20260508-141147` run
-      had already captured LINEA AAVEV3 post-launch + BSC AAVEV3 post-launch + flipped pre-launch days to
-      `empty_confirmed` in its per-VM shard, but the consolidator never merged it — see "Discoveries" below). Slot 3
-      2026-05-11: (1) ran `python -m unified_trading_library.manifest_consolidator --bucket lending-indices-{pid} --once`
-      → canonical now AAVEV3/LINEA = 451 captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0
-      attempted_failed; AAVEV3/BSC = 836 captured (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0
-      attempted_failed — the ~576 stale "404 GET https" `attempted_failed` rows (293 LINEA + 219 BSC) + 198 LINEA
-      blank-reason `empty_confirmed` are reclaimed; (2) launched fresh full-history backfill VM
-      `mtds-lending-indices-20260511-181115` (`2022-01-01..2026-05-11`, e2-standard-4, `mtds-lending-indices-` prefix in
-      `VM_PREFIX_TO_BUCKET`) — event-verified STARTED (`correlation_id` 366b8002…) + `LENDING_DAY_COMPLETE` /
-      `INSTRUMENT_PROCESSED` (real row counts) / `RESOURCE_PROFILER_SAMPLE` progress stream. **ETA ~4-17h** (much slower
-      than first estimated — the 2022-Q4 high-volume window dominates: OPTIMISM / ARBITRUM AAVEV3 emit 25-40k
-      reserve-param-history rows/day → heavy 1000-row-page pagination; and `lending_indices_handler` re-processes every
-      date in the range without a manifest-freshness skip — known follow-up per CLAUDE.md "Manifest concurrency
-      principle" / "refactor existing MTDS per-venue VMs"). As of 14:08 UTC at date 2022-12-10, healthy + progressing,
-      RSS ~741MB, no FAILED events. **Watcher `b72uau4o7` armed** (re-invokes on terminal/stall/2.5h-deadline; re-armed
-      if it false-fires on deadline). **FINAL PUSH steps 2-4** (per `[main → slot 3]` 14:01 brief): on VM `STOPPED`/`FAILED`
-      → `python -m unified_trading_library.manifest_consolidator --bucket lending-indices-{pid} --once` → verify canonical
-      shows the recent gap (2026-05-07→2026-05-11) `captured` for AAVEV3/LINEA + AAVEV3/BSC + the ~142 LINEA + ~296 BSC
-      `SOURCE_RETURNED_ZERO` pre-launch nits reconciled to `EXPECTED_PRE_GENESIS_CHAIN` (sample-inspect a parquet, not
-      just row counts) → flip `[x]` with `<repo>@<sha>` + VM-name + manifest-row evidence + write a `## DONE-2026-05-12`
-      block + cross-side INFO ping to ikenna-main with the final manifest counts. Stale-path
-      note: the audit said `market_tick_data_service/adapters/lending_indices/` — actual handler is
-      `market_tick_data_service/cli/handlers/lending_indices_handler.py` + adapter
-      `market_interface/adapters/defi/aave_lending.py` (no `adapters/lending_indices/` dir exists).
+      `status: backfill-aborted-handed-to-ikenna` (Harsh tab 3 end-of-shift handover 2026-05-11; see
+      `## DONE-2026-05-12 — Harsh tab 3 end-of-shift handover` block + cross-side ping to ikenna-main in
+      `plans/active/_agent_pings.md`). **The core gap is CLOSED**; what's handed off is operational catch-up + a P1
+      refactor.
+      - **✅ DONE (slot 3, 2026-05-11):**
+        - **"routing config absent" framing was STALE** (grep-then-conclude error in the 2026-05-08 audit):
+          `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since UAC@`2db3c8e` (Mar 2026);
+          `get_supported_chains_for_protocol("aave_v3")` includes LINEA+BSC; UAC launch dates corrected at UAC@`6c873e4`
+          (`("LINEA","AAVEV3")="2025-02-11"`, `("BSC","AAVEV3")="2024-01-23"`); `lending_indices` ∈
+          `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date
+          short-circuit (MTDS@`c6bdf96`) fires correctly. On-disk parquets verified REAL (LINEA
+          `aave_v3/LINEA/date=2025-03-01` = 475 rows USDC/WETH; BSC `aave_v3/BSC/date=2024-06-01` = 316 rows
+          Cake/BTCB/USDT/USDC/WBNB/ETH/FDUSD), not 1440-NaN placeholders. Actual gap was operational — `lending-indices-{pid}`
+          canonical `_index/availability_index.parquet` was stale vs the per-VM shards (the `mtds-lending-indices-20260508-141147`
+          run had already captured LINEA AAVEV3 post-launch + BSC AAVEV3 post-launch + flipped pre-launch days to
+          `empty_confirmed` in its per-VM shard, but the consolidator never merged it — root cause = the consolidator
+          daemon not polling the per-data_type DeFi buckets; see "Discoveries" below).
+        - **Manual consolidate** of `lending-indices-{pid}` → canonical now AAVEV3/LINEA = 451 captured
+          (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0 attempted_failed; AAVEV3/BSC = 836 captured
+          (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0 attempted_failed — the **~576 stale "404 GET https"
+          `attempted_failed` rows** (293 LINEA + 219 BSC) + 198 LINEA blank-reason `empty_confirmed` **are reclaimed** =
+          the Priority-#5 headline deliverable.
+        - **Consolidator-bucket Case-5 fix shipped** (deployment-service@`ad4d448` 8 per-data_type DeFi buckets + slot 6's
+          @`2a76a2a` adds dex-pools+liquidations = 10); relaunched daemon `manifest-consolidator-20260511-181538`; old
+          `20260507-175639` deleted; verified the new daemon consolidates `lending-indices`/`dex-swaps`/`evm-defi`/etc.
+        - **Stale-path note**: audit said `market_tick_data_service/adapters/lending_indices/` — actual handler is
+          `cli/handlers/lending_indices_handler.py` + adapter `market_interface/adapters/defi/aave_lending.py` (no
+          `adapters/lending_indices/` dir exists).
+      - **⏭ HANDED TO IKENNA** (Harsh tab 3 end-of-shift; pick up):
+        - (a) **Recent-days catch-up `2026-05-07..2026-05-11`** (~5-10min scoped run) — `launch-mtds-lending-indices-backfill-vm.sh
+          2026-05-07 2026-05-11` (event-verify per "No fire-and-forget VM launches"; the daemon then re-consolidates). The
+          full-history VM `mtds-lending-indices-20260511-181115` was **launched then KILLED 14:38 UTC** as the wrong call
+          (it re-downloads years of already-`captured` data — no manifest-freshness skip in the handler; got through
+          ~3373 events / ~375 dates before kill — idempotent re-captures, no data harm, just wasted compute + Graph
+          rate-limit). A clean full-history all-chains re-run should happen only AFTER (b).
+        - (b) **P1 — `ManifestFreshnessCache` wire-in** into `lending_indices_handler` + sibling MTDS DeFi backfill
+          handlers (`gas_fees`/`lst_rates`/`dex_pools`/`liquidations`/`perp_funding`) so re-runs skip already-`captured`
+          dates — see the P1 todo in § "Discoveries during Priority #5" below for the full spec.
+        - (c) **Clean full-history all-chains lending-indices re-run AFTER (b)** lands.
+        - (d) **P1 — `create-code-tarballs.sh` stale-repo list + non-graceful skip** — see the P1 todo in § "Discoveries"
+          below (still `[ ]`, not urgent).
+        - (Optional) the ~142 LINEA + ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits → `EXPECTED_PRE_GENESIS_CHAIN`
+          reconcile (cosmetic — both are honest absence; a clean post-(b) full re-run reconciles them, or
+          `reconcile_legacy_blank_to_typed_reason.py`-style sweep).
 
 ### Discoveries during Priority #5 (slot 3, 2026-05-11)
 
@@ -1371,3 +1382,46 @@ User flagged "runbooks shipped → nobody runs them → silent rot" gap. Closing
 V1-RETIRE blocker is fixed. Without periodic execution, harness rot like the 2026-05-01 → 2026-05-08 silent breakage
 recurs. Recommend: daily Tab 5 (governance) item OR cron-launched smoke VM. Both options covered in master plan Group F
 item 17 success criterion.
+
+## DONE-2026-05-12 — Harsh tab 3 end-of-shift handover (defi #5 / lending-indices → Ikenna's side)
+
+Harsh's shift ended; tab 3's `defi_master` Priority #5 (lending-indices LINEA/BSC) work hands to Ikenna. Operator decision
+2026-05-11 14:32 UTC: the full-history backfill VM was the wrong call (re-downloads years of already-`captured` data —
+`lending_indices_handler` has no manifest-freshness skip), so it was killed and the residual is handed over.
+
+**✅ DONE this cycle (slot 3, 2026-05-11):**
+
+- **"routing config absent" framing was STALE** — `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since UAC@`2db3c8e`
+  (Mar 2026); launch dates corrected UAC@`6c873e4` (LINEA AAVEV3 = 2025-02-11, BSC AAVEV3 = 2024-01-23); `lending_indices`
+  ∈ `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date short-circuit
+  (MTDS@`c6bdf96`) fires. On-disk parquets verified REAL (LINEA 2025-03-01 = 475 rows; BSC 2024-06-01 = 316 rows), not
+  1440-NaN placeholders. The actual gap was operational (canonical manifest stale vs per-VM shards).
+- **Priority-#5 headline deliverable reclaimed** — manual `manifest_consolidator --bucket lending-indices-{pid} --once`
+  → canonical now AAVEV3/LINEA = 451 captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0
+  attempted_failed; AAVEV3/BSC = 836 captured (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0
+  attempted_failed — the **~576 stale "404 GET https" `attempted_failed` rows** (293 LINEA + 219 BSC) + 198 LINEA
+  blank-reason `empty_confirmed` **reclaimed**.
+- **Consolidator-bucket Case-5 fix shipped** — deployment-service@`ad4d448` (8 per-data_type DeFi buckets:
+  lending-indices/dex-swaps/evm-defi/gas-fees/oracle-prices/perp-funding/solana-defi/lst-rates) + slot 6's @`2a76a2a`
+  (dex-pools+liquidations = 10); relaunched daemon `manifest-consolidator-20260511-181538`; old `20260507-175639`
+  deleted; verified the new daemon consolidates lending-indices/dex-swaps/evm-defi/etc on first cycle.
+- **VM `mtds-lending-indices-20260511-181115` killed** 2026-05-11 14:38 UTC (got through ~3373 events / ~375 dates;
+  idempotent re-captures, no data harm).
+- PM commits: `08ad9a5b` (STARTED ping), `bca02793` (Priority #5 status + Discoveries section), `883f45c9` (progress
+  ping), `624cf9b6` (ETA correction + FINAL-PUSH steps), this commit (handover). deployment-service@`ad4d448`
+  (consolidator-bucket fix).
+
+**⏭ HANDED TO IKENNA (pick up — Priority #5 stays `- [ ]` `status: backfill-aborted-handed-to-ikenna`):**
+
+- (a) **Recent-days catch-up `2026-05-07..2026-05-11`** (~5-10min scoped) — `launch-mtds-lending-indices-backfill-vm.sh
+  2026-05-07 2026-05-11` (event-verify per "No fire-and-forget VM launches"; daemon then re-consolidates) → flip
+  Priority #5 `[x]`.
+- (b) **P1 — `ManifestFreshnessCache` wire-in** into `lending_indices_handler` + sibling MTDS DeFi backfill handlers
+  (`gas_fees`/`lst_rates`/`dex_pools`/`liquidations`/`perp_funding`) so re-runs skip already-`captured` dates. Full spec
+  in § "Discoveries during Priority #5" P1 todo. The "refactor existing MTDS per-venue VMs" debt item from CLAUDE.md
+  "Manifest concurrency principle"; the `unified_trading_library.manifest_freshness.ManifestFreshnessCache` primitive
+  already exists.
+- (c) **Clean full-history all-chains lending-indices re-run AFTER (b)** lands.
+- (d) **P1 — `create-code-tarballs.sh` stale-repo list + non-graceful skip** — `[ ]` in § "Discoveries", not urgent.
+- (optional) the ~142 LINEA + ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits → `EXPECTED_PRE_GENESIS_CHAIN` reconcile
+  (cosmetic; a clean post-(b) re-run reconciles them).
