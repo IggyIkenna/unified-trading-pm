@@ -374,14 +374,25 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 - **Slot 5** `harsh-live-pipeline-impl-tab` — ⚪ QUEUED; hold ~1 day (gated on slot 2 Phase 7 *deployable* + Ikenna slot 4 design). `--reset-slot 5` before spawn.
 - **Slot 6** `harsh-workspace-qg-tab` — 🟢 IN FLIGHT (codex audit + QG baseline ✅; Track-D P0-1/2/3 ✅; back to freeze-gate-8/9 + phantom-audit cadence; flagged the slot-worktree-QG-repo-root bug).
 
-### ⚪ Main agent (this session) doing now
+### ⚪ Main agent (this session) doing now — POST-COMPACT RESUME SNAPSHOT (2026-05-11 10:30 UTC)
 
-- Polling `harsh_orchestrator/pings/*.md` (intra-side, per-slot) + the transition stub `_agent_pings.md` + [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md)
-  (cross-side) ~1 min while operator active.
-- Standing by to: (a) ack STARTED pings + flip QUEUED → IN FLIGHT in the registry above, (b) verify DONE pings + flip
-  IN FLIGHT → ✅ DONE, (c) answer 🟡 BLOCKED Qs in plan-of-record `## Open questions` sections, (d) field new direction
-  from Harsh, (e) handle escalated PM rebase conflicts (paragraph-rewrite shape) via plan-aware-merge-resolution, (f)
-  post cross-side ping when slot 2 ships Phase 7, (g) escalate case-5 BIG findings.
+> **If you're a post-compact / fresh main-agent session reading this**: you ARE slot 1 (Harsh-side orchestrator). A
+> cron loop (job `e97acdd7`, every 5 min, session-only) fires "Orchestrator poll (Harsh side, slot 1)..." prompts —
+> on each fire: `cd unified-trading-pm; git fetch; if incoming, git pull --rebase`; check `harsh_orchestrator/pings/slot_2..6.md`
+> + `harsh_orchestrator/_agent_pings.md` + `plans/active/_agent_pings.md` for new activity; handle (a) new blocker Q →
+> answer A1 in the slot's plan-of-record `## Open questions` + `[main → slot N]` ping + commit+push; (b) new STARTED →
+> flip the slot's LEDGER entry to 🟢 IN FLIGHT; (c) new DONE/shipped-unit → verify + flip LEDGER + note in `slot_6.md`
+> there's a unit to QG-validate; (d) Ikenna cross-side ping answering a pending item → relay to the affected slot +
+> flip LEDGER; (e) case-5 BIG finding → surface to operator in chat; (f) nothing new → terse one-liner. `date -u` for
+> timestamps (machine clock is IST). Conditional-push (fetch + rebase-on-reject; don't pipe `git push` through `tail`).
+> Don't reassign slot 3 (operator directive). Operator may say "stop" → omit further loop handling (loop ends when
+> the session ends anyway).
+
+**State as of 2026-05-11 10:30 UTC:**
+- **All cross-side decisions resolved** — Q4→(b)→(b+) full env-aware bucket arch; AWS region = ap-northeast-1; `EXPECTED_KNOWN_SOURCE_GAP` enum (Phase 1, shipped UAC root); F3 v8-schema-owner = `manifest_schema_final_gate_2026_05_09.md` (v8 slice (b) shipped @UAC`174f401`+`d938a69`); Q1.1/Q1.2/Q1.3/Q2 (4 features-svc QG-check FPs) all fixed; slot-worktree-QG-repo-root bug → `per_agent_worktrees` Phase 4.5; defi_master Q1 all 3 approved (#3 → Ikenna slot 5; #4 ASTER shipped UAC`77666c8`); slot-4 sports-stamping asks resolved. **No open blocker Qs.**
+- **Slots**: 1 = this (orchestrator, loop active). 2 `harsh-features-consolidation-tab` = `/compact`+continue'd by operator ~2026-05-11 10:30 UTC — resuming `features_service_qg_cleanup` Phase 1.2 real-violation rows (2/3/5/6-`features_service/`-subset/8/9/10; all 4 QG-check FPs resolved, skip nothing); watch for resume ping. 3 `harsh-wave3x-tab` = ✅ DONE all 5 tracks; idle (NOT reassigning per operator); Track-D case-D impl deferred post-cutover (Wave 3.M follow-up TBD). 4 `harsh-bucket-and-adapter-tab` = `/compact`+continue'd ~2026-05-11 10:30 UTC — resuming bucket-name SSOT: Done-def #3 (legacy `get_bucket_name`/`BUCKET_PREFIXES` delegate, UTL) + Phase 0e (Group-A env-tier add) + yaml-gap (then #5/#6 + 0f/0g/0h; Phase 0c/0d = code_freeze Phase 2.6, 2026-05-15→05-19); scope = bucket-SSOT only (available_at P1 absorbed by ikenna-available-at-tab); Phase 0i ✅ = ap-northeast-1. 5 `harsh-live-pipeline-impl-tab` = not spawned / gated (on Ikenna's live-pipeline Phase 4-5 design; features-consolidation Phase 7 ✅ met); has a P0-2-MDPS scope note in `slot_5.md` for activation. 6 `harsh-workspace-qg-tab` = `/compact`+continue'd ~2026-05-11 10:30 UTC — resuming: re-run freeze-gate-9 codex re-check now that v8 slice (b) landed + QG-validate slot-4/slot-2 shippable units; freeze-gate-8/9 + phantom-audit cadence.
+- **Harsh-side-unassigned carry-forward**: defi_988 remainder ~1,335 rows (#5 LINEA/BSC `lending-indices-handler` routing config + the VM launches) — flagged to operator; low priority.
+- **Merge/op model** (set 2026-05-11): one VS Code window at root + implementer agents via `cd .tabs/<N>/ && claude` (Option B); `.tabs/**` excluded from `.vscode/settings.json` watcher; per-slot ping files `harsh_orchestrator/pings/slot_<N>.md` (bidirectional — `[main → slot N]` channel; transition stub `_agent_pings.md`); direct-to-`live-defi-rollout` rebase-on-push (no batch merge); only slot 1 writes PM plan/codex bodies, implementers flip their own checkboxes with `git add -p`.
 
 ### ❓ Open questions across active plans (operator decisions pending)
 
