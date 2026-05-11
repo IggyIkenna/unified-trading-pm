@@ -217,6 +217,196 @@ implementing the math; it does NOT mean the `AMMMatcher` dispatcher in
 (Curve stable + crypto, Balancer weighted + boosted, Solana CLMM, Solidly-fork volatile + stable, Jupiter
 route composer), (c) validate each per its row above.** V3 + V4 are NOT greenfield — they need wiring only.
 
+## Simulation contract — unified pre-trade quote interface (Day-1 slot 6 design ship 2026-05-11)
+
+Phase 2 of `defi_simulation_realism` extends `AMMMatcher` (`engine.py:433`) to dispatch by `pool.pool_shape`
+instead of hardcoding `UniswapV2Pool`. All pool classes implement a common `PoolMatcher` Protocol that the
+matching engine + strategy P&L backtest replay engine call uniformly:
+
+```python
+# execution-service/execution_service/matching_engine/pool_matcher.py (NEW Phase 2A)
+from typing import Protocol
+from decimal import Decimal
+from unified_api_contracts.internal import OrderSide, PoolShape, SwapQuote, FillResult
+
+class PoolMatcher(Protocol):
+    """Pre-trade quote + post-trade apply protocol implemented by every PoolShape.
+
+    `quote()` is read-only (does NOT mutate pool state) and returns the simulated
+    fill INCLUDING fee + price impact. `apply()` is mutating (advances reserves /
+    tick / sqrtPrice / D) and is called by the matching engine after the strategy
+    accepts the quote. Idempotency requirement: `quote()` is referentially-transparent
+    for a fixed pool snapshot.
+
+    Implementers: UniswapV2Pool (shipped), UniswapV3Pool (shipped), UniswapV4Pool
+    (shipped, hooks via hooks.py), CurveStablePool (Phase 2C), CurveCryptoPool
+    (Phase 2C-deferred), BalancerWeightedPool (Phase 2D), BalancerBoostedPool
+    (Phase 2E), SolanaCLMMPool (Phase 2F), SolidlyForkPool (Phase 2H — NEW),
+    SolidlyCLForkPool (Phase 2H — NEW), JupiterAggregatorRoute (Phase 2G).
+    """
+
+    pool_shape: PoolShape
+
+    def quote(self, amount_in: Decimal, side: OrderSide) -> SwapQuote:
+        """Read-only pre-trade quote. Returns expected fill + fee + price-impact.
+
+        Args:
+            amount_in: input amount in token0 (BUY) or token1 (SELL) native decimals.
+            side: BUY (swap token1→token0) or SELL (swap token0→token1).
+        Returns:
+            SwapQuote(amount_out, fee_amount, price_impact_bps, spot_price_pre,
+                      spot_price_post, gas_estimate_units, hooks_invoked,
+                      ticks_crossed, used_curves).
+        """
+        ...
+
+    def apply(self, amount_in: Decimal, side: OrderSide) -> FillResult:
+        """Mutating apply. Advances pool state; returns realized FillResult.
+
+        FillResult fields match SwapQuote + adds: filled_at_block (None for
+        Tenderly fork sim), realized_slippage_vs_quote_bps, hooks_log.
+        """
+        ...
+
+    def spot_price(self, base: str, quote: str) -> Decimal:
+        """Read-only mid-price. No fee, no impact."""
+        ...
+
+    def snapshot(self) -> dict:
+        """Read-only state snapshot — enables Tenderly-fork comparison harness +
+        per-test fixture replay determinism. Returned dict is sufficient to
+        re-construct the pool via the inverse `cls.from_snapshot(snapshot_dict)`."""
+        ...
+```
+
+The matching engine dispatcher resolves `pool.pool_shape` → matcher fn via a registry, then calls the unified
+`quote()` / `apply()` interface. Required dispatcher refactor at
+[`engine.py:_amm_match_impl`](../../../execution-service/execution_service/matching_engine/engine.py#L94):
+
+```python
+# BEFORE (current — hardcoded V2 only):
+def _amm_match_impl(pool: UniswapV2Pool, ...): ...
+
+# AFTER (Phase 2 wiring):
+def _amm_match_impl(pool: PoolMatcher, ...):
+    quote = pool.quote(amount_in, side)
+    if not _passes_slippage_check(quote, slippage_tolerance):
+        return MatchResult(failed=True, reason="SLIPPAGE_EXCEEDED", ...)
+    fill = pool.apply(amount_in, side)
+    return MatchResult(filled=True, fill=fill, quote_delta=quote_vs_fill, ...)
+```
+
+`SwapQuote` + `FillResult` + `PoolShape` + `OrderSide` are UAC `internal` schemas (declared in Phase 1A).
+Pool-class implementations live in `execution-service/execution_service/matching_engine/` per `pool_shape`:
+
+- `amm.py` — Uniswap V2/V3/V4 pool classes (shipped; add `pool_shape` field + `quote()`/`apply()`/`snapshot()`
+  methods to satisfy `PoolMatcher` Protocol — Phase 2A refactor).
+- `curve.py` (NEW Phase 2C) — `CurveStablePool` (D-invariant + Newton-Raphson + A ramp) + `CurveCryptoPool`
+  (D + gamma) classes.
+- `balancer.py` (NEW Phase 2D) — `BalancerWeightedPool` (closed-form weighted) + `BalancerBoostedPool`
+  (Phase 2E linear-pool wrapper).
+- `solana_clmm.py` (NEW Phase 2F) — `SolanaCLMMPool` reusing V3 tick math + Solana decimals semantics.
+- `solidly_fork.py` (NEW Phase 2H) — `SolidlyForkPool` (cubic stable + xy=k volatile branch via
+  `stable: bool` flag) + `SolidlyCLForkPool` (V3-tick CL clone — Slipstream variants).
+- `aggregator.py` (NEW Phase 2G) — `JupiterAggregatorRoute` (multi-leg route composer reading from Jupiter
+  quote API + dispatching per-leg to the appropriate `PoolMatcher`).
+- `hooks.py` (shipped) — V4 `BeforeSwapHook` / `AfterSwapHook` Protocols + custom-curve implementations
+  (constant_sum / constant_mean / polynomial / logarithmic).
+
+**Multi-hop routing** (aggregator path) reuses the Protocol uniformly: each leg's pool is a `PoolMatcher`;
+the aggregator sums per-leg `SwapQuote`s into a composite route quote.
+
+## Golden test set harness (Day-1 slot 6 design ship 2026-05-11)
+
+Phase 3 of `defi_simulation_realism` ships the per-shape fixture corpus that locks the matcher fidelity gate
+in CI. Lives at
+[`execution-service/tests/integration/fixtures/amm_golden_swaps/`](../../../execution-service/tests/integration/fixtures/)
+as one JSON file per `PoolShape`:
+
+```
+amm_golden_swaps/
+├── uniswap_v2.json           # ≥ 5 swaps (V2 is integer-exact — small corpus OK)
+├── uniswap_v3.json           # ≥ 100 swaps spanning multi-tick crossings
+├── uniswap_v4.json           # ≥ 10 vanilla (hooks=address(0)) + ≥ 5 hook-active
+├── curve_stable.json         # ≥ 50 swaps on 3pool + ≥ 10 metapool compositions
+├── balancer_weighted.json    # ≥ 20 swaps on B-80BAL-20WETH + ≥ 5 batchSwap routes
+├── solana_clmm.json          # ≥ 30 swaps on Raydium + Orca CLMMs
+├── jupiter_routes.json       # ≥ 30 multi-leg routes
+└── solidly_fork.json         # ≥ 20 Velodrome + ≥ 20 Aerodrome (mixed stable + volatile)
+```
+
+Fixture row schema (canonical JSON shape — same across all `PoolShape`s):
+
+```json
+{
+  "pool_shape": "UNISWAP_V3",
+  "chain_id": 1,
+  "pool_address": "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640",
+  "block_number": 19500000,
+  "tx_hash": "0x...",
+  "snapshot_pre": {
+    "sqrt_price_x96": "1234567890",
+    "liquidity": "1000000000000",
+    "tick": 195000,
+    "fee_tier_bps": 5
+  },
+  "swap": {
+    "amount_in_native": "100000000000",
+    "token_in_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "side": "SELL",
+    "amount_out_native_expected": "54500000000000000000",
+    "token_out_address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    "fee_amount_native": "300000",
+    "price_impact_bps_expected": 8,
+    "ticks_crossed_expected": 3
+  },
+  "snapshot_post": {
+    "sqrt_price_x96": "1234560000",
+    "liquidity": "1000000000000",
+    "tick": 194997,
+    "fee_tier_bps": 5
+  },
+  "tolerance_bps": 5,
+  "source": "etherscan-swap-event-2024-Q2-window"
+}
+```
+
+Harness (`execution-service/tests/integration/test_amm_golden_swaps.py` — NEW Phase 3C):
+
+```python
+@pytest.mark.parametrize("fixture_file", AMM_GOLDEN_FIXTURE_FILES)
+def test_amm_golden_swap_replay(fixture_file: Path) -> None:
+    for row in load_fixture(fixture_file):
+        pool = pool_from_snapshot(row["pool_shape"], row["snapshot_pre"])
+        quote = pool.quote(
+            Decimal(row["swap"]["amount_in_native"]),
+            OrderSide[row["swap"]["side"]],
+        )
+        # Pure-math fidelity: simulated quote within tolerance of on-chain Swap event
+        delta_bps = abs(
+            (quote.amount_out / Decimal(row["swap"]["amount_out_native_expected"]) - 1) * 10000
+        )
+        assert delta_bps < row["tolerance_bps"], (
+            f"{row['pool_shape']} {row['pool_address']} block={row['block_number']} "
+            f"tx={row['tx_hash']}: |fill delta| = {delta_bps} bps > {row['tolerance_bps']}"
+        )
+        pool.apply(...)  # mutate
+        assert pool.snapshot() == row["snapshot_post"], (
+            f"{row['pool_shape']} post-state drift"
+        )
+```
+
+Fixture capture (Phase 3A operator/Harsh runbook): per-shape script under
+`execution-service/scripts/capture_golden_swaps.py --pool-shape <X> --pool <addr> --from-block <N> --window <K>`
+queries archive node via `eth_getLogs` for the pool's `Swap` event topic, snapshots `slot0()` / reserves at
+`block - 1` and `block`, persists JSON row matching schema above. **Run on same-region GCE VM** per CLAUDE.md
+"Manifest phantom audit" pattern (cross-region archive node listing is 18× slower).
+
+**Capture cadence**: fixture refresh per-shape on each AMM-family-upgrade (V3 → V4 hook activation, Balancer
+V2 → V3 launch, new fee tier deployment). Cron VM under `deployment-service/scripts/vm/` per CLAUDE.md
+"Runbook Execution-Owner SSOT" — owner: Harsh slot 4 (implementer); cadence: per-deploy when matcher code
+changes; verifier: harness exit code + `|delta| < tolerance_bps` per row.
+
 ### Cross-chain L2 deployment notes (Phase 2 implementation hazard)
 
 V3 deployed on Arbitrum / Optimism / Polygon / Base under the SAME factory bytecode but with
