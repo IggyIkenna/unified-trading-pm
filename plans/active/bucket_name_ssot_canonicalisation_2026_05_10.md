@@ -223,18 +223,17 @@ this plan and **Q4** below (operator decision).
       the env-aware helper. status: done — note: "Phase 1 code-complete scope. **SHIPPED 2026-05-12** (Ikenna slot 8
       absorbed; Harsh slot 4 had not started). Actual scope = **72 launchers** (not ~30 — full audit). Fanned out 5
       parallel sub-agents under slot 8 main, each handling ~12-19 launchers. Pattern applied uniformly per the canonical
-      template at `deployment-service/scripts/vm/launch-mdps-features-live.sh`: `DEPLOYMENT_ENV="${DEPLOYMENT_ENV:-prod}"`
-      default + `--env <prod|staging|dev>` CLI flag + closed-set validation + `DEPLOYMENT_ENV=${DEPLOYMENT_ENV}`
-      metadata propagation + `env="${DEPLOYMENT_ENV}"` GCE label + header banner citing this plan as SSOT.
-      Commits (all FF'd to `live-defi-rollout`):
+      template at `deployment-service/scripts/vm/launch-mdps-features-live.sh`:
+      `DEPLOYMENT_ENV="${DEPLOYMENT_ENV:-prod}"` default + `--env <prod|staging|dev>` CLI flag + closed-set validation +
+      `DEPLOYMENT_ENV=${DEPLOYMENT_ENV}` metadata propagation + `env="${DEPLOYMENT_ENV}"` GCE label + header banner
+      citing this plan as SSOT. Commits (all FF'd to `live-defi-rollout`):
       [`deployment-service@13ef741a`](../../../market-data-processing-service) (sub-A — 15 MTDS backfill launchers;
       restructured 6 positional-arg parsers into proper while-loops with `POSITIONAL[]` arrays; added `--labels` to 9
       file-based launchers previously lacking them);
       [`deployment-service@a2037d2`](../../../market-data-processing-service) (sub-B — 19 sports launchers incl.
-      api-football, footystats, sfi, understat, transfermarkt, openmeteo, sports-*; pre-pass arg-stripping for 3
+      api-football, footystats, sfi, understat, transfermarkt, openmeteo, sports-\*; pre-pass arg-stripping for 3
       forward-poll launchers with positional args; helper-function injection for sfi/sports-manifest-rescan chunked
-      fan-out);
-      [`deployment-service@68ad99f`](../../../market-data-processing-service) +
+      fan-out); [`deployment-service@68ad99f`](../../../market-data-processing-service) +
       [`deployment-service@e60ae2c`](../../../market-data-processing-service) (sub-C — 17 cefi/defi/tradfi/prediction
       launchers; `launch-cefi-massive-rollout.sh` propagates DEPLOYMENT_ENV via `_common_meta()` so all 364 spawned VMs
       inherit env; `launch-cefi-sharded-backfill.sh` via `launch_cefi_shard` + `launch_tradfi_shard` helpers;
@@ -243,14 +242,13 @@ this plan and **Q4** below (operator decision).
       launchers incl. `launch-vm-zombie-watchdog.sh`);
       [`deployment-service@5676048`](../../../market-data-processing-service) (sub-E — 12 migration/recon/smoke
       launchers; **special-case** `setup-data-pipeline-vm.sh` reads `DEPLOYMENT_ENV` from VM metadata via
-      `curl ... attributes/DEPLOYMENT_ENV` since it's the VM-side bootstrap, not a launcher).
-      All 72 files pass `bash -n` syntax check. Foot-gun #4 (prek auto-restore + `semver-rollout[bot]` author signature)
-      observed in sub-A/B/C/D/E mid-session; mitigated via bundled `git add && commit --no-verify && push --no-verify`
-      pattern per CLAUDE.md; `git show --stat HEAD` per commit verified all expected insertions present, no work lost.
-      Backward compat preserved: default `DEPLOYMENT_ENV=prod` means existing launches without `--env` behave
-      identically to pre-Phase-0f. Cloud Run deployment-api + manifest consolidator continue reading current flat
-      buckets — env-tiered reader-repoint is Phase 2.6 cutover work (GAP-2.4.D). **PREREQ cleared for Phase 2.6
-      cutover 2026-05-15→05-19.**"
+      `curl ... attributes/DEPLOYMENT_ENV` since it's the VM-side bootstrap, not a launcher). All 72 files pass
+      `bash -n` syntax check. Foot-gun #4 (prek auto-restore + `semver-rollout[bot]` author signature) observed in
+      sub-A/B/C/D/E mid-session; mitigated via bundled `git add && commit --no-verify && push --no-verify` pattern per
+      CLAUDE.md; `git show --stat HEAD` per commit verified all expected insertions present, no work lost. Backward
+      compat preserved: default `DEPLOYMENT_ENV=prod` means existing launches without `--env` behave identically to
+      pre-Phase-0f. Cloud Run deployment-api + manifest consolidator continue reading current flat buckets — env-tiered
+      reader-repoint is Phase 2.6 cutover work (GAP-2.4.D). **PREREQ cleared for Phase 2.6 cutover 2026-05-15→05-19.**"
 - [x] **[AGENT] P0**. **Phase 0g — verify deployment UI env-tier resolution (already shipped).** ✅ VERIFIED via
       [`codex/05-infrastructure/deployment-ui-architecture.md`](../../codex/05-infrastructure/deployment-ui-architecture.md)
       § "Environment tier (line 33-47, 119-140)": deployment UI env tier is RESOLVED FROM `window.location.hostname`
@@ -1418,44 +1416,117 @@ Going quiet — Phase-1 scope DONE; the above carries to the Phase-2.6 cutover (
 
 ## DONE-2026-05-12 — ikenna-bucket-prereq-tab (slot 8) — Phase 0f + Q7(c) close-out
 
-- ✅ **Phase 0f shipped** — 72 launchers env-aware (5-sub-agent parallel fan-out). Commits FF'd to
-  `live-defi-rollout`: `deployment-service@13ef741a` (15 MTDS) + `a2037d2` (19 sports) + `68ad99f` + `e60ae2c` (17
+- ✅ **Phase 0f shipped** — 72 launchers env-aware (5-sub-agent parallel fan-out). Commits FF'd to `live-defi-rollout`:
+  `deployment-service@13ef741a` (15 MTDS) + `a2037d2` (19 sports) + `68ad99f` + `e60ae2c` (17
   cefi/defi/tradfi/prediction) + `ecea78f3` (9 features/ml/strategy/infra) + `5676048` (12 migration/recon/smoke
-  + `setup-data-pipeline-vm.sh` VM-side bootstrap). Pattern from `launch-mdps-features-live.sh` (DEPLOYMENT_ENV default
-  + `--env` CLI flag + closed-set validation + metadata propagation + GCE label). Backward compat preserved via
-  `DEPLOYMENT_ENV=prod` default. PM plan-flip: `pm@96077adf`.
+  - `setup-data-pipeline-vm.sh` VM-side bootstrap). Pattern from `launch-mdps-features-live.sh` (DEPLOYMENT_ENV default
+  - `--env` CLI flag + closed-set validation + metadata propagation + GCE label). Backward compat preserved via
+    `DEPLOYMENT_ENV=prod` default. PM plan-flip: `pm@96077adf`.
 - ✅ **Phase 0h verified** — `sync-buckets-prod-to-{env,staging,dev}.sh` confirmed shipped by Harsh slot 4 pre-handoff
   (plan body line 258 already `status: done`). No Ikenna action needed.
 - ✅ **Q7(c) events env-tier RESOLVED** — operator decision 2026-05-11 PM: events bucket goes env-tiered (option c-i).
-  yaml flip + UTL `resolve_bucket_name` extension queue as Phase 2.6 sub-step. Q7(c) flipped to ✅ RESOLVED in this
-  plan body § Open questions.
+  yaml flip + UTL `resolve_bucket_name` extension queue as Phase 2.6 sub-step. Q7(c) flipped to ✅ RESOLVED in this plan
+  body § Open questions.
 - ✅ **Watchdog architecture P1 follow-up filed** —
   [`plans/active/issues/watchdog_env_tiered_events_architecture_2026_05_11.md`](issues/watchdog_env_tiered_events_architecture_2026_05_11.md).
-  Recommend option (i) single-watchdog-with-multi-bucket fan-in as default (lower-cost; smaller code change);
-  instrument post-cutover; split to option (ii) per-env watchdogs only if throughput data shows it's needed. Picks up
-  in next-cycle work-split after Phase 2.6 ships.
-- **Q7(b)** `pnl-store-defi` / `positions-store-defi` / `risk-store-defi` shape-alignment — still operator-pending;
-  not slot 8 to decide.
+  Recommend option (i) single-watchdog-with-multi-bucket fan-in as default (lower-cost; smaller code change); instrument
+  post-cutover; split to option (ii) per-env watchdogs only if throughput data shows it's needed. Picks up in next-cycle
+  work-split after Phase 2.6 ships.
+- **Q7(b)** `pnl-store-defi` / `positions-store-defi` / `risk-store-defi` shape-alignment — still operator-pending; not
+  slot 8 to decide.
 
 **Tier 2 carry-forward (rescan + design promotion)** — also shipped by parallel agents while slot 8 was on Phase 0f
 fan-out; slot 8 follow-up was the plan-status flip:
 
-- ✅ **Phase 3.A** — `deployment-service@<see manifest_schema_final_gate Phase 3.A>` —
-  `launch-cross-asset-rescan-vm.sh` shipped (singleton-locked, asia-northeast1-c, per-VM shard isolation, WORKERS=64,
-  HTTP_POOL_SIZE=128, tarball + tarball-from-local). Verified on disk.
-- ✅ **Phase 3.B** — `cross-asset-rescan-` prefix added to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`
-  (line 374, value `None` per "log-only" semantics). Watchdog VM relaunched (latest at 2026-05-11T14:18 UTC; current
-  state STOPPING — auto-recycle cycle).
-- ✅ **Phase 3.C** — Launcher registered in
-  `deployment_api/services/deploy_missing.py` `_SERVICE_LAUNCHER_SCRIPTS` (line 88,
-  `"cross-asset-rescan": f"{_VM_SCRIPT_DIR}/launch-cross-asset-rescan-vm.sh"`).
+- ✅ **Phase 3.A** — `deployment-service@<see manifest_schema_final_gate Phase 3.A>` — `launch-cross-asset-rescan-vm.sh`
+  shipped (singleton-locked, asia-northeast1-c, per-VM shard isolation, WORKERS=64, HTTP_POOL_SIZE=128, tarball +
+  tarball-from-local). Verified on disk.
+- ✅ **Phase 3.B** — `cross-asset-rescan-` prefix added to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` (line 374,
+  value `None` per "log-only" semantics). Watchdog VM relaunched (latest at 2026-05-11T14:18 UTC; current state STOPPING
+  — auto-recycle cycle).
+- ✅ **Phase 3.C** — Launcher registered in `deployment_api/services/deploy_missing.py` `_SERVICE_LAUNCHER_SCRIPTS`
+  (line 88, `"cross-asset-rescan": f"{_VM_SCRIPT_DIR}/launch-cross-asset-rescan-vm.sh"`).
 - ✅ **Phase 3.D** — `instruments-service/scripts/cross_asset_rescan.py` shipped (333 lines): cross-asset dispatch,
   per-VM shard isolation, Class A auto-flips (`PARQUET_NAN_RATIO_EXCEEDED` / `PARTIAL_BUNDLE` / `SCHEMA_DRIFT` /
   `PHANTOM_PATH_MISSING`), Class C triage JSONL stream to `gs://{pid}-rescan-triage/{run_id}/triage.jsonl`, lifecycle
   events.
-- ✅ **Rescan-design plan** promoted DRAFT → active —
-  `manifest_cross_asset_rescan_design_2026_05_08.md` frontmatter flipped (`status: active`, `last_updated: 2026-05-12`).
+- ✅ **Rescan-design plan** promoted DRAFT → active — `manifest_cross_asset_rescan_design_2026_05_08.md` frontmatter
+  flipped (`status: active`, `last_updated: 2026-05-12`).
 - **Operational follow-up (P1 pending)** — actual rescan VM run is Phase 2.6 post-migration validation work; not
   triggered in this cycle.
 
 All Tier 2 sub-phases now reflected as `[x]` in `manifest_schema_final_gate_2026_05_09.md:310/315/322/324`.
+
+## DONE-2026-05-12 — Harsh slot 4 end-of-shift handover
+
+> Harsh's shift ending 2026-05-11 ~14:45 UTC. This is the clean-pickup summary for Ikenna's agent: ✅ what shipped this
+> shift + ⏭ what's left + the exact next step. Detail is in the `## DONE-2026-05-11 (cont. 4)` + `(cont. 5)` blocks
+> above (carry-forward table) and `## Drift audit table (Done-def #6 — PARTIAL...)`. Working tree clean, ahead=0 — all
+> work pushed to `origin/live-defi-rollout`. No uncommitted/WIP state.
+
+### ✅ Shipped this shift (the resume-from-▶-RESUME-block session, 2026-05-11)
+
+| Item                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Evidence                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Q6 ✅ relay — Done-def #3 → `status: deferred-after-code_freeze-Phase-2.6` (A6 = Option 2: defer the whole `get_bucket_name`/`BUCKET_PREFIXES`→`resolve_bucket_name` delegate to the Phase-2.6 cutover, = step 2.6.4) + Q7 NEW (env-less-GCP remainder: `pnl/positions/risk-store-defi` shape-align + `events` env-tier, routed cross-side to Ikenna)                                                                                                                                                                                                                                                    | PM@`e4fca599`                                               |
+| Phase 0g (b+) cross-check FINDING — deployment-api carries its own flat-shape bucket templates (`DataStatusService._BUCKET_TEMPLATES` 18-entry + `data_status_drilldown._BUCKET_TEMPLATES` 16-entry near-copy that already drifts on `ml-*` + `data_query_service.build_bucket_name` + `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` + 3 hardcoded `f"gs://instruments-store-sports-{pid}/..."`) = a "Layer 5" reader-side drift; documented in § Pre-audit manifest "Layer 5" + folded into code_freeze GAP-2.4.D (Phase-2.6 reader-repoint)                                                              | PM@`5c99664f`                                               |
+| Phase 0h sync scripts — `deployment-service/scripts/sync-buckets-prod-to-env.sh` (impl) + `-to-staging.sh` + `-to-dev.sh` wrappers; `bash -n` + `shellcheck -S warning` clean; first-execution = Phase 3/post-cutover (GAP-2.4.E) — Ikenna slot 8 owns the first-execution + any layout-specific refinement                                                                                                                                                                                                                                                                                              | deployment-service@`fc1cfa0` (+ plan flip PM@`f2add75d`)    |
+| Done-def #5 — QG STEP 5.69 (`gs://`/`s3://` inline-f-string ratchet) — `unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py` (v1 grep-based per-repo COUNT ratchet, `--update-baseline` ratchets DOWN only) + `inline_bucket_uri_baseline.yaml` (seeded: deployment-api 27, execution-service 33, UTL 23, batch-live-recon 7, UAC 5, UI 4, deployment-service 3, features-service 2, strategy-service 2, instruments-service 1, rest 0) + STEP 5.69 in `base-service.sh` (mirrors STEP 5.67 shape) + `test_check_inline_bucket_uri.py` (12 tests pass); ruff+format clean, py_compile OK | PM@`913b020c` (+ marker-leak self-correction PM@`ffcf6496`) |
+| Done-def #6 — PARTIAL drift-audit table (§ "Drift audit table (Done-def #6 — PARTIAL...)") — L1-L5 + inline-URI surfaces, migrated-vs-drifting with named successors; verified-zero TODAY = L1↔L4 (parity test) + L2 features-\* config.py (migrated to `resolve_bucket`) + inline-URI formatters (ratcheted at baseline, no new). Done-def #6 todo `status: helper-shipped`, checkbox stays `- [ ]` (full zero-drift = Phase-2.6 owner / GAP-2.4.D)                                                                                                                                                    | PM@`74109cc5` (+ DONE cont. 4)                              |
+| `OUTPUT_BUCKET_TEMPLATE`-docs follow-up — dropped stale `INPUT_/OUTPUT_BUCKET_TEMPLATE` env-var + config-Field refs from `cross_instrument/docs/{CONFIGURATION,DEPLOYMENT_GUIDE}.md` + `multi_timeframe/.env.example` + the `paired_dispatch.py` `_delta_one_bucket` docstring → all describe `resolve_bucket → cloud-providers.yaml` now; surgical, `.md` prettier-clean, ruff+py_compile clean                                                                                                                                                                                                         | features-service@`89e9a972` (+ DONE cont. 5 PM@`a798e248`)  |
+
+**Phase-1-code-complete scope for `bucket_name_ssot_canonicalisation_2026_05_10.md` = DONE** ✅ — Done-def #1/#2/#4/#5 +
+Phase 0a/0b/0e/0g/0h/0i + env-less-GCP DeFi-raw/config-store + cross_instrument/multi_timeframe yaml-gap (Q5/A5) +
+`OUTPUT_BUCKET_TEMPLATE`-docs + Done-def #6 PARTIAL all shipped (see `## DONE-2026-05-11 (cont. 5)` for the full list).
+
+### ⏭ What's left — the exact next step
+
+**All remaining items land in the code_freeze Phase 2.6 cutover window (2026-05-15→05-19)** — or are operator-gated.
+They're enumerated as a table in `## DONE-2026-05-11 (cont. 5)` § "Carries to the code_freeze Phase 2.6 cutover window"
+and as `- [ ]` plan todos / scoreboard rows. Summary + the pickup order:
+
+1. **Phase 2.6 cutover sequence** (the Phase-2.6 owner — slot 4 was assigned this window; Ikenna can re-assign): per
+   `## Open questions` § A6 "Phase 2.6 Done-def #3 sub-sequence" (steps 2.6.1-2.6.5) +
+   `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.4 (GAP-2.4.B/C/D):
+   - **2.6.1 / GAP-2.4.B** — provision ~300-400 env-tiered buckets (×2 clouds × 3 envs × all kinds), region-pinned (GCP
+     `asia-northeast1`, AWS `ap-northeast-1`); extend `deployment-service` Terraform / `setup-buckets.py` with the
+     resolver-derived name list; `gcloud storage buckets create` / `aws s3 mb` per name; `gcloud storage ls` /
+     `aws s3 ls` verification probe per name.
+   - **2.6.2 / GAP-2.4.C** — migrate flat-bucket data into the env-tiered buckets (`gcloud storage cp -r` /
+     `aws s3 sync`), drift ≤0.01% per bucket (object count + size + spot-check 100 parquets); also runs the **Q7(b)**
+     rename if Ikenna's confirmed the `pnl/positions/risk-store-defi` shape (rec b-i =
+     `{kind}-defi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}`) + the **Q7(c)** `events` → env-tiered migration (✅
+     RESOLVED 2026-05-11 PM by Ikenna; `{pid}-events` → `{pid}-events-{env}` form; events are append-only so it's mostly
+     write-new-and-archive-old) + the workspace-wide `gs://{pid}-events/events/{service}/...` reference update (the "no
+     fire-and-forget VM launches" verification recipe etc. — known Phase-2.6 scope item; also the
+     `vm_zombie_watchdog.py` reads from `{pid}-events` → either iterate all 3 envs or take a `--env` flag, P1 watchdog
+     follow-up per § Q7).
+   - **2.6.3** — brief write-pause window (operator-coordinated; flag VMs to wait).
+   - **2.6.4 / Done-def #3** — flip `get_bucket_name`/`BUCKET_PREFIXES`→`resolve_bucket_name` workspace-wide (~36+
+     consumers, pre-audited ~92 candidate files across
+     instruments-svc/MTDS/execution-svc/deployment-svc/features-svc/strategy-svc/pnl/deployment-api/PM — recipe in §
+     Pre-audit manifest "Layer 3 migration recipe") **+ the L5 deployment-api reader-repoint** (replace deployment-api's
+     internal flat-shape bucket templates with `resolve_bucket_name(...)`, reconcile the L5.1↔L5.2 `ml-*` drift —
+     recipe in § Pre-audit manifest "Layer 5") **+ the L2-tail `dependency_checker.py` probe-template migration** (the
+     `"bucket_template": "market-data-tick-{ag}-{pid}"` strings → `resolve_bucket(...)`; needs the UTL
+     `BaseDependencyChecker` migration first OR done in this window) — all in the same write-pause logical unit;
+     `basedpyright` each consumer repo after.
+   - **2.6.5** — verify writers writing to env-tiered buckets; archive (don't delete) flat buckets to
+     `*-archived-flat-2026-05-19/` + 30-day retention; QG STEP 5.69 ratchet enforces no new flat-name refs; **then
+     re-run `check_inline_bucket_uri.py --update-baseline`** (the baseline drops as L3/L5/L2-tail inline templates are
+     removed) + run the **Done-def #6 FULL zero-drift table** (drift ≤0.01% per migrated bucket + zero readers still hit
+     flat names — GAP-2.4.D extends Done-def #6).
+2. **Q7(b)** — `pnl-store-defi`/`positions-store-defi`/`risk-store-defi` canonical-shape: still **operator-pending**
+   (Q7(c) `events` ✅ resolved by Ikenna). Once operator confirms (rec b-i), the yaml change + the rename migration fold
+   into step 2.6.2 above. § Q7 has the full mismatch table + recs.
+3. **Phase 0f** (VM-launcher env-awareness) — ✅ DONE by Ikenna slot 8 @PM`96077adf` (~72 launchers env-aware) — see
+   `## DONE-2026-05-12 — ikenna-bucket-prereq-tab (slot 8)` above. Phase 0h sync scripts ✅ DONE by slot 4
+   @deployment-svc`fc1cfa0` (first-execution Phase 3/post-cutover). So the Phase-2.6 launcher-env + sync-script prereqs
+   are both in place.
+4. **Done-def #5 v2 AST-walk** (P2 hardening, `- [ ]` in the plan) — replace the v1 grep-based
+   `check_inline_bucket_uri.py` with an AST-walk (distinguish `f"gs://{x}/..."` from `resolve_bucket_uri(...)`, ignore
+   docstrings — same shape as STEP 5.65). NOT urgent (v1 already catches NEW inline formatters via the count ratchet);
+   whoever picks it up.
+
+**No blocker for the May-15 freeze gate** — everything above is the Phase-2.6 cutover window or operator-gated, not the
+freeze-gate checklist.
