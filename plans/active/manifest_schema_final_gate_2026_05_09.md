@@ -359,20 +359,87 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - [ ] [AGENT] P0. Phase 4.MTDS — Each adapter (Databento / Tardis / CCXT / Barchart / Yahoo / Sports / DeFi /
       Prediction) explicitly passes `pipeline_mode=PipelineMode.BATCH_<source>` per UAC SOURCE_PRIORITY
   - emission-policy hooks via `publish_with_policy`. **Per E3 ratified item.**
-- [ ] [AGENT] P0. Phase 4.MDPS — candle writer + reprocess engine propagate `pipeline_mode` from input parquet's column.
+      **🟡 BLOCKED 2026-05-12 — finding @PM@`237d00b7` (slot 2 spawned `ikenna-v8-mw-mtds-sweep` sub-agent).**
+      Pre-audit found 26 files / 102 callsites needing fix, but 5 design ambiguities require operator triage before
+      mechanical sweep:
+      - **Q1 (CRITICAL)**: `DefiManifestRecorder.record_captured` routes through legacy UTL `ManifestWriter.add()` which
+        silently swallows `pipeline_mode` via `**kwargs` and doesn't stamp it on `AvailabilityRecord`. Phase
+        4.DEFAULT-REMOVAL won't catch this gap because `add()` doesn't have the v8 kwarg defaults to remove. Options:
+        (α) migrate `DefiManifestRecorder` to v8 `record_captured()` path (invasive but canonical, no-double-SSOT);
+        (β) extend `add()` to plumb `pipeline_mode`.
+      - **Q2**: 6 PipelineMode enum gaps for DeFi multi-source dispatch (`BATCH_HYPERLIQUID_REST`, `BATCH_PYTH_HERMES`,
+        `BATCH_CHAINLINK`) + Yahoo/Barchart (`BATCH_YAHOO`, `BATCH_BARCHART`) + footystats (`BATCH_FOOTYSTATS`). All
+        three findings filed: MTDS@`237d00b7`, MDPS-VIX-Yahoo@`a5e5aa4d`, INSTR-footystats@`6ede1e01`. Operator design
+        call: extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` entries, OR force workaround mapping to closest top
+        entry (instruments-service already chose β for footystats: stamps `BATCH_API_FOOTBALL` as documented
+        workaround pending enum extension).
+      - **Q3-Q5**: orchestrator dispatch strategy / reconciler preservation / test fixture updates — all downstream of
+        Q1-Q2. See finding doc `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`.
+
+      Sweep is mechanical (~60min) once Q1+Q2 triaged. Pre-audit shipped; no MTDS file changes (per spawn-prompt
+      anti-pattern "DON'T force a wrong value").
+- [x] [AGENT] P0. Phase 4.MDPS — candle writer + reprocess engine propagate `pipeline_mode` from input parquet's column.
       Emission-policy hooks at publish boundary.
-- [ ] [AGENT] P0. Phase 4.INSTRUMENTS — catalog refresh writes pass `pipeline_mode` per source. Update
+      **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-mdps-sweep` sub-agent @MDPS@`a3c7198`** — 22 callsites across
+      16 files (8 source + 2 scripts + 6 tests). New helper `resolve_pipeline_mode_from_source(blob_path)` parses
+      `pipeline_mode=<value>` hive partition segment from GCS blob path; legacy pre-v8 paths fall back to
+      `BATCH_DATABENTO`. Threaded through `write_candle_parquet` / `candle_write_mixin._write_candles` /
+      `live_workers._process_instrument_file` / `batch_workers._handle_empty_tick_data` / `orchestration_writer` VIX 15m
+      gap path / `live_aggregator._MDPSManifestRecorder` (LIVE_WEBSOCKET) / `io/writer.CandleWriter`. Emission-policy
+      hooks already in `canonical_writer.write_candle_parquet` from prior Phase 6.2 ship @MDPS@`311614a`.
+      QG: 1174 tests passing, 1 pre-existing foreign failure (`test_cli_main::test_cli_help`); basedpyright clean on
+      edited files. Finding filed:
+      [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md).
+- [x] [AGENT] P0. Phase 4.INSTRUMENTS — catalog refresh writes pass `pipeline_mode` per source. Update
       `reconcile_phantom_manifest_rows_all.py` to handle v8 row shape.
+      **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-instruments-sweep` sub-agent @instruments-service@`e530906`** —
+      ~50 callsites across 9 files. Per-source mapping table decided (api_football → BATCH_API_FOOTBALL, transfermarkt
+      → BATCH_TRANSFERMARKT, understat → BATCH_UNDERSTAT, soccer_football_info → BATCH_SOCCER_FOOTBALL_INFO, open_meteo
+      → BATCH_OPEN_METEO, polymarket gamma → BATCH_POLYMARKET_GAMMA_API, footystats → BATCH_API_FOOTBALL workaround
+      pending enum extension, CME options → BATCH_DATABENTO, CeFi options → BATCH_TARDIS, self-published catalog rows
+      → BATCH_INSTRUMENTS_SERVICE). New SSOT mapping `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` in orchestrator. Reconciler
+      `reconcile_phantom_manifest_rows_all.py` v8-aware (read-tolerant + write-preserving for all 4 new v8 columns —
+      pandas round-trip is naturally column-preserving; added docstring banner + inline comment for future readers, no
+      behaviour change needed). QG: identical pre-sweep baseline (zero new errors). Finding filed:
+      [`footystats_pipeline_mode_gap_2026_05_12.md`](issues/footystats_pipeline_mode_gap_2026_05_12.md).
 - [ ] [AGENT] P0. Phase 4.FEATURES — features-service (post-consolidation) + remaining features-\* repos pass propagated
       `pipeline_mode` + emission-policy hooks. **GATED on features-consolidation merge by May 16.**
 - [ ] [AGENT] P0. Phase 4.DEPLOYMENT-API — manifest read endpoints surface v8 columns; data-status drilldown renders
       `service_emission_state` badges (4 states).
-- [ ] [AGENT] P0. Phase 4.E2E — synthetic-fixture writers pass synthetic-source `pipeline_mode`.
-- [ ] [AGENT] P0. Phase 4.PM-SCRIPTS — any `unified-trading-pm/scripts/` Python that calls `record_*` passes explicit
+      **IN-FLIGHT 2026-05-12 slot 2 (`ikenna-v8-manifestwriter-tab`)** — verified via grep that zero current
+      deployment-api/ui references to `service_emission_state` / `last_emission_decision_at` / new emission columns.
+      Real open scope (NOT a false positive): need to (1) extend deployment-api manifest read endpoints to expose the
+      3 v8 emission columns + pipeline_mode in response shape; (2) add `ServiceEmissionStateBadge` 4-state renderer in
+      deployment-ui DataStatusTab; (3) reuse the Phase 5.5 forward-compat envelope pattern for the new columns.
+- [x] [AGENT] P0. Phase 4.E2E — synthetic-fixture writers pass synthetic-source `pipeline_mode`.
+      **N/A 2026-05-12 slot 2** — grep-then-read audit (per CLAUDE.md "Grep-Then-Read") found ZERO actual
+      `record_*(` method calls in `system-integration-tests/`. The only grep hit
+      (`tests/smoke/test_coverage_matrix_smoke.py:209`) was an error-message format-string referencing the method
+      names, not an actual invocation. No work needed.
+- [x] [AGENT] P0. Phase 4.PM-SCRIPTS — any `unified-trading-pm/scripts/` Python that calls `record_*` passes explicit
       kwargs.
-- [ ] [AGENT] P0. Phase 4.GREP-VERIFY — workspace-wide:
-      `grep -rln "record_captured\|record_empty\|record_failed\|record_expected_empty\|record_expected_unattempted" --include="*.py" | xargs grep -L "pipeline_mode="`
-      returns ZERO hits across all 10 affected repos. Reviewers reject phase-completion until this returns zero.
+      **N/A 2026-05-12 slot 2** — grep-then-read audit found ZERO actual record_* method calls in PM scripts. The 3
+      grep hits were: (a) `test_check_removed_symbols.py:45` test-fixture string `successor="ManifestWriter.record_captured"`
+      (literal in test data dict); (b) `test_check_banned_placeholder_methods.py:158/168/308` synthetic test code
+      defining `def record_empty_for_shard()` inside string literals to feed the AST-walk QG check; (c)
+      `check_banned_placeholder_methods.py` docstring + error-message strings. None are actual invocations. No work
+      needed.
+- [ ] [AGENT] P0. Phase 4.GREP-VERIFY — workspace-wide AST-walk (not naive grep — see note below).
+      **2026-05-12 slot 2 audit finding**: naive grep `grep -rln "record_captured\|..." --include="*.py" | xargs grep -L
+      "pipeline_mode="` returns false positives for files containing only docstring/comment/dict-key/string-literal
+      references (e.g. `"record_empty_expected": True` config-field, `def record_empty_for_shard()` inside
+      AST-walk-QG test fixtures' string literals, `successor="ManifestWriter.record_captured"` in test data, error-
+      message format strings naming the methods). Verified across deployment-api / system-integration-tests /
+      unified-trading-pm/scripts/ — 7 grep hits all false-positive (zero actual `.record_*(` invocations).
+      **Required approach**: AST-walk every `.py` file (matching the precedent set by
+      `unified-trading-pm/scripts/quality_gates/check_banned_placeholder_methods.py` +
+      `check_removed_symbols.py`), find every actual `Call` node where the called name is one of the 5 `record_*`
+      methods, and assert `pipeline_mode=` kwarg is present in `Call.keywords`. Whitelist via `# QG-allow:
+      pipeline-mode-explicit-or-other-reason` inline marker for the rare legitimate exception.
+      **Implementation site**: `unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`
+      (new AST-walk QG check; ~80-100 lines mirroring `check_banned_placeholder_methods.py` shape). Wire into
+      `base-service.sh` as a new STEP (~5.6x) workspace-wide. Reviewers reject phase-completion until AST-walk returns
+      zero. Naive grep stays as the fast initial filter for new agents starting Phase 4.x; AST-walk is the gate.
 - [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — at end of Phase 4, **all four** transitional `None` defaults removed from
       ManifestWriter's 5 `record_*` methods (explicit-or-fail): `pipeline_mode=` + the 3 v8 emission-tracking kwargs
       (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`). **AND** bump
