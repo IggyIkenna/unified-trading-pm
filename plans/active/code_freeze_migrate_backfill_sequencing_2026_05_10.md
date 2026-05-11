@@ -249,6 +249,212 @@ The plan items here promote the existing pieces to execution shape:
   - Pre-v7 cleanup (any straggler rows in pre-v7 shape → `attempted_failed` with `SCHEMA_VALIDATION_FAILED`).
   - GCS available_at backfill (rows with NULL `available_at` get stamped via `stamp_available_at_*` based on per-source semantics from Phase 1).
 
+### Phase 2.6 — Bucket-name SSOT cutover (provision → rsync → write-pause → delegate flip → archive)
+
+The 5-step sub-sequence operator-ratified 2026-05-11 (`bucket_name_ssot_canonicalisation_2026_05_10.md` § Open Q6 → A6
+= Option (ii) — defer ENTIRE delegate to code_freeze Phase 2.6 cutover window). Runs across 2026-05-15→05-19 immediately
+after Phase 2.5 (cross-asset rescan apply-flips) and before the Phase 2 freeze gate. Authored as Day-1 dry-run by slot
+3 2026-05-12 (`ikenna-codefreeze-audit-tab`). Per CLAUDE.md "Plans Run To Actual Completion" HARD RULE every step has
+real-infra CLI + verifier + duration + rollback.
+
+**Pre-conditions** (all must be ✅ before Phase 2.6 starts):
+1. Phase 2.0 pre-drain Stage 0 complete (`manifest_migration_master_2026_05_07` Stage 0; per `GAP-2.0.A`). Zero RUNNING
+   MTDS / MDPS / instruments / features VMs.
+2. Phase 2.1-2.5 complete (manifest v8 atomic rename + GCS bundled migration + OHLCV rename + AWS cloud-parity rsync +
+   cross-asset rescan `--apply-flips` completed). Manifest snapshot `_index/snapshots/pre_migration_2026_05_15.parquet`
+   in place.
+3. Operator-coordinated write-pause window scheduled (2026-05-15 12:00 UTC start typical; ~1-2h margin per asset_group).
+4. All Phase 1 freeze-gate items ✅ flipped at lines 151-159 above (Phase 1 freeze gate fired).
+5. Slot worktrees on `tab/<operator>/<N>` all rebased + clean; no in-flight foreign WIP.
+
+#### Step 2.6.1 — Provision env-tiered buckets (Day -1 — 2026-05-14)
+
+Provision ~180-300 net-new env-tiered buckets across GCP `central-element-323112` + AWS `427895769566` × {prod /
+staging / dev} per yaml `cloud-providers.yaml`. This is `bucket_name_ssot_canonicalisation` Phase 0c +
+code_freeze GAP-2.4.B. Owner: Harsh slot 4 per operator decision 2026-05-11.
+
+- **CLI** (per-cloud, idempotent):
+  ```bash
+  cd deployment-service && bash scripts/setup-buckets.sh --env prod --cloud gcp
+  bash scripts/setup-buckets.sh --env staging --cloud gcp
+  bash scripts/setup-buckets.sh --env dev --cloud gcp
+  bash scripts/setup-buckets.sh --env prod --cloud aws
+  bash scripts/setup-buckets.sh --env staging --cloud aws
+  bash scripts/setup-buckets.sh --env dev --cloud aws
+  ```
+  Script reads `configs/cloud-providers.yaml` + iterates every `${DEPLOYMENT_ENV}`-bearing kind × asset_group; calls
+  `gcloud storage buckets create gs://<resolver-derived-name> --location=asia-northeast1 --uniform-bucket-level-access`
+  (GCP) / `aws s3api create-bucket --bucket <name> --region ap-northeast-1 --create-bucket-configuration LocationConstraint=ap-northeast-1`
+  (AWS). Skips existing buckets.
+- **Verifier**:
+  ```bash
+  python unified-trading-pm/scripts/migration/verify_env_tiered_buckets_provisioned.py --env prod --cloud both
+  ```
+  (~NEW; this plan body authorizes). Reads yaml SSOT; per-(kind, asset_group, env, cloud) tuple, calls
+  `gcloud storage ls gs://<name>` / `aws s3api head-bucket --bucket <name>`; reports missing + drift. Expect 0 missing.
+- **Duration**: ~2-4h for ~600 buckets total (6 env×cloud passes × ~100 buckets/pass at ~2-5s/bucket).
+- **Rollback** (idempotent): `gcloud storage buckets delete gs://<name> --quiet` per bucket. Safe (no data shipped yet).
+
+#### Step 2.6.2 — Rsync flat→env-tiered (Day -1 to Day 0 — 2026-05-14→15)
+
+For every FLAT bucket on GCP (`features-delta-one-cefi-{pid}`, `features-onchain-{pid}`, `features-sports-{pid}`,
+`features-volatility-{ag}-{pid}`, `features-calendar-{pid}`, `dex-pools-{pid}`, `liquidations-{pid}`, etc.) AND on AWS
+(existing flat counterparts beyond the 10 DeFi buckets created Phase 2 of `aws_migration_defi_first`), copy ALL data
+into the new env-tiered **prod** bucket. dev/staging buckets stay empty until `sync-buckets-prod-to-{staging,dev}.sh`
+cron runs (Phase 0h, post-2026-05-23). This is `bucket_name_ssot_canonicalisation` Phase 0d + code_freeze GAP-2.4.C.
+
+- **CLI** (per-bucket, parallelisable per-asset-group on same-region GCE VMs):
+  ```bash
+  # GCP (workers via gcloud storage built-in parallelism):
+  gcloud storage cp -r --preserve-symlinks gs://<flat>/* gs://<env-tiered-prod>/
+
+  # AWS (workers via aws-cli s3 sync):
+  aws s3 sync s3://<flat>/ s3://<env-tiered-prod>/
+
+  # Bundled runner (NEW; this plan body authorizes):
+  bash deployment-service/scripts/migrate-flat-to-env-tiered.sh --env prod --cloud both --dry-run
+  bash deployment-service/scripts/migrate-flat-to-env-tiered.sh --env prod --cloud both --apply
+  ```
+- **Verifier** (per-bucket): post-copy object count + total size + 100-random-parquet read sample; drift ≤0.01%.
+  ```bash
+  python unified-trading-pm/scripts/migration/verify_flat_to_env_tiered_drift.py --bucket <kind> --env prod
+  ```
+  Compares `gcloud storage du gs://<flat>` vs `gcloud storage du gs://<env-tiered-prod>` for byte parity; sample-reads
+  100 parquets via `pd.read_parquet(...)` to confirm schema + non-empty rows.
+- **Duration**: bucket-volume-dependent. Small buckets (KB-MB) ~minutes each. Large buckets (`market-data-tick-cefi-{pid}`
+  likely TB-class) ~6-12h each. Total wall-clock ~12-24h with 4-8 parallel workers per asset_group.
+- **Rollback**: Step 2.6.2 is additive (no flat-side delete yet) — abort + retry safely. If partial copy, re-run is
+  idempotent (`gcloud storage cp` overwrites by default; use `--ignore-symlinks --recursive` for safety).
+
+#### Step 2.6.3 — Write-pause (Day 0 — 2026-05-15 ~12:00 UTC)
+
+Operator-coordinated write-pause across all 5 asset_groups. Backfill VMs paused (`launch-cefi-backfill.sh` /
+`launch-tradfi-backfill.sh` / etc. NOT launched); MTDS/MDPS/features in-flight shard flushes complete; manifest
+consolidator final run merges per-VM shards into canonical `_index/availability_index.parquet`. Composes with Phase 2.0
+pre-drain Stage 0 (already complete pre-Phase-2.1).
+
+- **CLI** (operator coordination):
+  ```bash
+  # Stop all backfill VM launches (no new gcloud compute instances create commands).
+  # Wait for in-flight to drain:
+  gcloud compute instances list --filter="status=RUNNING AND name~'(mtds|mdps|features|backfill|instruments)-.*'"
+  # Expect: zero rows.
+
+  # Final manifest consolidator run:
+  bash deployment-service/scripts/vm/launch-manifest-consolidator-vm.sh --one-shot
+  # Wait for STOPPED event:
+  python unified-trading-pm/scripts/events/tail.py --service manifest-consolidator --until STOPPED
+  ```
+- **Verifier**: `gcloud compute instances list` returns 0 backfill/MTDS/MDPS/features VMs; per-bucket
+  `_index/per_vm/*.parquet` consolidated into `_index/availability_index.parquet`; consolidator STOPPED event observed
+  in `gs://${pid}-events/events/manifest-consolidator/`.
+- **Duration**: 1-2h (mostly waiting for in-flight last-shard flushes + final consolidator run).
+- **Rollback**: trivially resume backfill launches; write-pause window aborted; no data destroyed.
+
+#### Step 2.6.4 — Delegate flip workspace-wide (Day 0 — 2026-05-15 ~14:00 UTC)
+
+Three reader/writer surfaces flip simultaneously workspace-wide in ONE PR (per CLAUDE.md "Manifest migration, NOT
+fallback" — no transitional dual-resolution window). This is `bucket_name_ssot_canonicalisation` Done-def #3 (L3 legacy
+delegate) + code_freeze GAP-2.4.D (L5 deployment-api reader-repoint) + L2-tail `dependency_checker.py` migration.
+
+Surfaces flipped:
+1. **L2-tail** — `features-service/features_service/{delta_one,onchain,volatility}/.../dependency_checker.py` inline
+   `"bucket_template": "market-data-tick-{ag}-{pid}"` strings → `resolve_bucket_name(kind='market-data', asset_group=..., env=os.environ['DEPLOYMENT_ENV'])`.
+2. **L3** — `unified-trading-library/.../cloud_interface/constants.py` + `core/cloud_constants.py` `get_bucket_name` +
+   `BUCKET_PREFIXES` → delegate to `resolve_bucket_name`. ~36+ consumers across instruments-service / execution-service
+   / MTDS / deployment-service / features-service / strategy-service / pnl-attribution / deployment-api / PM scripts.
+3. **L5** — `deployment-api/.../data_status_service.py:_BUCKET_TEMPLATES` (18 entries) +
+   `data_status_drilldown.py:_BUCKET_TEMPLATES` (16 entries; already drifts on `ml-*`) +
+   `data_query_service.py:build_bucket_name` + `upcoming_fixtures.py:_SPORTS_BUCKET_TEMPLATE` + 3 hardcoded
+   `f"gs://instruments-store-sports-{pid}/..."` f-strings — ALL replaced with `resolve_bucket_name(...)` calls.
+   Reconcile L5.1↔L5.2 `ml-*` drift (yaml SSOT wins: `ml-models-store` / `ml-predictions-store`).
+
+- **CLI** (operator authorises Day 0 ~14:00 UTC; sub-agent fan-out 3-way per-repo):
+  ```bash
+  # Spawn 3 parallel sub-agents (one per repo): features-service / unified-trading-library / deployment-api.
+  # Each: AST-walk + replace + QG-clean + push.
+  # Bundle into a single workspace-wide PR for atomicity:
+  bash unified-trading-pm/scripts/agents/launch-bucket-delegate-flip-trio.sh --apply
+  # Followed by:
+  cd deployment-service && gcloud run deploy deployment-api --image ... --region asia-northeast1
+  bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh
+  ```
+- **Verifier**:
+  ```bash
+  # QG STEP 5.69 ratchet:
+  cd unified-trading-pm && python scripts/quality_gates/check_inline_bucket_uri.py --update-baseline
+  # Verify baseline DROPPED (lower count):
+  diff -u unified-trading-pm/scripts/quality_gates/inline_bucket_uri_baseline.yaml.bak \
+            unified-trading-pm/scripts/quality_gates/inline_bucket_uri_baseline.yaml
+
+  # Smoke: deployment-api reads env-tiered names:
+  curl https://deployment-api.../api/v1/data-status/coverage?asset_group=cefi&data_type=ohlcv_1h | jq '.bucket'
+  # Expect: "market-data-tick-cefi-prod-central-element-323112" (env-tiered shape).
+
+  # Workspace QG full sweep (every affected repo):
+  for repo in features-service unified-trading-library deployment-api; do (cd $repo && bash scripts/quality-gates.sh); done
+  ```
+- **Duration**: 2-4h (workspace-wide PR + QG sweep across 3 repos + deployment-api deploy).
+- **Rollback**: revert the PR + redeploy (single git revert; no data destroyed). Backfill VMs still paused, so writers
+  haven't yet hit env-tiered names; rollback is clean.
+
+#### Step 2.6.5 — Archive flat buckets (Day +1 to Day +30 — 2026-05-16 onward)
+
+Asynchronous; runs in the background as readers + writers prove out on env-tiered names. Archive flat buckets with
+30-day retention; delete after manifest + downstream verification confirms zero readers still hit flat names.
+
+- **CLI** (per-bucket):
+  ```bash
+  # GCP: rename flat bucket prefix to archived suffix (object-level move, since bucket rename not supported):
+  gcloud storage cp -r gs://<flat>/* gs://<flat>-archived-flat-2026-05-19/
+  gcloud storage rm -r gs://<flat>/*
+  # OR (lower-risk): set lifecycle policy keeping flat for 30d then deleting:
+  gcloud storage buckets update gs://<flat> --lifecycle-file=lifecycle-30d-delete.json
+
+  # AWS:
+  aws s3 mv s3://<flat>/ s3://<flat>-archived-flat-2026-05-19/ --recursive
+  aws s3api put-bucket-lifecycle-configuration --bucket <flat> --lifecycle-configuration file://lifecycle-30d.json
+
+  # Bundled runner (NEW; this plan body authorizes):
+  bash deployment-service/scripts/archive-flat-buckets.sh --env prod --cloud both --retention-days 30
+  ```
+- **Verifier** (30-day audit log scan):
+  ```bash
+  # GCP audit log: zero reads on flat names since Day 0:
+  gcloud logging read 'resource.type="gcs_bucket" AND resource.labels.bucket_name=~"market-data-tick-cefi-central-element-323112"' \
+    --freshness=30d --format=json | jq 'length'
+  # Expect: 0 (no consumer reads since delegate-flip).
+
+  # AWS CloudTrail equivalent:
+  aws cloudtrail lookup-events --lookup-attributes AttributeKey=ResourceName,AttributeValue=<flat> --max-results 50
+  ```
+- **Duration**: 30 days (passive). Once verifier returns 0 reads workspace-wide:
+  ```bash
+  gcloud storage buckets delete gs://<flat-archived-flat-2026-05-19> --quiet
+  aws s3 rb s3://<flat>-archived-flat-2026-05-19 --force
+  ```
+- **Rollback**: cancel deletion within 30d window; restore lifecycle policy. Readers fall back to flat names ONLY if
+  per-domain `{DOMAIN}_GCS_BUCKET[_{AG}]` env override is set (delegate-flip otherwise routes to env-tiered).
+
+#### Phase 2.6 done-definition
+
+- ✅ Provision step: every yaml-declared env-tiered bucket exists on both clouds × 3 envs; verifier reports 0 missing.
+- ✅ Rsync step: per-bucket drift ≤0.01%; 100-random-parquet read sample passes on env-tiered names.
+- ✅ Write-pause step: zero RUNNING backfill/MTDS/MDPS/features VMs at Day 0 ~12:00 UTC; final consolidator STOPPED.
+- ✅ Delegate-flip step: workspace QG green across 3 affected repos; QG STEP 5.69 baseline DROPPED; deployment-api smoke
+  returns env-tiered bucket names; first writes on env-tiered names succeed in Phase 3 backfill resume.
+- ✅ Archive step: 30-day passive window elapses with 0 reads on flat names; flat buckets deleted.
+
+#### Composes with
+
+- `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0c (provisioning code half) + Phase 0d (data migration) +
+  Done-def #3 (L3 delegate flip) + Done-def #6 (L5 reader-repoint).
+- `aws_migration_defi_first_2026_05_07.md` Phase 5 cross-cloud rsync (must complete BEFORE Step 2.6.2 to avoid double-walk).
+- `manifest_migration_master_2026_05_07.md` Stage 0 (pre-drain) + Stage 6 (manifest snapshot post-Phase-2.5).
+- Phase 2.0 / 2.1 / 2.2 / 2.3 / 2.4 / 2.5 (all preconditions per § "Pre-conditions" above).
+- `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2 freeze gate (lines 252-259) — Phase 2.6 done-def
+  closes 3/6 freeze-gate items (manifest schema v8 + GCS bundled + cross-asset rescan all upstream).
+
 ### Phase 2 freeze gate (✅ to flip Phase 3 startable)
 
 - [ ] **Manifest schema is v8** workspace-wide; every row populated; reader fallback for v5/v6/v7 deleted; ZERO drift in 4-state taxonomy at every coverage drilldown level.
