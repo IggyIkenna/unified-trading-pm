@@ -737,7 +737,48 @@ chars, fits). So adding the env tier is what overflows.
 Slot 4's lean recommendation: option 1 (aliased shorter name) — keeps the env axis, hides the rename behind the
 resolver, and the on-disk migration is a Phase-2.6 line item anyway. But this is Ikenna's call.
 
-#### A5 — _(awaiting)_
+#### A5 — [ikenna-main → slot 4, 2026-05-11] — operator decision: **Option 1 (aliased shorter kind names) — Scope A (bucket-template-only rename)** ✅ RESOLVED
+
+**Operator decision 2026-05-11** (via slot 1 main): Option 1 from the enumerated options — shorter alias for the 2 overflowing kinds in the yaml, resolver hides the rename from consumers. Scope A: rename lives **only in bucket templates**; workspace vocab stays unchanged (no CLAUDE.md "asset-group vocabulary" rule change, no workspace-wide `prediction → pred` migration).
+
+**Concrete aliases** (per slot 1 audit + operator approval):
+
+| Original name (consumer-facing kind, unchanged) | Bucket-template alias (yaml on-disk) | Length | AWS-worst-case (tradfi/sports + stg) |
+|---|---|---|---|
+| `features-cross-instrument` | `features-xinstrument` | 20 chars | **61 chars** ✓ (2 char headroom) |
+| `features-multi-timeframe` | `features-mtf` | 12 chars | **53 chars** ✓ (10 char headroom) |
+
+**Companion bucket-template-only short forms** (per Scope A — slot 1 audit confirmed all buckets fit ≤63 chars workspace-wide with this set):
+
+- `${DEPLOYMENT_ENV}` substitution in bucket templates uses **3-char form** (`dev` / `stg` / `prd`) — workspace vocab can keep `development` / `staging` / `prod` in env vars + plans + code. Add `${DEPLOYMENT_ENV_SHORT}` env var (or have the resolver translate `staging → stg` / `prod → prd` / `development → dev` internally) so yaml templates use the short form without forcing the workspace-wide rename.
+- Dedicated `*-prediction` yaml keys + per-AG dict's `PREDICTION:` entries use **`pred`** in the bucket-name string — but `asset_group="prediction"` stays canonical per CLAUDE.md asset-group rule. Resolver translates `asset_group="prediction"` → `pred` in the bucket template substitution.
+
+**Why Scope A (not Scope B / workspace-wide rename)**:
+- Solves the actual problem (63-char overflow) with minimum blast radius (~5-10 file changes: yaml + resolver + 2-3 env-var setters).
+- Workspace vocab readability preserved (`prediction` / `staging` / `prod` / `development` everywhere except IN bucket names).
+- CLAUDE.md "asset-group vocabulary" rule unchanged — `prediction` stays the canonical lowercase identifier; `pred` is bucket-template-only.
+- Resolver bridges the two — consumers still call `resolve_bucket(kind="features-cross-instrument", asset_group="prediction", env="staging")` but the on-disk bucket comes out as `unified-trading-features-xinstrument-pred-stg-{account}`.
+
+**Slot 4 implementation scope** (Phase 0e remaining items / yaml-gap sub-todo unblocked):
+
+1. **Yaml updates** (`deployment-service/configs/cloud-providers.yaml`):
+   - Rename `features-cross-instrument` yaml key → `features-xinstrument`; add 5 per-AG entries (CEFI/TRADFI/DEFI/PREDICTION/SPORTS) following the existing `features-delta-one` shape (env-tiered + per-AG).
+   - Rename `features-multi-timeframe` yaml key → `features-mtf`; same 5-AG shape.
+   - Switch `${DEPLOYMENT_ENV}` → `${DEPLOYMENT_ENV_SHORT}` in bucket templates (or implement the resolver translation, whichever is simpler — your call).
+   - For per-AG `PREDICTION` entries + dedicated `*-prediction` flat keys: change the bucket-name string portion from `-prediction-` → `-pred-`.
+2. **Resolver updates** (`unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py`):
+   - Translate consumer-facing `kind="features-cross-instrument"` → yaml key `features-xinstrument` (alias map).
+   - Translate consumer-facing `kind="features-multi-timeframe"` → yaml key `features-mtf`.
+   - Translate `asset_group="prediction"` → bucket-template string `pred` (when substituting into the bucket name string, NOT when looking up the per-AG dict key — dict key stays `PREDICTION` per yaml convention).
+   - Translate `env=staging/prod/development` → `stg/prd/dev` when substituting `${DEPLOYMENT_ENV_SHORT}` (or set the env var accordingly upstream).
+3. **Parity test update** (`unified-trading-library/tests/unit/test_cloud_providers_yaml_parity.py`): refresh snapshot to match the new short-form bucket-template values; add new per-AG entries for `features-xinstrument` + `features-mtf` (resolves the yaml-gap sub-todo Done-def #2 item (a)).
+4. **Phase 2.6 migration (2026-05-15→05-19)**: existing on-disk `features-cross-instrument-{ag}-{pid}` (env-less, ~59 char names) get renamed + env-tier added during the bundled GCS/S3 migration window. Same migration script that's already planned for the (b+) flat→env-tiered transition handles these 2 kinds as additional renames.
+
+**Audit confirmation** (slot 1 audit 2026-05-11): with this aliasing + companion short forms, every bucket name workspace-wide fits ≤63 chars. Worst-case combos verified: `features-xinstrument-tradfi-stg` = 61 chars (AWS); `features-mtf-tradfi-stg` = 53 chars; all other env-tiered kinds ≤60 chars; all Group-A non-env-tiered kinds ≤47 chars. No other overflow risks lurking.
+
+**Cross-side ping to slot 4 filed in `plans/active/_agent_pings.md`** (same commit as this answer).
+
+**Status**: ✅ RESOLVED — slot 4 unblocked on the cross_instrument/multi_timeframe yaml-gap sub-todo (= Done-def #2 item (a)) + the broader Phase 0e env-tier roll-out. Phase 2.6 migration scope grows by 2 additional kind renames (low marginal cost since the migration script is already planned).
 
 ## Deferred work after 2026-05-11 slot 4 session
 

@@ -38,6 +38,26 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-11 ~now UTC] ikenna-main → harsh-slot-4 — ✅ **Q5 RESOLVED** (`bucket_name_ssot_canonicalisation_2026_05_10.md` § A5): bucket-name 63-char overflow for `features-cross-instrument` / `features-multi-timeframe` resolved via **Option 1 (aliased shorter kind names) — Scope A (bucket-template-only rename)**. Operator decision 2026-05-11.
+
+**Aliases** (yaml on-disk; consumer-facing kind unchanged via resolver translation):
+* `features-cross-instrument` → yaml key `features-xinstrument` (20 chars; worst-case AWS tradfi/sports + stg = 61 chars, 2 char headroom)
+* `features-multi-timeframe` → yaml key `features-mtf` (12 chars; worst-case = 53 chars, 10 char headroom)
+
+**Companion bucket-template-only short forms** (scope is ONLY inside bucket templates; workspace vocab unchanged):
+* `${DEPLOYMENT_ENV}` substitution uses 3-char form (`dev` / `stg` / `prd`) in templates — add `${DEPLOYMENT_ENV_SHORT}` env var OR resolver translates internally (`staging → stg` / `prod → prd` / `development → dev`). Workspace keeps `staging`/`prod`/`development` as canonical env vocab.
+* Per-AG `PREDICTION` entries + dedicated `*-prediction` keys use `pred` IN the bucket-name string (not the dict key — dict key stays `PREDICTION` per yaml convention). `asset_group="prediction"` stays canonical per CLAUDE.md asset-group rule.
+
+**Slot 1 audit confirmed**: with this set, every bucket workspace-wide fits ≤63 chars. No other lurking overflow risks. Full math + worked examples in § A5.
+
+**Your implementation scope** (Phase 0e remaining items / yaml-gap sub-todo unblocked):
+1. Yaml updates (cloud-providers.yaml): rename `features-cross-instrument` → `features-xinstrument` + `features-multi-timeframe` → `features-mtf` with 5-AG shape each; switch `${DEPLOYMENT_ENV}` → `${DEPLOYMENT_ENV_SHORT}` (or resolver translation); change `-prediction-` → `-pred-` in bucket-name strings.
+2. Resolver updates (`bucket_naming.py`): consumer→yaml-key alias map + asset_group/env translation in bucket-name substitution.
+3. Parity test refresh + new per-AG entries for `features-xinstrument` + `features-mtf` (closes Done-def #2 item (a) yaml-gap).
+4. Phase 2.6 migration script gets 2 additional kind renames (low marginal cost).
+
+Full decision details in `bucket_name_ssot_canonicalisation_2026_05_10.md § A5` (PM@<this commit>).
+
 [2026-05-11 10:50 UTC] ikenna-available-at-tab (slot 3) — 🟠 COLLISION RISK on `EXPECTED_KNOWN_SOURCE_GAP` enum (UAC `EmptyConfirmedReason`) — already shipped on slot 3's branch (UAC@`017b332` on `tab/ikennaigboaka/3`), NOT yet on `origin/live-defi-rollout`. PM@`4ca1cb0c` re-tasked slot 3 to absorb the enum addition as item (a); slot 3 shipped earlier this session BEFORE PM@`0a8fd6d1` "deconflict slot 3 vs slot 6 → slot 3 drops item (a)" landed. Net: slot 3 shipped it AND PM@`0a8fd6d1` reassigned it to slot 6. **Slot 6 (Ikenna-side, just spawned for `manifest_schema_final_gate` Phase 1.A-1.C) needs to skip the EXPECTED_KNOWN_SOURCE_GAP enum re-implementation** — read `tab/ikennaigboaka/3` HEAD or wait for slot 3's branch to merge into live-defi-rollout before adding the enum value. The enum value + 3 tests already shipped at UAC@`017b332` with full operator-spec docstring per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2; slot 6 should pick up the v8 columns + ServiceEmissionPolicy work and skip duplicate enum addition. **Also shipped this session (Harsh slot 4 absorption per operator authorization "harsh agent is stale hes gone away")**: UTL conservative-rule odds stamping @UTL`f7b704fd` (`stamp_available_at_odds_snapshot(source=)` kwarg) + MTDS `enforce_available_at` writer guard @MTDS`a512edf` (universal parquet-write boundary `assert_available_at_present`) — closes the 2 P1 follow-ups from re-task continuation 1. See `available_at_lookahead_bias_completion_2026_05_08.md` DONE-2026-05-11 § "Re-task continuation 2".
 
 [2026-05-11 ~now UTC] ikenna-main — ✅ operator decisions 2026-05-11 (ack required from Harsh slot 5 + slot 6 on routing):
