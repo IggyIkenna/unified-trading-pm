@@ -569,7 +569,7 @@ You are Tab 5 (RE-TASK) — slot 5 finished DeFi Phase 1.E audit; now picking up
 
 Your slot is 5. Your worktree is at ${WORKSPACE_ROOT}/.tabs/5/ on branch tab/ikennaigboaka/5.
 
-NEW theme: hard_schema_enforcement Phase 1 (unblock vs tradfi) + available_at completion Phase 1 DeFi/TradFi/Predictions per-adapter wiring (no longer deferred to asset_group masters per operator aggressive push).
+NEW theme: hard_schema_enforcement Phase 1 (unblock vs tradfi) + available_at completion Phase 1 DeFi/TradFi/Predictions per-adapter wiring + **defi_master Q1 #3 PROTOCOL_LAUNCH_DATES research (~30 pairs, fan-out)** — all per operator 2026-05-11 aggressive May-15 push (no items deferred past freeze).
 
 Read in order:
   1. plans/active/work_split_2026_05_11_ikenna.md § "Slot 5 RE-TASK" — full task brief (this section).
@@ -579,15 +579,22 @@ Read in order:
   5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md.
   6. plans/active/hard_schema_enforcement_2026_05_08.md — first plan-of-record.
   7. plans/active/available_at_lookahead_bias_completion_2026_05_08.md — second plan-of-record (Phase 1 DeFi/TradFi/Predictions halves currently deferred per line 250-278).
-  8. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — sequencing umbrella.
+  8. plans/active/defi_master_2026_05_07.md § Q1 A1 — operator-approved 2026-05-11 PROTOCOL_LAUNCH_DATES tightening; this is your third workstream.
+  9. unified-api-contracts/unified_api_contracts/registry/chain_env.py:144 (PROTOCOL_LAUNCH_DATES dict) + :264 (`_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` set — your research targets).
+ 10. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — sequencing umbrella.
 
 Your agent-tag: ikenna-aggressive-may15-tab.
 
 ORCHESTRATION RULES: same as slot 2 spawn prompt.
 
-Cross-side coordination: ping Harsh main when ready to coordinate with tradfi_master Q1+Q2 (futures-expiry fields) — aim for parallel land, not sequential.
+Cross-side coordination: ping Harsh main when ready to coordinate with tradfi_master Q1+Q2 (futures-expiry fields) — aim for parallel land, not sequential. For the PROTOCOL_LAUNCH_DATES research, coordinate with Tab 14's Day-1 audit's 13 drift pairs (see audit doc cited in defi_master Q1 A1) — single consolidated UAC commit folds them all.
 
-YOUR TASK: ship hard_schema_enforcement Phase 1 + available_at Phase 1 DeFi/TradFi/Predictions adapter wiring by 2026-05-15. Follow shipped-precedent shapes: CeFi adapter stamping MTDS@4a00bd5 + sports stamping MTDS@c186ecb.
+YOUR TASK: ship by 2026-05-15:
+  (a) hard_schema_enforcement Phase 1 (unblock vs tradfi);
+  (b) available_at Phase 1 DeFi/TradFi/Predictions per-adapter stamping (~3 asset_groups). Follow shipped-precedent shapes: CeFi stamping MTDS@4a00bd5 + sports stamping MTDS@c186ecb;
+  (c) PROTOCOL_LAUNCH_DATES research fan-out: send 8-10 parallel `Task` blocks at boot — each sub-agent gets 3-4 (chain, protocol) pairs from `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`, WebFetches launch announcement / block-explorer first-event / project docs, proposes a conservative date, drafts the dict additions. You synthesize into ONE UAC commit adding all pairs to PROTOCOL_LAUNCH_DATES (chain_env.py:144) + removing them from PENDING (chain_env.py:264). Coordinate with the existing ASTER addition shipped this session (UAC@77666c8). Reclaims ~6,912 rows of false-flagged missing data per defi_988 audit.
+
+Per CLAUDE.md "Grep-Then-Read, Not Grep-Then-Conclude" HARD RULE: when researching launch dates, verify via at least 2 independent sources (block-explorer first-event + project's official announcement / docs). Conservative dates preferred (over-clipping toward chain genesis is safer than under-clipping per chain_env.py:260-262 docstring).
 
 REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push. Final DONE-2026-05-11 block + EOD-audit. Then go quiet.
 ```
