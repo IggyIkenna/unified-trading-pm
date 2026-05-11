@@ -314,8 +314,13 @@ As you ship work:
 ## Boot ack template (paste this into `_agent_pings.md` after reading)
 
 ```text
-[YYYY-MM-DD HH:MM UTC] <your-agent-tag> — STARTED Tab N (<plan-of-record-path>)
+[YYYY-MM-DD HH:MM UTC] <your-agent-tag> — STARTED slot N (<plan-of-record-path>)
 ```
+
+> **Timestamp = real UTC.** This machine's clock is **IST (UTC+5:30)**, not UTC. Do NOT run `date` and slap "UTC" on
+> the output — that's wrong by 5h30m (e.g. `11:35 IST` is `06:05 UTC`). Get the timestamp with **`date -u +'%Y-%m-%d
+> %H:%M UTC'`** for every ping-ledger entry, plan-of-record `## Open questions` heading, and `## DONE-<date>` block.
+> Reference miss: 2026-05-11 slot 2's STARTED ack wrote `11:35 UTC` when it was actually `~06:05 UTC`.
 
 Main agent will see it on next 1-min poll, ack with a short note in your plan doc's `## Open questions` if anything to
 flag, otherwise stays silent. Your STARTED ping is removed automatically once main confirms clean boot.

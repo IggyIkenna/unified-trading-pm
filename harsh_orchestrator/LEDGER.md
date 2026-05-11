@@ -157,10 +157,11 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 - **Doing now**: standing by for Wave 1 spawn (slots 2 + 3 from terminal). Polling both ping ledgers ~1 min while
   operator active.
 
-#### Slot 2 — `harsh-features-consolidation-tab` ⚪ QUEUED — READY NOW; HARDEST DEADLINE 2026-05-13
+#### Slot 2 — `harsh-features-consolidation-tab` 🟢 IN FLIGHT — booted 2026-05-11 (PM@`917ec9d6`); Phase 4-7 (HARDEST DEADLINE 2026-05-13)
 
-- **Status (2026-05-11)**: QUEUED — awaiting operator spawn (`cd ${WORKSPACE_ROOT}/.tabs/2/ && claude`, paste work-split
-  § "Slot 2 spawn prompt"). Phase 0-3 already shipped per prior cycle: Phase 0 pre-audit @PM`1de574b4` (1286 lines /
+- **Status (2026-05-11)**: 🟢 IN FLIGHT — STARTED ack received (PM@`917ec9d6`; the agent wrote `11:35 UTC` but the
+  machine clock is IST so that's actually ~`06:05 UTC` — AGENT_ONBOARDING.md § "Boot ack template" now mandates
+  `date -u` for ping timestamps); booting/fanning-out on features_repo_consolidation Phase 4. Phase 0-3 already shipped per prior cycle: Phase 0 pre-audit @PM`1de574b4` (1286 lines /
   11 ext imports + 51 string refs); Phase 1A UAC `FeatureFamily` enum @`7f63ca3`; Phase 1B UTL `ManifestWriter
   feature_family` kwarg @`c16cef3`; Phase 2 + Phase 3 first wave done (features-service skeleton @`d3d6e286` pushed to
   `IggyIkenna/features-service` `live-defi-rollout`; workspace-manifest registered line 880).
@@ -196,10 +197,10 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 - **Full task brief**: [`../plans/active/work_split_2026_05_11_harsh.md`](../plans/active/work_split_2026_05_11_harsh.md)
   § "Slot 2 — Features-repo consolidation Phase 4-7".
 
-#### Slot 3 — `harsh-wave3x-tab` ⚪ QUEUED — READY NOW; Track D ANTI-SEQUENCING (before 2026-05-15)
+#### Slot 3 — `harsh-wave3x-tab` 🟢 IN FLIGHT — booted 2026-05-11; Tracks B/C/D/E (Track D ANTI-SEQUENCING before 2026-05-15)
 
-- **Status (2026-05-11)**: QUEUED — awaiting operator spawn (`cd ${WORKSPACE_ROOT}/.tabs/3/ && claude`, paste work-split
-  § "Slot 3 spawn prompt"). Track A already shipped UAC@`bdc84ed`.
+- **Status (2026-05-11)**: 🟢 IN FLIGHT — STARTED ack received (PM@`e289ada2`); booting/fanning-out on Wave3x Tracks
+  B/C/D/E. Track A already shipped UAC@`bdc84ed`.
 - **Theme**: Wave3x Tracks B/C/D/E parallel — (B) sports per-source SSOTs `UNDERSTAT_COVERED_LEAGUES` + `TRANSFER_WINDOWS`
   + footystats season bounds (UAC `canonical/sports/`); (C) `reconcile_legacy_blank_to_typed_reason.py` reconciler for
   instruments-service; (D) **ANTI-SEQUENCING CRITICAL** zero-activity-bar adapter audit across MTDS, MDPS, 8 features-*
@@ -233,8 +234,12 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 - **Full task brief**: [`../plans/active/work_split_2026_05_11_harsh.md`](../plans/active/work_split_2026_05_11_harsh.md)
   § "Slot 3 — Wave3x Tracks B/C/D/E parallel".
 
-#### Slot 4 — `harsh-bucket-and-adapter-tab` ⚪ QUEUED — PARTIAL GATE (prep now, activate on slot 2 Phase 4 + slot 3 Track E + Ikenna slot 3 Phase 0)
+#### Slot 4 — `harsh-bucket-and-adapter-tab` ⚪ QUEUED — worktree fixed + reset 2026-05-11, ready to spawn (PARTIAL GATE — prep now, activate on slot 2 Phase 4 + slot 3 Track E + Ikenna slot 3 Phase 0)
 
+- **Worktree note (2026-05-11)**: slot 4's `unified-trading-system-ui` worktree was left in a broken half-checkout
+  state (3075 dirty files, `locked`) by the killed `--init` during the freeze incident. Fixed: removed the broken
+  worktree, re-added on `tab/hk/4`, ran `--reset-slot 4` → all slot-4 repos rebased clean onto `origin/live-defi-rollout`.
+  Slot 4 is now spawnable normally.
 - **Theme**: bucket-name SSOT canonicalisation (yaml = canonical per plan; collapse the per-family `config.py` + UTL
   resolver duplicates → `bucket_naming.resolve_bucket_name()`; workspace QG step for inline `f"gs://{bucket}/..."`;
   yaml-vs-resolver parity test; plan-flip audit table) + per-asset-group available_at adapter wiring (sports adapter
@@ -297,9 +302,12 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 
 ### 🟢 Booted slots
 
-Slot 1 (this session) online. Slots 2-6 QUEUED — operator spawns Wave 1 (slots 2 + 3) first from terminal
-(`cd ${WORKSPACE_ROOT}/.tabs/<N>/ && claude`, paste matching spawn prompt from work-split § "Spawn prompts"), then
-Wave 2 (slots 6 → 4 → 5) as capacity allows. Each spawned tab acks STARTED in `harsh_orchestrator/_agent_pings.md`.
+- **Slot 1** (this session) — online (orchestrator, runs in the main clone, not `.tabs/1/`).
+- **Slot 2** `harsh-features-consolidation-tab` — 🟢 IN FLIGHT (booted 2026-05-11, PM@`917ec9d6`).
+- **Slot 3** `harsh-wave3x-tab` — 🟢 IN FLIGHT (booted, PM@`e289ada2`).
+- **Slot 4** `harsh-bucket-and-adapter-tab` — ⚪ QUEUED; worktree fixed + `--reset-slot 4` done; ready to spawn.
+- **Slot 5** `harsh-live-pipeline-impl-tab` — ⚪ QUEUED; hold ~1 day (gated on slot 2 Phase 7). `--reset-slot 5` before spawn.
+- **Slot 6** `harsh-workspace-qg-tab` — ⚪ QUEUED; ready to spawn (low-urgency; UI worktree already at `bb2bd32a` — `--reset-slot 6` before spawn for full sync).
 
 ### ⚪ Main agent (this session) doing now
 
@@ -323,7 +331,10 @@ here as they arise._
 | Repo               | Sha / change | Slot  | What                                                                                          |
 | ------------------ | ------------ | ----- | --------------------------------------------------------------------------------------------- |
 | (workspace root)   | `.vscode/settings.json` | 1 | Added `**/.tabs/**` to `files.watcherExclude` / `search.exclude` / `files.exclude` — freeze fix. _Loose local file, not committed to any repo._ |
-| unified-trading-pm | (this commit) | 1   | LEDGER refreshed to 2026-05-11 6-slot assignments + tab registry; `tab/<harsh-user>/N` → `tab/hk/N` normalised in work-split + LEDGER; `harsh_orchestrator/_agent_pings.md` swept. |
+| unified-trading-pm | `0244af36`+`6bfa9a42`+(this) | 1 | LEDGER + work-split refreshed to 2026-05-11 6-slot; `tab/<harsh-user>/N` → `tab/hk/N`; AGENT_ONBOARDING worktree-aware (new merge model); work-split spawn prompts slimmed to self-contained per-slot pointers; `_agent_pings.md` swept; slot 2+3 flipped IN FLIGHT. |
+| unified-trading-pm | `1d6c9d61` | (Ikenna) | `cleanup-empty-dirs.py` workspace housekeeping utility (operator-confirmed, pushed). |
+| unified-trading-system-ui | `bb2bd32a` | 1 | Untracked stray `.pyc` removed (operator-confirmed, pushed). |
+| (worktree fix)     | n/a          | 1     | Slot 4's `unified-trading-system-ui` worktree was broken (3075 dirty, `locked`) by the killed `--init` — removed + re-added on `tab/hk/4` + `--reset-slot 4` → all slot-4 repos clean on `origin/live-defi-rollout`. Slot 4 spawnable. |
 
 _(Implementer slot DONE blocks land in each slot's plan-of-record body; this table is the cross-slot index.)_
 
