@@ -138,6 +138,16 @@ affected); only the orchestrator's CeFi/sports/tradfi sentinel path is broken.
 - **Owner**: writegate Phase 2.A owner + Harsh slot 5 (live-pipeline MDPS phase) + Harsh slot 6 (QG sweep — add an
   AST/grep gate for `_create_empty_output` / `_handle_empty_tick_data` / `_create_full_day_empty_output` / direct
   `upload_bytes` candle writes that bypass `record_captured`).
+- **Status 2026-05-11**: ✅ **STEPS 1-4 + 6 SHIPPED by Ikenna slot 8** (`ikenna-slot8-p0-2-surgery` + `-finalize`;
+  MDPS `fe7deb5`/`849d039`/`6677728`/`01f08b6`/`a964b96`; PM plan-flips `6c2b7170`..`bf18c6db` + DONE block in
+  `writegate_honest_coverage_endtoend_2026_05_06.md` § "DONE-2026-05-11 — slot 8 P0-2 surgery"). Live MDPS path now =
+  canonical_writer + 4-pillar gate; legacy `_write_candles` override deleted; TradFi 1440-NaN-bar gone;
+  `_create_closed_market_candle` dups removed; `_maybe_write_vix_gap_placeholder` → `record_empty_for_shard(reason=EXPECTED_KNOWN_SOURCE_GAP)`;
+  dead `CandleProcessingService` branch deleted. ✅ **STEP 6 (QG AST gate) DONE by Harsh slot 6** (PM`a4512ed3` STEP 5.67).
+  **Step 5 only remains** (`output_schemas.py:57-66` OHLCV nullability flip) — DEFERRED-AFTER `hard_schema_enforcement_2026_05_08.md`
+  (itself blocked by `tradfi_master_2026_05_07` futures-expiry). Harsh slot 5's live-pipeline MDPS phase no longer owns
+  P0-2 — it's just the MDPS service-wiring per the work-split. Residual: a future `mdps_dead_candle_processing_service_cleanup`
+  plan for the 100+ LOC test-removal blast radius.
 
 ## Per-asset-group case-D coverage map (the actual Track D deliverable)
 
