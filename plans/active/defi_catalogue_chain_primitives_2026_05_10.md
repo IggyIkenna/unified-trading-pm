@@ -337,6 +337,60 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
 
 Owner: harsh + parallel agents per protocol.
 
+> **🟢 PHASE 2 PER-PROTOCOL SHARD-ATOM DESIGN — published 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab) per
+> work_split_2026_05_12 row 2 cross-side handshake "Ikenna publishes per-protocol shard-atom decision by Day 1 EOD
+> per protocol family; Harsh starts implementation Day 2 morning".**
+>
+> **Base shard atom for ALL DeFi protocols** (per
+> [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) line 69 +
+> `unified_api_contracts/canonical/domain/defi/gcs_paths.py`):
+> `(date, asset_group=defi, chain, venue, instrument_type, data_type)`. Path:
+> `raw_tick_data/by_date/day={date}/asset_group=defi/chain={chain}/venue={v}/instrument_type={it}/data_type={dt}/ticks.parquet`.
+>
+> **Per-protocol-family refinement** (whether instrument is a row-level column INSIDE the parquet vs hive-partition
+> shard axis OUTSIDE; mirrors the predictions/sports multi-axis correction pattern banner from 2026-05-06):
+>
+> | Protocol family | Per-instrument count | Shard granularity | Instrument axis location | Cluster validation |
+> |-----------------|----------------------|-------------------|--------------------------|--------------------|
+> | **Lending** (Aave / Spark / Compound / Morpho / Radiant / Fluid) | ~10-20 reserves per (protocol, chain) | **Per-(chain, protocol, asset, data_type, day)** = one manifest row per `(asset, day)` | `asset_symbol` IS a hive shard key (existing pattern at `lending_indices_handler.py`) | Not bundled (each asset is own shard) |
+> | **DEX V3 + CLMM** (Uniswap V3 / Sushi V3 / PancakeSwap / Camelot / Aerodromeq / Velodrome / TraderJoe V2 / Balancer / Curve / Raydium / Orca) | 100-1000+ pools per (protocol, chain) | **BUNDLED per-(chain, protocol, data_type, day)** = one manifest row per protocol+chain+day; `pool_address` is row-level column INSIDE parquet | `pool_address` is ROW-LEVEL (NOT hive shard axis) | **MANDATORY** per `UTL.record_captured` — `expected_root_clusters=set_of_pool_addresses` + `cluster_extractor=lambda row: row["pool_address"]` |
+> | **DEX V2** (Uniswap V2 / Sushi V2) | smaller pool catalog | Same as DEX V3 — BUNDLED | row-level `pool_address` | MANDATORY |
+> | **LST** (Lido / Ether.fi / Rocket Pool / Jito / Marinade / Solblaze + Ethena / Spark sDAI) | 1 token per (protocol, chain) | Per-(chain, protocol, token, data_type, day) — token is the shard atom in 1:1 case | `token_symbol` is hive shard key OR row-level (single-token protocols use hive) | Not bundled (1:1) |
+> | **Restaking LRT — single-token** (Renzo ezETH / KelpDAO rsETH / Ether.fi weETH) | 1 token per (protocol, chain) | Same as LST — per-token shard | hive shard key on `token_symbol` | Not bundled |
+> | **Restaking — multi-vault** (Symbiotic / Karak / EigenLayer / Puffer / Jito-restaking) | dozens of vaults per (protocol, chain) | **BUNDLED per-(chain, protocol, data_type, day)** = one manifest row per protocol+chain+day; `vault_address` is row-level | row-level `vault_address` | MANDATORY — `expected_root_clusters=set_of_vault_addresses` |
+> | **Vaults / yield-aggregator** (Yearn / Convex / Beefy / Pendle / Idle) | 50-200+ vaults per (protocol, chain) | **BUNDLED per-(chain, protocol, data_type, day)** = one row per protocol+chain+day; `vault_address` is row-level | row-level `vault_address` | MANDATORY |
+> | **Aggregators** (Jupiter Solana) | n/a (read-only routing) | per-(chain, protocol, data_type, day) — single route registry per day | route is row-level | Not bundled (registry snapshot) |
+> | **Perp DEX / on-chain CLOB** (Hyperliquid / Aster / GMX / Drift / Pacifica / Extended / Lighter) | per FLAG 1 RESOLVED 2026-05-10 → classified under `VENUES_BY_ASSET_GROUP["cefi"]` axis | **Per-(venue, instrument, data_type, day)** — same as CEFI venues, NOT DEFI shape | hive shard key on `instrument_id` (per-instrument shard) | Not bundled (per-instrument shard already) |
+>
+> **Rationale — why BUNDLED for DEX/Vaults/multi-vault Restaking**:
+> - Per-pool/per-vault shard would inflate manifest by 100-1000× per (protocol, chain) — 1000 Uniswap V3 pools × 5
+>   chains × 4 data_types × 1y days = 7.3M rows per protocol. Across 11 EVM DEX protocols = 80M+ rows. Unmanageable.
+> - Bundled per-(chain, protocol, data_type, day) keeps manifest ≤ ~30k rows per DEX protocol per year (5 chains × 4
+>   data_types × 365 days × 4 instrument_types).
+> - Per-pool/per-vault detail STILL fully recoverable by reading the parquet — `pool_address` / `vault_address`
+>   columns survive in parquet rows; row-level filters work for backtest + live reads.
+> - Cluster validation at `record_captured()` ensures no silent data loss: `expected_root_clusters` (set of pool
+>   addresses we EXPECT in the bundle) + `cluster_extractor` (lambda extracting `pool_address` from each row) gates
+>   the write — if any expected pool is missing from the parquet, `MissingClusterValidationError` raises (QG STEP
+>   5.64 enforces statically; UTL `record_captured` guard raises at runtime).
+>
+> **Shard-granularity SSOT compliance** (per
+> [`codex/04-architecture/shard-level-failure-isolation.md`](../../codex/04-architecture/shard-level-failure-isolation.md)
+> + `plans/epics/infrastructure_master_2026_05_07.md`): shard atom MUST be identical across (a) writer atomicity,
+> (b) manifest row key, (c) data-status display, (d) downstream pre-flight gate, (e) deployment-UI drilldown.
+> Per the matrix above, the shard atom for each protocol family is documented here as the SSOT; Phase 2 adapter
+> implementations MUST honor this matrix; deployment-UI drilldowns roll up to this same granularity.
+>
+> **Codex SSOT update** (Phase 2 boundary, per HARD RULE Post-Plan-Phase Codex Audit) — slot 2 today extends
+> [`codex/02-data/defi-venue-protocol-catalogue.md`](../../codex/02-data/defi-venue-protocol-catalogue.md) with a
+> "Per-protocol shard-atom matrix" subsection (Phase 1J refresh) — DEFERRED to Day-2 follow-up commit (this 6-row
+> matrix is the canonical content).
+>
+> **Harsh implementation handoff**: per-protocol Phase 2 adapter authors consume this matrix at adapter-write time.
+> The bundled protocols (DEX / multi-vault Restaking / Vaults) MUST pass `expected_root_clusters` +
+> `cluster_extractor` kwargs to `record_captured()` per cluster-validation HARD RULE. Single-instance protocols
+> (lending / LST / single-token LRT) can omit cluster kwargs.
+
 Success criterion: per protocol, an instruments-service adapter exists at
 `instruments-service/reference_data/adapters/defi/<protocol>_adapter.py` declaring instrument metadata sourced from the
 protocol's on-chain registry (or off-chain catalog API where on-chain is incomplete). Per-instrument: chain, contract
