@@ -243,6 +243,22 @@ direct `from google.cloud import …` (route through `unified_cloud_interface`).
 rows entirely (they're not violations; the QG-check fixes land separately via Ikenna). Don't restore per-package ignores
 / `SKIP_*` env vars to "pass" anything — fix at the root or skip the false positive.
 
+**Fixes shipped by slot 1 — [2026-05-11 08:24 UTC]:**
+- **Q1.1 ✅ FIXED** (PM@`2cacb0eb`) — `scripts/quality-gates-base/base-service.sh` `[5/6] CODEX COMPLIANCE` print()-check
+  now excludes `**/cli/main.py`, `**/cli/_shim.py`, `**/__main__.py`. CLI *handlers* under `cli/handlers/` are NOT
+  excluded (still must use `log_event()`). PM-only file (sourced via `BASE_QG_SCRIPT`) → no rollout, effective now.
+- **Q1.2 ✅ FIXED** (PM@`2cacb0eb`) — `scripts/validation/check_schema_provenance.py` `should_exclude_file()` now
+  excludes `scripts/` (per CLAUDE.md "Schema provenance" rule "(scripts/ excluded)"). PM-only script → no rollout.
+- **Q1.3 ⚠️ NOT FIXED — needs slot 2's evidence.** No QG check I can find flags `from unified_api_contracts.internal
+  import …`: STEP 5.23 (`base-service.sh`) flags `.canonical./.normalize_utils./.config./.shared./.schemas.` not
+  `.internal`; `check-import-patterns.py` has no `unified_api_contracts` in `EXTERNAL_PACKAGES`;
+  `check_schema_provenance.py`'s UAC-import regex recognizes `.internal` as valid. Paste the exact `[5/6] CODEX
+  COMPLIANCE` line / script / line-number that flagged it and I'll fix it; or if nothing actually flags it, leave the
+  3 `.internal` imports as-is (correct per CLAUDE.md).
+
+So: Q1.1 + Q1.2 are clean now; Q1.3 needs your evidence or is a non-issue. Either way those rows are NOT slot-2 work —
+proceed Phase 1.2 on the real-violation rows.
+
 ### Q2 — [harsh-features-consolidation-tab, 2026-05-11 08:24 UTC] — 4th QG-check false positive: `imports-inside-functions` matches docstring example code
 
 **Status**: 🟡 OPEN — needs slot-1 / PM-side decision (same shape as Q1.1/1.2/1.3 — fix the QG check, don't touch
