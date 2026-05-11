@@ -446,8 +446,69 @@ todos:
              `pytest tests/<f>/` for development; CI runs the whole tree.
 
         QG: `cd features-service && bash scripts/quality-gates.sh` Pass 1 clean. Push.
-    status: todo
-    note: ""
+
+        **STATUS 2026-05-11 (harsh-features-consolidation-tab slot 2) — 4.1-4.5 SHIPPED + verified; 4.6 QG-green
+        BLOCKED on a source-repo-carryover violation backlog. Checkbox stays `- [ ]`.** Sub-item state:
+        - **4.1** ✅ — cross-family + same-family import rewrites done (`df4f83b4` volatility / `b426c893` calendar /
+          `c9a1e5f5` commodity / `9f0f5e16` cross_instrument / `452698ef` delta_one / `00321e6e` multi_timeframe /
+          `b5c4b721` onchain / `6af6d49f` sports + the 1 cross-family test rewrite). Wave-8 audit confirmed ZERO
+          `features_<f>_service` direct-import drift workspace-wide.
+        - **4.2** ✅ — dispatching `features_service/cli/main.py` + 8 family `run(argv)` shims (`9135f6c4`); 19
+          `tests/unit/test_cli_dispatch.py` tests pass; `python -m features_service --version` / `--dispatcher-help` /
+          `--feature-family <f> --help` all smoke-clean.
+        - **4.3** ✅ — single flat `pyproject.toml` (46 unioned deps, pin-conflicts resolved, documented, ONE
+          `[project.dependencies]` list; no optional groups). `uv pip install -e .` succeeds (`bash scripts/setup.sh`
+          builds `.venv` clean: UTL + UAC editable path-deps + 46 deps installed exit 0).
+        - **4.4 / 4.5** ✅ — single `Dockerfile` (ARG PROJECT_ID + asia-northeast1 base) + single Health-API
+          aggregator (`726af91d`) wiring 8-family `_data_freshness` probes via lazy importlib; 11
+          `tests/api/test_health_router.py` tests pass.
+        - **4.6** 🟡 BLOCKED — `cd features-service && bash scripts/quality-gates.sh` FAILS. The QG progression now:
+          ENVIRONMENT ✅ → AUTO-FIX ✅ → LINT ✅ (ruff clean — Wave 7 fixes held) → TESTS ✅ (4 `tests/unit/` files
+          incl. the 2 newly-added required files, + the PM-integration test, all pass) → IMPORT PATTERNS ✅ (fixed this
+          session — see below) → **CODEX COMPLIANCE ❌ (17 violations, max 0)** + function/file-size violations. The 17
+          codex-compliance violations span: `os.getenv()/os.environ` (use `UnifiedCloudConfig`); `asyncio.run()` in a
+          loop (`features_service/calendar/cli/handlers/batch_handler.py`); imports inside functions; empty-string and
+          empty-dict/list fallbacks; local `BaseModel`/`TypedDict`/`dataclass` (schema-provenance — should import from
+          UAC/UIC); direct `from google.cloud import ...` (route through `unified_cloud_interface`); files >900 lines;
+          methods >50L / functions >200L. **These are pre-existing source-repo violations** that were masked in the 8
+          source `features-*-service` repos via per-file `ruff` ignores + `SKIP_*` env vars + per-repo
+          `CODEX_MAX_VIOLATIONS` settings; the consolidated `quality-gates.sh` (`CODEX_MAX_VIOLATIONS=0`,
+          no per-package ignores) surfaces all of them. Fixing them is a dedicated multi-day cleanup workstream — see Q1
+          in `## Open questions` below + the recommended successor plan `features_service_qg_cleanup_<YYYY_MM_DD>.md`.
+          (Same shape as the Phase 10 `DEFERRED` note re: 345 ruff errors — that one was bulk-fixed Wave 7; the
+          codex-compliance + size categories are the un-fixed remainder of the same class.)
+
+        **SHIPPED THIS SESSION (2026-05-11 slot 2)** toward 4.6:
+        - `tests/unit/test_event_logging.py` + `tests/unit/test_config.py` added (features-svc@`c11cafcd`) — QG
+          (`base-service.sh:264-265`) requires both; Phase 2/3 left them only at `tests/<family>/unit/`. 19 tests pass;
+          ruff + basedpyright clean.
+        - UTL top-level facade re-exports `ModeHandler` / `BroadcastSink` / `LiveDataSource` / `BuilderEntry` /
+          `resolve_build_order` / `get_adjacent_pairs` / `get_adjacent_triples` / `sort_timeframes` (UTL@`e7975fe`) —
+          the Phase 5 lifts shipped these in sub-modules but not at the facade, forcing deep imports.
+        - `check-import-patterns.py --fix` on features-service rewrote all 36 deep `from unified_trading_library.{...}
+          import` lines to `from unified_trading_library import ...` (features-svc@`a308a273`, + the QG auto-fix sweep).
+          `check-import-patterns.py` now reports **0 violations across all 503 source files + tests**; all 8 family
+          sub-packages import clean.
+
+        **F2 (4.7) — NO-OP.** `features_service/onchain/config.py` already imports + extends `UnifiedCloudConfig` (the
+        subtree merge brought the modern shape). Resolved with no code change (verified by prior session + re-verified
+        2026-05-11). **F6 (4.8) — Option C shipped** (`writer.add(feature_family=...)` adopted across the 18 callsites
+        in 8 families per Wave 3b; the deeper `record_captured(df,...)` df-flow refactor is DEFERRED — issue doc
+        `plans/archive/issues/f6_record_captured_requires_df_features_consolidation_2026_05_08.md` +
+        `f6_df_flow_refactor_blocked_by_available_at_2026_05_08.md`; gated behind `features_available_at_stamping_*`).
+        **F7 (4.9) — N/A for the features path.** features-service uses `writer.add(...)` (not `record_captured` /
+        `validate_df`); `NormalisingManifestWriter` has only test callers. The `validate_df` / `NormalisingManifestWriter`
+        `feature_family`-kwarg follow-ups are a UTL-side P2 that doesn't gate Phase 4 (no features service exercises
+        those paths).
+    status: blocked
+    note:
+      "2026-05-11 slot 2: 4.1-4.5 shipped + verified; F2 no-op, F6 Option C, F7 N/A-for-features. 4.6 (QG green) BLOCKED
+      — features-service QG fails on ~17 codex-compliance violations + function/file-size violations carried over from
+      the 8 source repos without their per-file-ignore exemptions (os.getenv / asyncio.run-in-loop / nested imports /
+      empty fallbacks / schema-provenance / cloud-SDK imports / size). Import-pattern category FIXED this session
+      (UTL@e7975fe re-exports + features-svc@a308a273 --fix; check-import-patterns.py = 0). Required test files added
+      (features-svc@c11cafcd). Successor: features_service_qg_cleanup_<date>.md (see Q1). Checkbox stays [ ] until QG
+      green."
 
   - id: phase-5-lift-cross-family-helpers-to-utl
     content: |
@@ -557,6 +618,19 @@ todos:
   - id: phase-6-regression-parity-test
     content: |
       - [ ] [AGENT] P0. Phase 6 — Pre-merge vs post-merge feature-output parity test. SEQUENTIAL after Phase 5.
+      <!-- STATUS 2026-05-11 (slot 2): the reusable utility (`scripts/dev/feature_parity_diff.py`) is SHIPPED
+           (PM@44d23659) — the codeable Phase 6 deliverable is done. The full byte-for-byte parity RUN (steps 1-5
+           below) is NOT done — only a lightweight import/CLI/route smoke ran (DONE-2026-05-08 PM block). The full run
+           needs (a) a 7-day reference window with live feature-input data on GCS, (b) the 8 source `features-*-service`
+           repos checked out at their last-pre-consolidation commit (they are now ARCHIVED read-only on GitHub per
+           Phase 7, but still cloneable + the local sibling clones still exist with the pre-archival HEAD == the
+           DEPRECATION_NOTICE commit; the actual pre-consolidation commit is one before that), (c) running 8 source
+           CLIs + 8 consolidated `python -m features_service --feature-family <f> --mode batch` runs = a real
+           backfill-scale operational op. Tracked as the operational residual in Q1 of `## Open questions` below — the
+           plan body's "Why this gates Phase 7" claim is moot now (Phase 7 already archived; the full parity check
+           becomes a post-hoc validation against the archived snapshots, not a gate). Checkbox stays `- [ ]` until the
+           full run executes. -->
+
 
         Goal: prove the migration is byte-for-byte (or numerically identical) for feature outputs on a sample
         backtest window. Workspace doesn't ship a generic "feature output diff" tool today, so this phase ALSO
@@ -587,12 +661,21 @@ todos:
 
         **Why this gates Phase 7**: source repos are NOT archived until parity is proven. If parity fails for a
         family, we revert that family's subtree merge + diagnose without losing operational continuity.
-    status: todo
-    note: ""
+        (NOTE 2026-05-11: this gate was pre-empted — Phase 7 archived 2026-05-08 before the full parity run; see the
+        inline `STATUS 2026-05-11` comment above + Q1.)
+    status: helper-shipped
+    note:
+      "2026-05-11 slot 2: reusable utility scripts/dev/feature_parity_diff.py SHIPPED (PM@44d23659) — schema/row-count
+      match + np.allclose(rtol=1e-9, equal_nan) for numeric + exact for available_at/temporal + exact for
+      string/categorical; text + --json modes; ruff + basedpyright clean; functional smoke verified. The full
+      byte-for-byte parity RUN (8 source-CLI baselines vs 8 consolidated runs over a 7-day window) is NOT done — only a
+      lightweight import/CLI/route smoke ran (DONE-2026-05-08 PM). The full run is a backfill-scale operational item
+      needing GCS feature-input data + the 8 source repos at their pre-consolidation commit (still cloneable; now
+      archived read-only on GitHub). Tracked in Q1. Checkbox stays [ ] until the full run executes."
 
   - id: phase-7-archive-source-repos
     content: |
-      - [ ] [HUMAN+AGENT] P0. Phase 7 — Archive the 8 source repos. SEQUENTIAL after Phase 6 parity gate green.
+      - [x] [HUMAN+AGENT] P0. Phase 7 — Archive the 8 source repos. SEQUENTIAL after Phase 6 parity gate green.
 
         Per source repo `features-<f>-service`:
         1. Add a `README_ARCHIVED.md` at repo root with a banner: "**ARCHIVED 2026-05-XX** — code merged into
@@ -608,8 +691,36 @@ todos:
            features-* repos explicitly.
 
         QG: `unified-trading-pm` quality-gates.sh clean after the workspace-manifest edit.
-    status: todo
-    note: ""
+
+        **SHIPPED 2026-05-08 + verified 2026-05-11 (harsh-features-consolidation-tab slot 2).** Operational state
+        confirmed via probes (per "Plans Run To Actual Completion" operational-step verification recipe):
+        - ✅ All 8 source repos archived read-only on GitHub: `gh api repos/IggyIkenna/features-<f>-service --jq .archived`
+          = `true` × 8 (calendar/commodity/cross-instrument/delta-one/multi-timeframe/onchain/sports/volatility).
+        - ✅ Each source repo carries a final `DEPRECATION_NOTICE.md` banner commit at HEAD (a4c7cf2 calendar / 5c28810
+          commodity / b8866c2 cross-instrument / e55ea32 delta-one / 4d1f0f9 multi-timeframe / 6d00e78 onchain / 35a49e7
+          sports / 9217a90 volatility). NOTE: step 2 (replace `README.md` with a 5-line stub) was NOT done before
+          archival — the archival commits added `DEPRECATION_NOTICE.md` alongside the existing `README.md` rather than
+          stubbing it. Cosmetic only + non-fixable now (archived GitHub repos reject pushes); the deprecation banner is
+          present so the redirect intent is captured.
+        - ✅ `unified-trading-system-repos.code-workspace` `folders` list cleaned — only `features-service` remains
+          (the 8 source-repo folder entries removed). Step 7 N/A — `setup-workspace-config-symlink.sh` does not
+          enumerate the 8 features-* repos.
+        - ✅ `workspace-manifest.json`: 8 source repos flipped to `status=consolidated-into-features-service` +
+          `archived_into=features-service` + `archive_date=2026-05-08` (PM@47b893be); `features-service` registered
+          as the consolidated service (PM@55f84a17, line ~842). The features-service entry `notes` field's stale last
+          sentence ("8 source repos remain status=active until Phase 7 archival") corrected 2026-05-11 to reflect the
+          completed-archival state.
+        ⚠️ **Phase 7 was SEQUENCED-AFTER-PHASE-6-PARITY-GREEN in the plan body, but Phase 6's *full* byte-for-byte
+        parity run never ran** (only a lightweight import/CLI/route smoke per the DONE-2026-05-08 PM block — see Phase 6
+        `note` + Q1 in `## Open questions` below). So the archival pre-empted its own gate. The plan-body sequencing is
+        a documented mismatch, not an unwind trigger (repos archived, manifest flipped, code shipped); the residual is
+        running the full parity check as a post-hoc validation against the archived snapshots (issue tracked via Q1).
+    status: done
+    note:
+      "verified 2026-05-11 (slot 2): 8 source repos archived on GitHub (gh api .archived = true x8),
+      DEPRECATION_NOTICE.md banner commits at HEAD, code-workspace folders cleaned, workspace-manifest statuses flipped
+      (PM@47b893be / 55f84a17) + stale features-service notes sentence corrected 2026-05-11. README.md stub (step 2) not
+      done + non-fixable (archived repos read-only); cosmetic. Phase-6-parity-green sequencing was pre-empted — see Q1."
 
   - id: phase-8a-deployment-launcher-migration
     content: |
@@ -1574,3 +1685,125 @@ bundled-Edit→add→commit→push pattern with `--no-verify` per CLAUDE.md auth
 
 Phase 4-9 remain in flight per their own checkboxes (no new deferrals captured this session — they were already explicit
 plan todos at lines 394 / 452 / 557 / 592 / 613 / 668 / 741 per EOD-audit grep).
+
+## Open questions
+
+### Q1 — [harsh-features-consolidation-tab, 2026-05-11 07:05 UTC] — QG-green backlog + Phase 6 full-parity-run not done + plan checkbox-vs-body drift + F9 org-naming
+
+**Status**: 🟡 BLOCKED — needs operator triage on scope (multi-day cleanup workstream + an operational op + an
+org-naming decision; none of it gates the May-23 cutover per the plan's own "Plan unlock recommendation", but all of it
+needs an active home before this plan archives).
+
+**Context — what slot 2 found + did this session (2026-05-11):**
+
+1. **Plan checkbox-vs-body contradiction (now reconciled).** Phase 4/6/7 checkboxes were `- [ ]` (todo) while the
+   `## DONE — 2026-05-08 PM session` block claims all 10 phases shipped + 8 source repos archived, and the "Plan unlock
+   recommendation" says FUNCTIONALLY COMPLETE. Slot 2 verified actual state via probes (`gh api .archived`, manifest
+   reads, git log, QG runs):
+   - **Phase 7 IS done** → flipped `- [x]` this session (8 repos archived on GitHub = true x8; code-workspace cleaned;
+     manifest statuses flipped PM@47b893be/55f84a17; DEPRECATION_NOTICE banners; stale manifest `notes` sentence
+     corrected). Caveat: source-repo `README.md` was never stubbed (cosmetic, non-fixable — archived repos read-only).
+   - **Phase 4 sub-items 4.1-4.5 done + verified** (import rewrites; CLI dispatcher `9135f6c4`; flat pyproject +
+     `uv pip install -e .` clean; Dockerfile; Health-API aggregator `726af91d`). F2 = NO-OP; F6 = Option C shipped; F7 =
+     N/A for features path. **4.6 (consolidated-repo QG green) BLOCKED** — see point 2.
+   - **Phase 6 utility done** (`scripts/dev/feature_parity_diff.py` PM@44d23659) but the **full byte-for-byte parity RUN
+     never ran** (only a lightweight import/CLI/route smoke per DONE-2026-05-08 PM). See point 3.
+   - **Phase 5 / 8A / 8B / 9 / 10** = already done per their notes (verified the commit shas exist + the artifacts are
+     present). So the body's "FUNCTIONALLY COMPLETE" assessment was roughly right; the checkboxes just lagged. Slot 2
+     corrected the Phase-7 checkbox + annotated Phase 4/6 with their precise blocked state.
+
+2. **Phase 4.6 — consolidated-repo QG-green backlog.** `cd features-service && bash scripts/quality-gates.sh` FAILS.
+   Progression: ENVIRONMENT ✅ → AUTO-FIX ✅ → LINT ✅ (ruff clean) → TESTS ✅ → IMPORT PATTERNS ✅ (slot 2 fixed all 36
+   deep-import violations this session: UTL@`e7975fe` re-exported the Phase 5 lift symbols at the top-level facade +
+   `check-import-patterns.py --fix` on features-svc@`a308a273` rewrote the consumers; `check-import-patterns.py` now = 0
+   violations / 503 files) → **CODEX COMPLIANCE ❌ (17 violations, max 0)** + function/file-size violations. The 17:
+   `os.getenv()/os.environ` (use `UnifiedCloudConfig`); `asyncio.run()` in a loop
+   (`features_service/calendar/cli/handlers/batch_handler.py`); imports inside functions; empty-string + empty-dict/list
+   fallbacks; local `BaseModel`/`TypedDict`/`dataclass` (schema-provenance — import from UAC/UIC); direct
+   `from google.cloud import ...` (route through `unified_cloud_interface`); files >900L; methods >50L /
+   functions >200L. **All pre-existing source-repo violations** masked in the 8 source `features-*-service` repos via
+   per-file `ruff` ignores + `SKIP_*` env vars + per-repo `CODEX_MAX_VIOLATIONS`; the consolidated `quality-gates.sh`
+   (`CODEX_MAX_VIOLATIONS=0`, no per-package ignores) surfaces all of them. **Same class as the Phase 10 `DEFERRED`
+   note** (345 ruff errors, bulk-fixed Wave 7) — the codex-compliance + size categories are the un-fixed remainder.
+   Fixing them properly (not via per-package-ignore restoration — that's a hack per "No double SSOT / fix the root
+   cause") is a dedicated multi-day cleanup workstream.
+
+3. **Phase 6 full parity run.** Needs (a) a 7-day reference window with live feature-input data on GCS, (b) the 8 source
+   `features-*-service` repos checked out at their _pre-consolidation_ commit (now archived read-only on GitHub but
+   still cloneable; the local sibling clones exist with HEAD == the DEPRECATION_NOTICE commit, so the pre-consolidation
+   commit is HEAD~1), (c) 8 source-CLI baseline runs + 8 consolidated
+   `python -m features_service --feature-family <f> --mode batch` runs + the `feature_parity_diff.py` comparison. A
+   backfill-scale operational op. Since Phase 7 already archived, this is now a post-hoc validation against the archived
+   snapshots, not a gate.
+
+4. **F9 — org-naming drift (unresolved operator decision from 2026-05-08).** Every `features-service` clone in the
+   workspace (main + all 6 `.tabs/<N>/` worktrees) has `origin = git@github.com:CosmicTrader/features-service.git`. But
+   `workspace-manifest.json` line ~880 says `github_url: https://github.com/IggyIkenna/features-service`. The
+   DONE-2026-05-10 block claims the operator created the canonical IggyIkenna remote + repointed local origin — but in
+   every clone I can see it's still CosmicTrader (and `git push origin` shows a
+   `remote: git@github.com:IggyIkenna/features-service.git` server-side line, suggesting a rename/transfer happened in
+   one direction). Slot 2 pushed this session's commits to `origin` (= CosmicTrader) per the existing plan-body guidance
+   ("Tab 2 honours the actually-configured remote"). **Operator: which org is canonical?** If CosmicTrader → fix the
+   manifest `github_url`. If IggyIkenna → `gh repo rename` / repoint origins in all clones + verify the pushed commits
+   are on the right remote.
+
+**Recommended decision:**
+
+- **(a)** Spawn `plans/active/features_service_qg_cleanup_<YYYY_MM_DD>.md` for the Phase-4.6 QG-green backlog
+  (codex-compliance + size categories; same shape as the Phase 10 ruff deferral but for the un-bulk-fixable categories —
+  these need real refactors: `os.getenv`→`UnifiedCloudConfig`, `asyncio.run`-in-loop→`asyncio.gather`, nested
+  imports→top-level, empty fallbacks→fail-fast, local schemas→UAC/UIC, `google.cloud`→`unified_cloud_interface`,
+  split >900L files + >50L methods). Cite this plan as `migrated_from:`. Mechanical-ish per category, fan-out-able to
+  sub-agents per file.
+- **(b)** Make the Phase 6 full parity run an explicit operational item — either a Phase in the (a) plan or a standalone
+  `plans/active/issues/features_parity_run_<date>.md` with the `execution:` block (owner / cadence=one-shot /
+  verifier=`feature_parity_diff.py` exit 0 / last_executed=NEVER). It does NOT block May-23 (Phase 7 already shipped)
+  but it's the "Plans Run To Actual Completion" residual.
+- **(c)** Operator resolves F9 + the manifest URL gets corrected to match the canonical org.
+- **(d)** If (a)+(b) are deemed post-May-23 scope: when this plan archives, migrate them to active homes per the Plan
+  Archival HARD RULE (don't archive with these as surviving `[ ]` checkboxes without a named successor).
+
+The plan body's `ci_status: features-service → FAILING` (in `workspace-manifest.json`) already acknowledges the
+QG-failing state — so (a)+(b) being open is not a new surprise, just a now-precisely-scoped one.
+
+## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2)
+
+Theme: features-repo consolidation Phase 4-7. On arrival the consolidation was substantially shipped over
+2026-05-08→05-10 (Phase 0-3 + 5 + 8A/8B + 9 + 10 all done; Phase 4/6/7 checkboxes lagged the actual state). Slot 2
+verified actual state, advanced Phase 4 (import-pattern category + required test files) + Phase 6 (utility), flipped
+Phase 7, and precisely scoped the remaining QG-green + parity-run workstreams (Q1).
+
+| Item                                                                                                                                                                                                | Outcome                                                                                  | Commit(s)                                                                       |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Boot-ack ping                                                                                                                                                                                       | shipped                                                                                  | PM@`917ec9d6` (+ ping migrated to per-slot file per 2026-05-11 workflow update) |
+| Phase 6 deliverable — `scripts/dev/feature_parity_diff.py` reusable parity-diff utility                                                                                                             | shipped                                                                                  | PM@`44d23659`                                                                   |
+| Phase 4.6 — required `tests/unit/test_event_logging.py` + `tests/unit/test_config.py`                                                                                                               | shipped (19 tests pass; ruff+basedpyright clean)                                         | features-svc@`c11cafcd`                                                         |
+| Phase 5 follow-up / Phase 4.6 — UTL top-level facade re-exports (ModeHandler/BroadcastSink/LiveDataSource/BuilderEntry/resolve_build_order/get_adjacent_pairs/get_adjacent_triples/sort_timeframes) | shipped                                                                                  | UTL@`e7975fe`                                                                   |
+| Phase 4.1/4.6 — `check-import-patterns.py --fix` on features-service (36 deep imports → top-level) + ruff auto-fix sweep                                                                            | shipped (`check-import-patterns.py` = 0 violations / 503 files; 8 families import clean) | features-svc@`a308a273`                                                         |
+| Phase 7 — verify + flip `[x]` + correct stale `workspace-manifest.json` `notes` sentence                                                                                                            | shipped                                                                                  | PM@(this plan-flip commit)                                                      |
+| Phase 4 — annotate `status: blocked` (4.1-4.5 done, 4.6 QG-green backlog scoped) + Phase 6 `status: helper-shipped` annotate                                                                        | shipped                                                                                  | PM@(this plan-flip commit)                                                      |
+| Q1 — case-5 finding (QG-green backlog + Phase 6 full-run + F9 + checkbox drift) + recommendation                                                                                                    | shipped                                                                                  | PM@(this plan-flip commit)                                                      |
+
+**Full-execution criterion status** (per "Plans Run To Actual Completion"): the work-split's "✅
+`cd features-service && bash scripts/quality-gates.sh` returns green" is **NOT met** — QG fails on ~17
+codex-compliance + size violations carried over from the 8 source repos (Q1 point 2). The work-split's "ALL 5
+asset_groups' feature calculators import + run" partial: all 8 family sub-packages `import` clean (verified); "run" (a
+real `--mode batch` per family on live data) was not executed — same operational gap as the Phase 6 full parity run.
+Both folded into Q1 recommendation (a)+(b) for a named successor plan.
+
+### Deferred work after 2026-05-11 slot-2 session
+
+| Phase / item                                                    | Status as of 2026-05-11                                                     | Successor / blocker                                                                                                                                                                                                                        |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Phase 4.6 — consolidated features-service QG green              | `blocked` (checkbox `- [ ]`)                                                | ~17 codex-compliance + function/file-size violations carried from source repos sans per-file-ignores → needs `features_service_qg_cleanup_<date>.md` (Q1 rec (a)). Import-pattern category FIXED this session.                             |
+| Phase 6 — full byte-for-byte parity run                         | `helper-shipped` (utility PM@44d23659; checkbox `- [ ]`)                    | Backfill-scale op: 8 source-CLI baselines (source repos at pre-consolidation commit, now archived-but-cloneable) vs 8 consolidated runs over a 7-day window → needs an `execution:` block + operational run (Q1 rec (b)).                  |
+| F9 — `features-service` GitHub org (CosmicTrader vs IggyIkenna) | open operator decision                                                      | `workspace-manifest.json` says IggyIkenna; every clone's `origin` is CosmicTrader. Operator picks; manifest URL corrected to match (Q1 rec (c)).                                                                                           |
+| README.md stub on 8 archived source repos                       | `done`-as-feasible (DEPRECATION_NOTICE.md present; README not stubbed)      | Non-fixable — archived repos read-only. Cosmetic. No successor needed.                                                                                                                                                                     |
+| Phase 4 deeper F6 `record_captured(df,...)` df-flow refactor    | `helper-shipped` (Option C: `writer.add(feature_family=...)` x18 callsites) | gated behind `features_available_at_stamping_*` per issue docs `f6_record_captured_requires_df_features_consolidation_2026_05_08.md` + `f6_df_flow_refactor_blocked_by_available_at_2026_05_08.md` (pre-existing; unchanged this session). |
+
+Cross-side: Phase 7 (features-service deployable + 8 child repos archived) was already announced cross-side on
+2026-05-10 (`plans/active/_agent_pings.md` 2026-05-10 19:10 UTC `features-service-consolidation-push-tab` ping:
+"Unblocks Phase 4-9... as needed"), and the DONE-2026-05-08 PM block already cleared the live-pipeline
+`STRICTLY-BLOCKED` gate. No new cross-side ping required this session (the slot-2 task brief's "CROSS-SIDE PING
+MANDATORY when Phase 7 lands" was satisfied by the 2026-05-10 push ping; Phase 7's checkbox flip this session is a
+state-correction, not a new landing).
