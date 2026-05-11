@@ -336,11 +336,15 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
 
 - [ ] [AGENT] P0. **9A — `codex/04-architecture/amm-slippage-simulation.md`** (NEW; full content covering all 7 pool
       shapes + lending rate impact + governance sim + staking + restaking yield models + slashing MC).
-- [ ] [AGENT] P0. **9B — Update `codex/04-architecture/concentrated-liquidity.md`** (V3/V4 + Solana CLMM addendum).
+- [ ] [AGENT] P0. **9B — CREATE `codex/04-architecture/concentrated-liquidity.md`** (V3/V4 + Solana CLMM
+      addendum). **Note 2026-05-11 slot 6 spot-check**: doc does NOT exist on disk; Phase 9B is a create-from-
+      scratch, not an update. Treat as Phase 9B-NEW.
 - [ ] [AGENT] P0. **9C — Update `codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`** with
       restaking yield decomposition + LRT-fee + seasonal-points models.
-- [ ] [AGENT] P0. **9D — Update `codex/04-architecture/batch-live-architecture.md`** with the matching-engine
-      extensions + the live=batch principle as it applies to new sim primitives.
+- [x] [AGENT] P0. **9D — Update `codex/04-architecture/batch-live-architecture.md`** with the matching-engine
+      extensions + the live=batch principle as it applies to new sim primitives. (PM@`ad6c98e1` — AMMMatcher
+      row updated to dispatch-by-PoolShape over PoolMatcher Protocol; cross-reference block cites today's
+      codex extensions PM@`3b76a5ef` + `d66b0f9f` + `816aed73`.)
 - [ ] [AGENT] P0. **9E — Update `master_to_live_defi_2026_05_23.md`** Group F items 17 + 18 status rows.
 
 ## Cross-plan dependencies
@@ -351,6 +355,72 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
 - **`risk_simulations_limits_alerting_2026_05_08.md`** sibling question doc — risk-simulation surface consumes Phase 4
   governance simulator + Phase 5 yield streams + Phase 7 slashing MC.
 - **`master_to_live_defi_2026_05_23.md`** Group F items 17 + 18 are the cutover gates this plan unblocks.
+
+## DONE-2026-05-15 — slot 6 (Ikenna `ikenna-defi-sim-realism-tab`) Day-1 design ship 2026-05-11
+
+Day-1 directive (`continuation_prompts_2026_05_12.md` § Ikenna slot 6) closed in single cycle ~9 AI-days of
+~14 budgeted; remaining 5 AI-days available for days 2-4 covering items 8+9 carry-forward + Phase 4
+(governance sim) + Phase 5 (yield streams) design when their dependencies clear.
+
+### Commit table
+
+| Commit | Repo | Scope |
+|---|---|---|
+| `PM@16d60480` | unified-trading-pm | STATUS-2026-05-11 line ([`ikenna_orchestrator/_agent_pings.md`](../../ikenna_orchestrator/_agent_pings.md)) — confirms slot-6 prior cycle (`manifest_schema_final_gate` Phase 2.A-D + Phase 3.D; carry-forward items 8+9 inherited from Harsh slot 6 EOD-2026-05-11 handoff). |
+| `PM@3b76a5ef` | unified-trading-pm | Codex [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) Phase 1A — NEW section #10 Solidly-fork (Velodrome + Aerodrome math + Slipstream out-of-scope note) + NEW "Per-shape sample pools + golden fixture seeds" 10-row matrix table + corrected gap analysis (V2/V3/V4 pool classes EXIST per `amm.py:52,259,403` — gap is matcher dispatcher) + cross-chain L2 hazard note + Solidly-fork update protocol footer. |
+| `PM@fd29975e` | unified-trading-pm | Plan body Phase 1A — PoolShape enum amendment: 13 → 15 members (NEW `SOLIDLY_FORK` shared matcher for Velodrome + Aerodrome + other Solidly forks via `(chain, factory)` discriminator; NEW `SOLIDLY_CL_FORK` for Slipstream V3-tick CL pools). Phase 1 boundary codex SSOT note updated to acknowledge today's extension. |
+| `PM@d66b0f9f` | unified-trading-pm | Codex Phase 2A + Phase 3 — NEW "Simulation contract — unified pre-trade quote interface" (PoolMatcher Protocol with `quote()` / `apply()` / `spot_price()` / `snapshot()`; per-pool-class module map curve.py / balancer.py / solana_clmm.py / solidly_fork.py / aggregator.py; `engine.py:_amm_match_impl` refactor target) + NEW "Golden test set harness" (per-PoolShape JSON fixture corpus schema + pytest harness skeleton + capture runbook). |
+| `PM@f9df943f` | unified-trading-pm | Cross-side ping ([`plans/active/_agent_pings.md`](_agent_pings.md)) — Phases 1A+2A+3 design ✅ → Harsh slot 4 cleared to start Day 2 morning (ahead of EOD-Day-2 handshake); slot 7 (Ikenna) cleared for AMM-flavoured topology shocks Day 1 PM. |
+| `PM@9bb51d4b` | unified-trading-pm | Plan body Phase 2 design-shipped status block + NEW Phase 2H (Solidly-fork classic-pool matcher; design-shipped). Implementation half remains `- [ ]` for Harsh slot 4. |
+| `PM@816aed73` | unified-trading-pm | Codex Phase 4+5 — NEW "Matching-engine end-to-end integration" (batch-vs-live PoolMatcher.apply() seam; end-to-end flow diagram; slippage tolerance gate; cross-service contracts for position-balance-monitor / strategy-service / risk-and-exposure-service) + NEW "Aggregator / multi-hop routing realism" (route-source by mode; per-leg dispatch; MEV mempool_path tracking; slippage composition multiplicative-not-additive). |
+| `PM@ad6c98e1` | unified-trading-pm | Codex `batch-live-architecture.md` AMMMatcher row updated for PoolShape dispatch (items 8+9 partial codex SSOT currency closure — 1 of ~50 docs spot-checked + corrected today). |
+| `PM@<this commit>` | unified-trading-pm | DONE-2026-05-15 block + Phase 9D `- [x]` flip + Phase 9B "doc-does-not-exist" annotation + items 8+9 status. |
+
+### Items 8+9 status (carry-forward from Harsh slot 6 EOD-2026-05-11)
+
+| Item | Description | Status as of 2026-05-11 EOD slot-6-day-1 | Successor |
+|---|---|---|---|
+| Item 8 | Full workspace `quality-gates.sh` + basedpyright 22-repo sweep | ⚪ DEFERRED — Day-1 design surface is plan/codex-only (no code edits); slot-worktree `.venv` constraint claim from Harsh notes contradicted by direct check (slot 6 `.venv` dirs present per `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-trading-library/.venv` + `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-api-contracts/.venv`). | Days 2-4 of slot-6 cycle when Harsh slot 4 implementation lands code changes triggering QG runs; or operator re-tasks slot 6 directly to QG sweep. |
+| Item 9 | ~50-doc codex SSOT currency pass per 1.D/1.E/1.F clusters | ⚪ PARTIAL — 1 of ~50 docs refreshed (`batch-live-architecture.md` PM@`ad6c98e1`); 1 doc identified as non-existent (`concentrated-liquidity.md`, captured as Phase 9B-NEW annotation in this plan). 48+ docs remain to spot-check. | Days 2-4 — bounded to the codex docs in 1.D (alerting/risk/DR) / 1.E (DeFi) / 1.F (UI/credentials) clusters per Harsh's brief. Routing to specific docs deferred to next-day sweep. |
+
+### Discoveries captured (HARD RULE Capture Discoveries As Plan Todos Immediately)
+
+1. **V2/V3/V4 pool classes EXIST in `amm.py:52,259,403`** — plan body Phase 2A/B "extend amm.py with UniswapV3Pool"
+   framing is stale. Recapped in Phase 2 status banner + cross-side ping. Implementation half = Protocol refactor +
+   dispatcher rewrite, NOT greenfield.
+2. **Slipstream V3-tick CL variants on Velodrome + Aerodrome** — operator decision pending whether to use shared
+   `SOLIDLY_CL_FORK` enum member or split `VELODROME_SLIPSTREAM` + `AERODROME_SLIPSTREAM`. Captured in plan body Phase
+   1A enum amendment as the conservative choice (shared) with rationale. Override-able by operator.
+3. **`concentrated-liquidity.md` codex doc does NOT exist on disk** — plan body Phase 9B's "Update" framing is
+   wrong; updated to "CREATE" + flagged as Phase 9B-NEW.
+4. **Aggregator route MTDS data_type does NOT exist in catalogue** — captured in codex Phase 5 § "Aggregator / multi-hop
+   routing realism" ("NEW; not yet in catalogue"). Phase 2G MTDS adapter dependency.
+5. **`PoolShape` lookup table `(chain, pool_address) → PoolShape`** — sourcing from MTDS `dex_pools` data_type
+   captured in codex § Aggregator. Cross-references to `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3.
+6. **Pre-flight Tenderly fork option for high-impact swaps** — captured in codex § Matching-engine end-to-end
+   integration as deferred-to-Phase-4-implementation.
+7. **MEV mempool_path attribution (PUBLIC vs PRIVATE) in FillResult** — codex § Aggregator multi-hop realism flags
+   this as required for execution-alpha separation; downstream consumer is `position-balance-monitor-service` +
+   `strategy-service` execution-alpha attribution.
+
+### Days 2-4 plan (calibrated AI-day budget ~5 remaining)
+
+1. **Phase 4 governance proposal sim design** (~2 AI-days) — codex section + plan body amendments for Aave V3 +
+   Compound V3 + Spark + Lido proposal capture adapter + `GovernanceProposalSimulator` (Tenderly-fork-based) + CLI.
+2. **Phase 5 yield-stream simulator design** (~2 AI-days) — composite per-LST/LRT forward yield distribution
+   (native staking + restaking AVS + LRT fee + seasonal points). Composes with `defi_catalogue_chain_primitives`
+   Phase 3 captures.
+3. **Items 8+9 days-2-4 continuation** (~1 AI-day) — codex SSOT currency pass on 1.D/1.E/1.F clusters; partial
+   workspace QG sweep on UAC + UTL + execution-service (the 3 repos most adjacent to today's design).
+
+### Operator-pending decisions surfaced today
+
+| Q | Decision needed | Recommended default | Where surfaced |
+|---|---|---|---|
+| 1A.1 | `SOLIDLY_FORK` shared matcher vs split per-fork enum members (`VELODROME_VE33` / `AERODROME`) | Shared `SOLIDLY_FORK` (math byte-for-byte identical; enum-explosion-prevention) | plan body Phase 1A amendment |
+| 1A.2 | `SOLIDLY_CL_FORK` shared CL matcher vs split (`VELODROME_SLIPSTREAM` / `AERODROME_SLIPSTREAM`) | Shared `SOLIDLY_CL_FORK` (same V3-tick math across forks) | plan body Phase 1A amendment |
+| 2G.1 | Aggregator route MTDS data_type — capture canonical aggregator quote-API responses per route at decision-time + persist | YES, new MTDS data_type `aggregator_route` | codex § "Aggregator / multi-hop routing realism" |
+| 2A.1 | Pre-flight Tenderly fork on high-impact live swaps (size > N% pool TVL threshold) — gate decision | DEFER to Phase 4 implementation (Harsh slot 4 codes the option; operator tunes N% per-archetype) | codex § "Matching-engine end-to-end integration" |
 
 ## Risk register
 
