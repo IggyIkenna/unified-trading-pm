@@ -87,18 +87,52 @@ question doc. Every phase has full-execution criteria with verifiable bullets pe
 12. **Codex SSOTs missing** — `credentials-matrix.md`, `aws-iam-matrix.md`, `secret-manager-naming.md`,
     `rotation-runbook.md` all need to be written.
 
-## Single open operator-decision
+## R9 sub-(a) — RESOLVED 2026-05-12 (operator gate closed)
 
-**R9 sub-(a)** — choose HSM-grade signing tier:
+**Cutover path**: **May-23 ships on CLOUD_KMS_ENCRYPTED** (option (c) — HSM-backed CMK envelope encryption);
+**June-1 flips per-wallet to COPPER_MPC / FIREBLOCKS_MPC** (options (a) + (b)) once client provides their
+Copper + Fireblocks credentials.
 
-- **(a) Fireblocks signer** (recommended — matches Copper architectural pattern, highest security tier,
-  factory-injection-clean, Fireblocks already enum-declared in
-  [transfer_types.py](unified-api-contracts/unified_api_contracts/internal/domain/execution_service/transfer_types.py))
-- **(b) Copper hot-wallet sub-account product** if it exists for non-custody-held DeFi positions (extends existing
-  Copper integration; operationally simpler IF Copper offers this product)
-- **(c) GCP KMS / AWS KMS-encrypted blob with VM-side runtime decryption** (cheaper, less rigorous than HSM)
+Operator rationale (verbatim 2026-05-12): *"client gives us [Copper/Fireblocks] credentials June 1st when we go
+live with them — we need best equivalent to test earlier or use our trust wallet but be ready for integration
+with them June 1st."*
 
-Plan assumes (a) Fireblocks pending operator confirmation; if (b) or (c), Phase 3.C swaps integration target.
+**Architectural implication**: per-wallet `signing_surface` field on
+[`WalletProvisioningConfig`](unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+is a closed-set StrEnum supporting BOTH cutover paths from day 1 (no recompile when client creds land):
+
+| Surface | Phase | Detail |
+|---|---|---|
+| `CLOUD_KMS_ENCRYPTED` | **May-23 cutover default** | Envelope-encrypted private key in Secret Manager; HSM-backed CMK (GCP Cloud HSM / AWS CloudHSM, FIPS 140-2 L3) wraps. Trading-VM SA is the only principal with KMS Decrypter on the CMK. In-memory decrypt at signing time only. |
+| `COPPER_MPC` | June-1 flip per-wallet | Client-provided Copper.co credentials. Wired in execution-service `custody/copper.py` since 2026-05-10; flip is config-only. |
+| `FIREBLOCKS_MPC` | June-1 flip per-wallet | Client-provided Fireblocks credentials. Requires `custody/fireblocks.py` (NEW per Phase 3.C) + factory registration. |
+| `LOCAL_KEY` | Dev / testnet only | Raw key from Secret Manager. Never production. |
+| `MOCK` | Test-only | Deterministic SHA256 fake. |
+
+**Per-wallet flippability**: each `WalletProvisioningConfig` row carries its own `signing_surface` so we can run
+a HOT_TRADING wallet on CLOUD_KMS while a TREASURY wallet sits on COPPER_MPC, etc. Wallet-level kill-switch
+binding (`kill_switch_id` field) gives operator the FINEST-grain freeze beyond per-venue + per-archetype.
+
+**Cloud-KMS safety note** (operator question): GCP Cloud HSM + AWS CloudHSM are FIPS 140-2 Level 3 hardware
+modules — strictly safer than raw-key-in-Secret-Manager (current Phase 3.C "today" state) but strictly less
+rigorous than MPC (Copper/Fireblocks). Single point of compromise = KMS Decrypter IAM role. Mitigations:
+(a) IAM bound to trading-VM SA only, no human principals; (b) per-wallet kill-switch wiring; (c) per-wallet
+spending caps via `SpendingCaps` field; (d) `allowed_destinations` withdraw whitelist; (e) audit-log
+on every `kms.decrypt` call. Sufficient for ≤7-day live smoke; June-1 hardens to MPC.
+
+**Phase 3.C scope SPLIT** per R9 resolution:
+
+- **Phase 3.C.1 — Cloud-KMS-encrypted wallet provisioning (May-23 path, P0)**: KMS CMK provisioning per
+  asset_group + per-wallet envelope-encrypted PK in Secret Manager + execution-service
+  `CloudKmsCustodyProvider` (NEW) implementing `CustodyProvider` protocol via in-memory decrypt → web3.py /
+  Solana sdk signing. Tests + Sepolia smoke. **Owner: slot 4 (this tab) + Harsh implementation handoff.**
+- **Phase 3.C.2 — Fireblocks integration (June-1 path, P0 post-cutover)**: original Phase 3.C content
+  unchanged — wired but DEFERRED-AFTER-CUTOVER per client-credential schedule. Operator manual entry to flip
+  via deployment-UI Live-Cluster button once client confirms credentials available.
+
+`Phase 3.C.2` stays open in this plan body but tagged `**DEFERRED-AFTER-CUTOVER (2026-06-01)**` —
+materialised post-cutover in successor plan `plans/active/fireblocks_copper_client_integration_2026_06_01.md`
+(operator-spawned when client creds land).
 
 ## Execution DAG
 
@@ -320,14 +354,33 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - [ ] [AGENT] **3.B.5** — Operational-model decision: CEFFU replaces or augments Copper for `carry_staked_basis` spot
         leg. Document in `codex/04-architecture/custody-architecture.md` (NEW or UPDATE).
 
-- [ ] [AGENT] P0. **3.C — Fireblocks signer integration (HSM-grade wallet signing).** Pending operator R9 sub-(a)
-      confirmation; assumes Fireblocks. Implementation: `execution-service/execution_service/custody/fireblocks.py`
-      mirroring Copper factory shape. Wallet-key signing: every `wallet_private_key` injection route changes from
-      raw-key-from-Secret-Manager to Fireblocks-vault-signing. Per-wallet policy controls (max amount per tx, allowed
-      destinations, time-of-day windows) defined per archetype.
-  - **Verification**: smoke test on Sepolia signs a transaction via Fireblocks vault; latency budget within
-    strategy-execution end-to-end target (HSM signing adds 100-500ms; verify under load).
-  - **Sub-residual**: HD-wallet derivation under Fireblocks-protected master key → N×M wallets per R7 derive cleanly.
+- [x] [DECISION] P0. **3.C — HSM-grade wallet signing path RESOLVED 2026-05-12** (operator R9 sub-(a) gate closed
+      via AskUserQuestion). May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`; June-1 flips per-wallet to
+      `COPPER_MPC` / `FIREBLOCKS_MPC` on client-provided creds. See "R9 sub-(a) — RESOLVED" section above for
+      full rationale + per-wallet flippability architecture. Split into 3.C.1 (cutover path) + 3.C.2
+      (post-cutover Fireblocks).
+
+  - [ ] [AGENT] P0. **3.C.1 — Cloud-KMS-encrypted wallet provisioning (May-23 cutover path).** Implementation:
+        `execution-service/execution_service/custody/cloud_kms.py` (NEW) implementing `CustodyProvider` protocol
+        — fetch envelope-encrypted private key from Secret Manager → call GCP `cloudkms.decrypt` (or AWS
+        `kms.decrypt`) with the per-wallet CMK URI → in-memory decrypt → web3.py / solana-py signing → discard
+        plaintext. Per-wallet CMK URI carried on
+        `WalletProvisioningConfig.kms_key_uri` (UAC@`d721b6a`, shipped 2026-05-12). KMS Decrypter IAM bound to
+        trading-VM SA only.
+    - **Verification**: smoke test on Sepolia + Solana devnet via singleton-locked launcher
+      `launch-defi-paper-trade-vm.sh` signs a transaction; latency budget ≤200ms KMS decrypt + ≤100ms web3 signing.
+    - **Sub-residual**: per-wallet CMK rotation cadence (90-day default, configurable per asset_group);
+      `rotation-runbook.md` entry per Phase 9.D.
+
+  - [ ] [AGENT] P0. **3.C.2 — Fireblocks signer integration (June-1 post-cutover path).** **DEFERRED-AFTER-CUTOVER
+        (2026-06-01)** — client provides Fireblocks credentials June 1st. Implementation:
+        `execution-service/execution_service/custody/fireblocks.py` (NEW) mirroring Copper factory shape.
+        Per-wallet flip from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` is config-only (no recompile) per
+        `WalletProvisioningConfig.signing_surface` field. Successor plan:
+        `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when client creds land).
+    - **Verification**: smoke test on Sepolia signs a transaction via Fireblocks vault; latency budget within
+      strategy-execution end-to-end target (HSM signing adds 100-500ms; verify under load).
+    - **Sub-residual**: HD-wallet derivation under Fireblocks-protected master key → N×M wallets per R7 derive cleanly.
 
 - [ ] [AGENT] P0. **3.D — Treasury rollup view — CANONICAL OWNER (ratified 2026-05-10 cross-plan audit Q7 per
       most-comprehensive-owner rule).** Combine custody balance (Copper + CEFFU) + venue margin balances + on-chain
@@ -362,10 +415,25 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       and codex
       [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
       §28+§48-53; superseded the legacy `leveraged_funding_arb` standalone-archetype name 2026-05-09) — ≥2 archetypes ×
-      5 chains (Ethereum, Arbitrum, Base, Polygon, Solana) = ≥10 mainnet wallets. HD-wallet derivation under Fireblocks
-      master seed (per Phase 3.C). UAC type extension: `archetype_id → wallet_address_per_chain` mapping.
+      5 chains (Ethereum, Arbitrum, Base, Polygon, Solana) = ≥10 mainnet wallets. HD-wallet derivation under
+      `CLOUD_KMS_ENCRYPTED` per-asset_group master CMK for May-23 cutover; flippable to Fireblocks master seed
+      per Phase 3.C.2 once June-1 client creds land. UAC type extension SHIPPED 2026-05-12: `WalletProvisioningConfig`
+      at UAC@`d721b6a` carries (chain + signing_surface + kms_key_uri | custodian_wallet_id +
+      allowed_protocols frozenset + allowed_destinations frozenset + spending_caps + kill_switch_id +
+      archetype_id + derivation_path).
   - **Sub-residuals captured**: per-wallet nonce queue management; per-wallet RPC rate-limit sub-budget; cross-archetype
     rebalancing flow; per-wallet protocol-approval pre-signing.
+  - [x] **4.A.SCHEMA — UAC wallet provisioning schema** SHIPPED 2026-05-12 by slot 4 at UAC@`d721b6a`:
+        `SigningSurface` StrEnum (5 values) + `WalletKind` StrEnum (4 values) + `SpendingCaps` frozen
+        dataclass (per_tx / per_hour / per_day + per_protocol_usd map) + `WalletProvisioningConfig` frozen
+        dataclass with `validate()` enforcing 6 invariants (surface ↔ credential-pointer match, HOT_TRADING
+        needs archetype_id, HOT_TRADING + GAS_RESERVE reject withdraw whitelist, kill_switch_id uses known
+        KillSwitchId prefixes). 27 schema-validation tests at
+        `tests/internal/unit/test_wallet_provisioning_schema.py` (all green). Imports:
+        `from unified_api_contracts.internal.domain.defi import (SigningSurface, WalletKind, SpendingCaps,
+        WalletProvisioningConfig, WalletProvisioningError)`. **Cross-tab handshake artefact** consumed by
+        slot 5 (defi_recursive_borrow archetype config — chain × protocol per-wallet rows) + slot 8
+        (cross_cutting #4 DART manual surfaces — wallet-tier kill-switch button per row).
 
 - [ ] [AGENT] P0. **4.B — Per-protocol approvals SSOT + automation.** YAML at
       `unified-api-contracts/config/required_approvals.yaml` per (archetype, chain, protocol, asset). Pre-signing
