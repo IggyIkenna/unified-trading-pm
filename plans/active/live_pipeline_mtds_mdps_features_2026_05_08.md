@@ -1249,6 +1249,53 @@ phase has a `Success gate:` row below. A phase counts DONE only when its gate is
 - **`defi_master_2026_05_07`** — DeFi-side critical-path consumer of this work. The 2 archetypes need this plan's Phase
   6 cross-cutting features by 2026-05-21. Banner mutually.
 
+## Open questions
+
+### Q1 — [harsh-live-pipeline-impl-tab, 2026-05-11 ~15:30 UTC] — Phase 3.5 collision: two `manifest_recorder.py`
+
+**Status**: 🟡 BLOCKED — main / ikenna-main to reconcile.
+
+Working from main's 2026-05-11 14:01 `[main → slot 5]` "you keep Phase 3; finish 3.2/3.5/`ShardManifestRecorder`" brief,
+I built the concrete `ShardManifestRecorder` impl + the runner-shutdown wiring. Mid-flight, **Ikenna slot 7's `ab17cc3`
+("Phase 3.5 ShardManifestRecorder wiring + connector-registry helper", `semver-rollout[bot]`, 2026-05-11 15:12) landed
+on `live-defi-rollout`** — it ships:
+
+- `market_tick_data_service/live/manifest_recorder.py` — `MTDSShardManifestRecorder` (211 lines; builds the
+  **per-asset_group v5 shard-atom row_key** for ALL 6 asset_groups — cefi spot/perp, cefi options/futures
+  bundled-by-root, defi chain-first, sports per-source, prediction canonical-question-group, tradfi futures/ETFs; always
+  stamps `pipeline_mode=PipelineMode.LIVE_WEBSOCKET`).
+- `market_tick_data_service/live/connector_registry.py` — `register_ws_feed_connector()` helper wrapping
+  `WS_FEED_CONNECTOR_FACTORIES` (double-register / empty-venue / non-callable guards + `overwrite=True`;
+  `unregister_ws_feed_connector()` + `registered_venues()` test helpers).
+- `tests/unit/test_live_manifest_recorder.py` — 10 tests.
+
+**Overlap**: my `tab/hk/5` (`cc62f02`, slot-branch only — **NOT** pushed to `live-defi-rollout`) ALSO adds
+`live/manifest_recorder.py` (`StreamingShardManifestRecorder` — cefi-style per-instrument only; **superseded by Ikenna's
+all-6-asset_group `MTDSShardManifestRecorder`**). Per "System-First / don't duplicate", **Ikenna's wins.**
+
+**My complementary work that is NOT in `ab17cc3`** (Ikenna didn't touch `websocket_runner.py` / `live/__init__.py` / the
+handler):
+
+- `live/websocket_runner.py` — `ShardManifestRecorder.close()` Protocol method + `LiveWebsocketRunner.run()`
+  finally-block calls `manifest_recorder.close()` (flush on shutdown). **Note**: Ikenna's `MTDSShardManifestRecorder`
+  would need a `close()` method to satisfy the extended Protocol — touches Ikenna's file, hence this Q.
+- `cli/handlers/websocket_streaming_handler.py` — wires `manifest_recorder=<concrete recorder>(...)` (was
+  `manifest_recorder=None` — the blocker Ikenna's commit message references) + docstring.
+- `live/__init__.py` — export the recorder.
+- `tests/unit/test_websocket_runner.py` — runner-calls-recorder-`close()` test (+ the 6 `StreamingShardManifestRecorder`
+  tests, which become moot under Ikenna's recorder).
+
+**Proposed reconciliation** (awaiting main / ikenna-main): (1) DROP my `live/manifest_recorder.py` + the 6
+`StreamingShardManifestRecorder` tests; (2) on top of `ab17cc3`, re-apply the `close()` Protocol method +
+runner-shutdown call + add `close()` to Ikenna's `MTDSShardManifestRecorder` + wire
+`manifest_recorder=MTDSShardManifestRecorder(bucket=bucket, vm_name=vm_name)` into the handler + `__init__.py` export +
+the runner-calls-close test + (optionally) refactor the handler's inline `WS_FEED_CONNECTOR_FACTORIES` to use Ikenna's
+`connector_registry.register_ws_feed_connector`. Per the 14:01 plan-aware-merge instruction ("if you see a conflict on
+those files, that's Ikenna slot 7's work — ping me / ikenna-main, don't blindly resolve") I'm holding rather than
+force-resolving. Also: Ikenna slot 7 was supposed to take Phase 5/6/15 per the 2026-05-11 deconflict — `ab17cc3` is
+Ikenna slot 7 doing Phase 3.5 "common-denominator wiring", which overlaps. ⇒ **slot-5-vs-slot-7 Phase-3 ownership needs
+a firm call.**
+
 ## Deferred work after 2026-05-08 PM Tab 2 session
 
 The 2026-05-08 PM/evening Tab 2 session shipped UTL primitives (Phase 8 / 10 / 12 + writegate Phase 5 helper) + codex
