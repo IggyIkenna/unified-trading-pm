@@ -33,8 +33,8 @@ related_plans:
 > endpoints. SSOT: [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md) § "Folded paper-vs-live
 > workflow maturity" +
 > [`codex/05-infrastructure/per-venue-paper-policy.md`](../../codex/05-infrastructure/per-venue-paper-policy.md).
-> Question doc:
-> [`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../questions/paper_vs_live_workflow_maturity_2026_05_08.md).
+> Question doc (retired 2026-05-09 PM@5d2d74c1; folded into
+> [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) § "Folded paper-vs-live workflow maturity").
 
 > **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the May-23 cutover for
 > `carry_staked_basis` (DeFi lead archetype) lands via dual-track promote workflow:

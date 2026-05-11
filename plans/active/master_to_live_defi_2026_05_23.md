@@ -651,8 +651,8 @@ batch-vs-live reconciliation, and final infra QG sweeps — that gates `master G
 #### Folded paper-vs-live workflow maturity (from `paper_vs_live_workflow_maturity_2026_05_08.md` question doc)
 
 These todos were folded in 2026-05-09 from the paper-vs-live workflow maturity question doc (operator decisions
-2026-05-09 settled 10 plan-shape forks; question doc:
-[`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../questions/paper_vs_live_workflow_maturity_2026_05_08.md)).
+2026-05-09 settled 10 plan-shape forks; source `plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md` retired
+2026-05-09 PM@5d2d74c1 after plan promotion).
 They extend items 17 (Backtest fidelity) / 18 (2-year batch backtest run) / 20 (Live testnet replicates prod) / 21
 (Reconciliation suite) / 22 (Trading guardrails) / 23 (DART manual-trade gate, Group G) with the paper-mode plumbing
 prerequisites the May-23 cutover requires.

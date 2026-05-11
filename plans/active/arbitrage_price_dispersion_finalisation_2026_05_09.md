@@ -42,8 +42,8 @@ isProject: false
 > — pairs with `carry_staked_basis`). **BE AWARE** when scoping Phase A (slot wiring) + Phase B (tracer): tracer must
 > emit per-instrument progress events with mode tag (`OperationalMode` field per `pvl-p17d` instruction-envelope mode
 > field), and the funding-rate-dispersion config must be paper-runnable end-to-end ≥3 days before May-23 cutover.
-> Question doc:
-> [`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../questions/paper_vs_live_workflow_maturity_2026_05_08.md).
+> Question doc (retired 2026-05-09 PM@5d2d74c1; folded into
+> [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) § "Folded paper-vs-live workflow maturity").
 > Codex SSOTs: [`codex/04-architecture/operational-modes.md`](../../codex/04-architecture/operational-modes.md) +
 > [`codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md`](../../codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md).
 
@@ -285,7 +285,7 @@ in plan order).
 4. **Volatility-cap clamp → short-term realised-vol features (NOT 60-day).** Use `features-volatility-service`'s
    short-window outputs: `realized_vol_5` / `realized_vol_10` / `realized_vol_20` (5/10/20 bar annualized close-to-
    close, computed at
-   [`features_volatility_service/calculators/realized_vol_calculator.py`](../../../features-volatility-service/features_volatility_service/calculators/realized_vol_calculator.py)).
+   [`features_service/volatility/calculators/realized_vol_calculator.py`](../../../features-service/features_service/volatility/calculators/realized_vol_calculator.py)).
    Proposed shape: clamp `target_leverage → 1.0` when **`realized_vol_20` (1h candles, ≈ 20h trailing) exceeds 80%
    annualized OR `vol_regime_zscore_20` > 2.0** (the latter adapts to per-asset baseline rather than using a fixed
    threshold). The engine reads these from features-volatility's parquet output per the existing reader pattern. Slot

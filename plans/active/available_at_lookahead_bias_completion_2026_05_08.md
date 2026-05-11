@@ -133,7 +133,7 @@ isProject: false
     — 10 defi feature_groups registered
   - `ManifestWriter.record_captured()` already calls `assert_available_at_present` — chain link 7 is COVERED
   - features-sports `_enforce_pit_sports()`
-    ([data/writer.py:42-72](../../../features-sports-service/features_sports_service/data/writer.py#L42-L72)) —
+    ([data/writer.py:42-72](../../../features-service/features_service/sports/data/writer.py#L42-L72)) —
     production-grade, raises on first future-dated row
 - **What's PARTIAL** (assumed downstream-ownership, but unowned):
   - features-onchain `feature_writer.py` imports `LookaheadBiasError` but uses `contextlib.suppress(LookaheadBiasError)`

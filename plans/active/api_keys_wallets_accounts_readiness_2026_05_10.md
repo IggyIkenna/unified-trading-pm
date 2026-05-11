@@ -671,9 +671,9 @@ cycle:
 
 ## Provenance
 
-- **Spawned from**:
-  [`plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md`](../questions/api_keys_wallets_accounts_readiness_2026_05_08.md)
-  — full audit findings + R1-R10 resolutions + sub-residual investigations.
+- **Spawned from**: `plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md` (retired 2026-05-09 PM@5d2d74c1
+  with the rest of `plans/questions/` after plan promotion) — full audit findings + R1-R10 resolutions + sub-residual
+  investigations now live in this plan body.
 - **Code commit shipped during plan extraction**: `deployment-service@9943e7c9` extends rotation-tracking SSOT with 8
   venues + 5 data sources.
 - **Operator directives codified**:
