@@ -410,6 +410,36 @@ unblocked on this row. **Propagation**: PM template change → standard PM-side;
 `scripts/propagation/rollout-quality-gates-unified.py` (operator-triggered) — but the bash scripts are already pulled
 fresh per QG run, so existing repos pick up the change on next QG.
 
+### Q3 — [harsh-features-consolidation-tab, 2026-05-11 11:05 UTC] — schema-provenance row e: group-2 service-internal plumbing → UAC, or narrower QG heuristic?
+
+**Status**: 🟡 OPEN — operator/Ikenna call. Gates **Phase 1.2e group-2** only (group-1 — the genuine domain I/O types —
+proceeds regardless once sub-agents A/B/C land).
+
+The ~38 `features_service/` schema-provenance flags split into two buckets (full list in `## Phase 1.2 — fresh QG
+re-enumeration ...` § "Row e ... sub-phase decision"):
+
+- **Group 1 (genuine domain I/O — clear move to `unified_api_contracts.internal.domain.features.<family>`):** the
+  per-family `*FeatureRequest` / `*FeatureResult` pairs, `OptionQuote` / `VolSurfaceTermStructureRecord` /
+  `VolatilitySurfacePoint`, `OnChainFeatures`, `CrossAssetSportsSignal` / `SportFinancialLink`, `OddsHTSnapshot`,
+  `FeatureMetadata` / `FeatureStatistics` / `InstrumentInfo`, the per-family `config.py:Parameters`. **No question — these
+  move.** Phase 1.2e does group 1.
+- **Group 2 (service-internal plumbing DTOs the QG also flags):** `PubSubMessage` / `SubscriberStats` (delta_one pubsub),
+  `_WeatherRow` (sports row tuple), `FeatureRegistryEntry` (sports `_registry_types`), `PITViolation` /
+  `ValidationViolation` (sports validation results), `DependencyFailure` / `DependencyReport` / `DependencyStatus`
+  (volatility) + `LookbackValidationReport` (delta_one), `*ProcessingResult` / `FeatureProcessingResult` /
+  `OrchestratorResult` / `ShardResult` (internal orchestration DTOs), `HealthResponse` (delta_one — a genuine HTTP DTO),
+  `SteamDetectorConfig` / `SteamMoveSignal` (sports steam-detector config), `CrossInstrumentConfig` (cross_instrument
+  calculator config).
+
+**Q**: Does group 2 also move to `unified_api_contracts.internal.domain.features.<family>` (the strict reading of Citadel
+§ 7 "no local domain types — period")? Or does `check_schema_provenance.py` get a narrower "domain" heuristic that
+exempts internal plumbing DTOs (matching the `python-backend.md` § "Schema Governance" carve-out: "Service-local | Only
+`SchemaDefinition` (parquet) and HTTP DTOs")? `HealthResponse` is definitely a local HTTP DTO regardless. **Recommendation**:
+move group 2 to UAC anyway (the rule is absolute; the carve-out is for parquet `SchemaDefinition` + literal FastAPI
+request/response DTOs, which most of group 2 aren't) — EXCEPT `HealthResponse`. But it's ~20 extra model relocations +
+consumer updates, so worth a yes/no before the relocation sub-agent runs. If "narrower heuristic" — that's a PM-side
+`check_schema_provenance.py` change (Ikenna's governance surface), same shape as Q1.1/Q1.2.
+
 ## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2), Phase 1.1
 
 Picked up this plan per main's A1 on `features_repo_consolidation_2026_05_08.md` Q1 (operator approved (a)+(b)+(c); this
