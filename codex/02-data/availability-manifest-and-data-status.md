@@ -255,14 +255,23 @@ populated; denominator-aware coverage metric; renamed from `_pct` to `_fraction`
 [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
 option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg
 convention). The `pipeline_mode` column shipped earlier as part of the
-`gcs_migration_bundle_pipeline_mode_2026_05_08` work and is preserved in v8. v7 is **legacy (in-flight migration; 30-day
-grace window per the final-gate plan)** — `read_availability_index()` backfills missing v8 columns to defaults until the
-~2026-06-15 reader-fallback deletion cutoff. The current runtime SSOT lives in
-`unified-trading-library/unified_trading_library/manifest_writer.py` — `MANIFEST_SCHEMA_VERSION = 8` and the
-`AvailabilityRecord` dataclass.
+`gcs_migration_bundle_pipeline_mode_2026_05_08` work and is preserved in v8.
+
+**Transitional version-constant state (2026-05-09 → end of Phase 4).** The column SHAPE is v8 — the 3 emission-tracking
+columns + `pipeline_mode` are present in `AvailabilityRecord` and accepted by all 5 `record_*` methods as nullable
+`None`-default kwargs (Phase 2.A shipped at UTL@`0adea1c6`). The CONSTANT `MANIFEST_SCHEMA_VERSION` stays at **`7`**
+transitionally: pre-Phase-4 callsites + raw tick capture / catalog snapshot rows don't go through
+`publish_with_policy()` yet and leave the emission columns as `None`. **Bump to 8 happens at end of Phase 4** (per
+[`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase
+4.DEFAULT-REMOVAL) when every callsite in the workspace passes the v8 kwargs explicitly + the `None` defaults are
+removed (explicit-or-fail). The header above says "Schema v8 (current; ratified)" because the column-shape contract is
+final + ratified; only the version-constant lags one phase behind, by design. `read_availability_index()` backfills
+missing v7/v8 columns to defaults until the ~2026-06-15 reader-fallback deletion cutoff. The current runtime SSOT lives
+in `unified-trading-library/unified_trading_library/manifest_writer.py` — `MANIFEST_SCHEMA_VERSION = 7` (transitional)
+and the `AvailabilityRecord` dataclass with the full v8 column set.
 
 ```python
-MANIFEST_SCHEMA_VERSION = 7
+MANIFEST_SCHEMA_VERSION = 7  # transitional; bumps to 8 at end of Phase 4.DEFAULT-REMOVAL
 
 @dataclass
 class AvailabilityRecord:

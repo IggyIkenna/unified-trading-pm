@@ -294,7 +294,16 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       `MissingVMShardIsolationError` guard. 12 unit tests under `tests/unit/test_manifest_migrations_v7_to_v8.py`.
 - QG: UTL quality-gates.sh clean. **Done-definition**: `unified-trading-library@<sha>` shipped + 11+ unit tests +
   back-compat with v7 rows. **STATUS — 4/4 sub-items ✅; UTL refs above; 30+ unit tests landed total.**
-- [ ] [AGENT] P2. **Phase 2 follow-up — `MANIFEST_SCHEMA_VERSION` vs codex doc drift (slot-6 audit finding 2026-05-11).**
+- [x] [AGENT] P2. **Phase 2 follow-up — `MANIFEST_SCHEMA_VERSION` vs codex doc drift (slot-6 audit finding 2026-05-11).**
+      **RESOLVED 2026-05-12 (option b) — `ikenna-v8-manifestwriter-tab` (slot 2) @PM@`<this-flip>`:** chose option (b) per
+      Phase-2 done-definition's own framing ("back-compat with v7 rows... bumps to 8 at end of Phase 4"). Codex doc
+      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+      lines 258-262 + 265 reconciled: prose now says "`MANIFEST_SCHEMA_VERSION = 7` (transitional; bumps to 8 at end of
+      Phase 4.DEFAULT-REMOVAL)" matching the embedded code snippet at line 265. The "Schema v8 (current; ratified)"
+      header is preserved because the column-shape contract IS final + ratified — only the version-constant lags one
+      phase behind, by design. Plan body Phase 4.DEFAULT-REMOVAL extended below to include the bump-to-8 + remove all
+      3 v8-emission-column `None` defaults at the same time as `pipeline_mode=` removal. No code change needed; the
+      manifest_writer.py constant value of `7` was correct all along.
       `manifest_writer.py:131` is still `MANIFEST_SCHEMA_VERSION = 7` while the v8 emission columns
       (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) ARE present in
       the `AvailabilityRecord` dataclass + the 5 `record_*` method sigs (Phase 2.A @UTL@`0adea1c6`). That looks
@@ -364,8 +373,13 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - [ ] [AGENT] P0. Phase 4.GREP-VERIFY — workspace-wide:
       `grep -rln "record_captured\|record_empty\|record_failed\|record_expected_empty\|record_expected_unattempted" --include="*.py" | xargs grep -L "pipeline_mode="`
       returns ZERO hits across all 10 affected repos. Reviewers reject phase-completion until this returns zero.
-- [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — at end of Phase 4, `pipeline_mode=` default removed from ManifestWriter
-      (explicit-or-fail). Any future regression caught at QG by basedpyright.
+- [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — at end of Phase 4, **all four** transitional `None` defaults removed from
+      ManifestWriter's 5 `record_*` methods (explicit-or-fail): `pipeline_mode=` + the 3 v8 emission-tracking kwargs
+      (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`). **AND** bump
+      `MANIFEST_SCHEMA_VERSION` from `7 → 8` at `manifest_writer.py:131` + reconcile codex doc
+      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+      lines 258-262 + 265 (drop the "transitional" wording — once defaults are gone, v8 IS the constant). Any future
+      regression caught at QG by basedpyright. Per Phase 2 P2 resolution (option b — line 291 above).
 - QG: every affected repo quality-gates.sh clean. **Done-definition**: zero grep hits + every repo's QG green + Phase
   4.DEFAULT-REMOVAL committed.
 
