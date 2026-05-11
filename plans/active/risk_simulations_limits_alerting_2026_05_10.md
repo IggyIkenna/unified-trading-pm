@@ -347,7 +347,11 @@ returns full rule set; tests pass.
 
 - [ ] [AGENT] P0. **6.A `/api/risk/rules` endpoint.** Per-axis listing.
 - [ ] [AGENT] P0. **6.B `/api/risk/preflight-test` endpoint.** POST a hypothetical order; returns pre-flight result.
-- [ ] [AGENT] P0. **6.C deployment-ui Risk tab.** Per-axis rule browser + pre-flight playground.
+- [x] [AGENT] P0. **6.C deployment-ui Risk tab.** Per-axis rule browser + pre-flight playground.
+      Shipped deployment-ui@33e6ea0 — `RiskTab.tsx` (top-level container composing RuleBrowser + PreflightPlayground
+      via React state + nav buttons), `register.ts` (RISK_WIDGETS registry: RiskTab + RuleBrowser +
+      PreflightPlayground), `RiskTab.test.tsx` (5 vitest tests covering default sub-view, nav switching,
+      props pass-through — all green locally; ran against vitest 4.1 via workspace `node_modules` symlink).
 
 **Full-execution criterion**: UI renders rules + playground works against real API.
 

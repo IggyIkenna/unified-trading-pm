@@ -226,8 +226,12 @@ registered.
 
 - [ ] [AGENT] P0. **7.A `/api/kill-switch/{id}/arm` + `/disarm` endpoints.** Operator-auth-gated; emits
       `KillSwitchArmRequest` to bus.
-- [ ] [AGENT] P0. **7.B deployment-ui Kill-switch tab.** Per-switch state + arm/disarm button + audit-log view +
-      reconciler dashboard.
+- [x] [AGENT] P0. **7.B deployment-ui Kill-switch tab.** Per-switch state + arm/disarm button + audit-log view +
+      reconciler dashboard. Shipped deployment-ui@33e6ea0 — `register.ts` exports `KILL_SWITCH_WIDGETS` registry
+      (KillSwitchTab + KillSwitchPanel + AuditLogViewer); `KillSwitchTab.test.tsx` adds 7 vitest tests
+      (loading / armed-count / empty / error / sub-view nav, all green locally). Top-level container
+      (`KillSwitchTab.tsx`) was shipped earlier as part of the per-switch panel work; the registry close-out lands
+      Phase 7.B end-to-end.
 
 **Full-execution criterion**: operator can arm a kill switch from UI; UI confirms within named SLA; audit log shows
 entry.
