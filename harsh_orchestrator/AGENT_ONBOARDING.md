@@ -32,7 +32,7 @@ Per shippable unit (a green, self-contained slice — helper+tests / one adapter
 3. `git fetch origin live-defi-rollout`.
 4. **Conditional push:**
    - **If incoming commits touch files YOU also edited in unmerged commits** → STOP. Write a `🟡 BLOCKED` Q in your
-     plan-of-record `## Open questions` listing your commits + the incoming ones; ping `_agent_pings.md`; continue with
+     plan-of-record `## Open questions` listing your commits + the incoming ones; ping your `pings/slot_<N>.md`; continue with
      what you CAN do. Slot 1 / operator resolves.
    - **Else** → `git rebase origin/live-defi-rollout` (auto-resolves non-overlapping changes). If the rebase surfaces a
      conflict, apply the **plan-aware-merge-resolution** protocol
@@ -106,9 +106,9 @@ the full ruleset at the top of every Task prompt (see § "Sub-agent fan-out — 
 
 | What                                           | Where                                                                                                                                                       | When                                             |
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| **Boot ack**                                   | `harsh_orchestrator/_agent_pings.md`                                                                                                                        | At session start (one-line `STARTED Tab N` ping) |
-| **Blocker / question for main**                | Your plan-of-record's `## Open questions` § (status `🟡 BLOCKED`) + ping in `harsh_orchestrator/_agent_pings.md`                                            | When you hit ambiguity / decision / push-race    |
-| **Done announcement**                          | `## DONE-<YYYY-MM-DD>` block at bottom of plan-of-record + ping in `harsh_orchestrator/_agent_pings.md`                                                     | When done-definition met                         |
+| **Boot ack**                                   | `harsh_orchestrator/pings/slot_<N>.md`                                                                                                                        | At session start (one-line `STARTED Tab N` ping) |
+| **Blocker / question for main**                | Your plan-of-record's `## Open questions` § (status `🟡 BLOCKED`) + ping in `harsh_orchestrator/pings/slot_<N>.md`                                            | When you hit ambiguity / decision / push-race    |
+| **Done announcement**                          | `## DONE-<YYYY-MM-DD>` block at bottom of plan-of-record + ping in `harsh_orchestrator/pings/slot_<N>.md`                                                     | When done-definition met                         |
 | **Side findings** (case-1 to case-5)           | Per Findings Triage Discipline in CLAUDE.md — case-5 BIG findings ALSO go through plan-of-record + ping (NOT direct chat); main agent escalates to operator | Throughout                                       |
 | **Direct chat to Harsh from your tab session** | NEVER — main is your dispatcher                                                                                                                             | NO EXCEPTIONS — see "Routing rule" below         |
 
@@ -121,7 +121,7 @@ scope." Even "my plan looks blocked on something outside my scope." Even "I thin
 Routing flow:
 
 1. Write the question / finding into your plan-of-record's `## Open questions` § using the format below.
-2. Append a one-line ping to `harsh_orchestrator/_agent_pings.md` pointing at the plan-of-record.
+2. Append a one-line ping to `harsh_orchestrator/pings/slot_<N>.md` pointing at the plan-of-record.
 3. Continue with anything you CAN do (don't block waiting).
 4. **Main agent** reads the ping (~1 min cadence), reads your Q in the plan-of-record, writes A1 in the plan- of-record
    (sometimes after escalating to operator on your behalf), removes the ping line.
@@ -164,7 +164,7 @@ cost of the centralized model — and the operator's attention is preserved for 
 <answer + reasoning + commit-sha of anything shipped meanwhile>
 ```
 
-Main agent polls `_agent_pings.md` ~1 min cadence (faster while operator's active). Your A1 typically lands within 1-5
+Main agent polls `harsh_orchestrator/pings/*.md` (+ the transition stub `_agent_pings.md`) ~1 min cadence (faster while operator's active). Your A1 typically lands within 1-5
 min for technical Qs; longer if the Q escalates to operator.
 
 #### End-to-end workflow example (a typical Q lifecycle)
@@ -210,7 +210,7 @@ Defers all UI tab refactors to a follow-up cycle.
 Tab 1 depends on for instruments-live UI tab content.
 ```
 
-**Step 2 — Tab 3 appends a one-line ping to `harsh_orchestrator/_agent_pings.md`**:
+**Step 2 — Tab 3 appends a one-line ping to `harsh_orchestrator/pings/slot_<N>.md`**:
 
 ```text
 [2026-05-08 13:22 UTC] deployment-ui-tab — Q on plan scope (37 todos vs ~10 AI-day est) — full-ship vs trim;
@@ -220,7 +220,7 @@ Tab 1 depends on for instruments-live UI tab content.
 **Step 3 — Tab 3 continues working on what they CAN do** (e.g. starts Phase A UAC SSOT — that work is in-scope under any
 of the three options, so it doesn't block on the answer).
 
-**Step 4 — Main agent polls `_agent_pings.md` (~1 min later)**, sees the ping, opens the plan-of-record, reads Q1,
+**Step 4 — Main agent polls your `pings/slot_<N>.md` (~1 min later)**, sees the ping, opens the plan-of-record, reads Q1,
 decides this is a scope decision that requires operator input. Main agent writes back in chat to operator with a
 summary:
 
@@ -243,7 +243,7 @@ unblocks Ikenna Tab 5 audit-log integration per cross-side handshake. Check off 
 `**DEFERRED → follow-up cycle**` annotation; do not delete.
 ```
 
-**Step 6 — Main agent removes the ping line from `_agent_pings.md`** (the doorbell job is done; full Q&A history lives
+**Step 6 — Main agent removes the ping line from your `pings/slot_<N>.md`** (the doorbell job is done; full Q&A history lives
 durably in the plan-of-record).
 
 **Step 7 — Tab 3 sees the A1** (next time they touch the plan-of-record, e.g. flipping a checkbox after shipping a
@@ -261,7 +261,7 @@ ledger sweeps + main-agent context resets).
   operator's day is gone.
 - ❌ **Ping ledger without writing the question in the plan-of-record**: _"Tab 3 — quick Q on scope, can you answer?"_ —
   main agent has no context, has to ping back asking for the question, latency doubles, no durable record.
-- ❌ **Write the question only in the plan-of-record without a ping**: main agent's ~1 min poll is on `_agent_pings.md`,
+- ❌ **Write the question only in the plan-of-record without a ping**: main agent's ~1 min poll is on your `pings/slot_<N>.md`,
   not on every plan body. Question may sit unread for hours.
 - ❌ **Bypass main and DM operator on a separate channel** (Telegram, Slack, etc.): main agent doesn't see it; the
   operator's coordination model breaks; A1 won't land in the plan-of-record's audit trail.
@@ -311,7 +311,7 @@ As you ship work:
 - **Final**: when done-definition met, append `## DONE-<YYYY-MM-DD>` block at bottom of plan body listing every code +
   plan-flip commit sha. Then go quiet — don't pick up new work autonomously.
 
-## Boot ack template (paste this into `_agent_pings.md` after reading)
+## Boot ack template (append to `harsh_orchestrator/pings/slot_<N>.md` after reading)
 
 ```text
 [YYYY-MM-DD HH:MM UTC] <your-agent-tag> — STARTED slot N (<plan-of-record-path>)
@@ -393,7 +393,7 @@ REPORT BACK: [structured shape of the response — table / sha list / file:line 
 ### Sub-agents do NOT commit, push, or flip plan checkboxes
 
 Sub-agents **return findings** (file:line lists, diffs to apply, audit tables) — they do not `git commit` / `git push` /
-`git rebase` / flip plan checkboxes / write to the LEDGER, plan-of-records, or `_agent_pings.md`. The **spawning slot**
+`git rebase` / flip plan checkboxes / write to the LEDGER, plan-of-records, or your `pings/slot_<N>.md`. The **spawning slot**
 integrates the findings into its own worktree, commits per shippable unit, conditional-pushes to `live-defi-rollout`,
 and flips the plan checkbox — all per the "Git discipline under per-slot worktrees" section above. (The slot itself
 pushes freely per shippable unit; only `--force` pushes + merging another slot's branch are operator/slot-1 territory.)
@@ -424,7 +424,7 @@ drift.
 
 - **Workspace state right now**: [`harsh_orchestrator/LEDGER.md`](LEDGER.md) — today's tab registry, in-flight status,
   recent done, open questions across plans.
-- **Active pings**: [`harsh_orchestrator/_agent_pings.md`](_agent_pings.md) — short doorbell-style log; one line per
+- **Active pings**: [`harsh_orchestrator/pings/slot_<N>.md`](pings/) — short doorbell-style log; one line per
   active blocker.
 - **All workspace rules**: [`cursor-configs/CLAUDE.md`](../cursor-configs/CLAUDE.md).
 - **Sub-agent inheritance**:

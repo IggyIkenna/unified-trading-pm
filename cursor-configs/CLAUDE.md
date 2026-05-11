@@ -2274,10 +2274,16 @@ serve different surfaces:
   signalling: a UAC contract landed, a UTL helper signature shipped, an in-flight refactor banner needs broadcasting).
   Polls run on the same ~1-min cadence but the surface stays quiet because cross-side comms are rare. Both sides write
   here.
-- **Per-side `<side>_orchestrator/_agent_pings.md`** — for **intra-side** comms only (one operator's main agent ↔ that
-  operator's spawned tabs: STARTED acks, blocker Qs, DONE announcements). Decoupled per side so STARTED/DONE noise
-  doesn't clog the cross-side ledger. Today both sides have these directories: `harsh_orchestrator/` and
-  `ikenna_orchestrator/`, each with `AGENT_ONBOARDING.md` + `LEDGER.md` + `_agent_pings.md`.
+- **Per-side `<side>_orchestrator/pings/slot_<N>.md`** — for **intra-side** comms (one operator's main agent ↔ that
+  operator's spawned tabs: STARTED acks, blocker Qs, DONE announcements). **Per-slot files**, not one shared file —
+  under the direct-to-`live-defi-rollout` merge model with per-tab worktrees, a single shared `_agent_pings.md` was the
+  highest-frequency rebase-conflict source (every spawned slot appended to it). Since the side's main agent (slot 1) is
+  the **only reader**, each spawned slot `N` writes ONLY `<side>_orchestrator/pings/slot_<N>.md` → zero collision on the
+  ping surface; slot 1 polls `<side>_orchestrator/pings/*.md`. Today both sides have orchestrator directories
+  (`harsh_orchestrator/`, `ikenna_orchestrator/`), each with `AGENT_ONBOARDING.md` + `LEDGER.md` + a `pings/` dir
+  (`pings/README.md` + `pings/slot_<N>.md`). The legacy single `<side>_orchestrator/_agent_pings.md` is retired to a
+  redirect stub on the Harsh side (2026-05-11) and may be migrated the same way on the Ikenna side. Format + lifecycle:
+  `<side>_orchestrator/pings/README.md`.
 
 The bifurcation matters because intra-side ledgers fill up fast (15-20 STARTED+DONE acks per cycle is normal) while
 cross-side ledgers should have <5 active entries. Mixing them makes both surfaces unreadable.

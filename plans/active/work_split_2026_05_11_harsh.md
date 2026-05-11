@@ -66,7 +66,7 @@ under-utilisation is fine, mid-cycle collision is not.
 
 - **Identity**: this session (Harsh's main orchestrator agent, slot 1 worktree at `.tabs/1/`).
 - **Scope**:
-  - **P0**. Daily ledger sweep at start: read `harsh_orchestrator/_agent_pings.md` + `plans/active/_agent_pings.md`,
+  - **P0**. Daily ledger sweep at start: read `harsh_orchestrator/pings/*.md` (per-slot) + `plans/active/_agent_pings.md` (cross-side),
     triage 🟡 BLOCKED Qs >24h, ack STARTED pings, verify DONE pings.
   - **P0**. Cross-side coordination: route Harsh slot 2 (features-consolidation Phase 7 ship) cross-side ping when it
     lands so Ikenna slot 4 unblocks live-pipeline implementation.
@@ -406,7 +406,7 @@ Slot-2-specific:
     pyproject+test consolidation / Phase 7 archive coordination.
 
 Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-features-consolidation-tab — STARTED slot 2
-(plans/active/features_repo_consolidation_2026_05_08.md)" to harsh_orchestrator/_agent_pings.md, then start.
+(plans/active/features_repo_consolidation_2026_05_08.md)" to harsh_orchestrator/pings/slot_<N>.md (your own per-slot ping file — no collision; see harsh_orchestrator/pings/README.md), then start.
 Final: "## DONE-2026-05-11" block at the bottom of the features_repo_consolidation plan body with every
 code + plan-flip commit sha + EOD deferral-audit (grep each deferral against plans/active/*.md per
 AGENT_ONBOARDING § plan-of-record curation), then go quiet.
@@ -450,7 +450,7 @@ Slot-3-specific:
     A/B/C/D classification per CLAUDE.md "Four-category empty-output decision".
 
 Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-wave3x-tab — STARTED slot 3
-(plans/active/wave3x_residual_ssots_2026_05_08.md)" to harsh_orchestrator/_agent_pings.md, then start.
+(plans/active/wave3x_residual_ssots_2026_05_08.md)" to harsh_orchestrator/pings/slot_<N>.md (your own per-slot ping file — no collision; see harsh_orchestrator/pings/README.md), then start.
 Final: "## DONE-2026-05-11" block in the wave3x_residual_ssots plan body + EOD deferral-audit, then go quiet.
 ```
 
@@ -486,7 +486,7 @@ Slot-4-specific:
   - Sub-agent fan-out hint: 2 parallel — (1) bucket-name SSOT migration; (2) sports adapter stamping wiring (gated).
 
 Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-bucket-and-adapter-tab — STARTED slot 4
-(plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)" to harsh_orchestrator/_agent_pings.md, then start.
+(plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)" to harsh_orchestrator/pings/slot_<N>.md (your own per-slot ping file — no collision; see harsh_orchestrator/pings/README.md), then start.
 Final: "## DONE-2026-05-11" block in the bucket_name_ssot_canonicalisation plan body + EOD deferral-audit, then go quiet.
 ```
 
@@ -520,7 +520,7 @@ Slot-5-specific:
     merge against the consolidated state.
 
 Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-live-pipeline-impl-tab — STARTED slot 5 (pre-gate)
-(plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)" to harsh_orchestrator/_agent_pings.md, then start.
+(plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)" to harsh_orchestrator/pings/slot_<N>.md (your own per-slot ping file — no collision; see harsh_orchestrator/pings/README.md), then start.
 Final: "## DONE-2026-05-11" block in the live_pipeline plan body + EOD deferral-audit (explicit
 DEFERRED-AFTER-PHASE-3-5 annotation if Phase 13/14/15 slip), then go quiet.
 ```
@@ -558,7 +558,7 @@ Slot-6-specific:
     go in plans/active/issues/. Sub-agent fan-out hint: 1-2 sub-agents (one per QG sweep run; one per codex audit pass).
 
 Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-workspace-qg-tab — STARTED slot 6
-(plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)" to harsh_orchestrator/_agent_pings.md, then start.
+(plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)" to harsh_orchestrator/pings/slot_<N>.md (your own per-slot ping file — no collision; see harsh_orchestrator/pings/README.md), then start.
 Final: "## DONE-2026-05-11" block in the code_freeze plan body (freeze-gate items 8 + 9 status) + EOD
 deferral-audit, then go quiet.
 ```

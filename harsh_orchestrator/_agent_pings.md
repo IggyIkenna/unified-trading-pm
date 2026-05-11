@@ -1,31 +1,19 @@
 <!--
-Lightweight ping ledger — the doorbell.
+RETIRED 2026-05-11 → per-slot ping files. See harsh_orchestrator/pings/ (one file per spawned slot:
+slot_2.md … slot_<N>.md). Rationale: this single shared file was the highest-frequency rebase-conflict
+source under the direct-to-live-defi-rollout merge model — every spawned slot appended here. Since slot 1
+(orchestrator) is the only reader, per-slot files = zero collision on the ping surface.
 
-Sub-agents append a one-liner here when they need attention from the main agent.
-The main agent polls this file every ~10 min via /loop, reads the referenced plan
-doc, answers in the plan doc's `## Open questions` section, then removes the line
-from this file.
+This file is kept ONLY for the 2026-05-11 transition: slots already running on 2026-05-11 (2/3/4/6) were
+spawned with prompts pointing here, so any STARTED/blocker/DONE line BELOW is from one of them; slot 1 reads
+both pings/*.md AND this file until this cycle's slots finish. Slots spawned from 2026-05-11 onward use
+pings/slot_<N>.md. After this cycle, this file is the redirect stub only.
 
-Format (one line per active ping):
-  [YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-liner with plan-doc pointer>
-
-Examples:
-  [2026-05-08 09:14 UTC] phase2-routes-tab — Q on subprocess.run timeout default; see deployment_api_work_stream_a_2026_05_07.md
-  [2026-05-08 09:32 UTC] dart-playwright-tab — done with personas 1-3, blocked on persona 4 fixture; see strategy_and_dart_master_2026_05_07.md
-  [2026-05-08 10:01 UTC] manifest-rescan-tab — silent-zero finding for prediction asset_group; see issues/prediction_silent_zero_2026_05_08.md
-
-This file is EPHEMERAL — entries are removed when handled. Full Q&A history lives
-in the referenced plan doc's `## Open questions` section (status badges 🟡 BLOCKED
-→ ✅ RESOLVED).
-
-When this ledger consistently has 15-20+ active pings, signal Harsh to spawn a
-SECOND main agent in another tab; two main agents can divide the ledger using a
-[CLAIMED-BY: main-1] / [CLAIMED-BY: main-2] marker on each ping.
-
-Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Process" — Plan-of-record + Q&A bus / Ping ledger / Polling cadence subsections.
+Format spec + lifecycle: harsh_orchestrator/pings/README.md.
+Cross-side (Ikenna ↔ Harsh) hard-gate pings still go in plans/active/_agent_pings.md (low-traffic shared).
 -->
 
-# Active pings
+# Active pings (transition file — prefer harsh_orchestrator/pings/slot_<N>.md)
 
 [2026-05-11 06:52 UTC] harsh-workspace-qg-tab — STARTED slot 6 (plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
 [2026-05-11 06:55 UTC] harsh-bucket-and-adapter-tab — STARTED slot 4 (plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)

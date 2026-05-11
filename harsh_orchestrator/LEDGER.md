@@ -29,7 +29,7 @@ instructions carefully"_:
    done-definition + full-execution criterion).
 3. Follow the rest of the AGENT_ONBOARDING.md reading order (CLAUDE.md → per-tab-worktrees.md → plan-aware-merge-resolution.md
    → SUB_AGENT_MANDATORY_RULES.md → work-split § "Slot N" → plan-of-record).
-4. Boot ack: append a one-liner to [`_agent_pings.md`](_agent_pings.md) per the AGENT_ONBOARDING.md template, then start
+4. Boot ack: append a one-liner to `harsh_orchestrator/pings/slot_<N>.md` (per-slot — no collision) per the AGENT_ONBOARDING.md template, then start
    work.
 
 ## Bootstrap — fresh main-agent chat
@@ -48,13 +48,12 @@ being asked to be the main orchestrator (slot 1):
    - From `unified-trading-pm/`: `git status`, `git rev-list --left-right --count HEAD...origin/live-defi-rollout`,
      `git log --oneline -5 origin/live-defi-rollout` — see local-ahead state + recent origin activity.
    - `git -C ../unified-trading-pm worktree list` — confirm slots 1-6 worktrees exist on `tab/hk/1`..`tab/hk/6`.
-   - `cat harsh_orchestrator/_agent_pings.md` + `cat plans/active/_agent_pings.md` — see active pings (intra-side +
-     cross-side).
+   - `cat harsh_orchestrator/pings/*.md` (intra-side, per-slot) + `cat harsh_orchestrator/_agent_pings.md` (transition stub) + `cat plans/active/_agent_pings.md` (cross-side) — see active pings.
    - Skim "Today's status" below for the tab registry + open questions.
 5. Ack to Harsh: _"Main agent online. State: N tabs in flight, M intra-side pings, K cross-side pings, J local commits
    queued for push. Today's plan = X, Y, Z. Standing by."_
 
-**Polling cadence**: check [`_agent_pings.md`](_agent_pings.md) (intra-side) + [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md)
+**Polling cadence**: read `harsh_orchestrator/pings/*.md` (intra-side, per-slot — see [`pings/README.md`](pings/README.md)) + the transition stub [`_agent_pings.md`](_agent_pings.md) + [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md)
 (cross-side) every **~1 min** while Harsh is active. Stretch to ~5 min when both ledgers empty for 30+ min. Empty cycles
 produce no chat output (no flooding).
 
@@ -92,7 +91,10 @@ at `live-defi-rollout` tip `7fddb7e8`). Grow with `--add-slot <N>` if peak paral
 **Operational model (Harsh side, set 2026-05-11):** one VS Code window at the workspace root (for editor/file checks
 when rarely needed); implementer agents (slots 2-6) run as `cd ${WORKSPACE_ROOT}/.tabs/<N>/ && claude` in integrated
 terminals (Option B). `.tabs/**` is excluded from the root window's `files.watcherExclude` / `search.exclude` /
-`files.exclude` (`.vscode/settings.json`) so the editor doesn't index the slot worktrees.
+`files.exclude` (`.vscode/settings.json`) so the editor doesn't index the slot worktrees. **Ping ledgers are per-slot**
+(`harsh_orchestrator/pings/slot_<N>.md`, one per spawned slot) so the every-slot-touches-one-file collision is gone —
+slot 1 is the only reader; see [`pings/README.md`](pings/README.md). (Transition: the 2026-05-11 slots 2/3/4/6 were
+spawned pointing at the old `_agent_pings.md`; slot 1 reads both during this cycle.)
 
 **Merge model — direct-to-`live-defi-rollout`, rebase-on-push (no batch-merge step):** the per-slot worktrees already
 solve the foot-guns (each slot has its own `.git/index` + working tree), so the branch model stays simple. Per shippable
@@ -311,7 +313,7 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 
 ### ⚪ Main agent (this session) doing now
 
-- Polling [`_agent_pings.md`](_agent_pings.md) (intra-side) + [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md)
+- Polling `harsh_orchestrator/pings/*.md` (intra-side, per-slot) + the transition stub `_agent_pings.md` + [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md)
   (cross-side) ~1 min while operator active.
 - Standing by to: (a) ack STARTED pings + flip QUEUED → IN FLIGHT in the registry above, (b) verify DONE pings + flip
   IN FLIGHT → ✅ DONE, (c) answer 🟡 BLOCKED Qs in plan-of-record `## Open questions` sections, (d) field new direction
@@ -346,7 +348,7 @@ Per CLAUDE.md "Daily Work-Split Process" § "Daily reset (each morning)" — see
 short:
 
 1. Fetch + summarise incoming commits (don't auto-pull).
-2. Re-read yesterday's work-split + this ledger's "Today's status" + both `_agent_pings.md` for overnight pings.
+2. Re-read yesterday's work-split + this ledger's "Today's status" + `harsh_orchestrator/pings/*.md` + cross-side `plans/active/_agent_pings.md` for overnight pings.
 3. Daily ledger sweep — remove ✅ RESOLVED Q&As >24h old; verify no stale 🟡 BLOCKED >24h.
 4. Draft today's work-split items (carryover + new emergence). Confirm `--init` slot count covers the day's themes.
 5. Slot-reset sweep — for every slot whose theme changed from yesterday, `setup-tab-worktrees.sh --reset-slot <N>`.
@@ -402,7 +404,7 @@ Use `.md` paths (no `.plan.md` segment) when referencing files in `plans/active/
 - **Per-tab worktree model**: [`../codex/05-infrastructure/per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md)
   + [`../codex/05-infrastructure/plan-aware-merge-resolution.md`](../codex/05-infrastructure/plan-aware-merge-resolution.md).
 - **Workspace coding standards + Daily Work-Split Process spec**: [`../cursor-configs/CLAUDE.md`](../cursor-configs/CLAUDE.md).
-- **Active pings**: [`_agent_pings.md`](_agent_pings.md) (intra-side) + [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md) (cross-side).
+- **Active pings**: [`harsh_orchestrator/pings/`](pings/) (intra-side, per-slot — see [`pings/README.md`](pings/README.md)) + [`_agent_pings.md`](_agent_pings.md) (transition stub) + [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md) (cross-side).
 - **Master plan**: [`../plans/active/master_to_live_defi_2026_05_23.md`](../plans/active/master_to_live_defi_2026_05_23.md).
 - **Sequencing umbrella this cycle**: [`../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md).
 - **Findings Triage Discipline**: CLAUDE.md § "Findings Triage Discipline (HARD RULE)".
