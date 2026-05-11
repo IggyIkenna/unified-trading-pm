@@ -3,10 +3,18 @@ plan_type: meta
 asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-06
-last_updated: 2026-05-08
+last_updated: 2026-05-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 name: master-to-live-defi-2026-05-23
+estimate_class: design
+estimate_baseline_ai_days: 6
+estimate_calibrated_ai_days: 3.6
+estimate_calibration_note: |
+  Plan-level estimate covers the meta-plan artefact itself (writing + maintaining the rollup surface, audit table,
+  Q&A surface). The ~175 sub-plans this plan orchestrates each carry their own estimate_class + calibrated AI-days
+  in their frontmatter. Total cutover scope = sum of sub-plan calibrated estimates, NOT this number. SSOT:
+  codex/08-workflows/estimation-calibration.md.
 overview:
   Master rollup plan from now (2026-05-06) to live DeFi trading on a real wallet by 2026-05-23. Three deliverables in
   one doc - (1) master plan tracking surface that orchestrates the ~175 active sub-plans without duplicating them, (2)
@@ -31,6 +39,15 @@ overview:
 > 2026-05-15) → Phase 2 one-shot physical migrations (window 2026-05-15→2026-05-19) → Phase 3 resume backfills
 > end-to-end (window 2026-05-19→2026-05-23) and includes an anti-sequencing audit table flagging 13 plans by
 > re-migration risk.
+
+> **🟢 ESTIMATE CALIBRATION — codified 2026-05-11** (READ BEFORE SCHEDULING)
+>
+> Per [`codex/08-workflows/estimation-calibration.md`](../../codex/08-workflows/estimation-calibration.md), AI-day
+> estimates in this workspace run 1.5-3× conservative for parallel-agent + sub-agent fan-out. Apply per-class
+> multipliers (`refactor` 0.4× / `design` 0.6× / `infra` 0.8× / `brand-new` 1.0× / `research` 1.2×) to baseline.
+> Sub-plans this master orchestrates should each carry `estimate_class` + `estimate_baseline_ai_days` +
+> `estimate_calibrated_ai_days` in frontmatter; work-split scope totals MUST use the calibrated number. Retrospective
+> ledger at [`codex/08-workflows/estimation-retrospective-ledger.md`](../../codex/08-workflows/estimation-retrospective-ledger.md).
 
 # May-23 Cutover Master — Live DeFi Trading by 2026-05-23
 

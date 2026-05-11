@@ -712,6 +712,44 @@ Mirrored at `plans/PLAN_FORMAT.md` § 8.
 
 ---
 
+## Estimate Calibration — Per-Class Multipliers (HARD RULE codified 2026-05-11)
+
+Claude's training-intuition AI-day estimates run **1.5-3× conservative** for this workspace's parallel-agent +
+sub-agent fan-out + per-tab-worktree pattern. Conservative estimates → operators undersell scope → real throughput
+exceeds plan → unscheduled work piles up as technical debt. Apply the multiplier at plan-write time:
+
+| Class | Multiplier | Typical work |
+|---|---|---|
+| `refactor` | 0.4× | Mechanical changes across N files (rename, migrate to helper, lint sweep) |
+| `design` | 0.6× | New artefact (plan, codex doc, UAC schema, helper module) |
+| `infra` | 0.8× | Real-infra ops (VM launch + verify, backfill, cloud migration with drift verification) |
+| `brand-new` | 1.0× | Novel feature with no template |
+| `research` | 1.2× | Scope unknown upfront; investigation-heavy |
+
+**Don't apply** when work is serial-only by construction (wallet keys, kill-switch, force-push, version 1.0.0),
+single-tab without sub-agent fan-out, external-dependency-bound (counterparty wait), or first touch on a brand-new
+domain. **When in doubt, pick the higher class** — optimism is the failure mode this corrects.
+
+**Frontmatter convention** (every active plan written after 2026-05-11):
+
+```yaml
+estimate_class: refactor | design | infra | brand-new | research
+estimate_baseline_ai_days: <pre-calibration estimate>
+estimate_calibrated_ai_days: <baseline × multiplier>
+```
+
+Multi-class plans use the dominant class for plan-level + override per-phase inline. Legacy plans retrofit on next
+substantive update — **do NOT mass-sweep** (collision risk per Findings Triage).
+
+**Retrospective ledger** at `codex/08-workflows/estimation-retrospective-ledger.md` — every plan archive appends a row
+(`Plan | Class | Calibrated | Actual | Ratio | Notes`). When 8+ rows land for a class with median ratio drifting
+±20% from 1.0, propose updated multiplier in `docs(codex):` PR.
+
+Full SSOT: `codex/08-workflows/estimation-calibration.md` (anti-patterns, "when not to apply" detail, per-phase
+override format, ledger governance).
+
+---
+
 ## Citadel-Grade Planning Standards
 
 Every plan MUST:
