@@ -412,12 +412,17 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
   no-occurrence repos, exit 1 on a synthetic new `def _create_empty_output`; `bash -n` clean; ruff-clean. **The P0-2
   *code fixes* — delete legacy `orchestration_writer._write_candles`, fix `tradfi/ohlcv_passthrough.py`, flip
   `output_schemas.py` OHLCV nullability, resolve the triple-SSOT — are writegate Phase 2.A + slot 5 (NOT slot 6).** As
-  writegate Phase 2.A deletes the methods, it removes the matching baseline entries. **Follow-ups (slot 6, not
-  blocking)**: (a) add a `test_check_banned_placeholder_methods.py` mirroring `test_check_removed_symbols.py`; (b)
-  add STEP 5.67 to `codex/06-coding-standards/quality-gates.md` STEP list (Post-Plan-Phase Codex Audit); (c) verify
-  whether `live_workers.py:199 _handle_empty_tick_data` + `output_writer_service.py:319 upload_bytes` are the
-  good/legit variants (Track D D4 hinted live_workers does the A/B/C split correctly) — if so, narrow the heuristic
-  rather than keep them baselined.
+  writegate Phase 2.A deletes the methods, it removes the matching baseline entries. **Follow-up (c) ✅ DONE
+  2026-05-11 PM (`PM@d75415fd`)** — after writegate Phase 2.A P0-2 surgery landed (MDPS@a964b96 + step-3/4/6
+  commits): baseline shrank 8→2 (steps 3/6 DELETED 4 occurrences → entries removed; `_maybe_write_vix_gap_placeholder`
+  REFORMED by step 4 to route through `record_empty_for_shard(reason=EXPECTED_KNOWN_SOURCE_GAP)` — no placeholder
+  parquet — but kept baselined-as-warning pending a cosmetic rename); `_handle_empty_tick_data` DROPPED from
+  `BANNED_METHOD_NAMES` entirely (writegate reformed both copies into the canonical honest-handler — it's now the
+  *recommended* name, so flagging it = noise); residual 2 = `_maybe_write_vix_gap_placeholder` (misnomer name) +
+  `output_writer_service.py:upload_bytes` (DEAD CODE — `OutputWriterService` not instantiated on any live path).
+  **Remaining follow-ups (slot 6, not blocking)**: (a) add a `test_check_banned_placeholder_methods.py` mirroring
+  `test_check_removed_symbols.py`; (b) add STEP 5.67 to `codex/06-coding-standards/quality-gates.md` STEP list
+  (Post-Plan-Phase Codex Audit).
 - **Track D P0-3 disposition (commodity phantom-row)** — `features-service/market(...)/commodity/cli/handlers/batch_handler.py:251-290`
   `_write_manifest` calls `writer.add(...)` for every (commodity, day) regardless of `_process_day` success → a
   fully-failed run still populates `captured`-shaped rows → `_should_skip_shard` permanently skips them. **Classified**
@@ -464,7 +469,7 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
 | Full `bash scripts/quality-gates.sh` workspace sweep (basedpyright + pytest + 60+ STEP checks) | slot worktrees have no per-repo `.venv` — `setup.sh` per repo needed first | `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (1)+(2); `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 full-execution criterion |
 | Sampled `# type: ignore[...]` reason-comment audit (~20-30 of 343) | day-1 only confirmed zero *bare* directives; per-line architectural check pending | `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (3) |
 | Phantom manifest audit (P1) — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group {cefi,defi,sports,tradfi,prediction} --dry-run` | laptop run impractical (no output in 4min on `cefi --dry-run --workers 32`; CLAUDE.md: cross-region listing 18× slower) — proper path = GCE same-region VM per `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe"; ADC present, deps importable from `.venv-workspace`. 2026-05-04 baseline = 354 residual; watch the Track-D commodity-phantom-row bug | `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 (P1); `plans/active/issues/qg_sweep_2026_05_11.md` § cross-refs + "Days 2-4 follow-up" (1) |
-| ~~AST/grep QG STEP for banned placeholder methods~~ — **SHIPPED `PM@a4512ed3` (STEP 5.67, baseline-aware ratchet, warn-mode for the 8 known MDPS occurrences, errors on new ones)** | Residual: writegate Phase 2.A removes the matching `banned_placeholder_methods_baseline.yaml` entries as it deletes the methods (writegate's job, not slot 6). Slot-6 follow-ups (not blocking): (a) `test_check_banned_placeholder_methods.py`; (b) add STEP 5.67 to `codex/06-coding-standards/quality-gates.md` STEP list; (c) verify `live_workers.py:199 _handle_empty_tick_data` + `output_writer_service.py:319 upload_bytes` are the legit variants → narrow the heuristic if so | DONE block above (slot-6 follow-ups (a)/(b)/(c)); `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (5); `wave3x_track_d_findings_2026_05_11.md` § "Recommended decision" (3) (now resolved) |
+| ~~AST/grep QG STEP for banned placeholder methods~~ — **SHIPPED `PM@a4512ed3` (STEP 5.67) → baseline shrunk 8→2 `PM@d75415fd` after writegate P0-2 surgery (drop `_handle_empty_tick_data` from the banned-name set; remove 4 deleted-method entries; residual 2 = `_maybe_write_vix_gap_placeholder` misnomer-name + `output_writer_service.py:upload_bytes` dead-code)** | Slot-6 follow-up (c) ✅ DONE `PM@d75415fd`. Remaining (not blocking): (a) `test_check_banned_placeholder_methods.py`; (b) add STEP 5.67 to `codex/06-coding-standards/quality-gates.md` STEP list. Residual baseline-2 clears when writegate Phase 2.A renames `_maybe_write_vix_gap_placeholder` + deletes the dead `OutputWriterService` class. | DONE block above (slot-6 follow-ups (a)/(b)); `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (5); `wave3x_track_d_findings_2026_05_11.md` § "Recommended decision" (3) (resolved) |
 | Codex SSOT audit pass — deepen currency spot-checks on the ~50 present docs the Phase 1.D/E/F plans touch (alerting/risk/DR, DeFi, UI/credentials) | day-1 only spot-checked the schema/manifest/pipeline core + alerting cluster | `plans/active/issues/codex_audit_2026_05_11.md` § "Days 2-4 follow-up" |
 | 33 codex docs referenced-but-not-yet-created for freeze-gate item 9 | all are `- [ ]` items in their owning Phase 1 plans — those plans' codex phases create them by 2026-05-15 | `plans/active/issues/codex_audit_2026_05_11.md` § "Pending codex work" table (per-plan); each owning plan's "Codex SSOT updates" phase |
 
