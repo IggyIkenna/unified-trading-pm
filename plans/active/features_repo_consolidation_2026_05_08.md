@@ -503,12 +503,18 @@ todos:
     status: blocked
     note:
       "2026-05-11 slot 2: 4.1-4.5 shipped + verified; F2 no-op, F6 Option C, F7 N/A-for-features. 4.6 (QG green) BLOCKED
-      — features-service QG fails on ~17 codex-compliance violations + function/file-size violations carried over from
-      the 8 source repos without their per-file-ignore exemptions (os.getenv / asyncio.run-in-loop / nested imports /
-      empty fallbacks / schema-provenance / cloud-SDK imports / size). Import-pattern category FIXED this session
-      (UTL@e7975fe re-exports + features-svc@a308a273 --fix; check-import-patterns.py = 0). Required test files added
-      (features-svc@c11cafcd). Successor: features_service_qg_cleanup_<date>.md (see Q1). Checkbox stays [ ] until QG
-      green."
+      — the features-service-side QG-codex-compliance carry-forward is now DONE (slot 2 sessions 2-4: QG 8→4→2→1
+      violations; cleared os.getenv/env-canon, asyncio.run-in-loop, imports-inside, empty-string/dict/list fallbacks,
+      broad-except, function/file-size, deep-unified-lib-imports, cloud-SDK-imports, ruff E501; features-svc up to
+      @71023f20). TWO blockers remain, NEITHER fixable at the features-service root: (1) `Schema provenance`
+      codex-compliance category — `check_schema_provenance.py` flags every local BaseModel/TypedDict/dataclass and does
+      NOT honor `# CORRECT-LOCAL` (the ~40 features-service-local types are correct per the operator rule; the QG check
+      needs an Ikenna PM-side fix) → tracked as Q6 in features_service_qg_cleanup_2026_05_11.md; (2) `[3.5/6] IMPORT
+      PATTERNS` QG step fails on 11 deep `unified_trading_library.feature_service_base.live_aggregator` imports from
+      slot-5's features-svc@225cc13b (Phase 5/6 live-runner wire-in — NOT features-cleanup work) → tracked as Q7 in
+      features_service_qg_cleanup_2026_05_11.md / routed to the live-pipeline plan owner. Successor:
+      features_service_qg_cleanup_2026_05_11.md (Phase 1.3 flips this checkbox when BOTH Q6 + Q7 land + a fresh
+      quality-gates.sh is green)."
 
   - id: phase-5-lift-cross-family-helpers-to-utl
     content: |

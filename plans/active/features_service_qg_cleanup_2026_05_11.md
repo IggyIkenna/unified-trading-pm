@@ -54,40 +54,13 @@ org-naming tidy):
       below); direct `from google.cloud import storage` (1 file, 4 call sites); files >900L (6 files); function/method
       size (~30 sites). Per-category fix shape + mechanical-vs-judgment-vs-QG-check-bug classification in the section
       below.
-- [ ] [AGENT] P0. Phase 1.2 — Fix each violation at the root. Per-violation commit (or small batches per category). Run
-      `cd features-service && bash scripts/quality-gates.sh` after each batch. **IN PROGRESS — 2 of the small rows
-      landed 2026-05-11 (slot 2, 2nd session); the big rows + medium rows carry forward.** Order: first resolve the
-      QG-check-bug categories via Q1+Q2 (slot-1/PM call — fix the QG check vs fix features-service); then the small
-      mechanical ones; then the big ones (schema-provenance ~38 features_service/ models → UAC/UIC; file-size 6 files;
-      function-size ~30). Each big category is its own shippable unit / sub-agent fan-out target. - **DONE 2026-05-11
-      (slot 2)**: (a) row 11 — `git rm` the 3 broken
-      `features_service/{calendar,commodity,       multi_timeframe}/.cursor/scripts/check-import-patterns.py` symlinks
-      (subtree-merge cruft; consolidated repo has no per-family `.cursor/`) — features-svc@`45efbe44`. (b) row 4 (cli
-      subset) — hoist `from features_service.cross_instrument.engine.mock_data_provider import run_mock_pipeline` out of
-      `_get_mock_pipeline()` to top-level in `cross_instrument/cli/main.py` (verified no circular import) —
-      features-svc@`45efbe44`. **NB on row 4 (monitors subset)**: the 2 `monitors/feature_freshness.py` "imports inside
-      functions" flags (`cross_instrument` + `calendar`) are **QG false positives** — the flagged line is EXAMPLE CODE
-      INSIDE THE MODULE DOCSTRING ("Typical usage:: from ...monitors import FeatureFreshnessChecker"), not a real nested
-      import. The QG `imports-inside-functions` check matches indented `from`/`import` lines without skipping
-      docstrings. Routed to Q2 below — DON'T touch features-service for those. - **CARRY FORWARD (next slot-2 session,
-      fresh budget — fan out per the Phase 1.1 table's sub-agent plan)**: row 2
-      (`commodity/engine/mock_data_provider.py` `os.environ.get("WORKSPACE_ROOT","")` → `UnifiedCloudConfig`- based
-      accessor — but check whether `UnifiedCloudConfig`/`unified_cloud_interface` actually exposes a workspace-root /
-      mock-seed-dir accessor; if NEITHER does, this needs a UCI addition, which is out of features-service scope → flag
-      it); row 3 (`calendar/cli/handlers/batch_handler.py` `asyncio.run()` in a loop → single `asyncio.run` +
-      `asyncio.gather`, or one outer `asyncio.run` if days are sequential — read the file); row 5
-      (empty-string/dict/list fallbacks → fail-loud/honest-absence — re-derive the file:line list from a fresh QG run,
-      the schema-provenance list eats the surrounding context in a `head`'d view); row 6 (the ~38 `features_service/`
-      schema-provenance models → `unified_api_contracts.internal.domain.features.<family>` per the 3-layer schema
-      model + update consumers — biggest item, a UAC + features-service cross-repo refactor, may warrant its own
-      sub-phase; see Q2); row 8 (`sports/data/gcs_reader.py` `from google.cloud import storage` ×4 →
-      `unified_cloud_interface.get_storage_client()` — and this file is also 1306L so the same owner should do the row-9
-      split for it); row 9 (the other 5 >900L files → split); row 10 (~30 >50L methods / >200L functions → decompose).
-      Partition the sub-agent fan-out so no two sub-agents touch the same file (`sports/data/gcs_reader.py` is BOTH row
-      8 + row 9 → one owner).
+- [x] [AGENT] P0. Phase 1.2 — Fix each violation at the root. **DONE 2026-05-11 (slot 2, sessions 2-4).** Session 2: removed 3 broken `.cursor/scripts/check-import-patterns.py` symlinks + hoisted `cross_instrument/cli/main.py` nested `run_mock_pipeline` import (features-svc@`45efbe44`). Session 3: 3-sub-agent fan-out (A=sports, B=onchain/volatility, C=delta_one/cross_instrument/calendar/commodity/multi_timeframe) — 28 commits, QG 16→9 (gcs_reader 1306L→4 modules + google.cloud→UCI + canonical.*→facade + 5 gs:// URIs dropped + both orchestrators split <900L + Files>900L 6→0 + imports-inside 28→4 + most func-size, features-svc up to @`e4b10570`). Session 4: Q4b (features-svc@`c9078cb2`), 3 more sub-agents (A's 5 deferred sports func-decomps `BatchHandler.run` 416→25 / `compute_team_form` 357→176 / `compute_h2h` 272→193 / `compute_player_lineup` 219→94 / `_build_registry` 389→12, 4 imports-inside hoisted, broad-except ×13 narrowed, asyncio de-nested, sports empty-fallbacks fail-loud-or-noqa; B's onchain ~17 empty-fallbacks root-fixed + `Dependency*` dedup'd from UTL root in volatility + `FeatureProcessingResult` double-def collapsed; C's `# CORRECT-LOCAL` markers + `PubSubMessage`→`DeltaOnePipelineMessage` rename), plus my fixes (12 E501s from verbose markers + `team_form` formatter follow-up + 7 `mock_data_provider.py` noqa-marker normalize + `_get_workspace_root` → canonical single-key `WORKSPACE_ROOT` form matching `multi_timeframe`). **QG progression: 8→4→2→1 codex-compliance violations.** Cleared this session: `asyncio.run-in-loop`, `imports-inside-functions`, `broad except Exception`, `Function/method size exceeded`, `Empty string fallback`, `Empty dict/list fallback`, `os.getenv()/os.environ`, `Env canon`, `Deep unified lib imports`, ruff E501. features-svc up to @`71023f20` (rebased onto slot-5's `225cc13b` Phase-5/6 live-runner wire-in). **Residual** = 1 codex-compliance category (`Schema provenance` — a QG-check FP, see Q6 below: `check_schema_provenance.py` flags every local `BaseModel`/`TypedDict`/`@dataclass` and doesn't honor `# CORRECT-LOCAL`; the ~40 types are correctly features-service-local per Q3 A1; needs an Ikenna PM-side fix) + the QG aborts even earlier at `[3.5/6] IMPORT PATTERNS` on 11 deep `from unified_trading_library.feature_service_base.live_aggregator import` calls from slot-5's `225cc13b` (NOT features-cleanup work — routed, see Q7). The features-service-side carry-forward is done.
+
+
 - [ ] [AGENT] P0. Phase 1.3 — `cd features-service && bash scripts/quality-gates.sh` returns green
       (CODEX_MAX_VIOLATIONS=0, no per-package ignores added). Flip `features_repo_consolidation_2026_05_08.md` Phase 4.6
       checkbox `- [x]` with the QG-green evidence; remove the `**DEFERRED**` annotation.
+      `status:` blocked. `note:` "2026-05-11 slot 2 — features-service-side carry-forward DONE (QG codex-compliance 8→1); the lone remaining codex category = `Schema provenance` QG-check FP (Q6 below — Ikenna PM-side) + the QG aborts at `[3.5/6] IMPORT PATTERNS` on slot-5's `225cc13b` 11 deep `unified_trading_library.feature_service_base.live_aggregator` imports (Q7 below — live-pipeline owner). Phase 1.3 flips when BOTH land."
 - [ ] [AGENT] P1. Phase 1.4 — Codex SSOT audit pass per CLAUDE.md "Post-Plan-Phase Codex Audit": verify
       `codex/04-architecture/features-service-architecture.md` reflects the cleaned-up shape; update if drifted.
 - [ ] [AGENT] P2. Phase 1.5 — Lift `_get_workspace_root()` to ONE shared UTL helper. **MIGRATED FROM: sub-agent C
@@ -98,9 +71,7 @@ org-naming tidy):
       double SSOT / lift cross-service utilities to UTL": add `unified_trading_library.dev_paths.get_workspace_root()`
       (with the `# noqa: qg-os-env` config-bootstrap marker on the env read INSIDE the helper, so callers don't carry
       it), replace all 8+ copies with `from unified_trading_library import get_workspace_root` (or
-      `unified_trading_library.dev_paths.get_workspace_root`), update `seed_writer.py` to use it too. Interim state
-      (2026-05-11): each copy carries the `# noqa: qg-os-env` / `# noqa: qg-empty-fallback` marker (matches
-      `seed_writer.py`) — so QG is green; this todo is the proper de-dup, not a blocker.
+      `unified_trading_library.dev_paths.get_workspace_root`), update `seed_writer.py` to use it too. Interim state (2026-05-11 slot 2): all 8 copies now use the canonical single-key form `os.environ.get("WORKSPACE_ROOT", "")  # noqa: qg-os-env  # noqa: qg-empty-fallback` (matching `multi_timeframe`; the legacy `UNIFIED_TRADING_WORKSPACE_ROOT` fallback was dropped — it tripped the `Env canon` QG check since it's not in `EnvVars`, features-svc@`71023f20`) — so QG codex-compliance is clean on this; this todo is the proper de-dup to a UTL helper, not a blocker.
 
 ### Phase 2 — Full byte-for-byte parity run (BLOCKED on data)
 
@@ -371,39 +342,9 @@ output shapes → `unified_api_contracts.internal.domain.features.<family>`; ser
   over-flag service-internal plumbing? → narrower "domain" heuristic in `check_schema_provenance.py`). **NEEDS
   OPERATOR/IKENNA CONFIRMATION** before the relocation sub-agent runs — flagged in Open questions Q3 below.
 
-- [ ] [AGENT] P0. Phase 1.2e — Resolve the ~38 `features_service/` schema-provenance flags per Q3 A1 (RESOLVED
-      2026-05-11). Lands AFTER sub-agents A/B/C land their commits (A/B/C touch many of the same files —
-      `volatility/engine/orchestrator.py` has `FeatureProcessingResult` + a >900L split; `cross_instrument/engine/orchestrator.py`
-      has `OrchestratorResult`/`ShardResult` + a `run() 105L` decomp; `sports/engine/feature_expectations.py` has
-      `PITViolation`/`ValidationViolation` + the `:383` import hoist — doing both in parallel would race).
-      **Group 1 — MOVE to `unified_api_contracts.internal.domain.features.<family>`** (genuine domain I/O consumed by
-      strategy-service / execution-service / deployment-api schema-view): the per-family `*FeatureRequest`/`*FeatureResult`
-      pairs (delta_one/volatility/cross_instrument/sports/onchain), `OptionQuote`/`VolSurfaceTermStructureRecord`/
-      `VolatilitySurfacePoint`, `OnChainFeatures`, `CrossAssetSportsSignal`/`SportFinancialLink`, `OddsHTSnapshot`,
-      `FeatureMetadata`/`FeatureStatistics`/`InstrumentInfo`, per-family `config.py:Parameters` → UAC side: add
-      `unified_api_contracts/canonical/domain/features/<family>.py` (or extend) + facade re-export at
-      `unified_api_contracts.internal.domain.features.<family>` (or bare `unified_api_contracts.internal`); features-service
-      side: replace local defs with `from unified_api_contracts.internal import <Model>` + update consumers.
-      **Group 2 — NO UAC moves** (per Q3 A1 operator rule — features-service-only consumers): (a) STAY LOCAL with a
-      `# CORRECT-LOCAL` marker on the `class` line (`base-service.sh:790/804/1049+` exempt `# CORRECT-LOCAL`) — most
-      already have it; ADD it to `PITViolation`/`ValidationViolation` (sports/engine/feature_expectations.py),
-      `LookbackValidationReport` (delta_one/app/core/dependency_checker.py), `FeatureProcessingResult`/`OrchestratorResult`/
-      `ShardResult` (per-family orchestrators), `CrossInstrumentConfig` (cross_instrument/app/calculators/cross_instrument_dynamics.py),
-      `PubSubMessage` (delta_one/app/pubsub/subscriber.py); already-marked: `HealthResponse`, `_WeatherRow` (stays local —
-      parquet-row shape), `SubscriberStats`, `FeatureRegistryEntry`, `SteamDetectorConfig`/`SteamMoveSignal`. (b) DEDUP
-      AGAINST UTL — `DependencyFailure`/`DependencyStatus`/`DependencyReport`/`DependencyError` in BOTH
-      `volatility/core/dependency_checker.py` AND `delta_one/app/core/dependency_checker.py` are byte-identical to
-      `unified_trading_library/core/dependency_checker.py` → replace local defs with
-      `from unified_trading_library.core.dependency_checker import DependencyError, DependencyStatus, DependencyFailure, DependencyReport`
-      + delete the dead code (`LookbackValidationReport` in the delta_one file stays local per (a)). (c) MOVE TO UAC —
-      NONE for group 2.
-      **2 within-repo cleanups (Phase 1.2e sub-items, not schema-prov-driven but adjacent):** (i) `FeatureProcessingResult`
-      is defined TWICE in features-service (`volatility/engine/orchestrator.py` + `volatility/core/orchestration_service.py`)
-      → collapse to ONE definition + import the other site. (ii) `PubSubMessage` (delta_one TypedDict) name-clashes with
-      UAC's existing `external/gcp/pubsub.py:PubSubMessage` (different layer) → recommend renaming the features-service one
-      `DeltaOnePipelineMessage`. QG `❌ Schema provenance` + `❌ Deep unified lib imports` clear. Own commits on UAC +
-      features-service. If a `# CORRECT-LOCAL`-tagged or imported-from-UTL line still flags → QG-check bug, route to
-      slot-1 (Q1.x shape), do NOT edit `check_schema_provenance.py`.
+- [x] [AGENT] P0. Phase 1.2e — Schema-provenance disposition per Q3 A1 (operator rule: features-service-only type → stays local; UTL has a canonical copy → dedup-import from UTL root; else `# CORRECT-LOCAL`). **DONE 2026-05-11 (slot 2 + sub-agents B/C, session 4).** A workspace grep (slot 2, not re-run by sub-agents) showed: the `*FeatureRequest`/`*FeatureResult` pairs + `OptionQuote`/`VolatilitySurfacePoint`/`OnChainFeatures`/`CrossAssetSportsSignal`/`SportFinancialLink`/`OddsHTSnapshot`/`PITViolation`/`ValidationViolation`/`SteamDetectorConfig`/`SteamMoveSignal`/`_WeatherRow`/`FeatureRegistryEntry`/`OrchestratorResult`/`ShardResult`/`CrossInstrumentConfig`/`FeatureProcessingResult`/`HealthResponse`/`LookbackValidationReport`/`SubscriberStats`/`ProcessingRequest`/`ProcessingResult`/`InstrumentInfo`/`FeatureStatistics`/per-family `config.py:Parameters` + the new `_RetracementArrays`/`_ExtensionArrays` (fibonacci) — **all features-service-only** (no non-features-service consumer) → STAY LOCAL with `# CORRECT-LOCAL` on the `class` line (≈40 markers added/verified across all families by sub-agents B/C; verbose markers shortened to fit ≤120 chars by slot 2, features-svc@`c2312f5e`). **`DeltaOnePipelineMessage`** (was `PubSubMessage`) renamed to avoid clash with UAC `external/gcp/pubsub.py:PubSubMessage` (different layer) — `# CORRECT-LOCAL`. **`Dependency*` dedup**: `DependencyFailure`/`DependencyStatus`/`DependencyReport` + `DependencyError` in `volatility/core/dependency_checker.py` were byte-identical to `unified_trading_library/core/dependency_checker.py` → replaced with `from unified_trading_library import DependencyError, DependencyFailure, DependencyStatus, DependencyReport` (root facade — all 4 in UTL root `__all__`), dead code deleted (features-svc@`46411267`); `delta_one/app/core/dependency_checker.py` already imported `DependencyReport`/`BaseDependencyChecker` from UTL root (no-op beyond marker). **`FeatureProcessingResult` double-def collapse**: was defined in both `volatility/engine/orchestrator.py` + `volatility/core/orchestration_service.py` → kept the `engine/orchestrator.py` def (live one), `core/orchestration_service.py` re-imports it (features-svc@`8278eb09`). **NONE moved to UAC** — the Q3-A1-original "Group 1 → UAC.internal" reduced to ∅ once the grep confirmed every candidate is features-service-only (the operator rule overrides the original 3-layer-model assumption). The `❌ Schema provenance` QG row still flags all ≈40 — that's a QG-check FP (Q6), not a disposition error.
+      **DEFERRED** (2 future-cleanup reconciliations — captured here so they aren't lost): (a) `VolSurfaceTermStructureRecord` (`volatility/models.py`) — features-service has a working-row `@dataclass` (`underlying_price: float`, mutated incrementally by the `vol_surface_term_structure` calculator, 30+ consumer sites); UAC `.internal.features.VolSurfaceTermStructureRecord` is the canonical `BaseModel` form (`underlying_price: Decimal`). Adoption is invasive (immutable BaseModel ≠ incremental mutation; float↔Decimal coercion at every site) → kept `# CORRECT-LOCAL` + a DEFERRED note in the class docstring; reconcile in a future cleanup (restructure the calculator's mutation pattern, or add a mutable UAC variant). (b) `OnChainFeatures` (`onchain/app/calculators/base.py`) — UTL `feature_calculator.onchain.OnChainFeatures` is a same-named but genuinely-different type (`features: dict[str, object]` vs UTL's `dict[str, int|float|str]`; different base classes) → not a dedup; `# CORRECT-LOCAL`; a future cleanup *could* reconcile if the on-chain calculator base classes are ever consolidated. Both are tracked here; no separate plan needed (they ride this plan or a future codex-cleanup plan).
+
 
 ## Open questions
 
@@ -737,6 +678,22 @@ C's `scripts/delta_one/migrate_dash_separator_paths.py` swap to UTL `StorageClie
 `list_blobs`/`blob_exists`/`copy_blob`/`delete_blob`) — so STEP 5.10 isn't *always* a scripts/ problem; this one happens
 to need delimiter-prefix listing.
 
+### Q6 — [harsh-features-consolidation-tab, 2026-05-11 (session 4)] — `check_schema_provenance.py` doesn't honor `# CORRECT-LOCAL` (the `❌ Schema provenance` codex-compliance step can't clear via markers)
+
+**Status**: 🟡 OPEN — needs slot-1 / Ikenna PM-side fix.
+
+The QG `[5/6] CODEX COMPLIANCE` step's `❌ Schema provenance: local BaseModel/TypedDict/dataclass found` line is driven by `unified-trading-pm/scripts/validation/check_schema_provenance.py` (called from `base-service.sh:574`). That script flags **every** local `BaseModel`/`TypedDict`/`@dataclass` in the repo (excluding only `tests/`, `scripts/`, `__init__.py`, `output_schemas.py`, and files with a `# SCHEMA_PROVENANCE_EXEMPT` header in the first 20 lines) — it does **NOT** honor the per-line `# CORRECT-LOCAL` marker that the `base-service.sh` inline rg-checks (STEP 5.9 / lines 799-823 / 1061+) honor. It even defines a `schema_imported_from_uac_uic()` helper that is **never called** (so a type that IS imported from UAC/UIC still has its local def flagged). After the Phase 1.2e disposition (per Q3 A1: the ≈40 local schema types in features-service are all features-service-only → stay local with `# CORRECT-LOCAL`), `check_schema_provenance.py` still flags all ≈40 — so the `❌ Schema provenance` codex-compliance category stays red for features-service regardless of the markers. **The features-service side is correct per the operator rule** (Q3 A1 — features-service-only types stay local with `# CORRECT-LOCAL`); the QG check is the thing that needs updating, not features-service.
+
+#### Recommended fix (slot-1 / Ikenna, PM-side `check_schema_provenance.py`)
+
+(1) `grep -v '#.*CORRECT-LOCAL'` on the matched `class` line (mirror `base-service.sh` STEP 5.9). (2) Skip underscore-prefixed classes (`class _Foo`). (3) Wire up the existing `schema_imported_from_uac_uic()` helper — don't flag a type that's also imported from UAC/UIC somewhere in the repo. (4) Honor `# SCHEMA_PROVENANCE_EXEMPT` anywhere in the file (not just first 20 lines). Until that lands, the `❌ Schema provenance` category stays red for features-service → the parent `features_repo_consolidation_2026_05_08.md` Phase 4.6/6 flips stay DEFERRED behind THIS Q + Q7 (the features-service-side carry-forward is otherwise done).
+
+### Q7 — [harsh-features-consolidation-tab, 2026-05-11 (session 4)] — `[3.5/6] IMPORT PATTERNS` QG step fails on slot-5's `225cc13b` (11 deep `unified_trading_library.feature_service_base.live_aggregator` imports)
+
+**Status**: 🟡 OPEN — routed to the live-pipeline plan owner (`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 5/6) / ikenna-side. NOT features-cleanup work.
+
+After rebasing onto features-svc@`225cc13b` (`feat(features-service): Phase 5 + Phase 6 live runner wire-in — per-family wrappers`), `bash scripts/quality-gates.sh` aborts at `[3.5/6] IMPORT PATTERNS` (`check-import-patterns.py` exit 1, 11 violations all in `unified_trading_library`): `from unified_trading_library.feature_service_base.live_aggregator import (...)` (deep import — should be `from unified_trading_library import (...)` per the top-level-imports rule, IFF those symbols are re-exported at UTL root; if not, ADD the re-export per "if the library is missing a re-export, ADD it"). Sites: `tests/common/test_live_runner.py:17`, `features_service/common/live_runner.py:27`, `features_service/common/live_cross_cutting.py:32`, `features_service/{commodity,calendar,onchain,multi_timeframe,cross_instrument,volatility}/live/__init__.py`, `features_service/sports/live/runner.py:22` (+1 more). `git log` attributes all 11 to `225cc13b` (Rollout Agent / live-pipeline Phase 5/6). **Action for the owner**: `cd features-service && python ../unified-trading-pm/scripts/validation/check-import-patterns.py --fix` (mechanical) — but FIRST verify the `live_aggregator` symbols (`LiveStreamAggregator`, etc.) are re-exported at `unified_trading_library` root; if not, add them to UTL's root `__all__` then re-fix. Until this lands, the features-service QG can't even reach `[5/6]` — so the parent Phase 4.6/6 flips stay DEFERRED behind THIS + Q6.
+
 ## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2), Phase 1.1
 
 Picked up this plan per main's A1 on `features_repo_consolidation_2026_05_08.md` Q1 (operator approved (a)+(b)+(c); this
@@ -766,3 +723,51 @@ Parent (`features_repo_consolidation_2026_05_08.md`) Phase 4.6 + Phase 6 annotat
 `**DEFERRED → features_service_qg_cleanup_2026_05_11.md**` pointer (added by main per A1) — slot 2 did NOT remove those
 this session (they're correct: this plan's Phase 1.3 / Phase 2.2 are the points that remove them, after the actual fixes
 land). Parent Phase 7 stays `[x]` (done this morning).
+
+## DONE-2026-05-11 (cont. — sessions 3+4) — harsh-features-consolidation-tab (slot 2), Phase 1.2 + 1.2e
+
+**Session 3 (3-sub-agent fan-out, A=sports / B=onchain+volatility / C=delta_one+cross_instrument+calendar+commodity+multi_timeframe)** — 28 commits, features-svc up to @`e4b10570`, QG 16→9: `gcs_reader.py` 1306L→4 modules + `google.cloud`→UCI + `canonical.*`→`.sports` facade + 5 `gs://` URIs dropped; `onchain/engine/orchestrator.py` 1256L→896L + `volatility/engine/orchestrator.py` 941L→429L (both <900L) + web3/solana/solders hoisted to module-top (proper root fix) + `pyproject.toml`/`uv.lock`; ~20 onchain/volatility func-decomps; `halftime`/`odds`/`derived_features_exporter` sports splits + ~10 sports func-decomps; `commodity` os.environ→config-bootstrap; calendar asyncio-in-loop fix; api `importlib` hoist; scripts→UTL StorageClient; fibonacci dataclass bundling; Files>900L 6→0, imports-inside 28→4.
+
+**Session 4** — features-svc `e4b10570 .. 71023f20` (rebased onto slot-5's `225cc13b` Phase-5/6 live-runner wire-in mid-session):
+
+| Commit | What |
+| --- | --- |
+| `c9078cb2` | Q4b — `scanner_factories.py` `unified_api_contracts.registry.chain_env` → one-level `unified_api_contracts.registry` facade for `resolve_rpc_url` |
+| `00361804` | sports — hoist 4 deferred imports + de-nest `asyncio.run` in `_sync_runners.py` |
+| `bdf36ca1` + `21c1c2f0` | sports — narrow `except Exception:` → specific tuples (×13 across writer/batch_handler/bucketed_features/11 calculators) + `# noqa: qg-empty-fallback` honest-absence on `.get(k,"")`/`.get(k,{})` sites |
+| `6c7359b6` | sports — decompose `compute_player_lineup_features` 219L→94L |
+| `23ef6944` + `16c74566` | sports — decompose `compute_h2h` 272L→193L |
+| `f34fbae4` + `05d6f7b6` | sports — decompose `compute_team_form` 357L→176L + ruff-format follow-up |
+| `04d858d6` | sports — decompose `_build_registry` 389L→~12L (6 per-phase entry builders) |
+| `573e8dd0` + `816b829a` | sports — decompose `BatchHandler.run` 416L→~25L (phases → module-level fns ≤200L) + restore `@override` |
+| `46411267` | onchain/volatility — root-fix onchain ~17 empty-fallbacks + dedup `volatility/core/dependency_checker.py` `Dependency*` against `unified_trading_library` (root facade) |
+| `8278eb09` | volatility — collapse duplicate `FeatureProcessingResult` to one owner (`engine/orchestrator.py`) |
+| `6598ee2c` | onchain — restore `lst_staking` doc after a formatter mangled the noqa comment |
+| `2a5c5e2b` | onchain/volatility — `# CORRECT-LOCAL` markers on schema-prov-flagged local types |
+| `77e817e3` + `c4873ef5` | delta_one/cross_instrument — `# CORRECT-LOCAL` markers (≈22 DTOs) + rename `PubSubMessage`→`DeltaOnePipelineMessage` + ruff-format wrap |
+| `c2312f5e` | shorten 12 verbose `# CORRECT-LOCAL` class comments to ≤120 chars (E501) |
+| `47424d50` | normalise `_get_workspace_root` noqa markers across 7 `mock_data_provider.py` files |
+| `71023f20` | `_get_workspace_root` — use canonical single-key `WORKSPACE_ROOT` (drop legacy `UNIFIED_TRADING_WORKSPACE_ROOT` fallback) — matches `multi_timeframe`; clears `Env canon` |
+
+**QG codex-compliance: 8 → 4 → 2 → 1.** The lone remaining category = `Schema provenance` (QG-check FP — Q6, Ikenna PM-side). The QG aborts even earlier at `[3.5/6] IMPORT PATTERNS` on slot-5's `225cc13b` 11 deep `unified_trading_library.feature_service_base.live_aggregator` imports (Q7, live-pipeline owner). Parent `features_repo_consolidation_2026_05_08.md` Phase 4.6 + Phase 6 stay DEFERRED behind Q6 + Q7.
+
+PM plan-flip commits: this session's plan update (PM@this-commit) + the slot-3 update (PM@`679ed5a6`).
+
+## Deferred work after 2026-05-11 session 4 (this plan)
+
+The 2026-05-11 slot-2 sessions 2-4 shipped the entire features-service-side QG-codex-compliance carry-forward (QG 8→1 — see DONE blocks above). Open items tracked here so the next agent picks up cleanly:
+
+| Phase / item | Status as of 2026-05-11 | Successor / blocker |
+| --- | --- | --- |
+| Phase 1.3 — QG green → flip parent Phase 4.6 | `blocked` (`- [ ]`) | DEFERRED-AFTER Q6 (`check_schema_provenance.py` `# CORRECT-LOCAL` fix — Ikenna PM-side) **AND** Q7 (`[3.5/6] IMPORT PATTERNS` fix on slot-5's `225cc13b` — live-pipeline owner). Flips when BOTH land + a fresh `bash scripts/quality-gates.sh` is green. |
+| Phase 1.4 — codex SSOT audit (`codex/04-architecture/features-service-architecture.md`) | `todo` (`- [ ]`, P1) | Not blocking; do after Phase 1.3. |
+| Phase 1.5 — lift `_get_workspace_root()` ×8 → UTL helper | `todo` (`- [ ]`, P2) | Not blocking (interim canonical-single-key form landed @`71023f20`). Proper de-dup to `unified_trading_library.dev_paths.get_workspace_root()`. |
+| Phase 1.2e DEFERRED (a) — `VolSurfaceTermStructureRecord` features-svc @dataclass ↔ UAC.internal BaseModel reconcile | `deferred` | Future cleanup — invasive (immutable BaseModel ≠ incremental mutation; float↔Decimal). `# CORRECT-LOCAL` + docstring DEFERRED note in place. |
+| Phase 1.2e DEFERRED (b) — `OnChainFeatures` features-svc ↔ UTL same-name different-shape | `deferred` | Future cleanup if on-chain calculator base classes are ever consolidated. `# CORRECT-LOCAL` in place. |
+| Phase 2 — full byte-for-byte parity run | `blocked` (`- [ ]`, P0) | DEFERRED-AFTER `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3 backfills (7-day reference window). |
+| Phase 3 — F9 GitHub org transfer CosmicTrader → IggyIkenna | `todo` (`- [ ]`, P2) | Non-blocking; do anytime. |
+
+Items routed OUT of this plan (tracked in their own homes):
+
+- **Q6** — `check_schema_provenance.py` doesn't honor `# CORRECT-LOCAL` → `🟡 OPEN`, slot-1/Ikenna PM-side (in this plan's `## Open questions` Q6).
+- **Q7** — `[3.5/6] IMPORT PATTERNS` fails on slot-5's `225cc13b` 11 deep imports → `🟡 OPEN`, live-pipeline plan owner (`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 5/6); also relayed on the cross-side ping ledger.
