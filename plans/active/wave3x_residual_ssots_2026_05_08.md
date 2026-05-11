@@ -156,24 +156,57 @@ zero-activity bars + record_captured". Wave 2 of writegate Phase 3.D.5 shipped t
 manifest level; Wave 3.M extends the same logic to the WRITE side so adapters emit shape-correct zero-activity-bars
 instead of writing nothing.
 
+> **🟢 AUDIT COMPLETE 2026-05-11 (slot 3, harsh-wave3x-tab — 6 read-only sub-agents)** — findings doc:
+> [`plans/active/issues/wave3x_track_d_findings_2026_05_11.md`](issues/wave3x_track_d_findings_2026_05_11.md) (per-adapter
+> A/B/C/D classification per CLAUDE.md "Four-category empty-output decision"). **Anti-sequencing conclusion**: Track D
+> forces **no new manifest schema column / shard-atom dimension** (the `zero_activity` marker is a per-row parquet-schema
+> value, not a manifest column) → the case-D *implementation* can safely defer post-cutover. **ONE candidate new
+> `EmptyConfirmedReason`** surfaced (`EXPECTED_KNOWN_SOURCE_GAP` for mid-history accepted gaps — VIX 15m gap + sports
+> `KNOWN_COVERAGE_GAPS`) — Ikenna slot 5 + slot 1 decision pending (Phase-1-now-vs-defer; tiny additive enum). The audit
+> ALSO surfaced current correctness bugs NOT in scope for Track D (escalated in the findings doc): **P0-1** MTDS
+> orchestrator `record_empty(row_key=...)` without `reason=` at `engine/orchestrator.py:2671/:2808/:2849` →
+> `LegacyBlankErrorReasonError` → honest-coverage sentinel pass silently aborts for CeFi/sports; **P0-2** MDPS
+> canonical-writer/`record_captured`/4-pillar-write-gate path is DEAD on the live path (MRO-overridden by the legacy
+> `upload_bytes`-no-manifest `_write_candles`) + `tradfi/ohlcv_passthrough.py:266 _create_full_day_empty_output` still
+> emits the 1440-NaN-bar incident shape + `output_schemas.py` nullable=True for trades/ohlcv + triple-SSOT candle
+> pipeline; **commodity** `cli/handlers/batch_handler.py:251-290` phantom manifest-row bug; **cross_instrument** 4
+> calculators `np.zeros(n)` for continuous features; **sports** calculators `fillna(magic)` masking-absence + half-shipped
+> quality-gate. → owners: writegate Phase 2.A/2.E + Harsh slot 5 (live-pipeline) + Harsh slot 6 (QG sweep).
+
 **Audit scope** (every per-shard adapter):
 
-- [ ] [MTDS] P0. Audit MTDS adapters (`market_tick_data_service/adapters/*.py`) for the case-A vs case-D split. For each
-      adapter, when source returns zero AND the catalog-aware guard reports the instrument alive: replace the current
-      `record_empty()` call with a per-data*type zero-activity-bar emission per the table in CLAUDE.md "Four-category
-      empty-output decision" rule. Per-data_type bar shape: -
-      `ohlcv*\*`→ O=H=L=C=prior_LTP, volume=0, trade_count=0, available_at=window_close.     -`trades`→ empty parquet (0 rows is correct; manifest carries`record_captured`with row_count=0 + a       zero-activity flag column).     -`book_snapshot_5`→ carry-forward last bid/ask at all 5 levels, mid=last_mid, spread=last_spread.     -`derivative_ticker`
-      → carry-forward last open_interest / mark_price / index_price.
+- [ ] [MTDS] P0. Audit MTDS adapters + (when source returns zero AND catalog-aware guard reports the instrument alive)
+      replace the `record_empty()` call with a per-data_type zero-activity-bar emission per the CLAUDE.md table:
+      `ohlcv_*` → O=H=L=C=prior_LTP, volume=0, trade_count=0, available_at=window_close; `trades` → empty parquet (0
+      rows ok; manifest `record_captured` row_count=0 + zero-activity flag column); `book_snapshot_5` → carry-forward
+      last bid/ask 5 levels; `derivative_ticker` → carry-forward last open_interest/mark_price/index_price.
+      **AUDIT DONE 2026-05-11** (slot 3 — D1+D2+D3 sub-agents; findings: `issues/wave3x_track_d_findings_2026_05_11.md`).
+      **DEFERRED — case-D *implementation* post-cutover** (no schema change forced; needs a NEW UTL `zero_activity_bars`
+      primitive + `instrument_catalog` threaded into adapter construction = Wave 2/3 of writegate Phase 3.D.5, "pending").
+      **NOTE**: sports HISTORICAL capture is in instruments-service NOT MTDS — sports half of Track D re-scopes there.
 - [ ] [MDPS] P0. Audit MDPS calculators for the same case-D handling at the candle-aggregation boundary.
+      **AUDIT DONE 2026-05-11** (slot 3 — D4 sub-agent). **DEFERRED — case-D impl post-cutover** (same prerequisites).
+      **NOTE**: D4 surfaced P0-2 (dead canonical-writer path + 1440-NaN TradFi passthrough + banned `_handle_empty_tick_data`
+      / `_create_closed_market_candle`×2 / `_maybe_write_vix_gap_placeholder`) — escalated to writegate Phase 2.A owner +
+      Harsh slot 5 in the findings doc; NOT slot-3's repo to fix.
 - [ ] [features-* (8 services)] P1. Audit each features service's calculators per same shape — especially the
       sports/prediction case-D-with-bookmaker-odds-carry-forward.
+      **AUDIT DONE 2026-05-11** (slot 3 — D5+D6 sub-agents, against the consolidated `features-service`@52898f5a, 8
+      family subdirs). **DEFERRED — case-D impl post-cutover**. **NOTE**: D5/D6 surfaced cross_instrument `np.zeros(n)`
+      continuous-feature bug, commodity phantom manifest-row bug, sports `fillna(magic)` masking-absence, sports
+      half-shipped quality-gate, presence-only manifest (`ManifestWriter.add` not `record_captured`), onchain/delta_one
+      never record honest-absence rows — escalated in the findings doc.
 - [ ] [TEST] P0. Per-adapter smoke tests: synthetic instrument-alive-but-source-zero day → zero-activity-bar with
       correct shape; instrument-not-yet-listed day → record_empty with EXPECTED_INSTRUMENT_NOT_LISTED (existing rule);
       pre-genesis-chain day for DeFi → record_empty with EXPECTED_PRE_GENESIS_CHAIN.
+      **DEFERRED — part of the case-D *implementation*, post-cutover** (tests pair with the adapter wiring above).
 - [ ] [DOCS] P0. Codex update to `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` §
       "Zero-activity-bar shape" — table of bar-shape per data_type, with explicit pre-LTP-carry-forward semantics + the
       volatility-smile use case (operator-flagged: every strike must be visible even on zero-volume days for
       cross-instrument analysis).
+      **DEFERRED — stub the case-D design + deferral pointer; deferrable since case-D impl itself is post-cutover.** The
+      audit findings (`issues/wave3x_track_d_findings_2026_05_11.md`) are the substantive interim record; slot 1 / a
+      Wave 3.M follow-up adds the codex stub alongside the implementation plan.
 
 ### Track E — Wave 3.S sports per-source rules (sports services, ~3 days)
 
