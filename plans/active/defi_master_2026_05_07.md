@@ -766,10 +766,13 @@ shipping with the Fork-1 prep batches below).
       `BUCKETS` (also reordered the DeFi block alphabetically + expanded the comment to document all 10 + flag
       `solana-defi` as legacy — the Solana handler now writes to `dex_pools`/`perp_funding`/`lst_rates` per
       `check_solana_defi_paths.py`). Relaunched the daemon: `manifest-consolidator-20260511-181538` (slot 3's) deleted,
-      new `manifest-consolidator-20260511-190513` running with the 10-bucket list. **No current data-staleness** — both
-      `dex-pools-{pid}` and `liquidations-{pid}` have a canonical `_index/availability_index.parquet` but ZERO
-      `_index/per_vm/` shards right now, so the fix is future-proofing for the next `mtds-dex-pools-*` / `mtds-liquidations-*`
-      backfill VM. **Other asset_groups checked, no gap**: CeFi options-chain/futures-chain, TradFi futures-chain,
+      new `manifest-consolidator-20260511-190513` running with the 10-bucket list — **first cycle PAID OFF immediately**:
+      it found `_index/per_vm/_legacy_seed.parquet` files in both new buckets (the consolidator auto-seeds legacy
+      snapshots on first poll of a bucket) and wrote them to the canonical indices — `dex-pools-{pid}` → 75983 rows,
+      `liquidations-{pid}` → 38134 rows. So there WAS real un-consolidated data sitting in those buckets (their canonical
+      `_index/availability_index.parquet` was stale-by-never-merged-legacy-seed; I'd initially mis-assessed it as
+      "no staleness" because I only checked for `_index/per_vm/{vm_name}.parquet` shards, missing the `_legacy_seed`).
+      **Other asset_groups checked, no gap**: CeFi options-chain/futures-chain, TradFi futures-chain,
       prediction canonical-question, sports fixture-bundles all write to their asset-group canonical buckets
       (`market-data-tick-{cefi,tradfi,prediction,sports}-{pid}`) which ARE already in the poll list — no dedicated
       per-data_type buckets there.
