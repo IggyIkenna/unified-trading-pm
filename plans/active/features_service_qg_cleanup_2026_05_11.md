@@ -289,7 +289,7 @@ check is regex-based and matches the `from ...monitors import FeatureFreshnessCh
 the fix is to make the imports-inside-functions check AST-based (or at least string-literal-aware) so it skips imports
 that appear inside docstrings / string literals. Until then, slot 2 skips those rows in Phase 1.2 (it already noted it
 will). NB: this is a more involved change than Q1.1/Q1.2 (regex → AST), which is why slot 1 didn't just fix it inline —
-it's Ikenna's QG-infra call.
+it's Ikenna's QG-infra call. **✅ FIXED by Ikenna 2026-05-11 (PM`0407eb1a`)** — `imports-inside-functions` check is now AST-based (`scripts/quality_gates/check_imports_inside_functions.py` + test), so imports that appear inside docstrings / string literals no longer flag. The cross_instrument + calendar `monitors/feature_freshness.py` docstring examples are clean. Nothing for slot 2 to do on Q2.
 
 #### A2 (✅ SHIPPED) — [ikenna-extra-hands-tab, 2026-05-11] — operator decision (a) implemented PM@<this commit>
 
