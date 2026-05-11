@@ -307,13 +307,14 @@ ${WORKSPACE_ROOT}/.tabs/8/ on branch tab/ikennaigboaka/8.
 PRIOR CYCLE: 2026-05-11 absorbed Harsh slot 4 bucket_name_ssot Phase 0f + Phase 0h carry-forward. Status-line first to
 confirm: Phase 0f VM-launcher env-awareness shipped? Phase 0h sync script first-execution scheduling?
 
-DAY-1 VERIFICATION (~15-30 min — DO THIS FIRST AFTER STATUS LINE):
-  Phase 3.D rescan VM CLI dispatcher fix ✅ RESOLVED by slot 3 PM@7a11b747 (deployment-service@03ce073 — route launcher
-  via VM_BACKFILL_CMD direct script invocation; setup-data-pipeline-vm.sh L670 whitelist extended). VM relaunched as
-  `cross-asset-rescan-20260511-171623` (RUNNING, asia-northeast1-c, dry-run, asset_group=cross_asset_all). VERIFY:
-  (a) STARTED + ≥1 progress event landed in `gs://central-element-323112-events/events/instruments-service/...`,
-  (b) STOPPED at exit, (c) triage.jsonl lands at `gs://central-element-323112-rescan-triage/20260511-171623/triage.jsonl`.
-  If VM fails or triage empty, file follow-up issue + ping slot 3. If all green, ack ✅ in plan body Phase 3.D + proceed.
+DAY-1 VERIFICATION ✅ DONE BY MAIN (slot 1, 2026-05-12 boot):
+  Phase 3.D rescan VM ✅ COMPLETED end-to-end. After slot 3's 2-iteration fix sequence (PM@`7a11b747` + `73f4a7ec`),
+  `cross-asset-rescan-20260511-172749` ran 16:30:41→16:47:11Z (16m 30s) with all 5 asset_groups return_code=0 and
+  phantom_line_count=0 across cefi/defi/tradfi/sports/prediction (dry-run). triage.jsonl is 0 bytes = healthy signal
+  = manifest in clean state per rescan algorithm. NO action required from you — skip verify, proceed directly to
+  Phase 3 consumer sweep + cross_cutting #4. Cross-side ping in `plans/active/_agent_pings.md` documents completion.
+  (Operator decision pending: should we run a `--apply-flips` non-dry-run pass to actually flip any manifest rows the
+  rescan might have identified in a longer/larger date-window sweep? Default = no, dry-run signal is conclusive.)
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
