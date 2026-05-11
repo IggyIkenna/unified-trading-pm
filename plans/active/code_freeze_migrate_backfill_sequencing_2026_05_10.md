@@ -385,6 +385,31 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
 
 **Shipped 2026-05-11**:
 
+- `PM@a4512ed3` — **Track D P0-2 (slot 6 half — the QG gate, not the code fix)** — new QG STEP 5.67
+  (`scripts/quality-gates-base/base-service.sh` + `scripts/quality_gates/check_banned_placeholder_methods.py` +
+  `scripts/quality_gates/banned_placeholder_methods_baseline.yaml`): AST-walk detecting `_create_empty_output` /
+  `_handle_empty_tick_data` / `_create_full_day_empty_output` / `_create_closed_market_candle` /
+  `_maybe_write_vix_gap_placeholder` defs + direct `*.upload_bytes(...)` candle writes that bypass `record_captured`.
+  Baseline-aware SHRINKING ratchet: the 8 currently-known MDPS occurrences are `pending_removal` → WARNINGS
+  (exit-clean, doesn't break MDPS QG); any NEW occurrence not in the baseline fails CI. Verified exit 0 on MDPS / on
+  no-occurrence repos, exit 1 on a synthetic new `def _create_empty_output`; `bash -n` clean; ruff-clean. **The P0-2
+  *code fixes* — delete legacy `orchestration_writer._write_candles`, fix `tradfi/ohlcv_passthrough.py`, flip
+  `output_schemas.py` OHLCV nullability, resolve the triple-SSOT — are writegate Phase 2.A + slot 5 (NOT slot 6).** As
+  writegate Phase 2.A deletes the methods, it removes the matching baseline entries. **Follow-ups (slot 6, not
+  blocking)**: (a) add a `test_check_banned_placeholder_methods.py` mirroring `test_check_removed_symbols.py`; (b)
+  add STEP 5.67 to `codex/06-coding-standards/quality-gates.md` STEP list (Post-Plan-Phase Codex Audit); (c) verify
+  whether `live_workers.py:199 _handle_empty_tick_data` + `output_writer_service.py:319 upload_bytes` are the
+  good/legit variants (Track D D4 hinted live_workers does the A/B/C split correctly) — if so, narrow the heuristic
+  rather than keep them baselined.
+- **Track D P0-3 disposition (commodity phantom-row)** — `features-service/market(...)/commodity/cli/handlers/batch_handler.py:251-290`
+  `_write_manifest` calls `writer.add(...)` for every (commodity, day) regardless of `_process_day` success → a
+  fully-failed run still populates `captured`-shaped rows → `_should_skip_shard` permanently skips them. **Classified**
+  (case-B/C phantom-manifest-row bug, exactly the class CLAUDE.md "Manifest phantom audit" warns about). **Captured**:
+  `wave3x_track_d_findings_2026_05_11.md` § features-set-2 (D6, with the fix + owner) + `plans/active/issues/qg_sweep_2026_05_11.md`
+  § cross-refs + this DONE block's deferred-work table. **Owner-routed**: slot 5 (live-pipeline) + writegate Phase 2.A
+  (the fix is in `features-service` which is slot-2-sole-writer-until-Phase-7 territory — slot 6 is read-only across
+  service repos). No separate issue doc (would duplicate the Track D doc). Slot 6's P1 phantom-audit pass watches for
+  re-growth from this bug if/when the commodity backfill runs.
 - `market-tick-data-service@3da026d` — **Track D P0-1 fix** (`wave3x_track_d_findings_2026_05_11.md` P0-1; owner
   re-routed to slot 6 by operator 2026-05-11): `engine/orchestrator.py` honest-coverage sentinel pass called
   `ManifestWriter.record_empty(row_key=...)` with NO `reason=` at 3 callsites (:2671 sports / :2808 Tier-3
@@ -422,7 +447,7 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
 | Full `bash scripts/quality-gates.sh` workspace sweep (basedpyright + pytest + 60+ STEP checks) | slot worktrees have no per-repo `.venv` — `setup.sh` per repo needed first | `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (1)+(2); `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 full-execution criterion |
 | Sampled `# type: ignore[...]` reason-comment audit (~20-30 of 343) | day-1 only confirmed zero *bare* directives; per-line architectural check pending | `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (3) |
 | Phantom manifest audit (P1) — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group {cefi,defi,sports,tradfi,prediction} --dry-run` | laptop run impractical (no output in 4min on `cefi --dry-run --workers 32`; CLAUDE.md: cross-region listing 18× slower) — proper path = GCE same-region VM per `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe"; ADC present, deps importable from `.venv-workspace`. 2026-05-04 baseline = 354 residual; watch the Track-D commodity-phantom-row bug | `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 (P1); `plans/active/issues/qg_sweep_2026_05_11.md` § cross-refs + "Days 2-4 follow-up" (1) |
-| AST/grep QG STEP for banned placeholder methods (`_create_empty_output` / `_handle_empty_tick_data` / `_create_full_day_empty_output` / direct-`upload_bytes`-candle-writes-that-bypass-`record_captured`) | **DEFERRED until after writegate Phase 2.A deletes those methods** — else the new gate fails on the still-present live code (Track D found them live in MDPS `tradfi/ohlcv_passthrough.py:266`, `orchestration_writer.py`, `batch_workers.py`) | `plans/active/issues/wave3x_track_d_findings_2026_05_11.md` § "Recommended decision" (3); `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (5) |
+| ~~AST/grep QG STEP for banned placeholder methods~~ — **SHIPPED `PM@a4512ed3` (STEP 5.67, baseline-aware ratchet, warn-mode for the 8 known MDPS occurrences, errors on new ones)** | Residual: writegate Phase 2.A removes the matching `banned_placeholder_methods_baseline.yaml` entries as it deletes the methods (writegate's job, not slot 6). Slot-6 follow-ups (not blocking): (a) `test_check_banned_placeholder_methods.py`; (b) add STEP 5.67 to `codex/06-coding-standards/quality-gates.md` STEP list; (c) verify `live_workers.py:199 _handle_empty_tick_data` + `output_writer_service.py:319 upload_bytes` are the legit variants → narrow the heuristic if so | DONE block above (slot-6 follow-ups (a)/(b)/(c)); `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (5); `wave3x_track_d_findings_2026_05_11.md` § "Recommended decision" (3) (now resolved) |
 | Codex SSOT audit pass — deepen currency spot-checks on the ~50 present docs the Phase 1.D/E/F plans touch (alerting/risk/DR, DeFi, UI/credentials) | day-1 only spot-checked the schema/manifest/pipeline core + alerting cluster | `plans/active/issues/codex_audit_2026_05_11.md` § "Days 2-4 follow-up" |
 | 33 codex docs referenced-but-not-yet-created for freeze-gate item 9 | all are `- [ ]` items in their owning Phase 1 plans — those plans' codex phases create them by 2026-05-15 | `plans/active/issues/codex_audit_2026_05_11.md` § "Pending codex work" table (per-plan); each owning plan's "Codex SSOT updates" phase |
 
