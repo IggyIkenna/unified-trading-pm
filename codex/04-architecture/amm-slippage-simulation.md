@@ -417,6 +417,162 @@ identical across Ethereum / Polygon / Arbitrum / Optimism / Gnosis / Avalanche /
 diverge) and to Curve (per-chain `A` parameters may differ from Ethereum reference). Per-chain calibration
 data must be captured per Phase 2 validation rows.
 
+## Matching-engine end-to-end integration (Day-1 slot 6 design ship 2026-05-11)
+
+Per CLAUDE.md "Batch = Live" HARD RULE: batch + live use the SAME `MatchingEngine` code path; only the
+execution-fill source differs. The `PoolMatcher` Protocol is the seam — `quote()` is read-only and identical
+in both modes; `apply()` differs:
+
+- **Batch / backtest replay mode**: `apply()` advances the pool's in-memory snapshot (reserves / tick /
+  sqrtPrice / D), emits a synthetic `FillResult` keyed to the replay block. Strategy P&L backtest = sum of
+  synthetic fills against historical position snapshots.
+- **Live mode**: `apply()` is a thin wrapper that submits the swap tx to the execution venue (Uniswap
+  `SwapRouter02` / Aave `Pool.supply()` / Curve metapool router / etc.) and reconstructs `FillResult` from
+  the resulting on-chain transaction receipt + emitted `Swap` event. **Critical**: the pool snapshot is
+  refreshed from the chain AFTER the tx confirms (or from a Tenderly fork pre-flight if the tx is queued
+  but not yet broadcast).
+- **Execution-alpha measurement** (CLAUDE.md "Batch = Live" sub-rule): live fills P&L − simulated fills P&L
+  (where simulated runs the SAME `PoolMatcher.quote()` against the SAME pool snapshot at the same block).
+
+End-to-end flow (both modes):
+
+```
+                          Strategy intent (SwapIntent: pool_address, amount, side, max_slippage_bps)
+                                                  │
+                                                  ▼
+                                    +─────────────────────────+
+                                    │ MatchingEngine          │   engine.py:562
+                                    │  - book_type lookup     │
+                                    │  - per-pool matcher fn  │
+                                    +─────────────────────────+
+                                                  │
+                                                  ▼
+                                    +─────────────────────────+
+                                    │ AMMMatcher              │   engine.py:433
+                                    │  - PoolShape dispatch   │   (Phase 2A refactor)
+                                    │  - pool_from_address    │
+                                    +─────────────────────────+
+                                                  │
+                                                  ▼
+            +───────────────────────────────────────────────────────────────────+
+            │ PoolMatcher Protocol (Phase 2A; implementers per pool_shape)      │
+            │  .quote(amount_in, side) → SwapQuote                              │
+            │  .apply(amount_in, side) → FillResult     ← differs batch vs live │
+            │  .spot_price() / .snapshot()                                      │
+            +───────────────────────────────────────────────────────────────────+
+                                                  │
+                          ┌───────────────────────┴────────────────────────┐
+                          ▼                                                ▼
+        +───────────────────────────────+                  +───────────────────────────────+
+        │ BATCH                         │                  │ LIVE                          │
+        │ apply() mutates in-memory     │                  │ apply() submits tx to venue   │
+        │   pool snapshot               │                  │   reconstructs FillResult     │
+        │ FillResult.filled_at_block =  │                  │   from on-chain tx receipt    │
+        │   replay block                │                  │ FillResult.filled_at_block =  │
+        │                               │                  │   confirmed block             │
+        +───────────────────────────────+                  +───────────────────────────────+
+                          │                                                │
+                          └───────────────────────┬────────────────────────┘
+                                                  ▼
+                                    +─────────────────────────+
+                                    │ position-balance-monitor│   (position-balance-monitor-service)
+                                    │  - apply FillResult     │
+                                    │  - update positions     │
+                                    +─────────────────────────+
+                                                  │
+                                                  ▼
+                                       Strategy P&L attribution
+                                       (execution alpha = live − sim)
+```
+
+**Slippage tolerance gate**: `_amm_match_impl` calls `.quote()` first; if `|quote.amount_out −
+strategy.min_amount_out| / strategy.min_amount_out > strategy.max_slippage_bps`, returns
+`MatchResult(failed=True, reason="SLIPPAGE_EXCEEDED")`. **Quote vs fill realized-slippage** is captured in
+`FillResult.realized_slippage_vs_quote_bps` — a non-trivial value here is the matcher-realism signal.
+
+**Pre-flight Tenderly fork check** (live mode, pre-broadcast): for high-impact swaps (size > N% of pool TVL),
+the live `apply()` MAY run a Tenderly-fork pre-flight `.quote()` against the upstream RPC state before
+broadcasting — protects against pool-state drift between strategy decision and tx inclusion. Out-of-scope for
+Day-1; deferred to Phase 4 implementation (originally plan body Phase 4 was governance sim — clarification
+needed; this matching-engine integration spec is separate).
+
+### Cross-service contracts (downstream consumer SSOTs)
+
+- **position-balance-monitor-service** (`position_balance_monitor/__init__.py`): consumes `FillResult` via
+  bus subscription. Position update logic must handle: (a) successful fill → reduce intent + add to filled
+  positions; (b) partial fill → split intent; (c) failed fill → log + emit `FILL_FAILED` event for
+  strategy-service replay.
+- **strategy-service** (`strategy_service/engine/`): drives backtest replay by iterating historical
+  `SwapIntent` events + dispatching to `MatchingEngine`. Live mode subscribes to
+  strategy-decision-bus + dispatches identically. Execution-alpha attribution = batch P&L (sim fills)
+  vs live P&L (real fills) on the same historical-or-paper-trade window.
+- **risk-and-exposure-service**: consumes `FillResult` for position-limit / VaR / leverage checks. Reads
+  `PoolMatcher.snapshot()` for forward-impact projection (what if strategy wants to scale up?).
+
+## Aggregator / multi-hop routing realism (Day-1 slot 6 design ship 2026-05-11; supersedes section #9 stub)
+
+Aggregator pool shapes (`JUPITER_ROUTE_AGGREGATOR`, `1INCH_AGGREGATOR`, `0X_AGGREGATOR`) are NOT single-pool
+matchers — they are **route composers** that route a single user-facing swap across N legs of underlying
+AMMs. Phase 2G implementation must handle:
+
+**Route-source by mode**:
+
+- **Live mode**: fetch route from aggregator quote API (`POST jup.ag/quote` / `1inch.io/v4.0/{chain}/quote`
+  / `api.0x.org/swap/v1/quote`) at strategy-decision time. Route is a JSON object listing per-leg pool
+  addresses + per-leg input share + expected per-leg amount_out + slippage cost. Returned route is
+  ephemeral — quote expires after ~5-15 seconds; matcher must re-fetch on stale-quote rejection.
+- **Batch mode**: replay needs historical routes. Aggregator quote APIs do NOT serve historical routes —
+  workaround: capture aggregator routes at decision time + persist per-route JSON to MTDS data_type
+  `aggregator_route` (NEW; not yet in catalogue). Backtest replay reconstructs per-leg state from MTDS
+  per-pool captures + replays the captured route, NOT the route the aggregator would have chosen at
+  replay-block (route choice is path-dependent on liquidity that's already been consumed — would be a
+  lookahead bias).
+
+**Per-leg dispatch**: for each leg in the route, the `AggregatorRouteMatcher` looks up the
+underlying-pool `PoolMatcher` from the leg's pool address + `PoolShape` lookup table (`(chain,
+pool_address) → PoolShape`; sourced from MTDS `dex_pools` data_type), calls `.quote(leg_amount_in, leg_side)`,
+and sums per-leg outputs:
+
+```python
+def aggregator_quote(route, amount_in):
+    amount_in_remaining = amount_in
+    amount_out_total = Decimal("0")
+    legs_quote: list[SwapQuote] = []
+    for leg in route.legs:
+        leg_amount_in = amount_in_remaining * Decimal(leg.input_share)
+        leg_pool = pool_registry.get_pool_matcher(leg.chain, leg.pool_address)
+        leg_quote = leg_pool.quote(leg_amount_in, leg.side)
+        legs_quote.append(leg_quote)
+        amount_in_remaining -= leg_amount_in
+        amount_out_total += leg_quote.amount_out
+    return SwapQuote(
+        amount_out=amount_out_total,
+        fee_amount=sum(q.fee_amount for q in legs_quote),
+        price_impact_bps=composite_price_impact(legs_quote),
+        legs=legs_quote,
+    )
+```
+
+**MEV considerations** (live mode): aggregator routes are **MEV-prone**. Front-running risk = high (bot sees
+your tx in mempool + sandwiches with bigger size on the same route legs). Mitigation: use private mempool
+(Flashbots Protect / MEV-Blocker) or private order flow (Cowswap / 1inch Fusion). The `FillResult` should
+record `mempool_path: PUBLIC | PRIVATE` so execution-alpha attribution can separate "lost to public mempool
+MEV" from "lost to genuine slippage."
+
+**Slippage composition**: per-leg fees + per-leg price-impact compound multiplicatively, not additively, for
+multi-hop. A 30-bp leg fee × 3 hops = 90 bps fee (additive) but the per-hop price impact compounds on a
+non-linear curve. For backtest realism, use the composite price-impact formula:
+
+```
+composite_fill = leg_1_amount_out * leg_2_amount_in_share * ... * leg_N_amount_in_share
+```
+
+Each per-leg `amount_in_share` is the strategy's chosen split; aggregator-API returns the optimal split.
+
+**Validation threshold**: ≥ 30 historical Jupiter routes within 10 bps composite fill (looser than per-pool
+≤5 bps because multi-hop variance is inherent — different routes can be near-optimal). Per `defi_master`
+plan, aggregator captures land via Phase 2G MTDS adapter (NEW; not yet shipped).
+
 ## Lending rate-impact-from-own-trade
 
 When we supply $X USDC to Aave, utilization moves, rates compress, our yield drops. Rate-impact calculator
