@@ -587,3 +587,63 @@ master spawned Sub-B targeting risk Phase 0 audit + Phase 1.A-E UAC taxonomy + P
   SCALE_DOWN→WARN, MONITOR/TEST_ONLY→INFO, RECOVERY→INFO). Test `test_kill_switch_rules_trigger_kill_switch_flag`
   updated to exempt RECOVERY codes from `triggers_kill_switch=True` invariant. Also fixed E501 leftover at
   `alerting/rules.py:126` from Sub-A's rename. 160/160 tests green.
+
+### DONE-2026-05-11 — Slot 7 Round 2 (Phase 2.A-F + 2.H + 2.I + Phase 3 + Phase 7)
+
+Slot 7 Round-2 fan-out shipped 6 sub-agents in parallel — Phase 2 (per-axis registries + family aggregator) + Phase 3
+(UTL pre-flight engine) + Phase 7 (codex SSOTs). Round-1 had closed Phase 0 + Phase 1.
+
+**Shipped artefacts:**
+
+- **Phase 2.A — archetype registry (Sub-D)**: `unified-api-contracts@86851ab` (NEW `registry/risk_rules/archetype.py`
+  451L + 33 tests; 24 rules across `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION`) +
+  `unified-trading-pm@7aa32954` (Phase 2.A flip).
+- **Phase 2.B-F — venue/account/client/asset_group/global registries (Sub-E)**: `unified-api-contracts@29d4fe4` (NEW
+  5 registry files + 33 tests; 48 rules: venue=27, account=8, client=4, asset_group=6, global=3). **Foot-gun #1**:
+  Sub-E's files landed under Sub-I's TICK_STALENESS commit message via within-slot index race. Content correct +
+  tests green. Plan-flip `PM@da590057` (bundled Sub-H's Phase 7 flips per same foot-gun).
+- **Phase 2.H + 2.I — family rules + UTL aggregator (Sub-F)**: `unified-api-contracts@301882f` (NEW
+  `registry/risk_rules/strategy_family.py` 17 rules + extended `risk_rule.py` with `PER_STRATEGY_FAMILY` scope + 6
+  new `FAMILY_*` `RiskRuleId` members + 30 tests) + `unified-trading-library@db8dcae5` (NEW
+  `risk/family_aggregator.py` rolling-state + cross-family correlation via numpy + 23 tests) +
+  `unified-trading-pm@fa7dd51d` (Phase 2.H + 2.I flips).
+- **Phase 3 — UTL pre-flight engine (Sub-G)**: `unified-trading-library@9b4bcc09` (NEW `risk/rule_evaluator.py`
+  13-trigger discriminated dispatch + `risk/preflight.py` BLOCK>SCALE_DOWN>TEST_ONLY>MONITOR precedence +
+  `risk/__init__.py` facade + 53 tests; 1817 insertions) + `unified-trading-pm@d6d38301` (Phase 3.A-C flips).
+- **Phase 7 — codex SSOTs (Sub-H)**: `unified-trading-pm@d86c8b3c` (3 NEW + 2 UPDATE codex docs, 679 insertions:
+  `risk-rule-taxonomy.md` 168L + `risk-preflight-flow.md` 198L + `risk-breaker-seam.md` 215L co-owned with DR plan
+  + UPDATE `kill-switch-circuit-breaker.md` +49L + UPDATE `capital-efficiency-patterns.md` +49L) +
+  `unified-trading-pm@bf1ebc54` (DR Phase 8.F cross-reference). Phase 7.A-E flips bundled in `PM@da590057` per
+  foot-gun #1.
+- **Master coordinator wrap-up**:
+  - `unified-api-contracts@5dfdd92` — NEW `registry/risk_rules/__init__.py` 7-axis aggregator (89 rules total) +
+    `get_rules_for(scope, applies_to)` + `iter_applicable_rules(...)` helper + `risk.py` facade re-exports; 201 UAC
+    tests pass.
+  - `unified-trading-library@6e7575b3` — Extended `risk/__init__.py` with `family_aggregator` exports; 76 UTL tests
+    pass.
+  - `unified-trading-pm@<this-commit>` — Round-2 DONE block + LEDGER refresh.
+
+**Aggregate rule counts**: archetype=24, venue=27, account=8, client=4, asset_group=6, global=3, family=17 →
+**89 ALL_RULES**. Round-2 added **172 new tests** (UAC 96 + UTL 76); UAC sweep 201/201, UTL risk sweep 76/76.
+
+**Findings raised**:
+
+- **Case-5 BIG — Foot-gun #1 (intra-slot index race)**: Sub-E's `UAC@29d4fe4` + Sub-H's flips at `PM@da590057`
+  landed under foreign commit messages due to within-slot `.git/index` sharing — same shape as Round-1 Sub-B
+  incident. Sub-I's `git add` absorbed Sub-E's pre-staged registry files; Sub-G's `git add` absorbed Sub-H's Phase 7
+  flips. **No data loss** — content correct on origin. Attribution muddled. Confirms within-slot multi-sub-agent
+  collision is REPRESENTABLE under per-slot worktree model when the mandatory pre-commit check
+  (`git diff --cached --stat` NO PATH ARG) is skipped.
+- **Foot-gun #4** — Sub-F + Sub-I both encountered prek auto-restore races; both recovered via bundled
+  Edit→add→commit→push pattern per workspace HARD RULE. ~10 min lost each. No work lost.
+
+**What remains open** (Phase 4+ blocked on Phase 3 consumption):
+
+- Phase 4 — per-service migration (risk-and-exposure / execution / strategy / position-balance). UTL pre-flight
+  helpers shipped; consumer wiring is next-cycle work.
+- Phase 5 — alerting wire (RiskRuleFiredEvent emit + consumer). Blocked by Phase 4.
+- Phase 6 — deployment-api + UI Risk tab. Blocked by Phase 4.
+- Phase 8 — real-VM rule fire suite. Blocked by Phase 4 + 5.
+- Phase 9 — cutover gate. Blocked by Phase 8.
+
+Phase 1 freeze gate (2026-05-15) covers Phase 0+1+2+3+7 from this plan; Phase 4+ is post-freeze.

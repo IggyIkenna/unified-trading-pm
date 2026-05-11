@@ -881,3 +881,36 @@ seeded the corresponding `LIVE_ALERT_RULES` entries — the master's scope parti
   `alerting/rules.py:126` from Sub-A's rename. Test `test_kill_switch_rules_trigger_kill_switch_flag` updated to
   exempt RECOVERY codes from the `triggers_kill_switch=True` invariant — they report past state changes, not arm new
   ones. 160/160 tests pass workspace-wide across alerting + risk_rule + strategy_family + circuit_breaker + kill_switch.
+
+## DONE-2026-05-11 — Slot 7 Round 2 Sub-I (alerting P1 tick-staleness)
+
+Sub-I shipped the P1 tick-staleness + connectivity-gap migrated-issue from § "Tick-staleness + connectivity-gap event
+taxonomy". 4 new AlertCodes (closed-set grew 52 → 56):
+
+- `TICK_STALENESS` (HIGH, PagerDuty + Telegram) — MDPS downstream-detected staleness
+- `CONNECTIVITY_GAP_DETECTED` (HIGH, PagerDuty + Telegram) — MTDS upstream-detected gap
+- `CONNECTIVITY_RECOVERED` (INFO, Telegram) — recovery
+- `CONNECTIVITY_GAP_BACKFILLED` (INFO, Telegram) — recovery + replay closed
+
+**Commits**:
+
+- `unified-api-contracts@29d4fe4` — `thresholds.py` (NEW `tick_staleness_seconds` 300s + `ThresholdUnit.SECONDS`).
+  Sub-I's intended commit; ALSO incidentally bundled Sub-E's 5 risk-registry files under this commit message via
+  foot-gun #1 within-slot index race.
+- `unified-api-contracts@92ad35c` — `codes.py` + `rules.py` (4 new AlertCode members + 4 LIVE_ALERT_RULES entries) +
+  `test_alerting_taxonomy.py` (+7 tests, 43 → 50 alerting tests pass).
+- `alerting-service@e7a9e7c` — `notifiers/router.py` `_check_coalesce_window()` (30s coalesce-window keyed on
+  `(venue, instrument)` for TICK_STALENESS + CONNECTIVITY_GAP_DETECTED) + `tests/unit/test_router_coalesce.py` (NEW,
+  22 tests, all green). **Pair-review tag** in commit body (alerting-service is Harsh's repo per CLAUDE.md "Two
+  teammates" rule); convention follows `_find_kill_switch_rule` precedent (`alerting-service@8eda37c`).
+- `unified-trading-pm@62d09dc8` — codex `04-architecture/alerting-batch-live.md` "Live Instruments Failure Rules"
+  section extended with 4 new codes + 3 plan checkboxes flipped (Phase 2.X migrated-issue todos: AlertCode taxonomy
+  extension + alert de-dup logic + codex update).
+
+**Findings**:
+
+- **Case-5 BIG — Foot-gun #1 cascade** documented in DONE-2026-05-11 of risk plan. Sub-E's pre-staged registry files
+  bundled under Sub-I's `UAC@29d4fe4` commit message via within-slot index race. No data loss; attribution muddled.
+
+**Cycle metrics**: ~75 min (under budget). 4 commits across 3 repos. 0 issue docs filed (findings captured in
+risk plan § Audit findings 0.D + risk plan DONE-2026-05-11).
