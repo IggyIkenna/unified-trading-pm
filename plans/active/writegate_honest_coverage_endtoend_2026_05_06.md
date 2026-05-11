@@ -3121,6 +3121,16 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [ ] [MDPS] P0. Wire `publish_with_manifest_lookup()` at every other MDPS emission boundary listed in the policy seed
       dict: `ohlcv_1m:current` / `ohlcv_1m:historical` / `ohlcv_24h` / `book_snapshot_5`. Same shape as Phase 5.3 / 5.4.
       Each emission gets unit + integration tests mirroring the `ohlcv_1h` template.
+      **PARTIAL 2026-05-11 PM** (slot 8 Q2-fix sub-agent, rate-limited mid-task):
+      Scaffolding shipped on `tab/ikennaigboaka/8` only (NOT FF-pushed to `live-defi-rollout` — dead helpers shouldn't
+      reach VMs) at [`market-data-processing-service@ae0cada`](market-data-processing-service): 152 LOC adding
+      `_resolve_policy_output_data_type()` (option-α source-conceptual seed-key resolver for all 4 data_types) +
+      `_publish_emission_check()` (generalized publisher mirroring slice (b)'s `_publish_ohlcv_1h_emission_check`).
+      **WIRING + TESTS REMAIN**: (1) replace the inline call to `_publish_ohlcv_1h_emission_check` in
+      `write_candle_parquet` with the resolve-then-check pattern using the new helpers; (2) add per-data_type unit tests
+      mirroring `test_canonical_writer_ohlcv_1h_policy.py` (one test class each for `ohlcv_1m`, `ohlcv_24h`,
+      `book_snapshot_5`); (3) run MDPS QG; (4) FF-push to `live-defi-rollout`; (5) flip this checkbox. Next slot 8
+      cycle picks up from `mdps@ae0cada` — scaffolding is a head-start, not blank-state.
 - [ ] [MDPS] P1. Audit MDPS for OTHER calculators that emit derived/aggregated outputs not yet in the policy seed (e.g.
       trade-flow imbalance metrics, microstructure features) — extend the UAC seed dict per finding. Each addition = one
       PR touching UAC + one PR touching MDPS + one PR flipping plan checkboxes.
