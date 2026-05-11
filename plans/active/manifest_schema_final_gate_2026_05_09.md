@@ -404,13 +404,24 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       [`footystats_pipeline_mode_gap_2026_05_12.md`](issues/footystats_pipeline_mode_gap_2026_05_12.md).
 - [ ] [AGENT] P0. Phase 4.FEATURES — features-service (post-consolidation) + remaining features-\* repos pass propagated
       `pipeline_mode` + emission-policy hooks. **GATED on features-consolidation merge by May 16.**
-- [ ] [AGENT] P0. Phase 4.DEPLOYMENT-API — manifest read endpoints surface v8 columns; data-status drilldown renders
+- [x] [AGENT] P0. Phase 4.DEPLOYMENT-API — manifest read endpoints surface v8 columns; data-status drilldown renders
       `service_emission_state` badges (4 states).
-      **IN-FLIGHT 2026-05-12 slot 2 (`ikenna-v8-manifestwriter-tab`)** — verified via grep that zero current
-      deployment-api/ui references to `service_emission_state` / `last_emission_decision_at` / new emission columns.
-      Real open scope (NOT a false positive): need to (1) extend deployment-api manifest read endpoints to expose the
-      3 v8 emission columns + pipeline_mode in response shape; (2) add `ServiceEmissionStateBadge` 4-state renderer in
-      deployment-ui DataStatusTab; (3) reuse the Phase 5.5 forward-compat envelope pattern for the new columns.
+      **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-deployment-api-ui` sub-agent**:
+      - **deployment-api@`2f833a7`** — `ShardGcsMetadata` extended with 4 v8 fields (`pipeline_mode`,
+        `service_emission_state`, `last_emission_decision_at`, `expected_window_completeness_fraction`) all
+        `None`-defaulting for forward-compat; new `ServiceEmissionStateLiteral` Literal[...] type mirroring UAC
+        `ServiceEmissionStateEnum`; `_gcs_metadata` populator threads v8 columns from manifest-row dict with closed-set
+        frozenset guard (off-set values silently drop to `None`) + unparseable-float warning fallback. 6 new tests in
+        `TestShardGcsMetadataV8Columns`; 49/49 shard_detail tests pass.
+      - **deployment-ui@`ab06bfe`** — NEW `ServiceEmissionStateBadge.tsx` (128 lines) — 4-state colour-coded badge
+        (green / amber / orange / red) + muted `—` placeholder for null/undefined; `compact` prop; ARIA `role=status`
+        + accessible-label + closed-set tooltip; `serviceEmissionStatePalette` helper for testability. `ShardDetailModal`
+        wired with the new badge + conditional `pipeline_mode` label. `ShardDetailGcs` TS interface extended with
+        4 nullable v8 fields. 9 new vitest tests (4 states + null + undefined + compact + ARIA + palette-uniqueness);
+        466/466 full suite passes; `VITE_MOCK_API=true npx vite build` clean.
+      - **Forward-compat verified**: pre-v8 manifest rows render muted `—` placeholder + omit pipeline_mode label; no
+        regressions; no double-SSOT (closed-set lives in UAC; deployment-api uses Literal alias; deployment-ui uses TS
+        union — all three name the same closed set, drift would be review-blocking).
 - [x] [AGENT] P0. Phase 4.E2E — synthetic-fixture writers pass synthetic-source `pipeline_mode`.
       **N/A 2026-05-12 slot 2** — grep-then-read audit (per CLAUDE.md "Grep-Then-Read") found ZERO actual
       `record_*(` method calls in `system-integration-tests/`. The only grep hit
@@ -452,14 +463,29 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 
 ### Phase 5 — Bundled migration script (May 11-12, SEQUENTIAL after Phase 1+2)
 
-- [ ] [AGENT] P0. Phase 5.A — Extend `unified-trading-pm/scripts/migration/gcs_migration_bundle_2026_05_08.py` to
+- [x] [AGENT] P0. Phase 5.A — Extend `unified-trading-pm/scripts/migration/gcs_migration_bundle_2026_05_08.py` to
       include the v8 NULL-column backfill in the same parquet walk. Single walk does FIVE migrations: (1)
       `pipeline_mode=` partition insertion, (2) `category=` → `asset_group=` rekey, (3) 5 drift axes (path-prefix /
       instrument_type casing / schema-4 empty / chain-bundle equivalence / hive-vocab), (4) v8 NULL columns via Phase
       2.D helper, (5) cross-asset rescan class-A auto-fixes via Phase 3.D `cross_asset_rescan.py` helper.
-- [ ] [AGENT] P0. Phase 5.B — Extend tests in `tests/test_gcs_migration_bundle.py` with v8-column + rescan-auto-fix
+      **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-gcs-migration-bundle` sub-agent @PM@`d9a4fa9b`** — `DriftClass`
+      StrEnum extended with `V8_NULL_COLUMNS_MISSING` + `CROSS_ASSET_RESCAN_CLASS_A`; `MigrationMetrics` extended with
+      4 new counters + 2 record_* methods; new helpers `run_v8_column_backfill` + `run_cross_asset_rescan` +
+      `_parse_rescan_output`; new dataclass `CrossAssetRescanResult`; `run_migration` extended with 5 new kwargs
+      (`v8_backfill_fn`, `rescan_fn`, `rescan_asset_group`, `skip_v8_backfill`, `skip_rescan`); new CLI flags
+      `--skip-v8-backfill` / `--skip-rescan` / `--rescan-asset-group`. Imports UTL Phase 2.D helper via facade (enabled
+      by UTL@`d76203a2` Citadel § 7 facade re-export). Rescan invoked via subprocess (process-isolation; Phase 3.D
+      helper is a standalone CLI). Defence-in-depth per-VM-shard-isolation guard fires BEFORE UTL helper invocation.
+- [x] [AGENT] P0. Phase 5.B — Extend tests in `tests/test_gcs_migration_bundle.py` with v8-column + rescan-auto-fix
       coverage. Maintain dry-run-by-default + per-VM shard isolation guard.
-- QG: PM quality-gates.sh clean. **Done-definition**: bundled script + 30+ unit tests covering all 5 migration axes.
+      **SHIPPED 2026-05-12 slot 2 @PM@`06076383`** — 14 new tests (target 8+): 4 v8 backfill + 7 rescan + 3
+      bundled/skip/isolation. Coverage: legacy v7 parquet → 4 NULL columns backfilled + non-zero
+      `v8_columns_backfilled_rows`; pre-migrated v8 parquet → `v8_columns_already_present_rows == row_count` + zero
+      backfilled; class-A drift case → `rescan_class_a_auto_fixes >= 1`; class-C ambiguous case → row in triage JSONL +
+      `rescan_class_c_triage_count >= 1`; per-VM-isolation guard fires before UTL helper; dry-run omits `--apply` flag
+      from rescan subprocess. All 37 tests pass locally in 16s (23 original + 14 new).
+- QG: PM quality-gates.sh clean. **Done-definition**: bundled script + 30+ unit tests covering all 5 migration axes
+  ✅ (37 tests total post-Phase-5.B; covers 7 axes — original 5 + v8-backfill + rescan-class-A).
 
 ### Phase 6 — Bounce-sweep #1 — drain stale VMs (May 12)
 
@@ -885,6 +911,111 @@ schedule compresses by 1 day per slip-day.
 The tab is ready to drop into today's `work_split_2026_05_10_ikenna.md` once operator decides the working model (Model A
 6-tab vs Model B dynamic spawned). Recommend Model B for today since the consolidation has HUMAN-gated Phase 2
 unblocking + 8 parallel Phase 3 sub-agents — dynamic spawning fits the shape better than fixed thematic tabs.
+
+## DONE-2026-05-12 — slot 2 `ikenna-v8-manifestwriter-tab` — Phase 2 P2 + Phase 4 partial + Phase 5.A+B
+
+Tab: `ikenna-v8-manifestwriter-tab` (slot 2 worktree at `.tabs/2/`). Session scope: re-task from writegate slice (c)
+Phase 6.2 close-out (prior session) → manifest_schema_final_gate Phase 2 (UTL v8 ManifestWriter) per operator
+re-task brief. Pre-audit discovery: RE-TASK BRIEF #2 primary scope (Step 0 Q2 Bug 1 + Step 1-4 Phase 2.A/B/C/D) ALL
+already shipped (slot 6 finished today). Surfaced finding to operator → operator directed "do all these: Phase 2 P2 +
+Phase 4 + Phase 5.A/B".
+
+### Commits
+
+| Commit | Repo | Summary |
+|---|---|---|
+| `PM@59d761a4` | unified-trading-pm | Phase 2 P2 — MANIFEST_SCHEMA_VERSION decision (option b) + codex softened + Phase 4.DEFAULT-REMOVAL extended |
+| `MDPS@a3c7198` | market-data-processing-service | Phase 4.MDPS — 22 callsites + `resolve_pipeline_mode_from_source` helper |
+| `instruments-service@e530906` | instruments-service | Phase 4.INSTRUMENTS — ~50 callsites + per-source map + v8-aware reconciler |
+| `PM@237d00b7` | unified-trading-pm | Phase 4.MTDS — 🟡 finding doc (5 Q's pending operator triage) |
+| `PM@a5e5aa4d` | unified-trading-pm | Finding doc: VIX 15m Yahoo/Barchart `PipelineMode` enum gap |
+| `PM@6ede1e01` | unified-trading-pm | Finding doc: footystats `PipelineMode` enum gap |
+| `PM@42348eba` | unified-trading-pm | Phase 4 partial plan-flip — MDPS [x] + INSTRUMENTS [x] + small-repos N/A + MTDS blocked + GREP-VERIFY AST-walk upgrade |
+| `deployment-api@2f833a7` | deployment-api | Phase 4.DEPLOYMENT-API — 4 v8 fields in `ShardGcsMetadata` + 6 tests |
+| `deployment-ui@ab06bfe` | deployment-ui | Phase 4.UI — `ServiceEmissionStateBadge` + 9 vitest |
+| `PM@d9a4fa9b` | unified-trading-pm | Phase 5.A — gcs_migration_bundle v8 backfill + cross-asset-rescan class-A |
+| `PM@06076383` | unified-trading-pm | Phase 5.B — 14 new tests (37 total) |
+| `UTL@d76203a2` | unified-trading-library | UTL `manifest_migrations` facade re-exports (enables Phase 5.A imports per Citadel § 7) |
+| `PM@<this-flip>` | unified-trading-pm | Plan-flip + DONE block |
+
+### What shipped (operationally)
+
+- **Phase 2 P2** — closed-set design call (option b): codex prose softened to match `manifest_writer.py:131` constant
+  value `MANIFEST_SCHEMA_VERSION = 7` (transitional); bump-to-8 + remove all 4 transitional `None` defaults
+  consolidated into Phase 4.DEFAULT-REMOVAL.
+- **Phase 4.MDPS** — pipeline_mode propagated through `write_candle_parquet` / `candle_write_mixin` / `live_workers` /
+  `batch_workers` / `orchestration_writer` / `live_aggregator` / `io/writer`. Helper `resolve_pipeline_mode_from_source`
+  parses `pipeline_mode=<value>` hive partition segment from GCS blob path; legacy pre-v8 paths fall back to
+  `BATCH_DATABENTO`. 22 callsites in 16 files (8 source + 2 scripts + 6 tests).
+- **Phase 4.INSTRUMENTS** — per-source pipeline_mode mapping table decided (api_football → BATCH_API_FOOTBALL,
+  transfermarkt → BATCH_TRANSFERMARKT, etc.); reconciler v8-aware (pandas read-tolerant + write-preserving — no
+  behaviour change needed). ~50 callsites in 9 files.
+- **Phase 4.DEPLOYMENT-API + UI** — `ShardGcsMetadata` response surfaces 4 v8 fields; `ServiceEmissionStateBadge`
+  4-state colour-coded badge wired into `ShardDetailModal`. 15 new tests (6 Python + 9 TS); 466/466 UI suite passes.
+- **Phase 5.A** — single-walk migration script extended with 2 new drift axes (`V8_NULL_COLUMNS_MISSING` +
+  `CROSS_ASSET_RESCAN_CLASS_A`); 4 new metrics counters; 3 new CLI flags; UTL facade enables clean import.
+- **Phase 5.B** — 14 new tests covering v8 backfill + rescan auto-fix + per-VM isolation defence-in-depth.
+
+### Findings filed (3 — pending operator triage)
+
+| Finding doc | Scope | Severity |
+|---|---|---|
+| [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md) | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0 |
+| [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry | P1 |
+| [`footystats_pipeline_mode_gap_2026_05_12.md`](issues/footystats_pipeline_mode_gap_2026_05_12.md) | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows | P1 |
+
+**Operator triage decision needed** (consolidated): extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` to add 6 missing
+values (`BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` /
+`BATCH_CHAINLINK`), OR ratify the workaround pattern (stamp closest SOURCE_PRIORITY top-entry value when no exact
+match). Plus: migrate `DefiManifestRecorder.record_captured` from legacy `ManifestWriter.add()` path to v8
+`record_captured()` path (no-double-SSOT per workspace contract).
+
+### Deferred work after 2026-05-12 ikenna-v8-manifestwriter-tab session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Phase 2 P2 — MANIFEST_SCHEMA_VERSION decision | `done` (PM@`59d761a4`) | — |
+| Phase 4.MDPS | `done` (MDPS@`a3c7198`) | — |
+| Phase 4.INSTRUMENTS | `done` (instruments-service@`e530906`) | — |
+| Phase 4.DEPLOYMENT-API + UI | `done` (deployment-api@`2f833a7` + deployment-ui@`ab06bfe`) | — |
+| Phase 4.E2E + Phase 4.PM-SCRIPTS | `done` (N/A — no real callsites; verified via grep-then-read) | — |
+| Phase 4.MTDS | `blocked` | Operator triage of 3 findings (6 PipelineMode enum gaps + DefiManifestRecorder add()-path) |
+| Phase 4.FEATURES | `deferred-after-may-16` | features-consolidation merge gate per plan body |
+| Phase 4.GREP-VERIFY | `todo` (`- [ ]`) | NEW QG STEP `check_pipeline_mode_explicit_at_record_calls.py` AST-walk; ~80-100 lines mirroring `check_banned_placeholder_methods.py` shape |
+| Phase 4.DEFAULT-REMOVAL | `blocked-after-mtds` | Blocked on Phase 4.MTDS unblock; once 4.MTDS + 4.FEATURES land, removes 4 None defaults + bumps MANIFEST_SCHEMA_VERSION 7→8 + reconciles codex |
+| Phase 5.A | `done` (PM@`d9a4fa9b`) | — |
+| Phase 5.B | `done` (PM@`06076383`) | — |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **Per-service slice (c) Phase 6.3-6.9** — writegate plan body: features-volatility / cross-instrument / ml-training /
+  ml-inference / strategy / execution / position-balance / risk / instruments-service rollouts.
+- **Phase 6-8 (manifest_schema_final_gate)** — HUMAN+AGENT operational steps (drain stale VMs / tarball refresh /
+  gcs Phase 3 walk / class-C triage). Out of agent scope; operator-runnable per plan body.
+
+### EOD-audit (per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit clause")
+
+Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**DEFERRED**`/`**BLOCKED**` annotation
+in `plans/active/`:
+
+- "Phase 4.MTDS blocked" — annotated in plan body Phase 4.MTDS section + `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`.
+- "Phase 4.FEATURES gated on May-16" — explicit annotation in plan body Phase 4.FEATURES.
+- "Phase 4.GREP-VERIFY AST-walk upgrade" — explicit `- [ ]` in plan body with implementation site
+  (`unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`) named.
+- "Phase 4.DEFAULT-REMOVAL blocked on MTDS" — annotated in plan body + extended scope (4 None defaults + bump
+  MANIFEST_SCHEMA_VERSION + reconcile codex) per Phase 2 P2 resolution.
+- "Per-service slice (c) Phase 6.3-6.9" — open in `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.3-6.9.
+
+No deferral lives only in chat or in the commit message. Three findings filed for operator triage.
+
+### Foreign findings flagged (NOT my code, NOT blocking)
+
+- Per-tree prettier auto-reflow (foot-gun #4) — ~130 codex docs + plans show line-wrapping diffs vs HEAD after sub-agent
+  rebases. Files have IDENTICAL semantic content; only whitespace differs. Stashed under `slot-2: foreign-prettier-reflows-foot-gun-4`
+  to keep the slot 2 working tree clean for plan-flip commits. Foreign agents will reconcile in their own commits per
+  CLAUDE.md "Two teammates × multiple parallel agents" rule.
+
+---
 
 ## Decision log
 
