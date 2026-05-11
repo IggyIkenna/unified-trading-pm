@@ -192,18 +192,25 @@ isProject: false
 
 todos:
 
-- [ ] [SCRIPT] P0. **UAC SSOT — bar boundary contract**. Add to UAC `canonical/crosscutting/availability_semantics.py`
-      (or new `bar_boundary_alignment.py`) the canonical rule: every bar timeframe ∈ {15s, 1m, 5m, 15m, 30m, 1h, 4h, 1d}
-      closes on a UTC-midnight-aligned boundary. Bar `[t_open, t_close)` has `available_at = t_close` (the moment the
-      bar closed and could be observed live). Document the rounding rule:
-      `t_close = ceil_to_boundary(last_tick_ts, timeframe, anchor=midnight_utc)`. Document that bar `t_open` =
-      `t_close - timeframe`. The rule is idempotent: replaying ticks with the same window yields the same
-      `(t_open, t_close, available_at)` triple regardless of when the replay runs.
+- [x] [SCRIPT] P0. **UAC SSOT — bar boundary contract** (shipped UAC@5240000 2026-05-11 by `ikenna-available-at-tab`).
+      New module `unified_api_contracts/canonical/crosscutting/bar_boundary.py` declares the 4-clause contract:
+      (1) closed-set timeframe `BAR_TIMEFRAMES = ('15s', '1m', '5m', '15m', '30m', '1h', '4h', '1d')`;
+      (2) `t_close` lies on the UTC-midnight-aligned grid for the timeframe;
+      (3) half-open window `[t_open, t_close)` of width `== timeframe`;
+      (4) `available_at == t_close` (no leak; replay-idempotent).
+      Public helpers: `BarTimeframe` Literal, `BAR_TIMEFRAME_SECONDS`, `BarBoundaryViolationError`,
+      `assert_bar_boundary_contract(...)`, `bar_window_for_close(t_close, timeframe)`. Re-exported from
+      `canonical/crosscutting/__init__.py` + root `unified_api_contracts` facade. 24 unit tests cover all clauses
+      + tz-awareness + idempotency. status: done.
 
-- [ ] [SCRIPT] P0. **UTL helper — `compute_bar_close_boundary(last_tick_ts, timeframe) -> datetime`**. Lift the
-      boundary-rounding logic into UTL `unified_trading_library/availability_stamping.py` so MDPS + any future
-      bar-producing service uses the same code. Unit tests: 15s/1m/5m/1h/1d × midnight + non-midnight last-tick-ts × DST
-      edges (no DST drift; UTC-only); idempotency under replay.
+- [x] [SCRIPT] P0. **UTL helper — `compute_bar_close_boundary(last_tick_ts, timeframe) -> tuple[datetime, datetime, datetime]`**
+      (shipped UTL@d798fcf3 2026-05-11 by `ikenna-available-at-tab`). Lifted boundary-rounding into
+      `unified_trading_library/availability_stamping.py`. Strictly-after ceiling (tick on grid point rolls to NEXT bar
+      per half-open window). Integer microsecond arithmetic vs UTC midnight — no float drift, exact for every
+      supported timeframe (each divides evenly into 86400s). Round-trips through `assert_bar_boundary_contract` so
+      drift is caught at helper-call site. Idempotent under replay (no `datetime.now()`). 20 unit tests covering
+      strictly-after rule, every timeframe in closed set, idempotency under repeated calls, tz-aware UTC gating
+      (naive + non-UTC both rejected), and no-DST-drift sanity for US spring-forward + EU fall-back. status: done.
 
 - [ ] [SCRIPT] P0. **MDPS audit + fix — bar boundary alignment**. Walk every `MDPS` calculator that emits OHLCV or
       aggregate bars. For each: (a) verify `t_open` / `t_close` are computed via `compute_bar_close_boundary` (no inline
@@ -242,10 +249,51 @@ todos:
       `assert_available_at_present` already wired into `ManifestWriter.record_captured()`. **Owned by
       `writegate_honest_coverage_endtoend_2026_05_06`** — flip when shipped.
 
-- [ ] [TRACKED] P0. **TRACK — sports adapter stamping**. fixture_lineups, fixture_player_stats, fixture_stats,
-      fixture_events, injuries, odds snapshots, weather, reference-tables — owned by `sports_master_2026_05_07` Phase
-      1-2. Phase 2.C stub wiring **BLOCKED-ON amendment prerequisite**; Phase 2.D schema bumps **DEFERRED to Stage 2**.
-      Flip when shipped.
+- [x] [TRACKED] P0. **TRACK — sports adapter stamping (MTDS-slice ODDS_SNAPSHOT path)** (shipped
+      market-tick-data-service@c186ecb 2026-05-11 by Harsh slot 4; plan flip 2026-05-11 by `ikenna-available-at-tab`
+      re-task (b)). MTDS `_process_sports_venue_with_leagues` wires
+      `stamp_available_at_odds_snapshot(shard_df, snapshot_time_col="bm_time")` (UTL wave3x Track E @UTL`2ab3685`)
+      into the per-shard groupby loop before `StreamingParquetWriter.write_chunk`, with shard-level failure isolation
+      (per-shard stamping failure → `failed_shards` dict → `record_failed` + `ADAPTER_FETCH_FAILED`, shard skipped —
+      never raised). 5 unit tests at `market-tick-data-service/tests/unit/test_sports_odds_available_at.py`. Issue
+      doc reference: `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` (4 design Qs answered
+      in-doc; see Re-task (c) below). **DEFERRED**: (1) **conservative-rule promotion** — current shipped behaviour
+      stamps `available_at = bm_time` (event-time); the strict Live=batch rule wants
+      `bm_time + emission_latency_ms_for_source("odds_api")` (= `bm_time + 5000ms` for the 5s polling cadence).
+      UAC `SOURCE_PRIORITY` + `EMISSION_LATENCY_MS_BY_SOURCE` entries for sports sources already exist (verified
+      2026-05-11 — `api_football=1000ms`, `odds_api=5000ms`, `understat=2h`, etc.), so the promotion is a one-line
+      UTL helper swap in MTDS's wiring. Filed as a Phase 1 P1 follow-up todo below + cross-referenced from
+      `wave3x_residual_ssots_2026_05_08.md` Track E sequencing. (2) **non-ODDS_SNAPSHOT sports paths** —
+      fixture_lineups / fixture_player_stats / fixture_stats / fixture_events / injuries / weather /
+      reference-tables stamping is NOT in the MTDS write path (sports backfill VMs `af-backfill-` / `fs-backfill-` /
+      `sfi-backfill-` etc. own those writes), remains in `sports_master_2026_05_07` Phase 1-2 scope per the
+      existing track. (3) **column-presence assertion at `StreamingParquetWriter.write_chunk`** — sports path uses
+      `record_captured_from_counts`, so the writegate `assert_available_at_present(df)` guard doesn't fire on this
+      path today. Filed as Phase 1 P1 follow-up todo below.
+
+- [x] [SCRIPT] P1. **Sports odds — promote `bm_time` stamping to conservative rule
+      `bm_time + emission_latency_ms_for_source(source)`** (shipped UTL@f7b704fd + MTDS@a512edf 2026-05-11 by
+      `ikenna-available-at-tab` absorbing Harsh slot 4 P1 per operator authorization "harsh agent is stale hes
+      gone away"). UTL extended `stamp_available_at_odds_snapshot` with optional `source=` kwarg; when set,
+      stamps `available_at = bm_time + emission_latency_ms_for_source(source)`. Misspelled source raises
+      `KeyError` (closed-set round-trip, mirrors `stamp_available_at_cefi_tick` precedent). MTDS wiring at
+      `_process_sports_venue_with_leagues` now passes `source=data_source.lower()` (= `"odds_api"` for the only
+      sports adapter currently routed through this path → bm_time + 5000ms). KeyError on unregistered source
+      surfaces as a shard-level failure (same path as `AvailableAtStampingError`). 5 new UTL tests + 5 existing
+      MTDS sports tests updated for the +5000ms delta. status: done.
+
+- [x] [SCRIPT] P1. **`StreamingParquetWriter.write_chunk` — `assert_available_at_present` boundary guard**
+      (shipped UTL@f7b704fd + MTDS@a512edf 2026-05-11 by `ikenna-available-at-tab` absorbing Harsh slot 4 P1
+      per operator authorization). `StreamingParquetWriter.__init__` accepts opt-in `enforce_available_at: bool
+      = False` kwarg; when True, every non-empty `write_chunk(df)` calls the inlined
+      `assert_available_at_present(df)` check and raises `LookaheadBiasError` on missing column / null values.
+      Universal parquet-write-boundary guard for paths that emit via this writer + call
+      `record_captured_from_counts` downstream (counts-only, bypasses the writegate
+      `assert_available_at_present` guard inside `ManifestWriter.record_captured(df=...)`). Inlined to avoid
+      circular import (manifest_writer transitively depends on this module). MTDS sports orchestrator now
+      passes `enforce_available_at=True` on the sports odds writer, completing the universal guard for the
+      sports path. 5 new UTL tests covering: default off (legacy unaffected) / missing column raises /
+      nulls raise with count / populated passes / empty df short-circuits. status: done.
 
 - [ ] [SCRIPT] P0. **DeFi (non-onchain) adapter stamping**. Per-adapter `available_at` stamping for: DefiLlama TVL, AAVE
       lending rates, Pyth Solana price feeds (re-added 2026-05-06 for LST-yield Solana coverage), Chainlink (EVM
@@ -322,24 +370,40 @@ todos:
 
 todos:
 
-- [ ] [SCRIPT] P0. **Sports feature_groups → UAC**. ~60 sports feature_groups (form, league_strength, fixture_xg,
-      lineup_quality, market_consensus, etc.) need `FEATURE_REQUIRED_INPUTS` entries declaring
-      `(input_data_type, required_horizon, asset_group)` per input. Source-of-truth:
-      `features-sports-service/features_sports_service/calculators/` calculator metadata. Add as Phase-1-equivalent todo
-      to `sports_master_2026_05_07` OR ship here directly.
+- [ ] [SCRIPT] P0. **Sports feature_groups → UAC**. ~26 sports feature_groups (team_form, team_goals, team_xg, etc.)
+      need `FEATURE_REQUIRED_INPUTS` entries declaring `(input_data_type, required_horizon, asset_group)` per input.
+      **DEFERRED**: enumerator audit 2026-05-11 (`ikenna-available-at-tab`) confirmed sports feature_groups remain
+      deferred pending sports-domain upstream `(asset_group, data_type)` vocabulary stabilisation — calculators
+      currently declare `["target_fixtures", "fixtures_history"]`-style symbolic inputs not yet a UAC pair. Sources of
+      truth: `features-sports-service/features_sports_service/calculators/` calculator metadata + the existing
+      "Temporary states" entry in `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md`. Successor: ship here
+      AFTER `sports_master_2026_05_07` Phase 1-2 stabilises sports data_type vocabulary.
 
-- [ ] [SCRIPT] P0. **CeFi feature_groups → UAC**. ~5 cefi feature_groups (volatility, liquidity, microstructure,
-      perp_basis, options_iv). Add to `cefi_master_2026_05_07` OR here.
+- [x] [SCRIPT] P0. **CeFi + TradFi feature_groups → UAC** (shipped UAC@cb7c343 2026-05-11 by `ikenna-available-at-tab`).
+      Added 12 cefi/tradfi cross-instrument feature_groups: `regime_detection`, `cross_venue_spreads`,
+      `realized_implied_vol`, `cross_asset_correlation`, `cross_instrument_dynamics`, `cme_gap` (tradfi-only),
+      `book_depth_bands`, `liquidity_walls`, `liquidation_clusters`, `liquidation_band_prediction`, `flow_interaction`,
+      `cointegration`, plus phase-1 `composite_sr`. **DEFERRED**: volatility (8 fg: options_iv / futures_term_structure /
+      tradfi_vol_surface / gamma_exposure / variance_risk_premium / second_order_greeks / vol_surface_term_structure)
+      pending UAC registration of `options_chain_snapshot` / `futures_curve_snapshot` data_types; calendar (7 fg:
+      economic_calendar / economic_events / yield_curve / sentiment / corporate_actions / earnings_results / temporal)
+      pending UAC registration of those data_types + per-source available_at rule decisions
+      (announcement_time / ex_date / earnings_announcement_time); cross_instrument `dxy_momentum` pending macro `dxy`
+      data_type registration in MTDS. status: helper-shipped (cross-instrument batch); volatility + calendar +
+      dxy_momentum remain `- [ ]` per the deferred-work scoreboard.
 
-- [ ] [SCRIPT] P0. **TradFi feature_groups → UAC**. ~8 tradfi feature_groups (term_structure, butterfly,
-      calendar_spread, vix_basis, etc.). Add to `tradfi_master_2026_05_07` OR here.
+- [x] [SCRIPT] P0. **Predictions feature_groups → UAC** (shipped UAC@cb7c343 2026-05-11 by `ikenna-available-at-tab`).
+      Added 6 Polymarket-derived feature_groups consuming `(prediction, trades)` / `(prediction, book_snapshot)`:
+      `polymarket_crowd_sentiment`, `polymarket_trade_flow`, `polymarket_whale_activity`,
+      `polymarket_market_microstructure`, `polymarket_cross_market`, `polymarket_temporal_patterns`. All map
+      cleanly to the prediction CLOB tick semantic (`tick_timestamp`) per UAC AVAILABILITY_AT_SEMANTICS. status: done.
 
-- [ ] [SCRIPT] P0. **Predictions feature_groups → UAC**. Per-canonical_question_group + per-binary-outcome features. Add
-      to `predictions_master_2026_05_07` OR here.
-
-- [ ] [SCRIPT] P0. **DeFi non-defi-yield feature_groups → UAC**. The 10 currently-registered cover defi yields;
-      cross-protocol carry, bridge-flow, MEV-leakage, gas-fee bands etc. likely need additions. Audit
-      `features-defi-service/` + `features-onchain-service/` calculators.
+- [ ] [SCRIPT] P0. **DeFi non-defi-yield feature_groups → UAC**. **DEFERRED**: enumerator audit 2026-05-11
+      (`ikenna-available-at-tab`) confirmed the existing 10 onchain feature_groups in FEATURE_REQUIRED_INPUTS plus
+      the 2 deferred external-API pass-throughs (`fear_greed` / `macro_sentiment`) cover the current DeFi calculator
+      surface; cross-protocol carry / bridge-flow / MEV-leakage / gas-fee-band feature_groups are not yet declared in
+      `features-defi-service/` / `features-onchain-service/` calculator metadata. Re-audit AFTER
+      `features_repo_consolidation_2026_05_08.md` Phase 7 ships the consolidated features-service.
 
 ---
 
@@ -347,13 +411,18 @@ todos:
 
 todos:
 
-- [ ] [SCRIPT] P1. **Audit `AVAILABILITY_AT_SEMANTICS` coverage**. Grep every `record_captured` callsite across the
-      workspace. Extract `(asset_group, data_type)` pairs. For each pair, verify entry exists in UAC
-      `availability_semantics.py` registry. Output: list of (asset_group, data_type) pairs with no entry → fix-list
-      ticket per pair. Estimated 2-4h spike on a workspace-clone.
+- [x] [SCRIPT] P1. **Audit `AVAILABILITY_AT_SEMANTICS` coverage** (shipped UAC@cb7c343 2026-05-11 by
+      `ikenna-available-at-tab`). Workspace-wide grep of `record_captured(` callsites across MTDS handlers
+      enumerated 14 DeFi data_types actively written but absent from the registry. Coverage probe ran from
+      slot-3 worktree against `market-tick-data-service/cli/handlers/*.py`. AVAILABILITY_AT_SEMANTICS rose
+      from 51 → 65 entries. status: done.
 
-- [ ] [SCRIPT] P1. **Add missing entries**. For each pair from the audit, add an `AvailabilitySemantic` literal + entry
-      to the registry. Sports + writegate Phase 2.D-A-E already cover some; close the residual gap.
+- [x] [SCRIPT] P1. **Add missing entries** (shipped UAC@cb7c343 2026-05-11 by `ikenna-available-at-tab`).
+      Added 14 DeFi pairs to AVAILABILITY_AT_SEMANTICS, all `tick_timestamp` semantic (per-row on-chain event
+      reads with the row's own timestamp == available_at): `dex_pools` / `vault_share_price` / `solana_defi`
+      / `oracle_prices` / `governance_events` / `perp_funding` / `staking_yields` / `bridge_events` /
+      `position_data` / `token_transfers` / `liquidation_events` / `liquidations` / `mev_events` /
+      `lst_rates`. No drift after `validate_required_inputs()` re-run. status: done.
 
 ---
 
@@ -450,14 +519,48 @@ This plan is a **coordinator**. Banners must be added to:
 
 ---
 
+## Deferred work after 2026-05-11 ikenna-available-at-tab session
+
+The 2026-05-11 `ikenna-available-at-tab` session shipped Phase 0.1 (UAC bar_boundary SSOT — UAC@5240000) + Phase 0.2
+(UTL `compute_bar_close_boundary` helper — UTL@d798fcf3). Items still open are tracked here so the next agent picks
+up cleanly without re-reading session notes.
+
+| Phase / item                                             | Status as of 2026-05-11                                      | Successor / blocker                                                                                                                                                                                                                                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0.1 — UAC bar_boundary SSOT                        | `done` (UAC@5240000 shipped)                                 | —                                                                                                                                                                                                                                                                                                         |
+| Phase 0.2 — UTL `compute_bar_close_boundary` helper      | `done` (UTL@d798fcf3 shipped)                                | —                                                                                                                                                                                                                                                                                                         |
+| Phase 0.3 — MDPS audit + fix (bar boundary alignment)    | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-`features_repo_consolidation_2026_05_08.md` Phase 7 (consolidated features-service deployable) AND `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4-5 (MDPS streaming aggregator design) — both gate MDPS calculator rework. Harsh slot 4 to pick up per-adapter wiring once unblocked. |
+| Phase 0.4 — Historical MDPS parquet reconciler           | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3 (need fixed MDPS first so reconciler stamps via the same UTL helper).                                                                                                                                                                                                            |
+| Phase 0.5 — MDPS write-gate enforcement                  | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3. `BarBoundaryViolationError` is already importable from UAC; wiring lives at MDPS `ManifestWriter.record_captured` invocation in the orchestrator path. The validator (`assert_bar_boundary_contract`) is the gate primitive.                                                    |
+| Phase 0.6 — QG static check for MDPS bar emission        | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3. Mirrors writegate STEP 5.64 AST-walk: every bar-emitting code path must call `compute_bar_close_boundary` (or import the UTL helper); ban inline `pd.Timestamp.floor` / `dt.replace(...)` bypasses.                                                                              |
+| Phase 1 (DeFi / TradFi / Predictions adapter stamping)   | `todo` (checkbox `- [ ]` × 3)                                | Owned by respective asset_group master plans (defi_master / tradfi_master / predictions_master). Harsh slot 4 picks up per-adapter wiring once Phase 0 lands at MDPS level.                                                                                                                              |
+| Phase 4 — FEATURE_REQUIRED_INPUTS expansion              | `helper-shipped` (UAC@cb7c343 — 19 cross-instrument fg added) | DEFERRED-AFTER-`features_repo_consolidation_2026_05_08.md` Phase 7 (sports vocabulary stabilisation; defi non-yield re-audit) + UAC data_type registration for volatility / calendar / dxy_momentum (own follow-up todos in same plan body Phase 4 section). FEATURE_REQUIRED_INPUTS rose 40 → 59.       |
+| Phase 5 — AVAILABILITY_AT_SEMANTICS workspace-wide audit | `done` (UAC@cb7c343 — 14 defi pairs added)                    | AVAILABILITY_AT_SEMANTICS rose 51 → 65. Audit + closure shipped same commit; no drift remaining at MTDS handler grep boundary.                                                                                                                                                                          |
+| Re-task (a) — UAC `EXPECTED_KNOWN_SOURCE_GAP` enum       | `done` (UAC@017b332 — closed-set member added)                | Closed set rose 14 → 15 members. Consumers (VIX 15m gap, sports `KNOWN_COVERAGE_GAPS`) named in docstring; downstream MDPS VIX-gap fix is Harsh slot 5 territory (P0-2 routing).                                                                                                                          |
+| Re-task (b) — sports `available_at` Phase 1 flip         | `done` (Harsh's MTDS@c186ecb cited + plan flipped 2026-05-11) | Flipped the sports-stamping checkbox to `- [x]`; filed 2 P1 follow-up todos for the conservative-rule promotion + `StreamingParquetWriter.write_chunk` boundary guard (per Q-A + Q-B answers).                                                                                                          |
+| Re-task (c) — answer Q-A/B/C/D in `mtds_sports_*` issue  | `done` (issue doc updated 2026-05-11)                         | Q-A resolved conservative rule (`bm_time + emission_latency_ms_for_source(src)`); Q-B resolved `StreamingParquetWriter.write_chunk` boundary guard; Q-C deferred (only ODDS_API routed today); Q-D resolved (sports SOURCE_PRIORITY + emission_latency entries already in UAC).                          |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **MDPS streaming aggregator design** (consumes Phase 0.1/0.2 contract): open in
+  [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 4. Ikenna
+  slot 4 owns the design-ahead this cycle.
+- **Per-adapter `available_at` stamping wiring (CeFi tick / TradFi / Predictions / DeFi)**: Harsh slot 4 scope. Cross-side
+  ping landed in `plans/active/_agent_pings.md` on Phase 0.1/0.2 close so Harsh slot 4 unblocks.
+- **features-onchain `suppress(LookaheadBiasError)` removal**: open in `ml_and_features_master_2026_05_07` Phase 2A; gated
+  on chain link 1 (per-adapter stamping) shipping for onchain adapters.
+
+---
+
 ## Temporary states + their canonical follow-up plans
 
 - **UAC `FEATURE_REQUIRED_INPUTS` registers 10 of ~90 feature_groups.** Successor: Phase 4 of THIS plan
   (cross-asset-group expansion).
 - **features-onchain `feature_writer.py` uses `contextlib.suppress(LookaheadBiasError)`.** Successor: Phase 6 of THIS
   plan (suppress() removal once chain links 0+1 ship).
-- **MDPS bar boundary alignment is convention, not contract.** Successor: Phase 0 of THIS plan (UAC SSOT + UTL helper +
-  write-gate enforcement).
+- **MDPS bar boundary alignment is convention, not contract.** Successor: Phase 0 of THIS plan; UAC + UTL halves shipped
+  2026-05-11 (UAC@5240000 + UTL@d798fcf3); MDPS-side audit + reconciler + write-gate + QG check open per the
+  deferred-work scoreboard above.
 - **`AVAILABILITY_AT_SEMANTICS` registry coverage not audited per (asset_group, data_type).** Successor: Phase 5 of THIS
   plan.
 
@@ -496,6 +599,96 @@ This plan is a **coordinator**. Banners must be added to:
 
 This session shipped the cefi half of Phase 1 P0; DeFi/TradFi/Predictions/Sports adapter stamping items in Phase 1
 remain `- [ ]`. Phases 0/2/4/5/6/7/8/9/10 untouched this session.
+
+## DONE-2026-05-11 — `ikenna-available-at-tab` session (slot 3)
+
+| Item                                                                                  | Status                       | Commits                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0.1 — UAC bar_boundary SSOT (closed-set timeframes + 4-clause contract)         | `done`                       | unified-api-contracts@5240000 (canonical/crosscutting/bar_boundary.py + 24 unit tests + root-facade re-export)                                                                                                                                                                                                                                          |
+| Phase 0.2 — UTL `compute_bar_close_boundary` helper                                   | `done`                       | unified-trading-library@d798fcf3 (availability_stamping.compute_bar_close_boundary + 20 unit tests; strictly-after ceiling, integer microsecond arithmetic, idempotent under replay, UAC validator round-trip)                                                                                                                                            |
+| Phase 5 — AVAILABILITY_AT_SEMANTICS audit + closure (14 defi pairs added)             | `done`                       | unified-api-contracts@cb7c343                                                                                                                                                                                                                                                                                                                            |
+| Phase 4 — FEATURE_REQUIRED_INPUTS expansion (19 cross-instrument feature_groups)      | `helper-shipped` (partial)   | unified-api-contracts@cb7c343 (cross-instrument + Polymarket); volatility / calendar / dxy_momentum / sports / defi-non-yield deferred per the in-body annotations                                                                                                                                                                                       |
+| Cross-side ping (Phase 0 lands → Harsh slot 4 unblocks per-adapter wiring)            | `done`                       | unified-trading-pm@9bc57fcb (plans/active/_agent_pings.md)                                                                                                                                                                                                                                                                                                |
+| Plan flips (Phase 0 + Phase 4 + Phase 5 checkboxes + deferred-work scoreboard)        | `done`                       | unified-trading-pm@9bc57fcb (Phase 0 + cross-side ping) + PM@<this commit> (Phase 4 + 5 + DONE block)                                                                                                                                                                                                                                                    |
+
+Open Phase-0 sub-items (0.3 MDPS audit / 0.4 reconciler / 0.5 write-gate / 0.6 QG check) and Phase-1 per-asset-group
+adapter stamping for DeFi / TradFi / Predictions / Sports remain `- [ ]` per the deferred-work scoreboard above —
+all DEFERRED-AFTER `features_repo_consolidation_2026_05_08.md` Phase 7 + `live_pipeline_mtds_mdps_features_2026_05_08.md`
+Phase 4-5. Harsh slot 4 picks up per-adapter wiring once MDPS unblocks.
+
+Counts after this session: AVAILABILITY_AT_SEMANTICS 51 → 65 (+14). FEATURE_REQUIRED_INPUTS 40 → 59 (+19).
+`validate_required_inputs()` green workspace-wide. UAC test suite (unit/test_bar_boundary.py +
+unit/test_availability_semantics.py + test_feature_dag_ssot.py minus the two pre-existing workspace-layout-dependent
+tests) green from slot-3 worktree.
+
+### Re-task continuation (PM@4ca1cb0c — main orchestrator re-task on operator approval)
+
+After original-scope ✅ DONE, slot 3 picked up 3 carryover items in its UAC/UTL competency per
+[main → slot 3] ping in `plans/active/_agent_pings.md`:
+
+| Re-task item                                                                                | Status | Commits                                                                                                          |
+| ------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| (a) UAC `EXPECTED_KNOWN_SOURCE_GAP` enum addition to `EmptyConfirmedReason` closed set       | `done` | unified-api-contracts@017b332 (StrEnum member + EMPTY_CONFIRMED_REASONS frozenset auto-derived + 3 unit tests)   |
+| (b) Flip sports `available_at` Phase 1 todo per Harsh's MTDS@`c186ecb` ship                  | `done` | unified-trading-pm@<this commit> (Phase 1 checkbox + 2 P1 follow-up todos for conservative rule + writer guard)  |
+| (c) Answer 4 design Qs Q-A/B/C/D in `mtds_sports_available_at_wiring_2026_05_11.md`          | `done` | unified-trading-pm@<this commit> (issue doc updated with full resolution + disposition note)                     |
+
+Design-Q resolutions summary (full text in the issue doc):
+
+* **Q-A**: conservative rule (`bm_time + emission_latency_ms_for_source(src)`) is canonical per Live=batch
+  CLAUDE.md rule. Current `bm_time`-only ship preserved as named-successor temporary state; P1 follow-up todo
+  filed in this plan's Phase 1 section.
+* **Q-B**: column-presence assertion at `StreamingParquetWriter.write_chunk` boundary is the universal guard
+  shape. P1 follow-up todo filed in this plan's Phase 1 section.
+* **Q-C**: deferred — only ODDS_API routed in MTDS today; re-audit when other sports adapters wire in.
+* **Q-D**: resolved — UAC already has SOURCE_PRIORITY + emission_latency entries for every sports source
+  (api_football=1s / odds_api=5s / understat=2h / sfi=1h / open_meteo=1h / transfermarkt=24h). No UAC pre-req.
+
+Closed set count after this re-task: AVAILABILITY_AT_SEMANTICS 51 → 65 (unchanged from earlier this cycle).
+EmptyConfirmedReason members: 14 → 15. UAC `tests/unit/test_honest_coverage.py` 33 → 36 tests pass.
+
+### Re-task continuation 2 (Harsh slot 4 absorption — operator authorization 2026-05-11)
+
+Operator direction "harsh agent is stale hes gone away can you do that work for him" → slot 3 absorbed the 2
+P1 follow-up todos filed by re-task continuation 1 (conservative-rule promotion + writer-boundary guard).
+Shipped in one logical unit across UTL + MTDS + PM:
+
+| Re-task item                                                                                | Status | Commits                                                                                                                  |
+| ------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Conservative-rule UTL helper (`stamp_available_at_odds_snapshot` + `source=` kwarg)         | `done` | unified-trading-library@f7b704fd (UTL helper + 5 tests)                                                                  |
+| `StreamingParquetWriter.write_chunk` boundary guard (`enforce_available_at=True` kwarg)     | `done` | unified-trading-library@f7b704fd (writer guard + 5 tests; inlined `assert_available_at_present` to avoid circular import) |
+| MTDS sports orchestrator wiring (`source="odds_api"` + `enforce_available_at=True`)         | `done` | market-tick-data-service@a512edf (orchestrator wiring + 5 sports odds tests updated for +5000ms delta)                  |
+| Plan flips on the 2 P1 follow-up todos in this plan body                                    | `done` | unified-trading-pm@<this commit> (`- [x]` flips + commit-sha evidence inline)                                            |
+
+What this fully closes: the available_at-Q-A + Q-B resolutions from re-task (c) are now operationally shipped
+end-to-end. Sports odds parquets written via MTDS sports orchestrator now carry
+`available_at = bm_time + emission_latency_ms_for_source("odds_api")` (= bm_time + 5000ms per UAC SOURCE_PRIORITY)
+AND every non-empty parquet write through `StreamingParquetWriter` with `enforce_available_at=True` raises
+`LookaheadBiasError` if `available_at` is missing or null — universal write-boundary guard composes with the
+conservative-rule stamping above.
+
+What remains DEFERRED (unchanged by this re-task — separate workstreams):
+
+- **Phase 0.3-0.6** (MDPS audit / reconciler / write-gate / QG static check) — still gated on
+  `features_repo_consolidation_2026_05_08.md` Phase 7 + `live_pipeline_mtds_mdps_features_2026_05_08.md`
+  Phase 4-5. Harsh slot 4 was originally re-tasked to promote the live-pipeline design stubs to
+  implementation (per PM@4ca1cb0c). Slot 4 has gone stale; that promotion now needs a new owner — flag
+  for next-cycle work-split.
+- **Sports non-ODDS_API adapters** (betfair / matchbook / sfi / footystats) — still not wired into
+  MTDS `_process_sports_venue_with_leagues`. When they do wire in, the same conservative-rule pattern
+  applies; verify the per-source latency entries exist in UAC `EMISSION_LATENCY_MS_BY_SOURCE` before
+  wiring (Q-C resolution path).
+- **Non-sports `StreamingParquetWriter` consumers** — the `enforce_available_at` kwarg defaults to False
+  for backward compat. Sweep through every non-tick MTDS write path that uses `StreamingParquetWriter` +
+  `record_captured_from_counts` (prediction streaming half) and enable the guard there too. P1 sweep
+  follow-up filed below.
+
+- [ ] [SCRIPT] P1. **Sweep non-tick MTDS write paths for `enforce_available_at=True`**. The CeFi tick
+      path goes through `PartitionedTickWriter` and gets the guard via the writegate path. The sports
+      odds path is now covered (above). The remaining surface: prediction streaming half (Polymarket
+      CLOB capture), any TradFi / DeFi paths that use `StreamingParquetWriter` directly +
+      `record_captured_from_counts` downstream. Audit needed; ~30-min per consumer + verify the upstream
+      stamping is wired so the guard doesn't surface stale gaps. Owner: next-cycle work-split (likely
+      slot 3 or Harsh slot 4 if available).
 
 ## Audit-2026-05-10 finding — post-cutover Phase: lift `available_at` to schema-level invariant
 

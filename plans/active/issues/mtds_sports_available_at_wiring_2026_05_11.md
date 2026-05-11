@@ -137,6 +137,60 @@ that's a UAC pre-req — Track E or wave3x Track B territory.)
 - **Q-D**: is there a `SOURCE_PRIORITY` / `emission_latency_ms_for_source` entry for the sports sources in UAC? If not
   and Q-A picks the conservative rule, that's a UAC pre-req.
 
+### Answers (slot 3, 2026-05-11 — Re-task c)
+
+> **Q-A — RESOLVED conservative rule**: `available_at = bm_time + emission_latency_ms_for_source(<sports_src>)`
+> is the canonical rule. **Reasoning**: per CLAUDE.md "Live = batch — same data, same fields, same timing semantics"
+> rule, historical writes MUST stamp with the live-pipeline-arrival latency added, not the raw event time. The
+> bm_time alone gives feature compute at `bm_time + 1000ms` a row that the live pipeline (5s polling cadence on
+> odds_api) would not actually have observed yet — that's a 4-second look-ahead leak. The conservative rule
+> (`bm_time + 5000ms` for odds_api) matches CeFi's `tick_timestamp + emission_latency_ms_for_source(tardis=50ms)`
+> precedent at `PartitionedTickWriter.write_chunk`. **Action**: Harsh slot 4's shipped behaviour (event-time only)
+> stays in place as a temporary state with a named successor — filed as Phase 1 P1 follow-up todo in
+> `available_at_lookahead_bias_completion_2026_05_08.md` ("Sports odds — promote `bm_time` stamping to conservative
+> rule"). Sequencing-safe because conservative ≥ optimistic; downstream `<= target_ts - horizon` checks become
+> slightly more conservative, no regression.
+
+> **Q-B — RESOLVED column-presence assertion at the `StreamingParquetWriter.write_chunk` boundary**. The
+> writegate `assert_available_at_present(df)` inside `ManifestWriter.record_captured` is the right guard, but it
+> only fires on the `record_captured(df=...)` code path. MTDS sports uses `record_captured_from_counts(...)` (no
+> df passed), so the guard doesn't fire today. Right shape: **call `assert_available_at_present(df)`
+> unconditionally inside `StreamingParquetWriter.write_chunk(df)`** — that's the universal parquet-write boundary
+> every MTDS adapter passes through, so adding the guard there covers ALL data_types (cefi via
+> `PartitionedTickWriter`, sports + prediction streaming via `StreamingParquetWriter`, future adapters too)
+> consistently, regardless of which manifest helper fires downstream. Filed as Phase 1 P1 follow-up todo in
+> `available_at_lookahead_bias_completion_2026_05_08.md` ("`StreamingParquetWriter.write_chunk` —
+> `assert_available_at_present` boundary guard"). ~30-min UTL edit + 5 unit tests.
+
+> **Q-C — DEFERRED (not in current scope; re-audit when other adapters wire into MTDS)**. The issue doc verifies
+> `bm_time` is universal for the ODDS_API adapter, which is the only sports adapter currently routed through
+> `_process_sports_venue_with_leagues`. Other adapters (betfair / matchbook / sfi / footystats) EXIST under
+> `market_interface/adapters/sports/` but are NOT wired into the MTDS sports orchestrator surface today —
+> verified by reading the sports SOURCE_PRIORITY (Q-D answer below): ODDS_SNAPSHOT / ODDS_MOVEMENT / ARBITRAGE are
+> all routed to `odds_api` only; FIXTURE_LINEUPS / FIXTURE_EVENTS / FIXTURE_STATS / etc. go to `api_football`
+> but via the sports-backfill VMs, NOT through MTDS's sports orchestrator. So Q-C is moot for the current shipping
+> state of MTDS sports. Re-audit if a future sports_master phase wires additional sports adapters into MTDS
+> (Harsh's MTDS slot's next-cycle scope OR sports_master Phase 1-2). If betfair/matchbook get wired, those
+> adapters will likely have their own publication-time column name (e.g. `pt` for betfair publish-time), needing a
+> per-source `event_time_col` dispatch — handle at wiring time.
+
+> **Q-D — RESOLVED yes, sports sources already have SOURCE_PRIORITY + EMISSION_LATENCY_MS_BY_SOURCE entries** in
+> UAC. Verified 2026-05-11 by reading
+> `unified_api_contracts/canonical/crosscutting/source_priority.py`: `api_football=1000ms`, `odds_api=5000ms`,
+> `understat=7_200_000ms` (2h post-match xG), `soccer_football_info=3_600_000ms` (1h SFI freeze cadence),
+> `open_meteo=3_600_000ms` (1h forecast issue cadence), `transfermarkt=86_400_000ms` (24h market values cadence).
+> No UAC pre-req remains — the conservative rule (Q-A) is implementable today on the strength of existing UAC
+> registrations. No new UAC entries needed.
+
+### Disposition (Re-task c → "Recommended decision" below)
+
+This issue doc's status flips from `STATUS: code SHIPPED — 2 open Qs` to `STATUS: code SHIPPED + 4 design Qs
+RESOLVED + 2 P1 follow-up todos filed`. The actual code change (conservative-rule promotion + writer-boundary
+guard) lives in `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 follow-up todos. This issue doc is
+ready to **archive** (per CLAUDE.md "Plan Archival" HARD RULE) once the 2 P1 follow-ups land — slot 3 owns the
+archival routing decision but does NOT auto-archive (live-defi-rollout lock). Archival deferred to whoever ships
+the 2 P1 follow-ups, citing this resolution as the source-of-decision.
+
 ## Recommended decision
 
 Fold this into `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 once the gates clear; the actual code
