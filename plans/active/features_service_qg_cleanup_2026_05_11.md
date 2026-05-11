@@ -184,6 +184,41 @@ at the top level; either way it's a 1-line decision, just not unilaterally mine.
 "Governance / ratchet thinking" split. Q1.3 is either PM-side QG-check or UAC-side re-export. Until decided, Phase 1.2
 proceeds on rows 2/3/4(cli)/8/9/10/11 + the `features_service/` schema-provenance subset; rows 1/6(scripts)/7 wait.)
 
+#### A1 — [main (slot 1), 2026-05-11 08:01 UTC]
+
+**Status**: RESOLVED — all 3 are confirmed QG-check false positives; slot 2 SKIPS those rows in Phase 1.2; the
+QG-check fixes are routed to Ikenna (workspace QG gates = his "governance / ratchet" surface per the work-split).
+
+- **Q1.1 (`print()` in `cli/`)** — ✅ confirmed false positive. CLI entry-points (`cli/main.py`, `cli/_shim.py`,
+  `__main__.py`) print to stdout for `--version` / `--help` / dispatcher output — that is correct CLI behaviour, not an
+  event. Every service CLI in the workspace has this shape. **Do NOT "fix" features-service** — leave the `cli/`
+  `print()`s as-is. **Fix routed to Ikenna**: `base-service.sh:421` `print()`-check should exclude `**/cli/` (or
+  `**/cli/main.py` / `**/__main__.py` / `**/cli/_shim.py`).
+- **Q1.2 (schema-provenance flags `scripts/`)** — ✅ confirmed false positive, **CLAUDE.md-backed**. CLAUDE.md "Schema
+  provenance" rule explicitly says **"(scripts/ excluded)"** — the check is out of sync with the documented SSOT.
+  `scripts/*/smoke_matrix.py:{CellResult,SmokeReport}` + `scripts/sports/*:{Result,DateStatus,PipelineReport,ServiceReport}`
+  are script-internal report dataclasses, NOT domain schemas; moving them to UAC/UIC would be wrong. **Do NOT relocate
+  them.** **Fix routed to Ikenna**: `check_schema_provenance.py` excludes `scripts/` (matching `pyrightconfig.json` +
+  most other QG checks). **NB**: this is ONLY the `scripts/` subset — the `features_service/` subset of the
+  schema-provenance flag is a real design question (the table's [J] row), separate from Q1; slot 2 still works that in
+  Phase 1.2.
+- **Q1.3 (`unified_api_contracts.internal` flagged as a deep import)** — ✅ confirmed false positive, **CLAUDE.md-backed**.
+  `unified_api_contracts.internal` is an explicitly-sanctioned facade per CLAUDE.md ("schemas → unified-api-contracts —
+  external + internal via `unified_api_contracts.internal`"; the Citadel import rule bans `canonical.*` /
+  `normalize_utils.*`, NOT `.internal`). The 3 sites (`commodity/monitors/feature_freshness.py`,
+  `commodity/engine/signal_composer.py`, `calendar/monitors/feature_freshness.py`) are correct. **Do NOT move them off
+  the facade.** **Fix routed to Ikenna**: the deep-import check whitelists `unified_api_contracts.internal` (it's a
+  facade, not a deep path). (Alternative if the workspace genuinely wants bare-`unified_api_contracts`-only: UAC
+  re-exports `FEATURE_FRESHNESS` / `CommoditySignal` / `FactorValue` / `RegimeState` at the top level — but the facade
+  approach matches the documented rule, so go with whitelisting `.internal` unless Ikenna says otherwise.)
+
+**Phase 1.2 instruction for the next slot-2 session**: proceed on the REAL violations — the `features_service/`
+schema-provenance subset, file-size (6 files, row [9]), function-size (~30, row [10]), `os.getenv()` (row [4 non-cli]),
+`asyncio.run()` in a loop (`calendar/cli/handlers/batch_handler.py`), nested imports, empty-string/dict/list fallbacks,
+direct `from google.cloud import …` (route through `unified_cloud_interface`). SKIP the Q1.1 / Q1.2-`scripts/` / Q1.3
+rows entirely (they're not violations; the QG-check fixes land separately via Ikenna). Don't restore per-package
+ignores / `SKIP_*` env vars to "pass" anything — fix at the root or skip the false positive.
+
 ## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2), Phase 1.1
 
 Picked up this plan per main's A1 on `features_repo_consolidation_2026_05_08.md` Q1 (operator approved (a)+(b)+(c); this
