@@ -808,16 +808,16 @@ operational follow-up half for slot 6's `manifest_schema_final_gate_2026_05_09` 
 | --------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Tarball refresh (CORE 4 + instruments-service + MDPS) to `gs://deployment-scripts-{pid}/code/` | `done` (2026-05-11) | All 6 tarballs at `2026-05-11T14:23-25Z`. Refreshed via `bash deployment-service/scripts/vm/create-code-tarballs.sh --include instruments-service --include market-data-processing-service`. |
 | Watchdog VM relaunch — picks up new `cross-asset-rescan-` prefix in `VM_PREFIX_TO_BUCKET`     | `done` (2026-05-11) | Old: `vm-zombie-watchdog-20260511-141810` deleted. New: `vm-zombie-watchdog-20260511-152717` RUNNING; verified 2 successful 5-min polls (14:33:32 + 14:38:37) finding watchable VMs + 0 zombies. |
-| Phase 3.D cross-asset-rescan VM kickoff (instruments-service rescan)                           | 🟢 `running` (2026-05-11; first kickoff failed → dispatcher fix shipped → relaunched) | First kickoff `cross-asset-rescan-20260511-153940` FAILED at argparse (`--operation: invalid choice: 'cross_asset_rescan'`). Slot 3 shipped dispatcher fix at `deployment-service@03ce073` (route via `VM_BACKFILL_CMD` direct script call — same shape as `launch-defi-phantom-recon-vm.sh`; the rescan is a one-shot orchestrator, not a payload-processor in the `UnifiedServiceHandler` shape). Tarballs refreshed at 16:15Z with the new launcher + setup script. Relaunched as `cross-asset-rescan-20260511-171623`. Phase 8 triage review will unblock once rescan completes. **Issue doc**: [`plans/active/issues/phase_3d_rescan_cli_dispatcher_gap_2026_05_11.md`](issues/phase_3d_rescan_cli_dispatcher_gap_2026_05_11.md) ✅ RESOLVED 2026-05-11 PM. |
+| Phase 3.D cross-asset-rescan VM kickoff (instruments-service rescan)                           | 🟢 `running` (2026-05-11; 2 iterations of fix; VM 172749 progressing through asset_groups) | **Iteration 1** `cross-asset-rescan-20260511-153940` FAILED at argparse (`--operation: invalid choice: 'cross_asset_rescan'`) → fixed at `deployment-service@03ce073` (route via `VM_BACKFILL_CMD` direct script call — same shape as `launch-defi-phantom-recon-vm.sh`; the rescan is a one-shot orchestrator, not a payload-processor in the `UnifiedServiceHandler` shape). **Iteration 2** `cross-asset-rescan-20260511-171623` FAILED at `TypeError: setup_events() missing 1 required positional argument: 'mode'` → fixed at `instruments-service@35f8c7c` (pass `mode=args.mode` + `GcsEventSink` per UTL contract). **Iteration 3** `cross-asset-rescan-20260511-172749` ✅ STARTED 16:30:41Z, emitted RESCAN_RUN_STARTED + RESCAN_SHARD_STARTED(cefi), VM RUNNING. Triage bucket `gs://central-element-323112-rescan-triage` provisioned in `asia-northeast1`. Phase 8 triage review will unblock once rescan completes. **Issue doc**: [`plans/active/issues/phase_3d_rescan_cli_dispatcher_gap_2026_05_11.md`](issues/phase_3d_rescan_cli_dispatcher_gap_2026_05_11.md) ✅ RESOLVED (both iterations + bucket provisioning). |
 
-> **🟢 VM RUNNING — cross-asset-rescan-20260511-171623 (dry-run, ETA 2-8h)**: Phase 3.D rescan VM relaunched 2026-05-11
-> after slot 3 shipped the dispatcher fix (`deployment-service@03ce073`). Walks availability manifests across all 5
-> asset_groups to detect manifest↔disk drift; class A drifts to stdout; class C ambiguity routes to
-> `gs://central-element-323112-rescan-triage/20260511-171623/triage.jsonl` for Phase 8 triage review (slot 6 /
-> `manifest_schema_final_gate_2026_05_09` Phase 8 owner). No mutation (dry-run; `--apply` not set). Events at
-> `gs://central-element-323112-events/events/instruments-service/2026-05-11/cross-asset-rescan-20260511-171623/`.
-> First kickoff `cross-asset-rescan-20260511-153940` documented as failed-then-fixed in the issue doc above for the
-> audit trail.
+> **🟢 VM RUNNING — cross-asset-rescan-20260511-172749 (dry-run, ETA 2-8h)**: Phase 3.D rescan VM running cleanly
+> end-to-end after 2-iteration fix sequence (dispatcher gap + setup_events signature). STARTED 16:30:41Z; emitted
+> `RESCAN_RUN_STARTED` + `RESCAN_SHARD_STARTED(cefi)` cleanly; processing asset_groups in sequence. Walks
+> availability manifests across all 5 asset_groups to detect manifest↔disk drift; class A drifts to stdout; class C
+> ambiguity routes to `gs://central-element-323112-rescan-triage/20260511-172749/triage.jsonl` for Phase 8 triage
+> review (slot 6 / `manifest_schema_final_gate_2026_05_09` Phase 8 owner). No mutation (dry-run; `--apply` not set).
+> Events at `gs://central-element-323112-events/events/instruments-service/2026-05-11/cross-asset-rescan-20260511-172749/`.
+> Iterations 1+2 documented as failed-then-fixed in the issue doc above for the audit trail.
 
 **Plan-of-record for Phase 3.D / Phase 8 triage**: `plans/active/manifest_schema_final_gate_2026_05_09.md` (slot 6
 ownership). Cross-side ping in `plans/active/_agent_pings.md` notifies slot 6 + workspace of the rescan kickoff.

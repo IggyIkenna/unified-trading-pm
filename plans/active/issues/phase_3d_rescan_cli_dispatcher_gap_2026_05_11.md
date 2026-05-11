@@ -6,7 +6,9 @@ status: ✅ RESOLVED
 author: ikenna-available-at-tab (slot 3)
 resolver: ikenna-available-at-tab (slot 3) — operator authorized 2026-05-11 PM
 resolution_commits:
-  - deployment-service@03ce073 (route launcher via VM_BACKFILL_CMD direct script invocation)
+  - deployment-service@03ce073 (route launcher via VM_BACKFILL_CMD direct script invocation — iteration 1 fix)
+  - instruments-service@35f8c7c (pass mode + GcsEventSink to setup_events() — iteration 2 fix surfaced after iteration 1)
+  - gs://central-element-323112-rescan-triage provisioned in asia-northeast1 (bucket was missing; class C triage upload would have failed)
 source:
   - market-data-processing-service VM run log at gs://deployment-scripts-central-element-323112/vm-logs/cross-asset-rescan-20260511-153940/run.log
   - instruments-service@a264f21 (Phase 3.D rescan script ship)
