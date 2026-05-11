@@ -733,10 +733,19 @@ shipping with the Fork-1 prep batches below).
       attempted_failed — the ~576 stale "404 GET https" `attempted_failed` rows (293 LINEA + 219 BSC) + 198 LINEA
       blank-reason `empty_confirmed` are reclaimed; (2) launched fresh full-history backfill VM
       `mtds-lending-indices-20260511-181115` (`2022-01-01..2026-05-11`, e2-standard-4, `mtds-lending-indices-` prefix in
-      `VM_PREFIX_TO_BUCKET`) — event-verified STARTED (`correlation_id` 366b8002…) + `LENDING_DAY_COMPLETE` progress
-      stream; ETA ~60-90min (pre-floor-date short-circuit makes pre-launch dates instant). Flip `[x]` when the VM hits
-      `STOPPED`/`FAILED` + canonical re-consolidated shows the recent gap (2026-05-07→2026-05-11) captured + the 142
-      LINEA + 296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits reconciled to `EXPECTED_PRE_GENESIS_CHAIN`. Stale-path
+      `VM_PREFIX_TO_BUCKET`) — event-verified STARTED (`correlation_id` 366b8002…) + `LENDING_DAY_COMPLETE` /
+      `INSTRUMENT_PROCESSED` (real row counts) / `RESOURCE_PROFILER_SAMPLE` progress stream. **ETA ~4-17h** (much slower
+      than first estimated — the 2022-Q4 high-volume window dominates: OPTIMISM / ARBITRUM AAVEV3 emit 25-40k
+      reserve-param-history rows/day → heavy 1000-row-page pagination; and `lending_indices_handler` re-processes every
+      date in the range without a manifest-freshness skip — known follow-up per CLAUDE.md "Manifest concurrency
+      principle" / "refactor existing MTDS per-venue VMs"). As of 14:08 UTC at date 2022-12-10, healthy + progressing,
+      RSS ~741MB, no FAILED events. **Watcher `b72uau4o7` armed** (re-invokes on terminal/stall/2.5h-deadline; re-armed
+      if it false-fires on deadline). **FINAL PUSH steps 2-4** (per `[main → slot 3]` 14:01 brief): on VM `STOPPED`/`FAILED`
+      → `python -m unified_trading_library.manifest_consolidator --bucket lending-indices-{pid} --once` → verify canonical
+      shows the recent gap (2026-05-07→2026-05-11) `captured` for AAVEV3/LINEA + AAVEV3/BSC + the ~142 LINEA + ~296 BSC
+      `SOURCE_RETURNED_ZERO` pre-launch nits reconciled to `EXPECTED_PRE_GENESIS_CHAIN` (sample-inspect a parquet, not
+      just row counts) → flip `[x]` with `<repo>@<sha>` + VM-name + manifest-row evidence + write a `## DONE-2026-05-12`
+      block + cross-side INFO ping to ikenna-main with the final manifest counts. Stale-path
       note: the audit said `market_tick_data_service/adapters/lending_indices/` — actual handler is
       `market_tick_data_service/cli/handlers/lending_indices_handler.py` + adapter
       `market_interface/adapters/defi/aave_lending.py` (no `adapters/lending_indices/` dir exists).
@@ -753,10 +762,11 @@ shipping with the Fork-1 prep batches below).
       AAVEV3 `attempted_failed` for ~3 days after the `20260508-141147` run had reconciled them). **FIXED** —
       deployment-service@`ad4d448` adds the 8 per-data_type DeFi buckets to `launch-manifest-consolidator-vm.sh`
       `BUCKETS`; relaunched the consolidator daemon as `manifest-consolidator-20260511-181538` (old
-      `manifest-consolidator-20260507-175639` to be deleted after the new one's first poll cycle confirms). One-time
-      manual consolidation of `lending-indices-{pid}` already done; the other 7 per-data_type DeFi buckets are picked up
-      by the relaunched daemon's first poll. **Case-5 big finding** (data correctness for DeFi, May-23 critical path,
-      cross-repo) — operator flagged in chat 2026-05-11.
+      `manifest-consolidator-20260507-175639` deleted 2026-05-11 12:50 UTC after the new one's first poll confirmed it
+      consolidating `lending-indices` + `dex-swaps` + `evm-defi`). One-time manual consolidation of `lending-indices-{pid}`
+      already done; the other 7 per-data_type DeFi buckets picked up by the relaunched daemon's first poll (verified —
+      `dex-swaps` got `legacy_seeded=True`, 46491 rows on first cycle). **Case-5 big finding** (data correctness for DeFi,
+      May-23 critical path, cross-repo) — operator flagged in chat 2026-05-11.
 - [x] [SCRIPT] P1. **Consolidator poll-list completeness audit (slot 6, 2026-05-11)** — the slot-3 fix above added 8 of
       the 10 per-data_type DeFi buckets to the consolidator `BUCKETS` list but missed `dex-pools-{pid}` and
       `liquidations-{pid}` — both are in `deployment-api`'s `_BUCKET_CATEGORY_OVERRIDES` + `_MTDS_DEFI_SUB_DIMENSIONS`
