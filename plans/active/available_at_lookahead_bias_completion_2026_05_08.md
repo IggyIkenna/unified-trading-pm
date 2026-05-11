@@ -212,12 +212,17 @@ todos:
       strictly-after rule, every timeframe in closed set, idempotency under repeated calls, tz-aware UTC gating
       (naive + non-UTC both rejected), and no-DST-drift sanity for US spring-forward + EU fall-back. status: done.
 
-- [ ] [SCRIPT] P0. **MDPS audit + fix — bar boundary alignment**. Walk every `MDPS` calculator that emits OHLCV or
-      aggregate bars. For each: (a) verify `t_open` / `t_close` are computed via `compute_bar_close_boundary` (no inline
-      rounding); (b) verify `available_at = t_close` on every emitted row; (c) reject any code path that produces a bar
-      with `available_at = t_open` (early-leak), `available_at = wall_clock_now` (replay-non-idempotent), or unaligned
-      boundary. Likely affected files: `mdps/engine/orchestrator.py`, `mdps/calculators/ohlcv_*.py`, `mdps/writers/*.py`
-      (verify via grep at implementation time).
+- [x] [SCRIPT] P0. **MDPS audit + fix — bar boundary alignment** (shipped 2026-05-11 by `ikenna-available-at-tab`,
+      `slot 3`). Walked the MDPS canonical-writer surface after slot 8's P0-2 cleanup deleted legacy paths;
+      identified + fixed an **off-by-one timeframe overshoot in `canonical_writer._stamp_candle_available_at`**
+      (formula was `ts_dt + tf_delta + latency_delta`, treating `timestamp` as `t_open` while aggregators emit
+      `t_close`). Fix: drop `+ tf_delta` term. New formula `out["available_at"] = ts_dt + latency_delta`. 4 tests
+      updated + 1 new regression-guard test. Module comment block rewritten to document the
+      `timestamp = t_close` MDPS aggregator convention with file:line refs to
+      `fast_candle_aggregation:94 + :134` + `polars_candle_engine:242` (all three emit `boundaries[i + 1]`).
+      Shipped: market-data-processing-service@`f004e12`. Verified all 19 `test_canonical_writer_record_helpers`
+      tests green. Issue doc: [`plans/active/issues/mdps_canonical_writer_off_by_one_tf_2026_05_11.md`](issues/mdps_canonical_writer_off_by_one_tf_2026_05_11.md).
+      status: done.
 
 - [ ] [SCRIPT] P0. **Reconciler — historical MDPS parquets without `available_at` or with misaligned boundaries**. Walk
       `gs://{pid}-mdps/` parquets, for each shard with missing/wrong `available_at`: re-stamp via
@@ -542,10 +547,10 @@ up cleanly without re-reading session notes.
 | -------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Phase 0.1 — UAC bar_boundary SSOT                        | `done` (UAC@5240000 shipped)                                 | —                                                                                                                                                                                                                                                                                                         |
 | Phase 0.2 — UTL `compute_bar_close_boundary` helper      | `done` (UTL@d798fcf3 shipped)                                | —                                                                                                                                                                                                                                                                                                         |
-| Phase 0.3 — MDPS audit + fix (bar boundary alignment)    | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-`features_repo_consolidation_2026_05_08.md` Phase 7 (consolidated features-service deployable) AND `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4-5 (MDPS streaming aggregator design) — both gate MDPS calculator rework. Harsh slot 4 to pick up per-adapter wiring once unblocked. |
-| Phase 0.4 — Historical MDPS parquet reconciler           | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3 (need fixed MDPS first so reconciler stamps via the same UTL helper).                                                                                                                                                                                                            |
-| Phase 0.5 — MDPS write-gate enforcement                  | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3. `BarBoundaryViolationError` is already importable from UAC; wiring lives at MDPS `ManifestWriter.record_captured` invocation in the orchestrator path. The validator (`assert_bar_boundary_contract`) is the gate primitive.                                                    |
-| Phase 0.6 — QG static check for MDPS bar emission        | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3. Mirrors writegate STEP 5.64 AST-walk: every bar-emitting code path must call `compute_bar_close_boundary` (or import the UTL helper); ban inline `pd.Timestamp.floor` / `dt.replace(...)` bypasses.                                                                              |
+| Phase 0.3 — MDPS audit + fix (bar boundary alignment)    | `done` (MDPS@`f004e12` + UAC@`8672d49` — off-by-one tf overshoot fixed + contract amended) | Off-by-one timeframe overshoot in `canonical_writer._stamp_candle_available_at` surfaced + fixed; UAC `bar_boundary` clause 4 amended for latency-aware Live=batch form. Issue doc: `mdps_canonical_writer_off_by_one_tf_2026_05_11.md`.                                                                  |
+| Phase 0.4 — Historical MDPS parquet reconciler           | `todo` (checkbox `- [ ]`)                                    | UNBLOCKED post-Phase-0.3 fix. Backfill-side: every MDPS parquet written between 2026-05-10 (Phase 1.2A.1 ship) and 2026-05-11 (`f004e12` fix) carries the over-stamped `available_at`. Reconciler walks `gs://{pid}-mdps/`, re-stamps via the corrected formula `timestamp + emission_latency_ms_for_source`. ~1 day of bad data on disk. Heavier script work; can be deferred or owned by Harsh slot 5 (MDPS competency). |
+| Phase 0.5 — MDPS write-gate enforcement                  | `todo` (checkbox `- [ ]`)                                    | UNBLOCKED post-Phase-0.3. With UAC contract amended + MDPS code fixed, wire `assert_bar_boundary_contract` into `canonical_writer.write_candle_parquet` (or via UTL `ManifestWriter.record_captured` extension). Future MDPS bug that drifts from the contract caught at write-time. Small surface (~20 lines + tests).                |
+| Phase 0.6 — QG static check for MDPS bar emission        | `todo` (checkbox `- [ ]`)                                    | UNBLOCKED post-Phase-0.3. AST-walk MDPS aggregator paths; assert each bar-emitting call goes through the canonical_writer (already enforced post-P0-2-cleanup) + emits `timestamp` per the t_close convention. Composes with slot 6/8's STEP 5.67 banned-placeholder AST walk on trunk.                                       |
 | Phase 1 (DeFi / TradFi / Predictions adapter stamping)   | `todo` (checkbox `- [ ]` × 3)                                | Owned by respective asset_group master plans (defi_master / tradfi_master / predictions_master). Harsh slot 4 picks up per-adapter wiring once Phase 0 lands at MDPS level.                                                                                                                              |
 | Phase 4 — FEATURE_REQUIRED_INPUTS expansion              | `helper-shipped` (UAC@cb7c343 — 19 cross-instrument fg added) | DEFERRED-AFTER-`features_repo_consolidation_2026_05_08.md` Phase 7 (sports vocabulary stabilisation; defi non-yield re-audit) + UAC data_type registration for volatility / calendar / dxy_momentum (own follow-up todos in same plan body Phase 4 section). FEATURE_REQUIRED_INPUTS rose 40 → 59.       |
 | Phase 5 — AVAILABILITY_AT_SEMANTICS workspace-wide audit | `done` (UAC@cb7c343 — 14 defi pairs added)                    | AVAILABILITY_AT_SEMANTICS rose 51 → 65. Audit + closure shipped same commit; no drift remaining at MTDS handler grep boundary.                                                                                                                                                                          |
@@ -702,6 +707,39 @@ What remains DEFERRED (unchanged by this re-task — separate workstreams):
       `record_captured_from_counts` downstream. Audit needed; ~30-min per consumer + verify the upstream
       stamping is wired so the guard doesn't surface stale gaps. Owner: next-cycle work-split (likely
       slot 3 or Harsh slot 4 if available).
+
+### Re-task continuation 3 (Phase 0.3 audit + MDPS off-by-one fix — operator authorization 2026-05-11)
+
+After re-task continuations 1 + 2 landed + the operator confirmed gates cleared (`features_repo_consolidation` Phase 7
+done; `live_pipeline_mtds_mdps_features` Phase 4-5 promoted to real impl; P0-2 MDPS surgery shipped), slot 3 picked up
+Phase 0.3 (MDPS audit + fix for bar boundary alignment). Audit found an off-by-one timeframe overshoot in the canonical
+writer's `available_at` stamping helper; operator authorised the one-line fix:
+
+| Re-task item                                                                                | Status | Commits                                                                                                                  |
+| ------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| MDPS canonical_writer `available_at` off-by-one tf fix + 5 tests                            | `done` | market-data-processing-service@`f004e12` (4 existing tests adjusted to `timestamp = t_close` + 1 new regression-guard) |
+| UAC `bar_boundary` clause 4 amendment (`available_at >= t_close` + 25h upper bound)         | `done` | unified-api-contracts@`8672d49` (relax strict `==` to leak-only lower bound + overshoot upper bound; 4 new clause-4 tests) |
+| CLAUDE.md `available_at is per-row, write-time` rule — bar-shape sub-section added          | `done` | unified-trading-pm@<this commit>                                                                                       |
+| Issue doc `mdps_canonical_writer_off_by_one_tf_2026_05_11.md` filed                          | `done` | unified-trading-pm@<this commit>                                                                                       |
+| Plan flips on Phase 0.3 (`- [x]`) + scoreboard refresh (0.4/0.5/0.6 UNBLOCKED post-fix)     | `done` | unified-trading-pm@<this commit>                                                                                       |
+
+Counts: UAC bar_boundary tests rose 24 → 27 (+3 net after relaxing clause-4 single test into 4 tests). MDPS
+`test_canonical_writer_record_helpers` tests rose 18 → 19 (+1 regression-guard). The MDPS fix landed on
+`origin/live-defi-rollout` via FF-push from slot 3's branch (per the Half 4 cadence codified 2026-05-11) — every
+agent + VM + downstream dep chain reads the corrected formula immediately. UAC contract amendment likewise FF'd into
+LDR.
+
+**Open follow-ups DEFERRED to next-cycle work-split** (per the deferred-work scoreboard table above):
+
+* **Phase 0.4 reconciler** — every MDPS parquet written between 2026-05-10 (Phase 1.2A.1 ship) and
+  2026-05-11 (`f004e12` fix) carries the over-stamped `available_at`. ~1 day of bad data on disk.
+  Reconciler script needed to walk `gs://{pid}-mdps/`, re-stamp via the corrected formula. Owner: Harsh
+  slot 5 (MDPS competency) OR slot 3 next cycle.
+* **Phase 0.5 MDPS write-gate** (call `assert_bar_boundary_contract` inside `canonical_writer.
+  write_candle_parquet`) — small surface, ~20 lines + tests. Future MDPS bug that drifts from the
+  contract caught at write-time. Owner: slot 3 next cycle.
+* **Phase 0.6 QG static check** — AST-walk MDPS aggregator paths to enforce the t_close convention +
+  ban inline `pd.Timestamp.floor` / `dt.replace(...)` rounding bypasses. Owner: slot 3 next cycle.
 
 ## Audit-2026-05-10 finding — post-cutover Phase: lift `available_at` to schema-level invariant
 

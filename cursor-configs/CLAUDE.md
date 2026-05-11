@@ -387,6 +387,24 @@ Read these before making ANY code changes:
   tables → `fetch_completed_at`; weather → forecast-issue-time. CeFi / DeFi / TradFi tick-level data → tick timestamp +
   source-priority scrape latency.
 
+  **Bar-shape rule (codified 2026-05-11 after MDPS off-by-one audit).** For every OHLCV-shape / aggregate bar (output of
+  MDPS canonical writer + any future bar-producing service): the bar's `timestamp` column on disk IS the bar's
+  **`t_close`** (close boundary), NOT `t_open`. The MDPS convention (`fast_candle_aggregation:94 + :134` +
+  `polars_candle_engine:242` all emit `boundaries[i + 1]`) is workspace-canonical. Therefore the `available_at` formula
+  for bars is:
+
+      available_at = timestamp + emission_latency_ms_for_source(primary_source)
+                   = t_close + per-source live-pipeline latency
+
+  NOT `timestamp + tf + latency` (the pre-2026-05-11 MDPS bug — would treat `timestamp` as `t_open` and overshoot by one
+  full timeframe: 1 minute for 1m, 1 hour for 1h, 1 day for 1d). UAC contract: `assert_bar_boundary_contract` clause 4
+  enforces `available_at >= t_close` with hard upper bound `available_at - t_close <= 25h` (catches the overshoot bug
+  + any future stamping bug that adds an extra timeframe; real per-source latencies in UAC
+  `EMISSION_LATENCY_MS_BY_SOURCE` cap at 24h via transfermarkt). The MDPS `canonical_writer._stamp_candle_available_at`
+  is the canonical bar-shape stamping helper; new bar-producing services MUST follow the same shape. Reference:
+  `plans/active/issues/mdps_canonical_writer_off_by_one_tf_2026_05_11.md` + fix shipped at MDPS@`f004e12` + UAC contract
+  amendment at UAC@`8672d49`.
+
 - **Prediction market lifecycle timing (instruments-service + MTDS — CRITICAL for prediction shard correctness)** —
   Prediction markets (Polymarket / Kalshi / others) are NOT static instruments; each market has a lifecycle:
   `market_created_at` (when listed), `resolution_time` (outcome determined), `settlement_time` (payouts). Recurring
