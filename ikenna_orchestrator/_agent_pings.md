@@ -62,3 +62,10 @@ StrategyFamily + AlertCode 39→45); (C) DR Phase 0+1.A-F (circuit_breaker + kil
 commit 6 LIVE_ALERT_RULES entries after Sub-A rename + Sub-B codes land. Plans:
 alerting_service_live_rules_2026_05_07.md / risk_simulations_limits_alerting_2026_05_10.md /
 disaster_recovery_circuit_breakers_2026_05_10.md.
+
+[2026-05-11 ~now UTC] ikenna-slot7-risk-uac (Sub-B) — DONE risk Phase 0+1.A-E + 1.F cross-ref + 2.G. Shipped
+UAC@945ad5d (risk_rule.py + strategy_family.py + risk.py facade + 6 AlertCodes 39→45 + 55 unit tests all green) +
+UAC@dc4c9f0 (ruff fixes). PM@0044e370 (plan flips + banners on 3 cross-plan files + audit findings). FOOT-GUN #1
+INCIDENT in UAC@dc4c9f0 — bundled Sub-C pre-staged test_circuit_breaker_taxonomy.py + test_kill_switch.py + __init__.py
+reorder under Sub-B commit message (no data loss, wrong attribution). Mitigation noted in risk plan § Audit findings
+0.D. Coordinator/Sub-C decide revert-vs-leave. Plan-of-record: risk_simulations_limits_alerting_2026_05_10.md.

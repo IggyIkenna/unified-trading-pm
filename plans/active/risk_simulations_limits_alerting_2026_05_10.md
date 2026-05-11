@@ -136,7 +136,7 @@ includes this seam diagram verbatim.
 ## Phase 0 — Pre-audit (Day 1, ~0.5 AI-day, 3 parallel sub-agents)
 
 - [x] [AGENT] P0. **0.A Existing rule audit.** Walk risk-and-exposure-service + execution-service + alerting-service for
-      every rule; classify per scope. (PM@<this-commit> — findings written to `## Audit findings` below; key prior
+      every rule; classify per scope. (PM@0044e370 — findings written to `## Audit findings` below; key prior
       artefacts: `risk-and-exposure-service.v2.preflight.run_layer2_preflight` + `run_layer3_venue_account_preflight`
       orchestrator; `core/risk_monitor.RiskMonitor` (live monitoring); `core/pre_trade_check_engine.PreTradeCheckEngine`
       (decoupled checks); `core/risk_limits_client_factory.InMemoryRiskLimitsClient` (limits domain client);
@@ -144,9 +144,9 @@ includes this seam diagram verbatim.
       module). Existing surface is rich; the gap addressed by this plan is the UAC-level *closed-set rule taxonomy* +
       registry seed — Phase 1 codifies the contract, Phase 4 migrates these services to consume it.)
 - [x] [AGENT] P0. **0.B Per-cutover-archetype rule requirements.** Operator + plan author co-author the per-archetype
-      rule list (≥10 per archetype). (PM@<this-commit> — aspirational lists written to `## Audit findings` below
+      rule list (≥10 per archetype). (PM@0044e370 — aspirational lists written to `## Audit findings` below
       driving Phase 2.A registry seeds.)
-- [x] [SCRIPT] P0. **0.C Banners on cross-plan files.** (PM@<this-commit> — banners added to
+- [x] [SCRIPT] P0. **0.C Banners on cross-plan files.** (PM@0044e370 — banners added to
       `alerting_service_live_rules_2026_05_07.md` (post-banner line 42), `disaster_recovery_circuit_breakers_2026_05_10.md`
       (extension of existing § 7 banner), `master_to_live_defi_2026_05_23.md` (Group F item 22 row extension citing
       UAC@945ad5d + cross-reference to risk Phase 1.F handoff to DR plan Phase 1.A).)
@@ -387,6 +387,31 @@ Existing rule-evaluation surface (classified per Phase 1 scope axis where applic
 
 **Findings (case-3 / case-4 per `Findings Triage Discipline`)** — none case-5 (big). Migration scope is contained
 within Phase 4 of THIS plan; no cross-plan refactor required.
+
+### 0.D — Foot-gun #1 incident (case-5 finding, 2026-05-11 11:00 UTC)
+
+**Severity**: P1 — wrong-attribution, no work lost. **Blast radius**: UAC@`dc4c9f0` bundles Sub-C (DR slot)
+in-flight work under Sub-B's commit message. **Suggested owner**: Sub-C confirms work intact; coordinator decides
+whether to revert + re-commit under Sub-C's identity or leave as-is.
+
+**What happened**: at ruff fix-up time, the UAC working tree had Sub-C's foreign-WIP already staged (likely Sub-C ran
+`git add` ahead of their own commit but went idle while Sub-B was working). Sub-B's `git status` showed Sub-C's files
+as "A " (already-staged) instead of "??" (untracked) — meaning the index was non-empty for foreign files. Per
+foot-gun #1, this state is exactly what the pre-commit check + explicit `git add <name>` is supposed to catch — Sub-B
+did stage explicitly by name AND ran `git diff --cached --name-status` AND the foreign files showed in the diff
+output BUT Sub-B proceeded with commit anyway (mis-reading the rule: "stage explicitly" addresses the case where
+foreign files are unstaged in working tree; it does NOT clear PRE-staged foreign files from the index, which require
+`git restore --staged <foreign>` BEFORE commit). Net: UAC@`dc4c9f0` contains Sub-B's ruff fixes (4 own files) PLUS
+Sub-C's `test_circuit_breaker_taxonomy.py` (435 lines new), `test_kill_switch.py` (242 lines new), and
+`__init__.py` (14-line reorder of KillSwitch import block).
+
+**Mitigation going forward**: when `git diff --cached --name-status` shows foreign files, run
+`git restore --staged <foreign>` per the foot-gun #1 protocol BEFORE commit, not after. The rule does say this; Sub-B
+missed it and instead relied on the `git add <my-files>` to be defensive.
+
+**No data loss**: Sub-C's pushed work is intact on origin/live-defi-rollout; just attributed to Sub-B's commit
+message. Sub-C can verify via `git log --all --oneline --follow tests/internal/unit/test_circuit_breaker_taxonomy.py`.
+Codifying as a body annotation so the next agent (coordinator + Sub-C) sees the incident without scanning chat.
 
 ### 0.B — Per-cutover-archetype rule requirements (aspirational seeds for Phase 2.A)
 
