@@ -358,8 +358,29 @@ SHARED-FILE-CONTENT collisions when slots push and pull each other's commits.
 > (`cd ${WORKSPACE_ROOT}/.tabs/<N>/`), then paste the matching prompt. The agent reads the slot's plan-of-record +
 > LEDGER bootstrap on its own.
 
-> **Boot pre-req**: Harsh runs `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 6` ONCE before
-> any slot 2-6 spawn (provisions all 6 slot worktrees on `tab/<harsh-user>/<N>` branches).
+> **Boot pre-req** (one-time on Harsh's machine, before any slot 2-6 spawn):
+>
+> ```bash
+> # 1. Verify workspace is clean across all repos on live-defi-rollout (per the precondition in
+> #    codex/05-infrastructure/per-tab-worktrees.md Step 0).
+> # 2. Provision 6 slot worktrees:
+> bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 6 --operator harsh
+> ```
+>
+> The `--init` step provisions per-repo worktrees + per-slot `.envrc` (PREK_CACHE_DIR isolation per foot-gun #4) AND
+> auto-copies `unified-trading-system-repos.code-workspace` into each slot dir (so `File → Open Workspace from File →
+> .tabs/<N>/unified-trading-system-repos.code-workspace` works immediately for the multi-root view; or just
+> `File → Open Folder → .tabs/<N>/` for flat single-root view — both produce identical isolation).
+>
+> Verify in a Cursor terminal of each new window:
+>
+> ```bash
+> pwd                                                              # → .../.tabs/<N>
+> git -C unified-trading-pm rev-parse --abbrev-ref HEAD            # → tab/harsh/<N>
+> ```
+>
+> Full 7-step paste-ready recipe at
+> [`codex/05-infrastructure/per-tab-worktrees.md`](../../codex/05-infrastructure/per-tab-worktrees.md).
 
 ### Slot 2 spawn prompt (features-repo consolidation Phase 4-7 — DEADLINE 2026-05-13)
 

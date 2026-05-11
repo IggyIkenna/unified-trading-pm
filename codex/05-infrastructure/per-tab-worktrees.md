@@ -190,18 +190,37 @@ theme assignments. The LEDGER mirrors it so fresh tab-agents bootstrap with the 
 
 ### Step 5 — open Cursor at a slot
 
-For each tab you want to spawn:
+For each tab you want to spawn, two equivalent options — pick the one matching how you like the file tree rendered:
 
 ```bash
-# Open Cursor at the slot's workspace dir (NOT the main workspace root).
+# Option A — Open as folder (single-root; flat file tree of all 27 repos as subdirs).
 code "$WORKSPACE_ROOT/.tabs/<N>"
-# OR for Claude Code:
+
+# Option B — Open as multi-root workspace (named labels per repo, custom emojis, folder grouping).
+# The .code-workspace file is auto-copied into each slot by --init / --add-slot
+# (provision_slot → copy_workspace_file), so this works immediately after Step 2.
+code "$WORKSPACE_ROOT/.tabs/<N>/unified-trading-system-repos.code-workspace"
+
+# OR for Claude Code CLI in a terminal:
 cd "$WORKSPACE_ROOT/.tabs/<N>" && claude
 ```
+
+Both options produce identical isolation — the window's CWD is rooted at the slot, all Git operations from any tab in
+that window hit the slot's `.git/index`. Option B just gives you the curated multi-root view from
+`unified-trading-system-repos.code-workspace`. The relative paths in the workspace file resolve against the slot dir.
 
 The slot's `.envrc` will load `PREK_CACHE_DIR` + `SLOT_NUMBER` if you have direnv installed (otherwise source it
 manually or set the env vars explicitly). Cursor's TypeScript server + file indexer cache per-workspace-path, so the
 first open warms the cache; subsequent opens are instant.
+
+**Verify CWD before pasting the spawn prompt.** In a Cursor terminal of the new window:
+
+```bash
+pwd                                                              # → .../.tabs/<N>
+git -C unified-trading-pm rev-parse --abbrev-ref HEAD            # → tab/<operator>/<N>
+```
+
+If `pwd` returns the main workspace root or the branch is `live-defi-rollout`, you opened the wrong directory.
 
 ### Step 6 — daily theme rotation
 

@@ -137,10 +137,28 @@ EOF
     log "  ENV  slot ${slot} .envrc written (PREK_CACHE_DIR=${sd}/.cache/prek)"
 }
 
+copy_workspace_file() {
+    # Copy the canonical multi-root .code-workspace into the slot dir so the
+    # operator can `File → Open Workspace from File` and get the labelled
+    # multi-root view (relative paths in the workspace file resolve against
+    # the slot dir; per-slot copy keeps each slot self-contained).
+    local slot="$1" sd src dst
+    sd="$(slot_dir "${slot}")"
+    src="${WORKSPACE_ROOT}/unified-trading-system-repos.code-workspace"
+    dst="${sd}/unified-trading-system-repos.code-workspace"
+    if [[ -f "${src}" ]]; then
+        cp "${src}" "${dst}"
+        log "  WS   slot ${slot} workspace file copied (${dst})"
+    else
+        log "  WS   slot ${slot} skipped (no canonical .code-workspace at ${src})"
+    fi
+}
+
 provision_slot() {
     local slot="$1"
     log "Provisioning slot ${slot} (branch tab/${OPERATOR}/${slot}) ..."
     write_slot_envrc "${slot}"
+    copy_workspace_file "${slot}"
     while IFS= read -r repo; do
         ensure_repo_worktree "${repo}" "${slot}"
     done < <(active_repos)

@@ -348,9 +348,23 @@ each other's commits.
 
 ## Spawn prompts (paste-ready into fresh Claude Code / Cursor tabs)
 
-> **Operator usage**: open a fresh Cursor / Claude Code tab inside the slot N worktree
-> (`cd ${WORKSPACE_ROOT}/.tabs/<N>/`), then paste the matching prompt. The agent reads the slot's plan-of-record +
-> LEDGER bootstrap on its own.
+> **Operator usage**: open a fresh Cursor / Claude Code tab inside the slot N worktree, then paste the matching prompt.
+> The agent reads the slot's plan-of-record + LEDGER bootstrap on its own.
+>
+> Two equivalent ways to open the slot in Cursor (both produce identical isolation):
+>
+> ```bash
+> # Option A — Open as folder (flat single-root view):
+> code "$WORKSPACE_ROOT/.tabs/<N>"
+>
+> # Option B — Open as multi-root workspace (named labels per repo, custom emojis):
+> code "$WORKSPACE_ROOT/.tabs/<N>/unified-trading-system-repos.code-workspace"
+> ```
+>
+> The `.code-workspace` file is auto-provisioned into each slot dir by `setup-tab-worktrees.sh --init` /
+> `--add-slot`, so Option B works immediately. For Claude Code CLI: `cd "$WORKSPACE_ROOT/.tabs/<N>" && claude`. Verify
+> CWD with `pwd` (→ `.../.tabs/<N>`) + branch with `git -C unified-trading-pm rev-parse --abbrev-ref HEAD` (→
+> `tab/ikennaigboaka/<N>`) before pasting the spawn prompt.
 
 ### Slot 2 spawn prompt (writegate slice b — CRITICAL PATH)
 
