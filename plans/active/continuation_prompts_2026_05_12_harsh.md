@@ -370,6 +370,35 @@ Ikenna-4 api_keys).
 DONE: append DONE-2026-05-15 block in EACH plan body. EOD-audit.
 ```
 
+## 🟢 SCOPE EXTENSION — Day 1 EOD pace check (2026-05-12 PM update; applies workspace-wide)
+
+**Observed**: Ikenna-side slots are shipping 3-5× calibrated pace on Day 1 of the 4-day cycle (slot 2 ✅ defi_catalogue
+Phases 1-3 entire scope; slot 4 ✅ api_keys_wallets Day-1 DONE + Day-2-4 plan; slot 5 ✅ defi_recursive_borrow Phases
+1-11 design batch; slot 6 ✅ defi_simulation_realism Phases 1-5; slot 7 ✅ scenarios Phases 1-2; slot 8 ⚪ active on
+manifest Phase 3). Same pace expected workspace-wide → Harsh slots will hit done-definitions early too.
+
+**Deadline UNCHANGED**: 2026-05-15 Phase 1 freeze gate. **Scope-within-cycle EXPANDS** to absorb idle capacity:
+
+| Slot | Day-2-4 extension scope |
+|---|---|
+| Harsh-2 (defi_catalogue impl 6-8 protocols) | Once protocols done: per-protocol consumer integration tests + codex docs + `defi_catalogue` reserve protocols (Sushi-V3 / Maverick / TraderJoe-V2 if not in initial set). Plus reserve list `client_reporting_pnl_attribution_mvp` (~6.5 calibrated, Group F item 22). |
+| Harsh-3 (code_freeze service-level closures) | Already has DAY-2 cross-side coordination with Ikenna slot 3's PipelineMode sweep. Day-2-4 extension: bucket_name_ssot Phase 0i tail (region pinning ratification) + manifest v8 wire-in tail + cc62f02 runner-shutdown wire-in cleanup (Harsh slot 5 limbo). |
+| Harsh-4 (defi_simulation_realism impl Phases 4-6) | Once Ikenna slot 6's family matrix lands Day 2 noon: per-AMM connectors. Then Phase 7 matching-engine integration (Ikenna slot 6 designs; you implement). Reserve list `wallet_treasury_client_flow` (~8.8 calibrated; pair with Ikenna slot 4). |
+| Harsh-5 (risk + DR impl) | Once Ikenna slot 7 scenarios land: per-scenario test coverage. Then Round 3 helper-shipped item test layer (5 reconcilers S/T/U/V/W + 1 risk route L + 4 UI components M+O). Plus alerting Phase 7-9 operator-action phases. |
+| Harsh-6 (cross_cutting #4 + manifest Phase 3 consumer sweep) | 8+ services consumer sweep is substantial; keep going. Day-4 stretch: reserve list `codex_vs_citadel_infrastructure_audit_2026_05_10` (~15.6 calibrated; hygiene). |
+| Harsh-7 (mock_data_pipeline_benchmarking) | Per-asset_group fixtures + benchmark harness. Day-4 stretch: reserve list `simulation_scenarios_topology_price_shocks` implementation tail (~7 calibrated; Ikenna slot 7 publishes scenarios Day 1+2). |
+| Harsh-8 (cross_asset_group_catalogue_audit) | Per-asset_group audit fan-out 5+. Day-4 stretch: reserve list `promote_workflow_may23_cli_path_2026_05_10` (~4.2 calibrated) + `available_at_lookahead_bias_completion` (~1.5 calibrated). |
+
+**Allocation principle**: extend within plan (Phases beyond current scope) → pull reserve list per work_split § Reserve
+list → confirmed P1 bugs (`ManifestFreshnessCache` wire-in to lending_indices_handler + sibling MTDS DeFi backfill
+handlers per operator confirmation 2026-05-11). **DON'T pull Cycle 2 cutover scope forward** (sequentially blocked on
+Phase 1 closure 2026-05-15).
+
+Cross-side ↔ Ikenna companion split:
+[`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § "🟢 SCOPE EXTENSION" has the mirror Ikenna
+per-slot extensions. Coordinate on overlapping reserve-list pickups (esp. `client_reporting_pnl_attribution_mvp` —
+Ikenna slot 5 and Harsh slot 2 both flagged it; pair-up or claim first).
+
 ## Coordination + cleanup
 
 After all slots post their STATUS-2026-05-11 lines, Harsh main (slot 1) sweeps:

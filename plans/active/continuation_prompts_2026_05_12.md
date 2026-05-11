@@ -387,6 +387,33 @@ DONE: append DONE-2026-05-15 block in EACH plan body (manifest_schema_final_gate
 EOD-audit per CLAUDE.md.
 ```
 
+## 🟢 SCOPE EXTENSION — Day 1 EOD pace check (2026-05-12 PM update)
+
+**Observed**: slots shipping 3-5× calibrated pace. Multiple slots ✅ DONE entire 4-day Cycle-1 scope on Day 1
+(slot 2 defi_catalogue Phases 1-3 + Phase 1B-1H all shipped; slot 4 api_keys_wallets Day-1 DONE block + Day-2-4 plan;
+slot 5 defi_recursive_borrow Phases 1-11 design batch; slot 6 defi_simulation_realism Phases 1-5 + Phase 9B/9C
+continuation; slot 7 simulation_scenarios Phases 1-2 design SHIPPED Day 1).
+
+**Deadline UNCHANGED**: 2026-05-15 Phase 1 freeze gate (external; cannot shift). **Scope-within-cycle EXPANDS** to
+absorb idle Day-2-4 capacity. Per-slot Day-2-4 extensions:
+
+| Slot | Day-1 status | Day-2-4 extension scope |
+|---|---|---|
+| 2 | ✅ defi_catalogue Phases 1-3 DONE | (a) cross_asset_group_catalogue_audit fan-out (~31 calibrated; per-asset_group catalog drift reconcile, 5-sub-agent fan-out per asset_group); (b) **DefiManifestRecorder ManifestFreshnessCache wire-in P1** (operator-confirmed bug from lending-indices VM ungraceful exit — extend to sibling MTDS DeFi backfill handlers `gas_fees` / `lst_rates` / `dex_pools` / `liquidations` / `perp_funding`). |
+| 3 | ✅ Phase 1.E audit + Phase 2.6 cutover dry-run + DAY-2 P0 PipelineMode sweep (operator-approved Q1+Q2) | After PipelineMode sweep closes Day 2: (a) workspace QG full sweep (freeze-gate item #5 partial); (b) full codex SSOT currency pass (~50 docs, freeze-gate item #6 partial); (c) Phase 2.6 detailed playbook (per-bucket migration order + per-VM-prefix rsync sizing + manifest re-sync scheduling). |
+| 4 | ✅ Day-1 DONE + Day-2-4 plan already drafted by slot itself | Slot 4 self-extended; let them keep momentum. Their Day-2-4 plan should be reviewed Day 2 morning by slot 1 to verify scope alignment with master plan Group F items 19+22. |
+| 5 | ✅ defi_recursive_borrow Phases 1-11 design batch | (a) Phase 12 backtest harness implementation (`recursive_borrow_paper_smoke.py` per `e2e-testing/scripts/defi/`); (b) Phase 4-6 implementation (sim contract integration + per-family backtest scenarios); (c) reserve list pickup `client_reporting_pnl_attribution_mvp_2026_05_10` (Group F item 22). |
+| 6 | ✅ defi_simulation_realism Phases 1-5 + Phase 9B/9C continuation | (a) Phase 6-7 (golden test set landing + matching-engine integration); (b) Phase 9C+9D (operator-runnable detail for Harsh slot 4); (c) reserve list pickup `mock_data_pipeline_benchmarking_2026_05_10` (~7 calibrated). |
+| 7 | ✅ simulation_scenarios Phases 1-2 (10 scenarios) | (a) Phase 3-4 (scenario-runner integration + per-scenario test fixtures); (b) Phase 5+ (per-archetype scenario coverage matrix); (c) handshake-driven fold-in of Harsh slot 5 risk + DR scenario test coverage. |
+| 8 | ⚪ ACTIVE on manifest Phase 4 consumer sweep | Keep going — Phase 3 consumer sweep is substantial (8+ services × per-service v8 column wire-in). Day-2 add-on: **DAY-2 P0 INJECTED PipelineMode sweep coordination** with slot 3 (Phase 4.MTDS / 4.MDPS / 4.INSTRUMENTS callsite migration overlap — see slot 3 prompt). Reserve list `codex_vs_citadel_infrastructure_audit_2026_05_10` (~15 calibrated; hygiene) as Day-4 stretch. |
+
+**Allocation principle**: extend within plan (Phases 4+) → pull reserve list (precedence per work_split § Reserve list)
+→ pull confirmed P1 bugs. Always finish current-cycle's directly-named scope before pulling forward.
+
+**Cycle 2 work-split (2026-05-16+) re-drafted at 2026-05-15 EOD** per `post_freeze_roadmap_2026_05_16_to_05_23.md`
+will account for whatever lands in Day-2-4 extension. Don't pull Cycle 2 cutover scope forward (sequentially blocked
+on Phase 1 closure).
+
 ## Coordination + cleanup
 
 After all slots post their STATUS-2026-05-11 lines, slot 1 (main) sweeps the ping ledger:
