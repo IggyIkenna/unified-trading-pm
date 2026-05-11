@@ -1289,6 +1289,9 @@ metadata; reconciliation report green; operator sign-off in plan archival commit
 | `PM@158dd8b1` | unified-trading-pm | **Phase 3 design — strategy-service factory + target-universe catalog**. Direct catalog-read pre-audit confirmed `factory.py:63` + `catalog.py:1958` dispatch dicts have NO Family 1/2 entries (silent runtime-error). SINGLE engine class with config-driven dispatch decision. Paste-ready Python for `_build_carry_recursive_borrow_lending_only` (7 cells) + `_build_carry_recursive_borrow_perp_hedged` (10 cells). 5 P0 implementation gates. |
 | `PM@03492b96` | unified-trading-pm | **Phase 12 design — per-family backtest scenario set**. 14 scenarios across 3 categories (4 funding-regime + 5 liquidation-stress + 5 venue/bridge-failure). Per-cell success verdict closed set. Pytest-parametrised harness shape consuming slot 6 PoolMatcher fixtures. 6 P0/P1 implementation gates + 3 cross-plan annotations needed. |
 | `PM@c7d0ed88` | unified-trading-pm | **Stream C C-enum.3 + C-enum.4 closed** — AD-1 framing reframed (8→11 corrected to 8→10 per codex sweep finding ZERO documented-but-not-in-enum archetypes); `uac@d02cce2` cited as shipped evidence. C-enum.3 downstream sweep migrated from archived `leveraged_leg_controller_2026_05_01.plan.md` to defi_recursive_borrow Phase 3 design as canonical wiring spec. Closes 2026-05-11 RE-TASK Tier 2 #6 carry-forward. |
+| `PM@88d41c25` | unified-trading-pm | Initial DONE-2026-05-15 block + scoreboard + slot-4 wallet schema dep wired (P1 todo). |
+| `PM@b339a1db` | unified-trading-pm | **Phases 4-11 design SSOT — Day-1 close-out batch** (3-sub-agent parallel fan-out reconciled). Phase 4 (`RecursiveLeverageReceiver.sol` Option A action-encoder); Phase 5 (3-driver orchestrator + 6 NEW DefiErrorCode + closed-set event taxonomy + 12 tests); Phase 6 (DELETE duplicate HL connector + EIP-712 chainId-at-runtime + 8 NEW HL_* error codes + replace 0.9 placeholder); Phase 7 (PerpHedgeSizer with closed-form `E≈base` + 8 tests); Phase 8 (HealthFactorMonitor + 7 NEW alert codes + 6 kill-switch mappings + 1.5× concentration multiplier); Phase 10 (10 codex docs — SUPERSEDES original `carry-recursive-staked-config-variants.md` singular); Phase 11 (deployment-api endpoint + 4 UI components incl HealthFactorMonitorTile). ~43 P0/P1 implementation gates captured across 7 phases. |
+| `PM@eaff29ac` | unified-trading-pm | **5 cross-plan annotations** (Findings Triage discipline; append-only to foreign plans): defi_catalogue Phase 3 (funding-rate + Arb/Base instruments); defi_simulation_realism (B1-B5+C4 fixtures); simulation_scenarios_topology_price_shocks (Cat B SSOT overlap); defi_master (SwapRouter02 per-chain registry); master_to_live_defi (Group F#18 scenario IDs + Group G#23 HealthFactorMonitorTile Continuous Verification). |
 
 ### AI-day delivery (calibrated; cycle budget ~14 calibrated AI-days for slot 5)
 
@@ -1300,12 +1303,13 @@ metadata; reconciliation report green; operator sign-off in plan archival commit
 | Phase 3 strategy-service factory design | design | ~1.0 |
 | Phase 12 backtest scenarios design | design | ~1.5 |
 | Stream C C-enum.3+4 closure | refactor | ~0.5 |
-| **Total Day 1** | | **~9.0 calibrated AI-days** (~64% of ~14 budget) |
+| Phases 4-11 design batch (3-sub-agent fan-out + synthesis) | research+design | ~3.5 |
+| 5 cross-plan annotations (Findings Triage) | refactor | ~0.5 |
+| **Total Day 1** | | **~13.0 calibrated AI-days** (~93% of ~14 budget) |
 
-Remaining ~5 calibrated AI-days budget for Days 2-4 of cycle (per density-push target 3.5-4/day): could be deployed on
-Phase 4 (Solidity FlashLoanReceiver extended-receiver design) + Phase 5/7/8 design completions + Phase 6
-(Hyperliquid LIVE wire-up DESIGN — implementation = Harsh/code repo work) OR redeployed to higher-priority slot
-absorption.
+**Day-1 cycle FULLY CLOSED**. All 13 phases (Phase 0 + Phases 1-13 designs OR explicit migrations) shipped at the
+design level. Day-2 work is implementation-side (Harsh code repos) + codex authoring (slot 5 can continue OR
+operator re-task). No remaining design surface in this plan.
 
 ### Day-2 deferred work — for slot 5 or operator re-task
 
