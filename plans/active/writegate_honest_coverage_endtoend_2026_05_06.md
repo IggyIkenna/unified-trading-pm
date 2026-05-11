@@ -817,10 +817,15 @@ NaN-ratio/cluster-coverage check — the entire honest-coverage infrastructure i
       `_write_closed_market_candles` (now deleted) to `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim
       pending Step 4 enum ship. 22 NaN-bar-shape tests deleted across `test_orchestration_writer.py` +
       `test_orchestration_workers.py` (they asserted the banned NaN-OHLC shape).
-- [ ] **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:417`) → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`.
-      **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`** Phase 1: UAC `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP`
-      enum value lands there (operator-approved 2026-05-11 per wave3x TL;DR #2). Slot 3 owns the enum ship; slot 8
-      consumes once landed.
+- [ ] **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:270` post-Step-3 — was :417 pre-deletion)
+      → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`. **INTERIM SHIPPED in Step 3**
+      (market-data-processing-service@2f163c1): the method was refactored from the now-deleted
+      `_write_closed_market_candles` to emit `record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)` per timeframe so
+      the manifest carries `empty_confirmed` instead of the banned NaN-OHLC parquet. **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`**
+      Phase 1: UAC `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP` enum value lands there (operator-approved
+      2026-05-11 per wave3x TL;DR #2). Slot 3 owns the enum ship; slot 8 then trivially upgrades the reason kwarg
+      from `SOURCE_RETURNED_ZERO` → `EXPECTED_KNOWN_SOURCE_GAP` in one Edit. Until then the interim keeps the
+      manifest honest + the banned NaN-bar write removed — that's the P0-2 critical-path win.
 - [ ] **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
       **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked
       by `tradfi_master_2026_05_07` futures-expiry shipping. Per task instructions, skipped.
