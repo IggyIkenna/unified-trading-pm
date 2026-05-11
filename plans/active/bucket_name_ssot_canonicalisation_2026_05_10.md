@@ -360,8 +360,20 @@ I can keep them coordinated, but if a third plan also touches base-service.sh nu
 
 ### Q4 — [harsh-bucket-and-adapter-tab, 2026-05-11 07:13 UTC] — 🔴 P0: cloud-providers.yaml features-\* env-tier is aspirational, not provisioned — drop the tier from the yaml, or provision the env-tiered buckets?
 
-**Status**: 🟡 BLOCKED — needs an operator decision; **migration-blocking** for the L2 config.py migration; routed via
-ping with `🔴 P0` marker.
+**Status**: ✅ RESOLVED — operator/Ikenna picked **option (b)** 2026-05-11 ("make reality match the yaml" —
+provision the env-tiered buckets + migrate the existing flat-bucket data + repoint every reader/writer; high-risk
+multi-bucket data migration). **Implications**: (1) the yaml STAYS env-tiered — that's the SSOT now (no change to the
+`${DEPLOYMENT_ENV}` shape; do ADD the missing `prediction`/`sports` keys with the same env-tier shape, uncomment GCP
+`features-calendar`, pick + model one canonical `-test-` variant shape, and PROBE `ml-*`/`strategy`/`execution` for
+flat-vs-env-tiered on disk — if any are flat they need provisioning too). (2) The **L2 config.py → `resolve_bucket_name`
+migration is UNBLOCKED** — do it now: the env-tiered names the resolver computes are now "correct" per (b); the buckets
+don't exist YET but the physical provisioning + data migration happens in `code_freeze` Phase 2 (item 2.6, window
+2026-05-15→05-19), and nothing writes `features-*` buckets between now and `code_freeze` Phase 3 backfills (QG runs in
+mock mode, so the gap is safe). This is the "code first, physical migration second" sequence per the `code_freeze`
+principle. (3) The env-tiered-bucket **provisioning + flat-bucket data migration + reader/writer repoint** is now a
+`code_freeze` **Phase 2.6** physical-migration item — NOT this plan's / slot 4's job to execute now. (4) Phase 0 of
+this plan is re-shaped: it's now just the yaml-correctness fixes (missing keys / uncomment `features-calendar` /
+`-test-` shape / `ml-*` probe), not "drop the tier vs provision the tier".
 
 GCP probe (2026-05-11, project `central-element-323112`): the `features-*` buckets that ACTUALLY EXIST are FLAT — no
 `${DEPLOYMENT_ENV}` tier — but the yaml entries

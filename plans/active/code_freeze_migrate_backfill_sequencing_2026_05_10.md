@@ -63,6 +63,12 @@ The principle: **code shape decisions → migration → backfill, in that order,
    2.3  OHLCV legacy filename → per-instrument rename reconcile
    2.4  AWS DeFi-first cloud-parity migration (GCS → S3 transfer + Glue/Athena)
    2.5  Manifest cross-asset rescan with --apply-flips (post-schema, post-data)
+   2.6  env-tiered features-* (+ Group-B ml-*/strategy/execution if flat on disk)
+        bucket provisioning + flat-bucket data migration + reader/writer repoint
+        (per bucket_name_ssot_canonicalisation_2026_05_10.md Q4 = option (b),
+         operator/Ikenna decision 2026-05-11 — "make reality match the yaml";
+         the CODE half (config.py → resolve_bucket_name) lands pre-Phase-2 in
+         the bucket-SSOT plan; this is the physical half)
 
                                   ↓ Phase 2 freeze gate ↓
 
