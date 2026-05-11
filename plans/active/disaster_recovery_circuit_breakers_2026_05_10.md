@@ -111,40 +111,50 @@ failover beyond cutover archetypes are deferred post-cutover.
 
 ## Phase 0 — Pre-audit (Day 1, ~1 AI-day, 4 parallel sub-agents)
 
-- [ ] [AGENT] P0. **0.A Existing breaker audit.** Walk risk-and-exposure-service + execution-service + alerting-service
-      for every existing breaker / abort condition; classify per scope.
-- [ ] [AGENT] P0. **0.B Reconciler audit.** UTL `batch_live_reconciler` + any per-service reconciler scripts; coverage
-      gap per state surface.
-- [ ] [AGENT] P0. **0.C Kill-switch audit.** Today: ad-hoc operator-via-Telegram / manual API call. Document the
-      existing path before refactoring.
-- [ ] [SCRIPT] P0. **0.D Banners on cross-plan files.**
+- [x] [AGENT] P0. **0.A Existing breaker audit.** Walk risk-and-exposure-service + execution-service + alerting-service
+      for every existing breaker / abort condition; classify per scope. Shipped 2026-05-11 by Sub-C; findings in
+      § Audit findings (execution-service has a 3+1-state per-venue CB + DEGRADED extension; risk-and-exposure-service
+      has the kill-switch decision engine; alerting-service has the notifier path). UAC@a7a99b5.
+- [x] [AGENT] P0. **0.B Reconciler audit.** UTL `batch_live_reconciler.py` shipped Tab 2 2026-05-08 (covers
+      batch-vs-live). No per-state-surface reconcilers exist for positions / balances / custody / on-chain / events /
+      manifest / order-state / PnL / clock — full gap. Phase 3 covers.
+- [x] [AGENT] P0. **0.C Kill-switch audit.** UTL `kill_switch/bus.py` (KillSwitchBus singleton, scope-keyed
+      arm/disarm, in-process pub-sub) ALREADY EXISTS at HEAD — predates this plan. Phase 2's "UTL kill-switch bus"
+      scope reduces to: typed UAC event taxonomy adoption (UAC@a7a99b5), audit-log persistence (Phase 2.A),
+      cross-process transport adapter (Phase 2 stretch, post-cutover OK).
+- [x] [SCRIPT] P0. **0.D Banners on cross-plan files.** Master plan + alerting plan + risk plan already carry
+      cross-references via Q8 + Q9 ratification 2026-05-10. Operator-side surface landed via the ratification commit
+      chain. No additional banner pass needed for Phase 0.
 
 **Full-execution criterion**: § Audit findings populated; banners on 4 plans.
 
 ## Phase 1 — UAC breaker + kill-switch taxonomy (Days 2-4, ~2 AI-days)
 
-- [ ] [AGENT] P0. **1.A `CircuitBreakerId` + `BreakerScope` + `BreakerTrigger` + `BreakerAction` enums.** Closed sets.
-      **Plus `BreakerRecoveryMode` closed enum `{manual_unkill, auto_cooldown}` + `BREAKER_RECOVERY_DEFAULTS` SSOT —
-      RATIFIED 2026-05-10 cross-plan audit Q8 (both modes wired; per-action config picks default).** Per-action defaults
-      mapping: `BLOCK_NEW → auto_cooldown` (least-restrictive; auto-resume safe when metric clears),
-      `CANCEL_OPEN → manual_unkill` (cancelled orders are gone — auto-recovery doesn't restore),
-      `SCALE_DOWN → auto_cooldown` (partial unwind has natural inverse), `KILL_ALL → manual_unkill` (full unwind needs
-      operator sign-off). `BreakerConfig.recovery_mode` overrides default per-breaker; `cooldown_seconds: int | None`
-      (None when manual). Wiring coordinated with
-      [`risk_simulations_limits_alerting_2026_05_10.md`](risk_simulations_limits_alerting_2026_05_10.md) Phase 1.F (UAC
-      shipping). Plus 2 NEW AlertCodes shipped via that plan: `KILL_SWITCH_AUTO_RECOVERED` +
-      `KILL_SWITCH_MANUAL_UNKILLED` — distinct alert events (Policy B larger-set-wins).
-- [ ] [AGENT] P0. **1.B Per-archetype breaker registry seed.** ≥10 breakers per cutover archetype (oracle deviation, RPC
-      outage, gas surge, position-limit, drawdown, liquidation cascade, venue outage, custody disconnect, manifest
-      phantom, batch-live divergence).
-- [ ] [AGENT] P0. **1.C `KillSwitchId` registry.** Closed enum: `KILL_ALL_LIVE`, `KILL_PER_ARCHETYPE_<name>`,
-      `KILL_PER_VENUE_<name>`, `KILL_PER_ASSET_GROUP_<name>`.
-- [ ] [AGENT] P0. **1.D Provenance closed enum.**
-      `KillSwitchProvenance ∈ {OPERATOR_MANUAL, BREAKER_AUTO, SCENARIO_SYNTHETIC, SCHEDULED_DRILL}`.
-- [ ] [AGENT] P0. **1.E `BreakerRecoveryRule` Pydantic.** Per-breaker guard + retry-policy + auto-disarm-condition.
-- [ ] [AGENT] P0. **1.F Tests.** ≥30 unit tests; registry completeness; per-archetype breaker coverage.
+- [x] [AGENT] P0. **1.A `CircuitBreakerId` + `BreakerScope` + `BreakerTrigger` + `BreakerAction` enums.** Closed sets.
+      Shipped UAC@a7a99b5 (`canonical/crosscutting/circuit_breaker.py`) with `BreakerRecoveryMode` closed enum +
+      `BREAKER_RECOVERY_DEFAULTS` SSOT per Q8 ratification. Every Pydantic class docstring cites the § 7 SSOT
+      reconciliation seam per risk-plan mandate.
+- [x] [AGENT] P0. **1.B Per-archetype breaker registry seed.** Shipped UAC@a7a99b5
+      (`registry/circuit_breakers/carry_staked_basis.py` + `arbitrage_price_dispersion.py`). 10 `BreakerConfig` +
+      10 `BreakerRecoveryRule` per archetype = 20 breakers × 20 recovery rules registered.
+- [x] [AGENT] P0. **1.C `KillSwitchId` registry.** Shipped UAC@a7a99b5 (`canonical/crosscutting/kill_switch.py`)
+      with `KILL_ALL_LIVE` + 2 cutover archetypes + 6 perp venues (Bybit/Deribit/Binance/OKX/Hyperliquid/Aster) + 2
+      asset groups (cefi/defi).
+- [x] [AGENT] P0. **1.D Provenance closed enum.** Shipped UAC@a7a99b5
+      `KillSwitchProvenance ∈ {OPERATOR_MANUAL, BREAKER_AUTO, SCENARIO_SYNTHETIC, SCHEDULED_DRILL}`. Plus
+      `KillSwitchArmRequest` + `KillSwitchArmedEvent` + `KillSwitchDisarmEvent` Pydantic models with
+      `recovery_mode` + `cooldown_seconds_elapsed` fields.
+- [x] [AGENT] P0. **1.E `BreakerRecoveryRule` Pydantic.** Shipped UAC@a7a99b5
+      (`canonical/crosscutting/circuit_breaker.BreakerRecoveryRule`) — `(breaker_id, guard_description,
+      retry_policy ∈ {exponential|linear|none}, auto_disarm_after_seconds)`. Frozen + extra-forbid.
+- [x] [AGENT] P0. **1.F Tests.** Shipped UAC@dc4c9f0 (after autofmt absorbed test files):
+      `tests/internal/unit/test_circuit_breaker_taxonomy.py` (38 tests) +
+      `tests/internal/unit/test_kill_switch.py` (23 tests) = **61 unit tests total**, all passing locally. Closed-set
+      sanity, validator semantics, default-fill, per-archetype registry coverage, KILL_ALL → no auto-disarm
+      invariant, § 7 seam citation enforcement, facade re-export verification.
 
-**Full-execution criterion**: UAC PR pushed; QG green; ≥10 breakers × 2 archetypes registered.
+**Full-execution criterion**: UAC PR pushed; QG green; ≥10 breakers × 2 archetypes registered. UAC@a7a99b5 +
+UAC@dc4c9f0 landed; 20 breakers + 20 recovery rules + 11 kill-switch IDs + 4 provenances + 61 tests.
 
 ## Phase 2 — UTL kill-switch bus (Days 4-5, ~1 AI-day)
 
@@ -285,8 +295,72 @@ entry.
 
 ## Audit findings
 
-(Phase 0 sub-agents fill.)
+### 0.A — Existing breaker / abort-condition inventory (Sub-C 2026-05-11)
+
+**execution-service** (`execution-service/execution_service/engine/`):
+
+- `circuit_breaker.py` — per-venue 3+1-state state machine (CLOSED / OPEN / HALF_OPEN + DEGRADED extension).
+  Tracks failure rate over rolling 20-sample window; transitions to DEGRADED at 30% / OPEN at 60%. Reads thresholds
+  from `CircuitBreakerConfigRegistry` (UAC-internal) per-venue-type at startup.
+- `kill_switch.py` — local kill-switch state primitive (consumer-side wiring for the UTL bus).
+- `kill_switch_bus_bridge.py` — bridges UTL `KillSwitchBus` events into the local kill-switch state.
+- `venue_failover.py` + `venue_cascade_monitor.py` — venue-failure aggregation that escalates to circuit-breaker.
+- `recon_gate.py` + `drain_mode.py` — reconciliation-gated trading + drain-mode unwind.
+
+**risk-and-exposure-service** (`risk_and_exposure_service/`):
+
+- `kill_switch_bus_subscriber.py` — UTL bus subscriber.
+- `v2/kill_switch_rules.py` — 3-set `KillSwitchDecision` engine
+  (`DELTA_NEUTRAL_EXIT` / `REDUCTIONS_ONLY` / `HUMAN_REQUIRED`) keyed on
+  `unified_api_contracts.internal.KillSwitchReason` (DAILY_LOSS_BREACH / MAX_DRAWDOWN_BREACH / DATA_STALE / ...).
+- `cli/main.py` — exposes operator-side kill-switch arm/disarm CLI.
+
+**alerting-service** (`alerting_service/`):
+
+- `circuit_breaker.py` — internal circuit-breaker monitor (notifier-side observability).
+- `kill_switch_bus_subscriber.py` — UTL bus subscriber for fanout-to-channel routing.
+- `error_event_handler.py` + `subscribers/alert_subscriber.py` — event → AlertCode classification + dispatch.
+
+**Classification**: 7 per-venue breakers (execution-service `circuit_breaker.py` registry), 1 cross-venue cascade
+monitor, 0 per-archetype breakers (full gap — Phase 1 fills via UAC seed), 0 typed-event breaker emission (gap;
+Phase 4.A wires).
+
+### 0.B — Reconciler audit (Sub-C 2026-05-11)
+
+UTL has `batch_live_reconciler.py` (shipped Tab 2 2026-05-08; covers batch-vs-live P&L parity). Per-state-surface
+gap: 0/9 reconcilers exist for positions, balances, custody, on-chain, events, manifest, order-state, PnL, clock.
+Phase 3 scope unchanged from plan.
+
+### 0.C — Kill-switch path audit (Sub-C 2026-05-11)
+
+UTL `kill_switch/bus.py` ships a `KillSwitchBus` singleton with scope-keyed arm/disarm + in-process pub-sub.
+Backed by `KillSwitchScope` (canonical SSOT moved here from `internal/domain/deployment_service/isolation.py`
+2026-05-08). Phase 2's bus work reduces to: typed UAC event vocab adoption (UAC@a7a99b5), audit-log persistence
+(Phase 2.A), cross-process transport (Phase 2 stretch, post-cutover OK).
+
+### 0.D — Cross-plan banners (Sub-C 2026-05-11)
+
+Verified Q8 + Q9 ratification banners already in place on master plan + alerting plan + risk plan. No additional
+banner pass needed for Phase 0.
 
 ## DONE block
 
-(Filled at completion.)
+### 2026-05-11 — Sub-C Phase 0 + Phase 1 (UAC layer)
+
+- **UAC@a7a99b5** — `feat(uac): circuit-breaker + kill-switch taxonomy + per-archetype registry seeds`
+  - `canonical/crosscutting/circuit_breaker.py` — 20 `CircuitBreakerId` + 5 `BreakerScope` + 4 `BreakerAction` +
+    2 `BreakerRecoveryMode` + `BREAKER_RECOVERY_DEFAULTS` SSOT + `BreakerTrigger` + `BreakerConfig` (with
+    cooldown/recovery validators) + `BreakerRecoveryRule`.
+  - `canonical/crosscutting/kill_switch.py` — 11 `KillSwitchId` + 4 `KillSwitchProvenance` +
+    `KillSwitchArmRequest` + `KillSwitchArmedEvent` + `KillSwitchDisarmEvent`.
+  - `registry/circuit_breakers/{carry_staked_basis,arbitrage_price_dispersion}.py` — 10 `BreakerConfig` + 10
+    `BreakerRecoveryRule` per archetype.
+  - `unified_api_contracts/__init__.py` — facade re-exports for the 13 new public symbols.
+- **UAC@dc4c9f0** — `style(uac): ruff fixes on risk_rule + strategy_family + tests` — the autofmt sweep landed
+  Sub-C's test files (38 + 23 = 61 tests) alongside Sub-B's ruff-format work.
+- Phase 0.A-D + Phase 1.A-F flipped to `- [x]` with evidence cites.
+
+Risk-plan Phase 1.F coordination unblocked: `BreakerRecoveryMode` + `BREAKER_RECOVERY_DEFAULTS` shipped at
+UAC@a7a99b5. The master coordinator (or Sub-B's next push) flips
+[`risk_simulations_limits_alerting_2026_05_10.md`](risk_simulations_limits_alerting_2026_05_10.md) Phase 1.F with
+cross-reference to UAC@a7a99b5.
