@@ -20,20 +20,115 @@ evidence table; see plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md
 issues/mtds_sports_available_at_wiring_2026_05_11.md (PM@7c088961). DONE block + deferred-work scoreboard in plan body.
 No-gate prep complete; going quiet — next session picks up on Q2/Q4 answers + slot-3 Track E.
 
-[2026-05-11 07:34 UTC] [main → slot 4] — Q1/Q2/Q3 answered in `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` § "Open questions" → "Answers from main (slot 1)": **Q1** = keep the resolver in UTL (`unified_trading_library.cloud_interface.bucket_naming`); the work-split's `from unified_api_contracts.bucket_naming` line was a sloppy paste — slot 1 corrected the work-split § "Slot 4" + LEDGER. **Q2** = the slot-2-Phase-4 gate is CLEAR (slot 2 shipped Phase 4.1-4.5; per-family config.py paths stable; slot 2 now on `features_service_qg_cleanup_2026_05_11.md`) — BUT the L2 config.py migration is now blocked on Q4, so proceed *as soon as Q4 is answered*. **Q3** = STEP 5.69 (confirm free; slot 6's P0-2 gate takes the next number). **Q4 (P0)** = SURFACED TO OPERATOR + added to the cross-side ping to Ikenna; slot 1 endorses your rec (a) "make the yaml match reality"; AWAITING operator/Ikenna decision — L2 migration + Phase 0 stay blocked until it lands. **Resume conditions**: (1) Q4 answered → do Phase 0 + the L2 config.py migration; (2) slot 3 Track E ships its UTL sports-stamping helpers → wire them into MTDS sports adapters per `issues/mtds_sports_available_at_wiring_2026_05_11.md`. Your "going quiet" is correct until then. (Take a `git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout` to pick these up.)
+[2026-05-11 07:34 UTC] [main → slot 4] — Q1/Q2/Q3 answered in
+`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` § "Open questions" → "Answers from main (slot 1)": **Q1**
+= keep the resolver in UTL (`unified_trading_library.cloud_interface.bucket_naming`); the work-split's
+`from unified_api_contracts.bucket_naming` line was a sloppy paste — slot 1 corrected the work-split § "Slot 4" +
+LEDGER. **Q2** = the slot-2-Phase-4 gate is CLEAR (slot 2 shipped Phase 4.1-4.5; per-family config.py paths stable; slot
+2 now on `features_service_qg_cleanup_2026_05_11.md`) — BUT the L2 config.py migration is now blocked on Q4, so proceed
+_as soon as Q4 is answered_. **Q3** = STEP 5.69 (confirm free; slot 6's P0-2 gate takes the next number). **Q4 (P0)** =
+SURFACED TO OPERATOR + added to the cross-side ping to Ikenna; slot 1 endorses your rec (a) "make the yaml match
+reality"; AWAITING operator/Ikenna decision — L2 migration + Phase 0 stay blocked until it lands. **Resume conditions**:
+(1) Q4 answered → do Phase 0 + the L2 config.py migration; (2) slot 3 Track E ships its UTL sports-stamping helpers →
+wire them into MTDS sports adapters per `issues/mtds_sports_available_at_wiring_2026_05_11.md`. Your "going quiet" is
+correct until then. (Take a `git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout` to pick these
+up.)
 
-[2026-05-11 08:01 UTC] [main → slot 4] — **You can RESUME — one of your two halves is unblocked.** Slot 3 shipped Track E (the 3 UTL sports-stamping helpers) @ UTL@`2ab3685` + codex. So your "sports-adapter `available_at` stamping" half is now unblocked **independent of Q4** — Q4 (the yaml-vs-reality env-tier mismatch) only blocks the *bucket-SSOT config.py migration* half, NOT the sports-stamping half. So: pull (`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`), then wire Track E's `stamp_available_at_*` helpers into the MTDS sports odds write path per your own audit `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` (wiring point: `market-tick-data-service/.../engine/orchestrator.py:2102 _process_sports_venue_with_leagues`; verifier: sports odds parquets carry a non-null `available_at` == bm_time (+ scrape latency); LookaheadBiasError strict-mode green for sports features-* compute). Coordinate the hand-off pattern with Ikenna slot 3 (available_at umbrella owner) — if a hand-off decision is needed, flag it in `mtds_sports_available_at_wiring_2026_05_11.md` § Open questions + ping slot 1 and I'll route a cross-side ping. **Still blocked (don't touch yet)**: the L2 config.py → `resolve_bucket_name` migration + Phase 0 — waiting on Q4 (with operator/Ikenna). Q3 follow-up: slot 6 took STEP 5.67 for its banned-placeholder gate, so your inline-`gs://`-formatter check takes STEP 5.68 (or next free — confirm in `base-service.sh`).
+[2026-05-11 08:01 UTC] [main → slot 4] — **You can RESUME — one of your two halves is unblocked.** Slot 3 shipped Track
+E (the 3 UTL sports-stamping helpers) @ UTL@`2ab3685` + codex. So your "sports-adapter `available_at` stamping" half is
+now unblocked **independent of Q4** — Q4 (the yaml-vs-reality env-tier mismatch) only blocks the _bucket-SSOT config.py
+migration_ half, NOT the sports-stamping half. So: pull
+(`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`), then wire Track E's
+`stamp_available_at_*` helpers into the MTDS sports odds write path per your own audit
+`plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` (wiring point:
+`market-tick-data-service/.../engine/orchestrator.py:2102 _process_sports_venue_with_leagues`; verifier: sports odds
+parquets carry a non-null `available_at` == bm_time (+ scrape latency); LookaheadBiasError strict-mode green for sports
+features-\* compute). Coordinate the hand-off pattern with Ikenna slot 3 (available_at umbrella owner) — if a hand-off
+decision is needed, flag it in `mtds_sports_available_at_wiring_2026_05_11.md` § Open questions + ping slot 1 and I'll
+route a cross-side ping. **Still blocked (don't touch yet)**: the L2 config.py → `resolve_bucket_name` migration + Phase
+0 — waiting on Q4 (with operator/Ikenna). Q3 follow-up: slot 6 took STEP 5.67 for its banned-placeholder gate, so your
+inline-`gs://`-formatter check takes STEP 5.68 (or next free — confirm in `base-service.sh`).
 
-[2026-05-11 08:03 UTC] [main → slot 4] — **Q4 ✅ RESOLVED — operator/Ikenna picked option (b)** "make reality match the yaml" (provision env-tiered buckets + migrate flat-bucket data + repoint readers/writers). What this means for you:
-  1. **The yaml stays env-tiered** — that's the SSOT now; don't drop the `${DEPLOYMENT_ENV}` tier. DO add the missing `prediction`/`sports` keys for the kinds that lack them (with the same env-tier shape), uncomment the GCP `features-calendar` entry, and pick + model ONE canonical `-test-` variant shape. PROBE `ml-*`/`strategy`/`execution` on GCP for flat-vs-env-tiered on disk — if any are flat, flag them (they'll need provisioning in Phase 2 too).
-  2. **The L2 `config.py → resolve_bucket_name` migration is UNBLOCKED — do it now.** The env-tiered names the resolver computes are now correct per (b); the buckets don't exist YET but they get provisioned in `code_freeze` Phase 2 (item **2.6**, window 2026-05-15→05-19) + the flat-bucket data migrates into them then. Nothing writes `features-*` buckets between now and `code_freeze` Phase 3 backfills, and QG runs in mock mode (emulator auto-creates buckets), so the gap is safe. This is the "code-first, physical-migration-second" sequence per the `code_freeze` principle.
-  3. **Your Phase 0 is re-shaped** — it's now just the yaml-correctness fixes (item 1 above), not "drop the tier vs provision the tier". The env-tiered-bucket PROVISIONING + flat-bucket DATA MIGRATION + reader/writer repoint is now `code_freeze` Phase 2.6 — NOT yours to execute now (I've added 2.6 to the code_freeze Phase 2 list).
-  4. **Plus your other half** — the MTDS sports-adapter `available_at` stamping is also unblocked (slot 3 Track E shipped @UTL`2ab3685`) — see my earlier `[main → slot 4]` ping + `issues/mtds_sports_available_at_wiring_2026_05_11.md`.
-  So: **both your halves are now actionable.** Pull (`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`), read the updated `bucket_name_ssot_canonicalisation_2026_05_10.md` Q4 + this ping + your earlier `[main → slot 4]`, then go. Suggested order: (a) yaml-correctness fixes + `ml-*` probe (quick); (b) L2 config.py migration; (c) sports-adapter stamping wiring (coordinate hand-off with Ikenna slot 3). Per-shippable-unit commits + conditional push as usual.
+[2026-05-11 08:03 UTC] [main → slot 4] — **Q4 ✅ RESOLVED — operator/Ikenna picked option (b)** "make reality match the
+yaml" (provision env-tiered buckets + migrate flat-bucket data + repoint readers/writers). What this means for you:
 
-[2026-05-11 08:31 UTC] [main → slot 4] — ⚠️ **SCOPE CHANGE: (b) → (b+)** — the operator extended the Q4 decision while away. Ikenna landed all the cascading edits @PM`2d6b131c`. **Re-bootstrap your task against (b+) before doing anything** — my earlier `[main → slot 4]` (b) instructions are SUPERSEDED (PM@`7be8593a` (b) capture stays in the plan body with a SUPERSEDED banner pointing at the (b+) section, which is authoritative). What changed under (b+):
-  1. **Env tier extends to ALL bucket kinds** — not just Group-B (features-*/ml-*/strategy/execution, already env-tiered) but also Group-A (raw-tick / instruments-store / market-data — currently env-LESS in yaml). So you ADD the `${DEPLOYMENT_ENV}` tier to the Group-A entries too. (bucket_name_ssot Phase 0e + code_freeze GAP-2.4.G.)
-  2. **Your scope grew ~3 → ~10-13 AI-day.** It now spans: Phase 1 code-complete (by 2026-05-15) = bucket_name_ssot Phase 0b (yaml-correctness fixes — env tier on Group-A too, missing keys, uncomment features-calendar, -test- shape) + 0e + **0f** (VM launchers env-aware — ~30 launchers under deployment-service/scripts/vm/ read DEPLOYMENT_ENV + pass via metadata) + **0g** (deployment-UI env tier — ✅ already shipped per codex deployment-ui-architecture.md; verify only) + **0h** (sync script: prod→staging/dev, truncated date window 1-2yr + same-region $0 egress + manifest re-sync post-data-sync — code-complete now, FIRST EXECUTION Phase 3/post-cutover) + **0i** (region pinning — operator picks AWS region us-east-1 vs ap-northeast-1; surface that as a Q if not yet decided) + the L2 config.py → resolve_bucket_name migration + the legacy delegate + QG STEP 5.69. Then Phase 2 physical migration (window 2026-05-15→05-19) = Phase 0c (provision ~300-400 buckets across both clouds × 3 envs) + Phase 0d (flat→tiered data migration with ≤0.01% drift verification + write-pause cutover).
-  3. **pipeline_mode confirmed in PATH not bucket NAME** — env tier in the bucket NAME (`features-delta-one-cefi-prod-{pid}`), `pipeline_mode=batch/live_websocket/live_rest` as a hive PATH segment. Orthogonal axes; don't conflate.
-  4. **Your other half (MTDS sports-adapter `available_at` stamping)** is still unblocked (slot 3 Track E shipped @UTL`2ab3685`) — per `issues/mtds_sports_available_at_wiring_2026_05_11.md`.
-  **Read first**: pull (`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`) → `bucket_name_ssot_canonicalisation_2026_05_10.md` Phases 0a-0i + the authoritative "Q4 RESOLVED — ikenna-operator (b+)" section → `code_freeze_migrate_backfill_sequencing_2026_05_10.md` GAP-2.4.B-I (the Phase-2 physical-migration items) → the updated `work_split_2026_05_11_harsh.md` § "Slot 4" (scope/budget) → `aws_migration_defi_first_2026_05_07.md` banner (AWS-side equivalent) → the 4 codex docs banners + CLAUDE.md "Key Rules" entry. **Suggested order**: (a) yaml-correctness fixes including the Group-A env-tier add (Phase 0b/0e) + the `ml-*`/`strategy`/`execution`/Group-A on-disk probe (quick); (b) region-pin Q to operator if undecided (0i); (c) L2 config.py migration + legacy delegate + QG STEP 5.69; (d) VM-launcher env-awareness (0f) + UI-env-tier verify (0g); (e) sync-script code (0h); (f) sports-adapter stamping wiring (coordinate hand-off with Ikenna slot 3). Phase 2 (provision + data migration, 0c/0d) is the 2026-05-15→05-19 window — code-complete everything else first. Per-shippable-unit commits + conditional push as usual; this is a multi-session task.
+1. **The yaml stays env-tiered** — that's the SSOT now; don't drop the `${DEPLOYMENT_ENV}` tier. DO add the missing
+   `prediction`/`sports` keys for the kinds that lack them (with the same env-tier shape), uncomment the GCP
+   `features-calendar` entry, and pick + model ONE canonical `-test-` variant shape. PROBE `ml-*`/`strategy`/`execution`
+   on GCP for flat-vs-env-tiered on disk — if any are flat, flag them (they'll need provisioning in Phase 2 too).
+2. **The L2 `config.py → resolve_bucket_name` migration is UNBLOCKED — do it now.** The env-tiered names the resolver
+   computes are now correct per (b); the buckets don't exist YET but they get provisioned in `code_freeze` Phase 2 (item
+   **2.6**, window 2026-05-15→05-19) + the flat-bucket data migrates into them then. Nothing writes `features-*` buckets
+   between now and `code_freeze` Phase 3 backfills, and QG runs in mock mode (emulator auto-creates buckets), so the gap
+   is safe. This is the "code-first, physical-migration-second" sequence per the `code_freeze` principle.
+3. **Your Phase 0 is re-shaped** — it's now just the yaml-correctness fixes (item 1 above), not "drop the tier vs
+   provision the tier". The env-tiered-bucket PROVISIONING + flat-bucket DATA MIGRATION + reader/writer repoint is now
+   `code_freeze` Phase 2.6 — NOT yours to execute now (I've added 2.6 to the code_freeze Phase 2 list).
+4. **Plus your other half** — the MTDS sports-adapter `available_at` stamping is also unblocked (slot 3 Track E shipped
+   @UTL`2ab3685`) — see my earlier `[main → slot 4]` ping + `issues/mtds_sports_available_at_wiring_2026_05_11.md`. So:
+   **both your halves are now actionable.** Pull
+   (`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`), read the updated
+   `bucket_name_ssot_canonicalisation_2026_05_10.md` Q4 + this ping + your earlier `[main → slot 4]`, then go. Suggested
+   order: (a) yaml-correctness fixes + `ml-*` probe (quick); (b) L2 config.py migration; (c) sports-adapter stamping
+   wiring (coordinate hand-off with Ikenna slot 3). Per-shippable-unit commits + conditional push as usual.
+
+[2026-05-11 08:31 UTC] [main → slot 4] — ⚠️ **SCOPE CHANGE: (b) → (b+)** — the operator extended the Q4 decision while
+away. Ikenna landed all the cascading edits @PM`2d6b131c`. **Re-bootstrap your task against (b+) before doing anything**
+— my earlier `[main → slot 4]` (b) instructions are SUPERSEDED (PM@`7be8593a` (b) capture stays in the plan body with a
+SUPERSEDED banner pointing at the (b+) section, which is authoritative). What changed under (b+):
+
+1. **Env tier extends to ALL bucket kinds** — not just Group-B (features-_/ml-_/strategy/execution, already env-tiered)
+   but also Group-A (raw-tick / instruments-store / market-data — currently env-LESS in yaml). So you ADD the
+   `${DEPLOYMENT_ENV}` tier to the Group-A entries too. (bucket_name_ssot Phase 0e + code_freeze GAP-2.4.G.)
+2. **Your scope grew ~3 → ~10-13 AI-day.** It now spans: Phase 1 code-complete (by 2026-05-15) = bucket_name_ssot Phase
+   0b (yaml-correctness fixes — env tier on Group-A too, missing keys, uncomment features-calendar, -test- shape) + 0e +
+   **0f** (VM launchers env-aware — ~30 launchers under deployment-service/scripts/vm/ read DEPLOYMENT_ENV + pass via
+   metadata) + **0g** (deployment-UI env tier — ✅ already shipped per codex deployment-ui-architecture.md; verify
+   only) + **0h** (sync script: prod→staging/dev, truncated date window 1-2yr + same-region $0 egress + manifest re-sync
+   post-data-sync — code-complete now, FIRST EXECUTION Phase 3/post-cutover) + **0i** (region pinning — operator picks
+   AWS region us-east-1 vs ap-northeast-1; surface that as a Q if not yet decided) + the L2 config.py →
+   resolve_bucket_name migration + the legacy delegate + QG STEP 5.69. Then Phase 2 physical migration (window
+   2026-05-15→05-19) = Phase 0c (provision ~300-400 buckets across both clouds × 3 envs) + Phase 0d (flat→tiered data
+   migration with ≤0.01% drift verification + write-pause cutover).
+3. **pipeline_mode confirmed in PATH not bucket NAME** — env tier in the bucket NAME
+   (`features-delta-one-cefi-prod-{pid}`), `pipeline_mode=batch/live_websocket/live_rest` as a hive PATH segment.
+   Orthogonal axes; don't conflate.
+4. **Your other half (MTDS sports-adapter `available_at` stamping)** is still unblocked (slot 3 Track E shipped
+   @UTL`2ab3685`) — per `issues/mtds_sports_available_at_wiring_2026_05_11.md`. **Read first**: pull
+   (`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`) →
+   `bucket_name_ssot_canonicalisation_2026_05_10.md` Phases 0a-0i + the authoritative "Q4 RESOLVED — ikenna-operator
+   (b+)" section → `code_freeze_migrate_backfill_sequencing_2026_05_10.md` GAP-2.4.B-I (the Phase-2 physical-migration
+   items) → the updated `work_split_2026_05_11_harsh.md` § "Slot 4" (scope/budget) →
+   `aws_migration_defi_first_2026_05_07.md` banner (AWS-side equivalent) → the 4 codex docs banners + CLAUDE.md "Key
+   Rules" entry. **Suggested order**: (a) yaml-correctness fixes including the Group-A env-tier add (Phase 0b/0e) + the
+   `ml-*`/`strategy`/`execution`/Group-A on-disk probe (quick); (b) region-pin Q to operator if undecided (0i); (c) L2
+   config.py migration + legacy delegate + QG STEP 5.69; (d) VM-launcher env-awareness (0f) + UI-env-tier verify (0g);
+   (e) sync-script code (0h); (f) sports-adapter stamping wiring (coordinate hand-off with Ikenna slot 3). Phase 2
+   (provision + data migration, 0c/0d) is the 2026-05-15→05-19 window — code-complete everything else first.
+   Per-shippable-unit commits + conditional push as usual; this is a multi-session task.
+
+[2026-05-11 08:57 UTC] harsh-bucket-and-adapter-tab — (b+) scope ack'd. SHIPPED this session (both halves' code): (1)
+**Phase 0b** yaml-correctness fixes — deployment-service@`a7eba4f` (PREDICTION/SPORTS keys on
+features-delta-one/volatility env-tiered; SPORTS on market-data/instruments-store; uncomment GCP features-calendar;
+§-header shape doc); UTL@`2118b1e` (parity test match, 92 tests). (2) **Done-def #2** L2
+`features-service/{family}/config.py` `*_bucket_template` → `resolve_bucket()` — features-service@`8f03ceeb` (new
+`features_service.common.resolve_bucket` wrapper; delta_one/volatility/onchain/calendar migrated;
+cross_instrument/multi_timeframe partial — yaml gap; STEP 5.31 PASS, basedpyright 0 NEW, 0 NEW test failures). (3)
+**Sports-adapter `available_at` half** — market-tick-data-service@`c186ecb` (`stamp_available_at_odds_snapshot` into
+`_process_sports_venue_with_leagues`, shard-level failure isolation, 5 tests pass). Plan-flips (Phase 0b [x], Done-def
+#2 [x]) + scoreboard + 2 new split-off sub-todos (cross_instrument/multi_timeframe yaml-gap; dependency_checker
+deferred) + DONE-2026-05-11(cont.) block + the sports issue-doc SHIPPED banner: PM@`<this commit>`.
+
+[2026-05-11 08:58 UTC] harsh-bucket-and-adapter-tab — STILL OPEN (all `- [ ]` plan todos in
+bucket_name_ssot_canonicalisation_2026_05_10.md): **Phase 0e** add `${DEPLOYMENT_ENV}` tier to Group-A yaml entries
+(market-data/instruments-store + dedicated prediction keys) + parity-test update — NOT done this session ((b+)
+extension); **Phase 0i** region-pin — **🔴 Q for operator: AWS region us-east-1 (current default) vs ap-northeast-1
+(closer to GCP asia-northeast1)?** (flagging since I can't tell if it's decided — surface to operator); **Done-def #3**
+legacy `get_bucket_name`+`BUCKET_PREFIXES` delegate (UTL, ~36 consumers, no hard gate, ships after #2 which is done —
+good next-session candidate); the cross_instrument/multi_timeframe yaml-gap sub-todo; **Done-def #5** QG STEP 5.68
+ratchet; **Done-def #6** audit table; **Phase 0c/0d** provision+migrate (= code_freeze Phase 2.6, 2026-05-15→05-19 — not
+now); 0f VM-launcher env-awareness; 0g UI-env-tier verify; 0h sync-script. **slot 1 action**: route a cross-side ping to
+Ikenna slot 3 to flip the `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 "TRACK — sports adapter
+stamping" todo + answer the 2 open design Qs in `issues/mtds_sports_available_at_wiring_2026_05_11.md` (all-NaT routing
+— slot 4 chose record_failed; sports-path `assert_available_at_present` guard). Going quiet — multi-session task; next
+session picks up Done-def #3 + Phase 0e + the yaml-gap sub-todo.

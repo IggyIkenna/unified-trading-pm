@@ -15,10 +15,26 @@ execution:
     Track E helpers)
   cadence: one-shot (the wiring); then QG-wired (basedpyright + the eventual STEP-5.67 record_captured-stamping check)
   verifier:
-    "sports odds parquets carry a non-null `available_at` col == bm_time (or bm_time + scrape latency);
-    LookaheadBiasError strict-mode green for sports features-* compute"
-  last_executed: NEVER
+    "sports odds parquets carry a non-null `available_at` col == bm_time; LookaheadBiasError strict-mode green for
+    sports features-* compute"
+  last_executed:
+    2026-05-11 (code wired — market-tick-data-service@c186ecb; full-pipeline verifier still pending a sports backfill
+    run)
 ---
+
+> **STATUS 2026-05-11: code SHIPPED.** market-tick-data-service@`c186ecb` wires
+> `stamp_available_at_odds_snapshot(shard_df, snapshot_time_col="bm_time")` (UTL wave3x Track E @UTL`2ab3685`) into
+> `_process_sports_venue_with_leagues` before `StreamingParquetWriter.write_chunk`, with shard-level failure isolation
+> (a per-shard stamping failure → `failed_shards` dict → manifest sentinel `record_failed` + `ADAPTER_FETCH_FAILED`,
+> shard skipped — NOT raised). `bm_time` confirmed universal for the only adapter on this path (ODDS_API). 5 new tests
+> in `market-tick-data-service/tests/unit/test_sports_odds_available_at.py` pass. **REMAINING** (not slot-4 scope —
+> route to Ikenna slot 3, the available_at umbrella owner): (1) flip the
+> `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 "TRACK — sports adapter stamping" todo; (2) decide the
+> 2 open design Qs below (Q-B all-NaT routing — slot 4 chose `record_failed`; Q new — the sports path uses
+> `record_captured_from_counts` so the writegate `assert_available_at_present` guard doesn't fire on it, a
+> column-presence assertion at the `StreamingParquetWriter.write_chunk` boundary would be a small follow-up). The
+> full-pipeline verifier (sports odds parquets on disk carry non-null `available_at`; LookaheadBiasError strict-mode
+> green for sports features-\* compute) needs a sports backfill run — operationally-pending.
 
 # MTDS-slice sports `available_at` wiring — audit (slot 4, 2026-05-11)
 
