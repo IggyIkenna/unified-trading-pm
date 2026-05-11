@@ -784,16 +784,78 @@ concurrency principle" (read-once + per-date freshness check + write-time CAS).
 Per "Post-Plan-Phase Codex Audit HARD RULE" — every major phase boundary triggers codex update in same logical unit as
 code commit. End-of-plan check: every codex doc reflects shipped state.
 
-- [ ] [AGENT] P0. **7A — `codex/02-data/defi-venue-protocol-catalogue.md`** (NEW; Phase 1J). Final lock at Phase 8.
+- [x] [AGENT] P0. **7A — `codex/02-data/defi-venue-protocol-catalogue.md`** (NEW; Phase 1J). Final lock at Phase 8.
+      ✅ Slot 2 Day 1 (PM@`f54dd90c`) + Day 2 mirror (PM@`15709c4b`) — doc covers 26 protocols + per-protocol
+      shard-atom matrix.
 - [ ] [AGENT] P0. **7B — `codex/02-data/defi-data-type-taxonomy.md`** (NEW; Phase 3J). Final lock at Phase 8.
-- [ ] [AGENT] P0. **7C — `codex/05-infrastructure/chain-rpc-mev-tenderly.md`** (NEW; Phase 5D). Final lock at Phase 8.
+      **HARSH-SIDE** — depends on Phase 3 MTDS adapter buildout per cross-side handshake.
+- [x] [AGENT] P0. **7C — `codex/05-infrastructure/chain-rpc-mev-tenderly.md`** (NEW; Phase 5D). Final lock at Phase 8.
+      ✅ Pre-existed at 204 lines + slot 2 Day 3 JITO_BUNDLE status update (PM@`8ce85bbc`).
 - [ ] [AGENT] P0. **7D — `codex/02-data/instrument-pipeline-defi.md`** (UPDATE; Phase 2J).
+      **HARSH-SIDE** — depends on Phase 2 instruments-service adapter buildout.
 - [ ] [AGENT] P0. **7E — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 3K + 6J).
+      **HARSH-SIDE** — depends on Phase 3 MTDS bundled data_types + Phase 6 backfills landing. Slot 2 Day 2 Phase 2
+      shard-atom matrix in codex (`defi-venue-protocol-catalogue.md`) provides the bundled-vs-per-instrument
+      reference for the future Phase 3K update.
 - [ ] [AGENT] P0. **7F — `codex/04-architecture/interface-credential-convention.md`** (UPDATE; Phase 4J).
+      **HARSH-SIDE** — depends on Phase 4 connector buildout.
 - [ ] [AGENT] P0. **7G — `codex/04-architecture/defi-execution-overview.md`** (UPDATE; Phase 4K).
-- [ ] [AGENT] P0. **7H — `defi_master_2026_05_07.md`** body — gap-fill priorities + per-archetype readiness matrix
+      **HARSH-SIDE** — depends on Phase 4 connector buildout.
+- [x] [AGENT] P0. **7H — `defi_master_2026_05_07.md`** body — gap-fill priorities + per-archetype readiness matrix
       refreshed.
+      ✅ Slot 2 Day 2 (PM@`d5ded095`) — Priority #5 flipped `[x]` with full closure evidence (catch-up VM
+      `mtds-lending-indices-20260511-204908` + manifest verification of 65 captured rows).
 - [ ] [AGENT] P0. **7I — `master_to_live_defi_2026_05_23.md`** Group F items 17-20 status rows refreshed.
+      **DEFERRED — slot 1 ownership** per `work_split_2026_05_12_ikenna.md` row 1 "Main orchestrator + governance +
+      master plan refresh". Slot 2 has shipped enough DeFi-side progress that the Group F item 17/18/19/20 rows
+      should reflect: item 17 (real wallet 7-day proof) BLOCKED on slot 4 wallet provisioning (UAC@`d721b6a`
+      shipped 2026-05-12; ready for slot 5 archetype config consumption); item 18 (2-year batch backtest) UNBLOCKED
+      by slot 2 Phase 3 spec — slot 5 Family-1 design Day 1 confirmed (PM@`5cb0952f`); item 19 (Copper+CEFFU
+      onboarding) tracked by slot 4 `api_keys_wallets_accounts_readiness_2026_05_10.md`; item 20 (DeFi-side
+      catalogue completeness) ✅ MOSTLY DONE per Phase 1J codex refresh. Slot 1 main-orch should integrate this
+      status into the master plan readiness checklist on next refresh cycle.
+- [ ] [AGENT] P1. **7J — ManifestFreshnessCache wire-in into MTDS DeFi backfill handlers (NEW — folded in from
+      `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block item (b))**. Per CLAUDE.md "Manifest concurrency
+      principle" rule + the existing primitive at
+      `unified-trading-library/unified_trading_library/manifest_freshness.py:136` `class ManifestFreshnessCache`
+      (single-bucket TTL-cached row-key membership set; `is_now_captured(row_key)` API; `bulk_load()` warm-up).
+      **DESIGN-SHIPPED 2026-05-13 (Day 4) by slot 2; IMPLEMENTATION HANDED TO HARSH SLOT 2** (per cross-side
+      handshake "Ikenna designs, Harsh implements").
+      **Workspace-grep audit 2026-05-13**: zero current handlers wire `ManifestFreshnessCache` (`grep -rn
+      ManifestFreshnessCache market-tick-data-service/market_tick_data_service/` returns 0 hits). 9 candidate
+      handlers identified at `market-tick-data-service/market_tick_data_service/cli/handlers/`:
+      `lending_indices_handler.py` / `gas_fee_handler.py` / `lst_rates_handler.py` / `dex_swaps_handler.py` /
+      `dex_pools_handler.py` / `liquidations_handler.py` / `liquidation_events_handler.py` / `perp_funding_handler.py`
+      / `solana_lst_archival.py`.
+      **Wire-in pattern** (consistent across all 9 handlers):
+      ```python
+      from unified_trading_library import ManifestFreshnessCache
+
+      # In handler.run():
+      cache = ManifestFreshnessCache(bucket=<bucket-for-this-handler>, ttl_seconds=60)
+      cache.bulk_load()  # warm at startup
+
+      for shard in expected_shards:
+          if cache.is_now_captured(shard.row_key):
+              continue  # concurrent worker (or prior chunk) beat us
+          result = expensive_remote_fetch(shard)
+          writer.record_captured(shard.row_key, ...)
+      ```
+      Per-handler bucket mapping (read from existing handler source — each handler writes to its own canonical
+      bucket; reuse that constant):
+      - `lending_indices_handler.py` → `lending-indices-{pid}`
+      - `gas_fee_handler.py` → `gas-fees-{pid}`
+      - `lst_rates_handler.py` → `lst-rates-{pid}`
+      - `dex_swaps_handler.py` + `dex_pools_handler.py` → `dex-swaps-{pid}` + `dex-pools-{pid}`
+      - `liquidations_handler.py` + `liquidation_events_handler.py` → `liquidations-{pid}`
+      - `perp_funding_handler.py` → `perp-funding-{pid}` (asset_group=cefi)
+      - `solana_lst_archival.py` → `solana-defi-{pid}`
+      **Tests** (per handler): mock `ManifestFreshnessCache` to return `True` for a known row_key and assert
+      `expensive_remote_fetch` is NOT called for that shard. Add unit test class `TestFreshnessSkip` in each
+      handler's existing test file. **Closes** `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block (b) +
+      unlocks clean full-history re-run (block-c). **Why P1 not P0**: not 2026-05-23-blocking — the catch-up VM
+      already closed the operational gap for Priority #5; the wire-in is the durable fix preventing future
+      re-download waste on multi-worker concurrent backfills.
 
 ## Phase 8 — Paper-trade smoke + 7-day live-trade proof (depends on Phase 6; ~7-10 AI-days)
 
@@ -913,6 +975,75 @@ Prior-cycle slot-2 STATUS-2026-05-11 flagged 3 PipelineMode findings as 🟡 BLO
 landed Q1=(α) + Q2=(A) approvals routed to slot 3 at PM@`4c573302`. Phase 4.GREP-VERIFY AST-walk QG check shipped
 by slot 3 at PM@`4159b7ae`. Phase 4.MTDS → Phase 4.DEFAULT-REMOVAL path now clear for 2026-05-15 freeze gate.
 Slot 2's prior cycle deferrals all closed via slot 3 follow-up.
+
+## DONE-2026-05-15 — slot 2 Days 2-4 close (2026-05-13 → 2026-05-15)
+
+Continued from Day 1 DONE block above. Day 2-4 work closes the remaining Phase 1 + Phase 5 + Phase 7 design scope.
+
+### Commits shipped Days 2-4
+
+| Phase | Repo | SHA | Summary |
+|-------|------|-----|---------|
+| 1H | PM | `15709c4b` | UAC QG green run (bash scripts/quality-gates.sh exit 0); Phase 2 codex matrix mirror in `defi-venue-protocol-catalogue.md` |
+| 3-LENDING.4 | infra | VM `mtds-lending-indices-20260511-204908` | Real-infra catch-up run — 234 events including STARTED + 232 progress + STOPPED at 19:55:59 UTC; ~3 min runtime |
+| 3-LENDING.4 / 7H | PM | `d5ded095` | Phase 3-LENDING.4 + `defi_master` Priority #5 closure with manifest verification (65 captured rows 2026-05-07..2026-05-11) |
+| 5A / 5B / 5C / 5D | PM | `8ce85bbc` | Phase 5 chain primitives — Jito design + RPC redundancy spec + Tenderly bundle-sim spec + codex doc status update |
+| 7 audit + 7J (NEW) | PM | `<this-commit>` | Phase 7 codex SSOT audit + ManifestFreshnessCache wire-in spec (Harsh handoff) |
+
+### Final scoreboard — what's done vs handed off
+
+| Phase / item | Status as of 2026-05-15 EOD | Successor |
+|--------------|------------------------------|------------|
+| **Phase 1 — UAC SSOT** | ✅ DONE (1B/1C/1D/1E/1F/1G/1H/1J all shipped or design-handed-off; 1A 99/99 ratified by slot 5) | n/a |
+| **Phase 2 — Instruments-service** | DESIGN-SHIPPED via shard-atom matrix; per-protocol adapters Harsh-side | Harsh slot 2 (cross-side handshake) |
+| **Phase 3 — MTDS adapter buildout** | LENDING-INDICES branch CLOSED (3-LENDING.1/2/3 stale framings + 3-LENDING.4 catch-up VM + 3-LENDING.5 reconciler partial); per-protocol DEX/vault/restaking adapters Harsh-side | Harsh slot 2 |
+| **Phase 4 — Execution-service connectors** | n/a — Harsh-side per cross-side handshake | Harsh slot 2 |
+| **Phase 5 — Chain primitives** | ALL DESIGN-SHIPPED (5A/5B/5C/5D); JITO_BUNDLE policy ✅, RpcProviderFallback + Tenderly simulate_bundle + per-chain config Harsh-side | Harsh slot 2 |
+| **Phase 6 — Backfills** | n/a — Harsh-side; Phase 6A Aave V3 Eth silent-zero CLOSED-AS-STALE | Harsh slot 2 |
+| **Phase 7 — Codex SSOT** | 7A/7C/7H ✅; 7B/7D/7E/7F/7G depend on Harsh-side phases; 7I deferred to slot 1; 7J (NEW) design-shipped | Mixed: Harsh + slot 1 |
+| **Phase 8 — Paper-trade + 7-day live** | n/a — depends on slot 5 Family-1/2 + slot 4 wallet + Harsh-side Phase 4 + Phase 6 | Slot 5 / slot 4 / Harsh |
+
+### Day 2-4 deferred-work scoreboard (carry forward post-cycle)
+
+| Phase / item | Status | Successor |
+|--------------|--------|------------|
+| 7J ManifestFreshnessCache wire-in | design-shipped | Harsh slot 2 implements 9 handlers (~2 calibrated AI-days via sub-agent fan-out per handler) |
+| 7I master plan Group F refresh | deferred-to-slot-1 | Slot 1 main-orch next refresh cycle |
+| 3-LENDING.5 reconciler one-shot wrapper | partial | Harsh slot 2 picks up after 7J lands (clean re-run reconciles residual `SOURCE_RETURNED_ZERO` nits) |
+| `create-code-tarballs.sh` stale-repo list | deferred-post-cutover | Tooling debt; not 2026-05-23-blocking |
+| Polygon zkEVM `CHAIN_GENESIS_DATES` entry | deferred-until-needed | Add when a protocol enters Phase 1A on zkEVM |
+| Optional rename `cefi_margin_tiers.py` → `perp_margin_tiers.py` | deferred-post-cutover | Mechanical refactor, not blocking |
+| Optional rename legacy `prediction/` → `prediction_mapping/` | deferred-post-cutover | Mechanical refactor, not blocking |
+
+### Final slot-2 throughput summary
+
+Cycle: 4-day density push 2026-05-12 → 2026-05-15. Calibrated budget: ~16 AI-days (design class × 0.6×). Actual
+shipped:
+- Day 1: ~5 calibrated AI-days (12 commits, Phase 1 majority + Phase 2 design + Phase 3 spec)
+- Day 2: ~2 calibrated AI-days (Phase 1H QG + Phase 2 codex mirror + 3-LENDING.4 catch-up VM + Priority #5 closure)
+- Day 3: ~3 calibrated AI-days (Phase 5A/5B/5C/5D design + codex JITO_BUNDLE status)
+- Day 4: ~2 calibrated AI-days (Phase 7 audit + 7J ManifestFreshnessCache spec + final DONE block)
+
+**Total: ~12 calibrated AI-days over 4 days = 3.0 AI-days/day average.** Density target was 3.5-4/day; actual
+average is at the lower bound but reflects the design-class nature of the work (many items were closer to
+"verification + handoff doc" than greenfield implementation, since slot 5 + slot 3 had already done preparatory
+shipping). Cross-side handshake to Harsh slot 2 fully primed for Phase 2/4/6 implementation. Slot 5 Family-1
+design fully unblocked. No 🟡 BLOCKED. No new findings.
+
+### Cross-side handshake summary for Harsh slot 2 (consolidated)
+
+All design + spec + provenance URLs codified in this plan body. Harsh slot 2 picks up in priority order:
+
+1. **Phase 2** (per-protocol instruments-service adapters) — shard-atom matrix is in the codex doc; 27 per-protocol
+   cells parallelisable via sub-agent fan-out per the labelled parallel-agents A-O in the Phase 2 protocol table.
+2. **Phase 1B** (per-chain reserve params) — 12 dicts to ship + `get_reserve_params()` chain dispatch.
+3. **Phase 1E** (perp margin tiers) — extend `cefi_margin_tiers.py` with Deribit + Hyperliquid + Aster × BTC/ETH.
+4. **Phase 5A** (JitoBundleProvider class) — Solana block-engine RPC implementation.
+5. **Phase 5B + 5C** (RpcProviderFallback + Tenderly simulate_bundle) — see codex doc for shape.
+6. **Phase 7J** (ManifestFreshnessCache wire-in into 9 MTDS DeFi handlers) — pattern docstring + per-handler bucket
+   mapping documented above.
+
+Plan ready for archival once Harsh slot 2 closes Phases 2/4/6 and operator signs off cutover gate.
 
 ## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
 
