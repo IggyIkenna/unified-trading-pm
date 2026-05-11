@@ -282,6 +282,170 @@ These items annotate other plans (Findings Triage — fits another active plan):
 - **Annotation needed** in `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3 (lending-indices fix): instruments-service must emit per-(chain, protocol) reserve listings for ARBITRUM Aave V3 (`USDC`, `USDC.E`, `USDT`, `DAI`, `WETH`, `WBTC`, `WSTETH`, `WEETH`, `RETH`, `ARB`, `LINK`) and BASE Aave V3 (`USDC`, `USDBC`, `WETH`, `CBBTC`, `WSTETH`, `WEETH`, `CBETH`) — without these the MTDS `lending_indices` adapter has no instrument universe for non-Ethereum chains.
 - **Annotation needed** in `defi_master_2026_05_07.md`: `UniswapConnector.swap_exact_input` SwapRouter02 address `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45` is **Ethereum mainnet**. Base + Arbitrum SwapRouter02 addresses differ — Family 1 loop unwinds on those chains need separate connector config.
 
+## Family 2 delta-hedge topology design — Family 1 + USDC-margined perp short (2026-05-12 slot 5)
+
+> **Design owner:** ikenna slot 5 / agent-tag `ikenna-recursive-borrow-tab` (2026-05-12).
+> **Source:** 3-sub-agent parallel research fan-out (Hyperliquid venue + Bybit venue + delta-hedge math/cell-ranking) reconciled below.
+> **Status:** DESIGN-SHIPPED. Consumes Family 1 design (above); feeds Phase 5 (orchestrator), Phase 6 (Hyperliquid live), Phase 7 (PerpHedgeSizer), Phase 8 (alerts), Phase 9 (matching-engine cost model).
+
+### Architectural recap
+
+- Family 2 = Family 1 + USDC-margined ETH perp short. Reuses Family 1 ReserveParams + chain-overrides table verbatim — perp leg is purely additive.
+- Per AD-2: hedge venues for May-23 = `Hyperliquid` (PRIMARY) + `Bybit` (SECONDARY). USDC-margin only — borrowed ETH stays inside the lending protocol; never sold to post as perp margin (would sever recursion invariant).
+- Share-class accounting: `(aETH × wstETH_per_ETH_oracle) + free_ETH − ETH_debt + perp_short_size_ETH = target_net_delta`. Pure carry @ `delta=0`; long-bias `+N`; short overlay `−N`.
+- Enum: `CARRY_RECURSIVE_BORROW_PERP_HEDGED` SHIPPED at `enums.py:76-78`.
+
+### Closed-form delta math (sanity-checked)
+
+For Family 1 cell `(chain, lender, LST, ETH_debt, mode)` with own capital `base` ETH, recursion depth `d`, per-loop `ltv ≤ liquidation_threshold − 0.05`:
+
+```
+Cumulative LST collateral (ETH-eq) = base × (1 − ltv^(d+1)) / (1 − ltv)
+Cumulative ETH debt                = base × ltv × (1 − ltv^d) / (1 − ltv)
+
+Net ETH-equivalent spot exposure E = (LST_eq) − (ETH_debt)
+                                   = base × (1 − ltv − ltv + ltv^(d+1) + 0) / (1 − ltv)
+                                   = base  exactly,  for all finite (ltv, d)
+```
+
+**Key result**: the recursion amplifies the SPREAD, not directional exposure. `E_actual ≈ 1 × base` per ETH of own capital. Sizing implication: `perp_short_size = E_actual` for `target_net_delta=0`. In practice `PerpHedgeSizer` (Phase 7) reads live position via Aave `getUserAccountData` rather than relying on closed form (LST/ETH peg drift + slippage + oracle-mark gap account for typical ±0.1-0.5% deviation).
+
+### Net APR formula
+
+```
+R_lend (Family 1) = S × (1 − ltv^(d+1)) / (1 − ltv)  −  B × ltv × (1 − ltv^d) / (1 − ltv)
+R_fund            = +f × (perp_short_size / base)     (delta=0 ⇒ +f)
+R_usdc            = u × (usdc_margin_buffer / base)   (HL pays 0; Bybit flex-savings ~0 for May-23)
+R_net             = R_lend + R_fund + R_usdc − Δg − Δs
+```
+
+Where `S` = staking yield, `B` = ETH borrow rate, `f` = perp funding APR (positive = longs pay shorts = carry to us), `u` = USDC supply APY at venue, `Δg/Δs` = gas/slippage amortised APR.
+
+**Worked example** — wstETH/WETH E-Mode (`ltv=0.93, d=8, S=3.2%, B=2.4%, f=+12% APR normal regime`):
+
+- `R_lend ≈ 5.27 × 3.2% − 4.56 × 2.4% ≈ 6.0%`
+- `R_fund ≈ +12.0%`
+- `R_usdc ≈ 0`
+- Gas/slippage drag ~0.6% ETH mainnet (4-12 rebalances/yr); ~0.1% Arbitrum/Base
+- **Net ≈ 17.4%** on Ethereum mainnet; ~17.9% on Arbitrum (gas drag smaller). Confidence HIGH on `R_lend`, MED on `R_fund` (regime variability — verify via MTDS historical funding data per defi_catalogue Phase 3).
+
+### Funding regime classification (long-term ETH-perp post-2024)
+
+- **Normal (bull / mean-reverting):** +5% to +25% APR; ~+12% median. Family 2 carries strongly positive.
+- **Sharp upswing / FOMO:** +50% to +100% APR for hours-to-days. Highly profitable for short side.
+- **Capitulation / panic:** −10% to −50% APR. Family 2 becomes funding-cost drag; cell rank drops or pauses.
+- **Long-term median post-Apr-2024 cross-venue:** ~+8-15% APR; negative regimes episodic (<5% of trading days). Verify via MTDS once funding-rate adapters land.
+
+### Per-cell × per-venue grid (`target_net_delta = 0`)
+
+| Family 1 cell | Hyperliquid leg | Bybit leg | preferred_venue_for_may_23 | rationale |
+|---------------|-----------------|-----------|----------------------------|-----------|
+| `aave_v3_ethereum_wsteth_weth_emode` | ETH-PERP short, USDC margin via HL Arbitrum-bridge | ETHUSDT-PERP short (deepest book) or ETHPERP-USDC short | **HL PRIMARY**, Bybit SECONDARY | DEX execution; 1h funding cadence (faster sign-flip detection); no KYC dependency; Bybit Feb-2025 hack premium → secondary cap |
+| `morpho_ethereum_wsteth_weth_market_0945` | ETH-PERP short | ETHUSDT-PERP short | **HL PRIMARY** | LLTV 0.945 → larger `E ≈ base`; tighter HF buffer; 1h funding granularity reduces rebalance-lag tail |
+| `aave_v3_arbitrum_wsteth_weth_emode` | ETH-PERP short (USDC bridge cheap on Arb) | ETHUSDT-PERP short | **HL PRIMARY** | Same-chain margin posting → cheapest gas in scope; cross-venue settlement risk minimised |
+| `aave_v3_base_cbeth_weth_emode` | ETH-PERP short (no cbETH-PERP on either venue) | ETHUSDT-PERP short | **HL PRIMARY** | cbETH/ETH basis risk: size `perp_short = cumulative_cbETH × Chainlink_cbETH_ETH_rate − cumulative_ETH_debt`; residual basis tracked as `CROSS_VENUE_DELTA_DRIFT` |
+| `aave_v3_ethereum_weeth_weth_emode` | ETH-PERP short | ETHUSDT-PERP short | **HL PRIMARY** | EIGEN/ETHFI points non-cash; discount in APR; otherwise similar to wstETH cell |
+| `morpho_ethereum_susde_usdc_market_086` | n/a | n/a | **OUT of Family 2** | Stable loop, USDC debt; net exposure USDC ≈ 0; perp would introduce delta, not hedge it |
+
+### USDC margin buffer sizing
+
+Per Family 2 cell with `perp_short_size = S` ETH at ETH spot `P_eth_usd`:
+
+```yaml
+perp_notional_usd: S × P_eth_usd
+initial_margin_usd: 0.10 × S × P_eth_usd       # 10x cross-leverage default (HL + Bybit; tighter than 50x max)
+recommended_buffer_usd: 0.30 × S × P_eth_usd   # 3× initial margin
+auto_topup_trigger: available_margin / initial_margin < 1.5  # ~30% price-move headroom before liquidation
+usdc_margin_buffer_min_pct: 0.30  # config field per Phase 2 schema
+```
+
+**Bridge latencies** (verify on testnet smoke):
+- Hyperliquid: ~10s once tx confirmed on Arbitrum bridge contract (HL L1 finality <1s).
+- Bybit: 1-5min depending on source chain (Eth ~3min, Arb/Base ~1min). Prefer Arbitrum-route.
+
+**Rebalance cadence**: PerpHedgeSizer poll every 5min; top-up tx only when threshold breached (<1×/day normal; several×/day during fast moves).
+
+### Target_net_delta configurations
+
+- `target_net_delta = 0`: pure carry; `R_net` = full alpha.
+- `target_net_delta = +1.0`: hold 1 ETH long + earn carry overlay; `perp_short_size = E_actual − 1.0`.
+- `target_net_delta = +N ≥ E_actual`: `perp_short_size = 0` → reverts to Family 1 (auto-degrades).
+- `target_net_delta = −1.0`: short 1 ETH outright + earn carry; `perp_short_size = E_actual + 1.0`.
+
+### Funding regime adaptive sizing (Phase 7.5 — NICE-TO-HAVE, may defer past May-23)
+
+- Rolling 7d + 30d funding-APR mean per `(perp_venue, perp_pair)` — feature owned by features-onchain-service (NEW row).
+- Conservative thresholds (hysteresis 5% APR to avoid thrashing):
+  - 30d-avg `< −5% APR`: REDUCE perp short by 50%.
+  - 30d-avg `< −15% APR`: SET perp short to 0 (cell paused; reverts to Family 1 mechanics).
+  - 30d-avg `> +30% APR`: maintain or INCREASE perp short toward `target_net_delta − 0.5`.
+
+### Top 3 May-23 viable Family 2 cells (`expected_apr × confidence × counterparty_diversification`)
+
+1. `aave_v3_ethereum_wsteth_weth_emode__hyperliquid_eth_perp__delta_0` — net APR ~10-25%; **HIGH × MED-HIGH × HIGH** (Aave + Lido + HL counterparty mix); flagship cell.
+2. `morpho_ethereum_wsteth_weth_market_0945__hyperliquid_eth_perp__delta_0` — net APR ~12-28%; **MED-HIGH × MED-HIGH × HIGH** (Morpho-Steakhouse curator added); highest APR.
+3. `aave_v3_ethereum_wsteth_weth_emode__bybit_eth_perp__delta_0` — net APR ~10-25%; **HIGH × MED × HIGH** (Bybit post-Feb-2025-hack discount); diversification anchor when cell #1 hits cap.
+
+### Family 2-specific risk surface (additive to Family 1)
+
+- **`FUNDING_SIGN_FLIP`** (Phase 8 alert): per-block funding crosses zero against strategy → position-pause; 30d-avg crosses negative threshold → adaptive sizing per Phase 7.5.
+- **`PERP_VENUE_OUTAGE`**: HL bridge halt / Bybit API rate-limit / trading halt. Decision tree:
+  - Family 1 leg delay-tolerant (HF safe) → maintain perp where possible, route new opens to backup venue.
+  - Family 1 leg delay-intolerant (HF near threshold) → flash-close Family 1 first (perp becomes outright short until venue recovers — risk escalated).
+- **`CROSS_VENUE_DELTA_DRIFT`**: `perp_short_size − E_actual > ±5% × E_actual` → auto-rebalance. Also triggers on cbETH/ETH or wstETH/ETH oracle move > 1% intra-day.
+- **`MARGIN_CALL_AT_PERP`**: `available_margin < MM × 1.2` → top up from treasury; if treasury insufficient → partial unwind Family 1 + perp.
+
+### Workspace canon checks (verified during fan-out)
+
+**Hyperliquid:**
+- ✅ `HYPERLIQUID` string constant in `unified-api-contracts/unified_api_contracts/registry/venue_constants.py:19,278,312,354,457,579,676,710,812` (canonical name + capability declarations across 9 registries).
+- ✅ `MarginModel.HYPERLIQUID` + `LIQUIDATION_PARAMS_REGISTRY` entry shipped (`internal/risk.py:698,841-846`).
+- ✅ `_HYPERLIQUID_RULES` risk caps shipped (`registry/risk_rules/venue.py:186-216`): $2M OI / $500k per-instrument / $4M venue exposure.
+- ✅ Coverage start `date(2023, 6, 29)` in `coverage_starts.py:49`; `KILL_PER_VENUE_HYPERLIQUID` in `kill_switch.py:87`.
+- ⚠️ `defi_execution/protocols/hyperliquid.py:64-273` — **simulation-only** (returns canned `order_<timestamp>` dict; no REST/WS calls).
+- ⚠️ `venues/hyperliquid.py:18-263` — **DUPLICATE simulation-only connector**; two parallel impls (one TypedDict, one `dict[str, object]`); consolidation needed.
+- ❌ `VENUE_ERRORS_DEFI` dict (`canonical/crosscutting/errors/defi.py:52-1161`) has NO Hyperliquid entries — 13 codes today all Aave/Balancer/Curve/etc.
+
+**Bybit:**
+- ✅ `BybitCCXTAdapter` perp-execution-grade at `execution-service/execution_service/trade_execution/adapters/bybit_ccxt.py:28-66`; futures=True selects `defaultType="future"`.
+- ✅ Factory wiring at `trade_execution/factory.py:36,94,147-155` (`Venue.BYBIT` in `CCXT_VENUES` + `CCXT_TO_UCI_VENUE`).
+- ✅ Canonical venue codes `BYBIT-SPOT` / `BYBIT-FUTURES` (`canonical/canonical_mappings.py:34-35,184,374,414-419`); testnet URLs (`venue_thresholds.py:127-131`); coverage start `2018-11-21` (`coverage_starts.py:48`).
+- ✅ Live test fixtures at `execution-service/tests/live/venues/cefi/test_bybit.py`.
+- ⚠️ `ApiKeyReloader` NOT wired into `BybitCCXTAdapter` constructor — same gap workspace-wide for CeFi adapters (Binance / OKX / Deribit). DEFER past May-23 unless operator escalates.
+
+### Findings + gaps (Findings Triage discharge)
+
+In-plan P0 (blocks Phase 5-8 implementation):
+
+- [ ] [UAC] **P0**. Resolve `PerpVenue` ambiguity from Phase 2 line 362: workspace has NO unified `Venue` enum — `HYPERLIQUID` + `BYBIT` are string constants in `venue_constants.py`. **Implementation: add `get_perp_venues() -> frozenset[str]` helper deriving from `VENUE_CAPABILITIES` filtered by `VenueCapability.PERP_TRADE`** (System-First — no new enum / no SSOT duplication).
+- [ ] [UAC] **P0**. Add Hyperliquid entry to `VENUE_ERRORS_DEFI` dict in `canonical/crosscutting/errors/defi.py` with classified codes: `HL_INSUFFICIENT_MARGIN` (FAIL — analog to aave INSUFFICIENT_COLLATERAL), `HL_REDUCE_ONLY_VIOLATION` (FAIL), `HL_INVALID_TIF` (FAIL), `HL_RATE_LIMITED` (RETRY — 429), `HL_NONCE_TOO_LOW` (RETRY — EIP-712 nonce race), `HL_SIGNATURE_INVALID` (FAIL — wallet config bug), `HL_POSITION_CLOSED` (SKIP — auto-liquidation race). Mirror in `DefiErrorCode` class constants.
+- [ ] [execution-service] **P0**. Consolidate `defi_execution/protocols/hyperliquid.py` + `venues/hyperliquid.py` into ONE canonical connector. Pick `defi_execution/protocols/hyperliquid.py` as canon (already uses parsed UAC schemas); delete or shim the other. Same logical unit as Phase 6 live wire-up.
+- [ ] [execution-service] **P0**. Phase 6 Hyperliquid LIVE wire-up: EIP-712 signing (action hash + nonce + `vaultAddress` envelope; ChainId 1337 mainnet / 421614 testnet — verify against current Hyperliquid SDK); REST POST to `https://api.hyperliquid.xyz/exchange`; WS `user_events` subscription. Replace `available_margin = equity × 0.9` placeholder (line 259) with parsed `HyperliquidUserState.marginSummary.accountValue − totalMarginUsed`.
+- [ ] [execution-service] **P0**. Hyperliquid bridge address + USDC deposit/withdrawal helpers under `defi_execution/`: operator deposits USDC on Arbitrum → bridge to HL L1 → arrives in trading wallet. **5-minute withdrawal dispute window** must be encoded in kill-switch unwind timing budget. Bridge address `0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7` (low-confidence — verify; HL has rotated bridges at least once in 2024).
+- [ ] [strategy-service] **P0**. Variant naming decision: **single archetype `CARRY_RECURSIVE_BORROW_PERP_HEDGED` with `perp_venue` config field** (already in Phase 2 schema proposal). No per-venue variant tarballs. Catalog enumerates `perp_venue ∈ {HYPERLIQUID, BYBIT}` at cell-id level only.
+- [ ] [strategy-service] **P0**. `PerpHedgeSizer` (Phase 7): pre-trade check against `_HYPERLIQUID_RULES` ($500k per-instrument cap) — block sizing that exceeds. Same for any Bybit per-position risk cap.
+- [ ] [risk] **P0**. Bybit counterparty cap policy: **cap Bybit notional at ≤50% of Hyperliquid leg for first 30 days post-cutover** (Feb-2025-hack trust-premium discount). Codify in strategy-service archetype config + risk-and-exposure-service venue-cap table.
+
+In-plan P1 (blocks polish, may defer to Phase 9-12):
+
+- [ ] [features-onchain-service] **P1**. New feature: `funding_rate_apr_rolling_30d_mean` per `(perp_venue, perp_pair)` — feeds Phase 7.5 adaptive sizing. Defer past May-23 if Phase 7 baseline ships green.
+- [ ] [risk-and-exposure-service] **P1**. Integration test: cross-venue netting `(aETH × er) + free_ETH − ETH_debt + perp_short = target_net_delta` within ±0.001 ETH on Tenderly fork + Hyperliquid testnet. Folds into Phase 7 deliverable.
+- [ ] [pnl-attribution-service] **P1**. Per-venue funding separation: HL funds 1h (24×/day); Bybit funds 8h (3×/day). Daily funding cost = `Σ_HL_hourly + Σ_Bybit_8h`. Avoid double-attribution in Family 2 P&L.
+- [ ] [execution-service] **P1**. Per-archetype subaccount + per-archetype API key for Bybit (blast-radius isolation): `carry_recursive_borrow_perp_hedged` key separate from `leveraged_funding_arb` key. Trading-only scope, no withdrawal, IP-whitelist to GCE static egress. Bybit subaccount provisioning runbook → `deployment-service/runbooks/` (NEW).
+- [ ] [batch-live-reconciliation-service] **P1**. Bybit private v5 WS streams (`order` / `execution` / `position`) parity with REST poll — fills land in position-balance-monitor ≤500ms after venue ack. Required for batch-vs-live recon harness.
+
+In-plan P2:
+
+- [ ] [strategy-service] **P2**. Pause-cell cleanliness when `target_net_delta = +N ≥ E_actual`: `_build_carry_recursive_staked` emits single-leg lending-only cell (not two-leg with `perp_short_size=0`) to keep bookkeeping clean.
+- [ ] [execution-service] **P2**. cbETH/ETH basis-risk monitor in Phase 8 (additive to HealthFactorMonitor) — small under normal markets (cbETH 0.1-0.5% premium/discount) but tail risk during Coinbase stress.
+- [ ] [execution-service] **P2**. USDC supply-APY (`R_usdc`): Hyperliquid does NOT pay; Bybit flexible-savings gates on KYC tier. Defer config field past May-23.
+- [ ] [ops] **P2**. Bybit live VM singleton-locked (per `Singleton-locked launchers` rule) — API key + IP whitelist mean only one VM-IP can authenticate simultaneously; without lock, zombie launcher could double-trade.
+- [ ] [docs] **P2**. Codex doc `codex/04-architecture/cefi-perp-leg-bybit.md` (NEW) — capture this topology + Feb-2025-hack risk addendum; cross-ref Family 2 plan + master plan B-risk row.
+
+Cross-plan annotations needed (Findings Triage):
+
+- **defi_catalogue_chain_primitives_2026_05_10.md Phase 3**: verify `funding_rate` data_type capture for ETH-PERP on Hyperliquid + Bybit at ≥1h cadence with ≥1y horizon — required for Phase 7.5 30d-mean feature. Grep-then-READ before concluding adapters missing (per HARD RULE).
+
 ## Phase 1 — Prerequisite: lending-rate backfill — REFRAMED 2026-05-10 cross-plan audit Q11
 
 > **🔴 OWNERSHIP TRANSFERRED** to
