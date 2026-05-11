@@ -890,7 +890,34 @@ physical-migration-second" sequence + the Done-def #2 precedent), Group-A flips 
 call. **Until resolved, slot 4 does NOT land the Done-def #3 delegate** (the riskiest item; warrants the sequencing
 decision first). Slot 1: route a cross-side ping to Ikenna.
 
-#### A6 — [pending Ikenna/operator]
+#### A6 — [ikenna-main, 2026-05-11 PM] — operator-routed decision: **Option 2 (defer ALL of Done-def #3 to Phase 2.6 window)** ✅ RESOLVED
+
+**Decision**: Defer the whole `get_bucket_name` → `resolve_bucket_name` delegate (Group A + Group B + all kinds) to Phase 2.6 (2026-05-15→05-19), landing it inside the same window as the flat→env-tiered bucket provisioning + data migration + write-pause cutover. Done-def #3 is reclassified from "Phase 1 code-complete deliverable" to "Phase 2.6 cutover deliverable."
+
+**Why Option 2 over Option 1 (transitional split)**:
+
+- **Done-def #3 is code-cleanup, not a freeze-gate blocker** (per Harsh slot 1 surface analysis + the Phase 1 freeze-gate checklist in `code_freeze_migrate_backfill_sequencing_2026_05_10.md:142-149` — `get_bucket_name` legacy is NOT in the 6 freeze-gate items). Deferring 4 days has zero downstream cost.
+- **Phase 2.6 sequencing fits naturally**: provision env-tiered buckets → rsync data flat→env-tiered → brief write-pause → flip `get_bucket_name` delegate to `resolve_bucket_name` (all 36 consumers in one logical unit) → archive flat buckets. Done-def #3 IS the cutover-flip step in this sequence; it's not a separate concern.
+- **Avoids "half-migrated" cognitive load.** Option 1 (Group-B flips now, Group-A flips Phase 2.6) creates a 4-day window where the delegate has special-cased Group-A logic that EVERY reader needs to remember + every reviewer needs to validate. Code-review burden + drift risk.
+- **Composes cleanly with workspace "No double SSOT" rule** (CLAUDE.md): Option 1 maintains TWO bucket-resolution paths in parallel for 4 days (legacy-flat for Group-A, env-tiered for Group-B). Option 2 has ONE path throughout, with the canonical switch happening atomically at the Phase 2.6 cutover.
+- **Cost of Option 1 saved**: slot 4 doesn't need to write + test the Group-A special-case branch in the delegate. Slot 4's other queued work (env-less-GCP-entries sub-todo + Done-def #5/#6 + Phase 0f/0g/0h) takes the saved capacity.
+- **Risk of write failures eliminated**: with Option 2, NO bucket re-pointing happens before the env-tiered buckets physically exist. With Option 1, the Group-B re-pointing is "safe" only because nothing writes Group-B between now and Phase-3 backfills — but that's a fragile assumption (any feature-service test run, any QG smoke, any CI integration test could trigger a Group-B write attempt against a non-existent bucket). Option 2 removes the assumption entirely.
+
+**Phase 2.6 Done-def #3 sub-sequence** (new structure):
+
+| Phase 2.6 Step | Owner | Action |
+|----------------|-------|--------|
+| 2.6.1 | Phase 2.6 owner (TBD; slot 4 or new agent) | Provision ~150-300 new env-tiered Group-A + Group-B buckets across both clouds × 3 envs × ap-northeast-1. |
+| 2.6.2 | Phase 2.6 owner | rsync data flat→env-tiered (Storage Transfer Service / DataSync, ≤0.01% drift). |
+| 2.6.3 | Phase 2.6 owner | Brief write-pause window (~minutes; operator-coordinated; flag VMs to wait). |
+| 2.6.4 | **Done-def #3 / slot 4 carryover** | Ship `get_bucket_name` → `resolve_bucket_name` delegate workspace-wide (all 36 consumers migrated in single PR). |
+| 2.6.5 | Phase 2.6 owner | Verify writers writing to env-tiered buckets; archive flat buckets; QG STEP 5.69 ratchet enforces no flat-name refs. |
+
+**Slot 4 in-flight scope** (NOT BLOCKED — proceed with current queue per Harsh slot 1's note): env-less-GCP-entries sub-todo + Done-def #5/#6 + Phase 0f (VM-launcher env-awareness) + Phase 0g (UI-env-tier verify) + Phase 0h (sync-script code). Done-def #3 stays `- [ ]` in the plan body with `status: deferred-after-Phase-2.6` annotation per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" Half 2 closed-set status values. Slot 4 will pick up Done-def #3 again in the Phase 2.6 cutover window (or hand off to whoever owns Phase 2.6 implementation).
+
+**Status**: ✅ RESOLVED — slot 4 unblocked on the queued items (no scope change to those); Done-def #3 explicitly re-sequenced to Phase 2.6.
+
+**Cross-side ping** to harsh-main filed in `plans/active/_agent_pings.md` (same commit as this answer).
 
 ## Deferred work after 2026-05-11 slot 4 session
 
