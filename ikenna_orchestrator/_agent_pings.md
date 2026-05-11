@@ -89,3 +89,14 @@ they should rebase against mdps@2f163c1 + extend rather than revert. Full DONE b
 above § Phase 0 audit findings — MTDS bundle adapter inventory. Plan-flip commits:
 PM@52a3fbc0/46cd5ab3/d05143e6/30796569/9bd8d44a (Step-by-step) + this commit. Plan-of-record:
 writegate_honest_coverage_endtoend_2026_05_06.md § Phase 2.A.
+
+[2026-05-11 13:00 UTC] ikenna-slot8-p0-2-finalize — P0-2 surgery FINALIZATION SHIPPED + merged to origin/live-defi-rollout.
+  Step 4 closed (VIX gap → record_empty(EXPECTED_KNOWN_SOURCE_GAP); mdps@01f08b6 — record_empty_for_shard +
+  _emit_status_for_shard accept reason kwarg defaulting to SOURCE_RETURNED_ZERO for backward compat on cefi/defi/tradfi
+  callers). Step 6 closed (CandleProcessingService dead-branch deleted + 4 source files + 5 test files / ~2090L removed;
+  mdps@a964b96; coverage rose 73.18% → 74.63%). MDPS commits a964b96 + 01f08b6 + 6677728 + 849d039 + fe7deb5 NOW LIVE
+  on origin/live-defi-rollout — VMs pulling from live-defi-rollout get the canonical_writer + 4-pillar gate live path.
+  PM plan-flips: bf18c6db (Step 6 done) + 0736e4b2 (Step 4 done) + 5b3ea34d (DONE block) + earlier step 1-3 flips. All
+  Steps 1/2/3/4/6 = ✅ done. Step 5 (output_schemas.py OHLCV nullability) remains DEFERRED-AFTER hard_schema_enforcement
+  plan per task brief. Plan-of-record: writegate_honest_coverage_endtoend_2026_05_06.md §
+  DONE-2026-05-11 — slot 8 P0-2 surgery (Finalization 2026-05-11 — slot 8 P0-2 finalize sub-agent subsection appended).

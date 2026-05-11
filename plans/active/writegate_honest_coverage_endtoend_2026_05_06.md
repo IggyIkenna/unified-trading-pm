@@ -872,6 +872,28 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md) — Step 5 will land via that plan
   after futures-expiry tradfi work.
 
+### Finalization 2026-05-11 — slot 8 P0-2 finalize sub-agent
+
+- ✅ **Step 4 finalized**: `record_empty_for_shard` + `_emit_status_for_shard` accept `reason: EmptyConfirmedReason`
+  kwarg (default `SOURCE_RETURNED_ZERO` for backward compat on `_handle_empty_tick_data` cefi/defi/tradfi callers);
+  VIX gap route passes `reason=EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP`. Final commit (post-rebase):
+  `mdps@01f08b6` on `origin/live-defi-rollout`.
+- ✅ **Step 6 shipped**: `CandleProcessingService` + `MarketDataProcessingService` + `MarketDataBatchProcessor` +
+  `candle_metadata_helpers` source files deleted (4 files); 5 test files deleted; `types.py` drops
+  `CandleServiceConfigDict` + docstring fix on `InstrumentMetadataDict`; `test_timestamp_date_alignment.py` drops
+  the `inspect.getsource(CandleProcessingService)` class but keeps `TestCloudCandleStorageValidation`. Net ~2090L
+  deleted; coverage 73.18% → 74.63% (1 pre-existing `test_cli_help` failure unrelated). Final commit (post-rebase):
+  `mdps@a964b96` on `origin/live-defi-rollout`.
+- ✅ **Merged into `origin/live-defi-rollout`**: all 5 P0-2 MDPS commits (`fe7deb5` + `849d039` + `6677728` +
+  `01f08b6` + `a964b96` — steps 1/2/3/4/6) FF-pushed via `git push origin tab/ikennaigboaka/8:live-defi-rollout`.
+  PM plan-flip commits (`6c2b7170` + `fd955dca` + `3bff1871` + `7e68177e` + `71dc431b` + `5b3ea34d` + `0736e4b2` +
+  `bf18c6db`) all on `origin/live-defi-rollout`. VMs pulling from `live-defi-rollout` now run the canonical_writer
+  + 4-pillar gate live path with the dead `CandleProcessingService` branch removed and VIX gap correctly tagged
+  `EXPECTED_KNOWN_SOURCE_GAP`.
+- **Step 5** (`output_schemas.py:57-66` OHLCV nullability flip) remains `todo`; per task brief out-of-scope,
+  blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07`
+  futures-expiry shipping. No change from prior DONE-2026-05-11 state.
+
 ### Phase 0 audit findings — MTDS bundle adapter inventory
 
 **CRITICAL plan correction**: Phase 2.B file paths at lines 510-516 are wrong:
