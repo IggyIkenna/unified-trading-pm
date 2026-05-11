@@ -31,6 +31,30 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-11 ~now UTC] [main → slot 7] — **ABSORB Harsh slot 5 live-pipeline carry-forward** (Harsh leaving in ~3hr; we're moving faster than planned per operator). Round 1-4 ✅ DONE; pick up Harsh slot 5's quiet/queued live-pipeline service-wiring scope. Plan-of-record: [`live_pipeline_mtds_mdps_features_2026_05_08.md`](../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md) § "Deferred work after 2026-05-11 Harsh slot 5 session".
+
+**Scope** (~6-9 AI-days; sub-agent fan-out compressible to ~2-3 wall-clock days):
+1. **Phase 3 — MTDS websocket `--mode live` + `live_runner.py`** (~2-3 days). MTDS service wiring for live-mode streaming consumption per `MDPSStreamingAggregator` contract slot 4 promoted at PM@`35a79dd4`.
+2. **Phase 5 — features-svc per-family `live/` runner modules** using `AssetScopedFeaturesRunner` UTL primitive slot 4 promoted (~2-3 days w/ 5-way fan-out: one sub-agent per consolidated features-svc family: delta-one + volatility + onchain + cross-instrument + multi-timeframe). Same wiring shape per family.
+3. **Phase 6 — features-svc cross-cutting `live/` runner** using `CrossCuttingFeaturesRunner` UTL primitive (~1-2 days). Cross-family fan-in propagation per the codex doc's cascade table.
+4. **Phase 15 — QG sweep + smoke** (~1 day). Workspace-wide QG green + integration smoke + per-service consumer-class audit (per the codex doc's emission-policy reference test fixtures).
+
+**Why slot 7**: alerting/risk/DR service-wiring competency from Rounds 1-4 transfers; same multi-plan fan-out pattern; Harsh side has zero Ikenna-side dependencies. **Hard sync gate**: slot 4's MDPSStreamingAggregator + AssetScopedFeaturesRunner + CrossCuttingFeaturesRunner UTL primitives already shipped (real impl, not stubs); slot 7 imports them. NO collision with slot 8 (separate scope: bucket SSOT).
+
+Per-shippable-unit commits + bundled push slot branch + FF LDR per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" Half 4. Plan-flip in `live_pipeline_mtds_mdps_features_2026_05_08.md` per shippable unit. EOD-audit before final DONE block.
+
+[2026-05-11 ~now UTC] [main → slot 8] — **ABSORB Harsh slot 4 bucket-SSOT carry-forward** (Harsh leaving in ~3hr; we're moving faster than planned per operator). P0-2 MDPS + writegate Phase 6.2 ✅ DONE; pick up Harsh slot 4's deferred-to-next-session bucket-migration prereqs. Plan-of-record: [`bucket_name_ssot_canonicalisation_2026_05_10.md`](../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md) Phase 0f + 0h.
+
+**Scope** (~2-4 AI-days):
+1. **Phase 0f — VM launcher env-awareness** (~1-2 days; ~30 launcher scripts under `deployment-service/scripts/vm/`). Each launcher MUST read `DEPLOYMENT_ENV` (env var OR `--env <prod|staging|dev>` CLI flag) + pass to VM via metadata so bucket-resolution targets the right env. Per CLAUDE.md (b+) decision section. Plan body lines ~202-210 enumerate the requirement.
+2. **Phase 0h — sync script `deployment-service/scripts/sync-buckets-prod-to-{staging,dev}.sh`** (~1-2 days). Keeps dev/staging current with prod via truncated date window (default 2 yrs for staging, 1 yr for dev) + same-region copy ($0 egress) + manifest re-sync post-data-sync. Per CLAUDE.md (b+) decision section. Plan body lines ~223+ enumerate the requirement.
+
+**Both are PREREQ for bucket-migration Phase 2.6** (2026-05-15→05-19 cutover window). Without Phase 0f, VM launches won't target env-tiered buckets. Without Phase 0h, dev/staging will drift from prod.
+
+**Why slot 8**: deployment-service + VM-launcher context from P0-2 MDPS surgery + Phase 6.2 ship; mechanical script work fits slot 8's shipping cadence. NO collision with Harsh slot 4 (currently working env-less-GCP-entries — different surface) or Ikenna slot 7 (live-pipeline — different scope).
+
+Per-shippable-unit commits + bundled push slot branch + FF LDR per CLAUDE.md Half 4. Plan-flip Phase 0f/0h checkboxes in same logical unit. Cross-side ping to harsh-main confirming completion when shipped.
+
 [2026-05-11 ~now UTC] [main → slot 5] — **RE-TASK EXPANSION** — slot 5 self-declared freed up after shipping DeFi Phase 1.E audit + hard_schema Phase 1. Operator authorized scope expansion: "reassign anything dropped out of 15th May code freeze... so it can do more and unblock more other work." Full brief: [`plans/active/work_split_2026_05_11_ikenna.md`](../plans/active/work_split_2026_05_11_ikenna.md) § "Slot 5 RE-TASK" → "RE-TASK EXPANSION 2026-05-11 PM".
 
 **Tier 1 (Phase 1 freeze-gate critical-path closures, ~5-6 AI-days w/ fan-out → ~2-3 wall-clock):**
