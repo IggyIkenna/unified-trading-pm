@@ -548,7 +548,7 @@ up cleanly without re-reading session notes.
 | Phase 0.1 — UAC bar_boundary SSOT                        | `done` (UAC@5240000 shipped)                                 | —                                                                                                                                                                                                                                                                                                         |
 | Phase 0.2 — UTL `compute_bar_close_boundary` helper      | `done` (UTL@d798fcf3 shipped)                                | —                                                                                                                                                                                                                                                                                                         |
 | Phase 0.3 — MDPS audit + fix (bar boundary alignment)    | `done` (MDPS@`f004e12` + UAC@`8672d49` — off-by-one tf overshoot fixed + contract amended) | Off-by-one timeframe overshoot in `canonical_writer._stamp_candle_available_at` surfaced + fixed; UAC `bar_boundary` clause 4 amended for latency-aware Live=batch form. Issue doc: `mdps_canonical_writer_off_by_one_tf_2026_05_11.md`.                                                                  |
-| Phase 0.4 — Historical MDPS parquet reconciler           | `todo` (checkbox `- [ ]`)                                    | UNBLOCKED post-Phase-0.3 fix. Backfill-side: every MDPS parquet written between 2026-05-10 (Phase 1.2A.1 ship) and 2026-05-11 (`f004e12` fix) carries the over-stamped `available_at`. Reconciler walks `gs://{pid}-mdps/`, re-stamps via the corrected formula `timestamp + emission_latency_ms_for_source`. ~1 day of bad data on disk. Heavier script work; can be deferred or owned by Harsh slot 5 (MDPS competency). |
+| Phase 0.4 — Historical MDPS parquet reconciler           | `helper-shipped` (MDPS@`<this commit>` script + 18 tests; operational run pending operator auth) | Reconciler script `scripts/reconcile_mdps_available_at_off_by_one_2026_05_10_2026_05_11.py` shipped — walks `gs://{pid}-mdps/processed_candles/by_date/day=YYYY-MM-DD/timeframe=*/...`, samples first row per parquet, classifies via `classify_delta()` (closed set: overshot / correct / leak / unscannable), re-stamps overshot via `restamp_parquet_subtract_tf()` (subtracts one tf from `available_at`); idempotent (classify-before-restamp gates the re-stamp); default SCAN-ONLY + `--apply-fixes` gated; per-VM shard isolation + `--max-fixes-per-run` halt safety + CSV audit. Operational run requires operator authorization on target `--project-id` per CLAUDE.md "Plans Run To Actual Completion" — rewriting prod parquets is destructive territory. |
 | Phase 0.5 — MDPS write-gate enforcement                  | `done` (MDPS@`7624730` shipped)                              | `_validate_stamped_candle_bar_boundary` wired into `canonical_writer.write_candle_parquet`; runs on both fresh-stamp + pre-stamped paths; sample-validates first/middle/last rows via UAC `assert_bar_boundary_contract`; 5 new unit tests cover overshoot/leak/misaligned/canonical-pass/unsupported-tf skip. |
 | Phase 0.6 — QG static check for MDPS bar emission        | `done` (PM@`<this commit>` shipped)                          | `scripts/quality_gates/check_mdps_bar_available_at_stamping.py` AST-walks MDPS source; flags any `df["available_at"] = ...` assignment outside canonical helper; whitelists `_stamp_candle_available_at` + `_validate_stamped_candle_bar_boundary` inside `canonical_writer.py` + inline `# QG-allow: mdps-bar-available-at` marker; 13 pytest tests; clean against live MDPS source (0 unauthorised writes). |
 | Phase 1 (DeFi / TradFi / Predictions adapter stamping)   | `todo` (checkbox `- [ ]` × 3)                                | Owned by respective asset_group master plans (defi_master / tradfi_master / predictions_master). Harsh slot 4 picks up per-adapter wiring once Phase 0 lands at MDPS level.                                                                                                                              |
@@ -753,9 +753,33 @@ Counts: MDPS `test_canonical_writer_record_helpers` tests rose 19 → 24 (+5 wri
 test fix (`00:01:00.500` → `00:00:00.500` to satisfy clause-4 latency-aware contract on pre-stamped rows). Both Phase
 0.5 + 0.6 FF-push'd into LDR via slot-3 branch per Half 4 cadence.
 
-**Phase 0.4 reconciler remains open** (the one-day overshoot window 2026-05-10 → 2026-05-11). Reconciler script needed
-to walk `gs://{pid}-mdps/`, identify parquets with the overshoot signature, re-stamp via corrected formula. Owner: Harsh
-slot 5 (MDPS competency) OR slot 3 next cycle.
+### Re-task continuation 5 (Phase 0.4 reconciler script — operator authorization 2026-05-11)
+
+Slot 3 shipped the Phase 0.4 reconciler script + 18 unit tests as the final close-out of Phase 0. The script is
+`market-data-processing-service/scripts/reconcile_mdps_available_at_off_by_one_2026_05_10_2026_05_11.py`. Default mode is
+SCAN-ONLY (CSV audit, zero GCS mutation) per the workspace operator-authority discipline; `--apply-fixes` is the explicit
+flag that gates the actual parquet rewrites.
+
+| Re-task item                                                                                                       | Status                | Commits                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Phase 0.4 reconciler script + 18 pytest tests (classify_delta closed set + restamp_subtract_tf idempotency + path parser) | `helper-shipped`      | market-data-processing-service@`<this commit>` (479-line reconciler + 18-test pure-logic test module) |
+| Plan flip on Phase 0.4 → `helper-shipped` (script + tests on LDR; operational run gated)                           | `done`                | unified-trading-pm@`<this commit>`                                                                                       |
+
+**Operational run remaining** (per CLAUDE.md "Plans Run To Actual Completion" HARD RULE — `helper-shipped` is NOT
+`done`):
+
+1. Operator confirms target GCS project ID (`central-element-323112` prod by default) + target asset_groups.
+2. Run scan-only first: `python scripts/reconcile_mdps_available_at_off_by_one_2026_05_10_2026_05_11.py --asset-group cefi`
+   (then defi / tradfi / prediction / sports). Inspects CSV at `/tmp/reconcile-mdps-availat-{ag}-{ts}.csv`.
+3. Review counts — expected: `overshot > 0` for parquets written 2026-05-10 → 2026-05-11; `leak == 0` (a non-zero
+   leak count signals a different bug class for upstream fix).
+4. Run with `--apply-fixes` once scan looks right. Default cap `--max-fixes-per-run=10_000` halt safety; lift on
+   subsequent runs.
+5. Re-run scan-only after `--apply-fixes` completes — every previously-overshot parquet should now classify as
+   `correct` (idempotency proof on real data).
+6. Cross-side ping to operator + main agent on completion with final counts per asset_group.
+
+Phase 0.4 flips to `done` only when step 5 confirms zero-overshot residual against the production bucket.
 
 ## Audit-2026-05-10 finding — post-cutover Phase: lift `available_at` to schema-level invariant
 
