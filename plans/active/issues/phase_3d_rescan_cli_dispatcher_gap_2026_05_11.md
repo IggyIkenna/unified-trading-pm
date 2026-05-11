@@ -1,7 +1,12 @@
 ---
 title: "Phase 3.D cross-asset rescan VM fails at startup — CLI dispatcher gap"
 created: 2026-05-11
+resolved: 2026-05-11
+status: ✅ RESOLVED
 author: ikenna-available-at-tab (slot 3)
+resolver: ikenna-available-at-tab (slot 3) — operator authorized 2026-05-11 PM
+resolution_commits:
+  - deployment-service@03ce073 (route launcher via VM_BACKFILL_CMD direct script invocation)
 source:
   - market-data-processing-service VM run log at gs://deployment-scripts-central-element-323112/vm-logs/cross-asset-rescan-20260511-153940/run.log
   - instruments-service@a264f21 (Phase 3.D rescan script ship)
@@ -10,6 +15,17 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---
+
+> ✅ **RESOLVED 2026-05-11 PM** via Option B (route launcher through `VM_BACKFILL_CMD`
+> direct-script-invocation, bypass CLI dispatch). Fix shipped at
+> `deployment-service@03ce073`. Same shape as `launch-defi-phantom-recon-vm.sh` +
+> `launch-expected-universe-enumerator-vm.sh` — the rescan is a one-shot
+> orchestrator on top of the existing phantom-audit reconciler, not a payload-
+> processor in the `UnifiedServiceHandler` shape, so direct script invocation
+> is the right abstraction. (Option A — register CLI dispatcher entry — would
+> have forced the rescan into a payload-processor shape it doesn't fit.)
+> Relaunched as `cross-asset-rescan-20260511-171623`; Phase 8 triage review
+> unblocked.
 
 > **Severity**: P0 — blocks `manifest_schema_final_gate_2026_05_09.md` Phase 8 triage review on the May-23 critical
 > path. Phase 8 consumes `gs://central-element-323112-rescan-triage/{run_id}/triage.jsonl` produced by the rescan VM;
