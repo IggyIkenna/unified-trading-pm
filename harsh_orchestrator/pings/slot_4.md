@@ -139,3 +139,22 @@ session picks up Done-def #3 + Phase 0e + the yaml-gap sub-todo.
   1. **Your sports-stamping cross-side asks ✅ RESOLVED** — the `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 "TRACK — sports adapter stamping" todo is flipped `[x]` citing your MTDS@`c186ecb`; the 4 design Qs (Q-A through Q-D) in `mtds_sports_available_at_wiring_2026_05_11.md` are resolved (Q-A: conservative rule `available_at = bm_time + emission_latency_ms_for_source(<src>)` — your event-time-only behaviour is a P1 follow-up to promote; Q-B: column-presence assert at the `StreamingParquetWriter.write_chunk` boundary; Q-D: sports sources already have SOURCE_PRIORITY + EMISSION_LATENCY_MS entries). Nothing more from you on the sports-stamping front.
   2. **SCOPE: `ikenna-available-at-tab` absorbed your available_at-related P1 work** (per operator authorization "harsh agent is stale") — the `StreamingParquetWriter.write_chunk` `assert_available_at_present` boundary guard is shipped (UTL@`f7b704fd` + MTDS@`a512edf`) + the 2 P1 follow-up todos (conservative-rule promotion, etc.) are Ikenna's now. **So drop the available_at P1 bits from your scope** — focus on the **bucket-name SSOT** (your core: Phase 0c/0d/0e/0f/0g/0h + Done-def #3/#5/#6 + the cross_instrument/multi_timeframe yaml-gap). Your next-session todos (Done-def #3 legacy delegate + Phase 0e Group-A env-tier + yaml-gap) are unchanged.
   3. **The v8 schema columns + `EXPECTED_KNOWN_SOURCE_GAP` enum are now in UAC root** (`from unified_api_contracts import V8_NEW_COLUMNS, SERVICE_EMISSION_STATE_COLUMN, EMPTY_CONFIRMED_REASON / EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP, READER_FALLBACK_WINDOW_DAYS, ...`) — available for any reader/writer your Phase 0c provisioning work needs. (Also: defi_master Q1 #3 PROTOCOL_LAUNCH_DATES research is now Ikenna slot 5's — not a Harsh-side carry-forward anymore.)
+
+[2026-05-11 11:12 UTC] harsh-bucket-and-adapter-tab — Phase 0e SHIPPED. (1) **Phase 0e** env-tier the Group-A bucket kinds in
+`cloud-providers.yaml` (`market-data`/`instruments-store`/`features-calendar`/`market-data-tick-prediction`/`instruments-store-prediction`
+→ `{prefix}-{ag}-${DEPLOYMENT_ENV}-{pid}`, both clouds; §-header comment updated; all names verified ≤63 chars) —
+deployment-service@`a5c2082` + UTL@`ba6089c` (parity test snapshot + per-kind expectations matched; ruff clean; pytest
+NOT runnable here — `origin` UTL `availability_stamping.py:83` imports `BAR_TIMEFRAME_SECONDS` which UAC `__init__.py`
+doesn't export → workspace-wide UTL→UAC drift mid-flight, not mine). Plan flips PM@`ecb47b6c` (Phase 0e `[x]` + scoreboard
++ DONE cont.2 block). (2) **NEW deferred sub-todo**: env-tier the remaining env-less GCP yaml entries — `dex-*`/`*-defi`
+raw (clean add, do first); `pnl-store-defi`/`positions-store-defi`/`risk-store-defi` (GCP asset-group-as-suffix shape vs
+AWS env-tiered — needs a SHAPE-ALIGNMENT decision + data migration); `config-store`/`events` (`events` operator-gated —
+workspace-wide `{pid}-events` refs). (3) **🟡 BLOCKED — Q5 (needs Ikenna)**: the cross_instrument/multi_timeframe yaml-gap
+sub-todo (last loose end of Done-def #2) is blocked because `features-cross-instrument` (25 chars) / `features-multi-timeframe`
+(24) overflow the 63-char bucket-name limit under `{prefix}-{ag}-${DEPLOYMENT_ENV}-{pid}` for the longer combos
+(prediction+staging, + AWS `unified-trading-` prefix). 4 options enumerated in plan § Open questions Q5 (slot 4 rec =
+option 1, aliased shorter bucket name). **Slot 1 action**: route a cross-side ping to Ikenna for Q5 (bucket-naming SSOT
+decisions → Ikenna per the work-split). STILL OPEN: Done-def #3 (legacy `get_bucket_name`+`BUCKET_PREFIXES` delegate —
+UTL, ~36 consumers, no gate — best next-up); the env-less-GCP-entries sub-todo (DeFi-raw first); Done-def #5/#6; the
+prior cross-side asks (Ikenna slot 3 — sports `available_at` Phase 1 todo + 2 design Qs). Going quiet — next session
+picks up Done-def #3 + the env-less-GCP-entries sub-todo.
