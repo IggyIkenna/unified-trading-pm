@@ -149,6 +149,25 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       V3, Camelot V3, Aerodromeq V3, Velodrome V2, TraderJoe V2, Raydium, Orca, Jupiter aggregator, Spark (verify
       already present), Radiant, Rocket Pool, Solblaze, Symbiotic, Karak, Renzo, KelpDAO, Puffer, Jito-restaking.
       Per-entry: `(venue_id, chain_id, data_types, start_date)`. Match shape of existing Aave V3 / Lido entries.
+      **PARTIAL 2026-05-11 by slot 5 (ikenna-defi-phase-1e-tab) — venue_id + chain_id + start_date shipped at
+      uac@`495d262`** in the **actual SSOT location** `unified_api_contracts/registry/defi_venues.py` (the plan body
+      reference to `defi_venue_capabilities.py` is stale — grep-verified that file does not exist; the canonical venue
+      registry lives in `defi_venues.py` per the file's own header SSOT pointer to
+      `codex/02-data/mtds-data-source-coverage-matrix.md`). Shipped: ALL_DEFI_VENUES extended from 74 → 99 (25 new
+      entries — 8 ETH + 7 ARB + 1 BASE + 1 OP + 2 POLY + 1 AVAX + 2 BSC + 3 SOL); DEFI_VENUE_PHASE 1:1 invariant
+      preserved with all 25 marked "pipeline"; LEGACY_DEFI_VENUE_ALIASES extended with 13 bare-name aliases;
+      `chain_env.py` PROTOCOL_LAUNCH_DATES extended with 12 confident dates (CONVEX/PENDLE/IDLE on ETH,
+      SYMBIOTIC/KARAK/RENZO/KELPDAO on ETH, PENDLE/RADIANT on ARB, RADIANT on BSC, JUPITER/JITORESTAKING on SOL);
+      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` extended with 13 pairs (Beefy multi-chain rollouts + YEARNV3 L2 rollouts
+      + IDLE/KARAK/RENZO L2 + SOLBLAZE) that fall back to chain genesis until subgraph-truth probe lands.
+      **DEFERRED — `data_types` per-venue declarations**: each new protocol's `data_types` matrix (vault_share_price /
+      dex_swaps / lending_indices / etc.) is encoded via per-protocol `SourceCapability` objects in
+      `registry/capability_declarations/_defi_source_capabilities.py` (currently 5 protocols: UNISWAP / AAVE / etc.).
+      Per-protocol `SourceCapability` blocks include `operations`, `base_urls` per env, `operation_details` per env +
+      signing scheme + credential type — that's per-adapter research depth, naturally co-shipped with the catalogue
+      Phase 2 (instruments adapter) + Phase 3 (MTDS adapter) per-protocol cells (parallel-agent A through O in the
+      Phase 2 matrix). Slot 5 venue declarations enable the manifest shard-atom population shape (Phase 2 anti-
+      sequencing risk closed); per-protocol SourceCapability adds the data-source contracts (Phase 2-3 scope).
 - [ ] [AGENT] P0. **1B — Extend `defi_reserve_params.py`** for Spark + Radiant + multi-chain Aave V3 (9 chains × N
       reserves each). Per-asset: LTV, liquidation threshold, liquidation bonus, can-be-collateral, can-be-borrowed,
       borrow cap, supply cap, reserve factor, optimal_utilization_rate, interest-rate-model parameters.
