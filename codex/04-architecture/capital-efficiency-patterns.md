@@ -248,6 +248,49 @@ Capital efficiency is NOT free — risk concentration grows with efficiency:
 
 Risk-and-exposure-service must model joint risk, not per-strategy. Family-level limits + correlation caps handle this.
 
+## Per-archetype Capital-at-Risk ceiling cross-link
+
+Each capital-efficiency pattern above unlocks leverage but also concentrates tail risk into specific stress scenarios
+(stETH depeg, exchange outage, oracle desync, liquidation cascade). The **`CapitalAtRiskCeiling` RiskRuleTrigger** is
+the gate that bounds the joint exposure introduced by combining these patterns. The trigger declares:
+
+```python
+CapitalAtRiskCeiling(
+    trigger_type="capital_at_risk_ceiling",
+    max_var_usd=Decimal("25000"),
+    confidence=Decimal("0.95"),
+    scenario_id="pyth_solana_depeg",
+)
+```
+
+A rule with this trigger is scoped per archetype (`RiskRuleScope.PER_ARCHETYPE`); its evaluator queries the family
+aggregator for the archetype's 95% VaR under the named scenario and compares to `max_var_usd`. Breach → `BLOCK` —
+the archetype cannot open new positions until the VaR drops below the ceiling.
+
+The same scope axis carries **per-account** `MaxGrossExposure` + `MaxNetExposure` triggers (closed-union members in
+[risk-rule-taxonomy.md](risk-rule-taxonomy.md#riskruletrigger-uac-canonicalcrosscuttingrisk_rulepy)) that bound the
+account-wide gross/net regardless of how cleverly the capital-efficiency patterns net out. The two layers compose:
+
+1. **Account-level guards** (`MAX_GROSS_EXPOSURE`, `MAX_NET_EXPOSURE`, `MAX_DAILY_LOSS`) — the floor that ANY pattern
+   combination must respect; independent of per-archetype tuning.
+2. **Per-archetype CaR ceiling** (`CAPITAL_AT_RISK_CEILING`) — bounds the tail exposure of each archetype's chosen
+   pattern stack (e.g. Pattern 4 LTV loop + Pattern 10 atomic composite for `carry_recursive_staked`).
+3. **Family aggregate** (`FAMILY_GROSS_EXPOSURE_CAP`, `FAMILY_CAPITAL_AT_RISK_CEILING`, `FAMILY_CORRELATION_WITH_OTHER_FAMILY`)
+   — the **family aggregator** in UTL rolls up per-archetype state into per-family state (sum-of-positions + max
+   drawdown + cross-family correlation matrix from rolling returns) and feeds rule_evaluator at family scope. This is
+   the layer that catches "all LST-family + funding-arb-family share oracle-risk exposure on Pyth Solana" —
+   per-archetype rules would miss the cross-family correlation; the aggregator surfaces it.
+
+Capital-allocation gates compose with these risk-rule pre-flight checks: every order goes through
+[`risk_preflight(order, context)`](risk-preflight-flow.md) BEFORE reaching execution-service. If any of the three
+layers above fires `BLOCK`, the order is rejected at Layer 2; if `SCALE_DOWN` fires (e.g. correlation creeping toward
+the family-level ceiling), the order proceeds at the min-aggregated scale_factor. The capital-efficiency patterns are
+NOT preflight-aware — they're pure structural setups; the rule registry is the gate that bounds their joint exposure.
+
+See [risk-rule-taxonomy.md § `RiskRuleTrigger`](risk-rule-taxonomy.md#riskruletrigger-uac-canonicalcrosscuttingrisk_rulepy)
+for the full closed-union of trigger types + [risk-preflight-flow.md](risk-preflight-flow.md) for the every-order
+integration path.
+
 ## Venue-feature requirements summary
 
 | Pattern               | Venue feature required         |
@@ -277,6 +320,12 @@ Risk-and-exposure-service must model joint risk, not per-strategy. Family-level 
   [../09-strategy/architecture-v2/archetypes/liquidation-capture.md](../09-strategy/architecture-v2/archetypes/liquidation-capture.md)
 - Risk gates:
   [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
+- Risk rule taxonomy (closed-set RiskRuleId / RiskRuleScope / RiskRuleTrigger):
+  [risk-rule-taxonomy.md](risk-rule-taxonomy.md)
+- Risk pre-flight aggregation (every-order path):
+  [risk-preflight-flow.md](risk-preflight-flow.md)
+- Risk-breaker escalation seam (cross-pattern joint risk):
+  [risk-breaker-seam.md](risk-breaker-seam.md)
 
 ## Not in this doc
 

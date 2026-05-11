@@ -16,6 +16,9 @@ monitor and reconciliation health check, they form the autonomous recovery stack
 - `09-strategy/architecture-v2/cross-cutting/risk-gates.md` — health factor thresholds trigger progressive responses
 - `04-architecture/execution-policy.md` — unwind cost estimation used by exit playbooks
 - `03-observability/alerting.md` — alert routing (Telegram, PagerDuty) for safety events
+- [`risk-rule-taxonomy.md`](risk-rule-taxonomy.md) — closed-set vocabulary for Layer 2 pre-flight rules
+- [`risk-preflight-flow.md`](risk-preflight-flow.md) — every-order pre-flight aggregation semantics
+- [`risk-breaker-seam.md`](risk-breaker-seam.md) — risk-controller → breaker escalation event contract
 
 ---
 
@@ -171,6 +174,46 @@ force_open(venue="binance", reason="Multi-leg compensation failed")
 
 Also triggered via `CIRCUIT_OPEN` PubSub event from alerting-service.
 
+### Risk-Rule Fire → Breaker Arm Cross-Link
+
+The circuit breaker has a SECOND transition cause beyond venue-rejection rates: the **risk-controller → breaker
+escalation seam**. When `risk_preflight()` accumulates N consecutive `RiskRuleConsequence.SCALE_DOWN` fires on the
+same `(venue, asset_group)` within a rolling window W, the risk-controller emits
+`BREAKER_ESCALATION_REQUESTED` to `circuit-breaker-commands`. The breaker subscribes and transitions per the
+UAC-declared `RISK_TO_BREAKER_ESCALATION_MAP: dict[(RiskRuleConsequence, int, timedelta), BreakerAction]`.
+
+This is **distinct from venue-rejection-rate-driven transitions** and lives in a separate enum domain — see
+[`risk-breaker-seam.md`](risk-breaker-seam.md) for the full layering contract. Key points:
+
+- The risk-controller emits the event; the breaker subscribes. No direct invocation.
+- Both transition causes are independent — a single SCALE_DOWN at Layer 2 does NOT engage the breaker (only
+  N-in-W does).
+- A breaker already in DEGRADED via venue-rejection-rate is unaffected by a fresh seam event for DEGRADED — the
+  transition is idempotent.
+
+### `BreakerRecoveryMode` — Manual vs Auto-Cooldown (UAC@a7a99b5)
+
+Each `BreakerConfig` carries a `recovery_mode: BreakerRecoveryMode` field with closed set
+`{manual_unkill, auto_cooldown}` plus `cooldown_seconds: int | None` (None when manual). Per-action defaults from
+`BREAKER_RECOVERY_DEFAULTS`:
+
+| `BreakerAction` | Default recovery mode | Rationale                                                                  |
+| --------------- | --------------------- | -------------------------------------------------------------------------- |
+| `BLOCK_NEW`     | `auto_cooldown`       | Least-restrictive; safe to auto-resume when metric clears.                 |
+| `SCALE_DOWN`    | `auto_cooldown`       | Partial unwind has a natural inverse — auto-resume on green guard reads.   |
+| `CANCEL_OPEN`   | `manual_unkill`       | Cancelled orders are gone; auto-recovery doesn't restore them.             |
+| `KILL_ALL`      | `manual_unkill`       | Full unwind needs operator sign-off before any new sizing.                 |
+
+Recovery emits one of two AlertCodes:
+
+- `KILL_SWITCH_AUTO_RECOVERED` — guard predicate green for the cooldown window; carries `recovered_after_seconds` +
+  guard-evaluation trail.
+- `KILL_SWITCH_MANUAL_UNKILLED` — operator action via deployment-UI or `kill-switch unkill` CLI; carries
+  `unkilled_by_operator_id`.
+
+The risk-controller does not observe recovery state — once the breaker auto-recovers or is operator-unkilled,
+subsequent Layer 2 SCALE_DOWNs start a fresh rolling-window for the seam.
+
 ### Multi-Venue Cascade → Kill Switch Escalation
 
 When multiple venues for a strategy are simultaneously OPEN, the system cannot maintain its intended hedging. This
@@ -273,6 +316,9 @@ before any action."
 | `KILL_SWITCH_DEACTIVATED`       | execution-service | INFO     | All services, alerting |
 | `KILL_SWITCH_AUTO_DEACTIVATED`  | execution-service | WARNING  | All services, alerting |
 | `KILL_SWITCH_BLOCKED_STARTUP`   | execution-service | CRITICAL | Alerting               |
+| `KILL_SWITCH_AUTO_RECOVERED`    | execution-service | INFO     | Alerting               |
+| `KILL_SWITCH_MANUAL_UNKILLED`   | execution-service | INFO     | Alerting               |
+| `BREAKER_ESCALATION_REQUESTED`  | risk-and-exposure | WARNING  | Execution circuit breaker |
 | `CIRCUIT_OPEN`                  | execution-service | ERROR    | Alerting, all services |
 | `CIRCUIT_HALF_OPEN`             | execution-service | WARNING  | Alerting               |
 | `CIRCUIT_CLOSED`                | execution-service | INFO     | Alerting, all services |
@@ -297,3 +343,6 @@ before any action."
 - `05-infrastructure/disaster-recovery.md` — infrastructure-level DR (RTO/RPO, rollback procedures)
 - `03-observability/alerting.md` — alert routing rules (Telegram, PagerDuty)
 - `03-observability/lifecycle-events.md` — mandatory event sequences during failures
+- [`risk-rule-taxonomy.md`](risk-rule-taxonomy.md) — Layer 2 vocabulary that feeds the escalation seam
+- [`risk-preflight-flow.md`](risk-preflight-flow.md) — every-order pre-flight aggregation that emits seam events
+- [`risk-breaker-seam.md`](risk-breaker-seam.md) — distinct-enums-with-escalation contract; Q9 ratification 2026-05-10
