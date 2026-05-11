@@ -218,11 +218,19 @@ this plan and **Q4** below (operator decision).
       instance → its own GCS event/log bucket scope → its own service account scoped to that env's projects only.
       Cross-env data leakage is impossible because the deployment-api per env uses its own service account. **No
       additional work**: env-aware UI is shipped. The header env badge (read-only; clicking shows tooltip with resolved
-      env + API base URL + cloud target) is the only operator-visible env signal. **Cross-check under (b+)**: confirm
-      the per-env deployment-api correctly resolves env-tiered bucket names via
-      `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)` once Phase 0c provisioning lands. If the API
-      currently hardcodes flat bucket names anywhere (audit at impl time), fix in same logical unit. status: done
-      (verification only) — note: "deployment UI env-tier shipped pre-2026-05-11; operator's instinct correct."
+      env + API base URL + cloud target) is the only operator-visible env signal. **Cross-check under (b+) — DONE
+      2026-05-11 (slot 4), FINDING below**: the per-env deployment-api does NOT yet resolve via
+      `resolve_bucket_name(...)` — it carries its own flat-shape bucket templates internally (a 5th drift surface; see §
+      Pre-audit manifest → "Layer 5 (reader-side): deployment-api internal bucket templates"). These point at the
+      current FLAT on-disk buckets, so they're CORRECT NOW — but they're the deployment-api half of the code_freeze
+      Phase 2.6 reader-repoint (GAP-2.4.D). **NOT fixed now** (premature repoint to env-tiered names would break the
+      data-status UI — same "Group-A safe-gap doesn't apply" reasoning as Done-def #3 / A6): the data-status UI reads
+      buckets continuously, so its bucket-name source must flip in the SAME window as the flat→env-tiered data
+      migration, not before. **Action taken**: documented as Layer 5 in the pre-audit manifest + added "migrate
+      deployment-api internal bucket templates → `resolve_bucket_name`" to code_freeze GAP-2.4.D (reader-repoint scope).
+      status: done (verification + cross-check audit) — note: "deployment UI env-tier shipped pre-2026-05-11; the
+      deployment-api internal-template finding is deferred-after-code_freeze-Phase-2.6 (reader-repoint), not a Phase-1
+      fix."
 - [ ] **[SCRIPT] P0**. **Phase 0h — sync script (prod → staging/dev) with truncated date window + same-region
       enforcement (Phase 1 code-complete scope ships the script; Phase 3 / post-cutover initial execution).** New script
       `deployment-service/scripts/sync-buckets-prod-to-staging.sh` (and `-to-dev.sh` variant). Per `(kind, asset_group)`
@@ -343,14 +351,25 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       entries (`market-data`, `instruments-store`, `features-calendar`) are env-tiered
       (`market-data-tick-{ag}-${DEPLOYMENT_ENV_SHORT}-{pid}` etc.); the on-disk buckets stay FLAT
       (`market-data-tick-{ag}-{pid}`) until code*freeze Phase 2.6 (2026-05-15→05-19). The 'safe gap' that makes Done-def
-      #2's
-      `features-*`migration OK (nothing writes`features-*`between now and Phase 3, QG is mock) does **NOT**     extend to Group-A — instruments-service backfills + MTDS captures write`market-data`/`instruments-store`buckets     continuously. So a naive`get*bucket_name('market_data',
-      ...)`→`resolve_bucket_name(kind='market-data',
-      ...)`     delegate landing NOW re-points those consumers to non-existent env-tiered names → first-write-failure (the exact     bug this plan exists to prevent). Options: (i) the delegate keeps Group-A domains     (`instruments`/`market_data`/`features_calendar`) returning the FLAT name until Phase 2.6, then flips with the     migration; (ii) defer the whole delegate to the Phase-2.6 window; (iii) confirm instruments-service/MTDS set the     per-domain     `{DOMAIN}\_GCS_BUCKET[*{AG}]` override     to the flat names during the transition (then the override pre-check shields them). Group-B domains     (`features*\*`/`ml*\*`/`execution`/`strategy`)     are unaffected (the safe gap covers them). See § Open questions Q6 — ✅ RESOLVED 2026-05-11 (A6): operator picked     **Option (ii) — defer the ENTIRE delegate (Group A + Group B + all kinds) to code_freeze Phase 2.6**     (2026-05-15→05-19), landing it as the cutover-flip step (`2.6.4`in the Phase-2.6 sub-sequence) alongside     provision → rsync flat→env-tiered → write-pause → flip delegate workspace-wide → archive flat buckets. Rationale:    `get_bucket_name` legacy is NOT in the 6 freeze-gate items (`code_freeze_migrate_backfill_sequencing_2026_05_10.md`
-      § Phase-1 freeze-gate checklist); deferring 4 days is zero-cost; avoids a 4-day half-migrated Group-A-special-case
-      window + the parallel-resolution-path drift it would create (CLAUDE.md 'No double SSOT'). NOT a Phase-1
-      deliverable anymore; carries to the Phase-2.6 owner (slot 4 or new agent). Slot 1: cross-side ping to Ikenna was
-      sent + Q6 was resolved by operator — nothing more to route."
+      #2's `features-*`migration OK (nothing writes`features-*`between now and Phase 3, QG is mock) does **NOT** extend
+      to Group-A — instruments-service backfills + MTDS captures write`market-data`/`instruments-store`buckets
+      continuously. So a
+      naive`get*bucket_name('market_data',     ...)`→`resolve_bucket_name(kind='market-data',     ...)` delegate landing
+      NOW re-points those consumers to non-existent env-tiered names → first-write-failure (the exact bug this plan
+      exists to prevent). Options: (i) the delegate keeps Group-A domains
+      (`instruments`/`market_data`/`features_calendar`) returning the FLAT name until Phase 2.6, then flips with the
+      migration; (ii) defer the whole delegate to the Phase-2.6 window; (iii) confirm instruments-service/MTDS set the
+      per-domain `{DOMAIN}\_GCS_BUCKET[*{AG}]` override to the flat names during the transition (then the override
+      pre-check shields them). Group-B domains (`features*\*`/`ml*\*`/`execution`/`strategy`) are unaffected (the safe
+      gap covers them). See § Open questions Q6 — ✅ RESOLVED 2026-05-11 (A6): operator picked **Option (ii) — defer the
+      ENTIRE delegate (Group A + Group B + all kinds) to code_freeze Phase 2.6** (2026-05-15→05-19), landing it as the
+      cutover-flip step (`2.6.4`in the Phase-2.6 sub-sequence) alongside provision → rsync flat→env-tiered → write-pause
+      → flip delegate workspace-wide → archive flat buckets. Rationale: `get_bucket_name` legacy is NOT in the 6
+      freeze-gate items (`code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase-1 freeze-gate checklist);
+      deferring 4 days is zero-cost; avoids a 4-day half-migrated Group-A-special-case window + the
+      parallel-resolution-path drift it would create (CLAUDE.md 'No double SSOT'). NOT a Phase-1 deliverable anymore;
+      carries to the Phase-2.6 owner (slot 4 or new agent). Slot 1: cross-side ping to Ikenna was sent + Q6 was resolved
+      by operator — nothing more to route."
 - [ ] **[SCRIPT] P1**. Workspace QG step (the inline-`f"gs://{bucket}/..."`/`f"s3://{bucket}/..."` formatter ratchet)
       AST-walks for these formatters; fails CI if any new ones land outside the resolver. **Design (slot 4
       2026-05-11)**: baseline-ratchet shape (count current `gs://`/`s3://` f-strings WITHOUT a `# noqa: gs-uri` marker
@@ -524,6 +543,50 @@ OR is dropped. Pre-audit: `grep -rn "_GCS_BUCKET" --include='*.py' . --exclude-d
 on it before deciding. Then
 `grep -rn "get_bucket_name\|get_instruments_bucket\|get_market_data_bucket\|get_execution_bucket\|get_strategy_bucket\|get_features_calendar_bucket\|BUCKET_PREFIXES"`
 for the full consumer set; basedpyright on each consumer repo after.
+
+### Layer 5 (reader-side): deployment-api internal bucket-template dicts — FINDING 2026-05-11 (slot 4, Phase 0g cross-check)
+
+`deployment-api` is a pure **reader** of the bucket landscape (it lists buckets to render the data-status UI + the
+deploy-flow). It does NOT use `resolve_bucket_name(...)` — it carries its own **flat-shape** bucket-template
+definitions, a 5th drift surface on top of L1-L4. Inventory (slot-4 audit
+`grep -rn 'BUCKET_TEMPLATE\|build_bucket_name\|gs://(instruments-store|market-data|features-)' deployment-api/`):
+
+| #    | Location                                                                       | Shape                                                                                                              | Notes                                                                                                                                                                                                 |
+| ---- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L5.1 | `data_status_service.py:2793` `DataStatusService._BUCKET_TEMPLATES` (ClassVar) | 18 `service → "{prefix}-{cat}-{pid}"` / `"{prefix}-{pid}"` entries, ALL FLAT                                       | The "canonical" internal dict the others mirror. Comment: "mirrors deployment-service ManifestReader."                                                                                                |
+| L5.2 | `data_status_drilldown.py:45` `_BUCKET_TEMPLATES` (module-level)               | 16 entries — a near-copy of L5.1 ("mirrors `DataStatusService._BUCKET_TEMPLATES` without the circular dependency") | **Already drifts from L5.1**: `ml-training-service` → `ml-models-store-{pid}` here vs `ml-training-artifacts-{pid}` in L5.1; `ml-inference` → `ml-predictions-{pid}` vs `ml-inference-results-{pid}`. |
+| L5.3 | `data_query_service.py:42` `build_bucket_name(prefix, ag)`                     | formula `f"{prefix}-{ag.lower()}-{pid}"`                                                                           | A 3rd shape — doesn't model the shared-bucket special-cases (`features-onchain-{pid}`, `features-sports-{pid}`).                                                                                      |
+| L5.4 | `data_status_service.py:2022` `_ROLLUP_BUCKET_TEMPLATE`                        | `"{pid}-data-status-rollups"`                                                                                      | Internal rollup bucket — not in cloud-providers.yaml at all (greenfield item if the rollup bucket should be SSOT'd).                                                                                  |
+| L5.5 | `upcoming_fixtures.py:23` `_SPORTS_BUCKET_TEMPLATE`                            | `"instruments-store-sports-{pid}"` (flat)                                                                          | Hardcoded sports instruments-store name.                                                                                                                                                              |
+| L5.6 | `data_query_service.py:469` + `data_status_drilldown.py:1798,1866`             | 3× `f"gs://instruments-store-sports-{pid}/..."`                                                                    | Hardcoded flat sports-instruments-store name in f-strings (the `# noqa: gs-uri` ratchet baseline captures these).                                                                                     |
+
+**Why NOT migrate these now (deferred-after-code_freeze-Phase-2.6)**: deployment-api reads buckets **continuously**
+(every data-status page load). The on-disk buckets are still FLAT until code_freeze Phase 2.6 provisions the env-tiered
+ones + migrates the data. If deployment-api flipped to `resolve_bucket_name(...)` now, it'd resolve env-tiered names
+that don't exist on disk → the data-status UI shows "Failed to load" for every shard. This is the SAME "Group-A safe-gap
+doesn't apply" reasoning that pushed Done-def #3 (the legacy `get_bucket_name` delegate) to Phase 2.6 per A6 — a
+reader/writer that touches buckets continuously must flip in the SAME window as the data migration, not before.
+
+**Phase 2.6 reader-repoint scope (code_freeze GAP-2.4.D)** — when the env-tiered buckets are provisioned + flat data is
+migrated:
+
+1. Replace L5.1 + L5.2 + L5.3 + L5.5 + L5.6 with
+   `resolve_bucket_name(cloud=get_cloud_provider().value, kind=<kind>, asset_group=<ag>)` calls. The `service → kind`
+   map: `instruments-service`/`corporate-actions` → `instruments-store`;
+   `market-tick-data-service`/`market-data-processing-service` → `market-data`; `features-delta-one-service` →
+   `features-delta-one`; `features-volatility-service` → `features-volatility`; `features-onchain-service` →
+   `features-onchain` (asset_group="defi"); `features-sports-service` → `features-sports`; `features-calendar-service` →
+   `features-calendar`; `features-multi-timeframe-service` → `features-multi-timeframe` (→ alias `features-mtf`);
+   `features-cross-instrument-service` → `features-cross-instrument` (→ alias `features-xinstrument`);
+   `features-commodity-service` → `features-commodity`; `ml-training-service` → `ml-models-store`;
+   `ml-inference-service` → `ml-predictions-store`; `strategy-service` → `strategy-store`; `execution-service` →
+   `execution-store`. (Reconcile the L5.1-vs-L5.2 ml-\* drift in the same pass — the yaml SSOT wins: `ml-models-store` /
+   `ml-predictions-store`.)
+2. L5.4 (`_ROLLUP_BUCKET_TEMPLATE` = `{pid}-data-status-rollups`): decide whether the rollup bucket gets a yaml entry
+   (it's an internal observability bucket, arguably stays internal like the rollup-worker — but if env-tiered, it should
+   be in the yaml too). Operator/Ikenna call (bucket-naming SSOT).
+3. basedpyright deployment-api + run `bash scripts/quality-gates.sh` (deployment-api); smoke the data-status UI against
+   the migrated env-tiered buckets.
 
 ### QG STEP 5.6X design (the `f"gs://..."` ratchet)
 
