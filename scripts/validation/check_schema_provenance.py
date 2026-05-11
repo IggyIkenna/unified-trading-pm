@@ -32,9 +32,15 @@ IMPORT_UAC_UIC_RE = re.compile(
 
 
 def should_exclude_file(rel_path: str) -> bool:
-    """Exclude tests/, .venv, build/, output_schemas.py, __init__.py."""
+    """Exclude tests/, scripts/, .venv, build/, output_schemas.py, __init__.py.
+
+    scripts/ is excluded per CLAUDE.md "Schema provenance" rule ("(scripts/ excluded)") — script-internal
+    report dataclasses (smoke-matrix CellResult/SmokeReport, pipeline-completeness Result/DateStatus/etc.)
+    are NOT domain schemas; pyrightconfig.json + most other QG checks already exclude scripts/. (Harsh slot-2
+    Q1.2, 2026-05-11.)
+    """
     parts = Path(rel_path).parts
-    if "tests" in parts or ".venv" in parts or "build" in parts:
+    if "tests" in parts or "scripts" in parts or ".venv" in parts or "build" in parts:
         return True
     if rel_path.endswith("__init__.py"):
         return True

@@ -415,8 +415,11 @@ log_section "[5/6] CODEX COMPLIANCE"
 V=0
 
 # PRINT_EXCLUDE_GLOBS: per-repo array of --glob exclusions (e.g. Rich console.print, bash template strings)
-# Excluded: console.print (Rich library), python3 -c "...print..." (bash heredoc templates), pprint
-_print_hits=$(rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" "${PRINT_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
+# Excluded: console.print (Rich library), python3 -c "...print..." (bash heredoc templates), pprint;
+#           CLI entry-points (**/cli/main.py, **/cli/_shim.py, **/__main__.py) — argparse --version/--help/dispatcher
+#           output to stdout is correct CLI behaviour, not an event (per Harsh slot-2 Q1.1, 2026-05-11; CLI handlers
+#           under cli/handlers/ are NOT excluded — they must still use log_event()).
+_print_hits=$(rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/cli/main.py" --glob "!**/cli/_shim.py" --glob "!**/__main__.py" "${PRINT_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v 'console\.print\|pprint\|python3 -c\|".*print.*"\|# noqa: qg-print' || :)
 [[ -n "$_print_hits" ]] && { echo "$_print_hits"; log_fail "print() — use log_event() from UEI"; V=$(( V + 1 )); } || log_success "No print()"
 
