@@ -36,6 +36,10 @@ related_codex:
 
 # Simulation scenarios — synthetic topology gaps + price shocks for backtest robustness
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) anti-sequencing audit flags this plan as a Phase 2.2 single-walk discipline risk: if the simulation harness writes synthetic-data parquets into the same buckets as real captures, it could conflict with the GCS bundled migration's "one walk only" rule. **Required mitigation (per code_freeze anti-sequencing audit row)**: confirm simulation outputs go to dedicated `*-sim-*` buckets per `bucket_name_ssot_canonicalisation_2026_05_10.md`'s yaml SSOT (operator decision (b+) 2026-05-11 — env-tier convention extends to ALL bucket kinds, so `*-sim-*` buckets also need env-tier in their names). If sim buckets are not yet isolated, **defer simulation runs to Phase 3** (post-Phase-2-freeze 2026-05-19). Banner-removal owned by this plan when sim-bucket isolation is verified.
+
 > **🟡 SCOPE-COMPRESSED 2026-05-10 (T-13 to cutover)** — operator review of Audit C Finding C-5 (56 todos / 0 done at
 > T-13, well-designed but unstarted) ratified Citadel-grade compression: ship the **MINIMUM VIABLE adversarial gate**
 > that covers the 2 LIVE archetypes (`carry_staked_basis` + `leveraged_funding_arb`) under their 6 highest-likelihood

@@ -471,6 +471,10 @@ isProject: false
 
 # Deployment-UI Lifecycle Tabs — Cross-Cutting Activation Plan
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) introduces a workspace-wide sequencing constraint that this plan touches via the **env-tier dimension** (axis 3 in the overview: dev / staging / prod resolved by domain). Per operator decision (b+) 2026-05-11 in `bucket_name_ssot_canonicalisation_2026_05_10.md`, env-tier resolution is **already shipped at the deployment-UI layer** (resolved from `window.location.hostname`; each env has its own domain → own deployment-api Cloud Run → own GCS bucket scope → own service account scoped to that env's projects only — cross-env data leakage impossible). No additional UI work required for (b+); Phase 0c bucket provisioning (~300-400 new env-tiered buckets) + Phase 0d data migration happen on the data plane, not the UI plane. **BE-AWARE** when reading this plan: the env-tier story per (b+) is data-plane provisioning + sync scripts + region pinning + VM launcher env-awareness, NOT UI surface changes; the UI surface for env was shipped pre-2026-05-11 per `codex/05-infrastructure/deployment-ui-architecture.md` § "Environment tier."
+
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation + features-repo consolidation 2026-05-08**
 >
 > [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 11 adds a NEW

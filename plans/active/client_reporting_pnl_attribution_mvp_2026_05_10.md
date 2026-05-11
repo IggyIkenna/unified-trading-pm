@@ -25,6 +25,10 @@ related_codex:
 
 # Client reporting + PnL attribution MVP
 
+> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
+>
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) introduces a workspace-wide sequencing constraint. Per operator decision (b+) 2026-05-11, all bucket-naming reads/writes route through the yaml SSOT (`deployment-service/configs/cloud-providers.yaml`) via `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`. **Required for this plan**: any client-reporting output bucket (per-client NAV / PnL parquets) + pnl-attribution archetype-bucket output MUST use the resolver, never inline f-string `f"gs://{bucket}/..."` (QG STEP 5.69 ratchet enforces). Env-tier (prod/staging/dev) is in the bucket NAME; archetype + per-client partition is in the PATH. Phase 0c bucket provisioning (~300-400 env-tiered buckets) lands during Phase 2 (2026-05-15→05-19); client-reporting buckets are part of that provisioning if not already covered. **BE-AWARE** when scoping pnl-attribution output paths — coordinate with `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0b yaml additive corrections to ensure the canonical SSOT names every bucket this plan writes.
+
 ## Why this plan exists
 
 May-23 cutover requires that the operator can show — for the live paper-trade demo client — a real-time NAV + PnL +
