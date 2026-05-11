@@ -1459,7 +1459,86 @@ isn't over.
 2's per-item flip is sufficient. Heuristic: if your session updated 3+ phase statuses OR left 2+ items in non-final
 state, ship the scoreboard.
 
-### Why all three halves are non-negotiable
+### Half 4 — Fast-forward your slot branch into `live-defi-rollout` per shippable unit (HARD RULE codified 2026-05-11)
+
+Half 1 pushed your shippable unit to your slot branch on origin. That makes the work **durable**, but **not visible**.
+VMs that pull from `live-defi-rollout`, other slots that branch from `live-defi-rollout`, downstream dep chains, CI
+workflows, and the manifest-concurrency protocol all see your work ONLY after it lands on `live-defi-rollout`. Until
+then, your slot branch is a private fork the rest of the workspace can't consume. **Reference incident 2026-05-11**:
+slot 2 shipped writegate slice (b) end-to-end across 5 repos but every commit sat on `tab/ikennaigboaka/2` for hours
+while other agents (`manifest_schema_final_gate` Phase 2 owner; slice (c) per-service rollout owners) had no way to
+import the new helpers — operator had to explicitly FF-merge slot branches into LDR to unblock the downstream chain.
+The slot branch was durable but invisible; the FF-push to LDR is the discipline that closes the visibility gap.
+
+**The rule.** After every successful push to your slot branch (Half 1), if your slot branch is a clean fast-forward of
+`origin/live-defi-rollout` (`ahead=N, behind=0`), immediately run:
+
+```bash
+git push origin tab/<operator>/<N>:live-defi-rollout --no-verify
+```
+
+This is a **server-side fast-forward push** — origin verifies it's a FF and advances `live-defi-rollout` to your slot
+branch's tip. No local checkout swap, no merge commit, no risk of clobbering foreign agents' work on
+`live-defi-rollout` (FF semantics guarantee monotonic forward motion). The push is rejected cleanly if some other slot
+beat you to it; rebase your slot branch onto the new `origin/live-defi-rollout` (per the conditional-push protocol)
+and retry. The combined cadence is:
+
+```bash
+# All four steps of one shippable unit, in one bash window:
+git push origin tab/<operator>/<N> --no-verify \
+  && git push origin tab/<operator>/<N>:live-defi-rollout --no-verify
+# (Plan-flip + checkbox edit happens in a separate PM commit per Half 2; the FF-push
+# of the plan-flip commit lands the same way — slot-branch push first, then LDR FF.)
+```
+
+For multi-repo shippable units (UAC + UTL + service-consumer in one logical unit), FF-push each repo's slot branch into
+its own `live-defi-rollout`. The dep chain (UAC types → UTL helpers → service consumers) only resolves when each repo's
+LDR is current.
+
+**Why this matters.**
+
+- **Visibility.** Slot branches are scratch space; `live-defi-rollout` is the SSOT for "what code is currently shipped."
+  Leaving work on the slot branch silently breaks downstream consumers' assumption that they have what they need.
+  Reference: slice (b) ship-summary commits sat private for hours until the operator FF'd manually.
+- **VM pull cadence.** VMs pull tarballs built from `live-defi-rollout`. A 4-hour-old slot-branch commit is invisible
+  to every running VM until it merges to `live-defi-rollout` AND the tarball refresh fires
+  (`bash deployment-service/scripts/vm/create-code-tarballs.sh --all`).
+- **Inter-slot consumption.** If slot 6 ships a UAC contract on its slot branch, slot 2 can't import it until slot 6
+  also FF's into `live-defi-rollout`. The dep chain only flows through `live-defi-rollout`, not directly between slot
+  branches. Cross-side coordination (Ikenna ↔ Harsh) likewise routes through LDR — slot branches are operator-private.
+- **CI / main-promotion path.** The eventual `live-defi-rollout` → `main` promotion can only see work that's already on
+  `live-defi-rollout`. Slot branches don't get promoted; the merged work does.
+- **Plan-flip credibility.** A `[x]` checkbox citing a slot-branch SHA is technically "shipped" per Half 2, but a
+  downstream agent reading the plan tries to import the helper, finds it absent on `live-defi-rollout`, and assumes
+  the checkbox is a false flip. FF-push closes the credibility gap.
+
+**When NOT to FF-push** (the failure-mode list — same shape as the conditional-push protocol):
+
+- **Slot branch is behind `live-defi-rollout`** (`behind>0`) — the FF will be rejected. Rebase first per the conditional-
+  push protocol, then re-run the LDR FF.
+- **Slot branch contains unmerged work you're not ready to expose** — rare; if you're parking design-only WIP for
+  cross-side review, hold the LDR FF until the review lands. Annotate the slot's plan-of-record `## Open questions`
+  with the held-back commit SHAs so the next agent doesn't assume it shipped.
+- **You're mid-rebase / mid-conflict-resolution** — finish the rebase first; the slot branch isn't a clean FF until
+  the rebase completes and `git status` is clean.
+- **The work is on a hard-stop boundary** (per CLAUDE.md hard-stop list — wallet private keys / kill-switch arming /
+  version 1.0.0 graduation / destructive ops). FF-push is a regular git operation, not a hard-stop, but if your
+  commit happens to be one of those rare cases, the hard-stop rule wins.
+
+**Anti-patterns** (banned):
+
+- **"I'll FF-push the slot branch at end of session."** End-of-session is too late — other agents have been blind to
+  your work for hours. FF-push per shippable unit, not per session.
+- **"Slot branch is the durable record."** It isn't. The slot branch is a scratch fork. `live-defi-rollout` is the
+  durable record. Reviewers reject any "shipped" claim that cites only a slot-branch SHA when LDR doesn't have it.
+- **"FF-push is a separate task / chore."** It's part of the same shippable unit as Half 1's push. Bundle them.
+- **"The operator will merge later."** They might, but operator-time-to-merge is expensive and unbounded. FF-push is
+  automatic + idempotent + risk-free (FF rejection just means "rebase + retry," same as the slot push).
+- **Force-push to `live-defi-rollout`.** **NEVER** — the FF rule is `--ff-only` semantically (`A:B` server-push form
+  enforces this; the remote rejects non-FF). Don't bypass with `--force` or `--force-with-lease` on the LDR ref. If
+  origin rejects, you're behind; rebase.
+
+### Why all four halves are non-negotiable
 
 - The plan is the operator's read-only view of "what's left." If checkboxes lag the actual state, the operator can't
   trust them, and parallel agents re-do work that's already shipped.
@@ -1471,6 +1550,10 @@ state, ship the scoreboard.
 - Per-shippable-unit pushes are the ONLY way the workspace's parallel-agent + per-VM-pull-from-`live-defi-rollout`
   - manifest-concurrency-protocol model works. A 4-hour uncommitted block is invisible to everything else and blocks no
     work but yours.
+- Per-shippable-unit FF-push of the slot branch into `live-defi-rollout` (Half 4) is the visibility half of the
+  cadence. Without it, Half 1's push lands the work on origin but downstream agents + VMs + CI can't see it. The
+  "Operator manually FF-merges at end of session" workaround that emerged 2026-05-11 is the failure mode this rule
+  codifies away.
 
 This applies to every plan in `plans/active/` and every working session — tier completions, partial flips inside a tier,
 even single-item flips when that's all the session shipped. Reviewers reject sessions that ship code without the
@@ -2292,10 +2375,20 @@ git fetch origin <branch>
 git log --oneline <branch>..origin/<branch>   # incoming commits, if any
 ```
 
-- **Zero incoming → push freely.** Default path; no operator approval needed.
+- **Zero incoming → push freely + FF-push into LDR.** Default path; no operator approval needed. Per the "Commit +
+  Push + Flip Plan Checkboxes" HARD RULE Half 4, the canonical bundled cadence is:
+
+  ```bash
+  git push origin tab/<operator>/<N> --no-verify \
+    && git push origin tab/<operator>/<N>:live-defi-rollout --no-verify
+  ```
+
+  The slot branch push (Half 1) makes the work durable; the LDR FF push (Half 4) makes it visible to VMs / other slots
+  / downstream dep chains / CI. Both happen in the same logical shippable unit.
 - **Any incoming → STOP, do NOT push.** Write a `🟡 BLOCKED` entry in your plan-of-record's `## Open questions` section
   listing your local commits + the incoming ones. Append a one-liner ping in `_agent_pings.md`. Continue with anything
-  you CAN do; main + operator decide rebase / merge / cherry-pick / drop.
+  you CAN do; main + operator decide rebase / merge / cherry-pick / drop. After rebase, re-run BOTH pushes (slot + LDR
+  FF).
 
 **Plan-of-record + Q&A bus.** Every spawned tab has a single **plan-of-record** (e.g. `cefi_master.md`,
 `writegate_honest_coverage.md`, `defi_master.md`) — that's where its todos live, where it flips checkboxes as it ships,
@@ -2399,7 +2492,10 @@ ORCHESTRATION RULES:
   2. Plan-doc Q&A flow — write blockers into <PLAN-OF-RECORD>'s `## Open questions` (status
      🟡 BLOCKED), append ping in _agent_pings.md, continue with what you CAN do.
   3. Conditional push — per shippable unit: commit locally, fetch + check incoming, zero
-     incoming → push, any incoming → flag + escalate.
+     incoming → push slot branch + FF-push slot into live-defi-rollout in one bundled
+     bash window (`git push origin tab/<op>/<N> && git push origin tab/<op>/<N>:live-defi-rollout`
+     per Half 4); any incoming → flag + escalate. NEVER leave a commit on the slot branch
+     without the LDR FF — slot branches are scratch space; LDR is the SSOT.
   4. Plan-flip in same logical unit as code — checkbox flip + `<repo>@<sha>` evidence
      stamped in body, NOT batched at session end.
   5. Findings Triage Discipline (HARD RULE) — case-1-to-5 routing per CLAUDE.md.

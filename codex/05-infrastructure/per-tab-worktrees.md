@@ -350,9 +350,11 @@ mitigations:
 ## Path A vs Path B (mechanism)
 
 Default is **Path A**: `git worktree add` on per-slot branch `tab/<operator>/<N>` rebased from `live-defi-rollout`. The
-slot master pushes its slot branch to origin per shippable unit; merge to `live-defi-rollout` happens as a separate
-shippable-unit step (master runs `git checkout live-defi-rollout && git merge --ff-only tab/<op>/<N> && git push` OR
-ships the merge via the slot branch directly — both work).
+slot master pushes its slot branch to origin per shippable unit (`git push origin tab/<op>/<N>`) AND immediately
+FF-pushes the slot branch tip into `live-defi-rollout` (`git push origin tab/<op>/<N>:live-defi-rollout` — server-side
+FF; remote rejects if non-FF, signalling rebase-needed). The bundled cadence is the canonical Half 1 + Half 4 of the
+[`Commit + Push + Flip Plan Checkboxes`](../../cursor-configs/CLAUDE.md) HARD RULE — codified 2026-05-11 after the
+slice (b) ship-blindness incident where slot-branch commits sat hours private from downstream consumers.
 
 **Path B fallback** (if Path A surprises): `git clone --reference` per slot. Each slot is an independent clone sharing
 `.git/objects` with the operator's primary clone via `--reference`. Each clone is on `live-defi-rollout` directly.
@@ -379,6 +381,39 @@ rebases. The rebase may surface conflicts — especially in PM repo, the always-
 resolution** (see [`plan-aware-merge-resolution.md`](plan-aware-merge-resolution.md)) gives the master agent a
 structured protocol: classify conflict shape (append-section / checkbox-flip / paragraph-rewrite), auto-resolve trivial
 ones, escalate semantic conflicts to the operator with plan-context reasoning.
+
+## Per-shippable-unit FF-push into `live-defi-rollout` (HARD RULE codified 2026-05-11)
+
+Every push to a slot branch MUST be followed immediately by a server-side fast-forward push of the slot tip into
+`live-defi-rollout`. This is the Half 4 codification in
+[`cursor-configs/CLAUDE.md`](../../cursor-configs/CLAUDE.md) § "Commit + Push + Flip Plan Checkboxes" — the
+visibility complement to Half 1's durability push.
+
+**Canonical command** (bundles Half 1 + Half 4 in one bash window):
+
+```bash
+git push origin tab/<operator>/<N> --no-verify \
+  && git push origin tab/<operator>/<N>:live-defi-rollout --no-verify
+```
+
+The `tab/<op>/<N>:live-defi-rollout` form is a server-side FF push — origin verifies it's a fast-forward and advances
+`live-defi-rollout` to the slot tip. **Remote rejects non-FF**: if rejected, your slot branch is behind LDR; rebase
+onto `origin/live-defi-rollout` (existing conditional-push protocol) and retry both pushes.
+
+**Why not auto-merge in a script.** The conditional check `ahead=N, behind=0` is the natural FF guard. A script that
+runs the bundled command on every commit would mostly work — but the rebase-on-failure branch needs human (or agent)
+judgment per plan-aware-merge-resolution. The HARD RULE is the discipline; the bash bundling is the implementation.
+
+**Reference incident 2026-05-11**: slot 2 shipped writegate slice (b) end-to-end across 5 repos but every commit sat
+on `tab/ikennaigboaka/2` for hours while downstream agents had no way to import the new helpers. Operator had to
+explicitly FF-merge slot branches into LDR to unblock the dep chain (`manifest_schema_final_gate` Phase 2 was waiting
+on the UTL `manifest_completeness` helper; slice (c) per-service rollout owners were waiting on the MDPS POC as a
+copy-paste template). The Half 4 rule codifies this away.
+
+**Foot-gun #5 — durable but invisible**. A clean Half 1 push to a slot branch creates a false sense of "shipped": the
+commit is on origin, the plan-flip checkbox is `[x]`, but `live-defi-rollout` doesn't have it yet. Downstream agents
+reading the plan, attempting `git fetch origin live-defi-rollout && grep <new_symbol>`, find no match and treat the
+plan flip as a false claim. The fix is Half 4 — make the work visible at the same moment it becomes durable.
 
 ## Anti-patterns
 
