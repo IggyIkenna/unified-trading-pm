@@ -3336,8 +3336,14 @@ signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Ph
 
 ### Q1 — [ikenna-writegate-slice-b-tab (slot 2), 2026-05-11 ~13:30 UTC] — slice (b) Phase 5.1-5.7 scope vs `manifest_schema_final_gate_2026_05_09.md` Phase 1 — three contradictions block ship-start
 
-**Status**: 🟡 BLOCKED — needs operator/slot-1 direction before any code lands. Composes with codex_audit_2026_05_11.md
-§ Q1 (F3 v8-schema-owner ambiguity) which is already 🟡 BLOCKED on slot-1/operator reconcile.
+**Status**: ✅ RESOLVED 2026-05-11 by operator decision PM@`39ab61e5` — option (b) per the Q's recommended path.
+[`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) is canonical v8 owner; writegate
+slice (b) Phase 5.2 SUPERSEDED (banner on `#### Slice (b)` header at line 2813). Slot 2's re-threaded scope = writegate
+Phase 5.1 (UTL `manifest_completeness` helper) + Phase 5.3-5.4 (MDPS `ohlcv_1h:current` + `:historical` POC) + Phase
+5.5 (deployment-api `/leaf-stats` + deployment-ui DataStatusTab surfaces) + Phase 5.6 (codex + CLAUDE.md) + Phase 5.7
+(ship-gate). Phase-numbering ambiguity in the work-split body lines 116-126 reconciled per work-split line 107: writegate
+plan body's own phase numbering is canonical. `EXPECTED_KNOWN_SOURCE_GAP` value addition routed to
+manifest_schema_final_gate Phase 1 (not slot 2's scope).
 
 The slot-1 work-split task brief for slot 2 ([`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) §
 "Slot 2") names "writegate slice (b) Phase 5.1-5.7 (UAC v8 manifest schema columns: `service_emission_state`,
