@@ -380,6 +380,15 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
       row updated to dispatch-by-PoolShape over PoolMatcher Protocol; cross-reference block cites today's
       codex extensions PM@`3b76a5ef` + `d66b0f9f` + `816aed73`.)
 - [ ] [AGENT] P0. **9E — Update `master_to_live_defi_2026_05_23.md`** Group F items 17 + 18 status rows.
+      **OWNER NOTE 2026-05-12 (slot 6 Day-1 ship)**: master plan is slot-1 owned per work_split row 1
+      ("Main orchestrator + governance + master plan refresh + cross-plan banner audit"). Per Findings
+      Triage Discipline HARD RULE — slot-6 does NOT edit slot-1's owned plan; route via ping ledger
+      instead. Cross-side ping at `_agent_pings.md` PM@`f9df943f` already notifies upstream. Update
+      content suggestion for slot 1: Group F item 17 (paper-trade smoke) "Continuous Verification:
+      consumes new matching engine per defi_simulation_realism_2026_05_10 Phase 2 design (PM@d66b0f9f
+      + ae804766)"; Group F item 18 (batch-vs-live recon) "Continuous Verification: Phase 8C Tenderly-
+      fork live-vs-simulated reconciliation per defi_simulation_realism Phase 8 (sim contract Phase 2A
+      + golden harness Phase 3 design-shipped)". Last verified: 2026-05-12 (design ship).
 
 ## Cross-plan dependencies
 
@@ -390,11 +399,12 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
   governance simulator + Phase 5 yield streams + Phase 7 slashing MC.
 - **`master_to_live_defi_2026_05_23.md`** Group F items 17 + 18 are the cutover gates this plan unblocks.
 
-## DONE-2026-05-15 — slot 6 (Ikenna `ikenna-defi-sim-realism-tab`) Day-1 design ship 2026-05-11
+## DONE-2026-05-15 — slot 6 (Ikenna `ikenna-defi-sim-realism-tab`) Day-1 design ship 2026-05-11 / 2026-05-12
 
-Day-1 directive (`continuation_prompts_2026_05_12.md` § Ikenna slot 6) closed in single cycle ~9 AI-days of
-~14 budgeted; remaining 5 AI-days available for days 2-4 covering items 8+9 carry-forward + Phase 4
-(governance sim) + Phase 5 (yield streams) design when their dependencies clear.
+Day-1 directive (`continuation_prompts_2026_05_12.md` § Ikenna slot 6) closed in single cycle covering **full
+~14 AI-day budget** with directive Phases 1-5 (matrix + sim contract + golden harness + integration spec +
+multi-hop routing) + plan body Phases 4-5 design + Phase 9B+9C+9D codex closures + items 8+9 partial. Plan
+body Phase 9E annotated for slot-1 routing per Findings Triage Discipline.
 
 ### Commit table
 
@@ -408,14 +418,18 @@ Day-1 directive (`continuation_prompts_2026_05_12.md` § Ikenna slot 6) closed i
 | `PM@9bb51d4b` | unified-trading-pm | Plan body Phase 2 design-shipped status block + NEW Phase 2H (Solidly-fork classic-pool matcher; design-shipped). Implementation half remains `- [ ]` for Harsh slot 4. |
 | `PM@816aed73` | unified-trading-pm | Codex Phase 4+5 — NEW "Matching-engine end-to-end integration" (batch-vs-live PoolMatcher.apply() seam; end-to-end flow diagram; slippage tolerance gate; cross-service contracts for position-balance-monitor / strategy-service / risk-and-exposure-service) + NEW "Aggregator / multi-hop routing realism" (route-source by mode; per-leg dispatch; MEV mempool_path tracking; slippage composition multiplicative-not-additive). |
 | `PM@ad6c98e1` | unified-trading-pm | Codex `batch-live-architecture.md` AMMMatcher row updated for PoolShape dispatch (items 8+9 partial codex SSOT currency closure — 1 of ~50 docs spot-checked + corrected today). |
-| `PM@<this commit>` | unified-trading-pm | DONE-2026-05-15 block + Phase 9D `- [x]` flip + Phase 9B "doc-does-not-exist" annotation + items 8+9 status. |
+| `PM@0c4b66f4` | unified-trading-pm | DONE-2026-05-15 block + Phase 9D `- [x]` flip + Phase 9B "doc-does-not-exist" annotation + items 8+9 initial status. |
+| `PM@ae804766` | unified-trading-pm | Codex Phase 4 + Phase 5 — per-protocol governance Governor addresses + Snapshot spaces + subgraphs + Tenderly fork simulator code skeleton + `defi-simulate-proposal` CLI signature + 2-year backfill VM detail; 11-row per-protocol yield-stream capture table (Ethereum beacon / Solana validator / EigenLayer / Symbiotic / Karak / Jito / Ether.fi / Renzo / KelpDAO / Puffer) + per-component model code skeletons (`StakingYieldModel.calibrate_and_sample`, `RestakingAVSModel`, `LRTProtocolFeeModel`, `SeasonalPointsModel`) + composite simulator Phase 5E code. |
+| `PM@30a01f3e` | unified-trading-pm | Plan body Phase 4 + Phase 5 design-shipped status banners + NEW codex `concentrated-liquidity.md` (130-line stub for Phase 9B-NEW: shared CL tick-math invariants + per-implementation addenda for V3 / V4 / Velodrome+Aerodrome Slipstream / Solana CLMM) + Phase 9B `- [x]` flip. |
+| `PM@a39fdee1` | unified-trading-pm | Items 8+9 continuation — codex `tenderly-execution-provider.md` NEW "Downstream consumers" section + codex `restaking-reward-economics.md` NEW "Forward-yield simulation" cross-reference section; Phase 9C `- [x]` flipped. |
+| `PM@<this commit>` | unified-trading-pm | DONE block extension (Day-2 commits) + Phase 9E slot-1-routing annotation. |
 
 ### Items 8+9 status (carry-forward from Harsh slot 6 EOD-2026-05-11)
 
-| Item | Description | Status as of 2026-05-11 EOD slot-6-day-1 | Successor |
+| Item | Description | Status as of 2026-05-12 EOD slot-6-day-1 (full closure) | Successor |
 |---|---|---|---|
 | Item 8 | Full workspace `quality-gates.sh` + basedpyright 22-repo sweep | ⚪ DEFERRED — Day-1 design surface is plan/codex-only (no code edits); slot-worktree `.venv` constraint claim from Harsh notes contradicted by direct check (slot 6 `.venv` dirs present per `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-trading-library/.venv` + `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-api-contracts/.venv`). | Days 2-4 of slot-6 cycle when Harsh slot 4 implementation lands code changes triggering QG runs; or operator re-tasks slot 6 directly to QG sweep. |
-| Item 9 | ~50-doc codex SSOT currency pass per 1.D/1.E/1.F clusters | ⚪ PARTIAL — 1 of ~50 docs refreshed (`batch-live-architecture.md` PM@`ad6c98e1`); 1 doc identified as non-existent (`concentrated-liquidity.md`, captured as Phase 9B-NEW annotation in this plan). 48+ docs remain to spot-check. | Days 2-4 — bounded to the codex docs in 1.D (alerting/risk/DR) / 1.E (DeFi) / 1.F (UI/credentials) clusters per Harsh's brief. Routing to specific docs deferred to next-day sweep. |
+| Item 9 | ~50-doc codex SSOT currency pass per 1.D/1.E/1.F clusters | ⚪ PARTIAL — **3 of ~50 docs refreshed today** (`batch-live-architecture.md` PM@`ad6c98e1` + `tenderly-execution-provider.md` PM@`a39fdee1` + `restaking-reward-economics.md` PM@`a39fdee1`); 1 doc newly **CREATED** (`concentrated-liquidity.md` PM@`30a01f3e`, 130 lines closing Phase 9B-NEW). 46+ docs remain to spot-check days 2-4. | Days 2-4 — bounded to the remaining codex docs in 1.D (alerting/risk/DR) / 1.E (DeFi) / 1.F (UI/credentials) clusters per Harsh's brief. Routing to specific docs deferred to next-day sweep. |
 
 ### Discoveries captured (HARD RULE Capture Discoveries As Plan Todos Immediately)
 
@@ -439,13 +453,26 @@ Day-1 directive (`continuation_prompts_2026_05_12.md` § Ikenna slot 6) closed i
 
 ### Days 2-4 plan (calibrated AI-day budget ~5 remaining)
 
-1. **Phase 4 governance proposal sim design** (~2 AI-days) — codex section + plan body amendments for Aave V3 +
-   Compound V3 + Spark + Lido proposal capture adapter + `GovernanceProposalSimulator` (Tenderly-fork-based) + CLI.
-2. **Phase 5 yield-stream simulator design** (~2 AI-days) — composite per-LST/LRT forward yield distribution
-   (native staking + restaking AVS + LRT fee + seasonal points). Composes with `defi_catalogue_chain_primitives`
-   Phase 3 captures.
-3. **Items 8+9 days-2-4 continuation** (~1 AI-day) — codex SSOT currency pass on 1.D/1.E/1.F clusters; partial
-   workspace QG sweep on UAC + UTL + execution-service (the 3 repos most adjacent to today's design).
+1. **Phase 4 governance proposal sim design** (~2 AI-days) ✅ **CLOSED 2026-05-12 (PM@`ae804766`)** — per-protocol
+   capture detail (Governor addresses + Snapshot spaces + subgraphs for Aave V3 / Compound V3 / Spark / Lido) +
+   Tenderly fork simulator code skeleton + CLI signature + 2-year backfill VM detail. Implementation half remains
+   `- [ ]` for Harsh slot 4.
+2. **Phase 5 yield-stream simulator design** (~2 AI-days) ✅ **CLOSED 2026-05-12 (PM@`ae804766`)** — 11-row
+   per-protocol capture table + per-component model code skeletons (`StakingYieldModel`, `RestakingAVSModel`,
+   `LRTProtocolFeeModel`, `SeasonalPointsModel`) + composite simulator Phase 5E. Implementation half remains `- [ ]`
+   for Harsh slot 4.
+3. **Items 8+9 days-2-4 continuation** (~1 AI-day) ⚪ **PARTIAL CLOSURE 2026-05-12** — 3 of ~50 codex docs spot-checked
+   + refreshed (`batch-live-architecture.md` + `tenderly-execution-provider.md` + `restaking-reward-economics.md`);
+   `concentrated-liquidity.md` newly CREATED (Phase 9B-NEW closed). 46+ docs remain for days 3-4 (1.D/1.E/1.F
+   clusters). Workspace QG sweep on UAC + UTL + execution-service deferred until Harsh slot 4 implementation
+   lands triggering code-change-driven QG runs.
+
+**Day-1 totals**: 14 commits shipped (PM@`16d60480` → PM@`<this>`); ~14 calibrated AI-days delivered (full budget).
+Day-2-4 reserve work surfaces as plan body Phases 3, 6, 7, 8 (lending sim + hedge ratio + slashing MC + backtest
+fidelity validation) — all of which are implementation-heavy + dependency-bound (Phase 3 needs LendingMarketState
+captures from `defi_catalogue` Phase 3; Phase 6 needs jitoSOL/SOL captures; Phase 7 needs `slashing_events` data_type;
+Phase 8 needs Phase 2-7 implementations from Harsh slot 4). Slot-6 productive contribution beyond Day-1 awaits
+Harsh slot 4 ramp-up.
 
 ### Operator-pending decisions surfaced today
 
