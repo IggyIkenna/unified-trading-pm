@@ -147,8 +147,8 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
   - **P0** (merge-model 2026-05-11): NOT routine merging — implementers self-land directly to `live-defi-rollout`
     (rebase-on-push). Slot 1's duty is handling *escalated* PM rebase conflicts (paragraph-rewrite shape) via the
     plan-aware-merge-resolution protocol + enforcing the scheduling rule (no two same-repo tasks in one wave).
-  - **P1**. Stale work-split sweep: archive `work_split_2026_05_08_harsh.md` (3 days old; carryover items already
-    rolled into today's split). _Not yet done — pending operator OK on the file move._
+  - **P1**. Stale work-split sweep: ✅ DONE (by extra-hands @PM`6093b8c5`) — `work_split_2026_05_08_{harsh,ikenna}.md`
+    moved `plans/active/` → `plans/archive/`; carryover items already rolled into today's split.
   - **P1**. Operator Q&A dispatch: route 🟡 BLOCKED Qs from slots 2-6 to operator chat; route decisions back to
     plan-of-record `## Open questions` sections.
 - **Plan-of-record**: this LEDGER + [`../plans/active/work_split_2026_05_11_harsh.md`](../plans/active/work_split_2026_05_11_harsh.md)
@@ -410,6 +410,7 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 | unified-trading-pm | (slot 6) | 6 | codex SSOT audit pass (freeze-gate-9 inventory + F2/F3) + QG static baseline; 2 issue docs filed (`codex_audit_2026_05_11.md` + `qg_sweep_2026_05_11.md`) (PM@`04ed9203`+`e8cbe46b`). |
 | market-tick-data-service / unified-trading-pm | (slot 6) | 6 | Track-D P0-1 fix MTDS@`3da026d` (record_empty reason= + loud manifest-contract exceptions); P0-2 QG STEP 5.67 PM@`a4512ed3` (banned-placeholder-method AST-walk, baseline-ratchet); P0-3 commodity phantom-row classified + owner-routed. |
 | unified-api-contracts / unified-trading-library / instruments-service | (slot 3) | 3 | Wave3x ALL DONE — Track A-UTL+B classifier extensions UTL@`3fbc6b3`+UAC@`7c8b5ad`; Track C reconciler `reconcile_legacy_blank_to_typed_reason.py` instruments-service@`485c57b`; Track D audit (findings doc); Track E 3 stamping helpers UTL@`2ab3685` (PM flips @`553e57c4`+`1f55b265`). |
+| (extra-hands) | `6093b8c5` | — | Stale work-splits `work_split_2026_05_08_{harsh,ikenna}.md` archived `active/`→`archive/` (slot-1 P1 carryover, done by extra-hands); + banner audit + AWS region brief. |
 | harsh_orchestrator + plans | (this commit) | 1 | (b)→(b+) supersession ack'd (Ikenna PM`2d6b131c`); slot-4 re-bootstrap `[main → slot 4]` ping ((b+) ~10-13 AI-day brief); slot-2 Phase 1.2 partial verified + Q2 (4th QG-check FP) ACKED → cross-side-pinged Ikenna; LEDGER slot 4 + slot 2 updated. |
 | unified-trading-pm | `2cacb0eb`+(this) | 1 | Q1.1 + Q1.2 QG-check FP fixes (operator OK'd): `base-service.sh` print()-check excludes `**/cli/main.py`/`**/cli/_shim.py`/`**/__main__.py`; `check_schema_provenance.py` excludes `scripts/` (CLAUDE.md). Both PM-only, no rollout. Q1.3 (`unified_api_contracts.internal` deep-import flag) — offending check not found; routed back to slot 2 for the exact step output. `[main → slot 2]` + cross-side ping + A1 updated. |
 | unified-trading-pm | (this commit) | 1 | Deconflict cross-side ping — Ikenna's Q4=(b)-propagation todo overlaps the Harsh-side half I already shipped @PM`7be8593a`; pinged him to rebase + reconcile/skip those (bucket_name_ssot Q4, code_freeze 2.6, work_split_harsh slot 4, slot-4 ping done by Harsh; his half = ikenna work-split slot 5 anti-seq, aws_migration AWS-side, codex docs, CLAUDE.md key rule). |
