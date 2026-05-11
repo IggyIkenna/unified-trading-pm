@@ -36,3 +36,36 @@ _(swept clean 2026-05-11 by slot 1 main agent — all 8 pings handled: slots 2/3
 [2026-05-11 ~now UTC] ikenna-phase-1d-tab — ROUND 2 STARTED. Phase 1.D continuation: Risk Phase 2 (per-axis registry + family aggregator) + Phase 3 (UTL pre-flight evaluator) + Phase 7 (codex SSOTs) + Alerting P1 tick-staleness migration. 6 sub-agents fanned out in parallel: (D) risk archetype registry, (E) risk venue/account/client/asset_group/global registries, (F) risk family rules + UTL aggregator, (G) risk UTL rule_evaluator + preflight + ≥40 tests, (H) risk codex 2 NEW + 2 UPDATE, (I) alerting tick-staleness UAC+router+codex. Plans: risk_simulations_limits_alerting_2026_05_10.md + alerting_service_live_rules_2026_05_07.md.
 
 [2026-05-11 ~16:00 UTC] ikenna-slot8-phase6-2-mdps-wiring — 🟡 BLOCKED on Q2 in writegate plan: UAC `SERVICE_OUTPUT_POLICIES` MDPS rows have service-name typo (`pipeline` vs `processing`) + `book_snapshot_5` key-shape ambiguity — silently breaks slice (b) POC + blocks Phase 6.2 wiring. Issue doc: plans/active/issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md. Recommended fix (option a + α) in Q. Slot 8 wiring paused; read-only audit continues.
+
+[2026-05-11 ~13:45 UTC] ikenna-writegate-slice-b-tab (slot 2) — ✅ Q1 RESOLVED by operator PM@`39ab61e5` (option b: manifest_schema_final_gate canonical v8 owner; slot 2 scope re-threaded to UTL helper + MDPS POC + deployment-api/ui + codex/CLAUDE.md + ship-gate). Resuming Phase 5.1 (UTL `manifest_completeness` helper) first.
+
+[2026-05-08 21:21 UTC] wave-8-basefc-validationflip — DONE audit; 74 calcs (not 12), paradigm split, 3-step migration;
+NO code shipped (foreign WIP on UTL registry.py + scope multi-day); successor plan needed post-Phase-6; see
+plans/active/issues/basefc_validation_flip_audit_2026_05_08.md (PM@142f7289) [2026-05-09 00:18 UTC]
+instruments-preflight-gate-tab F0 — DONE A.9 + A.10 SHIPPED (UAC@a07711d facade + UAC@8f89ec4 module + UTL@db0f4364
+helper); F2 cefi-available-at-stamping-tab UNBLOCKED —
+`from unified_trading_library.instruments_preflight import run_preflight, PreflightFailedError, UTLManifestReader`; see
+plans/epics/instruments_live_master_2026_05_08.md § A.9 + A.10 [2026-05-10 06:00 UTC] agent-arb-fundrate-c3 — ✅ DONE
+Phase A Commit 3 + A.7; Q11 RESOLVED. Engine 8-step loop at strategy-service@04c0d52; allocator multi-pair branch (b) at
+strategy-service@de9b4b0; PM plan flips at PM@4184c112 + this commit. Phase A complete; Phase B unblocked next. See
+plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md.
+[2026-05-11 ~now UTC] ikenna-phase-1d-tab — STARTED slot 7 (Phase 1.D: alerting + risk + DR). Fanning out 3 sub-agents
+in ONE message: (A) alerting Phase 2.X pattern→event_pattern rename + ML codex; (B) risk Phase 0+1.A-E (RiskRule +
+StrategyFamily + AlertCode 39→45); (C) DR Phase 0+1.A-F (circuit_breaker + kill_switch UAC). Master coordination: I
+commit 6 LIVE_ALERT_RULES entries after Sub-A rename + Sub-B codes land. Plans:
+alerting_service_live_rules_2026_05_07.md / risk_simulations_limits_alerting_2026_05_10.md /
+disaster_recovery_circuit_breakers_2026_05_10.md.
+
+[2026-05-11 ~now UTC] ikenna-slot7-risk-uac (Sub-B) — DONE risk Phase 0+1.A-E + 1.F cross-ref + 2.G. Shipped
+UAC@945ad5d (risk_rule.py + strategy_family.py + risk.py facade + 6 AlertCodes 39→45 + 55 unit tests all green) +
+UAC@dc4c9f0 (ruff fixes). PM@0044e370 (plan flips + banners on 3 cross-plan files + audit findings). FOOT-GUN #1
+INCIDENT in UAC@dc4c9f0 — bundled Sub-C pre-staged test_circuit_breaker_taxonomy.py + test_kill_switch.py + __init__.py
+reorder under Sub-B commit message (no data loss, wrong attribution). Mitigation noted in risk plan § Audit findings
+0.D. Coordinator/Sub-C decide revert-vs-leave. Plan-of-record: risk_simulations_limits_alerting_2026_05_10.md.
+
+[2026-05-11 09:55 UTC] ikenna-live-pipeline-tab — ✅ DONE slot 4 design-ahead. Phase 4/5/6/11/14 design-only stubs
+shipped: UAC@e55651b (FeaturesComputedEvent) + UTL@58bfbbeb (MDPSStreamingAggregator + Asset/CrossCutting features
+runners + 11 contract tests) + deployment-api@7d95dc9 (/api/data-status/live + LiveStatusRow + 4 tests) +
+deployment-ui@f3204ce (LiveDataStatusTab scaffold + 5 vitest tests) + PM@789201d0 (codex extension + plan flips +
+scoreboard). All implementation gated on features_repo_consolidation Phase 7 (Harsh slot 2). See
+plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md § DONE-2026-05-11.
