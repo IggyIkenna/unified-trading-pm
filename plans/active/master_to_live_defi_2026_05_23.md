@@ -948,7 +948,32 @@ verifier.
 `scripts/quality-gates.sh` on every PR. `Tab:<role>` = daily Tab assignment in current work-split. `manual` = operator
 sign-off.
 
-> **🟢 Last refreshed: 2026-05-11 evening by slot 1 main + 2026-05-12 boot sweep top-up + 2026-05-12 mid-cycle slot 8 Group F/G top-up.** Phase 1 freeze-gate (2026-05-15) readiness is in excellent shape. Major shipments today across 7-of-7 spawned Ikenna slots:
+> **🟢 Last refreshed: 2026-05-12 Day-1 EOD by slot 1 main.** Pace = 5× calibrated; 5 of 7 Ikenna implementer slots ✅ FULL-CYCLE-CLOSE on Day 1 of 4-day cycle. Phase 1 freeze-gate (2026-05-15) readiness is excellent + 3 calendar days of capacity now open for SCOPE EXTENSION 2 (Cycle 2 PREP pre-cutover work; see `continuation_prompts_2026_05_12.md` § "🟢 SCOPE EXTENSION 2").
+>
+> **Phase 1 freeze-gate items status (post Day-1 EOD)**:
+> - **#1 Schema columns frozen** ✅ (slot 6 Cycle 0; UAC@`174f401`)
+> - **#2 error_reason taxonomy** ✅ (slot 6 + slot 3)
+> - **#3 37-callsite migration** 🟡 (slot 2 writegate (c) Phase 6.2 MDPS POC ✅ shipped MDPS@`311614a`; slot 3 DAY-2 PipelineMode sweep — operator-approved Q1+Q2 PM@`4c573302` — covers remainder; Day-2 morning landing)
+> - **#4 ServiceEmissionPolicy seed dict locked** ✅ (slot 6 + slot 2)
+> - **#5 available_at per-row stamping** ✅ (slot 3 + slot 4 + slot 8)
+> - **#6 LookaheadBiasError strict-mode features-*** 🟡 (slot 3 Day-2-4 extension covers + slot 4 design dep)
+>
+> **5/6 ✅ + 2 🟡 PARTIAL**. PipelineMode sweep closes item #3 on Day 2 morning. Features-* strict-mode (#6) on track per slot 3+4 coordination.
+>
+> **2026-05-12 Day-1 EOD shipments by slot** (all on origin/live-defi-rollout):
+> - **Slot 2** ✅ defi_catalogue Phases 1B-1H + Phase 2 per-protocol shard-atom + Phase 3 lending-indices spec — 17 commits Days 1-4 (PM@`a1b9d3a9` cycle-close + PM@`95113b7c` DONE block).
+> - **Slot 3** 🟡 Day-1 PM PROGRESS (PM@`3c9eb631`) — Phase 1.E audit + Phase 2.6 cutover dry-run shipped (PM@`df659ed5`+`f07cddc6`); DAY-2 P0 PipelineMode sweep queued.
+> - **Slot 4** ✅ api_keys_wallets full-cycle close (PM@`20bd7964`) — wallet schema UAC@`d721b6a` + R9 sub-(a) RESOLVED CLOUD_KMS_ENCRYPTED for May-23.
+> - **Slot 5** ✅ defi_recursive_borrow FULL CYCLE CLOSE (PM@`71786748`) — Phases 1-11 design batch (PM@`b339a1db`) + Phase 12 backtest scenarios (PM@`03492b96`) + Phase 3 strategy-service factory spec (PM@`158dd8b1`).
+> - **Slot 6** ✅ defi_simulation_realism DONE-2026-05-15 (PM@`0c4b66f4`) — 3 codex sections shipped + Phase 9B concentrated-liquidity.md CREATE (PM@`30a01f3e`+`ae804766`) + Phase 9C continuation (PM@`a39fdee1`).
+> - **Slot 7** ✅ scenarios topology+price-shock DESIGN-SHIPPED (PM@`3daea56a`+`bea269b1`) — Phase 1+2 10-scenario designs.
+> - **Slot 8** ✅ Day-4 EOD CYCLE CLOSE (PM@`3fb30850`) — 11 ship lots / ~12 cal AI-days: manifest Phase 4 + codex_vs_citadel Phase 0+1.J Governance + DART precheck endpoint + audit-log persistence + master plan Group F/G mid-cycle refresh.
+>
+> **Slot status flipped to Day-2 mode**: SCOPE EXTENSION 2 Cycle 2 PREP layer ready for Day-3-4 pickup (bucket provisioning script review + per-VM-prefix rsync sizing + write-pause coordination protocol + cutover communication template + rollback procedure + Phase 12 paper-trade adapter pre-wiring + Cycle 6 design-ahead). No Cycle 2 EXECUTION pulled forward (gate-locked).
+>
+> **Pre-2026-05-12 baseline (preserved for delta context — original 2026-05-11 + 2026-05-12 boot sweep):**
+>
+> Phase 1 freeze-gate items below were sourced from earlier slot Cycle-0 shipments; Day-1 EOD slot status now supersedes:
 >
 > **2026-05-12 mid-cycle slot 8 Group F/G top-up:**
 > - **Item 5 (B · Data correctness)** — STEP 5.68 explicit-pipeline_mode-at-record-calls AST-walk QG check shipped at PM@`4159b7ae` (266 LOC `check_pipeline_mode_explicit_at_record_calls.py` + 207-LOC 11-test suite + 706-LOC bootstrap baseline). Workspace invocation: `OK — 114 baselined; 0 new occurrences`. Phase 4.GREP-VERIFY closed. Last verified: 2026-05-12.
