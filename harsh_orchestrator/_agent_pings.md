@@ -27,4 +27,4 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-_(no active pings — swept 2026-05-11 by slot 1; prior 2026-05-08 D2 entries all resolved/DONE >24h ago. Spawned tabs append STARTED/blocker/DONE one-liners here per the format above.)_
+[2026-05-11 11:35 UTC] harsh-features-consolidation-tab — STARTED slot 2 (plans/active/features_repo_consolidation_2026_05_08.md)
