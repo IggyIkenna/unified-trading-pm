@@ -301,10 +301,18 @@ Co-shipping the enum extension with the doc rewrites closes the doc-code drift.
       the SSOT location per grep audit; `archetype_config.py` only houses `ARCHETYPE_CONFIG_SEED` for kill-switch
       thresholds, see C-enum.2). Both values mapped to `StrategyFamily.CARRY_AND_YIELD` in `ARCHETYPE_TO_FAMILY` (smoke-
       import verified — enum count 53 → 55, zero missing family mappings, both `.value` round-trip cleanly).
-      **DEFERRED — TBD-3rd**: the 11th archetype identification (codex archive sweep + defi_master archetype list
-      cross-reference) remains Stream C scope. Slot 5 did not ship the 3rd because the value is not yet identified;
-      adding it requires the codex sweep which Stream C owns. Once Stream C identifies the 11th, this checkbox flips
-      fully to `[x]`.
+      **TBD-3rd FINDING (slot 5 codex sweep 2026-05-11)**: comprehensive sweep of
+      `codex/09-strategy/architecture-v2/archetypes/` (25 docs) cross-referenced against the StrategyArchetype enum
+      (53 → 55 members) found **ZERO documented-but-not-in-enum archetypes** — every codex archetype doc maps to an
+      existing enum value. Candidates surfaced via grep (`CARRY_AVS_CONTINUOUS` / `CARRY_ISSUER_SEASONAL`) are **PnL
+      attribution sub-factors**, NOT strategy archetypes — they live in `pnl-attribution-service` as a different StrEnum
+      (see `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md:430-431`). The reverse direction
+      (enum-without-doc) has many candidates (MARKET_MAKING_PASSIVE_SPREAD / VOL_* variants beyond VOL_TRADING_OPTIONS
+      / PORTFOLIO_*) but those would be "doc the existing enum value" not "add a new enum value." **Recommendation
+      for Stream C agent**: re-interpret the "8 → 11" framing — given grep evidence, the actual scope may be "ship the
+      2 named recursive-borrow values (DONE)" with no 11th. If a specific 3rd archetype is operationally required
+      pre-cutover, Stream C should name it explicitly (with codex-doc placement) rather than carrying a TBD slot.
+      Once Stream C confirms 2-not-3 OR names a specific 11th, this checkbox flips fully to `[x]`.
 - [ ] [UAC] P0. **C-enum.2**: Ship `StrategyArchetype` enum extension PR: 8 → 11 members. Per-member dataclass spec
       (drawdown / breach / collateral_unit / kill_switch_scope). Tests: every member round-trips through Pydantic; every
       member has a matching factory in strategy-service `engine/strategies/v2/factory.py` (factory stubs OK for members
