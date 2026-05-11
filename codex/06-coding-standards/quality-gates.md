@@ -103,17 +103,18 @@ identifiers. The table below maps each canonical step number to its location in 
 file. Steps without a dedicated section here are enforced inline in `base-service.sh` and documented in CLAUDE.md "Key
 Rules (Quick Reference)" / "Service Infrastructure Requirements".
 
-| STEP | Topic                                  | This doc anchor                                                                                                                | Enforcement file (canonical)                                     | CLAUDE.md cross-ref                                                        |
-| ---- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 5.10 | basedpyright type-check                | [Type Checking Standards](#type-checking-standards-pyrightconfigjson)                                                          | `scripts/quality-gates-base/base-service.sh`                     | "Key Rules — `basedpyright` not `pyright`"                                 |
-| 5.11 | ruff lint + format                     | [Ruff Version Consistency](#ruff-version-consistency-critical) · [Ruff Configuration](#ruff-configuration)                     | `scripts/quality-gates-base/base-service.sh`                     | "Key Rules — flat deps + ruff"                                             |
-| 5.22 | basedpyright suppression baseline      | [STEP 5.22: basedpyright Baseline Suppression](#step-522-basedpyright-baseline-suppression-error-policy--escalated-2026-03-10) | `scripts/quality-gates-base/base-service.sh` + `base-library.sh` | "No `# type: ignore` to hide architectural violations"                     |
-| 5.34 | typed config reloaders                 | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Service Infrastructure Requirements — Typed config reloaders (STEP 5.34)" |
-| 5.61 | ServiceBootstrap presence              | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Service Infrastructure Requirements — ServiceBootstrap (STEP 5.61)"       |
-| 5.62 | Health API + `make_health_router`      | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Service Infrastructure Requirements — Health API (STEP 5.62)"             |
-| 5.64 | bundled-shard cluster validation AST   | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Cluster validation MANDATORY at `record_captured` for bundled shards"     |
-| 5.65 | removed-symbol AST-walk                | [STEP 5.65: Removed-Symbol AST-Walk](#step-565-removed-symbol-ast-walk-citadel--6-extended)                                    | `scripts/quality_gates/check_removed_symbols.py` (driver)        | "Citadel-Grade Planning Standards § 6 Downstream Consumer Updates"         |
-| 5.66 | per-VM shard isolation envvar AST walk | (no section here — see enforcement file)                                                                                       | `scripts/quality-gates-base/base-service.sh`                     | "Per-VM shard isolation for concurrent backfills"                          |
+| STEP | Topic                                  | This doc anchor                                                                                                                            | Enforcement file (canonical)                                         | CLAUDE.md cross-ref                                                                                                         |
+| ---- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 5.10 | basedpyright type-check                | [Type Checking Standards](#type-checking-standards-pyrightconfigjson)                                                                      | `scripts/quality-gates-base/base-service.sh`                         | "Key Rules — `basedpyright` not `pyright`"                                                                                  |
+| 5.11 | ruff lint + format                     | [Ruff Version Consistency](#ruff-version-consistency-critical) · [Ruff Configuration](#ruff-configuration)                                 | `scripts/quality-gates-base/base-service.sh`                         | "Key Rules — flat deps + ruff"                                                                                              |
+| 5.22 | basedpyright suppression baseline      | [STEP 5.22: basedpyright Baseline Suppression](#step-522-basedpyright-baseline-suppression-error-policy--escalated-2026-03-10)             | `scripts/quality-gates-base/base-service.sh` + `base-library.sh`     | "No `# type: ignore` to hide architectural violations"                                                                      |
+| 5.34 | typed config reloaders                 | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Service Infrastructure Requirements — Typed config reloaders (STEP 5.34)"                                                  |
+| 5.61 | ServiceBootstrap presence              | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Service Infrastructure Requirements — ServiceBootstrap (STEP 5.61)"                                                        |
+| 5.62 | Health API + `make_health_router`      | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Service Infrastructure Requirements — Health API (STEP 5.62)"                                                              |
+| 5.64 | bundled-shard cluster validation AST   | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Cluster validation MANDATORY at `record_captured` for bundled shards"                                                      |
+| 5.65 | removed-symbol AST-walk                | [STEP 5.65: Removed-Symbol AST-Walk](#step-565-removed-symbol-ast-walk-citadel--6-extended)                                                | `scripts/quality_gates/check_removed_symbols.py` (driver)            | "Citadel-Grade Planning Standards § 6 Downstream Consumer Updates"                                                          |
+| 5.66 | per-VM shard isolation envvar AST walk | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Per-VM shard isolation for concurrent backfills"                                                                           |
+| 5.67 | banned NaN-placeholder method AST-walk | [STEP 5.67: Banned NaN-Placeholder / Bypass-`record_captured` AST-Walk](#step-567-banned-nan-placeholder--bypass-record_captured-ast-walk) | `scripts/quality_gates/check_banned_placeholder_methods.py` (driver) | "Honest absence vs fake placeholders" + "No double SSOT in data-saving methodology" + "Four-category empty-output decision" |
 
 When a STEP appears in CI output (e.g. `STEP 5.62 FAILED: api/main.py missing make_health_router`), open the enforcement
 file's matching block for the exact assertion + the CLAUDE.md cross-ref for the rationale + the linked anchor here for
@@ -490,6 +491,82 @@ In the same logical unit as the refactor commit (per
   execution-owner SSOT catches runtime drift (e.g. external API changes).
 - QG STEP 5.64 (bundled-shard cluster validation AST-walk) is the implementation precedent — STEP 5.65 follows the same
   `ast.walk()` shape applied to a different symbol-detection problem.
+
+---
+
+## STEP 5.67: Banned NaN-Placeholder / Bypass-`record_captured` AST-Walk
+
+Enforces CLAUDE.md [**Honest absence vs fake placeholders**](../../cursor-configs/CLAUDE.md) +
+[**No double SSOT in data-saving methodology**](../../cursor-configs/CLAUDE.md) +
+[**Four-category empty-output decision**](../../cursor-configs/CLAUDE.md): the `_create_empty_output()`-style
+placeholder methods — which emit NaN-OHLC placeholder bars that LOOK populated and pass the availability manifest as
+`captured` — are **banned** from `base_adapter` and any equivalent base class. So is a direct `*.upload_bytes(...)`
+candle write that bypasses `record_captured` (and therefore the 4-pillar write-gate + the manifest row).
+
+**Reference incidents**: 2026-05-05 MDPS 1440-NaN-bar (1440 `open=high=low=close=None` placeholder bars per day per
+`(venue, data_type)` persisted for years before hand-inspection caught them — the manifest said `captured` the whole
+time); Track D audit 2026-05-11 (`tradfi/ohlcv_passthrough.py:_create_full_day_empty_output` still in the live path;
+`CandleProcessingService` triple-SSOT; legacy `orchestration_writer._write_candles` overriding the canonical
+`record_captured` path by MRO).
+
+### How it works
+
+1. **Banned-name set + candle-write path fragments** — in
+   [`unified-trading-pm/scripts/quality_gates/check_banned_placeholder_methods.py`](../../scripts/quality_gates/check_banned_placeholder_methods.py):
+   `BANNED_METHOD_NAMES = {_create_empty_output, _create_full_day_empty_output, _create_closed_market_candle, _maybe_write_vix_gap_placeholder}`
+   — names that _describe synthesising a fake empty/closed/placeholder candle_. ( `_handle_empty_tick_data` was in the
+   set on day 1 but DROPPED 2026-05-11 PM after writegate Phase 2.A reformed it into the canonical honest-handler that
+   routes through `record_empty_for_shard` — it's now the _recommended_ method name, so flagging it would be noise.)
+   `CANDLE_WRITE_PATH_FRAGMENTS = (orchestration_writer, output_writer, candle_write, candle_processing, ohlcv_passthrough)`
+   — modules whose path indicates a candle-write context.
+2. **Baseline** — `unified-trading-pm/scripts/quality_gates/banned_placeholder_methods_baseline.yaml` is a **SHRINKING
+   ratchet**: every entry is a CURRENTLY-KNOWN occurrence (`status: pending_removal`) the gate tolerates as a WARNING
+   (exit-clean). Per-entry keys: `repo`, `file` (repo-relative), `method` (banned name OR `upload_bytes`), `status`,
+   `successor`. As of 2026-05-11 PM the baseline holds **2** entries (was 8 — writegate Phase 2.A P0-2 surgery deleted 4
+   occurrences and reformed `_maybe_write_vix_gap_placeholder`). REMOVE an entry the moment its successor
+   deletes/renames the occurrence; never ADD entries — a new placeholder method is a bug, not a baseline item.
+3. **AST walker** — parses every `.py` file in scope (excluding `.venv*` / `node_modules` / `build` / `dist` /
+   `__pycache__` / `scripts/` / `tests/` / archived trees) and flags: (a) `def`/`async def <name>` for `<name>` in the
+   banned set; (b) `ast.Call` to `*.upload_bytes(...)` (attribute-method form) in a module whose path matches a
+   candle-write fragment.
+4. **QG wiring** — `scripts/quality-gates-base/base-service.sh` STEP 5.67 invokes the checker scoped to the calling repo
+   (`--workspace-root <ws> --scope <repo> --source-dir <pkg>`). Baselined occurrences → warnings (exit 0); a
+   non-baselined occurrence → ERROR + `file:line` + the baseline's `default_successor` → exit 1. A workspace-wide sweep
+   (no `--scope`) walks every immediate sub-dir with a `pyproject.toml`. If the checker file is absent (older PM
+   checkout), the STEP is skipped clean. Unit tests: `scripts/quality_gates/test_check_banned_placeholder_methods.py`.
+
+### Adding a new banned occurrence? Don't — fix it instead.
+
+There is no "add a new entry" workflow (unlike STEP 5.65's manifest, which grows). If STEP 5.67 fails on YOUR code, the
+correct response is: delete the placeholder method and emit `record_empty(reason=...)` /
+`record_expected_empty(reason=…)` / `record_captured()` per the
+[Four-category empty-output decision](../../cursor-configs/CLAUDE.md), OR (for an `upload_bytes` flag) route the candle
+write through the canonical `CandleWriteMixin._write_candles` → `canonical_writer` → `record_captured` path. The only
+legitimate baseline edit is **removal** of an entry when its `successor` lands, OR (rare) updating the `file:` path of
+an existing baselined occurrence that moved files in the same commit that moves it.
+
+### Maintenance burden + cadence
+
+- The baseline only shrinks. Workspace-wide sweep cadence: every Post-Plan-Phase Codex Audit / Plans Run To Actual
+  Completion pass checks whether any `pending_removal` entry's successor has landed (→ remove the entry).
+- Residual baseline as of 2026-05-11 PM: `orchestration_writer.py:_maybe_write_vix_gap_placeholder` (REFORMED — now
+  routes through `record_empty_for_shard(reason=EXPECTED_KNOWN_SOURCE_GAP)`; only the misnomer name keeps it flagged; a
+  cosmetic rename in writegate Phase 2.A clears it) + `output_writer_service.py:upload_bytes` (DEAD CODE —
+  `OutputWriterService` is not instantiated on any live path; deleting the dead class clears it).
+
+### Composes with
+
+- [**Honest absence vs fake placeholders**](../../cursor-configs/CLAUDE.md) — this STEP is the static enforcement of
+  that rule's "Empty placeholders that look populated are worse than missing data" principle. The runtime defence is the
+  4-pillar `record_captured` write-gate; STEP 5.67 catches the placeholder-method shape at PR time.
+- [**Four-category empty-output decision**](../../cursor-configs/CLAUDE.md) — the banned methods are exactly the
+  anti-pattern that decision replaces (A: `record_empty(reason=…)` / B: `record_failed(UpstreamTimestampBiasError)` / C:
+  `record_failed(MalformedTickFieldError)` / D: zero-activity bars + `record_captured`).
+- STEP 5.65 (removed-symbol AST-walk) + STEP 5.64 (bundled-shard cluster validation AST-walk) are the implementation
+  precedents — STEP 5.67 follows the same baseline-aware-ratchet + `ast.walk()` shape applied to the placeholder-method
+  detection problem.
+- Track D audit findings doc (`plans/active/issues/wave3x_track_d_findings_2026_05_11.md` P0-2) — the audit that seeded
+  the baseline; writegate Phase 2.A is the successor that shrinks it.
 
 ---
 
