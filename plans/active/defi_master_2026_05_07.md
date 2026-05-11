@@ -788,6 +788,16 @@ shipping with the Fork-1 prep batches below).
       (which already owns the bucket-rename + must update every bucket consumer) OR to the features/execution pipeline-
       activation plan when those run end-to-end — whichever lands first. The fix shape is identical to deployment-service@`2a76a2a`:
       add the (then-extant) bucket names to `launch-manifest-consolidator-vm.sh` `BUCKETS` + relaunch the daemon.
+      **Sub-finding (watchdog-dict imprecision, slot-6 2026-05-11)**: `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET`
+      maps `mtds-gas-fees-` / `mtds-lst-rates-` / `mtds-dex-pools-backfill` / `mtds-liquidations-backfill` (+ `mtds-perp-funding-`)
+      to `market-data-tick-defi-{pid}`, but those MTDS handlers actually write the data to the dedicated per-data_type
+      buckets (`gas-fees-{pid}` / `lst-rates-{pid}` / `dex-pools-{pid}` / `liquidations-{pid}` / `perp-funding-{pid}`) via
+      `get_write_bucket_name(<kind>)`. The watchdog uses the mapped bucket only for a "is the VM still writing" progress
+      probe — `market-data-tick-defi-{pid}` is a *valid* (some handlers also write a catalogue index there) but imprecise
+      target. Cosmetic watchdog-progress-check imprecision, NOT a consolidator gap (the consolidator poll-list is now
+      correct vs the authoritative source = `get_write_bucket_name()` callsites + `_BUCKET_CATEGORY_OVERRIDES`). Fix when
+      touching the watchdog dict next: point those 5 prefixes at their dedicated buckets. Operator relaunch of the
+      watchdog VM required to pick it up (per CLAUDE.md VM-Naming-Convention rule).
 - [ ] [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list + non-graceful skip** — its `DEFI_REPOS`/EXTRA_REPOS
       list references `features-onchain-service` (consolidated into `features-service` by the 2026-05-08 features-*
       consolidation); the "SKIP <repo> — not found" path trips `set -e` so a missing repo aborts the whole tarball build
