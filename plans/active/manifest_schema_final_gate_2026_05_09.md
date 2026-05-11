@@ -265,39 +265,57 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
 
 ### Phase 2 — UTL v8 ManifestWriter (May 10-12, PARALLEL with Phase 1/3)
 
-- [ ] [AGENT] P0. Phase 2.A — `unified_trading_library/manifest_writer.py`: extend `record_captured` / `record_empty` /
+- [x] [AGENT] P0. Phase 2.A — `unified_trading_library/manifest_writer.py`: extend `record_captured` / `record_empty` /
       `record_failed` / `record_expected_empty` / `record_expected_unattempted` with 3 new kwargs
       (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) all defaulting to
       `None` for back-compat with existing callsites. Phase 4 sweeps the callsites; the default is REMOVED at end of
-      Phase 4 (explicit-or-fail per the writegate Phase 4 P0 P0 contract).
-- [ ] [AGENT] P0. Phase 2.B — `emission_publisher.py` integration: extend `publish_with_policy` to compute
+      Phase 4 (explicit-or-fail per the writegate Phase 4 P0 P0 contract). **SHIPPED 2026-05-12 slot 6 @UTL@0adea1c6**
+      — 12 unit tests landed in `tests/unit/test_manifest_writer_emission_state.py`.
+- [x] [AGENT] P0. Phase 2.B — `emission_publisher.py` integration: extend `publish_with_policy` to compute
       `service_emission_state` via Phase 1.B `next_state(...)` and pass to ManifestWriter. Wired at the same publish
-      boundary as the existing `EmissionDecision` flow.
-- [ ] [AGENT] P0. Phase 2.C — Reader fallback: `manifest_reader_fallback.py` tolerates v7 (3 columns missing) for ≤30d
+      boundary as the existing `EmissionDecision` flow. **SHIPPED 2026-05-12 slot 6 @UTL@001e8892** — `EmissionDecision`
+      extended with `service_emission_state` + `last_emission_decision_at`; mirrored into event metadata for stream-grep
+      observability. 6 new tests under `tests/events/test_emission_publisher.py`.
+- [x] [AGENT] P0. Phase 2.C — Reader fallback: `manifest_reader_fallback.py` tolerates v7 (3 columns missing) for ≤30d
       post-Phase-7. Emit `READER_BACKFILLED_V8_COLUMNS_AS_NULL` event per row. After 30d zero-event window, fallback
-      deleted (workspace "no double SSOT" rule).
-- [ ] [AGENT] P0. Phase 2.D — NEW `manifest_migrations/v7_to_v8.py` helper: walks canonical
+      deleted (workspace "no double SSOT" rule). **SHIPPED 2026-05-12 slot 6 @UTL@5f2aacd6** — implemented inline in
+      `manifest_writer.read_availability_index()` via `_V8_COLUMNS` + `_backfill()` (no separate module needed; reader
+      lives next to writer). 30d cutover counter starts at Phase 7 ship date.
+- [x] [AGENT] P0. Phase 2.D — NEW `manifest_migrations/v7_to_v8.py` helper: walks canonical
       `_index/availability_index.parquet` per bucket, adds 3 NULL columns to every existing row, writes per-VM shard at
-      `_index/per_vm/v7_to_v8_migrate_{VM_NAME}.parquet`. Per-VM shard isolation MANDATORY.
+      `_index/per_vm/v7_to_v8_migrate_{VM_NAME}.parquet`. Per-VM shard isolation MANDATORY. **SHIPPED 2026-05-12 slot 6
+      @UTL@bae1ecb9** — `migrate_v7_to_v8()` + `migrate_v7_to_v8_buckets()` + `V7ToV8MigrationResult` +
+      `MissingVMShardIsolationError` guard. 12 unit tests under `tests/unit/test_manifest_migrations_v7_to_v8.py`.
 - QG: UTL quality-gates.sh clean. **Done-definition**: `unified-trading-library@<sha>` shipped + 11+ unit tests +
-  back-compat with v7 rows.
+  back-compat with v7 rows. **STATUS — 4/4 sub-items ✅; UTL refs above; 30+ unit tests landed total.**
 
 ### Phase 3 — Cross-asset rescan launcher (May 9-11, PARALLEL with Phase 1/2)
 
-- [ ] [AGENT] P0. Phase 3.A — NEW `deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh` per the spec at
+- [x] [AGENT] P0. Phase 3.A — NEW `deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh` per the spec at
       `manifest_cross_asset_rescan_design_2026_05_08.md` lines 113-127 (singleton-lock, same-region zone, per-VM shard
       isolation envvars, `WORKERS=64` + `HTTP_POOL_SIZE=128`, tarball-default + tarball-from-local flag). Mirrors
-      `launch-sfi-forward-poll.sh` precedent.
-- [ ] [AGENT] P0. Phase 3.B — Add `cross-asset-rescan-` prefix to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict.
+      `launch-sfi-forward-poll.sh` precedent. **SHIPPED 2026-05-12 slot 6 @deployment-service@19fad8c** — 184-line
+      launcher with singleton-lock + `--apply` toggle + `cefi|defi|tradfi|sports|prediction|cross_asset_all` dispatch.
+- [x] [AGENT] P0. Phase 3.B — Add `cross-asset-rescan-` prefix to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict.
       Relaunch watchdog VM after dict update (running watchdog only fetches Python at boot per CLAUDE.md "VM Naming
-      Convention" rule).
-- [ ] [AGENT] P0. Phase 3.C — Register launcher in deployment-api `_SERVICE_LAUNCHER_SCRIPTS` registry so Deploy-Missing
-      UI can surface it.
-- [ ] [AGENT] P0. Phase 3.D — NEW `instruments-service/scripts/cross_asset_rescan.py` (Harsh Tab 4 scope per rescan
+      Convention" rule). **SHIPPED 2026-05-12 slot 6 @deployment-service@19fad8c** (same commit as 3.A) — prefix
+      registered as `None` (heartbeat-only; rescan VM writes to canonical per-asset-group manifest, not a dedicated
+      shard bucket). **DEFERRED — operator runs watchdog VM relaunch** (`gcloud compute instances delete
+      vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet` then `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`)
+      before the first rescan VM launch — running watchdog only fetches Python at boot.
+- [x] [AGENT] P0. Phase 3.C — Register launcher in deployment-api `_SERVICE_LAUNCHER_SCRIPTS` registry so Deploy-Missing
+      UI can surface it. **SHIPPED 2026-05-12 slot 6 @deployment-api@c8a1cd4** — `cross-asset-rescan` slug added.
+- [x] [AGENT] P0. Phase 3.D — NEW `instruments-service/scripts/cross_asset_rescan.py` (Harsh Tab 4 scope per rescan
       design line 22, but if Harsh's queue can't fit it by May 11 a fresh sub-agent picks it up). Implements class A
-      auto-flips + class C triage routing per rescan design § "Rescan flip schema".
+      auto-flips + class C triage routing per rescan design § "Rescan flip schema". **SHIPPED 2026-05-12 slot 6
+      @instruments-service@a264f21** — 333-line orchestrator on top of existing `reconcile_phantom_manifest_rows_all.py`
+      (handles 5 drift axes). Adds `cross_asset_all` dispatch + per-VM shard tag from `VM_NAME` + `VM_APPLY_FLIPS` gate
+      + triage JSONL streaming to `gs://{pid}-rescan-triage/{run_id}/triage.jsonl` + lifecycle events
+      (RESCAN_RUN_STARTED / RESCAN_SHARD_STARTED / RESCAN_SHARD_COMPLETED / RESCAN_SHARD_FAILED / RESCAN_RUN_STOPPED /
+      RESCAN_RUN_FAILED).
 - QG: deployment-service + instruments-service quality-gates.sh clean. **Done-definition**: launcher script + Python
-  script + watchdog registration shipped.
+  script + watchdog registration shipped. **STATUS — 4/4 sub-items ✅ (3.B watchdog relaunch is operator's standard
+  follow-up; not a code item).**
 
 ### Phase 4 — Workspace-wide consumer sweep (May 10-12, PARALLEL across 8 repos)
 
@@ -593,6 +611,37 @@ this plan.
 
 This is the standard Model B dispatcher pattern; codifying here so the responsibility is unambiguous across multi-tab
 parallel sessions on this plan.
+
+## DONE-2026-05-12 — slot 6 Phase 2 + Phase 3 ship-out
+
+Slot 6 (Ikenna `tab/ikennaigboaka/6`) shipped both **Phase 2 (UTL v8 ManifestWriter)** + **Phase 3 (cross-asset rescan
+launcher + script + watchdog + deployment-api registry)** end-to-end across 4 repos. Phase 1 (UAC v8 schema-bump +
+`next_state()` resolver + EXPECTED_KNOWN_SOURCE_GAP) had been shipped by slot 8 earlier the same day (UAC@`7be6bd5`);
+slot 6 absorbed via rebase + moved forward.
+
+| Phase  | Repo                | Commit                                                  | Highlights                                                                                                                                                                  |
+| ------ | ------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.A    | unified-trading-library | [`0adea1c6`]                                            | `AvailabilityRecord` + 3 new fields + 5 `record_*` methods extended + 12 unit tests.                                                                                          |
+| 2.B    | unified-trading-library | [`001e8892`]                                            | `EmissionDecision` extended + `publish_with_policy()` stamps v8 state via Phase 1.B `next_state()` + 6 new tests.                                                            |
+| 2.C    | unified-trading-library | [`5f2aacd6`]                                            | `read_availability_index()._backfill()` adds v8 cols as NULL when missing + emits `READER_BACKFILLED_V8_COLUMNS_AS_NULL` event.                                              |
+| 2.D    | unified-trading-library | [`bae1ecb9`]                                            | `manifest_migrations/v7_to_v8.py` — per-VM shard isolation guard + `MissingVMShardIsolationError` + `V7ToV8MigrationResult` + 12 unit tests.                                  |
+| 3.A/B  | deployment-service  | [`19fad8c`]                                             | `launch-cross-asset-rescan-vm.sh` — singleton-lock, `WORKERS=64`, `HTTP_POOL_SIZE=128`, asia-northeast1-c, `--apply` toggle. Watchdog dict registered (`cross-asset-rescan-`). |
+| 3.C    | deployment-api      | [`c8a1cd4`]                                             | `_SERVICE_LAUNCHER_SCRIPTS["cross-asset-rescan"]` slug for Deploy-Missing UI.                                                                                                |
+| 3.D    | instruments-service | [`a264f21`]                                             | `scripts/cross_asset_rescan.py` — 333-line orchestrator on top of existing reconciler + `cross_asset_all` dispatch + triage JSONL + lifecycle events.                         |
+
+**Operator follow-up:**
+
+- Phase 3.B watchdog relaunch (standard `gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c
+  --quiet` + `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh` to pick up the new prefix) before the
+  first cross-asset-rescan VM launch.
+- Tarball refresh (`bash deployment-service/scripts/vm/create-code-tarballs.sh --all`) so the rescan VM at boot reads
+  the new instruments-service `cross_asset_rescan.py` + the new launcher.
+- Phase 8 (cross-asset rescan triage review May 15) consumes the `gs://{pid}-rescan-triage/{run_id}/triage.jsonl`
+  output once the first rescan VM run completes.
+
+**Scoreboard — Phase 4-13 status post slot-6 ship:** unchanged; Phase 4 (workspace-wide consumer sweep) still
+DEFERRED-AFTER Phase 2 (now unblocked since 2.A's `None` defaults preserve back-compat for the gradual callsite sweep);
+Phase 5 (bundled migration script) and Phase 7 (gcs Phase 3 bundled walk) remain operator-gated per the plan body.
 
 ### features-consolidation parallel tab — DRAFTED (paste-ready spawn prompt below)
 
