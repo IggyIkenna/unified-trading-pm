@@ -1495,6 +1495,59 @@ else
     log_success "STEP 5.67: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# STEP 5.69 — inline f"gs://..." / f"s3://..." cloud-URI formatter ratchet
+#
+# (5.68 is reserved by `available_at_lookahead_bias_completion_2026_05_08.md`
+# for the feature-compute lookahead-callsite check — not yet implemented.)
+#
+# Enforces CLAUDE.md "Bucket-name SSOT (b+)": every bucket lookup goes through
+# `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`
+# (or `resolve_bucket_uri(...)` for a full URI) — never an inline f-string that
+# builds a `gs://` / `s3://` URI by hand. Scattering inline `f"gs://{bucket}/..."`
+# formatters across services is how the workspace ended up with the bucket-name
+# triple-drift the `bucket_name_ssot_canonicalisation_2026_05_10.md` plan exists
+# to collapse (yaml SSOT vs per-family config.py template vs UTL resolver vs
+# deployment-api's own internal templates — pre-audit manifest "Layer 1-5").
+#
+# The check runs `check_inline_bucket_uri.py` against the calling repo's source
+# (scripts/ + tests/ excluded). It is a SHRINKING per-repo COUNT ratchet:
+# `inline_bucket_uri_baseline.yaml` records the CURRENTLY-KNOWN count of inline
+# `f"gs://...`/`f"s3://...` formatters (those WITHOUT a `# noqa: gs-uri` marker —
+# the "grandfathered, intentional" exemption) per repo. A repo whose live count
+# EXCEEDS its baseline fails CI (a NEW inline formatter landed — route it through
+# `resolve_bucket_uri()` or mark it `# noqa: gs-uri` with a one-line reason). A
+# repo BELOW its baseline → WARNING (ratchet the baseline DOWN: re-run
+# `--update-baseline`). Repos not in the baseline default to count=0 (zero tolerance).
+#
+# v1 is grep-based (the formatter is always a single-line f-string in practice);
+# v2 hardening = an AST-walk distinguishing `f"gs://{x}/..."` from a
+# `resolve_bucket_uri(...)` call + ignoring docstrings/comments (same shape as
+# STEP 5.65's AST-walk). v1 ships first. SSOT: bucket_name_ssot_canonicalisation_2026_05_10.md
+# Done-def #5 + § "QG STEP 5.6X design".
+_INLINE_URI_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py"
+if [ -f "$_INLINE_URI_CHECKER" ]; then
+    _IU_REPO=$(basename "$REPO_ROOT")
+    _IU_WS="$(dirname "$REPO_ROOT")"
+    _IU_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _IU_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_INLINE_URI_CHECKER" \
+            --workspace-root "$_IU_WS" --scope "$_IU_REPO" "${_IU_SRC_ARG[@]}" >/tmp/inline_bucket_uri_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/inline_bucket_uri_qg.log 2>/dev/null; then
+            log_warn "STEP 5.69: $(grep -c '^\[WARN\]' /tmp/inline_bucket_uri_qg.log) repo(s) BELOW the inline-URI baseline — ratchet inline_bucket_uri_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "STEP 5.69: No new inline gs://|s3:// f-string URI formatters (baseline-ratchet, bucket-name SSOT (b+))"
+        fi
+    else
+        log_fail "STEP 5.69: NEW inline f\"gs://...\" / f\"s3://...\" cloud-URI formatter(s) above the per-repo baseline. Route through unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_uri(...) / resolve_bucket_name(...), or add '# noqa: gs-uri' with a one-line reason (CLAUDE.md 'Bucket-name SSOT (b+)'):"
+        cat /tmp/inline_bucket_uri_qg.log
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/inline_bucket_uri_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py --workspace-root $_IU_WS --scope $_IU_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.69: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)

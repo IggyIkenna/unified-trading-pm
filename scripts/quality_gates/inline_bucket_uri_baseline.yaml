@@ -1,0 +1,71 @@
+# Baseline for QG STEP 5.69 — inline `f"gs://..."` / `f"s3://..."` cloud-URI formatter ratchet.
+#
+# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of inline
+# `f"gs://...`/`f"s3://...` formatters (WITHOUT a `# noqa: gs-uri` marker) the
+# gate tolerates in that repo's service source (scripts/ + tests/ excluded). A
+# repo whose live count EXCEEDS its baseline fails CI — a NEW inline formatter
+# landed; route it through `unified_trading_library.cloud_interface.bucket_naming.
+# resolve_bucket_uri(...)` or add `# noqa: gs-uri` with a one-line reason.
+#
+# LOWER a count (re-run `--update-baseline`) the moment a migration removes inline
+# formatters — e.g. when the to-be-removed inline bucket-name templates land in
+# code_freeze Phase 2.6 (bucket_name_ssot_canonicalisation_2026_05_10.md Done-def
+# #3 / GAP-2.4.D deployment-api reader-repoint). NEVER raise a count.
+#
+# Repos not listed default to count=0 (zero tolerance — any inline formatter fails).
+#
+# SSOT for WHY: CLAUDE.md "Bucket-name SSOT (b+)" + bucket_name_ssot_canonicalisation_2026_05_10.md
+# (pre-audit manifest Layers 1-5 + "QG STEP 5.6X design"). The `# noqa: gs-uri` marker
+# convention is documented in execution-service/BYPASS_AUDIT.md + strategy-service/pyproject.toml.
+note: 'Seeded 2026-05-11 (slot 4) — bucket_name_ssot Done-def #5.'
+repos:
+  alerting-service:
+    count: 0
+  batch-live-reconciliation-service:
+    count: 7
+  client-reporting-api:
+    count: 0
+  deployment-api:
+    count: 27
+  deployment-service:
+    count: 3
+  deployment-ui:
+    count: 0
+  execution-service:
+    count: 33
+  features-service:
+    count: 2
+  ibkr-gateway-infra:
+    count: 0
+  instruments-service:
+    count: 1
+  market-data-processing-service:
+    count: 0
+  market-tick-data-service:
+    count: 0
+  ml-inference-service:
+    count: 0
+  ml-training-service:
+    count: 0
+  pnl-attribution-service:
+    count: 0
+  position-balance-monitor-service:
+    count: 0
+  risk-and-exposure-service:
+    count: 0
+  strategy-service:
+    count: 2
+  system-integration-tests:
+    count: 0
+  trading-agent-service:
+    count: 0
+  unified-api-contracts:
+    count: 5
+  unified-trading-api:
+    count: 0
+  unified-trading-library:
+    count: 23
+  unified-trading-pm:
+    count: 0
+  unified-trading-system-ui:
+    count: 4
