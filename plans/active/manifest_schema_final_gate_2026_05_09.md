@@ -408,6 +408,22 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       [`footystats_pipeline_mode_gap_2026_05_12.md`](issues/footystats_pipeline_mode_gap_2026_05_12.md).
 - [ ] [AGENT] P0. Phase 4.FEATURES — features-service (post-consolidation) + remaining features-\* repos pass propagated
       `pipeline_mode` + emission-policy hooks. **GATED on features-consolidation merge by May 16.**
+      **Pre-audit shipped 2026-05-12 slot 8** via Phase 4.GREP-VERIFY AST-walk: 6 callsites enumerated, concentrated
+      in 2 files (mechanical sweep, ~30min once gate lifts):
+      - `features_service/calendar/engine/calendar_orchestrator.py:241` — `record_failed(...)` (calendar orchestrator)
+      - `features_service/calendar/engine/calendar_orchestrator.py:264` — `record_empty(...)` (calendar orchestrator)
+      - `features_service/sports/cli/handlers/batch_handler.py:474` — `record_empty(...)` (sports batch handler)
+      - `features_service/sports/cli/handlers/batch_handler.py:487` — `record_failed(...)` (sports batch handler)
+      - `features_service/sports/cli/handlers/batch_handler.py:538` — `record_empty(...)` (sports batch handler)
+      - `features_service/sports/cli/handlers/batch_handler.py:547` — `record_failed(...)` (sports batch handler)
+
+      Pipeline-mode mapping per existing UAC SOURCE_PRIORITY: calendar paths likely `BATCH_INSTRUMENTS_SERVICE`
+      (self-published catalog rows); sports paths inherit from upstream MTDS source (`BATCH_API_FOOTBALL` for
+      footystats workaround; `BATCH_TRANSFERMARKT` for player stats; `BATCH_UNDERSTAT` for xG; etc.) — per slot 2's
+      Phase 4.INSTRUMENTS mapping table at `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`. All 6 occurrences are baselined as
+      `pending_phase_4_features` in
+      [`scripts/quality_gates/pipeline_mode_explicit_baseline.yaml`](../../scripts/quality_gates/pipeline_mode_explicit_baseline.yaml)
+      pending post-consolidation sweep.
 - [x] [AGENT] P0. Phase 4.DEPLOYMENT-API — manifest read endpoints surface v8 columns; data-status drilldown renders
       `service_emission_state` badges (4 states).
       **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-deployment-api-ui` sub-agent**:
