@@ -258,7 +258,7 @@ rows entirely (they're not violations; the QG-check fixes land separately via Ik
   CLAUDE.md "Citadel Import Rules" inline as comment. Slot 2 can now proceed Phase 1.2 row 7 — the 3 `.internal`
   imports stay AS-IS (correct per CLAUDE.md); QG green for that row.
 
-So: Q1.1 + Q1.2 are clean now; Q1.3 needs your evidence or is a non-issue. Either way those rows are NOT slot-2 work —
+So: Q1.1 + Q1.2 are clean now; Q1.3 is now ✅ FIXED (Ikenna PM`d2a553ed`). All 4 QG-check FPs resolved. Those rows are NOT slot-2 work —
 proceed Phase 1.2 on the real-violation rows.
 
 ### Q2 — [harsh-features-consolidation-tab, 2026-05-11 08:24 UTC] — 4th QG-check false positive: `imports-inside-functions` matches docstring example code
