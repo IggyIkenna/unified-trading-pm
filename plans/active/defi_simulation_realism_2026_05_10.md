@@ -157,6 +157,21 @@ Owner: harsh + parallel agents per shape.
 Success criterion: matching engine `amm.py` extends to model each `PoolShape` exactly. Backtest fill price within ~5bps
 of on-chain real fill at the same block (verified via Tenderly fork comparison).
 
+> **Day-1 slot-6 design ship 2026-05-11 (PM@`d66b0f9f`)**: codex
+> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Simulation
+> contract — unified pre-trade quote interface" + § "Per-shape sample pools + golden fixture seeds" ship
+> the Phase 2 design half: `PoolMatcher` Protocol (quote/apply/spot_price/snapshot methods); per-pool-class
+> module map (`curve.py` / `balancer.py` / `solana_clmm.py` / `solidly_fork.py` / `aggregator.py` — all NEW
+> for Phase 2C-H); `engine.py:_amm_match_impl` dispatcher refactor target; per-shape sample pool addresses
+> + validation thresholds (10-row matrix). **Critical finding**: V2 (`amm.py:52`) + V3 (`amm.py:259`) + V4
+> (`amm.py:403`) pool classes ALL EXIST — Phase 2A/B are Protocol-conformance refactors + dispatch wire-up,
+> NOT greenfield builds. **Implementation half remains `- [ ]` for Harsh slot 4** per cross-side handshake
+> (`plans/active/_agent_pings.md` PM@`f9df943f`). **NEW PHASE 2H** (added Day-1 2026-05-11): Solidly-fork
+> classic-pool matcher (Velodrome + Aerodrome shared via `(chain, factory)` discriminator; cubic stable +
+> xy=k volatile branches via `stable: bool` pool flag) + optional `SOLIDLY_CL_FORK` matcher for Slipstream
+> V3-tick CL pools. Validation: ≥ 20 swaps Velodrome + ≥ 20 swaps Aerodrome within 5 bps each (per codex
+> matrix row).
+
 - [ ] [AGENT] P0. **2A — Uniswap V3 tick-bucket integration**. Extend `matching_engine/amm.py` with
       `UniswapV3Pool.swap_exact_input()` integrating across all ticks crossed (per `getAmountsForLiquidity` formula).
       Source per-block tick bitmap from Phase 3 captures of catalogue plan. Validation: ≥ 100 historical Tenderly-fork
