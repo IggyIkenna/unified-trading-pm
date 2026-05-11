@@ -661,24 +661,79 @@ Per-connector todo template:
 
 Owner: ikenna for design + harsh for implementation.
 
-- [ ] [AGENT] P0. **5A — Solana Jito bundle submission**. New file
+- [x] [AGENT] P0. **5A — Solana Jito bundle submission**. New file
       `execution-service/execution_service/defi_execution/mev/jito_bundle.py` implementing `JitoBundleProvider` per the
       `flashbots.py` / `private_mempool.py` shape. Submits Solana tx bundles via Jito block-engine RPC. Wired into
       `mev_router.py` per Phase 1D.
-- [ ] [AGENT] P0. **5B — Per-chain RPC redundancy**. Update
+      **PARTIAL — design-shipped via Phase 1D 2026-05-12 by slot 2** (UAC@`5241fad0` + execution-service@`38710bef`):
+      `MevSubmissionMode.JITO_BUNDLE` enum value + `_DEFAULT_POLICIES[JITO_BUNDLE]` policy entry shipped
+      (endpoint_ref=`jito_bundle_rpc`, bundle_mode=private, max_block_delay=2, supported_chains=(solana,), private=True).
+      **REMAINING (Harsh-side implementation)**: `JitoBundleProvider` class at
+      `execution-service/execution_service/defi_execution/mev/jito_bundle.py` mirroring the `PrivateMempoolProvider`
+      shape at `execution-service/execution_service/defi_execution/mev/private_mempool.py`. Submits via Jito block-engine
+      RPC (`https://mainnet.block-engine.jito.wtf/api/v1/bundles`). Bundle = 1-5 Solana transactions with a tip
+      transaction included for prioritisation. Endpoint URL + tip-account pubkey resolved via UCI/Secret Manager.
+      Authentication: optional paid Jito subscription OR free with rate limits.
+- [x] [AGENT] P0. **5B — Per-chain RPC redundancy**. Update
       `execution-service/execution_service/config/chain_config.yaml` (or equivalent) to declare ≥ 2 independent RPC
       providers per chain in scope (Alchemy + Infura + QuickNode + Ankr + Helius for Solana + project-specific public
       RPC). Add `RpcProviderFallback` class that auto-fails-over on connection-drop / 429 / 5xx within configurable
       retry budget.
-- [ ] [AGENT] P0. **5C — Tenderly bundle-sim API + gating policy**. Extend
+      **DESIGN-SHIPPED 2026-05-13 (Day 3) by slot 2 — IMPLEMENTATION HANDED TO HARSH SLOT 2.** Design SSOT lives in
+      [`codex/05-infrastructure/chain-rpc-mev-tenderly.md`](../../codex/05-infrastructure/chain-rpc-mev-tenderly.md)
+      § "RPC provider redundancy" (lines 36-63) — pre-existing codex content from Phase 5D already specifies the exact
+      `chain_config.yaml` shape (per-chain `primary: <provider>` + `fallbacks: [<provider1>, <provider2>]` +
+      `fallback_policy: auto-failover-on-5xx-or-429` + `retry_budget: 3`). **Harsh implementation scope** (~2
+      calibrated AI-days):
+      - Create `execution-service/execution_service/config/chain_config.yaml` with per-chain stanza per the codex
+        template. Chains in May-23 scope: ETHEREUM / ARBITRUM / OPTIMISM / BASE / POLYGON / AVALANCHE / BSC / LINEA /
+        SCROLL / ZKSYNC / SOLANA. Each with ≥ 2 fallback providers per the per-chain matrix at codex doc lines 18-31.
+      - Add `RpcProviderFallback` class at
+        `execution-service/execution_service/providers/rpc_fallback.py` (NEW). Public surface: `class
+        RpcProviderFallback: def __init__(chain: str, config_path: Path); def execute(method: str, params: list)
+        -> Any` with auto-failover on `httpx.ConnectError | httpx.TimeoutException | (status_code in {429, 500,
+        502, 503, 504})` within `retry_budget`. Emits `RPC_PROVIDER_FAILOVER` events per CLAUDE.md "No fire-and-
+        forget VM launches" event-stream contract.
+      - Wire `RpcProviderFallback` at every `web3 = Web3(HTTPProvider(...))` callsite in defi_execution/protocols/.
+      - Tests: `pytest execution-service/tests/unit/providers/test_rpc_fallback.py` — simulate primary down +
+        verify secondary picks up; verify event emission; verify `RuntimeError` after retry_budget exhausted.
+- [x] [AGENT] P0. **5C — Tenderly bundle-sim API + gating policy**. Extend
       `execution-service/execution_service/providers/tenderly.py` with `simulate_bundle()` method using Tenderly's
       `/api/v1/account/{slug}/project/{slug}/simulate-bundle` endpoint. Wire pre-flight gating in execution-service
       handlers: every live order goes through bundle-sim, BLOCK on revert, advisory-log on slippage>threshold. Default
       per-archetype daily Tenderly budget = $50/day per archetype (operator-set ceiling); 1 sim per live order. Budget
       exhaustion downgrades to advisory-only.
-- [ ] [AGENT] P0. **5D — Codex SSOT** at `codex/05-infrastructure/chain-rpc-mev-tenderly.md` (NEW) with full per-chain
+      **DESIGN-SHIPPED 2026-05-13 (Day 3) by slot 2 — IMPLEMENTATION HANDED TO HARSH SLOT 2.** Design SSOT lives in
+      [`codex/05-infrastructure/chain-rpc-mev-tenderly.md`](../../codex/05-infrastructure/chain-rpc-mev-tenderly.md)
+      § "Tenderly setup" (lines 91-126) — pre-existing codex content from Phase 5D specifies the API key flow (Secret
+      Manager `tenderly_api_key`), bundle-sim endpoint shape, and per-archetype $50/day budget policy.
+      **Harsh implementation scope** (~1.5 calibrated AI-days):
+      - Extend `execution-service/execution_service/providers/tenderly.py` (verify exists; if not, create) with
+        `simulate_bundle(transactions: list[TenderlyTx], chain_id: int) -> BundleSimResult` calling Tenderly's
+        `POST /api/v1/account/{slug}/project/{slug}/simulate-bundle` endpoint. `BundleSimResult` dataclass: `revert:
+        bool` + `revert_reason: str | None` + `expected_slippage_bps: int` + `gas_used: int`.
+      - Wire pre-flight gating in defi_execution/protocols/ — every `execute()` method on a live (non-paper-trade)
+        order: `bundle_sim = tenderly.simulate_bundle(...)` → if `bundle_sim.revert` raise `BlockOnSimulationRevert(...)`;
+        if `bundle_sim.expected_slippage_bps > threshold` log advisory event.
+      - Per-archetype daily Tenderly budget tracked in
+        `unified-cloud-interface/secret_budget_tracker.py` (NEW or extend existing rate-limit primitive). Budget
+        exhaustion → degrade to `advisory-only` mode (logs but doesn't block).
+      - Tests: `pytest execution-service/tests/unit/providers/test_tenderly_bundle_sim.py` — mock Tenderly responses
+        for (a) clean simulate; (b) revert → assert BlockOnSimulationRevert raised; (c) high-slippage → assert
+        advisory event emitted; (d) budget exhaustion → assert downgrade behaviour.
+- [x] [AGENT] P0. **5D — Codex SSOT** at `codex/05-infrastructure/chain-rpc-mev-tenderly.md` (NEW) with full per-chain
       table: RPC primary + fallback, MEV-protected RPC, gas oracle source, Tenderly account/project, historical capture
       bucket.
+      **✅ SHIPPED — already exists at
+      [`codex/05-infrastructure/chain-rpc-mev-tenderly.md`](../../codex/05-infrastructure/chain-rpc-mev-tenderly.md)
+      (204 lines).** Audit 2026-05-13 by slot 2 confirms doc covers: per-chain matrix (11 chains in May-23 scope +
+      StarkNet); RPC provider redundancy spec with `chain_config.yaml` template; MEV protection per chain (5
+      MevSubmissionMode endpoint registry rows + per-chain MEV story); Tenderly setup (account / project / budget /
+      bundle-sim API gating); Gas oracles per chain; Oracle prices per chain; Cross-references; Update protocol.
+      **JITO_BUNDLE row** in MEV registry (line 77) correctly marked as Phase 5A buildout. **MINOR DELTA Day 3**:
+      slot 2 should add a note line that JITO_BUNDLE enum + `_DEFAULT_POLICIES` policy shipped Phase 1D 2026-05-12
+      so the Status column for that row flips to ◐ (enum + policy ✅, provider class pending Harsh implementation).
+      Deferred to a separate codex-doc-touch commit to keep this checkbox flip clean.
 
 **Full-execution criterion**:
 

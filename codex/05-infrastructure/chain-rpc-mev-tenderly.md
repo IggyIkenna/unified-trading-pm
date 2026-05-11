@@ -74,7 +74,7 @@ section is the **per-chain endpoint registry**.
 | `MEV_BLOCKER` | `mev_blocker_rpc` (`https://rpc.mevblocker.io`) | Ethereum | none (free) | ✅ wired via `PrivateMempoolProvider` |
 | `MANIFOLD` | `manifold_finance_rpc` | Ethereum | TBD | ◐ partially wired |
 | `FLASHBOTS_BUNDLE_RELAY` | `relay.flashbots.net` (`eth_sendBundle`) | Ethereum | required (paid auth signer) | ✗ STUBBED. NOT NEEDED for May-23 (Aave flash loans are single-tx atomic; cross-chain carry legs can't bundle). Out of scope per operator 2026-05-10 |
-| `JITO_BUNDLE` (NEW Phase 5A) | `jito_block_engine_rpc` | Solana | required (paid Jito subscription OR free with rate limits) | ✗ Phase 5A buildout |
+| `JITO_BUNDLE` (Phase 5A) | `jito_block_engine_rpc` | Solana | required (paid Jito subscription OR free with rate limits) | ◐ enum + `_DEFAULT_POLICIES[JITO_BUNDLE]` policy shipped 2026-05-12 (UAC@`5241fad0` + execution-service@`38710bef`); `JitoBundleProvider` class implementation pending Harsh-side per `defi_catalogue` Phase 5A remaining scope |
 
 Per-chain MEV story:
 
