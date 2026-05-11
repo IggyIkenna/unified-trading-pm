@@ -260,6 +260,35 @@ Spot-checked the Phase-1 plan codex todos that flipped `- [x]` since the day-1 s
   `service-emission-policy.md`, `cross-asset-rescan-protocol.md`) **still absent** — consistent with their owning plans'
   unchecked `- [ ]` state; no premature flip.
 
+### Emission-policy / v8-schema codex currency — re-check 2 (2026-05-11 ~12:20 UTC)
+
+The RESUME-block ask ("verify the v8-schema + emission-policy SSOT consistency in the manifest codex docs; note the
+`expected_window_completeness_pct`→`_fraction` rename") resolves to: **already maintained by ikenna-slot-6 — nothing new
+from this walk.**
+
+- `codex/02-data/service-output-emission-semantics.md` — brought to v8-currency at **PM@`f99895d1`** (semver-rollout
+  bot, ikenna-slot-6, 2026-05-11 12:09 UTC): STATUS block now cites UAC@`174f401` (the `manifest_schema` /
+  `service_emission_state` / `service_emission_policy.next_state` modules); added a `### next_state(...)` resolver
+  section + a `## Manifest-read protocol per service_emission_state` section with the 4-state consumer-action table
+  (`PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED` / `None`-legacy →
+  `READER_FALLBACK_WINDOW_DAYS = 30`). Consistent with the writegate slice (b) Phase 5.6 manifest-region edits to
+  `availability-manifest-and-data-status.md`. ✓ No drift.
+- `expected_window_completeness_pct` 0-1-vs-0-100 **range drift** — **already filed** as
+  [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](expected_window_completeness_pct_range_drift_2026_05_11.md)
+  (146 L, author `ikenna-slot-6`, P1, Case-5 SSOT contradiction: UAC `manifest_schema.py` docstring says 0-1 fraction;
+  codex `availability-manifest-and-data-status.md:253/344` says 0-100 percentage; the `_pct` column name implies
+  percentage). Owned + tracked Ikenna-side (the `→_fraction` rename `76f950a` the RESUME block mentions is the proposed
+  resolution shape). **Not a slot-6 finding** — recorded here only so the freeze-gate-9 inventory shows it's captured.
+- New codex stub `codex/04-architecture/service-emission-policy.md` (one of the 4 day-1-flagged NEW docs) — created by
+  ikenna-slot-6 per the RESUME block; verify content currency on the days-2-4 deepening pass (not a flip violation — its
+  owning plan's todo is now legitimately `- [x]` with the stub landed).
+
+### Slot-2 features-svc session-3 fan-out — QG-validated 2026-05-11 ~12:15 UTC
+
+Not a codex item, cross-ref only: the 28-commit slot-2 fan-out
+@`features-service`e4b10570`` (`c458166e..e4b10570`) was static-validated — see [`qg_sweep_2026_05_11.md`](qg_sweep_2026_05_11.md) regression-log row. Verdict ✓ static (gcs_reader 4-module split path-templates byte-identical + fallback/per-league logic preserved; onchain+volatility orchestrator splits = clean extract-method/module; web3-hoist no circular risk; `ruff
+check features_service/`exit-0; no`.py`>900L). Minor non-blocking: 5 bare`# noqa` ruff-warnings (slot-2's, exempt).
+
 ## Days 2-4 follow-up (slot 6)
 
 - Deepen currency spot-checks on the remaining ~50 present codex docs the Phase 1 plans touch — especially the Phase 1.D
