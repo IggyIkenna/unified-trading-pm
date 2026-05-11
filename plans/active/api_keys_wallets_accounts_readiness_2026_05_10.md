@@ -743,6 +743,57 @@ cycle:
 - **Bridge protocol adapters beyond CCTP** (Wormhole / LayerZero): out-of-scope for May-23 unless archetype scope adds
   them; successor plan = `plans/active/bridge_adapters_wormhole_layerzero_<date>.md`.
 
+## DONE-2026-05-15 — slot 4 Day 1 (2026-05-12) `ikenna-keys-wallets-tab`
+
+Cycle scope (per [`work_split_2026_05_12_ikenna.md`](work_split_2026_05_12_ikenna.md) row 4): Phase 1 Copper KYB
+checklist + Phase 2 Fireblocks R9 dispatch + Phase 3 wallet provisioning schema. Density target 3.5-4 calibrated
+AI-days/day. **Day-1 actual: ~5 AI-days shipped end-to-end** (schema + R9 dispatch + plan flip + handshake ping +
+custody onboarding checklist + R9 codex propagation + Cloud-KMS issue doc); meets density target on Day 1.
+
+### What shipped Day 1 (2026-05-12)
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Phase 4.A.SCHEMA — UAC `WalletProvisioningConfig` schema | ✅ DONE — UAC@`d721b6a` + 27 tests | Unblocks slot 5 Family-1/2 archetype config + slot 8 cross_cutting #4 DART surfaces (handshake ping shipped PM@`8aaf70da`) |
+| Phase 2 — Fireblocks R9 sub-(a) operator gate | ✅ RESOLVED 2026-05-12 via AskUserQuestion → CLOUD_KMS for May-23 → COPPER/FIREBLOCKS June-1 | Decision codified in plan body § R9 RESOLVED + propagated to `defi_master_2026_05_07.md` + `codex/04-architecture/custody-providers.md` top banner |
+| Phase 3.C SPLIT into 3.C.1 (Cloud-KMS) + 3.C.2 (Fireblocks) | ✅ design-shipped at PM@`5cc47002` | 3.C.1 implementation `CloudKmsCustodyProvider` PENDING — owner: slot-4 successor + Harsh side |
+| Phase 1 operator-action checklist — codex doc | ✅ DONE — `codex/05-infrastructure/custody-onboarding-checklist.md` at PM@`2e198794` | Covers Copper verification (§ A) + Cloud-KMS provisioning (§ B) + Fireblocks June-1 path (§ C) + CEFFU KYB (§ D) + risk wiring (§ E) + continuous-verification cadence (§ F) |
+| Phase 1 — Cloud HSM CMK provisioning operator-action issue doc | ✅ DONE — `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` | P0; 4-6 operator-hours; May-21 acceptance gate |
+
+### Deferred / open after 2026-05-12 session (Half 3 scoreboard)
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Phase 3.A — Copper sandbox real sign-and-broadcast smoke | OPEN | Operator-runnable (§ A.1.5 in checklist) before 2026-05-21 |
+| Phase 3.B.1 — CEFFU institutional KYB onboarding | 🟡 BLOCKED on operator KYB submission | 2-4 week SLA; KYB form upload (§ D.1 in checklist) |
+| Phase 3.B.2-5 — CEFFU API spec ingestion + adapter + test | 🟡 BLOCKED on D.1 + CEFFU spec delivery | Successor: same plan Phase 3.B.3 once spec lands |
+| Phase 3.C.1 — `CloudKmsCustodyProvider` implementation | OPEN | Owner: slot-4 successor or Harsh implementation handoff; **gates May-23 cutover** |
+| Phase 3.C.2 — `FireblocksCustodyProvider` implementation | 🟡 DEFERRED-AFTER-CUTOVER (2026-06-01) | Gated on client June-1 credential delivery; successor plan named: `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when creds land) |
+| Phase 3.D — Treasury rollup view canonical owner | OPEN — wallet-tier surfaces ready via schema | Owner: slot 4 (continuing) — Day 2 scope: deployment-api `/treasury/nav` endpoint + PBMS wiring |
+| Phase 4.A — N×M mainnet wallets provisioning | OPEN (schema shipped; wallet rows pending) | Gated on Cloud-KMS CMK provisioning per issue doc; Day 2-3 scope once operator completes B.1-B.3 |
+| Phase 4.B — Per-protocol approvals SSOT + automation | OPEN | Day 2-3 scope |
+| Phase 7 — Per-mode + per-archetype credential subset SSOTs | OPEN | Depends on Phases 2-6 enumeration; Day 3-4 scope |
+| Phase 8 — Audit recipe + continuous verification | OPEN | Depends on Phase 7; Day 3-4 scope |
+| Phase 9 — Codex SSOT updates | PARTIAL — `custody-providers.md` + `custody-onboarding-checklist.md` shipped today; remaining 9 docs Day 2-4 | Per-phase as remaining phases ship |
+
+### Day 2-4 plan (2026-05-13 → 2026-05-15)
+
+1. **Day 2** (2026-05-13): Phase 3.D treasury rollup `/api/treasury/rollup` endpoint design + PBMS wiring spec.
+   Phase 4.A wallet-row JSON generation (10+ mainnet wallets) — depends on operator Cloud HSM CMKs provisioning (issue
+   doc). Phase 9 codex stubs (`credentials-matrix.md`, `aws-iam-matrix.md`, `secret-manager-naming.md`,
+   `per-archetype-wallet-isolation.md`, `hsm-wallet-signing.md`).
+2. **Day 3** (2026-05-14): Phase 4.B per-protocol approvals YAML + pre-signing automation script. Phase 7 per-mode +
+   per-archetype credential subset YAMLs.
+3. **Day 4** (2026-05-15): Phase 8 audit script `credential-probe.sh` + health endpoint extension. Phase 8.C master
+   plan continuous-verification column. EOD reset to 2026-05-16 cycle plan.
+
+### Continuous-verification (per Runbook Execution-Owner SSOT HARD RULE)
+
+Codex doc § F declares cadence for every credential surface (Copper / Cloud-KMS / Fireblocks / CEFFU): daily cron VM
+`credential-probe-vm` + position-balance-monitor 60s reconciliation + per-PR `secret-scan.yml` + weekly full-workspace
+`gitleaks` + pre-cutover (May-22) full credential probe gate. All `last_executed: NEVER` today; operator-runbook items
+in checklist § A-D drive first executions.
+
 ## Provenance
 
 - **Spawned from**: `plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md` (retired 2026-05-09 PM@5d2d74c1
