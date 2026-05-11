@@ -77,3 +77,12 @@ PM@<this commit> (plan flips Phase 4/5/6 → [x], new scoreboard, cross-side pin
 consumer wiring). 27 unit tests pass across the 3 UTL primitives. DEFERRED in plan body (not blocking): cascade per-
 shard buffer + cross-cutting watermark-buffered scheduler + deployment-api endpoint real-wiring (needs live producers
 running). See plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md § DONE-2026-05-11 — Ikenna slot 4 RE-TASK.
+
+[2026-05-11 10:55 UTC] ikenna-live-pipeline-tab — ✅ ADDITIONAL Phase 11.1 endpoint real wiring shipped after operator
+pushback. deployment-api@9b0e81d promotes the /api/data-status/live endpoint from design-only stub to REAL manifest-
+read wiring: reads v8 availability manifest per asset_group, filters pipeline_mode=live_websocket, builds LiveStatusRow
+per shard with manifest-derived staleness from attempted_at, capture_status from 4-state taxonomy, resilient pre-v8 +
+OSError handling. 10 unit tests (up from 4). The deployment-ui scaffold already calls fetch() against this endpoint —
+real rows render the moment Harsh slot 5's per-service wiring lands. Health-API HTTP join for precise per-shard
+last_event_age_seconds / degraded_ratio_60s / cluster_pct_skipped_60s DEFERRED on per-service URL registry in
+DeploymentApiConfig — documented inline + in scoreboard. Phase 11.1 endpoint half now [x] done in plan.

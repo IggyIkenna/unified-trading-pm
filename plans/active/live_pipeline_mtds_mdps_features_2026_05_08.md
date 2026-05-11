@@ -805,22 +805,39 @@ todos:
   - id: phase-11-deployment-ui-live-tab
     content: |
       - [ ] [AGENT] P1. Phase 11 — deployment-UI live tab + Deploy-Missing for live clusters.
-        PARALLEL with Phase 9 + 10.
+        PARALLEL with Phase 9 + 10. (11.1 endpoint real-wired @deployment-api@`9b0e81d`; 11.3 scaffold @deployment-ui@`f3204ce`; 11.2 + 11.4 DEFERRED on Phase 13 launchers; Health-API HTTP join DEFERRED on per-service URL registry.)
 
-        **DESIGN-AHEAD shipped 2026-05-11 (Ikenna slot 4)**:
-        - deployment-api@`7d95dc9`: `GET /api/data-status/live` endpoint stub with `LiveStatusRow` +
-          `LiveStatusResponse` Pydantic models. Returns empty list with correct shape until Phase 5/6
-          live producers ship. 4 unit tests pin the endpoint contract (empty envelope, asset_group
-          query-param filter, 4-state capture_status taxonomy, validator rejects out-of-range health
-          metrics).
+        **REAL WIRING shipped 2026-05-11 (Ikenna slot 4 RE-TASK)**:
+        - deployment-api@`9b0e81d` (promoted from `7d95dc9` design-only stub): `GET /api/data-status/live`
+          REAL wiring — reads v8 availability manifest per asset_group via
+          `read_availability_index(bucket)`, filters `pipeline_mode=live_websocket`, builds one
+          `LiveStatusRow` per shard with shard-key axes from manifest columns + capture_status
+          4-state taxonomy + manifest-derived staleness (`attempted_at`-based; coarse proxy for
+          last-event-age until Health-API HTTP join lands). Resilient-read pattern: per-asset_group
+          failures logged + dropped; pre-v8 manifests handled gracefully. 10 unit tests cover:
+          empty-when-no-live-shards, populated-when-live-shards-present, asset_group filter, 90s
+          staleness derivation, pre-v8 graceful-empty, manifest-read OSError handled, 4-state
+          taxonomy preserved, multi-asset_group aggregation, Pydantic shape + validator rejection.
         - deployment-ui@`f3204ce`: `<LiveDataStatusTab/>` scaffold component. Renders loading / empty
           (with planned-implementation copy) / populated / error retry states against the Phase 11.1
-          endpoint. 5 vitest tests cover all 4 render branches + asset_group query-param propagation.
-        **DEFERRED**: Phase 11.2 launcher registration in `_SERVICE_LAUNCHER_SCRIPTS` (depends on Phase
-        13 launchers shipping). Phase 11.3 widget reuse (`TypedReasonBadges` / `FailurePillarStack` /
-        `LeafSchemaModal`) lands once endpoint returns real rows. Phase 11.4 Deploy-Missing button
-        wiring depends on Phase 13. Promote to full implementation in the next-cycle work-split once
-        Harsh slot 2 unblocks Phase 5/6 producers.
+          endpoint. Already wired to the real endpoint via `fetch()` — populated rows render the
+          moment live producers start writing shards. 5 vitest tests cover all 4 render branches +
+          asset_group query-param propagation.
+
+        **DEFERRED** (downstream-owned):
+        - Phase 11.2 launcher registration in `_SERVICE_LAUNCHER_SCRIPTS` — depends on Phase 13
+          launchers shipping (Harsh slot 5 owns).
+        - Phase 11.4 Deploy-Missing button wiring — depends on Phase 13 launchers.
+        - Phase 11.3 widget reuse (`TypedReasonBadges` / `FailurePillarStack` / `LeafSchemaModal`)
+          — lands once endpoint returns real rows + the live tab is registered in the deployment-ui
+          tabs surface (owned by `deployment_ui_lifecycle_tabs_2026_05_08`).
+        - **Health-API HTTP join** for precise `last_event_age_seconds` / `degraded_ratio_60s` /
+          `cluster_pct_skipped_60s` from each consumer service's `make_health_router`
+          `data_freshness` callback — depends on per-service URL registry in
+          :class:`~deployment_api.deployment_api_config.DeploymentApiConfig`. Until then the
+          endpoint serves the manifest-derived `staleness_seconds` (coarse proxy) +
+          `degraded_ratio_60s` = `cluster_pct_skipped_60s` = 0.0. Documented inline at
+          `deployment_api/routes/data_status.py` Phase 11.1 endpoint docstring.
 
         11.1 — `deployment-api`: NEW endpoint `GET /api/data-status/live` that pivots the manifest by
               `pipeline_mode=live_websocket` + joins per-shard health from the Health-API endpoints.
@@ -1278,7 +1295,7 @@ open are tracked here so Harsh slot 5 + the next agent pick up cleanly.
 | Phase 5 — features-service asset-scoped UTL primitive                 | `done` (UTL@`35425c70`)                       | Per-service per-family `live/` consumer wire-in (consolidated features-service) → Harsh slot 5.                |
 | Phase 6 — features-service cross-cutting UTL primitive                | `done` (UTL@`35425c70` partial)               | Watermark-buffered fan-in scheduler (per-period bucketing + grace-deadline STALE_DATA emission) DEFERRED in-place; per-service cross-cutting consumer wire-in → Harsh slot 5. |
 | Phase 4 cascade_parent_candle — per-shard child-event buffering       | `partial` (UTL@`ee64481a`)                    | Per-shard child-event buffer across run-loop iterations + flush at parent boundary. Deferred — opens once the timeframe DAG SSOT in UAC settles. Tracked in plan body Phase 4 description. |
-| Phase 11.1 endpoint wiring to real `data_freshness` callback          | `design-shipped` (deployment-api@`7d95dc9`)   | Real wiring requires Phase 5/6 producers actually publishing CandleComputed/FeaturesComputed via Harsh slot 5; until then the endpoint correctly returns empty list. |
+| Phase 11.1 endpoint manifest read + pipeline_mode filter              | `done` (deployment-api@`9b0e81d`)             | Endpoint REAL-wired to v8 manifest read. Health-API HTTP join (`last_event_age_seconds` / `degraded_ratio_60s` / `cluster_pct_skipped_60s` from each service's `data_freshness` callback) DEFERRED on per-service URL registry in `DeploymentApiConfig`. Until then manifest `attempted_at` is the staleness proxy. |
 | Phase 11.3 UI scaffold tabs-surface integration                       | `design-shipped` (deployment-ui@`f3204ce`)    | Register `<LiveDataStatusTab/>` in the deployment-ui main tabs registry → tracked in `deployment_ui_lifecycle_tabs_2026_05_08`. |
 
 Cross-side handshake — **HARSH SLOT 5 UNBLOCKED**: per-service consumer wire-in across MTDS / MDPS / features-service is
@@ -1388,3 +1405,28 @@ Test coverage: 14 (MDPS aggregator) + 13 (features runners) = **27 unit tests** 
 against the per-slot worktree. The UTL primitives are pure orchestration — feature-family business logic + OHLCV
 aggregation function stay with the consumer services (per Citadel Rule 7 SSOT). Live = batch principle preserved end-
 to-end: the caller supplies the **same** aggregation/compute callables that batch uses.
+
+### Follow-up commit: Phase 11.1 endpoint real wiring (deployment-api@`9b0e81d`)
+
+After operator pushback ("are there really no deferrals?"), promoted the `/api/data-status/live` endpoint from the
+2026-05-11 design-only stub at deployment-api@`7d95dc9` to **real manifest-read wiring**:
+
+- Reads v8 availability manifest per asset_group via `read_availability_index(bucket)` using the shared MTDS/MDPS
+  bucket-name template (`market-data-tick-{asset_group}-{pid}`).
+- Filters `pipeline_mode == "live_websocket"`; pre-v8 manifests (no column) handled gracefully → empty.
+- Builds `LiveStatusRow` per shard: shard-key axes from manifest columns; `capture_status` from the v5 4-state taxonomy
+  column; `staleness_seconds` derived from manifest `attempted_at` write-time (tz-aware UTC subtraction); empty when
+  the manifest is unreachable.
+- Resilient: per-asset_group read failures logged + that asset_group dropped from the response; endpoint stays
+  responsive when one bucket is missing.
+- `degraded_ratio_60s` + `cluster_pct_skipped_60s` stay at 0.0 — those require per-service Health-API HTTP join for
+  rolling-window emission stats. Documented inline at the endpoint docstring + in this plan's scoreboard as DEFERRED
+  on a per-service URL registry in `DeploymentApiConfig`.
+- 10 unit tests (up from 4): empty-when-no-live-shards, populated-when-live-shards-present, asset_group filter
+  honoured, 90s staleness derivation, pre-v8 manifest graceful-empty, manifest-read OSError handled, 4-state
+  capture_status taxonomy preserved, multi-asset_group aggregation, Pydantic shape, validator rejection.
+
+The deployment-ui `<LiveDataStatusTab/>` (deployment-ui@`f3204ce`) already calls `fetch('/api/data-status/live')`, so
+populated rows will render the moment Harsh slot 5's per-service consumer wiring lands + live producers start writing
+`pipeline_mode=live_websocket` shards. Phase 11.1 endpoint half is **done**; 11.2 + 11.3 + 11.4 deferrals stay as
+downstream-owned per the scoreboard.
