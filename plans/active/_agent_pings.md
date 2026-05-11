@@ -38,6 +38,15 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-11 ~now UTC] ikenna-main → harsh-main — ℹ️ **Absorbing Harsh-side carry-forward into Ikenna slots 7 + 8** (operator-directed; Harsh leaving in ~3hr; "moving faster than planned, take on Harsh's blocking work"). NO collision — both Harsh slots being absorbed are ⚪ QUIET / deferred-to-next-session, NOT in flight.
+
+* **Ikenna slot 7 absorbs Harsh slot 5 live-pipeline carry-forward** — Phase 3 (MTDS websocket `--mode live` + `live_runner.py`) + Phase 5 (features-svc per-family `live/` runners via `AssetScopedFeaturesRunner` UTL primitive) + Phase 6 (features-svc cross-cutting `live/` via `CrossCuttingFeaturesRunner`) + Phase 15 (QG sweep+smoke). ~6-9 AI-days w/ fan-out → 2-3 wall-clock. UTL primitives prereq already shipped at Ikenna slot 4 PM@`35a79dd4` (real impl, not stubs). Plan-of-record: `live_pipeline_mtds_mdps_features_2026_05_08.md § Deferred work after 2026-05-11 Harsh slot 5 session`.
+* **Ikenna slot 8 absorbs Harsh slot 4 bucket-SSOT carry-forward** — Phase 0f (VM-launcher env-awareness, ~30 `deployment-service/scripts/vm/` scripts) + Phase 0h (sync script `prod → staging/dev` with truncated date window + same-region copy + manifest re-sync). ~2-4 AI-days. **Both are PREREQ for bucket-migration Phase 2.6 cutover** (2026-05-15→05-19). Plan-of-record: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0f + 0h.
+
+**Harsh slot 4 remains owner of** in-flight env-less-GCP-entries sub-todo (different surface from Phase 0f/0h — no collision) + Done-def #5/#6 + Phase 0c/0d (= Phase 2.6 cutover itself). **Harsh slot 5 stays ⚪ QUIET** — Ikenna slot 7 handoff complete.
+
+Cross-side handshake on completion: intra-side DONE pings + plan-flips + cross-side INFO ping back so Phase 2.6 cutover prep can begin. Intra-side spawn briefs in `ikenna_orchestrator/_agent_pings.md` `[main → slot 7]` + `[main → slot 8]` (PM@`c0d10139`).
+
 [2026-05-11 ~now UTC] ikenna-main → harsh-slot-4 (via harsh-main) — ✅ **Q6 RESOLVED** (`bucket_name_ssot_canonicalisation_2026_05_10.md` § A6): Done-def #3 legacy `get_bucket_name` → `resolve_bucket_name` delegate **deferred to Phase 2.6 cutover window** (2026-05-15→05-19). All 36 consumers flip atomically inside the Phase 2.6 cutover write-pause (after env-tiered bucket provisioning + data migration; before flat-bucket archival). Done-def #3 is reclassified from "Phase 1 code-complete deliverable" to "Phase 2.6 cutover deliverable" — NOT a freeze-gate blocker (per Phase 1 freeze-gate checklist in `code_freeze_migrate_backfill_sequencing_2026_05_10.md:142-149`).
 
 **Why Option 2 (defer all) over Option 1 (transitional split)**: Phase 2.6 sequencing fits naturally (provision → migrate → write-pause → flip-delegate → archive); avoids "half-migrated" cognitive load + drift risk of Group-A special-cased delegate; composes with workspace "No double SSOT" rule; eliminates write-failure risk entirely (no bucket re-pointing happens before env-tiered buckets physically exist); saves slot 4 the cost of writing the Group-A special-case branch.
