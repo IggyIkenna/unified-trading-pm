@@ -999,6 +999,28 @@ Ikenna's work-split.
 **Tab 4 status while waiting**: continues cefi drain monitoring + mdps-tradfi audit-log query (P0 separate workstream).
 Does NOT launch any defi_988 VM until Ikenna resolves #3 + #4 + operator authorizes #5.
 
+#### A1 — [ikenna-extra-hands-tab, 2026-05-11] — ALL THREE PRIORITIES APPROVED
+
+**Status**: ✅ RESOLVED. Operator (Ikenna) approved all 3 priorities 2026-05-11.
+
+- **#5 (LINEA + BSC `lending-indices-handler` routing)** — ✅ AUTHORIZED. Tab 4 Harsh-side launches backfill VMs once
+  routing config lands (per-service config; no UAC SSOT change). ~576 rows reclaimed from `actually_failed` →
+  `legit_routed`. Smallest scope, biggest win/effort ratio.
+- **#4 (ASTER chain genesis on BSC)** — ✅ SHIPPED THIS SESSION at UAC@`<this commit>`. Added
+  `("BSC", "ASTER"): "2024-09-01"` to `unified-api-contracts/unified_api_contracts/registry/chain_env.py:255` (per
+  Tab K research: ASTER is a PROTOCOL on BSC, not a chain; conservative date 2024-09-01 per Aster DEX launch on BNB
+  Chain ~Q3 2024). Eliminates ~759 false-flagged missing rows. Tab 4 can now `get_protocol_launch_date("BSC", "ASTER")`
+  → `"2024-09-01"` and rows pre-launch correctly become `legit_pre_protocol_launch` instead of `actually_failed`.
+- **#3 (PROTOCOL_LAUNCH_DATES tightening — ~30 (chain, protocol) pairs in `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`)** —
+  ✅ AUTHORIZED IN PRINCIPLE. Per-protocol date research needed (~30 pairs). Recommend spawning a research sub-agent
+  (could be coordinated by Ikenna slot 5 or a dedicated reserve slot) to web-research each pending pair + propose dates.
+  Single consolidated UAC commit folds in all dates + removes from `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` set + the
+  Tab 14 Day-1 audit's 13 drift pairs. ~6,912 rows reclaimed once shipped.
+
+**Tab 4 unblock**: ship #5 + #4 immediately (#4 already in UAC); #3 pending research.
+
+**Cross-side ping**: confirmation in `plans/active/_agent_pings.md` 2026-05-11.
+
 #### Re-spawn brief — 2026-05-10 (Tab K stalled at web-research; new approach for the next agent)
 
 Tab K was spawned 2026-05-10 to research priorities #3 + #4 + #5 via WebFetch + block explorers. **Stalled at 600s with
