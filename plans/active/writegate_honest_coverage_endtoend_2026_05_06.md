@@ -832,7 +832,19 @@ NaN-ratio/cluster-coverage check — the entire honest-coverage infrastructure i
 - [ ] **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
       instantiation sites to determine if (c) `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is
       a live parallel SSOT or dead code. If live → file a finding annotation + flag for operator triage. If not live
-      → delete.
+      → delete. **AUDIT COMPLETE 2026-05-11 (slot 8)**: `CandleProcessingService` IS instantiated at
+      `market_data_processing_service/app/core/market_data_processing_service.py:58` inside the outer
+      `MarketDataProcessingService` class. But **`MarketDataProcessingService` is NOT wired to the production CLI** —
+      every production callsite (`cli/handlers/live_mode_handler.py:60`, `cli/handlers/process_handler.py:389`)
+      instantiates `CandleOrchestrationService` (the Step-1 surgery target) instead. The only `MarketDataProcessingService`
+      instantiations are in tests (`tests/unit/test_market_data_processing_service.py:49/90/132/174` + e2e at
+      `tests/e2e/test_candle_processing_e2e.py:116`). **DEFERRED — operator triage**: this is a 100+ LOC refactor
+      (delete `MarketDataProcessingService` + `CandleProcessingService` + `BatchProcessor` + `CloudCandleStorage` +
+      `CloudDataProvider` + their wrapping tests + the e2e). The deletion is safe per production-path-zero-impact
+      but the test-removal blast radius is significant. **Recommended action for next agent**: confirm with operator,
+      then file as a dedicated cleanup plan `plans/active/mdps_dead_candle_processing_service_cleanup_<YYYY_MM_DD>.md`
+      under the writegate Phase 2.A scope. Until then, the dead path co-exists with the live path —
+      annotated as known double-SSOT residue.
 
 ### Phase 0 audit findings — MTDS bundle adapter inventory
 
