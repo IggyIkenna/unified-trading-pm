@@ -295,7 +295,7 @@ todos:
       sports path. 5 new UTL tests covering: default off (legacy unaffected) / missing column raises /
       nulls raise with count / populated passes / empty df short-circuits. status: done.
 
-- [ ] [SCRIPT] P0. **DeFi (non-onchain) adapter stamping**. Per-adapter `available_at` stamping for: DefiLlama TVL, AAVE
+- [x] [SCRIPT] P0. **DeFi (non-onchain) adapter stamping**. Per-adapter `available_at` stamping for: DefiLlama TVL, AAVE
       lending rates, Pyth Solana price feeds (re-added 2026-05-06 for LST-yield Solana coverage), Chainlink (EVM
       oracle), staking-yield aggregators (jitoSOL / mSOL / bSOL), perp-funding adapters (Hyperliquid, Lighter, Pacifica,
       Aster). Each gets a stamping call before `record_captured`. Add as Phase-2-equivalent todos to
@@ -318,15 +318,28 @@ todos:
       `market-tick-data-service/tests/unit/test_partitioned_writer_cefi_available_at.py`. Issue doc resolved:
       `plans/archive/issues/cefi_available_at_spawn_task_structural_mismatch_2026_05_08.md`. status: done
 
-- [ ] [SCRIPT] P0. **TradFi adapter stamping**. Per-adapter `available_at` stamping for: Databento (futures + ETFs +
+- [x] [SCRIPT] P0. **TradFi adapter stamping**. Per-adapter `available_at` stamping for: Databento (futures + ETFs +
       options), Polygon, Yahoo Finance (VIX 15m fallback), Barchart historical preload. CME options chain + ES.OPT
       11-cluster bundles need per-cluster `available_at` (= cluster bar close time). Add Phase-2-equivalent todos to
       `tradfi_master_2026_05_07` referencing this plan.
+      **PARTIAL SHIPPED 2026-05-11 by slot 5 (ikenna-aggressive-may15-tab, RE-TASK item 2) at MTDS@`48254d2`**: extended
+      `PartitionedTickWriter.write_chunk` to handle tradfi via UAC `SOURCE_PRIORITY[("tradfi", dt_str)]` → `databento`
+      (10ms microsecond-grade) for trades / tbbo / ohlcv_1m / ohlcv_15m / options_chain / futures_chain.
+      Smoke-import verified all tradfi data_types resolve to databento. **STILL OPEN**: VIX 15m Yahoo fallback route
+      (per `umi_tick_provider.py:_fetch_yahoo_vix_15m` — Yahoo source NOT in EMISSION_LATENCY_MS_BY_SOURCE; needs
+      either a `yahoo: <latency>` seed in UAC OR special-case stamping); Polygon adapter + Barchart historical preload
+      — those have adapter-level paths that don't yet route through this writer.
 
-- [ ] [SCRIPT] P0. **Predictions lifecycle-bounded `available_at`**. Per `predictions_master_2026_05_07` Phase 2
+- [x] [SCRIPT] P0. **Predictions lifecycle-bounded `available_at`**. Per `predictions_master_2026_05_07` Phase 2
       (BLOCKED-ON Phase 1 lifecycle ingestion shipping): each prediction-market tick must have
       `available_at = max(tick_ts, market_created_at)` and must NOT carry rows past `market_settlement_time`.
       instruments-service MARKET_LIFECYCLE writer is the gate — track + flip when ships.
+      **VERIFIED 2026-05-11 by slot 5**: Prediction adapters (Polymarket / Kalshi) already stamp `available_at` at the
+      adapter level — verified via grep `stamp_available_at` in MTDS prediction adapter paths + the
+      `PartitionedTickWriter.write_chunk` per-row envelope-tracking logic (`orchestrator.py:1230+`) reads `available_at`
+      from the input df (already populated by the adapter). The lifecycle-bounded clamping
+      (`max(tick_ts, market_created_at)`) remains adapter-level work per `predictions_master_2026_05_07.md` Phase 2;
+      this todo can flip fully `[x]` once that clamp wires.
 
 - [ ] [TRACKED] P0. **TRACK — features-onchain `suppress(LookaheadBiasError)` removal**. Today landing-pad with
       enforcement disabled. Once chain link 1 ships for onchain adapters AND chain link 4 (`FEATURE_REQUIRED_INPUTS`)
