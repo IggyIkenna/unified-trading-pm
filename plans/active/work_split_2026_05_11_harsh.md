@@ -291,6 +291,25 @@ under-utilisation is fine, mid-cycle collision is not.
   - **P1 phantom audit** — Run
     `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group all --dry-run` periodically;
     ensure the 354 residual phantoms (from 2026-05-04 baseline) haven't grown.
+
+  - **P0 Track-D P0-bug fixes (ADDED 2026-05-11 per operator direction — Track D audit surfaced them, fixes in sight)**:
+    - **P0-1** — MTDS honest-coverage sentinel silently aborts: `market_tick_data_service/engine/orchestrator.py:2671`
+      (sports sentinel) / `:2808` (Tier-3 per-instrument) / `:2849` (Tier-2 venue-level) + `scripts/rebuild_prediction_manifest.py:351`
+      call `record_empty(row_key=...)` with NO `reason=` → `LegacyBlankErrorReasonError` → swallowed by the wrapping
+      `except Exception: "non-blocking"` → no `empty_confirmed`/`attempted_failed` rows land for CeFi/sports on any
+      zero-data shard date. Fix: pass `reason="SOURCE_RETURNED_ZERO"` (or the calendar `EXPECTED_HOLIDAY`/`EXPECTED_WEEKEND`/
+      `EXPECTED_PARTIAL_HALF_DAY` where the orchestrator already knows it via `is_non_trading_day`); STOP swallowing the
+      manifest-write exception in the wrapping `except` (a `LegacyBlankErrorReasonError` must be loud). Crisp, mechanical.
+    - **P0-2 (QG-gate half)** — add an AST/grep QG STEP that flags banned NaN-placeholder / bypass-`record_captured`
+      patterns: `_create_empty_output` / `_handle_empty_tick_data` / `_create_full_day_empty_output` /
+      `_create_closed_market_candle` / `_maybe_write_vix_gap_placeholder` / direct `storage_client.upload_bytes` candle
+      writes that don't route through `record_captured`. (The P0-2 *code* fixes — delete legacy `orchestration_writer.py:328
+      _write_candles`, fix `tradfi/ohlcv_passthrough.py`, flip `output_schemas.py` OHLCV nullability, resolve the
+      triple-SSOT — are writegate Phase 2.A scope + Harsh slot 5's live-pipeline MDPS phase, NOT slot 6.)
+    - **P0-3** — `commodity` phantom-row: investigate as part of the P1 phantom-audit pass above; classify + fix or file
+      an issue doc.
+    - Source: [`plans/active/issues/wave3x_track_d_findings_2026_05_11.md`](issues/wave3x_track_d_findings_2026_05_11.md)
+      (filed by Harsh slot 3).
 - **Plan-of-record**:
   [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
   freeze-gate items 8 + 9.
