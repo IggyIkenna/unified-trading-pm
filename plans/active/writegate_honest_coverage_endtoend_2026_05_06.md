@@ -3161,11 +3161,56 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.5 — Other features-\* services (P1, ~5 days bundled)**
 
-- [ ] [features-onchain-defi] P1. Audit for derived emissions (LST yield curves, gas-fee aggregates, vault-state
-      summaries). Extend seed dict per finding. Wire publish_with_policy.
-- [ ] [features-sports] P1. Audit + wire (fixture-stat aggregates, transfer-window features, line-movement metrics).
-- [ ] [features-prediction] P1. Audit + wire (canonical-question-group bundle metrics, market-mid time-series).
-- [ ] [features-microstructure] P1. Audit + wire (book-imbalance, trade-flow toxicity, etc.).
+> **Service-name correction (2026-05-11)**: post-features-consolidation, the canonical service names are
+> `features-onchain-service` / `features-sports-service` / `features-cross-instrument-service` (covers
+> features-prediction polymarket scope) / `features-delta-one-service` + `features-cross-instrument-service` +
+> `features-multi-timeframe-service` (cover features-microstructure scope). The 4-agent audit fanned out across
+> all 5 actual services.
+
+- [x] [features-onchain-service] P1. Audit for derived emissions (LST yield curves, gas-fee aggregates, vault-state
+      summaries). **Seed shipped 2026-05-11 @uac@b570d49 — 11 entries** (lending_rates / lst_yields / onchain_perps /
+      utilization / flash_loan_availability / rate_impact STRICT_FAIL; risk_params + health_factor BLOCK_CRITICAL;
+      macro_sentiment / rewards / liquidation_events PARTIAL_OK). **DEFERRED**: per-service wiring of
+      `publish_with_policy()` at `_dispatch_feature_group` callsites — Phase-2 consumer work.
+- [x] [features-sports-service] P1. Audit + seed (fixture-stat aggregates, transfer-window features, line-movement
+      metrics). **Seed shipped 2026-05-11 @uac@b570d49 — 7 entries** (fixture_features / derived_features
+      current+historical NAN_FILL; odds_features:current STRICT_FAIL, odds_features:historical NAN_FILL;
+      live_feature_subset STRICT_FAIL). **DEFERRED**: wiring at exporter + batch_handler emission points.
+- [x] [features-cross-instrument-service (prediction scope)] P1. Audit + seed (canonical-question-group bundle metrics,
+      market-mid time-series). **Seed shipped 2026-05-11 @uac@b570d49 — 6 polymarket entries**
+      (polymarket_crowd_sentiment + polymarket_trade_flow + polymarket_whale_activity +
+      polymarket_market_microstructure + polymarket_temporal_patterns NAN_FILL; polymarket_cross_market STRICT_FAIL
+      for canonical-question-group arb signals). **DEFERRED**: wiring at cross_instrument orchestrator.
+- [x] [features-cross-instrument + delta-one + multi-timeframe (microstructure scope)] P1. Audit + seed (book-imbalance,
+      trade-flow toxicity, cross-TF alignment). **Seed shipped 2026-05-11 @uac@b570d49 — 30 entries**:
+      cross-instrument (15 non-polymarket: regime_detection / cross_asset_correlation / cross_instrument_dynamics /
+      realized_implied_vol / cointegration / liquidation_band_prediction / dxy_momentum NAN_FILL; cme_gap PARTIAL_OK;
+      cross_venue_spreads / book_depth_bands / liquidity_walls / liquidation_clusters / flow_interaction / composite_sr
+      / paired_price_dispersion STRICT_FAIL); delta-one (9 anchors); multi-timeframe (4 cross-TF alignment groups all
+      STRICT_FAIL on paired_spec precedent). **DEFERRED**: per-service wiring of `publish_with_policy()`.
+
+**Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
+
+- [ ] [features-delta-one-service] P2. ~24 ohlcv-derived feature_groups share NAN_FILL policy (e.g. moving_averages,
+      oscillators, momentum, vwap, candlestick_patterns, market_structure, returns, streaks, supply_demand_zones,
+      fibonacci, level_confluence, signal_confirmation, confluence, statistical_anomaly, order_flow_inference,
+      polynomial_trendlines, risk_reward, wedge_quality, return_kurtosis, swing_outcome_targets, sr_memory). Adding 24
+      near-duplicate rows pads the seed dict. **Recommend** helper pattern: `OHLCV_DERIVED_FEATURE_GROUPS: frozenset[str]`
+      + auto-population loop at module load time, OR wildcard convention `("features-delta-one-service", "ohlcv_*")`.
+      Defer to Phase-2 expansion alongside the per-service `publish_with_policy()` wiring.
+- [ ] [features-cross-instrument-service] P2. **Seed-vs-registry drift flag**: original seed `paired_spec` +
+      `pairwise_correlation` entries do NOT appear as `feature_group` names in the live
+      `CALCULATOR_REGISTRY` (`features-service/features_service/cross_instrument/engine/orchestrator.py`). Closest live
+      names: `paired_price_dispersion` (now seeded STRICT_FAIL) + `cross_asset_correlation` (now seeded NAN_FILL).
+      **Triage decision needed**: (a) intentional umbrella keys covering multiple groups, (b) reserved for future
+      re-architecture, (c) drift to be renamed. Preserved as-is in this seed extension; route to slice-(c) wave-2
+      cleanup.
+- [ ] [features-multi-timeframe-service] P2. **Single-TF vs cross-TF ambiguity**: `intraday_regime` + `micro_regime`
+      may be single-TF derived (NAN_FILL ML feature, belongs in delta-one's bucket) rather than cross-TF aligned
+      (STRICT_FAIL on paired_spec precedent). Not seeded pending operator/service-maintainer confirmation.
+- [ ] [features-multi-timeframe-service] P2. `tf_risk_reward` + `wedge_confluence` are also cross-TF aggregates
+      consuming poly-fit + ATR across timeframes (same STRICT_FAIL reasoning as the 4 seeded entries). Not seeded
+      because operator estimate was ~2 entries; add in Phase-2 alongside the rest of the wedge/RR layer.
 
 **Phase 6.6 — ml-training + ml-inference (P0, ~3 days)**
 
