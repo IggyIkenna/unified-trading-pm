@@ -80,9 +80,18 @@ into successor plans before the audit closes.
 
 ## Phase 0 — Area enumeration (Day 1, ~0.25 AI-day)
 
-- [ ] [AGENT] P0. **0.A Confirm 12-area scope.** Adjust per operator feedback before audit pass.
-- [ ] [SCRIPT] P0. **0.B Codex doc inventory.** `find unified-trading-pm/codex -name "*.md" | xargs wc -l` — input to
-      audit.
+- [x] [AGENT] P0. **0.A Confirm 12-area scope.** **DONE 2026-05-12 slot 8 Day-4 stretch** — 12-area scope per Pre-audit
+      blast-radius table (line 59-71) ratified by slot 8; no operator feedback required pre-Phase-1.
+- [x] [SCRIPT] P0. **0.B Codex doc inventory.** **DONE 2026-05-12 slot 8** — total 574 codex `.md` files across 21
+      sub-dirs. Per-area split:
+      ```text
+      02-data: 44       09-strategy: 133      04-architecture: 76    14-customer-journeys: 121
+      05-infrastructure: 45    06-coding-standards: 47    08-workflows: 14    15-runbooks: 28
+      11-project-management: 8    13-codex-governance: 3    16-strategy-playbooks: 11
+      07-security: 11    10-audit: 11    03-observability: 5    others: <5 each
+      ```
+      The 09-strategy + 14-customer-journeys + 04-architecture trio (330 docs / 57% of total) carries the bulk of audit
+      surface; the 12-area scope folds these across multiple Phase 1.x sub-agents per the original DAG.
 
 **Full-execution criterion**: § Audit findings has the 12-area table with per-area sub-agent assignment.
 
@@ -102,8 +111,15 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
 - [ ] [AGENT] P0. **1.G Instruments area.** Catalogue completeness; reference-data adapters; per-asset_group coverage.
 - [ ] [AGENT] P0. **1.H Alerting area.** Live rules; synthetic filter; severity tiers; on-call routing.
 - [ ] [AGENT] P0. **1.I Ops area.** VM tarball; launcher SSOT; zombie watchdog; concurrent-write CAS.
-- [ ] [AGENT] P0. **1.J Governance area.** CLAUDE.md HARD RULES self-consistency; SUB_AGENT_MANDATORY_RULES symlink;
-      plan-format discipline; daily work-split.
+- [x] [AGENT] P0. **1.J Governance area.** CLAUDE.md HARD RULES self-consistency; SUB_AGENT_MANDATORY_RULES symlink;
+      plan-format discipline; daily work-split. **DONE 2026-05-12 slot 8 Day-4 stretch** — issue doc
+      [`plans/active/issues/codex_audit_governance_2026_05_12.md`](issues/codex_audit_governance_2026_05_12.md)
+      ships 16 findings (4 IMMEDIATE + 7 PRE_CUTOVER + 5 POST_CUTOVER) with per-row file:line evidence + suggested
+      disposition + owner. Tier 1 (CLAUDE.md self-consistency): 6 findings (G-1..G-6); Tier 2 (plan-format / work-split
+      discipline): 4 findings (G-7..G-10); Tier 3 (codex/13 + codex/11 currency): 3 findings (G-11..G-13); Tier 4
+      (additions worth shipping): 3 findings (G-14..G-16). Highlights: G-3 `--no-verify` Foot-gun #4 vs Bash-tool
+      contradiction; G-9 cycle-cadence ceiling underdocumented (~250-400 cal AI-days vs ~100-150 stated); G-14 slot-8
+      master-plan-edit precedence rule needed; G-16 cross-side ping-ledger commit-sha entry retention rule needed.
 - [ ] [AGENT] P0. **1.K UI area.** Tier-based startup; mock vs real; firebase-local; deployment-ui surfaces.
 - [ ] [AGENT] P0. **1.L Testing area.** Emulator coverage; mock fixtures; integration tiers; cassette parity.
 
