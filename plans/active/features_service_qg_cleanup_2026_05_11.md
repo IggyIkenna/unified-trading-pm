@@ -55,12 +55,36 @@ org-naming tidy):
       size (~30 sites). Per-category fix shape + mechanical-vs-judgment-vs-QG-check-bug classification in the section
       below.
 - [ ] [AGENT] P0. Phase 1.2 — Fix each violation at the root. Per-violation commit (or small batches per category). Run
-      `cd features-service && bash scripts/quality-gates.sh` after each batch. **NOT started 2026-05-11 (slot 2 ran out
-      of session budget after Phase 1.1)** — next slot-2 session picks up from the Phase 1.1 table below. Order: first
-      resolve the 3 likely-QG-check-bug categories via Q1 (slot-1/PM call — fix the QG check vs fix features-service);
-      then the small mechanical ones (`os.environ` 1-liner, `asyncio.run` 1 loop, `google.cloud` 1 file, the easy nested
-      imports); then the big ones (schema-provenance ~50 → UAC/UIC; file/function size). Each big category is its own
-      shippable unit / sub-agent fan-out target.
+      `cd features-service && bash scripts/quality-gates.sh` after each batch. **IN PROGRESS — 2 of the small rows
+      landed 2026-05-11 (slot 2, 2nd session); the big rows + medium rows carry forward.** Order: first resolve the
+      QG-check-bug categories via Q1+Q2 (slot-1/PM call — fix the QG check vs fix features-service); then the small
+      mechanical ones; then the big ones (schema-provenance ~38 features_service/ models → UAC/UIC; file-size 6 files;
+      function-size ~30). Each big category is its own shippable unit / sub-agent fan-out target. - **DONE 2026-05-11
+      (slot 2)**: (a) row 11 — `git rm` the 3 broken
+      `features_service/{calendar,commodity,       multi_timeframe}/.cursor/scripts/check-import-patterns.py` symlinks
+      (subtree-merge cruft; consolidated repo has no per-family `.cursor/`) — features-svc@`45efbe44`. (b) row 4 (cli
+      subset) — hoist `from features_service.cross_instrument.engine.mock_data_provider import run_mock_pipeline` out of
+      `_get_mock_pipeline()` to top-level in `cross_instrument/cli/main.py` (verified no circular import) —
+      features-svc@`45efbe44`. **NB on row 4 (monitors subset)**: the 2 `monitors/feature_freshness.py` "imports inside
+      functions" flags (`cross_instrument` + `calendar`) are **QG false positives** — the flagged line is EXAMPLE CODE
+      INSIDE THE MODULE DOCSTRING ("Typical usage:: from ...monitors import FeatureFreshnessChecker"), not a real nested
+      import. The QG `imports-inside-functions` check matches indented `from`/`import` lines without skipping
+      docstrings. Routed to Q2 below — DON'T touch features-service for those. - **CARRY FORWARD (next slot-2 session,
+      fresh budget — fan out per the Phase 1.1 table's sub-agent plan)**: row 2
+      (`commodity/engine/mock_data_provider.py` `os.environ.get("WORKSPACE_ROOT","")` → `UnifiedCloudConfig`- based
+      accessor — but check whether `UnifiedCloudConfig`/`unified_cloud_interface` actually exposes a workspace-root /
+      mock-seed-dir accessor; if NEITHER does, this needs a UCI addition, which is out of features-service scope → flag
+      it); row 3 (`calendar/cli/handlers/batch_handler.py` `asyncio.run()` in a loop → single `asyncio.run` +
+      `asyncio.gather`, or one outer `asyncio.run` if days are sequential — read the file); row 5
+      (empty-string/dict/list fallbacks → fail-loud/honest-absence — re-derive the file:line list from a fresh QG run,
+      the schema-provenance list eats the surrounding context in a `head`'d view); row 6 (the ~38 `features_service/`
+      schema-provenance models → `unified_api_contracts.internal.domain.features.<family>` per the 3-layer schema
+      model + update consumers — biggest item, a UAC + features-service cross-repo refactor, may warrant its own
+      sub-phase; see Q2); row 8 (`sports/data/gcs_reader.py` `from google.cloud import storage` ×4 →
+      `unified_cloud_interface.get_storage_client()` — and this file is also 1306L so the same owner should do the row-9
+      split for it); row 9 (the other 5 >900L files → split); row 10 (~30 >50L methods / >200L functions → decompose).
+      Partition the sub-agent fan-out so no two sub-agents touch the same file (`sports/data/gcs_reader.py` is BOTH row
+      8 + row 9 → one owner).
 - [ ] [AGENT] P0. Phase 1.3 — `cd features-service && bash scripts/quality-gates.sh` returns green
       (CODEX_MAX_VIOLATIONS=0, no per-package ignores added). Flip `features_repo_consolidation_2026_05_08.md` Phase 4.6
       checkbox `- [x]` with the QG-green evidence; remove the `**DEFERRED**` annotation.
@@ -186,8 +210,8 @@ proceeds on rows 2/3/4(cli)/8/9/10/11 + the `features_service/` schema-provenanc
 
 #### A1 — [main (slot 1), 2026-05-11 08:01 UTC]
 
-**Status**: RESOLVED — all 3 are confirmed QG-check false positives; slot 2 SKIPS those rows in Phase 1.2; the
-QG-check fixes are routed to Ikenna (workspace QG gates = his "governance / ratchet" surface per the work-split).
+**Status**: RESOLVED — all 3 are confirmed QG-check false positives; slot 2 SKIPS those rows in Phase 1.2; the QG-check
+fixes are routed to Ikenna (workspace QG gates = his "governance / ratchet" surface per the work-split).
 
 - **Q1.1 (`print()` in `cli/`)** — ✅ confirmed false positive. CLI entry-points (`cli/main.py`, `cli/_shim.py`,
   `__main__.py`) print to stdout for `--version` / `--help` / dispatcher output — that is correct CLI behaviour, not an
@@ -196,16 +220,16 @@ QG-check fixes are routed to Ikenna (workspace QG gates = his "governance / ratc
   `**/cli/main.py` / `**/__main__.py` / `**/cli/_shim.py`).
 - **Q1.2 (schema-provenance flags `scripts/`)** — ✅ confirmed false positive, **CLAUDE.md-backed**. CLAUDE.md "Schema
   provenance" rule explicitly says **"(scripts/ excluded)"** — the check is out of sync with the documented SSOT.
-  `scripts/*/smoke_matrix.py:{CellResult,SmokeReport}` + `scripts/sports/*:{Result,DateStatus,PipelineReport,ServiceReport}`
-  are script-internal report dataclasses, NOT domain schemas; moving them to UAC/UIC would be wrong. **Do NOT relocate
-  them.** **Fix routed to Ikenna**: `check_schema_provenance.py` excludes `scripts/` (matching `pyrightconfig.json` +
-  most other QG checks). **NB**: this is ONLY the `scripts/` subset — the `features_service/` subset of the
-  schema-provenance flag is a real design question (the table's [J] row), separate from Q1; slot 2 still works that in
-  Phase 1.2.
-- **Q1.3 (`unified_api_contracts.internal` flagged as a deep import)** — ✅ confirmed false positive, **CLAUDE.md-backed**.
-  `unified_api_contracts.internal` is an explicitly-sanctioned facade per CLAUDE.md ("schemas → unified-api-contracts —
-  external + internal via `unified_api_contracts.internal`"; the Citadel import rule bans `canonical.*` /
-  `normalize_utils.*`, NOT `.internal`). The 3 sites (`commodity/monitors/feature_freshness.py`,
+  `scripts/*/smoke_matrix.py:{CellResult,SmokeReport}` +
+  `scripts/sports/*:{Result,DateStatus,PipelineReport,ServiceReport}` are script-internal report dataclasses, NOT domain
+  schemas; moving them to UAC/UIC would be wrong. **Do NOT relocate them.** **Fix routed to Ikenna**:
+  `check_schema_provenance.py` excludes `scripts/` (matching `pyrightconfig.json` + most other QG checks). **NB**: this
+  is ONLY the `scripts/` subset — the `features_service/` subset of the schema-provenance flag is a real design question
+  (the table's [J] row), separate from Q1; slot 2 still works that in Phase 1.2.
+- **Q1.3 (`unified_api_contracts.internal` flagged as a deep import)** — ✅ confirmed false positive,
+  **CLAUDE.md-backed**. `unified_api_contracts.internal` is an explicitly-sanctioned facade per CLAUDE.md ("schemas →
+  unified-api-contracts — external + internal via `unified_api_contracts.internal`"; the Citadel import rule bans
+  `canonical.*` / `normalize_utils.*`, NOT `.internal`). The 3 sites (`commodity/monitors/feature_freshness.py`,
   `commodity/engine/signal_composer.py`, `calendar/monitors/feature_freshness.py`) are correct. **Do NOT move them off
   the facade.** **Fix routed to Ikenna**: the deep-import check whitelists `unified_api_contracts.internal` (it's a
   facade, not a deep path). (Alternative if the workspace genuinely wants bare-`unified_api_contracts`-only: UAC
@@ -216,8 +240,28 @@ QG-check fixes are routed to Ikenna (workspace QG gates = his "governance / ratc
 schema-provenance subset, file-size (6 files, row [9]), function-size (~30, row [10]), `os.getenv()` (row [4 non-cli]),
 `asyncio.run()` in a loop (`calendar/cli/handlers/batch_handler.py`), nested imports, empty-string/dict/list fallbacks,
 direct `from google.cloud import …` (route through `unified_cloud_interface`). SKIP the Q1.1 / Q1.2-`scripts/` / Q1.3
-rows entirely (they're not violations; the QG-check fixes land separately via Ikenna). Don't restore per-package
-ignores / `SKIP_*` env vars to "pass" anything — fix at the root or skip the false positive.
+rows entirely (they're not violations; the QG-check fixes land separately via Ikenna). Don't restore per-package ignores
+/ `SKIP_*` env vars to "pass" anything — fix at the root or skip the false positive.
+
+### Q2 — [harsh-features-consolidation-tab, 2026-05-11 08:24 UTC] — 4th QG-check false positive: `imports-inside-functions` matches docstring example code
+
+**Status**: 🟡 OPEN — needs slot-1 / PM-side decision (same shape as Q1.1/1.2/1.3 — fix the QG check, don't touch
+features-service).
+
+While working Phase 1.2 row 4 (nested imports), found that 2 of the 3 "imports inside functions" flags are **false
+positives**: `features_service/cross_instrument/monitors/feature_freshness.py` and
+`features_service/calendar/monitors/feature_freshness.py` are flagged for
+`from features_service.<f>.monitors import FeatureFreshnessChecker`, but **that line is example code INSIDE the module
+docstring** (under "Typical usage::"), not a real nested import. The QG `imports-inside-functions` check
+(`base-service.sh`) greps for indented `from`/`import` lines without skipping `"""..."""` docstring blocks (or `#`
+comments), so it matches usage examples. The 3rd flag (`cross_instrument/cli/main.py` — `run_mock_pipeline` inside
+`_get_mock_pipeline()`) was a REAL nested import and is fixed (features-svc@`45efbe44`).
+
+**Recommendation (routed to Ikenna, same surface as Q1)**: the QG `imports-inside-functions` check should skip lines
+inside triple-quoted strings + `#` comments (AST-based detection — match `ast.Import`/`ast.ImportFrom` nodes whose
+parent is a `FunctionDef`/`AsyncFunctionDef`, not a regex on indented lines). **Do NOT "fix" features-service** — the
+docstrings are correct (a usage example SHOULD show the import). Leave both `monitors/feature_freshness.py` files
+exactly as-is.
 
 ## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2), Phase 1.1
 
