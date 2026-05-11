@@ -48,6 +48,13 @@ new error reason needed → manifest schema bump → another Phase 2.1."*
    adding it in Phase 1 since it has a real consumer (the VIX gap NaN-placeholder fix + the broader honest-absence
    reason-taxonomy completeness). NOT urgent if deferred — the VIX gap currently mis-writes a NaN parquet either way;
    that's a separate bug to fix.
+   ✅ **SHIPPED 2026-05-11** (operator decision A1 routed enum-add to Phase 1) — UAC@174f401 by slot 6 ikenna-v8-schema-tab.
+   `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP = "EXPECTED_KNOWN_SOURCE_GAP"` lands in
+   `unified_api_contracts/canonical/crosscutting/honest_coverage.py` + `EMPTY_CONFIRMED_REASONS` frozenset +
+   `LegacyBlankErrorReasonError` message updated; 1 unit test in `tests/unit/test_honest_coverage.py`
+   (`test_expected_known_source_gap_value_present`) asserts the value + prefix. Sister case-D consumer wiring (MDPS
+   `_maybe_write_vix_gap_placeholder` → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`) is still **deferred** to P0-2
+   below (writegate Phase 2.A scope; MDPS triple-SSOT cleanup is bigger).
 
 3. **Case-D itself (the actual zero-activity-bar adapter wiring) is substantial deferred work** — ~30 adapters/handlers
    across MTDS + MDPS + 8 features families need it, plus a NEW UTL zero-activity-bar primitive, plus the

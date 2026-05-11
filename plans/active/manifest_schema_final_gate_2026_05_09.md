@@ -226,20 +226,36 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
 
 ### Phase 1 — UAC v8 schema-bump (May 9-11, PARALLEL with Phase 2/3)
 
-- [ ] [AGENT] P0. Phase 1.A — Ratify slice b spec inline. NEW
+- [x] [AGENT] P0. Phase 1.A — Ratify slice b spec inline. NEW
       `unified-api-contracts/unified_api_contracts/canonical/crosscutting/service_emission_state.py` with
       `ServiceEmissionStateEnum` (4 values verbatim: `PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY`
       / `BLOCKED`) + manifest-read protocol (BLOCKED rows = consumer-skip + raise `ManifestRowBlockedError`; STALE_DATA
       = consumer-skip + log; PUBLISHED_DEGRADED = consume with degraded flag). 12 unit tests covering: closed-set
       enforcement; round-trip via JSON; consumer skip semantics; default-None back-compat for v7 rows.
-- [ ] [AGENT] P0. Phase 1.B — Extend `service_emission_policy.py` to surface a `next_state(...)` resolver that maps
+      **SHIPPED 2026-05-11** — UAC@174f401 (slot 6 ikenna-v8-schema-tab). 12 tests in
+      `tests/unit/test_service_emission_state.py` cover all four contract bullets. `ServiceEmissionStateEnum` +
+      `ManifestRowBlockedError` + `SERVICE_EMISSION_STATES` re-exported from `unified_api_contracts` root facade.
+- [x] [AGENT] P0. Phase 1.B — Extend `service_emission_policy.py` to surface a `next_state(...)` resolver that maps
       `(ServiceEmissionPolicy, EmissionDecision)` → `ServiceEmissionStateEnum`. Pure function, no I/O. Tests: every
       (policy, decision) pair has a deterministic next_state.
-- [ ] [AGENT] P0. Phase 1.C — Manifest schema column declaration in `canonical/crosscutting/manifest_schema.py` (NEW or
+      **SHIPPED 2026-05-11** — UAC@174f401. `next_state(*, policy, event)` is the resolver; signature uses
+      `EmissionLifecycleEvent` (the structured `EmissionDecision.event_emitted` field) since that's UTL's
+      `publish_with_policy` output surface. 8 new tests in `test_service_emission_policy.py` cover every (policy, event)
+      pair + kwargs-only enforcement + pure-function determinism. Mapping: `STALE_DATA` → `STALE_DATA_HEARTBEAT_ONLY`;
+      other three lifecycle events map 1:1 to state values.
+- [x] [AGENT] P0. Phase 1.C — Manifest schema column declaration in `canonical/crosscutting/manifest_schema.py` (NEW or
       extend existing). 3 new columns: `service_emission_state` (str | None, ServiceEmissionStateEnum value);
       `last_emission_decision_at` (timestamp | None, ISO-8601 ms UTC); `expected_window_completeness_pct` (float | None,
       0.0-1.0). All nullable; v7 rows back-compat.
-- QG: UAC quality-gates.sh clean. **Done-definition**: `unified-api-contracts@<sha>` shipped + test count matches.
+      **SHIPPED 2026-05-11** — UAC@174f401 with NEW `unified_api_contracts/canonical/crosscutting/manifest_schema.py`
+      declaring all 3 column-name constants + `MANIFEST_SCHEMA_VERSION_V8 = 8` + `V8_NEW_COLUMNS` tuple + back-compat
+      `V8_COLUMN_DEFAULTS` dict (all `None`) + `READER_FALLBACK_WINDOW_DAYS = 30`. 6 tests in `test_manifest_schema.py`.
+      All 7 symbols re-exported from root facade. `__all__` alpha-sort drift from rebase caught by RUF022 + fixed in
+      follow-up UAC@d938a69.
+- QG: UAC quality-gates.sh clean (lint pass on my files; foreign lint errors from concurrent
+      circuit-breaker / risk-rule rebase resolved by another agent's UAC@dc4c9f0; tests pass; basedpyright 0/0; codex
+      compliance pass). **Done-definition**: `unified-api-contracts@174f401` + `@d938a69` shipped + 27 new tests added
+      (12 emission_state + 8 next_state + 6 manifest_schema + 1 EXPECTED_KNOWN_SOURCE_GAP).
 
 ### Phase 2 — UTL v8 ManifestWriter (May 10-12, PARALLEL with Phase 1/3)
 
