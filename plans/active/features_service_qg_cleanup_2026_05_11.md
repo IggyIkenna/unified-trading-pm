@@ -412,9 +412,10 @@ fresh per QG run, so existing repos pick up the change on next QG.
 
 ### Q3 — [harsh-features-consolidation-tab, 2026-05-11 11:05 UTC] — schema-provenance row e: group-2 service-internal plumbing → UAC, or narrower QG heuristic?
 
-**Status**: ✅ ANSWERED (A1 below — move-to-UAC default, except `HealthResponse` + `_WeatherRow`; operator/Ikenna may
-override to "narrower heuristic" within the cycle). Gates **Phase 1.2e group-2** only (group-1 — the genuine domain I/O
-types — proceeds regardless once sub-agents A/B/C land).
+**Status**: ✅ RESOLVED (A1 below, operator directive 2026-05-11 + slot-1 investigation: group-2 → ~12 stay local with
+`# CORRECT-LOCAL` + 3 `Dependency*` classes in 2 files dedup-import from UTL + ZERO UAC relocations; no operator/Ikenna
+gate remains). Group-1 (genuine domain I/O) → `unified_api_contracts.internal.domain.features.<family>`; proceeds with
+the A/B/C file-splits.
 
 The ~38 `features_service/` schema-provenance flags split into two buckets (full list in `## Phase 1.2 — fresh QG
 re-enumeration ...` § "Row e ... sub-phase decision"):
@@ -441,42 +442,77 @@ request/response DTOs, which most of group 2 aren't) — EXCEPT `HealthResponse`
 consumer updates, so worth a yes/no before the relocation sub-agent runs. If "narrower heuristic" — that's a PM-side
 `check_schema_provenance.py` change (Ikenna's governance surface), same shape as Q1.1/Q1.2.
 
-#### A1 — [main (slot 1), 2026-05-11 — surfaced to operator + cross-side to Ikenna]
+#### A1 — [main (slot 1), 2026-05-11 — operator directive 2026-05-11: "docs cover this; check the code+docs of both repos; if features-service-only → stays local; if another lib/service uses it → UAC"; investigation done by slot 1]
 
-**Status**: ✅ ANSWERED — proceed with the default below; operator/Ikenna may override within the cycle.
+**Status**: ✅ ANSWERED — per-type disposition below (workspace-wide grep + UTL/UAC code-and-docs check by slot 1).
+Supersedes the earlier "default = move everything to UAC" reading.
 
-- **Group 1** — no question, **move them** (as you already concluded). Phase 1.2e does group 1; the file-split sub-agents
-  (A/B/C) proceed in parallel regardless.
-- **Group 2** — default = **your own recommendation: move to `unified_api_contracts.internal.domain.features.<family>`,
-  with two carve-out exceptions** that the `python-backend.md` § "Schema Governance" table genuinely permits to stay
-  service-local:
-  1. `HealthResponse` — literal FastAPI HTTP DTO. Stays in the service (`api/main.py` neighbourhood).
-  2. `_WeatherRow` — it's a parquet-row tuple shape, i.e. `SchemaDefinition`-adjacent ("Service-local | Only
-     `SchemaDefinition` (parquet) and HTTP DTOs"). Stays local. (If you'd rather promote it to a typed UAC record
-     anyway, that's fine — your call; it's a 1-model judgment, not a blocker.)
-  Everything else in group 2 — `PubSubMessage` / `SubscriberStats`, `*ProcessingResult` / `FeatureProcessingResult` /
-  `OrchestratorResult` / `ShardResult`, `PITViolation` / `ValidationViolation`, `DependencyFailure` / `DependencyReport` /
-  `DependencyStatus` / `LookbackValidationReport`, `FeatureRegistryEntry`, `SteamDetectorConfig` / `SteamMoveSignal`,
-  `CrossInstrumentConfig` — **moves to `unified_api_contracts.internal.domain.features.<family>`.** Rationale: the
-  `python-backend.md` 3-layer model explicitly routes "internal messaging, pub-sub, domain outputs" → UIC (=
-  `unified_api_contracts.internal`); the carve-out is narrow (literal parquet `SchemaDefinition` + literal FastAPI
-  request/response DTOs only), and "it's ~20 extra relocations" is cost, not a reason to keep a double-SSOT
-  (Citadel § 7). Config dataclasses (`SteamDetectorConfig`, `CrossInstrumentConfig`, `config.py:Parameters`-type) are
-  the fuzziest — they're runtime params, not "output shapes" — but the path of least drift is UAC.internal too (one
-  home, QG-green). If a specific config genuinely has zero cross-repo consumers AND is pure local plumbing, you may
-  keep it local with a `# QG-exempt: local runtime config, no cross-repo consumers` comment + a one-line note here —
-  but lean toward moving.
-- **The "narrower heuristic" alternative** (a `check_schema_provenance.py` carve-out for internal-plumbing DTOs) is
-  **NOT the default** — that's a PM-side governance change owned by Ikenna (same surface as Q1.1/Q1.2/Q2). If the
-  operator or Ikenna wants that route instead, they'll say so on this Q or the cross-side ledger within the cycle and
-  I'll relay; until then, the move-to-UAC default stands so Phase 1.2e group-2 isn't blocked indefinitely. **Do NOT
-  edit `check_schema_provenance.py` yourself** — if a heuristic-narrowing is wanted it ships PM-side, not in your
-  features-service work.
+**Operator rule applied**: a group-2 type moves to `unified_api_contracts.internal` ONLY if a repo OTHER than
+features-service (and other than the 8 old `features-*-service` child repos being archived — those aren't real external
+consumers, they're the same code) actually consumes it. If a canonical version already lives in `unified-trading-library`
+(UTL), the fix is "delete the local copy + import from UTL" (per "search before implementing / if it EXISTS, USE it"),
+NOT "move to UAC". If it's genuinely features-service-internal plumbing, it stays local with a `# CORRECT-LOCAL` marker
+(the `base-service.sh` schema-provenance + deep-import QG STEPs already exempt any line tagged `# CORRECT-LOCAL` — see
+`base-service.sh:790/804/1049+`; several group-2 types already carry the marker).
 
-So: run the group-1 relocation now; run the group-2 relocation per the default above (except `HealthResponse` +
-`_WeatherRow`); flip Phase 1.2e `[x]` when QG goes green; if the operator/Ikenna overrides group-2 to "narrower
-heuristic" before you've started the group-2 sub-agent, hold group-2 and ping me. Group-1 + the A/B/C file-splits never
-wait on this.
+- **Group 1** — move them (no question). Phase 1.2e does group 1; the A/B/C file-split sub-agents proceed regardless.
+
+- **Group 2 — three buckets:**
+
+  **(a) STAY LOCAL in features-service** (no consumer outside features-service / the archiving child repos — service-internal
+  plumbing or HTTP/parquet-row carve-out). Action = ensure each has a `# CORRECT-LOCAL` marker on the `class` line (most
+  already do); QG then exempts them — NO relocation, NO `check_schema_provenance.py` edit needed.
+  - `HealthResponse` (`delta_one/api/health.py`) — literal FastAPI response shape (extends UTL's 2-field one with
+    delta_one fields `timestamp`/`subscription_health`/`computation_counters`); already `# CORRECT-LOCAL`. ✓
+  - `_WeatherRow` (sports) — parquet-row tuple shape, `SchemaDefinition`-adjacent. Stays.
+  - `SubscriberStats` (`delta_one/app/pubsub/subscriber.py`) — already `# CORRECT-LOCAL`. ✓
+  - `FeatureRegistryEntry` (`sports/tracking/_registry_types.py`) — already `# CORRECT-LOCAL`; used only in `sports/tracking/`. ✓
+  - `PITViolation` / `ValidationViolation` (`sports/engine/feature_expectations.py`) — sports-engine-internal validation
+    result DTOs; no external consumer. Add `# CORRECT-LOCAL`.
+  - `LookbackValidationReport` (`delta_one/app/core/dependency_checker.py`) — delta_one-internal; no external consumer. Add `# CORRECT-LOCAL`.
+  - `FeatureProcessingResult` (`volatility/engine/orchestrator.py` + `volatility/core/orchestration_service.py`) /
+    `OrchestratorResult` / `ShardResult` (`cross_instrument/engine/orchestrator.py`) — per-family orchestrator output
+    DTOs; no external consumer (the `ShardResult` in MTDS scripts is a different, unrelated class). Add `# CORRECT-LOCAL`.
+    (NB: `FeatureProcessingResult` is defined TWICE inside features-service — that's a within-repo double-def to collapse
+    to one definition; separate from this question.)
+  - `SteamDetectorConfig` / `SteamMoveSignal` (`sports/calculators/steam_detector.py`) — already `# CORRECT-LOCAL` — calculator config/signal. ✓
+  - `CrossInstrumentConfig` (`cross_instrument/app/calculators/cross_instrument_dynamics.py`) — calculator config; no external consumer. Add `# CORRECT-LOCAL`.
+  - `PubSubMessage` (`delta_one/app/pubsub/subscriber.py`, `TypedDict, total=False`) — delta_one-internal pipeline
+    envelope; no external consumer. Add `# CORRECT-LOCAL`. **BUT it name-clashes with UAC's existing
+    `unified_api_contracts/external/gcp/pubsub.py:PubSubMessage`** (the GCP-external API message — a different layer/shape).
+    Recommend renaming the features-service one (e.g. `DeltaOnePipelineMessage`) to kill the ambiguity — slot 2's call,
+    minor, not a blocker.
+
+  **(b) DEDUP AGAINST UTL — delete the local copy, import from `unified_trading_library`** (a canonical version already
+  exists there, BYTE-FOR-BYTE identical — verified). NOT a UAC move.
+  - `DependencyFailure` / `DependencyStatus` / `DependencyReport` (+ the `DependencyError` exception) — defined in
+    `volatility/core/dependency_checker.py` AND `delta_one/app/core/dependency_checker.py`; both are literal copies of
+    `unified_trading_library/core/dependency_checker.py` (same fields, same `to_dict`, same `DependencyError`). `unified-trading-library`
+    already re-exports `DependencyReport`/`DependencyStatus` from its root (`ml-inference-service` does
+    `from unified_trading_library import DependencyReport, DependencyStatus`). **Action**: in both features-service files,
+    replace the local `class Dependency*` defs with `from unified_trading_library.core.dependency_checker import
+    DependencyError, DependencyStatus, DependencyFailure, DependencyReport` and delete the dead code. (The
+    `LookbackValidationReport` in the delta_one file is NOT in UTL — it stays local per bucket (a) above; only the
+    `Dependency*` parts of that file dedup.) If features-service ever needs a Dependency* with extra fields, extend
+    UTL's (per "if the library's approach is wrong, FIX it / ADD the feature to the library") — don't re-fork.
+
+  **(c) MOVE TO `unified_api_contracts.internal`** — **none.** Per the operator rule, no group-2 type has a genuine
+  cross-repo consumer that isn't either an archiving child repo or already-homed-in-UTL. So group-2 needs **zero** UAC
+  relocations — buckets (a) `# CORRECT-LOCAL` + (b) import-from-UTL cover all 20. (Contrast group-1 — the `*FeatureRequest`/
+  `*FeatureResult` pairs, `OptionQuote`, `OnChainFeatures`, `CrossAssetSportsSignal`, `FeatureMetadata`/`FeatureStatistics`,
+  the per-family `config.py:Parameters` — those ARE genuine domain I/O consumed by strategy-service / execution-service /
+  the deployment-api schema-view, so they move to `unified_api_contracts.internal.domain.features.<family>`.)
+
+  **If the `base-service.sh` schema-provenance/deep-import STEPs still flag a `# CORRECT-LOCAL`-tagged or imported-from-UTL
+  line after you apply (a)/(b)** — that's a QG-check bug (the marker should exempt; the UTL import should clear the
+  "self-declared" flag), route it back to me like Q1.1/Q1.2/Q1.3; **do NOT edit `check_schema_provenance.py` yourself.**
+  The `check_schema_provenance.py` Python check (the one Q1.2 touched) may also need to honor `# CORRECT-LOCAL` if it
+  doesn't already — that's Ikenna's PM-side surface, not yours.
+
+So: run group-1 relocation now (genuine domain I/O → UAC.internal); for group-2 do bucket (a) (`# CORRECT-LOCAL` markers,
+~5 lines of edits) + bucket (b) (delete the Dependency* dups in 2 files, import from UTL); flip Phase 1.2e `[x]` when QG
+goes green. Group-1 + the A/B/C file-splits never wait on this. No operator/Ikenna gate remains on group-2 — this A1 is
+the resolution.
 
 ## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2), Phase 1.1
 
