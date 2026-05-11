@@ -7,15 +7,33 @@ data-saving methodology" + "Four-category empty-output decision" — the
 placeholder bars that LOOK populated and pass the manifest as ``captured``) are
 **banned** from ``base_adapter`` and any equivalent base class. Reference
 incidents: 2026-05-05 MDPS 1440-NaN-bar (placeholder bars persisted for years
-before hand-inspection caught them); Track D audit 2026-05-11
-(``tradfi/ohlcv_passthrough.py:266 _create_full_day_empty_output`` still in the
-live path).
+before hand-inspection caught them); Track D audit 2026-05-11.
+
+The banned name-set is deliberately scoped to names that *describe the act of
+synthesising a fake empty/closed/placeholder candle* (``_create_empty_output`` /
+``_create_full_day_empty_output`` / ``_create_closed_market_candle`` /
+``_maybe_write_vix_gap_placeholder``) — a new method with one of those names is
+almost certainly the banned shape. ``_handle_empty_tick_data`` was in the set on
+day 1 (2026-05-11 @PM a4512ed3) because the pre-reform MDPS TRADFI branch
+synthesised NaN candles inside it; writegate Phase 2.A P0-2 surgery (2026-05-11)
+reformed both copies (``batch_workers.py`` + ``live_workers.py``) to route
+through ``record_empty_for_shard`` — i.e. ``_handle_empty_tick_data`` is now the
+*canonical honest-handler name*, so flagging it is pure noise and it was dropped
+from the set. (A regression that re-adds NaN-synthesis would do it under a
+``_create_*`` name or inline; the runtime 4-pillar ``record_captured`` write-gate
+is the real defence, not this static check.)
 
 How it works
 ------------
 1. Loads ``banned_placeholder_methods_baseline.yaml`` (the workspace baseline of
    CURRENTLY-KNOWN occurrences — those are ``pending_removal`` and surface as
-   WARNINGS, exit-clean; writegate Phase 2.A is deleting them).
+   WARNINGS, exit-clean). As of 2026-05-11 PM the baseline holds 2 entries (was
+   8) — the writegate Phase 2.A P0-2 surgery deleted 4 of the offenders
+   (``tradfi/ohlcv_passthrough.py:_create_full_day_empty_output``,
+   ``batch_workers.py``/``orchestration_writer.py``:``_create_closed_market_candle``,
+   the legacy ``orchestration_writer.py`` ``_write_candles`` ``upload_bytes``
+   bypass) and reformed ``_maybe_write_vix_gap_placeholder`` (still flagged by
+   name; baselined-as-warning until writegate cosmetically renames it).
 2. AST-walks every ``.py`` file under the given source dir(s) (skipping venvs /
    build artefacts / archived trees / scripts/ / tests/).
 3. Flags: (a) ``def <name>`` / ``async def <name>`` for ``name`` in the banned
@@ -27,7 +45,8 @@ How it works
    ``successor:`` from the baseline header — **exit 1**.
 
 So a NEW placeholder method (or one moved to a new file) fails CI immediately;
-the existing ones are tracked + clear as writegate Phase 2.A ships.
+the residual baselined ones clear as writegate cosmetic renames / dead-code
+deletions ship.
 
 Usage::
 
@@ -52,11 +71,15 @@ import yaml
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-#: Method names that are banned as NaN-placeholder generators.
+#: Method names that are banned as NaN-placeholder generators. Scoped to names
+#: that describe *synthesising a fake empty/closed/placeholder candle* — a new
+#: method with one of these names is almost certainly the banned shape.
+#: ``_handle_empty_tick_data`` was dropped 2026-05-11 PM after writegate Phase
+#: 2.A P0-2 reformed it into the canonical honest-handler (routes through
+#: ``record_empty_for_shard``) — see module docstring.
 BANNED_METHOD_NAMES: Final[frozenset[str]] = frozenset(
     {
         "_create_empty_output",
-        "_handle_empty_tick_data",
         "_create_full_day_empty_output",
         "_create_closed_market_candle",
         "_maybe_write_vix_gap_placeholder",
