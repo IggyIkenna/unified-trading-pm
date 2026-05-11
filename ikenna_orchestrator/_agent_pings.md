@@ -31,14 +31,7 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-[2026-05-11 ~now UTC] [main → slot 3] — RE-TASK after ✅ DONE original scope. Pick up 3 carryover items in slot 3's
-UAC/UTL competency: (a) UAC `EXPECTED_KNOWN_SOURCE_GAP` enum addition to `EmptyConfirmedReason` closed set
-(operator-approved Phase 1; lands in `manifest_schema_final_gate_2026_05_09.md` scope; covers VIX 15m mid-history gap +
-sports `KNOWN_COVERAGE_GAPS`); (b) flip sports `available_at` Phase 1 todo in
-`available_at_lookahead_bias_completion_2026_05_08.md` per Harsh slot 4's `MTDS@c186ecb` ship; (c) answer 4 design Qs
-Q-A/B/C/D in `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` § "Open design questions". Full brief:
-`plans/active/work_split_2026_05_11_ikenna.md` § "Slot 3 — RE-TASK BRIEF". **Do NOT touch MDPS VIX-gap consumer**
-(`_maybe_write_vix_gap_placeholder`) — that's Harsh slot 5's territory per the P0-2 routing. ~2-4 hrs.
+[2026-05-11 ~now UTC] [main → slot 3] — RE-TASK after ✅ DONE original scope. **DECONFLICTED 2026-05-11 PM**: original re-task had 3 items; item (a) UAC `EXPECTED_KNOWN_SOURCE_GAP` enum addition is now owned by **slot 6** (its spawn prompt per PM@`2e7cfeea` assigns it explicitly). Slot 3 picks up 2 items: (a) flip sports `available_at` Phase 1 todo in `available_at_lookahead_bias_completion_2026_05_08.md` per Harsh slot 4's `MTDS@c186ecb` ship; (b) answer 4 design Qs Q-A/B/C/D in `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` § "Open design questions". Full brief: `plans/active/work_split_2026_05_11_ikenna.md` § "Slot 3 — RE-TASK BRIEF". **Do NOT touch MDPS VIX-gap consumer** (`_maybe_write_vix_gap_placeholder`) — that's Harsh slot 5's territory per the P0-2 routing. ~1-2 hrs.
 
 [2026-05-11 ~now UTC] [main → slot 4] — RE-TASK: your spawn prompt's "BLOCKED on features_repo_consolidation_2026_05_08
 Phase 7 (Harsh slot 2)" gate is **STALE**. Verified 2026-05-11: `features_repo_consolidation_2026_05_08.md:678` Phase 7
