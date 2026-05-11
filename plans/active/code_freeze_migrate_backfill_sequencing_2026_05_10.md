@@ -148,15 +148,15 @@ Plans in this section MUST run to ✅ shipped before Phase 2 starts. The umbrell
 
 The freeze gate fires when ALL of the following are true. The umbrella `manifest_evolution_master` G2 gate is the technical enforcer; this section is the operator-readable checklist.
 
-- [ ] **Schema columns frozen**: UAC manifest schema for v8 (incl. `service_emission_state`, `pipeline_mode`, `feature_family`) reviewed + merged + tagged. No further column adds. Column declaration is owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) per operator decision 2026-05-11 (resolves codex_audit F3 ambiguity — the final-gate plan is the canonical v8 owner; writegate slice (b)'s Phase 5.2 "UAC manifest schema columns" is SUPERSEDED, slice (b) retains the UTL `manifest_completeness` helper + MDPS POC + deployment-api/ui surfaces).
-- [ ] **error_reason taxonomy closed**: `EMPTY_CONFIRMED_REASONS` final set declared in UAC; `LegacyBlankErrorReasonError` rejecting any blank reason at write boundary (already shipped UTL@68b3804a per CLAUDE.md). New reason additions require explicit P0 RFC + this plan re-opens.
-- [ ] **All 37 MDPS/MTDS callsites migrated** to `ManifestWriter.record_captured(...) / record_empty(...) / record_failed(...) / record_expected_unattempted(...)`. AST sweep (writegate plan QG STEP 5.64) green workspace-wide.
-- [ ] **ServiceEmissionPolicy seed dict locked**: 19+ rows covering MDPS / features / ml-training / ml-inference / strategy / execution / position-balance / risk / instruments / alerting (+ any added during Phase 1).
-- [ ] **available_at per-row stamping wired** at every write boundary; LookaheadBiasError strict-mode green at every features-* calculator.
-- [ ] **features_repo_consolidation Phase 7** done — single features-service repo deployable; 8 child repos archived.
-- [ ] **bucket_name SSOT** — single UAC bucket_config registry; all per-service config.py duplicates deleted.
-- [ ] **Workspace QG green** across UAC + UTL + every service repo; basedpyright clean; no `# type: ignore` masking architectural violations.
-- [ ] **Codex SSOTs updated** per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — every doc that the Phase 1 plans should have touched is current.
+- [x] **Schema columns frozen**: UAC manifest schema for v8 (incl. `service_emission_state`, `pipeline_mode`, `feature_family`) reviewed + merged + tagged. No further column adds. Column declaration is owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) per operator decision 2026-05-11 (resolves codex_audit F3 ambiguity — the final-gate plan is the canonical v8 owner; writegate slice (b)'s Phase 5.2 "UAC manifest schema columns" is SUPERSEDED, slice (b) retains the UTL `manifest_completeness` helper + MDPS POC + deployment-api/ui surfaces). **✅ Shipped 2026-05-11**: UAC@`174f401` + `@d938a69` + `@76f950a` per slot 6 / slot 2 sequence; `canonical/crosscutting/manifest_schema.py:59,134-138,158-162` declares `MANIFEST_SCHEMA_VERSION_V8=8` + `V8_NEW_COLUMNS` tuple + `V8_COLUMN_DEFAULTS` dict; no `# TODO v9` markers per slot 3 audit 2026-05-12. (Note: `MANIFEST_SCHEMA_VERSION` constant in `manifest_writer.py:131` is still `=7` transitionally per Phase 2 P2 option-b decision; bump-to-8 lands at Phase 4.DEFAULT-REMOVAL.)
+- [x] **error_reason taxonomy closed**: `EMPTY_CONFIRMED_REASONS` final set declared in UAC; `LegacyBlankErrorReasonError` rejecting any blank reason at write boundary (already shipped UTL@`68b3804a` per CLAUDE.md). New reason additions require explicit P0 RFC + this plan re-opens. **✅ Verified 2026-05-12 slot 3 audit**: `EmptyConfirmedReason` 15 members + `EMPTY_CONFIRMED_REASONS` frozenset (UAC `canonical/crosscutting/honest_coverage.py:68-170,121`); `LegacyBlankErrorReasonError` raises at blank reason (UTL `manifest_writer.py`).
+- [ ] **All 37 MDPS/MTDS callsites migrated** to `ManifestWriter.record_captured(...) / record_empty(...) / record_failed(...) / record_expected_unattempted(...)`. AST sweep (writegate plan QG STEP 5.64) green workspace-wide. **🟡 PARTIAL 2026-05-12** — 4/6 sub-items shipped per slot 3 audit: MDPS@`a3c7198` (22 callsites) ✅ + instruments-service@`e530906` (~50 callsites) ✅ + deployment-api@`2f833a7` + deployment-ui@`ab06bfe` ✅ + Phase 4.E2E + Phase 4.PM-SCRIPTS ✅ N/A. **Phase 4.MTDS ❌ BLOCKED** on 3 operator findings (PM@`237d00b7` + `a5e5aa4d` + `6ede1e01` — recommend Q1=α DefiManifestRecorder migration + Q2=A extend UAC `PipelineMode` enum with 6 new values). **Phase 4.FEATURES** 🟢 UNBLOCKED (features-consolidation Phase 7 shipped) but sweep not started — owner: slot 2 or 4 carry-forward. **Phase 4.GREP-VERIFY** ❌ TODO (slot 3 ships `check_pipeline_mode_explicit_at_record_calls.py` Day 1-2 of this cycle, ~3-5h). **Phase 4.DEFAULT-REMOVAL** ❌ blocked-after-MTDS+FEATURES+GREP-VERIFY (consolidated scope: 4 None defaults removal + bump `MANIFEST_SCHEMA_VERSION` 7→8 + reconcile codex).
+- [x] **ServiceEmissionPolicy seed dict locked**: 19+ rows covering MDPS / features / ml-training / ml-inference / strategy / execution / position-balance / risk / instruments / alerting (+ any added during Phase 1). **✅ DONE 2026-05-12 slot 3 audit — 71 rows** in `unified-api-contracts/.../canonical/crosscutting/service_emission_policy.py:159-283`. Coverage: 5 MDPS + 11 Features (volatility / cross-instrument / delta-one / multi-timeframe) + ML training/inference + Strategy + Execution (order_intent / fill_confirmation) + Position-balance + Risk + Instruments + Onchain (11) + Sports (7). Default for unseeded pairs: STRICT_FAIL (line 315).
+- [ ] **available_at per-row stamping wired** at every write boundary; LookaheadBiasError strict-mode green at every features-* calculator. **🟡 PARTIAL 2026-05-12 slot 3 audit — 2/8 feature families**: features-sports ✅ shipped (`features-service/features_service/sports/data/writer.py:61` `PointInTimeEnforcer(as_of=as_of, strict=True)`); features-onchain 🟡 config-gated (production strict=True only; `feature_writer.py:143-146`); 6 other families (delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe) ❌ NO strict-mode wiring. Plan `available_at_lookahead_bias_completion_2026_05_08.md` 14/47 todos done (~30%); Phase 6 (calculator/writer enforcement) DEFERRED-AFTER chain links 0+1 + features-consolidation Phase 5.c gate-lift-into-UTL. **Action**: owner needs reassignment in 2026-05-13 cycle to drive 6 remaining families.
+- [x] **features_repo_consolidation Phase 7** done — single features-service repo deployable; 8 child repos archived. **✅ DONE 2026-05-11 — verified by slot 3 audit 2026-05-12**: 10/13 phases done (3 residual P2 deferred to successor `features_service_qg_cleanup_2026_05_11.md`, non-blocking); 8 child repos archived on GitHub (`gh api .archived = true`) — calendar / commodity / cross-instrument / delta-one / multi-timeframe / onchain / sports / volatility with DEPRECATION_NOTICE.md SHAs (a4c7cf2 / 5c28810 / b8866c2 / e55ea32 / 4d1f0f9 / 6d00e78 / 35a49e7 / 9217a90); `workspace-manifest.json` PM@`47b893be` + `55f84a17` flipped 8 source repos to `status=consolidated-into-features-service`.
+- [x] **bucket_name SSOT** — single UAC bucket_config registry; all per-service config.py duplicates deleted. **✅ CODE HALF DONE 2026-05-12 slot 3 audit**: `deployment-service/configs/cloud-providers.yaml` canonical; `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud, kind, asset_group, env)` shipped; QG STEP 5.69 `unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py` wired. Phase 0a/0b/0e/0f shipped per `bucket_name_ssot_canonicalisation_2026_05_10.md` (deployment-service@`a7eba4f` + UTL@`2118b1e` + deployment-service@`a5c2082` + UTL@`ba6089c` + 5 VM-launcher commits per Phase 0f). **Physical half (Phase 0c provisioning ~180-300 buckets + Phase 0d flat→tiered data migration) DEFERRED to Phase 2.4/Phase 2.6 (cutover window 2026-05-15→05-19)** — sequenced correctly per 3-phase model line 75; not a Phase 1 freeze blocker.
+- [ ] **Workspace QG green** across UAC + UTL + every service repo; basedpyright clean; no `# type: ignore` masking architectural violations. **🟡 PARTIAL 2026-05-12 slot 3 audit** — `qg_sweep_2026_05_11.md` static day-1 baseline ✅ (ruff clean on 20/22 repos; features-service 13×I001 in-flight consolidation expected; system-integration-tests 4×C901 pre-existing non-blocker; 0 bare `# type: ignore` directives, 343 coded — strong signal). Full `quality-gates.sh` + basedpyright sweep ❌ DEFERRED days 2-4 (slot worktrees lack per-repo `.venv`; `setup.sh` per repo needed, ~30-60min/repo × 22 repos = ~14-22h fan-out).
+- [ ] **Codex SSOTs updated** per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — every doc that the Phase 1 plans should have touched is current. **🟡 PARTIAL 2026-05-12 slot 3 audit** — per `codex_audit_2026_05_11.md` + Harsh slot 6 EOD-2026-05-12 handover: 58 codex docs present / 33 referenced-but-not-yet-created (all are `- [ ]` items in owning Phase 1 plans, deadline = freeze gate); 3/4 NEW codex docs landed by Harsh slot 6 (risk-rule-taxonomy / circuit-breaker-rule-taxonomy / service-emission-policy); `cross-asset-rescan-protocol.md` still ABSENT; ~50 codex docs need bulk currency spot-check (days 2-4 cross-coverage Harsh slot 6 + Ikenna slot 3).
 
 ## Phase 2 — One-shot physical migrations
 
@@ -697,3 +697,71 @@ NOT a Phase 1.E sequencing question — slot 5 defers to slot 1 + operator for t
 under the cited plan-of-record's `- [ ]` todos OR in this plan's audit table (rows added this commit). Slot 5 did NOT
 create new issue docs — all findings route to existing active plans per Findings Triage Discipline case-3 (outside my
 plan, fits another active plan). No deferral lives only in chat.
+
+## DONE-2026-05-12 — slot 3 (ikenna-codefreeze-audit-tab) Phase 1.E freeze-gate closure audit — Day 1
+
+Slot 3 (Ikenna side, `tab/ikennaigboaka/3`) Day 1 of the 4-day 2026-05-12→05-15 density-push cycle against work-split
+row 3: "**`code_freeze` Phase 1 freeze-gate completion audit + Phase 2 sequencing dry-run + cross-plan banner sweep**".
+6 Explore sub-agents fanned out 2026-05-12 ~boot UTC (Phase 0.B + LookaheadBias / Phase 4.GREP-VERIFY / features-consolidation /
+TradFi phantom carry-forward / bucket_ssot+seed+QG / operator-triage on 3 PipelineMode findings); results reconciled
+below. Plan-flips above (this commit) on the 5 freeze-gate items unambiguously ✅ shipped with commit-SHA evidence.
+
+### Audit summary — 9 freeze-gate items
+
+| # | Item | Status | Owner / next step |
+|---|------|--------|-------------------|
+| 1 | Schema columns frozen (UAC v8) | ✅ DONE | — (post-freeze `MANIFEST_SCHEMA_VERSION` 7→8 bump scheduled in Phase 4.DEFAULT-REMOVAL) |
+| 2 | error_reason taxonomy closed | ✅ DONE | — |
+| 3 | 37 MDPS/MTDS callsites migrated | 🟡 4/6 sub-items shipped | **Phase 4.MTDS** blocked on 3 operator findings; **Phase 4.GREP-VERIFY** slot 3 ships Day 1-2; **Phase 4.DEFAULT-REMOVAL** sequenced; **Phase 4.FEATURES** unblocked-not-started (slot 2/4 pickup) |
+| 4 | ServiceEmissionPolicy seed dict (19+ rows) | ✅ DONE — 71 rows | — |
+| 5 | available_at stamping + LookaheadBiasError strict-mode | 🟡 2/8 feature families wired | Owner reassignment needed for 6 remaining (delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe); `available_at_lookahead_bias_completion_2026_05_08.md` Phase 6 DEFERRED-AFTER chain links 0+1 + features-consolidation Phase 5.c |
+| 6 | features_repo_consolidation Phase 7 done | ✅ DONE | — (3 residual P2 items deferred to `features_service_qg_cleanup_2026_05_11.md`, non-blocking) |
+| 7 | bucket_name SSOT (code half) | ✅ DONE — physical half = Phase 2.4/2.6 (by design) | — |
+| 8 | Workspace QG green | 🟡 static day-1 baseline only | Days 2-4 full sweep — slot worktrees need `setup.sh` per repo (~14-22h fan-out across 22 repos) |
+| 9 | Codex SSOTs updated | 🟡 58 present / 33 pending | Days 2-4 bulk currency spot-check — Harsh slot 6 + Ikenna slot 3 cross-coverage |
+
+### Preamble-specified items + carry-forward
+
+| Item | Status | Action / owner |
+|------|--------|----------------|
+| **Phase 4.MTDS pipeline_mode sweep** (Q1-Q5) | ❌ **AWAITING-OPERATOR** | 3 issue docs all `locked_by: live-defi-rollout`, NO resolution markers: `mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` (PM@`237d00b7`) + `mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md` (PM@`a5e5aa4d`) + `footystats_pipeline_mode_gap_2026_05_12.md` (PM@`6ede1e01`). Pre-audit found 102 callsites in 26 MTDS files; mechanical sweep ~60min once Q1+Q2 triaged. **Recommend operator decisions**: Q1=(α) migrate `DefiManifestRecorder.record_captured` from legacy `ManifestWriter.add()` to v8 `record_captured()` path (no-double-SSOT); Q2=(A) extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with 6 missing values (`BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`). **CRITICAL PATH** — blocks Phase 4.DEFAULT-REMOVAL → blocks Phase 1 freeze gate. Cross-side escalation shipped this cycle ([`_agent_pings.md`](_agent_pings.md)). |
+| **Phase 4.FEATURES** | 🟢 UNBLOCKED — sweep not yet started | features_repo_consolidation Phase 7 ✅ SHIPPED unblocks gate. Owner: slot 2 (consistent with prior `ikenna-v8-mw-*` sub-agent pattern) OR fold into Phase 4.MTDS unblock once operator triage lands. ~6-12h fan-out across 6 feature-family adapters. |
+| **Phase 4.GREP-VERIFY** (workspace AST-walk QG STEP) | ❌ TODO — slot 3 picks up Day 1-2 | `unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` does NOT exist; test file does NOT exist; NOT wired into `base-service.sh`. Precedent `check_banned_placeholder_methods.py` 340 lines + 342 test lines. Effort ~3-5h. Claims STEP 5.66 or 5.68 (both reserved). **Slot 3 Day 1-2 of this cycle.** |
+| **Phase 4.DEFAULT-REMOVAL** | ❌ blocked-after-MTDS+FEATURES+GREP-VERIFY | Consolidated scope per Phase 2 P2 resolution (PM@`6efbfced`): (a) remove 4 `None` defaults from 5 `record_*` methods + (b) bump `MANIFEST_SCHEMA_VERSION` 7→8 at `manifest_writer.py:131` + (c) reconcile codex prose at `availability-manifest-and-data-status.md:258-262+265`. |
+| **Phase 0.B** (measure-honest-coverage.py PRE-baseline) | ❌ TODO | Baseline doc `codex/02-data/honest_coverage_baseline_2026_05.md` EXISTS as DRAFT (schema-only; all data cells TBD). Runner script `measure-honest-coverage.py` does NOT exist anywhere in workspace. Plan body marks as `[HUMAN] P0`. **Operator-runnable on same-region GCE VM**; gates Phase 12 ratchet POST-baseline comparison. Not a strict freeze-gate blocker but ties into deferred Phase 12 work — recommend operator-decision Day 2-3 on whether to (a) defer post-cutover (acceptable per plan body) or (b) author + run the script this cycle (slot 4 or 8 carry-forward). |
+| **LookaheadBiasError strict-mode at features-*** | 🟡 PARTIAL (= freeze-gate item 5 above) | 2/8 families shipped; 6 deferred-after-Phase-0+1 chain links + features-consolidation Phase 5.c. |
+| **Carry-forward — TradFi 4.3% phantom audit triage** | ❌ NOT YET OPENED — does NOT block freeze | Diagnosed 2026-05-11 (`defi-phantom-recon-tradfi-20260511-194845`); 3976 phantom (~4.3%, ABOVE bar). Routed to `tradfi_master_2026_05_07.md` § "Port phantom-audit" P0 todo. NO named owner in 2026-05-12 work-split. Dry-run only (manifest unmodified). Per-cluster real-vs-false-positive triage = POST-CUTOVER scope. **Sub-finding**: workspace-level `venue=UNKNOWN`/blank-venue cluster (~2150 cross-asset) needs adapter-side guard. Escalation: slot 1 / work-split rebalance to name TradFi-domain owner post-cutover. |
+
+### Go/no-go signal for 2026-05-15 Phase 1 freeze gate
+
+**🟡 CONDITIONAL GO** — Phase 1 freeze gate IS FEASIBLE BY 2026-05-15 conditional on:
+
+1. **Operator triages 3 PipelineMode findings** before EOD Day 2 (2026-05-13) — unblocks Phase 4.MTDS sweep (mechanical ~60min once decided)
+2. **Slot 3 ships `check_pipeline_mode_explicit_at_record_calls.py`** Day 1-2 (~3-5h)
+3. **Phase 4.FEATURES sweep** ships Day 2-3 — slot 2 or 4 pickup; ~6-12h fan-out
+4. **Phase 4.DEFAULT-REMOVAL** ships Day 3-4 — sequenced after 1+2+3 land
+5. **6 LookaheadBiasError strict-mode** family wire-ins — owner reassignment in 2026-05-13 cycle (currently deferred-after-Phase-0+1; if not reassigned + landed, item 5 declares slip post-freeze)
+6. **Workspace QG full sweep** Days 2-4 — 22 repos × `setup.sh` + `quality-gates.sh`
+7. **Codex bulk spot-check** Days 2-4 — Harsh slot 6 + Ikenna slot 3 cross-coverage
+
+### Slot 8 go/no-go signal (manifest_schema_final_gate Phase 3 consumer sweep ramp gate)
+
+**🟢 GO TO RAMP** — published 2026-05-12 Day 1 (vs work-split commitment of "EOD Day 2 = 2026-05-13"; ahead of schedule).
+Phase 1 freeze-gate items that gate Phase 3 (v8 schema landing on real GCS) are ALL ✅ shipped OR 🟡-partial-with-no-Phase-3-blocker.
+The v8 schema column declaration + UTL ManifestWriter + cross-asset-rescan launcher are operationally complete per
+`manifest_schema_final_gate_2026_05_09.md` Phases 1/2/3. Phase 3 consumer sweep can proceed in parallel with the
+ongoing Phase 4.MTDS unblock. Cross-side ping shipped this cycle.
+
+### Operator decisions outstanding (P0 — cross-side escalation 2026-05-12)
+
+- **Q1** (DefiManifestRecorder migration α vs β) — recommend α (canonical no-double-SSOT)
+- **Q2** (PipelineMode enum extension A vs B vs C) — recommend A (closes drift vectors)
+- **TradFi-domain owner** assignment for phantom triage (post-cutover; not 2026-05-15 critical)
+
+### Carry-forward to Day 2-4 (slot 3 own scope)
+
+- [ ] [SCRIPT] P0. Ship `check_pipeline_mode_explicit_at_record_calls.py` + tests + `base-service.sh` STEP wiring. Day 1-2.
+- [ ] [DOC] P0. Phase 2 cutover dry-run runbook section in this plan body (5-step per-bucket sub-sequence per `bucket_name_ssot_canonicalisation_2026_05_10.md` § A6). Day 2.
+- [ ] [DOC] P0. Cross-plan banner sweep — 9 plans per § "Cross-plan coordination banners" + 3 (b+) targets per slot 5 audit. Day 2-3.
+- [ ] [DOC] P0. Day 2 EOD daily progress ping in `ikenna_orchestrator/_agent_pings.md` per work-split § Daily sync points.
+- [ ] [DOC] P0. DONE-2026-05-15 EOD-cycle block + flip 5 ✅ freeze-gate items above into final-state evidence.
