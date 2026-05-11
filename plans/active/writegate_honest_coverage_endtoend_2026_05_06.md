@@ -894,6 +894,28 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07`
   futures-expiry shipping. No change from prior DONE-2026-05-11 state.
 
+### Step 6 follow-on 2026-05-11 — Slot 8 OutputWriterService dead-branch deletion
+
+Case-2 finding surfaced during Item 1 (QG STEP 5.67 verification post-P0-2). Structurally identical to the just-
+deleted `CandleProcessingService` triple-SSOT branch: an independent ~424L source file + 328L tests with its own
+`upload_bytes()` path bypassing `record_captured()`. Grep audit confirmed zero production wiring (only test files
++ a stale docstring reference in `output_path_helpers.py`).
+
+- ✅ **`OutputWriterService` deleted**: `output_writer_service.py` (424L) + `test_output_writer_service.py` (328L)
+  + 1-line docstring update in `output_path_helpers.py`. Commit `mdps@89eacc6` on `tab/ikennaigboaka/8`. MDPS QG:
+  1105 passed / 1 skipped / 1 pre-existing failed (the same `test_cli_help` `ENVIRONMENT='test'` env-validation
+  failure flagged earlier, not P0-2 scope).
+- ✅ **Banned-placeholder baseline yaml pruned**:
+  `unified-trading-pm/scripts/quality_gates/banned_placeholder_methods_baseline.yaml` shrunk from 8 entries to 3.
+  Removed the 5 stale entries (`_create_full_day_empty_output` / `_create_closed_market_candle` × 2 /
+  `orchestration_writer.py:upload_bytes` / `output_writer_service.py:upload_bytes`) — all those methods/patterns
+  are deleted in production. The 3 remaining entries (`batch_workers.py:_handle_empty_tick_data` /
+  `live_workers.py:_handle_empty_tick_data` / `_maybe_write_vix_gap_placeholder`) have honest bodies post-P0-2;
+  only their method NAMES still match the heuristic — successor text now describes a follow-up rename rather
+  than a deletion. QG STEP 5.67 re-run: 0 new occurrences, 3 baselined warnings (down from 4).
+- **Follow-on deferred** (not P0; cosmetic): rename the 3 body-honest methods so the heuristic no longer
+  false-positives. Tracked as a follow-up on slot 8 backlog; not on May-15 freeze-gate critical path.
+
 ### Phase 0 audit findings — MTDS bundle adapter inventory
 
 **CRITICAL plan correction**: Phase 2.B file paths at lines 510-516 are wrong:
