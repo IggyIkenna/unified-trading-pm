@@ -192,18 +192,25 @@ isProject: false
 
 todos:
 
-- [ ] [SCRIPT] P0. **UAC SSOT — bar boundary contract**. Add to UAC `canonical/crosscutting/availability_semantics.py`
-      (or new `bar_boundary_alignment.py`) the canonical rule: every bar timeframe ∈ {15s, 1m, 5m, 15m, 30m, 1h, 4h, 1d}
-      closes on a UTC-midnight-aligned boundary. Bar `[t_open, t_close)` has `available_at = t_close` (the moment the
-      bar closed and could be observed live). Document the rounding rule:
-      `t_close = ceil_to_boundary(last_tick_ts, timeframe, anchor=midnight_utc)`. Document that bar `t_open` =
-      `t_close - timeframe`. The rule is idempotent: replaying ticks with the same window yields the same
-      `(t_open, t_close, available_at)` triple regardless of when the replay runs.
+- [x] [SCRIPT] P0. **UAC SSOT — bar boundary contract** (shipped UAC@5240000 2026-05-11 by `ikenna-available-at-tab`).
+      New module `unified_api_contracts/canonical/crosscutting/bar_boundary.py` declares the 4-clause contract:
+      (1) closed-set timeframe `BAR_TIMEFRAMES = ('15s', '1m', '5m', '15m', '30m', '1h', '4h', '1d')`;
+      (2) `t_close` lies on the UTC-midnight-aligned grid for the timeframe;
+      (3) half-open window `[t_open, t_close)` of width `== timeframe`;
+      (4) `available_at == t_close` (no leak; replay-idempotent).
+      Public helpers: `BarTimeframe` Literal, `BAR_TIMEFRAME_SECONDS`, `BarBoundaryViolationError`,
+      `assert_bar_boundary_contract(...)`, `bar_window_for_close(t_close, timeframe)`. Re-exported from
+      `canonical/crosscutting/__init__.py` + root `unified_api_contracts` facade. 24 unit tests cover all clauses
+      + tz-awareness + idempotency. status: done.
 
-- [ ] [SCRIPT] P0. **UTL helper — `compute_bar_close_boundary(last_tick_ts, timeframe) -> datetime`**. Lift the
-      boundary-rounding logic into UTL `unified_trading_library/availability_stamping.py` so MDPS + any future
-      bar-producing service uses the same code. Unit tests: 15s/1m/5m/1h/1d × midnight + non-midnight last-tick-ts × DST
-      edges (no DST drift; UTC-only); idempotency under replay.
+- [x] [SCRIPT] P0. **UTL helper — `compute_bar_close_boundary(last_tick_ts, timeframe) -> tuple[datetime, datetime, datetime]`**
+      (shipped UTL@d798fcf3 2026-05-11 by `ikenna-available-at-tab`). Lifted boundary-rounding into
+      `unified_trading_library/availability_stamping.py`. Strictly-after ceiling (tick on grid point rolls to NEXT bar
+      per half-open window). Integer microsecond arithmetic vs UTC midnight — no float drift, exact for every
+      supported timeframe (each divides evenly into 86400s). Round-trips through `assert_bar_boundary_contract` so
+      drift is caught at helper-call site. Idempotent under replay (no `datetime.now()`). 20 unit tests covering
+      strictly-after rule, every timeframe in closed set, idempotency under repeated calls, tz-aware UTC gating
+      (naive + non-UTC both rejected), and no-DST-drift sanity for US spring-forward + EU fall-back. status: done.
 
 - [ ] [SCRIPT] P0. **MDPS audit + fix — bar boundary alignment**. Walk every `MDPS` calculator that emits OHLCV or
       aggregate bars. For each: (a) verify `t_open` / `t_close` are computed via `compute_bar_close_boundary` (no inline
@@ -450,14 +457,45 @@ This plan is a **coordinator**. Banners must be added to:
 
 ---
 
+## Deferred work after 2026-05-11 ikenna-available-at-tab session
+
+The 2026-05-11 `ikenna-available-at-tab` session shipped Phase 0.1 (UAC bar_boundary SSOT — UAC@5240000) + Phase 0.2
+(UTL `compute_bar_close_boundary` helper — UTL@d798fcf3). Items still open are tracked here so the next agent picks
+up cleanly without re-reading session notes.
+
+| Phase / item                                             | Status as of 2026-05-11                                      | Successor / blocker                                                                                                                                                                                                                                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0.1 — UAC bar_boundary SSOT                        | `done` (UAC@5240000 shipped)                                 | —                                                                                                                                                                                                                                                                                                         |
+| Phase 0.2 — UTL `compute_bar_close_boundary` helper      | `done` (UTL@d798fcf3 shipped)                                | —                                                                                                                                                                                                                                                                                                         |
+| Phase 0.3 — MDPS audit + fix (bar boundary alignment)    | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-`features_repo_consolidation_2026_05_08.md` Phase 7 (consolidated features-service deployable) AND `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4-5 (MDPS streaming aggregator design) — both gate MDPS calculator rework. Harsh slot 4 to pick up per-adapter wiring once unblocked. |
+| Phase 0.4 — Historical MDPS parquet reconciler           | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3 (need fixed MDPS first so reconciler stamps via the same UTL helper).                                                                                                                                                                                                            |
+| Phase 0.5 — MDPS write-gate enforcement                  | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3. `BarBoundaryViolationError` is already importable from UAC; wiring lives at MDPS `ManifestWriter.record_captured` invocation in the orchestrator path. The validator (`assert_bar_boundary_contract`) is the gate primitive.                                                    |
+| Phase 0.6 — QG static check for MDPS bar emission        | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3. Mirrors writegate STEP 5.64 AST-walk: every bar-emitting code path must call `compute_bar_close_boundary` (or import the UTL helper); ban inline `pd.Timestamp.floor` / `dt.replace(...)` bypasses.                                                                              |
+| Phase 1 (DeFi / TradFi / Predictions adapter stamping)   | `todo` (checkbox `- [ ]` × 3)                                | Owned by respective asset_group master plans (defi_master / tradfi_master / predictions_master). Harsh slot 4 picks up per-adapter wiring once Phase 0 lands at MDPS level.                                                                                                                              |
+| Phase 4 — FEATURE_REQUIRED_INPUTS expansion              | `todo` (checkbox `- [ ]` × 5)                                | This session's next work item; tracked in slot 3 todo list.                                                                                                                                                                                                                                              |
+| Phase 5 — AVAILABILITY_AT_SEMANTICS workspace-wide audit | `todo` (checkbox `- [ ]` × 2)                                | This session's next work item; tracked in slot 3 todo list.                                                                                                                                                                                                                                              |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **MDPS streaming aggregator design** (consumes Phase 0.1/0.2 contract): open in
+  [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 4. Ikenna
+  slot 4 owns the design-ahead this cycle.
+- **Per-adapter `available_at` stamping wiring (CeFi tick / TradFi / Predictions / DeFi)**: Harsh slot 4 scope. Cross-side
+  ping landed in `plans/active/_agent_pings.md` on Phase 0.1/0.2 close so Harsh slot 4 unblocks.
+- **features-onchain `suppress(LookaheadBiasError)` removal**: open in `ml_and_features_master_2026_05_07` Phase 2A; gated
+  on chain link 1 (per-adapter stamping) shipping for onchain adapters.
+
+---
+
 ## Temporary states + their canonical follow-up plans
 
 - **UAC `FEATURE_REQUIRED_INPUTS` registers 10 of ~90 feature_groups.** Successor: Phase 4 of THIS plan
   (cross-asset-group expansion).
 - **features-onchain `feature_writer.py` uses `contextlib.suppress(LookaheadBiasError)`.** Successor: Phase 6 of THIS
   plan (suppress() removal once chain links 0+1 ship).
-- **MDPS bar boundary alignment is convention, not contract.** Successor: Phase 0 of THIS plan (UAC SSOT + UTL helper +
-  write-gate enforcement).
+- **MDPS bar boundary alignment is convention, not contract.** Successor: Phase 0 of THIS plan; UAC + UTL halves shipped
+  2026-05-11 (UAC@5240000 + UTL@d798fcf3); MDPS-side audit + reconciler + write-gate + QG check open per the
+  deferred-work scoreboard above.
 - **`AVAILABILITY_AT_SEMANTICS` registry coverage not audited per (asset_group, data_type).** Successor: Phase 5 of THIS
   plan.
 
