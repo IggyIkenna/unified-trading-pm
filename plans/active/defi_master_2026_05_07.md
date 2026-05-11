@@ -732,12 +732,18 @@ shipping with the Fork-1 prep batches below).
       `expected_pre_genesis_chain` for the bad date range; OR (b) confirm ASTER genesis was earlier and the perp-funding
       adapter has a routing bug (which CLAUDE.md "UAC DATA_TYPES_BY_ASSET_GROUP is routing gate" rule flags as a likely
       cause). ~0.8k blank rows pending decision.
-- [ ] [SCRIPT] P0. **Priority #5 — Lending-indices LINEA/BSC routing config.** Distinct workstream from priority #1
+- [x] [SCRIPT] P0. **Priority #5 — Lending-indices LINEA/BSC routing config.** Distinct workstream from priority #1
       (which is Ethereum-AAVEV3 UAC fix).
-      `status: backfill-aborted-handed-to-ikenna` (Harsh tab 3 end-of-shift handover 2026-05-11; see
-      `## DONE-2026-05-12 — Harsh tab 3 end-of-shift handover` block + cross-side ping to ikenna-main in
-      `plans/active/_agent_pings.md`). **The core gap is CLOSED**; what's handed off is operational catch-up + a P1
-      refactor.
+      `status: closed-2026-05-13-by-ikenna-defi-catalogue-tab` (was `backfill-aborted-handed-to-ikenna` per Harsh tab
+      3 end-of-shift handover 2026-05-11). **✅ FULLY CLOSED 2026-05-13 (Day 2) by slot 2** — recent-days catch-up
+      VM `mtds-lending-indices-20260511-204908` launched + ran-to-completion in ~3min (234 events including
+      STARTED+232 progress+STOPPED at 19:55:59 UTC). Manifest verified at
+      `gs://lending-indices-central-element-323112/_index/availability_index.parquet`: 65 captured rows for
+      2026-05-07..2026-05-11 (13/day × 5 days across AAVEV3 × 6 chains + COMPOUNDV3 × 5 chains + SPARK × 1 chain);
+      2026-05-12+ → `empty_confirmed` (legitimate subgraph lag). Slot 3's handoff item (a) "recent-days catch-up"
+      done. Items (b) ManifestFreshnessCache wire-in + (c) clean full-history re-run after (b) + (d)
+      create-code-tarballs.sh stale-repo list remain as P1 follow-ups (not Priority-#5 blockers, not 2026-05-23
+      blockers). See `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3-LENDING.4 for full evidence.
       - **✅ DONE (slot 3, 2026-05-11):**
         - **"routing config absent" framing was STALE** (grep-then-conclude error in the 2026-05-08 audit):
           `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since UAC@`2db3c8e` (Mar 2026);

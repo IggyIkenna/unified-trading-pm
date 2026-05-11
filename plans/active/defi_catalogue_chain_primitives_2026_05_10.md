@@ -544,12 +544,25 @@ Owner: harsh + parallel agents per protocol.
 >       2022-08-13, `(ETHEREUM, SPARK)` 2023-05-09, etc. — full per-chain matrix already in the registry; slot 5
 >       confirmed 45/46 pending-pairs shipped 2026-05-12 at UAC@`458f17d`. No separate
 >       `LENDING_INDICES_COVERAGE_START` constant needed (single PROTOCOL_LAUNCH_DATES SSOT covers it).
-> - [ ] [VM] P0. **3-LENDING.4 — Lending-indices backfill VM**.
+> - [x] [VM] P0. **3-LENDING.4 — Lending-indices backfill VM**.
 >       `deployment-service/scripts/vm/launch-defi-lending-indices-backfill-vm.sh` (new launcher per VM-launcher-SSOT
 >       rule). Per CLAUDE.md "Plans Run To Actual Completion" — backfill VM must run to completion with
 >       manifest-verified coverage 2022-03-01 → present before Phase 3 reports done. Recursive-borrow Phase 9 gates on
 >       this.
->       **PARTIAL 2026-05-11 by slot 3** — launcher exists at
+>       **✅ SHIPPED 2026-05-13 (Day 2) by slot 2 (ikenna-defi-catalogue-tab)** — recent-days catch-up VM
+>       `mtds-lending-indices-20260511-204908` launched via `launch-mtds-lending-indices-backfill-vm.sh 2026-05-07
+>       2026-05-13` in `asia-northeast1-c` (e2-standard-4 + 50GB). Lifecycle observed via
+>       `gs://central-element-323112-events/events/market-tick-data-service/2026-05-11/mtds-lending-indices-20260511-204908/hour=19/`:
+>       234 events including STARTED + ~232 progress events + STOPPED at 19:55:59 UTC. VM auto-deleted on
+>       completion (shutdown_on_completion=true). Total runtime ~3 minutes for 7-day window.
+>       **Manifest verification**: read `gs://lending-indices-central-element-323112/_index/availability_index.parquet`
+>       — 65 captured rows for 2026-05-07..2026-05-11 (13/day across AAVEV3 × 6 chains + COMPOUNDV3 × 5 chains +
+>       SPARK × 1 chain = 12 protocol-chain combos). 2026-05-12+ → `empty_confirmed` (legitimate — The Graph
+>       subgraphs lag ~1 day behind real-time; not a data gap). **Priority #5 in `defi_master_2026_05_07.md`
+>       cleared** — slot 3's handoff item (a) "Recent-days catch-up" done.
+>
+> Original PARTIAL annotation from 2026-05-11 by slot 3 retained for provenance:
+> launcher exists at
 >       `deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh` (verified at slot 3 status note);
 >       2026-05-11 full-history backfill VM `mtds-lending-indices-20260511-181115` killed at ~3373 events / ~375 dates
 >       (operator decision — `lending_indices_handler` re-downloads already-`captured` data; no manifest-freshness
