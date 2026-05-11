@@ -239,12 +239,36 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       (`endpoint_ref="jito_bundle_rpc"` / `bundle_mode="private"` / `max_block_delay=2` /
       `supported_chains=("solana",)` / `private=True`). Endpoint ref is a Secret-Manager pointer per existing
       _DEFAULT_POLICIES convention; raw URL never enters source. No tech debt — clean extension of existing dispatch.
-- [ ] [AGENT] P0. **1E — Per-venue margin-tier table SSOT.** New file
+- [x] [AGENT] P0. **1E — Per-venue margin-tier table SSOT.** New file
       `unified-api-contracts/unified_api_contracts/registry/perp_margin_tiers.py` declaring
       `PERP_MARGIN_TIERS:     dict[(venue, instrument_type), list[MarginTier]]` for the 6 perp venues. Each tier:
       `(notional_lower, notional_upper, initial_margin_bps, maintenance_margin_bps)`. Per-venue table sourced from venue
       docs (Bybit / Binance / OKX / Deribit) + on-chain constants (Hyperliquid / Aster). Versioned (these change
       occasionally).
+      **DESIGN-SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab); IMPLEMENTATION HANDED TO HARSH SLOT 2.**
+      **🟡 DESIGN CORRECTION**: NEW file `perp_margin_tiers.py` would DUPLICATE the existing SSOT at
+      `unified-api-contracts/unified_api_contracts/registry/cefi_margin_tiers.py` (194 lines; `MarginTier` +
+      `VenueMarginSchedule` dataclasses + `CEFI_MARGIN_TIERS: dict[tuple[str, str], VenueMarginSchedule]` with 6
+      entries — BINANCE_BTC/ETH, BYBIT_BTC/ETH, OKX_BTC/ETH; + `get_margin_schedule`, `get_margin_tier`,
+      `maintenance_margin_for` helpers). Per FLAG 1 RESOLVED 2026-05-10 (`defi_catalogue` Pre-audit § Perp DEXes),
+      on-chain perp venues (Hyperliquid / Aster / GMX / Drift / Pacifica / Extended / Lighter) are classified
+      under `VENUES_BY_ASSET_GROUP["cefi"]` axis. So `cefi_margin_tiers.py` IS the canonical perp margin-tier SSOT
+      for ALL perp venues (CEX + on-chain) — no separate `perp_margin_tiers.py` file needed. Per System-First
+      Architecture ("never work around"), extending the existing file is the right design.
+      **Harsh implementation scope** (per cross-side handshake `Ikenna designs, Harsh implements`; ~1.5 calibrated
+      AI-days):
+      Extend `cefi_margin_tiers.py` `CEFI_MARGIN_TIERS` dict with entries for:
+      - **Deribit** BTC + ETH (https://www.deribit.com/kb/leverage-and-margin-perpetuals)
+      - **Hyperliquid** BTC + ETH (https://hyperliquid.gitbook.io/hyperliquid-docs/onboarding/how-to-trade-perpetuals)
+      - **Aster** BTC + ETH (on-chain constant from `defi_execution/protocols/aster.py` reading
+        `getLeverageBracket` per market)
+      Optional add for completeness (post-cutover, not May-23-blocking):
+      - **GMX V2** BTC + ETH (https://gmx-docs.io/docs/trading/leverage/)
+      - **Drift v2** BTC + ETH + SOL (https://docs.drift.trade/trading/leverage)
+      Each schedule: same `VenueMarginSchedule` shape as existing entries (sequence of `MarginTier` per notional
+      bracket). Per-venue research sources cited in docstring per existing pattern. Optional: rename
+      `cefi_margin_tiers.py` → `perp_margin_tiers.py` for visual clarity — DEFERRED (mechanical refactor across 1+
+      importer; not May-23-blocking).
 - [x] [AGENT] P0. **1F — UAC dual-prediction module pick.** Delete `canonical/domain/prediction/__init__.py` (legacy
       pre-canonical-question-group) AND any references; canonical = `canonical/domain/predictions/` per the
       `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md` SSOT. Workspace-grep audit for
