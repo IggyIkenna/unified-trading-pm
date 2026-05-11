@@ -216,6 +216,25 @@ The factory receives these as keyword arguments -- the calling service is respon
 | `TENDERLY_FORK_CREATED` | VNet created successfully (includes fork_id, chain_id, block_number) |
 | `TENDERLY_FORK_DELETED` | VNet deleted successfully (includes fork_id)                         |
 
+## Downstream consumers
+
+Beyond live-trade execution, Tenderly forks back simulation use-cases that NEED a fork-state mutator + state-reader
+combo:
+
+- **Governance proposal simulation** (`defi_simulation_realism_2026_05_10` Phase 4B / codex
+  [`amm-slippage-simulation.md`](amm-slippage-simulation.md) § "Governance proposal simulation harness"): apply
+  `governor.execute(proposalId)` on a fork pinned at the proposal-execution block; read affected protocol params
+  before + after; output per-asset parameter delta. Budget ~10 sims/day per
+  `defi_simulation_realism_2026_05_10.md` Risk register. Caller: `execution-service/execution_service/governance/proposal_simulator.py` (Phase 4B NEW).
+- **AMM matching-engine fidelity validation** (`defi_simulation_realism_2026_05_10` Phase 2 + Phase 8C / codex
+  [`amm-slippage-simulation.md`](amm-slippage-simulation.md) § "Golden test set harness"): replay historical swaps
+  against Tenderly fork pinned at swap block; compare matcher-computed fill vs on-chain `Swap` event. Per-shape
+  validation thresholds (≥ 100 V3 swaps within 5 bps; ≥ 50 Curve; ≥ 20 Balancer + Velodrome + Aerodrome; etc.).
+  Caller: `execution-service/tests/integration/test_amm_golden_swaps.py` (Phase 3C NEW).
+- **High-impact swap pre-flight check** (`defi_simulation_realism_2026_05_10` Phase 4 implementation — Harsh slot 4
+  scope): for live swaps where size > N% of pool TVL, run a pre-flight `.quote()` against Tenderly fork of upstream
+  RPC state before broadcasting tx — protects against pool-state drift between strategy decision and tx inclusion.
+
 ## References
 
 - [Execution Modes and Chain Resolution](execution-modes-and-chain-resolution.md) -- CHAIN_ENV config
@@ -223,3 +242,5 @@ The factory receives these as keyword arguments -- the calling service is respon
 - [Interface Credential Convention](interface-credential-convention.md) -- how services get API keys
 - [Custody Providers](custody-providers.md) -- transaction signing layer
 - [Flash Loan Receiver](flash-loan-receiver.md) -- Aave flash loans on forks
+- [AMM Slippage Simulation](amm-slippage-simulation.md) -- governance sim harness + matching-engine fidelity validation downstream consumers
+- [Concentrated Liquidity](concentrated-liquidity.md) -- tick-math reference for V3/V4 fork-state interpretation

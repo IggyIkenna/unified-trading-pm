@@ -369,8 +369,12 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
       (sqrtPriceX96 / tick math / active liquidity / position math / single-step swap / tick traversal) +
       per-implementation addenda for V3 / V4 / Velodrome+Aerodrome Slipstream / Solana CLMM; cross-references
       to amm-slippage-simulation.md + batch-live-architecture.md + execution-service amm.py.)
-- [ ] [AGENT] P0. **9C — Update `codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`** with
-      restaking yield decomposition + LRT-fee + seasonal-points models.
+- [x] [AGENT] P0. **9C — Update `codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`** with
+      restaking yield decomposition + LRT-fee + seasonal-points models. (PM@`<this-cycle>` 2026-05-12 — added
+      "Forward-yield simulation (composite stochastic model)" section cross-referencing
+      amm-slippage-simulation.md § "Staking + restaking yield-stream simulators" Phase 5A-E; lists native
+      staking + restaking AVS + LRT protocol-fee + seasonal-points discount-factor + composite simulator;
+      cites operator-tuned per-protocol calibration anchors from PM@ae804766.)
 - [x] [AGENT] P0. **9D — Update `codex/04-architecture/batch-live-architecture.md`** with the matching-engine
       extensions + the live=batch principle as it applies to new sim primitives. (PM@`ad6c98e1` — AMMMatcher
       row updated to dispatch-by-PoolShape over PoolMatcher Protocol; cross-reference block cites today's

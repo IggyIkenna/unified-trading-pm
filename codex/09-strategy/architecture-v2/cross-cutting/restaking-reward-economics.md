@@ -181,9 +181,33 @@ For each new restaking-eligible LST or AVS:
 - Dynamic vesting curves (linear assumed; cliff-then-linear is parametric in `expected_vesting_months`)
 - Cross-LST netting (each LST's reward streams are independent for now)
 
+## Forward-yield simulation (composite stochastic model)
+
+The historical-reward-realisation registries above describe the deterministic accounting of REALISED rewards.
+For FORWARD-yield projection (used by `carry_staked_basis` PnL forecast + `risk_simulations_limits_alerting`
+scenario coverage), see codex
+[`../../04-architecture/amm-slippage-simulation.md`](../../04-architecture/amm-slippage-simulation.md) §
+"Staking + restaking yield-stream simulators":
+
+- **Native staking** stochastic model — per-chain (Ethereum beacon + Solana validator); calibrated against ≥ 6
+  months historical `staking_yields` data_type with attestation-efficiency-binned heteroskedasticity.
+- **Restaking AVS** base+log-normal-premium model — per-LRT operator-allocation-weighted convolution of native
+  yield + per-AVS premium.
+- **LRT protocol-fee** discrete-event model — Ether.fi / Renzo / KelpDAO / Puffer fees historically change
+  quarterly; forward fee assumption = most-recent-quarter ± σ_quarterly capped at `[0, max_observed × 1.5]`.
+- **Seasonal-points** operator-tuned discount-factor model — historical points-to-token redemption ratios as
+  calibration anchors (Ether.fi 60% / Renzo 50% / Puffer 50% per 2024 airdrops; new programs 70% default).
+- **Composite simulator** Phase 5E — convolves all 4 layers into forward `ForwardYieldDistribution(mean, p5,
+  p95)` consumed by archetype PnL projection.
+
+Implementation lives at `execution-service/execution_service/yield_streams/` (NEW Phase 5A-E per
+`defi_simulation_realism_2026_05_10.md`); design ship 2026-05-12 (PM@`ae804766`).
+
 ## See also
 
 - [pnl-attribution.md](./pnl-attribution.md) — CARRY decomposition + REWARD_REALISATION_SLIPPAGE factor definitions
+- [../../04-architecture/amm-slippage-simulation.md](../../04-architecture/amm-slippage-simulation.md) — forward-yield
+  stochastic models (Phase 5A-E) + composite simulator code skeleton
 - `unified_api_contracts.internal.architecture_v2.restaking_rewards` — schema + registries
 - `unified_api_contracts.internal.architecture_v2.leveraged_legs` — LeveragedLegController consumes the realised total
   APY for `target_leverage_source="carry_quality"`
