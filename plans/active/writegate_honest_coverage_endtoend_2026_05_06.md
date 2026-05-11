@@ -846,6 +846,32 @@ NaN-ratio/cluster-coverage check — the entire honest-coverage infrastructure i
       under the writegate Phase 2.A scope. Until then, the dead path co-exists with the live path —
       annotated as known double-SSOT residue.
 
+### DONE-2026-05-11 — slot 8 P0-2 surgery
+
+The 2026-05-11 ikenna-slot8-p0-2-surgery session shipped 4 of 6 P0-2 steps. Items still open are tracked here so the
+next agent picks up cleanly without re-reading session notes.
+
+| Step / item                                         | Status as of 2026-05-11                  | Successor / blocker                                                                                                                  |
+| --------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Step 1 — Delete legacy `_write_candles` override    | `done` (`mdps@d717c59`)                  | CandleOrchestrationService now resolves `_write_candles` to canonical writer via MRO. `underlying` param threaded through CandleWriteMixin. |
+| Step 2 — TradFi ohlcv_passthrough 1440-NaN-bar fix  | `done` (`mdps@93883b7`)                  | `_create_full_day_empty_output` deleted; `process_to_candles` empty branch returns `_make_empty_candle_output()` (zero-row Path A).        |
+| Step 3 — Delete `_create_closed_market_candle` dup + TRADFI branch refactor + VIX gap interim | `done` (`mdps@2f163c1`) | Both copies deleted. `_handle_empty_tick_data` TRADFI special-case removed; `record_empty_for_shard` is the canonical path for every asset_group. `_maybe_write_vix_gap_placeholder` refactored from the deleted helper to `record_empty(SOURCE_RETURNED_ZERO)` interim. |
+| Step 4 — VIX gap reason upgrade to EXPECTED_KNOWN_SOURCE_GAP | `todo` (checkbox `- [ ]`)         | **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`** Phase 1 (slot 3 owns UAC `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP` enum ship). The banned NaN-bar write is GONE — only the reason-kwarg upgrade remains pending; 1-line Edit when the enum ships. |
+| Step 5 — `output_schemas.py:57-66` OHLCV nullability flip | `todo` (checkbox `- [ ]`)          | **OUT-OF-SCOPE for this session** per task instructions — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07` futures-expiry shipping.                  |
+| Step 6 — Triple-SSOT CandleProcessingService audit  | `todo` (checkbox `- [ ]`)                | **Audit complete + deferred for operator triage**. `MarketDataProcessingService(CandleProcessingService(...))` is NOT wired to production CLI; only tests instantiate it. Deletion is production-safe but 100+ LOC test-removal blast radius. Recommended successor plan `mdps_dead_candle_processing_service_cleanup_<YYYY_MM_DD>.md`. |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **UAC EXPECTED_KNOWN_SOURCE_GAP enum**: blocked Step 4. Owned by Ikenna slot 3; open in
+  [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1.
+- **Catalog-aware writer-side guard for cefi/defi/tradfi empty_confirmed → attempted_failed flip**: writegate Phase
+  3.D.5 Wave 3 (instrument_catalog wired into MTDS/MDPS adapter construction). Until it ships, the conservative
+  `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim from Step 3 stays in place — this is the design intent
+  per CLAUDE.md "Four-category empty-output decision" + "Reason taxonomy" sections.
+- **Hard schema enforcement (output_schemas.py OHLCV nullability)**: open in
+  [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md) — Step 5 will land via that plan
+  after futures-expiry tradfi work.
+
 ### Phase 0 audit findings — MTDS bundle adapter inventory
 
 **CRITICAL plan correction**: Phase 2.B file paths at lines 510-516 are wrong:

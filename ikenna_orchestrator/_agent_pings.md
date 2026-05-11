@@ -71,3 +71,21 @@ UAC@dc4c9f0 (ruff fixes). PM@0044e370 (plan flips + banners on 3 cross-plan file
 INCIDENT in UAC@dc4c9f0 — bundled Sub-C pre-staged test_circuit_breaker_taxonomy.py + test_kill_switch.py + __init__.py
 reorder under Sub-B commit message (no data loss, wrong attribution). Mitigation noted in risk plan § Audit findings
 0.D. Coordinator/Sub-C decide revert-vs-leave. Plan-of-record: risk_simulations_limits_alerting_2026_05_10.md.
+
+[2026-05-11 ~now UTC] ikenna-slot8-p0-2-surgery — DONE P0-2 MDPS dead write-gate surgery (4 of 6 steps shipped per
+slot 8 task brief). Step 1: legacy `_write_candles` MRO override deleted (mdps@d717c59) — CandleOrchestrationService
+now resolves to canonical writer + 4-pillar gate via MRO. Step 2: TradFi ohlcv_passthrough 1440-NaN-bar shape deleted
+(mdps@93883b7). Step 3: duplicated `_create_closed_market_candle` (both copies) + `_write_closed_market_candles` +
+TRADFI special-case branch deleted; `_handle_empty_tick_data` now routes every asset_group through
+`record_empty_for_shard` (mdps@2f163c1). Step 4: interim shipped via Step 3 (VIX gap → record_empty
+SOURCE_RETURNED_ZERO); reason-kwarg upgrade to EXPECTED_KNOWN_SOURCE_GAP blocked on slot 3/slot 6 UAC enum ship per
+manifest_schema_final_gate_2026_05_09 Phase 1. Step 5 OUT-OF-SCOPE per task brief. Step 6: triple-SSOT audit COMPLETE
+— `MarketDataProcessingService(CandleProcessingService)` is NOT on production CLI path; 100+ LOC test-removal
+deferred for operator triage. **COORDINATION NOTE for Harsh slot 5 + main**: line 34 ping mentions VIX-gap consumer
+is Harsh slot 5's territory, but slot 8 task brief explicitly owned `_maybe_write_vix_gap_placeholder` as part of P0-2
+step 3/4. The refactor I did (delete the `_write_closed_market_candles` call + add `record_empty_for_shard` interim)
+is the conservative non-NaN-bar version; if Harsh slot 5 has a different (e.g. catalog-aware) version in flight,
+they should rebase against mdps@2f163c1 + extend rather than revert. Full DONE block at writegate plan body just
+above § Phase 0 audit findings — MTDS bundle adapter inventory. Plan-flip commits:
+PM@52a3fbc0/46cd5ab3/d05143e6/30796569/9bd8d44a (Step-by-step) + this commit. Plan-of-record:
+writegate_honest_coverage_endtoend_2026_05_06.md § Phase 2.A.
