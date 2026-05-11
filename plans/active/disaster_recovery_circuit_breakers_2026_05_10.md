@@ -364,3 +364,15 @@ Risk-plan Phase 1.F coordination unblocked: `BreakerRecoveryMode` + `BREAKER_REC
 UAC@a7a99b5. The master coordinator (or Sub-B's next push) flips
 [`risk_simulations_limits_alerting_2026_05_10.md`](risk_simulations_limits_alerting_2026_05_10.md) Phase 1.F with
 cross-reference to UAC@a7a99b5.
+
+### 2026-05-11 — Slot 7 master coordinator (LIVE_ALERT_RULES seed for kill-switch recovery codes)
+
+- `unified-api-contracts@c96447b` — Master coordinator seeded `KILL_SWITCH_AUTO_RECOVERED` + `KILL_SWITCH_MANUAL_UNKILLED`
+  rule entries in `LIVE_ALERT_RULES` (alongside the 4 RISK_RULE_* entries from the risk plan). Both recovery codes use
+  `kill_switch_scope=KillSwitchScope.GLOBAL` (validator requires scope for `KILL_SWITCH_*` prefix) but
+  `triggers_kill_switch=False` — they REPORT past kill-switch state changes, not arm new ones. Test
+  `test_kill_switch_rules_trigger_kill_switch_flag` updated to exempt RECOVERY codes from the
+  `triggers_kill_switch=True` invariant via explicit `_RECOVERY_CODES` set. 160/160 tests pass workspace-wide.
+
+The risk-plan Phase 1.F flip is now live with the actual UAC@a7a99b5 + UAC@c96447b commit citations (no longer the
+placeholder "TBD" cross-reference).

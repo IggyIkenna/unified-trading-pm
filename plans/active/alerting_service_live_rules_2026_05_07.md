@@ -828,3 +828,49 @@ session" scoreboard above. No grep-misses.
 - 1 spawned tab (Tab L), no fan-out.
 - 2 commits: `deployment-service@8f87972` (launcher + watchdog) + this PM plan-flip commit.
 - 0 issue docs filed (all findings captured as plan annotations + body items per Findings Triage Discipline case 1+2).
+
+## DONE-2026-05-11 — Slot 7 (ikenna-phase-1d-tab) Sub-A cycle shipments
+
+**Cycle ownership**: `work_split_2026_05_11_ikenna.md` § "Slot 7 spawn prompt" — Phase 1.D 3-plan fan-out. Slot 7
+master spawned 3 sub-agents in parallel; Sub-A targeted alerting Phase 2.X + ML codex section.
+
+### Shipped artefacts (Sub-A scope)
+
+- **Phase 2.X — `AlertRule.pattern` → `event_pattern` rename**:
+  - `unified-api-contracts@0b61aec` — Pydantic field + 44 `LIVE_ALERT_RULES` constructor calls + 2 validators
+    (`_pattern_non_empty` → `_event_pattern_non_empty`; `_validate_pattern_matches_codes` →
+    `_validate_event_pattern_matches_codes`) + `tests/internal/unit/test_alerting_taxonomy.py` updated. 44/44 alerting
+    taxonomy tests pass. Drive-by fix to `test_alert_rule_accepts_kill_switch_flag_on_kill_switch_code` adding
+    `kill_switch_scope=KillSwitchScope.VENUE` (Findings Triage Case 1).
+  - `alerting-service@3b94456` — `router.py` `_find_kill_switch_rule` consumer one-liner. `to_routing_dict()` dict
+    key was already `event_pattern` (legacy byte-equivalence) so `config.py` factory was untouched.
+- **Phase 1.B carryover — codex ML category section** (DEFERRED-PER-FOOTGUN-3 from 2026-05-08; picked up cleanly under
+  per-slot worktree model):
+  - `unified-trading-pm@41c8a519` — `codex/15-runbooks/alerting/alert-code-taxonomy.md` new ML category subsection
+    (6 ML codes + severity routing + threshold sources + archetype-scope mapping); KillSwitchScope mapping table
+    extended to 4 rows (DEFI_LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL, VENUE_DISCONNECT=VENUE,
+    ML_MODEL_FAILURE=ARCHETYPE). Phase 2.X + Phase 1.B-ML-codex plan checkboxes flipped `[x]`. IN-FLIGHT REFACTOR
+    banner at top of plan removed.
+
+### Findings raised
+
+None. Foot-gun #3 (parallel-agent auto-revert wiping codex edits) was **unrepresentable** under per-slot worktree model
+codified 2026-05-10 — codex ML category section landed cleanly on first attempt where 5+ previous attempts had failed.
+
+### Cycle metrics
+
+- 30 minutes (vs ~4 hour budget). Per-slot worktree isolation eliminated the foot-gun #3 retry tax.
+- 3 commits across 3 repos (UAC + alerting-service + PM).
+- 0 issue docs filed.
+
+## DONE-2026-05-11 — Slot 7 master coordinator (LIVE_ALERT_RULES seed for Sub-B's 6 AlertCodes)
+
+After Sub-A's `event_pattern` rename + Sub-B's 6 new `AlertCode` members landed, the master coordinator (slot 7 main)
+seeded the corresponding `LIVE_ALERT_RULES` entries — the master's scope partition per the 3-agent fan-out:
+
+- `unified-api-contracts@c96447b` — `feat(uac): LIVE_ALERT_RULES — 6 new entries (4 RISK_RULE_* + 2 KILL_SWITCH_*_RECOVERED)
+  + E501 cleanup`. 6 new `AlertRule` entries using the new `event_pattern` field (4 risk-rule consequences per the § 7
+  seam diagram severity routing; 2 kill-switch recovery events per Q8 ratification). Fixes the E501 leftover at
+  `alerting/rules.py:126` from Sub-A's rename. Test `test_kill_switch_rules_trigger_kill_switch_flag` updated to
+  exempt RECOVERY codes from the `triggers_kill_switch=True` invariant — they report past state changes, not arm new
+  ones. 160/160 tests pass workspace-wide across alerting + risk_rule + strategy_family + circuit_breaker + kill_switch.

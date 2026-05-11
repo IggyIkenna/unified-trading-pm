@@ -190,9 +190,13 @@ deferred — its work hasn't started so no in-flight collision; banner added on 
       zero pre-existing references. (UAC@945ad5d — 6 new AlertCode members landed in
       `canonical/crosscutting/alerting/codes.py`; closed-set grows to 45 (verified via
       `test_alert_code_set_grew_by_at_least_six`); `test_no_pre_existing_shadowing_of_new_codes` confirms each new code
-      appears exactly once. **DEFERRED to master coordinator**: corresponding `LIVE_ALERT_RULES` entries in
-      `alerting/rules.py` — per spawn prompt scope partition, Sub-B does NOT add `AlertRule` entries; coordinator
-      seeds them after Sub-A's `event_pattern` rename (UAC@0b61aec) is fully consumed.)
+      appears exactly once. **`LIVE_ALERT_RULES` entries seeded by master coordinator at UAC@c96447b** —
+      6 new `AlertRule` entries with `event_pattern` field: `RISK_RULE_BLOCKED` (HIGH, PagerDuty+Telegram),
+      `RISK_RULE_SCALED_DOWN` (WARN, Telegram), `RISK_RULE_MONITOR_FIRED` (INFO, LogOnly),
+      `RISK_RULE_TEST_ONLY_ROUTED` (INFO, LogOnly), `KILL_SWITCH_AUTO_RECOVERED` (INFO, Telegram, scope=GLOBAL),
+      `KILL_SWITCH_MANUAL_UNKILLED` (INFO, Telegram, scope=GLOBAL). Test
+      `test_kill_switch_rules_trigger_kill_switch_flag` updated to exempt RECOVERY codes from
+      `triggers_kill_switch=True` invariant — they report past state changes, not arm new ones.)
 - [x] [AGENT] P0. **1.F `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` SSOT — RATIFIED 2026-05-10 cross-plan
       audit Q8.** Add `BreakerRecoveryMode` closed set `{manual_unkill, auto_cooldown}` to UAC. Add
       `BREAKER_RECOVERY_DEFAULTS: dict[BreakerAction, BreakerRecoveryMode]` mapping per-action defaults:
@@ -202,12 +206,12 @@ deferred — its work hasn't started so no in-flight collision; banner added on 
       operator sign-off). Plus `cooldown_seconds: int | None` on `BreakerConfig` (None when manual). Tests assert
       defaults dict matches per-action semantics. Coordinate with
       [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md) Phase 1.A
-      which owns `BreakerConfig` extension. (**Cross-reference flip — Sub-C (DR slot) owns the UAC artefact**: per spawn
-      prompt scope partition, `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` dict + `cooldown_seconds` field
-      land in `canonical/crosscutting/circuit_breaker.py` shipped by the DR plan Phase 1.A — NOT a duplicate ship in
-      `risk_rule.py`. The 2 kill-switch recovery AlertCodes that pair with the modes (`KILL_SWITCH_AUTO_RECOVERED` +
-      `KILL_SWITCH_MANUAL_UNKILLED`) DID ship at UAC@945ad5d as Phase 1.E. Update this flip with DR's commit SHA once
-      Sub-C lands.)
+      which owns `BreakerConfig` extension. (**Cross-reference flip — Sub-C (DR slot) shipped the UAC artefact at
+      UAC@a7a99b5**: `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` dict + `BreakerConfig.recovery_mode` +
+      `BreakerConfig.cooldown_seconds` all land in `canonical/crosscutting/circuit_breaker.py` per DR Phase 1.A —
+      NOT a duplicate ship in `risk_rule.py`. The 2 kill-switch recovery AlertCodes that pair with the modes
+      (`KILL_SWITCH_AUTO_RECOVERED` + `KILL_SWITCH_MANUAL_UNKILLED`) shipped at UAC@945ad5d as Phase 1.E + their
+      corresponding `LIVE_ALERT_RULES` entries at UAC@c96447b as master coordinator commit.)
 
 **Full-execution criterion**: UAC PR pushed; QG green; AlertCode closed-set grows from 39 → 45 with no shadowing;
 `BreakerRecoveryMode` + `BREAKER_RECOVERY_DEFAULTS` shipped; every Pydantic docstring cites the seam diagram + 5
@@ -446,4 +450,68 @@ concentration for `carry_staked_basis`).
 
 ## DONE block
 
-(Filled at completion.)
+### DONE-2026-05-11 — Slot 7 Sub-B (ikenna-slot7-risk-uac) Phase 0 + Phase 1 + Phase 2.G shipments
+
+**Cycle ownership**: `work_split_2026_05_11_ikenna.md` § "Slot 7 spawn prompt" — Phase 1.D 3-plan fan-out. Slot 7
+master spawned Sub-B targeting risk Phase 0 audit + Phase 1.A-E UAC taxonomy + Phase 2.G StrategyFamilyId.
+
+#### Shipped artefacts
+
+- **Phase 1.A-D — `RiskRule` UAC taxonomy**:
+  - `unified-api-contracts@945ad5d` — NEW `canonical/crosscutting/risk_rule.py` (484 lines): `RiskRuleId` (22 closed
+    members) / `RiskRuleScope` (6) / `RiskRuleConsequence` (4: BLOCK / SCALE_DOWN / MONITOR / TEST_ONLY) StrEnums +
+    `RiskRule` Pydantic (`frozen=True`, `extra='forbid'`, `kill_switch_scope()` orthogonality mapping) + 13-trigger
+    discriminated union `RiskRuleTrigger` + `CONSEQUENCE_EVENTS_EMITTED` + `CONSEQUENCE_ALERT_CODES` seam-conformance
+    constants. Every enum + Pydantic + method docstring cites "§ 7 SSOT reconciliation" per Phase 1.A reviewer
+    requirement. **38 unit tests in `test_risk_rule_taxonomy.py`** (incl. 4 seam-diagram-conformance tests per
+    consequence + 6 `kill_switch_scope()` orthogonality tests).
+- **Phase 1.E — AlertCode closed-set extension (39 → 45)**:
+  - `unified-api-contracts@945ad5d` (bundled) — 6 new `AlertCode` members in `canonical/crosscutting/alerting/codes.py`:
+    `RISK_RULE_BLOCKED`, `RISK_RULE_SCALED_DOWN`, `RISK_RULE_MONITOR_FIRED`, `RISK_RULE_TEST_ONLY_ROUTED`,
+    `KILL_SWITCH_AUTO_RECOVERED`, `KILL_SWITCH_MANUAL_UNKILLED`. Closed-set growth verified +
+    `test_no_pre_existing_shadowing_of_new_codes` confirms each new code appears exactly once. **`LIVE_ALERT_RULES`
+    rule entries seeded by master coordinator at UAC@c96447b** per scope partition.
+- **Phase 1.F — cross-reference flip** (DR Phase 1.A shipped the UAC artefact):
+  - `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` dict + `BreakerConfig.recovery_mode` +
+    `BreakerConfig.cooldown_seconds` shipped at `unified-api-contracts@a7a99b5` (Sub-C / DR plan Phase 1.A) — Risk
+    Phase 1.F flips with cross-reference, no duplicate ship.
+- **Phase 2.G — StrategyFamilyId + registry**:
+  - `unified-api-contracts@945ad5d` (bundled) — NEW `canonical/crosscutting/strategy_family.py` (230 lines):
+    `StrategyFamilyId` 7-member closed enum + `StrategyFamily` Pydantic + `STRATEGY_FAMILY_REGISTRY` seed dict +
+    `family_for_archetype()` reverse-lookup. `LST_LEVERAGE_FAMILY` contains `CARRY_STAKED_BASIS` +
+    `CARRY_RECURSIVE_STAKED`; `FUNDING_ARB_FAMILY` contains `ARBITRAGE_PRICE_DISPERSION` + `CARRY_BASIS_PERP`. **17 unit
+    tests in `test_strategy_family.py`** including cutover-archetype membership + disjoint-names invariant.
+- **Style fixes**:
+  - `unified-api-contracts@dc4c9f0` — `style(uac): ruff fixes on risk_rule + strategy_family + tests` (E501 union
+    one-line + RUF002 Greek rho → "rho"). **NOTE**: this commit bundled Sub-C's pre-staged test files (see Findings).
+- **Plan flips**:
+  - `unified-trading-pm@0044e370` — Phase 0.A/0.B/0.C + 1.A/1.B/1.C/1.D/1.E + 2.G all flipped `- [x]` with
+    `UAC@945ad5d` evidence. Phase 1.F flipped as cross-reference. Audit-findings section populated with rule-surface
+    inventory + per-cutover-archetype aspirational rule lists. Banners added on alerting + DR + master plans.
+
+#### Findings raised
+
+- **Case-5 BIG — Foot-gun #1 incident (within-slot)** (PM@`6e55596b`): Sub-B's `git add <my-files>` followed by
+  commit bundled Sub-C's 61 pre-staged test files (`test_circuit_breaker_taxonomy.py` 435 lines + `test_kill_switch.py`
+  242 lines) + `__init__.py` reorder into UAC@`dc4c9f0` under Sub-B's commit message. **No data loss** — Sub-C's tests
+  are on `origin/live-defi-rollout` and run green. Attribution muddled. Demonstrates that within-slot multi-sub-agent
+  collision is REPRESENTABLE under per-slot worktree model — pre-commit check (`git diff --cached --stat` with NO
+  path argument) is still mandatory for within-slot fan-outs. Documented in § "Audit findings 0.D" + intra-side ping
+  to coordinator (later resolved by master coordinator commit UAC@c96447b cross-referencing all 3 sub-agent commits).
+
+#### Cycle metrics
+
+- ~4 hours within time budget.
+- 4 commits: UAC@945ad5d (feature) + UAC@dc4c9f0 (ruff fixes, foot-gun #1) + PM@0044e370 (plan flips + banners) +
+  PM@6e55596b (foot-gun #1 incident doc).
+- 55 new tests (38 risk_rule + 17 strategy_family) + 99/99 total alerting+risk pass.
+- Ruff clean + basedpyright clean on Sub-B's 5 files.
+
+### DONE-2026-05-11 — Slot 7 master coordinator (LIVE_ALERT_RULES seed)
+
+- `unified-api-contracts@c96447b` — Master coordinator seeded 6 `LIVE_ALERT_RULES` entries (`RISK_RULE_BLOCKED` +
+  `_SCALED_DOWN` + `_MONITOR_FIRED` + `_TEST_ONLY_ROUTED` + `KILL_SWITCH_AUTO_RECOVERED` + `_MANUAL_UNKILLED`) using
+  the new `event_pattern` field from Sub-A's rename. Severity routing per § 7 seam diagram (BLOCK→HIGH+PD,
+  SCALE_DOWN→WARN, MONITOR/TEST_ONLY→INFO, RECOVERY→INFO). Test `test_kill_switch_rules_trigger_kill_switch_flag`
+  updated to exempt RECOVERY codes from `triggers_kill_switch=True` invariant. Also fixed E501 leftover at
+  `alerting/rules.py:126` from Sub-A's rename. 160/160 tests green.
