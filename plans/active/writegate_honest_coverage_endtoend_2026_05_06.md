@@ -2820,33 +2820,40 @@ shape codified in slice (a)'s seed dict.
 
 **Phase 5.1 — UTL `manifest_completeness.py` helper (P0, ~4hr)**
 
-- [ ] [UTL] P0. NEW `unified_trading_library/manifest_completeness.py` —
-      `compute_completeness_fraction(upstream_window: list[UpstreamWindowKey], manifest_reader: ManifestReader,     *, window_start_utc: datetime, window_end_utc: datetime) -> CompletenessReadout`.
+- [x] [UTL] P0. NEW `unified_trading_library/manifest_completeness.py` (shipped UTL@`ac5ade59`).
+      `compute_completeness_fraction(*, bucket: str, upstream_window: Sequence[Mapping[str, str]], manifest_index: pd.DataFrame | None = None, force_refresh: bool = False) -> CompletenessReadout`.
       Returns a frozen `CompletenessReadout` dataclass with `fraction: float`,
-      `incomplete_window: list[Mapping[str,str]]`, `total_expected: int`, `total_captured: int`,
+      `incomplete_window: tuple[Mapping[str,str], ...]`, `total_expected: int`, `total_captured: int`,
       `total_empty_confirmed: int`, `total_attempted_failed: int`, `total_expected_unattempted: int`. Each
-      `UpstreamWindowKey` is `Mapping[str,str]` matching the manifest row_key shape (asset_group / venue / data_type /
-      instrument_id / day / etc.). Helper queries the manifest once per call via the existing `ManifestReader`
-      interface, applies
-      `(captured + empty_confirmed) / (captured + empty_confirmed +     attempted_failed + expected_unattempted)` per
-      the workspace coverage formula, and emits the `incomplete_window` list as the rows where
+      upstream-window entry is `Mapping[str,str]` matching the manifest row_key shape. Helper queries the manifest via
+      the existing `read_availability_index(bucket)` reader, applies
+      `(captured + empty_confirmed) / (captured + empty_confirmed + attempted_failed + expected_unattempted)` per the
+      workspace coverage formula, and emits the `incomplete_window` list as the rows where
       `capture_status != captured AND capture_status != empty_confirmed`. Empty-confirmed rows DO count toward
       completeness (operator directive: empty-confirmed is honest absence, not a gap from the consumer's perspective;
-      only `attempted_failed` + `expected_unattempted` reduce completeness).
-- [ ] [UTL] P0. Wire `manifest_completeness.compute_completeness_fraction` to the existing `manifest_consolidator`'s
-      cached canonical-manifest read so consecutive calls within a 60s window don't burn redundant GCS reads (per the
-      workspace "Manifest concurrency principle" rule). 60s TTL; explicit `force_refresh=True` kwarg for tests.
-- [ ] [UTL] P0. NEW `unified_trading_library/emission_publisher.py::publish_with_manifest_lookup()` convenience wrapper
-      that combines `compute_completeness_fraction()` + `publish_with_policy()` into one call. Caller flow:
-      `publish_with_manifest_lookup(service=, output_data_type=, row_key=, upstream_dependencies=[...],     window_start_utc=, window_end_utc=, manifest_reader=)`
-      — helper computes the fraction, calls publish_with_policy, returns the `EmissionDecision`. The pure
+      only `attempted_failed` + `expected_unattempted` reduce completeness). Rows missing from the manifest entirely
+      are treated as `expected_unattempted` (caller declared them in the upstream window so absence-from-manifest is a
+      gap, not a no-op). Row-key canonicalisation matches `ManifestFreshnessCache` via `_coerce_row_key`.
+- [x] [UTL] P0. Wire `manifest_completeness.compute_completeness_fraction` to the existing
+      `read_availability_index(bucket)` cached canonical-manifest read so consecutive calls within a 60s window don't
+      burn redundant GCS reads (per the workspace "Manifest concurrency principle" rule). 60s TTL is the existing
+      in-process cache (`_INDEX_CACHE`); explicit `force_refresh=True` kwarg pops the entry. Pre-fetched `manifest_index`
+      kwarg short-circuits the read entirely for callers that have the index already. Shipped UTL@`ac5ade59`.
+- [x] [UTL] P0. NEW `unified_trading_library/emission_publisher.py::publish_with_manifest_lookup()` convenience wrapper
+      (shipped UTL@`ac5ade59`) that combines `compute_completeness_fraction()` + `publish_with_policy()` into one call.
+      Caller flow:
+      `publish_with_manifest_lookup(*, service, output_data_type, row_key, bucket, upstream_window, manifest_index=None, force_refresh=False, correlation_id=None, extra_event_details=None)` —
+      helper computes the fraction, calls publish_with_policy, returns the `EmissionDecision`. The pure
       `publish_with_policy()` from slice (a) stays available for callers that compute completeness via a non-manifest
       path (synthetic backtests, replay engines).
-- [ ] [TEST] P0. 12-15 unit tests for `manifest_completeness`: empty upstream window, all-captured, all-empty_confirmed,
-      mixed states, attempted_failed reduces fraction, expected_unattempted reduces fraction, incomplete_window list
-      shape matches contract, TTL cache hit / miss, force_refresh bypass, manifest-read failure raises (not silently
-      returns 0.0), and the publish_with_manifest_lookup integration smoke (one captured + one attempted_failed →
-      PUBLISHED_DEGRADED for PARTIAL_OK policy).
+- [x] [TEST] P0. 14 unit tests for `manifest_completeness` (shipped UTL@`ac5ade59` —
+      `tests/unit/test_manifest_completeness.py`): empty upstream window raises `EmptyUpstreamWindowError`, all-captured
+      (single + multi-row), all-empty_confirmed, mixed captured + empty_confirmed, attempted_failed reduces fraction,
+      expected_unattempted reduces fraction, missing-from-manifest treated as `expected_unattempted`, pre-fetched
+      `manifest_index` short-circuits GCS read, `force_refresh=True` invalidates TTL cache, row-key case canonicalisation
+      (lowercase `binance` matches uppercase `BINANCE` in manifest), realistic 60/60 + 58/60 ohlcv_1h POC shape from
+      writegate Phase 5.3 (58/60 captured + 2 attempted_failed → fraction=58/60≈0.967 + 2-element incomplete_window). QG:
+      ruff clean, basedpyright clean (0 errors), 14 new tests + 18 existing emission_publisher tests pass.
 
 **Phase 5.2 — UAC manifest schema columns (P1, ~2hr — additive)**
 
