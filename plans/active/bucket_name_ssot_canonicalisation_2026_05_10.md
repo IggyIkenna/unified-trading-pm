@@ -325,16 +325,23 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       `features-service/features_service/cross_instrument/docs/{CONFIGURATION,DEPLOYMENT_GUIDE}.md` +
       `features-service/features_service/multi_timeframe/.env.example` (docs only, no code impact — left to a
       features-service-docs sweep so this commit doesn't double-format foreign docs).
-- [ ] **[SCRIPT] P2**. **DEFERRED (follow-up to the cross_instrument/multi_timeframe migration above)** — drop the
-      now-stale `OUTPUT_BUCKET_TEMPLATE` env-var refs from
-      `features-service/features_service/cross_instrument/docs/CONFIGURATION.md` (`output_bucket_template` row) +
-      `cross_instrument/docs/DEPLOYMENT_GUIDE.md` (`OUTPUT_BUCKET_TEMPLATE` table row) + `multi_timeframe/.env.example`
-      (`# OUTPUT_BUCKET_TEMPLATE=...` line) — the Field + env-override alias were deleted @features-service`e980ecfd`;
-      `get_output_bucket` now routes through
-      `resolve_bucket(kind="features-cross-instrument"/     "features-multi-timeframe", ...)` (the yaml SSOT). status:
-      todo — note: "2026-05-11 slot 4 — docs-only, no code impact (a reader who sets `OUTPUT_BUCKET_TEMPLATE` would just
-      have it silently ignored); deferred to a features-service-docs sweep so the migration commit doesn't double-format
-      foreign docs (prettier churn on `.md`)."
+- [x] **[SCRIPT] P2**. **DEFERRED (follow-up to the cross_instrument/multi_timeframe migration above) — ✅ DONE
+      2026-05-11 (slot 4 cont. 5)** — dropped the now-stale `INPUT_/OUTPUT_BUCKET_TEMPLATE` env-var + config-Field refs
+      from `features-service/features_service/cross_instrument/docs/CONFIGURATION.md` ("### Bucket Templates" bullets →
+      "### Bucket Names (resolved from the yaml SSOT — not configured here)" with the kind→`resolve_bucket` map +
+      `features-xinstrument` alias note), `cross_instrument/docs/DEPLOYMENT_GUIDE.md` (dropped the
+      `INPUT_BUCKET_TEMPLATE`/`OUTPUT_BUCKET_TEMPLATE` table rows; added a `DEPLOYMENT_ENV` row + a "bucket names NOT
+      configured via env vars" callout + updated the Service-Account-IAM bucket hints), `multi_timeframe/.env.example`
+      ("BUCKET TEMPLATES" section → "BUCKET NAMES — NOT operator-configurable" note), and
+      `cross_instrument/app/     calculators/paired_dispatch.py` (`_delta_one_bucket` docstring — referenced the removed
+      `input_bucket_template` Field → now describes the `resolve_bucket → cloud-providers.yaml` chain; docstring-only,
+      ruff + py*compile clean). `.md` files prettier-clean. The Field + env-override alias were deleted
+      @features-service`e980ecfd`; `get_input_bucket` / `get_output_bucket` route through
+      `resolve_bucket(kind="features-delta-one" / "features-cross-instrument" /     "features-multi-timeframe", ...)`
+      (the yaml SSOT, resolver-aliased to `features-xinstrument` / `features-mtf`). status: done — evidence:
+      features-service@`89e9a972`. note: "2026-05-11 slot 4 cont. 5 — extended the original scope to also cover the
+      `INPUT*\*`refs + the`paired_dispatch.py`docstring (same staleness class); surgical edits     (no whole-file prettier-reformat — the 2`.md`
+      were already prettier-clean so the diff stays small)."
 - [ ] **[SCRIPT] P1**. **DEFERRED (split off from #2)** — migrate the `dependency_checker.py` inline `"bucket_template"`
       strings (`features-service/features_service/{delta_one,onchain,volatility}/.../dependency_checker.py` — the
       `"bucket_template": "market-data-tick-{asset_group_lower}-{project_id}"` etc. + the
@@ -1321,3 +1328,47 @@ Resumed per the ▶ RESUME block + the Q6 ✅ relay. Shipped this session:
 Going quiet — Phase-1-code-complete remainder (everything except Phase 0c/0d/Done-def #3/Q7-resolution which are all
 Phase-2.6 or operator-gated) is DONE; Phase 0f is Ikenna slot 8's; Phase 0c/0d + Done-def #3 are slot 4's
 Phase-2.6-window work.
+
+## DONE-2026-05-11 (cont. 5) — harsh-bucket-and-adapter-tab (slot 4), wrap-up: `OUTPUT_BUCKET_TEMPLATE`-docs cleanup + Phase-2.6-cutover scope handoff
+
+Resumed per the 13:57 `[main → slot 4]` brief (which corrected the "Harsh Tab 4 final push" brief: Done-def #5 + Phase
+0g already shipped → skip). Final actionable item this window = the `OUTPUT_BUCKET_TEMPLATE`-docs follow-up (queue item
+3); the other queue items were already in their target state (env-less sub-todo: DeFi-raw + config-store shipped,
+`pnl/positions/risk-store-defi` + `events` Q7-blocked; Done-def #6 partial table shipped @PM`74109cc5`;
+`dependency_checker.py` migration NOT contained — `BaseDependencyChecker` is UTL-side + ~6-10 tests introspect the
+`test_mode` infra → stays blocked).
+
+| Item                                    | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Evidence                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `OUTPUT_BUCKET_TEMPLATE`-docs follow-up | done — dropped stale `INPUT_/OUTPUT_BUCKET_TEMPLATE` env-var + config-Field refs from `cross_instrument/docs/CONFIGURATION.md` + `DEPLOYMENT_GUIDE.md` + `multi_timeframe/.env.example` + the `paired_dispatch.py` `_delta_one_bucket` docstring (all stale post-`e980ecfd` migration; bucket names now via `resolve_bucket → cloud-providers.yaml`, resolver-aliased to `features-xinstrument`/`features-mtf`). Surgical edits, `.md` prettier-clean, ruff + py_compile clean. | features-service@`89e9a972` (+ plan flip this commit) |
+
+### Phase-1-code-complete scope for this plan — DONE ✅
+
+Everything in `bucket_name_ssot_canonicalisation_2026_05_10.md` except the Phase-2.6-cutover items + the operator-gated
+items is shipped:
+
+- ✅ Done-def #1 (canonical layer = yaml, env-tiered) · ✅ Done-def #2 (per-family config.py → `resolve_bucket`, incl.
+  cross_instrument/multi_timeframe via the alias) · ✅ Done-def #4 (parity test extended) · ✅ Done-def #5 (QG STEP 5.69
+  `gs://`/`s3://` ratchet — checker + baseline + base-service.sh + test) · ✅ Phase 0a (operator decision recorded) · ✅
+  Phase 0b (yaml additive corrections) · ✅ Phase 0e (Group-A env-tier in yaml + parity test) · ✅ Phase 0g (UI env-tier
+  verified + (b+) cross-check FINDING → Layer 5 → code_freeze GAP-2.4.D) · ✅ Phase 0h (sync scripts shipped —
+  first-execution = Phase 3/post-cutover, handed to Ikenna slot 8) · ✅ Phase 0i (region pinning ratified
+  ap-northeast-1) · ✅ env-less-GCP DeFi-raw + config-store · ✅ cross_instrument/multi_timeframe yaml-gap (Q5/A5) · ✅
+  `OUTPUT_BUCKET_TEMPLATE`-docs follow-up · ✅ Done-def #6 PARTIAL drift-audit table.
+
+### Carries to the code_freeze Phase 2.6 cutover window (2026-05-15→05-19) — slot 4's, or hands off to the Phase-2.6 owner
+
+| Item                                                                                                                                                                                                                                                                                                                                                                                                               | Why it's Phase-2.6                                                                                                                                                                                               | Who                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Phase 0c** — provision ~150-300 env-tiered Group-A + Group-B buckets across both clouds × 3 envs × ap-northeast-1                                                                                                                                                                                                                                                                                                | physical infra; needs ADC                                                                                                                                                                                        | slot 4 (operator: "assume harsh provisions") — code_freeze GAP-2.4.B |
+| **Phase 0d** — migrate flat-bucket data into env-tiered buckets (≤0.01% drift verification + write-pause cutover)                                                                                                                                                                                                                                                                                                  | physical data migration; write-pause must align with the freeze window                                                                                                                                           | slot 4 — code_freeze GAP-2.4.C                                       |
+| **Done-def #3** — flip legacy `get_bucket_name`/`BUCKET_PREFIXES` → `resolve_bucket_name` workspace-wide (~36+ consumers)                                                                                                                                                                                                                                                                                          | = the cutover-flip step (2.6.4) — must land DURING the write-pause, after provisioning + data migration (Group-A writers write continuously; flipping before the env-tiered buckets exist = first-write failure) | slot 4 — Q6 ✅ Option 2                                              |
+| **L5 deployment-api reader-repoint** — replace deployment-api's internal flat-shape bucket templates (`DataStatusService._BUCKET_TEMPLATES` + `data_status_drilldown._BUCKET_TEMPLATES` + `data_query_service.build_bucket_name` + `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` + 3 hardcoded `f"gs://instruments-store-sports-{pid}/..."`) with `resolve_bucket_name(...)` + reconcile the L5.1↔L5.2 `ml-*` drift | deployment-api reads buckets continuously → must flip in lockstep with the data migration                                                                                                                        | code_freeze GAP-2.4.D (extends Done-def #6)                          |
+| **L2-tail `dependency_checker.py`** — migrate the inline `"bucket_template": "market-data-tick-{ag}-{pid}"` probe strings → `resolve_bucket(...)`                                                                                                                                                                                                                                                                  | the probe template now drifts from the env-tiered yaml; must land in the same window as the data migration OR via the UTL `BaseDependencyChecker` migration (whichever first)                                    | code_freeze Phase 2.6 / UTL migration                                |
+| **Done-def #6 FULL zero-drift table** — drift ≤0.01% per migrated bucket + zero readers still hit flat names                                                                                                                                                                                                                                                                                                       | runs after provisioning + data migration + the L3 flip + the L5 repoint                                                                                                                                          | code_freeze GAP-2.4.D owner                                          |
+| **Q7 (operator-gated, NOT Phase-2.6-blocked)** — `pnl-store-defi`/`positions-store-defi`/`risk-store-defi` canonical-shape decision (rec b-i = symmetric `{kind}-defi-{env}-{pid}`) + `events` env-tier (rec c-i = dedicated Phase-2.6 sub-step / c-ii = 3rd permitted env-less exception; main's lean = c-ii)                                                                                                     | needs Ikenna/operator; once decided, the yaml edit + (if a rename) the Phase-2.6 migration follow                                                                                                                | Ikenna/operator                                                      |
+| **Phase 0f** — VM-launcher env-awareness (~30 launchers read `DEPLOYMENT_ENV` + companion QG step)                                                                                                                                                                                                                                                                                                                 | operator-directed handoff 2026-05-11 (Harsh leaving ~3hr)                                                                                                                                                        | Ikenna slot 8                                                        |
+| **Done-def #5 v2 AST-walk** (P2 hardening) — distinguish `f"gs://{x}/..."` from `resolve_bucket_uri(...)`, ignore docstrings                                                                                                                                                                                                                                                                                       | precision follow-up; v1 grep-based already catches NEW inline formatters                                                                                                                                         | not urgent — whoever picks it up                                     |
+
+Going quiet — Phase-1 scope DONE; the above carries to the Phase-2.6 cutover (slot 4's window) + Ikenna slot 8 (Phase
+0f) + Ikenna/operator (Q7).
