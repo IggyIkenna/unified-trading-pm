@@ -176,3 +176,26 @@ picks up Done-def #3 + the env-less-GCP-entries sub-todo.
   3. **env-less-GCP-entries sub-todo** — env-tier the `dex-*`/`*-defi` GCP yaml entries first (clean `${DEPLOYMENT_ENV}` add); then `config-store`; **HOLD** `pnl-store-defi`/`positions-store-defi`/`risk-store-defi` (need a shape-alignment decision + data migration — surface to operator) and `events` (operator-gated — `{pid}-events` referenced workspace-wide per "no fire-and-forget VM launches").
   4. **Done-def #5/#6** + **Phase 0f** (~30 VM launchers under `deployment-service/scripts/vm/` read `DEPLOYMENT_ENV` — bulk audit + bulk edit) + **Phase 0g/0h** (0g already ✅; 0h = the sync-buckets-prod-to-{staging,dev} scripts).
   Phase 0c/0d (physical provision + flat→env-tiered data migration) = `code_freeze` Phase 2.6 (2026-05-15→05-19) — NOT now. Per-shippable-unit: commit on `tab/hk/4`, `git fetch` + check incoming, rebase if needed, `git push origin HEAD:live-defi-rollout`; flip plan checkboxes + `# DONE-2026-05-11` cont. block; ping `slot_4.md` (STARTED + per-unit + final); `date -u` for timestamps (machine clock is IST). QG STEP 5.69 ratchet enforces no new inline-f-string bucket names — keep everything through `resolve_bucket_name`.
+
+[2026-05-11 12:39 UTC] harsh-bucket-and-adapter-tab — **Q5/A5 yaml-gap SHIPPED** (the last loose end of Done-def #2). 5 commits:
+UTL@`4ee24b5` (resolver `_KIND_ALIASES` + `${DEPLOYMENT_ENV_SHORT}` substitution) + deployment-service@`008e371`
+(`env_substitutor` matching support) + deployment-service@`f81d043` (cloud-providers.yaml sweep — `${DEPLOYMENT_ENV}`→
+`${DEPLOYMENT_ENV_SHORT}` ~82 occ, `-prediction-`→`-pred-` 14 bucket strings, added `features-xinstrument`/`features-mtf`
+5-per-AG both clouds, §-header rewrite; all names ≤63 chars, worst 60) + UTL@`e3dd846` (parity test matched) +
+features-service@`e980ecfd` (cross_instrument/multi_timeframe `get_output_bucket`→`resolve_bucket`, Field deleted).
+Plan flips PM@`0a07520e` (cross_instrument/multi_timeframe yaml-gap `[x]` + scoreboard + Q6 + DONE cont.3 + a new `[ ]`
+follow-up for stale `OUTPUT_BUCKET_TEMPLATE` doc refs; whole plan prettier-reformatted to 120-col per .prettierrc).
+🟡 **BLOCKED — Q6 (needs Ikenna, bucket-naming SSOT decisions → Ikenna per work-split)**: Done-def #3 (legacy
+`get_bucket_name`→`resolve_bucket_name` delegate) — a naive delegate landing before code_freeze Phase 2.6 re-points
+Group-A consumers (instruments-service/MTDS — `market-data`/`instruments-store`, written CONTINUOUSLY) to env-tiered
+names that don't exist on disk → first-write-failure. Group-B (`features-*`/`ml-*`/`execution`/`strategy`) are in the
+"safe gap" (nothing writes them till Phase 3, QG mock) — Group-A are NOT. Options in plan § Open questions Q6: (i)
+transitional delegate (Group-B now, Group-A flips with Phase 2.6 — slot 4 rec); (ii) defer whole delegate to Phase 2.6;
+(iii) confirm per-domain env-override shield. **Slot 1 action**: route a cross-side ping to Ikenna for Q6. (Prior asks —
+Ikenna slot 3 sports `available_at` + Q5 — are ✅ resolved.) STILL OPEN (all `- [ ]` plan todos): Done-def #3 (pending
+Q6); env-less-GCP-entries sub-todo (DeFi-raw `dex-*`/`*-defi` first — clean `${DEPLOYMENT_ENV_SHORT}` add); the
+`OUTPUT_BUCKET_TEMPLATE`-docs follow-up; Done-def #5/#6; dependency_checker.py sub-todo; Phase 0c/0d (=Phase 2.6, not
+now), 0f, 0g (verify), 0h. Workspace obs (not slot-4): `import unified_trading_library` broken on origin/LDR
+(`availability_stamping.py:83` → `BAR_TIMEFRAME_SECONDS` not exported from UAC `__init__.py` — UTL→UAC drift mid-flight,
+not mine; blocks running the UTL parity test locally). Going quiet — next session picks up Done-def #3 (pending Q6) +
+the env-less-GCP-entries sub-todo (DeFi-raw first).
