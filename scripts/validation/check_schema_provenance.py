@@ -50,10 +50,14 @@ def should_exclude_file(rel_path: str) -> bool:
 
 
 def has_schema_provenance_exempt(filepath: Path) -> bool:
-    """Exempt files with # SCHEMA_PROVENANCE_EXEMPT in first 20 lines."""
+    """Exempt files with # SCHEMA_PROVENANCE_EXEMPT anywhere in the file.
+
+    (Was: first 20 lines only — Harsh slot-1 Q6 fix 2026-05-11: a `# SCHEMA_PROVENANCE_EXEMPT`
+    marker near a specific class def, not just in the header, should also exempt the file.)
+    """
     try:
         text = filepath.read_text(encoding="utf-8")
-        for line in text.splitlines()[:20]:
+        for line in text.splitlines():
             if "SCHEMA_PROVENANCE_EXEMPT" in line and "#" in line:
                 return True
     except OSError:
@@ -62,11 +66,32 @@ def has_schema_provenance_exempt(filepath: Path) -> bool:
 
 
 def find_schema_definitions(content: str) -> list[str]:
-    """Extract schema class names from file content."""
+    """Extract schema class names from file content.
+
+    Skips: (a) underscore-prefixed (private) classes — `class _Foo` is service-internal by
+    convention; (b) any class whose `class <name>` line carries a `# CORRECT-LOCAL` marker —
+    mirrors the `base-service.sh` inline rg-checks (STEP 5.9 / lines ~799-823 / ~1061+) which
+    `grep -v '#.*CORRECT-LOCAL'` on the matched class line. (Harsh slot-1 Q6 fix, 2026-05-11 —
+    so the per-line `# CORRECT-LOCAL` marker is honored consistently across every QG schema check,
+    matching the operator's Q3-A1 disposition: features-service-only types stay local with the marker.)
+    """
     found: set[str] = set()
+    lines = content.splitlines()
+
+    def _decl_line(name: str) -> str:
+        for ln in lines:
+            if re.search(rf"\bclass\s+{re.escape(name)}\b", ln):
+                return ln
+        return ""
+
     for pat in (CLASS_BASEMODEL_RE, CLASS_TYPEDDICT_RE, CLASS_DATACLASS_RE, CLASS_DATACLASS_NO_PAREN_RE):
         for m in pat.finditer(content):
-            found.add(m.group(1))
+            name = m.group(1)
+            if name.startswith("_"):
+                continue
+            if "CORRECT-LOCAL" in _decl_line(name):
+                continue
+            found.add(name)
     return sorted(found)
 
 
@@ -110,6 +135,12 @@ def scan_repo(repo_path: Path, repo_name: str) -> list[tuple[str, str]]:
 
         schemas = find_schema_definitions(content)
         for schema_name in schemas:
+            # Don't flag a locally-defined type that is ALSO imported from UAC/UIC somewhere in the
+            # repo (the local def then shadows the canonical one — that's a "remove the local def, use
+            # the import" cleanup, but it's not a "self-declared schema" violation). Wires up the
+            # previously-defined-but-never-called schema_imported_from_uac_uic() helper. (Harsh slot-1 Q6, 2026-05-11.)
+            if schema_imported_from_uac_uic(repo_path, schema_name):
+                continue
             violations.append((rel_str, schema_name))
 
     return violations
