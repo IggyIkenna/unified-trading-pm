@@ -377,3 +377,43 @@ The plan is done when ALL of the following are true:
 - `master_to_live_defi_2026_05_23.md` — the readiness model; this plan is the time-axis sequencing of how the readiness model fills in.
 - `manifest_evolution_master_2026_05_08.md` — the schema-axis enforcer; this plan is the time-axis enforcer.
 - `manifest_migration_master_2026_05_07.md` — the migration-stage coordinator; this plan adds Stage 0 (VM drain) and Phase 3 (backfill resumption) as bookends.
+
+## DONE-2026-05-11 — slot 6 (harsh-workspace-qg-tab) day-1 status (freeze-gate items 8 + 9)
+
+Slot 6 day-1 work toward the Phase 1 freeze gate (2026-05-15). Freeze-gate items 8 + 9 remain `- [ ]` — this is the
+running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
+
+**Shipped 2026-05-11** (PM commits):
+
+- `PM@cfeb79fc` — STARTED boot-ack ping.
+- `PM@04ed9203` — **freeze-gate item 9 (codex SSOT audit pass)** — `plans/active/issues/codex_audit_2026_05_11.md`:
+  25 Phase 1 plans scanned; 91 codex doc paths referenced; 58 present / 33 referenced-but-not-yet-created (all 33 are
+  unchecked `- [ ]` items in their owning plans — expected pending Phase-1 work, deadline = this freeze gate). Per-plan
+  pending-codex breakdown table = the freeze-gate-9 readiness checklist. Findings: F2 (codex
+  `availability-manifest-and-data-status.md` v8 dataclass missing `feature_family` which UTL code has @`c16cef3` —
+  routed to slot 2's `features_repo_consolidation` codex phase); F3 (v8 manifest-schema declaration owner ambiguous —
+  this plan `:139`/`:174-179` says "writegate slice (b) Phase 5.1, NOT a separate file"; codex doc +
+  `manifest_schema_final_gate_2026_05_09.md` say the final-gate plan — needs a slot-1/operator reconcile; tracked in
+  `codex_audit_2026_05_11.md` § Open questions Q1). Core schema/manifest/pipeline codex docs spot-checked: healthy.
+- `PM@e8cbe46b` — **freeze-gate item 8 (workspace QG) — static day-1 baseline** — `plans/active/issues/qg_sweep_2026_05_11.md`:
+  `ruff check` (source dirs only) 20/22 repos CLEAN; `features-service` 13×I001 import-org (auto-fixable —
+  mid-consolidation by slot 2, expected); `system-integration-tests` 4×C901 complexity 9-11 > SIT-local-limit 7
+  (pre-existing, not slot-2-related). `# type: ignore`: 344 total, 343 coded form, **0 actual bare directives
+  workspace-wide** (the classic architectural-violation-masker is absent). basedpyright + full `quality-gates.sh` sweep
+  **deferred days 2-4** — slot worktrees have no per-repo `.venv`; needs `bash scripts/setup.sh` per repo first (~30-60
+  min for 22 repos).
+
+**Deferred work (slot 6) — all captured in active plans / issue docs**:
+
+| Deferred item | Why | Tracked in |
+| --- | --- | --- |
+| Full `bash scripts/quality-gates.sh` workspace sweep (basedpyright + pytest + 60+ STEP checks) | slot worktrees have no per-repo `.venv` — `setup.sh` per repo needed first | `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (1)+(2); `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 full-execution criterion |
+| Sampled `# type: ignore[...]` reason-comment audit (~20-30 of 343) | day-1 only confirmed zero *bare* directives; per-line architectural check pending | `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (3) |
+| Phantom manifest audit (P1) — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group {cefi,defi,sports,tradfi,prediction} --dry-run` | laptop run impractical (no output in 4min on `cefi --dry-run --workers 32`; CLAUDE.md: cross-region listing 18× slower) — proper path = GCE same-region VM per `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe"; ADC present, deps importable from `.venv-workspace`. 2026-05-04 baseline = 354 residual; watch the Track-D commodity-phantom-row bug | `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 (P1); `plans/active/issues/qg_sweep_2026_05_11.md` § cross-refs + "Days 2-4 follow-up" (1) |
+| AST/grep QG STEP for banned placeholder methods (`_create_empty_output` / `_handle_empty_tick_data` / `_create_full_day_empty_output` / direct-`upload_bytes`-candle-writes-that-bypass-`record_captured`) | **DEFERRED until after writegate Phase 2.A deletes those methods** — else the new gate fails on the still-present live code (Track D found them live in MDPS `tradfi/ohlcv_passthrough.py:266`, `orchestration_writer.py`, `batch_workers.py`) | `plans/active/issues/wave3x_track_d_findings_2026_05_11.md` § "Recommended decision" (3); `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (5) |
+| Codex SSOT audit pass — deepen currency spot-checks on the ~50 present docs the Phase 1.D/E/F plans touch (alerting/risk/DR, DeFi, UI/credentials) | day-1 only spot-checked the schema/manifest/pipeline core + alerting cluster | `plans/active/issues/codex_audit_2026_05_11.md` § "Days 2-4 follow-up" |
+| 33 codex docs referenced-but-not-yet-created for freeze-gate item 9 | all are `- [ ]` items in their owning Phase 1 plans — those plans' codex phases create them by 2026-05-15 | `plans/active/issues/codex_audit_2026_05_11.md` § "Pending codex work" table (per-plan); each owning plan's "Codex SSOT updates" phase |
+
+EOD deferral-audit (per CLAUDE.md "End-of-cycle audit clause"): every row above is grep-findable in `plans/active/`
+(work-split, the 3 slot-6 issue docs in `plans/active/issues/`, or — for the 33 codex docs — the owning plans' `- [ ]`
+todos). No deferral lives only in chat.
