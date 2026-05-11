@@ -351,6 +351,30 @@ Read these before making ANY code changes:
   callers that try to use it directly outside `record_captured` get a deprecation error. Plan:
   `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 1A.
 
+- **Service-output emission policy (writegate slice (a)+(b); shipped UTL@`1a7e1d4b` + UTL@`ac5ade59` + MDPS@`9e1a93e`)**
+  — Every service that emits derived/aggregated output (MDPS / features-\* / ml-\* / strategy / execution / position-
+  balance / risk / instruments-service) MUST run its publish-boundary through `publish_with_policy()` or
+  `publish_with_manifest_lookup()` from `unified_trading_library.emission_publisher`. The helper resolves a 4-state
+  policy (`STRICT_FAIL` / `PARTIAL_OK` / `NAN_FILL` / `BLOCK_CRITICAL`) from the SSOT in
+  `unified_api_contracts.canonical.crosscutting.service_emission_policy.SERVICE_OUTPUT_POLICIES` keyed by `(service,
+  output_data_type)` with `:<slice>` differentiation (`ohlcv_1h:current` vs `ohlcv_1h:historical`) — then emits a
+  lifecycle event (`PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA` / `BLOCKED`) and returns a structured
+  `EmissionDecision`. **Decision matrix**: full window (`completeness_fraction == 1.0`) → `PUBLISHED_OK` regardless of
+  policy; gap + `PARTIAL_OK`/`NAN_FILL` → `PUBLISHED_DEGRADED` + publish row; gap + `STRICT_FAIL` → `STALE_DATA`
+  heartbeat-only (no row); gap + `BLOCK_CRITICAL` → `BLOCKED` + alert flag (no row). **completeness_fraction formula**:
+  `(captured + empty_confirmed) / (captured + empty_confirmed + attempted_failed + expected_unattempted)` — only
+  `attempted_failed` + `expected_unattempted` reduce completeness; `empty_confirmed` is honest absence from the
+  consumer's perspective. The `manifest_completeness.compute_completeness_fraction()` helper computes it from the
+  upstream manifest with 60s TTL caching + `force_refresh=True` kwarg. **Batch = live symmetry**: identical helper for
+  both modes — downstream parquet readers + event consumers cannot distinguish batch vs live. **Per-service rollout**:
+  slice (b) MDPS `ohlcv_1h` POC shipped 2026-05-11 (`canonical_writer._publish_ohlcv_1h_emission_check`); slice (c)
+  Phase 6.1-6.9 covers the remaining 8 service rollouts. Codex SSOT:
+  [`codex/02-data/service-output-emission-semantics.md`](../codex/02-data/service-output-emission-semantics.md). Plan:
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+  slice (b) + (c). **DEFERRED-AFTER** `manifest_schema_final_gate_2026_05_09.md` Phase 2: writing
+  `completeness_fraction` + `incomplete_window` columns directly into the parquet/manifest row (currently emitted via
+  lifecycle event payload only).
+
 - **`available_at` is per-row, write-time, equal to live-pipeline-arrival (workspace-wide)** — Every shard's parquet
   contains an `available_at` column. Each row's value = when the live pipeline would have actually had that row's
   information per `unified_api_contracts.canonical.crosscutting.availability_semantics.AVAILABILITY_AT_SEMANTICS`. NEVER

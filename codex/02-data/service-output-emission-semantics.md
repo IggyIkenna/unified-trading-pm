@@ -1,0 +1,208 @@
+---
+scope: workspace
+status: active
+last_updated: 2026-05-11
+owner: ikenna
+related_plans:
+  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
+  - plans/active/manifest_schema_final_gate_2026_05_09.md
+related_codex:
+  - codex/02-data/availability-manifest-and-data-status.md
+  - codex/02-data/honest-absence-downstream-handling.md
+---
+
+# Service-output emission semantics
+
+> **STATUS** (2026-05-11): slice (a) shipped UAC@`58c3b61` + UTL@`1a7e1d4b` (4-state policy enum + lifecycle events +
+> `publish_with_policy()`); slice (b) shipped UTL@`ac5ade59` + MDPS@`9e1a93e` (manifest_completeness helper +
+> publish_with_manifest_lookup wrapper + ohlcv_1h POC); slice (c) Phase 6.1-6.9 covers the remaining 8 services
+> (multi-week rollout). v8 manifest schema columns for `service_emission_state` + `last_emission_decision_at` +
+> `expected_window_completeness_pct` are owned by [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+> Phase 1.
+
+## TL;DR
+
+Every service that emits a derived / aggregated output (MDPS hourly candles, features-\* feature_groups, ml-\* model
+versions, strategy archetype signals, execution order_intent/fill confirmations, position-balance portfolio_state,
+risk-and-exposure risk_state, instruments-service catalog snapshots) MUST route its publish boundary through
+`unified_trading_library.emission_publisher.publish_with_policy()` (or `publish_with_manifest_lookup()` when the
+upstream completeness is computed from manifest reads).
+
+The publisher resolves a 4-state policy from the SSOT in
+`unified_api_contracts.canonical.crosscutting.service_emission_policy.SERVICE_OUTPUT_POLICIES` (keyed by
+`(service, output_data_type)`), evaluates the caller-supplied `completeness_fraction`, decides whether to publish the
+row + whether to fire an alert, and emits the matching lifecycle event.
+
+## The 3 stacked layers
+
+```
+                            ┌──────────────────────────────────────────────┐
+Layer 3 — Service emission  │ publish_with_policy(...)                    │
+(this doc)                  │   → EmissionDecision(policy, event,         │
+                            │     should_publish_row, should_alert,       │
+                            │     completeness_fraction, ...)             │
+                            │                                              │
+                            │ Owners: every derived/aggregated service    │
+                            │ Policy SSOT: UAC SERVICE_OUTPUT_POLICIES    │
+                            └──────────────────┬───────────────────────────┘
+                                               │
+                            ┌──────────────────▼───────────────────────────┐
+Layer 2 — Service output    │ Service writes parquet rows + manifest      │
+completeness                │ row. Completeness fraction derived from     │
+                            │ upstream manifest 4-state at write-time.    │
+                            │                                              │
+                            │ Helper: manifest_completeness.compute_       │
+                            │ completeness_fraction(upstream_window, ...) │
+                            └──────────────────┬───────────────────────────┘
+                                               │
+                            ┌──────────────────▼───────────────────────────┐
+Layer 1 — Manifest 4-state  │ ManifestWriter writes one of:               │
+                            │   captured / empty_confirmed /              │
+                            │   attempted_failed / expected_unattempted   │
+                            │                                              │
+                            │ SSOT: CLAUDE.md "Availability manifest v5". │
+                            └──────────────────────────────────────────────┘
+```
+
+## The 4 policies
+
+Closed set in `unified_api_contracts.canonical.crosscutting.service_emission_policy.ServiceEmissionPolicy`:
+
+| Policy           | When upstream has gaps (`completeness_fraction < 1.0`)                                                                                              | Use case                                                                                                                |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `STRICT_FAIL`    | Suppress the row. Emit `STALE_DATA` heartbeat-only event. Downstream sees: service UP (still emitting), data STALE (no metric row).                 | Real-time current-bar emissions (`ohlcv_1m:current`, `ohlcv_1h:current`, paired_spec for cross-instrument features).    |
+| `PARTIAL_OK`     | Publish the row + emit `PUBLISHED_DEGRADED` event with the `completeness_fraction`. Downstream consumer branches on the fraction per its tolerance. | Historical re-emissions (`ohlcv_1h:historical`), aggregate metrics (`high_low_24h`).                                    |
+| `NAN_FILL`       | Publish the row + emit `PUBLISHED_DEGRADED` event. The row contains NaN for the gap-contributing columns; tree-based ML tolerates per NaN-policy.   | Rolling-window features (`vol_30d`, `pairwise_correlation`).                                                            |
+| `BLOCK_CRITICAL` | Suppress the row + fire a P0 alert via alerting-service. Emit `BLOCKED` event. Operator triages.                                                    | Position state during venue-down; ml-training model_version publish; execution `fill_confirmation` (position-truth).    |
+
+`completeness_fraction == 1.0` always emits `PUBLISHED_OK` + publishes the row regardless of policy — no gap = no
+decision.
+
+## The 4 lifecycle events
+
+Closed set in `EmissionLifecycleEvent`:
+
+- `PUBLISHED_OK` — full window, row written, INFO severity.
+- `PUBLISHED_DEGRADED` — gap + permissive policy, row written, WARNING severity.
+- `STALE_DATA` — gap + `STRICT_FAIL`, no row, WARNING severity (heartbeat).
+- `BLOCKED` — gap + `BLOCK_CRITICAL`, no row, ERROR severity + alert flag.
+
+Every event carries `completeness_fraction`, `incomplete_window_count`, `policy`, and `row_key` in the metadata
+payload. A 50-row sample of `incomplete_window` is inlined for operator drill-down.
+
+## Slice differentiation (`:current` vs `:historical`)
+
+`output_data_type` carries an optional `:<slice>` suffix when real-time and historical re-emission warrant different
+policies for the same underlying type. The MDPS ohlcv_1h POC (slice (b)) is the canonical example:
+
+| `output_data_type`    | Slice resolver                                                       | Typical policy | Behaviour on gap                                                  |
+| --------------------- | -------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------- |
+| `ohlcv_1h:current`    | `_resolve_emission_slice(date_str) == "current"` when `date_str` == today UTC | `STRICT_FAIL`  | Suppress row (live consumer needs full current bar or no bar)     |
+| `ohlcv_1h:historical` | `date_str < today UTC`                                               | `PARTIAL_OK`   | Publish row with `fraction < 1.0` (historical backfill tolerates) |
+
+Per CLAUDE.md "Live = batch — same code path" rule, there is NO separate live vs batch writer. The same
+`canonical_writer.write_candle_parquet` serves both; only the resolved `output_data_type` tag differs. Adapters MUST
+NOT branch on a `mode=live` / `mode=batch` flag at the writer level.
+
+## Helper API surface
+
+All in `unified_trading_library.emission_publisher` + `unified_trading_library.manifest_completeness`:
+
+### `publish_with_policy(*, service, output_data_type, row_key, completeness_fraction, incomplete_window=None, correlation_id=None, extra_event_details=None) -> EmissionDecision`
+
+Pure publish-boundary helper — no manifest read, no I/O beyond the lifecycle event emit. Caller computes the
+completeness fraction however it wants (manifest-grain via `manifest_completeness`, bar-level via parquet inspection,
+synthetic for backtests). Returns `EmissionDecision` carrying the `should_publish_row` flag the caller branches on.
+
+### `publish_with_manifest_lookup(*, service, output_data_type, row_key, bucket, upstream_window, manifest_index=None, force_refresh=False, ...) -> EmissionDecision`
+
+Convenience wrapper combining `compute_completeness_fraction()` + `publish_with_policy()` in one call. Reads the
+canonical availability index via `read_availability_index(bucket)` (60s TTL cache); `force_refresh=True` invalidates;
+`manifest_index=<pd.DataFrame>` short-circuits the read for callers with the index already.
+
+### `compute_completeness_fraction(*, bucket, upstream_window, manifest_index=None, force_refresh=False) -> CompletenessReadout`
+
+Standalone helper for callers that want to compute the fraction without publishing (e.g. diagnostics, data-status
+endpoints, audit reports). Returns frozen `CompletenessReadout` with the fraction + the `incomplete_window` list +
+per-state totals.
+
+## Worked examples
+
+### MDPS `ohlcv_1h:current` — STRICT_FAIL on gap
+
+Service: `market-data-processing-service`. Upstream: 60 × `ohlcv_1m` shards (manifest-grain: 1 ohlcv_1m row per day per
+shard). Live emission at hour H of day D for `(BINANCE, BTC-USDT, spot)`:
+
+```python
+decision = publish_with_manifest_lookup(
+    service="market-data-processing-service",
+    output_data_type="ohlcv_1h:current",
+    row_key={"date": "2026-05-08", "venue": "BINANCE", "data_type": "ohlcv_1h", ...},
+    bucket="market-data-tick-cefi-prod-...",
+    upstream_window=[{"date": "2026-05-08", "venue": "BINANCE", "data_type": "ohlcv_1m", ...}],
+)
+if decision.should_publish_row:
+    manifest_writer.record_captured(row_key=..., df=candles_df, ...)
+# else: helper already emitted STALE_DATA heartbeat; no record_captured call.
+```
+
+Day D's ohlcv_1m manifest row in state `captured` → fraction=1.0 → `PUBLISHED_OK` + row written. State `attempted_failed`
+→ fraction=0.0 → `STALE_DATA` + no row.
+
+### features-volatility `vol_30d` — NAN_FILL
+
+Service: `features-volatility`. Upstream: 30 × daily `ohlcv_24h` manifest rows. NAN_FILL policy means the helper
+publishes the row when 1-10% of the upstream window has gaps; the NaN-contributing columns carry NaN; tree-based ML
+trains on the populated columns.
+
+### execution-service `fill_confirmation` — BLOCK_CRITICAL
+
+Service: `execution-service`. Upstream: per-venue real-time fill stream. BLOCK_CRITICAL policy means partial venue
+state suppresses the fill_confirmation row AND fires a P0 alert — execution + position-balance cannot tolerate
+position-truth violations.
+
+## Anti-patterns
+
+- **Don't call `ManifestWriter.record_captured` directly at a derived-service emission boundary without going through
+  `publish_with_policy()`.** The QG STEP (writegate slice (c) Phase 6.9) statically walks every `record_captured(`
+  callsite and asserts the paired publisher call when the data_type is a declared service-output.
+- **Don't ship a service with `output_data_type` missing from `SERVICE_OUTPUT_POLICIES`.** Unseeded `(service,
+  output_data_type)` pairs default to `STRICT_FAIL` per the UAC SSOT — forces explicit declaration.
+- **Don't branch on `mode=live` / `mode=batch` at the publish boundary.** Per CLAUDE.md "Live = batch — same code path",
+  the slice is resolved at write-time from `date_str` vs today's UTC date. Batch and live use the same helper.
+- **Don't pass `completeness_fraction=0.0` defensively for missing upstream manifest reads.**
+  `compute_completeness_fraction` distinguishes "missing-from-manifest" (treated as `expected_unattempted`) from
+  manifest-read failure (raises). Defensive `0.0` masks the failure mode.
+- **Don't emit lifecycle events outside the publisher.** Every `PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA` /
+  `BLOCKED` event MUST come from `publish_with_policy()` so the metadata schema is uniform across services.
+
+## Per-service rollout playbook (= slice (c) Phase 6 sub-plan template)
+
+Each service consuming this SSOT files a sub-plan at `plans/active/wave4_emission_rollout_<service>_<YYYY_MM_DD>.md`
+with this structure (Citadel-Grade Planning Standards):
+
+1. **Pre-audit blast radius** — identify every `record_captured(` callsite in the service, classify as raw-capture (no
+   wire-in needed) vs derived-output (wire-in required).
+2. **Phased DAG** — group emission boundaries by data_type slice (`:current` vs `:historical`); declare phase
+   dependencies + QG gates.
+3. **No technical debt** — old inline `record_captured` calls fully replaced by the publish-boundary wrapper; no
+   compat shims.
+4. **Parallelization** — when N data_types are independent (`ohlcv_1m:current` + `ohlcv_1m:historical` +
+   `book_snapshot_5:current` + ...), fan-out via parallel Task sub-agents per the workspace
+   sub-agent-with-mandatory-rules pattern.
+5. **Success criteria** — every `(service, output_data_type)` slice has a seed row in `SERVICE_OUTPUT_POLICIES`; every
+   emission boundary wires `publish_with_policy()` / `publish_with_manifest_lookup()`; service QG green; per-service
+   plan checkbox flipped with commit-sha evidence.
+6. **Downstream consumer updates** — `SERVICE_OUTPUT_POLICIES` seed additions go in UAC with a `__all__` re-export per
+   the Citadel import rules.
+7. **SSOT** — this codex doc + the UAC `SERVICE_OUTPUT_POLICIES` dict.
+
+## Composes with
+
+- `codex/02-data/availability-manifest-and-data-status.md` — the 4-state manifest layer this builds on.
+- `codex/02-data/honest-absence-downstream-handling.md` — downstream NaN-handling tolerances per consumer class.
+- `cursor-configs/CLAUDE.md` § "Service-output emission policy" — key-rule entry pointing here.
+- `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` slices (a) + (b) + (c) — the architecture plan.
+- `plans/active/manifest_schema_final_gate_2026_05_09.md` Phase 1-2 — owns the v8 manifest schema columns
+  (`service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`) which complement the
+  in-band parquet-row columns this doc describes.

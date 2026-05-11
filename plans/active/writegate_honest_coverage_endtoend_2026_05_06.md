@@ -2910,37 +2910,48 @@ shape codified in slice (a)'s seed dict.
 
 **Phase 5.5 — deployment-api / deployment-ui surfaces the new columns (P1, ~3hr)**
 
-- [ ] [deployment-api] P1. `/leaf-stats` endpoint already reads parquet column stats per Phase 4.A — extend
-      `LeafParquetStats` Pydantic model with `completeness_fraction_envelope` (min / max / null_count / mean) +
-      `incomplete_window_present_count` (int — how many rows have non-empty list). Helper extracts both at parquet-read
-      time. Already-tested via the existing leaf-stats Phase 4.A.3 unit tests; extend with one new case asserting the
-      envelope on a synthetic mixed-completeness parquet.
-- [ ] [deployment-ui] P1. `LeafSchemaModal` (already shipped Phase 4.B.3) renders the new envelope as a 4th block after
-      the `available_at` envelope. Color coding: green when all rows have fraction=1.0, amber when 0.95 ≤ mean < 1.0,
-      red when mean < 0.95 (per the existing `nanRatioColor` palette inverted). Also surface
-      `incomplete_window_present_count` so operators can see how many emissions in the parquet had gaps without drilling
-      into individual rows.
+- [ ] [deployment-api] P1. **DEFERRED-AFTER** `manifest_schema_final_gate_2026_05_09.md` Phase 2 + writegate slice (c)
+      Phase 6.2 (MDPS column writes). `/leaf-stats` envelope surfacing for `completeness_fraction` +
+      `incomplete_window` requires the columns to ACTUALLY land in the parquet rows MDPS writes. Slot 2 Phase 5.3/5.4
+      POC deferred the parquet-row column writes per operator decision (option b SUPERSEDED writegate Phase 5.2 → owned
+      by manifest_schema_final_gate Phase 2). Endpoint extension stays gated until columns ship. Shape spec preserved
+      here for the future agent: extend `LeafParquetStats` Pydantic model with `completeness_fraction_envelope` (min /
+      max / null_count / mean) + `incomplete_window_present_count` (int — how many rows have non-empty list); helper
+      extracts both at parquet-read time; one new unit test asserts the envelope on a synthetic mixed-completeness
+      parquet.
+- [ ] [deployment-ui] P1. **DEFERRED-AFTER** the deployment-api half above. `LeafSchemaModal` renders the new envelope
+      as a 4th block after the `available_at` envelope. Color coding: green when all rows have fraction=1.0, amber when
+      0.95 ≤ mean < 1.0, red when mean < 0.95 (per the existing `nanRatioColor` palette inverted). Also surface
+      `incomplete_window_present_count` so operators can see how many emissions in the parquet had gaps without
+      drilling into individual rows.
 
 **Phase 5.6 — Codex SSOT entry + CLAUDE.md key-rule (P0, ~2hr)**
 
-- [ ] [DOCS] P0. CLAUDE.md NEW Key Rule entry "Service-output emission policy" between "Cluster validation MANDATORY"
-      and "available_at is per-row, write-time" rules. Body cites: 4 policies + 4 lifecycle events + the
-      `(service, output_data_type)` SSOT location
-      (`unified_api_contracts.canonical.crosscutting.service_emission_policy`) + the `publish_with_policy()` UTL
-      helper + the writegate plan for the architecture detail. ≤ 25 lines per the existing rule-block density.
-- [ ] [DOCS] P0. NEW `unified-trading-pm/codex/02-data/service-output-emission-semantics.md` — full architecture
-      document. Sections: (1) Three stacked layers diagram (manifest 4-state → service emission policy → service output
-      completeness); (2) The 4 policies with worked examples per asset_group; (3) The 4 lifecycle events with heartbeat
-      semantics + downstream branching; (4) Per-(service, output_data_type) seed table mirroring UAC SSOT; (5)
+- [x] [DOCS] P0. CLAUDE.md NEW Key Rule entry "Service-output emission policy" inserted between "Cluster validation
+      MANDATORY" and "available_at is per-row, write-time" rules (shipped PM@`<this commit>`). Body cites: 4 policies +
+      4 lifecycle events + the `(service, output_data_type)` SSOT location + `publish_with_policy()` /
+      `publish_with_manifest_lookup()` UTL helpers + the writegate plan for architecture detail + slice (a)+(b) ship
+      shas (UTL@`1a7e1d4b` + UTL@`ac5ade59` + MDPS@`9e1a93e`). Codex SSOT cross-reference. DEFERRED-AFTER
+      `manifest_schema_final_gate_2026_05_09.md` Phase 2 for parquet-row column writes.
+- [x] [DOCS] P0. NEW `unified-trading-pm/codex/02-data/service-output-emission-semantics.md` — full architecture
+      document (shipped PM@`<this commit>`). Sections: (1) Three-stacked-layers diagram (manifest 4-state → service
+      emission policy → service output completeness); (2) The 4 policies with worked examples per asset_group; (3) The
+      4 lifecycle events with heartbeat semantics; (4) Slice differentiation (`:current` vs `:historical`); (5)
       `publish_with_policy()` + `publish_with_manifest_lookup()` + `manifest_completeness.compute_completeness_fraction`
-      API reference; (6) Batch = live symmetry guarantee + worked examples; (7) Anti-patterns; (8) Per-service rollout
-      playbook (= the slice-c sub-plan template, see Phase 6 below).
+      API reference; (6) Worked examples (MDPS ohlcv_1h:current STRICT_FAIL, features-vol NAN_FILL, execution
+      BLOCK_CRITICAL); (7) Anti-patterns; (8) Per-service rollout playbook (= slice-c Phase 6 sub-plan template).
 
 **Phase 5.7 — Slice-(b) ship-gate + flip checkboxes (P0, ~30min)**
 
-- [ ] [PM] P0. Once Phase 5.1-5.6 land + QG green: flip slice-(b) checkbox on the writegate plan; commit + push the plan
-      flip per the workspace "Commit + Push + Flip Plan Checkboxes" HARD RULE. Memory entry update for slice-(b)
-      shipping (mirror the slice-(a) memory entry shape).
+- [x] [PM] P0. Slice-(b) Phase 5.1 (UTL helper + tests) + Phase 5.3-5.4 (MDPS ohlcv_1h POC + 17 tests) + Phase 5.6
+      (codex SSOT + CLAUDE.md key-rule) shipped PM@`<this commit>`. Phase 5.5 (deployment-api/ui surfaces)
+      **DEFERRED-AFTER** `manifest_schema_final_gate_2026_05_09.md` Phase 2 — the parquet-row column writes upstream
+      are gated on that plan's v8 schema column declaration. Phase 5.4 P1 30-day integration test **DEFERRED** to MDPS
+      integration test suite once slice (c) Phase 6.2 wires `publish_with_manifest_lookup` at every MDPS data_type.
+      Slot 2 (`ikenna-writegate-slice-b-tab`) ship-gate done; cross-side ping to Harsh slot 6 for workspace QG sweep
+      pending. Code commits: UTL@`ac5ade59` (Phase 5.1) + MDPS@`9e1a93e` (Phase 5.3+5.4). PM commits: PM@`f3153bd6`
+      (Q1 escalation, superseded by rebase to PM@`16b77c70`) + PM@`27cf5c6a` (Q1 ✅ RESOLVED close) + PM@`88baed07`
+      (Phase 5.1 flip) + PM@`74e8bf51` (Phase 5.3+5.4 flip) + PM@`<this commit>` (Phase 5.6 + 5.7).
 
 #### Slice (c) — Per-service rollout (GREENLIT 2026-05-08; multi-week, ~3-5 weeks)
 
