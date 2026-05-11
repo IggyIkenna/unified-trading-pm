@@ -245,10 +245,33 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       `(notional_lower, notional_upper, initial_margin_bps, maintenance_margin_bps)`. Per-venue table sourced from venue
       docs (Bybit / Binance / OKX / Deribit) + on-chain constants (Hyperliquid / Aster). Versioned (these change
       occasionally).
-- [ ] [AGENT] P0. **1F — UAC dual-prediction module pick.** Delete `canonical/domain/prediction/__init__.py` (legacy
+- [x] [AGENT] P0. **1F — UAC dual-prediction module pick.** Delete `canonical/domain/prediction/__init__.py` (legacy
       pre-canonical-question-group) AND any references; canonical = `canonical/domain/predictions/` per the
       `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md` SSOT. Workspace-grep audit for
       downstream consumers; update each.
+      **🔴 FINDING 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab) — PLAN BODY INSTRUCTION MIS-FRAMED; corrected
+      via Findings Triage Discipline.** The pre-audit shows `canonical/domain/prediction/` (legacy, singular) and
+      `canonical/domain/predictions/` (new, plural) serve **DIFFERENT purposes**, not redundant duplicates:
+      - **Legacy `prediction/`** (614 bytes `__init__.py` + 9514 bytes `prediction_mapping.py`) — cross-venue
+        mapping. Exports: `CanonicalPredictionMarket`, `MappingRule`, `OrphanDetector`,
+        `PredictionMarketCategory`, `PredictionMarketCrossVenueMapping`, `PredictionMarketMapper`. Maps individual
+        Polymarket markets to Kalshi market equivalents (1:1 cross-venue dispatch).
+      - **New `predictions/`** (canonical_groups.py + classifiers.py + lifecycle.py) — canonical-question-group
+        taxonomy. Exports: `CanonicalQuestionGroup` (StrEnum), `CanonicalGroupMetadata`, `MarketLifecycle`,
+        `classify_polymarket_to_canonical_group`, `classify_kalshi_to_canonical_group`. Groups markets across
+        venues into shared canonical questions (e.g., all "US Election 2024" markets across Polymarket + Kalshi).
+      **Real consumers verified workspace-grep**: legacy `prediction/` has 2 live consumers — UAC facade
+      `unified_api_contracts/prediction.py` (`from canonical.domain.prediction import *`) +
+      `instruments-service/.../adapters/prediction/polymarket.py:25` import. Deleting it would break polymarket
+      adapter. **Migration plan SSOT** (`plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`)
+      line 459-460 explicitly says the legacy `PredictionMarketCategory` enum **needs alignment with
+      CanonicalQuestionGroup**, NOT outright deletion. Migration plan is ARCHIVED — alignment work was
+      completed without retiring the legacy module.
+      **Decision**: keep BOTH modules; the plan-body instruction was wrong. The cross-venue mapping role of
+      legacy `prediction/` is distinct from the canonical-question-group role of new `predictions/`. Phase 1F
+      design-shipped as a clarification. Lower-priority cleanup (post-cutover): rename legacy `prediction/`
+      → `prediction_mapping/` (to disambiguate from the new module visually), which is mechanical refactor
+      across the 2 live consumers + facade re-export — DEFERRED to post-cutover plan since not May-23-blocking.
 - [x] [AGENT] P0. **1G — `LST_TOKEN_TO_PROTOCOL_ASSET` SSOT verification.** Confirm presence at the documented location
       (per `defi_master_2026_05_07.md` Phase 9.1A); if missing, add as
       `unified_api_contracts/canonical/domain/predictions/lifecycle.py` sibling for LSTs at
