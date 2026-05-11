@@ -488,6 +488,106 @@ EOD deferral-audit (per CLAUDE.md "End-of-cycle audit clause"): every row above 
 (work-split, the 3 slot-6 issue docs in `plans/active/issues/`, or — for the 33 codex docs — the owning plans' `- [ ]`
 todos). No deferral lives only in chat.
 
+## DONE-2026-05-12 — Harsh slot 6 (harsh-workspace-qg-tab) end-of-shift handover
+
+Harsh shift ending 2026-05-12 ~14:42 UTC. Slot-6 role this cycle = QG / codex-currency / phantom-audit cadence +
+QG-validate slot-2-to-5 shippable units. Everything below is **committed + pushed to `live-defi-rollout`** — nothing
+uncommitted, nothing in-flight (the last shippable unit, the Sports phantom-audit result, was already pushed before
+the wrap-up signal). Per-shippable-unit pushes throughout, so Ikenna's side has the full state.
+
+### ✅ Shipped this shift (with evidence)
+
+1. **Consolidator poll-list completeness** (slot 3's open Q "are other per-data_type buckets missing?") — `deployment-service@2a76a2a`:
+   added `dex-pools-{pid}` + `liquidations-{pid}` to `launch-manifest-consolidator-vm.sh` `BUCKETS` (slot-3's `ad4d448`
+   added 8 of the 10 per-data_type DeFi buckets in `_BUCKET_CATEGORY_OVERRIDES`/`_MTDS_DEFI_SUB_DIMENSIONS`; these 2
+   were missed — both written by MTDS handlers via `get_write_bucket_name()`). **Relaunched the daemon**: deleted
+   slot-3's `manifest-consolidator-20260511-181538`, new `manifest-consolidator-20260511-190513` RUNNING + verified
+   healthy — the first cycle **consolidated legacy seeds** for both new buckets: `dex-pools-{pid}` → 75983 rows,
+   `liquidations-{pid}` → 38134 rows written to their canonical `_index/availability_index.parquet` (so there *was*
+   real un-consolidated data, not just future-proofing). Other asset_groups (CeFi options/futures, TradFi futures,
+   prediction, sports) write to their asset-group canonical buckets which are already polled — no gap. Plan-flips +
+   findings: `defi_master_2026_05_07.md` § "Discoveries during Priority #5" (the consolidator P1 item flipped `[x]`;
+   P2 future-gap item — features-*/execution/ml buckets + the code_freeze Phase 2.6 bucket-rename lockstep + the
+   watchdog-dict `mtds-{gas-fees,lst-rates,dex-pools,liquidations,perp-funding}-` imprecision sub-finding).
+   `harsh_orchestrator/pings/slot_6.md` 2026-05-11 13:40/13:45 UTC.
+2. **MTDS ruff fix** — `market-tick-data-service@61f872d`: stray `test_adapter_watchdog_wiring.py` ruff-line-collapse
+   (origin was out-of-sync with `ruff format`). Mechanical; cleared the slot's working tree.
+3. **Codex deepening pass** — `codex_audit_2026_05_11.md` § "Days-2-4 codex deepening pass — 2026-05-11 ~13:45 UTC":
+   3 of the 4 day-1-flagged NEW codex docs now landed (`risk-rule-taxonomy.md` 168 L / `circuit-breaker-rule-taxonomy.md`
+   350 L / `service-emission-policy.md` 134 L); `cross-asset-rescan-protocol.md` still ABSENT. Two drift findings
+   found + routed to `manifest_schema_final_gate_2026_05_09.md`: (a) Phase-2 follow-up P2 — `manifest_writer.py:131`
+   still `MANIFEST_SCHEMA_VERSION = 7` while the v8 emission columns are present; codex `availability-manifest-and-data-status.md:261`
+   prose says "=8" but its snippet (:265) says "=7" → doc inconsistency (nothing branches on `==8`, no breakage; ikenna-slot-6
+   to decide bump-code vs soften-prose); (b) the Phase-3 boundary entry for `codex/02-data/cross-asset-rescan-protocol.md`
+   was missing from the plan's "Codex SSOT updates" section — added it, flagged ❌ NOT YET SHIPPED post-Phase-3-ship,
+   owner ikenna-slot-6. `service-output-emission-semantics.md` re-confirmed v8-current. Revised codex-doc count
+   58→61 present / 35→32 pending.
+4. **QG-validated slot-5's Phase 4** `market-data-processing-service@0068b2f` (LiveStreamAggregator) — `qg_sweep_2026_05_11.md`
+   regression-log row: ✓ static, Live=batch invariant satisfied at code level (`live_aggregator.py:77` imports
+   `create_candle_from_interval` from `app.calculators.fast_candle_aggregation` — THE batch fn; `:338` calls it),
+   7 Protocol adapters thin, CLI follows `--operation`/`--mode`/`--shard-spec`, ruff exit-0, new file 511 L, known
+   follow-ups documented (no silent debt). (The earlier slot-2/4 queued units — `features-svc@45efbe44`, `deployment-svc@a7eba4f`,
+   `UTL@2118b1e`, `features-svc@8f03ceeb`, `MTDS@c186ecb`, `deployment-svc@a5c2082`, the 28-commit `features-svc@e4b10570`
+   fan-out — were validated in the prior session; rows already in the regression-log.)
+5. **GCE-VM phantom audit — ALL 5 asset_groups** (`launch-defi-phantom-recon-vm.sh <ag> --dry-run`, GCE same-region
+   e2-standard-4; all VMs self-deleted on completion; **no `--apply` run — the manifest is unmodified**):
+   - **DeFi** (`defi-phantom-recon-defi-20260511-192115`): 311602 real / 1298 phantom (0.41%) — ALL FALSE-positive
+     (`venue=EIGENLAYER`/`data_type=rewards`; data exists at `…/data_type=eigenlayer_rewards/rewards.parquet`; audit
+     probes the manifest's `data_type=rewards/`). Root cause = **shard-key-SSOT violation** in `eigenlayer_rewards_handler.py`
+     (`record_captured(data_type="rewards")` but `to_parquet` path uses `data_type="eigenlayer_rewards"`; stale docstring
+     too). **DeFi real residual = 0.** → `defi_master_2026_05_07.md` § Discoveries (P1; fix = align `_EIGENLAYER_DATA_TYPE`
+     to `"eigenlayer_rewards"` + one-time manifest migration + fix docstring; defi-pipeline owner).
+   - **CeFi** (`defi-phantom-recon-cefi-20260511-193451`): 1290706 real / 2223 phantom (0.17% — UNDER the <0.5%
+     `cefi_master` criterion). Residual = blank `venue` 1453 / DERIBIT 136 (mostly `options_chain`+`futures_chain` bundled)
+     / `venue=UNKNOWN` 111 / Bitfinex `*F0` ~400 — drift-axis-suspicious. → `cefi_master_2026_05_07.md` § "Port phantom-audit"
+     todo (per-cluster real-vs-false-positive triage pending — cefi owner).
+   - **TradFi** (`defi-phantom-recon-tradfi-20260511-194845`): 92125 real / 3976 phantom (~4.3% — **ABOVE bar**;
+     highest of any asset_group). Residual = `trades` 1017 + `tbbo` 1017 (identical ⇒ Databento `trades;tbbo` per-schema-bundle
+     drift) + `venue=UNKNOWN` 565 + `venue=YAHOO_FINANCE` 21 (VIX 15m) + ~1356 other. → `tradfi_master_2026_05_07.md`
+     § "Port phantom-audit" todo (**P0** — verify whether the parquet exists bundled vs per-schema; add the per-schema-bundle
+     drift axis to the audit; tradfi owner).
+   - **Prediction** (`defi-phantom-recon-prediction-20260511-195513`): 14403 real / 71 phantom (0.49% — at bar).
+     Residual = `venue=POLYMARKET` 50 + `venue=UNKNOWN` 21, all `data_type=trades` — small; predictions owner to triage
+     (likely canonical_question_group bundling vs per-market_id path).
+   - **Sports** (`defi-phantom-recon-sports-20260511-195856`): 570562 real / 115524 phantom (16.8% — **WAY above bar**).
+     Distribution: `STANDINGS` 12828, `SFI_LEAGUES` 12777, `INJURIES` 9843, `PLAYER_STATS` 878, `PLAYER_VALUES` 708,
+     `FIXTURE_LINEUPS` 670, … + ~63k other. **Almost certainly mostly false-positive** — sports has its own per-league/bare-path
+     SSOT (`unified_api_contracts.sports.candidate_parquet_paths`); the audit's sports dispatcher must use the CURRENT
+     layout (the 2026-04-29 incident: stale `entity=odds/` vs `entity=footystats_odds/` → false 26% ODDS phantom — same
+     failure class) AND apply the UAC `SOURCE_COVERAGE_START`/`DATA_TYPE_COVERAGE_START`/`KNOWN_COVERAGE_GAPS` date-range
+     clips (the STANDINGS/SFI_LEAGUES/INJURIES clusters smell like un-clipped pre-launch-date rows). → `sports_master_2026_05_07.md`
+     § "Phantom recon" row (routes to the consumed `sports_phantom_recon_and_failure_triage` plan).
+   - **Cross-asset finding** (workspace-level): `venue=UNKNOWN`/blank-venue phantoms across cefi (1453+111) / tradfi (565)
+     / prediction (21) ≈ ~2150 — the manifest writer should never record `venue=UNKNOWN`/blank per the "Never overload
+     venue with non-venue data" rule; needs root-cause = which adapter(s) write venue-less manifest rows. Routed via the
+     `code_freeze` DONE-2026-05-11 phantom-audit deferral row + `qg_sweep_2026_05_11.md` cross-refs.
+   - **Net**: ~2.28M real / ~123k flagged-phantom; the big numbers (sports 115k + tradfi 4k) are almost certainly mostly
+     stale-audit-path false-positives. Residual work: (a) extend `reconcile_phantom_manifest_rows_all.py`'s drift-axis
+     coverage (sports per-league SSOT currency + UAC date-range clips; tradfi Databento per-schema-bundle; cross-asset
+     venue-less-row handling), (b) per-cluster real-vs-false-positive verification, THEN (c) `--apply` only the genuinely-real
+     subset. Full per-asset-group results live in the `code_freeze` DONE-2026-05-11 phantom-audit deferral row + each
+     asset_group's master plan + `slot_6.md` 2026-05-11 14:00/14:18/14:31/14:35 UTC.
+
+State at handover: no VMs left running that slot 6 launched (all 5 phantom-recon VMs self-deleted); `manifest-consolidator-20260511-190513`
+RUNNING + healthy (the only consolidator, singleton). Slot branch `tab/hk/6` == `origin/live-defi-rollout` (0 ahead/0 behind).
+
+### ⏭ What's left (carry-forward for Ikenna's agent — exact next steps)
+
+| Item | Status | Exact next step |
+| --- | --- | --- |
+| **Freeze-gate item 8** (workspace QG green) — full `quality-gates.sh` + basedpyright workspace-wide sweep | NOT done — deferred all cycle | Slot worktrees have no per-repo `.venv` → `setup.sh` per repo first, then `cd <repo> && bash scripts/quality-gates.sh` (~30-60min/repo × 22 repos). Do highest-risk first (UAC, UTL, MTDS, MDPS, features-service, deployment-api). Tracked in `qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (1)+(2). |
+| **Freeze-gate item 9** (codex SSOT currency) — ~50-present-codex-doc currency spot-check (1.D alerting/risk/DR + 1.E DeFi + 1.F UI/credentials clusters) | Partial — 3/4 NEW docs landed, 2 drift findings routed; the bulk spot-check not done | Walk the ~50 present codex docs the Phase-1 plans touch (esp. Ikenna slot 7's Round 1-4 just landed — verify the alerting/risk/DR docs reflect the new SSOTs). Tracked in `codex_audit_2026_05_11.md` § "Days 2-4 follow-up". Then both items 8+9 → `[x]` per the master plan. |
+| **EIGENLAYER `rewards` shard-key drift** | Diagnosed + routed | Fix in `eigenlayer_rewards_handler.py`: `_EIGENLAYER_DATA_TYPE = "eigenlayer_rewards"` (match the parquet path) + one-time manifest migration `data_type=rewards`→`eigenlayer_rewards` + fix the stale docstring (:21). `defi_master` § Discoveries (P1). Defi-pipeline owner. |
+| **TradFi 4.3% phantom** (P0) | Diagnosed + routed | `tradfi_master` § "Port phantom-audit" todo: verify the `trades`/`tbbo` 2034 — parquet bundled-on-disk vs per-schema-in-manifest? If bundled-vs-per-schema drift, fix the Databento adapter shard-key + add the per-schema-bundle drift axis to `reconcile_phantom_manifest_rows_all.py`. Tradfi owner. |
+| **CeFi 2223 / Prediction 71 / Sports 115524 phantom residuals** | Snapshotted (dry-run); not triaged | Per-cluster real-vs-false-positive triage in each asset_group's master plan; for sports, FIRST verify the audit's sports dispatcher against `candidate_parquet_paths` + the UAC date-range clips (almost certainly mostly false-positive). Then `--apply` only the genuinely-real subset. |
+| **Cross-asset `venue=UNKNOWN`/blank-venue phantoms** (~2150) | Found + flagged | Root-cause = which adapter(s) `record_captured`/`record_empty` without a resolved venue; fix the writer-side guard. Workspace data-quality follow-up. |
+| **`MANIFEST_SCHEMA_VERSION` doc-vs-code drift** + **`cross-asset-rescan-protocol.md` codex stub** | Both routed | `manifest_schema_final_gate_2026_05_09.md` Phase 2 follow-up + Phase 3 codex entry. Ikenna-slot-6. |
+| QG STEP 5.67 baseline maintenance | No new banned-NaN-placeholder patterns surfaced this shift | Re-check `banned_placeholder_methods_baseline.yaml` if any surface during the QG sweep. |
+
+### Plan-flips this shift (PM commits)
+
+PM@`d52cc0c5`→rebased (defi_master Priority #5 consolidator audit) · PM@`116aa6f7`→rebased (slot_6 ping + watchdog sub-finding) · PM@`7a77883d`→rebased (mdps@0068b2f QG-validated + consolidator-fix correction) · PM@`f8d4d9bf`→rebased (MANIFEST_SCHEMA_VERSION finding) · PM@`b0ad35bf`→rebased (codex deepening pass) · PM@`11faa8ac`→rebased (DeFi phantom-audit result) · PM@`7148edd2` (CeFi phantom-audit result) · PM@`8771ee42`→rebased (TradFi+Prediction phantom-audit) · PM@`4548b5ea`→rebased (Sports phantom-audit + final scoreboard) · this commit (end-of-shift handover). Code: `deployment-service@2a76a2a` · `market-tick-data-service@61f872d`.
+
 ## DONE-2026-05-11 — slot 5 (ikenna-defi-phase-1e-tab) DeFi Phase 1.E sequencing readiness audit
 
 Slot 5 (Ikenna side, `tab/ikennaigboaka/5`) day-1 against the work-split § "Slot 5 — DeFi Phase 1.E sequencing
