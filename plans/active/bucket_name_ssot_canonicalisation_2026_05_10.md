@@ -200,28 +200,29 @@ this plan and **Q4** below (operator decision).
       currently hardcodes flat bucket names anywhere (audit at impl time), fix in same logical unit. status: done
       (verification only) — note: "deployment UI env-tier shipped pre-2026-05-11; operator's instinct correct."
 - [ ] **[SCRIPT] P0**. **Phase 0h — sync script (prod → staging/dev) with truncated date window + same-region
-      enforcement (Phase 1 code-complete scope ships the script; Phase 3 / post-cutover initial execution).** New script
-      `deployment-service/scripts/sync-buckets-prod-to-staging.sh` (and `-to-dev.sh` variant). Per `(kind, asset_group)`
-      cross-product, copies the last `N` years (default `N=2` for staging, `N=1` for dev; operator-tunable per yaml) of
-      data from the prod bucket to the staging/dev bucket. Same-region constraint: enforce
-      `--source-region == --dest-region`; abort if mismatch (no cross-region egress). Date window: read parquet hive
-      partition `day=YYYY-MM-DD`, copy only `day >= today - N*365` paths. Idempotent: re-running skips already-synced
-      files (gsutil `-n` dry-run + diff). Schedule: Cloud Scheduler daily cron (default 02:00 UTC, low activity) — or
-      operator-triggered if real-time isn't needed. Manifest sync: also re-run manifest consolidator on staging/dev
-      after data sync so the staging/dev manifest matches the truncated window. Verification: post-sync manifest row
-      count in staging/dev = (prod row count) for `day >= today - N*365`; spot-check 100 random parquets readable.
-      status: todo — note: "Script ships Phase 1; first execution Phase 3 or post-cutover (no urgency pre-2026-05-23
-      since dev/staging not yet in active use)."
-- [ ] **[AGENT] P1**. **Phase 0i — region-pinning audit + enforcement (Phase 1 code-complete scope).** Audit yaml
-      entries for region: GCP entries should all be `asia-northeast1` (per `${GCS_REGION:-asia-northeast1}`); AWS
-      entries should be consistent within yaml (currently `${AWS_REGION:-us-east-1}` per yaml line 59). Cross-cloud
-      region consistency: GCP asia-northeast1 (Tokyo) ≠ AWS us-east-1 (Virginia) — the cross-cloud rsync per
-      `aws_migration_defi_first` already pays this cost; same-region enforcement is WITHIN-cloud (GCP all same; AWS all
-      same). Add region as a yaml field per bucket (or assume cloud-default per `gcp.region` / `aws.region`). Bucket
-      provisioning (Phase 0c) creates buckets in the canonical region; reject any
-      `gcloud storage buckets create     --location=<other-region>`. status: todo — note: "Phase 1 code-complete scope;
-      confirm operator wants asia-northeast1 (GCP) + us-east-1 (AWS) as cluster default OR migrate to a closer pair
-      (e.g. asia-northeast1 + ap-northeast-1)."
+      enforcement (Phase 1 code-complete scope ships the script; Phase 3 / post-cutover initial execution).** New
+      script `deployment-service/scripts/sync-buckets-prod-to-staging.sh` (and `-to-dev.sh` variant). Per
+      `(kind, asset_group)` cross-product, copies the last `N` years (default `N=2` for staging, `N=1` for dev;
+      operator-tunable per yaml) of data from the prod bucket to the staging/dev bucket. Same-region constraint:
+      enforce `--source-region == --dest-region`; abort if mismatch (no cross-region egress). Date window: read parquet
+      hive partition `day=YYYY-MM-DD`, copy only `day >= today - N*365` paths. Idempotent: re-running skips
+      already-synced files (gsutil `-n` dry-run + diff). Schedule: Cloud Scheduler daily cron (default 02:00 UTC, low
+      activity) — or operator-triggered if real-time isn't needed. Manifest sync: also re-run manifest consolidator on
+      staging/dev after data sync so the staging/dev manifest matches the truncated window. Verification: post-sync
+      manifest row count in staging/dev = (prod row count) for `day >= today - N*365`; spot-check 100 random parquets
+      readable. status: todo — note: "Script ships Phase 1; first execution Phase 3 or post-cutover (no urgency
+      pre-2026-05-23 since dev/staging not yet in active use)."
+- [x] **[AGENT] P1**. **Phase 0i — region-pinning audit + enforcement (Phase 1 code-complete scope; OPERATOR RATIFIED
+      ap-northeast-1 2026-05-11).** Audit yaml entries for region: GCP entries are all `asia-northeast1` (per
+      `${GCS_REGION:-asia-northeast1}`); **AWS now ratified `ap-northeast-1` (Tokyo) per operator decision (a)
+      2026-05-11** — matched-region with GCP, zero-cost ratification (the 10 DeFi buckets shipped 2026-05-08 via
+      `setup-defi-buckets.sh:28` already default to `ap-northeast-1`). Cross-cloud region: GCP asia-northeast1 ↔ AWS
+      ap-northeast-1 = same metro Tokyo (~1ms RTT, ~$0.01-0.02/GB cross-cloud egress vs ~$0.09/GB trans-Pacific = ~5×
+      cheaper). Within-cloud syncing (Phase 0h) is $0. Bucket provisioning (Phase 0c) creates buckets in canonical
+      region; reject any `gcloud storage buckets create --location=<other-region>` / `aws s3 mb --region=<other>`.
+      **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}` → `${AWS_REGION:-ap-northeast-1}`.
+      Decision brief: [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](issues/aws_region_decision_brief_2026_05_11.md).
+      status: done — region pinning canonicalised; Phase 0c bucket provisioning targets ap-northeast-1 on AWS.
 
 **Net scope under (b+) — AI-day budget**: Phase 0a (done, decision recorded) + Phase 0b (~0.5 day) + Phase 0c (~2-3 days
 for ~600+ new buckets across both clouds × 3 envs × all kinds) + Phase 0d (~2-3 days for full data migration with

@@ -418,9 +418,12 @@ Read these before making ANY code changes:
     egress) + manifest re-sync post-data-sync.
   - **VM launchers (Phase 0f)**: ~30 launchers under `deployment-service/scripts/vm/` MUST read `DEPLOYMENT_ENV` (env
     or `--env <prod|staging|dev>` CLI flag) and pass to VM via metadata so bucket-resolution targets the right env.
-  - **Region pinning (Phase 0i)**: GCP all asia-northeast1 (Tokyo); AWS all us-east-1 (or ap-northeast-1 for matched
-    region per operator decision). Bucket provisioning rejects `--location=<other-region>` to keep within-cloud syncs
-    at $0 egress.
+  - **Region pinning (Phase 0i — RATIFIED ap-northeast-1 2026-05-11)**: GCP all `asia-northeast1` (Tokyo); AWS all
+    `ap-northeast-1` (Tokyo) per operator ratification 2026-05-11 (matched-region; the 10 DeFi buckets shipped
+    2026-05-08 via `setup-defi-buckets.sh:28` already default to `ap-northeast-1`, so ratification is zero-cost).
+    Within-cloud syncing (Phase 0h) is $0; cross-cloud rsync (`aws_migration_defi_first` Phase 5) is same-metro Tokyo
+    (~1ms RTT, ~$0.01-0.02/GB egress vs ~$0.09/GB trans-Pacific = ~5× cheaper). Bucket provisioning rejects
+    `--location=<other-region>`.
   - **Deployment UI env tier (Phase 0g — already shipped)**: per `codex/05-infrastructure/deployment-ui-architecture.md`,
     env tier is resolved from `window.location.hostname` (not via in-UI toggle). Each tier has its own domain → its
     own deployment-api Cloud Run → its own GCS bucket scope → its own service account scoped to that env's projects

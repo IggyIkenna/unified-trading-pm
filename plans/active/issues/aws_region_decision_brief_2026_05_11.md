@@ -101,3 +101,32 @@ us-east-1 — not the case for S3 / EC2 / Lambda we use) or compliance (no curre
 
 Reply: `(a)` ratify ap-northeast-1 / `(b)` revert to us-east-1 / `(c)` multi-region split / hold + reason. Slot 1 (or
 this session) implements per decision.
+
+## ✅ RESOLVED 2026-05-11 — Operator answer: (a) ratify ap-northeast-1
+
+**Status**: ✅ RESOLVED. Operator (Ikenna) decision: **option (a) — ratify ap-northeast-1 (Tokyo) for AWS** as the
+canonical region for matched-region pairing with GCP `asia-northeast1`.
+
+**What landed** (PM@<this commit>):
+
+- `configs/cloud-providers.yaml:59` — `${AWS_REGION:-us-east-1}` → `${AWS_REGION:-ap-northeast-1}` + comment citing
+  operator decision 2026-05-11.
+- `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0i — flipped `[ ] P1` → `[x] P1` with operator-ratified
+  status; AWS canonical region documented as `ap-northeast-1`.
+- `code_freeze_migrate_backfill_sequencing_2026_05_10.md` GAP-2.4.F — annotated "OPERATOR RATIFIED ap-northeast-1
+  2026-05-11"; same-metro Tokyo trade-off captured.
+- `cursor-configs/CLAUDE.md` "Bucket-name SSOT operator decision (b+)" key rule — Region pinning sub-bullet updated to
+  AWS `ap-northeast-1` ratified.
+- Cross-side ping in `plans/active/_agent_pings.md` confirming (a) so Harsh slot 4 provisions Phase 0c buckets in
+  `ap-northeast-1`.
+
+**Net cost / benefit**:
+
+- Migration cost: **zero** (already in ap-northeast-1 per setup script default).
+- Within-cloud sync (Phase 0h) ongoing cost: $0 egress (single region).
+- Cross-cloud rsync ongoing cost: ~5× cheaper than trans-Pacific (~$0.01-0.02/GB metro vs ~$0.09/GB trans-Pacific).
+- Latency: GCP ↔ AWS Tokyo same-metro = ~1ms RTT (vs ~150ms trans-Pacific).
+
+**Phase 0c provisioning direction for Harsh slot 4**: provision the ~150 new AWS buckets in `ap-northeast-1`. Use
+`setup-defi-buckets.sh` pattern (defaults match) or extend Terraform with explicit `region = "ap-northeast-1"`. Reject
+any `aws s3 mb --region=<other>` invocation per GAP-2.4.F + Phase 0i.
