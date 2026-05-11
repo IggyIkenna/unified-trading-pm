@@ -166,6 +166,16 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       SYMBIOTIC/KARAK/RENZO/KELPDAO on ETH, PENDLE/RADIANT on ARB, RADIANT on BSC, JUPITER/JITORESTAKING on SOL);
       `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` extended with 13 pairs (Beefy multi-chain rollouts + YEARNV3 L2 rollouts
       + IDLE/KARAK/RENZO L2 + SOLBLAZE) that fall back to chain genesis until subgraph-truth probe lands.
+      **Phase 1B research close-out 2026-05-12 by slot 5 (ikenna-aggressive-may15-tab) — 45 of 46 pending pairs
+      shipped @uac@`458f17d` via 5-sub-agent fan-out**: PROTOCOL_LAUNCH_DATES now 98 pairs (was 53);
+      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` reduced to 2 pairs (`(POLYGON, COMPOUNDV3)` — Compound not on Polygon;
+      `(SOLANA, SOLBLAZE)` — medium-low confidence pending Solscan pool-creation-tx audit). Per-sub-agent partitioning:
+      A (ETH lending/vault, 8) + B (LST/restaking + Solana, 8) + C (Balancer/PancakeSwap/Sushi multi-chain, 9) +
+      D (DEX/AMM multi-chain, 9) + E (Beefy/Yearn/Idle/Karak/Renzo, 12) = 46 pairs researched, 45 shipped. Confidence
+      tiers: 32 high (primary-source verified) + 11 medium (announcement-anchored) + 2 low (conservative pre-launch
+      placeholders for Beefy ETH + Yearn V3 ARB/OPT — flagged for tightening if precision matters). Test fix: 2 BASE
+      pairs (BALANCER, SUSHISWAPV3) CLAMPED to BASE chain genesis 2023-08-09 (sub-agent dates pre-dated chain
+      mainnet GA). tests/unit/test_protocol_launch_dates.py 19/19 pass.
       **DEFERRED — `data_types` per-venue declarations**: each new protocol's `data_types` matrix (vault_share_price /
       dex_swaps / lending_indices / etc.) is encoded via per-protocol `SourceCapability` objects in
       `registry/capability_declarations/_defi_source_capabilities.py` (currently 5 protocols: UNISWAP / AAVE / etc.).
