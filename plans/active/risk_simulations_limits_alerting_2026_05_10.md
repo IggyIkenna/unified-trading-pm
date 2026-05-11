@@ -219,7 +219,15 @@ canonical SSOTs.
 
 ## Phase 2 — Per-axis limit registry (Days 3-5, ~2 AI-days, 6 parallel sub-agents)
 
-- [ ] [AGENT] P0. **2.A Per-archetype rules.** `registry/risk_rules/archetype.py` — ≥10 rules per cutover archetype.
+- [x] [AGENT] P0. **2.A Per-archetype rules.** `registry/risk_rules/archetype.py` — ≥10 rules per cutover archetype.
+      (UAC@86851ab — shipped 24 `RiskRule` entries in `ARCHETYPE_RULES` tuple (12 per cutover archetype). Coverage axes
+      per § Scope item 2: position size + drawdown + leverage + concentration + correlation + slippage budget +
+      capital-at-risk + daily-loss + per-archetype-specific (gas budget for CARRY_STAKED_BASIS on-chain Solana, funding
+      cost ceiling for ARBITRAGE_PRICE_DISPERSION funding-arb). Every rule scoped `PER_ARCHETYPE`; `kill_switch_scope()`
+      returns `KillSwitchScope.ARCHETYPE` per § 7 seam-diagram orthogonality. Tests:
+      `tests/internal/unit/test_risk_rules_archetype.py` — 33 tests including ≥10-per-archetype enforcement, scope +
+      applies_to invariants, closed-union trigger discriminator conformance, severity-mapping conformance, kill-switch
+      scope orthogonality, axis-coverage parametrised checks, frozen-Pydantic + dedup invariants. All 33 pass.)
 - [ ] [AGENT] P0. **2.B Per-venue rules.** `registry/risk_rules/venue.py` — for cutover-archetype venues.
 - [ ] [AGENT] P0. **2.C Per-account rules.** `registry/risk_rules/account.py` — paper + live accounts.
 - [ ] [AGENT] P0. **2.D Per-client rules.** `registry/risk_rules/client.py` — cutover demo client.
