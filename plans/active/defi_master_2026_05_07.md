@@ -757,6 +757,37 @@ shipping with the Fork-1 prep batches below).
       manual consolidation of `lending-indices-{pid}` already done; the other 7 per-data_type DeFi buckets are picked up
       by the relaunched daemon's first poll. **Case-5 big finding** (data correctness for DeFi, May-23 critical path,
       cross-repo) — operator flagged in chat 2026-05-11.
+- [x] [SCRIPT] P1. **Consolidator poll-list completeness audit (slot 6, 2026-05-11)** — the slot-3 fix above added 8 of
+      the 10 per-data_type DeFi buckets to the consolidator `BUCKETS` list but missed `dex-pools-{pid}` and
+      `liquidations-{pid}` — both are in `deployment-api`'s `_BUCKET_CATEGORY_OVERRIDES` + `_MTDS_DEFI_SUB_DIMENSIONS`
+      (10 keys), and both are written via `get_write_bucket_name()` in their MTDS handlers
+      (`dex_pools_handler.py:326`; `get_write_bucket_name("liquidations")`). Same staleness class. **FIXED** —
+      deployment-service@`2a76a2a` adds `dex-pools-{pid}` + `liquidations-{pid}` to `launch-manifest-consolidator-vm.sh`
+      `BUCKETS` (also reordered the DeFi block alphabetically + expanded the comment to document all 10 + flag
+      `solana-defi` as legacy — the Solana handler now writes to `dex_pools`/`perp_funding`/`lst_rates` per
+      `check_solana_defi_paths.py`). Relaunched the daemon: `manifest-consolidator-20260511-181538` (slot 3's) deleted,
+      new `manifest-consolidator-20260511-190513` running with the 10-bucket list. **No current data-staleness** — both
+      `dex-pools-{pid}` and `liquidations-{pid}` have a canonical `_index/availability_index.parquet` but ZERO
+      `_index/per_vm/` shards right now, so the fix is future-proofing for the next `mtds-dex-pools-*` / `mtds-liquidations-*`
+      backfill VM. **Other asset_groups checked, no gap**: CeFi options-chain/futures-chain, TradFi futures-chain,
+      prediction canonical-question, sports fixture-bundles all write to their asset-group canonical buckets
+      (`market-data-tick-{cefi,tradfi,prediction,sports}-{pid}`) which ARE already in the poll list — no dedicated
+      per-data_type buckets there.
+- [ ] [SCRIPT] P2. **Future consolidator-poll-list gap — features-\* / execution-store / strategy-store-prediction / ml-\*
+      buckets (slot-6 finding 2026-05-11).** When the features-service / execution-service / ml-\* pipelines run
+      end-to-end and write manifest rows to their per-asset-group buckets — AND if they run multi-VM with
+      `MANIFEST_PER_VM_SHARDS=true` — those buckets MUST be added to the consolidator `BUCKETS` list or their canonical
+      `_index/availability_index.parquet` will drift stale. Currently NOT a gap: probed 2026-05-11 — `features-delta-one-*`
+      / `features-volatility-*` / `features-onchain-defi` / `features-calendar` / `features-sports` / `execution-store-*`
+      / `ml-predictions-store` buckets exist but have ZERO `_index/availability_index.parquet` (pipeline hasn't run with
+      manifest writes yet); `ml-models-store-{pid}` has a canonical index (single-writer pattern → no consolidation
+      needed); `strategy-store-prediction-{pid}` not provisioned. **Also**: the bucket-name SSOT env-tier migration
+      (`code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.6) RENAMES every bucket (e.g.
+      `market-data-tick-prediction-{pid}` → `market-data-tick-pred-prd-{pid}`); the consolidator `BUCKETS` list MUST be
+      updated in lockstep with that rename or it polls dead names. **Owner**: this item migrates to `code_freeze` Phase 2.6
+      (which already owns the bucket-rename + must update every bucket consumer) OR to the features/execution pipeline-
+      activation plan when those run end-to-end — whichever lands first. The fix shape is identical to deployment-service@`2a76a2a`:
+      add the (then-extant) bucket names to `launch-manifest-consolidator-vm.sh` `BUCKETS` + relaunch the daemon.
 - [ ] [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list + non-graceful skip** — its `DEFI_REPOS`/EXTRA_REPOS
       list references `features-onchain-service` (consolidated into `features-service` by the 2026-05-08 features-*
       consolidation); the "SKIP <repo> — not found" path trips `set -e` so a missing repo aborts the whole tarball build
