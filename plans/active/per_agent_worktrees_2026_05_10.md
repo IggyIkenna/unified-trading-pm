@@ -319,6 +319,10 @@ master-resolved      sanity
 - [x] [SCRIPT] P0. CLAUDE.md "Daily reset (each morning)" extended (PM@8986a8b2): step 5 = slot-reset sweep
       (`--reset-slot <N>` per theme-changing slot); step 6 = mirror slot↔theme table to operator orchestrator LEDGER.
 
+## Phase 4.5 — Post-rollout findings (in-flight)
+
+- [ ] [SCRIPT] P1. **Slot-worktree QG resolves wrong repo root** — `cd .tabs/<N>/<repo>/ && bash scripts/quality-gates.sh` runs PM's `tests/`/import-checks instead of `<repo>`'s. `base-service.sh` repo-root resolution uses `git rev-parse --show-toplevel` which jumps to the sibling worktree root under `.tabs/<N>/` (unified-trading-pm). Affects every slot's pre-push QG — the "QG green" signal is meaningless for the repo actually being edited. Spotted by Harsh slot 6 on MTDS; likely all repos. Issue doc: [`plans/active/issues/slot_worktree_qg_repo_root_resolution_2026_05_11.md`](issues/slot_worktree_qg_repo_root_resolution_2026_05_11.md). Operator decision 2026-05-11: fold into this plan (not standalone). **Fix shape**: `base-service.sh` repo-root = nearest `pyproject.toml` walking UP from `$PWD` (not `git rev-parse --show-toplevel`), OR `setup-tab-worktrees.sh` writes a `.repo-root` marker / sets a per-slot-repo env var. Owner: Harsh slot 6 or pick up when next QG round comes through; coordinate via cross-side ping.
+
 ## Phase 5 — Sign-off (1h) — ✅ THIS SESSION
 
 - [x] [AGENT] P0. Audit doc D3 row flipped in

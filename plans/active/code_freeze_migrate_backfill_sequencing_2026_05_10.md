@@ -54,9 +54,9 @@ The principle: **code shape decisions → migration → backfill, in that order,
 ─────────────────────────────────────────────────────────────────────────────
    2.0  Pre-migration VM drain + state freeze (GAP — formalized below)
    2.1  Manifest v5/v6/v7 → v8 atomic rename + service_emission_state column
-        (schema declared in writegate slice (b) Phase 5.1; rename + apply-flips
-         executed via manifest_cross_asset_rescan_design — design intentionally
-         split, not a missing file)
+        (schema owned by manifest_schema_final_gate_2026_05_09 per operator
+         decision 2026-05-11; rename + apply-flips executed via
+         manifest_cross_asset_rescan_design)
    2.2  GCS bundled migration: pipeline_mode partition + category=→asset_group=
         rekey + 5-axis drift sweep (path-prefix / instrument_type casing /
         schema-4 empty / chain-bundle equivalence) — single walk, all changes
@@ -142,7 +142,7 @@ Plans in this section MUST run to ✅ shipped before Phase 2 starts. The umbrell
 
 The freeze gate fires when ALL of the following are true. The umbrella `manifest_evolution_master` G2 gate is the technical enforcer; this section is the operator-readable checklist.
 
-- [ ] **Schema columns frozen**: UAC manifest schema for v8 (incl. `service_emission_state`, `pipeline_mode`, `feature_family`) reviewed + merged + tagged. No further column adds. Column declaration is owned by writegate slice (b) Phase 5.1 (NOT a separate `manifest_v8_schema_migration_design` file — design intentionally bundled per operator direction "manifest, code, and data migrate in the same group plan to avoid collision risk").
+- [ ] **Schema columns frozen**: UAC manifest schema for v8 (incl. `service_emission_state`, `pipeline_mode`, `feature_family`) reviewed + merged + tagged. No further column adds. Column declaration is owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) per operator decision 2026-05-11 (resolves codex_audit F3 ambiguity — the final-gate plan is the canonical v8 owner; writegate slice (b)'s Phase 5.2 "UAC manifest schema columns" is SUPERSEDED, slice (b) retains the UTL `manifest_completeness` helper + MDPS POC + deployment-api/ui surfaces).
 - [ ] **error_reason taxonomy closed**: `EMPTY_CONFIRMED_REASONS` final set declared in UAC; `LegacyBlankErrorReasonError` rejecting any blank reason at write boundary (already shipped UTL@68b3804a per CLAUDE.md). New reason additions require explicit P0 RFC + this plan re-opens.
 - [ ] **All 37 MDPS/MTDS callsites migrated** to `ManifestWriter.record_captured(...) / record_empty(...) / record_failed(...) / record_expected_unattempted(...)`. AST sweep (writegate plan QG STEP 5.64) green workspace-wide.
 - [ ] **ServiceEmissionPolicy seed dict locked**: 19+ rows covering MDPS / features / ml-training / ml-inference / strategy / execution / position-balance / risk / instruments / alerting (+ any added during Phase 1).
@@ -177,12 +177,12 @@ Plans in this section run AFTER Phase 1 freeze gate. They MUST run to operationa
 
 ### Phase 2.1 — Manifest v5/v6/v7 → v8 atomic rename
 
-The v8 schema target + flip semantics are **intentionally split across two existing plans, not a missing file**. Per operator direction 2026-05-08 ("manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution; don't allow execution in isolation"), the v8 design lives in:
+The v8 schema target + flip semantics live in two existing plans (updated 2026-05-11 per operator decision resolving codex_audit F3 ambiguity):
 
-- **Schema column declaration** — `writegate_honest_coverage_endtoend_2026_05_06.md` slice (b) Phase 5.1 ("UAC manifest schema columns").
+- **Schema column declaration** — [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) ("One-shot maximalist plan that lands the BEST manifest (v8 with all designed columns) on real GCS infra by 2026-05-23 ... slice b spec landed as part of this plan"). Operator decision 2026-05-11 confirmed this plan is the canonical v8 owner; writegate slice (b)'s Phase 5.2 ("UAC manifest schema columns") is SUPERSEDED + bannered. Writegate slice (b) retains the UTL `manifest_completeness` helper (Phase 5.1) + MDPS `ohlcv_1h` POC (Phase 5.3-5.4) + deployment-api/ui surfaces (Phase 5.5) + codex/CLAUDE.md updates (Phase 5.6).
 - **Rescan flip schema + apply-flips execution** — `manifest_cross_asset_rescan_design_2026_05_08.md` (class A mutable / class B immutable / class C triage closed sets, per-asset-group rules, concurrency safety).
 
-There is therefore no "v8 schema design" gap; the plan items here promote the existing pieces to execution shape:
+The plan items here promote the existing pieces to execution shape:
 
 - [ ] [PLAN] P0. **`plans/active/manifest_cross_asset_rescan_design_2026_05_08.md`** — Cross-asset-group `--apply-flips` reconciler. **Disposition**: promote draft → active execution plan. The plan today has:
   1. **Class A mutable** flips (`capture_status` / `error_reason` / `attempted_at` / `path` reconciled to disk truth).
@@ -195,7 +195,7 @@ There is therefore no "v8 schema design" gap; the plan items here promote the ex
   - Verification probe: read 100 random rows post-rename; assert all v8 columns populated; assert ZERO rows with v5/v6/v7 shape; assert reader-fallback path raises `ManifestSchemaError` on any pre-v8 input.
   - Launcher script (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`; queued per the existing plan body).
   - `cross_asset_rescan.py` Python (Harsh Tab 4 scope per existing plan body).
-- [ ] [PLAN] P0. **`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`** slice (b) Phase 5.1 — UAC manifest schema column declaration for v8. **Phase 2 entry blocker**: column set must be final before the rescan plan can write rows in v8 shape.
+- [ ] [PLAN] P0. **`plans/active/manifest_schema_final_gate_2026_05_09.md`** — UAC manifest schema column declaration for v8 (operator decision 2026-05-11; supersedes the prior "writegate slice (b) Phase 5.1" attribution). **Phase 2 entry blocker**: column set must be final before the rescan plan can write rows in v8 shape. The new `EXPECTED_KNOWN_SOURCE_GAP` value for UAC `EmptyConfirmedReason` (operator-approved 2026-05-11 per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2 — covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`) lands in this same Phase 1 window.
 - [ ] [PLAN] P1. **`plans/active/expected_universe_v2_design_2026_05_08.md`** — Promote draft to active execution plan if launched in Phase 2 (per audit Q3 sequencing-vs-v8 decision). If deferred behind v8, defer to Phase 3.
 
 ### Phase 2.2 — GCS bundled migration: pipeline_mode + category-rekey + drift sweep
@@ -376,7 +376,7 @@ The plan is done when ALL of the following are true:
 ## Temporary states + their canonical follow-up plans
 
 - **`expected_universe_v2_design_2026_05_08.md` deferred behind Phase 2.1 v8 schema bump** — successor: this plan's Phase 2.1 entry. Re-evaluate after Phase 2.1 ships whether v2 enumerator runs in Phase 2.X or post-cutover.
-- **v8 schema design intentionally split across two plans (NOT a missing file)** — column declaration owned by `writegate_honest_coverage_endtoend_2026_05_06.md` slice (b) Phase 5.1; rescan flip schema + apply-flips execution owned by `manifest_cross_asset_rescan_design_2026_05_08.md`. Per operator direction 2026-05-08 ("manifest, code, and data migrate in the same group plan to avoid collision risk; force batch execution; don't allow execution in isolation"). Reviewers reject any new "v8-schema-design" standalone plan — the split is canonical.
+- **v8 schema design split across two plans** — column declaration owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) (operator decision 2026-05-11 resolving codex_audit F3); rescan flip schema + apply-flips execution owned by `manifest_cross_asset_rescan_design_2026_05_08.md`. Writegate slice (b) Phase 5.2 SUPERSEDED — bannered in writegate plan, slice (b) retains UTL helper + MDPS POC + deployment-api/ui surfaces.
 - **GAP-2.0 VM drain + state freeze procedure** — successor: addition to `manifest_migration_master_2026_05_07.md` Stage 0 per disposition.
 - **GAP-2.3 OHLCV legacy filename rename** — successor: addition to `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 2.X per disposition.
 

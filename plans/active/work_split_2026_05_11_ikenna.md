@@ -51,7 +51,7 @@ with explicit handshake).
 | Slot | Theme                                                                                 | Plan-of-record                                                                                                                 | AI-day budget |
 | ---- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------- |
 | 1    | main orchestrator + on-call governance                                                | [LEDGER](../../ikenna_orchestrator/LEDGER.md) + Phase 1 freeze-gate audit + master plan refresh + cross-plan banner sweep      | continuous    |
-| 2    | **CRITICAL PATH** — writegate slice (b) Phase 5.1-5.7 (UAC v8 schema columns)         | [writegate_honest_coverage_endtoend_2026_05_06.md](writegate_honest_coverage_endtoend_2026_05_06.md) slice (b)                 | ~5            |
+| 2    | **CRITICAL PATH** — writegate slice (b) Phase 5.1, 5.3-5.7 (UTL helper + MDPS POC + UI surfaces; v8 columns moved to final-gate per operator 2026-05-11) | [writegate_honest_coverage_endtoend_2026_05_06.md](writegate_honest_coverage_endtoend_2026_05_06.md) slice (b) + [manifest_schema_final_gate_2026_05_09.md](manifest_schema_final_gate_2026_05_09.md) | ~5            |
 | 3    | available_at completion Phase 0 (bar boundary contract) + Phase 4-5 audits            | [available_at_lookahead_bias_completion_2026_05_08.md](available_at_lookahead_bias_completion_2026_05_08.md)                   | ~4            |
 | 4    | live pipeline Phase 4-5 design-ahead (gated) + Phase 11 deployment-UI live tab design | [live_pipeline_mtds_mdps_features_2026_05_08.md](live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 4-5 + 11                | ~3            |
 | 5    | DeFi Phase 1.E sequencing readiness + cross-plan coordination                         | [code_freeze_migrate_backfill_sequencing_2026_05_10.md](code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase 1.E audit | ~3            |
@@ -102,16 +102,13 @@ under-utilisation is fine, mid-cycle collision is not.
     - **What ran**: live read of UAC/UTL/PM commits + manifest spot-check + per-tab DONE blocks.
     - **Verification**: `git log --oneline origin/live-defi-rollout --since "2026-05-11 00:00"` + LEDGER tab statuses.
 
-### Slot 2 — Writegate slice (b) Phase 5.1-5.7 (UAC v8 schema columns) — CRITICAL PATH
+### Slot 2 — Writegate slice (b) Phase 5.1, 5.3-5.7 (UTL helper + MDPS POC + UI surfaces) — CRITICAL PATH
+
+> **⚠️ SCOPE UPDATE 2026-05-11** (operator decision resolving codex_audit F3 + work-split phase-number drift): the "UAC manifest v8 schema columns" item is **MOVED OUT** of slot 2's scope — it's now owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md). Slot 2's remaining scope = writegate slice (b) Phase 5.1 (UTL `manifest_completeness` helper) + Phase 5.3-5.4 (MDPS `ohlcv_1h:current` + `:historical` wire-in) + Phase 5.5 (deployment-api `/leaf-stats` + deployment-ui DataStatusTab surfaces) + Phase 5.6 (codex + CLAUDE.md) + Phase 5.7 (ship-gate). Note: writegate's own phase numbering is canonical (5.1 = UTL helper, 5.2 = UAC columns SUPERSEDED, etc.); the work-split's prior 5.1/5.2 swap is corrected below.
 
 - **Identity**: `ikenna-writegate-slice-b-tab` (slot 2 worktree at `.tabs/2/`).
-- **Scope** (per [writegate plan §5.1-5.7](writegate_honest_coverage_endtoend_2026_05_06.md), the v8 schema column
-  declaration the Phase 2.1 manifest atomic rename consumes):
-  - **P0 Phase 5.1** — Declare UAC manifest v8 schema columns: `service_emission_state`, `pipeline_mode`,
-    `feature_family`. Update
-    [`unified_api_contracts/canonical/manifest/`](../../../unified-api-contracts/unified_api_contracts/canonical/manifest/)
-    schema definitions; types frozen + dataclass-style + StrEnum for closed sets.
-  - **P0 Phase 5.2** — Add `manifest_completeness` UTL helper computing
+- **Scope** (per [writegate plan §5.1, 5.3-5.7](writegate_honest_coverage_endtoend_2026_05_06.md)):
+  - **P0 Phase 5.1** — Add `manifest_completeness` UTL helper computing
     `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` per drilldown level. SSOT for
     the 3 derived %s
     ([`measure-honest-coverage.py` is the per-data_type measurement script](../../codex/02-data/availability-manifest-and-data-status.md);
@@ -134,12 +131,15 @@ under-utilisation is fine, mid-cycle collision is not.
   rendering) + PM (codex doc + plan flips + CLAUDE.md key rule).
 - **Read-first**: CLAUDE.md § "Availability manifest v5 (honest-coverage)" + § "Honest absence vs fake placeholders" + §
   "Cluster validation MANDATORY at record_captured".
-- **Sub-agent fan-out**: send 1 message with 4 parallel `Task` blocks at boot:
-  1. UAC v8 schema column declarations (Phase 5.1).
-  2. UTL `manifest_completeness` helper + tests (Phase 5.2).
-  3. deployment-api leaf-stats endpoint extension + tests (Phase 5.3).
-  4. deployment-ui DataStatusTab rendering + tests (Phase 5.4). Then serially: codex doc (5.5) + CLAUDE.md (5.6) +
-     workspace QG sweep (5.7).
+- **Sub-agent fan-out**: send 1 message with 3 parallel `Task` blocks at boot:
+  1. UTL `manifest_completeness` helper + tests (writegate Phase 5.1). The UAC v8 schema column declaration item that
+     was previously in slot 2 is now owned by `manifest_schema_final_gate_2026_05_09.md` per operator decision
+     2026-05-11; coordinate via cross-side ping when the final-gate plan ships v8 columns so slot 2's helper consumes
+     them.
+  2. MDPS `ohlcv_1h:current` + `:historical` wire-in (writegate Phase 5.3-5.4) — uses `publish_with_manifest_lookup()`
+     at the real-time emission + historical re-emission boundaries.
+  3. deployment-api `/leaf-stats` + deployment-ui DataStatusTab surface extension (writegate Phase 5.5). Then serially:
+     codex + CLAUDE.md (writegate Phase 5.6) + ship-gate (writegate Phase 5.7).
 - **Collision risk**:
   - **vs slot 4 (live-pipeline)**: slot 4 declares `pipeline_mode` enum facade in UAC; slot 2 declares the manifest
     column type that uses it. **Hard sync**: slot 4 ships UAC `PipelineMode` facade FIRST (already shipped UAC@b643c9a

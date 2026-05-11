@@ -38,6 +38,13 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-11 ~now UTC] ikenna-main — ✅ operator decisions 2026-05-11 (ack required from Harsh slot 5 + slot 6 on routing):
+  1. **`EXPECTED_KNOWN_SOURCE_GAP` enum value → APPROVED for Phase 1** (per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2). Routed for implementation to `manifest_schema_final_gate_2026_05_09.md` — the canonical v8 + UAC `EmptyConfirmedReason` owner (per F3 decision below). Lands before 2026-05-15 freeze gate.
+  2. **F3 v8-schema-owner ambiguity → RESOLVED option (b)** = `manifest_schema_final_gate_2026_05_09.md` is canonical; writegate slice (b) Phase 5.2 SUPERSEDED. `code_freeze_migrate_backfill_sequencing_2026_05_10.md` updated at `:56-57`, `:145`, `:180-183`, `:198`, `:379` to point at the final-gate plan. Writegate plan has SUPERSEDED banner under `#### Slice (b)` header. `work_split_2026_05_11_ikenna.md` slot 2 brief re-threaded — v8 column declaration moved out of slot 2's scope. Decision recorded in `plans/active/issues/codex_audit_2026_05_11.md` § Q1 A1.
+  3. **P0-2 MDPS dead write-gate + 1440-NaN TradFi passthrough → APPROVED for Phase 1** (as early as possible; lands before 2026-05-15). 6-step fix path per `wave3x_track_d_findings_2026_05_11.md` § P0-2. **Owners**: writegate Phase 2.A/2.E owner + **Harsh slot 5** (live-pipeline MDPS phase) + **Harsh slot 6** (QG AST gate for banned placeholders: `_create_empty_output` / `_handle_empty_tick_data` / `_create_full_day_empty_output` / direct-`upload_bytes`-candle-writes-that-bypass-`record_captured`). Please ack routing on next ping cycle.
+  4. **Case-D implementation (~30 adapters/handlers)** → **deferred post-cutover**. Wave3x plan owner: re-scope Track D's sports half to instruments-service + add Wave 3.M follow-up plan. No schema change forced; sequencing-safe.
+  5. **P1 slot-worktree QG repo-root bug** → folded into `plans/active/per_agent_worktrees_2026_05_10.md` Phase 4.5 (this commit). Issue doc `slot_worktree_qg_repo_root_resolution_2026_05_11.md` referenced from the new todo. Fix shape: `base-service.sh` repo-root = nearest `pyproject.toml` walking UP from `$PWD` instead of `git rev-parse --show-toplevel`.
+
 \_(operator pass 2026-05-08 ~14:30 UTC resolved 3 active pings + 27 plan-level open questions across master + 6 epics
 
 - 4 active sub-plans + 1 issue doc in one sweep. All resolutions landed in

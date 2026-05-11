@@ -340,6 +340,15 @@ already a UTL primitive `FeatureWriteGate`/`WriteGateConfig`, consumed by all 3 
 
 ## Recommended decision
 
+> **✅ OPERATOR DECISIONS 2026-05-11** (Ikenna, via main orchestrator slot 1):
+>
+> 1. **`EXPECTED_KNOWN_SOURCE_GAP` enum value → APPROVED for Phase 1** (lands before 2026-05-15 freeze gate). Reason: real consumers exist (VIX 15m mid-history gap currently mis-written as NaN-OHLC placeholder; sports `KNOWN_COVERAGE_GAPS` ranges) and the addition is tiny + additive. Routed for implementation to `manifest_schema_final_gate_2026_05_09.md` (the canonical v8 + UAC `EmptyConfirmedReason` owner per the same-day F3 decision).
+> 2. **P0-2 MDPS dead write-gate + 1440-NaN TradFi passthrough → APPROVED for Phase 1** (as early as possible; lands before 2026-05-15 freeze gate). 6-step fix path per § P0-2 above. Routed to: writegate Phase 2.A/2.E owner + Harsh slot 5 (live-pipeline MDPS phase) + Harsh slot 6 (QG AST gate for banned placeholders). Cross-side ping to harsh-main filed.
+> 3. **P0-1 MTDS blank-reason** → already SHIPPED 2026-05-11 by Harsh slot 6 at `market-tick-data-service@3da026d` (per § P0-1 above).
+> 4. **Case-D implementation** (~30 adapters/handlers) → **deferred post-cutover**. Forces no schema change so sequencing-safe. Wave3x plan owner: re-scope Track D's sports half to instruments-service + add a Wave 3.M follow-up plan for the case-D implementation. Slot-1 will note in master plan's continuous-verification column at next refresh.
+>
+> Original recommendations preserved below for reference.
+
 1. **Ikenna slot 5 + slot 1**: (a) approve/reject `EXPECTED_KNOWN_SOURCE_GAP` for the Phase 1 schema window; (b) confirm
    case-D implementation defers post-cutover (or name the follow-up plan); (c) note in the
    `code_freeze_migrate_backfill_sequencing` anti-sequencing audit row that Track D's audit found "no new shard atom

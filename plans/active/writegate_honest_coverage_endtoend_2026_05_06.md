@@ -2810,6 +2810,8 @@ passes `completeness_fraction` for now.
 
 #### Slice (b) — MDPS `ohlcv_1h` end-to-end POC (GREENLIT 2026-05-08; ~2 days)
 
+> **🟡 SUPERSEDED 2026-05-11 — Phase 5.2 only** (per operator decision resolving codex_audit F3 ambiguity): the "UAC manifest schema columns" item under **Phase 5.2** below is **now owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md)** — the canonical v8 schema declaration plan. Slice (b)'s remaining scope is unchanged: UTL `manifest_completeness` helper (Phase 5.1), MDPS `ohlcv_1h:current` + `:historical` wire-in (Phase 5.3-5.4), deployment-api / deployment-ui surfaces (Phase 5.5), codex/CLAUDE.md (Phase 5.6), ship-gate (Phase 5.7). The new `EXPECTED_KNOWN_SOURCE_GAP` value for UAC `EmptyConfirmedReason` (operator-approved 2026-05-11 per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2 — covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`) also lands in `manifest_schema_final_gate_2026_05_09.md` in the same Phase 1 window.
+
 **Goal**: prove the slice-(a) schema floor works end-to-end on ONE real service emission boundary so per-service rollout
 (slice c) has a battle-tested template to copy. MDPS `ohlcv_1h` is the chosen POC: it has both real-time current-bar
 emission (STRICT_FAIL when current minute upstream is missing) AND historical re-emission (PARTIAL_OK with

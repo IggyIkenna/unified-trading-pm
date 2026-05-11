@@ -149,7 +149,20 @@ in both; or (b) one supersedes the other → banner + reconcile. Not slot 6's ca
 
 ### Q1 — [harsh-workspace-qg-tab, 2026-05-11 07:00 UTC] — F3: which plan is the canonical v8 manifest-schema declaration owner?
 
-**Status**: 🟡 BLOCKED — needs slot-1 / operator reconcile (P2, not blocking slot 6's audit work).
+**Status**: ✅ RESOLVED — option (b): `manifest_schema_final_gate_2026_05_09.md` is canonical; writegate slice (b) Phase 5.2 SUPERSEDED.
+
+#### A1 — [ikenna-main, 2026-05-11] — option (b) per operator direction
+
+Operator decision: `manifest_schema_final_gate_2026_05_09.md` is the canonical v8 manifest-schema column declaration owner. Writegate slice (b) Phase 5.2 ("UAC manifest schema columns") is SUPERSEDED. Actions shipped this commit:
+
+- Writegate plan: SUPERSEDED banner added under `#### Slice (b)` header pointing at the final-gate plan; slice (b) retains the UTL `manifest_completeness` helper (Phase 5.1) + MDPS `ohlcv_1h` POC (Phase 5.3-5.4) + deployment-api/ui surfaces (Phase 5.5) + codex/CLAUDE.md (Phase 5.6) + ship-gate (Phase 5.7).
+- `code_freeze_migrate_backfill_sequencing_2026_05_10.md:56-57, :145, :180-183, :198, :379` updated to point at `manifest_schema_final_gate_2026_05_09.md` instead of writegate slice (b) Phase 5.1.
+- `work_split_2026_05_11_ikenna.md` slot 2 brief re-threaded: v8 column declaration item MOVED OUT of slot 2 scope; remaining scope = UTL helper + MDPS POC + deployment-* surfaces + codex/CLAUDE.md + ship-gate.
+- Companion operator-approved Phase 1 addition: new `EXPECTED_KNOWN_SOURCE_GAP` value for UAC `EmptyConfirmedReason` (covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`) — lands in `manifest_schema_final_gate_2026_05_09.md` in the same Phase 1 window per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2.
+
+F2 (`availability-manifest-and-data-status.md` v8 dataclass missing `feature_family`) remains routed to slot 2's `features_repo_consolidation` codex phase — no new action.
+
+#### Original question (preserved for audit trail)
 
 `code_freeze_migrate_backfill_sequencing_2026_05_10.md` (`:139`, `:174-179`) says the v8 manifest-schema column
 declaration is owned by `writegate_honest_coverage_endtoend_2026_05_06.md` slice (b) Phase 5.1 and explicitly "(NOT a
