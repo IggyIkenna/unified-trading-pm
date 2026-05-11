@@ -221,11 +221,15 @@ inventory:
     `EXPECTED_REFDATA_CADENCE_CHANGE`
   - `EXPECTED_KNOWN_SOURCE_GAP` (latest — operator-approved 2026-05-11; landed via `manifest_schema_final_gate` Phase 1;
     covers VIX-15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`).
-    `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy (codified 2026-05-07)" still lists only the
-    original 9. **NOT a new finding** — this is the same pattern F2 flags: the codex docs intentionally lag the
-    still-mutating UAC enums _during_ Phase 1; the catch-up to closed-set state is the post-Phase-2-gate codex sweep,
-    tracked-pending in `code_freeze:337` (gated on Phase 2 gate), `wave3x_residual_ssots_2026_05_08.md:241` (+ slot 3
-    already shipped partial updates @`:181`/`:277`), and `cross_asset_group_catalogue_audit_2026_05_10.md:198`/`:295`.
+    `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy (codified 2026-05-07)" lists the original
+    9 + `EXPECTED_KNOWN_SOURCE_GAP` (slot 3 added that row 2026-05-11 PM citing UAC@`174f401`) = **10**; still missing
+    the 8 Wave-3.X members (`EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_OUTSIDE_TRADING_HOURS` /
+    `EXPECTED_OUTSIDE_TRANSFER_WINDOW` / `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` /
+    `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` / `EXPECTED_DEPRECATED_DATA_TYPE` / `EXPECTED_REFDATA_CADENCE_CHANGE`).
+    **NOT a new finding** — this is the same pattern F2 flags: the codex docs intentionally lag the still-mutating UAC
+    enums _during_ Phase 1; the catch-up to closed-set state is the post-Phase-2-gate codex sweep, tracked-pending in
+    `code_freeze:337` (gated on Phase 2 gate), `wave3x_residual_ssots_2026_05_08.md:241` (+ slot 3 already shipped
+    partial updates @`:181`/`:277`), and `cross_asset_group_catalogue_audit_2026_05_10.md:198`/`:295`.
 - **`RecordFailedReason` taxonomy is NEW** (UAC `honest_coverage.py:227`; 8 closed-set members:
   `SCHEMA_VALIDATION_FAILED`/`UPSTREAM_TIMESTAMP_BIAS`/`MALFORMED_TICK_FIELD`/`UPSTREAM_SUBGRAPH_ZERO`/`CLUSTER_COVERAGE_VIOLATION`/`MALFORMED_ROW_KEY`/`CLASSIFIED_VENUE_ERROR`/`UNCLASSIFIED_ADAPTER_ERROR`).
   Landed @`cb70b3a` (slot 5's RE-TASK — foundational for `hard_schema_enforcement_2026_05_08.md` Phase 2 per-row
@@ -236,6 +240,25 @@ inventory:
   (closed-set state).
 - **No new _unowned_ codex drift** this re-check. The doc layer's catch-up to the v8-schema + enum-taxonomy state is all
   tracked-pending and appropriately gated on the post-Phase-1/Phase-2 codex sweeps.
+
+### Codex `[x]`-flip verification (code-shipped ⟺ doc-shipped, per "Plans Run To Actual Completion")
+
+Spot-checked the Phase-1 plan codex todos that flipped `- [x]` since the day-1 scan — every one's doc actually landed
+(no "checkbox flipped, doc not there" violations):
+
+- `alerting_service_live_rules_2026_05_07.md:357` (`[x]` create `codex/15-runbooks/alerting/` with `scope: alerting`) +
+  `:512` (`[x]` `codex/15-runbooks/alerting/alert-code-taxonomy.md` add kill-switch-publisher content) — **verified**:
+  the dir exists with 8+ runbook files; `alert-code-taxonomy.md` is present (≈20 KB, `status: active`, 37 `kill_switch`
+  references). ✓
+- `wave3x_residual_ssots_2026_05_08.md:181` + `:277` (`[x]` SHIPPED 2026-05-11 PM (slot 3): codex updates to
+  `codex/02-data/honest-absence-downstream-handling.md`) — **verified**: the doc has the
+  `### Reconciler chain for legacy error_reason (the three passes)` subsection + the
+  `## Per-source available_at stamping helpers (UTL)` section + the `EXPECTED_KNOWN_SOURCE_GAP` row in the
+  reason-taxonomy table. ✓ (The reason-taxonomy table is at 10/18 reasons — that's the tracked-pending closed-set sweep
+  per `code_freeze:337`, not a flip violation.)
+- The 4 day-1-flagged NEW codex docs (`risk-rule-taxonomy.md`, `circuit-breaker-rule-taxonomy.md`,
+  `service-emission-policy.md`, `cross-asset-rescan-protocol.md`) **still absent** — consistent with their owning plans'
+  unchecked `- [ ]` state; no premature flip.
 
 ## Days 2-4 follow-up (slot 6)
 
