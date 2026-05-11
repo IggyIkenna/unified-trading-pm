@@ -249,10 +249,56 @@ todos:
       `assert_available_at_present` already wired into `ManifestWriter.record_captured()`. **Owned by
       `writegate_honest_coverage_endtoend_2026_05_06`** — flip when shipped.
 
-- [ ] [TRACKED] P0. **TRACK — sports adapter stamping**. fixture_lineups, fixture_player_stats, fixture_stats,
-      fixture_events, injuries, odds snapshots, weather, reference-tables — owned by `sports_master_2026_05_07` Phase
-      1-2. Phase 2.C stub wiring **BLOCKED-ON amendment prerequisite**; Phase 2.D schema bumps **DEFERRED to Stage 2**.
-      Flip when shipped.
+- [x] [TRACKED] P0. **TRACK — sports adapter stamping (MTDS-slice ODDS_SNAPSHOT path)** (shipped
+      market-tick-data-service@c186ecb 2026-05-11 by Harsh slot 4; plan flip 2026-05-11 by `ikenna-available-at-tab`
+      re-task (b)). MTDS `_process_sports_venue_with_leagues` wires
+      `stamp_available_at_odds_snapshot(shard_df, snapshot_time_col="bm_time")` (UTL wave3x Track E @UTL`2ab3685`)
+      into the per-shard groupby loop before `StreamingParquetWriter.write_chunk`, with shard-level failure isolation
+      (per-shard stamping failure → `failed_shards` dict → `record_failed` + `ADAPTER_FETCH_FAILED`, shard skipped —
+      never raised). 5 unit tests at `market-tick-data-service/tests/unit/test_sports_odds_available_at.py`. Issue
+      doc reference: `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` (4 design Qs answered
+      in-doc; see Re-task (c) below). **DEFERRED**: (1) **conservative-rule promotion** — current shipped behaviour
+      stamps `available_at = bm_time` (event-time); the strict Live=batch rule wants
+      `bm_time + emission_latency_ms_for_source("odds_api")` (= `bm_time + 5000ms` for the 5s polling cadence).
+      UAC `SOURCE_PRIORITY` + `EMISSION_LATENCY_MS_BY_SOURCE` entries for sports sources already exist (verified
+      2026-05-11 — `api_football=1000ms`, `odds_api=5000ms`, `understat=2h`, etc.), so the promotion is a one-line
+      UTL helper swap in MTDS's wiring. Filed as a Phase 1 P1 follow-up todo below + cross-referenced from
+      `wave3x_residual_ssots_2026_05_08.md` Track E sequencing. (2) **non-ODDS_SNAPSHOT sports paths** —
+      fixture_lineups / fixture_player_stats / fixture_stats / fixture_events / injuries / weather /
+      reference-tables stamping is NOT in the MTDS write path (sports backfill VMs `af-backfill-` / `fs-backfill-` /
+      `sfi-backfill-` etc. own those writes), remains in `sports_master_2026_05_07` Phase 1-2 scope per the
+      existing track. (3) **column-presence assertion at `StreamingParquetWriter.write_chunk`** — sports path uses
+      `record_captured_from_counts`, so the writegate `assert_available_at_present(df)` guard doesn't fire on this
+      path today. Filed as Phase 1 P1 follow-up todo below.
+
+- [ ] [SCRIPT] P1. **Sports odds — promote `bm_time` stamping to conservative rule
+      `bm_time + emission_latency_ms_for_source(source)`**. **MIGRATED FROM:** the MTDS-slice ODDS_SNAPSHOT path
+      ship (above) chose the event-time rule (`bm_time` only) because the conservative rule's UAC pre-req status
+      was unverified at ship-time. Verified 2026-05-11 by slot 3 (Re-task c, Q-D answer): sports sources have
+      `EMISSION_LATENCY_MS_BY_SOURCE` entries — `odds_api=5000ms`, `api_football=1000ms`, `understat=7_200_000ms`
+      (2h post-match), `soccer_football_info=3_600_000ms` (1h), `open_meteo=3_600_000ms` (1h),
+      `transfermarkt=86_400_000ms` (24h). Per CLAUDE.md "Live = batch — same data, same fields, same timing
+      semantics" rule, historical writes MUST stamp with the live-pipeline-arrival latency added, NOT the raw
+      event time. Fix shape: introduce `stamp_available_at_odds_snapshot_conservative(df, snapshot_time_col,
+      source)` in UTL `availability_stamping.py` (thin wrapper:
+      `stamp_available_at_event_time(df, event_time_col) + timedelta(ms=emission_latency_ms_for_source(source))`)
+      OR extend the existing `stamp_available_at_odds_snapshot` to take an optional `source=` kwarg with the same
+      semantic. Then update MTDS's wiring call site (one line in `_process_sports_venue_with_leagues`). Sequencing-
+      safe (conservative > optimistic; downstream consumers' strict `<= target_ts - horizon` checks become
+      slightly more conservative, no regression). Owner: Harsh slot 4 (re-task) OR slot 3 next cycle if Harsh
+      doesn't pick up.
+
+- [ ] [SCRIPT] P1. **`StreamingParquetWriter.write_chunk` — `assert_available_at_present` boundary guard**.
+      **MIGRATED FROM:** Q-B answer (Re-task c, 2026-05-11). The MTDS sports path uses
+      `record_captured_from_counts` (counts-only, no df), so the existing writegate
+      `assert_available_at_present(df)` guard inside `ManifestWriter.record_captured` doesn't fire on this path.
+      The CeFi tick path goes through `PartitionedTickWriter.write_chunk` which IS protected; the gap is sports +
+      any other path that uses plain `StreamingParquetWriter` + counts-only manifest emission. Right shape: add an
+      unconditional `assert_available_at_present(df)` call inside `StreamingParquetWriter.write_chunk(df)` so
+      every parquet-write boundary asserts the column, regardless of which manifest helper fires downstream.
+      This is universal — covers every MTDS adapter that writes through `StreamingParquetWriter` (which is most of
+      sports + the streaming half of prediction). ~30-min UTL edit + 5 unit tests. Owner: Harsh slot 4 (UTL
+      `StreamingParquetWriter` lives in UTL, but the consumer audit is MTDS-side).
 
 - [ ] [SCRIPT] P0. **DeFi (non-onchain) adapter stamping**. Per-adapter `available_at` stamping for: DefiLlama TVL, AAVE
       lending rates, Pyth Solana price feeds (re-added 2026-05-06 for LST-yield Solana coverage), Chainlink (EVM
@@ -495,6 +541,9 @@ up cleanly without re-reading session notes.
 | Phase 1 (DeFi / TradFi / Predictions adapter stamping)   | `todo` (checkbox `- [ ]` × 3)                                | Owned by respective asset_group master plans (defi_master / tradfi_master / predictions_master). Harsh slot 4 picks up per-adapter wiring once Phase 0 lands at MDPS level.                                                                                                                              |
 | Phase 4 — FEATURE_REQUIRED_INPUTS expansion              | `helper-shipped` (UAC@cb7c343 — 19 cross-instrument fg added) | DEFERRED-AFTER-`features_repo_consolidation_2026_05_08.md` Phase 7 (sports vocabulary stabilisation; defi non-yield re-audit) + UAC data_type registration for volatility / calendar / dxy_momentum (own follow-up todos in same plan body Phase 4 section). FEATURE_REQUIRED_INPUTS rose 40 → 59.       |
 | Phase 5 — AVAILABILITY_AT_SEMANTICS workspace-wide audit | `done` (UAC@cb7c343 — 14 defi pairs added)                    | AVAILABILITY_AT_SEMANTICS rose 51 → 65. Audit + closure shipped same commit; no drift remaining at MTDS handler grep boundary.                                                                                                                                                                          |
+| Re-task (a) — UAC `EXPECTED_KNOWN_SOURCE_GAP` enum       | `done` (UAC@017b332 — closed-set member added)                | Closed set rose 14 → 15 members. Consumers (VIX 15m gap, sports `KNOWN_COVERAGE_GAPS`) named in docstring; downstream MDPS VIX-gap fix is Harsh slot 5 territory (P0-2 routing).                                                                                                                          |
+| Re-task (b) — sports `available_at` Phase 1 flip         | `done` (Harsh's MTDS@c186ecb cited + plan flipped 2026-05-11) | Flipped the sports-stamping checkbox to `- [x]`; filed 2 P1 follow-up todos for the conservative-rule promotion + `StreamingParquetWriter.write_chunk` boundary guard (per Q-A + Q-B answers).                                                                                                          |
+| Re-task (c) — answer Q-A/B/C/D in `mtds_sports_*` issue  | `done` (issue doc updated 2026-05-11)                         | Q-A resolved conservative rule (`bm_time + emission_latency_ms_for_source(src)`); Q-B resolved `StreamingParquetWriter.write_chunk` boundary guard; Q-C deferred (only ODDS_API routed today); Q-D resolved (sports SOURCE_PRIORITY + emission_latency entries already in UAC).                          |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
@@ -576,6 +625,31 @@ Counts after this session: AVAILABILITY_AT_SEMANTICS 51 → 65 (+14). FEATURE_RE
 `validate_required_inputs()` green workspace-wide. UAC test suite (unit/test_bar_boundary.py +
 unit/test_availability_semantics.py + test_feature_dag_ssot.py minus the two pre-existing workspace-layout-dependent
 tests) green from slot-3 worktree.
+
+### Re-task continuation (PM@4ca1cb0c — main orchestrator re-task on operator approval)
+
+After original-scope ✅ DONE, slot 3 picked up 3 carryover items in its UAC/UTL competency per
+[main → slot 3] ping in `plans/active/_agent_pings.md`:
+
+| Re-task item                                                                                | Status | Commits                                                                                                          |
+| ------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| (a) UAC `EXPECTED_KNOWN_SOURCE_GAP` enum addition to `EmptyConfirmedReason` closed set       | `done` | unified-api-contracts@017b332 (StrEnum member + EMPTY_CONFIRMED_REASONS frozenset auto-derived + 3 unit tests)   |
+| (b) Flip sports `available_at` Phase 1 todo per Harsh's MTDS@`c186ecb` ship                  | `done` | unified-trading-pm@<this commit> (Phase 1 checkbox + 2 P1 follow-up todos for conservative rule + writer guard)  |
+| (c) Answer 4 design Qs Q-A/B/C/D in `mtds_sports_available_at_wiring_2026_05_11.md`          | `done` | unified-trading-pm@<this commit> (issue doc updated with full resolution + disposition note)                     |
+
+Design-Q resolutions summary (full text in the issue doc):
+
+* **Q-A**: conservative rule (`bm_time + emission_latency_ms_for_source(src)`) is canonical per Live=batch
+  CLAUDE.md rule. Current `bm_time`-only ship preserved as named-successor temporary state; P1 follow-up todo
+  filed in this plan's Phase 1 section.
+* **Q-B**: column-presence assertion at `StreamingParquetWriter.write_chunk` boundary is the universal guard
+  shape. P1 follow-up todo filed in this plan's Phase 1 section.
+* **Q-C**: deferred — only ODDS_API routed in MTDS today; re-audit when other sports adapters wire in.
+* **Q-D**: resolved — UAC already has SOURCE_PRIORITY + emission_latency entries for every sports source
+  (api_football=1s / odds_api=5s / understat=2h / sfi=1h / open_meteo=1h / transfermarkt=24h). No UAC pre-req.
+
+Closed set count after this re-task: AVAILABILITY_AT_SEMANTICS 51 → 65 (unchanged from earlier this cycle).
+EmptyConfirmedReason members: 14 → 15. UAC `tests/unit/test_honest_coverage.py` 33 → 36 tests pass.
 
 ## Audit-2026-05-10 finding — post-cutover Phase: lift `available_at` to schema-level invariant
 
