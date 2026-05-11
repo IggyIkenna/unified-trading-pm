@@ -96,30 +96,35 @@ data-status UI flags every Understat shard for La Liga as a possible coverage ho
 
 **Files to create**:
 
-- [ ] [UAC] P0. NEW `unified_api_contracts/canonical/domain/sports/understat_coverage.py` —
-      `UNDERSTAT_COVERED_LEAGUES: frozenset[str]` containing the 5 league_ids Understat actually covers (per published
-      Understat coverage). Helper: `does_understat_cover(league_id: str) -> bool`. Cite source: scrape of Understat's
-      per-league index page as of 2026-05-08.
-- [ ] [UAC] P0. EXTEND `unified_api_contracts/canonical/domain/sports/transfer_windows.py` — **CORRECTION 2026-05-08
-      audit**: file already EXISTS with a different API (`is_transfer_window_open` / `get_transfer_windows_for_year` /
-      `most_recent_window_close`). Re-scoped: ADD `TRANSFER_WINDOWS: dict[str, list[tuple[date, date]]]` keyed by
-      country_code → list of (window_open, window_close) ranges per the country's published transfer registration
-      windows (FIFA + national-FA rules) + `is_within_transfer_window(country_code: str, day: date) -> bool` helper.
-      Seed with EU countries (England, Spain, Italy, Germany, France) + USA (MLS-specific summer/winter windows) + Japan
-      (J.League windows). Wire `legacy_reason_classifier` to the new dict (existing API remains for callers that need
-      year-scoped queries).
-- [ ] [UAC] P0. EXTEND `unified_api_contracts/sports/provider_league_ids.py` — add `season_start: date` +
-      `season_end: date` fields to the existing `FOOTYSTATS_SEASON_IDS` dict entries. Source: footystats per-league
-      season pages. Helpers: `get_footystats_season_bounds(league_id: str, season: str) -> tuple[date, date]` +
-      `is_within_footystats_season(league_id: str, season: str, day: date) -> bool`. Composes with the existing
-      `SOURCE_COVERAGE_START` clip — pre-season days within the source's coverage window get the new
-      `EXPECTED_PRE_SEASON` reason; post-season days get `EXPECTED_POST_SEASON`.
+- [x] [UAC] P0. **SHIPPED 2026-05-11 UAC@`7c8b5ad`** (slot 3, harsh-wave3x-tab). **DEVIATION (DRY, per "No double
+      SSOT")**: NOT a new `understat_coverage.py` file — the data already lives in `provider_league_ids.py`'s
+      `UNDERSTAT_NAMES` + the private `_UNDERSTAT_LEAGUE_COVERAGE`. Added a public alias `UNDERSTAT_COVERED_LEAGUES`
+      (= `frozenset(UNDERSTAT_NAMES.keys())` — single SSOT) + `does_understat_cover(league_id)` to `provider_league_ids.py`,
+      re-exported from the `sports` facade. 5 leagues (BUNDESLIGA / EPL / LA_LIGA / LIGUE_1 / SERIE_A).
+- [x] [UAC] P0. **SHIPPED 2026-05-11 UAC@`7c8b5ad`** (slot 3). EXTEND `transfer_windows.py` — **DEVIATION (DRY)**: NOT a
+      new `TRANSFER_WINDOWS: dict[country_code, list[(date,date)]]` dict — that would duplicate the existing
+      `_COUNTRY_DEFAULTS` + `_YEAR_OVERRIDES` (which already cover 25+ countries incl. COVID-2020 overrides). Added
+      `is_within_transfer_window(country_code: str, day: date) -> bool` — country-code-keyed sibling of the existing
+      league-id-keyed `is_transfer_window_open`; reads the same SSOT via `_get_candidate_windows` / `_resolve_specs` (no
+      duplicate calendar dict). Re-exported from the `sports` facade. The classifier wires to `is_transfer_window_open`
+      (which already takes a league_id) — see Track B UTL below.
+- [x] [UAC] P0. **SHIPPED 2026-05-11 UAC@`7c8b5ad`** (slot 3). EXTEND season bounds — **DEVIATION (DRY)**: NOT
+      `season_start`/`season_end` fields on `FOOTYSTATS_SEASON_IDS` (those are `int` season IDs; adding fields would
+      break `get_provider_league_id`) — the season *boundary dates* already exist via `season_dates.get_season_boundary`
+      (derived from `LeagueDefinition.season_months`). Added `get_footystats_season_bounds(league_id, season_year) ->
+      tuple[date, date]` + `is_within_footystats_season(league_id, season_year, day) -> bool` +
+      `footystats_season_status_for_day(league_id, day) -> Literal["EXPECTED_PRE_SEASON","EXPECTED_POST_SEASON"] | None`
+      to `season_dates.py`, re-exported from the `sports` facade. (Composes with the existing `SOURCE_COVERAGE_START`
+      clip — that handles before-FootyStats-coverage-started; this handles before/after the league's season window.)
 - [ ] [UTL] P0. Extend `legacy_reason_classifier.py::_classify_sports` to consume the three new SSOTs: source ==
       Understat AND league not in covered set → `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`; source == transfermarkt AND day
       outside transfer window → `EXPECTED_OUTSIDE_TRANSFER_WINDOW`; source == footystats AND day outside season bounds →
-      `EXPECTED_PRE_SEASON` or `EXPECTED_POST_SEASON` per which side of the window.
-- [ ] [TEST] P0. UAC tests cover each new SSOT's seeded entries + helper boolean correctness; UTL classifier tests cover
-      each new EXPECTED\_\* reason firing for the right (source, league_id, day) shape; closed-set drift guard.
+      `EXPECTED_PRE_SEASON` or `EXPECTED_POST_SEASON` per which side of the window. **(in flight 2026-05-11 — slot 3;
+      bundled with the Track A UTL classifier extension since both touch `legacy_reason_classifier.py`.)**
+- [x] [TEST] P0. UAC tests — **SHIPPED 2026-05-11 UAC@`7c8b5ad`** (slot 3): `tests/unit/sports/test_per_source_coverage_ssots.py`,
+      22 tests covering each new SSOT's entries + helper correctness + cross-year-vs-calendar-year footystats season
+      status + typed-reason-string check + facade re-export; all pass; ruff + basedpyright clean. **UTL classifier tests
+      pending — bundled with the Track B UTL `_classify_sports` extension above.**
 
 ### Track C — Reconciler script (instruments-service, ~1 day)
 
