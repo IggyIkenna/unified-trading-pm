@@ -1,0 +1,706 @@
+# Baseline for check_pipeline_mode_explicit_at_record_calls.py
+#
+# Each entry = a CURRENTLY-KNOWN occurrence of a `record_*` call without an
+# explicit `pipeline_mode=` kwarg. Surfaces as WARNING (informational, exit-clean).
+# A new occurrence not in this file → ERROR, exit 1.
+#
+# Bootstrap baseline written 2026-05-12 by slot 8 from the full workspace sweep.
+# Per-repo split:
+#   market-tick-data-service: 97 entries (slot 3-owned, Phase 4.MTDS triage gate)
+#   features-service: 6 entries (gated on features-consolidation merge ~2026-05-16)
+#   unified-trading-library: 11 entries (Phase 4.DEFAULT-REMOVAL successor — UTL test/internal callsites)
+#
+# Status closed set:
+#   - pending_phase_4_mtds      → Phase 4.MTDS Q1-Q5 triage gate (slot 3)
+#   - pending_phase_4_features  → features-consolidation merge gate (~2026-05-16)
+#
+# Clear cadence: entries are DELETED from this file (not re-statused) as Phase 4.MTDS
+# sweep + features-consolidation Phase 4.FEATURES sweep + DEFAULT-REMOVAL land.
+
+default_successor: "manifest_schema_final_gate Phase 4.MTDS + Phase 4.DEFAULT-REMOVAL"
+
+entries:
+  - repo: features-service
+    file: features_service/calendar/engine/calendar_orchestrator.py
+    line: 241
+    method: record_failed
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
+  - repo: features-service
+    file: features_service/calendar/engine/calendar_orchestrator.py
+    line: 264
+    method: record_empty
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
+  - repo: features-service
+    file: features_service/sports/cli/handlers/batch_handler.py
+    line: 538
+    method: record_empty
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
+  - repo: features-service
+    file: features_service/sports/cli/handlers/batch_handler.py
+    line: 547
+    method: record_failed
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
+  - repo: features-service
+    file: features_service/sports/cli/handlers/batch_handler.py
+    line: 474
+    method: record_empty
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
+  - repo: features-service
+    file: features_service/sports/cli/handlers/batch_handler.py
+    line: 487
+    method: record_failed
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/live/manifest_recorder.py
+    line: 182
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/live/websocket_runner.py
+    line: 647
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/live/websocket_runner.py
+    line: 665
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/engine/orchestrator.py
+    line: 2949
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/engine/orchestrator.py
+    line: 2954
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/engine/orchestrator.py
+    line: 2596
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/engine/orchestrator.py
+    line: 2482
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/engine/orchestrator.py
+    line: 2762
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/engine/orchestrator.py
+    line: 2769
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/engine/orchestrator.py
+    line: 2901
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/engine/orchestrator.py
+    line: 2910
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/position_data_handler.py
+    line: 171
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/position_data_handler.py
+    line: 180
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/position_data_handler.py
+    line: 189
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/position_data_handler.py
+    line: 124
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/position_data_handler.py
+    line: 133
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/position_data_handler.py
+    line: 142
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/token_transfers_handler.py
+    line: 187
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/token_transfers_handler.py
+    line: 196
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/token_transfers_handler.py
+    line: 205
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/flash_loan_events_handler.py
+    line: 141
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/flash_loan_events_handler.py
+    line: 150
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/flash_loan_events_handler.py
+    line: 159
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/liquidations_handler.py
+    line: 297
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/liquidations_handler.py
+    line: 306
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/liquidations_handler.py
+    line: 316
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/lst_rates_handler.py
+    line: 480
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/lst_rates_handler.py
+    line: 408
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/lst_rates_handler.py
+    line: 425
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/lst_rates_handler.py
+    line: 433
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/lst_rates_handler.py
+    line: 417
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py
+    line: 181
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py
+    line: 190
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py
+    line: 200
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/bridge_events_handler.py
+    line: 142
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/bridge_events_handler.py
+    line: 151
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/bridge_events_handler.py
+    line: 160
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/gas_fee_handler.py
+    line: 219
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/gas_fee_handler.py
+    line: 227
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/gas_fee_handler.py
+    line: 236
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/gas_fee_handler.py
+    line: 252
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/gas_fee_handler.py
+    line: 260
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/gas_fee_handler.py
+    line: 269
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/gas_fee_handler.py
+    line: 285
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/gas_fee_handler.py
+    line: 293
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/gas_fee_handler.py
+    line: 302
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/liquidation_events_handler.py
+    line: 153
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/liquidation_events_handler.py
+    line: 162
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/liquidation_events_handler.py
+    line: 171
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/dex_swaps_handler.py
+    line: 377
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/dex_swaps_handler.py
+    line: 386
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/dex_swaps_handler.py
+    line: 396
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/perp_funding_handler.py
+    line: 245
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/perp_funding_handler.py
+    line: 254
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/perp_funding_handler.py
+    line: 263
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/governance_events_handler.py
+    line: 124
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/governance_events_handler.py
+    line: 133
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/governance_events_handler.py
+    line: 142
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/lending_indices_handler.py
+    line: 324
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/lending_indices_handler.py
+    line: 350
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/lending_indices_handler.py
+    line: 359
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/lending_indices_handler.py
+    line: 369
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/oracle_prices_handler.py
+    line: 669
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/oracle_prices_handler.py
+    line: 642
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/oracle_prices_handler.py
+    line: 677
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/oracle_prices_handler.py
+    line: 686
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/oracle_prices_handler.py
+    line: 650
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/oracle_prices_handler.py
+    line: 659
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/vault_share_price_handler.py
+    line: 481
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/vault_share_price_handler.py
+    line: 287
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/vault_share_price_handler.py
+    line: 295
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/vault_share_price_handler.py
+    line: 497
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/vault_share_price_handler.py
+    line: 505
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/dex_pools_handler.py
+    line: 374
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/dex_pools_handler.py
+    line: 383
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/dex_pools_handler.py
+    line: 398
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/solana_defi_handler.py
+    line: 225
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/solana_defi_handler.py
+    line: 233
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/solana_defi_handler.py
+    line: 244
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/staking_yields_handler.py
+    line: 115
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/staking_yields_handler.py
+    line: 124
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/staking_yields_handler.py
+    line: 133
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/staking_yields_handler.py
+    line: 160
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/staking_yields_handler.py
+    line: 169
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/staking_yields_handler.py
+    line: 178
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/staking_yields_handler.py
+    line: 205
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/staking_yields_handler.py
+    line: 214
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/staking_yields_handler.py
+    line: 223
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/_defi_manifest.py
+    line: 152
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/_defi_manifest.py
+    line: 214
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/_defi_manifest.py
+    line: 290
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/evm_defi_handler.py
+    line: 390
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/evm_defi_handler.py
+    line: 399
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/evm_defi_handler.py
+    line: 409
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/mev_events_handler.py
+    line: 124
+    method: record_captured
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/mev_events_handler.py
+    line: 133
+    method: record_empty
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: market-tick-data-service
+    file: market_tick_data_service/cli/handlers/mev_events_handler.py
+    line: 142
+    method: record_failed
+    status: pending_phase_4_mtds
+    successor: "manifest_schema_final_gate Phase 4.MTDS sweep (gated on operator triage of Q1-Q5 per plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)"
+  - repo: unified-trading-library
+    file: unified_trading_library/manifest_writer_normalising.py
+    line: 261
+    method: record_captured
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/manifest_writer_normalising.py
+    line: 278
+    method: record_empty
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/manifest_writer_normalising.py
+    line: 295
+    method: record_failed
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/manifest_writer.py
+    line: 1919
+    method: record_failed
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/per_leaf_failure.py
+    line: 226
+    method: record_failed
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/streaming/candle_writer.py
+    line: 356
+    method: record_captured
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/streaming/candle_writer.py
+    line: 306
+    method: record_failed
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/streaming/candle_writer.py
+    line: 323
+    method: record_empty
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/streaming/candle_writer.py
+    line: 338
+    method: record_failed
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/streaming/parallel_per_symbol_runner.py
+    line: 346
+    method: record_failed
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"
+  - repo: unified-trading-library
+    file: unified_trading_library/streaming/live_aggregator.py
+    line: 454
+    method: record_empty
+    status: pending_phase_4_features
+    successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL — UTL ManifestWriter internal callsites cleared when 4 transitional None defaults removed"

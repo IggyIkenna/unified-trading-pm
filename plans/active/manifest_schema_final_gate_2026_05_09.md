@@ -439,22 +439,24 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       defining `def record_empty_for_shard()` inside string literals to feed the AST-walk QG check; (c)
       `check_banned_placeholder_methods.py` docstring + error-message strings. None are actual invocations. No work
       needed.
-- [ ] [AGENT] P0. Phase 4.GREP-VERIFY — workspace-wide AST-walk (not naive grep — see note below).
-      **2026-05-12 slot 2 audit finding**: naive grep `grep -rln "record_captured\|..." --include="*.py" | xargs grep -L
-      "pipeline_mode="` returns false positives for files containing only docstring/comment/dict-key/string-literal
-      references (e.g. `"record_empty_expected": True` config-field, `def record_empty_for_shard()` inside
-      AST-walk-QG test fixtures' string literals, `successor="ManifestWriter.record_captured"` in test data, error-
-      message format strings naming the methods). Verified across deployment-api / system-integration-tests /
-      unified-trading-pm/scripts/ — 7 grep hits all false-positive (zero actual `.record_*(` invocations).
-      **Required approach**: AST-walk every `.py` file (matching the precedent set by
-      `unified-trading-pm/scripts/quality_gates/check_banned_placeholder_methods.py` +
-      `check_removed_symbols.py`), find every actual `Call` node where the called name is one of the 5 `record_*`
-      methods, and assert `pipeline_mode=` kwarg is present in `Call.keywords`. Whitelist via `# QG-allow:
-      pipeline-mode-explicit-or-other-reason` inline marker for the rare legitimate exception.
-      **Implementation site**: `unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`
-      (new AST-walk QG check; ~80-100 lines mirroring `check_banned_placeholder_methods.py` shape). Wire into
-      `base-service.sh` as a new STEP (~5.6x) workspace-wide. Reviewers reject phase-completion until AST-walk returns
-      zero. Naive grep stays as the fast initial filter for new agents starting Phase 4.x; AST-walk is the gate.
+- [x] [AGENT] P0. Phase 4.GREP-VERIFY — workspace-wide AST-walk (not naive grep).
+      **SHIPPED 2026-05-12 slot 8** at `pm@<this-flip-commit>` — new AST-walk QG check
+      [`scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`](../../scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py)
+      (266 lines mirroring `check_banned_placeholder_methods.py` shape) + 11-test unit suite at
+      [`scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py`](../../scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py)
+      + bootstrap baseline at
+      [`scripts/quality_gates/pipeline_mode_explicit_baseline.yaml`](../../scripts/quality_gates/pipeline_mode_explicit_baseline.yaml)
+      (114 entries: 97 market-tick-data-service `pending_phase_4_mtds` + 6 features-service
+      `pending_phase_4_features` + 11 unified-trading-library `pending_phase_4_features` Phase 4.DEFAULT-REMOVAL
+      successor). Workspace-wide invocation: `OK — 114 baselined occurrence(s); 0 new occurrences`. Whitelist marker
+      `# QG-allow: pipeline-mode-not-applicable` supports the rare legitimate exception (e.g. `**kwargs` plumbing).
+      Reviewer enforcement: ANY new `record_*(...)` call without explicit `pipeline_mode=` kwarg + not baselined +
+      not whitelisted → ERROR, exit 1. Baseline entries get DELETED (not re-statused) as slot 3 ships Phase 4.MTDS
+      sweep + features-consolidation ships Phase 4.FEATURES sweep. **2026-05-12 slot 2 audit finding** confirmed:
+      naive grep `grep -rln "record_captured" --include="*.py" | xargs grep -L "pipeline_mode="` returned 7
+      false positives for docstring/comment/dict-key/string-literal references; AST-walk authoritatively counts only
+      actual `Call` nodes. **TODO Phase 4.GREP-VERIFY P1** [next slot]: wire QG check into per-repo `quality-gates.sh`
+      via `base-service.sh` new STEP (~5.6x) so per-PR CI ratchets workspace-wide before merge.
 - [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — at end of Phase 4, **all four** transitional `None` defaults removed from
       ManifestWriter's 5 `record_*` methods (explicit-or-fail): `pipeline_mode=` + the 3 v8 emission-tracking kwargs
       (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`). **AND** bump
