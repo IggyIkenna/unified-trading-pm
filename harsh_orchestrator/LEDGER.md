@@ -296,7 +296,7 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 - **Full task brief**: [`../plans/active/work_split_2026_05_11_harsh.md`](../plans/active/work_split_2026_05_11_harsh.md)
   § "Slot 4 — Bucket-name SSOT + per-asset-group available_at adapter wiring".
 
-#### Slot 5 — `harsh-live-pipeline-impl-tab` 🟢 IN FLIGHT (STARTED 2026-05-11 12:20 UTC — rebased clean, live-pipeline Phases 3-5 + 13-15 per-service consumer wire-in)
+#### Slot 5 — `harsh-live-pipeline-impl-tab` 🟢 IN FLIGHT (STARTED 2026-05-11 12:20 UTC — live-pipeline Phases 3-5 + 13-15 per-service consumer wire-in). **Phase 4 ✅ SHIPPED 12:34** = `mdps@0068b2f` (`LiveStreamAggregator` + 7 Protocol adapters + `--mode live --operation streaming-aggregation --shard-spec` CLI + config fields + 12 unit tests). Continuing Phase 3 (MTDS websocket) + Phase 5 (features-svc `live/` runner modules).
 
 - **Theme**: live-pipeline Phase 3-5 service wiring (Phase 3 MTDS websocket rollout per asset_group; Phase 4 MDPS
   streaming aggregation; Phase 5 features-service asset-scoped streaming) + Phase 13/14/15 (VM launchers + watchdog dict
