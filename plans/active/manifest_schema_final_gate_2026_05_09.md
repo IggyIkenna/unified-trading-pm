@@ -1039,6 +1039,37 @@ No deferral lives only in chat or in the commit message. Three findings filed fo
 
 ---
 
+## DONE-2026-05-12 — slot 8 Phase 4.GREP-VERIFY closure + Phase 4.FEATURES pre-audit
+
+Slot 8 (`tab/ikennaigboaka/8`, agent-tag `ikenna-manifest-phase3-tab`) shipped two consumer-sweep items today
+inside the manifest_schema_final_gate Phase 4 cluster:
+
+| Phase                 | Repo                  | Commit            | Highlights                                                                                                                                                                                                                                                                                              |
+| --------------------- | --------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 4.GREP-VERIFY   | unified-trading-pm    | [`4159b7ae`]       | NEW AST-walk QG check `scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (266 LOC) + 11-test unit suite + 706-LOC bootstrap baseline. Detects every `record_*(...)` call missing explicit `pipeline_mode=` kwarg. Workspace invocation: `OK — 114 baselined; 0 new occurrences`.    |
+| Phase 4.FEATURES P0   | unified-trading-pm    | [`c1414ed7`]       | Pre-audit enumerated 6 features-service callsites concentrated in 2 files (calendar orchestrator + sports batch handler). Pipeline-mode mapping per existing UAC SOURCE_PRIORITY documented inline. Mechanical sweep ~30min once features-consolidation merge lifts the gate (target 2026-05-16). |
+
+**Phase 4 cluster scoreboard post-slot-8 ship:**
+
+| Sub-phase             | Status as of 2026-05-12 | Owner / Successor / Blocker                                                                              |
+| --------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| Phase 4.MDPS          | ✅ shipped slot 2 (`mdps@a3c7198`) | Done                                                                                                     |
+| Phase 4.INSTRUMENTS   | ✅ shipped slot 2 (`instruments-service@e530906`) | Done                                                                                                     |
+| Phase 4.DEPLOYMENT-API | ✅ shipped slot 2 (`deployment-api@2f833a7` + `deployment-ui@ab06bfe`) | Done                                                                                                     |
+| Phase 4.E2E           | ✅ N/A (slot 2 audit; zero actual record_* calls) | Done                                                                                                     |
+| Phase 4.PM-SCRIPTS    | ✅ N/A (slot 2 audit; zero actual record_* calls) | Done                                                                                                     |
+| Phase 4.GREP-VERIFY   | ✅ shipped slot 8 today (PM@`4159b7ae`)  | Done — see DONE block above                                                                              |
+| Phase 4.FEATURES      | ⚪ pre-audit shipped slot 8 today; sweep deferred-after-may-16 | Successor: features-consolidation merge gate; 6 callsites enumerated above                                |
+| Phase 4.MTDS          | 🟡 pre-audit shipped slot 2 (26 files / 102 callsites); sweep BLOCKED on operator triage of Q1-Q5 | Successor: slot 3 (code_freeze Phase 1.E audit) per `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` |
+| Phase 4.DEFAULT-REMOVAL | ⚪ blocked transitively on Phase 4.MTDS | Successor: same as Phase 4.MTDS                                                                          |
+
+**Phase 4.GREP-VERIFY ratchet** is now LIVE — any new `record_*(...)` call workspace-wide missing explicit
+`pipeline_mode=` kwarg + not in `pipeline_mode_explicit_baseline.yaml` + no `# QG-allow: pipeline-mode-not-applicable`
+inline marker fails the check + blocks the PR. Baseline entries get DELETED (not re-statused) as Phase 4.MTDS sweep
++ Phase 4.FEATURES sweep + Phase 4.DEFAULT-REMOVAL land. The next-cycle todo `[next slot] Phase 4.GREP-VERIFY P1`
+wires the QG check into per-repo `quality-gates.sh` via `base-service.sh` new STEP (~5.6x) so per-PR CI ratchets
+the workspace-wide baseline before merge.
+
 ## Decision log
 
 - **2026-05-09** — Plan created from `plans/questions/backfill_manifest_schema_freeze_gate_2026_05_08.md` decision-log
