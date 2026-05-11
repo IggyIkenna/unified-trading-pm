@@ -147,9 +147,16 @@ CADENCE per shippable unit (Half 1+2+4):
   git push origin tab/ikennaigboaka/8 --no-verify && \
     git push origin tab/ikennaigboaka/8:live-defi-rollout --no-verify
 
-DON'T STOP at nice-haves. Both are PREREQ for Phase 2.6 cutover — without them, VM launches won't target env-tiered buckets + dev/staging will drift from prod. If wall-clock allows after Phase 0f + 0h, pick up writegate slice (c) Phase 6.3 (features-volatility wiring, ~3 days) or Phase 6.4 (features-cross-instrument, ~3 days) — your scope's slice (c) Phase 6.2 is shipped; 6.3 + 6.4 are unowned + critical for gate item #3.
+DON'T STOP at nice-haves. Both are PREREQ for Phase 2.6 cutover — without them, VM launches won't target env-tiered buckets + dev/staging will drift from prod. **AFTER Phase 0f + 0h, pick up Phase 3 (cross-asset rescan) — UNOWNED + closes operator's bad-data cleanup gap** (operator surfaced 2026-05-11 PM: bad parquets — 1440-NaN-bar, partial bundles, schema drift — travel with Phase 2.6 rsync as bad parquets; rescan is the post-migration validation layer that flips them in manifest to `attempted_failed`).
 
-DONE: DONE-2026-05-12 block in `bucket_name_ssot_canonicalisation_2026_05_10.md`. Cross-side ping to harsh-main: "Phase 0f + 0h shipped — Phase 2.6 cutover prereqs cleared on Ikenna side."
+**Tier 2 — Phase 3 cross-asset rescan (~3-5 AI-days; existing plan, no new plan to create)** per `manifest_schema_final_gate_2026_05_09.md:286-301`:
+  3. **Phase 3.A** — NEW `deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh` per `manifest_cross_asset_rescan_design_2026_05_08.md:113-127` (singleton-locked, same-region `ap-northeast-1`, per-VM shard isolation envvars, `WORKERS=64` + `HTTP_POOL_SIZE=128`, tarball-default + tarball-from-local flag). Mirror `launch-sfi-forward-poll.sh` precedent. Natural deployment-service continuation of Phase 0f/0h work.
+  4. **Phase 3.B** — Add `cross-asset-rescan-` prefix to `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict. Relaunch watchdog VM after dict update (per CLAUDE.md "VM Naming Convention" rule — watchdog only fetches Python at boot).
+  5. **Phase 3.C** — Register launcher in `deployment-api/deployment_api/services/deploy_missing.py` `_SERVICE_LAUNCHER_SCRIPTS` registry so Deploy-Missing UI button surfaces it.
+  6. **Phase 3.D** — NEW `instruments-service/scripts/cross_asset_rescan.py` per `manifest_cross_asset_rescan_design_2026_05_08.md § "Rescan flip schema"`. Class A mutable auto-flips (capture_status / error_reason / attempted_at / path reconciled to disk truth; bad parquets → `attempted_failed(reason=PARQUET_NAN_RATIO_EXCEEDED|PARTIAL_BUNDLE|SCHEMA_DRIFT|PHANTOM_PATH_MISSING)`) + Class C triage routing to `gs://{pid}-rescan-triage/{run_id}/triage.jsonl` for operator review. Per-asset-group rules respect `venue_trading_calendar` / `*_LAUNCH_DATES` / `SOURCE_COVERAGE_START` / market lifecycle. Phantom-audit integration baked in (target 0 phantoms across 5 asset_groups; baseline 354 residual from 2026-05-04). **If slot 3 picks up Phase 3.D in parallel, coordinate via the rescan-design plan body's open-questions section.**
+  7. **Promote `manifest_cross_asset_rescan_design_2026_05_08.md` from DRAFT → active execution plan** in same logical unit (frontmatter `status: active` flip + add a Phase 1 (= Phase 3.A-D consumption) section pointing at the work-split brief).
+
+DONE: DONE-2026-05-12 block in `bucket_name_ssot_canonicalisation_2026_05_10.md` (Phase 0f + 0h) + `manifest_schema_final_gate_2026_05_09.md` (Phase 3.A-D if shipped) + `manifest_cross_asset_rescan_design_2026_05_08.md` (status flip + Phase 1 ratification). Cross-side ping to harsh-main: "Phase 0f + 0h shipped — Phase 2.6 cutover prereqs cleared; Phase 3 cross-asset rescan launcher + script shipped — bad-data cleanup mechanism online."
 ```
 
 ## Harsh slot 4 — push through final items before leaving (~3hr window)
@@ -243,10 +250,48 @@ DON'T STOP at nice-haves. Goal: freeze-gate item 8 (workspace QG green) + item 9
 DONE: DONE-2026-05-12 block in `code_freeze_migrate_backfill_sequencing_2026_05_10.md`. Cross-side INFO ping to ikenna-main with freeze-gate items 8 + 9 status + phantom-audit residual counts per asset_group.
 ```
 
+## Ikenna slot 3 — defi #5 lending-indices VM wrap + Phase 0.4 MDPS reconciler + cross-asset rescan assist
+
+```text
+You are Tab 3 (Ikenna). Continue your re-task + absorb 2 adjacent items. Worktree: ${WORKSPACE_ROOT}/.tabs/3/ on branch tab/ikennaigboaka/3.
+
+CONTEXT: slot 3 currently running defi_master Priority #5 lending-indices LINEA/BSC routing config + backfill VM `mtds-lending-indices-20260511-181115` (ETA ~60-90min from launch). When VM hits STOPPED + canonical re-consolidated shows the recent gap (2026-05-07→05-11) captured + checkbox flips `[x]`, primary scope ✅ DONE. Operator-directed 2026-05-11 PM: don't go quiet at done — absorb 2 adjacent items per the "no nice-have skipping" + "consolidate gap-plugging items into existing plans" directives.
+
+READ (in order):
+  1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
+  2. unified-trading-pm/plans/active/continuation_prompts_2026_05_11_pm.md § Slot 3
+  3. unified-trading-pm/plans/active/issues/mdps_canonical_writer_off_by_one_tf_2026_05_11.md (Phase 0.4 scope — reconciler script)
+  4. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md:286-301 (Phase 3 — if assisting slot 8)
+  5. unified-trading-pm/plans/active/manifest_cross_asset_rescan_design_2026_05_08.md (rescan design spec — if assisting slot 8 on Phase 3.D)
+
+Agent-tag: ikenna-reconciler-tab.
+
+SHIP both items post-lending-VM. Do NOT stop at nice-haves. Sequence:
+
+Step 0 (~5 min) — VM verification: confirm `mtds-lending-indices-20260511-181115` STOPPED cleanly + canonical manifest shows LINEA AAVEV3 + BSC AAVEV3 captured for 2026-05-07→05-11. Flip defi_master Priority #5 `[x]` per slot 3 LEDGER entry. If VM hasn't landed yet, hold + monitor; pick up Step 1 once verified.
+
+Step 1 (~2-3 hr) — **Phase 0.4 MDPS `available_at` off-by-one reconciler** per `mdps_canonical_writer_off_by_one_tf_2026_05_11.md` Phase 0.4. Every MDPS-emitted candle written between Phase 1.2A.1 ship (2026-05-10) and MDPS@f004e12 fix (2026-05-11) carries the over-stamped value (1-timeframe overshoot). NEW script `market-data-processing-service/scripts/reconcile_available_at_off_by_one_tf.py`:
+  - Walks `gs://{pid}-mdps/` for candles written in the bad window (filter by manifest `attempted_at` between 2026-05-10 + 2026-05-11)
+  - Per-row: re-stamps `available_at = tick_close + latency_delta` (drops the redundant `+ tf_delta`)
+  - Per-VM shard isolation MANDATORY (per CLAUDE.md "Per-VM shard isolation for concurrent backfills" rule)
+  - Tests + dry-run mode + production verification probe
+  - Plan-flip Phase 0.4 `[x]` + DONE block in issue doc
+
+Step 2 (~ASSIST slot 8 OR full ownership if slot 8 saturated) — **Cross-asset rescan Phase 3.D assist**. Slot 8 is primary owner of Phase 3.A/B/C/D per `manifest_schema_final_gate_2026_05_09.md:286-301`. If slot 8 ships Phase 3.A/B/C cleanly but Phase 3.D (`instruments-service/scripts/cross_asset_rescan.py` reconciler logic per the rescan-design spec) is too big for slot 8's remaining capacity, slot 3 absorbs Phase 3.D. Mental model matches lending-indices reconciler work (manifest reconciliation against on-disk truth). Coordinate with slot 8 via `manifest_cross_asset_rescan_design_2026_05_08.md` open-questions section. Don't double-implement — verify slot 8 status first.
+
+CADENCE per shippable unit (CLAUDE.md "Commit + Push + Flip Plan Checkboxes" Half 1+2+4):
+  git push origin tab/ikennaigboaka/3 --no-verify && \
+    git push origin tab/ikennaigboaka/3:live-defi-rollout --no-verify
+
+DON'T STOP at nice-haves. Phase 0.4 unblocks honest MDPS metadata for the 2-day bad window; Phase 3.D assist unblocks operator's bad-data flagging mechanism post-Phase-2.6 bucket migration.
+
+DONE: DONE-2026-05-12 block in `mdps_canonical_writer_off_by_one_tf_2026_05_11.md` (Phase 0.4 reconciler) + (if Phase 3.D taken) `manifest_schema_final_gate_2026_05_09.md` + `manifest_cross_asset_rescan_design_2026_05_08.md`. Cross-side INFO ping to harsh-main when reconciler runs to completion + manifest consolidator merges shards.
+```
+
 ## Skipped (already in flight or absorbed)
 
 - **Ikenna slot 1 (main orchestrator)**: this session.
-- **Ikenna slot 3, 4, 6**: already in flight on lending-indices VM monitoring / live-pipeline Phase 14/11 / manifest_schema_final_gate Phase 1 follow-ups respectively. No staleness signal.
+- **Ikenna slot 4, 6**: already in flight on live-pipeline Phase 14/11 / manifest_schema_final_gate Phase 1 follow-ups respectively. No staleness signal.
 - **Harsh slot 1 (main orchestrator)**, **slot 3** (defi #5 VM monitoring — same scope as Ikenna slot 3), **slot 5** (⚪ QUIET, absorbed by Ikenna slot 7).
 
 ## Composes with
