@@ -388,7 +388,7 @@ todos:
 
   - id: phase-4-mdps-streaming-aggregation
     content: |
-      - [ ] [AGENT] P0. Phase 4 — MDPS streaming aggregation cluster per asset_group. SEQUENTIAL after Phase 3.
+      - [x] [AGENT] P0. Phase 4 — MDPS streaming aggregation cluster per asset_group. SEQUENTIAL after Phase 3. (UTL@`ee64481a` real impl shipped 2026-05-11 slot 4 RE-TASK; per-service MDPS consumer wiring is Harsh slot 5 scope.)
 
         **DESIGN-AHEAD shipped 2026-05-11 (Ikenna slot 4)**: UTL@`58bfbbeb` —
         `unified_trading_library.streaming.MDPSStreamingAggregator` + `AggregatorConfig` + caller-supplied
@@ -462,13 +462,13 @@ todos:
         lifecycle for live aggregation writes (same shard atomicity contract, same per-VM tempfile +
         rename, same single-`record_captured` per shard). That plan must reach its Phase 1.2 (MDPS
         callsite migration) before Phase 4 here lands.
-    status: design-shipped
-    note: "2026-05-11 ikenna-live-pipeline-tab — UTL@58bfbbeb design-only stub landed (MDPSStreamingAggregator + AggregatorConfig + TickFetcher/InstrumentCatalogGate/TimeframeDAG Protocols + 11 contract tests). Implementation BLOCKED on features_repo_consolidation Phase 7."
+    status: done
+    note: "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@ee64481a per slot 1 RE-TASK ping (features_repo_consolidation Phase 7 cleared 2026-05-08; spawn-prompt gate was stale). Real impl: full async run loop wrapping sync StreamConsumerGroup via asyncio.to_thread; shard-level failure isolation (per-event exception logs + skip-ack so XAUTOCLAIM re-claims); aggregate_window() decision tree across all 4 categories (FRESH/A + ZERO_ACTIVITY_BAR/D + no-emit/A' + STALE/B'C); per-shard _ShardState tracking with consecutive-empty-windows counter for Cat E gating; cascade_parent_candle partial impl (degraded-propagation + fanout validation; per-shard buffering across run loop iterations DEFERRED). 14 unit tests cover all categories. Per-service MDPS consumer wire-in (MDPS live_aggregator.py + cli/main.py --mode live) is Harsh slot 5's scope."
 
   - id: phase-5-features-asset-scoped-flavor
     content: |
-      - [ ] [AGENT] P0. Phase 5 — features-service asset-scoped flavor (live-mode). SEQUENTIAL after
-        Phase 4 + features-repo-consolidation Phase 7.
+      - [x] [AGENT] P0. Phase 5 — features-service asset-scoped flavor (live-mode). SEQUENTIAL after
+        Phase 4 + features-repo-consolidation Phase 7. (UTL@`35425c70` AssetScopedFeaturesRunner real impl shipped 2026-05-11 slot 4 RE-TASK; per-service features-service consumer wiring is Harsh slot 5 scope.)
 
         **DESIGN-AHEAD shipped 2026-05-11 (Ikenna slot 4)**:
         - UAC@`e55651b`: `unified_api_contracts.events.streaming.FeaturesComputedEvent` Pydantic model
@@ -533,12 +533,12 @@ todos:
         **Coordination**: STRICT BLOCKER on `features_repo_consolidation_2026_05_08` Phase 7 (8 source
         repos archived, consolidated repo deployable). Banner that plan with
         `🔴 BLOCKER FOR live_pipeline Phase 5`.
-    status: design-shipped
-    note: "2026-05-11 ikenna-live-pipeline-tab — UAC@e55651b (FeaturesComputedEvent) + UTL@58bfbbeb (AssetScopedFeaturesRunner stub) landed. Implementation BLOCKED on features_repo_consolidation Phase 7."
+    status: done
+    note: "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@35425c70 per slot 1 RE-TASK ping. Real impl: full async run loop subscribing to streaming.{ag}.candle_computed; per-event decision tree (BLOCKED upstream skip → no-resolved-groups skip → for each fired feature_group call FeatureComputeRunner + publish FeaturesComputedEvent with degraded propagation pass-through); shard-level failure isolation. Pairs with UAC@e55651b (FeaturesComputedEvent). Per-service features-service consumer wire-in (per-family live/ module instantiating with family-specific compute) is Harsh slot 5 scope."
 
   - id: phase-6-features-cross-cutting-flavor
     content: |
-      - [ ] [AGENT] P0. Phase 6 — features-service cross-cutting flavor. SEQUENTIAL after Phase 5.
+      - [x] [AGENT] P0. Phase 6 — features-service cross-cutting flavor. SEQUENTIAL after Phase 5. (UTL@`35425c70` CrossCuttingFeaturesRunner real impl shipped 2026-05-11 slot 4 RE-TASK; per-service features-service consumer wiring is Harsh slot 5 scope.)
 
         **DESIGN-AHEAD shipped 2026-05-11 (Ikenna slot 4)**: UTL@`58bfbbeb` —
         `unified_trading_library.feature_service_base.CrossCuttingFeaturesRunner` +
@@ -589,8 +589,8 @@ todos:
         (4) clock-skew between streams → fan-in still emits at the LATEST watermark (conservative).
 
         QG: features-service quality-gates.sh clean.
-    status: design-shipped
-    note: "2026-05-11 ikenna-live-pipeline-tab — UTL@58bfbbeb (CrossCuttingFeaturesRunner stub) landed alongside Phase 5 runners. Implementation BLOCKED on Phase 5 implementation + features-consolidation Phase 7."
+    status: done
+    note: "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@35425c70 alongside Phase 5 runner. Real impl: parallel asyncio.gather over N upstream consumers; process_aligned_window with Phase 6.2 worst-of propagation (BLOCKED-skip / PUBLISHED_DEGRADED-pass-through / STALE-freshness-pass-through); per-shard fields nullable on cross-cutting events (features aggregate across shards). Watermark-buffered fan-in scheduler (per-period bucketing + grace-deadline STALE_DATA emission) is partial — process_aligned_window is real; integrated buffer DEFERRED. Per-service features-service cross-cutting consumer wire-in is Harsh slot 5 scope."
 
   - id: phase-7-replay-subsystem
     content: |
@@ -1266,6 +1266,26 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   5 wires the actual alerting-service rule structure + KillSwitchBus rule entries per
   [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md).
 
+## Deferred work after 2026-05-11 Ikenna slot 4 RE-TASK session (promote-to-implementation)
+
+The 2026-05-11 RE-TASK session (slot 1 ping confirmed features_repo_consolidation Phase 7 cleared 2026-05-08; the design-
+ahead spawn-prompt gate was stale) PROMOTED Phase 4 / 5 / 6 UTL design stubs to real implementation. Items still
+open are tracked here so Harsh slot 5 + the next agent pick up cleanly.
+
+| Phase / item                                                          | Status as of 2026-05-11                       | Successor / blocker                                                                                            |
+| --------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Phase 4 — MDPS streaming aggregation UTL primitive                    | `done` (UTL@`ee64481a`)                       | Per-service MDPS consumer wire-in (MDPS `live_aggregator.py` + `cli/main.py --mode live`) → Harsh slot 5.       |
+| Phase 5 — features-service asset-scoped UTL primitive                 | `done` (UTL@`35425c70`)                       | Per-service per-family `live/` consumer wire-in (consolidated features-service) → Harsh slot 5.                |
+| Phase 6 — features-service cross-cutting UTL primitive                | `done` (UTL@`35425c70` partial)               | Watermark-buffered fan-in scheduler (per-period bucketing + grace-deadline STALE_DATA emission) DEFERRED in-place; per-service cross-cutting consumer wire-in → Harsh slot 5. |
+| Phase 4 cascade_parent_candle — per-shard child-event buffering       | `partial` (UTL@`ee64481a`)                    | Per-shard child-event buffer across run-loop iterations + flush at parent boundary. Deferred — opens once the timeframe DAG SSOT in UAC settles. Tracked in plan body Phase 4 description. |
+| Phase 11.1 endpoint wiring to real `data_freshness` callback          | `design-shipped` (deployment-api@`7d95dc9`)   | Real wiring requires Phase 5/6 producers actually publishing CandleComputed/FeaturesComputed via Harsh slot 5; until then the endpoint correctly returns empty list. |
+| Phase 11.3 UI scaffold tabs-surface integration                       | `design-shipped` (deployment-ui@`f3204ce`)    | Register `<LiveDataStatusTab/>` in the deployment-ui main tabs registry → tracked in `deployment_ui_lifecycle_tabs_2026_05_08`. |
+
+Cross-side handshake — **HARSH SLOT 5 UNBLOCKED**: per-service consumer wire-in across MTDS / MDPS / features-service is
+now actionable. The UTL primitives (`MDPSStreamingAggregator` / `AssetScopedFeaturesRunner` /
+`CrossCuttingFeaturesRunner`) compile, type-clean, ship with their full Protocol surfaces, and have unit tests covering
+every decision branch. Cross-side ping sent to Harsh main via `plans/active/_agent_pings.md`.
+
 ## Deferred work after 2026-05-11 Ikenna slot 4 design-ahead session
 
 The 2026-05-11 Ikenna slot 4 session shipped design-only stubs + Phase 11.1 endpoint stub + Phase 11.3 UI scaffold +
@@ -1332,3 +1352,39 @@ Full-execution criterion (per work-split slot 4 done-definition):
 `from unified_trading_library.streaming import MDPSStreamingAggregator` resolves + the class signature matches the
 design contract (verified via 11 design-only contract tests passing locally against the per-slot worktree). Same for the
 features-service runners + UAC event + deployment-api endpoint + deployment-ui scaffold.
+
+## DONE-2026-05-11 — Ikenna slot 4 RE-TASK (promote-to-implementation)
+
+Slot 1 RE-TASK ping ([`ikenna_orchestrator/_agent_pings.md`](../../ikenna_orchestrator/_agent_pings.md) line 36) verified
+that the design-ahead spawn-prompt's "BLOCKED on features_repo_consolidation Phase 7" gate was **stale**
+([`features_repo_consolidation_2026_05_08.md:678`](features_repo_consolidation_2026_05_08.md) Phase 7 `[x]` shipped
+2026-05-08, three days before this RE-TASK). Two follow-up commits in UTL **PROMOTE the design stubs to real
+implementation**:
+
+- **unified-trading-library@`ee64481a`** — `MDPSStreamingAggregator` real impl: full async run loop wrapping sync
+  `StreamConsumerGroup` via `asyncio.to_thread`; shard-level failure isolation (per-event exception logs + skip-ack);
+  `aggregate_window()` 4-category decision tree (Cat A FRESH-emit / Cat D ZERO_ACTIVITY_BAR / Cat A' no-emit / Cat B'/C
+  STALE-emit) with per-shard `_ShardState` consecutive-empty-windows counter gating Cat E WS-dead-cascade.
+  `cascade_parent_candle` partial impl: degraded-propagation + fanout validation real; per-shard child-event buffering
+  across run-loop iterations deferred to a follow-up. 2 new Protocols (`OHLCVAggregator`, `PriorLTPProvider`,
+  `ManifestRecorder`) added so caller supplies the batch-compatible OHLCV function per live=batch rule. 14 unit tests
+  cover all 5 categories + cascade fanout + degraded propagation.
+
+- **unified-trading-library@`35425c70`** — `AssetScopedFeaturesRunner` + `CrossCuttingFeaturesRunner` real impls. Asset-
+  scoped runner: async run loop subscribing to `streaming.{ag}.candle_computed`; per-event decision tree (BLOCKED skip →
+  no-resolved-groups skip → for each fired feature_group: compute + publish FeaturesComputedEvent with degraded
+  propagation pass-through). Cross-cutting runner: parallel `asyncio.gather` over N upstream consumers; Phase 6.2 worst-
+  of propagation (BLOCKED skip + PUBLISHED_DEGRADED pass-through + STALE freshness pass-through); per-shard fields
+  nullable on cross-cutting events. New Protocol `CrossCuttingFeatureCompute` for the multi-input compute signature.
+  13 unit tests covering all decision branches across both runners.
+
+- **unified-trading-pm@<this commit>** — Phase 4/5/6 checkboxes flipped to `[x]` with `<repo>@<sha>` evidence; status
+  notes updated to `done`; new "Deferred work after 2026-05-11 RE-TASK session" scoreboard section captures the open
+  items (per-service consumer wire-in → Harsh slot 5; watermark-buffered fan-in scheduler partial; cascade per-shard
+  buffer deferred; Phase 11.1 endpoint real-wiring deferred until live producers running). Cross-side ping to Harsh slot
+  5 via `plans/active/_agent_pings.md` to unblock per-service consumer wiring across MTDS / MDPS / features-service.
+
+Test coverage: 14 (MDPS aggregator) + 13 (features runners) = **27 unit tests** across the 3 UTL primitives, all passing
+against the per-slot worktree. The UTL primitives are pure orchestration — feature-family business logic + OHLCV
+aggregation function stay with the consumer services (per Citadel Rule 7 SSOT). Live = batch principle preserved end-
+to-end: the caller supplies the **same** aggregation/compute callables that batch uses.

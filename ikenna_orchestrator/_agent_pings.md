@@ -69,3 +69,11 @@ runners + 11 contract tests) + deployment-api@7d95dc9 (/api/data-status/live + L
 deployment-ui@f3204ce (LiveDataStatusTab scaffold + 5 vitest tests) + PM@789201d0 (codex extension + plan flips +
 scoreboard). All implementation gated on features_repo_consolidation Phase 7 (Harsh slot 2). See
 plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md § DONE-2026-05-11.
+[2026-05-11 10:35 UTC] ikenna-live-pipeline-tab — ✅ RE-TASK DONE slot 4 promote-to-implementation. After your re-task
+ping (features_repo_consolidation Phase 7 cleared 2026-05-08; gate was stale), promoted Phase 4/5/6 UTL stubs to real
+implementation: UTL@ee64481a (MDPSStreamingAggregator full async run loop + 4-category decision tree + cascade-partial)
++ UTL@35425c70 (AssetScopedFeaturesRunner + CrossCuttingFeaturesRunner real impls + Phase 6.2 worst-of propagation) +
+PM@<this commit> (plan flips Phase 4/5/6 → [x], new scoreboard, cross-side ping to Harsh slot 5 unblocking per-service
+consumer wiring). 27 unit tests pass across the 3 UTL primitives. DEFERRED in plan body (not blocking): cascade per-
+shard buffer + cross-cutting watermark-buffered scheduler + deployment-api endpoint real-wiring (needs live producers
+running). See plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md § DONE-2026-05-11 — Ikenna slot 4 RE-TASK.
