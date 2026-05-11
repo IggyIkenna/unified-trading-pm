@@ -31,9 +31,26 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-[2026-05-11 ~now UTC] [main → slot 3] — RE-TASK after ✅ DONE original scope. Pick up 3 carryover items in slot 3's UAC/UTL competency: (a) UAC `EXPECTED_KNOWN_SOURCE_GAP` enum addition to `EmptyConfirmedReason` closed set (operator-approved Phase 1; lands in `manifest_schema_final_gate_2026_05_09.md` scope; covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`); (b) flip sports `available_at` Phase 1 todo in `available_at_lookahead_bias_completion_2026_05_08.md` per Harsh slot 4's `MTDS@c186ecb` ship; (c) answer 4 design Qs Q-A/B/C/D in `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` § "Open design questions". Full brief: `plans/active/work_split_2026_05_11_ikenna.md` § "Slot 3 — RE-TASK BRIEF". **Do NOT touch MDPS VIX-gap consumer** (`_maybe_write_vix_gap_placeholder`) — that's Harsh slot 5's territory per the P0-2 routing. ~2-4 hrs.
+[2026-05-11 ~now UTC] [main → slot 3] — RE-TASK after ✅ DONE original scope. Pick up 3 carryover items in slot 3's
+UAC/UTL competency: (a) UAC `EXPECTED_KNOWN_SOURCE_GAP` enum addition to `EmptyConfirmedReason` closed set
+(operator-approved Phase 1; lands in `manifest_schema_final_gate_2026_05_09.md` scope; covers VIX 15m mid-history gap +
+sports `KNOWN_COVERAGE_GAPS`); (b) flip sports `available_at` Phase 1 todo in
+`available_at_lookahead_bias_completion_2026_05_08.md` per Harsh slot 4's `MTDS@c186ecb` ship; (c) answer 4 design Qs
+Q-A/B/C/D in `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` § "Open design questions". Full brief:
+`plans/active/work_split_2026_05_11_ikenna.md` § "Slot 3 — RE-TASK BRIEF". **Do NOT touch MDPS VIX-gap consumer**
+(`_maybe_write_vix_gap_placeholder`) — that's Harsh slot 5's territory per the P0-2 routing. ~2-4 hrs.
 
-[2026-05-11 ~now UTC] [main → slot 4] — RE-TASK: your spawn prompt's "BLOCKED on features_repo_consolidation_2026_05_08 Phase 7 (Harsh slot 2)" gate is **STALE**. Verified 2026-05-11: `features_repo_consolidation_2026_05_08.md:678` Phase 7 `[x]` flipped; `workspace-manifest.json` shows 8 features-*-service repos `archived_into=features-service archive_date=2026-05-08`; 8 source repos archived on GitHub. Phase 7 cleared 3 days ago. Promote your 5 design stubs to actual implementation: (1) `MDPSStreamingAggregator` UTL stub → real impl per `codex/05-infrastructure/live-pipeline-architecture.md` Phase 4 design; (2) `AssetScopedFeaturesRunner` UTL stub → real impl; (3) `CrossCuttingFeaturesRunner` UTL stub → real impl; (4) `deployment-api /api/data-status/live` endpoint stub → wire to real `data_freshness` callback; (5) `<LiveDataStatusTab/>` deployment-ui scaffold → wire to live API; (6) plan-flip Phase 4/5/6 implementation halves `design-shipped` → `[x]` with `<repo>@<sha>` evidence. Full brief: `plans/active/work_split_2026_05_11_ikenna.md` § "Slot 4 — RE-TASK BRIEF". Coordinate via cross-side ping with Harsh slot 5 (per-service consumers were waiting on your design promotion). ~6-10 hrs.
+[2026-05-11 ~now UTC] [main → slot 4] — RE-TASK: your spawn prompt's "BLOCKED on features_repo_consolidation_2026_05_08
+Phase 7 (Harsh slot 2)" gate is **STALE**. Verified 2026-05-11: `features_repo_consolidation_2026_05_08.md:678` Phase 7
+`[x]` flipped; `workspace-manifest.json` shows 8 features-\*-service repos
+`archived_into=features-service archive_date=2026-05-08`; 8 source repos archived on GitHub. Phase 7 cleared 3 days ago.
+Promote your 5 design stubs to actual implementation: (1) `MDPSStreamingAggregator` UTL stub → real impl per
+`codex/05-infrastructure/live-pipeline-architecture.md` Phase 4 design; (2) `AssetScopedFeaturesRunner` UTL stub → real
+impl; (3) `CrossCuttingFeaturesRunner` UTL stub → real impl; (4) `deployment-api /api/data-status/live` endpoint stub →
+wire to real `data_freshness` callback; (5) `<LiveDataStatusTab/>` deployment-ui scaffold → wire to live API; (6)
+plan-flip Phase 4/5/6 implementation halves `design-shipped` → `[x]` with `<repo>@<sha>` evidence. Full brief:
+`plans/active/work_split_2026_05_11_ikenna.md` § "Slot 4 — RE-TASK BRIEF". Coordinate via cross-side ping with Harsh
+slot 5 (per-service consumers were waiting on your design promotion). ~6-10 hrs.
 
 [2026-05-08 21:21 UTC] wave-8-basefc-validationflip — DONE audit; 74 calcs (not 12), paradigm split, 3-step migration;
 NO code shipped (foreign WIP on UTL registry.py + scope multi-day); successor plan needed post-Phase-6; see
@@ -45,3 +62,10 @@ plans/epics/instruments_live_master_2026_05_08.md § A.9 + A.10 [2026-05-10 06:0
 Phase A Commit 3 + A.7; Q11 RESOLVED. Engine 8-step loop at strategy-service@04c0d52; allocator multi-pair branch (b) at
 strategy-service@de9b4b0; PM plan flips at PM@4184c112 + this commit. Phase A complete; Phase B unblocked next. See
 plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md.
+
+[2026-05-11 ~now UTC] ikenna-phase-1d-tab — STARTED slot 7 (Phase 1.D: alerting + risk + DR). Fanning out 3 sub-agents
+in ONE message: (A) alerting Phase 2.X pattern→event_pattern rename + ML codex; (B) risk Phase 0+1.A-E (RiskRule +
+StrategyFamily + AlertCode 39→45); (C) DR Phase 0+1.A-F (circuit_breaker + kill_switch UAC). Master coordination: I
+commit 6 LIVE_ALERT_RULES entries after Sub-A rename + Sub-B codes land. Plans:
+alerting_service_live_rules_2026_05_07.md / risk_simulations_limits_alerting_2026_05_10.md /
+disaster_recovery_circuit_breakers_2026_05_10.md.
