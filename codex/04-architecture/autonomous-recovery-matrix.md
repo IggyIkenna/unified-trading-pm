@@ -247,9 +247,37 @@ T+300s  PagerDuty CRITICAL: "Multiple venues down"
 
 ---
 
+## Layer-3 BreakerRecoveryMode composes with Layer-4 ErrorAction
+
+The 4-set `ErrorAction` taxonomy (RETRY / RECONNECT / SKIP / FAIL) classifies **post-venue-error responses** at Layer 4
+— after a venue rejects an attempt, the adapter routes via `classify_venue_error()`. This composes with — but is
+distinct from — Layer 3's `BreakerRecoveryMode` 2-set (`manual_unkill` / `auto_cooldown`), which classifies the
+**breaker state machine's exit** from DEGRADED / OPEN / HALF_OPEN. Per-action defaults in `BREAKER_RECOVERY_DEFAULTS`
+(shipped UAC@a7a99b5 per Q8 ratification 2026-05-10):
+
+| BreakerAction | Default recovery mode | Why                                                              |
+| ------------- | --------------------- | ---------------------------------------------------------------- |
+| `BLOCK_NEW`   | `auto_cooldown`       | Least-restrictive; auto-resume safe once metric clears.          |
+| `CANCEL_OPEN` | `manual_unkill`       | Cancelled orders are gone; auto-recovery can't restore them.     |
+| `SCALE_DOWN`  | `auto_cooldown`       | Partial unwind has a natural inverse — full-size resumes safely. |
+| `KILL_ALL`    | `manual_unkill`       | Full unwind requires operator sign-off before re-enable.         |
+
+**How they compose**: a venue rejection at Layer 4 maps to an ErrorAction; that ErrorAction may transition the breaker
+state machine (e.g. repeated `FAIL` classifications open the breaker). Once open, the breaker's
+`BreakerConfig.recovery_mode` (defaulted via `BREAKER_RECOVERY_DEFAULTS[action]`, or explicitly overridden) governs
+exit semantics. Layer 4 `ErrorAction` is per-attempt; Layer 3 `BreakerRecoveryMode` is per-state-transition.
+
+**Cross-references**: [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) — `BreakerAction` +
+`BreakerRecoveryMode` taxonomy. [`kill-switch-event-bus.md`](kill-switch-event-bus.md) — arm/disarm event flow
+consuming recovery decisions. [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) — integrated
+state-machine narrative.
+
 ## Related
 
 - `kill-switch-circuit-breaker.md` — detailed kill switch and circuit breaker mechanics
+- `circuit-breaker-rule-taxonomy.md` — `CircuitBreakerId` / `BreakerScope` / `BreakerAction` / `BreakerRecoveryMode`
+  closed sets (DR plan Phase 8.A)
+- `kill-switch-event-bus.md` — `KillSwitchBus` + audit-log + typed event vocab (DR plan Phase 8.B)
 - `09-strategy/architecture-v2/cross-cutting/risk-gates.md` — health factor thresholds
 - `04-architecture/execution-policy.md` — unwind cost estimation
 - `05-infrastructure/disaster-recovery.md` — infrastructure DR (RTO/RPO, rollback)

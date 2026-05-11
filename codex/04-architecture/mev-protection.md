@@ -373,10 +373,40 @@ mev_policy_id: mainnet-swap-standard-v3 # Reference to artifact-versioned policy
 | `execution_service/config/chain_config.yaml` | MEV protection threshold + private RPC config |
 | UAC `registry/capability_declarations/_defi.py` | `PROTECTED_RPC_URLS` SSOT |
 
+## MEV-driven breaker trigger
+
+When MEV protection's mempool watch detects a sandwich or front-run pattern against in-flight transactions, the
+execution-service emits a typed `MEV_DETECTED` event consumed by the **circuit breaker state machine** per the DR plan
+Phase 8 taxonomy. The breaker fires `BreakerAction.BLOCK_NEW` (UAC@a7a99b5 closed-set value) with
+`BreakerRecoveryMode.AUTO_COOLDOWN` recovery: cooldown expires once the MEV-watch window stays quiet for N seconds
+(configurable per chain — typical defaults: 60s on EVM mainnet, 30s on L2s).
+
+**Trigger conditions** (any one fires `MEV_DETECTED`):
+
+- Sandwich pattern detected: tx pair with same `tx_recipient` flanking ours within ±2 blocks + opposite direction
+- Front-run pattern: pending tx with same `to` + higher `gas_price` than ours, submitted ≤500ms after we broadcast
+- Stale-quote attack: post-broadcast price deviation > MEV protection threshold (default 50 bps) within next 3 blocks
+
+**Recovery semantics**: per the BreakerRecoveryMode auto-cooldown contract (see
+[`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md) § "Layer-3 BreakerRecoveryMode composes with Layer-4
+ErrorAction" for the per-action defaults table), the BLOCK_NEW action defaults to auto-cooldown. Once N consecutive
+mempool-watch windows clear, the breaker auto-disarms and emits `KILL_SWITCH_AUTO_RECOVERED` (alerting AlertCode
+Round 1 ship at UAC@945ad5d).
+
+**Cross-references**: [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) — full `BreakerAction` +
+`BreakerRecoveryMode` enum. [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) — integrated breaker
+state machine including MEV-driven entry. [`kill-switch-event-bus.md`](kill-switch-event-bus.md) — event-bus shape for
+`MEV_DETECTED` consumption.
+
 ## Related Docs
 
 - [`chain-rpc-mev-tenderly.md`](../05-infrastructure/chain-rpc-mev-tenderly.md) — per-chain RPC + MEV +
   Tenderly + gas oracle SSOT.
+- [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) — `BreakerAction` +
+  `BreakerRecoveryMode` closed sets consumed by the MEV-driven breaker trigger above.
+- [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) — full breaker state machine including
+  MEV-detection entry.
+- [`kill-switch-event-bus.md`](kill-switch-event-bus.md) — `KillSwitchBus` event vocab for `MEV_DETECTED`.
 - [`tenderly-execution-provider.md`](tenderly-execution-provider.md) — pre-flight simulation provider.
 - [`interface-credential-convention.md`](interface-credential-convention.md) — wallet key injection.
 - [`flash-loan-receiver.md`](flash-loan-receiver.md) — Aave flash loan receiver contract.
