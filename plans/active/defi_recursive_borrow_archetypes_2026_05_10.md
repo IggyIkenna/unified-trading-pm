@@ -37,6 +37,15 @@ estimate_calibration_note: |
 
 # DeFi recursive-borrow archetypes — Family 1 + Family 2 implementation
 
+> **🟢 PHASE 1 BLOCKER STATUS REFRESHED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)** — Per
+> [`defi_catalogue_chain_primitives_2026_05_10.md`](defi_catalogue_chain_primitives_2026_05_10.md) Phase 3 §
+> "PHASE 3 LENDING-INDICES SPEC FOR slot 5 (Family-1) HANDSHAKE — published 2026-05-12", lending-indices data
+> for Family 1 backtest is **broadly available NOW** with 2-year+ horizons across AAVEV3 (ETH/ARB/BASE/OPT/LINEA/BSC)
+> + COMPOUNDV3 (ETH/ARB/BASE/OPT/SCROLL) + SPARK (ETH). All three original 2026-05-08 "Bug 1/2/3" framings closed
+> as STALE (pre-audit 2026-05-11 slot 3 + 2026-05-12 slot 2). Remaining work (recent-days catch-up VM, P1
+> ManifestFreshnessCache wire-in) does NOT block Family-1 design; pulls fix Day 3 (2026-05-14). **Slot 5: start
+> Family-1 design Day 1**.
+
 ## Why this plan exists
 
 Two recursive-borrow strategy families surfaced in
