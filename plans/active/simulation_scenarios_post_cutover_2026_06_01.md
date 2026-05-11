@@ -53,7 +53,7 @@ formalises the work as a named-successor per CLAUDE.md "Temporary state must hav
   22 (trading guardrails) gate satisfied by pre-cutover compressed scope; broader coverage continues post-cutover.
 - CLAUDE.md "Live = batch — same data, same fields, same timing semantics, different sources OK" — every scenario rides
   prod codepaths.
-- [`disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md`](disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md) —
+- [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md) —
   consumes scenario primitives from the pre-cutover sprint; this plan extends them.
 
 ## Phases
