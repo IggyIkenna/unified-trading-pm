@@ -573,7 +573,16 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 22. **Trading guardrails** — circuit breakers configured per archetype; kill switches wired (codex
     `04-architecture/autonomous-recovery-matrix.md`); alerting-service rules cover live data-freshness + P&L deviation +
     position breaches (codex `04-architecture/alerting-batch-live.md`); auto-recovery for known transient failure
-    classes. **Tab 5 (Agent 5) cycle 2026-05-08 progress** (refresh from 2026-05-07 baseline): Phase 2 service migration
+    classes. **Risk plan Phase 0+1+2.G shipped 2026-05-11** —
+    [`risk_simulations_limits_alerting_2026_05_10`](risk_simulations_limits_alerting_2026_05_10.md) Phase 1 ships UAC
+    risk-rule taxonomy (UAC@`945ad5d`): `RiskRuleId` / `RiskRuleScope` / `RiskRuleConsequence` closed enums; `RiskRule`
+    Pydantic with typed-trigger discriminated union; `kill_switch_scope()` orthogonality mapping per § 7 SSOT seam
+    diagram; 6 new AlertCodes (closed-set 39 → 45); `StrategyFamilyId` risk-aggregation registry + cutover-archetype
+    membership (LST_LEVERAGE_FAMILY ← CARRY_STAKED_BASIS; FUNDING_ARB_FAMILY ← ARBITRAGE_PRICE_DISPERSION). Group F item
+    22 dependency cleared for risk Phases 2-9; sibling plan
+    [`disaster_recovery_circuit_breakers_2026_05_10`](disaster_recovery_circuit_breakers_2026_05_10.md) Phase 1 owns
+    `BreakerRecoveryMode` + `BREAKER_RECOVERY_DEFAULTS` (composes with risk Phase 1.F via cross-reference, not
+    duplication). **Tab 5 (Agent 5) cycle 2026-05-08 progress** (refresh from 2026-05-07 baseline): Phase 2 service migration
     SHIPPED (alerting-service@`b025e83` consumes UAC `LIVE_ALERT_RULES`); Phase 3 envelope `code: AlertCode` field
     SHIPPED (UAC@`2636815` Option A) + 3-service consumer migration (execution-service@`624c36a8` yield_recon +
     funding_recon, position-balance-monitor@`d206ab3` reconciliation_engine + fee_recon, risk-and-exposure@`915f0de`

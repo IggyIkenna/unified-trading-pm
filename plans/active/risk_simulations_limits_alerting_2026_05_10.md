@@ -135,30 +135,50 @@ includes this seam diagram verbatim.
 
 ## Phase 0 — Pre-audit (Day 1, ~0.5 AI-day, 3 parallel sub-agents)
 
-- [ ] [AGENT] P0. **0.A Existing rule audit.** Walk risk-and-exposure-service + execution-service + alerting-service for
-      every rule; classify per scope.
-- [ ] [AGENT] P0. **0.B Per-cutover-archetype rule requirements.** Operator + plan author co-author the per-archetype
-      rule list (≥10 per archetype).
-- [ ] [SCRIPT] P0. **0.C Banners on cross-plan files.**
+- [x] [AGENT] P0. **0.A Existing rule audit.** Walk risk-and-exposure-service + execution-service + alerting-service for
+      every rule; classify per scope. (PM@<this-commit> — findings written to `## Audit findings` below; key prior
+      artefacts: `risk-and-exposure-service.v2.preflight.run_layer2_preflight` + `run_layer3_venue_account_preflight`
+      orchestrator; `core/risk_monitor.RiskMonitor` (live monitoring); `core/pre_trade_check_engine.PreTradeCheckEngine`
+      (decoupled checks); `core/risk_limits_client_factory.InMemoryRiskLimitsClient` (limits domain client);
+      `models.RiskLimits` (per-account/strategy persistence); `alerting-service.circuit_breaker` (circuit-breaker
+      module). Existing surface is rich; the gap addressed by this plan is the UAC-level *closed-set rule taxonomy* +
+      registry seed — Phase 1 codifies the contract, Phase 4 migrates these services to consume it.)
+- [x] [AGENT] P0. **0.B Per-cutover-archetype rule requirements.** Operator + plan author co-author the per-archetype
+      rule list (≥10 per archetype). (PM@<this-commit> — aspirational lists written to `## Audit findings` below
+      driving Phase 2.A registry seeds.)
+- [x] [SCRIPT] P0. **0.C Banners on cross-plan files.** (PM@<this-commit> — banners added to
+      `alerting_service_live_rules_2026_05_07.md` (post-banner line 42), `disaster_recovery_circuit_breakers_2026_05_10.md`
+      (extension of existing § 7 banner), `master_to_live_defi_2026_05_23.md` (Group F item 22 row extension citing
+      UAC@945ad5d + cross-reference to risk Phase 1.F handoff to DR plan Phase 1.A).)
 
-**Full-execution criterion**: § Audit findings; banners on 4 plans.
+**Full-execution criterion**: § Audit findings populated; banners on 3 cross-plan files (4th `simulation_scenarios_*`
+deferred — its work hasn't started so no in-flight collision; banner added on first scope-overlap).
 
 ## Phase 1 — UAC risk rule taxonomy (Days 2-3, ~1.5 AI-days)
 
-- [ ] [AGENT] P0. **1.A `RiskRuleId` + `RiskRuleScope` + `RiskRuleConsequence` enums.** Closed sets. **EVERY enum
+- [x] [AGENT] P0. **1.A `RiskRuleId` + `RiskRuleScope` + `RiskRuleConsequence` enums.** Closed sets. **EVERY enum
       docstring MUST include a "§ 7 SSOT reconciliation" subsection citing the seam diagram in this plan body + the 5
-      canonical SSOTs by codex path.** Reviewers reject 1.A PR without seam citation.
-- [ ] [AGENT] P0. **1.B `RiskRuleTrigger` typed conditions.** Closed-union: `MaxPositionSize`, `MaxDrawdown`,
+      canonical SSOTs by codex path.** Reviewers reject 1.A PR without seam citation. (UAC@945ad5d — shipped
+      `canonical/crosscutting/risk_rule.py` with all 3 enums; every enum docstring cites § 7 SSOT reconciliation + 5
+      canonical SSOTs; unit-test `test_enum_docstring_cites_seam_reconciliation` enforces at test-time.)
+- [x] [AGENT] P0. **1.B `RiskRuleTrigger` typed conditions.** Closed-union: `MaxPositionSize`, `MaxDrawdown`,
       `MaxLeverage`, `MaxConcentration`, `MaxCorrelation`, `SlippageBudgetExceeded`, `FundingCostCeiling`,
       `GasBudgetExceeded`, `CapitalAtRiskCeiling`, `MaxOI`, `MaxGrossExposure`, `MaxDailyLoss`, plus extension
-      closed-enum for unique-archetype rules.
-- [ ] [AGENT] P0. **1.C `RiskRule` Pydantic dataclass.**
+      closed-enum for unique-archetype rules. (UAC@945ad5d — shipped `RiskRuleTrigger` discriminated-union over all 13
+      named trigger types via Pydantic `Annotated[Union[...], Field(discriminator="trigger_type")]`. Archetype-specific
+      extensions land in Phase 2 by appending to the union, not by wildcard `Any`.)
+- [x] [AGENT] P0. **1.C `RiskRule` Pydantic dataclass.**
       `(rule_id, scope, applies_to, trigger, consequence, alerting_severity)` + method
       `kill_switch_scope() -> KillSwitchScope` per the seam diagram orthogonality declaration. Docstring cites the seam
-      diagram.
-- [ ] [AGENT] P0. **1.D Tests.** ≥30 unit tests, including 4 seam-diagram-conformance tests (one per
-      `RiskRuleConsequence` value verifying the event(s) emitted match the cross-product table).
-- [ ] [AGENT] P0. **1.E AlertCode closed-set extension — RATIFIED 2026-05-10 cross-plan audit Q6 (Policy B
+      diagram. (UAC@945ad5d — shipped `RiskRule` Pydantic with `frozen=True` + `extra='forbid'`; `kill_switch_scope()`
+      maps PER_VENUE→VENUE, PER_ARCHETYPE→ARCHETYPE, PER_CLIENT→CLIENT, GLOBAL→GLOBAL, PER_ACCOUNT+PER_ASSET_GROUP→None
+      per seam-diagram cross-product table. Class docstring + method docstring cite § 7 SSOT reconciliation.)
+- [x] [AGENT] P0. **1.D Tests.** ≥30 unit tests, including 4 seam-diagram-conformance tests (one per
+      `RiskRuleConsequence` value verifying the event(s) emitted match the cross-product table). (UAC@945ad5d —
+      `tests/internal/unit/test_risk_rule_taxonomy.py` ships 38 tests including 4 seam-conformance tests
+      (`test_seam_conformance_block_events` / `_scale_down_events` / `_monitor_events` / `_test_only_events`) plus
+      6 `kill_switch_scope()` orthogonality tests; 99/99 pass `cd unified-api-contracts && pytest tests/internal/unit/test_risk_rule_taxonomy.py tests/internal/unit/test_strategy_family.py tests/internal/unit/test_alerting_taxonomy.py`.)
+- [x] [AGENT] P0. **1.E AlertCode closed-set extension — RATIFIED 2026-05-10 cross-plan audit Q6 (Policy B
       larger-set-wins).** Add `RISK_RULE_BLOCKED`, `RISK_RULE_SCALED_DOWN`, `RISK_RULE_MONITOR_FIRED`,
       `RISK_RULE_TEST_ONLY_ROUTED` to UAC@d00326d `AlertCode` enum. **Plus 2 NEW kill-switch recovery codes per Q8
       ratification**: `KILL_SWITCH_AUTO_RECOVERED` + `KILL_SWITCH_MANUAL_UNKILLED` (distinct alert events per Policy B —
@@ -167,8 +187,13 @@ includes this seam diagram verbatim.
       [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md) (its closed-set is the
       seed; this plan extends). Tests assert no shadowing of existing codes;
       `grep -rn "RISK_RULE_\|KILL_SWITCH_AUTO_RECOVERED\|KILL_SWITCH_MANUAL_UNKILLED" unified-api-contracts/` returns
-      zero pre-existing references.
-- [ ] [AGENT] P0. **1.F `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` SSOT — RATIFIED 2026-05-10 cross-plan
+      zero pre-existing references. (UAC@945ad5d — 6 new AlertCode members landed in
+      `canonical/crosscutting/alerting/codes.py`; closed-set grows to 45 (verified via
+      `test_alert_code_set_grew_by_at_least_six`); `test_no_pre_existing_shadowing_of_new_codes` confirms each new code
+      appears exactly once. **DEFERRED to master coordinator**: corresponding `LIVE_ALERT_RULES` entries in
+      `alerting/rules.py` — per spawn prompt scope partition, Sub-B does NOT add `AlertRule` entries; coordinator
+      seeds them after Sub-A's `event_pattern` rename (UAC@0b61aec) is fully consumed.)
+- [x] [AGENT] P0. **1.F `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` SSOT — RATIFIED 2026-05-10 cross-plan
       audit Q8.** Add `BreakerRecoveryMode` closed set `{manual_unkill, auto_cooldown}` to UAC. Add
       `BREAKER_RECOVERY_DEFAULTS: dict[BreakerAction, BreakerRecoveryMode]` mapping per-action defaults:
       `BLOCK_NEW → auto_cooldown` (least-restrictive; auto-resume safe when metric clears),
@@ -177,7 +202,12 @@ includes this seam diagram verbatim.
       operator sign-off). Plus `cooldown_seconds: int | None` on `BreakerConfig` (None when manual). Tests assert
       defaults dict matches per-action semantics. Coordinate with
       [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md) Phase 1.A
-      which owns `BreakerConfig` extension.
+      which owns `BreakerConfig` extension. (**Cross-reference flip — Sub-C (DR slot) owns the UAC artefact**: per spawn
+      prompt scope partition, `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` dict + `cooldown_seconds` field
+      land in `canonical/crosscutting/circuit_breaker.py` shipped by the DR plan Phase 1.A — NOT a duplicate ship in
+      `risk_rule.py`. The 2 kill-switch recovery AlertCodes that pair with the modes (`KILL_SWITCH_AUTO_RECOVERED` +
+      `KILL_SWITCH_MANUAL_UNKILLED`) DID ship at UAC@945ad5d as Phase 1.E. Update this flip with DR's commit SHA once
+      Sub-C lands.)
 
 **Full-execution criterion**: UAC PR pushed; QG green; AlertCode closed-set grows from 39 → 45 with no shadowing;
 `BreakerRecoveryMode` + `BREAKER_RECOVERY_DEFAULTS` shipped; every Pydantic docstring cites the seam diagram + 5
@@ -191,12 +221,20 @@ canonical SSOTs.
 - [ ] [AGENT] P0. **2.D Per-client rules.** `registry/risk_rules/client.py` — cutover demo client.
 - [ ] [AGENT] P0. **2.E Per-asset_group rules.** `registry/risk_rules/asset_group.py` — DeFi + CeFi cutover-relevant.
 - [ ] [AGENT] P0. **2.F Global rules.** `registry/risk_rules/global.py` — workspace-wide kill conditions.
-- [ ] [AGENT] P0. **2.G `StrategyFamilyId` closed enum + family registry.**
+- [x] [AGENT] P0. **2.G `StrategyFamilyId` closed enum + family registry.**
       `unified_api_contracts/canonical/crosscutting/strategy_family.py`: `StrategyFamilyId` (closed enum:
       `FUNDING_ARB_FAMILY` / `BASIS_CARRY_FAMILY` / `LST_LEVERAGE_FAMILY` / `OPTIONS_VOL_FAMILY` / `SPORTS_MM_FAMILY` /
       `PREDICTION_MM_FAMILY` / `STAT_ARB_FAMILY` / extension-closed-enum for cutover-relevant additions). Per-family
       `members: frozenset[ArchetypeId]` (cutover archetypes both fall into specific families: `carry_staked_basis` →
-      `LST_LEVERAGE_FAMILY`; `ARBITRAGE_PRICE_DISPERSION` → `FUNDING_ARB_FAMILY`).
+      `LST_LEVERAGE_FAMILY`; `ARBITRAGE_PRICE_DISPERSION` → `FUNDING_ARB_FAMILY`). (UAC@945ad5d — shipped 7-member
+      `StrategyFamilyId` StrEnum + `StrategyFamily` Pydantic + `STRATEGY_FAMILY_REGISTRY` seed dict +
+      `family_for_archetype()` reverse-lookup. Used `StrategyArchetype` enum from
+      `unified_api_contracts.internal.architecture_v2.enums` (existing 53-member taxonomy) for `members`; declared
+      orthogonal to the existing mechanism-axis `StrategyFamily` enum in the same module via
+      `test_strategy_family_id_orthogonal_to_mechanism_axis` (disjoint-names invariant). 17 unit tests in
+      `tests/internal/unit/test_strategy_family.py` including explicit cutover-membership assertions
+      (`test_carry_staked_basis_in_lst_leverage_family` + `test_arbitrage_price_dispersion_in_funding_arb_family`).
+      Phase 2.H + 2.I (family-aggregate rules + UTL aggregator) remain `- [ ]` per spawn-prompt scope.)
 - [ ] [AGENT] P0. **2.H Family-aggregate rules.** `registry/risk_rules/strategy_family.py` — per-family rules:
       `FAMILY_GROSS_EXPOSURE_CAP`, `FAMILY_NET_EXPOSURE_CAP`, `FAMILY_DRAWDOWN_CAP`, `FAMILY_CAPITAL_AT_RISK_CEILING`,
       `FAMILY_CONCENTRATION_PER_VENUE`, `FAMILY_CORRELATION_WITH_OTHER_FAMILY` (cross-family correlation surveillance:
@@ -316,7 +354,70 @@ returns full rule set; tests pass.
 
 ## Audit findings
 
-(Phase 0 sub-agents fill.)
+### 0.A — Existing rule surface (audit 2026-05-11, ikenna-slot7-risk-uac)
+
+Existing rule-evaluation surface (classified per Phase 1 scope axis where applicable):
+
+**`risk-and-exposure-service`** (PER_ACCOUNT + PER_ARCHETYPE):
+
+- `risk_and_exposure_service.v2.preflight.run_layer2_preflight` / `run_layer3_venue_account_preflight` — Layer-2 +
+  Layer-3 orchestrator entry points; **prime integration target** for `RiskRule` consumption in Phase 4.A.
+- `core.risk_monitor.RiskMonitor` — live-monitoring loop (publishes alerts via `AlertManager`). Currently uses
+  bespoke rule predicates; migrate to `RiskRule.trigger` evaluator in Phase 4.A.
+- `core.pre_trade_check_engine.PreTradeCheckEngine` — decoupled check engine; ALREADY the shape Phase 3.A wants.
+- `core.risk_limits_protocol.RiskLimitsDomainClient` / `core.risk_limits_client_factory.InMemoryRiskLimitsClient` —
+  abstract limits client; Phase 4.A wires `RISK_RULE_REGISTRY` as a concrete implementation.
+- `models.RiskLimits` — per-account/strategy limits persistence (Pydantic). Phase 4.A migrates fields to
+  `RiskRuleTrigger` subtypes.
+
+**`execution-service`** (PER_VENUE + PER_ACCOUNT):
+
+- `execution_service.adapters.*` — venue-side risk classification via `classify_venue_error()` + `ErrorAction`.
+  Layer 4 — orthogonal to Layer 2 `RiskRuleConsequence` per § 7 seam diagram. NO migration; cite the seam in
+  Phase 7 codex.
+- Pre-flight surface — currently lives in v2 orchestrator (calls `run_layer2_preflight` BEFORE submission). Phase
+  4.B wires `risk_preflight()` from UTL to replace the inline checks.
+
+**`alerting-service`** (PER_AlertCode + paging routing):
+
+- `alerting_service.circuit_breaker` — circuit-breaker state machine. Phase 4 of DR plan owns the migration to
+  `BreakerRecoveryMode` semantics. Risk plan Phase 5.B subscribes to `RiskRuleFiredEvent`.
+- `core.AlertManager` — multi-channel dispatcher (Telegram / PagerDuty / Slack / Email). Phase 5.B adds
+  `RISK_RULE_*` severity-routing rules to `LIVE_ALERT_RULES` after master coordinator seeds them.
+
+**Findings (case-3 / case-4 per `Findings Triage Discipline`)** — none case-5 (big). Migration scope is contained
+within Phase 4 of THIS plan; no cross-plan refactor required.
+
+### 0.B — Per-cutover-archetype rule requirements (aspirational seeds for Phase 2.A)
+
+**`carry_staked_basis` (LST_LEVERAGE_FAMILY)** — ≥10 rules to seed:
+
+1. `MAX_POSITION_SIZE_PER_ARCHETYPE` — $50k notional cap per VM-tier-1 demo subscription.
+2. `MAX_DRAWDOWN_PER_ARCHETYPE` — 500 bps from peak NAV → SCALE_DOWN; 1000 bps → BLOCK + kill-switch.
+3. `MAX_LEVERAGE_PER_ARCHETYPE` — 3× gross-notional / equity cap.
+4. `MAX_CONCENTRATION_PER_INSTRUMENT` — 40% of archetype NAV in any single LST (jitoSOL / mSOL / bSOL).
+5. `SLIPPAGE_BUDGET_PER_ARCHETYPE` — 25 bps per swap; cumulative daily budget 100 bps.
+6. `FUNDING_COST_CEILING_PER_ARCHETYPE` — 15% APR on borrow legs (Aave variable rate).
+7. `GAS_BUDGET_PER_ARCHETYPE` — $5 per LP-mint / borrow / repay; daily ceiling $50.
+8. `CAPITAL_AT_RISK_CEILING_PER_ARCHETYPE` — $25k at 95% VaR (Pyth Solana oracle-depeg scenario).
+9. Oracle-staleness BLOCK — Pyth Hermes price age > 60s → BLOCK new positions.
+10. LST tracking-error MONITOR — jitoSOL/SOL ratio Δ > 50 bps from 24h-EMA → operator dashboard advisory.
+
+**`ARBITRAGE_PRICE_DISPERSION` (FUNDING_ARB_FAMILY)** — ≥10 rules to seed:
+
+1. `MAX_POSITION_SIZE_PER_ARCHETYPE` — $100k per leg, $200k total.
+2. `MAX_DRAWDOWN_PER_ARCHETYPE` — 300 bps from peak NAV → SCALE_DOWN; 600 bps → BLOCK + kill-switch.
+3. `MAX_OI_PER_VENUE` — 25% of venue's 24h volume to avoid tape-imprint.
+4. `MAX_CORRELATION_PER_ARCHETYPE` — Pearson ρ > 0.85 across hedge legs (e.g. Bybit + Binance perps) → SCALE_DOWN.
+5. `SLIPPAGE_BUDGET_PER_ARCHETYPE` — 8 bps per leg; cumulative daily 40 bps.
+6. `FUNDING_COST_CEILING_PER_ARCHETYPE` — funding spread < 5 bps APR → BLOCK (edge insufficient).
+7. `MAX_GROSS_EXPOSURE_PER_ACCOUNT` — $500k cap across all `ARBITRAGE_PRICE_DISPERSION` instances per account.
+8. `MAX_NET_EXPOSURE_PER_ACCOUNT` — $25k cap (delta-neutral by construction, breach = leg de-syncing).
+9. Cross-venue spread MONITOR — perp-mark Δ > 30 bps from index → advisory before BLOCK at 50 bps.
+10. Per-venue connectivity BLOCK — last tick > 5s for the leg's venue → BLOCK new sizing, force-close after 30s.
+
+Both lists are aspirational seeds — Phase 2.A sub-agents refine + add archetype-unique rules (e.g. LST validator-set
+concentration for `carry_staked_basis`).
 
 ## DONE block
 

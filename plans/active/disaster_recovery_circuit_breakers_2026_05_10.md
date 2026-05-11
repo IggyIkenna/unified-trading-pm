@@ -37,6 +37,14 @@ related_codex:
 > identifying which of the 5 SSOTs the class composes with + how the seam is preserved. Reviewer rejects Phase 1 PRs
 > that omit it.
 >
+> **🟡 CROSS-PLAN BANNER — Risk plan Phase 1 active (UAC@945ad5d landed 2026-05-11).** Phase 0+1+2.G of
+> [`risk_simulations_limits_alerting_2026_05_10`](./risk_simulations_limits_alerting_2026_05_10.md) shipped the
+> `RiskRuleId` / `RiskRuleScope` / `RiskRuleConsequence` enums + `RiskRule` Pydantic + `StrategyFamilyId` registry + 6
+> new `AlertCode` members (closed-set 39 → 45). **Coordinate ownership** of `BreakerRecoveryMode` +
+> `BREAKER_RECOVERY_DEFAULTS` (this plan's Phase 1.A) — the risk plan's Phase 1.F flip is a cross-reference to that
+> work; do NOT duplicate the enum + dict in `risk_rule.py`. Sub-A's `event_pattern` rename also landed
+> (UAC@0b61aec) — all new `AlertRule` entries MUST use `event_pattern=`, never legacy `pattern=`.
+>
 > **🟢 CROSS-PLAN COORDINATION — Phase 7.B kill-switch tab vs `deployment_ui_lifecycle_tabs_2026_05_08.md` 6-tab
 > shell.** Phase 7.B below ships a NEW deployment-ui kill-switch tab. The lifecycle plan
 > ([`deployment_ui_lifecycle_tabs_2026_05_08.md:152-160`](deployment_ui_lifecycle_tabs_2026_05_08.md)) currently
