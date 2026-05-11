@@ -3327,6 +3327,66 @@ signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Ph
 - [ ] [AGENT] P0. **Codex update**: extend `codex/02-data/availability-manifest-and-data-status.md` with the
       `DATA_QUALITY_SUSPECTED_GAP` reason semantics + the 3-state-vs-2-state explanation.
 
+## Open questions
+
+> **Lifecycle**: in-session Q&A bus per CLAUDE.md "Daily Work-Split Process" § "Plan-of-record + Q&A bus". Status badges
+> 🟡 BLOCKED → ✅ RESOLVED. Resolved Q&As cleaned up at daily ledger sweep; audit trail survives in commits + plan
+> checkbox flips. Distinct from "Tracked open questions (deferred to follow-up plans)" below — that section is for items
+> intentionally deferred to successor plans, not in-flight operator decisions.
+
+### Q1 — [ikenna-writegate-slice-b-tab (slot 2), 2026-05-11 ~13:30 UTC] — slice (b) Phase 5.1-5.7 scope vs `manifest_schema_final_gate_2026_05_09.md` Phase 1 — three contradictions block ship-start
+
+**Status**: 🟡 BLOCKED — needs operator/slot-1 direction before any code lands. Composes with codex_audit_2026_05_11.md
+§ Q1 (F3 v8-schema-owner ambiguity) which is already 🟡 BLOCKED on slot-1/operator reconcile.
+
+The slot-1 work-split task brief for slot 2 ([`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) §
+"Slot 2") names "writegate slice (b) Phase 5.1-5.7 (UAC v8 manifest schema columns: `service_emission_state`,
+`pipeline_mode`, `feature_family`)". Cross-reading this plan body's Phase 5.1-5.7 (lines 2811-2922) + the active P0 plan
+[`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1 + the cross-side ping
+[plans/active/\_agent_pings.md:89-93](_agent_pings.md) (harsh-main 2026-05-11 07:10 UTC F3 v8-schema-owner ambiguity)
+surfaces **three concrete contradictions** the work-split brief did not account for:
+
+1. **SSOT-ownership conflict (F3 known-open).** code_freeze plan `:139` + `:174-179` says writegate slice (b) Phase 5.1
+   owns the v8 column declaration "(NOT a separate `manifest_v8_schema_migration_design` file)"; the active P0 plan
+   `manifest_schema_final_gate_2026_05_09.md` (created 2026-05-09, depends_on writegate-honest-coverage) Phase 1.A/1.B/1.C
+   ALSO claims ownership of `ServiceEmissionStateEnum` + `next_state` resolver + the schema column declaration. Both
+   plans active. Two writers on the same artifact = workspace "No double SSOT" rule violation. **Decision needed**: (a)
+   writegate slice (b) Phase 5.1 is canonical, manifest_schema_final_gate Phase 1 banners as "see writegate slice (b)"
+   + writegate slice (b) absorbs the work; OR (b) manifest_schema_final_gate Phase 1 is canonical, writegate slice (b)
+   Phase 5.1 banners SUPERSEDED + my slot 2 contributes to manifest_schema_final_gate Phase 1 instead.
+
+2. **Column-name mismatch.** slot-1 brief lists v8 new columns as
+   `service_emission_state` + `pipeline_mode` + `feature_family`. But `pipeline_mode` + `feature_family` are **already
+   shipped in UTL `manifest_writer.py`** (v7 / pre-v8 columns at `manifest_writer.py:757` + `:819`). The actual NEW v8
+   columns per `manifest_schema_final_gate_2026_05_09.md` Phase 1.C are: **`service_emission_state` +
+   `last_emission_decision_at` + `expected_window_completeness_pct`**. Suspect the slot-1 brief paraphrased from the
+   code_freeze plan's freeze-gate item 9 (`:145`) which lists "v8 (incl. `service_emission_state`, `pipeline_mode`,
+   `feature_family`)" — the "incl." reads as "v8 includes these column names that are part of the v8 schema state" not
+   "these are the NEW columns being added." **Decision needed**: confirm the 3 new v8 columns are
+   `service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct` (per
+   manifest_schema_final_gate Phase 1.C, which has the authoritative `(str | None)` / `(timestamp | None)` /
+   `(float | None, 0.0-1.0)` type list).
+
+3. **Plan-body Phase 5.2 vs Phase 1.C column-set conflict.** This plan body's Phase 5.2 (line 2849-2858) declares
+   manifest schema columns as `completeness_fraction` + `incomplete_window`. `manifest_schema_final_gate` Phase 1.C
+   declares them as `expected_window_completeness_pct` + (no `incomplete_window`-shaped column;
+   `last_emission_decision_at` is a 3rd column). The two are NOT the same — `completeness_fraction` is `Float64` row-
+   level fraction; `expected_window_completeness_pct` is `(float | None, 0.0-1.0)` per the maximalist plan. Possible
+   reconciliations: (α) they're the same column, one of the two names becomes canonical; (β) they're different columns
+   serving different consumers (writegate's emission_publisher caller flow vs maximalist's emission-policy hook).
+   `incomplete_window` (string, JSON-encoded list per writegate Phase 5.2) may also need to migrate to a different
+   shape or be dropped in favor of event-stream `incomplete_window_count` only.
+
+**Recommendation**: writegate slice (b) Phase 5.1-5.7 ABSORBS into `manifest_schema_final_gate_2026_05_09.md` Phase 1
+work — they're effectively the same May-15-freeze-gate work, and the maximalist plan has the more rigorous Phase 1.A/B/C
+breakdown + dependency chain + workspace-wide consumer sweep already specified. My slot 2 then becomes a Phase 1.A/B/C
+shipping slot. Writegate slice (b) Phase 5.1-5.2 in this plan body gets banners pointing at `manifest_schema_final_gate`
+Phase 1 ("design + column declaration owned by the maximalist plan"). Writegate slice (b) Phase 5.3-5.4 (MDPS adapter
+wire-in) is a SEPARATE concern — that's the `publish_with_manifest_lookup()` end-to-end POC, which lives in writegate's
+domain. Phase 5.5-5.7 (deployment-api/ui + codex + CLAUDE.md + QG) stays in writegate-side scope.
+
+**ASK**: confirm recommendation or redirect. While 🟡 BLOCKED I am NOT touching code; will read read-only context only.
+
 ## Coordination with sibling plans
 
 > **2026-05-06 update**: this plan is now the **umbrella** for the honest-coverage + shard-granularity work-package. See
