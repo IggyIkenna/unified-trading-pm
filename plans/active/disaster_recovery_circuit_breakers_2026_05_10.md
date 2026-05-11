@@ -238,14 +238,17 @@ entry.
 - [ ] [AGENT] P0. **8.B NEW `codex/04-architecture/kill-switch-event-bus.md`.**
 - [ ] [AGENT] P0. **8.C UPDATE `kill-switch-circuit-breaker.md`** — wired to new taxonomy + bus.
 - [ ] [AGENT] P0. **8.D UPDATE `autonomous-recovery-matrix.md`** — per-breaker recovery rule cross-link.
-- [ ] [AGENT] P0. **8.F NEW `codex/04-architecture/risk-breaker-seam.md` (co-owned with risk_simulations Phase 7.E per
+- [x] [AGENT] P0. **8.F NEW `codex/04-architecture/risk-breaker-seam.md` (co-owned with risk_simulations Phase 7.E per
       Q9 ratification 2026-05-10).** Distinct-enums-with-escalation-seam architecture: `RiskRuleConsequence` and
       `BreakerAction` are SEPARATE enums (different triggers, different layers). Seam: N consecutive
       `RiskRuleConsequence.SCALE_DOWN` fires on same `(venue, asset_group)` within window W →
       `BREAKER_ESCALATION_REQUESTED` event consumed by execution-service breaker. UAC SSOT
       `RISK_TO_BREAKER_ESCALATION_MAP` declares thresholds. Breaker state machine subscribes to the event + transitions
       per its own rules (Phase 4.B execution-service integration). Per-action `BreakerRecoveryMode` (Phase 1.A) wires
-      both manual + auto-cooldown paths.
+      both manual + auto-cooldown paths. (PM@d86c8b3c — risk-breaker-seam.md shipped under risk plan Phase 7.E; this
+      cross-references the co-owned ship. Doc cites both plans + Q9 ratification provenance. Original codex commit
+      PM@730914a9 was rebased to PM@d86c8b3c during force-push to per-slot branch tab/ikennaigboaka/7; risk plan
+      Phase 7.A-E flips at PM@da590057 cite the pre-rebase sha — same content, different sha.)
 - [ ] [AGENT] P0. **8.E UPDATE `mev-protection.md`** — MEV-driven breaker entry.
 
 **Full-execution criterion**: 2 NEW + 3 UPDATE; cross-references resolve.
