@@ -1071,6 +1071,64 @@ treasury rebalance reflects expected yield; plan archived per HARD RULE.
 **Full-execution criterion:** ≥7 days of `gs://${PID}-events/events/strategy/defi-recursive-*/` events with daily P&L
 metadata; reconciliation report green; operator sign-off in plan archival commit.
 
+## DONE-2026-05-15 — slot 5 (Ikenna `ikenna-recursive-borrow-tab`) Day-1 design ship 2026-05-12
+
+### Commit table
+
+| Commit | Repo | Scope |
+| ------ | ---- | ----- |
+| `PM@afc6176a` | unified-trading-pm | STATUS-2026-05-11 ack line + pivot to defi_recursive_borrow Phases 1-2 (per `work_split_2026_05_12_ikenna.md` row 5). |
+| `PM@5cb0952f` | unified-trading-pm | **Family 1 topology design SSOT** (per-chain × per-lender) — 3-sub-agent parallel fan-out (Ethereum + Arbitrum + Base) reconciled. Top-7 May-23 viable cells ranked. P0 SILENT CORRECTNESS BUG captured: `defi_reserve_params.py:175 get_reserve_params(asset, chain)` ignores chain arg. P0 missing `ARCHETYPE_CONFIG_SEED` rows for both enum members. 11 in-plan UAC todos + 2 cross-plan annotations. |
+| `PM@3fbe82ca` | unified-trading-pm | **Family 2 delta-hedge topology design SSOT** — 3-sub-agent parallel fan-out (Hyperliquid + Bybit + delta-hedge math). Closed-form delta math: `E_actual ≈ base` for all `(ltv, d)`. Net APR formula. Top-3 cells: HL-PRIMARY × {Aave-Eth, Morpho-Eth, Bybit-secondary}. P0 duplicate Hyperliquid connectors + missing `VENUE_ERRORS_DEFI` HL entries. 8 P0 + 5 P1 + 5 P2 in-plan todos + 1 cross-plan annotation. |
+| `PM@158dd8b1` | unified-trading-pm | **Phase 3 design — strategy-service factory + target-universe catalog**. Direct catalog-read pre-audit confirmed `factory.py:63` + `catalog.py:1958` dispatch dicts have NO Family 1/2 entries (silent runtime-error). SINGLE engine class with config-driven dispatch decision. Paste-ready Python for `_build_carry_recursive_borrow_lending_only` (7 cells) + `_build_carry_recursive_borrow_perp_hedged` (10 cells). 5 P0 implementation gates. |
+| `PM@03492b96` | unified-trading-pm | **Phase 12 design — per-family backtest scenario set**. 14 scenarios across 3 categories (4 funding-regime + 5 liquidation-stress + 5 venue/bridge-failure). Per-cell success verdict closed set. Pytest-parametrised harness shape consuming slot 6 PoolMatcher fixtures. 6 P0/P1 implementation gates + 3 cross-plan annotations needed. |
+| `PM@c7d0ed88` | unified-trading-pm | **Stream C C-enum.3 + C-enum.4 closed** — AD-1 framing reframed (8→11 corrected to 8→10 per codex sweep finding ZERO documented-but-not-in-enum archetypes); `uac@d02cce2` cited as shipped evidence. C-enum.3 downstream sweep migrated from archived `leveraged_leg_controller_2026_05_01.plan.md` to defi_recursive_borrow Phase 3 design as canonical wiring spec. Closes 2026-05-11 RE-TASK Tier 2 #6 carry-forward. |
+
+### AI-day delivery (calibrated; cycle budget ~14 calibrated AI-days for slot 5)
+
+| Item | Class | Calibrated AI-days delivered |
+| ---- | ----- | ---------------------------- |
+| Status line + boot sweep | refactor | 0.05 |
+| Family 1 topology (3-sub-agent research + synthesis) | research | ~3.0 |
+| Family 2 topology (3-sub-agent research + synthesis) | research | ~3.0 |
+| Phase 3 strategy-service factory design | design | ~1.0 |
+| Phase 12 backtest scenarios design | design | ~1.5 |
+| Stream C C-enum.3+4 closure | refactor | ~0.5 |
+| **Total Day 1** | | **~9.0 calibrated AI-days** (~64% of ~14 budget) |
+
+Remaining ~5 calibrated AI-days budget for Days 2-4 of cycle (per density-push target 3.5-4/day): could be deployed on
+Phase 4 (Solidity FlashLoanReceiver extended-receiver design) + Phase 5/7/8 design completions + Phase 6
+(Hyperliquid LIVE wire-up DESIGN — implementation = Harsh/code repo work) OR redeployed to higher-priority slot
+absorption.
+
+### Day-2 deferred work — for slot 5 or operator re-task
+
+| Phase / item | Status as of 2026-05-12 EOD slot-5-day-1 | Successor / blocker |
+| ------------ | --------------------------------------- | ------------------- |
+| Phase 4 — Extended FlashLoanReceiver.sol design | TODO; carries Solidity design surface (action-encoder pattern vs hard-coded loops). Slot 6's AMM PoolMatcher Protocol consumable as a co-design input. | Slot 5 Day 2 OR operator re-task |
+| Phase 5 — RecursiveLoopOrchestrator design | TODO; consumes Phase 4 contract spec + Family 1+2 cell config schemas (this plan). Persistent + flash driver shape. | Slot 5 Day 2-3 |
+| Phase 6 — Hyperliquid LIVE wire-up DESIGN | TODO; EIP-712 signing + REST + WS + DUPLICATE CONNECTOR consolidation. Implementation = Harsh / execution-service code. | Slot 5 Day 2 design |
+| Phase 7 — PerpHedgeSizer + USDC margin top-up DESIGN | TODO; closed-form math + bridge-latency budget already in Family 2 design. | Slot 5 Day 2 |
+| Phase 8 — HealthFactorMonitor + alerting DESIGN | TODO; alert codes already enumerated in Family 1+2 + Phase 12 scenario taxonomy. | Slot 5 Day 2 |
+| Phase 10 — Codex SSOT updates DESIGN | TODO; 7 codex docs touchpoints; rolls alongside Day 2-4. | Slot 5 Day 2-4 |
+| Phase 11 — deployment-api + deployment-ui DESIGN | TODO; ArchetypeMatrix variant rendering + HealthFactorMonitor live tile. | Slot 5 Day 3-4 |
+| Phase 4 implementation (Solidity) + Phase 5 impl (execution-service code) + Phase 6 impl (HL live) + Phase 9 impl (matching engine) + Phase 12 impl (test harness) | DEFERRED to Harsh code-side workstreams | Cross-side handshake post slot 5 design completion |
+
+### Day-2 dependency landed mid-cycle (queued for Phase 2/3 implementation)
+
+- ✅ **Slot 4 wallet schema SHIPPED @uac@d721b6a 2026-05-12** per `_agent_pings.md:34` — `WalletProvisioningConfig` + `SigningSurface` (5-value StrEnum) + `WalletKind` (4-value StrEnum) + `SpendingCaps` frozen dataclass importable from `unified_api_contracts.internal.domain.defi`. **Family 1/2 archetype config row shape (per slot 4 spec)**: `kind=WalletKind.HOT_TRADING` + `archetype_id="recursive_borrow_<family>"` + `allowed_protocols={"AAVE_V3", ...}` + `signing_surface=SigningSurface.CLOUD_KMS_ENCRYPTED` for May-23 cutover (flippable to `FIREBLOCKS_MPC` June-1 when client provides creds). `SpendingCaps` (per_tx / per_hour / per_day / per_protocol map) wired per-cell. Phase 3 catalog builder + Phase 2 config schema consume this in Day-2 implementation pass. **In-plan todo**: extend `_build_carry_recursive_borrow_lending_only` + `_build_carry_recursive_borrow_perp_hedged` config dicts with `wallet_provisioning_config_ref: "recursive_borrow_<family>_<chain>_<lender>"` field (closed-set string keys matching `WalletProvisioningConfig` registry entries).
+
+### Findings + cross-plan annotations queued (Findings Triage)
+
+The following annotations need to land in the target plans (queued, NOT yet annotated by slot 5 to avoid foreign-file
+edit collision per CLAUDE.md "Two teammates × multiple parallel agents" rule):
+
+- **defi_catalogue_chain_primitives_2026_05_10.md Phase 3**: (a) verify `funding_rate` data_type capture for ETH-PERP on Hyperliquid + Bybit at ≥1h cadence with ≥1y horizon (Family 2 Phase 7.5 30d-mean feature dep); (b) instruments-service per-(chain, protocol) reserve listings for Arbitrum Aave V3 (11 reserves) + Base Aave V3 (7 reserves) — MTDS `lending_indices` adapter has no instrument universe for non-Ethereum chains without these.
+- **defi_simulation_realism_2026_05_10.md**: extend golden-harness corpus to cover scenarios B1-B5 (LST oracle shock variants) + C4 (Uniswap V3 pool drain). Slot 6's existing fixtures cover happy-path slippage; scenario fixtures need stress-shape variants.
+- **simulation_scenarios_topology_price_shocks_2026_05_09.md**: Category B scenarios align with topology-shock taxonomy; check for SSOT overlap (closed-set scenario IDs should NOT drift between plans).
+- **defi_master_2026_05_07.md**: `UniswapConnector.swap_exact_input` SwapRouter02 address `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45` is **Ethereum mainnet**. Base + Arbitrum SwapRouter02 addresses differ — Family 1 loop unwinds on those chains need separate connector config.
+- **master_to_live_defi_2026_05_23.md Group F item 18** (2-year batch backtest run): Phase 12 satisfies via full scenario matrix; update master plan item-18 wording to reference scenario ID set.
+
 ## Temporary states + canonical follow-up plans
 
 - **P1 lending protocols (Spark / Morpho Blue / Maker DSR)** deferred from Phase 1; successor plan:
