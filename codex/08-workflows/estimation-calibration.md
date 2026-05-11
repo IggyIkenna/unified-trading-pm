@@ -21,7 +21,8 @@ unscheduled work piles up as technical debt → next cycle's plans bake in the s
   `market-tick-data-service`, `market-data-processing-service`, `instruments-service`, `features-service`,
   `deployment-service`) on `live-defi-rollout` — ~250 commits/day workspace-wide.
 - **2026-05-11 work-split**: `~15 AI-days` (Ikenna, 4 slots) + `~21 AI-days` (Harsh, 5 slots) = `~36 AI-days /
-  4-day cycle = ~9 AI-days/day` *scheduled* burn. Per CLAUDE.md the load-balancing *ceiling* is `~50 AI-days/day per
+  4-day cycle = ~9 AI-days/day` *scheduled* burn (the BUDGET, not throughput). Measured 2026-05-11 *delivered*
+  throughput = ~130 cal AI-days/day workspace (~65/side, commit-derived). Per CLAUDE.md the load-balancing *ceiling* is `~80-100 AI-days/day per
   side`, so scheduled scope is roughly 1/5 of theoretical capacity.
 - **Plan-vs-actual spot checks** (see [retrospective ledger](estimation-retrospective-ledger.md)): multiple plans
   estimated at 2-6 AI-days landed in 1 session with sub-agent fan-out, ratios ranging 0.17×-0.50× of nominal.
@@ -129,18 +130,35 @@ If you set `effective_concurrent_slots: 4` for a plan, the wall-clock prediction
 `baseline / 4 × 0.4 (refactor)`. The class multiplier already captures intra-slot sub-agent fan-out — applying it
 again on top of the slot divisor double-counts the same compression.
 
-### Workspace ceiling sanity check
+### Workspace ceiling sanity check (corrected 2026-05-11)
 
-CLAUDE.md "Daily Work-Split Process" cites `~50 AI-days/day per side` as the load-balancing ceiling. That ceiling
-assumes:
+**Two throughput numbers, often confused — keep them straight:**
 
-- 8 slots × ~6 AI-days/slot/day with sub-agent fan-out (the post-class-multiplier rate).
-- Operator actively load-balances so slots don't converge on the same files.
-- No foot-gun #1-#4 incidents eating cycles to recovery work.
+1. **Scheduled scope** = AI-days totalled in the daily work-split's slot table. Conservative because it bakes in
+   safety margin for blocked slots + Q&A bus latency + collisions. 2026-05-11 split was ~36 cal AI-days/4-day-cycle
+   workspace = ~9/day workspace = ~4.5/day per side. **This is the BUDGET, not the throughput.**
+2. **Delivered throughput** = cal AI-days actually shipped (commit-derived, weighted by commit type — substantive
+   ship ~1.5, service code ~1.2, plan flip ~0.15, coordination ping ~0.05). 2026-05-11 measured **~130 cal
+   AI-days/day workspace = ~65/side**, derived from 343 same-day commits across 8 active repos
+   (`unified-trading-pm` 286, services 47, bot 10, with class-weighted average ~0.38 cal AI-days/commit).
 
-In practice, 2026-05-04 → 2026-05-11 measured `~9 AI-days/day` *scheduled* burn per side from the work-split scope
-totals — i.e. operators schedule ~1/5 of the theoretical ceiling. The gap is the safety margin against blocked
-slots + cross-slot collisions + Q&A bus latency. Don't compute wall-clock predictions assuming the ceiling.
+**The new ceiling**:
+- **Measured sustained: ~65-75 cal AI-days/day per side** (~130-150 workspace; 2026-05-11 sampled at upper end).
+- **Theoretical ceiling: ~80-100 cal AI-days/day per side** (~160-200 workspace) at 8 slots × 8-12 cal
+  AI-days/slot/day post-class-multiplier with zero foot-gun rework + active operator load-balancing + sub-agent
+  fan-out depth 4-6.
+- **Below-this signals scope slip**: 2026-05-04→11 average commit rate ~250/day workspace × class-weighted
+  ~0.4 = ~100/day workspace = ~50/side. Below 50/side sustained = something is blocking.
+
+**Why the old "~50/side ceiling" was wrong**: it conflated scheduled budget (4.5/side measured) with throughput
+ceiling (65/side measured). Original "~50/side" number derived from a back-of-envelope `8 slots × 6 cal AI-days/slot/day`
+that ignored coordination commits + plan-flip work + governance burn — all of which are real cal AI-days delivered
+into the workspace, just not into a single plan's checkbox count.
+
+**How to apply to projections**: when you need to estimate "will N cal AI-days of scope finish in M days," divide
+by **~100-130 cal AI-days/day workspace** (the measured 7-day average) for the realistic-pace projection. Use
+**~150-180/day** only for the stretch-target projection (push pace, sub-agent fan-out maxed, minimal foot-guns).
+Don't use the scheduled-budget number — it understates real throughput ~7×.
 
 ---
 

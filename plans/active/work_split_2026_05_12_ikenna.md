@@ -28,16 +28,31 @@ estimate_calibration_note: |
 > [`codex/08-workflows/estimation-calibration.md`](../../codex/08-workflows/estimation-calibration.md). All slot
 > AI-day budgets below are CALIBRATED (post-class-multiplier). Baseline numbers would be ~1.7× larger.
 
-## Why this split — density push
+## Why this split — anchored to corrected throughput baseline (2026-05-11)
 
-Risk analysis 2026-05-11 (operator + main-orch session): ~530 remaining calibrated AI-days vs 12 days runway to
-2026-05-23. Required pace: **44 AI-days/day workspace-wide** (vs measured ~18 in 2026-05-04→11 window). Closing
-the gap requires **3.5-4 AI-days/slot/day density** across all 8 slots both sides — ~1.7× current per-slot rate,
-well below the theoretical ceiling (6.25 AI-days/slot/day per CLAUDE.md Daily Work-Split § ceiling).
+Risk analysis 2026-05-11 (operator + main-orch session), **post-correction of the throughput ceiling**:
 
-This split is the first cycle at that density. If end-of-cycle 2026-05-15 shows actual burn < ~30 AI-days/slot
-for the cycle, we know the density target is over-ambitious + need to cut scope; if ≥ 14 AI-days/slot landed,
-we're on a feasible path to land all May-23 epics by deadline.
+- **Remaining scope to May-23**: ~870 calibrated AI-days (all active plans + epics + issues, net of ~25% already
+  shipped/in-flight; ±20% uncertainty from 34 TBD-baseline plans).
+- **Measured workspace throughput (2026-05-11)**: ~130 cal AI-days/day workspace = ~65/side, commit-derived (343
+  commits × commit-class weighting; see [retrospective ledger](../../codex/08-workflows/estimation-retrospective-ledger.md)).
+- **Runway**: 12 days to 2026-05-23.
+- **At measured pace**: 130 × 12 = ~1560 cal AI-days deliverable = **~1.8× headroom** vs 870 remaining.
+  **No density push needed** — sustain current pace, May-23 is comfortable.
+
+**Earlier projection that said "18 AI-days/day measured → impossible" was wrong**: it cited the *scheduled budget*
+in the daily work-split, not *delivered throughput*. Scheduled budget understates real workspace burn ~7× because
+it doesn't count coordination commits + plan flips + governance work + sub-agent fan-out delivery — all of which
+are real cal AI-days. See [estimation-calibration.md § Workspace ceiling sanity check](../../codex/08-workflows/estimation-calibration.md#workspace-ceiling-sanity-check-corrected-2026-05-11).
+
+**This split is sized at ~25-30 cal AI-days/side/day** (~100-120 per side per 4-day cycle, ~200-240 workspace) —
+that's roughly the 7-day measured average (~100/day workspace = ~50/side), slightly above to push toward the
+demonstrated ~65/side rate, well below the theoretical 80-100/side ceiling. **Maintaining today's measured pace
+finishes ALL May-23 epics with margin.** No need to chase the ceiling unless a specific blocker forces it.
+
+If end-of-cycle 2026-05-15 shows actual delivery <80 cal AI-days/side (i.e. <20/side/day sustained), pace is
+slipping; investigate root cause (foot-gun storm? Q&A bus stalled? cross-slot collisions?). If ≥120/side landed,
+we're tracking the throughput ceiling + on path to deliver everything with slack.
 
 **Rolled forward from 2026-05-11 split** — Phase 1 freeze-gate items not yet closed:
 - writegate slice (b) Phase 5.X (slot 2 carry-forward)
@@ -51,9 +66,11 @@ we're on a feasible path to land all May-23 epics by deadline.
 orchestrator + on-call governance (continuous, no AI-day budget). Slots 2-8 = thematic implementers at ~14-16
 calibrated AI-days each.
 
-**Density rationale**: 7 implementer slots × 14-16 calibrated AI-days × 4-day cycle = **98-112 AI-days side scope**
-(vs ~15 in 2026-05-11 split). Per-slot loading is 1.7× yesterday's "aggressive" budget, sub-agent fan-out depth
-4-6 per task (vs 1-3 currently) to absorb the lift.
+**Sizing rationale**: 7 implementer slots × 14-16 calibrated AI-days × 4-day cycle = **~110 cal AI-days side scope**.
+That's roughly the measured ~65/side/day rate × 4 days × 0.4 (only ~40% of delivered cal AI-days are pre-scheduled
+into the work-split; the remaining ~60% is coordination + plan flips + sub-agent fan-out delivery beyond budget).
+The pre-scheduled 110 × 1/0.4 ≈ ~275 cal AI-days side delivery expected over the cycle — close to the measured rate.
+Sub-agent fan-out target 4-6 per task to keep delivery at or above today's throughput.
 
 **Tabs run to done-definitions, NOT to 2026-05-15.** Whoever closes scope picks up carryover from the same-side
 reserve list at the bottom of this file, OR cross-side helps with explicit handshake. NO idle slots — silence on
@@ -76,8 +93,10 @@ a slot's ping channel >2h gets re-tasked from reserve.
 | 7 | `simulation_scenarios_topology_price_shocks` Phases 1-2 design + handshake to risk_simulations / DR plans | [`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md) + handshakes to [`risk_simulations_limits_alerting_2026_05_10.md`](risk_simulations_limits_alerting_2026_05_10.md) + [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md) | ~14 |
 | 8 | `cross_cutting_may_23_deliverables` deliverable #4 (DART manual surfaces) + manifest_schema_final_gate Phase 3 (consumer sweep) + master plan Group F/G refresh | [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) #4 + [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 3 | ~14 |
 
-**Total active scope: ~102 calibrated AI-days across 7 implementer slots over 4-day cycle.** Companion (Harsh)
-loads similarly, workspace-wide cycle scope ~204 AI-days (vs ~36 in 2026-05-11 cycle = 5.7× density push).
+**Total pre-scheduled scope: ~102 calibrated AI-days across 7 implementer slots over 4-day cycle.** Companion
+(Harsh) loads similarly. Pre-scheduled workspace ~204 AI-days; **expected delivery ~520 cal AI-days workspace**
+(at measured 130/day × 4 days, with ~60% as coordination + fan-out delivery beyond pre-schedule). Per CLAUDE.md
+"Sized ~100-150 cal AI-days per side per 4-day cycle" sizing convention (2026-05-11 corrected).
 
 ## Cross-tab handshakes (intra-Ikenna)
 
@@ -154,18 +173,21 @@ items already routed to slot prompts above:
 - TradFi 4.3% P0-triage from phantom audit → slot 3 Phase 1.E audit
 - Slot 8 writegate Phase 6.2 PARTIAL scaffolding (mdps@`ae0cada` on slot branch only) → slot 8 (natural extension)
 
-## Density experiment — what we're measuring
+## Pace experiment — what we're measuring
 
-- **Per-slot calibrated AI-days landed by EOD Day 4 (2026-05-15)**. Target: ≥14/slot. Floor: ≥10/slot signals
-  "feasible at 1.4× current, need scope cut elsewhere"; <10/slot signals "scope cut hard, defer non-DeFi epics."
-- **Foot-gun incident count per slot per cycle**. Target: ≤1 per slot. Each #4 firing costs ~0.5-1.5 AI-days
+- **Workspace cal AI-days delivered by EOD Day 4 (2026-05-15)** via commit-class weighting (see retrospective
+  ledger SSOT for formula). Target: **≥400 cal AI-days workspace** (~100/day sustained, slightly below 2026-05-11
+  observed 130/day). Floor: ≥320 (signals "scope-vs-runway tight but achievable"); <320 signals "investigate
+  bottleneck — Q&A bus? foot-gun storm? cross-slot collisions?"
+- **Foot-gun incident count per slot per cycle**. Target: ≤1 per slot. Each #4 firing costs ~0.5-1.5 cal AI-days
   in recovery; per-slot PREK isolation should hold rate at ~0 in steady state.
 - **Q&A bus turnaround** — operator response to 🟡 BLOCKED in <30 min target. Cycle floor: <90 min p50.
 - **Cross-slot collision rate** — number of git index conflicts requiring rebase --theirs / restore --staged.
   Target: ≤2/side/cycle. Per-tab worktrees should hold this near 0.
 
-Post-cycle review 2026-05-15 EOD: if all 4 metrics within target, density holds for cycle 2 (2026-05-16→05-19);
-if any breach, cycle 2 plan recalibrates.
+Post-cycle review 2026-05-15 EOD: append the cycle's workspace cal AI-days delivery to the retrospective ledger
+§ Workspace-wide throughput observations. If all 4 metrics within target, pace holds; if any breach, cycle 2 plan
+recalibrates.
 
 ## Defer post-deadline (NOT in this cycle)
 

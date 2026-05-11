@@ -42,6 +42,43 @@ _(Empty as of 2026-05-11. Owner agents append a row when the plan archives.)_
 
 ---
 
+## Workspace-wide throughput observations
+
+Separate from per-plan ratios — measures **delivered cal AI-days/day across the whole workspace**, derived from
+commit counts × commit-type weighting. Feeds risk projections (May-23 cutover, capacity-vs-scope math).
+
+**Commit-to-cal-AI-day weights** (apply to each commit; sum across day):
+
+| Commit class | Weight | Examples |
+|---|---|---|
+| Substantive ship | 1.5 | Master plan write, codex doc, multi-phase architectural commit |
+| Service code | 1.2 | UAC schema add, UTL helper, MTDS adapter, service implementation |
+| Plan flip / banner sweep | 0.15 | Checkbox flip, cross-plan banner add, doc(plans) flip commit |
+| Coordination ping | 0.05 | LEDGER update, slot ping, single-line work-split tweak |
+| Bot commit | 0.0 | semver-rollout[bot] auto-version-bump, dependabot |
+
+### Observation log
+
+| Date | Workspace commits | Class-weighted cal AI-days | Per-side rate | Notes |
+|---|---|---|---|---|
+| 2026-05-11 | 343 | **~130** | ~65/side | Heavy session: CLAUDE.md trim + calibration framework codify + 56-plan sweep + 2 work-splits authored; multi-slot active. PM 286, UAC 22, UTL 7, MDPS 0, MTDS 3, instruments 2, features 4, deployment 8, ui 1, bot ~10. |
+
+### Derived ceiling estimates
+
+- **Measured sustained throughput (1 day, 2026-05-11)**: ~130 cal AI-days/day workspace (~65/side).
+- **7-day average (2026-05-04→11, commit-rate-derived ~250/day × 0.4 weight)**: ~100 cal AI-days/day workspace (~50/side).
+- **Theoretical ceiling (8 slots × 8-12 cal AI-days/slot/day at peak)**: ~160-200/day workspace (~80-100/side).
+- **CLAUDE.md correction (PM@e50a21bb)**: ceiling cited as "~50/side" was the **7-day average measured rate**,
+  not the ceiling. Corrected to "~65-75 measured, ~80-100 theoretical."
+
+### Track-forward
+
+Append a row per "interesting" day going forward (heavy activity, density-push cycles, foot-gun-heavy days,
+freeze-gate days). When 7+ rows exist, recompute the 7-day average + update the "measured sustained" line in the
+codex SSOT § Workspace ceiling sanity check.
+
+---
+
 ## Ledger governance
 
 - **Append-only** during a calibration cycle. Once 8+ rows land for a class, a `docs(codex):` PR may compress

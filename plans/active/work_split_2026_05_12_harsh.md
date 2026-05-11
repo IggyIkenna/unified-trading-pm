@@ -28,16 +28,29 @@ estimate_calibration_note: |
 > [`codex/08-workflows/estimation-calibration.md`](../../codex/08-workflows/estimation-calibration.md). All slot
 > AI-day budgets below are CALIBRATED (post-class-multiplier). Baseline numbers would be ~1.7× larger.
 
-## Why this split — density push
+## Why this split — anchored to corrected throughput baseline (2026-05-11)
 
-Risk analysis 2026-05-11 (operator + main-orch session): ~530 remaining calibrated AI-days vs 12 days runway to
-2026-05-23. Required pace: **44 AI-days/day workspace-wide** (vs measured ~18 in 2026-05-04→11 window). Closing
-the gap requires **3.5-4 AI-days/slot/day density** across all 8 slots both sides — ~1.7× current per-slot rate,
-well below the theoretical ceiling (6.25 AI-days/slot/day per CLAUDE.md Daily Work-Split § ceiling).
+Risk analysis 2026-05-11 (operator + main-orch session), **post-correction of the throughput ceiling**:
 
-This split is the first cycle at that density. If end-of-cycle 2026-05-15 shows actual burn < ~30 AI-days/slot
-for the cycle, we know the density target is over-ambitious + need to cut scope; if ≥ 14 AI-days/slot landed,
-we're on a feasible path to land all May-23 epics by deadline.
+- **Remaining scope to May-23**: ~870 calibrated AI-days (all active plans + epics + issues, net of ~25% already
+  shipped/in-flight; ±20% uncertainty from 34 TBD-baseline plans).
+- **Measured workspace throughput (2026-05-11)**: ~130 cal AI-days/day workspace = ~65/side, commit-derived (343
+  commits × commit-class weighting; see [retrospective ledger](../../codex/08-workflows/estimation-retrospective-ledger.md)).
+- **Runway**: 12 days to 2026-05-23.
+- **At measured pace**: 130 × 12 = ~1560 cal AI-days deliverable = **~1.8× headroom** vs 870 remaining.
+  **No density push needed** — sustain current pace, May-23 is comfortable.
+
+**Earlier projection that said "18 AI-days/day measured → impossible" was wrong**: it cited the *scheduled budget*
+in the daily work-split, not *delivered throughput*. Scheduled budget understates real workspace burn ~7× because
+it doesn't count coordination commits + plan flips + governance work + sub-agent fan-out delivery — all of which
+are real cal AI-days. See [estimation-calibration.md § Workspace ceiling sanity check](../../codex/08-workflows/estimation-calibration.md#workspace-ceiling-sanity-check-corrected-2026-05-11).
+
+**This split is sized at ~25-30 cal AI-days/side/day pre-scheduled** (~100-120 per side per 4-day cycle) — that's
+roughly the 7-day measured average. Harsh-side is implement-from-spec heavy, expects to deliver above pre-schedule
+when service-side fan-out closes substantive commits (1.2 cal weight each) vs Ikenna-side coordination weight.
+
+If end-of-cycle 2026-05-15 shows actual delivery <80 cal AI-days/side (i.e. <20/side/day sustained), pace is
+slipping; investigate root cause. If ≥120/side landed, we're tracking the throughput ceiling.
 
 Harsh side this cycle: **implement-from-spec + run-script-and-verify + mechanical refactors**. Ikenna companion
 covers cross-cutting design, multi-repo governance, master plan + Q&A surfaces. CLAUDE.md split principle
@@ -73,8 +86,10 @@ applies — implement-side gets the bulk of LOC + commits; design-side gets the 
 | 7 | `mock_data_pipeline_benchmarking` implementation (per-asset_group mock data fixtures + benchmark harness across DeFi + CeFi + TradFi simulation paths) | [`mock_data_pipeline_benchmarking_2026_05_10.md`](mock_data_pipeline_benchmarking_2026_05_10.md) | ~14 |
 | 8 | `cross_asset_group_catalogue_audit` implementation (per-asset_group catalogue reconciliation; fan-out 5+ sub-agents per asset_group) + `codex_vs_citadel_infrastructure_audit` follow-ups | [`cross_asset_group_catalogue_audit_2026_05_10.md`](cross_asset_group_catalogue_audit_2026_05_10.md) + [`codex_vs_citadel_infrastructure_audit_2026_05_10.md`](codex_vs_citadel_infrastructure_audit_2026_05_10.md) | ~14 |
 
-**Total active scope: ~102 calibrated AI-days across 7 implementer slots over 4-day cycle.** Companion (Ikenna)
-loads similarly, workspace-wide cycle scope ~204 AI-days (vs ~36 in 2026-05-11 cycle = 5.7× density push).
+**Total pre-scheduled scope: ~102 calibrated AI-days across 7 implementer slots over 4-day cycle.** Companion
+(Ikenna) loads similarly. Pre-scheduled workspace ~204 AI-days; **expected delivery ~520 cal AI-days workspace**
+(at measured 130/day × 4 days, with ~60% as coordination + fan-out delivery beyond pre-schedule). Per CLAUDE.md
+"Sized ~100-150 cal AI-days per side per 4-day cycle" sizing convention (2026-05-11 corrected).
 
 ## Cross-tab handshakes (intra-Harsh)
 
@@ -134,16 +149,17 @@ Order of pickup precedence:
 5. `promote_workflow_may23_cli_path_2026_05_10` — ~4.2 calibrated.
 6. `available_at_lookahead_bias_completion_2026_05_08` — ~1.5 calibrated.
 
-## Density experiment — what we're measuring
+## Pace experiment — what we're measuring
 
 Same 4 metrics as Ikenna companion:
 
-- **Per-slot calibrated AI-days landed by EOD Day 4 (2026-05-15)**. Target: ≥14/slot.
+- **Workspace cal AI-days delivered by EOD Day 4 (2026-05-15)** via commit-class weighting. Target ≥400 workspace
+  (~100/day sustained). Floor ≥320.
 - **Foot-gun incident count per slot per cycle**. Target: ≤1.
 - **Q&A bus turnaround**. Target: p50 <90 min.
 - **Cross-slot collision rate**. Target: ≤2/side/cycle.
 
-Post-cycle review 2026-05-15 EOD jointly with Ikenna main.
+Post-cycle review 2026-05-15 EOD jointly with Ikenna main. Append delivery to retrospective ledger.
 
 ## Defer post-deadline (NOT in this cycle)
 

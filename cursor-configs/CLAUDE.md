@@ -882,13 +882,15 @@ Per-side `<side>_orchestrator/` directory contains: `AGENT_ONBOARDING.md` + `LED
 
 ### Why this exists
 
-Two operators × multiple parallel agents = ~50 AI-days/day per side. Without daily split, agents converge on
-critical-path files (UAC, master plans, deployment-api) and step on each other. Daily split is operator's load-balancer.
+Two operators × multiple parallel agents = **~65-75 AI-days/day per side measured**, **~80-100/side theoretical
+ceiling** (2026-05-11 empirical correction). Without daily split, agents converge on critical-path files (UAC,
+master plans, deployment-api) and step on each other. Daily split is operator's load-balancer.
 
 ### Cadence + split principle
 
-Daily morning. Drafts `plans/active/work_split_<YYYY_MM_DD>_ikenna.md` + `..._harsh.md`. Sized ~25-50 AI-days per
-side. End-of-day archived.
+Daily morning. Drafts `plans/active/work_split_<YYYY_MM_DD>_ikenna.md` + `..._harsh.md`. **Sized ~100-150 cal
+AI-days per side per 4-day cycle** (≈ 25-40 cal AI-days/side/day, anchored to measured throughput with safety
+margin). End-of-day archived.
 
 **Ikenna**: cross-cutting design (3+ repos), trading-judgment / risk calls, governance / ratchet thinking, large
 migrations / refactors changing on-disk shape, human-approval surface, master plan / umbrella coordination.
