@@ -639,11 +639,23 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
       2026-05-07: DONE — MTDS@10aa715 (ohlcv_1m); CloudFront 429 quirks documented in MEMORY
       (feedback_lighter_pacifica_cloudfront_quirks)]
 
-### Custody (Copper)
+### Custody (Copper + Cloud-KMS for May-23 + Fireblocks June-1)
+
+> **🟢 R9 sub-(a) RESOLVED 2026-05-12** by Ikenna slot 4 per
+> [`api_keys_wallets_accounts_readiness_2026_05_10.md`](api_keys_wallets_accounts_readiness_2026_05_10.md): May-23
+> cutover ships on `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK); June-1 flips per-wallet to `COPPER_MPC` / `FIREBLOCKS_MPC`
+> on client-provided creds. Operator-action checklist: [`codex/05-infrastructure/custody-onboarding-checklist.md`](../../codex/05-infrastructure/custody-onboarding-checklist.md).
+> Per-wallet schema: [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+> (UAC@`d721b6a`).
 
 - [ ] [AGENT] P1. Copper sandbox integration test — validate `CopperCustodyProvider` (in execution-service) per
       `codex/04-architecture/custody-providers.md` § 2.3 CopperCustodyProvider. [AUDIT 2026-05-07: FRESH — actionable,
       P0-relevant for May 23 Group F]
+- [ ] [AGENT] P0. `CloudKmsCustodyProvider` implementation (NEW, `execution-service/execution_service/custody/cloud_kms.py`)
+      per `api_keys_wallets` Plan Phase 3.C.1 — owner: Ikenna slot 4 successor + Harsh implementation.
+- [ ] [AGENT] P0 **DEFERRED-AFTER-CUTOVER (2026-06-01)**. `FireblocksCustodyProvider` implementation
+      per `api_keys_wallets` Plan Phase 3.C.2 — gated on client June-1 credential delivery. Successor plan:
+      `plans/active/fireblocks_copper_client_integration_2026_06_01.md`.
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 

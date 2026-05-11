@@ -4,6 +4,21 @@ scope: [engineer, admin]
 
 # Custody Providers — single SSOT
 
+> **🟢 R9 sub-(a) RESOLVED 2026-05-12** — per
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> § R9 RESOLVED: **May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`** (HSM-backed CMK envelope encryption);
+> **June-1 flips per-wallet to `COPPER_MPC` / `FIREBLOCKS_MPC`** on client-provided creds. Per-wallet
+> `signing_surface` field on
+> [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+> supports config-only flips with no recompile.
+>
+> Operator-runbook for every cutover + June-1 onboarding step:
+> [`codex/05-infrastructure/custody-onboarding-checklist.md`](../05-infrastructure/custody-onboarding-checklist.md).
+>
+> Cloud-KMS adapter (§ B in checklist) — `CloudKmsCustodyProvider` PENDING at
+> `execution-service/execution_service/custody/cloud_kms.py` per Plan Phase 3.C.1.
+> Fireblocks adapter (§ C) — `FireblocksCustodyProvider` PENDING per Plan Phase 3.C.2 DEFERRED-AFTER-CUTOVER.
+
 This is the single SSOT for custody integration in the Unified Trading System. It folds in the previous per-provider
 docs (`copper-custody-integration.md` + `ceffu-custody-integration.md`, both deleted 2026-05-08 per
 [`../../plans/active/codex_refactor_2026_05_08.md`](../../plans/active/codex_refactor_2026_05_08.md) Phase D.4) so the
@@ -82,16 +97,24 @@ Frozen dataclass controlling provider selection and credentials:
 
 `get_custody_provider(config: CustodyConfig)` in `custody/factory.py` routes on `config.provider`:
 
-| `config.provider` | Implementation                       | Credentials required                       |
-| ----------------- | ------------------------------------ | ------------------------------------------ |
-| `"mock"`          | `MockCustodyProvider`                | None                                       |
-| `"local_key"`     | `LocalKeyCustodyProvider`            | `private_key`, `rpc_url`                   |
-| `"copper"`        | `CopperCustodyProvider`              | `api_key`, `api_secret`, `organization_id` |
-| `"ceffu"`         | `CeffuCustodyProvider` (stub-shipped, methods raise) | `api_key`, `api_secret`, `organization_id` |
-| unknown           | `MockCustodyProvider` (with warning) | None                                       |
+| `config.provider` | Implementation                       | Credentials required                       | UAC `SigningSurface` |
+| ----------------- | ------------------------------------ | ------------------------------------------ | -------------------- |
+| `"mock"`          | `MockCustodyProvider`                | None                                       | `MOCK`               |
+| `"local_key"`     | `LocalKeyCustodyProvider`            | `private_key`, `rpc_url`                   | `LOCAL_KEY`          |
+| `"cloud_kms"`     | `CloudKmsCustodyProvider` (PENDING — Plan Phase 3.C.1) | `kms_key_uri`, `private_key_secret_ref` (wrapped ciphertext) | `CLOUD_KMS_ENCRYPTED` **(May-23 cutover default)** |
+| `"copper"`        | `CopperCustodyProvider`              | `api_key`, `api_secret`, `organization_id` | `COPPER_MPC`         |
+| `"fireblocks"`    | `FireblocksCustodyProvider` (PENDING — Plan Phase 3.C.2 DEFERRED-AFTER-CUTOVER) | `api_key`, `api_secret`, `vault_account_id` | `FIREBLOCKS_MPC`     |
+| `"ceffu"`         | `CeffuCustodyProvider` (stub-shipped, methods raise) | `api_key`, `api_secret`, `organization_id` | *(routes via Copper; CEFFU stub-only)* |
+| unknown           | `MockCustodyProvider` (with warning) | None                                       | —                    |
 
-Imports for `local_key`, `copper`, and `ceffu` are deferred (inside the routing branch) to avoid importing `web3` or
-`httpx` when they are not needed.
+Imports for `local_key`, `copper`, `ceffu`, `cloud_kms`, and `fireblocks` are deferred (inside the routing branch) to
+avoid importing `web3` / `httpx` / `google-cloud-kms` / `fireblocks-sdk-python` when not needed.
+
+**Per-wallet flippability** — each wallet row in
+`gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` carries its own
+[`WalletProvisioningConfig.signing_surface`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py),
+overriding the top-level `CustodyConfig.provider` default per-call. Operator flips the field
+in the JSON; deployment-UI Live-Cluster button reloads via `ApiKeyReloader` pattern. No service restart, no recompile.
 
 ---
 
