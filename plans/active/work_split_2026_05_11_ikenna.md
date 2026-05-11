@@ -162,7 +162,15 @@ under-utilisation is fine, mid-cycle collision is not.
       non-null values; completeness percentages sum-check matches manifest counts.
   - ✅ A v8 manifest atomic rename rehearsal (dry-run only — no write) shows zero schema-validation failures.
 
-### Slot 3 — Available_at completion Phase 0 + Phase 4-5 audits
+### Slot 3 — Available_at completion Phase 0 + Phase 4-5 audits — **RE-TASKED 2026-05-11**
+
+> **🟢 RE-TASK BRIEF (added 2026-05-11 by slot 1 main on operator approval)** — original scope (Phase 0.1/0.2 + Phase 4 partial + Phase 5 both) ✅ DONE per PM@`9bc57fcb` + PM@`c628eee7`. Slot 3 went quiet legitimately at done-definition met. Operator re-tasks slot 3 to absorb three carryover items in its UAC/UTL competency:
+>
+> 1. **UAC `EXPECTED_KNOWN_SOURCE_GAP` enum addition** — operator-approved 2026-05-11 (per `plans/active/issues/wave3x_track_d_findings_2026_05_11.md` TL;DR #2). Add new value to UAC `EmptyConfirmedReason` closed set (covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS` ranges). Land in `manifest_schema_final_gate_2026_05_09.md` scope. Tests + CLAUDE.md "Four-category empty-output decision" Reason-taxonomy section update for the new value. **Do NOT** touch the MDPS VIX-gap consumer (`_maybe_write_vix_gap_placeholder`) — that's Harsh slot 5's territory per the P0-2 routing.
+> 2. **Flip sports `available_at` Phase 1 todo** in `available_at_lookahead_bias_completion_2026_05_08.md` per Harsh slot 4's ship at `market-tick-data-service@c186ecb` (`stamp_available_at_odds_snapshot` wired into `_process_sports_venue_with_leagues` with shard-level failure isolation + 5 tests).
+> 3. **Answer 4 design Qs in `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` § "Open design questions"**: Q-A (odds `available_at` rule: `bm_time` vs `bm_time + emission_latency_ms_for_source(src)`); Q-B (does MTDS sports write path need `assert_available_at_present`-equivalent guard, given it uses `record_captured_from_counts` not `record_captured(df)`); Q-C (do all sports adapters — betfair/matchbook/sfi/footystats — emit `bm_time` or equivalent publication-time col); Q-D (is there a `SOURCE_PRIORITY` / `emission_latency_ms_for_source` entry for sports sources in UAC, and is it a pre-req).
+>
+> Estimated effort: ~2-4 hrs. Stays in slot 3's repos (UAC + UTL + PM). Phase 0.3-0.6 + Phase 4 remainder stay DEFERRED behind cross-plan gates per the original DONE block.
 
 - **Identity**: `ikenna-available-at-tab` (slot 3 worktree at `.tabs/3/`).
 - **Scope** (per
@@ -207,7 +215,25 @@ under-utilisation is fine, mid-cycle collision is not.
     - **What ran**: `cd features-onchain-service && bash scripts/quality-gates.sh` against fixture.
     - **Verification**: pytest output shows `LookaheadBiasError` raised with correct row context.
 
-### Slot 4 — Live pipeline Phase 4-5 design-ahead + Phase 11 deployment-UI live tab design
+### Slot 4 — Live pipeline Phase 4-5 design-ahead + Phase 11 deployment-UI live tab design — **RE-TASKED 2026-05-11**
+
+> **🟢 RE-TASK BRIEF (added 2026-05-11 by slot 1 main on operator approval)** — slot 4's design-ahead scope ✅ DONE per UAC@`e55651b` + UTL@`58bfbbeb` + deployment-api@`7d95dc9` + deployment-ui@`f3204ce` + PM@`789201d0` + PM@`e30bc355`. **However**: the spawn prompt's "BLOCKED on `features_repo_consolidation_2026_05_08` Phase 7 (Harsh slot 2)" hard-sync constraint is **STALE**. Verified 2026-05-11 by slot 1:
+>
+> - `features_repo_consolidation_2026_05_08.md:678` Phase 7 archival is `- [x]` flipped done.
+> - `workspace-manifest.json` shows 8 features-*-service repos with `"archived_into": "features-service", "archive_date": "2026-05-08"`.
+> - `gh api repos/IggyIkenna/<repo> --jq .archived = true × 8` per plan's `## DONE — 2026-05-08 PM session` block.
+> - features-service repo exists + skeleton + 8 sub-package subtree merges + 10 workflows pushed at `features-service@d3d6e286` on 2026-05-10.
+>
+> So slot 4's hard-sync gate cleared 3 days ago. Slot 4 design-shipped instead of implementing as a result of misreading the spawn prompt. Promote-to-implementation scope:
+>
+> 1. **`MDPSStreamingAggregator`** (UTL@`58bfbbeb` stub) → real implementation: UTC-aligned candle boundaries + watermark + grace + replay handoff per the design contract in `codex/05-infrastructure/live-pipeline-architecture.md`. Add unit tests covering the 4-category empty-output decision matrix per CLAUDE.md.
+> 2. **`AssetScopedFeaturesRunner`** (UTL@`58bfbbeb` stub) → real implementation. Per-asset_group flavor (cefi/defi/tradfi/predictions/sports) wired against the now-consolidated `features-service`.
+> 3. **`CrossCuttingFeaturesRunner`** (UTL@`58bfbbeb` stub) → real implementation. Cross-cutting fan-in propagation per the codex doc's "cross-cutting fan-in propagation table".
+> 4. **`deployment-api /api/data-status/live` endpoint** (deployment-api@`7d95dc9` stub) → wire to real `data_freshness` callback from `unified_trading_library.health.make_health_router`. Pydantic models stay as shipped.
+> 5. **`<LiveDataStatusTab/>` deployment-ui** (deployment-ui@`f3204ce` scaffold) → wire to the live API endpoint above instead of mock fixtures.
+> 6. **Plan flips**: in `live_pipeline_mtds_mdps_features_2026_05_08.md`, flip Phase 4/5/6 implementation halves from `status: design-shipped` + `**DEFERRED**` annotations to `- [x]` done with `<repo>@<sha>` evidence. Phase 11 already partially flipped; complete the implementation half.
+>
+> Estimated effort: ~6-10 hrs (live-pipeline implementation has integration test surface). Stays in slot 4's repos (UAC + UTL + deployment-api + deployment-ui + PM). Coordinate via cross-side ping with Harsh slot 5 (live-pipeline service wiring per-service consumers) — they were waiting on slot 4 to promote design to implementation; the slot 4 spawn-prompt staleness was the actual blocker on both sides.
 
 - **Identity**: `ikenna-live-pipeline-tab` (slot 4 worktree at `.tabs/4/`).
 - **Scope** (per [live_pipeline_mtds_mdps_features_2026_05_08.md](live_pipeline_mtds_mdps_features_2026_05_08.md); Phase
