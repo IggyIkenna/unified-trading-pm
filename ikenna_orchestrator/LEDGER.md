@@ -66,16 +66,20 @@ number is addressable. Both go in the registry entry for clarity.
 peak parallel work exceeds). All 26 active repos × 8 slots = 208 worktrees on branches `tab/ikennaigboaka/1` through
 `tab/ikennaigboaka/8`, each at head `6a6ae73b` at provisioning time.
 
-| Slot | Theme                       | Plan-of-record / scope                                         |
-| ---- | --------------------------- | -------------------------------------------------------------- |
-| 1    | main orchestrator + on-call | (this LEDGER) — direction-setting + Q&A dispatch + ping triage |
-| 2    | (unassigned)                | —                                                              |
-| 3    | (unassigned)                | —                                                              |
-| 4    | (unassigned)                | —                                                              |
-| 5    | (unassigned)                | —                                                              |
-| 6    | (unassigned)                | —                                                              |
-| 7    | (unassigned)                | —                                                              |
-| 8    | (unassigned)                | —                                                              |
+| Slot | Theme (2026-05-11)                                                                                  | Plan-of-record / scope                                                                                                          |
+| ---- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | main orchestrator + on-call governance                                                              | (this LEDGER) — Phase 1 freeze-gate audit + master plan refresh + cross-plan banner sweep + Q&A dispatch + ping triage          |
+| 2    | **CRITICAL PATH** — writegate slice (b) Phase 5.1-5.7 (UAC v8 manifest schema columns)              | [`writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) slice (b)  |
+| 3    | available_at completion Phase 0 (bar boundary contract) + Phase 4 + Phase 5 audits                  | [`available_at_lookahead_bias_completion_2026_05_08.md`](../plans/active/available_at_lookahead_bias_completion_2026_05_08.md)   |
+| 4    | live-pipeline Phase 4-5 design-ahead (gated on Harsh slot 2) + Phase 11 deployment-UI live tab      | [`live_pipeline_mtds_mdps_features_2026_05_08.md`](../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 4-5 + 11 |
+| 5    | DeFi Phase 1.E sequencing readiness audit + cross-plan banner sweep                                 | [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase 1.E audit |
+| 6    | (reserve) — spawn for mid-cycle finding                                                             | —                                                                                                                               |
+| 7    | (reserve) — spawn for mid-cycle finding                                                             | —                                                                                                                               |
+| 8    | (reserve) — spawn for mid-cycle finding                                                             | —                                                                                                                               |
+
+**Per-slot full task brief + spawn prompts** in [`../plans/active/work_split_2026_05_11_ikenna.md`](../plans/active/work_split_2026_05_11_ikenna.md) § "Tab registry" + § "Spawn prompts." Reading order for fresh tab agents: (1) [AGENT_ONBOARDING.md](AGENT_ONBOARDING.md) → (2) CLAUDE.md → (3) per-tab-worktrees codex → (4) work-split § "Slot N" → (5) plan-of-record. Cross-cycle deadline: **Phase 1 code-freeze gate fires 2026-05-15** (4 days from today); slots 2 + 4 are gated on cross-side handshakes from Harsh slot 2.
+
+> **NOTE for fresh tab agents** — slot worktrees were provisioned 2026-05-11 at HEAD `6a6ae73b` and are now ~37 commits behind `origin/live-defi-rollout` after a busy morning of cross-side shipping. Run `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>` from the main workspace clone (NOT from inside the slot worktree) before booting the slot's agent — fast-forward only, zero local commits queued, safe.
 
 The daily work-split plan (`plans/active/work_split_<YYYY_MM_DD>_ikenna.md`) is the authoritative source for today's
 themes. This LEDGER's table mirrors that assignment for fresh tab-agents bootstrapping outside chat scrollback. When the
@@ -84,91 +88,46 @@ work-split plan flips a slot to a new theme, the operator (or main orchestrator)
 
 ---
 
-## Today's status (2026-05-08)
+## Today's status (2026-05-11) — Phase 1 code-freeze push to 2026-05-15 freeze gate
 
 ### Working model
 
-**Model A — fixed thematic 6-tab clustering** per
-[`../plans/active/work_split_2026_05_08_ikenna.md`](../plans/active/work_split_2026_05_08_ikenna.md). Tab identities +
-scope + done-definitions live in the work-split plan body (Tab 1-6 sections). This ledger holds the live tab status; the
-work-split holds the durable assignment.
+**Model A — fixed thematic 5-slot clustering** per
+[`../plans/active/work_split_2026_05_11_ikenna.md`](../plans/active/work_split_2026_05_11_ikenna.md). Slot identities +
+scope + done-definitions + cross-tab + cross-side handshakes + spawn prompts live in the work-split plan body. This
+LEDGER holds the live slot status (DONE blocks, Q&A pointers, blockers as they surface); the work-split holds the
+durable assignment.
 
-### Tab registry
+### Slot status (live; updated as slots ack STARTED / ship / hit blockers)
 
-#### Tab 1 — main orchestrator
+- **Slot 1 (this session)** — main orchestrator + on-call; polling intra + cross-side ping ledgers; routing Q&A.
+- **Slot 2-5** — see `## Today's slot assignments` above for theme + plan-of-record. Status updates land here as each
+  slot acks STARTED / ships shippable units / hits blockers (per the work-split's Daily sync points contract).
 
-- This session. Polling [`_agent_pings.md`](_agent_pings.md) every ~1 min while Ikenna is active. No implementation work
-  — direction-setting + Q&A dispatch + plan-of-record curation + ping triage only.
+### Workstream snapshot (cross-side activity already in flight; from origin scan 2026-05-11)
 
-#### Tab 2 — DeFi launch + Fork 1 completion ⚪ NOT YET SPAWNED
+Visible from origin commits since the 2026-05-08 LEDGER snapshot rolled to "Historical log" below:
 
-- **Plan-of-record**: [`../plans/active/defi_master_2026_05_07.md`](../plans/active/defi_master_2026_05_07.md)
-  - [`../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
-  - master plan Group F.
-- **Spawn brief**: see work-split plan § "TAB 1 — DeFi launch + Fork 1 completion".
+- **Harsh side actively shipping** (~37 commits since 2026-05-09 across `tab/hk/<N>` slots): wave3x all 5 tracks DONE
+  (Tracks A+B UAC SSOTs, Tracks C+E UTL stamping helpers, Track D adapter audit findings doc); features-consolidation
+  Phase 0-3 + features-service skeleton @d3d6e286 pushed; bucket-name SSOT canonical layer decided (yaml); workspace
+  QG static baseline 2026-05-11; codex audit pass 2026-05-11. Two open Q's flagged to Ikenna side via cross-side ping
+  2026-05-11 07:10 UTC (`EXPECTED_KNOWN_SOURCE_GAP` enum decision + v8-schema-owner ambiguity + MDPS dead write-gate
+  P0-2). Ikenna slot 5 + slot 1 own resolution.
+- **Ikenna-side commits this cycle** (slot 1 main, this session): work-split files shipped PM@4682cbfb;
+  setup-tab-worktrees.sh `.code-workspace` auto-provision PM@7fddb7e8; cross-side ping informing Harsh main of script
+  change PM@dc7aac44; this LEDGER refresh (current commit).
 
-#### Tab 3 — Live pipeline + writegate Phase 5 ratchet ⚪ NOT YET SPAWNED
+### LEDGER history before today
 
-- **Plan-of-record**:
-  [`../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
-  - [`../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md).
-- **Spawn brief**: see work-split plan § "TAB 2 — Live pipeline + writegate Phase 5 ratchet".
+The "Today's status (2026-05-08)" section that previously occupied this slot — covering the 6-tab Model A
+clustering against `work_split_2026_05_08_ikenna.md` (which was never archived per the EOD rule and is itself superseded
+by today's plan) — has been rolled into "Historical log" at the bottom of this file.
 
-#### Tab 4 — GCS migration + manifest cluster ⚪ NOT YET SPAWNED
+### Open questions across active plans (operator decisions pending)
 
-- **Plan-of-record**:
-  [`../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
-  - [`../plans/epics/manifest_migration_master_2026_05_07.md`](../plans/epics/manifest_migration_master_2026_05_07.md).
-- **Spawn brief**: see work-split plan § "TAB 3 — GCS migration + manifest cluster".
-
-#### Tab 5 — AWS migration + cloud-agnostic governance ⚪ NOT YET SPAWNED
-
-- **Plan-of-record**:
-  [`../plans/active/aws_migration_defi_first_2026_05_07.md`](../plans/active/aws_migration_defi_first_2026_05_07.md).
-- **Spawn brief**: see work-split plan § "TAB 4 — AWS migration + cloud-agnostic governance".
-
-#### Tab 6 — Alerting + master refresh + governance ⚪ NOT YET SPAWNED
-
-- **Plan-of-record**:
-  [`../plans/active/alerting_service_live_rules_2026_05_07.md`](../plans/active/alerting_service_live_rules_2026_05_07.md)
-  - [`../plans/active/master_to_live_defi_2026_05_23.md`](../plans/active/master_to_live_defi_2026_05_23.md) Group F+G +
-    [`../plans/active/deploy_missing_auto_launch_2026_05_07.md`](../plans/active/deploy_missing_auto_launch_2026_05_07.md).
-- **Spawn brief**: see work-split plan § "TAB 5 — Alerting + master refresh + governance".
-
-#### Tab 7 — Cross-cutting design (catalogue + IDs + clients + DART scope) ⚪ NOT YET SPAWNED
-
-- **Plan-of-record**:
-  [`../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md).
-- **Spawn brief**: see work-split plan § "TAB 6 — Cross-cutting design (catalogue + IDs + clients + DART scope)".
-
-> **Note**: tab numbering offsets by +1 from the work-split plan because Tab 1 = main here. Work-split plan's "TAB 1"
-> maps to LEDGER's "Tab 2", "TAB 2" → "Tab 3", etc. Spawned agents are told their LEDGER tab number; they read the
-> matching scope from the work-split plan's tab-number entry by following the spawn brief link.
-
-### 🟡 Ready to spawn (open a fresh tab + paste the prompt)
-
-_(none queued — orchestration directory just bootstrapped 2026-05-08; tabs spawn on operator direction.)_
-
-### ⚪ Main agent (this session) doing now
-
-- Polling intra-side ping ledger ~1 min while operator active.
-- Standing by to: (a) ack STARTED pings + flip QUEUED → IN FLIGHT, (b) verify DONE pings + flip IN FLIGHT → ✅ DONE, (c)
-  answer 🟡 BLOCKED Qs in plan-of-record (rebase + ack if push-race; escalate case-5 BIG to chat + issue doc per
-  Findings Triage Discipline), (d) field new direction from Ikenna.
-
-### ❓ Open questions across active plans
-
-_(none flagged from spawned tabs — orchestration directory just bootstrapped, no Ikenna-side spawns yet.)_
-
-### ✅ Done today (2026-05-08)
-
-- Predictions cluster contract handshake verified — UAC + UTL contract pieces all already shipped earlier under
-  writegate Phase 1A scope; cross-side ping landed in
-  [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md) confirming Harsh Tab 1's deferred MTDS writer
-  migration has no Ikenna-side blocker (PM@`090c3ec7`). ✓
-- Orchestration folder bootstrapped (this restructure 2026-05-08) — `AGENT_ONBOARDING.md` + `LEDGER.md` +
-  `_agent_pings.md` mirror Harsh's shape with CLAUDE.md cross-references for Findings Triage / Capture Discoveries /
-  Cross-Plan Banners / stretched polling cadence. ✓
+_(none currently flagged from Ikenna-side slots; cross-side has 3 items in `plans/active/_agent_pings.md` 2026-05-11
+07:10 UTC from harsh-main — Ikenna slot 5 + slot 1 own resolution.)_
 
 ---
 
@@ -197,7 +156,24 @@ refresh.
 
 ### 2026-05-08 (D2 — orchestration bootstrap)
 
-Captured in "Today's status → Done today" above. Will roll forward to historical log on next morning's daily reset.
+Orchestration folder bootstrapped: `AGENT_ONBOARDING.md` + `LEDGER.md` + `_agent_pings.md` mirror Harsh's shape with
+CLAUDE.md cross-references for Findings Triage / Capture Discoveries / Cross-Plan Banners / stretched polling cadence.
+Predictions cluster contract handshake verified — UAC + UTL contract pieces all already shipped earlier under writegate
+Phase 1A scope; cross-side ping landed in `plans/active/_agent_pings.md` confirming Harsh Tab 1's deferred MTDS writer
+migration has no Ikenna-side blocker (PM@`090c3ec7`). 6-tab Model A clustering planned per
+`work_split_2026_05_08_ikenna.md` (alerting + writegate + GCS migration + AWS migration + governance + cross-cutting
+design); spawn execution slipped — work-split was never archived per the EOD rule and is superseded by
+`work_split_2026_05_11_ikenna.md`.
+
+### 2026-05-09 → 2026-05-10 (gap — daily reset cadence slipped)
+
+No work-split files shipped on 2026-05-09 or 2026-05-10. Cross-side activity continued (mtds-utl-completion-tab
+2026-05-10 14:35 UTC; pm-governance-hygiene-tab 2026-05-10 14:25 UTC; features-service-consolidation-push 2026-05-10
+19:10 UTC — all in `plans/active/_agent_pings.md`). Work-split cadence resumed 2026-05-11.
+
+### 2026-05-11 (this cycle)
+
+Active. See `## Today's status (2026-05-11)` above.
 
 ---
 
