@@ -43,10 +43,10 @@ run to their done-definitions, not to 2026-05-15.
 
 > **Per-tab worktree model**
 > ([`codex/05-infrastructure/per-tab-worktrees.md`](../../codex/05-infrastructure/per-tab-worktrees.md)). Each slot is a
-> permanent worktree at `${WORKSPACE_ROOT}/.tabs/<N>/` on branch `tab/<harsh-user>/<N>`. **Slot count: TBD — Harsh
-> declares at first `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 6`** (6 covers the 5
-> active themes + 1 reserve; grow with `--add-slot` if peak parallel work exceeds capacity). Before any slot
-> reassignment from yesterday's theme, run `--reset-slot <N>`.
+> permanent worktree at `${WORKSPACE_ROOT}/.tabs/<N>/` on branch `tab/hk/<N>`. **Slot count: 6 — provisioned
+> 2026-05-11 via `setup-tab-worktrees.sh --init --slots 6`** (`$USER=hk` → branches `tab/hk/1`..`tab/hk/6`, all at the
+> `live-defi-rollout` tip; 6 covers the 5 active themes + 1 reserve; grow with `--add-slot` if peak parallel work
+> exceeds). Before any slot reassignment from yesterday's theme, run `--reset-slot <N>`.
 
 | Slot | Theme                                                                                                               | Plan-of-record                                                                                                                                                                                                                        | AI-day budget |
 | ---- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
@@ -364,7 +364,7 @@ SHARED-FILE-CONTENT collisions when slots push and pull each other's commits.
 > # 1. Verify workspace is clean across all repos on live-defi-rollout (per the precondition in
 > #    codex/05-infrastructure/per-tab-worktrees.md Step 0).
 > # 2. Provision 6 slot worktrees:
-> bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 6 --operator harsh
+> bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 6   ($USER=hk on this machine → tab/hk/1..6; already provisioned 2026-05-11)
 > ```
 >
 > The `--init` step provisions per-repo worktrees + per-slot `.envrc` (PREK_CACHE_DIR isolation per foot-gun #4) AND
@@ -376,7 +376,7 @@ SHARED-FILE-CONTENT collisions when slots push and pull each other's commits.
 >
 > ```bash
 > pwd                                                              # → .../.tabs/<N>
-> git -C unified-trading-pm rev-parse --abbrev-ref HEAD            # → tab/harsh/<N>
+> git -C unified-trading-pm rev-parse --abbrev-ref HEAD            # → tab/hk/<N>
 > ```
 >
 > Full 7-step paste-ready recipe at
@@ -388,7 +388,7 @@ SHARED-FILE-CONTENT collisions when slots push and pull each other's commits.
 You are Tab 2 — a sub-agent spawned by Harsh's main orchestrator agent (slot 1, a separate
 Claude Code session on the SAME machine).
 
-Your slot is 2. Your worktree is at ${WORKSPACE_ROOT}/.tabs/2/ on branch tab/<harsh-user>/2.
+Your slot is 2. Your worktree is at ${WORKSPACE_ROOT}/.tabs/2/ on branch tab/hk/2.
 Today's theme for slot 2: features-repo consolidation Phase 4-7 — HARDEST DEADLINE 2026-05-13
 (2 days from today).
 
@@ -439,7 +439,7 @@ then resume. Then go quiet — don't pick up new work autonomously.
 ```text
 You are Tab 3 — spawned by Harsh's main orchestrator (slot 1).
 
-Your slot is 3. Worktree: ${WORKSPACE_ROOT}/.tabs/3/ on branch tab/<harsh-user>/3.
+Your slot is 3. Worktree: ${WORKSPACE_ROOT}/.tabs/3/ on branch tab/hk/3.
 Theme: Wave3x Tracks B/C/D/E parallel — sports per-source SSOTs + reconciler +
 zero-activity-bar adapter audit + sports stamping cascade.
 
@@ -472,7 +472,7 @@ REPORT-BACK: same as slot 2.
 ```text
 You are Tab 4 — spawned by Harsh's main orchestrator (slot 1).
 
-Your slot is 4. Worktree: ${WORKSPACE_ROOT}/.tabs/4/ on branch tab/<harsh-user>/4.
+Your slot is 4. Worktree: ${WORKSPACE_ROOT}/.tabs/4/ on branch tab/hk/4.
 Theme: bucket-name SSOT canonicalisation + per-asset-group available_at adapter wiring (sports).
 
 BEFORE doing anything: read in order:
@@ -503,7 +503,7 @@ REPORT-BACK: same as slot 2.
 ```text
 You are Tab 5 — spawned by Harsh's main orchestrator (slot 1).
 
-Your slot is 5. Worktree: ${WORKSPACE_ROOT}/.tabs/5/ on branch tab/<harsh-user>/5.
+Your slot is 5. Worktree: ${WORKSPACE_ROOT}/.tabs/5/ on branch tab/hk/5.
 Theme: live-pipeline Phase 3-5 service wiring (post features-consolidation unblock) + Phase
 13/14/15 (VM launchers + codex sweep + QG sweep).
 
@@ -532,7 +532,7 @@ REPORT-BACK: same as slot 2.
 ```text
 You are Tab 6 — spawned by Harsh's main orchestrator (slot 1).
 
-Your slot is 6. Worktree: ${WORKSPACE_ROOT}/.tabs/6/ on branch tab/<harsh-user>/6.
+Your slot is 6. Worktree: ${WORKSPACE_ROOT}/.tabs/6/ on branch tab/hk/6.
 Theme: workspace QG green sweep + codex audit pass + Phase 1 freeze-gate items 8 + 9
 (runs all 4 days, validates on-disk state per slot completion).
 
