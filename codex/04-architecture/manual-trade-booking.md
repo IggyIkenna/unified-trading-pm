@@ -157,6 +157,57 @@ Persistence happens at the API boundary BEFORE forwarding (EXECUTE flow) or dire
 the fill (RECORD_ONLY flow). Audit-log row is the durable record; downstream processing failures
 do not invalidate the audit row.
 
+## Wallet-tier wiring (DeFi manual trades)
+
+When `ManualInstruction.wallet_id` is non-empty (DeFi action), the `/manual/instruction` endpoint
+performs a pre-trade wallet-tier validation BEFORE forwarding to the executor. The validation
+consumes the operator-target `WalletProvisioningConfig` (per slot 4 wallet schema at
+`unified_api_contracts/internal/domain/defi/wallet_config.py`) and computes a
+`WalletSpendingPreCheckResult` row that is persisted into the audit log.
+
+### Validation algorithm (execution-service runtime)
+
+1. **Kill-switch check** — load `WalletProvisioningConfig.kill_switch_id`; if armed in the
+   live `KillSwitchBus` state, set `kill_switch_armed=True`, `passed=False`,
+   `denial_reason="kill_switch_armed"`. Short-circuit (skip cap checks).
+2. **Per-tx cap** — compute `amount_usd` from `manual_instruction.quantity × price` (or reference
+   price for market orders) and call `SpendingCaps.is_within_per_tx(amount_usd)`. Populate
+   `per_tx_check`.
+3. **Per-hour cap** — query `position-balance-monitor-service` for the rolling 1h spend on this
+   wallet; populate `per_hour_check`.
+4. **Per-day cap** — same for rolling 24h; populate `per_day_check`.
+5. **Per-protocol cap** — if `manual_instruction.venue` matches a `SpendingCaps.per_protocol_usd`
+   key, check the per-protocol limit; populate `per_protocol_check`.
+6. **Aggregate** — `passed = (kill_switch_armed is False) and all 4 cap checks True`. If `passed
+   is False`, populate `denial_reason` with the failed check name (`kill_switch_armed` /
+   `per_tx_cap_exceeded` / `per_hour_cap_exceeded` / `per_day_cap_exceeded` /
+   `per_protocol_cap_exceeded`).
+
+### UI surface (DART panel — Harsh T6)
+
+The DART `ManualTradingPanel` "DeFi Action" tab (per `dart-manual-trade-spec.md` § 4 BUILD #1)
+extends the form with:
+
+- **Wallet selector** — dropdown of the operator's `(client × archetype)` wallets from
+  `WalletMappingConfig`. Disabled rows for wallets where `kill_switch_id` is currently armed
+  (with hover tooltip explaining the kill-switch state).
+- **Per-row kill-switch button** — wallet-tier kill-switch arm/disarm action; each click writes a
+  `ManualInstructionAuditLog` row with `action_category=ManualAuditCategory.MANUAL_TRADE`,
+  `manual_instruction=None`, and a stub instruction documenting the kill-switch event (per
+  cross-side handoff with slot 4 — final shape may move to a dedicated `KillSwitchAction` audit
+  category in a follow-up cycle).
+- **Spending-caps display** — per-wallet `SpendingCaps` (per-tx / per-hour / per-day / per-protocol)
+  surfaced read-only above the submit button, with a "remaining headroom" indicator pulled from
+  the position-balance-monitor rolling-window query that drives the validation algorithm above.
+- **Pre-submit validation echo** — after the operator clicks Submit but before the request fires,
+  the client calls `POST /manual/instruction/precheck` (same payload, dry-run) and renders the
+  resulting `WalletSpendingPreCheckResult` so the operator sees the validation outcome without
+  spending actual quote-asset capital.
+
+Per-row UI components map to slot 4's `WalletProvisioningConfig` fields:
+`kill_switch_id` → kill-switch button state · `spending_caps` → caps display ·
+`allowed_protocols` → enabled-action filter · `signing_surface` → pending-signing-modal route.
+
 ## SSOT
 
 - ManualInstruction schema: `unified-api-contracts/unified_api_contracts/internal/execution.py`

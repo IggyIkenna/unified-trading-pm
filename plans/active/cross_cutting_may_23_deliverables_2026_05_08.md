@@ -745,3 +745,42 @@ audit-log persistence shape) where no canonical SSOT exists.
   consume whichever grammar lands (shape-agnostic at the UAC layer).
 - Harsh T6 should also constrain `ManualInstruction.order_type: str` to `OperationType.value` membership at the
   endpoint validator (Pydantic `field_validator`); no UAC change needed, just runtime guard.
+
+### DONE-2026-05-12 Day-2 (Ikenna T8 slot 8) — DART wallet-tier wiring
+
+Day-2 extension of the cross_cutting #4 contract layer; consumes slot 4's wallet schema at
+[`uac@d721b6a`](../../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+(`WalletProvisioningConfig` + `SpendingCaps` + `kill_switch_id`).
+
+- [x] [DESIGN+UAC] **DART wallet-tier UAC contract layer** (Ikenna T8 Day-2). Shipped at uac@`1d8a059` +
+      pm@`<this-flip-commit>`:
+  - `ManualInstruction.wallet_id: str = ""` — DeFi wallet provenance for audit-log rollups; empty for
+    CeFi/sports/prediction trades.
+  - `WalletSpendingPreCheckResult` — pre-trade kill-switch + SpendingCaps validation outcome computed at
+    `/manual/instruction` API boundary by execution-service runtime; persisted into audit log.
+  - `ManualInstructionAuditLog` extended with `wallet_id` (top-level mirror for indexed audit-log queries by wallet
+    without joining through embedded body) + `wallet_spending_check: WalletSpendingPreCheckResult | None`.
+  - 5 new unit tests added to `tests/unit/test_dart_manual_action_contracts.py` (12/12 total pass; basedpyright
+    clean).
+  - Codex doc extended:
+    [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — added
+    "Wallet-tier wiring (DeFi manual trades)" section covering the validation algorithm + UI surface mapping for
+    Harsh T6.
+
+**Validation algorithm (execution-service runtime, NOT UAC)**:
+
+1. Kill-switch armed → `passed=False`, `denial_reason="kill_switch_armed"`, short-circuit.
+2. `amount_usd = quantity × price` (or reference price for market orders) → `is_within_per_tx`.
+3. PBM rolling 1h spend query → `per_hour_check`.
+4. PBM rolling 24h spend query → `per_day_check`.
+5. If venue matches `SpendingCaps.per_protocol_usd` key → `per_protocol_check`.
+6. Aggregate: `passed = kill_switch_armed is False AND all 4 cap checks True`.
+
+**UI surface mapping (Harsh T6)**: DART `ManualTradingPanel` "DeFi Action" tab extended with wallet selector (drops
+disabled rows for armed kill-switches) + per-row kill-switch button + spending-caps display with remaining-headroom
+indicator + `POST /manual/instruction/precheck` dry-run validation echo before submit.
+
+**Cross-side handoff to slot 4 (wallet schema owner)**: contract layer is shape-agnostic for the per-wallet
+kill-switch event audit-log shape — current proposal uses a stub `ManualInstruction` row with `manual_instruction=None`
++ `wallet_spending_check` populated; final shape may move to a dedicated `KillSwitchAction` audit category in a
+follow-up cycle. Slot 4 to flag if the proposed shape conflicts with their `KillSwitchBus` event surface.
