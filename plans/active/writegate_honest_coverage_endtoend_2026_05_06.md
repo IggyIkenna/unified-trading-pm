@@ -3118,19 +3118,26 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.2 — MDPS remaining data_types (P0, ~2 days)**
 
-- [ ] [MDPS] P0. Wire `publish_with_manifest_lookup()` at every other MDPS emission boundary listed in the policy seed
+- [x] [MDPS] P0. Wire `publish_with_manifest_lookup()` at every other MDPS emission boundary listed in the policy seed
       dict: `ohlcv_1m:current` / `ohlcv_1m:historical` / `ohlcv_24h` / `book_snapshot_5`. Same shape as Phase 5.3 / 5.4.
       Each emission gets unit + integration tests mirroring the `ohlcv_1h` template.
-      **PARTIAL 2026-05-11 PM** (slot 8 Q2-fix sub-agent, rate-limited mid-task):
-      Scaffolding shipped on `tab/ikennaigboaka/8` only (NOT FF-pushed to `live-defi-rollout` — dead helpers shouldn't
-      reach VMs) at [`market-data-processing-service@ae0cada`](market-data-processing-service): 152 LOC adding
-      `_resolve_policy_output_data_type()` (option-α source-conceptual seed-key resolver for all 4 data_types) +
-      `_publish_emission_check()` (generalized publisher mirroring slice (b)'s `_publish_ohlcv_1h_emission_check`).
-      **WIRING + TESTS REMAIN**: (1) replace the inline call to `_publish_ohlcv_1h_emission_check` in
-      `write_candle_parquet` with the resolve-then-check pattern using the new helpers; (2) add per-data_type unit tests
-      mirroring `test_canonical_writer_ohlcv_1h_policy.py` (one test class each for `ohlcv_1m`, `ohlcv_24h`,
-      `book_snapshot_5`); (3) run MDPS QG; (4) FF-push to `live-defi-rollout`; (5) flip this checkbox. Next slot 8
-      cycle picks up from `mdps@ae0cada` — scaffolding is a head-start, not blank-state.
+      **SHIPPED 2026-05-12** (slot 2 picked up slot 8 scaffolding after rate-limit pause):
+      - Scaffolding (slot 8, cherry-picked into slot 2): `market-data-processing-service@d0df50c` —
+        `_resolve_policy_output_data_type()` (option-α source-conceptual seed-key resolver for all 4 data_types) +
+        `_publish_emission_check()` (generalised publisher subsuming slice (b)'s `_publish_ohlcv_1h_emission_check`).
+      - Wiring + tests + cleanup: `market-data-processing-service@311614a` — replaced inline ohlcv_1h call site in
+        `write_candle_parquet` with `_resolve_policy_output_data_type` → `_publish_emission_check`; **deleted**
+        `_is_ohlcv_1h_aggregation_path` + `_publish_ohlcv_1h_emission_check` (subsumed; no double SSOT); rewrote
+        `tests/unit/test_canonical_writer_ohlcv_1h_policy.py` — new `TestResolvePolicyOutputDataType` (15 cases across
+        all 4 data_types + slice / negative paths), parametrised `TestPublishEmissionCheck` (6 happy-path data_types +
+        manifest-read-failure + DEPLOYMENT_FAILED event verification across 3 data_types), parametrised
+        `TestWriteCandleParquetPolicyIntegration` (skip + publish branches × all 4 data_types + truly-ungated DEFI
+        `dex_pool_swaps` case replacing the pre-Phase-6.2 ohlcv_1m-is-not-gated assertion).
+      - Runtime UAC regression guard (slot 8, already in LDR): `mdps@daf9988` —
+        `TestServiceEmissionPolicySeedRuntimeLookup` hits the REAL UAC seed for all 6 MDPS canonical keys (no mocks).
+      - QG: 1151 tests passed; 1 pre-existing foreign failure (`test_cli_main::test_cli_help` UTL
+        `StartupValidationError` on `ENVIRONMENT='test'` — unrelated to emission policy); basedpyright clean on edited
+        files (0 errors on canonical_writer slice-(b)/Phase-6.2 sections + test file).
 - [ ] [MDPS] P1. Audit MDPS for OTHER calculators that emit derived/aggregated outputs not yet in the policy seed (e.g.
       trade-flow imbalance metrics, microstructure features) — extend the UAC seed dict per finding. Each addition = one
       PR touching UAC + one PR touching MDPS + one PR flipping plan checkboxes.
@@ -3425,6 +3432,102 @@ Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**
 - "Per-service slice (c) rollout" — in writegate plan body Phase 6.1-6.9 (this file, lines below).
 
 No deferral lives only in chat or in the commit message.
+
+---
+
+## DONE-2026-05-12 — Slot 2 (ikenna-writegate-slice-c-phase-6.2-tab) — Slice (c) Phase 6.2
+
+Tab: `ikenna-writegate-slice-c-phase-6.2-tab` (slot 2 worktree at `.tabs/2/`). Session scope: writegate slice (c)
+Phase 6.2 — wire `publish_with_manifest_lookup` at the remaining 3 seeded MDPS data_types (`ohlcv_1m` / `ohlcv_24h` /
+`book_snapshot_5`) on top of the slice (b) ohlcv_1h POC. Picked up slot 8's `mdps@ae0cada` scaffolding (paused
+2026-05-11 PM mid-task per Anthropic rate limit) and shipped the wiring + tests + cleanup in one shippable unit.
+
+### Commits
+
+| Commit            | Repo                           | Summary                                                                                                |
+| ----------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| MDPS@`d0df50c`    | market-data-processing-service | Slot 8 scaffolding cherry-picked: `_resolve_policy_output_data_type` + `_publish_emission_check`       |
+| MDPS@`311614a`    | market-data-processing-service | Wiring + tests + cleanup — replace inline ohlcv_1h call site; delete subsumed helpers; rewrite tests   |
+| PM@`<this-flip>`  | unified-trading-pm             | Phase 6.2 flip `[ ] → [x]` + CLAUDE.md slice (b) reference update + DONE-2026-05-12 block + scoreboard |
+
+### What shipped (operationally)
+
+* **MDPS canonical_writer** — `write_candle_parquet` now gates emission across all 4 seeded MDPS data_types via the
+  source-conceptual resolver pattern. Slice (b) ohlcv_1h-specific helpers (`_is_ohlcv_1h_aggregation_path` +
+  `_publish_ohlcv_1h_emission_check`) DELETED — subsumed by `_resolve_policy_output_data_type` +
+  `_publish_emission_check`. No double SSOT.
+* **Test surface** — `test_canonical_writer_ohlcv_1h_policy.py` rewritten (the file name is kept for git-history
+  archaeology; the docstring now reflects Phase 6.2 coverage):
+  * `TestResolvePolicyOutputDataType` — 13 cases × parametric expansion ≈ 17 assertions across all 4 data_types +
+    slice differentiation + 3 negative paths (passthrough / unmapped source / book_snapshot_5 with wrong mdps_dt).
+  * `TestPublishEmissionCheck` — 6 happy-path params (every gated `output_data_type`) + manifest-read-failure +
+    3-way DEPLOYMENT_FAILED event params pinning that the event carries the resolved token, not hardcoded ohlcv_1h.
+  * `TestWriteCandleParquetPolicyIntegration` — parametric skip (6 cases) + publish (4 cases) across all gated
+    paths; truly-ungated DEFI `dex_pool_swaps` test replaces the pre-Phase-6.2 ohlcv_1m-not-gated assertion (now
+    wrong — ohlcv_1m IS gated by Phase 6.2).
+  * `TestResolveEmissionSlice` + `TestBuildOhlcv1mUpstreamWindow` + `TestServiceEmissionPolicySeedRuntimeLookup`
+    unchanged (still cover the kept helpers + the Q2 Bug 1 runtime-UAC-lookup regression guard).
+* **QG state** — 1151 MDPS unit tests pass; 1 pre-existing foreign failure (`test_cli_main::test_cli_help` — UTL
+  `service_runtime.StartupValidationError` on `ENVIRONMENT='test'`, unrelated to emission policy). basedpyright
+  clean on edited functions; 2 pre-existing foreign basedpyright errors in `canonical_writer.py` (orphaned
+  `_timeframe_to_timedelta` from MDPS@`f004e12` off-by-one fix + foreign `int(ts_col.iloc[0])` line 348) — NOT my
+  edits. ruff clean.
+* **Full-execution criterion**: completeness envelope render verification deferred — the deployment-ui muted
+  placeholder lights up only once `manifest_schema_final_gate` Phase 2 ships parquet completeness_fraction columns
+  (per Phase 5.5 forward-compat surface). Phase 6.2 unblocks the column-write side; the render side waits on
+  Phase 2.
+
+### Deferred work after 2026-05-12 ikenna-writegate-slice-c-phase-6.2-tab session
+
+| Phase / item                                                                | Status as of 2026-05-12         | Successor / blocker                                                                                                                          |
+| --------------------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 6.2 — MDPS remaining data_types                                       | `done` (MDPS@`311614a`)         | —                                                                                                                                            |
+| Phase 6.2 P1 — audit MDPS for OTHER calculators emitting derived outputs    | `todo` (`- [ ]` in plan body)   | Operator-triage; extend UAC seed dict per finding. Plan body Phase 6.2 P1 item explicit.                                                     |
+| Phase 5.4 P1 — 30-day integration test                                      | `todo` (`- [ ]` in plan body)   | Originally `deferred-after-phase-6.2`; now unblocked. Open for next slot 2 cycle to write — needs real MDPS parquet writes against live LDR. |
+| Phase 5.5 — completeness envelope full-execution render verification        | `deferred-after-phase-2`        | DEFERRED-AFTER `manifest_schema_final_gate_2026_05_09.md` Phase 2 (parquet completeness_fraction column write).                              |
+| Phase 6.3 — features-volatility (P0, ~3 days)                               | `todo` (`- [ ]` in plan body)   | Next slice (c) sub-plan owner. Wire `publish_with_manifest_lookup` at `high_low_24h` / `vol_30d` / `realised_vol_intraday`.                  |
+| Phase 6.4-6.8 — remaining services rollout                                  | `todo` (`- [ ]` in plan body)   | features-cross-instrument / ml-training / ml-inference / strategy / execution / position-balance / risk / instruments-service.               |
+| Phase 6.9 — slice-(c) workspace-wide audit + ship-gate                      | `todo` (`- [ ]` in plan body)   | New QG STEP (AST walk every `record_captured(` callsite paired with publisher call) + workspace flip-sweep.                                  |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **Parquet column write for `completeness_fraction` + `incomplete_window`**: open in
+  [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 2. Phase 6.2 emits the
+  EmissionDecision in the lifecycle event payload; Phase 2 is the parquet/manifest-row write.
+- **Per-service slice (c) rollout** (Phase 6.3-6.9): writegate plan body Phase 6.3-6.9 sub-todos enumerate; per-service
+  plans land as `wave4_emission_rollout_{service}_<YYYY_MM_DD>.md` sub-plans per codex SSOT
+  § "Per-service rollout playbook".
+
+### EOD-audit (per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit clause")
+
+Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**DEFERRED**` annotation in
+`plans/active/`:
+
+- "Phase 6.2 P1 audit for OTHER MDPS calculators emitting derived outputs" — Phase 6.2 P1 todo in plan body (this
+  file, line ~3134-3136).
+- "Phase 5.4 P1 30-day integration test now unblocked" — Phase 5.4 P1 todo in plan body (this file).
+- "Phase 5.5 render verification deferred-after Phase 2" — Phase 5.5 already annotated in plan body + slice (b) DONE
+  block above.
+- "Phase 6.3-6.9 per-service rollout" — Phases 6.3 / 6.4 / 6.5 / 6.6 / 6.7 / 6.8 / 6.9 already enumerated in plan body
+  as explicit `- [ ]` todos (this file, lines ~3138-3197).
+- "Parquet column write for completeness_fraction" — open in `manifest_schema_final_gate_2026_05_09.md` Phase 2.
+
+No deferral lives only in chat or in the commit message.
+
+### Foreign findings (per CLAUDE.md "Findings Triage Discipline")
+
+Two foreign breakages observed during MDPS QG; both pre-date my edits and are someone else's plan to fix:
+
+1. `test_cli_main::test_cli_help` fails with UTL `StartupValidationError: Invalid env ENVIRONMENT='test'. Valid: dev,
+   development, staging, prod, production`. UTL `service_runtime.py` validator rejects `'test'`; the test calls
+   `run_cli()` which routes through `ServiceBootstrap.run()` which validates `ENVIRONMENT`. Foreign code, foreign test;
+   not in scope for slice (c) Phase 6.2.
+2. `basedpyright canonical_writer.py` flags `_timeframe_to_timedelta` (line 264) as unused — orphaned by
+   `mdps@f004e12` off-by-one-fix which dropped the `tf_delta` formula. Plus 1 `reportAny` at line 348 (foreign
+   `_stamp_candle_available_at` internals). Neither is my edit; both pre-existed before this commit.
+
+Both flagged here for the operator's awareness; no action taken (per "QG failure attribution" — fix on their own
+commits).
 
 ---
 

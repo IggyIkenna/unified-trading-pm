@@ -367,8 +367,12 @@ Read these before making ANY code changes:
   consumer's perspective. The `manifest_completeness.compute_completeness_fraction()` helper computes it from the
   upstream manifest with 60s TTL caching + `force_refresh=True` kwarg. **Batch = live symmetry**: identical helper for
   both modes — downstream parquet readers + event consumers cannot distinguish batch vs live. **Per-service rollout**:
-  slice (b) MDPS `ohlcv_1h` POC shipped 2026-05-11 (`canonical_writer._publish_ohlcv_1h_emission_check`); slice (c)
-  Phase 6.1-6.9 covers the remaining 8 service rollouts. Codex SSOT:
+  slice (b) MDPS `ohlcv_1h` POC shipped 2026-05-11; slice (c) Phase 6.2 generalised the gate to all 4 seeded MDPS
+  data_types (`ohlcv_1h` / `ohlcv_1m` / `ohlcv_24h` / `book_snapshot_5`) via the source-conceptual resolver
+  `canonical_writer._resolve_policy_output_data_type` + generalised publisher `canonical_writer._publish_emission_check`
+  (ohlcv_1h-specific helpers deleted — no double SSOT). Slice (c) Phase 6.3-6.9 covers the remaining 8 service
+  rollouts (features-volatility / features-cross-instrument / ml-training / ml-inference / strategy / execution /
+  position-balance / risk / instruments-service). Codex SSOT:
   [`codex/02-data/service-output-emission-semantics.md`](../codex/02-data/service-output-emission-semantics.md). Plan:
   [`writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
   slice (b) + (c). **DEFERRED-AFTER** `manifest_schema_final_gate_2026_05_09.md` Phase 2: writing
