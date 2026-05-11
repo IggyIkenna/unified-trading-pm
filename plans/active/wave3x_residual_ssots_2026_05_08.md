@@ -81,11 +81,17 @@ incorrect operator dashboards and ML training NaN-fill mistakes.
       case-insensitive; in-session / pre-market / post-close / weekend / 24/7-default-True / naive-tz / boundary
       open-inclusive / close-exclusive / CBOE 20:15 close / registry membership; both enum drift guards. Ruff +
       basedpyright clean.
-- [ ] [UTL] P0. Extend `unified_trading_library/legacy_reason_classifier.py` to consume both registries: when input
-      shard's day is a half-day → emit `EXPECTED_PARTIAL_HALF_DAY`; when intra-day shard timestamp falls outside the
-      venue session hours → emit `EXPECTED_OUTSIDE_TRADING_HOURS`. Closed-set drift guard.
-- [ ] [TEST] P0. UTL classifier tests: half-day day for ES.OPT venue → reason matches; weekend for venue NYSE →
-      EXPECTED_WEEKEND (existing rule); pre-market timestamp for NYSE shard → EXPECTED_OUTSIDE_TRADING_HOURS.
+- [x] [UTL] P0. **SHIPPED 2026-05-11 UTL@`3fbc6b3`** (slot 3, harsh-wave3x-tab). `_classify_tradfi` extended: after the
+      whole-day `non_trading_day_reason` check — `is_half_day_session(venue, day)` (UAC `registry.half_day_sessions`
+      @bdc84ed) → `EXPECTED_PARTIAL_HALF_DAY`; an intra-day `timestamp` cell outside `is_within_venue_session_hours(venue, ts)`
+      (UAC `registry.venue_session_hours`) → `EXPECTED_OUTSIDE_TRADING_HOURS`. Added `_parse_iso_date` / `_parse_iso_datetime`
+      defensive parsers (None → fall through to `SOURCE_RETURNED_ZERO`). Closed-set drift guard extended (the existing
+      `test_every_classifier_returns_value_inside_empty_confirmed_reasons` test gets the new sample rows).
+- [x] [TEST] P0. **SHIPPED 2026-05-11 UTL@`3fbc6b3`** (slot 3): `tests/unit/test_legacy_reason_classifier.py` extended
+      (NOT a parallel file — same file per the "expand existing test files" rule). +13 tests (half-day / pre-market-ts /
+      in-session-ts / 24-7-venue + the sports ones below) + 5 new entries in the closed-set drift guard. 33 tests pass;
+      ruff clean; basedpyright clean modulo a PRE-EXISTING `reportPrivateImportUsage` on the unchanged
+      `from unified_api_contracts import non_trading_day_reason` line.
 
 ### Track B — Sports per-source coverage SSOTs (UAC, ~2 days)
 
@@ -116,11 +122,15 @@ data-status UI flags every Understat shard for La Liga as a possible coverage ho
       `footystats_season_status_for_day(league_id, day) -> Literal["EXPECTED_PRE_SEASON","EXPECTED_POST_SEASON"] | None`
       to `season_dates.py`, re-exported from the `sports` facade. (Composes with the existing `SOURCE_COVERAGE_START`
       clip — that handles before-FootyStats-coverage-started; this handles before/after the league's season window.)
-- [ ] [UTL] P0. Extend `legacy_reason_classifier.py::_classify_sports` to consume the three new SSOTs: source ==
-      Understat AND league not in covered set → `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`; source == transfermarkt AND day
-      outside transfer window → `EXPECTED_OUTSIDE_TRANSFER_WINDOW`; source == footystats AND day outside season bounds →
-      `EXPECTED_PRE_SEASON` or `EXPECTED_POST_SEASON` per which side of the window. **(in flight 2026-05-11 — slot 3;
-      bundled with the Track A UTL classifier extension since both touch `legacy_reason_classifier.py`.)**
+- [x] [UTL] P0. **SHIPPED 2026-05-11 UTL@`3fbc6b3`** (slot 3, harsh-wave3x-tab; bundled with the Track A UTL extension —
+      both touch `legacy_reason_classifier.py`). `_classify_sports` extended: after the coarse known-gap +
+      pre-source-coverage-start checks, when the shard has a `league_id` — understat + `not does_understat_cover(league_id)`
+      → `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`; transfermarkt + a transfer-records `data_type` (the `"transfer" in
+      data_type` guard keeps the rule off year-round PLAYER_VALUES) + day outside `is_transfer_data_expected(league_id, day)`
+      (window + post-close grace) → `EXPECTED_OUTSIDE_TRANSFER_WINDOW`; footystats + `footystats_season_status_for_day(league_id, day)`
+      non-None → `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON`. Consumes the UAC@7c8b5ad SSOTs (Track B above). 9 sports
+      tests added (covered/uncovered/no-league understat; off-window/in-window/player-values transfermarkt; pre/post/in-season
+      footystats) — see the `[TEST]` item under Track A above.
 - [x] [TEST] P0. UAC tests — **SHIPPED 2026-05-11 UAC@`7c8b5ad`** (slot 3): `tests/unit/sports/test_per_source_coverage_ssots.py`,
       22 tests covering each new SSOT's entries + helper correctness + cross-year-vs-calendar-year footystats season
       status + typed-reason-string check + facade re-export; all pass; ruff + basedpyright clean. **UTL classifier tests
