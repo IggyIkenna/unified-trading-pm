@@ -198,7 +198,10 @@ this plan and **Q4** below (operator decision).
       `events` stays env-less like `terraform-state`/`secrets` or goes env-tiered. status: helper-shipped — note:
       "2026-05-11 slot 4 (cont. 3) — DeFi-raw + config-store env-tiered @deployment-service`070c897` + UTL`5058381`;
       checkbox stays `- [ ]` until (b) the pnl/positions/risk shape decision + migration AND (c) the `events` operator
-      sign-off land — both operator-gated."
+      sign-off land — both operator-gated. **(b)+(c) written up as Q7 in § Open questions 2026-05-11 (slot 4, this
+      session)** with the full shape-mismatch table + slot-4 recs (b-i = align GCP to symmetric
+      `{kind}-defi-{env}-{pid}`; c-i = env-tier `events` as a dedicated Phase-2.6 sub-step / c-ii = document as 3rd
+      permitted env-less exception); routed cross-side to Ikenna. Yaml unchanged pending operator answer."
 - [ ] **[SCRIPT] P0**. **Phase 0f — VM launcher scripts read `DEPLOYMENT_ENV` (Phase 1 code-complete scope).** Audit
       every script under `deployment-service/scripts/vm/` (~30 launchers per CLAUDE.md "VM launcher script SSOT") for
       hardcoded bucket references; ensure each launcher reads `DEPLOYMENT_ENV` from env / CLI flag and passes it to the
@@ -330,10 +333,9 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       `BUCKET_PREFIXES` to `bucket_naming.resolve_bucket_name(...)` (a `{domain}` → `{kind}` translation map + per-cloud
       dispatch). The legacy `{DOMAIN}_GCS_BUCKET[_{ASSET_GROUP}]` env-override shim either (a) survives as a thin
       wrapper in `get_bucket_name`, OR (b) is dropped in favour of the `${DEPLOYMENT_ENV}` axis (decide at impl time per
-      whether the per-domain override env vars are actively used). status: todo — note: "2026-05-11 slot 4 — the
-      resolver docstring already names this 'a follow-up step'; folded in so it doesn't fall off-radar; no gate
-      (UTL-only) but ships after the L2 config.py migration (now done @`8f03ceeb`) so consumers don't briefly see two
-      delegating paths. Pre-audit done (slot 4): ~36+ consumers across instruments-service (~16 files) /
+      whether the per-domain override env vars are actively used). status: deferred-after-code*freeze-Phase-2.6 — note:
+      "2026-05-11 slot 4 — the resolver docstring already names this 'a follow-up step'; folded in so it doesn't fall
+      off-radar; no gate (UTL-only). Pre-audit done (slot 4): ~36+ consumers across instruments-service (~16 files) /
       execution-service (~13) / deployment-service (~7) / PM scripts — grep
       `get_bucket_name\|BUCKET_PREFIXES\|get_instruments_bucket\|     get_market_data_bucket\|get_execution_bucket\|get_strategy_bucket\|get_features_calendar_bucket\|get_write_bucket_name`
       — enumerate fully + basedpyright each consumer repo after the delegate lands (Citadel § 6). **⚠️ Q6 (slot 4 cont.
@@ -342,19 +344,27 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       (`market-data-tick-{ag}-${DEPLOYMENT_ENV_SHORT}-{pid}` etc.); the on-disk buckets stay FLAT
       (`market-data-tick-{ag}-{pid}`) until code*freeze Phase 2.6 (2026-05-15→05-19). The 'safe gap' that makes Done-def
       #2's
-      `features-*`migration OK (nothing writes`features-_`between now and Phase 3, QG is mock) does **NOT**     extend to Group-A — instruments-service backfills + MTDS captures write`market-data`/`instruments-store`buckets     continuously. So a naive`get_bucket_name('market_data',
+      `features-*`migration OK (nothing writes`features-*`between now and Phase 3, QG is mock) does **NOT**     extend to Group-A — instruments-service backfills + MTDS captures write`market-data`/`instruments-store`buckets     continuously. So a naive`get*bucket_name('market_data',
       ...)`→`resolve_bucket_name(kind='market-data',
-      ...)`     delegate landing NOW re-points those consumers to non-existent env-tiered names → first-write-failure (the exact     bug this plan exists to prevent). Options: (i) the delegate keeps Group-A domains     (`instruments`/`market_data`/`features_calendar`) returning the FLAT name until Phase 2.6, then flips with the     migration; (ii) defer the whole delegate to the Phase-2.6 window; (iii) confirm instruments-service/MTDS set the     per-domain     `{DOMAIN}\_GCS_BUCKET[_{AG}]` override     to the flat names during the transition (then the override pre-check shields them). Group-B domains     (`features*\*`/`ml*\*`/`execution`/`strategy`)
-      are unaffected (the safe gap covers them). See § Open questions Q6. Slot 1: route a cross-side ping to Ikenna."
+      ...)`     delegate landing NOW re-points those consumers to non-existent env-tiered names → first-write-failure (the exact     bug this plan exists to prevent). Options: (i) the delegate keeps Group-A domains     (`instruments`/`market_data`/`features_calendar`) returning the FLAT name until Phase 2.6, then flips with the     migration; (ii) defer the whole delegate to the Phase-2.6 window; (iii) confirm instruments-service/MTDS set the     per-domain     `{DOMAIN}\_GCS_BUCKET[*{AG}]` override     to the flat names during the transition (then the override pre-check shields them). Group-B domains     (`features*\*`/`ml*\*`/`execution`/`strategy`)     are unaffected (the safe gap covers them). See § Open questions Q6 — ✅ RESOLVED 2026-05-11 (A6): operator picked     **Option (ii) — defer the ENTIRE delegate (Group A + Group B + all kinds) to code_freeze Phase 2.6**     (2026-05-15→05-19), landing it as the cutover-flip step (`2.6.4`in the Phase-2.6 sub-sequence) alongside     provision → rsync flat→env-tiered → write-pause → flip delegate workspace-wide → archive flat buckets. Rationale:    `get_bucket_name` legacy is NOT in the 6 freeze-gate items (`code_freeze_migrate_backfill_sequencing_2026_05_10.md`
+      § Phase-1 freeze-gate checklist); deferring 4 days is zero-cost; avoids a 4-day half-migrated Group-A-special-case
+      window + the parallel-resolution-path drift it would create (CLAUDE.md 'No double SSOT'). NOT a Phase-1
+      deliverable anymore; carries to the Phase-2.6 owner (slot 4 or new agent). Slot 1: cross-side ping to Ikenna was
+      sent + Q6 was resolved by operator — nothing more to route."
 - [ ] **[SCRIPT] P1**. Workspace QG step (the inline-`f"gs://{bucket}/..."`/`f"s3://{bucket}/..."` formatter ratchet)
       AST-walks for these formatters; fails CI if any new ones land outside the resolver. **Design (slot 4
       2026-05-11)**: baseline-ratchet shape (count current `gs://`/`s3://` f-strings WITHOUT a `# noqa: gs-uri` marker
       per repo → fail if the count grows). Goes in `unified-trading-pm/scripts/quality-gates-base/base-service.sh` as a
-      new STEP — **STEP 5.68** (5.65 = removed-symbol AST-walk; 5.66 reserved for the multi-process-launcher AST-walk;
-      5.67 taken by slot 6's banned-placeholder gate; so 5.68 — confirm it's free in `base-service.sh` at impl time per
-      slot 1's 2026-05-11 A3/follow-up). Full design in § "Pre-audit manifest" → "QG STEP 5.6X design". status: todo —
-      note: "2026-05-11 slot 4 — design written; ships after the L2 config.py migration (done @`8f03ceeb`) + the
-      legacy-delegate land (else the ratchet baseline bakes in to-be-removed inline templates)."
+      new STEP — **STEP 5.69** (5.66 reserved for the multi-process-launcher AST-walk; 5.67 taken by the banned
+      NaN-placeholder gate; 5.68 reserved by `available_at_lookahead_bias_completion_2026_05_08.md` for the
+      feature-compute lookahead-callsite check — confirmed via `base-service.sh` grep; matches CLAUDE.md "Key Rules"
+      which already cites STEP 5.69 + the QG STEP 5.6X design section below). Full design in § "Pre-audit manifest" →
+      "QG STEP 5.6X design". status: todo — note: "2026-05-11 slot 4 — design written; baseline-ratchet so existing
+      legitimate `gs://{already_resolved_bucket}` sites + the to-be-removed inline templates (`get_bucket_name`
+      consumers, `dependency_checker.py`) don't break CI; when those land in code_freeze Phase 2.6 the baseline ratchets
+      DOWN. NO LONGER blocked-on-the-legacy-delegate (Done-def #3 deferred to Phase 2.6 per A6) — the ratchet point is
+      'no new inline f-strings beyond today's count', which is Phase-1-shippable; v1 = grep-based, v2 AST-walk =
+      hardening follow-up."
 - [x] **[SCRIPT] P1**. Add yaml-vs-resolver parity unit test (already shipped at UTL@`24f9b2cb` for 10 DeFi bucket
       entries; extend coverage to features-\* + sports + tradfi). **Shipped UTL@`e8dc6e3` (slot 4 2026-05-11)**:
       `_SNAPSHOT_YAML` extended with `features-volatility` / `features-onchain` (per-asset_group) + `features-sports` /
@@ -533,8 +543,13 @@ for the full consumer set; basedpyright on each consumer repo after.
 - **Implementation note**: a literal `grep`-on-`f"gs://` is enough for v1 (the formatter is always a single-line
   f-string in practice); an AST-walk that distinguishes `f"gs://{x}/..."` from a `resolve_bucket_uri(...)` call is the
   v2 hardening (matches the QG STEP 5.65 AST-walk pattern). v1 ships first.
-- **Sequencing**: ships _after_ the L2 + L3 migrations land, so the ratchet baseline doesn't bake in the to-be-removed
-  inline templates.
+- **Sequencing**: a baseline ratchet is Phase-1-shippable — the ratchet point is "no NEW inline f-strings beyond today's
+  count", which doesn't depend on the L2/L3 migrations. The to-be-removed inline templates (`get_bucket_name` consumers,
+  `dependency_checker.py` probe strings) are baked into today's baseline; when they land in code_freeze Phase 2.6 the
+  baseline ratchets DOWN (re-run `--update-baseline` post-migration). So: ship STEP 5.69 in Phase 1 (Done-def #5),
+  ratchet the baseline down in Phase 2.6. **Update 2026-05-11**: the original "ships after L2 + L3" note assumed the
+  legacy delegate (L3 / Done-def #3) was a Phase-1 deliverable; A6 deferred it to Phase 2.6, but the ratchet doesn't
+  need to wait for it.
 
 ## Open questions
 
@@ -892,32 +907,111 @@ decision first). Slot 1: route a cross-side ping to Ikenna.
 
 #### A6 — [ikenna-main, 2026-05-11 PM] — operator-routed decision: **Option 2 (defer ALL of Done-def #3 to Phase 2.6 window)** ✅ RESOLVED
 
-**Decision**: Defer the whole `get_bucket_name` → `resolve_bucket_name` delegate (Group A + Group B + all kinds) to Phase 2.6 (2026-05-15→05-19), landing it inside the same window as the flat→env-tiered bucket provisioning + data migration + write-pause cutover. Done-def #3 is reclassified from "Phase 1 code-complete deliverable" to "Phase 2.6 cutover deliverable."
+**Decision**: Defer the whole `get_bucket_name` → `resolve_bucket_name` delegate (Group A + Group B + all kinds) to
+Phase 2.6 (2026-05-15→05-19), landing it inside the same window as the flat→env-tiered bucket provisioning + data
+migration + write-pause cutover. Done-def #3 is reclassified from "Phase 1 code-complete deliverable" to "Phase 2.6
+cutover deliverable."
 
 **Why Option 2 over Option 1 (transitional split)**:
 
-- **Done-def #3 is code-cleanup, not a freeze-gate blocker** (per Harsh slot 1 surface analysis + the Phase 1 freeze-gate checklist in `code_freeze_migrate_backfill_sequencing_2026_05_10.md:142-149` — `get_bucket_name` legacy is NOT in the 6 freeze-gate items). Deferring 4 days has zero downstream cost.
-- **Phase 2.6 sequencing fits naturally**: provision env-tiered buckets → rsync data flat→env-tiered → brief write-pause → flip `get_bucket_name` delegate to `resolve_bucket_name` (all 36 consumers in one logical unit) → archive flat buckets. Done-def #3 IS the cutover-flip step in this sequence; it's not a separate concern.
-- **Avoids "half-migrated" cognitive load.** Option 1 (Group-B flips now, Group-A flips Phase 2.6) creates a 4-day window where the delegate has special-cased Group-A logic that EVERY reader needs to remember + every reviewer needs to validate. Code-review burden + drift risk.
-- **Composes cleanly with workspace "No double SSOT" rule** (CLAUDE.md): Option 1 maintains TWO bucket-resolution paths in parallel for 4 days (legacy-flat for Group-A, env-tiered for Group-B). Option 2 has ONE path throughout, with the canonical switch happening atomically at the Phase 2.6 cutover.
-- **Cost of Option 1 saved**: slot 4 doesn't need to write + test the Group-A special-case branch in the delegate. Slot 4's other queued work (env-less-GCP-entries sub-todo + Done-def #5/#6 + Phase 0f/0g/0h) takes the saved capacity.
-- **Risk of write failures eliminated**: with Option 2, NO bucket re-pointing happens before the env-tiered buckets physically exist. With Option 1, the Group-B re-pointing is "safe" only because nothing writes Group-B between now and Phase-3 backfills — but that's a fragile assumption (any feature-service test run, any QG smoke, any CI integration test could trigger a Group-B write attempt against a non-existent bucket). Option 2 removes the assumption entirely.
+- **Done-def #3 is code-cleanup, not a freeze-gate blocker** (per Harsh slot 1 surface analysis + the Phase 1
+  freeze-gate checklist in `code_freeze_migrate_backfill_sequencing_2026_05_10.md:142-149` — `get_bucket_name` legacy is
+  NOT in the 6 freeze-gate items). Deferring 4 days has zero downstream cost.
+- **Phase 2.6 sequencing fits naturally**: provision env-tiered buckets → rsync data flat→env-tiered → brief write-pause
+  → flip `get_bucket_name` delegate to `resolve_bucket_name` (all 36 consumers in one logical unit) → archive flat
+  buckets. Done-def #3 IS the cutover-flip step in this sequence; it's not a separate concern.
+- **Avoids "half-migrated" cognitive load.** Option 1 (Group-B flips now, Group-A flips Phase 2.6) creates a 4-day
+  window where the delegate has special-cased Group-A logic that EVERY reader needs to remember + every reviewer needs
+  to validate. Code-review burden + drift risk.
+- **Composes cleanly with workspace "No double SSOT" rule** (CLAUDE.md): Option 1 maintains TWO bucket-resolution paths
+  in parallel for 4 days (legacy-flat for Group-A, env-tiered for Group-B). Option 2 has ONE path throughout, with the
+  canonical switch happening atomically at the Phase 2.6 cutover.
+- **Cost of Option 1 saved**: slot 4 doesn't need to write + test the Group-A special-case branch in the delegate. Slot
+  4's other queued work (env-less-GCP-entries sub-todo + Done-def #5/#6 + Phase 0f/0g/0h) takes the saved capacity.
+- **Risk of write failures eliminated**: with Option 2, NO bucket re-pointing happens before the env-tiered buckets
+  physically exist. With Option 1, the Group-B re-pointing is "safe" only because nothing writes Group-B between now and
+  Phase-3 backfills — but that's a fragile assumption (any feature-service test run, any QG smoke, any CI integration
+  test could trigger a Group-B write attempt against a non-existent bucket). Option 2 removes the assumption entirely.
 
 **Phase 2.6 Done-def #3 sub-sequence** (new structure):
 
-| Phase 2.6 Step | Owner | Action |
-|----------------|-------|--------|
-| 2.6.1 | Phase 2.6 owner (TBD; slot 4 or new agent) | Provision ~150-300 new env-tiered Group-A + Group-B buckets across both clouds × 3 envs × ap-northeast-1. |
-| 2.6.2 | Phase 2.6 owner | rsync data flat→env-tiered (Storage Transfer Service / DataSync, ≤0.01% drift). |
-| 2.6.3 | Phase 2.6 owner | Brief write-pause window (~minutes; operator-coordinated; flag VMs to wait). |
-| 2.6.4 | **Done-def #3 / slot 4 carryover** | Ship `get_bucket_name` → `resolve_bucket_name` delegate workspace-wide (all 36 consumers migrated in single PR). |
-| 2.6.5 | Phase 2.6 owner | Verify writers writing to env-tiered buckets; archive flat buckets; QG STEP 5.69 ratchet enforces no flat-name refs. |
+| Phase 2.6 Step | Owner                                      | Action                                                                                                               |
+| -------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| 2.6.1          | Phase 2.6 owner (TBD; slot 4 or new agent) | Provision ~150-300 new env-tiered Group-A + Group-B buckets across both clouds × 3 envs × ap-northeast-1.            |
+| 2.6.2          | Phase 2.6 owner                            | rsync data flat→env-tiered (Storage Transfer Service / DataSync, ≤0.01% drift).                                      |
+| 2.6.3          | Phase 2.6 owner                            | Brief write-pause window (~minutes; operator-coordinated; flag VMs to wait).                                         |
+| 2.6.4          | **Done-def #3 / slot 4 carryover**         | Ship `get_bucket_name` → `resolve_bucket_name` delegate workspace-wide (all 36 consumers migrated in single PR).     |
+| 2.6.5          | Phase 2.6 owner                            | Verify writers writing to env-tiered buckets; archive flat buckets; QG STEP 5.69 ratchet enforces no flat-name refs. |
 
-**Slot 4 in-flight scope** (NOT BLOCKED — proceed with current queue per Harsh slot 1's note): env-less-GCP-entries sub-todo + Done-def #5/#6 + Phase 0f (VM-launcher env-awareness) + Phase 0g (UI-env-tier verify) + Phase 0h (sync-script code). Done-def #3 stays `- [ ]` in the plan body with `status: deferred-after-Phase-2.6` annotation per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" Half 2 closed-set status values. Slot 4 will pick up Done-def #3 again in the Phase 2.6 cutover window (or hand off to whoever owns Phase 2.6 implementation).
+**Slot 4 in-flight scope** (NOT BLOCKED — proceed with current queue per Harsh slot 1's note): env-less-GCP-entries
+sub-todo + Done-def #5/#6 + Phase 0f (VM-launcher env-awareness) + Phase 0g (UI-env-tier verify) + Phase 0h (sync-script
+code). Done-def #3 stays `- [ ]` in the plan body with `status: deferred-after-Phase-2.6` annotation per CLAUDE.md
+"Commit + Push + Flip Plan Checkboxes" Half 2 closed-set status values. Slot 4 will pick up Done-def #3 again in the
+Phase 2.6 cutover window (or hand off to whoever owns Phase 2.6 implementation).
 
-**Status**: ✅ RESOLVED — slot 4 unblocked on the queued items (no scope change to those); Done-def #3 explicitly re-sequenced to Phase 2.6.
+**Status**: ✅ RESOLVED — slot 4 unblocked on the queued items (no scope change to those); Done-def #3 explicitly
+re-sequenced to Phase 2.6.
 
 **Cross-side ping** to harsh-main filed in `plans/active/_agent_pings.md` (same commit as this answer).
+
+### Q7 — [harsh-bucket-and-adapter-tab, 2026-05-11] — env-less-GCP-entries remainder: `pnl-store-defi`/`positions-store-defi`/`risk-store-defi` shape-alignment + `events` env-tier sign-off (both operator-gated)
+
+**Status**: 🟡 BLOCKED — needs operator/Ikenna calls (bucket-naming SSOT decisions → Ikenna per the work-split). These
+are the last two pieces of the env-less-GCP-entries sub-todo; the DeFi-raw (`dex-*`/`*-defi`) + `config-store` half
+shipped @deployment-service`070c897`+UTL`5058381` (+ the §-header comment now lists exactly these as the residual
+env-less GCP kinds). Slot 4 cannot decide them — both involve a name change (= a Phase-2.6 data migration) and `events`
+is high-blast-radius.
+
+**(b) `pnl-store-defi` / `positions-store-defi` / `risk-store-defi` — shape-alignment, not just an env-tier add.** The
+GCP yaml today (`cloud-providers.yaml:147-149`):
+
+| kind                   | GCP today                                | AWS today                                                                        | shape mismatch                                                                            |
+| ---------------------- | ---------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `pnl-store-defi`       | `pnl-store-${GCP_PROJECT_ID}-defi`       | `unified-trading-pnl-store-defi-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}`       | GCP puts `-defi` AFTER the project id; no env tier                                        |
+| `positions-store-defi` | `positions-store-${GCP_PROJECT_ID}-defi` | `unified-trading-positions-store-defi-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}` | same                                                                                      |
+| `risk-store-defi`      | `risk-store-defi-${GCP_PROJECT_ID}`      | `unified-trading-risk-store-defi-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}`      | GCP puts `-defi-` BEFORE the project id (different again from pnl/positions); no env tier |
+
+The DeFi-raw kinds were a clean `${DEPLOYMENT_ENV_SHORT}` _add_ because their GCP shape already matched AWS's
+`{kind}-{pid}` form. These three don't — GCP uses asset-group-as-suffix/-infix, AWS uses asset-group-in-the-middle +
+env-tier. Aligning GCP to `pnl-store-defi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}` /
+`positions-store-defi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}` /
+`risk-store-defi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}` (the symmetric form, AWS minus the `unified-trading-`
+prefix) **renames the on-disk GCP buckets** → a Phase-2.6 data migration (`gcloud storage cp -r` flat-shape →
+env-tiered-shape, ≤0.01% drift). Char check: `risk-store-defi-prd-central-element-323112` = 42 chars — well under 63.
+
+> **Recommendation (slot 4)**: option **(b-i)** — align GCP to the symmetric
+> `{kind}-defi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}` form for all three; add the rename to the Phase-2.6 migration
+> scope (already migrating flat→env-tiered for the DeFi-raw
+>
+> - Group-A + Group-B kinds, so the marginal cost is small — same `gcloud storage cp` loop, one extra source→dest pair
+>   per kind). Rejected alternative (b-ii) "keep GCP's idiosyncratic suffix/infix shapes + just bolt
+>   `${DEPLOYMENT_ENV_SHORT}` on" — perpetuates 3 different shapes for 3 sibling kinds + an AWS↔GCP asymmetry, contra
+>   (b+)'s "env tier extends to ALL kinds, symmetrically". Rejected (b-iii) "leave env-less forever like
+>   `terraform-state`/`secrets`" — these are per-asset-group P&L/position/risk stores, not workspace-singletons;
+>   prod/staging/dev isolation IS the (b+) strategic requirement (Citadel-grade, May-23 cutover).
+
+**(c) `events` (`${GCP_PROJECT_ID}-events`) — env-tier or stays env-less?** HIGH blast radius:
+`gs://{pid}-events/events/{service}/{YYYY-MM-DD}/{correlation_id}/hour={H}/*.jsonl` is the canonical event-stream path
+referenced **workspace-wide** (CLAUDE.md "No fire-and-forget VM launches" rule cites it verbatim;
+`unified-events-interface` UI reads it; every `ServiceBootstrap` writes it; `GCSEventSink` writes it). The AWS side is
+env-tiered. Going env-tiered on GCP means a `{pid}-events` → `events-${DEPLOYMENT_ENV_SHORT}-${pid}` rename + repointing
+every event reader/writer + a data migration of years of JSONL. **This is genuinely a "do we want 3 separate event
+streams (dev/staging/prd) on GCP" product call** — not a mechanical yaml edit.
+
+> **Recommendation (slot 4)**: option **(c-i)** — env-tier `events` too (consistency with AWS + the (b+) "ALL kinds"
+> directive + true env isolation for the event stream), BUT make it a _dedicated Phase-2.6 sub-step_ with its own
+> rollout note (it's the single highest-blast-radius rename in the whole bucket-SSOT effort — touches the most
+> consumers, and a partial cutover would split the event stream). Acceptable alternative (c-ii): keep `events` env-less
+> like `terraform-state`/`secrets` and document it as a 3rd permitted exception in CLAUDE.md ("Reviewers reject any new
+> yaml entry that doesn't carry `${DEPLOYMENT_ENV}` unless explicitly operator-confirmed env-less (currently:
+> `terraform-state`, `secrets`, `events`)") — defensible because the event stream is observability metadata, not trading
+> data, and per-env deployment-api service-account scoping already provides cross-env isolation at the _read_ layer (per
+> Phase 0g's finding). Operator picks.
+
+**No code change pending on Q7** — the yaml stays as-is (the 3 defi-store kinds + `events` env-less) until the operator
+answers; the env-less-GCP-entries sub-todo checkbox stays `- [ ]` with `status: helper-shipped`. If the answer is
+(b-i)+(c-i): the yaml edits + parity-test refresh are ~30 min; the data migrations fold into Phase 2.6. If (c-ii): a
+1-line CLAUDE.md edit + the sub-todo flips `[x]` for the `events` part.
 
 ## Deferred work after 2026-05-11 slot 4 session
 
