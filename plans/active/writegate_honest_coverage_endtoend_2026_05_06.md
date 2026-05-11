@@ -2910,20 +2910,26 @@ shape codified in slice (a)'s seed dict.
 
 **Phase 5.5 — deployment-api / deployment-ui surfaces the new columns (P1, ~3hr)**
 
-- [ ] [deployment-api] P1. **DEFERRED-AFTER** `manifest_schema_final_gate_2026_05_09.md` Phase 2 + writegate slice (c)
-      Phase 6.2 (MDPS column writes). `/leaf-stats` envelope surfacing for `completeness_fraction` +
-      `incomplete_window` requires the columns to ACTUALLY land in the parquet rows MDPS writes. Slot 2 Phase 5.3/5.4
-      POC deferred the parquet-row column writes per operator decision (option b SUPERSEDED writegate Phase 5.2 → owned
-      by manifest_schema_final_gate Phase 2). Endpoint extension stays gated until columns ship. Shape spec preserved
-      here for the future agent: extend `LeafParquetStats` Pydantic model with `completeness_fraction_envelope` (min /
-      max / null_count / mean) + `incomplete_window_present_count` (int — how many rows have non-empty list); helper
-      extracts both at parquet-read time; one new unit test asserts the envelope on a synthetic mixed-completeness
-      parquet.
-- [ ] [deployment-ui] P1. **DEFERRED-AFTER** the deployment-api half above. `LeafSchemaModal` renders the new envelope
-      as a 4th block after the `available_at` envelope. Color coding: green when all rows have fraction=1.0, amber when
-      0.95 ≤ mean < 1.0, red when mean < 0.95 (per the existing `nanRatioColor` palette inverted). Also surface
-      `incomplete_window_present_count` so operators can see how many emissions in the parquet had gaps without
-      drilling into individual rows.
+- [x] [deployment-api] P1. **SHIPPED forward-compatible** deployment-api@`3a0948e` per operator direction 2026-05-11
+      "do the not chat only stuff you have credentials". NEW `LeafCompletenessEnvelope` Pydantic model
+      (`deployment_api/types/shard_detail.py`) with fields `present` / `min_fraction` / `max_fraction` /
+      `mean_fraction` / `null_count` / `incomplete_window_present_count`; NEW `_compute_completeness_envelope()` helper
+      (`deployment_api/services/shard_detail.py`) — extracts envelope when `completeness_fraction` column present in
+      parquet, returns `present=False` otherwise. Wired into `get_leaf_parquet_stats()` after the existing
+      `_compute_available_at_envelope()` call. `incomplete_window_present_count` counts rows where the
+      `incomplete_window` JSON column is non-empty / non-null / non-"[]". 8 new unit tests cover absent column,
+      all-1.0, mixed completeness with populated `incomplete_window`, null rows counted separately, all-null,
+      `incomplete_window` absent when `completeness` present, end-to-end via `get_leaf_parquet_stats`, backward-compat
+      absent-columns case. All 43 leaf-stats tests pass. Lights up automatically when slice (c) per-service rollout
+      starts writing the columns; no further deployment-api change needed at that point.
+- [x] [deployment-ui] P1. **SHIPPED forward-compatible** deployment-ui@`00132db` per the same operator direction.
+      `LeafSchemaModal` renders the completeness envelope as a 4th block after the `available_at` envelope. NEW
+      `completenessColor()` helper (inverted from `nanRatioColor`: green ≥ 1.0; yellow 0.99-1.0; amber 0.95-0.99; red
+      < 0.95). Block renders min / max / mean / null_count / incomplete_window_present_count when
+      `data.completeness.present`; muted placeholder pill with slice-(c)-gate explainer (title attribute) otherwise.
+      NEW `LeafCompletenessEnvelope` TS interface in `src/api/client.ts` mirroring the Pydantic shape. 10 new vitest
+      tests (`completenessColor` boundary tests + 3 envelope-rendering scenarios). All 25 LeafSchemaModal tests pass;
+      vite smoke build green.
 
 **Phase 5.6 — Codex SSOT entry + CLAUDE.md key-rule (P0, ~2hr)**
 
@@ -3218,6 +3224,8 @@ per [`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) § "Slo
 | PM@`88baed07`  | unified-trading-pm                  | Phase 5.1 flip (UTL helper + 14 tests evidence)                                                           |
 | PM@`74e8bf51`  | unified-trading-pm                  | Phase 5.3 + 5.4 flip (MDPS POC evidence)                                                                  |
 | PM@`989da6e0`  | unified-trading-pm                  | Phase 5.6 + 5.7 — codex SSOT `service-output-emission-semantics.md` + CLAUDE.md key-rule + ship-gate flip |
+| deployment-api@`3a0948e` | deployment-api                      | Phase 5.5 deployment-api half — `LeafCompletenessEnvelope` + `_compute_completeness_envelope()` + 8 tests (forward-compatible) |
+| deployment-ui@`00132db`  | deployment-ui                       | Phase 5.5 deployment-ui half — `LeafSchemaModal` 4th block + `completenessColor()` + 10 vitest (forward-compatible)            |
 
 ### Deferred work after 2026-05-11 ikenna-writegate-slice-b-tab session
 
@@ -3231,8 +3239,8 @@ open are tracked here so the next agent picks up cleanly.
 | Phase 5.3 — MDPS `ohlcv_1h:current` wire-in               | `done` (MDPS@`9e1a93e`)           | —                                                                                                                |
 | Phase 5.4 — MDPS `ohlcv_1h:historical` wire-in            | `done` (same MDPS@`9e1a93e` hook) | "Live = batch — same code path" — single canonical_writer serves both slices                                     |
 | Phase 5.4 P1 30-day integration test                      | `deferred-after-phase-6.2`        | DEFERRED-AFTER writegate slice (c) Phase 6.2 (per-MDPS-data_type publish_with_manifest_lookup rollout)            |
-| Phase 5.5 — deployment-api `/leaf-stats` envelope extension | `deferred-after-manifest-v8-cols` | DEFERRED-AFTER `manifest_schema_final_gate_2026_05_09.md` Phase 2 (parquet-row column writes upstream needed)    |
-| Phase 5.5 — deployment-ui `LeafSchemaModal` 4th block     | `deferred-after-manifest-v8-cols` | Cascades after the deployment-api half                                                                           |
+| Phase 5.5 — deployment-api `/leaf-stats` envelope extension | `done` (deployment-api@`3a0948e`) | SHIPPED forward-compatible 2026-05-11 per operator "do the not chat only stuff" — lights up auto when slice (c) writes columns |
+| Phase 5.5 — deployment-ui `LeafSchemaModal` 4th block     | `done` (deployment-ui@`00132db`) | SHIPPED forward-compatible 2026-05-11; muted placeholder until slice (c) ships parquet columns                   |
 | Phase 5.6 — codex SSOT + CLAUDE.md key-rule               | `done` (PM@`989da6e0`)            | —                                                                                                                |
 | Phase 5.7 — slice (b) ship-gate                           | `done` (this commit)              | Cross-side INFO ping landed for Harsh slot 6 (no action needed; slot 6 QG-AST gate already shipped @PM`a4512ed3`) |
 
