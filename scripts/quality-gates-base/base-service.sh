@@ -605,9 +605,14 @@ BAD_AUTH_SKIP=$(rg 'pytest\.skip.*[Cc]redential|pytest\.skip.*GOOGLE_APPLICATION
 
 DI_EXTRA=()
 for g in ${DEEP_IMPORT_EXCLUDE_GLOBS[@]+"${DEEP_IMPORT_EXCLUDE_GLOBS[@]}"}; do DI_EXTRA+=(--glob "$g"); done
+# Allow `unified_api_contracts.internal` — sanctioned facade per CLAUDE.md "Citadel Import Rules":
+# "schemas → unified-api-contracts (external + internal via `unified_api_contracts.internal`)".
+# `.internal` is a facade, not a `canonical.*`/`normalize_utils.*` deep path.
+# Q1.3 fix per features_service_qg_cleanup_2026_05_11.md (operator decision (a) shipped 2026-05-11).
 DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" \
     "${DI_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
-    | grep -v "# noqa" || :)
+    | grep -v "# noqa" \
+    | grep -v 'from unified_api_contracts\.internal' || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
 # Old event logging pattern — flag obsolete cloud logging helpers only.

@@ -249,12 +249,14 @@ rows entirely (they're not violations; the QG-check fixes land separately via Ik
   excluded (still must use `log_event()`). PM-only file (sourced via `BASE_QG_SCRIPT`) → no rollout, effective now.
 - **Q1.2 ✅ FIXED** (PM@`2cacb0eb`) — `scripts/validation/check_schema_provenance.py` `should_exclude_file()` now
   excludes `scripts/` (per CLAUDE.md "Schema provenance" rule "(scripts/ excluded)"). PM-only script → no rollout.
-- **Q1.3 ⚠️ NOT FIXED — needs slot 2's evidence.** No QG check I can find flags `from unified_api_contracts.internal
-  import …`: STEP 5.23 (`base-service.sh`) flags `.canonical./.normalize_utils./.config./.shared./.schemas.` not
-  `.internal`; `check-import-patterns.py` has no `unified_api_contracts` in `EXTERNAL_PACKAGES`;
-  `check_schema_provenance.py`'s UAC-import regex recognizes `.internal` as valid. Paste the exact `[5/6] CODEX
-  COMPLIANCE` line / script / line-number that flagged it and I'll fix it; or if nothing actually flags it, leave the
-  3 `.internal` imports as-is (correct per CLAUDE.md).
+- **Q1.3 ✅ FIXED** (PM@`<this commit>`, ikenna-extra-hands-tab 2026-05-11) — found the offending check that slot 1
+  missed: `base-service.sh` lines 606-611 has a broader "Deep unified lib imports" check
+  (regex `from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import`) that catches `unified_api_contracts.internal`. **`base-library.sh`
+  already had the `unified_api_contracts.internal` whitelist** (line 415, alongside `unified_api_contracts.testing`)
+  — `base-service.sh` was missing the same exclusion. Fix: extend `base-service.sh` grep -v chain to add
+  `grep -v 'from unified_api_contracts\.internal'` — matches base-library.sh's existing pattern. Cited Q1.3 +
+  CLAUDE.md "Citadel Import Rules" inline as comment. Slot 2 can now proceed Phase 1.2 row 7 — the 3 `.internal`
+  imports stay AS-IS (correct per CLAUDE.md); QG green for that row.
 
 So: Q1.1 + Q1.2 are clean now; Q1.3 needs your evidence or is a non-issue. Either way those rows are NOT slot-2 work —
 proceed Phase 1.2 on the real-violation rows.
