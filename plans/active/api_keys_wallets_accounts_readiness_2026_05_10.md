@@ -769,6 +769,11 @@ cycle:
 | **Phase 9.F — hsm-wallet-signing.md** | ✅ DONE | PM@`e4c49a88` | 5-tier HSM ladder SSOT |
 | **Phase 9.K — custody-providers.md banner + factory table** | ✅ DONE | PM@`2e198794` | R9 propagation; per-wallet flippability |
 | **Phase 3.C.2 — Fireblocks integration spec** | ✅ DESIGN-SHIPPED | PM@`e4c49a88` | Paste-ready engineering spec for June-1 implementation |
+| **Phase 3.C.1 — CloudKmsCustodyProvider impl** | ✅ DONE — **THE MAY-23 CUTOVER SIGNING GATE** | execution-service@`d45d24b4` | 372-line provider (GCP + AWS paths) + factory wire + base.py extension + 23 unit tests via DI seam. Operator now blocked ONLY on Cloud HSM CMK provisioning runbook § B.3. |
+| **Phase 8.C — Master plan Item 19 refresh** | ✅ DONE | PM@`d608dfa4` | Continuous-verification cell fully populated with full shipment chain |
+| **Phase 9.D — rotation-runbook.md** | ✅ DONE | PM@`d608dfa4` | Per-class rotation cadence + 90d CMK re-wrap operator-runbook + pre-cutover rotation gate |
+| **Phase 9.G — interface-credential-convention.md update** | ✅ DONE | PM@`d608dfa4` | Custody factory row + per-signing_surface fields + flippability |
+| **Phase 9.I — runtime-tiers-and-deployment.md update** | ✅ DONE | PM@`d608dfa4` | NEW per-mode credential subset § |
 | **Cross-tab handshakes** — slots 5 + 8 | ✅ PUBLISHED | PM@`8aaf70da` | Schema importable; slot 5 EOD confirms consumed via Family-1/2 catalog config |
 | **Plan flips Phase 3.C SPLIT + 4.A + R9** | ✅ DONE | PM@`5cc47002` | Plan body codifies decision tree |
 | **Cloud-KMS operator-action issue doc** | ✅ FILED | PM@`2e198794` | `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` P0 |
@@ -779,7 +784,7 @@ cycle:
 |---|---|---|
 | Phase 3.A — Copper sandbox sign-and-broadcast smoke | 🟡 OPEN | Operator-runnable (§ A.1.5 in custody-onboarding-checklist.md) before 2026-05-21 |
 | Phase 3.B — CEFFU KYB onboarding | 🟡 BLOCKED on operator KYB submission | 2-4 week SLA; runbook § D in checklist |
-| Phase 3.C.1 — CloudKmsCustodyProvider implementation | 🟡 OPEN | Owner: slot-4 successor + Harsh implementation; **gates May-23 cutover** |
+| Phase 3.C.1 — CloudKmsCustodyProvider implementation | ✅ DONE | SHIPPED 2026-05-12 by slot 4 at execution-service@`d45d24b4` (372-line provider + factory wire + 23 unit tests via DI seam, all green). Wired up `cloud_kms` factory branch alongside copper/ceffu/local_key/mock. **Operational gate**: now blocked ONLY on operator Cloud HSM CMK provisioning per `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` (4-6 op-hours). |
 | Phase 3.C.2 — FireblocksCustodyProvider implementation | 🟡 DEFERRED-AFTER-CUTOVER (2026-06-01) | Successor plan: `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned post-creds) — design fully spec'd at PM@`e4c49a88` |
 | Phase 3.D — Treasury rollup `/api/treasury/rollup` endpoint | 🟡 OPEN | deployment-api scope; not done this cycle (collision avoidance with slot 8 cross_cutting #4) — Day 2 next cycle |
 | Phase 4.A wallet-row JSON real-address fill | 🟡 BLOCKED on operator Cloud HSM CMK provisioning per issue doc — template ready at UAC@`b9050d7` | Operator runbook § B.3 in checklist; 4-6 hour operator-task |
@@ -792,13 +797,13 @@ cycle:
 | Phase 6.C — GHA WIF upgrade (replace PATs) | 🟡 OPEN | GHA scope |
 | Phase 6.D — Anthropic API budget cap | 🟡 OPEN — P2 | Deployment-service scope |
 | Phase 8.B — Health endpoint credential probes | 🟡 OPEN | UTL `make_health_router` extension |
-| Phase 8.C — Master plan continuous-verification column | 🟡 OPEN | Master plan refresh; coordinate with slot 1 |
+| Phase 8.C — Master plan continuous-verification column | ✅ DONE | Item 19 row refreshed at PM@`d608dfa4` with full shipment chain (3.C.1 + 3.C.2 design + checklist + template + probe-script) + Last verified bumped 2026-05-12. |
 | Phase 8.D — Pre-cutover sign-off gate | 🟡 OPEN | Operator-runnable on 2026-05-22 via `credential-probe.sh --mode live --archetype carry_staked_basis` (target 100% pass) |
 | Phase 9.B — aws-iam-matrix.md (PENDING Phase 1.B) | 🟡 OPEN | Depends on Phase 1.B (AWS IAM provisioning, slot 4 successor or operator) |
-| Phase 9.D — rotation-runbook.md | 🟡 OPEN | Depends on Phase 5.A.2 |
-| Phase 9.G — Update interface-credential-convention.md | 🟡 OPEN | Codex propagation |
+| Phase 9.D — rotation-runbook.md | ✅ DONE | `codex/05-infrastructure/rotation-runbook.md` NEW at PM@`d608dfa4`. Per-class cadence + 90d CMK auto-rotation re-wrap operator-runbook + pre-cutover rotation gate 2026-05-22. |
+| Phase 9.G — Update interface-credential-convention.md | ✅ DONE | PM@`d608dfa4` — factory table extended with execution-service (Custody) row + per-signing_surface CustodyConfig fields + per-wallet flippability. |
 | Phase 9.H — Update config-reloader-pattern.md | 🟡 OPEN | Codex propagation |
-| Phase 9.I — Update runtime-tiers-and-deployment.md | 🟡 OPEN | Codex propagation |
+| Phase 9.I — Update runtime-tiers-and-deployment.md | ✅ DONE | PM@`d608dfa4` — NEW § "Per-mode credential subset" cross-references credentials_per_mode.yaml + credentials_per_archetype.yaml + credential-probe.sh. |
 | Phase 9.J — Update firebase-local.md | 🟡 OPEN | Codex propagation |
 | Phase 1 — AWS↔GCP parity workstream | 🟡 DEFERRED — biggest single workstream (7-10 AI-days) | Slot 4 successor or operator; gating dual-cloud-active steady state but NOT gating May-23 cutover |
 | Phase 2 — Trading venue credentials native adapters | 🟡 DEFERRED — 10-15 AI-day workstream | Slot 4 successor or Harsh; uses Phase 4.A schema + secret-manager-naming SSOT |
