@@ -211,10 +211,19 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       pre-canonical-question-group) AND any references; canonical = `canonical/domain/predictions/` per the
       `predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md` SSOT. Workspace-grep audit for
       downstream consumers; update each.
-- [ ] [AGENT] P0. **1G — `LST_TOKEN_TO_PROTOCOL_ASSET` SSOT verification.** Confirm presence at the documented location
+- [x] [AGENT] P0. **1G — `LST_TOKEN_TO_PROTOCOL_ASSET` SSOT verification.** Confirm presence at the documented location
       (per `defi_master_2026_05_07.md` Phase 9.1A); if missing, add as
       `unified_api_contracts/canonical/domain/predictions/lifecycle.py` sibling for LSTs at
       `canonical/domain/onchain/lst_protocol_mapping.py`. Map: `(lst_token_symbol, chain) → (protocol, base_asset)`.
+      **✅ SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)** at UAC@`961af767`. **Actual SSOT location**:
+      `unified_api_contracts/internal/domain/defi/lst.py:37` (NOT the plan body's hypothesised
+      `canonical/domain/onchain/lst_protocol_mapping.py`; grep-verified that file doesn't exist). **Actual shape**:
+      `dict[str, tuple[str, str]]` mapping `token → (protocol, base_asset)` — chain is NOT in the key (multi-chain
+      LSTs like wstETH-on-Optimism are the SAME ERC20 token contract bridged; chain dimension lives in
+      `instrument_id` + instruments-service `LST_REFERENCE_DATA` registry). Slot 2 extended with restaking LRTs
+      (`ezETH` → RENZO/ETH, `rsETH` → KELPDAO/ETH) to cover Phase 1A scope. Symbiotic/Karak DELIBERATELY not added
+      (per-vault shares, not a single canonical LRT). Test `test_table_has_all_canonical_lsts` updated; helpers
+      `tokens_for_protocol_asset` + `protocol_asset_for_token` already cover the new entries.
 - [ ] [AGENT] P0. **1H — UAC QG green** (`bash scripts/quality-gates.sh` from UAC repo). All new entries pass
       basedpyright + ruff + Bandit + pytest.
 
