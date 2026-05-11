@@ -18,6 +18,17 @@ sources:
 
 # Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes
 
+> **🟢 ALIGNED with operator decision (b+) 2026-05-11.** The per-env tier resolution pattern documented in this doc
+> (each tier has its own domain → own deployment-api Cloud Run → own GCS bucket scope → own service account scoped to
+> that env's projects only) **is already the architectural target** for the bucket-naming SSOT operator decision (b+)
+> per [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+> Phase 0g. No additional UI work needed — env-aware bucket targeting works by the operator navigating to the matching
+> domain. **Post-Phase-0c (env-tiered bucket provisioning lands)**: the per-env deployment-api must resolve env-tiered
+> bucket names via `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)`; if any API code hardcodes
+> flat bucket names (audit at implementation time), fix in same logical unit as Phase 0c. The header env badge
+> tooltip should show the resolved env-tiered bucket name(s) for the operator's current page so cross-env
+> verification is one-glance.
+
 ## TL;DR
 
 - The deployment-UI + deployment-api pair is the workspace SSOT surface for **everything deployable, monitorable, and

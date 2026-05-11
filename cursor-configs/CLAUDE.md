@@ -398,6 +398,43 @@ Read these before making ANY code changes:
   incident: 2026-05-04 instruments-service `00f6352` + `619a32e` chunk workers without isolation clobbered each other's
   manifest entries. Plan: `pre_flight_concurrency_hardening_2026*<TBD>.md` (Plan C in writegate follow-ups).
 
+- **Bucket-name SSOT operator decision (b+) — full env-aware bucket architecture (codified 2026-05-11)** — Yaml
+  `deployment-service/configs/cloud-providers.yaml` is the canonical bucket-naming SSOT (operator decision 2026-05-11
+  per `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0a). Every bucket-resolution call goes
+  through `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind=...,
+  asset_group=..., env=...)`; never inline `f"gs://{bucket}/..."` (QG STEP 5.69 ratchet enforces). **Operator decision
+  (b+)**: env-tier convention (`${DEPLOYMENT_ENV}` → staging/prod/development) extends to **ALL** bucket kinds across
+  both clouds — Group-A (instruments-store, market-data, raw-tick) AND Group-B (features-\*, ml-\*, strategy-\*,
+  execution-\*). Slot 4 + Harsh slot 1 had recommended option (a) (drop env tier from yaml on the basis that
+  features-\* env-tier was aspirational-not-provisioned); operator overrode to (b+) — provision env-tiered buckets +
+  migrate flat-bucket data + repoint readers/writers — on the strategic basis that prod/staging/dev isolation is a
+  Citadel-grade requirement for May-23 live cutover.
+  - **Pipeline_mode is in the PATH, NOT the bucket name.** Bucket NAME: `gs://market-data-tick-cefi-prod-{pid}` (env in
+    NAME). Path INSIDE: `/raw_tick_data/by_date/day=YYYY-MM-DD/pipeline_mode=live_websocket/asset_group=cefi/...`.
+    Orthogonal axes: env tier controls isolation between prod/staging/dev; pipeline_mode controls source provenance
+    (batch_databento / live_websocket / live_rest) within the bucket.
+  - **Sync script (Phase 0h)**: `deployment-service/scripts/sync-buckets-prod-to-{staging,dev}.sh` keeps dev/staging
+    current with prod via truncated date window (default 2 yrs for staging, 1 yr for dev) + same-region copy ($0
+    egress) + manifest re-sync post-data-sync.
+  - **VM launchers (Phase 0f)**: ~30 launchers under `deployment-service/scripts/vm/` MUST read `DEPLOYMENT_ENV` (env
+    or `--env <prod|staging|dev>` CLI flag) and pass to VM via metadata so bucket-resolution targets the right env.
+  - **Region pinning (Phase 0i)**: GCP all asia-northeast1 (Tokyo); AWS all us-east-1 (or ap-northeast-1 for matched
+    region per operator decision). Bucket provisioning rejects `--location=<other-region>` to keep within-cloud syncs
+    at $0 egress.
+  - **Deployment UI env tier (Phase 0g — already shipped)**: per `codex/05-infrastructure/deployment-ui-architecture.md`,
+    env tier is resolved from `window.location.hostname` (not via in-UI toggle). Each tier has its own domain → its
+    own deployment-api Cloud Run → its own GCS bucket scope → its own service account scoped to that env's projects
+    only. Cross-env data leakage impossible. No additional UI work needed for (b+).
+  - **Migration sequencing**: Phase 1 code-complete (deadline 2026-05-15) covers 0a/0b/0e/0f/0g/0h/0i + L2 config.py
+    migration + legacy `get_bucket_name` delegate. Phase 2 physical migration (window 2026-05-15→05-19) covers 0c
+    (provision ~300-400 new env-tiered buckets across both clouds × 3 envs) + 0d (flat→env-tiered data migration with
+    ≤0.01% drift verification + write-pause cutover). Phase 3 (2026-05-19→05-23) verifies env-tiered native + archives
+    flat buckets + QG STEP 5.69 ratchet enforces no new flat refs. **Sequenced via**
+    `code_freeze_migrate_backfill_sequencing_2026_05_10.md` GAP-2.4.B/C/D/E/F/G/H/I sub-steps.
+  - **Reviewers reject** any new code that builds bucket names by inline f-string formatting (Phase 1 violation per
+    QG STEP 5.69). Reviewers reject any new yaml entry that doesn't carry `${DEPLOYMENT_ENV}` unless explicitly
+    operator-confirmed env-less (currently: `terraform-state`, `secrets`).
+
 - **Sports GCS path SSOT** — Never hardcode `sports_reference/by_date/day=.../entity=.../...` paths inline. Use
   `from unified_api_contracts.sports import candidate_parquet_paths, candidate_parquet_uris, SPORTS_DATA_TYPE_TO_FOLDER, SPORTS_DATA_TYPE_LAYOUT, SportsPathLayout, sports_bucket_name`.
   The 2026-04-29 phantom-row audit incident (false 26% phantom for ODDS because the audit probed `entity=odds/` instead

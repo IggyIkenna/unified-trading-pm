@@ -53,7 +53,7 @@ run to their done-definitions, not to 2026-05-15.
 | 1    | main orchestrator + on-call                                                                                         | [LEDGER](../../harsh_orchestrator/LEDGER.md) + ping triage + workspace QG sweep coordination                                                                                                                                          | continuous    |
 | 2    | **HARDEST DEADLINE 2026-05-13** — features-repo consolidation Phase 4-7                                             | [features_repo_consolidation_2026_05_08.md](features_repo_consolidation_2026_05_08.md) Phase 4-7                                                                                                                                      | ~5            |
 | 3    | wave3x Tracks B/C/D/E parallel                                                                                      | [wave3x_residual_ssots_2026_05_08.md](wave3x_residual_ssots_2026_05_08.md) Tracks B/C/D/E                                                                                                                                             | ~5            |
-| 4    | bucket-name SSOT canonicalisation + per-asset-group available_at adapter wiring                                     | [bucket_name_ssot_canonicalisation_2026_05_10.md](bucket_name_ssot_canonicalisation_2026_05_10.md) + [available_at_lookahead_bias_completion_2026_05_08.md](available_at_lookahead_bias_completion_2026_05_08.md) Phase 1 per-adapter | ~3            |
+| 4    | **(b+) full env-aware bucket architecture** — bucket-name SSOT canonicalisation + env-tier provisioning across both clouds × 3 envs + flat→tiered data migration + sync script + region pinning + VM script env-aware + per-asset-group available_at adapter wiring | [bucket_name_ssot_canonicalisation_2026_05_10.md](bucket_name_ssot_canonicalisation_2026_05_10.md) (Phase 0a-0i) + [available_at_lookahead_bias_completion_2026_05_08.md](available_at_lookahead_bias_completion_2026_05_08.md) Phase 1 per-adapter | ~10-13        |
 | 5    | live pipeline Phase 3-5 service wiring (post features-consolidation unblock; mid-cycle activation) + Phase 13/14/15 | [live_pipeline_mtds_mdps_features_2026_05_08.md](live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 3-5 + 13-15                                                                                                                    | ~5            |
 | 6    | workspace QG green sweep + codex audit pass + Phase 1 freeze-gate items 8 + 9                                       | [code_freeze_migrate_backfill_sequencing_2026_05_10.md](code_freeze_migrate_backfill_sequencing_2026_05_10.md) freeze-gate items 8 + 9                                                                                                | ~3            |
 
@@ -183,24 +183,48 @@ under-utilisation is fine, mid-cycle collision is not.
   - ✅ Track D findings doc enumerates every adapter's classification per CLAUDE.md "Four-category empty-output
     decision" (A/B/C/D categories).
 
-### Slot 4 — Bucket-name SSOT + per-asset-group available_at adapter wiring
+### Slot 4 — (b+) full env-aware bucket architecture + per-asset-group available_at adapter wiring
+
+> **OPERATOR DECISION 2026-05-11 (Ikenna): option (b+) — full env-aware bucket architecture across all buckets in
+> both clouds.** Slot 4 + Harsh slot 1 had recommended option (a) (drop the env tier from yaml); operator overrode to
+> (b+) on the strategic basis that prod/staging/dev isolation is a Citadel-grade requirement for the May-23 live
+> cutover. **Slot 4 scope under (b+) is materially bigger** (~10-13 AI-day vs ~3 under (a)); spans Phase 1
+> code-complete (deadline 2026-05-15) + Phase 2 physical migration window (2026-05-15→05-19). Full Phase 0a-0i
+> breakdown in
+> [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md). Cross-side ping
+> confirming (b+) lands in [`plans/active/_agent_pings.md`](_agent_pings.md).
 
 - **Identity**: `harsh-bucket-and-adapter-tab` (slot 4 worktree at `.tabs/4/`).
-- **Scope**:
-  - **P0 bucket-name SSOT** (per
-    [bucket_name_ssot_canonicalisation_2026_05_10.md](bucket_name_ssot_canonicalisation_2026_05_10.md); NEVER executed
-    per memory):
-    - Decide canonical SSOT layer: yaml as canonical (recommendation per plan line 48); migrate per-family `config.py`
-      to `bucket_naming.resolve_bucket_name()` calls.
-    - Workspace QG step for inline `f"gs://{bucket}/..."` formatters.
-    - Extend yaml-vs-resolver parity unit test.
-    - Plan-flip audit table verifying zero drift.
-  - **P0 per-asset-group available_at adapter wiring** (per
-    [available_at_lookahead_bias_completion_2026_05_08.md](available_at_lookahead_bias_completion_2026_05_08.md) Phase 1
-    remaining halves; CeFi already shipped MTDS@4a00bd5):
-    - Sports adapter stamping (folded with Wave3x Track E from slot 3 — wire Track E's UTL helpers into MTDS sports
-      adapters).
-    - Coordinate hand-off pattern with Ikenna slot 3 once Phase 0 bar boundary contract lands.
+- **Scope (Phase 1 code-complete by 2026-05-15)**:
+  - **P0** Phase 0b — yaml additive corrections: missing `prediction`/`sports` keys, GCP `features-calendar`
+    uncomment, canonical `-test-` E2E variant.
+  - **P0** Phase 0e — yaml extends env tier to ALL `${DEPLOYMENT_ENV}`-MISSING bucket kinds (instruments-store,
+    market-data, etc.). Operator confirms which stay env-less (terraform-state likely; secrets definitely).
+  - **P0** Phase 0f — VM launcher scripts (~30 under `deployment-service/scripts/vm/`) read `DEPLOYMENT_ENV`; pass to
+    VM via metadata. `--env <prod|staging|dev>` CLI flag per launcher OR centralised helper.
+  - **P0** Phase 0g — verify deployment UI env-tier shipped ✅ done (per `codex/05-infrastructure/deployment-ui-architecture.md`); cross-check per-env deployment-api resolves env-tiered names via resolver.
+  - **P0** Phase 0h — sync script `deployment-service/scripts/sync-buckets-prod-to-{staging,dev}.sh` + Cloud Scheduler
+    cron. Truncated date window (1-2 yr), same-region enforced, manifest sync post-data-sync. Ships in Phase 1; first
+    execution Phase 3 / post-cutover.
+  - **P0** Phase 0i — region-pinning audit (GCP all asia-northeast1; AWS all us-east-1 OR ap-northeast-1 per operator
+    decision); reject `--location=<other>` in provisioning.
+  - **P0** Done-def #2 — L2 config.py migration: per-family `config.py` `*_bucket_template` Field defaults →
+    `resolve_bucket_name()` calls. Migration recipe in plan body § Pre-audit manifest.
+  - **P0** Done-def #3 — legacy `get_bucket_name` + `BUCKET_PREFIXES` → delegate to `resolve_bucket_name()`.
+  - **P0** Done-def #5 — QG STEP 5.69 ratchet for inline `f"gs://{bucket}/..."` formatters (ships AFTER #2 + Phase 0d
+    so baseline doesn't bake in pre-migration sites).
+- **Scope (Phase 2 physical migration 2026-05-15→05-19)**:
+  - **P0** Phase 0c — provision env-tiered buckets across BOTH clouds × 3 envs (staging/prod/development) × all yaml
+    kinds. Estimated ~300-400 new buckets. Implementation: extend Terraform `deployment-service/terraform/modules/storage_buckets`
+    OR `setup-buckets.sh`. Verification: `gcloud storage ls` / `aws s3 ls` per yaml-derived name.
+  - **P0** Phase 0d — flat→env-tiered data migration. For every existing flat bucket on GCP + AWS, copy ALL data into
+    new env-tiered prod bucket via `gcloud storage cp -r --preserve-symlinks` / `aws s3 sync`. Drift verify ≤0.01%.
+    Operator-coordinated write-pause cutover window. Archive flat buckets to `*-archived-flat-2026-05-19/` + 30-day
+    retention; delete after manifest + downstream verification.
+- **Scope (per-asset-group available_at adapter wiring; carryover from cycle-start scope)**:
+  - **P0** Sports adapter stamping (folded with Wave3x Track E from slot 3 — wire Track E's UTL helpers into MTDS
+    sports adapters).
+  - **P0** Coordinate hand-off pattern with Ikenna slot 3 once Phase 0 bar boundary contract lands.
 - **Plan-of-record**:
   [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md)
   - [`available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md) Phase

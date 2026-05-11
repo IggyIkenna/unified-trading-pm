@@ -264,16 +264,22 @@ items:
 
   - id: "DAT-09"
     area: "02-data"
-    title: "Bucket naming conventions followed"
+    title: "Bucket naming conventions followed (operator decision (b+) 2026-05-11)"
     description:
       "Bucket names follow the naming conventions in cloud-providers.yaml. No ad-hoc bucket names in code; bucket names
-      sourced from config."
+      sourced from config via resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...). Per operator decision
+      (b+) 2026-05-11 (plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md Phase 0a): yaml's env-tier convention
+      extends to ALL buckets (Group-A instruments-store + market-data + raw-tick AND Group-B features-*/ml-*/strategy/
+      execution) across both clouds × 3 envs (staging/prod/development). Audit verifies: (1) every reader/writer hits
+      env-tiered bucket names not flat; (2) VM launchers read DEPLOYMENT_ENV; (3) sync script (prod -> staging/dev with
+      truncated date window) shipped + scheduled; (4) same-region enforced (no cross-region egress within-cloud); (5)
+      QG STEP 5.69 ratchet for inline f\"gs://...\" formatters green."
     applies_to: "all"
     mode: "both"
     status: "not_assessed"
     evidence: ""
     notes: ""
-    priority: "P2"
+    priority: "P0"
 
   - id: "DAT-10"
     area: "02-data"

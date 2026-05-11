@@ -271,11 +271,30 @@ under-utilisation is fine, mid-cycle collision is not.
     owns the schema; slot 5 owns the enum value addition).
   - **P0** — Audit [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md):
     are recursive-borrow archetype definitions code-shipped? Per defi_master Phase 9 dependency.
+  - **P0 (NEW 2026-05-11)** — **Operator decision (b+) cascade audit**: bucket-name SSOT operator decision
+    [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md) Phase 0a
+    (option (b+) — full env-aware bucket architecture across both clouds + sync script + region pinning) extends Harsh
+    slot 4 scope ~3 → ~10-13 AI-day. Anti-sequencing audit table entry for bucket_name_ssot now flips from "Phase 1.B
+    ownership; sequenced before Phase 2.4 AWS migration writes" to "Phase 1 (code-complete: 0a/0b/0e/0f/0g/0h/0i + L2
+    config.py + legacy delegate) + Phase 2 (physical migration: 0c provision ~300-400 buckets + 0d data migration with
+    ≤0.01% drift verification + write-pause cutover) + Phase 3 (verification: zero readers hit flat names, QG STEP
+    5.69 ratchet enforces no new flat refs)." Update the audit table accordingly + extend
+    [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group D + F readiness columns to reflect
+    the bigger physical migration scope.
   - **P1** — Refresh anti-sequencing audit table at
     [code_freeze:298-313](code_freeze_migrate_backfill_sequencing_2026_05_10.md#L298-L313) with today's status of every
-    plan listed; add new plans created during today's cycle.
+    plan listed (now includes bucket_name_ssot Phase 0c/0d entry per (b+) per
+    [code_freeze:GAP-2.4.B/C/E/F/G/H/I](code_freeze_migrate_backfill_sequencing_2026_05_10.md#L222-L228)); add new
+    plans created during today's cycle.
   - **P1** — Cross-plan coordination banner sweep (helper to slot 1 P0 banner verification): walk the 9 banner targets
-    and add any banners still missing.
+    and add any banners still missing. **NEW per (b+)**: add banner on
+    [`aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md) Phase 2 (already added by slot 1
+    PM@<this commit>) + verify on
+    [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) +
+    [`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md)
+    +
+    [`client_reporting_pnl_attribution_mvp_2026_05_10.md`](client_reporting_pnl_attribution_mvp_2026_05_10.md) (the
+    other plans touching bucket-naming per the 2026-05-11 grep audit).
 - **Plan-of-record**:
   [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase
   1.E + anti-sequencing audit + [`defi_master_2026_05_07.md`](defi_master_2026_05_07.md) for cross-reference.

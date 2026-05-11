@@ -1,19 +1,21 @@
 ---
 title:
-  "Bucket-name SSOT canonicalisation — collapse three-layer drift (yaml + per-family config.py + UTL resolver) to one"
+  "Bucket-name SSOT canonicalisation — collapse three-layer drift (yaml + per-family config.py + UTL resolver) to one + provision env-tiered buckets to match yaml (operator decision option b 2026-05-11)"
 status: active
 created: 2026-05-10
-deadline: pre-cutover (P1 — silent operational failure surface; first-write failures on new consolidated services)
-horizon: 1-2 day scope-bounded
+deadline: 2026-05-15 freeze gate (Phase 1 code-complete) for SSOT collapse + yaml-add-missing-keys; 2026-05-19 Phase 2 window for env-tier provisioning + flat→tiered data migration
+horizon: cross-cycle (Phase 1 code-complete in ~2 days, Phase 2 physical migration in 4-day window)
 spawned_from: plans/archive/issues/bucket_name_ssot_triple_drift_2026_05_10.md (archived 2026-05-10)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 execution:
-  owner: UTL/UAC infra agent
+  owner: Harsh slot 4 (provisioning + L2 config.py migration + data migration coordination); Ikenna slot 1 (operator decisions, cross-plan banner sweep)
   cadence: one-shot
   verifier:
     workspace-grep returns 0 hits for inline f"gs://{bucket}/..." formatters that don't go through UTL resolver;
-    features-service + MTDS + instruments-service first-writes resolve via single SSOT
+    features-service + MTDS + instruments-service first-writes resolve via single SSOT;
+    every yaml-resolver-derived bucket name returns 200 from `gcloud storage ls` / `aws s3 ls`;
+    flat-bucket data migrated to env-tiered buckets with ≤0.01% drift; flat buckets archived
   last_executed: NEVER
 ---
 
@@ -45,11 +47,22 @@ config.py templates onto it. Workspace partially-shifted-but-not-yet-canonicalis
 
 ## FINDING 2026-05-11 (slot 4) — the yaml SSOT contradicts the provisioned features-\* infra (migration-blocking)
 
+> **OPERATOR DECISION 2026-05-11 (Ikenna): option (b) — make reality match the yaml.** Provision env-tiered buckets
+> + migrate flat-bucket data into them + repoint readers/writers via `resolve_bucket_name()`. The yaml STAYS AS-IS as the
+> canonical SSOT (with additions: missing `prediction`/`sports` keys + GCP `features-calendar` uncommented + `-test-`
+> variant canonical shape modeled). The lost prod/staging/dev isolation that motivated the yaml's Group-B env-tier
+> convention IS the architectural target — the system is going live with real money 2026-05-23, env-isolation is a
+> Citadel-grade requirement. The migration cost is high but it's the right architecture; defer the operational complexity
+> to Phase 2 of `code_freeze_migrate_backfill_sequencing_2026_05_10.md` (one-shot physical migration window
+> 2026-05-15→05-19). **Slot 4 + Harsh slot 1 had recommended option (a) (drop the env tier from yaml) — operator
+> overrode to (b) per CLAUDE.md "bucket-naming SSOT decisions are Ikenna's human-approval surface."**
+>
 > **Severity**: P1 / migration-blocking — not a same-day operational outage (the L2 config.py templates are what's
-> actually used in prod today, and they match reality), but a naive "migrate config.py onto `resolve_bucket_name` as-is"
-> would re-create the exact first-write-failure class this plan exists to prevent. **Blast radius**: every features-\* /
-> ml-\* bucket-writing service + `setup-buckets.sh`. **Owner**: needs an operator decision (Q4 below — a "bucket-naming
-> SSOT decision" per the work-split split-principle = Ikenna/operator territory).
+> actually used in prod today, and they match reality), but the resolver-derived names don't exist on disk so any
+> consolidated-service launch via `resolve_bucket_name()` will fail first-write until provisioning lands. **Blast
+> radius**: every features-\* / ml-\* bucket-writing service + `setup-buckets.sh` + Terraform / IaC + the data inside
+> the existing flat buckets (must migrate without loss). **Owner**: Harsh slot 4 implementation per work-split, with
+> coordination from Ikenna slot 1 + slot 5 anti-sequencing audit.
 
 GCP probe (2026-05-11, project `central-element-323112`, `gcloud storage buckets list`):
 
@@ -78,41 +91,126 @@ this plan and **Q4** below (operator decision).
       templates onto `bucket_naming.resolve_bucket_name()` calls (drops the local templates; `${DEPLOYMENT_ENV}` suffix
       gains universal coverage); (b) Per-family configs are canonical; remove `${DEPLOYMENT_ENV}` from yaml entries
       (drops env axis workspace-wide). **DECISION 2026-05-11 (slot 4): (a) — yaml SSOT is canonical AS THE ARCHITECTURAL
-      DIRECTION**, BUT **a Phase 0 yaml-vs-provisioned-infra reconciliation is now a hard prerequisite** — see the
-      FINDING below + the new Phase 0 todo. Rationale for (a): (1) keeps the env axis available for
-      prod/staging/dev/test isolation; (2) yaml already models GCP↔AWS asymmetries (`tick-` infix on GCP `market-data`,
-      AWS-only `features-calendar`) the per-family templates don't; (3) the UTL resolver already reads the yaml — so (a)
-      just _removes_ duplicate layers, no new SSOT. **Caveat (FINDING 2026-05-11)**: the on-disk GCP features-_ buckets
-      (`features-delta-one-cefi-central-element-323112`, `features-onchain-central-element-323112`,
-      `features-sports-...`, `features-volatility-{cefi,defi,...}-...`, `features-calendar-...`) are FLAT — **no
-      `${DEPLOYMENT_ENV}` tier** — so the current yaml `features-delta-one-cefi-${DEPLOYMENT_ENV}-${GCP_PROJECT_ID}`
-      resolves to a bucket that doesn't exist (`...cefi-prod-...`); the L2 config.py templates
-      (`features-delta-one-{ag}-{pid}`, no env) are the ones that match reality. A naive "config.py →
-      resolve_bucket_name as-is" migration would re-create the exact first-write-failure bug this plan exists to
-      prevent. So (a) holds, but the yaml needs a fix-forward FIRST (drop the spurious env tier from GCP features-_ OR
-      provision the env-tiered buckets — operator decision; plus add the missing `prediction`/`sports` keys for
-      `features-delta-one`/`features-volatility`/`features-onchain`/`instruments-store`/ `market-data`, add the GCP
-      `features-calendar` entry, and resolve the `-test-` variant naming inconsistency
-      `instruments-store-cefi-test-{pid}` vs `market-data-tick-test-cefi-{pid}`). Collapse targets unchanged: L2
-      config.py `*_bucket_template` Field defaults → `resolve_bucket_name()`; legacy
-      `cloud_interface.constants.get_bucket_name` + `BUCKET_PREFIXES` → delegate to `resolve_bucket_name()`. See §
-      "Pre-audit manifest" + § "FINDING 2026-05-11" below.
-- [ ] **[AGENT] P0**. **Phase 0 — reconcile `deployment-service/configs/cloud-providers.yaml` with the provisioned
-      features-\* / instruments-store / market-data infra (NEW — surfaced by the 2026-05-11 slot-4 GCP bucket probe).**
-      MUST land before the L2 config.py migration (else the migration produces resolver-derived bucket names that don't
-      exist on disk). Steps: (1) probe GCP (done — see § FINDING) + AWS (`aws s3 ls` — couldn't run from slot, needs a
-      machine with the AWS CLI / ADC) for the actual bucket names; (2) operator decision: drop the spurious
-      `${DEPLOYMENT_ENV}` tier from GCP features-\* yaml entries to match reality, OR provision the env-tiered buckets +
-      migrate data to match the yaml (the riskier path; default to (drop)); (3) add the missing per-asset_group keys
-      (`prediction`/`sports` for `features-delta-one`/`features-volatility`/`features-onchain`/`instruments-store`/
-      `market-data` — those buckets exist on disk but aren't in the yaml); (4) add the GCP `features-calendar` entry
-      (the bucket exists: `features-calendar-central-element-323112`; the yaml has it commented out — uncomment + fix);
-      (5) decide whether/how the resolver models the `-test-` E2E variant (current on-disk shapes are inconsistent:
-      `instruments-store-cefi-test-{pid}` puts `test` after AG, `market-data-tick-test-cefi-{pid}` puts it before AG);
-      (6) update the parity test (UTL@`e8dc6e3`'s `_FEATURES_PIPELINE_KINDS` + `_KNOWN_YAML_ASYMMETRIES`) to match; (7)
-      verify each resolver-derived name `gcloud storage ls`-exists. status: blocked — note: "2026-05-11 slot 4 —
-      surfaced via GCP probe; needs an operator decision on (drop env tier) vs (provision env-tiered buckets) — see §
-      Open questions Q4 (🔴 P0)."
+      DIRECTION**. Rationale: (1) keeps the env axis available for prod/staging/dev/test isolation; (2) yaml already
+      models GCP↔AWS asymmetries (`tick-` infix on GCP `market-data`, AWS-only `features-calendar`) the per-family
+      templates don't; (3) the UTL resolver already reads the yaml — so (a) just _removes_ duplicate layers, no new
+      SSOT. Collapse targets: L2 config.py `*_bucket_template` Field defaults → `resolve_bucket_name()`; legacy
+      `cloud_interface.constants.get_bucket_name` + `BUCKET_PREFIXES` → delegate to `resolve_bucket_name()`.
+- [x] **[AGENT] P0**. **Phase 0a — operator decision on yaml-vs-provisioned-infra mismatch (Q4 below).** OPERATOR
+      DECISION 2026-05-11 (Ikenna): **option (b) — make reality match the yaml.** Provision env-tiered features-\* /
+      ml-\* / strategy-\* / execution-\* buckets to match the yaml's Group-B convention; migrate existing flat-bucket
+      data into the env-tiered buckets; repoint readers/writers via `resolve_bucket_name()`. Yaml stays as-is as the
+      canonical SSOT (with additions per Phase 0b). Slot 4 + Harsh slot 1 had recommended option (a) (drop the env tier
+      from yaml) on the basis that the env-tier was aspirational-not-provisioned; operator overrode to (b) on the
+      strategic basis that prod/staging/dev isolation is a Citadel-grade requirement for May-23 live cutover. See § Q4
+      below for full operator answer text + cross-side ping confirmation to Harsh main.
+- [ ] **[AGENT] P0**. **Phase 0b — yaml additive corrections (NO removals; Phase 1 code-complete scope).** Add the
+      missing per-asset_group keys to `deployment-service/configs/cloud-providers.yaml`: `prediction`/`sports` for
+      `features-delta-one`/`features-volatility`/`features-onchain`/`instruments-store`/`market-data` (those buckets
+      either exist already or will be provisioned per Phase 0c). Uncomment the GCP `features-calendar` entry (the
+      bucket `features-calendar-central-element-323112` already exists). Model one canonical `-test-` E2E variant shape
+      in the yaml (current on-disk shapes are inconsistent: `instruments-store-cefi-test-{pid}` vs
+      `market-data-tick-test-cefi-{pid}` — operator/Harsh slot 4 picks one and migrates the other). Update the parity
+      test (UTL@`e8dc6e3`'s `_FEATURES_PIPELINE_KINDS` + `_KNOWN_YAML_ASYMMETRIES`) to match. status: todo — note:
+      "2026-05-11 — Phase 1 code-complete scope; yaml additions don't require bucket provisioning to land."
+- [ ] **[SCRIPT] P0**. **Phase 0c — provision env-tiered buckets to match yaml (Harsh slot 4 scope; Phase 2 physical
+      migration window 2026-05-15→05-19).** For every yaml entry carrying `${DEPLOYMENT_ENV}`, provision the
+      corresponding bucket on both GCP (`gcloud storage buckets create gs://<resolver-derived-name>`) and AWS
+      (`aws s3 mb s3://<resolver-derived-name>`) via Terraform / `setup-buckets.sh` extensions. Coverage matrix:
+      `(kind, asset_group, env, cloud)` cross-product per yaml. Estimate: ~30-50 new buckets per cloud per env; ~3 envs
+      (staging/prod/development) × 2 clouds = ~180-300 new buckets total. Provision via Terraform module
+      `deployment-service/terraform/modules/storage_buckets` (or extend `setup-buckets.sh` — operator picks at
+      implementation time). Verification: `gcloud storage ls` / `aws s3 ls` returns 200 for every yaml-derived name.
+      status: blocked — note: "Harsh slot 4 owns; Phase 2 of code_freeze_migrate_backfill_sequencing umbrella."
+- [ ] **[SCRIPT] P0**. **Phase 0d — migrate flat-bucket data into env-tiered buckets (Phase 2 physical migration; data
+      preservation critical).** For every existing flat bucket (`features-delta-one-cefi-{pid}`,
+      `features-onchain-{pid}`, `features-sports-{pid}`, `features-volatility-{ag}-{pid}`, `features-calendar-{pid}`,
+      etc. — extended per Phase 0e to include raw-tick + instruments-store + manifest buckets), copy ALL data into the
+      new env-tiered prod bucket (`features-delta-one-cefi-prod-{pid}`, etc.) using `gcloud storage cp -r
+      --preserve-symlinks` (GCP) / `aws s3 sync` (AWS). Drift verification: post-copy object count + total size +
+      spot-check 100 random parquets per bucket must match within 0.01%. **Cutover window**: pause writes to the flat
+      buckets during the migration (operator-coordinated; ~few hours per asset_group depending on volume).
+      Post-migration: archive (don't delete) the flat buckets to a `*-archived-flat-2026-05-19/` prefix + retention
+      policy 30 days, then delete after manifest + downstream verification confirms zero readers still hit the flat
+      names. status: blocked — note: "DEFERRED-AFTER Phase 0c provisioning; Phase 2 of code_freeze umbrella; Harsh
+      slot 4 owns coordinated with operator for the write-pause window."
+
+#### Phase 0e through 0i — full (b+) env-aware bucket architecture extension (operator direction 2026-05-11)
+
+> **OPERATOR DIRECTION 2026-05-11 (Ikenna, extending option b → b+)**: extend the env-tier convention from yaml's
+> Group-B-only (features-\* / ml-\* / strategy-\* / execution-\*) to **ALL buckets** (raw-tick / instruments-store /
+> manifest / etc.). Add a **prod → staging/dev sync script** with truncated date window (1-2 years) so dev/staging
+> aren't full-history (avoids prohibitive storage cost). All buckets in the **same region** (asia-northeast1 on GCP, AWS
+> region per yaml) to avoid cross-region egress. **Verified**: deployment UI already env-tiered per
+> [`codex/05-infrastructure/deployment-ui-architecture.md`](../../codex/05-infrastructure/deployment-ui-architecture.md)
+> § "Environment tier" — no new toggle work needed; resolved from `window.location.hostname`, each env has its own
+> domain → its own deployment-api Cloud Run → its own GCS bucket scope → its own service account.
+
+- [ ] **[AGENT] P0**. **Phase 0e — extend yaml env tier to ALL `${DEPLOYMENT_ENV}`-MISSING bucket kinds (Phase 1
+      code-complete scope).** Currently env-LESS in yaml: `instruments` (was `instruments-store` per resolver — verify
+      actual key), `market_data` / `market-data` (raw tick storage — high-volume), state/terraform-state (probably
+      legitimately env-less; confirm with operator). Add `${DEPLOYMENT_ENV}` to:
+      `instruments-store-{ag}-{env}-{pid}`, `market-data-tick-{ag}-{env}-{pid}` (GCP), `unified-trading-instruments-{ag}-{env}-{account}`,
+      `unified-trading-market-data-{ag}-{env}-{account}` (AWS). Cross-cloud parity: yaml entries match shape on both clouds.
+      Update parity test (UTL@`e8dc6e3`'s `_FEATURES_PIPELINE_KINDS` + `_KNOWN_YAML_ASYMMETRIES`) to require env tier on
+      these kinds too. Operator confirms which buckets STAY env-less (`terraform-state` is likely; `secrets` is
+      definitely). **Composes with**: `pipeline_mode={batch_databento, live_websocket, live_rest}` hive partition
+      INSIDE the bucket — env tier is at the BUCKET NAME level, pipeline_mode is at the PATH level; orthogonal axes,
+      no conflict. status: todo — note: "Phase 1 code-complete scope; lands before Phase 0c provisioning."
+- [ ] **[SCRIPT] P0**. **Phase 0f — VM launcher scripts read `DEPLOYMENT_ENV` (Phase 1 code-complete scope).** Audit
+      every script under `deployment-service/scripts/vm/` (~30 launchers per CLAUDE.md "VM launcher script SSOT") for
+      hardcoded bucket references; ensure each launcher reads `DEPLOYMENT_ENV` from env / CLI flag and passes it to the
+      VM via `metadata` so the VM's bucket-resolution call lands on the right env-tiered bucket. Default to
+      `DEPLOYMENT_ENV=prod` for production launches, `DEPLOYMENT_ENV=staging` for staging launches, etc. Add a
+      `--env <prod|staging|dev>` CLI flag to each launcher OR centralise via a single helper script that every launcher
+      sources. Workspace QG step (companion to STEP 5.69) AST-walks launcher scripts for bucket references not flowing
+      through the env-aware helper. status: todo — note: "Phase 1 code-complete scope; ~30 launchers; bulk audit +
+      bulk edit."
+- [x] **[AGENT] P0**. **Phase 0g — verify deployment UI env-tier resolution (already shipped).** ✅ VERIFIED via
+      [`codex/05-infrastructure/deployment-ui-architecture.md`](../../codex/05-infrastructure/deployment-ui-architecture.md)
+      § "Environment tier (line 33-47, 119-140)": deployment UI env tier is RESOLVED FROM
+      `window.location.hostname` (not via in-UI toggle); each tier (DEV / STAGING / PROD) has its own domain → its own
+      deployment-api Cloud Run instance → its own GCS event/log bucket scope → its own service account scoped to that
+      env's projects only. Cross-env data leakage is impossible because the deployment-api per env uses its own service
+      account. **No additional work**: env-aware UI is shipped. The header env badge (read-only; clicking shows
+      tooltip with resolved env + API base URL + cloud target) is the only operator-visible env signal. **Cross-check
+      under (b+)**: confirm the per-env deployment-api correctly resolves env-tiered bucket names via
+      `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)` once Phase 0c provisioning lands. If the API
+      currently hardcodes flat bucket names anywhere (audit at impl time), fix in same logical unit. status: done
+      (verification only) — note: "deployment UI env-tier shipped pre-2026-05-11; operator's instinct correct."
+- [ ] **[SCRIPT] P0**. **Phase 0h — sync script (prod → staging/dev) with truncated date window + same-region
+      enforcement (Phase 1 code-complete scope ships the script; Phase 3 / post-cutover initial execution).** New
+      script `deployment-service/scripts/sync-buckets-prod-to-staging.sh` (and `-to-dev.sh` variant). Per
+      `(kind, asset_group)` cross-product, copies the last `N` years (default `N=2` for staging, `N=1` for dev;
+      operator-tunable per yaml) of data from the prod bucket to the staging/dev bucket. Same-region constraint:
+      enforce `--source-region == --dest-region`; abort if mismatch (no cross-region egress). Date window: read parquet
+      hive partition `day=YYYY-MM-DD`, copy only `day >= today - N*365` paths. Idempotent: re-running skips
+      already-synced files (gsutil `-n` dry-run + diff). Schedule: Cloud Scheduler daily cron (default 02:00 UTC, low
+      activity) — or operator-triggered if real-time isn't needed. Manifest sync: also re-run manifest consolidator on
+      staging/dev after data sync so the staging/dev manifest matches the truncated window. Verification: post-sync
+      manifest row count in staging/dev = (prod row count) for `day >= today - N*365`; spot-check 100 random parquets
+      readable. status: todo — note: "Script ships Phase 1; first execution Phase 3 or post-cutover (no urgency
+      pre-2026-05-23 since dev/staging not yet in active use)."
+- [ ] **[AGENT] P1**. **Phase 0i — region-pinning audit + enforcement (Phase 1 code-complete scope).** Audit yaml
+      entries for region: GCP entries should all be `asia-northeast1` (per `${GCS_REGION:-asia-northeast1}`); AWS
+      entries should be consistent within yaml (currently `${AWS_REGION:-us-east-1}` per yaml line 59). Cross-cloud
+      region consistency: GCP asia-northeast1 (Tokyo) ≠ AWS us-east-1 (Virginia) — the cross-cloud rsync per
+      `aws_migration_defi_first` already pays this cost; same-region enforcement is WITHIN-cloud (GCP all same; AWS all
+      same). Add region as a yaml field per bucket (or assume cloud-default per `gcp.region` / `aws.region`). Bucket
+      provisioning (Phase 0c) creates buckets in the canonical region; reject any `gcloud storage buckets create
+      --location=<other-region>`. status: todo — note: "Phase 1 code-complete scope; confirm operator wants
+      asia-northeast1 (GCP) + us-east-1 (AWS) as cluster default OR migrate to a closer pair (e.g. asia-northeast1 +
+      ap-northeast-1)."
+
+**Net scope under (b+) — AI-day budget**: Phase 0a (done, decision recorded) + Phase 0b (~0.5 day) + Phase 0c (~2-3
+days for ~600+ new buckets across both clouds × 3 envs × all kinds) + Phase 0d (~2-3 days for full data migration with
+truncated window for dev/staging) + Phase 0e (~1 day yaml extensions) + Phase 0f (~1-2 days launcher script audit +
+edits across ~30 scripts) + Phase 0g (✅ done, verification only) + Phase 0h (~1-2 days sync script ship) + Phase 0i
+(~0.5 day region audit) + done-def #2 (L2 config.py migration ~1 day, blocked-after Phase 0c) + done-def #3 (legacy
+delegate ~0.5 day) + done-def #5 (QG STEP 5.69 ~0.5 day, blocked-after #2) + done-def #6 (audit table ~0.5 day,
+blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans Phase 1 code-complete (deadline
+2026-05-15) + Phase 2 physical migration window (2026-05-15→05-19) + Phase 3 backfill resumption verification
+(post-2026-05-19).
 - [ ] **[SCRIPT] P1**. Migrate per-family `features-service/features_service/{family}/config.py` `*_bucket_template`
       Field defaults to call `bucket_naming.resolve_bucket_name(...)` lazily at runtime (delete the
       `Field(default="...")` template + repoint `get_*_bucket(...)` method bodies). **GATED** on Harsh slot 2
@@ -173,10 +271,27 @@ this plan and **Q4** below (operator decision).
 
 ## Composes with
 
-- `aws_migration_defi_first_2026_05_07.md` — AWS yaml has `features-calendar` entry but GCP doesn't; the parity
-  regression test at UTL@`780a9575` fired on this drift. **RESOLVED 2026-05-11 (slot 4, UTL@`e8dc6e3`)**: the parity
-  test now allowlists the `features-calendar` GCP-missing asymmetry (`_KNOWN_YAML_ASYMMETRIES`, with the documented
-  yaml-comment reason) + a stale-allowlist guard. Undocumented drift still fails.
+- **`code_freeze_migrate_backfill_sequencing_2026_05_10.md`** — this plan's Phase 0a (operator decision) + Phase 0b
+  (yaml additive corrections) + #2 (L2 config.py migration) + #3 (legacy delegate) ship in **Phase 1 code-complete**
+  (deadline 2026-05-15) of the sequencing umbrella. Phase 0c (env-tiered bucket provisioning) + Phase 0d (flat→tiered
+  data migration) ship in **Phase 2 physical migration** (window 2026-05-15→05-19) of the same umbrella alongside
+  manifest v8 atomic rename + GCS bundled migration + AWS DeFi-first parity + cross-asset rescan. Operator-coordinated
+  write-pause window for Phase 0d aligns with the rest of Phase 2's freeze window so backfills don't race the
+  migration.
+- **`aws_migration_defi_first_2026_05_07.md`** — AWS-side env-tier provisioning (Phase 0c half) folds into AWS
+  migration's existing scope; the bucket-naming SSOT decision (b) extends AWS migration's bucket creation step from
+  "10 DeFi buckets" to "all env-tiered Group-B buckets per yaml." AWS yaml has `features-calendar` entry but GCP
+  doesn't; the parity regression test at UTL@`780a9575` fired on this drift. **RESOLVED 2026-05-11 (slot 4,
+  UTL@`e8dc6e3`)**: the parity test now allowlists the `features-calendar` GCP-missing asymmetry
+  (`_KNOWN_YAML_ASYMMETRIES`, with the documented yaml-comment reason) + a stale-allowlist guard. **NEW under (b)**:
+  GCP `features-calendar` entry must be uncommented + provisioned per Phase 0b + Phase 0c, then the allowlist entry
+  removed (Phase 0b done-def step).
+- **`work_split_2026_05_11_harsh.md` § Slot 4** — slot 4's scope grows under (b): `bucket-name SSOT` was scoped at
+  ~3 AI-day for option (a); under (b) it's ~5-7 AI-day spanning Phase 1 (code-complete) + Phase 2 (provisioning + data
+  migration). Work-split slot 4 entry updated 2026-05-11 to reflect (b) scope.
+- **`work_split_2026_05_11_ikenna.md` § Slot 5** — anti-sequencing audit table entry for `bucket_name_ssot_canonicalisation`
+  flips from "Phase 1.B ownership; sequenced before Phase 2.4 AWS migration writes" to "Phase 1 + Phase 2 split per
+  operator decision (b); Phase 0c provisioning + Phase 0d data migration become Phase 2.4 sub-steps."
 - Workspace foot-gun #1 — surgical staging when editing feature-service config.py files (parallel-agent territory).
 - `available_at_lookahead_bias_completion_2026_05_08.md` — sibling plan-of-record for slot 4 this cycle (the per-adapter
   `available_at` stamping half). No shared files; the only overlap is that the QG STEP numbering here (5.69) must not
@@ -360,7 +475,16 @@ I can keep them coordinated, but if a third plan also touches base-service.sh nu
 
 ### Q4 — [harsh-bucket-and-adapter-tab, 2026-05-11 07:13 UTC] — 🔴 P0: cloud-providers.yaml features-\* env-tier is aspirational, not provisioned — drop the tier from the yaml, or provision the env-tiered buckets?
 
-**Status**: ✅ RESOLVED — operator/Ikenna picked **option (b)** 2026-05-11 ("make reality match the yaml" —
+> **🟡 SUPERSEDED 2026-05-11 by (b+) extension** — operator extended (b) → (b+) the same day after reviewing the
+> initial (b) decision shape (PM@7be8593a). (b+) extends env-tier to ALL buckets (Group-A: raw-tick, instruments-store,
+> market-data — not just Group-B features-\*/ml-\*/strategy/execution), adds sync script (prod → staging/dev with
+> truncated date window + same-region), adds region pinning, adds VM launcher env-aware audit. See **#### ✅ Q4
+> RESOLVED — [ikenna-operator, 2026-05-11] — option (b): make reality match the yaml** below for the full (b+) scope
+> + Phase 0a-0i breakdown + AI-day budget. The Harsh-shipped (b) version below stays for attribution + git history;
+> the (b+) version is the authoritative.
+
+**Status**: ✅ RESOLVED (initial (b) per Harsh slot 1 PM@7be8593a; superseded by (b+) extension below per operator
+direction 2026-05-11) — operator/Ikenna picked **option (b)** 2026-05-11 ("make reality match the yaml" —
 provision the env-tiered buckets + migrate the existing flat-bucket data + repoint every reader/writer; high-risk
 multi-bucket data migration). **Implications**: (1) the yaml STAYS env-tiered — that's the SSOT now (no change to the
 `${DEPLOYMENT_ENV}` shape; do ADD the missing `prediction`/`sports` keys with the same env-tier shape, uncomment GCP
@@ -373,7 +497,12 @@ mock mode, so the gap is safe). This is the "code first, physical migration seco
 principle. (3) The env-tiered-bucket **provisioning + flat-bucket data migration + reader/writer repoint** is now a
 `code_freeze` **Phase 2.6** physical-migration item — NOT this plan's / slot 4's job to execute now. (4) Phase 0 of
 this plan is re-shaped: it's now just the yaml-correctness fixes (missing keys / uncomment `features-calendar` /
-`-test-` shape / `ml-*` probe), not "drop the tier vs provision the tier".
+`-test-` shape / `ml-*` probe), not "drop the tier vs provision the tier". **NOTE per (b+) extension**: implication
+(3) updated — `code_freeze` Phase 2.6 became GAP-2.4.B (provision) + GAP-2.4.C (migrate data) + GAP-2.4.D (audit
+table) + GAP-2.4.E (sync script) + GAP-2.4.F (region) + GAP-2.4.G (yaml all-buckets extension) + GAP-2.4.H (VM
+launcher env-aware) + GAP-2.4.I (UI verify ✅ done). Implication (4) extended: Phase 0e (yaml all-buckets env tier)
++ Phase 0f (VM scripts) + Phase 0g (UI verify ✅) + Phase 0h (sync script) + Phase 0i (region pinning) added to this
+plan. AI-day budget grows ~3 → ~10-13 under (b+).
 
 GCP probe (2026-05-11, project `central-element-323112`): the `features-*` buckets that ACTUALLY EXIST are FLAT — no
 `${DEPLOYMENT_ENV}` tier — but the yaml entries
@@ -426,13 +555,57 @@ the Track-D P0-2 banned-NaN-placeholder / bypass-`record_captured` patterns — 
 first to land claims, second adjusts; coordinate via the template.
 
 **A4 (P0 — yaml features-* env-tier mismatch) — surfaced to the operator 2026-05-11** + added to the cross-side ping
-to Ikenna (bucket-naming SSOT is on Ikenna's human-approval surface per CLAUDE.md). Slot 1 endorses slot 4's
-recommendation **(a) make the yaml match reality** — drop `${DEPLOYMENT_ENV}` from the GCP `features-*` (+ `ml-*` if same
-issue once probed) entries, add the missing `prediction`/`sports` keys, uncomment GCP `features-calendar`, pick + model
-one canonical `-test-` variant shape. Low-risk (no bucket renames / data migration); the lost prod/staging/dev features-*
-isolation was never actually provisioned, so nothing changes operationally. **Status: AWAITING OPERATOR / IKENNA DECISION** —
-the L2 config.py migration + Phase 0 stay blocked until it lands. (Do NOT restore per-package ignores or env-prefix the
-config.py templates to "fix" it — the yaml is the SSOT and it must reflect what's provisioned.)
+to Ikenna (bucket-naming SSOT is on Ikenna's human-approval surface per CLAUDE.md). Slot 1 endorsed slot 4's
+recommendation **(a) make the yaml match reality**. **Operator (Ikenna) overrode to (b) — make reality match the yaml**
+2026-05-11. See ✅ A4 RESOLVED below.
+
+#### ✅ Q4 RESOLVED — [ikenna-operator, 2026-05-11] — option (b): make reality match the yaml
+
+**Status**: ✅ RESOLVED. Operator (Ikenna) decision: **option (b) — provision env-tiered buckets + migrate
+flat-bucket data + repoint readers/writers via `resolve_bucket_name()`**. Yaml stays as-is (with Phase 0b additive
+corrections). High-risk multi-bucket data migration accepted as the cost of the right architectural target.
+
+**Rationale (operator)**: prod/staging/dev/test isolation for features-\* and ml-\* and strategy-\* and execution-\*
+buckets is a Citadel-grade requirement for the May-23 live cutover. The yaml's Group-B env-tier convention is the
+correct architectural target; it being aspirational-not-provisioned today is a provisioning gap, not a yaml flaw. The
+right fix is to close the gap by provisioning + migrating data, not by encoding the gap in the SSOT.
+
+**Re-scoping under (b)**:
+
+- **Phase 0a** (✅ done — this answer): operator decision recorded.
+- **Phase 0b** (Phase 1 code-complete scope, deadline 2026-05-15): yaml additive corrections (missing keys + GCP
+  features-calendar + canonical -test- variant). NO removals from the yaml. ~0.5 AI-day.
+- **Phase 0c** (Phase 2 physical migration scope, window 2026-05-15→05-19): provision ~180-300 new env-tiered buckets
+  on GCP + AWS via Terraform / `setup-buckets.sh` extensions. Harsh slot 4 owns. ~1-2 AI-day.
+- **Phase 0d** (Phase 2 physical migration scope): migrate ALL flat-bucket data into the new env-tiered buckets via
+  `gcloud storage cp -r` / `aws s3 sync`; pause writes during cutover; verify drift ≤0.01%; archive flat buckets after
+  manifest + downstream verification. Operator-coordinated for the write-pause window. ~2-3 AI-day depending on data
+  volume + parallel transfer.
+- **Done-def #2 (L2 config.py migration)**: now happens AFTER Phase 0c provisioning (else first-write fails). Same
+  resolver-call shape as before — just resolves to env-tiered names that now exist.
+- **Done-def #3 (legacy `get_bucket_name` delegate)**: unchanged.
+- **Done-def #5 (QG STEP 5.69 ratchet)**: ships AFTER #2 + Phase 0d (else baseline bakes in pre-migration sites).
+- **Done-def #6 (audit table)**: extended to verify Phase 0d data-migration drift ≤0.01% per bucket + zero readers
+  still hit flat bucket names.
+
+**Cross-side ping to Harsh main**: lands in `plans/active/_agent_pings.md` confirming option (b) so Harsh slot 4 can
+re-scope from "yaml fix-forward" to "provision + migrate." See that file for the timestamped ping.
+
+**Sequencing under code_freeze_migrate_backfill_sequencing_2026_05_10.md**:
+
+- Phase 1 freeze gate (2026-05-15): items #1, #2 (L2 config.py migration repointed to resolver — but resolver still
+  returns names that don't exist on disk until Phase 0c provisions them; this is OK because the L2 migration is a
+  CODE change, not a runtime exercise; first-write on consolidated-service launches doesn't happen until Phase 3
+  backfills resume), Phase 0a + 0b shipped.
+- Phase 2 physical migration window (2026-05-15→05-19): Phase 0c provisioning + Phase 0d data migration. Operator
+  coordinates the write-pause window with the master plan's other Phase 2 items (manifest v8 atomic rename + GCS
+  bundled migration + AWS DeFi-first parity + cross-asset rescan).
+- Phase 3 resume backfills (2026-05-19→05-23): all writes hit env-tiered buckets natively; flat buckets archived;
+  done-def #5 QG ratchet enforces no new flat-bucket f-strings.
+
+(Per CLAUDE.md "Plans Run To Actual Completion": "operator-actionable" deferral is NOT allowed for the data migration —
+operator authorized agent has ADC admin perms on both clouds, can run the migration end-to-end. Operator coordination
+is needed only for the write-pause window timing.)
 
 
 ## Deferred work after 2026-05-11 slot 4 session

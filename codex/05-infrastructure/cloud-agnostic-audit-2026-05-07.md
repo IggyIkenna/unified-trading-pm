@@ -18,6 +18,14 @@ related:
 > **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as
 > the audit completes; this is the punch list that drives the AWS migration.
 
+> **🟡 IN-FLIGHT REFACTOR — operator decision (b+) 2026-05-11.** The bucket-naming SSOT operator decision
+> (per [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+> Phase 0a) extends the env-tier convention from yaml's Group-B-only (features-\* / ml-\* / strategy-\* / execution-\*)
+> to **ALL buckets** (raw-tick / instruments-store / manifest / etc.) across BOTH clouds × 3 envs (staging/prod/development).
+> Adds a prod → staging/dev sync script with truncated date window (1-2 yrs) + same-region enforcement +
+> env-aware VM launcher scripts. Audit findings post-2026-05-11 must classify violations against the (b+) target
+> shape, not the (a) drop-env-tier shape.
+
 ## Purpose
 
 Snapshot the workspace's compliance with [`cloud-agnostic-script-pattern`](./cloud-agnostic-script-pattern.md) on

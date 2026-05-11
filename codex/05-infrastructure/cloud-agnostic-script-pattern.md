@@ -21,6 +21,23 @@ related:
 > `deployment-service/scripts/aws/setup-defi-buckets.sh` shipped as the first AWS-side provisioning script). Subsequent
 > phases populate `lib/cloud-helpers.sh` + the Python factory + the QG lint rule.
 
+> **🟡 IN-FLIGHT REFACTOR — operator decision (b+) 2026-05-11.** Per
+> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+> Phase 0a, the env-tier convention extends to ALL buckets (Group-A `instruments-store` / `market-data` / raw-tick + Group-B
+> features-\*/ml-\*/strategy/execution) across both clouds × 3 envs. New requirements for cloud-agnostic scripts:
+>
+> 1. **Every script reads `DEPLOYMENT_ENV`** (env / CLI flag) and passes it to `resolve_bucket_name(...)`. VM launcher
+>    scripts MUST add a `--env <prod|staging|dev>` CLI flag (Phase 0f). Scripts that hardcode bucket names without
+>    reading env are now violations.
+> 2. **Same-region enforcement**: bucket provisioning scripts (`setup-buckets.sh`, Terraform) MUST reject
+>    `--location=<other-region>` to keep within-cloud syncs at $0 egress (Phase 0i).
+> 3. **Sync script pattern (Phase 0h)**: `deployment-service/scripts/sync-buckets-prod-to-{staging,dev}.sh` — copies
+>    last `N` years of data from prod bucket to staging/dev bucket (default `N=2` for staging, `N=1` for dev). Idempotent
+>    via `gsutil -n` dry-run; manifest sync follows. Truncated date window keeps dev/staging storage bill 5-10× cheaper
+>    than full history.
+> 4. **VM launcher env-aware audit**: ~30 launchers under `deployment-service/scripts/vm/` need env-aware bucket
+>    targeting; QG step (companion to STEP 5.69) AST-walks for non-helper bucket references.
+
 ## Purpose
 
 Every script in the workspace that touches cloud resources MUST follow a single pattern so the same script runs against

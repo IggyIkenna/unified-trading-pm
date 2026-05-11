@@ -315,6 +315,17 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
 
 ### Phase 2 — Provision 10 missing DeFi buckets + IAM (½ day, **PARALLEL** with Phase 1.5 once 1.5.A finishes)
 
+> **🟡 IN-FLIGHT REFACTOR — operator decision (b+) 2026-05-11 extends Phase 2 scope.** Per
+> [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md) Phase 0c (operator
+> picked option (b+) — provision env-tiered buckets across both clouds + sync prod→staging/dev with truncated date
+> window), AWS bucket provisioning grows from "10 missing DeFi buckets" to "all env-tiered Group-A + Group-B kinds × 3
+> envs (staging/prod/development)." Estimated: ~150-200 NEW buckets on AWS alone (in addition to GCP-side ~150-200).
+> The 10 DeFi buckets shipped 2026-05-08 cover only PROD env — STAGING + DEV variants must be added. **Coordinate with
+> bucket_name_ssot plan Phase 0c + 0d** (Harsh slot 4 owns); this plan's existing Phase 2 sub-items either get
+> superseded by Phase 0c/0d OR extend to cover the broader scope. Prefer the latter — keep Phase 2 here as the AWS-side
+> implementation arm of bucket_name_ssot Phase 0c. **Sequencing**: this Phase 2 still ships AFTER bucket_name_ssot
+> Phase 1 code-complete (yaml extensions, Phase 0e + 0f) lands.
+
 - [x] [SCRIPT] P0. Extend `deployment-service/configs/cloud-providers.yaml` to declare AWS bucket templates for:
       `dex-pools`, `dex-swaps`, `evm-defi`, `eigenlayer-rewards`, `solana-defi`, `pnl-store-defi`,
       `positions-store-defi`, `risk-store-defi`, `events`, `config-store`. Names:
