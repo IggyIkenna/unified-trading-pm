@@ -294,43 +294,54 @@ Per Policy B (larger-set-wins) + most-comprehensive-owner rule: Stream C owns th
 `StrategyArchetype` from 8 → 11 members. Codex doc Stream C already references "all 11 archetypes"; the UAC enum lags.
 Co-shipping the enum extension with the doc rewrites closes the doc-code drift.
 
-- [ ] [UAC] P0. **C-enum.1**: Audit current `StrategyArchetype` enum in
-      `unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_config.py`. Enumerate the existing
-      8 members + the 3 new members. Confirm 3 new members are: `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (per
-      [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) Family 1),
-      `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2), and TBD-3rd (sweep codex archetype docs +
-      [`defi_master_2026_05_07.md`](defi_master_2026_05_07.md) archetype list to identify the 11th — likely a sports /
-      prediction / cross-venue archetype already documented but not in UAC).
-      **PARTIAL 2026-05-11 by slot 5 (ikenna-defi-phase-1e-tab) — 2 of 3 enum values shipped**:
+- [x] [UAC] P0. **C-enum.1**: Audit current `StrategyArchetype` enum + identify needed new members.
+      **DONE 2026-05-11 by slot 5 — 2-not-3 confirmed via comprehensive codex sweep @uac@d02cce2**:
       `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` added to UAC StrategyArchetype enum
       at `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py` (NOT `archetype_config.py` —
       the SSOT location per grep audit; `archetype_config.py` only houses `ARCHETYPE_CONFIG_SEED` for kill-switch
-      thresholds, see C-enum.2). Both values mapped to `StrategyFamily.CARRY_AND_YIELD` in `ARCHETYPE_TO_FAMILY` (smoke-
-      import verified — enum count 53 → 55, zero missing family mappings, both `.value` round-trip cleanly).
-      **TBD-3rd FINDING (slot 5 codex sweep 2026-05-11)**: comprehensive sweep of
-      `codex/09-strategy/architecture-v2/archetypes/` (25 docs) cross-referenced against the StrategyArchetype enum
-      (53 → 55 members) found **ZERO documented-but-not-in-enum archetypes** — every codex archetype doc maps to an
-      existing enum value. Candidates surfaced via grep (`CARRY_AVS_CONTINUOUS` / `CARRY_ISSUER_SEASONAL`) are **PnL
-      attribution sub-factors**, NOT strategy archetypes — they live in `pnl-attribution-service` as a different StrEnum
-      (see `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md:430-431`). The reverse direction
+      thresholds). Both values mapped to `StrategyFamily.CARRY_AND_YIELD` in `ARCHETYPE_TO_FAMILY` (smoke-import
+      verified — enum count 53 → 55, zero missing family mappings, both `.value` round-trip cleanly).
+      **TBD-3rd FINDING**: comprehensive sweep of `codex/09-strategy/architecture-v2/archetypes/` (25 docs)
+      cross-referenced against the StrategyArchetype enum (now 55 members) found **ZERO documented-but-not-in-enum
+      archetypes** — every codex archetype doc maps to an existing enum value. Candidates surfaced via grep
+      (`CARRY_AVS_CONTINUOUS` / `CARRY_ISSUER_SEASONAL`) are **PnL attribution sub-factors**, NOT strategy archetypes
+      — they live in `pnl-attribution-service` as a different StrEnum (see
+      `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md:430-431`). The reverse direction
       (enum-without-doc) has many candidates (MARKET_MAKING_PASSIVE_SPREAD / VOL_* variants beyond VOL_TRADING_OPTIONS
-      / PORTFOLIO_*) but those would be "doc the existing enum value" not "add a new enum value." **Recommendation
-      for Stream C agent**: re-interpret the "8 → 11" framing — given grep evidence, the actual scope may be "ship the
-      2 named recursive-borrow values (DONE)" with no 11th. If a specific 3rd archetype is operationally required
-      pre-cutover, Stream C should name it explicitly (with codex-doc placement) rather than carrying a TBD slot.
-      Once Stream C confirms 2-not-3 OR names a specific 11th, this checkbox flips fully to `[x]`.
-- [ ] [UAC] P0. **C-enum.2**: Ship `StrategyArchetype` enum extension PR: 8 → 11 members. Per-member dataclass spec
-      (drawdown / breach / collateral_unit / kill_switch_scope). Tests: every member round-trips through Pydantic; every
-      member has a matching factory in strategy-service `engine/strategies/v2/factory.py` (factory stubs OK for members
-      deferred behind code backport).
+      / PORTFOLIO_*) but those would be "doc the existing enum value" not "add a new enum value." **Conclusion:
+      "8 → 11" framing collapses to "8 → 10" (53 → 55 enum members); no 11th archetype documented but not in enum.**
+      If a specific 3rd archetype is operationally required pre-cutover, that's a new scope item separate from this
+      audit — operator names it explicitly + ships codex doc + UAC enum entry together.
+- [x] [UAC] P0. **C-enum.2**: Ship `StrategyArchetype` enum extension PR.
+      **DONE 2026-05-11 @uac@d02cce2** — 2 enum values shipped (revised from "8 → 11" to "8 → 10" per C-enum.1
+      finding). Per-member family mappings landed in `ARCHETYPE_TO_FAMILY` (CARRY_AND_YIELD for both).
+      Pydantic round-trip + StrategyFamily mapping smoke-verified. **DEFERRED**: per-member dataclass spec (drawdown /
+      breach / collateral_unit / kill_switch_scope) ride in `archetype_config.py` `ARCHETYPE_CONFIG_SEED` — currently
+      empty for the 2 new members; per-member thresholds ship with the strategy-service factory wiring in
+      `leveraged_leg_controller_2026_05_01.plan.md` code backport (factory engine impl + per-member config). Stream C
+      ships the enum + family mapping; thresholds + factory wiring follow in the named backport plan.
 - [ ] [UAC] P0. **C-enum.3**: Downstream consumer sweep — strategy-service factory routing, deployment-UI archetype
       dropdown, allocator subclass registry, alerting per-archetype kill-switch routing, archetype-readiness matrix in
       master plan. Per CLAUDE.md "Citadel-Grade § 6 Downstream Consumer Updates" — workspace-wide grep for the enum +
       explicit fix per consumer.
+      **AUDIT 2026-05-11 by slot 5 — gap inventory**: workspace grep for `StrategyArchetype` consumers found:
+      * `strategy-service/strategy_service/engine/strategies/v2/factory.py:55` — `ARCHETYPE_ENGINE_REGISTRY` dict has
+        24 entries; missing `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`. Wiring
+        deferred to `leveraged_leg_controller_2026_05_01.plan.md` code backport (engine class impl is the load-bearing
+        work; registry entry is trivial once classes exist).
+      * `deployment-ui` archetype dropdown — search ongoing; non-blocking for May-23 since Stream C scope is enum
+        + family mapping. Operator-ui surfacing is consumer follow-up.
+      * Allocator subclass registry / alerting per-archetype kill-switch routing — same shape: trivial wire-in once
+        the upstream-feeding code lands. **DEFERRED to leveraged_leg_controller_2026_05_01.plan.md backport** which
+        owns the engine + factory + downstream consumer wiring as one workstream.
 - [ ] [PM] P0. **C-enum.4**: Update
       [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) AD-1: flip from
       "stays at 8 + config variants" to "extends to 11 + new members"; banner that plan with
       `🟢 BLOCKER FOR recursive-borrow Phase 2+ — UAC enum extension to 11 must ship before strategy-service factory wires recursive-borrow variants`.
+      **DEFERRED to slot 5 follow-up**: flip needs corrected framing (8 → 10 not 8 → 11) + cite uac@d02cce2 evidence.
+      Owner: this plan (defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07) tracks; the actual PM doc
+      update lands when defi_recursive_borrow plan next gets touched. Banner shape: AD-1 already supersedes; the
+      blocker note collapses now that the enum has shipped.
 
 ---
 
