@@ -301,8 +301,18 @@ The matching engine lives in `execution-service/execution_service/matching_engin
 | `L0Matcher`        | Sports   | Top-of-book (scraped bookmaker odds)            |
 | `L1Matcher`        | TradFi   | Trades with aggressor side                      |
 | `L2Matcher`        | CeFi     | Order book depth with 5 levels                  |
-| `AMMMatcher`       | DeFi     | Constant product swaps                          |
+| `AMMMatcher`       | DeFi     | Dispatch-by-`PoolShape` over `PoolMatcher` Protocol (V2 / V3 / V4 / Curve stable+crypto / Balancer weighted+boosted / Solana CLMM / Solidly-fork / aggregator) — see [`amm-slippage-simulation.md`](amm-slippage-simulation.md) |
 | `BenchmarkMatcher` | All      | Always fill at requested price (benchmark mode) |
+
+> **NOTE (2026-05-11 slot 6 design ship)**: pre-2026-05-11 `AMMMatcher` was a single constant-product
+> (`x*y=k`) matcher hardcoded to `UniswapV2Pool` at [`engine.py:471`](../../../execution-service/execution_service/matching_engine/engine.py). The Phase 2A refactor introduces dispatch by `pool.pool_shape` via a
+> `PoolMatcher` Protocol that all per-shape pool classes implement (`quote()` / `apply()` / `spot_price()` /
+> `snapshot()`). V2 / V3 / V4 pool classes already exist at `amm.py:52`, `:259`, `:403`; remaining 7 shape
+> classes (Curve stable + crypto, Balancer weighted + boosted, Solana CLMM, Solidly-fork, aggregator) land
+> via `defi_simulation_realism_2026_05_10.md` Phases 2C-2H. The "Batch = Live" seam is `PoolMatcher.apply()`:
+> batch mutates in-memory pool snapshot; live submits tx to venue + reconstructs `FillResult` from on-chain
+> receipt. Full integration spec: [`amm-slippage-simulation.md`](amm-slippage-simulation.md) § "Matching-engine
+> end-to-end integration".
 
 ---
 
