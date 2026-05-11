@@ -336,10 +336,16 @@ todos:
       **PARTIAL SHIPPED 2026-05-11 by slot 5 (ikenna-aggressive-may15-tab, RE-TASK item 2) at MTDS@`48254d2`**: extended
       `PartitionedTickWriter.write_chunk` to handle tradfi via UAC `SOURCE_PRIORITY[("tradfi", dt_str)]` → `databento`
       (10ms microsecond-grade) for trades / tbbo / ohlcv_1m / ohlcv_15m / options_chain / futures_chain.
-      Smoke-import verified all tradfi data_types resolve to databento. **STILL OPEN**: VIX 15m Yahoo fallback route
-      (per `umi_tick_provider.py:_fetch_yahoo_vix_15m` — Yahoo source NOT in EMISSION_LATENCY_MS_BY_SOURCE; needs
-      either a `yahoo: <latency>` seed in UAC OR special-case stamping); Polygon adapter + Barchart historical preload
-      — those have adapter-level paths that don't yet route through this writer.
+      Smoke-import verified all tradfi data_types resolve to databento. **VIX 15m Yahoo fallback CLOSED 2026-05-11
+      @uac@8aaf7de + MTDS@c1a0988**: added `yahoo: 900_000` to UAC `EMISSION_LATENCY_MS_BY_SOURCE` (Yahoo Finance
+      free-tier 15min intraday delay) + extended `SOURCE_PRIORITY[("tradfi", "ohlcv_15m")]` to
+      `["databento", "yahoo"]` (databento primary; yahoo secondary documents the rolling-60d fallback route); MTDS
+      `_fetch_yahoo_vix_15m` now stamps `available_at = ts_event + 900_000ms` BEFORE handing to
+      `PartitionedTickWriter` (writer's `"available_at" not in df.columns` guard preserves the stamp). Smoke-tested
+      via PYTHONPATH-scoped eval. **STILL OPEN — DEFERRED to tradfi_master_2026_05_07**: Polygon adapter (TradFi
+      venues Databento doesn't cover; usage scope to verify) + Barchart historical preload (one-time bulk import;
+      correct semantic = stamp via Yahoo latency since Barchart is the live-equivalent historical proxy for the
+      same CBOE source).
 
 - [x] [SCRIPT] P0. **Predictions lifecycle-bounded `available_at`**. Per `predictions_master_2026_05_07` Phase 2
       (BLOCKED-ON Phase 1 lifecycle ingestion shipping): each prediction-market tick must have
