@@ -388,7 +388,7 @@ todos:
 
   - id: phase-4-mdps-streaming-aggregation
     content: |
-      - [x] [AGENT] P0. Phase 4 — MDPS streaming aggregation cluster per asset_group. SEQUENTIAL after Phase 3. (UTL@`ee64481a` real impl shipped 2026-05-11 slot 4 RE-TASK; per-service MDPS consumer wiring is Harsh slot 5 scope.)
+      - [x] [AGENT] P0. Phase 4 — MDPS streaming aggregation cluster per asset_group. SEQUENTIAL after Phase 3. (UTL@`ee64481a` real impl shipped 2026-05-11 slot 4 RE-TASK; per-service MDPS consumer wiring shipped 2026-05-11 Harsh slot 5 at mdps@`0068b2f` — `live_aggregator.py` LiveStreamAggregator + 7 Protocol adapters + `--mode live --operation streaming-aggregation` + 12 unit tests; QG-clean.)
 
         **DESIGN-AHEAD shipped 2026-05-11 (Ikenna slot 4)**: UTL@`58bfbbeb` —
         `unified_trading_library.streaming.MDPSStreamingAggregator` + `AggregatorConfig` + caller-supplied
@@ -463,7 +463,7 @@ todos:
         rename, same single-`record_captured` per shard). That plan must reach its Phase 1.2 (MDPS
         callsite migration) before Phase 4 here lands.
     status: done
-    note: "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@ee64481a per slot 1 RE-TASK ping (features_repo_consolidation Phase 7 cleared 2026-05-08; spawn-prompt gate was stale). Real impl: full async run loop wrapping sync StreamConsumerGroup via asyncio.to_thread; shard-level failure isolation (per-event exception logs + skip-ack so XAUTOCLAIM re-claims); aggregate_window() decision tree across all 4 categories (FRESH/A + ZERO_ACTIVITY_BAR/D + no-emit/A' + STALE/B'C); per-shard _ShardState tracking with consecutive-empty-windows counter for Cat E gating; cascade_parent_candle partial impl (degraded-propagation + fanout validation; per-shard buffering across run loop iterations DEFERRED). 14 unit tests cover all categories. Per-service MDPS consumer wire-in (MDPS live_aggregator.py + cli/main.py --mode live) is Harsh slot 5's scope."
+    note: "2026-05-11 ikenna-live-pipeline-tab — UTL primitive PROMOTED TO IMPLEMENTATION at UTL@ee64481a per slot 1 RE-TASK ping (features_repo_consolidation Phase 7 cleared 2026-05-08; spawn-prompt gate was stale). Real impl: full async run loop wrapping sync StreamConsumerGroup via asyncio.to_thread; shard-level failure isolation (per-event exception logs + skip-ack so XAUTOCLAIM re-claims); aggregate_window() decision tree across all 4 categories (FRESH/A + ZERO_ACTIVITY_BAR/D + no-emit/A' + STALE/B'C); per-shard _ShardState tracking with consecutive-empty-windows counter for Cat E gating; cascade_parent_candle partial impl (degraded-propagation + fanout validation; per-shard buffering across run loop iterations DEFERRED). 14 unit tests cover all categories. Per-service MDPS consumer wire-in shipped 2026-05-11 by Harsh slot 5 at mdps@`0068b2f`: `market_data_processing_service/app/core/live_aggregator.py` — LiveStreamAggregator orchestrator + 7 Protocol adapters (_MDPSTickFetcher GCS read at pipeline_mode=live_websocket; mdps_ohlcv_aggregator wrapping create_candle_from_interval per Live=batch; _MDPSInstrumentCatalogGate caller-injected alive/venue-open predicates; _MDPSPriorLTPProvider; _MDPSManifestRecorder→record_empty_for_shard; _MDPSTimeframeDAG closed-set DAG) + StreamConsumerGroup/StreamPublisher wiring + emission_publisher publishing CandleComputedEvent + CANDLE_COMPUTED progress event; `cli/parser.py` + `cli/handlers/live_aggregator_handler.py` add `--mode live --operation streaming-aggregation --shard-spec asset_group:venue:data_type`; `config.py` adds streaming_redis_url + vm_name fields; 12 unit tests (pure adapters + 4-category wired-aggregator paths + construction + shard-spec parsing); ruff + basedpyright clean. DEFERRED follow-ups (P1, captured in module docstring + Phase 4 deferred-items list below): (a) candle-parquet persistence — MDPSStreamingAggregator computes OHLCV but the CandleComputedEvent carries metadata only; needs a `candle_persister` Protocol or open_candle_writer integration in the aggregator; (b) publish_with_policy SSOT-policy resolution on the emission boundary (the event already carries emission_policy/outcome from a hardcoded default); (c) catalog-aware (A) vs (D) split wiring (instruments-service cache + venue_trading_calendar) per writegate Phase 3.D.5 Waves 2/3."
 
   - id: phase-5-features-asset-scoped-flavor
     content: |
@@ -1332,8 +1332,43 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
 - **Phase 13 launchers + watchdog updates**: separate todo (Phase 11.2/11.4 cross-references this). Open in this plan's
   Phase 13.
 
+## Deferred work after 2026-05-11 Harsh slot 5 session (per-service consumer wire-in)
+
+The 2026-05-11 Harsh slot 5 session shipped the **Phase 4 MDPS streaming-aggregation consumer wire-in**
+(mdps@`0068b2f` — `live_aggregator.py` LiveStreamAggregator + 7 Protocol adapters + `--mode live --operation
+streaming-aggregation --shard-spec` CLI + config fields + 12 unit tests; ruff + basedpyright clean). Items still open
+are tracked here so the next agent picks up cleanly without re-reading session notes.
+
+| Phase / item                                                | Status as of 2026-05-11                        | Successor / blocker                                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Phase 4 — MDPS streaming aggregation (consumer wire-in)     | `done` (mdps@`0068b2f`)                        | DEFERRED follow-ups: **(a)** candle-parquet persistence — `MDPSStreamingAggregator` computes the OHLCV bar but the `CandleComputedEvent` carries metadata only; needs a `candle_persister` Protocol on the aggregator OR wiring `unified_trading_library.streaming.open_candle_writer`/`write_chunk`/`close_candle_writer` into it. **2-repo change (UTL + MDPS)** → next slot-5 session or operator triage. **(b)** `publish_with_policy` SSOT-policy resolution on the emission boundary (the event already carries `emission_policy`/`emission_outcome` from a hardcoded `STRICT_FAIL` default). **(c)** catalog-aware (A) vs (D) split wiring (instruments-service cache `is_alive` + UAC `venue_trading_calendar` `is_venue_open`) per writegate Phase 3.D.5 Waves 2/3 — currently `_MDPSInstrumentCatalogGate` defaults both predicates to `True`. |
+| Phase 3 — MTDS websocket streaming rollout                  | `todo` (checkbox `- [ ]`)                      | NOT done this session. UTL primitives (`UTCAlignedScheduler`, `StreamPublisher`, `ReplayPublisher`) shipped; per-venue WS adapter wire-in + `--mode live` MTDS CLI dispatch + `CandleBoundaryCrossedEvent` emission + intra-day GCS flush at `pipeline_mode=live_websocket` + manifest record = next slot-5 session. Per-asset_group rollout sequence in Phase 3.5. |
+| Phase 5 — features-service asset-scoped flavor              | `todo` (checkbox `- [ ]`; UTL@`35425c70` real) | NOT done this session. UTL `AssetScopedFeaturesRunner` real impl shipped + `FeaturesComputedEvent` UAC@`e55651b`; per-family `features_service/{onchain,sports,commodity,delta_one,volatility,multi_timeframe}/live/` runner-instantiation modules + `--mode live` features-service CLI = next slot-5 session. Coordinate paths with slot 2's consolidated repo state. |
+| Phase 6 — features-service cross-cutting flavor             | `todo` (checkbox `- [ ]`; UTL@`35425c70` real) | NOT done this session. UTL `CrossCuttingFeaturesRunner` real impl shipped (watermark-buffered fan-in scheduler partial — `process_aligned_window` real); per-service `features_service/{calendar,cross_instrument}/live/` cross-cutting modules = next slot-5 session (after Phase 5 wire-in). |
+| Phase 13 — VM launchers + watchdog dict                    | `done` (deployment-service shipped 2026-05-11 slot 4; 4 launchers code-ready in (b+) env-aware shape; watchdog dict +14 prefixes) | DEFERRED operational: 13.4 watchdog VM relaunch ships with Phase 15 cluster bootstrap. Slot-5 wire-in verified the launchers exist; no code change needed this session. |
+| Phase 14 — Codex SSOT updates (live-pipeline-architecture)  | `done` (items 1 + 4-8 shipped 2026-05-11 slot 4) | The Phase-4-wire-in shape (LiveStreamAggregator + 7 Protocol adapters + the persistence-gap follow-up) is documented in this plan's Phase 4 `note:` field; codex `live-pipeline-architecture.md` already covers the topology. A short codex amendment noting the persistence-gap follow-up (when (a) lands) rides with that work. |
+| Phase 15 — Workspace QG sweep + 7-day live smoke           | `todo` (checkbox `- [ ]`)                      | DEFERRED — gates on Phases 3 + 5 + 6 wire-in completing. Ownership coordinated with slot 6 (workspace QG). |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **features-repo-consolidation Phase 7**: ✅ shipped per LEDGER (features-service deployable, 8 child repos archived) —
+  the gate for Phase 5/6 wire-in is cleared; remaining is the slot-5 wire-in work above. Open in
+  [`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md).
+- **Phase 9 alerting tier-up**: `design-shipped` (codex contract landed); UAC `AlertCode` + alerting-service rule wiring +
+  executive-service kill-switch consumer DEFERRED-TO-TAB-5 per [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md).
+- **MDPSStreamingAggregator candle-persistence + cascade-buffer primitive extensions**: open in
+  [`mdps_streaming_and_backpressure_2026_05_07.md`](mdps_streaming_and_backpressure_2026_05_07.md) (which owns the
+  `open_candle_writer`/`write_chunk`/`close_candle_writer` lifecycle the persistence follow-up will use).
+
 ## Temporary states + their canonical follow-up plans
 
+- **MDPSStreamingAggregator candle-parquet persistence** is intentionally deferred (Phase 4 follow-up (a) above) —
+  the current primitive shape (`OHLCVAggregator` returns a 6-tuple; `CandleComputedEvent` carries metadata only) gives
+  the live-mode consumer no shard-aware hook to persist the bar; the wire-in publishes the `candle_computed` event
+  cascade only. Successor: a `candle_persister` Protocol on `MDPSStreamingAggregator` OR wiring
+  `unified_trading_library.streaming.open_candle_writer`/`write_chunk`/`close_candle_writer` into it. Track under
+  [`mdps_streaming_and_backpressure_2026_05_07.md`](mdps_streaming_and_backpressure_2026_05_07.md) Phase 1 (which ships
+  that lifecycle) + the next Harsh slot-5 session for the MDPS-side consumer wiring.
 - **In-process MDPS→features handoff** is intentionally deferred (Phase 5.2) — initial rollout uses Redis Stream hop
   only. Successor: post-May-23 perf optimisation if benchmarks show Redis-hop is the latency bottleneck. Track under
   `infrastructure_master_2026_05_07` post-cutover follow-ups.
