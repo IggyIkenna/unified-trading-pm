@@ -168,6 +168,93 @@ rows 2 + 3 + 4(cli) + 8 + 11 = one "mechanical batch" sub-agent (all small, cont
 sub-agents (one per family's worst files); row 6 [J] subset = 1-2 sub-agents AFTER Q1.2 + the domain-vs-internal
 decision lands; rows 1 + 6(scripts) + 7 = NO sub-agent — blocked on Q1 (QG-check decisions).
 
+## Phase 1.2 — fresh QG re-enumeration + 3-sub-agent fan-out (2026-05-11 slot 2, session 3)
+
+**Q1.1 / Q1.2 / Q1.3 / Q2 all ✅ FIXED by Ikenna/slot-1** (PM@`2cacb0eb` cli/-print + scripts/-schema-prov exclusions;
+PM@`d2a553ed` deep-import whitelists `unified_api_contracts.internal`; PM@`0407eb1a` imports-inside-functions →
+AST-based). Re-ran `cd features-service && bash scripts/quality-gates.sh` 2026-05-11 (post those PM fixes, on top of
+features-svc@`45efbe44`): `❌ Codex compliance FAILED: 16 violations`. The QG-check FP rows DID clear (`✅ No print()`,
+`monitors/feature_freshness.py` docstring imports no longer flagged, `unified_api_contracts.internal` no longer flagged).
+But the AST-based imports-inside check now finds **28 real nested imports** (vs the old regex's ~3), and several STEP
+5.x checks surface that weren't in the original Phase 1.1 table. **Updated 16-category list** (post-Ikenna-fixes):
+
+| # | Category | Sites (this run) | Owner sub-agent |
+| - | - | - | - |
+| a | `os.getenv()/os.environ` | `commodity/engine/mock_data_provider.py:40` (1 — `WORKSPACE_ROOT`) | C |
+| b | `asyncio.run() in loop` | `calendar/cli/handlers/batch_handler.py` | C |
+| c | `Imports inside functions` (AST) | **28 sites** — incl `api/main.py:61 import importlib` (C); `onchain/collectors/default_factories.py:{82 web3, 152 solana, 212 solders.pubkey, 226 solders.signature}` (B); `onchain/engine/mock_data_provider.py:{250 MockScenario, 251 ScenarioConfig, 265 numpy}` (B); `sports/engine/feature_expectations.py:383 from unified_trading_library import (...)` (A); ~19 more not enumerated in the `head`'d log — each sub-agent fixes the ones in its dir | A/B/C |
+| d | `Empty string fallback` + `Empty dict/list fallback` | entries not visible in the log header view — sub-agent C re-derives via `bash scripts/quality-gates.sh 2>&1 \| sed -n '/Empty string fallback/,/Schema provenance/p'` and fixes its-family ones; A/B fix theirs | A/B/C |
+| e | `Schema provenance: local BaseModel/TypedDict/dataclass` | **~38 `features_service/` models** (scripts/ subset now ✅ excluded). **DEFERRED to its own sub-phase — see "Row e (schema-provenance) — sub-phase decision" below.** | (sub-phase) |
+| f | `Deep unified lib imports — use top-level` | 3: `sports/compute/coverage_gate.py: from unified_api_contracts.sports import (...)` (A); `sports/cli/handlers/batch_handler.py: from unified_api_contracts.sports import get_league_by_api_football_id` (A); `onchain/collectors/scanner_factories.py: from unified_api_contracts.registry.chain_env import resolve_rpc_url` (B). **NOTE** the QG check (`base-service.sh:606-616`, regex `from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import`) only whitelists `.internal` — so it flags `from unified_api_contracts.{domain} import` which CLAUDE.md explicitly sanctions. Sub-agents try the bare `from unified_api_contracts import X` form first (CLAUDE.md's preferred shape); if a symbol isn't re-exported there, leave it + `# Q-FOR-IKENNA` + report (→ a possible Q1.5: whitelist `unified_api_contracts.<domain>` facades, OR UAC re-exports the symbols at bare top-level). `registry.chain_env` is a genuine deep path → bare facade or `.defi`. | A/B |
+| g | `Direct cloud SDK imports found` (codex-compliance) | `sports/data/gcs_reader.py: from google.cloud import storage` ×4 (inside functions) → `unified_cloud_interface.get_storage_client` (A) | A |
+| h | `Files exceed 900 lines` | 6: `volatility/engine/orchestrator.py` 941L (B); `sports/exporters/derived_features_exporter.py` 1618L (A); `sports/calculators/odds_calculator.py` 1391L (A); `sports/calculators/halftime_calculator.py` 1208L (A); `sports/data/gcs_reader.py` 1306L (A); `onchain/engine/orchestrator.py` 1256L (B) | A/B |
+| i | `Function/class/method size exceeded` | **~55 sites** (line 110-163 of the codex-section log) — worst: `sports/cli/handlers/batch_handler.py:422:run() 416L` (A); `sports/exporters/derived_features_exporter.py:147:export_derived_features() 458L` + `:612:_run_new_calculators() 261L` (A); `sports/calculators/odds_calculator.py:579:compute_prob_space_features() 417L` + `:257:compute_odds_batch() 203L` (A); `sports/calculators/team_form.py:184:compute_team_form() 357L` (A); `sports/tracking/feature_builder_registry.py:57:_build_registry() 389L` (A); `sports/calculators/halftime_calculator.py:140:compute_halftime_features() 327L` (A); `sports/calculators/transfer_window_calculator.py:223:_compute_shock_features() 281L` (A); `sports/calculators/h2h_calculator.py:72:compute_h2h() 272L` (A); `sports/calculators/season_context.py:212:compute_season_context() 253L` (A); `sports/calculators/player_lineup_calculator.py:251:compute_player_lineup_features() 219L` (A); `onchain/engine/orchestrator.py:42:OnChainOrchestrationService 1215L` (class!) + 5 onchain methods (B); `delta_one/engine/orchestrator.py:180:process_feature_group() 154L` + 2 more (C); `delta_one/cli/handlers/batch_handler.py:267:_execute_batch() 123L` + 3 more (C); `cross_instrument/cli/handlers/batch_handler.py:394:run() 105L` (C); `calendar/engine/calendar_orchestrator.py:277:process_day() 113L` (C); `volatility/engine/orchestrator.py` 3 methods (B); `onchain/cli/main.py:104:ComputeHandler.run() 117L` + `cli/handlers/batch_handler.py:_ingest_and_process() 119L` (B); `onchain/app/core/feature_writer.py:99:write_features() 138L` (B); + ~25 more 50-130L spread across the families | A/B/C |
+| j | `Backward-compat pattern found` (codex-compliance) | `sports/data/gcs_reader.py` comment "for backward compatibility" + `sports/calculators/transfer_window_calculator.py` comment "For backward compat" (both COMMENTS, no shim code) → reword the comments (A) | A |
+| k | `STEP 5.10: Direct cloud SDK imports` | `scripts/sports/backfill_fixture_features_manifest.py` (A) + `scripts/delta_one/migrate_dash_separator_paths.py` (C) — `from google.cloud import` in scripts → `unified_cloud_interface.get_storage_client`; if a migration script genuinely needs raw SDK, leave + `# Q-FOR-IKENNA: STEP 5.10 should exclude scripts/?` | A/C |
+| l | `STEP 5.12b: Hardcoded cloud URIs` | `sports/data/gcs_reader.py:{797,819,847,881,1116}` — `f"gs://{bucket}/sports_reference/..."` → `resolve_bucket_name(...)` + UCI StorageClient `download_bytes`; use `unified_api_contracts.sports` path helpers (`sports_bucket_name`, `candidate_parquet_uris`) where they cover the path (A) | A |
+| m | `STEP 5.23: Deep UAC import` | `sports/data/gcs_reader.py: from unified_api_contracts.canonical.domain.sports.canonical_ids import (...)` → `from unified_api_contracts.sports import (...)` facade (A) | A |
+| n | `STEP 5.30: Hardcoded market categories` | `volatility/cli/parser.py` (comment embedding `["CEFI","TRADFI"]` — reword) (B) + `multi_timeframe/cli/main.py: asset_group_choices=["CEFI","TRADFI","DEFI","PREDICTION"]` (add `# CORRECT-LOCAL: CLI arg choices` like `cross_instrument/cli/main.py:151` already has) (C) | B/C |
+
+(That's 14 named + the 2 split empty-fallback rows in (d) = ~16. The codex-section log is saved at `/tmp/fqg_slot2_codex_section.txt` for the run.)
+
+**3-sub-agent fan-out launched 2026-05-11 (slot 2, session 3)** — partitioned per-FAMILY (not per-row) because
+`sports/` is too entangled for parallel sub-agents (e.g. `derived_features_exporter.py` consumes `odds_calculator`,
+`halftime_calculator`, AND `gcs_reader` — splitting those in parallel would race on the exporter's import lines):
+
+- **Sub-agent A** = `features_service/sports/**` + `scripts/sports/backfill_fixture_features_manifest.py` — owns rows
+  c(sports)/d(sports)/f(sports x2)/g/h(sports x3)/i(sports ×14)/j(both)/k(sports script)/l/m + the `gcs_reader.py`
+  5-category cluster (g+h+j+l+m). Allowed to touch the single import line in `cross_instrument/sports_bridge.py` if a
+  moved sports symbol is consumed there.
+- **Sub-agent B** = `features_service/onchain/**` + `features_service/volatility/**` — owns rows c(onchain ×7)/d(those
+  families)/f(onchain registry import)/h(onchain orch + volatility orch)/i(onchain ~12 + volatility 3)/n(volatility
+  parser comment).
+- **Sub-agent C** = `features_service/{delta_one,cross_instrument-except-sports_bridge,calendar,commodity-mock-provider,
+  multi_timeframe-cli-main,api-main}/**` + `scripts/delta_one/migrate_dash_separator_paths.py` — owns rows a/b/c(api
+  importlib)/d(those families)/i(delta_one ~7 + cross_instrument 3 + calendar 2)/k(delta_one script)/n(multi_timeframe
+  CLI-choices comment).
+
+All 3: pathspec commits only (shared slot index), no `git add -A`, no `git push` (slot 2 master pushes after verify),
+no schema-prov model migrations (row e deferred). Each reports commits + cleared categories + `Q-FOR-IKENNA` findings +
+deferred sub-items.
+
+**Row e (schema-provenance ~38 `features_service/` models) — sub-phase decision (2026-05-11 slot 2):** deferred to its
+own sub-phase (Phase 1.2e below) — it's a UAC + features-service **cross-repo** refactor, and the file-split sub-agents
+(A/B/C) touch many of the same files (e.g. `volatility/engine/orchestrator.py` has both a >900L split AND
+`FeatureProcessingResult` to move; `cross_instrument/engine/orchestrator.py` has `run() 105L` AND
+`OrchestratorResult`/`ShardResult`), so doing both in parallel would race. Sequence: A/B/C land the size/mechanical
+fixes first → THEN Phase 1.2e relocates the models. **Triage of the ~38** (per the 3-layer schema model — service
+output shapes → `unified_api_contracts.internal.domain.features.<family>`; service-local allowed only
+`SchemaDefinition` parquet schemas + HTTP DTOs):
+
+- **(group 1 — genuine domain I/O → move to `unified_api_contracts.internal.domain.features.<family>`):** the per-family
+  `*FeatureRequest` / `*FeatureResult` pairs (`DeltaOneFeatureRequest/Result`, `VolatilityFeatureRequest/Result`,
+  `CrossInstrumentFeatureRequest/Result`, `SportsFeatureRequest/Result`, `OnchainFeatureRequest/Result`); `OptionQuote`,
+  `VolSurfaceTermStructureRecord`, `VolatilitySurfacePoint` (volatility); `OnChainFeatures` (onchain);
+  `CrossAssetSportsSignal`, `SportFinancialLink` (cross_instrument sports bridge); `OddsHTSnapshot` (sports);
+  `FeatureMetadata`, `FeatureStatistics`, `InstrumentInfo` (delta_one models). The per-family `config.py:Parameters` —
+  these are the strategy/feature-group parameter schemas → also UAC `.internal.domain.features.<family>` (they're a
+  contract, not service-internal plumbing).
+- **(group 2 — service-internal plumbing the QG over-flags — candidate for a narrower "domain" definition OR move to UIC
+  anyway):** `PubSubMessage`/`SubscriberStats` (delta_one pubsub plumbing); `_WeatherRow` (sports — a row tuple);
+  `FeatureRegistryEntry` (sports `_registry_types` — internal registry); `PITViolation`/`ValidationViolation` (sports
+  internal validation results); `DependencyFailure`/`DependencyReport`/`DependencyStatus` (volatility internal);
+  `LookbackValidationReport` (delta_one internal); `*ProcessingResult`/`FeatureProcessingResult`/`HealthResponse`/
+  `OrchestratorResult`/`ShardResult` (internal orchestration/health DTOs); `SteamDetectorConfig`/`SteamMoveSignal`
+  (sports steam-detector config); `CrossInstrumentConfig` (cross_instrument calculator config). **Recommendation**: the
+  workspace rule is "no local domain types — period" (Citadel § 7), and the `SchemaDefinition`+HTTP-DTO carve-out
+  (`python-backend.md` § Schema Governance) is narrow — so move group 2 to `unified_api_contracts.internal.domain.
+  features.<family>` too, EXCEPT `HealthResponse` (genuine HTTP DTO — stays local) and any actual parquet
+  `SchemaDefinition`. If that's too heavy for one sub-phase, group 1 is the must-do; group 2 can be a Q1.6 (does the QG
+  over-flag service-internal plumbing? → narrower "domain" heuristic in `check_schema_provenance.py`). **NEEDS
+  OPERATOR/IKENNA CONFIRMATION** before the relocation sub-agent runs — flagged in Open questions Q3 below.
+
+- [ ] [AGENT] P0. Phase 1.2e — Relocate the ~38 `features_service/` schema-provenance models per the triage above
+      (group 1 mandatory; group 2 pending Q3). Lands AFTER sub-agents A/B/C. UAC side: add
+      `unified_api_contracts/canonical/domain/features/<family>.py` (or extend existing) + facade re-export at
+      `unified_api_contracts.internal.domain.features.<family>` (or `unified_api_contracts.internal`). features-service
+      side: replace local definitions with `from unified_api_contracts.internal import <Model>` + update all consumers.
+      QG `❌ Schema provenance` clears. Own commits on UAC + features-service.
+
 ## Open questions
 
 ### Q1 — [harsh-features-consolidation-tab, <UTC>] — 3 likely QG-check bugs in the codex-compliance step (block part of Phase 1.2)
