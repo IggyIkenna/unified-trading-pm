@@ -599,6 +599,126 @@ Total new cells: 17. Within the master plan position-cap envelope (~$1.7M aggreg
 - [ ] [strategy-service] **P1**. Round-trip test fixture: `tests/unit/v2/test_carry_recursive_borrow_archetypes.py` covering both family enum members through factory + catalog + tracer.
 - [ ] [strategy-service] **P0**. Peripheral script wiring per HARD RULE: extend `strategy-service/scripts/quality-gates.sh` to run basedpyright + ruff on `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW per Phase 12). Confirm directory exists OR defer until Phase 12 lands.
 
+## Phase 12 design — per-family backtest scenario set (2026-05-12 slot 5)
+
+> **Design owner:** ikenna slot 5 / agent-tag `ikenna-recursive-borrow-tab` (2026-05-12).
+> **Source:** Family 1 + 2 funding regime taxonomy synthesis + slot 6 PoolMatcher / golden-harness shape consumption (slot 6 Day-1 ship per `defi_simulation_realism_2026_05_10.md` DONE-2026-05-15 block).
+> **Status:** DESIGN-SHIPPED. Consumed by Phase 9 (matching-engine cost model) + Phase 12 (backtest runs) + Phase 13 (live deploy gating).
+
+### Scope
+
+Define the closed set of backtest scenarios that gate Family 1 + Family 2 cells from `design-shipped` → `live-ready`. Every cell in the Phase 3 catalogue (17 cells: 7 Family 1 + 10 Family 2) must clear the scenario matrix below before promotion to Phase 13 live deploy.
+
+### Scenario taxonomy (3 categories × N concrete scenarios)
+
+#### Category A — Funding regime backtests (Family 2 only; Family 1 skips)
+
+Per the Family 2 design funding regime classification:
+
+| Scenario ID | Window | Regime | Cells exercised | Success criteria |
+| ----------- | ------ | ------ | --------------- | ---------------- |
+| `SCN-A1-NORMAL-2024` | 2024-01-01 → 2024-12-31 | Positive funding median ~+12% APR; episodic +30% spikes | All Family 2 cells | Net APR > 0 on ≥80% of trading days; max consecutive drawdown < 8% per cell |
+| `SCN-A2-FLIP-NOV-2022` | 2022-10-01 → 2022-12-31 | Capitulation; FTX-collapse; ETH-perp funding flipped negative for ~6 weeks | All Family 2 cells | Adaptive-sizing trigger fires within 7 days of 30d-avg crossing −5% APR; perp_short_size reduces ≥50%; max drawdown < 15% |
+| `SCN-A3-FOMO-2024-Q1` | 2024-01-01 → 2024-03-31 | Sharp upswing; funding spiked +50-100% APR daily; ETH/BTC ETF approval flow | Family 2 wstETH / weETH cells | Strategy continues holding short; cumulative funding-capture > 8% APR over 90 days |
+| `SCN-A4-DEPEG-MAR-2023` | 2023-03-08 → 2023-03-15 | USDC depeg post-SVB collapse (USDC traded 0.87-0.93 for ~48h) | All Family 2 USDC-margined cells | Margin auto-topup fires < 60s after deviation > 3%; no liquidation events |
+
+#### Category B — Liquidation stress (price-shock backtests for both families)
+
+Tests Phase 8 HealthFactorMonitor + LiquidationProximityCircuit + kill-switch wiring. Each shock is replayed against cells via Tenderly fork. Scenarios consume slot 6 `PoolMatcher.quote()` for swap leg P&L.
+
+| Scenario ID | Shock type | Magnitude | Cells exercised | Success criteria |
+| ----------- | ---------- | --------- | --------------- | ---------------- |
+| `SCN-B1-FLASH-CRASH-LST-DEPEG` | wstETH/ETH oracle drops 3% over 1 block (15s) | 3% peg deviation | All wstETH / weETH cells | HF doesn't drop below 1.05; partial unwind fires at HF 1.10 (`HEALTH_FACTOR_CRITICAL`); position state matches HealthFactorMonitor predicted at ±0.5% |
+| `SCN-B2-ETH-CRASH-15PCT-1D` | ETH/USD drops 15% in 1 day (e.g. 2024-04-13 BTC-driven sell-off magnitude) | 15% | All ETH-debt cells | Kill-switch unwinds before liquidation (`LIQUIDATION_IMMINENT`); unwind P&L within 2% of analytical model |
+| `SCN-B3-WSTETH-PEG-EXTREME` | wstETH/ETH oracle drops 8% (Lido validator slashing scenario) | 8% peg deviation | wstETH cells (Aave + Morpho) | Morpho LLTV 0.945 cell unwinds at HF 1.05; Aave 0.93 LTV cell maintains; recursive flash-unwind correctly closes loop atomically |
+| `SCN-B4-CBETH-PEG-COINBASE` | cbETH/ETH drops 5% (Coinbase custody-stress scenario) | 5% peg | Base cbETH cells | Cell auto-pauses; bridge-risk + counterparty risk fire as separate alerts |
+| `SCN-B5-ORACLE-STALE-24H` | Chainlink feed goes stale > 24h heartbeat | 24h staleness | All cells | All cells halt opening new loops; existing positions held with `ORACLE_STALE_PAUSE` alert |
+
+#### Category C — Venue + bridge failure (operational resilience)
+
+Tests cross-venue coordination + USDC margin top-up automation.
+
+| Scenario ID | Failure type | Cells exercised | Success criteria |
+| ----------- | ------------ | --------------- | ---------------- |
+| `SCN-C1-HL-BRIDGE-HALT` | Hyperliquid Arbitrum-bridge halt for 30min | All Family 2 HL cells | Adaptive: maintain existing perp position; route new opens to Bybit (failover); 30-min unwind budget respected |
+| `SCN-C2-BYBIT-API-RATELIMIT` | Bybit REST returns 429 for 5 min sustained | All Family 2 Bybit cells | Exponential backoff retries; `BybitCCXTAdapter` does NOT silently fail; positions maintained; alerting fires at 60s of sustained 429 |
+| `SCN-C3-AAVE-PAUSE-RESERVE` | Aave V3 pauses one reserve (e.g. wstETH supply cap reached) | Cells supplying that reserve | Cell goes to `PAUSED_NEW_OPENS` state; existing positions held; can still close/repay |
+| `SCN-C4-UNISWAP-V3-POOL-DRAIN` | Uniswap V3 wstETH/WETH pool drops to <$1M depth | All Family 1+2 wstETH cells using swap leg | Slippage tolerance gate triggers; cells abort opening new loops; existing positions can unwind via fallback (Curve / Balancer per slot 6 aggregator path) |
+| `SCN-C5-USDC-TOPUP-TREASURY-EMPTY` | Treasury USDC balance reaches 0 just as margin top-up needed | All Family 2 cells | Partial unwind fires (Family 1 + perp simultaneously) to release margin; no liquidation events |
+
+### Per-scenario data envelope (gated on defi_catalogue Phase 3 + slot 6 golden harness)
+
+| Data type | Source | Cadence | Horizon needed | Gated on |
+| --------- | ------ | ------- | -------------- | -------- |
+| `SUPPLY_APY` / `BORROW_APY` / `UTILISATION` | MTDS lending-indices adapters | hourly | 2022-03-01 → today | defi_catalogue Phase 3 (broadly captured per 2026-05-12 spec) |
+| `funding_rate` ETH-PERP @ Hyperliquid + Bybit | MTDS funding adapters | 1h (HL) / 8h (Bybit) | 2023-06-29 → today (HL launch); 2018-11-21 → today (Bybit) | defi_catalogue Phase 3 — verify adapter (P1 flag in Family 2 design) |
+| `oracle_prices` Chainlink wstETH/ETH + cbETH/ETH + weETH/eETH | MTDS oracle adapters | per-block | 2022-01-01 → today | defi_catalogue Phase 3 |
+| AMM pool snapshots (Uniswap V3 wstETH/WETH + cbETH/WETH + weETH/WETH) | slot 6 golden test fixtures | per-pool-shape JSON corpus | scenario-specific | slot 6 Phase 3 golden-harness shipped 2026-05-12 |
+
+### Per-cell success criteria (rolls up per scenario)
+
+Each scenario produces a per-cell verdict from the closed set `{PASS, PASS_WITH_WARNING, FAIL_ALPHA, FAIL_RISK, INFRA_GAP}`:
+
+- `PASS`: net APR within ±10% of analytical model + zero risk-rule violations + zero unwind anomalies.
+- `PASS_WITH_WARNING`: net APR within ±20% OR minor risk-rule warning (e.g. HF dipped below 1.10 but recovered).
+- `FAIL_ALPHA`: net APR < 50% of analytical prediction (cell un-economic in regime; flag for cell-removal or scenario-skip).
+- `FAIL_RISK`: HF dropped below 1.05 OR liquidation fired OR cross-venue delta drift > 10% (cell un-safe in regime; mandatory fix or cell removal).
+- `INFRA_GAP`: data missing for the scenario (cell verdict pending; flag for defi_catalogue follow-up).
+
+Cell promotes to `live-ready` only when: ALL Category B + C scenarios → `PASS` or `PASS_WITH_WARNING`; ≥80% of Category A scenarios → `PASS`.
+
+### Backtest harness — consumes slot 6 golden test fixtures
+
+Test runner shape (paste-ready spec for Phase 12 implementation):
+
+```python
+# strategy-service/tests/integration/test_recursive_borrow_scenarios.py (NEW)
+@pytest.mark.parametrize("cell_id", FAMILY_1_CELL_IDS + FAMILY_2_CELL_IDS)
+@pytest.mark.parametrize("scenario", BACKTEST_SCENARIOS)
+def test_cell_scenario(cell_id: str, scenario: BacktestScenario) -> None:
+    # 1. Load cell config from catalog
+    cell = get_target_universe_spec(cell_id)
+    # 2. Replay scenario window through matching engine (slot 6 PoolMatcher.apply())
+    result = run_backtest(
+        cell=cell,
+        scenario_window=scenario.window,
+        oracle_overrides=scenario.oracle_overrides,
+        funding_overrides=scenario.funding_overrides,
+        venue_overrides=scenario.venue_overrides,  # bridge-halt etc.
+    )
+    # 3. Assert per-scenario success criteria
+    verdict = scenario.compute_verdict(result)
+    assert verdict in {PASS, PASS_WITH_WARNING}, (cell_id, scenario.id, verdict, result)
+```
+
+Harness wiring:
+- `BACKTEST_SCENARIOS` list lives in `unified-api-contracts/unified_api_contracts/internal/architecture_v2/backtest_scenarios.py` (NEW; UAC-internal — scenario configs are workspace-cross-cutting).
+- `BacktestScenario` dataclass: `id`, `window: tuple[date, date]`, `oracle_overrides`, `funding_overrides`, `venue_overrides`, `success_criteria_compute_verdict`.
+- `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (per Phase 12 already-existing todo) runs a subset of Category C scenarios against real testnet (Tenderly fork + HL testnet + Bybit testnet) for ≥7 continuous days per master plan Group F item 18.
+
+### Codex SSOT outputs (Phase 12 boundary)
+
+Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
+
+- NEW `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` — full scenario taxonomy + per-cell success criteria + harness shape. Cross-ref `codex/04-architecture/amm-slippage-simulation.md` (slot 6's PoolMatcher Protocol) + `codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md`.
+- UPDATE `codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md` § "Backtest scenarios" — point at new doc.
+- UPDATE `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` § "Per-cell backtest verdicts" — table column for each scenario verdict per cell.
+
+### Phase 12 implementation gates
+
+- [ ] [UAC] **P0**. Add `internal/architecture_v2/backtest_scenarios.py` (NEW) with `BACKTEST_SCENARIOS` list + `BacktestScenario` dataclass; 4 Category A + 5 Category B + 5 Category C scenarios = 14 total.
+- [ ] [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over cells × scenarios; runs via slot 6 PoolMatcher fixtures + Tenderly fork.
+- [ ] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset against live testnet; wired into strategy-service QG per peripheral-script-dirs HARD RULE.
+- [ ] [features-onchain-service] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay.
+- [ ] [codex] **P1**. Author `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (NEW) per spec above.
+- [ ] [codex] **P1**. Update `carry-recursive-staked.md` + `venue-collateral-2026-05-07.md` with backtest-scenario refs.
+
+### Cross-plan annotations needed (Findings Triage)
+
+- **slot 6 `defi_simulation_realism_2026_05_10.md`** — extend golden-harness corpus to cover scenarios B1-B5 (LST oracle shock variants) + C4 (Uniswap V3 pool drain). Slot 6's existing fixtures cover happy-path slippage; scenario fixtures need stress-shape variants.
+- **slot 7 `simulation_scenarios_topology_price_shocks_2026_05_09.md`** — Category B scenarios align with topology-shock taxonomy; check for SSOT overlap (closed-set scenario IDs should NOT drift between plans).
+- **`master_to_live_defi_2026_05_23.md` Group F item 18 (2-year batch backtest run)** — Phase 12 satisfies via full scenario matrix; update master plan item-18 wording to reference scenario ID set.
+
 ## Phase 1 — Prerequisite: lending-rate backfill — REFRAMED 2026-05-10 cross-plan audit Q11
 
 > **🔴 OWNERSHIP TRANSFERRED** to
