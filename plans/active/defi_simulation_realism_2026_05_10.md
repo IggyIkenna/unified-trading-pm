@@ -447,9 +447,13 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
 ## DONE-2026-05-15 — slot 6 (Ikenna `ikenna-defi-sim-realism-tab`) Day-1 design ship 2026-05-11 / 2026-05-12
 
 Day-1 directive (`continuation_prompts_2026_05_12.md` § Ikenna slot 6) closed in single cycle covering **full
-~14 AI-day budget** with directive Phases 1-5 (matrix + sim contract + golden harness + integration spec +
-multi-hop routing) + plan body Phases 4-5 design + Phase 9B+9C+9D codex closures + items 8+9 partial. Plan
-body Phase 9E annotated for slot-1 routing per Findings Triage Discipline.
+~14 AI-day budget AND day 2-4 reserve work compressed into Day-1 per operator "continue"** directive after
+declaring done: directive Phases 1-5 (matrix + sim contract + golden harness + integration spec + multi-hop
+routing) + plan body Phases 3 (lending rate-impact) + 4 (governance sim) + 5 (yield streams) + 6 (hedge ratio
+audit + impl spec + harness) + 7 (slashing MC) design + Phase 9A/B/C/D codex closures + items 8+9 partial
+(4 docs refreshed + 1 created). Plan body Phase 9E annotated for slot-1 routing per Findings Triage Discipline.
+**Only Phase 8 (backtest fidelity validation operator sign-off) and Phase 2-7 IMPLEMENTATION halves remain
+`- [ ]`** — both gated on Harsh slot 4 ramp-up.
 
 ### Commit table
 
@@ -467,7 +471,10 @@ body Phase 9E annotated for slot-1 routing per Findings Triage Discipline.
 | `PM@ae804766` | unified-trading-pm | Codex Phase 4 + Phase 5 — per-protocol governance Governor addresses + Snapshot spaces + subgraphs + Tenderly fork simulator code skeleton + `defi-simulate-proposal` CLI signature + 2-year backfill VM detail; 11-row per-protocol yield-stream capture table (Ethereum beacon / Solana validator / EigenLayer / Symbiotic / Karak / Jito / Ether.fi / Renzo / KelpDAO / Puffer) + per-component model code skeletons (`StakingYieldModel.calibrate_and_sample`, `RestakingAVSModel`, `LRTProtocolFeeModel`, `SeasonalPointsModel`) + composite simulator Phase 5E code. |
 | `PM@30a01f3e` | unified-trading-pm | Plan body Phase 4 + Phase 5 design-shipped status banners + NEW codex `concentrated-liquidity.md` (130-line stub for Phase 9B-NEW: shared CL tick-math invariants + per-implementation addenda for V3 / V4 / Velodrome+Aerodrome Slipstream / Solana CLMM) + Phase 9B `- [x]` flip. |
 | `PM@a39fdee1` | unified-trading-pm | Items 8+9 continuation — codex `tenderly-execution-provider.md` NEW "Downstream consumers" section + codex `restaking-reward-economics.md` NEW "Forward-yield simulation" cross-reference section; Phase 9C `- [x]` flipped. |
-| `PM@<this commit>` | unified-trading-pm | DONE block extension (Day-2 commits) + Phase 9E slot-1-routing annotation. |
+| `PM@ce625ca5` | unified-trading-pm | DONE block extension (Day-2 commits) + Phase 9E slot-1-routing annotation + days 2-4 plan rewritten reflecting closure status. |
+| `PM@ebcc723e` | unified-trading-pm | **Phase 6A audit ✅ + 6B impl spec + 6C harness spec**: `carry_staked_basis` hedge ratio confirmed STATIC at `staked_basis.py:264`; codex hedge-ratio section extended with `_compute_dynamic_hedge_ratio` helper + per-tick rebalance handler + hysteresis band config + LST exchange rate source table (jitoSOL/SOL via Jito stake pool + rETH/ETH via RocketPool `rETH.getExchangeRate()` etc.); plan body Phase 6A flipped `[x]`; Phase 6B reframed conditional → confirmed-needed. |
+| `PM@80905822` | unified-trading-pm | **Phase 3 + Phase 7 design extensions**: codex § "Lending rate-impact" extended with per-protocol IRM capture table (7 protocol-chain combos: Aave V3 × 6 + Compound V3 × 4 + Spark × 2 + Radiant × 2) + `protocol_irm_shape` discriminator + protocol-dispatched `post_trade_rate()` calculator (Compound V3 single-kink shape vs Aave kinked-slope); codex § "Slashing tail-risk MC" extended with per-chain slashing event sources (Lighthouse/Prysm beacon + beaconcha.in historical + Solana `getSlashingHistory` + Solana Beach) + `SlashingTailRiskMC` Poisson+ECDF+Hill-estimator-heavy-tail simulator code + Phase 7C archetype capital-allocation hook; plan body Phase 3 + Phase 7 design-shipped banners. |
+| `PM@<this commit>` | unified-trading-pm | Cross-reference: `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` Phase 6A audit finding banner + AMM-doc cross-link. Final DONE block update covering 17 commits total. |
 
 ### Items 8+9 status (carry-forward from Harsh slot 6 EOD-2026-05-11)
 

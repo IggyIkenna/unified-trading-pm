@@ -29,6 +29,15 @@ on `(perp_venue, lst_asset)`; if False, the slot is rejected.
 
 ## Token / position flow — `LST_AS_MARGIN` (only allowed structure)
 
+> **Hedge ratio audit 2026-05-12 (Phase 6A of `defi_simulation_realism_2026_05_10`)** — current hedge
+> sizing is **STATIC** at `eth_qty * (1 - margin_haircut)` (1:1 against LST principal clamped by venue
+> haircut), confirmed at `staked_basis.py:264`. NO per-tick / per-bar adjustment for LST/native peg drift.
+> Phase 6B implementation (Harsh slot 4) introduces dynamic adjustment using LST exchange rate stream
+> (jitoSOL/SOL, mSOL/SOL, bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH) with `peg_drift_threshold_bps` hysteresis
+> band (default 25 bps ≈ 3σ daily). Full spec:
+> [`../../../04-architecture/amm-slippage-simulation.md`](../../../04-architecture/amm-slippage-simulation.md)
+> § "Hedge-ratio dynamic adjustment (Phase 6)".
+
 ```
 1. SWAP (leader): USDC --> ETH/SOL on a spot venue (UNISWAP_V3, JUPITER, ...).
 2. STAKE: ETH/SOL --> LST on the staking protocol.
