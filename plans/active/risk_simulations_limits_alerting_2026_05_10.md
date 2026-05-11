@@ -273,14 +273,29 @@ canonical SSOTs.
       `tests/internal/unit/test_strategy_family.py` including explicit cutover-membership assertions
       (`test_carry_staked_basis_in_lst_leverage_family` + `test_arbitrage_price_dispersion_in_funding_arb_family`).
       Phase 2.H + 2.I (family-aggregate rules + UTL aggregator) remain `- [ ]` per spawn-prompt scope.)
-- [ ] [AGENT] P0. **2.H Family-aggregate rules.** `registry/risk_rules/strategy_family.py` — per-family rules:
+- [x] [AGENT] P0. **2.H Family-aggregate rules.** `registry/risk_rules/strategy_family.py` — per-family rules:
       `FAMILY_GROSS_EXPOSURE_CAP`, `FAMILY_NET_EXPOSURE_CAP`, `FAMILY_DRAWDOWN_CAP`, `FAMILY_CAPITAL_AT_RISK_CEILING`,
       `FAMILY_CONCENTRATION_PER_VENUE`, `FAMILY_CORRELATION_WITH_OTHER_FAMILY` (cross-family correlation surveillance:
       e.g. all LST-family + funding-arb-family share oracle-risk exposure on Pyth Solana). Each family declares ≥6
-      rules.
-- [ ] [AGENT] P0. **2.I Family-aggregate evaluator.** UTL `risk/family_aggregator.py`: rolls up per-archetype state into
+      rules. (UAC@301882f — slot 7 Sub-F shipped `STRATEGY_FAMILY_RULES` tuple in
+      `unified_api_contracts/registry/risk_rules/strategy_family.py` with full 6-rule seed for LST_LEVERAGE_FAMILY +
+      FUNDING_ARB_FAMILY (12 rules covering the 6 required categories) plus single-rule placeholders for the 5
+      forward-compat families (BASIS_CARRY / OPTIONS_VOL / SPORTS_MM / PREDICTION_MM / STAT_ARB) = 17 rules total.
+      Extended UAC `RiskRuleScope` with new `PER_STRATEGY_FAMILY` member + `RiskRuleId` with 6 `FAMILY_*` members;
+      `kill_switch_scope()` returns `None` for `PER_STRATEGY_FAMILY` (family-aggregate rules escalate via the
+      circuit-breaker BLOCK-rate path, not the kill-switch's per-blast-radius halt). 30 unit tests in
+      `tests/internal/unit/test_risk_rules_strategy_family.py` cover coverage invariants + per-family rule shapes +
+      orthogonality with kill-switch axis.)
+- [x] [AGENT] P0. **2.I Family-aggregate evaluator.** UTL `risk/family_aggregator.py`: rolls up per-archetype state into
       per-family state (sum-of-positions per family + max-drawdown across family + cross-family correlation matrix from
-      rolling returns). Feeds rule_evaluator at family scope. Recomputes per fill event + per-minute cron.
+      rolling returns). Feeds rule_evaluator at family scope. Recomputes per fill event + per-minute cron. (UTL@db8dcae5
+      — slot 7 Sub-F shipped `aggregate_family_state()` + `ArchetypeState` + `FamilyState` TypedDicts in
+      `unified_trading_library/risk/family_aggregator.py`. Aggregation contract: gross/net summed; drawdown max;
+      capital-at-risk summed; cross-family Pearson correlation pairwise from 30d returns (symmetric, omits self,
+      handles zero-variance + length-mismatch gracefully). 23 unit tests in `tests/unit/risk/test_family_aggregator.py`
+      cover empty input, unknown-archetype skip, single + multi-archetype rollup, drawdown=max invariant, correlation
+      symmetry + perfect positive/negative, custom registry override, FamilyState shape sanity. Composes with Sub-G's
+      `risk/rule_evaluator.py` (UTL@9b4bcc09) for Phase 3.B preflight aggregation at family scope.)
 
 **Full-execution criterion**: registry has ≥30 archetype-scope + ≥12 family-scope rules; family-aggregator computes
 per-family state on stub events with correctness invariant `sum(archetype_state) == family_state`; per-family helper
