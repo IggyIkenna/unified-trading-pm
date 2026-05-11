@@ -129,10 +129,18 @@ Owner: ikenna (cross-cutting design); harsh implements per protocol once contrac
 Success criterion: every protocol added in this plan has a UAC entry that downstream consumers (instruments-service /
 MTDS / execution-service) compile against. UAC QG green. No service code references a protocol not declared in UAC.
 
-- [ ] [AGENT] P0. **1-LENDING — Lending-indices UAC enums (folded in from recursive-borrow Phase 1 per Q11 ratification
+- [x] [AGENT] P0. **1-LENDING — Lending-indices UAC enums (folded in from recursive-borrow Phase 1 per Q11 ratification
       2026-05-10)**. Add `SUPPLY_APY` / `BORROW_APY` / `UTILISATION` / `LIQUIDATION_THRESHOLD` / `EMODE_PARAMS` to
-      `data_type` enum in `canonical/domain/market_data/data_types.py`. Update `BUNDLED_DATA_TYPES` if any are bundled
-      per protocol (utilisation per pool may be). Wire into manifest schema `data_type` column validation. Coordinate
+      `data_type` enum. **✅ SHIPPED 2026-05-11 by slot 5 (ikenna-defi-phase-1e-tab)** at
+      `unified-api-contracts/unified_api_contracts/internal/domain/market_data_processing/candle_schema.py` (SSOT
+      location for `DataType` enum — the plan's original ref to `canonical/domain/market_data/data_types.py` was stale;
+      grep-verified only one `class DataType(StrEnum)` in UAC, lives in `candle_schema.py`). All 5 enum values added
+      after `LENDING_INDICES` with comment block citing this plan + recursive-borrow Q11 ratification. Smoke-import
+      verified — `DataType` count 30 → 35, all 5 values resolve to lowercase strings (`supply_apy` / `borrow_apy` /
+      `utilisation` / `liquidation_threshold` / `emode_params`). **DEFERRED to Stream C downstream sweep**: (a)
+      `BUNDLED_DATA_TYPES` extension — utilisation-per-pool MAY be bundled per protocol but the bundling decision
+      belongs to the per-protocol MTDS adapter author (Phase 3 catalogue plan); (b) manifest `data_type` column
+      validation wire-in is automatic via `DataType` StrEnum membership — no extra work. Coordinate
       with [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) Phase 1
       reframed-as-blocker section — that plan no longer ships these; this plan ships them as part of Phase 1.
 

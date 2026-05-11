@@ -295,6 +295,16 @@ Co-shipping the enum extension with the doc rewrites closes the doc-code drift.
       `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2), and TBD-3rd (sweep codex archetype docs +
       [`defi_master_2026_05_07.md`](defi_master_2026_05_07.md) archetype list to identify the 11th — likely a sports /
       prediction / cross-venue archetype already documented but not in UAC).
+      **PARTIAL 2026-05-11 by slot 5 (ikenna-defi-phase-1e-tab) — 2 of 3 enum values shipped**:
+      `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` added to UAC StrategyArchetype enum
+      at `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py` (NOT `archetype_config.py` —
+      the SSOT location per grep audit; `archetype_config.py` only houses `ARCHETYPE_CONFIG_SEED` for kill-switch
+      thresholds, see C-enum.2). Both values mapped to `StrategyFamily.CARRY_AND_YIELD` in `ARCHETYPE_TO_FAMILY` (smoke-
+      import verified — enum count 53 → 55, zero missing family mappings, both `.value` round-trip cleanly).
+      **DEFERRED — TBD-3rd**: the 11th archetype identification (codex archive sweep + defi_master archetype list
+      cross-reference) remains Stream C scope. Slot 5 did not ship the 3rd because the value is not yet identified;
+      adding it requires the codex sweep which Stream C owns. Once Stream C identifies the 11th, this checkbox flips
+      fully to `[x]`.
 - [ ] [UAC] P0. **C-enum.2**: Ship `StrategyArchetype` enum extension PR: 8 → 11 members. Per-member dataclass spec
       (drawdown / breach / collateral_unit / kill_switch_scope). Tests: every member round-trips through Pydantic; every
       member has a matching factory in strategy-service `engine/strategies/v2/factory.py` (factory stubs OK for members
