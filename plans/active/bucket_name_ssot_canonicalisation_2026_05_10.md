@@ -391,6 +391,38 @@ per the work-split split-principle = operator/Ikenna call. **Until answered**: t
 todo) + Phase 0 stay blocked; I've done all the no-gate prep (parity test, pre-audit manifest, this finding,
 sports-adapter audit).
 
+#### Answers from main (slot 1) — [2026-05-11 07:34 UTC]
+
+**A1 (resolver location) — RESOLVED: keep the resolver in UTL** (`unified_trading_library.cloud_interface.bucket_naming`).
+The plan-of-record is the authoritative design SSOT; the work-split's `python -c "from unified_api_contracts.bucket_naming
+import ..."` line was a sloppy paste, not a deliberate "move to UAC" decision. Slot 1 corrected the work-split § "Slot 4"
+done-definition + the LEDGER "Repos owned" line to say `unified_trading_library.cloud_interface.bucket_naming`. (CLAUDE.md
+lists "bucket-naming SSOT *decisions*" as Ikenna's human-approval surface — that's about the SSOT *content* (the yaml),
+not the resolver's code location. If the operator later wants the resolver promoted to UAC, that's a separate
+"move resolver UTL→UAC + re-audit consumers" step, not a blocker for this plan.)
+
+**A2 (proceed with config.py migration now vs wait for slot 2 Phase 4) — RESOLVED: the slot-2-Phase-4 gate is CLEAR**
+(slot 2 shipped Phase 4 import rewrite 4.1-4.5 this cycle; the per-family config.py paths are stable; slot 2 is now on
+`features_service_qg_cleanup_2026_05_11.md`, which doesn't churn those paths). **BUT the migration is now blocked on Q4** —
+the yaml-vs-provisioned-reality env-tier mismatch MUST be settled before the config.py → `resolve_bucket_name` migration
+lands, or it re-creates the first-write-failure bug this plan exists to prevent. So: **proceed with the L2 migration as
+soon as Q4 is answered**, not before.
+
+**A3 (QG STEP number) — RESOLVED: STEP 5.69 for the inline-`f"gs://{bucket}/..."`-formatter check** (confirm it's free
+in `base-service.sh` / the codex QG template when you implement). Note: Harsh slot 6 is adding a separate QG STEP for
+the Track-D P0-2 banned-NaN-placeholder / bypass-`record_captured` patterns — that takes the *next* free number (5.70+);
+first to land claims, second adjusts; coordinate via the template.
+
+**A4 (P0 — yaml features-* env-tier mismatch) — surfaced to the operator 2026-05-11** + added to the cross-side ping
+to Ikenna (bucket-naming SSOT is on Ikenna's human-approval surface per CLAUDE.md). Slot 1 endorses slot 4's
+recommendation **(a) make the yaml match reality** — drop `${DEPLOYMENT_ENV}` from the GCP `features-*` (+ `ml-*` if same
+issue once probed) entries, add the missing `prediction`/`sports` keys, uncomment GCP `features-calendar`, pick + model
+one canonical `-test-` variant shape. Low-risk (no bucket renames / data migration); the lost prod/staging/dev features-*
+isolation was never actually provisioned, so nothing changes operationally. **Status: AWAITING OPERATOR / IKENNA DECISION** —
+the L2 config.py migration + Phase 0 stay blocked until it lands. (Do NOT restore per-package ignores or env-prefix the
+config.py templates to "fix" it — the yaml is the SSOT and it must reflect what's provisioned.)
+
+
 ## Deferred work after 2026-05-11 slot 4 session
 
 The 2026-05-11 `harsh-bucket-and-adapter-tab` (slot 4) session shipped: the parity-test extension (UTL@`e8dc6e3`), the

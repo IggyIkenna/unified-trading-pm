@@ -205,7 +205,7 @@ under-utilisation is fine, mid-cycle collision is not.
   [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md)
   - [`available_at_lookahead_bias_completion_2026_05_08.md`](available_at_lookahead_bias_completion_2026_05_08.md) Phase
     1 per-adapter halves.
-- **Repos owned**: `unified-api-contracts` (bucket_naming resolver) + `unified-trading-library` (QG step) +
+- **Repos owned**: `unified-trading-library` (`cloud_interface.bucket_naming` resolver — already exists; SSOT = `cloud-providers.yaml`) + `unified-trading-library` (QG step) +
   `features-service` (per-family config.py — coordinate with Harsh slot 2 on file paths) + `deployment-service`
   (setup-buckets.sh) + `market-tick-data-service` (sports adapter stamping wiring) + PM (plan flips + audit table).
 - **Read-first**: CLAUDE.md § "Bucket-name SSOT" memory entry + § "available_at is per-row" + § "Plans Run To Actual
@@ -225,7 +225,7 @@ under-utilisation is fine, mid-cycle collision is not.
   - ✅ Sports adapter stamping wired to MTDS; LookaheadBiasError strict-mode green for sports features-\* compute.
 - **Full-execution criterion**:
   - ✅ A live
-    `python -c "from unified_api_contracts.bucket_naming import resolve_bucket_name; print(resolve_bucket_name('cefi', 'tradfi'))"`
+    `python -c "from unified_trading_library.cloud_interface.bucket_naming import resolve_bucket_name; print(resolve_bucket_name(cloud='gcp', kind='market-data', asset_group='cefi'))"`
     returns the canonical bucket name; per-family config.py imports raise `DeprecationWarning`.
     - **What ran**: workspace-wide import + grep audit.
     - **Verification**: zero string literals matching `gs://.+-` outside the resolver module.
@@ -360,7 +360,7 @@ under-utilisation is fine, mid-cycle collision is not.
 | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `features-service/features_service/*`                                     | slot 2 (consolidation), slot 4 (config.py per-family), slot 5 (live-pipeline consumers) | Slot 2 sole writer until Phase 7; slots 4 + 5 wait for hand-off ping.                         |
 | `unified-api-contracts/unified_api_contracts/canonical/sports/*`          | slot 3 (Wave3x Track B SSOTs)                                                           | Slot 3 sole writer; coordinates with Ikenna slot 5 if any DeFi/cross-asset overlap.           |
-| `unified-api-contracts/unified_api_contracts/bucket_naming.py`            | slot 4 (bucket-name SSOT)                                                               | Slot 4 sole writer.                                                                           |
+| `unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py` + `cloud-providers.yaml` | slot 4 (bucket-name SSOT — yaml is the SSOT, resolver in UTL) | Slot 4 sole writer. |
 | `unified-trading-library/unified_trading_library/availability_stamping/*` | slot 3 (Track E sports stamping) + Ikenna slot 3 (Phase 0 helpers)                      | Distinct files within stamping/; both can edit in parallel; surgical `git add -p`.            |
 | `market-tick-data-service/*`                                              | slot 4 (sports adapter wiring), slot 5 (Phase 3 websocket), slot 6 (audit, read-only)   | Distinct files; slots 4 + 5 surgical staging.                                                 |
 | `instruments-service/scripts/*`                                           | slot 3 (Track C reconciler)                                                             | Slot 3 sole writer; new script file, no collision.                                            |

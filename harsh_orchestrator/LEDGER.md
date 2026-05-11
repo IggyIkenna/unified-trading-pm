@@ -250,8 +250,18 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 - **Full task brief**: [`../plans/active/work_split_2026_05_11_harsh.md`](../plans/active/work_split_2026_05_11_harsh.md)
   § "Slot 3 — Wave3x Tracks B/C/D/E parallel".
 
-#### Slot 4 — `harsh-bucket-and-adapter-tab` 🟢 IN FLIGHT — booted 2026-05-11 06:55 UTC (PM@`eb52b83b`); bucket-SSOT canonical-layer decided (yaml); PARTIAL GATE on the rest (slot 2 Phase 4 + slot 3 Track E + Ikenna slot 3 Phase 0)
+#### Slot 4 — `harsh-bucket-and-adapter-tab` ⚪ PREP DONE, GOING QUIET — no-gate work shipped; waiting on Q4 (P0, operator) + slot-3 Track E
 
+- **Status (2026-05-11, latest)**: ⚪ no-gate prep DONE, agent gone quiet (cleanly). Shipped: parity-test extension
+  UTL@`e8dc6e3` (bucket_naming features-*/sports/tradfi/prediction coverage + fixed `test_workspace_yaml_has_gcp_aws_parity`,
+  RED since 2026-05-08); plan-flips PM@`59e92b18`; full 4-layer pre-audit manifest + per-layer migration recipe + QG STEP
+  5.69 design; the **P0 FINDING** that `cloud-providers.yaml` features-* entries carry a `${DEPLOYMENT_ENV}` tier the GCP
+  buckets DON'T have (naive config.py→`resolve_bucket_name` migration would re-create the first-write-failure bug — Q4,
+  surfaced to operator + cross-side-pinged Ikenna); sports-adapter audit `issues/mtds_sports_available_at_wiring_2026_05_11.md`
+  (PM@`7c088961`/`e1f20f01`); DONE block + deferred-work scoreboard. **Q1/Q2/Q3 answered by slot 1** (A1 keep resolver
+  in UTL — work-split paste corrected; A2 slot-2-Phase-4 gate clear, proceed after Q4; A3 STEP 5.69). **Resume on**: Q4
+  answered (operator/Ikenna — recommend (a) match yaml to reality) → Phase 0 + L2 config.py migration; slot-3 Track E ships
+  → wire sports stamping into MTDS.
 - **Worktree note (2026-05-11)**: slot 4's `unified-trading-system-ui` worktree was left in a broken half-checkout
   state (3075 dirty files, `locked`) by the killed `--init` during the freeze incident. Fixed: removed the broken
   worktree, re-added on `tab/hk/4`, ran `--reset-slot 4` → all slot-4 repos rebased clean onto `origin/live-defi-rollout`.
@@ -271,7 +281,7 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
   (bucket-SSOT triple-drift incident, 2026-05-08 Tab 4 close-out — there are THREE current SSOT layers: yaml + per-family
   config.py + UTL resolver; yaml is canonical, collapse the other two; audit each call site before deletion).
 - **Sub-agent fan-out**: 2 parallel — (1) bucket-name SSOT migration, (2) sports adapter stamping wiring (gated).
-- **Repos owned**: `unified-api-contracts` (bucket_naming resolver) + `unified-trading-library` (QG step) + `features-service`
+- **Repos owned**: `unified-trading-library` (`cloud_interface.bucket_naming` resolver — exists; SSOT = `cloud-providers.yaml`) + `unified-trading-library` (QG step) + `features-service`
   (per-family config.py — coordinate paths with slot 2) + `deployment-service` (setup-buckets.sh) + `market-tick-data-service`
   (sports adapter stamping) + PM (plan flips + audit table).
 - **Full task brief**: [`../plans/active/work_split_2026_05_11_harsh.md`](../plans/active/work_split_2026_05_11_harsh.md)
@@ -359,6 +369,7 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 | --- | --- | --- | --- | --- |
 | 3 (via slot 1 + Ikenna) | `issues/wave3x_track_d_findings_2026_05_11.md` | Add `EXPECTED_KNOWN_SOURCE_GAP` to UAC `EmptyConfirmedReason` in the Phase-1 schema window (before 2026-05-15) OR defer post-cutover? + case-D *implementation* = substantial deferred work — defer post-cutover or fold into a named Wave 3.M plan? | 🟡 cross-side-pinged Ikenna 2026-05-11 (`plans/active/_agent_pings.md`) | Ikenna slot 5 (v7/v8 schema) + slot 1 — operator weigh-in welcome; recommend add the enum in Phase 1 + defer case-D impl post-cutover |
 | 6 (via slot 1 + Ikenna) | `issues/codex_audit_2026_05_11.md` Q1 (F3) | Which plan is the canonical v8 manifest-schema declaration owner — `code_freeze:139,174-179` says writegate slice (b) Phase 5.1 ("NOT a separate v8 file"); `availability-manifest-and-data-status.md` + `manifest_schema_final_gate_2026_05_09.md` say the final-gate plan. Double-SSOT risk. | 🟡 cross-side-pinged Ikenna 2026-05-11 | Ikenna-side reconcile: (a) "same work, two refs" → say so in both; or (b) one supersedes → banner the loser + fix code_freeze:139,174-179. P2, not blocking. |
+| 4 (operator + Ikenna) | `bucket_name_ssot_canonicalisation_2026_05_10.md` Q4 (P0) | `cloud-providers.yaml` features-* (+ Group-B ml-*/strategy/execution) carry a `${DEPLOYMENT_ENV}` tier the provisioned GCP `features-*` buckets DON'T have → `resolve_bucket_name` would compute non-existent names → first-write failures (the exact bug the plan prevents). Plus missing `prediction`/`sports` keys, commented-out `features-calendar`, inconsistent `-test-` shapes. | 🟡 surfaced to operator + cross-side-pinged Ikenna 2026-05-11; AWAITING decision (migration-blocking) | Recommend (a) make the yaml match reality (drop spurious env tier from GCP `features-*`, add missing keys, uncomment `features-calendar`, model one `-test-` shape — low-risk, no bucket renames). Bucket-naming SSOT = Ikenna/operator. |
 | 2 | `features_repo_consolidation_2026_05_08.md` Q1 | Phase 4.6 (consolidated-repo QG green) BLOCKED on ~17 codex-compliance + function/file-size violations carried over from the 8 source repos without their per-file ignores (proper fix = a multi-day cleanup workstream, not per-package-ignore restoration); Phase 6 full byte-for-byte parity RUN never ran (needs a 7-day live-data window); F9 org-naming (features-service under `CosmicTrader` not `IggyIkenna` — operator-confirmed-temporary). NONE of it gates the May-23 cutover per the plan's own assessment; Phase 7 (8 repos archived) IS done. | 🟡 BLOCKED — needs operator triage on scope | Recommend: (a) spin a `features_service_qg_cleanup_<date>.md` successor plan owning 4.6 + Phase 6 full parity run + F9; (b) annotate Phase 4.6 + Phase 6 `**DEFERRED → successor**`; (c) treat features-consolidation as ~done for the work-split (residual = QG-cleanup + parity-run, neither gating cutover). Operator confirm? |
 
 ### ✅ Done today (2026-05-11)
