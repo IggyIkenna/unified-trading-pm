@@ -604,6 +604,93 @@ def post_trade_rate(state: LendingMarketState, supply_delta: Decimal, borrow_del
 `BenchmarkMatcher` extension (Phase 3B): all supply/borrow/repay/withdraw at Aave V3 + Compound V3 + Spark + Radiant
 call this calculator. Backtest yield uses post-trade rate.
 
+### Per-protocol IRM parameter capture (Day-1 slot 6 design ship 2026-05-12; operator-runnable for Harsh slot 4)
+
+Per-protocol IRM parameter source for Phase 3A `LendingMarketState` capture by MTDS adapter
+`market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lending_indices.py`:
+
+| Protocol | Chain | Pool/Comet address | IRM getter | Reserve config getter | Capture cadence |
+|---|---|---|---|---|---|
+| **Aave V3** | Ethereum | `PoolAddressesProvider` `0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e` → `Pool` `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2` | `DefaultReserveInterestRateStrategyV2.getInterestRateData(asset)` — returns `baseVariableBorrowRate`, `variableRateSlope1`, `variableRateSlope2`, `optimalUsageRatio` | `Pool.getReserveData(asset)` — returns `liquidityIndex`, `variableBorrowIndex`, `currentVariableBorrowRate`, `currentLiquidityRate`, `aTokenAddress` | Per-block (12s slot) for active markets; per-hour for inactive |
+| **Aave V3** | Arbitrum / Optimism / Polygon / Base / Avalanche | Per-chain Pool address — see UAC `CHAIN_PROTOCOL_DEPLOYMENTS` | Same `DefaultReserveInterestRateStrategyV2` ABI | Same `Pool.getReserveData` ABI | Per-chain block time |
+| **Compound V3** | Ethereum | `Comet` per market (e.g. cUSDCv3 `0xc3d688B66703497DAA19211EEdff47f25384cdc3`) | `Comet.getUtilization()` + `Comet.getBorrowRate(utilization)` + `Comet.getSupplyRate(utilization)` (single-asset borrow model — DIFFERENT shape from Aave's kinked-slope) | `Comet.getAssetInfo(i)` for each collateral; `Comet.totalSupply()` / `Comet.totalBorrow()` | Per-block |
+| **Compound V3** | Arbitrum / Polygon / Base | Per-chain Comet markets | Same Comet ABI | Same | Per-chain block time |
+| **Spark** | Ethereum | `SparkPool` `0xC13e21B648A5Ee794902342038FF3aDAB66BE987` (Aave-V3-fork) | Same Aave V3 IRM ABI | Same Aave V3 ABI | Per-block |
+| **Spark** | Gnosis | `SparkPool` Gnosis address | Same ABI | Same | Per-block (~5s) |
+| **Radiant** | BSC / Arbitrum | Radiant V2 LendingPool addresses (Aave V2 fork — different ABI from V3) | `LendingPool.getReserveData(asset)` returns legacy V2 struct with `currentLiquidityRate`, `currentVariableBorrowRate`, IRM params accessed via separate `InterestRateStrategy` contract per-asset | Same V2-shape getter | Per-block |
+
+**Compound V3 IRM is NOT kinked-slope** — uses a separate `kink` parameter where below-kink rate is linear in
+utilization, above-kink rate jumps to a different linear slope (different shape from Aave's piecewise). Matcher
+must dispatch by `(protocol, asset)` and use protocol-specific IRM formula:
+
+```python
+# execution-service/execution_service/matching_engine/lending/rate_impact.py (NEW Phase 3A)
+def post_trade_rate(
+    state: LendingMarketState,
+    supply_delta: Decimal,
+    borrow_delta: Decimal,
+) -> tuple[Decimal, Decimal]:
+    new_total_supply = state.total_supply + supply_delta
+    new_total_borrow = state.total_borrow + borrow_delta
+    new_utilization = new_total_borrow / new_total_supply if new_total_supply > 0 else Decimal("0")
+    if state.protocol_irm_shape == "AAVE_KINKED":
+        # Aave V3 + Spark + Radiant — piecewise linear
+        if new_utilization < state.optimal_utilization_rate:
+            borrow_apy = state.irm_base + state.irm_slope1 * new_utilization / state.optimal_utilization_rate
+        else:
+            excess = new_utilization - state.optimal_utilization_rate
+            borrow_apy = state.irm_base + state.irm_slope1 + state.irm_slope2 * excess / (Decimal("1") - state.optimal_utilization_rate)
+    elif state.protocol_irm_shape == "COMPOUND_V3":
+        # Comet — single-asset base + below/above-kink slope
+        if new_utilization <= state.compound_kink:
+            borrow_apy = state.compound_base_rate + state.compound_below_kink_slope * new_utilization
+        else:
+            borrow_apy = (
+                state.compound_base_rate
+                + state.compound_below_kink_slope * state.compound_kink
+                + state.compound_above_kink_slope * (new_utilization - state.compound_kink)
+            )
+    else:
+        raise UnknownIRMShapeError(state.protocol_irm_shape)
+    supply_apy = borrow_apy * new_utilization * (Decimal("1") - state.reserve_factor)
+    return supply_apy, borrow_apy
+```
+
+UAC `LendingMarketState` schema (Phase 1B) extends with discriminator field `protocol_irm_shape: Literal["AAVE_KINKED", "COMPOUND_V3", "MORPHO_ADAPTIVE"]` (future Morpho support) + Compound-specific fields
+`compound_kink`, `compound_base_rate`, `compound_below_kink_slope`, `compound_above_kink_slope`.
+
+### Phase 3C validation harness (operator-runnable for Harsh slot 4)
+
+Replay 1 month of historical large-supply events; compare simulated post-trade rate vs realized on-chain rate.
+
+```python
+# execution-service/tests/integration/test_lending_rate_impact_validation.py (NEW Phase 3C)
+@pytest.mark.parametrize("protocol", ["aave_v3_ethereum", "aave_v3_arbitrum", "compound_v3_ethereum", "spark_ethereum"])
+def test_post_trade_rate_within_tolerance(protocol: str) -> None:
+    events = mtds.read_large_supply_events(
+        protocol=protocol,
+        min_supply_usd=Decimal("10_000_000"),
+        lookback_days=30,
+    )
+    for event in events:
+        state = mtds.read_lending_market_state(protocol, event.asset, event.block_number - 1)
+        simulated_supply_apy, simulated_borrow_apy = post_trade_rate(
+            state, supply_delta=event.amount_usd, borrow_delta=Decimal("0"),
+        )
+        realized_state_post = mtds.read_lending_market_state(protocol, event.asset, event.block_number)
+        delta_supply_bps = abs(simulated_supply_apy - realized_state_post.current_liquidity_rate) * Decimal("10000")
+        delta_borrow_bps = abs(simulated_borrow_apy - realized_state_post.current_variable_borrow_rate) * Decimal("10000")
+        # Acceptance: ≥ 90% within 10 bps absolute APY delta
+        if delta_supply_bps > Decimal("10") or delta_borrow_bps > Decimal("10"):
+            failures.append((protocol, event.tx_hash, delta_supply_bps, delta_borrow_bps))
+    assert len(failures) / len(events) < Decimal("0.1"), failures
+```
+
+**Large-supply event source** (`mtds.read_large_supply_events`): on-chain `Supply` event topic filter on Aave V3
+Pool / Compound V3 Comet — captured by MTDS `lending_events` data_type (NEW; not yet in catalogue; gap captured
+in `defi_simulation_realism_2026_05_10.md` DONE block discoveries section). Backfill: 30-day rolling window
+across 6 protocol-chain combos = ~200-500 events/window.
+
 ## Governance proposal simulation harness
 
 Capture (`defi_simulation_realism` Phase 4A): on-chain Governor events + Snapshot off-chain proposals API for
@@ -893,6 +980,106 @@ MC simulator (Phase 7B): `SlashingTailRiskMC(allocation, horizon)`:
 
 Carry archetype hook (Phase 7C): output P(slashing) feeds into capital-allocation rule. Cap per-LST exposure when
 historical slashing rate spikes; back off when normal.
+
+### Per-chain slashing event capture (Day-1 slot 6 design ship 2026-05-12; operator-runnable for Harsh slot 4)
+
+Per-chain `slashing_events` data_type source — Phase 7A capture for MTDS adapter
+`market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/slashing_events.py`:
+
+| Chain | Source / endpoint | Per-event grain | Historical depth | Capture cadence |
+|---|---|---|---|---|
+| **Ethereum beacon** | Lighthouse/Prysm REST `/eth/v1/beacon/pool/attester_slashings` + `/eth/v1/beacon/pool/proposer_slashings` + block-body parsing for slashing operations | Per-slot (every 12s) | Genesis 2020-12-01 → now (~5.5 years; ~1.5M slashings catalogued via beaconcha.in cross-ref) | WS subscription to head + epoch-finalization replay |
+| **Ethereum beacon** (historical) | beaconcha.in REST `https://beaconcha.in/api/v1/slashings` (rate-limited; 10 req/sec free tier) | Per-slashing event | Same | One-shot historical backfill via paginated API; ongoing capture via Lighthouse WS |
+| **Solana validator** | Solana RPC `getSlashingHistory` (Anza Solana 1.18+) + Validator Info program account scan | Per-validator-event | Genesis 2020-03 → now; per-epoch grain (~2-3 days) | Once per epoch (post-finalization); replay from epoch 0 for historical |
+| **Solana validator (cross-check)** | Solana Beach API `https://api.solanabeach.io/v1/validators/slashing` (rate-limited; needs API key) | Per-event | Same | Cross-validation against on-chain getSlashingHistory |
+
+UAC `SlashingEvent` schema (Phase 1E) fields: `chain`, `validator_id`, `slashed_at_epoch`, `slashed_at_slot`
+(ETH-only), `slashed_amount_native`, `slashing_reason` (Ethereum: `proposer_slashing` / `attester_slashing` /
+`surround_vote` / `double_propose`; Solana: `downtime` / `double_sign` / `network_partition`), `slasher_validator_id`
+(ETH-only — who reported), `evidence_block_hash`.
+
+### Phase 7B MC simulator architecture (operator-runnable)
+
+```python
+# execution-service/execution_service/risk/slashing_tail_risk_mc.py (NEW Phase 7B)
+@dataclass
+class SlashingTailRiskMC:
+    """Monte Carlo simulator for carry archetype slashing tail-risk.
+
+    Calibration: per-chain slashing rate histogram from `slashing_events` data_type.
+    Simulation: N=10000 forward paths × archetype LST allocation × N_effective_validators.
+    Output: P(loss > threshold) curve for risk dashboard + archetype capital-allocation gate.
+    """
+
+    chain: Literal["ethereum", "solana"]
+    n_paths: int = 10_000
+    horizon_epochs: int = 1170  # ~6 months Ethereum, ~3 months Solana
+
+    def calibrate(self) -> SlashingDistribution:
+        """Returns per-validator-epoch slashing probability + per-event severity distribution
+        from historical `slashing_events` data_type."""
+        events = mtds.read_slashing_events(chain=self.chain, lookback_days=365)
+        # Probability bin: events per validator-epoch (Ethereum) or per validator-day (Solana).
+        total_validator_epochs = mtds.cumulative_validator_epochs(self.chain, lookback_days=365)
+        p_per_validator_epoch = Decimal(len(events)) / Decimal(total_validator_epochs)
+        # Severity: native_token amount slashed per event (heavy-tailed; log-normal or empirical CDF).
+        severities = [e.slashed_amount_native for e in events]
+        return SlashingDistribution(
+            p_per_validator_epoch=p_per_validator_epoch,
+            severity_distribution=ECDF(severities),
+            heavy_tail_alpha=fit_power_law_tail(severities),  # Hill estimator on top-quintile
+        )
+
+    def simulate_archetype_loss(
+        self,
+        allocation_native_units: Decimal,           # e.g., 1000 ETH staked
+        effective_n_validators: int,                # = allocation / 32 ETH per validator
+        distribution: SlashingDistribution,
+    ) -> ProbabilityOfLossCurve:
+        """For each MC path: sample slashing events over horizon, sum severity, compute loss fraction."""
+        rng = np.random.default_rng(42)
+        path_losses = np.zeros(self.n_paths)
+        for i in range(self.n_paths):
+            # Number of slashings on this path ~ Poisson(N_val * horizon_epochs * p_per_val_epoch).
+            lam = float(effective_n_validators * self.horizon_epochs * distribution.p_per_validator_epoch)
+            n_slashings = rng.poisson(lam)
+            # Sample severity per slashing.
+            severities = [distribution.severity_distribution.sample(rng) for _ in range(n_slashings)]
+            path_losses[i] = sum(severities) / float(allocation_native_units)  # loss fraction
+        return ProbabilityOfLossCurve(
+            thresholds_pct=[0.01, 0.05, 0.10, 0.25, 0.50, 1.00, 2.50, 5.00, 10.00],
+            p_loss_exceeds=np.percentile(path_losses, [99, 95, 90, 75, 50, 25, 10, 5, 1]).tolist(),
+        )
+```
+
+### Phase 7C archetype capital-allocation hook (operator-runnable)
+
+```python
+# strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py — extend on_tick()
+def _slashing_risk_gate(
+    self,
+    current_allocation_eth: Decimal,
+    p_loss_curve: ProbabilityOfLossCurve,
+    config: _BasisConfig,
+) -> Decimal:
+    """Returns the multiplier on next-bar's target allocation based on tail risk.
+
+    Risk gate parameters in default_basis_trade.yaml:
+      slashing_risk:
+        max_p_loss_exceeds_1pct: 0.05         # if P(loss > 1%) > 5%, back off
+        max_p_loss_exceeds_5pct: 0.01         # if P(loss > 5%) > 1%, back off harder
+        backoff_multiplier_at_threshold: 0.5  # halve allocation when threshold breached
+    """
+    risk_config = config.slashing_risk
+    if p_loss_curve.p_at_threshold(0.05) > risk_config.max_p_loss_exceeds_5pct:
+        return Decimal("0")  # circuit-break — no new allocation
+    if p_loss_curve.p_at_threshold(0.01) > risk_config.max_p_loss_exceeds_1pct:
+        return Decimal(str(risk_config.backoff_multiplier_at_threshold))
+    return Decimal("1.0")  # normal-rate operation
+```
+
+Validation harness (Phase 7C tests): compare 1-year archetype backtest with vs without slashing risk gate;
+document realized P&L delta + max-drawdown delta + tail-event survival rate.
 
 ## Hedge-ratio dynamic adjustment (Phase 6)
 

@@ -208,6 +208,18 @@ models" with all 7 shapes' math + validation results.
 
 Owner: harsh + parallel agent.
 
+> **Day-1 slot-6 design ship 2026-05-12**: codex
+> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Lending rate-impact-from-
+> own-trade" → "Per-protocol IRM parameter capture" subsection ships the Phase 3 design half with
+> operator-runnable detail for Harsh slot 4: (a) per-protocol Pool/Comet addresses + IRM getter ABIs + reserve
+> config getters across 7 protocol-chain combos (Aave V3 Ethereum/Arbitrum/Optimism/Polygon/Base/Avalanche +
+> Compound V3 Ethereum/Arbitrum/Polygon/Base + Spark Ethereum/Gnosis + Radiant BSC/Arbitrum); (b) UAC
+> `LendingMarketState` schema extension with `protocol_irm_shape` discriminator + Compound-V3-specific fields
+> (kink + below/above-kink slopes — Compound V3 has DIFFERENT shape from Aave's piecewise; matcher dispatch
+> required); (c) `post_trade_rate()` calculator code with protocol-shape dispatch; (d) Phase 3C validation
+> harness skeleton + large-supply event source (NEW `lending_events` MTDS data_type — gap captured in
+> discoveries section). **Implementation half remains `- [ ]` for Harsh slot 4**.
+
 - [ ] [AGENT] P0. **3A — `LendingRateImpactCalculator`** in `execution-service/execution_service/matching_engine/`.
       Inputs: `LendingMarketState` (Phase 1B) + proposed supply/borrow amount. Output: post-trade `borrow_apy` +
       `supply_apy` using the captured kink-style interest rate model
@@ -344,6 +356,18 @@ Owner: harsh.
 ## Phase 7 — Slashing tail-risk Monte Carlo (~3-5 AI-days)
 
 Owner: harsh.
+
+> **Day-1 slot-6 design ship 2026-05-12**: codex
+> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Slashing tail-risk Monte
+> Carlo" → "Per-chain slashing event capture" + "Phase 7B MC simulator architecture" + "Phase 7C archetype
+> capital-allocation hook" subsections ship the Phase 7 design half with operator-runnable detail for Harsh slot 4:
+> (a) per-chain `slashing_events` data_type source — Ethereum beacon (Lighthouse/Prysm `/eth/v1/beacon/pool/*_slashings`
+> + beaconcha.in historical backfill) + Solana (Anza RPC `getSlashingHistory` + Solana Beach cross-check); (b)
+> `SlashingTailRiskMC` simulator code skeleton with Poisson sampling + ECDF severity + Hill-estimator heavy-tail
+> alpha + N=10000 paths; (c) Phase 7C `_slashing_risk_gate` archetype hook with config thresholds
+> (`max_p_loss_exceeds_1pct`, `max_p_loss_exceeds_5pct`, `backoff_multiplier_at_threshold`) for capital-allocation
+> circuit-breaker; (d) validation harness comparison: 1-year backtest with vs without slashing risk gate documenting
+> P&L delta + max-drawdown delta + tail-event survival rate. **Implementation half remains `- [ ]` for Harsh slot 4**.
 
 - [ ] [AGENT] P0. **7A — Historical slashing rate calibration** per chain. Ethereum beacon: load slashing events from
       `SLASHING_EVENT` data_type captures (Phase 1A); compute per-validator-epoch slashing probability. Solana
