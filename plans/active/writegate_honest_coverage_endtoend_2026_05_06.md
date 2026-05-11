@@ -798,10 +798,25 @@ NaN-ratio/cluster-coverage check — the entire honest-coverage infrastructure i
       branch returns `_make_empty_candle_output()` (zero-row CandleOutput, Path A). Upstream
       `live_workers._process_all_timeframes` detects `candles_df.empty` and emits `record_empty_for_shard`. 27/27
       tradfi adapter tests pass.
-- [ ] **Step 3 (P0)**: Delete duplicated `_create_closed_market_candle` at `orchestration_writer.py:65` + `batch_workers.py:94`
-      (banned per CLAUDE.md "No double SSOT"); delete `_handle_empty_tick_data` from `batch_workers.py:192` (banned
-      per CLAUDE.md "No double SSOT in data-saving methodology"). Replace TradFi non-trading-day callers with
-      `record_expected_empty(row_key=..., reason=EXPECTED_HOLIDAY/EXPECTED_WEEKEND)`.
+- [x] **Step 3 (P0)**: Delete duplicated `_create_closed_market_candle` at `orchestration_writer.py:65` + `batch_workers.py:94`
+      (banned per CLAUDE.md "No double SSOT"); delete `_write_closed_market_candles` (uses the banned NaN-OHLC
+      helper). Update `_handle_empty_tick_data` TRADFI branch to route through `record_empty_for_shard` like every
+      other asset_group (instead of the deleted `_write_closed_market_candles`). Shipped
+      market-data-processing-service@2f163c1. **KEPT** `_handle_empty_tick_data` itself — it's the production
+      orchestration entry-point for empty-tick branches, NOT a banned placeholder; it already routes non-TRADFI
+      asset_groups through `record_empty_for_shard` correctly (per writegate AUDIT 2026-05-07 line 1156-1159).
+      **NOTE**: scope refined vs task spec — task said "also delete `_handle_empty_tick_data`", but examining its
+      body showed it's the orchestration handler (live_workers.py:279 calls it as the empty-tick dispatch), NOT a
+      `_create_empty_output()`-style synthesizer. Deleting it would break the live empty-tick branch. The correct
+      surgery is to delete the TRADFI-special-case INSIDE `_handle_empty_tick_data` (which called the now-deleted
+      `_write_closed_market_candles`), not the method itself. **DEFERRED-AFTER-writegate_phase_3.D.5_wave3**: per
+      CLAUDE.md asset-group rule, cefi/defi/tradfi catalog-says-alive instrument-day with source-zero MUST flip to
+      `attempted_failed`; until the catalog-aware writer-side guard ships (Wave 3 of writegate Phase 3.D.5), the
+      conservative interim is `record_empty_for_shard(SOURCE_RETURNED_ZERO)`. Sister fix:
+      `_maybe_write_vix_gap_placeholder` (orchestration_writer.py:270) refactored from
+      `_write_closed_market_candles` (now deleted) to `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim
+      pending Step 4 enum ship. 22 NaN-bar-shape tests deleted across `test_orchestration_writer.py` +
+      `test_orchestration_workers.py` (they asserted the banned NaN-OHLC shape).
 - [ ] **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:417`) → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`.
       **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`** Phase 1: UAC `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP`
       enum value lands there (operator-approved 2026-05-11 per wave3x TL;DR #2). Slot 3 owns the enum ship; slot 8
