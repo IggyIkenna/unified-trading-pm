@@ -3202,6 +3202,72 @@ QG end-of-plan: user signs off on baseline document; ratchet floor activated.
 
 ---
 
+## DONE-2026-05-11 — Slot 2 (ikenna-writegate-slice-b-tab) — Slice (b) close-out
+
+Tab: `ikenna-writegate-slice-b-tab` (slot 2 worktree at `.tabs/2/`). Session scope: writegate slice (b) Phase 5.1-5.7
+per [`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) § "Slot 2" + the operator's Q1 RESOLVED option
+(b) re-thread (PM@`39ab61e5`).
+
+### Commits
+
+| Commit         | Repo                                | Summary                                                                                                   |
+| -------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| UTL@`ac5ade59` | unified-trading-library             | `manifest_completeness.py` + `publish_with_manifest_lookup()` wrapper + 14 unit tests (Phase 5.1)         |
+| MDPS@`9e1a93e` | market-data-processing-service      | `canonical_writer` ohlcv_1h emission-policy POC + 17 unit tests (Phase 5.3 + 5.4)                         |
+| PM@`27cf5c6a`  | unified-trading-pm                  | Q1 BLOCKED → ✅ RESOLVED close (cite of operator PM@`39ab61e5` decision)                                  |
+| PM@`88baed07`  | unified-trading-pm                  | Phase 5.1 flip (UTL helper + 14 tests evidence)                                                           |
+| PM@`74e8bf51`  | unified-trading-pm                  | Phase 5.3 + 5.4 flip (MDPS POC evidence)                                                                  |
+| PM@`989da6e0`  | unified-trading-pm                  | Phase 5.6 + 5.7 — codex SSOT `service-output-emission-semantics.md` + CLAUDE.md key-rule + ship-gate flip |
+
+### Deferred work after 2026-05-11 ikenna-writegate-slice-b-tab session
+
+The 2026-05-11 ikenna-writegate-slice-b-tab session closed slice (b) per the operator's re-threaded scope. Items still
+open are tracked here so the next agent picks up cleanly.
+
+| Phase / item                                              | Status as of 2026-05-11           | Successor / blocker                                                                                              |
+| --------------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Phase 5.1 — UTL `manifest_completeness` helper            | `done` (UTL@`ac5ade59`)           | —                                                                                                                |
+| Phase 5.2 — UAC v8 schema columns                         | SUPERSEDED                        | Owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1 per operator PM@`39ab61e5` |
+| Phase 5.3 — MDPS `ohlcv_1h:current` wire-in               | `done` (MDPS@`9e1a93e`)           | —                                                                                                                |
+| Phase 5.4 — MDPS `ohlcv_1h:historical` wire-in            | `done` (same MDPS@`9e1a93e` hook) | "Live = batch — same code path" — single canonical_writer serves both slices                                     |
+| Phase 5.4 P1 30-day integration test                      | `deferred-after-phase-6.2`        | DEFERRED-AFTER writegate slice (c) Phase 6.2 (per-MDPS-data_type publish_with_manifest_lookup rollout)            |
+| Phase 5.5 — deployment-api `/leaf-stats` envelope extension | `deferred-after-manifest-v8-cols` | DEFERRED-AFTER `manifest_schema_final_gate_2026_05_09.md` Phase 2 (parquet-row column writes upstream needed)    |
+| Phase 5.5 — deployment-ui `LeafSchemaModal` 4th block     | `deferred-after-manifest-v8-cols` | Cascades after the deployment-api half                                                                           |
+| Phase 5.6 — codex SSOT + CLAUDE.md key-rule               | `done` (PM@`989da6e0`)            | —                                                                                                                |
+| Phase 5.7 — slice (b) ship-gate                           | `done` (this commit)              | Cross-side INFO ping landed for Harsh slot 6 (no action needed; slot 6 QG-AST gate already shipped @PM`a4512ed3`) |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **v8 manifest schema column declaration** (`service_emission_state` + `last_emission_decision_at` +
+  `expected_window_completeness_pct`): open in
+  [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1.A/B/C.
+  Routed there per operator decision PM@`39ab61e5` option (b).
+- **`EXPECTED_KNOWN_SOURCE_GAP` enum addition** to `EmptyConfirmedReason`: open in `manifest_schema_final_gate` Phase 1
+  per operator decision PM@`39ab61e5`. Originally raised by Harsh slot 3 Track D audit; covers VIX 15m mid-history gap +
+  sports `KNOWN_COVERAGE_GAPS`.
+- **Per-service rollout (slice c) Phase 6.1-6.9**: 8 services need their derived emissions wired through
+  `publish_with_policy()` / `publish_with_manifest_lookup()`. Multi-week effort; per-service plans land as
+  `wave4_emission_rollout_{service}_<YYYY_MM_DD>.md` sub-plans per the codex doc § "Per-service rollout playbook".
+
+### EOD-audit (per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit clause")
+
+Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**DEFERRED**` annotation in
+`plans/active/`:
+
+- "Phase 5.5 deployment-api/ui surfaces deferred-after manifest_schema_final_gate Phase 2" — annotated in plan body
+  Phase 5.5 (this file).
+- "Phase 5.4 P1 30-day integration test deferred to slice (c) Phase 6.2" — annotated in plan body Phase 5.4 P1 todo
+  (this file).
+- "v8 schema column declaration owned by manifest_schema_final_gate" — that plan's Phase 1.A/B/C is in
+  `plans/active/manifest_schema_final_gate_2026_05_09.md` with explicit todo list.
+- "`EXPECTED_KNOWN_SOURCE_GAP` enum addition" — in `manifest_schema_final_gate_2026_05_09.md` per operator PM@`39ab61e5`
+  routing.
+- "Per-service slice (c) rollout" — in writegate plan body Phase 6.1-6.9 (this file, lines below).
+
+No deferral lives only in chat or in the commit message.
+
+---
+
 ## Handover — Agent 2 (writegate tab) 2026-05-07 evening
 
 **Session scope:** ikenna 5-tab layout Agent 2 — writegate (heaviest tab). 3 items: Phase 4.A typed-error rendering,
