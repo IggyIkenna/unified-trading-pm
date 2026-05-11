@@ -90,6 +90,17 @@ org-naming tidy):
       checkbox `- [x]` with the QG-green evidence; remove the `**DEFERRED**` annotation.
 - [ ] [AGENT] P1. Phase 1.4 — Codex SSOT audit pass per CLAUDE.md "Post-Plan-Phase Codex Audit": verify
       `codex/04-architecture/features-service-architecture.md` reflects the cleaned-up shape; update if drifted.
+- [ ] [AGENT] P2. Phase 1.5 — Lift `_get_workspace_root()` to ONE shared UTL helper. **MIGRATED FROM: sub-agent C
+      report 2026-05-11.** There are 7+ near-identical `_get_workspace_root()` copies across
+      `features_service/{commodity,delta_one,calendar,cross_instrument,volatility,multi_timeframe,onchain,sports}/engine/mock_data_provider.py`
+      — each is dev-only mock-seed-path discovery (`os.environ.get("WORKSPACE_ROOT", os.environ.get("UNIFIED_TRADING_WORKSPACE_ROOT", ""))`
+      → `parents[N]` heuristic fallback). Also inlined in `unified_trading_library/core/seed_writer.py:287`. Per "No
+      double SSOT / lift cross-service utilities to UTL": add `unified_trading_library.dev_paths.get_workspace_root()`
+      (with the `# noqa: qg-os-env` config-bootstrap marker on the env read INSIDE the helper, so callers don't carry
+      it), replace all 8+ copies with `from unified_trading_library import get_workspace_root` (or
+      `unified_trading_library.dev_paths.get_workspace_root`), update `seed_writer.py` to use it too. Interim state
+      (2026-05-11): each copy carries the `# noqa: qg-os-env` / `# noqa: qg-empty-fallback` marker (matches
+      `seed_writer.py`) — so QG is green; this todo is the proper de-dup, not a blocker.
 
 ### Phase 2 — Full byte-for-byte parity run (BLOCKED on data)
 
@@ -216,6 +227,61 @@ But the AST-based imports-inside check now finds **28 real nested imports** (vs 
 All 3: pathspec commits only (shared slot index), no `git add -A`, no `git push` (slot 2 master pushes after verify),
 no schema-prov model migrations (row e deferred). Each reports commits + cleared categories + `Q-FOR-IKENNA` findings +
 deferred sub-items.
+
+**Session-3 sub-agent results — Sub-agent A (`sports/**`) LANDED 2026-05-11** (11 commits in features-service; 16 → 9
+violation categories on re-run; commits NOT yet pushed — slot 2 pushes after B+C land + a verify pass): `d6a2144f` split
+`gcs_reader.py` 1306L → `gcs_reader` 538L + `gcs_normalizers` 550L + `gcs_mappings` 182L + `gcs_paths` 39L; `google.cloud
+import storage` ×4 → module-top `from unified_trading_library import get_storage_client` (UCI `blob_exists`/`download_bytes`/
+`list_blobs`); dropped the 5 `gs://{bucket}/...` f-strings; `canonical.domain.sports.canonical_ids` → `unified_api_contracts.sports`
+facade; rewored the "backward compatibility" comment; hoisted function-level imports in gcs_reader/feature_versioning/
+feature_expectations; no compat re-exports (consumers import from `gcs_mappings` directly). `5ae6b194` `cli/main.py::ComputeHandler.run()`
+77L → `_run_batch`/`_run_live`. `de5c77ba` split `halftime_calculator.py` 1208L → 587L + `halftime_columns` 132L +
+`halftime_multi_source` 465L; `compute_halftime_features` 327L → 53L. `a7e527f6` split `odds_calculator.py` 1391L → 332L +
+`odds_columns` 243L + `odds_prob_space` 385L + `odds_velocity` 355L; `compute_odds_batch` 203L → ~40L; `compute_prob_space_features`
+417L → ~40L. `aaa4184e` split `derived_features_exporter.py` 1618L → 453L + `derived_features_helpers` 777L +
+`derived_new_calculators` 261L; `export_derived_features` 458L → ~70L; `_run_new_calculators` 261L → ~6L. `299dad9f`
+`transfer_window_calculator._compute_shock_features` 281L → <60L (+ rewored "For backward compat" comment). `64c3f469`+
+`adde9ff6`+`c0611829` `season_context.compute_season_context` 253L → ~12L (+ E501 trims). `7f157aba`+`e1a107f1` `scripts/sports/
+backfill_fixture_features_manifest.py`: `canonical.domain.sports.league_data` → `unified_api_contracts.sports` facade (the
+`from google.cloud import storage` there LEFT + `# Q-FOR-IKENNA` comment — see Q5). **Cleared**: Direct-cloud-SDK (gcs_reader),
+STEP 5.12b, STEP 5.23, backward-compat-comment, Files>900L (all 4 sports files), most imports-inside, ~10 sports func-size
+sites. **Sub-agent A DEFERRED (budget — pure helper-extraction, no risk to the gcs_reader cluster; carry forward to a
+follow-up slot-2 session or a 4th sub-agent)**: `sports/cli/handlers/batch_handler.py:422:BatchHandler.run() 416L` (per-phase
+helper extraction — NOTE this file's sibling `_sync_runners.py` also has the `asyncio.run() in loop` violation + 3
+imports-inside lines 451/569/726 + broad-except flags, none in A's task list); `sports/calculators/team_form.py:184:compute_team_form() 357L`;
+`sports/calculators/h2h_calculator.py:72:compute_h2h() 272L`; `sports/calculators/player_lineup_calculator.py:251:compute_player_lineup_features() 219L`
+(~20L over); `sports/tracking/feature_builder_registry.py:57:_build_registry() 389L` (~120L deferred imports + ~270L
+`BuilderEntry(...)` constructions — thread imports as a dict into 2-3 `_build_registry_phase_X` helpers); `sports/cli/handlers/_fetch_runner.py:117 from datetime import datetime` (import-inside) + `sports/cli/handlers/batch_handler.py` ×3 deferred imports.
+
+**Session-3 sub-agent results — Sub-agent C (`delta_one/**` + `cross_instrument/**`-except-sports_bridge + `calendar/**`
++ `commodity` mock-provider + `multi_timeframe` cli-main + `api/main.py` + `scripts/delta_one`) LANDED 2026-05-11** (8
+commits; ALL C-family tasks done — zero deferrals, zero `Q-FOR-IKENNA`; commits NOT yet pushed): `d1ad3514` commodity
+`_get_workspace_root` config-bootstrap pattern (`os.environ.get("WORKSPACE_ROOT", os.environ.get("UNIFIED_TRADING_WORKSPACE_ROOT",""))`
++ `# noqa: qg-os-env`) + `multi_timeframe/cli/main.py` `# CORRECT-LOCAL: CLI arg choices` comment + `api/main.py` hoist
+`import importlib` + calendar `batch_handler.py` extract `_run_live()` (asyncio.run out of deep nesting). `b8d36088`
+`scripts/delta_one/migrate_dash_separator_paths.py` `google.cloud.storage` → UTL `StorageClient` (`list_blobs`/`blob_exists`/
+`copy_blob`/`delete_blob` — fully expressible, no Q needed). `66d4d8ba` `{commodity,delta_one,calendar,cross_instrument}/engine/mock_data_provider.py`
+add `# noqa: qg-empty-fallback` to the config-bootstrap workspace-root reads. `4617dfb6` calendar: `process_day` 113L→40L+3
+helpers; `fetch_earnings` 76L→42L+`_parse_earnings_row`+`_coerce_eps`. `1e2f34a4` cross_instrument: `BatchHandler.run` 105L→49L+3
+helpers; `CrossInstrumentOrchestrator.run` 60L→`_process_shard`; `BaseFeatureCalculator.calculate` 54L→`_run_calculation_pipeline`.
+`c6c74ceb` delta_one `batch_handler.py`: `_execute_batch` 123L, `_check_dependencies` 62L, `run` 54L, `_filter_delta_one_instruments`
+62L — all <50L via 6 helpers. `238b7e7d` delta_one `orchestrator.py`: `process_feature_group` 154L, `_safe_process_instrument`
+52L, `_process_instrument` 51L — all <50L via 6 helpers. `f5dcaa99` delta_one calculators: `base_calculator.calculate`
+51L→`_run_calculation_pipeline`; `fibonacci.py` — bundled 12 per-bar arrays into 2 dataclasses (`_RetracementArrays`/
+`_ExtensionArrays`), `_fill_all_arrays` 21 params→7, `_calculate_fib_features` 56L→18L. **Cleared**: ALL delta_one/
+cross_instrument/calendar/commodity/multi_timeframe/api func-size sites; asyncio-in-loop (calendar); empty-fallbacks (C's
+families — all 4 mock_data_provider lines marked); STEP 5.10 (delta_one script); imports-inside (api/main); the flagged
+`delta_one/service.py`+`models.py` schema-prov types are the row-e set (left for Phase 1.2e). **C's new `_`-prefixed
+dataclasses are NOT schema-prov-flagged.** C noted 2 uncommitted onchain files (`onchain/cli/handlers/batch_handler.py`,
+`onchain/cli/main.py`) = sub-agent B's in-flight work, left untouched (pathspec commits avoided bundling). **C's
+empty-fallback note**: many `sports/` sites (A) + `onchain/` sites (B) still flag; plus `volatility/` + `sports/` +
+`onchain/` `mock_data_provider.py` need the same `# noqa: qg-empty-fallback` treatment as C's 4 (left for B/A).
+
+**Status as of 2026-05-11 (A + C landed, B running)**: features-service QG `Codex compliance FAILED: 9 violations` (down
+from 16), and all 9 are in `sports/` (A's deferred items + remaining `_sync_runners.py` asyncio + sports empty-fallbacks
++ Q-FOR-IKENNA rows) or `onchain/`/`volatility/` (sub-agent B's, still running). Slot 2 master: waits for B → verify
+pass (basedpyright on changed dirs + fresh QG) → conditional-push all of A+B+C's commits + Phase 1.2e (group-1 UAC move +
+group-2 markers/dedup) → flip parent Phase 4.6 when QG green.
 
 **Row e (schema-provenance ~38 `features_service/` models) — sub-phase decision (2026-05-11 slot 2):** deferred to its
 own sub-phase (Phase 1.2e below) — it's a UAC + features-service **cross-repo** refactor, and the file-split sub-agents
@@ -540,6 +606,45 @@ So: run group-1 relocation now (genuine domain I/O → UAC.internal); for group-
 ~5 lines of edits) + bucket (b) (delete the Dependency* dups in 2 files, import from UTL); flip Phase 1.2e `[x]` when QG
 goes green. Group-1 + the A/B/C file-splits never wait on this. No operator/Ikenna gate remains on group-2 — this A1 is
 the resolution.
+
+### Q4 — [harsh-features-consolidation-tab (via sub-agent A), 2026-05-11] — `DI=` ("deep unified lib imports") QG check over-flags `from unified_api_contracts.<domain> import`
+
+**Status**: 🟡 OPEN — slot-1/Ikenna call (PM-side QG-check OR UAC re-export). Same shape as Q1.x. **Not slot-2's to
+fix** — features-service uses the `.<domain>` facade form correctly per CLAUDE.md; leave the imports as-is until decided.
+
+Sub-agent A hit this on `sports/data/gcs_normalizers.py` (`from unified_api_contracts.sports import build_fixture_id, build_team_id`),
+`sports/compute/coverage_gate.py` (`from unified_api_contracts.sports import FEATURE_UPSTREAM_REQUIREMENTS, UpstreamReq, in_coverage`),
+`sports/cli/handlers/batch_handler.py` (`from unified_api_contracts.sports import get_league_by_api_football_id`). None of
+those symbols are re-exported at the bare `unified_api_contracts` facade (A verified via Python). The `DI=` check
+(`base-service.sh:606-616`, regex `from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import`) only whitelists `unified_api_contracts.internal`
+(Q1.3 fix) — so it flags `from unified_api_contracts.{domain} import X` which **CLAUDE.md explicitly sanctions** ("Services
+use `from unified_api_contracts import X` or `from unified_api_contracts.{domain} import X`. Deep paths (`canonical.*`,
+`normalize_utils.*`) are UAC-internal only"). **This is the "Q1.5 hypothesis" from the original Phase 1.1 table.** Two
+fixes: (a) the `DI=` grep also whitelists `unified_api_contracts\.[a-z_]+` (any `.<domain>` facade — but NOT `.canonical`/
+`.normalize_utils`/`.registry`/`.config`/`.shared`/`.schemas` which stay banned), OR (b) UAC re-exports `build_fixture_id`/
+`build_team_id`/`FEATURE_UPSTREAM_REQUIREMENTS`/`UpstreamReq`/`in_coverage`/`get_league_by_api_football_id` at the bare
+top-level. Recommendation: (a) — the `.{domain}` facade IS the documented surface; bare-only would force re-exporting the
+entire sports/market/execution/etc. namespace at top level. (`coverage_gate.py` + `batch_handler.py` were already at
+`.sports` before A's session — pre-existing, not introduced by the consolidation.) **Until decided, these 3 rows keep QG
+red for features-service — but they're not features-service violations.**
+
+### Q5 — [harsh-features-consolidation-tab (via sub-agent A), 2026-05-11] — QG STEP 5.10 (direct cloud SDK) should exclude `scripts/`
+
+**Status**: 🟡 OPEN — slot-1/Ikenna call (PM-side: STEP 5.10 excludes `scripts/`, OR UCI gets a delimiter-prefix-listing
+API). Same shape as Q1.2 (`check_schema_provenance.py` `scripts/` exclusion). **Not slot-2's to fix** — leave the import.
+
+`scripts/sports/backfill_fixture_features_manifest.py` needs `from google.cloud import storage` because UCI's
+`StorageClient.list_blobs` returns a flat `Iterator[BlobMetadata]` with no `.prefixes` attribute, so the delimiter-based
+prefix walk (`_list_days` / `_list_af_leagues_for_day` — list "directories" under a prefix) can't be expressed via UCI
+today. QG STEP 5.5 / 5.12b / 5.23 already exclude `scripts/` (matching `pyrightconfig.json` + most checks); STEP 5.10
+(`rg ... -l .`) doesn't. Fix: exclude `scripts/` from STEP 5.10 (operator decision — migration/backfill scripts
+legitimately need raw SDK for one-off ops UCI doesn't cover) — OR add a delimiter-prefix-listing method to UCI's
+`StorageClient` (bigger; would let the script use UCI). Recommendation: exclude `scripts/` from STEP 5.10. (Sub-agent A
+left the import + a `# Q-FOR-IKENNA` comment at `scripts/sports/backfill_fixture_features_manifest.py:51-56`.) **Until
+decided, this 1 row keeps QG red — but it's a scripts/ row, same carve-out class as STEP 5.5/5.12b/5.23.** NB: sub-agent
+C's `scripts/delta_one/migrate_dash_separator_paths.py` swap to UTL `StorageClient` WAS fully expressible (flat
+`list_blobs`/`blob_exists`/`copy_blob`/`delete_blob`) — so STEP 5.10 isn't *always* a scripts/ problem; this one happens
+to need delimiter-prefix listing.
 
 ## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2), Phase 1.1
 
