@@ -715,10 +715,60 @@ shipping with the Fork-1 prep batches below).
       adapter has a routing bug (which CLAUDE.md "UAC DATA_TYPES_BY_ASSET_GROUP is routing gate" rule flags as a likely
       cause). ~0.8k blank rows pending decision.
 - [ ] [SCRIPT] P0. **Priority #5 — Lending-indices LINEA/BSC routing config.** Distinct workstream from priority #1
-      (which is Ethereum-AAVEV3 UAC fix). LINEA + BSC AAVE V3 deployments have routing config absent from the MTDS
-      lending-indices handler — verify chain-to-subgraph mapping in
-      `market_tick_data_service/adapters/lending_indices/`, add LINEA + BSC entries with correct subgraph URLs (Messari
-      graph-network IDs), smoke-test 1 day per chain.
+      (which is Ethereum-AAVEV3 UAC fix).
+      `status: backfill-running` — **the "routing config absent" framing was STALE** (grep-then-conclude error in the
+      2026-05-08 audit): `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` have been wired since UAC@`2db3c8e` (Mar 2026);
+      `get_supported_chains_for_protocol("aave_v3")` already includes LINEA+BSC; UAC launch dates corrected at
+      UAC@`6c873e4` (`("LINEA","AAVEV3")="2025-02-11"`, `("BSC","AAVEV3")="2024-01-23"`); `lending_indices` ∈
+      `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date short-circuit
+      (MTDS@`c6bdf96`) fires correctly. On-disk parquets verified REAL (LINEA `aave_v3/LINEA/date=2025-03-01` = 475 rows
+      USDC/WETH reserves; BSC `aave_v3/BSC/date=2024-06-01` = 316 rows Cake/BTCB/USDT/USDC/WBNB/ETH/FDUSD), not
+      1440-NaN placeholders. **The actual gap was operational**: the `lending-indices-{pid}` canonical
+      `_index/availability_index.parquet` was stale vs the per-VM shards (the `mtds-lending-indices-20260508-141147` run
+      had already captured LINEA AAVEV3 post-launch + BSC AAVEV3 post-launch + flipped pre-launch days to
+      `empty_confirmed` in its per-VM shard, but the consolidator never merged it — see "Discoveries" below). Slot 3
+      2026-05-11: (1) ran `python -m unified_trading_library.manifest_consolidator --bucket lending-indices-{pid} --once`
+      → canonical now AAVEV3/LINEA = 451 captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0
+      attempted_failed; AAVEV3/BSC = 836 captured (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0
+      attempted_failed — the ~576 stale "404 GET https" `attempted_failed` rows (293 LINEA + 219 BSC) + 198 LINEA
+      blank-reason `empty_confirmed` are reclaimed; (2) launched fresh full-history backfill VM
+      `mtds-lending-indices-20260511-181115` (`2022-01-01..2026-05-11`, e2-standard-4, `mtds-lending-indices-` prefix in
+      `VM_PREFIX_TO_BUCKET`) — event-verified STARTED (`correlation_id` 366b8002…) + `LENDING_DAY_COMPLETE` progress
+      stream; ETA ~60-90min (pre-floor-date short-circuit makes pre-launch dates instant). Flip `[x]` when the VM hits
+      `STOPPED`/`FAILED` + canonical re-consolidated shows the recent gap (2026-05-07→2026-05-11) captured + the 142
+      LINEA + 296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits reconciled to `EXPECTED_PRE_GENESIS_CHAIN`. Stale-path
+      note: the audit said `market_tick_data_service/adapters/lending_indices/` — actual handler is
+      `market_tick_data_service/cli/handlers/lending_indices_handler.py` + adapter
+      `market_interface/adapters/defi/aave_lending.py` (no `adapters/lending_indices/` dir exists).
+
+### Discoveries during Priority #5 (slot 3, 2026-05-11)
+
+- [x] [SCRIPT] P0. **Manifest consolidator daemon was NOT polling the per-data_type DeFi buckets** — `lending-indices-{pid}`,
+      `dex-swaps-{pid}`, `evm-defi-{pid}`, `gas-fees-{pid}`, `oracle-prices-{pid}`, `perp-funding-{pid}`,
+      `solana-defi-{pid}`, `lst-rates-{pid}` (deployment-api's `data_status_service._BUCKET_CATEGORY_OVERRIDES` routes
+      each DeFi data_type to its own dedicated bucket). The consolidator's `VM_BUCKETS` covered `instruments-store-*`,
+      `market-data-tick-*` (asset-group canonicals), `strategy-store-*`, `features-sports-*` — none of the per-data_type
+      DeFi buckets. Consequence: their canonical `_index/availability_index.parquet` drifted stale vs per-VM shards →
+      deployment-UI data-status showed wrong DeFi coverage (e.g. lending-indices kept showing 293 LINEA + 219 BSC
+      AAVEV3 `attempted_failed` for ~3 days after the `20260508-141147` run had reconciled them). **FIXED** —
+      deployment-service@`ad4d448` adds the 8 per-data_type DeFi buckets to `launch-manifest-consolidator-vm.sh`
+      `BUCKETS`; relaunched the consolidator daemon as `manifest-consolidator-20260511-181538` (old
+      `manifest-consolidator-20260507-175639` to be deleted after the new one's first poll cycle confirms). One-time
+      manual consolidation of `lending-indices-{pid}` already done; the other 7 per-data_type DeFi buckets are picked up
+      by the relaunched daemon's first poll. **Case-5 big finding** (data correctness for DeFi, May-23 critical path,
+      cross-repo) — operator flagged in chat 2026-05-11.
+- [ ] [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list + non-graceful skip** — its `DEFI_REPOS`/EXTRA_REPOS
+      list references `features-onchain-service` (consolidated into `features-service` by the 2026-05-08 features-*
+      consolidation); the "SKIP <repo> — not found" path trips `set -e` so a missing repo aborts the whole tarball build
+      with `EXIT=1` (it logs the SKIP message but then dies). Blocks `create-code-tarballs.sh --asset-group DEFI` from
+      `.tabs/*` worktrees (which have `features-service` not `features-onchain-service`). Workaround for Priority #5:
+      none needed — the deployed `mtds-code.tar.gz` (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit)
+      + the latest lending_indices code, so the VM ran current code without a refresh. Fix: (a) update the repo lists to
+      post-consolidation names (`features-service` instead of `features-onchain-service`/`features-defi-service`/etc.);
+      (b) make the missing-repo case actually `continue` past `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball
+      ...; else log "SKIP ..."; fi`). Owner: features-* consolidation follow-up — coordinate with
+      `features_repo_consolidation_2026_05_08` (archived?) or `infrastructure_master_2026_05_07`. **MIGRATE** to whichever
+      owns the features-* consolidation tail.
 
 ### Chain coverage + CLOB-on-chain venues (migrated from `defi_chain_coverage_and_clob_venues_2026_05_08`)
 
