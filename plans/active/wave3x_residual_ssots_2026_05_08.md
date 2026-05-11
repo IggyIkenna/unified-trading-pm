@@ -147,21 +147,44 @@ reconciler can re-classify them with the now-available typed reasons.
 
 **File**:
 
-- [ ] [instruments-service] P0. NEW `instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py` — walks the
-      canonical manifest, finds
-      `(capture_status=empty_confirmed AND error_reason ∈ {SOURCE_RETURNED_ZERO,     EXPECTED_INSTRUMENT_NOT_LISTED})`
-      rows that were stamped during the 2026-05-07 sweep, re-runs them through the now-extended
-      `classify_blank_reason_row()` with Track A + B SSOTs available, and where the extended classifier returns a
-      more-specific typed reason (e.g. `EXPECTED_PARTIAL_HALF_DAY` instead of `SOURCE_RETURNED_ZERO`), stamps the new
-      reason on the row. Same shape as the existing reconciler scripts: `--asset-group` flag, `--apply-flips` gate
-      (default scan-only), `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=` per-VM-shard isolation protocol, RECONCILER\_\*
-      events, CSV audit, `--max-flips-per-run` halt safety.
-- [ ] [TEST] P0. Smoke-test on a synthetic manifest with planted `SOURCE_RETURNED_ZERO` rows for half-day-CME-shards →
-      reconciler finds them, scan-only mode reports the proposed new reasons, `--apply-flips` mode flips them.
-- [ ] [DOCS] P0. Codex audit-ledger update under
-      `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md` § "Reason taxonomy" — note the
-      reconciler is the canonical mechanism for legacy reason upgrades whenever a new EXPECTED\_\* reason is added to
-      UAC `EmptyConfirmedReason`.
+- [x] [instruments-service] P0. **SHIPPED 2026-05-11 instruments-service@`485c57b`** (slot 3, harsh-wave3x-tab).
+      `scripts/reconcile_legacy_blank_to_typed_reason.py` — walks `empty_confirmed` rows whose `error_reason` is a
+      2026-05-07-sweep default (`SOURCE_RETURNED_ZERO` / `EXPECTED_INSTRUMENT_NOT_LISTED`), re-runs each through
+      `classify_blank_reason_row` (deep import — it's not on the UTL facade) now that the Track A SSOTs (UAC@bdc84ed) +
+      Track B SSOTs (UAC@7c8b5ad) are available, and upgrades rows where the classifier returns a more-specific
+      `EXPECTED_*` (≠ `SOURCE_RETURNED_ZERO`, ≠ current reason; **never downgrades; never flips `capture_status`** — the
+      `empty_confirmed→attempted_failed` discrimination for cefi/defi/tradfi-at-instrument-grain is the writeguard's /
+      `reconcile_blank_error_reason_rows.py`'s job). Same shape as `reconcile_expected_absence_reasons.py`: `--asset-group`,
+      `--apply-flips` (default scan-only) + CSV audit, `MANIFEST_PER_VM_SHARDS=true`+`VM_NAME=` guard, `RECONCILER_*` events,
+      `--max-flips-per-run`, per-VM-shard write (consolidator merges last-writer-wins).
+      **FINDING (adjacent, → writegate Phase 3.D.5 / a follow-up)**: the dry-run found ~604,951 defi + ~1,868,285 sports
+      `empty_confirmed/SOURCE_RETURNED_ZERO` rows. Per the operator directive (defi can't legit-empty at instrument-day
+      grain) many of the defi ones arguably should be `attempted_failed` — but the pass-1 sweep only handled BLANK
+      reasons (these already have `SOURCE_RETURNED_ZERO`), so they were never flipped. This reconciler deliberately
+      doesn't do that status-flip (it's a reason-UPGRADE, not a status-flip); the gap is for the writeguard / a follow-up.
+- [x] [TEST] P0. **SHIPPED 2026-05-11 instruments-service@`485c57b`** (slot 3): `tests/unit/test_reconcile_legacy_blank_to_typed_reason.py`
+      (importlib-loaded script-module pattern, matching `test_purge_legacy_unsharded_manifest_rows.py`). 6 tests:
+      SWEEP_DEFAULT_REASONS constant; candidate-mask picks sweep-defaults only / missing-columns→all-false; `main()`
+      scan-only proposes the `SOURCE_RETURNED_ZERO → EXPECTED_WEEKEND` upgrade for a planted Saturday CME row (CSV
+      assertion); `main()` `--apply-flips` rewrites `error_reason` in the uploaded per-VM shard; `--apply-flips` aborts
+      `rc=4` without `MANIFEST_PER_VM_SHARDS`. All pass; ruff clean; basedpyright `scripts/*` baseline matches the
+      sibling reconciler (~60 `reportAny`/`reportUnknownMemberType` from `google.cloud` no-stubs + pandas `.loc` —
+      `scripts/` is not strict-typed in instruments-service QG).
+      **Full-execution evidence — dry-run on the 5 production manifests (2026-05-11)**: tradfi 141,401 rows / 0 candidates;
+      sports 2,675,696 rows / 1,868,285 candidates / 0 upgrades; cefi 2,632,931 rows / 0 candidates; defi 1,606,190 rows
+      / 604,951 candidates / 0 upgrades; prediction 16,812 rows / 41 candidates / 0 upgrades. Reconciler RAN clean on all
+      5 (no errors, no incorrect reclassifications). 0 upgrades surfaced because the existing 2026-05-07 sweep +
+      orchestrator calendar-pre-skip already classified most rows, AND the new Track A+B branches need finer per-row
+      columns (`league_id` for sports / intraday `timestamp` for tradfi / `chain` for defi) that current manifest rows
+      mostly lack — the reconciler is ready for whenever those columns are written / a new reason is added. (Operator
+      decides if/when to run `--apply-flips` after CSV review — currently a no-op given 0 upgrades.)
+- [x] [DOCS] P0. **SHIPPED 2026-05-11 PM** (slot 3): codex update to `codex/02-data/honest-absence-downstream-handling.md`
+      — added a `### Reconciler chain for legacy error_reason (the three passes)` subsection (under "Reader-side fallback
+      for legacy rows") naming all 3 reconcilers in order + noting `reconcile_legacy_blank_to_typed_reason.py` is the
+      **canonical mechanism for legacy-reason upgrades whenever a new `EXPECTED_*` reason is added to UAC
+      `EmptyConfirmedReason` or a new fine-grained SSOT lands** + the 2026-05-11 dry-run result. (The plan said
+      `availability-manifest-and-data-status.md` § "Reason taxonomy" but that doc has no such section — the reason-taxonomy
+      content lives in `honest-absence-downstream-handling.md`, so the update landed there.)
 
 ### Track D — Wave 3.M zero-activity-bar adapter audit (every per-shard adapter; ~2 days)
 
@@ -292,6 +315,89 @@ its through-line + makes track ownership cleaner per the daily work-split proces
 ## Open questions
 
 (none currently — operator greenlight 2026-05-08 covered the full track set)
+
+## Deferred work after 2026-05-11 slot-3 session
+
+The 2026-05-11 slot-3 (`harsh-wave3x-tab`) session shipped Tracks A-UTL + B + C + D (audit) + E. Items still open
+(deferred to named owners) are tracked here so the next agent picks up cleanly:
+
+| Track / item                                | Status as of 2026-05-11        | Successor / owner                                                                                                                                                            |
+| ------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Track A `[UTL]` classifier + `[TEST]`       | `done` (UTL@3fbc6b3)           | —                                                                                                                                                                            |
+| Track B `[UAC]` ×3 + `[TEST]`-UAC           | `done` (UAC@7c8b5ad)           | —                                                                                                                                                                            |
+| Track B `[UTL]` `_classify_sports` + tests  | `done` (UTL@3fbc6b3)           | —                                                                                                                                                                            |
+| Track C `[instruments-service]` + `[TEST]` + `[DOCS]` | `done` (instruments-service@485c57b; dry-runs on 5 prod manifests; codex@bce1822e-area) | — (operator decides if/when to `--apply-flips` after CSV review — currently a no-op given 0 upgrades on current manifest data) |
+| Track D — `[MTDS]` / `[MDPS]` / `[features-*]` AUDIT | `done` 2026-05-11 — findings: `issues/wave3x_track_d_findings_2026_05_11.md` | — (audit complete; per-adapter A/B/C/D classification filed)                                                                                                                  |
+| Track D — case-D *implementation* (zero-activity-bar adapter wiring) | `deferred-post-cutover` — no schema change forced (anti-seq verdict: no new manifest dim) | DEFERRED post-cutover; needs a NEW UTL `zero_activity_bars` primitive + `instrument_catalog` threaded into adapter construction (Wave 2/3 of writegate Phase 3.D.5, "pending"); sports half re-scopes to instruments-service. Slot 1 / a Wave 3.M follow-up owns the impl plan. |
+| Track D — `[TEST]` per-adapter smoke tests  | `deferred-post-cutover`        | Pairs with the case-D adapter wiring above.                                                                                                                                   |
+| Track D — `[DOCS]` codex zero-activity-bar shape stub | `deferred-post-cutover`        | Slot 1 / a Wave 3.M follow-up adds the codex stub alongside the case-D impl plan. The audit findings doc is the substantive interim record.                                    |
+| Track D — `EXPECTED_KNOWN_SOURCE_GAP` candidate new `EmptyConfirmedReason` | `blocked` — operator/Ikenna-slot-5 decision pending | DECISION NEEDED (Ikenna slot 5 + slot 1): add to UAC `EmptyConfirmedReason` in the Phase 1 schema window (before 2026-05-15 freeze — it's a tiny additive enum) OR defer post-cutover. Surfaced in the findings doc + the cross-side ping (PM@fcf99e52 routed it). |
+| Track D — P0 bugs surfaced (MTDS blank-reason sentinel-abort; MDPS dead canonical-writer path + 1440-NaN TradFi passthrough; commodity phantom-row; cross_instrument np.zeros; sports fillna-magic) | `routed` — owners = writegate Phase 2.A/2.E + Harsh slots 5+6 | Escalated in `issues/wave3x_track_d_findings_2026_05_11.md` + the cross-side ping; NOT slot-3's repos to fix per the Track D read-only brief.                                  |
+| Track E `[UTL]` 3 stamping helpers + `[TEST]` + `[DOCS]` | `done` (UTL@2ab3685; codex@bce1822e) | —                                                                                                                                                                            |
+| Track E `[features-sports]` calculator wire-in of the stamp helpers | `deferred` — per-service half | DEFERRED to Harsh slot 4 (MTDS sports adapter stamping wiring) + Ikenna slot 3 (available_at Phase 1 per-asset_group cascade) per the 2026-05-11 work-split. UTL helpers are ready to consume; see `plans/active/issues/` for slot 4's MTDS-slice sports `available_at` wiring issue doc. |
+| Track A `[UTL]` adjacent: pre-existing `reportPrivateImportUsage` on `from unified_api_contracts import non_trading_day_reason` (legacy_reason_classifier.py:162) | `noted` — pre-existing, not introduced this session | Picked up by the workspace QG sweep (Ikenna) or the writegate owner; fix = deep import `from unified_api_contracts.registry.venue_trading_calendar import non_trading_day_reason` with a `# noqa: ... qg-deep-import` comment. |
+| Adjacent finding: `instruments-service/scripts/reconcile_blank_error_reason_rows.py:76` does `from unified_trading_library import classify_blank_reason_row` — that symbol is NOT on the UTL facade → `ImportError` at runtime | `noted` — pre-existing bug on the writegate Wave 2.M sweep script | → writegate Phase 3.D.5 owner / QG sweep. 1-line fix: change to `from unified_trading_library.legacy_reason_classifier import classify_blank_reason_row` (the deep path the docstring already references). My new reconciler uses the correct deep import. |
+| Adjacent finding (Track C dry-run): ~604,951 defi + ~1,868,285 sports `empty_confirmed/SOURCE_RETURNED_ZERO` rows that arguably should be `attempted_failed` per the cefi/defi/tradfi-can't-legit-empty-at-instrument-grain operator directive — the 2026-05-07 sweep only handled BLANK reasons so never flipped them | `noted` — gap | → writegate Phase 3.D.5 / a follow-up. My reconciler deliberately doesn't do that status-flip (it's a reason-UPGRADE only). |
+
+## DONE-2026-05-11 (slot 3 — wave3x Tracks A-UTL / B / C / D (audit) / E)
+
+Slot 3 (`harsh-wave3x-tab`) ran Tracks A-UTL + B + C + D (read-only audit) + E end-to-end on real infrastructure
+(per-tab worktree `tab/hk/3`, pushed directly to `live-defi-rollout`).
+
+**Code commits:**
+
+- `unified-api-contracts@7c8b5ad` — Track B sports per-source SSOTs: `UNDERSTAT_COVERED_LEAGUES` + `does_understat_cover`
+  (provider_league_ids.py) + `is_within_transfer_window(country_code, day)` (transfer_windows.py) +
+  `get_footystats_season_bounds` / `is_within_footystats_season` / `footystats_season_status_for_day` (season_dates.py) +
+  sports-facade re-exports + 22 unit tests (`tests/unit/sports/test_per_source_coverage_ssots.py`). DRY deviation:
+  re-used existing SSOTs (`UNDERSTAT_NAMES` / `_COUNTRY_DEFAULTS` / `get_season_boundary`) rather than creating duplicate
+  dicts (per "No double SSOT").
+- `unified-trading-library@3fbc6b3` — Tracks A+B UTL classifier extensions: `_classify_tradfi` (half-day →
+  `EXPECTED_PARTIAL_HALF_DAY`, intraday-ts-outside-session → `EXPECTED_OUTSIDE_TRADING_HOURS`; consumes
+  `registry.half_day_sessions` + `registry.venue_session_hours`) + `_classify_sports` (understat /
+  transfermarkt-off-window / footystats-pre/post-season → matching `EXPECTED_*`; consumes UAC@7c8b5ad) +
+  `_parse_iso_date`/`_parse_iso_datetime` helpers + 13 new tests + 5 drift-guard entries (33 pass).
+- `unified-trading-library@2ab3685` — Track E availability_stamping sports helpers: `stamp_available_at_injuries` +
+  `stamp_available_at_odds_snapshot` (named aliases over `_event_time`) + `stamp_available_at_post_match_cascade`
+  (source-priority candidate cascade + `kickoff+120min` fallback) + 2 col-name constants + 3 facade re-exports + 18 new
+  tests (37 pass).
+- `instruments-service@485c57b` — Track C `scripts/reconcile_legacy_blank_to_typed_reason.py` (second-pass reason
+  upgrader: `empty_confirmed` rows with a 2026-05-07-sweep default reason → re-classify via `classify_blank_reason_row`
+  with Track A+B SSOTs → upgrade to more-specific `EXPECTED_*`; never downgrades / never flips capture_status; same
+  shape as `reconcile_expected_absence_reasons.py`) + 6 unit/smoke tests.
+
+**Plan-flip + codex + findings commits (PM):**
+
+- `unified-trading-pm@56dec3f1` — Track D findings doc `plans/active/issues/wave3x_track_d_findings_2026_05_11.md`
+  (6 read-only audit sub-agents, per-adapter A/B/C/D classification) + Track D plan annotations + escalation ping.
+- `unified-trading-pm@e5d82a15` — Track B UAC plan flips (3 `[UAC]` + `[TEST]`-UAC checkboxes).
+- `unified-trading-pm@c6607382` — Track A+B UTL plan flips (3 `[UTL]`/`[TEST]` checkboxes).
+- `unified-trading-pm@bce1822e` — Track E plan flips (3 of 4 checkboxes) + codex `honest-absence-downstream-handling.md`
+  `## Per-source available_at stamping helpers (UTL)` section.
+- `unified-trading-pm@<this commit>` — Track C plan flips (3 checkboxes) + codex `honest-absence-downstream-handling.md`
+  `### Reconciler chain for legacy error_reason (the three passes)` subsection + this DONE block + the deferred-work
+  scoreboard above.
+
+**Full-execution evidence:**
+
+- UAC@7c8b5ad: `cd unified-api-contracts && .venv-workspace/bin/python -m pytest tests/unit/sports/test_per_source_coverage_ssots.py`
+  → 22 passed; ruff + basedpyright clean.
+- UTL@3fbc6b3: `pytest tests/unit/test_legacy_reason_classifier.py` → 33 passed; ruff clean; basedpyright clean modulo
+  the pre-existing `non_trading_day_reason` `reportPrivateImportUsage`.
+- UTL@2ab3685: `pytest tests/unit/test_availability_stamping.py` → 37 passed; ruff clean; basedpyright clean on
+  `availability_stamping.py`.
+- instruments-service@485c57b: `pytest tests/unit/test_reconcile_legacy_blank_to_typed_reason.py` → 6 passed; ruff
+  clean; **dry-run on the 5 production canonical manifests** (tradfi 141,401 rows / 0 candidates; sports 2,675,696 /
+  1,868,285 candidates / 0 upgrades; cefi 2,632,931 / 0 candidates; defi 1,606,190 / 604,951 candidates / 0 upgrades;
+  prediction 16,812 / 41 candidates / 0 upgrades — reconciler RAN clean on all 5, no errors, no incorrect
+  reclassifications; 0 upgrades because the existing sweep + orchestrator pre-skip already classified most rows and
+  the new branches need finer per-row columns current rows mostly lack).
+- All pushes verified `git rev-list --left-right --count HEAD...origin/live-defi-rollout` → `0 0`.
+
+**Deferred (see the scoreboard above for the full table)**: Track D case-D *implementation* + per-adapter smoke tests +
+codex stub → post-cutover (no schema change forced); Track D `EXPECTED_KNOWN_SOURCE_GAP` candidate reason → Ikenna
+slot 5 decision; Track D P0 bugs → writegate Phase 2.A/2.E + Harsh slots 5+6; Track E features-sports calculator
+wire-in → Harsh slot 4 + Ikenna slot 3.
 
 ## DONE-2026-05-10 (Tab H — wave3x Track A UAC half)
 

@@ -329,4 +329,30 @@ direction 2026-05-07 we now want the manifest to BE the SSOT, so:
 Cross-reference: writegate Phase 3.D `reconcile_expected_absence_reasons.py` per asset_group performs the retrospective
 backfill so the slow path eventually empties out per asset_group.
 
+### Reconciler chain for legacy `error_reason` (the three passes)
+
+There are now THREE reconciler passes over the manifest's `error_reason` column, run in order, each in
+`instruments-service/scripts/`:
+
+1. **`reconcile_blank_error_reason_rows.py`** (writegate Phase 3.D.5 Wave 2.M, 2026-05-07) — stamps the *initial*
+   reason on legacy `empty_confirmed` rows that had a **blank** `error_reason`, via `classify_blank_reason_row`. Most
+   rows land on `SOURCE_RETURNED_ZERO` (the honest-absence default) or, for cefi/defi/tradfi at instrument-day grain,
+   flip to `attempted_failed`.
+2. **`reconcile_expected_absence_reasons.py`** (writegate Phase 3.D, the per-asset-group retrospective backfill above) —
+   same SSOT classifier, walks the same null-reason set; the canonical retrospective pass.
+3. **`reconcile_legacy_blank_to_typed_reason.py`** (Wave 3.X Track C, 2026-05-11) — the *second-pass upgrader*. Walks
+   `empty_confirmed` rows whose `error_reason` is one of the pass-1/2 *defaults* (`SOURCE_RETURNED_ZERO` /
+   `EXPECTED_INSTRUMENT_NOT_LISTED`) and re-runs each through `classify_blank_reason_row` — now that the finer SSOTs
+   exist (`HALF_DAY_SESSIONS` / `VENUE_SESSION_HOURS` from UAC@bdc84ed, `UNDERSTAT_COVERED_LEAGUES` / per-country
+   transfer windows / FootyStats season bounds from UAC@7c8b5ad) — upgrading rows where the classifier now returns a
+   *more-specific* `EXPECTED_*` (never downgrades, never flips `capture_status`). **This is the canonical mechanism for
+   legacy-reason upgrades whenever a new `EXPECTED_*` reason is added to UAC `EmptyConfirmedReason` or a new fine-grained
+   SSOT lands** — re-run it (scan-only first, then `--apply-flips` after CSV review). Same shape as the others
+   (`--asset-group`, `--apply-flips`, `--max-flips-per-run`, `MANIFEST_PER_VM_SHARDS`+`VM_NAME`, `RECONCILER_*` events,
+   CSV audit, per-VM-shard write so the consolidator merges last-writer-wins).
+
+(2026-05-11 dry-run on the 5 production manifests: 0 upgrades surfaced on the current manifest data — the pass-1/2
+sweep + the orchestrator's calendar-pre-skip already classified most rows; the new branches need finer per-row columns
+that current rows mostly lack. The reconciler is ready for whenever those columns are written / a new reason is added.)
+
 ---
