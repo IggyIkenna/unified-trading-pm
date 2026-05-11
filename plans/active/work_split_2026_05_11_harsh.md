@@ -352,209 +352,215 @@ under-utilisation is fine, mid-cycle collision is not.
 **Per-slot worktree isolation** makes cross-slot races on `.git/index` unrepresentable. The table above is for
 SHARED-FILE-CONTENT collisions when slots push and pull each other's commits.
 
-## Spawn prompts (paste-ready into fresh Claude Code / Cursor tabs)
+## Spawn prompts (paste-ready)
 
-> **Operator usage**: open a fresh Cursor / Claude Code tab inside the slot N worktree
-> (`cd ${WORKSPACE_ROOT}/.tabs/<N>/`), then paste the matching prompt. The agent reads the slot's plan-of-record +
-> LEDGER bootstrap on its own.
-
-> **Boot pre-req** (one-time on Harsh's machine, before any slot 2-6 spawn):
+> **Operator usage**: open a fresh Claude Code session inside the slot's worktree —
+> `cd ${WORKSPACE_ROOT}/.tabs/<N>/ && claude` (Option B, one VS Code window at the root + terminal CLIs per slot), or a
+> VS Code window at `.tabs/<N>/`. Confirm CWD + branch first: `pwd` → `.../.tabs/<N>`, `git -C unified-trading-pm
+> rev-parse --abbrev-ref HEAD` → `tab/hk/<N>`. Then paste the matching prompt below.
 >
-> ```bash
-> # 1. Verify workspace is clean across all repos on live-defi-rollout (per the precondition in
-> #    codex/05-infrastructure/per-tab-worktrees.md Step 0).
-> # 2. Provision 6 slot worktrees:
-> bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 6   ($USER=hk on this machine → tab/hk/1..6; already provisioned 2026-05-11)
-> ```
->
-> The `--init` step provisions per-repo worktrees + per-slot `.envrc` (PREK_CACHE_DIR isolation per foot-gun #4) AND
-> auto-copies `unified-trading-system-repos.code-workspace` into each slot dir (so `File → Open Workspace from File →
-> .tabs/<N>/unified-trading-system-repos.code-workspace` works immediately for the multi-root view; or just
-> `File → Open Folder → .tabs/<N>/` for flat single-root view — both produce identical isolation).
->
-> Verify in a Cursor terminal of each new window:
->
-> ```bash
-> pwd                                                              # → .../.tabs/<N>
-> git -C unified-trading-pm rev-parse --abbrev-ref HEAD            # → tab/hk/<N>
-> ```
->
-> Full 7-step paste-ready recipe at
+> **Boot pre-req** (already done 2026-05-11): 6 slot worktrees provisioned via
+> `setup-tab-worktrees.sh --init --slots 6` (`$USER=hk` → branches `tab/hk/1`..`tab/hk/6`). Before reassigning a slot
+> to a new theme, run `setup-tab-worktrees.sh --reset-slot <N>` first. Full 7-step recipe:
 > [`codex/05-infrastructure/per-tab-worktrees.md`](../../codex/05-infrastructure/per-tab-worktrees.md).
+>
+> **The prompts below are intentionally minimal.** All the common content — role, git discipline (conditional push to
+> `live-defi-rollout`, rebase-on-push, plan-aware-merge on conflict), reading order, communication bus (ping ledger +
+> plan-of-record Q&A format), pre-commit check, plan-of-record curation duties, sub-agent fan-out discipline, boot-ack
+> template — lives ONCE in [`../../harsh_orchestrator/AGENT_ONBOARDING.md`](../../harsh_orchestrator/AGENT_ONBOARDING.md)
+> (the SSOT). Each prompt just names the per-slot facts (slot number, worktree/branch, theme, agent-tag, plan-of-record,
+> slot-specific notes) and points the agent there. Per-slot task briefs (scope items + priorities + repos owned +
+> collision boundaries + done-definition + full-execution criterion) are in this file's § "Slot N" sections above.
 
-### Slot 2 spawn prompt (features-repo consolidation Phase 4-7 — DEADLINE 2026-05-13)
+### Slot 2 spawn prompt — features-repo consolidation Phase 4-7 (HARDEST DEADLINE 2026-05-13)
 
 ```text
-You are Tab 2 — a sub-agent spawned by Harsh's main orchestrator agent (slot 1, a separate
-Claude Code session on the SAME machine).
+You are slot 2 — a scoped implementer spawned by Harsh's main orchestrator (slot 1, a separate Claude Code
+session on the SAME PC). Your worktree: ${WORKSPACE_ROOT}/.tabs/2/ on branch tab/hk/2. Your agent-tag for
+ping-ledger entries: harsh-features-consolidation-tab.
 
-Your slot is 2. Your worktree is at ${WORKSPACE_ROOT}/.tabs/2/ on branch tab/hk/2.
-Today's theme for slot 2: features-repo consolidation Phase 4-7 — HARDEST DEADLINE 2026-05-13
-(2 days from today).
+Theme: features-repo consolidation Phase 4-7 — HARDEST DEADLINE 2026-05-13 (Phase 0-3 already shipped:
+pre-audit PM@1de574b4, UAC FeatureFamily @7f63ca3, UTL ManifestWriter feature_family kwarg @c16cef3,
+features-service skeleton @d3d6e286 pushed + workspace-manifest registered). Phase 4 = import rewrite
+(11 ext imports + 51 string refs per the pre-audit); Phase 5 = lift cross-family helpers to UTL; Phase 6 =
+pyproject + test consolidation; Phase 7 = single features-service deployable + 8 child repos archived.
 
-BEFORE doing anything else, read in order:
-  1. plans/active/work_split_2026_05_11_harsh.md § "Slot 2 — Features-repo consolidation ..." — full task brief.
-  2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards.
-  3. unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md — 3-tier isolation model.
-  4. unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md — reconciliation
-     protocol when your push surfaces a rebase conflict.
-  5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — sub-agent inheritance.
-  6. plans/active/features_repo_consolidation_2026_05_08.md — your plan-of-record.
-  7. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — sequencing umbrella you serve.
-  8. The Phase 0 pre-audit manifest at PM@1de574b4 (1286 lines / 11 ext imports + 51 string refs).
+Read, in order, BEFORE doing anything:
+  1. harsh_orchestrator/AGENT_ONBOARDING.md — role + git discipline + reading order + comms bus + pre-commit
+     check + plan-of-record curation + sub-agent fan-out + boot-ack template. (This is the SSOT for all the
+     common mechanics; everything not slot-specific is there.)
+  2. plans/active/work_split_2026_05_11_harsh.md § "Slot 2 — Features-repo consolidation Phase 4-7" — your
+     full task brief (scope/priorities/repos owned/collision boundaries/done-definition/full-execution criterion).
+  3. plans/active/features_repo_consolidation_2026_05_08.md — your plan-of-record (todos + checkbox flips +
+     ## Open questions for blockers).
+  4. The Phase 0 pre-audit manifest at PM@1de574b4 (1286 lines) — exact 11+51 sites for Phase 4.
+  (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
+  plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
 
-Your agent-tag for ping-ledger entries: harsh-features-consolidation-tab.
+Slot-2-specific:
+  - CROSS-SIDE PING MANDATORY when Phase 7 lands (features-service deployable; 8 child repos archived):
+    append a ping in plans/active/_agent_pings.md so Ikenna slot 4 can promote live-pipeline Phase 4-5
+    design to implementation.
+  - Citadel § 6 requires a workspace-grep audit table for the removed/renamed per-repo import paths.
+  - Sub-agent fan-out hint: 4 parallel at boot — Phase 4 import rewrite / Phase 5 UTL helper lift / Phase 6
+    pyproject+test consolidation / Phase 7 archive coordination.
 
-ORCHESTRATION RULES (full text in CLAUDE.md):
-  1. Per-slot worktree — cross-slot races unrepresentable. WITHIN your slot, sub-agents you spawn
-     share your worktree's .git/index, so pre-commit check (git status + git diff --cached --stat
-     NO PATH ARG) still mandatory before EVERY commit. Use `git add -p` for shared files; never
-     `git add -A` / `git add <whole-shared-file>`.
-  2. Plan-doc Q&A flow — write blockers into features_repo_consolidation plan's `## Open
-     questions` section (status 🟡 BLOCKED), append ping in harsh_orchestrator/_agent_pings.md,
-     continue with what you CAN do.
-  3. Conditional push — per shippable unit: commit locally, fetch + check incoming, zero
-     incoming → push, any incoming → flag + escalate.
-  4. Plan-flip in same logical unit as code — checkbox flip + `<repo>@<sha>` evidence
-     stamped in body, NOT batched at session end.
-  5. Findings Triage Discipline (HARD RULE) — case-1-to-5 routing per CLAUDE.md.
-  6. CROSS-SIDE PING MANDATORY when Phase 7 lands (features-service deployable; 8 child repos
-     archived) so Ikenna slot 4 can promote live-pipeline Phase 4-5 design to implementation.
-
-YOUR TASK: ship features_repo_consolidation Phase 4-7 by 2026-05-13. Full task brief in this
-work-split § "Slot 2".
-
-REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional push.
-Final: append a "DONE-2026-05-11" block at the bottom of features_repo_consolidation plan body
-listing every code + plan-flip commit sha. EOD-audit (per CLAUDE.md "Capture Discoveries As Plan
-Todos Immediately" § "End-of-cycle audit clause"): every deferral in your final summary MUST
-already be a `- [ ]` plan todo or a `**DEFERRED**` annotation in plans/active/. Run
-`grep -n "<distinctive phrase>" plans/active/*.md plans/active/issues/*.md` per deferral
-line — match → cite file:line in summary; no match → STOP, add the todo, push the flip,
-then resume. Then go quiet — don't pick up new work autonomously.
+Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-features-consolidation-tab — STARTED slot 2
+(plans/active/features_repo_consolidation_2026_05_08.md)" to harsh_orchestrator/_agent_pings.md, then start.
+Final: "## DONE-2026-05-11" block at the bottom of the features_repo_consolidation plan body with every
+code + plan-flip commit sha + EOD deferral-audit (grep each deferral against plans/active/*.md per
+AGENT_ONBOARDING § plan-of-record curation), then go quiet.
 ```
 
-### Slot 3 spawn prompt (Wave3x Tracks B/C/D/E)
+### Slot 3 spawn prompt — Wave3x Tracks B/C/D/E parallel
 
 ```text
-You are Tab 3 — spawned by Harsh's main orchestrator (slot 1).
+You are slot 3 — a scoped implementer spawned by Harsh's main orchestrator (slot 1, a separate Claude Code
+session on the SAME PC). Your worktree: ${WORKSPACE_ROOT}/.tabs/3/ on branch tab/hk/3. Your agent-tag:
+harsh-wave3x-tab.
 
-Your slot is 3. Worktree: ${WORKSPACE_ROOT}/.tabs/3/ on branch tab/hk/3.
-Theme: Wave3x Tracks B/C/D/E parallel — sports per-source SSOTs + reconciler +
-zero-activity-bar adapter audit + sports stamping cascade.
+Theme: Wave3x Tracks B/C/D/E parallel — (B) sports per-source SSOTs (UNDERSTAT_COVERED_LEAGUES +
+TRANSFER_WINDOWS + footystats season bounds, UAC canonical/sports/); (C) reconcile_legacy_blank_to_typed_reason.py
+reconciler for instruments-service; (D) ANTI-SEQUENCING-CRITICAL zero-activity-bar adapter audit across MTDS,
+MDPS, 8 features-* services; (E) sports per-source stamping helpers (stamp_available_at_lineups / _injuries /
+_post_match_cascade / _odds, UTL availability_stamping/). Track A already shipped UAC@bdc84ed; P1 Track A UTL
+wire (half-day + session-hours from UAC@bdc84ed).
 
-BEFORE doing anything: read in order:
-  1. plans/active/work_split_2026_05_11_harsh.md § "Slot 3 — Wave3x ..." — full task brief.
-  2-5. (standard: CLAUDE.md, per-tab-worktrees, plan-aware-merge, SUB_AGENT_MANDATORY_RULES).
-  6. plans/active/wave3x_residual_ssots_2026_05_08.md — your plan-of-record.
-  7. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — sequencing umbrella.
+Read, in order, BEFORE doing anything:
+  1. harsh_orchestrator/AGENT_ONBOARDING.md — role + git discipline + reading order + comms bus + pre-commit
+     check + plan-of-record curation + sub-agent fan-out + boot-ack template (the SSOT for all common mechanics).
+  2. plans/active/work_split_2026_05_11_harsh.md § "Slot 3 — Wave3x Tracks B/C/D/E parallel" — your full task
+     brief.
+  3. plans/active/wave3x_residual_ssots_2026_05_08.md — your plan-of-record.
+  (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
+  plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
 
-Your agent-tag: harsh-wave3x-tab.
+Slot-3-specific:
+  - Track D is ANTI-SEQUENCING CRITICAL — must complete BEFORE the 2026-05-15 Phase 2 freeze (code_freeze:300).
+    If the audit finds a new shard atom dimension OR a new error reason needed → escalate to slot 1 + Ikenna
+    slot 5 IMMEDIATELY (they decide v8-schema-now vs deferred-post-cutover).
+  - Per CLAUDE.md "Grep-Then-Read, Not Grep-Then-Conclude" HARD RULE: the Track D adapter audit MUST read
+    consumer code + check runtime-resolved patterns (regex dispatch, StrEnum lookups, factory registries) —
+    do NOT conclude "missing" from a literal grep alone.
+  - Sequencing vs slot 2: Track D's audit of the 8 features-* repos should run AFTER slot 2 ships Phase 4
+    (import rewrite), or against archived snapshots — coordinate via slot 1.
+  - Sub-agent fan-out hint: 5 parallel at boot (one per Track A-UTL / B / C / D / E); Track D benefits from
+    ~10-12 sub-sub-agents (one per service repo) for the read-only audit pass.
+  - Track D findings doc goes to plans/active/issues/wave3x_track_d_findings_2026_05_11.md with per-adapter
+    A/B/C/D classification per CLAUDE.md "Four-category empty-output decision".
 
-ORCHESTRATION RULES: same as slot 2.
-
-Track D ANTI-SEQUENCING CRITICAL: must complete BEFORE Phase 2 freeze (2026-05-15) per
-code_freeze:300. If audit finds new shard atom dimension OR new error reason needed,
-escalate to slot 1 + Ikenna slot 5 (Phase 1.E sequencing) IMMEDIATELY — they decide whether
-the new finding lands in v8 schema (Ikenna slot 2) or is deferred post-cutover.
-
-Per CLAUDE.md "Grep-Then-Read, Not Grep-Then-Conclude" HARD RULE: Track D adapter audit MUST
-read consumer code + check runtime-resolved patterns; do NOT conclude "missing" from literal
-grep alone.
-
-YOUR TASK: full task brief in this work-split § "Slot 3".
-
-REPORT-BACK: same as slot 2.
+Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-wave3x-tab — STARTED slot 3
+(plans/active/wave3x_residual_ssots_2026_05_08.md)" to harsh_orchestrator/_agent_pings.md, then start.
+Final: "## DONE-2026-05-11" block in the wave3x_residual_ssots plan body + EOD deferral-audit, then go quiet.
 ```
 
-### Slot 4 spawn prompt (bucket-name SSOT + per-adapter wiring)
+### Slot 4 spawn prompt — bucket-name SSOT + per-asset-group available_at adapter wiring
 
 ```text
-You are Tab 4 — spawned by Harsh's main orchestrator (slot 1).
+You are slot 4 — a scoped implementer spawned by Harsh's main orchestrator (slot 1, a separate Claude Code
+session on the SAME PC). Your worktree: ${WORKSPACE_ROOT}/.tabs/4/ on branch tab/hk/4. Your agent-tag:
+harsh-bucket-and-adapter-tab.
 
-Your slot is 4. Worktree: ${WORKSPACE_ROOT}/.tabs/4/ on branch tab/hk/4.
-Theme: bucket-name SSOT canonicalisation + per-asset-group available_at adapter wiring (sports).
+Theme: bucket-name SSOT canonicalisation (yaml = canonical per plan; collapse the per-family config.py + UTL
+resolver duplicates → bucket_naming.resolve_bucket_name(); workspace QG step for inline f"gs://{bucket}/...";
+yaml-vs-resolver parity test; plan-flip audit table) + per-asset-group available_at adapter wiring (sports
+adapter stamping — wire slot 3 Track E's UTL helpers into MTDS sports adapters; CeFi already shipped MTDS@4a00bd5).
 
-BEFORE doing anything: read in order:
-  1. plans/active/work_split_2026_05_11_harsh.md § "Slot 4 — Bucket-name SSOT ..." — full task brief.
-  2-5. (standard).
-  6. plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md — primary plan-of-record.
-  7. plans/active/available_at_lookahead_bias_completion_2026_05_08.md — secondary plan-of-record.
+Read, in order, BEFORE doing anything:
+  1. harsh_orchestrator/AGENT_ONBOARDING.md — the SSOT for all common mechanics.
+  2. plans/active/work_split_2026_05_11_harsh.md § "Slot 4 — Bucket-name SSOT + per-asset-group available_at
+     adapter wiring" — your full task brief.
+  3. plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md — primary plan-of-record.
+  4. plans/active/available_at_lookahead_bias_completion_2026_05_08.md Phase 1 — secondary plan-of-record.
+  (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
+  plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
 
-Your agent-tag: harsh-bucket-and-adapter-tab.
+Slot-4-specific:
+  - GATED: bucket-name SSOT migration runs AFTER slot 2 ships Phase 4 (per-family config.py paths stabilise),
+    or against the consolidated state. Sports adapter stamping WAITS on (a) slot 3 Track E ship (UTL helpers)
+    + (b) Ikenna slot 3 Phase 0 ship (bar boundary contract). While gated, prep test scaffolds + the mechanical
+    3-layer-collapse plan.
+  - Triple-drift incident reference (2026-05-08 Tab 4 close-out): there are THREE current SSOT layers (yaml +
+    per-family config.py + UTL resolver). yaml is canonical; collapse the other two; audit each call site
+    before deletion.
+  - Sub-agent fan-out hint: 2 parallel — (1) bucket-name SSOT migration; (2) sports adapter stamping wiring (gated).
 
-ORCHESTRATION RULES: same as slot 2.
-
-Bucket-name SSOT triple-drift incident reference (2026-05-08 Tab 4 close-out): there are
-THREE current SSOT layers (yaml + per-family config.py + UTL resolver). Decision per plan
-body: yaml is canonical; collapse the other two. Audit each call site before deletion.
-
-Sports adapter stamping WAITS on (a) Wave3x slot 3 Track E ship (UTL helpers); (b) Ikenna
-slot 3 Phase 0 ship (bar boundary contract). Wait for cross-side pings. While waiting,
-prep test scaffolds.
-
-YOUR TASK: full task brief in this work-split § "Slot 4".
-
-REPORT-BACK: same as slot 2.
+Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-bucket-and-adapter-tab — STARTED slot 4
+(plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)" to harsh_orchestrator/_agent_pings.md, then start.
+Final: "## DONE-2026-05-11" block in the bucket_name_ssot_canonicalisation plan body + EOD deferral-audit, then go quiet.
 ```
 
-### Slot 5 spawn prompt (live-pipeline Phase 3-5 implementation, gated)
+### Slot 5 spawn prompt — live-pipeline Phase 3-5 service wiring (GATED — pre-gate scaffolds now)
 
 ```text
-You are Tab 5 — spawned by Harsh's main orchestrator (slot 1).
+You are slot 5 — a scoped implementer spawned by Harsh's main orchestrator (slot 1, a separate Claude Code
+session on the SAME PC). Your worktree: ${WORKSPACE_ROOT}/.tabs/5/ on branch tab/hk/5. Your agent-tag:
+harsh-live-pipeline-impl-tab.
 
-Your slot is 5. Worktree: ${WORKSPACE_ROOT}/.tabs/5/ on branch tab/hk/5.
-Theme: live-pipeline Phase 3-5 service wiring (post features-consolidation unblock) + Phase
-13/14/15 (VM launchers + codex sweep + QG sweep).
+Theme: live-pipeline Phase 3-5 service wiring (Phase 3 MTDS websocket rollout per asset_group; Phase 4 MDPS
+streaming aggregation; Phase 5 features-service asset-scoped streaming) + Phase 13/14/15 (VM launchers +
+watchdog dict updates + codex SSOT updates + QG sweep + smoke — likely next-cycle).
 
-BEFORE doing anything: read in order:
-  1. plans/active/work_split_2026_05_11_harsh.md § "Slot 5 — Live pipeline ..." — full task brief.
-  2-5. (standard).
-  6. plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md — your plan-of-record.
-  7. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — sequencing umbrella.
+Read, in order, BEFORE doing anything:
+  1. harsh_orchestrator/AGENT_ONBOARDING.md — the SSOT for all common mechanics.
+  2. plans/active/work_split_2026_05_11_harsh.md § "Slot 5 — Live pipeline Phase 3-5 service wiring" — full task brief.
+  3. plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md — your plan-of-record (Phases 3-5 + 13-15).
+  4. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — the sequencing umbrella you serve.
+  (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
+  plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
 
-Your agent-tag: harsh-live-pipeline-impl-tab.
+Slot-5-specific:
+  - GATED START: Phase 3-5 IMPLEMENTATION is blocked until BOTH (a) Harsh slot 2 ships features-consolidation
+    Phase 7 AND (b) Ikenna slot 4 ships Phase 4-5 design-ahead commits. Watch plans/active/_agent_pings.md for
+    both cross-side pings. While gated: ship PRE-GATE scaffolds + integration test fixtures only (read the
+    live-pipeline design docs + Ikenna's UTL stubs as they ship; prep MTDS websocket integration scaffolds /
+    MDPS streaming consumer hooks / features-service per-asset-group flavors). When BOTH pings land, promote
+    scaffolds to implementation (5 parallel sub-agents, one per asset_group).
+  - Phase 5 features-service consumers live in the repo slot 2 is consolidating — coordinate file paths;
+    merge against the consolidated state.
 
-ORCHESTRATION RULES: same as slot 2.
-
-GATED START: Phase 3-5 IMPLEMENTATION blocked until BOTH (a) Harsh slot 2 ships features-
-consolidation Phase 7 AND (b) Ikenna slot 4 ships Phase 4-5 design-ahead commits. While
-gated, ship pre-gate scaffolds + integration test fixtures (no actual implementation).
-When BOTH cross-side pings land, promote scaffolds to implementation.
-
-YOUR TASK: full task brief in this work-split § "Slot 5".
-
-REPORT-BACK: same as slot 2.
+Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-live-pipeline-impl-tab — STARTED slot 5 (pre-gate)
+(plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)" to harsh_orchestrator/_agent_pings.md, then start.
+Final: "## DONE-2026-05-11" block in the live_pipeline plan body + EOD deferral-audit (explicit
+DEFERRED-AFTER-PHASE-3-5 annotation if Phase 13/14/15 slip), then go quiet.
 ```
 
-### Slot 6 spawn prompt (workspace QG green sweep + codex audit)
+### Slot 6 spawn prompt — workspace QG green sweep + codex audit pass
 
 ```text
-You are Tab 6 — spawned by Harsh's main orchestrator (slot 1).
+You are slot 6 — a scoped implementer spawned by Harsh's main orchestrator (slot 1, a separate Claude Code
+session on the SAME PC). Your worktree: ${WORKSPACE_ROOT}/.tabs/6/ on branch tab/hk/6. Your agent-tag:
+harsh-workspace-qg-tab.
 
-Your slot is 6. Worktree: ${WORKSPACE_ROOT}/.tabs/6/ on branch tab/hk/6.
-Theme: workspace QG green sweep + codex audit pass + Phase 1 freeze-gate items 8 + 9
-(runs all 4 days, validates on-disk state per slot completion).
+Theme: workspace QG green sweep (UAC + UTL + every service repo; basedpyright clean; no # type: ignore masking
+architectural violations — run after each slot ships a shippable unit, validate) + codex SSOT audit pass per
+CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE + freeze-gate items 8 + 9 of
+code_freeze_migrate_backfill_sequencing_2026_05_10.md + P1 phantom audit
+(instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group all --dry-run — ensure the
+354 residual phantoms from the 2026-05-04 baseline haven't grown). Runs all 4 days.
 
-BEFORE doing anything: read in order:
-  1. plans/active/work_split_2026_05_11_harsh.md § "Slot 6 — Workspace QG ..." — full task brief.
-  2-5. (standard).
-  6. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — your plan-of-record.
+Read, in order, BEFORE doing anything:
+  1. harsh_orchestrator/AGENT_ONBOARDING.md — the SSOT for all common mechanics.
+  2. plans/active/work_split_2026_05_11_harsh.md § "Slot 6 — Workspace QG green sweep + codex audit pass" — full task brief.
+  3. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — your plan-of-record (freeze-gate items 8 + 9).
+  (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
+  plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
 
-Your agent-tag: harsh-workspace-qg-tab.
+Slot-6-specific:
+  - Per CLAUDE.md "QG failure attribution": when a workspace QG failure surfaces, git-blame the failing file.
+    Your commit caused it → fix in same logical unit. Foreign-side commit caused it → file an issue doc in
+    plans/active/issues/ and continue with your own work (they fix on their own commits).
+  - Per CLAUDE.md "Findings Triage Discipline" temporary exception (in effect until QG is workspace-clean):
+    QG-failure findings on someone else's code are EXEMPT from the case-3/4/5 documentation requirement —
+    they'll be cleaned up in bulk. Non-QG findings (data correctness, in-flight VM bugs, SSOT contradictions)
+    stay case-1-to-5 normally.
+  - You are read-only across UAC + UTL + every service repo + codex docs; issue docs for failure attribution
+    go in plans/active/issues/. Sub-agent fan-out hint: 1-2 sub-agents (one per QG sweep run; one per codex audit pass).
 
-ORCHESTRATION RULES: same as slot 2 + ALSO:
-  - Per CLAUDE.md "QG failure attribution" rule: when a workspace QG failure surfaces,
-    git-blame the failing file. If your commit caused it, fix in same logical unit. If a
-    foreign-side commit caused it, file an issue doc in plans/active/issues/ and continue
-    with your own work — they fix on their own commits.
-  - Per CLAUDE.md "Findings Triage Discipline" temporary exception: QG-failure findings on
-    someone else's code during the workspace QG cleanup window are EXEMPT from case-3/4/5
-    documentation requirement. They'll be cleaned up in bulk.
-
-YOUR TASK: full task brief in this work-split § "Slot 6".
-
-REPORT-BACK: same as slot 2.
+Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-workspace-qg-tab — STARTED slot 6
+(plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)" to harsh_orchestrator/_agent_pings.md, then start.
+Final: "## DONE-2026-05-11" block in the code_freeze plan body (freeze-gate items 8 + 9 status) + EOD
+deferral-audit, then go quiet.
 ```
 
 ## Daily sync points

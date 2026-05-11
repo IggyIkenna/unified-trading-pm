@@ -13,88 +13,92 @@ locked_since: 2026-05-08
 > doc is your boot context — read it once before doing anything else, then read everything in the "Reading order" below
 > in sequence. Total bootstrap time: ~5 min.
 
-## 🚨 HARD RULE — git pull / rebase / push require operator authorization (codified 2026-05-08 PM)
+## Git discipline under per-slot worktrees (codified 2026-05-11 — supersedes the 2026-05-08 "operator-auth-for-all-git-ops" rule)
 
-**Effective immediately for every spawned tab agent.** You must NOT run any of the following git operations unless Harsh
-explicitly asks you via [`_agent_pings.md`](_agent_pings.md) (or directly in your tab session):
+You run in your **own worktree** at `${WORKSPACE_ROOT}/.tabs/<N>/` on branch `tab/hk/<N>` — a separate `.git/index` +
+working tree from every other slot (see [`../codex/05-infrastructure/per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md)).
+The shared-working-tree foot-guns — a `pull`/`rebase` in one tab auto-stashing another tab's uncommitted WIP — are
+**unrepresentable across slots** now. So the pre-worktree HARD RULE ("no push/pull/rebase without operator
+authorization") is **lifted**: you push your own work per shippable unit, no authorization ping needed.
 
-- `git pull` (any variant: `--ff-only`, `--rebase`, plain)
-- `git rebase` (interactive or otherwise; including `git pull --rebase`)
-- `git push` (to any remote; any branch; any flag including `--force-with-lease`)
-- `git stash pop` / `git stash apply` of stashes you didn't create yourself
-- `git checkout origin/<branch> -- .` or any wildcard remote-overwrite of working tree
-- `git reset --hard` or any destructive reset
+### The merge model — direct-to-`live-defi-rollout`, rebase-on-push (no batch-merge step)
 
-### What you CAN still do
+Per shippable unit (a green, self-contained slice — helper+tests / one adapter migration / one reconciler):
 
-- **Commit locally per shippable unit** (HARD RULE per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" still applies).
-  Local commits accumulate on `live-defi-rollout` until operator authorizes a push.
-- **Read git state**: `git status`, `git log`, `git fetch` (read-only — fetch downloads but doesn't merge), `git diff`,
-  `git stash list`, `git stash show`.
-- **`git stash push` your OWN dirty work** if you need a clean tree to do something specific (then restore via
-  `git stash pop` when done — and only if the stash was YOURS).
-- **Edit files, run tests, run quality gates, run scripts.**
+1. **Pre-commit check** — `git status` + `git diff --cached --stat` (NO path arg). Confirm only YOUR files are staged.
+   Within your slot, sub-agents you spawned share your `.git/index`, so this check still matters. Stage by name or
+   `git add -p`; **never `git add -A` / `git add .` / `git add <whole-shared-file>`.**
+2. `git commit` on your branch `tab/hk/<N>`.
+3. `git fetch origin live-defi-rollout`.
+4. **Conditional push:**
+   - **If incoming commits touch files YOU also edited in unmerged commits** → STOP. Write a `🟡 BLOCKED` Q in your
+     plan-of-record `## Open questions` listing your commits + the incoming ones; ping `_agent_pings.md`; continue with
+     what you CAN do. Slot 1 / operator resolves.
+   - **Else** → `git rebase origin/live-defi-rollout` (auto-resolves non-overlapping changes). If the rebase surfaces a
+     conflict, apply the **plan-aware-merge-resolution** protocol
+     ([`../codex/05-infrastructure/plan-aware-merge-resolution.md`](../codex/05-infrastructure/plan-aware-merge-resolution.md)):
+     checkbox-flip / append-section shapes → keep both, `git rebase --continue`; paragraph-rewrite or code conflict →
+     escalate to slot 1 (don't guess). Then `git push origin HEAD:live-defi-rollout`.
+5. **Flip the plan-of-record checkbox in the same logical unit** as the code commit (see § "Plan-of-record curation
+   duties").
 
-### What to do when you'd previously have pulled / rebased / pushed
+Nobody does a batch-merge step — each slot self-lands its work as it finishes. The only residual is a rebase conflict
+in PM when two slots flip checkboxes in the same plan file; mitigated by (a) **only slot 1 writes PM plan/codex bodies**
+— you flip ONLY your own plan-of-record's checkboxes with `git add -p`; (b) the plan-aware-merge protocol auto-resolves
+trivial shapes; (c) the scheduling rule (slot 1 keeps same-repo tasks out of the same parallel wave).
 
-| Old behaviour                                      | New behaviour                                                                                                                                                               |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Commit done → push to share with workspace         | Commit locally → ping `_agent_pings.md` "Tab N: commit `<sha>` ready for push, see plan-of-record" → wait for operator authorization                                        |
-| Incoming commits on origin → pull/rebase to update | Do NOT pull. `git fetch` to inspect; ping "Tab N: N commits on origin since my last fetch, request sync" → wait                                                             |
-| Local conflicts with origin → rebase to resolve    | Stop. Ping "Tab N: BLOCKED — local commits diverge from origin" + list both sides → wait for operator decision                                                              |
-| Foreign dirty files on disk during rebase / pull   | This situation should NOT arise anymore (no pulls/rebases). If you find foreign dirty files at boot, leave them alone (per "Two teammates × multiple parallel agents" rule) |
+### What's still operator/slot-1 territory (don't do without a ping)
 
-### Why this rule exists
+- `git push --force` / `--force-with-lease` to `live-defi-rollout` — **never.**
+- Merging another slot's branch into `live-defi-rollout` — that's slot 1's job in dependency order, not yours.
+- `git reset --hard` past commits you didn't make; `git stash pop`/`apply` of a stash you didn't create.
+- `git checkout origin/<branch> -- .` or any wildcard remote-overwrite of the working tree — **never** (the "Two
+  teammates × multiple parallel agents" rule still applies to any foreign-owned dirty file you find at boot — leave it
+  alone).
 
-A pull/rebase by one tab when another tab has uncommitted work in the shared working tree silently stashes the other
-tab's edits (as we just experienced — Tab 5's rebase auto-stashed Tab 1's main-orchestrator-LEDGER
+### Why the change
 
-- AGENT_ONBOARDING WIP on 2026-05-08 PM). The auto-stash is technically correct git behaviour, but it breaks the "shared
-  working tree, no pull needed between tabs" assumption the workspace runs on. The fix is to centralize all
-  pull/push/rebase operations through operator authorization — pinged via `_agent_pings.md` or stated directly in the
-  tab session.
-
-### Operator-authorized git operations format
-
-When operator wants you to pull/rebase/push, they'll write a directive in `_agent_pings.md` like:
-
-```text
-[YYYY-MM-DD HH:MM UTC] OPERATOR → tab-N — AUTHORIZED git pull --rebase + push for commit <sha>
-```
-
-Or directly in your tab session: _"Tab N — go ahead and push your commit, then pull origin"_.
-
-Either form is sufficient authorization. Until you see one, your local commits stay local.
+The 2026-05-08 "operator-auth-for-all-git-ops" rule existed because the shared working tree meant Tab A's `git pull
+--rebase` would auto-stash Tab B's uncommitted edits (the 2026-05-08 PM incident — Tab 5's rebase auto-stashed Tab 1's
+LEDGER + AGENT_ONBOARDING WIP — that drove it). Per-slot worktrees eliminate that by construction. With the foot-gun
+gone, centralizing every push through the operator just adds latency for no safety gain, so we're back to the standard
+conditional-push model.
 
 ## Your role in 3 sentences
 
-You are **Tab N**, a scoped implementer spawned by Harsh's main orchestrator agent (Tab 1, a separate Claude Code
-session on the SAME PC, sharing the SAME `.git/` + working tree as you). You execute one task end-to-end against your
-assigned plan-of-record, ship it, and go quiet. You do NOT take on adjacent work, push speculatively, or message Harsh
-directly — Tab 1 is your conversational dispatcher. You CAN spawn `Task` sub-agents per your LEDGER tab entry's
-"Sub-agent fan-out hint" — see § "Sub-agent fan-out — discipline" below for constraints (mechanical / audit work only;
-NEVER cross-cutting design; sub-agents do NOT inherit CLAUDE.md and MUST be given the full ruleset at the top of every
-Task prompt).
+You are **slot N**, a scoped implementer spawned by Harsh's main orchestrator agent (slot 1, a separate Claude Code
+session on the SAME PC). You work in your **own worktree** at `${WORKSPACE_ROOT}/.tabs/<N>/` on branch `tab/hk/<N>` —
+an isolated `.git/index` + working tree from every other slot — and you execute one task end-to-end against your
+assigned plan-of-record, shipping it incrementally (commit + conditional-push per shippable unit per the git-discipline
+section above), then go quiet. You do NOT take on adjacent work, push speculatively, merge another slot's branch, or
+message Harsh directly — slot 1 is your conversational dispatcher; you CAN spawn `Task` sub-agents per your LEDGER slot
+entry's "Sub-agent fan-out" hint, but only for mechanical / audit work, never cross-cutting design, and you MUST paste
+the full ruleset at the top of every Task prompt (see § "Sub-agent fan-out — discipline" below).
 
 ## Reading order (do this first, in sequence)
 
-1. **THIS file** — confirm your role.
-2. **`harsh_orchestrator/LEDGER.md`** — find your tab entry by tab number. Its spawn-prompt block is your full task
-   brief (repos owned, behavioural contract, collision boundaries, done-definition).
-3. **`cursor-configs/CLAUDE.md` § "Daily Work-Split Process (Ikenna ↔ Harsh, AI-paralleled)"** — full workspace spec
-   for the Model A / Model B work-split, shared working tree, conditional push, plan-of-record + Q&A bus, ping ledger,
-   polling cadence, sub-agent fan-out. **All the orchestration rules you need live there.** This onboarding doc is just
-   the boot pointer.
-4. **`cursor-configs/CLAUDE.md`** (the rest) — workspace coding standards: uv not pip, basedpyright not pyright, no
+1. **THIS file** — confirm your role + the git discipline (the "Git discipline under per-slot worktrees" section above).
+2. **[`../codex/05-infrastructure/per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md)** — the 3-tier
+   isolation model. You are tier 2 (a slot); sub-agents you spawn are tier 3 (they share your slot's worktree).
+3. **`harsh_orchestrator/LEDGER.md`** — find your **Slot N** entry under "Today's status → Tab registry". It has theme /
+   plan-of-record / worktree+branch / gate status + a pointer to the work-split § "Slot N".
+4. **`plans/active/work_split_<today>_harsh.md` § "Slot N"** — your **full task brief**: scope items + priorities +
+   repos owned + collision boundaries + done-definition + full-execution criterion. (The work-split's § "Spawn prompts"
+   is just the minimal per-slot prompt your operator pasted — the substance is in § "Slot N".)
+5. **`cursor-configs/CLAUDE.md` § "Daily Work-Split Process" + § "Per-Tab Worktrees"** — the workspace orchestration
+   spec (Model A/B work-splits, conditional push, plan-of-record + Q&A bus, ping ledger, polling cadence, sub-agent
+   fan-out, the 3-tier worktree model).
+6. **`cursor-configs/CLAUDE.md`** (the rest) — workspace coding standards: uv not pip, basedpyright not pyright, no
    `os.getenv()`, "Findings Triage Discipline (HARD RULE)", "Commit + Push + Flip Plan Checkboxes (HARD RULE)", "Two
-   teammates × multiple parallel agents", per-asset-group shard-key matrix.
-5. **`cursor-configs/SUB_AGENT_MANDATORY_RULES.md`** — symlinked to `CLAUDE.md` since 2026-05-08 PM, so it contains the
+   teammates × multiple parallel agents", per-asset-group shard-key matrix, etc.
+7. **[`../codex/05-infrastructure/plan-aware-merge-resolution.md`](../codex/05-infrastructure/plan-aware-merge-resolution.md)**
+   — the conflict-resolution protocol for when your `git rebase origin/live-defi-rollout` surfaces a conflict (classify
+   shape → auto-resolve trivial → escalate paragraph-rewrites to slot 1).
+8. **`cursor-configs/SUB_AGENT_MANDATORY_RULES.md`** — symlinked to `CLAUDE.md` since 2026-05-08 PM, so it contains the
    full CLAUDE.md ruleset. **You MUST paste its contents at the top of every `Task` sub-agent prompt you spawn**
-   (sub-agents do NOT inherit CLAUDE.md; they start with fresh context). See § "Sub-agent fan-out — discipline" below
-   for the full pattern (when to use sub-agents, when not to, and the canonical Task-prompt shape).
-6. **Your plan-of-record** — the specific plan named in your tab entry (e.g. `cefi_master_2026_05_07.md` for
-   `cefi-babysit-tab`). This is where your todos live + where you flip checkboxes + where you write `## Open questions`
-   for blockers.
+   (sub-agents do NOT inherit CLAUDE.md). See § "Sub-agent fan-out — discipline" below.
+9. **Your plan-of-record** — the specific plan named in your Slot N entry. Where your todos live + where you flip
+   checkboxes + where you write `## Open questions` for blockers.
 
 ## The only 4 things you must internalise (everything else is in CLAUDE.md)
 
@@ -267,44 +271,33 @@ ledger sweeps + main-agent context resets).
   tab session text (operator can read at their own pace) or in the plan-of-record body as iteration-log entries (e.g.
   _"sweep #37: 16/24 alive, no actions"_).
 
-### 2. Push discipline (UPDATED 2026-05-08 PM — operator authorization required for all pushes/pulls/rebases)
+### 2. Push discipline — see "Git discipline under per-slot worktrees" above
 
-> **⚠️ This subsection is SUPERSEDED on the push-trigger condition.** Read the HARD RULE block at the top of this doc
-> ("🚨 HARD RULE — git pull / rebase / push require operator authorization") for the current rule. The "zero incoming →
-> push freely" path is no longer in effect. All pushes/pulls/rebases require explicit operator authorization via
-> `_agent_pings.md` or direct tab-session direction.
+The full rule is the **"Git discipline under per-slot worktrees"** section near the top of this doc. In short: commit
+per shippable unit on your branch `tab/hk/<N>` → `git fetch origin live-defi-rollout` → if incoming touches files you
+also edited, STOP + flag (`🟡 BLOCKED` Q in plan-of-record + ping); else `git rebase origin/live-defi-rollout` (apply
+the plan-aware-merge protocol on conflict) → `git push origin HEAD:live-defi-rollout`. No operator authorization needed
+per push — the per-slot worktree makes the old shared-tree foot-gun unrepresentable. `--force` pushes + merging another
+slot's branch stay operator/slot-1 territory.
 
-Per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" HARD RULE — **commit per shippable unit always**. Local commits
-accumulate; do NOT push them. To request push:
+### 3. Pre-commit check (within-slot — sub-agents share your `.git/index`)
 
-```bash
-git status                                       # confirm only your files
-git log --oneline origin/<branch>..HEAD          # list local commits ready
-```
-
-Then ping `_agent_pings.md`:
-
-```text
-[YYYY-MM-DD HH:MM UTC] <your-agent-tag> — Tab N: <count> commits ready for push (sha-list); see <plan-of-record>
-```
-
-Wait for operator authorization. Until then, keep working — local commits don't block your tab from making the next
-commit.
-
-### 3. Pre-commit check (catches the shared-working-tree foot-gun)
-
-Before EVERY commit, in ANY repo:
+Cross-slot bundling is unrepresentable now (each slot has its own index). But **within your slot**, any `Task`
+sub-agents you spawned write to the same `.git/index` as you — so the check still matters. Before EVERY commit, in ANY
+repo:
 
 ```bash
 git status                 # full picture: modified, staged, untracked
 git diff --cached --stat   # NO PATH ARGUMENT — see entire index
 ```
 
-If anything in the staged set or working tree isn't yours, surgically un-stage (`git restore --staged <file>`) or stash
-(`git stash --keep-index`) before committing. Use `git add -p` for your hunks if any shared file has foreign edits.
-**Never `git add -A` / `git add .` / `git add <whole-shared-file>`.**
+If anything in the staged set or working tree isn't from the unit you're committing, surgically un-stage
+(`git restore --staged <file>`) or stash (`git stash --keep-index`) first. Use `git add -p` for your hunks if a shared
+file has another sub-agent's edits. **Never `git add -A` / `git add .` / `git add <whole-shared-file>`.** Also: if you
+find a *foreign-owned* dirty file at boot (untracked file you didn't create, or a tracked file with edits that aren't
+yours), leave it alone — per CLAUDE.md "Two teammates × multiple parallel agents."
 
-Reference incidents: PM@`961980db` / `611b9501` / `34075d84` (all from concurrent-agent overlap).
+Reference incidents: PM@`961980db` / `611b9501` / `34075d84` (all from concurrent-agent overlap, pre-worktree model).
 
 ### 4. Plan-of-record curation duties
 
@@ -392,12 +385,13 @@ REPORT BACK: [structured shape of the response — table / sha list / file:line 
 )
 ```
 
-### Sub-agents do NOT push, commit, or flip plan checkboxes
+### Sub-agents do NOT commit, push, or flip plan checkboxes
 
-Per the new git HARD RULE at the top of this doc, no agent — main, tab, or sub-agent — runs `git push` / `git pull` /
-`git rebase` without operator authorization. Sub-agents return findings; the spawning tab integrates findings into its
-own working tree + commits per shippable unit. Sub-agents never write directly to the ledger, plan-of-records, or
-`_agent_pings.md` either — only their spawning tab does, after integrating their findings.
+Sub-agents **return findings** (file:line lists, diffs to apply, audit tables) — they do not `git commit` / `git push` /
+`git rebase` / flip plan checkboxes / write to the LEDGER, plan-of-records, or `_agent_pings.md`. The **spawning slot**
+integrates the findings into its own worktree, commits per shippable unit, conditional-pushes to `live-defi-rollout`,
+and flips the plan checkbox — all per the "Git discipline under per-slot worktrees" section above. (The slot itself
+pushes freely per shippable unit; only `--force` pushes + merging another slot's branch are operator/slot-1 territory.)
 
 ### Anti-patterns (sub-agent foot-guns operator has already seen)
 
