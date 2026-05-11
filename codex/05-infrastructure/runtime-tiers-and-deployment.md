@@ -240,6 +240,42 @@ Before v7, a deployer set five env vars separately: `CLOUD_MOCK_MODE`, `MOCK_STA
 
 ---
 
+## Per-mode credential subset (added 2026-05-12 per Phase 7.A)
+
+Per [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+Phase 7.A, each pipeline mode (paper / batch / live) declares its required
+credential set. SSOT yaml:
+[`unified-api-contracts/config/credentials_per_mode.yaml`](../../unified-api-contracts/unified_api_contracts/config/credentials_per_mode.yaml).
+
+| Mode | Custody | Venue scope | Data | Telegram |
+|---|---|---|---|---|
+| `paper` | sandbox (`copper-sandbox-*` only) | None (Tenderly fork fills) | live read-only | `telegram-bot-token-dev` |
+| `batch` | `mock` | read-scope (`<venue>-read-*` only) | live (historical sources) | `telegram-bot-token-dev` |
+| `live` | `cloud_kms` (May-23 default) → `copper`/`fireblocks` (June-1 flip) | trade-scope (`<venue>-trade-*`) | live | `telegram-bot-token-prod` |
+
+Runtime-profile composition consumes this subset — e.g. `prod` profile
+implies `live` mode credential requirements; `paper` profile implies
+`paper` mode credentials. The `credential-probe.sh` audit script
+([`deployment-service/scripts/audit/credential-probe.sh`](../../deployment-service/scripts/audit/credential-probe.sh))
+takes `--mode {paper|batch|live}` and verifies the subset against real
+Secret Manager / Secrets Manager state.
+
+**Per-archetype subset** (Phase 7.B):
+[`unified-api-contracts/config/credentials_per_archetype.yaml`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+— each cutover archetype (carry_staked_basis + ARBITRAGE_PRICE_DISPERSION)
+declares its specific wallet PKs + venue trade keys + data sources. Operator
+runs `credential-probe.sh --mode live --archetype carry_staked_basis` to
+verify per-archetype readiness.
+
+**R9 sub-(a) RESOLVED 2026-05-12**: May-23 cutover defaults all wallets to
+`signing_surface=CLOUD_KMS_ENCRYPTED` (per
+[`hsm-wallet-signing.md`](hsm-wallet-signing.md)). June-1 flips per-wallet
+to `COPPER_MPC` / `FIREBLOCKS_MPC` when client provides custody credentials.
+The flip is config-only (no recompile, no service restart) per the
+custody-providers § 1 factory pattern.
+
+---
+
 ## Deployed-environment topology (prod / uat) — provisioned 2026-04-25
 
 Orthogonal to the local-tier and runtime-profile axes above. Once code reaches a deployed environment:

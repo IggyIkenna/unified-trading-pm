@@ -55,11 +55,34 @@ into **execution-service** (matching_engine/ sub-package).
 | execution-service (CeFi)   | `get_order_adapter(venue, api_key, api_secret, ...)`                   | Exchange API key + secret                  |
 | execution-service (DeFi)   | `connector.connect(config={"wallet_private_key": pk, "rpc_url": url})` | Wallet key + resolved RPC URL              |
 | execution-service (Sports) | `adapter(credentials={"api_key": key, ...})`                           | Venue-specific credentials                 |
+| execution-service (Custody) | `get_custody_provider(CustodyConfig(provider, ...))`                   | Per-`signing_surface` config (see § Custody) |
 | instruments-service        | `create_adapter(venue, api_key=key)`                                   | Data provider API key                      |
 | UMI                        | `get_adapter(venue)`                                                   | None (public endpoints)                    |
 | UEI                        | `setup_events()`                                                       | None (ADC for PubSub)                      |
 | UFI                        | N/A                                                                    | None (public APIs)                         |
 | UCI                        | N/A                                                                    | Provides `get_secret_client()` to services |
+
+### Custody (per-wallet signing surface — added 2026-05-12 by Phase 3.C SPLIT)
+
+Per [`custody-providers.md`](custody-providers.md) § 1, custody signing routes
+through a single factory `get_custody_provider(config: CustodyConfig)` that
+picks the right `CustodyProvider` implementation per `config.provider`. The
+provider name comes from UAC `WalletProvisioningConfig.signing_surface` (per
+[`per-archetype-wallet-isolation.md`](../05-infrastructure/per-archetype-wallet-isolation.md)
+§ 6 + UAC@`d721b6a` schema):
+
+| `signing_surface`         | `config.provider` | Required `CustodyConfig` fields                     | Notes |
+|---------------------------|--------------------|------------------------------------------------------|-------|
+| `LOCAL_KEY`               | `local_key`        | `private_key` (raw PK), `rpc_url`                    | Dev / testnet only |
+| `CLOUD_KMS_ENCRYPTED`     | `cloud_kms`        | `kms_key_uri`, `private_key_secret_ref`, `rpc_url`   | **May-23 cutover default** (per R9 RESOLVED 2026-05-12) — shipped at execution-service@`d45d24b4` |
+| `COPPER_MPC`              | `copper`           | `api_key`, `api_secret`, `organization_id`           | June-1 client-cred flip target |
+| `FIREBLOCKS_MPC`          | `fireblocks`       | `api_key`, `api_secret`, `vault_account_id` (via `organization_id`) | June-1 client-cred flip target (Phase 3.C.2 deferred-after-cutover) |
+| `MOCK`                    | `mock`             | None                                                 | Test-only |
+
+**Per-wallet flippability**: each `WalletProvisioningConfig` row carries its
+own `signing_surface` — operator flips the field in
+`gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` + service
+reloads via `ApiKeyReloader` — **no recompile, no service restart**.
 
 ## Why This Convention
 
