@@ -609,8 +609,15 @@ the resolution.
 
 ### Q4 — [harsh-features-consolidation-tab (via sub-agent A), 2026-05-11] — `DI=` ("deep unified lib imports") QG check over-flags `from unified_api_contracts.<domain> import`
 
-**Status**: 🟡 OPEN — slot-1/Ikenna call (PM-side QG-check OR UAC re-export). Same shape as Q1.x. **Not slot-2's to
-fix** — features-service uses the `.<domain>` facade form correctly per CLAUDE.md; leave the imports as-is until decided.
+**Status**: ✅ FIXED 2026-05-11 by Harsh slot 1 — option (a). `base-service.sh` `DI=` check now whitelists the sanctioned
+`.{domain}` facade form (`grep -vP 'from unified_api_contracts\.(?!canonical|normalize_utils|registry|config|shared|schemas|external)[a-z_]+ import'`)
+— so `from unified_api_contracts.sports import build_fixture_id` etc. pass, while `from unified_api_contracts.canonical.X import`
+/ `.normalize_utils.X` / etc. (the deep-internal namespaces) stay flagged (negative lookahead keeps them; STEP 5.23
+remains the precise enforcement). PM-only edit (per-repo `quality-gates.sh` sources `base-service.sh` via `BASE_QG_SCRIPT`
+— no rollout). Commit: PM@(this commit). **Slot 2: leave the `.sports` imports AS-IS** — they're correct per CLAUDE.md and
+QG-green now (re-run after a `git fetch origin live-defi-rollout && git rebase`).
+
+#### A1 — [main (slot 1), 2026-05-11] — fixed; see status above.
 
 Sub-agent A hit this on `sports/data/gcs_normalizers.py` (`from unified_api_contracts.sports import build_fixture_id, build_team_id`),
 `sports/compute/coverage_gate.py` (`from unified_api_contracts.sports import FEATURE_UPSTREAM_REQUIREMENTS, UpstreamReq, in_coverage`),
@@ -630,8 +637,16 @@ red for features-service — but they're not features-service violations.**
 
 ### Q5 — [harsh-features-consolidation-tab (via sub-agent A), 2026-05-11] — QG STEP 5.10 (direct cloud SDK) should exclude `scripts/`
 
-**Status**: 🟡 OPEN — slot-1/Ikenna call (PM-side: STEP 5.10 excludes `scripts/`, OR UCI gets a delimiter-prefix-listing
-API). Same shape as Q1.2 (`check_schema_provenance.py` `scripts/` exclusion). **Not slot-2's to fix** — leave the import.
+**Status**: ✅ FIXED 2026-05-11 by Harsh slot 1 — STEP 5.10 now excludes `scripts/` (`--glob '!scripts'` added to the
+`CLOUD_SDK_VIOLATIONS` rg, matching STEP 5.5/5.12b/5.23 + `pyrightconfig.json`; migration/backfill scripts legitimately
+need raw SDK for one-off ops UCI doesn't cover — e.g. the delimiter-prefix walk here). PM-only edit (no rollout — sourced
+via `BASE_QG_SCRIPT`). Commit: PM@(this commit). **Slot 2: leave the `from google.cloud import storage` import in
+`scripts/sports/backfill_fixture_features_manifest.py` AS-IS** — QG-green now (re-run after rebase); the `# Q-FOR-IKENNA`
+comment sub-agent A left at `:51-56` can be replaced with a `# scripts/ — raw SDK OK for one-off delimiter-prefix listing
+(QG STEP 5.10 excludes scripts/; UCI StorageClient has no .prefixes)` note. (NB: if a future UCI version adds a
+delimiter-prefix-listing method, migrating this script to UCI is a nice-to-have, not required.)
+
+#### A1 — [main (slot 1), 2026-05-11] — fixed; see status above.
 
 `scripts/sports/backfill_fixture_features_manifest.py` needs `from google.cloud import storage` because UCI's
 `StorageClient.list_blobs` returns a flat `Iterator[BlobMetadata]` with no `.prefixes` attribute, so the delimiter-based

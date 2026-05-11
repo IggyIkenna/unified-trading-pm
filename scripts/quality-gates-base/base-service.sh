@@ -609,10 +609,17 @@ for g in ${DEEP_IMPORT_EXCLUDE_GLOBS[@]+"${DEEP_IMPORT_EXCLUDE_GLOBS[@]}"}; do D
 # "schemas → unified-api-contracts (external + internal via `unified_api_contracts.internal`)".
 # `.internal` is a facade, not a `canonical.*`/`normalize_utils.*` deep path.
 # Q1.3 fix per features_service_qg_cleanup_2026_05_11.md (operator decision (a) shipped 2026-05-11).
+# Also allow the sanctioned `.{domain}` facade form per CLAUDE.md "Citadel Import Rules": services use
+# `from unified_api_contracts import X` OR `from unified_api_contracts.{domain} import X` (sports/market/execution/
+# alerting/...). Only the deep-internal namespaces stay flagged — `canonical`/`normalize_utils`/`registry`/`config`/
+# `shared`/`schemas`/`external` (these are always accessed deeper, so they keep the trailing dot and the negative
+# lookahead below does not whitelist them); STEP 5.23 (uac-import-surface-enforcement) is the precise enforcement
+# for those. Q4 fix per features_service_qg_cleanup_2026_05_11.md (2026-05-11).
 DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" \
     "${DI_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa" \
-    | grep -v 'from unified_api_contracts\.internal' || :)
+    | grep -v 'from unified_api_contracts\.internal' \
+    | grep -vP 'from unified_api_contracts\.(?!canonical|normalize_utils|registry|config|shared|schemas|external)[a-z_]+ import' || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
 # Old event logging pattern — flag obsolete cloud logging helpers only.
@@ -820,6 +827,7 @@ CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests' \
+    --glob '!scripts' \
     --glob '!unified_cloud_interface/providers/**' \
     "${_csdk_step_extra[@]}" \
     -l . 2>/dev/null || :)
