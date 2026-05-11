@@ -228,11 +228,37 @@ canonical SSOTs.
       `tests/internal/unit/test_risk_rules_archetype.py` — 33 tests including ≥10-per-archetype enforcement, scope +
       applies_to invariants, closed-union trigger discriminator conformance, severity-mapping conformance, kill-switch
       scope orthogonality, axis-coverage parametrised checks, frozen-Pydantic + dedup invariants. All 33 pass.)
-- [ ] [AGENT] P0. **2.B Per-venue rules.** `registry/risk_rules/venue.py` — for cutover-archetype venues.
-- [ ] [AGENT] P0. **2.C Per-account rules.** `registry/risk_rules/account.py` — paper + live accounts.
-- [ ] [AGENT] P0. **2.D Per-client rules.** `registry/risk_rules/client.py` — cutover demo client.
-- [ ] [AGENT] P0. **2.E Per-asset_group rules.** `registry/risk_rules/asset_group.py` — DeFi + CeFi cutover-relevant.
-- [ ] [AGENT] P0. **2.F Global rules.** `registry/risk_rules/global.py` — workspace-wide kill conditions.
+- [x] [AGENT] P0. **2.B Per-venue rules.** `registry/risk_rules/venue.py` — for cutover-archetype venues.
+      (UAC@29d4fe4 — shipped 27 `RiskRule` entries in `VENUE_RULES` tuple across 9 cutover-archetype venues: 6 CeFi
+      perps (bybit / deribit / binance / okx / hyperliquid / aster) + 3 Solana DeFi protocols (marinade / jito / sanctum
+      for `carry_staked_basis` LST yields). Each venue carries ≥3 rules (MaxOI / max single-instrument size / max
+      cross-instrument size). Every rule scope=`PER_VENUE`; `kill_switch_scope()` returns `KillSwitchScope.VENUE`.
+      `applies_to` is lowercase venue short-name per CLAUDE.md asset-group vocab rule. NOTE: commit 29d4fe4 carries
+      wrong message — a parallel agent's auto-commit bundled this work under their TICK_STALENESS commit message via
+      foot-gun #1+#4; surfaced as discovery to operator. Files + tests are correct + landed on origin/live-defi-rollout.)
+- [x] [AGENT] P0. **2.C Per-account rules.** `registry/risk_rules/account.py` — paper + live accounts.
+      (UAC@29d4fe4 — 8 `RiskRule` entries in `ACCOUNT_RULES` across 2 cutover accounts (`paper_default` +
+      `live_cutover_2026_05_23`). Each carries 4 rules: gross exposure / net exposure / daily loss / drawdown. Live
+      cutover account fires CRITICAL severity; paper fires HIGH/WARN. `kill_switch_scope()` returns `None`
+      (PER_ACCOUNT not directly kill-switch-applicable per seam orthogonality).)
+- [x] [AGENT] P0. **2.D Per-client rules.** `registry/risk_rules/client.py` — cutover demo client.
+      (UAC@29d4fe4 — 4 `RiskRule` entries in `CLIENT_RULES` for `cutover_demo_client_2026_05_23`: per-archetype
+      subscription size + total subscription cap + drawdown + capital-at-risk ceiling. `kill_switch_scope()` returns
+      `KillSwitchScope.CLIENT`.)
+- [x] [AGENT] P0. **2.E Per-asset_group rules.** `registry/risk_rules/asset_group.py` — DeFi + CeFi cutover-relevant.
+      (UAC@29d4fe4 — 6 `RiskRule` entries in `ASSET_GROUP_RULES` across `defi` + `cefi` asset_groups. Each carries 3
+      rules: concentration + gross exposure + asset-group-specific (DeFi gas-budget rule; CeFi funding-cost ceiling).
+      Lowercase asset_group keys per CLAUDE.md vocab rule. `kill_switch_scope()` returns `None`.)
+- [x] [AGENT] P0. **2.F Global rules.** `registry/risk_rules/global_rules.py` — workspace-wide kill conditions.
+      (UAC@29d4fe4 — 3 workspace-wide kill-condition `RiskRule` entries in `GLOBAL_RULES`:
+      `GLOBAL_PORTFOLIO_DRAWDOWN_HALT` + `GLOBAL_DATA_STALENESS_HALT` + total-portfolio CaR ceiling. All scope=`GLOBAL`,
+      `applies_to="*"`, `alerting_severity=CRITICAL`, `triggers_kill_switch=True`. Module named `global_rules.py` (not
+      `global.py`) to avoid Python keyword collision per spawn instructions. **DEFERRED**: closed-set `RiskRuleId`
+      additions for oracle outage / cross-cloud egress / custody endpoint unreachable — captured for follow-up Phase
+      2.F+ once enum additions clear seam review.) Tests: `tests/internal/unit/test_risk_rules_other_axes.py` — 33
+      tests including non-empty + min-count contracts, per-axis scope discipline, applies_to vocab sanity,
+      `kill_switch_scope()` orthogonality, consequence→alerting_severity mapping, DeFi-only gas-budget rule presence
+      + CeFi absence, every global rule fires CRITICAL + triggers kill-switch. All 33 pass.
 - [x] [AGENT] P0. **2.G `StrategyFamilyId` closed enum + family registry.**
       `unified_api_contracts/canonical/crosscutting/strategy_family.py`: `StrategyFamilyId` (closed enum:
       `FUNDING_ARB_FAMILY` / `BASIS_CARRY_FAMILY` / `LST_LEVERAGE_FAMILY` / `OPTIONS_VOL_FAMILY` / `SPORTS_MM_FAMILY` /
@@ -302,12 +328,23 @@ returns full rule set; tests pass.
 
 ## Phase 7 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **7.A NEW `codex/04-architecture/risk-rule-taxonomy.md`.** Taxonomy, scope axis, consequence closed
-      enum.
-- [ ] [AGENT] P0. **7.B NEW `codex/04-architecture/risk-preflight-flow.md`.** Order-submission flow, scale-down
-      semantics, block semantics.
-- [ ] [AGENT] P0. **7.C UPDATE `kill-switch-circuit-breaker.md`** — risk-rule fire → breaker arm cross-link.
-- [ ] [AGENT] P0. **7.E NEW `codex/04-architecture/risk-breaker-seam.md` — RATIFIED 2026-05-10 cross-plan audit Q9.**
+- [x] [AGENT] P0. **7.A NEW `codex/04-architecture/risk-rule-taxonomy.md`.** Taxonomy, scope axis, consequence closed
+      enum. (PM@730914a9 — 152-line doc: closed-set RiskRuleId 22 members + RiskRuleScope 6 + RiskRuleConsequence 4 +
+      RiskRuleTrigger 13 typed subtypes + § 7 SSOT seam diagram verbatim from plan body + orthogonality declarations
+      vs ErrorAction / AlertCode / KillSwitchScope; 7 outbound cross-references.)
+- [x] [AGENT] P0. **7.B NEW `codex/04-architecture/risk-preflight-flow.md`.** Order-submission flow, scale-down
+      semantics, block semantics. (PM@730914a9 — 153-line doc: ASCII flow diagram across Layers 1-4 + RiskPreflightResult
+      shape + BLOCK / SCALE_DOWN (min-aggregation) / MONITOR / TEST_ONLY aggregation semantics + strategy + execution
+      call sites + kill-switch bus integration + anti-patterns; 7 outbound cross-references.)
+- [x] [AGENT] P0. **7.C UPDATE `kill-switch-circuit-breaker.md`** — risk-rule fire → breaker arm cross-link.
+      (PM@730914a9 — added Risk-Rule Fire → Breaker Arm Cross-Link subsection citing the seam + BreakerRecoveryMode
+      manual-vs-auto-cooldown subsection per UAC@a7a99b5 + 3 new PubSub event rows (KILL_SWITCH_AUTO_RECOVERED /
+      KILL_SWITCH_MANUAL_UNKILLED / BREAKER_ESCALATION_REQUESTED) + 6 new cross-references at top + bottom.)
+- [x] [AGENT] P0. **7.D UPDATE `capital-efficiency-patterns.md`** — per-archetype capital-at-risk ceiling cross-link.
+      (PM@730914a9 — added Per-archetype Capital-at-Risk Ceiling Cross-Link section showing 3-layer composition
+      (account guards / per-archetype CaR / family aggregate) with risk_preflight() integration + 3 new outbound
+      cross-references to risk-rule-taxonomy / risk-preflight-flow / risk-breaker-seam.)
+- [x] [AGENT] P0. **7.E NEW `codex/04-architecture/risk-breaker-seam.md` — RATIFIED 2026-05-10 cross-plan audit Q9.**
       Document the distinct-enums-with-escalation-seam architecture: `RiskRuleConsequence` (per-rule-firing taxonomy)
       and `BreakerAction` (per-venue state-machine taxonomy) are SEPARATE enums by design — different triggers,
       different layers. The seam: when N consecutive `RiskRuleConsequence.SCALE_DOWN` consequences fire on same
@@ -318,8 +355,10 @@ returns full rule set; tests pass.
       (both use SCALE_DOWN vocabulary because the operator-facing concept is the same), and operational implications
       (risk-controller can fire WITHOUT breaker firing; breaker can fire WITHOUT risk-controller — they're independent
       layers that ESCALATE through the seam, not duplicate). Cross-links the seam diagram + cross-product table from
-      this plan body.
-- [ ] [AGENT] P0. **7.D UPDATE `capital-efficiency-patterns.md`** — per-archetype capital-at-risk ceiling cross-link.
+      this plan body. (PM@730914a9 — 144-line doc co-owned with DR plan Phase 8.F: TL;DR + naming-collision-intentional
+      table + seam event flow diagram + 4-layer layering diagram + operational implications + recovery-mode wiring
+      per BREAKER_RECOVERY_DEFAULTS + anti-patterns + Q9 ratification provenance. Includes `RISK_TO_BREAKER_ESCALATION_MAP`
+      typed-dict stub shape with TODO entries pending Phase 4 cutover-aspirational threshold population.)
 
 **Full-execution criterion**: 2 NEW + 2 UPDATE; cross-references resolve.
 
