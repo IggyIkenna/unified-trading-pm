@@ -167,17 +167,35 @@ this plan and **Q4** below (operator decision).
 > § "Environment tier" — no new toggle work needed; resolved from `window.location.hostname`, each env has its own
 > domain → its own deployment-api Cloud Run → its own GCS bucket scope → its own service account.
 
-- [ ] **[AGENT] P0**. **Phase 0e — extend yaml env tier to ALL `${DEPLOYMENT_ENV}`-MISSING bucket kinds (Phase 1
-      code-complete scope).** Currently env-LESS in yaml: `instruments` (was `instruments-store` per resolver — verify
-      actual key), `market_data` / `market-data` (raw tick storage — high-volume), state/terraform-state (probably
-      legitimately env-less; confirm with operator). Add `${DEPLOYMENT_ENV}` to: `instruments-store-{ag}-{env}-{pid}`,
-      `market-data-tick-{ag}-{env}-{pid}` (GCP), `unified-trading-instruments-{ag}-{env}-{account}`,
-      `unified-trading-market-data-{ag}-{env}-{account}` (AWS). Cross-cloud parity: yaml entries match shape on both
-      clouds. Update parity test (UTL@`e8dc6e3`'s `_FEATURES_PIPELINE_KINDS` + `_KNOWN_YAML_ASYMMETRIES`) to require env
-      tier on these kinds too. Operator confirms which buckets STAY env-less (`terraform-state` is likely; `secrets` is
-      definitely). **Composes with**: `pipeline_mode={batch_databento, live_websocket, live_rest}` hive partition INSIDE
-      the bucket — env tier is at the BUCKET NAME level, pipeline_mode is at the PATH level; orthogonal axes, no
-      conflict. status: todo — note: "Phase 1 code-complete scope; lands before Phase 0c provisioning."
+- [x] **[AGENT] P0**. **Phase 0e — extend yaml env tier to the `${DEPLOYMENT_ENV}`-MISSING Group-A bucket kinds (Phase 1
+      code-complete scope).** Added `${DEPLOYMENT_ENV}` (after asset_group for per-AG kinds) to: `market-data` (per-AG),
+      `instruments-store` (per-AG), `features-calendar` (flat), `market-data-tick-prediction` (flat),
+      `instruments-store-prediction` (flat) — both clouds. **SHIPPED deployment-service@`a5c2082` + UTL@`ba6089c`**
+      (parity test snapshot + `test_resolve_market_data_per_cloud_shape` /
+      `test_resolve_instruments_store_per_asset_group` / `test_resolve_features_prediction_sports_keys` /
+      `test_features_calendar_resolves_both_clouds` updated; `market-data-tick-prediction` +
+      `instruments-store-prediction` trimmed from the snapshot — covered by the env-tier-agnostic live-yaml pin
+      `_FEATURES_PIPELINE_KINDS` — to keep snapshot lines under the 100-char cap). All env-tiered names verified to fit
+      the 63-char bucket-name limit on both clouds. §-header comment in `cloud-providers.yaml` updated. **Composes
+      with**: `pipeline_mode={batch_databento, live_websocket, live_rest}` hive partition INSIDE the bucket — env tier
+      is at the BUCKET NAME level, pipeline_mode at the PATH level; orthogonal axes. status: done — note: "code-first
+      per code_freeze sequencing — resolver returns env-tiered names now; Phase 0c provisions + Phase 0d migrates the
+      flat data (2026-05-15→05-19). features-service config.py already routes through `resolve_bucket()` (Done-def #2
+      @`8f03ceeb`) so it picks up the new shape. The remaining env-less GCP entries are split into the new sub-todo
+      below."
+- [ ] **[SCRIPT] P1**. **DEFERRED (split off from Phase 0e)** — env-tier the remaining env-less GCP yaml entries that
+      Phase 0e did not touch: `dex-pools` / `dex-swaps` / `evm-defi` / `eigenlayer-rewards` / `solana-defi` (DeFi raw
+      on-chain — AWS already env-tiered, GCP env-less — clean `${DEPLOYMENT_ENV}` add); `pnl-store-defi` /
+      `positions-store-defi` / `risk-store-defi` (GCP shape is `pnl-store-{pid}-defi` asset-group-as-suffix vs AWS
+      `unified-trading-pnl-store-defi-{env}-{account}` — needs a SHAPE-ALIGNMENT decision, not just an env-tier add —
+      and a data migration since the GCP bucket names change); `config-store` (GCP `config-store-{pid}` vs AWS
+      env-tiered — ConfigStore hot-reload bucket, modest blast radius); `events` (GCP `{pid}-events` vs AWS env-tiered —
+      **HIGH blast radius**: `{pid}-events` is referenced workspace-wide per the "No fire-and-forget VM launches" rule
+      `gs://{pid}-events/events/{service}/...` — needs operator confirm whether `events` stays env-less like
+      `terraform-state`/`secrets` or goes env-tiered). status: todo — note: "2026-05-11 slot 4 — surfaced while doing
+      Phase 0e; scoped out of Phase 0e because (a) the pnl/positions/risk ones need a shape decision + migration, (b)
+      `events` needs operator sign-off given the workspace-wide `{pid}-events` references. The DeFi-raw `dex-*`/`*-defi`
+      ones are a clean add (do those first); `config-store` next; `pnl-store-defi`/etc + `events` are operator-gated."
 - [ ] **[SCRIPT] P0**. **Phase 0f — VM launcher scripts read `DEPLOYMENT_ENV` (Phase 1 code-complete scope).** Audit
       every script under `deployment-service/scripts/vm/` (~30 launchers per CLAUDE.md "VM launcher script SSOT") for
       hardcoded bucket references; ensure each launcher reads `DEPLOYMENT_ENV` from env / CLI flag and passes it to the
@@ -200,28 +218,28 @@ this plan and **Q4** below (operator decision).
       currently hardcodes flat bucket names anywhere (audit at impl time), fix in same logical unit. status: done
       (verification only) — note: "deployment UI env-tier shipped pre-2026-05-11; operator's instinct correct."
 - [ ] **[SCRIPT] P0**. **Phase 0h — sync script (prod → staging/dev) with truncated date window + same-region
-      enforcement (Phase 1 code-complete scope ships the script; Phase 3 / post-cutover initial execution).** New
-      script `deployment-service/scripts/sync-buckets-prod-to-staging.sh` (and `-to-dev.sh` variant). Per
-      `(kind, asset_group)` cross-product, copies the last `N` years (default `N=2` for staging, `N=1` for dev;
-      operator-tunable per yaml) of data from the prod bucket to the staging/dev bucket. Same-region constraint:
-      enforce `--source-region == --dest-region`; abort if mismatch (no cross-region egress). Date window: read parquet
-      hive partition `day=YYYY-MM-DD`, copy only `day >= today - N*365` paths. Idempotent: re-running skips
-      already-synced files (gsutil `-n` dry-run + diff). Schedule: Cloud Scheduler daily cron (default 02:00 UTC, low
-      activity) — or operator-triggered if real-time isn't needed. Manifest sync: also re-run manifest consolidator on
-      staging/dev after data sync so the staging/dev manifest matches the truncated window. Verification: post-sync
-      manifest row count in staging/dev = (prod row count) for `day >= today - N*365`; spot-check 100 random parquets
-      readable. status: todo — note: "Script ships Phase 1; first execution Phase 3 or post-cutover (no urgency
-      pre-2026-05-23 since dev/staging not yet in active use)."
+      enforcement (Phase 1 code-complete scope ships the script; Phase 3 / post-cutover initial execution).** New script
+      `deployment-service/scripts/sync-buckets-prod-to-staging.sh` (and `-to-dev.sh` variant). Per `(kind, asset_group)`
+      cross-product, copies the last `N` years (default `N=2` for staging, `N=1` for dev; operator-tunable per yaml) of
+      data from the prod bucket to the staging/dev bucket. Same-region constraint: enforce
+      `--source-region == --dest-region`; abort if mismatch (no cross-region egress). Date window: read parquet hive
+      partition `day=YYYY-MM-DD`, copy only `day >= today - N*365` paths. Idempotent: re-running skips already-synced
+      files (gsutil `-n` dry-run + diff). Schedule: Cloud Scheduler daily cron (default 02:00 UTC, low activity) — or
+      operator-triggered if real-time isn't needed. Manifest sync: also re-run manifest consolidator on staging/dev
+      after data sync so the staging/dev manifest matches the truncated window. Verification: post-sync manifest row
+      count in staging/dev = (prod row count) for `day >= today - N*365`; spot-check 100 random parquets readable.
+      status: todo — note: "Script ships Phase 1; first execution Phase 3 or post-cutover (no urgency pre-2026-05-23
+      since dev/staging not yet in active use)."
 - [x] **[AGENT] P1**. **Phase 0i — region-pinning audit + enforcement (Phase 1 code-complete scope; OPERATOR RATIFIED
       ap-northeast-1 2026-05-11).** Audit yaml entries for region: GCP entries are all `asia-northeast1` (per
       `${GCS_REGION:-asia-northeast1}`); **AWS now ratified `ap-northeast-1` (Tokyo) per operator decision (a)
       2026-05-11** — matched-region with GCP, zero-cost ratification (the 10 DeFi buckets shipped 2026-05-08 via
       `setup-defi-buckets.sh:28` already default to `ap-northeast-1`). Cross-cloud region: GCP asia-northeast1 ↔ AWS
-      ap-northeast-1 = same metro Tokyo (~1ms RTT, ~$0.01-0.02/GB cross-cloud egress vs ~$0.09/GB trans-Pacific = ~5×
+      ap-northeast-1 = same metro Tokyo (~1ms RTT,
+      ~$0.01-0.02/GB cross-cloud egress vs ~$0.09/GB trans-Pacific = ~5×
       cheaper). Within-cloud syncing (Phase 0h) is $0. Bucket provisioning (Phase 0c) creates buckets in canonical
       region; reject any `gcloud storage buckets create --location=<other-region>` / `aws s3 mb --region=<other>`.
-      **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}` → `${AWS_REGION:-ap-northeast-1}`.
-      Decision brief: [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](issues/aws_region_decision_brief_2026_05_11.md).
+      **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}`→`${AWS_REGION:-ap-northeast-1}`.     Decision brief: [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](issues/aws_region_decision_brief_2026_05_11.md).
       status: done — region pinning canonicalised; Phase 0c bucket provisioning targets ap-northeast-1 on AWS.
 
 **Net scope under (b+) — AI-day budget**: Phase 0a (done, decision recorded) + Phase 0b (~0.5 day) + Phase 0c (~2-3 days
@@ -251,16 +269,24 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       name templates" PASSES; basedpyright on the 8 touched source files = 0 NEW errors; ruff clean; scoped pytest = 0
       NEW failures. **DEFERRED sub-items** (split below): cross_instrument/multi_timeframe `get_output_bucket` (yaml
       gap) + the `dependency_checker.py` inline `bucket_template` strings.
-- [ ] **[SCRIPT] P1**. **DEFERRED (split off from #2)** — `cross_instrument` + `multi_timeframe`: (a) add
-      `features-cross-instrument` + `features-multi-timeframe` kinds to
-      `deployment-service/configs/cloud-providers.yaml` (env-tiered shape per option (b); the buckets evidently exist on
-      disk — the config.py templates route to them); then (b) finish migrating `cross_instrument/config.py` +
-      `multi_timeframe/config.py` `get_output_bucket()` →
+- [ ] **[SCRIPT] P1**. **DEFERRED (split off from #2) — BLOCKED 2026-05-11 (slot 4 cont.) on a bucket-name-length design
+      decision** — `cross_instrument` + `multi_timeframe`: (a) add `features-cross-instrument` +
+      `features-multi-timeframe` kinds to `deployment-service/configs/cloud-providers.yaml` (env-tiered per (b+);
+      buckets evidently exist on disk — config.py templates route to them); then (b) finish migrating
+      `cross_instrument/config.py` + `multi_timeframe/config.py` `get_output_bucket()` →
       `resolve_bucket(kind="features-cross-instrument"/"features-multi-timeframe", asset_group=...)` (their
-      `output_bucket_template` Field defaults are still in code — comments added pointing here). status: todo — note:
-      "2026-05-11 slot 4 — surfaced by the L2 migration sub-agent: the yaml has no `features-cross-instrument`/
-      `features-multi-timeframe` kinds, so those 2 `get_output_bucket` methods couldn't be migrated. Add the yaml kinds
-      (deployment-service) first, then finish the migration (features-service)."
+      `output_bucket_template` Field defaults stay in code, with the existing pointer comments). status: blocked — note:
+      "2026-05-11 slot 4 (cont.) — BLOCKER: `features-cross-instrument` (25 chars) / `features-multi-timeframe` (24) are
+      too long for `{prefix}-{ag}-${DEPLOYMENT_ENV}-${PROJECT_ID}` under the 63-char bucket-name limit on BOTH clouds
+      for the longer combos — AWS `unified-trading-features-cross-instrument-prediction-staging-{12-digit-account}` ≈ 73
+      (over by 10), even `...-cefi-prod-...` ≈ 64 (over by 1); GCP `...-prediction-staging-central-element-323112` ≈ 67
+      (over). Needs OPERATOR/IKENNA design call (work-split: bucket-naming SSOT → Ikenna). Options: (i) shorter bucket
+      name aliased to the kind in yaml (`features-xinstr-{ag}-{env}-{pid}` — resolver hides the map; but existing
+      `features-cross-instrument-{ag}-{pid}` on-disk buckets need a rename+env-tier migration); (ii) drop
+      `unified-trading-` prefix for these 2 on AWS (`features-cross-instrument-{ag}-{env}-{account}` ≈ 53 fits — but
+      breaks the AWS naming convention); (iii) keep these 2 env-LESS like `terraform-state` (violates (b+) but the
+      env-less name ≈ 59 fits); (iv) GCP env-tiered + AWS env-less (asymmetric). See § Open questions Q5. Slot 1: route
+      a cross-side ping to Ikenna."
 - [ ] **[SCRIPT] P1**. **DEFERRED (split off from #2)** — migrate the `dependency_checker.py` inline `"bucket_template"`
       strings (`features-service/features_service/{delta_one,onchain,volatility}/.../dependency_checker.py` — the
       `"bucket_template": "market-data-tick-{asset_group_lower}-{project_id}"` etc. + the
@@ -270,10 +296,15 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       `BaseDependencyChecker` migration first; (b) the `test_mode` model + `OUTPUT_BUCKETS`/`OUTPUT_BUCKETS_TEST` dicts
       are introspected/asserted by ~6-10 tests (`test_dependency_config_models.py`, `test_volatility_e2e.py`,
       `test_smoke_matrix.py`, `test_defi_data_source_routing.py`, ...) — a clean migration rewrites that infra + those
-      tests; (c) low-risk to leave: the `market-data` probe template already matches the env-less yaml `market-data`
-      entry (zero drift), and `dependency_checker.get_output_bucket`/ `OUTPUT_BUCKETS` is a dead-code duplicate of the
-      (now-migrated) `config.get_output_bucket` — the actual write path uses config.py's. Resumes after the UTL
-      `BaseDependencyChecker` migration + a `test_mode`-infra rewrite plan."
+      tests; (c) the `market-data` probe template was zero-drift vs the (then) env-less yaml `market-data` entry — **but
+      as of Phase 0e (2026-05-11) the yaml `market-data` is env-tiered (`market-data-tick-{ag}-{env}-{pid}`), so the
+      probe template `market-data-tick-{ag}-{pid}` now DRIFTS from the yaml.** The on-disk buckets stay flat until
+      code_freeze Phase 2.6, so the probe is still correct for current on-disk reality — but the dependency_checker
+      migration MUST land in the SAME window as the flat→env-tiered data migration (Phase 2.6), or via the UTL
+      `BaseDependencyChecker` migration if that lands first, whichever is sooner;
+      `dependency_checker.get_output_bucket`/ `OUTPUT_BUCKETS` is a dead-code duplicate of the (now-migrated)
+      `config.get_output_bucket` — the actual write path uses config.py's. Resumes after the UTL `BaseDependencyChecker`
+      migration + a `test_mode`-infra rewrite plan."
 - [ ] **[SCRIPT] P1**. Delegate the legacy `unified_trading_library.cloud_interface.constants.get_bucket_name` +
       `BUCKET_PREFIXES` to `bucket_naming.resolve_bucket_name(...)` (a `{domain}` → `{kind}` translation map + per-cloud
       dispatch). The legacy `{DOMAIN}_GCS_BUCKET[_{ASSET_GROUP}]` env-override shim either (a) survives as a thin
@@ -666,6 +697,48 @@ re-scope from "yaml fix-forward" to "provision + migrate." See that file for the
 operator authorized agent has ADC admin perms on both clouds, can run the migration end-to-end. Operator coordination is
 needed only for the write-pause window timing.)
 
+### Q5 — [harsh-bucket-and-adapter-tab, 2026-05-11 (cont.)] — `features-cross-instrument` / `features-multi-timeframe` bucket names overflow the 63-char limit under the (b+) env-tier template
+
+**Status**: 🟡 BLOCKED — waiting for an operator/Ikenna design decision (work-split: bucket-naming SSOT decisions →
+Ikenna). Blocks the `cross_instrument` / `multi_timeframe` yaml-gap sub-todo (= the last loose end of Done-def #2).
+
+The (b+) env-tier convention is `{prefix}-{ag}-${DEPLOYMENT_ENV}-${PROJECT_ID}` (GCP) /
+`unified-trading-{kind}-{ag}-${DEPLOYMENT_ENV}-${AWS_ACCOUNT_ID}` (AWS). Both GCS and S3 cap bucket names at **63
+chars**. The two outstanding kinds have long names:
+
+- `features-cross-instrument` (25 chars). AWS:
+  `unified-trading-features-cross-instrument-prediction-staging-{12-digit-account}` ≈ **73 chars** (over by 10); even
+  the shortest combo `...-cefi-prod-...` ≈ 64 (over by 1). GCP:
+  `features-cross-instrument-prediction-staging-central-element-323112` ≈ **67** (over); `...-cefi-prod-...` ≈ 58
+  (fits).
+- `features-multi-timeframe` (24 chars). Same problem (one char shorter — still overflows for
+  `prediction`+`staging`/`development`).
+
+Note the EXISTING on-disk buckets are env-LESS (`features-cross-instrument-{ag}-{pid}` per the config.py template — ≈ 59
+chars, fits). So adding the env tier is what overflows.
+
+**Options** (pick one — all viable, different tradeoffs):
+
+1. **Shorter bucket name aliased to the kind in the yaml** — e.g.
+   `gcp.storage.features-cross-instrument: "features-xinstr-${ag}-${DEPLOYMENT_ENV}-${GCP_PROJECT_ID}"`; consumers still
+   call `resolve_bucket(kind="features-cross-instrument")` (the resolver hides the kind→bucket-name map — that's
+   literally its job). `features-xinstr-prediction-staging-central-element-323112` ≈ 56 (fits); AWS
+   `unified-trading-features-xinstr-prediction-staging-{account}` ≈ 62 (fits, barely). **Cost**: the existing
+   `features-cross-instrument-{ag}-{pid}` buckets on disk need a rename + env-tier migration in Phase 2.6 (a bigger
+   migration than a pure env-tier add).
+2. **Drop the `unified-trading-` prefix for these 2 on AWS** —
+   `features-cross-instrument-{ag}-${DEPLOYMENT_ENV}-${AWS_ACCOUNT_ID}` ≈ 53 (fits). **Cost**: breaks the AWS naming
+   convention (`unified-trading-` prefix on all AWS buckets).
+3. **Keep these 2 env-LESS** like `terraform-state`/`secrets` — `features-cross-instrument-{ag}-{pid}` ≈ 59 (fits), no
+   migration. **Cost**: violates the (b+) "env tier on ALL kinds" decision (would need an explicit operator carve-out in
+   the §-header comment + the QG ratchet's allowlist).
+4. **GCP env-tiered + AWS env-less** — asymmetric; the parity test would need a `_KNOWN_YAML_ASYMMETRIES` entry.
+
+Slot 4's lean recommendation: option 1 (aliased shorter name) — keeps the env axis, hides the rename behind the
+resolver, and the on-disk migration is a Phase-2.6 line item anyway. But this is Ikenna's call.
+
+#### A5 — _(awaiting)_
+
 ## Deferred work after 2026-05-11 slot 4 session
 
 The 2026-05-11 `harsh-bucket-and-adapter-tab` (slot 4) session shipped: the parity-test extension (UTL@`e8dc6e3`), the
@@ -674,16 +747,18 @@ QG STEP 5.69 design, the FINDING that the yaml features-\* env-tier is unprovisi
 [`issues/mtds_sports_available_at_wiring_2026_05_11.md`](issues/mtds_sports_available_at_wiring_2026_05_11.md) sports
 audit. Items still open are tracked here so the next agent picks up cleanly.
 
-| Item                                                                                                                                    | Status as of 2026-05-11 (PM-time)                                                 | Successor / blocker                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Done-def #1 — decide canonical layer                                                                                                    | `done` ([x]) — option (b) (operator/Ikenna): yaml canonical, env-tiered           | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Phase 0 (re-shaped: yaml-correctness fixes only) — add prediction/sports keys + uncomment GCP features-calendar + doc shape conventions | `done` ([x] partial) — deployment-service@`a7eba4f` + UTL@`2118b1e` (parity test) | The bucket PROVISIONING + flat-bucket DATA MIGRATION + reader/writer repoint is `code_freeze` Phase 2.6 (2026-05-15→05-19) — NOT slot 4's to execute now (per option (b) "code-first, physical-migration-second"). `aws s3 ls` probe still pending (no AWS CLI on the slot machine — `ml-*`/`strategy`/`execution` confirmed env-tiered on GCP). `-test-` variant canonicalisation = a Phase-0 sub-item flagged for operator OK on the canonical shape.                                                                                                   |
-| Done-def #2 — migrate per-family `config.py` `*_bucket_template` → resolver                                                             | `done` ([x]) — features-service@`8f03ceeb` (sub-agent fan-out)                    | DEFERRED sub-items split off: (a) cross_instrument/multi_timeframe `get_output_bucket` (yaml gap — no `features-cross-instrument`/`features-multi-timeframe` kinds); (b) `dependency_checker.py` inline templates (blocked on UTL `BaseDependencyChecker` migration + `test_mode`-infra rewrite + ~6-test blast radius).                                                                                                                                                                                                                                  |
-| Done-def #3 — delegate legacy `get_bucket_name` + `BUCKET_PREFIXES` → resolver                                                          | `todo` ([ ])                                                                      | No hard gate (UTL-only) but ships after #2 (now done) — needs the workspace-consumer pre-audit fully enumerated (~36+ files across instruments-service / execution-service / deployment-service / PM scripts) + basedpyright each consumer repo (Citadel § 6).                                                                                                                                                                                                                                                                                            |
-| Done-def #4 — extend parity test                                                                                                        | `done` ([x]) — UTL@`e8dc6e3` (+ UTL@`2118b1e` Phase-0 follow-up)                  | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Done-def #5 — QG STEP 5.68 (`f"gs://..."` ratchet)                                                                                      | `todo` ([ ])                                                                      | DEFERRED-AFTER #2 (done) + #3 (else ratchet baseline bakes in to-be-removed inline templates); design written in § Pre-audit manifest → "QG STEP 5.6X design"; STEP **5.68** (5.66 reserved for multi-process-launcher, 5.67 taken by slot 6 — confirm 5.68 free in `base-service.sh`).                                                                                                                                                                                                                                                                   |
-| Done-def #6 — plan-flip cite + grep audit table (zero drift)                                                                            | `blocked` ([ ])                                                                   | DEFERRED-AFTER #3 + #5 + the Phase-2.6 provisioning/migration (then verify drift ≤0.01% per bucket + zero readers still hit flat names).                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Sports-adapter `available_at` (the other slot-4 half)                                                                                   | `done` ([x] — code shipped MTDS@`c186ecb`)                                        | Code wired (`_process_sports_venue_with_leagues` stamps `available_at = bm_time` via UTL `stamp_available_at_odds_snapshot` @UTL`2ab3685`, shard-level failure isolation, 5 tests). REMAINING: slot 1 routes a cross-side ping to Ikenna slot 3 to flip the `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 "TRACK — sports adapter stamping" todo; + the 2 open design Qs in `issues/mtds_sports_available_at_wiring_2026_05_11.md` (all-NaT routing; sports-path `assert_available_at_present` guard) for Ikenna slot 3 / sports_master. |
+| Item                                                                                                                                    | Status as of 2026-05-11 (PM-time)                                                 | Successor / blocker                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Done-def #1 — decide canonical layer                                                                                                    | `done` ([x]) — option (b) (operator/Ikenna): yaml canonical, env-tiered           | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Phase 0 (re-shaped: yaml-correctness fixes only) — add prediction/sports keys + uncomment GCP features-calendar + doc shape conventions | `done` ([x] partial) — deployment-service@`a7eba4f` + UTL@`2118b1e` (parity test) | The bucket PROVISIONING + flat-bucket DATA MIGRATION + reader/writer repoint is `code_freeze` Phase 2.6 (2026-05-15→05-19) — NOT slot 4's to execute now (per option (b) "code-first, physical-migration-second"). `aws s3 ls` probe still pending (no AWS CLI on the slot machine — `ml-*`/`strategy`/`execution` confirmed env-tiered on GCP). `-test-` variant canonicalisation = a Phase-0 sub-item flagged for operator OK on the canonical shape.                                                                                                                                                                          |
+| Done-def #2 — migrate per-family `config.py` `*_bucket_template` → resolver                                                             | `done` ([x]) — features-service@`8f03ceeb` (sub-agent fan-out)                    | DEFERRED sub-items split off: (a) cross_instrument/multi_timeframe `get_output_bucket` — **BLOCKED on Q5** (the `features-cross-instrument`/`features-multi-timeframe` bucket names overflow the 63-char limit under the (b+) env-tier template — needs an Ikenna design call); (b) `dependency_checker.py` inline templates (blocked on UTL `BaseDependencyChecker` migration + `test_mode`-infra rewrite + ~6-test blast radius — note: after Phase 0e the `market-data` probe template now DRIFTS from the env-tiered yaml; must land in the Phase-2.6 window or via the UTL migration).                                      |
+| **Phase 0e** — env-tier the Group-A bucket kinds in yaml + parity test                                                                  | `done` ([x]) — deployment-service@`a5c2082` + UTL@`ba6089c`                       | `market-data`/`instruments-store`/`features-calendar`/`market-data-tick-prediction`/`instruments-store-prediction` env-tiered on both clouds; §-header comment updated; all names verified ≤63 chars. Remaining env-less GCP entries (`dex-*`/`*-defi` raw, `pnl-store-defi`/etc shape-alignment, `events`/`config-store`) split into a new `- [ ]` sub-todo (the DeFi-raw ones are a clean add; `pnl-store-defi`/etc need a shape decision; `events` is operator-gated due to workspace-wide `{pid}-events` refs). code-first per code_freeze sequencing — provisioning + flat-bucket migration = Phase 2.6 (2026-05-15→05-19). |
+| cross_instrument/multi_timeframe yaml-gap sub-todo (the last loose end of Done-def #2)                                                  | `blocked` ([ ]) — Q5                                                              | The `features-cross-instrument` (25 chars) / `features-multi-timeframe` (24) bucket names overflow the 63-char limit under `{prefix}-{ag}-${DEPLOYMENT_ENV}-${PROJECT_ID}` for the longer combos (`prediction`+`staging`, + AWS `unified-trading-` prefix). Needs operator/Ikenna design call — see § Open questions Q5 (4 options: aliased shorter name / drop `unified-trading-` for these 2 / keep env-less / asymmetric). Slot 1: route a cross-side ping to Ikenna.                                                                                                                                                         |
+| Done-def #3 — delegate legacy `get_bucket_name` + `BUCKET_PREFIXES` → resolver                                                          | `todo` ([ ])                                                                      | No hard gate (UTL-only) but ships after #2 (now done) — needs the workspace-consumer pre-audit fully enumerated (~36+ files across instruments-service / execution-service / deployment-service / PM scripts) + basedpyright each consumer repo (Citadel § 6).                                                                                                                                                                                                                                                                                                                                                                   |
+| Done-def #4 — extend parity test                                                                                                        | `done` ([x]) — UTL@`e8dc6e3` (+ UTL@`2118b1e` Phase-0 follow-up)                  | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Done-def #5 — QG STEP 5.68 (`f"gs://..."` ratchet)                                                                                      | `todo` ([ ])                                                                      | DEFERRED-AFTER #2 (done) + #3 (else ratchet baseline bakes in to-be-removed inline templates); design written in § Pre-audit manifest → "QG STEP 5.6X design"; STEP **5.68** (5.66 reserved for multi-process-launcher, 5.67 taken by slot 6 — confirm 5.68 free in `base-service.sh`).                                                                                                                                                                                                                                                                                                                                          |
+| Done-def #6 — plan-flip cite + grep audit table (zero drift)                                                                            | `blocked` ([ ])                                                                   | DEFERRED-AFTER #3 + #5 + the Phase-2.6 provisioning/migration (then verify drift ≤0.01% per bucket + zero readers still hit flat names).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Sports-adapter `available_at` (the other slot-4 half)                                                                                   | `done` ([x] — code shipped MTDS@`c186ecb`)                                        | Code wired (`_process_sports_venue_with_leagues` stamps `available_at = bm_time` via UTL `stamp_available_at_odds_snapshot` @UTL`2ab3685`, shard-level failure isolation, 5 tests). REMAINING: slot 1 routes a cross-side ping to Ikenna slot 3 to flip the `available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 "TRACK — sports adapter stamping" todo; + the 2 open design Qs in `issues/mtds_sports_available_at_wiring_2026_05_11.md` (all-NaT routing; sports-path `assert_available_at_present` guard) for Ikenna slot 3 / sports_master.                                                                        |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
@@ -739,5 +814,28 @@ after #2 + #3); the cross_instrument/multi_timeframe yaml-gap sub-todo (add
 dependency_checker.py sub-todo (blocked on UTL `BaseDependencyChecker` migration + `test_mode`-infra rewrite); Done-def
 #6 (audit table — ships after #3 + #5 + the Phase-2.6 provisioning/migration); Phase 0 `aws s3 ls` probe + `-test-`
 canonical-shape operator OK; cross-side ping to Ikenna slot 3 to flip the available_at Phase 1 sports todo + answer the
-2 open design Qs in the sports issue doc. Going quiet — next session picks up Done-def #3 (no gate) + the yaml-gap
-sub-todo.
+2 open design Qs in the sports issue doc.
+
+## DONE-2026-05-11 (cont. 2) — harsh-bucket-and-adapter-tab (slot 4), Phase 0e session
+
+| Item                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Status     | Commits                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------ |
+| Phase 0e — env-tier the Group-A bucket kinds (`market-data`/`instruments-store`/`features-calendar`/`market-data-tick-prediction`/`instruments-store-prediction`) in `cloud-providers.yaml`, both clouds, after asset_group; §-header comment updated; all names verified ≤63 chars                                                                                                                                                                                                                     | `done`     | deployment-service@`a5c2082`                           |
+| Phase 0e — parity test (`_SNAPSHOT_YAML` Group-A entries env-tiered; `test_resolve_market_data_per_cloud_shape` / `_instruments_store_per_asset_group` / `_features_prediction_sports_keys` Group-A rows / `_features_calendar_resolves_both_clouds` expectations get `-staging-`; `market-data-tick-prediction`+`instruments-store-prediction` trimmed from snapshot — covered by live-yaml pin); ruff clean. pytest not runnable (origin UTL→UAC `BAR_TIMEFRAME_SECONDS` drift mid-flight — not mine) | `done`     | unified-trading-library@`ba6089c`                      |
+| New deferred sub-todo: env-tier the remaining env-less GCP yaml entries (`dex-*`/`*-defi` raw — clean add; `pnl-store-defi`/`positions-store-defi`/`risk-store-defi` — shape-alignment needed; `events`/`config-store` — `events` operator-gated)                                                                                                                                                                                                                                                       | `captured` | (plan todo above)                                      |
+| cross_instrument/multi_timeframe yaml-gap sub-todo → flipped to `status: blocked` + Q5 raised (the `features-cross-instrument`/`features-multi-timeframe` 63-char overflow — needs Ikenna design call; 4 options enumerated)                                                                                                                                                                                                                                                                            | `blocked`  | (plan + Q5)                                            |
+| `dependency_checker.py` deferred-note updated for the post-Phase-0e `market-data`-probe-template drift                                                                                                                                                                                                                                                                                                                                                                                                  | `done`     | (plan)                                                 |
+| Plan-flips (Phase 0e `[x]`) + new sub-todos + scoreboard rows + Q5 + this DONE block                                                                                                                                                                                                                                                                                                                                                                                                                    | `done`     | PM@`<this commit>` (this commit; references the above) |
+
+**Still open after the Phase 0e session:** Done-def #3 (legacy `get_bucket_name`+`BUCKET_PREFIXES` delegate — UTL, ~36
+consumers, no hard gate, ships after #2 which is done — **best next-session candidate**); the
+cross_instrument/multi_timeframe yaml-gap sub-todo is now **BLOCKED on Q5** (Ikenna design call); the new
+env-less-GCP-entries sub-todo (do the DeFi-raw `dex-*`/`*-defi` ones first — clean add; `pnl-store-defi`/etc +
+`events`/`config-store` are shape-decision / operator-gated); Done-def #5 (QG STEP 5.68 ratchet — after #2 + #3);
+Done-def #6 (audit table — after #3 + #5 + Phase 2.6); Phase 0 `aws s3 ls` probe + `-test-` canonical-shape operator OK;
+cross-side ping to Ikenna slot 3 (sports `available_at` Phase 1 todo flip + 2 design Qs) + cross-side ping to Ikenna re
+Q5. **Workspace observation (not slot-4-owned)**: `import unified_trading_library` is currently broken on
+`origin/live-defi-rollout` — `availability_stamping.py:83` imports `BAR_TIMEFRAME_SECONDS` which
+`unified_api_contracts/__init__.py` doesn't export — a UTL→UAC drift mid-flight (almost certainly the `available_at`
+bar-boundary work; flagged in slot_4.md ping for visibility). Going quiet — next session picks up Done-def #3 + the
+env-less-GCP-entries sub-todo (DeFi-raw first).
