@@ -21,12 +21,18 @@ matching engine produces the simulated fills for batch (and for live's "always f
 P&L mode). If the matching engine model is wrong, backtest P&L is wrong, the strategy ships with the wrong sizing
 + the wrong tail risk, and live trade losses surprise everyone.
 
-Pre-2026-05-10 matching engine had ONE AMM model (constant product `x*y=k`) per
+Pre-2026-05-10 matching engine had ONE AMM **matcher** (constant product `x*y=k`) per
 [`engine.py:7-12`](../../../execution-service/execution_service/matching_engine/engine.py): "AMMMatcher: DeFi Swaps
-(constant product x*y=k)". This is correct only for Uniswap V2; every other AMM (V3 / V4 / Curve / Balancer / Solana
-CLMM / aggregators) was approximated, producing 50-500bps fill-price errors for any non-V2 leg.
+(constant product x*y=k)". The pool **classes** for `UniswapV2Pool` (`amm.py:52`), `UniswapV3Pool` (`amm.py:259`),
+and `UniswapV4Pool` (`amm.py:403`) all exist with full math, but the `AMMMatcher` dispatcher at
+[`engine.py:433`](../../../execution-service/execution_service/matching_engine/engine.py) hardcodes V2 only
+(line 471 `cast("UniswapV2Pool | None", ...)`) — V3 + V4 pool classes are unreachable through current routing.
+Every other AMM family (Curve / Balancer / Solana CLMM / Solidly-fork / aggregators) is BOTH unrouted AND has
+no pool-class implementation, producing 50-500bps fill-price errors for any non-V2 leg.
 
-This doc fixes that by declaring per-pool-shape models that match production within ~5-10bps.
+This doc fixes that by declaring per-pool-shape models that match production within ~5-10bps + by separating
+the gap into (a) wire up existing V3/V4 pool classes via dispatch-by-`PoolShape`, (b) ship the 7 missing pool
+classes (Curve stable + crypto, Balancer weighted + boosted, Solana CLMM, Solidly-fork, Jupiter aggregator).
 
 ## Pool shape taxonomy + slippage models
 
@@ -149,6 +155,77 @@ def aggregator_swap(route, amount_in):
 ```
 
 **Validation**: ≥ 30 historical Jupiter routes within 10bps (looser since multi-hop variance).
+
+### 10. Solidly-fork ve(3,3) — Velodrome / Aerodrome (and other Solidly forks)
+
+Single matcher serves all classic Solidly forks (Velodrome on Optimism, Aerodrome on Base, Equalizer on Fantom,
+Thena on BSC, Ramses on Arbitrum, etc.) discriminated by `(chain_id, factory_address)`. Each pool carries a
+`stable: bool` flag at pool creation selecting between two invariants:
+
+- **Volatile** (`stable=false`): `x * y = k` (identical to Uniswap V2 constant product).
+- **Stable** (`stable=true`): Solidly cubic invariant `x^3 * y + x * y^3 = k` — flatter than Curve near peg but
+  uses a closed-form cubic rather than amplification-coefficient interpolation.
+
+Output amount for the stable branch is computed via Newton-Raphson `_get_y(x_new, k, y_old)` solver (Velodrome
+`Pool.sol::_get_y`, 255-iteration cap, revert-on-non-convergence). Decimals are normalised to 1e18 internally
+BEFORE invariant math — critical edge case for 6-decimal tokens like USDC; cube terms overflow naïve uint256
+arithmetic without scale-down.
+
+Fee model: per-pool, configurable by factory admin (`PoolFactory.setFee(pool, fee)`); defaults ~5 bps stable /
+~30 bps volatile. **Fees are siphoned to `PoolFees` distributor** (NOT added to reserves) — this is the
+ve(3,3) flywheel hook that distributes to veVELO / veAERO voters. Backtest reserve reconstruction must subtract
+the siphoned fee, unlike Uniswap V2 where fee grows `k`.
+
+**Inputs** (from MTDS captures): `(reserve0, reserve1, stable: bool, fee_bps, decimals0, decimals1)`. Optional
+`PoolFees` accumulator if backtest tracks LP fee distribution separately. **Validation**: ≥ 20 historical
+Velodrome + ≥ 20 historical Aerodrome swaps within 5bps; mixed flavour coverage (stable + volatile per fork).
+
+**Out-of-scope for this matcher** (separate enum members): **Velodrome Slipstream** (concentrated-liquidity
+Uniswap-V3 clone on Optimism, late-2024 launch) and **Aerodrome Slipstream** (CL fork on Base, mid-2024
+launch) — both use V3 tick math + a separate `CLFactory`. Either model as `SOLIDLY_CL_FORK` with `(chain,
+factory)` discriminator (sharing V3 math + tick mechanics) or as parallel enum members
+`VELODROME_SLIPSTREAM` / `AERODROME_SLIPSTREAM`. **Open question for Phase 1A operator decision** — see plan
+body Phase 1A note.
+
+## Per-shape sample pools + golden fixture seeds (Day-1 slot 6 design ship 2026-05-11)
+
+Below table enumerates the matrix that Phase 2 implementations validate against. Pool addresses verified at
+research time; TX hashes + exact reserves to be pinned by master agent (or Harsh slot 4 implementer) at
+fixture-capture time via `cast logs` / Etherscan / subgraph queries. **Validation harness reads fixture file,
+re-runs each leg through `_amm_match_impl`, asserts |fill-bps delta| < tolerance.**
+
+| Shape | Chain | Sample pool address | Primary token pair | Fee | Validation threshold | Pool class status |
+|---|---|---|---|---|---|---|
+| `UNISWAP_V2` | Ethereum mainnet | `0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc` | USDC / WETH | 30 bps flat | ≥1 swap exact (0 wei drift on V2 integer math) | ✅ `UniswapV2Pool` shipped (`amm.py:52`) |
+| `UNISWAP_V3` | Ethereum mainnet | `0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640` | USDC / WETH (0.05% tier) | 5 / 30 / 100 / 1000 bps tiered | ≥100 swaps within 5 bps | ✅ `UniswapV3Pool` shipped (`amm.py:259`) |
+| `UNISWAP_V4_HOOK` | Ethereum mainnet | `PoolManager 0x000000000004444c5dc75cB358380D2e3dE08A90` + vanilla USDC/WETH pool key | USDC / WETH (varies) | base + hook delta dynamic | ≥10 vanilla swaps (V3-equivalent) + ≥5 hook-active swaps within 5 bps | ✅ `UniswapV4Pool` shipped (`amm.py:403`) — hook dispatch via `hooks.py` |
+| `CURVE_STABLE` | Ethereum mainnet | `0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7` (3pool DAI/USDC/USDT) | n-token stable basket | 1-4 bps; `admin_fee` 50% | ≥50 swaps within 5 bps; metapool composition path required | ❌ NOT YET — Phase 2C needs new `CurveStablePool` class |
+| `CURVE_CRYPTO` | Ethereum mainnet | `0xD51a44d3FaE010294C616388b506AcdA1bfAAE46` (tricrypto USDT/WBTC/ETH) | 3-token crypto basket | dynamic `mid_fee`/`out_fee` + EMA oracle | ≥30 swaps within 10 bps (looser; gamma math non-trivial) | ❌ NOT YET — Phase 2C deferred to crypto-pool extension |
+| `BALANCER_WEIGHTED` | Ethereum mainnet | `0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56` (B-80BAL-20WETH; Vault `0xBA12222222228d8Ba445958a75a0704d566BF2C8`) | BAL / WETH (80/20) | 10 bps (per-pool configurable; bounds 0.0001%-10%) | ≥20 swaps within 5 bps via Vault `batchSwap` | ❌ NOT YET — Phase 2D needs new `BalancerWeightedPool` class |
+| `BALANCER_BOOSTED` | Ethereum mainnet | Phase 2E candidate: a `bb-a-USD` boosted pool — pin at impl time | stable basket via Aave aToken linear pools | composite (linear-pool spread + weighted swap fee) | ≥5 swaps within 5 bps | ❌ NOT YET — Phase 2E |
+| `SOLANA_CLMM` | Solana mainnet | Phase 2F candidate: Raydium USDC/SOL CLMM — pin at impl time | USDC / SOL | tiered (Raydium 5/25/100/1000 bps; Orca similar) | ≥30 swaps within 5 bps | ❌ NOT YET — Phase 2F (reuses V3 base) |
+| `JUPITER_ROUTE_AGGREGATOR` | Solana mainnet | n/a (route from Jupiter quote API) | varies per route | composite of leg fees | ≥30 routes within 10 bps (looser; multi-hop variance) | ❌ NOT YET — Phase 2G (route decomposition) |
+| `SOLIDLY_FORK` | Optimism (Velodrome) | `0x2B4C76d0dc16BE1C31D4C1DC53bF9B45987Fc75c` (USDC/USDT stable, `stable=true`, ~5 bps fee) | USDC / USDT | 5-30 bps per-pool configurable | ≥20 swaps Velodrome within 5 bps | ❌ NOT YET — Phase 2H (NEW: was not in original Phase 1A enum; added Day-1 slot 6 design 2026-05-11) |
+| `SOLIDLY_FORK` | Base (Aerodrome) | `0x6cDcb1C4A4D1C3C6d054b27AC5B77e89eAFb971d` (USDC/AERO volatile, `stable=false`, ~30 bps fee) | USDC / AERO | 5-30 bps per-pool configurable | ≥20 swaps Aerodrome within 5 bps; shared matcher with Velodrome | ❌ NOT YET — Phase 2H (shared matcher) |
+
+**Reading the "Pool class status" column**: pool-class-shipped means `amm.py` has a Python class
+implementing the math; it does NOT mean the `AMMMatcher` dispatcher in
+[`engine.py:433`](../../../execution-service/execution_service/matching_engine/engine.py) routes to it. Per
+2026-05-11 slot-6 read, the matcher hardcodes `UniswapV2Pool` only at line 471
+(`pool = cast("UniswapV2Pool | None", kwargs.get("pool", self._pool))`). **Phase 2 work is therefore:
+(a) extend `AMMMatcher` to dispatch by `pool.pool_shape` attribute, (b) add the 7 missing pool classes
+(Curve stable + crypto, Balancer weighted + boosted, Solana CLMM, Solidly-fork volatile + stable, Jupiter
+route composer), (c) validate each per its row above.** V3 + V4 are NOT greenfield — they need wiring only.
+
+### Cross-chain L2 deployment notes (Phase 2 implementation hazard)
+
+V3 deployed on Arbitrum / Optimism / Polygon / Base under the SAME factory bytecode but with
+`factory.enableFeeAmount()` overrides — Polygon historically added a 100bps tier with `tickSpacing=1` not
+present on Ethereum. **Matcher MUST read `pool.tickSpacing()` per pool at simulation time, NOT hardcode by
+fee tier**. Same hazard applies to Balancer (Vault address `0xBA12222222228d8Ba445958a75a0704d566BF2C8` is
+identical across Ethereum / Polygon / Arbitrum / Optimism / Gnosis / Avalanche / Base, but per-pool fees
+diverge) and to Curve (per-chain `A` parameters may differ from Ethereum reference). Per-chain calibration
+data must be captured per Phase 2 validation rows.
 
 ## Lending rate-impact-from-own-trade
 
@@ -344,11 +421,24 @@ Per `defi_simulation_realism` Phase 8 (backtest fidelity validation):
 
 When adding a new pool shape:
 
-1. Add to UAC `PoolShape` enum.
+1. Add to UAC `PoolShape` enum (in `unified-api-contracts/unified_api_contracts/internal/domain/defi/` —
+   currently TO BE CREATED per Phase 1A; member list locked in plan body Phase 1A todo).
 2. Add model implementation to `matching_engine/amm.py` or `hooks.py`.
 3. Add validation harness (≥ N historical Tenderly-fork swaps within bps).
-4. Add row to "Pool shape taxonomy + slippage models" section of this doc.
-5. Update routing in `engine.py:_amm_match_impl`.
+4. Add row to "Pool shape taxonomy + slippage models" section of this doc + new row to "Per-shape sample
+   pools + golden fixture seeds" table.
+5. Update routing in `engine.py:_amm_match_impl` to dispatch by `pool.pool_shape` (currently hardcoded to V2
+   per `engine.py:471`).
+
+When adding a new ve(3,3) Solidly fork (e.g., Equalizer / Thena / Ramses):
+
+1. **Prefer `SOLIDLY_FORK` shared matcher** with `(chain_id, factory_address)` discriminator over a new
+   enum member. The cubic stable + xy=k volatile math is byte-for-byte identical across forks.
+2. If the fork has a **Slipstream / CL variant** (Velodrome Slipstream, Aerodrome Slipstream), that is a
+   SEPARATE matcher (V3-tick math) — either fold into `SOLIDLY_CL_FORK` shared matcher or add a parallel
+   enum member. Operator-decision in Phase 1A.
+3. Add per-fork golden fixture (≥ 1 stable + 1 volatile swap) to "Per-shape sample pools + golden fixture
+   seeds" table.
 
 When adding a new simulation primitive (governance / staking / slashing / etc.):
 
