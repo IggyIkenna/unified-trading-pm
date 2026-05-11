@@ -3640,6 +3640,55 @@ domain. Phase 5.5-5.7 (deployment-api/ui + codex + CLAUDE.md + QG) stays in writ
 
 **ASK**: confirm recommendation or redirect. While 🟡 BLOCKED I am NOT touching code; will read read-only context only.
 
+### Q2 — [ikenna-slot8-phase6-2-mdps-wiring (slot 8), 2026-05-11 ~16:00 UTC] — UAC `SERVICE_OUTPUT_POLICIES` seed dict has MDPS service-name typo (`pipeline` vs `processing`) + `book_snapshot_5` key-shape ambiguity — blocks Phase 6.2 wiring + retroactively breaks slice (b) POC
+
+**Status**: 🟡 BLOCKED — waiting for operator decision on seed-dict canonicalisation before Phase 6.2 wiring can proceed.
+
+Surfaced 2026-05-11 ~16:00 UTC while bootstrapping Phase 6.2 (wire `publish_with_manifest_lookup` at MDPS
+`ohlcv_1m:current` / `ohlcv_1m:historical` / `ohlcv_24h` / `book_snapshot_5`). Two seed-dict bugs surface
+together; full evidence + recommended decision in the companion issue doc
+[`plans/active/issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md`](issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md).
+
+**Bug 1 — service-name typo.** UAC `service_emission_policy.py:163-168` uses `"market-data-pipeline-service"` for 6
+MDPS seed entries. Workspace canonical (everywhere else: ServiceBootstrap calls, `manifest_service_name` defaults,
+the slice (b) POC at `canonical_writer.py:479`, all 17 slice (b) tests) is `"market-data-processing-service"`. Net
+effect: every runtime `publish_with_manifest_lookup` call from MDPS lookup-MISSES the seed and falls through to the
+`STRICT_FAIL` default at `service_emission_policy.py:228`. The slice (b) POC behaves as STRICT_FAIL for both
+`:current` AND `:historical` — even though the operator-msg-10 framing + UAC seed + codex SSOT all explicitly say
+`:historical` should be `PARTIAL_OK`. The `:current` STRICT_FAIL coincidence masks the bug (POC publishes a row
+either way at completeness=1.0); the `:historical` semantic difference (PARTIAL_OK should `PUBLISHED_DEGRADED`
+gappy rows) was never under test because the 17 unit tests mock `publish_with_manifest_lookup` entirely + only assert
+kwarg shape, never the runtime UAC dict-lookup behaviour. Provenance: UAC@`58c3b61` (2026-05-08 17:14 UTC) shipped the
+file with the typo; `grep -rn "market-data-pipeline-service" --include='*.py' .tabs/8/` returns 0 other hits, so it's
+a one-off typo at original ship, not a deliberate naming convention.
+
+**Bug 2 — book_snapshot_5 key shape.** UAC seed key is `("market-data-pipeline-service", "book_snapshot_5")`. But MDPS
+`canonical_writer.py:76` maps source `book_snapshot_5` through `_SOURCE_OHLCV_PREFIX` so the runtime `mdps_dt` becomes
+`book5_ohlcv_<tf>` (5 timeframes). Two reconciliation paths, both architectural decisions:
+**(α)** UAC key stays at source-conceptual data_type (`"book_snapshot_5"`), gate function for Phase 6.2 passes
+`output_data_type="book_snapshot_5"` directly — consistent with slice (b) where `"ohlcv_1h:current"` is the
+source-conceptual token; OR **(β)** UAC key reflects post-mapping `mdps_dt` → seed dict expands 5x to per-cadence
+entries (`book5_ohlcv_1m`, `book5_ohlcv_5m`, etc.) optionally collapsed via slice differentiation. Recommendation
+in the issue doc is **(α)** — minimal seed-dict churn, consistent with slice (b) shape, preserves the operator-msg-10
+"5 policies seeded for MDPS" framing.
+
+**Recommended fix (option a, ~10 surgical edits):** rename every `"market-data-pipeline-service"` to
+`"market-data-processing-service"` in (1) UAC `service_emission_policy.py:163-168 + :127 docstring + :216 docstring`,
+(2) UTL `emission_publisher.py:127 docstring + :267 docstring`, (3) workspace-canonical CLAUDE.md "Service-output
+emission policy" section, (4) writegate plan body's slice-(b) examples + Phase 5.6 cites. Bug 2 resolved via (α):
+extend the gate function in `canonical_writer.py` to also fire on `source_data_type ∈ {"book_snapshot_5", "trades"}`
++ pass `output_data_type` derived from the source token (not mdps_dt). Could fold as a Phase 6.0 prerequisite to
+slice (c) OR ship as a standalone 30min ratchet PR.
+
+**Why this is operator-triage, not "Clear context = implement" per CLAUDE.md** — touches UAC public-API surface +
+retroactively re-asserts the slice (b) POC commit's runtime behaviour + affects work-split routing for slice (c)
+per-service rollout (Phase 6.3-6.8 owners need the canonical naming convention pinned before wiring their own
+services).
+
+**ASK**: confirm fix shape (option a + α) or redirect. While 🟡 BLOCKED I am NOT touching code; Slot 8's Phase 6.2
+wiring paused. Read-only audit of MDPS adapter sites where `ohlcv_1m` / `ohlcv_24h` / book_snapshot routes through
+will continue (those touchpoints don't change between options).
+
 ## Coordination with sibling plans
 
 > **2026-05-06 update**: this plan is now the **umbrella** for the honest-coverage + shard-granularity work-package. See
