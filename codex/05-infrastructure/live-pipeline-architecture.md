@@ -168,6 +168,104 @@ UAC top-level facade extended at UAC@b02335d to surface `PipelineMode` + `is_bat
 `pipeline_mode_for_source` per Citadel Import Rules. UTL streaming package facade extended at UTL@858f3c84 to publish
 `StreamPublisher` / `StreamConsumerGroup` / `ReplayPublisher` / `ReplayWatermarkKV` from a single import surface.
 
+## Phase 4 + 5 + 6 design contracts shipped 2026-05-11 (Tab 4 slot 4 design-ahead)
+
+The streaming-aggregation + features-runner class signatures are landed as **design-only stubs** ahead of Phase 7 of
+`features_repo_consolidation_2026_05_08` (Harsh slot 2). Consumers (MDPS `cli/main.py` + the consolidated
+features-service CLI) compile against the published shapes; method bodies raise `NotImplementedError` until the gating
+plan unblocks implementation. Shipped 2026-05-11 by Ikenna slot 4.
+
+| Design contract                                                                                                | Purpose                                                                                                                                                                              | Plan phase                                  |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
+| `unified_api_contracts.events.streaming.FeaturesComputedEvent`                                                 | Features-service per-(feature_family, feature_group, shard) compute emission. Mirrors `CandleComputedEvent`'s data-freshness + emission-outcome propagation rules; per-shard fields nullable for cross-instrument families. | Phase 5.1.d (UAC@`e55651b`)                 |
+| `unified_trading_library.streaming.MDPSStreamingAggregator` + `AggregatorConfig`                               | Per-asset-group MDPS streaming cluster contract. Subscribes to `streaming.{ag}.candle_boundary_crossed` → fetches ticks → aggregates OHLCV → writes via candle_writer → emits `CandleComputedEvent`. Live = batch cascade + 4-category gap semantics + RSS-pause integration + cluster validation propagation. | Phase 4 (UTL@`58bfbbeb`)                    |
+| `unified_trading_library.streaming.TickFetcher` / `InstrumentCatalogGate` / `TimeframeDAG`                     | Caller-supplied Protocols for the aggregator's per-event decision tree.                                                                                                              | Phase 4 (UTL@`58bfbbeb`)                    |
+| `unified_trading_library.feature_service_base.AssetScopedFeaturesRunner` + `AssetScopedRunnerConfig`           | One-VM-per-asset_group features-service live runner. Subscribes to `streaming.{ag}.candle_computed` → resolves which feature_groups in family fire → computes via write-gate → publishes `FeaturesComputedEvent`. | Phase 5 (UTL@`58bfbbeb`)                    |
+| `unified_trading_library.feature_service_base.CrossCuttingFeaturesRunner` + `CrossCuttingRunnerConfig`         | Cross-asset-group fan-in runner via `WatermarkAlignmentFanin`. Emits cross-instrument features (e.g. `cross_instrument.lst_yield_vs_eth_spot` for `carry_staked_basis`, `cross_instrument.perp_funding_vs_spot_basis` for `ARBITRAGE_PRICE_DISPERSION`). Degraded propagation + clock-skew rules per Phase 6.2. | Phase 6 (UTL@`58bfbbeb`)                    |
+| `deployment_api.routes.data_status.LiveStatusRow` + `LiveStatusResponse` + `GET /api/data-status/live`         | Phase 11.1 endpoint contract — pivots manifest by `pipeline_mode=live_websocket` + joins per-shard health (staleness, degraded-ratio-60s, cluster-pct-skipped-60s, last-candle-emitted-at). Returns empty until Phase 5/6 live producers ship. | Phase 11.1 (deployment-api@`7d95dc9`)       |
+| `deployment-ui` `<LiveDataStatusTab/>` scaffold                                                                | Phase 11.3 component — renders the 4 states (loading / empty / populated / error) against the Phase 11.1 endpoint. Re-uses existing card / badge primitives.                          | Phase 11.3 (deployment-ui@`f3204ce`)        |
+
+**Why design-only.** Phase 4 + 5 + 6 implementation needs the consolidated features-service deployable
+(`features_repo_consolidation_2026_05_08` Phase 7) so the asset-scoped runner can subscribe to the per-asset-group
+`streaming.{ag}.candle_computed` stream + import the family registry. Shipping the class signatures now lets MDPS +
+features-service author the per-service callsites (`live_aggregator.py` + `features_service/live/`) against the stable
+shapes; the methods get unblocked once consolidation lands. Phase 11 design-ahead lets deployment-ui wire the new tab
+into the tabs surface (per `deployment_ui_lifecycle_tabs_2026_05_08`) without waiting for the live producer.
+
+### Multi-timeframe cascade rule (Phase 4.2)
+
+The 1m candle MUST derive from 4× 15s candles, NOT from raw ticks re-aggregated. Aggregator waits for
+`parent_timeframe_fanout` (4 for 1m-from-15s, 5 for 5m-from-1m, 3 for 15m-from-5m, 4 for 1h-from-15m, 24 for 1d-from-1h)
+`CandleComputedEvent` emissions for a shard → feeds them through the SAME aggregation function as batch's
+`_process_standard_timeframe` → emits the parent. **Live = batch symmetry — re-aggregating ticks for parent timeframes
+diverges live from batch (batch uses cascade) and produces silent OHLCV drift across the timeframe DAG.**
+
+### 4-category live gap semantics (Phase 4.3)
+
+Mirrors CLAUDE.md "Four-category empty-output decision" with a WS-specific Cat (B') replacement for the batch
+upstream-bias category. Five emission decisions, every per-event tree resolves to one:
+
+| Category   | Trigger                                                                                  | Action                                                                                            |
+| ---------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **A**      | WS connected, ticks present                                                              | FRESH emit, `emission_outcome=PUBLISHED_OK`, `data_freshness=FRESH`                               |
+| **D**      | WS connected, no ticks, catalog says alive AND venue calendar says open                  | Zero-activity bar (O=H=L=C=prior_LTP, vol=0), `data_freshness=ZERO_ACTIVITY_BAR`, `PUBLISHED_OK`  |
+| **A'**     | WS connected, no ticks, catalog says delisted/pre-listing OR venue closed                | No emission; manifest `record_empty(reason=EXPECTED_*)` per writegate taxonomy                    |
+| **B'/C**   | WS disconnected mid-window OR malformed ticks filtered                                   | STALE emit (carry-forward LTP), `data_freshness=STALE`, `emission_outcome=PUBLISHED_DEGRADED`     |
+| **E**      | WS dead > `ws_dead_max_windows` (default 4) consecutive windows                          | Stop emitting; alerting-service tier-1 fires CRITICAL                                             |
+
+The catalog-aware `InstrumentCatalogGate` Protocol distinguishes A / D / A'. The aggregator NEVER emits a
+`CandleComputedEvent` for Cat (A') — manifest's `record_empty` carries the absence signal; downstream consumers read the
+manifest, not the absence of events. NaN placeholder bars are banned (per CLAUDE.md "Honest absence vs fake
+placeholders").
+
+### Cross-cutting fan-in propagation (Phase 6.2)
+
+`CrossCuttingFeaturesRunner` uses `WatermarkAlignmentFanin` (shipped at UTL@858f3c84) to align multi-stream inputs to
+the target window. Default grace = 500ms intra-zone. Outcome propagation:
+
+| Upstream state                          | Output                                                                                       |
+| --------------------------------------- | -------------------------------------------------------------------------------------------- |
+| All inputs FRESH                        | `PUBLISHED_OK`                                                                               |
+| One stream `PUBLISHED_DEGRADED`         | `PUBLISHED_DEGRADED` (degraded propagation)                                                  |
+| One stream missing > grace, critical    | `STALE_DATA` with `policy_decision_reason` naming the missing input                          |
+| One stream missing > grace, non-critical| `PUBLISHED_OK` with NaN-fill for the missing column (per UAC required_inputs DAG declaration)|
+| Clock-skew between streams              | Fan-in emits at LATEST watermark (conservative — never look-ahead)                           |
+
+Per-family deployment matrix (Phase 5.3):
+
+- `onchain` — colocated with defi MDPS.
+- `sports` — colocated with sports MDPS.
+- `commodity` — colocated with tradfi MDPS.
+- `delta_one` / `volatility` — colocated with the asset_group of the underlying instruments (typically split into
+  multiple VMs: delta_one-cefi, delta_one-defi, delta_one-tradfi).
+- `multi_timeframe` — colocated with each asset_group's MDPS (lightweight, follows the candle stream natively).
+- `calendar` / `cross_instrument` — run cross-cutting per `CrossCuttingFeaturesRunner` (their `required_inputs` span
+  asset_groups uniformly).
+
+### Phase 11 deployment-UI live tab surface
+
+`GET /api/data-status/live` is a manifest-pivot-by-`pipeline_mode=live_websocket` endpoint joining per-shard health from
+the consumer service's `make_health_router(data_freshness=...)` callback (Phase 8 already shipped at UTL@d08c50c3).
+`LiveStatusRow` shard-key axes mirror v5 manifest exactly; the per-shard health metrics are:
+
+- `staleness_seconds` — wall-clock seconds since last `CandleComputedEvent` for the shard. Maps to alerting tier 1 rule
+  (`> 30`) per the alerting-tier table above.
+- `degraded_ratio_60s` — fraction of last-60s emissions with `emission_outcome=PUBLISHED_DEGRADED`. Higher means more WS
+  reconnects + carry-forward LTP bars (stale-not-missing rule firing).
+- `cluster_pct_skipped_60s` — for bundled shards (options_chain / futures_chain / prediction canonical-question-group /
+  sports per-fixture-bundle), fraction of expected_root_clusters that did NOT receive a CandleComputed in the last 60s.
+  0 for non-bundled.
+- `last_candle_emitted_at` — most recent `CandleComputedEvent.available_at` for the shard.
+
+`capture_status` uses the 4-state writegate Phase 3.D.5 taxonomy (`captured` / `empty_confirmed` / `attempted_failed` /
+`expected_unattempted`) — same closed set as the batch manifest, so the live tab can render the same
+`TypedReasonBadges` + `FailurePillarStack` + `LeafSchemaModal` widgets as `DataStatusTab` (Phase 4 writegate widgets
+reused per Phase 11.3 design).
+
+Phase 11.4 ("Deploy live cluster") action fires the launchers under `deployment-service/scripts/vm/`
+(`launch-mtds-live-{asset_group}.sh` + `launch-mdps-features-live-{asset_group}.sh` per Phase 13). Until the launchers
+ship, the Deploy-Missing button degrades to "no launcher registered" per the workspace deploy-missing convention.
+
 ## Anti-patterns
 
 - Don't emit partial candles on MTDS startup — UTC alignment scheduler blocks until next aligned boundary.

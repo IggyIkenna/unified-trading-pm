@@ -390,6 +390,21 @@ todos:
     content: |
       - [ ] [AGENT] P0. Phase 4 — MDPS streaming aggregation cluster per asset_group. SEQUENTIAL after Phase 3.
 
+        **DESIGN-AHEAD shipped 2026-05-11 (Ikenna slot 4)**: UTL@`58bfbbeb` —
+        `unified_trading_library.streaming.MDPSStreamingAggregator` + `AggregatorConfig` + caller-supplied
+        `TickFetcher` / `InstrumentCatalogGate` / `TimeframeDAG` Protocols landed as design-only stubs.
+        Every method raises `NotImplementedError` until Phase 4 implementation lands (gated on
+        `features_repo_consolidation_2026_05_08` Phase 7 + the live-pipeline cascade unblock).
+        Class docstring contract covers: 4-category gap semantics (FRESH / ZERO_ACTIVITY_BAR / no-emit /
+        STALE-emit / WS-dead-cascade), multi-timeframe cascade (Live = batch symmetry), RSS-pause
+        integration with `mdps_streaming_and_backpressure_2026_05_07.md`, cluster validation propagation
+        per writegate Phase 1A. Consumers (MDPS `cli/main.py` + `live_aggregator.py`) compile against
+        the shape now. Full-execution criterion (work-split):
+        `from unified_trading_library.streaming import MDPSStreamingAggregator` resolves + 11 design-only
+        contract tests pass (run-raises-NotImpl, Protocols runtime-checkable, frozen-dataclass config).
+        **DEFERRED**: implementation body (subscribe-fetch-aggregate-write-publish loop + cascade fan-in)
+        ships once Harsh slot 2 lands features-consolidation Phase 7.
+
         Site: `market-data-processing-service/market_data_processing_service/cli/main.py` +
         `live_workers.py` + a NEW `live_aggregator.py`.
 
@@ -447,13 +462,28 @@ todos:
         lifecycle for live aggregation writes (same shard atomicity contract, same per-VM tempfile +
         rename, same single-`record_captured` per shard). That plan must reach its Phase 1.2 (MDPS
         callsite migration) before Phase 4 here lands.
-    status: todo
-    note: ""
+    status: design-shipped
+    note: "2026-05-11 ikenna-live-pipeline-tab — UTL@58bfbbeb design-only stub landed (MDPSStreamingAggregator + AggregatorConfig + TickFetcher/InstrumentCatalogGate/TimeframeDAG Protocols + 11 contract tests). Implementation BLOCKED on features_repo_consolidation Phase 7."
 
   - id: phase-5-features-asset-scoped-flavor
     content: |
       - [ ] [AGENT] P0. Phase 5 — features-service asset-scoped flavor (live-mode). SEQUENTIAL after
         Phase 4 + features-repo-consolidation Phase 7.
+
+        **DESIGN-AHEAD shipped 2026-05-11 (Ikenna slot 4)**:
+        - UAC@`e55651b`: `unified_api_contracts.events.streaming.FeaturesComputedEvent` Pydantic model
+          for the `streaming.{asset_group}.features_computed` emission (Phase 5.1.d). Mirrors
+          `CandleComputedEvent` shape + adds `feature_family` / `feature_group` axes. Per-shard fields
+          (venue / chain / instrument_id / etc.) nullable to accommodate cross-instrument families that
+          aggregate across shards.
+        - UTL@`58bfbbeb`: `unified_trading_library.feature_service_base.AssetScopedFeaturesRunner` +
+          `AssetScopedRunnerConfig` design-only stub. Per-family deployment matrix (onchain / sports /
+          commodity / delta_one / volatility / multi_timeframe), LookaheadBiasError enforcement at every
+          live compute, write-gate cluster validation, FeaturesComputedEvent emission contract — all
+          captured in class docstring. Method bodies raise `NotImplementedError` until consolidation
+          unblocks. 11 contract tests cover import-resolves + run-raises-NotImpl + config dataclass shape.
+        **DEFERRED**: implementation body (FeatureGroupResolver wiring + per-feature compute loop +
+        emission publisher integration) ships once Harsh slot 2 lands features-consolidation Phase 7.
 
         Site: `features-service/features_service/cli/main.py` + a NEW `features_service/live/`.
 
@@ -503,12 +533,22 @@ todos:
         **Coordination**: STRICT BLOCKER on `features_repo_consolidation_2026_05_08` Phase 7 (8 source
         repos archived, consolidated repo deployable). Banner that plan with
         `🔴 BLOCKER FOR live_pipeline Phase 5`.
-    status: todo
-    note: ""
+    status: design-shipped
+    note: "2026-05-11 ikenna-live-pipeline-tab — UAC@e55651b (FeaturesComputedEvent) + UTL@58bfbbeb (AssetScopedFeaturesRunner stub) landed. Implementation BLOCKED on features_repo_consolidation Phase 7."
 
   - id: phase-6-features-cross-cutting-flavor
     content: |
       - [ ] [AGENT] P0. Phase 6 — features-service cross-cutting flavor. SEQUENTIAL after Phase 5.
+
+        **DESIGN-AHEAD shipped 2026-05-11 (Ikenna slot 4)**: UTL@`58bfbbeb` —
+        `unified_trading_library.feature_service_base.CrossCuttingFeaturesRunner` +
+        `CrossCuttingRunnerConfig` design-only stub. Docstring contract covers:
+        watermark-aligned multi-stream subscribe, 4-rule emission propagation (FRESH / DEGRADED /
+        STALE_DATA / NaN-fill non-critical), conservative latest-watermark on clock-skew, per-VM
+        consumer-group convention (each VM unique group → every box sees every event for
+        cross-cutting). 11 contract tests cover the runner shape. **DEFERRED**: implementation body
+        (WatermarkAlignmentFanin wire-in + per-cross-cutting-feature compute + emission publisher) lands
+        once Phase 5 implementation lands per features-consolidation Phase 7.
 
         Site: `features-service/features_service/live/cross_cutting_runner.py` (NEW).
 
@@ -549,8 +589,8 @@ todos:
         (4) clock-skew between streams → fan-in still emits at the LATEST watermark (conservative).
 
         QG: features-service quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: design-shipped
+    note: "2026-05-11 ikenna-live-pipeline-tab — UTL@58bfbbeb (CrossCuttingFeaturesRunner stub) landed alongside Phase 5 runners. Implementation BLOCKED on Phase 5 implementation + features-consolidation Phase 7."
 
   - id: phase-7-replay-subsystem
     content: |
@@ -767,6 +807,21 @@ todos:
       - [ ] [AGENT] P1. Phase 11 — deployment-UI live tab + Deploy-Missing for live clusters.
         PARALLEL with Phase 9 + 10.
 
+        **DESIGN-AHEAD shipped 2026-05-11 (Ikenna slot 4)**:
+        - deployment-api@`7d95dc9`: `GET /api/data-status/live` endpoint stub with `LiveStatusRow` +
+          `LiveStatusResponse` Pydantic models. Returns empty list with correct shape until Phase 5/6
+          live producers ship. 4 unit tests pin the endpoint contract (empty envelope, asset_group
+          query-param filter, 4-state capture_status taxonomy, validator rejects out-of-range health
+          metrics).
+        - deployment-ui@`f3204ce`: `<LiveDataStatusTab/>` scaffold component. Renders loading / empty
+          (with planned-implementation copy) / populated / error retry states against the Phase 11.1
+          endpoint. 5 vitest tests cover all 4 render branches + asset_group query-param propagation.
+        **DEFERRED**: Phase 11.2 launcher registration in `_SERVICE_LAUNCHER_SCRIPTS` (depends on Phase
+        13 launchers shipping). Phase 11.3 widget reuse (`TypedReasonBadges` / `FailurePillarStack` /
+        `LeafSchemaModal`) lands once endpoint returns real rows. Phase 11.4 Deploy-Missing button
+        wiring depends on Phase 13. Promote to full implementation in the next-cycle work-split once
+        Harsh slot 2 unblocks Phase 5/6 producers.
+
         11.1 — `deployment-api`: NEW endpoint `GET /api/data-status/live` that pivots the manifest by
               `pipeline_mode=live_websocket` + joins per-shard health from the Health-API endpoints.
               Returns per-shard rows with: capture_status (4-state taxonomy from writegate),
@@ -793,8 +848,8 @@ todos:
 
         **Coordination**: `deployment_ui_lifecycle_tabs_2026_05_08` owns the existing tabs surface;
         banner mutually.
-    status: todo
-    note: ""
+    status: design-shipped
+    note: "2026-05-11 ikenna-live-pipeline-tab — deployment-api@7d95dc9 (/api/data-status/live endpoint stub + LiveStatusRow) + deployment-ui@f3204ce (LiveDataStatusTab scaffold) landed. Phase 11.2 launcher registration + Phase 11.4 Deploy-Missing wiring DEFERRED until Phase 13 launchers ship + Phase 5/6 live producers unblock."
 
   - id: phase-12-batch-vs-live-reconciliation-gate
     content: |
@@ -875,6 +930,25 @@ todos:
         "Post-Plan-Phase Codex Audit" rule (CLAUDE.md, codified 2026-05-08), this phase enhances the
         plan-driven stubs created at plan-draft time + updates 5 existing docs.
 
+        **PARTIAL shipped 2026-05-11 (Ikenna slot 4)**: PM@<this commit> extended
+        [`codex/05-infrastructure/live-pipeline-architecture.md`](../../codex/05-infrastructure/live-pipeline-architecture.md)
+        with a new "Phase 4 + 5 + 6 design contracts shipped 2026-05-11" section that:
+        (a) catalogs the design-only stubs landed (UAC@e55651b + UTL@58bfbbeb + deployment-api@7d95dc9
+            + deployment-ui@f3204ce);
+        (b) codifies the multi-timeframe cascade rule (Phase 4.2);
+        (c) codifies the 4-category live gap semantics table (Phase 4.3 — FRESH / ZERO_ACTIVITY_BAR /
+            no-emit / STALE-emit / WS-dead-cascade);
+        (d) codifies the cross-cutting fan-in propagation table (Phase 6.2 — degraded propagation +
+            non-critical NaN-fill + conservative latest-watermark on clock-skew);
+        (e) documents the per-family deployment matrix (Phase 5.3);
+        (f) documents the Phase 11 deployment-UI live tab surface contract.
+        **DEFERRED**: items 4-8 of the Phase 14 list (`replay-subsystem.md` enhancement /
+        `instrument-lifecycle-cache-delta-hot-reload.md` per-service-callback table /
+        `availability-manifest-and-data-status.md` + `batch-live-architecture.md` +
+        `alerting-batch-live.md` + `runtime-tiers-and-deployment.md` updates) ship as Phase 5/6/7/13
+        land — each codex doc gets enhanced at the matching phase boundary per the workspace
+        "Post-Plan-Phase Codex Audit" HARD RULE.
+
         Stubs already created at plan-draft time (2026-05-08); this phase enhances them with the
         as-shipped detail (per-asset-group venue rollout matrix, empirical latency benchmarks, alerting
         tier thresholds tuned during the smoke window, etc.):
@@ -900,8 +974,8 @@ todos:
            + the replay box prefix.
 
         QG: `unified-trading-pm` quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: design-shipped
+    note: "2026-05-11 ikenna-live-pipeline-tab — live-pipeline-architecture.md extended with Phase 4-5-11 design sections (PM@<this commit>). Items 4-8 (replay-subsystem.md / instrument-lifecycle / availability-manifest / batch-live-architecture / alerting-batch-live / runtime-tiers) deferred to corresponding phase-completion boundaries per Post-Plan-Phase Codex Audit HARD RULE."
 
   - id: phase-15-workspace-wide-qg-sweep-and-smoke
     content: |
@@ -1192,6 +1266,29 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   5 wires the actual alerting-service rule structure + KillSwitchBus rule entries per
   [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md).
 
+## Deferred work after 2026-05-11 Ikenna slot 4 design-ahead session
+
+The 2026-05-11 Ikenna slot 4 session shipped design-only stubs + Phase 11.1 endpoint stub + Phase 11.3 UI scaffold +
+Phase 14 codex doc extension covering Phase 4 + 5 + 6 + 11 design contracts (5 commits across UAC / UTL /
+deployment-api / deployment-ui / PM). All implementation bodies are gated on
+`features_repo_consolidation_2026_05_08` Phase 7 (Harsh slot 2).
+
+| Phase / item                                            | Status as of 2026-05-11   | Successor / blocker                                                                                                    |
+| ------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Phase 4 — MDPS streaming aggregation cluster            | `design-shipped`          | DEFERRED-AFTER-`features_repo_consolidation_2026_05_08` Phase 7. Stub at UTL@`58bfbbeb`.                               |
+| Phase 5 — features-service asset-scoped flavor          | `design-shipped`          | DEFERRED-AFTER-`features_repo_consolidation_2026_05_08` Phase 7. Stubs at UAC@`e55651b` + UTL@`58bfbbeb`.               |
+| Phase 6 — features-service cross-cutting flavor         | `design-shipped`          | DEFERRED-AFTER-Phase 5 implementation. Stub at UTL@`58bfbbeb`.                                                         |
+| Phase 11 — deployment-UI live tab + Deploy-Missing      | `design-shipped`          | Phase 11.1/11.3 stubs at deployment-api@`7d95dc9` + deployment-ui@`f3204ce`. Phase 11.2/11.4 deferred to Phase 13.     |
+| Phase 14 — Codex SSOT updates (item 1)                  | `design-shipped` (item 1) | live-pipeline-architecture.md extension landed (PM@<this commit>); items 4-8 deferred to corresponding phase boundaries per Post-Plan-Phase Codex Audit HARD RULE. |
+
+Cross-plan items NOT addressed this session (still open in their own plans-of-record):
+
+- **features-repo-consolidation Phase 7**: Harsh slot 2 owns the consolidation work that unblocks live-pipeline
+  Phase 4/5/6 implementation. Open in
+  [`features_repo_consolidation_2026_05_08.md`](features_repo_consolidation_2026_05_08.md).
+- **Phase 13 launchers + watchdog updates**: separate todo (Phase 11.2/11.4 cross-references this). Open in this
+  plan's Phase 13.
+
 ## Temporary states + their canonical follow-up plans
 
 - **In-process MDPS→features handoff** is intentionally deferred (Phase 5.2) — initial rollout uses Redis Stream hop
@@ -1215,3 +1312,23 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
 | Replay subsystem race-condition at handoff                                            | Low                                         | Double-publish or gap at handoff             | Phase 7.3 watermark KV check on live publisher side; Phase 7 test #2 + #3 cover handoff scenarios                                                                                                 |
 | `INSTRUMENT_CACHE_REFRESH_TRIGGER` consumer in MTDS leaks subscriptions on rapid-flap | Low                                         | WS connection-pool exhaustion                | Phase 10.3 implementation MUST use connection-pool reuse; reloader test #5 covers fetch-failure resilience                                                                                        |
 | Health-API rolling-window calculation slow under load                                 | Low                                         | Endpoint latency > 100s SLO breaks alerting  | Phase 8.3 sanity invariant + test #5 (endpoint <100ms); thread-safe ring buffer is the correct shape                                                                                              |
+
+## DONE-2026-05-11 — Ikenna slot 4 design-ahead session
+
+Five commits across UAC / UTL / deployment-api / deployment-ui / PM shipped the Phase 4/5/6/11/14 design contracts as
+design-only stubs so consumer services compile against the shapes before
+[`features_repo_consolidation_2026_05_08`](features_repo_consolidation_2026_05_08.md) Phase 7 unblocks implementation:
+
+- **unified-api-contracts@`e55651b`** — `FeaturesComputedEvent` streaming event (Phase 5.1.d).
+- **unified-trading-library@`58bfbbeb`** — `MDPSStreamingAggregator` (Phase 4) + `AssetScopedFeaturesRunner` (Phase 5)
+  + `CrossCuttingFeaturesRunner` (Phase 6) design-only stubs + 11 contract tests across 2 test files.
+- **deployment-api@`7d95dc9`** — `GET /api/data-status/live` endpoint stub + `LiveStatusRow` + `LiveStatusResponse`
+  Pydantic models (Phase 11.1) + 4 unit tests.
+- **deployment-ui@`f3204ce`** — `<LiveDataStatusTab/>` scaffold (Phase 11.3) + 5 vitest render-branch tests.
+- **unified-trading-pm@<this commit>** — `codex/05-infrastructure/live-pipeline-architecture.md` extended with
+  Phase 4-5-11 design contracts section + plan checkbox flips + scoreboard.
+
+Full-execution criterion (per work-split slot 4 done-definition):
+`from unified_trading_library.streaming import MDPSStreamingAggregator` resolves + the class signature matches the
+design contract (verified via 11 design-only contract tests passing locally against the per-slot worktree). Same for the
+features-service runners + UAC event + deployment-api endpoint + deployment-ui scaffold.
