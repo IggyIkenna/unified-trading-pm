@@ -1,0 +1,106 @@
+# Baseline for QG STEP 5.67 — banned NaN-placeholder / bypass-record_captured methods.
+#
+# This is a SHRINKING ratchet. Every entry below is a CURRENTLY-KNOWN occurrence
+# (Track D audit 2026-05-11, wave3x_track_d_findings_2026_05_11.md P0-2) that the
+# gate tolerates as a WARNING (exit-clean). Any NEW occurrence — a new `def
+# _create_empty_output` / `_handle_empty_tick_data` / `_create_full_day_empty_output`
+# / `_create_closed_market_candle` / `_maybe_write_vix_gap_placeholder`, or a new
+# direct `*.upload_bytes(...)` in a candle-write module — that is NOT listed here
+# fails CI (exit 1).
+#
+# REMOVE an entry from this file the moment its successor deletes the occurrence —
+# do NOT add new entries (a new placeholder method is a bug, not a baseline item).
+# The successor for all entries is writegate Phase 2.A (`_create_empty_output()`
+# deletion + v3-path deletion + the MDPS dead-write-gate fix in
+# `live_pipeline_mtds_mdps_features_2026_05_08.md`'s MDPS phase).
+#
+# Per-entry required keys: repo, file (repo-relative), method, status, successor.
+# `status` must be `pending_removal`. `method` is the banned method name OR
+# `upload_bytes` for the candle-write-bypass pattern.
+#
+# SSOT for WHY these are banned: CLAUDE.md "Honest absence vs fake placeholders" +
+# "No double SSOT in data-saving methodology" + "Four-category empty-output
+# decision"; the 2026-05-05 MDPS 1440-NaN-bar incident; Track D audit findings doc.
+
+default_successor:
+  "writegate Phase 2.A (banned-placeholder-method deletion + MDPS dead-write-gate fix per
+  live_pipeline_mtds_mdps_features_2026_05_08.md MDPS phase)"
+
+entries:
+  # _handle_empty_tick_data — CLAUDE.md "No double SSOT" explicitly bans
+  # `_create_empty_output()` + `_handle_empty_tick_data()` co-existence.
+  - repo: market-data-processing-service
+    file: market_data_processing_service/app/core/batch_workers.py
+    method: _handle_empty_tick_data
+    status: pending_removal
+    successor: "writegate Phase 2.A"
+  # NOTE: live_workers.py:199 _handle_empty_tick_data MAY be the GOOD pattern
+  # (Track D D4: live_workers.py:613 _process_all_timeframes does the A/B/C split
+  # correctly via record_empty_for_shard). Verify before removing from the baseline
+  # — if it's the honest path, it should route to record_empty(reason=) and the
+  # name itself is the only thing matching the heuristic; in that case rename it OR
+  # add a per-occurrence allowlist note here. Baselined for now so the gate doesn't
+  # break MDPS QG.
+  - repo: market-data-processing-service
+    file: market_data_processing_service/app/core/live_workers.py
+    method: _handle_empty_tick_data
+    status: pending_removal
+    successor: "writegate Phase 2.A (verify whether this is the GOOD honest-path variant first)"
+  # _create_full_day_empty_output — the literal 2026-05-05 1440-NaN-bar incident
+  # shape: returns n_candles all-NaN OHLC rows + market_state='closed' on empty input.
+  - repo: market-data-processing-service
+    file: market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py
+    method: _create_full_day_empty_output
+    status: pending_removal
+    successor:
+      "writegate Phase 2.A — return BaseCandleAdapter._make_empty_candle_output() on empty + caller routes to
+      record_empty"
+  # _create_closed_market_candle — emits NaN-OHLC closed-market rows for TradFi
+  # non-trading days; DOUBLE-SSOT (duplicated in batch_workers.py AND
+  # orchestration_writer.py); written via the no-manifest legacy path.
+  - repo: market-data-processing-service
+    file: market_data_processing_service/app/core/batch_workers.py
+    method: _create_closed_market_candle
+    status: pending_removal
+    successor:
+      "writegate Phase 2.A — replace with record_expected_empty(reason=EXPECTED_HOLIDAY/EXPECTED_WEEKEND); delete the
+      duplicate"
+  - repo: market-data-processing-service
+    file: market_data_processing_service/app/core/orchestration_writer.py
+    method: _create_closed_market_candle
+    status: pending_removal
+    successor:
+      "writegate Phase 2.A — replace with record_expected_empty(reason=EXPECTED_HOLIDAY/EXPECTED_WEEKEND); delete the
+      duplicate"
+  # _maybe_write_vix_gap_placeholder — writes closed-market NaN candles for VIX 15m
+  # gap dates, contradicting the CLAUDE.md VIX-15m-source-layering rule ("the gap is
+  # an accepted gap / denominator clip, not a coverage hole").
+  - repo: market-data-processing-service
+    file: market_data_processing_service/app/core/orchestration_writer.py
+    method: _maybe_write_vix_gap_placeholder
+    status: pending_removal
+    successor:
+      "writegate Phase 2.A — record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP) [pending the new-reason decision per Track
+      D] OR record_expected_empty; never write a NaN placeholder parquet"
+  # Direct upload_bytes in candle-write modules — bypasses record_captured / the
+  # 4-pillar write-gate. orchestration_writer.py's legacy _write_candles_to_gcs is
+  # the path Track D P0-2 flagged (CandleOrchestrationWriter._write_candles overrides
+  # the canonical_writer→record_captured path by MRO → ZERO manifest record + ZERO
+  # write-gate on every candle MDPS writes today).
+  - repo: market-data-processing-service
+    file: market_data_processing_service/app/core/orchestration_writer.py
+    method: upload_bytes
+    status: pending_removal
+    successor:
+      "writegate Phase 2.A — delete legacy orchestration_writer.py _write_candles / _write_candles_to_gcs so
+      CandleWriteMixin._write_candles (canonical_writer→record_captured→write-gate) wins"
+  # output_writer_service.py — verify whether this is the legit writer (routes
+  # through record_captured) or another bypass. Baselined for now so the gate
+  # doesn't break MDPS QG on day 1.
+  - repo: market-data-processing-service
+    file: market_data_processing_service/app/core/output_writer_service.py
+    method: upload_bytes
+    status: pending_removal
+    successor:
+      "writegate Phase 2.A (verify: legit record_captured-routed writer vs bypass; if legit, narrow the STEP-5.67
+      heuristic instead)"

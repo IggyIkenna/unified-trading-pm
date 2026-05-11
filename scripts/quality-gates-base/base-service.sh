@@ -1417,6 +1417,55 @@ else
     log_success "STEP 5.65: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# STEP 5.67 — Banned NaN-placeholder / bypass-record_captured method AST-walk
+#
+# (5.66 is reserved for the planned launcher-script multi-process-isolation
+# AST-walk per CLAUDE.md "Per-VM shard isolation for concurrent backfills".)
+#
+# Enforces CLAUDE.md "Honest absence vs fake placeholders" + "No double SSOT in
+# data-saving methodology" + "Four-category empty-output decision": the
+# `_create_empty_output()`-style placeholder methods (which emit NaN-OHLC
+# placeholder bars that LOOK populated and pass the manifest as `captured`) are
+# BANNED from `base_adapter` and any equivalent base class; so is a direct
+# `*.upload_bytes(...)` candle write that bypasses `record_captured` (the MDPS
+# legacy `orchestration_writer._write_candles` path Track D P0-2 flagged — ZERO
+# manifest record + ZERO 4-pillar write-gate on every candle MDPS writes today).
+#
+# The check runs `check_banned_placeholder_methods.py` against the calling repo's
+# source tree (scripts/ + tests/ excluded). It is a SHRINKING ratchet: occurrences
+# listed in `banned_placeholder_methods_baseline.yaml` (status: pending_removal —
+# the writegate-Phase-2.A backlog) surface as WARNINGS (exit-clean); any NEW
+# occurrence not in the baseline fails CI. Remove a baseline entry the moment its
+# successor deletes the occurrence; never ADD a new one.
+#
+# Reference incidents: 2026-05-05 MDPS 1440-NaN-bar (placeholder bars persisted for
+# years before hand-inspection caught them); Track D audit 2026-05-11 P0-2
+# (`tradfi/ohlcv_passthrough.py:266 _create_full_day_empty_output` still live; the
+# `record_captured`/write-gate path dead on MDPS's live path by MRO).
+_BANNED_PLACEHOLDER_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_banned_placeholder_methods.py"
+if [ -f "$_BANNED_PLACEHOLDER_CHECKER" ]; then
+    _BPM_REPO=$(basename "$REPO_ROOT")
+    _BPM_WS="$(dirname "$REPO_ROOT")"
+    _BPM_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BPM_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_BANNED_PLACEHOLDER_CHECKER" \
+            --workspace-root "$_BPM_WS" --scope "$_BPM_REPO" "${_BPM_SRC_ARG[@]}" >/tmp/banned_placeholder_qg.log 2>&1; then
+        # exit 0 — either no occurrences, or only baselined (pending_removal) ones.
+        if grep -q '^\[WARN\]' /tmp/banned_placeholder_qg.log 2>/dev/null; then
+            log_warn "STEP 5.67: $(grep -c '^\[WARN\]' /tmp/banned_placeholder_qg.log) baselined NaN-placeholder occurrence(s) (pending_removal — writegate Phase 2.A backlog); 0 new"
+        else
+            log_success "STEP 5.67: No banned NaN-placeholder / bypass-record_captured methods"
+        fi
+    else
+        log_fail "STEP 5.67: NEW banned NaN-placeholder / bypass-record_captured pattern (not in unified-trading-pm/scripts/quality_gates/banned_placeholder_methods_baseline.yaml). Delete it — emit record_empty(reason=...) / record_captured() instead (CLAUDE.md 'Honest absence vs fake placeholders'):"
+        cat /tmp/banned_placeholder_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_banned_placeholder_methods.py --workspace-root $_BPM_WS --scope $_BPM_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.67: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
