@@ -99,8 +99,14 @@ into successor plans before the audit closes.
 
 Each sub-agent owns one area. Output template per area: `plans/active/issues/codex_audit_{area}_2026_05_10.md`.
 
-- [ ] [AGENT] P0. **1.A Data area.** SSOT discipline; manifest schema; honest-absence taxonomy; available_at;
-      pipeline_mode; downstream-handling.
+- [x] [AGENT] P0. **1.A Data area.** SSOT discipline; manifest schema; honest-absence taxonomy; available_at;
+      pipeline_mode; downstream-handling. **DONE 2026-05-12 slot 8 sub-agent** — issue doc
+      [`plans/active/issues/codex_audit_data_2026_05_12.md`](issues/codex_audit_data_2026_05_12.md) ships 20 findings
+      (6 IMMEDIATE + 12 PRE_CUTOVER + 2 POST_CUTOVER) across 6 tiers with per-row file:line evidence + suggested
+      disposition + owner. Highest-blast-radius IMMEDIATE items: D-1 (reason taxonomy lag — UAC `EmptyConfirmedReason`
+      enum has 17+ members but codex/CLAUDE.md cite 9-13), D-5 (`bucket-naming-and-config.md` fully superseded by
+      `resolve_bucket_name(...)`), D-7 (`unified_trading_services` non-existent module references in
+      `schema-governance.md` + `README.md`).
 - [ ] [AGENT] P0. **1.B Strategy area.** Archetype canonicalisation; strategy-service co-location; signal-leasing;
       promote workflow.
 - [ ] [AGENT] P0. **1.C Execution area.** Matching engine hooks; live-batch parity; DeFi connectors; order-state
