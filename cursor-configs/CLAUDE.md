@@ -375,6 +375,18 @@ Read these before making ANY code changes:
   `completeness_fraction` + `incomplete_window` columns directly into the parquet/manifest row (currently emitted via
   lifecycle event payload only).
 
+  **Seed-key convention (codified 2026-05-11, Q2 Bug 2 operator decision option α)**: UAC `SERVICE_OUTPUT_POLICIES`
+  seed-dict keys MUST use the **source-conceptual `data_type` token** (e.g. `"book_snapshot_5"`, NOT the runtime
+  per-cadence token `"book5_ohlcv_1m"`). The gate function (`publish_with_policy` / `publish_with_manifest_lookup`)
+  takes `output_data_type` matching the source-conceptual token; any per-cadence translation (e.g.
+  `book_snapshot_5 → book5_ohlcv_<tf>` in MDPS's `_SOURCE_OHLCV_PREFIX`) is the writer's internal concern and happens
+  BELOW the gate. Slice-style differentiation (`"<data_type>:<slice>"` — `"ohlcv_1h:current"` vs `"ohlcv_1h:historical"`)
+  is the ONE permitted decoration of the source-conceptual token because the policy genuinely differs by real-time vs
+  re-emission slice. Reviewers reject seed-dict entries keyed at per-cadence granularity (e.g. one entry per
+  `book5_ohlcv_1m` / `book5_ohlcv_5m` / `book5_ohlcv_1h` cadence) — that's 5× seed-row expansion for no policy
+  difference. Plan: writegate Phase 6.2 Q2 (issue doc
+  `writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md`).
+
 - **`available_at` is per-row, write-time, equal to live-pipeline-arrival (workspace-wide)** — Every shard's parquet
   contains an `available_at` column. Each row's value = when the live pipeline would have actually had that row's
   information per `unified_api_contracts.canonical.crosscutting.availability_semantics.AVAILABILITY_AT_SEMANTICS`. NEVER
