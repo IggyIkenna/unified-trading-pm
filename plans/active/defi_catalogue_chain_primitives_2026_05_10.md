@@ -237,10 +237,17 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
 
 **Codex SSOT update (Phase 1 boundary)** — per Post-Plan-Phase Codex Audit HARD RULE:
 
-- [ ] [AGENT] P0. **1J — Update `codex/02-data/defi-venue-protocol-catalogue.md`** with all 26 protocols added in Phase
+- [x] [AGENT] P0. **1J — Update `codex/02-data/defi-venue-protocol-catalogue.md`** with all 26 protocols added in Phase
       1A. Per-protocol: chain coverage, data_types declared, instruments-service catalog status (Phase 2), MTDS capture
       status (Phase 3), execution connector status (Phase 4), testnet readiness, GCS bucket path, backfill plan
       reference.
+      **✅ SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)** at PM@`f54dd90c`. Codex doc already comprehensive
+      (165 lines, 6 protocol sections + per-chain coverage summary + cross-references + update protocol). 5
+      refresh-deltas landed: (a) corrected stale `defi_venue_capabilities.py` references → actual `defi_venues.py`;
+      (b) Aave V3 Ethereum silent-zero row flipped to ✅ captured (slot 3 + slot 2 audit closure); (c) Renzo/KelpDAO
+      UAC + LST mapping ✅; (d) Solana MEV cell flipped ✅ for JITO_BUNDLE (Phase 1D); (e) header bumped to 2026-05-12
+      with delta summary. Remaining ◐/✗ statuses reflect Phase 2/3/4 buildout still in flight (harsh-side per
+      cross-side handshake).
 
 **Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE):
 
