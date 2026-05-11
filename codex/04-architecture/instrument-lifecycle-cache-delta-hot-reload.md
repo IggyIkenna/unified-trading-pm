@@ -86,11 +86,83 @@ reloader.stop()
 
 ## Per-service callback semantics
 
+The summary table below lists the high-level callback responsibilities. Per Phase 10 of
+[`live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+which shipped 2026-05-11 with `InstrumentLifecycleCacheDeltaReloader` (UTL@`54d658e8`), the per-service implementation
+details + Protocol surface are documented in the expanded tables further down this section.
+
 | Service              | `on_added`                                                        | `on_removed`                                               | `on_changed`                                                                 |
 | -------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | **MTDS**             | Subscribe new instrument's WS feed (or REST poll fallback)        | Unsubscribe + flush in-flight buffers                      | Refresh per-instrument config (e.g. tick size, contract size for new expiry) |
 | **MDPS**             | Refresh case-A vs case-D classifier registry                      | Refresh classifier (delisted instruments now case A')      | Refresh classifier + propagate any contract-shape changes                    |
 | **features-service** | Re-validate UAC `required_inputs` DAG for affected feature_groups | Drop in-progress features for delisted instruments cleanly | Re-validate DAG; affected features may need recompute                        |
+
+### MTDS — `CatalogDelta` callback wiring (Phase 10 detail)
+
+MTDS instantiates `InstrumentLifecycleCacheDeltaReloader` per asset_group in `live_mode` startup and wires three
+discrete callbacks. Each callback receives `(CatalogDelta, snapshot)` where `CatalogDelta` is a frozen dataclass with
+`added: tuple[InstrumentRow, ...]`, `removed: tuple[InstrumentRow, ...]`, `changed: tuple[tuple[InstrumentRow, InstrumentRow], ...]`
+(`(old, new)` pairs).
+
+| Callback site                                         | Signature                                                   | Behaviour                                                                                                                                                                                       |
+| ----------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `live/ws_subscription_manager.on_added`               | `(delta: CatalogDelta, snapshot: InstrumentCatalog) -> None` | For each `added` instrument, call `ws_client.subscribe(venue, instrument_id)`. WS adapter routes by venue per `unified_api_contracts.market.SOURCE_PRIORITY`; falls back to REST poll if WS unavailable. |
+| `live/ws_subscription_manager.on_removed`             | `(delta, snapshot) -> None`                                 | For each `removed` instrument, call `ws_client.unsubscribe(venue, instrument_id)` + flush in-flight tick buffer to GCS via `record_captured` before final-tick window closes.                    |
+| `live/instrument_config_cache.on_changed`             | `(delta, snapshot) -> None`                                 | For each `(old, new)` pair, refresh `tick_size` / `contract_size` / `expiry_date` / `settlement_currency` in the live config cache. New expiry → spawn new contract WS subscription; old `expiry_date < now` → unsubscribe expired contract. |
+
+### MDPS — `CatalogDelta` callback wiring (Phase 10 detail)
+
+MDPS uses the catalog to drive the case-A-vs-D classifier (per CLAUDE.md "Four-category empty-output decision") that
+decides whether a zero-source-response window is `record_empty(reason=EXPECTED_INSTRUMENT_DELISTED)` (case A) or
+`record_captured` with a zero-activity bar (case D — instrument alive but illiquid).
+
+| Callback site                                          | Signature                                                   | Behaviour                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `live/catalog_classifier.on_added`                     | `(delta, snapshot) -> None`                                 | Add new instrument to `_alive_set` keyed by `(venue, instrument_id, day)`. The classifier reads `_alive_set` per write-gate; presence routes to case D, absence routes to case A.                                                                                                                                                          |
+| `live/catalog_classifier.on_removed`                   | `(delta, snapshot) -> None`                                 | Remove instrument from `_alive_set`. Subsequent zero-source-response windows for this instrument route to case A (record_empty reason `EXPECTED_INSTRUMENT_DELISTED`).                                                                                                                                                                     |
+| `live/aggregator_config_cache.on_changed`              | `(delta, snapshot) -> None`                                 | For each `(old, new)` pair where contract-shape fields differ (`tick_size`, `lot_size`, `settlement_currency`, `multiplier`), refresh the per-instrument aggregator config. Aggregation function (`compute_ohlcv_bar` etc.) reads these for tick-to-candle normalisation; stale values produce silently wrong OHLCV. Cluster-validation propagates: new expiry → new entry in `expected_root_clusters` map for the bundled-shard root. |
+
+### features-service — `CatalogDelta` callback wiring (Phase 10 detail)
+
+features-service consumes the catalog to validate UAC `feature_group → required_inputs` DAG completeness per
+asset-scoped runner. When an instrument is added/removed/changed mid-day, the DAG validity for any feature_group
+touching that instrument can flip.
+
+| Callback site                                                 | Signature                                                   | Behaviour                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `live/feature_dag_validator.on_added`                         | `(delta, snapshot) -> None`                                 | For each `added` instrument, walk every feature_group's `required_inputs` set; if any input matches `(asset_group, venue, instrument_id, data_type)`, mark feature_group as `now_satisfied` (was previously skipped with `DEPENDENCIES_MISSING_CONTINUE`). Next CandleComputed event fires the feature for this instrument.                          |
+| `live/feature_dag_validator.on_removed`                       | `(delta, snapshot) -> None`                                 | For each `removed` instrument, drop in-progress feature compute state cleanly (cancel pending tasks, flush partial outputs as `record_failed` with `error_reason=INSTRUMENT_DELISTED_MID_COMPUTE`, propagate `data_freshness=STALE` for any cross-instrument features whose inputs included this instrument).                                       |
+| `live/cross_instrument_input_cache.on_changed`                | `(delta, snapshot) -> None`                                 | For each `(old, new)` pair, refresh cross-instrument feature input mappings (e.g. `cross_instrument.lst_yield_vs_eth_spot` referencing `defi.lido.steth_yield` — if Lido's contract address changes mid-day, the cross-cutting runner needs the new address). Propagates to `WatermarkAlignmentFanin` upstream-stream registration if applicable. |
+
+### Reloader invocation pattern (per service)
+
+Each consumer service mounts the reloader as part of `ServiceBootstrap` startup:
+
+```python
+from unified_trading_library.instrument_lifecycle_cache_delta_reloader import (
+    InstrumentLifecycleCacheDeltaReloader,
+)
+from unified_trading_library.events import EventSubscriber
+
+# In service startup:
+reloader = InstrumentLifecycleCacheDeltaReloader(
+    asset_group="cefi",
+    storage_client=storage_client,
+    on_added=ws_subscription_manager.on_added,
+    on_removed=ws_subscription_manager.on_removed,
+    on_changed=instrument_config_cache.on_changed,
+)
+subscriber = EventSubscriber(topic="instrument-cache-refresh-trigger", project_id=...)
+async for event in subscriber.subscribe():
+    if event.event_name == "INSTRUMENT_CACHE_REFRESH_TRIGGER":
+        await reloader.on_refresh_event(event)
+```
+
+The reloader fetches the new catalog snapshot from GCS, diffs against the previous in-memory snapshot, builds the
+`CatalogDelta`, and dispatches the three callbacks in order: `on_added` → `on_changed` → `on_removed`. Order matters
+for two reasons: (1) `on_added` may need to subscribe a feed BEFORE `on_changed` refreshes that instrument's config;
+(2) `on_removed` runs last so its `flush_in_flight` calls don't fight `on_added`'s new subscriptions on the same
+underlying WS connection.
 
 ## Failure modes + retry
 
