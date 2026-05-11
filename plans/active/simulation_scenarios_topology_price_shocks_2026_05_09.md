@@ -92,11 +92,11 @@ estimate_calibration_note: |
 > | Phase | Pre-cutover scope | Status |
 > | ----- | ------------------ | ------ |
 > | 0 — Pre-audit | Sub-agent fan-out per todos 0.A-0.C | `todo` (3 AI-hours) |
-> | 1 — UAC contracts | 1.A + 1.B + 1.C only (scoped to 5 mutations + 3 outcomes) | `todo` (1 AI-day) |
-> | 2 — UTL primitives | 2.A + 2.B + 2.D only (single-layer applier) | `todo` (1 AI-day) |
+> | 1 — UAC contracts | 1.A + 1.B + 1.C + 1.D | **`design-shipped` 2026-05-12 slot 7** (per § Day-1 scenario designs; UAC Pydantic instantiation = Day 2 follow-on) |
+> | 2 — UTL primitives | 2.A + 2.B + 2.D (Phase 2.E `available_at` discipline `design-shipped` 2026-05-12 slot 7 per per-scenario fragments) | `todo` (1 AI-day) — applier + checker + runner remain |
 > | 3 — Wire-ins | 3.E + 3.F only (execution-engine adversarial + risk/alerting consumers) | `todo` (1 AI-day) |
-> | 4 — Scenario library | 6 scenarios from above bullet (~1 each) | `todo` (1 AI-day) |
-> | 5 — Matrix | 12-cell scope (not full per-archetype matrix) | `todo` (0.5 AI-day) |
+> | 4 — Scenario library | 10 scenarios shipped as design fragments 2026-05-12 slot 7 (6 critical-path + 4 price-shocks per operator CONTINUE-prompt); UAC instantiation = Day 2 | **`design-shipped`** |
+> | 5 — Matrix | 16-cell scope (10 scenarios × 2 archetypes filtered to applicable; over-delivered vs 12-cell compressed target) | `todo` (0.5 AI-day) |
 > | 6 / 7 / 8 / 9 | DEFERRED post-cutover | `deferred-after-simulation_scenarios_post_cutover_2026_06_01` |
 >
 > Total compressed scope: ~4-5 AI-days. Fits T-13 with margin. Successor plan picks up immediately post-cutover for the
@@ -699,10 +699,59 @@ The plan is DONE when:
 8. ✅ DONE block at the bottom of this plan body lists every code commit + plan-flip commit + codex commit + VM run +
    report parquet path.
 
+## Day-1 scenario designs (Phase 1 + 2 + handshake — slot 7 2026-05-12)
+
+The compressed-scope Phase 1.B `ScenarioOverlay` registry needs 10 scenarios shipped pre-cutover (6 topology shocks + 4 price-shocks). Slot 7 (`ikenna-scenarios-topology-tab`) authored full per-scenario design specs on 2026-05-12 via 6-sub-agent fan-out (topology) + parent-agent serial pass (price-shocks). All 11 design fragments live at `plans/active/scratch_scenarios_day1/` as canonical per-scenario design artefacts (~995 lines total) — each follows the same structured 6-section template (header table / real-world referent / trigger condition / observable signature / mutation spec / expected outcomes / auto-recovery contract / cross-references). The fragments are the Phase 1.D registry seed authority — Phase 1.B Pydantic dataclasses (UAC code) lift their `ScenarioOverlay` instances from these specs.
+
+### Scenario inventory (10 pre-cutover; all design-shipped 2026-05-12)
+
+| # | `scenario_id` | Category | Layer(s) | Asset groups | Targets archetype(s) | Design |
+|---|---|---|---|---|---|---|
+| 1 | `cefi_venue_circuit_breaker_trip` | `VENUE_OUTAGE` | RAW_TICK + EVENT + ORDER | `cefi` | `ARBITRAGE_PRICE_DISPERSION` (P); `carry_staked_basis` (S) | [`scratch_scenarios_day1/01_cefi_venue_circuit_breaker_trip.md`](scratch_scenarios_day1/01_cefi_venue_circuit_breaker_trip.md) |
+| 2 | `defi_chain_rpc_outage_solana` | `VENUE_OUTAGE` (chain-level) | RAW_TICK + EVENT | `defi` | `carry_staked_basis` (P); `ARBITRAGE_PRICE_DISPERSION` (S) | [`02_defi_chain_rpc_outage_solana.md`](scratch_scenarios_day1/02_defi_chain_rpc_outage_solana.md) |
+| 3 | `defi_liquidity_drain_lending_pool` | `VENUE_OUTAGE` (protocol-pause) + `TOPOLOGY_GAP` | FEATURE + ORDER | `defi` | `carry_staked_basis` (P) | [`03_defi_liquidity_drain_lending_pool.md`](scratch_scenarios_day1/03_defi_liquidity_drain_lending_pool.md) |
+| 4 | `defi_oracle_deviation_30sigma` | `STALENESS` + `PRICE_SHOCK` + `DATA_CORRUPTION` | RAW_TICK + FEATURE | `defi` | `carry_staked_basis` (P); `ARBITRAGE_PRICE_DISPERSION` (S) | [`04_defi_oracle_deviation_30sigma.md`](scratch_scenarios_day1/04_defi_oracle_deviation_30sigma.md) |
+| 5 | `defi_gas_surge_50x` | `PRICE_SHOCK` + `OPERATIONAL` | FEATURE + ORDER | `defi` | `carry_staked_basis` (P); `ARBITRAGE_PRICE_DISPERSION` (S) | [`05_defi_gas_surge_50x.md`](scratch_scenarios_day1/05_defi_gas_surge_50x.md) |
+| 6 | `defi_mempool_congestion_inclusion_delay` | `OPERATIONAL` + `DATA_CORRUPTION` (sandwich variant) | ORDER + EVENT | `defi` | both archetypes | [`06_defi_mempool_congestion.md`](scratch_scenarios_day1/06_defi_mempool_congestion.md) |
+| 7 | `cefi_funding_spike_10x` | `PRICE_SHOCK` | RAW_TICK + FEATURE | `cefi` | `ARBITRAGE_PRICE_DISPERSION` (P); `carry_staked_basis` (S) | [`07_cefi_funding_spike_10x.md`](scratch_scenarios_day1/07_cefi_funding_spike_10x.md) |
+| 8 | `cross_asset_flash_crash` | `PRICE_SHOCK` + `CROSS_ASSET` | RAW_TICK + FEATURE + ORDER | `cefi` + `defi` | both archetypes | [`08_cross_asset_flash_crash.md`](scratch_scenarios_day1/08_cross_asset_flash_crash.md) |
+| 9 | `cross_asset_basis_blowout_perp_spot` | `PRICE_SHOCK` + `CROSS_ASSET` | RAW_TICK + FEATURE | `cefi` (P); `defi` (S) | `ARBITRAGE_PRICE_DISPERSION` (P); `carry_staked_basis` (S) | [`09_cross_asset_basis_blowout.md`](scratch_scenarios_day1/09_cross_asset_basis_blowout.md) |
+| 10 | `defi_stablecoin_depeg` | `PRICE_SHOCK` + `DATA_CORRUPTION` | RAW_TICK + FEATURE + EVENT | `defi` (P); `cefi` (S — USDT-denom perps) | both archetypes | [`10_defi_stablecoin_depeg.md`](scratch_scenarios_day1/10_defi_stablecoin_depeg.md) |
+
+10 scenarios = 6 critical-path per compressed-scope § (line 67-74) + 4 additional price-shocks per operator CONTINUE-prompt (flash-crash, basis-blowout, funding-spike, depeg). Per-archetype matrix cardinality: `carry_staked_basis` × ~8 applicable = ~8 cells; `ARBITRAGE_PRICE_DISPERSION` × ~8 applicable = ~8 cells → ~16 cells (vs ~34 in full Phase 4 scope; compressed-scope target is 12 per § line 73-74, slot 7 over-delivered by 4 cells to absorb the 4 price-shocks from the CONTINUE prompt explicitly).
+
+### Handshake integration shape (cross-plan)
+
+The full integration shape — `simulation_scenarios` × `risk_simulations` × `disaster_recovery` ownership boundaries, per-axis registry handshake, recovery-mode wiring, risk-breaker escalation seam, outcome-assertion → expected-state cross-product, and aggregate cross-scenario follow-ups — lives at [`scratch_scenarios_day1/11_handshake_integration.md`](scratch_scenarios_day1/11_handshake_integration.md). Phase 5 matrix-runner (Days 9-10 of compressed scope) builds against that 6-tuple-per-cell contract.
+
+### Aggregate follow-up findings (12 — see § 11 of handshake doc for full table)
+
+Sub-agent fan-out surfaced **12 distinct UAC / codex / taxonomy gaps** discovered during Day-1 grounding (no fabrications — each scenario emitted `**FOLLOW-UP**:` annotations rather than invent missing IDs). Owner routing per Findings Triage Discipline:
+
+- **risk plan Phase 1.E** (AlertCode 45-set extensions): `VENUE_HALTED`, `LENDING_POOL_PAUSED`, `LENDING_BORROW_CAP_REACHED`, `LENDING_UTILIZATION_HIGH`, `MARKET_DATA_STALE` (literal name gap; semantic substitutes exist), `GAS_PRICE_SPIKE`, `GAS_BUDGET_EXCEEDED`, `KILL_SWITCH_ORACLE_DIVERGENCE` (parity gap vs `KILL_SWITCH_VENUE_DISCONNECT`).
+- **DR plan Phase 4 or Phase 1.A extension**: `ORACLE_STALENESS_SECONDS` `CircuitBreakerId` (staleness conflated with deviation under `ORACLE_DEVIATION_BPS`), `RPC_OUTAGE_SECONDS` per-chain disambiguation, `ARBITRAGE_PRICE_DISPERSION` `applies_to` seed for `RPC_OUTAGE_SECONDS`, `LENDING_POOL_UNAVAILABLE_SECONDS` breaker missing.
+- **writegate honest-coverage Phase 2.A**: `OracleStaleError` / `OracleDeviationError` exception classes likely missing from UTL taxonomy (today's 4-category set is `UpstreamTimestampBiasError` / `MalformedTickFieldError` / `DependencyError`).
+- **defi_master Phase 1.E or features-onchain**: Solana microlamports → USD normalisation for `GAS_BUDGET_PER_ARCHETYPE`'s USD-50 ceiling needs `tx_cost_estimate_usd` contract confirmation.
+- **successor `simulation_scenarios_post_cutover_2026_06_01.md` Phase 1.B**: first-class `LendingFeatureSpike` + `VenueOutage` + `MempoolCongestion` mutation members (composed via primitives in compressed scope).
+
+P1-tier items operator-triage Day-2 noon checkpoint: which land in pre-cutover scope vs successor. P2/P3 items default-deferred to successor unless operator pulls forward.
+
+### Phase status flip — compressed-scope Phase 1.A/1.B/1.C/1.D + Phase 2.E design-shipped
+
+The structured per-scenario specs above are the design substrate for compressed-scope Phase 1.D (`ScenarioOverlay` registry seed) + Phase 1.B (`ScenarioMutationSpec` closed-union enumeration — needs the existing closed-union members `PriceShift` / `LatencyInject` / `BookSpoof` / `RejectFills` / `OracleDeviate` / `GasSurge` / `StaleHold` / `EventDrop` / `EventDuplicate` / `DropRows` / `ManifestPhantom`; new first-class `LendingFeatureSpike` / `VenueOutage` / `MempoolCongestion` deferred). Phase 1.C (`ScenarioOutcomeAssertion` closed-enum) consumes the 6-tuple-per-cell from § handshake doc § "Per-scenario expected-outcome shape." Phase 2.E lookahead-bias compatibility shape codified in each scenario's `available_at` discipline subsection.
+
+Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C `design-shipped`; 1.D `design-shipped` (seed library design; UAC Pydantic instantiation code = Day 2 implementation slot); Phase 2.E `design-shipped`.
+
 ## Audit findings
 
 (Phase 0 sub-agents fill this section — left empty at plan creation.)
 
 ## DONE block
 
-(Filled at plan completion; per Plan Format end-of-cycle template.)
+### DONE-2026-05-12 (slot 7 `ikenna-scenarios-topology-tab` Day-1 design landing)
+
+- **PM@<slot 7 reconcile commit>**: this section + scratch_scenarios_day1/{01..11}.md (11 design fragments, 995 lines total).
+- **6-sub-agent fan-out** (single message, parallel) authored topology fragments 01-06 in ~3-5min wall-clock each; parent agent authored price-shock fragments 07-10 + handshake doc 11 serially while sub-agents ran.
+- **Handshake integration shape** at `scratch_scenarios_day1/11_handshake_integration.md` codifies cross-plan ownership across simulation_scenarios × risk_simulations × disaster_recovery, names the 6-tuple-per-cell contract (consequence / breaker_id / breaker_action / kill_switch_id / alert_codes / expected_within), and aggregates 12 follow-up gaps with owner routing per Findings Triage.
+- **Phase status flips** (compressed scope per § line 91-100): 1.A + 1.B + 1.C + 1.D + 2.E moved to `design-shipped` (UAC Pydantic implementation = Day 2 follow-on slot).
+- **Day-2 noon operator checkpoint**: triage which P1 follow-up items land in pre-cutover vs successor `simulation_scenarios_post_cutover_2026_06_01.md`. Cross-side mirror to Harsh slot 5 for risk-implementation handoff coordination.
