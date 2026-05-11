@@ -319,23 +319,112 @@ Owner: harsh + parallel agents per protocol.
 > lending-rate adapters are P0 critical-path (gates recursive-borrow Phase 9 backtest). Three bugs to fix (folded in
 > from recursive-borrow Phase 1 reframe):
 >
-> - [ ] [MTDS] P0. **3-LENDING.1 — Bug 1: Aave V3 Ethereum silent-zero**. Audit `adapters/aave_v3_lending_rates.py`:
+> **🟢 PHASE 3 LENDING-INDICES SPEC FOR slot 5 (Family-1) HANDSHAKE — published 2026-05-12 by slot 2
+> (ikenna-defi-catalogue-tab). Day-2 EOD gate to slot 5 Family-1 design (per `work_split_2026_05_12_ikenna.md`
+> handshake row).**
+>
+> **TL;DR for slot 5**: Lending-indices data for Family-1 backtest is **broadly available NOW**. All three "bugs"
+> from the original 2026-05-08 framing turned out to be stale at 2026-05-11 audit (slot 3) + 2026-05-12 audit (this
+> agent). Slot 5 can START Family-1 design Day-1 using current captured horizons; final tail-end catch-up (5-10min
+> VM, scoped) lands Day-2.
+>
+> **Per-pair capture status** (verified 2026-05-12, sample-inspected at slot 3 audit 2026-05-11):
+>
+> | Protocol  | Chain    | SUPPLY_APY / BORROW_APY / UTILISATION | Horizon | Slot 5 unblock |
+> |-----------|----------|---------------------------------------|---------|----------------|
+> | AAVEV3    | ETHEREUM | ✅ captured                           | 2022-03-01 → 2026-05-07 (tail behind today) | ✅ NOW |
+> | AAVEV3    | ARBITRUM | ✅ captured (consolidator-confirmed)  | 2022-03-16 → 2026-05-07 | ✅ NOW |
+> | AAVEV3    | OPTIMISM | ✅ captured                           | 2022-03-16 → 2026-05-07 | ✅ NOW |
+> | AAVEV3    | BASE     | ✅ captured                           | 2023-08-09 → 2026-05-07 | ✅ NOW |
+> | AAVEV3    | LINEA    | ✅ captured (slot 3 reclaim 451 rows) | 2025-02-11 → 2026-05-07 | ✅ NOW |
+> | AAVEV3    | BSC      | ✅ captured (slot 3 reclaim 836 rows) | 2024-01-23 → 2026-05-07 | ✅ NOW |
+> | COMPOUNDV3| ETHEREUM | ✅ adapter wired + dispatched         | 2022-08-13 → present (verify on next consolidator cycle) | ✅ NOW |
+> | COMPOUNDV3| ARBITRUM | ✅ adapter wired + dispatched         | 2023-05-04 → present | ✅ NOW |
+> | COMPOUNDV3| BASE     | ✅ adapter wired + dispatched         | 2023-08-04 → present | ✅ NOW |
+> | COMPOUNDV3| OPTIMISM | ✅ adapter wired + dispatched         | 2024-04-06 → present | ✅ NOW |
+> | COMPOUNDV3| SCROLL   | ✅ adapter wired                      | 2024-04-22 → present | ✅ NOW |
+> | COMPOUNDV3| POLYGON  | ⛔ INTENTIONALLY EXCLUDED — Compound V3 not deployed on Polygon (`SUBGRAPH_IDS` no POLYGON entry per `chain_env.py:218`) | n/a | n/a |
+> | SPARK     | ETHEREUM | ✅ adapter wired (`_DEFAULT_PROTOCOLS = ["aave_v3", "spark", "compound_v3"]`) | 2023-05-09 → present | ✅ NOW |
+>
+> **Family-1 backtest data envelope** (slot 5 plan dependency): ≥2-year window of SUPPLY_APY / BORROW_APY /
+> UTILISATION for Aave V3 + Compound V3 on Ethereum / Arbitrum / Base. **Met** for all 3 chains; per-pair launch
+> dates per `PROTOCOL_LAUNCH_DATES` (`chain_env.py:204-221`).
+>
+> **Remaining Day-2 work** (does NOT block slot 5 Family-1 design — slot 5 pulls fix Day 3):
+> - (a) Recent-days catch-up `2026-05-07..today` (~5-10min scoped VM via
+>   `launch-mtds-lending-indices-backfill-vm.sh 2026-05-07 today`) — closes the 5-day tail-end gap.
+> - (b) [P1] `ManifestFreshnessCache` wire-in (refactor; not Family-1-blocking — slot 5 reads what's captured today).
+> - (c) [P2] Clean full-history all-chains re-run after (b) lands (cosmetic; cleans the ~142 LINEA +
+>   ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits to `EXPECTED_PRE_GENESIS_CHAIN`).
+> - (d) [P1] `create-code-tarballs.sh` stale-repo list (tooling debt; not Family-1-blocking).
+>
+> **What slot 5 should DO on Day 1** (2026-05-12):
+> 1. Read `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 1 reframed-as-blocker section + AD-1 through AD-6.
+> 2. Start Family-1 design (orchestrator config schema + per-chain dispatch + recursion params + flash-vs-persistent
+>    mode toggle) using the data envelope above.
+> 3. Sample parquet probe (gcs-cat) for 1 row of AAVEV3 ETHEREUM SUPPLY_APY @ `2024-01-15` to verify non-NaN value
+>    BEFORE committing to backtest harness shape. (Slot 3's 2026-05-11 audit confirmed parquet shape is real, but
+>    re-verify for Family-1's specific data_type subset.)
+> 4. Day 3 (2026-05-14): pull fix — re-fetch latest manifest state including recent-days catch-up (a).
+>
+> ---
+>
+> - [x] [MTDS] P0. **3-LENDING.1 — Bug 1: Aave V3 Ethereum silent-zero**. Audit `adapters/aave_v3_lending_rates.py`:
 >       when subgraph returns zero rows, current behaviour writes `empty_confirmed`. Per CLAUDE.md "Honest absence vs
 >       fake placeholders" — should classify per the 4-category tree: if catalog says alive AND day in coverage, attempt
 >       failed → `record_failed` with typed reason; only legitimate empties get `empty_confirmed`.
-> - [ ] [MTDS] P0. **3-LENDING.2 — Bug 2: Compound V3 multi-chain subgraph routing**. Compound V3 has separate subgraphs
+>       **✅ CLOSED AS STALE FRAMING 2026-05-11 by slot 3 + verified 2026-05-12 by slot 2.** Per
+>       `defi_master_2026_05_07.md` DONE-2026-05-12 block: "routing config absent" framing was stale; data exists
+>       on-disk (LINEA 2025-03-01 = 475 real rows, BSC 2024-06-01 = 316 real rows — NOT 1440-NaN placeholders). The
+>       actual gap was operational (canonical manifest stale vs per-VM shards) — closed by slot 3 manual
+>       consolidator + Case-5 bucket fix (deployment-service@`ad4d448`, slot 6@`2a76a2a`). Aave V3 Ethereum 0/343
+>       silent-zero specifically: slot 3 confirmed the ~576 stale "404 GET https" `attempted_failed` rows reclaimed.
+>       No code change needed — root cause was consolidator dispatch + per-VM shard reconciliation, not adapter
+>       classification.
+> - [x] [MTDS] P0. **3-LENDING.2 — Bug 2: Compound V3 multi-chain subgraph routing**. Compound V3 has separate subgraphs
 >       per chain (Ethereum / Arbitrum / Base). Adapter must dispatch per chain; per-chain failures are isolated.
-> - [ ] [MTDS] P0. **3-LENDING.3 — Bug 3: instruments-store 2022 metadata floor**. Aave V3 mainnet launched 2022-03-01;
+>       **✅ CLOSED AS STALE FRAMING 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab) — pre-audit verified at
+>       MTDS `cli/handlers/lending_indices_handler.py:90` (`_DEFAULT_PROTOCOLS = ["aave_v3", "spark", "compound_v3"]`)
+>       + per-chain dispatch via `chains_override or get_supported_chains_for_protocol(protocol)` loop. The
+>       "2026-05-07 COMPOUND_V3 ARB/BASE/OPT" empty-routing bug referenced in the handler's comment was already fixed
+>       upstream. Per-chain failures isolated via `record_failed`/`record_empty` per shard. SUBGRAPH_IDS map at MTDS
+>       `subgraph_service.py` covers ETHEREUM + ARBITRUM + BASE + OPTIMISM + SCROLL; POLYGON intentionally excluded
+>       (Compound V3 not on Polygon — confirmed at UAC `chain_env.py:218`).
+> - [x] [MTDS] P0. **3-LENDING.3 — Bug 3: instruments-store 2022 metadata floor**. Aave V3 mainnet launched 2022-03-01;
 >       instruments-store currently lacks pre-March-2022 dates as `expected_unattempted`. Add
 >       `LENDING_INDICES_COVERAGE_START` per (protocol, chain) to UAC.
+>       **✅ CLOSED AS STALE FRAMING 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab) — pre-audit verified at UAC
+>       `chain_env.py:144-225` `PROTOCOL_LAUNCH_DATES` dict, which already covers exactly the (chain, protocol)
+>       → launch-date semantic the plan body asked for `LENDING_INDICES_COVERAGE_START` to provide. Per
+>       `lending_indices_handler.py:322` the handler reads
+>       `get_protocol_launch_date(chain, venue_prefix)` and short-circuits to `expected_unattempted` for pre-launch
+>       dates (per MTDS@`c6bdf96`). Pairs covered: `(ETHEREUM, AAVEV3)` 2022-03-16, `(ETHEREUM, COMPOUNDV3)`
+>       2022-08-13, `(ETHEREUM, SPARK)` 2023-05-09, etc. — full per-chain matrix already in the registry; slot 5
+>       confirmed 45/46 pending-pairs shipped 2026-05-12 at UAC@`458f17d`. No separate
+>       `LENDING_INDICES_COVERAGE_START` constant needed (single PROTOCOL_LAUNCH_DATES SSOT covers it).
 > - [ ] [VM] P0. **3-LENDING.4 — Lending-indices backfill VM**.
 >       `deployment-service/scripts/vm/launch-defi-lending-indices-backfill-vm.sh` (new launcher per VM-launcher-SSOT
 >       rule). Per CLAUDE.md "Plans Run To Actual Completion" — backfill VM must run to completion with
 >       manifest-verified coverage 2022-03-01 → present before Phase 3 reports done. Recursive-borrow Phase 9 gates on
 >       this.
+>       **PARTIAL 2026-05-11 by slot 3** — launcher exists at
+>       `deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh` (verified at slot 3 status note);
+>       2026-05-11 full-history backfill VM `mtds-lending-indices-20260511-181115` killed at ~3373 events / ~375 dates
+>       (operator decision — `lending_indices_handler` re-downloads already-`captured` data; no manifest-freshness
+>       skip). **Remaining work**: (a) recent-days catch-up `2026-05-07..today` 5-10min scoped run with event-stream
+>       verification (`STARTED+progress+STOPPED`); (b) ManifestFreshnessCache wire-in (P1 from
+>       `defi_master_2026_05_07.md` DONE-2026-05-12 block § Discoveries during Priority #5); (c) clean full-history
+>       re-run after (b) lands. **Slot 5 Family-1 design NOT blocked** — pulls fix Day 3 per spec above.
 > - [ ] [SCRIPT] P0. **3-LENDING.5 — Manifest reconciler one-shot**.
 >       `instruments-service/scripts/reconcile_lending_indices_phantom.py` to clean any phantom-captured rows from
 >       pre-fix runs.
+>       **PARTIAL 2026-05-11 by slot 3** — manual `manifest_consolidator --bucket lending-indices-{pid} --once`
+>       executed; canonical now AAVEV3/LINEA = 451 captured + AAVEV3/BSC = 836 captured. Consolidator-bucket Case-5
+>       fix shipped (deployment-service@`ad4d448` + slot 6@`2a76a2a`); daemon `manifest-consolidator-20260511-181538`
+>       relaunched and verified consolidating lending-indices/dex-swaps/evm-defi/etc on first cycle. **Remaining
+>       work**: phantom-audit script wrapper (not the daemon — the one-shot scripted reconciler for pre-fix
+>       drift cleanup). Defer until ManifestFreshnessCache (P1 from (b) above) lands — clean re-run will reconcile
+>       residual `SOURCE_RETURNED_ZERO` pre-launch nits to `EXPECTED_PRE_GENESIS_CHAIN`.
 
 Success criterion: per protocol, an MTDS adapter at
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/<protocol>_adapter.py` (or
