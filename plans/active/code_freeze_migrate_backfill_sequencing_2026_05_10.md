@@ -383,8 +383,20 @@ The plan is done when ALL of the following are true:
 Slot 6 day-1 work toward the Phase 1 freeze gate (2026-05-15). Freeze-gate items 8 + 9 remain `- [ ]` — this is the
 running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
 
-**Shipped 2026-05-11** (PM commits):
+**Shipped 2026-05-11**:
 
+- `market-tick-data-service@3da026d` — **Track D P0-1 fix** (`wave3x_track_d_findings_2026_05_11.md` P0-1; owner
+  re-routed to slot 6 by operator 2026-05-11): `engine/orchestrator.py` honest-coverage sentinel pass called
+  `ManifestWriter.record_empty(row_key=...)` with NO `reason=` at 3 callsites (:2671 sports / :2808 Tier-3
+  per-instrument / :2849 Tier-2 venue-level) + `scripts/rebuild_prediction_manifest.py:351` — `LegacyBlankErrorReasonError`
+  swallowed by the wrapping `except Exception: "non-blocking"` → sentinel pass aborted silently for CeFi/sports on any
+  zero-data-shard date (no `empty_confirmed` / `attempted_failed` rows landed → absence masked as "never attempted").
+  Fix: all 4 callsites pass `reason="SOURCE_RETURNED_ZERO"`; new `except (LegacyBlankErrorReasonError, UnknownEmptyConfirmedReasonError): raise`
+  before the swallowing `except` (manifest-contract violations now fail loud); imports from the UAC/UTL root facades.
+  Verified ruff-clean + zero new basedpyright errors + all 12 `test_orchestrator_capture_status.py` /
+  `test_rebuild_prediction_manifest_force.py` tests pass. **Slot-1 to-route**: tell slot 5 / the writegate Phase 2.A
+  owner that P0-1 is done (Track D doc routed it to them; operator moved it to slot 6); the Track D doc's P0-1 owner
+  pointer is now stale.
 - `PM@cfeb79fc` — STARTED boot-ack ping.
 - `PM@04ed9203` — **freeze-gate item 9 (codex SSOT audit pass)** — `plans/active/issues/codex_audit_2026_05_11.md`:
   25 Phase 1 plans scanned; 91 codex doc paths referenced; 58 present / 33 referenced-but-not-yet-created (all 33 are
