@@ -412,8 +412,9 @@ fresh per QG run, so existing repos pick up the change on next QG.
 
 ### Q3 — [harsh-features-consolidation-tab, 2026-05-11 11:05 UTC] — schema-provenance row e: group-2 service-internal plumbing → UAC, or narrower QG heuristic?
 
-**Status**: 🟡 OPEN — operator/Ikenna call. Gates **Phase 1.2e group-2** only (group-1 — the genuine domain I/O types —
-proceeds regardless once sub-agents A/B/C land).
+**Status**: ✅ ANSWERED (A1 below — move-to-UAC default, except `HealthResponse` + `_WeatherRow`; operator/Ikenna may
+override to "narrower heuristic" within the cycle). Gates **Phase 1.2e group-2** only (group-1 — the genuine domain I/O
+types — proceeds regardless once sub-agents A/B/C land).
 
 The ~38 `features_service/` schema-provenance flags split into two buckets (full list in `## Phase 1.2 — fresh QG
 re-enumeration ...` § "Row e ... sub-phase decision"):
@@ -439,6 +440,43 @@ move group 2 to UAC anyway (the rule is absolute; the carve-out is for parquet `
 request/response DTOs, which most of group 2 aren't) — EXCEPT `HealthResponse`. But it's ~20 extra model relocations +
 consumer updates, so worth a yes/no before the relocation sub-agent runs. If "narrower heuristic" — that's a PM-side
 `check_schema_provenance.py` change (Ikenna's governance surface), same shape as Q1.1/Q1.2.
+
+#### A1 — [main (slot 1), 2026-05-11 — surfaced to operator + cross-side to Ikenna]
+
+**Status**: ✅ ANSWERED — proceed with the default below; operator/Ikenna may override within the cycle.
+
+- **Group 1** — no question, **move them** (as you already concluded). Phase 1.2e does group 1; the file-split sub-agents
+  (A/B/C) proceed in parallel regardless.
+- **Group 2** — default = **your own recommendation: move to `unified_api_contracts.internal.domain.features.<family>`,
+  with two carve-out exceptions** that the `python-backend.md` § "Schema Governance" table genuinely permits to stay
+  service-local:
+  1. `HealthResponse` — literal FastAPI HTTP DTO. Stays in the service (`api/main.py` neighbourhood).
+  2. `_WeatherRow` — it's a parquet-row tuple shape, i.e. `SchemaDefinition`-adjacent ("Service-local | Only
+     `SchemaDefinition` (parquet) and HTTP DTOs"). Stays local. (If you'd rather promote it to a typed UAC record
+     anyway, that's fine — your call; it's a 1-model judgment, not a blocker.)
+  Everything else in group 2 — `PubSubMessage` / `SubscriberStats`, `*ProcessingResult` / `FeatureProcessingResult` /
+  `OrchestratorResult` / `ShardResult`, `PITViolation` / `ValidationViolation`, `DependencyFailure` / `DependencyReport` /
+  `DependencyStatus` / `LookbackValidationReport`, `FeatureRegistryEntry`, `SteamDetectorConfig` / `SteamMoveSignal`,
+  `CrossInstrumentConfig` — **moves to `unified_api_contracts.internal.domain.features.<family>`.** Rationale: the
+  `python-backend.md` 3-layer model explicitly routes "internal messaging, pub-sub, domain outputs" → UIC (=
+  `unified_api_contracts.internal`); the carve-out is narrow (literal parquet `SchemaDefinition` + literal FastAPI
+  request/response DTOs only), and "it's ~20 extra relocations" is cost, not a reason to keep a double-SSOT
+  (Citadel § 7). Config dataclasses (`SteamDetectorConfig`, `CrossInstrumentConfig`, `config.py:Parameters`-type) are
+  the fuzziest — they're runtime params, not "output shapes" — but the path of least drift is UAC.internal too (one
+  home, QG-green). If a specific config genuinely has zero cross-repo consumers AND is pure local plumbing, you may
+  keep it local with a `# QG-exempt: local runtime config, no cross-repo consumers` comment + a one-line note here —
+  but lean toward moving.
+- **The "narrower heuristic" alternative** (a `check_schema_provenance.py` carve-out for internal-plumbing DTOs) is
+  **NOT the default** — that's a PM-side governance change owned by Ikenna (same surface as Q1.1/Q1.2/Q2). If the
+  operator or Ikenna wants that route instead, they'll say so on this Q or the cross-side ledger within the cycle and
+  I'll relay; until then, the move-to-UAC default stands so Phase 1.2e group-2 isn't blocked indefinitely. **Do NOT
+  edit `check_schema_provenance.py` yourself** — if a heuristic-narrowing is wanted it ships PM-side, not in your
+  features-service work.
+
+So: run the group-1 relocation now; run the group-2 relocation per the default above (except `HealthResponse` +
+`_WeatherRow`); flip Phase 1.2e `[x]` when QG goes green; if the operator/Ikenna overrides group-2 to "narrower
+heuristic" before you've started the group-2 sub-agent, hold group-2 and ping me. Group-1 + the A/B/C file-splits never
+wait on this.
 
 ## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2), Phase 1.1
 
