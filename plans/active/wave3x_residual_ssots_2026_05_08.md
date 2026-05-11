@@ -232,22 +232,32 @@ stamping logic.
 
 **Files / changes**:
 
-- [ ] [UTL] P0. Extend `availability_stamping.stamp_available_at_*` family with the four sports stamp helpers per the
-      CLAUDE.md "available_at is per-row, write-time" rule: -
-      `stamp_available_at_lineups(kickoff: datetime) -> datetime` returns `kickoff - 60min` (conservative — clip earlier
-      leaks per operator directive). - `stamp_available_at_injuries(report_time: datetime) -> datetime` per-row event
-      time. -
-      `stamp_available_at_post_match(match_end_time: datetime | None, kickoff: datetime,       source_cascade: list[str]) -> datetime`
-      — cascade detection per CLAUDE.md (api_football native → SFI progressive freeze → footystats / understat →
-      low-confidence `kickoff + 120min` fallback). Returns the first non-None match_end_time it finds; the cascade order
-      is the source-priority order from UAC. - `stamp_available_at_odds_snapshot(snapshot_time: datetime) -> datetime`
-      returns publication time per snapshot.
+- [x] [UTL] P0. **SHIPPED 2026-05-11 UTL@`2ab3685`** (slot 3, harsh-wave3x-tab). Added to `availability_stamping.py`:
+      `stamp_available_at_injuries(df, report_time_col="report_time")` (named alias over `stamp_available_at_event_time`);
+      `stamp_available_at_odds_snapshot(df, snapshot_time_col="bm_time")` (named alias); `stamp_available_at_post_match_cascade(df, match_end_candidate_cols, kickoff_col, default_match_duration)` —
+      generalises the existing `stamp_available_at_post_match`: per-row uses the first present-and-non-null candidate
+      match-end column in source-priority order (api_football native → SFI progressive freeze → footystats/understat),
+      falls back to `kickoff + 120min`; raises `AvailableAtStampingError` on empty-list / no-columns / all-NaT. Plus
+      `INJURIES_REPORT_TIME_COL` / `ODDS_SNAPSHOT_TIME_COL` constants + 3 facade re-exports. **DEVIATION**: kept the
+      module's DataFrame-shaped helper API (the plan body sketched scalar signatures `(kickoff: datetime) -> datetime`);
+      `stamp_available_at_lineups` (kickoff−60min) already existed.
 - [ ] [features-sports] P0. Wire the new stamp helpers at the sports calculator emission boundaries that currently emit
-      blank or read-time-derived `available_at` columns.
-- [ ] [TEST] P0. Unit tests cover each stamp helper's edge cases + a regression test on a synthetic post-match shard
-      that verifies the cascade falls through to `kickoff + 120min` only when all upstream cascades are empty.
-- [ ] [DOCS] P0. Codex update to `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` adding the 4
-      sports stamping rules to the existing temporal-availability table.
+      blank or read-time-derived `available_at` columns. **DEFERRED — per-service half; owner = Harsh slot 4 (MTDS
+      sports adapter stamping wiring) + Ikenna slot 3 (available_at Phase 1 per-asset_group cascade) per the
+      2026-05-11 work-split.** UTL helpers (above) are ready to consume; see `plans/active/issues/` for slot 4's
+      MTDS-slice sports `available_at` wiring issue doc.
+- [x] [TEST] P0. **SHIPPED 2026-05-11 UTL@`2ab3685`** (slot 3): `tests/unit/test_availability_stamping.py` extended
+      (NOT a parallel file — same file). +18 tests (injuries default/custom/missing-col; odds_snapshot default/custom;
+      cascade priority-per-row / first-wins / single-candidate-matches-post_match / fallback-only / empty-list-raises /
+      no-cols-raises / empty-df / all-NaT-raises / no-mutation; + UTL-facade re-export). 37 tests pass; ruff clean;
+      basedpyright clean on `availability_stamping.py`.
+- [x] [DOCS] P0. **SHIPPED 2026-05-11 PM** (slot 3): codex update to `codex/02-data/honest-absence-downstream-handling.md`
+      — added a `## Per-source available_at stamping helpers (UTL)` section with the per-helper rule table (lineups /
+      injuries / odds_snapshot / post_match(+cascade) / event_time-for-weather / cefi_tick / offset+explicit) + the
+      `record_captured` → `assert_available_at_present` → `LookaheadBiasError` enforcement note + the per-service-wire-in
+      ownership pointer. (The plan said "existing temporal-availability table" but that table lives in
+      `availability-manifest-and-data-status.md` / CLAUDE.md, not this doc — added a fresh section here instead, which
+      also gives the doc's existing line-112 cross-ref a local target.)
 
 ## Success criteria
 

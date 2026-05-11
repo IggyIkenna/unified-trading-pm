@@ -87,6 +87,31 @@ Each consumer picks the shape that matches its modeling. Common patterns:
 
 ---
 
+## Per-source `available_at` stamping helpers (UTL)
+
+Downstream gating only works if every write-side parquet carries a per-row `available_at` equal to when the live
+pipeline would actually have had that row — never midnight UTC, never read-time-derived (per the CLAUDE.md
+"`available_at` is per-row, write-time, equal to live-pipeline-arrival" rule). The stamping is centralised in
+`unified_trading_library.availability_stamping` so every adapter / calculator uses the same per-source rule:
+
+| Helper                                       | Source / data_type             | `available_at` rule                                                                                                                       |
+| -------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `stamp_available_at_lineups`                 | sports lineups                 | `kickoff − 60 min` (conservative — official lineups publish ~T-60min, sometimes earlier; using T-60 clips earlier-leak rows)               |
+| `stamp_available_at_injuries`                | sports injury reports          | per-row injury-report / occurrence time (so a feature for fixture F sees only injuries reported before F's kickoff — and only from prior fixtures) |
+| `stamp_available_at_odds_snapshot`           | sports pre-match odds          | per-row snapshot publication time (`bm_time`) — opening lines days before kickoff, closing lines at kickoff; never derived from the fixture date  |
+| `stamp_available_at_post_match` / `_cascade` | sports post-match (xG, fixture_stats, sfi_progressive, results) | `match_end_time`; `_cascade` tries candidate match-end columns in source-priority order (api_football native → SFI progressive freeze → footystats/understat) then falls back to `kickoff + 120 min` (conservative — never under-estimates) |
+| `stamp_available_at_event_time`              | weather forecasts              | forecast-**issue** time (distinct from the forecast-target time) — pass the issue-time column                                              |
+| `stamp_available_at_cefi_tick`               | CeFi / DeFi / TradFi tick data | tick timestamp + `emission_latency_ms_for_source(source)` (the source-priority emission latency, NOT the slower batch-archive fetch latency) |
+| `stamp_available_at_offset` / `_explicit`    | generic                        | `kickoff + offset` (rare; e.g. SFI `kickoff + timer_seconds`) / fixed point-in-time snapshot                                               |
+
+`record_captured` calls `assert_available_at_present` internally — a parquet missing or with null `available_at` →
+`LookaheadBiasError`. The sports stamp helpers were lifted to UTL by `wave3x_residual_ssots_2026_05_08.md` Track E; the
+features-sports / MTDS-sports-adapter wire-in of these helpers at the calculator emission boundaries is the per-service
+half (Harsh slot 4 MTDS sports adapter stamping + Ikenna slot 3 available_at Phase 1 — see `plans/active/issues/` for
+the MTDS-slice sports `available_at` wiring issue doc).
+
+---
+
 ## Pre-flight validation (per-service responsibility)
 
 Every downstream service has a pre-flight gate that runs BEFORE the expensive compute. The gate consults:
