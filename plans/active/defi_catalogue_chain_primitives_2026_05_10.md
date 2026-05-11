@@ -778,3 +778,66 @@ Owner: ikenna for design + harsh for runs.
 Plan archives to `plans/archive/defi_catalogue_chain_primitives_2026_05_10.plan.md` post-cutover with deferred-work
 audit per CLAUDE.md "Plan Archival HARD RULE" — every `**DEFERRED**` annotation migrated to active home before the
 archive boundary.
+
+## DONE-2026-05-15 — slot 2 (ikenna-defi-catalogue-tab) Day 1 (2026-05-12)
+
+Density-push cycle Day 1 closed at high throughput. Phase 1 mostly done; Phase 2 design SSOT shipped; Phase 3 spec
+artefact for slot 5 handshake published with all 3 "Bug 1/2/3" framings closed as stale. No new findings blocking
+slot 5 Family-1 design.
+
+### Commits shipped Day 1 (slot 2 = ikenna-defi-catalogue-tab)
+
+| Phase | Repo | SHA | Summary |
+|-------|------|-----|---------|
+| 1D | UAC | `5241fad0` | `MevSubmissionMode.JITO_BUNDLE` enum value added |
+| 1D | execution-service | `38710bef` | `_DEFAULT_POLICIES[JITO_BUNDLE]` policy wired |
+| 1G | UAC | `961af767` | `LST_TOKEN_TO_PROTOCOL_ASSET` extended with `ezETH` (RENZO) + `rsETH` (KELPDAO); test expected-set updated |
+| 1C | UAC | `4a155143` | `CHAIN_GENESIS_DATES` naming convention pinned (BSC alt-name + Polygon zkEVM future-deferral) |
+| 1J | PM | `f54dd90c` | Codex `defi-venue-protocol-catalogue.md` refresh 2026-05-12 (5 deltas: stale-path / Aave silent-zero / Renzo+KelpDAO UAC / JITO_BUNDLE / header) |
+| 3 / 3-LENDING.1+.2+.3 | PM | `fafecddf` | Phase 3 LENDING-INDICES spec for slot 5 Family-1 handshake; all 3 bugs closed as STALE FRAMING with audit evidence |
+| 3 handshake | PM | `3d9afbbc` | Cross-plan banner on `defi_recursive_borrow_archetypes_2026_05_10.md` line 38 + intra-side ping to slot 5 |
+| 1B | PM | `2675e2f7` | Phase 1B design-shipped (existing `defi_reserve_params.py` shape sufficient) + Harsh implementation handoff doc |
+| 1F | PM | `aa74cea8` | Phase 1F finding — plan body instruction mis-framed; legacy + new prediction modules serve different purposes (cross-venue mapping vs canonical-question-group); both retained |
+| 1E | PM | `27c6ce39` | Phase 1E design-correction — extend existing `cefi_margin_tiers.py` rather than create new `perp_margin_tiers.py` (no duplicate SSOT); Harsh implementation handoff |
+| 2 | PM | `48a55845` | Phase 2 per-protocol shard-atom design matrix — bundled vs per-instrument decision per protocol family |
+
+### Deferred work after 2026-05-12 session (carry-forward to Day 2 morning)
+
+| Phase / item | Status as of 2026-05-12 EOD | Successor / blocker |
+|--------------|-----------------------------|----------------------|
+| 1H — UAC QG green | deferred-to-day-2 | Quick local QG run by slot 2 Day 2 AM (`bash scripts/quality-gates.sh` from UAC) — edits Day 1 were small/clean, deferring to start-of-day batch verify |
+| 3-LENDING.4 — recent-days catch-up VM | deferred-to-day-2 | 5-10min scoped run on `launch-mtds-lending-indices-backfill-vm.sh 2026-05-07 today` + event-stream verify per CLAUDE.md "No fire-and-forget VM launches". NOT slot-5-blocking (Family-1 design has 2-year+ horizon already available). Slot 2 Day 2 AM action — closes `defi_master_2026_05_07.md` Priority #5 `[x]`. |
+| 3-LENDING.5 reconciler one-shot wrapper | deferred-after-3-LENDING.4 | Phantom-audit script wrapper for pre-fix drift cleanup; daemon already running per slot 3 manual consolidator (`manifest-consolidator-20260511-181538`). Defer until 3-LENDING.4 catch-up lands. |
+| ManifestFreshnessCache wire-in (P1, from `defi_master` handover-block (b)) | deferred-after-3-LENDING.4 | Refactor across `lending_indices_handler` + sibling MTDS DeFi backfill handlers (`gas_fees`/`lst_rates`/`dex_pools`/`liquidations`/`perp_funding`). Slot 2 or Harsh slot 2 Day 2-3 work. Not 2026-05-23-blocking but unlocks clean full-history re-run. |
+| Clean full-history all-chains lending-indices re-run (P2) | deferred-after-ManifestFreshnessCache | Cosmetic cleanup of ~142 LINEA + ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits to `EXPECTED_PRE_GENESIS_CHAIN`. |
+| `create-code-tarballs.sh` stale-repo list (P1, from `defi_master` handover-block (d)) | deferred-after-ManifestFreshnessCache | Tooling debt; not May-23-blocking. |
+| Phase 2 codex matrix subsection in `defi-venue-protocol-catalogue.md` | deferred-to-day-2 AM | Mirror the Phase 2 per-protocol shard-atom matrix from the plan body into the codex doc as a "Per-protocol shard-atom matrix" subsection (Phase 1J refresh extension). Quick edit, slot 2 Day 2 AM. |
+| Optional rename `cefi_margin_tiers.py` → `perp_margin_tiers.py` (visual clarity) | deferred-post-cutover | Mechanical refactor; not May-23-blocking. |
+| Optional rename legacy `canonical/domain/prediction/` → `prediction_mapping/` (visual disambiguation from new `predictions/`) | deferred-post-cutover | Mechanical refactor across 2 live consumers + facade re-export; not May-23-blocking. |
+| Polygon zkEVM `CHAIN_GENESIS_DATES` entry | deferred-until-needed | Add `"POLYGON_ZKEVM": "2023-03-27"` only when a protocol on that chain enters Phase 1A scope. |
+
+### Cross-side handshakes for Harsh slot 2 (Day 2 morning pickup)
+
+Per `work_split_2026_05_12_ikenna.md` row 2 cross-side handshake — "Ikenna designs (Phases 1-3), Harsh implements
+(Phases 2-6 across protocols)":
+
+- **Phase 1B** — per-chain `AAVE_V3_<CHAIN>_RESERVES` + `SPARK_ETHEREUM_RESERVES` + `RADIANT_<CHAIN>_RESERVES`
+  dicts (12 total). Provenance URLs documented per protocol. Extend `get_reserve_params()` chain dispatch.
+- **Phase 1E** — extend `cefi_margin_tiers.py` `CEFI_MARGIN_TIERS` with Deribit / Hyperliquid / Aster × BTC + ETH
+  entries. Same `VenueMarginSchedule` shape.
+- **Phase 2** — per-protocol instruments-service adapters per the bundled-vs-per-instrument matrix shipped today.
+  Cluster validation MANDATORY for DEX / multi-vault restaking / vaults.
+
+### Critical-path handshake status
+
+- **Slot 5 (ikenna-recursive-borrow-tab) Family-1 design**: ✅ UNBLOCKED Day 1. Lending-indices data with 2-year+
+  horizons across AAVEV3 (6 chains) + COMPOUNDV3 (5 chains) + SPARK (ETH). Slot 5 confirmed pivot per their STATUS
+  line; Family-1 + Family-2 topology design SSOT shipped same-day (PM@`5cb0952f` + PM@`3fbe82ca`).
+- **Slot 5 Day-3 (2026-05-14)**: pull fix after 3-LENDING.4 recent-days catch-up VM lands (slot 2 Day 2 AM action).
+
+### Operator-triage closures (informational — closed by slot 3)
+
+Prior-cycle slot-2 STATUS-2026-05-11 flagged 3 PipelineMode findings as 🟡 BLOCKED. Operator triage 2026-05-11 PM
+landed Q1=(α) + Q2=(A) approvals routed to slot 3 at PM@`4c573302`. Phase 4.GREP-VERIFY AST-walk QG check shipped
+by slot 3 at PM@`4159b7ae`. Phase 4.MTDS → Phase 4.DEFAULT-REMOVAL path now clear for 2026-05-15 freeze gate.
+Slot 2's prior cycle deferrals all closed via slot 3 follow-up.
