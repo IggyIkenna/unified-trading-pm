@@ -288,12 +288,22 @@ returns full rule set; tests pass.
 
 ## Phase 3 — UTL pre-flight + rule evaluator (Days 5-7, ~2 AI-days)
 
-- [ ] [AGENT] P0. **3.A `risk/rule_evaluator.py`.** `evaluate_rule(rule, context) -> RuleEvalResult`. Per-trigger
-      evaluator function.
-- [ ] [AGENT] P0. **3.B `risk/preflight.py`.** `risk_preflight(order, context) -> RiskPreflightResult`. Iterates
+- [x] [AGENT] P0. **3.A `risk/rule_evaluator.py`.** `evaluate_rule(rule, context) -> RuleEvalResult`. Per-trigger
+      evaluator function. (UTL@9b4bcc09 — per-trigger dispatch over closed `RiskRuleTrigger` union, 13 sub-classes;
+      `RuleEvalContext` TypedDict(total=False); `UnknownTriggerError` / `MissingContextFieldError` fail-loud paths;
+      consequence→scale_factor mapping (BLOCK=0, SCALE_DOWN=0.5, MONITOR/TEST_ONLY=1.0); strict `>` semantics for
+      threshold checks.)
+- [x] [AGENT] P0. **3.B `risk/preflight.py`.** `risk_preflight(order, context) -> RiskPreflightResult`. Iterates
       applicable rules per scope; returns aggregate (pass / scale-down with multiplier / block with reason). Reuses
-      rule_evaluator.
-- [ ] [AGENT] P0. **3.C Tests.** ≥40 unit tests; per-rule evaluator behaviour; pre-flight aggregation.
+      rule_evaluator. (UTL@9b4bcc09 — precedence BLOCK > SCALE_DOWN > TEST_ONLY > MONITOR; `scale_factor =
+      min(scale_down_factors)` (most-restrictive wins); `fired_rules` preserves evaluation order; `blocked_by`
+      enumerates BLOCK rule_ids; composite `reason` with primary + per-consequence tally.)
+- [x] [AGENT] P0. **3.C Tests.** ≥40 unit tests; per-rule evaluator behaviour; pre-flight aggregation. (UTL@9b4bcc09 —
+      53 tests pass: `tests/unit/risk/test_rule_evaluator.py` (37) covers per-trigger fire+no-fire across all 13
+      triggers + boundary semantics + scale_factor mapping + `UnknownTriggerError` + `MissingContextFieldError`;
+      `tests/unit/risk/test_preflight.py` (16) covers empty/no-fire baselines + 4-tier precedence + scale_factor min
+      aggregation + fired_rules ordering + blocked_by enumeration + reason composition + mixed-consequence smoke. ruff
+      + basedpyright clean.)
 
 **Full-execution criterion**: UTL PR pushed; QG green; integration test runs pre-flight on stub orders.
 
