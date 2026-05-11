@@ -784,3 +784,53 @@ indicator + `POST /manual/instruction/precheck` dry-run validation echo before s
 kill-switch event audit-log shape — current proposal uses a stub `ManualInstruction` row with `manual_instruction=None`
 + `wallet_spending_check` populated; final shape may move to a dedicated `KillSwitchAction` audit category in a
 follow-up cycle. Slot 4 to flag if the proposed shape conflicts with their `KillSwitchBus` event surface.
+
+### DONE-2026-05-12 Day-3 (Ikenna T8 slot 8) — DART precheck endpoint + audit-log persistence SSOT
+
+Day-3 closure of cross_cutting #4 contract scope; rounds out the UAC contract layer that Harsh T6 consumes.
+
+- [x] [DESIGN+UAC] **DART precheck endpoint contract** (Ikenna T8 Day-3). Shipped at uac@`fe8e50e`:
+  - `ManualInstructionPrecheckResponse` Pydantic model for `POST /manual/instruction/precheck` dry-run validation.
+    Fields: `instruction_id` / `checked_at` / `accepted` + `rejection_reason` / `wallet_spending_check` /
+    `capital_allocation_remaining_usd` / `routing_target` / `estimated_amount_usd`.
+  - 2 new unit tests (accepted path + capital-allocation rejection path); 14/14 total pass.
+- [x] [DESIGN+UAC] **DART audit-log persistence SSOT** (Ikenna T8 Day-3). Shipped at uac@`003b5ff`:
+  - NEW module `unified_api_contracts/internal/manual_audit_paths.py` — pure-function path helpers, no GCS/S3 code.
+  - `BUCKET_KIND_MANUAL_AUDIT = "manual-audit"` constant for the `resolve_bucket_name(kind=...)` SSOT lookup.
+  - `OBJECT_KEY_TEMPLATE = "manual_audit/{date}/{action_category}/{audit_id}.jsonl"` — env-tiered bucket, UTC-date
+    partition, action-category sub-partition for selective reads.
+  - `manual_audit_object_key(...)` + `manual_audit_date_prefix(...)` helpers; both reject path separators.
+  - 8 new unit tests (constants / template shape / both category keys / empty + separator rejection / date prefix /
+    UTC date partition); 22/22 total pass. basedpyright clean.
+  - Codex doc extended:
+    [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — added
+    "Audit log persistence (GCS / S3)" section covering object-key shape + bucket-name resolution + retention
+    rationale + date partition + action-category sub-partition + file format.
+
+**Cross-side handoff to slot 4 (bucket-name SSOT owner)**: annotated
+[`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md)
+Phase 0i tail with a NEW P1 todo proposing the `manual-audit` bucket kind addition to `cloud-providers.yaml` (6
+buckets: 3 envs × 2 clouds; retention/lifecycle config: ≥7y compliance + Coldline-after-90d for cost). Pre-addition,
+execution-service + ml-training-service audit-log writers BLOCK on this entry; UAC path SSOT module already declares
+`BUCKET_KIND_MANUAL_AUDIT = "manual-audit"` to mark the dependency.
+
+### Cross_cutting #4 contract scope — final scoreboard
+
+| Layer                                  | Status                              | Commit                               |
+| -------------------------------------- | ----------------------------------- | ------------------------------------ |
+| Manual trade action (`OperationType`)  | ✅ existing UAC SSOT (no-op design)  | `unified_api_contracts/canonical/domain/execution/base.py:65` |
+| Manual trade execution mode            | ✅ existing UAC SSOT (no-op design)  | `unified_api_contracts/internal/execution.py:ManualExecutionMode` |
+| ML training-control action axis        | ✅ Day-1 ship                        | `uac@336b486`                        |
+| Audit-log dispatch category            | ✅ Day-1 ship                        | `uac@336b486`                        |
+| Audit-log Pydantic schema              | ✅ Day-1 ship                        | `uac@336b486`                        |
+| Wallet provenance on instruction       | ✅ Day-2 ship                        | `uac@1d8a059`                        |
+| Wallet-tier kill-switch + caps check   | ✅ Day-2 ship                        | `uac@1d8a059`                        |
+| Pre-trade validation endpoint          | ✅ Day-3 ship                        | `uac@fe8e50e`                        |
+| Audit-log persistence path SSOT        | ✅ Day-3 ship                        | `uac@003b5ff`                        |
+| `manual-audit` bucket-kind in yaml     | 🟡 cross-side, slot 4 Phase 0i tail | annotated PM `bucket_name_ssot` plan |
+
+**End state**: every contract layer Harsh T6 needs for the 5 DART manual surfaces (+ the underlying ML training trigger
++ audit-log persistence) is shipped in UAC with closed-set semantics + Pydantic models + unit-tested helpers. The
+remaining work is implementation wiring (execution-service runtime + ml-training-service runtime + DART UI panel +
+position-balance-monitor-service rolling-window query for wallet caps) — all owned by Harsh T6 cross-side per the
+spawn brief's "Ikenna designs / Harsh implements" handoff.

@@ -295,6 +295,22 @@ this plan and **Q4** below (operator decision).
       active use yet; tracked in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` GAP-2.4.E). The
       truncated-window day-partition enumeration is `gcloud storage ls`-based v1; if a bucket layout deviates from the 3
       known shapes the script over-copies (harmless + idempotent) — refine at first-execution if needed."
+- [ ] **[AGENT] P1**. **Phase 0i tail — add `manual-audit` bucket kind to cloud-providers.yaml** (Ikenna T8 slot 8
+      ANNOTATED 2026-05-12). Consumed by DART manual-action audit log persistence per
+      [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) § "Audit
+      log persistence (GCS / S3)" + UAC path SSOT `unified_api_contracts/internal/manual_audit_paths.py` (shipped at
+      uac@`003b5ff`). Proposed shape under (b+) env-tier:
+      ```yaml
+      # GCP
+      manual-audit: "manual-audit-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
+      # AWS
+      manual-audit: "unified-trading-manual-audit-${DEPLOYMENT_ENV}-${AWS_ACCOUNT_ID}"
+      ```
+      Plus retention/lifecycle config (≥7 years for compliance; consider Coldline class after 90d for cost). Adds 6
+      buckets to Phase 0c provisioning scope (3 envs × 2 clouds). Owner: slot 4 (bucket-name SSOT owner). Pre-Phase-0i:
+      execution-service + ml-training-service audit-log writers BLOCK on this entry — UAC path SSOT module already
+      declares `BUCKET_KIND_MANUAL_AUDIT = "manual-audit"` to mark the dependency.
+
 - [x] **[AGENT] P1**. **Phase 0i — region-pinning audit + enforcement (Phase 1 code-complete scope; OPERATOR RATIFIED
       ap-northeast-1 2026-05-11).** Audit yaml entries for region: GCP entries are all `asia-northeast1` (per
       `${GCS_REGION:-asia-northeast1}`); **AWS now ratified `ap-northeast-1` (Tokyo) per operator decision (a)

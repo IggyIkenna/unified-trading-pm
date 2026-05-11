@@ -157,6 +157,68 @@ Persistence happens at the API boundary BEFORE forwarding (EXECUTE flow) or dire
 the fill (RECORD_ONLY flow). Audit-log row is the durable record; downstream processing failures
 do not invalidate the audit row.
 
+## Audit log persistence (GCS / S3)
+
+Path SSOT lives at `unified_api_contracts/internal/manual_audit_paths.py`. Callers MUST use the
+path-helper functions; inline f-string paths are banned (would drift from the SSOT).
+
+### Object key shape
+
+```text
+manual_audit/{YYYY-MM-DD}/{action_category}/{audit_id}.jsonl
+```
+
+Concrete examples:
+
+- `manual_audit/2026-05-12/manual_trade/aud-defi-100.jsonl`
+- `manual_audit/2026-05-12/ml_training_control/aud-ml-200.jsonl`
+
+### Bucket name (env-tiered)
+
+Resolved via `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(
+cloud=..., kind="manual-audit", env=...)`. The `manual-audit` bucket-kind entry lands in
+`deployment-service/configs/cloud-providers.yaml` per the
+[`bucket_name_ssot_canonicalisation_2026_05_10`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+Phase 0i tail (slot 4 owned scope) — proposed shape:
+
+```yaml
+manual-audit: "manual-audit-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"  # GCP
+manual-audit: "unified-trading-manual-audit-${DEPLOYMENT_ENV}-${AWS_ACCOUNT_ID}"  # AWS
+```
+
+### Why separate from operational events bucket
+
+Operational events at `gs://{pid}-events-{env}/events/{service}/...` are short-retention (~30d)
+hourly-partitioned streams optimised for log-tail. Manual audit rows have different requirements:
+
+- **Long retention** for compliance (≥7 years).
+- **Append-only / immutable** — operator actions are durable record.
+- **Indexed by wallet / strategy / submitted_by** for pnl-attribution + batch-live-recon +
+  alerting queries.
+
+A dedicated `manual-audit` bucket (env-tiered) gives operations independent retention + access
+controls + lifecycle policies without polluting the operational events surface.
+
+### Date partition + UTC convention
+
+`YYYY-MM-DD` is computed from `ManualInstructionAuditLog.persisted_at` in UTC. Cross-day
+operator sessions (e.g. an action submitted at 2026-05-12T23:59 UTC) partition by UTC date,
+not operator-local timezone — keeps the audit log queryable without timezone-conversion logic.
+
+### Action-category sub-partition
+
+The `action_category` directory matches `ManualAuditCategory` value strings
+(`manual_trade` / `ml_training_control`). Consumers selectively read one category for cheaper
+queries (e.g. pnl-attribution only needs `manual_trade/`; ml-training-service introspection only
+needs `ml_training_control/`).
+
+### File format
+
+Single-row line-delimited JSON (`.jsonl`). Object keys include the `.jsonl` suffix even for the
+common single-row write case — readers iterate via `readlines()` for forward-compat with future
+multi-row append batches. Pydantic round-trip via `ManualInstructionAuditLog.model_dump_json()` /
+`.model_validate_json()`.
+
 ## Wallet-tier wiring (DeFi manual trades)
 
 When `ManualInstruction.wallet_id` is non-empty (DeFi action), the `/manual/instruction` endpoint
