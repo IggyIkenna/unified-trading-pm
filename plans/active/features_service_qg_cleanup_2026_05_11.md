@@ -291,6 +291,36 @@ that appear inside docstrings / string literals. Until then, slot 2 skips those 
 will). NB: this is a more involved change than Q1.1/Q1.2 (regex → AST), which is why slot 1 didn't just fix it inline —
 it's Ikenna's QG-infra call.
 
+#### A2 (✅ SHIPPED) — [ikenna-extra-hands-tab, 2026-05-11] — operator decision (a) implemented PM@<this commit>
+
+**Status**: ✅ SHIPPED. Operator (Ikenna) decision 2026-05-11: **option (a) — upgrade `imports-inside-functions` check
+from regex to AST-based**. Implementation landed PM@<this commit>:
+
+- **NEW**: `unified-trading-pm/scripts/quality_gates/check_imports_inside_functions.py` (~190 lines) — AST walker that
+  flags only ACTUAL `Import` / `ImportFrom` nodes with a `FunctionDef` / `AsyncFunctionDef` / `Lambda` ancestor.
+  Docstrings, comments, and string literals are inert (they're not AST Import nodes). Honours BOTH the new
+  `# noqa: imports-inside-functions` marker AND the legacy `# noqa: qg-inside-import` marker (backwards-compat with
+  `base-library.sh`'s prior shape). Auto-skips self-package imports via `--self-pkg` arg (preserves
+  `base-library.sh`'s `_SELF_PKG` circular-import workaround behaviour). Supports `--exclude-glob` for
+  per-repo `INSIDE_EXTRA_EXCLUDES` / `IMPORT_INSIDE_EXCLUDE_GLOBS`.
+- **NEW**: `unified-trading-pm/scripts/quality_gates/test_check_imports_inside_functions.py` (~180 lines, **18 tests
+  all PASS**). Includes regression test for the 2026-05-11 docstring incident
+  (`test_docstring_with_import_example_not_flagged`) + coverage for top-level imports / TYPE_CHECKING blocks /
+  comments / string literals / both noqa markers / self-package skip / lambda+nested-def cases / syntax errors.
+- **UPDATED**: `scripts/quality-gates-base/base-service.sh` lines 497-505 — replaces ripgrep regex with
+  `python3 check_imports_inside_functions.py --source-dir "$SOURCE_DIR" --exclude-glob ...`.
+- **UPDATED**: `scripts/quality-gates-base/base-library.sh` lines 331-338 — same replacement, plus passes
+  `--self-pkg "$_SELF_PKG"` to preserve self-import auto-skip + drops the `grep -v` filter chain.
+- Both bash scripts pass `bash -n` syntax check.
+
+**For slot 2**: the 2 `monitors/feature_freshness.py` docstring false positives are now silent under the new check.
+Phase 1.2 row 4 can re-run; only the REAL nested import (`cli/main.py` `run_mock_pipeline` inside `_get_mock_pipeline()`,
+which slot 2 already fixed @features-svc@`45efbe44`) was a true violation. Workspace QG green for features-service is
+unblocked on this row. **Propagation**: PM template change → standard PM-side; the new Python script ships in PM repo
++ both bash scripts under `scripts/quality-gates-base/` reference it directly. Per-repo rollout via
+`scripts/propagation/rollout-quality-gates-unified.py` (operator-triggered) — but the bash scripts are already pulled
+fresh per QG run, so existing repos pick up the change on next QG.
+
 ## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2), Phase 1.1
 
 Picked up this plan per main's A1 on `features_repo_consolidation_2026_05_08.md` Q1 (operator approved (a)+(b)+(c); this

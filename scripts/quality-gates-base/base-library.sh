@@ -328,14 +328,24 @@ else
     log_success "No asyncio.run() in loop"
 fi
 
+# Imports inside functions — AST-based check (operator decision (a) 2026-05-11).
+# Replaces the prior regex check (which false-positived on docstring usage examples
+# containing `from foo import bar`). The AST walker only flags actual nested-function
+# Import / ImportFrom nodes; docstrings, comments, and string literals are inert.
+# Honours `# noqa: imports-inside-functions` and the legacy `# noqa: qg-inside-import` marker.
+# Self-package imports (circular-import workarounds) auto-skipped via --self-pkg.
 _SELF_PKG=$(echo "$SOURCE_DIR" | tr '/' '_')
-_inside_extra_globs=()
-for _excl in "${INSIDE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _inside_extra_globs+=("--glob" "!${_excl}"); done
-INSIDE=$(rg "^[[:space:]]+import |^[[:space:]]+from .* import" --type py --glob "!tests/**" --glob "!**/__init__.py" \
-    "${_inside_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
-    | grep -v "# noqa: qg-inside-import\|# noqa:.*qg-inside-import" \
-    | grep -v "from ${_SELF_PKG}\.\|from ${_SELF_PKG} " || :)
-[[ -n "$INSIDE" ]] && { log_fail "Imports inside functions — move to top"; echo "$INSIDE" | head -3; V=$(( V + 1 )); } || log_success "No imports inside functions"
+_AST_CHECKER="$(cd "$(dirname "${BASH_SOURCE[0]}")/../quality_gates" && pwd)/check_imports_inside_functions.py"
+_inside_extra_args=()
+for _excl in "${INSIDE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _inside_extra_args+=("--exclude-glob" "$_excl"); done
+if python3 "$_AST_CHECKER" --source-dir "$SOURCE_DIR" --self-pkg "$_SELF_PKG" \
+    "${_inside_extra_args[@]}" 2>/tmp/_inside_imports_qg.err; then
+    log_success "No imports inside functions"
+else
+    log_fail "Imports inside functions — move to top (AST-detected)"
+    head -10 /tmp/_inside_imports_qg.err 2>/dev/null
+    V=$(( V + 1 ))
+fi
 
 ANY=$(rg ": Any|-> Any|\[Any\]" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v "type: ignore" || :)
 [[ -n "$ANY" ]] && { log_fail "Any types (including dict[str, Any]) — use Pydantic models or specific types"; echo "$ANY" | head -3; V=$(( V + 1 )); } || log_success "No Any types"

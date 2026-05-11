@@ -494,15 +494,24 @@ else
     log_success "No asyncio.run() in loop"
 fi
 
-# IMPORT_INSIDE_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/smoke-test-dev.py"); base adds --glob
-IMPORT_INSIDE_EXTRA=()
+# Imports inside functions — AST-based check (operator decision (a) 2026-05-11).
+# Replaces the prior regex check (which false-positived on docstring usage examples
+# containing `from foo import bar`). The AST walker only flags actual nested-function
+# Import / ImportFrom nodes; docstrings, comments, and string literals are inert.
+# Honours `# noqa: imports-inside-functions` and the legacy `# noqa: qg-inside-import` marker.
+# IMPORT_INSIDE_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/smoke-test-dev.py").
+_AST_CHECKER="$(cd "$(dirname "${BASH_SOURCE[0]}")/../quality_gates" && pwd)/check_imports_inside_functions.py"
+IMPORT_INSIDE_EXTRA_ARGS=()
 for g in ${IMPORT_INSIDE_EXCLUDE_GLOBS[@]+"${IMPORT_INSIDE_EXCLUDE_GLOBS[@]}"}; do
-    IMPORT_INSIDE_EXTRA+=(--glob "$g")
+    IMPORT_INSIDE_EXTRA_ARGS+=(--exclude-glob "$g")
 done
-INSIDE=$(rg "^[[:space:]]+import |^[[:space:]]+from .* import" --type py --glob "!tests/**" --glob "!**/__init__.py" \
-    "${IMPORT_INSIDE_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
-# Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.2
-[[ -n "$INSIDE" ]] && { log_fail "Imports inside functions — move to top"; echo "$INSIDE" | head -3; V=$(( V + 1 )); } || log_success "No imports inside functions"
+if python3 "$_AST_CHECKER" --source-dir "$SOURCE_DIR" "${IMPORT_INSIDE_EXTRA_ARGS[@]}" 2>/tmp/_inside_imports_qg.err; then
+    log_success "No imports inside functions"
+else
+    log_fail "Imports inside functions — move to top (AST-detected)"
+    head -10 /tmp/_inside_imports_qg.err 2>/dev/null
+    V=$(( V + 1 ))
+fi
 
 ANY=$(rg ": Any|-> Any|\[Any\]" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v "type: ignore" || :)
 [[ -n "$ANY" ]] && { log_fail "Any types (including dict[str, Any]) — use Pydantic models or specific types"; echo "$ANY" | head -3; V=$(( V + 1 )); } || log_success "No Any types"
