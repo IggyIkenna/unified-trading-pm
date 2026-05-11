@@ -13,6 +13,12 @@ locked_since: 2026-05-11
 
 # writegate UAC SERVICE_OUTPUT_POLICIES seed dict — MDPS service-name typo + book_snapshot_5 key shape blocks slice (b) POC + Phase 6.2
 
+> **Status (2026-05-11 PM)**: ✅ RESOLVED. Bug 1 fixed at `UAC@7be6bd5` (seed-dict rename) + `UTL@4d8de4ce`
+> (docstring sweep). Bug 2 decision (option α) codified at `PM@fa806abe` (CLAUDE.md "Service-output emission
+> policy" section extended). Regression guard at `MDPS@daf9988` (8 new tests under
+> `TestServiceEmissionPolicySeedRuntimeLookup` hit the REAL UAC seed dict — no mocks). All 4 commits FF-pushed
+> to `origin/live-defi-rollout`. Phase 6.2 wiring is now unblocked. Closes this issue.
+
 > **Severity**: P0 — silently-broken slice (b) POC + blocks slice (c) Phase 6.2 wiring on the only available
 > per-data_type seed.  
 > **Blast radius**: unified-api-contracts (1 file, 6 keys) + market-data-processing-service (slice (b) POC at

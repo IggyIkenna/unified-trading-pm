@@ -3642,7 +3642,14 @@ domain. Phase 5.5-5.7 (deployment-api/ui + codex + CLAUDE.md + QG) stays in writ
 
 ### Q2 — [ikenna-slot8-phase6-2-mdps-wiring (slot 8), 2026-05-11 ~16:00 UTC] — UAC `SERVICE_OUTPUT_POLICIES` seed dict has MDPS service-name typo (`pipeline` vs `processing`) + `book_snapshot_5` key-shape ambiguity — blocks Phase 6.2 wiring + retroactively breaks slice (b) POC
 
-**Status**: 🟡 BLOCKED — waiting for operator decision on seed-dict canonicalisation before Phase 6.2 wiring can proceed.
+**Status**: ✅ RESOLVED 2026-05-11 PM — operator approval per Q2 AskUserQuestion → option (a) for Bug 1 + option
+(α) for Bug 2. Bug 1 shipped at UAC@`7be6bd5` (seed-dict rename) + UTL@`4d8de4ce` (docstring sweep across
+emission_publisher + manifest_completeness + tests). Bug 2 decision codified at PM@`fa806abe` (CLAUDE.md
+"Service-output emission policy" section extended with the seed-key-convention paragraph: source-conceptual
+data_type tokens, not per-cadence runtime tokens). Regression guard at MDPS@`daf9988` (8 new tests in
+`test_canonical_writer_ohlcv_1h_policy.py::TestServiceEmissionPolicySeedRuntimeLookup` — runtime UAC lookup
+assertions against the REAL seed dict, no mocks; would have caught Bug 1 immediately had they been in place).
+All 4 commits FF-pushed to `origin/live-defi-rollout`. Phase 6.2 wiring is now unblocked.
 
 Surfaced 2026-05-11 ~16:00 UTC while bootstrapping Phase 6.2 (wire `publish_with_manifest_lookup` at MDPS
 `ohlcv_1m:current` / `ohlcv_1m:historical` / `ohlcv_24h` / `book_snapshot_5`). Two seed-dict bugs surface
