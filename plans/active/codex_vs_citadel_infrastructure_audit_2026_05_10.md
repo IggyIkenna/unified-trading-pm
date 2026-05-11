@@ -120,7 +120,19 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
 - [ ] [AGENT] P0. **1.F Position-balance area.** Per-client lineage; reconciliation; custody pings.
 - [ ] [AGENT] P0. **1.G Instruments area.** Catalogue completeness; reference-data adapters; per-asset_group coverage.
 - [ ] [AGENT] P0. **1.H Alerting area.** Live rules; synthetic filter; severity tiers; on-call routing.
-- [ ] [AGENT] P0. **1.I Ops area.** VM tarball; launcher SSOT; zombie watchdog; concurrent-write CAS.
+- [x] [AGENT] P0. **1.I Ops area.** VM tarball; launcher SSOT; zombie watchdog; concurrent-write CAS. **DONE 2026-05-12 ikenna-codex-audit-ops-tab (slot 8 sub-agent)** — issue doc
+      [`plans/active/issues/codex_audit_ops_2026_05_12.md`](issues/codex_audit_ops_2026_05_12.md)
+      ships 19 findings (6 IMMEDIATE + 11 PRE_CUTOVER + 2 POST_CUTOVER) with per-row file:line evidence + suggested
+      disposition + owner. Tier 1 (codex doc vs implementation drift): 6 findings (O-1..O-6); Tier 2 (operational
+      governance gaps): 6 findings (O-7..O-12); Tier 3 (stale / planned-stub / currency): 5 findings (O-13..O-17);
+      Tier 4 (additions worth shipping): 2 findings (O-18..O-19). **Critical operator-attention items**: O-1 — 20 of
+      76 launchers under `deployment-service/scripts/vm/launch-*.sh` skip the canonical
+      `setup-data-pipeline-vm.sh` setup script (`MANIFEST_PER_VM_SHARDS` / `VM_SHUTDOWN_ON_COMPLETION` /
+      `vm-exec-with-gcs-tee.sh` invariants potentially missing across multiple cutover-critical scripts —
+      `vm-tarball-deployment.md` Invariant #1 claims "every launcher" uses canonical setup script); O-3 / O-4 stale
+      bucket-name patterns in `disaster-recovery.md` + `README.md` contradict the (b+) bucket-name SSOT; O-7 / O-8
+      no QG enforcement that new `VM_PREFIX_TO_BUCKET` entries trigger watchdog relaunch + new launchers register in
+      Deploy-Missing UI `_SERVICE_LAUNCHER_SCRIPTS`; O-11 CLAUDE.md `PREK_HOME` vs `PREK_CACHE_DIR` 3-way drift.
 - [x] [AGENT] P0. **1.J Governance area.** CLAUDE.md HARD RULES self-consistency; SUB_AGENT_MANDATORY_RULES symlink;
       plan-format discipline; daily work-split. **DONE 2026-05-12 slot 8 Day-4 stretch** — issue doc
       [`plans/active/issues/codex_audit_governance_2026_05_12.md`](issues/codex_audit_governance_2026_05_12.md) ships 16
