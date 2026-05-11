@@ -47,7 +47,8 @@ the actual UTL code + the referenced plans, not by grep alone.
 - **25 Phase 1 plans** scanned (all of `code_freeze` § "Phase 1.A-1.F").
 - **91 distinct codex doc paths** referenced across those plans.
 - **58 present** / **33 referenced-but-not-yet-created** (all 33 are unchecked `- [ ]` items in their owning plans —
-  expected pending Phase-1 work; the freeze gate is the deadline for them).
+  expected pending Phase-1 work; the freeze gate is the deadline for them). _(Re-check 2026-05-11 PM revised to 35 —
+  `manifest_schema_final_gate`'s codex section expanded after the morning scan; see § "Re-check — 2026-05-11 PM".)_
 - Core schema/manifest/pipeline codex docs spot-checked: **healthy** (see § "Spot-check results").
 
 ## Pending codex work for freeze-gate item 9 (the 33 not-yet-created docs, grouped by owning plan)
@@ -149,18 +150,27 @@ in both; or (b) one supersedes the other → banner + reconcile. Not slot 6's ca
 
 ### Q1 — [harsh-workspace-qg-tab, 2026-05-11 07:00 UTC] — F3: which plan is the canonical v8 manifest-schema declaration owner?
 
-**Status**: ✅ RESOLVED — option (b): `manifest_schema_final_gate_2026_05_09.md` is canonical; writegate slice (b) Phase 5.2 SUPERSEDED.
+**Status**: ✅ RESOLVED — option (b): `manifest_schema_final_gate_2026_05_09.md` is canonical; writegate slice (b) Phase
+5.2 SUPERSEDED.
 
 #### A1 — [ikenna-main, 2026-05-11] — option (b) per operator direction
 
-Operator decision: `manifest_schema_final_gate_2026_05_09.md` is the canonical v8 manifest-schema column declaration owner. Writegate slice (b) Phase 5.2 ("UAC manifest schema columns") is SUPERSEDED. Actions shipped this commit:
+Operator decision: `manifest_schema_final_gate_2026_05_09.md` is the canonical v8 manifest-schema column declaration
+owner. Writegate slice (b) Phase 5.2 ("UAC manifest schema columns") is SUPERSEDED. Actions shipped this commit:
 
-- Writegate plan: SUPERSEDED banner added under `#### Slice (b)` header pointing at the final-gate plan; slice (b) retains the UTL `manifest_completeness` helper (Phase 5.1) + MDPS `ohlcv_1h` POC (Phase 5.3-5.4) + deployment-api/ui surfaces (Phase 5.5) + codex/CLAUDE.md (Phase 5.6) + ship-gate (Phase 5.7).
-- `code_freeze_migrate_backfill_sequencing_2026_05_10.md:56-57, :145, :180-183, :198, :379` updated to point at `manifest_schema_final_gate_2026_05_09.md` instead of writegate slice (b) Phase 5.1.
-- `work_split_2026_05_11_ikenna.md` slot 2 brief re-threaded: v8 column declaration item MOVED OUT of slot 2 scope; remaining scope = UTL helper + MDPS POC + deployment-* surfaces + codex/CLAUDE.md + ship-gate.
-- Companion operator-approved Phase 1 addition: new `EXPECTED_KNOWN_SOURCE_GAP` value for UAC `EmptyConfirmedReason` (covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`) — lands in `manifest_schema_final_gate_2026_05_09.md` in the same Phase 1 window per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2.
+- Writegate plan: SUPERSEDED banner added under `#### Slice (b)` header pointing at the final-gate plan; slice (b)
+  retains the UTL `manifest_completeness` helper (Phase 5.1) + MDPS `ohlcv_1h` POC (Phase 5.3-5.4) + deployment-api/ui
+  surfaces (Phase 5.5) + codex/CLAUDE.md (Phase 5.6) + ship-gate (Phase 5.7).
+- `code_freeze_migrate_backfill_sequencing_2026_05_10.md:56-57, :145, :180-183, :198, :379` updated to point at
+  `manifest_schema_final_gate_2026_05_09.md` instead of writegate slice (b) Phase 5.1.
+- `work_split_2026_05_11_ikenna.md` slot 2 brief re-threaded: v8 column declaration item MOVED OUT of slot 2 scope;
+  remaining scope = UTL helper + MDPS POC + deployment-\* surfaces + codex/CLAUDE.md + ship-gate.
+- Companion operator-approved Phase 1 addition: new `EXPECTED_KNOWN_SOURCE_GAP` value for UAC `EmptyConfirmedReason`
+  (covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`) — lands in `manifest_schema_final_gate_2026_05_09.md`
+  in the same Phase 1 window per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2.
 
-F2 (`availability-manifest-and-data-status.md` v8 dataclass missing `feature_family`) remains routed to slot 2's `features_repo_consolidation` codex phase — no new action.
+F2 (`availability-manifest-and-data-status.md` v8 dataclass missing `feature_family`) remains routed to slot 2's
+`features_repo_consolidation` codex phase — no new action.
 
 #### Original question (preserved for audit trail)
 
@@ -177,6 +187,55 @@ PM-body territory either way.
 **Also routing-only (no decision needed)**: F2 (codex doc `availability-manifest-and-data-status.md` v8 dataclass
 missing `feature_family` which UTL code already has @`c16cef3`) → route to slot 2's
 `features_repo_consolidation_2026_05_08.md` codex phase; slot 2 already lists that doc in its codex-update phase.
+
+## Re-check — 2026-05-11 PM (v8 manifest schema slice (b) landed)
+
+Re-ran after the morning's incoming: v8 manifest schema slice (b) Phase 1.A/B/C shipped (UAC@`174f401` + `d938a69`;
+`manifest_schema_final_gate_2026_05_09.md` Phase 1.A/B/C `[x]`; PM@`b0069ca3` plan-flips), plus the
+`manifest_schema_final_gate` plan body expanded its "Codex SSOTs touched" section today. Net deltas to the day-1
+inventory:
+
+- **v8 schema codex currency — confirmed.** `codex/02-data/availability-manifest-and-data-status.md:244` has the "Schema
+  v8 (current; ratified 2026-05-09)" section + the 4-state `capture_status` enum + reader-fallback notes. F2
+  (`feature_family` missing from the v8 dataclass _snippet_ in that doc — UTL code already has it @`c16cef3`) remains
+  the one gap, still routed to slot 2's `features_repo_consolidation_2026_05_08.md` codex phase. F3 (v8-schema owner) ✅
+  resolved by operator — see § Open questions Q1 / A1: `manifest_schema_final_gate_2026_05_09.md` is canonical;
+  writegate slice (b) Phase 5.2 SUPERSEDED; `code_freeze` body re-pointed.
+- **2 NEW codex docs surfaced into the pending inventory** (not in the day-1 91-doc count —
+  `manifest_schema_final_gate`'s codex section was expanded after the morning scan):
+  - `codex/04-architecture/service-emission-policy.md` — NEW; full expansion of the slice-a `service_emission_policy.py`
+    stub (the 4-state `ServiceEmissionPolicy` enum + read protocol). Tracked-pending in
+    `manifest_schema_final_gate_2026_05_09.md` "Codex SSOTs touched" `:128` + "Codex SSOT updates" `:507` ("Phase 1
+    boundary → ... `service-emission-policy.md`"). Not yet created. (Adjacent:
+    `codex/04-architecture/execution-policy.md` exists; the emission-policy doc is a distinct sibling.)
+  - `codex/02-data/cross-asset-rescan-protocol.md` — NEW stub; tracked-pending in
+    `code_freeze_migrate_backfill_sequencing_2026_05_10.md:337` (the "after Phase 2 freeze gate fires" DOC todo) + the
+    cross-asset-rescan plan's Codex SSOT updates. Not yet created.
+  - **Revised count: 58 present / 35 referenced-but-not-yet-created** (the day-1 "33" + these two). All 35 remain
+    unchecked `- [ ]` (or equivalent Phase-boundary bullet) items in their owning plans — expected pending Phase-1 work.
+- **`EmptyConfirmedReason` enum has grown 9 → 18** (UAC `canonical/crosscutting/honest_coverage.py`): original 9
+  (`EXPECTED_HOLIDAY`/`EXPECTED_WEEKEND`/`EXPECTED_PAUSED_LEAGUE`/`EXPECTED_PRE_SOURCE_COVERAGE_START`/`EXPECTED_PRE_GENESIS_CHAIN`/`EXPECTED_INSTRUMENT_NOT_LISTED`/`EXPECTED_INSTRUMENT_DELISTED`/`EXPECTED_PARTIAL_HALF_DAY`/`SOURCE_RETURNED_ZERO`)
+  - `EXPECTED_PRE_VENUE_LAUNCH` + `EXPECTED_OUTSIDE_TRADING_HOURS` + `EXPECTED_OUTSIDE_TRANSFER_WINDOW` +
+    `EXPECTED_PRE_SEASON`
+  - `EXPECTED_POST_SEASON` + `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` + `EXPECTED_DEPRECATED_DATA_TYPE` +
+    `EXPECTED_REFDATA_CADENCE_CHANGE`
+  - `EXPECTED_KNOWN_SOURCE_GAP` (latest — operator-approved 2026-05-11; landed via `manifest_schema_final_gate` Phase 1;
+    covers VIX-15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`).
+    `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy (codified 2026-05-07)" still lists only the
+    original 9. **NOT a new finding** — this is the same pattern F2 flags: the codex docs intentionally lag the
+    still-mutating UAC enums _during_ Phase 1; the catch-up to closed-set state is the post-Phase-2-gate codex sweep,
+    tracked-pending in `code_freeze:337` (gated on Phase 2 gate), `wave3x_residual_ssots_2026_05_08.md:241` (+ slot 3
+    already shipped partial updates @`:181`/`:277`), and `cross_asset_group_catalogue_audit_2026_05_10.md:198`/`:295`.
+- **`RecordFailedReason` taxonomy is NEW** (UAC `honest_coverage.py:227`; 8 closed-set members:
+  `SCHEMA_VALIDATION_FAILED`/`UPSTREAM_TIMESTAMP_BIAS`/`MALFORMED_TICK_FIELD`/`UPSTREAM_SUBGRAPH_ZERO`/`CLUSTER_COVERAGE_VIOLATION`/`MALFORMED_ROW_KEY`/`CLASSIFIED_VENUE_ERROR`/`UNCLASSIFIED_ADAPTER_ERROR`).
+  Landed @`cb70b3a` (slot 5's RE-TASK — foundational for `hard_schema_enforcement_2026_05_08.md` Phase 2 per-row
+  `record_failed` routing). `codex/02-data/availability-manifest-and-data-status.md` +
+  `honest-absence-downstream-handling.md` don't reference it yet. **NOT a new finding** — codex sync tracked-pending in
+  `hard_schema_enforcement_2026_05_08.md` `:119-126` (`codex-update` todo: "add the `SCHEMA_VALIDATION_FAILED` reason
+  ... to the closed-set `RecordFailedReason` enum" in `honest-absence-downstream-handling.md`) + `code_freeze:337`
+  (closed-set state).
+- **No new _unowned_ codex drift** this re-check. The doc layer's catch-up to the v8-schema + enum-taxonomy state is all
+  tracked-pending and appropriately gated on the post-Phase-1/Phase-2 codex sweeps.
 
 ## Days 2-4 follow-up (slot 6)
 
