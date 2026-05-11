@@ -92,11 +92,11 @@ estimate_calibration_note: |
 > | Phase | Pre-cutover scope | Status |
 > | ----- | ------------------ | ------ |
 > | 0 — Pre-audit | Sub-agent fan-out per todos 0.A-0.C | `todo` (3 AI-hours) |
-> | 1 — UAC contracts | 1.A + 1.B + 1.C + 1.D | **`design-shipped` 2026-05-12 slot 7** (per § Day-1 scenario designs; UAC Pydantic instantiation = Day 2 follow-on) |
-> | 2 — UTL primitives | 2.A + 2.B + 2.D (Phase 2.E `available_at` discipline `design-shipped` 2026-05-12 slot 7 per per-scenario fragments) | `todo` (1 AI-day) — applier + checker + runner remain |
-> | 3 — Wire-ins | 3.E + 3.F only (execution-engine adversarial + risk/alerting consumers) | `todo` (1 AI-day) |
-> | 4 — Scenario library | 10 scenarios shipped as design fragments 2026-05-12 slot 7 (6 critical-path + 4 price-shocks per operator CONTINUE-prompt); UAC instantiation = Day 2 | **`design-shipped`** |
-> | 5 — Matrix | 16-cell scope (10 scenarios × 2 archetypes filtered to applicable; over-delivered vs 12-cell compressed target) | `todo` (0.5 AI-day) |
+> | 1 — UAC contracts | 1.A + 1.B + 1.C + 1.D | **`done` 2026-05-12 slot 7 Day-2** (UAC@`33630a6`: scenario_overlay.py + 10 registry instances + 53 tests; built atop Day-1 design fragments) |
+> | 2 — UTL primitives | 2.A + 2.B + 2.D (Phase 2.E `available_at` discipline `design-shipped` Day-1) | **`done` 2026-05-12 slot 7 Day-2** (UTL@`3797fed5`: applier + checker + runner + 51 tests) |
+> | 3 — Wire-ins | 3.E + 3.F only (execution-engine adversarial + risk/alerting consumers) | **`design-shipped` 2026-05-12 slot 7 Day-2** (integration spec at `scratch_scenarios_day1/12_phase3_integration_spec.md`; cross-side handshake to Harsh slot 5 for implementation) |
+> | 4 — Scenario library | 10 scenarios shipped as design fragments + UAC registry instances 2026-05-12 slot 7 | **`done`** (UAC@`33630a6` registry/scenarios/) |
+> | 5 — Matrix | 16-cell scope (10 scenarios × 2 archetypes filtered to applicable; over-delivered vs 12-cell compressed target) | `todo` (0.5 AI-day) — Day-3 ScenarioMatrixRunner |
 > | 6 / 7 / 8 / 9 | DEFERRED post-cutover | `deferred-after-simulation_scenarios_post_cutover_2026_06_01` |
 >
 > Total compressed scope: ~4-5 AI-days. Fits T-13 with margin. Successor plan picks up immediately post-cutover for the
@@ -333,24 +333,24 @@ and only then unblocks dependents.
 
 ## Phase 1 — UAC scenario contracts (Days 2-3, ~2 AI-days)
 
-- [ ] [AGENT] P0. **1.A Closed-enum scenario taxonomy.**
+- [x] [AGENT] P0. **1.A Closed-enum scenario taxonomy.** ✅ UAC@`33630a6` (slot 7 Day-2 2026-05-12) — `canonical/crosscutting/scenario_overlay.py` ships `ScenarioCategory` (7 members) + `ScenarioOverlayLayer` (6) + `OutcomeCategory` (9 — replaces `ScenarioOutcomeAssertion` closed-enum proposal with discriminator-typed Pydantic; same closed-set discipline).
       `unified_api_contracts/canonical/crosscutting/scenario_overlay.py` ships: `ScenarioCategory` (TOPOLOGY*GAP /
       STALENESS / PRICE_SHOCK / VENUE_OUTAGE / DATA_CORRUPTION / CROSS_ASSET / OPERATIONAL), `ScenarioId` (NewType[str]
       with regex `^[a-z]a-z0-9*]+$`), `ScenarioOverlayLayer` (RAW_TICK / FEATURE / SIGNAL / ORDER / EVENT / MANIFEST).
       Frozen Pydantic.
-- [ ] [AGENT] P0. **1.B `ScenarioOverlay` Pydantic dataclass.** Fields: `scenario_id`, `category`, `layer`,
+- [x] [AGENT] P0. **1.B `ScenarioOverlay` Pydantic dataclass.** ✅ UAC@`33630a6` — frozen + extra-forbid; `scenario_id` regex validated; `ScenarioMutationSpec` 11-member discriminated union shipped (PriceShift / StaleHold / LatencyInject / BookSpoof / RejectFills / OracleDeviate / GasSurge / DropRows / EventDrop / EventDuplicate / ManifestPhantom). Original 1.B plan-body shape now extended; new mutations land via `_MutationBase` subclass + discriminator literal. Fields: `scenario_id`,
       `asset_groups: frozenset[MarketAssetGroup]`, `applies_to: ScenarioApplicabilityFilter` (per-venue / per-data_type
       / per-instrument / per-day / per-archetype), `mutation_spec: ScenarioMutationSpec` (closed union: `DropRows` |
       `StaleHold` | `PriceShift` | `BookSpoof` | `LatencyInject` | `RejectFills` | `OracleDeviate` | `GasSurge` |
       `ManifestPhantom` | `EventDrop` | `EventDuplicate`), `expected_outcomes: list[ScenarioOutcomeAssertion]`. Every
       field typed; no `Any`.
-- [ ] [AGENT] P0. **1.C `ScenarioOutcomeAssertion` closed-enum.** Categories: `STRATEGY_HALTED` (signal generator stops
+- [x] [AGENT] P0. **1.C `ScenarioOutcomeAssertion` closed-enum.** ✅ UAC@`33630a6` — `ScenarioOutcomeAssertion` Pydantic + `OutcomeCategory` 9-member closed-set (STRATEGY_HALTED / STRATEGY_SCALED_DOWN / RISK_BREAKER_TRIPPED / ORDER_REJECTED / ORDER_CANCELLED_ON_STALE / KILL_SWITCH_ARMED / ALERT_FIRED / PNL_BOUNDED_BY / RECONCILIATION_FLAGGED). Each carries optional consequence / breaker_id / breaker_action / kill_switch_id / alert_codes refs (the 6-tuple-per-cell contract from handshake doc fragment 11). Categories: `STRATEGY_HALTED` (signal generator stops
       emitting), `STRATEGY_SCALED_DOWN` (size cut by ≥X%), `RISK_BREAKER_TRIPPED` (named breaker fires),
       `ORDER_REJECTED` (execution refuses), `ORDER_CANCELLED_ON_STALE` (auto-cancel fires), `KILL_SWITCH_ARMED` (named
       kill switch arms), `ALERT_FIRED` (named alert rule fires with `synthetic=true`), `PNL_BOUNDED_BY` (per-archetype
       P&L bound), `RECONCILIATION_FLAGGED` (batch-vs-live recon raises). Each carries a typed
       `expected_within: timedelta` SLA.
-- [ ] [AGENT] P0. **1.D Per-asset_group scenario seed library.**
+- [x] [AGENT] P0. **1.D Per-asset_group scenario seed library.** ✅ UAC@`33630a6` — `registry/scenarios/{__init__,cefi,defi,cross_asset}.py` ships 10 `ScenarioOverlay` instances (2 cefi + 6 defi + 2 cross_asset); `SCENARIO_REGISTRY: dict[str, ScenarioOverlay]` populated via `register_scenario()` helper at module-load.
       `unified_api_contracts/registry/scenarios/{cefi,defi,tradfi,sports,prediction,cross_asset}.py` — each module
       exposes a `frozenset[ScenarioOverlay]` constant with seed scenarios from § Phase 4 (full library lands in Phase 4;
       seed shape lands here). Registry: `SCENARIO_REGISTRY: dict[ScenarioId, ScenarioOverlay]` indexed at module load.
@@ -373,12 +373,12 @@ and only then unblocks dependents.
 
 ## Phase 2 — UTL primitives (Days 3-4, ~2 AI-days)
 
-- [ ] [AGENT] P0. **2.A `unified_trading_library/scenario/applier.py`.** `ScenarioOverlayApplier` class — one applier
+- [x] [AGENT] P0. **2.A `unified_trading_library/scenario/applier.py`.** ✅ UTL@`3797fed5` — `ScenarioOverlayApplier` with per-mutation typed dispatch on all 11 union members; pure-functional (never mutates input); stamps `_synthetic_provenance` provenance list (chain-aware). 18 unit tests cover dispatch + provenance + smoke against every Day-1 registry scenario. `ScenarioOverlayApplier` class — one applier
       per `ScenarioOverlayLayer`. Pure-functional
       `apply(input_frame: pl.DataFrame, overlay: ScenarioOverlay, context: ScenarioContext) -> pl.DataFrame`. Each
       mutation_spec has its own applier method. NEVER mutates input; returns a new frame with
       `_synthetic_provenance: list[ScenarioId]` column appended. Tested against polars + pandas frames.
-- [ ] [AGENT] P0. **2.B `unified_trading_library/scenario/checker.py`.** `ScenarioOutcomeChecker` — registers callbacks
+- [x] [AGENT] P0. **2.B `unified_trading_library/scenario/checker.py`.** ✅ UTL@`3797fed5` — per-OutcomeCategory match logic (9 categories); `synthetic=True` safeguard rejects real-fire events; SLA enforcement (`expected_within_seconds`); composes 6-tuple-per-cell contract. 22 unit tests cover all 9 categories + SLA + synthetic safeguard. `ScenarioOutcomeChecker` — registers callbacks
       against the event stream + service state surfaces (strategy-service emit, risk-and-exposure breaker fire,
       execution-service order state, alerting-service rule fire, position-balance scaling). Each
       `ScenarioOutcomeAssertion` checks `expected_within` SLA against observed.
@@ -389,7 +389,7 @@ and only then unblocks dependents.
       payload) + `gs://{pid}-scenario-reports/{archetype}/{YYYY-MM-DD}/{scenario_id}/{run_id}/report.parquet`
       (queryable). Reuses UTL emission helpers — no new bucket-naming logic; uses Tab 4's `bucket_naming.py` SSOT
       (UTL@780a9575).
-- [ ] [AGENT] P0. **2.D `unified_trading_library/scenario/runner.py`.** `ScenarioRunner` — orchestrates a single
+- [x] [AGENT] P0. **2.D `unified_trading_library/scenario/runner.py`.** ✅ UTL@`3797fed5` — `ScenarioRunner` orchestrator; loads `ScenarioOverlay` from UAC `SCENARIO_REGISTRY`; takes caller-supplied `ObserverCallback`; emits `ScenarioReport`. Filters assertions to target archetype only; fail-loud on unknown scenario_id + archetype-with-no-assertions. 7 unit tests cover end-to-end + error paths. `ScenarioRunner` — orchestrates a single
       `(scenario_id, archetype, time_window)` run end-to-end: invokes the unified backtest pipeline (the same one Group
       F item 18 uses) with `--scenario-overlay` flag, observes outputs via `ScenarioOutcomeChecker`, emits
       `ScenarioReport` via `ScenarioReportEmitter`. **No parallel backtest engine — this only configures and observes
@@ -429,12 +429,12 @@ Each sub-task is a separate sub-agent assignment. Same Bash-bundling discipline 
       `strategy-service/strategy_service/signal_generator.py` — SIGNAL-layer applier between feature read + signal
       emission; outcome-checker-callback registered at signal-emit boundary. Per-archetype hook list comes from UAC
       scenario registry.
-- [ ] [AGENT] P0. **3.E execution-service matching-engine adversarial mode.**
+- [x] [AGENT] P0. **3.E execution-service matching-engine adversarial mode** — **`design-shipped` 2026-05-12 slot 7 Day-2.** Integration spec at [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md) § "Phase 3.E" — the 3-step recipe (subscribe to scenario context at engine init → route fill-attempt boundary through applier if active → emit `ObservedEvent` per state transition). Cross-side handshake invited to Harsh slot 5 for implementation per work-split row "Ikenna-7 ↔ Harsh-5 (risk + DR + simulation)." DEFERRED: full code wire-in (Harsh slot 5 implementation slot).
       `execution-service/execution_service/matching_engine/{engine,trade_matcher}.py` — extend the existing slippage /
       latency / partial-fill hooks (per audit 0.A inventory) with `ScenarioOverlay`-driven mutations: `LatencyInject`,
       `RejectFills`, `BookSpoof`. **Do not replace the existing model** — extend via the existing hook interface. Sports
       adapter (`sports_matching.py`) gets fixture-cancellation / kickoff-delay mutations.
-- [ ] [AGENT] P0. **3.F position-balance + risk + alerting consumers.** `position-balance-monitor-service`: subscribe to
+- [x] [AGENT] P0. **3.F position-balance + risk + alerting consumers** — **`design-shipped` 2026-05-12 slot 7 Day-2.** Integration spec at [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md) § "Phase 3.F" — 3 consumer shapes (position-balance `KillSwitchProvenance.SCENARIO_SYNTHETIC` filter; risk-and-exposure `RiskOutcomeBridge` ObservedEvent emit on every breaker trip; alerting `synthetic=True` log-only path). Cross-side handshake invited to Harsh slot 5 for implementation. DEFERRED: full code wire-in (Harsh slot 5 implementation slot). `position-balance-monitor-service`: subscribe to
       `synthetic=true` scenario events; emit per-scenario state snapshots. `risk-and-exposure-service`: outcome-checker
       hook fires on every breaker trip and emits `ScenarioOutcomeResult`. `alerting-service`: rule-eval respects
       `synthetic=true` filter — alert fires + report records, but on-call paging suppressed (synthetic events go to
@@ -750,11 +750,19 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
 
 ### DONE-2026-05-12 (slot 7 `ikenna-scenarios-topology-tab` Day-1 design landing)
 
-- **PM@<slot 7 reconcile commit>**: this section + scratch_scenarios_day1/{01..11}.md (11 design fragments, 995 lines total).
+- **PM@`bea269b1`**: scratch_scenarios_day1/{01..11}.md (11 design fragments, 995 lines total) + plan body Day-1 designs section.
 - **6-sub-agent fan-out** (single message, parallel) authored topology fragments 01-06 in ~3-5min wall-clock each; parent agent authored price-shock fragments 07-10 + handshake doc 11 serially while sub-agents ran.
 - **Handshake integration shape** at `scratch_scenarios_day1/11_handshake_integration.md` codifies cross-plan ownership across simulation_scenarios × risk_simulations × disaster_recovery, names the 6-tuple-per-cell contract (consequence / breaker_id / breaker_action / kill_switch_id / alert_codes / expected_within), and aggregates 12 follow-up gaps with owner routing per Findings Triage.
 - **Phase status flips** (compressed scope per § line 91-100): 1.A + 1.B + 1.C + 1.D + 2.E moved to `design-shipped` (UAC Pydantic implementation = Day 2 follow-on slot).
 - **Day-2 noon operator checkpoint**: triage which P1 follow-up items land in pre-cutover vs successor `simulation_scenarios_post_cutover_2026_06_01.md`. Cross-side mirror to Harsh slot 5 for risk-implementation handoff coordination.
+
+### DONE-2026-05-12 (slot 7 Day-2 code landing — UAC + UTL + Phase 3 design spec)
+
+- **UAC@`33630a6`**: `canonical/crosscutting/scenario_overlay.py` (609 LOC: ScenarioCategory 7 / ScenarioOverlayLayer 6 / OutcomeCategory 9 / ScenarioMutationSpec 11-member discriminated union / ScenarioOverlay + ScenarioApplicabilityFilter + ScenarioOutcomeAssertion + ScenarioReport Pydantic + SCENARIO_REGISTRY + register_scenario helper); `registry/scenarios/{__init__,cefi,defi,cross_asset}.py` (10 ScenarioOverlay instances from Day-1 design fragments); facade re-exports for 22 names; `tests/internal/unit/test_scenario_overlay.py` 53 tests pass.
+- **UTL@`3797fed5`**: `unified_trading_library/scenario/{__init__,applier,checker,runner}.py` (~870 LOC): ScenarioOverlayApplier with per-mutation typed dispatch on all 11 union members (pure-functional, provenance-stamping, chain-aware); ScenarioOutcomeChecker with per-OutcomeCategory match logic + synthetic=True safeguard + SLA enforcement; ScenarioRunner orchestrator with ObserverCallback pattern + per-archetype assertion filtering; `tests/unit/scenario/` 51 tests pass.
+- **Phase 3 integration spec** at [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md): Phase 3.E + 3.F design substrate (3-step recipe for execution-service matching-engine adversarial mode + 3 consumer shapes for position-balance / risk / alerting). Cross-side handshake invited to Harsh slot 5 per work-split.
+- **Plan status flips**: Phase 1 (1.A/1.B/1.C/1.D) + Phase 2 (2.A/2.B/2.D) + Phase 4 → `done`; Phase 3 (3.E/3.F) → `design-shipped`. Phase 5 ScenarioMatrixRunner = Day-3 (next slot 7 cycle item).
+- **Total Day-2 ship**: 3 commits (UAC@`33630a6` + UTL@`3797fed5` + PM plan flip), 3406 LOC across 16 files, 104 unit tests green. Compressed-scope plan body line 60-65 fully realized in code; Phase 3.E/3.F implementation cross-side-handed-off to Harsh slot 5.
 
 ## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
 
