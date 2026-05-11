@@ -450,6 +450,155 @@ Cross-plan annotations needed (Findings Triage):
 
 - **defi_catalogue_chain_primitives_2026_05_10.md Phase 3**: verify `funding_rate` data_type capture for ETH-PERP on Hyperliquid + Bybit at ≥1h cadence with ≥1y horizon — required for Phase 7.5 30d-mean feature. Grep-then-READ before concluding adapters missing (per HARD RULE).
 
+## Phase 3 design — strategy-service factory + target-universe catalog (2026-05-12 slot 5)
+
+> **Design owner:** ikenna slot 5 / agent-tag `ikenna-recursive-borrow-tab` (2026-05-12).
+> **Source:** direct catalog-read + Family 1/2 design synthesis (no sub-agent fan-out needed; small scope).
+> **Status:** DESIGN-SHIPPED. Consumed by Phase 3 implementation (file:line pre-audit completed).
+
+### Workspace ground truth (pre-audit)
+
+- `strategy-service/strategy_service/engine/strategies/v2/factory.py:63` — `_ARCHETYPE_ENGINE_MAP` dict: `CARRY_RECURSIVE_STAKED → CarryRecursiveStakedEngine`. **MISSING**: `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`. Will runtime-error on archetype dispatch.
+- `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py:1958` — `_ARCHETYPE_BUILDERS` dict: same gap. Will fail catalog enumeration.
+- `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py:915-959` — `_build_carry_recursive_staked()` reference impl: enumerates 7 cells (3 LST×lending × 2 leverage versions on ETH + 1 SOL). Pattern uses `_spec()` helper with positional args `(archetype, instance_id, base_share_class, position_cap, quote_share_class, config_dict)`.
+- Existing `CARRY_RECURSIVE_STAKED@` instance_id format: `CARRY_RECURSIVE_STAKED@<lend>-<stake>-<perp_venue>-<base>-<bar>-<share>-<version>-<env>`. Slot 5 design will follow this convention.
+
+### Engine class strategy (decision)
+
+**SELECTED: single engine class with config-driven dispatch.** Reuse existing `CarryRecursiveStakedEngine` with config-variant branch on `archetype` enum value (or `perp_leg_enabled` config field). Rationale:
+
+- 99% of the engine's mechanics (rebalance loop, LeveragedLegController integration, kill-switch wiring, tracer hook) are identical across Family 0 (CARRY_RECURSIVE_STAKED) / Family 1 (LENDING_ONLY) / Family 2 (PERP_HEDGED).
+- Only the leg composition differs: 0 = stake+borrow+perp (existing); 1 = stake+borrow (no perp); 2 = lending+perp (no stake leg, or LST-staking-yield-only without basis trade).
+- A second engine class would duplicate the entire orchestrator surface — Citadel-Grade "No Technical Debt" + System-First.
+
+Implementation gate: `factory.py:63` dict adds **same `CarryRecursiveStakedEngine` for all 3 archetype keys** (Family 0, 1, 2). Engine internal branches via `config["perp_leg_enabled"]` + `config["staking_yield_enabled"]` flags.
+
+### Catalog builders (paste-ready spec)
+
+Two new builder functions in `catalog.py`, registered at line 1958:
+
+**`_build_carry_recursive_borrow_lending_only()` — Family 1 (lending leg only, no perp short):**
+
+```python
+def _build_carry_recursive_borrow_lending_only() -> tuple[TargetInstanceSpec, ...]:
+    out: list[TargetInstanceSpec] = []
+    a = StrategyArchetype.CARRY_RECURSIVE_BORROW_LENDING_ONLY
+
+    # Top-7 cells per Family 1 design (2026-05-12 slot 5 spec):
+    # Cell format: (lender, chain, collateral, debt, mode, version_suffix)
+    cells = [
+        ("aave_v3", "ethereum", "wsteth", "weth", "emode_eth", "v1"),
+        ("morpho",  "ethereum", "wsteth", "weth", "market_0945", "v1"),
+        ("aave_v3", "arbitrum", "wsteth", "weth", "emode_eth", "v1"),
+        ("aave_v3", "base",     "cbeth",  "weth", "emode_eth", "v1"),
+        ("morpho",  "ethereum", "susde",  "usdc", "market_086", "v1"),
+        ("aave_v3", "ethereum", "weeth",  "weth", "emode_eth", "v1"),
+        ("aave_v3", "base",     "wsteth", "weth", "emode_eth", "v1"),
+    ]
+    for lender, chain, coll, debt, mode, ver in cells:
+        share_class = ShareClass.ETH if debt == "weth" else ShareClass.USDC
+        position_cap = Decimal("100000")  # USDC equivalent; per-cell override later via config
+        out.append(
+            _spec(
+                a,
+                f"CARRY_RECURSIVE_BORROW_LENDING_ONLY@{lender}-{chain}-{coll}-{debt}-{mode}-{ver}-prod",
+                share_class,
+                position_cap,
+                ShareClass.USDC,  # quote-share for P&L accounting
+                {
+                    "lending_protocol": lender,
+                    "chain": chain,
+                    "collateral_asset": coll,
+                    "debt_asset": debt,
+                    "ltv_mode": mode,  # emode_eth / market_0945 / market_086 / standard
+                    "perp_leg_enabled": "false",
+                    "target_net_delta": "0",  # Family 1 has no perp; delta carries unhedged
+                    "hold_policy": "CONTINUOUS",
+                    # Chain-overrides (per Family 1 design) — full set picked up by orchestrator
+                    # via `chain` field lookup; this dict is the per-instance "rest" override.
+                },
+            )
+        )
+
+    return tuple(out)
+```
+
+**`_build_carry_recursive_borrow_perp_hedged()` — Family 2 (Family 1 + perp short):**
+
+```python
+def _build_carry_recursive_borrow_perp_hedged() -> tuple[TargetInstanceSpec, ...]:
+    out: list[TargetInstanceSpec] = []
+    a = StrategyArchetype.CARRY_RECURSIVE_BORROW_PERP_HEDGED
+
+    # Top-3 cells per Family 2 design (2026-05-12 slot 5 spec); each spawns 2× perp_venue variants:
+    cells = [
+        # (lender, chain, collateral, debt, mode, version)
+        ("aave_v3", "ethereum", "wsteth", "weth", "emode_eth", "v1"),
+        ("morpho",  "ethereum", "wsteth", "weth", "market_0945", "v1"),
+        ("aave_v3", "arbitrum", "wsteth", "weth", "emode_eth", "v1"),
+        ("aave_v3", "base",     "cbeth",  "weth", "emode_eth", "v1"),
+        ("aave_v3", "ethereum", "weeth",  "weth", "emode_eth", "v1"),
+    ]
+    perp_venues = [
+        ("hyperliquid", "eth_perp"),  # PRIMARY per Family 2 design
+        ("bybit",       "eth_usdt_perp"),  # SECONDARY — capped at 50% of HL leg notional first 30d
+    ]
+    target_deltas = [("0", "delta0")]  # Day-1 ship: pure-carry delta=0 only; +1/+N variants per future plan
+
+    for lender, chain, coll, debt, mode, ver in cells:
+        for perp_venue, perp_pair in perp_venues:
+            for target_delta_str, delta_tag in target_deltas:
+                out.append(
+                    _spec(
+                        a,
+                        f"CARRY_RECURSIVE_BORROW_PERP_HEDGED@{lender}-{chain}-{coll}-{debt}-{mode}-{perp_venue}-{perp_pair}-{delta_tag}-{ver}-prod",
+                        ShareClass.ETH,
+                        Decimal("100000"),
+                        ShareClass.USDC,
+                        {
+                            "lending_protocol": lender,
+                            "chain": chain,
+                            "collateral_asset": coll,
+                            "debt_asset": debt,
+                            "ltv_mode": mode,
+                            "perp_leg_enabled": "true",
+                            "perp_venue": perp_venue,
+                            "perp_pair": perp_pair,
+                            "target_net_delta": target_delta_str,
+                            "usdc_margin_buffer_min_pct": "0.30",
+                            "hold_policy": "CONTINUOUS",
+                        },
+                    )
+                )
+
+    return tuple(out)
+```
+
+**Cell count**:
+- Family 1: 7 cells (1 lender × 1 collateral × 1 debt × 1 mode each).
+- Family 2: 5 base cells × 2 perp venues × 1 target_delta = 10 cells. Excludes sUSDe/USDC (no ETH delta to hedge).
+
+Total new cells: 17. Within the master plan position-cap envelope (~$1.7M aggregate at $100k each).
+
+### LeveragedLegController + tracer extension
+
+- `LeveragedLegController` (existing, `strategy-service/strategy_service/engine/strategies/v2/leg_controller_adapter.py`) — accepts `target_net_delta` parameter via config; rebalances by trimming/extending perp leg to match. Family 1 cells set `perp_leg_enabled=false` → controller short-circuits the perp side and only manages lending leg.
+- Tracer: `defi_carry_recursive_staked_decision_trace.py` already has `_net_apr_recursive(stake_apy, borrow_apy, ltv, n_loops)` at line 210 (verified per plan body Phase 3 line 287). **New helper** `_net_apr_with_perp_funding(stake_apy, borrow_apy, perp_funding_apy, ltv, n_loops, target_net_delta, usdc_idle_apy)` per Family 2 net-APR formula above. Both helpers exposed via tracer module top-level.
+
+### Cross-plan handshakes
+
+- **slot 6 `defi_simulation_realism_2026_05_10.md`** — AMM family matrix + sim contract + golden test set. **Required by Phase 9** of THIS plan (matching engine DeFi cost model). Slot 6's Day-2 noon deliverable per work_split row 6. Slot 5's Phase 3 cell enumeration uses slot 6's `AMM_SLIPPAGE_FAMILY` taxonomy (when published) to attach per-cell `expected_slippage_bps` config field. **Annotation** added to `defi_simulation_realism_2026_05_10.md` in next plan-flip commit.
+- **slot 2 `defi_catalogue_chain_primitives_2026_05_10.md`** — funding-rate adapters for HL + Bybit ETH-PERP (already-flagged P1 cross-plan annotation in Family 2 design).
+
+### Phase 3 implementation gate
+
+- [ ] [strategy-service] **P0**. Wire `_ARCHETYPE_ENGINE_MAP[StrategyArchetype.CARRY_RECURSIVE_BORROW_LENDING_ONLY] = CarryRecursiveStakedEngine` + same for `CARRY_RECURSIVE_BORROW_PERP_HEDGED` in `factory.py:63`.
+- [ ] [strategy-service] **P0**. Add `_build_carry_recursive_borrow_lending_only` + `_build_carry_recursive_borrow_perp_hedged` builder functions in `catalog.py` per spec above. Register in `_ARCHETYPE_BUILDERS` dict at line 1958.
+- [ ] [strategy-service] **P0**. Engine internal: branch in `CarryRecursiveStakedEngine` on `config["perp_leg_enabled"]` + `config["staking_yield_enabled"]` (NEW config field — `true` only for Family 0 CARRY_RECURSIVE_STAKED; `false` for Family 1/2 — Family 1/2 are pure borrow loops where the "staking yield" is the lending supply APY, not LST staking yield).
+- [ ] [strategy-service] **P0**. Tracer: add `_net_apr_with_perp_funding(...)` helper to `defi_carry_recursive_staked_decision_trace.py`; reuse existing `_net_apr_recursive` for Family 1; extend module top-level exports.
+- [ ] [strategy-service] **P1**. Round-trip test fixture: `tests/unit/v2/test_carry_recursive_borrow_archetypes.py` covering both family enum members through factory + catalog + tracer.
+- [ ] [strategy-service] **P0**. Peripheral script wiring per HARD RULE: extend `strategy-service/scripts/quality-gates.sh` to run basedpyright + ruff on `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW per Phase 12). Confirm directory exists OR defer until Phase 12 lands.
+
 ## Phase 1 — Prerequisite: lending-rate backfill — REFRAMED 2026-05-10 cross-plan audit Q11
 
 > **🔴 OWNERSHIP TRANSFERRED** to
