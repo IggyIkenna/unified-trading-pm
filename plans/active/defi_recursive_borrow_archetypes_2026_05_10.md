@@ -720,6 +720,212 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
 - **slot 7 `simulation_scenarios_topology_price_shocks_2026_05_09.md`** — Category B scenarios align with topology-shock taxonomy; check for SSOT overlap (closed-set scenario IDs should NOT drift between plans).
 - **`master_to_live_defi_2026_05_23.md` Group F item 18 (2-year batch backtest run)** — Phase 12 satisfies via full scenario matrix; update master plan item-18 wording to reference scenario ID set.
 
+## Phase 4-11 design — Day-1 close-out batch (2026-05-12 slot 5)
+
+> **Design owner:** ikenna slot 5 / agent-tag `ikenna-recursive-borrow-tab` (2026-05-12 Day-1 close-out).
+> **Source:** 3-parallel-sub-agent fan-out covering Phases 4+5 (Solidity + orchestrator) / Phases 6+7+8 (HL LIVE + sizer + monitor) / Phases 10+11 (codex + UI). Sub-agent reports reconciled below.
+> **Status:** DESIGN-SHIPPED across all 7 phases. Implementation gates listed per phase; each consumed by Harsh code-side workstreams.
+
+### Phase 4 — Extended `RecursiveLeverageReceiver.sol` (Solidity)
+
+**Decision**: **Option A (generic action-encoder pattern) over Option B (hard-coded loop)**. Rationale: (a) unwind shape differs from open (Option B would need 2 contracts); (b) cross-asset loops need inline Uniswap swap which Option B can't express; (c) Phase 8 kill-switch flash-close needs the same atomic-action surface. Whitelist `allowedTarget` + `allowedSelector` bounds audit surface.
+
+**Contract**: NEW `deployment-service/contracts/RecursiveLeverageReceiver.sol` (parallel deploy; does NOT replace existing 35-LOC `FlashLoanReceiver.sol` passthrough). `Action[]` struct: `(address target, bytes data, uint256 value)`. `params = abi.encode(Action[], bytes32 correlation_id)`. Named errors only (`UnauthorizedCaller` / `UnauthorizedInitiator` / `TargetNotAllowed` / `SelectorNotAllowed` / `ActionFailed(uint256 idx)` / `InsufficientRepaymentBalance` / `ReentrancyDetected`). Per-action whitelist: `{AavePool, UniswapV3SwapRouter02, WETH9} × {supply, borrow, repay, withdraw, exactInputSingle, exactOutputSingle, deposit, withdraw, approve}`.
+
+**Defences**: nonReentrant guard; inline `approve(target, exactAmount)` per-action (NO infinite approval); `InsufficientRepaymentBalance` check before `approve(POOL, owed)`; `OWNER`-bound `initiator`; `sweep(token)` escape hatch.
+
+**Per-chain matrix** (May-23 P0 = Sepolia testnet + Ethereum mainnet + Base mainnet; Arbitrum DEFERRED-PER-MAY23):
+
+| Chain | chain_id | Aave V3 Pool | UAC row |
+|-------|----------|--------------|---------|
+| Ethereum | 1 | `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2` | TBD address |
+| Base | 8453 | (via PoolAddressesProvider) | TBD |
+| Sepolia | 11155111 | `0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951` | TBD |
+
+**UAC schema extension**: `unified_api_contracts/internal/architecture_v2/flash_loan_receiver.py` `FLASH_LOAN_RECEIVER_REGISTRY` add `receiver_kind: Literal["passthrough", "recursive_leverage"]` field; backfill existing rows as `passthrough`; new rows = `recursive_leverage`. `flash_loan_receiver_for(..., kind=)` filter. `testnet_contracts.py` `PROTOCOL_SCHEMAS["aave_v3"]` add `recursive_leverage_receiver` `RequiredContract` row.
+
+**Foundry tests** (11 tests under `deployment-service/contracts/test/RecursiveLeverageReceiver.t.sol`): atomic open (lending-only + cross-asset wstETH/WETH); atomic close; failed flash repayment; mid-callback revert; re-entrancy blocked; target/selector not allowed; owner sweep; unauthorized initiator; cross-chain deploy idempotency.
+
+**Phase 4 P0/P1 implementation gates**:
+
+- [ ] [Solidity] **P0**. Author `RecursiveLeverageReceiver.sol` per pseudo-code (action-encoder + whitelist + nonReentrant + sweep). Named errors only.
+- [ ] [Solidity] **P0**. Foundry test suite (11 tests) + `forge test --gas-report` green; commit `.gas-snapshot`.
+- [ ] [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with `receiver_kind` field; backfill existing rows as `passthrough`; add 4 NEW rows.
+- [ ] [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]`.
+- [ ] [deployment-service] **P0**. NEW launcher `scripts/deploy-recursive-leverage-receiver.sh --chain <ethereum|base|sepolia>` per VM-launcher-SSOT.
+- [ ] [security] **P1**. Internal review by ikenna/harsh (re-entrancy / approval scoping / repayment correctness / whitelist completeness). External audit deferred post-MVP.
+- [ ] [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification; then Ethereum + Base mainnet with cross-plan banner.
+
+### Phase 5 — `RecursiveLoopOrchestrator` (execution-service Python)
+
+**NEW module**: `execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py`. Public surface: `open(request) -> RecursiveLoopResult` + `unwind(request) -> RecursiveLoopResult`.
+
+**Schemas** (UAC `unified_api_contracts.internal.architecture_v2.recursive_loop_orchestrator` — NEW module, co-located with `flash_loan_receiver.py`): `RecursiveLoopRequest` (start_amount / share_class_coin / n_loops / ltv_per_loop / slippage_tolerance / gas_buffer / opening_mode / chain / lending_protocol / perp_leg_config / correlation_id); `RecursiveLoopResult` (success / mode / tx_receipts / final_position / realised_supply_apy / realised_borrow_apy / total_gas_used / total_gas_cost_usd / flash_premium_paid / per_iter_events / error_code); `AavePositionState` + `LoopIterEvent` + `PerpLegConfig`.
+
+**Drivers** (3): persistent open (N sequential supply→borrow→swap→supply iters with pre-iter HF gate + gas-budget gate); flash open (single tx via `RecursiveLeverageReceiver.sol`); unwind (symmetric inverse). NO `raise` inside per-iter loop (shard-isolation rule); `LOOP_ABORTED_HF_LOW` + partial result instead.
+
+**Action-encoder helpers** (module-private): `build_recursive_open_actions(request) -> tuple[Action, ...]` + `build_recursive_close_actions(request) -> tuple[Action, ...]`. Round-trip property test for ABI encode/decode.
+
+**Event taxonomy** (closed set, via `unified_trading_library.events.log_event`): `LOOP_OPEN_STARTED` / `LOOP_ITER_STARTED(idx, mode, projected_supply, projected_borrow, hf_pre_iter)` / `LOOP_ITER_COMPLETED(idx, mode, tx_hash, gas_used, aToken_balance_post, debt_post, hf_post, slippage_observed_bps)` / `LOOP_ABORTED_HF_LOW(idx, projected_hf, threshold)` / `LOOP_OPEN_FAILED(error_code, idx_at_failure, partial_receipts_count)` / `LOOP_OPEN_COMPLETED(final_position, realised_apy_snapshot, total_gas_used, flash_premium_paid)`. Symmetric `LOOP_CLOSE_*`. Event-stream signature for "operationally shipped" verification: STARTED→≥1 ITER_COMPLETED→terminal.
+
+**6 NEW `DefiErrorCode` entries** (extend `aave.py:390`): `RECURSIVE_LOOP_ABORTED_HF` (SKIP); `RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED` (SKIP); `RECURSIVE_LOOP_SLIPPAGE_REVERT` (RETRY); `RECURSIVE_LOOP_FLASH_RECEIVER_NOT_FOUND` (FAIL); `RECURSIVE_LOOP_FLASH_REPAYMENT_INSUFFICIENT` (FAIL); `RECURSIVE_LOOP_FLASH_ACTION_FAILED_<idx>` (FAIL); `RECURSIVE_LOOP_PARTIAL_OPEN_NO_UNWIND_FUNDS` (FAIL → routes to alerting `LIQUIDATION_IMMINENT`).
+
+**12 unit/integration tests**: persistent open lending-only; persistent close; flash open lending-only; flash close; persistent open cross-asset wstETH/WETH; HF abort mid-loop; slippage revert retry; reverted iter mid-stream partial result; flash action failed idx encoded; re-attempt after partial open; Tenderly fork full cycle; cross-chain Base.
+
+**Phase 5 P0 implementation gates**:
+
+- [ ] [UAC] **P0**. NEW module `internal/architecture_v2/recursive_loop_orchestrator.py` with 5 schema types.
+- [ ] [execution-service] **P0**. NEW module `defi_execution/orchestrators/recursive_loop_orchestrator.py` per design.
+- [ ] [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes; route via FAIL/RETRY/SKIP-prefix dispatcher.
+- [ ] [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation_id threading.
+- [ ] [execution-service] **P0**. Action-encoder helpers + round-trip property test.
+- [ ] [execution-service] **P0**. 12 unit + integration tests (Tenderly fork + Web3 mock at signing level).
+- [ ] [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via Phase-4-deployed receiver.
+
+### Phase 6 — Hyperliquid LIVE perp connector wire-up
+
+**Consolidation**: pick `defi_execution/protocols/hyperliquid.py` as canon; DELETE `venues/hyperliquid.py` duplicate (workspace grep confirmed zero non-test consumers).
+
+**EIP-712 signing surface**: action dict → msgpack → keccak256 over `(action_hash, vault_address_bytes_or_zero, nonce_uint64)` → EIP-712 digest under domain `{"name": "Exchange", "version": "1", "chainId": <chain>, "verifyingContract": 0x0…}`. **ChainId loaded from HL SDK constants at runtime** (NOT hardcoded `1337`/`421614`) — avoids `HL_SIGNATURE_INVALID` on HL chainId rotation. Nonce: monotonic ms-clock + 100ms jitter; persist `last_nonce_seen` per wallet; warm from `/info historicalOrders` on connect. Wallet key via `ApiKeyReloader` against Secret Manager key `hyperliquid-api-credentials` (NOT one-shot validation).
+
+**REST surface**: POST `/exchange` (1 req/s; signed actions) + POST `/info` (10 req/s; unsigned). All responses through `model_validate()` per live-mode boundary; raw dict access banned (QG STEP 5.64 catches).
+
+**WebSocket surface**: `wss://api.hyperliquid.xyz/ws` with `user_events` subscription. Heartbeat: HL pings every ~50s; pong within 10s. Reconnection: exponential backoff (1s→2s→4s→…→30s cap) + on-reconnect `/info clearinghouseState` snapshot for dropped-fill reconciliation. Fill confirmation: REST place_order returns success → WS `fills` message → `HyperliquidFill.model_validate(payload)` → enqueue. If no WS fill within `fill_confirm_timeout_ms=5000`: emit `HL_FILL_CONFIRMATION_MISSED` (NEW, RETRY).
+
+**Bridge surface**: Arbitrum bridge contract `0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7` *(low-confidence — verify against current HL docs)*. 5-min withdrawal dispute window encoded in kill-switch budget; `pending_until_ts = now + 300s` field on bridge tx. NEW module `defi_execution/hyperliquid_bridge.py` with `deposit_usdc_to_hyperliquid` / `withdraw_usdc_from_hyperliquid` / `get_bridge_pending` async helpers.
+
+**DefiErrorCode taxonomy** — extend `VENUE_ERRORS_DEFI` with **8 NEW codes**: `HL_INSUFFICIENT_MARGIN` (FAIL); `HL_REDUCE_ONLY_VIOLATION` (FAIL); `HL_INVALID_TIF` (FAIL); `HL_RATE_LIMITED` (RETRY); `HL_NONCE_TOO_LOW` (RETRY); `HL_SIGNATURE_INVALID` (FAIL — no retry; alert); `HL_POSITION_CLOSED` (SKIP); `HL_FILL_CONFIRMATION_MISSED` (RETRY).
+
+**Available-margin computation**: replace `available_margin = equity × 0.9` placeholder (line 259) with `Decimal(parsed.marginSummary.accountValue) − Decimal(parsed.marginSummary.totalMarginUsed)`. Load-bearing for PerpHedgeSizer (Phase 7); 0.9 over-reports headroom ~10% on cross-margin with open positions.
+
+**Phase 6 P0/P1 implementation gates**:
+
+- [ ] [execution-service] **P0**. DELETE `venues/hyperliquid.py` after workspace-grep confirms zero non-test consumers.
+- [ ] [execution-service] **P0**. Replace simulation logic with REST POST `/exchange` returning `model_validate(HyperliquidOpenOrder | HyperliquidFill)`. Keep simulation gated behind `is_live=False`.
+- [ ] [execution-service] **P0**. NEW module `defi_execution/protocols/_hyperliquid_signing.py`; load chainId from HL SDK constants at runtime.
+- [ ] [execution-service] **P0**. Wire `ApiKeyReloader` for `hyperliquid-api-credentials` Secret Manager key.
+- [ ] [UAC] **P0**. Add 8 new HL error codes to `VENUE_ERRORS_DEFI`; extend `classify_venue_error()`; cassette tests per code shape.
+- [ ] [execution-service] **P1**. NEW `hyperliquid_bridge.py` helpers + `_PENDING_BRIDGE_DISPUTE_SECONDS=300`. Tenderly Arbitrum fork integration test.
+- [ ] [execution-service] **P1**. Replace `equity × 0.9` placeholder; regression test asserting parsed `accountValue − totalMarginUsed`.
+
+### Phase 7 — `PerpHedgeSizer` + USDC margin top-up
+
+**NEW module**: `execution-service/execution_service/defi_execution/helpers/perp_hedge_sizer.py`. Public: `PerpHedgeSizer.compute_rebalance()` + `compute_margin_topup()`.
+
+**Schemas** (`unified_api_contracts.internal.execution`, NEW): `HedgeSizerConfig` (`target_net_delta_eth`, `usdc_margin_buffer_min=1.5`, `auto_topup_threshold=1.5`, `rebalance_band_pct=0.05`); `RebalanceInstruction` (`action: Literal["short", "cover", "noop"]`, `size_delta_eth`, `reason`, `target_perp_size`, `current_perp_size`, `E_actual`); `MarginTopupInstruction` (`venue`, `amount_usdc`, `source: Literal["copper", "ceffu", "treasury_hot"]`, `bridge_eta_seconds`).
+
+**Sizing logic** (consume Family 2 closed-form `E ≈ base`): read `E_actual` from Aave `getUserAccountData` × `er`; `target_perp_size = max(0, E_actual − target_net_delta_eth)`; `size_delta = target − current`; if `|size_delta| > rebalance_band_pct × E_actual` → emit `CROSS_VENUE_DELTA_DRIFT` + `RebalanceInstruction(action="short"|"cover")`. Otherwise `noop`.
+
+**Margin top-up**: read `available_margin / initial_margin_estimate`; if ratio `< usdc_margin_buffer_min`: needed `= (auto_topup_threshold × initial_margin) − available`; emit `MarginTopupInstruction` with source (testnet `treasury_hot`; mainnet `copper`/`ceffu` gated by Group F item 19). Bridge ETA: HL ~10s; Bybit 1-5min.
+
+**Position-balance verification** (integration test on Tenderly + HL testnet): `(aETH × er) + free_ETH − ETH_debt + perp_short = target_net_delta` within ±0.001 ETH.
+
+**8 unit tests**: hedge-up band breach; hedge-down band breach; within-band noop; over-hedge correction delta=0; under-hedge correction delta=+1; margin-call top-up below buffer; bridge-failure handling; target_net_delta=-1 short bias.
+
+**Phase 7 P0/P1 implementation gates**:
+
+- [ ] [UAC] **P0**. NEW `unified_api_contracts.internal.execution` types: `HedgeSizerConfig` + `RebalanceInstruction` + `MarginTopupInstruction`.
+- [ ] [execution-service] **P0**. NEW `defi_execution/helpers/perp_hedge_sizer.py` class.
+- [ ] [execution-service] **P0**. Wire `_read_E_from_aave_and_er` against MTDS features-onchain `er` time-series.
+- [ ] [execution-service] **P0**. 8 unit tests + 1 Tenderly+HL-testnet integration test (cross-venue netting within ±0.001 ETH).
+- [ ] [execution-service] **P1**. Treasury source resolver `_pick_source()` — testnet stub; mainnet emits operator-gated event (NOT auto-execute until Group F item 19).
+
+### Phase 8 — `HealthFactorMonitor` + `LiquidationProximityCircuit` + alerting
+
+**NEW module**: `execution-service/execution_service/defi_execution/monitors/health_factor_monitor.py`. Long-running loop with `ServiceBootstrap(STARTED/STOPPED/FAILED)`.
+
+**Polling cadence** (per-chain block times): Ethereum 12s (WS `eth_subscribe newHeads`); Base 2s; Arbitrum 250ms tick + debounce HF emission to 1s. Fallback: poll-loop under WS unavailable; emit `RPC_NEWHEADS_UNAVAILABLE` warn.
+
+**Per-block emission**: `HEALTH_FACTOR_OBSERVED(chain, wallet, hf, block_num)` every block. Threshold breach: `HEALTH_FACTOR_BELOW_THRESHOLD(severity=warn, hf<1.10)` + `LIQUIDATION_IMMINENT(severity=critical, hf<1.05)`.
+
+**7 NEW alert codes** in UAC `unified_api_contracts.internal.alerts.DefiAlertCode`: `HEALTH_FACTOR_CRITICAL` (warn); `LIQUIDATION_IMMINENT` (critical); `FUNDING_SIGN_FLIP` (warn); `RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED` (critical); `CROSS_VENUE_DELTA_DRIFT` (warn); `PERP_VENUE_OUTAGE` (critical); `ORACLE_STALE_PAUSE` (critical).
+
+**Kill-switch wiring** (`strategy-service/circuit_breakers/liquidation_proximity_circuit.py` — NEW):
+
+| Alert | Action |
+|-------|--------|
+| `LIQUIDATION_IMMINENT` | Immediate flash-close via `RecursiveLeverageReceiver` + perp cover reduce_only |
+| `HEALTH_FACTOR_CRITICAL` | Partial unwind (reduce leverage by 1 loop level); iterate if still < 1.10, max 3 iters |
+| `FUNDING_SIGN_FLIP` | Position-pause (`accepts_new_signals=False`); HF threshold tightens 1.10→1.20; auto-resume on funding flip back |
+| `PERP_VENUE_OUTAGE` | Decision-tree: if backup live, re-hedge on backup; else `STRATEGY_HALT` + unwind spot |
+| `ORACLE_STALE_PAUSE` | No new opens; HF threshold widens +0.10 buffer |
+| `RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED` | Mid-loop recovery: read partial-state on-chain + emit recovery RebalanceInstruction chain |
+
+**Risk-and-exposure-service concentration**: `ARCHETYPE_CONCENTRATION_MULTIPLIER` dict in `registry/risk_rules/venue.py` — Family 1/2 = 1.5× (HALF the headroom of simple variants on same chain × asset × protocol). Wired into existing `_HYPERLIQUID_RULES` proposal-time veto.
+
+**Phase 8 P0/P1 implementation gates**:
+
+- [ ] [execution-service] **P0**. NEW `HealthFactorMonitor` module with `ServiceBootstrap` + per-chain polling cadence registry. Active event-stream verification (no fire-and-forget).
+- [ ] [UAC] **P0**. Add 7 alert codes to `DefiAlertCode`; route through `alerting-service`. Cassette tests per code.
+- [ ] [strategy-service] **P0**. NEW `circuit_breakers/liquidation_proximity_circuit.py` with 6 alert→action mappings. 6 unit tests + 1 Tenderly-fork integration test (HF=1.04 → flash-close within single block).
+- [ ] [UAC] **P1**. `ARCHETYPE_CONCENTRATION_MULTIPLIER` dict + wire into risk-and-exposure-service `propose_position()` veto.
+- [ ] [deployment-ui] **P1**. Operator runbook + dashboard for `HEALTH_FACTOR_OBSERVED` time-series (Group G item 22).
+
+### Phase 10 — Codex SSOT updates (10 docs)
+
+**SUPERSESSION**: original todo `carry-recursive-staked-config-variants.md` (singular) → REJECTED per AD-1 reframe; replaced by 2 distinct family docs.
+
+| # | Action | Path | Sketch |
+|---|--------|------|--------|
+| 1 | NEW | `codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md` (~600 words) | Mechanics (`R_lend` formula, `E_actual ≈ base`); per-chain × per-lender matrix (paste from plan); top-3 May-23 cells + kill-switch surface |
+| 2 | NEW | `codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md` (~700 words) | Family 1 base + USDC-margined ETH perp; HL PRIMARY × Bybit SECONDARY; Feb-2025 hack addendum; funding-regime degradation policy |
+| 3 | UPDATE | `carry-recursive-staked.md` (+30 words) | `## See also` + `## Not in this archetype` cross-refs to Family 1 + 2; top breadcrumb |
+| 4 | UPDATE | `codex/04-architecture/flash-loan-receiver.md` (+200 words) | NEW `## Extended receiver` section (action-encoder Option A); deployed-address rows for Family 1/2; new modes table row |
+| 5 | UPDATE | `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` (+150 words) | Family 1 lender admission section + Family 2 perp pairing section; SwapRouter02 chain-disambiguation caveat |
+| 6 | NEW | `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md` (~500 words; Phase 9 + 12 deliverable) | Per-variant 2-year P&L curve summary; per-month attribution; analytical vs simulated reconciliation |
+| 7 | NEW | `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (~600 words; Phase 12 deliverable) | 14-scenario taxonomy; per-cell verdict matrix; harness shape; SSOT alignment caveats |
+| 8 | UPDATE | `codex/09-strategy/strategy-summary.md` (+60 words) | Carry & Yield heading (6)→(8); insert 2 archetype entries; drift-correction note |
+| 9 | UPDATE | `codex/04-architecture/batch-live-architecture.md` (+120 words) | NEW `### Archetype-grain batch=live status` sub-section; concentration-risk note |
+| 10 | NEW | `codex/04-architecture/cefi-perp-leg-bybit.md` (~400 words; flagged P2→P1 if Bybit ships first) | Bybit perp topology; Feb-2025 hack addendum; funding cadence diff vs HL |
+
+**Phase 10 P0/P1 implementation gates** (10, one per doc):
+
+- [ ] [codex] **P0**. Ship `carry-recursive-borrow-lending-only.md` + verify `grep -r` ≥ 3 cross-refs.
+- [ ] [codex] **P0**. Ship `carry-recursive-borrow-perp-hedged.md` + verify bidirectional link.
+- [ ] [codex] **P0**. Patch `carry-recursive-staked.md` (See also + Not in this archetype + breadcrumb).
+- [ ] [codex] **P0**. Patch `flash-loan-receiver.md` (`## Extended receiver` + addresses + modes).
+- [ ] [codex] **P0**. Patch `venue-collateral-2026-05-07.md` (Family 1 + Family 2 sections).
+- [ ] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9).
+- [ ] [codex] **P0**. Ship `recursive-borrow-backtest-scenarios-2026-05.md` (gates on Phase 12 design — design SHIPPED 2026-05-12 above).
+- [ ] [codex] **P0**. Patch `strategy-summary.md` Carry & Yield count + 2 entries.
+- [ ] [codex] **P0**. Patch `batch-live-architecture.md` `### Archetype-grain batch=live status`.
+- [ ] [codex] **P1**. Ship `cefi-perp-leg-bybit.md` (escalate to P0 if Family 2 ships Bybit before HL).
+
+### Phase 11 — deployment-api + deployment-ui surface
+
+**NEW deployment-api endpoint**: `GET /data-status/recursive-borrow-coverage` at `deployment-api/deployment_api/routes/recursive_borrow_coverage.py` (NEW route file, co-located with `data_status.py` — concerns differ). Pydantic models at `deployment-api/deployment_api/models/recursive_borrow.py` (NEW file; **CREATES `models/` directory** which doesn't exist today — recommended decision; aligns with System-First Architecture rule).
+
+**Models**: `CellCoverage` (protocol, chain, collateral_asset, debt_asset, family, perp_venue, lending_rate_coverage_pct, funding_rate_coverage_pct, spread_history_horizon_days, last_observed_at, cell_status); `RecursiveBorrowCoverageResponse` (generated_at, cache_ttl_seconds=60, cells, summary).
+
+**Auth**: `@require_role(Role.READ_ONLY)` per existing pattern. **Cache TTL**: 60s via `cache_with_ttl` helper.
+
+**4 NEW deployment-ui components**:
+
+1. **`ArchetypeMatrix.tsx`** (`src/components/widgets/strategy/`) — brand-new (workspace grep confirms 0 hits; greenfield). Grid keyed by `(family, chain, lender, collateral, debt, perp_venue?)`; 7 Family 1 + 10 Family 2 rows; per-cell badge `design-ready` / `coverage-ready` / `live-ready` / `paused`. SWR hook, 60s revalidate.
+2. **`HealthFactorMonitorTile.tsx`** — brand-new. Live HF chart with `ReferenceLine` at 1.10 (yellow) + 1.05 (red); UI-throttled to 1-5s irrespective of chain block-rate. Wires into `KillSwitchPanel.tsx:23` ARCHETYPE tier (per-position kill, NOT global per Hard-stop rule). **NEW SSE endpoint required (P1 sub-todo)**: `GET /data-status/recursive-borrow-health-factors/stream`.
+3. **`RecursiveBorrowDrilldown.tsx`** — per-protocol coverage % progress bar + per-asset spread-history sparkline (last 30d). Click → modal with cell-level config + backtest verdict.
+4. **`BacktestResultsPanel.tsx`** (P1) — Phase 9 P&L curves per variant (Family 1 vs Family 2 toggle); 14-scenario verdict matrix; per-month attribution stacked-area. Requires NEW `GET /data-status/recursive-borrow-backtest-results` endpoint.
+
+**Wire-in**: `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh --api` / `--ui` after changes. Playwright matrix tests at `deployment-ui/tests/integration/recursive_borrow/*.spec.ts`. Mock state extension at `deployment-api/deployment_api/mock_state.py`.
+
+**Phase 11 P0/P1 implementation gates**:
+
+- [ ] [deployment-api] **P0**. NEW `routes/recursive_borrow_coverage.py` + `models/recursive_borrow.py` (creates `models/` directory). RBAC `@require_role(Role.READ_ONLY)`; 60s cache.
+- [ ] [deployment-api] **P0**. Integration test against Tier-0 mock manifest.
+- [ ] [deployment-ui] **P0**. `ArchetypeMatrix.tsx` (7 + 10 cells).
+- [ ] [deployment-ui] **P0**. `HealthFactorMonitorTile.tsx` (threshold lines; UI-throttled).
+- [ ] [deployment-ui] **P0**. `RecursiveBorrowDrilldown.tsx` (coverage % + spread sparkline).
+- [ ] [deployment-ui] **P1**. `BacktestResultsPanel.tsx` + companion backtest-results endpoint (gates on Phase 9).
+
+**Cross-plan annotations queued**: `master_to_live_defi_2026_05_23.md` Group G item 23 (HealthFactorMonitorTile as NEW operator-UX surface — annotate Continuous Verification cadence `daily-Tab`); `deployment-api/docs/models-directory-convention_2026_05_xx.md` (NEW; capture `models/` directory convention shift).
+
+### Open decisions (queued for implementation-time triage)
+
+- **Phase 4 receiver naming**: `RecursiveLeverageReceiver.sol` vs extending `FlashLoanReceiver.sol` — RECOMMENDED parallel deploy (preserves existing 35-LOC passthrough; adds `receiver_kind` discriminator in UAC).
+- **Phase 6 chainId source**: HL SDK constants at runtime (recommended) vs hardcoded — runtime read avoids `HL_SIGNATURE_INVALID` on HL chainId rotation.
+- **Phase 11 deployment-api `models/` directory**: create vs inline per existing convention — RECOMMENDED create (System-First Architecture rule).
+- **Phase 8 monitor RPC source**: WS `eth_subscribe newHeads` vs polling — RECOMMENDED WS where supported; emit `RPC_NEWHEADS_UNAVAILABLE` on degradation.
+
 ## Phase 1 — Prerequisite: lending-rate backfill — REFRAMED 2026-05-10 cross-plan audit Q11
 
 > **🔴 OWNERSHIP TRANSFERRED** to
