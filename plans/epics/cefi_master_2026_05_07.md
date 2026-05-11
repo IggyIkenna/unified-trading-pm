@@ -343,6 +343,20 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
 - [ ] [AGENT] P0. Port phantom-audit + manifest-rebuild scripts to CeFi (current scripts target sports/multi-asset).
       [AUDIT 2026-05-07: DONE — `reconcile_phantom_manifest_rows_all.py` is multi-asset-group with `--asset-group cefi`
       flag per CLAUDE.md, used 2026-05-04 to reduce 130k→354 false-positives on cefi (per MEMORY)]
+      [SLOT-6 RAN 2026-05-11 — `launch-defi-phantom-recon-vm.sh cefi --dry-run` → `defi-phantom-recon-cefi-20260511-193451`
+      (e2-standard-4, asia-northeast1-c; 129220 prefixes @~370/sec; completed 14:16 UTC, exit 0, VM self-deleted):
+      **1290706 real captures / 2223 "phantom captures" = 0.17% phantom rate — UNDER the <0.5% criterion** (line 292 of
+      this plan). Residual 2223 spread across drift-axis-suspicious clusters: blank `venue` 1453, DERIBIT 136 (mostly
+      `options_chain` 435 + `futures_chain` 401 — bundled data_types), `venue=UNKNOWN` 111, Bitfinex `*F0` perpetual
+      codes (BTCF0/ETHF0/DOTF0/… ~20-34 each ≈ 400). These are NOT obviously real-missing-data — they're the classic
+      manifest-vs-disk shape drifts (blank/UNKNOWN venue rows the audit can't probe a path for; chain-bundle `option`↔
+      `options_chain` equivalence; venue-normalization `BTCF0`→canonical). **Did NOT `--apply`** — flipping all 2223 to
+      `attempted_failed` would corrupt the manifest for the false-positive majority (2026-05-04 130,897-false-positive
+      class). **Pending (cefi owner)**: per-cluster real-vs-false-positive triage — sample each cluster, check parquet
+      existence, then either add the missing drift axis to `reconcile_phantom_manifest_rows_all.py`'s cefi templates
+      (for false-positives) or `--apply` only the genuinely-real subset. Criterion-met for now (0.17% < 0.5%); full
+      classification is the residual work. Cross-ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md`
+      DONE-2026-05-11 deferral table (phantom-audit row) + `harsh_orchestrator/pings/slot_6.md` 2026-05-11 14:00/14:18 UTC.]
 - [ ] [AGENT] P0. Monitor + reap zombie VMs (`gcloud compute instances list` + parallel-delete pattern per workspace
       VM-naming convention). [AUDIT 2026-05-07: IN-FLIGHT — `vm-zombie-watchdog-20260506-175221` RUNNING; ongoing role;
       treat as forever-todo]
