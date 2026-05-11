@@ -20,17 +20,6 @@ owner: Ikenna (plan), Harsh (alerting-service code)
 
 # Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging
 
-> **🟡 IN-FLIGHT REFACTOR — AlertRule field renamed `pattern` → `event_pattern` 2026-05-10 PM**
->
-> The `AlertRule` Pydantic field originally spec'd as `pattern` is renamed to `event_pattern` to align with the codex
-> SSOT in [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md) § "Alerting-Service Routing
-> Rules" (lines 116-149) where every routing-rule entry uses the `event_pattern` key. Codex is SSOT for target structure
-> per workspace rule. Implementation agents picking up this plan MUST use `event_pattern` in UAC + Pydantic
->
-> - tests + any downstream consumer. The already-shipped UAC@d00326d (`AlertRule.pattern`,
->   `unified_api_contracts/canonical/crosscutting/alerting/rules.py`) requires a follow-up rename PR; any downstream
->   plan or service that wired against `pattern` must rename in the same logical unit when consuming.
-
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation 2026-05-08**
 >
 > [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 9 EXTENDS this
@@ -190,13 +179,20 @@ default-factory.
       wiring (ml-inference-service / strategy-service / ml-training-service) DEFERRED to Phase 3 (envelope
       `code: AlertCode` field UAC@2636815 unblocks but actual emission sites pending). DART manual-pause / override /
       replicate UI for ML trades DEFERRED to `strategy_and_dart_master` Phase 2.2.
-- [ ] [AGENT] P1. **Codex `alert-code-taxonomy.md` ML category section + KillSwitchScope mapping table.** Sub-E
+- [x] [AGENT] P1. **Codex `alert-code-taxonomy.md` ML category section + KillSwitchScope mapping table.** Sub-E
       attempted the edit 5+ times during the 2026-05-08 cycle; foot-gun #3 (parallel-agent `git checkout HEAD -- <file>`
       auto-revert) wiped each attempt. Pick up on a quieter session. Required content: ML category subsection (severity
       routing per ML code, threshold sources, archetype-scope mapping) + KillSwitchScope mapping table extension showing
       all 4 KILL*SWITCH*\* codes (DEFI_LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL, VENUE_DISCONNECT=VENUE,
-      ML_MODEL_FAILURE=ARCHETYPE) + scope_key resolution rules per code. **DEFERRED-PER-FOOTGUN-3 2026-05-08**: not lost
-      — explicitly captured here so next cycle picks up.
+      ML_MODEL_FAILURE=ARCHETYPE) + scope_key resolution rules per code. **SHIPPED 2026-05-11** PM@`<pending>`:
+      `codex/15-runbooks/alerting/alert-code-taxonomy.md` extended with (a) new `## ML category — alert codes +
+      thresholds + KillSwitchScope mapping` section covering per-code routing matrix (6 ML codes with
+      severity/channels/threshold_key/unit/scope), threshold sources + tuning rationale (PSI vs ratio guard, ms vs
+      minutes foot-gun avoidance), operator escalation ladder (INFERENCE_LATENCY → STALENESS → DRIFT → PNL → VERSION →
+      KILL_SWITCH), archetype-scope semantics + recovery flow, cross-references; (b) KillSwitchScope mapping table
+      extended with `KILL_SWITCH_ML_MODEL_FAILURE` ARCHETYPE row + `details["archetype"]` scope_key source; (c)
+      Categories bullet for ML lifecycle codes with deep-link to new section; (d) `AlertRule.pattern` references
+      updated to `event_pattern` in tandem with UAC@`0b61aec` rename.
 
 ### Phase 2 — Service migration to UAC SSOT (1 day, **PARALLEL** with Phase 1 once Phase 1 lands)
 
@@ -230,14 +226,21 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
       body + defi_rules.py threshold migration + new test file). Per CLAUDE.md "Two teammates × multiple parallel
       agents" rule + work-split Agent-1 ownership of alerting Phase 2, ship-first-review-after is the institutional
       default.
-- [ ] [AGENT] P0. **Phase 2.X — `AlertRule.pattern` → `event_pattern` rename follow-up PR.** UAC@d00326d shipped the
+- [x] [AGENT] P0. **Phase 2.X — `AlertRule.pattern` → `event_pattern` rename follow-up PR.** UAC@d00326d shipped the
       Pydantic field as `pattern`; codex SSOT
       [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md) § "Alerting-Service Routing
       Rules" (lines 116-149) uses `event_pattern`. Codex is SSOT for target structure per workspace rule. Rename
       surface: UAC `unified_api_contracts/canonical/crosscutting/alerting/rules.py` (Pydantic field + every constructor
       in seed dict) + UAC tests + alerting-service consumer (config.py default-factory body + any `.pattern` attribute
       access) + tests. Single logical-unit commit; no compatibility shim. Owns the IN-FLIGHT REFACTOR banner at top of
-      this plan — banner clears when this todo flips `[x]`.
+      this plan — banner clears when this todo flips `[x]`. **SHIPPED 2026-05-11**: UAC@`0b61aec` (Pydantic field rename
+      + 44 LIVE_ALERT_RULES constructor calls + validators `_pattern_non_empty` → `_event_pattern_non_empty` +
+      `_validate_pattern_matches_codes` → `_validate_event_pattern_matches_codes` + test file rename `rule.pattern` →
+      `rule.event_pattern` × all sites + drive-by fix to
+      `test_alert_rule_accepts_kill_switch_flag_on_kill_switch_code` adding `kill_switch_scope=KillSwitchScope.VENUE` —
+      44/44 taxonomy tests green) + alerting-service@`3b94456` (router.py `_find_kill_switch_rule`: `rule.pattern` →
+      `rule.event_pattern`). `to_routing_dict()` dict KEY stays `"event_pattern"` (legacy byte-equivalence preserved).
+      IN-FLIGHT REFACTOR banner cleared by this flip.
 
 ### Phase 3 — Producer migration to UAC closed-set codes (2 days, parallel across services)
 

@@ -72,7 +72,7 @@ Adding a new code requires:
 4. Include the code in the next quarterly rehearsal scope ([`rehearsal-procedure.md`](./rehearsal-procedure.md)).
 
 The closed-set sanity test `tests/internal/unit/test_alerting_taxonomy.py` enforces (1) ↔ (2): every
-`AlertRule.pattern` must match at least one `AlertCode` member.
+`AlertRule.event_pattern` must match at least one `AlertCode` member.
 
 ### Categories
 
@@ -96,14 +96,17 @@ The closed-set sanity test `tests/internal/unit/test_alerting_taxonomy.py` enfor
 - **Service health** — `SERVICE_ERROR` / `SERVICE_ERROR_CRITICAL` / `SERVICE_DEGRADED` / `PREFLIGHT_FAILED`.
 - **Cross-cloud safety net** — `CROSS_CLOUD_EGRESS_DETECTED` (HIGH, audit 2026-05-07 §dual-cloud-active). Threshold:
   `cross_cloud_egress_bytes_per_request` = 1 MiB.
+- **ML lifecycle (`ML_*` + `KILL_SWITCH_ML_MODEL_FAILURE`)** — 6 codes added 2026-05-08 (cefi_ml_may_23_2026.epic Tab 5
+  Item 6). See [ML category section](#ml-category--alert-codes--thresholds--killswitchscope-mapping) below for the
+  per-code severity routing, threshold sources, and archetype-scope mapping.
 
 ## Construction-time validation
 
 `AlertRule` Pydantic validators raise:
 
-- `UnknownAlertCodeError` when a `pattern` matches no `AlertCode` member (rule is dead, would never fire).
+- `UnknownAlertCodeError` when an `event_pattern` matches no `AlertCode` member (rule is dead, would never fire).
 - `UnknownThresholdKeyError` when `threshold_key` is not in `ALERT_THRESHOLDS`.
-- A plain `ValueError` when `triggers_kill_switch=True` is set on a non-`KILL_SWITCH_*` code, or when `pattern` /
+- A plain `ValueError` when `triggers_kill_switch=True` is set on a non-`KILL_SWITCH_*` code, or when `event_pattern` /
   `channels` is empty.
 
 Pydantic v2 wraps these in `ValidationError` for downstream consumers, but the typed-error classes remain importable for
@@ -131,11 +134,12 @@ Per operator decision 2026-05-08 (recorded in
 [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md)
 Migrated-issues §"Kill-switch publisher hook"):
 
-| `AlertCode`                         | `KillSwitchScope` | scope_key source                         |
-| ----------------------------------- | ----------------- | ---------------------------------------- |
-| `KILL_SWITCH_DEFI_LIQUIDATION_RISK` | `GLOBAL`          | `None` (GLOBAL is platform-wide)         |
-| `KILL_SWITCH_PORTFOLIO_DRAWDOWN`    | `GLOBAL`          | `None`                                   |
-| `KILL_SWITCH_VENUE_DISCONNECT`      | `VENUE`           | `details["venue"]` (alert payload field) |
+| `AlertCode`                         | `KillSwitchScope` | scope_key source                                 |
+| ----------------------------------- | ----------------- | ------------------------------------------------ |
+| `KILL_SWITCH_DEFI_LIQUIDATION_RISK` | `GLOBAL`          | `None` (GLOBAL is platform-wide)                 |
+| `KILL_SWITCH_PORTFOLIO_DRAWDOWN`    | `GLOBAL`          | `None`                                           |
+| `KILL_SWITCH_VENUE_DISCONNECT`      | `VENUE`           | `details["venue"]` (alert payload field)         |
+| `KILL_SWITCH_ML_MODEL_FAILURE`      | `ARCHETYPE`       | `details["archetype"]` (e.g. `cefi_carry_arb`)   |
 
 Adding a new `KILL_SWITCH_*` code MUST also pick a `KillSwitchScope` and document it here. The
 `AlertRule._validate_kill_switch_scope_matches_code_family` validator rejects construction without a scope on a
@@ -167,6 +171,85 @@ recoverable via operator manual DART trigger but a missed page is not.
 
 `KillSwitchBus._deliver` itself catches subscriber callback exceptions — one bad subscriber does not abort delivery to
 other subscribers. See UTL `tests/unit/test_kill_switch_bus.py` for the deliver-isolation guarantees.
+
+## ML category — alert codes + thresholds + KillSwitchScope mapping
+
+Added 2026-05-08 per `cefi_ml_may_23_2026.epic` Tab 5 Item 6 — pre-cutover surface for ML-model lifecycle observability.
+6 codes total: 5 `ML_*` monitoring codes + 1 `KILL_SWITCH_ML_MODEL_FAILURE` halt code. All have closed-set sanity tests
+in `tests/internal/unit/test_alerting_taxonomy.py` (Phase 1 SSOT enforcement).
+
+### Per-code routing matrix
+
+| AlertCode                       | Severity   | Channels                          | threshold_key                       | ThresholdUnit  | KillSwitchScope | scope_key source        |
+| ------------------------------- | ---------- | --------------------------------- | ----------------------------------- | -------------- | --------------- | ----------------------- |
+| `ML_MODEL_VERSION_MISMATCH`     | `CRITICAL` | PAGERDUTY + TELEGRAM              | `ml_model_version_mismatch_minutes` | `MINUTES`      | n/a             | n/a                     |
+| `KILL_SWITCH_ML_MODEL_FAILURE`  | `CRITICAL` | PAGERDUTY + TELEGRAM              | n/a (binary halt)                   | n/a            | `ARCHETYPE`     | `details["archetype"]`  |
+| `ML_MODEL_DRIFT_DETECTED`       | `HIGH`     | PAGERDUTY + TELEGRAM              | `ml_model_drift_psi`                | `PSI`          | n/a             | n/a                     |
+| `ML_PNL_DEVIATION`              | `HIGH`     | PAGERDUTY + TELEGRAM              | `ml_pnl_deviation_bps`              | `BPS_OF_ONE`   | n/a             | n/a                     |
+| `ML_SIGNAL_STALENESS`           | `WARN`     | TELEGRAM + SLACK                  | `ml_signal_staleness_minutes`       | `MINUTES`      | n/a             | n/a                     |
+| `ML_INFERENCE_LATENCY_BREACH`   | `WARN`     | SLACK                             | `ml_inference_latency_p99_ms`       | `MILLISECONDS` | n/a             | n/a                     |
+
+### Threshold sources + tuning rationale
+
+- **`ml_signal_staleness_minutes`** (MINUTES) — staleness window before the signal is considered stale enough to
+  investigate. Source: ML signal-freshness SLO per archetype; SSOT in UAC `ALERT_THRESHOLDS`. Investigate before
+  escalating to `ML_MODEL_VERSION_MISMATCH` or `KILL_SWITCH_ML_MODEL_FAILURE`.
+- **`ml_model_drift_psi`** (PSI — Population Stability Index, distinct from ratio) — industry rule of thumb: `< 0.10`
+  stable, `0.10–0.25` moderate, `> 0.25` significant. Default `0.20`. Source: training-set baseline vs live inference
+  output distribution. PSI is **NOT** a ratio — DO NOT compare against ratio thresholds; the unit guard in
+  `test_ml_psi_threshold_unit_is_explicit` catches accidental mis-comparison.
+- **`ml_pnl_deviation_bps`** (BPS_OF_ONE) — P&L deviation from expected baseline over 24h rolling window. Default per
+  the strategy archetype's published expected-Sharpe band; see strategy-service archetype config for per-archetype
+  overrides via `AlertThreshold.for_archetype()`.
+- **`ml_inference_latency_p99_ms`** (MILLISECONDS — explicit unit guards against the 500-MIN-vs-500-MS foot-gun) — model
+  server p99 latency SLO. Default `500ms`. Wrong unit (minutes) = 500-minute SLO = silent disaster; the
+  `test_ml_inference_latency_threshold_unit_is_milliseconds` test catches drift.
+- **`ml_model_version_mismatch_minutes`** (MINUTES) — grace window for the live strategy to detect an unexpected model
+  version (model promotion lag tolerance). Default tight (`5 min`) — model-version mismatch is zero-tolerance
+  regulatory + risk concern; a trade against an unapproved artefact is a P0 halt.
+
+### Operator escalation ladder
+
+The ML codes are designed to escalate progressively:
+
+1. **`ML_INFERENCE_LATENCY_BREACH`** (WARN, Slack-only) — model server slowing; investigate before staleness escalates.
+2. **`ML_SIGNAL_STALENESS`** (WARN, Telegram + Slack) — signal stale; could be latency, model crash, or upstream
+   feature outage. Escalate to model-team if persists.
+3. **`ML_MODEL_DRIFT_DETECTED`** (HIGH, PagerDuty P2) — model output distribution has shifted vs training baseline.
+   Page model-team; may be regime change or stale model.
+4. **`ML_PNL_DEVIATION`** (HIGH, PagerDuty P2) — strategy underperforming expected baseline. Could be model wrong OR
+   execution degraded; correlate with execution-service alerts.
+5. **`ML_MODEL_VERSION_MISMATCH`** (CRITICAL, PagerDuty P1) — strategy executing against unexpected model version. Halt
+   archetype until artefact / promotion path resolved. No grace period — page immediately.
+6. **`KILL_SWITCH_ML_MODEL_FAILURE`** (CRITICAL, PagerDuty P1 + bus.fire()) — model server unreachable / repeated
+   inference failures. ARCHETYPE-scoped kill-switch halts the affected archetype only; other archetypes keep trading.
+   Recovery: model-team restores server OR operator overrides via DART manual trigger.
+
+### Archetype-scope semantics
+
+`KILL_SWITCH_ML_MODEL_FAILURE` is the only ARCHETYPE-scoped kill-switch in the closed set. The `details["archetype"]`
+payload field identifies WHICH archetype to halt — e.g. `"cefi_carry_basis"`, `"defi_leveraged_funding_arb"`. The
+KillSwitchBus resolves this scope_key + halts only adapter/strategy instances tagged with that archetype. Other
+archetypes (DeFi carry, sports, prediction) keep trading. Missing `details["archetype"]` → fallback to
+wildcard-halt-all-archetypes for safety (over-broad halt is the safe default, mirroring the GLOBAL/VENUE scope
+fallback semantics in [scope_key resolution](#scope_key-resolution)).
+
+Recovery from an `ARCHETYPE` kill-switch halt requires either (a) the underlying alert condition clearing (model server
+recovers, inference success rate restores) OR (b) operator manual DART override per the kill-switch runbook
+(`unified-trading-pm/codex/15-runbooks/alerting/kill_switch_ml_model_failure.md`). The execution-service halt-pump
+subscribes to the bus event + drains in-flight orders before halting; positions are NOT auto-flattened (operator
+decides flatten vs hold-and-monitor).
+
+### Cross-references for ML category
+
+- Plan: [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md)
+  Phase 1.B + Phase 1.B-ML covers the 6 codes, threshold registry seeds, and routing rules.
+- ML-monitoring producer surface: lives in `ml-inference-service/ml_inference_service/monitoring/` (drift detector,
+  staleness clock, latency sampler) — emits alerts through `alerting-service` via PubSub `defi_alerts` topic.
+- Strategy-service consumer: subscribes to `KILL_SWITCH_ML_MODEL_FAILURE` bus events via UTL `KillSwitchBus`;
+  per-archetype halt semantics in `strategy_service/lifecycle/kill_switch_subscriber.py`.
+- Test SSOT: `tests/internal/unit/test_alerting_taxonomy.py` — `_ML_LIFECYCLE_CODES` tuple + `test_ml_*` suite (8
+  tests) enforces closed-set membership, threshold units, KILL_SWITCH semantics.
 
 ### Reference plan + codex
 
