@@ -329,24 +329,40 @@ todos:
 
 todos:
 
-- [ ] [SCRIPT] P0. **Sports feature_groups → UAC**. ~60 sports feature_groups (form, league_strength, fixture_xg,
-      lineup_quality, market_consensus, etc.) need `FEATURE_REQUIRED_INPUTS` entries declaring
-      `(input_data_type, required_horizon, asset_group)` per input. Source-of-truth:
-      `features-sports-service/features_sports_service/calculators/` calculator metadata. Add as Phase-1-equivalent todo
-      to `sports_master_2026_05_07` OR ship here directly.
+- [ ] [SCRIPT] P0. **Sports feature_groups → UAC**. ~26 sports feature_groups (team_form, team_goals, team_xg, etc.)
+      need `FEATURE_REQUIRED_INPUTS` entries declaring `(input_data_type, required_horizon, asset_group)` per input.
+      **DEFERRED**: enumerator audit 2026-05-11 (`ikenna-available-at-tab`) confirmed sports feature_groups remain
+      deferred pending sports-domain upstream `(asset_group, data_type)` vocabulary stabilisation — calculators
+      currently declare `["target_fixtures", "fixtures_history"]`-style symbolic inputs not yet a UAC pair. Sources of
+      truth: `features-sports-service/features_sports_service/calculators/` calculator metadata + the existing
+      "Temporary states" entry in `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md`. Successor: ship here
+      AFTER `sports_master_2026_05_07` Phase 1-2 stabilises sports data_type vocabulary.
 
-- [ ] [SCRIPT] P0. **CeFi feature_groups → UAC**. ~5 cefi feature_groups (volatility, liquidity, microstructure,
-      perp_basis, options_iv). Add to `cefi_master_2026_05_07` OR here.
+- [x] [SCRIPT] P0. **CeFi + TradFi feature_groups → UAC** (shipped UAC@cb7c343 2026-05-11 by `ikenna-available-at-tab`).
+      Added 12 cefi/tradfi cross-instrument feature_groups: `regime_detection`, `cross_venue_spreads`,
+      `realized_implied_vol`, `cross_asset_correlation`, `cross_instrument_dynamics`, `cme_gap` (tradfi-only),
+      `book_depth_bands`, `liquidity_walls`, `liquidation_clusters`, `liquidation_band_prediction`, `flow_interaction`,
+      `cointegration`, plus phase-1 `composite_sr`. **DEFERRED**: volatility (8 fg: options_iv / futures_term_structure /
+      tradfi_vol_surface / gamma_exposure / variance_risk_premium / second_order_greeks / vol_surface_term_structure)
+      pending UAC registration of `options_chain_snapshot` / `futures_curve_snapshot` data_types; calendar (7 fg:
+      economic_calendar / economic_events / yield_curve / sentiment / corporate_actions / earnings_results / temporal)
+      pending UAC registration of those data_types + per-source available_at rule decisions
+      (announcement_time / ex_date / earnings_announcement_time); cross_instrument `dxy_momentum` pending macro `dxy`
+      data_type registration in MTDS. status: helper-shipped (cross-instrument batch); volatility + calendar +
+      dxy_momentum remain `- [ ]` per the deferred-work scoreboard.
 
-- [ ] [SCRIPT] P0. **TradFi feature_groups → UAC**. ~8 tradfi feature_groups (term_structure, butterfly,
-      calendar_spread, vix_basis, etc.). Add to `tradfi_master_2026_05_07` OR here.
+- [x] [SCRIPT] P0. **Predictions feature_groups → UAC** (shipped UAC@cb7c343 2026-05-11 by `ikenna-available-at-tab`).
+      Added 6 Polymarket-derived feature_groups consuming `(prediction, trades)` / `(prediction, book_snapshot)`:
+      `polymarket_crowd_sentiment`, `polymarket_trade_flow`, `polymarket_whale_activity`,
+      `polymarket_market_microstructure`, `polymarket_cross_market`, `polymarket_temporal_patterns`. All map
+      cleanly to the prediction CLOB tick semantic (`tick_timestamp`) per UAC AVAILABILITY_AT_SEMANTICS. status: done.
 
-- [ ] [SCRIPT] P0. **Predictions feature_groups → UAC**. Per-canonical_question_group + per-binary-outcome features. Add
-      to `predictions_master_2026_05_07` OR here.
-
-- [ ] [SCRIPT] P0. **DeFi non-defi-yield feature_groups → UAC**. The 10 currently-registered cover defi yields;
-      cross-protocol carry, bridge-flow, MEV-leakage, gas-fee bands etc. likely need additions. Audit
-      `features-defi-service/` + `features-onchain-service/` calculators.
+- [ ] [SCRIPT] P0. **DeFi non-defi-yield feature_groups → UAC**. **DEFERRED**: enumerator audit 2026-05-11
+      (`ikenna-available-at-tab`) confirmed the existing 10 onchain feature_groups in FEATURE_REQUIRED_INPUTS plus
+      the 2 deferred external-API pass-throughs (`fear_greed` / `macro_sentiment`) cover the current DeFi calculator
+      surface; cross-protocol carry / bridge-flow / MEV-leakage / gas-fee-band feature_groups are not yet declared in
+      `features-defi-service/` / `features-onchain-service/` calculator metadata. Re-audit AFTER
+      `features_repo_consolidation_2026_05_08.md` Phase 7 ships the consolidated features-service.
 
 ---
 
@@ -354,13 +370,18 @@ todos:
 
 todos:
 
-- [ ] [SCRIPT] P1. **Audit `AVAILABILITY_AT_SEMANTICS` coverage**. Grep every `record_captured` callsite across the
-      workspace. Extract `(asset_group, data_type)` pairs. For each pair, verify entry exists in UAC
-      `availability_semantics.py` registry. Output: list of (asset_group, data_type) pairs with no entry → fix-list
-      ticket per pair. Estimated 2-4h spike on a workspace-clone.
+- [x] [SCRIPT] P1. **Audit `AVAILABILITY_AT_SEMANTICS` coverage** (shipped UAC@cb7c343 2026-05-11 by
+      `ikenna-available-at-tab`). Workspace-wide grep of `record_captured(` callsites across MTDS handlers
+      enumerated 14 DeFi data_types actively written but absent from the registry. Coverage probe ran from
+      slot-3 worktree against `market-tick-data-service/cli/handlers/*.py`. AVAILABILITY_AT_SEMANTICS rose
+      from 51 → 65 entries. status: done.
 
-- [ ] [SCRIPT] P1. **Add missing entries**. For each pair from the audit, add an `AvailabilitySemantic` literal + entry
-      to the registry. Sports + writegate Phase 2.D-A-E already cover some; close the residual gap.
+- [x] [SCRIPT] P1. **Add missing entries** (shipped UAC@cb7c343 2026-05-11 by `ikenna-available-at-tab`).
+      Added 14 DeFi pairs to AVAILABILITY_AT_SEMANTICS, all `tick_timestamp` semantic (per-row on-chain event
+      reads with the row's own timestamp == available_at): `dex_pools` / `vault_share_price` / `solana_defi`
+      / `oracle_prices` / `governance_events` / `perp_funding` / `staking_yields` / `bridge_events` /
+      `position_data` / `token_transfers` / `liquidation_events` / `liquidations` / `mev_events` /
+      `lst_rates`. No drift after `validate_required_inputs()` re-run. status: done.
 
 ---
 
@@ -472,8 +493,8 @@ up cleanly without re-reading session notes.
 | Phase 0.5 — MDPS write-gate enforcement                  | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3. `BarBoundaryViolationError` is already importable from UAC; wiring lives at MDPS `ManifestWriter.record_captured` invocation in the orchestrator path. The validator (`assert_bar_boundary_contract`) is the gate primitive.                                                    |
 | Phase 0.6 — QG static check for MDPS bar emission        | `todo` (checkbox `- [ ]`)                                    | DEFERRED-AFTER-Phase 0.3. Mirrors writegate STEP 5.64 AST-walk: every bar-emitting code path must call `compute_bar_close_boundary` (or import the UTL helper); ban inline `pd.Timestamp.floor` / `dt.replace(...)` bypasses.                                                                              |
 | Phase 1 (DeFi / TradFi / Predictions adapter stamping)   | `todo` (checkbox `- [ ]` × 3)                                | Owned by respective asset_group master plans (defi_master / tradfi_master / predictions_master). Harsh slot 4 picks up per-adapter wiring once Phase 0 lands at MDPS level.                                                                                                                              |
-| Phase 4 — FEATURE_REQUIRED_INPUTS expansion              | `todo` (checkbox `- [ ]` × 5)                                | This session's next work item; tracked in slot 3 todo list.                                                                                                                                                                                                                                              |
-| Phase 5 — AVAILABILITY_AT_SEMANTICS workspace-wide audit | `todo` (checkbox `- [ ]` × 2)                                | This session's next work item; tracked in slot 3 todo list.                                                                                                                                                                                                                                              |
+| Phase 4 — FEATURE_REQUIRED_INPUTS expansion              | `helper-shipped` (UAC@cb7c343 — 19 cross-instrument fg added) | DEFERRED-AFTER-`features_repo_consolidation_2026_05_08.md` Phase 7 (sports vocabulary stabilisation; defi non-yield re-audit) + UAC data_type registration for volatility / calendar / dxy_momentum (own follow-up todos in same plan body Phase 4 section). FEATURE_REQUIRED_INPUTS rose 40 → 59.       |
+| Phase 5 — AVAILABILITY_AT_SEMANTICS workspace-wide audit | `done` (UAC@cb7c343 — 14 defi pairs added)                    | AVAILABILITY_AT_SEMANTICS rose 51 → 65. Audit + closure shipped same commit; no drift remaining at MTDS handler grep boundary.                                                                                                                                                                          |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
@@ -534,6 +555,27 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
 
 This session shipped the cefi half of Phase 1 P0; DeFi/TradFi/Predictions/Sports adapter stamping items in Phase 1
 remain `- [ ]`. Phases 0/2/4/5/6/7/8/9/10 untouched this session.
+
+## DONE-2026-05-11 — `ikenna-available-at-tab` session (slot 3)
+
+| Item                                                                                  | Status                       | Commits                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0.1 — UAC bar_boundary SSOT (closed-set timeframes + 4-clause contract)         | `done`                       | unified-api-contracts@5240000 (canonical/crosscutting/bar_boundary.py + 24 unit tests + root-facade re-export)                                                                                                                                                                                                                                          |
+| Phase 0.2 — UTL `compute_bar_close_boundary` helper                                   | `done`                       | unified-trading-library@d798fcf3 (availability_stamping.compute_bar_close_boundary + 20 unit tests; strictly-after ceiling, integer microsecond arithmetic, idempotent under replay, UAC validator round-trip)                                                                                                                                            |
+| Phase 5 — AVAILABILITY_AT_SEMANTICS audit + closure (14 defi pairs added)             | `done`                       | unified-api-contracts@cb7c343                                                                                                                                                                                                                                                                                                                            |
+| Phase 4 — FEATURE_REQUIRED_INPUTS expansion (19 cross-instrument feature_groups)      | `helper-shipped` (partial)   | unified-api-contracts@cb7c343 (cross-instrument + Polymarket); volatility / calendar / dxy_momentum / sports / defi-non-yield deferred per the in-body annotations                                                                                                                                                                                       |
+| Cross-side ping (Phase 0 lands → Harsh slot 4 unblocks per-adapter wiring)            | `done`                       | unified-trading-pm@9bc57fcb (plans/active/_agent_pings.md)                                                                                                                                                                                                                                                                                                |
+| Plan flips (Phase 0 + Phase 4 + Phase 5 checkboxes + deferred-work scoreboard)        | `done`                       | unified-trading-pm@9bc57fcb (Phase 0 + cross-side ping) + PM@<this commit> (Phase 4 + 5 + DONE block)                                                                                                                                                                                                                                                    |
+
+Open Phase-0 sub-items (0.3 MDPS audit / 0.4 reconciler / 0.5 write-gate / 0.6 QG check) and Phase-1 per-asset-group
+adapter stamping for DeFi / TradFi / Predictions / Sports remain `- [ ]` per the deferred-work scoreboard above —
+all DEFERRED-AFTER `features_repo_consolidation_2026_05_08.md` Phase 7 + `live_pipeline_mtds_mdps_features_2026_05_08.md`
+Phase 4-5. Harsh slot 4 picks up per-adapter wiring once MDPS unblocks.
+
+Counts after this session: AVAILABILITY_AT_SEMANTICS 51 → 65 (+14). FEATURE_REQUIRED_INPUTS 40 → 59 (+19).
+`validate_required_inputs()` green workspace-wide. UAC test suite (unit/test_bar_boundary.py +
+unit/test_availability_semantics.py + test_feature_dag_ssot.py minus the two pre-existing workspace-layout-dependent
+tests) green from slot-3 worktree.
 
 ## Audit-2026-05-10 finding — post-cutover Phase: lift `available_at` to schema-level invariant
 
