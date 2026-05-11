@@ -1,7 +1,12 @@
 ---
 title: "expected_window_completeness_pct range drift — UAC says 0-1 fraction, codex says 0-100 percentage"
 created: 2026-05-11
+resolved: 2026-05-11
 author: ikenna-slot-6
+status: resolved
+resolution: option-a-rename-to-fraction
+resolution_commits:
+  - unified-api-contracts@76f950a
 source:
   - unified_api_contracts/canonical/crosscutting/manifest_schema.py:EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN docstring (UAC@174f401)
   - codex/02-data/availability-manifest-and-data-status.md:253
@@ -11,6 +16,15 @@ locked_since: 2026-05-11
 ---
 
 # `expected_window_completeness_pct` range drift — Case-5 SSOT contradiction
+
+> **✅ RESOLVED 2026-05-11** — operator picked option (a) rename. Shipped at UAC@`76f950a`: column renamed from
+> `expected_window_completeness_pct` → `expected_window_completeness_fraction`; value range stays `[0.0, 1.0]`;
+> constant name `EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN` → `EXPECTED_WINDOW_COMPLETENESS_FRACTION_COLUMN`;
+> `V8_NEW_COLUMNS` tuple + `V8_COLUMN_DEFAULTS` dict + root facade `__all__` updated; tests + docstring naming-history
+> note shipped. Codex docs (`availability-manifest-and-data-status.md`, `service-output-emission-semantics.md`) +
+> plan body (`manifest_schema_final_gate_2026_05_09.md` Phase 1.C) updated in same logical unit at PM@<follow-up>.
+> Rename window was free (zero on-disk writes had shipped); the `_pct` constant name is banned post-`76f950a`.
+> Original analysis preserved below for audit trail.
 
 > **Severity**: P1 — silent correctness risk; not blocking 2026-05-15 freeze but **must** resolve before downstream
 > consumers (deployment-api drilldowns, Phase 4 sweep, batch-vs-live recon) start reading the column at runtime.

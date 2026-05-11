@@ -17,12 +17,16 @@ related_codex:
 > `publish_with_policy()`); slice (b) shipped UTL@`ac5ade59` + MDPS@`9e1a93e` (manifest_completeness helper +
 > publish_with_manifest_lookup wrapper + ohlcv_1h POC); slice (c) Phase 6.1-6.9 covers the remaining 8 services
 > (multi-week rollout). v8 manifest schema columns for `service_emission_state` + `last_emission_decision_at` +
-> `expected_window_completeness_pct` are owned by [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
-> Phase 1 — **shipped 2026-05-11 at UAC@`174f401`** (`unified_api_contracts.canonical.crosscutting.manifest_schema`
+> `expected_window_completeness_fraction` are owned by [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+> Phase 1 — **shipped 2026-05-11 at UAC@`174f401`** + rename @ UAC@`76f950a` (`unified_api_contracts.canonical.crosscutting.manifest_schema`
 > declares `MANIFEST_SCHEMA_VERSION_V8 = 8` + `V8_NEW_COLUMNS` + `V8_COLUMN_DEFAULTS` + `READER_FALLBACK_WINDOW_DAYS`;
 > `unified_api_contracts.canonical.crosscutting.service_emission_state` declares `ServiceEmissionStateEnum` +
 > `SERVICE_EMISSION_STATES` frozenset + `ManifestRowBlockedError`; `service_emission_policy.next_state(*, policy, event)`
 > resolves `(ServiceEmissionPolicy, EmissionLifecycleEvent)` → `ServiceEmissionStateEnum` for the writer hot path).
+> The third column was originally shipped as `expected_window_completeness_pct` at UAC@`174f401`; renamed to
+> `_fraction` at UAC@`76f950a` per
+> [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
+> option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg.
 
 ## TL;DR
 
@@ -229,5 +233,5 @@ with this structure (Citadel-Grade Planning Standards):
 - `cursor-configs/CLAUDE.md` § "Service-output emission policy" — key-rule entry pointing here.
 - `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` slices (a) + (b) + (c) — the architecture plan.
 - `plans/active/manifest_schema_final_gate_2026_05_09.md` Phase 1-2 — owns the v8 manifest schema columns
-  (`service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`) which complement the
+  (`service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_fraction`) which complement the
   in-band parquet-row columns this doc describes.

@@ -6,7 +6,7 @@ overview: |
   Phase 3 parquet walk does FIVE migrations in ONE pass to fit the 14-day window: (1) `pipeline_mode=` hive
   partition, (2) `category=` → `asset_group=` rekey, (3) 5 drift axes from 2026-05-04 phantom audit, (4) v8
   NULL-column backfill (`service_emission_state` + `last_emission_decision_at` +
-  `expected_window_completeness_pct`), (5) cross-asset rescan class-A auto-fixes. Closed-set
+  `expected_window_completeness_fraction`), (5) cross-asset rescan class-A auto-fixes. Closed-set
   `ServiceEmissionStateEnum` ratified inline (4 values: `PUBLISHED_OK` / `PUBLISHED_DEGRADED` /
   `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`) — slice b spec landed as part of this plan. Workspace-wide Phase 4
   consumer sweep across 8 repos is critical-path. Two-stage MTDS bounce-sweep: drain May 12, full launch May 16.
@@ -245,7 +245,7 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       other three lifecycle events map 1:1 to state values.
 - [x] [AGENT] P0. Phase 1.C — Manifest schema column declaration in `canonical/crosscutting/manifest_schema.py` (NEW or
       extend existing). 3 new columns: `service_emission_state` (str | None, ServiceEmissionStateEnum value);
-      `last_emission_decision_at` (timestamp | None, ISO-8601 ms UTC); `expected_window_completeness_pct` (float | None,
+      `last_emission_decision_at` (timestamp | None, ISO-8601 ms UTC); `expected_window_completeness_fraction` (float | None,
       0.0-1.0). All nullable; v7 rows back-compat.
       **SHIPPED 2026-05-11** — UAC@174f401 with NEW `unified_api_contracts/canonical/crosscutting/manifest_schema.py`
       declaring all 3 column-name constants + `MANIFEST_SCHEMA_VERSION_V8 = 8` + `V8_NEW_COLUMNS` tuple + back-compat
@@ -256,12 +256,18 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       circuit-breaker / risk-rule rebase resolved by another agent's UAC@dc4c9f0; tests pass; basedpyright 0/0; codex
       compliance pass). **Done-definition**: `unified-api-contracts@174f401` + `@d938a69` shipped + 27 new tests added
       (12 emission_state + 8 next_state + 6 manifest_schema + 1 EXPECTED_KNOWN_SOURCE_GAP).
+      **2026-05-11 RENAME** — third v8 column renamed from `expected_window_completeness_pct` → `expected_window_completeness_fraction`
+      at UAC@`76f950a` per operator-approved option (a) from
+      [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](issues/expected_window_completeness_pct_range_drift_2026_05_11.md).
+      Three-way SSOT drift on range convention (UAC said 0-1; codex said "0-100 fraction" oxymoron; column name `_pct`
+      implied percentage; UTL `completeness_fraction` arg canonical 0-1). Rename free because zero on-disk writes had
+      shipped. `_pct` constant name banned post-`76f950a`.
 
 ### Phase 2 — UTL v8 ManifestWriter (May 10-12, PARALLEL with Phase 1/3)
 
 - [ ] [AGENT] P0. Phase 2.A — `unified_trading_library/manifest_writer.py`: extend `record_captured` / `record_empty` /
       `record_failed` / `record_expected_empty` / `record_expected_unattempted` with 3 new kwargs
-      (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_pct`) all defaulting to
+      (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) all defaulting to
       `None` for back-compat with existing callsites. Phase 4 sweeps the callsites; the default is REMOVED at end of
       Phase 4 (explicit-or-fail per the writegate Phase 4 P0 P0 contract).
 - [ ] [AGENT] P0. Phase 2.B — `emission_publisher.py` integration: extend `publish_with_policy` to compute

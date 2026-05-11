@@ -250,8 +250,11 @@ The schema has evolved through six published revisions: v4 → v5 (honest-covera
 adds 3 emission-tracking columns: **`service_emission_state`** (closed-set `ServiceEmissionStateEnum`:
 `PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`), **`last_emission_decision_at`**
 (ISO-8601 UTC timestamp of the most recent `publish_with_policy()` decision for this row), and
-**`expected_window_completeness_pct`** (0.0-100.0 fraction of the expected per-row window that was actually populated;
-denominator-aware coverage metric). The `pipeline_mode` column shipped earlier as part of the
+**`expected_window_completeness_fraction`** (0.0-1.0 fraction of the expected per-row window that was actually
+populated; denominator-aware coverage metric; renamed from `_pct` to `_fraction` at UAC@`76f950a` 2026-05-11 per
+[`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
+option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg
+convention). The `pipeline_mode` column shipped earlier as part of the
 `gcs_migration_bundle_pipeline_mode_2026_05_08` work and is preserved in v8. v7 is **legacy (in-flight migration; 30-day
 grace window per the final-gate plan)** — `read_availability_index()` backfills missing v8 columns to defaults until the
 ~2026-06-15 reader-fallback deletion cutoff. The current runtime SSOT lives in
@@ -341,7 +344,7 @@ class AvailabilityRecord:
     # ─────────────────────────────────────────────────────────────────────
     service_emission_state: str | None = None  # "PUBLISHED_OK" | "PUBLISHED_DEGRADED" | "STALE_DATA_HEARTBEAT_ONLY" | "BLOCKED" | None (pre-migration)
     last_emission_decision_at: str | None = None  # ISO-8601 UTC timestamp of last publish_with_policy decision
-    expected_window_completeness_pct: float | None = None  # 0.0-100.0 fraction of expected per-row window populated
+    expected_window_completeness_fraction: float | None = None  # 0.0-1.0 fraction of expected per-row window populated (renamed from _pct at UAC@76f950a 2026-05-11)
 ```
 
 ### Column Rules
