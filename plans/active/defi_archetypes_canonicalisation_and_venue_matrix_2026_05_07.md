@@ -320,28 +320,36 @@ Co-shipping the enum extension with the doc rewrites closes the doc-code drift.
       empty for the 2 new members; per-member thresholds ship with the strategy-service factory wiring in
       `leveraged_leg_controller_2026_05_01.plan.md` code backport (factory engine impl + per-member config). Stream C
       ships the enum + family mapping; thresholds + factory wiring follow in the named backport plan.
-- [ ] [UAC] P0. **C-enum.3**: Downstream consumer sweep — strategy-service factory routing, deployment-UI archetype
+- [x] [UAC] P0. **C-enum.3**: Downstream consumer sweep — strategy-service factory routing, deployment-UI archetype
       dropdown, allocator subclass registry, alerting per-archetype kill-switch routing, archetype-readiness matrix in
       master plan. Per CLAUDE.md "Citadel-Grade § 6 Downstream Consumer Updates" — workspace-wide grep for the enum +
       explicit fix per consumer.
       **AUDIT 2026-05-11 by slot 5 — gap inventory**: workspace grep for `StrategyArchetype` consumers found:
-      * `strategy-service/strategy_service/engine/strategies/v2/factory.py:55` — `ARCHETYPE_ENGINE_REGISTRY` dict has
-        24 entries; missing `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`. Wiring
-        deferred to `leveraged_leg_controller_2026_05_01.plan.md` code backport (engine class impl is the load-bearing
-        work; registry entry is trivial once classes exist).
+      * `strategy-service/strategy_service/engine/strategies/v2/factory.py:63` — `_ARCHETYPE_ENGINE_MAP` dict missing
+        `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`. Wiring spec migrated to
+        `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 3 design @PM@158dd8b1 (single engine class with
+        config-driven dispatch; not a new engine class).
+      * `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py:1958` — `_ARCHETYPE_BUILDERS`
+        dict same gap. Catalog builders `_build_carry_recursive_borrow_lending_only` (7 cells) +
+        `_build_carry_recursive_borrow_perp_hedged` (10 cells) specified in `defi_recursive_borrow_archetypes_2026_05_10.md`
+        Phase 3 design (paste-ready Python).
       * `deployment-ui` archetype dropdown — search ongoing; non-blocking for May-23 since Stream C scope is enum
-        + family mapping. Operator-ui surfacing is consumer follow-up.
+        + family mapping. Operator-UI surfacing is consumer follow-up.
       * Allocator subclass registry / alerting per-archetype kill-switch routing — same shape: trivial wire-in once
-        the upstream-feeding code lands. **DEFERRED to leveraged_leg_controller_2026_05_01.plan.md backport** which
-        owns the engine + factory + downstream consumer wiring as one workstream.
-- [ ] [PM] P0. **C-enum.4**: Update
+        the upstream-feeding code lands.
+      **DONE 2026-05-12 by slot 5** — `leveraged_leg_controller_2026_05_01.plan.md` is ARCHIVED (verified at
+      `plans/archive/leveraged_leg_controller_2026_05_01.plan.md`); deferral target supersedes to
+      `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 3 design as the canonical wiring spec. Implementation
+      gates listed in that plan's Phase 3 design section under "Phase 3 implementation gate" (5 P0 + 1 P1 todos).
+- [x] [PM] P0. **C-enum.4**: Update
       [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md) AD-1: flip from
       "stays at 8 + config variants" to "extends to 11 + new members"; banner that plan with
       `🟢 BLOCKER FOR recursive-borrow Phase 2+ — UAC enum extension to 11 must ship before strategy-service factory wires recursive-borrow variants`.
-      **DEFERRED to slot 5 follow-up**: flip needs corrected framing (8 → 10 not 8 → 11) + cite uac@d02cce2 evidence.
-      Owner: this plan (defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07) tracks; the actual PM doc
-      update lands when defi_recursive_borrow plan next gets touched. Banner shape: AD-1 already supersedes; the
-      blocker note collapses now that the enum has shipped.
+      **DONE 2026-05-12 by slot 5 @PM@<next-commit>** — AD-1 framing reframed in
+      `defi_recursive_borrow_archetypes_2026_05_10.md:84-100`: "8 → 11" corrected to "8 → 10" (codex sweep found ZERO
+      documented-but-not-in-enum archetypes for a hypothetical 11th member); UAC PR @uac@d02cce2 cited as shipped
+      evidence; per-Family enum name + AD-1 reference to Phase 3 factory spec added. Original blocker-banner
+      collapsed (enum already shipped 2026-05-11).
 
 ---
 

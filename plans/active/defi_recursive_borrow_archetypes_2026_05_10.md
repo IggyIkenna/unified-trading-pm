@@ -81,23 +81,24 @@ window if Phase 1 starts immediately.
 
 ## Architectural decisions (locked from 2026-05-09 research)
 
-> **AD-1 — FLIPPED 2026-05-10 cross-plan audit Q10 (Policy B larger-set-wins).** Both families = **NEW UAC
-> `StrategyArchetype` enum members** (extending from 8 → 11 archetypes; was originally "config variants of
-> `CARRY_RECURSIVE_STAKED`" — that approach REJECTED in favor of explicit enum members per the larger-set rule + to
-> match codex doc Stream C "all 11 archetypes" language). UAC PR owned by
+> **AD-1 — FLIPPED 2026-05-10 cross-plan audit Q10 (Policy B larger-set-wins). REFRAMED 2026-05-12 by slot 5 per
+> Stream C C-enum.1 audit + C-enum.4 backport.** Both families = **NEW UAC `StrategyArchetype` enum members**
+> (extending from **8 → 10** archetypes — NOT "8 → 11" as originally framed; slot 5 codex sweep 2026-05-11 found
+> ZERO documented-but-not-in-enum archetypes for a hypothetical 11th member; framing collapsed to the 2 actually
+> needed). Was originally "config variants of `CARRY_RECURSIVE_STAKED`" — that approach REJECTED in favor of
+> explicit enum members per the larger-set rule. **UAC PR SHIPPED** at `uac@d02cce2` (2026-05-11 per
 > [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
-> Stream C (per Q10 most-comprehensive-owner ratification; Stream C already ships the codex doc backport for "all 11
-> archetypes" so the enum-extension PR is the natural co-shipment). Strategy-service factory routing updates to dispatch
-> per archetype enum member (not per config-variant lookup). Justification for the flip: explicit enum is clearer for
-> downstream consumers (deployment-UI archetype dropdown, allocator subclass routing, kill-switch per-archetype scoping,
-> archetype-readiness matrix per master plan); config-variant shape conflates orthogonal axes (`perp_leg_enabled` is a
-> structural difference, not a config tuning knob). Justification for original AD-1: the recursion mechanics,
-> share-class semantics, and kill-switch surface (drawdown 0.05 / breach 0.03 per
-> [`archetype_config.py:169-177`](../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_config.py#L169-L177))
-> were thought identical — but Family 2's perp leg adds a distinct risk surface (funding-sign-flip, perp-venue outage,
-> cross-venue delta drift) that warrants explicit enum-level visibility. Family 1 = new enum member
-> `CARRY_RECURSIVE_BORROW_LENDING_ONLY`; Family 2 = new enum member `CARRY_RECURSIVE_BORROW_PERP_HEDGED`. Plus one more
-> archetype TBD by Stream C (the third of the 8→11 expansion — TBD in Stream C UAC PR).
+> Stream C C-enum.2 closure) — `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` visible
+> at `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py:76-78`. Strategy-service factory
+> routing updates dispatch per archetype enum member (not per config-variant lookup); see Phase 3 design above for
+> `factory.py:63` + `catalog.py:1958` spec. Justification for the flip: explicit enum is clearer for downstream
+> consumers (deployment-UI archetype dropdown, allocator subclass routing, kill-switch per-archetype scoping,
+> archetype-readiness matrix per master plan); config-variant shape conflates orthogonal axes (`perp_leg_enabled` is
+> a structural difference, not a config tuning knob). Family 2's perp leg adds a distinct risk surface (funding-sign-
+> flip, perp-venue outage, cross-venue delta drift) that warrants explicit enum-level visibility (drawdown 0.05 /
+> breach 0.03 per
+> [`archetype_config.py:169-177`](../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_config.py#L169-L177)).
+> Family 1 = `CARRY_RECURSIVE_BORROW_LENDING_ONLY`; Family 2 = `CARRY_RECURSIVE_BORROW_PERP_HEDGED`.
 
 > **AD-2**. The recursion is **purely lending-side**. Perp leg (Family 2) is a single matched short, separately
 > USDC-margined. Hyperliquid / Bybit / OKX are USDC-margin-only — borrowed ETH cannot be posted as perp margin without
