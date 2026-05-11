@@ -288,6 +288,22 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       `MissingVMShardIsolationError` guard. 12 unit tests under `tests/unit/test_manifest_migrations_v7_to_v8.py`.
 - QG: UTL quality-gates.sh clean. **Done-definition**: `unified-trading-library@<sha>` shipped + 11+ unit tests +
   back-compat with v7 rows. **STATUS — 4/4 sub-items ✅; UTL refs above; 30+ unit tests landed total.**
+- [ ] [AGENT] P2. **Phase 2 follow-up — `MANIFEST_SCHEMA_VERSION` vs codex doc drift (slot-6 audit finding 2026-05-11).**
+      `manifest_writer.py:131` is still `MANIFEST_SCHEMA_VERSION = 7` while the v8 emission columns
+      (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) ARE present in
+      the `AvailabilityRecord` dataclass + the 5 `record_*` method sigs (Phase 2.A @UTL@`0adea1c6`). That looks
+      *intentional* per the Phase-2 done-definition ("back-compat with v7 rows" — v7-labeled rows carry nullable v8
+      columns until Phase 4 makes the kwargs required, THEN bump to 8) — but the codex doc
+      `codex/02-data/availability-manifest-and-data-status.md` overstates it: line 261 prose says
+      "`MANIFEST_SCHEMA_VERSION = 8` ... in `manifest_writer.py`" while the embedded code snippet (line 265) correctly
+      says `MANIFEST_SCHEMA_VERSION = 7` — internal inconsistency in the doc + doc-prose-vs-code drift. Nothing branches
+      on `schema_version == 8` (grepped UTL/deployment-api/MTDS/MDPS/instruments-service — zero hits), so no current
+      reader-logic breakage. **Decision needed (ikenna-slot-6 / this plan owner)**: either (a) the code should bump to 8
+      now (and the codex snippet at line 265 updates to 8), OR (b) the code stays at 7 transitionally and the codex
+      prose at line 261 + the "Schema v8 (current; ratified)" header soften to "transitionally writing v7-labeled rows
+      with nullable v8 columns; bumps to 8 at end of Phase 4". Pick one + reconcile the doc. Source: slot-6 codex-audit
+      pass 2026-05-11, prompted by the 13:30 `[main → slot 6]` ping ("verify the v8 ManifestWriter is *shipped* not just
+      UAC-declared"). No urgency — additive, back-compat, no reader breakage; but it's a "docs are the intent" drift.
 
 ### Phase 3 — Cross-asset rescan launcher (May 9-11, PARALLEL with Phase 1/2)
 
