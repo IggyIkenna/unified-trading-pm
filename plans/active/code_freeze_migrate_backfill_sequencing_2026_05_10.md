@@ -471,3 +471,113 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
 EOD deferral-audit (per CLAUDE.md "End-of-cycle audit clause"): every row above is grep-findable in `plans/active/`
 (work-split, the 3 slot-6 issue docs in `plans/active/issues/`, or — for the 33 codex docs — the owning plans' `- [ ]`
 todos). No deferral lives only in chat.
+
+## DONE-2026-05-11 — slot 5 (ikenna-defi-phase-1e-tab) DeFi Phase 1.E sequencing readiness audit
+
+Slot 5 (Ikenna side, `tab/ikennaigboaka/5`) day-1 against the work-split § "Slot 5 — DeFi Phase 1.E sequencing
+readiness + cross-plan coordination" scope. Audit the 4 Phase 1.E plans (`defi_catalogue_chain_primitives_2026_05_10`
++ `arbitrage_price_dispersion_finalisation_2026_05_09` + `cme_polymarket_arb_2026_05_08` +
+`defi_recursive_borrow_archetypes_2026_05_10`) for Phase 2 freeze readiness; refresh the anti-sequencing audit table;
+verify cross-plan banner sweep on the 9 + 3 banner targets.
+
+**Shipped 2026-05-11**:
+
+- `PM@fff39bfa` — **Anti-sequencing audit table refresh** (this plan § "Anti-sequencing audit"). Updated 2 existing
+  rows + added 2 new rows.
+  - **`arbitrage_price_dispersion_finalisation_2026_05_09.md`**: ✅ SHIPPED 2026-05-09 per audit. UAC
+    `StrategyArchetype.ARBITRAGE_PRICE_DISPERSION` present at `enums.py:68` (grep-verified — no `LEVERAGED_FUNDING_ARB`
+    standalone). Phases A-E shipped per plan body commit ledger: strategy-service@24f8494 (dispatcher) + @0b4ef0e
+    (helper module) + @04c0d52 (engine 8-step loop) + @de9b4b0 (multi-pair allocator); pnl-attribution archetype rows
+    shipped; codex circular-ref resolved Phase E. **NO new canonical_question_group; NO new StrategyArchetype enum
+    value. Anti-sequencing risk = NONE.** Two P1 carryover items remain (canonical BTC/USDT slot entry at
+    `archetype_slot_resolver.py` + slot resolver test) — non-blocking for Phase 2 (config additions land at
+    strategy-service, not UAC/manifest).
+  - **`cme_polymarket_arb_2026_05_08.md`**: ✅ Phase 1 SHIPPED uac@b95d146 per audit. `InstrumentType.EVENT_CONTRACT`
+    present at `_instrument_enums.py:54` + `INSTRUMENT_TYPES_BY_VENUE[CME]` (venue_constants.py:358) +
+    `INSTRUMENT_TYPE_FOLDER_MAP["EVENT_CONTRACT"] = "event_contracts"` + Databento BAG classifier
+    (`external/databento/normalize.py:69-110`; root prefix dispatcher). **Enum value MUST be referenced in v8 schema
+    declaration** (writegate slice (b) Phase 5.1 — slot 2 owns; slot 5 → slot 2 handshake). Phases 2-5 BLOCKED
+    (predictions-master Phase 5 + tradfi-master Q1+Q2 + post-cutover per plan body) — explicitly OUT of May-23 scope.
+    No additional anti-sequencing risk from post-cutover phases since `linked_canonical_question_group` is a cross-link
+    field, not a new shard atom dimension.
+  - **NEW row — `defi_recursive_borrow_archetypes_2026_05_10.md`**: AD-1 FLIPPED 2026-05-10 per cross-plan audit Q10
+    ratification — Family 1 + Family 2 are NOW NEW UAC StrategyArchetype enum values
+    (`CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`), no longer config variants of
+    CARRY_RECURSIVE_STAKED. UAC PR ownership transferred to
+    `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07` Stream C (most-comprehensive-owner rule — Stream C
+    already ships the 8→11 archetype expansion codex backport). Plan body Phase 1 transferred to
+    `defi_catalogue_chain_primitives_2026_05_10` Phase 1 + 3 (lending-indices data_types + adapter rewrites + backfill
+    VM). Per slot 5 grep 2026-05-11: NEITHER enum value present in UAC `internal/architecture_v2/enums.py:31-118` yet.
+    **Must land in v8 declaration before Phase 1 freeze 2026-05-15.** Decision: Ship via
+    `defi_archetypes_canonicalisation` Stream C (the canonical owner) before Phase 1 freeze; slot 5 → slot 2 v8 schema
+    declaration handshake per work-split Cross-tab handshakes (P0).
+  - **NEW row — `defi_catalogue_chain_primitives_2026_05_10.md`**: NEW `SUPPLY_APY` / `BORROW_APY` / `UTILISATION` /
+    `LIQUIDATION_THRESHOLD` / `EMODE_PARAMS` data_type enums + 26 venue entries + Solana Jito MEV mode + PERP_MARGIN_TIERS
+    table + LST_TOKEN_TO_PROTOCOL_ASSET SSOT. **Existing UAC state per audit**: `CHAIN_GENESIS_DATES` (chain_env.py:91)
+    covers 22 chains ✅; `PROTOCOL_LAUNCH_DATES` (chain_env.py:144) covers ~50+ (chain, protocol) entries including
+    Aave V3 multi-chain + Compound V3 + Uniswap V2-V4 + Spark + Lido + Rocket Pool + Etherfi + Ethena + Maker + Frax +
+    Solana protocols ✅ (Tab 14 audit 2026-05-08 refined many to subgraph-truth dates). **Open per Phase 1A**: 26 new
+    venue entries (Yearn / Convex / Beefy / Pendle / Idle / Balancer / Sushi V2+V3 / PancakeSwap V3 / Camelot V3 /
+    Aerodromeq V3 / Velodrome V2 / TraderJoe V2 / Raydium / Orca / Jupiter / Spark verify / Radiant / RocketPool verify /
+    Solblaze / EigenLayer / Symbiotic / Karak / Renzo / KelpDAO / Puffer / Jito-restaking). Phase 1 SEQUENTIAL gate for
+    the catalogue plan's execution DAG; ~145-260 AI-day total scope across Phases 1-8 for May-23 cutover.
+    **Lending-indices data_types must land in v8 declaration** (slot 2 owns; slot 5 → slot 2 handshake).
+  - **`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` row extended**: Stream B mostly shipped via
+    `arbitrage_price_dispersion_finalisation`; Stream C owns the 8 → 11 StrategyArchetype enum expansion (must ship
+    CARRY_RECURSIVE_BORROW_LENDING_ONLY + CARRY_RECURSIVE_BORROW_PERP_HEDGED + 3rd-TBD per AD-1 flip 2026-05-10).
+    Stream C is Phase 1 critical path.
+- `PM@8ea02ccd` — **Cross-plan banner sweep — 3 missing banners added**. Per work-split § Slot 5 P1 (banner sweep
+  helper to slot 1 P0 banner verification): walked the 9 banner targets at this plan § "Cross-plan coordination
+  banners" + the 3 new (b+)-driven targets. **Result of grep audit 2026-05-11**:
+  - ✅ 8 of 9 prior banner targets verified PRESENT (master_to_live_defi:26 / manifest_evolution_master:29 (epic) /
+    manifest_migration_master:27 (epic) / gcs_migration_bundle_pipeline_mode:547 / aws_migration_defi_first:19
+    (already added by slot 1 PM@1b9e6451 yesterday per work-split note) / writegate_honest_coverage_endtoend:32 /
+    features_repo_consolidation:931 / live_pipeline_mtds_mdps_features:938).
+  - ✅ 3 missing banners ADDED this commit:
+    - `deployment_ui_lifecycle_tabs_2026_05_08.md` — BE-AWARE banner clarifying env-tier UI surface already shipped
+      pre-2026-05-11 per `codex/05-infrastructure/deployment-ui-architecture.md`; no additional UI work for (b+)
+      data-plane provisioning.
+    - `simulation_scenarios_topology_price_shocks_2026_05_09.md` — BE-AWARE banner citing the anti-sequencing audit
+      row (Phase 2.2 single-walk discipline risk if sim harness writes synthetic parquets into real buckets);
+      required mitigation = dedicated `*-sim-*` env-tiered buckets per yaml SSOT.
+    - `client_reporting_pnl_attribution_mvp_2026_05_10.md` — BE-AWARE banner citing the bucket-name SSOT (b+)
+      requirement that client-reporting + pnl-attribution output buckets MUST use
+      `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)` not inline f-strings (QG STEP
+      5.69 ratchet); Phase 0c bucket provisioning lands these.
+
+**Open questions surfaced 2026-05-11 — NONE from slot 5 directly.** The work-split LEDGER cited two cross-side pings
+from harsh-main 2026-05-11 07:10 UTC overlapping slot 5 + slot 1 scope (`EXPECTED_KNOWN_SOURCE_GAP` enum decision +
+v8-schema-owner ambiguity); the v8-schema-owner question is writegate-Phase-5.1-ownership (slot 2's plan-of-record),
+NOT a Phase 1.E sequencing question — slot 5 defers to slot 1 + operator for those.
+
+**Findings raised 2026-05-11** (per CLAUDE.md "Findings Triage Discipline"):
+
+- **Case-3 (outside my plan, fits another active plan)**: NEW UAC StrategyArchetype enum values
+  `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` are owned by
+  `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07` Stream C per AD-1 flip 2026-05-10. **Not fixing
+  here** — surfaced in the new audit table row for `defi_recursive_borrow_archetypes`. Stream C agent picks up.
+- **Case-3 (outside my plan, fits another active plan)**: lending-indices data_types (SUPPLY_APY / BORROW_APY /
+  UTILISATION / LIQUIDATION_THRESHOLD / EMODE_PARAMS) are owned by `defi_catalogue_chain_primitives` Phase 1-LENDING
+  (folded in from recursive-borrow per Q11 ratification). **Not fixing here** — surfaced in the new audit table row.
+  Catalogue Phase 1 agent picks up.
+- **Case-3 (handshake to slot 2)**: both new-enum work streams (defi_recursive_borrow new StrategyArchetype values
+  via Stream C, defi_catalogue new data_type enums) need slot 2's v8 schema declaration to reference them. Captured
+  in the audit table rows' decision columns + work-split § Cross-tab handshakes "Slot 5 → Slot 2 (P0)" entry.
+
+**Deferrals after 2026-05-11 slot 5 session**:
+
+| Item                                                               | Status as of 2026-05-11                                                          | Successor / blocker                                                                                                       |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| UAC `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `_PERP_HEDGED` enum add | `todo` — NEITHER present in `unified-api-contracts/.../enums.py:31-118`          | `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` Stream C — Phase 1 critical path before 2026-05-15      |
+| UAC `SUPPLY_APY/BORROW_APY/UTILISATION/LIQUIDATION_THRESHOLD/EMODE_PARAMS` data_type enum add | `todo` — not present in `canonical/domain/market_data/data_types.py` per Phase 1-LENDING todo | `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1-LENDING + Phase 1A — Phase 1 critical path before 2026-05-15 |
+| 26 new venue entries in `defi_venue_capabilities.py`               | `todo` per `defi_catalogue_chain_primitives` Phase 1A                            | `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1A — Phase 1 critical path                                          |
+| v8 schema declaration referencing 3 new enum sets above            | `todo` — slot 2's writegate slice (b) Phase 5.1                                  | `writegate_honest_coverage_endtoend_2026_05_06.md` slice (b) Phase 5.1; slot 5 → slot 2 handshake                         |
+| `arbitrage_price_dispersion_finalisation` 2 P1 carryover items     | `todo` — config additions at strategy-service, no UAC/manifest impact            | `arbitrage_price_dispersion_finalisation_2026_05_09.md` Phase A remaining items (canonical BTC/USDT slot + resolver test) |
+| `cme_polymarket_arb` Phases 2-5                                    | `blocked` — POST-CUTOVER per plan body; deps = predictions-master + tradfi-master | `cme_polymarket_arb_2026_05_08.md` post-May-23 follow-up                                                                  |
+| `defi_recursive_borrow_archetypes` Phase 2+ (config schema → backtest → live) | `blocked-after-defi_catalogue Phase 3 backfill captured`                         | `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3 lending-indices backfill                                          |
+| Anti-sequencing audit row (P1) — `mock_data_pipeline_benchmarking_2026_05_10.md` bucket isolation confirmation | `todo` — verified row stays in audit table; not personally confirmed     | Owner = the mock_data_pipeline plan; banner-sweep parallel target if it touches bucket-naming                             |
+
+**EOD deferral-audit** (per CLAUDE.md "End-of-cycle audit clause"): each row above is grep-findable in `plans/active/`
+under the cited plan-of-record's `- [ ]` todos OR in this plan's audit table (rows added this commit). Slot 5 did NOT
+create new issue docs — all findings route to existing active plans per Findings Triage Discipline case-3 (outside my
+plan, fits another active plan). No deferral lives only in chat.
