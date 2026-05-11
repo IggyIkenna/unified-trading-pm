@@ -134,6 +134,34 @@ playbook: per-bucket migration order, per-VM-prefix rsync sizing, manifest re-sy
 CARRY-FORWARD FROM 2026-05-11: (1) TradFi 4.3% phantom audit P0-triage (per slot 6 audit PM@`17d0b9c6`) — surface as
 Phase 1.E sub-audit item. (2) Phase 4.MTDS Q1-Q5 (PM@`237d00b7`) — your audit collects + escalates operator decision.
 
+DAY-2 P0 INJECTED 2026-05-12 (operator triage decisions received):
+  Operator approved both Q1 + Q2 from your Phase 1.E audit cross-side ping (PM@<your-audit-ship-commit>):
+    • Q1 = (α) — migrate `DefiManifestRecorder.record_captured` legacy `ManifestWriter.add()` → v8 `record_captured()` path.
+    • Q2 = (A) — extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with 6 missing values: `BATCH_YAHOO` / `BATCH_BARCHART` /
+      `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`.
+  Issue docs flipped ✅ RESOLVED with operator decisions inline:
+    • `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`
+    • `plans/active/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`
+    • `plans/active/issues/footystats_pipeline_mode_gap_2026_05_12.md`
+  **Scope you ship (~60 min mechanical sweep)**:
+    1. UAC: extend `unified_api_contracts/canonical/crosscutting/pipeline_mode.py` + `source_priority.py` with 6 new enum
+       values + SOURCE_PRIORITY entries (per existing per-source layering convention). Update facade re-exports if any.
+       UAC unit tests covering new enum members + SOURCE_PRIORITY entries.
+    2. UTL: deprecate / remove `DefiManifestRecorder.record_captured` legacy `ManifestWriter.add()` path; route all callers
+       through v8 `record_captured()` with explicit `pipeline_mode=`.
+    3. MTDS: 102 callsites across 26 files now get explicit `pipeline_mode=PipelineMode.BATCH_<source>` (the previously
+       ambiguous `BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`
+       callsites flip from workaround → exact match).
+    4. MDPS: 1 VIX-gap callsite at `orchestration_writer.py:343` flips to `pipeline_mode=PipelineMode.BATCH_YAHOO` (or
+       `BATCH_BARCHART` depending on which fetcher emitted that day's empty).
+    5. instruments-service: ~7 footystats orchestrator callsites + 2 backfill scripts flip to `pipeline_mode=PipelineMode.BATCH_FOOTYSTATS`.
+    6. Phase 4.DEFAULT-REMOVAL prerequisite cleared — remove `pipeline_mode: PipelineMode | None = None` default in UTL
+       `ManifestWriter` once sweep is workspace-clean.
+  **Sub-agent fan-out**: 5 Task blocks (one per repo surface: UAC + UTL + MTDS + MDPS + instruments-service). Reconcile
+  into single workspace sweep table; flip Phase 4.MTDS / Phase 4.MDPS / Phase 4.INSTRUMENTS / Phase 4.DEFAULT-REMOVAL
+  checkboxes in `manifest_schema_final_gate_2026_05_09.md` + freeze-gate item #3 in `code_freeze` plan.
+  **Unblocks**: Phase 4.DEFAULT-REMOVAL → 2026-05-15 Phase 1 freeze gate (was blocking item).
+
 DONE: append DONE-2026-05-15 block. EOD-audit. Banner-cleanup owned by you when Phase 1.E flips closed.
 ```
 

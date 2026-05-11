@@ -13,9 +13,17 @@ locked_since: 2026-05-12
 
 # VIX 15m route (Yahoo + Barchart) has no BATCH_YAHOO / BATCH_BARCHART PipelineMode values
 
+> **✅ RESOLVED by operator 2026-05-12** (decision relayed via ikenna-main slot 1).
+>
+> **Q2 = (A)** — extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with **`BATCH_YAHOO`** + **`BATCH_BARCHART`** (plus 4 sibling values from `mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`: `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`).
+>
+> **Implementation owner**: Ikenna slot 3 — bundle with the workspace-wide PipelineMode sweep. Once `BATCH_YAHOO` + `BATCH_BARCHART` land in the enum + SOURCE_PRIORITY, the VIX 15m callsite at `market-data-processing-service/market_data_processing_service/app/core/orchestration_writer.py:343` flips from workaround closed-set match → exact source tag. Same shape lands in MTDS `umi_tick_provider.py` Yahoo fetcher.
+>
+> **Unblocks**: accurate VIX-gap row pipeline_mode tagging + Phase 4.MTDS sweep MDPS portion + Phase 4.DEFAULT-REMOVAL.
+
 > **Severity**: P1 — blocks accurate `pipeline_mode=` tagging for VIX-gap `empty_confirmed` rows emitted by `MDPS orchestration_writer._maybe_write_vix_gap_placeholder`. Workaround uses closest closed-set match. Phase 4.DEFAULT-REMOVAL prerequisite is still satisfiable.
 > **Blast radius**: 1 callsite in `market-data-processing-service/market_data_processing_service/app/core/orchestration_writer.py:343` (`record_empty_for_shard` for VIX 15m gap dates 2025-11-13 → today−60d). Same shape will surface in MTDS sweep when the VIX 15m route at `market_tick_data_service/adapters/umi_tick_provider.py` is touched — Yahoo fetcher's `record_captured` writes will need a `pipeline_mode=` value that matches the actual source.
-> **Suggested owner**: operator triage (Ikenna — UAC SSOT design call).
+> **Suggested owner**: operator triage (Ikenna — UAC SSOT design call). **→ DECIDED 2026-05-12 (above).**
 
 ## What I found
 

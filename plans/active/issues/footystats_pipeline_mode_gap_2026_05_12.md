@@ -14,9 +14,17 @@ locked_since: 2026-05-12
 
 # footystats source has no BATCH_FOOTYSTATS PipelineMode value
 
+> **✅ RESOLVED by operator 2026-05-12** (decision relayed via ikenna-main slot 1).
+>
+> **Q2 = (A)** — extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with **`BATCH_FOOTYSTATS`** (plus 5 sibling values from `mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`: `BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`).
+>
+> **Implementation owner**: Ikenna slot 3 — bundle with the workspace-wide PipelineMode sweep. Once `BATCH_FOOTYSTATS` lands in the enum + SOURCE_PRIORITY, the ~7 instruments-service orchestrator callsites + 2 backfill scripts flip from workaround closed-set match → exact source tag.
+>
+> **Unblocks**: accurate footystats-catalog-refresh pipeline_mode tagging + Phase 4.INSTRUMENTS sweep + Phase 4.DEFAULT-REMOVAL.
+
 > **Severity**: P1 — blocks accurate `pipeline_mode=` tagging for footystats-served instruments catalog refreshes (MATCHES / PREDICTIONS / ODDS data_types). Workaround uses closest closed-set match. Phase 4.DEFAULT-REMOVAL prerequisite is still satisfiable.
 > **Blast radius**: instruments-service orchestrator (~7 footystats callsites: lines ~4510, 4531, 4743, 4755, 4779, 4953, 4974); `scripts/backfill_per_league_record_empty.py` (MATCHES entry); `scripts/backfill_sports_per_entity_manifest.py` (MATCHES + ODDS + PREDICTIONS specs). Same callsite class likely exists in MTDS / features-* once they ship sweeps.
-> **Suggested owner**: operator triage (Ikenna — UAC SSOT design call).
+> **Suggested owner**: operator triage (Ikenna — UAC SSOT design call). **→ DECIDED 2026-05-12 (above).**
 
 ## What I found
 

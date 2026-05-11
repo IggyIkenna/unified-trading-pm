@@ -128,6 +128,24 @@ SCOPE (~16 calibrated AI-days):
             `last_emission_decision_at` + `expected_window_completeness_fraction` to ManifestWriter. UTL v8
             ManifestWriter ✅ shipped by Ikenna slot 6 at UTL@`0adea1c6`/`001e8892`/`5f2aacd6`/`bae1ecb9`; just wire callers.
 
+CROSS-SIDE COORDINATION (operator triage decisions 2026-05-12 PM — IMPORTANT):
+  Ikenna slot 3 is shipping a workspace-wide PipelineMode sweep this cycle (operator-approved Q1+Q2 per cross-side
+  ping in `plans/active/_agent_pings.md`):
+    • Q1 = (α) `DefiManifestRecorder.record_captured` legacy `ManifestWriter.add()` → v8 `record_captured()` path.
+    • Q2 = (A) UAC `PipelineMode` enum + `SOURCE_PRIORITY` extended with 6 values: `BATCH_YAHOO` / `BATCH_BARCHART` /
+      `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`.
+  Your writegate slice (c) callsite migration tail (~37 callsites across MTDS/MDPS/features) OVERLAPS Ikenna slot 3's
+  Phase 4.MTDS / 4.MDPS / 4.INSTRUMENTS callsite migration. Coordination:
+    1. **Wait for Ikenna slot 3's UAC enum extension to land on LDR** (estimated ~15-20 min into their sweep). Once
+       the 6 new PipelineMode values are on LDR, your writegate slice (c) callers can pass exact-match values rather
+       than workaround closed-set matches.
+    2. **Coordinate by file ownership** — Ikenna slot 3 owns the explicit `pipeline_mode=` arg insertion at the
+       callsite (their Phase 4 sweep); you own the legacy-callsite → v8 path migration shape (writegate slice (c)
+       template). Where files overlap (MTDS handlers, MDPS orchestration_writer, instruments-service orchestrator),
+       pull their changes via FF first, then layer your slice (c) refactor on top.
+    3. **Cross-side ping when starting overlapping file work** — file in `plans/active/_agent_pings.md`
+       `[harsh-slot-3 → ikenna-slot-3]` STARTED entry per CLAUDE.md "Cross-Plan Coordination Banners" HARD RULE.
+
 CRITICAL PATH HANDSHAKES:
   • Cross-side ↔ Ikenna slot 3 — Ikenna audits Phase 1 freeze-gate items (6 items per code_freeze:142-149). You
     implement service-level closures. Daily sync EOD on freeze-gate item closures. Ikenna publishes go/no-go signal

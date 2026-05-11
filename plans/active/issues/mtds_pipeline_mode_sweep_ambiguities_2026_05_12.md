@@ -17,9 +17,19 @@ locked_since: 2026-05-12
 
 # MTDS Phase 4.MTDS pipeline_mode sweep — operator-decision-required ambiguities
 
+> **✅ RESOLVED by operator 2026-05-12** (decision relayed via ikenna-main slot 1).
+>
+> **Q1 = (α)** — migrate `DefiManifestRecorder.record_captured` legacy `ManifestWriter.add()` path → v8 `record_captured()` path. No further legacy `add()` callsites remain post-sweep.
+>
+> **Q2 = (A)** — extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with 6 missing values: `BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`. SOURCE_PRIORITY entries land per existing per-source layering convention (Yahoo / Barchart / footystats / Hyperliquid REST batch fallbacks; Pyth Hermes + Chainlink batch ingest paths).
+>
+> **Implementation owner**: Ikenna slot 3 (`code_freeze_migrate_backfill` Phase 1.E audit — already grokked the PipelineMode landscape). Estimated ~60 min mechanical sweep once Q1+Q2 triaged. Once shipped: this doc flips to ✅ CLOSED + `locked_by` line removed.
+>
+> **Unblocks**: Phase 4.MTDS → Phase 4.DEFAULT-REMOVAL → 2026-05-15 Phase 1 freeze gate.
+
 > **Severity**: P0 — blocks Phase 4.DEFAULT-REMOVAL in `unified-trading-library`.
 > **Blast radius**: MTDS (26 files / 102 invocations); UTL `ManifestWriter.add()` (legacy path lacks `pipeline_mode`); UAC `PipelineMode` closed-set.
-> **Suggested owner**: operator triage (Ikenna — UAC SSOT design call).
+> **Suggested owner**: operator triage (Ikenna — UAC SSOT design call). **→ DECIDED 2026-05-12 (above).**
 
 ## What I found
 
