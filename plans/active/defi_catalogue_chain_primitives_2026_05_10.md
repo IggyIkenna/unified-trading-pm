@@ -190,10 +190,17 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
 - [ ] [AGENT] P0. **1C — Verify `CHAIN_GENESIS_DATES`** at `chain_env.py:91` covers all 22 chains in scope. Add any
       missing (BNB Chain alt-name normalisation, Polygon zkEVM if distinct from Polygon PoS). Confirm Solana mainnet
       (2020-03-16) is the canonical entry for Solana DeFi.
-- [ ] [AGENT] P0. **1D — Add `MevSubmissionMode.JITO_BUNDLE`** to UAC (`unified_api_contracts/internal/`). Update
+- [x] [AGENT] P0. **1D — Add `MevSubmissionMode.JITO_BUNDLE`** to UAC (`unified_api_contracts/internal/`). Update
       `execution-service/execution_service/v2/mev_router.py` `_DEFAULT_POLICIES` dict with the policy:
       `endpoint_ref="jito_bundle_rpc"`, `bundle_mode="private"`, `max_block_delay=2`, `supported_chains=("solana",)`,
       `private=True`. Endpoint resolved via UCI/Secret Manager at dispatch.
+      **✅ SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)**: UAC@`5241fad0` extended
+      `MevSubmissionMode` StrEnum at `internal/architecture_v2/enums.py:344` with `JITO_BUNDLE = "JITO_BUNDLE"` (after
+      `CUSTOM_PRIVATE_RPC`); execution-service@`38710bef` extended `_DEFAULT_POLICIES` dict at
+      `execution_service/v2/mev_router.py:73-80` with exact policy spec from plan
+      (`endpoint_ref="jito_bundle_rpc"` / `bundle_mode="private"` / `max_block_delay=2` /
+      `supported_chains=("solana",)` / `private=True`). Endpoint ref is a Secret-Manager pointer per existing
+      _DEFAULT_POLICIES convention; raw URL never enters source. No tech debt — clean extension of existing dispatch.
 - [ ] [AGENT] P0. **1E — Per-venue margin-tier table SSOT.** New file
       `unified-api-contracts/unified_api_contracts/registry/perp_margin_tiers.py` declaring
       `PERP_MARGIN_TIERS:     dict[(venue, instrument_type), list[MarginTier]]` for the 6 perp venues. Each tier:
