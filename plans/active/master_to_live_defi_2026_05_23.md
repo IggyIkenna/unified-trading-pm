@@ -10,11 +10,18 @@ name: master-to-live-defi-2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
+effective_concurrent_slots: 5-8
 estimate_calibration_note: |
   Plan-level estimate covers the meta-plan artefact itself (writing + maintaining the rollup surface, audit table,
-  Q&A surface). The ~175 sub-plans this plan orchestrates each carry their own estimate_class + calibrated AI-days
-  in their frontmatter. Total cutover scope = sum of sub-plan calibrated estimates, NOT this number. SSOT:
-  codex/08-workflows/estimation-calibration.md.
+  Q&A surface) — that is single-slot work for the master-plan owner. The ~175 sub-plans this plan orchestrates each
+  carry their own estimate_class + calibrated AI-days in their frontmatter. Total cutover scope = sum of sub-plan
+  calibrated estimates, NOT this number.
+
+  effective_concurrent_slots: 5-8 reflects the workspace allocation for May-23 cutover execution: both operators
+  (Ikenna + Harsh) run up to 8 slots each, and sub-plans fan out across slots per the daily work-split. Wall-clock
+  prediction for the cutover = sum-of-sub-plan-calibrated-ai-days / 5-8 effective concurrent slots (bounded by the
+  serial-dependency floor — code-freeze → migrate → backfill phases cannot fully parallelise).
+  SSOT: codex/08-workflows/estimation-calibration.md § "Parallelism axis".
 overview:
   Master rollup plan from now (2026-05-06) to live DeFi trading on a real wallet by 2026-05-23. Three deliverables in
   one doc - (1) master plan tracking surface that orchestrates the ~175 active sub-plans without duplicating them, (2)

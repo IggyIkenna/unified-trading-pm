@@ -47,6 +47,60 @@ without sub-agent fan-out, without parallel slots."
 
 ---
 
+## Parallelism axis — AI-day vs wall-clock
+
+The class multipliers above measure **intra-slot compression**: how much one slot's effort shrinks when sub-agent
+fan-out + workspace-context-share + per-tab-worktree isolation kick in. The seed retrospective entries are all
+single-slot-with-fan-out observations.
+
+The workspace also runs **multi-slot parallelism**: each operator (Ikenna + Harsh) has up to 8 concurrent slots
+(`tab/<operator>/<N>` worktrees), so up to 16 slots workspace-wide can work on different phases of the same plan
+or on different plans simultaneously. This is a **wall-clock divisor** orthogonal to class multipliers:
+
+```
+calibrated_ai_days   = baseline_ai_days × class_multiplier      (intra-slot effort, what we already track)
+wall_clock_days      = calibrated_ai_days / effective_concurrent_slots   (when plan parallelises)
+```
+
+`effective_concurrent_slots` is bounded by the **serial-dependency floor** — phases with hard ordering (Phase 2
+needs Phase 1's artefact) cannot parallelise. A 12-AI-day plan with 4 sequential phases is at most ~3 AI-days
+wall-clock per phase even with 8 slots. A 12-AI-day plan with 4 independent phases collapses to ~3 AI-days
+wall-clock total at 4-slot fan-out, ~1.5 days at 8-slot fan-out.
+
+### Optional frontmatter field
+
+```yaml
+effective_concurrent_slots: 1     # default; single-slot serial work
+effective_concurrent_slots: 2-4   # typical multi-phase plan with some serial deps
+effective_concurrent_slots: 5-8   # heavily-parallel multi-phase plan; rare
+```
+
+Use the **range form** when the parallelism axis is ambiguous (depends on what other slots are doing this cycle).
+Most plans omit this field — the daily work-split is the operator's actual decision on slot allocation, and the
+plan can't predict it upfront. Use only when the plan EXPLICITLY decomposes into independent phases that
+operators routinely fan out across slots (master plans, multi-domain umbrella plans, batch backfills).
+
+### Don't double-discount
+
+If you set `effective_concurrent_slots: 4` for a plan, the wall-clock prediction is `calibrated / 4`, NOT
+`baseline / 4 × 0.4 (refactor)`. The class multiplier already captures intra-slot sub-agent fan-out — applying it
+again on top of the slot divisor double-counts the same compression.
+
+### Workspace ceiling sanity check
+
+CLAUDE.md "Daily Work-Split Process" cites `~50 AI-days/day per side` as the load-balancing ceiling. That ceiling
+assumes:
+
+- 8 slots × ~6 AI-days/slot/day with sub-agent fan-out (the post-class-multiplier rate).
+- Operator actively load-balances so slots don't converge on the same files.
+- No foot-gun #1-#4 incidents eating cycles to recovery work.
+
+In practice, 2026-05-04 → 2026-05-11 measured `~9 AI-days/day` *scheduled* burn per side from the work-split scope
+totals — i.e. operators schedule ~1/5 of the theoretical ceiling. The gap is the safety margin against blocked
+slots + cross-slot collisions + Q&A bus latency. Don't compute wall-clock predictions assuming the ceiling.
+
+---
+
 ## When the multipliers don't apply
 
 Calibration assumes the work pattern that's been measured. Stop applying the multiplier and use the baseline (or

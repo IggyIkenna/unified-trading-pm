@@ -736,10 +736,17 @@ domain. **When in doubt, pick the higher class** — optimism is the failure mod
 estimate_class: refactor | design | infra | brand-new | research
 estimate_baseline_ai_days: <pre-calibration estimate>
 estimate_calibrated_ai_days: <baseline × multiplier>
+effective_concurrent_slots: 1 | 2-4 | 5-8     # OPTIONAL — see "parallelism axis" in SSOT
 ```
 
 Multi-class plans use the dominant class for plan-level + override per-phase inline. Legacy plans retrofit on next
 substantive update — **do NOT mass-sweep** (collision risk per Findings Triage).
+
+**AI-day vs wall-clock**: `class_multiplier` measures **intra-slot** compression (sub-agent fan-out within one
+slot). The workspace also runs **multi-slot parallelism** — up to 8 slots per operator (16 workspace-wide). For
+plans that parallelise across slots, `wall_clock_days = calibrated_ai_days / effective_concurrent_slots`, bounded
+by the serial-dependency floor (phases with hard ordering cannot parallelise). DON'T double-discount: the class
+multiplier already captures intra-slot fan-out; the slot divisor is on top, not instead.
 
 **Retrospective ledger** at `codex/08-workflows/estimation-retrospective-ledger.md` — every plan archive appends a row
 (`Plan | Class | Calibrated | Actual | Ratio | Notes`). When 8+ rows land for a class with median ratio drifting
