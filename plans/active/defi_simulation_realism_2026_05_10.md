@@ -229,6 +229,18 @@ Owner: harsh + parallel agent.
 
 Owner: ikenna for design + harsh for implementation.
 
+> **Day-1 slot-6 design ship 2026-05-12 (PM@`ae804766`)**: codex
+> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Governance
+> proposal simulation harness" → "Per-protocol capture detail" subsection ships the Phase 4 design half
+> with operator-runnable detail for Harsh slot 4: (a) per-protocol Governor contract addresses
+> (`GovernanceV3Ethereum`, `GovernorBravoDelegator`, MakerDAO ChiefBoot for Spark, AragonVoting for Lido)
+> + Snapshot space IDs + subgraph endpoints; (b) Tenderly fork simulator code skeleton with REST API
+> patterns (POST `fork` + `simulate`) + ~10 sims/day budget; (c) `defi-simulate-proposal` CLI signature
+> + JSON return shape; (d) 2-year backfill VM launcher detail (`launch-governance-backfill-vm.sh`
+> per-protocol; watchdog dict entry `governance-backfill-` + tarball refresh required per CLAUDE.md VM
+> Naming Convention HARD RULE; per-VM shard isolation `VM_NAME=<unique-tag>` + `MANIFEST_PER_VM_SHARDS=true`).
+> **Implementation half remains `- [ ]` for Harsh slot 4** per cross-side handshake.
+
 - [ ] [AGENT] P0. **4A — Governance capture adapter**. New
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/governance_adapter.py` capturing
       Aave V3 + Compound V3 + Spark + Lido proposals. Sources: on-chain Governor contract events (Tally indexes, but
@@ -252,6 +264,22 @@ Owner: ikenna for design + harsh for implementation.
 ## Phase 5 — Yield-stream simulators (~8-12 AI-days)
 
 Owner: harsh + parallel agents.
+
+> **Day-1 slot-6 design ship 2026-05-12 (PM@`ae804766`)**: codex
+> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Staking +
+> restaking yield-stream simulators" → "Per-protocol capture detail" subsection ships the Phase 5 design
+> half with operator-runnable detail for Harsh slot 4: (a) 11-row per-protocol capture table covering
+> Ethereum beacon (Lighthouse/Prysm REST per-epoch) + Ethereum execution (eth_getBlockByNumber +
+> baseFeePerGas + priorityFee) + Solana validator (getInflationReward per-epoch) + EigenLayer +
+> Symbiotic + Karak + Jito-restaking subgraphs + Ether.fi/Renzo/KelpDAO/Puffer LRT-fee contract
+> addresses + governance subgraph polls; (b) per-component model skeletons — `StakingYieldModel`
+> calibrate+sample with attestation-efficiency-binned heteroskedasticity; `RestakingAVSModel`
+> base+log-normal-premium per-LRT operator-allocation-weighted; `LRTProtocolFeeModel` discrete-event
+> mean±σ_quarterly per-protocol; `SeasonalPointsModel` operator-tuned discount factors with 4 protocol
+> calibration anchors (Ether.fi 60% / Renzo 50% / Puffer 50% / new programs 70%); (c) `Phase 5E`
+> composite `staking_yield_stream_distribution(lst_or_lrt, chain, horizon_epochs)` code skeleton
+> convolving all 4 layers. **Implementation half remains `- [ ]` for Harsh slot 4** per cross-side
+> handshake.
 
 - [ ] [AGENT] P0. **5A — Native staking yield stochastic model**. Per-chain (Ethereum beacon / Solana validator).
       Inputs: historical per-epoch reward distribution + recent attestation efficiency + validator-set churn. Output:
@@ -336,9 +364,11 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
 
 - [ ] [AGENT] P0. **9A — `codex/04-architecture/amm-slippage-simulation.md`** (NEW; full content covering all 7 pool
       shapes + lending rate impact + governance sim + staking + restaking yield models + slashing MC).
-- [ ] [AGENT] P0. **9B — CREATE `codex/04-architecture/concentrated-liquidity.md`** (V3/V4 + Solana CLMM
-      addendum). **Note 2026-05-11 slot 6 spot-check**: doc does NOT exist on disk; Phase 9B is a create-from-
-      scratch, not an update. Treat as Phase 9B-NEW.
+- [x] [AGENT] P0. **9B — CREATE `codex/04-architecture/concentrated-liquidity.md`** (V3/V4 + Solana CLMM
+      addendum). (PM@`<this-cycle>` 2026-05-12 — created 130-line stub with shared CL tick-math invariants
+      (sqrtPriceX96 / tick math / active liquidity / position math / single-step swap / tick traversal) +
+      per-implementation addenda for V3 / V4 / Velodrome+Aerodrome Slipstream / Solana CLMM; cross-references
+      to amm-slippage-simulation.md + batch-live-architecture.md + execution-service amm.py.)
 - [ ] [AGENT] P0. **9C — Update `codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`** with
       restaking yield decomposition + LRT-fee + seasonal-points models.
 - [x] [AGENT] P0. **9D — Update `codex/04-architecture/batch-live-architecture.md`** with the matching-engine
