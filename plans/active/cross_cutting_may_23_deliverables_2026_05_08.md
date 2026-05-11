@@ -673,3 +673,75 @@ Harsh's daily work_split.** No durable-record gaps. Open questions are now all `
 This audit closes Tab 6's plan-of-record. Operator can now scan the table above to see exactly what's left + where each
 remaining item lives. The plan stays `status: active` (not archived) because the 11 [SCRIPT]+[BUILD] sub-items are still
 in flight under Harsh T6's ownership; archive eligible once Harsh T6's DONE-2026-0X-XX block lands.
+
+## DONE-2026-05-12 (Ikenna T8 slot 8) — DART manual-action UAC contract layer for deliverable #4
+
+Tab 8 (Ikenna slot 8, agent-tag `ikenna-manifest-phase3-tab`) shipped the **UAC contract layer** Harsh T6's 5 BUILDs
+consume. The DART scope spec at
+[`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
+defined behaviour-level intent for each BUILD; the missing piece was the closed-set Pydantic contracts the
+implementations would post / persist.
+
+### Concrete gaps identified (grep-then-read on existing UAC `internal/execution.py`)
+
+1. **`order_type: str` was undisciplined** — the existing `ManualInstruction` field allowed any string, defeating
+   closed-set discipline. Existing `OperationType` StrEnum at
+   `unified_api_contracts/canonical/domain/execution/base.py:65` ALREADY covers all 19 DeFi + CeFi action verbs (SWAP /
+   STAKE / UNSTAKE / LEND / BORROW / REPAY / WITHDRAW / DEPOSIT / FLASH_BORROW / FLASH_REPAY / ADD_LIQUIDITY /
+   REMOVE_LIQUIDITY / REBALANCE_RANGE / COLLECT_FEES / CLAIM_REWARD / SELL_REWARD / TRANSFER / TRADE / REBALANCE /
+   BUY / SELL). **Decision (system-first):** existing `OperationType` IS the canonical DART trade-action enum; no
+   duplicate. Document the mapping in codex; runtime constraint can be tightened post-cutover via Pydantic
+   `Annotated[str, AfterValidator(...)]` once Harsh T6 enumerates the actual endpoint payloads.
+2. **No ML training-control contract** — DART BUILD #3 is the only one without an existing API; `ml-training-service`
+   only ships health endpoints today (verified at `ml-training-service/ml_training_service/api/main.py`). Need
+   request / response Pydantic models + a closed-set action enum.
+3. **No persistence shape for the audit log** — `manual-trade-booking.md` referenced `persist_audit_log()` but no
+   `ManualInstructionAuditLog` Pydantic model existed. pnl-attribution / batch-live-reconciliation / alerting all need
+   this row shape to consume manual actions alongside automated fills.
+
+### Shipped (uac@`336b486` + pm@`<this-commit>`)
+
+- [x] [DESIGN+UAC] **DART manual-action UAC contract layer** (Ikenna T8). 4 new types in
+      `unified_api_contracts/internal/execution.py`:
+  - `ManualMLTrainingAction` StrEnum (`PAUSE` / `RESUME` / `RETRAIN`) — closed-set training-control verbs distinct
+    from `OperationType` (trade actions).
+  - `MLTrainingControlRequest` / `MLTrainingControlResponse` — DART BUILD #3 endpoint contract for
+    `ml-training-service POST /training/{archetype}/{action}`.
+  - `ManualAuditCategory` StrEnum (`MANUAL_TRADE` / `ML_TRAINING_CONTROL`) — closed-set dispatch axis for the unified
+    audit log.
+  - `ManualInstructionAuditLog` — single persistence shape for both `ManualInstruction` submissions and
+    `MLTrainingControlRequest` submissions; consumed by pnl-attribution / batch-live-reconciliation / alerting.
+  - 7 unit tests in `tests/unit/test_dart_manual_action_contracts.py` (closed-set membership · request/response
+    correlation · both audit-row category dispatches). basedpyright clean.
+  - Codex doc updated:
+    [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md)
+    — added "ML training-control actions" endpoint table + "Audit log surface" section + extended SSOT pointer list.
+
+### Cross-side handoff status (Ikenna T8 → Harsh T6)
+
+- **Deliverable #4 BUILD #3 (DART manual ML training trigger)** — UNBLOCKED at the contract layer. Harsh T6 implements
+  `ml-training-service/ml_training_service/api/training_control_api.py` consuming `MLTrainingControlRequest` +
+  `MLTrainingControlResponse` and persisting `ManualInstructionAuditLog` rows with
+  `action_category=ManualAuditCategory.ML_TRAINING_CONTROL`.
+- **Deliverable #4 BUILDs #1, #2, #4, #5 (DART trade surfaces)** — UNBLOCKED. Existing `ManualInstruction` schema
+  carries every needed field; Harsh T6's wiring should constrain `order_type` to `OperationType` value-strings at the
+  endpoint payload boundary (Pydantic `field_validator` checking membership).
+- **Audit-log persistence layer** — UNBLOCKED. Both surfaces (execution-service `manual_instruction_api.py` +
+  ml-training-service `training_control_api.py`) write to the same `ManualInstructionAuditLog` table; pnl-attribution /
+  batch-live-reconciliation / alerting query that single table for cross-cutting rollups.
+
+### Why no parallel SSOT
+
+`OperationType` StrEnum at `unified_api_contracts/canonical/domain/execution/base.py:65` already enumerates every DeFi
++ CeFi action verb. Per CLAUDE.md "System-First Architecture (No Ad-Hoc Solutions)" + "Grep-Then-Read" — verified
+existing canonical surface BEFORE adding new code. Net new code touches ONLY the gaps (training-control axis +
+audit-log persistence shape) where no canonical SSOT exists.
+
+### What this leaves for the cycle
+
+- Harsh T6's 5 [BUILD] subitems (#4 BUILDs 1-5) — UNBLOCKED at the UAC layer; mechanical wiring of UI panels +
+  endpoint handlers + audit-log persistence remains.
+- Tab 6.A's strategy ID grammar still 🟡 BLOCKED on operator triage of the parallel-SSOT issue doc; DART surfaces
+  consume whichever grammar lands (shape-agnostic at the UAC layer).
+- Harsh T6 should also constrain `ManualInstruction.order_type: str` to `OperationType.value` membership at the
+  endpoint validator (Pydantic `field_validator`); no UAC change needed, just runtime guard.

@@ -115,6 +115,8 @@ For RECORD_ONLY mode, venue validation is skipped (OTC trades have arbitrary cou
 
 ## API Endpoints
 
+### Trade actions (execution-service)
+
 | Method | Path                      | Description                                        |
 | ------ | ------------------------- | -------------------------------------------------- |
 | POST   | /manual/instruction       | Submit manual instruction (EXECUTE or RECORD_ONLY) |
@@ -124,10 +126,47 @@ For RECORD_ONLY mode, venue validation is skipped (OTC trades have arbitrary cou
 | GET    | /manual/venues            | Dynamic venue list from UAC registry               |
 | GET    | /manual/algos             | Supported execution algorithms                     |
 
+### ML training-control actions (ml-training-service)
+
+Per `cross_cutting_may_23_deliverables` deliverable #4 BUILD #3 — DART manual ML training trigger.
+Distinct API surface (training-control is not a trade) but persists to the **same audit log** for
+unified operator-action timeline.
+
+| Method | Path                                | Description                                                          |
+| ------ | ----------------------------------- | -------------------------------------------------------------------- |
+| POST   | /training/{archetype}/{action}      | Apply lifecycle action (`pause` / `resume` / `retrain`) to archetype |
+| GET    | /training/{archetype}/status        | Get current training-loop status per archetype                       |
+| GET    | /training/audit/{request_id}        | Lookup audit row for a control request                               |
+
+Action axis is the closed-set `ManualMLTrainingAction` enum (`PAUSE` / `RESUME` / `RETRAIN`).
+
+## Audit log surface
+
+Single `ManualInstructionAuditLog` row per operator-initiated action across BOTH trade + ML control
+axes. Dispatched via `action_category: ManualAuditCategory` (`MANUAL_TRADE` populates
+`manual_instruction`; `ML_TRAINING_CONTROL` populates `ml_training_request` + optionally
+`ml_training_response`).
+
+Consumed by:
+
+- **pnl-attribution-service** — rolls up manual fills by `strategy_id` alongside automated fills.
+- **batch-live-reconciliation-service** — isolates execution alpha (manual vs simulated fills).
+- **alerting-service** — emits `strategy_id` per fired alert when manual action triggers a threshold.
+
+Persistence happens at the API boundary BEFORE forwarding (EXECUTE flow) or directly after recording
+the fill (RECORD_ONLY flow). Audit-log row is the durable record; downstream processing failures
+do not invalidate the audit row.
+
 ## SSOT
 
 - ManualInstruction schema: `unified-api-contracts/unified_api_contracts/internal/execution.py`
 - ManualExecutionMode enum: same file
+- ManualMLTrainingAction enum: same file (DART BUILD #3)
+- ManualAuditCategory enum: same file (audit-log dispatch axis)
+- MLTrainingControlRequest / MLTrainingControlResponse: same file
+- ManualInstructionAuditLog schema: same file
 - OperationalMode enum: `unified-api-contracts/unified_api_contracts/internal/modes.py`
-- API handler: `execution-service/execution_service/api/manual_instruction_api.py`
+- API handler (trade): `execution-service/execution_service/api/manual_instruction_api.py`
+- API handler (training control): `ml-training-service/ml_training_service/api/training_control_api.py` (TBD per BUILD #3)
 - Cluster configs: `deployment-service/configs/clusters/*.yaml`
+- DART scope spec: `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`
