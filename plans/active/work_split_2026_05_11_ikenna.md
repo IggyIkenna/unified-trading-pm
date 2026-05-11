@@ -773,6 +773,38 @@ These items are explicitly deferred behind the 2026-05-15 Phase 1 freeze gate an
   [code_freeze:1162-1165](code_freeze_migrate_backfill_sequencing_2026_05_10.md#L1162-L1165). Harsh slot 5 picks up
   Phase 3-5 service wiring once features-consolidation Phase 7 unblocks; Phase 13/14/15 land in next-cycle.
 
+## Deferred work after 2026-05-11 session
+
+End-of-cycle scoreboard per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" Half 3. Companion: [`work_split_2026_05_11_harsh.md`](work_split_2026_05_11_harsh.md) § same.
+
+| Phase / item | Status as of 2026-05-11 EOD | Successor / blocker |
+|---|---|---|
+| Slot 2 — manifest_schema_final_gate Phase 2/3/4/5 + writegate slice (b) Phase 5.A/B | ✅ DONE (PM@`1dae5dbf`; 12 commits / 5 repos) | — |
+| Slot 2 — writegate slice (b) Phase 5.X remainder (post-5.A/B) | ⚪ PARTIAL — 5.A/B `gcs_migration_bundle` shipped; 5.X tail open | 2026-05-12 slot 8 secondary scope (manifest Phase 3 + cross_cutting #4) — see [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § Ikenna slot 8 |
+| Slot 3 — defi #5 lending-indices LINEA/BSC + canonical re-consolidation | ✅ DONE (PM@`e160a364`) | — |
+| Slot 3 — 4 lending-indices residuals handed off | ⚪ DEFERRED | 2026-05-12 slot 2 (`defi_catalogue_chain_primitives` Phase 3 covers lending-indices fix) |
+| Slot 3 — Phase 3.D rescan VM CLI dispatcher fix (extra) | ✅ DONE (PM@`7a11b747`, deployment-service@`03ce073`) | — |
+| Slot 4 — live-pipeline Phase 4-5 design-ahead carry-forward | ⚪ PARTIAL — status uncertain per main-orch audit | 2026-05-12 slot 7 (already absorbing Harsh slot 5 live-pipeline Phase 3-5/15 carry-forward — extends to 4-5 implementation) |
+| Slot 5 — DeFi Phase 1.E audit + hard_schema_enforcement Phase 1 | ✅ DONE (PM@`79b5258e`/`63413bb9`/`6f9db6ca`/`9c73ef57`/`b945e108`) | — |
+| Slot 5 — Tier 1 item 1 Step 5 P0-2 MDPS output_schemas nullability | ⚪ STATUS UNCLEAR — pending slot 5 STATUS-2026-05-11 ack | 2026-05-12 slot 5 carry-forward (defi_recursive_borrow theme) — STATUS-2026-05-11 line resolves |
+| Slot 5 — Tier 1 item 2 writegate slice (c) Phase 6.5 features-* bundle | ⚪ STATUS UNCLEAR — pending slot 5 STATUS-2026-05-11 ack | 2026-05-12 slot 5 carry-forward; if open, fan to 2026-05-12 reserve list |
+| Slot 5 — Tier 1 item 3 expected_universe_v2 promotion | ✅ DONE (plan frontmatter `status: active`) | Enumerator implementation deferred — 2026-05-12 reserve list |
+| Slot 5 — Tier 2 item 4 available_at DeFi/TradFi/Pred per-adapter stamping | ⚪ PARTIAL | 2026-05-12 slot 5 carry-forward + per-asset-group master plans (defi_master / tradfi_master / predictions_master) |
+| Slot 5 — Tier 2 item 5 PROTOCOL_LAUNCH_DATES ~30 (chain, protocol) pairs | ✅ DONE — 45 pairs shipped (PM@`c71b10c7`; exceeds 30 scoped) | — |
+| Slot 5 — Tier 2 item 6 Stream C C-enum.3+4 | ⚪ DEFERRED-PER-USER (deferred to backport plan; C-enum.1+2 done) | Backport plan TBD (post-2026-05-15 freeze gate) |
+| Slot 6 — phantom audit all-5 asset_groups | ✅ DONE (PM@`17d0b9c6`; dry-run, no `--apply`; DeFi 0/CeFi 0.17%/TradFi 4.3%-P0-triage/Pred 0.49%/Sports 16.8%) | TradFi 4.3% P0-triage open — 2026-05-12 slot 3 (code_freeze Phase 1.E audit covers) |
+| Slot 6 — phantom audit items 8+9 partial | ⚪ DEFERRED | 2026-05-12 slot 6 (defi_simulation_realism) carry-forward — see [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § Ikenna slot 6 |
+| Slot 7 — Ikenna alerting/risk/DR Rounds 1-4 | ✅ DONE | — |
+| Slot 7 — Harsh slot 5 live-pipeline absorption (Phase 3/5/6/15) | ⚪ STATUS UNCLEAR — pending slot 7 STATUS-2026-05-11 ack | 2026-05-12 slot 7 (simulation_scenarios theme) carry-forward |
+| Slot 8 — P0-2 MDPS surgery 5/5 incl. EXPECTED_KNOWN_SOURCE_GAP + writegate Phase 6.2 PARTIAL | ✅/⚪ DONE primary + PARTIAL on Phase 6.2 consumer wiring (152 LOC scaffolding at mdps@`ae0cada` ONLY on `tab/ikennaigboaka/8`; NOT FF'd to LDR) | 2026-05-12 slot 8 (manifest Phase 3 owner — natural extension to wire-up scaffolding) |
+| Slot 8 — Phase 0f VM-launcher env-awareness absorption | ⚪ STATUS UNCLEAR — pending slot 8 STATUS-2026-05-11 ack | 2026-05-12 slot 8 carry-forward (cross_cutting #4 + manifest Phase 3) |
+| Slot 8 — Phase 0h sync-script first-execution | ⚪ DEFERRED — code shipped (deployment-service@`fc1cfa0` by Harsh slot 4); first-execution = post-Phase-2.6 cutover | 2026-05-12 slot 8 carry-forward; first exec lands in Phase 2.6 cutover window (2026-05-15→05-19) |
+| Q1-Q5 MTDS pipeline_mode (Phase 4.MTDS blocked) | 🟡 BLOCKED on operator decision (PM@`237d00b7`) | 2026-05-12 slot 3 (`code_freeze` Phase 1.E audit — Phase 4.MTDS triage) |
+| VIX 15m pipeline_mode finding (PM@`a5e5aa4d`) | ⚪ NOTED — issue doc filed, no owner | 2026-05-12 reserve list (post-cutover) |
+| footystats pipeline_mode gap (PM@`6ede1e01`) | ⚪ NOTED — issue doc filed, no owner | 2026-05-12 reserve list (post-cutover) |
+
+**Sweep complete**: every line above either ✅ DONE with commit citation or has a named 2026-05-12 successor in [`work_split_2026_05_12_ikenna.md`](work_split_2026_05_12_ikenna.md) / [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md). No orphans remain after this scoreboard.
+
 ## Composes with
 
 - CLAUDE.md § "Daily Work-Split Process" — the canonical process this plan instantiates.

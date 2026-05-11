@@ -676,6 +676,25 @@ deferral-audit, then go quiet.
 - **live-pipeline Phase 13/14/15** — likely slip to next-cycle if Phase 3-5 implementation consumes available time.
 - **hard_schema_enforcement Phase 1** — `blocked_by: tradfi-master-2026-05-07`; out of scope until tradfi unblocks.
 
+## Deferred work after 2026-05-11 session
+
+End-of-cycle scoreboard per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" Half 3. End-of-shift handover banner: PM@`d3b7e8d7` — all 5 implementer slots ⚪ DONE primary + per-slot pickup-points handed over to Ikenna's side. Companion: [`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) § same.
+
+| Phase / item | Status as of 2026-05-11 EOD | Successor / blocker |
+|---|---|---|
+| Harsh slot 2 — features-consolidation Q6+Q7 (Phase 4.6/6) | ✅ Q6+Q7 RESOLVED (PM@`1f8f6390`); ⚪ parent Phase 4.6/6 flip PENDING one fresh-green QG-run | 2026-05-12 Harsh slot 2 (per companion split) — fresh QG-run + plan-flip |
+| Harsh slot 3 — defi #5 monitoring | ✅ DONE (handover PM@`13030665`) | Cross-side: Ikenna slot 3 absorbed lending-indices residuals (see Ikenna scoreboard) |
+| Harsh slot 4 — bucket_name_ssot env-LESS GCP entries + Phase 0h code | ✅ DONE primary (deployment-service@`fc1cfa0`); Phase 0f operational + Phase 0h first-execution ⚪ DEFERRED | Cross-side: Ikenna slot 8 absorbed Phase 0f + Phase 0h (see Ikenna scoreboard) |
+| Harsh slot 5 — live-pipeline Phase 3.1/3.3/3.4 (mtds@`97b2224`) | ✅ DONE primary; Phase 3.5/5/6/15 ⚪ DEFERRED — Q1 reconciling on LDR | Cross-side: Ikenna slot 7 absorbed Phase 3.5/5/6/15 (PM@`91a24ecc`); 2026-05-12 Ikenna slot 7 carries forward |
+| Harsh slot 6 — workspace QG cadence + features-consolidation downstream consumer audit | ✅ DONE (PM@`8b4a8110`) | — |
+| Harsh slot 6 — DeFi simulation-realism downstream impl handoff | ⚪ DEFERRED — Ikenna designs (slot 6), Harsh implements | 2026-05-12 Ikenna slot 6 → Harsh slot 4 (per companion split cross-side handshakes) |
+| live-pipeline Phase 13/14/15 (DEFERRED-AFTER-PHASE-3-5) | ⚪ DEFERRED | 2026-05-12 Ikenna slot 7 (carries forward Phase 3-5 + 13-15 if Phase 3-5 closes) |
+| live-pipeline Phase 6 (cross-cutting features; DEFERRED-AFTER-FEATURES-CONSOLIDATION) | 🟡 BLOCKED on features-consolidation Phase 7 merge | 2026-05-12 Ikenna slot 7 (carry-forward); unblocks once Harsh slot 2 closes features-consolidation Q6+Q7 plan-flip |
+| wave3x Track A UTL classifier extension (P1) | ⚪ DEFERRED — may slip if Tracks B/C/D/E consumed cycle | 2026-05-12 reserve list (post-cutover) |
+| features_repo_consolidation Phase 8 + 9 (manifest migration + Health-API/live-mode flavors) | ⚪ DEFERRED — post-Phase-7 per plan body | 2026-05-12 Harsh slot 2 (post Q6+Q7 closure) or post-cutover |
+
+**Sweep complete**: every line above either ✅ DONE with commit citation or has a named 2026-05-12 successor (own side or cross-side). No orphans remain after this scoreboard.
+
 ## Composes with
 
 - CLAUDE.md § "Daily Work-Split Process" — the canonical process this plan instantiates.

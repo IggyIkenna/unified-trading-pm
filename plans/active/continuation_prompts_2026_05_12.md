@@ -82,6 +82,9 @@ SUB-AGENT FAN-OUT (recommended Phase 1 expansion):
 DON'T STOP at nice-haves. If matrix + shard decisions + lending-indices fix all close before Day 4, look for adjacent
 items: protocol-config schema additions (UAC), catalog refresh tests, codex doc 04-architecture/ updates.
 
+CARRY-FORWARD FROM 2026-05-11: 4 lending-indices residuals slot 3 handed off (per `defi_master` Priority #5 close-out
+PM@`e160a364`) — fold into Phase 3 lending-indices fix work.
+
 DONE: append DONE-2026-05-15 block in defi_catalogue plan body. EOD-audit per CLAUDE.md "End-of-cycle audit clause".
 ```
 
@@ -127,6 +130,9 @@ SUB-AGENT FAN-OUT (recommended Phase 1.E expansion):
 
 DON'T STOP at nice-haves. If audit + Phase 2 dry-run + banner sweep all close before Day 4, pick up Phase 2 detailed
 playbook: per-bucket migration order, per-VM-prefix rsync sizing, manifest re-sync scheduling.
+
+CARRY-FORWARD FROM 2026-05-11: (1) TradFi 4.3% phantom audit P0-triage (per slot 6 audit PM@`17d0b9c6`) — surface as
+Phase 1.E sub-audit item. (2) Phase 4.MTDS Q1-Q5 (PM@`237d00b7`) — your audit collects + escalates operator decision.
 
 DONE: append DONE-2026-05-15 block. EOD-audit. Banner-cleanup owned by you when Phase 1.E flips closed.
 ```
@@ -284,8 +290,10 @@ SUB-AGENT FAN-OUT:
 DON'T STOP at nice-haves. If Phases 1-2 + handshakes close, pick up Phase 3 (scenario-runner integration spec) or
 Phase 4 (per-scenario test fixture set).
 
-CARRY-FORWARD FROM 2026-05-11: Phase 5/6/15 of live-pipeline from yesterday's absorption — fold residual into
-end-of-Day-1 status if any remained open.
+CARRY-FORWARD FROM 2026-05-11: (1) Phase 3.5/5/6/15 of live-pipeline from yesterday's Harsh-slot-5 absorption (PM@`91a24ecc`).
+(2) Slot 4's Phase 4-5 design-ahead carry-forward (status uncertain — STATUS-2026-05-11 line resolves; if open, extend to
+Phase 4-5 implementation). (3) Phase 13/14/15 DEFERRED-AFTER-PHASE-3-5 — pick up if Phase 3-5 closes early. (4) Phase 6
+(features cross-cutting) — 🟡 BLOCKED on features-consolidation Phase 7 (Harsh slot 2 Q6+Q7); unblocks when that ships.
 
 DONE: append DONE-2026-05-15 block. EOD-audit.
 ```
@@ -325,8 +333,12 @@ SCOPE (~14 calibrated AI-days):
   Cross_cutting #4 — DART manual surfaces. Per deliverable, what operator UI controls + manual-action API endpoints
             + audit-log shape we need pre-cutover. Plan body sections + UAC stubs for the surfaces.
   Group F/G master plan refresh — fields per item per master plan continuous-verification matrix.
-  Carry-forward: bucket_name_ssot Phase 0f (operational verification of VM launcher env-awareness) + Phase 0h
-            (first sync execution — post-Phase-2.6 cutover step).
+  Carry-forward (2026-05-11 scoreboard):
+            • bucket_name_ssot Phase 0f (operational verification of VM launcher env-awareness)
+            • bucket_name_ssot Phase 0h (first sync execution — post-Phase-2.6 cutover step)
+            • Writegate slice (b) Phase 5.X remainder (post-5.A/B tail)
+            • Writegate Phase 6.2 PARTIAL scaffolding from mdps@`ae0cada` (152 LOC ohlcv_1m/24h/book_snapshot_5 helpers
+              shipped to `tab/ikennaigboaka/8` ONLY; NOT FF'd to LDR) — FF to LDR + complete consumer wiring + unit tests.
 
 CRITICAL PATH HANDSHAKES:
   • slot 3 (code_freeze Phase 1.E audit) — gates your Phase 3 ramp. Wait for go-signal EOD Day 2. Phase 3.D quick-win

@@ -135,6 +135,24 @@ Order of pickup precedence:
 4. `bucket_name_ssot_canonicalisation_2026_05_10` Phase 0i tail — ~2 calibrated remaining (most Phase 0 shipped).
 5. `cross_asset_group_catalogue_audit_2026_05_10` — ~31.2 calibrated; can fan out to multiple sub-agents.
 6. `codex_vs_citadel_infrastructure_audit_2026_05_10` — ~15.6 calibrated; hygiene.
+7. **VIX 15m pipeline_mode finding** (PM@`a5e5aa4d`) — Yahoo / Barchart route lacks BATCH_YAHOO / BATCH_BARCHART PipelineMode values. ~0.5 calibrated. Post-cutover acceptable.
+8. **footystats pipeline_mode gap** (PM@`6ede1e01`; issue doc `plans/active/issues/footystats_pipeline_mode_gap_2026_05_12.md`) — ~0.5 calibrated. Post-cutover acceptable.
+9. **expected_universe_v2 enumerator implementation** — plan promoted 2026-05-11 (status: active); impl scope ~2-3 calibrated. Day-4 if Family-1/2 slots run dry.
+10. **Stream C C-enum.3+4** (slot 5 Tier 2 item 6 deferred-to-backport) — finish if defi_recursive_borrow slot closes early. ~0.5 calibrated.
+
+**2026-05-11 spillover migration ledger** (per `work_split_2026_05_11_ikenna.md` § Deferred work after 2026-05-11 session):
+items already routed to slot prompts above:
+- Writegate slice (b) Phase 5.X remainder → slot 8 (manifest Phase 3 owner + cross_cutting #4 carry-forward)
+- 4 lending-indices residuals → slot 2 (defi_catalogue Phase 3)
+- live-pipeline Phase 4-5 design-ahead → slot 7 (Harsh slot 5 absorption carry-forward)
+- live-pipeline Phase 13/14/15 DEFERRED-AFTER-PHASE-3-5 → slot 7 (if Phase 3-5 closes early)
+- live-pipeline Phase 6 (cross-cutting features) → slot 7 (unblocks once Harsh slot 2 closes features-consolidation Q6+Q7)
+- Phase 4.MTDS Q1-Q5 → slot 3 (code_freeze Phase 1.E audit triage)
+- Slot 5 Tier 1 items 1+2 status-uncertain → slot 5 STATUS-2026-05-11 ack resolves; if open, slot 5 carry-forward
+- Slot 5 Tier 2 item 4 (available_at DeFi/TradFi/Pred stamping) → slot 5 carry-forward + per-asset-group master plans
+- Slot 6 phantom audit items 8+9 → slot 6 carry-forward (defi_simulation_realism theme)
+- TradFi 4.3% P0-triage from phantom audit → slot 3 Phase 1.E audit
+- Slot 8 writegate Phase 6.2 PARTIAL scaffolding (mdps@`ae0cada` on slot branch only) → slot 8 (natural extension)
 
 ## Density experiment — what we're measuring
 
