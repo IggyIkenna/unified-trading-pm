@@ -520,16 +520,23 @@ Two issues' taxonomy migrations — operator decision 2026-05-08 to keep BOTH ev
 pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in their respective plans (see Batch E
 `writegate` + `mdps_streaming` migrations); the alerting taxonomy is THIS plan's surface.
 
-- [ ] [SCRIPT] P1. **Add `TICK_STALENESS` + `CONNECTIVITY_GAP_DETECTED` + `CONNECTIVITY_RECOVERED` +
+- [x] [SCRIPT] P1. **Add `TICK_STALENESS` + `CONNECTIVITY_GAP_DETECTED` + `CONNECTIVITY_RECOVERED` +
       `CONNECTIVITY_GAP_BACKFILLED` codes to UAC alert taxonomy** (Phase 1 of this plan). Per-code: severity, threshold
       (consecutive count + window), routing channel. `TICK_STALENESS` payload includes per-(venue, instrument)
       baseline-vs-actual; `CONNECTIVITY_GAP_DETECTED` payload includes the gap window start_time + `last_received_at`.
-- [ ] [SCRIPT] P1. **Alert de-dup logic**: when both fire on the same (venue, instrument, time-window) the operator sees
+      Shipped at UAC@29d4fe4 (thresholds.py) + UAC@92ad35c (codes.py + rules.py + test_alerting_taxonomy.py — 56-member
+      closed set, 50 alerting tests pass).
+- [x] [SCRIPT] P1. **Alert de-dup logic**: when both fire on the same (venue, instrument, time-window) the operator sees
       ONE alert with both signals merged in the body, not two. Implement at the router level via a 30-second coalesce
-      window keyed on `(venue, instrument)`.
-- [ ] [AGENT] P1. **Codex update**: `codex/04-architecture/alerting-batch-live.md` adds both codes to the
+      window keyed on `(venue, instrument)`. Shipped at alerting-service@e7a9e7c
+      (`alerting_service/notifiers/router.py` `_check_coalesce_window` + 22 unit tests in
+      `tests/unit/notifiers/test_router_coalesce.py`). Pair-review tag in commit message per CLAUDE.md "alerting-service
+      is Harsh's repo"; follows existing `_find_kill_switch_rule` precedent.
+- [x] [AGENT] P1. **Codex update**: `codex/04-architecture/alerting-batch-live.md` adds both codes to the
       live-instruments-failure-rules section (already extended in `instruments_live_master_2026_05_08` Phase A.4 — land
-      both updates same-day).
+      both updates same-day). Shipped this commit — new "Live Instruments Failure Rules" section in
+      [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md) covers all 4
+      AlertCodes + the 30s coalesce semantics + cross-refs to UAC + alerting-service + tests.
 
 ## Cross-plan blockers
 
