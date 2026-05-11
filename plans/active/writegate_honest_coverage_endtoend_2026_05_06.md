@@ -774,6 +774,42 @@ resolved via a typed return shape (`WriteResult` enum or `Result[str, WriteFaile
 **Exception-set unification needed**: Path 1 catches `(OSError, ValueError, RuntimeError, KeyError, TypeError)` but the
 orphans differ. Phase 2.A unifies to the broadest set and routes ALL caught exceptions through `classify_venue_error`.
 
+### P0-2 — MDPS dead write-gate surgery (2026-05-11 slot 8)
+
+Per [`wave3x_track_d_findings_2026_05_11.md`](issues/wave3x_track_d_findings_2026_05_11.md) § P0-2: the 2026-05-06 audit
+above (lines 746-768) called `orchestration_writer.py:413 _write_candles_to_gcs` orphaned, but missed the actual
+MRO-winning override at `orchestration_writer.py:328 _write_candles` (legacy `storage_client.upload_bytes`-direct path,
+no `ManifestWriter`, no 4-pillar gate). Result: every candle MDPS wrote in production had ZERO manifest record + ZERO
+NaN-ratio/cluster-coverage check — the entire honest-coverage infrastructure in `canonical_writer.py` +
+`candle_write_mixin.py` was dead code on the live path. 6-step fix executed by slot 8 ikenna-slot8-p0-2-surgery:
+
+- [x] **Step 1 (P0)**: Delete `CandleOrchestrationWriter._write_candles` + `BatchOrchestrationMixin._write_candles`
+      NotImplementedError stub (the stub intercepted MRO before `CandleWriteMixin._write_candles`). Add `underlying`
+      param to `CandleWriteMixin._write_candles` + `_build_candle_output_path` + `_upload_candles_to_gcs` to preserve
+      the `live_workers.py:713` + `:1170` callsite contract. Net: `CandleOrchestrationService._write_candles` now
+      resolves to the canonical writer path (`canonical_writer.write_candle_parquet` →
+      `ManifestWriter.record_captured` + UTL 4-pillar gate). Shipped market-data-processing-service@d717c59 — 1171/1173
+      tests pass + 1 skip + 1 unrelated CLI env-validation failure (`test_cli_help` — `ENVIRONMENT='test'` not in
+      valid set; not P0-2 scope).
+- [ ] **Step 2 (P0)**: Fix `tradfi/ohlcv_passthrough.py:266 _create_full_day_empty_output` — currently emits
+      `n_candles` rows of all-NaN OHLC on `tick_data.empty`. Replace with `BaseCandleAdapter._make_empty_candle_output()`
+      + route empty result through `record_empty(row_key=..., reason=...)`.
+- [ ] **Step 3 (P0)**: Delete duplicated `_create_closed_market_candle` at `orchestration_writer.py:65` + `batch_workers.py:94`
+      (banned per CLAUDE.md "No double SSOT"); delete `_handle_empty_tick_data` from `batch_workers.py:192` (banned
+      per CLAUDE.md "No double SSOT in data-saving methodology"). Replace TradFi non-trading-day callers with
+      `record_expected_empty(row_key=..., reason=EXPECTED_HOLIDAY/EXPECTED_WEEKEND)`.
+- [ ] **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:417`) → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`.
+      **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`** Phase 1: UAC `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP`
+      enum value lands there (operator-approved 2026-05-11 per wave3x TL;DR #2). Slot 3 owns the enum ship; slot 8
+      consumes once landed.
+- [ ] **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
+      **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked
+      by `tradfi_master_2026_05_07` futures-expiry shipping. Per task instructions, skipped.
+- [ ] **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
+      instantiation sites to determine if (c) `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is
+      a live parallel SSOT or dead code. If live → file a finding annotation + flag for operator triage. If not live
+      → delete.
+
 ### Phase 0 audit findings — MTDS bundle adapter inventory
 
 **CRITICAL plan correction**: Phase 2.B file paths at lines 510-516 are wrong:
