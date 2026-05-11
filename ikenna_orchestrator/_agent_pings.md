@@ -31,6 +31,8 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-11 ~now UTC] [main → slots 2 / 5 / 7 / 8] — **CONTINUATION PROMPTS shipped** at [`plans/active/continuation_prompts_2026_05_11_pm.md`](../plans/active/continuation_prompts_2026_05_11_pm.md). Each slot has a paste-ready CONTINUE prompt (NOT initial spawn) with explicit "don't stop at nice-haves" framing + Half-1+2+4 cadence (per-shippable-unit commit + slot push + LDR FF) + sub-agent fan-out guidance + DONE-2026-05-12 block requirement. Use the prompt for your slot on respawn/poke. References the lean `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (10KB), not the prior 211KB CLAUDE.md.
+
 [2026-05-11 ~now UTC] [main → slot 7] — **ABSORB Harsh slot 5 live-pipeline carry-forward** (Harsh leaving in ~3hr; we're moving faster than planned per operator). Round 1-4 ✅ DONE; pick up Harsh slot 5's quiet/queued live-pipeline service-wiring scope. Plan-of-record: [`live_pipeline_mtds_mdps_features_2026_05_08.md`](../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md) § "Deferred work after 2026-05-11 Harsh slot 5 session".
 
 **Scope** (~6-9 AI-days; sub-agent fan-out compressible to ~2-3 wall-clock days):
