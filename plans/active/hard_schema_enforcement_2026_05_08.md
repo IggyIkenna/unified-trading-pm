@@ -72,9 +72,22 @@ todos:
           - **Predictions**: ALREADY hard-required per Phase 1A of writegate — no change needed; serves as
             reference for the rest.
         Per-flip: one-shot manifest migration script back-fills + flips schema in a single PR.
-    status: blocked
-    blocked_by: tradfi-master-2026-05-07
-    note: "Sequenced AFTER tradfi_master Q1+Q2 futures+options expiry flips."
+        **PARTIAL FOUNDATION 2026-05-11 by slot 5 (ikenna-aggressive-may15-tab, RE-TASK) — RecordFailedReason
+        taxonomy + SCHEMA_VALIDATION_FAILED enum value shipped at uac@`3157f45`** (sister enum to
+        `EmptyConfirmedReason` per the existing `honest_coverage.py` shape). 8 closed-set members covering schema
+        violation / upstream timestamp bias / malformed tick field / upstream subgraph zero / cluster coverage
+        violation / malformed row key / classified venue error / unclassified adapter error. Foundational for
+        Phase 2 per-row `record_failed` routing — adapters route schema-rejected rows to
+        `record_failed(reason=RecordFailedReason.SCHEMA_VALIDATION_FAILED, ...)` once Phase 2 refactors the
+        `ManifestWriter.record_failed` signature to accept the structured-reason kwarg. Smoke-import verified:
+        enum count 8, frozenset size 8, mutually exclusive with EmptyConfirmedReason. **STILL OPEN per Phase 1**:
+        per-asset-group nullable→required field flips (see roadmap below); current plan body lists the field
+        inventory but actual flips need (a) per-asset-group instrument-record subclass shape OR conditional
+        Pydantic model_validator (decision sub-todo), (b) one-shot back-fill migration script per flip, (c)
+        consumer-sweep across instruments-service + MTDS + downstream services. Roadmap added in the plan body
+        below — actionable by the next agent.
+    status: helper-shipped
+    note: "uac@3157f45 RecordFailedReason taxonomy shipped 2026-05-11; Phase 2 record_failed signature refactor + per-asset-group field flips still pending."
 
   - id: phase-2-per-row-record-failed-orchestrator-refactor
     content: |
@@ -201,3 +214,71 @@ partial commit would mass-fail every existing futures row mid-migration.
 Follows `unified-trading-pm/plans/PLAN_FORMAT.md`: 3-tier readiness (C5 / D3); per-repo gates; Cursor checkboxes on
 every todo; sibling-plan dependencies declared in `depends_on`; SSOT-first (codex docs in the codex-update todo own
 intent, plan owns activation); pre-audit complete via the source RFC archived to `plans/archive/issues/`.
+
+
+## Per-asset-group schema-flip roadmap (added 2026-05-11 slot 5, RE-TASK)
+
+Phase 1's "nullable → required" flips require a workspace-wide audit of `InstrumentRecord`
+(`unified-api-contracts/unified_api_contracts/internal/reference/instrument.py`) + per-domain schemas under
+`canonical/domain/`. Current state observation (slot 5 grep 2026-05-11):
+
+- `InstrumentRecord.base_asset` / `quote_asset` (line 84-85) — `str = ""` (defaults to empty; workspace rule says
+  CeFi spot/perp must have non-empty). **NOT nullable but unenforced** — empty-string sentinel passes the type
+  check but violates the workspace contract.
+- `InstrumentRecord.base_asset_contract_address` / `quote_asset_contract_address` / `base_asset_decimals` /
+  `quote_asset_decimals` (line 158-170) — `str | None = None` / `int | None = None`. DeFi rule says these must
+  be non-null for on-chain instruments. **NULLABLE; needs flip for DeFi.**
+- `InstrumentRecord.expiry` (line 108) — `datetime | None = None`. TradFi futures rule says must be non-null
+  for futures. **NULLABLE; needs flip for TradFi futures + options** (blocked on `tradfi_master` Q1+Q2).
+- Sports `fixture_id` — present on `canonical/domain/sports/{fixture_stats,player_stats,events,arbitrage}.py`
+  per grep; need per-file audit for nullability.
+
+**Three architectural choices for the actual flips** (next agent picks one):
+
+1. **Per-asset-group `InstrumentRecord` subclass** (e.g. `CefiSpotInstrument` / `DefiPoolInstrument` /
+   `TradFiFuturesInstrument`) with the relevant fields non-nullable. Cleanest type-safety but requires a
+   discriminated-union shape at the read boundary + URDI adapter migration.
+2. **Pydantic `model_validator(mode="after")` on `InstrumentRecord`** that asserts per-`instrument_type` field
+   requirements at runtime (e.g. `if instrument_type in {SPOT, PERPETUAL}: assert base_asset and quote_asset`).
+   Lightest-touch but defers errors to runtime instead of type-check.
+3. **Conditional-required per work-split (b)** — flip all the fields to non-nullable at the schema level + allow
+   instrument-records to pass through the URDI adapter with sentinel values during the tradfi-master Q1+Q2
+   transition window, then flip the sentinels to hard-required post-tradfi-Q1+Q2 land. Operator preference per
+   2026-05-11 aggressive May-15 push.
+
+**Recommended**: option (2) `model_validator` — smallest blast radius, codifies the workspace rules without
+disrupting the existing `InstrumentRecord` consumers, lands incrementally per asset_group. Subclasses (option 1)
+can come later as a refactor once the runtime checks have stabilised the data shape.
+
+**Per-flip migration sequence** (one PR per asset_group + per field, ordered to minimise mass-fail-during-transit):
+
+1. CeFi `base_asset` / `quote_asset` — empty-string → non-empty validator. Back-fill migration: walk every
+   captured CeFi spot/perp instrument in `gs://instruments-store-cefi-prod-{pid}`, identify rows with empty
+   `base_asset` or `quote_asset`, classify (legitimate-data-source-omission vs adapter-bug), back-fill from
+   venue REST or flag for re-fetch.
+2. DeFi `chain_id` / `contract_address` / `decimals` — None → non-null validator on instruments with
+   `instrument_type in DEFI_INSTRUMENT_TYPES`. Back-fill from on-chain registry (Aave V3 / Compound V3 / etc.
+   subgraphs) + per-protocol fallback ABI calls. **Composes with catalogue Phase 2-3** — those adapters write
+   the per-protocol contract addresses + decimals at instruments-service write time.
+3. TradFi futures `expiry_date` + 4 sister dates — blocked on `tradfi_master_2026_05_07` Q1 (futures-expiry
+   fields shipping). Sequence: tradfi_master Q1 lands → this plan Phase 1.3 lands → existing futures rows
+   already comply.
+4. TradFi options `expiration` — blocked on `tradfi_master_2026_05_07` Q2 (options-expiration flip). Same
+   sequencing as #3.
+5. Sports `fixture_id` — per-file audit in `canonical/domain/sports/`; flip nullable → required on every
+   per-fixture entity schema. Already-captured sports parquets per the 2026-05-07 audit should comply (the
+   adapter populates fixture_id from the api_football payload); validator simply codifies the requirement.
+
+**Phase 2 dependency**: per-row `record_failed` routing refactor at instruments-service `engine/orchestrator.py`
++ MTDS adapter base. Each per-row try/except routes schema-rejected rows to
+`record_failed(reason=RecordFailedReason.SCHEMA_VALIDATION_FAILED, ...)` with `error_detail` capturing the
+field name + expected type + observed value. The RecordFailedReason taxonomy shipped at uac@`3157f45` is the
+foundation; the signature refactor is Phase 2's body of work.
+
+**Phase 4 dependency**: `ManifestWriter.record_captured` row_key shape validation extends naturally — empty
+`instrument_id` for per-instrument shards / empty `chain` for DeFi bundled shards → `record_failed(reason=
+RecordFailedReason.MALFORMED_ROW_KEY)`. Phase 4 wires the guard.
+
+**Phase 5 dependency**: PM `quality-gates.sh` STEP 5.66 AST-walk asserts (a) hard-required fields are
+non-nullable in the Pydantic declarations + (b) every `record_captured` callsite passes the row_key shape
+validation kwargs for bundled shards. Extends existing STEP 5.64.
