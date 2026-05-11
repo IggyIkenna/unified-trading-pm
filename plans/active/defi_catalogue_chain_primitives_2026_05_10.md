@@ -309,8 +309,12 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       (`ezETH` → RENZO/ETH, `rsETH` → KELPDAO/ETH) to cover Phase 1A scope. Symbiotic/Karak DELIBERATELY not added
       (per-vault shares, not a single canonical LRT). Test `test_table_has_all_canonical_lsts` updated; helpers
       `tokens_for_protocol_asset` + `protocol_asset_for_token` already cover the new entries.
-- [ ] [AGENT] P0. **1H — UAC QG green** (`bash scripts/quality-gates.sh` from UAC repo). All new entries pass
+- [x] [AGENT] P0. **1H — UAC QG green** (`bash scripts/quality-gates.sh` from UAC repo). All new entries pass
       basedpyright + ruff + Bandit + pytest.
+      **✅ SHIPPED 2026-05-13 (Day 2) by slot 2 (ikenna-defi-catalogue-tab)** — full QG run from UAC repo exited 0
+      after slot 2's Day-1 Phase 1 edits (MevSubmissionMode.JITO_BUNDLE enum + LST_TOKEN_TO_PROTOCOL_ASSET ezETH/rsETH
+      + CHAIN_GENESIS_DATES naming-convention comment + test_lst_protocol_asset.py expected-set extension).
+      basedpyright + ruff + Bandit + pytest all green. No regressions from Phase 1 edits.
 
 **Codex SSOT update (Phase 1 boundary)** — per Post-Plan-Phase Codex Audit HARD RULE:
 

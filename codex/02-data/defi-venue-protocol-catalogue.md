@@ -132,6 +132,46 @@ axis (CLOB-style data shape, regardless of on-chain settlement). Captures wired 
 | **Vertex** | Arbitrum | ✗ | ✗ | ✗ | ✗ | OUT OF SCOPE |
 | **Jupiter perps (Solana)** | Solana | ✗ | ✗ | ✗ | ✗ | OUT OF SCOPE |
 
+## Per-protocol shard-atom matrix
+
+> **Codex SSOT for per-protocol shard atom** (mirrored from
+> [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
+> Phase 2 design — published 2026-05-12 + mirrored to codex 2026-05-13 by slot 2). Decides bundled-vs-per-instrument
+> per protocol family. Composes with [`shard-level-failure-isolation.md`](../04-architecture/shard-level-failure-isolation.md)
+> + writegate Phase 3.D.5 cluster validation.
+
+**Base shard atom for ALL DeFi protocols** (per
+[`per-asset-group-bucket-layouts.md`](per-asset-group-bucket-layouts.md) line 69 + UAC
+`canonical/domain/defi/gcs_paths.py`): `(date, asset_group=defi, chain, venue, instrument_type, data_type)`. Path:
+`raw_tick_data/by_date/day={date}/asset_group=defi/chain={chain}/venue={v}/instrument_type={it}/data_type={dt}/ticks.parquet`.
+
+**Per-protocol-family refinement** (whether instrument is a row-level column INSIDE the parquet vs hive-partition
+shard axis OUTSIDE; mirrors the predictions/sports multi-axis correction pattern banner from 2026-05-06):
+
+| Protocol family | Per-instrument count | Shard granularity | Instrument axis location | Cluster validation |
+|-----------------|----------------------|-------------------|--------------------------|--------------------|
+| **Lending** (Aave / Spark / Compound / Morpho / Radiant / Fluid) | ~10-20 reserves per (protocol, chain) | **Per-(chain, protocol, asset, data_type, day)** = one manifest row per `(asset, day)` | `asset_symbol` IS a hive shard key | Not bundled |
+| **DEX V3 + CLMM** (Uniswap V3 / Sushi V3 / PancakeSwap / Camelot / Aerodromeq / Velodrome / TraderJoe V2 / Balancer / Curve / Raydium / Orca) | 100-1000+ pools per (protocol, chain) | **BUNDLED per-(chain, protocol, data_type, day)** | `pool_address` is row-level | **MANDATORY** |
+| **DEX V2** (Uniswap V2 / Sushi V2) | smaller pool catalog | BUNDLED same as V3 | row-level `pool_address` | MANDATORY |
+| **LST** (Lido / Ether.fi / Rocket Pool / Jito / Marinade / Solblaze / Ethena / Spark sDAI) | 1 token per (protocol, chain) | Per-(chain, protocol, token, data_type, day) | hive key on `token_symbol` | Not bundled |
+| **Restaking single-token LRT** (Renzo ezETH / KelpDAO rsETH / Ether.fi weETH) | 1 token per (protocol, chain) | Same as LST | hive key on `token_symbol` | Not bundled |
+| **Restaking multi-vault** (Symbiotic / Karak / EigenLayer / Puffer / Jito-restaking) | dozens of vaults per (protocol, chain) | **BUNDLED per-(chain, protocol, data_type, day)** | row-level `vault_address` | MANDATORY |
+| **Vaults / yield-aggregator** (Yearn / Convex / Beefy / Pendle / Idle) | 50-200+ vaults per (protocol, chain) | **BUNDLED per-(chain, protocol, data_type, day)** | row-level `vault_address` | MANDATORY |
+| **Aggregators** (Jupiter Solana) | n/a (read-only routing) | per-(chain, protocol, data_type, day) | route is row-level | Not bundled (registry snapshot) |
+| **Perp DEX / on-chain CLOB** (Hyperliquid / Aster / GMX / Drift / Pacifica / Extended / Lighter) | per FLAG 1 RESOLVED 2026-05-10 → classified under cefi asset_group | Per-(venue, instrument, data_type, day) — same as CEFI venues | hive key on `instrument_id` | Not bundled |
+
+**Rationale — why BUNDLED for DEX / Vaults / multi-vault Restaking**: per-pool/per-vault shard would inflate
+manifest by 100-1000× per (protocol, chain). Bundled keeps manifest ≤ ~30k rows per DEX protocol per year. Per-pool
+detail recoverable via row-level columns + cluster validation gates silent loss
+(`expected_root_clusters` + `cluster_extractor` per UTL `record_captured` HARD RULE).
+
+**Compliance with Shard-granularity SSOT** (per
+[`shard-level-failure-isolation.md`](../04-architecture/shard-level-failure-isolation.md) +
+`plans/epics/infrastructure_master_2026_05_07.md`): shard atom MUST be identical across (a) writer atomicity,
+(b) manifest row key, (c) data-status display, (d) downstream pre-flight gate, (e) deployment-UI drilldown.
+Per-protocol Phase 2 adapter implementations MUST honor this matrix; deployment-UI drilldowns roll up to this same
+granularity.
+
 ## Per-chain coverage summary
 
 | Chain | Genesis | RPC primary | RPC fallback | Gas oracle | MEV protection | DeFi protocols (this catalogue) |
