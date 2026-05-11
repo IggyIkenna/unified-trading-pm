@@ -545,8 +545,17 @@ not silently defer.
 Each phase boundary triggers the codex audit per CLAUDE.md "Post-Plan-Phase Codex Audit HARD RULE":
 
 - Phase 1 boundary → UPDATE `codex/04-architecture/service-emission-policy.md` with the 4-state enum + read protocol.
+  **✅ SHIPPED — `service-emission-policy.md` LANDED (134 L, stub-appropriate)** (verified slot-6 codex-audit 2026-05-11).
 - Phase 2 boundary → UPDATE `codex/02-data/availability-manifest-and-data-status.md` with v8 columns + reader migration
-  window.
+  window. **Mostly done; ⚠ doc drift** — the v8 columns + reader-migration window are in the doc, but line 261 prose
+  says "`MANIFEST_SCHEMA_VERSION = 8` ... in `manifest_writer.py`" while `manifest_writer.py:131` is still `= 7` (the
+  embedded code snippet at :265 correctly says `= 7`). See the Phase 2 follow-up todo above. (slot-6 codex-audit 2026-05-11.)
+- Phase 3 boundary → CREATE `codex/02-data/cross-asset-rescan-protocol.md` stub documenting the cross-asset rescan
+  workflow (launcher VM + per-VM shard isolation + `VM_APPLY_FLIPS` gate + class-C triage JSONL → `gs://{pid}-rescan-triage/`).
+  **❌ NOT YET SHIPPED** — Phase 3 code shipped 2026-05-11 (`deployment-service@19fad8c` + `deployment-api@c8a1cd4` +
+  `instruments-service@a264f21`) but the codex stub is absent; OWNER ikenna-slot-6. Per the "Post-Plan-Phase Codex Audit"
+  HARD RULE the stub should ride with the Phase-3 ship. (slot-6 codex-audit finding 2026-05-11; was missing from this
+  section entirely — added by slot 6.)
 - Phase 4 boundary → UPDATE `codex/06-coding-standards/quality-gates.md` with the new workspace-wide grep verification
   step.
 - Phase 7 boundary → UPDATE `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit" with bundled-walk
