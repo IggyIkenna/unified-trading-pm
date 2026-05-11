@@ -28,3 +28,4 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 # Active pings
 
 [2026-05-11 06:52 UTC] harsh-workspace-qg-tab — STARTED slot 6 (plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+[2026-05-11 06:55 UTC] harsh-bucket-and-adapter-tab — STARTED slot 4 (plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
