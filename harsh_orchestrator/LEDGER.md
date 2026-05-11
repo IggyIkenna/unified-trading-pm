@@ -385,6 +385,9 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 
 ### ❓ Open questions across active plans (operator decisions pending)
 
+_(2026-05-11) `defi_master_2026_05_07.md` Q1 ✅ RESOLVED by Ikenna — defi_988 backfill (~13,632 rows of DeFi data reclamation) is unblocked: #4 ASTER chain genesis on BSC ✅ shipped UAC`77666c8`; #5 LINEA/BSC `lending-indices-handler` routing config authorized (still to land); #3 PROTOCOL_LAUNCH_DATES tightening authorized-in-principle (needs per-protocol date research for ~30 pairs). **NOT on any current Harsh slot** (the 2026-05-08 `vm-ops-tab` that owned it is retired; today's slot 4 is a different theme) — carry-forward / spin-up candidate; flagged to operator._
+
+
 | Slot | Plan | Q | Status | Action needed |
 | --- | --- | --- | --- | --- |
 | 3 | `issues/wave3x_track_d_findings_2026_05_11.md` | `EXPECTED_KNOWN_SOURCE_GAP` enum + case-D impl deferral. | ✅ RESOLVED 2026-05-11 (operator, Ikenna PM`39ab61e5`): enum ✅ APPROVED Phase 1 (lands in `manifest_schema_final_gate_2026_05_09.md`); case-D impl ✅ deferred post-cutover (Wave 3.M follow-up plan TBD; sports half re-scopes to instruments-service — Harsh-side follow-up, slot 3 not reassigned). | — (closed; Wave-3.M-plan creation = next-cycle follow-up) |
@@ -412,6 +415,7 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 | unified-api-contracts / unified-trading-library / instruments-service | (slot 3) | 3 | Wave3x ALL DONE — Track A-UTL+B classifier extensions UTL@`3fbc6b3`+UAC@`7c8b5ad`; Track C reconciler `reconcile_legacy_blank_to_typed_reason.py` instruments-service@`485c57b`; Track D audit (findings doc); Track E 3 stamping helpers UTL@`2ab3685` (PM flips @`553e57c4`+`1f55b265`). |
 | deployment-svc/UTL/features-svc/MTDS/PM | (slot 4) | 4 | (b+) session 1: Phase 0b cloud-providers.yaml @deployment-svc`a7eba4f` + parity-test @UTL`2118b1e`; Done-def #2 L2 config.py migration @features-svc`8f03ceeb`; sports-adapter `available_at` stamping @MTDS`c186ecb`; PM`f5b7da56` flips/scoreboard. |
 | (operator + Ikenna) | `78fd7070` | — | AWS region ratified = `ap-northeast-1` (b+ Phase 0i resolved; zero-cost — DeFi buckets already there; matched-region with GCP asia-northeast1). Master plan readiness column refresh. |
+| harsh_orchestrator + plans | (this commit) | 1 | defi_master Q1 ✅ resolved by Ikenna (3 priorities approved; #4 ASTER genesis UAC`77666c8`; defi_988 ~13,632 rows unblocked) — noted as unassigned carry-forward + cross-side ack (clarified today's slot 4 ≠ old vm-ops-tab) + flagged to operator. |
 | harsh_orchestrator + plans | (this commit) | 1 | Q1.3 (4th of 4 QG-check FPs) ✅ FIXED by Ikenna @PM`d2a553ed` (base-service.sh deep-import whitelist `unified_api_contracts.internal`) — relayed to slot 2 (full-throttle on real-violation rows now) + flipped cleanup-plan A1 + LEDGER; cross-side ack. ALL 4 QG-check FPs resolved (Q1.1/Q1.2 Harsh slot 1, Q1.3/Q2 Ikenna). |
 | harsh_orchestrator + plans | (this commit) | 1 | Q2 (4th QG-check FP) ✅ FIXED by Ikenna @PM`0407eb1a` (imports-inside-functions → AST) — relayed to slot 2 + flipped in cleanup-plan A2 + LEDGER; cross-side ack. All 4 QG-check FPs now: Q1.1/Q1.2 ✅ (Harsh slot 1), Q2 ✅ (Ikenna), Q1.3 pending-on-slot-2. |
 | harsh_orchestrator + plans | (this commit) | 1 | Relayed Phase-0i resolution + session-1 ack to slot 4 (`[main → slot 4]`); cross-side-pinged Ikenna slot 3 (flip sports-stamping todo + answer 2 design Qs in mtds_sports_available_at_wiring); flagged slot-4 shippable units to slot 6; LEDGER. |
