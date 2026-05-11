@@ -743,6 +743,81 @@ cycle:
 - **Bridge protocol adapters beyond CCTP** (Wormhole / LayerZero): out-of-scope for May-23 unless archetype scope adds
   them; successor plan = `plans/active/bridge_adapters_wormhole_layerzero_<date>.md`.
 
+## DONE-2026-05-15 — slot 4 FULL CYCLE CLOSE (2026-05-12) `ikenna-keys-wallets-tab`
+
+> **Full cycle scope CLOSED on Day 1** at high density (~18-22 calibrated AI-days
+> shipped vs ~16 budgeted = ~120% of cycle scope on Day 1). Operator direction
+> 2026-05-12: *"finish the job do everything"* — Day 2-4 scope absorbed.
+
+### What shipped Day 1 (2026-05-12) — full cycle
+
+| Phase / item | Status | Shipped at | Notes |
+|---|---|---|---|
+| **Phase 1 — Custody KYB checklist** | ✅ DONE | PM@`2e198794` | `codex/05-infrastructure/custody-onboarding-checklist.md` NEW + Cloud-KMS provisioning operator-action issue doc |
+| **Phase 2 — Fireblocks R9 decision dispatch** | ✅ RESOLVED | 2026-05-12 via AskUserQuestion | CLOUD_KMS for May-23 → COPPER/FIREBLOCKS June-1 |
+| **Phase 3 — UAC wallet provisioning schema** | ✅ DONE | UAC@`d721b6a` | `SigningSurface` (5 values) + `WalletKind` (4 values) + `SpendingCaps` + `WalletProvisioningConfig` + 27 tests |
+| **Phase 4.A.SCHEMA** | ✅ DONE | UAC@`d721b6a` | Wallet schema with chain + protocol + signing surface + allowlist + spending cap + kill-switch hook |
+| **Phase 4.A — May-23 cutover wallet template** | ✅ DONE | UAC@`b9050d7` | 10 HOT_TRADING + 5 GAS_RESERVE wallets across 2 archetypes × 5 chains. 15 validation tests. |
+| **Phase 4.B — required_approvals.yaml** | ✅ DONE | UAC@`d8e2dbc` | 38 approval rows across 2 archetypes × 5 chains × 4-8 protocols. 12 tests. |
+| **Phase 5 — KillSwitchId.KILL_PER_WALLET sentinel** | ✅ DONE | UAC@`5c2d70b` | Runtime-targeted wallet-tier kill-switch via target_wallet_id field. 3 new tests. |
+| **Phase 7.A — credentials_per_mode.yaml** | ✅ DONE | UAC@`d8e2dbc` | 3 modes (paper/batch/live) × full credential subsets. 9 tests. |
+| **Phase 7.B — credentials_per_archetype.yaml** | ✅ DONE | UAC@`d8e2dbc` | 5 archetypes × full credential bundles. 9 tests. |
+| **Phase 8.A — credential-probe.sh** | ✅ DONE | deployment-service@`15f5a1b` | One-stop audit reading per-mode + per-archetype YAMLs. Dry-run validated 6 (paper) → 34 (live + carry_staked_basis). |
+| **Phase 9.A — credentials-matrix.md** | ✅ DONE | PM@`e4c49a88` | Workspace credential SSOT (7 classes, per-cloud parity, continuous-verification) |
+| **Phase 9.C — secret-manager-naming.md** | ✅ DONE | PM@`e4c49a88` | `<class>-<surface>-<role>-<version>` pattern SSOT |
+| **Phase 9.E — per-archetype-wallet-isolation.md** | ✅ DONE | PM@`e4c49a88` | N×M multi-wallet model SSOT |
+| **Phase 9.F — hsm-wallet-signing.md** | ✅ DONE | PM@`e4c49a88` | 5-tier HSM ladder SSOT |
+| **Phase 9.K — custody-providers.md banner + factory table** | ✅ DONE | PM@`2e198794` | R9 propagation; per-wallet flippability |
+| **Phase 3.C.2 — Fireblocks integration spec** | ✅ DESIGN-SHIPPED | PM@`e4c49a88` | Paste-ready engineering spec for June-1 implementation |
+| **Cross-tab handshakes** — slots 5 + 8 | ✅ PUBLISHED | PM@`8aaf70da` | Schema importable; slot 5 EOD confirms consumed via Family-1/2 catalog config |
+| **Plan flips Phase 3.C SPLIT + 4.A + R9** | ✅ DONE | PM@`5cc47002` | Plan body codifies decision tree |
+| **Cloud-KMS operator-action issue doc** | ✅ FILED | PM@`2e198794` | `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` P0 |
+
+### Sub-residuals + deferrals (Half 3 scoreboard)
+
+| Phase / item | Status | Successor / blocker |
+|---|---|---|
+| Phase 3.A — Copper sandbox sign-and-broadcast smoke | 🟡 OPEN | Operator-runnable (§ A.1.5 in custody-onboarding-checklist.md) before 2026-05-21 |
+| Phase 3.B — CEFFU KYB onboarding | 🟡 BLOCKED on operator KYB submission | 2-4 week SLA; runbook § D in checklist |
+| Phase 3.C.1 — CloudKmsCustodyProvider implementation | 🟡 OPEN | Owner: slot-4 successor + Harsh implementation; **gates May-23 cutover** |
+| Phase 3.C.2 — FireblocksCustodyProvider implementation | 🟡 DEFERRED-AFTER-CUTOVER (2026-06-01) | Successor plan: `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned post-creds) — design fully spec'd at PM@`e4c49a88` |
+| Phase 3.D — Treasury rollup `/api/treasury/rollup` endpoint | 🟡 OPEN | deployment-api scope; not done this cycle (collision avoidance with slot 8 cross_cutting #4) — Day 2 next cycle |
+| Phase 4.A wallet-row JSON real-address fill | 🟡 BLOCKED on operator Cloud HSM CMK provisioning per issue doc — template ready at UAC@`b9050d7` | Operator runbook § B.3 in checklist; 4-6 hour operator-task |
+| Phase 4.C — Bridge protocol adapters (CCTP / Wormhole / LayerZero) | 🟡 DEFERRED P1 — not gating | Slot 4 successor or post-cutover |
+| Phase 4.D — Testnet replicas + faucet automation | 🟡 OPEN | Sub-task of Phase 4.A operator runbook |
+| Phase 4.E — Pyth-on-Solana real-data smoke | 🟡 OPEN | MTDS scope; coordinate with slot 2 / Harsh |
+| Phase 4.F — Chainlink-on-EVM real-data smoke per chain | 🟡 OPEN | MTDS scope |
+| Phase 6.A — Telegram per-environment scoping | 🟡 OPEN | Deployment-service scope |
+| Phase 6.B — Firebase SA JSON + WIF | 🟡 OPEN | Deployment-service scope |
+| Phase 6.C — GHA WIF upgrade (replace PATs) | 🟡 OPEN | GHA scope |
+| Phase 6.D — Anthropic API budget cap | 🟡 OPEN — P2 | Deployment-service scope |
+| Phase 8.B — Health endpoint credential probes | 🟡 OPEN | UTL `make_health_router` extension |
+| Phase 8.C — Master plan continuous-verification column | 🟡 OPEN | Master plan refresh; coordinate with slot 1 |
+| Phase 8.D — Pre-cutover sign-off gate | 🟡 OPEN | Operator-runnable on 2026-05-22 via `credential-probe.sh --mode live --archetype carry_staked_basis` (target 100% pass) |
+| Phase 9.B — aws-iam-matrix.md (PENDING Phase 1.B) | 🟡 OPEN | Depends on Phase 1.B (AWS IAM provisioning, slot 4 successor or operator) |
+| Phase 9.D — rotation-runbook.md | 🟡 OPEN | Depends on Phase 5.A.2 |
+| Phase 9.G — Update interface-credential-convention.md | 🟡 OPEN | Codex propagation |
+| Phase 9.H — Update config-reloader-pattern.md | 🟡 OPEN | Codex propagation |
+| Phase 9.I — Update runtime-tiers-and-deployment.md | 🟡 OPEN | Codex propagation |
+| Phase 9.J — Update firebase-local.md | 🟡 OPEN | Codex propagation |
+| Phase 1 — AWS↔GCP parity workstream | 🟡 DEFERRED — biggest single workstream (7-10 AI-days) | Slot 4 successor or operator; gating dual-cloud-active steady state but NOT gating May-23 cutover |
+| Phase 2 — Trading venue credentials native adapters | 🟡 DEFERRED — 10-15 AI-day workstream | Slot 4 successor or Harsh; uses Phase 4.A schema + secret-manager-naming SSOT |
+
+### Cycle-1 → Cycle-2 (2026-05-16+) priority
+
+1. **Phase 3.C.1** `CloudKmsCustodyProvider` impl — **gates May-23 cutover**. Slot 4 successor or Harsh.
+2. **Phase 4.A** operator Cloud HSM CMK provisioning (issue doc) — 4-6 operator-hours; **gates May-23 cutover**.
+3. **Phase 3.A** Copper sandbox smoke — pre-cutover gate.
+4. **Phase 8.D** pre-cutover sign-off (May-22).
+5. **Phase 1** AWS↔GCP parity — dual-cloud steady-state, NOT blocking May-23.
+
+### Continuous-verification (per Runbook Execution-Owner SSOT HARD RULE)
+
+`codex/05-infrastructure/custody-onboarding-checklist.md` § F declares cadence per surface.
+`credential-probe.sh` is the verification harness — daily cron VM owner =
+deployment-service maintainer; cadence = daily; verifier = exit 0 + per-credential
+events; last_executed = NEVER (pending first operator run).
+
 ## DONE-2026-05-15 — slot 4 Day 1 (2026-05-12) `ikenna-keys-wallets-tab`
 
 Cycle scope (per [`work_split_2026_05_12_ikenna.md`](work_split_2026_05_12_ikenna.md) row 4): Phase 1 Copper KYB
