@@ -271,34 +271,29 @@ todos:
       `record_captured_from_counts`, so the writegate `assert_available_at_present(df)` guard doesn't fire on this
       path today. Filed as Phase 1 P1 follow-up todo below.
 
-- [ ] [SCRIPT] P1. **Sports odds — promote `bm_time` stamping to conservative rule
-      `bm_time + emission_latency_ms_for_source(source)`**. **MIGRATED FROM:** the MTDS-slice ODDS_SNAPSHOT path
-      ship (above) chose the event-time rule (`bm_time` only) because the conservative rule's UAC pre-req status
-      was unverified at ship-time. Verified 2026-05-11 by slot 3 (Re-task c, Q-D answer): sports sources have
-      `EMISSION_LATENCY_MS_BY_SOURCE` entries — `odds_api=5000ms`, `api_football=1000ms`, `understat=7_200_000ms`
-      (2h post-match), `soccer_football_info=3_600_000ms` (1h), `open_meteo=3_600_000ms` (1h),
-      `transfermarkt=86_400_000ms` (24h). Per CLAUDE.md "Live = batch — same data, same fields, same timing
-      semantics" rule, historical writes MUST stamp with the live-pipeline-arrival latency added, NOT the raw
-      event time. Fix shape: introduce `stamp_available_at_odds_snapshot_conservative(df, snapshot_time_col,
-      source)` in UTL `availability_stamping.py` (thin wrapper:
-      `stamp_available_at_event_time(df, event_time_col) + timedelta(ms=emission_latency_ms_for_source(source))`)
-      OR extend the existing `stamp_available_at_odds_snapshot` to take an optional `source=` kwarg with the same
-      semantic. Then update MTDS's wiring call site (one line in `_process_sports_venue_with_leagues`). Sequencing-
-      safe (conservative > optimistic; downstream consumers' strict `<= target_ts - horizon` checks become
-      slightly more conservative, no regression). Owner: Harsh slot 4 (re-task) OR slot 3 next cycle if Harsh
-      doesn't pick up.
+- [x] [SCRIPT] P1. **Sports odds — promote `bm_time` stamping to conservative rule
+      `bm_time + emission_latency_ms_for_source(source)`** (shipped UTL@f7b704fd + MTDS@a512edf 2026-05-11 by
+      `ikenna-available-at-tab` absorbing Harsh slot 4 P1 per operator authorization "harsh agent is stale hes
+      gone away"). UTL extended `stamp_available_at_odds_snapshot` with optional `source=` kwarg; when set,
+      stamps `available_at = bm_time + emission_latency_ms_for_source(source)`. Misspelled source raises
+      `KeyError` (closed-set round-trip, mirrors `stamp_available_at_cefi_tick` precedent). MTDS wiring at
+      `_process_sports_venue_with_leagues` now passes `source=data_source.lower()` (= `"odds_api"` for the only
+      sports adapter currently routed through this path → bm_time + 5000ms). KeyError on unregistered source
+      surfaces as a shard-level failure (same path as `AvailableAtStampingError`). 5 new UTL tests + 5 existing
+      MTDS sports tests updated for the +5000ms delta. status: done.
 
-- [ ] [SCRIPT] P1. **`StreamingParquetWriter.write_chunk` — `assert_available_at_present` boundary guard**.
-      **MIGRATED FROM:** Q-B answer (Re-task c, 2026-05-11). The MTDS sports path uses
-      `record_captured_from_counts` (counts-only, no df), so the existing writegate
-      `assert_available_at_present(df)` guard inside `ManifestWriter.record_captured` doesn't fire on this path.
-      The CeFi tick path goes through `PartitionedTickWriter.write_chunk` which IS protected; the gap is sports +
-      any other path that uses plain `StreamingParquetWriter` + counts-only manifest emission. Right shape: add an
-      unconditional `assert_available_at_present(df)` call inside `StreamingParquetWriter.write_chunk(df)` so
-      every parquet-write boundary asserts the column, regardless of which manifest helper fires downstream.
-      This is universal — covers every MTDS adapter that writes through `StreamingParquetWriter` (which is most of
-      sports + the streaming half of prediction). ~30-min UTL edit + 5 unit tests. Owner: Harsh slot 4 (UTL
-      `StreamingParquetWriter` lives in UTL, but the consumer audit is MTDS-side).
+- [x] [SCRIPT] P1. **`StreamingParquetWriter.write_chunk` — `assert_available_at_present` boundary guard**
+      (shipped UTL@f7b704fd + MTDS@a512edf 2026-05-11 by `ikenna-available-at-tab` absorbing Harsh slot 4 P1
+      per operator authorization). `StreamingParquetWriter.__init__` accepts opt-in `enforce_available_at: bool
+      = False` kwarg; when True, every non-empty `write_chunk(df)` calls the inlined
+      `assert_available_at_present(df)` check and raises `LookaheadBiasError` on missing column / null values.
+      Universal parquet-write-boundary guard for paths that emit via this writer + call
+      `record_captured_from_counts` downstream (counts-only, bypasses the writegate
+      `assert_available_at_present` guard inside `ManifestWriter.record_captured(df=...)`). Inlined to avoid
+      circular import (manifest_writer transitively depends on this module). MTDS sports orchestrator now
+      passes `enforce_available_at=True` on the sports odds writer, completing the universal guard for the
+      sports path. 5 new UTL tests covering: default off (legacy unaffected) / missing column raises /
+      nulls raise with count / populated passes / empty df short-circuits. status: done.
 
 - [ ] [SCRIPT] P0. **DeFi (non-onchain) adapter stamping**. Per-adapter `available_at` stamping for: DefiLlama TVL, AAVE
       lending rates, Pyth Solana price feeds (re-added 2026-05-06 for LST-yield Solana coverage), Chainlink (EVM
@@ -650,6 +645,50 @@ Design-Q resolutions summary (full text in the issue doc):
 
 Closed set count after this re-task: AVAILABILITY_AT_SEMANTICS 51 → 65 (unchanged from earlier this cycle).
 EmptyConfirmedReason members: 14 → 15. UAC `tests/unit/test_honest_coverage.py` 33 → 36 tests pass.
+
+### Re-task continuation 2 (Harsh slot 4 absorption — operator authorization 2026-05-11)
+
+Operator direction "harsh agent is stale hes gone away can you do that work for him" → slot 3 absorbed the 2
+P1 follow-up todos filed by re-task continuation 1 (conservative-rule promotion + writer-boundary guard).
+Shipped in one logical unit across UTL + MTDS + PM:
+
+| Re-task item                                                                                | Status | Commits                                                                                                                  |
+| ------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Conservative-rule UTL helper (`stamp_available_at_odds_snapshot` + `source=` kwarg)         | `done` | unified-trading-library@f7b704fd (UTL helper + 5 tests)                                                                  |
+| `StreamingParquetWriter.write_chunk` boundary guard (`enforce_available_at=True` kwarg)     | `done` | unified-trading-library@f7b704fd (writer guard + 5 tests; inlined `assert_available_at_present` to avoid circular import) |
+| MTDS sports orchestrator wiring (`source="odds_api"` + `enforce_available_at=True`)         | `done` | market-tick-data-service@a512edf (orchestrator wiring + 5 sports odds tests updated for +5000ms delta)                  |
+| Plan flips on the 2 P1 follow-up todos in this plan body                                    | `done` | unified-trading-pm@<this commit> (`- [x]` flips + commit-sha evidence inline)                                            |
+
+What this fully closes: the available_at-Q-A + Q-B resolutions from re-task (c) are now operationally shipped
+end-to-end. Sports odds parquets written via MTDS sports orchestrator now carry
+`available_at = bm_time + emission_latency_ms_for_source("odds_api")` (= bm_time + 5000ms per UAC SOURCE_PRIORITY)
+AND every non-empty parquet write through `StreamingParquetWriter` with `enforce_available_at=True` raises
+`LookaheadBiasError` if `available_at` is missing or null — universal write-boundary guard composes with the
+conservative-rule stamping above.
+
+What remains DEFERRED (unchanged by this re-task — separate workstreams):
+
+- **Phase 0.3-0.6** (MDPS audit / reconciler / write-gate / QG static check) — still gated on
+  `features_repo_consolidation_2026_05_08.md` Phase 7 + `live_pipeline_mtds_mdps_features_2026_05_08.md`
+  Phase 4-5. Harsh slot 4 was originally re-tasked to promote the live-pipeline design stubs to
+  implementation (per PM@4ca1cb0c). Slot 4 has gone stale; that promotion now needs a new owner — flag
+  for next-cycle work-split.
+- **Sports non-ODDS_API adapters** (betfair / matchbook / sfi / footystats) — still not wired into
+  MTDS `_process_sports_venue_with_leagues`. When they do wire in, the same conservative-rule pattern
+  applies; verify the per-source latency entries exist in UAC `EMISSION_LATENCY_MS_BY_SOURCE` before
+  wiring (Q-C resolution path).
+- **Non-sports `StreamingParquetWriter` consumers** — the `enforce_available_at` kwarg defaults to False
+  for backward compat. Sweep through every non-tick MTDS write path that uses `StreamingParquetWriter` +
+  `record_captured_from_counts` (prediction streaming half) and enable the guard there too. P1 sweep
+  follow-up filed below.
+
+- [ ] [SCRIPT] P1. **Sweep non-tick MTDS write paths for `enforce_available_at=True`**. The CeFi tick
+      path goes through `PartitionedTickWriter` and gets the guard via the writegate path. The sports
+      odds path is now covered (above). The remaining surface: prediction streaming half (Polymarket
+      CLOB capture), any TradFi / DeFi paths that use `StreamingParquetWriter` directly +
+      `record_captured_from_counts` downstream. Audit needed; ~30-min per consumer + verify the upstream
+      stamping is wired so the guard doesn't surface stale gaps. Owner: next-cycle work-split (likely
+      slot 3 or Harsh slot 4 if available).
 
 ## Audit-2026-05-10 finding — post-cutover Phase: lift `available_at` to schema-level invariant
 
