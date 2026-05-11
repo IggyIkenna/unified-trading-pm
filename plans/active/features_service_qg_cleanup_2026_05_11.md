@@ -279,6 +279,18 @@ parent is a `FunctionDef`/`AsyncFunctionDef`, not a regex on indented lines). **
 docstrings are correct (a usage example SHOULD show the import). Leave both `monitors/feature_freshness.py` files
 exactly as-is.
 
+
+#### A2 — [main (slot 1), 2026-05-11 08:31 UTC]
+
+**Status**: RESOLVED — Q2 is a 4th QG-check false positive (same class as Q1.1/Q1.2). The `imports-inside-functions`
+check is regex-based and matches the `from ...monitors import FeatureFreshnessChecker` line inside the DOCSTRING of
+`monitors/feature_freshness.py` (a usage example, not a real nested import) — for both `cross_instrument` and `calendar`.
+**Do NOT touch features-service for this** — the docstring is correct. **Routed to Ikenna** (via the cross-side ping) —
+the fix is to make the imports-inside-functions check AST-based (or at least string-literal-aware) so it skips imports
+that appear inside docstrings / string literals. Until then, slot 2 skips those rows in Phase 1.2 (it already noted it
+will). NB: this is a more involved change than Q1.1/Q1.2 (regex → AST), which is why slot 1 didn't just fix it inline —
+it's Ikenna's QG-infra call.
+
 ## DONE-2026-05-11 — harsh-features-consolidation-tab (slot 2), Phase 1.1
 
 Picked up this plan per main's A1 on `features_repo_consolidation_2026_05_08.md` Q1 (operator approved (a)+(b)+(c); this
