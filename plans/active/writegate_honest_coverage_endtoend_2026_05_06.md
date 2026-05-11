@@ -791,9 +791,13 @@ NaN-ratio/cluster-coverage check — the entire honest-coverage infrastructure i
       `ManifestWriter.record_captured` + UTL 4-pillar gate). Shipped market-data-processing-service@d717c59 — 1171/1173
       tests pass + 1 skip + 1 unrelated CLI env-validation failure (`test_cli_help` — `ENVIRONMENT='test'` not in
       valid set; not P0-2 scope).
-- [ ] **Step 2 (P0)**: Fix `tradfi/ohlcv_passthrough.py:266 _create_full_day_empty_output` — currently emits
+- [x] **Step 2 (P0)**: Fix `tradfi/ohlcv_passthrough.py:266 _create_full_day_empty_output` — currently emits
       `n_candles` rows of all-NaN OHLC on `tick_data.empty`. Replace with `BaseCandleAdapter._make_empty_candle_output()`
-      + route empty result through `record_empty(row_key=..., reason=...)`.
+      + route empty result through `record_empty(row_key=..., reason=...)`. Shipped
+      market-data-processing-service@93883b7 — `_create_full_day_empty_output` deleted, `process_to_candles` empty
+      branch returns `_make_empty_candle_output()` (zero-row CandleOutput, Path A). Upstream
+      `live_workers._process_all_timeframes` detects `candles_df.empty` and emits `record_empty_for_shard`. 27/27
+      tradfi adapter tests pass.
 - [ ] **Step 3 (P0)**: Delete duplicated `_create_closed_market_candle` at `orchestration_writer.py:65` + `batch_workers.py:94`
       (banned per CLAUDE.md "No double SSOT"); delete `_handle_empty_tick_data` from `batch_workers.py:192` (banned
       per CLAUDE.md "No double SSOT in data-saving methodology"). Replace TradFi non-trading-day callers with
