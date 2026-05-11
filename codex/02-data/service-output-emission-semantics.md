@@ -18,7 +18,11 @@ related_codex:
 > publish_with_manifest_lookup wrapper + ohlcv_1h POC); slice (c) Phase 6.1-6.9 covers the remaining 8 services
 > (multi-week rollout). v8 manifest schema columns for `service_emission_state` + `last_emission_decision_at` +
 > `expected_window_completeness_pct` are owned by [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
-> Phase 1.
+> Phase 1 — **shipped 2026-05-11 at UAC@`174f401`** (`unified_api_contracts.canonical.crosscutting.manifest_schema`
+> declares `MANIFEST_SCHEMA_VERSION_V8 = 8` + `V8_NEW_COLUMNS` + `V8_COLUMN_DEFAULTS` + `READER_FALLBACK_WINDOW_DAYS`;
+> `unified_api_contracts.canonical.crosscutting.service_emission_state` declares `ServiceEmissionStateEnum` +
+> `SERVICE_EMISSION_STATES` frozenset + `ManifestRowBlockedError`; `service_emission_policy.next_state(*, policy, event)`
+> resolves `(ServiceEmissionPolicy, EmissionLifecycleEvent)` → `ServiceEmissionStateEnum` for the writer hot path).
 
 ## TL;DR
 
@@ -125,6 +129,27 @@ canonical availability index via `read_availability_index(bucket)` (60s TTL cach
 Standalone helper for callers that want to compute the fraction without publishing (e.g. diagnostics, data-status
 endpoints, audit reports). Returns frozen `CompletenessReadout` with the fraction + the `incomplete_window` list +
 per-state totals.
+
+### `next_state(*, policy: ServiceEmissionPolicy, event: EmissionLifecycleEvent) -> ServiceEmissionStateEnum`
+
+Pure resolver (`unified_api_contracts.canonical.crosscutting.service_emission_policy`) that maps the lifecycle event
+the publisher just emitted to the v8 manifest column value. Three of four events map 1:1; `STALE_DATA` renames to
+`STALE_DATA_HEARTBEAT_ONLY` so the manifest column self-documents the "heartbeat-only, no metric row" semantic. The
+`policy` arg is advisory (state derives from `event` under the slice (b) spec; kept in signature for forward-compat with
+future policy-specific state nuances). UTL's writer hot path calls this after `publish_with_policy(...)` to fill the
+`service_emission_state` v8 column. Shipped at UAC@`174f401` per `manifest_schema_final_gate_2026_05_09.md` Phase 1.B.
+
+## Manifest-read protocol per `service_emission_state`
+
+Downstream consumers reading the v8 manifest column MUST branch on the four states:
+
+| State                       | Consumer action                                                                                                                                                       |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PUBLISHED_OK`              | Consume normally — full upstream window represented.                                                                                                                  |
+| `PUBLISHED_DEGRADED`        | Consume with the row's `completeness_fraction` column applied per the per-service consumer-class audit (NaN-fill / rolling-window denominator adjust / propagate-per-leg). |
+| `STALE_DATA_HEARTBEAT_ONLY` | **Skip + log.** No metric row was written; service is up + emitting heartbeat events. Downstream MUST NOT proxy-fill from prior windows — the absence is the signal.  |
+| `BLOCKED`                   | **Skip + raise `ManifestRowBlockedError`** (`unified_api_contracts.canonical.crosscutting.service_emission_state`). The publish-boundary policy withheld the metric row + fired a P0 alert; any downstream read is a correctness-critical attempt to consume data deliberately withheld. |
+| `None` (legacy v7 row)      | Fall through to `capture_status`-based reasoning. The ≤30-day reader-fallback window (`READER_FALLBACK_WINDOW_DAYS = 30`) expires ~2026-06-14 per Phase 7 walk.        |
 
 ## Worked examples
 
