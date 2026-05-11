@@ -692,15 +692,24 @@ entire sports/market/execution/etc. namespace at top level. (`coverage_gate.py` 
 `.sports` before A's session — pre-existing, not introduced by the consolidation.) **Until decided, these 3 rows keep QG
 red for features-service — but they're not features-service violations.**
 
-**Q4b (related — from sub-agent B, 2026-05-11): `resolve_rpc_url` only reachable via the deep path `unified_api_contracts.registry.chain_env`.**
-`features_service/onchain/collectors/scanner_factories.py` does `from unified_api_contracts.registry.chain_env import resolve_rpc_url`
-— `resolve_rpc_url` is NOT re-exported at the bare `unified_api_contracts` facade nor at `unified_api_contracts.defi` (B
-verified). Unlike Q4 proper, `registry.chain_env` IS a genuinely deep path (not a `.{domain}` facade), so the *right* fix
-is **UAC re-exports `resolve_rpc_url`** at `unified_api_contracts/__init__.py` or the `.defi` facade (per CLAUDE.md: "RPC
-URL templates: `CHAIN_RPC_TEMPLATES` in UAC `registry/capability_declarations/_defi.py` — SSOT for all chain→RPC mappings.
-execution-service DeFi connectors import from UAC, never define their own" — so `resolve_rpc_url` SHOULD have a facade
-surface). UAC-side change → Ikenna/slot-1. B left the deep import + a `# Q-FOR-IKENNA` comment in
-`scanner_factories.py`. **Until decided, this 1 row keeps QG red — not a features-service violation.**
+**Q4b — ✅ RESOLVED 2026-05-11 by Harsh slot 1 (sub-agent B's premise was incorrect — the re-export ALREADY exists).**
+`resolve_rpc_url` IS re-exported at the `unified_api_contracts.registry` package facade — `registry/__init__.py:90`
+imports it from `.chain_env` and `:799` lists it in `__all__` (alongside `CHAIN_RPC_TEMPLATES`, which execution-service
+imports as `from unified_api_contracts.registry import CHAIN_RPC_TEMPLATES`). `unified_api_contracts.registry` is a
+sanctioned ONE-LEVEL facade (same shape as `.defi`/`.sports`/`.market`; NOT a deep-internal path — CLAUDE.md names only
+`canonical.*`/`normalize_utils.*` as internal, and STEP 5.23 flags `.canonical./.normalize_utils./.config./.shared./.schemas.`
+— not `.registry.`). So:
+- **No UAC change needed** — the facade re-export is already there.
+- **Slot-2 fix (1 line, mechanical)**: in `features_service/onchain/collectors/scanner_factories.py:43` change
+  `from unified_api_contracts.registry.chain_env import resolve_rpc_url` → `from unified_api_contracts.registry import resolve_rpc_url`
+  (one-level facade). Same for `lst_seasonal_rewards_live.py` if it does the two-level form. Drop the `# Q-FOR-IKENNA` comment.
+- **`base-service.sh` DI= check** updated this cycle (Harsh slot 1, PM@(this commit)): `registry` removed from the
+  deep-internal exclusion set, so `from unified_api_contracts.registry import X` (one-level) is whitelisted while
+  `from unified_api_contracts.registry.chain_env import X` (two-level) stays flagged — i.e. once slot 2 makes the 1-line
+  import fix, that QG row clears. (This also clears execution-service's existing `from unified_api_contracts.registry
+  import CHAIN_RPC_TEMPLATES` which was being flagged.) **So Q4b is slot-2's 1-line import edit, not an Ikenna change.**
+
+#### A1 (Q4b) — [main (slot 1), 2026-05-11] — resolved; see above. Sub-agent B's "needs UAC re-export" was a false premise.
 
 ### Q5 — [harsh-features-consolidation-tab (via sub-agent A), 2026-05-11] — QG STEP 5.10 (direct cloud SDK) should exclude `scripts/`
 
