@@ -214,6 +214,35 @@ Recovery emits one of two AlertCodes:
 The risk-controller does not observe recovery state — once the breaker auto-recovers or is operator-unkilled,
 subsequent Layer 2 SCALE_DOWNs start a fresh rolling-window for the seam.
 
+### Per-state-surface reconciler outputs feed breaker triggers
+
+In addition to venue-rejection-rate sliding-windows (the classic state machine above) and risk-controller seam events
+(per [`risk-breaker-seam.md`](risk-breaker-seam.md)), circuit breakers consume a third input axis: **per-state-surface
+reconciler drift events**. The
+[`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md)
+Phase 3 ships 8 reconcilers, each emitting typed drift events that the matching `CircuitBreakerId` subscribes to.
+
+| Reconciler | What it diffs | Drift event feeds breaker |
+| ---------- | ------------- | ------------------------- |
+| **Position reconciler** (Phase 3.A) | `position-balance-monitor-service` internal state vs venue REST + custody endpoint per-instrument. | `POSITION_LIMIT_EXCEEDED` — position drift > tolerance fires breaker with `CANCEL_OPEN` action. |
+| **Balance reconciler** (Phase 3.B) | Per-account total balance: internal accumulator vs venue balance endpoint. | `HEDGE_GAP_NOTIONAL_USD` — balance drift > USD threshold fires breaker. |
+| **Custody reconciler** (Phase 3.C) | Copper + CEFFU ping success + balance vs internal record. | `CUSTODY_DISCONNECT_SECONDS` — failed ping over threshold seconds fires `BLOCK_NEW`. |
+| **On-chain reconciler** (Phase 3.D) | Wallet on-chain balance vs `position-balance-monitor` per-chain accumulator. | `POSITION_LIMIT_EXCEEDED` (chain-scoped) — drift > tolerance fires breaker. |
+| **Event reconciler** (Phase 3.E) | Event-stream count + sequence vs expected per service (gaps / out-of-order events). | `CLOCK_SKEW_MS` (sequence proxy) + per-service health breakers — gap fires `BLOCK_NEW`. |
+| **Manifest reconciler** (Phase 3.F) | Phantom audit (per CLAUDE.md "Manifest phantom audit"); wired as nightly cron. | `MANIFEST_PHANTOM_RATE_BPS` — phantom rate > threshold bps fires breaker. |
+| **Order-state reconciler** (Phase 3.G) | Internal order state vs venue order state per-instrument. | `REJECT_RATE_BPS` (order-state drift proxy) — drift > bps fires `BLOCK_NEW`. |
+| **PnL + clock + batch-vs-live reconciler** (Phase 3.H) | PnL invariant + clock-skew + UTL@908b1647 batch-vs-live divergence. | `BATCH_LIVE_DIVERGENCE_BPS` + `CLOCK_SKEW_MS` + `PNL_VARIANCE_SIGMA` — each subscribes to its slice. |
+
+The three input axes are **independent + idempotent**. A single root cause that fires from multiple inputs (e.g. venue
+outage tripping rejection-rate AND custody reconciler) results in idempotent state transitions — CLOSED → DEGRADED is a
+no-op if already DEGRADED. The breaker state machine is the deduplication boundary; reconcilers don't coordinate among
+themselves.
+
+Per [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) § "Trigger sources — three input axes", every
+`CircuitBreakerId` declares which axis or axes it subscribes to in the per-archetype registry seed. Reconciler-driven
+breakers (manifest / batch-live / position-drift / balance / custody / clock) are explicit in their `description`
+field.
+
 ### Multi-Venue Cascade → Kill Switch Escalation
 
 When multiple venues for a strategy are simultaneously OPEN, the system cannot maintain its intended hedging. This
