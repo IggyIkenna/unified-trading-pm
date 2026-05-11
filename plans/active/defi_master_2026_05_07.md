@@ -1437,3 +1437,13 @@ Harsh's shift ended; tab 3's `defi_master` Priority #5 (lending-indices LINEA/BS
 - (d) **P1 — `create-code-tarballs.sh` stale-repo list + non-graceful skip** — `[ ]` in § "Discoveries", not urgent.
 - (optional) the ~142 LINEA + ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits → `EXPECTED_PRE_GENESIS_CHAIN` reconcile
   (cosmetic; a clean post-(b) re-run reconciles them).
+
+## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
+
+CLAUDE.md DeFi Execution Architecture section cites `UniswapConnector.swap_exact_input()` via SwapRouter02 `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45`. **This address is Ethereum mainnet only.**
+
+Family 1 + Family 2 cells on Arbitrum + Base require separate SwapRouter02 addresses for the cross-asset swap leg (e.g. WETH→wstETH unwind). Without per-chain dispatch, Family 1 Arbitrum/Base cells will revert at the swap step.
+
+**Recommended fix**: extend `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py` `UNISWAP_SWAP_ROUTER_BY_CHAIN: dict[str, str]` registry covering Ethereum / Arbitrum / Base / Optimism. `UniswapConnector.swap_exact_input(chain=...)` reads from registry. Per System-First Architecture rule — single SSOT, no hardcoded address in the connector.
+
+Slot 5 NOT fixing (Findings Triage — adjacent to defi_master scope, not recursive-borrow). Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Family 1 topology design § Cross-plan annotations queued.

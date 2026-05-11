@@ -845,3 +845,12 @@ Prior-cycle slot-2 STATUS-2026-05-11 flagged 3 PipelineMode findings as 🟡 BLO
 landed Q1=(α) + Q2=(A) approvals routed to slot 3 at PM@`4c573302`. Phase 4.GREP-VERIFY AST-walk QG check shipped
 by slot 3 at PM@`4159b7ae`. Phase 4.MTDS → Phase 4.DEFAULT-REMOVAL path now clear for 2026-05-15 freeze gate.
 Slot 2's prior cycle deferrals all closed via slot 3 follow-up.
+
+## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
+
+Slot 5 Day-1 design ship surfaced 2 Phase 3 dependencies for slot 2 to verify or close:
+
+1. **Funding-rate data_type capture for ETH-PERP on Hyperliquid + Bybit** at ≥1h cadence, ≥1y horizon. Required for Family 2 Phase 7.5 `funding_rate_apr_rolling_30d_mean` feature (adaptive sizing). Grep-then-READ before concluding adapter missing (HARD RULE) — check `market-tick-data-service/market_tick_data_service/adapters/` for `hyperliquid_funding_*.py` or `bybit_funding_*.py` patterns.
+2. **Instruments-service per-(chain, protocol) reserve listings** for Arbitrum Aave V3 (11 reserves: USDC, USDC.E, USDT, DAI, WETH, WBTC, WSTETH, WEETH, RETH, ARB, LINK) + Base Aave V3 (7 reserves: USDC, USDBC, WETH, CBBTC, WSTETH, WEETH, CBETH). Without these listings, MTDS `lending_indices` adapter has no instrument universe for non-Ethereum chains — Family 1 Arbitrum/Base cells unblock requires these.
+
+Slot 5 NOT fixing (Findings Triage — outside-plan scope); slot 2 owns this Phase 3 detail. Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Family 1 topology design section (Arbitrum + Base ReserveParams matrix).

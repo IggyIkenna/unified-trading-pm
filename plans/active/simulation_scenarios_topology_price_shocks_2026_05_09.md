@@ -755,3 +755,19 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
 - **Handshake integration shape** at `scratch_scenarios_day1/11_handshake_integration.md` codifies cross-plan ownership across simulation_scenarios × risk_simulations × disaster_recovery, names the 6-tuple-per-cell contract (consequence / breaker_id / breaker_action / kill_switch_id / alert_codes / expected_within), and aggregates 12 follow-up gaps with owner routing per Findings Triage.
 - **Phase status flips** (compressed scope per § line 91-100): 1.A + 1.B + 1.C + 1.D + 2.E moved to `design-shipped` (UAC Pydantic implementation = Day 2 follow-on slot).
 - **Day-2 noon operator checkpoint**: triage which P1 follow-up items land in pre-cutover vs successor `simulation_scenarios_post_cutover_2026_06_01.md`. Cross-side mirror to Harsh slot 5 for risk-implementation handoff coordination.
+
+## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
+
+Slot 5 Day-1 Phase 12 design (per-family backtest scenario set) introduces a Category B liquidation-stress scenario taxonomy that may overlap with this plan's topology-shock taxonomy. **SSOT alignment check needed**:
+
+| Slot-5 scenario ID | Description | Potential overlap with this plan |
+|---|---|---|
+| SCN-B1 | wstETH/ETH oracle 3% drop / 1 block | LST flash depeg topology |
+| SCN-B2 | ETH/USD 15% drop / 1 day | major crash topology |
+| SCN-B3 | wstETH/ETH 8% drop (Lido slashing) | LST extreme depeg topology |
+| SCN-B4 | cbETH/ETH 5% drop (Coinbase stress) | LST custody-counterparty topology |
+| SCN-B5 | Chainlink feed stale > 24h | oracle-outage topology |
+
+Recommendation: closed-set scenario IDs should NOT drift between plans. Either (a) this plan owns the canonical taxonomy and recursive-borrow plan references by ID, OR (b) recursive-borrow Phase 12 owns its own per-archetype taxonomy and this plan references by ID. Operator-call. Slot 5 NOT fixing (Findings Triage — slot 7 owns this plan).
+
+Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 design § Category B scenarios.

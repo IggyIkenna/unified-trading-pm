@@ -1635,3 +1635,11 @@ Agent 5):
 | Existing deployment-UI                            | `deployment-ui/src/pages/`                                                                                                                               |
 | Existing UTS-UI admin                             | `unified-trading-system-ui/app/(ops)/admin/`                                                                                                             |
 | Cross-cloud partial AWS                           | `deployment-api/deployment_api/routes/_code_builds_aws.py`, `deployment-service/buildspec.aws.yaml`                                                      |
+
+## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
+
+**Group F item 18 (2-year batch backtest run)** — recursive-borrow Phase 12 design (shipped 2026-05-12 @PM@`03492b96`) satisfies item 18 via 14-scenario matrix: 4 funding-regime (SCN-A1-A4) + 5 liquidation-stress (SCN-B1-B5) + 5 venue/bridge-failure (SCN-C1-C5). **Recommended master plan refresh**: update Group F item 18 wording to reference scenario ID set `{SCN-A1..A4, SCN-B1..B5, SCN-C1..C5}` so continuous-verification matrix can drill into per-scenario verdicts.
+
+**Group G item 23 (operator-UX)** — recursive-borrow Phase 11 design introduces NEW operator-UX surface `HealthFactorMonitorTile` (live HF chart per active position; threshold lines at 1.10/1.05; UI-throttled 1-5s irrespective of chain block-rate). Per Master Plan Continuous-Verification Column HARD RULE, this needs an entry: cadence `daily-Tab`, owner `slot 5 or designated UI Tab`, verifier `Playwright matrix at deployment-ui/tests/integration/recursive_borrow/`, last_verified `NEVER`.
+
+Slot 5 NOT auto-editing the readiness checklist table (Findings Triage — master plan owned by main orchestrator + slot 1). Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 11 + Phase 12 design sections.

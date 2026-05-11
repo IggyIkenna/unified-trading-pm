@@ -472,3 +472,16 @@ Day-1 directive (`continuation_prompts_2026_05_12.md` § Ikenna slot 6) closed i
 - ✅ Master plan Group F items 17 + 18 green via this plan's deliverables.
 
 Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
+
+## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
+
+Slot 5 Day-1 Phase 12 design (per-family backtest scenario set) consumes slot 6's PoolMatcher Protocol + golden test harness shape. **Extension needed**: golden-harness fixture corpus should cover 6 stress-shape variants beyond happy-path slippage:
+
+- **B1**: wstETH/ETH oracle drops 3% over 1 block (LST flash depeg)
+- **B2**: ETH/USD drops 15% in 1 day (crash scenario)
+- **B3**: wstETH/ETH drops 8% (Lido validator slashing scenario)
+- **B4**: cbETH/ETH drops 5% (Coinbase custody stress)
+- **B5**: Chainlink feed stale > 24h heartbeat
+- **C4**: Uniswap V3 wstETH/WETH pool drops to <$1M depth (slippage exhaustion + Curve/Balancer fallback path)
+
+Each fixture is one PoolShape `.json` snapshot at the stress state; consumed by `strategy-service/tests/integration/test_recursive_borrow_scenarios.py` (NEW per Family 1/2 Phase 12 design). Slot 5 NOT fixing (Findings Triage — slot 6 owns the golden-harness corpus). Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 design § Category B + C scenarios.
