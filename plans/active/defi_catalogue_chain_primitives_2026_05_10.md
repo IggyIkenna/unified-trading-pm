@@ -184,9 +184,35 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       Phase 2 (instruments adapter) + Phase 3 (MTDS adapter) per-protocol cells (parallel-agent A through O in the
       Phase 2 matrix). Slot 5 venue declarations enable the manifest shard-atom population shape (Phase 2 anti-
       sequencing risk closed); per-protocol SourceCapability adds the data-source contracts (Phase 2-3 scope).
-- [ ] [AGENT] P0. **1B — Extend `defi_reserve_params.py`** for Spark + Radiant + multi-chain Aave V3 (9 chains × N
+- [x] [AGENT] P0. **1B — Extend `defi_reserve_params.py`** for Spark + Radiant + multi-chain Aave V3 (9 chains × N
       reserves each). Per-asset: LTV, liquidation threshold, liquidation bonus, can-be-collateral, can-be-borrowed,
       borrow cap, supply cap, reserve factor, optimal_utilization_rate, interest-rate-model parameters.
+      **DESIGN-SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab); IMPLEMENTATION HANDED TO HARSH SLOT 2**
+      per cross-side handshake "Ikenna designs, Harsh implements per protocol" (`work_split_2026_05_12_ikenna.md`).
+      Canonical SSOT shape ALREADY in place at
+      `unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py`:
+      `ReserveParams` dataclass (max_ltv / liquidation_threshold / liquidation_bonus / reserve_factor) +
+      `EModeCategory` (category_id / label / max_ltv / liquidation_threshold / liquidation_bonus / assets) +
+      `AAVE_V3_ETHEREUM_RESERVES` dict (10 assets) + `AAVE_V3_EMODE_CATEGORIES` (ETH_CORRELATED + STABLECOIN) +
+      `MORPHO_BLUE_ETHEREUM_RESERVES` (line 352) + `get_reserve_params(asset, chain="ETHEREUM")` already accepts
+      `chain` parameter. **Harsh implementation scope** (12 per-chain dicts to ship; ~3 calibrated AI-days via
+      sub-agent fan-out per chain):
+      `AAVE_V3_ARBITRUM_RESERVES` (https://app.aave.com/reserve-overview/?marketName=proto_arbitrum_v3) +
+      `AAVE_V3_OPTIMISM_RESERVES` (proto_optimism_v3) +
+      `AAVE_V3_BASE_RESERVES` (proto_base_v3) +
+      `AAVE_V3_AVALANCHE_RESERVES` (proto_avalanche_v3) +
+      `AAVE_V3_POLYGON_RESERVES` (proto_polygon_v3) +
+      `AAVE_V3_BSC_RESERVES` (proto_bnb_v3) +
+      `AAVE_V3_LINEA_RESERVES` (proto_linea_v3) +
+      `AAVE_V3_SCROLL_RESERVES` (proto_scroll_v3) +
+      `AAVE_V3_ZKSYNC_RESERVES` (proto_zksync_v3) +
+      `SPARK_ETHEREUM_RESERVES` (https://app.spark.fi/markets) +
+      `RADIANT_ARBITRUM_RESERVES` + `RADIANT_BSC_RESERVES` (https://app.radiant.capital).
+      Plus extend `get_reserve_params()` chain dispatch from single-dict lookup to per-chain dict-of-dicts. Same
+      pattern; same dataclass; primary-source values from Aave/Spark/Radiant governance UIs cross-verified with
+      on-chain `getReserveData()` reads. Per-chain E-Mode categories also extend `AAVE_V3_EMODE_CATEGORIES` if
+      governance has chain-specific categories (some chains have RWA-collateralised stablecoins as separate
+      category). Harsh-side cross-side handshake: pickup Day 2 morning per `work_split_2026_05_12_ikenna.md` row 2.
 - [x] [AGENT] P0. **1C — Verify `CHAIN_GENESIS_DATES`** at `chain_env.py:91` covers all 22 chains in scope. Add any
       missing (BNB Chain alt-name normalisation, Polygon zkEVM if distinct from Polygon PoS). Confirm Solana mainnet
       (2020-03-16) is the canonical entry for Solana DeFi.
