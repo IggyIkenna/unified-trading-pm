@@ -621,6 +621,121 @@ proposal executes at time T. Used by risk simulations sibling.
 **Inputs**: `GovernanceProposal` schema (`defi_simulation_realism` Phase 1C). **Validation**: ≥ 5 historical
 proposals' P&L delta within 100bps of actual realized post-execution delta.
 
+### Per-protocol capture detail (Day-1 slot 6 design ship 2026-05-11; operator-runnable for Harsh slot 4)
+
+Per-protocol Governor contract addresses + data sources for Phase 4A adapter:
+
+| Protocol | Chain | Governor address | Snapshot space | Subgraph (preferred) | Capture method |
+|---|---|---|---|---|---|
+| **Aave V3** | Ethereum | `GovernanceV3Ethereum` `0x9AEE0B04504CeF83A65AC3f0e838D0593BCb2BC7` | `aave.eth` | `https://api.thegraph.com/subgraphs/name/aave/governance-v2` | On-chain `ProposalCreated` / `ProposalExecuted` events via subgraph + Snapshot REST API for off-chain temperature checks (`hub.snapshot.org/api`) |
+| **Compound V3** | Ethereum | `GovernorBravoDelegator` `0xc0Da02939E1441F497fd74F78cE7Decb17B66529` | `comp-vote.eth` | `https://api.thegraph.com/subgraphs/name/arr00/compound-governance-2` | Same shape; `GovernorBravo` event ABI |
+| **Spark** | Ethereum | `MakerDAO`-style ChiefBoot delegation `0x0a3f6849f78076aefaDf113F5BED87720274dDC0` | `spark.eth` | `https://api.thegraph.com/subgraphs/name/makerdao/governance` | Spark proposals execute through MakerDAO's chief; capture via MakerDAO subgraph + filter for Spark-asset-list proposals |
+| **Lido** | Ethereum | `AragonVoting` `0x2e59A20f205bB85a89C53f1936454680651E618e` | `lido-snapshot.eth` | `https://api.thegraph.com/subgraphs/name/lidofinance/lido` | Aragon-style voting events; LDO-token weighted; Snapshot dominates pre-execution signalling |
+
+**Subgraph schema** for each: `id`, `proposer`, `createdAt`, `votingStartTime`, `votingEndTime`, `executedAt`
+(nullable), `status`, `payload_targets[]`, `payload_calldatas[]`. Adapter parses into UAC
+`GovernanceProposal` schema (Phase 1C). Capture cadence: 5-minute poll while voting active; 1-hour poll
+when no active proposals.
+
+### Tenderly fork simulator detail (Phase 4B operator-runnable)
+
+```python
+# execution-service/execution_service/governance/proposal_simulator.py (NEW Phase 4B)
+def simulate_proposal_execution(
+    proposal: GovernanceProposal,
+    fork_block: int,
+    affected_assets: list[str],
+) -> dict[str, ParameterDelta]:
+    """Run governor.execute(proposalId) on a Tenderly fork pinned at fork_block.
+
+    Returns per-asset before/after parameter delta. Tenderly API:
+      POST tenderly.co/api/v1/account/{user}/project/{proj}/fork
+        body: {"network_id": "1", "block_number": fork_block}
+      POST .../fork/{fork_id}/simulate
+        body: {"network_id": "1", "from": <governor>, "to": <governor>,
+               "input": <encoded executeProposal calldata>}
+    """
+    fork_id = tenderly.create_fork(chain_id=1, block_number=fork_block)
+    # Snapshot baseline params
+    before = {asset: read_asset_params(fork_id, asset) for asset in affected_assets}
+    # Execute proposal payload
+    tenderly.simulate(
+        fork_id=fork_id,
+        from_=proposal.executor_address,
+        to=proposal.governor_address,
+        input=encode_execute_call(proposal.proposal_id),
+    )
+    after = {asset: read_asset_params(fork_id, asset) for asset in affected_assets}
+    return {
+        asset: ParameterDelta(before=before[asset], after=after[asset])
+        for asset in affected_assets
+    }
+```
+
+`read_asset_params(fork_id, asset)` calls protocol-specific getters: Aave V3 = `Pool.getReserveData(asset)`
++ `Pool.getConfiguration(asset)` + `AaveOracle.getAssetPrice(asset)`; Compound V3 = `Comet.getAssetInfo()`
++ `Comet.baseTrackingSupplyIndex`; Spark = `SparkPool.getReserveData(asset)`. Tenderly fork budget
+constraint: ~10 sims/day per `defi_simulation_realism` risk register row.
+
+### CLI signature (Phase 4C operator-runnable)
+
+```bash
+# Returns archetype P&L delta if proposal executes at time T
+defi-simulate-proposal \
+  --proposal-id 0x<32-byte-hex-id> \
+  --protocol aave_v3|compound_v3|spark|lido \
+  --archetype carry_staked_basis|leveraged_funding_arb \
+  --time-T 2026-05-15T12:00:00Z \
+  --fork-block 22500000
+
+# Returns JSON:
+# {
+#   "archetype": "carry_staked_basis",
+#   "proposal_id": "0x...",
+#   "parameter_deltas": [{"asset": "USDC", "before": {...}, "after": {...}}, ...],
+#   "expected_pnl_delta_bps": -45,   # negative = archetype P&L worsens by 45bps
+#   "confidence_interval_bps": [-60, -30],
+#   "validation_status": "calibrated"  # if proposal already executed historically
+# }
+```
+
+CLI lives in `execution-service/execution_service/cli/simulate_proposal.py` (NEW Phase 4C); wired into
+`execution-service`'s service CLI per `codex/06-coding-standards/cli-convention.md` (`--operation simulate-proposal
+--mode batch --asset-group defi`). Used by `risk_simulations_limits_alerting_2026_05_10.md` sibling for
+governance-axis scenario coverage.
+
+### Backfill historical proposals (Phase 4D operator-runnable)
+
+Two-year backfill across 4 protocols using subgraph paginated queries. Per protocol:
+
+```python
+# instruments-service or backfill VM under deployment-service/scripts/vm/
+def backfill_governance_proposals(
+    protocol: Literal["aave_v3", "compound_v3", "spark", "lido"],
+    from_date: date = date(2024, 5, 1),
+    to_date: date = date(2026, 5, 11),
+) -> None:
+    subgraph_url = PROTOCOL_SUBGRAPH_MAP[protocol]
+    cursor = None
+    while True:
+        page = subgraph_paginated_query(subgraph_url, cursor, batch_size=100)
+        proposals = parse_to_uac_governance_proposal(page, protocol)
+        manifest_writer.record_captured(
+            data_type="governance_proposals",
+            asset_group="defi",
+            venue=protocol.upper(),
+            rows=proposals,
+            shard_atom=("defi", protocol),  # SSOT per writegate plan Phase 1A
+        )
+        if not page.has_next: break
+        cursor = page.cursor
+```
+
+VM launch: `deployment-service/scripts/vm/launch-governance-backfill-vm.sh aave_v3` (NEW; needs watchdog dict
+entry `governance-backfill-` + tarball refresh per CLAUDE.md VM Naming Convention HARD RULE). Expected
+output: ~500-1500 proposals/protocol/year × 4 protocols × 2 years = ~4k-12k rows. Per-VM shard isolation
+mandatory (`VM_NAME` + `MANIFEST_PER_VM_SHARDS=true`).
+
 ## Staking + restaking yield-stream simulators
 
 ### Native staking (Phase 5A)
@@ -666,6 +781,100 @@ distribution = (
 Used by `carry_staked_basis` PnL projection + risk simulations.
 
 **Validation**: walk-forward 6+ months calibration; per-period error within 50bps APY.
+
+### Per-protocol capture detail (Day-1 slot 6 design ship 2026-05-11; operator-runnable for Harsh slot 4)
+
+Native staking + restaking yield streams — per-protocol data sources for `staking_yields` /
+`restaking_rewards` / `lrt_protocol_fee_history` data_types under
+`market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/`:
+
+| Protocol / source | Data_type | Endpoint / SDK | Per-period grain | Capture cadence |
+|---|---|---|---|---|
+| **Ethereum beacon** | `staking_yields` | Lighthouse / Prysm REST `https://beacon-mainnet.{provider}.com/eth/v1/validator/duties/attester/{epoch}` + `/beacon/rewards/blocks/{block_root}` | Per-epoch (32 slots, ~6.4 min) | Every epoch via WS subscription |
+| **Ethereum execution layer** | `staking_yields` (execution_rewards subfield) | `eth_getBlockByNumber` + decode block.baseFeePerGas + block.transactions.priorityFee | Per-block | Every 12-second slot via WS |
+| **Solana validator** | `staking_yields` | Solana RPC `getInflationReward` + Validator Info program | Per-epoch (432k slots, ~2-3 days) | Once per epoch (post-finalization) |
+| **EigenLayer AVS rewards** | `restaking_rewards` | Subgraph `https://api.thegraph.com/subgraphs/name/eigen-labs/eigenlayer-rewards-mainnet` + `RewardsCoordinator` contract `0x7750d328b314EfFa365A0402CcfD489B80B0adda` | Per-`rewardsSubmitted` event | 5-minute poll |
+| **Symbiotic** | `restaking_rewards` | Subgraph `https://api.studio.thegraph.com/query/symbiotic/symbiotic-mainnet` | Per-`RewardClaimed` event | 5-minute poll |
+| **Karak** | `restaking_rewards` | Subgraph `https://api.thegraph.com/subgraphs/name/karak-network/karak-mainnet` | Per-reward-distribution event | 5-minute poll |
+| **Jito (Solana restaking)** | `restaking_rewards` | Jito API `https://kobe.mainnet.jito.network/api/v1/validators` + on-chain `jitoSOL` stake pool | Per-epoch | Once per epoch |
+| **Ether.fi LRT fee** | `lrt_protocol_fee_history` | Etherfi `LiquidityPool` `0x308861A430be4cce5502d0A12724771Fc6DaF216` `setProtocolFee` event | Per-governance-change | Subgraph poll on governance state |
+| **Renzo LRT fee** | `lrt_protocol_fee_history` | Renzo `RestakeManager` `0x74a09653A083691711cF8215a6ab074BB4e99ef5` fee getter | Per-governance-change | Subgraph poll on governance state |
+| **KelpDAO LRT fee** | `lrt_protocol_fee_history` | KelpDAO `LRTConfig` `0x947Cb49334e6571ccBFEF1f1f1178d8469D65ec7` | Per-governance-change | Subgraph poll on governance state |
+| **Puffer LRT fee** | `lrt_protocol_fee_history` | Puffer `PufferVaultV2` `0xD9A442856C234a39a81a089C06451EBAa4306a72` | Per-governance-change | Subgraph poll on governance state |
+
+**Native staking stochastic model** (`StakingYieldSimulator.calibrate_and_sample(chain, horizon_epochs)`):
+
+```python
+# execution-service/execution_service/yield_streams/native_staking.py (NEW Phase 5A)
+def calibrate_native_staking(chain: Literal["ethereum", "solana"]) -> StakingYieldModel:
+    history = mtds.read_staking_yields(chain, lookback_days=180)  # 6+ months
+    epoch_rewards = history.groupby("epoch")["reward_per_validator"].sum()
+    # Heteroskedasticity around validator-set churn — bin by attestation_efficiency
+    bins = pd.qcut(history["attestation_efficiency"], q=5)
+    per_bin_mean = epoch_rewards.groupby(bins).mean()
+    per_bin_std = epoch_rewards.groupby(bins).std()
+    return StakingYieldModel(per_bin_mean=per_bin_mean, per_bin_std=per_bin_std, chain=chain)
+
+def sample_forward_distribution(
+    model: StakingYieldModel,
+    horizon_epochs: int,
+    current_attestation_efficiency: float,
+) -> ForwardYieldDistribution:
+    bin_idx = bisect(model.per_bin_mean.index, current_attestation_efficiency)
+    mean = model.per_bin_mean.iloc[bin_idx]
+    std = model.per_bin_std.iloc[bin_idx]
+    samples = np.random.normal(mean, std, size=(10_000, horizon_epochs)).sum(axis=1)
+    return ForwardYieldDistribution(
+        mean=samples.mean(),
+        p5=np.percentile(samples, 5),
+        p95=np.percentile(samples, 95),
+    )
+```
+
+**Restaking AVS model** (`RestakingAVSModel.sample(protocol, lst, horizon)`): per-AVS reward variability is
+generally higher than native staking (smaller AVS operator set, more concentrated reward distribution).
+Model as **base + AVS premium** where base = native staking yield distribution + AVS premium ~
+`LogNormal(μ_avs, σ_avs)` calibrated from `restaking_rewards` data_type. Per-LRT forward yield = base +
+weighted-sum-of-AVS-premia where weights = LRT's operator allocation shares.
+
+**LRT protocol-fee discrete-event model** (`LRTProtocolFeeModel.sample(protocol, horizon)`): fees change
+~quarterly via governance. State = `most_recent_quarter_fee_bps + std_band(historical_changes)`. Forward
+sample = `current_fee_bps + N(0, σ_quarterly)` capped at `[0, max_observed_fee_bps × 1.5]`.
+
+**Seasonal-points discount factor** (operator-tuned per-protocol):
+- Ether.fi loyalty points → ETHFI airdrop (2024-03): redemption ratio ~0.001 ETHFI / point at launch; 60% discount applied.
+- Renzo ezPoints → REZ airdrop (2024-04): similar ~0.0008 REZ / point; 50% discount applied.
+- Puffer carrot points → PUFFER airdrop (2024-10): ~0.0006 PUFFER / point; 50% discount applied.
+- New programs (KelpDAO Kelp Miles, Karak XP) — operator-tunable; default 70% discount on first calibration.
+
+Discount factor accounts for: token-launch volatility, vesting cliffs, illiquidity-at-redemption, market
+sell-pressure at airdrop. Operator updates the per-protocol ratio quarterly via
+`config_reloaders.py` reload of `defi_seasonal_points_calibration.yaml`.
+
+**Composite simulator integration** (Phase 5E):
+
+```python
+# execution-service/execution_service/yield_streams/composite_simulator.py (NEW Phase 5E)
+def staking_yield_stream_distribution(
+    lst_or_lrt: str,                # e.g., "weETH", "ezETH", "jitoSOL"
+    chain: Literal["ethereum", "solana"],
+    horizon_epochs: int,
+) -> ForwardYieldDistribution:
+    protocol = LST_TO_PROTOCOL[lst_or_lrt]
+    base = sample_forward_distribution(
+        model=NATIVE_STAKING_MODELS[chain],
+        horizon_epochs=horizon_epochs,
+        current_attestation_efficiency=mtds.current_attestation_efficiency(chain),
+    )
+    avs_premium = RESTAKING_AVS_MODEL.sample(protocol, lst_or_lrt, horizon_epochs)
+    fee = LRT_PROTOCOL_FEE_MODEL.sample(protocol, horizon_epochs)
+    points = SEASONAL_POINTS_MODEL.sample(protocol, lst_or_lrt, horizon_epochs)
+    # Composite distribution: convolve all 4 layers
+    return convolve_distributions([base, avs_premium, -fee, points])
+```
+
+Used by `carry_staked_basis` archetype config (per-LST forward yield) + `leveraged_funding_arb` (debt cost
+vs LST yield differential) + `risk_simulations_limits_alerting` sibling.
 
 ## Slashing tail-risk Monte Carlo
 
