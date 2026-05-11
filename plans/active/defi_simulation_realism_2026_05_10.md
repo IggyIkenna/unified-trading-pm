@@ -306,12 +306,33 @@ Owner: harsh + parallel agents.
 
 Owner: harsh.
 
-- [ ] [AGENT] P0. **6A — Audit `carry_staked_basis` engine** for hedge ratio shape. Read
-      `strategy-service/strategy_service/engine/strategies/v2/stat_arb_pairs/pairs_fixed.py` + carry archetype config in
-      `configs/defaults/default_basis_trade.yaml`. Confirm: static fixed ratio? Or dynamic-adjusted? File:line evidence.
-- [ ] [AGENT] P0. **6B — If static**: implement dynamic hedge-ratio adjustment using LST/SOL exchange rate stream from
-      Phase 1A captures (jitoSOL/SOL, mSOL/SOL, bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance
-      trigger when |peg_drift| > N bps.
+> **Phase 6A audit shipped 2026-05-12 (slot 6 Day-1)**: carry_staked_basis engine confirmed **STATIC**. The
+> audit pointer in todo 6A below to `pairs_fixed.py` was stale — that file is a stat_arb_pairs strategy, NOT
+> the `carry_staked_basis` archetype. **Real code path**:
+> [`strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:248-318`](../../../strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py)
+> — function `_build_legs()`. Line 264:
+> ```python
+> perp_short_units = eth_qty * (Decimal("1") - structure.perp_margin_haircut)
+> ```
+> The hedge is sized 1:1 against LST principal (delta-neutral) clamped by venue margin haircut. **No
+> per-tick / per-bar peg-drift adjustment** anywhere in the engine. `default_basis_trade.yaml` has
+> `hedge_ratio_window: 60` but that's for `stat_arb_pairs` (different strategy); `carry_staked_basis`
+> archetype config has NO hedge_ratio dynamics. **Conclusion: Phase 6B IS needed** — operator can no
+> longer treat as conditional.
+
+- [x] [AGENT] P0. **6A — Audit `carry_staked_basis` engine** for hedge ratio shape.
+      ✅ DONE 2026-05-12 slot 6 Day-1 (no commit yet — finding documented in Phase 6 banner above).
+      **Evidence**: `staked_basis.py:264` `perp_short_units = eth_qty * (Decimal("1") - structure.perp_margin_haircut)`
+      — STATIC. Audit pointer in original todo (`pairs_fixed.py`) was wrong file (stat_arb_pairs ≠
+      carry_staked_basis). Real archetype engine path: `staked_basis.py:_build_legs` line 248-318.
+- [ ] [AGENT] P0. **6B — IMPLEMENT (not conditional — audit confirmed static)** dynamic hedge-ratio
+      adjustment using LST/native exchange rate stream from Phase 1A captures (jitoSOL/SOL, mSOL/SOL,
+      bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance trigger when
+      |peg_drift| > N bps. **Implementation home**: extend `staked_basis.py` with a new
+      `_compute_dynamic_hedge_ratio(structure, lst_rate_stream, peg_drift_threshold_bps)` helper called
+      inside `_build_legs` to size `perp_short_units = eth_qty * lst_rate_at_now / (1 - margin_haircut)`.
+      Hysteresis band parameter `peg_drift_threshold_bps` configurable per archetype (default 25 bps
+      based on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps; 3-stddev hysteresis ≈ 25 bps).
 - [ ] [AGENT] P0. **6C — Tests**: backtest carry archetype with dynamic vs static hedge-ratio over 1-year historical
       replay. Document P&L delta + confidence interval.
 

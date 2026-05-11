@@ -899,11 +899,104 @@ historical slashing rate spikes; back off when normal.
 `carry_staked_basis` shorts SOL perp against long jitoSOL; ratio assumes 1:1 SOL-equivalent but jitoSOL/SOL drifts
 with peg behavior + accrual.
 
-Phase 6A audit: read `pairs_fixed.py` + `default_basis_trade.yaml` to determine whether ratio is static or dynamic.
+### Phase 6A audit ✅ DONE 2026-05-12 (slot 6 Day-1 finding)
 
-If static (Phase 6B): implement dynamic adjustment using LST/SOL exchange rate stream from Phase 1A captures
-(jitoSOL/SOL, mSOL/SOL, bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance trigger when
-|peg_drift| > N bps with hysteresis band (avoid over-trading).
+**Hedge ratio is STATIC.** Original Phase 6A todo pointer (`pairs_fixed.py` + `default_basis_trade.yaml`) was
+stale — `pairs_fixed.py` is the stat_arb_pairs strategy, not the `carry_staked_basis` archetype.
+
+**Real code path**: `strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:248-318`
+(function `_build_legs()`).
+
+Line 264:
+```python
+perp_short_units = eth_qty * (Decimal("1") - structure.perp_margin_haircut)
+```
+
+The hedge is sized 1:1 against LST principal (delta-neutral) clamped by venue margin haircut. There is **no
+per-tick / per-bar peg-drift adjustment** anywhere in the carry-staked-basis engine. `default_basis_trade.yaml`
+has a `hedge_ratio_window: 60` parameter — but that's consumed by `stat_arb_pairs` strategy
+(rolling OLS hedge ratio for fixed pairs), NOT by `carry_staked_basis`. The carry archetype has no
+hedge_ratio dynamics in either code or config.
+
+### Phase 6B implementation spec (operator-runnable for Harsh slot 4)
+
+Audit-confirmed: **Phase 6B IS needed** (no longer conditional on "if static" — finding closed).
+
+Extend `staked_basis.py::_build_legs()` to consume an LST/native exchange rate stream from MTDS:
+
+```python
+# strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py
+def _compute_dynamic_hedge_ratio(
+    structure: _DerivedStructure,
+    lst_rate_now: Decimal,            # current jitoSOL/SOL (or rETH/ETH, etc.) from MTDS lst_rates data_type
+    last_rebalance_rate: Decimal | None,  # stored in StrategyState
+    peg_drift_threshold_bps: Decimal = Decimal("25"),  # hysteresis band — default = ~3σ daily for jitoSOL/SOL
+) -> tuple[Decimal, bool]:
+    """Returns (hedge_ratio_multiplier, should_rebalance).
+
+    hedge_ratio_multiplier = lst_rate_now (always; this is what perp_short_units is scaled by).
+    should_rebalance = True if |lst_rate_now / last_rebalance_rate - 1| * 10000 > peg_drift_threshold_bps.
+    """
+    if last_rebalance_rate is None:
+        return lst_rate_now, True  # initial entry — always set
+    drift_bps = abs(lst_rate_now / last_rebalance_rate - Decimal("1")) * Decimal("10000")
+    return lst_rate_now, drift_bps > peg_drift_threshold_bps
+```
+
+Then in `_build_legs()` line 264 refactor:
+
+```python
+# BEFORE (static):
+perp_short_units = eth_qty * (Decimal("1") - structure.perp_margin_haircut)
+
+# AFTER (dynamic):
+hedge_multiplier, _ = _compute_dynamic_hedge_ratio(
+    structure, lst_rate_now=mtds.current_lst_rate(config.lst_asset),
+    last_rebalance_rate=strategy_state.last_hedge_rebalance_rate,
+)
+perp_short_units = eth_qty * hedge_multiplier * (Decimal("1") - structure.perp_margin_haircut)
+```
+
+Plus a per-tick handler in `CarryStakedBasisEngine.on_tick()` (line 326) that reads current LST rate,
+calls `_compute_dynamic_hedge_ratio`, and if `should_rebalance` emits a rebalance leg adjusting
+`perp_short_units` to the new size. Rebalance leg is an `InstructionActionV2.TRADE` on the perp venue
+with `params={"role": "hedge_rebalance"}`.
+
+### Hysteresis band calibration
+
+Default `peg_drift_threshold_bps = 25` based on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps
+(~3σ rebalance trigger). Per-archetype config overridable in `default_basis_trade.yaml`:
+
+```yaml
+hedge_ratio:
+  dynamic: true                       # NEW flag — Phase 6B enables
+  peg_drift_threshold_bps: 25         # rebalance trigger
+  min_rebalance_interval_seconds: 300 # rate-limit (5 min) — prevents thrash on volatile peg
+  max_rebalance_per_day: 24           # circuit-breaker — Phase 6 risk register
+```
+
+LST exchange rate stream source (per MTDS `lst_rates` data_type catalogue):
+- **jitoSOL/SOL**: Jito stake pool on-chain getter `getStakeAccountRentExemption` + Solana RPC
+  `getMultipleAccounts` for stake delegations.
+- **mSOL/SOL**: Marinade `marinadeProgramAccountInfo` + on-chain stake.
+- **bSOL/SOL**: BlazeStake stake pool getter.
+- **rETH/ETH**: RocketPool `rETH.getExchangeRate()` view function.
+- **stETH/ETH**: Lido `stEthPerToken()` getter (always ~1.0 for stETH — rebasing token; use
+  wstETH/ETH for the actual drift signal: `wstETH.stEthPerToken()`).
+- **weETH/ETH**: Ether.fi `weETH.getRate()`.
+
+Capture cadence: per-block on EVM chains (Ether.fi / RocketPool / Lido), per-epoch on Solana (Jito /
+Marinade / BlazeStake). Backtest replay reads historical rates from MTDS at simulation block.
+
+### Phase 6C validation harness
+
+Backtest carry archetype with dynamic vs static hedge-ratio over 1-year historical replay:
+
+- Run A: static hedge (current production code, pre-Phase-6B).
+- Run B: dynamic hedge (post-Phase-6B with default `peg_drift_threshold_bps=25`).
+- Run C: dynamic hedge with operator-tuned threshold (`peg_drift_threshold_bps ∈ {10, 25, 50, 100}` sweep).
+
+Document P&L delta + confidence interval per Phase 6 full-execution criterion.
 
 ## Architecture diagram
 
