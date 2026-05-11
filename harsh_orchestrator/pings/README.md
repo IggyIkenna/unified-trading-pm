@@ -49,3 +49,29 @@ only.
 Cross-side (Ikenna ↔ Harsh) hard-gate signalling stays in the shared `plans/active/_agent_pings.md` — that one is
 low-traffic (<5 active entries normally) so a single shared file is fine there. Per CLAUDE.md "Daily Work-Split Process"
 § "Ping ledger bifurcation".
+
+## Bidirectional comms (codified 2026-05-11)
+
+The per-slot file is **two-way**. Beyond the slot's own STARTED/blocker/DONE/status lines, **slot 1 (main) may append
+`[main → slot N]` messages here** — acks, scope changes ("re-read work-split § Slot N — your scope grew"), pointers
+("Q1 answered in <plan> § Open questions — proceed with X"), short directives. So this file is the lightweight
+bidirectional comm doc between main and the slot; substantive Q→A still uses the slot's plan-of-record `## Open
+questions` (Q from slot → A1 from main) — `slot_<N>.md` just carries the *pointer* to the A1.
+
+**The slot's read loop**: after each shippable-unit push you do `git fetch origin live-defi-rollout && git rebase
+origin/live-defi-rollout` anyway (per the conditional-push merge model). When you do — **re-read your `slot_<N>.md` for
+new `[main → slot N]` messages + your plan-of-record `## Open questions` for new A1s.** That's how main reaches you
+without going through the operator. The operator may also nudge you ("take a pull, main has a message in your slot
+file") — same thing, just a hint.
+
+**Collision note**: main appending `[main → slot N]` lines + the slot appending its own lines = an append-section
+conflict on a flat list IF you push within the same few-second window — trivially resolved "keep both" per the
+plan-aware-merge protocol. Much smaller than the old every-slot-on-one-file collision; acceptable. (If it ever gets
+noisy, split this file into a `## Pings from slot <N>` section + a `## Messages from main` section so the appends never
+overlap — not needed yet.)
+
+**Pull-safety under per-tab worktrees**: `git pull --rebase` / `git rebase origin/live-defi-rollout` from inside your
+slot worktree only affects YOUR worktree — it can't auto-stash another slot's WIP (the old shared-tree foot-gun is
+unrepresentable). The only thing to watch: don't rebase mid-edit with uncommitted WIP — commit first (you do this per
+shippable unit anyway), then rebase, then read your messages. Worst case is a trivial rebase conflict you resolve via
+the plan-aware-merge protocol.

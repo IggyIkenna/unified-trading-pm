@@ -617,7 +617,7 @@ todos:
 
   - id: phase-6-regression-parity-test
     content: |
-      - [ ] [AGENT] P0. Phase 6 — Pre-merge vs post-merge feature-output parity test. SEQUENTIAL after Phase 5.
+      - [ ] [AGENT] P0. Phase 6 — Pre-merge vs post-merge feature-output parity test. SEQUENTIAL after Phase 5. **DEFERRED → [`features_service_qg_cleanup_2026_05_11.md`](features_service_qg_cleanup_2026_05_11.md) Phase 2** (the reusable utility `scripts/dev/feature_parity_diff.py` PM@`44d23659` IS shipped; the full byte-for-byte RUN is `blocked_by` `code_freeze` Phase 3 backfills — needs a 7-day live-data window on GCS).
       <!-- STATUS 2026-05-11 (slot 2): the reusable utility (`scripts/dev/feature_parity_diff.py`) is SHIPPED
            (PM@44d23659) — the codeable Phase 6 deliverable is done. The full byte-for-byte parity RUN (steps 1-5
            below) is NOT done — only a lightweight import/CLI/route smoke ran (DONE-2026-05-08 PM block). The full run
@@ -1790,6 +1790,28 @@ codex-compliance + size violations carried over from the 8 source repos (Q1 poin
 asset_groups' feature calculators import + run" partial: all 8 family sub-packages `import` clean (verified); "run" (a
 real `--mode batch` per family on live data) was not executed — same operational gap as the Phase 6 full parity run.
 Both folded into Q1 recommendation (a)+(b) for a named successor plan.
+
+#### A1 — [main (slot 1), 2026-05-11 07:24 UTC]
+
+**Status**: ✅ RESOLVED — operator approved recommendations (a)+(b)+(c) (2026-05-11).
+
+- **(a) Successor plan SPAWNED** — slot 1 created [`features_service_qg_cleanup_2026_05_11.md`](features_service_qg_cleanup_2026_05_11.md):
+  Phase 1 = the QG-codex cleanup (fixed the **proper way** — root cause, **NOT** per-package-ignore restoration; per
+  operator _"slot 2 can solve the quality-gates codex issues and make it solid"_); Phase 2 = the full byte-for-byte
+  parity run (`blocked_by` `code_freeze` Phase 3 backfills — per operator _"we need the data so it is blocked until we
+  have the proper data in gcs buckets"_); Phase 3 = the F9 org transfer (P2, **non-blocking** — per operator _"F9
+  regarding the repo owner is nothing major… we can do that anytime… I don't think it's a blocker"_; do it anytime once
+  features-service is QG-green and solid).
+- **(b) Phase 4.6 + Phase 6 annotated** `**DEFERRED → features_service_qg_cleanup_2026_05_11.md**` (checkboxes stay
+  `- [ ]` until the successor plan flips them with QG-green / parity-run evidence respectively).
+- **(c) F9** — operator: not a blocker; the `CosmicTrader → IggyIkenna` transfer lives in the successor plan Phase 3,
+  do anytime.
+- **Work-split status**: features-consolidation is treated as **~done** — Phase 7 (deployable + 8 repos archived) ✅;
+  the residual (QG-cleanup + parity-run + org-transfer) is the successor plan, and **none of it gates the May-23
+  cutover**. **slot 2's next move**: take `features_service_qg_cleanup_2026_05_11.md` Phase 1 (QG-codex cleanup). Once
+  this plan's `## DONE` block is in (plus the Phase 4.6/6/F9 successor pointers removed), `features_repo_consolidation_2026_05_08.md`
+  can archive cleanly per the "Plan Archival HARD RULE."
+
 
 ### Deferred work after 2026-05-11 slot-2 session
 

@@ -416,6 +416,12 @@ Read, in order, BEFORE doing anything:
   (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
   plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
 
+Bidirectional comms: after each shippable-unit push (where you `git fetch origin live-defi-rollout && git rebase
+origin/live-defi-rollout` anyway), RE-READ your harsh_orchestrator/pings/slot_<N>.md for `[main → slot N]` messages
+(slot 1 reaches you there — acks / scope changes / pointers) + your plan-of-record `## Open questions` for new A1s.
+See harsh_orchestrator/pings/README.md § "Bidirectional comms". The operator may also nudge you ("take a pull, main
+has a message") — same thing.
+
 Slot-2-specific:
   - CROSS-SIDE PING MANDATORY when Phase 7 lands (features-service deployable; 8 child repos archived):
     append a ping in plans/active/_agent_pings.md so Ikenna slot 4 can promote live-pipeline Phase 4-5
@@ -453,6 +459,12 @@ Read, in order, BEFORE doing anything:
   3. plans/active/wave3x_residual_ssots_2026_05_08.md — your plan-of-record.
   (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
   plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
+
+Bidirectional comms: after each shippable-unit push (where you `git fetch origin live-defi-rollout && git rebase
+origin/live-defi-rollout` anyway), RE-READ your harsh_orchestrator/pings/slot_<N>.md for `[main → slot N]` messages
+(slot 1 reaches you there — acks / scope changes / pointers) + your plan-of-record `## Open questions` for new A1s.
+See harsh_orchestrator/pings/README.md § "Bidirectional comms". The operator may also nudge you ("take a pull, main
+has a message") — same thing.
 
 Slot-3-specific:
   - Track D is ANTI-SEQUENCING CRITICAL — must complete BEFORE the 2026-05-15 Phase 2 freeze (code_freeze:300).
@@ -494,6 +506,12 @@ Read, in order, BEFORE doing anything:
   (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
   plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
 
+Bidirectional comms: after each shippable-unit push (where you `git fetch origin live-defi-rollout && git rebase
+origin/live-defi-rollout` anyway), RE-READ your harsh_orchestrator/pings/slot_<N>.md for `[main → slot N]` messages
+(slot 1 reaches you there — acks / scope changes / pointers) + your plan-of-record `## Open questions` for new A1s.
+See harsh_orchestrator/pings/README.md § "Bidirectional comms". The operator may also nudge you ("take a pull, main
+has a message") — same thing.
+
 Slot-4-specific:
   - GATED: bucket-name SSOT migration runs AFTER slot 2 ships Phase 4 (per-family config.py paths stabilise),
     or against the consolidated state. Sports adapter stamping WAITS on (a) slot 3 Track E ship (UTL helpers)
@@ -527,6 +545,12 @@ Read, in order, BEFORE doing anything:
   4. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — the sequencing umbrella you serve.
   (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
   plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
+
+Bidirectional comms: after each shippable-unit push (where you `git fetch origin live-defi-rollout && git rebase
+origin/live-defi-rollout` anyway), RE-READ your harsh_orchestrator/pings/slot_<N>.md for `[main → slot N]` messages
+(slot 1 reaches you there — acks / scope changes / pointers) + your plan-of-record `## Open questions` for new A1s.
+See harsh_orchestrator/pings/README.md § "Bidirectional comms". The operator may also nudge you ("take a pull, main
+has a message") — same thing.
 
 Slot-5-specific:
   - GATED START: Phase 3-5 IMPLEMENTATION is blocked until BOTH (a) Harsh slot 2 ships features-consolidation
@@ -564,6 +588,12 @@ Read, in order, BEFORE doing anything:
   3. plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — your plan-of-record (freeze-gate items 8 + 9).
   (AGENT_ONBOARDING's reading order then takes you through CLAUDE.md, per-tab-worktrees.md,
   plan-aware-merge-resolution.md, SUB_AGENT_MANDATORY_RULES.md.)
+
+Bidirectional comms: after each shippable-unit push (where you `git fetch origin live-defi-rollout && git rebase
+origin/live-defi-rollout` anyway), RE-READ your harsh_orchestrator/pings/slot_<N>.md for `[main → slot N]` messages
+(slot 1 reaches you there — acks / scope changes / pointers) + your plan-of-record `## Open questions` for new A1s.
+See harsh_orchestrator/pings/README.md § "Bidirectional comms". The operator may also nudge you ("take a pull, main
+has a message") — same thing.
 
 Slot-6-specific:
   - Per CLAUDE.md "QG failure attribution": when a workspace QG failure surfaces, git-blame the failing file.

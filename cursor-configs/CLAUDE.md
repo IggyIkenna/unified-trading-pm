@@ -2283,7 +2283,12 @@ serve different surfaces:
   (`harsh_orchestrator/`, `ikenna_orchestrator/`), each with `AGENT_ONBOARDING.md` + `LEDGER.md` + a `pings/` dir
   (`pings/README.md` + `pings/slot_<N>.md`). The legacy single `<side>_orchestrator/_agent_pings.md` is retired to a
   redirect stub on the Harsh side (2026-05-11) and may be migrated the same way on the Ikenna side. Format + lifecycle:
-  `<side>_orchestrator/pings/README.md`.
+  `<side>_orchestrator/pings/README.md`. The per-slot file is
+  **bidirectional** — the side's main agent (slot 1) may append `[main → slot N]` messages (acks / scope changes /
+  pointers to Q-answers); the slot re-reads `slot_<N>.md` + its plan-of-record `## Open questions` after each
+  `git fetch && git rebase origin/live-defi-rollout` (which it does per the conditional-push merge model anyway). This
+  lets main reach a spawned slot without routing through the operator. Substantive Q→A still uses the plan-of-record
+  `## Open questions` (Q from slot → A1 from main); `slot_<N>.md` carries the pointer.
 
 The bifurcation matters because intra-side ledgers fill up fast (15-20 STARTED+DONE acks per cycle is normal) while
 cross-side ledgers should have <5 active entries. Mixing them makes both surfaces unreadable.

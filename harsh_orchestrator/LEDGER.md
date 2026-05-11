@@ -159,9 +159,15 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 - **Doing now**: standing by for Wave 1 spawn (slots 2 + 3 from terminal). Polling both ping ledgers ~1 min while
   operator active.
 
-#### Slot 2 — `harsh-features-consolidation-tab` 🟢 IN FLIGHT — Phase 7 ✅ (8 repos archived); Phase 4 sub-items 4.1-4.5 ✅; **Phase 4.6 QG-green BLOCKED** + Phase 6 full parity-run not done → see Q1 (operator triage)
+#### Slot 2 — `harsh-features-consolidation-tab` 🟢 IN FLIGHT — features-consolidation ~done (Phase 7 ✅, 4.1-4.5 ✅); Q1 ✅ RESOLVED → now on `features_service_qg_cleanup_2026_05_11.md` Phase 1 (QG-codex cleanup)
 
-- **Status (2026-05-11)**: 🟢 IN FLIGHT — STARTED ack received (PM@`917ec9d6`; the agent wrote `11:35 UTC` but the
+- **Status (2026-05-11, latest)**: Q1 ✅ RESOLVED — operator approved (a) spawn `features_service_qg_cleanup_2026_05_11.md`
+  (created by slot 1; Phase 1 = QG-codex cleanup the proper way / no per-package-ignore; Phase 2 = full parity run
+  blocked_by `code_freeze` Phase 3 backfills; Phase 3 = F9 org transfer P2 non-blocking) + (b) Phase 4.6/6 in the parent
+  `**DEFERRED → features_service_qg_cleanup_2026_05_11.md**` + (c) F9 non-blocking. **Slot 2's next move**: take
+  `features_service_qg_cleanup_2026_05_11.md` Phase 1. features-consolidation is ~done for the work-split (Phase 7 ✅;
+  residual = the cleanup plan; none of it gates the May-23 cutover). Pointer in `slot_2.md` `[main → slot 2]`.
+- **Earlier status (2026-05-11)**: 🟢 IN FLIGHT — STARTED ack received (PM@`917ec9d6`; the agent wrote `11:35 UTC` but the
   machine clock is IST so that's actually ~`06:05 UTC` — AGENT_ONBOARDING.md § "Boot ack template" now mandates
   `date -u` for ping timestamps); booting/fanning-out on features_repo_consolidation Phase 4. Phase 0-3 already shipped per prior cycle: Phase 0 pre-audit @PM`1de574b4` (1286 lines /
   11 ext imports + 51 string refs); Phase 1A UAC `FeatureFamily` enum @`7f63ca3`; Phase 1B UTL `ManifestWriter
@@ -369,6 +375,7 @@ flips a slot to a new theme, slot 1 updates the row above + runs `--reset-slot <
 | unified-api-contracts | (slot 3) | 3 | Wave3x Track B UAC sports SSOTs (`UNDERSTAT_COVERED_LEAGUES` + `TRANSFER_WINDOWS` + footystats season bounds) shipped + 3 checkboxes flipped (PM@`e5d82a15`-area). |
 | unified-trading-pm | (slot 4) | 4 | bucket-name SSOT — canonical layer decided = yaml; parity-test todo flipped; pre-audit manifest added (PM@`59e92b18`). |
 | unified-trading-pm | (slot 6) | 6 | codex SSOT audit pass (freeze-gate-9 inventory + F2/F3) + QG static baseline; 2 issue docs filed (`codex_audit_2026_05_11.md` + `qg_sweep_2026_05_11.md`) (PM@`04ed9203`+`e8cbe46b`). |
+| unified-trading-pm | (this commit) | 1 | NEW `features_service_qg_cleanup_2026_05_11.md` (QG-codex cleanup + full parity run [blocked_by code_freeze Phase 3] + F9 transfer; owner slot 2); slot 2 Q1 ✅ RESOLVED (A1 in features_repo_consolidation); Phase 4.6/6 annotated DEFERRED→successor; per-slot ping file bidirectional (`[main → slot N]` channel — README + AGENT_ONBOARDING + spawn prompts + CLAUDE.md updated). |
 | features-service / UTL / unified-trading-pm | (slot 2) | 2 | features-svc Phase 4.1-4.5 verified + shipped (test files `c11cafcd`; UTL facade re-exports `e7975fe`; import-rewrite `a308a273` → 0 deep-import violations); Phase 7 checkbox flipped `[x]` (8 repos archived); F2 no-op / F6 Option C / F7 N/A confirmed (PM@`9d91b2f4`). |
 
 _(Implementer slot DONE blocks land in each slot's plan-of-record body; this table is the cross-slot index.)_
@@ -440,6 +447,7 @@ Use `.md` paths (no `.plan.md` segment) when referencing files in `plans/active/
 - **Active pings**: [`harsh_orchestrator/pings/`](pings/) (intra-side, per-slot — see [`pings/README.md`](pings/README.md)) + [`_agent_pings.md`](_agent_pings.md) (transition stub) + [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md) (cross-side).
 - **Master plan**: [`../plans/active/master_to_live_defi_2026_05_23.md`](../plans/active/master_to_live_defi_2026_05_23.md).
 - **Sequencing umbrella this cycle**: [`../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md).
+- **Spawned 2026-05-11**: [`../plans/active/features_service_qg_cleanup_2026_05_11.md`](../plans/active/features_service_qg_cleanup_2026_05_11.md) (successor for `features_repo_consolidation` Phase 4.6 + Phase 6 + F9; owner = slot 2).
 - **Findings Triage Discipline**: CLAUDE.md § "Findings Triage Discipline (HARD RULE)".
 - **Push discipline (conditional rule)**: CLAUDE.md § "CI Verification After Every Push (HARD RULE)" + "Daily Work-Split
   Process" § "Conditional push (the multi-agent safety valve)".

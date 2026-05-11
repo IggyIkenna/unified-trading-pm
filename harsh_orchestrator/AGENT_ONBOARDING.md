@@ -41,6 +41,10 @@ Per shippable unit (a green, self-contained slice — helper+tests / one adapter
      escalate to slot 1 (don't guess). Then `git push origin HEAD:live-defi-rollout`.
 5. **Flip the plan-of-record checkbox in the same logical unit** as the code commit (see § "Plan-of-record curation
    duties").
+6. **After the rebase, check for inbound messages** — re-read your `harsh_orchestrator/pings/slot_<N>.md` for new
+   `[main → slot N]` lines (slot 1 reaches you here — acks, scope changes, pointers) + your plan-of-record `## Open
+   questions` for new `A1` answers to anything you flagged. This is the bidirectional half of the per-slot ping file
+   (see [`pings/README.md`](pings/README.md) § "Bidirectional comms").
 
 Nobody does a batch-merge step — each slot self-lands its work as it finishes. The only residual is a rebase conflict
 in PM when two slots flip checkboxes in the same plan file; mitigated by (a) **only slot 1 writes PM plan/codex bodies**
