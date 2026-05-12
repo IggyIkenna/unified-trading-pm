@@ -1582,3 +1582,18 @@ inline-formatter violation, but it should go through `resolve_bucket_name(kind="
 **Suggested**: add both kinds to the `gcp:` and `aws:` storage blocks as cross-cutting Group-A-ish (env-tiered like
 `events`/`config-store`); then ping slot 7 / the mock-data-benchmarking plan to switch the CLI. Owner: this plan
 (bucket-ssot is the canonical owner of `cloud-providers.yaml`).
+
+---
+
+## Deferred work after 2026-05-12 Slot 3 session
+
+| Phase / item | Status as of 2026-05-12 17:20 UTC | Successor / blocker |
+| ------------ | --------------------------------- | ------------------- |
+| Phase 0c — GCP prod bucket creation | ✅ DONE — 38 prd buckets created (asia-northeast1, UBLA) | No blocker — complete |
+| Phase 0c — STS flat→prd data migration (16 jobs) | IN PROGRESS — 10/16 SUCCESS, 6 IN_PROGRESS (large market-data-tick transfers; cefi ~12TB) | ScheduleWakeup parity check ~18:35 UTC; Gate 2 fires when all SUCCESS |
+| Phase 0c — dex-pools 1-object transient failure | ✅ FIXED — manually copied `_index/availability_index.parquet`; parity 185079/185079 | No blocker — complete |
+| PART C — code migration `resolve_bucket_name()` | 🔴 BLOCKED on Gate 2 | Scope: instruments-service/scripts/ (9 occurrences / ~19 files) + deployment-service/scripts/vm/ (345 occurrences / 20+ bash files); also 4 noqa markers in service source. Wakeup at ~18:35 UTC will fire Gate 2 when parity verified |
+| QG 5.69 → zero violations | 🔴 BLOCKED on Gate 2 | 4 violations in service source (error message strings, not bucket constructions) → `# noqa: gs-uri` markers. 0 violations in scripts/ (excluded from QG 5.69). After Gate 2, lower baseline to 0 |
+| Phase 0c — AWS prod provision | ❌ NOT STARTED | Deferred to code_freeze Phase 2.6 window (2026-05-15→05-19) per plan |
+| Phase 0c — staging/dev provision | ❌ NOT STARTED | Deferred to code_freeze Phase 2.6 window per plan |
+| Phase 5A phantom audit (GCE VM) | 🔴 BLOCKED — CLAUDE.md requires GCE VM (same-region) | Needs dedicated GCE VM launch in asia-northeast1-c; deferred to next Slot 3 session or Harsh slot |
