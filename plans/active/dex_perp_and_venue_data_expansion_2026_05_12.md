@@ -59,38 +59,31 @@ NOTE: UAC `BITFINEX-FUTURES` (existing) vs `BITFINEX-DERIVATIVES` (new Tardis-sp
 
 ## Phase 1: UAC registry additions (SERIAL — gates all adapter work)
 
-- [ ] [UAC] P0. **Add `LIGHTER-ZKSYNC` Tardis capability.** In `_cefi.py` or a new `_dex_perp.py` file (whichever is the
-      current home for LIGHTER-ZKSYNC — check before editing): add Tardis exchange name `"lighter-zksync"`,
-      `coverage_start: 2026-04-17`, data_types `["trades", "book_snapshot_5", "derivative_ticker"]`, pre-tardis REST
-      base_url `"https://api.lighter.xyz"` for ohlcv_1m only pre-2026-04-17. Markets: BTC, ETH, SOL, XRP, HYPE, BNB
-      (plus exotic: NVDA, USDCAD, BRENTOIL, XAU, XAG, SNDK).
+- [x] [UAC] P0. **Add `LIGHTER-ZKSYNC` Tardis capability.** (UAC@06f0567) Shipped to `venue_mapping.py` (SSOT for MTDS
+      routing): added `"lighter-zksync"` to `all_tardis_exchanges`, `tardis_to_venue`, and
+      `venue_instrument_type_to_tardis` for PERPETUAL instrument type. Pre-2026-04-17 REST path handled in Phase 2A via
+      date-threshold routing in `umi_tick_provider.py`.
 
-- [ ] [UAC] P0. **Add `KRAKEN-FUTURES` Tardis capability.** Tardis exchange name `"kraken-futures"`,
-      `coverage_start: 2019-03-30`. Data types: `trades`, `book_snapshot_5` (from `incremental_book_L2`),
-      `derivative_ticker` (funding*rate). Base URL: `"https://futures.kraken.com"`. Perp symbol format `PF_XBTUSD`;
-      dated format `FF_XBTUSD_YYMMDD`. Add normalisation note: strip
-      `PF*`/`FF\_`prefix, extract     coin. NOTE:`venue_launch_dates.py`already has`KRAKEN-FUTURES: 2019-09-01` — UAC
-      start date for data coverage is 2019-03-30 (Tardis), launch date is the exchange inception. Don't duplicate.
+- [x] [UAC] P0. **Add `KRAKEN-FUTURES` Tardis capability.** (UAC@06f0567) Fixed `venue_start_dates` 2020-01-01 →
+      2019-03-30. Added `("KRAKEN-FUTURES", "PERPETUAL"): "cryptofacilities"` and `("KRAKEN-FUTURES", "FUTURE"):
+      "cryptofacilities"` to `venue_instrument_type_to_tardis`. Pre-existing `tardis_to_venue` entry
+      `"cryptofacilities": "KRAKEN-FUTURES"` was already correct.
 
-- [ ] [UAC] P0. **Resolve BITFINEX-FUTURES vs BITFINEX-DERIVATIVES naming.** Check if `BITFINEX-FUTURES` already has
-      Tardis routing. If yes: rename to `BITFINEX-DERIVATIVES` only if no downstream parquet paths are stale (check
-      manifest first — if captured rows exist under BITFINEX-FUTURES, keep name, just add Tardis metadata). If no Tardis
-      routing exists: add `tartis_exchange: "bitfinex-derivatives"`, `coverage_start: 2019-12-01`, symbol format
-      `tBTCF0:USTF0`, data_types `["trades", "book_snapshot_5", "derivative_ticker"]`. Reliable filtering from
-      2020-05-27.
+- [x] [UAC] P0. **Resolve BITFINEX-FUTURES vs BITFINEX-DERIVATIVES naming.** (UAC@06f0567) Decision: kept
+      `BITFINEX-FUTURES` (downstream parquet paths under that name; rename = manifest migration). Fixed
+      `venue_start_dates` 2020-01-01 → 2019-12-01. Added `("BITFINEX-FUTURES", "PERPETUAL"):
+      "bitfinex-derivatives"` and `("BITFINEX-FUTURES", "FUTURE"): "bitfinex-derivatives"` to
+      `venue_instrument_type_to_tardis`. Pre-existing `tardis_to_venue` entry `"bitfinex-derivatives":
+      "BITFINEX-FUTURES"` was already correct.
 
-- [ ] [UAC] P0. **Add `DRIFT-SOLANA` capability entry.** S3 archive source:
-      `https://drift-historical-data-v2.s3.eu-west-1.amazonaws.com/program/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/market/{SYMBOL}-PERP/tradeRecords/{YYYY}/{YYYYMMDD}`.
-      Data API source: `https://data.api.drift.trade`. Coverage: S3 archive 2022-01-01 → 2025-01-01 (free), Data API
-      2025-01-01 → present (free). Data types: `trades`, `derivative_ticker` (funding_rate). Markets: SOL-PERP,
-      BTC-PERP, ETH-PERP + major alts. NOTE: `DRIFT` already appears in `market_data_categories.py` cefi list (line 200)
-      — ensure new entry uses same canonical venue string.
+- [x] [UAC] P0. **Add `DRIFT` routing entries.** (UAC@06f0567) Added `"DRIFT"` to `all_cefi_onchain_clob_venues`;
+      `"DRIFT": "2022-01-01"` to `venue_start_dates` (S3 archive origin); `"DRIFT": "drift_api"` to
+      `venue_to_data_provider`. Canonical venue string is `DRIFT` (matches `market_data_categories.py` line 200). Alias
+      `DRIFT-SOLANA: 2022-11-04` kept for backwards compat.
 
-- [ ] [UAC] P1. **Add `lst_margin_accepted` + `lst_margin_tokens` to venue capability structure.** New optional fields
-      on `SourceCapability` (or a companion dict `LST_MARGIN_VENUES`). Values: Bybit `["stETH"]`, Deribit `["stETH"]`,
-      Drift `["JitoSOL", "mSOL"]`. All other cefi venues: `lst_margin_accepted=False` (pending live API verification).
-      This gates Phase 5 (collateral verification script). Preferred approach: `LST_MARGIN_VENUES: dict[str, list[str]]`
-      constant — simpler than struct change.
+- [x] [UAC] P1. **Add `LST_MARGIN_VENUES` dict.** (UAC@06f0567) Shipped as module-level constant in `venue_mapping.py`
+      + exported from `registry/__init__.py` `__all__`. Values: `"BYBIT": ["stETH"]`, `"DERIBIT": ["stETH"]`,
+      `"DRIFT": ["JitoSOL", "mSOL"]`. Gates Phase 4 collateral verification script.
 
 - [ ] [UAC] P2. **Add `is_rebasing` + `rebase_rate` to `lst_rates` schema.** In UAC `canonical/domain/defi/` or wherever
       lst_rates schema lives: add `is_rebasing: bool` (stETH=True, wstETH=False) and `rebase_rate: float | None` (daily
