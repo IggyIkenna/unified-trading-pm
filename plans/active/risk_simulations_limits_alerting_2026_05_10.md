@@ -369,8 +369,19 @@ returns full rule set; tests pass.
       AlertCode-named `log_event`s as the interim; fold into Phase 5.A when the event model lands. **DEFERRED P3**: the
       gate is wired through `SignalPublisher` (the documented signal-emission seam, currently call-site-less in-repo);
       the v2 orchestrator / output-builder signal paths should adopt `apply_risk_preflight` when they next change.)
-- [ ] [AGENT] P0. **4.D position-balance.** Per-rule state-tracking (current draw-down, current leverage, current OI)
-      emitted to rule_evaluator-readable format.
+- [x] [AGENT] P0. **4.D position-balance.** Per-rule state-tracking (current draw-down, current leverage, current OI)
+      emitted to rule_evaluator-readable format. (position-balance-monitor-service@50b3c25 —
+      `core/rule_eval_context_builder.py`: `PortfolioRiskState` (authoritative NAV / equity / gross+net exposure /
+      per-(venue,instrument) OI / daily-loss snapshot), `PeakNavTracker` (per-(account,archetype) high-water mark →
+      drawdown bps from peak NAV), `build_rule_eval_context()` mapping to UTL `RuleEvalContext` — populates
+      `account_id` / `current_drawdown_bps` / `current_leverage` / `gross_exposure_usd` / `net_exposure_usd` /
+      `daily_loss_usd` + scope keys + `open_interest_usd` (venue+instrument) + `instruction_size_usd` passthrough;
+      deliberately omits the keys not owned by position-balance (concentration / correlation / funding / gas / VaR /
+      slippage) so risk/execution/strategy layer those in. No rule logic duplicated — emits state only. 13 unit tests
+      `tests/unit/test_rule_eval_context_builder.py` (one drives `unified_trading_library.risk.evaluate_rule`
+      end-to-end). FLAG: UTL does not re-export the `risk` sub-package surface at the package root — used
+      `# noqa: qg-deep-import`; UTL should re-export `RuleEvalContext` / `evaluate_rule` / `risk_preflight` at top
+      level.)
 
 **Full-execution criterion**: per-repo QG green; integration test verifies block behaviour at execution-service.
 

@@ -273,8 +273,23 @@ nightly-cron wiring (Phase 6.A).
       `BreakerFiredEvent` model to UAC `canonical/crosscutting/circuit_breaker.py`; (b) wire `circuit_breaker.py` to load
       `BreakerConfig` from `registry/circuit_breakers/{carry_staked_basis,arbitrage_price_dispersion}.py` for per-archetype
       breakers + emit the typed event on transition. Tracked under this todo + flagged to operator.
-- [ ] [AGENT] P0. **4.C position-balance + alerting consumers.** Subscribe to breaker + kill-switch events; severity
-      routing. **ALERTING HALF DONE 2026-05-12** (alerting-service@0a52a33 — `alerting_service/dr_event_handler.py`:
+- [x] [AGENT] P0. **4.C position-balance + alerting consumers.** Subscribe to breaker + kill-switch events; severity
+      routing. **PBM HALF DONE 2026-05-12** (position-balance-monitor-service@50b3c25 —
+      `core/reconciler_breaker_bridge.py`: `ReconcilerBreakerBridge` hosts the UTL
+      position/balance/custody/onchain `*Reconciler` instances (consumer passes them in — it owns RPC caller /
+      tolerances), `subscribe(...)`s a shared callback that on `breaker_fired` emits an AlertCode-stamped AlertEvent
+      (`AlertCode.CIRCUIT_BREAKER_OPEN`, severity mapped from `BreakerConfig.alerting_severity`) to `RISK_ALERTS` AND
+      arms the mapped kill-switch via `get_kill_switch_bus().arm(KillSwitchArmRequest(provenance=BREAKER_AUTO,...))`
+      when the breaker's `BreakerConfig.action is KILL_ALL` (the contract analogue of "triggers_kill_switch"; the
+      surfaces are platform-wide so the target is `KILL_ALL_LIVE`). `PositionBalanceKillSwitchSubscriber` (typed
+      `KillSwitchSubscriber` via `register_subscriber`) puts position-balance into safe-read-only mode on any
+      kill-switch arm; global `KILL_ALL_LIVE` disarm exits it; `is_safe_read_only()` / `safe_read_only_reason()`
+      exposed for fill emitters / drift-flip dispatchers. `run_position_reconcile(...)` monitoring-loop entry point.
+      Tests `tests/unit/test_reconciler_breaker_bridge.py` (7): breaker-fire→AlertEvent emitted; KILL_ALL
+      breaker→kill-switch armed; non-KILL breaker→no arm; kill-switch arm→safe mode; global disarm→exit; end-to-end
+      breaker-fire→arm→safe-mode. FLAG: UTL does not re-export `KillSwitchSubscriber` nor the `reconcile` sub-package
+      surface at the package root — used `# noqa: qg-deep-import`; UTL should re-export them at top level.)
+      **ALERTING HALF DONE 2026-05-12** (alerting-service@0a52a33 — `alerting_service/dr_event_handler.py`:
       `handle_kill_switch_armed_event` routes `KillSwitchArmedEvent` at CRITICAL+page for global/wallet/asset-group
       switch ids, HIGH+page otherwise; `handle_kill_switch_disarm_event` routes `KillSwitchDisarmEvent` via the
       RECOVERY AlertCodes per `BreakerRecoveryMode` (`AUTO_COOLDOWN`→`KILL_SWITCH_AUTO_RECOVERED`,
@@ -283,8 +298,7 @@ nightly-cron wiring (Phase 6.A).
       `PER_ARCHETYPE_BREAKERS` registry (`KILL_ALL`→CRITICAL+page, `CANCEL_OPEN`→HIGH+page,
       `SCALE_DOWN`/`BLOCK_NEW`→WARN+Telegram); new `router.route_event_with_explicit_channels` for caller-computed
       severity; wired into `subscribers/alert_subscriber.dispatch_event`; tests `tests/unit/test_dr_event_handler.py`
-      cover arm/disarm/recovery routing + breaker-action tiering; 412 unit tests pass.) **PBM HALF DEFERRED** to the
-      position-balance-monitor-service tab. **DEFERRED P2 (alerting)**: no typed `BreakerFiredEvent` UAC model exists
+      cover arm/disarm/recovery routing + breaker-action tiering; 412 unit tests pass.) **DEFERRED P2 (alerting)**: no typed `BreakerFiredEvent` UAC model exists
       yet — the breaker-fire handler classifies off `CircuitBreakerId` + the registry's `BreakerAction`; when a typed
       `BreakerFiredEvent` lands in UAC, switch `handle_circuit_breaker_fire_payload` to validate against it. FLAGGED to
       DR plan Phase 1 / risk plan owners.
