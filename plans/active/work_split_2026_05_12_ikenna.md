@@ -505,7 +505,7 @@ retried on next backfill. Memory note from 2026-05-06 ("retry doesn't work") pre
 | ------- | ------------------------------------------------------------------------ | ------- | --------------------- |
 | Gate 0A | UAC Phase 0A + UTL Phase 0B pushed to origin                             | 🟢 FIRED (uac@0457b0e; UTL: helper pre-existed; PM@fc429e43 per Slot 4 ping) | Slot 4 Phases 1–4 ✅ proceeding (Phase 1.5 QG green PM@ff2b46fb) |
 | Gate 1  | Propagation chain Phases 1–4 + Phase 2.A all pushed to origin            | 🔴 OPEN | Slot 3 apply-flips    |
-| Gate 2  | Physical bucket migration (prod) complete + object-count parity verified | 🔴 OPEN | Slot 8 code migration |
+| Gate 2  | Physical bucket migration (prod) complete + object-count parity verified | 🟢 FIRED (Slot 3 @ ~19:00 UTC — 16 STS jobs SUCCESS, parity verified; PM@`c52ddffb`) | Slot 3 PART C (resolve_bucket_name migration) + Slot 8 PART C |
 | Gate 3  | Phantom count = 0 (or <10 class-C) + manifest data-status panel accurate | 🔴 OPEN | Backfill clearance    |
 | Gate 4  | All writegate coding (2.A-2.D + 6.3-6.9 + Phase 6.8) pushed to origin    | 🔴 OPEN | Full manifest audit   |
 
