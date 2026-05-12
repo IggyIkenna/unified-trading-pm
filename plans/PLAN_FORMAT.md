@@ -133,6 +133,24 @@ shows filled vs hollow circles correctly.
 **Why:** Cursor reads the checkbox from the content; `status:` in YAML alone does not render filled circles. Without
 this prefix, done tasks still appear hollow in the UI.
 
+### Sub-bullet checkboxes (explicit allowance, codified 2026-05-12)
+
+Nested checkboxes under a parent todo are **allowed** when they represent atomic sub-tasks that ship together with the
+parent (e.g. per-repo or per-asset-group flavours of the same shippable unit):
+
+```markdown
+- [x] [SCRIPT] P0. Sweep `category` → `asset_group` across the 5 asset-group repos
+  - [x] cefi: instruments-service@<sha>
+  - [x] defi: instruments-service@<sha>
+  - [x] tradfi: instruments-service@<sha>
+  - [ ] sports: blocked on URDI@<sha>
+  - [ ] prediction: blocked on URDI@<sha>
+```
+
+Sub-bullet checkboxes do not satisfy the "first content line" rule on their own (Cursor renders them as nested items
+under the parent's filled/hollow state). They are valid only as children of a parent `- [x]` / `- [ ]` checkbox; a
+plan section consisting entirely of nested checkboxes without a parent is rejected.
+
 ````
 
 ---
