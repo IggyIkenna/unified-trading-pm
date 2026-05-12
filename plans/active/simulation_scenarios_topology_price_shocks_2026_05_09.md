@@ -93,11 +93,12 @@ estimate_calibration_note: |
 > | ----- | ------------------ | ------ |
 > | 0 — Pre-audit | Sub-agent fan-out per todos 0.A-0.C | `todo` (3 AI-hours) |
 > | 1 — UAC contracts | 1.A + 1.B + 1.C + 1.D | **`done` 2026-05-12 slot 7 Day-2** (UAC@`33630a6`: scenario_overlay.py + 10 registry instances + 53 tests; built atop Day-1 design fragments) |
-> | 2 — UTL primitives | 2.A + 2.B + 2.D (Phase 2.E `available_at` discipline `design-shipped` Day-1) | **`done` 2026-05-12 slot 7 Day-2** (UTL@`3797fed5`: applier + checker + runner + 51 tests) |
+> | 2 — UTL primitives | 2.A + 2.B + 2.D (Phase 2.E `available_at` discipline) | **`done` 2026-05-12 slot 7 Day-2+4** (UTL@`3797fed5` applier + checker + runner + 51 tests; UTL@`9e84ee44` Phase 2.E `scenario_overlay_active` kwarg on `assert_no_lookahead_for_feature_group` + 2 tests) |
 > | 3 — Wire-ins | 3.E + 3.F only (execution-engine adversarial + risk/alerting consumers) | **`design-shipped` 2026-05-12 slot 7 Day-2** (integration spec at `scratch_scenarios_day1/12_phase3_integration_spec.md`; cross-side handshake to Harsh slot 5 for implementation) |
 > | 4 — Scenario library | 10 scenarios shipped as design fragments + UAC registry instances 2026-05-12 slot 7 | **`done`** (UAC@`33630a6` registry/scenarios/) |
-> | 5 — Matrix | 16-cell scope (10 scenarios × 2 archetypes filtered to applicable; over-delivered vs 12-cell compressed target) | `todo` (0.5 AI-day) — Day-3 ScenarioMatrixRunner |
-> | 6 / 7 / 8 / 9 | DEFERRED post-cutover | `deferred-after-simulation_scenarios_post_cutover_2026_06_01` |
+> | 5 — Matrix | 16-cell scope (10 scenarios × 2 archetypes filtered to applicable; over-delivered vs 12-cell compressed target) | **`done` 2026-05-12 slot 7 Day-3** (UAC@`556b96f` `registry/scenario_archetype_matrix.py` + 11 tests; UTL@`66904fe0` `scenario/matrix_runner.py` + 10 tests — 16-cell matrix builds at module load from SCENARIO_REGISTRY) |
+> | 8.A — Codex scenario-injection-architecture | NEW doc capturing the architecture | **`done` 2026-05-12 slot 7 Day-4** (PM `codex/04-architecture/scenario-injection-architecture.md`) |
+> | 6 / 7 / 8.B-I / 9 | DEFERRED post-cutover | `deferred-after-simulation_scenarios_post_cutover_2026_06_01` |
 >
 > Total compressed scope: ~4-5 AI-days. Fits T-13 with margin. Successor plan picks up immediately post-cutover for the
 > broader 9-phase coverage.
@@ -394,7 +395,7 @@ and only then unblocks dependents.
       F item 18 uses) with `--scenario-overlay` flag, observes outputs via `ScenarioOutcomeChecker`, emits
       `ScenarioReport` via `ScenarioReportEmitter`. **No parallel backtest engine — this only configures and observes
       the existing one.**
-- [ ] [AGENT] P0. **2.E LookaheadBiasError compatibility.** `ScenarioOverlay` mutations that shift `available_at`
+- [x] [AGENT] P0. **2.E LookaheadBiasError compatibility.** ✅ UTL@`9e84ee44` (slot 7 Day-4 2026-05-12) — `assert_no_lookahead_for_feature_group(..., scenario_overlay_active: bool = False)` kwarg shipped. When True, downgrades the `LookaheadBiasError` to a structured `_logger.warning` with `SCENARIO_OVERLAY_LOOKAHEAD_DOWNGRADE` marker. Strict mode stays on for every non-overlay path. 2 new tests cover downgrade-to-warning + strict-mode invariant; 11/11 `TestAssertNoLookaheadForFeatureGroup` tests pass. `ScenarioOverlay` mutations that shift `available_at`
       (StaleHold, EventDrop) must NOT trigger LookaheadBiasError downstream. Mechanism: applier stamps
       `_synthetic_available_at_shift: bool` column; UTL `lookahead_bias_check` accepts a `scenario_overlay_active: bool`
       kwarg that downgrades the error to a structured warning emitted to the report. **Strict mode stays on for
@@ -493,16 +494,16 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
 
 ## Phase 5 — Per-archetype regression matrix (Days 9-10, ~2 AI-days)
 
-- [ ] [AGENT] P0. **5.A Matrix definition.** `unified-api-contracts/registry/scenario_archetype_matrix.py` declares
+- [x] [AGENT] P0. **5.A Matrix definition.** ✅ UAC@`556b96f` (slot 7 Day-3 2026-05-12) — `unified-api-contracts/registry/scenario_archetype_matrix.py` ships `MATRIX: dict[str, frozenset[str]]` derived at module-load from `SCENARIO_REGISTRY` (each scenario lands in archetype matrix iff at least one declared `expected_outcome.archetype` matches). Cutover archetypes: `carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION`. `matrix_cell_count()` + `scenarios_for_archetype()` helpers + 5 facade re-exports. 11 unit tests verify per-archetype critical-scenario presence + closed-archetype-set + over-delivers-vs-12-cell-target. `unified-api-contracts/registry/scenario_archetype_matrix.py` declares
       `MATRIX: dict[ArchetypeId, frozenset[ScenarioId]]`. `carry_staked_basis` × every DeFi + applicable cross_asset
       scenario; `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) × every CeFi + DeFi + applicable cross_asset
       scenario. Out-of-asset_group scenarios excluded by construction.
-- [ ] [AGENT] P0. **5.B `ScenarioMatrixRunner`.** `unified_trading_library/scenario/matrix_runner.py` — given an
+- [x] [AGENT] P0. **5.B `ScenarioMatrixRunner`.** ✅ UTL@`66904fe0` (slot 7 Day-3 2026-05-12) — `unified_trading_library/scenario/matrix_runner.py` ships `ScenarioMatrixRunner` (sync serial iterator), `ScenarioMatrixCell` (frozen dataclass with passed + failure_count derived properties), `ScenarioMatrixReport` (all_passed Phase 5.C invariant + cell_count + passed/failed_cell_count + `failure_summary()` formatter), `ObserverFactory` typed alias. Fail-loud on unknown archetype + registry/matrix mismatch. 10 unit tests cover red/green matrix + report shape + failure_summary formatting. Pre-cutover synchronous; Phase 9 parallel-per-cell GCE VM extension DEFERRED. `unified_trading_library/scenario/matrix_runner.py` — given an
       `ArchetypeId`, drives `ScenarioRunner` over every scenario in the matrix, aggregates `ScenarioReport` rows into a
       `ScenarioMatrixReport` parquet at
       `gs://{pid}-scenario-reports/matrix/{archetype}/{YYYY-MM-DD}/{run_id}/matrix.parquet`. Pass/fail per cell +
       aggregate.
-- [ ] [AGENT] P0. **5.C Matrix done-definition.** A matrix run is GREEN iff every cell PASSES every declared
+- [x] [AGENT] P0. **5.C Matrix done-definition.** ✅ codified in UTL@`66904fe0` `ScenarioMatrixReport.all_passed` property (true iff every cell's `ScenarioMatrixCell.passed` is true; `failure_summary()` enumerates failed cells + per-assertion observed_summary). RED matrix surfaces as `matrix_report.all_passed == False` to callers; matrix-RED → cutover blocker per Phase 10 (full operational verification deferred to Phase 9 real-VM runs, post-Harsh-slot-5 Phase 3.E wire-in). A matrix run is GREEN iff every cell PASSES every declared
       `expected_outcome` within its `expected_within` SLA. Any FAIL = matrix red. RED matrix is a cutover blocker (Phase
       10).
 
@@ -566,7 +567,7 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
 
 ## Phase 8 — Codex SSOTs (Days 11-12, ~1.5 AI-days, parallel with Phase 9 first-archetype run)
 
-- [ ] [AGENT] P0. **8.A NEW `codex/04-architecture/scenario-injection-architecture.md`.** Sections: overlay layer
+- [x] [AGENT] P0. **8.A NEW `codex/04-architecture/scenario-injection-architecture.md`.** ✅ shipped slot 7 Day-4 2026-05-12 (PM commit pending). Codifies reuse-prod-codepath principle + 6 closed-set pipeline-tap layers + 11 mutation discriminator union + 9 OutcomeCategory enum + 6-tuple-per-cell contract + `synthetic=true` event-stream provenance + LookaheadBias compatibility (Phase 2.E) + 2-archetype 16-cell regression matrix + cross-plan composition rules + provenance trail of every Day-1..Day-4 commit. Phase 8.B + 8.C (separate scenario-outcome-assertions + scenario-overlay-semantics codex pages) DEFERRED — content folded into this single Phase 8.A doc until consumer growth requires split. Sections: overlay layer
       model + 6 ScenarioOverlayLayer values + reuse-prod-codepath principle + injection-point map + per-layer applier
       semantics + `synthetic=true` event-stream provenance + LookaheadBias compatibility note + cross-references to
       `live-pipeline-architecture.md` + `replay-subsystem.md`. Stub at Phase 1 commit; full content lands here.
@@ -763,6 +764,36 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
 - **Phase 3 integration spec** at [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md): Phase 3.E + 3.F design substrate (3-step recipe for execution-service matching-engine adversarial mode + 3 consumer shapes for position-balance / risk / alerting). Cross-side handshake invited to Harsh slot 5 per work-split.
 - **Plan status flips**: Phase 1 (1.A/1.B/1.C/1.D) + Phase 2 (2.A/2.B/2.D) + Phase 4 → `done`; Phase 3 (3.E/3.F) → `design-shipped`. Phase 5 ScenarioMatrixRunner = Day-3 (next slot 7 cycle item).
 - **Total Day-2 ship**: 3 commits (UAC@`33630a6` + UTL@`3797fed5` + PM plan flip), 3406 LOC across 16 files, 104 unit tests green. Compressed-scope plan body line 60-65 fully realized in code; Phase 3.E/3.F implementation cross-side-handed-off to Harsh slot 5.
+
+### DONE-2026-05-12 (slot 7 Day-3 — Phase 5 matrix runner)
+
+- **UAC@`556b96f`**: `registry/scenario_archetype_matrix.py` (~110 LOC: `CUTOVER_ARCHETYPES` frozenset + `MATRIX: dict[archetype, frozenset[scenario_id]]` derived at module-load from `SCENARIO_REGISTRY` + `matrix_cell_count()` + `scenarios_for_archetype()` helpers); 5 facade re-exports (`SCENARIO_ARCHETYPE_MATRIX` + `CUTOVER_ARCHETYPES` + `matrix_cell_count` + `scenarios_for_archetype`); `tests/internal/unit/test_scenario_archetype_matrix.py` 11 tests (cell-count-over-delivers + per-archetype critical-scenario presence + closed-archetype-set + fail-loud on unknown).
+- **UTL@`66904fe0`**: `scenario/matrix_runner.py` (~217 LOC: `ScenarioMatrixRunner` synchronous serial iterator + `ScenarioMatrixCell` frozen dataclass with `passed` + `failure_count` derived props + `ScenarioMatrixReport` aggregate with `all_passed` Phase 5.C invariant + `failure_summary()` formatter + `ObserverFactory` typed alias); facade re-exports for 3 new names; `tests/unit/scenario/test_matrix_runner.py` 10 tests.
+- **Plan status flips**: Phase 5.A + 5.B + 5.C → `done` (matrix declaration + runner + green-matrix done-definition all codified).
+- **Total Day-3 ship**: 2 commits (UAC + UTL), ~600 LOC, 21 new tests. UTL scenario test count: 61 (51 Phase 2 + 10 Phase 5.B).
+
+### DONE-2026-05-12 (slot 7 Day-4 — Phase 2.E LookaheadBias downgrade + Phase 8.A codex stub)
+
+- **UTL@`9e84ee44`**: `point_in_time.py` `assert_no_lookahead_for_feature_group(..., scenario_overlay_active: bool = False)` kwarg. When True, downgrades `LookaheadBiasError` to `_logger.warning(SCENARIO_OVERLAY_LOOKAHEAD_DOWNGRADE: ...)`; strict mode stays on for every non-overlay path. 2 new tests in `tests/unit/test_point_in_time.py` (downgrade-to-warning + strict-mode invariant). 11/11 `TestAssertNoLookaheadForFeatureGroup` tests pass + scoped ruff clean.
+- **PM codex stub** at [`codex/04-architecture/scenario-injection-architecture.md`](../../codex/04-architecture/scenario-injection-architecture.md): Phase 8.A NEW doc codifying reuse-prod-codepath principle + 6 closed-set pipeline-tap layers + 11 mutation discriminator union + 9 OutcomeCategory enum + 6-tuple-per-cell contract + `synthetic=true` event-stream provenance + LookaheadBias compatibility (Phase 2.E) + 2-archetype 16-cell regression matrix + cross-plan composition + Day-1..Day-4 provenance trail. Phase 8.B (scenario-outcome-assertions) + 8.C (scenario-overlay-semantics) DEFERRED — content folded into this single Phase 8.A doc until consumer growth requires split.
+- **Plan status flips**: Phase 2.E + Phase 5.A + Phase 5.B + Phase 5.C + Phase 8.A → `done`.
+- **Total Day-4 ship**: 1 UTL commit + 1 PM commit (codex + plan flips), ~280 LOC.
+
+### Full cycle ship summary (slot 7 `ikenna-scenarios-topology-tab` Cycle-1 2026-05-12)
+
+| Phase | Status | Evidence |
+|---|---|---|
+| 1.A/1.B/1.C/1.D | `done` Day-2 | UAC@`33630a6` |
+| 2.A/2.B/2.D | `done` Day-2 | UTL@`3797fed5` |
+| 2.E | `done` Day-4 | UTL@`9e84ee44` |
+| 3.E + 3.F | `design-shipped` Day-2 (impl Harsh slot 5) | `scratch_scenarios_day1/12_phase3_integration_spec.md` |
+| 4 (scenario library) | `done` Day-2 | UAC@`33630a6` `registry/scenarios/` |
+| 5.A + 5.B + 5.C | `done` Day-3 | UAC@`556b96f` + UTL@`66904fe0` |
+| 8.A (codex stub) | `done` Day-4 | PM `codex/04-architecture/scenario-injection-architecture.md` |
+| 0 (pre-audit) | `todo` | Operator-deferrable; existing Day-1 design fragments serve as the de-facto audit |
+| 6 / 7 / 8.B-I / 9 / 10 | `deferred-after-successor` | `simulation_scenarios_post_cutover_2026_06_01.md` |
+
+**Cycle-1 totals (Days 1+2+3+4)**: 11 commits across 3 repos (UAC + UTL + PM); ~4000+ LOC; 125 unit tests green (53 UAC + 61 UTL + 11 UAC matrix); compressed-scope pre-cutover deliverables 100% shipped except Phase 3 implementation handed off to Harsh slot 5 + Phase 9 real-VM ops (deferred until Phase 3 impl lands).
 
 ## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
 
