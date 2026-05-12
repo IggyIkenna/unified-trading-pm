@@ -98,7 +98,7 @@ cloud_kms_cmk_prediction
 
 Full URI: `projects/{pid}/locations/asia-northeast1/keyRings/wallets-{env}/cryptoKeys/trading-{asset_group}-master-v1`
 
-### 2.5 Per-wallet wrapped private keys
+### 2.5 Per-wallet wrapped private keys (production cutover wallets)
 
 ```
 <archetype>-<chain>-<role>-v<n>-wrapped
@@ -116,6 +116,46 @@ Note: wrapped ciphertext lives in Secret Manager; CMK URI carried separately
 on `WalletProvisioningConfig.kms_key_uri`. The wrapper-pattern is
 `gcloud kms encrypt --key=<cmk_uri> --plaintext-file=<pk>` → base64
 ciphertext → Secret Manager.
+
+### 2.5.A Pre-cutover test wallets (Trust Wallet canonical — provisioned 2026-05-12)
+
+Pre-cutover test wallets use a separate naming pattern (less structured than
+the per-archetype-per-chain prod pattern above) because they cover all
+chains under a single operator-managed wallet:
+
+```
+defi-wallet-<provider>           # public EVM/Solana address
+defi-wallet-<provider>-private-key            # raw PK (LOCAL_KEY surface)
+defi-wallet-<provider>-private-key-wrapped    # envelope-encrypted PK (CLOUD_KMS_ENCRYPTED surface)
+```
+
+| Pattern | Live entry | Status |
+|---|---|---|
+| `defi-wallet-trust` | EVM `0x992ebFe04DB...` (canonical per operator 2026-05-12) | ✅ Live |
+| `defi-wallet-private-key` | EVM 0x-hex Trust Wallet PK | ✅ Live |
+| `defi-wallet-private-key-wrapped` | Wrapped via `wallets-staging/trading-defi-master-v1` CMK | ✅ Live; end-to-end smoke verified 2026-05-12 |
+| `defi-wallet-metamask` | EVM address `0x0056801778F9...` | ✅ Live (address only — no PK) |
+| `defi-wallet-solana` | Solana base58 address | 🟡 PENDING operator Trust Wallet Solana export |
+| `defi-wallet-solana-private-key` | Solana base58 PK | 🟡 PENDING |
+| `defi-wallet-solana-private-key-wrapped` | Wrapped via same CMK | 🟡 PENDING |
+
+**Why the different pattern**: prod cutover wallets are per-archetype-per-chain
+isolated (N×M model per
+[`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md)) so
+the structured `<archetype>-<chain>-<role>-vN-wrapped` naming carries the
+archetype + chain attribution in the secret name itself. Pre-cutover test
+wallets cover ALL chains under one operator-managed wallet (Trust Wallet) so
+the secret name only carries the provider attribution (`-trust` / `-metamask`
+/ `-solana`).
+
+Reader contract: services consuming `defi-wallet-*` secrets MUST also read
+the corresponding `WalletProvisioningConfig` row in
+[`test_wallet_provisioning_pre_cutover.json`](../../unified-api-contracts/unified_api_contracts/config/test_wallet_provisioning_pre_cutover.json)
+for chain + signing_surface + allowed_protocols + spending_caps context.
+
+Pattern is NOT EXPECTED to grow much — operator-managed test wallets stay
+1-2 entries per provider. Production cutover wallets follow § 2.5 prod
+pattern strictly.
 
 ### 2.6 Data sources
 

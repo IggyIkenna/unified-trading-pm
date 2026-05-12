@@ -60,6 +60,69 @@ Net effect on the credential surface:
 
 ---
 
+## § 1.A — LIVE pre-cutover inventory (provisioned 2026-05-12 by slot 4 agent ADC)
+
+Codified after agent-authorized ADC self-provisioning + end-to-end signing
+pipeline smoke verification. **Real, live entries in GCP Secret Manager +
+Cloud HSM today** (`central-element-323112`, `asia-northeast1`).
+
+### Cloud HSM CMKs (10 keys; 90-day auto-rotation; HSM-backed FIPS 140-2 L3)
+
+| KeyRing | CMK | Purpose | IAM bindings |
+|---|---|---|---|
+| `wallets-prod` | `trading-defi-master-v1` | DeFi wallets cutover-prod | `unified-trading-sa`: Decrypter |
+| `wallets-prod` | `trading-cefi-master-v1` | CeFi wallets | `unified-trading-sa`: Decrypter |
+| `wallets-prod` | `trading-tradfi-master-v1` | TradFi wallets | `unified-trading-sa`: Decrypter |
+| `wallets-prod` | `trading-sports-master-v1` | Sports archetype wallets | `unified-trading-sa`: Decrypter |
+| `wallets-prod` | `trading-prediction-master-v1` | Prediction archetype wallets | `unified-trading-sa`: Decrypter |
+| `wallets-staging` | `trading-{defi,cefi,tradfi,sports,prediction}-master-v1` | Test wallets | `unified-trading-sa`: Decrypter + Encrypter |
+
+Full URI pattern: `projects/central-element-323112/locations/asia-northeast1/keyRings/wallets-{env}/cryptoKeys/trading-{asset_group}-master-v1`.
+
+### Pre-cutover test wallet entries (Trust Wallet canonical)
+
+| Secret Manager entry | Type | Value | Status |
+|---|---|---|---|
+| `defi-wallet-trust` | EVM address (canonical) | `0x992ebFe04DB05f964C45BCE3D73Ca4c81715a79f` | ✅ Live |
+| `defi-wallet-private-key` | EVM 0x-hex PK (raw, 66 chars) | (Trust Wallet PK — never logged) | ✅ Live |
+| `defi-wallet-private-key-wrapped` | Envelope-encrypted EVM PK | (233-byte base64 ciphertext via `wallets-staging/trading-defi-master-v1`) | ✅ Live; end-to-end smoke verified 2026-05-12 |
+| `defi-wallet-metamask` | EVM address (secondary) | `0x0056801778F9A5dE5C8a5225B676859b797fA88B` | ✅ Live (address only — no PK provisioned) |
+| `defi-wallet-solana` | Solana base58 address | (pending Trust Wallet Solana export) | 🟡 PENDING operator-action |
+| `defi-wallet-solana-private-key` | Solana base58 PK | (pending operator export) | 🟡 PENDING |
+| `defi-wallet-solana-private-key-wrapped` | Envelope-encrypted Solana PK | (pending) | 🟡 PENDING |
+
+**End-to-end signing pipeline smoke** (verified 2026-05-12 by slot 4 agent):
+`CloudKmsCustodyProvider` fetched `defi-wallet-private-key-wrapped` from
+Secret Manager → Cloud HSM KMS Decrypt → web3.py `from_key` derived address
+→ matched `defi-wallet-trust` value. The May-23 cutover `CLOUD_KMS_ENCRYPTED`
+signing path is **operationally verified**.
+
+Operator runbook:
+[`pre-cutover-test-wallets-runbook.md`](pre-cutover-test-wallets-runbook.md)
+§ 0 (canonical lookup) + § 3 (Solana via Trust Wallet operator-export flow).
+
+### Tenderly + chain RPC credentials (✅ SORTED 2026-05-12)
+
+| Secret Manager entry | Use |
+|---|---|
+| `tenderly-api-key` | Tenderly API auth (fork creation + simulation) |
+| `tenderly-fork-rpc-url` | RPC endpoint for batch/paper mode |
+| `alchemy-api-key` | EVM chain RPCs (ETH / Arb / Base / Polygon mainnet + Sepolia variants) |
+| `helius-key` | Solana mainnet RPC (production-grade Solana RPC P1 follow-up) |
+
+### POD-managed credentials (delivered 2026-06-01)
+
+Per [`pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md):
+
+| Secret Manager entry | Provisioned by | Status |
+|---|---|---|
+| `copper-api-key` / `copper-api-secret` / `copper-org-id` | POD → operator (June-1) | 🟡 PENDING POD delivery |
+| `copper-sandbox-api-key` / `copper-sandbox-api-secret` | POD pre-cutover sandbox | 🟡 PENDING |
+| `ceffu-api-key` / `ceffu-api-secret` / `ceffu-org-id` | POD → operator (June-1) | 🟡 PENDING POD delivery |
+| `fireblocks-*` | **OUT OF SCOPE** per POD stack choice (Copper + CEFFU only) | ❌ Not provisioning |
+
+---
+
 ## § 2 — Per-mode credential subsets
 
 SSOT YAML: [`unified-api-contracts/config/credentials_per_mode.yaml`](../../unified-api-contracts/config/credentials_per_mode.yaml).
