@@ -36,15 +36,15 @@ ring.
 
 | Axis | Type | What it captures |
 | ---- | ---- | ---------------- |
-| `KillSwitchId` | `StrEnum` (11 members) | What's being killed (`KILL_ALL_LIVE` / per-archetype / per-venue / per-asset_group) |
+| `KillSwitchId` | `StrEnum` (12 members) | What's being killed (`KILL_ALL_LIVE` / per-archetype / per-venue / per-asset_group / per-wallet) |
 | `KillSwitchProvenance` | `StrEnum` (4-set) | Who armed (operator / breaker / scenario / scheduled drill) |
-| `KillSwitchArmRequest` | `BaseModel` | Inbound request to `KillSwitchBus.arm()` |
+| `KillSwitchArmRequest` | `BaseModel` (6 fields) | Inbound request to `KillSwitchBus.arm()` (carries `target_wallet_id` for `KILL_PER_WALLET`) |
 | `KillSwitchArmedEvent` | `BaseModel` | Emitted to subscribers on successful arm |
 | `KillSwitchDisarmEvent` | `BaseModel` | Emitted on disarm with `BreakerRecoveryMode` + elapsed-cooldown telemetry |
 
-## `KillSwitchId` registry — 11 closed-set members
+## `KillSwitchId` registry — 12 closed-set members
 
-Cutover-scope kill-switches (Phase 1.C UAC@a7a99b5):
+Cutover-scope kill-switches (Phase 1.C UAC@a7a99b5 + wallet-tier slot 4 UAC@d721b6a 2026-05-12):
 
 | ID | Scope | Halt semantics |
 | -- | ----- | -------------- |
@@ -57,8 +57,17 @@ Cutover-scope kill-switches (Phase 1.C UAC@a7a99b5):
 | `KILL_PER_VENUE_OKX` | `VENUE` | Halt every archetype touching OKX. |
 | `KILL_PER_VENUE_HYPERLIQUID` | `VENUE` | Halt every archetype touching Hyperliquid. |
 | `KILL_PER_VENUE_ASTER` | `VENUE` | Halt every archetype touching Aster. |
-| `KILL_PER_ASSET_GROUP_CEFI` | (asset-group filter) | Halt every CeFi archetype. |
-| `KILL_PER_ASSET_GROUP_DEFI` | (asset-group filter) | Halt every DeFi archetype. |
+| `KILL_PER_ASSET_GROUP_CEFI` | (asset-group filter — no enum) | Halt every CeFi archetype. |
+| `KILL_PER_ASSET_GROUP_DEFI` | (asset-group filter — no enum) | Halt every DeFi archetype. |
+| `KILL_PER_WALLET` | (runtime-targeted via `target_wallet_id` — see `KillSwitchScope` mapping note below) | **FINEST-grain switch** (below per-venue + per-archetype). Engages only the named wallet's signing surface, leaving sibling wallets of the same archetype unaffected. Composes with `WalletProvisioningConfig.kill_switch_id`. Added 2026-05-12 (slot 4 UAC@d721b6a) per `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 5. |
+
+> **Wallet axis — `KillSwitchScope` mapping note (2026-05-12).** Unlike per-venue / per-archetype which map cleanly to
+> `KillSwitchScope.{VENUE,ARCHETYPE}`, `KillSwitchScope` has **no `WALLET` member** today — the wallet axis is
+> *runtime-targeted* via `KillSwitchArmRequest.target_wallet_id` rather than enum-per-wallet (which would explode the
+> closed set unbounded). The `kill_switch.py` § 7 SSOT reconciliation docstring references a `KillSwitchScope.WALLET`;
+> see audit finding R-5 / AL-1 for the slot 4 reconciliation (add enum member OR fix docstring to "runtime-targeted").
+> See full wallet-tier kill-switch section + audit-log invariant in [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md)
+> § "Wallet-tier kill-switch (`KILL_PER_WALLET`)".
 
 **Adding a new kill-switch** (review-blocking checklist):
 
@@ -98,6 +107,7 @@ class KillSwitchArmRequest(BaseModel):
     provenance: KillSwitchProvenance
     requested_by: str             # operator ID / breaker_id:serial / scenario_id / drill_id
     arm_timestamp: datetime       # when the arm was requested (UTC)
+    target_wallet_id: str = ""    # required when switch_id == KILL_PER_WALLET (slot 4 UAC@d721b6a 2026-05-12); empty otherwise
     metadata: dict[str, str] = {} # breaker_serial / threshold_observed / correlation_id / etc.
 ```
 

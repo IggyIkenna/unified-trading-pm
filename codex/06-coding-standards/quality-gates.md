@@ -1897,7 +1897,7 @@ def test_pubsub_emulator_roundtrip(pubsub_emulator_host):
 Each `@pytest.mark.allow_network` opt-out emits a WARNING in CI logs. Monitor the count — it should be stable and
 explained.
 
-Plugin location: `unified-trading-pm/scripts/dev/network_block_plugin.py`
+Plugin location: `unified-api-contracts/unified_api_contracts/testing/network_block_plugin.py`
 
 ### Cassette Parity Testing (H5.2)
 

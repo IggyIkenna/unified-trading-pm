@@ -678,9 +678,9 @@ fixtures eliminate live cloud calls:
 | Exchange REST      | `responses` library                       | `execution-service/tests/fixtures/`                                                                   |
 | WebSocket feeds    | `MockWebSocketFeed`                       | `market-tick-data-service/market_tick_data_service/market_interface/tests/fixtures/mock_ws_server.py` |
 | Cassette parity    | `test_cassette_schema_parity.py`          | `unified-api-contracts/tests/`                                                                        |
-| Network blocking   | `network_block_plugin.py`                 | `unified-trading-pm/scripts/dev/`                                                                     |
-| Fault injection    | `FaultInjectionTransport`                 | `unified-trading-pm/scripts/dev/fixtures/`                                                            |
-| Tick replay        | `TickReplayEngine`                        | `unified-trading-pm/scripts/dev/fixtures/`                                                            |
+| Network blocking   | `network_block_plugin.py`                 | `unified-api-contracts/unified_api_contracts/testing/`                                                |
+| Fault injection    | `FaultInjectionTransport`                 | `unified-api-contracts/unified_api_contracts/testing/fault_injection.py`                              |
+| Tick replay        | `TickReplayEngine`                        | `unified-api-contracts/unified_api_contracts/testing/mock_replay.py`                                  |
 | Full demo stack    | `demo-mode.sh`                            | `unified-trading-pm/scripts/`                                                                         |
 
 Full details: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md` (Plan #60) See also:
@@ -841,24 +841,6 @@ Usage rules:
 
 ---
 
-## Test Infrastructure: Emulators & Mocks
+<!-- TS-14 (2026-05-12): the verbatim-duplicated "Test Infrastructure: Emulators & Mocks" section was deleted here.
+     The canonical copy survives ~180 lines above (search "## Test Infrastructure: Emulators & Mocks"). -->
 
-All CI tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). Protocol-faithful emulators and mock
-fixtures eliminate live cloud calls:
-
-| Layer              | Tool                                      | Location                                                                                              |
-| ------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| GCP Pub/Sub        | `PUBSUB_EMULATOR_HOST`                    | `unified-cloud-interface/tests/conftest.py`                                                           |
-| GCS                | `STORAGE_EMULATOR_HOST` (fake-gcs-server) | `unified-cloud-interface/tests/conftest.py`                                                           |
-| BigQuery           | `BIGQUERY_EMULATOR_HOST`                  | `trading-analytics-api/tests/conftest.py`                                                             |
-| AWS S3/Secrets/SQS | `@mock_aws` (moto)                        | `unified-cloud-interface/tests/integration/test_aws_mode.py`                                          |
-| Exchange REST      | `responses` library                       | `execution-service/tests/fixtures/`                                                                   |
-| WebSocket feeds    | `MockWebSocketFeed`                       | `market-tick-data-service/market_tick_data_service/market_interface/tests/fixtures/mock_ws_server.py` |
-| Cassette parity    | `test_cassette_schema_parity.py`          | `unified-api-contracts/tests/`                                                                        |
-| Network blocking   | `network_block_plugin.py`                 | `unified-trading-pm/scripts/dev/`                                                                     |
-| Fault injection    | `FaultInjectionTransport`                 | `unified-trading-pm/scripts/dev/fixtures/`                                                            |
-| Tick replay        | `TickReplayEngine`                        | `unified-trading-pm/scripts/dev/fixtures/`                                                            |
-| Full demo stack    | `demo-mode.sh`                            | `unified-trading-pm/scripts/`                                                                         |
-
-Full details: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md` (Plan #60) See also:
-[quality-gates.md](quality-gates.md) § GCP Emulator Configuration, AWS Moto, Credential-Free CI Gate

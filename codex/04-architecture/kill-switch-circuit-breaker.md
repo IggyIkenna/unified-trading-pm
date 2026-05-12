@@ -19,6 +19,9 @@ monitor and reconciliation health check, they form the autonomous recovery stack
 - [`risk-rule-taxonomy.md`](risk-rule-taxonomy.md) — closed-set vocabulary for Layer 2 pre-flight rules
 - [`risk-preflight-flow.md`](risk-preflight-flow.md) — every-order pre-flight aggregation semantics
 - [`risk-breaker-seam.md`](risk-breaker-seam.md) — risk-controller → breaker escalation event contract
+- [`manual-trade-booking.md`](manual-trade-booking.md) § "Wallet-tier wiring (DeFi manual trades)" — wallet-tier
+  kill-switch + spending-cap pre-trade audit-log invariant (every `KILL_PER_WALLET` fire produces a
+  `WalletSpendingPreCheckResult` row, UAC@`1d8a059` slot 8 2026-05-12)
 
 ---
 
@@ -87,6 +90,54 @@ When `KILL_SWITCH_ACTIVATED` event is received by strategy-service:
 
 **Critical rule:** During kill switch, strategy-service MUST NOT attempt to re-enter target positions. The kill switch
 overrides strategy target state. Strategy pauses its target-tracking loop and only processes exit playbook instructions.
+
+### Wallet-tier kill-switch (`KILL_PER_WALLET`)
+
+**Added 2026-05-12** (slot 4 UAC@`d721b6a`) per `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 5.
+
+`KILL_PER_WALLET` is the **FINEST-grain switch** in the closed `KillSwitchId` set — sits *below* per-venue and
+per-archetype. The 5-axis kill-switch hierarchy is now:
+
+```
+KILL_ALL_LIVE  (GLOBAL)
+   └─ KILL_PER_ASSET_GROUP_{CEFI,DEFI}  (asset-group filter)
+       └─ KILL_PER_ARCHETYPE_{CARRY_STAKED_BASIS, ARBITRAGE_PRICE_DISPERSION}  (ARCHETYPE)
+           └─ KILL_PER_VENUE_{BYBIT, DERIBIT, BINANCE, OKX, HYPERLIQUID, ASTER}  (VENUE)
+               └─ KILL_PER_WALLET  (per-wallet — runtime-targeted via target_wallet_id)
+```
+
+**Runtime-targeting semantics.** Unlike per-archetype / per-venue (which dispatch on the `switch_id` enum alone),
+`KILL_PER_WALLET` carries a `target_wallet_id` string field on `KillSwitchArmRequest` (UAC@`d721b6a`). The bus
+validates: `target_wallet_id` MUST be non-empty when `switch_id == KILL_PER_WALLET`; MUST be empty otherwise. This
+avoids an enum-per-wallet explosion (we provision many DeFi wallets per archetype) while preserving the closed-set
+discipline at the switch-axis level.
+
+**`KillSwitchScope` mapping.** `KillSwitchScope` (UAC `alerting/codes.py`) has **no `WALLET` member** today. The
+wallet axis is runtime-targeted, parallel to the per-asset-group convention (where `KILL_PER_ASSET_GROUP_*` enum
+values exist but there's no `KillSwitchScope.ASSET_GROUP` — at runtime the consumer maps to `GLOBAL` filtered by
+asset_group). The `unified_api_contracts.canonical.crosscutting.kill_switch.KillSwitchId.KILL_PER_WALLET` docstring
+currently references `KillSwitchScope.WALLET` — see audit findings R-5 / AL-1 for the slot 4 reconciliation
+(add `WALLET` enum member OR fix docstring to "runtime-targeted, no enum equivalent").
+
+**Halt semantics.** When armed:
+
+- Engages **only the named wallet's signing surface** (the wallet's private-key Web3 / ECDSA / sequencer client).
+- **Leaves sibling wallets** of the same archetype, venue, asset-group unaffected.
+- Composes with `WalletProvisioningConfig.kill_switch_id` (UAC `internal/domain/defi/wallet_config.py`): set to
+  `"KILL_PER_WALLET"` for wallet-level freezes; broader prefixes (`KILL_PER_VENUE_*` / `KILL_PER_ARCHETYPE_*` /
+  `KILL_ALL_LIVE`) cascade through this wallet too.
+- Composes with `SpendingCaps` (per-tx / per-hour / per-day / per-protocol — UAC `wallet_config.py:106-141`).
+  Spending-cap exceedance fires `WALLET_CAP_EXCEEDED` AlertCode (see audit finding R-6 / AL-2 — missing today;
+  slot 4 follow-up).
+
+**Audit-log invariant.** Every `KILL_PER_WALLET` arm / pre-trade check produces a `WalletSpendingPreCheckResult`
+row (UAC `internal/execution.py:192-232`, slot 8 UAC@`1d8a059` 2026-05-12). See
+[`manual-trade-booking.md`](manual-trade-booking.md) § "Wallet-tier wiring (DeFi manual trades)" for the validation
+algorithm + the `ManualInstructionPrecheckResponse` consumer surface.
+
+**Operator UX.** DART `ManualTradingPanel` "DeFi Action" tab ships a per-row kill-switch button for arming /
+unkilling `KILL_PER_WALLET` per wallet_id (Phase 5 slot 8). See
+[`manual-trade-booking.md`](manual-trade-booking.md) § "DART operator UI".
 
 ### Propagation Path
 
@@ -361,6 +412,13 @@ before any action."
 > `03-observability/alerting.md`. The two enums have different naming on purpose: lifecycle events are short-form
 > (`CIRCUIT_OPEN`); AlertCodes prefix with the subsystem (`CIRCUIT_BREAKER_*`) for pattern-routing in
 > `alerting-service/notifiers/router.py`.
+
+> **Wallet-tier kill-switch ↔ manual-trade audit-log invariant (2026-05-12).** Every `KILL_PER_WALLET` arm AND every
+> wallet-tier pre-trade check produces a `WalletSpendingPreCheckResult` audit-log row (UAC `internal/execution.py:192-232`,
+> slot 8 UAC@`1d8a059`). See [`manual-trade-booking.md`](manual-trade-booking.md) § "Wallet-tier wiring (DeFi manual
+> trades)" for the validation algorithm + DART operator-UI integration. The audit log is the SSOT for "did the
+> wallet-tier kill-switch / spending-cap actually engage on this manual trade attempt?" — distinct from the PubSub
+> `KILL_SWITCH_*` event fanout (which is the runtime-halt signal, not the per-attempt audit trail).
 
 ---
 

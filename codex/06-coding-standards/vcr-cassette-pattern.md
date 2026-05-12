@@ -12,20 +12,22 @@ hitting rate limits or requiring credentials.
 
 ## Cassette Locations
 
-| Repo                    | Path                                                  | Purpose                                                      |
-| ----------------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
-| `unified-api-contracts` | `api_contracts/api_contracts_external/<venue>/mocks/` | Cassette YAML files, one per endpoint                        |
-| `unified-api-contracts` | `vcr_endpoints.py`                                    | Endpoint definitions — URL patterns, request/response schema |
-| `unified-api-contracts` | `scripts/record_vcr_cassettes.py`                     | Recording script — requires live credentials                 |
+> **2026-05-12 reconciliation (TS-2 + TS-3)**: this section was stale — paths now match shipped UAC layout.
+> Canonical SSOT for cassette ownership / recording / contributing is
+> [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md); this doc covers the in-test
+> *pattern* (decorator usage + replay shape). When the two docs diverge, `vcr-cassette-ownership.md` wins.
+
+| Repo                    | Path                                                                | Purpose                                                      |
+| ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `unified-api-contracts` | `unified_api_contracts/external/<venue>/mocks/*.yaml`               | Cassette YAML files, one per endpoint                        |
+| `unified-api-contracts` | `unified_api_contracts/testing/vcr_endpoints.py`                    | Endpoint definitions — URL patterns, request/response schema |
+| (per-interface repo)    | `<interface>/scripts/record_*.py`                                   | Recording script — owned by each interface repo, NOT by AC (per `vcr-cassette-ownership.md` § "Recording") |
 
 ## Recording Cassettes
 
-```bash
-cd unified-api-contracts
-# Requires: real API key in Secret Manager or VENUE_API_KEY env var
-python scripts/record_vcr_cassettes.py --venue binance --endpoint spot_klines
-# Cassette saved to: api_contracts/api_contracts_external/binance/mocks/spot_klines.yaml
-```
+Recording scripts live in the **owning interface repo** (not in unified-api-contracts; AC ships no recording script —
+see `02-data/vcr-cassette-ownership.md` § "Recording"). The shipped cassettes are then contributed back to AC's
+`unified_api_contracts/external/<venue>/mocks/` directory via PR so all replay consumers share one path.
 
 ## Replay in Interface Repos
 

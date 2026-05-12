@@ -243,7 +243,7 @@ If only HTTP is on the call path, use `responses` or `aioresponses`.
 All tests must pass with `CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`. To prove zero live network calls:
 
 ```bash
-pytest --block-network  # from unified-trading-pm/scripts/dev/network_block_plugin.py
+pytest --block-network  # from unified-api-contracts/unified_api_contracts/testing/network_block_plugin.py
 ```
 
 Tests connecting to LOCAL emulators use `@pytest.mark.allow_network`. This opt-out must be commented explaining it is an
