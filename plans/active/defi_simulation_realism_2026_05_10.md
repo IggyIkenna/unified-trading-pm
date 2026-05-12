@@ -436,6 +436,19 @@ Owner: harsh.
 
 Owner: ikenna for sign-off + harsh for runs.
 
+> **Day-1 slot-6 design ship 2026-05-12**: codex
+> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Validation gates" →
+> "Phase 8 validation framework" subsection ships the Phase 8 design half with operator-runnable detail:
+> (a) Three parallel harness scripts under `execution-service/tests/integration/backtest_fidelity/`
+> (`run_carry_archetype_replay.py` / `run_leveraged_funding_arb_replay.py` / `run_tenderly_live_reconciliation.py`)
+> plus operator dashboard composer (`compose_sign_off_report.py`); (b) `BacktestFidelityReport` schema with
+> per-leg attribution + bias-reduction-pct + max-drawdown delta; (c) `TenderlyReconciliationReport` schema with
+> per-pool-shape breakdown for failure-mode triage + 95% within-10-bps acceptance gate + Tenderly fork budget
+> (~$500/day during validation runs); (d) `SignOffReport` schema with aggregate signal (GREEN/YELLOW/RED) +
+> operator APPROVE/REJECT persistence to pnl-attribution-service. **Implementation half remains `- [ ]` for
+> Harsh slot 4** (Phase 8A/B/C scripts cannot run until Phase 2-7 implementations land); **operator sign-off
+> 8D is the May-23 cutover gate** routed to slot 1 (master plan owner) for execution timing.
+
 - [ ] [AGENT] P0. **8A — Carry archetype 1-year replay** using all new sim primitives (Phases 2-7) + Phase 6 dynamic
       hedge ratio. Compare simulated P&L vs old (constant-product + zero-rate-impact + static-hedge) replay. Document
       delta + reduced bias evidence.

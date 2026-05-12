@@ -1293,6 +1293,142 @@ Per `defi_simulation_realism` Phase 8 (backtest fidelity validation):
   for ≥ 95% of fills.
 - **Phase 8D — Operator sign-off** that backtest fidelity acceptable for May-23 cutover.
 
+### Phase 8 validation framework (Day-1 slot 6 design ship 2026-05-12; operator-runnable for Harsh slot 4)
+
+Validation harness lives at `execution-service/tests/integration/backtest_fidelity/` (NEW Phase 8). Three
+parallel scripts produce JSON reports the operator reviews for Phase 8D sign-off:
+
+```
+backtest_fidelity/
+├── run_carry_archetype_replay.py          # Phase 8A
+├── run_leveraged_funding_arb_replay.py    # Phase 8B
+├── run_tenderly_live_reconciliation.py    # Phase 8C
+└── compose_sign_off_report.py             # Phase 8D — operator dashboard
+```
+
+**Phase 8A — Carry archetype 1-year replay** (`run_carry_archetype_replay.py`):
+
+```python
+def run_carry_replay(
+    archetype: str = "carry_staked_basis",
+    lookback_days: int = 365,
+    engine_old: MatchingEngineConfig = MATCHING_ENGINE_OLD,   # pre-2026-05-10 V2-only + zero-impact + static-hedge
+    engine_new: MatchingEngineConfig = MATCHING_ENGINE_NEW,   # post-Phase-2-7 PoolMatcher + rate-impact + dynamic-hedge
+) -> BacktestFidelityReport:
+    """Replay 1-year carry archetype trades through both old + new matching engines; diff P&L + metrics."""
+    historical_trades = mtds.read_archetype_trades(archetype, lookback_days)
+    pnl_old = []
+    pnl_new = []
+    for trade in historical_trades:
+        fill_old = engine_old.replay_trade(trade, pool_snapshot_at(trade.block_number))
+        fill_new = engine_new.replay_trade(trade, pool_snapshot_at(trade.block_number))
+        pnl_old.append(fill_old.realized_pnl_usdc)
+        pnl_new.append(fill_new.realized_pnl_usdc)
+    return BacktestFidelityReport(
+        archetype=archetype,
+        n_trades=len(historical_trades),
+        old_pnl_total=sum(pnl_old),
+        new_pnl_total=sum(pnl_new),
+        delta_total_pnl_bps=(sum(pnl_new) - sum(pnl_old)) / sum(abs(p) for p in pnl_old) * 10_000,
+        old_pnl_std=stdev(pnl_old),
+        new_pnl_std=stdev(pnl_new),
+        bias_reduction_pct=(stdev(pnl_old) - stdev(pnl_new)) / stdev(pnl_old) * 100,
+        per_leg_breakdown=compute_per_leg_attribution(historical_trades, pnl_old, pnl_new),
+        max_drawdown_old=max_dd(pnl_old),
+        max_drawdown_new=max_dd(pnl_new),
+    )
+```
+
+Expected output for a 1-year carry replay: simulated P&L delta in the range 50-300 bps (new engine has higher
+fidelity → less optimistic estimates due to rate-impact + dynamic-hedge + per-shape pool dispatch). Negative
+delta means new engine reports LOWER P&L than old — this is the EXPECTED direction (old engine over-estimated
+because zero-impact assumptions favor the strategy). **A POSITIVE delta is a red flag** — investigate matcher
+bugs.
+
+**Phase 8B — Leveraged-funding-arb 1-year replay** (`run_leveraged_funding_arb_replay.py`): same shape as 8A
+but with `archetype="leveraged_funding_arb"`. Per-leg attribution differs (funding-arb has perp + lending legs
+vs carry-staked-basis's stake + perp legs). Expected delta range 30-200 bps (smaller than carry because
+funding-arb is less LST-rate-impact-sensitive).
+
+**Phase 8C — Tenderly fork live-vs-simulated reconciliation** (`run_tenderly_live_reconciliation.py`):
+
+```python
+def run_tenderly_reconciliation(
+    paper_trade_window_hours: int = 24,
+    tolerance_bps: Decimal = Decimal("10"),
+    coverage_threshold_pct: Decimal = Decimal("95"),
+) -> TenderlyReconciliationReport:
+    """For each tick of yesterday's paper-trade window: re-simulate via Tenderly fork at same block."""
+    paper_trades = paper_trade_log.read(window_hours=paper_trade_window_hours)
+    per_tick_deltas: list[Decimal] = []
+    for trade in paper_trades:
+        # Live fill: from paper-trade log
+        live_fill = trade.realized_fill
+        # Simulated fill: re-run via current PoolMatcher against Tenderly fork at the same block
+        fork_id = tenderly.create_fork(
+            chain_id=trade.chain_id,
+            block_number=trade.block_number,
+        )
+        pool = pool_from_address(trade.pool_address, fork_state=tenderly.read_pool_state(fork_id, trade.pool_address))
+        sim_quote = pool.quote(trade.amount_in, trade.side)
+        delta_bps = abs(sim_quote.amount_out - live_fill.amount_out) / live_fill.amount_out * Decimal("10000")
+        per_tick_deltas.append(delta_bps)
+        tenderly.delete_fork(fork_id)  # ~10c per fork; 5000 ticks/day = ~$500/day during validation runs
+    within_tolerance_pct = (
+        Decimal(sum(1 for d in per_tick_deltas if d < tolerance_bps))
+        / Decimal(len(per_tick_deltas))
+        * Decimal("100")
+    )
+    return TenderlyReconciliationReport(
+        n_ticks=len(per_tick_deltas),
+        within_tolerance_pct=within_tolerance_pct,
+        median_delta_bps=median(per_tick_deltas),
+        p95_delta_bps=percentile(per_tick_deltas, 95),
+        pass_phase_8c_gate=within_tolerance_pct >= coverage_threshold_pct,
+    )
+```
+
+**Acceptance gate**: `within_tolerance_pct >= 95%` (per Phase 8C criterion). Failure mode flags per-pool-shape
+breakdown so operator can identify which matcher (V3 / Curve / Solidly-fork / etc.) is drifting.
+
+**Phase 8D — Operator sign-off report** (`compose_sign_off_report.py`):
+
+```python
+@dataclass
+class SignOffReport:
+    """Operator dashboard for May-23 cutover gate. Plain JSON; rendered by deployment-ui."""
+    plan_version: str
+    generated_at: datetime
+    phase_8a_carry: BacktestFidelityReport
+    phase_8b_leveraged: BacktestFidelityReport
+    phase_8c_tenderly: TenderlyReconciliationReport
+    aggregate_signal: Literal["GREEN", "YELLOW", "RED"]   # GREEN if all 3 pass; YELLOW if 2/3; RED otherwise
+    operator_sign_off_status: Literal["PENDING", "APPROVED", "REJECTED"]
+    operator_sign_off_at: datetime | None
+    operator_sign_off_notes: str
+
+    @property
+    def gate_pass_summary(self) -> dict[str, bool]:
+        return {
+            "carry_replay_pass": self.phase_8a_carry.delta_total_pnl_bps < Decimal("0"),  # new engine LOWER P&L = expected
+            "leveraged_replay_pass": self.phase_8b_leveraged.delta_total_pnl_bps < Decimal("0"),
+            "tenderly_reconciliation_pass": self.phase_8c_tenderly.pass_phase_8c_gate,
+        }
+```
+
+`SignOffReport` rendered by deployment-ui as a Phase-8 dashboard tile (NEW Phase 8D UI work — slot-8 owns
+DART surfaces per cross_cutting #4; cross-side coordinate). Operator clicks APPROVE / REJECT button + types
+notes; status persists to `pnl-attribution-service` as a one-off audit row keyed by `plan_version`.
+
+### Phase 8 cross-plan dependencies
+
+- **Phase 8A/B** requires `MATCHING_ENGINE_NEW` config — wired AFTER Harsh slot 4 ships Phase 2-7 implementations.
+- **Phase 8C** requires Tenderly fork API + paper-trade log — Tenderly already wired
+  ([`tenderly-execution-provider.md`](tenderly-execution-provider.md)); paper-trade log is master plan Group F
+  item 17.
+- **Phase 8D operator sign-off** is a Group F item 17+18 entry in `master_to_live_defi_2026_05_23.md` —
+  refresh routed to slot 1 per Phase 9E annotation in `defi_simulation_realism_2026_05_10.md`.
+
 ## Cross-references
 
 - Plan: [`defi_simulation_realism_2026_05_10.md`](../../plans/active/defi_simulation_realism_2026_05_10.md) — owns
