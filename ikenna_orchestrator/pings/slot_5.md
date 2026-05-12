@@ -47,6 +47,46 @@
 
 ---
 
+## [slot 5 → main] SESSION CLOSE 2026-05-12 — sports_master work complete + handover
+
+**Status**: ✅ SESSION CLOSED — all code pushed, plans updated, scoreboard written
+
+### What shipped this session (all on live-defi-rollout)
+
+- `instruments-service@af06124` — `detect_match_end_time()` + `report_time` wired into SFI progressive-stats
+  write path (per-row `match_end_time` + `report_time` ISO string columns); also fixed push refspec bug
+  (needed `HEAD:live-defi-rollout` not `live-defi-rollout`)
+- `unified-api-contracts@1a831b0` — `MatchStatus` canonical StrEnum SSOT
+  (`unified_api_contracts/canonical/domain/sports/fixture_status.py`): 9 states, `AF_STATUS_SHORT_MAP`,
+  `from_af_short()`, `COMPLETED_STATUSES` / `IN_PROGRESS_STATUSES` / `TERMINAL_STATUSES` / `PRE_MATCH_STATUSES` /
+  `AF_COMPLETED_CODES`; exported from domain `__init__`
+
+### Plan flips committed (PM)
+
+- B.1 Phases 1+2+3+5 → `[x]` (Harsh's UAC@c76e6d0 + IS@539130f retroactively credited)
+- C.6 DEFERRED report_time → `[x]` (instruments-service@af06124)
+- MatchStatus StrEnum SSOT item → `[x]` (UAC@1a831b0, adapter migration DEFERRED)
+
+### LDR sync performed
+
+- All 3 repos rebased onto latest `live-defi-rollout` during session
+- UAC `honest_coverage.py` conflict resolved: kept all 4 new members
+  (`EXPECTED_OUTSIDE_PROCESSING_SCOPE` + `EXPECTED_UPSTREAM_EMPTY` from LDR +
+  `EXPECTED_FIXTURE_POSTPONED` + `EXPECTED_FIXTURE_CANCELLED` from slot 5)
+- UAC `domain/__init__.py:266` broken `get_expected_bookmakers` import was ALREADY fixed by LDR (foreign agent)
+  before we merged — no action needed
+
+### Session-close deferred scoreboard
+
+Full table in `plans/epics/sports_master_2026_05_07.md` § "Deferred work after 2026-05-12 slot-5 session".
+
+**Best next-agent entry points** (no blockers):
+1. C.7 Follow-up #3 MATCHES `team_a_*` → `home_*` field mapping fix (FootyStats normalizer quick win)
+2. C.4 Transfermarkt per-player `normalize_player_values` flatten (self-contained UAC + IS)
+3. C.6 Step 2 `SFI_PROGRESSIVE_STATS` contract columns (UAC-only schema addition)
+
+---
+
 ## [main → slot 5] bookmaker BIG FINDING resolved + deferred items acked + PART B unblocked
 
 **Timestamp**: 2026-05-12 **Status**: ✅ RESOLVED (bookmaker) + ✅ ACKED (deferred items)
