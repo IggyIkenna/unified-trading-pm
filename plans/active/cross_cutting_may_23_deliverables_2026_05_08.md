@@ -935,8 +935,14 @@ slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log *writ
   `GET /manual/venues` + `GET /manual/algos`). **PARTIAL-RESOLVE 2026-05-12 (Harsh slot 6)**:
   `GET /manual/algos` route IS already shipped at `execution_service/api/manual_instruction_api.py:676` (returns
   `_SUPPORTED_ALGOS`). Pre-audit claim "no route" was stale. Backend half is complete — `/manual/venues` +
-  `/manual/algos` both serve dynamic lists. Remaining D2 work is UI-side: switch the dropdowns from `constants.ts`
-  to the dynamic endpoints. Provenance: Harsh slot-6 pre-audit 2026-05-12 + grep-then-read verification.
+  `/manual/algos` both serve dynamic lists. **PARTIAL-FIX 2026-05-12 (Harsh slot 6) @unified-trading-system-ui@`21666537`**:
+  added `Aster` to `components/trading/manual/constants.ts` `VENUES` (ordered after `Hyperliquid`, the other perp DEX)
+  to close the immediate Aster-gap; doesn't replace the proper dynamic-endpoint switch but unblocks operator selection
+  of Aster pre-cutover. Remaining D2 work: switch dropdowns from `constants.ts` to dynamic `useVenues()` + `useAlgos()`
+  hooks at `hooks/api/use-orders.ts:26-50` (they already exist and target the gateway-proxied routes); the response
+  shape per `lib/types/api-generated.ts:7857-7891` is `{venues|algos: string[]}` so the mapping is mechanical. Deferred
+  for browser-test validation. Provenance: Harsh slot-6 pre-audit 2026-05-12 + grep-then-read verification + Day-2
+  UI fix.
 - [ ] **D3 — P2 — `dart-manual-trade-spec.md` § 5 still says strategy_id grammar is "🟡 BLOCKED pending operator triage"
   but this plan's open question #2/#3 (lines 172-184) marks it ✅ RESOLVED 2026-05-08 via Option A** (existing 6-axis UAC
   v2 `archetype@venue-asset-instrument-period-quote-env` grammar is canonical; no `vN`). Doc-drift in the spec doc Harsh
