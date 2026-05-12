@@ -245,25 +245,24 @@ reads the parquet rows.
 
 > **Temporary states + their canonical follow-up plans** (per CLAUDE.md HARD RULE — codex audit D-3 2026-05-12):
 >
-> | Temporary state                                                          | Successor plan                                                                                                                            | Successor phase                              |
-> | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+> | Temporary state                                                                                                                                                                        | Successor plan                                                                                                         | Successor phase                                                              |
+> | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 > | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated) | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep |
-> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 7 reader-fallback deletion (~2026-06-15) |
-
+> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 7 reader-fallback deletion (~2026-06-15)                               |
 
 The schema has evolved through six published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8
 (maximalist final gate per
 [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md):8-15) which
-adds 3 emission-tracking columns: **`service_emission_state`** (closed-set `ServiceEmissionStateEnum`:
-`PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`), **`last_emission_decision_at`**
-(ISO-8601 UTC timestamp of the most recent `publish_with_policy()` decision for this row), and
-**`expected_window_completeness_fraction`** (0.0-1.0 fraction of the expected per-row window that was actually
-populated; denominator-aware coverage metric; renamed from `_pct` to `_fraction` at UAC@`76f950a` 2026-05-11 per
+adds 3 emission-tracking columns: **`service_emission_state`** (closed-set `ServiceEmissionStateEnum`: `PUBLISHED_OK` /
+`PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`), **`last_emission_decision_at`** (ISO-8601 UTC timestamp
+of the most recent `publish_with_policy()` decision for this row), and **`expected_window_completeness_fraction`**
+(0.0-1.0 fraction of the expected per-row window that was actually populated; denominator-aware coverage metric; renamed
+from `_pct` to `_fraction` at UAC@`76f950a` 2026-05-11 per
 [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
-option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg
-convention). The `pipeline_mode` column shipped earlier as part of the
-`gcs_migration_bundle_pipeline_mode_2026_05_08` work and is preserved in v8.
+option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg convention).
+The `pipeline_mode` column shipped earlier as part of the `gcs_migration_bundle_pipeline_mode_2026_05_08` work and is
+preserved in v8.
 
 **Schema v8 is live as of Phase 4.DEFAULT-REMOVAL (UTL@`547ff3c`, 2026-05-12).** `MANIFEST_SCHEMA_VERSION = 8` in
 `manifest_writer.py:131`. The `pipeline_mode=` default is removed (explicit-or-fail) from all 6 public `record_*`
@@ -383,14 +382,14 @@ class AvailabilityRecord:
     cancelled, market lifecycle outside resolution window).
   - **Sports reference-data (instruments-service side, distinct from MTDS tick capture)**: `STANDINGS` / `LEAGUES` /
     `INJURIES` / `FIXTURE_LINEUPS` etc. are cadence-driven refdata; `empty_confirmed` is legitimate when (a) league is
-    pre-season (use `EXPECTED_PRE_SEASON`), (b) league is paused (`EXPECTED_PAUSED_LEAGUE`), (c) source does not
-    cover the league (`EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`), (d) known-gap `EXPECTED_KNOWN_SOURCE_GAP`. SP-6
+    pre-season (use `EXPECTED_PRE_SEASON`), (b) league is paused (`EXPECTED_PAUSED_LEAGUE`), (c) source does not cover
+    the league (`EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`), (d) known-gap `EXPECTED_KNOWN_SOURCE_GAP`. SP-6
     catalogue-audit finding 2026-05-11 surfaced `STANDINGS`/`SFI_LEAGUES`/`INJURIES` rows "smelling like un-clipped
-    pre-launch" with `KNOWN_COVERAGE_GAPS = {}` empty — the resolution is to populate the typed reasons above, NOT
-    to suppress the manifest row. Cross-references: `sports-data-source-coverage-matrix.md` per-source coverage
-    windows, `honest-absence-downstream-handling.md` § "Reason taxonomy".
-  - **Prediction reference-data**: `MARKET_LIFECYCLE` rows respect per-market `market_created_at` /
-    `resolution_time` / `settlement_time` bounds; `empty_confirmed` when market is outside lifecycle.
+    pre-launch" with `KNOWN_COVERAGE_GAPS = {}` empty — the resolution is to populate the typed reasons above, NOT to
+    suppress the manifest row. Cross-references: `sports-data-source-coverage-matrix.md` per-source coverage windows,
+    `honest-absence-downstream-handling.md` § "Reason taxonomy".
+  - **Prediction reference-data**: `MARKET_LIFECYCLE` rows respect per-market `market_created_at` / `resolution_time` /
+    `settlement_time` bounds; `empty_confirmed` when market is outside lifecycle.
 - **`underlying` vs `instrument_id`** for derivatives: bundled chain shards (options_chain / futures_chain) populate
   `underlying` with the base asset (BTC, ETH) and leave `instrument_id` empty. Per-symbol shards populate
   `instrument_id` and leave `underlying` empty.
@@ -699,34 +698,35 @@ The `instruments-service/scripts/` directory contains ~40 operator-runnable one-
 "Runbook Execution-Owner SSOT" HARD RULE every operator-runnable runbook MUST declare owner / cadence / verifier /
 last_executed. Closed-set inventory + per-script disposition (annotated for the May-23 cutover wave):
 
-| Script                                            | Class                | Runner                  | Cadence              | Delete-after-run? |
-| ------------------------------------------------- | -------------------- | ----------------------- | -------------------- | ----------------- |
-| `reconcile_phantom_manifest_rows_all.py`          | multi-asset-group    | (see Phantom-audit § above) | weekly → daily        | NO (recurring)    |
-| `reconcile_phantom_manifest_rows.py`              | sports-only legacy   | phased out               | n/a                  | YES (post-cutover)|
-| `reconcile_blank_error_reason_rows.py`            | legacy-to-typed-reason backfill | one-shot per asset-group | one-shot       | YES (post-run)    |
-| `reconcile_legacy_blank_to_typed_reason.py`       | as above (alias)     | one-shot                 | one-shot             | YES (post-run)    |
-| `reconcile_expected_absence_reasons.py`           | reason-taxonomy backfill | one-shot              | one-shot             | YES (post-run)    |
-| `flip_phantom_to_attempted_failed.py`             | one-shot remediation | per phantom-audit run    | per-incident         | YES (post-run)    |
-| `purge_pre_launch_manifest_rows.py`               | pre-launch sweep     | per venue-launch-date update | per-incident      | YES (post-run)    |
-| `dedupe_manifest_schema_drift.py`                 | schema-drift sweep   | one-shot per migration   | per-migration        | YES (post-run)    |
-| `fix_manifest_venue_casing.py`                    | CF-3/SP-3 case-folding remediation | one-shot once `to_canonical_venue()` ships | one-shot | YES (post-run)|
+| Script                                      | Class                              | Runner                                     | Cadence        | Delete-after-run?  |
+| ------------------------------------------- | ---------------------------------- | ------------------------------------------ | -------------- | ------------------ |
+| `reconcile_phantom_manifest_rows_all.py`    | multi-asset-group                  | (see Phantom-audit § above)                | weekly → daily | NO (recurring)     |
+| `reconcile_phantom_manifest_rows.py`        | sports-only legacy                 | phased out                                 | n/a            | YES (post-cutover) |
+| `reconcile_blank_error_reason_rows.py`      | legacy-to-typed-reason backfill    | one-shot per asset-group                   | one-shot       | YES (post-run)     |
+| `reconcile_legacy_blank_to_typed_reason.py` | as above (alias)                   | one-shot                                   | one-shot       | YES (post-run)     |
+| `reconcile_expected_absence_reasons.py`     | reason-taxonomy backfill           | one-shot                                   | one-shot       | YES (post-run)     |
+| `flip_phantom_to_attempted_failed.py`       | one-shot remediation               | per phantom-audit run                      | per-incident   | YES (post-run)     |
+| `purge_pre_launch_manifest_rows.py`         | pre-launch sweep                   | per venue-launch-date update               | per-incident   | YES (post-run)     |
+| `dedupe_manifest_schema_drift.py`           | schema-drift sweep                 | one-shot per migration                     | per-migration  | YES (post-run)     |
+| `fix_manifest_venue_casing.py`              | CF-3/SP-3 case-folding remediation | one-shot once `to_canonical_venue()` ships | one-shot       | YES (post-run)     |
 
 Per the IN-22 QG ratchet (in-flight): one-shot reconcilers + flip scripts should be MOVED to `scripts/_one_shot/` +
 deleted on archive-boundary per the "Plans Run To Actual Completion" rule (operationally-shipped =
 script-deleted-after-run). Reconcilers that recur (phantom-audit, hot-reload) keep their location.
 
 Cross-references: CLAUDE.md § "Manifest phantom audit", "Runbook Execution-Owner SSOT"; per-script `execution:` blocks
-to be added in the same logical unit as the next script-touch (do NOT mass-sweep — collision risk per
-"Two teammates × multiple parallel agents").
+to be added in the same logical unit as the next script-touch (do NOT mass-sweep — collision risk per "Two teammates ×
+multiple parallel agents").
 
 ### Catalogue-completeness runbook (codex audit IN-21 2026-05-12)
 
 End-to-end runbook for "is the catalogue complete + every venue actually flowing?":
 
-1. **Per-asset-group finding ledger** — five `plans/active/issues/catalogue_audit_<asset_group>_2026_05_12.md`
-   issue docs (cefi / defi / tradfi / sports / prediction). Each per-row finding has a typed disposition.
-2. **Phantom-audit reconciler** — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X
-   --dry-run` (multi-asset-group; runs per § "Phantom audit — re-runnable recipe" above).
+1. **Per-asset-group finding ledger** — five `plans/active/issues/catalogue_audit_<asset_group>_2026_05_12.md` issue
+   docs (cefi / defi / tradfi / sports / prediction). Each per-row finding has a typed disposition.
+2. **Phantom-audit reconciler** —
+   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run` (multi-asset-group;
+   runs per § "Phantom audit — re-runnable recipe" above).
 3. **Per-asset-group UAC registry SSOTs** —
    - `unified_api_contracts/registry/market_data_categories.py:VENUES_BY_ASSET_GROUP` (21 cefi / 8 tradfi / 2 prediction
      / ~10 sports).
@@ -737,8 +737,8 @@ End-to-end runbook for "is the catalogue complete + every venue actually flowing
 4. **instruments-service `factory.py` adapter consistency** — `CANONICAL_VENUE_TO_ADAPTER` keys must be ⊆ the union of
    step 3 venue ids (modulo IN-9 venue-class taxonomy "execution-only" / "refdata-only" exemptions). Auto-registration
    mechanism documented in IN-13.
-5. **`verify_instrument_manifest_coverage.py`** — instruments-service script that joins UAC venue catalogue to
-   manifest rows + flags drift.
+5. **`verify_instrument_manifest_coverage.py`** — instruments-service script that joins UAC venue catalogue to manifest
+   rows + flags drift.
 
 When all 5 layers reconcile (no GHOST venues + no ORPHAN adapters + no MISSING coverage windows + no DUAL-classified
 venues), the catalogue is **complete** for the asset_group. Cross-references:
@@ -1121,12 +1121,13 @@ fabricate placeholder rows, never `fillna(0)` at calc boundaries, never use sent
 **Phase 0 audit 2026-05-06 finding — now owned + tracked (codex audit D-13 closure 2026-05-12)**: orchestrator
 prediction empty path at `live_workers.py:268-271` returned `success=True, candles_generated=0` with NO manifest record
 (no `record_empty`, no `record_captured`, no `record_failed`). Distinct from 1440-NaN class but equally opaque. Fix
-owned by [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+owned by
+[`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
 Phase 2.A scope expansion — adds `record_empty(row_key)` so prediction empties surface as honest absence. Per CLAUDE.md
-"Findings Triage" rule, open bugs do NOT live inside SSOT codex docs as long-form prose — this surface now points at
-the owning plan + the plan body's todo carries the closure status. When Phase 2.A flips
-`live_workers.py:268-271` → `record_empty(...)`, this paragraph is reduced to a one-line "Fixed at writegate Phase 2.A
-@<commit-sha>" historical note.
+"Findings Triage" rule, open bugs do NOT live inside SSOT codex docs as long-form prose — this surface now points at the
+owning plan + the plan body's todo carries the closure status. When Phase 2.A flips `live_workers.py:268-271` →
+`record_empty(...)`, this paragraph is reduced to a one-line "Fixed at writegate Phase 2.A @<commit-sha>" historical
+note.
 
 ### 7. Per-VM shard isolation for concurrent backfills (workspace rule, codified 2026-05-06)
 
@@ -1265,3 +1266,43 @@ python -m unified_trading_library.manifest_consolidator --bucket market-data-tic
 ```
 
 Idempotent + safe to run concurrently with the scheduled cycle.
+
+## Honest-coverage measurement script + UI surface (Phase 2, 2026-05-12)
+
+`instruments-service/scripts/measure_honest_coverage.py` — daily cron script that reads each asset_group's canonical
+manifest and computes coverage at three aggregation levels:
+
+- **Level 1 — per asset_group**:
+  `{ captured, empty_confirmed, attempted_failed, expected_unattempted, total, coverage_pct }`
+- **Level 2 — per (asset_group, venue)**: same shape per venue
+- **Level 3 — per (asset_group, venue, data_type)**: same shape per data_type per venue
+
+**Coverage formula**:
+`coverage_pct = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted) × 100`
+
+**Output**: `gs://central-element-323112-honest-coverage/{YYYY-MM-DD}/coverage.json`
+
+JSON shape:
+
+```json
+{
+  "generated_at": "...",
+  "date": "YYYY-MM-DD",
+  "by_asset_group": { "cefi": { "captured": N, "empty_confirmed": N, "attempted_failed": N, "expected_unattempted": N, "total": N, "coverage_pct": 99.12 } },
+  "by_venue":       { "cefi": { "BINANCE": { ... } } },
+  "by_venue_data_type": { "cefi": { "BINANCE": { "trades": { ... } } } }
+}
+```
+
+**Execution cadence**: daily cron VM at midnight UTC, launched via
+`deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh`. VM prefix `measure-honest-coverage-` registered in
+`vm_zombie_watchdog.py`. Singleton-locked launcher.
+
+**API surface**: `GET /api/data-status/honest-coverage?date=YYYY-MM-DD` (deployment-api `routes/data_status.py`) — reads
+the daily JSON blob and returns it as raw JSON; 404 when coverage has not yet been measured for the date.
+
+**UI surface**: deployment-ui `/data-status` tab — `HonestCoverageCard` component renders per-asset-group coverage %
+with a coloured progress bar (captured / empty_confirmed / attempted_failed / expected_unattempted stacked).
+
+SSOT: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2 +
+`codex/03-deployment/data-status-ui-surface.md`.
