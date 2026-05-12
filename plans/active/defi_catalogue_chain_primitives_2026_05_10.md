@@ -160,10 +160,14 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       already present), Radiant, Rocket Pool, Solblaze, Symbiotic, Karak, Renzo, KelpDAO, Puffer, Jito-restaking.
       Per-entry: `(venue_id, chain_id, data_types, start_date)`. Match shape of existing Aave V3 / Lido entries.
       **PARTIAL 2026-05-11 by slot 5 (ikenna-defi-phase-1e-tab) — venue_id + chain_id + start_date shipped at
-      uac@`495d262`** in the **actual SSOT location** `unified_api_contracts/registry/defi_venues.py` (the plan body
-      reference to `defi_venue_capabilities.py` is stale — grep-verified that file does not exist; the canonical venue
-      registry lives in `defi_venues.py` per the file's own header SSOT pointer to
-      `codex/02-data/mtds-data-source-coverage-matrix.md`). Shipped: ALL_DEFI_VENUES extended from 74 → 99 (25 new
+      uac@`495d262`** in `unified_api_contracts/registry/defi_venues.py` (NOTE 2026-05-12 IN-1:
+      the prior "grep-verified that file does not exist" claim about `defi_venue_capabilities.py` was
+      INCORRECT per operator decision PM@`32d0174e`. `defi_venue_capabilities.py` IS canonical — it covers
+      the per-(venue, data_type) capability matrix + start dates, distinct from `defi_venues.py` which
+      covers venue identity (ALL_DEFI_VENUES + LEGACY_DEFI_VENUE_ALIASES). Both coexist intentionally;
+      the 900-line QG ceiling drove the split. Codex doc corrected by Harsh slot 8. The correct SSOT for
+      the Phase 1A extension work was BOTH files — venue identity additions landed in `defi_venues.py`;
+      capability-matrix entries for the new 25 protocols are a Phase 1A follow-up via `defi_venue_capabilities.py`). Shipped: ALL_DEFI_VENUES extended from 74 → 99 (25 new
       entries — 8 ETH + 7 ARB + 1 BASE + 1 OP + 2 POLY + 1 AVAX + 2 BSC + 3 SOL); DEFI_VENUE_PHASE 1:1 invariant
       preserved with all 25 marked "pipeline"; LEGACY_DEFI_VENUE_ALIASES extended with 13 bare-name aliases;
       `chain_env.py` PROTOCOL_LAUNCH_DATES extended with 12 confident dates (CONVEX/PENDLE/IDLE on ETH,
@@ -337,7 +341,11 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
       reference.
       **✅ SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)** at PM@`f54dd90c`. Codex doc already comprehensive
       (165 lines, 6 protocol sections + per-chain coverage summary + cross-references + update protocol). 5
-      refresh-deltas landed: (a) corrected stale `defi_venue_capabilities.py` references → actual `defi_venues.py`;
+      refresh-deltas landed: (a) **NOTE 2026-05-12 IN-1: the "corrected stale `defi_venue_capabilities.py`
+      references → actual `defi_venues.py`" delta in this done block was ITSELF incorrect per operator
+      decision PM@`32d0174e`. `defi_venue_capabilities.py` IS canonical (per-venue×data_type capability
+      matrix). Codex doc re-corrected by Harsh slot 8 at PM@`32d0174e`. No further action needed.**
+      Original delta (a) now void;
       (b) Aave V3 Ethereum silent-zero row flipped to ✅ captured (slot 3 + slot 2 audit closure); (c) Renzo/KelpDAO
       UAC + LST mapping ✅; (d) Solana MEV cell flipped ✅ for JITO_BUNDLE (Phase 1D); (e) header bumped to 2026-05-12
       with delta summary. Remaining ◐/✗ statuses reflect Phase 2/3/4 buildout still in flight (harsh-side per
