@@ -447,6 +447,43 @@ pre-freeze. Per-slot Day-3-4 layer:
 which Cycle 2 PREP work to assign Day 3 morning. Same review at 2026-05-14 EOD for Day 4. Master goal: arrive at
 2026-05-15 freeze gate with **maximum pre-cutover prep banked** so 2026-05-16 cutover execution can launch fast.
 
+## 🟢 SCOPE EXTENSION 3 — Harsh-side absorption (2026-05-12 ~07 GMT operator-directed)
+
+**Observed**: Harsh side hit 96% weekly Claude limit (PM@`ae9847ed` wind-down). Some Harsh slots resumed on Sonnet (slot 2/5/8); others STOPPED (slot 3 BLOCKED on Ikenna PipelineMode sweep) or ⚪ DONE (slot 6/7). Ikenna has more credits remaining → operator-directed: **absorb Harsh blockers + idle scope into Ikenna slots**.
+
+**Per-slot absorption (Ikenna picks up Harsh scope)**:
+
+| Ikenna slot | Absorbed Harsh scope | Why |
+|---|---|---|
+| **2** | **(reinforced)** 4 lending-indices residuals from Harsh slot 3 (recent-days catch-up backfill 2026-05-07→11; clean full-history re-run after ManifestFreshnessCache wire-in; create-code-tarballs.sh stale-repo P1) | DeFi-context match; already routed in SCOPE EXTENSION but slot 3 STOPPED so reinforcing |
+| **3** | **Harsh slot 3 STOPPED scope** — writegate slice (c) callsite migration tail + manifest v8 wire-in across MTDS/MDPS/features | Already deep in PipelineMode sweep (Q1+Q2); natural sequence after sweep closes (~Day-2 morning). 37-callsite migration is freeze-gate item #3 — must close anyway. |
+| **6** | **Harsh slot 4 scope** — defi_simulation_realism Phase 2C-H (per-pool-class connectors: curve.py / balancer.py / solana_clmm.py / solidly_fork.py / aggregator.py) + Phase 1A UAC schema implementation (PoolShape enum + LendingMarketState + GovernanceProposal + 3 others) | Already designed Phases 1-5 + Phase 9B/9C/9D today; you wrote the contract — now implement against it. 5-sub-agent fan-out per pool class. |
+| **7** | **Harsh slot 5 scope** — risk + DR Phase 3.E/3.F scenario integration (per-scenario test coverage + scenario-runner wiring) | Already on `simulation_scenarios_topology_price_shocks` Phase 1-2 (10 scenarios shipped); fold the test layer in as Phase 3-4 implementation. Cross-side overlap was always there. |
+| **8** | **Harsh slot 6 items 8+9 + (resume of) Harsh slot 8 scope** — full workspace QG sweep (~22-repo `quality-gates.sh`+basedpyright) + ~50-doc codex SSOT currency pass + reconstruct the 11 missing area issue docs from Harsh slot 8 local (IN-1 was routed to slot 2; EX-1, EX-10, PB-1/2/3, ML-1/2, + 4 more area finding docs need pushing) | Already on codex_vs_citadel + cross_cutting #4 + manifest Phase 3 today; natural extension. Operator triages each finding as it lands. |
+
+**Operator decisions received 2026-05-12 ~07 GMT** (relayed in this commit):
+- **GMX/DRIFT P0** ✅ **Option (a)** — remove from `defi_venue_capabilities.py:130-131`, keep only in `VENUES_BY_ASSET_GROUP["cefi"]` per the HYPERLIQUID/ASTER pattern. Implementation owner: **Ikenna slot 8** (cross_asset Phase 1C scope). Cross-side ack to harsh-slot-8 (resumed Sonnet — same scope, but Ikenna slot 8 leads since Ikenna has credits).
+- **12 BIG findings Phase 2.C** ✅ **operator-triage-each** approach — Ikenna slot 8 reconstructs + ships the 11 area issue docs to LDR (governance G-1 to G-13 already on LDR); operator triages each via inline AskUserQuestion as ready. 3 IMMEDIATE governance findings (G-3 `--no-verify` reconciliation; G-9 cadence ceiling update; G-11 codex/13 index entry) surfaced to operator inline this commit for fast triage.
+
+**Allocation principle (updated 2026-05-12 ~07 GMT)**: directly-named scope → scope-extensions → Harsh-absorbed scope → reserve list → Cycle 2 PREP → Cycle 6 design-ahead → P1 bugs. **Harsh-absorbed scope is HIGHER priority than reserve list** because Harsh slots are STOPPED — these are blockers actually halting workspace throughput vs reserve which is "nice to have."
+
+**Cross-side coordination**: Harsh side may resume more slots on Sonnet as Claude credits free up. If Harsh re-spawns + picks up absorbed scope, coordinate via cross-side ping (`[ikenna-slot-N → harsh-slot-N] ABSORBED: <plan> Phase <X>; please skip + work on <Y> instead` shape). Ikenna picks up the writes; Harsh helps with test runs / smoke / non-owning verification.
+
+**🚨 NEW P0 surfaced 2026-05-12 ~07 GMT** (operator): venue × deposit-chain × custody-routing matrix is missing.
+Classification (cefi vs defi) is in `VENUES_BY_ASSET_GROUP` but **per-chain deposit/withdraw routing + custody routes
+(ClearLoop / CEFFU / Copper / Fireblocks / direct prop)** are not in the registry. Full capture + recommended schema
+extension + per-venue matrix in [`plans/active/issues/venue_chain_custody_routing_matrix_2026_05_12.md`](issues/venue_chain_custody_routing_matrix_2026_05_12.md).
+**Routing**:
+- **Slot 4** (api_keys_wallets Day-2-4): extend `VENUE_WALLET_CAPABILITIES` schema with `VenueFundsRoutingCapabilities`
+  (deposit_chains / withdrawal_chains / custody_routing tuple / deposit_address_per_chain dict) + fill matrix for 15+
+  venues per issue doc Item 2. Compose with existing Phase 3.B (CEFFU) + Phase 4.A (per-chain wallet).
+- **Slot 8** (cross_asset audit Day-2-4): audit cross-asset venue catalogues against the new per-chain + custody axis;
+  surface drift findings. Extends current cross_asset_audit + cross_cutting #4 scope.
+- **Slot 1 (main)**: add Group F item 19 extension + new G24 (per-venue deposit-chain matrix) to master plan
+  continuous-verification table.
+- **Operator decisions**: 3 sub-items in issue doc (custody route mix for May-23; ClearLoop in or post-cutover;
+  deposit-address provisioning timing). Surface inline next AskUserQuestion.
+
 ## Coordination + cleanup
 
 After all slots post their STATUS-2026-05-11 lines, slot 1 (main) sweeps the ping ledger:
