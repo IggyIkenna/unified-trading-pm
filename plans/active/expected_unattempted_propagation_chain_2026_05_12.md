@@ -111,8 +111,9 @@ Also update `EMPTY_CONFIRMED_REASONS` closed-set dict with descriptions for both
 
 Run `assert_pipeline_mode_source_priority_round_trip` + `pytest tests/test_cassette_schema_parity.py`.
 
-- [ ] [CODE] P0. Add `EXPECTED_OUTSIDE_PROCESSING_SCOPE` + `EXPECTED_UPSTREAM_EMPTY` to UAC `EmptyConfirmedReason` +
-      `EMPTY_CONFIRMED_REASONS` dict. QG + push.
+- [x] [CODE] P0. Add `EXPECTED_OUTSIDE_PROCESSING_SCOPE` + `EXPECTED_UPSTREAM_EMPTY` to UAC `EmptyConfirmedReason` +
+      `EMPTY_CONFIRMED_REASONS` dict. QG + push. (uac@0457b0e — 20 total reasons; en-dash ruf001 fixed; pushed
+      2026-05-12)
 
 ### Phase 0B — UTL: cross-service manifest reader helper
 
@@ -257,6 +258,7 @@ The current classifier in `legacy_reason_classifier.py` does NOT check fixture e
 under-counts "failed" for sports.
 
 ### Pre-audit
+
 ```bash
 grep -n "fixture\|FIXTURE\|api_football\|check.*fixture\|fixture.*exist" \
   unified-trading-library/unified_trading_library/legacy_reason_classifier.py | head -20
@@ -267,7 +269,8 @@ grep -rn "fixture.*manifest\|manifest.*fixture\|check.*fixture.*shard" \
 
 ### Implementation pattern
 
-In `_classify_sports()` (after source-coverage + known-gap + source-limitation checks, before `SOURCE_RETURNED_ZERO` fallback):
+In `_classify_sports()` (after source-coverage + known-gap + source-limitation checks, before `SOURCE_RETURNED_ZERO`
+fallback):
 
 ```python
 # Check fixture existence BEFORE falling through to SOURCE_RETURNED_ZERO
@@ -289,13 +292,14 @@ Reconciler scripts should read instruments-service manifest once and pass into c
 - [ ] [CODE] P1. Add `fixture_manifest` param to `_classify_sports()` in `legacy_reason_classifier.py`. Wire fixture
       existence check BEFORE `SOURCE_RETURNED_ZERO` fallback. Add 3 unit tests (no fixture → expected_unattempted;
       fixture exists + source limitation → SOURCE_RETURNED_ZERO; fixture exists + no limitation → attempted_failed).
-- [ ] [CODE] P1. Update `reconcile_legacy_blank_to_typed_reason.py` to read instruments-service fixture manifest for
-      the sports asset_group and pass it into the classifier.
+- [ ] [CODE] P1. Update `reconcile_legacy_blank_to_typed_reason.py` to read instruments-service fixture manifest for the
+      sports asset_group and pass it into the classifier.
 - [ ] [RESEARCH] P1. Audit instruments-service manifest for transfermarkt data: does the manifest correctly track
       per-league transfer windows? Is `EXPECTED_OUTSIDE_TRANSFER_WINDOW` being correctly applied to all transfermarkt
       data_types (player_values, transfers) during non-window periods? Is `available_at` set to last day of the transfer
       window for player values entering next season? File a follow-up todo if the design doesn't match the intent.
-- [ ] [QG] P1. `cd unified-trading-library && bash scripts/quality-gates.sh`. `cd instruments-service && bash scripts/quality-gates.sh`. Push.
+- [ ] [QG] P1. `cd unified-trading-library && bash scripts/quality-gates.sh`.
+      `cd instruments-service && bash scripts/quality-gates.sh`. Push.
 
 ---
 
@@ -304,27 +308,27 @@ Reconciler scripts should read instruments-service manifest once and pass into c
 **model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~0.8 (was ~0.5; +0.3 for forward-fill semantics)
 
 **Goal**: When MDPS's `DependencyChecker` finds upstream MTDS shard absent or empty, write `expected_unattempted` in
-MDPS's own manifest rather than returning silently. ALSO codify the downstream consumption contract so MDPS knows exactly
-how to behave based on upstream manifest state.
+MDPS's own manifest rather than returning silently. ALSO codify the downstream consumption contract so MDPS knows
+exactly how to behave based on upstream manifest state.
 
 ### MDPS downstream consumption contract (operator direction 2026-05-12)
 
 The whole point of correct upstream manifest classification is that MDPS can act intelligently:
 
-| Upstream MTDS `capture_status` | MDPS behaviour | Why |
-| ------------------------------ | -------------- | --- |
-| `captured` | Process normally | Data exists |
-| `empty_confirmed` + any reason | Write **zero-volume / forward-fill-last-price** bars for that time block | "Good missing" — confirmed no trades; price continuity preserved; not a data quality issue |
-| `attempted_failed` | Write **NaN** (do NOT forward-fill) | "Bad missing" — data may exist but fetch failed; downstream must not treat silence as zero-activity |
-| `expected_unattempted` | Write `expected_unattempted` in MDPS manifest + skip | Upstream said skip — MDPS propagates honest absence |
+| Upstream MTDS `capture_status` | MDPS behaviour                                                           | Why                                                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `captured`                     | Process normally                                                         | Data exists                                                                                         |
+| `empty_confirmed` + any reason | Write **zero-volume / forward-fill-last-price** bars for that time block | "Good missing" — confirmed no trades; price continuity preserved; not a data quality issue          |
+| `attempted_failed`             | Write **NaN** (do NOT forward-fill)                                      | "Bad missing" — data may exist but fetch failed; downstream must not treat silence as zero-activity |
+| `expected_unattempted`         | Write `expected_unattempted` in MDPS manifest + skip                     | Upstream said skip — MDPS propagates honest absence                                                 |
 
 This contract means MDPS must READ upstream MTDS capture_status per shard, not just check presence.
 
 - [ ] [CODE] P0. Add `record_expected_unattempted` call in MDPS `DependencyChecker` when skipping due to absent/empty
       MTDS shard. Pass `manifest_writer` reference at construction if not already present.
-- [ ] [CODE] P0. Codify MDPS downstream consumption contract in MDPS orchestration_service: route MTDS
-      `empty_confirmed` → zero-vol/forward-fill; `attempted_failed` → NaN; `expected_unattempted` → propagate skip.
-      Add 4 unit tests (one per upstream status).
+- [ ] [CODE] P0. Codify MDPS downstream consumption contract in MDPS orchestration_service: route MTDS `empty_confirmed`
+      → zero-vol/forward-fill; `attempted_failed` → NaN; `expected_unattempted` → propagate skip. Add 4 unit tests (one
+      per upstream status).
 - [ ] [CODEX] P1. Add `## MDPS downstream consumption contract` section to
       `codex/02-data/honest-absence-downstream-handling.md` documenting the 4-row table above. Reference this plan +
       writegate Phase 2.A.
