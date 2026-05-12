@@ -436,26 +436,37 @@ Owner: harsh.
       **Evidence**: `staked_basis.py:264` `perp_short_units = eth_qty * (Decimal("1") - structure.perp_margin_haircut)`
       — STATIC. Audit pointer in original todo (`pairs_fixed.py`) was wrong file (stat_arb_pairs ≠
       carry_staked_basis). Real archetype engine path: `staked_basis.py:_build_legs` line 248-318.
-- [ ] [AGENT] P0. **6B-WIRE-IN — wire `compute_dynamic_hedge_ratio` into `_build_legs` callsite** (status:
-      helper-shipped). The pure-function helper landed at strategy-service@`0653c7a` —
-      `strategy_service/engine/strategies/v2/carry_and_yield/dynamic_hedge_ratio.py` with
-      `compute_dynamic_hedge_ratio(eth_qty, margin_haircut, lst_native_rate_now, last_rebalance_rate,
-      peg_drift_threshold_bps) -> DynamicHedgeDecision`. 10 unit tests pass: initial entry / drift below
-      threshold / drift above threshold (positive + negative) / zero haircut / default 3σ / custom threshold /
-      input validation. **Still DEFERRED — wire-in to `staked_basis.py::_build_legs` line 264** needs:
-      (a) UAC `HedgeRatioSnapshot` persistence wiring at archetype boundary; (b) per-tick handler in
-      `CarryStakedBasisEngine.on_tick()` for rebalance trade emission; (c) `StrategyState` extension to
-      carry `last_hedge_rebalance_rate`. Sequenced separately from helper ship per CLAUDE.md "Don't add
-      features beyond what the task requires" — helper ships first; wire-in lands once the comprehensive
-      backtest harness (Phase 6C) is ready to verify the live-flow change.
-- [ ] [AGENT] P0. **6B (original) — IMPLEMENT (not conditional — audit confirmed static)** dynamic hedge-ratio
-      adjustment using LST/native exchange rate stream from Phase 1A captures (jitoSOL/SOL, mSOL/SOL,
-      bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance trigger when
-      |peg_drift| > N bps. **Implementation home**: extend `staked_basis.py` with a new
-      `_compute_dynamic_hedge_ratio(structure, lst_rate_stream, peg_drift_threshold_bps)` helper called
-      inside `_build_legs` to size `perp_short_units = eth_qty * lst_rate_at_now / (1 - margin_haircut)`.
-      Hysteresis band parameter `peg_drift_threshold_bps` configurable per archetype (default 25 bps
-      based on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps; 3-stddev hysteresis ≈ 25 bps).
+- [x] [AGENT] P0. **6B-WIRE-IN — wire `compute_dynamic_hedge_ratio` into `_build_legs` callsite**.
+      (strategy-service@`6431955` — `CarryStakedBasisEngine` gains `__init__` override + cross-tick
+      `last_hedge_rebalance_rate: Decimal | None` state (None on first entry → always-triggers fresh
+      baseline); `on_tick` reads `lst_native_rate` feature (default 1.0 — collapses to pre-Phase-6B
+      static `eth_qty * (1 - haircut)` sizing → safe rollout for archetypes without upstream LST/native
+      rate feed); reads `peg_drift_threshold_bps` param (default `DEFAULT_PEG_DRIFT_THRESHOLD_BPS = 25`);
+      calls `compute_dynamic_hedge_ratio` for the decision; `_build_legs` accepts `perp_short_units` as
+      a new positional parameter so the engine atomically persists `decision.new_rebalance_baseline_rate`
+      with the trade emission. `AtomicInstruction.attestations` extended with the HedgeRatioSnapshot
+      (Phase 1F UAC schema) audit fields — `lst_native_rate_now` / `hedge_peg_drift_bps` /
+      `hedge_peg_drift_threshold_bps` / `hedge_rebalance_triggered` / `hedge_new_baseline_rate` /
+      `hedge_perp_short_units` — for pnl-attribution-service's Phase 6C dynamic-vs-static backtest harness.
+      NEW `tests/unit/engine/strategies/v2/test_carry_staked_basis_dynamic_hedge_wire_in.py` ships 6 tests
+      (default-rate-collapses-to-static, lst_rate>1-scales-up, drift-below-threshold-preserves-baseline,
+      drift-above-threshold-advances-baseline, custom-threshold-param-honoured, initial-entry-always-
+      triggers; all green); existing `test_carry_staked_basis_lst_as_margin_emits_four_leg_bundle` + 11
+      `dynamic_hedge_ratio` unit tests still green (no regression). basedpyright + ruff clean.)
+      **DEFERRED**: P1 — emit `HedgeRatioSnapshot` rows to a dedicated downstream data_type (today's
+      attestations bundle is the audit trail; persistence via a new `hedge_ratio_snapshots` writeback
+      can land after Phase 6C identifies which downstream service consumes the audit log).
+- [x] [AGENT] P0. **6B (original) — IMPLEMENT (not conditional — audit confirmed static)** dynamic
+      hedge-ratio adjustment using LST/native exchange rate stream from Phase 1A captures (jitoSOL/SOL,
+      mSOL/SOL, bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance trigger when
+      |peg_drift| > N bps. **Implementation home**: SAME wire-in as 6B-WIRE-IN above (strategy-service@
+      `6431955`) — `CarryStakedBasisEngine.on_tick` calls `compute_dynamic_hedge_ratio(eth_qty,
+      margin_haircut, lst_native_rate_now, last_rebalance_rate, peg_drift_threshold_bps)`; the size
+      formula is `perp_short_units = eth_qty * lst_native_rate * (1 - margin_haircut)`. Hysteresis band
+      parameter `peg_drift_threshold_bps` configurable per archetype via the engine `params` dict
+      (default 25 bps based on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps; 3-stddev hysteresis
+      ≈ 25 bps). Phase 6B-WIRE-IN closure satisfies this todo simultaneously — both items are the same
+      shipped wire-in.
 - [ ] [AGENT] P0. **6C — Tests**: backtest carry archetype with dynamic vs static hedge-ratio over 1-year historical
       replay. Document P&L delta + confidence interval.
 
