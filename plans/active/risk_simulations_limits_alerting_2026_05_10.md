@@ -526,11 +526,12 @@ Replaces the previous moderate/catastrophic split (5%/13%). New default policy a
       depeg ladder to be actionable — without aggregate view, the KILL_ALL trigger can't compute the impact
       magnitude. Owner: features-service maintainer + Ikenna (cross-cutting design).
 
-- [ ] [AGENT] P0. **D.3 — UAC `STABLECOIN_PEG_RESTORE_HISTORY` registry.** Per-stable historical depeg events:
+- [x] [AGENT] P0. **D.3 — UAC `STABLECOIN_PEG_RESTORE_HISTORY` registry.** Per-stable historical depeg events:
       `(stable, event_date, trough_depeg_bps, restore_duration_hours, was_structural: bool)`. Seeds: USDC 2023-03-11
       (-1300bps, 72h, false), UST 2022-05-09 (-10000bps, never, true), PYUSD 2024-07 (-700bps, ~14d, false),
       USDE 2024-Q4 (multiple <-300bps, <72h, false), BUSD 2024-12 (-200bps, never reissued, true). Owner: UAC
       + research analyst. Feeds the operator-decision UI for crystallize-vs-wait at 5-10% tier.
+      (UAC@d8e72de — registry/stablecoin_peg_history.py: DepegEvent NamedTuple + dict seeded for 6 stables)
 
 - [ ] [AGENT] P0. **D.4 — Backtest harness for depeg ladder.** New script
       `risk-and-exposure-service/scripts/backtest_depeg_ladder.py`:
@@ -817,6 +818,7 @@ Phase 1 freeze gate (2026-05-15) covers Phase 0+1+2+3+7 from this plan; Phase 4+
 | Phase 6.A — `/api/risk/rules` endpoint; 6.B — `/api/risk/preflight-test` endpoint (6.C UI Risk tab shipped `deployment-ui@33e6ea0`) | DONE — shipped `deployment-api@dc8be51` (both endpoints + 20 route tests; risk_routes registered under `/api/risk` in main.py — was unregistered) | — |
 | Phase 8 — real-VM per-rule synthetic-fire suite (8.A/8.B/8.C) | BLOCKED on Ikenna slot 7 `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 injection primitives (Day 2 2026-05-13) | Tab 5 Day 2+. |
 | Phase D.1 — UAC BreakerConfig per-stable depeg thresholds (8 stables × 4 tiers) | ✅ SHIPPED UAC@2b49ef2 2026-05-12 | — |
+| Phase D.3 — UAC STABLECOIN_PEG_RESTORE_HISTORY registry (6 stables seeded) | ✅ SHIPPED UAC@d8e72de 2026-05-12 | — |
 | UTL hygiene — root re-export of `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package root; clean the Phase-4 `# noqa: qg-deep-import` deep imports | DEFERRED P2 (`kill_switch/__init__` exports added `@d1a0d0d` — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works) | UTL hygiene follow-up — owner pick. |
 
 ### DONE-2026-05-12 — Tab 5 (Harsh) — risk Phase 4 fan-out + Phase 5.B + UAC `RiskRuleFiredEvent`
