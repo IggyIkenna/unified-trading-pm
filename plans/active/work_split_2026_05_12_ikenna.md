@@ -340,6 +340,22 @@ PART C — PARALLEL with Phase 3 fan-out (same MDPS repo as Phase 2):
   When Phases 1–4 + 2.A all pushed: ping Slot 1 → GATE 1 fired.
 ```
 
+**Slot 4 session close status (2026-05-12):**
+- PART A (Script-1 root-cause) ✅ DONE — prior session
+- Phase 0A (UAC EmptyConfirmedReason) ✅ DONE — `uac@0457b0e`
+- Phase 0B (UTL helper) ✅ DONE — pre-existed; no new helper needed
+- Gate 0A ✅ FIRED
+- Phase 1 (MTDS pre-flight) ✅ DONE — wired, QG green
+- Phase 1.5 (sports classifier) ✅ DONE — `pm@ff2b46fb`
+- Phase 2 (MDPS dep-skip record_expected_unattempted) ✅ DONE — `mdps@3f70cf6`; 4 unit tests pass
+- Phase 3.0 design direction ✅ RESOLVED — **Option A confirmed** by operator 2026-05-12.
+  subscription_list is runtime (DomainConfigReloader). No UAC frozenset. Runtime comparison at `_get_instruments()`.
+- Phase 3.1–3.N 🟡 TODO — spawn 6 feature sub-agents (delta_one, calendar, onchain, volatility, sports, commodity)
+- Phase 4 (ML services) 🟡 TODO — after Phase 3
+- PART C (writegate 2.A MDPS 4-state routing) 🟡 TODO
+- 19 pre-existing MDPS test failures 🟡 FLAGGED (EmissionDecision schema drift, sports config, env validation) — not this slot's work; logged to ping
+- Gate 1: 🔴 OPEN — need Phases 3, 4, and 2.A first
+
 **Slot 5 — Phase 2.D match_end_time + Phase 2.C features-sports**:
 
 ```

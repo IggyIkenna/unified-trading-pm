@@ -437,39 +437,40 @@ grep -rn "subscription_list\|SUBSCRIPTION_LIST\|MVP\|mvp_instruments" \
   It is NOT a static compile-time constant. The original Phase 3.0 plan to "grep subscription_list values and
   extract the union → static frozenset in UAC" does NOT work — the values are environment-specific runtime config.
 
-  **Revised Phase 3 approach (AWAITING OPERATOR DIRECTION)**:
-  - Option A (runtime comparison): At each module's batch_handler startup, fetch all candidate instruments from
-    instruments-service catalog; compare with runtime `InstrumentDomainConfig.subscription_list`; write
-    `expected_unattempted(EXPECTED_OUTSIDE_PROCESSING_SCOPE)` for each instrument in catalog but NOT in list.
-    No UAC frozenset needed — the subscription_list IS the scope gate at runtime.
-  - Option B (static UAC constant): Keep frozenset idea but populate from deployment config rather than source
-    grep. Requires a one-time extraction from GCP config + UAC PR. More fragile (stalens risk on config changes).
-  - Option C (skip Phase 3.0 altogether): Each module already knows its own subscription_list; just compare inline
-    without a UAC constant. Simpler but no single SSOT for MVP scope.
+  **✅ OPERATOR DIRECTION RECEIVED 2026-05-12 (slot 4 session)**: Option A confirmed.
+  subscription_list IS the features-service scope gate at runtime; sub-agents do NOT change what gets processed.
+  No UAC frozenset needed. Implementation: at `_get_instruments()` call point in each batch handler,
+  compare full catalog result with post-`_filter_*_instruments()` set, write `expected_unattempted` for remainder.
 
-  Operator should direct: which option. Option A is the natural extension of the existing pattern.
+  - ~~Option A (runtime comparison): At each module's batch_handler startup, fetch all candidate instruments from~~
+    ~~instruments-service catalog; compare with runtime `InstrumentDomainConfig.subscription_list`; write~~
+    ~~`expected_unattempted(EXPECTED_OUTSIDE_PROCESSING_SCOPE)` for each instrument in catalog but NOT in list.~~
+    ~~No UAC frozenset needed — the subscription_list IS the scope gate at runtime.~~ **← CHOSEN**
+  - ~~Option B (static UAC constant)~~ — rejected (staleness risk on runtime config changes).
+  - ~~Option C (skip Phase 3.0)~~ — rejected (no manifest honesty without the write).
 
 ### Sub-phase 3.1–3.N — Per-module batch handler wiring (PARALLEL)
 
 For each features module: `delta_one`, `calendar`, `onchain`, `volatility`, `sports`, `commodity`.
 
-Pattern in each module's batch handler (before the main processing loop):
+Pattern in each module's batch handler (Option A — runtime comparison, confirmed 2026-05-12):
 
 ```python
-from unified_api_contracts.registry.processing_scope import FEATURES_MVP_INSTRUMENTS
 from unified_api_contracts.canonical.crosscutting.honest_coverage import EmptyConfirmedReason
 
-# Get all candidate instruments for this batch run (from MDPS manifest or instruments catalog)
-all_candidate_instruments = get_candidate_instruments(asset_group, date_range)
+# At _get_instruments() call point — BEFORE the main processing loop:
+# all_candidate_instruments = full catalog from instruments-service
+# in_scope_instruments = post-filter set (subscription_list gate applied)
+all_candidate_instruments: set[str] = set(_get_instruments(asset_group, date_range))
+in_scope_instruments: set[str] = set(_filter_instruments(all_candidate_instruments))
 
-for instrument_id in all_candidate_instruments:
-    if instrument_id not in FEATURES_MVP_INSTRUMENTS:
-        manifest_writer.record_expected_unattempted(
-            ...,
-            reason=EmptyConfirmedReason.EXPECTED_OUTSIDE_PROCESSING_SCOPE,
-        )
-        continue
-    # ... existing feature computation
+for instrument_id in all_candidate_instruments - in_scope_instruments:
+    manifest_writer.record_expected_unattempted(
+        instrument_id=instrument_id,
+        reason=EmptyConfirmedReason.EXPECTED_OUTSIDE_PROCESSING_SCOPE,
+    )
+# Then continue with existing loop over in_scope_instruments only.
+# NOTE: subscription_list IS the scope gate — this does NOT change what gets processed.
 ```
 
 - [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `delta_one` batch handler.
@@ -668,6 +669,25 @@ for module in ["delta_one", "calendar", "onchain", "volatility", "sports", "comm
                f"already be shipped). QG + push."
     )
 ```
+
+---
+
+## Deferred work after 2026-05-12 slot-4-session-close session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Phase 0A (UAC: EXPECTED_OUTSIDE_PROCESSING_SCOPE + EXPECTED_UPSTREAM_EMPTY) | ✅ DONE — `uac@0457b0e` pushed to live-defi-rollout | Gate 0A fired |
+| Phase 0B (UTL read_availability_index helper) | ✅ DONE — pre-existed in `manifest_writer.py:3257`; no new helper needed | Gate 0A fired |
+| Phase 1 (MTDS pre-flight wired to instruments-service manifest) | ✅ DONE — `uac@0457b0e` (same push included MTDS wiring) — see slot 4 ping Gate 0A | Phases 3+4 can proceed |
+| Phase 1.5 (sports classifier fixture-existence fix) | ✅ DONE — `pm@ff2b46fb` per slot 4 ping | Unblocked |
+| Phase 2 (MDPS record_expected_unattempted on dep-skip) | ✅ DONE — `mdps@3f70cf6`; 4 unit tests pass; codex updated | Phase 3 can proceed |
+| Phase 3.0 design blocker (subscription_list runtime vs static) | ✅ RESOLVED — Option A confirmed by operator 2026-05-12. No UAC frozenset; runtime comparison at `_get_instruments()` call. | Phase 3.1–3.N unblocked |
+| Phase 3.1–3.N (6 features modules — delta_one, calendar, onchain, volatility, sports, commodity) | 🟡 TODO — unblocked by Option A confirmation. Next slot to pick up: fan-out 6 sub-agents simultaneously per spawn template above. | Successor: next slot run of this plan |
+| Phase 4 (ml-training + ml-inference expected_unattempted) | 🟡 TODO — blocked until Phase 3 ships (same pattern). | Successor: after Phase 3 fan-out |
+| Phase 2.A (PART C — writegate MDPS 4-state routing + v6 columns) | 🟡 TODO — in work_split slot 4 carry-forward. | Successor: writegate_honest_coverage_endtoend_2026_05_06.md Phase 6.x |
+| Phase 5 (manifest reconciliation apply-flips) | 🔴 BLOCKED until Phases 1–4 all shipped | Successor: after Phase 4 done |
+| Phase 6 (validation gate phantom count sign-off) | 🔴 BLOCKED until Phase 5 done | Successor: final QG pass |
+| 19 pre-existing MDPS test failures (EmissionDecision schema drift + sports config + env validation) | 🟡 FLAGGED — not caused by this work. UTL added `service_emission_state` + `last_emission_decision_at` required args to `EmissionDecision.__init__`; MDPS tests use old signature. Logged in slot_4.md ping. Owner: UTL/writegate team. | Issue: operator triage |
 
 ---
 
