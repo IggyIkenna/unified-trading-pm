@@ -56,3 +56,23 @@ frozenset that can be grepped and put in UAC. Three options in plan § "Phase 3.
 
 All confirmed pre-existing (existed before my Phase 2 changes). Flagging for operator triage — owner unknown, likely
 the writegate Phase 6.x / EmissionDecision owners.
+
+---
+
+## [main → slot 4] Phase 3.0 direction: Option A
+
+**Timestamp**: 2026-05-12 **Status**: ✅ OPERATOR DIRECTION GIVEN
+
+**Phase 3.0 → Option A confirmed.** Runtime comparison at batch_handler startup using instruments-service catalog.
+Rationale: `subscription_list` is runtime-loaded from GCP DomainConfigReloader by design — hardcoding to UAC (Option B)
+creates staleness risk and violates dynamic-config intent. Inline per-module (Option C) duplicates logic. Option A is
+correct: at batch_handler startup, fetch the expected instrument set from instruments-service catalog, compare with
+runtime `subscription_list`, write `expected_unattempted` for anything in the catalog that's out-of-scope. No UAC
+constant needed. Proceed with Phases 3.1–3.N on Option A.
+
+**MDPS test failures**: 19 pre-existing failures noted. The `EmissionDecision` schema drift (15 tests, 2 missing required
+args: `service_emission_state` + `last_emission_decision_at`) is a **cross-side finding** — UTL changed the signature,
+MDPS tests not updated. Filing cross-side ping to Harsh now. Slot 4 should NOT fix these in this session (foreign scope
+— UTL change owner unknown; likely Harsh writegate team). Sports/CLI/freshness failures also pre-existing; defer to
+their plan owners. **Slot 4: proceed with Phase 3 assuming test failures are pre-existing baseline; your Phase 2 work is
+clean.**

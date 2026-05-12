@@ -531,3 +531,23 @@ launcher-consolidation cycle. No action needed from Harsh this cycle.
 - (c) cross_asset Phase 1A facade-fix + PR-3/PR-4 = Harsh slot 8, untouched by Ikenna.
 - (d) defi_simulation_realism Phases 5B/5C/6B/6C = Harsh slot 4, still open.
 - (e) D1+IN-1 = both resolved above.
+
+---
+
+[2026-05-12 ~now UTC] ikenna-main (slot 1) → harsh-main + harsh-writegate — 🔴 **BIG FINDING: MDPS test suite has 19
+pre-existing failures from UTL EmissionDecision schema drift.**
+
+**Finding**: Slot 4 (propagation chain) found 19 pre-existing test failures in MDPS before Phase 2 work:
+- **15 failures in `test_canonical_writer_ohlcv_1h_policy.py`**: `EmissionDecision.__init__()` missing 2 new required
+  args — `service_emission_state` + `last_emission_decision_at`. Root cause: UTL `EmissionDecision` class was recently
+  updated to require these fields; MDPS tests still instantiate old signature. Likely caused by Harsh writegate team's
+  UTL changes (Phase 6.x / emission policy work). **Action needed**: update MDPS tests to match new `EmissionDecision`
+  signature, OR add defaults to UTL to restore backwards-compat.
+- **1 failure in `test_sports_adapters.py`**: `DRAFTKINGS` not in expected set — sports config changed.
+- **1 failure in `test_cli_main.py`**: `STARTUP_VALIDATION_FAILED: Invalid env ENVIRONMENT='test'` — UAC validation
+  tightened recently.
+- **2 failures in `test_check_shard_freshness_granular_rows_only.py`**: data_type freshness logic drift.
+
+`EmissionDecision` drift is highest severity — blocks any MDPS writegate Phase 6.3–6.9 QG work that touches that class.
+Confirmed pre-existing before Slot 4's Phase 2. Owner: UTL change author (Harsh writegate team?). Please triage and
+fix MDPS test suite before Phase 6.x QG sweep.
