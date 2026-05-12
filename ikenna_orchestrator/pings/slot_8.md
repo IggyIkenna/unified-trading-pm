@@ -51,16 +51,16 @@ Phase 0i tail shipped from reserve list:
 |---|---|---|
 | Phase 6.8 PART A — instruments-service 25 `.add()` → `record_captured()` | ✅ DONE (`instruments-service@27fbc90`) | PART B/C below |
 | Phase 6.8 PART B — wire `publish_with_policy()` on top | 🔴 BLOCKED — gate is Slots 6+7 confirming Phases 6.3+6.4+6.5 pushed | Slot 1: unblock when 6.3-6.5 land |
-| Phase 6.8 PART C — bucket code migration | 🔴 BLOCKED — gate is Gate 2 (Slot 3 confirms bucket parity) | Slot 1: ping slot 8 when Gate 2 fires |
+| Phase 6.8 PART C — bucket code migration | ✅ GATE 2 FIRED — unblocked (see main→slot 8 ping below) | Proceed now |
 | Phase 6.9 QG workspace flip-sweep | 🔴 BLOCKED — same gate as PART B | Slot 1 → slot 8 when 6.3-6.8 all pushed |
 | bucket_name_ssot Phase 0i tail — manual-audit yaml SSOT | ✅ DONE (`deployment-service@00a1288` + `utl@aeff9c19`) | Slot 4: provision 6 buckets (pinged) |
 | UTL top-level `resolve_bucket_name` export (import-pattern fix) | ✅ DONE (`utl@aeff9c19`) | Consumed by deployment-service QG STEP 3.5 |
 
 **What next agent/operator needs to pick up slot 8:**
 
-1. Watch for Slot 1 ping unblocking Phase 6.9 sweep (gate = Phases 6.3-6.8 all pushed to origin).
-2. Watch for Slot 1 Gate 2 ping (bucket parity confirmed) → then run PART C code migration.
-3. If both gates still closed: pull from reserve list in `work_split_2026_05_12_ikenna.md`.
+1. **PART C NOW UNBLOCKED** (Gate 2 fired — see ping below). Proceed with instruments-service source noqa markers + QG baselines.
+2. Watch for Slot 1 ping unblocking Phase 6.9 sweep (gate = Phases 6.3-6.8 all pushed to origin).
+3. If PART C + PART B still blocked: pull from reserve list in `work_split_2026_05_12_ikenna.md`.
 4. Foreign WIP: `instruments-service/tests/unit/test_new_orchestrator.py` is dirty (NOT slot 8's work — do not commit).
 
 **Repo states at session close (all on `live-defi-rollout`, 0 local commits ahead):**
@@ -68,3 +68,25 @@ Phase 0i tail shipped from reserve list:
 - `unified-trading-library` — clean, HEAD `aeff9c19` (our export + 0 remote commits since)
 - `instruments-service` — clean except foreign WIP in `tests/unit/test_new_orchestrator.py`, HEAD `2760ee8`
 - `unified-trading-pm` — clean except foreign `WORKSPACE_MANIFEST_DAG.svg` + `workspace-manifest.json`, HEAD `696414f5`
+
+---
+
+## [main → slot 8] Gate 2 FIRED — PART C unblocked
+
+**Timestamp**: 2026-05-12 ~19:00 UTC **Status**: ✅ GATE 2 FIRED
+
+Slot 3 confirmed all 16 STS flat→prd transfers complete + parity verified (PM@`c52ddffb`):
+- market-data-tick-tradfi: SUCCESS 5298504/5298504 (last job)
+- Full parity across dex-pools 185079/185079 + all market-data-tick + instruments-store-sports
+- 3 availability_index.parquet transient failures fixed manually via `gcloud storage cp`
+
+**PART C (bucket code migration) is NOW UNBLOCKED.** Slot 3 is proceeding with instruments-service/scripts/ (9 Python
+f-string occurrences) + deployment-service/scripts/vm/ (345 gs:// bash occurrences). You may proceed with your
+PART C scope in parallel — instruments-service main service source (`4 noqa markers`) + QG baselines.
+
+**PART B** (Phase 6.9 QG workspace flip-sweep) still gated on Slots 6+7 pings (Phases 6.3/6.4/6.5). No ping files for
+those slots yet — if your slot is idle, pull from reserve list or ping main about Slots 6+7 status.
+
+**manual-audit bucket provisioning** (from Slot 8→Slot 4 handoff): Slot 4 owns 6-bucket provisioning
+(3 envs × 2 clouds) with ≥7-year retention policy. This is now unblocked and should proceed once Slot 4 finishes
+propagation chain Phases 3+4+2.A.

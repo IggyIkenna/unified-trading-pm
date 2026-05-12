@@ -175,12 +175,37 @@ tickers.py BIG FINDING from Slot 2 ping is a **false alarm** — re-exports full
 |------|--------|----------|
 | 0A | 🟢 FIRED | uac@0457b0e + PM@fc429e43 |
 | 1 | 🟡 IN PROGRESS | Slot 4 at Phase 1.5; ~2-3 phases remaining |
-| 2 | 🔴 OPEN | Slot 3 bucket migration pending |
+| 2 | 🟢 FIRED | Slot 3 — 16 STS jobs SUCCESS, parity verified ~19:00 UTC (PM@`c52ddffb`) |
 | 3 | 🔴 OPEN | Phantom audit pending |
 | 4 | 🔴 OPEN | Slots 6+7 features-service build pending; Slot 8 PART A done |
 
 **Slot 8 dependency**: PART B (Phase 6.9 sweep) waiting on Slots 6+7 ping confirming Phases 6.3/6.4/6.5 pushed. No
 ping files for slots 6+7 yet — operator may want to check those sessions.
+
+### Day-2 session-end scoreboard (2026-05-12 session 3 — slot 1 main)
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Gate 0A | ✅ FIRED (pre-existing) | Slot 4 proceeding |
+| Gate 1 | 🟡 IN PROGRESS | Slot 4 given Phase 3.0 = Option A; Phases 3+4+2.A pending |
+| Gate 2 | ✅ FIRED this session | Slot 3 PART C (code migration) + Slot 8 PART C now unblocked |
+| Gate 3 | 🔴 OPEN | Phantom audit (needs GCE VM + manifest) |
+| Gate 4 | 🔴 OPEN | Slots 6+7 features-service build (no ping files yet) |
+| Slot 2 tickers.py BIG FINDING | ✅ FALSE ALARM resolved | PM@`caf36847`; file intact with all 15 re-exports |
+| Slot 2 Phase 1C GMX/DRIFT | 🟡 direction given (both DeFi) | Slot 2 can proceed; told to not block slot |
+| Slot 4 Phase 3.0 direction | ✅ Option A dispatched | PM@`279cc1ed`; Slot 4 proceeding |
+| MDPS EmissionDecision BIG FINDING | ✅ cross-side ping filed | Harsh-main triage needed (UTL schema drift) |
+| Slot 5 bookmaker BIG FINDING | ✅ resolved via Slot 2 UAC@`b73949d` | PM@`caf36847`; Slot 5 can pull + test |
+| PB-1 codex audit-log path fix | ✅ DONE (prior session) | PM@`7c058ef0` |
+| PB-3 client_id threading | 🟡 PRE_CUTOVER | Codex correctly marks as follow-up; no code change needed now |
+
+**Slot 8 PART C**: Gate 2 just fired. Notify Slot 8 (ping filed this session). Slot 8 should proceed with
+`bucket_name_ssot` code migration in instruments-service + deployment-service scripts.
+
+**Next operator / fresh agent priorities**:
+1. Check Slots 6+7 status — no ping files; they own Phases 6.3/6.4/6.5 (features-service build). Gate 4 unblocked once these ship.
+2. Gate 1 watch — Slot 4 will ping when Phases 3+4+2.A complete.
+3. Harsh-main triage — MDPS EmissionDecision 15 test failures (UTL schema drift; see `_agent_pings.md` entry).
 
 ### Workstream snapshot (cross-side activity already in flight; from origin scan 2026-05-11)
 
