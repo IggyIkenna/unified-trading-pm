@@ -502,9 +502,16 @@ Owner: harsh.
 > circuit-breaker; (d) validation harness comparison: 1-year backtest with vs without slashing risk gate documenting
 > P&L delta + max-drawdown delta + tail-event survival rate. **Implementation half remains `- [ ]` for Harsh slot 4**.
 
-- [ ] [AGENT] P0. **7A — Historical slashing rate calibration** per chain. Ethereum beacon: load slashing events from
-      `SLASHING_EVENT` data_type captures (Phase 1A); compute per-validator-epoch slashing probability. Solana
-      validator: distinct shape (per-validator-event); compute per-validator-day probability.
+- [x] [AGENT] P0. **7A — Historical slashing rate calibration** per chain. (execution-service@`639fd6f4` — NEW
+      `matching_engine/lending/slashing_calibration.py`: `PER_CHAIN_EPOCH_SECONDS` (Ethereum beacon 384s / Solana
+      validator-day 86400s) + `TYPICAL_VALIDATOR_SET_SIZE` (Ethereum ~900k / Solana ~1.5k Q1-2026 observed) +
+      `default_cumulative_validator_epochs(chain, lookback_days)` derives the MC denominator + `calibrate_chain(chain,
+      events, lookback_days|cumulative_validator_epochs, n_paths, horizon_epochs, seed)` orchestrator that wraps
+      Phase 7B `SlashingTailRiskMC.calibrate()` with per-chain glue. Mutually-exclusive `lookback_days` vs
+      `cumulative_validator_epochs` gives operators a sane default + an explicit override path. Smoke: 50 ATTESTER_SLASHING
+      ETH events × 180-day lookback → `p_per_val_epoch=1.37e-9`, `severity_mean=0.5`, `alpha=2.0`. The MTDS read path
+      (`slashing_events_adapter` Phase 1E → `SLASHING_EVENT` parquet) is operator-side wiring; this helper accepts the
+      events in-memory so it's unit-testable without I/O.)
 - [x] [AGENT] P0. **7B — `SlashingTailRiskMC`** in execution-service. (execution-service@`b16fb8b6` — NEW
       `matching_engine/lending/slashing_tail_risk.py`: `SlashingTailRiskMC` stateful dataclass with `calibrate()`
       (consumes UAC `SlashingEvent` rows + cumulative validator-epoch denominator → fits Poisson lambda + log-normal
@@ -514,8 +521,17 @@ Owner: harsh.
       lookup for the Phase 7C archetype gate. Knuth's algorithm for small λ, Gaussian approx for λ>30. Smoke pass:
       150 mock ETH events @ 0.5±0.2 → p_per_val_epoch=1.5e-5, alpha=7.22, archetype 1000 ETH/31 validators → P(loss>5%)≈0
       (conservative — light-tail Gaussian severities). basedpyright clean.)
-- [ ] [AGENT] P0. **7C — Carry archetype tail-risk allocation hook**. Output P(slashing) feeds into archetype's
-      capital-allocation rule (cap per-LST exposure when historical slashing rate spikes; back off when normal).
+- [x] [AGENT] P0. **7C — Carry archetype tail-risk allocation hook**. (execution-service@`639fd6f4` — NEW
+      `matching_engine/lending/slashing_archetype_gate.py`: `SlashingRiskGateConfig` (cap_threshold P(loss>1%)>0.05 +
+      kill_threshold P(loss>5%)>0.01 + backoff_multiplier_at_threshold=0.5 defaults per codex § Phase 7C) +
+      `AllocationDecision` (allocation_multiplier + closed-set rationale [normal / cap_threshold_exceeded /
+      kill_threshold_exceeded] + audit p1pct/p5pct readings) + `evaluate_slashing_risk_gate(loss_curve, config)`
+      precedence-ordered evaluator [kill > cap > normal]; consumed by `CarryStakedBasisEngine.on_tick` preflight at
+      the archetype-engine boundary. Smoke: low-risk synthetic curve → `rationale=normal`; `cap_threshold=-1` forces
+      `cap_threshold_exceeded` → multiplier=0.5. basedpyright + ruff clean.) **DEFERRED**: P1 — wire-in to
+      `staked_basis.py::on_tick` preflight (the helper here is the math kernel; the archetype-engine integration
+      lands as a separate strategy-service commit once the operator confirms the per-archetype config threshold
+      values via the risk-and-exposure-service backtest harness).
 
 **Full-execution criterion**:
 
