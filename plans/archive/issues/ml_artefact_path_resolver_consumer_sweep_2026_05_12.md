@@ -10,7 +10,21 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-12
 severity: P1
 suggested_owner: ml-training + ml-inference + UTL owners (sweep coordinated)
+resolved: 2026-05-12
 ---
+
+> **✅ RESOLVED 2026-05-12** via Path A (resolve_bucket_name() sweep). 20 callsites across 6 repos retrofitted:
+> 2 hot f-string fallbacks migrated to `resolve_bucket_name()` (UTL `ModelRegistry._init_` ml_gcs_bucket fallback
+> + UTL `CloudModelArtifactStore._bucket` fallback); 1 live runtime callsite migrated via local helper
+> (deployment-service `check_ml_dependencies_by_mode.py`); remaining 17 legacy template-string dicts /
+> Pydantic Settings defaults / docstrings tagged `# CORRECT-LOCAL` per QG STEP 5.69 ratchet. Added new yaml
+> kinds `ml-training-artifacts` + `ml-artifacts` to `deployment-service/configs/cloud-providers.yaml` (GCP +
+> AWS, env-tiered per Bucket-name SSOT (b+); flat on-disk buckets migrate in code_freeze Phase 2.6).
+>
+> **Commit chain**: deployment-service@2d299df → deployment-api@89b990f → ml-inference-service@fd812ff →
+> ml-training-service@980135b → unified-trading-library@36b80712 → unified-api-contracts@01f4ae0.
+> QG STEP 5.69 ratchet green for all 6 ML-bucket consumer repos (counts ≤ baseline). Composes with codex-side
+> PM@959ca3fc.
 
 ## What I found
 

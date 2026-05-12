@@ -1,7 +1,16 @@
 ---
 title: "Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol surface infra + doc completion"
+type: design
+status: active
+asset_group: cross-cutting
+priority: P0
 created: 2026-05-12
+promoted_from_issue: 2026-05-12
 author: ikenna-main-slot1
+owner: split across slots 2 / 5 / 6 / 8 (see Routing section)
+estimate_class: design
+estimate_baseline_ai_days: 8
+estimate_calibrated_ai_days: 4.8
 source:
   - codex/09-strategy/strategy-summary.md
   - codex/09-strategy/architecture-v2/archetypes/*
@@ -11,6 +20,11 @@ source:
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---
+
+> **Promoted to standalone plan 2026-05-12** from `plans/active/issues/strategy_archetype_taxonomy_refinement_2026_05_12.md`.
+> The issue body grew past 280 lines with operator-supplied design call (foundational axiom + 13 corrections +
+> per-slot routing + operator directives + decisions received) — too substantial to fold; lifted in place as a
+> design-class active plan.
 
 # Strategy archetype taxonomy refinement
 
