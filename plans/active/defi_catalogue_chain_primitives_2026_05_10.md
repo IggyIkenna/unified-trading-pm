@@ -749,12 +749,34 @@ writegate Phase 3.D.5. No legacy NaN-placeholder rows.
 - Restaking: `eigenlayer_rewards` (rename to `restaking_rewards` for protocol-agnostic), `staking_yields`,
   `restaking_yields`, `slashing_events` for all 6 LRT protocols + EigenLayer + Symbiotic + Karak + Jito-restaking.
 
-Per-protocol todo template:
+Per-protocol todos (expanded from template):
 
-- [ ] [AGENT] P0. **3.<X> — `<protocol>` MTDS adapter.** TheGraph subgraph (EVM) or RPC poller (Solana, Pyth) source.
-      Captures per-tick or per-block data per UAC Phase 1A data_types. Manifest writes via
-      `ManifestWriter.record_captured` with all 4 capture states wired. Per-protocol cluster validation if bundled
-      data_type.
+- [x] [AGENT] P0. **3.ROCKETPOOL — Rocket Pool (rETH) MTDS adapter** — `adapters/defi/lst_rocket_pool_adapter.py`.
+      AAVE oracle primary + DefiLlama fallback. `oracle_prices` data_type. mtds@`80ee665`.
+- [x] [AGENT] P0. **3.RENZO — Renzo (ezETH) MTDS adapter** — `adapters/defi/lst_renzo_adapter.py`.
+      AAVE oracle primary + DefiLlama fallback. `oracle_prices` data_type. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.KELPDAO — KelpDAO (rsETH) MTDS adapter** — `adapters/defi/lst_kelpdao_adapter.py`.
+      AAVE oracle primary + DefiLlama fallback. `oracle_prices` data_type. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.PUFFER — Puffer Finance (pufETH) MTDS adapter** — `adapters/defi/lst_puffer_adapter.py`.
+      AAVE oracle primary + DefiLlama fallback. `oracle_prices` data_type. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.SOLBLAZE — Solblaze (bSOL) MTDS adapter** — `adapters/defi/lst_solblaze_adapter.py`.
+      DefiLlama coins API (Solana chain, no AAVE oracle). `oracle_prices` data_type. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.YEARN — Yearn Finance V3 vaults MTDS adapter** — `adapters/defi/vault_yearn_adapter.py`.
+      DefiLlama yields API filtered by `yearn-finance`. `vault_share_price`/`vault_apy`/`vault_tvl`. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.CONVEX — Convex Finance vaults MTDS adapter** — `adapters/defi/vault_convex_adapter.py`.
+      DefiLlama yields API filtered by `convex-finance`. `vault_share_price`/`vault_apy`/`vault_tvl`. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.BEEFY — Beefy Finance multi-chain vaults MTDS adapter** — `adapters/defi/vault_beefy_adapter.py`.
+      DefiLlama yields API filtered by `beefy`. `vault_share_price`/`vault_apy`/`vault_tvl`. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.IDLE — Idle Finance yield vaults MTDS adapter** — `adapters/defi/vault_idle_adapter.py`.
+      DefiLlama yields API filtered by `idle`. `vault_share_price`/`vault_apy`/`vault_tvl`. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.PENDLE — Pendle PT/YT/SY MTDS adapter** — `adapters/defi/vault_pendle_adapter.py`.
+      DefiLlama yields API filtered by `pendle`. `vault_share_price`/`vault_apy`/`vault_tvl`. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.SYMBIOTIC — Symbiotic restaking vaults MTDS adapter** — `adapters/defi/restaking_symbiotic_adapter.py`.
+      DefiLlama yields API filtered by `symbiotic`. `restaking_rewards`/`vault_tvl`. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.KARAK — Karak restaking vaults MTDS adapter** — `adapters/defi/restaking_karak_adapter.py`.
+      DefiLlama yields API filtered by `karak-network`. `restaking_rewards`/`vault_tvl`. mtds@`3e82cc5`.
+- [x] [AGENT] P0. **3.JITO-RESTAKING — Jito Restaking (Solana) MTDS adapter** — `adapters/defi/restaking_jito_adapter.py`.
+      DefiLlama yields API filtered by `jito-restaking`. `restaking_rewards`/`vault_tvl`. mtds@`3e82cc5`.
 
 **Codex SSOT updates (Phase 3 boundary)**:
 
