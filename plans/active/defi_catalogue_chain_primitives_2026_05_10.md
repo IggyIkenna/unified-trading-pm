@@ -485,15 +485,15 @@ address, decimals, symbol, instrument_type, classification, lifecycle dates. Eac
 > + _ADAPTERS + ADAPTER_DATA_SOURCES). 35 new unit tests (100 total in defi/ suite, 100/100 passing).
 > basedpyright 0 errors on new files; ruff clean.
 >
-> **DEFERRED — remaining Phase 2 gaps:**
-> - `2.BEEFY` (multi-vault, 6 chains) — **DEFERRED**: 200+ vaults across chains; static registry would be stale;
->   needs Beefy API integration or curated snapshot. Successor: Phase 2 follow-up plan or Phase 3 MTDS.
-> - `2.PENDLE` (PT/YT/SY + maturity, ETH+ARB) — **DEFERRED**: instruments have expiry dates requiring Pendle API or
->   curated snapshot; trickiest. Successor: Phase 2 follow-up plan.
-> - `2.JITO-RESTAKING` (Solana restaking vaults) — **DEFERRED**: separate from jito.py LST adapter; vault structure
->   TBD. Successor: Phase 2 follow-up plan.
-> - `2.RENZO-ARB` (bridged ezETH multi-chain) — **DEFERRED**: needs `chain` parsing from venue name + per-chain
->   address map + `renzo` added to `defi_graph_adapters` set. Successor: Phase 2 follow-up plan.
+> **DEFERRED — remaining Phase 2 gaps (status as of 2026-05-12 ~10:30 UTC):**
+> - `2.RENZO-ARB` (bridged ezETH multi-chain) — ✅ **DONE** instruments-service@`38192e7` (multi-chain registry
+>   shipped; factory.py register pending bundled reconcile).
+> - `2.BEEFY` (multi-vault, 6 chains) — **IN PROGRESS** via parallel sub-agent (curated TOP-vault snapshot per chain
+>   instead of full 200+ enumeration; matches the pattern operator approved for yearn/idle/karak in session 2).
+> - `2.PENDLE` (PT/YT/SY + maturity, ETH+ARB) — **IN PROGRESS** via parallel sub-agent (curated active-markets
+>   snapshot with maturity > today filter).
+> - `2.JITO-RESTAKING` (Solana restaking vaults) — **IN PROGRESS** via parallel sub-agent (separate adapter file
+>   `jito_restaking.py` with `venue=jito_restaking`, distinct from existing `jito.py` LST adapter).
 
 Per-protocol todo template (instantiated 27 times):
 
@@ -559,8 +559,16 @@ Per-protocol todo template (instantiated 27 times):
       active-markets API or curated snapshot. Successor: Phase 2 follow-up plan.
 - [ ] [AGENT] P0. **2.JITO-RESTAKING — Jito restaking vaults (Solana)** — **DEFERRED**: separate from jito.py LST;
       vault structure TBD. Successor: Phase 2 follow-up plan.
-- [ ] [AGENT] P0. **2.RENZO-ARB — Renzo bridged ezETH on Arbitrum** — **DEFERRED**: needs chain parsing + per-chain
-      address map + `renzo` added to `defi_graph_adapters`. Successor: Phase 2 follow-up plan.
+- [x] [AGENT] P0. **2.RENZO-ARB — Renzo bridged ezETH on Arbitrum** — extended existing
+      `adapters/defi/renzo.py` to multi-chain via `_LRT_TOKENS_BY_CHAIN` keyed dict (mirrors
+      karak/yearn pattern). ezETH on Arbitrum at canonical bridged address
+      `0x2416092f143378750bb29b79eD961ab195CcEea5` (verified arbiscan), launch 2024-02-29 per
+      `PROTOCOL_LAUNCH_DATES[("ARBITRUM", "RENZO")]`. Tests extended (7/7 passing): added
+      `test_get_instruments_arbitrum_yields_bridged_record` + `test_unknown_chain_returns_empty_list`
+      + multi-chain venue tests. instruments-service@`38192e7`. **Pending in factory.py reconcile
+      (bundled with beefy/pendle/jito-restaking sub-agent fan-out)**: register `RENZO-ARBITRUM`
+      in `CANONICAL_VENUE_TO_ADAPTER` + add `"renzo"` to `defi_graph_adapters` set so chain gets
+      parsed from the venue name.
 
 **Codex SSOT update (Phase 2 boundary)**:
 
