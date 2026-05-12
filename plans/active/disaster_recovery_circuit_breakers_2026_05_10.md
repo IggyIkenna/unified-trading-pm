@@ -339,7 +339,7 @@ nightly-cron wiring (Phase 6.A).
 
 ## Phase 5 — Auto-recovery rules (Days 10-11, ~1 AI-day)
 
-- [ ] [AGENT] P0. **5.A Per-breaker recovery rule.** Each `BreakerRecoveryRule` declared with named guard (e.g. "oracle
+- [x] [AGENT] P0. **5.A Per-breaker recovery rule.** Each `BreakerRecoveryRule` declared with named guard (e.g. "oracle
       deviation < 5σ for 5min" → auto-disarm). **Two recovery modes wired (Q8 ratification)**: (1) `manual_unkill` —
       breaker armed state persists until operator action via deployment-UI or `kill-switch unkill` CLI; recovery emits
       `KILL_SWITCH_MANUAL_UNKILLED` alert with `unkilled_by_operator_id`. (2) `auto_cooldown` — guard predicate
@@ -357,11 +357,13 @@ nightly-cron wiring (Phase 6.A).
       (manual). Half-wiring: risk-and-exposure-service `ArmedBreakerRegistry` (550a39e) stores the paired
       `BreakerRecoveryRule` per armed breaker; position-balance `ReconcilerBreakerBridge` (50b3c25) arms breakers;
       alerting-service `dr_event_handler` (0a52a33) emits the recovery AlertCodes on `KillSwitchDisarmEvent`.
-      **DEFERRED (P0, follow-on)**: the service-side recovery *loop* — a service (risk-and-exposure-service is the
-      natural host) instantiates a `BreakerRecoveryEngine`, registers a guard predicate per `auto_cooldown` breaker,
-      `arm()`s on each breaker fire, runs `tick_all()` on a per-minute cron / fill event, and maps each disarming
-      `RecoveryDecision` → `KillSwitchBus.disarm()` + the `KILL_SWITCH_*_RECOVERED`/`_UNKILLED` alert emit. Successor:
-      this todo (5.A) — owner = risk-and-exposure-service tab once a recovery-cron entry point lands.
+      **service-side recovery loop SHIPPED 2026-05-12** (`risk-and-exposure-service@b7fe8b1`):
+      `recovery_loop.py` — `BreakerRecoveryEngine` singleton + `_false_guard` (conservative AUTO_COOLDOWN guard;
+      hard-timeout `TIMEOUT_DISARM` still fires) + `arm_recovery` (called by `arm_breaker` on first fire) +
+      `tick_recovery` (maps non-HOLD `RecoveryDecision` → `KillSwitchBus.disarm()` + `disarm_breaker()` + log_event) +
+      `start_recovery_ticker` (daemon thread, 60s interval) + `reset_recovery_engine_for_testing`.
+      `circuit_breaker_registry.py` extended: `armed_config()` export + `arm_breaker` calls `arm_recovery` on first arm.
+      12 unit tests in `test_recovery_loop.py`; 489 service unit tests pass.
 - [ ] [AGENT] P0. **5.B Recovery test matrix.** Per breaker × per recovery rule, integration test exercises the recovery
       path. **unit-level matrix SHIPPED 2026-05-12** — `unified-trading-library@d5161fd`
       `tests/unit/circuit_breaker/test_recovery.py` (18 tests): `auto_cooldown` green/red-reset/timeout paths,
