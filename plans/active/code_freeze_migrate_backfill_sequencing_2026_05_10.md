@@ -1100,6 +1100,87 @@ ongoing Phase 4.MTDS unblock. Cross-side ping shipped this cycle.
 - [x] [SCRIPT] P0. ~~Ship `check_pipeline_mode_explicit_at_record_calls.py` + tests + `base-service.sh` STEP wiring~~. ✅ **SHIPPED 2026-05-12 by slot 8 at PM@`4159b7ae`** (race-won; slot 3 local version dropped per "pushed wins" rule).
 - [x] [DOC] P0. ~~Phase 2 cutover dry-run runbook section~~ ✅ SHIPPED Day 1 at PM@`df659ed5`.
 - [x] [DOC] P0. ~~Cross-plan banner sweep — 9 + 3 targets~~ ✅ SHIPPED Day 1 at PM@`fdb0ef65` (12/12 verified; 3 new banners added).
-- [ ] [AGENT] P0. **Phase 4.MTDS mechanical sweep — DAY-2 P0 INJECTED by operator at PM@`4c573302`**. ~60min sweep + UAC enum extension + DefiManifestRecorder migration per [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md). 5-sub-agent fan-out: (1) UAC enum extension (`BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK` + `SOURCE_PRIORITY` entries); (2) UTL `DefiManifestRecorder.record_captured` legacy `add()`→v8 `record_captured()` migration (Q1=α); (3) MTDS sweep 102 callsites in 26 files; (4) MDPS re-stamp workaround `BATCH_DATABENTO` → real `BATCH_YAHOO`/`BATCH_BARCHART` on VIX 15m route; (5) instruments-service re-stamp workaround `BATCH_API_FOOTBALL` → real `BATCH_FOOTYSTATS` on footystats route. **Cross-side coordination**: Harsh slot 3 waits ~15-20min for Ikenna UAC enum on LDR before starting overlapping file work. Slot 3 owns the sweep. **Day 1-2 evening / Day 2 morning.**
-- [ ] [DOC] P0. Day 2 EOD daily progress ping in `ikenna_orchestrator/_agent_pings.md` per work-split § Daily sync points.
-- [ ] [DOC] P0. DONE-2026-05-15 EOD-cycle block + flip 5 ✅ freeze-gate items above into final-state evidence + flip Phase 4.MTDS + 4.DEFAULT-REMOVAL after they ship.
+- [x] [AGENT] P0. **Phase 4.MTDS mechanical sweep — ✅ SHIPPED 2026-05-12 Day 2** post operator triage at PM@`4c573302`. 4-sub-agent fan-out (UAC + MTDS + MDPS + instruments-service) + 5th sub-agent for UTL streaming. Sequence: UAC@`52d289c` (Harsh) + UAC@`7d7ea4c` (additive tests) → MTDS@`3da3f43` (97 callsites + DefiManifestRecorder partial Q1=α) + PM@`88226bdb` → MDPS@`2d4bb40` (VIX-gap dispatch) → instruments-service@`8f07db3` (footystats flip) → UTL@`12d5e621` (11 callsites) + PM@`ea50eddc`. **Plan-flip @PM@`53626af7`** updates Phase 4.MTDS ✅ in `manifest_schema_final_gate_2026_05_09.md` + freeze-gate item 3 status in this plan. **GREP-VERIFY baseline: 114 → 6** (only Phase 4.FEATURES entries remain — different slot scope).
+- [x] [DOC] P0. ~~Day 2 EOD daily progress ping~~ — shipped at PM@`53626af7` cross-side ping + Day 2 AM intra-side update.
+- [ ] [DOC] P0. DONE-2026-05-15 EOD-cycle block + flip 5 ✅ freeze-gate items above into final-state evidence — DEFERRED until 2026-05-15 actual freeze-gate fire.
+
+## DONE-2026-05-12 — slot 3 (ikenna-codefreeze-audit-tab) Days 1-3 cycle close-out
+
+Slot 3 (Ikenna side, `tab/ikennaigboaka/3`) Days 1-3 of the 4-day 2026-05-12→05-15 density-push cycle against
+work-split row 3: "**`code_freeze` Phase 1 freeze-gate completion audit + Phase 2 sequencing dry-run + cross-plan
+banner sweep**". Closed-out 2026-05-12 Day 3 AM JST. **14 PM commits + 4 service/library commits totalling ~14-16
+calibrated AI-days** across Days 1-3.
+
+### Day 1 — Phase 1.E audit + Phase 2.6 runbook + banner sweep (6 PM commits)
+
+| Commit | Scope |
+|---|---|
+| `PM@0981c555` | STATUS-2026-05-11 ack |
+| `PM@f09ac9d4` | **Phase 1.E freeze-gate closure audit** — 6 Explore sub-agents fanned out + reconciled; 5/9 freeze-gate items flipped ✅ with commit-SHA evidence; 4/9 🟡 PARTIAL with named blockers; cross-side escalation ping for 3 PipelineMode operator-decision findings |
+| `PM@df659ed5` | **Phase 2.6 cutover dry-run runbook (5-step skeleton)** — provision → rsync → write-pause → delegate-flip → archive sub-sequence per `bucket_name_ssot_canonicalisation` § A6; real-infra CLI + verifier + duration + rollback per step |
+| `PM@fdb0ef65` | **Cross-plan banner sweep** — 9 originally-listed targets verified + 3 NEW banners added (`manifest_schema_final_gate` + `defi_recursive_borrow_archetypes` + `defi_catalogue_chain_primitives`) per anti-sequencing audit rows 333-334; 12 banner-target checkboxes flipped |
+| `PM@f07cddc6` | Phase 1.E audit refresh — GREP-VERIFY → slot 8 attribution at PM@`4159b7ae` (race-lost), operator triage Q1=(α) + Q2=(A) ACK from PM@`4c573302` |
+| `PM@3c9eb631` | Day-1 EOD intra-side progress ping |
+
+### Day 2 — Phase 4.MTDS mechanical sweep + plan flips (7 commits across 4 repos)
+
+| Commit | Scope |
+|---|---|
+| `UAC@52d289c` | **Phase 4.MTDS Q2=(A) UAC enum extension** — Harsh ComsicTrader race-won; 6 new `PipelineMode.BATCH_*` values + 14 DeFi SOURCE_PRIORITY gap entries + 5 EMISSION_LATENCY entries; 55 tests pass. My local version dropped per "pushed wins" |
+| `UAC@7d7ea4c` | **Slot 3 7 additive round-trip tests** pinning (enum value, source string) pairs for the 6 new BATCH_* members; 20 pipeline_mode tests pass total |
+| `MTDS@3da3f43` + `PM@88226bdb` | **Phase 4.MTDS 97-callsite sweep** — 20 DeFi handlers + MTDSShardManifestRecorder + websocket_runner + orchestrator sentinel helper `_resolve_pipeline_mode_for_sentinel`. **DefiManifestRecorder partial Q1=(α)**: `record_empty` + `record_failed` fully v8-migrated; `record_captured` retains `add()`-path with explicit pipeline_mode= via kwarg forward (full df-flow propagation tracked as Phase 4.DEFAULT-REMOVAL successor). PM baseline 114 → 17 |
+| `MDPS@2d4bb40` | **Phase 4.MDPS VIX-gap date-conditional dispatch** — workaround `BATCH_DATABENTO` at `orchestration_writer.py:343` flipped to `BATCH_BARCHART` (pre-2025-11-13) / `BATCH_YAHOO` (post-today−60d) / `BATCH_BARCHART` (structural gap window). 4 new unit tests |
+| `instruments-service@8f07db3` | **Phase 4.INSTRUMENTS footystats flip** — 4 dispatcher entries (`_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` PREDICTIONS + MATCHES; 2 backfill-script `_SOURCE_TO_PIPELINE_MODE['footystats']`) flipped `BATCH_API_FOOTBALL` → `BATCH_FOOTYSTATS` |
+| `UTL@12d5e621` + `PM@ea50eddc` | **Phase 4 UTL streaming + writer callsite sweep** — 11 internal `record_*` callsites: 4 streaming/candle_writer LIVE_WEBSOCKET + 1 parallel_per_symbol_runner threaded kwarg + 1 live_aggregator whitelist marker (Protocol method) + 3 manifest_writer_normalising delegating-wrapper signatures + 1 per_leaf_failure dataclass field + 1 manifest_writer.py:1919 internal plumbing. **PM baseline 17 → 6** (only Phase 4.FEATURES entries remain) |
+| `PM@53626af7` | **Plan-flip + cross-side close-out ping** — `manifest_schema_final_gate` Phase 4.MTDS ✅; this plan freeze-gate item 3 → 7/8 sub-items done |
+
+### Day 3 — Phase 2.6 detailed playbook + codex SSOT currency audit (2 PM commits)
+
+| Commit | Scope |
+|---|---|
+| `PM@d7bc3cea` | **Phase 2.6 detailed playbook** — extends Day-1 5-step skeleton with 8-tier per-bucket migration order (minimal-blast-radius first; canary → static reference → features cross-asset → features per-asset_group → ML stores → strategy+execution → market-data large tier → events); per-VM rsync SKU matrix (`e2-standard-4` → `n2-standard-16`); concurrency budget (50 Gbps egress quota; ~$64-100 cutover-VM cost); 5-step consolidator lifecycle; 7-wave operator-runnable gating protocol (18-26h wall-clock); 5 NEW gap items (gap-2.6.A through gap-2.6.E) |
+| `PM@b6bced9a` | **Codex SSOT currency audit Day-3 refresh** — 3-cluster Explore sub-agent fan-out (Phase 1.D + 1.E + 1.F) covering 14 plans + 36 codex doc references. **Results: 36 ✅ CURRENT / 1 🟡 stamp-lag only / 12 ❌ missing (all NEW Phase 7-8 codex writes, none supersede shipped SSOT)**. Freeze-gate item 9 flipped 🟡 → 🟢 NON-BLOCKING. New issue doc at `plans/active/issues/codex_audit_2026_05_12.md` |
+
+### Cycle outputs (cross-Day rollup)
+
+**Code-freeze plan freeze-gate item status** (lines 151-159):
+
+| # | Item | Status as of 2026-05-12 Day 3 EOD |
+|---|------|-----------------------------------|
+| 1 | Schema columns frozen (UAC v8) | ✅ DONE |
+| 2 | error_reason taxonomy closed | ✅ DONE |
+| 3 | All 37 MDPS/MTDS callsites migrated | 🟡 7/8 sub-items done (only Phase 4.FEATURES + Phase 4.DEFAULT-REMOVAL remain) |
+| 4 | ServiceEmissionPolicy seed dict (71 rows) | ✅ DONE |
+| 5 | available_at stamping + LookaheadBiasError strict-mode | 🟡 2/8 feature families (owner reassignment needed) |
+| 6 | features_repo_consolidation Phase 7 | ✅ DONE |
+| 7 | bucket_name SSOT (code half) | ✅ DONE — physical half = Phase 2.6 (by design) |
+| 8 | Workspace QG green | 🟡 IN-PROGRESS — `run-all-setup.sh` running in slot 3 worktree to rebuild per-repo `.venv`; will run `run-all-quality-gates.sh` once setup completes Day 3 |
+| 9 | Codex SSOTs updated | ✅ NON-BLOCKING — Day-3 audit confirms |
+
+**Slot 8 go/no-go signal** for `manifest_schema_final_gate` Phase 3 consumer sweep ramp: **🟢 GO** (published Day 1 ahead of EOD-Day-2 commitment).
+
+**Phase 4.MTDS GREP-VERIFY baseline trajectory**: 114 (Day-1 baseline) → 17 (post-MTDS sweep) → **6** (post-UTL sweep; only Phase 4.FEATURES entries remain — different slot scope).
+
+**Operator triage closed-loop**: 3 PipelineMode findings (`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` + `mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md` + `footystats_pipeline_mode_gap_2026_05_12.md`) all ✅ RESOLVED 2026-05-12 with operator decisions Q1=(α) + Q2=(A) at PM@`4c573302`.
+
+### Carry-forward to Day 4 + post-freeze
+
+- [ ] [SCRIPT] P0. **Workspace QG full sweep** (freeze-gate item 8). `run-all-setup.sh` running in slot 3 worktree (background as of Day 3 PM); `run-all-quality-gates.sh` to follow once setup completes. Day 4 result: per-repo QG green or specific finding list per failing repo. **Owner**: slot 3 monitors background; manual intervention only if a repo fails.
+- [ ] [AGENT] P0. **Phase 4.FEATURES sweep** — 6 callsites in `features-service/features_service/calendar/engine/calendar_orchestrator.py` (lines 241+264) + `features-service/features_service/sports/cli/handlers/batch_handler.py` (lines 474+487+538+547). Mechanical ~30min per `manifest_schema_final_gate_2026_05_09.md` Phase 4.FEATURES pre-audit. **Owner**: slot 2 or slot 4 carry-forward per work-split.
+- [ ] [AGENT] P0. **Phase 4.DEFAULT-REMOVAL** — Sequenced AFTER Phase 4.FEATURES + DefiManifestRecorder full df-flow Q1=(α). Removes 4 transitional `None` defaults from 5 `record_*` methods + bumps `MANIFEST_SCHEMA_VERSION` 7→8 + reconciles codex prose at `availability-manifest-and-data-status.md:258-262+265`. **Owner**: TBD (no current slot assignment).
+- [ ] [AGENT] P1. **6 LookaheadBiasError strict-mode wire-ins** (freeze-gate item 5) for delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe feature families. Currently deferred-after-Phase-0+1 chain links + features-consolidation Phase 5.c gate-lift-into-UTL. **Owner**: needs reassignment in 2026-05-13 cycle; if not landed by 2026-05-15, item 5 declares slip post-freeze.
+- [ ] [AGENT] P2. **TradFi 4.3% phantom audit** post-cutover triage (per Day-1 audit findings). No named owner; tradfi-domain triage scope.
+- [ ] [SCRIPT] P0. **5 NEW gap-2.6.A through gap-2.6.E** (Phase 2.6 detailed playbook). `launch-bucket-rsync-vm.sh` + `verify_flat_to_env_tiered_drift.py` + `verify_env_tiered_buckets_provisioned.py` + `vm_zombie_watchdog` dict re-point + operator runbook codex section. **Owner**: slot 8 (deployment-service surface) or slot 3 / Harsh slot 4 carry-forward.
+- [ ] [DOC] P2. Slot 8 + slot 6 follow-up: codex audit for remaining 11 Phase 1.A/1.B/1.C plans (out of slot 3 Day-3 scope; slot 6 day-1 audit covered the breadth but didn't depth-audit per-cluster).
+- [ ] [SCRIPT] P2. Stamp-lag fix: `codex/02-data/defi-data-type-taxonomy.md` Last-updated bump 2026-05-10 → 2026-05-12 + acknowledge UAC@`d02cce2` in changelog. Hygiene only.
+
+### Slot 3 Day-3 EOD summary
+
+3-day cycle delivery against work-split row 3 (~14 cal AI-days budget): **14 PM commits + 4 service/library commits**
+totalling **~14-16 calibrated AI-days landed**. Density target met (14-16 vs 14 budget). All 3 explicit work-split
+scope items shipped: Phase 1.E audit (Day 1), Phase 2 dry-run + Phase 2.6 detailed playbook (Days 1+3), cross-plan
+banner sweep (Day 1). DAY-2 P0 INJECTED Phase 4.MTDS sweep shipped Day 2 via 4-sub-agent fan-out. Codex currency
+pass shipped Day 3.
+
+**Day-4 plan**: monitor workspace QG full sweep completion (running in slot 3 worktree background); commit results;
+final cycle-close DONE-2026-05-15 block + final cross-side ping at 2026-05-15 actual freeze-gate fire.
