@@ -221,10 +221,27 @@ Harsh implements service-level wiring (Phase 3.E + 3.F). Concretely Harsh slot 5
    pair for a ~16-cell matrix smoke).
 5. Cross-side ping when Phase 3.E + 3.F done; Ikenna slot 7 picks up Phase 5 matrix-runner.
 
-## Done definition (Phase 3 design-shipped)
+## Done definition (Phase 3 — `done` 2026-05-12 Harsh slot 5)
 
-Phase 3.E + 3.F flip to `design-shipped` 2026-05-12 with this spec as the canonical artefact. Phase 3.E + 3.F flip
-to `done` once Harsh slot 5 ships the implementation + cross-side handshake closes.
+Phase 3.E + 3.F flipped to `done` 2026-05-12. Implementation shipped (each per shippable unit on `live-defi-rollout`):
+
+- **Phase 3.E — matching-engine adversarial mode**:
+  - `execution-service@d0ec76f1` — `AdversarialMatchingEngine` (RejectFills + LatencyInject + BookSpoof routing at
+    fill-attempt boundary; `ObservedEvent` emission with `synthetic=True`).
+  - `execution-service@6bdf6136` — 9 unit tests covering pass-through (scenario_id=None), `SCENARIO_REGISTRY`
+    validation, all 3 mutation types, ObservedEvent discipline.
+  - `execution-service@1c5923f3` — `python -m execution_service.cli.run_scenario --scenario-id X --archetype Y`
+    operator-runtime CLI.
+- **Phase 3.F — consumer subscriptions**:
+  - `position-balance-monitor-service@8b6c06f` — `ScenarioKillSwitchSubscriber` (synthetic arm filter) + 7 unit tests.
+  - `risk-and-exposure-service@0a8f024` — `ScenarioOutcomeBridge` + `arm_breaker(synthetic=...)` kwarg → BREAKER_ARMED
+    ObservedEvent emission + 8 unit tests.
+  - `alerting-service@3c0d675` — router `_is_synthetic()` + `_route_synthetic_log_only()` short-circuit + 8 unit tests.
+  - `execution-service@92aa4af2` — per-archetype integration smoke (2 tests pass: APD × cefi_venue_circuit_breaker_trip
+    + carry_staked_basis × defi_chain_rpc_outage_solana).
+
+**Cross-side handshake closes**: Ikenna slot 7 (UAC@`33630a6` + UTL@`3797fed5` design primitives) ↔ Harsh slot 5
+(implementation). Ikenna slot 7 picks up Phase 5 matrix-runner next.
 
 Phase 3.A / 3.B / 3.C / 3.D / 3.G remain `deferred-after-simulation_scenarios_post_cutover_2026_06_01` per
 compressed-scope plan body line 84-88 (MTDS / MDPS / features / strategy / manifest taps = post-cutover infra).
