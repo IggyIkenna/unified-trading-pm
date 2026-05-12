@@ -431,6 +431,24 @@ grep -rn "subscription_list\|SUBSCRIPTION_LIST\|MVP\|mvp_instruments" \
 - [ ] [CODE] P1. Pre-audit: extract all per-module subscription_list values → union → add `FEATURES_MVP_INSTRUMENTS`
       constant to UAC `registry/processing_scope.py`.
 
+  **DESIGN DISCOVERY (2026-05-12 slot 4)**: `InstrumentDomainConfig.subscription_list` in all features modules
+  (delta_one, calendar, onchain, volatility, commodity, sports, cross_instrument, multi_timeframe) is a **runtime-
+  loaded dynamic list** from GCP config (DomainConfigReloader pattern — UTL `config_interface/domain_configs.py:67`).
+  It is NOT a static compile-time constant. The original Phase 3.0 plan to "grep subscription_list values and
+  extract the union → static frozenset in UAC" does NOT work — the values are environment-specific runtime config.
+
+  **Revised Phase 3 approach (AWAITING OPERATOR DIRECTION)**:
+  - Option A (runtime comparison): At each module's batch_handler startup, fetch all candidate instruments from
+    instruments-service catalog; compare with runtime `InstrumentDomainConfig.subscription_list`; write
+    `expected_unattempted(EXPECTED_OUTSIDE_PROCESSING_SCOPE)` for each instrument in catalog but NOT in list.
+    No UAC frozenset needed — the subscription_list IS the scope gate at runtime.
+  - Option B (static UAC constant): Keep frozenset idea but populate from deployment config rather than source
+    grep. Requires a one-time extraction from GCP config + UAC PR. More fragile (stalens risk on config changes).
+  - Option C (skip Phase 3.0 altogether): Each module already knows its own subscription_list; just compare inline
+    without a UAC constant. Simpler but no single SSOT for MVP scope.
+
+  Operator should direct: which option. Option A is the natural extension of the existing pattern.
+
 ### Sub-phase 3.1–3.N — Per-module batch handler wiring (PARALLEL)
 
 For each features module: `delta_one`, `calendar`, `onchain`, `volatility`, `sports`, `commodity`.
