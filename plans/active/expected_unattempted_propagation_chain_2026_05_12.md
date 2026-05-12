@@ -1,0 +1,556 @@
+---
+name: expected-unattempted-propagation-chain-2026-05-12
+type: plan
+plan_type: implementation
+asset_group: cross-cutting
+owner: ikenna
+status: active
+priority: P0
+created: 2026-05-12
+last_updated: 2026-05-12
+deadline: 2026-05-15
+parent: manifest_evolution_master_2026_05_08
+related_plans:
+  - manifest_evolution_master_2026_05_08
+  - manifest_cross_asset_rescan_design_2026_05_08
+  - writegate_honest_coverage_endtoend_2026_05_06
+  - expected_universe_v2_design_2026_05_08
+migrated_from: plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md
+locked_by: live-defi-rollout
+locked_since: 2026-05-12
+estimate_class: brand-new
+estimate_baseline_ai_days: 5.5
+estimate_calibrated_ai_days: 5.5
+effective_concurrent_slots: 4
+model_tier: sonnet-doable
+thinking: high
+---
+
+# Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML
+
+## Why
+
+The manifest dependency chain does not propagate `expected_unattempted` through services at runtime. Every service runs
+its own pre-flight but ignores upstream manifest state. Results:
+
+1. **MTDS** writes `attempted_failed` for instruments that instruments-service says don't exist → false-positive phantom
+   rows inflate phantom counts; "0 phantoms" target is unreachable.
+2. **MDPS** reads MTDS manifest via `DependencyChecker` but writes NO row when skipping a shard → invisible gaps in
+   manifest; data-status panel shows nothing for legitimately-skipped shards.
+3. **Features** filters by `subscription_list` config per module but writes NO row for non-MVP instruments → can't
+   distinguish "not in scope" from "failed to compute" from "never attempted".
+4. **ML** same gap as features.
+
+**Complement to G3 enumerator** (`expected_universe_v2_design_2026_05_08`): G3 is a one-time batch script that
+pre-populates `expected_unattempted` for historical data from the instruments catalog. THIS PLAN covers runtime
+propagation — every future run correctly records `expected_unattempted` at the moment a shard is skipped. Both are
+required; G3 fills history, this plan prevents re-accumulation.
+
+**Pre-condition for `--apply-flips`**: reconciliation `--apply-flips` on MTDS/MDPS/features manifests is BLOCKED until
+Phases 1–4 land. Running `--apply-flips` before will flip false-positive `attempted_failed` rows to `empty_confirmed`,
+masking the root cause.
+
+## Scope + dependency order
+
+```
+Phase 0: UAC reason + UTL cross-service reader (SERIAL — foundation)
+    ↓
+Phase 1: MTDS pre-flight wired to instruments-service manifest (SERIAL — root)
+    ↓
+Phase 2: MDPS record_expected_unattempted on skip (SERIAL — depends on Phase 1)
+    ↓
+Phase 3: Features per-module expected_unattempted + MVP scope constant (PARALLEL per module)
+Phase 4: ML services expected_unattempted + ML scope constant (PARALLEL with Phase 3)
+    ↓
+Phase 5: Manifest reconciliation scripts — dry-run baseline + apply-flips in dependency order
+    ↓
+Phase 6: Validation gate — phantom count target + manifest accuracy sign-off
+```
+
+## Repos touched
+
+| Repo                                    | Scope                                                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `unified-api-contracts`                 | Phase 0A: new `EXPECTED_OUTSIDE_PROCESSING_SCOPE` + `EXPECTED_UPSTREAM_EMPTY` EmptyConfirmedReason values           |
+| `unified-trading-library`               | Phase 0B: `read_upstream_manifest()` helper; Phase 2: `BaseDependencyChecker.record_expected_unattempted_on_skip()` |
+| `market-tick-data-service` (MTDS)       | Phase 1: instruments-service pre-flight in batch orchestrator                                                       |
+| `market-data-processing-service` (MDPS) | Phase 2: DependencyChecker wiring                                                                                   |
+| `features-service`                      | Phase 3: per-module batch handler wiring                                                                            |
+| `ml-training` + `ml-inference-service`  | Phase 4: ML scope wiring                                                                                            |
+| `instruments-service`                   | Phase 5: reconciliation script execution                                                                            |
+| `unified-trading-pm`                    | This plan + plan flips                                                                                              |
+
+---
+
+## Phase 0 — UAC reason extension + UTL cross-service manifest reader
+
+**model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~0.4
+
+### Phase 0A — UAC: two new EmptyConfirmedReason values
+
+File: `unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py`
+
+Add to `EmptyConfirmedReason` StrEnum (after existing `EXPECTED_KNOWN_SOURCE_GAP`):
+
+```python
+EXPECTED_OUTSIDE_PROCESSING_SCOPE = "expected_outside_processing_scope"
+# Used by features/ML batch handlers when an instrument exists in instruments-service
+# catalog but is not in the service's subscription_list / MVP scope config.
+# Reason: not a data gap — deliberate scope exclusion.
+
+EXPECTED_UPSTREAM_EMPTY = "expected_upstream_empty"
+# Used by downstream services (MTDS, MDPS, features) when skipping a shard because
+# the upstream service's manifest has capture_status in ('empty_confirmed', 'expected_unattempted').
+# Reason: upstream honest-absence propagated downstream; no fetch attempted.
+```
+
+Also update `EMPTY_CONFIRMED_REASONS` closed-set dict with descriptions for both new values.
+
+Run `assert_pipeline_mode_source_priority_round_trip` + `pytest tests/test_cassette_schema_parity.py`.
+
+- [ ] [CODE] P0. Add `EXPECTED_OUTSIDE_PROCESSING_SCOPE` + `EXPECTED_UPSTREAM_EMPTY` to UAC `EmptyConfirmedReason` +
+      `EMPTY_CONFIRMED_REASONS` dict. QG + push.
+
+### Phase 0B — UTL: cross-service manifest reader helper
+
+File: `unified-trading-library/unified_trading_library/manifest_reader_fallback.py` (or `manifest_writer.py`)
+
+**First**: check if `ManifestReader` already supports reading an arbitrary GCS bucket by instantiating with a different
+bucket param. If it does, document the pattern; no code change needed.
+
+If NOT: add to UTL `manifest_writer.py` or a new `manifest_cross_service.py`:
+
+```python
+def read_upstream_manifest(
+    upstream_bucket: str,
+    project_id: str,
+    asset_group: str | None = None,
+    date_min: date | None = None,
+    date_max: date | None = None,
+) -> pd.DataFrame:
+    """Read the canonical manifest parquet from an upstream service's GCS bucket.
+
+    Returns the availability_index DataFrame filtered to the requested date range.
+    Used by downstream services for pre-flight cross-service dependency checks.
+    """
+```
+
+The implementation reads `gs://{upstream_bucket}/_index/availability_index.parquet` via GCS client (same ADC-based
+pattern as existing ManifestWriter internals).
+
+Add 3 unit tests (mock GCS): empty result, filtered by date, all-rows path.
+
+- [ ] [CODE] P0. Verify ManifestReader bucket parameterization OR add `read_upstream_manifest()` to UTL. QG + push.
+
+---
+
+## Phase 1 — MTDS pre-flight: instruments-service manifest read
+
+**model_tier**: sonnet-doable | **thinking**: high | **Cal AI-days**: ~1.5
+
+**Goal**: Before MTDS starts per-shard fetches for a batch run, read the instruments-service manifest to learn which
+instruments exist and what their status is. Write `expected_unattempted` for shards that instruments-service says are
+`empty_confirmed` or `expected_unattempted`, skipping the fetch entirely for those shards.
+
+### Pre-audit (implementer must do first)
+
+```bash
+# Find instruments-service bucket names per asset_group
+grep -rn "instruments.store\|instruments_store\|INSTRUMENTS_BUCKET" \
+  instruments-service/instruments_service/ \
+  unified-trading-library/unified_trading_library/ \
+  deployment-service/configs/ \
+  --include="*.py" --include="*.yaml" | grep -v .venv | head -30
+
+# Find where MTDS batch orchestrator loops per-shard
+grep -rn "record_captured\|record_failed\|record_empty\|manifest_writer" \
+  market-tick-data-service/market_tick_data_service/orchestrators/ \
+  market-tick-data-service/market_tick_data_service/cli/handlers/ \
+  --include="*.py" | head -30
+
+# Check if ManifestReader accepts a bucket param
+grep -n "class ManifestReader\|def __init__\|bucket" \
+  unified-trading-library/unified_trading_library/manifest_writer.py | head -20
+```
+
+### Implementation pattern
+
+In the MTDS batch orchestrator (per asset_group):
+
+```python
+# At orchestrator startup (BEFORE the per-shard fetch loop)
+from unified_trading_library.manifest_cross_service import read_upstream_manifest
+from unified_trading_library.cloud_interface.bucket_naming import resolve_bucket_name
+from unified_api_contracts.canonical.crosscutting.honest_coverage import EmptyConfirmedReason
+
+# SSOT: resolve_bucket_name uses deployment-service/configs/cloud-providers.yaml.
+# DEPLOYMENT_ENV comes from UnifiedCloudConfig (never os.getenv directly).
+instruments_bucket = resolve_bucket_name(
+    cloud="gcp",
+    kind="instruments",
+    asset_group=asset_group,
+    env=cloud_config.deployment_env,
+)
+
+upstream_manifest = read_upstream_manifest(
+    upstream_bucket=instruments_bucket,
+    project_id=cloud_config.project_id,
+    date_min=batch_date_min,
+    date_max=batch_date_max,
+)
+
+# Build set of (venue, instrument_id, date) for which instruments-service has captured or empty_confirmed rows
+# "captured" or "empty_confirmed" means instruments-service KNOWS about this shard → MTDS should attempt
+# "expected_unattempted" or absent → MTDS should write expected_unattempted and skip
+upstream_known: set[tuple[str, str, date]] = {
+    (row.venue, row.instrument_id, row.date)
+    for row in upstream_manifest.itertuples()
+    if row.capture_status in ("captured", "empty_confirmed")
+}
+
+# For each MTDS shard (venue, instrument_id, data_type, date) NOT in upstream_known:
+for shard in planned_shards:
+    if (shard.venue, shard.instrument_id, shard.date) not in upstream_known:
+        manifest_writer.record_expected_unattempted(
+            ...,
+            reason=EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY,
+        )
+        continue
+    # ... existing fetch logic
+```
+
+**Bucket name verification**: `resolve_bucket_name(cloud="gcp", kind="instruments", asset_group=ag, env=env)` is the
+canonical call (SSOT: `deployment-service/configs/cloud-providers.yaml`). Implementer MUST verify the `instruments` kind
+key exists in cloud-providers.yaml for each asset_group. If the key is missing (instruments-service bucket not yet
+registered), add it to cloud-providers.yaml as part of this phase — do NOT hardcode the bucket string inline (QG STEP
+5.69 ratchet rejects inline f-string bucket lookups). Never use `os.getenv()` — get `deployment_env` from
+`UnifiedCloudConfig`.
+
+**Shard isolation**: MTDS must pass `VM_NAME` + `MANIFEST_PER_VM_SHARDS=true` for the expected_unattempted writes (same
+as captured writes) to avoid multi-worker collision.
+
+**Tests**: mock read_upstream_manifest returning 3 scenarios: all known, some unknown, none known. Assert
+expected_unattempted calls for unknown shards.
+
+- [ ] [CODE] P0. Pre-audit: confirm INSTRUMENTS_BUCKET_BY_ASSET_GROUP names from cloud-providers.yaml. Document in a
+      `INSTRUMENTS_BUCKETS` constant in UAC `registry/` or UTL config (NOT hardcoded inline).
+- [ ] [CODE] P0. Wire instruments-service manifest read into MTDS batch orchestrator pre-flight per above pattern. Cover
+      all 5 asset_groups. Add 3 unit tests.
+- [ ] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`. Push.
+
+---
+
+## Phase 2 — MDPS: record_expected_unattempted on skip
+
+**model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~0.5
+
+**Goal**: When MDPS's `DependencyChecker` finds upstream MTDS shard absent or empty, write `expected_unattempted` in
+MDPS's own manifest rather than returning silently.
+
+### Pre-audit
+
+```bash
+grep -n "record_expected_unattempted\|expected_unattempted\|return.*empty\|return.*None\|skip" \
+  market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py \
+  market-data-processing-service/market_data_processing_service/app/core/orchestration_service.py \
+  | head -30
+```
+
+### Implementation pattern
+
+In `DependencyChecker` (or `BaseDependencyChecker`) when `check_shard_freshness` returns absent/empty:
+
+```python
+# Currently (gap):
+if not upstream_shard_present:
+    return []   # silent skip — no manifest row written
+
+# Fixed:
+if not upstream_shard_present:
+    manifest_writer.record_expected_unattempted(
+        ...,
+        reason=EmptyConfirmedReason.EXPECTED_UPSTREAM_EMPTY,
+    )
+    return []
+```
+
+If `BaseDependencyChecker` lives in UTL, the `manifest_writer` reference must be passed in at construction or the method
+must be added as an optional callback. Prefer passing the writer at `DependencyChecker.__init__` so the UTL base class
+stays injection-friendly.
+
+- [ ] [CODE] P0. Add `record_expected_unattempted` call in MDPS `DependencyChecker` when skipping due to absent MTDS
+      shard. Pass `manifest_writer` reference at construction if not already present. Add 2 unit tests (absent shard →
+      expected_unattempted recorded; present shard → no call).
+- [ ] [QG] P0. `cd market-data-processing-service && bash scripts/quality-gates.sh`. Push.
+
+---
+
+## Phase 3 — Features: expected_unattempted for non-MVP instruments
+
+**model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~1.0 (fan-out: PARALLEL per module)
+
+**Goal**: For instruments NOT in each feature module's `subscription_list`, record `expected_unattempted` before the
+main processing loop. Centralize the MVP scope list as a UAC constant.
+
+### Sub-phase 3.0 — Centralize MVP scope list
+
+Add to UAC `registry/` or a new `registry/processing_scope.py`:
+
+```python
+FEATURES_MVP_INSTRUMENTS: frozenset[str] = frozenset({
+    # Populate from existing subscription_list values across all feature modules.
+    # Implementer: grep subscription_list in features-service/features_service/*/config_reloaders.py
+    # and extract the union. This becomes the canonical MVP list.
+    # Format: canonical instrument_id strings as used in manifest rows.
+})
+
+ML_SCOPE_INSTRUMENTS: frozenset[str] = frozenset({
+    # Same: grep ml-training + ml-inference-service config for instrument lists.
+})
+```
+
+Pre-audit for implementer:
+
+```bash
+grep -rn "subscription_list\|SUBSCRIPTION_LIST\|MVP\|mvp_instruments" \
+  features-service/features_service/ \
+  ml-training/ ml-inference-service/ \
+  --include="*.py" --include="*.yaml" | grep -v .venv | head -40
+```
+
+- [ ] [CODE] P1. Pre-audit: extract all per-module subscription_list values → union → add `FEATURES_MVP_INSTRUMENTS`
+      constant to UAC `registry/processing_scope.py`.
+
+### Sub-phase 3.1–3.N — Per-module batch handler wiring (PARALLEL)
+
+For each features module: `delta_one`, `calendar`, `onchain`, `volatility`, `sports`, `commodity`.
+
+Pattern in each module's batch handler (before the main processing loop):
+
+```python
+from unified_api_contracts.registry.processing_scope import FEATURES_MVP_INSTRUMENTS
+from unified_api_contracts.canonical.crosscutting.honest_coverage import EmptyConfirmedReason
+
+# Get all candidate instruments for this batch run (from MDPS manifest or instruments catalog)
+all_candidate_instruments = get_candidate_instruments(asset_group, date_range)
+
+for instrument_id in all_candidate_instruments:
+    if instrument_id not in FEATURES_MVP_INSTRUMENTS:
+        manifest_writer.record_expected_unattempted(
+            ...,
+            reason=EmptyConfirmedReason.EXPECTED_OUTSIDE_PROCESSING_SCOPE,
+        )
+        continue
+    # ... existing feature computation
+```
+
+- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `delta_one` batch handler.
+- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `calendar` batch handler.
+- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `onchain` batch handler.
+- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `volatility` batch handler.
+- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `sports` batch handler.
+- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `commodity` batch handler (if exists).
+- [ ] [QG] P1. `cd features-service && bash scripts/quality-gates.sh`. Push.
+
+---
+
+## Phase 4 — ML services: expected_unattempted for out-of-scope instruments
+
+**model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~0.5
+
+**Goal**: Same pattern as Phase 3 for ml-training and ml-inference-service.
+
+Pre-audit:
+
+```bash
+grep -rn "subscription_list\|instrument_list\|scope\|predict.*instrument" \
+  ml-training/ ml-inference-service/ \
+  --include="*.py" | grep -v .venv | head -20
+```
+
+- [ ] [CODE] P2. Pre-audit: extract ML instrument scope → add `ML_SCOPE_INSTRUMENTS` to UAC
+      `registry/processing_scope.py` (same file as Phase 3.0).
+- [ ] [CODE] P2. Wire `expected_unattempted` for out-of-scope instruments in `ml-training` batch handler.
+- [ ] [CODE] P2. Wire `expected_unattempted` for out-of-scope instruments in `ml-inference-service` batch handler.
+- [ ] [QG] P2. QG on each repo. Push.
+
+---
+
+## Phase 5 — Manifest reconciliation scripts: baseline + apply-flips
+
+**model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~1.0
+
+**Pre-condition**: Phases 1–4 MUST be shipped (pushed to origin) before `--apply-flips` runs. Dry-run baseline (Phase
+5A) CAN run before Phases 1–4.
+
+### Phase 5A — Dry-run baseline (run on same-region GCE VM, asia-northeast1-c)
+
+Run all 3 scripts × 5 asset_groups in parallel:
+
+```bash
+# Phantom audit
+for ag in cefi defi tradfi sports prediction; do
+  python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group $ag --dry-run &
+done
+wait
+
+# Expected-absence-reason reconciler
+for ag in cefi defi tradfi sports prediction; do
+  python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group $ag --dry-run &
+done
+wait
+
+# Legacy-blank-reason reconciler
+for ag in cefi defi tradfi sports prediction; do
+  python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group $ag --dry-run &
+done
+wait
+```
+
+Record baseline phantom counts per asset_group in `## Reconciliation baseline` section below.
+
+- [ ] [SCRIPT] P0. Run dry-run baseline across all 5 asset_groups × 3 scripts. Record counts below.
+
+### Phase 5B — Apply-flips in dependency order (AFTER Phases 1–4 shipped)
+
+Run in strict sequence:
+
+```bash
+# Pass 1: instruments-service reference data_types FIRST (root)
+python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
+  --asset-group cefi --data-types instruments,venue_trading_calendar --apply-flips
+python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
+  --asset-group defi --data-types instruments,venue_trading_calendar --apply-flips
+# ... repeat for tradfi, sports, prediction
+
+# Wait for Pass 1 to complete + verify:
+# - manifest captured row count for instruments/venue_trading_calendar is stable
+# - no new attempted_failed rows created
+
+# Pass 2: MTDS data_types (depends on Pass 1)
+python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
+  --asset-group cefi \
+  --data-types ohlcv_1h,ohlcv_1m,ohlcv_24h,trades,tbbo,book_snapshot_5,book_snapshot \
+  --apply-flips
+# ... repeat for defi (lending_rates, lst_yields, dex_pools, perp_funding, oracle_prices, etc.)
+# ... repeat for tradfi (ohlcv_1m,ohlcv_15m,trades,tbbo,options_chain,futures_chain)
+# ... repeat for sports (all sports data_types)
+# ... repeat for prediction (trades,book_snapshot,prediction_canonical_question_group,MARKET_LIFECYCLE)
+
+# Pass 3: MDPS processed outputs (depends on Pass 2)
+# Pass 4: features (depends on Pass 3)
+```
+
+- [ ] [SCRIPT] P0. Pass 1 apply-flips: instruments-service data_types, all 5 asset_groups. Verify phantom count drops;
+      sample parquets not empty. Record in `## Reconciliation baseline`.
+- [ ] [SCRIPT] P0. Pass 2 apply-flips: MTDS data_types, all 5 asset_groups. Verify only expected_unattempted rows remain
+      for instruments not in instruments-service catalog.
+- [ ] [SCRIPT] P1. Pass 3 apply-flips: MDPS data_types. Verify MDPS manifest clean.
+- [ ] [SCRIPT] P1. Pass 4 apply-flips: features + ML data_types. Verify features manifest clean.
+
+Also run all 5 asset_groups through `reconcile_expected_absence_reasons.py --apply-flips` and
+`reconcile_legacy_blank_to_typed_reason.py --apply-flips` in the same order.
+
+---
+
+## Phase 6 — Validation gate + backfill clearance
+
+**model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~0.5
+
+**Success criteria for clearance to start backfills**:
+
+- [ ] [VALIDATE] P0. Phantom count across all 5 asset_groups = 0 (or residual <10 in class C triage).
+- [ ] [VALIDATE] P0. Manifest data-status panel shows `expected_unattempted` rows with correct reasons for all
+      instruments outside MVP scope (not blank, not `attempted_failed`).
+- [ ] [VALIDATE] P0. A fresh MTDS dry-run on a sample date generates 0 new `attempted_failed` rows for instruments that
+      instruments-service says don't exist (i.e., Phase 1 wiring is live).
+- [ ] [VALIDATE] P1. A fresh MDPS dry-run on a sample date generates `expected_unattempted` rows (not empty) for shards
+      where MTDS said `empty_confirmed`.
+- [ ] [VALIDATE] P1.
+      `data_capture_rate = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` is
+      non-zero denominator (expected universe enumerated) across all asset_groups.
+- [ ] [CODEX] P1. Update `codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight chain"
+      to document the instruments→MTDS→MDPS→features propagation pattern + the two new EmptyConfirmedReason values.
+- [ ] [FLIP] P0. Flip this plan's parent epic gate: manifest_evolution_master G3 can now proceed (enumerator runs on top
+      of the runtime propagation chain, not instead of it).
+
+---
+
+## Reconciliation baseline (fill after Phase 5A)
+
+| Script         | Asset group | Phantom count (dry-run) | Empty reason nulls | Legacy blank reasons | Date run |
+| -------------- | ----------- | ----------------------- | ------------------ | -------------------- | -------- |
+| phantom        | cefi        | TBD                     | —                  | —                    | —        |
+| phantom        | defi        | TBD                     | —                  | —                    | —        |
+| phantom        | tradfi      | TBD                     | —                  | —                    | —        |
+| phantom        | sports      | TBD                     | —                  | —                    | —        |
+| phantom        | prediction  | TBD                     | —                  | —                    | —        |
+| absence-reason | cefi        | —                       | TBD                | —                    | —        |
+| absence-reason | defi        | —                       | TBD                | —                    | —        |
+| absence-reason | tradfi      | —                       | TBD                | —                    | —        |
+| absence-reason | sports      | —                       | TBD                | —                    | —        |
+| absence-reason | prediction  | —                       | TBD                | —                    | —        |
+| legacy-blank   | cefi        | —                       | —                  | TBD                  | —        |
+| legacy-blank   | defi        | —                       | —                  | TBD                  | —        |
+| legacy-blank   | tradfi      | —                       | —                  | TBD                  | —        |
+| legacy-blank   | sports      | —                       | —                  | TBD                  | —        |
+| legacy-blank   | prediction  | —                       | —                  | TBD                  | —        |
+
+---
+
+## Slot assignment (Sonnet 4.6 executable)
+
+This plan is fully executable by a Sonnet 4.6 agent at thinking: high. Each phase is bounded, single-repo or
+single-file, with a clear spec above. No cross-repo architecture decisions required (those decisions are made in this
+plan body).
+
+**Spawn prompt header for executing slot**:
+
+```
+MODEL TIER: Sonnet 4.6
+THINKING: high
+PLAN: expected_unattempted_propagation_chain_2026_05_12.md
+WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
+
+Execute phases 0 → 6 in order. Each phase has a pre-audit step — do the grep FIRST before writing code.
+Do not start Phase 5B (apply-flips) until Phases 1–4 are pushed to origin.
+Follow CLAUDE.md commit/push/flip discipline: ship each phase → push → flip checkbox → next phase.
+Run QG after each repo change before pushing.
+```
+
+**Phase fan-out** (Phase 3 can be sub-agent fan-out — 6 modules PARALLEL):
+
+```python
+# Phase 3 sub-agents (all in SINGLE Agent tool call):
+for module in ["delta_one", "calendar", "onchain", "volatility", "sports", "commodity"]:
+    Agent(
+        model="sonnet",
+        prompt=f"MODEL TIER: Sonnet 4.6 / THINKING: medium\n[SUB_AGENT_MANDATORY_RULES]\n"
+               f"Wire expected_unattempted for non-MVP instruments in features_service/{module}/ "
+               f"batch handler per expected_unattempted_propagation_chain_2026_05_12.md Phase 3. "
+               f"Use EmptyConfirmedReason.EXPECTED_OUTSIDE_PROCESSING_SCOPE from UAC (Phase 0A must "
+               f"already be shipped). QG + push."
+    )
+```
+
+---
+
+## Cross-plan coordination
+
+- **manifest_evolution_master_2026_05_08 G3**: enumerator CAN proceed independently; this plan's runtime chain + G3
+  batch fill are complementary. G3 runs on top of the runtime chain, not instead.
+- **manifest_cross_asset_rescan_design_2026_05_08**: `--apply-flips` in Phase 5B replaces the rescan plan's Pass 1–4
+  command set (same scripts, now correctly ordered). Update rescan plan after Phase 5B.
+- **writegate_honest_coverage_endtoend_2026_05_06**: this plan is effectively writegate Phase 7 (upstream propagation
+  chain). Add reference banner to writegate plan when Phase 0 starts.
+- **expected_universe_v2_design_2026_05_08**: G3 enumerator must run AFTER this plan's Phase 1 ships (so MTDS future
+  runs don't re-pollute the expected_universe rows).
+
+## Codex SSOT updates (Phase 6)
+
+- **UPDATE** `codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight chain" — add the
+  full propagation chain description.
+- **UPDATE** `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" — add
+  `EXPECTED_OUTSIDE_PROCESSING_SCOPE` + `EXPECTED_UPSTREAM_EMPTY` to the closed-set table.
+- **UPDATE** `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit" — note that phantom counts
+  include false positives until this plan's Phases 1–4 ship.
