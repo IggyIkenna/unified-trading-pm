@@ -3199,6 +3199,22 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       dict per finding. NAN_FILL boundary: ensure parquet rows with NaN values still carry a valid
       `completeness_fraction` (NaN cells contribute to incomplete_window per the column they affect, but the row IS
       written; tree-based ML models tolerate NaN per CLAUDE.md "Honest absence vs fake placeholders").
+      **🟡 SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace
+      `rg "\.record_captured|\.record_empty|\.record_failed|publish_with_policy"
+      features-service/features_service/volatility/` returns **0** callsites today. The
+      features-volatility sub-package has NO honest-coverage manifest writes — Phase 6.3
+      is not a "migration", it's a BUILD-FROM-SCRATCH:
+      (a) introduce a `_record_manifest_*` helper triad (mirroring the
+      `calendar_orchestrator` shape harsh slot 3 just shipped at `features-service@229a0963`),
+      (b) wire it at the `VolatilityWriter.write_features(...)` call sites in
+      `features_service/volatility/io/writer.py` + service `write_features` callers,
+      (c) decide upstream-completeness computation (vol_30d needs 30 × `ohlcv_24h` manifest
+      lookups; realised_vol_intraday is intraday-window per-day), AND
+      (d) thread the v8 columns from `publish_with_manifest_lookup`'s `EmissionDecision`
+      into the `record_captured` call (per the MDPS Phase 6.2 v8-column-passthrough
+      finding above — same shape gap will exist here unless wired together). Realistic
+      estimate ~3-4 cal AI-days under the `brand-new` × 1.0 multiplier — the original 3
+      days under-bakes the manifest-write build half.
 
 **Phase 6.4 — features-cross-instrument (P0, ~3 days)**
 
@@ -3207,6 +3223,15 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       leak-bias trap that produces confidently-wrong signal. Validate with a dedicated test: synthetic upstream where
       leg A is fully captured but leg B has 1% gaps → assert NO `paired_spec` row is written for the affected window +
       STALE_DATA event fires.
+      **🟡 SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace
+      `rg "\.record_captured|\.record_empty|\.record_failed|publish_with_policy"
+      features-service/features_service/cross_instrument/` returns **0** callsites today.
+      Same shape as Phase 6.3 — build from scratch. Critical-path consideration: the
+      STRICT_FAIL on paired_spec means a runner-side `publish_with_manifest_lookup` call
+      with both legs in `upstream_window` MUST be the gate before the parquet write
+      (vs. the post-hoc record_captured + NaN-tolerance pattern at the calendar/sports
+      paths). Add Phase 6.4 to the per-service rollout playbook codex doc as the
+      reference design for STRICT_FAIL emissions.
 
 **Phase 6.5 — Other features-\* services (P1, ~5 days bundled)**
 
@@ -3281,11 +3306,37 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       tolerated; missing venue balance → block + alert + manual triage.
 - [ ] [risk-and-exposure-service] P0. Wire at `risk_state` emission (BLOCK_CRITICAL). Same.
 
+**🟡 Phase 6.6 + 6.7 SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace grep across
+`ml-training-service/` + `ml-inference-service/` + `strategy-service/` + `execution-service/` +
+`position-balance-monitor-service/` + `risk-and-exposure-service/` for
+`\.record_captured|\.record_empty|\.record_failed|publish_with_policy` returns **0** callsites
+in service source today. Same build-from-scratch shape as Phase 6.3 / 6.4. Realistic Phase 6.6
++ 6.7 estimate is closer to ~8-12 cal AI-days (brand-new × 1.0 multiplier) — original ~8 days
+under-bakes the manifest-write build half + the v8-column passthrough wiring + the upstream-completeness
+arithmetic per emission boundary (each `BLOCK_CRITICAL` row requires reading multiple manifest
+rows to compute completeness; the helper exists at UTL but no service consumes it yet).
+
 **Phase 6.8 — instruments-service catalog snapshot (P0, ~1 day)**
 
 - [ ] [instruments-service] P0. Wire at the catalog-snapshot emission (PARTIAL_OK — best-effort union of multiple
       sources). Per-source partial coverage is normal; the publish records the per-source breakdown in the
       `incomplete_window` field so consumers can branch on which source is missing.
+      **🟡 SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace
+      `rg "\.record_captured|\.record_empty|\.record_failed" instruments-service/instruments_service/`
+      returns 41 callsites (Phase 4.INSTRUMENTS sweep landed them with explicit `pipeline_mode=`
+      at instruments-service@e530906) — BUT 41 calls go through `ManifestWriter.add(...)` (legacy
+      v7 path) NOT through `ManifestWriter.record_captured(...)`. So Phase 6.8 wiring requires
+      EITHER (a) migrate the 41 `.add()` callsites to `.record_captured()` first
+      (Phase 4.DEFAULT-REMOVAL territory) then wire `publish_with_policy` on top, OR (b) declare
+      the "catalog_snapshot" emission as a NEW separate write boundary (a consolidator-style
+      "today's catalog is done" event-emitting helper that reads the existing per-source manifest
+      rows + emits the `PARTIAL_OK` decision). The seed-dict comment at
+      `service_emission_policy.py:192-195` already says "Per-source partial coverage handled at
+      the manifest layer (per-row capture_status), not at the catalog-publish layer" — which
+      suggests (b) is the intended shape (a TODAY-consolidator), but the consolidator doesn't
+      exist yet. Operator-decision needed to pick (a) vs (b); ~1 day estimate stands ONLY for (b)
+      build (a single new emission helper + cron VM); (a) is ~2-3 days bundled with Phase
+      4.DEFAULT-REMOVAL.
 
 **Phase 6.9 — Slice-(c) workspace-wide audit + ship-gate (P0, ~2 days)**
 
