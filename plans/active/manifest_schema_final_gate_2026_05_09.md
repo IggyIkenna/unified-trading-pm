@@ -363,25 +363,19 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - [ ] [AGENT] P0. Phase 4.MTDS — Each adapter (Databento / Tardis / CCXT / Barchart / Yahoo / Sports / DeFi /
       Prediction) explicitly passes `pipeline_mode=PipelineMode.BATCH_<source>` per UAC SOURCE_PRIORITY
   - emission-policy hooks via `publish_with_policy`. **Per E3 ratified item.**
-      **🟡 BLOCKED 2026-05-12 — finding @PM@`237d00b7` (slot 2 spawned `ikenna-v8-mw-mtds-sweep` sub-agent).**
-      Pre-audit found 26 files / 102 callsites needing fix, but 5 design ambiguities require operator triage before
-      mechanical sweep:
-      - **Q1 (CRITICAL)**: `DefiManifestRecorder.record_captured` routes through legacy UTL `ManifestWriter.add()` which
-        silently swallows `pipeline_mode` via `**kwargs` and doesn't stamp it on `AvailabilityRecord`. Phase
-        4.DEFAULT-REMOVAL won't catch this gap because `add()` doesn't have the v8 kwarg defaults to remove. Options:
-        (α) migrate `DefiManifestRecorder` to v8 `record_captured()` path (invasive but canonical, no-double-SSOT);
-        (β) extend `add()` to plumb `pipeline_mode`.
-      - **Q2**: 6 PipelineMode enum gaps for DeFi multi-source dispatch (`BATCH_HYPERLIQUID_REST`, `BATCH_PYTH_HERMES`,
-        `BATCH_CHAINLINK`) + Yahoo/Barchart (`BATCH_YAHOO`, `BATCH_BARCHART`) + footystats (`BATCH_FOOTYSTATS`). All
-        three findings filed: MTDS@`237d00b7`, MDPS-VIX-Yahoo@`a5e5aa4d`, INSTR-footystats@`6ede1e01`. Operator design
-        call: extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` entries, OR force workaround mapping to closest top
-        entry (instruments-service already chose β for footystats: stamps `BATCH_API_FOOTBALL` as documented
-        workaround pending enum extension).
-      - **Q3-Q5**: orchestrator dispatch strategy / reconciler preservation / test fixture updates — all downstream of
-        Q1-Q2. See finding doc `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`.
+      **🟡 IN-PROGRESS 2026-05-12 — Q1+Q2 operator-triaged; Harsh slot 3 executing.**
+      Pre-audit found 26 files / 102 callsites needing fix. Design decisions resolved:
+      - **Q1 ✅ RESOLVED** — operator chose **(α)**: migrate `DefiManifestRecorder` to v8 `record_captured()` path.
+        UTL step pending (Step 2 — see below).
+      - **Q2 ✅ RESOLVED** — operator chose **(A)**: extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with 6 BATCH_*
+        values. **SHIPPED @uac@`52d289c`** — BATCH_YAHOO / BATCH_BARCHART / BATCH_FOOTYSTATS / BATCH_HYPERLIQUID_REST /
+        BATCH_PYTH_HERMES / BATCH_CHAINLINK added + 14 DeFi SOURCE_PRIORITY gap entries + 5 EMISSION_LATENCY entries.
+        55 round-trip tests passing (3 previously failing, all fixed). instruments-service BATCH_API_FOOTBALL footystats
+        workaround superseded — instruments-service cleanup deferred to its next slot.
+      - **Q3-Q5**: orchestrator dispatch strategy / reconciler preservation / test fixture updates — downstream of Q1-Q2,
+        being addressed inline during MTDS sweep. See `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`.
 
-      Sweep is mechanical (~60min) once Q1+Q2 triaged. Pre-audit shipped; no MTDS file changes (per spawn-prompt
-      anti-pattern "DON'T force a wrong value").
+      Next: Step 2 UTL `DefiManifestRecorder` v8 migration → Step 3 MTDS 97-callsite `pipeline_mode=` sweep.
 - [x] [AGENT] P0. Phase 4.MDPS — candle writer + reprocess engine propagate `pipeline_mode` from input parquet's column.
       Emission-policy hooks at publish boundary.
       **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-mdps-sweep` sub-agent @MDPS@`a3c7198`** — 22 callsites across
