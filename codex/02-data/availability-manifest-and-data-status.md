@@ -381,6 +381,21 @@ class AvailabilityRecord:
 - **`capture_status` is canonical** for shard state — `captured` (real data on disk), `empty_confirmed` (source returned
   200 + zero rows; counts in denominator only), `attempted_failed` (exception during fetch; classified via
   `error_reason`).
+- **Per-asset-group + per-data-source empty-rule asymmetry** (codex audit IN-12 2026-05-12):
+  - **cefi / defi / tradfi tick data**: `empty_confirmed` only at venue-level (HOLIDAY / WEEKEND / PRE_LAUNCH /
+    PRE_GENESIS / PARTIAL_HALF_DAY). Per-instrument-day `empty_confirmed` is NOT legitimate — points to a writer bug.
+  - **sports / prediction tick data**: `empty_confirmed` CAN be at instrument-day grain (paused league, fixture
+    cancelled, market lifecycle outside resolution window).
+  - **Sports reference-data (instruments-service side, distinct from MTDS tick capture)**: `STANDINGS` / `LEAGUES` /
+    `INJURIES` / `FIXTURE_LINEUPS` etc. are cadence-driven refdata; `empty_confirmed` is legitimate when (a) league is
+    pre-season (use `EXPECTED_PRE_SEASON`), (b) league is paused (`EXPECTED_PAUSED_LEAGUE`), (c) source does not
+    cover the league (`EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`), (d) known-gap `EXPECTED_KNOWN_SOURCE_GAP`. SP-6
+    catalogue-audit finding 2026-05-11 surfaced `STANDINGS`/`SFI_LEAGUES`/`INJURIES` rows "smelling like un-clipped
+    pre-launch" with `KNOWN_COVERAGE_GAPS = {}` empty — the resolution is to populate the typed reasons above, NOT
+    to suppress the manifest row. Cross-references: `sports-data-source-coverage-matrix.md` per-source coverage
+    windows, `honest-absence-downstream-handling.md` § "Reason taxonomy".
+  - **Prediction reference-data**: `MARKET_LIFECYCLE` rows respect per-market `market_created_at` /
+    `resolution_time` / `settlement_time` bounds; `empty_confirmed` when market is outside lifecycle.
 - **`underlying` vs `instrument_id`** for derivatives: bundled chain shards (options_chain / futures_chain) populate
   `underlying` with the base asset (BTC, ETH) and leave `instrument_id` empty. Per-symbol shards populate
   `instrument_id` and leave `underlying` empty.
@@ -668,6 +683,72 @@ the resulting rows with per-row `capture_status` badges + per-row staleness badg
 
 **Script SSOT:** `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (multi-asset-group; the older
 `reconcile_phantom_manifest_rows.py` is sports-only and being phased out).
+
+```yaml
+execution:
+  owner: instruments-service maintainer (slot 4 Harsh in pre-cutover work-split, fallback owner: Ikenna)
+  cadence: weekly during pre-cutover; daily for the final 7 days before May-23 cutover
+  verifier: |
+    `gcloud compute instances list --filter='name~"phantom-audit"'` shows STARTED+STOPPED within 60s of completion.
+    `phantom-rows-found = 0` printed to STDOUT (the script's success condition).
+    Sample 3 random shards × 5 asset_groups from the audit's per-asset-group output JSON; assert no row missing
+    where manifest reports captured.
+  last_executed: NEVER (continuous-cadence not yet established; first runs were ad-hoc 2026-04-26 + 2026-05-05)
+```
+
+(Added per codex audit IN-6 2026-05-12 — Runbook Execution-Owner SSOT HARD RULE compliance.)
+
+### Manifest-remediation script index (codex audit IN-16 2026-05-12)
+
+The `instruments-service/scripts/` directory contains ~40 operator-runnable one-off remediation scripts. Per CLAUDE.md
+"Runbook Execution-Owner SSOT" HARD RULE every operator-runnable runbook MUST declare owner / cadence / verifier /
+last_executed. Closed-set inventory + per-script disposition (annotated for the May-23 cutover wave):
+
+| Script                                            | Class                | Runner                  | Cadence              | Delete-after-run? |
+| ------------------------------------------------- | -------------------- | ----------------------- | -------------------- | ----------------- |
+| `reconcile_phantom_manifest_rows_all.py`          | multi-asset-group    | (see Phantom-audit § above) | weekly → daily        | NO (recurring)    |
+| `reconcile_phantom_manifest_rows.py`              | sports-only legacy   | phased out               | n/a                  | YES (post-cutover)|
+| `reconcile_blank_error_reason_rows.py`            | legacy-to-typed-reason backfill | one-shot per asset-group | one-shot       | YES (post-run)    |
+| `reconcile_legacy_blank_to_typed_reason.py`       | as above (alias)     | one-shot                 | one-shot             | YES (post-run)    |
+| `reconcile_expected_absence_reasons.py`           | reason-taxonomy backfill | one-shot              | one-shot             | YES (post-run)    |
+| `flip_phantom_to_attempted_failed.py`             | one-shot remediation | per phantom-audit run    | per-incident         | YES (post-run)    |
+| `purge_pre_launch_manifest_rows.py`               | pre-launch sweep     | per venue-launch-date update | per-incident      | YES (post-run)    |
+| `dedupe_manifest_schema_drift.py`                 | schema-drift sweep   | one-shot per migration   | per-migration        | YES (post-run)    |
+| `fix_manifest_venue_casing.py`                    | CF-3/SP-3 case-folding remediation | one-shot once `to_canonical_venue()` ships | one-shot | YES (post-run)|
+
+Per the IN-22 QG ratchet (in-flight): one-shot reconcilers + flip scripts should be MOVED to `scripts/_one_shot/` +
+deleted on archive-boundary per the "Plans Run To Actual Completion" rule (operationally-shipped =
+script-deleted-after-run). Reconcilers that recur (phantom-audit, hot-reload) keep their location.
+
+Cross-references: CLAUDE.md § "Manifest phantom audit", "Runbook Execution-Owner SSOT"; per-script `execution:` blocks
+to be added in the same logical unit as the next script-touch (do NOT mass-sweep — collision risk per
+"Two teammates × multiple parallel agents").
+
+### Catalogue-completeness runbook (codex audit IN-21 2026-05-12)
+
+End-to-end runbook for "is the catalogue complete + every venue actually flowing?":
+
+1. **Per-asset-group finding ledger** — five `plans/active/issues/catalogue_audit_<asset_group>_2026_05_12.md`
+   issue docs (cefi / defi / tradfi / sports / prediction). Each per-row finding has a typed disposition.
+2. **Phantom-audit reconciler** — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X
+   --dry-run` (multi-asset-group; runs per § "Phantom audit — re-runnable recipe" above).
+3. **Per-asset-group UAC registry SSOTs** —
+   - `unified_api_contracts/registry/market_data_categories.py:VENUES_BY_ASSET_GROUP` (21 cefi / 8 tradfi / 2 prediction
+     / ~10 sports).
+   - `unified_api_contracts/registry/defi_venues.py:ALL_DEFI_VENUES` (~70 DeFi).
+   - `unified_api_contracts/registry/defi_venue_capabilities.py:DEFI_VENUE_DATA_TYPE_CAPABILITIES`.
+   - Per-asset-group `*_instrument_universe.py` (CeFi / DeFi / TradFi / Sports).
+   - Per-asset-group `*_SOURCE_COVERAGE_START` constants in `coverage_starts.py`.
+4. **instruments-service `factory.py` adapter consistency** — `CANONICAL_VENUE_TO_ADAPTER` keys must be ⊆ the union of
+   step 3 venue ids (modulo IN-9 venue-class taxonomy "execution-only" / "refdata-only" exemptions). Auto-registration
+   mechanism documented in IN-13.
+5. **`verify_instrument_manifest_coverage.py`** — instruments-service script that joins UAC venue catalogue to
+   manifest rows + flags drift.
+
+When all 5 layers reconcile (no GHOST venues + no ORPHAN adapters + no MISSING coverage windows + no DUAL-classified
+venues), the catalogue is **complete** for the asset_group. Cross-references:
+[`venue-availability.md`](./venue-availability.md) § "Where Availability Lives" + § "Venue-class taxonomy",
+[`instrument-pipeline-defi.md`](./instrument-pipeline-defi.md) § "instruments-service `factory.py`".
 
 **Seven drift axes the audit handles** (each one historically caused a wave of false-positive phantoms):
 

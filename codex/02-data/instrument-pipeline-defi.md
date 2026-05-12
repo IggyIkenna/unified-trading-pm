@@ -15,7 +15,11 @@ are required by which strategy type.
 ```
 instruments-service
     │  Provides: InstrumentRecord objects with canonical instrument_key
-    │  Adapters: eigenlayer.py, ethfi.py, lido.py, etherfi.py, binance.py, hyperliquid.py
+    │  Adapters (under reference_data/adapters/defi/ as of 2026-05-12 — refreshed per codex audit IN-4):
+    │    aave_v3, balancer, benqi, compound_v3, curve, drift, eigenlayer, ethena, etherfi, ethfi,
+    │    euler_v2, fluid, jito, kamino, lido, marinade, morpho, orca, radiant, raydium, spark,
+    │    uniswap_v2, uniswap_v3, uniswap_v4, venus (25 DeFi adapters total).
+    │  CeFi adapters (under reference_data/adapters/cefi/): binance, hyperliquid, et al. — NOT DeFi.
     ▼
 market-tick-data-service (MTDS)
     │  Consumes: instrument_key list per venue
@@ -43,7 +47,15 @@ execution-service
 
 ## Per-Strategy Instrument Requirements
 
-| Strategy                      | Staking Instrument                    | Perp Instrument                                  | Reward Token(s)                   | Price Feeds Needed                                                              |
+> **Archetype-name supersession (codex audit IN-17 2026-05-12)**: the strategy labels below
+> (`DEFI_STAKED_BASIS` / `DEFI_STAKED_BASIS_LIDO` / `DEFI_RECURSIVE_BASIS` / `DEFI_AAVE_LENDING`) predate the
+> 2026-04-25 archetype canonicalisation. The May-23 cutover lead archetype is `carry_staked_basis` (+ second lead
+> `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion`, formerly `leveraged_funding_arb`). Strategy-area Phase 1.B
+> audit owns the workspace-wide rename sweep; this table will be regenerated when the archetype-name table flips.
+> Use the cross-reference to UAC `StrategyArchetype` (55 members per slot-8 strategy audit ST-1) as the canonical
+> SSOT meanwhile; codex/09-strategy/architecture-v2/README.md is the strategy-side counterpart.
+
+| Strategy (legacy label)       | Staking Instrument                    | Perp Instrument                                  | Reward Token(s)                   | Price Feeds Needed                                                              |
 | ----------------------------- | ------------------------------------- | ------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------- |
 | `DEFI_STAKED_BASIS` (EtherFi) | `ETHERFI-ETHEREUM:LST:WEETH@ETHEREUM` | `HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID` | EIGEN (weekly), ETHFI (quarterly) | `eigen_price_usdt`, `ethfi_price_usdt`, `weeth_eth_rate`                        |
 | `DEFI_STAKED_BASIS_LIDO`      | `LIDO-ETHEREUM:LST:WSTETH@ETHEREUM`   | `HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID` | None                              | `wsteth_eth_rate`                                                               |
@@ -198,16 +210,37 @@ RewardScheduleEntry(
 
 ## Key Files
 
-| File                                                         | Purpose                                                      |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| `instruments_service/reference_data/adapters/eigenlayer.py`  | EIGEN governance token adapter                               |
-| `instruments_service/reference_data/adapters/ethfi.py`       | ETHFI governance token adapter                               |
-| `instruments_service/reference_data/adapters/lido.py`        | stETH/wstETH LST adapters                                    |
-| `instruments_service/reference_data/factory.py`              | Adapter registry (`CANONICAL_VENUE_TO_ADAPTER`, `_ADAPTERS`) |
-| `unified_api_contracts/registry/reward_schedules.py`         | EIGEN/ETHFI reward schedule SSOT                             |
-| `unified_trading_library/config_interface/paths/registry.py` | GCS path templates SSOT                                      |
-| `market_tick_data_service/engine/orchestrator.py`            | MTDS write path + per-instrument files                       |
-| `market_data_processing_service/config.py`                   | MDPS `get_processed_path()`                                  |
+(Refreshed 2026-05-12 per codex audit IN-4 — adapter paths corrected to live under `adapters/defi/` subdir.)
+
+| File                                                            | Purpose                                                      |
+| --------------------------------------------------------------- | ------------------------------------------------------------ |
+| `instruments_service/reference_data/adapters/defi/eigenlayer.py`| EIGEN governance token adapter                               |
+| `instruments_service/reference_data/adapters/defi/ethfi.py`     | ETHFI governance token adapter                               |
+| `instruments_service/reference_data/adapters/defi/lido.py`      | stETH/wstETH LST adapters                                    |
+| `instruments_service/reference_data/adapters/defi/` (full set)  | 25 DeFi adapters; see Pipeline-Stages diagram for full list  |
+| `instruments_service/reference_data/factory.py`                 | Adapter registry (`CANONICAL_VENUE_TO_ADAPTER`, `_ADAPTERS`) — runtime auto-registration mechanism documented per codex audit IN-13 |
+| `unified_api_contracts/registry/reward_schedules.py`            | EIGEN/ETHFI reward schedule SSOT                             |
+| `unified_api_contracts/registry/defi_venues.py`                 | `ALL_DEFI_VENUES` / `DEFI_VENUE_PHASE` / `MTDS_DEFI_VENUES` (~70 DeFi venue ids) |
+| `unified_api_contracts/registry/defi_venue_capabilities.py`     | `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — per-(venue, data_type) start-date SSOT (merged into `VENUE_DATA_TYPE_CAPABILITIES` at load time) |
+| `unified_trading_library/config_interface/paths/registry.py`    | GCS path templates SSOT                                      |
+| `market_tick_data_service/engine/orchestrator.py`               | MTDS write path + per-instrument files                       |
+| `market_data_processing_service/config.py`                      | MDPS `get_processed_path()`                                  |
+
+## instruments-service `factory.py` adapter auto-registration mechanism (codex audit IN-13)
+
+`reference_data/factory.py` builds `CANONICAL_VENUE_TO_ADAPTER` at module-load through two layers:
+
+1. **Static registration** — explicit `_ADAPTERS` dict maps `(asset_group, adapter_key)` → adapter class.
+2. **Subgraph-prefix auto-mapping** — `_SUBGRAPH_VENUE_PREFIX_TO_PROTOCOL` (in `factory.py:180-181`) maps canonical
+   venue ids (e.g. `DRIFT-SOLANA`) to the underlying protocol adapter (e.g. `drift`). The `_PROTOCOL_TO_ADAPTER_KEY`
+   indirection means `canonical_venue` → `protocol_key` → `adapter_key` → adapter-class.
+
+**Catalogue-audit consequences** (CF-2 / CF-9 / DF-10 — see `catalogue_audit_*_2026_05_12.md`): a venue id that
+matches a subgraph prefix gets auto-mapped to a protocol adapter even if no explicit row exists; bare `DRIFT` (no
+`-SOLANA` suffix) does NOT match the subgraph prefix and silently has no adapter; `GMX` mapped to `uniswap_v3` is a
+DEX-shape match while UAC `_PERPS` declares perp-shape (DF-10 cross-shape mismatch). Future auditors: don't grep for
+literal `CANONICAL_VENUE_TO_ADAPTER["FOO"]` — read this section first, then walk the subgraph-prefix dict + protocol
+indirection.
 
 ## Related Docs
 

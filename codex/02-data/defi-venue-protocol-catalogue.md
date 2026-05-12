@@ -30,14 +30,23 @@ we can execute, and which chain × asset_group axis it occupies. If a protocol i
 plans, it must appear here — if it doesn't, that's a finding (file an issue doc per
 [`Findings Triage Discipline`](../../cursor-configs/CLAUDE.md#findings-triage-discipline)).
 
-**Status legend**:
+**Status legend** (tightened 2026-05-12 per codex audit IN-10 — split code-shipped vs data-flowing):
 
-- ✅ **PRODUCTION** — UAC entry + instruments-service adapter + MTDS adapter + execution connector all green; data
-  flowing to GCS; tests pass; manifest coverage ≥ 99%.
+- ✅ **PRODUCTION** — UAC entry + instruments-service adapter + MTDS adapter + execution connector ALL green AND
+  **manifest coverage ≥ 99% verified by sample-parquet inspection** (rows present, OHLC populated, NOT 1440-NaN per
+  the 2026-05-05 MDPS reference incident). Data is actually flowing.
+- 🟢 **CODE-SHIPPED-AWAITING-BACKFILL** — UAC entry + adapter + connector all wired, code passes QG, but the first
+  manifest-coverage backfill has not landed yet OR backfill is < 99% coverage. Distinct from ✅ — "code shipped" is
+  NOT "operationally shipped" per CLAUDE.md "Plans Run To Actual Completion" rule. Cross-references catalogue findings
+  DF-6 (vault venues "live"-labelled with no adapter / handler / capability) + DF-20 (MARGINFI / SOLEND "live" ghosts).
 - ◐ **PARTIAL** — some axes live, others zero. See per-row notes.
 - ✗ **ZERO** — no implementation. Either P0 buildout or post-cutover deferred per
   [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md).
 - 🔍 **VERIFY** — claimed shipped but unverified in current codebase. Treat as ✗ until verification ships.
+
+When a row flips from 🟢 to ✅, the commit message includes a manifest-coverage cite (sample-parquet inspection
+result + manifest row count). The "UAC-symbol-shipped ≠ data-flowing" rule applies workspace-wide; the strictness here
+mirrors the master-plan readiness-checklist Continuous-Verification column.
 
 **Axis legend**: UAC = entry in
 [`registry/defi_venues.py`](../../../unified-api-contracts/unified_api_contracts/registry/defi_venues.py)

@@ -5,9 +5,10 @@ scope: [engineer, admin]
 # Venue Availability SSOT
 
 > **See also:** `codex/02-data/availability-manifest-and-data-status.md` for the complete availability manifest schema
-> (v7 — current; `MANIFEST_SCHEMA_VERSION = 7` in UTL `manifest_writer.py`), per-service shard dimensions, data status
+> (**v8 column-shape ratified 2026-05-09**; `MANIFEST_SCHEMA_VERSION = 7` constant transitionally pinned in UTL
+> `manifest_writer.py:131` until Phase 4.DEFAULT-REMOVAL bumps to `8`), per-service shard dimensions, data status
 > page hierarchy, availability % calculation, and integrity principles. This document covers venue launch dates and
-> instrument availability specifically.
+> instrument availability specifically. (v8/v7 reconciliation per codex audit IN-8 2026-05-12.)
 
 ## What This Is
 
@@ -41,6 +42,68 @@ coverage-window clipping. Distinct from `defi_venues.py` which is the venue-set 
 `availability-manifest-and-data-status.md:544-547`). It is NOT the venue-set registry — that role is split
 across the four SSOTs above per asset_group. The historical "primary SSOT" framing pre-dated the
 per-asset-group split landed in 2026-04-25 (`market_data_categories.py` Wave 3).
+
+## Venue identifier case-folding contract (codified 2026-05-12 per codex audit IN-3)
+
+The 5 catalogue audits keep re-flagging case-folding drift between two distinct identifier spaces:
+
+| Space                                                      | Convention | Examples                                                | Where it lives                                            |
+| ---------------------------------------------------------- | ---------- | ------------------------------------------------------- | --------------------------------------------------------- |
+| **User-facing venue id** (manifest rows, UI, paths)        | UPPERCASE  | `BINANCE-SPOT` / `ODDS_API` / `POLYMARKET` / `AAVE_V3` | `VENUES_BY_ASSET_GROUP` + `ALL_DEFI_VENUES` UAC registries |
+| **Python symbol / secret key / source-coverage key**       | lowercase  | `binance` / `odds_api` / `polymarket` / `aave_v3`       | `_BASE_VENUES_BY_ASSET_GROUP` / `SourceCapability.source` / `*_SOURCE_COVERAGE_START` / instruments-service adapter registry keys |
+
+Until the `to_canonical_venue()` helper ships (cross-asset Phase 1D), honest-coverage clip joins MUST normalise on
+both sides — e.g. `CEFI_SOURCE_COVERAGE_START["BINANCE".lower()]` (NOT `CEFI_SOURCE_COVERAGE_START["BINANCE-SPOT"]`,
+which silently misses every spot venue). Reference incidents: CF-3 / CF-4 / SP-3 in
+`plans/active/issues/catalogue_audit_*_2026_05_12.md`. The QG ratchet that statically enforces case-correctness is
+tracked in IN-22.
+
+## Venue-class taxonomy (codified 2026-05-12 per codex audit IN-9)
+
+The 5 catalogue audits also kept re-flagging that the workspace uses "venue" loosely. Closed-set taxonomy:
+
+| Class                              | Has instrument universe? | Has MTDS market-data adapter? | Has execution connector? | Examples (catalogue-audit cite) |
+| ---------------------------------- | ------------------------ | ----------------------------- | ------------------------ | ------------------------------- |
+| **Market-data venue**              | ✅                       | ✅                            | depends                  | BINANCE-SPOT, AAVE_V3-ETHEREUM  |
+| **Refdata-only source**            | ✅ (universe metadata)   | ❌                            | ❌                       | POLYGON.IO instruments fetch (TF-5); OPEN_METEO (SP-2) |
+| **Execution-only connector**       | ❌                       | ❌                            | ✅                       | Jupiter, Wormhole/LayerZero bridges (DF-19)            |
+| **API-capability source**          | ❌                       | partial (per data_type only)  | ❌                       | `bitstamp` / `huobi` / `kucoin` / `mexc` SourceCapabilities (CF-12); FRED / POLYGON / ECB / OPENBB / OFR / REGULATORY (TF-4) |
+| **Bundled combination**            | ✅ (multi-source)        | ✅                            | ✅                       | most production market-data venues                     |
+
+When adding a new venue id to `VENUES_BY_ASSET_GROUP`, declare its class up-front + verify each ✅ has a wired
+adapter / capability / connector. QG ratchet enforcement is tracked in IN-22.
+
+## Adding a new venue (per-asset_group SSOT touchpoints)
+
+1. Add the UPPERCASE venue id to `VENUES_BY_ASSET_GROUP[ag]` (or `ALL_DEFI_VENUES`).
+2. Declare the venue class per IN-9 taxonomy above (record in the same commit).
+3. Add `launch_date` to `venue_launch_dates.py`.
+4. Add source-coverage start to `*_SOURCE_COVERAGE_START` (lowercase key per the case-folding contract).
+5. For DeFi: add per-(venue, data_type) start-dates to `defi_venue_capabilities.py:DEFI_VENUE_DATA_TYPE_CAPABILITIES`.
+6. For instruments-service-backed venues: register adapter in `factory.py:CANONICAL_VENUE_TO_ADAPTER` (the
+   instruments-service auto-registration mechanism is documented in IN-13; cross-link to
+   `instrument-pipeline-defi.md`).
+
+## QG ratchet — every venue id must be wired (codex audit IN-22 2026-05-12)
+
+New QG STEP 5.7x (in-flight) statically asserts: every venue id in `VENUES_BY_ASSET_GROUP[ag]` and `ALL_DEFI_VENUES`
+has at least one of:
+
+(a) an instruments-service adapter mapping in `CANONICAL_VENUE_TO_ADAPTER` (or auto-mapped via subgraph-prefix /
+    protocol-indirection per IN-13), OR
+(b) a documented "no-instrument-universe" exemption per the IN-9 venue-class taxonomy (execution-only / refdata-only
+    / api-capability-source).
+
+Motivating catalogue audits:
+- CF-9 / CF-10 — bare `GMX` / `DRIFT` cefi venues with no adapter (GHOST).
+- DF-6 — vault venues marked "live" with no adapter, handler, OR capability anywhere.
+- DF-20 — MARGINFI / SOLEND "live" ghosts.
+- SP-1 — `manifold` declared in capability but no venue/adapter.
+- PR-7 — `MANIFOLD` orphan.
+
+QG script path: `unified-trading-pm/scripts/quality_gates/check_venue_adapter_coverage.py` (planned). Owner: governance
++ QG maintainer. Until the QG ships, reviewers flag PRs that add a venue id to a registry without one of (a) / (b)
+checked in the same commit.
 
 ```python
 @dataclass

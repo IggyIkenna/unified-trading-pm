@@ -35,11 +35,22 @@ All `data-catalogue.*.yaml` files must conform to this schema. Validated by
 ```yaml
 datasets:
   - dataset_id: instruments_cefi_binance # snake_case, globally unique
-    category: cefi # cefi | tradfi | defi | sports | altdata | prediction
+    asset_group: cefi # cefi | tradfi | defi | sports | prediction (canonical key
+                     # set per CLAUDE.md § "Asset-group vocabulary"; the legacy
+                     # `category:` key + `altdata` member are deprecated 2026-05-12
+                     # per codex audit IN-5 — readers tolerate both keys during the
+                     # transition window, validators warn on legacy use)
     service_owner: instruments-service # repo name that writes this dataset
-    schema_ref: unified_api_contracts.internal.domain.instruments.InstrumentsSchema
-    gcp_path: gs://instruments-cefi-batch/instrument_availability/
-    aws_path: s3://instruments-cefi-batch/instrument_availability/
+    schema_ref: unified_api_contracts.internal.reference.InstrumentRecord
+    # Canonical bucket lookup (per CLAUDE.md § "Bucket-name SSOT (b+)" + codex
+    # audit IN-18); never inline `gs://...` / `s3://...` in production callers.
+    bucket_lookup:
+      cloud: gcp # or aws
+      kind: instruments # passed to resolve_bucket_name(kind=...)
+      asset_group: cefi
+      # env tier is read from ${DEPLOYMENT_ENV} (staging / prod / development)
+    sample_legacy_gcp_path: gs://instruments-cefi-batch/instrument_availability/ # illustrative; do NOT inline
+    sample_legacy_aws_path: s3://instruments-cefi-batch/instrument_availability/ # illustrative; do NOT inline
     partition_keys: [year, month, day] # Hive partition columns
     format: parquet # parquet | json | csv
     retention_days: 90
