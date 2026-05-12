@@ -810,7 +810,16 @@ Owner: ikenna for design + harsh for implementation.
       handlers: every live order goes through bundle-sim, BLOCK on revert, advisory-log on slippage>threshold. Default
       per-archetype daily Tenderly budget = $50/day per archetype (operator-set ceiling); 1 sim per live order. Budget
       exhaustion downgrades to advisory-only.
-      **DESIGN-SHIPPED 2026-05-13 (Day 3) by slot 2 — IMPLEMENTATION HANDED TO HARSH SLOT 2.** Design SSOT lives in
+      **✅ IMPLEMENTATION SHIPPED 2026-05-12 by slot 2 — execution-service@2abbc1f7** —
+      `simulate_bundle(transactions, chain_id) -> BundleSimResult` + `TenderlyTx` / `BundleSimResult` dataclasses +
+      `gate_or_advise()` pre-flight helper landed in `execution_service/providers/tenderly.py`;
+      `TenderlyBudgetTracker` with GCS-backed daily state (`$50/day` ceiling) landed in
+      `execution_service/providers/tenderly_budget.py`; `BlockOnSimulationRevert` in
+      `execution_service/providers/_tenderly_errors.py`; 6 unit tests in
+      `tests/unit/providers/test_tenderly_bundle_sim.py` covering request shape / clean sim / revert / high-slippage
+      advisory / budget exhaustion / block-on-revert. **REMAINING — wire `gate_or_advise()` call into every live DeFi
+      `execute()` path** (defi_execution/protocols/) is a separate slice tracked under Harsh's continuation queue.
+      Design SSOT lives in
       [`codex/05-infrastructure/chain-rpc-mev-tenderly.md`](../../codex/05-infrastructure/chain-rpc-mev-tenderly.md)
       § "Tenderly setup" (lines 91-126) — pre-existing codex content from Phase 5D specifies the API key flow (Secret
       Manager `tenderly_api_key`), bundle-sim endpoint shape, and per-archetype $50/day budget policy.
