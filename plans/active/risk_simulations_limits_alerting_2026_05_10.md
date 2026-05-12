@@ -491,6 +491,82 @@ returns full rule set; tests pass.
 - `alerting_service_live_rules_2026_05_07` — `RiskRuleFiredEvent` is alerting consumer.
 - `promote_workflow_may23_cli_path_2026_05_10` — gate evaluator reads pre-flight pass/fail.
 
+## Stablecoin depeg additions (operator-direction 2026-05-12) — INJECTED
+
+Operator direction 2026-05-12 PM: tighten stablecoin-depeg response thresholds + add aggregate-exposure awareness +
+require historical backtest before shipping new ladder to live. Composes with `scratch_scenarios_day1/10_defi_stablecoin_depeg.md`
+(revised 2026-05-12) + `scratch_scenarios_day1/17_lrt_lending_meltdown_composite.md`.
+
+### Tightened depeg ladder (revised 2026-05-12)
+
+Replaces the previous moderate/catastrophic split (5%/13%). New default policy across `carry_staked_basis` +
+`LEVERAGED_FUNDING_ARB` + `ARBITRAGE_PRICE_DISPERSION`:
+
+| Magnitude | Action | Notes |
+|---|---|---|
+| 100bps–300bps (1–3%) | MONITOR (alert only) | No auto-action |
+| 300bps–500bps (3–5%) | SCALE_DOWN | Halve new entries; pause cross-stable arb |
+| **≥500bps (≥5%)** | **KILL_ALL + FAST_UNWIND** | Was 1300bps (13%); operator-tightened |
+| ≥1000bps (≥10%) | EMERGENCY (crystallize stable→ETH/BTC) | Full flatten; recovery_mode=manual_unkill |
+| Per-stable override | Synthetic/algo stables (USDE/CRVUSD/FRAX) trigger at HALF | KILL at 2.5%; reflects historical fragility |
+
+- [ ] [AGENT] P0. **D.1 — UAC `BreakerConfig` per-stable depeg thresholds.** Extend
+      `registry/circuit_breakers/carry_staked_basis.py` + add `registry/circuit_breakers/leveraged_funding_arb.py`
+      with per-stable breaker configs: `stable_depeg_warning` / `_small` / `_moderate` / `_catastrophic` per
+      (USDC, USDT, DAI, USDE, FRAX, GHO, CRVUSD, SUSDE). Override thresholds for synthetic stables (HALF).
+      Owner: slot 5 or risk-side maintainer.
+
+- [ ] [AGENT] P0. **D.2 — Aggregate stablecoin exposure feature.** New feature in
+      `features-service/features_service/cross_instrument/` (or similar):
+      `stablecoin_aggregate_exposure_<stable>` — sums across all venues, all chains, all protocols, all wallets.
+      Returns `gross_long`, `gross_short`, `net`, `delta_1` (sensitivity to 1bps peg move). Required for the
+      depeg ladder to be actionable — without aggregate view, the KILL_ALL trigger can't compute the impact
+      magnitude. Owner: features-service maintainer + Ikenna (cross-cutting design).
+
+- [ ] [AGENT] P0. **D.3 — UAC `STABLECOIN_PEG_RESTORE_HISTORY` registry.** Per-stable historical depeg events:
+      `(stable, event_date, trough_depeg_bps, restore_duration_hours, was_structural: bool)`. Seeds: USDC 2023-03-11
+      (-1300bps, 72h, false), UST 2022-05-09 (-10000bps, never, true), PYUSD 2024-07 (-700bps, ~14d, false),
+      USDE 2024-Q4 (multiple <-300bps, <72h, false), BUSD 2024-12 (-200bps, never reissued, true). Owner: UAC
+      + research analyst. Feeds the operator-decision UI for crystallize-vs-wait at 5-10% tier.
+
+- [ ] [AGENT] P0. **D.4 — Backtest harness for depeg ladder.** New script
+      `risk-and-exposure-service/scripts/backtest_depeg_ladder.py`:
+      (a) Pull historical Chainlink `latestAnswer` for USDC/USD (`0x8fFf...8f6`) + USDT/USD (`0x3E7d...32D`) +
+          DAI/USD (`0xAed0...ee9`) aggregators 2020-01-01 → 2026-05-12 via MTDS oracle_prices_handler data lake.
+      (b) Compute rolling peg-deviation per stable per day; identify all `peg_dev > 100bps` events.
+      (c) Simulate the new ladder per archetype × event; output `n_triggers`, `false_positive_rate` (events
+          where peg recovered <72h without intervention), `true_positive_rate` (events where intervention saved
+          drawdown vs do-nothing).
+      (d) **Acceptance criterion**: false-positive rate <5% at 500bps KILL_ALL OR operator-tunable per-stable
+          override; true-positive rate >90% on capture of 2023-03 USDC + 2022-05 UST + 2024-07 PYUSD.
+      (e) Output: `risk-and-exposure-service/results/depeg_backtest_<run_id>.md` with per-event table + ladder
+          parameter sensitivity sweep (sweep across 300bps / 500bps / 800bps KILL_ALL thresholds; recommend
+          best).
+      Owner: slot 5 risk-side or dedicated backtest tab. **HARD gate before live**: ladder cannot ship without
+      this backtest output.
+
+- [ ] [AGENT] P1. **D.5 — Issuer-pause event integration.** Subscribe to Circle `attestations` endpoint + Tether
+      attestation site + MakerDAO PSM state contract. Emit `AlertCode.STABLECOIN_ISSUER_PAUSED` when any
+      stablecoin issuer flips to paused state. Feeds into the crystallize-vs-wait decision (issuer_paused=true
+      shifts decision toward crystallize). Owner: alerting-service or instruments-service maintainer.
+
+- [ ] [AGENT] P1. **D.6 — Stablecoin→non-stable emergency-exit route registry.** UAC
+      `STABLECOIN_EMERGENCY_EXIT_ROUTES` per-stable: list of {DEX-pool / CEX-spot} paths sorted by depth +
+      slippage cost at typical exit-size. Used by the FAST_UNWIND + CRYSTALLIZE actions to pick cheapest exit.
+      Owner: execution-service + UAC.
+
+- [ ] [AGENT] P1. **D.7 — Governance-forum watcher for stablecoin issuer + Aave/Spark.** Same surface as
+      scenario 17 `governance_forum_watcher` trigger_d — Snapshot + Tally + Discord polling for tagged
+      `incident` / `freeze` / `<stable-name>` threads. Operator-page alert only; not auto-action. Owner:
+      alerting-service.
+
+### Cross-references
+
+- Scenario specs: `scratch_scenarios_day1/10_defi_stablecoin_depeg.md` (revised 2026-05-12) + `17_lrt_lending_meltdown_composite.md`
+- `defi_recursive_borrow_archetypes_2026_05_10.md` — recursive-borrow archetype carries primary USDC/USDT exposure
+- `disaster_recovery_circuit_breakers_2026_05_10.md` — auto-response wiring for KILL_ALL + FAST_UNWIND + CRYSTALLIZE
+- `BREAKER_RECOVERY_DEFAULTS` SSOT at UAC@`a7a99b5` — recovery_mode=manual_unkill mapping for catastrophic-tier
+
 ## Deferred work after 2026-05-10 plan-creation session
 
 | Item                                               | Status                        | Successor / blocker                                                                                              |

@@ -40,13 +40,44 @@ At T+N seconds, oracle-published peg-price for selected stable drops from `$1.00
 - **Duration**: 6h (instant-recovery class) → 7 days (slow-recovery) → permanent (UST). Bimodal: most de-pegs resolve within 72h (90% of historical instances); 10% are structural (UST, BUSD wind-down).
 - **Cross-stable correlation**: LOW (<0.2) — each stable has distinct issuer + collateral; idiosyncratic. EXCEPT during systemic events (2023-03 USDC drop dragged DAI down via 50%+ USDC backing). Scenario MUST support both isolated-stable (USDC only) and correlated-multi (USDC + DAI + FRAX).
 
-### Expected outcomes (per archetype × per magnitude tier)
+### Expected outcomes (per archetype × per magnitude tier) — revised 2026-05-12 per operator: aggressive thresholds
+
+**Operator direction 2026-05-12**: previous moderate/catastrophic split (5%/13%) was too conservative. New default policy:
+- **1% (100bps)** → enter monitoring; alert operator; no auto-action yet
+- **3% (300bps)** → SCALE_DOWN (was 5%); halve new entries; pause cross-stable arb
+- **5% (500bps)** → **KILL_ALL + FAST_UNWIND** (was 13%); recovery_mode=manual_unkill
+- **10%+ (1000bps+)** → ALL archetypes referencing the stable enter EMERGENCY mode + crystallize stable→ETH/BTC via cheapest path
+- Per-stable override: USDE/CRVUSD/FRAX/USDE (synthetic / algo-adjacent stables) at HALF those thresholds (KILL at 2.5%) because historically more depeg-fragile than USDC/USDT
+
+**Rationale**: at 5% depeg, recursive-borrow Aave health-factor recalc + perp-denominator drift cost > peg-restore wait-cost. Backtest with historical Chainlink USDC/USD + USDT/USD + DAI/USD aggregator data (Chainlink mainnet `0x8fFf...8f6` / `0x3E7d...32D` / `0xAed0...ee9` — available via MTDS `oracle_prices_handler`) to verify the new thresholds don't fire false-positives on 2020-2026 historical chop. **MUST**: simulate the new ladder against historical 2023-03 USDC ($0.87 trough — 13% peak), 2022-05 UST collapse, 2024 USDE volatility, 2024-07 PYUSD, 2024-12 BUSD wind-down BEFORE shipping to live.
 
 | Archetype | Magnitude | `RiskRuleConsequence` | Rule(s) fired | Breaker(s) tripped | `BreakerAction` | `KillSwitchId` armed | `AlertCode` fired | `expected_within` |
 |---|---|---|---|---|---|---|---|---|
-| `carry_staked_basis` | moderate (-500bps USDC) | SCALE_DOWN (reduce LST positions; pause new entries until peg recovers) | `MAX_CONCENTRATION` (stable exposure) + `MAX_DAILY_LOSS` | `carry_staked_basis_stable_depeg_moderate` (or **FOLLOW-UP**) | SCALE_DOWN; existing positions held | none initially | `RISK_RULE_SCALED_DOWN` + `CIRCUIT_BREAKER_TRIPPED` | 120s |
-| `carry_staked_basis` | catastrophic (-1300bps+ OR no_recovery) | BLOCK + KILL on existing | `MAX_DRAWDOWN_BREACH` + `GLOBAL_DATA_STALENESS_HALT` (peg disagreement = stale numeraire) | `carry_staked_basis_stable_depeg_catastrophic` (or **FOLLOW-UP**) | KILL_ALL + FAST_UNWIND | `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` + `KILL_ALL_LIVE` (if multi-stable systemic) | `RISK_RULE_BLOCKED` + `KILL_SWITCH_ARMED` + multiple `CRITICAL` | 60s |
-| `ARBITRAGE_PRICE_DISPERSION` (USDT-quoted perps) | moderate USDT de-peg | SCALE_DOWN (correct denominator + halve new positions until peg stable) | `MAX_POSITION_SIZE_PER_INSTRUMENT` (denominator-corrected) | `arbitrage_price_dispersion_denominator_depeg` (or **FOLLOW-UP**) | SCALE_DOWN | none | `RISK_RULE_SCALED_DOWN` | 120s |
+| `carry_staked_basis` | warning (-100bps to -300bps) | MONITOR (alert only; no auto-action) | `MAX_CONCENTRATION` warn | `carry_staked_basis_stable_depeg_warning` (**FOLLOW-UP**) | none | none | `RISK_RULE_WARNING` | 60s |
+| `carry_staked_basis` | small (-300bps to -500bps) | SCALE_DOWN (halve new entries; pause cross-stable arb) | `MAX_CONCENTRATION` + `MAX_DAILY_LOSS` | `carry_staked_basis_stable_depeg_small` (**FOLLOW-UP**) | SCALE_DOWN; existing positions held | none | `RISK_RULE_SCALED_DOWN` + `CIRCUIT_BREAKER_TRIPPED` | 120s |
+| `carry_staked_basis` | **moderate (-500bps+)** | **KILL_ALL + FAST_UNWIND** (revised — was SCALE_DOWN) | `MAX_DRAWDOWN_BREACH` + `GLOBAL_DATA_STALENESS_HALT` | `carry_staked_basis_stable_depeg_moderate` (**FOLLOW-UP**) | KILL_ALL + FAST_UNWIND | `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` | `RISK_RULE_BLOCKED` + `KILL_SWITCH_ARMED` + multiple `CRITICAL` | 60s |
+| `carry_staked_basis` | catastrophic (-1000bps+ OR no_recovery) | EMERGENCY (full flatten + crystallize stable→ETH/BTC) | `MAX_DRAWDOWN_BREACH` + `GLOBAL_DATA_STALENESS_HALT` | `carry_staked_basis_stable_depeg_catastrophic` (**FOLLOW-UP**) | KILL_ALL + FAST_UNWIND + CRYSTALLIZE | `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` + `KILL_ALL_LIVE` (if multi-stable systemic) | `RISK_RULE_BLOCKED` + `KILL_SWITCH_ARMED` + multiple `CRITICAL` | 60s |
+| `LEVERAGED_FUNDING_ARB` | -300bps to -500bps | SCALE_DOWN (halve recursive depth) | `MAX_CONCENTRATION` + `MAX_DAILY_LOSS` | `funding_arb_stable_depeg_small` (**FOLLOW-UP**) | SCALE_DOWN | none | `RISK_RULE_SCALED_DOWN` | 120s |
+| `LEVERAGED_FUNDING_ARB` | **-500bps+** | **KILL_ALL + FAST_UNWIND** | `MAX_DRAWDOWN_BREACH` | `funding_arb_stable_depeg_moderate` (**FOLLOW-UP**) | KILL_ALL + FAST_UNWIND | `KILL_PER_ARCHETYPE_LEVERAGED_FUNDING_ARB` | `RISK_RULE_BLOCKED` + `KILL_SWITCH_ARMED` | 60s |
+| `ARBITRAGE_PRICE_DISPERSION` (USDT-quoted perps) | -300bps to -500bps | SCALE_DOWN (correct denominator + halve new positions) | `MAX_POSITION_SIZE_PER_INSTRUMENT` (denominator-corrected) | `arbitrage_price_dispersion_denominator_depeg_small` (**FOLLOW-UP**) | SCALE_DOWN | none | `RISK_RULE_SCALED_DOWN` | 120s |
+| `ARBITRAGE_PRICE_DISPERSION` | -500bps+ | KILL_ALL on USDT-quoted leg; preserve USD-quoted / coin-margined positions | `MAX_DRAWDOWN_BREACH` (denominator-corrected) | `arbitrage_price_dispersion_denominator_depeg_moderate` (**FOLLOW-UP**) | KILL_ALL (USDT-quoted subset only) | `KILL_PER_ARCHETYPE_ARB` (denominator-scoped) | `RISK_RULE_BLOCKED` + `KILL_SWITCH_ARMED` | 60s |
+
+### Backtest verification (HARD requirement before live)
+
+Historical data available:
+- **Chainlink mainnet aggregators** via MTDS `oracle_prices_handler.py`:
+  - USDC/USD: `0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6` (deployed ~2020)
+  - USDT/USD: `0x3E7d1eAB13ad0104d2750B8863b489D65364e32D` (deployed ~2020)
+  - DAI/USD: `0xAed0c38402a5d19df6E4c03F4E2DceD6e29c1ee9` (deployed ~2020)
+- **Pyth on Solana** for USDC/USD + USDT/USD (Hermes batch + PythNet live)
+- **DEX TWAPs** from Curve 3pool / Uniswap V3 USDC/ETH per features-onchain features
+
+**Backtest harness** (proposed under `risk-and-exposure-service/scripts/backtest_depeg_ladder.py`):
+1. Pull historical Chainlink `latestAnswer` for the 3 aggregators 2020-01-01 → 2026-05-12
+2. Compute rolling peg-deviation = `abs(price - 1.0) * 10000` bps per stable per day
+3. For each archetype × threshold tier in the table above, count: `n_trigger_events` + `false_positive_rate` (events where peg recovered <72h without intervention) + `true_positive_rate` (events where peg-restore took >7d or never)
+4. **Required outcome**: false-positive rate <5% at the 500bps KILL_ALL threshold OR operator-tunable per-stable override; true-positive rate >90% (catching the events that would have hurt unhedged positions)
+5. **Known historical events to capture in backtest output**: 2023-03-11 USDC ($0.87 / -13% / restored 72h) → KILL_ALL fires correctly, saves the position if it would have bled on Aave health-factor recalc; 2022-05-09 UST ($0.00 / never recovered) → KILL_ALL fires within first 5% drop, saves 95% of capital; 2024-07 PYUSD (-7% / restored ~2 weeks) → KILL_ALL fires correctly; 2024-04 USDE volatility (multiple <-3% events) → SCALE_DOWN fires, KILL_ALL doesn't (correctly preserves yield-strategy upside if backtest tunes thresholds right).
 
 ### Auto-recovery contract
 
