@@ -103,35 +103,67 @@ backtest fidelity** until this is fixed.
    (1e27 unit) → decimal-fraction conversion matching `_parse_borrow_rate`
    semantics. basedpyright clean. The fetch query already requested them
    (line 77-79); the only fix was wiring them into the output dict.
-2. **MDPS**: extend the `lending_indices` parquet schema to include the 3 new
-   columns. Per CLAUDE.md "Live = batch" + "Honest absence vs fake
-   placeholders" — historical rows that were captured before this fix should
-   be `record_failed(SCHEMA_VALIDATION_FAILED)` or backfilled with the actual
-   per-block slope values from the subgraph. Recommend backfill (the subgraph
-   has historical state — re-run the lending-indices VM with the schema-extended
-   adapter; ~2 cal AI-days).
-3. **UAC**: extend `LendingMarketState` schema NO CHANGE — the model already
-   has `optimal_utilization_rate` / `irm_slope1` / `irm_slope2` fields (uac@
-   `7f978f5` Phase 1B); the gap is purely on the producer side.
-4. **execution-service**: update the `LendingMarketState` builder at the
-   consumer call-site (Phase 3B `BenchmarkMatcher` extension or wherever the
-   state is materialised from MTDS captures) to populate the per-tick fields
-   from the captured parquet instead of the static defaults. The defaults in
-   `rate_model.py:AAVE_V3_RATE_MODEL_DEFAULTS_BY_ASSET` stay as a fallback for
-   the (asset, block) pairs where backfill is incomplete.
-5. **Document the gap** in
-   `codex/04-architecture/amm-slippage-simulation.md` § "Lending rate-impact-
-   from-own-trade" → "Per-protocol IRM parameter capture" — note that the
-   backfill captures need to land before Phase 8C fidelity validation runs.
+2. ✅ **UAC `LendingIndexRecord` schema +5 fields SHIPPED at uac@`bd9c202`
+   (2026-05-12 slot 6)** — `optimal_utilization_rate`, `variable_rate_slope1`,
+   `variable_rate_slope2`, `base_variable_borrow_rate`, `reserve_factor` added
+   as `float | None` (default `None`) for backwards compat. The on-disk parquet
+   schema follows automatically — old rows have `None`, new rows post-mtds@
+   `4b38a9b` carry the captured per-block slopes.
+3. ⏳ **Backfill VM** (operator-runnable; defer to next cycle or operator
+   discretion). Runbook:
+   - Refresh tarballs: `bash deployment-service/scripts/vm/create-code-tarballs.sh --all`
+     (per CLAUDE.md "VM tarball deployment" HARD RULE — tarballs must include
+     mtds@`4b38a9b` adapter fix).
+   - Launch backfill: `bash deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh
+     <start-date> <end-date>` per pre-Phase-1B backfill horizon (the subgraph
+     supports block-pinned historical queries via `block: {number: $blockNumber}`).
+   - Event-stream verification: STARTED+progress+STOPPED per per-VM shard
+     isolation. Manifest re-consolidation post-run.
+   - Expected duration: ~6-12 hours for a 2-year horizon × all Aave V3
+     chains (Ethereum/Arbitrum/Optimism/Polygon/Base/Avalanche). Same pattern
+     as the existing `mtds-lending-indices-` VM prefix.
+4. ✅ **Consumer call-site row-level override path SHIPPED at features-service@
+   `e292a4d4` (2026-05-12 slot 6)** — `_resolve_rate_params(symbol, row)`
+   sibling helper that prefers per-tick captured slopes when present (post-
+   Phase-1B parquets), per-field fallback to UAC static defaults for any None
+   /NaN. 4 new unit tests cover no-row / full-override / partial-coverage /
+   NaN-as-missing. **Step 4 remaining**: migrate the calculator's `fetch_data()`
+   from DefiLlama Yields to the MTDS `lending_indices` parquet so the row
+   override path actually activates (~1 cal AI-day; the override path is
+   dormant until then). Other consumers (execution-service
+   `LendingRateImpactCalculator`) take `LendingMarketState` as input — their
+   call-site is upstream and consumes the captured slopes automatically once
+   the state builder reads from MTDS.
+5. ✅ **Codex doc note SHIPPED at PM@`<this commit>` (2026-05-12 slot 6)** —
+   `codex/04-architecture/amm-slippage-simulation.md` § "Per-protocol IRM
+   parameter capture" gains a top-of-section ⚠️ CRITICAL banner pointing at
+   this issue doc + flagging that the backfill VM (Step 3) must land before
+   Phase 8A/B replay runs.
 
-**Estimate**: ~2 cal AI-days total (~0.5 MTDS edit + ~0.5 schema + 1 backfill VM).
+**Original estimate**: ~2 cal AI-days total.
+
+**Actual delivery (2026-05-12 slot 6)**: ~1.5 cal AI-days for Steps 1, 2, 4
+(partial), 5. ~0.5 cal AI-day remaining for Step 3 (backfill VM — operator-
+runnable; defer to next cycle owner) + Step 4 tail (`fetch_data()` migration
+from DefiLlama → MTDS lending_indices parquet).
 
 **Sequencing**: must land BEFORE Phase 8A/B carry-archetype + leveraged-funding-arb
 1-year replay runs — otherwise the replays use the proxy and the resulting P&L
 delta is uninterpretable.
 
-**Suggested owner**: defi-master plan / MTDS lending-indices adapter
-maintainer (slot 5 or 8 absorption, or operator-triage routing).
+**Status summary**:
+
+| Step | Status | Commit |
+|---|---|---|
+| 1. MTDS producer-side wire-through (3 fields + _parse_ray helper) | ✅ DONE | mtds@`4b38a9b` |
+| 2. UAC `LendingIndexRecord` schema +5 fields (Optional[float]) | ✅ DONE | uac@`bd9c202` |
+| 3. Backfill VM run (operator-runnable; runbook in this doc) | ⏳ deferred | tbd next-cycle |
+| 4. Consumer row-level override path (`_resolve_rate_params`) + 4 tests | ✅ DONE (DefiLlama→MTDS source migration tail remaining) | features-service@`e292a4d4` |
+| 5. Codex `amm-slippage-simulation.md` ⚠️ CRITICAL banner | ✅ DONE | PM@`<this commit>` |
+
+**Suggested owner for the tail** (Step 3 backfill VM + Step 4 source
+migration): defi-master plan / MTDS lending-indices adapter maintainer (slot
+5 or 8 absorption, or operator-triage routing).
 
 ## Composes with
 
