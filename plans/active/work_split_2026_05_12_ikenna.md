@@ -346,17 +346,25 @@ PART C — PARALLEL with Phase 3 fan-out (same MDPS repo as Phase 2):
 MODEL TIER: Sonnet 4.6 / THINKING: medium
 WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
 
-PART A — NOW: Phase 2.D match_end_time from SFI freeze-detection:
-  Decision (locked 2026-05-12): ship match_end_time from SFI progressive-stats freeze algorithm.
-  30 progressive stats stop updating → match end. Deterministic, high-confidence. Needed for lookahead-bias.
-  announced_at + report_time NOT in scope (require pre-match live poll — not available retroactively).
-  Pre-audit: grep -n "match_end_time\|freeze_detect\|progressive_stats\|30.*stat" instruments-service/ --include="*.py" | grep -v .venv | head -20
+PART A — NOW: Phase 2.D ALL fields (full scope — all ship now):
+  Decision (locked 2026-05-12): full Phase 2.D ships. All fields are retroactively available.
+  Pre-audit:
+    grep -n "match_end_time\|announced_at\|report_time\|freeze_detect\|progressive_stats\|POSTPONED\|CANCELLED" \
+      instruments-service/ --include="*.py" | grep -v .venv | head -30
+    grep -n "announced_at\|fixture.*timestamp\|created_at" \
+      instruments-service/instruments_service/adapters/api_football*.py | head -20
   Steps:
-    1. Add match_end_time: datetime | None to UAC instruments schema
-    2. Wire SFI adapter freeze-detection → match_end_time field
-    3. Wire assert_available_at_present for the match_end_time row
-    4. Add match_end_time_confidence: Literal["high"] = "high" constant to UAC (not a column — documents source quality)
-    3 unit tests (freeze detected, no freeze yet, partial data). QG + push.
+    1. UAC instruments schema: add match_end_time: datetime | None + announced_at: datetime | None + report_time: datetime | None
+    2. UAC constants: SFI_DATA_LAG_P95_SECONDS (measure once: sample 1000 fixtures, compute
+       (SFI-progressive-stats-freeze-timestamp − scheduled_kickoff − nominal_duration).quantile(0.95). Start with 300s as prior).
+    3. SFI adapter: freeze-detection → match_end_time field (30 progressive stats stop → match end)
+    4. API Football adapter: read announced_at from fixture object (fixture.created / fixture.timestamp field — check API Football response shape first)
+    5. Derive: report_time = match_end_time + timedelta(seconds=SFI_DATA_LAG_P95_SECONDS) where match_end_time is known
+    6. UAC: add EXPECTED_FIXTURE_POSTPONED + EXPECTED_FIXTURE_CANCELLED to EmptyConfirmedReason
+    7. instruments-service: for fixtures with status POSTPONED or CANCELLED → record_empty(reason=EXPECTED_FIXTURE_POSTPONED/CANCELLED)
+       (historical clean state only — live postponement transitions handled in live-pipeline plan)
+    8. assert_available_at_present wiring
+    5 unit tests (freeze detected, no freeze yet, announced_at from API Football, postponed, cancelled). QG + push.
 
 PART B — AFTER defi_recursive Phase 2 design: Phase 2.C features-sports stubs:
   Fix fixture_lineups + fixture_player_stats stubs (data read at _fetch_runner.py:171/173 but discarded).
