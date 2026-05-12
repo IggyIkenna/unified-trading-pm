@@ -203,13 +203,23 @@ paper/live deployment exists.
   - Per CLAUDE.md: running watchdog only fetches Python at boot.
   - (vm-zombie-watchdog-20260512-184112 RUNNING — bounced 2026-05-12 13:41 UTC)
 
-- [ ] [SCRIPT] P0. **Smoke-launch each launcher** with `--dry-run` (printed gcloud command), then with `--mode paper`
+- [x] [SCRIPT] P0. **Smoke-launch each launcher** with `--dry-run` (printed gcloud command), then with `--mode paper`
       for ≥90s, then verify events.
   - Probe:
     `gcloud storage ls gs://${PID}-events/events/strategy-service/$(date +%Y-%m-%d)/strategy-paper-carry_staked_basis-*/`
     — directory exists with `hour=*` partition.
   - Read first JSONL, assert `event=="STARTED"`.
   - 10min recheck for new events with row counts (per CLAUDE.md _"No fire-and-forget VM launches"_).
+  - (deployment-service@4a4e2e1, VM strategy-paper-carry-staked-basis-20260512-192413 self-deleted 2026-05-12 13:57 UTC)
+  - Infrastructure smoke PASSES: launcher → tarball download (9 repos) → dep install → venv symlink → command dispatch →
+    colocated_engine.py ran to strategy resolver. DEPLOYMENT_STARTED emitted in deployment archive.
+  - **Phase 2 gaps discovered during smoke** (see Phase 2 todos below):
+    - `colocated_engine.py` lacks `ServiceBootstrap` → no STARTED event in `gs://central-element-323112-events/`
+      strategy-service event archive. Phase 2 must wire ServiceBootstrap into colocated_engine.py.
+    - `V2BatchHarness` has no resolver entry for `carry_staked_basis` → `Unknown strategy: carry_staked_basis`.
+      Phase 2 must register the archetype in the harness resolver.
+    - setup-data-pipeline-vm.sh startup failure leaves VM RUNNING indefinitely (self-delete only triggers via
+      vm-exec-with-gcs-tee.sh which doesn't run when install fails). Phase 2 should add self-delete on script error.
 
 - [ ] [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** once
       [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 ships
@@ -250,6 +260,18 @@ paper/live deployment exists.
 
 **Phase 1 QG**: workspace QG runs clean on deployment-service. Launcher bash-syntax check passes (per
 `codex/05-infrastructure/launcher-script-ssot.md`).
+
+## Phase 1 smoke-gaps → Phase 2 todos (discovered 2026-05-12 smoke run)
+
+- [ ] [AGENT] P0. **Wire `ServiceBootstrap` into `colocated_engine.py`** so paper/live VMs emit
+      `STARTED`/`STOPPED`/`FAILED` to `gs://central-element-323112-events/events/strategy-service/`.
+      Currently `colocated_engine.py` has no ServiceBootstrap; events go to the deployment heartbeat archive only.
+      Required for "No fire-and-forget VM launches" HARD RULE compliance.
+- [ ] [AGENT] P0. **Register `carry_staked_basis` (and `leveraged_funding_arb`) in `V2BatchHarness`** resolver.
+      Observed error: `Unknown strategy: carry_staked_basis -- V2BatchHarness: no resolver entry for strategy_type`.
+      Phase 2 must add resolver entry (or confirm the archetype slug → strategy_type mapping).
+- [ ] [AGENT] P1. **Add self-delete on startup-script failure** in `setup-data-pipeline-vm.sh`. When `set -euo pipefail`
+      exits the script early (e.g. dep conflict), the VM stays RUNNING indefinitely. Add a `trap "gcloud compute instances delete \$(hostname) ..." ERR EXIT` at script top for strategy-paper/live tasks.
 
 ## Phase 2 — Operator pre-flight checklist (P0, ~0.5d, SEQUENTIAL after Phase 1)
 
