@@ -115,40 +115,21 @@ Every autonomous recovery action the system takes, mapped to its alert tier:
 
 ## Alerting-Service Routing Rules
 
-The routing rules in `alerting-service/notifiers/router.py` must map events to channels. The canonical rules:
-
-```python
-# Default routing rules (config-driven, loaded from AlertingSystemConfig)
-ROUTING_RULES = [
-    # T1 CRITICAL — PagerDuty P1 + Telegram
-    {"event_pattern": "KILL_SWITCH_*",                "channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "CIRCUIT_BREAKER_OPEN",         "channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "MULTI_LEG_COMPENSATION_FAILED","channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "UNHEDGED_POSITION_ALERT",      "channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "DUAL_FAILURE_DETECTED",        "channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "ORDER_RECOVERY_FAILED",        "channels": ["pagerduty", "telegram"], "severity": "critical"},
-
-    # T2 HIGH — PagerDuty P2 + Telegram
-    {"event_pattern": "CIRCUIT_BREAKER_BACKOFF_*",    "channels": ["pagerduty", "telegram"], "severity": "warning"},
-    {"event_pattern": "ORDER_ORPHANED",               "channels": ["pagerduty", "telegram"], "severity": "warning"},
-    {"event_pattern": "POSITION_DRIFT_DETECTED",      "channels": ["pagerduty", "telegram"], "severity": "warning"},
-    {"event_pattern": "RECON_DEGRADED_*",             "channels": ["pagerduty", "telegram"], "severity": "warning"},
-
-    # T3 WARNING — Telegram only
-    {"event_pattern": "CIRCUIT_BREAKER_DEGRADED",     "channels": ["telegram"]},
-    {"event_pattern": "CIRCUIT_BREAKER_CLOSED",       "channels": ["telegram"]},
-    {"event_pattern": "PREFLIGHT_FAILED",             "channels": ["telegram"]},
-    {"event_pattern": "SERVICE_DEGRADED",             "channels": ["telegram"]},
-    {"event_pattern": "POSITION_CORRECTION_*",        "channels": ["telegram"]},
-    {"event_pattern": "PORTFOLIO_REBALANCE_*",        "channels": ["telegram"]},
-    {"event_pattern": "ORDER_RECOVERY_*",             "channels": ["telegram"]},
-
-    # T4 INFO — Telegram (fallback for everything else)
-    {"event_pattern": "*",                            "channels": ["telegram"]},
-]
-```
-
-First match wins. The `*` fallback ensures nothing is silent.
+> **SSOT note (AL-3 reconciliation 2026-05-12).** Routing rules are **UAC-driven**, not an inline python block in
+> this codex doc. The runtime loads `[rule.to_routing_dict() for rule in LIVE_ALERT_RULES]` from
+> `alerting_service/config.py` (line 12-34), where `LIVE_ALERT_RULES` lives in UAC
+> `unified_api_contracts/canonical/crosscutting/alerting/rules.py` and ships **~56 `AlertRule(...)` entries** spanning
+> kill-switch / circuit-breaker / ML / risk-rule-consequence / kill-switch-recovery / tick-staleness / connectivity-gap /
+> DeFi / margin / position-recon / order-recovery / multi-leg / service-health / cross-cloud-egress codes. Operator
+> overrides flow via `AlertingSystemConfig.routing_rules`. The closed AlertCode set is governed in
+> [`../15-runbooks/alerting/alert-code-taxonomy.md`](../15-runbooks/alerting/alert-code-taxonomy.md); the
+> [`AlertRule._validate_kill_switch_scope_matches_code_family`](../15-runbooks/alerting/alert-code-taxonomy.md#construction-time-validation)
+> validator enforces per-rule consistency.
+>
+> Routing-rule philosophy (preserved verbatim): **first-match-wins** on `event_pattern` glob, with a `*` fallback
+> guaranteeing nothing is silent. T1 CRITICAL → PagerDuty P1 + Telegram; T2 HIGH → PagerDuty P2 + Telegram; T3 WARN →
+> Telegram only; T4 INFO → Telegram fallback. The per-code routing matrix lives in UAC `LIVE_ALERT_RULES` — see the
+> per-code playbook entries in `15-runbooks/alerting/operator-playbook.md` rather than re-deriving here.
 
 ---
 

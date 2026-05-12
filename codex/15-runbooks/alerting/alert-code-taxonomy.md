@@ -62,7 +62,17 @@ Sources:
 (Telegram / PagerDuty / Slack / Email). When DART (Phase 5) ships, dispatchers will consume `AlertSeverity` directly and
 the legacy filter mapping can be deleted.
 
-## Closed set (39 codes as of 2026-05-07)
+## Closed set (~63 codes as of 2026-05-12)
+
+> **Recount (AL-4 reconciliation 2026-05-12).** The "39 codes as of 2026-05-07" headline was last updated at the
+> 2026-05-07 baseline; the closed set has since grown via shipments tracked below. Authoritative member-count is the
+> length of `AlertCode` in `unified_api_contracts/canonical/crosscutting/alerting/codes.py`. Current breakdown
+> (~63 members) — re-derive from `codes.py` rather than this prose if you need an exact number:
+>
+> - **4** Kill-switch family (`KILL_SWITCH_*`); **4** Circuit-breaker; **8** DeFi-original + **5** DeFi recursive-borrow
+>   archetype (2026-05-12 Phase 8); **4** Margin ladder; **8** Position/reconciliation; **5** Order; **3** Multi-leg;
+>   **4** Service health; **1** Cross-cloud egress; **5** ML lifecycle (2026-05-08); **4** Risk-rule consequence
+>   (2026-05-10); **2** Kill-switch recovery (2026-05-10); **4** Tick-staleness / connectivity-gap (2026-05-11).
 
 Adding a new code requires:
 
@@ -76,14 +86,16 @@ The closed-set sanity test `tests/internal/unit/test_alerting_taxonomy.py` enfor
 
 ### Categories
 
-- **Kill-switch family (`KILL_SWITCH_*`)** — three codes: `KILL_SWITCH_DEFI_LIQUIDATION_RISK`,
-  `KILL_SWITCH_PORTFOLIO_DRAWDOWN`, `KILL_SWITCH_VENUE_DISCONNECT`. All `triggers_kill_switch=True`, all CRITICAL +
-  PagerDuty + Telegram.
+- **Kill-switch family (`KILL_SWITCH_*`)** — four codes: `KILL_SWITCH_DEFI_LIQUIDATION_RISK`,
+  `KILL_SWITCH_PORTFOLIO_DRAWDOWN`, `KILL_SWITCH_VENUE_DISCONNECT`, `KILL_SWITCH_ML_MODEL_FAILURE` (added 2026-05-08
+  for `cefi_ml_may_23_2026.epic`). All `triggers_kill_switch=True`, all CRITICAL + PagerDuty + Telegram.
 - **Circuit-breaker (`CIRCUIT_BREAKER_*`)** — `OPEN` (CRITICAL), `BACKOFF_ESCALATING` (HIGH), `DEGRADED` / `CLOSED`
   (WARN).
-- **DeFi-specific (`DEFI_*`)** — health-factor / weETH-depeg / aave-utilization-spike / funding-rate-flip /
-  feature-stale / position-liquidated / rate-deviation / tx-simulation-failed. Severity varies; thresholds anchored in
-  UAC `ALERT_THRESHOLDS`.
+- **DeFi-specific (`DEFI_*`)** — original 8: health-factor / weETH-depeg / aave-utilization-spike / funding-rate-flip /
+  feature-stale / position-liquidated / rate-deviation / tx-simulation-failed. Family-1/2 recursive-borrow archetype
+  added 2026-05-12 (5 more): `DEFI_LIQUIDATION_IMMINENT` / `DEFI_CROSS_VENUE_DELTA_DRIFT` / `DEFI_PERP_VENUE_OUTAGE` /
+  `DEFI_ORACLE_STALE_PAUSE` / `DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED`. Severity varies; thresholds anchored in UAC
+  `ALERT_THRESHOLDS`.
 - **Margin ladder (`MARGIN_*`)** — `LIQUIDATION` / `CRITICAL` (CRITICAL), `WARNING` / `THRESHOLD_BREACH` (HIGH).
   Thresholds come from UAC `LIQUIDATION_PARAMS_REGISTRY` (PBM canonical).
 - **Position / reconciliation** — `POSITION_DRIFT` / `POSITION_DRIFT_DETECTED` / `POSITION_CRITICAL_DISCREPANCY` /
@@ -96,9 +108,25 @@ The closed-set sanity test `tests/internal/unit/test_alerting_taxonomy.py` enfor
 - **Service health** — `SERVICE_ERROR` / `SERVICE_ERROR_CRITICAL` / `SERVICE_DEGRADED` / `PREFLIGHT_FAILED`.
 - **Cross-cloud safety net** — `CROSS_CLOUD_EGRESS_DETECTED` (HIGH, audit 2026-05-07 §dual-cloud-active). Threshold:
   `cross_cloud_egress_bytes_per_request` = 1 MiB.
-- **ML lifecycle (`ML_*` + `KILL_SWITCH_ML_MODEL_FAILURE`)** — 6 codes added 2026-05-08 (cefi_ml_may_23_2026.epic Tab 5
-  Item 6). See [ML category section](#ml-category--alert-codes--thresholds--killswitchscope-mapping) below for the
-  per-code severity routing, threshold sources, and archetype-scope mapping.
+- **ML lifecycle (`ML_*` + `KILL_SWITCH_ML_MODEL_FAILURE`)** — 5 `ML_*` codes added 2026-05-08
+  (`ML_SIGNAL_STALENESS` / `ML_MODEL_DRIFT_DETECTED` / `ML_PNL_DEVIATION` / `ML_INFERENCE_LATENCY_BREACH` /
+  `ML_MODEL_VERSION_MISMATCH`) + the kill-switch family member `KILL_SWITCH_ML_MODEL_FAILURE`
+  (`cefi_ml_may_23_2026.epic` Tab 5 Item 6). See
+  [ML category section](#ml-category--alert-codes--thresholds--killswitchscope-mapping) below for the per-code
+  severity routing, threshold sources, and archetype-scope mapping.
+- **Risk-rule consequence (`RISK_RULE_*`)** — 4 codes added 2026-05-10 (`risk_simulations_limits_alerting`
+  Phase 1.E + Policy B "larger-set-wins"): `RISK_RULE_BLOCKED` (severity per `RiskRule.alerting_severity` — typically
+  HIGH or CRITICAL), `RISK_RULE_SCALED_DOWN` (WARN), `RISK_RULE_MONITOR_FIRED` (INFO/WARN), `RISK_RULE_TEST_ONLY_ROUTED`
+  (INFO). Producer: risk-and-exposure-service `rule_evaluator`.
+- **Kill-switch recovery** — 2 codes added 2026-05-10 (`risk_simulations_limits_alerting` Phase 1.F + DR plan Phase 1.A):
+  `KILL_SWITCH_AUTO_RECOVERED` (INFO — auto-cooldown path) and `KILL_SWITCH_MANUAL_UNKILLED` (INFO — operator DART
+  unkill). Distinct events so dashboards distinguish auto-vs-operator recovery; producers: execution-service breaker
+  + risk-and-exposure-service kill-switch on transition out of armed state.
+- **Tick-staleness + connectivity-gap** — 4 codes added 2026-05-11 (alerting-service Phase 1+):
+  `TICK_STALENESS` (HIGH — MDPS downstream-detected staleness), `CONNECTIVITY_GAP_DETECTED` (HIGH — MTDS upstream
+  WS-disconnect / heartbeat-stale), `CONNECTIVITY_RECOVERED` (INFO — recovery), `CONNECTIVITY_GAP_BACKFILLED` (INFO —
+  full backfill). 30s coalesce window in `notifiers/router.py` keyed on `(venue, instrument)` merges concurrent
+  `TICK_STALENESS` + `CONNECTIVITY_GAP_DETECTED` for the same window into ONE operator-visible alert.
 
 ## Construction-time validation
 
@@ -263,8 +291,11 @@ decides flatten vs hold-and-monitor).
   `_validate_kill_switch_scope_matches_code_family` validator.
 - UTL SSOT: `unified_trading_library.kill_switch` — `KillSwitchBus`, `KillSwitchEvent`, `KillSwitchEventType`,
   `get_kill_switch_bus()`.
-- Cross-cutting SSOT: `KillSwitchScope` lives in `unified_api_contracts.internal.domain.deployment_service.isolation`
-  (workspace `isolation` SSOT paired with `runtime-topology.yaml`).
+- Cross-cutting SSOT: `KillSwitchScope` lives in `unified_api_contracts.canonical.crosscutting.alerting.codes`
+  (canonical-layer SSOT; moved here 2026-05-08 from `unified_api_contracts.internal.domain.deployment_service.isolation`
+  so canonical `AlertRule` can carry a per-rule `kill_switch_scope` field without a circular import). The internal-layer
+  location now re-exports the canonical symbol, so prior call sites (`unified_api_contracts.internal.KillSwitchScope`)
+  keep resolving. The top-level facade is `unified_api_contracts.alerting.KillSwitchScope`.
 
 ## Adding a new severity
 
