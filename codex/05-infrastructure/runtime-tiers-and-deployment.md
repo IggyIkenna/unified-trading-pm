@@ -105,8 +105,8 @@ SSOT under `deployment-service/scripts/vm/` per the VM launcher script SSOT rule
 
 | VM type                            | Launcher                                     | VM-name prefix        | Scope                                                        | Watchdog dict entry                          |
 | ---------------------------------- | -------------------------------------------- | --------------------- | ------------------------------------------------------------ | -------------------------------------------- |
-| **MTDS live**                      | `launch-mtds-live-{asset_group}.sh`          | `mtds-live-`          | Per asset_group; one VM per cluster                          | `VM_PREFIX_TO_BUCKET["mtds-live-"]`          |
-| **MDPS + features (asset-scoped)** | `launch-mdps-features-live-{asset_group}.sh` | `mdps-features-live-` | Per asset_group; one VM per cluster                          | `VM_PREFIX_TO_BUCKET["mdps-features-live-"]` |
+| **MTDS live**                      | `launch-mtds-live.sh --asset-group <ag>`     | `mtds-live-`          | Per asset_group; one VM per cluster (dispatched by `--asset-group` flag, single parameterised launcher) | `VM_PREFIX_TO_BUCKET["mtds-live-"]`          |
+| **MDPS + features (asset-scoped)** | `launch-mdps-features-live.sh --asset-group <ag>` | `mdps-features-live-` | Per asset_group; one VM per cluster (dispatched by `--asset-group` flag, single parameterised launcher) | `VM_PREFIX_TO_BUCKET["mdps-features-live-"]` |
 | **Features cross-cutting**         | `launch-features-cross-cutting.sh`           | `features-xc-`        | Singleton; subscribes to ALL asset_groups                    | `VM_PREFIX_TO_BUCKET["features-xc-"]`        |
 | **Replay cascade**                 | `launch-replay-cascade.sh`                   | `replay-`             | Singleton; bridges batch→live on restart                     | `VM_PREFIX_TO_BUCKET["replay-"]`             |
 | **Alerting service**               | unchanged batch-live wiring                  | n/a (existing)        | Singleton; consumes `StreamingHealthSnapshot` via Health-API | n/a (existing)                               |

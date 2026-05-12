@@ -68,13 +68,24 @@ For batch services (Cloud Build jobs), update the image tag in the Cloud Build t
 
 ## GCS Backup Locations
 
-| Data               | Bucket                      | Path                                           | Retention                  |
-| ------------------ | --------------------------- | ---------------------------------------------- | -------------------------- |
-| Manifest snapshots | `unified-trading-manifests` | `snapshots/YYYY-MM-DD/workspace-manifest.json` | 90 days                    |
-| Service configs    | `unified-trading-configs`   | `<service>/config.json`                        | 30 days (versioned bucket) |
-| Market data        | `unified-market-data`       | `<venue>/<instrument>/YYYY/MM/DD/`             | Indefinite                 |
-| ML models          | `unified-ml-models`         | `<model>/<version>/`                           | Indefinite (tagged)        |
-| Audit logs         | `unified-audit-logs`        | `<service>/YYYY/MM/DD/`                        | 1 year                     |
+> **Bucket-name SSOT (O-3 reconciliation 2026-05-12).** The legacy hardcoded bucket names previously listed here
+> (`unified-trading-manifests` / `unified-trading-configs` / `unified-market-data` / `unified-ml-models` /
+> `unified-audit-logs`) **do not exist** in the canonical SSOT. Every bucket lookup goes through
+> `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)`
+> per `deployment-service/configs/cloud-providers.yaml`. See CLAUDE.md § "Bucket-name SSOT (b+)" + the
+> `bucket_name_ssot_canonicalisation_2026_05_10.md` plan. Region-pinned: GCP `asia-northeast1`, AWS `ap-northeast-1`.
+> The watchdog dict (`deployment-service/scripts/vm/vm_zombie_watchdog.py` § `VM_PREFIX_TO_BUCKET`) is the live registry
+> of which bucket pattern serves which VM-prefix.
+
+| Data               | Canonical bucket kind (resolve via `resolve_bucket_name(kind=...)`) | Path                                           | Retention                  |
+| ------------------ | ------------------------------------------------------------------- | ---------------------------------------------- | -------------------------- |
+| Manifest snapshots | `manifest` (asset-group-scoped where applicable; see `cloud-providers.yaml`) | `snapshots/YYYY-MM-DD/workspace-manifest.json` | 90 days                    |
+| Service configs    | `configs` (env-tier: dev / staging / prod via `${DEPLOYMENT_ENV}`)  | `<service>/config.json`                        | 30 days (versioned bucket) |
+| Market data        | `market-data-tick` (per asset_group — `cefi` / `defi` / `tradfi` / `sports` / `prediction`) | `pipeline_mode=<batch|live>/asset_group=<ag>/<venue>/<instrument>/YYYY/MM/DD/` (`pipeline_mode` in PATH, not bucket name) | Indefinite                 |
+| ML models          | `ml-models`                                                         | `<model>/<version>/`                           | Indefinite (tagged)        |
+| Audit logs         | `audit-logs` (per service)                                          | `<service>/YYYY/MM/DD/`                        | 1 year                     |
+| Events             | `events` (per service / per cloud)                                  | `events/<service>/{YYYY-MM-DD}/{correlation_id}/hour={H}/*.jsonl` | 90 days (per retention policy) |
+| Kill-switch audit  | `kill-switch-audit`                                                 | `audit/kill_switch/{YYYY-MM-DD}/`              | Indefinite (regulatory)    |
 
 ## Communication Protocol During Incidents
 
