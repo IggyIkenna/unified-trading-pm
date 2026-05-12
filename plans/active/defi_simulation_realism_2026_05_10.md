@@ -212,13 +212,22 @@ of on-chain real fill at the same block (verified via Tenderly fork comparison).
       asserts `SolanaCLMM == V3` numbers at the same pool state.) **DEFERRED**: P1 — Solana-specific tick-bitmap layout
       + multi-tick traversal (shares the Uniswap-V3 multi-tick follow-up) + ≥30-historical-Raydium/Orca-swap
       validation (golden harness — Phase 3).
-- [ ] [AGENT] P0. **2G — Jupiter aggregator per-route decomposition**. Read Jupiter route from quote API; for each leg,
-      route to the appropriate pool-shape matcher above (via `pool_matcher.POOL_MATCHER_REGISTRY` + a `(chain,
-      pool_address) → PoolShape` lookup); compose realized fill (multiplicative slippage composition per codex §
-      "Aggregator / multi-hop routing realism"). Validation: ≥ 30 historical Jupiter routes within 10bps. NEW
-      `aggregator.py` registered to `PoolShape.JUPITER_ROUTE_AGGREGATOR` / `ONEINCH_AGGREGATOR` / `ZEROX_AGGREGATOR`;
-      needs the `aggregator_route` MTDS data_type (NEW — not yet in catalogue; see Discoveries item 4) for batch
-      replay. **DEFERRED-AFTER** the 2026-05-12 Harsh-slot-4 cycle. Successor: next Harsh-slot-4 cycle or sub-agent.
+- [x] [AGENT] P0. **2G — Jupiter (+ 1inch / 0x) aggregator per-route decomposition**. (execution-service@`dc09d6df`
+      — NEW `aggregator.py`: `RouteLeg` (per-leg `pool_shape` + `pool_snapshot` + `side` + `input_share` +
+      `chain_id` + `pool_address`; `to_dict`/`from_dict` for JSON-decoded routes) + `AggregatorRouteMatcher`
+      (satisfies the `PoolMatcher` Protocol; builds each leg's underlying `PoolMatcher` via `pool_matcher_from_snapshot`,
+      composes per-leg `quote()`/`apply()` into a route-level `SwapQuote`/`FillResult` with per-leg sub-quotes in
+      `.legs`; two route kinds — `"split"` parallel [each leg takes `input_share` of route input, outputs summed] and
+      `"chain"` serial multi-hop [leg i consumes 100 % of leg i-1's output]; `spot_price` = product (chain) /
+      share-weighted-sum (split) of per-leg effective rates; `snapshot`/`from_snapshot` round-trip the route + per-leg
+      pool snapshots; `FillResult.mempool_path` ∈ `{BATCH_SIM, PUBLIC, PRIVATE}` for MEV-vs-slippage execution-alpha
+      attribution) + `OneInchRouteMatcher` / `ZeroExRouteMatcher` (same logic, distinct `PoolShape`); registered to
+      `PoolShape.JUPITER_ROUTE_AGGREGATOR` / `ONEINCH_AGGREGATOR` / `ZEROX_AGGREGATOR` via `engine.py` side-effect
+      import; `__init__.py` re-exports; `test_pool_matcher.py` +7 aggregator tests.) **DEFERRED**: P1 — batch replay
+      of aggregator legs needs (a) the NEW `aggregator_route` MTDS data_type (catalogue gap — captured-route JSON
+      persisted at decision time; see Discoveries item 4) + (b) the `(chain, pool_address) → PoolShape` lookup
+      (MTDS `dex_pools` data_type); the live-mode quote-API fetch path + ≥30-historical-Jupiter-route validation
+      (golden harness — Phase 3) are the same follow-up.
 - [x] [AGENT] P0. **2H — Solidly-fork ve(3,3) classic-pool matcher** (NEW; added Day-1 2026-05-11). (execution-service@
       `3ebecde2` — NEW `solidly_fork.py`:`SolidlyForkPool` — shared matcher for Velodrome / Aerodrome / Equalizer /
       Thena / Ramses, discriminated by `(chain_id, factory_address)` + per-pool `stable: bool` flag selecting the
@@ -619,6 +628,7 @@ PoolMatcher Protocol design half was design-shipped by Ikenna slot 6 Day-1 in co
 | `execution-service@3ebecde2` | execution-service | **Phase 2** — NEW `matching_engine/pool_matcher.py` (`PoolMatcher` Protocol [quote/apply/spot_price/snapshot] + `POOL_MATCHER_REGISTRY` + `@register_pool_matcher` + `pool_matcher_from_snapshot` + `BasePoolMatcher` mixin); `amm.py` — Uniswap V2/V3/V4 conform to `PoolMatcher` (mix in `BasePoolMatcher`; `execute_swap` on V3/V4 advances sqrtPrice+tick; `spot_price` property on V2; `snapshot_state`+`from_snapshot` on all; `@register_pool_matcher`); NEW `curve.py` (`CurveStablePool` — n-token StableSwap D-invariant, Newton-Raphson `get_D`/`get_y`, per-token decimals normalisation, admin-fee accounting); NEW `balancer.py` (`BalancerWeightedPool` weighted-product + `BalancerBoostedPool` linear-spread); NEW `solidly_fork.py` (`SolidlyForkPool` — shared Velodrome/Aerodrome/... matcher, `(chain_id, factory_address)` + `stable: bool` discriminator, cubic-stable `x^3y+xy^3=k` Newton-Raphson `_get_y` / `xy=k` volatile, human-unit decimals normalisation, fee siphoned to `PoolFees`); `engine.py` — `_amm_match_impl` dispatches via the `PoolMatcher` Protocol (quote → slippage gate → apply), `AMMMatcher` accepts any `PoolMatcher`, local `OrderSide` removed → `unified_api_contracts.internal.OrderSide`, side-effect imports register all matchers; NEW `tests/unit/test_pool_matcher.py` (39 tests — Protocol conformance, quote-read-only, apply-mutates+FillResult, snapshot round-trip determinism, Solidly-volatile==xyk, Curve-low-slippage-at-peg, Solidly-stable-invariant-held, AMMMatcher dispatch + slippage gate). |
 
 | `execution-service@54e61d21` | execution-service | **Phase 2F** — NEW `solana_clmm.py` (`SolanaCLMMPool` subclasses `UniswapV3Pool` → `PoolShape.SOLANA_CLMM`; `SolanaAMMPool` subclasses `UniswapV2Pool` → `PoolShape.SOLANA_AMM`); registered via `engine.py` side-effect import; `__init__.py` re-exports; `test_pool_matcher.py` parametrizes both + asserts `SolanaCLMM == V3` (48 tests green). |
+| `execution-service@dc09d6df` | execution-service | **Phase 2G** — NEW `aggregator.py` (`RouteLeg` + `AggregatorRouteMatcher` [PoolMatcher Protocol; `split` parallel / `chain` serial-multi-hop route kinds; per-leg `pool_matcher_from_snapshot` dispatch; route-level `SwapQuote`/`FillResult` with per-leg `.legs`; `spot_price` = product/share-weighted-sum of per-leg rates; `snapshot`/`from_snapshot` round-trip incl. post-`apply` leg state; `FillResult.mempool_path` ∈ `{BATCH_SIM,PUBLIC,PRIVATE}`] + `OneInchRouteMatcher` / `ZeroExRouteMatcher`); registered to `PoolShape.JUPITER_ROUTE_AGGREGATOR` / `ONEINCH_AGGREGATOR` / `ZEROX_AGGREGATOR`; `__init__.py` re-exports; `test_pool_matcher.py` +7 aggregator tests (54 tests green, 593 across the matching-engine suite — no regression). ruff + basedpyright clean. |
 
 ### What shipped (`- [x]`)
 
@@ -627,13 +637,15 @@ PoolMatcher Protocol design half was design-shipped by Ikenna slot 6 Day-1 in co
 - **Phase 2C** — `CurveStablePool` (StableSwap D-invariant; n-token; decimals-normalised; admin-fee).
 - **Phase 2D/2E** — `BalancerWeightedPool` + `BalancerBoostedPool`.
 - **Phase 2F** — `SolanaCLMMPool` (V3 tick math) + `SolanaAMMPool` (xy=k).
+- **Phase 2G** — `AggregatorRouteMatcher` (`split` + `chain` route kinds; per-leg dispatch over the registry) + `OneInchRouteMatcher` + `ZeroExRouteMatcher`.
 - **Phase 2H** (NEW) — `SolidlyForkPool` (cubic-stable + xy=k-volatile; shared across Solidly forks).
 - **Engine integration** — `_amm_match_impl` → `PoolMatcher.quote()`/`.apply()`; `AMMMatcher` Protocol-typed.
-- **48 unit tests** green. `bash scripts/quality-gates.sh` on a fresh execution-service `.venv` should be re-run by
-  the next slot to gate on the full suite (this slot's worktree had no repo `.venv`; verified via the workspace
-  `.venv-workspace` + `PYTHONPATH` override → 48/48 tests pass + `basedpyright` clean on all 5 new modules; only
-  pre-existing errors remain: `engine.py:_mk` `OrderType` internal-vs-matching-engine mismatch + `sports_matching.py:394`
-  unnecessary comparison — neither introduced here).
+- **54 unit tests** (`test_pool_matcher.py`) green; **593** across the matching-engine suite (no regression).
+  `bash scripts/quality-gates.sh` on a fresh execution-service `.venv` should be re-run by the next slot to gate on
+  the full suite (this slot's worktree had no repo `.venv`; verified via the workspace `.venv-workspace` +
+  `PYTHONPATH` override → all tests pass + `ruff` + `basedpyright` clean on all touched files; only pre-existing
+  errors remain: `engine.py:_mk` `OrderType` internal-vs-matching-engine mismatch [a dual-`OrderType`-import bug in
+  UAC `internal/__init__.py`, not introduced here] + `sports_matching.py:394` unnecessary comparison).
 
 ### Deferred work after 2026-05-12 (harsh-defi-sim-impl-tab session) — all captured as `- [ ]` / `**DEFERRED**` plan todos above
 
@@ -643,7 +655,7 @@ PoolMatcher Protocol design half was design-shipped by Ikenna slot 6 Day-1 in co
 | Phase 1G (UAC QG green) | `- [ ]` todo | run `cd unified-api-contracts && bash scripts/quality-gates.sh` on a fresh `.venv` (this slot verified import-clean + 5 pre-existing `reportUnsupportedDunderAll` in `internal/__init__.py` for `DexPoolDayRecord`/`LendingIndexRecord`/`LiquidationRecord`/`LstRateRecord`/`PerpFundingRecord` — NOT introduced here; from a recent lending-rate DataType enums commit — flagged in chat). |
 | Phase 2A multi-tick traversal + `CURVE_CRYPTO` (2C) + `BALANCER_COMPOSABLE` (2E) + `SolidlyCLForkPool` (2H) | `- [ ]` **DEFERRED** annotations on the respective Phase 2 todos | needs `tick_liquidity_bitmap` (multi-tick) + Curve V2 SDK reference (gamma) + Vault `batchSwap` routing (composable); next Harsh-slot-4 cycle / sub-agent fan-out. |
 | Phase 2F (`solana_clmm.py`) | `- [x]` shipped (execution-service@`54e61d21`) | Multi-tick traversal + historical-swap validation deferred (golden harness — Phase 3); shares the Uniswap-V3 multi-tick follow-up. |
-| Phase 2G (`aggregator.py` — Jupiter/1inch/0x route composers) | `- [ ]` **DEFERRED-AFTER** annotation on the 2G todo | `pool_matcher.py` Protocol + `register_pool_matcher` + `POOL_MATCHER_REGISTRY` now in place — straight multi-leg compose over the registry + a `(chain, pool_address) → PoolShape` lookup; engine.py needs the `from . import aggregator  # noqa: F401` line added; needs the NEW `aggregator_route` MTDS data_type (catalogue gap, Discoveries item 4) for batch replay. Next Harsh-slot-4 cycle / sub-agent fan-out. |
+| Phase 2G (`aggregator.py` — Jupiter/1inch/0x route composers) | `- [x]` shipped (execution-service@`dc09d6df`) | Batch replay of aggregator legs deferred: needs (a) the NEW `aggregator_route` MTDS data_type (catalogue gap, Discoveries item 4) + (b) the `(chain, pool_address) → PoolShape` lookup (MTDS `dex_pools`); the live-mode quote-API fetch path + ≥30-historical-Jupiter-route validation (golden harness — Phase 3) are the same follow-up. |
 | Golden test set (per-`PoolShape` `tests/integration/fixtures/amm_golden_swaps/*.json` + `test_amm_golden_swaps.py` replay harness + `scripts/capture_golden_swaps.py` archive-node capture runbook) — codex § "Golden test set harness" (= continuation prompt "Phase 6 — golden test set landing") | `- [ ]` **DEFERRED** | `pool_matcher_from_snapshot(pool_shape, snapshot_pre)` is wired (the harness's core dispatch) + every pool class implements `snapshot()`/`from_snapshot()` (round-trip-tested); remaining = pin real on-chain `Swap`-event rows via same-region GCE archive-node capture (codex runbook). Next Harsh-slot-4 cycle / sub-agent. |
 | Phase 8C Tenderly-fork live-vs-simulated reconciliation harness | `- [ ]` | depends on golden test set + Phases 3-7 implementations. |
 | Codex SSOT update (Phase 2 boundary) — fill `amm-slippage-simulation.md` § "Per-pool-shape models" with the as-built math + (once captured) validation results | `- [ ]` | next Harsh-slot-4 cycle (Post-Plan-Phase Codex Audit HARD RULE — folds in with the validation-results landing). |
