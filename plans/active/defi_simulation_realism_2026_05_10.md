@@ -510,8 +510,26 @@ Owner: harsh.
       (default 25 bps based on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps; 3-stddev hysteresis
       ≈ 25 bps). Phase 6B-WIRE-IN closure satisfies this todo simultaneously — both items are the same
       shipped wire-in.
-- [ ] [AGENT] P0. **6C — Tests**: backtest carry archetype with dynamic vs static hedge-ratio over 1-year historical
-      replay. Document P&L delta + confidence interval.
+- [x] [AGENT] P0. **6C — Tests**: backtest carry archetype with dynamic vs static hedge-ratio over 1-year historical
+      replay. Document P&L delta + confidence interval. (strategy-service@`7eb3dab` — NEW
+      `tests/unit/engine/strategies/v2/test_dynamic_hedge_ratio_dynamic_vs_static_backtest.py` ships the
+      synthetic-data math-validation half: 18 tests across 7 classes; `replay_synthetic()` harness +
+      4 stream generators (`steady_accrual_stream` / `volatile_noise_stream` w/ deterministic LCG /
+      `depeg_event_stream` / `sawtooth_stream`) + `STATIC_THRESHOLD_BPS` sentinel reproducing the
+      pre-Phase-6B static shape. 5 scenarios validated: (a) **steady accrual** (jitoSOL-like
+      1.000→1.080 over 365 ticks) — dynamic rebalances 30× (28-38 band), static = 1×, residual ratio
+      32.47× vs the >2× math-correctness floor; (b) **volatile noise** (8bps daily noise around 1.05) —
+      dynamic rebalance count == 1 exactly (hysteresis fully protects: 8bps << 25bps default
+      threshold); tighter 3bps threshold fires more often; (c) **depeg event** (1.05→1.02 at tick 100)
+      — dynamic rebalances exactly 2× (initial + depeg), static residual > 5× dynamic; (d) **sawtooth
+      oscillation** (±50bps every 10 ticks over 200) — dynamic rebalances exactly 20× (one per
+      direction flip), total residual == 0 (rebalance fires AT the transition); (e) **threshold
+      sensitivity** — tight threshold ⇒ more rebalances + lower aggregate residual (monotonic). Edge
+      cases + stream-generator contracts also covered. basedpyright 0/0/0; ruff check + ruff format
+      clean. **DEFERRED**: P1 — operator-runnable 1-year historical replay against real MTDS LST-rate
+      captures lands in Phase 8A backtest-fidelity harness (consumes `BacktestFidelityReport` UAC
+      schema shipped in this cycle); needs real `instruments-service` LST-rate stream + MTDS adapter
+      backfill. Synthetic-data half here locks the hedge-residual math contract.
 
 **Full-execution criterion**:
 
