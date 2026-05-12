@@ -15,11 +15,32 @@ Venue availability (launch dates, supported instrument types, active chains) is 
 determining which instruments existed at a given historical date. This prevents backtesting on data that didn't exist
 yet and ensures instruments-service only returns instruments that were live at the query time.
 
-## Where Availability Lives
+## Where Availability Lives — the per-asset_group venue-registry SSOTs (clarified 2026-05-12)
 
-### UAC VenueMapping (primary SSOT)
+**Three distinct SSOTs** in `unified_api_contracts/registry/`. Don't conflate them — case-folding /
+dual-classification audits (CF-1/CF-2/CF-3, DF-3, SP-3, PR-1 per `catalogue_audit_*_2026_05_12.md`) anchor on
+these specific registries, NOT on the legacy `venue_mapping.py` helper:
 
-`unified_api_contracts.registry.venue_mapping.VenueMapping` — canonical venue metadata including launch date:
+1. **`market_data_categories.py:VENUES_BY_ASSET_GROUP`** — primary venue catalogue per asset_group:
+   21 cefi / 8 tradfi / 2 prediction / ~10 sports venue ids (UPPERCASE: `BINANCE-SPOT`, `ODDS_API`, `POLYMARKET`).
+2. **`defi_venues.py:ALL_DEFI_VENUES`** + `DEFI_VENUE_PHASE` / `MTDS_DEFI_VENUES` — ~70 DeFi venue ids
+   (UPPERCASE per the same case convention).
+3. **`venue_launch_dates.py`** — per-venue `launch_date` for the `EXPECTED_PRE_VENUE_LAUNCH` reason taxonomy
+   member (UAC@ac218dc 2026-05-07).
+4. **`coverage_starts.py`** + per-asset-group `*_SOURCE_COVERAGE_START` constants — source-coverage windows
+   for the `EXPECTED_PRE_SOURCE_COVERAGE_START` reason.
+
+The `defi_venue_capabilities.py:DEFI_VENUE_DATA_TYPE_CAPABILITIES` dict (merged into
+`VENUE_DATA_TYPE_CAPABILITIES` at load) is the per-`(venue, data_type)` start-date SSOT — used by adapter
+coverage-window clipping. Distinct from `defi_venues.py` which is the venue-set SSOT.
+
+### UAC VenueMapping (legacy helper — NOT the venue-set SSOT)
+
+`unified_api_contracts.registry.venue_mapping.VenueMapping` / `VenueEntry` is a per-venue **date-helper**
+(`get_venue_start_date`, `get_expected_trading_dates`) used by manifest readers (see
+`availability-manifest-and-data-status.md:544-547`). It is NOT the venue-set registry — that role is split
+across the four SSOTs above per asset_group. The historical "primary SSOT" framing pre-dated the
+per-asset-group split landed in 2026-04-25 (`market_data_categories.py` Wave 3).
 
 ```python
 @dataclass
@@ -111,22 +132,32 @@ chains continue using Chainlink. SSOT: CLAUDE.md "Pyth — UNBANNED 2026-05-06" 
 
 ## Adding a New Venue
 
-1. Add `VenueEntry` to `unified_api_contracts/registry/venue_mapping.py` with `launch_date`
-2. Create or update an adapter in `instruments_service/reference_data/adapters/`
-3. Set `available_from_datetime` in `InstrumentRecord` from the known deploy/TGE date
-4. Register adapter in `factory.py` (`CANONICAL_VENUE_TO_ADAPTER`, `_ADAPTERS`)
-5. Add to MTDS venue list in `market_tick_data_service/config/venues.yaml`
+1. Add the venue id to the appropriate per-asset_group SSOT:
+   - DeFi: `unified_api_contracts/registry/defi_venues.py:ALL_DEFI_VENUES` (+ DEFI_VENUE_PHASE / MTDS_DEFI_VENUES if applicable)
+   - CeFi / TradFi / Sports / Prediction: `unified_api_contracts/registry/market_data_categories.py:VENUES_BY_ASSET_GROUP[asset_group]`
+2. Add `launch_date` entry to `unified_api_contracts/registry/venue_launch_dates.py` (for `EXPECTED_PRE_VENUE_LAUNCH` reason).
+3. Add source-coverage window to `unified_api_contracts/registry/coverage_starts.py` (`*_SOURCE_COVERAGE_START`).
+4. For DeFi: add per-`(venue, data_type)` capability rows to `defi_venue_capabilities.py:DEFI_VENUE_DATA_TYPE_CAPABILITIES`.
+5. Create or update an adapter in `instruments_service/reference_data/adapters/<asset_group>/`.
+6. Set `available_from_datetime` in `InstrumentRecord` from the known deploy/TGE date.
+7. Register adapter in `factory.py` (`CANONICAL_VENUE_TO_ADAPTER`, `_ADAPTERS`).
+8. Add to MTDS venue list in `market_tick_data_service/config/venues.yaml`.
 
 ## Key Files
 
-| File                                                        | Purpose                           |
-| ----------------------------------------------------------- | --------------------------------- |
-| `unified_api_contracts/registry/venue_mapping.py`           | VenueEntry registry (SSOT)        |
-| `instruments_service/reference_data/factory.py`             | Adapter registry                  |
-| `instruments_service/reference_data/adapters/eigenlayer.py` | `_EIGEN_DEPLOY_DATE = 2024-09-17` |
-| `instruments_service/reference_data/adapters/ethfi.py`      | `_ETHFI_DEPLOY_DATE = 2024-03-18` |
-| `instruments_service/reference_data/adapters/lido.py`       | `_LIDO_DEPLOY_DATE = 2020-12-18`  |
-| `unified_trading_library/reference_data/validation.py`      | `validate_venue_names()`          |
+| File                                                          | Purpose                                                                                |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `unified_api_contracts/registry/market_data_categories.py`    | `VENUES_BY_ASSET_GROUP` per-asset_group venue catalogue (primary SSOT for cefi/tradfi/sports/prediction venues) |
+| `unified_api_contracts/registry/defi_venues.py`               | `ALL_DEFI_VENUES` / `DEFI_VENUE_PHASE` / `MTDS_DEFI_VENUES` (primary SSOT for DeFi venues) |
+| `unified_api_contracts/registry/defi_venue_capabilities.py`   | `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — per-(venue, data_type) start-date dict           |
+| `unified_api_contracts/registry/venue_launch_dates.py`        | Per-venue launch_date (used by `EXPECTED_PRE_VENUE_LAUNCH` reason)                     |
+| `unified_api_contracts/registry/coverage_starts.py`           | Per-asset-group `*_SOURCE_COVERAGE_START` (used by `EXPECTED_PRE_SOURCE_COVERAGE_START`) |
+| `unified_api_contracts/registry/venue_mapping.py`             | VenueEntry date-helper (`get_venue_start_date`, `get_expected_trading_dates`) — NOT the venue-set SSOT |
+| `instruments_service/reference_data/factory.py`               | Adapter registry                                                                       |
+| `instruments_service/reference_data/adapters/defi/eigenlayer.py` | `_EIGEN_DEPLOY_DATE = 2024-09-17`                                                  |
+| `instruments_service/reference_data/adapters/defi/ethfi.py`   | `_ETHFI_DEPLOY_DATE = 2024-03-18`                                                      |
+| `instruments_service/reference_data/adapters/defi/lido.py`    | `_LIDO_DEPLOY_DATE = 2020-12-18`                                                       |
+| `unified_trading_library/reference_data/validation.py`        | `validate_venue_names()`                                                               |
 
 ## Related Docs
 
