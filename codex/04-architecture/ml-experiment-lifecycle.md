@@ -4,6 +4,32 @@ scope: [engineer, ml-engineer, admin]
 
 # ML experiment lifecycle
 
+> **🟡 LIFT 2026-05-12 (ML-6 PRE_CUTOVER, slot 8 audit)** — the ML-manifest parquet schema in this doc is the
+> **design intent**, NOT what ships. **Implementation reality**: UTL `ModelRegistry` (`unified-trading-library/
+> unified_trading_library/ml/model_registry.py`) uses a **JSON index** at `model_registry/manifest.json`
+> (constant `MANIFEST_PATH`), and ml-training / ml-inference reference models by `(variant_config, training_period |
+> model_version)` — **NOT by `job_id`**. The `data-lineage-MTDS-features-ml.md` v7 manifest-shard list adds a
+> `job_id` column at the data-manifest layer, so a partial overlap exists, but no `ml_manifest.parquet` artefact is
+> written. Operator decision pending: (a) build the parquet ML-manifest as designed below + retrofit `ModelRegistry`,
+> OR (b) rewrite this doc around the JSON-index reality + the data-manifest `job_id` column. Tracked in
+> `plans/active/issues/codex_audit_ml_2026_05_12.md` ML-6.
+
+## ML Hard Rules (LIFT 2026-05-12 from `_archived_pre_v2/cross-cutting/ml-pipeline.md`, ML-13 PRE_CUTOVER)
+
+The archived pre-v2 ml-pipeline doc enumerated 3 Hard Rules not mirrored anywhere active. Lifted here per slot 8
+audit ML-13 so the archived doc can be cleanly hard-bannered or deleted.
+
+1. **ML models are signals, not decisions.** A model emits a directional / volatility / event-probability
+   prediction. Strategy-service consumes the prediction and decides whether to act on it — the model never trades
+   directly. This separation is what makes paper / live / shadow / batch all share the same inference path.
+2. **Training and inference are separate services.** `ml-training-service` produces artefacts in the registry;
+   `ml-inference-service` (standalone, NOT features-service — see ML-2 SUPERSEDED banner in
+   `../16-strategy-playbooks/ml/cefi-ml-live-serving.md`) consumes them. Crossing the seam (e.g. running inference
+   inside the training service, or training in the inference service) breaks the artefact-versioning contract.
+3. **No model goes live without human approval.** Promotion `validated → shadow → champion` is a strategy-service
+   config change with a documented runbook (see ML-10 follow-up: `15-runbooks/ml/promote-model-to-champion.md`
+   pending). The model-promotion subscriber consumes `MODEL_PROMOTED` events; arming the promotion is operator-only.
+
 ## Why a separate manifest
 
 The data manifest (`unified_trading_library.manifest_writer.ManifestWriter`) is the SSOT for "what data exists and at

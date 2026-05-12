@@ -96,24 +96,38 @@ strategy-service (live mode):
 
 ## Hot-reload of model artefacts
 
-Same pattern as `ApiKeyReloader` + `InstrumentLifecycleCacheDeltaReloader`:
+> **🟡 LIFT 2026-05-12 (ML-3 PRE_CUTOVER, slot 8 audit)** — design intent below was a `ModelArtefactReloader` mirroring
+> `InstrumentLifecycleCacheDeltaReloader` subscribing to `streaming.models.refresh_trigger`. **Implementation reality
+> is simpler**: `ml-inference-service/ml_inference_service/app/core/model_promotion_subscriber.py` subscribes to the
+> Pub/Sub topic `ml_model_coordination_events` (constant `ML_MODEL_COORDINATION_TOPIC`), listens for
+> `MODEL_PROMOTED` events, and on receipt **clears the in-memory model cache** (no delta-diff, no snapshot dispatch);
+> `ModelLoader` then lazily reloads from the new `artifact_gcs_path` on the next inference call. Codex describes
+> the cache-bust mechanism (current); the design-intent delta-reloader is a POST_CUTOVER upgrade tracked in ML-18
+> (hot-reload-mechanisms matrix).
+
+### Current — cache-bust on `MODEL_PROMOTED`
 
 ```python
-from unified_trading_library.instrument_lifecycle_cache_delta_reloader import (
-    InstrumentLifecycleCacheDeltaReloader,
-    CatalogDelta,
-)
+# ml-inference-service/ml_inference_service/app/core/model_promotion_subscriber.py
+ML_MODEL_COORDINATION_TOPIC = "ml_model_coordination_events"
 
-# A new reloader is added in UTL: ModelArtefactReloader (parallel to the instrument-lifecycle one).
-# It diffs `model_registry` snapshots between refresh-trigger events and dispatches
-# `(ModelDelta, new_registry)` to subscribers (per-asset-group features-service workers
-# re-load the affected models in-process).
+# On MODEL_PROMOTED event arrival:
+#   1. ModelPromotionSubscriber.handle_event() → clears ModelLoader's in-memory cache.
+#   2. Next inference call lazily loads new artefact_gcs_path via ModelRegistry.
+#   3. Per-event audit + observability via standard alerting-service routing.
 ```
 
-Subscribed by the features-service compute worker; diffs new vs old model registry; on `added` / `modified` model
-artefacts, downloads the new artefact + atomically swaps the in-memory model. `removed` models stop emitting features
-for that model_family. The reloader carries the same `(CatalogDelta, snapshot)` shape the instrument-lifecycle one uses,
-so the two share test fixtures.
+`MODEL_PROMOTED` carries `(model_family, new_version, artifact_gcs_path)`. No delta-diff is computed; the next call
+to `ModelLoader.load(model_family, version)` finds an empty cache and re-reads the artefact from GCS through
+`ModelRegistry`. Strategy-service config still decides WHICH `job_id` is the champion; the subscriber bridges UAC's
+promotion-event into the inference service's runtime cache lifecycle.
+
+### Design-intent (POST_CUTOVER upgrade tracked in ML-18)
+
+The original design specified a `ModelArtefactReloader` parallel to `InstrumentLifecycleCacheDeltaReloader` —
+diffing `model_registry` snapshots, dispatching `(ModelDelta, new_registry)` to subscribers, sharing fixtures with the
+instrument-lifecycle reloader. **This is NOT shipped**; the cache-bust path above is what ships for May-23 cutover.
+Upgrade to delta-shape is tracked in `plans/active/issues/codex_audit_ml_2026_05_12.md` ML-18 (POST_CUTOVER).
 
 ## Model-version traceability per trade
 
@@ -137,6 +151,27 @@ grouping fills by `model_version` + summing realised P&L.
 - **Don't bake the model into the Docker image.** Image is service-version; model is a separate artefact lifecycle.
 - **Don't use a different inference path for batch vs live.** Same code, same registry, same model_version stamping —
   per "Batch = Live: Unified Pipeline Architecture" workspace rule.
+
+## `data_freshness` callback semantics (ml-inference-service)
+
+> **ADD 2026-05-12 (ML-11 PRE_CUTOVER, slot 8 audit)** — the workspace STEP 5.62 rule requires every `api/main.py` to
+> wire `make_health_router` with a `data_freshness` callback. `ml-inference-service` imports `make_health_router` but
+> codex never defined what "fresh" means for an ML service. This section is the contract.
+
+For `ml-inference-service`, **freshness** is the minimum of three timestamps:
+
+1. **Last successful inference batch** — most-recent `FEATURE_COMPUTED` event consumed + scored (signals the
+   consume-and-score loop is alive end-to-end). Stale if older than `expected_cadence * 1.5` per
+   `(asset_group, model_family)`.
+2. **Last `MODEL_PROMOTED` event processed** — most-recent promotion handled by `ModelPromotionSubscriber`
+   (signals the hot-reload path is alive; stale if the topic has unconsumed messages older than 60s).
+3. **Feature-event lag** — `now() - last_FEATURE_COMPUTED.available_at` (signals upstream is producing; stale if
+   > `expected_cadence` of the slowest live model_family on the same VM).
+
+The `data_freshness` callback returns the **maximum** of those three lags. `ML_SIGNAL_STALE` (per
+`ml-alerting-rules.md` Rule 1) is the live alert that fires when the callback's lag exceeds the per-archetype
+threshold. The callback is also the verifier the `make_health_router` GET `/healthz` endpoint reports and the
+deployment-UI freshness column reads.
 
 ## Cross-references
 

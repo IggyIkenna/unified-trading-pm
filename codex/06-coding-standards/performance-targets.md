@@ -17,7 +17,7 @@ All latencies measured end-to-end (wall clock), using mocked external dependenci
 | Order submission (execution-service → venue mock)  | 200ms | 400ms  | 500ms  | 1000ms |
 | Signal generation (strategy-service, full cycle)   | 500ms | 800ms  | 1000ms | 2000ms |
 | Feature computation (any single service, 1 symbol) | 100ms | 300ms  | 500ms  | 1000ms |
-| ML inference (ml-inference-api, single prediction) | 50ms  | 150ms  | 250ms  | 500ms  |
+| ML inference (ml-inference-service, single prediction) | 50ms  | 150ms  | 250ms  | 500ms  |
 | End-to-end signal-to-order (strategy → execution)  | 800ms | 1500ms | 2000ms | 5000ms |
 | GCS read (feature batch, 1 day, 1 symbol)          | 500ms | 1000ms | 2000ms | 5000ms |
 | PubSub publish (single event)                      | 10ms  | 50ms   | 100ms  | 200ms  |
