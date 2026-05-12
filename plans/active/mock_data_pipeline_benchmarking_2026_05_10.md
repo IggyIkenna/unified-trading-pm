@@ -205,14 +205,34 @@ design-shipped. ✅(partial)
       `BenchmarkHarness`, writes `stage_profile.parquet` + `synthetic_run_manifest.json` under `--report-uri`; mutually
       exclusive with real-data backtest flags by construction (this CLI is the synthetic path only). Smoke-verified
       end-to-end in `stub` mode.)
-- [ ] [AGENT] P0. **4.A-tail Per-service `--synthetic-input-uri` flags.** **DEFERRED** (slot 7 2026-05-12). For
-      `subprocess` mode the harness shells out to each service CLI; each of MTDS / MDPS / features-* / ML-inference /
-      strategy / execution needs a `--synthetic-input-uri <prefix>` flag (consumes the generator parquet under that
-      prefix via its existing reader path — no parallel reader, just a source override). Until then the harness
-      `subprocess` mode raises `HarnessStageNotWiredError` (covered by `test_harness_subprocess_mode_raises_not_wired`).
-      Also: `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` needs a `RUN_OPERATION=synthetic-benchmark`
-      branch consuming the `SYNTHETIC_*` metadata. **Successor**: this plan (stays active); if it slips past
-      2026-05-23, fold into `live_pipeline_mtds_mdps_features_2026_05_08`. Provenance: Phase 4 reframe note above.
+- [ ] [AGENT] P0. **4.A-tail Per-service `--synthetic-input-uri` flags.** **PARTIAL** (slot 6 2026-05-12 reserve
+      pickup). **`setup-data-pipeline-vm.sh` synthetic-benchmark branch ✅ SHIPPED** (deployment-service@`3fde508` —
+      added `synthetic-benchmark` to the existing VM_TASK dispatch OR-list at line 670 alongside `mdps-backfill` /
+      `features-backfill` / `phantom-recon` / `expected-universe-enum` / `cross-asset-rescan`;
+      `launch-synthetic-benchmark-vm.sh` passes the UTL CLI via VM_BACKFILL_CMD). **Still DEFERRED — 6 service CLI
+      `--synthetic-input-uri` flags**: each of MTDS / MDPS / features-* / ML-inference / strategy / execution needs
+      a `--synthetic-input-uri <prefix>` flag (consumes the generator parquet under that prefix via its existing
+      reader path — no parallel reader, just a source override). Until then the harness `subprocess` mode raises
+      `HarnessStageNotWiredError` (covered by `test_harness_subprocess_mode_raises_not_wired`). **Per-service
+      wire-in spec (operator-runnable for next slot)**:
+
+      | Service | CLI entry | Reader override point | Pattern |
+      |---|---|---|---|
+      | MTDS | `market-tick-data-service/market_tick_data_service/cli/main.py` `_add_service_args` (line 141+) | `tardis_reader.py` + `databento_reader.py` source-URI lookup | `parser.add_argument("--synthetic-input-uri", type=str, default=None, help="If set, read raw-tick parquet from this URI prefix instead of prod source")` + thread to each reader as a constructor kwarg that overrides the prod-bucket URI builder |
+      | MDPS | `market-data-processing-service/.../cli/main.py` | `RawTickHive.read()` reader pathing | Same flag; pass to `RawTickHive(synthetic_input_uri=...)` overriding the per-asset-group prod bucket |
+      | features-* | per-family service CLI (`features-onchain-service` / `features-sports-service` / `features-volatility-service` / etc.) | each `LiveAggregator` / `LiveRunner` upstream source | Same flag; override the manifest reader's bucket-name resolver to point at the synthetic prefix |
+      | ML-inference | `ml-inference-service/.../cli/main.py` | feature-vector parquet reader | Same flag; pass to the upstream feature-vector loader |
+      | strategy | `strategy-service/strategy_service/cli/main.py` | signal + features parquet readers | Same flag; thread through to upstream-source resolver in `StrategyEngine` orchestrator |
+      | execution | `execution-service/execution_service/cli/main.py` | matching-engine pool-snapshot reader (for batch backtest replay) | Same flag; pass to `pool_from_snapshot` to read snapshots from synthetic prefix instead of prod `dex_pools` data_type |
+
+      **Reader override semantics**: when `--synthetic-input-uri gs://{pid}-synthetic-input/{run_id}` is set, the
+      reader's source-URI builder returns `f"{synthetic_input_uri}/asset_group={ag}/data_type={dt}/..."` (matching
+      the generator's shard layout per UAC `SyntheticShardLayout`) INSTEAD of the prod `resolve_bucket_name(...)`
+      output. No parallel reader path; same parquet schema; same hive layout. Per CLAUDE.md "Live = batch": the
+      ONLY thing that differs is the source URI; everything downstream stays prod-shaped.
+
+      **Successor**: this plan (stays active); if it slips past 2026-05-23, fold into
+      `live_pipeline_mtds_mdps_features_2026_05_08`. Provenance: Phase 4 reframe note above.
 - [x] [AGENT] P0. **4.B Per-stage profiler integration.** (utl@`ca9c346` — `BenchmarkHarness._run_stage` wraps every
       DAG stage with `synthetic.profile.profile_stage(name)`; no separate pipeline-orchestrator to wire — the harness
       IS the orchestrator, per "Never build standalone backtest engines": `subprocess` mode shells out to the prod
