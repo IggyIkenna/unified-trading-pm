@@ -477,13 +477,20 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       enforcement is optional follow-up, not a gap. **NICE-TO-HAVE**: also add STEP 5.70 invocation to PM's own
       `quality-gates.sh` (Phase 4.PM-SCRIPTS confirmed N/A — zero real `record_*` calls in PM scripts — so it'd be a
       vacuous pass; defer).
-- [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — at end of Phase 4, **all four** transitional `None` defaults removed from
-      ManifestWriter's 5 `record_*` methods (explicit-or-fail): `pipeline_mode=` + the 3 v8 emission-tracking kwargs
-      (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`). **AND** bump
-      `MANIFEST_SCHEMA_VERSION` from `7 → 8` at `manifest_writer.py:131` + reconcile codex doc
-      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-      lines 258-262 + 265 (drop the "transitional" wording — once defaults are gone, v8 IS the constant). Any future
-      regression caught at QG by basedpyright. Per Phase 2 P2 resolution (option b — line 291 above).
+- [x] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — `pipeline_mode=` default removed (explicit-or-fail) from all 6 public
+      `record_*` methods + `MANIFEST_SCHEMA_VERSION` bumped `7 → 8` at `manifest_writer.py:131` + codex doc
+      `availability-manifest-and-data-status.md` "transitional" prose updated to reflect v8 live.
+      (utl@`547ff3c` 2026-05-12 — Phase 4.DEFAULT-REMOVAL shipped)
+      **DEFERRED**: 3 v8 emission kwargs (`service_emission_state=` / `last_emission_decision_at=` /
+      `expected_window_completeness_fraction=`) still accept `= None` — removing their defaults requires a full
+      emission-policy callsite sweep across MTDS + instruments-service + any raw-tick adapters. Those callsites were
+      NOT swept in Phase 4 (only `pipeline_mode=` was). Tracked as follow-up deferred item below.
+- [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL-v8kwargs — **DEFERRED** — remove `= None` defaults from 3 v8 emission
+      kwargs (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`) in
+      all public `record_*` methods once MTDS + instruments-service + raw-tick adapter callsites are swept to pass
+      these explicitly. Predecessor: Phase 4.DEFAULT-REMOVAL (done, utl@`547ff3c`). Blocked by: callsite sweep not
+      yet done (emission-policy adapters only partially updated — only writegate slice (b) MDPS POC callsites pass v8
+      kwargs; remaining 8 services pending Phase 6.3-6.9 rollout per writegate plan).
 - QG: every affected repo quality-gates.sh clean. **Done-definition**: zero grep hits + every repo's QG green + Phase
   4.DEFAULT-REMOVAL committed.
 
