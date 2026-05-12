@@ -95,14 +95,65 @@ Phase 6 (Validation: workspace-wide grep audits + downstream consumer verificati
 Phase 7 (Codex SSOT updates throughout per Post-Plan-Phase Codex Audit HARD RULE)
 ```
 
+## Per-asset-group catalogue audit pass (2026-05-12 — slot 8 5-way fan-out, groundwork for Phases 1-7)
+
+> **🔴 BIG FINDING 2026-05-12 — Phase 1A as originally written is WRONG; re-framed below.** The catalogue
+> audit found `canonical/domain/prediction/` (singular) and `canonical/domain/predictions/` (plural) are NOT
+> redundant duplicates — singular = cross-venue mapping (`PredictionMarketMapper` etc.), plural =
+> canonical-question-group taxonomy. Executing "delete the singular module" breaks
+> `instruments-service/.../adapters/prediction/polymarket.py:25` and loses the cross-venue-mapping feature.
+> (Already independently caught on the DeFi side — `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1F.)
+> 1A re-scoped to "keep both + fix the one deep-import consumer + optional post-cutover rename". Operator
+> flagged in chat 2026-05-12 + `plans/active/_agent_pings.md`.
+
+Five per-asset-group catalogue drift reports landed (`plans/active/issues/catalogue_audit_{asset_group}_2026_05_12.md`),
+each cross-referencing UAC capability declarations / coverage-start windows / instruments-service adapters / MTDS
+adapters / execution connectors. Aggregate: **69 findings** (1×P0, ~21×P1, ~40×P2, ~7×P3).
+
+| asset_group | issue doc | # findings | Headline drift | Fan-out → |
+| ----------- | --------- | ---------- | -------------- | --------- |
+| defi | [`catalogue_audit_defi_2026_05_12.md`](issues/catalogue_audit_defi_2026_05_12.md) | 20 (DF-1..DF-20) | GMX/DRIFT dual-classified (P0, DF-3); euler_v2/radiant/venus/benqi in `MTDS_DEFI_VENUES`+instruments-service but ZERO UAC `PROTOCOL_CAPABILITIES`/`DEFI_VENUE_DATA_TYPE_CAPABILITIES` rows → phantom-row risk (DF-2); "22 chains" claim matches no list (`MAINNET_CHAIN_IDS`=19 / `CHAIN_GENESIS_DATES`=21 / `CHAIN_CONFIGS`=35 / `GAS_FEE_CHAIN_START_DATES`=14, DF-7) | Phase 1C (GMX/DRIFT + DF-10 GMX-shape), Phase 1D (`SOLBLAZE`/`BLAZESTAKE`, `TRADER_JOEV2`/`TRADERJOEV2`, `sDAI` split), Phase 1F (chain-set SSOT + "22 chains" wording); `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1A (euler/radiant/venus/benqi UAC back-fill) + Phase 2-3 (9 vault primitives + `vault_share_price`); `defi_master_2026_05_07.md` (`ORACLE_COVERAGE_START["chainlink"]`) |
+| cefi | [`catalogue_audit_cefi_2026_05_12.md`](issues/catalogue_audit_cefi_2026_05_12.md) | 16 (CF-1..CF-16) | **Wave 3.M zero-activity-bars 0% started** — all 21 CeFi venues still on legacy `empty_confirmed` (Cat A) path; no Cat-D zero-activity bars; UTL `zero_activity_bars` + `get_prior_ltp` helpers don't exist yet (CF-15); `BINANCE` vs `BINANCE-SPOT` coverage-start/data_type-capability key mismatch silently skips ≥8 cefi venues in honest-coverage % (CF-4/7/8); GMX/DRIFT cefi-side ghosts (CF-1/2/9/10, composes with DF-3); 1 banned-pattern (`try/except ImportError` + `# type: ignore` Drift fallback in execution-service, CF-16) | Phase 3 (consumes Wave 3.M; this plan's Phase 3 was already scoped to it); Phase 1C/1D (GMX/DRIFT + case-folding); `writegate_honest_coverage_endtoend_2026_05_06.md` Wave 3.M (callout added); `cefi_master_2026_05_07.md` (coverage-key + data_type rows + instruments-id reconcile); execution-service QG (CF-16) |
+| tradfi | [`catalogue_audit_tradfi_2026_05_12.md`](issues/catalogue_audit_tradfi_2026_05_12.md) | 10 (TF-1..TF-10) | E2 confirmed + fully located: ETF universe fragmented across **4** files (`KNOWN_ETFS` `tradfi_symbology.py:459` / `ETF_TICKERS` `tradfi_ticker_universe.py:295` / `_BTC_SPOT_ETFS`+`_ETH_SPOT_ETFS` `tradfi_instrument_universe.py:151` / `TRADFI_TICKER_COVERAGE_START` ETF subset) with divergent membership; futures-roots across **3** (`TRADFI_INSTRUMENTS` / `TRADFI_DATABENTO_INSTRUMENTS` / hard-coded `SUPPORTED_UNDERLYINGS` in `databento_cme_converter.py:57`); VIX-15m constants live in `registry/data_source_continuity.py` NOT `canonical/crosscutting/honest_coverage.py` as CLAUDE.md claims (TF-7); no `futures_chain` data_type for any TradFi venue + `options_chain` only at CME despite OPRA coverage-start (TF-6) | Phase 5A (`tradfi_etfs.py`), Phase 5B (`tradfi_roots.py`), Phase 5C (`asset_group_registry.py`), Phase 7 (codex + CLAUDE.md VIX-pointer fix); `tradfi_master_2026_05_07.md` (`futures_chain`/OPRA options, `CFE`-vs-`CBOE`, `ICE` missing from coverage dict) |
+| sports | [`catalogue_audit_sports_2026_05_12.md`](issues/catalogue_audit_sports_2026_05_12.md) | 12 (SP-1..SP-12) | URDI / sports-execution adapter layer (~20 sportsbook/exchange/aggregator keys) NOT checked out in any worktree → error-classification + typed-empty-reason + cluster-validation + capability-vs-method reconciliation all unverified (SP-12); venue-id casing drift spans 5 sports SSOTs (SP-3, wider than Phase 1D's current scope); `KNOWN_COVERAGE_GAPS = {}` contradicts the 2026-05-11 phantom-recon STANDINGS/SFI_LEAGUES/INJURIES pre-launch clusters (SP-6); no `LINEUPS_PRE/POST` split confirmed clean (SP-9) | Phase 1D (widen to cover SP-3); `sports_master_2026_05_07.md` (SP-1/2/4/5/6/7/10); **new URDI-side reconciliation owner needed** (SP-12 + URDI half of SP-10) — flag to operator |
+| prediction | [`catalogue_audit_prediction_2026_05_12.md`](issues/catalogue_audit_prediction_2026_05_12.md) | 11 (PR-1..PR-11) | **Phase 1A mis-framed** (PR-1 — see BIG FINDING banner above); `prediction_canonical_question_group` + `MARKET_LIFECYCLE` are live manifest-emitting data_types but absent from `DATA_TYPES_BY_ASSET_GROUP["prediction"]` (only `["trades"]`) → coverage-% aggregators under-count prediction shards (PR-3/PR-4); `MARKET_LIFECYCLE` instruments→MTDS parquet wiring + `PREDICTION_GROUPS` cluster registry are still open temporary-states (PR-5/PR-6); MANIFOLD orphan key (PR-7) | Phase 1A (re-word + fold in PR-3/PR-4); `predictions_master_2026_05_07.md` (PR-4/PR-6/PR-7/PR-11); `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1F (cross-link the keep-both decision) |
+
+**Cross-cutting drift surfaced by ≥2 sub-agents** (highest-leverage fixes): (1) **GMX/DRIFT dual-classification** —
+flagged on both the defi side (DF-3, P0) and cefi side (CF-1/CF-2); Phase 1C owns it but is unstarted. (2)
+**venue-id casing drift** — `VENUES_BY_ASSET_GROUP` (uppercase) vs `_BASE_VENUES_BY_ASSET_GROUP` (lowercase) vs
+per-source capability dicts (lowercase) hits cefi (CF-3), sports (SP-3), and the defi venue-keyed dicts in a
+different form (DF-4/5/17); Phase 1D should ship a `to_canonical_venue()` helper + a test that enumerates *every*
+venue-keyed dict across all asset_groups and asserts no key drift. (3) **coverage-start key mismatch** — denominator
+dicts keyed by a venue spelling the manifest doesn't use silently zero out the expected shard count for those venues
+(cefi CF-4/7/8, sports SP-6, defi DF-8); the Phase 2 `measure_honest_coverage.py` script must validate key-set
+parity between the capability dict and the venue list before computing %.
+
+Stale-claim reconciliation across all 5: of the 2026-05-08 pre-audit deltas — **2 fully RESOLVED** (`LST_TOKEN_TO_PROTOCOL_ASSET`
+located at `internal/domain/defi/lst.py:37`; `GAS_FEE_CHAIN_START_DATES` located at `chain_env.py:61`), **~4
+PARTIALLY-RESOLVED** (Spark ghost → now instruments+UAC done, MTDS-generic, no connector; Radiant orphan → now in
+`ALL_DEFI_VENUES`+`DEFI_VENUE_PHASE`+`MarginModel` but not `PROTOCOL_CAPABILITIES`; case-folding drift → still open in
+multiple forms; Tardis coverage dates → BITGET pinned, others TODO/missing), **~3 STILL-OPEN** (GMX/DRIFT
+dual-classification; "22 chains"; TradFi ETF SSOT — `tradfi_etfs.py`/`tradfi_roots.py`/`asset_group_registry.py`
+confirmed NOT to exist, so Phase 5 is genuinely unimplemented). Phase 1A's premise (delete singular `prediction/`)
+is REJECTED. Each sub-agent's `## Stale-claim reconciliation` section has the per-delta detail.
+
 ## Phase 1 — UAC SSOT cleanup (SEQUENTIAL gate; ~3-5 AI-days)
 
 Owner: ikenna (cross-cutting design); harsh implements + downstream consumer updates.
 
-- [ ] [AGENT] P0. **1A — UAC dual-prediction module pick + delete**. Canonical = `canonical/domain/predictions/`.
-      Delete `canonical/domain/prediction/__init__.py` + workspace-grep audit for downstream consumers; update
-      every import. Per Citadel § 6 extension: enumerate every consumer (services + scripts + tests) — paste table
-      in commit message.
+- [ ] [AGENT] P0. **1A — UAC dual-prediction module RECONCILE (re-scoped 2026-05-12 — NOT a delete).** Per
+      [`catalogue_audit_prediction_2026_05_12.md`](issues/catalogue_audit_prediction_2026_05_12.md) PR-1/PR-2 +
+      `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1F: `canonical/domain/prediction/` (singular,
+      cross-venue mapping — `PredictionMarketMapper` etc.) and `canonical/domain/predictions/` (plural,
+      canonical-question-group taxonomy) are BOTH canonical and non-redundant. Actions: (a) KEEP BOTH; do NOT
+      delete. (b) Fix the one deep-import consumer `instruments-service/.../reference_data/adapters/prediction/polymarket.py:25`
+      to import via the `unified_api_contracts` facade rather than the deep `canonical.domain.prediction` path
+      (PR-2). (c) **OPTIONAL, POST_CUTOVER** — rename `canonical/domain/prediction/` → `canonical/domain/prediction_mapping/`
+      for clarity (singular-vs-plural is a footgun); file as a post-cutover issue doc, not in this plan. (d) Fold in
+      PR-3/PR-4: add `prediction_canonical_question_group` + `MARKET_LIFECYCLE` to `DATA_TYPES_BY_ASSET_GROUP["prediction"]`
+      (currently `["trades"]` only) so coverage-% aggregators don't under-count prediction expected shards. (e) Drop
+      the original "paste downstream-consumer table in commit message" — the consumer table is in the prediction
+      catalogue-audit issue doc's `## prediction/ → predictions/ migration table` (exactly 1 real deep-import consumer).
 - [ ] [AGENT] P0. **1B — Spark + Radiant SSOT consolidation**. (a) Build out Spark instruments-service adapter +
       MTDS adapter + execution connector per `defi_catalogue_chain_primitives_2026_05_10.md` Phases 2/3/4 (this
       plan owns the SSOT decision; that plan owns the implementation). (b) Add UAC `defi_venue_capabilities.py`

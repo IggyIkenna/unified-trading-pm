@@ -2559,6 +2559,18 @@ manifest classification work but closely related — once Wave 2.M's blank-reaso
 next adapter behaviour to fix is "what to do when source returns nothing for an active instrument." Wave 3.M is that
 fix.
 
+> **🔎 FINDING 2026-05-12 (cross_asset_group_catalogue_audit slot-8 CeFi sub-agent, `plans/active/issues/catalogue_audit_cefi_2026_05_12.md` CF-15)** — Wave 3.M is **0% started for CeFi**: all 21 venues in
+> `VENUES_BY_ASSET_GROUP["cefi"]` still take the legacy path; none emit Category-D zero-activity bars. The
+> `unified_trading_library.zero_activity_bars` helper + `get_prior_ltp(...)` SSOT (the 2nd + 3rd tasks below) do
+> **not exist yet**. Mild good news: the banned `_create_empty_output` / `_handle_empty_tick_data` patterns were
+> NOT found in MTDS CeFi adapter source — current behaviour is honest `empty_confirmed` (Cat A), not fake-populated
+> NaN placeholders — so the gap is "Cat-D not yet implemented", not "Cat-D faked". DeFi-side note (per
+> `catalogue_audit_defi_2026_05_12.md`): DeFi subgraph data_types (`dex_pools`/`lending_indices`/`oracle_prices`/`lst_rates`) are pass-through
+> `NEEDS_CANDLE_PROCESSING=False`, so the relevant DeFi analogue is "subgraph returned zero rows" → `SOURCE_RETURNED_ZERO`,
+> which `honest_coverage.py:266` already declares legitimate at instrument-day grain. The cross_asset plan's Phase 3
+> (per-CeFi-venue zero-activity-bar verification) is the consumer of this wave; its sub-agent built a per-venue
+> Cat-A/B/C/D matrix that should seed the audit task below.
+
 **Tasks:**
 
 - [ ] [SCRIPT] P1. **Audit MTDS adapters per (venue, data_type)** for the zero-volume-during-market- hours behaviour.
