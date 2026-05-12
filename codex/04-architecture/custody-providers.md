@@ -7,10 +7,25 @@ scope: [engineer, admin]
 > **🟢 R9 sub-(a) RESOLVED 2026-05-12** — per
 > [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > § R9 RESOLVED: **May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`** (HSM-backed CMK envelope encryption);
-> **June-1 flips per-wallet to `COPPER_MPC` / `FIREBLOCKS_MPC`** on client-provided creds. Per-wallet
+> **June-1 flips per-wallet to `COPPER_MPC` / CEFFU** on POD-provided creds. Per-wallet
 > `signing_surface` field on
 > [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
 > supports config-only flips with no recompile.
+>
+> **🟢 Cloud HSM CMKs PROVISIONED 2026-05-12** by slot 4 agent (operator-authorized ADC):
+> 10 HSM-backed CMKs (5 asset_groups × `wallets-prod` + `wallets-staging` KeyRings) in
+> `asia-northeast1`, 90-day auto-rotation, IAM Decrypter bound to
+> `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` only.
+> **End-to-end smoke test PASSED**: encrypt + decrypt round-trip on staging CMK
+> returned matching plaintext. Issue doc closed at
+> [`plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md`](../../plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md).
+>
+> **🟢 POD / Elysium client scope clarified 2026-05-12** — see
+> [`codex/14-customer-journeys/pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md).
+> POD (Elysium sub-entity, AIFM Ireland; BVI Fund) is our first DeFi allocator
+> client. POD manages Copper + CEFFU KYB directly. **Fireblocks is OUT OF SCOPE
+> per POD stack choice** — POD uses Copper + CEFFU only. `SigningSurface.FIREBLOCKS_MPC`
+> stays in UAC enum for future-flexibility but is NOT a May-23 / June-1 target.
 >
 > Operator-runbook for every cutover + June-1 onboarding step:
 > [`codex/05-infrastructure/custody-onboarding-checklist.md`](../05-infrastructure/custody-onboarding-checklist.md).
