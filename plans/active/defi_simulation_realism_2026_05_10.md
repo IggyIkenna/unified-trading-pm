@@ -369,16 +369,43 @@ Owner: harsh + parallel agents.
       `staking_yields` rows; `sample_forward_distribution()` MC kernel sums N=horizon_epochs Gaussian draws per
       path → APR annualised by epochs_per_year (82125 ETH / 365 SOL). Smoke pass: 200 mock Ethereum samples,
       1170-epoch horizon, mean=84.9% p5=83.7% p95=86.1%. basedpyright clean.)
-- [ ] [AGENT] P0. **5B — Restaking AVS yield model**. Per-AVS reward variability layered on top of native staking base.
-      EigenLayer + Symbiotic + Karak AVSes from Phase 1A captures. Output: per-LRT forward yield distribution.
-- [ ] [AGENT] P0. **5C — LRT protocol-fee model**. Discrete-event model: Ether.fi / Renzo / KelpDAO / Puffer fees
-      historically change ~quarterly via governance. Capture fee-change events; forward fee assumption =
-      most-recent-quarter fee + ±1 stddev band.
-- [ ] [AGENT] P0. **5D — Seasonal-points model** (off-chain rewards). Discrete-event model with operator-supplied
-      "expected season ending in" dates. Treats points as airdrop-equivalent at season end at a discount factor that
-      matches historical points-to-token redemption ratios (operator-tuned).
-- [ ] [AGENT] P0. **5E — Composite `StakingYieldStreamSimulator`** that integrates 5A + 5B + 5C + 5D into a single
-      per-LST/LRT forward-yield distribution. Used by `carry_staked_basis` PnL projection + risk simulations.
+- [x] [AGENT] P0. **5B — Restaking AVS yield model**. (execution-service@`58c703a5` — NEW
+      `matching_engine/yield_streams/restaking_avs.py`: `RestakingRewardSample` historical-row dataclass,
+      `AVSPremiumDistribution` per-(AVS, LRT) log-normal calibrated state (mu_log + sigma_log + per-LRT
+      operator_allocation_share), `RestakingAVSModel` bundle, `calibrate_restaking_avs_model()` log-domain
+      fit (≥ 5 positive samples per pair; degenerate sigma=0 collapse below threshold),
+      `sample_lrt_total_premium()` MC kernel summing weighted per-AVS log-normal draws. EigenLayer / Symbiotic
+      / Karak / Jito-restaking captured via MTDS `restaking_rewards`. Smoke: 30 EigenLayer/weETH samples →
+      `(mean, p5, p95)` triple populated; pure-LSTs return zero (no matched distributions). basedpyright clean.)
+- [x] [AGENT] P0. **5C — LRT protocol-fee model**. (execution-service@`58c703a5` — NEW
+      `matching_engine/yield_streams/lrt_protocol_fee.py`: `LRTProtocolFeeSample` per-quarter row,
+      `LRTProtocolFeeDistribution` per-protocol calibrated state (current_fee_bps + sigma_quarterly_bps +
+      fee_ceiling_bps = max_observed × 1.5), `LRTProtocolFeeModel` bundle, `calibrate_lrt_protocol_fee_model()`
+      fits Gaussian on consecutive quarter-to-quarter deltas, `sample_forward_fee()` MC kernel clips path
+      draws to `[0, ceiling]` then averages over horizon_quarters. Covers Ether.fi / Renzo / KelpDAO / Puffer.
+      Smoke: 8-quarter ETHERFI calibration → forward 8-quarter mean fee 135bps ±2.6bps band on the smoke
+      synthetic input. basedpyright clean.)
+- [x] [AGENT] P0. **5D — Seasonal-points model** (off-chain rewards). (execution-service@`58c703a5` — NEW
+      `matching_engine/yield_streams/seasonal_points.py`: `SeasonalPointsConfig` operator-supplied per-protocol
+      (points_per_unit_per_epoch + redemption_ratio + discount_factor + expected_season_end + epochs_per_year),
+      `SeasonalPointsImpliedYield` discounted forward APR + audit fields (undiscounted APR + discount_factor
+      + season_days_remaining), `compute_implied_apr()` validates tz-aware datetimes / discount ∈ [0,1] /
+      non-negative rates, `SeasonalPointsModel` bundle + `compute_implied_apr_for_protocol()` lookup wrapper
+      (returns zero-yield for protocols without seasonal programmes). Defaults per codex: 60% Ether.fi, 50%
+      Renzo / Puffer, 70% new programmes. Yaml hot-reload via `config_reloaders.py` is a follow-up todo.)
+- [x] [AGENT] P0. **5E — Composite `StakingYieldStreamSimulator`** that integrates 5A + 5B + 5C + 5D into a
+      single per-LST/LRT forward-yield distribution. (execution-service@`58c703a5` — NEW
+      `matching_engine/yield_streams/composite_simulator.py`: `CompositeYieldInputs` bundle of per-layer
+      calibrated models + per-LST runtime context, `_LST_TO_PROTOCOL` pinned mapping (stETH/rETH/cbETH/wstETH
+      pure-LSTs + weETH→ETHERFI / ezETH→RENZO / rsETH→KELPDAO / pufETH→PUFFER LRTs + jitoSOL/mSOL/bSOL
+      pure-Solana), `staking_yield_stream_distribution()` first-moment composition with CLT tail
+      reconstruction returning `ForwardYieldDistribution`, `make_staking_yield_decomposition()` returning UAC
+      `StakingYieldDecomposition` snapshot (per-AVS breakdown via per-AVS sub-model sampling). Smoke: weETH
+      Ethereum 1170-epoch composite — calibrated 100 ns + 30 avs + 8 quarters + 1 seasonal config, composite
+      `(mean_apr, p5, p95)` populated + decomposition with 1 AVS component + 135bps fee + 0.049 seasonal APR.
+      basedpyright + ruff clean.) **DEFERRED**: P1 — per-path element-wise sum (full convolution preserving
+      log-normal tail vs CLT moment approximation); operator-tuned `defi_seasonal_points_calibration.yaml` +
+      `defi_yield_stream_protocol_map.yaml` hot-reload via `config_reloaders.py`.
 
 **Full-execution criterion**:
 
