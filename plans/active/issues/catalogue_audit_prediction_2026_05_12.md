@@ -1,0 +1,128 @@
+---
+title: "Catalogue audit — prediction (cross_asset_group plan)"
+created: 2026-05-12
+author: harsh-catalogue-audit-tab (slot 8 sub-agent)
+source:
+  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
+  - plans/active/defi_catalogue_chain_primitives_2026_05_10.md
+  - plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md
+  - plans/epics/predictions_master_2026_05_07.md
+  - unified-api-contracts/unified_api_contracts/canonical/domain/prediction/ (singular)
+  - unified-api-contracts/unified_api_contracts/canonical/domain/predictions/ (plural)
+  - unified-api-contracts/unified_api_contracts/registry/market_data_categories.py
+  - unified-api-contracts/unified_api_contracts/registry/defi_prediction_instrument_seeds.py
+  - unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py
+  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py
+  - instruments-service/instruments_service/reference_data/adapters/prediction/{kalshi,polymarket}.py
+  - market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/
+  - market-tick-data-service/market_tick_data_service/engine/orchestrator.py
+locked_by: live-defi-rollout
+locked_since: 2026-05-12
+---
+
+# Catalogue audit — prediction (cross_asset_group plan)
+
+## Methodology
+
+Reconciled the prediction-asset-group catalogue across five SSOT layers: (1) UAC dual modules
+`canonical/domain/prediction/` (singular) + `canonical/domain/predictions/` (plural) + their facades + `registry/`
+venue tables + coverage windows; (2) instruments-service `reference_data/adapters/prediction/{kalshi,polymarket}.py`;
+(3) MTDS `market_interface/adapters/prediction/{kalshi_adapter,polymarket_adapter,manifold_adapter}.py` + the MTDS
+orchestrator's `prediction_canonical_question_group` bundling path; (4) workspace-wide grep (`rg -P`, `.venv*`/
+`node_modules`/`build` excluded) for `canonical.domain.prediction` (singular) and the singular module's public
+symbols; (5) the 2026-05-08 pre-audit deltas + 2026-05-12 reconciliation already recorded in
+`defi_catalogue_chain_primitives_2026_05_10.md` Phase 1F. Grep-then-read applied: every 0-hit grep escalated to a
+file read of candidate consumers + factory/orchestrator modules.
+
+## Findings
+
+| # | Finding (KEEP/LIFT/CONSOLIDATE/DELETE/ADD) | Type | Layer(s) | Severity | Disposition | Owner | Evidence (file:line) |
+|---|---|---|---|---|---|---|---|
+| PR-1 | KEEP both `prediction/` (singular, cross-venue mapping: `PredictionMarketMapper`/`CanonicalPredictionMarket`/`PredictionMarketCrossVenueMapping`/`MappingRule`/`OrphanDetector`/`PredictionMarketCategory`) AND `predictions/` (plural, canonical-question-group SSOT: `CanonicalQuestionGroup`/`MarketLifecycle`/`classify_*`/`CANONICAL_GROUP_METADATA`/`CLASSIFIER_STABILITY_HASH`) — they are DIFFERENT features, not redundant duplicates. The cross_asset plan's Phase 1A "delete the singular" instruction is **mis-framed** and must be re-worded to "consolidate naming" (rename singular → `prediction_mapping/`), NOT delete. | DUAL-MODULE / STALE | UAC | P1 | PRE_CUTOVER | ikenna | `unified_api_contracts/canonical/domain/prediction/__init__.py:1-12`; `…/domain/predictions/__init__.py:1-30`; `defi_catalogue_chain_primitives_2026_05_10.md:272-300` (2026-05-12 "keep BOTH" decision already recorded) |
+| PR-2 | CONSOLIDATE: instruments-service polymarket adapter imports `PredictionMarketMapper` via the **deep path** `unified_api_contracts.canonical.domain.prediction` — violates the UAC Citadel import rule (facade-only). Switch to `from unified_api_contracts.prediction import PredictionMarketMapper`. | DUAL-MODULE (import-surface) | instruments-service / UAC | P2 | PRE_CUTOVER | harsh | `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:25-27` |
+| PR-3 | ADD: `prediction_canonical_question_group` is a live data_type — consumed by MTDS orchestrator (`record_captured_from_counts(... expected_root_clusters=…)`), instruments-service orchestrator, UAC `source_priority.py` / `availability_semantics.py` / `honest_coverage.py` — but is **missing from `DATA_TYPES_BY_ASSET_GROUP["prediction"]`** (which only lists `["trades"]`). Add it (and `prediction_market_metadata` is referenced in `market_data_categories.py:790` only in a per-instrument seed list, not the canonical DT set). | MISSING-DT | UAC | P1 | PRE_CUTOVER | ikenna | `unified_api_contracts/registry/market_data_categories.py:152-159`; `…/crosscutting/honest_coverage.py:323,471`; MTDS `engine/orchestrator.py:2600-2624` |
+| PR-4 | ADD: `MARKET_LIFECYCLE` data_type — instruments-service adapters expose `get_market_lifecycles()` and the orchestrator emits a `data_type="market_lifecycle"`-style row; `predictions/lifecycle.py` docstring says it is "persisted in instruments-service's MARKET_LIFECYCLE data_type parquet" — but the data_type name is not in `DATA_TYPES_BY_ASSET_GROUP["prediction"]` and MTDS orchestrator (`engine/orchestrator.py:2551,2582`) notes the MARKET_LIFECYCLE wiring is still pending (currently MTDS derives lifecycle bounds from instruments-service `available_from/to_datetime` on the InstrumentRecord, not a dedicated parquet). | MISSING-DT / temporary-state | UAC + instruments-service + MTDS | P1 | PRE_CUTOVER | ikenna | `unified_api_contracts/canonical/domain/predictions/lifecycle.py:47,119`; instruments-service `kalshi.py:434`, `polymarket.py:1087`; MTDS `engine/orchestrator.py:2551,2582` |
+| PR-5 | KEEP (verified) — MTDS Polymarket + Kalshi adapters DO respect lifecycle bounds: ticks outside `[market_created_at, settlement_time)` are dropped; `available_at = max(tick_ts, market_created_at)` per row; `canonical_question_group` column derived via UAC `classify_*`. Live=batch parity holds — single `download_batch` path, no live-only data_type split for prediction. No drift. | (no-finding / verified-clean) | MTDS | — | — | — | MTDS `polymarket_adapter.py:540-606,696-741`; `kalshi_adapter.py:14-22,292-339` |
+| PR-6 | KEEP (verified) — `PREDICTION_GROUPS` cluster registry in `honest_coverage.py` is a documented **temporary placeholder** (empty-ish), populated by the predictions migration plan; `prediction_canonical_question_group` is in `CLUSTERED_DATA_TYPES`/`_DATA_TYPE_TO_CLUSTER_REGISTRY`; MTDS passes `expected_root_clusters`+`observed_clusters` (not literal `cluster_extractor` kwarg, but functionally equivalent — `record_captured_from_counts`). Cluster validation IS present. Monitor that `PREDICTION_GROUPS` gets fully seeded before cutover. | CLUSTER (temporary-state, not drift) | UAC + MTDS | P2 | PRE_CUTOVER | ikenna | `unified_api_contracts/canonical/crosscutting/honest_coverage.py:513-565`; MTDS `engine/orchestrator.py:2611-2624` |
+| PR-7 | LIFT: `MANIFOLD` is an **orphan/cross-classification** case — MTDS has `market_interface/adapters/prediction/manifold_adapter.py` + `ManifoldAdapter` in the prediction adapters `__init__`; UAC has `ManifoldMarket`/`ManifoldPrice`/`ManifoldTrade` external schemas + a `_MANIFOLD` SourceCapability — but it is declared under `registry/capability_declarations/_sports.py`, NOT prediction, and is NOT in `VENUES_BY_ASSET_GROUP["prediction"]` (nor `["sports"]`). Decide: either (a) add `MANIFOLD` to `VENUES_BY_ASSET_GROUP["prediction"]` + move its capability to `_prediction`, or (b) delete the MTDS `manifold_adapter.py` if Manifold is out of scope for May-23. | ORPHAN | UAC + MTDS | P2 | POST_CUTOVER | ikenna | MTDS `market_interface/adapters/prediction/manifold_adapter.py:1-15`, `…/prediction/__init__.py`; UAC `registry/capability_declarations/_sports.py:237,431`; `registry/market_data_categories.py:217-222` |
+| PR-8 | CONSOLIDATE / doc-only: `registry/venue_constants.py:56-61` lists `POLYMARKET`/`KALSHI`/`NOVIG`/`BETOPENLY`/`PROPHETX` under a "Prediction Markets — crypto/blockchain-based prediction exchanges" comment, but `VENUES_BY_ASSET_GROUP["prediction"]` only contains `POLYMARKET`+`KALSHI` (NOVIG/BETOPENLY/PROPHETX are sports-betting exchanges with no prediction adapters). Re-comment so the venue-constant grouping comment doesn't imply they're prediction venues. | CASE/NAMING (comment drift) | UAC | P3 | POST_CUTOVER | harsh | `unified_api_contracts/registry/venue_constants.py:56-61` |
+| PR-9 | KEEP (verified) — venue-id casing is consistent: `POLYMARKET`/`KALSHI` (uppercase) across `VENUES_BY_ASSET_GROUP`, `PREDICTION_SOURCE_COVERAGE_START`, `PREDICTION_VENUE_LAUNCH_DATES`, `PREDICTION_KNOWN_COVERAGE_GAPS`, `defi_prediction_instrument_seeds.py`, MTDS adapters (`venue="POLYMARKET"`), instruments-service adapters. No lowercase/uppercase drift for prediction (unlike the cefi `VENUES_BY_ASSET_GROUP` vs `_BASE_VENUES_BY_ASSET_GROUP` issue noted in the parent plan — that's a cefi-only problem). | CASE/NAMING (verified-clean) | all | — | — | — | `unified_api_contracts/canonical/coverage_starts.py:126-146`; `registry/venue_launch_dates.py:88-100` |
+| PR-10 | KEEP (verified) — coverage windows are present + consistent: `PREDICTION_SOURCE_COVERAGE_START` (`POLYMARKET` 2022-11-21 CLOB launch, `KALSHI` 2021-07-19), `PREDICTION_VENUE_LAUNCH_DATES` (`POLYMARKET` 2020-09-01 Polygon mainnet, `KALSHI` 2021-07-30 CFTC), `PREDICTION_KNOWN_COVERAGE_GAPS` (`POLYMARKET *` pre-CLOB AMM era 2020-06-12→2022-11-20). Note the deliberate distinction: launch-date 2020-09 (markets existed) vs source-coverage-start 2022-11-21 (order-book trades started) — documented in `coverage_starts.py:122-146`. No COVERAGE-WINDOW drift. | COVERAGE (verified-clean) | UAC | — | — | — | `unified_api_contracts/canonical/coverage_starts.py:122-168`; `registry/venue_launch_dates.py:88-130` |
+| PR-11 | KEEP (verified) — empty-confirmed-reason: prediction CAN have `empty_confirmed` at instrument-day grain per CLAUDE.md; MTDS prediction bundle path routes a missing-`available_at`-envelope bundle to `record_failed(error="missing_available_at_envelope")` (honest), and sub-threshold classifier output → `OTHER` group (keeps the row in the shard rather than dropping it). No blank-reason path observed. The classifier-confidence-low path (`attempted_failed[reason=ClassifierConfidenceLow]`) is referenced in `classifiers.py` docstring — confirm the typed reason exists in the UAC reason taxonomy / `attempted_failed` reason set. | EMPTY-REASON (mostly-clean; one verify) | UAC + MTDS | P2 | PRE_CUTOVER | ikenna | MTDS `engine/orchestrator.py:2594-2604`; `polymarket_adapter.py:701-723`; UAC `predictions/classifiers.py:1-40` |
+
+## prediction/ → predictions/ migration table
+
+**This table is the corrected actionable input for the parent plan's Phase 1A.** The pre-audit framed Phase 1A as
+"delete `canonical/domain/prediction/` (singular), move every public symbol into `predictions/` (plural)". That is
+**WRONG** — verified by slot-2 reconciliation on 2026-05-12 (`defi_catalogue_chain_primitives_2026_05_10.md:272-300`)
+and re-confirmed here. The singular module is a *distinct feature* (cross-venue 1:1 market mapping + keyword
+categorization), not a legacy ancestor of the plural module (canonical-question-group taxonomy). No symbols should be
+moved. The only mechanical work is the optional rename `prediction/` → `prediction_mapping/` for visual
+disambiguation, which is POST_CUTOVER and touches exactly the 2 live consumers below + the facade re-export.
+
+| Symbol | currently in | should be in | downstream consumers still importing singular (repo:file:line) |
+|---|---|---|---|
+| `PredictionMarketMapper` | `canonical/domain/prediction/prediction_mapping.py` | STAY (optionally `…/prediction_mapping/`) — do NOT move to plural | `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:25-27` (deep import — PR-2 says switch to facade `unified_api_contracts.prediction`); `unified-api-contracts/tests/test_prediction_market_mapping.py:7` (facade `unified_api_contracts.prediction` — OK); `unified-trading-pm/scripts/prediction/test_prediction_pipeline_e2e.py:213-217` (lazy import inside test — facade) |
+| `CanonicalPredictionMarket` | `canonical/domain/prediction/prediction_mapping.py` | STAY | (re-exported via `unified_api_contracts.prediction` facade; used by tests above) |
+| `PredictionMarketCrossVenueMapping` | `canonical/domain/prediction/prediction_mapping.py` | STAY | (facade re-export only; no service consumer found) |
+| `MappingRule` | `canonical/domain/prediction/prediction_mapping.py` | STAY | `unified-api-contracts/tests/test_prediction_market_mapping.py` (facade) |
+| `OrphanDetector` | `canonical/domain/prediction/prediction_mapping.py` | STAY | `unified-api-contracts/tests/test_prediction_market_mapping.py` (facade) |
+| `PredictionMarketCategory` | `canonical/domain/prediction/prediction_mapping.py` | STAY (migration plan line 459-460 says *align with* `CanonicalQuestionGroup`, NOT delete — alignment already done in archived plan) | `unified-api-contracts/tests/test_prediction_market_mapping.py` (facade); `unified-trading-pm/scripts/prediction/test_prediction_pipeline_e2e.py:213-219` (facade); `unified-trading-system-ui/context/api-contracts/canonical-schemas/domain/prediction/*` (vendored snapshot copy of UAC — NOT a live import; refreshed by a context-sync script, not edited by hand) |
+| facade `unified_api_contracts/prediction.py` | re-exports `from canonical.domain.prediction import *` | STAY (update target path if rename happens) | n/a (it IS the facade) |
+
+**Net for Phase 1A**: re-word the Phase 1A todo from "delete the singular + migrate symbols" to "(a) confirm-and-record
+the keep-both decision (already done in `defi_catalogue_chain_primitives` Phase 1F); (b) PR-2 — flip instruments-service
+polymarket adapter to the facade import; (c) optional POST_CUTOVER rename `prediction/` → `prediction_mapping/`."
+Then close Phase 1A's "workspace-grep returns zero hits" full-execution criterion as **not-applicable / superseded**.
+
+## Recommended fan-out targets
+
+- **`cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1A** — re-word the dual-module todo per the migration
+  table above (keep both modules; PR-2 facade-import fix; close the "zero hits" criterion as superseded). Also fold
+  PR-3 (`prediction_canonical_question_group` missing from `DATA_TYPES_BY_ASSET_GROUP`) + PR-4 (`MARKET_LIFECYCLE`
+  data_type registration) into Phase 1 (UAC SSOT cleanup) since they are pure UAC registry edits.
+- **`predictions_master_2026_05_07.md` (epic)** — owns PR-4 (MARKET_LIFECYCLE wiring instruments-service→MTDS),
+  PR-6 (seed `PREDICTION_GROUPS` cluster registry fully), PR-7 (MANIFOLD scope decision), PR-11 (confirm
+  `ClassifierConfidenceLow` is a typed `attempted_failed` reason).
+- **`defi_catalogue_chain_primitives_2026_05_10.md` Phase 1F** — already records the keep-both decision; cross-link
+  it from the cross_asset plan's Phase 1A so the next agent doesn't re-investigate.
+- **`mock_data_pipeline_benchmarking_2026_05_10.md`** — prediction mock fixtures should exercise: lifecycle-bounded
+  tick gating, the `canonical_question_group` column, the `prediction_canonical_question_group` bundle path with
+  `expected_root_clusters`, and a sub-threshold-classifier → `OTHER` row.
+
+## Stale-claim reconciliation
+
+- **2026-05-08 pre-audit delta "A1 — UAC dual-prediction modules" (`canonical/domain/prediction/` + `…/predictions/`
+  both exist; plural is canonical; delete the singular)** — **PARTIALLY-RESOLVED, but the framing is STALE/WRONG.**
+  Both modules still exist (verified). However the premise ("singular is legacy, deletable") was investigated and
+  *rejected* on 2026-05-12 by slot 2 (`defi_catalogue_chain_primitives_2026_05_10.md:272-300`): the two modules serve
+  different purposes (cross-venue mapping vs canonical-question-group taxonomy); the archived migration plan
+  (`predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md:459-460`) only ever asked for the
+  legacy `PredictionMarketCategory` enum to be *aligned with* `CanonicalQuestionGroup`, not deleted. **Action: the
+  cross_asset plan Phase 1A and `defi_catalogue` Phase 1F now agree (keep both) — but the cross_asset plan body
+  + risk register + full-execution criterion still say "delete / zero hits" and must be re-worded (this issue doc's
+  migration table is the corrected input).**
+- **2026-05-08 pre-audit delta "Case-folding drift (`VENUES_BY_ASSET_GROUP` uppercase vs `_BASE_VENUES_BY_ASSET_GROUP`
+  lowercase)"** — **NOT-APPLICABLE to prediction.** That drift is a cefi-only artefact; the prediction venue list
+  (`POLYMARKET`/`KALSHI`) is uppercase-consistent across every prediction SSOT (PR-9). No prediction action needed.
+
+## Coverage summary
+
+The prediction-asset-group catalogue is in **fair shape** for May-23. The MTDS market-data layer is the strongest:
+lifecycle-bound tick gating, per-row `available_at`, `canonical_question_group` derivation, and the bundled
+`prediction_canonical_question_group` cluster path with `expected_root_clusters` are all implemented and live=batch
+symmetric — no live-only data_type split. The instruments-service reference layer correctly populates `MarketLifecycle`
+(`market_created_at`/`resolution_time`/`settlement_time` + `canonical_group`) for both venues. The main gaps are
+**registry/SSOT hygiene, not correctness**: `prediction_canonical_question_group` (PR-3) and `MARKET_LIFECYCLE`
+(PR-4) are live but absent from `DATA_TYPES_BY_ASSET_GROUP["prediction"]`; the `PREDICTION_GROUPS` cluster registry is
+a documented placeholder still awaiting full seeding (PR-6); the instruments-service→MTDS `MARKET_LIFECYCLE` parquet
+wiring is a still-open temporary state (PR-4); and `MANIFOLD` is an orphan adapter (PR-7).
+
+**BIG findings** (operator should note): the parent plan's **Phase 1A is mis-framed** — executing it as written
+("delete `canonical/domain/prediction/`") would break the instruments-service Polymarket adapter and lose the
+cross-venue-mapping feature. The corrected input is the migration table above; the cross_asset plan body needs a
+re-word, not a deletion. This was already caught once on the `defi_catalogue` side (Phase 1F) but the cross_asset
+plan was not synced. Secondary BIG-ish item: PR-3/PR-4 mean two live, manifest-emitting prediction data_types are
+absent from the canonical `DATA_TYPES_BY_ASSET_GROUP` SSOT — any coverage-% aggregator keyed off that dict will
+under-count prediction expected shards (the same class of bug the `defi_prediction_instrument_seeds.py` Wave 8G
+work fixed for per-instrument denominators).

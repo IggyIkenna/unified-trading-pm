@@ -1,0 +1,141 @@
+---
+title: "Catalogue audit — tradfi (cross_asset_group plan)"
+created: 2026-05-12
+author: harsh-catalogue-audit-tab (slot 8 sub-agent)
+source:
+  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md (pre-audit item E2 — TradFi ETF list not at single SSOT; Phase 5 — tradfi_etfs.py / tradfi_roots.py)
+  - unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py
+  - unified-api-contracts/unified_api_contracts/registry/tradfi_ticker_universe.py
+  - unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py
+  - unified-api-contracts/unified_api_contracts/registry/venue_constants.py
+  - unified-api-contracts/unified_api_contracts/registry/market_data_categories.py (VENUES_BY_ASSET_GROUP)
+  - unified-api-contracts/unified_api_contracts/registry/venue_launch_dates.py
+  - unified-api-contracts/unified_api_contracts/registry/venue_trading_calendar.py
+  - unified-api-contracts/unified_api_contracts/registry/half_day_sessions.py
+  - unified-api-contracts/unified_api_contracts/registry/session_times.py
+  - unified-api-contracts/unified_api_contracts/registry/venue_session_hours.py
+  - unified-api-contracts/unified_api_contracts/registry/data_type_capability.py
+  - unified-api-contracts/unified_api_contracts/registry/data_source_continuity.py
+  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_tradfi.py
+  - unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py
+  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py
+  - unified-api-contracts/unified_api_contracts/internal/reference/ticker_registry.py
+  - instruments-service/instruments_service/reference_data/adapters/tradfi/{databento,ibkr,polygon,tradfi_live}.py
+  - market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py
+  - market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/*.py
+locked_by: live-defi-rollout
+locked_since: 2026-05-12
+---
+
+# Catalogue audit — tradfi
+
+## Methodology
+
+Read the UAC registry layer (`registry/*tradfi*`, `venue_constants.py`, `venue_trading_calendar.py`,
+`half_day_sessions.py`, `session_times.py`, `data_type_capability.py`, `data_source_continuity.py`,
+`capability_declarations/_tradfi.py`), the coverage-window layer (`coverage_starts.py`, `honest_coverage.py`),
+the instruments-service tradfi reference adapters (`databento.py` / `ibkr.py` / `polygon.py` / `tradfi_live.py`),
+and the MTDS market-data adapters (`umi_tick_provider.py` route + `market_interface/adapters/tradfi/*`). For every
+declared instrument/root/ETF/venue I traced (a) where it is declared in UAC, (b) which instruments-service adapter
+fetches its reference def, (c) which MTDS adapter fetches its market data, (d) whether it has a coverage-start /
+launch-date / gap-helper. IBKR live data goes through `ibkr-gateway-infra` (not present in this worktree) — auditable
+here are only the UAC `_IBKR` capability decl + instruments-service `tradfi/ibkr.py` adapter + MTDS `ibkr_adapter.py`.
+
+## Findings
+
+| # | Finding (KEEP/LIFT/CONSOLIDATE/DELETE/ADD) | Type | Layer(s) | Severity | Disposition | Owner | Evidence (file:line) |
+|---|---|---|---|---|---|---|---|
+| TF-1 | CONSOLIDATE — TradFi ETF list lives in ≥4 places with divergent membership. (a) `KNOWN_ETFS` (set, ~40 tickers, used by the instruments-service Databento adapter for ETF classification); (b) `ETF_TICKERS` in `tradfi_ticker_universe.py` (~59 tickers — superset of (a), adds ETHA/FETH/ETHE/VIG/AGG/BND/VCIT/.../MCHI); (c) `_BTC_SPOT_ETFS` + `_ETH_SPOT_ETFS` lists in `tradfi_instrument_universe.py` (Databento `DatabentoInstrumentDef` rows for IBIT/FBTC/ARKB/GBTC + ETHA/FETH/ETHE); (d) `TRADFI_TICKER_COVERAGE_START` in `coverage_starts.py` (only ETFs with listing-date overrides). No single SSOT → drift. This IS the E2 finding. Phase 5A `tradfi_etfs.py` should subsume all 4. | SSOT-FRAG | UAC | P1 | PRE_CUTOVER | harsh (Phase 5A) | tradfi_symbology.py:459 (`KNOWN_ETFS`); tradfi_ticker_universe.py:295 (`ETF_TICKERS`); tradfi_instrument_universe.py:151-177 (`_BTC_SPOT_ETFS` etc.); coverage_starts.py:106 (`TRADFI_TICKER_COVERAGE_START`) |
+| TF-2 | CONSOLIDATE — TradFi futures-root universe lives in ≥3 places with divergent membership. (a) `TRADFI_INSTRUMENTS` (57 `TradFiInstrumentDef` rows incl. ES/NQ/RTY/YM/CL/NG/GC/.../VX/EW1-4) + `TRADFI_DATA_BINDINGS` (Databento dataset/stype map) in `tradfi_symbology.py`; (b) `TRADFI_DATABENTO_INSTRUMENTS` (71 `DatabentoInstrumentDef` rows — includes MES.FUT + micro crypto futures NOT in (a)) in `tradfi_instrument_universe.py`; (c) the OPRA/CME converter `SUPPORTED_UNDERLYINGS = {"GC","NG","ES","NQ","CL"}` hard-coded in MTDS `databento_cme_converter.py`. Two parallel UAC instrument-list types (`TradFiInstrumentDef` vs `DatabentoInstrumentDef`) with overlapping but non-identical contents = the same E2-class fragmentation for roots. Phase 5B `tradfi_roots.py` should subsume. | SSOT-FRAG | UAC + MTDS | P1 | PRE_CUTOVER | harsh (Phase 5B) | tradfi_symbology.py:256-422 (`TRADFI_INSTRUMENTS` + `TRADFI_DATA_BINDINGS`); tradfi_instrument_universe.py:269 (`TRADFI_DATABENTO_INSTRUMENTS`); market-tick-data-service/.../tradfi/databento_cme_converter.py:57 |
+| TF-3 | CONSOLIDATE — TradFi underlying-name normalisation lives in 3 places: `EXCHANGE_CODE_TO_NAME` + the `base_asset` arg of every `_fut(...)`/`_opt(...)` in `tradfi_symbology.py` (legacy names: `SP500`/`EUR`/`TNOTE10Y`), AND `UNDERLYING_NORMALIZATION` in `internal/reference/ticker_registry.py` (display names: `SP500`/`AUDUSD`/`UST-10Y`) — and `ticker_registry.py`'s own docstring says it "anchors the convention going forward" yet `tradfi_symbology.py` still ships the old mix. Pick one. | SSOT-FRAG / CASE | UAC | P2 | PRE_CUTOVER | ikenna (closed-set call) | tradfi_symbology.py:139 (`EXCHANGE_CODE_TO_NAME`), :260 (`_fut("ES.FUT","CME","SP500")`); unified_api_contracts/internal/reference/ticker_registry.py (docstring + `UNDERLYING_NORMALIZATION`) |
+| TF-4 | DELETE-or-RECONCILE — UAC `_tradfi.py` declares 10 `SourceCapability` rows (ibkr, databento, fred, polygon, barchart, yahoo_finance, ecb, openbb, ofr, regulatory) but `VENUES_BY_ASSET_GROUP["tradfi"]` lists only 8 (NASDAQ, NYSE, CME, ICE, CBOE, FX, BARCHART, YAHOO_FINANCE) — FRED / POLYGON / ECB / OPENBB / OFR / REGULATORY / IBKR have NO entry in the venue list. The two axes (`SourceCapability.source` ≠ market-data `venue`) are deliberately different concepts, but there is no documented mapping; a reader can't tell whether FRED-sourced VIXCLS shows up under venue=CBOE, venue=FX, or has no venue. Document the source→venue mapping (or fold it into the Phase 5C `asset_group_registry`). | GHOST (source w/o venue) | UAC | P2 | PRE_CUTOVER | ikenna (Phase 5C) | capability_declarations/_tradfi.py:262-273 (`TRADFI_CAPABILITIES`); market_data_categories.py:194-206 (`VENUES_BY_ASSET_GROUP["tradfi"]`) |
+| TF-5 | ADD-or-RECONCILE — `instruments-service/.../tradfi/polygon.py` reference adapter fetches equity/ETF/index instruments from `/v3/reference/tickers` but `POLYGON` is not a `venue` in `VENUES_BY_ASSET_GROUP["tradfi"]` (it appears only as a `SourceCapability`). Either Polygon is a refdata-only source (then say so explicitly) or it should appear in the venue list. Also: no MTDS market-data adapter for Polygon (the adapters/tradfi/ dir has databento/fred/openbb/ofr/ecb/ibkr/yahoo only) — Polygon is instruments-only by design; document. | ORPHAN (adapter w/o venue) | instruments-service + UAC | P2 | PRE_CUTOVER | harsh | instruments-service/.../tradfi/polygon.py:10,255; market_data_categories.py:194-206 |
+| TF-6 | RECONCILE — `data_type_capability.py` declares `options_chain` for TradFi only at `venue=CME` (sourced by `databento_opra_converter.py`), and **no `futures_chain` row exists for any TradFi venue** (the `futures_chain` rows in that file are all CeFi/DeFi). Yet `TRADFI_INSTRUMENTS`/`TRADFI_DATABENTO_INSTRUMENTS` contain dozens of futures roots whose roll-curve membership is exactly what `futures_chain` would express, and MTDS has `databento_cme_converter.py` doing per-root cluster extraction (`_ES_OPTIONS_CLUSTERS`, `_ES_OPTIONS_WEEKDAY_ALWAYS_ON`). Either `futures_chain` is intentionally absent for TradFi (curated roll-curve handled inline) → document; or it's a MISSING-DT. Also no CBOE/OPRA equity-options `options_chain` row despite the `_OPRA` coverage-start (`OPRA: 2003-01-13`). | MISSING-DT | UAC + MTDS | P1 | PRE_CUTOVER | ikenna (catalogue completeness call) | data_type_capability.py:559-566 (only CME options_chain); tradfi_symbology.py:529-640 (`_ES_OPTIONS_CLUSTERS` / `_ES_OPTIONS_WEEKDAY_ALWAYS_ON`); coverage_starts.py:91-94 (`OPRA`/`DATABENTO` starts) |
+| TF-7 | KEEP-but-DOCUMENT — VIX 15m source-layering constants (`BARCHART_VIX_FIRST_DATE` / `BARCHART_VIX_LAST_DATE` / `BARCHART_VIX_FILE_COUNT` / `YAHOO_VIX_15M_WINDOW_DAYS` / `VIX_15M_GAP_FIRST_DATE` / `VIX_15M_SOURCE_HISTORY` / `is_vix_15m_gap_date` / `get_vix_15m_source`) live in `registry/data_source_continuity.py`, **not** in `canonical/crosscutting/honest_coverage.py` as CLAUDE.md's "VIX 15m source layering" pointer and this audit's tasking imply. `honest_coverage.py` only *references* the gap in the `EXPECTED_KNOWN_SOURCE_GAP` docstring (line 170) — it does NOT import or re-use the constants. CLAUDE.md's pointer is stale on the file location. Constants ARE consumed by MTDS `umi_tick_provider._fetch_yahoo_vix_15m` (lines 378-419) — so the layering route is consistent — but `coverage_starts.py` has no VIX-15m entry at all (only the per-ETF `TRADFI_TICKER_COVERAGE_START`), so the denominator-clip for the 2025-11-13→today-60d gap relies entirely on the `EXPECTED_KNOWN_SOURCE_GAP` reason firing, not on a coverage-start window. Fine, but the SSOT chain (constants in `data_source_continuity.py` → reason in `honest_coverage.py` → route in `umi_tick_provider.py`) should be documented in one place; CLAUDE.md pointer should be corrected. | COVERAGE / SSOT-FRAG | UAC + MTDS | P2 | PRE_CUTOVER | harsh (Phase 7 codex audit) + ikenna (CLAUDE.md fix) | data_source_continuity.py:63-100,156-182; honest_coverage.py:163-176; market-tick-data-service/.../adapters/umi_tick_provider.py:233-240,343-472; coverage_starts.py:90-118 (no VIX entry) |
+| TF-8 | RECONCILE — half-day / holiday calendar is split: `US_MARKET_HOLIDAYS` (full closures) in `venue_trading_calendar.py`, `_US_EQUITY_HALF_DAYS` / `HALF_DAY_SESSIONS` (shortened sessions) in `half_day_sessions.py`, intra-day session windows in `session_times.py` AND `venue_session_hours.py` (two modules), with `half_day_sessions.py`'s docstring naming all of them as composing pieces. Calendars are populated through 2028 (`venue_trading_calendar.py` has a "2028" comment) and 2023+ for half-days — verify they're current (2026 entries present). The split is by-design (full vs shortened vs intra-day) but `session_times.py` vs `venue_session_hours.py` is a genuine 2-module duplication for the same "what hours is venue X open" question — pick one. | COVERAGE / SSOT-FRAG | UAC | P2 | PRE_CUTOVER | harsh | venue_trading_calendar.py:43-101; half_day_sessions.py:48-60; session_times.py (whole module); venue_session_hours.py (whole module) |
+| TF-9 | NOTE (adjacent, not catalogue) — `instruments-service/.../tradfi/ibkr.py` opens with a blanket `# pyright: reportUnknownVariableType=false, ...` line suppressing ~35 basedpyright checks — architectural-violation masking per CLAUDE.md "no `# type: ignore` to hide". Flagging for the instruments-service code-health owner; out of scope for this catalogue audit. | (code-health) | instruments-service | P2 | POST_CUTOVER | instruments-service maintainer | instruments-service/.../tradfi/ibkr.py:1 |
+| TF-10 | KEEP — `umi_tick_provider.py` VIX route: `venue==CBOE AND data_type==ohlcv_15m` → `_fetch_yahoo_vix_15m` (called BEFORE the generic `_DATABENTO_VENUES` branch which excludes CBOE+ohlcv_15m anyway), with explicit `available_at` stamping to override the wrong `SOURCE_PRIORITY[("tradfi","ohlcv_15m")]=["databento","yahoo"]` default. Correct per CLAUDE.md. No drift in the route itself. | (verified-OK) | MTDS | — | — | — | market-tick-data-service/.../adapters/umi_tick_provider.py:233-243,461-472 |
+
+## ETF + futures-root SSOT inventory
+
+| Symbol/Root | declared in (file:line) | adapter coverage | MTDS fetch | launch/first-trade date in coverage_starts? |
+|---|---|---|---|---|
+| ES.FUT (S&P 500 e-mini) | tradfi_symbology.py:260 (`TradFiInstrumentDef`) + :344 (`TRADFI_DATA_BINDINGS`); tradfi_instrument_universe.py:75 (`DatabentoInstrumentDef`) | instruments-service tradfi/databento.py (curated `TRADFI_DATABENTO_INSTRUMENTS`) | MTDS databento_adapter.py / databento_cme_converter.py (GLBX.MDP3 parent ES) | No per-root override; venue-level `CME: 2010-01-01` + `DATABENTO: 2003-01-13` (coverage_starts.py:91-94) — both flagged `# TODO verify` for CME |
+| MES.FUT (micro S&P) | tradfi_instrument_universe.py:148 (`DatabentoInstrumentDef`) — **NOT in tradfi_symbology.py `TRADFI_INSTRUMENTS`** | instruments-service tradfi/databento.py | MTDS databento (added 2026-05-05 per inline comment) | No; venue-level CME clip only |
+| NQ/RTY/YM/CL/NG/RB/HO/GC/SI/HG/PL/ZC/ZW/ZS/ZM/ZL/ZB/ZN/ZF/ZT/6E/6J/6B/6C/6A/6S/6L/6N/6Z/6M/LE/HE .FUT (CME) | tradfi_symbology.py:261-296 + :345-374; tradfi_instrument_universe.py:74-148 | instruments-service tradfi/databento.py | MTDS databento (GLBX.MDP3) | No per-root override; venue CME/DATABENTO clip |
+| CT/CC/KC/SB/OJ/DX .FUT (ICE US); BRN/G/T .FUT (ICE Europe) | tradfi_symbology.py:322-329 + :409-419 | instruments-service tradfi/databento.py | MTDS databento (IFUS.IMPACT / IFEU.IMPACT) | No; venue `ICE` has NO entry in `TRADFI_SOURCE_COVERAGE_START` (only FRED/OPRA/DATABENTO/TARDIS/CME) — minor GHOST: ICE in venue list but not in source-coverage dict |
+| VX.FUT (VIX futures, CFE) | tradfi_symbology.py:308 (`_fut("VX.FUT","CFE","VIX")`) + :402 (XCBF.MDP3 parent VX) | instruments-service tradfi/databento.py | MTDS databento (XCBF.MDP3) | No; **CFE not a venue in `VENUES_BY_ASSET_GROUP["tradfi"]`** (only CBOE) — venue/symbology mismatch (`venue="CFE"` vs canonical `CBOE`) |
+| VIX-USD (spot index, CBOE) | tradfi_symbology.py:301 (`TradFiInstrumentDef`, INDEX) + :377-394 (`TRADFI_DATA_BINDINGS` barchart/yahoo/fred); `VIX_INDEX_INSTRUMENT` :518, `VIX_INSTRUMENT` :523 | instruments-service tradfi/databento.py (static Yahoo indices for CBOE venue) | MTDS umi_tick_provider `_fetch_yahoo_vix_15m` (CBOE+ohlcv_15m) | No coverage-start entry; 15m gap handled via `data_source_continuity.is_vix_15m_gap_date` + `EXPECTED_KNOWN_SOURCE_GAP` reason |
+| EW1/EW2/EW3/EW4 .OPT (weekly ES options) | tradfi_symbology.py:314-317 + :407-410 | instruments-service tradfi/databento.py | MTDS databento_cme_converter.py (cluster extraction) | No |
+| ES/NQ/CL/GC .OPT | tradfi_symbology.py:310-313 + :399-402 | instruments-service tradfi/databento.py | MTDS databento_cme_converter.py (`SUPPORTED_UNDERLYINGS = {GC,NG,ES,NQ,CL}` — NG.OPT is in the converter set but NOT in `TRADFI_INSTRUMENTS`!) | No |
+| SPY/QQQ/IWM/VTI/DIA/EEM/VEA/VWO/GLD/SLV/USO/UNG/TLT/IEF/SHY/LQD/HYG/JNK/XLF.../ARKK.../etc. | tradfi_ticker_universe.py:295 (`ETF_TICKERS`, ~59); `KNOWN_ETFS` :459 (~40, subset) | instruments-service tradfi/databento.py (`TRADFI_TICKER_UNIVERSE`, raw_symbol via DBEQ.BASIC for NASDAQ/NYSE) | MTDS databento_equity.py (DBEQ.BASIC ohlcv) | No per-ticker override for the non-crypto ETFs; venue NASDAQ/NYSE → DATABENTO clip 2003-01-13 |
+| IBIT/FBTC/ARKB/GBTC (BTC spot ETF) | tradfi_ticker_universe.py:333 (`ETF_TICKERS`); `KNOWN_ETFS` :500-503; tradfi_instrument_universe.py:177 (`_BTC_SPOT_ETFS`, real listing exchanges); coverage_starts.py:108-111 (`TRADFI_TICKER_COVERAGE_START` 2024-01-11) | instruments-service tradfi/databento.py | MTDS databento (ARCX.PILLAR/BATS.PITCH per umi_tick_provider `_DATABENTO_VENUES` incl ARCA/BATS) | Yes — 2024-01-11 (coverage_starts.py:108-111) |
+| ETHA/FETH/ETHE (ETH spot ETF) | tradfi_ticker_universe.py:339 (`ETF_TICKERS`) — **NOT in `KNOWN_ETFS`**; tradfi_instrument_universe.py `_ETH_SPOT_ETFS`; coverage_starts.py:113-115 (2024-07-23) | instruments-service tradfi/databento.py | MTDS databento | Yes — 2024-07-23 (coverage_starts.py:113-115) |
+| BITO (BTC futures ETF) | tradfi_ticker_universe.py:337 (`ETF_TICKERS`); `KNOWN_ETFS` :504; coverage_starts.py:117 (2021-10-19) | instruments-service tradfi/databento.py | MTDS databento | Yes — 2021-10-19 |
+| IVV/VOO (S&P 500 ETF) | `KNOWN_ETFS` :461-462 — **NOT in `ETF_TICKERS`** (asymmetry: KNOWN_ETFS has IVV/VOO, ETF_TICKERS doesn't; ETF_TICKERS has ETHA/FETH/VIG/AGG/BND/etc., KNOWN_ETFS doesn't) | classification only (KNOWN_ETFS) | not fetched (not in ETF_TICKERS) | UNKNOWN |
+| FX_SPOT_PAIRS (e.g. KRW/USD) | tradfi_instrument_universe.py (`FX_SPOT_PAIRS`); venue `FX` in `VENUES_BY_ASSET_GROUP["tradfi"]` | instruments-service tradfi/databento.py (`FX_SPOT_PAIRS` static, Yahoo) | MTDS yahoo_finance_adapter.py (venue FX, ohlcv_24h) | UNKNOWN — no `FX` entry in `TRADFI_SOURCE_COVERAGE_START` |
+
+## VIX source-layering audit
+
+Mostly consistent, with one stale-pointer issue. The layering is: **Barchart preload** (`2020-01-02` → `2025-11-12`,
+12 CSV files, pre-loaded to GCS) → **Yahoo rolling 60-day window** (`YAHOO_VIX_15M_WINDOW_DAYS = 60`, no fixed start) →
+**permanent honest gap** (`2025-11-13` → `today − 60d`, shrinking 1 day/day). All five constants + `is_vix_15m_gap_date`
++ `get_vix_15m_source` live in **`registry/data_source_continuity.py`** (re-exported via `registry/__init__.py`). The
+MTDS route in `umi_tick_provider._fetch_yahoo_vix_15m` imports `BARCHART_VIX_FIRST_DATE` / `BARCHART_VIX_LAST_DATE` and
+branches: in-Barchart-range → return empty (preload owns it), in-gap → return empty, before-any-source → return empty,
+else Yahoo fetch + `available_at` stamp. So the **route is consistent with the constants**. Drift: (1) CLAUDE.md's
+"VIX 15m source layering" pointer (and this audit's tasking) says the constants are in `canonical/crosscutting/honest_coverage.py`
+— they are NOT; `honest_coverage.py` only mentions the gap in the `EXPECTED_KNOWN_SOURCE_GAP` reason docstring. (2)
+`canonical/coverage_starts.py` has no VIX-15m window at all — the gap denominator-clip relies on the `EXPECTED_KNOWN_SOURCE_GAP`
+reason firing per-shard, not on a `*_SOURCE_COVERAGE_START` window. Both are documentation/SSOT-chain gaps, not data-correctness
+bugs. Recommend: correct the CLAUDE.md pointer + add a one-paragraph "VIX 15m SSOT chain" note to the Phase-7 codex pass.
+
+## Recommended fan-out targets
+
+- `cross_asset_group_catalogue_audit_2026_05_10.md` **Phase 5A** — `tradfi_etfs.py` creation should subsume `KNOWN_ETFS`
+  + `ETF_TICKERS` + `_BTC_SPOT_ETFS`/`_ETH_SPOT_ETFS` + the `TRADFI_TICKER_COVERAGE_START` ETF subset (TF-1).
+- `cross_asset_group_catalogue_audit_2026_05_10.md` **Phase 5B** — `tradfi_roots.py` creation should subsume the two
+  parallel UAC instrument-list types (`TRADFI_INSTRUMENTS` / `TRADFI_DATABENTO_INSTRUMENTS`) + the converter's hard-coded
+  `SUPPORTED_UNDERLYINGS`, and reconcile the MES.FUT / NG.OPT membership gaps (TF-2, TF-6).
+- `cross_asset_group_catalogue_audit_2026_05_10.md` **Phase 5C** (`asset_group_registry.py` / `get_canonical_inventory`)
+  — document the TradFi source→venue mapping so the 10 `SourceCapability` rows reconcile against the 8-entry venue list
+  (TF-4, TF-5).
+- `cross_asset_group_catalogue_audit_2026_05_10.md` **Phase 7** (Codex SSOT updates) — add the "VIX 15m SSOT chain" note +
+  flag the stale CLAUDE.md "VIX 15m source layering" file-location pointer (TF-7).
+- `tradfi_master_2026_05_07.md` (`plans/epics/`) — catalogue-completeness owner for the `futures_chain` / OPRA-equity-options
+  `options_chain` decision (TF-6) + the `venue="CFE"`-vs-`CBOE` and `venue="ICE"`-not-in-coverage-dict mismatches (TF-2 row,
+  inventory table).
+- `mock_data_pipeline_benchmarking_2026_05_10.md` — once `tradfi_etfs.py`/`tradfi_roots.py` land, the mock-data seeders
+  (`*/scripts/seed_mock_data.py`, `unified-trading-pm/scripts/catalogue/sync-to-mock.py`, `deployment-api/.../data_status_mock.py`)
+  should be re-pointed at the new SSOT so mock fixtures track the canonical tradfi universe.
+
+## Stale-claim reconciliation
+
+The 2026-05-08 pre-audit had exactly one tradfi-specific delta (per the cross_asset_group plan § "Pre-audit reference"):
+
+- **E2 — "TradFi ETF list not at single SSOT, distributed across Databento converter + VIX layering rule + ETF list
+  (location unconfirmed)"** → **STILL-OPEN**, and now fully located. The ETF list is in ≥4 places (TF-1: `KNOWN_ETFS`,
+  `ETF_TICKERS`, `_BTC_SPOT_ETFS`/`_ETH_SPOT_ETFS`, `TRADFI_TICKER_COVERAGE_START`); the futures-root list is in ≥3 places
+  (TF-2: `TRADFI_INSTRUMENTS`+`TRADFI_DATA_BINDINGS`, `TRADFI_DATABENTO_INSTRUMENTS`, converter `SUPPORTED_UNDERLYINGS`);
+  the "Databento converter" referenced in the pre-audit = `databento_cme_converter.py` (CME) + `databento_opra_converter.py`
+  (OPRA, referenced in `data_type_capability.py:566`); the "VIX layering rule" = `data_source_continuity.py` constants
+  (NOT in `honest_coverage.py` as CLAUDE.md says — TF-7). `tradfi_etfs.py` / `tradfi_roots.py` / `asset_group_registry.py`
+  do **not** yet exist (confirmed: `find` returns nothing; `canonical/domain/derivatives/` has only `__init__.py` +
+  `options.py`) — Phase 5 is genuinely unimplemented, not stale-resolved.
+
+No other 2026-05-08 pre-audit delta touched tradfi (the dual-prediction-module / Spark-Radiant / GMX-DRIFT /
+case-folding / `LST_TOKEN_TO_PROTOCOL_ASSET` / `GAS_FEE_CHAIN_START_DATES` / mev-protection items are all defi/prediction/cross-cutting).
+
+## Coverage summary
+
+Coverage of the tradfi catalogue is broadly sound — every futures root and ETF declared in UAC has a corresponding
+instruments-service Databento reference adapter path and an MTDS market-data path, and the VIX source-layering route is
+implemented and matches its constants. The dominant issue is **SSOT fragmentation**, not ghosts/orphans: the ETF list
+(≥4 files, divergent membership — incl. IVV/VOO in `KNOWN_ETFS` but not `ETF_TICKERS`, ETHA/FETH not in `KNOWN_ETFS`),
+the futures-root list (≥3 files, two parallel UAC types, MES.FUT/NG.OPT membership asymmetries), and underlying-name
+normalisation (3 conventions, one self-declared "canonical going forward" that the others ignore). Smaller items: 7
+`SourceCapability` rows with no `venue` entry (FRED/POLYGON/ECB/OPENBB/OFR/REGULATORY/IBKR); `venue="CFE"` for VX.FUT vs
+canonical `CBOE`; `venue="ICE"` absent from `TRADFI_SOURCE_COVERAGE_START`; no `futures_chain` data_type for TradFi; no
+CBOE/OPRA equity-options `options_chain`; CLAUDE.md's VIX-pointer names the wrong file. **No BIG finding** (no data-correctness
+break, no May-23 critical-path blocker, no batch-vs-live divergence) — all dispositions are PRE_CUTOVER consolidation work
+that Phase 5 of the cross_asset_group plan already scopes. Phase 5 should be confirmed unimplemented and run.
