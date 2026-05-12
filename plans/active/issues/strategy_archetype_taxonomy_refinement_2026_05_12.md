@@ -236,6 +236,28 @@ Current section enumeration in strategy-summary.md = **55**. After refinement:
 - Surface naming decision (a)/(b) for operator (this commit's AskUserQuestion).
 - Surface Deribit-LST-collateral verification ask (slot 2 or slot 4 verification — for `CARRY_STAKED_BASIS_DATED` Deribit eligibility).
 
+## 🚀 OPERATOR DIRECTIVE 2026-05-12 — SHIP ALL SCOPE THIS CYCLE (no Cycle-6 deferrals)
+
+> _"ship all regardless of risk we will land"_
+
+**Full taxonomy refinement scope = MUST-SHIP within 2026-05-15 freeze-gate cycle**, NOT partial / at-risk-deferred / Cycle-6-deferred. Every routed item (slot 2 / 5 / 6 / 8) is a freeze-gate hard requirement now:
+
+- **Slot 2** — UAC enum + ARCHETYPE_TO_FAMILY + share-class/venue compat matrix. ~30 min mechanical. **MUST-SHIP**.
+- **Slot 5** — `CarryFamilyEngine` **fully wired across all 9 Carry archetypes** (NOT scaffold-only). Axes: share-class × staking-leg × hedge-leg × recursion × direction × sequential-vs-flashloan. Replaces all existing carry handlers. **MUST-SHIP**.
+- **Slot 6** — **SVI/SSVI options surface fitter** + **normalised strike/term slicing infra** (`vol/surface/normalised_grid.py`) + **all 18 Vol Trading per-archetype docs**. Audit existing libs (py_vollib / QuantLib / ArbitrageRepair) first → integrate vs greenfield call. **MUST-SHIP**.
+- **Slot 8** — `strategy-summary.md` 13 corrections + workspace-grep count drift + **4 Portfolio docs** + **new Carry docs** (`carry-staked-basis-dated.md` + `carry-basis-perp-inv.md` + `carry-basis-dated-inv.md`) + `market-making-event-settled.md` retention update + **Deribit LST verification** + **legacy deprecation execution** (`MARKET_MAKING_CONTINUOUS` + `VOL_TRADING_OPTIONS` enum-remove + workspace-grep migration audit + config flips). **MUST-SHIP**.
+
+**Allocation principle override**: pace is 5× calibrated; capacity exists. Risk = at-risk-items-pre-2026-05-15-freeze is preferred over Cycle-6-defer. If a slot is overloaded, fan-out sub-agents 6-8 deep (already in playbook).
+
+**3 calendar days remaining (2026-05-13 / 14 / 15)**. Each slot has ~3-5 days of single-AI work at calibrated pace = ~15-25 days at 5× = sufficient.
+
+**Cross-slot sequencing for May-23 critical path coverage**:
+1. Slot 2 ships UAC enum FIRST (~30 min) — unblocks slot 5 + slot 8 imports.
+2. Slot 5 + slot 6 + slot 8 fan out in parallel after UAC lands.
+3. Slot 8 workspace-grep + count-drift sweep + legacy deprecation runs LAST (after granular variant docs land, per "deprecate as soon as docs land" decision).
+
+**Per-slot capacity confirmation**: this taxonomy work is ON TOP OF existing slot scope (Day-1 ✅ + SCOPE EXTENSION + SCOPE EXTENSION 2 + SCOPE EXTENSION 3 Harsh absorption). Operator confirmed pace covers it. No scope-cuts.
+
 ## ✅ Operator decisions received 2026-05-12
 
 1. **Naming**: ✅ Option (b) — `CARRY_BASIS_PERP_INV` + `CARRY_BASIS_DATED_INV` (inverse-of-basis intuition). Implementation:
