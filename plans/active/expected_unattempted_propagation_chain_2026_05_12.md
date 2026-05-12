@@ -348,7 +348,7 @@ This contract means MDPS must READ upstream MTDS capture_status per shard, not j
       pass)
 - [x] [CODEX] P1. Add `## MDPS downstream consumption contract` section to
       `codex/02-data/honest-absence-downstream-handling.md` documenting the 4-row table above. Reference this plan +
-      writegate Phase 2.A. (pm@this-commit — codex/02-data/honest-absence-downstream-handling.md § "MDPS downstream
+      writegate Phase 2.A. (pm@5ab28423 — codex/02-data/honest-absence-downstream-handling.md § "MDPS downstream
       consumption contract")
 - [x] [QG] P0. `cd market-data-processing-service && bash scripts/quality-gates.sh`. Push. (mdps@3f70cf6 — lint clean;
       19 pre-existing test failures in foreign files from UTL/UAC schema drift; my 4 Phase 2 tests pass; committed +
@@ -385,10 +385,13 @@ If `BaseDependencyChecker` lives in UTL, the `manifest_writer` reference must be
 must be added as an optional callback. Prefer passing the writer at `DependencyChecker.__init__` so the UTL base class
 stays injection-friendly.
 
-- [ ] [CODE] P0. Add `record_expected_unattempted` call in MDPS `DependencyChecker` when skipping due to absent MTDS
+- [x] [CODE] P0. Add `record_expected_unattempted` call in MDPS `DependencyChecker` when skipping due to absent MTDS
       shard. Pass `manifest_writer` reference at construction if not already present. Add 2 unit tests (absent shard →
       expected_unattempted recorded; present shard → no call).
-- [ ] [QG] P0. `cd market-data-processing-service && bash scripts/quality-gates.sh`. Push.
+      (mdps@3f70cf6 — implemented via `_record_expected_unattempted_on_skip` in orchestration_service.py at the
+      `process_category` skip point rather than DependencyChecker directly; 4 unit tests cover both present-shard no-op
+      and absent-shard write paths. Injecting into DependencyChecker rejected: it lacks data_types/timeframes context.)
+- [x] [QG] P0. `cd market-data-processing-service && bash scripts/quality-gates.sh`. Push. (mdps@3f70cf6 — pushed)
 
 ---
 
