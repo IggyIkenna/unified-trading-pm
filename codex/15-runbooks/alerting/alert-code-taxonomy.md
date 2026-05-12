@@ -43,8 +43,9 @@ Sources:
   `AlertCode` (StrEnum, closed set) + `AlertSeverity` (CRITICAL/HIGH/WARN/INFO) + `AlertChannel`
   (PAGERDUTY/TELEGRAM/SLACK/EMAIL/LOG_ONLY) + `ALERT_CODES` frozenset.
 - [`thresholds.py`](../../../unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/thresholds.py)
-  — `AlertThreshold` dataclass + `ThresholdUnit` (BPS_OF_ONE/RATIO/USD/MINUTES/COUNT_PER_MINUTE) + `ALERT_THRESHOLDS`
-  dict.
+  — `AlertThreshold` dataclass + `ThresholdUnit` (BPS_OF_ONE/RATIO/USD/MINUTES/SECONDS/MILLISECONDS/COUNT_PER_MINUTE/PSI;
+  8+ members per slot 8 audit AL-7 PRE_CUTOVER refresh 2026-05-12 — SECONDS used by `tick_staleness_seconds`,
+  MILLISECONDS added for 500-MIN-vs-500-MS guard, PSI used by ML drift) + `ALERT_THRESHOLDS` dict.
 - [`rules.py`](../../../unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py) —
   `AlertRule` Pydantic model + `LIVE_ALERT_RULES` tuple. `to_routing_dict()` renders the legacy
   `(event_pattern, channels, severity_filter)` shape consumed by alerting-service.
@@ -139,6 +140,25 @@ The closed-set sanity test `tests/internal/unit/test_alerting_taxonomy.py` enfor
 
 Pydantic v2 wraps these in `ValidationError` for downstream consumers, but the typed-error classes remain importable for
 direct programmatic use.
+
+## Event names vs AlertCodes — routing seam (AL-13 PRE_CUTOVER 2026-05-12, slot 8 audit)
+
+The alerting router matches `event_pattern` globs against the **event name** string emitted by `log_event()`, NOT
+against `AlertCode` enum members directly. The two vocabularies overlap but are not identical:
+
+- **`AlertCode` closed set** (~63 members in `codes.py:21-227`) is the **stable code** new emitters should use.
+- **Event names emitted by `log_event()`** are a SUPERSET. Legacy lifecycle events (`KILL_SWITCH_ACTIVATED`,
+  `CIRCUIT_BREAKER_OPEN`) ship as event names in `unified_trading_library/events/event_types.py:165,210` +
+  `events_interface/schemas.py:372` but are NOT `AlertCode` enum members. The router matches them via wildcard rules
+  (`event_pattern="KILL_SWITCH_*"` matches both `KILL_SWITCH_ACTIVATED` event name + every `KILL_SWITCH_DEFI_*` /
+  `KILL_SWITCH_PORTFOLIO_DRAWDOWN` / etc. `AlertCode`).
+
+**New emitters should prefer `AlertCode` members** — they get closed-set validation + downstream threshold lookup.
+Wildcard routing on legacy event names is supported for backward compatibility but should NOT be used for new code.
+
+CLAUDE.md "Observability" mandates `CIRCUIT_BREAKER_OPEN` + `KILL_SWITCH_ACTIVATED` as required lifecycle events —
+they remain valid emission targets even though they are NOT `AlertCode` enum members; the router handles them via
+the wildcard path.
 
 ## Kill-switch publisher hook semantics
 

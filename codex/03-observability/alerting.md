@@ -13,6 +13,15 @@ severities route to different channels, but nothing is silent.
 Alert delivery channels: **Telegram** (primary, all alerts) and **PagerDuty** (critical trading events). Slack is
 deprecated.
 
+> **🟡 SLACK DEPRECATION RECONCILIATION (AL-6 PRE_CUTOVER 2026-05-12, slot 8 audit)** — this doc declares Slack
+> deprecated; downstream references still treating Slack as a live channel are tracked for follow-up:
+> (a) `codex/04-architecture/alerting-batch-live.md:18` lists "PagerDuty / Telegram / Slack";
+> (b) `codex/15-runbooks/alerting/operator-playbook.md:48` references "pinned in the Slack channel";
+> (c) `codex/15-runbooks/alerting/alert-code-taxonomy.md:189-190` ML routing matrix lists SLACK as a live channel;
+> (d) code: `AlertChannel.SLACK` exists in `codes.py:271`; `alerting-service/notifiers/slack.py` + sibling modules
+> still ship. Operator-declared direction: Telegram + PagerDuty only. Code-removal + ML-routing updates routed to
+> alerting-service maintainer (cross-ref slot 8 ALERTING AL-6 PRE_CUTOVER follow-up).
+
 ---
 
 ## Alert Severity Tiers
@@ -137,8 +146,8 @@ Every autonomous recovery action the system takes, mapped to its alert tier:
 
 | Alert           | Trigger                        | Detection                | Response                  | Status      |
 | --------------- | ------------------------------ | ------------------------ | ------------------------- | ----------- |
-| OOM Death Loop  | Serial log OOM >= 5 times      | UTD v2 auto-sync (30s)   | VM terminated             | IMPLEMENTED |
-| Startup Timeout | No SERVICE_STARTED after 5 min | UTD v2 auto-sync (30s)   | VM terminated             | IMPLEMENTED |
+| OOM Death Loop  | Serial log OOM >= 5 times      | deployment-service VM watchdog + `vm-exec-with-gcs-tee.sh` serial-log scrape (AL-9 PRE_CUTOVER 2026-05-12 refresh; "UTD v2" naming retired per Ops audit O-13) | VM terminated             | IMPLEMENTED |
+| Startup Timeout | No SERVICE_STARTED after 5 min | deployment-service VM watchdog + event-stream STARTED check (AL-9 PRE_CUTOVER 2026-05-12 refresh) | VM terminated             | IMPLEMENTED |
 | Memory Critical | memory_percent > 90%           | PerformanceMonitor (30s) | Log ERROR, resource_alert | IMPLEMENTED |
 | Memory Warning  | memory_percent > 85%           | PerformanceMonitor (30s) | Log WARNING               | IMPLEMENTED |
 

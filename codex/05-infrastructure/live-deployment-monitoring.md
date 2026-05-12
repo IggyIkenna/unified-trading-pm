@@ -59,7 +59,9 @@ events to the same downstream consumers via the unified-events-interface).
   [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.md) work-stream B.
 - **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md),
   [`alerting/operator-playbook`](../15-runbooks/alerting/operator-playbook.md).
-- **Code:** `unified-trading-library/events/`, `unified-events-interface/`, alerting-service (TBD).
+- **Code:** `unified-trading-library/events/`, deployment-UI events tab (UEI archived per CLAUDE.md "System-First
+  Architecture"; UI consumption shifted to deployment-UI events tab per `pagerduty-escalation-policy.md:129`;
+  AL-19 PRE_CUTOVER 2026-05-12 refresh), alerting-service (TBD).
 
 ## Open questions
 
