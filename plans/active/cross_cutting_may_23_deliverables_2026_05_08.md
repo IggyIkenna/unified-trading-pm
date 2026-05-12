@@ -125,8 +125,13 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
       captured.
 - [ ] [BUILD] **DART manual DeFi swap / lend / borrow / stake** for the carry-staked-basis archetype across enabled
       chains. Owner: Harsh T6.
-- [ ] [BUILD] **DART manual CeFi order placement** across the 4 live CeFi venues (Bybit / Deribit / Binance / OKX).
-      Owner: Harsh T6.
+- [x] [BUILD] **DART manual CeFi order placement** across the 4 live CeFi venues (Bybit / Deribit / Binance / OKX).
+      Owner: Harsh T6. **SHIPPED 2026-05-12 (Harsh slot 6)**: Aster added to VENUES (`unified-trading-system-ui@21666537`);
+      `single-order-form.tsx` venue + algo dropdowns switched from `constants.ts` hardcoded arrays to `useVenues()` +
+      `useAlgos()` hooks (`hooks/api/use-orders.ts:26-50`) with static-constant fallback
+      (`unified-trading-system-ui@55e8b9cb`). **FOLLOW-UP (operator-runnable)**: browser-test venue + algo dropdowns
+      in manual trading panel (`cd unified-trading-system-ui && npm install && npm run dev` — no browser in tab-6
+      worktree). Backend (manual instruction API) was already present from Ikenna T8 UAC contract layer.
 - [x] [BUILD] **DART manual ML training trigger** (pause-resume model retraining for any in-flight ML archetype). Owner:
       Harsh T6. **SHIPPED 2026-05-12 (Harsh slot 6) @ml-training-service@`05dc363`** — NEW
       `ml-training-service/ml_training_service/api/training_control_api.py` (175 lines): 3 routes
