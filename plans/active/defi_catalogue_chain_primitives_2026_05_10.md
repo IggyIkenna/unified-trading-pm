@@ -825,9 +825,9 @@ Per-connector todo template:
 **Codex SSOT update (Phase 4 boundary)**:
 
 - [x] [AGENT] P0. **4J — Update `codex/04-architecture/interface-credential-convention.md`** with new connectors'
-      credential shapes. (PM@`<flip-sha>` — added Phase 4 credential shape section; all 13 follow existing pattern)
+      credential shapes. (PM@`3d1d5a39` — added Phase 4 credential shape section; all 13 follow existing pattern)
 - [x] [AGENT] P0. **4K — Update `codex/04-architecture/defi-execution-overview.md`** with connector inventory.
-      (PM@`<flip-sha>` — added Phase 4 connector inventory tables by family: LST/LRT, restaking, yield, Solana)
+      (PM@`3d1d5a39` — added Phase 4 connector inventory tables by family: LST/LRT, restaking, yield, Solana)
 
 **Full-execution criterion**:
 
