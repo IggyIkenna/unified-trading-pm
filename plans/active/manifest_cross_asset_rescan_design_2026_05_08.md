@@ -153,6 +153,67 @@ Per CLAUDE.md "Post-Plan-Phase Codex Audit HARD RULE":
   launcher + the rescan Python script.
 - **UPDATE** `codex/00-SSOT-INDEX.md` — register the new cross-asset-rescan-protocol.md doc.
 
+## Reconciliation dependency ordering (HARD RULE — codified 2026-05-12)
+
+**Finding (2026-05-12 operator direction)**: reconciliation scripts currently scan ALL data_types in each asset_group
+bucket without service ordering. instruments-service is the reference-data root — its rows (`data_type=instruments`,
+`data_type=venue_trading_calendar`) define WHAT should exist for every downstream service (MTDS → MDPS → features).
+Flipping downstream phantom rows before instruments-service state is clean produces incorrect `empty_confirmed` reasons
+(e.g., `EXPECTED_INSTRUMENT_NOT_LISTED` for an instrument that WAS listed but had a phantom in the reference bucket).
+
+**`--data-types` flag already exists**
+([`reconcile_phantom_manifest_rows_all.py:507`](../instruments-service/scripts/reconcile_phantom_manifest_rows_all.py#L507))
+— use it to enforce ordering.
+
+**Required execution order for `--apply-flips` pass** (SERIAL gates between passes):
+
+| Pass | Scope                              | `--data-types` flag                                                                                                                                                                                                                                                                                                                                                                                                                  | Parallelism                                 |
+| ---- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
+| 1    | instruments-service reference rows | `--data-types instruments,venue_trading_calendar`                                                                                                                                                                                                                                                                                                                                                                                    | SERIAL (root — must complete before pass 2) |
+| 2    | MTDS raw market data               | `--data-types ohlcv_1h,ohlcv_1m,ohlcv_24h,ohlcv_15m,trades,tbbo,book_snapshot_5,book_snapshot,lending_rates,lst_yields,lending_indices,dex_pools,dex_pool_swaps,perp_funding,oracle_prices,staking_yields,risk_params,rewards,flash_loan_events,governance_events,liquidation_events,bridge_events,position_data,token_transfers,vault_share_price,options_chain,futures_chain,prediction_canonical_question_group,MARKET_LIFECYCLE` | PARALLEL across all 5 asset_groups          |
+| 3    | MDPS processed outputs             | `--data-types ohlcv_1h` (where written by MDPS pipeline_mode)                                                                                                                                                                                                                                                                                                                                                                        | PARALLEL across asset_groups, AFTER pass 2  |
+| 4    | features services                  | features-specific data_types                                                                                                                                                                                                                                                                                                                                                                                                         | PARALLEL, AFTER pass 3                      |
+
+**For dry-run (audit-only, no flips)**: ordering is not critical — phantoms from all passes can be discovered in
+parallel. Only the `--apply-flips` run requires strict ordering.
+
+**Action items** (todos below):
+
+- [ ] [DESIGN] P1. Add `## Reconciliation execution order` section to this plan documenting the pass sequence with exact
+      `--data-types` values per pass, derived from authoritative scan of each service's `record_captured()` callsites.
+      **DEFERRED**: needs per-service data_type ownership audit (1 AI-day).
+- [ ] [SCRIPT] P0. Add execution order enforcement to the rescan launcher
+      (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) — pass 1 completes before pass 2 starts.
+      Implement as sequential VM invocations or as a sequenced CLI flag `--pass 1|2|3|4` that the launcher orchestrates.
+      **Blocker**: launcher not yet shipped (see "Launcher script" section above).
+- [ ] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
+      before `--apply-flips`. Commands: see "Dry-run command set" section below.
+
+## Dry-run command set — all 5 asset_groups (run on same-region GCE VM, asia-northeast1-c)
+
+```bash
+# Run in parallel — ordering does not matter for dry-run (read-only audit)
+python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run
+python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run
+python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run
+python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group sports --dry-run
+python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group prediction --dry-run
+
+# Also run the expected-absence-reason reconciler (all 5 asset_groups):
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group cefi --dry-run
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group defi --dry-run
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group tradfi --dry-run
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group sports --dry-run
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group prediction --dry-run
+
+# And the legacy-blank-reason reconciler:
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi --dry-run
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group defi --dry-run
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group tradfi --dry-run
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group sports --dry-run
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group prediction --dry-run
+```
+
 ## Open questions
 
 - Q1 — operator-approval edge cases for class C triage: bundle all class-C rows into one weekly review, or
