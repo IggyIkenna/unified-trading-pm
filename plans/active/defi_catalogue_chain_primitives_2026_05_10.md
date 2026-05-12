@@ -461,13 +461,17 @@ address, decimals, symbol, instrument_type, classification, lifecycle dates. Eac
 >   the adapter file + test only, main agent reconciles `factory.py` for all in one commit. (Pre-existing
 >   `factory.py:~366 reportRedeclaration` on `adapter` — unrelated, leave it.)
 >
-> **DONE 2026-05-12 (harsh slot 2):** `2.ROCKETPOOL` (rETH LST, instruments-service@`a490033`). **Phase 2 fan-out
-> queue for next session** (one sub-agent per clean-boundary protocol; create adapter + test, don't touch factory.py):
-> Renzo (ezETH, ETH+ARB), KelpDAO (rsETH, ETH), Yearn (vaults, ETH+ARB+OPT), Pendle (PT/YT/SY + maturity, ETH+ARB —
-> trickiest, needs the Pendle active-markets API), Beefy (vaults, 6 chains), Idle (vaults, ETH+ARB+POLY), Convex
-> (Curve-LP vaults, ETH), Solblaze (bSOL, SOL), Symbiotic/Karak/Puffer (restaking vaults, ETH), Jito-restaking (SOL,
-> extend `jito.py`). Then main agent reconciles `factory.py` registrations + flips each `2.<PROTOCOL>` checkbox + the
-> `2J` codex update.
+> **DONE 2026-05-12 (harsh slot 2):** `2.ROCKETPOOL` (rETH LST, instruments-service@`a490033`) + `2.RENZO`
+> (ezETH LRT) + `2.KELPDAO` (rsETH LRT) (instruments-service@`be12b56`) — 3 single-token ETH LST/LRT registry
+> adapters, registered in `factory.py`, 5 unit tests each (offline). **Phase 2 fan-out queue for next session**
+> (one sub-agent per clean-boundary protocol; create adapter + test, do NOT touch the shared `factory.py` —
+> main agent reconciles registrations after the fan-out): Yearn (vaults, ETH+ARB+OPT), Pendle (PT/YT/SY + maturity,
+> ETH+ARB — trickiest, needs the Pendle active-markets API or a curated active-markets snapshot), Beefy (vaults,
+> 6 chains), Idle (vaults, ETH+ARB+POLY), Convex (Curve-LP-staking vaults, ETH), Solblaze (bSOL LST, SOL — use
+> `_solana_utils.py` + `marinade.py` template), Symbiotic / Karak / Puffer (restaking vaults, ETH), Jito-restaking
+> (SOL — extend `jito.py` or add `jito_restaking.py`), Renzo-ARB (bridged ezETH multi-chain extension — parse `chain`
+> from venue name + per-chain address map + add to `defi_graph_adapters` set). Then main agent reconciles `factory.py`
+> registrations + flips each `2.<PROTOCOL>` checkbox + the `2J` codex update.
 
 Per-protocol todo template (instantiated 27 times):
 
@@ -484,6 +488,19 @@ Per-protocol todo template (instantiated 27 times):
       instruments-service@`a490033`. basedpyright clean on new file; ruff clean; pytest 5/5. (Not bundled — single-token,
       no cluster validation needed. Manifest `record_captured` happens in the orchestrator that calls `get_instruments`,
       per the existing lido/etherfi pattern — no per-adapter manifest write.)
+- [x] [AGENT] P0. **2.RENZO — Renzo (ezETH) instruments-service adapter** — `adapters/defi/renzo.py` (static
+      single-token LRT registry; ezETH on Ethereum, `instrument_type=YIELD_BEARING`, contract
+      `0xbf5495Efe5DB9ce00f80364C8B423567e58d2110`, 18 decimals, launch 2024-04-29 per `PROTOCOL_LAUNCH_DATES`) +
+      `test_renzo_metadata.py` (5 tests, offline) + `factory.py` registration (`RENZO-ETHEREUM`). instruments-service@`be12b56`.
+      basedpyright clean on new file; ruff clean; pytest 5/5. **DEFERRED — Renzo-ARB**: bridged ezETH on Arbitrum
+      (`('ARBITRUM','RENZO')` launch 2024-02-29 in `PROTOCOL_LAUNCH_DATES`) needs the multi-chain extension (parse
+      `chain` from venue name + per-chain address map + add `renzo` to `factory.py`'s `defi_graph_adapters` set) — in
+      the Phase 2 fan-out queue above.
+- [x] [AGENT] P0. **2.KELPDAO — KelpDAO (rsETH) instruments-service adapter** — `adapters/defi/kelpdao.py` (static
+      single-token LRT registry; rsETH on Ethereum, `instrument_type=YIELD_BEARING`, contract
+      `0xA1290d69c65A6Fe4DF752f95823fae25cB99e5A7`, 18 decimals, launch 2023-11-09 per `PROTOCOL_LAUNCH_DATES`) +
+      `test_kelpdao_metadata.py` (5 tests, offline) + `factory.py` registration (`KELPDAO-ETHEREUM`). instruments-service@`be12b56`.
+      basedpyright clean on new file; ruff clean; pytest 5/5.
 
 **Codex SSOT update (Phase 2 boundary)**:
 
