@@ -12,7 +12,7 @@ scope: [engineer, ml-engineer, admin]
 > `job_id` column at the data-manifest layer, so a partial overlap exists, but no `ml_manifest.parquet` artefact is
 > written. Operator decision pending: (a) build the parquet ML-manifest as designed below + retrofit `ModelRegistry`,
 > OR (b) rewrite this doc around the JSON-index reality + the data-manifest `job_id` column. Tracked in
-> `plans/active/issues/codex_audit_ml_2026_05_12.md` ML-6.
+> `plans/archive/issues/codex_audit_ml_2026_05_12.md` ML-6.
 
 ## ML Hard Rules (LIFT 2026-05-12 from `_archived_pre_v2/cross-cutting/ml-pipeline.md`, ML-13 PRE_CUTOVER)
 

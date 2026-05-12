@@ -277,5 +277,5 @@ Current section enumeration in strategy-summary.md = **55**. After refinement:
 - `unified-api-contracts/.../internal/architecture_v2/enums.py` (UAC enum)
 - `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` (slot 5 Phases 1-2 design + new Family 1/2 archetypes)
 - `plans/active/master_to_live_defi_2026_05_23.md:224` (master plan strategy archetypes row)
-- `plans/active/issues/venue_chain_custody_routing_matrix_2026_05_12.md` (share-class × venue compatibility matrix overlap)
+- `plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md` (share-class × venue compatibility matrix overlap)
 - `cursor-configs/CLAUDE.md` (any archetype-count references)

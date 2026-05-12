@@ -21,7 +21,7 @@ estimate_calibrated_ai_days: 3.0
 # Governance HARD RULE automation + QG ratchet gaps (post-cutover)
 
 > **MIGRATED FROM:** `codex_vs_citadel_infrastructure_audit_2026_05_10` — Phase 5 POST_CUTOVER consolidation
-> 2026-05-12. Source area issue docs in `plans/active/issues/codex_audit_governance_2026_05_12.md` +
+> 2026-05-12. Source area issue docs in `plans/archive/issues/codex_audit_governance_2026_05_12.md` +
 > `codex_audit_data_2026_05_12.md` + `codex_audit_strategy_2026_05_12.md` + `codex_audit_ui_2026_05_12.md` +
 > `codex_audit_position_balance_2026_05_12.md` + `codex_audit_alerting_2026_05_12.md`.
 

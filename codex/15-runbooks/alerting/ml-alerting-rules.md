@@ -23,7 +23,7 @@ scope: [engineer, admin]
 >   wire `ML_MODEL_DRIFT_DETECTED` AlertCode, OR (b) re-baseline Rule 2 around the accuracy-drop signal that actually
 >   ships, OR (c) deprecate Rule 2 to POST_CUTOVER.
 >
-> Tracked in `plans/active/issues/codex_audit_ml_2026_05_12.md` ML-4 + ML-5 (PRE_CUTOVER, owner: ml-inference + alerting
+> Tracked in `plans/archive/issues/codex_audit_ml_2026_05_12.md` ML-4 + ML-5 (PRE_CUTOVER, owner: ml-inference + alerting
 > + slot 4).
 
 ## TL;DR

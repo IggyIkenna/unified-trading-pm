@@ -782,7 +782,7 @@ orphans differ. Phase 2.A unifies to the broadest set and routes ALL caught exce
 
 ### P0-2 — MDPS dead write-gate surgery (2026-05-11 slot 8)
 
-Per [`wave3x_track_d_findings_2026_05_11.md`](issues/wave3x_track_d_findings_2026_05_11.md) § P0-2: the 2026-05-06 audit
+Per [`wave3x_track_d_findings_2026_05_11.md`](../archive/issues/wave3x_track_d_findings_2026_05_11.md) § P0-2: the 2026-05-06 audit
 above (lines 746-768) called `orchestration_writer.py:413 _write_candles_to_gcs` orphaned, but missed the actual
 MRO-winning override at `orchestration_writer.py:328 _write_candles` (legacy `storage_client.upload_bytes`-direct path,
 no `ManifestWriter`, no 4-pillar gate). Result: every candle MDPS wrote in production had ZERO manifest record + ZERO
@@ -2559,7 +2559,7 @@ manifest classification work but closely related — once Wave 2.M's blank-reaso
 next adapter behaviour to fix is "what to do when source returns nothing for an active instrument." Wave 3.M is that
 fix.
 
-> **🔎 FINDING 2026-05-12 (cross_asset_group_catalogue_audit slot-8 CeFi sub-agent, `plans/active/issues/catalogue_audit_cefi_2026_05_12.md` CF-15)** — Wave 3.M is **0% started for CeFi**: all 21 venues in
+> **🔎 FINDING 2026-05-12 (cross_asset_group_catalogue_audit slot-8 CeFi sub-agent, `plans/archive/issues/catalogue_audit_cefi_2026_05_12.md` CF-15)** — Wave 3.M is **0% started for CeFi**: all 21 venues in
 > `VENUES_BY_ASSET_GROUP["cefi"]` still take the legacy path; none emit Category-D zero-activity bars. The
 > `unified_trading_library.zero_activity_bars` helper + `get_prior_ltp(...)` SSOT (the 2nd + 3rd tasks below) do
 > **not exist yet**. Mild good news: the banned `_create_empty_output` / `_handle_empty_tick_data` patterns were

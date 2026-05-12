@@ -129,7 +129,7 @@ catalog refreshes). Both are ~30min UAC changes; the re-tag migration is a one-t
 
 ## Composes with
 
-- `plans/active/issues/footystats_pipeline_mode_gap_2026_05_12.md` — sister
+- `plans/archive/issues/footystats_pipeline_mode_gap_2026_05_12.md` — sister
   finding (different source family, same closed-set design call).
 - `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` — same shape.
 - `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4.DEFAULT-REMOVAL —

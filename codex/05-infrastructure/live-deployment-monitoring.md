@@ -146,7 +146,7 @@ After the dict edit, **relaunch the watchdog VM** so it picks up the new prefix.
 invisible to the zombie watchdog (silent money burn). Reference incident 2026-05-05 (5 prefixes silently un-watched).
 
 This is also the surface monitored by the launcher-governance QG checks (O-7 + O-8 per
-`plans/active/issues/codex_audit_ops_2026_05_12.md`); see `launcher-script-ssot.md` § "QG check policy" for the
+`plans/archive/issues/codex_audit_ops_2026_05_12.md`); see `launcher-script-ssot.md` § "QG check policy" for the
 warning-with-baseline scaffolding pattern.
 
 ## Pre-launch verification protocol

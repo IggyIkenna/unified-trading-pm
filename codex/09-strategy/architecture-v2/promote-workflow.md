@@ -4,7 +4,7 @@ doc_kind: workflow_stub
 status: active
 ssot_for: strategy_promote_workflow_cli
 created: 2026-05-12
-created_per: plans/active/issues/codex_audit_strategy_2026_05_12.md ST-17
+created_per: plans/archive/issues/codex_audit_strategy_2026_05_12.md ST-17
 ---
 
 # Strategy promote workflow (backtest → paper → live)

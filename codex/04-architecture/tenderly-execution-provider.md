@@ -129,7 +129,7 @@ used for live mode -- connectors talk directly to Alchemy RPCs (+ Helius for Sol
 Custody routing: **May-23 cutover default = CLOUD_KMS_ENCRYPTED (CloudKmsCustodyProvider)** per
 [`interface-credential-convention.md`](interface-credential-convention.md) 2026-05-12 refresh. **June-1 flip targets** =
 Copper MPC / CEFFU MirrorX / Fireblocks per client cred availability. Cross-ref:
-[`plans/active/issues/venue_chain_custody_routing_matrix_2026_05_12.md`](../../plans/active/issues/venue_chain_custody_routing_matrix_2026_05_12.md).
+[`plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md`](../../plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md).
 
 ## Tenderly VNet API
 

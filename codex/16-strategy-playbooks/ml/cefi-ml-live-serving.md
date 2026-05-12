@@ -127,7 +127,7 @@ promotion-event into the inference service's runtime cache lifecycle.
 The original design specified a `ModelArtefactReloader` parallel to `InstrumentLifecycleCacheDeltaReloader` —
 diffing `model_registry` snapshots, dispatching `(ModelDelta, new_registry)` to subscribers, sharing fixtures with the
 instrument-lifecycle reloader. **This is NOT shipped**; the cache-bust path above is what ships for May-23 cutover.
-Upgrade to delta-shape is tracked in `plans/active/issues/codex_audit_ml_2026_05_12.md` ML-18 (POST_CUTOVER).
+Upgrade to delta-shape is tracked in `plans/archive/issues/codex_audit_ml_2026_05_12.md` ML-18 (POST_CUTOVER).
 
 ## Model-version traceability per trade
 

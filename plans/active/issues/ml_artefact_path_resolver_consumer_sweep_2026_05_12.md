@@ -3,7 +3,7 @@ title: ML artefact path resolver consumer sweep — retrofit `resolve_bucket_nam
 created: 2026-05-12
 author: ikenna-self-answer-ml-pb-batch (slot 8 sub-agent, batch 2)
 source:
-  - plans/active/issues/codex_audit_ml_2026_05_12.md ML-1
+  - plans/archive/issues/codex_audit_ml_2026_05_12.md ML-1
   - codex/04-architecture/bucket-name-ssot.md (b+)
   - CLAUDE.md § "Bucket-name SSOT (b+)" + QG STEP 5.69 ratchet
 locked_by: live-defi-rollout
@@ -14,7 +14,7 @@ suggested_owner: ml-training + ml-inference + UTL owners (sweep coordinated)
 
 ## What I found
 
-ML-1 in `plans/active/issues/codex_audit_ml_2026_05_12.md` flagged a 5-way contradiction between codex docs + code on
+ML-1 in `plans/archive/issues/codex_audit_ml_2026_05_12.md` flagged a 5-way contradiction between codex docs + code on
 the canonical ML model-artefact bucket/path. The codex-side drift was resolved by the IMMEDIATE batch (PM@`959ca3fc`)
 which updated 4 codex docs to point at `resolve_bucket_name(cloud=, kind="ml-models-store", asset_group=, env=)` as
 the canonical resolver per the workspace Bucket-name SSOT (b+) codified 2026-05-11.

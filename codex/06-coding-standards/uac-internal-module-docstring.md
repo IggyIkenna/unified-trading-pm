@@ -3,7 +3,7 @@ scope: [engineer]
 status: stable
 created: 2026-05-12
 last_reviewed: 2026-05-12
-source: plans/active/issues/codex_audit_governance_2026_05_12.md G-15
+source: plans/archive/issues/codex_audit_governance_2026_05_12.md G-15
 ---
 
 # UAC `internal/*.py` Module Docstring Rule (G-15 codification)
@@ -74,7 +74,7 @@ verify the docstring follows the shape above.
 
 **Future ratchet** (P2 backlog): a QG STEP that walks `unified-api-contracts/unified_api_contracts/internal/*.py`,
 checks each for `^Consumers:` + `^Cross-reference:` + `^codex SSOT:` headers in the module docstring, fails the
-build if missing. Filed against `plans/active/issues/codex_audit_governance_2026_05_12.md` G-15 (this codex doc
+build if missing. Filed against `plans/archive/issues/codex_audit_governance_2026_05_12.md` G-15 (this codex doc
 is the design half; the QG ratchet is the enforcement half).
 
 ## Composes with

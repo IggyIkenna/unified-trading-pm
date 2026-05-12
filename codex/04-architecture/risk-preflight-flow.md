@@ -91,7 +91,7 @@ passthrough annotations.
 
 ## Layer-2.5 — wallet-tier pre-flight stack (DeFi + manual-trade booking)
 
-> **Codified 2026-05-12 per Risk audit R-4** (issue doc `plans/active/issues/codex_audit_risk_2026_05_12.md`). Lifts the
+> **Codified 2026-05-12 per Risk audit R-4** (issue doc `plans/archive/issues/codex_audit_risk_2026_05_12.md`). Lifts the
 > 4-layer wallet-tier pre-flight stack already shipped via slot 7 (circuit_breaker + kill_switch contracts at
 > `UAC@a7a99b5` — 20 `BreakerConfig × 2 archetypes` + 20 `BreakerRecoveryRule` + 11 `KillSwitchIds`) and slot 8 Day-2
 > (`WalletSpendingPreCheckResult` at UAC@`1d8a059` — kill-switch + caps validation). Lives BETWEEN Layer 2
@@ -108,7 +108,7 @@ envelope (kill-switch armed-state + per-tx / per-hour / per-day / per-protocol U
 ownership (Layer 2 = risk-and-exposure-service; Layer 2.5 = execution-service runtime + DART manual-trade endpoint), and
 different update cadences (portfolio re-evaluated per tick; wallet state re-evaluated per kill-switch event + per-wallet
 rolling-window query). Codifying them as parallel sub-layers keeps both SSOTs honest. See R-11 cross-link in
-`plans/active/issues/codex_audit_risk_2026_05_12.md` for the wallet-USD ↔ archetype-USD cap-aggregation architecture
+`plans/archive/issues/codex_audit_risk_2026_05_12.md` for the wallet-USD ↔ archetype-USD cap-aggregation architecture
 call (still operator-gated as of 2026-05-12).
 
 ### The 4 checks (in order)

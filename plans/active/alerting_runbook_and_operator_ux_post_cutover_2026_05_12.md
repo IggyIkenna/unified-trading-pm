@@ -22,7 +22,7 @@ estimate_calibrated_ai_days: 2.4
 
 > **MIGRATED FROM:** `codex_vs_citadel_infrastructure_audit_2026_05_10` — Phase 5 POST_CUTOVER consolidation
 > 2026-05-12. Source area issue docs:
-> `plans/active/issues/codex_audit_alerting_2026_05_12.md` (AL-22), `codex_audit_risk_2026_05_12.md` (R-15, R-16),
+> `plans/archive/issues/codex_audit_alerting_2026_05_12.md` (AL-22), `codex_audit_risk_2026_05_12.md` (R-15, R-16),
 > `codex_audit_strategy_2026_05_12.md` (ST-11), `codex_audit_testing_2026_05_12.md` (TS-19, TS-20).
 
 ## Why this plan exists

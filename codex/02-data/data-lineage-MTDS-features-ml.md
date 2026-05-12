@@ -20,7 +20,7 @@ in ML-14) Owner: data-pipeline agents 3 + 5 Related plan:
 > `resolve_bucket_name(...)` call**; treat the inline `{category}` substitutions as legacy + reconcile against
 > `deployment-service/configs/cloud-providers.yaml` + the asset_group hive-key vocabulary (`asset_group=` canonical,
 > `category=` legacy on-disk per `market_tick_data_service/raw_tick_hive.py`). Tracked in
-> `plans/active/issues/codex_audit_ml_2026_05_12.md` ML-14; full rewrite pending data-pipeline owner.
+> `plans/archive/issues/codex_audit_ml_2026_05_12.md` ML-14; full rewrite pending data-pipeline owner.
 
 ## Purpose
 

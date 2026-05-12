@@ -141,8 +141,8 @@ DAY-2 P0 INJECTED 2026-05-12 (operator triage decisions received):
       `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`.
   Issue docs flipped ✅ RESOLVED with operator decisions inline:
     • `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`
-    • `plans/active/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`
-    • `plans/active/issues/footystats_pipeline_mode_gap_2026_05_12.md`
+    • `plans/archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`
+    • `plans/archive/issues/footystats_pipeline_mode_gap_2026_05_12.md`
   **Scope you ship (~60 min mechanical sweep)**:
     1. UAC: extend `unified_api_contracts/canonical/crosscutting/pipeline_mode.py` + `source_priority.py` with 6 new enum
        values + SOURCE_PRIORITY entries (per existing per-source layering convention). Update facade re-exports if any.
@@ -472,7 +472,7 @@ which Cycle 2 PREP work to assign Day 3 morning. Same review at 2026-05-14 EOD f
 **🚨 NEW P0 surfaced 2026-05-12 ~07 GMT** (operator): venue × deposit-chain × custody-routing matrix is missing.
 Classification (cefi vs defi) is in `VENUES_BY_ASSET_GROUP` but **per-chain deposit/withdraw routing + custody routes
 (ClearLoop / CEFFU / Copper / Fireblocks / direct prop)** are not in the registry. Full capture + recommended schema
-extension + per-venue matrix in [`plans/active/issues/venue_chain_custody_routing_matrix_2026_05_12.md`](issues/venue_chain_custody_routing_matrix_2026_05_12.md).
+extension + per-venue matrix in [`plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md`](../archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md).
 **Routing**:
 - **Slot 4** (api_keys_wallets Day-2-4): extend `VENUE_WALLET_CAPABILITIES` schema with `VenueFundsRoutingCapabilities`
   (deposit_chains / withdrawal_chains / custody_routing tuple / deposit_address_per_chain dict) + fill matrix for 15+

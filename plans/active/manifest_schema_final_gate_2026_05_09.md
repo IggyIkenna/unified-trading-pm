@@ -382,7 +382,7 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       hooks already in `canonical_writer.write_candle_parquet` from prior Phase 6.2 ship @MDPS@`311614a`.
       QG: 1174 tests passing, 1 pre-existing foreign failure (`test_cli_main::test_cli_help`); basedpyright clean on
       edited files. Finding filed:
-      [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md).
+      [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md).
 - [x] [AGENT] P0. Phase 4.INSTRUMENTS — catalog refresh writes pass `pipeline_mode` per source. Update
       `reconcile_phantom_manifest_rows_all.py` to handle v8 row shape.
       **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-instruments-sweep` sub-agent @instruments-service@`e530906`** —
@@ -394,7 +394,7 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       `reconcile_phantom_manifest_rows_all.py` v8-aware (read-tolerant + write-preserving for all 4 new v8 columns —
       pandas round-trip is naturally column-preserving; added docstring banner + inline comment for future readers, no
       behaviour change needed). QG: identical pre-sweep baseline (zero new errors). Finding filed:
-      [`footystats_pipeline_mode_gap_2026_05_12.md`](issues/footystats_pipeline_mode_gap_2026_05_12.md).
+      [`footystats_pipeline_mode_gap_2026_05_12.md`](../archive/issues/footystats_pipeline_mode_gap_2026_05_12.md).
 - [x] [AGENT] P0. Phase 4.FEATURES — features-service (post-consolidation) + remaining features-\* repos pass propagated
       `pipeline_mode` + emission-policy hooks. **✅ SHIPPED 2026-05-12 by harsh slot 3** (features-consolidation Phase 7
       already shipped 2026-05-11 per code_freeze freeze-gate item 6; gate was effectively lifted Day 2). 6 callsites in
@@ -987,8 +987,8 @@ Phase 4 + Phase 5.A/B".
 | Finding doc | Scope | Severity |
 |---|---|---|
 | [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md) | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0 |
-| [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry | P1 |
-| [`footystats_pipeline_mode_gap_2026_05_12.md`](issues/footystats_pipeline_mode_gap_2026_05_12.md) | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows | P1 |
+| [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry | P1 |
+| [`footystats_pipeline_mode_gap_2026_05_12.md`](../archive/issues/footystats_pipeline_mode_gap_2026_05_12.md) | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows | P1 |
 
 **Operator triage decision needed** (consolidated): extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` to add 6 missing
 values (`BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` /

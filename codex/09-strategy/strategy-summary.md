@@ -29,7 +29,7 @@ SSOT: `unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2`
 > 2026-04-17 baseline before the Phase 9 expansion. The UAC enum is canonical; if this doc disagrees with
 > `unified_api_contracts/internal/architecture_v2/enums.py`, the enum wins. Refresh trigger: slot 8 Strategy-area Phase
 > 1.B audit (2026-05-12; see
-> [`plans/active/issues/codex_audit_strategy_2026_05_12.md`](../../plans/active/issues/codex_audit_strategy_2026_05_12.md)
+> [`plans/archive/issues/codex_audit_strategy_2026_05_12.md`](../../plans/archive/issues/codex_audit_strategy_2026_05_12.md)
 > ST-1/ST-2/ST-14 — the prior `cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md` issue-doc reference is
 > no longer at the listed path; the audit chain now anchors on the Phase 1.B issue doc + the
 > `codex_vs_citadel_infrastructure_audit_2026_05_10.md` parent plan).

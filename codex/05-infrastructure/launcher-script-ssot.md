@@ -115,7 +115,7 @@ foot-guns:
   governance + slot 11.
 
 Both QG checks ship under the canonical **warning-with-baseline** policy (§ next). Tracked as PRE_CUTOVER backlog in
-`plans/active/issues/codex_audit_ops_2026_05_12.md` findings O-7 + O-8.
+`plans/archive/issues/codex_audit_ops_2026_05_12.md` findings O-7 + O-8.
 
 ### QG check policy — warning-with-baseline pattern (codified 2026-05-12)
 
@@ -162,7 +162,7 @@ populated, the check MUST NOT be wired — green-on-introduction is the contract
 disabled in frustration.
 
 **Applies to**: O-7 (watchdog dict relaunch correlation) + O-8 (launcher → Deploy-Missing dict parity) per
-`plans/active/issues/codex_audit_ops_2026_05_12.md`. Both checks ship under this policy; the operator-design-gate is the
+`plans/archive/issues/codex_audit_ops_2026_05_12.md`. Both checks ship under this policy; the operator-design-gate is the
 day-1 baseline payload (which currently-unwatched prefixes / unregistered launchers count as "known tolerated state vs
 latent bug"), not the warning-vs-error toggle. Future launcher-governance checks (e.g. a `MANIFEST_PER_VM_SHARDS=true`
 presence check across every `launch-*.sh`) ship under the same policy.

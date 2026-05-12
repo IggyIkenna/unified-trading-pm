@@ -574,7 +574,7 @@ an existing baselined occurrence that moved files in the same commit that moves 
 - STEP 5.65 (removed-symbol AST-walk) + STEP 5.64 (bundled-shard cluster validation AST-walk) are the implementation
   precedents — STEP 5.67 follows the same baseline-aware-ratchet + `ast.walk()` shape applied to the placeholder-method
   detection problem.
-- Track D audit findings doc (`plans/active/issues/wave3x_track_d_findings_2026_05_11.md` P0-2) — the audit that seeded
+- Track D audit findings doc (`plans/archive/issues/wave3x_track_d_findings_2026_05_11.md` P0-2) — the audit that seeded
   the baseline; writegate Phase 2.A is the successor that shrinks it.
 
 ---

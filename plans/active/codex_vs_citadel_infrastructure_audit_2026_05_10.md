@@ -96,7 +96,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
 
 - [x] [AGENT] P0. **1.A Data area.** SSOT discipline; manifest schema; honest-absence taxonomy; available_at;
       pipeline_mode; downstream-handling. **DONE 2026-05-12 slot 8 sub-agent** — issue doc
-      [`plans/active/issues/codex_audit_data_2026_05_12.md`](issues/codex_audit_data_2026_05_12.md) ships 20 findings (6
+      [`plans/archive/issues/codex_audit_data_2026_05_12.md`](../archive/issues/codex_audit_data_2026_05_12.md) ships 20 findings (6
       IMMEDIATE + 12 PRE_CUTOVER + 2 POST_CUTOVER) across 6 tiers with per-row file:line evidence + suggested
       disposition + owner. Highest-blast-radius IMMEDIATE items: D-1 (reason taxonomy lag — UAC `EmptyConfirmedReason`
       enum has 17+ members but codex/CLAUDE.md cite 9-13), D-5 (`bucket-naming-and-config.md` fully superseded by
@@ -104,7 +104,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       `schema-governance.md` + `README.md`).
 - [x] [AGENT] P0. **1.B Strategy area.** Archetype canonicalisation; strategy-service co-location; signal-leasing;
       promote workflow. **DONE 2026-05-12 harsh-codex-audit-strategy-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_strategy_2026_05_12.md`](issues/codex_audit_strategy_2026_05_12.md) ships 20
+      [`plans/archive/issues/codex_audit_strategy_2026_05_12.md`](../archive/issues/codex_audit_strategy_2026_05_12.md) ships 20
       findings (5 IMMEDIATE + 12 PRE_CUTOVER + 3 POST_CUTOVER incl. ST-15 KEEP) across 4 tiers with per-row file:line
       evidence + disposition + owner. Critical: ST-1/2/3/6 archetype-count drift (codex says "53 archetypes / 8
       families / 18 engines" but UAC enums = `StrategyArchetype`=55 / `StrategyFamily`=9 / `InstructionActionV2`=14;
@@ -115,7 +115,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       matches the codex implementation map. No BIG-finding-level drift.
 - [x] [AGENT] P0. **1.C Execution area.** Matching engine hooks; live-batch parity; DeFi connectors; order-state
       machine; flash-loan receiver. **DONE 2026-05-12 harsh-codex-audit-execution-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_execution_2026_05_12.md`](issues/codex_audit_execution_2026_05_12.md) ships 27
+      [`plans/archive/issues/codex_audit_execution_2026_05_12.md`](../archive/issues/codex_audit_execution_2026_05_12.md) ships 27
       findings (9 IMMEDIATE + 12 PRE_CUTOVER + 5 POST_CUTOVER + 1 KEEP) across 4 tiers with per-row file:line evidence +
       disposition + owner. **BIG findings**: EX-1 (`flash-loan-receiver.md` says mainnet Aave receiver "Not yet deployed"
       but `testnet_contracts.yaml` chain_id 1 already registers `flash_loan_receiver: 0x42c005e2Bc545a49B50Fee3E76B8558348CAAb4c`
@@ -128,7 +128,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       doesn't exist (it's in UTL), `DefiErrorCode` moved to UAC, UDEI archived — same class as Data-area D-7).
 - [x] [AGENT] P0. **1.D Risk area.** Circuit breakers; kill-switch; pre-flight checks; per-archetype limits; wallet-tier
       kill-switch + spending caps. **DONE 2026-05-12 ikenna-codex-audit-risk-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_risk_2026_05_12.md`](issues/codex_audit_risk_2026_05_12.md) ships 16 findings (5
+      [`plans/archive/issues/codex_audit_risk_2026_05_12.md`](../archive/issues/codex_audit_risk_2026_05_12.md) ships 16 findings (5
       IMMEDIATE + 7 PRE_CUTOVER + 2 POST_CUTOVER + 2 KEEP) with per-row file:line evidence + suggested disposition +
       owner. Tier 1 (today's slot 4 + slot 8 wallet-tier shipments — codex catch-up gap): 4 findings (R-1..R-4); Tier 2
       (UAC ↔ codex enum-count drift): 5 findings (R-5..R-9); Tier 3 (pre-flight chain sequencing): 3 findings
@@ -138,7 +138,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       surface degraded for wallet-tier risk).
 - [x] [AGENT] P0. **1.E ML area.** Lifecycle; training/inference colocated; cache-delta hot reload; lookahead-bias.
       **DONE 2026-05-12 harsh-codex-audit-ml-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_ml_2026_05_12.md`](issues/codex_audit_ml_2026_05_12.md) ships 20 findings (5
+      [`plans/archive/issues/codex_audit_ml_2026_05_12.md`](../archive/issues/codex_audit_ml_2026_05_12.md) ships 20 findings (5
       IMMEDIATE + 12 PRE_CUTOVER + 2 POST_CUTOVER + 1 KEEP) across 4 tiers. **BIG**: ML-1 (4+ mutually-incompatible
       model-artefact bucket/path SSOTs in codex + a 5th in code — `ml-models-store-{pid}` / `ml-training-artifacts-{pid}`
       / `ml-predictions-{category}-...` — none routed through `resolve_bucket_name()` per QG STEP 5.69; live-ML cutover
@@ -152,7 +152,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       doc entries in `00-SSOT-INDEX.md`.
 - [x] [AGENT] P0. **1.F Position-balance area.** Per-client lineage; reconciliation; custody pings. **DONE 2026-05-12
       harsh-codex-audit-positionbalance-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_position_balance_2026_05_12.md`](issues/codex_audit_position_balance_2026_05_12.md)
+      [`plans/archive/issues/codex_audit_position_balance_2026_05_12.md`](../archive/issues/codex_audit_position_balance_2026_05_12.md)
       ships 19 findings (6 IMMEDIATE + 11 PRE_CUTOVER + 3 POST_CUTOVER; a few split doc-fix vs impl halves) across 4
       tiers. **BIG**: PB-1/2/3 (execution audit-records — codex `07-security/audit-logging.md` says append-only JSONL at
       `audit/{client_id}/{date}/{event_type}/` with storage-layer immutability; reality `execution-service/.../utils/audit_log.py:60`
@@ -166,7 +166,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       PBMS as the positions SSOT or covers the batch-vs-live recon contract / custody-ping loop).
 - [x] [AGENT] P0. **1.G Instruments area.** Catalogue completeness; reference-data adapters; per-asset_group coverage.
       **DONE 2026-05-12 harsh-codex-audit-instruments-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_instruments_2026_05_12.md`](issues/codex_audit_instruments_2026_05_12.md) ships 22
+      [`plans/archive/issues/codex_audit_instruments_2026_05_12.md`](../archive/issues/codex_audit_instruments_2026_05_12.md) ships 22
       findings (2 IMMEDIATE + 17 PRE_CUTOVER + 3 POST_CUTOVER) across 4 tiers; cross-references the 5 per-asset_group
       `catalogue_audit_{ag}_2026_05_12.md` issue docs (elevated DF-1/2/3/6/8/10/11/14/15/16/18/19/20, CF-1/2/3/4/9/10/12,
       TF-4/5/6, SP-1/2/3/6/10, PR-1/6/7 → IN-1/2/3/4/9/10/11/12/13/15/22). **BIG**: IN-1 (`defi-venue-protocol-catalogue.md`'s
@@ -180,7 +180,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       IN-22 (proposed QG ratchet to statically catch the GHOST-venue class).
 - [x] [AGENT] P0. **1.H Alerting area.** Live rules; synthetic filter; severity tiers; on-call routing. **DONE 2026-05-12
       harsh-codex-audit-alerting-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_alerting_2026_05_12.md`](issues/codex_audit_alerting_2026_05_12.md) ships 22
+      [`plans/archive/issues/codex_audit_alerting_2026_05_12.md`](../archive/issues/codex_audit_alerting_2026_05_12.md) ships 22
       findings (6 IMMEDIATE + 12 PRE_CUTOVER + 3 POST_CUTOVER + 1 KEEP) across 4 tiers; cross-refs Risk-area R-5/R-6.
       **BIG**: AL-1 (`KillSwitchScope.WALLET` broken ref — UAC internally inconsistent on a same-day slot-4 shipment);
       AL-2/R-6 (`WALLET_CAP_EXCEEDED` AlertCode promised by `wallet_config.py:114-117` SpendingCaps docstring doesn't
@@ -193,7 +193,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       `rehearsal-procedure.md` + `live-deployment-monitoring.md` all still 2026-05-07 PLANNED stubs — on-call has no
       per-code response steps for ~12 of ~63 AlertCodes). AL-1/AL-2 routed to slot 4 (collision avoidance), not fixed here.
 - [x] [AGENT] P0. **1.I Ops area.** VM tarball; launcher SSOT; zombie watchdog; concurrent-write CAS. **DONE 2026-05-12 ikenna-codex-audit-ops-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_ops_2026_05_12.md`](issues/codex_audit_ops_2026_05_12.md)
+      [`plans/archive/issues/codex_audit_ops_2026_05_12.md`](../archive/issues/codex_audit_ops_2026_05_12.md)
       ships 19 findings (6 IMMEDIATE + 11 PRE_CUTOVER + 2 POST_CUTOVER) with per-row file:line evidence + suggested
       disposition + owner. Tier 1 (codex doc vs implementation drift): 6 findings (O-1..O-6); Tier 2 (operational
       governance gaps): 6 findings (O-7..O-12); Tier 3 (stale / planned-stub / currency): 5 findings (O-13..O-17);
@@ -207,7 +207,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       Deploy-Missing UI `_SERVICE_LAUNCHER_SCRIPTS`; O-11 CLAUDE.md `PREK_HOME` vs `PREK_CACHE_DIR` 3-way drift.
 - [x] [AGENT] P0. **1.J Governance area.** CLAUDE.md HARD RULES self-consistency; SUB_AGENT_MANDATORY_RULES symlink;
       plan-format discipline; daily work-split. **DONE 2026-05-12 slot 8 Day-4 stretch** — issue doc
-      [`plans/active/issues/codex_audit_governance_2026_05_12.md`](issues/codex_audit_governance_2026_05_12.md) ships 16
+      [`plans/archive/issues/codex_audit_governance_2026_05_12.md`](../archive/issues/codex_audit_governance_2026_05_12.md) ships 16
       findings (4 IMMEDIATE + 7 PRE_CUTOVER + 5 POST_CUTOVER) with per-row file:line evidence + suggested disposition +
       owner. Tier 1 (CLAUDE.md self-consistency): 6 findings (G-1..G-6); Tier 2 (plan-format / work-split discipline): 4
       findings (G-7..G-10); Tier 3 (codex/13 + codex/11 currency): 3 findings (G-11..G-13); Tier 4 (additions worth
@@ -216,7 +216,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       precedence rule needed; G-16 cross-side ping-ledger commit-sha entry retention rule needed.
 - [x] [AGENT] P0. **1.K UI area.** Tier-based startup; mock vs real; firebase-local; deployment-ui surfaces. **DONE
       2026-05-12 harsh-codex-audit-ui-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_ui_2026_05_12.md`](issues/codex_audit_ui_2026_05_12.md) ships 19 findings (3
+      [`plans/archive/issues/codex_audit_ui_2026_05_12.md`](../archive/issues/codex_audit_ui_2026_05_12.md) ships 19 findings (3
       IMMEDIATE + 12 PRE_CUTOVER + 4 POST_CUTOVER) across 4 tiers. Critical: UI-1 (`codex/08-workflows/local-dev.md`
       still prints the dead 5173-5183 port registry / 11 legacy split UIs verbatim below its own "obsolete" banner —
       only `deployment-ui:5183` + `unified-trading-system-ui:3000/3100` survive per `ui-api-mapping.json`); UI-2
@@ -231,7 +231,7 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
       still be the old 7-peer-tab layout).
 - [x] [AGENT] P0. **1.L Testing area.** Emulator coverage; mock fixtures; integration tiers; cassette parity. **DONE
       2026-05-12 harsh-codex-audit-testing-tab (slot 8 sub-agent)** — issue doc
-      [`plans/active/issues/codex_audit_testing_2026_05_12.md`](issues/codex_audit_testing_2026_05_12.md) ships 20
+      [`plans/archive/issues/codex_audit_testing_2026_05_12.md`](../archive/issues/codex_audit_testing_2026_05_12.md) ships 20
       findings (6 IMMEDIATE + 12 PRE_CUTOVER + 2 POST_CUTOVER) across 4 tiers. **BIG**: TS-5 (`quality-gates.md` +
       `dependency-management.md` still teach `[project.optional-dependencies] dev` / `uv pip install -e ".[dev]"` —
       directly contradicts the workspace "Flat deps only" rule + actual pyprojects; also surfaces in Governance/Coding-Standards
@@ -434,18 +434,18 @@ post-cutover == total).
 
 | # | Area | Issue doc | Findings | IMMEDIATE / PRE_CUTOVER / POST_CUTOVER (+KEEP) | Done by |
 |---|------|-----------|----------|------------------------------------------------|---------|
-| 1.A | Data | [`codex_audit_data_2026_05_12.md`](issues/codex_audit_data_2026_05_12.md) | 20 (D-1..D-20) | 6 / 12 / 2 | slot 8 (earlier 2026-05-12) |
-| 1.B | Strategy | [`codex_audit_strategy_2026_05_12.md`](issues/codex_audit_strategy_2026_05_12.md) | 20 (ST-1..ST-20) | 5 / 12 / 3 | harsh-codex-audit-strategy-tab |
-| 1.C | Execution | [`codex_audit_execution_2026_05_12.md`](issues/codex_audit_execution_2026_05_12.md) | 27 (EX-1..EX-27) | 9 / 12 / 5 (+1) | harsh-codex-audit-execution-tab |
-| 1.D | Risk | [`codex_audit_risk_2026_05_12.md`](issues/codex_audit_risk_2026_05_12.md) | 16 (R-1..R-16) | 5 / 7 / 2 (+2) | slot 8 (earlier 2026-05-12) |
-| 1.E | ML | [`codex_audit_ml_2026_05_12.md`](issues/codex_audit_ml_2026_05_12.md) | 20 (ML-1..ML-20) | 5 / 12 / 2 (+1) | harsh-codex-audit-ml-tab |
-| 1.F | Position-balance | [`codex_audit_position_balance_2026_05_12.md`](issues/codex_audit_position_balance_2026_05_12.md) | 19 (PB-1..PB-19) | 6 / 11 / 3 | harsh-codex-audit-positionbalance-tab |
-| 1.G | Instruments | [`codex_audit_instruments_2026_05_12.md`](issues/codex_audit_instruments_2026_05_12.md) | 22 (IN-1..IN-22) | 2 / 17 / 3 | harsh-codex-audit-instruments-tab |
-| 1.H | Alerting | [`codex_audit_alerting_2026_05_12.md`](issues/codex_audit_alerting_2026_05_12.md) | 22 (AL-1..AL-22) | 6 / 12 / 3 (+1) | harsh-codex-audit-alerting-tab |
-| 1.I | Ops | [`codex_audit_ops_2026_05_12.md`](issues/codex_audit_ops_2026_05_12.md) | 19 (O-1..O-19) | 6 / 11 / 2 | slot 8 (earlier 2026-05-12) |
-| 1.J | Governance | [`codex_audit_governance_2026_05_12.md`](issues/codex_audit_governance_2026_05_12.md) | 16 (G-1..G-16) | 4 / 7 / 5 | slot 8 (earlier 2026-05-12) |
-| 1.K | UI | [`codex_audit_ui_2026_05_12.md`](issues/codex_audit_ui_2026_05_12.md) | 19 (UI-1..UI-19) | 3 / 12 / 4 | harsh-codex-audit-ui-tab |
-| 1.L | Testing | [`codex_audit_testing_2026_05_12.md`](issues/codex_audit_testing_2026_05_12.md) | 20 (TS-1..TS-20) | 6 / 12 / 2 | harsh-codex-audit-testing-tab |
+| 1.A | Data | [`codex_audit_data_2026_05_12.md`](../archive/issues/codex_audit_data_2026_05_12.md) | 20 (D-1..D-20) | 6 / 12 / 2 | slot 8 (earlier 2026-05-12) |
+| 1.B | Strategy | [`codex_audit_strategy_2026_05_12.md`](../archive/issues/codex_audit_strategy_2026_05_12.md) | 20 (ST-1..ST-20) | 5 / 12 / 3 | harsh-codex-audit-strategy-tab |
+| 1.C | Execution | [`codex_audit_execution_2026_05_12.md`](../archive/issues/codex_audit_execution_2026_05_12.md) | 27 (EX-1..EX-27) | 9 / 12 / 5 (+1) | harsh-codex-audit-execution-tab |
+| 1.D | Risk | [`codex_audit_risk_2026_05_12.md`](../archive/issues/codex_audit_risk_2026_05_12.md) | 16 (R-1..R-16) | 5 / 7 / 2 (+2) | slot 8 (earlier 2026-05-12) |
+| 1.E | ML | [`codex_audit_ml_2026_05_12.md`](../archive/issues/codex_audit_ml_2026_05_12.md) | 20 (ML-1..ML-20) | 5 / 12 / 2 (+1) | harsh-codex-audit-ml-tab |
+| 1.F | Position-balance | [`codex_audit_position_balance_2026_05_12.md`](../archive/issues/codex_audit_position_balance_2026_05_12.md) | 19 (PB-1..PB-19) | 6 / 11 / 3 | harsh-codex-audit-positionbalance-tab |
+| 1.G | Instruments | [`codex_audit_instruments_2026_05_12.md`](../archive/issues/codex_audit_instruments_2026_05_12.md) | 22 (IN-1..IN-22) | 2 / 17 / 3 | harsh-codex-audit-instruments-tab |
+| 1.H | Alerting | [`codex_audit_alerting_2026_05_12.md`](../archive/issues/codex_audit_alerting_2026_05_12.md) | 22 (AL-1..AL-22) | 6 / 12 / 3 (+1) | harsh-codex-audit-alerting-tab |
+| 1.I | Ops | [`codex_audit_ops_2026_05_12.md`](../archive/issues/codex_audit_ops_2026_05_12.md) | 19 (O-1..O-19) | 6 / 11 / 2 | slot 8 (earlier 2026-05-12) |
+| 1.J | Governance | [`codex_audit_governance_2026_05_12.md`](../archive/issues/codex_audit_governance_2026_05_12.md) | 16 (G-1..G-16) | 4 / 7 / 5 | slot 8 (earlier 2026-05-12) |
+| 1.K | UI | [`codex_audit_ui_2026_05_12.md`](../archive/issues/codex_audit_ui_2026_05_12.md) | 19 (UI-1..UI-19) | 3 / 12 / 4 | harsh-codex-audit-ui-tab |
+| 1.L | Testing | [`codex_audit_testing_2026_05_12.md`](../archive/issues/codex_audit_testing_2026_05_12.md) | 20 (TS-1..TS-20) | 6 / 12 / 2 | harsh-codex-audit-testing-tab |
 
 **Recurring cross-area patterns** (worth a single batched fix in Phase 3): (1) **moved/archived-repo references** — codex
 + CLAUDE.md repeatedly name modules that no longer exist (`unified-config-interface/testnet_contracts.py` → UTL;

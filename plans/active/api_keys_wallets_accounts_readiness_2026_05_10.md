@@ -556,7 +556,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 > 2026-05-12 (R-10 = Option B shared UTL helper; R-11 = AND-aggregate w/ wallet-tier HARD floor; R-17 = NEW Layer 4
 > position-health; R-18 = SpendingCaps `min(fixed, proportional)`). Codex SSOT:
 > [`codex/04-architecture/risk-preflight-flow.md`](../../codex/04-architecture/risk-preflight-flow.md) §§ R-10..R-13.
-> Source issue docs: [`issues/codex_audit_risk_2026_05_12.md`](issues/codex_audit_risk_2026_05_12.md) R-10/R-11 +
+> Source issue docs: [`../archive/issues/codex_audit_risk_2026_05_12.md`](../archive/issues/codex_audit_risk_2026_05_12.md) R-10/R-11 +
 > `risk-preflight-flow.md` § R-17/R-18.
 
 ### 4.C.A — UAC schema extensions (slot 4 owned; ~1 cal AI-day)

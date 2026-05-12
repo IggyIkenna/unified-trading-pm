@@ -201,7 +201,7 @@ manifest level; Wave 3.M extends the same logic to the WRITE side so adapters em
 instead of writing nothing.
 
 > **🟢 AUDIT COMPLETE 2026-05-11 (slot 3, harsh-wave3x-tab — 6 read-only sub-agents)** — findings doc:
-> [`plans/active/issues/wave3x_track_d_findings_2026_05_11.md`](issues/wave3x_track_d_findings_2026_05_11.md) (per-adapter
+> [`plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`](../archive/issues/wave3x_track_d_findings_2026_05_11.md) (per-adapter
 > A/B/C/D classification per CLAUDE.md "Four-category empty-output decision"). **Anti-sequencing conclusion**: Track D
 > forces **no new manifest schema column / shard-atom dimension** (the `zero_activity` marker is a per-row parquet-schema
 > value, not a manifest column) → the case-D *implementation* can safely defer post-cutover. **ONE candidate new
@@ -224,7 +224,7 @@ instead of writing nothing.
       `ohlcv_*` → O=H=L=C=prior_LTP, volume=0, trade_count=0, available_at=window_close; `trades` → empty parquet (0
       rows ok; manifest `record_captured` row_count=0 + zero-activity flag column); `book_snapshot_5` → carry-forward
       last bid/ask 5 levels; `derivative_ticker` → carry-forward last open_interest/mark_price/index_price.
-      **AUDIT DONE 2026-05-11** (slot 3 — D1+D2+D3 sub-agents; findings: `issues/wave3x_track_d_findings_2026_05_11.md`).
+      **AUDIT DONE 2026-05-11** (slot 3 — D1+D2+D3 sub-agents; findings: `../archive/issues/wave3x_track_d_findings_2026_05_11.md`).
       **DEFERRED — case-D *implementation* post-cutover** (no schema change forced; needs a NEW UTL `zero_activity_bars`
       primitive + `instrument_catalog` threaded into adapter construction = Wave 2/3 of writegate Phase 3.D.5, "pending").
       **NOTE**: sports HISTORICAL capture is in instruments-service NOT MTDS — sports half of Track D re-scopes there.
@@ -249,7 +249,7 @@ instead of writing nothing.
       volatility-smile use case (operator-flagged: every strike must be visible even on zero-volume days for
       cross-instrument analysis).
       **DEFERRED — stub the case-D design + deferral pointer; deferrable since case-D impl itself is post-cutover.** The
-      audit findings (`issues/wave3x_track_d_findings_2026_05_11.md`) are the substantive interim record; slot 1 / a
+      audit findings (`../archive/issues/wave3x_track_d_findings_2026_05_11.md`) are the substantive interim record; slot 1 / a
       Wave 3.M follow-up adds the codex stub alongside the implementation plan.
 
 ### Track E — Wave 3.S sports per-source rules (sports services, ~3 days)
@@ -333,12 +333,12 @@ The 2026-05-11 slot-3 (`harsh-wave3x-tab`) session shipped Tracks A-UTL + B + C 
 | Track B `[UAC]` ×3 + `[TEST]`-UAC           | `done` (UAC@7c8b5ad)           | —                                                                                                                                                                            |
 | Track B `[UTL]` `_classify_sports` + tests  | `done` (UTL@3fbc6b3)           | —                                                                                                                                                                            |
 | Track C `[instruments-service]` + `[TEST]` + `[DOCS]` | `done` (instruments-service@485c57b; dry-runs on 5 prod manifests; codex@bce1822e-area) | — (operator decides if/when to `--apply-flips` after CSV review — currently a no-op given 0 upgrades on current manifest data) |
-| Track D — `[MTDS]` / `[MDPS]` / `[features-*]` AUDIT | `done` 2026-05-11 — findings: `issues/wave3x_track_d_findings_2026_05_11.md` | — (audit complete; per-adapter A/B/C/D classification filed)                                                                                                                  |
+| Track D — `[MTDS]` / `[MDPS]` / `[features-*]` AUDIT | `done` 2026-05-11 — findings: `../archive/issues/wave3x_track_d_findings_2026_05_11.md` | — (audit complete; per-adapter A/B/C/D classification filed)                                                                                                                  |
 | Track D — case-D *implementation* (zero-activity-bar adapter wiring) | `deferred-post-cutover` — no schema change forced (anti-seq verdict: no new manifest dim) | DEFERRED post-cutover; needs a NEW UTL `zero_activity_bars` primitive + `instrument_catalog` threaded into adapter construction (Wave 2/3 of writegate Phase 3.D.5, "pending"); sports half re-scopes to instruments-service. Slot 1 / a Wave 3.M follow-up owns the impl plan. |
 | Track D — `[TEST]` per-adapter smoke tests  | `deferred-post-cutover`        | Pairs with the case-D adapter wiring above.                                                                                                                                   |
 | Track D — `[DOCS]` codex zero-activity-bar shape stub | `deferred-post-cutover`        | Slot 1 / a Wave 3.M follow-up adds the codex stub alongside the case-D impl plan. The audit findings doc is the substantive interim record.                                    |
 | Track D — `EXPECTED_KNOWN_SOURCE_GAP` candidate new `EmptyConfirmedReason` | `blocked` — operator/Ikenna-slot-5 decision pending | DECISION NEEDED (Ikenna slot 5 + slot 1): add to UAC `EmptyConfirmedReason` in the Phase 1 schema window (before 2026-05-15 freeze — it's a tiny additive enum) OR defer post-cutover. Surfaced in the findings doc + the cross-side ping (PM@fcf99e52 routed it). |
-| Track D — P0 bugs surfaced (MTDS blank-reason sentinel-abort; MDPS dead canonical-writer path + 1440-NaN TradFi passthrough; commodity phantom-row; cross_instrument np.zeros; sports fillna-magic) | `routed` — owners = writegate Phase 2.A/2.E + Harsh slots 5+6 | Escalated in `issues/wave3x_track_d_findings_2026_05_11.md` + the cross-side ping; NOT slot-3's repos to fix per the Track D read-only brief.                                  |
+| Track D — P0 bugs surfaced (MTDS blank-reason sentinel-abort; MDPS dead canonical-writer path + 1440-NaN TradFi passthrough; commodity phantom-row; cross_instrument np.zeros; sports fillna-magic) | `routed` — owners = writegate Phase 2.A/2.E + Harsh slots 5+6 | Escalated in `../archive/issues/wave3x_track_d_findings_2026_05_11.md` + the cross-side ping; NOT slot-3's repos to fix per the Track D read-only brief.                                  |
 | Track E `[UTL]` 3 stamping helpers + `[TEST]` + `[DOCS]` | `done` (UTL@2ab3685; codex@bce1822e) | —                                                                                                                                                                            |
 | Track E `[features-sports]` calculator wire-in of the stamp helpers | `deferred` — per-service half | DEFERRED to Harsh slot 4 (MTDS sports adapter stamping wiring) + Ikenna slot 3 (available_at Phase 1 per-asset_group cascade) per the 2026-05-11 work-split. UTL helpers are ready to consume; see `plans/active/issues/` for slot 4's MTDS-slice sports `available_at` wiring issue doc. |
 | Track A `[UTL]` adjacent: pre-existing `reportPrivateImportUsage` on `from unified_api_contracts import non_trading_day_reason` (legacy_reason_classifier.py:162) | `noted` — pre-existing, not introduced this session | Picked up by the workspace QG sweep (Ikenna) or the writegate owner; fix = deep import `from unified_api_contracts.registry.venue_trading_calendar import non_trading_day_reason` with a `# noqa: ... qg-deep-import` comment. |
@@ -374,7 +374,7 @@ Slot 3 (`harsh-wave3x-tab`) ran Tracks A-UTL + B + C + D (read-only audit) + E e
 
 **Plan-flip + codex + findings commits (PM):**
 
-- `unified-trading-pm@56dec3f1` — Track D findings doc `plans/active/issues/wave3x_track_d_findings_2026_05_11.md`
+- `unified-trading-pm@56dec3f1` — Track D findings doc `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`
   (6 read-only audit sub-agents, per-adapter A/B/C/D classification) + Track D plan annotations + escalation ping.
 - `unified-trading-pm@e5d82a15` — Track B UAC plan flips (3 `[UAC]` + `[TEST]`-UAC checkboxes).
 - `unified-trading-pm@c6607382` — Track A+B UTL plan flips (3 `[UTL]`/`[TEST]` checkboxes).

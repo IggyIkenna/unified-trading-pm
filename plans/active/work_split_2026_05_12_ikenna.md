@@ -155,7 +155,7 @@ Order of pickup precedence:
 5. `cross_asset_group_catalogue_audit_2026_05_10` — ~31.2 calibrated; can fan out to multiple sub-agents.
 6. `codex_vs_citadel_infrastructure_audit_2026_05_10` — ~15.6 calibrated; hygiene.
 7. **VIX 15m pipeline_mode finding** (PM@`a5e5aa4d`) — Yahoo / Barchart route lacks BATCH_YAHOO / BATCH_BARCHART PipelineMode values. ~0.5 calibrated. Post-cutover acceptable.
-8. **footystats pipeline_mode gap** (PM@`6ede1e01`; issue doc `plans/active/issues/footystats_pipeline_mode_gap_2026_05_12.md`) — ~0.5 calibrated. Post-cutover acceptable.
+8. **footystats pipeline_mode gap** (PM@`6ede1e01`; issue doc `plans/archive/issues/footystats_pipeline_mode_gap_2026_05_12.md`) — ~0.5 calibrated. Post-cutover acceptable.
 9. **expected_universe_v2 enumerator implementation** — plan promoted 2026-05-11 (status: active); impl scope ~2-3 calibrated. Day-4 if Family-1/2 slots run dry.
 10. **Stream C C-enum.3+4** (slot 5 Tier 2 item 6 deferred-to-backport) — finish if defi_recursive_borrow slot closes early. ~0.5 calibrated.
 

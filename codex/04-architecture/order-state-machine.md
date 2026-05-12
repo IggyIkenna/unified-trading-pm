@@ -4,7 +4,7 @@ doc_kind: contract_stub
 status: active
 ssot_for: order_state_machine
 created: 2026-05-12
-created_per: plans/active/issues/codex_audit_execution_2026_05_12.md EX-24
+created_per: plans/archive/issues/codex_audit_execution_2026_05_12.md EX-24
 ---
 
 # Order state machine
