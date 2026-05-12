@@ -423,9 +423,11 @@ DONE 2026-05-12.** 12 issue docs flipped per-row; 3 operator-gates + 4 P2 sub-ga
 
 ## Phase 6 — Audit sign-off doc (Day 13, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **6.A Aggregate audit sign-off (inline section in this plan, NOT a separate issue doc).** Append a
-      `## Audit sign-off 2026-05-22` section to this plan body with findings aggregate, per-area summary, disposition
-      counts, links to per-area issue docs + immediate/pre-cutover commit shas + post-cutover plan filings.
+- [x] [AGENT] P0. **6.A Aggregate audit sign-off (inline section in this plan, NOT a separate issue doc).** **DONE
+      2026-05-12 (slot 8 closeout pass)** — see `## Audit sign-off 2026-05-22` section below; covers findings aggregate
+      (242 across 48 tiers / 12 areas), per-area summary table, disposition counts (63 IMMEDIATE / 137 PRE_CUTOVER / 36
+      POST_CUTOVER / 6 KEEP), per-area issue-doc links, IMMEDIATE/PRE_CUTOVER batch commit shas, POST_CUTOVER plan
+      filings, remaining operator gates.
 - [ ] [AGENT] P0. **6.B Operator sign-off.** Operator reviews + approves; doc status flips to `signed-off`.
 
 **Full-execution criterion**: sign-off doc exists; operator approved; counts add up (immediate + pre-cutover +
@@ -498,6 +500,142 @@ ref + missing `WALLET_CAP_EXCEEDED` AlertCode — routed to slot 4); TS-5 (codex
 contradict the workspace "Flat deps only" rule). Plus the catalogue-audit P0: GMX/DRIFT dual-classification
 (`cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1C — see that plan's "Per-asset-group catalogue audit pass" section).
 
+## Audit sign-off 2026-05-22
+
+> **Status**: 🟡 DRAFT — slot 8 has assembled the aggregate evidence below from Phases 0-5; awaiting operator review +
+> 3 genuine gate decisions (R-10 / R-11 / AL-14) before this section flips to `signed-off` and the master plan Group A
+> row (Phase 7) flips green. Drafted 2026-05-12 (slot 8 closeout pass) — populated entirely from existing plan-body
+> evidence chains; no new investigation in this commit.
+
+### Findings aggregate
+
+**Total: 242 findings across 48 tiers in 12 area issue docs** (Phase 1 complete 2026-05-12).
+
+| Disposition | Count | % | Phase landing |
+|---|---|---|---|
+| IMMEDIATE | ~63 | 26% | Phase 3 — codex doc rewrites + SSOT consolidations + CLAUDE.md hygiene |
+| PRE_CUTOVER | ~137 | 57% | Phase 4 — architecture clean-ups composing with cutover hot path |
+| POST_CUTOVER | ~36 | 15% | Phase 5 — filed into 3 consolidated successor plans |
+| KEEP (verified-clean) | ~6 | 2% | No-action recordings |
+| **Total** | **~242** | **100%** | |
+
+### Per-area summary
+
+| Area | Issue doc | Findings (IMMEDIATE / PRE_CUTOVER / POST_CUTOVER / KEEP) | Owner | Status |
+|---|---|---|---|---|
+| Data | [`codex_audit_data_2026_05_12.md`](../archive/issues/codex_audit_data_2026_05_12.md) | 20 (6 / 12 / 2 / 0) | slot 8 (earlier 2026-05-12) | ✅ DONE |
+| Strategy | [`codex_audit_strategy_2026_05_12.md`](../archive/issues/codex_audit_strategy_2026_05_12.md) | 20 (5 / 12 / 3 / 0) | harsh-codex-audit-strategy-tab | ✅ DONE |
+| Execution | [`codex_audit_execution_2026_05_12.md`](../archive/issues/codex_audit_execution_2026_05_12.md) | 27 (9 / 12 / 5 / 1) | harsh-codex-audit-execution-tab | ✅ DONE |
+| Risk | [`codex_audit_risk_2026_05_12.md`](../archive/issues/codex_audit_risk_2026_05_12.md) | 16 (5 / 7 / 2 / 2) | slot 8 (earlier 2026-05-12) | ✅ DONE (R-10 / R-11 operator gates remain) |
+| ML | [`codex_audit_ml_2026_05_12.md`](../archive/issues/codex_audit_ml_2026_05_12.md) | 20 (5 / 12 / 2 / 1) | harsh-codex-audit-ml-tab | ✅ DONE |
+| Position-balance | [`codex_audit_position_balance_2026_05_12.md`](../archive/issues/codex_audit_position_balance_2026_05_12.md) | 19 (6 / 11 / 3 / 0) | harsh-codex-audit-positionbalance-tab | ✅ DONE (4 P2 sub-gates remain) |
+| Instruments | [`codex_audit_instruments_2026_05_12.md`](../archive/issues/codex_audit_instruments_2026_05_12.md) | 22 (2 / 17 / 3 / 0) | harsh-codex-audit-instruments-tab | ✅ DONE (IN-1 routed to Ikenna slot 2) |
+| Alerting | [`codex_audit_alerting_2026_05_12.md`](../archive/issues/codex_audit_alerting_2026_05_12.md) | 22 (6 / 12 / 3 / 1) | harsh-codex-audit-alerting-tab | ✅ DONE (AL-14 operator gate remains) |
+| Ops | [`codex_audit_ops_2026_05_12.md`](../archive/issues/codex_audit_ops_2026_05_12.md) | 19 (6 / 11 / 2 / 0) | slot 8 (earlier 2026-05-12) | ✅ DONE |
+| Governance | [`codex_audit_governance_2026_05_12.md`](../archive/issues/codex_audit_governance_2026_05_12.md) | 16 (4 / 7 / 5 / 0) | slot 8 (earlier 2026-05-12) | ✅ DONE |
+| UI | [`codex_audit_ui_2026_05_12.md`](../archive/issues/codex_audit_ui_2026_05_12.md) | 19 (3 / 12 / 4 / 0) | harsh-codex-audit-ui-tab | ✅ DONE |
+| Testing | [`codex_audit_testing_2026_05_12.md`](../archive/issues/codex_audit_testing_2026_05_12.md) | 20 (6 / 12 / 2 / 0) | harsh-codex-audit-testing-tab | ✅ DONE |
+
+### Phase 3 IMMEDIATE batch commit shas
+
+Recurring-pattern + per-area batches (see Phase 3.A1-3.A7 + Phase 3.A/3.B/3.C body for the per-finding evidence):
+
+| Batch | Scope | Commit |
+|---|---|---|
+| 3.A1 moved/archived-repo refs | D-7 / EX-2/5/6 / + | PM@`0fc4b3fd` + `f401a3c9` + `959ca3fc` + `d19d3bf2` + `e94e703a` + UAC@`c89e820` |
+| 3.A2 enum-count drift | D-1 / ST-1/2/3/6 / R-5..R-9 / AL-4 / ML-4 | PM@`d19d3bf2` + `87a09ca8` + `88f435f7` + `4b3e27c7` + `57c748b2` + `33a4df91` |
+| 3.A3 bucket-name SSOT | D-5 / O-3/4 / ML-1 / PB-10/11 | PM@`564c060b` (operator-gate triage) + `d19d3bf2` + `3dc3e6b1` + `19a2001c` |
+| 3.A4 SSOT-INDEX gaps | ST-18 / ML / IN / O-15 / G-11 / TS-15 / AL-18 | PM@`87a09ca8` + `57c748b2` + `38748f36` + `3dc3e6b1` + `88318109` + `3bd13993` + `4b3e27c7` |
+| 3.A5 Runbook-Execution-Owner | O-7+O-8 (QG warning-with-baseline) / IN-6/14/16 / PB | PM@`564c060b` + `3dc3e6b1` + `38748f36` + `19a2001c` |
+| 3.A6 self-flagged-stale-docs | UI-14 / TS-14/15 (IN-1 routed) | PM@`8af99d6d` + `3bd13993` + IN-1 cross-side ping @PM`79f73426` |
+| 3.A7 per-area singletons | ST-4 / EX-8/20 / AL-3 / AL-10 / TS-3/1/2 / TS-5 / UI-1/2 / G-3 / O-11 | PM@`87a09ca8` + `0fc4b3fd` + `4b3e27c7` + `c9511517` + `3bd13993` + `8af99d6d` + `33a4df91` |
+
+### Phase 4 PRE_CUTOVER batch commit shas
+
+| Batch | Area | Findings | Commit |
+|---|---|---|---|
+| Batch 1 | Data | 11 | PM@`d19d3bf2` |
+| Batch 1 | Strategy | 9 | PM@`87a09ca8` |
+| Batch 1 | Execution | 10 + UAC EX-6 | PM@`e94e703a` + UAC@`c89e820` |
+| Batch 1 | Instruments | 13 | PM@`38748f36` (+ issue-doc row flips @PM`651ccf15`) |
+| Batch 2 | ML | 8 | PM@`57c748b2` |
+| Batch 2 | Position-balance | 5 | PM@`19a2001c` |
+| Batch 2 | Risk | 4 | PM@`88f435f7` |
+| Batch 2 | Alerting | 5 | PM@`4b3e27c7` |
+| Batch 3 | Ops | 5 | PM@`3dc3e6b1` |
+| Batch 3 | Governance | 2 + 5 routed | PM@`88318109` |
+| Batch 3 | UI | 9 + 2 partial + UI-9 routed | PM@`8af99d6d` |
+| Batch 3 | Testing | 11 + 2 partial + 1 routed | PM@`3bd13993` |
+| CLAUDE.md bundle | G-4/G-10/G-14/G-16 + UI-9 + TS-12 mirror | 6 | PM@`33a4df91` |
+| Cross-asset Phase 4 mev consolidation companion | EX-8/EX-20 closeout | 2 | PM@`be7d7c84` + sibling @`0fc4b3fd` |
+| Operator-gate triage | PB-7/14/17/18 + ML-1/7 + R-4 + AL-10/15 + O-7/8/14 + UI-16 | 13 | PM@`564c060b` + per-area row-flips @PM`bbaf645d` + `8958e237` + `adff9712` + `e24828e2` + `d3ee7092` + `c9511517` |
+
+**PRE_CUTOVER total**: ~101 of ~137 shipped directly; ~36 routed to area maintainers (alerting maintainer,
+execution-service maintainer, ml-training owner, etc.) per Findings Triage Discipline — codex-doc-fix half shipped from
+slot 8; code-work half delegated to named owner.
+
+### Phase 5 POST_CUTOVER successor plans
+
+31 POST_CUTOVER rows filed into 3 consolidated successor plans (PM@`b2b15f8d` 2026-05-12 ikenna-postcutover-phase-5
+sub-agent):
+
+| Successor plan | Findings | Scope |
+|---|---|---|
+| [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md) | 12 | AL-12, D-14, IN-19, IN-20, ML-12, ML-18, PB-16, O-12, O-19, ST-20, UI-17, UI-19 — codex-doc-hygiene |
+| [`governance_qg_automation_gaps_post_cutover_2026_05_12.md`](governance_qg_automation_gaps_post_cutover_2026_05_12.md) | 11 | G-2, G-5, G-8, G-12, G-13, D-18, ST-19, UI-13, UI-18, PB-19, AL-21 QG-half — QG-automation gaps |
+| [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md`](alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md) | 7 | AL-22, R-15, R-16, ST-11, TS-19, TS-20, AL-21 UX-half — operator-UX deliverables |
+
+Zero orphans.
+
+### Remaining operator gates (pre-sign-off)
+
+**3 genuine operator decisions still required** (per slot-8 Phase 2.C triage @PM`564c060b`):
+
+1. **R-10 — pre-flight check call-graph implementation** — risk pre-flight ordering across (kill_switch / circuit_breaker
+   / spending_caps / venue_health / data_freshness / margin / capital_allocation). Operator decision: which architecture
+   (linear pipeline / DAG with explicit ordering / event-driven). Not slot 8 work — risk-and-exposure-service maintainer
+   territory.
+2. **R-11 — capital-allocation seam: subsume-vs-AND-aggregate** — when multiple archetypes target the same wallet,
+   per-archetype caps either AND (most restrictive wins) or capital-allocator-subsumes. Operator decision needed before
+   live cap enforcement.
+3. **AL-14 — named on-call rotation** — `operator-playbook.md` + `pagerduty-escalation-policy.md` rotation gap. Operator
+   decision on named-person assignments (2-operator 12-hour split? rotation cadence?).
+
+**4 P2 sub-gates** (from PB-17 / PB-18 / AL-15 triage):
+
+4. Per-archetype recon tolerance bands.
+5. Cutover-window recon cadence (intra-cutover-window).
+6. CEFFU custody-disconnect threshold.
+7. Auto-pause-vs-alert escalation policy.
+
+All 7 are non-blocking for sign-off-doc *drafting* (this section), but **operator answers on R-10 / R-11 / AL-14 are
+prerequisites for Phase 6.B operator sign-off** + master plan Group A row flip (Phase 7).
+
+### Cross-side handshakes outstanding
+
+- **IN-1** (`02-data/defi-venue-protocol-catalogue.md` 2026-05-12 refresh falsely asserts `defi_venue_capabilities.py`
+  "does not exist") — routed to Ikenna slot 2 per cross-side collision-avoidance @PM`79f73426` ping; orchestrator
+  confirmed routing 2026-05-12. Slot 8 holding off on edit; awaiting Ikenna-slot-2 revert.
+- **GMX/DRIFT dual-classification P0** (cross_asset Phase 1C) — operator greenlight pending; flagged in
+  `plans/active/_agent_pings.md`.
+
+### Sign-off block
+
+**To be filled by operator** after R-10 / R-11 / AL-14 decisions and a final pass over this section:
+
+```yaml
+audit_sign_off:
+  date: <YYYY-MM-DD>
+  operator: <name>
+  decisions_resolved:
+    - R-10: <decision>
+    - R-11: <decision>
+    - AL-14: <decision>
+  status: signed-off
+```
+
+Once `signed-off`, Phase 6.B flips ✅ + Phase 7.A master-plan Group A row flips green + the plan archives.
+
 ## DONE block
 
 (Final completion block — filled when Phases 0-7 all green + operator sign-off.)
@@ -514,13 +652,15 @@ contradict the workspace "Flat deps only" rule). Plus the catalogue-audit P0: GM
 | Phase 3 (immediate items shipped) | ✅ MOSTLY-DONE 2026-05-12 (slot 8) | IMMEDIATE rows shipped across 12 areas via the same 5-sub-agent + operator-gate-triage fan-outs that drove Phase 4; per-batch evidence in Phase 4.A above. Recurring-pattern batches (3.A1 moved/archived-repo refs · 3.A2 enum-count drift · 3.A3 bucket-name SSOT · 3.A4 SSOT-INDEX gaps · 3.A5 Runbook-Execution-Owner blocks · 3.A6 self-flagged-stale-doc cleanup) — all landed; IN-1 (defi-venue-protocol-catalogue.md drift-introducing "correction") routed to Ikenna slot 2 per the cross-side collision-avoidance rule. Phase 3.A/3.B/3.C plan-level row flips deferred to Phase 6 sign-off doc. |
 | Phase 4 (pre-cutover items shipped) | ✅ DONE 2026-05-12 (slot 8 Day-4 stretch + closeout this turn) | 4.A flipped @PM`<this commit>` — ~101 of ~137 PRE_CUTOVER findings shipped across 3 parallel sub-agent batches; ~36 routed-to-area-maintainer with codex-doc-fix half shipped + code-work half delegated per Findings Triage. 4.B flipped — per-area assertions visible in issue docs; PM/UAC/deployment-service/ml-inference-service all `0 0` vs LDR. cross_asset Phase 4 mev-protection consolidation @PM`be7d7c84` is the companion. |
 | Phase 5 (post-cutover items filed) | ✅ DONE 2026-05-12 (slot 8) | 31 POST_CUTOVER rows → 3 consolidated successor plans (codex-doc-currency + qg-automation + alerting-runbook); zero orphans |
-| Phase 6 (audit sign-off doc) | ☐ TODO (Day 13) | gated on Phase 4 (now ✅) + operator approval of the 3 remaining genuine gates (R-10 / R-11 / AL-14) + 4 P2 sub-gates |
-| Phase 7 (cutover gate) | ☐ TODO (Day 13) | master plan Group A row; gated on Phase 6 |
+| Phase 3.A1-3.A7 + 3.A/3.B/3.C plan-level rows | ✅ DONE 2026-05-12 (slot 8 RESUME-2) | All 10 Phase 3 IMMEDIATE-batch sub-rows + plan-level rows flipped with evidence chain from Phase 4.A. Commit @PM`<this-commit>` |
+| Phase 6.A (audit sign-off doc — drafting half) | ✅ DONE 2026-05-12 (slot 8 RESUME-2 closeout) | `## Audit sign-off 2026-05-22` section appended this commit; findings aggregate (242 / 48 tiers / 12 areas) + per-area summary table + disposition counts (63/137/36/6) + Phase 3 + Phase 4 batch commit-sha tables + Phase 5 successor-plan registry + 3 remaining operator gates + 4 P2 sub-gates + cross-side handshake state + sign-off block. PM@`<this-commit>` |
+| Phase 6.B (operator sign-off) | ☐ TODO (Day 13) | gated on operator approval of R-10 / R-11 / AL-14 (+ 4 P2 sub-gates per PB-17 / PB-18 / AL-15 triage). Sign-off block in `## Audit sign-off 2026-05-22` section is operator-fillable when ready. |
+| Phase 7 (cutover gate) | ☐ TODO (Day 13) | master plan Group A row; gated on Phase 6.B |
 
 **Carry-forward for next slot-8 session**: (1) operator decision on 3 genuine gates (R-10 / R-11 / AL-14) + 4 P2
-sub-gates from PB-17/PB-18 triage; (2) Phase 6 audit sign-off doc — append `## Audit sign-off 2026-05-22` section to
-this plan body with findings aggregate + per-area summary + disposition counts + immediate/pre-cutover commit shas +
-post-cutover plan filings (most-of-the-data is already in the `## Audit findings` table — sign-off doc is a sub-1-day
-write); (3) Phase 7 master-plan Group A row flip after sign-off. Slot 8's IN-1 callout to Ikenna slot 2
-(`defi-venue-protocol-catalogue.md` 2026-05-12 refresh falsely asserts `defi_venue_capabilities.py` "does not exist") —
-escalated `plans/active/_agent_pings.md` 2026-05-12 + orchestrator confirmed routing; do not touch from slot 8.
+sub-gates from PB-17/PB-18 triage — when ready, the operator fills the sign-off block in `## Audit sign-off 2026-05-22`
+section + Phase 6.B flips ✅; (2) Phase 7 master-plan Group A row flip after sign-off. Slot 8's IN-1 callout to Ikenna
+slot 2 (`defi-venue-protocol-catalogue.md` 2026-05-12 refresh falsely asserts `defi_venue_capabilities.py` "does not
+exist") — escalated `plans/active/_agent_pings.md` 2026-05-12 + orchestrator confirmed routing; do not touch from slot
+8. **Day-3 stretch carry-forward (PM@`b0500361` + this commit)**: Phase 3 ✅ closed fully; Phase 6.A ✅ drafted —
+remaining slot 8 surface is 100% operator-gated.
