@@ -105,18 +105,67 @@ foot-guns:
 - **Step 2 gap** — a new prefix added to `VM_PREFIX_TO_BUCKET` without a watchdog VM relaunch leaves the prefix
   un-watched. Reference incident 2026-05-05 (5 prefixes silently un-watched → zombie burn). **Proposed QG check**:
   correlate `git log -p deployment-service/scripts/vm/vm_zombie_watchdog.py | grep VM_PREFIX_TO_BUCKET` against the
-  watchdog VM relaunch event in `gs://...vm-logs/vm-zombie-watchdog-*/EXIT_STATUS`. **Status**: unbacked — owner is
-  governance + slot 11 (launcher-consolidation owner); design tradeoff between agent-run check vs operator-discipline
-  reminder.
+  watchdog VM relaunch event in `gs://...vm-logs/vm-zombie-watchdog-*/EXIT_STATUS`. **Status**: design-gated;
+  scaffolding policy codified below (§ "QG check policy"). Owner: governance + slot 11 (launcher-consolidation owner).
 - **Step 3 gap** — a new launcher under `launch-*.sh` without a `_SERVICE_LAUNCHER_SCRIPTS` registration silently
   degrades the Deploy-Missing UI button to "no launcher registered" (per "What goes wrong" enumeration further down this
   doc). **Proposed QG check**: static dual-list parity check — every file matching `launch-*.sh` must appear in the dict
   (or in an explicit allowlist of "intentionally non-Deploy-Missing-reachable" launchers like internal-tooling /
-  one-off-audit launchers). **Status**: unbacked — owner is governance + slot 11.
+  one-off-audit launchers). **Status**: design-gated; scaffolding policy codified below (§ "QG check policy"). Owner:
+  governance + slot 11.
 
-Both QG-check ADDs are **operator-design-gated** as of 2026-05-12 — the closed-set policy (auto-fail vs warning,
-allowlist taxonomy, false-positive cost) needs an operator call before the check is wired into `scripts/quality_gates/`.
-Tracked as PRE_CUTOVER backlog in `plans/active/issues/codex_audit_ops_2026_05_12.md` findings O-7 + O-8.
+Both QG checks ship under the canonical **warning-with-baseline** policy (§ next). Tracked as PRE_CUTOVER backlog in
+`plans/active/issues/codex_audit_ops_2026_05_12.md` findings O-7 + O-8.
+
+### QG check policy — warning-with-baseline pattern (codified 2026-05-12)
+
+**Canonical policy for every NEW launcher-governance QG check** (and every NEW QG ratchet workspace-wide): ship as
+**warning-with-baseline**, NOT auto-fail-on-day-1. Auto-fail would block every PR the moment the check lands because the
+workspace inevitably has CURRENTLY-KNOWN occurrences that don't violate intent but trip the literal pattern.
+Warning-with-baseline lets the check land green on day 1, then ratchet tighter as fixes ship.
+
+**The shape** (each check has these 5 parts):
+
+1. **Detection** — AST-walk (preferred) or grep with documented false-positive boundary. The check identifies every
+   `(repo, file, line)` triple that matches the violation pattern.
+2. **Baseline YAML** — `scripts/quality_gates/<check_name>_baseline.yaml` enumerates every CURRENTLY-KNOWN occurrence
+   with a `status:` slot from a closed taxonomy + a `successor:` plan reference. Bootstrapped at check-introduction by a
+   full workspace sweep.
+3. **Behaviour** — for each detection: if `(repo, file, line)` is in baseline → WARNING (informational, exit-clean).
+   Else → ERROR + `file:line` + the `successor:` from the baseline → exit 1. New occurrences fail; the existing tail
+   doesn't.
+4. **Clear cadence** — baseline entries are **DELETED** (not re-statused) as fixes land. The baseline shrinks toward
+   zero. When the file is empty, the check is fully ratcheted and the warning surface disappears.
+5. **Inline allowlist** — a documented inline marker (e.g. `# QG-allow: <reason>` on the same line) bypasses the check
+   for the rare legitimate exception (test fixture / `**dict` kwargs / etc.). The marker is part of the contract, not an
+   escape hatch.
+
+**Exemplars in workspace** (read these before designing a new check):
+
+- [`scripts/quality_gates/check_banned_placeholder_methods.py`](../../scripts/quality_gates/check_banned_placeholder_methods.py)
+  with companion `check_banned_placeholder_methods_baseline.yaml` — the original warning-with-baseline scaffolding
+  pattern.
+- [`scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`](../../scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py)
+  with companion `pipeline_mode_explicit_baseline.yaml` — slot 8 shipped 2026-05-12 (Phase 4.GREP-VERIFY). AST-walk
+  detection; per-method baseline tagged with `status: pending_phase_4_mtds | pending_phase_4_features`; `successor:`
+  plumbed per entry; clear cadence by DELETE. Direct template for the O-7 + O-8 checks.
+
+**Allowlist taxonomy (closed set)**: every baseline-YAML entry's `status:` field draws from a **closed set** of values
+named per check (typically `pending_<phase>_<area>` shape) — never a free-form string. The taxonomy mirrors the
+"successor plan" surface: each `status:` value names the active plan / phase that owns clearing it. Entries are
+**deleted** (not re-statused) when the owning phase ships; the YAML is append-only at bootstrap, delete-only thereafter.
+This shape matches the writegate plan's Phase 4.GREP-VERIFY ratchet idiom.
+
+**Wiring**: each check is invoked from a numbered `STEP 5.NN` block in `scripts/quality-gates.sh` (and the per-repo
+`scripts/quality-gates.sh` for service-scoped checks); a non-zero exit fails the gate. Until the day-1 baseline is
+populated, the check MUST NOT be wired — green-on-introduction is the contract that prevents the check from being
+disabled in frustration.
+
+**Applies to**: O-7 (watchdog dict relaunch correlation) + O-8 (launcher → Deploy-Missing dict parity) per
+`plans/active/issues/codex_audit_ops_2026_05_12.md`. Both checks ship under this policy; the operator-design-gate is the
+day-1 baseline payload (which currently-unwatched prefixes / unregistered launchers count as "known tolerated state vs
+latent bug"), not the warning-vs-error toggle. Future launcher-governance checks (e.g. a `MANIFEST_PER_VM_SHARDS=true`
+presence check across every `launch-*.sh`) ship under the same policy.
 
 ## features-service consolidation (2026-05-08)
 
