@@ -25,6 +25,24 @@ locked_since: 2026-05-08
 >
 > **Tomorrow** (new Harsh shift): fresh main-agent reads this banner + the per-slot DONE blocks + `git fetch` summary, then the daily-reset draws the new work-split. The above pickup-points + the `## Open questions` blocks in the named plans are the carry-forward surface.
 
+> ## ▶ NEW SHIFT 2026-05-12 — density-push cycle (4-day, → 2026-05-15 freeze gate); 8-slot Model A. Work-split: [`../../plans/active/work_split_2026_05_12_harsh.md`](../../plans/active/work_split_2026_05_12_harsh.md). Continuation prompts: [`../../plans/active/continuation_prompts_2026_05_12_harsh.md`](../../plans/active/continuation_prompts_2026_05_12_harsh.md). Slot 1 (orchestrator) poll loop RESTARTED (cron `92fad4f1`, 5-min).
+>
+> **Today's slot assignments + boot state** (as of 2026-05-12 03:33 UTC):
+> | Slot | Theme (plan-of-record) | State |
+> |---|---|---|
+> | 1 | main orchestrator + on-call + LEDGER + intra-side ping triage | 🟢 ONLINE (poll loop active) |
+> | 2 | `defi_catalogue_chain_primitives_2026_05_10.md` Phases 2-4 — **CRITICAL PATH** — per-protocol fan-out 6-8 protocols (Aave-V3/Compound-V3/Curve-V2/Uniswap-V3/Pancake-V3/Velodrome/Lyra/GMX-V2) | ⚪ not booted yet (also a small carry-forward QG-fix  multi-line-header @PM`30bef62c`) |
+> | 3 | `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 1 service-tail (writegate slice (c) callsite migration + manifest v8 wire-in across MTDS/MDPS) — **CRITICAL PATH** | 🟢 IN FLIGHT (booted @PM`a8a9d2bf`) — **HOLDING** on Ikenna slot 3's UAC PipelineMode enum + Phase-4 sweep landing on LDR (overlapping files); slot-1 poll-loop has the watch; meanwhile doing fan-out prep (read `pipeline_mode_explicit_baseline.yaml` 112-entry inventory). Phase 0i ✅ already done; Phase 4.FEATURES = deferred-after-may-16 (not slot 3's). |
+> | 4 | `defi_simulation_realism_2026_05_10.md` Phases 4-6 — per-AMM connectors + golden tests — depends on Ikenna slot 6 family matrix EOD Day 2 | 🟢 IN FLIGHT (booted — `harsh-defi-sim-impl-tab`, theme-pivoted @PM`9625e89d`) |
+> | 5 | `risk_simulations_limits_alerting_2026_05_10.md` + `disaster_recovery_circuit_breakers_2026_05_10.md` — alerting wiring + circuit breakers + scenario coverage | ⚪ not booted yet — **scenario primitives LANDED** (UAC@`33630a6` + UTL@`3797fed5`, slot 5 cleared to start Phase 3.E/3.F; read `scratch_scenarios_day1/12_phase3_integration_spec.md` + the cross-side ping) |
+> | 6 | `cross_cutting_may_23_deliverables_2026_05_08.md` #4 (DART manual surfaces UI + stubs) + `manifest_schema_final_gate_2026_05_09.md` Phase 3 consumer sweep (8+ services) | ⚪ not booted yet |
+> | 7 | `mock_data_pipeline_benchmarking_2026_05_10.md` — per-asset_group mock data fixtures + benchmark harness | 🟢 IN FLIGHT (booted @PM`0f0ca67b`; **Phase 0 DONE** @PM`a13ae989` — UAC synthetic-generator taxonomy + registry) |
+> | 8 | `cross_asset_group_catalogue_audit_2026_05_10.md` + `codex_vs_citadel_infrastructure_audit_2026_05_10.md` follow-ups | ⚪ not provisioned yet — operator runs `--add-slot 8` then spawns; agent creates its own `slot_8.md` on boot |
+>
+> **Operator-pending (non-urgent — surfaced if a slot blocks on one)**: Phase 0.B `measure-honest-coverage.py` PRE-baseline (defer-post-cutover vs author-this-cycle); the 6 LookaheadBiasError strict-mode family wire-ins (delta_one/volatility/calendar/commodity/cross_instrument/multi_timeframe) need an owner — freeze-gate item 5 slips post-freeze if not picked up by 2026-05-15; TradFi-domain owner for the phantom-audit triage (post-cutover). Q1+Q2 freeze-gate triage ✅ CLOSED 2026-05-11 evening @PM`4c573302` (Q1=(α) DefiManifestRecorder→v8 record_captured; Q2=(A) extend PipelineMode enum + SOURCE_PRIORITY w/ 6 BATCH_* values) — Ikenna slot 3 executing the ~60min mechanical sweep.
+>
+> _(The per-slot `#### Slot N` entries below are mostly yesterday's 2026-05-11 state — being refreshed incrementally as slots boot. This banner is the current-cycle index.)_
+
 ## Spawned tab — boot path
 
 If Harsh just opened a fresh Claude Code (CLI in a terminal `cd .tabs/<N>/` per Option B, or VS Code window at
