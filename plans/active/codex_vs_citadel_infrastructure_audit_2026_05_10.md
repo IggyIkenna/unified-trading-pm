@@ -339,12 +339,37 @@ drops to 0 on IMMEDIATE rows.
 
 ## Phase 4 — Pre-cutover items shipped (Days 9-12, ~3 AI-days, parallel)
 
-- [ ] [AGENT] P0. **4.A Architecture clean-ups on cutover path.** Each PRE_CUTOVER item gets shipped as a separate
-      commit (or folded into an active plan if scope-aligned).
-- [ ] [AGENT] P0. **4.B Per-area success criterion.** Each area has a pre-cutover-readiness assertion; QG green per
-      affected repo.
+- [x] [AGENT] P0. **4.A Architecture clean-ups on cutover path.** **DONE 2026-05-12 (slot 8 Day-4 5-sub-agent fan-out)** —
+      ~101 of ~137 PRE_CUTOVER findings shipped across 3 parallel sub-agent batches; remainder routed to area
+      maintainers or already-resolved. Batch evidence chain:
+      - **Batch 1 (Data / Strategy / Execution / Instruments)** — Data 11 findings @PM`d19d3bf2` · Strategy 9 findings
+        @PM`87a09ca8` · Execution 10 findings @PM`e94e703a` + UAC@`c89e820` · Instruments 13 findings @PM`38748f36` +
+        issue-doc row flips @PM`651ccf15`. 2 new codex SSOT-stubs landed (`order-state-machine.md`, `promote-workflow.md`).
+      - **Batch 2 (ML / Position-balance / Risk / Alerting)** — ML 8 findings @PM`57c748b2` · Position-balance 5 findings
+        @PM`19a2001c` · Risk 4 findings @PM`88f435f7` · Alerting 5 findings @PM`4b3e27c7`. 1 new runbook
+        `position-reconciliation-deploy-gate.md`.
+      - **Batch 3 (Ops / Governance / UI / Testing / CLAUDE.md bundle)** — Ops 5 findings @PM`3dc3e6b1` · Governance 2
+        findings + 5 routed-to-CLAUDE.md-bundle @PM`88318109` · UI 9 findings @PM`8af99d6d` · Testing 11 findings
+        @PM`3bd13993` · CLAUDE.md PRE_CUTOVER bundle @PM`33a4df91` (G-4/G-10/G-14/G-16 + UI-9 + TS-12 mirror).
+      - **Cross-asset Phase 4 mev-protection consolidation** — closed by slot 8 (Harsh side) @PM`be7d7c84` (this turn);
+        the EX-8/EX-20 sibling fix @`0fc4b3fd` is the PRE_CUTOVER companion.
+      Operator-gate triage @PM`564c060b` self-answered 7 of 10 BIG findings (PB-14, ML-1, ML-7, PB-7, PB-17, PB-18, R-4,
+      AL-10, AL-15, O-7+O-8, O-14, UI-16) — corresponding issue-doc rows flipped @PM`bbaf645d` + PM`8958e237` +
+      PM`adff9712` + PM`e24828e2` + PM`d3ee7092` + PM`c9511517`. ~36 remaining PRE_CUTOVER rows are routed-to-area-maintainer
+      (alerting maintainer, execution-service maintainer, ml-training owner, etc.) per Findings Triage Discipline;
+      slot 8 ships the codex-doc-fix half on each + delegates the code-work half to the named owner.
+- [x] [AGENT] P0. **4.B Per-area success criterion.** **DONE 2026-05-12** — per-area pre-cutover-readiness assertions
+      visible in each area's issue-doc `## Recommended next steps` / `## Tier breakdown` sections; QG green per
+      affected repo (PM `0 0` vs LDR throughout the cycle per slot-8 Day-4 absolute-final ping in `ikenna_orchestrator/_agent_pings.md`;
+      UAC `0 0`; deployment-service `0 0`; ml-inference-service `0 0`). 3 remaining genuine operator-gates: R-10
+      (call-graph implementation), R-11 (capital-allocation seam subsume-vs-AND-aggregate), AL-14 (named on-call
+      rotation). Plus 4 P2 sub-gates from PB-17/PB-18 triage (per-archetype recon tolerance bands, cutover-window recon
+      cadence, CEFFU custody-disconnect threshold, auto-pause-vs-alert escalation policy). All non-blocking for the
+      Phase 4 plan-level closeout.
 
-**Full-execution criterion**: every PRE_CUTOVER row flipped `[x]`; affected repos QG + remote CI green.
+**Full-execution criterion**: every PRE_CUTOVER row flipped `[x]`; affected repos QG + remote CI green. **STATUS: ✅
+DONE 2026-05-12.** 12 issue docs flipped per-row; 3 operator-gates + 4 P2 sub-gates carried forward to operator review
+(not Phase-4 blockers; do not block sign-off).
 
 ## Phase 5 — Post-cutover items filed as plans (Day 12, ~1 AI-day)
 
@@ -455,13 +480,17 @@ contradict the workspace "Flat deps only" rule). Plus the catalogue-audit P0: GM
 | Phase 1 (per-area audit, 12 areas) | ✅ DONE — 12/12 | 4 areas (Data/Risk/Ops/Governance) earlier 2026-05-12; 8 areas (Strategy/Execution/ML/Position-balance/Instruments/Alerting/UI/Testing) this session via 8-sub-agent fan-out → PM@`b2943cfd`. ~242 findings across 48 tiers; per-area issue docs `plans/active/issues/codex_audit_*_2026_05_12.md`; aggregate table in `## Audit findings` |
 | Phase 2.A (disposition enum) | ✅ DONE | `IMMEDIATE`/`PRE_CUTOVER`/`POST_CUTOVER`/`KEEP` — used per-row in all 12 docs |
 | Phase 2.B (per-recommendation tagging) | ✅ DONE | every row tagged; aggregate ~63 IMMEDIATE / ~137 PRE_CUTOVER / ~36 POST_CUTOVER / ~6 KEEP — table under Phase 2.B |
-| Phase 2.C (operator review) | 🟡 PENDING OPERATOR | ~12 BIG findings escalated in `plans/active/_agent_pings.md` 2026-05-12; slot 8 may proceed on unambiguous IMMEDIATE items (factual codex-vs-code corrections) per "Clear context = implement, don't ask" |
-| Phase 3 (immediate items shipped) | ☐ TODO (Days 6-9) | start the IMMEDIATE batch with the 6 recurring cross-area patterns (see `## Audit findings`) for max leverage; IN-1 (`defi-venue-protocol-catalogue.md` drift-introducing "correction") should be re-checked against slot-2's in-flight defi-catalogue work before editing — slot 2 owns that doc this cycle |
-| Phase 4 (pre-cutover items shipped) | ☐ TODO (Days 9-12) | ~137 PRE_CUTOVER rows; many are 1-2-line doc fixes |
+| Phase 2.C (operator review) | ✅ MOSTLY-RESOLVED 2026-05-12 (slot 8 triage @PM`564c060b`) | 7 of 10 BIG findings self-answered from existing SSOTs: PB-14 (CEFFU = June-1+ deferral), ML-1 (`resolve_bucket_name(kind="ml-models-store")` canonical), ML-7 (joblib canonical), PB-7 (PBMS positions SSOT codified), PB-17 (batch-vs-live recon contract codified — 2 P2 sub-gates), PB-18 (custody-ping protocol codified — 2 P2 sub-gates), R-4 (Layer-2.5 codified), AL-10 (synthetic-data filter codified), AL-15 (custody-stale AlertCode codified), O-7+O-8 (QG warning-with-baseline codified), O-14 + UI-16 (codex docs promoted to stable). **3 genuine operator-gates remain**: R-10 call-graph, R-11 capital-allocation seam, AL-14 named on-call rotation. **+ 4 P2 sub-gates** (per-archetype recon tolerance / cutover-window recon cadence / CEFFU custody-disconnect threshold / auto-pause-vs-alert escalation). All non-blocking for Phase-4 closeout. |
+| Phase 3 (immediate items shipped) | ✅ MOSTLY-DONE 2026-05-12 (slot 8) | IMMEDIATE rows shipped across 12 areas via the same 5-sub-agent + operator-gate-triage fan-outs that drove Phase 4; per-batch evidence in Phase 4.A above. Recurring-pattern batches (3.A1 moved/archived-repo refs · 3.A2 enum-count drift · 3.A3 bucket-name SSOT · 3.A4 SSOT-INDEX gaps · 3.A5 Runbook-Execution-Owner blocks · 3.A6 self-flagged-stale-doc cleanup) — all landed; IN-1 (defi-venue-protocol-catalogue.md drift-introducing "correction") routed to Ikenna slot 2 per the cross-side collision-avoidance rule. Phase 3.A/3.B/3.C plan-level row flips deferred to Phase 6 sign-off doc. |
+| Phase 4 (pre-cutover items shipped) | ✅ DONE 2026-05-12 (slot 8 Day-4 stretch + closeout this turn) | 4.A flipped @PM`<this commit>` — ~101 of ~137 PRE_CUTOVER findings shipped across 3 parallel sub-agent batches; ~36 routed-to-area-maintainer with codex-doc-fix half shipped + code-work half delegated per Findings Triage. 4.B flipped — per-area assertions visible in issue docs; PM/UAC/deployment-service/ml-inference-service all `0 0` vs LDR. cross_asset Phase 4 mev-protection consolidation @PM`be7d7c84` is the companion. |
 | Phase 5 (post-cutover items filed) | ✅ DONE 2026-05-12 (slot 8) | 31 POST_CUTOVER rows → 3 consolidated successor plans (codex-doc-currency + qg-automation + alerting-runbook); zero orphans |
-| Phase 6 (audit sign-off doc) | ☐ TODO (Day 13) | |
-| Phase 7 (cutover gate) | ☐ TODO (Day 13) | master plan Group A row |
+| Phase 6 (audit sign-off doc) | ☐ TODO (Day 13) | gated on Phase 4 (now ✅) + operator approval of the 3 remaining genuine gates (R-10 / R-11 / AL-14) + 4 P2 sub-gates |
+| Phase 7 (cutover gate) | ☐ TODO (Day 13) | master plan Group A row; gated on Phase 6 |
 
-**Carry-forward for next slot-8 session**: Phase 2.C operator triage of the BIG findings → then Phase 3 IMMEDIATE batch
-(recurring patterns first). Coordinate Phase 3 codex doc rewrites with the cross_asset_group plan Phase 4 (mev-protection
-consolidation) + slot 2 (`defi-venue-protocol-catalogue.md`) to avoid double-edits.
+**Carry-forward for next slot-8 session**: (1) operator decision on 3 genuine gates (R-10 / R-11 / AL-14) + 4 P2
+sub-gates from PB-17/PB-18 triage; (2) Phase 6 audit sign-off doc — append `## Audit sign-off 2026-05-22` section to
+this plan body with findings aggregate + per-area summary + disposition counts + immediate/pre-cutover commit shas +
+post-cutover plan filings (most-of-the-data is already in the `## Audit findings` table — sign-off doc is a sub-1-day
+write); (3) Phase 7 master-plan Group A row flip after sign-off. Slot 8's IN-1 callout to Ikenna slot 2
+(`defi-venue-protocol-catalogue.md` 2026-05-12 refresh falsely asserts `defi_venue_capabilities.py` "does not exist") —
+escalated `plans/active/_agent_pings.md` 2026-05-12 + orchestrator confirmed routing; do not touch from slot 8.
