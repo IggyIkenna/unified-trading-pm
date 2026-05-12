@@ -40,3 +40,31 @@ Phase 0i tail shipped from reserve list:
 **Handoff to slot 4**: bucket provisioning (6 buckets × 3 envs × 2 clouds + ≥7-year lifecycle/retention policy).
 
 **Slot 8 status**: PART A done. PART B/C gated. Reserve item done. Standing by for next gate or reserve task.
+
+---
+
+## [Slot 8 → Slot 1] 2026-05-12 — SESSION CLOSE SCOREBOARD
+
+**All repos fast-forwarded to LDR HEAD. Session ending.**
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Phase 6.8 PART A — instruments-service 25 `.add()` → `record_captured()` | ✅ DONE (`instruments-service@27fbc90`) | PART B/C below |
+| Phase 6.8 PART B — wire `publish_with_policy()` on top | 🔴 BLOCKED — gate is Slots 6+7 confirming Phases 6.3+6.4+6.5 pushed | Slot 1: unblock when 6.3-6.5 land |
+| Phase 6.8 PART C — bucket code migration | 🔴 BLOCKED — gate is Gate 2 (Slot 3 confirms bucket parity) | Slot 1: ping slot 8 when Gate 2 fires |
+| Phase 6.9 QG workspace flip-sweep | 🔴 BLOCKED — same gate as PART B | Slot 1 → slot 8 when 6.3-6.8 all pushed |
+| bucket_name_ssot Phase 0i tail — manual-audit yaml SSOT | ✅ DONE (`deployment-service@00a1288` + `utl@aeff9c19`) | Slot 4: provision 6 buckets (pinged) |
+| UTL top-level `resolve_bucket_name` export (import-pattern fix) | ✅ DONE (`utl@aeff9c19`) | Consumed by deployment-service QG STEP 3.5 |
+
+**What next agent/operator needs to pick up slot 8:**
+
+1. Watch for Slot 1 ping unblocking Phase 6.9 sweep (gate = Phases 6.3-6.8 all pushed to origin).
+2. Watch for Slot 1 Gate 2 ping (bucket parity confirmed) → then run PART C code migration.
+3. If both gates still closed: pull from reserve list in `work_split_2026_05_12_ikenna.md`.
+4. Foreign WIP: `instruments-service/tests/unit/test_new_orchestrator.py` is dirty (NOT slot 8's work — do not commit).
+
+**Repo states at session close (all on `live-defi-rollout`, 0 local commits ahead):**
+- `deployment-service` — clean, HEAD `5a9abab`
+- `unified-trading-library` — clean, HEAD `aeff9c19` (our export + 0 remote commits since)
+- `instruments-service` — clean except foreign WIP in `tests/unit/test_new_orchestrator.py`, HEAD `2760ee8`
+- `unified-trading-pm` — clean except foreign `WORKSPACE_MANIFEST_DAG.svg` + `workspace-manifest.json`, HEAD `696414f5`

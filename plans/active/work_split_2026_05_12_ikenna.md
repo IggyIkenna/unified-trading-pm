@@ -480,6 +480,14 @@ PART C — AFTER GATE 2: Bucket code migration:
   QG STEP 5.69 returns zero hits. Push.
 ```
 
+**Slot 8 session close status (2026-05-12):**
+- PART A ✅ DONE — `instruments-service@27fbc90`
+- PART B 🔴 BLOCKED — gate: Slots 6+7 confirm Phases 6.3+6.4+6.5 pushed → Slot 1 pings slot 8
+- PART C 🔴 BLOCKED — gate: Gate 2 (bucket parity confirmed by Slot 3) → Slot 1 pings slot 8
+- Reserve pulled: bucket_name_ssot Phase 0i tail ✅ DONE (`deployment-service@00a1288` + `utl@aeff9c19`)
+- Slot 4 pinged with manual-audit provisioning handoff (6 buckets × 3 envs × 2 clouds)
+- Next: watch `ikenna_orchestrator/pings/slot_8.md` for gate signals from Slot 1
+
 ---
 
 ### check_shard_freshness retry — CONFIRMED WORKING (correction 2026-05-12)
