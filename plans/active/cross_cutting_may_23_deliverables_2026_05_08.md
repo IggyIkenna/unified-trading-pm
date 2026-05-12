@@ -928,7 +928,7 @@ slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log *writ
   call → Ikenna lane** per CLAUDE.md "Daily Work-Split Process" tie-breaker. Cross-side: annotate Ikenna slot-8's next
   ping / the `dart-manual-trade-spec.md` § 5 area; Harsh BUILD #1 backend wiring waits on the resolution. Provenance:
   Harsh slot-6 pre-audit 2026-05-12, grep-then-read on `manual_instruction_api.py`.
-- [ ] **D2 — P2 — `manual-trade-booking.md` "Dynamic Venue List" claim drifts from the UI.** The codex doc says the
+- [x] **D2 — P2 — `manual-trade-booking.md` "Dynamic Venue List" claim drifts from the UI.** The codex doc says the
   venue list "resolves dynamically from UAC `CAPABILITY_DECLARATIONS`" — true on the backend (`_get_supported_venues()`)
   but the **UI** (`components/trading/manual/single-order-form.tsx:13` → `constants.ts` `VENUES`) uses a hand-maintained
   hardcoded list (missing Aster; no DeFi protocols/chains). Folded into BUILD #2's UI work (switch the dropdowns to
@@ -938,11 +938,16 @@ slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log *writ
   `/manual/algos` both serve dynamic lists. **PARTIAL-FIX 2026-05-12 (Harsh slot 6) @unified-trading-system-ui@`21666537`**:
   added `Aster` to `components/trading/manual/constants.ts` `VENUES` (ordered after `Hyperliquid`, the other perp DEX)
   to close the immediate Aster-gap; doesn't replace the proper dynamic-endpoint switch but unblocks operator selection
-  of Aster pre-cutover. Remaining D2 work: switch dropdowns from `constants.ts` to dynamic `useVenues()` + `useAlgos()`
-  hooks at `hooks/api/use-orders.ts:26-50` (they already exist and target the gateway-proxied routes); the response
-  shape per `lib/types/api-generated.ts:7857-7891` is `{venues|algos: string[]}` so the mapping is mechanical. Deferred
-  for browser-test validation. Provenance: Harsh slot-6 pre-audit 2026-05-12 + grep-then-read verification + Day-2
-  UI fix.
+  of Aster pre-cutover. **SHIPPED 2026-05-12 (Harsh slot 6)**: switched `single-order-form.tsx` venue + algo dropdowns
+  from `constants.ts` hardcoded arrays to `useVenues()` + `useAlgos()` hooks (`hooks/api/use-orders.ts:26-50`);
+  response mapped via `(data as {data?: Array<{name|type: string}>})?.data?.map(...)` with static-constant fallback
+  while loading. Commits: `unified-trading-system-ui@<sha>` (pending browser-test push below).
+  **FOLLOW-UP (operator-runnable)**: browser-test the Venue + Algo dropdowns in manual trading panel to confirm
+  dynamic data loads (no `node_modules` installed in tab-6 worktree). Run:
+  ```bash
+  cd unified-trading-system-ui && npm install && npm run dev
+  ```
+  Then open the manual trading panel + verify Venue/Algo selects show API-driven options (fallback to constants while API loads). Provenance: Harsh slot-6 pre-audit 2026-05-12 + grep-then-read verification + Day-2/Day-3 UI fix.
 - [ ] **D3 — P2 — `dart-manual-trade-spec.md` § 5 still says strategy_id grammar is "🟡 BLOCKED pending operator triage"
   but this plan's open question #2/#3 (lines 172-184) marks it ✅ RESOLVED 2026-05-08 via Option A** (existing 6-axis UAC
   v2 `archetype@venue-asset-instrument-period-quote-env` grammar is canonical; no `vN`). Doc-drift in the spec doc Harsh
