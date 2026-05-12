@@ -20,9 +20,10 @@ reference-only.
 | Cross-cutting concerns | 10    | Risk gates, venue selection, execution policies, transfers, allocator, MEV, benchmark fills, capital isolation, trade expression, venue-account coordination                                                                                                                                                                                                                                                                                                  |
 
 A strategy's identity has **5 layers** : family → archetype → instance → config → derived categories. Communication with
-execution happens through a **polymorphic `StrategyInstruction`** with 13 action types (TRADE, SWAP, LEND, BORROW,
-STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL, **CONVERT_DUST, LP_MINT/LP_BURN**) — the latter 3 added with
-the Phase 9 DeFi LP archetypes. SSOT: `unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2`.
+execution happens through a **polymorphic `StrategyInstruction`** with 14 action types (TRADE, SWAP, LEND, BORROW,
+STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL, **CONVERT_DUST, LP_MINT, LP_BURN**) — the latter 3 added with
+the Phase 9 DeFi LP archetypes (LP_MINT + LP_BURN are 2 distinct enum members, not one slash-pair).
+SSOT: `unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2`.
 
 > **2026-05-08 drift correction.** Pre-2026-05-08 this doc described 8 families / 18 archetypes — those numbers were the
 > 2026-04-17 baseline before the Phase 9 expansion. The UAC enum is canonical; if this doc disagrees with
@@ -32,10 +33,11 @@ the Phase 9 DeFi LP archetypes. SSOT: `unified_api_contracts.internal.architectu
 
 **Main use / why it exists:**
 
-1. **Collapse 200+ legacy strategy variants into 53 code paths** served by shared family engines — new strategies become
+1. **Collapse 200+ legacy strategy variants into 55 code paths** served by shared family engines — new strategies become
    config, not new code. (The 2026-04-17 baseline had 18 archetypes covering the original 53 strategies; Phase 9
    expanded the archetype set to 53 to cover MEV, DeFi LP, full vol-surface trading, prediction MM, cross-category event
-   arb, and portfolio sleeves.)
+   arb, and portfolio sleeves; the subsequent `CARRY_RECURSIVE_STAKED` split — into
+   `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` — brought the total to **55**.)
 2. **Categories become derived labels** , not routing axes — no more `CEFI_ML_DIRECTIONAL_BTC` vs
    `TRADFI_ML_DIRECTIONAL_SPY` duplication.
 3. **Unify capital flow** across DeFi bridges, CEX wallet transfers, Unity sports pools, and TradFi tunnels via a single
@@ -758,16 +760,18 @@ unknown archetype/family.
 Documents the post-v1-delete shape of the strategy registry — the ONE place in Python that resolves
 `strategy_id → (name, family, category, archetype)`. v1 `StrategyFamily` (17 values), `StrategyArchetype` (13 values),
 and 55-entry `_DEFAULT_STRATEGIES` were deleted 2026-04-21. v2 registry is **derived, not hand-maintained** — generated
-from `archetype_capability_manifest.json`, flattening 53 archetypes × their cells' representative slot labels
-(originally sized for 18 archetypes / 96 entries on 2026-04-20; now expanded with the Phase 9 archetype additions).
+from `archetype_capability_manifest.json`, flattening 55 archetypes × their cells' representative slot labels
+(originally sized for 18 archetypes / 96 entries on 2026-04-20; expanded by Phase 9 to 53, then to 55 by the
+`CARRY_RECURSIVE_STAKED` split — see UAC `StrategyArchetype` enum SSOT).
 Public API signatures preserved so consumers need no call-site changes. Key v1→v2 field drift: `strategy_id` changed
 from flat ID (e.g. `DEFI_ETH_BASIS_HUF_1H`) to slot-label grammar; `execution_mode`, `strategy_type`,
 `default_timeframe` all removed (now archetype-derived).
 
 **4. category-instrument-coverage.md** —
 [category-instrument-coverage.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/category-instrument-coverage.md)
-SSOT matrix: for every one of the 53 archetypes (originally 18 on 2026-04-20; expanded to 53 in Phase 9 — 35 new
-archetypes await their cell declarations), every `(category, instrument_type)` cell is declared SUPPORTED / PARTIAL /
+SSOT matrix: for every one of the 55 archetypes (originally 18 on 2026-04-20; expanded to 53 in Phase 9; then to 55
+by the `CARRY_RECURSIVE_STAKED` split — 35+ new archetypes await their cell declarations), every
+`(category, instrument_type)` cell is declared SUPPORTED / PARTIAL /
 BLOCKED / N/A with representative venues, signal variant, gap reason, and fully-spelled slot-label examples. Category is
 always derived from the execution venue — the same `ARBITRAGE_PRICE_DISPERSION` engine runs CeFi, DeFi, or Unity
 event-settled markets; only venue params differ. As of 2026-04-20 snapshot: only
