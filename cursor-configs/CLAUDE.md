@@ -7,8 +7,8 @@
 > Trim 2026-05-11: was 2758 lines / 211KB; now ~999 lines / ~58KB. SSOT pointers added; mature wisdom moved to codex.
 >
 > **Size budget (codified 2026-05-12 per G-10 audit)**: target ≤1200 lines / 70 KB. When budget is breached, do NOT
-> inline new rules — push to a codex SSOT + leave a 1-line pointer here. Drift-watcher cadence: weekly governance
-> audit (slot 1 main). Hard upper bound = 1500 lines / 90 KB; past that the file is review-blocking until trimmed.
+> inline new rules — push to a codex SSOT + leave a 1-line pointer here. Drift-watcher cadence: weekly governance audit
+> (slot 1 main). Hard upper bound = 1500 lines / 90 KB; past that the file is review-blocking until trimmed.
 
 ---
 
@@ -17,14 +17,16 @@
 **Default: Sonnet 4.6 / thinking: medium.** Escalate deliberately — not by default.
 
 Three axes declared per slot and per spawn prompt:
+
 - `model_tier: sonnet-doable | opus-required` — Opus only for main orchestrator, cross-repo architecture, >200k context
 - `thinking: medium | high | max` — max always requires Opus; medium on Opus is always wrong
 - Sub-agent Agent tool calls MUST set `model="sonnet"|"opus"` explicitly — never inherit
 
 **Self-check at every task start (MANDATORY)**:
+
 1. Read running model from system prompt. Read declared tier + thinking from spawn prompt.
-2. Model mismatch → Sonnet on opus-required: **STOP**, output `⚠️ WRONG MODEL` block, wait for operator.
-   Opus on sonnet-doable: flag `💸 WRONG MODEL` + proceed.
+2. Model mismatch → Sonnet on opus-required: **STOP**, output `⚠️ WRONG MODEL` block, wait for operator. Opus on
+   sonnet-doable: flag `💸 WRONG MODEL` + proceed.
 3. Thinking mismatch (either direction) → **HARD STOP**, output stop block, wait for operator "proceed anyway" override.
 
 SSOT: `codex/06-coding-standards/model-tier-selection.md`.
@@ -45,8 +47,8 @@ SSOT: `codex/06-coding-standards/model-tier-selection.md`.
 
 ## Master Plan — Live DeFi Trading by 2026-05-23
 
-Two DeFi archetypes (`carry_staked_basis` lead + `leveraged_funding_arb`) live on a real wallet ≥7 continuous days by
-2026-05-23, with hedge legs across 6 perp venues + AWS↔GCP cloud parity.
+Two DeFi archetypes (`carry_staked_basis` lead + `arbitrage_price_dispersion`) live on a real wallet ≥7 continuous days
+by 2026-05-23, with hedge legs across 6 perp venues + AWS↔GCP cloud parity.
 
 - **Working plan**: `plans/active/master_to_live_defi_2026_05_23.md`
 - **Codex SSOT companion**: `codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`
@@ -54,6 +56,11 @@ Two DeFi archetypes (`carry_staked_basis` lead + `leveraged_funding_arb`) live o
 - **Per-service readiness checklist**: 7 groups / 23 items (A code-health · B data-correctness · C runtime-parity · D
   coverage · E operability · F trading-prereq · G operator-UX). Live-only items: F+G cover paper-trade / Copper+CEFFU /
   live-testnet / batch-vs-live recon / circuit-breakers / DART manual-trade gate.
+- **Parallel workstreams — ACTIVE, not just sidecars**: TradFi (`epics/tradfi_master_2026_05_07.md`), Sports
+  (`epics/sports_master_2026_05_07.md`), and Predictions (`epics/predictions_master_2026_05_07.md`) run as **active
+  parallel tracks** on entirely separate codepaths / APIs / VM runs — not blocked by or dependent on the DeFi May-23
+  gate. Agent slots SHOULD be allocated to these tracks. DeFi-only focus underutilises the 16-slot workspace capacity (8
+  Ikenna + 8 Harsh); parallel tracks absorb surplus slots. Include in daily work-splits alongside DeFi.
 
 ---
 
@@ -299,6 +306,16 @@ Pointer chain. Full specs in codex:
 - **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura.
 - **Pyth — UNBANNED 2026-05-06** for Solana on-chain price feeds (Hermes batch + PythNet live). Solana-only; other
   chains use Chainlink. Plan: `plans/active/defi_master_2026_05_07.md`.
+- **DeFi + CeFi hybrid instrument universe (CRITICAL)**: DeFi strategies are NOT on-chain only. "DeFi" labels the
+  **long/stake/lend leg** (on-chain); the **hedge/short leg** runs on CeFi perp venues. ALL CeFi venues (Binance, Bybit,
+  OKX, Deribit, Kraken, Hyperliquid, Aster) are candidates for perp shorts. Eligibility is archetype-driven:
+  `carry_staked_basis` requires LST_AS_MARGIN (Bybit UTA/stETH, Deribit/stETH, OKX/wstETH, DRIFT/JitoSOL+mSOL);
+  `arbitrage_price_dispersion` uses USDC margin (all venues eligible). SSOT:
+  `codex/09-strategy/architecture-v2/archetypes/`.
+- **Institutional custody — outside May-23**: Copper (DeFi + non-Binance CeFi MPC signing) and CEFFU (Binance
+  institutional) are June-1 items. May-23 cutover ships on `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK). Config-only flip:
+  `signing_surface` field on `WalletProvisioningConfig` — no recompile needed. SSOT:
+  `codex/04-architecture/custody-providers.md`.
 
 ---
 
@@ -400,8 +417,9 @@ Tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). SSOT:
 - **Network blocking**: `pytest --block-network`; `@pytest.mark.allow_network` opts out.
 - **WS tests**: `MockWebSocketFeed` from MTDS `tests/market_interface/fixtures/mock_ws_server.py`.
 - **DeFi unit tests**: `responses` library (Hyperliquid REST). Mock Web3 at signing level — never hit real RPCs.
-- **DeFi integration tests**: shared Tenderly fork fixtures in `execution-service/tests/defi_execution/integration/conftest.py`
-  (path corrected 2026-05-12 per TS-12 audit — was `tests/integration/conftest.py`).
+- **DeFi integration tests**: shared Tenderly fork fixtures in
+  `execution-service/tests/defi_execution/integration/conftest.py` (path corrected 2026-05-12 per TS-12 audit — was
+  `tests/integration/conftest.py`).
 - **Local stack**: `bash unified-trading-pm/scripts/demo-mode.sh --seed`.
 - **Cassette parity**: `cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py` (every commit).
 
@@ -495,7 +513,9 @@ Key repo mapping: events → UTL · schemas → UAC (external + `unified_api_con
 unified-cloud-interface · config → unified-config-interface · market data → MTDS (UMI archived) · execution →
 execution-service · position → position-balance-monitor-service · reference data → instruments-service · domain utils
 
-- ML + feature orchestration → UTL · features → unified-features-interface · **sports reference → `instruments-service`** (sports module, merged from sports-reference-data-service 2026-03-01; `URDI` / `unified-reference-data-interface` is a phantom name — does NOT exist as a repo) · execution algos
+- ML + feature orchestration → UTL · features → unified-features-interface · **sports reference →
+  `instruments-service`** (sports module, merged from sports-reference-data-service 2026-03-01; `URDI` /
+  `unified-reference-data-interface` is a phantom name — does NOT exist as a repo) · execution algos
 - matching engine → execution-service · UI → check existing 3 UIs first (`unified-trading-system-ui` consolidated
   portal + `deployment-ui` + `user-management-ui`).
 
@@ -631,7 +651,8 @@ Workaround:
 4. Stage explicitly by name; never `git add .` / `-A`.
 5. If repeatedly reverted across multiple Edit attempts, prek patch under `~/.cache/prek/patches/` is restore source.
    Tighter Edit→commit window is the only mitigation today. Per-tree `PREK_CACHE_DIR` (per-tab `.envrc`) reduces races
-   (canonical env var per `unified-trading-pm/scripts/dev/setup-tab-worktrees.sh:133` + `codex/05-infrastructure/per-tab-worktrees.md:155`).
+   (canonical env var per `unified-trading-pm/scripts/dev/setup-tab-worktrees.sh:133` +
+   `codex/05-infrastructure/per-tab-worktrees.md:155`).
 
 ### Half 2 — Flip the plan checkbox in the same logical unit
 
@@ -864,9 +885,9 @@ from 1.0, propose updated multiplier in `docs(codex):` PR.
 
 **Legacy-plan backfill cadence (codified 2026-05-12 per G-4 audit)**: ~30 active plans pre-date this rule and lack
 `estimate_class` / `estimate_baseline_ai_days` / `estimate_calibrated_ai_days` frontmatter. Do NOT mass-sweep (high
-collision risk per Findings Triage). Instead: on the next substantive touch of any legacy plan, the touching agent
-adds the 3 frontmatter fields in the same logical unit as the substantive change. Target backfill rate ≥3 plans/cycle
-until <10 unconverted; verified via weekly governance audit (slot 1 main runs the inventory regenerator).
+collision risk per Findings Triage). Instead: on the next substantive touch of any legacy plan, the touching agent adds
+the 3 frontmatter fields in the same logical unit as the substantive change. Target backfill rate ≥3 plans/cycle until
+<10 unconverted; verified via weekly governance audit (slot 1 main runs the inventory regenerator).
 
 Full SSOT: `codex/08-workflows/estimation-calibration.md` (anti-patterns, "when not to apply" detail, per-phase override
 format, ledger governance).
@@ -1036,17 +1057,17 @@ implementation. Spawned tabs scoped implementers; tab count varies. Used for dyn
   - **Workspace-shared `plans/active/_agent_pings.md`** — cross-side comms only (Ikenna ↔ Harsh hard-gate signalling).
   - **Per-side `<side>_orchestrator/pings/slot_<N>.md`** — intra-side comms (main ↔ spawned tabs). Per-slot files (zero
     collision). Bidirectional — main may append `[main → slot N]` messages.
-  - **Commit-sha retention rule (G-16, 2026-05-12)**: cross-side ping entries that name a SPECIFIC commit-sha (not
-    just a plan reference) MUST stay in the ledger until BOTH sides have acked, even if older than 24h. Daily
-    sweeps clean ✅ RESOLVED ping-only entries; commit-sha-bearing entries persist until acked.
+  - **Commit-sha retention rule (G-16, 2026-05-12)**: cross-side ping entries that name a SPECIFIC commit-sha (not just
+    a plan reference) MUST stay in the ledger until BOTH sides have acked, even if older than 24h. Daily sweeps clean ✅
+    RESOLVED ping-only entries; commit-sha-bearing entries persist until acked.
 - **Polling cadence** (Model B main): ~1 min while operator active; 5 min when tabs quiet.
 - **Sub-agent fan-out**: send all `Task` calls in SINGLE message. Sub-agents inherit nothing — paste
   `SUB_AGENT_MANDATORY_RULES.md` at top of every Task prompt.
-- **Slot precedence on master plan (G-14, 2026-05-12)**: slot 1 main is the sole owner of master-plan refresh +
-  daily inventory regenerator. Other slots feed status via the per-side ping ledger; they do NOT edit
+- **Slot precedence on master plan (G-14, 2026-05-12)**: slot 1 main is the sole owner of master-plan refresh + daily
+  inventory regenerator. Other slots feed status via the per-side ping ledger; they do NOT edit
   `master_to_live_defi_2026_05_23.md` directly. Single exception: spawn briefs that EXPLICITLY assign master-plan
-  refresh to a non-slot-1 slot. That assignment must be in the spawn brief body + cross-pinged to slot 1 main
-  BEFORE editing.
+  refresh to a non-slot-1 slot. That assignment must be in the spawn brief body + cross-pinged to slot 1 main BEFORE
+  editing.
 
 ### Daily plan shape + reset
 

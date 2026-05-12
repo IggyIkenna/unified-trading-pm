@@ -72,43 +72,45 @@ Shipped 2026-05-12 (`defi_catalogue_chain_primitives_2026_05_10.md` Phase 4).
 
 **LST / Liquid Restaking Tokens (EVM)**
 
-| Connector          | venue_id              | Chain    | Operations                       |
-| ------------------ | --------------------- | -------- | -------------------------------- |
-| RocketPoolConnector | ROCKETPOOL-ETHEREUM  | Ethereum | stake / unstake                  |
-| RenzoConnector     | RENZO-ETHEREUM        | Ethereum | deposit / withdraw / delegate    |
-| KelpDAOConnector   | KELPDAO-ETHEREUM      | Ethereum | deposit / withdraw / delegate    |
-| PufferConnector    | PUFFER-ETHEREUM       | Ethereum | deposit / withdraw               |
+| Connector           | venue_id            | Chain    | Operations                    |
+| ------------------- | ------------------- | -------- | ----------------------------- |
+| RocketPoolConnector | ROCKETPOOL-ETHEREUM | Ethereum | stake / unstake               |
+| RenzoConnector      | RENZO-ETHEREUM      | Ethereum | deposit / withdraw / delegate |
+| KelpDAOConnector    | KELPDAO-ETHEREUM    | Ethereum | deposit / withdraw / delegate |
+| PufferConnector     | PUFFER-ETHEREUM     | Ethereum | deposit / withdraw            |
 
 **Restaking Middleware (EVM)**
 
-| Connector          | venue_id              | Chain    | Operations                       |
-| ------------------ | --------------------- | -------- | -------------------------------- |
-| SymbioticConnector | SYMBIOTIC-ETHEREUM    | Ethereum | deposit / withdraw / delegate    |
-| KarakConnector     | KARAK-ETHEREUM        | Ethereum | deposit / withdraw / delegate    |
+| Connector          | venue_id           | Chain    | Operations                    |
+| ------------------ | ------------------ | -------- | ----------------------------- |
+| SymbioticConnector | SYMBIOTIC-ETHEREUM | Ethereum | deposit / withdraw / delegate |
+| KarakConnector     | KARAK-ETHEREUM     | Ethereum | deposit / withdraw / delegate |
 
 **Yield Optimizers (EVM)**
 
-| Connector       | venue_id           | Chain    | Operations                          |
-| --------------- | ------------------ | -------- | ----------------------------------- |
-| YearnConnector  | YEARN-ETHEREUM     | Ethereum | deposit / withdraw                  |
-| ConvexConnector | CONVEX-ETHEREUM    | Ethereum | deposit / withdraw / claim_rewards  |
-| BeefyConnector  | BEEFY-POLYGON      | Polygon  | deposit / withdraw                  |
+| Connector       | venue_id        | Chain    | Operations                         |
+| --------------- | --------------- | -------- | ---------------------------------- |
+| YearnConnector  | YEARN-ETHEREUM  | Ethereum | deposit / withdraw                 |
+| ConvexConnector | CONVEX-ETHEREUM | Ethereum | deposit / withdraw / claim_rewards |
+| BeefyConnector  | BEEFY-POLYGON   | Polygon  | deposit / withdraw                 |
 
 **Yield Derivatives (EVM)**
 
-| Connector      | venue_id          | Chain    | Operations             |
-| -------------- | ----------------- | -------- | ---------------------- |
-| PendleConnector | PENDLE-ETHEREUM  | Ethereum | deposit / withdraw     |
-| IdleConnector  | IDLE-ETHEREUM     | Ethereum | deposit / withdraw     |
+| Connector       | venue_id        | Chain    | Operations         |
+| --------------- | --------------- | -------- | ------------------ |
+| PendleConnector | PENDLE-ETHEREUM | Ethereum | deposit / withdraw |
+| IdleConnector   | IDLE-ETHEREUM   | Ethereum | deposit / withdraw |
 
 **Solana LST / Restaking**
 
-| Connector              | venue_id                  | Chain  | Operations                    |
-| ---------------------- | ------------------------- | ------ | ----------------------------- |
-| SolBlazeConnector      | SOLBLAZE-SOLANA           | Solana | stake / unstake               |
-| JitoRestakingConnector | JITO-RESTAKING-SOLANA     | Solana | deposit / withdraw / delegate |
+| Connector              | venue_id              | Chain  | Operations                    |
+| ---------------------- | --------------------- | ------ | ----------------------------- |
+| SolBlazeConnector      | SOLBLAZE-SOLANA       | Solana | stake / unstake               |
+| JitoRestakingConnector | JITO-RESTAKING-SOLANA | Solana | deposit / withdraw / delegate |
 
-All Phase 4 connectors follow the same `connector.connect(config={...})` credential injection shape as the Phase 1–3 connectors (see `interface-credential-convention.md`). Testnet validation (Sepolia/Holesky/devnet) and Tenderly fork integration tests are tracked in `defi_catalogue_chain_primitives_2026_05_10.md` Phase 4 full-execution criterion.
+All Phase 4 connectors follow the same `connector.connect(config={...})` credential injection shape as the Phase 1–3
+connectors (see `interface-credential-convention.md`). Testnet validation (Sepolia/Holesky/devnet) and Tenderly fork
+integration tests are tracked in `defi_catalogue_chain_primitives_2026_05_10.md` Phase 4 full-execution criterion.
 
 ## Error Classification
 
@@ -116,21 +118,21 @@ Every on-chain revert maps to a structured error code with an action. SSOT for t
 `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (13 codes; see CLAUDE.md § "DeFi Execution
 Architecture"). Table refreshed 2026-05-12 per slot 8 exec audit EX-7 — earlier count was 11.
 
-| Code                              | Action | When                            |
-| --------------------------------- | ------ | ------------------------------- |
-| INSUFFICIENT_COLLATERAL           | FAIL   | Borrow exceeds LTV              |
-| INSUFFICIENT_BALANCE              | FAIL   | Not enough tokens               |
-| NO_COLLATERAL_DEPOSITED           | FAIL   | Can't borrow                    |
-| ASSET_NOT_SUPPORTED               | FAIL   | Token not in pool               |
-| ZERO_AMOUNT                       | FAIL   | Amount must be > 0              |
-| TX_REVERTED                       | FAIL   | Generic revert                  |
-| GAS_ESTIMATION_FAILED             | RETRY  | Node congestion                 |
-| SLIPPAGE_EXCEEDED                 | RETRY  | Price moved                     |
-| FLASH_LOAN_RECEIVER_INVALID       | FAIL   | Receiver not a contract         |
-| FLASH_LOAN_INSUFFICIENT_LIQUIDITY | FAIL   | Pool drained                    |
-| NO_OUTSTANDING_DEBT               | SKIP   | Nothing to repay                |
-| BORROW_CAP_EXCEEDED               | FAIL   | Pool borrow-cap reached         |
-| SUPPLY_CAP_EXCEEDED               | FAIL   | Pool supply-cap reached         |
+| Code                              | Action | When                    |
+| --------------------------------- | ------ | ----------------------- |
+| INSUFFICIENT_COLLATERAL           | FAIL   | Borrow exceeds LTV      |
+| INSUFFICIENT_BALANCE              | FAIL   | Not enough tokens       |
+| NO_COLLATERAL_DEPOSITED           | FAIL   | Can't borrow            |
+| ASSET_NOT_SUPPORTED               | FAIL   | Token not in pool       |
+| ZERO_AMOUNT                       | FAIL   | Amount must be > 0      |
+| TX_REVERTED                       | FAIL   | Generic revert          |
+| GAS_ESTIMATION_FAILED             | RETRY  | Node congestion         |
+| SLIPPAGE_EXCEEDED                 | RETRY  | Price moved             |
+| FLASH_LOAN_RECEIVER_INVALID       | FAIL   | Receiver not a contract |
+| FLASH_LOAN_INSUFFICIENT_LIQUIDITY | FAIL   | Pool drained            |
+| NO_OUTSTANDING_DEBT               | SKIP   | Nothing to repay        |
+| BORROW_CAP_EXCEEDED               | FAIL   | Pool borrow-cap reached |
+| SUPPLY_CAP_EXCEEDED               | FAIL   | Pool supply-cap reached |
 
 Error format: `ERROR_CODE: AAVE V3 transaction failed -- <raw message>`
 
@@ -153,9 +155,9 @@ Uniswap swaps use on-chain slippage protection:
 3. SwapRouter02 reverts if actual output < minAmountOut
 4. Default slippage tolerance: see code SSOT in `execution-service/.../defi_execution/protocols/uniswap.py`
    (`max_slippage_bps` default; reconcile codex narrative against the code default on next exec audit pass — slot 8
-   audit EX-9 2026-05-12 flagged drift across mev-protection.md = 20 bps, this doc = 50 bps,
-   execution-policy.md examples = 10/20/30/50 bps; the per-rule examples are correct, the doc-narrative defaults need
-   alignment to the single code default). Configurable via `config["max_slippage_bps"]`.
+   audit EX-9 2026-05-12 flagged drift across mev-protection.md = 20 bps, this doc = 50 bps, execution-policy.md
+   examples = 10/20/30/50 bps; the per-rule examples are correct, the doc-narrative defaults need alignment to the
+   single code default). Configurable via `config["max_slippage_bps"]`.
 
 ## Integration Testing
 
@@ -219,6 +221,28 @@ instruction is automatically prepended to the instruction sequence.
 Rebasing tokens (eETH, stETH) cannot be used as Aave collateral directly because their balance changes break Aave's
 scaled balance accounting. Wrapping converts them to non-rebasing equivalents where yield accrues via exchange rate
 appreciation instead of balance changes.
+
+## Strategy Architecture: DeFi Long + CeFi Short (Hybrid Venue Model)
+
+DeFi strategies combine an **on-chain long leg** (staking, lending, providing liquidity) with a **CeFi perp short leg**
+(hedge). The "DeFi" label refers to the strategy family, not venue restriction.
+
+```
+DeFi strategy = on-chain long (LST staking / Aave lending / AMM LP)
+              + CeFi perp short (hedge leg)
+```
+
+ALL CeFi perp venues are candidates for the short leg. Eligibility is archetype-specific:
+
+| Archetype                    | Margin mode   | Eligible CeFi venues                                                             |
+| ---------------------------- | ------------- | -------------------------------------------------------------------------------- |
+| `carry_staked_basis`         | LST_AS_MARGIN | Bybit UTA (stETH/METH/USDe), Deribit (stETH), OKX (wstETH), DRIFT (JitoSOL/mSOL) |
+| `arbitrage_price_dispersion` | USDC          | All venues: Binance, Bybit, OKX, Deribit, Kraken, Hyperliquid, Aster, DRIFT      |
+
+The venue-collateral matrix in UAC + per-archetype docs is the authoritative eligibility gate. Preflight rejects venues
+that fail the margin-mode check at strategy runtime — no hardcoded allowlist in code.
+
+SSOT: `codex/09-strategy/architecture-v2/archetypes/` (per-archetype venue matrices).
 
 ## Key Files
 
