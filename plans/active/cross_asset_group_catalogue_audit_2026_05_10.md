@@ -146,7 +146,7 @@ unimplemented). Phase 1A's premise (delete singular `prediction/`) is REJECTED. 
 
 Owner: ikenna (cross-cutting design); harsh implements + downstream consumer updates.
 
-- [ ] [AGENT] P0. **1A — UAC dual-prediction module RECONCILE (re-scoped 2026-05-12 — NOT a delete).** Per
+- [x] [AGENT] P0. **1A — UAC dual-prediction module RECONCILE (re-scoped 2026-05-12 — NOT a delete).** **DONE 2026-05-12 (slot 8 RESUME-3 parent flip)** — all in-cutover-scope sub-todos closed: 1A.a (keep-both no-op confirmed by prediction sub-agent) + 1A.b (facade-fix at `instruments-service@ca8a019`) + 1A.d (operator-directed `prediction_canonical_question_group`+`MARKET_LIFECYCLE` addition to `DATA_TYPES_BY_ASSET_GROUP["prediction"]` with grain-segregation comment at UAC@`89f63b7`) ✅; 1A.c (optional `prediction/` → `prediction_mapping/` rename) is explicitly POST_CUTOVER-deferred per the body annotation, out of cutover scope. Sub-row checkboxes all `[x]`; parent flip aligns with cutover-readiness semantics. Per
       [`catalogue_audit_prediction_2026_05_12.md`](../archive/issues/catalogue_audit_prediction_2026_05_12.md)
       PR-1/PR-2 + `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1F: `canonical/domain/prediction/` (singular,
       cross-venue mapping — `PredictionMarketMapper` etc.) and `canonical/domain/predictions/` (plural,
