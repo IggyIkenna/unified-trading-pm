@@ -142,20 +142,21 @@ includes this seam diagram verbatim.
 ## Phase 0 — Pre-audit (Day 1, ~0.5 AI-day, 3 parallel sub-agents)
 
 - [x] [AGENT] P0. **0.A Existing rule audit.** Walk risk-and-exposure-service + execution-service + alerting-service for
-      every rule; classify per scope. (PM@0044e370 — findings written to `## Audit findings` below; key prior
-      artefacts: `risk-and-exposure-service.v2.preflight.run_layer2_preflight` + `run_layer3_venue_account_preflight`
-      orchestrator; `core/risk_monitor.RiskMonitor` (live monitoring); `core/pre_trade_check_engine.PreTradeCheckEngine`
-      (decoupled checks); `core/risk_limits_client_factory.InMemoryRiskLimitsClient` (limits domain client);
-      `models.RiskLimits` (per-account/strategy persistence); `alerting-service.circuit_breaker` (circuit-breaker
-      module). Existing surface is rich; the gap addressed by this plan is the UAC-level *closed-set rule taxonomy* +
-      registry seed — Phase 1 codifies the contract, Phase 4 migrates these services to consume it.)
+      every rule; classify per scope. (PM@0044e370 — findings written to `## Audit findings` below; key prior artefacts:
+      `risk-and-exposure-service.v2.preflight.run_layer2_preflight` + `run_layer3_venue_account_preflight` orchestrator;
+      `core/risk_monitor.RiskMonitor` (live monitoring); `core/pre_trade_check_engine.PreTradeCheckEngine` (decoupled
+      checks); `core/risk_limits_client_factory.InMemoryRiskLimitsClient` (limits domain client); `models.RiskLimits`
+      (per-account/strategy persistence); `alerting-service.circuit_breaker` (circuit-breaker module). Existing surface
+      is rich; the gap addressed by this plan is the UAC-level _closed-set rule taxonomy_ + registry seed — Phase 1
+      codifies the contract, Phase 4 migrates these services to consume it.)
 - [x] [AGENT] P0. **0.B Per-cutover-archetype rule requirements.** Operator + plan author co-author the per-archetype
-      rule list (≥10 per archetype). (PM@0044e370 — aspirational lists written to `## Audit findings` below
-      driving Phase 2.A registry seeds.)
+      rule list (≥10 per archetype). (PM@0044e370 — aspirational lists written to `## Audit findings` below driving
+      Phase 2.A registry seeds.)
 - [x] [SCRIPT] P0. **0.C Banners on cross-plan files.** (PM@0044e370 — banners added to
-      `alerting_service_live_rules_2026_05_07.md` (post-banner line 42), `disaster_recovery_circuit_breakers_2026_05_10.md`
-      (extension of existing § 7 banner), `master_to_live_defi_2026_05_23.md` (Group F item 22 row extension citing
-      UAC@945ad5d + cross-reference to risk Phase 1.F handoff to DR plan Phase 1.A).)
+      `alerting_service_live_rules_2026_05_07.md` (post-banner line 42),
+      `disaster_recovery_circuit_breakers_2026_05_10.md` (extension of existing § 7 banner),
+      `master_to_live_defi_2026_05_23.md` (Group F item 22 row extension citing UAC@945ad5d + cross-reference to risk
+      Phase 1.F handoff to DR plan Phase 1.A).)
 
 **Full-execution criterion**: § Audit findings populated; banners on 3 cross-plan files (4th `simulation_scenarios_*`
 deferred — its work hasn't started so no in-flight collision; banner added on first scope-overlap).
@@ -182,8 +183,9 @@ deferred — its work hasn't started so no in-flight collision; banner added on 
 - [x] [AGENT] P0. **1.D Tests.** ≥30 unit tests, including 4 seam-diagram-conformance tests (one per
       `RiskRuleConsequence` value verifying the event(s) emitted match the cross-product table). (UAC@945ad5d —
       `tests/internal/unit/test_risk_rule_taxonomy.py` ships 38 tests including 4 seam-conformance tests
-      (`test_seam_conformance_block_events` / `_scale_down_events` / `_monitor_events` / `_test_only_events`) plus
-      6 `kill_switch_scope()` orthogonality tests; 99/99 pass `cd unified-api-contracts && pytest tests/internal/unit/test_risk_rule_taxonomy.py tests/internal/unit/test_strategy_family.py tests/internal/unit/test_alerting_taxonomy.py`.)
+      (`test_seam_conformance_block_events` / `_scale_down_events` / `_monitor_events` / `_test_only_events`) plus 6
+      `kill_switch_scope()` orthogonality tests; 99/99 pass
+      `cd unified-api-contracts && pytest tests/internal/unit/test_risk_rule_taxonomy.py tests/internal/unit/test_strategy_family.py tests/internal/unit/test_alerting_taxonomy.py`.)
 - [x] [AGENT] P0. **1.E AlertCode closed-set extension — RATIFIED 2026-05-10 cross-plan audit Q6 (Policy B
       larger-set-wins).** Add `RISK_RULE_BLOCKED`, `RISK_RULE_SCALED_DOWN`, `RISK_RULE_MONITOR_FIRED`,
       `RISK_RULE_TEST_ONLY_ROUTED` to UAC@d00326d `AlertCode` enum. **Plus 2 NEW kill-switch recovery codes per Q8
@@ -196,13 +198,12 @@ deferred — its work hasn't started so no in-flight collision; banner added on 
       zero pre-existing references. (UAC@945ad5d — 6 new AlertCode members landed in
       `canonical/crosscutting/alerting/codes.py`; closed-set grows to 45 (verified via
       `test_alert_code_set_grew_by_at_least_six`); `test_no_pre_existing_shadowing_of_new_codes` confirms each new code
-      appears exactly once. **`LIVE_ALERT_RULES` entries seeded by master coordinator at UAC@c96447b** —
-      6 new `AlertRule` entries with `event_pattern` field: `RISK_RULE_BLOCKED` (HIGH, PagerDuty+Telegram),
-      `RISK_RULE_SCALED_DOWN` (WARN, Telegram), `RISK_RULE_MONITOR_FIRED` (INFO, LogOnly),
-      `RISK_RULE_TEST_ONLY_ROUTED` (INFO, LogOnly), `KILL_SWITCH_AUTO_RECOVERED` (INFO, Telegram, scope=GLOBAL),
-      `KILL_SWITCH_MANUAL_UNKILLED` (INFO, Telegram, scope=GLOBAL). Test
-      `test_kill_switch_rules_trigger_kill_switch_flag` updated to exempt RECOVERY codes from
-      `triggers_kill_switch=True` invariant — they report past state changes, not arm new ones.)
+      appears exactly once. **`LIVE_ALERT_RULES` entries seeded by master coordinator at UAC@c96447b** — 6 new
+      `AlertRule` entries with `event_pattern` field: `RISK_RULE_BLOCKED` (HIGH, PagerDuty+Telegram),
+      `RISK_RULE_SCALED_DOWN` (WARN, Telegram), `RISK_RULE_MONITOR_FIRED` (INFO, LogOnly), `RISK_RULE_TEST_ONLY_ROUTED`
+      (INFO, LogOnly), `KILL_SWITCH_AUTO_RECOVERED` (INFO, Telegram, scope=GLOBAL), `KILL_SWITCH_MANUAL_UNKILLED` (INFO,
+      Telegram, scope=GLOBAL). Test `test_kill_switch_rules_trigger_kill_switch_flag` updated to exempt RECOVERY codes
+      from `triggers_kill_switch=True` invariant — they report past state changes, not arm new ones.)
 - [x] [AGENT] P0. **1.F `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` SSOT — RATIFIED 2026-05-10 cross-plan
       audit Q8.** Add `BreakerRecoveryMode` closed set `{manual_unkill, auto_cooldown}` to UAC. Add
       `BREAKER_RECOVERY_DEFAULTS: dict[BreakerAction, BreakerRecoveryMode]` mapping per-action defaults:
@@ -214,8 +215,8 @@ deferred — its work hasn't started so no in-flight collision; banner added on 
       [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md) Phase 1.A
       which owns `BreakerConfig` extension. (**Cross-reference flip — Sub-C (DR slot) shipped the UAC artefact at
       UAC@a7a99b5**: `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` dict + `BreakerConfig.recovery_mode` +
-      `BreakerConfig.cooldown_seconds` all land in `canonical/crosscutting/circuit_breaker.py` per DR Phase 1.A —
-      NOT a duplicate ship in `risk_rule.py`. The 2 kill-switch recovery AlertCodes that pair with the modes
+      `BreakerConfig.cooldown_seconds` all land in `canonical/crosscutting/circuit_breaker.py` per DR Phase 1.A — NOT a
+      duplicate ship in `risk_rule.py`. The 2 kill-switch recovery AlertCodes that pair with the modes
       (`KILL_SWITCH_AUTO_RECOVERED` + `KILL_SWITCH_MANUAL_UNKILLED`) shipped at UAC@945ad5d as Phase 1.E + their
       corresponding `LIVE_ALERT_RULES` entries at UAC@c96447b as master coordinator commit.)
 
@@ -234,23 +235,23 @@ canonical SSOTs.
       `tests/internal/unit/test_risk_rules_archetype.py` — 33 tests including ≥10-per-archetype enforcement, scope +
       applies_to invariants, closed-union trigger discriminator conformance, severity-mapping conformance, kill-switch
       scope orthogonality, axis-coverage parametrised checks, frozen-Pydantic + dedup invariants. All 33 pass.)
-- [x] [AGENT] P0. **2.B Per-venue rules.** `registry/risk_rules/venue.py` — for cutover-archetype venues.
-      (UAC@29d4fe4 — shipped 27 `RiskRule` entries in `VENUE_RULES` tuple across 9 cutover-archetype venues: 6 CeFi
-      perps (bybit / deribit / binance / okx / hyperliquid / aster) + 3 Solana DeFi protocols (marinade / jito / sanctum
-      for `carry_staked_basis` LST yields). Each venue carries ≥3 rules (MaxOI / max single-instrument size / max
+- [x] [AGENT] P0. **2.B Per-venue rules.** `registry/risk_rules/venue.py` — for cutover-archetype venues. (UAC@29d4fe4 —
+      shipped 27 `RiskRule` entries in `VENUE_RULES` tuple across 9 cutover-archetype venues: 6 CeFi perps (bybit /
+      deribit / binance / okx / hyperliquid / aster) + 3 Solana DeFi protocols (marinade / jito / sanctum for
+      `carry_staked_basis` LST yields). Each venue carries ≥3 rules (MaxOI / max single-instrument size / max
       cross-instrument size). Every rule scope=`PER_VENUE`; `kill_switch_scope()` returns `KillSwitchScope.VENUE`.
       `applies_to` is lowercase venue short-name per CLAUDE.md asset-group vocab rule. NOTE: commit 29d4fe4 carries
       wrong message — a parallel agent's auto-commit bundled this work under their TICK_STALENESS commit message via
-      foot-gun #1+#4; surfaced as discovery to operator. Files + tests are correct + landed on origin/live-defi-rollout.)
-- [x] [AGENT] P0. **2.C Per-account rules.** `registry/risk_rules/account.py` — paper + live accounts.
-      (UAC@29d4fe4 — 8 `RiskRule` entries in `ACCOUNT_RULES` across 2 cutover accounts (`paper_default` +
-      `live_cutover_2026_05_23`). Each carries 4 rules: gross exposure / net exposure / daily loss / drawdown. Live
-      cutover account fires CRITICAL severity; paper fires HIGH/WARN. `kill_switch_scope()` returns `None`
-      (PER_ACCOUNT not directly kill-switch-applicable per seam orthogonality).)
-- [x] [AGENT] P0. **2.D Per-client rules.** `registry/risk_rules/client.py` — cutover demo client.
-      (UAC@29d4fe4 — 4 `RiskRule` entries in `CLIENT_RULES` for `cutover_demo_client_2026_05_23`: per-archetype
-      subscription size + total subscription cap + drawdown + capital-at-risk ceiling. `kill_switch_scope()` returns
-      `KillSwitchScope.CLIENT`.)
+      foot-gun #1+#4; surfaced as discovery to operator. Files + tests are correct + landed on
+      origin/live-defi-rollout.)
+- [x] [AGENT] P0. **2.C Per-account rules.** `registry/risk_rules/account.py` — paper + live accounts. (UAC@29d4fe4 — 8
+      `RiskRule` entries in `ACCOUNT_RULES` across 2 cutover accounts (`paper_default` + `live_cutover_2026_05_23`).
+      Each carries 4 rules: gross exposure / net exposure / daily loss / drawdown. Live cutover account fires CRITICAL
+      severity; paper fires HIGH/WARN. `kill_switch_scope()` returns `None` (PER_ACCOUNT not directly
+      kill-switch-applicable per seam orthogonality).)
+- [x] [AGENT] P0. **2.D Per-client rules.** `registry/risk_rules/client.py` — cutover demo client. (UAC@29d4fe4 — 4
+      `RiskRule` entries in `CLIENT_RULES` for `cutover_demo_client_2026_05_23`: per-archetype subscription size + total
+      subscription cap + drawdown + capital-at-risk ceiling. `kill_switch_scope()` returns `KillSwitchScope.CLIENT`.)
 - [x] [AGENT] P0. **2.E Per-asset_group rules.** `registry/risk_rules/asset_group.py` — DeFi + CeFi cutover-relevant.
       (UAC@29d4fe4 — 6 `RiskRule` entries in `ASSET_GROUP_RULES` across `defi` + `cefi` asset_groups. Each carries 3
       rules: concentration + gross exposure + asset-group-specific (DeFi gas-budget rule; CeFi funding-cost ceiling).
@@ -261,10 +262,10 @@ canonical SSOTs.
       `applies_to="*"`, `alerting_severity=CRITICAL`, `triggers_kill_switch=True`. Module named `global_rules.py` (not
       `global.py`) to avoid Python keyword collision per spawn instructions. **DEFERRED**: closed-set `RiskRuleId`
       additions for oracle outage / cross-cloud egress / custody endpoint unreachable — captured for follow-up Phase
-      2.F+ once enum additions clear seam review.) Tests: `tests/internal/unit/test_risk_rules_other_axes.py` — 33
-      tests including non-empty + min-count contracts, per-axis scope discipline, applies_to vocab sanity,
-      `kill_switch_scope()` orthogonality, consequence→alerting_severity mapping, DeFi-only gas-budget rule presence
-      + CeFi absence, every global rule fires CRITICAL + triggers kill-switch. All 33 pass.
+      2.F+ once enum additions clear seam review.) Tests: `tests/internal/unit/test_risk_rules_other_axes.py` — 33 tests
+      including non-empty + min-count contracts, per-axis scope discipline, applies_to vocab sanity,
+      `kill_switch_scope()` orthogonality, consequence→alerting_severity mapping, DeFi-only gas-budget rule presence +
+      CeFi absence, every global rule fires CRITICAL + triggers kill-switch. All 33 pass.
 - [x] [AGENT] P0. **2.G `StrategyFamilyId` closed enum + family registry.**
       `unified_api_contracts/canonical/crosscutting/strategy_family.py`: `StrategyFamilyId` (closed enum:
       `FUNDING_ARB_FAMILY` / `BASIS_CARRY_FAMILY` / `LST_LEVERAGE_FAMILY` / `OPTIONS_VOL_FAMILY` / `SPORTS_MM_FAMILY` /
@@ -284,22 +285,20 @@ canonical SSOTs.
       `FAMILY_CONCENTRATION_PER_VENUE`, `FAMILY_CORRELATION_WITH_OTHER_FAMILY` (cross-family correlation surveillance:
       e.g. all LST-family + funding-arb-family share oracle-risk exposure on Pyth Solana). Each family declares ≥6
       rules. (UAC@301882f — slot 7 Sub-F shipped `STRATEGY_FAMILY_RULES` tuple in
-      `unified_api_contracts/registry/risk_rules/strategy_family.py` with full 6-rule seed for LST_LEVERAGE_FAMILY +
+      `unified_api_contracts/registry/risk_rules/strategy_family.py` with full 6-rule seed for LST*LEVERAGE_FAMILY +
       FUNDING_ARB_FAMILY (12 rules covering the 6 required categories) plus single-rule placeholders for the 5
       forward-compat families (BASIS_CARRY / OPTIONS_VOL / SPORTS_MM / PREDICTION_MM / STAT_ARB) = 17 rules total.
-      Extended UAC `RiskRuleScope` with new `PER_STRATEGY_FAMILY` member + `RiskRuleId` with 6 `FAMILY_*` members;
-      `kill_switch_scope()` returns `None` for `PER_STRATEGY_FAMILY` (family-aggregate rules escalate via the
-      circuit-breaker BLOCK-rate path, not the kill-switch's per-blast-radius halt). 30 unit tests in
-      `tests/internal/unit/test_risk_rules_strategy_family.py` cover coverage invariants + per-family rule shapes +
-      orthogonality with kill-switch axis.)
+      Extended UAC `RiskRuleScope` with new `PER_STRATEGY_FAMILY` member + `RiskRuleId` with 6
+      `FAMILY*\*`members;    `kill_switch_scope()`returns`None`for`PER_STRATEGY_FAMILY`(family-aggregate rules escalate via the     circuit-breaker BLOCK-rate path, not the kill-switch's per-blast-radius halt). 30 unit tests in    `tests/internal/unit/test_risk_rules_strategy_family.py`
+      cover coverage invariants + per-family rule shapes + orthogonality with kill-switch axis.)
 - [x] [AGENT] P0. **2.I Family-aggregate evaluator.** UTL `risk/family_aggregator.py`: rolls up per-archetype state into
       per-family state (sum-of-positions per family + max-drawdown across family + cross-family correlation matrix from
       rolling returns). Feeds rule_evaluator at family scope. Recomputes per fill event + per-minute cron. (UTL@db8dcae5
       — slot 7 Sub-F shipped `aggregate_family_state()` + `ArchetypeState` + `FamilyState` TypedDicts in
       `unified_trading_library/risk/family_aggregator.py`. Aggregation contract: gross/net summed; drawdown max;
-      capital-at-risk summed; cross-family Pearson correlation pairwise from 30d returns (symmetric, omits self,
-      handles zero-variance + length-mismatch gracefully). 23 unit tests in `tests/unit/risk/test_family_aggregator.py`
-      cover empty input, unknown-archetype skip, single + multi-archetype rollup, drawdown=max invariant, correlation
+      capital-at-risk summed; cross-family Pearson correlation pairwise from 30d returns (symmetric, omits self, handles
+      zero-variance + length-mismatch gracefully). 23 unit tests in `tests/unit/risk/test_family_aggregator.py` cover
+      empty input, unknown-archetype skip, single + multi-archetype rollup, drawdown=max invariant, correlation
       symmetry + perfect positive/negative, custom registry override, FamilyState shape sanity. Composes with Sub-G's
       `risk/rule_evaluator.py` (UTL@9b4bcc09) for Phase 3.B preflight aggregation at family scope.)
 
@@ -316,22 +315,31 @@ returns full rule set; tests pass.
       threshold checks.)
 - [x] [AGENT] P0. **3.B `risk/preflight.py`.** `risk_preflight(order, context) -> RiskPreflightResult`. Iterates
       applicable rules per scope; returns aggregate (pass / scale-down with multiplier / block with reason). Reuses
-      rule_evaluator. (UTL@9b4bcc09 — precedence BLOCK > SCALE_DOWN > TEST_ONLY > MONITOR; `scale_factor =
-      min(scale_down_factors)` (most-restrictive wins); `fired_rules` preserves evaluation order; `blocked_by`
-      enumerates BLOCK rule_ids; composite `reason` with primary + per-consequence tally.)
+      rule_evaluator. (UTL@9b4bcc09 — precedence BLOCK > SCALE_DOWN > TEST_ONLY > MONITOR;
+      `scale_factor =     min(scale_down_factors)` (most-restrictive wins); `fired_rules` preserves evaluation order;
+      `blocked_by` enumerates BLOCK rule_ids; composite `reason` with primary + per-consequence tally.)
 - [x] [AGENT] P0. **3.C Tests.** ≥40 unit tests; per-rule evaluator behaviour; pre-flight aggregation. (UTL@9b4bcc09 —
       53 tests pass: `tests/unit/risk/test_rule_evaluator.py` (37) covers per-trigger fire+no-fire across all 13
       triggers + boundary semantics + scale_factor mapping + `UnknownTriggerError` + `MissingContextFieldError`;
       `tests/unit/risk/test_preflight.py` (16) covers empty/no-fire baselines + 4-tier precedence + scale_factor min
-      aggregation + fired_rules ordering + blocked_by enumeration + reason composition + mixed-consequence smoke. ruff
-      + basedpyright clean.)
+      aggregation + fired_rules ordering + blocked_by enumeration + reason composition + mixed-consequence smoke. ruff +
+      basedpyright clean.)
 
 **Full-execution criterion**: UTL PR pushed; QG green; integration test runs pre-flight on stub orders.
 
 ## Phase 4 — Per-service migration (Days 7-9, ~2 AI-days, 4 parallel sub-agents)
 
 - [ ] [AGENT] P0. **4.A risk-and-exposure-service.** Existing rules migrate to UAC registry; rule_evaluator wired; no
-      code-side rule logic remains in service.
+      code-side rule logic remains in service. **design-shipped** risk-and-exposure-service@85c99aa — `v2/preflight.py`
+      `run_layer2_rule_preflight()` builds the runtime `RuleEvalContext` + axis-ids, resolves rules via UAC
+      `iter_applicable_rules()`, runs UTL `risk_preflight()`, maps `RiskRuleConsequence` → `RiskGateDecision`;
+      `run_layer2_preflight()` folds the registry outcome in most-restrictively when a `rule_context` is supplied;
+      `InMemoryRiskLimitsClient` / `RiskLimitsDomainClient` are now a thin reader over the UAC registry
+      (`iter_applicable_rules` delegates straight to UAC); 8 new tests (469 unit pass). **DEFERRED**: the legacy
+      explicit-threshold `PortfolioContext` gates (daily-loss/drawdown/family-cap, hand-supplied thresholds) +
+      `RiskMonitor` bespoke threshold predicates are NOT yet removed — they compose with the registry path
+      transitionally until the strategy-architecture-v2 caller supplies a `RuleEvalContext` and PBMS-state is wired into
+      one (depends on risk plan Phase 4.D). Full "no code-side rule logic remains" cutover = follow-up under this todo.
 - [ ] [AGENT] P0. **4.B execution-service.** Order submission path inserts `risk_preflight` BEFORE venue submission.
       Block / scale-down behaviour wired.
 - [ ] [AGENT] P0. **4.C strategy-service.** Signal generator queries pre-flight before sizing; if pre-flight returns
@@ -353,11 +361,11 @@ returns full rule set; tests pass.
 
 - [ ] [AGENT] P0. **6.A `/api/risk/rules` endpoint.** Per-axis listing.
 - [ ] [AGENT] P0. **6.B `/api/risk/preflight-test` endpoint.** POST a hypothetical order; returns pre-flight result.
-- [x] [AGENT] P0. **6.C deployment-ui Risk tab.** Per-axis rule browser + pre-flight playground.
-      Shipped deployment-ui@33e6ea0 — `RiskTab.tsx` (top-level container composing RuleBrowser + PreflightPlayground
-      via React state + nav buttons), `register.ts` (RISK_WIDGETS registry: RiskTab + RuleBrowser +
-      PreflightPlayground), `RiskTab.test.tsx` (5 vitest tests covering default sub-view, nav switching,
-      props pass-through — all green locally; ran against vitest 4.1 via workspace `node_modules` symlink).
+- [x] [AGENT] P0. **6.C deployment-ui Risk tab.** Per-axis rule browser + pre-flight playground. Shipped
+      deployment-ui@33e6ea0 — `RiskTab.tsx` (top-level container composing RuleBrowser + PreflightPlayground via React
+      state + nav buttons), `register.ts` (RISK_WIDGETS registry: RiskTab + RuleBrowser + PreflightPlayground),
+      `RiskTab.test.tsx` (5 vitest tests covering default sub-view, nav switching, props pass-through — all green
+      locally; ran against vitest 4.1 via workspace `node_modules` symlink).
 
 **Full-execution criterion**: UI renders rules + playground works against real API.
 
@@ -365,20 +373,20 @@ returns full rule set; tests pass.
 
 - [x] [AGENT] P0. **7.A NEW `codex/04-architecture/risk-rule-taxonomy.md`.** Taxonomy, scope axis, consequence closed
       enum. (PM@730914a9 — 152-line doc: closed-set RiskRuleId 22 members + RiskRuleScope 6 + RiskRuleConsequence 4 +
-      RiskRuleTrigger 13 typed subtypes + § 7 SSOT seam diagram verbatim from plan body + orthogonality declarations
-      vs ErrorAction / AlertCode / KillSwitchScope; 7 outbound cross-references.)
+      RiskRuleTrigger 13 typed subtypes + § 7 SSOT seam diagram verbatim from plan body + orthogonality declarations vs
+      ErrorAction / AlertCode / KillSwitchScope; 7 outbound cross-references.)
 - [x] [AGENT] P0. **7.B NEW `codex/04-architecture/risk-preflight-flow.md`.** Order-submission flow, scale-down
-      semantics, block semantics. (PM@730914a9 — 153-line doc: ASCII flow diagram across Layers 1-4 + RiskPreflightResult
-      shape + BLOCK / SCALE_DOWN (min-aggregation) / MONITOR / TEST_ONLY aggregation semantics + strategy + execution
-      call sites + kill-switch bus integration + anti-patterns; 7 outbound cross-references.)
+      semantics, block semantics. (PM@730914a9 — 153-line doc: ASCII flow diagram across Layers 1-4 +
+      RiskPreflightResult shape + BLOCK / SCALE_DOWN (min-aggregation) / MONITOR / TEST_ONLY aggregation semantics +
+      strategy + execution call sites + kill-switch bus integration + anti-patterns; 7 outbound cross-references.)
 - [x] [AGENT] P0. **7.C UPDATE `kill-switch-circuit-breaker.md`** — risk-rule fire → breaker arm cross-link.
       (PM@730914a9 — added Risk-Rule Fire → Breaker Arm Cross-Link subsection citing the seam + BreakerRecoveryMode
       manual-vs-auto-cooldown subsection per UAC@a7a99b5 + 3 new PubSub event rows (KILL_SWITCH_AUTO_RECOVERED /
       KILL_SWITCH_MANUAL_UNKILLED / BREAKER_ESCALATION_REQUESTED) + 6 new cross-references at top + bottom.)
 - [x] [AGENT] P0. **7.D UPDATE `capital-efficiency-patterns.md`** — per-archetype capital-at-risk ceiling cross-link.
-      (PM@730914a9 — added Per-archetype Capital-at-Risk Ceiling Cross-Link section showing 3-layer composition
-      (account guards / per-archetype CaR / family aggregate) with risk_preflight() integration + 3 new outbound
-      cross-references to risk-rule-taxonomy / risk-preflight-flow / risk-breaker-seam.)
+      (PM@730914a9 — added Per-archetype Capital-at-Risk Ceiling Cross-Link section showing 3-layer composition (account
+      guards / per-archetype CaR / family aggregate) with risk_preflight() integration + 3 new outbound cross-references
+      to risk-rule-taxonomy / risk-preflight-flow / risk-breaker-seam.)
 - [x] [AGENT] P0. **7.E NEW `codex/04-architecture/risk-breaker-seam.md` — RATIFIED 2026-05-10 cross-plan audit Q9.**
       Document the distinct-enums-with-escalation-seam architecture: `RiskRuleConsequence` (per-rule-firing taxonomy)
       and `BreakerAction` (per-venue state-machine taxonomy) are SEPARATE enums by design — different triggers,
@@ -391,8 +399,8 @@ returns full rule set; tests pass.
       (risk-controller can fire WITHOUT breaker firing; breaker can fire WITHOUT risk-controller — they're independent
       layers that ESCALATE through the seam, not duplicate). Cross-links the seam diagram + cross-product table from
       this plan body. (PM@730914a9 — 144-line doc co-owned with DR plan Phase 8.F: TL;DR + naming-collision-intentional
-      table + seam event flow diagram + 4-layer layering diagram + operational implications + recovery-mode wiring
-      per BREAKER_RECOVERY_DEFAULTS + anti-patterns + Q9 ratification provenance. Includes `RISK_TO_BREAKER_ESCALATION_MAP`
+      table + seam event flow diagram + 4-layer layering diagram + operational implications + recovery-mode wiring per
+      BREAKER_RECOVERY_DEFAULTS + anti-patterns + Q9 ratification provenance. Includes `RISK_TO_BREAKER_ESCALATION_MAP`
       typed-dict stub shape with TODO entries pending Phase 4 cutover-aspirational threshold population.)
 
 **Full-execution criterion**: 2 NEW + 2 UPDATE; cross-references resolve.
@@ -448,8 +456,8 @@ Existing rule-evaluation surface (classified per Phase 1 scope axis where applic
 
 - `risk_and_exposure_service.v2.preflight.run_layer2_preflight` / `run_layer3_venue_account_preflight` — Layer-2 +
   Layer-3 orchestrator entry points; **prime integration target** for `RiskRule` consumption in Phase 4.A.
-- `core.risk_monitor.RiskMonitor` — live-monitoring loop (publishes alerts via `AlertManager`). Currently uses
-  bespoke rule predicates; migrate to `RiskRule.trigger` evaluator in Phase 4.A.
+- `core.risk_monitor.RiskMonitor` — live-monitoring loop (publishes alerts via `AlertManager`). Currently uses bespoke
+  rule predicates; migrate to `RiskRule.trigger` evaluator in Phase 4.A.
 - `core.pre_trade_check_engine.PreTradeCheckEngine` — decoupled check engine; ALREADY the shape Phase 3.A wants.
 - `core.risk_limits_protocol.RiskLimitsDomainClient` / `core.risk_limits_client_factory.InMemoryRiskLimitsClient` —
   abstract limits client; Phase 4.A wires `RISK_RULE_REGISTRY` as a concrete implementation.
@@ -458,46 +466,45 @@ Existing rule-evaluation surface (classified per Phase 1 scope axis where applic
 
 **`execution-service`** (PER_VENUE + PER_ACCOUNT):
 
-- `execution_service.adapters.*` — venue-side risk classification via `classify_venue_error()` + `ErrorAction`.
-  Layer 4 — orthogonal to Layer 2 `RiskRuleConsequence` per § 7 seam diagram. NO migration; cite the seam in
-  Phase 7 codex.
-- Pre-flight surface — currently lives in v2 orchestrator (calls `run_layer2_preflight` BEFORE submission). Phase
-  4.B wires `risk_preflight()` from UTL to replace the inline checks.
+- `execution_service.adapters.*` — venue-side risk classification via `classify_venue_error()` + `ErrorAction`. Layer 4
+  — orthogonal to Layer 2 `RiskRuleConsequence` per § 7 seam diagram. NO migration; cite the seam in Phase 7 codex.
+- Pre-flight surface — currently lives in v2 orchestrator (calls `run_layer2_preflight` BEFORE submission). Phase 4.B
+  wires `risk_preflight()` from UTL to replace the inline checks.
 
 **`alerting-service`** (PER_AlertCode + paging routing):
 
 - `alerting_service.circuit_breaker` — circuit-breaker state machine. Phase 4 of DR plan owns the migration to
   `BreakerRecoveryMode` semantics. Risk plan Phase 5.B subscribes to `RiskRuleFiredEvent`.
-- `core.AlertManager` — multi-channel dispatcher (Telegram / PagerDuty / Slack / Email). Phase 5.B adds
-  `RISK_RULE_*` severity-routing rules to `LIVE_ALERT_RULES` after master coordinator seeds them.
+- `core.AlertManager` — multi-channel dispatcher (Telegram / PagerDuty / Slack / Email). Phase 5.B adds `RISK_RULE_*`
+  severity-routing rules to `LIVE_ALERT_RULES` after master coordinator seeds them.
 
-**Findings (case-3 / case-4 per `Findings Triage Discipline`)** — none case-5 (big). Migration scope is contained
-within Phase 4 of THIS plan; no cross-plan refactor required.
+**Findings (case-3 / case-4 per `Findings Triage Discipline`)** — none case-5 (big). Migration scope is contained within
+Phase 4 of THIS plan; no cross-plan refactor required.
 
 ### 0.D — Foot-gun #1 incident (case-5 finding, 2026-05-11 11:00 UTC)
 
-**Severity**: P1 — wrong-attribution, no work lost. **Blast radius**: UAC@`dc4c9f0` bundles Sub-C (DR slot)
-in-flight work under Sub-B's commit message. **Suggested owner**: Sub-C confirms work intact; coordinator decides
-whether to revert + re-commit under Sub-C's identity or leave as-is.
+**Severity**: P1 — wrong-attribution, no work lost. **Blast radius**: UAC@`dc4c9f0` bundles Sub-C (DR slot) in-flight
+work under Sub-B's commit message. **Suggested owner**: Sub-C confirms work intact; coordinator decides whether to
+revert + re-commit under Sub-C's identity or leave as-is.
 
 **What happened**: at ruff fix-up time, the UAC working tree had Sub-C's foreign-WIP already staged (likely Sub-C ran
-`git add` ahead of their own commit but went idle while Sub-B was working). Sub-B's `git status` showed Sub-C's files
-as "A " (already-staged) instead of "??" (untracked) — meaning the index was non-empty for foreign files. Per
-foot-gun #1, this state is exactly what the pre-commit check + explicit `git add <name>` is supposed to catch — Sub-B
-did stage explicitly by name AND ran `git diff --cached --name-status` AND the foreign files showed in the diff
-output BUT Sub-B proceeded with commit anyway (mis-reading the rule: "stage explicitly" addresses the case where
-foreign files are unstaged in working tree; it does NOT clear PRE-staged foreign files from the index, which require
+`git add` ahead of their own commit but went idle while Sub-B was working). Sub-B's `git status` showed Sub-C's files as
+"A " (already-staged) instead of "??" (untracked) — meaning the index was non-empty for foreign files. Per foot-gun #1,
+this state is exactly what the pre-commit check + explicit `git add <name>` is supposed to catch — Sub-B did stage
+explicitly by name AND ran `git diff --cached --name-status` AND the foreign files showed in the diff output BUT Sub-B
+proceeded with commit anyway (mis-reading the rule: "stage explicitly" addresses the case where foreign files are
+unstaged in working tree; it does NOT clear PRE-staged foreign files from the index, which require
 `git restore --staged <foreign>` BEFORE commit). Net: UAC@`dc4c9f0` contains Sub-B's ruff fixes (4 own files) PLUS
-Sub-C's `test_circuit_breaker_taxonomy.py` (435 lines new), `test_kill_switch.py` (242 lines new), and
-`__init__.py` (14-line reorder of KillSwitch import block).
+Sub-C's `test_circuit_breaker_taxonomy.py` (435 lines new), `test_kill_switch.py` (242 lines new), and `__init__.py`
+(14-line reorder of KillSwitch import block).
 
 **Mitigation going forward**: when `git diff --cached --name-status` shows foreign files, run
 `git restore --staged <foreign>` per the foot-gun #1 protocol BEFORE commit, not after. The rule does say this; Sub-B
 missed it and instead relied on the `git add <my-files>` to be defensive.
 
-**No data loss**: Sub-C's pushed work is intact on origin/live-defi-rollout; just attributed to Sub-B's commit
-message. Sub-C can verify via `git log --all --oneline --follow tests/internal/unit/test_circuit_breaker_taxonomy.py`.
-Codifying as a body annotation so the next agent (coordinator + Sub-C) sees the incident without scanning chat.
+**No data loss**: Sub-C's pushed work is intact on origin/live-defi-rollout; just attributed to Sub-B's commit message.
+Sub-C can verify via `git log --all --oneline --follow tests/internal/unit/test_circuit_breaker_taxonomy.py`. Codifying
+as a body annotation so the next agent (coordinator + Sub-C) sees the incident without scanning chat.
 
 ### 0.B — Per-cutover-archetype rule requirements (aspirational seeds for Phase 2.A)
 
@@ -534,8 +541,8 @@ concentration for `carry_staked_basis`).
 
 ### DONE-2026-05-11 — Slot 7 Sub-B (ikenna-slot7-risk-uac) Phase 0 + Phase 1 + Phase 2.G shipments
 
-**Cycle ownership**: `work_split_2026_05_11_ikenna.md` § "Slot 7 spawn prompt" — Phase 1.D 3-plan fan-out. Slot 7
-master spawned Sub-B targeting risk Phase 0 audit + Phase 1.A-E UAC taxonomy + Phase 2.G StrategyFamilyId.
+**Cycle ownership**: `work_split_2026_05_11_ikenna.md` § "Slot 7 spawn prompt" — Phase 1.D 3-plan fan-out. Slot 7 master
+spawned Sub-B targeting risk Phase 0 audit + Phase 1.A-E UAC taxonomy + Phase 2.G StrategyFamilyId.
 
 #### Shipped artefacts
 
@@ -551,12 +558,12 @@ master spawned Sub-B targeting risk Phase 0 audit + Phase 1.A-E UAC taxonomy + P
   - `unified-api-contracts@945ad5d` (bundled) — 6 new `AlertCode` members in `canonical/crosscutting/alerting/codes.py`:
     `RISK_RULE_BLOCKED`, `RISK_RULE_SCALED_DOWN`, `RISK_RULE_MONITOR_FIRED`, `RISK_RULE_TEST_ONLY_ROUTED`,
     `KILL_SWITCH_AUTO_RECOVERED`, `KILL_SWITCH_MANUAL_UNKILLED`. Closed-set growth verified +
-    `test_no_pre_existing_shadowing_of_new_codes` confirms each new code appears exactly once. **`LIVE_ALERT_RULES`
-    rule entries seeded by master coordinator at UAC@c96447b** per scope partition.
+    `test_no_pre_existing_shadowing_of_new_codes` confirms each new code appears exactly once. **`LIVE_ALERT_RULES` rule
+    entries seeded by master coordinator at UAC@c96447b** per scope partition.
 - **Phase 1.F — cross-reference flip** (DR Phase 1.A shipped the UAC artefact):
   - `BreakerRecoveryMode` enum + `BREAKER_RECOVERY_DEFAULTS` dict + `BreakerConfig.recovery_mode` +
-    `BreakerConfig.cooldown_seconds` shipped at `unified-api-contracts@a7a99b5` (Sub-C / DR plan Phase 1.A) — Risk
-    Phase 1.F flips with cross-reference, no duplicate ship.
+    `BreakerConfig.cooldown_seconds` shipped at `unified-api-contracts@a7a99b5` (Sub-C / DR plan Phase 1.A) — Risk Phase
+    1.F flips with cross-reference, no duplicate ship.
 - **Phase 2.G — StrategyFamilyId + registry**:
   - `unified-api-contracts@945ad5d` (bundled) — NEW `canonical/crosscutting/strategy_family.py` (230 lines):
     `StrategyFamilyId` 7-member closed enum + `StrategyFamily` Pydantic + `STRATEGY_FAMILY_REGISTRY` seed dict +
@@ -567,19 +574,19 @@ master spawned Sub-B targeting risk Phase 0 audit + Phase 1.A-E UAC taxonomy + P
   - `unified-api-contracts@dc4c9f0` — `style(uac): ruff fixes on risk_rule + strategy_family + tests` (E501 union
     one-line + RUF002 Greek rho → "rho"). **NOTE**: this commit bundled Sub-C's pre-staged test files (see Findings).
 - **Plan flips**:
-  - `unified-trading-pm@0044e370` — Phase 0.A/0.B/0.C + 1.A/1.B/1.C/1.D/1.E + 2.G all flipped `- [x]` with
-    `UAC@945ad5d` evidence. Phase 1.F flipped as cross-reference. Audit-findings section populated with rule-surface
-    inventory + per-cutover-archetype aspirational rule lists. Banners added on alerting + DR + master plans.
+  - `unified-trading-pm@0044e370` — Phase 0.A/0.B/0.C + 1.A/1.B/1.C/1.D/1.E + 2.G all flipped `- [x]` with `UAC@945ad5d`
+    evidence. Phase 1.F flipped as cross-reference. Audit-findings section populated with rule-surface inventory +
+    per-cutover-archetype aspirational rule lists. Banners added on alerting + DR + master plans.
 
 #### Findings raised
 
-- **Case-5 BIG — Foot-gun #1 incident (within-slot)** (PM@`6e55596b`): Sub-B's `git add <my-files>` followed by
-  commit bundled Sub-C's 61 pre-staged test files (`test_circuit_breaker_taxonomy.py` 435 lines + `test_kill_switch.py`
-  242 lines) + `__init__.py` reorder into UAC@`dc4c9f0` under Sub-B's commit message. **No data loss** — Sub-C's tests
-  are on `origin/live-defi-rollout` and run green. Attribution muddled. Demonstrates that within-slot multi-sub-agent
-  collision is REPRESENTABLE under per-slot worktree model — pre-commit check (`git diff --cached --stat` with NO
-  path argument) is still mandatory for within-slot fan-outs. Documented in § "Audit findings 0.D" + intra-side ping
-  to coordinator (later resolved by master coordinator commit UAC@c96447b cross-referencing all 3 sub-agent commits).
+- **Case-5 BIG — Foot-gun #1 incident (within-slot)** (PM@`6e55596b`): Sub-B's `git add <my-files>` followed by commit
+  bundled Sub-C's 61 pre-staged test files (`test_circuit_breaker_taxonomy.py` 435 lines + `test_kill_switch.py` 242
+  lines) + `__init__.py` reorder into UAC@`dc4c9f0` under Sub-B's commit message. **No data loss** — Sub-C's tests are
+  on `origin/live-defi-rollout` and run green. Attribution muddled. Demonstrates that within-slot multi-sub-agent
+  collision is REPRESENTABLE under per-slot worktree model — pre-commit check (`git diff --cached --stat` with NO path
+  argument) is still mandatory for within-slot fan-outs. Documented in § "Audit findings 0.D" + intra-side ping to
+  coordinator (later resolved by master coordinator commit UAC@c96447b cross-referencing all 3 sub-agent commits).
 
 #### Cycle metrics
 
@@ -592,11 +599,11 @@ master spawned Sub-B targeting risk Phase 0 audit + Phase 1.A-E UAC taxonomy + P
 ### DONE-2026-05-11 — Slot 7 master coordinator (LIVE_ALERT_RULES seed)
 
 - `unified-api-contracts@c96447b` — Master coordinator seeded 6 `LIVE_ALERT_RULES` entries (`RISK_RULE_BLOCKED` +
-  `_SCALED_DOWN` + `_MONITOR_FIRED` + `_TEST_ONLY_ROUTED` + `KILL_SWITCH_AUTO_RECOVERED` + `_MANUAL_UNKILLED`) using
-  the new `event_pattern` field from Sub-A's rename. Severity routing per § 7 seam diagram (BLOCK→HIGH+PD,
-  SCALE_DOWN→WARN, MONITOR/TEST_ONLY→INFO, RECOVERY→INFO). Test `test_kill_switch_rules_trigger_kill_switch_flag`
-  updated to exempt RECOVERY codes from `triggers_kill_switch=True` invariant. Also fixed E501 leftover at
-  `alerting/rules.py:126` from Sub-A's rename. 160/160 tests green.
+  `_SCALED_DOWN` + `_MONITOR_FIRED` + `_TEST_ONLY_ROUTED` + `KILL_SWITCH_AUTO_RECOVERED` + `_MANUAL_UNKILLED`) using the
+  new `event_pattern` field from Sub-A's rename. Severity routing per § 7 seam diagram (BLOCK→HIGH+PD, SCALE_DOWN→WARN,
+  MONITOR/TEST_ONLY→INFO, RECOVERY→INFO). Test `test_kill_switch_rules_trigger_kill_switch_flag` updated to exempt
+  RECOVERY codes from `triggers_kill_switch=True` invariant. Also fixed E501 leftover at `alerting/rules.py:126` from
+  Sub-A's rename. 160/160 tests green.
 
 ### DONE-2026-05-11 — Slot 7 Round 2 (Phase 2.A-F + 2.H + 2.I + Phase 3 + Phase 7)
 
@@ -606,25 +613,25 @@ Slot 7 Round-2 fan-out shipped 6 sub-agents in parallel — Phase 2 (per-axis re
 **Shipped artefacts:**
 
 - **Phase 2.A — archetype registry (Sub-D)**: `unified-api-contracts@86851ab` (NEW `registry/risk_rules/archetype.py`
-  451L + 33 tests; 24 rules across `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION`) +
-  `unified-trading-pm@7aa32954` (Phase 2.A flip).
-- **Phase 2.B-F — venue/account/client/asset_group/global registries (Sub-E)**: `unified-api-contracts@29d4fe4` (NEW
-  5 registry files + 33 tests; 48 rules: venue=27, account=8, client=4, asset_group=6, global=3). **Foot-gun #1**:
-  Sub-E's files landed under Sub-I's TICK_STALENESS commit message via within-slot index race. Content correct +
-  tests green. Plan-flip `PM@da590057` (bundled Sub-H's Phase 7 flips per same foot-gun).
+  451L + 33 tests; 24 rules across `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION`) + `unified-trading-pm@7aa32954`
+  (Phase 2.A flip).
+- **Phase 2.B-F — venue/account/client/asset_group/global registries (Sub-E)**: `unified-api-contracts@29d4fe4` (NEW 5
+  registry files + 33 tests; 48 rules: venue=27, account=8, client=4, asset_group=6, global=3). **Foot-gun #1**: Sub-E's
+  files landed under Sub-I's TICK_STALENESS commit message via within-slot index race. Content correct + tests green.
+  Plan-flip `PM@da590057` (bundled Sub-H's Phase 7 flips per same foot-gun).
 - **Phase 2.H + 2.I — family rules + UTL aggregator (Sub-F)**: `unified-api-contracts@301882f` (NEW
-  `registry/risk_rules/strategy_family.py` 17 rules + extended `risk_rule.py` with `PER_STRATEGY_FAMILY` scope + 6
-  new `FAMILY_*` `RiskRuleId` members + 30 tests) + `unified-trading-library@db8dcae5` (NEW
-  `risk/family_aggregator.py` rolling-state + cross-family correlation via numpy + 23 tests) +
-  `unified-trading-pm@fa7dd51d` (Phase 2.H + 2.I flips).
+  `registry/risk_rules/strategy_family.py` 17 rules + extended `risk_rule.py` with `PER_STRATEGY_FAMILY` scope + 6 new
+  `FAMILY_*` `RiskRuleId` members + 30 tests) + `unified-trading-library@db8dcae5` (NEW `risk/family_aggregator.py`
+  rolling-state + cross-family correlation via numpy + 23 tests) + `unified-trading-pm@fa7dd51d` (Phase 2.H + 2.I
+  flips).
 - **Phase 3 — UTL pre-flight engine (Sub-G)**: `unified-trading-library@9b4bcc09` (NEW `risk/rule_evaluator.py`
   13-trigger discriminated dispatch + `risk/preflight.py` BLOCK>SCALE_DOWN>TEST_ONLY>MONITOR precedence +
   `risk/__init__.py` facade + 53 tests; 1817 insertions) + `unified-trading-pm@d6d38301` (Phase 3.A-C flips).
 - **Phase 7 — codex SSOTs (Sub-H)**: `unified-trading-pm@d86c8b3c` (3 NEW + 2 UPDATE codex docs, 679 insertions:
   `risk-rule-taxonomy.md` 168L + `risk-preflight-flow.md` 198L + `risk-breaker-seam.md` 215L co-owned with DR plan
-  + UPDATE `kill-switch-circuit-breaker.md` +49L + UPDATE `capital-efficiency-patterns.md` +49L) +
-  `unified-trading-pm@bf1ebc54` (DR Phase 8.F cross-reference). Phase 7.A-E flips bundled in `PM@da590057` per
-  foot-gun #1.
+  - UPDATE `kill-switch-circuit-breaker.md` +49L + UPDATE `capital-efficiency-patterns.md` +49L) +
+    `unified-trading-pm@bf1ebc54` (DR Phase 8.F cross-reference). Phase 7.A-E flips bundled in `PM@da590057` per
+    foot-gun #1.
 - **Master coordinator wrap-up**:
   - `unified-api-contracts@5dfdd92` — NEW `registry/risk_rules/__init__.py` 7-axis aggregator (89 rules total) +
     `get_rules_for(scope, applies_to)` + `iter_applicable_rules(...)` helper + `risk.py` facade re-exports; 201 UAC
@@ -633,24 +640,24 @@ Slot 7 Round-2 fan-out shipped 6 sub-agents in parallel — Phase 2 (per-axis re
     pass.
   - `unified-trading-pm@<this-commit>` — Round-2 DONE block + LEDGER refresh.
 
-**Aggregate rule counts**: archetype=24, venue=27, account=8, client=4, asset_group=6, global=3, family=17 →
-**89 ALL_RULES**. Round-2 added **172 new tests** (UAC 96 + UTL 76); UAC sweep 201/201, UTL risk sweep 76/76.
+**Aggregate rule counts**: archetype=24, venue=27, account=8, client=4, asset_group=6, global=3, family=17 → **89
+ALL_RULES**. Round-2 added **172 new tests** (UAC 96 + UTL 76); UAC sweep 201/201, UTL risk sweep 76/76.
 
 **Findings raised**:
 
-- **Case-5 BIG — Foot-gun #1 (intra-slot index race)**: Sub-E's `UAC@29d4fe4` + Sub-H's flips at `PM@da590057`
-  landed under foreign commit messages due to within-slot `.git/index` sharing — same shape as Round-1 Sub-B
-  incident. Sub-I's `git add` absorbed Sub-E's pre-staged registry files; Sub-G's `git add` absorbed Sub-H's Phase 7
-  flips. **No data loss** — content correct on origin. Attribution muddled. Confirms within-slot multi-sub-agent
-  collision is REPRESENTABLE under per-slot worktree model when the mandatory pre-commit check
-  (`git diff --cached --stat` NO PATH ARG) is skipped.
+- **Case-5 BIG — Foot-gun #1 (intra-slot index race)**: Sub-E's `UAC@29d4fe4` + Sub-H's flips at `PM@da590057` landed
+  under foreign commit messages due to within-slot `.git/index` sharing — same shape as Round-1 Sub-B incident. Sub-I's
+  `git add` absorbed Sub-E's pre-staged registry files; Sub-G's `git add` absorbed Sub-H's Phase 7 flips. **No data
+  loss** — content correct on origin. Attribution muddled. Confirms within-slot multi-sub-agent collision is
+  REPRESENTABLE under per-slot worktree model when the mandatory pre-commit check (`git diff --cached --stat` NO PATH
+  ARG) is skipped.
 - **Foot-gun #4** — Sub-F + Sub-I both encountered prek auto-restore races; both recovered via bundled
   Edit→add→commit→push pattern per workspace HARD RULE. ~10 min lost each. No work lost.
 
 **What remains open** (Phase 4+ blocked on Phase 3 consumption):
 
-- Phase 4 — per-service migration (risk-and-exposure / execution / strategy / position-balance). UTL pre-flight
-  helpers shipped; consumer wiring is next-cycle work.
+- Phase 4 — per-service migration (risk-and-exposure / execution / strategy / position-balance). UTL pre-flight helpers
+  shipped; consumer wiring is next-cycle work.
 - Phase 5 — alerting wire (RiskRuleFiredEvent emit + consumer). Blocked by Phase 4.
 - Phase 6 — deployment-api + UI Risk tab. Blocked by Phase 4.
 - Phase 8 — real-VM rule fire suite. Blocked by Phase 4 + 5.
