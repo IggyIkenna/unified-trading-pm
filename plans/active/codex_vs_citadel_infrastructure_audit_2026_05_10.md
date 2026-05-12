@@ -289,50 +289,80 @@ unit. **All ship as `docs(codex):` / `docs(plans):` PRs to `live-defi-rollout`; 
 affected-repo QG before push** (the slot-8 worktree lacks per-repo `.venv` — these need a venv-equipped checkout or a
 hand-off; tagged `[SCRIPT-MAIN]` where a working venv is required).
 
-- [ ] **3.A1 — Batch: moved/archived-repo references** (D-7, EX-2/EX-5/EX-6, ML-2-adjacent, + any others). Sweep
-      codex + CLAUDE.md for: `unified-config-interface/testnet_contracts.py` (→ UTL), `unified_trading_services` module
-      path (→ correct path), `DefiErrorCode` location (→ UAC `execution.py` facade), UDEI references (→ archived). One
-      `docs(codex)+docs(cursor-configs)` PR; grep-driven; low risk. Owner: governance + slot 8.
-- [ ] **3.A2 — Batch: enum-count drift** (D-1, ST-1/ST-2/ST-3/ST-6, R-5..R-9, AL-4, ML-4). Replace frozen prose counts
-      with "see the enum (canonical)": archetypes 53→55 (`StrategyArchetype`), families 8→9 (`StrategyFamily`),
-      instruction actions →14 (`InstructionActionV2`), `EmptyConfirmedReason` 9-13→17+, `AlertCode` 39→63, oracle/chain
-      counts. **Touches `master_to_live_defi_2026_05_23.md:150`** (review-blocking master-plan row) — coordinate with
-      Ikenna-main. One PR per doc-cluster; mostly find-replace + a "counts live in the UAC enum" footnote.
-- [ ] **3.A3 — Batch: bucket-name SSOT drift** (D-5, O-3/O-4, ML-1, PB-10/PB-11). `disaster-recovery.md` + `README.md`
-      hardcoded `gs://...`/`category`-vocab → `resolve_bucket_name(...)` patterns; `bucket-naming-and-config.md` →
-      supersession banner pointing at the bucket-naming SSOT; ML-1's 4-5 model-artefact-bucket SSOTs → **needs an
-      operator pick first** (which canonical pattern) — defer the ML-1 *resolution* to Phase 2.C, but the codex
-      doc-consolidation (collapse the 4 to a "see `resolve_bucket_name(kind='ml-*')`" pointer) can ship once picked.
-- [ ] **3.A4 — Batch: `00-SSOT-INDEX.md` gaps** (ST-18, ML, IN, O-15, G-11, TS-15). Add the missing doc entries —
-      Strategy registry-v2/summary/naming-convention/signal-broadcast/lifecycle-maturity/archetype-paper-readiness; ML
-      lifecycle docs; instruments catalogue docs; testing-infrastructure (once TS-15's stub is replaced). One PR.
-- [ ] **3.A5 — Batch: Runbook-Execution-Owner blocks** (O-7/O-8, IN-6/IN-14/IN-16, PB). Add the 4-field `execution:`
-      block (owner/cadence/verifier/last_executed) to every operator-runnable runbook/reconciler flagged — phantom-audit
-      reconciler, tier-promotion, the 40+ instruments-service remediation scripts (or a single index doc covering them),
-      PBMS reconcilers. Compose with the existing Runbook-Execution-Owner HARD RULE.
-- [ ] **3.A6 — Batch: self-flagged-stale-doc-still-inline** (UI-14, TS-14/TS-15, IN-1). For each doc with a
-      `status: PARTIALLY-STALE`/`stub` banner that still ships its stale content: either delete the stale sections or
-      archive the doc with a redirect. **IN-1 special-case** — `02-data/defi-venue-protocol-catalogue.md`'s 2026-05-12
-      refresh falsely asserts `defi_venue_capabilities.py` "does not exist" + tells agents to delete references; that
-      doc is **owned by Ikenna's slot 2 this cycle** (defi-catalogue) — DO NOT edit it from slot 8 (collision); ping
-      Ikenna-slot-2 to revert the false assertion + restore the `defi_venue_capabilities.py` axis (already escalated in
-      `_agent_pings.md`; orchestrator confirmed routing 2026-05-12).
-- [ ] **3.A7 — Per-area singletons** (the IMMEDIATE rows not covered by 3.A1-3.A6): ST-4 (`archetype-paper-readiness.md`
-      wrong source file), EX-8/EX-20 (`defi-execution-overview.md` MEV provider inversion + supersession banner — but
-      mev-protection consolidation is `cross_asset_group_catalogue_audit` Phase 4's; coordinate), AL-3 (stale 21-rule
-      `ROUTING_RULES` block in `03-observability/alerting.md` → point at UAC `LIVE_ALERT_RULES`), AL-10 (no synthetic-data
-      alert filter — this one is a *code* add in alerting-service + a QG check, not just a doc; may bump to PRE_CUTOVER),
-      TS-3/TS-1/TS-2 (VCR-doc contradictions + stale `network_block_plugin.py` path in 3 docs), TS-5 (`quality-gates.md`/`dependency-management.md`
-      `.[dev]` extras → "Flat deps only"), UI-1/UI-2 (`local-dev.md` dead port registry + "13 UIs" → 2-3), G-3 (`--no-verify`
-      Foot-gun #4 vs Bash-tool contradiction in CLAUDE.md), O-11 (`PREK_HOME` vs `PREK_CACHE_DIR` 3-way drift in CLAUDE.md).
-- [ ] [AGENT] P0. **3.A Codex doc rewrites.** Every IMMEDIATE-tagged codex doc gets the recommended rewrite per the
-      batch plan above. PRs shipped per "Commit + Push + Flip" cadence; flip the per-area issue-doc row `[x]` with the
-      `<commit-sha>` in the same logical unit.
-- [ ] [AGENT] P0. **3.B SSOT consolidations.** Duplicate SSOTs deleted; cross-references rewritten; QG steps added if a
-      banned-pattern surface emerges (candidates: a QG ratchet that catches the GHOST-venue class per IN-22; a check
-      that new runbooks carry the `execution:` block).
-- [ ] [AGENT] P0. **3.C CLAUDE.md hygiene.** Dead rules removed; supersession banners added; cross-references resolved
-      (G-3, O-11, the "13 UIs"/UI-2, the moved-repo refs from 3.A1).
+- [x] **3.A1 — Batch: moved/archived-repo references** (D-7, EX-2/EX-5/EX-6, ML-2-adjacent, + any others). **DONE
+      2026-05-12 (slot 8 Phase 2.C IMMEDIATE batch @PM`0fc4b3fd` + `f401a3c9` + `959ca3fc` + PRE_CUTOVER batches
+      @PM`d19d3bf2` (Data) + @PM`e94e703a` (Execution) + UAC@`c89e820` (EX-6 docstring fix))** — `unified-config-interface/testnet_contracts.py`
+      (→ UTL `unified_trading_library/config_interface/testnet_contracts.py`) corrected at CLAUDE.md L255 + master_to_live
+      L252 (EX-2); `DefiErrorCode` location rewritten "From UAC `DefiErrorCode`, consumed by execution-service DeFi
+      connectors" at `mev-protection.md` L307 + CLAUDE.md L258 (EX-5); UDEI `unified-defi-execution-interface` references
+      removed from `flash-loan-receiver.md` CI snippet (EX-3) + UAC `DefiErrorCode` docstring corrected "UDEI connectors"
+      → "execution-service DeFi connectors" (EX-6); `unified_trading_services` non-existent module path corrected per
+      D-7 in Data PRE_CUTOVER batch (`schema-governance.md` + `README.md`). Owner: governance + slot 8.
+- [x] **3.A2 — Batch: enum-count drift** (D-1, ST-1/ST-2/ST-3/ST-6, R-5..R-9, AL-4, ML-4). **DONE 2026-05-12 (slot 8
+      PRE_CUTOVER batches @PM`d19d3bf2` (Data) + @PM`87a09ca8` (Strategy) + @PM`88f435f7` (Risk) + @PM`4b3e27c7`
+      (Alerting) + @PM`57c748b2` (ML))** — `EmptyConfirmedReason` 9-13 → 17+ enum-count lag corrected (D-1); archetype
+      counts 53 → 55 (`StrategyArchetype`), families 8 → 9 (`StrategyFamily`), instruction actions → 14
+      (`InstructionActionV2`) corrected in Strategy batch (ST-1/2/3/6); Risk Kill-switch + spending-cap enum-count drift
+      corrected (R-5..R-9); `AlertCode` headline "Closed set (39 codes as of 2026-05-07)" → ~63 members corrected at
+      `alert-code-taxonomy.md:65` (AL-4); ML-4 PSI/KL drift wiring described per ML batch. **Master-plan row touch
+      `master_to_live_defi_2026_05_23.md:150`** confirmed handled via Strategy batch + the CLAUDE.md PRE_CUTOVER bundle
+      @PM`33a4df91` (slot 8 cross-side coordination with Ikenna-main).
+- [x] **3.A3 — Batch: bucket-name SSOT drift** (D-5, O-3/O-4, ML-1, PB-10/PB-11). **DONE 2026-05-12 (slot 8 Phase 2.C
+      operator-gate triage @PM`564c060b` + PRE_CUTOVER batches @PM`d19d3bf2` (Data D-5) + @PM`3dc3e6b1` (Ops O-3/O-4) +
+      @PM`19a2001c` (PB-10/PB-11) + ML-1 self-answered)** — `bucket-naming-and-config.md` supersession banner added
+      pointing at `resolve_bucket_name(...)` SSOT (D-5); `disaster-recovery.md` + `README.md` hardcoded `gs://...`
+      patterns + `category`-vocab references corrected (O-3/O-4); PBMS bucket-name references re-pointed (PB-10/PB-11);
+      ML-1 self-answered in operator-gate triage — canonical = `resolve_bucket_name(kind="ml-models-store")` per
+      `codex/02-data/bucket-naming-and-config.md`; ML codex doc-consolidation collapsed to "see `resolve_bucket_name(kind='ml-*')`"
+      pointer. Owner: governance + slot 8.
+- [x] **3.A4 — Batch: `00-SSOT-INDEX.md` gaps** (ST-18, ML, IN, O-15, G-11, TS-15). **DONE 2026-05-12 (slot 8 PRE_CUTOVER
+      batches @PM`87a09ca8` (Strategy ST-18, 6 rows) + @PM`57c748b2` (ML lifecycle docs) + @PM`38748f36` (Instruments
+      catalogue docs) + @PM`3dc3e6b1` (Ops O-15) + @PM`88318109` (Governance G-11) + @PM`3bd13993` (Testing TS-15) +
+      @PM`4b3e27c7` (Alerting AL-18, 7 rows))** — Strategy registry-v2/summary/naming-convention/signal-broadcast/
+      lifecycle-maturity/archetype-paper-readiness rows added per ST-18; ML lifecycle docs registered; instruments
+      catalogue docs registered; testing-infrastructure stub-replacement registered with TS-15 fix; alerting taxonomy
+      docs registered with 7 alerting-runbook entries. Owner: governance + slot 8.
+- [x] **3.A5 — Batch: Runbook-Execution-Owner blocks** (O-7/O-8, IN-6/IN-14/IN-16, PB). **DONE 2026-05-12 (slot 8
+      operator-gate triage @PM`564c060b` + PRE_CUTOVER batches @PM`3dc3e6b1` (Ops O-7+O-8 codified as QG warning-with-baseline)
+      + @PM`38748f36` (Instruments IN-6/14/16 runbook block on remediation scripts) + @PM`19a2001c` (PB runbook blocks))**
+      — O-7+O-8 codified as QG warning-with-baseline per operator-gate triage (no per-launcher `execution:` block ratchet;
+      baseline check on `VM_PREFIX_TO_BUCKET` + Deploy-Missing UI `_SERVICE_LAUNCHER_SCRIPTS` set-parity); IN-6/14/16
+      runbook blocks added to phantom-audit reconciler + tier-promotion + instruments-service remediation script index;
+      PBMS reconciler runbook blocks added per PB-17/PB-18 codification. Owner: governance + slot 8.
+- [x] **3.A6 — Batch: self-flagged-stale-doc-still-inline** (UI-14, TS-14/TS-15, IN-1). **DONE 2026-05-12 (slot 8
+      PRE_CUTOVER batches @PM`8af99d6d` (UI UI-14 `local-dev.md` stale-section deletion + redirect) + @PM`3bd13993`
+      (Testing TS-14 `testing.md` stub-replacement + TS-15 emulator/mock table dedup) + IN-1 routed to Ikenna slot 2 per
+      cross-side collision-avoidance @PM`79f73426` ping + orchestrator confirmation)** — UI-14's `local-dev.md` stale
+      sections (dead port registry + 11 legacy split UIs) deleted; TS-14 `testing.md` 1-line stub replaced with proper
+      SSOT body; TS-15 emulator/mock table dedup landed. **IN-1 special-case** owned by Ikenna slot 2 — slot 8 ping
+      logged in `_agent_pings.md` 2026-05-12; orchestrator confirmed routing.
+- [x] **3.A7 — Per-area singletons** (the IMMEDIATE rows not covered by 3.A1-3.A6). **DONE 2026-05-12 (slot 8
+      PRE_CUTOVER + IMMEDIATE batches across all 12 areas)** — ST-4 `archetype-paper-readiness.md` source-file correction
+      (Strategy batch @PM`87a09ca8`); EX-8/EX-20 `defi-execution-overview.md` MEV provider inversion fix + supersession
+      banner @`0fc4b3fd` (coordinated with `cross_asset_group_catalogue_audit` Phase 4 closeout @PM`be7d7c84`); AL-3
+      stale `ROUTING_RULES` block → UAC `LIVE_ALERT_RULES` pointer (Alerting batch @PM`4b3e27c7`); AL-10 synthetic-data
+      filter codified via operator-gate triage @PM`564c060b` + @c9511517 (taxonomy in `alert-code-taxonomy.md`;
+      UAC `AlertRule.allow_synthetic` field wire-in routed to alerting maintainer for downstream impl); TS-3/TS-1/TS-2
+      VCR-doc contradictions + stale `network_block_plugin.py` path fixed (Testing batch @PM`3bd13993`); TS-5
+      `quality-gates.md`/`dependency-management.md` `.[dev]` extras → "Flat deps only" (Testing batch @PM`3bd13993`);
+      UI-1/UI-2 `local-dev.md` dead port registry + "13 UIs" → 2-3 (UI batch @PM`8af99d6d` + CLAUDE.md bundle
+      @PM`33a4df91`); G-3 `--no-verify` Foot-gun #4 reconciliation codified in CLAUDE.md bundle @PM`33a4df91`; O-11
+      `PREK_HOME` vs `PREK_CACHE_DIR` 3-way drift resolved in CLAUDE.md PRE_CUTOVER bundle @PM`33a4df91`.
+- [x] [AGENT] P0. **3.A Codex doc rewrites.** **DONE 2026-05-12 (slot 8)** — every IMMEDIATE-tagged codex doc rewritten
+      per the 3.A1-3.A7 batch chain above. Per-area issue-doc rows flipped via the `## PRE_CUTOVER batch shipped 2026-05-12
+      (slot 8 sub-agent)` disposition tables appended to each `codex_audit_<area>_2026_05_12.md` doc @PM`651ccf15` (Data/Strategy/Instruments/Execution)
+      + corresponding flips in ML/PB/Risk/Alerting/Ops/Governance/UI/Testing batches.
+- [x] [AGENT] P0. **3.B SSOT consolidations.** **DONE 2026-05-12 (slot 8)** — duplicate SSOTs deleted; cross-references
+      rewritten (3-way `mev-protection.md` consolidation closed via `cross_asset_group_catalogue_audit` Phase 4
+      @PM`be7d7c84` + EX-8/EX-20 sibling fix @`0fc4b3fd`; bucket-naming SSOT consolidation per 3.A3; runbook execution-owner
+      consolidation per 3.A5). QG steps: IN-22 (GHOST-venue ratchet) filed POST_CUTOVER per Phase 5
+      `governance_qg_automation_gaps_post_cutover_2026_05_12.md`; `execution:` block ratchet captured in same POST_CUTOVER
+      plan. No new QG ratchet shipped in this plan's scope (PRE_CUTOVER tier).
+- [x] [AGENT] P0. **3.C CLAUDE.md hygiene.** **DONE 2026-05-12 (slot 8 CLAUDE.md PRE_CUTOVER bundle @PM`33a4df91`)** —
+      dead rules removed; supersession banners added; cross-references resolved (G-3 `--no-verify` reconciliation +
+      G-4 legacy-plan estimate-backfill cadence + G-10 size-budget audit cadence + G-14 slot-1 master-plan ownership +
+      G-16 cross-side ping-ledger commit-sha retention + UI-9 dev-stack startup decision table + TS-12 Tenderly fixture
+      path mirror + O-11 `PREK_HOME` vs `PREK_CACHE_DIR` 3-way drift + UI-2 "13 UIs" → 2-3 + moved-repo refs from 3.A1).
 
 **Full-execution criterion**: every IMMEDIATE row flipped `[x]` with `<commit-sha>` evidence; codex-vs-code drift count
 drops to 0 on IMMEDIATE rows.
