@@ -5,9 +5,18 @@
 # A new occurrence not in this file → ERROR, exit 1.
 #
 # Bootstrap baseline written 2026-05-12 by slot 8 from the full workspace sweep.
-# Per-repo split (current state after 2026-05-12 Phase 4.UTL sweep):
-#   market-tick-data-service: 97 entries (slot 3-owned, Phase 4.MTDS triage gate)
-#   features-service: 6 entries (gated on features-consolidation merge ~2026-05-16)
+# Per-repo split (current state after 2026-05-12 Phase 4.FEATURES sweep —
+# harsh slot 3 cleared the 6 features-service entries):
+#   market-tick-data-service: 0 entries (Phase 4.MTDS sweep landed 2026-05-12
+#     at MTDS@3da3f43 — 97 callsites in 23 files + DefiManifestRecorder
+#     Q1=(α) migration; UTL@12d5e62 11 internal callsites; UAC@52d289c
+#     PipelineMode enum extension + 14 DeFi SOURCE_PRIORITY entries.)
+#   features-service: 0 entries (Phase 4.FEATURES sweep landed 2026-05-12 by
+#     harsh slot 3 — sports/batch_handler 4 callsites + calendar_orchestrator
+#     2 callsites cleared. Calendar uses BATCH_INSTRUMENTS_SERVICE workaround
+#     per features_calendar_pipeline_mode_gap_2026_05_12.md; clean fix
+#     (BATCH_FRED + BATCH_FEATURES_CALENDAR_SERVICE) is an operator-decision
+#     UAC enum extension pending.)
 #   unified-trading-library: 0 entries (Phase 4.UTL sweep landed 2026-05-12 —
 #     11 callsites cleared: streaming/candle_writer 4 LIVE_WEBSOCKET stamps,
 #     streaming/parallel_per_symbol_runner caller-passed pipeline_mode kwarg,
@@ -17,49 +26,13 @@
 #     manifest_writer:1919 _validate_with_source plumb-through from
 #     _maybe_validate/record_captured.)
 #
-# Status closed set:
+# Status closed set (no entries today, kept for future Phase-N sweeps):
 #   - pending_phase_4_mtds      → Phase 4.MTDS Q1-Q5 triage gate (slot 3)
 #   - pending_phase_4_features  → features-consolidation merge gate (~2026-05-16)
 #
 # Clear cadence: entries are DELETED from this file (not re-statused) as Phase 4.MTDS
 # sweep + features-consolidation Phase 4.FEATURES sweep + DEFAULT-REMOVAL land.
 
-default_successor: "manifest_schema_final_gate Phase 4.MTDS + Phase 4.DEFAULT-REMOVAL"
+default_successor: "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL"
 
-entries:
-  - repo: features-service
-    file: features_service/calendar/engine/calendar_orchestrator.py
-    line: 241
-    method: record_failed
-    status: pending_phase_4_features
-    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
-  - repo: features-service
-    file: features_service/calendar/engine/calendar_orchestrator.py
-    line: 264
-    method: record_empty
-    status: pending_phase_4_features
-    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
-  - repo: features-service
-    file: features_service/sports/cli/handlers/batch_handler.py
-    line: 538
-    method: record_empty
-    status: pending_phase_4_features
-    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
-  - repo: features-service
-    file: features_service/sports/cli/handlers/batch_handler.py
-    line: 547
-    method: record_failed
-    status: pending_phase_4_features
-    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
-  - repo: features-service
-    file: features_service/sports/cli/handlers/batch_handler.py
-    line: 474
-    method: record_empty
-    status: pending_phase_4_features
-    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
-  - repo: features-service
-    file: features_service/sports/cli/handlers/batch_handler.py
-    line: 487
-    method: record_failed
-    status: pending_phase_4_features
-    successor: "manifest_schema_final_gate Phase 4.FEATURES sweep (gated on features-consolidation merge by 2026-05-16)"
+entries: []

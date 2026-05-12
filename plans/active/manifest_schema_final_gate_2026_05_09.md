@@ -395,24 +395,27 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       pandas round-trip is naturally column-preserving; added docstring banner + inline comment for future readers, no
       behaviour change needed). QG: identical pre-sweep baseline (zero new errors). Finding filed:
       [`footystats_pipeline_mode_gap_2026_05_12.md`](issues/footystats_pipeline_mode_gap_2026_05_12.md).
-- [ ] [AGENT] P0. Phase 4.FEATURES — features-service (post-consolidation) + remaining features-\* repos pass propagated
-      `pipeline_mode` + emission-policy hooks. **GATED on features-consolidation merge by May 16.**
-      **Pre-audit shipped 2026-05-12 slot 8** via Phase 4.GREP-VERIFY AST-walk: 6 callsites enumerated, concentrated
-      in 2 files (mechanical sweep, ~30min once gate lifts):
-      - `features_service/calendar/engine/calendar_orchestrator.py:241` — `record_failed(...)` (calendar orchestrator)
-      - `features_service/calendar/engine/calendar_orchestrator.py:264` — `record_empty(...)` (calendar orchestrator)
-      - `features_service/sports/cli/handlers/batch_handler.py:474` — `record_empty(...)` (sports batch handler)
-      - `features_service/sports/cli/handlers/batch_handler.py:487` — `record_failed(...)` (sports batch handler)
-      - `features_service/sports/cli/handlers/batch_handler.py:538` — `record_empty(...)` (sports batch handler)
-      - `features_service/sports/cli/handlers/batch_handler.py:547` — `record_failed(...)` (sports batch handler)
-
-      Pipeline-mode mapping per existing UAC SOURCE_PRIORITY: calendar paths likely `BATCH_INSTRUMENTS_SERVICE`
-      (self-published catalog rows); sports paths inherit from upstream MTDS source (`BATCH_API_FOOTBALL` for
-      footystats workaround; `BATCH_TRANSFERMARKT` for player stats; `BATCH_UNDERSTAT` for xG; etc.) — per slot 2's
-      Phase 4.INSTRUMENTS mapping table at `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`. All 6 occurrences are baselined as
-      `pending_phase_4_features` in
-      [`scripts/quality_gates/pipeline_mode_explicit_baseline.yaml`](../../scripts/quality_gates/pipeline_mode_explicit_baseline.yaml)
-      pending post-consolidation sweep.
+- [x] [AGENT] P0. Phase 4.FEATURES — features-service (post-consolidation) + remaining features-\* repos pass propagated
+      `pipeline_mode` + emission-policy hooks. **✅ SHIPPED 2026-05-12 by harsh slot 3** (features-consolidation Phase 7
+      already shipped 2026-05-11 per code_freeze freeze-gate item 6; gate was effectively lifted Day 2). 6 callsites in
+      2 files cleared:
+      - `features-service@842ff741` (sports/batch_handler 4 callsites lines 474+487+538+547) — adds module-level SSOT
+        `_FEATURE_GROUP_TO_PIPELINE_MODE` dict + `_resolve_pipeline_mode(name)` helper. Mapping per slot 2's Phase
+        4.INSTRUMENTS `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` precedent: fixture_features → `BATCH_API_FOOTBALL`,
+        odds_features → `BATCH_ODDS_API`, derived_features → `BATCH_FOOTYSTATS`; 14 reference-table TABLE_TO_EXPORT
+        catalog exports fall-through to `BATCH_API_FOOTBALL` default.
+      - `features-service@229a0963` (calendar_orchestrator 2 callsites lines 241+264) — adds module-level SSOT
+        `_FEATURE_GROUP_TO_PIPELINE_MODE` for `time_features` + `economic_events`. Both tagged
+        `BATCH_INSTRUMENTS_SERVICE` as a documented closed-set workaround pending UAC enum extension
+        (`BATCH_FRED` for economic_events FRED-sourced + `BATCH_FEATURES_CALENDAR_SERVICE` for time_features
+        pure-derived) — full finding + operator-decision menu at
+        [`issues/features_calendar_pipeline_mode_gap_2026_05_12.md`](issues/features_calendar_pipeline_mode_gap_2026_05_12.md).
+        Same logical-unit adjacent fix: `record_empty(...)` at line 264 now also passes `reason="SOURCE_RETURNED_ZERO"` —
+        original code would have crashed `LegacyBlankErrorReasonError` at runtime (UTL Wave-2 writegate blank-reason
+        guard, hardened 2026-05-07).
+      - PM baseline `pipeline_mode_explicit_baseline.yaml` shrunk **6 → 0** at PM@`<this-flip>` (full workspace
+        baseline now empty). STEP 5.70 `check_pipeline_mode_explicit_at_record_calls.py` workspace-wide: `OK — 0
+        baselined occurrences, 0 new occurrences`. Phase 4.DEFAULT-REMOVAL now UNBLOCKED on the FEATURES half.
 - [x] [AGENT] P0. Phase 4.DEPLOYMENT-API — manifest read endpoints surface v8 columns; data-status drilldown renders
       `service_emission_state` badges (4 states).
       **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-deployment-api-ui` sub-agent**:
