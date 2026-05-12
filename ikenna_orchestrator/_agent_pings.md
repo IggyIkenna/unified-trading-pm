@@ -31,6 +31,38 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-13 ~Day-2 UTC] [main → slot 8] — 🚀 **ADDITIONAL Day-2-4 scope: workspace-grep sweep for stale `features-*-service` references**. Operator directive 2026-05-13: _"features volatility service etc shouldn't exist need to check where in the plans/codex this is still being referenced and fix everywhere"_. Per `features_repo_consolidation_2026_05_08.md` Phase 7 (landed 2026-05-08), the per-family services were consolidated into ONE `features-service` repo with 8 family modules. Pre-consolidation service names should NOT appear in active plans / codex / CLAUDE.md.
+
+**Survey 2026-05-13 (slot 1 grep)**:
+- `plans/active/`: **184 references** (stale)
+- `codex/`: **497 references** (stale)
+- `cursor-configs/CLAUDE.md`: **1 reference** (stale)
+- `plans/archive/`: 1532 references (historical — DO NOT TOUCH; preserves pre-consolidation context)
+
+**Stale patterns to fix** (regex):
+```
+features-(volatility|cross-instrument|onchain|sports|delta-one|multi-timeframe|commodity|calendar|prediction|microstructure|onchain-defi)-service
+```
+
+**Replacement guidance**:
+- Service references → `features-service` (single repo); cite the family module path like `features_service/volatility/` where specific.
+- Bucket references (e.g. `features-volatility-cefi-{pid}`) → **KEEP** (these are canonical per bucket-name SSOT (b+); storage layer splits by family × asset_group × env).
+- File-path references (e.g. `features-volatility-service/scripts/...`) → check if file still exists under consolidated `features-service/scripts/...`; update path OR mark as legacy if file was deleted.
+- Service-name in coordination docs (work-splits / continuation prompts / cross-side pings) → `features-service` + family module.
+- QG / workspace-manifest entries → verify they reference `features-service` per the consolidation.
+
+**Triage classes (slot 8 sub-agent fan-out by area)**:
+- Sub-A: `plans/active/` (184 hits) — biggest concentration, fan out 4-6 sub-agents by plan-cluster (writegate / live-pipeline / api_keys_wallets / etc).
+- Sub-B: `codex/` (497 hits) — fan out 4-6 sub-agents by codex section (02-data / 04-architecture / 09-strategy / etc).
+- Sub-C: `cursor-configs/CLAUDE.md` (1 hit) — trivial single-line fix.
+- Sub-D: workspace-manifest.json + per-repo workflow YAMLs — verify no per-family-service entries.
+
+**Bundled with existing slot 8 scope** (codex_vs_citadel + cross_asset_audit + 13 strategy-summary corrections + 4 Portfolio docs + 3 new Carry docs + Deribit LST verification + legacy archetype deprecation + ~63 IMMEDIATE codex audit findings). Fan out 8+ sub-agents and rip through it.
+
+**Slot 8 capacity check**: at 5× pace + 8-deep fan-out, ~682 references across active+codex+CLAUDE.md is a 2-3 hour mechanical sweep. Within cycle.
+
+
+
 [2026-05-13 ~Day-2 UTC] [main → slots 3/4/5/6/7/8] — 🚀 **WRITEGATE SLICE (c) Phase 6.3-6.8 = BUILD (not migrate) — 9-service emission infra fan-out**. Slot 3's PM@`f0208d34` surfaced: these 9 services have ZERO `record_*` callsites today — emission greenfield, not migration. Operator directive 2026-05-13: ship full build pre-cutover (production manifest readiness even without backfill yet — downstream consumers + cutover monitoring require it). Full per-service emission shape + routing in [`plans/active/issues/writegate_slice_c_phase_6_3_to_6_8_build_not_migration_2026_05_13.md`](../plans/active/issues/writegate_slice_c_phase_6_3_to_6_8_build_not_migration_2026_05_13.md).
 
 **Per-slot service ownership (1-2 services each, ~3-6 hrs/service × 5× pace + fan-out = ~30-90 min each)**:
