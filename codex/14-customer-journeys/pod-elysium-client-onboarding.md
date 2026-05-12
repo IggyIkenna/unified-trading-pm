@@ -66,18 +66,31 @@ on behalf of the BVI Fund using credentials delegated to us by POD.
 
 **Test setup** uses our own wallets — no client capital at risk.
 
-| Chain | Test wallet provider | Setup owner | UAC `SigningSurface` |
+**Canonical wallet = Trust Wallet** (per operator 2026-05-12 *"yeah seems
+trust wallet is the direction we're going"*). Single BIP-39 seed → EVM PK +
+Solana keypair (different Ed25519 key under same mnemonic).
+
+| Chain | Wallet | Secret Manager refs | `SigningSurface` |
 |---|---|---|---|
-| ETHEREUM mainnet | MetaMask OR Trust Wallet (✅ already set up per operator) | UTS (us) | `LOCAL_KEY` for testnet → `CLOUD_KMS_ENCRYPTED` for any mainnet small-amount test |
-| ETHEREUM Sepolia | MetaMask (Sepolia network added) | UTS | `LOCAL_KEY` |
-| Arbitrum Sepolia / Base Sepolia / Polygon Amoy | MetaMask (network added) | UTS | `LOCAL_KEY` |
-| Holesky | MetaMask (network added; Lido + EigenLayer testnet) | UTS | `LOCAL_KEY` |
-| Solana mainnet | **Operator-led setup** (Phantom OR solana-cli; see § 4 below) | Operator | `LOCAL_KEY` for testnet → `CLOUD_KMS_ENCRYPTED` for prod test |
-| Solana devnet | Phantom (devnet mode) OR solana-cli airdrop | Operator | `LOCAL_KEY` |
+| ETHEREUM mainnet + Sepolia + 5 EVM testnets (Arb / Base / Polygon / Holesky) | **Trust Wallet** EVM PK | `defi-wallet-trust` (addr) + `defi-wallet-private-key` (PK) + `defi-wallet-private-key-wrapped` (CMK-encrypted) | `CLOUD_KMS_ENCRYPTED` via `wallets-staging/trading-defi-master-v1` (verified 2026-05-12) |
+| Solana mainnet + devnet | **Trust Wallet Solana wallet** (separate Ed25519 keypair under same seed) | `defi-wallet-solana` + `defi-wallet-solana-private-key` + `defi-wallet-solana-private-key-wrapped` (🟡 PENDING operator export — see [`pre-cutover-test-wallets-runbook.md`](../05-infrastructure/pre-cutover-test-wallets-runbook.md) § 3) | `CLOUD_KMS_ENCRYPTED` via same staging CMK |
+| Tenderly fork + chain RPCs (EVM all) | n/a (RPC creds) | `tenderly-api-key` + `tenderly-fork-rpc-url` + `alchemy-api-key` | n/a (RPC auth, not signing) |
+| CeFi (BYBIT / BINANCE / etc.) | Per-venue institutional sandbox | Per-venue secrets `<venue>-{read,trade,withdraw}-*` (sandbox suffixed) | n/a (venue-managed) |
+| MetaMask (secondary, NOT canonical) | Address-only — no PK in Secret Manager | `defi-wallet-metamask` | n/a unless operator provisions per-runbook § 4.A |
+
+**Tenderly fork + Sepolia + EVM testnets: ✅ FULLY SORTED** — Tenderly access
++ fork RPC URL + Alchemy chain RPCs all confirmed present in Secret Manager
+2026-05-12.
+
+**Solana: 🟡 PARTIAL** — Trust Wallet's Solana wallet (same seed, different
+keypair) is the chosen route, but the Solana PK has NOT YET been exported
+from Trust Wallet to Secret Manager. Operator runbook in
+[`pre-cutover-test-wallets-runbook.md`](../05-infrastructure/pre-cutover-test-wallets-runbook.md)
+§ 3.1.
 
 CeFi test wallets (BYBIT / BINANCE / etc.) on **Ethereum already set up** by
 operator pre-2026-05-12; awaiting confirmation of per-venue institutional
-sandbox availability.
+sandbox availability (out of slot 4 scope; per-venue operator onboarding).
 
 ### 3.2 Cutover (2026-06-01 onwards)
 

@@ -4,15 +4,15 @@ scope: [admin, operator]
 
 # Pre-cutover test-wallet operator runbook
 
-> **Created 2026-05-12** by slot 4 per operator 2026-05-12 clarification:
-> *"for test we need our own setup with trust wallets or metamask and cefi
-> wallets we have both setup on ethereum already for sol and non evm chain
-> i guess its operator led just need to tell em what to setup for tests."*
+> **Created 2026-05-12** by slot 4. **Updated 2026-05-12** with operator
+> confirmation: *"yeah seems trust wallet is the direction we're going"* —
+> Trust Wallet is the canonical pre-cutover test wallet across all 5 EVM
+> testnets. MetaMask remains a secondary lookup (address-only secret;
+> no PK provisioned).
 >
-> Captures the operator-action setup for pre-cutover testing wallets. POD
-> client-managed Copper + CEFFU custody activates June-1; this doc covers
-> the now → 2026-05-23 cutover → 2026-06-01 window where we use OUR own
-> wallets (not POD's capital).
+> POD client-managed Copper + CEFFU custody activates June-1; this doc
+> covers the now → 2026-05-23 cutover → 2026-06-01 window where we use
+> OUR own wallets (not POD's capital).
 >
 > Composes with:
 > [`codex/14-customer-journeys/pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md)
@@ -20,23 +20,64 @@ scope: [admin, operator]
 
 ---
 
+## § 0 — Canonical test wallet (where to find it)
+
+**Canonical EVM test wallet** (confirmed operator-direction 2026-05-12):
+
+| Surface | Value | Secret Manager entry |
+|---|---|---|
+| **Trust Wallet EVM address** (canonical for EVM testnets) | `0x992ebFe04DB05f964C45BCE3D73Ca4c81715a79f` | [`defi-wallet-trust`](#) |
+| **Trust Wallet EVM PK** (raw 0x-hex) | (66-char hex; never logged) | [`defi-wallet-private-key`](#) |
+| **Trust Wallet EVM PK wrapped** (May-23 cutover signing path) | (233-byte base64 ciphertext) | [`defi-wallet-private-key-wrapped`](#) — envelope-encrypted via `wallets-staging/trading-defi-master-v1` CMK on 2026-05-12, round-trip-verified |
+| MetaMask address (NOT canonical — secondary) | `0x0056801778F9A5dE5C8a5225B676859b797fA88B` | [`defi-wallet-metamask`](#) — address only, NO PK |
+| **Trust Wallet Solana keypair** (operator-action — see § 3 below) | (needs export from Trust Wallet → Solana network → reveal PK) | `defi-wallet-solana-private-key` + `defi-wallet-solana-private-key-wrapped` (both pending operator export) |
+
+### Tenderly fork + chain RPC coverage (sorted)
+
+Pre-cutover testing also depends on chain-RPC + Tenderly fork credentials.
+All confirmed present in Secret Manager 2026-05-12:
+
+| Surface | Secret Manager entry | Use |
+|---|---|---|
+| Tenderly access | `tenderly-api-key` | Authenticated Tenderly API (fork creation + simulation) |
+| Tenderly fork RPC | `tenderly-fork-rpc-url` | RPC endpoint for batch/paper mode (consumed per `credentials_per_mode.yaml` Phase 7.A `paper` + `batch` modes) |
+| Alchemy mainnet/L2 RPC | `alchemy-api-key` | EVM chain RPCs (ETH / Arb / Base / Polygon mainnet + Sepolia variants) |
+
+**Sepolia coverage**: same Trust Wallet EVM PK (Sepolia uses the same secp256k1
+key shape as mainnet). Operator funds the wallet via Sepolia faucet (see § 2.1 below).
+
+**End-to-end smoke verified 2026-05-12**: `CloudKmsCustodyProvider` fetched
+`defi-wallet-private-key-wrapped` → Cloud HSM KMS Decrypt → web3.py
+`from_key` → derived address matched `defi-wallet-trust`. The signing
+pipeline that goes live on 2026-05-23 is operationally proven against
+this wallet.
+
+**Wallet provisioning JSON** (consumed at runtime by trading VM):
+[`unified-api-contracts/unified_api_contracts/config/test_wallet_provisioning_pre_cutover.json`](../../unified-api-contracts/unified_api_contracts/config/test_wallet_provisioning_pre_cutover.json) —
+5 EVM testnet entries (`test-eth-sepolia-trust` / `test-arb-sepolia-trust` /
+`test-base-sepolia-trust` / `test-poly-amoy-trust` / `test-holesky-trust`),
+all pointing at the wrapped PK + same Trust Wallet address.
+
+---
+
 ## § 1 — Coverage status
 
 | Chain | Wallet provider | Setup status (per operator 2026-05-12) |
 |---|---|---|
-| ETHEREUM mainnet | MetaMask / Trust Wallet | ✅ Already set up |
-| ETHEREUM Sepolia | MetaMask | ✅ Already set up (CeFi wallets on Ethereum confirmed) |
-| Arbitrum / Base / Polygon (mainnet + testnets) | MetaMask | ✅ Already set up (operator extends MetaMask to new networks per § 2.1) |
-| Holesky (Lido + EigenLayer testnet) | MetaMask | ⚪ Operator add network per § 2.2 |
+| ETHEREUM mainnet | **Trust Wallet** (canonical) | ✅ Already set up — PK in `defi-wallet-private-key` |
+| ETHEREUM Sepolia | Trust Wallet (same EVM PK) | ✅ Already set up (CeFi wallets on Ethereum confirmed) |
+| Arbitrum / Base / Polygon (mainnet + testnets) | Trust Wallet (same EVM PK) | ✅ Already set up — same EVM PK works across chains |
+| Holesky (Lido + EigenLayer testnet) | Trust Wallet (same EVM PK) | ⚪ Operator add network per § 2.2 |
 | **Solana mainnet** | Phantom OR solana-cli | 🟡 **OPERATOR ACTION** per § 3 |
 | **Solana devnet** | Phantom OR solana-cli | 🟡 **OPERATOR ACTION** per § 3 |
 | CeFi venues (Bybit / OKX / Deribit / etc.) | Per-venue institutional sandbox | ⚪ Per-venue operator onboarding (out of agent scope) |
+| MetaMask (secondary) | `defi-wallet-metamask` address only | ⚪ No PK in Secret Manager. Operator may provision separately if MetaMask wallet should also be live (see § 5). |
 
 ---
 
-## § 2 — EVM chains (operator can do via MetaMask UI)
+## § 2 — EVM chains (operator can do via Trust Wallet / MetaMask UI)
 
-### 2.1 Add new EVM networks to existing MetaMask
+### 2.1 Add new EVM networks to existing Trust Wallet (canonical) or MetaMask
 
 For each new chain, operator clicks Settings → Networks → Add Network → fills:
 
@@ -97,58 +138,105 @@ For agent to envelope-encrypt + provision per
 
 ---
 
-## § 3 — Solana setup (operator one-time)
+## § 3 — Solana setup — Trust Wallet path (operator-confirmed direction)
 
-Solana wallet setup is operator-led because there's no MetaMask-equivalent
-already configured. Choose Phantom (browser UX) OR solana-cli (terminal).
+**Confirmed operator-direction 2026-05-12** (*"or can we use trust wallet for
+solana too?"*): yes — Trust Wallet supports Solana via the **same BIP-39
+mnemonic seed** but derives a **different keypair** (Ed25519 for Solana vs
+secp256k1 for EVM). The EVM PK in `defi-wallet-private-key` therefore
+**cannot be reused on Solana** — operator must export the Solana keypair
+separately from Trust Wallet's Solana wallet view.
 
-### 3.1 Phantom (recommended for operator UX)
+### 3.1 Trust Wallet → Solana keypair export (recommended)
 
-1. Install Phantom browser extension: <https://phantom.app>
-2. Create new wallet → save seed phrase (12 words) to 1Password Secure Note.
-3. Switch to devnet: Settings → Developer Settings → Change Network → Devnet.
-4. Copy the wallet's public address.
-5. Fund via Solana faucet:
-   ```bash
-   solana airdrop 2 <YOUR_PUBKEY> --url devnet
-   ```
-   OR via <https://faucet.solana.com> (devnet 2 SOL per request).
-6. Export PK: Settings → Show Private Key → reveal the base58-encoded PK.
-7. Hand to slot 4 agent per § 2.2 envelope-encrypt flow (replace
-   `test-eth-sepolia-pk-wrapped` with `test-sol-devnet-pk-wrapped`).
+1. Open Trust Wallet (mobile or browser extension) — the same wallet that
+   holds the EVM seed in `defi-wallet-trust` / `defi-wallet-private-key`.
+2. Switch to the **Solana wallet** view (Trust Wallet's left-side wallet
+   selector → Solana).
+3. Note the **Solana public address** (base58-encoded, no `0x` prefix).
+4. **Reveal Solana private key**: Settings → Wallets → (selected wallet)
+   → Show Recovery Phrase (or "Show Private Key" if exposed at wallet level).
+   Trust Wallet UI: tap the Solana wallet → Settings → Show Private Key.
+   The Solana PK is a base58-encoded string (NOT the EVM 0x-hex format).
+5. Hand the **Solana private key** + **Solana public address** to slot 4
+   agent via secure channel (1Password Secure Note / Signal disappearing
+   message — NEVER plain-text email / Slack).
 
-### 3.2 solana-cli (alternative)
-
+Slot 4 agent then:
 ```bash
-# Install solana-cli (one-time)
-sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+PROJECT_ID=central-element-323112
+CMK="projects/${PROJECT_ID}/locations/asia-northeast1/keyRings/wallets-staging/cryptoKeys/trading-defi-master-v1"
 
-# Generate new keypair (devnet — workstation OK; mainnet — cold laptop)
-solana-keygen new --outfile ~/.config/solana/uts-test-sol-devnet.json
+# Provision the raw Solana address + PK
+gcloud secrets create defi-wallet-solana --data-file=- <<< "${SOLANA_ADDRESS}"
+gcloud secrets create defi-wallet-solana-private-key --data-file=- <<< "${SOLANA_PK_BASE58}"
 
-# Get the pubkey
-solana-keygen pubkey ~/.config/solana/uts-test-sol-devnet.json
-
-# Configure CLI to use devnet
-solana config set --url devnet
-
-# Airdrop SOL for gas
-solana airdrop 2
-
-# Hand the keypair JSON to slot 4 agent for envelope-encrypt
+# Envelope-encrypt + provision wrapped version (mirrors EVM Trust Wallet flow)
+gcloud secrets versions access latest --secret=defi-wallet-solana-private-key --project=${PROJECT_ID} \
+  | gcloud kms encrypt --key=${CMK} --plaintext-file=- --ciphertext-file=- --project=${PROJECT_ID} \
+  | base64 \
+  | gcloud secrets create defi-wallet-solana-private-key-wrapped --data-file=- --project=${PROJECT_ID}
 ```
 
-The keypair JSON contains the base58 array form of the PK. Slot 4 agent
-encrypts the JSON file directly (or converts to hex first; either works
-with web3py-equivalent Solana SDK).
+Then add to
+[`test_wallet_provisioning_pre_cutover.json`](../../unified-api-contracts/unified_api_contracts/config/test_wallet_provisioning_pre_cutover.json):
 
-### 3.3 Mainnet small-amount Solana test wallet
+```json
+{
+  "wallet_id": "test-sol-mainnet-trust",
+  "chain": "SOLANA",
+  "kind": "HOT_TRADING",
+  "signing_surface": "CLOUD_KMS_ENCRYPTED",
+  "kms_key_uri": "projects/central-element-323112/locations/asia-northeast1/keyRings/wallets-staging/cryptoKeys/trading-defi-master-v1",
+  "private_key_secret_ref": "defi-wallet-solana-private-key-wrapped",
+  "address": "<SOLANA_BASE58_PUBKEY>",
+  "allowed_protocols": ["JITO", "MARINADE", "RAYDIUM", "ORCA", "JUPITER"],
+  "spending_caps": {"per_tx_usd": "100", "per_day_usd": "1000"},
+  "kill_switch_id": "KILL_PER_ASSET_GROUP_DEFI",
+  "archetype_id": "test_carry_staked_basis"
+}
+```
 
-Same as 3.1 / 3.2 BUT:
-- Use a **cold laptop** for keypair generation (per § B.3.1 of
-  [`custody-onboarding-checklist.md`](custody-onboarding-checklist.md)).
-- Fund with ≤$10 SOL only for first sign-and-broadcast smoke.
-- Envelope-encrypt with `wallets-prod` CMK (not staging).
+### 3.2 Solana devnet wallet (optional — operator can use mainnet small-amount)
+
+The Trust Wallet Solana wallet from § 3.1 is **mainnet by default**. For
+devnet-only testing (zero capital risk), two options:
+
+(a) **Reuse the mainnet Trust Wallet keypair on devnet** — Solana mainnet
+keypairs work on devnet as identity (no economic risk on devnet; same
+public address). Just airdrop devnet SOL to the same pubkey:
+```bash
+solana airdrop 2 <SOLANA_PUBKEY> --url devnet
+```
+
+(b) **Generate a fresh devnet-only keypair** via solana-cli — separate
+identity from the Trust Wallet mainnet wallet. Useful if operator wants
+strict mainnet/devnet wallet separation:
+```bash
+sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+solana-keygen new --outfile ~/.config/solana/uts-test-sol-devnet.json
+solana airdrop 2 $(solana-keygen pubkey ~/.config/solana/uts-test-sol-devnet.json) --url devnet
+# Hand keypair JSON to slot 4 agent for wrapping via staging CMK
+```
+
+### 3.3 Phantom (NOT recommended now that Trust Wallet path is chosen)
+
+Phantom remains a valid alternative wallet provider per
+<https://phantom.app>, but per operator 2026-05-12 direction the canonical
+path is Trust Wallet (same seed across EVM + Solana for operational simplicity).
+Phantom flow only if operator decides to provision a **separate** Solana
+keypair distinct from Trust Wallet — not the current direction.
+
+### 3.4 RPC credentials (Solana mainnet + devnet)
+
+Solana RPC endpoint credentials needed beyond the wallet:
+
+- **Public devnet RPC** (`https://api.devnet.solana.com`): public, no auth
+  required — sufficient for low-rate test smoke.
+- **Production-grade RPC** (Helius / QuickNode / Triton): NOT YET in Secret
+  Manager. Operator-action P1 if production-rate Solana RPC needed.
+- **Pyth Hermes** (oracle prices, mainnet + devnet): public HTTPS endpoint
+  per UAC `oracle_prices_handler.py` — no auth needed.
 
 ---
 
@@ -163,6 +251,39 @@ mirroring the prod template shape at
 Each entry uses `signing_surface=LOCAL_KEY` (for raw-key testnet) OR
 `signing_surface=CLOUD_KMS_ENCRYPTED` (for envelope-encrypted testnet/mainnet
 small-amount tests).
+
+---
+
+## § 4.A — Optional: separate MetaMask wallet provisioning
+
+`defi-wallet-metamask` holds the MetaMask EVM address
+(`0x0056801778F9A5dE5C8a5225B676859b797fA88B`) but **no private key**. This
+means MetaMask is NOT currently a usable test wallet — only Trust Wallet is.
+
+If operator wants MetaMask as a second usable test wallet (e.g. for
+parallel-strategy smoke tests, dual-wallet liquidation drills, or
+operator-vs-system signing separation), follow the same envelope-encrypt
+flow as Trust Wallet:
+
+```bash
+# Operator opens MetaMask → Account → Show private key → reveal PK
+# Operator hands PK to slot 4 agent via secure channel.
+# Slot 4 agent runs:
+PROJECT_ID=central-element-323112
+CMK="projects/${PROJECT_ID}/locations/asia-northeast1/keyRings/wallets-staging/cryptoKeys/trading-defi-master-v1"
+echo -n "${METAMASK_PK}" \
+  | gcloud kms encrypt --key=${CMK} --plaintext-file=- --ciphertext-file=- --project=${PROJECT_ID} \
+  | base64 \
+  | gcloud secrets create defi-wallet-metamask-private-key-wrapped --data-file=- --project=${PROJECT_ID}
+# (Also create defi-wallet-metamask-private-key with raw PK if LOCAL_KEY surface needed.)
+```
+
+Then add MetaMask-prefixed entries to
+`test_wallet_provisioning_pre_cutover.json` mirroring the Trust Wallet shape
+(`test-eth-sepolia-metamask` / etc.) pointing at the new
+`defi-wallet-metamask-private-key-wrapped` secret.
+
+**Not blocking May-23 cutover**; pure NICE-TO-HAVE.
 
 ---
 
