@@ -75,6 +75,27 @@ compliance + tax reporting deferred post-cutover.
 10. Codex SSOTs: 2 NEW + 2 UPDATE.
 11. Real-VM cutover-archetype dry-run: full lifecycle for demo client end-to-end including ≥1 automated withdrawal + ≥1
     perf-fee crystallization event.
+12. **Native-gas-token treasury reservation + auto-provision** (added 2026-05-12 per operator carry-staked-basis
+    discipline; codified in [`pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+    HARD RULE #6 "Gas fees"): every DeFi strategy preflight verifies the wallet's native-gas-token balance per chain
+    (ETH on Ethereum / Arbitrum / Optimism / Base; SOL on Solana; BNB on BSC; MATIC on Polygon; AVAX on Avalanche;
+    GNO on Gnosis) exceeds a configured threshold. When below threshold, auto-provision routes
+    `native_gas_reservation_pct` (default **1.0%** of starting capital per DeFi strategy; tunable per chain via
+    `default_basis_trade.yaml::native_gas_reservation_pct_by_chain`) into the native gas token via the spot venue.
+    Hard block — strategy emits `record_failed(GAS_INSUFFICIENT)` instead of attempting a tx that will revert at
+    validator level. **Treasury accounting**: native-gas reserves are NON-DEPLOYABLE — must be tracked as a separate
+    `gas_reserve_balance_native` column in the per-(client, chain, wallet) treasury balance snapshot, excluded from
+    `available_capital_usd` for archetype-allocation purposes.
+13. **aToken / debt-token treasury discipline** (added 2026-05-12 per operator carry-staked-basis discipline; codified
+    in [`pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) HARD RULE #4
+    "DeFi lending/borrowing yield ... never APY"): Aave V3 / Compound V3 / Spark / Radiant supply positions tracked as
+    actual `aToken_balance_native` per (chain, protocol, asset); borrow positions tracked as
+    `debt_token_balance_native`. Position-balance-monitor reads on-chain `balanceOf(aToken_addr, wallet)` per block —
+    the balance growth IS the yield (no APY proxy). Treasury balance snapshot extends with per-(chain, protocol,
+    asset) aToken + debt-token rows alongside the underlying token rows; pnl-attribution-service consumes the
+    snapshots' index-growth delta as CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW. **Banned**: tracking lending
+    positions as the underlying token's USD value with an APY-multiplier — discards the on-chain growth signal +
+    introduces discretization error.
 
 ### Non-goals (post-cutover)
 

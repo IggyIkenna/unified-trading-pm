@@ -88,13 +88,25 @@ Solana `getInflationReward` per-epoch). The codex
 table lists the canonical chain-native sources per protocol. The oracle / exchange-rate path is the proxy fallback when
 direct chain-native capture is unavailable.
 
-**Centralized-exchange collateral form**: Bybit + OKX accept the **wrapped non-rebasing** form (wstETH on Bybit per
-the Bybit Convert + USDT/UTA collateral docs; OKX accepts wstETH + cbETH + weETH per OKX Collateral Asset List). The
-unwrapped rebasing stETH is NOT accepted as cross-margin on either venue (the daily-rebase event would otherwise force
-re-collateralization). carry-staked-basis archetype config (`default_basis_trade.yaml`) MUST therefore stake to the
-wrapped form before transferring as perp-venue margin — the on-chain `STAKE` leg actually does
-`Lido.submit → stETH → wstETH wrap` for the ETH side; on Solana the LST issuers (Jito, Marinade, BlazeStake) already
-mint non-rebasing tokens natively so no wrap step is needed.
+**Centralized-exchange collateral form** (per
+[`codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`](../archetypes/carry-staked-basis.md) §
+"Venue × LST collateral matrix"):
+
+| CEX | Accepted LST collateral | Form | Attribution factor when posted as cross-margin |
+|---|---|---|---|
+| **Bybit (UTA)** | stETH + METH + USDe | **Rebasing** (Bybit absorbs daily rebase server-side at UTA layer) | `CARRY_BASE_REBASING` — position-balance-monitor reads Bybit subaccount balance delta per day |
+| **OKX (multi-currency margin)** | wstETH + cbETH + weETH (haircut TBD per Stream A live probe) | **Wrapped non-rebasing** | `CARRY_BASE` — `holding × (exchange_rate_now / exchange_rate_prev - 1)` per the on-chain getter |
+| **Deribit (X:PM/X:SM)** | stETH (7.5% haircut, offsets ETH-perp directly — 2026-01-13 onwards) | **Rebasing** | `CARRY_BASE_REBASING` |
+| **Drift (Solana CL DEX)** | jitoSOL + mSOL (native non-rebasing) | **Wrapped non-rebasing** | `CARRY_BASE` |
+
+Implication for `carry_staked_basis` archetype `_build_legs` discipline: the on-chain `STAKE` leg shape MUST match
+the perp venue's accepted collateral form. ETH-side: Bybit + Deribit consume the rebasing stETH directly
+(`Lido.submit → stETH → TRANSFER`); OKX requires wrapping (`Lido.submit → stETH → wstETH wrap → TRANSFER`). Solana
+side: jitoSOL / mSOL / bSOL are natively non-rebasing — no wrap step needed for Drift. **Banned**: posting wrapped
+wstETH to Bybit (Bybit's UTA pricing is calibrated on stETH share-price; wstETH delta diverges) — and conversely
+posting rebasing stETH to OKX (OKX has no daily-rebase reconciliation; the position would mark as undersized post-
+rebase). Archetype-engine config (`default_basis_trade.yaml`) discriminates by `perp_venue` to select the right
+wrap-or-not step at `_build_legs` time.
 
 **Banned patterns**:
 

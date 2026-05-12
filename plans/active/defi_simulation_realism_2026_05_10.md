@@ -273,6 +273,17 @@ historical-swap **validation results** still pending — fold into this section 
 
 Owner: harsh + parallel agent.
 
+> **⚠️ HARD RULE 2026-05-12 — Phase 3 yield is derived from on-chain INDEX growth, NOT APY** (operator-codified,
+> [`pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) HARD RULE #4):
+> the matching-engine `LendingRateImpactCalculator` (Phase 3A — execution-service@`ff6c52ba`) computes the
+> POST-TRADE marginal rate the next-block accrual will use — that output is the input to the matcher's pre-trade
+> quote, NOT the consumer's P&L attribution. **Backtest replay yield** is computed downstream from the
+> `(liquidity_index, variable_borrow_index)` snapshots captured by MTDS (per
+> `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` capture-coverage requirement): the
+> position-balance-monitor reads the aToken/debt-token balance per block; the index delta directly drives
+> `CARRY_LENDING_SUPPLY` / `CARRY_LENDING_BORROW` P&L factors. **Banned in Phase 3 implementation**: any
+> `supply × apy × time_fraction` proxy as the canonical yield computation; APY is a presentation view only.
+
 > **Day-1 slot-6 design ship 2026-05-12**: codex
 > [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Lending rate-impact-from-
 > own-trade" → "Per-protocol IRM parameter capture" subsection ships the Phase 3 design half with
