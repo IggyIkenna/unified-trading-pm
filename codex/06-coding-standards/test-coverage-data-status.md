@@ -42,6 +42,21 @@ The `deployment-ui-drilldown-depth-audit.md` ratchet rule applies here:
 3. Any flip from WORKING → STOPS*AT_INTERMEDIATE_LEVEL*<level> in the audit is a failing test — the regression is caught
    before merge.
 
+**Execution-owner block** (codified 2026-05-12 per TS-13 audit + Runbook Execution-Owner SSOT HARD RULE):
+
+```yaml
+execution:
+  owner: deployment-ui repo playwright suite (bash scripts/quality-gates.sh runs `npx playwright test data-status/`)
+  cadence: per-PR (PR triggers playwright matrix) + nightly drift detection in deployment-ui CI
+  verifier: playwright job status (green); STOPS_AT_INTERMEDIATE_LEVEL flips surface as failed assertions
+  last_executed: <verify via deployment-ui GitHub Actions → workflow runs tab>
+```
+
+Note: the "is a failing test" language in point 3 above is **aspirational** for new audit-row additions today
+(reviewer-discipline-only); the QG-enforcement gap (auto-fail on STOPS_AT_INTERMEDIATE_LEVEL flip) is part of the
+deployment-ui playwright suite owner's PRE_CUTOVER backlog. Until wired: every audit-row flip must be paired with a
+playwright-matrix update in the same PR.
+
 ## Why this is a separate codex doc
 
 The data-status surface is one of the most-touched-by-parallel-agents surfaces in the workspace (deployment-api +

@@ -234,7 +234,9 @@ combo:
   [`amm-slippage-simulation.md`](amm-slippage-simulation.md) § "Golden test set harness"): replay historical swaps
   against Tenderly fork pinned at swap block; compare matcher-computed fill vs on-chain `Swap` event. Per-shape
   validation thresholds (≥ 100 V3 swaps within 5 bps; ≥ 50 Curve; ≥ 20 Balancer + Velodrome + Aerodrome; etc.). Caller:
-  `execution-service/tests/integration/test_amm_golden_swaps.py` (Phase 3C NEW).
+  `execution-service/tests/defi_execution/integration/test_amm_golden_swaps.py` (Phase 3C NEW; conftest path
+  corrected 2026-05-12 per TS-12 audit — Tenderly fork fixtures live in
+  `execution-service/tests/defi_execution/integration/conftest.py`, not the legacy `tests/integration/conftest.py`).
 - **High-impact swap pre-flight check** (`defi_simulation_realism_2026_05_10` Phase 4 implementation — Harsh slot 4
   scope): for live swaps where size > N% of pool TVL, run a pre-flight `.quote()` against Tenderly fork of upstream RPC
   state before broadcasting tx — protects against pool-state drift between strategy decision and tx inclusion.

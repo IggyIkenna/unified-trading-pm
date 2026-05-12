@@ -4,6 +4,13 @@ scope: [engineer]
 
 # Quality Gates
 
+> **FLAT-DEPS BANNER (codified 2026-05-12 per TS-5 audit)** — the workspace is on **flat-deps-only**: every
+> `pyproject.toml` has ONE `[project.dependencies]` block; no `[project.optional-dependencies]`, no `.[dev]` extras.
+> Multiple inline examples below still show legacy `uv pip install -e ".[dev]"` / `[project.optional-dependencies] dev`
+> shapes (pre-2026-05 patterns); they will be scrubbed inline. New work: use the flat `dependencies` block + plain
+> `uv pip install -e .` per CLAUDE.md § "Dependencies + builds". Verification:
+> `grep optional-dependencies */pyproject.toml` returns 0 hits.
+
 ## Table of Contents
 
 1. [TL;DR](#tldr)

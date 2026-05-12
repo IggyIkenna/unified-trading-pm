@@ -4,11 +4,13 @@ scope: [engineer]
 
 # Integration Testing Layers
 
-**Last Updated:** 2026-03-04 **SSOT for:** The 5-layer integration testing strategy across all repos. **Cross-refs:**
+**Last Updated:** 2026-05-12 (currency refresh per TS-7 audit; was 2026-03-04). **SSOT for:** The 5-layer integration
+testing strategy across all repos. **Cross-refs:**
 
 - Repo registry: `unified-trading-pm/workspace-manifest.json`
-- Plan: `unified-trading-pm/plans/cursor-plans/consolidated_remaining_work.plan.md`
-- Cursor rule: `.cursor/rules/integration-testing-layers.mdc`
+- Plan: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md` (archived; folded forward into
+  `06-coding-standards/README.md` § "Test Infrastructure" + `quality-gates.md` § GCP Emulator / Moto / Cassette parity)
+- Cursor rule: `cursor-rules/testing/integration-testing-layers.mdc` (verify path post `cursor-rules/` reorg)
 - Tier architecture: `04-architecture/tier-and-import-architecture.md`
 - Topology DAG: `04-architecture/TOPOLOGY-DAG.md`
 
@@ -61,14 +63,21 @@ Layer 3:   Pipeline Smoke & E2E       (system-integration-tests, needs GCP sandb
 
 **VCR-based integration test execution:**
 
-VCR-based integration tests do NOT run standalone from AC. They EXECUTE from within the owning interface repos
-(`unified-cloud-interface`, `market-tick-data-service/market_tick_data_service/market_interface`, `instruments-service`
-(reference data — formerly unified-reference-data-interface)), which declare `unified-api-contracts` as a dependency and
-provide the normalization layer under test. This ensures the cassette replays are exercised against the actual adapter
-code, not in isolation.
+VCR-based integration tests do NOT run standalone from AC. They EXECUTE from within the owning consumer repos
+(reconciled 2026-05-12 per TS-18 audit):
 
-See `vcr-cassette-pattern.md` for the full VCR cassette workflow (recording, storage locations, replay pattern in
-interface repos).
+- `unified-cloud-interface` (cloud SDK adapters)
+- `market-tick-data-service/market_tick_data_service/market_interface` (UMI consumer post-collapse — market data)
+- `instruments-service` (reference data — formerly URDI)
+- `execution-service` (UTEI/USEI/UDEI consumer post-collapse — trade + sports + DeFi execution)
+- `position-balance-monitor-service` (UPI consumer post-collapse — position balance)
+
+Each declares `unified-api-contracts` as a dependency and provides the normalization layer under test. This ensures
+the cassette replays are exercised against the actual adapter code, not in isolation.
+
+See [`vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md) for the canonical recording workflow + cassette
+inventory (the earlier `vcr-cassette-pattern.md` was deprecated 2026-05-12 per TS-3 audit; its content is folded into
+ownership.md).
 
 **Tier:** T0 (unified-api-contracts is the T0 pure leaf covering both surfaces)
 
@@ -238,6 +247,31 @@ If only HTTP is on the call path, use `responses` or `aioresponses`.
   `cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py`
 - Nightly drift detection re-records cassettes and alerts on schema changes (alerting-only, not blocking)
 
+**Execution-owner blocks (codified 2026-05-12 per TS-11 audit + Runbook Execution-Owner SSOT HARD RULE):**
+
+```yaml
+# Cassette schema parity check
+execution:
+  owner: UAC repo per-commit QG (bash scripts/quality-gates.sh) + per-PR GitHub Actions
+  cadence: per-commit + per-PR
+  verifier: exit code 0 + ~256 tests in ~2s (per quality-gates.md:1838)
+  last_executed: every UAC commit on live-defi-rollout
+
+# Nightly cassette drift check
+execution:
+  owner: UAC repo .github/workflows/cassette-drift-check.yml
+  cadence: nightly (cron schedule in workflow file)
+  verifier: GitHub Actions job status + alerting-service alert on schema diff
+  last_executed: <verify in GitHub Actions → workflow runs tab>
+
+# Cassette orphan checker
+execution:
+  owner: UAC repo per-commit QG (bash scripts/quality-gates.sh)
+  cadence: per-commit
+  verifier: exit code 0 (unified_api_contracts/testing/cassette_orphan_checker.py output)
+  last_executed: every UAC commit on live-defi-rollout
+```
+
 #### CI Hermeticity (Credential-Free Gate)
 
 All tests must pass with `CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`. To prove zero live network calls:
@@ -248,6 +282,15 @@ pytest --block-network  # from unified-api-contracts/unified_api_contracts/testi
 
 Tests connecting to LOCAL emulators use `@pytest.mark.allow_network`. This opt-out must be commented explaining it is an
 emulator (not a live API). Each opt-out emits a CI warning.
+
+> **QG-enforcement gap (PRE_CUTOVER backlog, codified 2026-05-12 per TS-9 audit)** — today `--block-network` is wired
+> only into `system-integration-tests` per the archived `cicd_mock_hardening_2026_03_11` h8-credential-free-gate.
+> Most service test suites have the plugin available via UAC's `testing/network_block_plugin.py` but DO NOT register
+> it in their root `conftest.py`. **Proposed QG STEP**: scan every `*_service/tests/conftest.py` for explicit
+> registration of the network gate (or an explicit allowlist comment); fail any service that lacks either.
+> **Status**: unbacked — owner is governance + QG-template maintainer; design tradeoff between hard-fail vs warning.
+> Reference incident class: 2026-05-05 MDPS emitted STARTED+STOPPED with garbage output (a hermetic-test gate
+> catches a different failure mode but mirrors the "code-shipped is not operationally-shipped" lesson).
 
 ---
 

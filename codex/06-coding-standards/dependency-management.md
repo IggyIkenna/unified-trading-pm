@@ -4,14 +4,23 @@ scope: [engineer]
 
 # Dependency Management
 
+> **FLAT-DEPS BANNER (codified 2026-05-12 per TS-5 audit)** — the workspace is on the **flat-deps-only** convention:
+> every `pyproject.toml` has ONE `[project.dependencies]` block. **No `[project.optional-dependencies]`. No `.[dev]`
+> extras.** Dev tooling (pytest, ruff, mypy, prek) lives in the same flat `dependencies` list. The pre-flat-deps
+> examples inline below (`[project.optional-dependencies] dev` blocks, `uv pip install -e ".[dev]"` commands) are
+> **legacy patterns being scrubbed**; do NOT copy them into new pyprojects or Dockerfiles. SSOT: CLAUDE.md
+> § "Dependencies + builds". Verification: `grep optional-dependencies */pyproject.toml` returns 0 hits across
+> the active workspace. Inline scrub tracked as a P2 doc-clean.
+
 ## TL;DR
 
 All dependencies are managed via `pyproject.toml` with pinned versions. **Commit `uv.lock`** — quality gates run
-`uv lock` automatically when deps change; include `uv.lock` in commits. Dev dependencies (pytest, ruff, mypy, prek) are
-in `[project.optional-dependencies] dev`. Ruff version MUST be identical across `pyproject.toml`,
-`.pre-commit-config.yaml`, `quality-gates.sh`, and CI configs. unified-trading-services is installed separately (SSH for
-local, HTTPS+PAT for CI/Docker). When a test skips due to a missing dependency, add it to dev deps -- never leave it
-skipping.
+`uv lock` automatically when deps change; include `uv.lock` in commits. **All deps (including dev tooling — pytest,
+ruff, mypy, prek) live in a single flat `[project.dependencies]` block** per the FLAT-DEPS rule above; the inline
+`[project.optional-dependencies] dev` shape further down this doc is legacy and being scrubbed.
+Ruff version MUST be identical across `pyproject.toml`, `.pre-commit-config.yaml`, `quality-gates.sh`, and CI configs.
+unified-trading-services is installed separately (SSH for local, HTTPS+PAT for CI/Docker). When a test skips due to a
+missing dependency, add it to deps -- never leave it skipping.
 
 **Status:** [IMPLEMENTED] in all services.
 
