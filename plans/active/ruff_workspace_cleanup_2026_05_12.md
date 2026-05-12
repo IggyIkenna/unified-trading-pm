@@ -68,20 +68,20 @@ Per in-scope repo:
 
 Cadence: one repo per checkbox. Lint/format/noqa counts from 2026-05-12 ~11:50 UTC audit; rebase will refresh.
 
-- [ ] `features-calendar-service` — lint=4 / format=1 / unused-noqa=1 (warm-up)
-- [ ] `features-commodity-service` — lint=2 / format=1 / unused-noqa=3
-- [ ] `trading-agent-service` — lint=2 / format=0 / unused-noqa=1
-- [ ] `ibkr-gateway-infra` — lint=5 / format=2 / unused-noqa=1
-- [ ] `features-delta-one-service` — lint=3 / format=1 / unused-noqa=7
-- [ ] `features-multi-timeframe-service` — lint=2 / format=1 / unused-noqa=5
-- [ ] `features-onchain-service` — lint=4 / format=1 / unused-noqa=5
-- [ ] `pnl-attribution-service` — lint=4 / format=2 / unused-noqa=5
-- [ ] `batch-live-reconciliation-service` — lint=3 / format=2 / unused-noqa=1
-- [ ] `system-integration-tests` — lint=6 / format=0 / unused-noqa=10
-- [ ] `features-sports-service` — lint=1 / format=2 / **unused-noqa=53** (noqa-heavy; main payoff here)
-- [ ] `unified-trading-api` — lint=7 / format=3 / unused-noqa=16
-- [ ] `client-reporting-api` — lint=51 / format=2 / unused-noqa=6 (lint-heavy; many residual hand-fixes expected — itemize residual count)
-- [ ] `e2e-testing` — lint=54 / format=39 / unused-noqa=37 (BIGGEST in-scope; save for last; expect ~5000-line diff)
+- [ ] `features-calendar-service` — lint=4 / format=1 / unused-noqa=1 (warm-up) **SKIPPED** — `archive/` repo dirty (4 files uncommitted; foreign WIP per rule 3)
+- [ ] `features-commodity-service` — lint=2 / format=1 / unused-noqa=3 **SKIPPED** — `archive/` repo dirty (1 file; foreign WIP per rule 3)
+- [x] `trading-agent-service` — lint=2 / format=0 / unused-noqa=1 — **NO CHANGES** (already clean; residual: 1 C901 in .cursor/scripts/) (slot-7/tab/ikennaigboaka/7)
+- [x] `ibkr-gateway-infra` — lint=5 / format=2 / unused-noqa=1 — ibkr-gateway-infra@3000860; residual: 1 SIM105 (un-auto-fixable)
+- [ ] `features-delta-one-service` — lint=3 / format=1 / unused-noqa=7 **SKIPPED** — `archive/` repo dirty (2 files; foreign WIP per rule 3)
+- [ ] `features-multi-timeframe-service` — lint=2 / format=1 / unused-noqa=5 **SKIPPED** — `archive/` repo dirty (3 files; foreign WIP per rule 3)
+- [ ] `features-onchain-service` — lint=4 / format=1 / unused-noqa=5 **SKIPPED** — `archive/` repo dirty (7 files; foreign WIP per rule 3)
+- [x] `pnl-attribution-service` — lint=4 / format=2 / unused-noqa=5 — pnl-attribution-service@300c7fd; residual: 4 C901 (un-auto-fixable)
+- [x] `batch-live-reconciliation-service` — lint=3 / format=2 / unused-noqa=1 — batch-live-reconciliation-service@0494e39; residual: 0
+- [x] `system-integration-tests` — lint=6 / format=0 / unused-noqa=10 — system-integration-tests@609704f; residual: 12 C901+E741 (un-auto-fixable)
+- [ ] `features-sports-service` — lint=1 / format=2 / **unused-noqa=53** (noqa-heavy; main payoff here) **SKIPPED** — `archive/` repo dirty (23 files; foreign WIP per rule 3)
+- [x] `unified-trading-api` — lint=7 / format=3 / unused-noqa=16 — unified-trading-api@8e5f06e; residual: 15 C901+E501+N812 (un-auto-fixable)
+- [x] `client-reporting-api` — lint=51 / format=2 / unused-noqa=6 (lint-heavy; many residual hand-fixes expected — itemize residual count) — client-reporting-api@9258ad1; residual: 49 C901+SIM105+E501+RUF005 (un-auto-fixable)
+- [x] `e2e-testing` — lint=54 / format=39 / unused-noqa=37 (BIGGEST in-scope; save for last; expect ~5000-line diff) — e2e-testing@5c79a82; residual: 57 C901+E501+F841+E741 (un-auto-fixable; sports scripts with deep complexity)
 
 ## Per-repo recipe (template)
 
@@ -122,20 +122,20 @@ git log -1 --pretty='%H'
 
 Per the 2026-05-12 audit, ~570 residual violations are expected workspace-wide after auto-fix (mostly RUF003 unicode + un-wrappable E501). Agent records the per-repo residual count after each ruff pass:
 
-- [ ] `features-calendar-service` residual: `<N>` violations
-- [ ] `features-commodity-service` residual: `<N>` violations
-- [ ] `trading-agent-service` residual: `<N>` violations
-- [ ] `ibkr-gateway-infra` residual: `<N>` violations
-- [ ] `features-delta-one-service` residual: `<N>` violations
-- [ ] `features-multi-timeframe-service` residual: `<N>` violations
-- [ ] `features-onchain-service` residual: `<N>` violations
-- [ ] `pnl-attribution-service` residual: `<N>` violations
-- [ ] `batch-live-reconciliation-service` residual: `<N>` violations
-- [ ] `system-integration-tests` residual: `<N>` violations
-- [ ] `features-sports-service` residual: `<N>` violations
-- [ ] `unified-trading-api` residual: `<N>` violations
-- [ ] `client-reporting-api` residual: `<N>` violations (expected high — ~45+)
-- [ ] `e2e-testing` residual: `<N>` violations
+- [ ] `features-calendar-service` residual: **SKIPPED** (archive dirty)
+- [ ] `features-commodity-service` residual: **SKIPPED** (archive dirty)
+- [x] `trading-agent-service` residual: 1 violation (C901 in .cursor/scripts/ — un-fixable)
+- [x] `ibkr-gateway-infra` residual: 1 violation (SIM105 — un-auto-fixable)
+- [ ] `features-delta-one-service` residual: **SKIPPED** (archive dirty)
+- [ ] `features-multi-timeframe-service` residual: **SKIPPED** (archive dirty)
+- [ ] `features-onchain-service` residual: **SKIPPED** (archive dirty)
+- [x] `pnl-attribution-service` residual: 4 violations (C901 — un-auto-fixable)
+- [x] `batch-live-reconciliation-service` residual: 0 violations ✅ fully clean
+- [x] `system-integration-tests` residual: 12 violations (C901+E741 — un-auto-fixable)
+- [ ] `features-sports-service` residual: **SKIPPED** (archive dirty)
+- [x] `unified-trading-api` residual: 15 violations (C901+E501+N812 — un-auto-fixable)
+- [x] `client-reporting-api` residual: 49 violations (C901+SIM105+E501+RUF005 — un-auto-fixable; hand-fix follow-up needed)
+- [x] `e2e-testing` residual: 57 violations (C901+E501+F841+E741 — un-auto-fixable; complex sports scripts)
 
 When the auto-fix sweep is done, agent posts a final `harsh_orchestrator/pings/slot_N.md` summary with workspace-wide residual count. Hand-fix is a separate follow-up plan, NOT this one's scope.
 
