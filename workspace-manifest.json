@@ -1793,6 +1793,49 @@
         "ui",
         "archived"
       ]
+    },
+    "e2e-testing": {
+      "type": "test-harness",
+      "arch_tier": "integration",
+      "status": "active",
+      "version": "0.1.0",
+      "description": "End-to-end testing for DeFi + Sports + Prediction pipelines (instruments \u2192 market data \u2192 features \u2192 strategy). 3-layer architecture across asset_groups. Standalone repo; scripts/<asset_group>/ wired into primary-consumer service QGs per CLAUDE.md.",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "completion_path": "infrastructure",
+      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline.",
+      "ci_status": "LOCAL_PASS",
+      "coverage_pct": null,
+      "bypass_audit_path": null,
+      "testing_level": "e2e",
+      "skipped_gates": [],
+      "doc_standard": "test-canonical",
+      "version_source": "pyproject.toml",
+      "codex_sections": [
+        "06-coding-standards",
+        "08-workflows"
+      ],
+      "github_url": "https://github.com/IggyIkenna/e2e-testing",
+      "semver_rules_ref": "infra",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": null,
+      "role": "test",
+      "tags": [
+        "e2e",
+        "testing",
+        "cross-domain"
+      ]
     }
   },
   "topologicalOrder": {
@@ -1882,6 +1925,7 @@
         "level": 8,
         "description": "IaC + post-deploy validation (last).",
         "repos": [
+          "e2e-testing",
           "ibkr-gateway-infra",
           "system-integration-tests"
         ]
