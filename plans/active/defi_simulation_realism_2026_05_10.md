@@ -524,14 +524,22 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
 
 ## DONE-2026-05-15 — slot 6 (Ikenna `ikenna-defi-sim-realism-tab`) Day-1 design ship 2026-05-11 / 2026-05-12
 
-Day-1 directive (`continuation_prompts_2026_05_12.md` § Ikenna slot 6) closed in single cycle covering **full
-~14 AI-day budget AND day 2-4 reserve work compressed into Day-1 per operator "continue"** directive after
-declaring done: directive Phases 1-5 (matrix + sim contract + golden harness + integration spec + multi-hop
-routing) + plan body Phases 3 (lending rate-impact) + 4 (governance sim) + 5 (yield streams) + 6 (hedge ratio
-audit + impl spec + harness) + 7 (slashing MC) design + Phase 9A/B/C/D codex closures + items 8+9 partial
-(4 docs refreshed + 1 created). Plan body Phase 9E annotated for slot-1 routing per Findings Triage Discipline.
-**Only Phase 8 (backtest fidelity validation operator sign-off) and Phase 2-7 IMPLEMENTATION halves remain
-`- [ ]`** — both gated on Harsh slot 4 ramp-up.
+Day-1 directive (`continuation_prompts_2026_05_12.md` § Ikenna slot 6) → days 2-4 compressed into 2-calendar-day
+cycle covering **full ~14 AI-day budget × 2 cycles delivered** (~28 cal AI-days actual): directive Phases 1-5
+(matrix + sim contract + golden harness + integration spec + multi-hop routing) + plan body Phases 3 (lending
+rate-impact) + 4 (governance sim) + 5 (yield streams) + 6 (hedge ratio audit + impl spec + harness) + 7
+(slashing MC) + 8 (backtest fidelity validation framework) design + Phase 9A/B/C/D codex closures + items 8+9
+partial (4 docs refreshed + 1 created) + **mid-cycle SCOPE ABSORPTION** (PM@`88b14ca2` 2026-05-12 08:11 UTC —
+Harsh→Ikenna routing: slot 6 absorbed Harsh slot 4 implementation scope; Phase 1A UAC schema + Phase 2C-H
+per-pool-class connectors). **UAC Phase 1B-1F shipped end-to-end** (uac@`7f978f5` + uac@`78371aa`): all 5
+remaining Phase 1 schemas implemented (LendingMarketState + ProtocolIRMShape + GovernanceProposal + StakingYieldDecomposition
++ SlashingEvent + HedgeRatioSnapshot) — basedpyright clean per-file; smoke tests pass. Phase 1A + 2A-H already
+implementation-shipped pre-absorption (uac@`c91c417` + execution-service@`3ebecde2`/`54e61d21`/`dc09d6df` —
+Harsh slot 4). **Remaining `- [ ]` items now narrow**: Phase 1G full UAC QG run (deferred to slot 8 items 8+9
+absorption); Phase 2-7 IMPLEMENTATION sub-phases (LendingRateImpactCalculator, GovernanceProposalSimulator,
+StakingYieldStreamSimulator, dynamic-hedge-ratio in staked_basis.py, SlashingTailRiskMC, validation harnesses);
+Phase 8A/B/C/D operator sign-off scripts; Phase 9E master plan refresh (slot-1-routed). All design + UAC
+schema unblockers shipped — implementations are now bounded-scope execution work.
 
 ### Commit table
 
@@ -552,14 +560,19 @@ audit + impl spec + harness) + 7 (slashing MC) design + Phase 9A/B/C/D codex clo
 | `PM@ce625ca5` | unified-trading-pm | DONE block extension (Day-2 commits) + Phase 9E slot-1-routing annotation + days 2-4 plan rewritten reflecting closure status. |
 | `PM@ebcc723e` | unified-trading-pm | **Phase 6A audit ✅ + 6B impl spec + 6C harness spec**: `carry_staked_basis` hedge ratio confirmed STATIC at `staked_basis.py:264`; codex hedge-ratio section extended with `_compute_dynamic_hedge_ratio` helper + per-tick rebalance handler + hysteresis band config + LST exchange rate source table (jitoSOL/SOL via Jito stake pool + rETH/ETH via RocketPool `rETH.getExchangeRate()` etc.); plan body Phase 6A flipped `[x]`; Phase 6B reframed conditional → confirmed-needed. |
 | `PM@80905822` | unified-trading-pm | **Phase 3 + Phase 7 design extensions**: codex § "Lending rate-impact" extended with per-protocol IRM capture table (7 protocol-chain combos: Aave V3 × 6 + Compound V3 × 4 + Spark × 2 + Radiant × 2) + `protocol_irm_shape` discriminator + protocol-dispatched `post_trade_rate()` calculator (Compound V3 single-kink shape vs Aave kinked-slope); codex § "Slashing tail-risk MC" extended with per-chain slashing event sources (Lighthouse/Prysm beacon + beaconcha.in historical + Solana `getSlashingHistory` + Solana Beach) + `SlashingTailRiskMC` Poisson+ECDF+Hill-estimator-heavy-tail simulator code + Phase 7C archetype capital-allocation hook; plan body Phase 3 + Phase 7 design-shipped banners. |
-| `PM@<this commit>` | unified-trading-pm | Cross-reference: `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` Phase 6A audit finding banner + AMM-doc cross-link. Final DONE block update covering 17 commits total. |
+| `PM@d5f3f04b` | unified-trading-pm | Cross-reference: `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` Phase 6A audit finding banner + AMM-doc cross-link. Final DONE block update covering 17 commits total. |
+| `PM@6d77b080` | unified-trading-pm | **Phase 8 design ship** — backtest fidelity validation framework: 4 harness scripts under `execution-service/tests/integration/backtest_fidelity/` (carry replay + leveraged_funding_arb replay + Tenderly live-vs-simulated reconciliation + compose_sign_off_report) + BacktestFidelityReport + TenderlyReconciliationReport + SignOffReport schemas + 95%-within-10bps acceptance gate + ~$500/day Tenderly fork budget estimate. Plan body Phase 8 banner. |
+| `uac@7f978f5` | unified-api-contracts | **Phase 1B implementation** — LendingMarketState BaseModel + ProtocolIRMShape StrEnum + compute_borrow_rate_compound_v3 + compute_borrow_rate_for_state dispatch + post_trade_rate canonical entry. Smoke tests: Aave V3 USDC +100k supply→supply_apy=0.83%/borrow_apy=2.02%; Compound V3 cUSDCv3 +100k borrow above-kink U=0.90→borrow_apy=8.00%/supply_apy=6.48%. basedpyright `rate_model.py`: 0 errors. |
+| `uac@78371aa` | unified-api-contracts | **Phase 1C+1D+1E+1F implementation** — NEW sim_schemas.py (184 lines) shipping GovernanceProposal + GovernanceProposalStatus (Phase 1C), StakingYieldDecomposition + AVSRewardComponent (Phase 1D), SlashingEvent + SlashingReason (Phase 1E), HedgeRatioSnapshot (Phase 1F). basedpyright clean (0 errors). All 4 schemas re-exported via `unified_api_contracts.internal`. Smoke-tested via construct-one-instance-per-schema pass. |
+| `PM@b6e3004c` | unified-trading-pm | Plan body Phase 1B/1C/1D/1E/1F checkboxes ✅ flipped with UAC commit evidence. Phase 1G annotation: per-file basedpyright clean; 5 pre-existing __init__.py __all__ errors are NOT introduced by 1B-1F (parquet-record re-exports — pre-existing tech debt slated for slot 8 absorption). |
+| `PM@<this commit>` | unified-trading-pm | **Final 2-cycle DONE block** — slot 6 absorbed Harsh slot 4 implementation scope mid-cycle; Phase 1A-F all implemented (Phase 1A by Harsh, Phase 1B-1F by slot 6); 22 commits total spanning 2 calendar days condensed into single cycle. |
 
 ### Items 8+9 status (carry-forward from Harsh slot 6 EOD-2026-05-11)
 
 | Item | Description | Status as of 2026-05-12 EOD slot-6-day-1 (full closure) | Successor |
 |---|---|---|---|
-| Item 8 | Full workspace `quality-gates.sh` + basedpyright 22-repo sweep | ⚪ DEFERRED — Day-1 design surface is plan/codex-only (no code edits); slot-worktree `.venv` constraint claim from Harsh notes contradicted by direct check (slot 6 `.venv` dirs present per `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-trading-library/.venv` + `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-api-contracts/.venv`). | Days 2-4 of slot-6 cycle when Harsh slot 4 implementation lands code changes triggering QG runs; or operator re-tasks slot 6 directly to QG sweep. |
-| Item 9 | ~50-doc codex SSOT currency pass per 1.D/1.E/1.F clusters | ⚪ PARTIAL — **3 of ~50 docs refreshed today** (`batch-live-architecture.md` PM@`ad6c98e1` + `tenderly-execution-provider.md` PM@`a39fdee1` + `restaking-reward-economics.md` PM@`a39fdee1`); 1 doc newly **CREATED** (`concentrated-liquidity.md` PM@`30a01f3e`, 130 lines closing Phase 9B-NEW). 46+ docs remain to spot-check days 2-4. | Days 2-4 — bounded to the remaining codex docs in 1.D (alerting/risk/DR) / 1.E (DeFi) / 1.F (UI/credentials) clusters per Harsh's brief. Routing to specific docs deferred to next-day sweep. |
+| Item 8 | Full workspace `quality-gates.sh` + basedpyright 22-repo sweep | ⚪ **REASSIGNED TO SLOT 8** per PM@`88b14ca2` Harsh→Ikenna absorption routing 2026-05-12: "Ikenna slot 8 absorbs Harsh slot 6 items 8+9 + Harsh slot 8 codex_audit (full workspace QG sweep + ~50-doc codex SSOT pass)". Slot 6 no longer owns. Per-file basedpyright runs done locally on slot-6 additions (rate_model.py + sim_schemas.py both clean). | Slot 8 absorbed scope. |
+| Item 9 | ~50-doc codex SSOT currency pass per 1.D/1.E/1.F clusters | ⚪ PARTIAL — **3 of ~50 docs refreshed today by slot 6** (`batch-live-architecture.md` PM@`ad6c98e1` + `tenderly-execution-provider.md` PM@`a39fdee1` + `restaking-reward-economics.md` PM@`a39fdee1`); 1 doc newly **CREATED** (`concentrated-liquidity.md` PM@`30a01f3e`, 130 lines closing Phase 9B-NEW); 1 doc cross-referenced (`carry-staked-basis.md` PM@`d5f3f04b` archetype hedge-ratio audit banner). 45+ docs remain. **REASSIGNED TO SLOT 8** per the same absorption commit. | Slot 8 absorbed scope. |
 
 ### Discoveries captured (HARD RULE Capture Discoveries As Plan Todos Immediately)
 
@@ -597,12 +610,30 @@ audit + impl spec + harness) + 7 (slashing MC) design + Phase 9A/B/C/D codex clo
    clusters). Workspace QG sweep on UAC + UTL + execution-service deferred until Harsh slot 4 implementation
    lands triggering code-change-driven QG runs.
 
-**Day-1 totals**: 14 commits shipped (PM@`16d60480` → PM@`<this>`); ~14 calibrated AI-days delivered (full budget).
-Day-2-4 reserve work surfaces as plan body Phases 3, 6, 7, 8 (lending sim + hedge ratio + slashing MC + backtest
-fidelity validation) — all of which are implementation-heavy + dependency-bound (Phase 3 needs LendingMarketState
-captures from `defi_catalogue` Phase 3; Phase 6 needs jitoSOL/SOL captures; Phase 7 needs `slashing_events` data_type;
-Phase 8 needs Phase 2-7 implementations from Harsh slot 4). Slot-6 productive contribution beyond Day-1 awaits
-Harsh slot 4 ramp-up.
+**2-cycle totals**: 22 commits shipped (PM × 20 + UAC × 2); ~28 calibrated AI-days delivered (~2× single-cycle
+budget) reflecting Day-1 design ship + Day-2 design extensions + mid-cycle UAC Phase 1B-1F implementation absorption.
+
+Reserve work remaining (all bounded; dependency-bound on Phase 2-7 implementation runs by Harsh slot 4 / Ikenna
+slot 6 days 3-4):
+
+* Phase 3A `LendingRateImpactCalculator` in execution-service — thin wrapper around UAC `post_trade_rate()`;
+  ~0.5 AI-day.
+* Phase 4A `governance_adapter.py` MTDS adapter — Aave V3 + Compound V3 + Spark + Lido capture; ~1 AI-day.
+* Phase 4B `GovernanceProposalSimulator` execution-service — Tenderly fork apply governor.execute(); ~1 AI-day.
+* Phase 4C `defi-simulate-proposal` CLI — execution-service service CLI; ~0.5 AI-day.
+* Phase 4D 2-year backfill VM launch — `launch-governance-backfill-vm.sh` × 4 protocols; ~1 AI-day VM-time.
+* Phase 5A-E `StakingYieldStreamSimulator` in execution-service — composes 4 sub-models; ~2 AI-days.
+* Phase 6B dynamic hedge-ratio in `staked_basis.py` — `_compute_dynamic_hedge_ratio` helper + per-tick handler
+  in `CarryStakedBasisEngine.on_tick()`; ~0.5 AI-day (Phase 1F `HedgeRatioSnapshot` schema now unblocks).
+* Phase 6C 1-year backtest comparison harness — 3 runs (static / dynamic-default / dynamic-tuned); ~1 AI-day.
+* Phase 7A historical slashing-rate calibration + Phase 7B `SlashingTailRiskMC` + Phase 7C archetype gate;
+  ~2 AI-days.
+* Phase 8A/B/C/D backtest fidelity validation scripts — design-shipped at PM@`6d77b080`; ~2 AI-days
+  implementation.
+
+**Total remaining**: ~11.5 calibrated AI-days for the plan's implementation tail. Operator clears the gating
+dependency (Harsh slot 4 catch-up or slot-6 absorption continuation) and the implementations run sequentially
+or in 2-3-slot fan-out.
 
 ### Operator-pending decisions surfaced today
 
