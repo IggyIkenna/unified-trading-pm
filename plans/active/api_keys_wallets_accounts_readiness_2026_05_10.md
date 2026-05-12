@@ -550,6 +550,61 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 ---
 
+## Phase 4.C — Pre-flight stack implementation (R-10/R-11/R-17/R-18 ratified 2026-05-12) — Day 4-13
+
+> **Provenance**: slot 8 codex audit 2026-05-12 surfaced 4 pre-flight architecture findings; operator ratified
+> 2026-05-12 (R-10 = Option B shared UTL helper; R-11 = AND-aggregate w/ wallet-tier HARD floor; R-17 = NEW Layer 4
+> position-health; R-18 = SpendingCaps `min(fixed, proportional)`). Codex SSOT:
+> [`codex/04-architecture/risk-preflight-flow.md`](../../codex/04-architecture/risk-preflight-flow.md) §§ R-10..R-13.
+> Source issue docs: [`issues/codex_audit_risk_2026_05_12.md`](issues/codex_audit_risk_2026_05_12.md) R-10/R-11 +
+> `risk-preflight-flow.md` § R-17/R-18.
+
+### 4.C.A — UAC schema extensions (slot 4 owned; ~1 cal AI-day)
+
+- [ ] [UAC] **R-18: extend `SpendingCaps` with `pct_of_balance` fields** — `unified_api_contracts/internal/domain/defi/wallet_config.py:106-141` add per-period `pct_of_balance: Decimal | None = None` field (per_tx / per_hour / per_day / per_protocol). Add helper `effective_cap(period, current_balance) → min(per_period_usd, pct_of_balance × current_balance)` returning the binding cap (or `None` if neither set). 3-4 new unit tests. **Owner**: slot 4 (wallet schema).
+- [ ] [UAC] **R-17: extend `WalletSpendingPreCheckResult` with 4 position-health fields** — `unified_api_contracts/internal/execution.py` add `position_health_check: bool | None`, `projected_ltv: Decimal | None`, `projected_margin_ratio: Decimal | None`, `position_health_denial_reason: str = ""`. Update `_now()`-based tests in `tests/unit/test_dart_manual_action_contracts.py` + add 2 new tests (lending Layer-4 path + perp Layer-4 path). **Owner**: slot 8 successor (DART contract surface; closest fit).
+
+### 4.C.B — PBM position-health endpoint (PBM owned; ~2 cal AI-days)
+
+- [ ] [SERVICE] **R-17: add `GET /positions/health?wallet_id=X` to position-balance-monitor-service** — returns current `{ltv, margin_ratio, liquidation_threshold, maintenance_margin}` per open position keyed by wallet. Reads PBMS rolling state (Aave/Compound LTV from on-chain `getUserAccountData`; perp margin ratios from venue REST). 5-second cache. Pydantic response per UAC `PositionHealthSnapshot` (new type — add in same UAC commit as 4.C.A). **Owner**: PBM service maintainer; gated on R-17 UAC schema (4.C.A) shipping first.
+
+### 4.C.C — UTL shared pre-flight helper (UTL owned; ~2 cal AI-days)
+
+- [ ] [LIB] **R-10: ship `run_wallet_preflight_checks(instruction) → WalletSpendingPreCheckResult`** — NEW module `unified_trading_library/risk_preflight/wallet_preflight.py`. 5-layer strict-ordered short-circuit:
+  1. Kill-switch (KillSwitchBus query — local, microseconds)
+  2. Wallet caps (SpendingCaps effective_cap per R-13)
+  3. Archetype allocation (CapitalAllocation lookup)
+  4. Position health (PBM `/positions/health` query per R-17; 5s cache)
+  5. Venue eligibility (CAPABILITY_DECLARATIONS + WalletProvisioningConfig.allowed_protocols)
+  Audit-log row write at end (success OR failure). 12-15 unit tests covering each layer's pass/fail + ordering invariant + 5s cache. **Owner**: UTL maintainer; gated on 4.C.A + 4.C.B contracts shipping first.
+
+### 4.C.D — Execution-service runtime wire-in (execution-service owned; ~1 cal AI-day)
+
+- [ ] [SERVICE] **R-10: wire `run_wallet_preflight_checks` into execution-service order-submission path** — `execution-service/.../order_adapter.py` calls UTL helper before every venue submission; on `passed=False` emit `INSTRUCTION_REJECTED_WALLET_PRECHECK` lifecycle event + persist `ManualInstructionAuditLog` row + return rejection to caller. **Owner**: execution-service maintainer; gated on 4.C.C UTL helper shipping.
+
+### 4.C.E — DART /manual/instruction wire-in (already partial per slot 8 Day-3; ~0.5 cal AI-days completion)
+
+- [ ] [SERVICE] **R-10: DART endpoints consume the shared helper** — `execution-service/.../manual_instruction_api.py` `POST /manual/instruction` + `POST /manual/instruction/precheck` (slot 8 Day-3 `ManualInstructionPrecheckResponse` contract at uac@`fe8e50e`) both call `run_wallet_preflight_checks`. Precheck endpoint returns the result without forwarding to executor (dry-run). **Owner**: execution-service maintainer; same logical unit as 4.C.D.
+
+### 4.C.F — Strategy-service forward wire-in (strategy-service owned; ~0.5 cal AI-days)
+
+- [ ] [SERVICE] **R-10: strategy emission also runs pre-flight** — `strategy-service` forward path to execution calls `run_wallet_preflight_checks` BEFORE handoff. Failure rejects the strategy emission + emits alert. **Owner**: strategy-service maintainer; gated on 4.C.C.
+
+### 4.C.G — Per-venue safety-margin tuning (operator + risk-plan owner; ~0.5 cal AI-day)
+
+- [ ] [HUMAN+AGENT] **R-17: tune `ltv_safety_margin` + `margin_safety_factor` per-protocol/per-venue** — defaults shipped by 4.C.C (`ltv_safety_margin=0.85` lending; `margin_safety_factor=1.5` perps). Operator/risk-plan owner reviews per-protocol (Aave's 90% liquidation threshold ≠ Compound's 85%; Hyperliquid's maintenance margin ≠ Deribit's). Codify in UAC registry (new `PROTOCOL_LIQUIDATION_PARAMS` if needed). **Owner**: risk-plan owner + operator.
+
+**Phase 4.C done definition** (full-execution criterion):
+
+- ✅ All 5 layers fire on every DeFi trade + manual-trade + strategy-emitted order; verified end-to-end via integration tests.
+- ✅ `WalletSpendingPreCheckResult` audit-log rows written for every pre-flight evaluation (pass OR fail).
+- ✅ Position-health rejection demonstrably blocks a leveraged-Aave-borrow that would tip projected_ltv above the safety threshold (smoke test on Sepolia fork).
+- ✅ `SpendingCaps` proportional path tested: wallet with $50k balance + 5%/day pct_of_balance returns $2.5k cap (not the fixed $100k cap that would apply at scale).
+
+**Phase 4.C estimate**: ~7-8 cal AI-days total (5 service touchpoints + 1 UAC + per-venue tuning). Multi-slot fan-out feasible: UAC schema (4.C.A) + PBM endpoint (4.C.B) parallel; UTL helper (4.C.C) gates 4.C.D + 4.C.E + 4.C.F (all parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
+
+---
+
 ## Phase 5 — Data sources (sports + prediction + DeFi-data + oracles) — Day 3-9
 
 - [ ] [SCRIPT] P0. **5.A — Sports per-source rotation runbook.** Already partially shipped via

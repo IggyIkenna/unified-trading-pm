@@ -1452,12 +1452,17 @@ findings across 12 areas. Outstanding work + answered-then-deferred follow-ups:
   — ML-1 consumer sweep: **17 inline `gs://...models...` callsites in 6 repos** still bypass
   `resolve_bucket_name(kind="ml-models-store", ...)`. Routed to 3-slot coordinated retrofit per Findings Triage (NOT
   unilateral cross-repo edit). Composes with cluster-D readiness (live ML serving).
-- **R-10 / R-11 operator gates** (genuine architecture decisions, slot 8 audit surfaced 2026-05-12):
-  R-10 = call-graph implementation strategy for the 4-layer pre-flight stack
-  (slot 8 recommendation: **Option B — shared UTL helper** `run_preflight_checks(instruction)` per Findings Triage
-  + latency budget; awaiting operator confirmation). R-11 = capital-allocation seam
-  (slot 8 recommendation: **AND-aggregate with wallet-tier as HARD floor**; pre-flight returns `min(wallet_headroom,
-  archetype_headroom)` + both ledgers update; awaiting operator confirmation).
+- **R-10 / R-11 / R-17 / R-18 ✅ RATIFIED 2026-05-12 by operator** (4 pre-flight architecture decisions all ratified
+  inline; codex `risk-preflight-flow.md` §§ R-10/R-11/R-17/R-18 carry "RATIFIED" banners; implementation captured as
+  `api_keys_wallets_accounts_readiness_2026_05_10.md` **Phase 4.C — Pre-flight stack implementation** ~7-8 cal AI-days:
+  * **R-10** Option B — shared UTL helper `run_wallet_preflight_checks(instruction)` (Phase 4.C.C).
+  * **R-11** AND-aggregate w/ wallet-tier HARD floor; pre-flight returns `min(wallet_headroom, archetype_headroom)`;
+    dual-ledger spend tracking; multi-archetype wallets aggregate at wallet ledger.
+  * **R-17** NEW Layer 4 — position-health (LTV for lending; margin ratio for perps); 5-layer pre-flight stack
+    (kill-switch → wallet-caps → archetype-allocation → **position-health** → venue-eligibility); UAC
+    `WalletSpendingPreCheckResult` +4 fields; PBM new `GET /positions/health?wallet_id=X` endpoint with 5s cache.
+  * **R-18** SpendingCaps Option C — `min(fixed, proportional)`; `SpendingCaps` gets per-period `pct_of_balance` field
+    + `effective_cap()` helper; anti-procyclical for losses.
 - **PB-17 / PB-18 P2 sub-gates** (4 items surfaced during contract codification): per-archetype recon tolerance
   bands · cutover-window recon cadence · CEFFU-specific custody disconnect threshold · auto-pause-live vs alert-only
   escalation policy. All surfaced for next-cycle main triage.
