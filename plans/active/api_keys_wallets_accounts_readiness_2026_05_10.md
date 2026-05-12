@@ -774,6 +774,15 @@ cycle:
 | **Phase 9.D — rotation-runbook.md** | ✅ DONE | PM@`d608dfa4` | Per-class rotation cadence + 90d CMK re-wrap operator-runbook + pre-cutover rotation gate |
 | **Phase 9.G — interface-credential-convention.md update** | ✅ DONE | PM@`d608dfa4` | Custody factory row + per-signing_surface fields + flippability |
 | **Phase 9.I — runtime-tiers-and-deployment.md update** | ✅ DONE | PM@`d608dfa4` | NEW per-mode credential subset § |
+| **Phase 4.D — Testnet contracts extension** | ✅ DONE | UAC@`818aaf1` | 4 new chains (Arbitrum Sepolia + Base Sepolia + Polygon Amoy + Solana devnet) + 11 tests |
+| **Phase 8.B — Health endpoint credential probes** | ✅ DONE | utl@`1632e0fa` | `make_health_router` credentials_health callback + `/health/credentials` sub-route + 8 tests |
+| **Phase 9.B — aws-iam-matrix.md stub** | ✅ DONE | PM@`810ce4c7` | Per-service IAM SSOT (19 services × `uts-{svc}-{env}`) + closed-set policies + WIF + KMS Decrypter for execution-only |
+| **Phase 9.H — config-reloader-pattern.md update** | ✅ DONE | PM@`810ce4c7` | Rule 8 NEW + per-wallet WalletCustodyReloader skeleton |
+| **Phase 9.J — firebase-local.md update** | ✅ DONE | PM@`810ce4c7` | Per-env SA JSON + FIREBASE_AUTH_MODE routing + per-tier discipline |
+| **Phase 6.D — Anthropic API budget cap** | ✅ DONE | deployment-service@`c0a30fe` | `configs/anthropic_budget.yaml` per-workflow caps + alert codes |
+| **Phase 4.E — Pyth-on-Solana real-data smoke runbook** | ✅ DONE | deployment-service@`c0a30fe` | `scripts/audit/pyth-realdata-smoke.sh` event-stream verified runbook |
+| **Phase 4.F — Chainlink-on-EVM real-data smoke runbook** | ✅ DONE | deployment-service@`c0a30fe` | `scripts/audit/chainlink-realdata-smoke.sh` per-chain runbook |
+| **Phase 1.A — GCP per-service SA matrix yaml SSOT** | ✅ DONE | deployment-service@`c0a30fe` | 57-SA matrix (19 services × 3 envs) + per-service IAM bindings |
 | **Cross-tab handshakes** — slots 5 + 8 | ✅ PUBLISHED | PM@`8aaf70da` | Schema importable; slot 5 EOD confirms consumed via Family-1/2 catalog config |
 | **Plan flips Phase 3.C SPLIT + 4.A + R9** | ✅ DONE | PM@`5cc47002` | Plan body codifies decision tree |
 | **Cloud-KMS operator-action issue doc** | ✅ FILED | PM@`2e198794` | `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` P0 |
@@ -789,23 +798,24 @@ cycle:
 | Phase 3.D — Treasury rollup `/api/treasury/rollup` endpoint | 🟡 OPEN | deployment-api scope; not done this cycle (collision avoidance with slot 8 cross_cutting #4) — Day 2 next cycle |
 | Phase 4.A wallet-row JSON real-address fill | 🟡 BLOCKED on operator Cloud HSM CMK provisioning per issue doc — template ready at UAC@`b9050d7` | Operator runbook § B.3 in checklist; 4-6 hour operator-task |
 | Phase 4.C — Bridge protocol adapters (CCTP / Wormhole / LayerZero) | 🟡 DEFERRED P1 — not gating | Slot 4 successor or post-cutover |
-| Phase 4.D — Testnet replicas + faucet automation | 🟡 OPEN | Sub-task of Phase 4.A operator runbook |
-| Phase 4.E — Pyth-on-Solana real-data smoke | 🟡 OPEN | MTDS scope; coordinate with slot 2 / Harsh |
-| Phase 4.F — Chainlink-on-EVM real-data smoke per chain | 🟡 OPEN | MTDS scope |
+| Phase 4.D — Testnet replicas + faucet automation | ✅ DONE | UAC@`818aaf1` — 4 new chains (Arbitrum Sepolia + Base Sepolia + Polygon Amoy + Solana devnet) added to `config/testnet_contracts.yaml` + 11 schema-validation tests + per-chain flash_loan_receiver + Solana Hermes endpoint. Faucet-automation sub-item: P2 deferred. |
+| Phase 4.E — Pyth-on-Solana real-data smoke runbook | ✅ DONE (runbook) | deployment-service@`c0a30fe` — `scripts/audit/pyth-realdata-smoke.sh` + event-stream verification. Real-VM execution deferred (PENDING `launch-mtds-pyth-smoke-vm.sh` launcher per slot 4 successor / Harsh). |
+| Phase 4.F — Chainlink-on-EVM real-data smoke runbook per chain | ✅ DONE (runbook) | deployment-service@`c0a30fe` — `scripts/audit/chainlink-realdata-smoke.sh` per chain. Real-VM execution deferred (PENDING `launch-mtds-chainlink-smoke-vm.sh` launcher). |
 | Phase 6.A — Telegram per-environment scoping | 🟡 OPEN | Deployment-service scope |
 | Phase 6.B — Firebase SA JSON + WIF | 🟡 OPEN | Deployment-service scope |
 | Phase 6.C — GHA WIF upgrade (replace PATs) | 🟡 OPEN | GHA scope |
-| Phase 6.D — Anthropic API budget cap | 🟡 OPEN — P2 | Deployment-service scope |
-| Phase 8.B — Health endpoint credential probes | 🟡 OPEN | UTL `make_health_router` extension |
+| Phase 6.D — Anthropic API budget cap | ✅ DONE | deployment-service@`c0a30fe` — `configs/anthropic_budget.yaml` per-workflow caps + 75%/100% warning/block thresholds + `WORKFLOW_BUDGET_EXCEEDED` alert codes. |
+| Phase 8.B — Health endpoint credential probes | ✅ DONE | utl@`1632e0fa` — `make_health_router` `credentials_health` callback + `/health/credentials` sub-route + 8 standalone tests. Closed-set status: ok / fail / pending_kyb / post_cutover_only / unknown. |
 | Phase 8.C — Master plan continuous-verification column | ✅ DONE | Item 19 row refreshed at PM@`d608dfa4` with full shipment chain (3.C.1 + 3.C.2 design + checklist + template + probe-script) + Last verified bumped 2026-05-12. |
 | Phase 8.D — Pre-cutover sign-off gate | 🟡 OPEN | Operator-runnable on 2026-05-22 via `credential-probe.sh --mode live --archetype carry_staked_basis` (target 100% pass) |
-| Phase 9.B — aws-iam-matrix.md (PENDING Phase 1.B) | 🟡 OPEN | Depends on Phase 1.B (AWS IAM provisioning, slot 4 successor or operator) |
+| Phase 9.B — aws-iam-matrix.md (PENDING Phase 1.B) | ✅ DONE (stub) | PM@`810ce4c7` — `codex/05-infrastructure/aws-iam-matrix.md` per-service IAM SSOT. 19 services × `uts-{service}-{env}` naming + closed-set policy attachments + KMS Decrypter for execution-only. PENDING Phase 1.B Terraform/CDK provisioning. |
 | Phase 9.D — rotation-runbook.md | ✅ DONE | `codex/05-infrastructure/rotation-runbook.md` NEW at PM@`d608dfa4`. Per-class cadence + 90d CMK auto-rotation re-wrap operator-runbook + pre-cutover rotation gate 2026-05-22. |
 | Phase 9.G — Update interface-credential-convention.md | ✅ DONE | PM@`d608dfa4` — factory table extended with execution-service (Custody) row + per-signing_surface CustodyConfig fields + per-wallet flippability. |
-| Phase 9.H — Update config-reloader-pattern.md | 🟡 OPEN | Codex propagation |
+| Phase 9.H — Update config-reloader-pattern.md | ✅ DONE | PM@`810ce4c7` — Rule 8 NEW: per-wallet credential reload + `WalletCustodyReloader` skeleton. NEW § "Per-wallet credential class". |
 | Phase 9.I — Update runtime-tiers-and-deployment.md | ✅ DONE | PM@`d608dfa4` — NEW § "Per-mode credential subset" cross-references credentials_per_mode.yaml + credentials_per_archetype.yaml + credential-probe.sh. |
-| Phase 9.J — Update firebase-local.md | 🟡 OPEN | Codex propagation |
-| Phase 1 — AWS↔GCP parity workstream | 🟡 DEFERRED — biggest single workstream (7-10 AI-days) | Slot 4 successor or operator; gating dual-cloud-active steady state but NOT gating May-23 cutover |
+| Phase 9.J — Update firebase-local.md | ✅ DONE | PM@`810ce4c7` — NEW § "Firebase prod vs emulator credential split" + per-env SA JSON storage + FIREBASE_AUTH_MODE routing + per-tier credential discipline. |
+| Phase 1.A — GCP per-service SA matrix yaml SSOT | ✅ DONE | deployment-service@`c0a30fe` — `configs/gcp_service_accounts.yaml` SSOT covering 19 services × 3 envs (57 SAs) + per-service IAM roles + bucket + secrets + KMS Decrypter on 5 CMKs (execution-prod). |
+| Phase 1.B-H — AWS↔GCP parity provisioning | 🟡 DEFERRED — 7-10 AI-day workstream | Slot 4 successor or operator. Per-service IAM design SHIPPED (Phase 1.A + 9.B); Terraform/CDK provisioning + ECR + S3 buckets + Secrets Manager mirror + SNS/SQS + EventBridge + WIF — NOT gating May-23 cutover (dual-cloud-active steady state target). |
 | Phase 2 — Trading venue credentials native adapters | 🟡 DEFERRED — 10-15 AI-day workstream | Slot 4 successor or Harsh; uses Phase 4.A schema + secret-manager-naming SSOT |
 
 ### Cycle-1 → Cycle-2 (2026-05-16+) priority
