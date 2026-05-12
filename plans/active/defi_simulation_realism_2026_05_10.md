@@ -126,22 +126,38 @@ Owner: ikenna (cross-cutting design); harsh implements.
       (verified Day-1 sub-agent fan-out 2026-05-11); enum explosion as new forks emerge would force
       stale per-fork dispatch updates without functional benefit. Per-fork golden fixture rows live in
       codex per-shape sample-pool/fixture matrix table.
-- [ ] [AGENT] P0. **1B — `LendingMarketState` Pydantic model** for rate-impact sim inputs. Fields: `total_supply`,
-      `total_borrow`, `optimal_utilization_rate`, `interest_rate_model_params` (kink-style: base / slope1 / slope2 /
-      reserve_factor), `liquidityIndex`, `variableBorrowIndex`. Used by both backtest replay + live pre-trade estimate.
-- [ ] [AGENT] P0. **1C — `GovernanceProposal` schema** + `GOVERNANCE_PROPOSAL` data_type. Fields: `proposal_id`,
-      `protocol`, `proposer`, `created_at`, `voting_start`, `voting_end`, `executed_at` (nullable), `payload`
-      (calldata + targets), `status` (pending / active / passed / failed / executed / cancelled). Protocols in scope:
-      Aave V3 + Compound V3 + Spark + Lido (Snapshot off-chain) + Uniswap (governance fork data).
-- [ ] [AGENT] P0. **1D — `StakingYieldDecomposition` schema**. Fields: `native_staking_apr` (consensus + execution
-      rewards), `mev_apr` (Solana validator MEV share OR Ethereum block-builder tips), `restaking_avs_apr` (per AVS
-      array), `lrt_protocol_fee_bps`, `seasonal_points` (off-chain, may be null). Used by D4 simulator.
-- [ ] [AGENT] P0. **1E — `SlashingEvent` schema** + `SLASHING_EVENT` data_type. Fields: `chain`, `validator_id`,
-      `slashed_at_epoch`, `slashed_amount_native`, `slashing_reason` (downtime / double-sign / surround-vote per
-      Ethereum; per-Solana-event-type per Solana). Used by Phase 7 MC.
-- [ ] [AGENT] P0. **1F — `HedgeRatioSnapshot` schema** for D5 carry archetype. Fields: `archetype`, `leg_long`,
-      `leg_short`, `target_ratio`, `realized_ratio`, `peg_drift_bps`, `last_adjustment_at`.
-- [ ] [AGENT] P0. **1G — UAC QG green** post-Phase-1.
+- [x] [AGENT] P0. **1B — `LendingMarketState` Pydantic model** for rate-impact sim inputs.
+      (unified-api-contracts@`7f978f5` — `LendingMarketState` BaseModel + `ProtocolIRMShape` StrEnum
+      (AAVE_KINKED / COMPOUND_V3 / MORPHO_ADAPTIVE) + `compute_borrow_rate_compound_v3()` + protocol-
+      dispatched `compute_borrow_rate_for_state()` + Phase 1B+3A canonical `post_trade_rate(state, supply_delta,
+      borrow_delta) → (supply_apy, borrow_apy)`. Backwards-compat `from_aave_pool_params()` builder promotes
+      legacy `AavePoolParams` to the new model. Smoke-test: Aave V3 USDC +100k supply borrow_apy=2.02%
+      supply_apy=0.83%; Compound V3 cUSDCv3 +100k borrow (above kink) borrow_apy=8.00% supply_apy=6.48%.
+      basedpyright `rate_model.py`: 0 errors.)
+- [x] [AGENT] P0. **1C — `GovernanceProposal` schema** + `GOVERNANCE_PROPOSAL` data_type.
+      (unified-api-contracts@`78371aa` — `sim_schemas.py:GovernanceProposal` BaseModel + `GovernanceProposalStatus`
+      closed-set StrEnum (PENDING/ACTIVE/PASSED/FAILED/EXECUTED/CANCELLED/EXPIRED). Fields cover Aave V3 +
+      Compound V3 + Spark + Lido + Uniswap shapes: governor_address, payload_targets, payload_calldatas,
+      executor_address, snapshot_proposal_id.)
+- [x] [AGENT] P0. **1D — `StakingYieldDecomposition` schema** + `AVSRewardComponent`.
+      (unified-api-contracts@`78371aa` — `sim_schemas.py:StakingYieldDecomposition` BaseModel composing
+      native_staking_apr + mev_apr + per-AVS restaking_avs_components[] (list[AVSRewardComponent]) +
+      lrt_protocol_fee_bps + nullable seasonal_points_implied_apr/discount_factor.)
+- [x] [AGENT] P0. **1E — `SlashingEvent` schema** + `SLASHING_EVENT` data_type.
+      (unified-api-contracts@`78371aa` — `sim_schemas.py:SlashingEvent` BaseModel + `SlashingReason`
+      StrEnum (ETH: PROPOSER_SLASHING / ATTESTER_SLASHING / SURROUND_VOTE / DOUBLE_PROPOSE; SOL: DOWNTIME /
+      DOUBLE_SIGN / NETWORK_PARTITION; generic: OTHER).)
+- [x] [AGENT] P0. **1F — `HedgeRatioSnapshot` schema** for carry-staked-basis archetype.
+      (unified-api-contracts@`78371aa` — `sim_schemas.py:HedgeRatioSnapshot` BaseModel — archetype,
+      instrument_long, instrument_short, target_ratio, realized_ratio, peg_drift_bps,
+      peg_drift_threshold_bps, last_adjustment_at, rebalance_triggered, captured_at. Consumed by
+      position-balance-monitor + Phase 6C dynamic-vs-static backtest comparison.)
+- [ ] [AGENT] P0. **1G — UAC QG green** post-Phase-1. **2026-05-12 status**: rate_model.py +
+      sim_schemas.py both basedpyright clean individually (0 errors). 5 pre-existing __init__.py errors
+      (DexPoolDayRecord / LendingIndexRecord / LiquidationRecord / LstRateRecord / PerpFundingRecord
+      __all__ entries reference symbols not imported into the module) are PRE-EXISTING — NOT introduced
+      by Phase 1B-1F additions. Full UAC QG run pending operator clearance (items 8+9 carry-forward;
+      now routed to slot 8 per absorption).
 
 **Codex SSOT update (Phase 1 boundary)** — `codex/04-architecture/amm-slippage-simulation.md` exists since
 2026-05-10 with Phases 2-8 content stubs. **Day-1 slot-6 ship 2026-05-11 (PM@`3b76a5ef`)**: extended with
