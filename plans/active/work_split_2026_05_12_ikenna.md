@@ -347,9 +347,18 @@ WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
 PART A — NOW: Phase 2.D ALL fields (full scope — all ship now):
   Decision (locked 2026-05-12): full Phase 2.D ships. All fields are retroactively available.
   Pre-audit:
-    grep -n "match_end_time\|announced_at\|report_time\|freeze_detect\|progressive_stats\|POSTPONED\|CANCELLED" \
+    # CRITICAL FIRST: does instruments-service poll for FUTURE (upcoming) fixtures from API Football?
+    grep -rn "future\|upcoming\|scheduled\|date_from\|date_gte\|next.*fixture\|fixture.*future" \
+      instruments-service/instruments_service/ --include="*.py" | grep -v .venv | head -20
+    # If NO future-fixture poll exists: add it. We need upcoming fixtures so:
+    #   (a) downstream can calibrate API_FOOTBALL_RESULT_LAG_P95_SECONDS as fixtures complete live
+    #   (b) MTDS/features know what to attempt + when for each fixture
+    #   (c) announced_at is captured at fixture creation, not just at backfill time
+    # Future-fixtures poll: query API Football /fixtures?status=NS&next=50 (or date_from=today)
+    # Write each fixture to instruments manifest as expected_unattempted until SFI confirms it started.
+    grep -rn "match_end_time\|announced_at\|report_time\|freeze_detect\|progressive_stats\|POSTPONED\|CANCELLED" \
       instruments-service/ --include="*.py" | grep -v .venv | head -30
-    grep -n "announced_at\|fixture.*timestamp\|created_at" \
+    grep -n "announced_at\|created_at\|fixture.*date\|timestamp" \
       instruments-service/instruments_service/adapters/api_football*.py | head -20
   Steps:
     1. UAC instruments schema: add match_end_time: datetime | None + announced_at: datetime | None + report_time: datetime | None
