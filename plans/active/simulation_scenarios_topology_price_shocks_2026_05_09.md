@@ -416,17 +416,17 @@ and only then unblocks dependents.
 
 Each sub-task is a separate sub-agent assignment. Same Bash-bundling discipline per `Commit + Push + Flip` HARD RULE.
 
-- [ ] [AGENT] P0. **3.A MTDS raw-tick overlay.** `market-tick-data-service` adapters' fetch-result post-processing:
+- [ ] [AGENT] P0. **3.A MTDS raw-tick overlay.** **DEFERRED-PER-COMPRESSED-SCOPE** (scope compression note line 85: "Phases 3.A / 3.B / 3.C / 3.D / 3.G deferred — MTDS / MDPS / features / strategy taps + manifest scenario_id column = post-cutover infra"). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.A. `market-tick-data-service` adapters' fetch-result post-processing:
       after `record_captured` decision, if `ScenarioContext.has_overlay(layer=RAW_TICK)`, route through
       `ScenarioOverlayApplier`. Wire at `market_tick_data_service/adapters/base_adapter.py` `_post_fetch` hook — single
       edit point per the audit grep. Per-VM scenario_id passed via `VM_NAME` decoration + `ScenarioContext.from_env()`.
-- [ ] [AGENT] P0. **3.B MDPS feature-layer overlay.** `mdps/engine/orchestrator.py` after honest-absence guard, before
+- [ ] [AGENT] P0. **3.B MDPS feature-layer overlay.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.B. `mdps/engine/orchestrator.py` after honest-absence guard, before
       parquet write — invoke FEATURE-layer applier. Re-uses existing 4-category guard rails (no new banned-pattern
       surface). LookaheadBiasError downgrade per 2.E.
-- [ ] [AGENT] P0. **3.C features-\* overlay tap.** `features-service/feature_calculator/<calculator>.py`
+- [ ] [AGENT] P0. **3.C features-\* overlay tap.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.C. `features-service/feature_calculator/<calculator>.py`
       per-feature-group tap at `_compute_<group>` exit, before `record_captured`. Per the consolidated repo (post Harsh
       Tab 2 features-consolidation 2026-05-08).
-- [ ] [AGENT] P0. **3.D strategy-service signal tap + outcome hook.**
+- [ ] [AGENT] P0. **3.D strategy-service signal tap + outcome hook.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.D.
       `strategy-service/strategy_service/signal_generator.py` — SIGNAL-layer applier between feature read + signal
       emission; outcome-checker-callback registered at signal-emit boundary. Per-archetype hook list comes from UAC
       scenario registry.
@@ -440,7 +440,7 @@ Each sub-task is a separate sub-agent assignment. Same Bash-bundling discipline 
       hook fires on every breaker trip and emits `ScenarioOutcomeResult`. `alerting-service`: rule-eval respects
       `synthetic=true` filter — alert fires + report records, but on-call paging suppressed (synthetic events go to
       dashboard only).
-- [ ] [AGENT] P0. **3.G Manifest-layer scenario_id column.** `unified_trading_library/manifest/writer.py`
+- [ ] [AGENT] P0. **3.G Manifest-layer scenario_id column.** **DEFERRED-PER-COMPRESSED-SCOPE** (scope compression note line 85 — manifest scenario_id column = post-cutover infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.G. `unified_trading_library/manifest/writer.py`
       `record_captured` accepts optional `scenario_id: ScenarioId | None`. Adds a v5 manifest column `scenario_id` —
       additive, default null. Phantom-audit reconciler scripts gain awareness via 1-line filter (skip rows with
       `scenario_id is not null`).
@@ -667,7 +667,21 @@ This plan composes with — read these before touching any of the surfaces:
 
 ## Open questions
 
-(Filled as the plan executes — operator + agent iterate here.)
+### Q1 — [harsh-slot-6, 2026-05-12 12:59 UTC] — Phase 10.A/B authority + epic file missing
+
+**Status**: 🟡 BLOCKED — needs main / operator decision
+
+Post-rebase audit (2026-05-12 13:00 UTC): Phase 4 and Phase 5 were fully completed by Ikenna slot 7 Day-3 before this slot resumed. All remaining `- [ ]` items in this plan are either:
+- Explicitly DEFERRED-PER-COMPRESSED-SCOPE (Phases 3.A/B/C/D/G, 6, 7, 8.B-I, 9 + individual items 0.A/0.C/2.C/4.C/4.D/4.E)
+- Phase 10.A-D (gated on Phase 9, which is DEFERRED)
+
+**Two specific questions for main/operator**:
+
+1. **Phase 10.A** (master plan extension — add Group F item 17.5 "Scenario regression matrix green per archetype"): CLAUDE.md G-14 says slot 1 main is the sole owner of `master_to_live_defi_2026_05_23.md` edits. Can slot 1 take this? It's a small doc addition (1 row to Group F table).
+
+2. **Phase 10.B** (epic banner): The plan references `plans/epics/live_defi_rollout_2026_05_23.epic.md` — but this file DOES NOT EXIST in the worktree (`ls plans/epics/` returns 12 files, none named `live_defi_rollout_2026_05_23`). The archived version is `plans/archive/live_defi_rollout_may_23_2026.epic.md`. Where should the simulation scenarios matrix gate row go? Options: (a) cross_cutting epic (`plans/epics/cross_cutting_may_23_2026.epic.md` — this plan is cross-cutting); (b) a newly created `live_defi_rollout_2026_05_23.epic.md`; (c) this is a dead reference since Phase 9 is deferred — just annotate Phase 10.B as DEFERRED too.
+
+Continue on what I CAN do (plan curation + DONE block) while awaiting answer.
 
 ## Deferred work after 2026-05-09 plan-creation session
 
@@ -810,3 +824,36 @@ Slot 5 Day-1 Phase 12 design (per-family backtest scenario set) introduces a Cat
 Recommendation: closed-set scenario IDs should NOT drift between plans. Either (a) this plan owns the canonical taxonomy and recursive-borrow plan references by ID, OR (b) recursive-borrow Phase 12 owns its own per-archetype taxonomy and this plan references by ID. Operator-call. Slot 5 NOT fixing (Findings Triage — slot 7 owns this plan).
 
 Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 design § Category B scenarios.
+
+## Deferred work after 2026-05-12 Harsh slot-6 Day-3 session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Phase 3.A/B/C/D/G | DEFERRED-PER-COMPRESSED-SCOPE (annotations added this session) | `simulation_scenarios_post_cutover_2026_06_01.md` Phases 3.A/B/C/D/G |
+| Phase 6 (backtest CLI) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 6 |
+| Phase 7 (UI surface) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 7 |
+| Phases 8.B-I (codex updates) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 8 |
+| Phase 9 (real-VM matrix runs) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 9 |
+| Phase 10.A (master plan extension) | 🟡 BLOCKED — slot-1 territory per CLAUDE.md G-14 | Main orchestrator slot-1 to add Group F item 17.5 |
+| Phase 10.B (epic banner) | 🟡 BLOCKED — epic file `live_defi_rollout_2026_05_23.epic.md` MISSING; see Q1 | Slot-1 / operator triage: which epic gets the row |
+| Phase 10.C (banner removal) | Blocked on Phase 9 | Successor plan |
+| Phase 10.D (cron VM) | Blocked on Phase 9 + operator-runnable | Successor plan + operator |
+| DART scenario fold-in (cross_cutting #4) | Not in pre-cutover scope: Phase 7 (UI) DEFERRED; BUILD #1/#4/#5 Ikenna-blocked | Successor plan Phase 7 / post-Ikenna-D1/D4 resolution |
+| Scenario taxonomy SSOT alignment with slot-5 recursive-borrow SCN-B1..B5 | Needs operator call (option a or b above) | `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 owner |
+
+## DONE-2026-05-12 — Harsh slot 6 Day-3 session
+
+**Session theme**: `simulation_scenarios_topology_price_shocks_2026_05_09.md` impl tail
+
+**Post-rebase state verified (13:00 UTC)**: Phase 4 (scenario library) + Phase 5 (matrix) fully ✅ done by Ikenna slot 7 Day-3. Phase 3.E + 3.F ✅ done by Harsh slot 5. Phase 1/2/8.A ✅ done by Ikenna slot 7. All pre-cutover compressed scope is COMPLETE.
+
+**Shipped this session**:
+- `plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md` plan curation: DEFERRED annotations added to 3.A/B/C/D/G (these items were missing explicit DEFERRED markers even though scope compression note already said they're deferred). Q1 Open Question added for Phase 10.A/B authority + missing epic file.
+
+**Next step (slot-1 territory)**:
+- Phase 10.A: slot-1 to add "Scenario regression matrix green per archetype" as Group F item 17.5 in `master_to_live_defi_2026_05_23.md`
+- Phase 10.B: operator triage on epic file — see Q1 above
+
+**Real blockers (🟡)**:
+- Phase 10.A: G-14 slot-1 territory
+- Phase 10.B: Epic file `plans/epics/live_defi_rollout_2026_05_23.epic.md` does not exist
