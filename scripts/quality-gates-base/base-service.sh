@@ -1473,8 +1473,14 @@ fi
 # `record_captured`/write-gate path dead on MDPS's live path by MRO).
 _BANNED_PLACEHOLDER_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_banned_placeholder_methods.py"
 if [ -f "$_BANNED_PLACEHOLDER_CHECKER" ]; then
-    _BPM_REPO=$(basename "$REPO_ROOT")
-    _BPM_WS="$(dirname "$REPO_ROOT")"
+    # Scope = THIS repo's directory name; workspace-root = dir CONTAINING the repo
+    # dirs. `REPO_ROOT` is set by qg-common.sh:48 to `dirname(PROJECT_ROOT)` —
+    # it IS the workspace-root (contains the repo dirs), NOT one of them. Old
+    # wiring (`basename`/`dirname REPO_ROOT`) silently scanned wrong tree +
+    # computed mis-rooted relative paths breaking baseline match. Reference:
+    # plans/active/issues/qg_runner_worktree_foot_guns_2026_05_12.md.
+    _BPM_REPO=$(basename "$PROJECT_ROOT")
+    _BPM_WS="$REPO_ROOT"
     _BPM_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BPM_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_BANNED_PLACEHOLDER_CHECKER" \
@@ -1526,8 +1532,11 @@ fi
 # Done-def #5 + § "QG STEP 5.6X design".
 _INLINE_URI_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py"
 if [ -f "$_INLINE_URI_CHECKER" ]; then
-    _IU_REPO=$(basename "$REPO_ROOT")
-    _IU_WS="$(dirname "$REPO_ROOT")"
+    # Slot-worktree-aware: scope=this-repo's-dir; workspace-root=REPO_ROOT (which
+    # IS the workspace root per qg-common.sh:48). Reference:
+    # plans/active/issues/qg_runner_worktree_foot_guns_2026_05_12.md.
+    _IU_REPO=$(basename "$PROJECT_ROOT")
+    _IU_WS="$REPO_ROOT"
     _IU_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _IU_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_INLINE_URI_CHECKER" \
@@ -1579,8 +1588,11 @@ fi
 # batch/live diff is which SOURCE serves a given (asset_group, data_type)).
 _PIPELINE_MODE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py"
 if [ -f "$_PIPELINE_MODE_CHECKER" ]; then
-    _PM_REPO=$(basename "$REPO_ROOT")
-    _PM_WS="$(dirname "$REPO_ROOT")"
+    # Slot-worktree-aware: scope=this-repo's-dir; workspace-root=REPO_ROOT (which
+    # IS the workspace root per qg-common.sh:48). Reference:
+    # plans/active/issues/qg_runner_worktree_foot_guns_2026_05_12.md.
+    _PM_REPO=$(basename "$PROJECT_ROOT")
+    _PM_WS="$REPO_ROOT"
     _PM_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _PM_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_PIPELINE_MODE_CHECKER" \
