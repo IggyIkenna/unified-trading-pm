@@ -186,11 +186,14 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 
 ## Phase 4 — client-reporting-api routes (Days 7-8, ~1 AI-day)
 
-- [ ] [AGENT] P0. **4.A `/api/clients/{id}/nav` endpoint.** Reads UAC `ClientNAV` shape from parquet; supports
-      time-range query.
-- [ ] [AGENT] P0. **4.B `/api/clients/{id}/pnl` endpoint.** Returns daily PnL series.
-- [ ] [AGENT] P0. **4.C `/api/clients/{id}/positions` endpoint.** Current open positions + cost basis.
-- [ ] [AGENT] P0. **4.D `/api/clients/{id}/attribution` endpoint.** PnL waterfall by component.
+- [x] [AGENT] P0. **4.A `/api/clients/{id}/nav` endpoint.** Reads UAC `ClientNAV` shape from parquet; supports
+      time-range query. (client-reporting-api@a2555fa — nav route + mock/live helpers + 4 tests)
+- [x] [AGENT] P0. **4.B `/api/clients/{id}/pnl` endpoint.** Returns daily PnL series.
+      (client-reporting-api@a2555fa — pnl route + strategy/execution split aggregation + 3 tests)
+- [x] [AGENT] P0. **4.C `/api/clients/{id}/positions` endpoint.** Current open positions + cost basis.
+      (client-reporting-api@a2555fa — positions route returns mock MVP; real feed Phase 8)
+- [x] [AGENT] P0. **4.D `/api/clients/{id}/attribution` endpoint.** PnL waterfall by component.
+      (client-reporting-api@a2555fa — attribution route + factor×layer rows + 5 tests; 15 tests total green)
 
 **Full-execution criterion**: 4 routes return real data for the demo client when queried locally + on a deployed Cloud
 Run revision.
@@ -280,8 +283,8 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 | Phase 3.A PBM lineage fields | ✅ DONE (position-balance-monitor-service@14f25b9) | archetype_id/strategy_leg_id/trade_id on Position + LocalFillRecord; QG pass |
 | Phase 3.B execution-service pnl_attribution | ✅ DONE (execution-service@a4145838) | FillAttributionContext + build_attribution_rows; 6 test classes 5462 passed |
 | Phase 3.C MTDS client_id enrichment | ✅ RESOLVED-VIA-ARCHITECTURE — no MTDS change needed (see checkbox annotation) | Architecture: FillAttributionContext.client_id already carries it; joiner confirms |
-| Phase 4.A-4.D client-reporting-api routes | IN PROGRESS (this session) | Next: implement nav/pnl/positions/attribution endpoints |
-| Phase 5-9 | TODO | Blocked on Phase 4 |
+| Phase 4.A-4.D client-reporting-api routes | ✅ DONE (client-reporting-api@a2555fa) | 4 routes + reader + stubs + 15 tests; pushed to live-defi-rollout |
+| Phase 5-9 | TODO | Blocked on Phase 4 (now unblocked); Phase 5 = deployment-ui ClientReporting tab |
 
 ## Deferred work after 2026-05-10 plan-creation session
 
