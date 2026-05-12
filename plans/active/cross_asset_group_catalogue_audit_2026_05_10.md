@@ -240,8 +240,9 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
 
 **Codex SSOT update (Phase 1 boundary)**:
 
-- [ ] [AGENT] P0. **1H — Update `codex/02-data/contracts-scope-and-layout.md`** with the 6 cleanup items + their
-      resolution (canonical pick, deletions, additions).
+- [x] [AGENT] P0. **1H — Update `codex/02-data/contracts-scope-and-layout.md`** with the 6 cleanup items + their
+      resolution (canonical pick, deletions, additions). (PM@`bd7a9ea6` — "Audit-confirmed canonical picks —
+      2026-05-12 SSOT cleanup" table added with all 6 Phase 1 resolutions)
 
 **Full-execution criterion**:
 
@@ -461,7 +462,9 @@ Owner: ikenna for sign-off + harsh for runs.
 
 Per Post-Plan-Phase Codex Audit HARD RULE:
 
-- [ ] [AGENT] P0. **7A — `codex/02-data/contracts-scope-and-layout.md`** (UPDATE; Phase 1H + 5D).
+- [x] [AGENT] P0. **7A — `codex/02-data/contracts-scope-and-layout.md`** (UPDATE; Phase 1H + 5D). DONE — 5D:
+      asset_group_registry section (PM@`58e5dbe0`); 1H: 6-item audit-confirmed canonical picks table
+      (PM@`bd7a9ea6`).
 - [ ] [AGENT] P0. **7B — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 2E).
 - [ ] [AGENT] P0. **7C — `codex/03-deployment/data-status-ui-surface.md`** (NEW; Phase 2F).
 - [ ] [AGENT] P0. **7D — `codex/02-data/honest-absence-downstream-handling.md`** (UPDATE; Phase 3E).
@@ -522,7 +525,7 @@ Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
 | Phase 4 (3 mev-protection.md consolidation)               | ✅ DONE 2026-05-12 (slot 8 closeout)            | 3-way consolidation already landed 2026-05-10; slot 8 verified structure (54-line redirect + 431-line canonical + 156-line scope-narrowed strategy narrative) + reconciled UAC `MevSubmissionMode` enum drift (canonical missing CUSTOM_PRIVATE_RPC; strategy missing JITO_BUNDLE) — both tables now mirror UAC's 6-mode enum. EX-8/EX-20 sibling fix already shipped @`0fc4b3fd`. 1 NICE-TO-HAVE carried inline (71 vscode-webview links in `strategy-summary.md`). Phase 4 close-out commit: PM@`be7d7c84` |
 | Phase 5 (TradFi ETF/roots SSOT + asset_group_registry)    | ✅ DONE 2026-05-12 (slot 2) — 5A UAC@`9d80f43` + 5B UAC@`24dd517` + 5C UAC@`03f10f0` + 5D PM@`58e5dbe0` | `tradfi_etfs.py` (59-ETF dict) + `tradfi_roots.py` (60-root dict) + `asset_group_registry.py` (`get_canonical_inventory()` / `AssetGroupInventory`) shipped; codex `contracts-scope-and-layout.md` updated with derivatives sub-package + cross-asset-group entry-point section |
 | Phase 6 (validation)                                      | ☐ TODO                                          | gated on Phases 1-5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Phase 7A-D, 7F (codex SSOT updates)                       | ☐ TODO                                          | gated on Phases 1H + 2E + 2F + 3E + Phase-5; incl. CLAUDE.md VIX-15m pointer fix (TF-7), `contracts-scope-and-layout.md` venue-class taxonomy (DF-19), the 6 cross-asset cleanup items                                                                                                                                                                                                                                                                                                                       |
+| Phase 7A-D, 7F (codex SSOT updates)                       | 🟡 IN PROGRESS — 7A partially done: Phase 5D (asset_group_registry PM@`58e5dbe0`) + Phase 1H (6-item cleanup table PM@`bd7a9ea6`); 7B/7C/7D gated on 2E+2F+3E | 7A = `contracts-scope-and-layout.md` is NOW COMPLETE (5D+1H both done). 7B-7D-7F remain gated on phases 2+3. |
 | Phase 7E (codex `04-architecture/mev-protection.md` SSOT) | ✅ DONE 2026-05-12 (slot 8)                     | gated on Phase 4 which closed this turn; canonical SSOT confirmed at `codex/04-architecture/mev-protection.md` (431 lines, full spec); plan body 7E flipped @PM`<this commit>`                                                                                                                                                                                                                                                                                                                               |
 
 **Carry-forward for next slot-8 session**: Phase 1A facade-fix + PR-3/PR-4 ✅ DONE last cycle; Phase 1E/1F audit half +
