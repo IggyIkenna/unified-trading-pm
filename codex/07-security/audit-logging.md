@@ -136,7 +136,15 @@ persisted as immutable audit records.
 
 ## Strategy Audit
 
-Strategy decision events (`STRATEGY_INSTRUCTION`, `SIGNAL_GENERATED`) must also be persisted.
+> **STATUS 2026-05-12 (per slot 8 audit PB-4)**: schema declared in UAC; runtime emission today is `log_event(...)` into
+> the events JSONL bucket (`gs://{pid}-events/events/...`) ONLY — there is **no `persist_audit_log`-equivalent for
+> strategy events**, and `signal_publisher.py:188` hardcodes `"client": "system"` so the per-client lineage axis below
+> is design-intent, not present-tense. Strategy-audit GCS writer wiring is a PRE_CUTOVER follow-up per the slot 8 audit
+> doc; until shipped, treat the `audit/{client_id}/...` path as the *target* shape, not the *current* path.
+
+Strategy decision events (`STRATEGY_INSTRUCTION`, `SIGNAL_GENERATED`) **must** be persisted (design intent — writer
+PRE_CUTOVER pending per PB-4); they are emitted on the events stream today via `log_event(...)` and consumed by
+analytics from there.
 
 **Canonical schema:** `STRATEGY_AUDIT` in `unified-api-contracts/unified_api_contracts/internal/schemas/audit.py`
 
