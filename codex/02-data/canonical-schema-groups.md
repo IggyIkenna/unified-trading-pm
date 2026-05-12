@@ -4,8 +4,20 @@ scope: [engineer, admin]
 
 # Canonical Schema Groups
 
-All internal canonical schemas are defined in `unified_api_contracts.internal` (the `internal/` subpackage of
-unified-api-contracts). Each group is a single source of truth for its domain.
+> **Canonical vs internal split (clarified 2026-05-12)** — per
+> [`contracts-scope-and-layout.md`](contracts-scope-and-layout.md):
+>
+> - **Canonical types** (`CanonicalTrade`, `CanonicalOrderBook`, `CanonicalOHLCV`, `CanonicalLiquidation`,
+>   `CanonicalOptionsChainEntry` — the "Group 1/2/…" tables below) live in `unified_api_contracts.canonical/domain/`.
+>   These are the output of normalizers — the cross-venue normalised shape every consumer reads.
+> - **Internal types** (service-internal pydantic models, dataclasses, TypedDicts used inside one repo as it
+>   processes canonical inputs) live in `unified_api_contracts.internal/domain/<service>/`. These are NOT shared
+>   cross-service; they exist so a service's `__init__` / `runner.py` / `cli/handlers/` agree on a single shape
+>   without each module re-deriving it.
+>
+> The legacy phrasing "all internal canonical schemas are in `unified_api_contracts.internal`" was wrong — it
+> conflated canonical (cross-service output of normalizers) with internal (per-service intermediate). Each table
+> below is annotated `(canonical)` or `(internal)` at the top of the group.
 
 **External raw → normalised mapping:** [unified-api-contracts](https://github.com/central-element/unified-api-contracts)
 holds raw external schemas (`unified_api_contracts.external`) and normalised canonicals

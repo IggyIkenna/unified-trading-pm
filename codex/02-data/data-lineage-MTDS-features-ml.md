@@ -27,7 +27,8 @@ canonical feature paths; ml-inference writes canonical prediction paths) without
   v5 added `capture_status / error_reason / attempted_at` (honest-coverage). v6 added
   `quote_asset / margin_type / combo_type / leg_weights` (DERIBIT inverse-vs-linear + multi-leg). v7 added `fixture_id`
   (sports per-fixture row column) + `job_id` (ML/strategy/execution experiment-keyed services). v8 (in design) adds
-  `pipeline_mode / service_emission_state / last_emission_decision_at / expected_window_completeness_pct`. SSOT:
+  `pipeline_mode / service_emission_state / last_emission_decision_at / expected_window_completeness_fraction`
+  (renamed from `_pct` per UAC@`76f950a` 2026-05-11 — fraction 0.0-1.0, not percentage 0-100). SSOT:
   [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md).
 - **SchemaContract** — every (category, instrument_type, data_type[, timeframe, feature_group]) registered in UAC
   `internal/schemas/contracts.py::CONTRACT_REGISTRY`.

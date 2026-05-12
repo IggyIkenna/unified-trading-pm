@@ -37,7 +37,9 @@ scope: [engineer, admin]
 `SchemaDefinition` / `ColumnSchema` for a service's GCS writes live in `schemas/output_schemas.py`:
 
 ```python
-from unified_trading_services.domain import SchemaDefinition, ColumnSchema
+# Canonical import (preferred). Pure schema types live in unified-api-contracts/internal
+# and are re-exported through UTL with pyarrow conversion helpers.
+from unified_trading_library import SchemaDefinition, ColumnSchema
 
 INSTRUCTIONS_SCHEMA = SchemaDefinition(
     name="instructions",

@@ -108,10 +108,15 @@ Two DeFi archetypes (`carry_staked_basis` lead + `leveraged_funding_arb`) live o
   B=`record_failed(UpstreamTimestampBiasError)` partition mislabeled; C=`record_failed(MalformedTickFieldError)` data
   quality; D=write zero-activity bars + `record_captured` (when catalog says alive AND day in market hours). SSOT:
   writegate plan Phase 2.A + Phase 3.D.5.
-- **Reason taxonomy** — closed set in UAC `EMPTY_CONFIRMED_REASONS` (`EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` /
-  `EXPECTED_PAUSED_LEAGUE` / `EXPECTED_PRE_SOURCE_COVERAGE_START` / `EXPECTED_PRE_GENESIS_CHAIN` /
-  `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` / `EXPECTED_PARTIAL_HALF_DAY` /
-  `SOURCE_RETURNED_ZERO`). Blank reason rejected via `LegacyBlankErrorReasonError`. SSOT:
+- **Reason taxonomy** — closed set in UAC `EMPTY_CONFIRMED_REASONS` (17 EXPECTED_* + `SOURCE_RETURNED_ZERO`):
+  `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PAUSED_LEAGUE` / `EXPECTED_PRE_SOURCE_COVERAGE_START` /
+  `EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_PRE_VENUE_LAUNCH` (UAC@ac218dc) / `EXPECTED_INSTRUMENT_NOT_LISTED` /
+  `EXPECTED_INSTRUMENT_DELISTED` / `EXPECTED_PARTIAL_HALF_DAY` / `EXPECTED_OUTSIDE_TRADING_HOURS` /
+  `EXPECTED_OUTSIDE_TRANSFER_WINDOW` / `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` (Wave 3.X dim #6) /
+  `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` (Wave 3.X dim #7) / `EXPECTED_DEPRECATED_DATA_TYPE` /
+  `EXPECTED_REFDATA_CADENCE_CHANGE` (manifest_migration_master C.1/C.11) / `EXPECTED_KNOWN_SOURCE_GAP`
+  (UAC@174f401 2026-05-11) / `SOURCE_RETURNED_ZERO`. Blank reason rejected via `LegacyBlankErrorReasonError`.
+  Canonical enum: `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`. SSOT:
   `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy".
 - **Cluster validation MANDATORY** at `record_captured()` for bundled data_types (`options_chain`, `futures_chain`,
   `prediction_canonical_question_group`, sports per-fixture-bundles). UTL guard raises `MissingClusterValidationError`

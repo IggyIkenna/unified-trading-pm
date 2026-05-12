@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_verified: 2026-05-12
 ---
 
 # Data Catalogue Schema
@@ -9,6 +10,23 @@ scope: [engineer, admin]
 
 All `data-catalogue.*.yaml` files must conform to this schema. Validated by
 `data_catalogue_refresh.plan.md#dc-catalogue-format-standard`.
+
+> ## Two distinct manifests — do NOT confuse them (clarified 2026-05-12)
+>
+> This document covers the **data-catalogue manifest** — a per-service inventory + freshness ledger written to
+> `gs://data-catalogue-{project_id}/{service}/day={date}/manifest.parquet` via
+> `deployment_service.data_status.manifest_writer.ManifestWriter`. It is for **catalogue-completeness reporting**
+> (which datasets exist, when they were last written, row counts at the dataset level).
+>
+> The **availability manifest** (used everywhere else in this codex) is a different artifact at
+> `gs://{kind}-{asset_group}-{env}-{project_id}/_index/availability_index.parquet` written via the canonical
+> `unified_trading_library.manifest_writer.ManifestWriter` (`record_captured` / `record_empty` / `record_failed` /
+> `record_expected_unattempted` API). It is for **per-shard data-status drilldown** (capture_status × error_reason
+> taxonomy). See [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md).
+>
+> The two SSOT classes happen to share the name `ManifestWriter` — they live in different modules and have
+> different APIs. When in doubt, the **availability manifest** is the May-23 cutover artifact; the **data-catalogue
+> manifest** is the operator-facing inventory ledger.
 
 ---
 

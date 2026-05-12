@@ -17,7 +17,7 @@ related:
 
 > **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as
 > the next manifest-schema bump (v7 → v8 — `pipeline_mode` + `service_emission_state` + `last_emission_decision_at` +
-> `expected_window_completeness_pct` per
+> `expected_window_completeness_fraction` (renamed from `_pct` per UAC@`76f950a` 2026-05-11) per
 > [`manifest_v7_schema_migration_design_2026_05_08.md`](../../plans/active/manifest_v7_schema_migration_design_2026_05_08.md))
 > is planned + executed. Current runtime SSOT: `MANIFEST_SCHEMA_VERSION = 7` in UTL
 > `unified_trading_library/manifest_writer.py`.
