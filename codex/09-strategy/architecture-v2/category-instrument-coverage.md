@@ -608,7 +608,8 @@ CARRY_BASIS_PERP@lido-hyperliquid-steth-usdt-prod
 CARRY_BASIS_PERP@uniswap-lighter-zksync-eth-usdc-prod
 CARRY_BASIS_PERP@uniswap-pacifica-solana-sol-usdc-prod
 CARRY_BASIS_PERP@uniswap-extended-starknet-eth-usdc-prod
-# Cross-DEX funding-spread (DEX-DEX leveraged_funding_arb sub-cell)
+# Cross-DEX funding-spread (DEX-DEX `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` sub-cell;
+# canonicalised 2026-05-07 from legacy `leveraged_funding_arb` per slot 8 strategy audit ST-7)
 CARRY_BASIS_PERP@hyperliquid-pacifica-btc-usdc-prod
 CARRY_BASIS_PERP@hyperliquid-lighter-eth-usdc-prod
 ```
@@ -1432,9 +1433,11 @@ summary:
 - **2026-05-08** — Refresh stub: scope updated to "53 archetypes" per UAC `StrategyArchetype` SSOT (PM@d6d0cd57
   refreshed `strategy-summary.md`); the 18-archetype matrix body is preserved as the May-23 live + immediate-backtest
   subset, full Phase 9 materialisation tracked under `plans/active/codex_refactor_2026_05_08.md` Phase A.4 + B.
-- **2026-05-08** — Refresh stub: scope updated to "53 archetypes" per UAC `StrategyArchetype` SSOT (PM@d6d0cd57
-  refreshed `strategy-summary.md`); the 18-archetype matrix body is preserved as the May-23 live + immediate-backtest
-  subset, full Phase 9 materialisation tracked under `plans/active/codex_refactor_2026_05_08.md` Phase A.4 + B.
+  (Duplicate stub-line removed 2026-05-12 per slot 8 strategy audit ST-16.)
+- **2026-05-12** — Currency note: UAC `StrategyArchetype` is now 55 (not 53) per slot 8 strategy audit ST-1 — the
+  `CARRY_RECURSIVE_STAKED` split (into `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`)
+  was the post-2026-05-08 delta. Matrix body remains the 18-archetype subset until the full 55-archetype materialisation
+  ships under the codex_refactor plan above.
 - **2026-04-19 (same day)** — Added dated-future rolls architecture: continuous-underlying concept,
   representative-future resolution via features, `REPRESENTATIVE_FUTURE_CHANGED` event contract, futures-roll as ATOMIC
   combo (listed or synthesized), circuit breakers. Slot-label convention now distinguishes rolling (`-dated-`) from

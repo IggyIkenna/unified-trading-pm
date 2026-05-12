@@ -27,9 +27,33 @@ SSOT: `unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2`
 
 > **2026-05-08 drift correction.** Pre-2026-05-08 this doc described 8 families / 18 archetypes — those numbers were the
 > 2026-04-17 baseline before the Phase 9 expansion. The UAC enum is canonical; if this doc disagrees with
-> `unified_api_contracts/internal/architecture_v2/enums.py`, the enum wins. Refresh trigger: cross_cutting Tab 6 audit
-> (Option A path — see
-> [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)).
+> `unified_api_contracts/internal/architecture_v2/enums.py`, the enum wins. Refresh trigger: slot 8 Strategy-area Phase
+> 1.B audit (2026-05-12; see
+> [`plans/active/issues/codex_audit_strategy_2026_05_12.md`](../../plans/active/issues/codex_audit_strategy_2026_05_12.md)
+> ST-1/ST-2/ST-14 — the prior `cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md` issue-doc reference is
+> no longer at the listed path; the audit chain now anchors on the Phase 1.B issue doc + the
+> `codex_vs_citadel_infrastructure_audit_2026_05_10.md` parent plan).
+
+> **Static enforcement of "the enum wins"** (codex audit ST-10 2026-05-12): the QG ratchet `check_strategy_taxonomy_counts.py`
+> (planned at `unified-trading-pm/scripts/quality_gates/`) parses `enums.py` member counts + greps codex `.md` files for
+> hard-count patterns (`\d+ archetype` / `\d+ families` / `\d+ action types`) + fails on mismatch. Would have caught
+> the ST-1 / ST-2 / ST-3 / ST-6 drift cluster automatically. Ships under the Strategy-area Phase 4 follow-up. Until
+> the QG ships, reviewers reject codex `.md` PRs that change hard counts without a same-PR `enums.py` edit.
+
+> **Strategy-service co-location invariants** (codex audit ST-8 + ST-9 2026-05-12):
+>
+> - `strategy_service/engine/` MUST have ZERO imports from `strategy_service/adapters/` — co-location boundary per
+>   `python-backend.md` "engine/adapters/cli structure". Enforcement: `strategy_service/topology_enforcement.py`
+>   (verify coverage; if it doesn't statically check engine→adapter, add a `grep`-on-engine-imports or AST-walk to
+>   `strategy-service/scripts/quality-gates.sh`).
+> - `strategy_service/signal_broadcast/` (12 modules) MUST satisfy the 5 service-infrastructure invariants enumerated
+>   in [`codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md`](../14-customer-journeys/shared-core/signal-broadcast-architecture.md):
+>   `ServiceBootstrap` wired · `make_health_router` with nested `signal_broadcast` `data_freshness` callback · typed
+>   `SignalBroadcastConfig` reloaders · zero local schema definitions (UAC `signal_broadcast` facade) ·
+>   `ApiKeyReloader` for HMAC creds (NOT one-shot `validate_api_keys_for_venues()`). Statically asserted via
+>   `failure_isolation.py` using `classify_venue_error()` + emitting `ADAPTER_FETCH_FAILED`; `credentials.py`
+>   importing `ApiKeyReloader`. QG-step wiring to be added to strategy-service `scripts/quality-gates.sh` under
+>   Phase 4 follow-up.
 
 **Main use / why it exists:**
 

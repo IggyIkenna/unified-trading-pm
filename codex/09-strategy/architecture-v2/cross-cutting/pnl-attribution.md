@@ -565,9 +565,12 @@ equity_in_eth worth of ETH exposure. Zero ETH delta would mean underperforming E
 
 When drift exceeds threshold, strategy emits a SWAP instruction to buy ETH back toward target.
 
-See [share-classes.md](../../_archived_pre_v2/cross-cutting/share-classes.md) for the full share class specification and
-[codex/04-architecture/defi-risk-monitoring.md](../../../04-architecture/defi-risk-monitoring.md) for monitoring
-thresholds.
+Share-class specification: the legacy `_archived_pre_v2/cross-cutting/share-classes.md` reference was superseded
+2026-05-12 per slot 8 strategy audit ST-13 — the canonical share-class definitions are now expected to live in the
+strategy catalogue 3-tier doc + UAC `ConfigRegistry`. Cross-link: live operator-facing thresholds are in
+[`codex/04-architecture/defi-risk-monitoring.md`](../../../04-architecture/defi-risk-monitoring.md). If a downstream
+consumer needs the full share-class spec before that section is written into a live SSOT, file a ping in
+`_agent_pings.md` so the migration sub-plan picks it up.
 
 ## Reward P&L Factors
 
