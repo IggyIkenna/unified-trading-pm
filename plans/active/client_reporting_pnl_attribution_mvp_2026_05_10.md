@@ -158,10 +158,11 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 
 ## Phase 3 — Per-service emit-with-lineage migration (Days 5-7, ~2 AI-days, 3 parallel sub-agents)
 
-- [ ] [AGENT] P0. **3.A position-balance emit-with-lineage.** Every position event carries
+- [x] [AGENT] P0. **3.A position-balance emit-with-lineage.** Every position event carries
       `(client_id, archetype_id, strategy_leg_id, trade_id)`. Backfill via existing correlation_id where available;
       gap-fill via execution-service trade lineage.
-- [ ] [AGENT] P0. **3.B execution-service per-client factor × layer emit.** Matching engine already runs in BENCHMARK
+      (position-balance-monitor-service@14f25b9 — added archetype_id, strategy_leg_id, trade_id to Position + LocalFillRecord; QG 6/6 tests pass)
+- [x] [AGENT] P0. **3.B execution-service per-client factor × layer emit.** Matching engine already runs in BENCHMARK
       and SIMULATED (or live) modes per `codex/04-architecture/batch-live-architecture.md §5`. Wire emit so every fill
       produces `PnLAttributionRow`s tagged with `layer=STRATEGY` (factor decomposition of BENCHMARK fill) AND
       `layer=EXECUTION` (factor decomposition of `(live_or_SIMULATED − BENCHMARK)` residual). Per-factor split per codex
@@ -169,6 +170,7 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
       `CARRY` / `GREEKS` / `SETTLEMENT` / `FX` rows are mostly `layer=STRATEGY`; `FEES` / `REBATE` split per
       modelled-vs-surprise. Banned: emitting `STRATEGY_ALPHA` / `EXECUTION_ALPHA` as factor names (they're derived
       sum-by-layer aggregates). `FINANCING` mapped to `factor=CARRY` per codex name-mapping table.
+      (execution-service@a4145838 — pnl_attribution/ module: FillAttributionContext + build_attribution_rows + 6 test classes 5462 passed)
 - [ ] [AGENT] P0. **3.C Funding + fee + financing aux emit.** MTDS funding events + execution fee events + custody
       financing events all gain `client_id` via subscription mapping.
 
