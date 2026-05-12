@@ -203,7 +203,7 @@ resolution (priority / unanimity / highest-confidence) → emit `TRADE`.
 Same rules engine but targeting sports / prediction markets. Flow adds market-availability check, odds gate, best-odds
 routing; bets settle standard WON/LOST/VOID.
 
-## Carry & Yield (6)
+## Carry & Yield (8)
 
 **`CARRY_BASIS_DATED`** —
 [archetypes/carry-basis-dated.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md)
@@ -226,6 +226,20 @@ simultaneously on same capital. Net carry = staking yield + funding − borrow c
 Recursive leveraging of a staking position: stake → pledge → borrow → stake → ... Effective leverage ≈
 `1 / (1 − LTV × safety)`, typically 3-4× on ETH. Captures leveraged staking yield with cascading liquidation risk;
 unwind respects LST unbonding period.
+
+**`CARRY_RECURSIVE_BORROW_LENDING_ONLY`** —
+[archetypes/carry-recursive-borrow-lending-only.md](architecture-v2/archetypes/carry-recursive-borrow-lending-only.md)
+Family 1 — pure-lending recursive arb (no perp leg, no LST-staking-yield leg). LST collateral on Aave V3 E-Mode at
+0.93 LTV; borrow ETH; swap back to LST on Uniswap V3; redeposit; repeat. Closed-form `E_actual = base` — recursion
+amplifies SPREAD not directional exposure. Top-7 May-23 cells across Aave V3 Ethereum / Arbitrum / Base; expected
+APR 6-10% net for canonical wstETH/WETH cell. Added 2026-05-12.
+
+**`CARRY_RECURSIVE_BORROW_PERP_HEDGED`** —
+[archetypes/carry-recursive-borrow-perp-hedged.md](architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md)
+Family 2 — Family 1 + USDC-margined ETH perp short for delta neutrality. Net APR formula
+`R_lend + R_fund + R_usdc - gas - slippage` ≈ 17.4% for wstETH/WETH cell at +12% funding regime. HL PRIMARY + Bybit
+SECONDARY (50% cap first 30d post-cutover per Feb-2025 hack). PerpHedgeSizer rebalances on band breach > 5% of
+E_actual. Added 2026-05-12.
 
 **`YIELD_ROTATION_LENDING`** —
 [archetypes/yield-rotation-lending.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md)

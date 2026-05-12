@@ -124,16 +124,27 @@ CARRY_RECURSIVE_STAKED@jito-kamino-sol-prod            (SOL on Kamino)
 | `defi/recursive-staked-basis.md`  | Direct match                   |
 | Code: `recursive_staked_basis.py` | → `CarryRecursiveStakedEngine` |
 
+> **Sibling archetypes (Family 1/2 — added 2026-05-12):** Family 1 + Family 2 are
+> distinct enum members consuming the recursive-loop infrastructure with different
+> leg composition. See [carry-recursive-borrow-lending-only.md](carry-recursive-borrow-lending-only.md)
+> (Family 1; no perp leg) + [carry-recursive-borrow-perp-hedged.md](carry-recursive-borrow-perp-hedged.md)
+> (Family 2; USDC-margined perp short for delta neutrality across HL + Bybit).
+
 ## Not in this archetype
 
 - **Simple LST hold** (no leverage) — `YIELD_STAKING_SIMPLE`
 - **Non-recursive staked basis** (one stake + one perp hedge, no loops) — `CARRY_STAKED_BASIS`
 - **Pure lending rotation** (no staking leg) — `YIELD_ROTATION_LENDING`
 - **Liquidation snipe during cascade** — `LIQUIDATION_CAPTURE`
+- **Pure recursive lending arb** (no staking yield, no perp) → [carry-recursive-borrow-lending-only.md](carry-recursive-borrow-lending-only.md)
+- **Delta-hedged recursive borrow** (Family 1 + USDC perp short) → [carry-recursive-borrow-perp-hedged.md](carry-recursive-borrow-perp-hedged.md)
 
 ## See also
 
 - Family: [carry-and-yield.md](../families/carry-and-yield.md)
 - Non-recursive variant: [carry-staked-basis.md](carry-staked-basis.md)
+- Sibling recursive variants (added 2026-05-12):
+  [carry-recursive-borrow-lending-only.md](carry-recursive-borrow-lending-only.md) +
+  [carry-recursive-borrow-perp-hedged.md](carry-recursive-borrow-perp-hedged.md)
 - Venue collateral rules (LTV, haircut):
   [../../../02-venues/venue-registry-reference.md](../../../02-venues/venue-registry-reference.md)
