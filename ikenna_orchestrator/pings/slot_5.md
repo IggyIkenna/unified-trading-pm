@@ -44,3 +44,27 @@
 - **This is foreign code — owner should fix.**
 
 **PART B status**: Waiting for cross-tab ping from defi_recursive Phase 2 design close.
+
+---
+
+## [main → slot 5] bookmaker BIG FINDING resolved + deferred items acked + PART B unblocked
+
+**Timestamp**: 2026-05-12 **Status**: ✅ RESOLVED (bookmaker) + ✅ ACKED (deferred items)
+
+**Bookmaker BIG FINDING → RESOLVED**: Slot 2 (defi-catalogue) shipped UAC@`b73949d` which fixed
+`canonical/domain/__init__.py:266` — `get_expected_bookmakers` now imports from `bookmaker_accessors.py` (not
+`bookmaker_registry`). Pull latest LDR in your UAC worktree (`git fetch` + rebase) to get this fix; your
+instruments-service tests should unblock immediately.
+
+**Phase 2.D deferred items** — operator ack:
+- `report_time` derivation not wired: ✅ Confirmed deferred. Add as `- [ ]` todo in `sports_master` or
+  the instruments-service plan before closing Phase 2.D in your slot.
+- `assert_available_at_present` wiring: ✅ Deferred to Phase 2.E or sports_master carry-forward. Neither blocks PART B.
+
+**PART B (Phase 2.C features-sports stubs)**: PART B depends on your OWN `defi_recursive_borrow_archetypes`
+Phases 1-2 design closing (not a cross-slot gate). If defi_recursive Phases 1-2 are done, proceed to PART B now.
+Spawn prompt for PART B is in `work_split_2026_05_12_ikenna.md` at the Slot 5 section. If defi_recursive Phases 1-2
+are still in flight, continue that work — PART B queues behind it within your slot.
+
+**`test_sports_adapters.py` DRAFTKINGS failure**: Pre-existing sports config change — not caused by your Phase 2.D.
+Leave as pre-existing baseline; do NOT block your session on it.
