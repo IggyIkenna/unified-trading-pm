@@ -292,28 +292,64 @@ Pre-audit: writegate Wave 3.M is PENDING. Some CeFi venues may still emit legacy
 
 Owner: harsh.
 
-- [ ] [AGENT] P0. **4A — Audit content drift**: read all three:
-      - `codex/07-security/mev-protection.md`
-      - `codex/04-architecture/mev-protection.md`
-      - `codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md`
-      Diff their content; identify overlap, contradictions, and unique content per file.
-- [ ] [AGENT] P0. **4B — Pick canonical**: `codex/04-architecture/mev-protection.md` (most comprehensive,
-      includes 5 protection layers + error codes + strategy config + key files reference). Migrate any unique
-      content from the other two into it.
-- [ ] [AGENT] P0. **4C — Convert non-canonical to redirects**:
-      - `codex/07-security/mev-protection.md` → 1-line redirect: "Moved to `codex/04-architecture/mev-protection.md`.
-        Security-perspective content folded in there." Keep as 5-line stub for backwards-compat link resolution; OR
-        delete entirely if no incoming link exists.
-      - `codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md` → narrow to **strategy-side** narrative
-        only (how strategies CONFIGURE MEV protection, parameters, fallbacks per archetype). Cross-link to
-        canonical for the protection mechanism itself.
-- [ ] [AGENT] P0. **4D — Workspace-grep** for incoming links to the 3 docs; update broken links.
+> **STATUS 2026-05-12 — Phase 4 already largely shipped pre-2026-05-12; closeout verified by slot 8 this turn.**
+> The 3-way consolidation landed back in 2026-05-10 (catalogue_audit_strategy_2026_05_12 ST-15 confirms the structure
+> is correct: `07-security/` = 54-line redirect stub, `04-architecture/` = 431-line canonical, `09-strategy/.../cross-cutting/` =
+> 156-line scope-narrowed strategy-side narrative with explicit cross-link to canonical). 4A-4D walk below show the
+> verify-and-close steps; 4E adds the ST-15 nit reconciliation (UAC `MevSubmissionMode` enum vs both doc tables).
+
+- [x] [AGENT] P0. **4A — Audit content drift**: read all three. **DONE 2026-05-10 (consolidation) + 2026-05-12 (verify slot 8)** —
+      `07-security/mev-protection.md` (54 lines) is a redirect stub with explicit `## Where to find what` pointer
+      table; `04-architecture/mev-protection.md` (431 lines) is the canonical (threat model + provider factory + RPC
+      URL SSOT + provider implementations + operational run-book + UAC `MevSubmissionMode` table); `09-strategy/architecture-v2/cross-cutting/mev-protection.md`
+      (156 lines) carries the strategy-side narrative (per-strategy MEV policy YAML, per-chain rules, per-action-type
+      mapping, monitoring metrics) with a top-of-file "CANONICAL location" banner pointing back at `04-architecture/`.
+      Three docs, three scopes, zero overlap in the implementation surface; cross-references walk both directions.
+- [x] [AGENT] P0. **4B — Pick canonical**: `codex/04-architecture/mev-protection.md`. **DONE 2026-05-10** — verified
+      by slot 8 2026-05-12 that the canonical doc carries (a) threat model, (b) provider selection factory matrix
+      mapping `chain_id → provider class`, (c) protected RPC URLs SSOT, (d) provider implementations (NoProtection /
+      PrivateMempool / Flashbots / Jito), (e) UAC `MevSubmissionMode` enum table, (f) operational run-book — the
+      complete spec. The other two carry nothing the canonical doesn't.
+- [x] [AGENT] P0. **4C — Convert non-canonical to redirects**. **DONE 2026-05-10** — `07-security/mev-protection.md`
+      is a redirect stub with `## Where to find what` lookup table for 4 common reader entry points. The
+      `09-strategy/.../cross-cutting/mev-protection.md` is scope-narrowed: its top banner reads "CANONICAL location for
+      the protection mechanism: `codex/04-architecture/mev-protection.md` ... If editing the implementation / threat
+      model / provider behaviour, edit the canonical, NOT this doc." then narrates per-strategy policy YAML + per-chain
+      rules + per-action-type mapping + monitoring — strategy-side concerns only.
+- [x] [AGENT] P0. **4D — Workspace-grep** for incoming links to the 3 docs. **DONE 2026-05-12 (slot 8)** — 16 files
+      reference at least one of the 3 paths: 8 plan docs (active + archive + scratch + issue docs), 7 codex docs, +
+      `codex/00-SSOT-INDEX.md` (the canonical SSOT-index row explicitly identifies `04-architecture/mev-protection.md`
+      as canonical and `07-security/mev-protection.md` as the redirect). All link targets resolve. EX-8 / EX-20 (the
+      sibling `defi-execution-overview.md` § "MEV Protection Framework" with inverted L2/mainnet provider selection) is
+      already ✅ DONE @`0fc4b3fd` per `codex_audit_execution_2026_05_12.md` — supersession banner added + legacy
+      3-provider table deleted + 1-line redirect to canonical. **Carry-over**: `codex/09-strategy/strategy-summary.md`
+      contains 71 `vscode-webview://` URLs (an editor-paste artefact across the entire file — not just the mev section);
+      out-of-scope for Phase 4 since it doesn't break the consolidation, but a worthwhile cleanup pass — filed as a
+      `**NICE-TO-HAVE**` follow-up below.
+- [x] [AGENT] P0. **4E — ST-15 nit: UAC `MevSubmissionMode` enum reconciliation.** **DONE 2026-05-12 (slot 8 this turn)** —
+      canonical doc (`04-architecture/mev-protection.md:201`) was missing `CUSTOM_PRIVATE_RPC` row; strategy-side doc
+      (`09-strategy/architecture-v2/cross-cutting/mev-protection.md:28-35`) was missing `JITO_BUNDLE` row. Both tables
+      now mirror the UAC `MevSubmissionMode` enum (6 active modes + 1 removed: PUBLIC_MEMPOOL / FLASHBOTS_PROTECT /
+      MEV_BLOCKER / MANIFOLD / CUSTOM_PRIVATE_RPC / JITO_BUNDLE; BLOXROUTE marked removed in both). Strategy doc
+      header now cross-links UAC enum source-of-truth + canonical for implementation. Closes ST-15 carry-over.
+
+**Phase 4 carry-over (out-of-scope NICE-TO-HAVE)**:
+
+- **NICE-TO-HAVE — `codex/09-strategy/strategy-summary.md` vscode-webview link artefacts**. 71 occurrences of
+  `vscode-webview://` URL prefix across the file (editor-paste artefact when authoring via VS Code preview); link
+  targets all resolve correctly but the URLs are noisy and break preview rendering in some viewers. Follow-up:
+  global s/vscode-webview:\/\/[^\/]+\/unified-trading-system-repos\/unified-trading-pm\///g + workspace-grep test
+  to confirm no other strategy/codex doc has the same artefact. Filed inline (NICE-TO-HAVE, not blocking; not a
+  P3 plan-todo since the link content is intact and resolution works).
 
 **Full-execution criterion**:
 
-- ✅ Canonical `04-architecture/mev-protection.md` includes 100% of unique content from the other 2.
-- ✅ Other 2 docs either redirect-only or scope-narrowed with cross-link.
-- ✅ Zero broken links across the workspace.
+- ✅ Canonical `04-architecture/mev-protection.md` includes 100% of unique content from the other 2 — verified
+  slot 8 2026-05-12.
+- ✅ Other 2 docs either redirect-only or scope-narrowed with cross-link — verified slot 8 2026-05-12 (54-line
+  redirect stub + 156-line scope-narrowed strategy narrative with top-banner cross-link).
+- ✅ Zero broken links across the workspace — verified slot 8 2026-05-12 (16 incoming files; all targets resolve;
+  EX-8/EX-20 already shipped @`0fc4b3fd`).
 
 ## Phase 5 — TradFi ETF list SSOT + canonical asset-group registry (PARALLEL with 1; ~3-5 AI-days)
 
@@ -424,7 +460,7 @@ Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
 | Phase 1F (`GAS_FEE_CHAIN_START_DATES`) | ✅ ALREADY EXISTS — but extend | at `chain_env.py:61` (int-keyed) + `GAS_FEE_SOLANA_START_DATE` — DF-13; **extend** to reconcile the chain-set fragmentation (`MAINNET_CHAIN_IDS`=19 / `CHAIN_GENESIS_DATES`=21 / `CHAIN_CONFIGS`=35 / `GAS_FEE_CHAIN_START_DATES`=14 / "22 chains" claim matches none — DF-7) + correct the "22 chains" wording in CLAUDE.md + per-protocol plans |
 | Phase 2 (manifest health script + UI) | ☐ TODO | `measure_honest_coverage.py` confirmed NOT to exist; must validate venue-key↔capability-dict parity before computing % (CF-4/SP-6/DF-8 — coverage-start key mismatch silently zeros expected shards) |
 | Phase 3 (per-CeFi-venue zero-activity-bar verify) | ☐ TODO | Wave 3.M is 0% started (all 21 cefi venues on legacy `empty_confirmed`; no Cat-D bars; UTL helpers don't exist) — callout added to `writegate_honest_coverage_endtoend_2026_05_06.md`; the cefi sub-agent's per-venue Cat-A/B/C/D matrix in `catalogue_audit_cefi_2026_05_12.md` seeds the audit |
-| Phase 4 (3 mev-protection.md consolidation) | ☐ TODO | codex-audit ST-15 confirms the 3-way overlap is *already* mostly resolved (mev-protection consolidated to `04-architecture/mev-protection.md`) — verify + close the residual; EX-8/EX-20 found `defi-execution-overview.md` § MEV inverts the L2/mainnet provider selection (no supersession banner) |
+| Phase 4 (3 mev-protection.md consolidation) | ✅ DONE 2026-05-12 (slot 8 closeout) | 3-way consolidation already landed 2026-05-10; slot 8 verified structure (54-line redirect + 431-line canonical + 156-line scope-narrowed strategy narrative) + reconciled UAC `MevSubmissionMode` enum drift (canonical missing CUSTOM_PRIVATE_RPC; strategy missing JITO_BUNDLE) — both tables now mirror UAC's 6-mode enum. EX-8/EX-20 sibling fix already shipped @`0fc4b3fd`. 1 NICE-TO-HAVE carried inline (71 vscode-webview links in `strategy-summary.md`). Phase 4 close-out commit: PM@<next> |
 | Phase 5 (TradFi ETF/roots SSOT + asset_group_registry) | ☐ TODO | `tradfi_etfs.py` / `tradfi_roots.py` / `asset_group_registry.py` confirmed NOT to exist; SSOT-fragmentation fully mapped — ETF list across 4 files, futures-roots across 3, VIX constants in `data_source_continuity.py` not `honest_coverage.py` (TF-1/TF-2/TF-7); `canonical/domain/derivatives/` has only `__init__.py`+`options.py` |
 | Phase 6 (validation) | ☐ TODO | |
 | Phase 7 (codex SSOT updates) | ☐ TODO | incl. CLAUDE.md VIX-15m pointer fix (TF-7), `contracts-scope-and-layout.md` venue-class taxonomy (DF-19), the 6 cross-asset cleanup items |

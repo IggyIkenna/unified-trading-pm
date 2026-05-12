@@ -198,6 +198,7 @@ Per [`mev_router.py`](../../../execution-service/execution_service/v2/mev_router
 | `FLASHBOTS_PROTECT`          | Flashbots private RPC                        | Strong (bundle-only inclusion)   | +200-1000ms typical |
 | `MEV_BLOCKER`                | MEV Blocker RPC                              | Strong                           | +200-1000ms         |
 | `MANIFOLD`                   | Manifold relay                               | Strong; revenue share on backrun | +200-1000ms         |
+| `CUSTOM_PRIVATE_RPC`         | Operator-provided RPC URL                    | Varies (per relay)               | Varies              |
 | `JITO_BUNDLE` (NEW Phase 5A) | Jito block-engine RPC                        | Strong (Solana)                  | Solana-specific     |
 | `BLOXROUTE`                  | (REMOVED per CLAUDE.md; do not re-introduce) | n/a                              | n/a                 |
 
