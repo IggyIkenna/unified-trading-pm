@@ -803,6 +803,42 @@ backtest in the unified pipeline. No live trading. Bugs/backfills/schema fixes i
       EXPECTED_BOOKMAKER_MARKET_SETS coverage (Bet365 + Pinnacle + 1xBet + Marathonbet + William Hill). Slippage: 1%
       over closing for liquid markets, 3% for thin. MDPS odds horizon bucket DEFERRED with in-play archetype.
 
+## Catalogue audit findings (re-audited 2026-05-12)
+
+Folded from `plans/archive/issues/catalogue_audit_sports_2026_05_12.md` — re-audit verdicts (2026-05-12, ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
+
+- [ ] [SCRIPT] **P0**. **SP-13 — MTDS sports registry phantom-import bug (critical-path May-23 blocker)**.
+      `market-tick-data-service/market_tick_data_service/market_interface/sports/registry.py:23-40` `_ADAPTER_PATHS`
+      routes 18 sportsbook/exchange/bookmaker keys (betfair / matchbook / onexbet / odds_api / skybet / coral /
+      paddypower / betfred / betvictor / boylesports / bwin / ladbrokes / williamhill / betway / unibet / bet888sport
+      / bet365 / sbo) to `unified_sports_execution_interface.adapters.*` — a **phantom Python package** (no such
+      package exists workspace-wide; URDI ELIMINATED 2026-03-26 per codex/GLOSSARY.md). Every
+      `adapter_for_bookmaker(key)` call raises `ModuleNotFoundError` at the `importlib.import_module()` line. **Fix**:
+      rewrite the 18 phantom paths to `execution_service.sports_execution.adapters.<subdir>.<module>` per the
+      post-merge layout in `execution-service/execution_service/sports_execution/adapters/__init__.py:1-32`. Other
+      agent in flight on this fix.
+- [ ] [SCRIPT] **P1**. **SP-5 — bet365 + DK/FD scrapers**. bet365 wired wrong (phantom import per SP-13);
+      DraftKings / FanDuel have NO scraper (only `NotImplementedError` browser stubs in `sports_execution/adapters/scrapers/`).
+      Fix scope: either ship the scrapers OR delete the venue capability entries for DK/FD so they don't show as
+      live in the catalogue.
+- [ ] [SCRIPT] **P1**. **SP-10 — cluster-validation kwargs MISSING workspace-wide**. 0 hits for
+      `expected_root_clusters` / `cluster_extractor` in any sports adapter. CLAUDE.md cluster-validation mandate
+      (`record_captured()` for bundled data_types) not wired through `instruments_service/engine/orchestrator.py`
+      for sports per-fixture bundles. Add cluster kwargs at the bundle-writer boundary in orchestrator.
+- [ ] [SCRIPT] **P1**. **SP-12(a) — execution-service `sports_execution` missing `classify_venue_error()`**.
+      instruments-service sports reference adapters GREEN via `BaseSportsReferenceAdapter`; execution-service
+      sports_execution has 0 hits. Add classify wiring at adapter-base level.
+- [ ] [SCRIPT] **P2**. **SP-12(e) — capability-decl vs method match**. 17 caps declared vs 15 execution classes
+      present. Reconcile.
+- [ ] [SCRIPT] **P2**. **SP-12(f) — shard-level isolation**. Orchestrator-level catch preserves isolation but
+      per-adapter not enforced. Tighten.
+
+Already GREEN (re-audit closed): SP-1/SP-2/SP-3 case-folding (cross_asset_group Phase 1D), SP-4 data-type-namespace
+note (cross_asset_group Phase 1D), SP-6 KNOWN_COVERAGE_GAPS (folded to sports phantom-recon plan), SP-7 launch-dates
+asymmetry (docstring fix shipped), SP-8 EMPTY_CONFIRMED_REASONS taxonomy (closed-set verified), SP-9 LINEUPS_PRE/POST
+absent (clean), SP-11 sports-reference GCS paths (clean), SP-12(b) `ADAPTER_FETCH_FAILED` (ref adapters GREEN),
+SP-12(c) typed empty reasons (GREEN at orchestrator/triggers).
+
 ## Anti-patterns + workspace-rule cross-references
 
 - **Sports GCS path SSOT** (CLAUDE.md): use `unified_api_contracts.sports.candidate_parquet_paths` — NEVER hardcode
