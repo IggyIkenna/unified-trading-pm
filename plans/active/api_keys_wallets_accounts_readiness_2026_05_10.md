@@ -907,3 +907,60 @@ in checklist § A-D drive first executions.
 | Date       | Author     | Change                                                                                                                                               |
 | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-05-10 | main agent | Plan spawned from question doc. All 10 residuals resolved + sub-residuals captured. Self-contained for execution; no need to re-read questions/ doc. |
+
+## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
+
+**Finding (P2)**: cross-chain keypair axis is implicit but not explicit across the wallet codex + UAC schemas. All artifacts use chain-aware shapes + per-chain `wallet_id`s (`csb-eth-hot-lido-v1` vs `csb-arb-hot-lido-v1` in [`per-archetype-wallet-isolation.md`](../../codex/05-infrastructure/per-archetype-wallet-isolation.md) § 2), but **none state**:
+
+1. **EVM secp256k1 keypair is shared across all EVM chains** — one PK derives the same address on Ethereum / Arbitrum / Base / Optimism / Polygon (implicit in [`pre-cutover-test-wallets-runbook.md`](../../codex/05-infrastructure/pre-cutover-test-wallets-runbook.md) § 2.1 "operator extends MetaMask with new networks" but never explicit).
+2. **Per-chain config rows exist anyway** because `allowed_protocols` / `spending_caps` / `kill_switch_id` differ per chain even when the underlying PK is shared.
+3. **Non-EVM chains need distinct keypairs** — Solana ed25519 (test-wallet runbook § 3) + Hyperliquid L1 EIP-712-over-own-L1 + Bitcoin. Cryptographic primitives not codified.
+
+**Why it matters**: an implementer wiring this plan could either (a) over-provision — generate fresh PK per EVM chain → loses address-fungibility (cross-chain bridges, ENS, on-chain reputation), or (b) under-provision — one config row per EVM keypair → loses per-chain spending caps + kill-switch scoping.
+
+**Recommended fix** (slot 4 owns; ~50 LOC addition):
+
+Append a new section to [`codex/05-infrastructure/per-archetype-wallet-isolation.md`](../../codex/05-infrastructure/per-archetype-wallet-isolation.md) (best home; sibling section after § 2):
+
+```markdown
+## § N — Cross-chain keypair axis (the orthogonality rule)
+
+The N×M wallet topology has TWO axes that are orthogonal but commonly conflated:
+
+1. **Keypair axis** — which cryptographic keypair signs.
+2. **Config-row axis** — which (`wallet_id`, `chain`) row carries operational envelope (`allowed_protocols`, `spending_caps`, `kill_switch_id`).
+
+### Per-chain-family keypair rules
+
+| Chain family | Cryptographic primitive | Keypair sharing |
+|---|---|---|
+| EVM (Ethereum / Arbitrum / Base / Optimism / Polygon / Sepolia / Holesky / Base Sepolia / Arbitrum Sepolia) | secp256k1 ECDSA | **Shared** — one keypair derives the same `0x...` address on every EVM chain |
+| Solana mainnet / devnet | ed25519 | Distinct keypair (no sharing with EVM) |
+| Hyperliquid L1 | secp256k1 ECDSA + EIP-712 over chain_id 1337 (mainnet) / 421614 (testnet) | Distinct from EVM despite shared primitive — different EIP-712 domain |
+| Bitcoin / Bitcoin testnet | secp256k1 ECDSA (Schnorr for Taproot) | Distinct from EVM (different address derivation) |
+
+### Per-chain config-row rules
+
+`WalletProvisioningConfig` row count = `(chains × kinds × archetypes)`, not `keypairs`. Two `csb-eth-hot-lido-v1` and `csb-arb-hot-lido-v1` rows share the same EVM keypair → same `0x...` address → but have distinct rows because:
+
+- Per-chain `allowed_protocols` (Aave V3 cap LTV differs per chain; Uniswap router address differs per chain per [`UNISWAP_SWAP_ROUTER_BY_CHAIN`](../../../unified-api-contracts/unified_api_contracts/registry/dex_router_addresses.py)).
+- Per-chain `spending_caps` (gas-cost-per-tx + chain-specific risk budget).
+- Per-chain `kill_switch_id` (per-chain kill-switch tier-up; `KILL_PER_ASSET_GROUP_DEFI` is chain-agnostic, but `KILL_PER_VENUE_AAVEV3_BASE` is chain-specific).
+
+### Wallet-id naming convention
+
+- EVM cells: `{archetype}-{chain}-{kind}-{venue}-v{N}` (e.g. `csb-eth-hot-lido-v1` / `csb-arb-hot-lido-v1`). Same EVM keypair, separate config rows.
+- Solana cells: `{archetype}-sol-{kind}-{venue}-v{N}` (e.g. `csb-sol-hot-jito-v1`). Distinct ed25519 keypair.
+- Hyperliquid: `{archetype}-hl-{kind}-v{N}` (e.g. `apd-hl-hot-eth-perp-v1`). Distinct secp256k1 keypair.
+
+### Provisioning implication
+
+In the envelope-encrypt flow ([`pre-cutover-test-wallets-runbook.md`](pre-cutover-test-wallets-runbook.md) § 2.2):
+
+- **EVM**: operator hands one PK; agent wraps once; agent creates N config rows (one per EVM chain in scope) with the same `private_key_secret_ref` but different `chain` + `allowed_protocols` + `spending_caps` + `kill_switch_id`.
+- **Solana / Hyperliquid / Bitcoin**: per-chain PK; per-chain wrap; per-chain config row.
+```
+
+Optional: also surface the rule in [`hsm-wallet-signing.md`](../../codex/05-infrastructure/hsm-wallet-signing.md) § 2.3 (CLOUD_KMS_ENCRYPTED section) as a 2-line callout pointing at the new section.
+
+**Slot 5 NOT fixing** (Findings Triage — outside-plan scope; slot 4 owns wallet codex surface). Source: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 PerpHedgeSizer + Phase 8 monitor design + Family 2 design § "USDC margin buffer + top-up automation".
