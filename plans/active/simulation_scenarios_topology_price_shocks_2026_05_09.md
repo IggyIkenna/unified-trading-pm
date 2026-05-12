@@ -303,7 +303,7 @@ and only then unblocks dependents.
 
 ## Phase 0 — Pre-audit (Day 1, ~1.5 AI-days, 3 parallel sub-agents)
 
-- [ ] [AGENT] P0. **0.A Inventory existing scenario / mock infra.** Sub-agent walks:
+- [ ] [AGENT] P0. **0.A Inventory existing scenario / mock infra.** **DEFERRED-PER-COMPRESSED-SCOPE** — Day-1 6-sub-agent design fan-out (`scratch_scenarios_day1/{01..10}.md`) served as the de-facto infra inventory: each fragment cites the relevant existing matching-engine hook / mock-WS infra / ManifestWriter surface inline. Formal Phase 0 audit deferred to successor `simulation_scenarios_post_cutover_2026_06_01.md`. Sub-agent walks:
       `execution-service/matching_engine/{engine,trade_matcher,amm,sports_matching,hooks}.py` (existing slippage +
       latency hooks), `execution-service/tests/integration/conftest.py` (Tenderly fixtures),
       `market-tick-data-service/tests/market_interface/fixtures/mock_ws_server.py` (MockWebSocketFeed),
@@ -311,12 +311,12 @@ and only then unblocks dependents.
       `streaming` + `batch_live_reconciler` + `honest_coverage_ratchet` (Tab 2 2026-05-08), MDPS feature-layer
       NaN-handling primitives. Output: a markdown table in this plan's § "Audit findings" with
       `surface | what's there | reuse-as` columns. **Don't write code yet — only surface what to reuse.**
-- [ ] [AGENT] P0. **0.B Cross-plan coordination banners.** Add
+- [ ] [AGENT] P0. **0.B Cross-plan coordination banners.** **DEFERRED-UNTIL-PHASE-3-IMPL** — banner-add is bundled with the Phase 3 wire-in launch per CLAUDE.md "Cross-Plan Coordination Banners" rule (banner-add is part of the in-flight refactor's logical unit). Phase 3.E + 3.F impl is cross-side-handed-off to Harsh slot 5; banner-add becomes their action when implementation begins. Add
       `> **🟡 IN-FLIGHT REFACTOR — synthetic scenario injection landing across MTDS / MDPS / features / strategy / execution / alerting / position-balance / risk via UAC `ScenarioOverlay`+ UTL`scenario/`; downstream consumers will gain a `scenario_id`provenance column on parquet writes + a`synthetic=true`event metadata field. RE-VERIFY any reader / dashboard code that filters or groups parquet output. See`simulation_scenarios_topology_price_shocks_2026_05_09.md`.**`
       to: `master_to_live_defi_2026_05_23.md`, `live_pipeline_mtds_mdps_features_2026_05_08.md`,
       `alerting_service_live_rules_2026_05_07.md`, `writegate_honest_coverage_endtoend_2026_05_06.md`. Banner removed by
       this plan's owner when Phase 9 ships.
-- [ ] [SCRIPT] P0. **0.C Workspace-grep callsite enumeration.** For every overlay tap point — `_fetch_*` per MTDS
+- [ ] [SCRIPT] P0. **0.C Workspace-grep callsite enumeration.** **DEFERRED-UNTIL-MULTI-LAYER-WIRE-IN** — compressed-scope ships only the ORDER-layer wire (Phase 3.E, Harsh slot 5). Multi-layer callsite enumeration (RAW_TICK / FEATURE / SIGNAL / EVENT / MANIFEST) is post-cutover scope (Phase 3.A/B/C/G of successor plan); CSV emission useful only when those taps land. For every overlay tap point — `_fetch_*` per MTDS
       adapter, `_compute_*` per features-\* calculator, `emit_signal` in strategy-service, `submit_order` +
       `simulate_fill` in execution-service, `record_captured` + `record_empty` + `record_failed` +
       `record_expected_unattempted` in UTL ManifestWriter — produce a CSV
@@ -355,11 +355,11 @@ and only then unblocks dependents.
       `unified_api_contracts/registry/scenarios/{cefi,defi,tradfi,sports,prediction,cross_asset}.py` — each module
       exposes a `frozenset[ScenarioOverlay]` constant with seed scenarios from § Phase 4 (full library lands in Phase 4;
       seed shape lands here). Registry: `SCENARIO_REGISTRY: dict[ScenarioId, ScenarioOverlay]` indexed at module load.
-- [ ] [AGENT] P0. **1.E `ScenarioReport` Pydantic dataclass.** Fields: `scenario_id`, `archetype: ArchetypeId`,
+- [x] [AGENT] P0. **1.E `ScenarioReport` Pydantic dataclass.** ✅ UAC@`33630a6` (slot 7 Day-2 2026-05-12) — `canonical/crosscutting/scenario_overlay.py` ships `ScenarioReport` + `ScenarioOutcomeResult` Pydantic, frozen + extra-forbid, with `scenario_id` / `archetype` / `run_id` / `started_at_iso` / `finished_at_iso` / `outcome_results: tuple[ScenarioOutcomeResult, ...]` / `synthetic: bool = True` / `parquet_artifacts: frozenset[str]` / `event_correlation_id` fields. Fields: `scenario_id`, `archetype: ArchetypeId`,
       `run_id`, `started_at`, `finished_at`, `outcome_results: list[ScenarioOutcomeResult]` (assertion + observed +
       pass/fail), `synthetic: bool = True`, `parquet_artifacts: list[GcsPath]` (per-stage parquet snapshots),
       `event_correlation_id`. Used by Phase 7 UI + Phase 9 evidence.
-- [ ] [AGENT] P0. **1.F UAC tests.** ≥30 unit tests in
+- [x] [AGENT] P0. **1.F UAC tests.** ✅ UAC@`33630a6` (slot 7 Day-2 2026-05-12) — `tests/internal/unit/test_scenario_overlay.py` ships 53 tests (over-delivers vs ≥30 target); + UAC@`556b96f` (slot 7 Day-3) `tests/internal/unit/test_scenario_archetype_matrix.py` ships 11 tests for the per-archetype matrix layer = **64 UAC unit tests total**. Coverage: closed-set enum membership / scenario_id regex / Pydantic frozen + extra-forbid / per-mutation discriminator dispatch / 6-tuple seam-ref / registry completeness / per-asset_group count / register_scenario idempotency + duplicate guard. ≥30 unit tests in
       `unified-api-contracts/tests/internal/unit/test_scenario_overlay.py`: enum membership / seed-registry round-trip /
       Pydantic validation / typed-mutation discrimination / outcome-assertion serialization round-trip.
 
@@ -385,7 +385,7 @@ and only then unblocks dependents.
       `ScenarioOutcomeAssertion` checks `expected_within` SLA against observed.
       `check(scenario_run_id, assertion) -> ScenarioOutcomeResult`. Uses the existing event stream contract, no new
       infra.
-- [ ] [AGENT] P0. **2.C `unified_trading_library/scenario/report.py`.** `ScenarioReportEmitter` — writes
+- [ ] [AGENT] P0. **2.C `unified_trading_library/scenario/report.py`.** **DEFERRED-PER-COMPRESSED-SCOPE** (plan body line 63 explicit: "2.C / 2.E / 2.F deferred"; 2.E now shipped Day-4 at UTL@`9e84ee44`; 2.F shipped Day-2 at UTL@`3797fed5`; 2.C parquet sink remains DEFERRED). Pre-cutover ship returns `ScenarioReport` in-memory via `ScenarioRunner.run().report`; consumer JSONL-serializes per matrix-runner spec. Parquet GCS emission lands when real-VM matrix runs ship (Phase 9, deferred to successor `simulation_scenarios_post_cutover_2026_06_01.md`). `ScenarioReportEmitter` — writes
       `ScenarioReport` to `gs://{pid}-events/scenarios/{archetype}/{YYYY-MM-DD}/{scenario_id}/{run_id}.json` (event
       payload) + `gs://{pid}-scenario-reports/{archetype}/{YYYY-MM-DD}/{scenario_id}/{run_id}/report.parquet`
       (queryable). Reuses UTL emission helpers — no new bucket-naming logic; uses Tab 4's `bucket_naming.py` SSOT
@@ -400,7 +400,7 @@ and only then unblocks dependents.
       `_synthetic_available_at_shift: bool` column; UTL `lookahead_bias_check` accepts a `scenario_overlay_active: bool`
       kwarg that downgrades the error to a structured warning emitted to the report. **Strict mode stays on for
       non-overlay paths** — only the overlay-active path skips.
-- [ ] [AGENT] P0. **2.F UTL tests.** ≥40 unit tests covering: per-mutation applier correctness,
+- [x] [AGENT] P0. **2.F UTL tests.** ✅ UTL@`3797fed5` (slot 7 Day-2 2026-05-12) ships 51 unit tests in `tests/unit/scenario/` (test_applier 18 / test_checker 22 / test_runner 7 + 4 shared); + UTL@`66904fe0` (Day-3) ships 10 matrix-runner tests; + UTL@`9e84ee44` (Day-4) adds 2 Phase 2.E LookaheadBias downgrade tests = **63 UTL unit tests total** (over-delivers vs ≥40 target). Coverage: per-mutation applier correctness on all 11 union members + per-OutcomeCategory checker behaviour on mocked event stream + report-emitter round-trip + runner end-to-end + matrix-runner red/green + LookaheadBias compatibility under overlay-active path. ≥40 unit tests covering: per-mutation applier correctness,
       per-outcome-assertion-kind checker behavior on a mocked event stream, report-emitter parquet round-trip, runner
       end-to-end with a stub pipeline, lookahead-bias-check behaviour under overlay vs not.
 
@@ -459,26 +459,26 @@ Each sub-task is a separate sub-agent assignment. Same Bash-bundling discipline 
 Each sub-agent owns one module in `unified-api-contracts/registry/scenarios/<asset_group>.py`. Each scenario is a fully
 typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per the scope section.
 
-- [ ] [AGENT] P0. **4.A CeFi (≥8 scenarios).** `cefi_tick_gap_15min`, `cefi_funding_spike_10x`,
+- [x] [AGENT] P0. **4.A CeFi (compressed-scope subset of ≥8).** ✅ UAC@`33630a6` — `registry/scenarios/cefi.py` ships 2 ScenarioOverlay instances per compressed-scope plan body line 67-74: `cefi_venue_circuit_breaker_trip` + `cefi_funding_spike_10x`. **DEFERRED**: full ≥8 CeFi scenario library (`cefi_tick_gap_15min`, `cefi_liquidation_cascade`, `cefi_book_top_stale_120s`, `cefi_venue_outage_single`, `cefi_wide_spread_50bps`, `cefi_halt_then_reopen_gap_5pct`, `cefi_funding_rate_negative_extreme`) to successor `simulation_scenarios_post_cutover_2026_06_01.md` Phase 4. `cefi_tick_gap_15min`, `cefi_funding_spike_10x`,
       `cefi_liquidation_cascade`, `cefi_book_top_stale_120s`, `cefi_venue_outage_single` (Bybit-only),
       `cefi_wide_spread_50bps`, `cefi_halt_then_reopen_gap_5pct`, `cefi_funding_rate_negative_extreme`. Each declares
       per-archetype expected outcomes (e.g. `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) halts on
       `cefi_funding_spike_10x`).
-- [ ] [AGENT] P0. **4.B DeFi (≥8 scenarios).** `defi_oracle_deviation_30sigma`, `defi_gas_surge_50x`,
+- [x] [AGENT] P0. **4.B DeFi (compressed-scope subset of ≥8).** ✅ UAC@`33630a6` — `registry/scenarios/defi.py` ships 6 ScenarioOverlay instances per compressed-scope plan body line 67-74: `defi_oracle_deviation_30sigma`, `defi_gas_surge_50x`, `defi_liquidity_drain_lending_pool`, `defi_chain_rpc_outage_solana`, `defi_mempool_congestion_inclusion_delay`, `defi_stablecoin_depeg`. **DEFERRED**: full ≥8 DeFi scenario library (`defi_rpc_outage_arbitrum`, `defi_reorg_solana_3block`, `defi_mev_sandwich_2pct`, `defi_slippage_blowout_uniswap`, `defi_pyth_feed_lag_solana_5min`, `defi_aave_utilization_99pct` as named-but-not-shipped fragments) to successor Phase 4. `defi_oracle_deviation_30sigma`, `defi_gas_surge_50x`,
       `defi_rpc_outage_arbitrum`, `defi_reorg_solana_3block`, `defi_mev_sandwich_2pct`, `defi_slippage_blowout_uniswap`,
       `defi_pyth_feed_lag_solana_5min`, `defi_aave_utilization_99pct`. Per-archetype outcomes (e.g. `carry_staked_basis`
       cancels new entries on `defi_oracle_deviation_30sigma`).
-- [ ] [AGENT] P0. **4.C TradFi (≥6 scenarios).** `tradfi_options_chain_partial_4_of_11_clusters_missing`,
+- [ ] [AGENT] P0. **4.C TradFi (≥6 scenarios).** **DEFERRED-PER-COMPRESSED-SCOPE** (plan body line 82-83: "Full per-asset_group scenario library (Phase 4 ≥34 scenarios — only 6 ship pre-cutover)") — TradFi cluster-bundling scenarios are post-cutover; cutover archetypes are CeFi-perp + DeFi-LST, no TradFi exposure. Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 4. `tradfi_options_chain_partial_4_of_11_clusters_missing`,
       `tradfi_es_halt_circuit_breaker_l2`, `tradfi_overnight_gap_3pct`, `tradfi_databento_429_storm`,
       `tradfi_vix_15m_yahoo_window_edge`, `tradfi_etf_late_close_fill`. Hooks the cluster-validation
       MissingClusterValidationError surface (UAC `BUNDLED_DATA_TYPES`) for the partial-bundle scenario.
-- [ ] [AGENT] P0. **4.D Sports seed (4 scenarios).** `sports_kickoff_delay_60min`, `sports_fixture_cancellation_late`,
+- [ ] [AGENT] P0. **4.D Sports seed (4 scenarios).** **DEFERRED-PER-USER** (plan body § "Deferred work after 2026-05-09 session" row 1: "Sports full-coverage scenario library — Post-cutover"). Cutover archetypes have no sports exposure. `sports_kickoff_delay_60min`, `sports_fixture_cancellation_late`,
       `sports_lineup_announce_post_kickoff` (LookaheadBias-adjacent), `sports_odds_storm_pinnacle_outage`. Full coverage
       post-cutover.
-- [ ] [AGENT] P0. **4.E Prediction seed (4 scenarios).** `prediction_market_resolve_premature_polymarket`,
+- [ ] [AGENT] P0. **4.E Prediction seed (4 scenarios).** **DEFERRED-PER-USER** (plan body § "Deferred work after 2026-05-09 session" row 2: "Prediction full-coverage scenario library — Post-cutover"). Cutover archetypes have no prediction-market exposure. `prediction_market_resolve_premature_polymarket`,
       `prediction_canonical_question_lifecycle_violation`, `prediction_clob_book_invert`,
       `prediction_kalshi_resolution_disputed`. Full coverage post-cutover.
-- [ ] [AGENT] P0. **4.F Cross-asset (4 scenarios).** `cross_asset_correlation_break_btc_eth`,
+- [x] [AGENT] P0. **4.F Cross-asset (compressed-scope subset of 4).** ✅ UAC@`33630a6` — `registry/scenarios/cross_asset.py` ships 2 ScenarioOverlay instances per compressed-scope plan body line 67-74: `cross_asset_flash_crash` + `cross_asset_basis_blowout_perp_spot`. **DEFERRED**: full 4-scenario cross-asset set (`cross_asset_correlation_break_btc_eth`, `cross_asset_global_liquidation_cascade`, `cross_asset_cross_cloud_failover_aws_to_gcp`) to successor Phase 4. `cross_asset_correlation_break_btc_eth`,
       `cross_asset_basis_blowout_perp_spot`, `cross_asset_global_liquidation_cascade`,
       `cross_asset_cross_cloud_failover_aws_to_gcp`. Each touches ≥2 asset_groups; outcomes assert global kill switch
       arms in the most severe case.
