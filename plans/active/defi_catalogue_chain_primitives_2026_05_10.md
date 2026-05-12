@@ -1285,3 +1285,85 @@ Slot 5 Day-1 design ship surfaced 2 Phase 3 dependencies for slot 2 to verify or
 2. **Instruments-service per-(chain, protocol) reserve listings** for Arbitrum Aave V3 (11 reserves: USDC, USDC.E, USDT, DAI, WETH, WBTC, WSTETH, WEETH, RETH, ARB, LINK) + Base Aave V3 (7 reserves: USDC, USDBC, WETH, CBBTC, WSTETH, WEETH, CBETH). Without these listings, MTDS `lending_indices` adapter has no instrument universe for non-Ethereum chains — Family 1 Arbitrum/Base cells unblock requires these.
 
 Slot 5 NOT fixing (Findings Triage — outside-plan scope); slot 2 owns this Phase 3 detail. Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Family 1 topology design section (Arbitrum + Base ReserveParams matrix).
+
+## DONE-2026-05-12 — Harsh slot 2 (harsh-defi-catalogue-impl-tab) Day-1 Phase-2-closure + Phase-3/5C-start session
+
+Density-push Day-1 closed Phase 2 entirely + opened Phase 3 + closed Phase 5C operational gate. ~10 commits across
+4 repos via 4 sub-agents (3 Phase-2 INSTR + 1 Phase-3 MTDS) + 4 main-thread shippable units.
+
+### Commits shipped Day-1 (Harsh slot 2 = harsh-defi-catalogue-impl-tab)
+
+| Phase | Repo | SHA | Summary |
+|-------|------|-----|---------|
+| 2.RENZO-ARB | instruments-service | `38192e7` | Renzo (ezETH) multi-chain adapter — ARB bridged 0x2416...CcEea5; tests 7/7 |
+| 2.BEEFY+PENDLE+JITO-RESTAKING+factory reconcile | instruments-service | `b563afb` | 16 Beefy vaults across 5 chains + 30 Pendle PT/YT/SY records + 3 Jito-Restaking VRTs + factory.py latent fix (defi_graph_adapters extension); end-to-end smoke 15/15 + defi/ unit 122/122 pass |
+| 2 plan flips (renzo-arb) | PM | `cc6d8191` | Phase 2 deferred 2.RENZO-ARB → ✅ |
+| 2 plan flips (beefy/pendle/jito-restaking) | PM | `1ac57926` | Phase 2 ✅ COMPLETE — 4-of-4 deferred adapters closed |
+| 2J codex SSOT | PM | `692d628e` | defi-venue-protocol-catalogue.md INSTR ✗→✅ for 13 protocols + new (f) deltas block |
+| 3.LST.ROCKET-POOL | MTDS | `80ee665` | RocketPoolAdapter via AAVE-Oracle pattern — 398L adapter + 233L test (16 unit tests pass) + factory.py + adapters/__init__.py registration |
+| 5C ops gate (yaml) | deployment-service | `180cd55` | cloud-providers.yaml: archetype-state bucket kind under both gcp.storage + aws.storage (env-tiered single bucket; flat-string kind, asset_group ignored) |
+| 5C ops gate (python) | execution-service | `02fc9fc6` | tenderly_budget.py _BUDGET_KIND: 'archetype_state' → 'archetype-state' (workspace yaml convention is hyphenated) |
+
+### Phase totals
+
+- **Phase 2 ✅ COMPLETE** — all 14 deferred protocol adapters shipped instruments-service-side. INSTR ✗→✅ for 13
+  protocols (rocket_pool/solblaze ETH-LST + symbiotic/karak/renzo/kelpdao/puffer/jito_restaking restaking/LRT +
+  convex/idle/yearn/beefy/pendle vaults). factory.py latent fix bundled (defi_graph_adapters extension closes the
+  silent-ETHEREUM-default-chain bug for all multi-chain LST/LRT/vault adapters).
+- **Phase 3 STARTED** — first MTDS adapter shipped (Rocket Pool / rETH oracle prices via AAVE V3 Ethereum). Pattern
+  validated: `lst_lido_adapter.py`-shape clone with address swap, ~400 lines per adapter, ~16 unit tests, no real
+  RPC calls in tests. 12 more LST/LRT/vault MTDS adapters remain (per-protocol research needed for non-AAVE-listed
+  LRTs — see deferred-work scoreboard below).
+- **Phase 5C operational gate ✅ CLOSED** — Ikenna's "What's left for Harsh slot 2" item 7 (archetype-state bucket
+  kind yaml entry) now resolved. TenderlyBudgetTracker can now resolve its bucket end-to-end via
+  resolve_bucket_name(cloud=, kind="archetype-state", asset_group="defi"). Bucket provisioning still pending
+  operator-action (typical workflow: yaml-add → terraform/gcloud bucket create → tracker can read/write).
+
+### Deferred work after 2026-05-12 Harsh-slot-2 Day-1 session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|--------------|-------------------------|----------------------|
+| 3.LST — Solblaze (bSOL, Solana) | deferred-to-Phase-3-followup | Solana-specific data path (Pyth Hermes, similar to existing `jito.py` LST adapter shape). Not on AAVE Oracle. Research needed. |
+| 3.LRT — Renzo (ezETH) MTDS adapter | deferred-to-Phase-3-followup | ezETH NOT on AAVE V3 Ethereum (verified `defi_reserve_params.py:94-126` — only WSTETH/WEETH/CBETH/RETH listed). Need Chainlink price feed OR direct on-chain ratio read OR DefiLlama-only fallback. |
+| 3.LRT — KelpDAO (rsETH) MTDS adapter | deferred-to-Phase-3-followup | Same as Renzo — rsETH not in AAVE Oracle. Need per-protocol price feed. |
+| 3.LRT — Puffer (pufETH) MTDS adapter | deferred-to-Phase-3-followup | Same — not in AAVE Oracle. |
+| 3.RESTAKING — Symbiotic / Karak vault MTDS adapters | deferred-to-Phase-3-followup | Per-vault on-chain reads + restaking_yields data_type (renamed from `eigenlayer_rewards` per Phase 3 plan-body spec). Multi-vault BUNDLED shape per Phase-2 shard-atom matrix. |
+| 3.RESTAKING — Jito-restaking (Solana) MTDS adapter | deferred-to-Phase-3-followup | Solana NCN-vault VRT mint reads; per-vault state via Solana SPL. |
+| 3.VAULT — Yearn / Convex / Beefy / Pendle / Idle MTDS adapters | deferred-to-Phase-3-followup | 5 vault MTDS adapters; per-protocol on-chain RPC reads OR protocol APIs (Beefy public API / Yearn V3 vault contracts / Pendle V2 API / Idle vault contracts / Convex registry). vault_share_price/vault_apy/vault_tvl per Phase 3 'Per-protocol scope'. |
+| 4 — Phase 4 EXEC connectors for new LSTs/LRTs/vaults | deferred-to-Phase-4-fanout | ~13 execution-service connectors (rocket_pool/renzo/kelpdao/puffer/symbiotic/karak/jito_restaking + yearn/convex/beefy/pendle/idle + solblaze) at `execution-service/execution_service/defi_execution/protocols/<slug>.py` mirroring `lido.py`/`etherfi.py` BaseConnector shape (~200-250L each). Tenderly fork integration tests required. |
+| 5C downstream — wire `gate_or_advise()` into `defi_execution/protocols/` live `execute()` paths | deferred-to-followup | Mechanical: edit each protocol's `execute()` to call `tenderly.simulate_bundle()` → if `revert` raise `BlockOnSimulationRevert`; else if `expected_slippage_bps > threshold` log advisory event. ~10 protocols × 10-20L per file. Ikenna's 'What's left' item 5. |
+| 5B downstream — wire `RpcProviderFallback` at every `web3 = Web3(HTTPProvider(...))` callsite | deferred-to-followup | Mechanical: replace direct Web3 Alchemy HTTPProvider with `RpcProviderFallback(chain).get_web3()`. ~15 callsites under `defi_execution/protocols/`. Ikenna's 'What's left' item 6. |
+| 6 — Phase 6 backfill VMs per protocol | deferred-to-Phase-6-fanout | After Phase 3 MTDS adapters land per protocol. Per-protocol backfill VM scripts in `deployment-service/scripts/vm/` + event-stream verification + manifest spot-check (per CLAUDE.md "No fire-and-forget VM launches"). |
+| 5C operational provisioning | deferred-to-operator | `gsutil mb gs://archetype-state-prd-central-element-323112` (or terraform). Needs operator-side `gcloud` action (per CLAUDE.md "Operator authority + ADC" + "Hard-stop list" — bucket-provision is operator-actionable but not slot-2-blocking; tracker fails-open on read errors). |
+| Phase 3 — Funding-rate ETH-PERP capture verification (slot-5 cross-plan ask) | deferred-to-followup | Verify `market-tick-data-service/market_tick_data_service/adapters/` has `hyperliquid_funding_*.py` OR `bybit_funding_*.py` for ≥1h cadence + ≥1y horizon. Grep-then-READ per HARD RULE before concluding gap. Slot 5 Family 2 Phase 7.5 dependency. |
+| Phase 3 — Arbitrum + Base AAVE V3 reserve listings (slot-5 cross-plan ask) | deferred-to-followup | Add 11 ARB + 7 BASE reserves to instruments-service AAVE V3 catalogue. Family 1 Arbitrum/Base cells unblock requires this. Slot 5 NOT fixing — slot 2 owns. |
+
+### Cross-side handshakes status (2026-05-12 EOD Harsh slot 2)
+
+- **Phase 2 INSTR (Ikenna design → Harsh implement)**: ✅ COMPLETE all 14 deferred adapters + factory reconcile.
+- **Phase 5C operational gate (Ikenna design 5A/5B/5C → Harsh wire-in)**: ◐ HALF-CLOSED. yaml + python kind-rename
+  shipped (this session). gate_or_advise() and RpcProviderFallback wire-in to defi_execution/protocols/ deferred to
+  follow-up Harsh session (mechanical sweep across ~10-15 callsites — good sub-agent fan-out target).
+- **Phase 3 MTDS (Harsh implementation per protocol)**: ◐ STARTED. 1 of 13 protocols (rocket_pool) ✅; 12 deferred
+  to follow-up sessions (per-protocol data-source research needed for non-AAVE-listed LRTs).
+- **Phase 4 EXEC (Harsh implementation per connector)**: ✗ NOT STARTED. Lido/EtherFi/EigenLayer connectors already
+  exist (sufficient for current carry_staked_basis archetype). New-protocol connectors deferred per plan-body
+  Phase 4.
+
+### Operational verification (per "Plans Run To Actual Completion" HARD RULE)
+
+- ✅ All 4 Phase-2 deferred adapters: instruments-service unit tests 122/122 pass; end-to-end factory smoke 15/15
+  chain-parse cases pass; basedpyright clean on new files.
+- ✅ Rocket Pool MTDS adapter: 16/16 unit tests pass (offline; no real Alchemy/AAVE calls).
+- ✅ archetype-state yaml entry: factory smoke (`resolve_bucket_name(cloud="gcp", kind="archetype-state", asset_group="defi")`)
+  returns the env-tiered template; pending operator bucket provisioning (deferred above).
+- ⏳ Real-infra backfill VM runs for new protocols: deferred to Phase 6 follow-up sessions per protocol.
+
+### What slot 2 should DO on next session
+
+1. Pick highest-impact deferred Phase 3 MTDS adapter (recommendation: Solblaze — Solana LST, similar to existing
+   jito.py shape; or one of the LRTs with confirmed Chainlink coverage). Research data source first; implement adapter
+   via single-sub-agent fan-out using Rocket Pool shipped today as additional template.
+2. Phase 5C downstream wire-in (gate_or_advise + RpcProviderFallback) — single sub-agent for each, mechanical sweep.
+3. Phase 6 backfill VM launches per shipped Phase 3 adapter (start with rocket_pool — has full code path; needs
+   `launch-mtds-rocket-pool-backfill-vm.sh` launcher under `deployment-service/scripts/vm/`).
