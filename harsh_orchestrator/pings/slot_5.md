@@ -102,3 +102,5 @@
   • `unified-trading-pm@b3228dfc` plan flip: simulation_scenarios Phase 3.E/3.F `design-shipped` → `done`; integration spec § "Done definition (Phase 3 — `done` 2026-05-12 Harsh slot 5)" block added
   • Cross-side ping to ikenna-main `plans/active/_agent_pings.md` at 10:50 UTC (handshake closes; Ikenna slot 7 ungated for Phase 5 matrix-runner)
 **Phase 8 (risk real-VM rule-fire suite) + DR Phase 6 (chaos-drill cron) + DR Phase 9 (DR drill VM) NOT touched** — per ▶ RESUME 10:07 UTC instruction "stop and ping when you reach them". Going ⚪ QUIET. No open blocker Qs.
+
+[2026-05-12 11:21 UTC] [slot 5] STARTED on Sonnet max — auditing remaining unblocked scope in risk + DR plans. Rebased all repos clean. Identified unblocked items: DR Phase 8.A/8.B/8.D (flip — docs exist), DR Phase 8.C+8.E (minor codex updates needed), Risk Phase 5.A (emit RiskRuleFiredEvent from risk-and-exposure-service), DR Phase 5.A (service-side recovery loop). VM-gated items (Risk Phase 8, DR Phase 6, DR Phase 9) skipped per spawn brief.
