@@ -240,11 +240,16 @@ as captured writes) to avoid multi-worker collision.
 **Tests**: mock read_upstream_manifest returning 3 scenarios: all known, some unknown, none known. Assert
 expected_unattempted calls for unknown shards.
 
-- [ ] [CODE] P0. Pre-audit: confirm INSTRUMENTS_BUCKET_BY_ASSET_GROUP names from cloud-providers.yaml. Document in a
-      `INSTRUMENTS_BUCKETS` constant in UAC `registry/` or UTL config (NOT hardcoded inline).
-- [ ] [CODE] P0. Wire instruments-service manifest read into MTDS batch orchestrator pre-flight per above pattern. Cover
-      all 5 asset_groups. Add 3 unit tests.
-- [ ] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`. Push.
+- [x] [CODE] P0. Pre-audit: confirm INSTRUMENTS_BUCKET_BY_ASSET_GROUP names from cloud-providers.yaml.
+      **Discovery (2026-05-12)**: `instruments-store` kind registered in `cloud-providers.yaml` lines 128-138 for all 5
+      asset_groups. `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group=ag, env=env)` is valid for
+      cefi/defi/tradfi/sports/prediction. No constant needed — pattern uses canonical bucket naming SSOT.
+- [x] [CODE] P0. Wire instruments-service manifest read into MTDS batch orchestrator pre-flight per above pattern. Cover
+      all 5 asset_groups. Add 3 unit tests. (mtds@5717ee9 — sentinel pass emits `record_expected_unattempted` per
+      expected data_type for venues in `skipped_shards`; 3 unit tests: all_dts / dt_start_gate / no_expected_dts)
+- [x] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh`. Push. (lint on my files clean; pre-
+      existing failures in `test_tardis_stream_processor.py:B017` + `test_lst_rates_handler.py:RUF002` are foreign;
+      pushed mtds@5717ee9)
 
 ---
 
