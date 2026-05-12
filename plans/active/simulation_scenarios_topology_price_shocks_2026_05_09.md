@@ -12,7 +12,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-09
 related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/epics/live_defi_rollout_2026_05_23.epic.md
+  - plans/active/defi_master_2026_05_07.md  # SSOT for "May-23 deliverable" — the live_defi_rollout_2026_05_23.epic was SUPERSEDED 2026-05-08 (3-layer → 2-layer collapse) and folded into defi_master § "May-23 deliverable" per operator direction
   - plans/epics/cross_cutting_2026_05_23.epic.md
   - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
   - plans/active/alerting_service_live_rules_2026_05_07.md
@@ -635,8 +635,7 @@ engine state) and emits a real `ScenarioReport` parquet.
 - [ ] [AGENT] P0. **10.A Master plan extension.** `master_to_live_defi_2026_05_23.md` Group F gets new item 17.5 (or
       extension of item 20): "Scenario regression matrix green per archetype within ≤24h of cutover; matrix run as part
       of pre-cutover dress rehearsal." Continuous-verification column populated.
-- [ ] [AGENT] P0. **10.B Epic banner.** `plans/epics/live_defi_rollout_2026_05_23.epic.md` epic-table gains a row for
-      this plan's matrix gate.
+- [ ] [AGENT] P0. **10.B `defi_master` § "May-23 deliverable" annotation.** *(Re-routed 2026-05-12 — the originally-referenced `plans/epics/live_defi_rollout_2026_05_23.epic.md` was SUPERSEDED 2026-05-08 and folded into `defi_master_2026_05_07.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse direction; the archived file at `plans/archive/live_defi_rollout_may_23_2026.epic.md` carries the supersession banner.)* `defi_master_2026_05_07.md` § "May-23 deliverable" success-criteria table gains a row pointing at this plan's scenario-regression-matrix gate (Group F item 17.5).
 - [ ] [AGENT] P0. **10.C Cross-plan banners removed.** The 4 IN-FLIGHT REFACTOR banners from Phase 0.B come down once
       Phase 9 is green. Per the banner-remove-owner-by-launcher rule.
 - [ ] [AGENT] P0. **10.D Cron + continuous verification.** `mtds-scenario-matrix-` cron VM runs both matrices nightly;
@@ -835,7 +834,7 @@ Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 design § C
 | Phases 8.B-I (codex updates) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 8 |
 | Phase 9 (real-VM matrix runs) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 9 |
 | Phase 10.A (master plan extension) | 🟡 BLOCKED — slot-1 territory per CLAUDE.md G-14 | Main orchestrator slot-1 to add Group F item 17.5 |
-| Phase 10.B (epic banner) | 🟡 BLOCKED — epic file `live_defi_rollout_2026_05_23.epic.md` MISSING; see Q1 | Slot-1 / operator triage: which epic gets the row |
+| Phase 10.B (defi_master § "May-23 deliverable" annotation) | ✅ Q1 RESOLVED 2026-05-12 — archived epic was SUPERSEDED 2026-05-08 + folded into `defi_master_2026_05_07.md`; re-routed | Successor plan adds row to `defi_master` "May-23 deliverable" success-criteria table |
 | Phase 10.C (banner removal) | Blocked on Phase 9 | Successor plan |
 | Phase 10.D (cron VM) | Blocked on Phase 9 + operator-runnable | Successor plan + operator |
 | DART scenario fold-in (cross_cutting #4) | Not in pre-cutover scope: Phase 7 (UI) DEFERRED; BUILD #1/#4/#5 Ikenna-blocked | Successor plan Phase 7 / post-Ikenna-D1/D4 resolution |
@@ -855,5 +854,5 @@ Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 design § C
 - Phase 10.B: operator triage on epic file — see Q1 above
 
 **Real blockers (🟡)**:
-- Phase 10.A: G-14 slot-1 territory
-- Phase 10.B: Epic file `plans/epics/live_defi_rollout_2026_05_23.epic.md` does not exist
+- Phase 10.A: G-14 slot-1 territory (✅ being taken by slot-1 main 2026-05-12 — item 17.5 added to `master_to_live_defi_2026_05_23.md` Group F)
+- Phase 10.B: ✅ RESOLVED 2026-05-12 — archived epic was SUPERSEDED 2026-05-08 + folded into `defi_master_2026_05_07.md` § "May-23 deliverable"; re-routed (successor plan adds the row there, not to a non-existent epic file)
