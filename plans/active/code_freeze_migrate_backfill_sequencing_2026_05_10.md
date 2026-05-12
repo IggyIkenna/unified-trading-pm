@@ -445,6 +445,130 @@ Asynchronous; runs in the background as readers + writers prove out on env-tiere
   returns env-tiered bucket names; first writes on env-tiered names succeed in Phase 3 backfill resume.
 - ✅ Archive step: 30-day passive window elapses with 0 reads on flat names; flat buckets deleted.
 
+#### Phase 2.6 detailed playbook — per-bucket migration order + per-VM rsync sizing + manifest re-sync (Day-3 extension)
+
+Authored Day 3 by slot 3 (ikenna-codefreeze-audit-tab) per work-split scope-extension. Extends the 5-step skeleton
+above with concrete sequencing, parallelism budget, and operator-runnable timing estimates.
+
+##### Per-bucket migration order (minimal-blast-radius sequencing)
+
+Migrate from smallest/most-reversible → largest/most-blast-radius. Each tier completes drift-verify before the next
+tier starts. **Total estimated wall-clock: 18-26h with 4-8 parallel rsync VMs**.
+
+| Order | Tier | Bucket family | Size class | Cutover risk | Per-bucket migrate ETA |
+|---|---|---|---|---|---|
+| 1 | **Canary (small)** | `dex-pools-{pid}` / `liquidations-{pid}` | ~75K-40K rows; ~1-5 GB each | Low — single-shape, no asset_group axis; rebuild trivially | 5-15min each |
+| 2 | **Static reference** | `instruments-store-{ag}-{pid}` × 5 asset_groups (cefi/defi/tradfi/sports/prediction) | ~50-500 MB each (catalog rows) | Low — write cadence is daily-scheduled-Cloud-Scheduler-driven, easy to pause | 10-30min each |
+| 3 | **Features (cross-asset)** | `features-calendar-{pid}` + `features-prediction-{pid}` + `features-sports-{pid}` | ~1-10 GB each | Medium — features-consolidation merged so single deploy boundary; flat→env-tiered delegate flip safe per safe-gap rule | 15-45min each |
+| 4 | **Features (per-asset_group)** | `features-volatility-{ag}-{pid}` + `features-onchain-{ag}-{pid}` + `features-delta-one-{ag}-{pid}` × 5 ag | ~10-100 GB each | Medium — same safe-gap reasoning | 30-90min each |
+| 5 | **ML stores** | `ml-models-store-{pid}` / `ml-predictions-store-{pid}` / `ml-configs-store-{pid}` | ~5-50 GB each | Medium — ml-training write cadence is paused during Phase 2 anyway | 15-60min each |
+| 6 | **Strategy + execution** | `strategy-store-{ag}-{pid}` + `execution-store-{ag}-{pid}` × 4 ag (no sports for execution) | ~5-50 GB each | Medium-High — paper-trade smoke depends on these; cutover after | 15-60min each |
+| 7 | **Large market-data** | `market-data-tick-{ag}-{pid}` × 5 asset_groups | **~100GB-2TB each** (cefi/tradfi largest; sports/prediction smallest) | High — readers across MTDS/MDPS/features; single largest tier of the migration | **2-6h each** (use n2-standard-8 + parallelism) |
+| 8 | **Event archive** (if migrating) | `events-{pid}` (per Q7(c) env-tier decision) | ~1-5 GB | Low — append-only, can stale-snapshot mid-write | 10-30min |
+
+Sequencing rationale: smaller buckets validate the full 5-step sub-sequence (provision → rsync → write-pause →
+delegate-flip → archive) on low-risk bucket families before touching the multi-TB `market-data-tick-*` buckets. If a
+canary uncovers a drift-verify edge case, only minutes of operator time are lost vs. hours+ for late-stage failures.
+
+##### Per-VM rsync sizing
+
+| Bucket size class | VM SKU | Parallel-VM budget | Bandwidth (same-region asia-northeast1) | Throughput |
+|---|---|---|---|---|
+| ≤ 10 GB | `e2-standard-4` (4 vCPU, 16GB) | 1 VM per bucket | ~250 MB/s (gcloud cp single-process) | ~5-10min per 10GB |
+| 10-100 GB | `e2-standard-8` (8 vCPU, 32GB) | 1 VM per bucket | ~500 MB/s (parallel HTTP pool inside gcloud cp) | ~5-15min per 10GB |
+| 100GB-1TB | `n2-standard-8` (8 vCPU, 32GB, network-tier-premium) | 2 VMs per bucket (split by prefix `day=2020`-`day=2022` vs `day=2023+`) | ~750 MB/s aggregate | ~3-5min per 10GB |
+| 1TB+ | `n2-standard-16` (16 vCPU, 64GB, premium-tier) | 4-8 VMs per bucket (split by asset_group sub-prefix or by year-bucket prefix) | ~1.5-3 GB/s aggregate | ~1-2min per 10GB at peak |
+
+**Concurrency budget**: GCP project-wide bandwidth quota for `central-element-323112` is ~50 Gbps egress (default).
+A 4-VM `n2-standard-16` fleet runs ~12 Gbps; safe to run 4 parallel rsync streams against different buckets. Cross-zone
+(asia-northeast1-a vs -c) traffic is free within region.
+
+**Cost estimate**: rsync VMs at ~$0.40/hr × 8 VMs × 20h cutover window = ~$64. Egress within asia-northeast1 = $0 (same
+region). Total cutover-VM cost ~$64-100.
+
+**Recommended VM launcher**: NEW `deployment-service/scripts/vm/launch-bucket-rsync-vm.sh` (gap-2.6.A; not yet shipped)
+that takes `--source-bucket gs://<flat>` + `--dest-bucket gs://<env-tiered>` + `--workers N` + `--prefix-filter <pattern>`.
+Singleton-locked per source-bucket (refuses 2nd launch against same flat bucket). Emits standard event stream
+(BUCKET_RSYNC_STARTED / BUCKET_RSYNC_PROGRESS / BUCKET_RSYNC_STOPPED / BUCKET_RSYNC_FAILED). Pattern mirrors
+`launch-cross-asset-rescan-vm.sh` shape.
+
+##### Manifest re-sync scheduling
+
+The manifest consolidator (`launch-manifest-consolidator-vm.sh` singleton) needs special handling during Phase 2.6:
+
+1. **Pre-cutover (T-1h before write-pause)**: Final consolidator cycle runs to flush all per-VM shards from
+   Phase 2.0 pre-drain into canonical `_index/availability_index.parquet`. After this run, ZERO per-VM shards should
+   exist (verified via `gcloud storage ls gs://<bucket>/_index/per_vm/`). **Owner**: Phase 2.0 Stage 0 final-consolidate
+   step.
+2. **During write-pause (T0 to T+1h)**: Consolidator STOPPED. No new writes happen anyway since backfill VMs are
+   drained.
+3. **During rsync (T+1h to T+18h, depending on tier)**: Consolidator STOPPED. The flat-bucket `_index/` is being
+   copied verbatim to the env-tiered bucket; running the consolidator mid-copy would write to flat while readers are
+   migrating, breaking the atomicity.
+4. **Post-delegate-flip (T+18h to T+19h)**: Consolidator RELAUNCHED against the env-tiered buckets. First cycle is a
+   no-op (per-VM shards are still empty since Phase 3 backfills haven't started). Smoke test: consolidator should emit
+   STARTED → STOPPED cleanly within 5 min.
+5. **Phase 3 readiness (T+19h onwards)**: Consolidator runs continuously. Phase 3 backfill VMs launch with their normal
+   `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique>` env; consolidator merges per-VM shards as usual on env-tiered
+   buckets.
+
+**Watchdog dict (`vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registry) update**: every existing prefix that maps to
+a flat bucket needs to be re-pointed to the env-tiered name during the delegate-flip step. Re-launch the watchdog VM
+AFTER the dict edit lands (CLAUDE.md "VM Naming Convention" rule). **Recommended sub-step in Step 2.6.4**: include the
+`vm_zombie_watchdog.py` dict edit in the same workspace-wide PR as the L3 delegate flip + L5 reader-repoint.
+
+##### Gating + ramp protocol
+
+Operator-runnable wave structure for the 18-26h cutover window:
+
+- **Wave 1 (T-1h to T0)**: Phase 2.0 pre-drain final consolidate + write-pause confirmation + Step 2.6.1 provisioning.
+- **Wave 2 (T0 to T+4h)**: Tier 1-3 rsync (canary + static reference + features cross-asset). 8 parallel rsync VMs.
+- **Wave 2 verify (T+4h to T+5h)**: Drift-verify all Tier 1-3 buckets via `verify_flat_to_env_tiered_drift.py`.
+  Operator GO/NO-GO checkpoint.
+- **Wave 3 (T+5h to T+10h)**: Tier 4-5 rsync (features per-asset_group + ML stores). 6 parallel rsync VMs.
+- **Wave 3 verify + GO/NO-GO** (T+10h to T+11h).
+- **Wave 4 (T+11h to T+17h)**: Tier 6 rsync (strategy + execution). 4 parallel rsync VMs.
+- **Wave 4 verify + GO/NO-GO** (T+17h to T+18h).
+- **Wave 5 (T+18h to T+24h)**: Tier 7 rsync (market-data — largest tier). 4-8 parallel rsync VMs (n2-standard-16 SKU).
+- **Wave 5 verify + GO/NO-GO** (T+24h to T+25h).
+- **Wave 6 (T+25h to T+26h)**: Step 2.6.4 delegate-flip workspace-wide PR + deployment-api redeploy + smoke test.
+- **Wave 7 (T+26h to T+27h)**: Step 2.6.3 write-pause LIFT. Phase 3 backfill VMs cleared to launch against env-tiered
+  buckets.
+
+If ANY wave's verify fails: STOP, diagnose, decide whether to (a) re-run that wave, (b) operator-decision to extend
+the write-pause window, (c) operator-decision to rollback the wave + recover from the snapshot per Phase 2.1 Step F.
+DO NOT proceed to the next wave with an unresolved verify failure (data-correctness blast radius compounds).
+
+##### Outstanding NEW work (gap-2.6.A through gap-2.6.E)
+
+- [ ] [SCRIPT] P0. **gap-2.6.A** — NEW `deployment-service/scripts/vm/launch-bucket-rsync-vm.sh` (singleton-locked,
+      per-source-bucket; emits BUCKET_RSYNC_STARTED/PROGRESS/STOPPED/FAILED events; takes `--source-bucket` + `--dest-bucket`
+      + `--workers N` + `--prefix-filter <pattern>`). Mirrors `launch-cross-asset-rescan-vm.sh` shape. **Owner**:
+      slot 8 or Harsh slot 4 (deployment-service surface familiarity). Phase 2 prereq.
+- [ ] [SCRIPT] P0. **gap-2.6.B** — NEW `unified-trading-pm/scripts/migration/verify_flat_to_env_tiered_drift.py`
+      (referenced in Step 2.6.2 verifier above; not yet shipped). Compares post-copy object count + total size + reads
+      100 random parquets per bucket; reports drift ≤0.01% per bucket. **Owner**: this plan body authorizes; slot 3 or
+      slot 8 Day-3/4.
+- [ ] [SCRIPT] P0. **gap-2.6.C** — NEW `unified-trading-pm/scripts/migration/verify_env_tiered_buckets_provisioned.py`
+      (referenced in Step 2.6.1 verifier; not yet shipped). Reads yaml SSOT, iterates every (kind, asset_group, env,
+      cloud), calls `gcloud storage ls` / `aws s3api head-bucket`, reports missing. **Owner**: this plan body
+      authorizes; slot 3 or slot 8 Day-3/4.
+- [ ] [SCRIPT] P1. **gap-2.6.D** — `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` env-tier re-pointing — every prefix
+      mapping to a flat bucket needs the env-tiered name post-delegate-flip. Bundle into Step 2.6.4 PR. **Owner**: slot
+      8 (watchdog surface familiarity).
+- [ ] [DOC] P0. **gap-2.6.E** — Operator runbook section in `codex/05-infrastructure/` documenting the 7-wave gating
+      protocol above + operator-runnable GO/NO-GO checklist per wave. **Owner**: this plan body authorizes; slot 3
+      Day-3/4 if time permits.
+
+##### Carry-forward + dependencies
+
+- All NEW gap-2.6.A through gap-2.6.E shipped + workspace QG green + Phase 2.0-2.5 + Phase 1 freeze gate fired →
+  Phase 2.6 cutover window can run.
+- This detailed playbook section is a `helper-shipped` artefact — the actual run-it-on-real-infra ops are Phase 2.6
+  steps 2.6.1 through 2.6.5 themselves (operator-runnable per the 5-step sub-sequence above).
+- `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0c provisioning + Phase 0d data migration become the
+  authoritative implementation of Steps 2.6.1 + 2.6.2 — this playbook is the *coordination layer* on top.
+
 #### Composes with
 
 - `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0c (provisioning code half) + Phase 0d (data migration) +
