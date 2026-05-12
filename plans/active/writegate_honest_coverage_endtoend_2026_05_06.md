@@ -3310,11 +3310,25 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 `ml-training-service/` + `ml-inference-service/` + `strategy-service/` + `execution-service/` +
 `position-balance-monitor-service/` + `risk-and-exposure-service/` for
 `\.record_captured|\.record_empty|\.record_failed|publish_with_policy` returns **0** callsites
-in service source today. Same build-from-scratch shape as Phase 6.3 / 6.4. Realistic Phase 6.6
-+ 6.7 estimate is closer to ~8-12 cal AI-days (brand-new × 1.0 multiplier) — original ~8 days
-under-bakes the manifest-write build half + the v8-column passthrough wiring + the upstream-completeness
-arithmetic per emission boundary (each `BLOCK_CRITICAL` row requires reading multiple manifest
-rows to compute completeness; the helper exists at UTL but no service consumes it yet).
+in service source today. BUT 5 of 6 services HAVE `ManifestWriter.add(...)` legacy-v7 callsites
+that need migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wiring
+on top:
+* `ml-training-service/ml_training_service/ml/model_registry.py:299-310` —
+  `writer.add(processing_date, row_count=1, model_family, training_period, job_id)`. Phase 6.6
+  needs this migrated to `record_captured(...)` then wrapped with `publish_with_policy(service="ml-training-service",
+  output_data_type="model_version", ...)` per BLOCK_CRITICAL.
+* `ml-inference-service/.../prediction_publisher.py`,
+  `strategy-service/.../cloud_strategy_storage.py`,
+  `execution-service/.../data_sink.py` + `results/save_operations.py`,
+  `risk-and-exposure-service/.../risk_snapshot_sink.py` — each holds existing `ManifestWriter`
+  usage (mostly `.add()`); auditor needs to enumerate per-service before writing the
+  per-service rollout plan.
+* `position-balance-monitor-service` — NO `ManifestWriter` reference in source today
+  (genuine from-scratch build).
+Realistic Phase 6.6 + 6.7 estimate is closer to ~10-15 cal AI-days (mix of refactor 0.4×
+for the .add→record_captured migration + brand-new 1.0× for the new publish-boundary
+wiring + the v8-column passthrough wiring + the upstream-completeness arithmetic per
+BLOCK_CRITICAL emission). The helper exists at UTL but no service consumes it yet.
 
 **Phase 6.8 — instruments-service catalog snapshot (P0, ~1 day)**
 
