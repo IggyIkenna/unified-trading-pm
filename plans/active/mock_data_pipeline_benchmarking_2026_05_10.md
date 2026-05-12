@@ -29,6 +29,16 @@ estimate_calibration_note: |
 
 # Mock-data pipeline benchmarking
 
+> **🟢 VM RUNNING (smoke 2026-05-12 16:21 UTC, slot-7 Day-2)**:
+> `synbench-leveraged-fundin-c2-standard-8-20260512-162102` in `asia-northeast1-c`,
+> `--mode subprocess --archetype leveraged_funding_arb --date-start 2024-01-01
+> --date-end 2024-01-01 --row-count-scale 0.1`. Events:
+> `gs://central-element-323112-events/events/unified-trading-library/2026-05-12/synbench-leveraged-fundin-c2-standard-8-20260512-162102/`.
+> Profile parquet target: `gs://central-element-323112-benchmark-reports/leveraged_funding_arb/synbench-leveraged-fundin-c2-standard-8-20260512-162102/stage_profile.parquet`.
+> Auto-shutdown via `VM_SHUTDOWN_ON_COMPLETION=true`. Watchdog VM
+> `vm-zombie-watchdog-20260512-161459` running with refreshed `synbench-`
+> prefix in `VM_PREFIX_TO_BUCKET`. Banner cleared when STOPPED event emits.
+
 ## Why this plan exists
 
 May-23 cutover gates on Group F item 18 ("2-yr batch backtest run completes inside an operationally-acceptable window")
