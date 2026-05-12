@@ -549,6 +549,10 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
   [`shard_granularity_ssot_propagation_2026_05_06.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.md).
 - Sibling asset_group umbrellas: `defi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`,
   `predictions_master_2026_05_07`.
+- Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
+  [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
+  `cross_asset_group_catalogue_audit_2026_05_10.md`.
+- Canonical asset_group registry: `unified_api_contracts.canonical.crosscutting.asset_group_registry` (Phase 5C/5D).
 
 ## Folded plans (archived 2026-05-07)
 
