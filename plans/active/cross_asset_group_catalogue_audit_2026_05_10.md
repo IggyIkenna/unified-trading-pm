@@ -146,7 +146,13 @@ unimplemented). Phase 1A's premise (delete singular `prediction/`) is REJECTED. 
 
 Owner: ikenna (cross-cutting design); harsh implements + downstream consumer updates.
 
-- [x] [AGENT] P0. **1A — UAC dual-prediction module RECONCILE (re-scoped 2026-05-12 — NOT a delete).** **DONE 2026-05-12 (slot 8 RESUME-3 parent flip)** — all in-cutover-scope sub-todos closed: 1A.a (keep-both no-op confirmed by prediction sub-agent) + 1A.b (facade-fix at `instruments-service@ca8a019`) + 1A.d (operator-directed `prediction_canonical_question_group`+`MARKET_LIFECYCLE` addition to `DATA_TYPES_BY_ASSET_GROUP["prediction"]` with grain-segregation comment at UAC@`89f63b7`) ✅; 1A.c (optional `prediction/` → `prediction_mapping/` rename) is explicitly POST_CUTOVER-deferred per the body annotation, out of cutover scope. Sub-row checkboxes all `[x]`; parent flip aligns with cutover-readiness semantics. Per
+- [x] [AGENT] P0. **1A — UAC dual-prediction module RECONCILE (re-scoped 2026-05-12 — NOT a delete).** **DONE 2026-05-12
+      (slot 8 RESUME-3 parent flip)** — all in-cutover-scope sub-todos closed: 1A.a (keep-both no-op confirmed by
+      prediction sub-agent) + 1A.b (facade-fix at `instruments-service@ca8a019`) + 1A.d (operator-directed
+      `prediction_canonical_question_group`+`MARKET_LIFECYCLE` addition to `DATA_TYPES_BY_ASSET_GROUP["prediction"]`
+      with grain-segregation comment at UAC@`89f63b7`) ✅; 1A.c (optional `prediction/` → `prediction_mapping/` rename)
+      is explicitly POST*CUTOVER-deferred per the body annotation, out of cutover scope. Sub-row checkboxes all `[x]`;
+      parent flip aligns with cutover-readiness semantics. Per
       [`catalogue_audit_prediction_2026_05_12.md`](../archive/issues/catalogue_audit_prediction_2026_05_12.md)
       PR-1/PR-2 + `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1F: `canonical/domain/prediction/` (singular,
       cross-venue mapping — `PredictionMarketMapper` etc.) and `canonical/domain/predictions/` (plural,
@@ -159,15 +165,13 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
       (instruments-service@`ca8a019` 2026-05-12)
       `from unified_api_contracts.canonical.domain.prediction import (PredictionMarketMapper,)` →
       `from           unified_api_contracts.prediction import (PredictionMarketMapper,)` (the facade
-      `unified_api_contracts/prediction.py` does `from unified_api_contracts.canonical.domain.prediction import *`, and
-      `PredictionMarketMapper` is a non-underscore re-export → resolves clean; QG `check_uac_import_surface` then passes
-      for this consumer). **Note (out of 1A scope, file separately)**: the same file lines 28-36 also have deep
-      `canonical.domain.sports` imports (`build_*_prediction_id`, `POLYMARKET_MARKET_TO_CANONICAL`, `_slug`, ...) —
-      those are a _separate_ UAC-import-surface violation; route to `sports_master_2026_05_07.md` or a
+      `unified_api_contracts/prediction.py` does `from unified_api_contracts.canonical.domain.prediction import
+      *`, and     `PredictionMarketMapper`is a non-underscore re-export → resolves clean; QG`check*uac_import_surface`then passes     for this consumer). **Note (out of 1A scope, file separately)**: the same file lines 28-36 also have deep    `canonical.domain.sports` imports (`build\*\*\_prediction_id`, `POLYMARKET_MARKET_TO_CANONICAL`, `\_slug`,
+      ...) — those are a \_separate* UAC-import-surface violation; route to `sports_master_2026_05_07.md` or a
       `plans/active/issues/` doc, not here (sports facade re-export coverage needs checking first; don't break it as a
       side-effect of the prediction fix). - [x] [DESIGN P0 — operator-directed] **1A.d — PR-3/PR-4.** (UAC@`89f63b7`
       2026-05-12 — operator directed Sonnet continuation to ship despite gotcha; grain-segregation comment added inline;
-      downstream completion*pct aggregators must not mix with instrument-day grain) 🟡 **GOTCHA found on deeper read
+      downstream completion\*pct aggregators must not mix with instrument-day grain) 🟡 **GOTCHA found on deeper read
       (slot 8, 2026-05-12) — contradicts the earlier "no operator gate" framing.**
       `DATA_TYPES_BY_ASSET_GROUP["prediction"]` is `["trades"]` and the in-code comment there explicitly records \_why*
       `book_snapshot_5` was removed 2026-04-19: leaving a not-actually-emitted-per-(venue,day) data*type in that list
@@ -178,15 +182,15 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
       `trades`. Naïvely appending them to `DATA_TYPES_BY_ASSET_GROUP["prediction"]` would re-introduce the exact
       phantom-inflation the comment warns against, and would break
       `is_expected("prediction",           "POLYMARKET", "prediction_canonical_question_group")` semantics
-      (`test_data_status_registries.py` asserts the `trades` form). The \_real* fix the prediction sub-agent's PR-3/PR-4
-      was pointing at: the honest-coverage denominator for cluster-grain / market_id-grain prediction data_types must be
-      computed against the **`PREDICTION_GROUPS` cluster registry** (`honest_coverage.py:471`
+      (`test_data_status_registries.py` asserts the `trades` form). The \_real\* fix the prediction sub-agent's
+      PR-3/PR-4 was pointing at: the honest-coverage denominator for cluster-grain / market_id-grain prediction
+      data_types must be computed against the **`PREDICTION_GROUPS` cluster registry** (`honest_coverage.py:471`
       `CLUSTER_VALIDATION_DATA_TYPES["prediction_canonical_question_group"]="PREDICTION_GROUPS"`) and the
       per-`market_id` lifecycle bounds — NOT a flat venue×day grid. That registry is **still a placeholder awaiting full
       seeding (PR-6, a documented temporary-state)**, so 1A.d is **gated on PR-6** + an ikenna coverage-aggregator-grain
       decision. Re-tagged: PRE_CUTOVER, gated; **NOT shippable as a quick dict edit**. Compose with Phase 2
-      (`measure_honest_coverage.py` must handle non-venue×day grains). - [ ] [SCRIPT] P2. **1A.c — OPTIONAL
-      POST_CUTOVER** — rename `canonical/domain/prediction/` → `canonical/domain/prediction_mapping/` for clarity
+      (`measure_honest_coverage.py` must handle non-venue×day grains). - [ ] [SCRIPT] P2. \*\*1A.c — OPTIONAL
+      POST_CUTOVER\*\* — rename `canonical/domain/prediction/` → `canonical/domain/prediction_mapping/` for clarity
       (singular-vs-plural is a footgun); file as a post-cutover issue doc, not in this plan. Drop the original "paste
       downstream-consumer table in commit message" — the consumer table is in the prediction catalogue-audit issue doc's
       `## prediction/ → predictions/ migration table` (exactly 1 real deep-import consumer).
@@ -194,19 +198,20 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
       adapter + execution connector per `defi_catalogue_chain_primitives_2026_05_10.md` Phases 2/3/4 (this plan owns the
       SSOT decision; that plan owns the implementation). (b) Add UAC `defi_venue_capabilities.py` entry for Radiant
       matching the existing `instruments-service/reference_data/adapters/defi/radiant.py`. Both end-states: every
-      protocol exists in both UAC and downstream layers — no ghosts, no orphans.
-      **1B(b) ✅ SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)** at UAC@`6dd274b`:
-      `RADIANT-ARBITRUM` (2022-07-25) + `RADIANT-BSC` (2022-09-21) added to `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
-      with `lending_indices` + `oracle_prices` data types. Orphan-adapter gap closed.
-      **1B(a) DEFERRED** to defi_catalogue_chain_primitives Phases 2/3/4 (Spark instruments+MTDS+connector) —
+      protocol exists in both UAC and downstream layers — no ghosts, no orphans. **1B(b) ✅ SHIPPED 2026-05-12 by slot 2
+      (ikenna-defi-catalogue-tab)** at UAC@`6dd274b`: `RADIANT-ARBITRUM` (2022-07-25) + `RADIANT-BSC` (2022-09-21) added
+      to `DEFI_VENUE_DATA_TYPE_CAPABILITIES` with `lending_indices` + `oracle_prices` data types. Orphan-adapter gap
+      closed. **1B(a) DEFERRED** to defi_catalogue_chain_primitives Phases 2/3/4 (Spark instruments+MTDS+connector) —
       Harsh-side implementation, per cross-side handshake.
 - [x] [AGENT] P0. **1C — GMX + DRIFT dual-classification resolution**. Operator-greenlit 2026-05-12: keep in
-      defi_venue_capabilities.py + add `axis_override: "cefi"` field. UAC@`7c8482e` — `DEFI_VENUE_AXIS_OVERRIDES`
-      dict added to `defi_venues.py` (GMX-ARBITRUM, GMX-AVALANCHE, DRIFT-SOLANA → "cefi"); cross-ref comment on GMX
-      entries in `defi_venue_capabilities.py`.
-- [x] [AGENT] P0. **1D — Case-folding drift**. UAC@`b73949d`: to_canonical_venue() + DF-4 BLAZESTAKE alias + DF-17 TRADERJOEV2→TRADER_JOEV2 + parity test. CF-4 (BINANCE vs BINANCE-SPOT) + DF-5 (sDAI) DEFERRED — deeper structural issues. Decide canonical case (recommendation: keep `VENUES_BY_ASSET_GROUP`
-      uppercase as the canonical user-facing identifier; lowercase elsewhere is for Python-symbol use). Add a
-      `to_canonical_venue(venue_id: str) → str` helper in UAC; update consumers.
+      defi_venue_capabilities.py + add `axis_override: "cefi"` field. UAC@`7c8482e` — `DEFI_VENUE_AXIS_OVERRIDES` dict
+      added to `defi_venues.py` (GMX-ARBITRUM, GMX-AVALANCHE, DRIFT-SOLANA → "cefi"); cross-ref comment on GMX entries
+      in `defi_venue_capabilities.py`.
+- [x] [AGENT] P0. **1D — Case-folding drift**. UAC@`b73949d`: to_canonical_venue() + DF-4 BLAZESTAKE alias + DF-17
+      TRADERJOEV2→TRADER_JOEV2 + parity test. CF-4 (BINANCE vs BINANCE-SPOT) + DF-5 (sDAI) DEFERRED — deeper structural
+      issues. Decide canonical case (recommendation: keep `VENUES_BY_ASSET_GROUP` uppercase as the canonical user-facing
+      identifier; lowercase elsewhere is for Python-symbol use). Add a `to_canonical_venue(venue_id: str) → str` helper
+      in UAC; update consumers.
 - [x] [AGENT] P0. **1E — `LST_TOKEN_TO_PROTOCOL_ASSET` SSOT verification + canonicalisation**. **DONE-AT-DIFFERENT-PATH
       2026-05-12 (slot 8 catalogue-audit pass DF-12)** — exists at
       `unified-api-contracts/unified_api_contracts/internal/domain/defi/lst.py:37` as
@@ -229,20 +234,20 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
       per-protocol plans matches NO list. Enforce:
       `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES keys ⊇ GAS_FEE_CHAIN_START_DATES keys` + correct the "22 chains" wording
       workspace-wide + add a QG ratchet (cross-asset Phase 6A scope or a `check_chain_set_inclusion.py` QG step).
-      **PRE_CUTOVER; owner=ikenna (cross-cutting closed-set decision on chain universe).**
-      **✅ SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)** at UAC@`6dd274b`:
-      SCROLL (534352) + ZKSYNC (324) added to MAINNET_CHAIN_IDS; SCROLL (534351) + ZKSYNC (300) added to TESTNET_CHAIN_IDS.
-      GAS_FEE_CHAIN_START_DATES extended 14→19: BLAST (81457/2024-02-29) + MODE (34443/2024-01-12) +
-      GNOSIS (100/2021-01-01) + SCROLL (534352/2023-10-17) + ZKSYNC (324/2023-03-24). MAINNET now 21 chains.
-      **DEFERRED (same commit)**: "22 chains" wording workspace-wide correction + QG ratchet
-      `check_chain_set_inclusion.py` — Phase 6A scope per plan body. Not added to this flip to avoid scope creep.
+      **PRE_CUTOVER; owner=ikenna (cross-cutting closed-set decision on chain universe).** **✅ SHIPPED 2026-05-12 by
+      slot 2 (ikenna-defi-catalogue-tab)** at UAC@`6dd274b`: SCROLL (534352) + ZKSYNC (324) added to MAINNET_CHAIN_IDS;
+      SCROLL (534351) + ZKSYNC (300) added to TESTNET_CHAIN_IDS. GAS_FEE_CHAIN_START_DATES extended 14→19: BLAST
+      (81457/2024-02-29) + MODE (34443/2024-01-12) + GNOSIS (100/2021-01-01) + SCROLL (534352/2023-10-17) + ZKSYNC
+      (324/2023-03-24). MAINNET now 21 chains. **DEFERRED (same commit)**: "22 chains" wording workspace-wide
+      correction + QG ratchet `check_chain_set_inclusion.py` — Phase 6A scope per plan body. Not added to this flip to
+      avoid scope creep.
 - [ ] [AGENT] P0. **1G — UAC QG green** post-Phase-1.
 
 **Codex SSOT update (Phase 1 boundary)**:
 
 - [x] [AGENT] P0. **1H — Update `codex/02-data/contracts-scope-and-layout.md`** with the 6 cleanup items + their
-      resolution (canonical pick, deletions, additions). (PM@`bd7a9ea6` — "Audit-confirmed canonical picks —
-      2026-05-12 SSOT cleanup" table added with all 6 Phase 1 resolutions)
+      resolution (canonical pick, deletions, additions). (PM@`bd7a9ea6` — "Audit-confirmed canonical picks — 2026-05-12
+      SSOT cleanup" table added with all 6 Phase 1 resolutions)
 
 **Full-execution criterion**:
 
@@ -258,18 +263,21 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
 
 Owner: harsh + parallel agent.
 
-- [ ] [AGENT] P0. **2A — `measure_honest_coverage.py`** at `instruments-service/scripts/` or
+- [x] [AGENT] P0. **2A — `measure_honest_coverage.py`** at `instruments-service/scripts/` or
       `unified-trading-library/scripts/`. Reads canonical manifest; computes per-asset-group + per-(asset_group,
       venue) + per-(asset_group, venue, data_type, day) coverage % using
       `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. Outputs CSV + JSON for UI
       consumption. Runs same-region GCE VM (per CLAUDE.md memory "operator-run measure-honest-coverage.py on same-region
-      GCE VM").
-- [ ] [AGENT] P0. **2B — Cron VM** to run 2A daily at midnight UTC; output to GCS bucket
+      GCE VM"). (instruments-service@2760ee8 — scripts/measure_honest_coverage.py created; 3-level coverage
+      per-AG/venue/data_type; writes gs://central-element-323112-honest-coverage/{date}/coverage.json)
+- [x] [AGENT] P0. **2B — Cron VM** to run 2A daily at midnight UTC; output to GCS bucket
       `gs://central-element-323112-honest-coverage/{YYYY-MM-DD}/coverage.json`. Launcher
       `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh` per CLAUDE.md "VM launcher script SSOT".
-      Singleton-locked.
-- [ ] [AGENT] P0. **2C — Deployment-api endpoint** at `GET /api/data-status/honest-coverage` returning the latest 2B
-      output + per-asset-group + per-venue + per-data_type drilldowns.
+      Singleton-locked. (deployment-service@5a9abab — launch-measure-honest-coverage-vm.sh + vm_zombie_watchdog.py
+      registration)
+- [x] [AGENT] P0. **2C — Deployment-api endpoint** at `GET /api/data-status/honest-coverage` returning the latest 2B
+      output + per-asset-group + per-venue + per-data_type drilldowns. (deployment-api@2b6e7f2 — GET
+      /api/data-status/honest-coverage; 404 when not yet measured)
 - [ ] [AGENT] P0. **2D — Deployment-ui surface**. Per-asset-group coverage % card at top of each asset_group's
       data-status tab + drilldown chart: per-venue / per-data_type / per-day stacked-bar (captured / empty_confirmed /
       attempted_failed / expected_unattempted). Composes with existing data-status tab (deployment-stack at port 5183).
@@ -297,15 +305,17 @@ Pre-audit: writegate Wave 3.M is PENDING. Some CeFi venues may still emit legacy
 "reader / schema-drift bug" or older Category A "\_create_empty_output()" pattern) instead of zero-activity bars
 (Category D "tradeable-but-illiquid" with O=H=L=C=prior_LTP, volume=0, trade_count=0).
 
-- [ ] [AGENT] P0. **3A — Per-CeFi-venue adapter audit** across the ~21 venues in `VENUES_BY_ASSET_GROUP["cefi"]`. For
+- [x] [AGENT] P0. **3A — Per-CeFi-venue adapter audit** across the ~21 venues in `VENUES_BY_ASSET_GROUP["cefi"]`. For
       each venue × each data_type: 1. What does the adapter emit on source-zero-response? Category A (record_empty), B
       (UpstreamTimestampBiasError), C (MalformedTickFieldError), or D (zero-activity bar)? 2. If catalogue says alive +
       venue market hours yes + source returns zero → must be Category D (zero-activity bar). Verify per CLAUDE.md
       "Four-category empty-output decision". 3. NO `_create_empty_output()` in any base adapter (banned per writegate
-      Phase 2.A).
-- [ ] [AGENT] P0. **3B — Per-venue remediation tickets**. For each venue still emitting legacy NaN placeholders, file an
+      Phase 2.A). (slot 2 background sub-agent 2026-05-12 — all 18 implemented CeFi venues COMPLIANT: Category A with
+      typed reasons; no NaN placeholders; GMX/DRIFT cefi-side wiring absent in MTDS routing but not a manifest
+      violation)
+- [x] [AGENT] P0. **3B — Per-venue remediation tickets**. For each venue still emitting legacy NaN placeholders, file an
       issue doc at `plans/active/issues/cefi_<venue>_zero_activity_bar_2026_05_<date>.md` with the audit finding +
-      remediation owner.
+      remediation owner. (N/A — Phase 3A audit found zero violations; no issue docs required)
 - [ ] [AGENT] P0. **3C — Reconciler script** `instruments-service/scripts/reconcile_legacy_nan_placeholder_bars.py` to
       convert existing NaN-placeholder rows in production manifests to either Category A `record_empty` (typed reason)
       or Category D zero-activity bar per the catalogue-aware rule.
@@ -396,39 +406,38 @@ Owner: harsh.
 - [x] [AGENT] P0. **5A — TradFi ETF list SSOT**. New file
       `unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/tradfi_etfs.py` declaring
       `TRADFI_ETFS: dict[str, ETFMetadata]` (ticker → metadata: underlying / issuer / expense_ratio / launch_date /
-      source). Currently distributed across Databento converter + ad-hoc references.
-      **✅ SHIPPED 2026-05-12 slot 2** at UAC@`9d80f43`: 59-entry `TRADFI_ETFS` dict across 7 categories
-      (`equity`/`international`/`fixed_income`/`commodity`/`sector`/`crypto_spot`/`crypto_futures`).
-      `ETFMetadata` dataclass: ticker/category/underlying/listing_date/issuer/in_known_etfs/crypto_underlying.
-      Derived sets: `ALL_ETF_TICKERS`, `KNOWN_ETFS_TICKERS`, `CRYPTO_ETF_TICKERS`, `BTC_ETF_TICKERS`,
-      `ETH_ETF_TICKERS`, `ETF_LISTING_DATES`. Helpers: `is_etf()`, `get_etf_category()`,
-      `get_etf_listing_date()`, `get_crypto_etfs()`. Consumer migration from 4 source files: Phase 6 scope.
+      source). Currently distributed across Databento converter + ad-hoc references. **✅ SHIPPED 2026-05-12 slot 2** at
+      UAC@`9d80f43`: 59-entry `TRADFI_ETFS` dict across 7 categories
+      (`equity`/`international`/`fixed_income`/`commodity`/`sector`/`crypto_spot`/`crypto_futures`). `ETFMetadata`
+      dataclass: ticker/category/underlying/listing_date/issuer/in_known_etfs/crypto_underlying. Derived sets:
+      `ALL_ETF_TICKERS`, `KNOWN_ETFS_TICKERS`, `CRYPTO_ETF_TICKERS`, `BTC_ETF_TICKERS`, `ETH_ETF_TICKERS`,
+      `ETF_LISTING_DATES`. Helpers: `is_etf()`, `get_etf_category()`, `get_etf_listing_date()`, `get_crypto_etfs()`.
+      Consumer migration from 4 source files: Phase 6 scope.
 - [x] [AGENT] P0. **5B — TradFi root product SSOT**. Similar file
       `unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/tradfi_roots.py` declaring
       `TRADFI_ROOTS: dict[str, RootMetadata]` for ES / MBT / MET / VIX / etc. with venue + data_types + cluster bundling
-      rules.
-      **✅ SHIPPED 2026-05-12 slot 2** at UAC@`24dd517`: 60-entry `TRADFI_ROOTS` dict across 14 categories.
+      rules. **✅ SHIPPED 2026-05-12 slot 2** at UAC@`24dd517`: 60-entry `TRADFI_ROOTS` dict across 14 categories.
       `RootMetadata` dataclass: root/category/underlying/exchange/dataset/asset_group/has_options/
-      parent_root/micro_root/options_parent/expiry_series/listing_date/in_supported_underlyings.
-      Covers CME index/energy/metals/grains/fixed-income/FX/livestock/sector/crypto futures; ICE
-      Europe BRN+G; CFE VX + CBOE VIX spot; ES options cluster sub-series; CME event contracts.
-      Derived sets: `ALL_ROOT_SYMBOLS`, `CME_ROOTS`, `OPTIONS_ENABLED_ROOTS`, `SUPPORTED_CONVERTER_ROOTS`,
-      `CRYPTO_FUTURE_ROOTS`, `MICRO_ROOTS`, `ES_OPTIONS_CLUSTER_ROOTS`, `EVENT_CONTRACT_ROOTS`.
-      ICE US softs (CT/CC/KC/SB/OJ/DX/T) deferred — dataset ambiguity between 2 source files (Phase 6).
+      parent_root/micro_root/options_parent/expiry_series/listing_date/in_supported_underlyings. Covers CME
+      index/energy/metals/grains/fixed-income/FX/livestock/sector/crypto futures; ICE Europe BRN+G; CFE VX + CBOE VIX
+      spot; ES options cluster sub-series; CME event contracts. Derived sets: `ALL_ROOT_SYMBOLS`, `CME_ROOTS`,
+      `OPTIONS_ENABLED_ROOTS`, `SUPPORTED_CONVERTER_ROOTS`, `CRYPTO_FUTURE_ROOTS`, `MICRO_ROOTS`,
+      `ES_OPTIONS_CLUSTER_ROOTS`, `EVENT_CONTRACT_ROOTS`. ICE US softs (CT/CC/KC/SB/OJ/DX/T) deferred — dataset
+      ambiguity between 2 source files (Phase 6).
 - [x] [AGENT] P0. **5C — Cross-asset-group registry index**. New file
       `unified-api-contracts/unified_api_contracts/canonical/asset_group_registry.py` providing:
       `python     def get_canonical_inventory(asset_group: str) -> AssetGroupInventory:         """Return canonical inventory: venues, instruments, data_types, source coverage windows."""     `
       Single function returning the full canonical surface for any asset_group. Resolves the question doc § A1 problem
-      (no central "give me everything for asset_group X" surface).
-      **✅ SHIPPED 2026-05-12 slot 2** at UAC@`03f10f0`: `AssetGroupInventory` dataclass (asset_group/venues/
-      data_types/source_coverage_start) + `get_canonical_inventory()` composing `VENUES_BY_ASSET_GROUP` +
-      `DATA_TYPES_BY_ASSET_GROUP` + 5 per-asset-group `*_SOURCE_COVERAGE_START` dicts.
+      (no central "give me everything for asset_group X" surface). **✅ SHIPPED 2026-05-12 slot 2** at UAC@`03f10f0`:
+      `AssetGroupInventory` dataclass (asset_group/venues/ data_types/source_coverage_start) +
+      `get_canonical_inventory()` composing `VENUES_BY_ASSET_GROUP` + `DATA_TYPES_BY_ASSET_GROUP` + 5 per-asset-group
+      `*_SOURCE_COVERAGE_START` dicts.
 
 **Codex SSOT update (Phase 5 boundary)**:
 
 - [x] [AGENT] P0. **5D — Update `codex/02-data/contracts-scope-and-layout.md`** with the new asset-group registry index
-      entry-point. (PM@58e5dbe0 — added `canonical/asset_group_registry.py` + `canonical/domain/derivatives/` to
-      Package structure table + new "Cross-asset-group canonical inventory (Phase 5C SSOT)" subsection)
+      entry-point. (PM@58e5dbe0 — added `canonical/asset_group_registry.py` + `canonical/domain/derivatives/` to Package
+      structure table + new "Cross-asset-group canonical inventory (Phase 5C SSOT)" subsection)
 
 **Full-execution criterion**:
 
@@ -463,8 +472,7 @@ Owner: ikenna for sign-off + harsh for runs.
 Per Post-Plan-Phase Codex Audit HARD RULE:
 
 - [x] [AGENT] P0. **7A — `codex/02-data/contracts-scope-and-layout.md`** (UPDATE; Phase 1H + 5D). DONE — 5D:
-      asset_group_registry section (PM@`58e5dbe0`); 1H: 6-item audit-confirmed canonical picks table
-      (PM@`bd7a9ea6`).
+      asset_group_registry section (PM@`58e5dbe0`); 1H: 6-item audit-confirmed canonical picks table (PM@`bd7a9ea6`).
 - [ ] [AGENT] P0. **7B — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 2E).
 - [ ] [AGENT] P0. **7C — `codex/03-deployment/data-status-ui-surface.md`** (NEW; Phase 2F).
 - [ ] [AGENT] P0. **7D — `codex/02-data/honest-absence-downstream-handling.md`** (UPDATE; Phase 3E).
@@ -510,23 +518,23 @@ Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
 
 ### DONE-2026-05-12 — slot 8 (harsh-catalogue-audit-tab) — per-asset-group catalogue audit pass (groundwork)
 
-| Phase / item                                              | Status as of 2026-05-12 EOD                     | Evidence / successor / blocker                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| --------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Catalogue audit pass (5-way fan-out)                      | ✅ DONE                                         | `plans/active/issues/catalogue_audit_{cefi,defi,tradfi,sports,prediction}_2026_05_12.md` (69 findings; 1×P0) — PM@`dc89abed`; reconciliation table + fan-out dispatch + cross-cutting drift summary + stale-claim reconciliation in `## Per-asset-group catalogue audit pass (2026-05-12)` section — PM@`920ec94c`                                                                                                                                                                                           |
-| Phase 1A (dual-prediction module)                         | ✅ DONE (1A.a/b/d) — 1A.c POST_CUTOVER deferred | 1A.a (keep-both no-op) + 1A.b (facade fix at `instruments-service@ca8a019`) + 1A.d (operator-directed UAC@`89f63b7` adding `prediction_canonical_question_group`+`MARKET_LIFECYCLE` to `DATA_TYPES_BY_ASSET_GROUP["prediction"]` with grain-segregation comment) all flipped PM@`34866256` (Sonnet cycle). 1A.c (optional `prediction/` → `prediction_mapping/` rename) deferred to POST_CUTOVER per the body annotation.                                                                                    |
-| Phase 1B (Spark + Radiant SSOT consolidation)             | ✅ 1B(b) DONE 2026-05-12 (slot 2) / 1B(a) Harsh-side in-flight | 1B(b) Radiant UAC back-fill: `RADIANT-ARBITRUM`+`RADIANT-BSC` added to `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — UAC@`6dd274b`; 1B(a) Spark instruments+UAC partial — Harsh-side continuing; euler_v2/venus/benqi + PLASMA orphan keys (DF-2/DF-9) remain `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1A scope |
-| Phase 1C (GMX/DRIFT dual-classification)                  | ✅ DONE 2026-05-12 (slot 2) — UAC@`7c8482e`     | `DEFI_VENUE_AXIS_OVERRIDES` dict in `defi_venues.py`: GMX-ARBITRUM, GMX-AVALANCHE, DRIFT-SOLANA → "cefi"; cross-ref comment on GMX entries in `defi_venue_capabilities.py`. Resolves DF-3/CF-1/CF-2/CF-9/CF-10. |
-| Phase 1D (case-folding drift)                             | ✅ DONE 2026-05-12 (slot 2) — to_canonical_venue() + DF-4/DF-17 + parity test UAC@`b73949d` | CF-4 (BINANCE vs BINANCE-SPOT) + DF-5 (sDAI) DEFERRED — deeper structural issues per plan |
-| Phase 1E (`LST_TOKEN_TO_PROTOCOL_ASSET`)                  | ✅ DONE-AT-DIFFERENT-PATH 2026-05-12 (slot 8)   | at `unified-api-contracts/.../internal/domain/defi/lst.py:37` per DF-12; plan body 1E flipped @PM`021e945f`                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Phase 1F (`GAS_FEE_CHAIN_START_DATES`) audit half         | ✅ DONE-AT-DIFFERENT-PATH 2026-05-12 (slot 8)   | at `unified-api-contracts/.../registry/chain_env.py:61` (int-keyed) + `GAS_FEE_SOLANA_START_DATE` at line 80 per DF-13; plan body 1F flipped @PM`021e945f`                                                                                                                                                                                                                                                                                                                                                   |
-| Phase 1F-extend (chain-set fragmentation)                 | ✅ DONE 2026-05-12 (slot 2) — chain-set parity UAC@`6dd274b` | SCROLL+ZKSYNC added to `MAINNET_CHAIN_IDS`+`TESTNET_CHAIN_IDS`; BLAST/MODE/GNOSIS/SCROLL/ZKSYNC added to `GAS_FEE_CHAIN_START_DATES` (14→19 chains); "22 chains" wording correction + QG ratchet DEFERRED to Phase 6A per plan body |
-| Phase 2 (manifest health script + UI)                     | ☐ TODO                                          | `measure_honest_coverage.py` confirmed NOT to exist; must validate venue-key↔capability-dict parity before computing % (CF-4/SP-6/DF-8 — coverage-start key mismatch silently zeros expected shards)                                                                                                                                                                                                                                                                                                        |
-| Phase 3 (per-CeFi-venue zero-activity-bar verify)         | ☐ TODO                                          | Wave 3.M is 0% started (all 21 cefi venues on legacy `empty_confirmed`; no Cat-D bars; UTL helpers don't exist) — callout added to `writegate_honest_coverage_endtoend_2026_05_06.md`; the cefi sub-agent's per-venue Cat-A/B/C/D matrix in `catalogue_audit_cefi_2026_05_12.md` seeds the audit                                                                                                                                                                                                             |
-| Phase 4 (3 mev-protection.md consolidation)               | ✅ DONE 2026-05-12 (slot 8 closeout)            | 3-way consolidation already landed 2026-05-10; slot 8 verified structure (54-line redirect + 431-line canonical + 156-line scope-narrowed strategy narrative) + reconciled UAC `MevSubmissionMode` enum drift (canonical missing CUSTOM_PRIVATE_RPC; strategy missing JITO_BUNDLE) — both tables now mirror UAC's 6-mode enum. EX-8/EX-20 sibling fix already shipped @`0fc4b3fd`. 1 NICE-TO-HAVE carried inline (71 vscode-webview links in `strategy-summary.md`). Phase 4 close-out commit: PM@`be7d7c84` |
-| Phase 5 (TradFi ETF/roots SSOT + asset_group_registry)    | ✅ DONE 2026-05-12 (slot 2) — 5A UAC@`9d80f43` + 5B UAC@`24dd517` + 5C UAC@`03f10f0` + 5D PM@`58e5dbe0` | `tradfi_etfs.py` (59-ETF dict) + `tradfi_roots.py` (60-root dict) + `asset_group_registry.py` (`get_canonical_inventory()` / `AssetGroupInventory`) shipped; codex `contracts-scope-and-layout.md` updated with derivatives sub-package + cross-asset-group entry-point section |
-| Phase 6 (validation)                                      | ☐ TODO                                          | gated on Phases 1-5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Phase 7A-D, 7F (codex SSOT updates)                       | 🟡 IN PROGRESS — 7A partially done: Phase 5D (asset_group_registry PM@`58e5dbe0`) + Phase 1H (6-item cleanup table PM@`bd7a9ea6`); 7B/7C/7D gated on 2E+2F+3E | 7A = `contracts-scope-and-layout.md` is NOW COMPLETE (5D+1H both done). 7B-7D-7F remain gated on phases 2+3. |
-| Phase 7E (codex `04-architecture/mev-protection.md` SSOT) | ✅ DONE 2026-05-12 (slot 8)                     | gated on Phase 4 which closed this turn; canonical SSOT confirmed at `codex/04-architecture/mev-protection.md` (431 lines, full spec); plan body 7E flipped @PM`<this commit>`                                                                                                                                                                                                                                                                                                                               |
+| Phase / item                                              | Status as of 2026-05-12 EOD                                                                                                                                   | Evidence / successor / blocker                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Catalogue audit pass (5-way fan-out)                      | ✅ DONE                                                                                                                                                       | `plans/active/issues/catalogue_audit_{cefi,defi,tradfi,sports,prediction}_2026_05_12.md` (69 findings; 1×P0) — PM@`dc89abed`; reconciliation table + fan-out dispatch + cross-cutting drift summary + stale-claim reconciliation in `## Per-asset-group catalogue audit pass (2026-05-12)` section — PM@`920ec94c`                                                                                                                                                                                           |
+| Phase 1A (dual-prediction module)                         | ✅ DONE (1A.a/b/d) — 1A.c POST_CUTOVER deferred                                                                                                               | 1A.a (keep-both no-op) + 1A.b (facade fix at `instruments-service@ca8a019`) + 1A.d (operator-directed UAC@`89f63b7` adding `prediction_canonical_question_group`+`MARKET_LIFECYCLE` to `DATA_TYPES_BY_ASSET_GROUP["prediction"]` with grain-segregation comment) all flipped PM@`34866256` (Sonnet cycle). 1A.c (optional `prediction/` → `prediction_mapping/` rename) deferred to POST_CUTOVER per the body annotation.                                                                                    |
+| Phase 1B (Spark + Radiant SSOT consolidation)             | ✅ 1B(b) DONE 2026-05-12 (slot 2) / 1B(a) Harsh-side in-flight                                                                                                | 1B(b) Radiant UAC back-fill: `RADIANT-ARBITRUM`+`RADIANT-BSC` added to `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — UAC@`6dd274b`; 1B(a) Spark instruments+UAC partial — Harsh-side continuing; euler_v2/venus/benqi + PLASMA orphan keys (DF-2/DF-9) remain `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1A scope                                                                                                                                                                                         |
+| Phase 1C (GMX/DRIFT dual-classification)                  | ✅ DONE 2026-05-12 (slot 2) — UAC@`7c8482e`                                                                                                                   | `DEFI_VENUE_AXIS_OVERRIDES` dict in `defi_venues.py`: GMX-ARBITRUM, GMX-AVALANCHE, DRIFT-SOLANA → "cefi"; cross-ref comment on GMX entries in `defi_venue_capabilities.py`. Resolves DF-3/CF-1/CF-2/CF-9/CF-10.                                                                                                                                                                                                                                                                                              |
+| Phase 1D (case-folding drift)                             | ✅ DONE 2026-05-12 (slot 2) — to_canonical_venue() + DF-4/DF-17 + parity test UAC@`b73949d`                                                                   | CF-4 (BINANCE vs BINANCE-SPOT) + DF-5 (sDAI) DEFERRED — deeper structural issues per plan                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Phase 1E (`LST_TOKEN_TO_PROTOCOL_ASSET`)                  | ✅ DONE-AT-DIFFERENT-PATH 2026-05-12 (slot 8)                                                                                                                 | at `unified-api-contracts/.../internal/domain/defi/lst.py:37` per DF-12; plan body 1E flipped @PM`021e945f`                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Phase 1F (`GAS_FEE_CHAIN_START_DATES`) audit half         | ✅ DONE-AT-DIFFERENT-PATH 2026-05-12 (slot 8)                                                                                                                 | at `unified-api-contracts/.../registry/chain_env.py:61` (int-keyed) + `GAS_FEE_SOLANA_START_DATE` at line 80 per DF-13; plan body 1F flipped @PM`021e945f`                                                                                                                                                                                                                                                                                                                                                   |
+| Phase 1F-extend (chain-set fragmentation)                 | ✅ DONE 2026-05-12 (slot 2) — chain-set parity UAC@`6dd274b`                                                                                                  | SCROLL+ZKSYNC added to `MAINNET_CHAIN_IDS`+`TESTNET_CHAIN_IDS`; BLAST/MODE/GNOSIS/SCROLL/ZKSYNC added to `GAS_FEE_CHAIN_START_DATES` (14→19 chains); "22 chains" wording correction + QG ratchet DEFERRED to Phase 6A per plan body                                                                                                                                                                                                                                                                          |
+| Phase 2 (manifest health script + UI)                     | ☐ TODO                                                                                                                                                        | `measure_honest_coverage.py` confirmed NOT to exist; must validate venue-key↔capability-dict parity before computing % (CF-4/SP-6/DF-8 — coverage-start key mismatch silently zeros expected shards)                                                                                                                                                                                                                                                                                                        |
+| Phase 3 (per-CeFi-venue zero-activity-bar verify)         | ☐ TODO                                                                                                                                                        | Wave 3.M is 0% started (all 21 cefi venues on legacy `empty_confirmed`; no Cat-D bars; UTL helpers don't exist) — callout added to `writegate_honest_coverage_endtoend_2026_05_06.md`; the cefi sub-agent's per-venue Cat-A/B/C/D matrix in `catalogue_audit_cefi_2026_05_12.md` seeds the audit                                                                                                                                                                                                             |
+| Phase 4 (3 mev-protection.md consolidation)               | ✅ DONE 2026-05-12 (slot 8 closeout)                                                                                                                          | 3-way consolidation already landed 2026-05-10; slot 8 verified structure (54-line redirect + 431-line canonical + 156-line scope-narrowed strategy narrative) + reconciled UAC `MevSubmissionMode` enum drift (canonical missing CUSTOM_PRIVATE_RPC; strategy missing JITO_BUNDLE) — both tables now mirror UAC's 6-mode enum. EX-8/EX-20 sibling fix already shipped @`0fc4b3fd`. 1 NICE-TO-HAVE carried inline (71 vscode-webview links in `strategy-summary.md`). Phase 4 close-out commit: PM@`be7d7c84` |
+| Phase 5 (TradFi ETF/roots SSOT + asset_group_registry)    | ✅ DONE 2026-05-12 (slot 2) — 5A UAC@`9d80f43` + 5B UAC@`24dd517` + 5C UAC@`03f10f0` + 5D PM@`58e5dbe0`                                                       | `tradfi_etfs.py` (59-ETF dict) + `tradfi_roots.py` (60-root dict) + `asset_group_registry.py` (`get_canonical_inventory()` / `AssetGroupInventory`) shipped; codex `contracts-scope-and-layout.md` updated with derivatives sub-package + cross-asset-group entry-point section                                                                                                                                                                                                                              |
+| Phase 6 (validation)                                      | ☐ TODO                                                                                                                                                        | gated on Phases 1-5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Phase 7A-D, 7F (codex SSOT updates)                       | 🟡 IN PROGRESS — 7A partially done: Phase 5D (asset_group_registry PM@`58e5dbe0`) + Phase 1H (6-item cleanup table PM@`bd7a9ea6`); 7B/7C/7D gated on 2E+2F+3E | 7A = `contracts-scope-and-layout.md` is NOW COMPLETE (5D+1H both done). 7B-7D-7F remain gated on phases 2+3.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Phase 7E (codex `04-architecture/mev-protection.md` SSOT) | ✅ DONE 2026-05-12 (slot 8)                                                                                                                                   | gated on Phase 4 which closed this turn; canonical SSOT confirmed at `codex/04-architecture/mev-protection.md` (431 lines, full spec); plan body 7E flipped @PM`<this commit>`                                                                                                                                                                                                                                                                                                                               |
 
 **Carry-forward for next slot-8 session**: Phase 1A facade-fix + PR-3/PR-4 ✅ DONE last cycle; Phase 1E/1F audit half +
 7E ✅ DONE this cycle. Open: Phase 1C operator greenlight then implement (GMX/DRIFT P0); Phase 1B Spark+Radiant SSOT
@@ -539,15 +547,15 @@ Phase 7A-D/7F codex SSOT updates (Phase 5 ✅ DONE as of 2026-05-12 slot-2 sessi
 
 ## Deferred work after 2026-05-12 slot-2 (ikenna-defi-catalogue-tab) session
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-| --- | --- | --- |
-| Phase 5A — `tradfi_etfs.py` (59-ETF SSOT) | ✅ DONE — UAC@`9d80f43` | Phase 6 consumer migration |
-| Phase 5B — `tradfi_roots.py` (60-root SSOT) | ✅ DONE — UAC@`24dd517` | Phase 6 consumer migration; ICE US softs (CT/CC/KC/SB/OJ/DX/T) **DEFERRED** to Phase 6 (dataset ambiguity CME vs ICE between tradfi_symbology.py and tradfi_instrument_universe.py) |
-| Phase 5C — `asset_group_registry.py` (`get_canonical_inventory`) | ✅ DONE — UAC@`03f10f0` | Phase 6 consumer migration |
-| Phase 5D — codex `contracts-scope-and-layout.md` update | ✅ DONE — PM@`58e5dbe0` | — |
-| Phase 1C — GMX/DRIFT dual-classification | 🟡 BLOCKED — `OPERATOR-GREENLIT NEEDED` | Operator must confirm classification approach before Phase 1C can implement |
-| Phase 1G — UAC QG green | 🟡 BLOCKED — 137 pre-existing E501 errors in `market_data_categories.py` + RUF003 in `risk_rules/venue.py`; foreign debt | Phase 1 gate; needs foreign-owned file fixes |
-| Phase 2 — manifest health script + UI | ☐ TODO | Independent of Phase 5 |
-| Phase 3 — per-CeFi zero-activity-bar verify | ☐ TODO | Gated on writegate Wave 3.M |
-| Phase 6 — validation + downstream consumer migration | ☐ TODO | Gated on Phases 1-5 (Phase 5 now ✅) |
-| Phase 7A-D, 7F — codex SSOT updates | ☐ TODO | Gated on Phases 1H + 2E + 2F + 3E + 5 (5 now ✅) |
+| Phase / item                                                     | Status as of 2026-05-12                                                                                                  | Successor / blocker                                                                                                                                                                 |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 5A — `tradfi_etfs.py` (59-ETF SSOT)                        | ✅ DONE — UAC@`9d80f43`                                                                                                  | Phase 6 consumer migration                                                                                                                                                          |
+| Phase 5B — `tradfi_roots.py` (60-root SSOT)                      | ✅ DONE — UAC@`24dd517`                                                                                                  | Phase 6 consumer migration; ICE US softs (CT/CC/KC/SB/OJ/DX/T) **DEFERRED** to Phase 6 (dataset ambiguity CME vs ICE between tradfi_symbology.py and tradfi_instrument_universe.py) |
+| Phase 5C — `asset_group_registry.py` (`get_canonical_inventory`) | ✅ DONE — UAC@`03f10f0`                                                                                                  | Phase 6 consumer migration                                                                                                                                                          |
+| Phase 5D — codex `contracts-scope-and-layout.md` update          | ✅ DONE — PM@`58e5dbe0`                                                                                                  | —                                                                                                                                                                                   |
+| Phase 1C — GMX/DRIFT dual-classification                         | 🟡 BLOCKED — `OPERATOR-GREENLIT NEEDED`                                                                                  | Operator must confirm classification approach before Phase 1C can implement                                                                                                         |
+| Phase 1G — UAC QG green                                          | 🟡 BLOCKED — 137 pre-existing E501 errors in `market_data_categories.py` + RUF003 in `risk_rules/venue.py`; foreign debt | Phase 1 gate; needs foreign-owned file fixes                                                                                                                                        |
+| Phase 2 — manifest health script + UI                            | ☐ TODO                                                                                                                   | Independent of Phase 5                                                                                                                                                              |
+| Phase 3 — per-CeFi zero-activity-bar verify                      | ☐ TODO                                                                                                                   | Gated on writegate Wave 3.M                                                                                                                                                         |
+| Phase 6 — validation + downstream consumer migration             | ☐ TODO                                                                                                                   | Gated on Phases 1-5 (Phase 5 now ✅)                                                                                                                                                |
+| Phase 7A-D, 7F — codex SSOT updates                              | ☐ TODO                                                                                                                   | Gated on Phases 1H + 2E + 2F + 3E + 5 (5 now ✅)                                                                                                                                    |
