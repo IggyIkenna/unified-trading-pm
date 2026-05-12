@@ -834,3 +834,81 @@ execution-service + ml-training-service audit-log writers BLOCK on this entry; U
 remaining work is implementation wiring (execution-service runtime + ml-training-service runtime + DART UI panel +
 position-balance-monitor-service rolling-window query for wallet caps) — all owned by Harsh T6 cross-side per the
 spawn brief's "Ikenna designs / Harsh implements" handoff.
+
+## DART #4 [BUILD] implementation pre-audit (Tab 6 / Harsh slot 6, 2026-05-12)
+
+Citadel § 1 pre-audit before touching code. Grep-then-read pass over every surface the 5 [BUILD] subitems touch.
+**Net finding**: the UAC contract layer is fully shipped (Ikenna T8 Day-1/2/3 above); the **codex design docs are
+remarkably complete** (`dart-manual-trade-spec.md` § 4 + `manual-trade-booking.md` cover schema / endpoints / audit-log
+/ wallet-tier / UI surface mapping). What is NOT yet built is **runtime wiring + UI components**. The 5 BUILDs reduce to
+~3 net-new artefacts + ~2 verification-and-extend passes. Cross-side gating: BUILD-#1 wallet-tier validation needs
+slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log *writers* in BUILD #1 + #3 block on the
+`manual-audit` bucket-kind in `cloud-providers.yaml` (slot-4 `bucket_name_ssot` Phase 0i tail).
+
+### State-of-the-world per surface
+
+| Surface | Exists today | What's missing |
+|---|---|---|
+| UAC `internal/execution.py` | `ManualInstruction` (+ `wallet_id`, `order_type: str`), `ManualExecutionMode`, `ManualMLTrainingAction`, `MLTrainingControlRequest/Response`, `ManualAuditCategory`, `WalletSpendingPreCheckResult`, `ManualInstructionPrecheckResponse`, `ManualInstructionAuditLog` — all unit-tested (22 tests) | nothing — contract layer DONE (Ikenna T8) |
+| UAC `internal/manual_audit_paths.py` | path-helper module + `BUCKET_KIND_MANUAL_AUDIT` | the `manual-audit` bucket-kind row in `deployment-service/configs/cloud-providers.yaml` (slot-4 Phase 0i tail, 🟡 cross-side) |
+| UAC `internal/domain/defi/wallet_config.py` | `WalletProvisioningConfig` + `SpendingCaps` + `SigningSurface` + `kill_switch_id` + `allowed_protocols` (slot-4, `uac@d721b6a`) | nothing — consumed read-only by the validation algorithm |
+| UAC `canonical/domain/execution/base.py:65` `OperationType` | 19 DeFi+CeFi action verbs (SWAP/STAKE/UNSTAKE/LEND/BORROW/REPAY/…/BUY/SELL) | nothing — IS the canonical DART trade-action enum; just needs an endpoint-boundary membership validator on `ManualInstruction.order_type` |
+| execution-service `api/manual_instruction_api.py` (25 KB, exists) | `POST /manual/instruction` (EXECUTE + RECORD_ONLY), `/manual/cancel`, `/manual/amend`, `GET /manual/instructions/{id}`, `GET /manual/venues` (dynamic from `CAPABILITY_DECLARATIONS` via `_get_supported_venues()` + `@lru_cache`), `_SUPPORTED_ALGOS` list, `ManualInstructionRequest` validator | (a) `wallet_id` field not handled; (b) NO wallet-tier validation algorithm (kill-switch + 4 SpendingCaps checks); (c) NO `POST /manual/instruction/precheck` dry-run endpoint; (d) `order_type` accepted as free string — needs `OperationType.value` membership guard; (e) NO `GET /manual/algos` route (doc lists it; only `/manual/venues` exists); (f) audit-log persist (`ManualInstructionAuditLog` → `manual_audit_paths` → `resolve_bucket_name(kind="manual-audit")`) not wired |
+| ml-training-service `api/` | `main.py` + health endpoints only | NEW `api/training_control_api.py` — `POST /training/{archetype}/{action}` (`pause`/`resume`/`retrain`), `GET /training/{archetype}/status`, `GET /training/audit/{request_id}`; consumes `MLTrainingControlRequest/Response`; persists `ManualInstructionAuditLog` with `action_category=ML_TRAINING_CONTROL`; mount router in `main.py`. Backend lifecycle action: wire to the existing ml-training-service training-loop control (the CLI surfaces an equivalent — verify the in-process hook before May-23) |
+| position-balance-monitor-service | (rolling-window spend not exposed for wallet caps) | NEW endpoint/query: rolling 1h + 24h USD spend per `wallet_id` — drives validation-algorithm steps 3-4 in execution-service |
+| UI `components/trading/manual/manual-trading-panel.tsx` (235 L) + `single-order-form.tsx` + `mass-quote-panel.tsx` + `constants.ts` + `types.ts` | CeFi single-order + mass-quote, side/orderType/instrument/venue/qty/price/strategyId/algo+algoParams (TWAP/VWAP/ICEBERG/SOR/BEST_PRICE/BENCHMARK_FILL)/executionMode(execute\|record_only)/counterparty/sourceReference; `strategy_id` already a payload field; venue + algo lists come from **hardcoded `constants.ts`** (`VENUES` has Hyperliquid, **no Aster**; no DeFi protocols/chains) | (a) NO "DeFi Action" tab — needs chain selector → protocol selector → action selector (`OperationType` subset) + wallet selector (disabled rows for armed kill-switch) + spending-caps display w/ headroom + `POST …/precheck` dry-run echo before submit; (b) venue/algo lists should switch from `constants.ts` to the dynamic `GET /manual/venues` + `GET /manual/algos` endpoints (eliminates the Aster-missing drift); (c) NO `category`/`asset_group` selector on the in-context panel (back-office `/services/trading/book` page reportedly has Category tabs per `manual-trade-booking.md` § "UI Surfaces" — verify); (d) NO `MlTrainingControlPanel` component under `components/dart/` + NO `/services/dart/ml-training` route (closest existing primitive: `components/dart/strategy-param-version-bump-modal.tsx`); (e) sports/prediction backtest surfaces (instrument=fixture_id|market_id, side=home/away/draw, `OperationalMode.BACKTEST`) — verify whether the panel already routes these categories, extend if not |
+| UI `components/dart/` | `automation-toggle.tsx`, `strategy-param-version-bump-modal.tsx`, `trade-monitor.tsx` + `/services/dart/{terminal,locked}/page.tsx` routes | `MlTrainingControlPanel.tsx` + `ml-training/page.tsx` route (BUILD #3 UI) |
+
+### BUILD-by-BUILD work breakdown (post-pre-audit)
+
+- **BUILD #1 — DART manual DeFi swap/lend/borrow/stake** (`CARRY_STAKED_BASIS`, enabled chains). _Net-new + extend._
+  Backend: extend `manual_instruction_api.py` — add `wallet_id` handling + the 6-step wallet-tier validation algorithm
+  (kill-switch via slot-5 `KillSwitchBus` → `is_within_per_tx` → PBM 1h → PBM 24h → per-protocol → aggregate) + the
+  `POST /manual/instruction/precheck` dry-run endpoint returning `ManualInstructionPrecheckResponse` + audit-log persist
+  via `manual_audit_paths` (BLOCKED on slot-4 bucket-kind). PBM: add the rolling-window spend query. UI: "DeFi Action"
+  tab per `manual-trade-booking.md` § "UI surface (DART panel — Harsh T6)". **Cross-side**: kill-switch state needs
+  slot-5 spec (EOD Day 2); bucket-kind needs slot-4 Phase 0i.
+- **BUILD #2 — DART manual CeFi order placement** (Bybit/Deribit/Binance/OKX + Hyperliquid + Aster). _Verify + small
+  extend._ (a) Verify `aster` is in UAC `CAPABILITY_DECLARATIONS` with `supports_trading=True` (it's a perp venue —
+  check `registry/capability_declarations/_cefi.py` / `_defi.py`); if absent, add it (or note it's a separate registry
+  task). (b) Switch the UI venue/algo dropdowns from `constants.ts` to `GET /manual/venues` + `GET /manual/algos` (add
+  the `/manual/algos` route to `manual_instruction_api.py` if missing) so the surface is registry-driven, not
+  hand-maintained. (c) Verify TWAP/VWAP/ICEBERG/SOR/BEST_PRICE algo params render for each. Backend trade path: already
+  shipped — verification only.
+- **BUILD #3 — DART manual ML training trigger** (pause/resume/retrain per ML archetype). _Net-new (greenfield)._
+  Backend: NEW `ml-training-service/ml_training_service/api/training_control_api.py` (3 endpoints above) + mount in
+  `api/main.py` + wire `pause`/`resume`/`retrain` to the existing training-loop control primitive (CLI equivalent
+  exists — locate the in-process hook) + audit-log persist (`ML_TRAINING_CONTROL` category; BLOCKED on slot-4
+  bucket-kind). UI: NEW `MlTrainingControlPanel.tsx` under `components/dart/` mounting at `/services/dart/ml-training`;
+  per-archetype model-registry row → `pause`/`resume`/`retrain` buttons → `POST /training/{archetype}/{action}`.
+- **BUILD #4 — DART manual sports bet placement** (backtest exec-validation only). _Verify + small extend._ Verify the
+  manual panel routes a `sports` category (instrument=fixture_id, side=home/away/draw); backend = execution-service
+  matching-engine path with `OperationalMode.BACKTEST` (no live wiring). If the panel lacks a sports category surface,
+  add a minimal one routed through `OperationalMode.BACKTEST`.
+- **BUILD #5 — DART manual prediction-market trade** (Polymarket/Kalshi/Opinion-Trade/CME-event-arb, backtest-only).
+  _Verify + small extend._ Same shape as #4: instrument=market_id + side + size → backtest matching-engine against the
+  `canonical_question_group` CLOB; `OperationalMode.BACKTEST`. Verify-or-add the prediction category surface.
+
+### Cross-side handshakes this pre-audit confirms
+
+- **Ikenna T8 → Harsh T6** — DONE (contract layer fully shipped Day-1/2/3; nothing more needed from the design side).
+- **slot 5 → Harsh T6 (BUILD #1)** — need the `KillSwitchBus` runtime-state read API for validation-algorithm step 1.
+  Spec handoff EOD Day 2 per work-split. Tracked: 🟡 BLOCKED until then for the kill-switch leg of BUILD #1 backend.
+- **slot 4 → Harsh T6 (BUILD #1 + #3 audit-log writers)** — need the `manual-audit` bucket-kind row in
+  `deployment-service/configs/cloud-providers.yaml` (slot-4 `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0i
+  tail, already annotated with the P1 todo). Audit-log persist is BLOCKED until that lands; everything else in BUILDs
+  #1/#3 can proceed (write the persist call, point it at `resolve_bucket_name(kind="manual-audit")`, it resolves once
+  the yaml entry exists).
+- **Tab 6.A strategy_id grammar** — still 🟡 BLOCKED on operator triage; DART surfaces are shape-agnostic at the UAC
+  layer (the `strategy_id: str` field already exists on `ManualInstruction` + the UI panel); the only thing the grammar
+  decision affects is whether the UI *auto-derives* `strategy_id` from selected archetype+venue+instrument-type vs.
+  leaves it operator-entered. Not blocking the BUILD wiring.
+
+### Status as of 2026-05-12 (Day 1, Harsh slot 6)
+
+Pre-audit shipped (this section). The 5 [BUILD] checkboxes (lines 126-134 above) stay `- [ ]` — implementation wiring
+not yet started this session; the cross-side handoffs that gate BUILD #1 (slot-5 kill-switch, slot-4 bucket-kind) land
+EOD Day 2. **DEFERRED to Day-2+**: BUILD #1-#5 runtime + UI wiring per the breakdown above. Lowest-risk first
+implementation candidate (unblocked, no UAC change): the `ManualInstruction.order_type` → `OperationType.value`
+membership `field_validator` at the `manual_instruction_api.py` endpoint boundary (Ikenna T8 explicitly flagged this as
+the right next step).
