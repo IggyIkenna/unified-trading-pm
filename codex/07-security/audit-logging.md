@@ -1,5 +1,10 @@
 ---
 scope: [engineer, admin]
+execution:
+  owner: execution-service maintainer (audit-log path) + governance (retention-lock provisioning)
+  cadence: continuous (live emission per trade/order action; one-shot retention-lock setup pre-cutover)
+  verifier: GCS object-listing under `audit/{client_id_or_order_id}/{YYYY/MM/DD}/` matches `EXECUTION_AUDIT.required_fields` schema; retention-lock policy attached via `gsutil retention set`.
+  last_executed: NEVER (retention-lock provisioning P0 PRE_CUTOVER gap per slot 8 audit PB-2 / PB-8)
 ---
 
 # Audit Logging

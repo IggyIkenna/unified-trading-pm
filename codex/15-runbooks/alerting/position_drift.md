@@ -10,6 +10,11 @@ referenced_by:
 related:
   - codex/15-runbooks/alerting/operator-playbook.md
   - codex/15-runbooks/alerting/balance_drift.md
+execution:
+  owner: alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call rotation (operator response)
+  cadence: continuous (PBMS reconciliation loop emits `POSITION_DRIFT` per `position_drift_bps` threshold)
+  verifier: alert routes to Telegram + CRITICAL severity → PagerDuty + auto STOP_NEW_ONLY per `autonomous-recovery-matrix.md` G4; WARN noise-floor `position_drift_bps=100`
+  last_executed: NEVER (live PBMS reconciliation activation pending master plan Group F)
 ---
 
 # `POSITION_DRIFT` Runbook
