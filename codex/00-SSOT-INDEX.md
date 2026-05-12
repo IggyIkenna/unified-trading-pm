@@ -191,6 +191,8 @@ CapabilityResolutionError (from UTL capability_errors.py) on mismatch. Called by
 | Active coverage improvement plans                            | `unified-trading-pm/plans/cicd/`                                            | unified-trading-pm |
 | Agent workflow procedures                                    | `.cursor/rules/*.mdc` (cursor rules are the canonical agent guidance)       | unified-trading-pm |
 | Codex vs PM boundary rules (content placement)               | `unified-trading-pm/codex/13-codex-governance/SSOT-BOUNDARY.md`             | unified-trading-pm |
+| Codex governance — section registry (where each topic lives) | `unified-trading-pm/codex/13-codex-governance/SECTION-REGISTRY.md`          | unified-trading-pm |
+| Codex governance — directory README                          | `unified-trading-pm/codex/13-codex-governance/README.md`                    | unified-trading-pm |
 
 ## Layer Ownership
 

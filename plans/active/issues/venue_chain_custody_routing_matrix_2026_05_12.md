@@ -108,7 +108,47 @@ Group F item 19 "Treasury / custody integration" currently names "Copper for DeF
 - ClearLoop included as 3rd path option
 - Add G24 "Per-venue deposit-chain matrix" with `Last verified` cadence; QG-enforced.
 
-## Operator decisions needed
+## ✅ Operator decisions received 2026-05-12 ~07 GMT
+
+**Q1 — Custody route mix for May-23**: ⚠️ **CRITICAL REFRAME**. Operator: _"we won't even have Copper by 23rd May 2026 realistically; we want the code/hooks to understand how it will work but we can't actually test it until 1st June. By that point we need to be confident in the strategy. For 23rd we can use Trust Wallet and MetaMask."_
+
+**→ May-23 path** = **self-custody hot wallets**:
+- **DeFi + on-chain CLOBs** (Aave/Uniswap/Curve/HYPERLIQUID/ASTER/GMX-V2 on EVM): **MetaMask** (browser-extension EVM) OR **Trust Wallet** (multi-chain mobile/extension)
+- **DeFi on Solana** (DRIFT/PACIFICA): **Phantom** (Solana browser-extension) OR **Trust Wallet Solana**
+- **CeFi venues** (Binance/Bybit/OKX/Deribit): **direct API key + secret per account** (no intermediate custody; prop-trading model)
+
+**→ June 1+ path** = **MPC custody flippable**:
+- Copper MPC signing for DeFi + on-chain CLOBs (replaces MetaMask/Trust Wallet at signing-surface seam)
+- CEFFU MirrorX for select cefi (Binance/Bybit) off-exchange settlement
+- Fireblocks as MPC alternative
+- Strategy confidence MUST be built between May-23 and June-1 so MPC custody is just a wallet-surface flip, not a strategy redesign.
+
+**Code/hooks ship NOW** so the May-23 → June-1 transition is wallet-surface-flip-only:
+- `SigningSurface` StrEnum extends with `BROWSER_EXTENSION_WALLET` (MetaMask / Trust Wallet EVM / Phantom Solana) +
+  `EXCHANGE_API_KEY` (direct cefi venue credentials).
+- `WalletProvisioningConfig` accepts current = `BROWSER_EXTENSION_WALLET` for May-23; flippable to `COPPER_MPC` /
+  `FIREBLOCKS_MPC` June-1.
+- Trading code paths (execution-service / strategy-service) sign via abstract `SigningSurface` interface — never
+  hardcode the surface. May-23 → June-1 = config flip, not code change.
+
+**Q2 — ClearLoop**: ✅ **Post-cutover** (Cycle 6 backlog). Setup lead-time matches CEFFU; doesn't block May-23.
+
+**Q3 — Per-venue deposit-address provisioning timing**: ✅ **All chains for the 6 May-23 perp venues pre-cutover** —
+Binance / Bybit / OKX / Hyperliquid / Aster / GMX-V2 / DRIFT addresses per supported chain pre-2026-05-23. DeFi
+protocol wallets per Phase 4.A in flight.
+
+**Operator-action items for May-23 (slot 4 surface)**:
+1. Set up MetaMask + Trust Wallet + Phantom production hot wallets per `WalletProvisioningConfig` derivation (HD-wallet
+   under `CLOUD_KMS_ENCRYPTED` master CMK per-asset_group — slot 4 schema shipped UAC@`d721b6a` already supports this).
+2. Per the 6 perp venues + DeFi protocols: provision deposit addresses on supported chains.
+3. Fund hot wallets per archetype × chain budget (separate operator decision — likely small initial sizes for confidence-building).
+
+**Strategy-side implications**:
+- 2026-05-23 → 2026-06-01 = **8-day self-custody confidence window** running real-but-small positions; metric = confidence-to-flip-to-MPC.
+- 2026-06-01 = MPC custody flip (Copper + CEFFU integration online); zero strategy code change at flip moment.
+- If confidence not green by 2026-06-01, **extend self-custody window** rather than force MPC flip (recoverable decision).
+
+## Operator decisions for next routing (capacity-cram extensions)
 
 1. **Which custody routes do we actually use for May-23?**
    - (a) Prop-trading only — direct venue wallets across all cefi; Copper for DeFi
