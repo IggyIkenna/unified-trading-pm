@@ -303,9 +303,20 @@ Owner: harsh + parallel agent.
       Aave V3 + Spark + Radiant; COMPOUND_V3 for Comet). Provides `post_trade_rate()` canonical method +
       `supply_rate_delta_bps()` / `borrow_rate_delta_bps()` convenience methods. Smoke-tested: Aave USDC pool
       at U=50% (kink=90%); +100M supply compresses borrow rate by 20.20 bps. basedpyright clean on new subpackage.)
-- [ ] [AGENT] P0. **3B — `BenchmarkMatcher` extension**. Currently does instant-fill at benchmark; extend to call
-      `LendingRateImpactCalculator` for all supply/borrow/repay/withdraw at Aave V3 + Compound V3 + Spark + Radiant.
-      Backtest yield computation uses post-trade rate, not pre-trade.
+- [x] [AGENT] P0. **3B — `BenchmarkMatcher` extension**. (execution-service@`b8989ae5` — `BenchmarkMatcher.match`
+      gains a lending-mode dispatch: when `lending_market_state` (UAC `LendingMarketState`) +
+      `lending_trade_kind` (`LendingTradeKind` enum OR string name) kwargs are present, the matcher routes
+      through `LendingRateImpactCalculator` (Phase 3A) → `MatchResult.fill_price` = post-trade APY +
+      `MatchResult.price_impact_bps` = signed rate-delta in bps (negative for SUPPLY/REPAY; positive for
+      BORROW/WITHDRAW). Legacy benchmark-price path unchanged for non-lending orders. Typed-error
+      `error_message` closed set for missing/invalid kwargs. Covers Aave V3 + Compound V3 + Spark + Radiant
+      via UAC's `ProtocolIRMShape` discriminator. NEW `tests/unit/matching_engine/test_benchmark_matcher_rate_impact.py`
+      ships 11 tests (SUPPLY -rate / BORROW +rate / WITHDRAW +rate / REPAY -rate / string-form-accepted /
+      invalid-kind / missing-state / zero-quantity / legacy-price-path-unchanged / missing-benchmark-price /
+      supply-then-withdraw-sign-flip; all green). Existing 59 tests still green (golden-harness +
+      `test_pool_matcher.py`). ruff clean; basedpyright clean on the changed file modulo pre-existing
+      `_mk` `OrderType` internal-vs-matching-engine mismatch (PM @`b16fb8b6` DONE table flagged; not
+      introduced here).)
 - [ ] [AGENT] P0. **3C — Validation harness**. Replay 1 month of historical Aave V3 large supplies (>$10M); compare
       simulated post-trade rate vs realized on-chain rate. Tolerance: ≤ 10bps absolute APY delta.
 
