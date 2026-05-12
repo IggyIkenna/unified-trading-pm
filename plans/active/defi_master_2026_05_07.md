@@ -1068,6 +1068,17 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 - [ ] **Batch-vs-live reconciliation running**: per-archetype P&L diff + per-trade fill comparison nightly.
 - [ ] **AWS↔GCP parity**: live trading + monitoring runnable on AWS for at least one carry archetype (cloud-parity
       proof; full-scale AWS NOT required).
+- [ ] **Gas / lending / staking discipline live + verified** (added 2026-05-12 per operator carry-staked-basis cycle;
+      codified in [`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+      HARD RULES #4-#6): (a) gas — real per-block `gas_fees` MTDS captures across all 7 DeFi chains (Ethereum / Arbitrum
+      / Optimism / Polygon / Base / Avalanche / Solana / BSC / Gnosis) drive both strategy-decision preflight + P&L
+      attribution as the `GAS` factor; (b) lending — `liquidity_index` / `variable_borrow_index` captured per-block from
+      Aave V3 / Compound V3 / Spark / Radiant subgraphs (per `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md`
+      end-to-end fix mtds@`4b38a9b` + uac@`bd9c202` + features-service@`e292a4d4`); CARRY_LENDING_SUPPLY /
+      CARRY_LENDING_BORROW P&L factors derived from index growth × per-block aToken/debt-token balance reads (no APY
+      proxy); (c) staking — both wrapped (wstETH/weETH/jitoSOL price-delta) and rebasing (stETH balance-delta)
+      attribution paths wired; CEX collateral form discipline (Bybit/Deribit rebasing; OKX wrapped; Drift native
+      non-rebasing) baked into archetype `_build_legs` perp-venue dispatch.
 
 ### IN/OUT scope
 
