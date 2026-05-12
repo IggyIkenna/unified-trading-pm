@@ -458,24 +458,25 @@ FIXTURES for those leagues.
 
 Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phases). Owner-side todo:
 
-- [ ] [SCRIPT] P0. UAC `unified_api_contracts/external/api_football/normalize.py:372-395` — replace 4 stub-pass-through
-      normalizers (`normalize_fixture_stats`, `normalize_fixture_event`, `normalize_lineup`, `normalize_injury`) with
-      real flatteners that unpack the nested `statistics: [...]` / `events: [...]` /
-      `startXI: [...] + substitutes: [...]` / `players: [...]` arrays into per-row records. [AUDIT 2026-05-07: FRESH —
-      actionable; UAC@fb02104 added event_time field on CanonicalFixtureEvent (Phase 2.D) which is pre-req prep]
-- [ ] [SCRIPT] P0. UAC contract update for the 4 data_types — declare the actual flattened columns (per-stat, per-event,
-      per-lineup-slot, per-injured-player), `cadence: "per_fixture"`. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [SCRIPT] P0. instruments-service AF batch_handler: switch from raw-passthrough to the flattening writer. [AUDIT
-      2026-05-07: FRESH — actionable]
+- [x] [SCRIPT] P0. UAC `unified_api_contracts/external/api_football/normalize.py:372-395` — replace 4 stub-pass-through
+      normalizers with real flatteners. (UAC@c76e6d0 — all 4 normalizers flatten nested structs into per-row dicts;
+      `_FIXTURE_STAT_TYPE_MAP` 18-entry closed set; `normalize_api_football_lineup` explodes startXI+subs.)
+- [x] [SCRIPT] P0. UAC contract update for the 4 data_types — declare the actual flattened columns (per-stat, per-event,
+      per-lineup-slot, per-injured-player), `cadence: "per_fixture"`. (UAC@c76e6d0 — SPORTS_FIXTURE_STATS /
+      FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES SchemaContracts extended with full ColumnSpec lists.)
+- [x] [SCRIPT] P0. instruments-service AF batch_handler: switch from raw-passthrough to the flattening writer.
+      (instruments-service@539130f — all 4 normalizers wired via chain.from_iterable in api_football adapter.)
 - [ ] [SCRIPT] P0. Migration shape: flip every existing manifest row for the 4 data_types →
       `record_failed(reason=INCOMPLETE_PAYLOAD_PRE_FLATTENING, attempted_at=now)`, delete the thin parquets, then
       re-fetch via a dedicated VM (`af-backfill-flatten-{ts}`). The 4 data_types use ISOLATED endpoints
       (`/fixtures/statistics`, `/fixtures/events`, `/fixtures/lineups`, `/injuries`) — separate from `/fixtures` itself
       — so quota cost is bounded to the 4-endpoint × historical-fixture-set product, NOT a full FIXTURES re-fetch.
       [AUDIT 2026-05-07: FRESH — actionable; coordinate with manifest_migration_master_2026_05_07:Stage 3]
-- [ ] [TEST] P0. Cassette parity test (`unified-api-contracts/tests/test_cassette_schema_parity.py` extension):
-      flattened normalizer output matches the per-row UAC schema for each of the 4 data_types. [AUDIT 2026-05-07: FRESH
-      — actionable]
+- [x] [TEST] P0. Normalizer output shape tests. (UAC@c76e6d0 — 13 unit tests in
+      `tests/unit/test_normalize_api_football.py` covering full payload shape, partial null-fill, unknown-stat-type
+      skip, no-coach lineup, missing-fixture injury, malformed-input returns. `test_sports_contracts.py` parametrized
+      cases verify schema registration for all 4 data_types. Note: `test_cassette_schema_parity.py` was NOT extended
+      — the per-normalizer unit tests satisfy the same invariant.)
 - [ ] [VERIFY] P0. After re-fetch VM completes for one league × one season, open deployment-ui schema modal for each of
       the 4 data_types and confirm full per-row column set (xG, shots-on-target, possession, goal-events with minute,
       starting-XI per slot, etc.). [AUDIT 2026-05-07: BLOCKED-ON above flatten ship + re-fetch VM]
