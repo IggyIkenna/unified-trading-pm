@@ -476,7 +476,7 @@ Key repo mapping: events → UTL · schemas → UAC (external + `unified_api_con
 unified-cloud-interface · config → unified-config-interface · market data → MTDS (UMI archived) · execution →
 execution-service · position → position-balance-monitor-service · reference data → instruments-service · domain utils
 
-- ML + feature orchestration → UTL · features → unified-features-interface · sports reference → URDI · execution algos
+- ML + feature orchestration → UTL · features → unified-features-interface · **sports reference → `instruments-service`** (sports module, merged from sports-reference-data-service 2026-03-01; `URDI` / `unified-reference-data-interface` is a phantom name — does NOT exist as a repo) · execution algos
 - matching engine → execution-service · UI → check existing 3 UIs first (`unified-trading-system-ui` consolidated
   portal + `deployment-ui` + `user-management-ui`).
 
