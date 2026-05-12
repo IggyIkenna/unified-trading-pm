@@ -99,11 +99,10 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 ### 2A: Lighter-Tardis routing (PARALLEL with 2B/2C/2D/2E)
 
-- [ ] [SCRIPT] P0. **Route `LIGHTER-ZKSYNC` → Tardis for dates >= 2026-04-17.** In
-      `market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py` in the
-      `if venue_upper == "LIGHTER-ZKSYNC":` block (line ~190): add date-threshold routing — Tardis for
-      `date >= 2026-04-17` (trades + book_snapshot_5 + market_stats/derivative_ticker); existing `/candles` REST path
-      for ohlcv_1m pre-2026-04-17. Tardis exchange slug: `"lighter-zksync"`.
+- [x] [SCRIPT] P0. **Route `LIGHTER-ZKSYNC` → Tardis for dates >= 2026-04-17.** (MTDS@c936451) Updated
+      `umi_tick_provider.py` LIGHTER-ZKSYNC block: ohlcv_1m always uses REST /candles; date >= 2026-04-17 routes to
+      `tardis.download_batch` with exchange from `_VM.get_tardis_exchange_for_venue("LIGHTER-ZKSYNC")` =
+      `"lighter-zksync"`; pre-2026-04-17 falls back to `_fetch_lighter_rest`.
 
 - [ ] [SCRIPT] P0. **Add `market_stats` → `derivative_ticker` column mapping for Lighter-Tardis.** Tardis `market_stats`
       message type carries funding_rate, mark_price, index_price, open_interest. Map to canonical `derivative_ticker`
@@ -115,11 +114,11 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 ### 2B: Kraken Futures adapter via Tardis (PARALLEL with 2A/2C/2D/2E)
 
-- [ ] [SCRIPT] P0. **Add `KRAKEN-FUTURES` Tardis routing in `umi_tick_provider.py`.** Add
-      `if venue_upper == "KRAKEN-FUTURES":` branch routing to Tardis exchange `"kraken-futures"`. Data types: trades,
-      book_snapshot_5 (derived from incremental_book_L2 with existing Tardis book snapshot consolidation logic),
-      derivative_ticker. Historical from 2019-03-30. Shard-level failure isolation: no `raise` inside per-instrument
-      loop.
+- [x] [SCRIPT] P0. **`KRAKEN-FUTURES` Tardis routing.** (UAC@06f0567 + pre-existing routing) KRAKEN-FUTURES was already
+      in `_TARDIS_CEFI_VENUES` via `tardis_to_venue["cryptofacilities"] = "KRAKEN-FUTURES"`. `get_tardis_exchange_for_venue`
+      returns `"cryptofacilities"`. Generic Tardis block at umi_tick_provider.py:216 handles routing. No explicit branch
+      needed. UAC Phase 1 fixed `venue_start_dates` 2020-01-01 → 2019-03-30 and added PERPETUAL/FUTURE entries to
+      `venue_instrument_type_to_tardis`.
 
 - [ ] [SCRIPT] P1. **Kraken Futures symbol normalisation.** Strip `PF_` prefix (perps) and `FF_` prefix (dated), extract
       underlying coin (e.g. `PF_XBTUSD` → `BTC`). Dated futures include expiry in filename — preserve expiry suffix in
@@ -131,11 +130,11 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 ### 2C: BitFinex Derivatives adapter via Tardis (PARALLEL with 2A/2B/2D/2E)
 
-- [ ] [SCRIPT] P0. **Add `BITFINEX-DERIVATIVES` (or `BITFINEX-FUTURES`) Tardis routing.** Tardis exchange
-      `"bitfinex-derivatives"`. Symbol format `tBTCF0:USTF0` → normalize to `BTC`. Data types: trades, book_snapshot_5,
-      derivative_ticker. Coverage from 2019-12-01; reliable from 2020-05-27 — emit
-      `record_empty(EXPECTED_PRE_SOURCE_COVERAGE_START)` for dates 2019-12-01 to 2020-05-26 where symbol-filtering is
-      unreliable. Shard-level failure isolation required.
+- [x] [SCRIPT] P0. **`BITFINEX-FUTURES` Tardis routing.** (UAC@06f0567 + pre-existing routing) BITFINEX-FUTURES was
+      already in `_TARDIS_CEFI_VENUES` via `tardis_to_venue["bitfinex-derivatives"] = "BITFINEX-FUTURES"`. Generic Tardis
+      block handles routing, returns `"bitfinex-derivatives"` exchange name. UAC Phase 1 fixed `venue_start_dates`
+      2020-01-01 → 2019-12-01 and added PERPETUAL/FUTURE entries to `venue_instrument_type_to_tardis`. Name kept as
+      BITFINEX-FUTURES (downstream parquet paths exist; renaming = manifest migration out of scope).
 
 - [ ] [SCRIPT] P1. **BitFinex symbol normalisation.** Pattern `tXXXF0:USTF0` → extract `XXX` as coin. Handle edge cases:
       XBTF0 → BTC (BitFinex uses XBT not BTC). Add normalisation constant to UAC.
@@ -161,11 +160,12 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 ### 2E: Pacifica funding rate addition (PARALLEL with 2A/2B/2C/2D)
 
-- [ ] [SCRIPT] P0. **Add funding rate fetch to existing Pacifica adapter.** In `umi_tick_provider.py` Pacifica block
-      (line ~660): add `GET /api/v1/funding_rate/history?symbol={symbol}&limit=4000` fetch from `api.pacifica.fi`.
-      Output: `derivative_ticker` rows with `funding_rate` column. History from June 2025 launch — emit
-      `record_empty(EXPECTED_PRE_VENUE_LAUNCH)` for pre-June 2025 dates. Shard-level isolation: funding rate fetch
-      failure should not abort OHLCV fetch for same shard.
+- [x] [SCRIPT] P0. **Add funding rate fetch to existing Pacifica adapter.** (MTDS@749e9fc) Added
+      `_PACIFICA_FUNDING_START_MS` (2025-06-01 UTC) constant + `data_types` param to `_fetch_pacifica_rest`. Per-coin
+      funding block: `GET /api/v1/funding_rate/history?symbol={coin}&limit=4000` when `derivative_ticker` in requested
+      types AND `start_ms >= _PACIFICA_FUNDING_START_MS`. Shard-isolated: aiohttp errors logged, loop continues. Output:
+      `derivative_ticker` rows with `funding_rate` + `mark_price` columns. Pre-June 2025 dates skip funding fetch
+      (orchestrator emits `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`).
 
 - [ ] [TEST] P1. **Unit test: Pacifica funding rate fetch + pre-launch empty emit.** ≥4 cases: normal fetch, empty
       response, pre-launch date, API error (→ record_failed not record_empty).
