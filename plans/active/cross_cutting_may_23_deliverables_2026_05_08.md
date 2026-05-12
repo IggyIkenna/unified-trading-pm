@@ -904,11 +904,41 @@ slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log *writ
   decision affects is whether the UI *auto-derives* `strategy_id` from selected archetype+venue+instrument-type vs.
   leaves it operator-entered. Not blocking the BUILD wiring.
 
+### Discoveries during pre-audit (Capture-Discoveries-As-Plan-Todos HARD RULE)
+
+- [ ] **D1 — P1 — `order_type` semantic-mismatch needs an Ikenna design call before BUILD #1 wiring.** Ikenna T8's
+  handoff says "constrain `ManualInstruction.order_type: str` to `OperationType.value` membership at the endpoint
+  validator". But in `execution-service/execution_service/api/manual_instruction_api.py` today, `ManualInstruction.order_type`
+  is populated from `request.algo or "MARKET"` (`manual_instruction_api.py:324` EXECUTE flow; `:608` sets `"RECORD_ONLY"`)
+  — i.e. it currently carries the **execution algo** (MARKET / TWAP / VWAP / ICEBERG / SOR / BEST_PRICE / BENCHMARK_FILL),
+  none of which are `OperationType` values. And `ManualInstructionRequest` has only `side` (BUY/SELL) + `algo`, no
+  `operation_type` field. So a DeFi-action selector (SWAP/STAKE/UNSTAKE/LEND/BORROW/ATOMIC per `dart-manual-trade-spec.md`
+  § 4 BUILD #1) needs a NEW `operation_type: OperationType` field on `ManualInstructionRequest` + a decision on what
+  `ManualInstruction.order_type` canonically means (algo vs. operation verb vs. add a third field). **Closed-set design
+  call → Ikenna lane** per CLAUDE.md "Daily Work-Split Process" tie-breaker. Cross-side: annotate Ikenna slot-8's next
+  ping / the `dart-manual-trade-spec.md` § 5 area; Harsh BUILD #1 backend wiring waits on the resolution. Provenance:
+  Harsh slot-6 pre-audit 2026-05-12, grep-then-read on `manual_instruction_api.py`.
+- [ ] **D2 — P2 — `manual-trade-booking.md` "Dynamic Venue List" claim drifts from the UI.** The codex doc says the
+  venue list "resolves dynamically from UAC `CAPABILITY_DECLARATIONS`" — true on the backend (`_get_supported_venues()`)
+  but the **UI** (`components/trading/manual/single-order-form.tsx:13` → `constants.ts` `VENUES`) uses a hand-maintained
+  hardcoded list (missing Aster; no DeFi protocols/chains). Folded into BUILD #2's UI work (switch the dropdowns to
+  `GET /manual/venues` + `GET /manual/algos`). Also: `manual-trade-booking.md` § "API Endpoints" lists `GET /manual/algos`
+  but `manual_instruction_api.py` only ships `GET /manual/venues` (has `_SUPPORTED_ALGOS` list, no route) — add the route
+  as part of BUILD #2. Provenance: Harsh slot-6 pre-audit 2026-05-12.
+- [ ] **D3 — P2 — `dart-manual-trade-spec.md` § 5 still says strategy_id grammar is "🟡 BLOCKED pending operator triage"
+  but this plan's open question #2/#3 (lines 172-184) marks it ✅ RESOLVED 2026-05-08 via Option A** (existing 6-axis UAC
+  v2 `archetype@venue-asset-instrument-period-quote-env` grammar is canonical; no `vN`). Doc-drift in the spec doc Harsh
+  T6 implements against. Fix as a 2-line consistency edit when BUILD wiring starts (or sooner — it's the deliverable-#4
+  SSOT). Provenance: Harsh slot-6 pre-audit 2026-05-12.
+
 ### Status as of 2026-05-12 (Day 1, Harsh slot 6)
 
-Pre-audit shipped (this section). The 5 [BUILD] checkboxes (lines 126-134 above) stay `- [ ]` — implementation wiring
-not yet started this session; the cross-side handoffs that gate BUILD #1 (slot-5 kill-switch, slot-4 bucket-kind) land
-EOD Day 2. **DEFERRED to Day-2+**: BUILD #1-#5 runtime + UI wiring per the breakdown above. Lowest-risk first
-implementation candidate (unblocked, no UAC change): the `ManualInstruction.order_type` → `OperationType.value`
-membership `field_validator` at the `manual_instruction_api.py` endpoint boundary (Ikenna T8 explicitly flagged this as
-the right next step).
+Pre-audit shipped (this section + the per-BUILD breakdown + discoveries D1-D3). The 5 [BUILD] checkboxes (lines 126-134
+above) stay `- [ ]` — implementation wiring not yet started; BUILD #1 backend is **🟡 BLOCKED on D1** (Ikenna `order_type`
+design call) **+ slot-5 kill-switch spec (EOD Day 2) + slot-4 bucket-kind (Phase 0i)**; BUILDs #2/#4/#5 are verify-and-
+extend and unblocked once the UI work picks up; BUILD #3 is greenfield + unblocked at the contract layer (audit-log
+write leg blocked on slot-4 bucket-kind only). **DEFERRED to Day-2+**: all BUILD #1-#5 runtime + UI wiring per the
+breakdown above. The "just add an `order_type` validator" first-impl candidate turned out to need D1's design call —
+re-prioritised: first unblocked impl when wiring starts is the **BUILD #3 ml-training-service `training_control_api.py`
+scaffold** (greenfield, contract layer shipped, no cross-side design needed beyond locating the in-process training-loop
+control hook).
