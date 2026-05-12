@@ -185,7 +185,13 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       uniform split. Provenance: § Audit findings 0.B. **Successor for the calibration-blocked half**: this plan stays
       active until 3.C lands or the cutover backfill horizon closes; if backfill slips past 2026-05-23, fold into
       `live_pipeline_mtds_mdps_features_2026_05_08`.
-- [ ] [AGENT] P1. **3.D Prod-reader schema-parity verification.** **DEFERRED (gated on Phase 4)** (slot 7 2026-05-12).
+- [ ] [AGENT] P1. **3.D Prod-reader schema-parity verification.** **PARTIAL (slot 7, 2026-05-12)**: reader wire-in
+      shipped for strategy-service (`GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix;
+      strategy@`a03d12e`) and ml-inference-service (`FeatureSubscriber.read()` override check; ml-inference@`0206358`).
+      Harness `mtds_read` command fixed (`--operation fetch` → `--operation download`; utl@`7eceaba`).
+      **DEFERRED remains**: (1) MTDS reader wire-in (`databento_reader.py` / `tardis_reader.py` use a different path
+      and still bypass override — no approach landed yet); (2) subprocess-mode harness run + schema-drift assertion
+      (requires VM, needs operator sign-off); (3) slot-8 handshake items below.
       Run each generator's output through the prod MTDS / MDPS / features-* reader for that `(asset_group, data_type)`
       (via the harness `subprocess` mode once Phase 4 wires the `--synthetic-input-uri` flag) and assert NO schema-drift
       error (CLAUDE.md "Reader/schema-drift bug → RAISE LOUD"). Any column the prod reader expects that the Phase 2.A
@@ -539,7 +545,7 @@ uniformly across the 5 chain shards.
 | Phase 2 (UTL generator + profiler + harness) | ✅ done — utl@`ca9c346` (54 tests) | — |
 | Phase 3.A / 3.B (per-archetype generators) | ✅ design-shipped (Phase 1.B specs + Phase 2.A domain logic) | — |
 | Phase 3.C (real-backfill row-count + axis-2 byte-size calibration) | 🟡 deferred (P1) | this plan; if cutover backfill slips past 2026-05-23 → fold into `live_pipeline_mtds_mdps_features_2026_05_08` |
-| Phase 3.D (prod-reader schema-parity verification) | 🟡 deferred (P1) | this plan; **blocked on Phase 4.A-tail** (needs `subprocess` mode) |
+| Phase 3.D (prod-reader schema-parity verification) | 🟡 partial (P1) | strategy@`a03d12e` + ml-inference@`0206358` wired; MTDS reader + subprocess run + slot-8 items remain |
 | Phase 4.A (benchmark CLI) | ✅ done — utl@`457fe19` (`python -m unified_trading_library.synthetic`) | — |
 | Phase 4.B (per-stage profiler integration) | ✅ done — in `BenchmarkHarness` | — |
 | Phase 4.C (profile-parquet emit) | ✅ done — in `cli.main` | — |
@@ -554,7 +560,7 @@ uniformly across the 5 chain shards.
 | Phase 8.A (master-plan Group F item 18 row) | 🟡 deferred (P0) | Ikenna-side master-plan row; **pinging slot 1 main now via `_agent_pings.md` — benchmark report ready** |
 | Phase 8.B (🟢 VM RUNNING banner removal) | ✅ done — banner removed from plan body now that all matrix VMs are self-deleted; cross-plan banners (if any added) cleared in this commit | — |
 | `benchmark-reports` bucket kind in `cloud-providers.yaml` | 🟡 deferred (P2) | finding routed to `bucket_name_ssot_canonicalisation_2026_05_10.md` (slot 4) — until then the launcher uses the conventional `${PROJECT}-benchmark-reports` name + the CLI takes `--report-uri` explicitly |
-| Phase 3.D (per-reader threading for MTDS / ml-inference / strategy whose readers bypass `resolve_bucket_uri`) | 🟡 deferred (P1) | this plan; **blocked on per-service reader refactor** — the framework override is installed but is a no-op for these 3 readers; aggregation report flags them as "oversized_seen — re-run after Phase 3.D" |
+| Phase 3.D (per-reader threading for MTDS / ml-inference / strategy whose readers bypass `resolve_bucket_uri`) | 🟡 partial (P1) | strategy@`a03d12e` ✅ + ml-inference@`0206358` ✅; harness mtds_read op fix utl@`7eceaba` ✅; **MTDS reader** (databento/tardis path) ❌ not yet wired |
 
 **The active half of this plan** (it stays in `plans/active/`): Phase 4.A-tail → Phase 5.B/5.C → Phase 6 → Phase 8.A,
 plus 3.C/3.D. The cutover gate (Group F item 18) is the deadline driver. **Cannot archive until at least Phase 6
