@@ -148,9 +148,9 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
       canonical-question-group taxonomy) are BOTH canonical and non-redundant. **Sub-todos (each its own shippable
       unit; needs a venv-equipped checkout — the slot-8 worktree has no per-repo `.venv`, so QG-verify in main or hand
       to a slot with one):**
-      - [ ] [SCRIPT] P0. **1A.a — KEEP BOTH** (no-op confirmation; `prediction/` is NOT deleted). Mark the original
-            "delete singular" instruction VOID.
-      - [ ] [SCRIPT] P0. **1A.b — facade-import fix (PR-2).** `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:25-27`:
+      - [x] [SCRIPT] P0. **1A.a — KEEP BOTH** (no-op confirmation; `prediction/` is NOT deleted). Mark the original
+            "delete singular" instruction VOID. (confirmed by prediction sub-agent 2026-05-12 — no code change needed)
+      - [x] [SCRIPT] P0. **1A.b — facade-import fix (PR-2).** `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:25-27`: (instruments-service@`ca8a019` 2026-05-12)
             `from unified_api_contracts.canonical.domain.prediction import (PredictionMarketMapper,)` → `from
             unified_api_contracts.prediction import (PredictionMarketMapper,)` (the facade `unified_api_contracts/prediction.py`
             does `from unified_api_contracts.canonical.domain.prediction import *`, and `PredictionMarketMapper` is a
@@ -159,7 +159,7 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
             imports (`build_*_prediction_id`, `POLYMARKET_MARKET_TO_CANONICAL`, `_slug`, ...) — those are a *separate*
             UAC-import-surface violation; route to `sports_master_2026_05_07.md` or a `plans/active/issues/` doc, not here
             (sports facade re-export coverage needs checking first; don't break it as a side-effect of the prediction fix).
-      - [ ] [DESIGN P0 — owner: ikenna] **1A.d — PR-3/PR-4 is NOT "add 2 strings"; it's a coverage-grain design call.**
+      - [x] [DESIGN P0 — operator-directed] **1A.d — PR-3/PR-4.** (UAC@`89f63b7` 2026-05-12 — operator directed Sonnet continuation to ship despite gotcha; grain-segregation comment added inline; downstream completion_pct aggregators must not mix with instrument-day grain)
             🟡 **GOTCHA found on deeper read (slot 8, 2026-05-12) — contradicts the earlier "no operator gate" framing.**
             `DATA_TYPES_BY_ASSET_GROUP["prediction"]` is `["trades"]` and the in-code comment there explicitly records
             *why* `book_snapshot_5` was removed 2026-04-19: leaving a not-actually-emitted-per-(venue,day) data_type in
