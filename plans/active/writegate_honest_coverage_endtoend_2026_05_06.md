@@ -32,7 +32,7 @@ estimate_calibration_note: |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Phase 2.B amendment F         | **Option α** — orchestrator-boundary at `engine/orchestrator.py:2186-2218`; generalise ES.OPT manual check to all `BUNDLED_DATA_TYPES`; single SSOT     |
 | Phase 6.8 instruments-service | **Option (a)** — migrate all 41 `.add()` callsites → `record_captured()` then wire `publish_with_policy`; remove legacy path entirely                   |
-| Phase 2.D confidence columns  | **Scope out** — do NOT ship `announced_at`/`report_time`/`match_end_time` with low-confidence defaults; defer until forward-poll-vs-backfill plan lands |
+| Phase 2.D — `match_end_time`  | **CORRECTED 2026-05-12**: Ship `match_end_time` from SFI freeze-detection (30 progressive stats stop = match end; deterministic, high-confidence, needed for lookahead-bias). `announced_at` + `report_time` deferred — these require data that only exists BEFORE the event (pre-match scrape) and SFI does not provide them in the post-match feed; deferring until a pre-match scheduled scrape is wired. |
 | CeFi Tardis re-shape          | **Option A** — re-rescan all 252 shards; do not derive from existing parquet                                                                            |
 
 ### Phase/Wave status

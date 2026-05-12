@@ -197,120 +197,261 @@ Post-cycle review 2026-05-15 EOD: append the cycle's workspace cal AI-days deliv
 Workspace-wide throughput observations. If all 4 metrics within target, pace holds; if any breach, cycle 2 plan
 recalibrates.
 
-## Addendum — manifest cleanup + bucket migration + propagation chain (added 2026-05-12 PM)
+## Addendum — manifest + writegate + propagation + migration + backfill (COMPREHENSIVE, 2026-05-12 PM)
 
 **Operator direction 2026-05-12 PM**: all manifest cleanup + `expected_unattempted` propagation + bucket SSOT migration
-work is assigned to Ikenna slots. Parallel where possible. Serial gates explicit below.
++ writegate coding + emission policy rollout spread across ALL Ikenna slots. Execution order locked:
+**1. Coding → 2. Reconciliation dry-runs → 3. Apply-flips → 4. Env-split migration (production first) → 5. Backfills**.
 
-### Dependency DAG
+---
+
+### Master dependency DAG
 
 ```
-PARALLEL (no inter-dependencies — start immediately):
-  Slot 4 (after API-keys work): Script 1 SOURCE_RETURNED_ZERO root-cause audit + apply-flips
-  Slot 4 (interleaved):         Propagation chain Phases 0–4 (UAC + UTL + MTDS + MDPS + features code)
-  Slot 3 (after code-freeze dry-run): Full phantom GCE VM dry-run scan (all 5 asset_groups, full date range)
+══════════════════ IMMEDIATE PARALLEL (no inter-dependencies) ═══════════════════════════
+  Slot 3-A:  GCE VM dry-run baseline — all 5 AGs × 3 scripts [starts now]
+  Slot 3-B:  GCS production bucket provisioning (Storage Transfer Service) [starts now]
+  Slot 4:    Propagation chain Phase 0A (UAC) → 0B (UTL) → then 1→2→3-fanout→4
+  Slot 4:    Script-1 SOURCE_RETURNED_ZERO root-cause + fix [starts now, no blocker]
+  Slot 5:    Phase 2.D match_end_time SFI freeze-detect [starts now]
+  Slot 6:    Phase 2.B MTDS cluster Option α [starts now]
+  Slot 6:    Emission Phase 6.3 features-volatility BUILD FROM SCRATCH [starts now]
+  Slot 7:    Emission Phase 6.4 features-cross STRICT_FAIL [starts now]
+  Slot 8:    Phase 6.8 instruments-service 41 .add()→record_captured() [starts now]
 
-SERIAL GATE 1: Phases 1–4 of propagation chain shipped → unlock Slot 3 apply-flips in dependency order
+═══════════════════ GATE 0A: UAC Phase 0A + UTL Phase 0B pushed ═════════════════════════
+  Slot 4:    Phase 1 MTDS pre-flight → Phase 2 MDPS DependencyChecker
+             Phase 3 features 6-module fan-out (PARALLEL) + Phase 2.A MDPS 4-state (PARALLEL)
+             Phase 4 ML
 
-  Slot 3 (AFTER gate 1): Phantom apply-flips, all 5 asset_groups, in pass order (instruments → MTDS → MDPS → features)
+═══════════════════ GATE 1: Phases 1–4 + 2.A all pushed to origin ═══════════════════════
+  Slot 3:    Apply-flips in dependency order:
+               Pass 1: instruments data_types, all 5 AGs
+               Pass 2: MTDS data_types, all 5 AGs
+               Pass 3: MDPS data_types
+               Pass 4: features + ML data_types
 
-SERIAL GATE 2: Physical bucket migration complete → unlock code migration
+═══════════════════ GATE 2: bucket physical migration (prod) done + parity ══════════════
+  Slot 8:    Code migration — resolve_bucket_name() all scripts + VM launchers
 
-  Slot 8 (AFTER gate 2): Code migration — resolve_bucket_name() across all scripts + VM launchers (~60 hardcoded strings)
-
-SERIAL GATE 3: All above complete → manifest clean sign-off → backfills can start
+═══════════════════ GATE 3: phantom = 0 + manifest accurate ══════════════════════════════
+  ALL slots: BACKFILLS CLEARED — instruments-service → MTDS → MDPS → features order
 ```
 
-### Slot extensions (bolted onto existing slot themes)
+**Phase 2.B does NOT block Phase 2.A or 2.C** — different repos (MTDS vs MDPS/features). Run in parallel.
+**Phase 2.D (match_end_time) does NOT block any reconciler** — instruments-service field addition only.
 
-| Slot | Existing theme                           | Addendum manifest/bucket work                                                               | Additional cal AI-days |
-| ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------- |
-| 3    | `code_freeze` audit + dry-run            | Full phantom GCE VM dry-run scan (all 5 AGs) + Phase 5A baseline + apply-flips AFTER gate 1 | ~3                     |
-| 4    | `api_keys_wallets` (contracted to ~6-10) | propagation chain Phases 0–4 + Script 1 apply-flips root-cause                              | ~5                     |
-| 8    | `cross_cutting` + manifest Phase 3       | Bucket SSOT code migration (resolve_bucket_name, all scripts + VM launchers) AFTER gate 2   | ~6                     |
+---
 
-**Physical bucket migration** (create env-tiered buckets + copy data + verify parity) was originally Harsh slot 4.
-Operator direction 2026-05-12: move to Ikenna. Assigned to **Slot 3 reserve pickup** once code_freeze Phase 1 gate
-closes — use GCS Storage Transfer Service per bucket_name_ssot Phase 0c/0d. See plan for exact bucket naming spec. Cal
-AI-days ~4 (infra class 0.8×). **BLOCKER**: do NOT switch any scripts to `resolve_bucket_name()` until env-tiered
-buckets physically exist + data copied + parity verified.
+### Slot assignments (manifest/writegate work, all 8 slots)
 
-### Spawn prompts per slot
+| Slot | Work | Gates | Cal AI-days |
+|------|------|-------|-------------|
+| **1** | Gate status tracking + blocker triage + ping triage + master plan refresh | continuous | — |
+| **3** | ① Dry-run baseline GCE VM (5 AGs) [NOW] ② Bucket provisioning prod (STS) [NOW] ③ Apply-flips Passes 1-4 [GATE 1] ④ Bucket code migration [GATE 2] | starts NOW; ③ waits GATE 1; ④ waits GATE 2 | ~7 |
+| **4** | Script-1 root-cause + Phase 0A→0B→1→1.5→2→3-fanout→4 + Phase 2.A MDPS 4-state+v6 | GATE 0A serial unlock | ~9 |
+| **5** | Phase 2.D match_end_time SFI [NOW] + Phase 2.C features-sports stubs [after defi_recursive phases] | independent | ~3 |
+| **6** | Phase 2.B MTDS cluster Option α [NOW] + Emission 6.3 features-vol BUILD FROM SCRATCH [NOW] | independent | ~7 |
+| **7** | Emission 6.4 features-cross STRICT_FAIL [NOW] + Emission 6.5 features-* wiring [NOW] | independent | ~4 |
+| **8** | Phase 6.8 instruments-service 41 callsites [NOW] + Phase 6.9 QG sweep [after 6.3-6.8] + bucket code migration [GATE 2] | 6.9 waits 6.3-6.8; migration waits GATE 2 | ~8 |
 
-**Slot 3 — Full phantom dry-run scan + apply-flips (AFTER code-freeze Phase 1 gate close)**:
+**Total additional cal AI-days across all slots: ~38** (covers all open writegate coding + propagation chain + reconcilers + bucket migration).
+
+---
+
+### Spawn prompts
+
+**Slot 3 — Dry-run baseline + bucket provisioning + apply-flips**:
 
 ```
 MODEL TIER: Sonnet 4.6 / THINKING: high
 WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
 
-Step 1 — Launch a same-region GCE VM (asia-northeast1-c, e2-standard-8) and run the dry-run baseline:
+PART A — NOW: Launch GCE VM (asia-northeast1-c, e2-standard-8) for dry-run baseline:
   for ag in cefi defi tradfi sports prediction; do
-    python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group $ag --dry-run
-    python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group $ag --dry-run
-    python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group $ag --dry-run
-  done
-Record phantom counts per asset_group in expected_unattempted_propagation_chain_2026_05_12.md § "Reconciliation baseline".
+    python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group $ag --dry-run &
+    python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group $ag --dry-run &
+    python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group $ag --dry-run &
+  done; wait
+  Record phantom counts in expected_unattempted_propagation_chain_2026_05_12.md § "Reconciliation baseline".
 
-Step 2 — WAIT for serial gate: propagation chain Phases 1–4 pushed to origin (check expected_unattempted_propagation_chain_2026_05_12.md todos).
+PART B — NOW (PARALLEL with A): GCS production bucket provisioning per bucket_name_ssot_canonicalisation_2026_05_10.md.
+  Production buckets only — staging/dev deferred (we need production data for DeFi cutover).
+  Use Storage Transfer Service to copy flat→env-tiered. Verify object-count parity before any code switch.
+  Record parity counts in bucket_name_ssot plan. When done: ping Slot 1 → GATE 2 condition met.
 
-Step 3 — Apply-flips in strict dependency order (instruments-service root first):
-  Pass 1: --data-types instruments,venue_trading_calendar, all 5 AGs
-  Pass 2: MTDS data_types, all 5 AGs
+PART C — AFTER GATE 1 (propagation chain Phases 1–4 + 2.A pushed to origin):
+  Apply-flips in strict dependency order:
+  Pass 1: instruments,venue_trading_calendar all 5 AGs (--apply-flips)
+  Pass 2: MTDS data_types all 5 AGs
   Pass 3: MDPS data_types
   Pass 4: features + ML data_types
+  Also run: reconcile_expected_absence_reasons.py --apply-flips all 5 AGs
+  Also run: reconcile_legacy_blank_to_typed_reason.py --apply-flips all 5 AGs
+  Verify phantom count = 0 (or <10 class-C). Record. Ping Slot 1 → GATE 3 condition.
 
-Step 4 — Verify phantom count = 0 (or <10 class-C triage). Record in plan. Ping slot 1 with result.
+PART D — AFTER GATE 2: Code migration — replace hardcoded gs:// f-strings with resolve_bucket_name().
+  Scope: instruments-service scripts + deployment-service VM launchers (~60 files).
+  QG STEP 5.69 ratchet must return zero violations. Push.
 ```
 
-**Slot 4 — Propagation chain Phases 0–4 + Script 1 root-cause**:
+**Slot 4 — Propagation chain Phases 0–4 + MDPS 4-state contract + Script-1 root-cause**:
 
 ```
 MODEL TIER: Sonnet 4.6 / THINKING: high
 PLAN: unified-trading-pm/plans/active/expected_unattempted_propagation_chain_2026_05_12.md
 WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
 
-Part A (do first): Root-cause why Script 1 (reconcile_legacy_blank_to_typed_reason.py) reports "0 would upgrade"
-for defi (604,951 rows) and sports (1,868,285 rows) despite having classifiers:
-- Read reconciler lines 410-470 (the upgrade loop + SOURCE_RETURNED_ZERO special handling at line 464)
-- Check whether those rows have capture_status = 'empty_confirmed' (eligible) vs 'attempted_failed' (excluded)
-- Check cefi instrument-day grain special handling at line 445
-- Document finding + fix if filter is wrong, THEN run --apply-flips for the affected asset_groups
+PART A — NOW: Root-cause Script-1 zero-upgrade for defi + sports:
+  Read instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py lines 410-470.
+  Check: capture_status = 'empty_confirmed' eligible vs 'attempted_failed' excluded.
+  Check: cefi instrument-day grain special handling at line 445.
+  Fix filter if wrong. Run --apply-flips for affected asset_groups.
 
-Part B (after API-keys work, parallel with Part A research): Execute propagation chain Phases 0–4 in order:
-  Phase 0A → Phase 0B → Phase 1 → Phase 2 → Phase 3 (fan-out 6 modules PARALLEL) → Phase 4
-Each phase: grep pre-audit → implement → QG → push → flip checkbox.
-DO NOT start Phase 5B apply-flips — that's slot 3's job after the serial gate.
+PART B — SEQUENTIAL foundation, then fan-out:
+  Phase 0A: Add EXPECTED_OUTSIDE_PROCESSING_SCOPE + EXPECTED_UPSTREAM_EMPTY to UAC EmptyConfirmedReason
+            + EMPTY_CONFIRMED_REASONS dict. QG + push. (GATE 0A prerequisite — ship this first)
+  Phase 0B: Verify ManifestReader bucket param OR add read_upstream_manifest() helper in UTL.
+            3 mock-GCS unit tests. QG + push. (GATE 0A complete after 0A+0B both pushed)
+  Phase 1:  MTDS batch orchestrator — read instruments-service manifest pre-flight.
+            5 asset_groups. Verify instruments bucket names in cloud-providers.yaml.
+            3 unit tests. QG + push.
+  Phase 1.5:Sports classifier fixture-existence fix (legacy_reason_classifier.py).
+            Add fixture_manifest param to _classify_sports(). 3 unit tests. QG + push.
+  Phase 2:  MDPS DependencyChecker.record_expected_unattempted on skip.
+            Wire 4-state consumption contract:
+              empty_confirmed → forward-fill zero-volume bars (price continuity preserved)
+              attempted_failed → NaN (do NOT forward-fill — data may exist but fetch failed)
+              expected_unattempted → propagate skip
+            4 unit tests. QG + push.
+  Phase 3:  Spawn 6 sub-agents SIMULTANEOUSLY (delta_one, calendar, onchain, volatility, sports, commodity).
+            Each wires EXPECTED_OUTSIDE_PROCESSING_SCOPE for non-MVP instruments in batch handler.
+            Add UAC FEATURES_MVP_INSTRUMENTS frozenset first (Phase 3.0 pre-step).
+            QG per module + push.
+  Phase 4:  ml-training + ml-inference expected_unattempted (ML_SCOPE_INSTRUMENTS constant in UAC).
+            QG per repo + push.
+
+PART C — PARALLEL with Phase 3 fan-out (same MDPS repo as Phase 2):
+  Writegate Phase 2.A — MDPS 4-state output routing:
+    Delete _create_empty_output from canonical_writer.
+    Wire 4-state routing (empty_confirmed→forward-fill, attempted_failed→NaN, expected_unattempted→propagate).
+    Add v6 column wiring: quote_asset + margin_type into canonical_writer.add().
+    Per-adapter integration tests. QG green + push.
+  When Phases 1–4 + 2.A all pushed: ping Slot 1 → GATE 1 fired.
 ```
 
-**Slot 8 — Bucket SSOT code migration (AFTER physical migration complete)**:
+**Slot 5 — Phase 2.D match_end_time + Phase 2.C features-sports**:
+
+```
+MODEL TIER: Sonnet 4.6 / THINKING: medium
+WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
+
+PART A — NOW: Phase 2.D match_end_time from SFI freeze-detection:
+  Decision (locked 2026-05-12): ship match_end_time from SFI progressive-stats freeze algorithm.
+  30 progressive stats stop updating → match end. Deterministic, high-confidence. Needed for lookahead-bias.
+  announced_at + report_time NOT in scope (require pre-match live poll — not available retroactively).
+  Pre-audit: grep -n "match_end_time\|freeze_detect\|progressive_stats\|30.*stat" instruments-service/ --include="*.py" | grep -v .venv | head -20
+  Steps:
+    1. Add match_end_time: datetime | None to UAC instruments schema
+    2. Wire SFI adapter freeze-detection → match_end_time field
+    3. Wire assert_available_at_present for the match_end_time row
+    4. Add match_end_time_confidence: Literal["high"] = "high" constant to UAC (not a column — documents source quality)
+    3 unit tests (freeze detected, no freeze yet, partial data). QG + push.
+
+PART B — AFTER defi_recursive Phase 2 design: Phase 2.C features-sports stubs:
+  Fix fixture_lineups + fixture_player_stats stubs (data read at _fetch_runner.py:171/173 but discarded).
+  4-step fix per stub:
+    1. Read from _fetch_runner output instead of discarding
+    2. Stamp available_at per row
+    3. Write to GCS via canonical_writer
+    4. record_captured() with assert_available_at_present
+  Delete _ensure_timestamp (5 callsites).
+  Wire per-table available_at for 14 TABLE_TO_EXPORT entries.
+  Per-table unit tests + integration test. QG + push.
+```
+
+**Slot 6 — Phase 2.B MTDS cluster Option α + Emission Phase 6.3 features-volatility**:
 
 ```
 MODEL TIER: Sonnet 4.6 / THINKING: high
 WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
-BLOCKED UNTIL: physical env-tiered buckets exist + data copied (bucket_name_ssot Phase 0c/0d complete)
 
-When unblocked: replace all hardcoded bucket f-strings in instruments-service scripts + deployment-service
-VM launchers with resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=cloud_config.deployment_env).
-QG STEP 5.69 ratchet enforces; confirm zero ratchet violations after migration.
-See bucket_name_ssot_canonicalisation_2026_05_10.md Phase 1 for exact scope (~60 files, 3 service repos).
+PART A — NOW: Phase 2.B MTDS cluster wiring Option α (decision locked 2026-05-12):
+  Generalise the manual ES.OPT cluster check at engine/orchestrator.py:2186-2218 to cover ALL BUNDLED_DATA_TYPES.
+  Pre-audit:
+    grep -n "BUNDLED_DATA_TYPES\|root_cluster\|cluster_extractor\|expected_root_clusters\|ES\.OPT\|options_chain" \
+      market-tick-data-service/ --include="*.py" | grep -v .venv | head -40
+  Steps:
+    1. UAC: add DatabentoClassification.root_cluster field to classification schema
+    2. UAC: add futures_expiry_bucket() helper (TradFi futures chain cluster grouping)
+    3. MTDS engine/orchestrator.py: generalise ES.OPT check → BUNDLED_DATA_TYPES dispatch
+    4. Wire record_captured(expected_root_clusters=, cluster_extractor=) for all bundled adapters
+    5. Unit tests per bundled data_type (options_chain, futures_chain, sports per-fixture bundles). QG + push.
+
+PART B — NOW PARALLEL: Emission Phase 6.3 features-volatility BUILD FROM SCRATCH:
+  No prior template — this is the first features-service service to get publish_with_policy.
+  Pre-audit:
+    grep -rn "record_captured\|manifest_writer\|canonical_writer" \
+      features-service/features_service/volatility/ --include="*.py" | grep -v .venv | head -20
+  Steps:
+    1. Add features-volatility entry to UAC SERVICE_EMISSION_POLICY_SEED_DICT
+    2. Wire _resolve_policy_output_data_type in volatility batch handler
+    3. Wire _publish_emission_check (routes to STRICT_FAIL / PARTIAL_OK / NAN_FILL / BLOCK_CRITICAL)
+    4. 4 unit tests (one per emission mode). QG + push.
 ```
 
-### Writegate phase-to-slot assignments (152 open todos)
+**Slot 7 — Emission Phase 6.4 features-cross STRICT_FAIL + Phase 6.5 features-* seeds**:
 
-`writegate_honest_coverage_endtoend_2026_05_06.md` is the largest open-todo plan. Phases mapped to slots:
+```
+MODEL TIER: Sonnet 4.6 / THINKING: high
+WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
 
-| Writegate phase | Slot | Rationale |
-| --------------- | ---- | --------- |
-| Phase 2.A — MDPS forward-fill 4-state contract + delete `_create_empty_output` | **Slot 4** | Same repo as MDPS propagation chain Phase 2 — execute together |
-| Phase 2.B — MTDS partition validation + schema contract | **Slot 4** | Same repo as MTDS propagation chain Phase 1 |
-| Phase 2.C — features-sports honest-absence wiring | **Slot 4** | Same fan-out as features Phase 3 |
-| Phase 3A — retrospective reconcilers (legacy-blank + expected-absence-reason) | **Slot 3** | Slot 3 owns all reconciler passes |
-| Phase 4A — deployment-api typed-error rendering (UI shows typed reasons) | **Slot 8** | cross_cutting + manifest UI already on Slot 8 |
-| Phase 5 — coverage baseline ratchet + QG enforcement | **Slot 4** | closes writegate after code wiring |
-| Wave 4 slices (b)+(c) — generalised publisher rollout | **Slot 4** | continuation of MDPS POC shipped 2026-05-11 |
+PART A — NOW: Emission Phase 6.4 features-cross-instrument (STRICT_FAIL — trading-risk):
+  Cross-asset signals propagate into strategy. Bad emission = trading risk event. STRICT_FAIL mode
+  prevents silent bad data from reaching strategy without an explicit error.
+  Pre-audit:
+    grep -rn "record_captured\|manifest_writer\|publish" \
+      features-service/features_service/cross_instrument/ --include="*.py" | grep -v .venv | head -20
+  Steps:
+    1. Add STRICT_FAIL seed for features-cross-instrument in UAC SERVICE_EMISSION_POLICY_SEED_DICT
+    2. Wire _publish_emission_check in cross_instrument batch handler
+    3. 4 unit tests (mode routing). QG + push.
 
-Writegate Phase 2.A forward-fill semantics is codified in `expected_unattempted_propagation_chain_2026_05_12.md`
-Phase 2 (added 2026-05-12). Slot 4 executes both as a single logical unit.
+PART B — PARALLEL: Emission Phase 6.5 features-* seeds (UAC@b570d49 already seeded; wire emit paths):
+  Wire _publish_emission_check for: delta_one, calendar, onchain, commodity modules.
+  Spawn sub-agents per module (PARALLEL — 4 sub-agents in one Agent tool call).
+  Each sub-agent: audit → wire → 4 unit tests → QG → push.
+```
+
+**Slot 8 — Phase 6.8 instruments-service + Phase 6.9 QG sweep + bucket code migration**:
+
+```
+MODEL TIER: Sonnet 4.6 / THINKING: high
+WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
+
+PART A — NOW: Phase 6.8 instruments-service 41 .add() callsites (decision: Option (a) locked):
+  Pre-audit:
+    grep -n "\.add(\|manifest_writer\.add\|ManifestWriter.*\.add" \
+      instruments-service/instruments_service/ --include="*.py" | grep -v .venv
+  Migrate all callsites from .add() → record_captured(). Per callsite:
+    - service_emission_state kwarg (add to UAC SERVICE_EMISSION_POLICY_SEED_DICT if entry missing)
+    - pipeline_mode kwarg (from instruments-service source type)
+    - available_at per-row (assert_available_at_present)
+  Wire publish_with_policy() from UTL@1a7e1d4b for instruments-service output data_types.
+  QG STEP 5.64 (callsite AST walk) + STEP 5.69 (bucket f-strings) must pass. Push.
+
+PART B — AFTER 6.3-6.8 all pushed: Emission Phase 6.9 QG workspace flip-sweep:
+  Run QG STEP 5.64 across ALL services — expect zero .add() violations.
+  Run QG STEP 5.66 — expect zero MultiWorkerWithoutShardIsolationError.
+  Run QG STEP 5.69 — expect zero inline bucket f-strings.
+  Fix any violations. Push. Ping Slot 1 → GATE 4 condition met.
+
+PART C — AFTER GATE 2: Bucket code migration:
+  Replace all hardcoded gs:// f-strings with resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...).
+  QG STEP 5.69 returns zero hits. Push.
+```
+
+---
 
 ### check_shard_freshness retry — CONFIRMED WORKING (correction 2026-05-12)
 
@@ -319,15 +460,38 @@ UTL ships `retry_failed: bool = True` as DEFAULT. Both MTDS (`tick_data_handler.
 retried on next backfill. Memory note from 2026-05-06 ("retry doesn't work") pre-dates UTL@ba83a6f1 (shipped
 2026-05-07). No additional orchestrator wiring needed.
 
+---
+
 ### Serial gate status tracking
 
-| Gate   | Condition                                                                       | Status  | Unblocks              |
-| ------ | ------------------------------------------------------------------------------- | ------- | --------------------- |
-| Gate 1 | Propagation chain Phases 1–4 pushed to origin                                   | 🔴 OPEN | Slot 3 apply-flips    |
-| Gate 2 | Physical bucket migration complete (env-tiered buckets exist + parity verified) | 🔴 OPEN | Slot 8 code migration |
-| Gate 3 | Phantom count = 0 + manifest data-status panel accurate                         | 🔴 OPEN | Backfill clearance    |
+| Gate    | Condition                                                                              | Status  | Unblocks               |
+| ------- | -------------------------------------------------------------------------------------- | ------- | ---------------------- |
+| Gate 0A | UAC Phase 0A + UTL Phase 0B pushed to origin                                           | 🔴 OPEN | Slot 4 Phases 1–4      |
+| Gate 1  | Propagation chain Phases 1–4 + Phase 2.A all pushed to origin                          | 🔴 OPEN | Slot 3 apply-flips     |
+| Gate 2  | Physical bucket migration (prod) complete + object-count parity verified               | 🔴 OPEN | Slot 8 code migration  |
+| Gate 3  | Phantom count = 0 (or <10 class-C) + manifest data-status panel accurate               | 🔴 OPEN | Backfill clearance     |
+| Gate 4  | All writegate coding (2.A-2.D + 6.3-6.9 + Phase 6.8) pushed to origin                 | 🔴 OPEN | Full manifest audit    |
 
-Update gate status in this table when each condition is met. Slot 1 main owns the gate status column.
+Slot 1 main owns the gate status column. Update when condition met; ping all affected slots.
+
+---
+
+### Writegate phase-to-slot assignments (no orphans)
+
+| Writegate phase | Slot | Priority | Est. cal AI-days |
+|-----------------|------|----------|------------------|
+| Phase 2.A — MDPS 4-state contract + `_create_empty_output` delete + v6 columns | **4** | P0 NOW | ~4 |
+| Phase 2.B — MTDS cluster Option α (orchestrator boundary) | **6** | P0 NOW | ~4 |
+| Phase 2.C — features-sports stubs + per-table available_at | **5** | P1 (after defi design) | ~2 |
+| Phase 2.D — `match_end_time` from SFI freeze-detect (CORRECTED) | **5** | P0 NOW | ~1 |
+| Phase 2.E.3 — downstream consumer audit (7 services) | **8** (part of 6.9 sweep) | P1 | ~1 |
+| Phase 3.A — reconcilers dry-run + apply-flips | **3** | P0 (GATE 1 gated) | ~2 |
+| Emission Phase 6.3 — features-volatility BUILD FROM SCRATCH | **6** | P0 NOW | ~4 |
+| Emission Phase 6.4 — features-cross STRICT_FAIL | **7** | P0 NOW | ~3 |
+| Emission Phase 6.5 — features-* seeds wiring (4 modules) | **7** | P1 | ~3 |
+| Emission Phase 6.8 — instruments-service 41 `.add()` callsites | **8** | P0 NOW | ~3 |
+| Emission Phase 6.9 — QG workspace flip-sweep | **8** | P1 (after 6.3-6.8) | ~1 |
+| Phase 5 — coverage baseline ratchet CI gate | **8** (tail) | P2 | ~1 |
 
 ---
 
@@ -335,4 +499,8 @@ Update gate status in this table when each condition is met. Slot 1 main owns th
 
 - `wave2_polymarket_record_captured_from_counts` — deadline 2026-06-15.
 - `simulation_scenarios_post_cutover` — deadline 2026-07-15.
+- Emission Phase 6.6 + 6.7 (ml-training + strategy + execution + risk) — ~10-15 cal AI-days; post-Phase-4.DEFAULT-REMOVAL migration required first. File as separate Cycle 2 plan.
+- Phase 3.D.5 v2 catalog-driven enumeration — multi-week scope; Cycle 3+.
+- Wave 3.S/3.M/3.X (sports/prediction per-source rules + zero-activity bars + dimensions audit) — Cycle 2.
+- CeFi Tardis re-shape Option A (252-shard re-rescan) — separate VM run; Cycle 2.
 - Any plan with frontmatter `deadline:` ≥ 2026-05-24.
