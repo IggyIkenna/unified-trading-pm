@@ -18,7 +18,7 @@ Paper mode bridges the gap by executing real smart contract calls on chain forks
 | **RPC target**        | Tenderly fork (historical block)        | Tenderly fork (live block)  | Mainnet                      |
 | **Smart contracts**   | Called on fork (same code path as live) | Called on fork (real-time)  | Called on mainnet            |
 | **Execution**         | Real connectors → fork                  | Real connectors → fork      | Real connectors → mainnet    |
-| **Signing**           | MockCustody (fork doesn't verify)       | MockCustody or sandbox      | Copper MPC                   |
+| **Signing**           | MockCustody (fork doesn't verify)       | MockCustody or sandbox      | CLOUD_KMS_ENCRYPTED (May-23 cutover default) → Copper MPC / CEFFU MirrorX / Fireblocks (June-1 flip targets) |
 | **Gas costs**         | Real from fork tx receipt               | Real from fork tx receipt   | Real from mainnet tx receipt |
 | **Fill prices**       | Real execution price (fork)             | Real execution price (fork) | Real execution price         |
 | **Data source**       | GCS (pre-downloaded features)           | Live feeds (real-time)      | Live feeds (real-time)       |
@@ -229,8 +229,11 @@ boundaries) behave correctly across multi-day backtests.
 | `alchemy-api-key`        | All chain RPC calls              | All (same key, different endpoints) |
 | `tardis-api-key`         | CeFi historical data             | Batch only                          |
 | `thegraph-api-key`       | DeFi subgraph queries            | All                                 |
-| `copper-api-key`         | Transaction signing (production) | Live only                           |
+| Cloud KMS CMK (GCP/AWS)  | Transaction signing (May-23 default) | Live only — `CLOUD_KMS_ENCRYPTED` signing surface per `interface-credential-convention.md` |
+| `copper-api-key`         | Transaction signing (June-1 flip target) | Live only — MPC flip post client cred delivery |
 | `copper-sandbox-api-key` | Transaction signing (test)       | Paper only                          |
+| `ceffu-api-key`          | Transaction signing (June-1 flip target) | Live only — CEFFU MirrorX flip post client cred delivery |
+| `fireblocks-api-key`     | Transaction signing (June-1 flip target) | Live only — Fireblocks MPC flip post client cred delivery |
 
 ### RPC Endpoint Resolution
 
@@ -270,7 +273,9 @@ TENDERLY_FORK=true           # Create Tenderly VNet fork for execution
 CLOUD_PROVIDER=gcp
 CLOUD_MOCK_MODE=false
 CHAIN_ENV=mainnet            # Real mainnet chain IDs and RPC URLs
-CUSTODY_PROVIDER=copper      # Real MPC signing via Copper
+CUSTODY_PROVIDER=cloud_kms   # May-23 cutover default — CLOUD_KMS_ENCRYPTED signing surface
+                             # June-1 flip targets: copper / ceffu / fireblocks per client cred delivery
+                             # SSOT: interface-credential-convention.md (2026-05-12 refresh)
 ```
 
 ## Smart Contract & Atomic Transaction Handling

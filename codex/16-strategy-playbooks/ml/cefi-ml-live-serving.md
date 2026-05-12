@@ -9,14 +9,24 @@ scope: [engineer, admin]
 > inference active" + "Model-version traceability per trade". Wiring lands on the Harsh side per the cross-side
 > handshake; this doc is the contract.
 
+> **🟡 SUPERSEDED 2026-05-12 — live ML inference orchestrator is `ml-inference-service` (standalone), NOT
+> features-service.** The "no parallel ML inference path" claim below predates the architecture-v2 split. Operator
+> disposition (2026-05-12 ML-2 BIG-finding triage): canonical = `ml-inference-service` per code reality + v2
+> archetype docs. features-service compute path runs FEATURE computation; ML inference happens in the dedicated
+> `ml-inference-service`. See `ml-and-features-master_2026_05_07.md` + `ml-inference-service` source for live flow.
+
 ## TL;DR
 
-Live ML inference for the May-23 CeFi LIVE archetype runs on the SAME features-service compute path as batch (per
-[`batch-live-architecture.md`](../../04-architecture/batch-live-architecture.md) (single SSOT) — no parallel ML
-inference path). Three durable artefacts make this work:
+Live ML inference for the May-23 CeFi LIVE archetype runs in the dedicated **`ml-inference-service`** (standalone
+orchestrator; NOT features-service). features-service publishes `FEATURE_COMPUTED` events; `ml-inference-service`
+consumes them, loads the champion model from the registry, emits inference events that strategy-service consumes.
+Per [`batch-live-architecture.md`](../../04-architecture/batch-live-architecture.md): live + batch share the same
+component interactions; only the execution-fill source differs. Three durable artefacts make this work:
 
-1. **Model artefact registry** — UAC SSOT for `gs://uts-models-{cloud}/{asset_group}/{family}/{version}/model.{ext}`
-   path templates per (asset_group, model_family). UTL `model_registry.py` reads + caches.
+1. **Model artefact registry** — UAC SSOT for model paths per (asset_group, model_family). UTL `model_registry.py`
+   reads + caches. Bucket name resolves via `resolve_bucket_name(cloud=..., kind="ml-models-store", env=...)` per
+   **Bucket-name SSOT (b+)** — never inline `gs://uts-models-{cloud}/...` (QG STEP 5.69 enforces). Canonical kind
+   = `ml-models-store-{pid}`.
 2. **Hot-reload of model artefacts** — mirror the
    [`InstrumentLifecycleCacheDeltaReloader`](../../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
    pattern: subscribe to `streaming.models.refresh_trigger`, diff registry, hot-reload affected models without service
@@ -27,20 +37,24 @@ inference path). Three durable artefacts make this work:
 ## Path templates (UAC SSOT)
 
 `unified_api_contracts.canonical.crosscutting.model_registry.MODEL_PATH_TEMPLATES` is the canonical mapping (greenfield;
-ships in the Harsh ml-features-phase2a wave). Shape:
+ships in the Harsh ml-features-phase2a wave). Bucket name resolves via `resolve_bucket_name(kind="ml-models-store",
+...)` — paths below are object-key-only shapes:
 
 ```python
+# Object-key shape (bucket resolved via resolve_bucket_name at read-time):
 MODEL_PATH_TEMPLATES: dict[tuple[AssetGroup, str], str] = {
-    ("cefi", "lgbm_carry_basis"): "gs://uts-models-{cloud}/cefi/lgbm_carry_basis/{version}/model.txt",
-    ("cefi", "lgbm_funding_arb"): "gs://uts-models-{cloud}/cefi/lgbm_funding_arb/{version}/model.txt",
-    ("defi", "lgbm_lst_yield"):   "gs://uts-models-{cloud}/defi/lgbm_lst_yield/{version}/model.txt",
+    ("cefi", "lgbm_carry_basis"): "cefi/lgbm_carry_basis/{version}/model.txt",
+    ("cefi", "lgbm_funding_arb"): "cefi/lgbm_funding_arb/{version}/model.txt",
+    ("defi", "lgbm_lst_yield"):   "defi/lgbm_lst_yield/{version}/model.txt",
     # ...
 }
+# Full URI built at read-time:
+#   bucket = resolve_bucket_name(cloud=cloud_provider, kind="ml-models-store", env=env)
+#   uri = f"gs://{bucket}/{MODEL_PATH_TEMPLATES[(ag, family)].format(version=v)}"
 ```
 
-`{cloud}` is filled at read-time from `UnifiedCloudConfig().cloud_provider` per workspace cloud-agnostic rule.
 `{version}` is the semver of the model artefact (separate from service semver — model artefacts have their own
-versioning).
+versioning). Cloud + env resolved at read-time from `UnifiedCloudConfig` per workspace cloud-agnostic rule.
 
 ## Live-serving flow
 

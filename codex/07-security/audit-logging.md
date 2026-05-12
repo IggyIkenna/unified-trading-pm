@@ -149,7 +149,8 @@ Strategy decision events (`STRATEGY_INSTRUCTION`, `SIGNAL_GENERATED`) must also 
 | `signal_source`     | Model or rule that produced the signal               |
 | `position_snapshot` | Serialised position state at decision time           |
 
-**GCS storage path:** `audit/{client_id}/{date}/strategy/`
+**GCS storage path:** `audit/{client_id}/{YYYY/MM/DD}/{iso-timestamp}-strategy.json` (per-event file, 4-level date
+split). Strategy-audit lineage IS per-client (strategy_id resolves to a single client).
 
 **Retention:** minimum **3 years** (cold storage).
 
@@ -157,22 +158,29 @@ Strategy decision events (`STRATEGY_INSTRUCTION`, `SIGNAL_GENERATED`) must also 
 
 ## Data Retention Summary
 
-| Audit Domain | Hot (days) | Warm (days) | Cold (years) | Path template                            |
-| ------------ | ---------- | ----------- | ------------ | ---------------------------------------- |
-| Execution    | 90         | 365         | 7            | `audit/{client_id}/{date}/{event_type}/` |
-| Strategy     | 90         | 365         | 3            | `audit/{client_id}/{date}/strategy/`     |
+| Audit Domain | Hot (days) | Warm (days) | Cold (years) | Path template                                                                  | Lineage axis             |
+| ------------ | ---------- | ----------- | ------------ | ------------------------------------------------------------------------------ | ------------------------ |
+| Execution    | 90         | 365         | 7            | `audit/{client_order_id}/{YYYY/MM/DD}/{iso-timestamp}-{event_type}.json`        | **per-order** (3 of 5 event types thread `client_order_id` / `order_id` / `operation_id` into the path slot; code-fix to thread real `client_id` = PRE_CUTOVER follow-up in execution-service per slot 8 audit PB-3) |
+| Strategy     | 90         | 365         | 3            | `audit/{client_id}/{YYYY/MM/DD}/{iso-timestamp}-strategy.json`                  | per-client               |
+| Risk         | 90         | 365         | 3            | `audit/{client_id}/{YYYY/MM/DD}/{iso-timestamp}-risk.json`                      | per-client               |
 
 Retention tiers are defined as `AuditRetention` models in
-`unified-api-contracts/unified_api_contracts/internal/schemas/audit.py`.
+`unified-api-contracts/unified_api_contracts/internal/schemas/audit.py`. Note: `gcs_path_template` on `AuditRetention`
+is **declared-but-unused** at runtime (per slot 8 audit PB-1) — execution-service `audit_log.py:60` hardcodes the
+4-level date split shape; align template with code OR wire template into runtime as PRE_CUTOVER follow-up.
 
 ---
 
 ## Immutability Rules
 
-- Audit records are **append-only**. Never delete or overwrite an existing audit record.
-- Use the GCS Object Versioning or Retention Lock feature on the audit bucket to enforce immutability at the storage
-  layer.
-- `log_event()` writes are non-destructive JSONL appends; always use the append mode.
+- Audit records are **append-only at the bucket level** — every event lands as a NEW per-event-filename object
+  (PUT, NOT append-to-existing-file). The per-event filename (ISO timestamp + event_type suffix) prevents overwrite
+  by construction.
+- GCS Object Versioning + Retention Lock on the audit bucket enforce immutability at the storage layer
+  (**PRE_CUTOVER follow-up routed to slot 4** per `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 3.C —
+  audit bucket Retention-Lock configuration).
+- `log_event()` writes are non-destructive: write-once per per-event filename; no in-place modification of existing
+  objects.
 
 ---
 

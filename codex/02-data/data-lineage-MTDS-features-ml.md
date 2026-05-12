@@ -15,7 +15,12 @@ canonical feature paths; ml-inference writes canonical prediction paths) without
 
 ## Conventions
 
-- **Canonical bucket name** — `<domain>-<category>-central-element-323112` (prod project).
+- **Canonical bucket name** — resolved via
+  `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind=..., asset_group=...,
+  env=...)` per **Bucket-name SSOT (b+)** (see CLAUDE.md § "Bucket-name SSOT (b+)"). For ML model artefacts:
+  `kind="ml-models-store"`. For ML training artefacts (intermediate): `kind="ml-training-artifacts"` (post Phase 0i
+  bucket-name SSOT registration). For ML predictions: paths live UNDER the consumer's bucket, not their own kind.
+  Never inline `gs://uts-models-{cloud}/...` or `s3://artifacts/...` (QG STEP 5.69 enforces).
 - **Hive partitioning** — `key=value`, not `key-value`. See `partitioning.md`.
 - **Manifest shard dims (v7 — current)** —
   `venue, chain, data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type, fixture_id, job_id`.

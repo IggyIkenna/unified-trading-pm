@@ -32,12 +32,15 @@ This doc names the **ML manifest** that lives alongside the data manifest.
 | artifact_uri          | str        | GCS URI of the fitted model artifact                                             |
 | git_sha               | str        | Git SHA of the training code                                                     |
 
-Path: `gs://{pid}-ml-artifacts/manifest/_index/ml_manifest.parquet`.
+Path: `{bucket}/manifest/_index/ml_manifest.parquet` where `bucket =
+resolve_bucket_name(cloud=..., kind="ml-models-store", env=...)` per **Bucket-name SSOT (b+)** (see CLAUDE.md
+§ "Bucket-name SSOT (b+)"). Canonical kind = `ml-models-store-{pid}` (matches UTL `ModelRegistry`). Never inline
+`gs://{pid}-ml-artifacts/...` — QG STEP 5.69 enforces.
 
 ## Job-id contract
 
-`job_id` is the primary key. Every artifact in `gs://{pid}-ml-artifacts/{model_family}/{version}/{job_id}/` has a
-matching ML-manifest row. Inference services (ml-inference-service / strategy-service) read by `job_id` to load the
+`job_id` is the primary key. Every artifact under `{bucket}/{model_family}/{version}/{job_id}/` (bucket resolved via
+`resolve_bucket_name(kind="ml-models-store", ...)`) has a matching ML-manifest row. Inference services (ml-inference-service / strategy-service) read by `job_id` to load the
 champion model; never by file-path scan.
 
 ## Lifecycle states

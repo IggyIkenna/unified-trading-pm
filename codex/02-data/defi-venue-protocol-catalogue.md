@@ -9,8 +9,13 @@ scope: [engineer, admin]
 > connector. Last updated 2026-05-12 (defi_catalogue_chain_primitives_2026_05_10 Phase 1J refresh by slot 2
 > `ikenna-defi-catalogue-tab`).
 >
-> **2026-05-12 refresh deltas**: (a) corrected stale UAC SSOT path references from non-existent
-> `defi_venue_capabilities.py` → actual `defi_venues.py` (per slot 5's 2026-05-11 finding at uac@`495d262`);
+> **2026-05-12 refresh deltas**: (a) **CORRECTED 2026-05-12 by slot 8 audit IN-1**: `defi_venue_capabilities.py`
+> DOES exist (178 LOC, holds `DEFI_VENUE_DATA_TYPE_CAPABILITIES`); both `defi_venues.py` AND
+> `defi_venue_capabilities.py` are canonical SSOTs covering DIFFERENT axes — `defi_venues.py` carries
+> `ALL_DEFI_VENUES` + per-venue chain support; `defi_venue_capabilities.py` carries per-(venue, data_type)
+> capability matrix. The prior "does not exist" claim was drift-introducing (slot 5's 2026-05-11 finding at
+> uac@`495d262` referred to a SUBSET of references being stale, NOT the file itself). Per operator triage
+> 2026-05-12 (PM@`79f73426` relayed to slot 2) + slot 8 audit `catalogue_audit_defi_2026_05_12.md` DF-2/DF-3/DF-8;
 > (b) Lending § Aave V3 Ethereum silent-zero row marked CLOSED AS STALE FRAMING per slot 3 audit 2026-05-11 +
 > slot 2 verification 2026-05-12 (data exists on-disk; consolidator fix shipped); (c) Restaking § Renzo (ezETH) +
 > KelpDAO (rsETH) UAC + LST mapping rows flipped ✅ (UAC@`961af767` extended `LST_TOKEN_TO_PROTOCOL_ASSET`);
@@ -37,14 +42,16 @@ plans, it must appear here — if it doesn't, that's a finding (file an issue do
 **Axis legend**: UAC = entry in
 [`registry/defi_venues.py`](../../../unified-api-contracts/unified_api_contracts/registry/defi_venues.py)
 (canonical SSOT for `ALL_DEFI_VENUES` + per-venue chain support) +
+[`registry/defi_venue_capabilities.py`](../../../unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py)
+(per-(venue, data_type) capability matrix — `DEFI_VENUE_DATA_TYPE_CAPABILITIES`, 178 LOC) +
 [`registry/chain_env.py`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py)
 (`PROTOCOL_LAUNCH_DATES` per `(chain, protocol)`) +
 [`registry/defi_reserve_params.py`](../../../unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py)
 (per-asset risk params for lending) + supporting registries; INSTR = instruments-service adapter at
 `reference_data/adapters/defi/`; MTDS = market-tick-data-service adapter at `market_interface/adapters/defi/`
-(or sibling); EXEC = execution-service connector at `defi_execution/protocols/`. **Note 2026-05-12**: plan
-references to `defi_venue_capabilities.py` are STALE — that file does not exist; canonical lives at
-`defi_venues.py` per slot 5's 2026-05-11 verification.
+(or sibling); EXEC = execution-service connector at `defi_execution/protocols/`. **Note 2026-05-12 (slot 8 audit
+IN-1 correction)**: `defi_venue_capabilities.py` IS canonical — covers the per-(venue, data_type) capability axis
+that `defi_venues.py` (per-venue chain support) does NOT. The two registries are complementary, not redundant.
 
 ## Lending protocols
 
