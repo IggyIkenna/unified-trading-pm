@@ -200,8 +200,9 @@ recalibrates.
 ## Addendum — manifest + writegate + propagation + migration + backfill (COMPREHENSIVE, 2026-05-12 PM)
 
 **Operator direction 2026-05-12 PM**: all manifest cleanup + `expected_unattempted` propagation + bucket SSOT migration
-+ writegate coding + emission policy rollout spread across ALL Ikenna slots. Execution order locked:
-**1. Coding → 2. Reconciliation dry-runs → 3. Apply-flips → 4. Env-split migration (production first) → 5. Backfills**.
+
+- writegate coding + emission policy rollout spread across ALL Ikenna slots. Execution order locked: **1. Coding → 2.
+  Reconciliation dry-runs → 3. Apply-flips → 4. Env-split migration (production first) → 5. Backfills**.
 
 ---
 
@@ -238,24 +239,25 @@ recalibrates.
   ALL slots: BACKFILLS CLEARED — instruments-service → MTDS → MDPS → features order
 ```
 
-**Phase 2.B does NOT block Phase 2.A or 2.C** — different repos (MTDS vs MDPS/features). Run in parallel.
-**Phase 2.D (match_end_time) does NOT block any reconciler** — instruments-service field addition only.
+**Phase 2.B does NOT block Phase 2.A or 2.C** — different repos (MTDS vs MDPS/features). Run in parallel. **Phase 2.D
+(match_end_time) does NOT block any reconciler** — instruments-service field addition only.
 
 ---
 
 ### Slot assignments (manifest/writegate work, all 8 slots)
 
-| Slot | Work | Gates | Cal AI-days |
-|------|------|-------|-------------|
-| **1** | Gate status tracking + blocker triage + ping triage + master plan refresh | continuous | — |
-| **3** | ① Dry-run baseline GCE VM (5 AGs) [NOW] ② Bucket provisioning prod (STS) [NOW] ③ Apply-flips Passes 1-4 [GATE 1] ④ Bucket code migration [GATE 2] | starts NOW; ③ waits GATE 1; ④ waits GATE 2 | ~7 |
-| **4** | Script-1 root-cause + Phase 0A→0B→1→1.5→2→3-fanout→4 + Phase 2.A MDPS 4-state+v6 | GATE 0A serial unlock | ~9 |
-| **5** | Phase 2.D match_end_time SFI [NOW] + Phase 2.C features-sports stubs [after defi_recursive phases] | independent | ~3 |
-| **6** | Phase 2.B MTDS cluster Option α [NOW] + Emission 6.3 features-vol BUILD FROM SCRATCH [NOW] | independent | ~7 |
-| **7** | Emission 6.4 features-cross STRICT_FAIL [NOW] + Emission 6.5 features-* wiring [NOW] | independent | ~4 |
-| **8** | Phase 6.8 instruments-service 41 callsites [NOW] + Phase 6.9 QG sweep [after 6.3-6.8] + bucket code migration [GATE 2] | 6.9 waits 6.3-6.8; migration waits GATE 2 | ~8 |
+| Slot  | Work                                                                                                                                              | Gates                                      | Cal AI-days |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ----------- |
+| **1** | Gate status tracking + blocker triage + ping triage + master plan refresh                                                                         | continuous                                 | —           |
+| **3** | ① Dry-run baseline GCE VM (5 AGs) [NOW] ② Bucket provisioning prod (STS) [NOW] ③ Apply-flips Passes 1-4 [GATE 1] ④ Bucket code migration [GATE 2] | starts NOW; ③ waits GATE 1; ④ waits GATE 2 | ~7          |
+| **4** | Script-1 root-cause + Phase 0A→0B→1→1.5→2→3-fanout→4 + Phase 2.A MDPS 4-state+v6                                                                  | GATE 0A serial unlock                      | ~9          |
+| **5** | Phase 2.D match_end_time SFI [NOW] + Phase 2.C features-sports stubs [after defi_recursive phases]                                                | independent                                | ~3          |
+| **6** | Phase 2.B MTDS cluster Option α [NOW] + Emission 6.3 features-vol BUILD FROM SCRATCH [NOW]                                                        | independent                                | ~7          |
+| **7** | Emission 6.4 features-cross STRICT_FAIL [NOW] + Emission 6.5 features-\* wiring [NOW]                                                             | independent                                | ~4          |
+| **8** | Phase 6.8 instruments-service 41 callsites [NOW] + Phase 6.9 QG sweep [after 6.3-6.8] + bucket code migration [GATE 2]                            | 6.9 waits 6.3-6.8; migration waits GATE 2  | ~8          |
 
-**Total additional cal AI-days across all slots: ~38** (covers all open writegate coding + propagation chain + reconcilers + bucket migration).
+**Total additional cal AI-days across all slots: ~38** (covers all open writegate coding + propagation chain +
+reconcilers + bucket migration).
 
 ---
 
@@ -427,7 +429,7 @@ PART B — NOW PARALLEL: Emission Phase 6.3 features-volatility BUILD FROM SCRAT
     4. 4 unit tests (one per emission mode). QG + push.
 ```
 
-**Slot 7 — Emission Phase 6.4 features-cross STRICT_FAIL + Phase 6.5 features-* seeds**:
+**Slot 7 — Emission Phase 6.4 features-cross STRICT_FAIL + Phase 6.5 features-\* seeds**:
 
 ```
 MODEL TIER: Sonnet 4.6 / THINKING: high
@@ -491,13 +493,13 @@ retried on next backfill. Memory note from 2026-05-06 ("retry doesn't work") pre
 
 ### Serial gate status tracking
 
-| Gate    | Condition                                                                              | Status  | Unblocks               |
-| ------- | -------------------------------------------------------------------------------------- | ------- | ---------------------- |
-| Gate 0A | UAC Phase 0A + UTL Phase 0B pushed to origin                                           | 🔴 OPEN | Slot 4 Phases 1–4      |
-| Gate 1  | Propagation chain Phases 1–4 + Phase 2.A all pushed to origin                          | 🔴 OPEN | Slot 3 apply-flips     |
-| Gate 2  | Physical bucket migration (prod) complete + object-count parity verified               | 🔴 OPEN | Slot 8 code migration  |
-| Gate 3  | Phantom count = 0 (or <10 class-C) + manifest data-status panel accurate               | 🔴 OPEN | Backfill clearance     |
-| Gate 4  | All writegate coding (2.A-2.D + 6.3-6.9 + Phase 6.8) pushed to origin                 | 🔴 OPEN | Full manifest audit    |
+| Gate    | Condition                                                                | Status  | Unblocks              |
+| ------- | ------------------------------------------------------------------------ | ------- | --------------------- |
+| Gate 0A | UAC Phase 0A + UTL Phase 0B pushed to origin                             | 🟢 FIRED (uac@0457b0e; UTL: helper pre-existed; PM@fc429e43 per Slot 4 ping) | Slot 4 Phases 1–4 ✅ proceeding (Phase 1.5 QG green PM@ff2b46fb) |
+| Gate 1  | Propagation chain Phases 1–4 + Phase 2.A all pushed to origin            | 🔴 OPEN | Slot 3 apply-flips    |
+| Gate 2  | Physical bucket migration (prod) complete + object-count parity verified | 🔴 OPEN | Slot 8 code migration |
+| Gate 3  | Phantom count = 0 (or <10 class-C) + manifest data-status panel accurate | 🔴 OPEN | Backfill clearance    |
+| Gate 4  | All writegate coding (2.A-2.D + 6.3-6.9 + Phase 6.8) pushed to origin    | 🔴 OPEN | Full manifest audit   |
 
 Slot 1 main owns the gate status column. Update when condition met; ping all affected slots.
 
@@ -505,20 +507,20 @@ Slot 1 main owns the gate status column. Update when condition met; ping all aff
 
 ### Writegate phase-to-slot assignments (no orphans)
 
-| Writegate phase | Slot | Priority | Est. cal AI-days |
-|-----------------|------|----------|------------------|
-| Phase 2.A — MDPS 4-state contract + `_create_empty_output` delete + v6 columns | **4** | P0 NOW | ~4 |
-| Phase 2.B — MTDS cluster Option α (orchestrator boundary) | **6** | P0 NOW | ~4 |
-| Phase 2.C — features-sports stubs + per-table available_at | **5** | P1 (after defi design) | ~2 |
-| Phase 2.D — `match_end_time` from SFI freeze-detect (CORRECTED) | **5** | P0 NOW | ~1 |
-| Phase 2.E.3 — downstream consumer audit (7 services) | **8** (part of 6.9 sweep) | P1 | ~1 |
-| Phase 3.A — reconcilers dry-run + apply-flips | **3** | P0 (GATE 1 gated) | ~2 |
-| Emission Phase 6.3 — features-volatility BUILD FROM SCRATCH | **6** | P0 NOW | ~4 |
-| Emission Phase 6.4 — features-cross STRICT_FAIL | **7** | P0 NOW | ~3 |
-| Emission Phase 6.5 — features-* seeds wiring (4 modules) | **7** | P1 | ~3 |
-| Emission Phase 6.8 — instruments-service 41 `.add()` callsites | **8** | P0 NOW | ~3 |
-| Emission Phase 6.9 — QG workspace flip-sweep | **8** | P1 (after 6.3-6.8) | ~1 |
-| Phase 5 — coverage baseline ratchet CI gate | **8** (tail) | P2 | ~1 |
+| Writegate phase                                                                | Slot                      | Priority               | Est. cal AI-days |
+| ------------------------------------------------------------------------------ | ------------------------- | ---------------------- | ---------------- |
+| Phase 2.A — MDPS 4-state contract + `_create_empty_output` delete + v6 columns | **4**                     | P0 NOW                 | ~4               |
+| Phase 2.B — MTDS cluster Option α (orchestrator boundary)                      | **6**                     | P0 NOW                 | ~4               |
+| Phase 2.C — features-sports stubs + per-table available_at                     | **5**                     | P1 (after defi design) | ~2               |
+| Phase 2.D — `match_end_time` from SFI freeze-detect (CORRECTED)                | **5**                     | P0 NOW                 | ~1               |
+| Phase 2.E.3 — downstream consumer audit (7 services)                           | **8** (part of 6.9 sweep) | P1                     | ~1               |
+| Phase 3.A — reconcilers dry-run + apply-flips                                  | **3**                     | P0 (GATE 1 gated)      | ~2               |
+| Emission Phase 6.3 — features-volatility BUILD FROM SCRATCH                    | **6**                     | P0 NOW                 | ~4               |
+| Emission Phase 6.4 — features-cross STRICT_FAIL                                | **7**                     | P0 NOW                 | ~3               |
+| Emission Phase 6.5 — features-\* seeds wiring (4 modules)                      | **7**                     | P1                     | ~3               |
+| Emission Phase 6.8 — instruments-service 41 `.add()` callsites                 | **8**                     | P0 NOW                 | ~3               |
+| Emission Phase 6.9 — QG workspace flip-sweep                                   | **8**                     | P1 (after 6.3-6.8)     | ~1               |
+| Phase 5 — coverage baseline ratchet CI gate                                    | **8** (tail)              | P2                     | ~1               |
 
 ---
 
@@ -526,7 +528,8 @@ Slot 1 main owns the gate status column. Update when condition met; ping all aff
 
 - `wave2_polymarket_record_captured_from_counts` — deadline 2026-06-15.
 - `simulation_scenarios_post_cutover` — deadline 2026-07-15.
-- Emission Phase 6.6 + 6.7 (ml-training + strategy + execution + risk) — ~10-15 cal AI-days; post-Phase-4.DEFAULT-REMOVAL migration required first. File as separate Cycle 2 plan.
+- Emission Phase 6.6 + 6.7 (ml-training + strategy + execution + risk) — ~10-15 cal AI-days;
+  post-Phase-4.DEFAULT-REMOVAL migration required first. File as separate Cycle 2 plan.
 - Phase 3.D.5 v2 catalog-driven enumeration — multi-week scope; Cycle 3+.
 - Wave 3.S/3.M/3.X (sports/prediction per-source rules + zero-activity bars + dimensions audit) — Cycle 2.
 - CeFi Tardis re-shape Option A (252-shard re-rescan) — separate VM run; Cycle 2.
