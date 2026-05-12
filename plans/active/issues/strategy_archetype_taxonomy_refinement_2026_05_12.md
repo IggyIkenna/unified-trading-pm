@@ -236,12 +236,18 @@ Current section enumeration in strategy-summary.md = **55**. After refinement:
 - Surface naming decision (a)/(b) for operator (this commit's AskUserQuestion).
 - Surface Deribit-LST-collateral verification ask (slot 2 or slot 4 verification — for `CARRY_STAKED_BASIS_DATED` Deribit eligibility).
 
-## Operator decisions needed (surface inline)
+## ✅ Operator decisions received 2026-05-12
 
-1. **Naming** for the perp-hedged carry trade — option (a) `CARRY_BORROW_PERP_HEDGED` (descriptive) vs option (b) `CARRY_BASIS_PERP_INV` (inverse-of-basis intuition).
-2. **Deribit LST collateral acceptance** — verify whether Deribit accepts ETH LSTs as collateral for dated futures (affects `CARRY_STAKED_BASIS_DATED` venue list).
-3. **Centralized carry engine** — confirm refactor approach: ONE engine + axis-driven config (recommended) vs N separate handler-per-archetype (current).
-4. **Legacy deprecation timing** — `MARKET_MAKING_CONTINUOUS` + `VOL_TRADING_OPTIONS` removed only after granular variants all doc-complete + 1 live config each. May-23 = both still in registry. Confirm: post-cutover deprecation OK?
+1. **Naming**: ✅ Option (b) — `CARRY_BASIS_PERP_INV` + `CARRY_BASIS_DATED_INV` (inverse-of-basis intuition). Implementation:
+   - UAC enum: rename `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → `CARRY_BASIS_PERP_INV`; add `CARRY_BASIS_DATED_INV`.
+   - `defi_recursive_borrow_archetypes_2026_05_10.md` updated to reflect (Family 2 → renamed).
+   - Per-archetype docs: rename file `carry-recursive-borrow-perp-hedged.md` → `carry-basis-perp-inv.md`; add new `carry-basis-dated-inv.md`.
+   - Workspace-grep: 2026-05-12 archetype mentions reconciled (slot 8 sweep).
+2. **Centralized `CarryFamilyEngine`**: ✅ ONE engine + axis-driven config — slot 5 ships. Axes: share-class × staking-leg × hedge-leg × recursion × direction × sequential-vs-flashloan. Validates against existing `defi_recursive_borrow_archetypes_2026_05_10.md` Phases 1-2 design batch (slot 5's Day-1 work).
+3. **Legacy deprecation**: ✅ **Pre-cutover** — deprecate `MARKET_MAKING_CONTINUOUS` + `VOL_TRADING_OPTIONS` as soon as granular variant docs land (NOT post-cutover). Slot 6 owns Vol Trading 18-doc completion → triggers `VOL_TRADING_OPTIONS` deprecation. Slot 8 / Harsh slot 6 owns MM granular completion → triggers `MARKET_MAKING_CONTINUOUS` deprecation. Config migration audit before deprecation: workspace-grep for live strategy configs using the legacy enums → migrate to granular variants in same logical unit.
+4. **Deribit LST collateral verification**: ✅ Single slot — **slot 8 cross_asset audit**. Output: list of LSTs Deribit accepts as dated-futures collateral (if any). Result feeds `CARRY_STAKED_BASIS_DATED` venue list (OKX + Bybit known; Deribit pending verification).
+
+## Operator decisions needed (next round, surfaced after slot 2/5/6/8 progress)
 
 ## Composes with
 
