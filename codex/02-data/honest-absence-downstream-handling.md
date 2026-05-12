@@ -394,3 +394,27 @@ on `capture_status`:
 `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`.
 
 ---
+
+## Phase 3A CeFi adapter audit results (2026-05-12)
+
+Full per-CeFi-venue adapter audit across all 18 implemented CeFi venues in `VENUES_BY_ASSET_GROUP["cefi"]`, run by slot
+2 background sub-agent 2026-05-12. **Result: all 18 compliant — Category A with typed reasons.**
+
+Key findings:
+
+- No `_create_empty_output()` calls in any CeFi base adapter (banned per writegate Phase 2.A). The QG checker
+  `unified-trading-pm/scripts/quality_gates/check_banned_placeholder_methods.py` confirms zero matches in non-test code.
+- No NaN-placeholder bars emitted by any CeFi venue. The 2026-05-05 MDPS incident pattern (`capture_status=captured`
+  with all-NaN OHLC) is absent from new writes post-writegate Wave 2.M.
+- All 18 adapters route on-source-zero-response to `record_empty(reason=EXPECTED_*)` (Category A) correctly.
+- GMX/DRIFT cefi-side wiring absent in MTDS routing — these have no tick adapter; not a manifest violation.
+- `_handle_empty_tick_data` (MDPS `batch_workers.py` + `live_workers.py`) is the approved post-Wave-2.M method that
+  routes through `record_empty_for_shard` — it is NOT in the banned-pattern set (it replaced `_create_empty_output`).
+
+**Historical reconciler**: `instruments-service/scripts/reconcile_legacy_nan_placeholder_bars.py` scans
+`capture_status=captured` rows in production manifests for all-NaN OHLC parquet data written before writegate Wave 2.M
+and reclassifies them to `attempted_failed` with `error_reason="LEGACY_NAN_PLACEHOLDER"`. Default mode: scan-only (CSV
+report); pass `--apply-flips` with `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME` to mutate. Scopes: `cefi` only (Phase 3
+scope; other asset_groups out of scope per this plan).
+
+Reference: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 3A/3B/3C.
