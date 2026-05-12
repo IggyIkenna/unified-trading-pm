@@ -251,14 +251,34 @@ findings total** across 48 tiers. Phase 1 → DONE; Phase 2 (disposition tagging
 
 ## Phase 2 — Per-recommendation disposition (Day 6, ~1 AI-day)
 
-- [ ] [AGENT] P0. **2.A Disposition closed enum.** `IMMEDIATE` (codex doc rewrite / SSOT consolidation that ships in
+- [x] [AGENT] P0. **2.A Disposition closed enum.** `IMMEDIATE` (codex doc rewrite / SSOT consolidation that ships in
       days) / `PRE_CUTOVER` (architecture clean-up that composes with cutover hot path) / `POST_CUTOVER` (large
-      refactor, cross-quarter scope).
-- [ ] [AGENT] P0. **2.B Per-recommendation tagging.** Every row in every audit issue doc gets a disposition + a 1-line
-      reason + an owner.
-- [ ] [AGENT] P0. **2.C Operator review.** Operator approves dispositions; disagreements surface as P0 ping.
+      refactor, cross-quarter scope) / `KEEP` (verified-clean, no change). **DONE 2026-05-12 slot 8** — enum used per-row
+      in all 12 issue docs.
+- [x] [AGENT] P0. **2.B Per-recommendation tagging.** Every row in every audit issue doc gets a disposition + a 1-line
+      reason + an owner. **DONE 2026-05-12 slot 8** — every row in all 12 issue docs carries a `disposition` column +
+      reason (folded into the finding text) + `owner` column. Aggregate:
 
-**Full-execution criterion**: every audit-issue-doc row has a disposition; operator has signed off via Q&A or chat.
+      | Disposition | Count | Notes |
+      |---|---|---|
+      | IMMEDIATE | ~63 | codex doc rewrites + SSOT consolidations that ship in days — start the Phase 3 batch with the recurring cross-area patterns (moved/archived-repo refs · enum-count drift · bucket-name SSOT drift · SSOT-INDEX gaps · Runbook-Execution-Owner gaps · self-flagged-stale-doc-still-inline) for max leverage |
+      | PRE_CUTOVER | ~137 | architecture clean-ups composing with the cutover path; many are 1-2-line doc fixes that could fold into IMMEDIATE if a slot has capacity |
+      | POST_CUTOVER | ~36 | large refactors / cross-quarter scope → Phase 5 files each as an issue doc or migrates into an existing plan |
+      | KEEP | ~6 | verified-clean (no change) — incl. ST-15 (mev-protection 3-way overlap already consolidated), EX KEEP, R 2×KEEP, ML KEEP, AL-20 |
+      | **Total** | **~242** | across 48 tiers in 12 issue docs |
+
+      **Per-area split** — Data 6/12/2 · Strategy 5/12/3 · Execution 9/12/5(+1) · Risk 5/7/2(+2) · ML 5/12/2(+1) ·
+      Position-balance 6/11/3 · Instruments 2/17/3 · Alerting 6/12/3(+1) · Ops 6/11/2 · Governance 4/7/5 · UI 3/12/4 ·
+      Testing 6/12/2 (IMMEDIATE / PRE_CUTOVER / POST_CUTOVER (+KEEP)).
+- [ ] [AGENT] P0. **2.C Operator review.** Operator approves dispositions; disagreements surface as P0 ping. **🟡
+      PENDING OPERATOR** — dispositions aggregated above; the ~12 BIG findings (EX-1, EX-10, IN-1, PB-1/2/3, ML-1, ML-2,
+      AL-1/AL-2, TS-5, + the catalogue P0 GMX/DRIFT) are escalated in `plans/active/_agent_pings.md` for triage. Slot 8
+      may proceed on the *unambiguous* IMMEDIATE items (factual codex-vs-code corrections — e.g. IN-1, count fixes,
+      moved-repo refs) per "Clear context = implement, don't ask"; the BIG findings that imply a code/architecture
+      decision (custody backend, flash-loan-receiver deployment, audit-record immutability) wait for operator sign-off.
+
+**Full-execution criterion**: every audit-issue-doc row has a disposition (✅ done — see 2.B table); operator has signed
+off via Q&A or chat (🟡 pending).
 
 ## Phase 3 — Immediate items shipped (Days 6-9, ~3 AI-days, parallel)
 
@@ -367,4 +387,23 @@ contradict the workspace "Flat deps only" rule). Plus the catalogue-audit P0: GM
 
 ## DONE block
 
-(Filled at completion.)
+(Final completion block — filled when Phases 0-7 all green + operator sign-off.)
+
+### DONE-2026-05-12 — slot 8 (harsh-catalogue-audit-tab) — Phase 0 + Phase 1 (12/12) + Phase 2.A/2.B
+
+| Phase / item | Status as of 2026-05-12 EOD | Evidence / successor / blocker |
+|---|---|---|
+| Phase 0 (area enumeration) | ✅ DONE | (earlier 2026-05-12 slot 8) 12-area scope + codex doc inventory (574 docs / 21 sub-dirs) |
+| Phase 1 (per-area audit, 12 areas) | ✅ DONE — 12/12 | 4 areas (Data/Risk/Ops/Governance) earlier 2026-05-12; 8 areas (Strategy/Execution/ML/Position-balance/Instruments/Alerting/UI/Testing) this session via 8-sub-agent fan-out → PM@`b2943cfd`. ~242 findings across 48 tiers; per-area issue docs `plans/active/issues/codex_audit_*_2026_05_12.md`; aggregate table in `## Audit findings` |
+| Phase 2.A (disposition enum) | ✅ DONE | `IMMEDIATE`/`PRE_CUTOVER`/`POST_CUTOVER`/`KEEP` — used per-row in all 12 docs |
+| Phase 2.B (per-recommendation tagging) | ✅ DONE | every row tagged; aggregate ~63 IMMEDIATE / ~137 PRE_CUTOVER / ~36 POST_CUTOVER / ~6 KEEP — table under Phase 2.B |
+| Phase 2.C (operator review) | 🟡 PENDING OPERATOR | ~12 BIG findings escalated in `plans/active/_agent_pings.md` 2026-05-12; slot 8 may proceed on unambiguous IMMEDIATE items (factual codex-vs-code corrections) per "Clear context = implement, don't ask" |
+| Phase 3 (immediate items shipped) | ☐ TODO (Days 6-9) | start the IMMEDIATE batch with the 6 recurring cross-area patterns (see `## Audit findings`) for max leverage; IN-1 (`defi-venue-protocol-catalogue.md` drift-introducing "correction") should be re-checked against slot-2's in-flight defi-catalogue work before editing — slot 2 owns that doc this cycle |
+| Phase 4 (pre-cutover items shipped) | ☐ TODO (Days 9-12) | ~137 PRE_CUTOVER rows; many are 1-2-line doc fixes |
+| Phase 5 (post-cutover items filed) | ☐ TODO (Day 12) | ~36 POST_CUTOVER rows → issue docs / plan migrations |
+| Phase 6 (audit sign-off doc) | ☐ TODO (Day 13) | |
+| Phase 7 (cutover gate) | ☐ TODO (Day 13) | master plan Group A row |
+
+**Carry-forward for next slot-8 session**: Phase 2.C operator triage of the BIG findings → then Phase 3 IMMEDIATE batch
+(recurring patterns first). Coordinate Phase 3 codex doc rewrites with the cross_asset_group plan Phase 4 (mev-protection
+consolidation) + slot 2 (`defi-venue-protocol-catalogue.md`) to avoid double-edits.

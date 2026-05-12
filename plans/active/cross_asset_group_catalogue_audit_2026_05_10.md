@@ -381,3 +381,25 @@ Per Post-Plan-Phase Codex Audit HARD RULE:
 - ✅ Zero workspace-grep broken-link findings.
 
 Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
+
+## DONE block
+
+### DONE-2026-05-12 — slot 8 (harsh-catalogue-audit-tab) — per-asset-group catalogue audit pass (groundwork)
+
+| Phase / item | Status as of 2026-05-12 EOD | Evidence / successor / blocker |
+|---|---|---|
+| Catalogue audit pass (5-way fan-out) | ✅ DONE | `plans/active/issues/catalogue_audit_{cefi,defi,tradfi,sports,prediction}_2026_05_12.md` (69 findings; 1×P0) — PM@`dc89abed`; reconciliation table + fan-out dispatch + cross-cutting drift summary + stale-claim reconciliation in `## Per-asset-group catalogue audit pass (2026-05-12)` section — PM@`920ec94c` |
+| Phase 1A (dual-prediction module) | 🔁 RE-SCOPED + 🟡 PENDING OPERATOR | premise (delete singular `prediction/`) REJECTED — both modules non-redundant; re-scoped to "keep both + fix 1 deep-import consumer (`instruments-service/.../adapters/prediction/polymarket.py:25`) + fold in PR-3/PR-4 (`prediction_canonical_question_group`+`MARKET_LIFECYCLE` → `DATA_TYPES_BY_ASSET_GROUP["prediction"]`)"; ready to implement (no operator decision needed for the keep-both + facade-fix; the optional rename is POST_CUTOVER) |
+| Phase 1B (Spark + Radiant SSOT consolidation) | ☐ TODO | Spark now PARTIALLY done (instruments+UAC; no MTDS-dedicated/connector); Radiant PARTIALLY done (in `ALL_DEFI_VENUES`+`MarginModel`; not `PROTOCOL_CAPABILITIES`); + euler_v2/venus/benqi same shape — fan-out to `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1A per DF-2; PLASMA orphan keys (DF-9) need register-or-delete |
+| Phase 1C (GMX/DRIFT dual-classification) | ☐ TODO — 🟡 OPERATOR-GREENLIT NEEDED | P0; confirmed still dual in UAC `_defi.py`+`defi_protocol_registry.py` AND `VENUES_BY_ASSET_GROUP["cefi"]` AND routed via DEX adapter (DF-3/DF-10/CF-1/CF-2); decision per plan body; escalated in `_agent_pings.md` |
+| Phase 1D (case-folding drift) | ☐ TODO | widen to cover SP-3 (sports, 5 SSOTs) + DF-4/5/17 (defi venue-keyed dicts) + CF-3/4 (cefi) — ship `to_canonical_venue()` + an all-asset-group venue-key-parity test |
+| Phase 1E (`LST_TOKEN_TO_PROTOCOL_ASSET`) | ✅ ALREADY EXISTS (different path) | at `unified-api-contracts/.../internal/domain/defi/lst.py:37` (not `canonical/domain/onchain/` as the todo predicted; `internal/` placement looks correct) — DF-12; should be marked done-with-different-path by the plan owner |
+| Phase 1F (`GAS_FEE_CHAIN_START_DATES`) | ✅ ALREADY EXISTS — but extend | at `chain_env.py:61` (int-keyed) + `GAS_FEE_SOLANA_START_DATE` — DF-13; **extend** to reconcile the chain-set fragmentation (`MAINNET_CHAIN_IDS`=19 / `CHAIN_GENESIS_DATES`=21 / `CHAIN_CONFIGS`=35 / `GAS_FEE_CHAIN_START_DATES`=14 / "22 chains" claim matches none — DF-7) + correct the "22 chains" wording in CLAUDE.md + per-protocol plans |
+| Phase 2 (manifest health script + UI) | ☐ TODO | `measure_honest_coverage.py` confirmed NOT to exist; must validate venue-key↔capability-dict parity before computing % (CF-4/SP-6/DF-8 — coverage-start key mismatch silently zeros expected shards) |
+| Phase 3 (per-CeFi-venue zero-activity-bar verify) | ☐ TODO | Wave 3.M is 0% started (all 21 cefi venues on legacy `empty_confirmed`; no Cat-D bars; UTL helpers don't exist) — callout added to `writegate_honest_coverage_endtoend_2026_05_06.md`; the cefi sub-agent's per-venue Cat-A/B/C/D matrix in `catalogue_audit_cefi_2026_05_12.md` seeds the audit |
+| Phase 4 (3 mev-protection.md consolidation) | ☐ TODO | codex-audit ST-15 confirms the 3-way overlap is *already* mostly resolved (mev-protection consolidated to `04-architecture/mev-protection.md`) — verify + close the residual; EX-8/EX-20 found `defi-execution-overview.md` § MEV inverts the L2/mainnet provider selection (no supersession banner) |
+| Phase 5 (TradFi ETF/roots SSOT + asset_group_registry) | ☐ TODO | `tradfi_etfs.py` / `tradfi_roots.py` / `asset_group_registry.py` confirmed NOT to exist; SSOT-fragmentation fully mapped — ETF list across 4 files, futures-roots across 3, VIX constants in `data_source_continuity.py` not `honest_coverage.py` (TF-1/TF-2/TF-7); `canonical/domain/derivatives/` has only `__init__.py`+`options.py` |
+| Phase 6 (validation) | ☐ TODO | |
+| Phase 7 (codex SSOT updates) | ☐ TODO | incl. CLAUDE.md VIX-15m pointer fix (TF-7), `contracts-scope-and-layout.md` venue-class taxonomy (DF-19), the 6 cross-asset cleanup items |
+
+**Carry-forward for next slot-8 session**: Phase 1A facade-fix + PR-3/PR-4 (no operator gate); Phase 1C operator greenlight then implement; Phase 1D `to_canonical_venue()` + parity test; mark 1E/1F done-with-different-path + extend 1F for the chain-set fragmentation; then Phases 2-5. Coordinate Phase 1B fan-out with slot 2 (`defi_catalogue_chain_primitives` Phase 1A) — slot 8 ping already sent.
