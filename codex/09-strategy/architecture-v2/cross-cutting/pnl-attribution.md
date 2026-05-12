@@ -39,7 +39,97 @@ Batch P&L (official):
   OVERRIDES live P&L where they differ
 ```
 
-### 4. Factor × layer dual axis — closed sets stay decoupled
+### 4. DeFi lending/borrowing yield is derived from on-chain INDEXES, never APY
+
+**APY is a presentation view, NEVER a primary in P&L attribution.** Every lending/borrowing yield component is computed
+from the protocol's on-chain index growth between the prev-block and now-block snapshots:
+
+```
+supply_yield(prev_block, now_block) = aToken_balance × (liquidity_index_now / liquidity_index_prev - 1)
+borrow_cost(prev_block, now_block)  = debt_token_balance × (variable_borrow_index_now / variable_borrow_index_prev - 1)
+```
+
+The on-chain `liquidity_index` (Aave) / `supplyIndex` (Compound V3) IS the rate — it accrues continuously every block
+per the protocol's interest-rate model. APY is just a 365-day annualization of the same accrual; using APY introduces a
+discretization error AND loses the per-block fidelity needed for block-aligned P&L attribution.
+
+**Treasury wiring**: positions are tracked as the actual aToken / debt-token balance (Aave aUSDC, vDebt-USDC; Compound
+V3 base-token + collateral-token balances). position-balance-monitor-service reads on-chain `balanceOf(aToken_addr,
+user)` per block → balance growth IS the yield. The CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW factor rows below
+formalize the computation.
+
+**Banned patterns** (review-blocking):
+
+- `supply_pnl = supply_usd × apy × time_fraction` — uses APY proxy instead of index growth.
+- `borrow_cost = borrow_usd × borrow_apy / 365 × days` — same issue, mirror side.
+- Tracking position in USD rather than aToken units — discards the on-chain growth signal.
+- Reading `currentLiquidityRate` / `currentVariableBorrowRate` (the APR view) instead of `liquidityIndex` /
+  `variableBorrowIndex` (the cumulative-growth view).
+
+**Backfill prerequisite**: MTDS `lending_indices` parquet must carry per-block `liquidity_index` + `variable_borrow_index`
+columns for the historical window covered by backtest replay. Currently captured per
+[`amm-slippage-simulation.md`](../../../04-architecture/amm-slippage-simulation.md) § "Per-protocol IRM parameter
+capture" — see also `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for the slope-fields capture
+gap fix.
+
+### 5. Staking yield: wrapped (price-delta) vs rebasing (balance-delta) — distinct attribution paths
+
+Both produce the same economic yield but the **data source differs**:
+
+| Token shape | Examples | Yield mechanism | Attribution factor | Data source |
+|---|---|---|---|---|
+| **Wrapped / non-rebasing** | wstETH, weETH, cbETH (ETH side); jitoSOL, mSOL, bSOL (Solana side) | On-chain exchange rate accretes; user balance stays fixed | `CARRY_BASE` = `holding × (exchange_rate_now / exchange_rate_prev - 1)` | `lst-rates` parquet — oracle price from issuer's stake pool contract (`rETH.getExchangeRate()`, `wstETH.stEthPerToken()`, Jito stake-pool getter) |
+| **Rebasing** | stETH (Lido native), ankrETH (rebasing variant), native unstaked SOL via validator-distribution | User balance grows mechanically each rebase epoch; price stays ~1:1 with native | `CARRY_BASE_REBASING` = `(balance_now - balance_prev) × token_price` | position-balance-monitor `balanceOf(token, wallet)` per block + `lst-rates` for token price |
+
+**Native chain-side direct** (preferred over oracle proxy where available): both shapes can sometimes be derived
+directly from on-chain validator-distribution events (Ethereum beacon `Withdrawal` events + execution-layer rewards;
+Solana `getInflationReward` per-epoch). The codex
+[`amm-slippage-simulation.md`](../../../04-architecture/amm-slippage-simulation.md) § "Per-protocol capture detail"
+table lists the canonical chain-native sources per protocol. The oracle / exchange-rate path is the proxy fallback when
+direct chain-native capture is unavailable.
+
+**Centralized-exchange collateral form**: Bybit + OKX accept the **wrapped non-rebasing** form (wstETH on Bybit per
+the Bybit Convert + USDT/UTA collateral docs; OKX accepts wstETH + cbETH + weETH per OKX Collateral Asset List). The
+unwrapped rebasing stETH is NOT accepted as cross-margin on either venue (the daily-rebase event would otherwise force
+re-collateralization). carry-staked-basis archetype config (`default_basis_trade.yaml`) MUST therefore stake to the
+wrapped form before transferring as perp-venue margin — the on-chain `STAKE` leg actually does
+`Lido.submit → stETH → wstETH wrap` for the ETH side; on Solana the LST issuers (Jito, Marinade, BlazeStake) already
+mint non-rebasing tokens natively so no wrap step is needed.
+
+**Banned patterns**:
+
+- Single `CARRY_BASE` factor with shape-agnostic computation — misses the rebasing case (balance grows but the
+  exchange-rate-change formula returns 0).
+- Treating stETH and wstETH as identical for attribution — they have DIFFERENT data sources.
+- CEX collateral posted in the rebasing form — re-collateralization risk on every Lido rebase.
+
+### 6. Gas fees: real per-block capture, treasury-provisioned, P&L-attributed
+
+Gas is a P&L factor on every DeFi transaction. Three discipline rules:
+
+1. **Real per-block capture, not modeled**: MTDS `gas_fee_handler` writes per-(chain, block) `gas_used`, `gas_price`,
+   `native_token_usd_price_at_block` to the `gas_fees` data_type. Strategy decision + execution simulation read the
+   actual per-block gas — no synthetic / averaged proxies in either batch replay or live preflight.
+2. **Native-gas-token treasury check + auto-provision**: every DeFi strategy preflight (`StrategyEngineV2.on_tick()` +
+   execution-service preflight gate) verifies the wallet's native-gas-token balance per chain (ETH on
+   Ethereum/Arbitrum/Optimism/Base; SOL on Solana; BNB on BSC; MATIC on Polygon; AVAX on Avalanche; GNO on Gnosis)
+   exceeds a configured threshold. When below threshold, the strategy auto-provisions by routing X% of starting
+   capital into the native-gas token via the spot venue (default `native_gas_reservation_pct = 1.0%` per DeFi strategy
+   config; tunable per chain via `default_basis_trade.yaml` `native_gas_reservation_pct_by_chain`). **Hard block**
+   when balance < threshold AND auto-provision route unavailable — strategy emits `record_failed(GAS_INSUFFICIENT)`
+   instead of attempting a tx that will revert at validator level.
+3. **GAS as a P&L factor**: every fill on a DeFi venue contributes `-(gas_used × gas_price × native_usd_at_tx_block)`
+   to the `GAS` factor (see Factor Definitions table). Strategy alpha vs execution alpha layer rule: gas is
+   `EXECUTION` layer for production trades (counterparty-independent cost); `STRATEGY` layer only when the strategy
+   over-trades (excessive rebalances eating gas — that's signal-quality, not fill-quality).
+
+**Banned patterns**:
+
+- Hardcoded gas-cost constants in archetype configs (`gas_cost_usd_per_tx = 5`) — must read per-block from `gas_fees`.
+- Pre-trade simulations that ignore gas — over-estimates fill P&L for any DeFi leg.
+- Treasury accounting that lumps native gas into "available capital" — gas reserves are non-deployable.
+
+### 7. Factor × layer dual axis — closed sets stay decoupled
 
 Every `PnLAttribution` row is tagged with TWO orthogonal axes:
 
@@ -144,13 +234,16 @@ realised_amount
 | DELTA                       | `sum(position_qty × (price_now - price_prev))` per instrument                                 | Positive = profitable direction            |
 | FUNDING                     | `sum(position_qty × funding_rate × funding_interval)` per perp                                | Positive = received funding                |
 | BASIS                       | `spot_pnl + perp_pnl` for basis trades (captures convergence)                                 | Positive = basis moved in favor            |
-| CARRY                       | `sum(collateral × apy × time_fraction)` for lending/staking                                   | Positive = yield earned                    |
-| CARRY_BASE                  | `holding × (exchange_rate_now / exchange_rate_prev - 1)` for LST                              | Positive = exchange-rate accreted          |
+| **CARRY_LENDING_SUPPLY**    | `aToken_balance × (liquidity_index_now / liquidity_index_prev - 1)` per (protocol, asset, block). **NEVER `supply × apy × time_fraction`** — APY is a derived view, not a primary; the on-chain index IS the rate. | Positive = supply yield accreted           |
+| **CARRY_LENDING_BORROW**    | `debt_token_balance × (variable_borrow_index_now / variable_borrow_index_prev - 1)` per (protocol, asset, block). **NEVER `borrow × apy × time_fraction`**. The debt principal grows mechanically with `variable_borrow_index`; consumers track the debt-token balance separately. | Negative = borrow cost accrued             |
+| CARRY_BASE                  | **Wrapped non-rebasing LST** (wstETH, weETH, cbETH, jitoSOL, mSOL, jitoSOL): `holding × (exchange_rate_now / exchange_rate_prev - 1)` (oracle price IS the yield — non-rebasing token, balance fixed, price accretes) | Positive = exchange-rate accreted          |
+| **CARRY_BASE_REBASING**     | **Rebasing LST** (stETH, ankrETH-rebasing variants, native mSOL distribution): `(balance_now - balance_prev) × token_price` (balance accretes; price stays ~1:1 with native). Distinct factor from `CARRY_BASE` because the data source is balance-delta, NOT price-delta — wiring shape differs at the position-balance-monitor + lst-rates reader. | Positive = balance accreted                |
 | CARRY_AVS_CONTINUOUS        | `sum_per_token(claimed_amount × token_eth_price)` from eigenlayer_rewards                     | Positive = AVS rewards earned              |
 | CARRY_ISSUER_SEASONAL       | `sum_per_distributor(transfer_amount × token_eth_price_at_receipt)` from lst_seasonal_rewards | Positive = issuer epoch reward received    |
 | REWARD_REALISATION_SLIPPAGE | `realised_amount_target - mark_at_receipt_target` from dust-conversion router                 | Negative when reward token sells below mid |
 | GREEKS                      | `delta_pnl + gamma_pnl + vega_pnl + theta_pnl` for options                                    | Per-greek decomposition                    |
 | FEES                        | `-sum(fee_amount)` for all trades in period                                                   | Always negative (cost)                     |
+| **GAS**                     | `-sum(gas_used × gas_price_per_block × native_token_usd_price_at_tx_block)` per defi chain    | Always negative (cost — every defi tx burns native gas) |
 | SLIPPAGE                    | `sum(fill_price - benchmark_price) × quantity × side_sign`                                    | Negative = worse than benchmark            |
 | SETTLEMENT                  | `settlement_value - mark_value` at expiry/event resolution                                    | Positive = favorable settlement            |
 | LIQUIDATION                 | `liquidation_penalty` or `liquidation_bonus`                                                  | Negative for penalized party               |
