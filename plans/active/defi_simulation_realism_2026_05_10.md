@@ -285,10 +285,13 @@ Owner: harsh + parallel agent.
 > harness skeleton + large-supply event source (NEW `lending_events` MTDS data_type — gap captured in
 > discoveries section). **Implementation half remains `- [ ]` for Harsh slot 4**.
 
-- [ ] [AGENT] P0. **3A — `LendingRateImpactCalculator`** in `execution-service/execution_service/matching_engine/`.
-      Inputs: `LendingMarketState` (Phase 1B) + proposed supply/borrow amount. Output: post-trade `borrow_apy` +
-      `supply_apy` using the captured kink-style interest rate model
-      (`(utilization < optimal) ? base + slope1 *     utilization / optimal : base + slope1 + slope2 * (utilization - optimal) / (1 - optimal)`).
+- [x] [AGENT] P0. **3A — `LendingRateImpactCalculator`** in `execution-service/execution_service/matching_engine/`.
+      (execution-service@`ff6c52ba` — NEW `lending/` subpackage with `LendingRateImpactCalculator` class +
+      `LendingTradeKind` StrEnum (SUPPLY/BORROW/WITHDRAW/REPAY). Thin wrapper around UAC `post_trade_rate()`
+      canonical entry (uac@`7f978f5`); dispatches by `LendingMarketState.protocol_irm_shape` (AAVE_KINKED for
+      Aave V3 + Spark + Radiant; COMPOUND_V3 for Comet). Provides `post_trade_rate()` canonical method +
+      `supply_rate_delta_bps()` / `borrow_rate_delta_bps()` convenience methods. Smoke-tested: Aave USDC pool
+      at U=50% (kink=90%); +100M supply compresses borrow rate by 20.20 bps. basedpyright clean on new subpackage.)
 - [ ] [AGENT] P0. **3B — `BenchmarkMatcher` extension**. Currently does instant-fill at benchmark; extend to call
       `LendingRateImpactCalculator` for all supply/borrow/repay/withdraw at Aave V3 + Compound V3 + Spark + Radiant.
       Backtest yield computation uses post-trade rate, not pre-trade.
