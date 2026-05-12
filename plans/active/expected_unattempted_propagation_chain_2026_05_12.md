@@ -240,8 +240,8 @@ as captured writes) to avoid multi-worker collision.
 **Tests**: mock read_upstream_manifest returning 3 scenarios: all known, some unknown, none known. Assert
 expected_unattempted calls for unknown shards.
 
-- [x] [CODE] P0. Pre-audit: confirm INSTRUMENTS_BUCKET_BY_ASSET_GROUP names from cloud-providers.yaml.
-      **Discovery (2026-05-12)**: `instruments-store` kind registered in `cloud-providers.yaml` lines 128-138 for all 5
+- [x] [CODE] P0. Pre-audit: confirm INSTRUMENTS_BUCKET_BY_ASSET_GROUP names from cloud-providers.yaml. **Discovery
+      (2026-05-12)**: `instruments-store` kind registered in `cloud-providers.yaml` lines 128-138 for all 5
       asset_groups. `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group=ag, env=env)` is valid for
       cefi/defi/tradfi/sports/prediction. No constant needed — pattern uses canonical bucket naming SSOT.
 - [x] [CODE] P0. Wire instruments-service manifest read into MTDS batch orchestrator pre-flight per above pattern. Cover
@@ -299,9 +299,10 @@ in after reading instruments-service manifest for the asset_group + date range.
 Reconciler scripts should read instruments-service manifest once and pass into classifier.
 
 - [x] [CODE] P1. Add `fixture_manifest` param to `classify_blank_reason_row()` in `legacy_reason_classifier.py`. Wire
-      fixture existence check via `_fixture_exists_for_shard()` helper BEFORE `SOURCE_RETURNED_ZERO` fallback. Add 4 unit
-      tests (empty manifest → expected_unattempted; wrong league → expected_unattempted; fixture+limitation →
-      empty_confirmed; fixture+no limitation → attempted_failed). (utl@290a4150 — test_sports_fixture_classifier.py + 4 tests pass)
+      fixture existence check via `_fixture_exists_for_shard()` helper BEFORE `SOURCE_RETURNED_ZERO` fallback. Add 4
+      unit tests (empty manifest → expected_unattempted; wrong league → expected_unattempted; fixture+limitation →
+      empty_confirmed; fixture+no limitation → attempted_failed). (utl@290a4150 — test_sports_fixture_classifier.py + 4
+      tests pass)
 - [x] [CODE] P1. Update `reconcile_legacy_blank_to_typed_reason.py` to read instruments-service fixture manifest for the
       sports asset_group and pass it into the classifier. Add Shape (c) upgrade path. (instruments-service@715139a)
 - [ ] [RESEARCH] P1. Audit instruments-service manifest for transfermarkt data: does the manifest correctly track
@@ -309,10 +310,10 @@ Reconciler scripts should read instruments-service manifest once and pass into c
       data_types (player_values, transfers) during non-window periods? Is `available_at` set to last day of the transfer
       window for player values entering next season? File a follow-up todo if the design doesn't match the intent.
 - [x] [QG] P1. `cd unified-trading-library && bash scripts/quality-gates.sh`.
-      `cd instruments-service && bash scripts/quality-gates.sh`. Push.
-      UTL: 4 new tests pass (test_sports_fixture_classifier.py); 109 pre-existing manifest_writer failures (foreign).
-      instruments-service: 6/6 reconciler tests pass (instruments-service@703d36b fixed Shape-b test gap from 3a05e4f);
-      84 pre-existing failures (orchestrator_coverage, phase2d, urdi — foreign). (instruments-service@703d36b)
+      `cd instruments-service && bash scripts/quality-gates.sh`. Push. UTL: 4 new tests pass
+      (test_sports_fixture_classifier.py); 109 pre-existing manifest_writer failures (foreign). instruments-service: 6/6
+      reconciler tests pass (instruments-service@703d36b fixed Shape-b test gap from 3a05e4f); 84 pre-existing failures
+      (orchestrator_coverage, phase2d, urdi — foreign). (instruments-service@703d36b)
 
 ---
 
@@ -337,15 +338,21 @@ The whole point of correct upstream manifest classification is that MDPS can act
 
 This contract means MDPS must READ upstream MTDS capture_status per shard, not just check presence.
 
-- [ ] [CODE] P0. Add `record_expected_unattempted` call in MDPS `DependencyChecker` when skipping due to absent/empty
-      MTDS shard. Pass `manifest_writer` reference at construction if not already present.
-- [ ] [CODE] P0. Codify MDPS downstream consumption contract in MDPS orchestration_service: route MTDS `empty_confirmed`
+- [x] [CODE] P0. Add `record_expected_unattempted` call in MDPS `DependencyChecker` when skipping due to absent/empty
+      MTDS shard. Pass `manifest_writer` reference at construction if not already present. (mdps@3f70cf6 —
+      `record_expected_unattempted_for_shard` in canonical_writer.py + `_record_expected_unattempted_on_skip` wired into
+      process_category skip path)
+- [x] [CODE] P0. Codify MDPS downstream consumption contract in MDPS orchestration_service: route MTDS `empty_confirmed`
       → zero-vol/forward-fill; `attempted_failed` → NaN; `expected_unattempted` → propagate skip. Add 4 unit tests (one
-      per upstream status).
-- [ ] [CODEX] P1. Add `## MDPS downstream consumption contract` section to
+      per upstream status). (mdps@3f70cf6 — 4 unit tests in tests/unit/test_expected_unattempted_on_dep_skip.py; all
+      pass)
+- [x] [CODEX] P1. Add `## MDPS downstream consumption contract` section to
       `codex/02-data/honest-absence-downstream-handling.md` documenting the 4-row table above. Reference this plan +
-      writegate Phase 2.A.
-- [ ] [QG] P0. `cd market-data-processing-service && bash scripts/quality-gates.sh`. Push.
+      writegate Phase 2.A. (pm@this-commit — codex/02-data/honest-absence-downstream-handling.md § "MDPS downstream
+      consumption contract")
+- [x] [QG] P0. `cd market-data-processing-service && bash scripts/quality-gates.sh`. Push. (mdps@3f70cf6 — lint clean;
+      19 pre-existing test failures in foreign files from UTL/UAC schema drift; my 4 Phase 2 tests pass; committed +
+      pushed)
 
 ### Pre-audit
 
