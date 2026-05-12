@@ -152,7 +152,9 @@ Canonical kind = `ml-models-store-{pid}`.
 
 ```
 {bucket}/{type}/{family}/{version}/
-  content.json (or .pkl for models)
+  content.json (or model.joblib for models — workspace no-pickle rule per python-backend.md;
+                ONNX export is the inference-serving format per ml-inference-service model_loader.py
+                docstring — pending ML-7 reconciliation in slot 8 audit ML-1/ML-7)
   meta.json (created_at, created_by, description, links to derived_from, input_hashes)
   conformance_tests_passed: true
 ```
