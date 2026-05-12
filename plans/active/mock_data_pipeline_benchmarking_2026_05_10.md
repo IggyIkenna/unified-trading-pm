@@ -205,34 +205,67 @@ design-shipped. ✅(partial)
       `BenchmarkHarness`, writes `stage_profile.parquet` + `synthetic_run_manifest.json` under `--report-uri`; mutually
       exclusive with real-data backtest flags by construction (this CLI is the synthetic path only). Smoke-verified
       end-to-end in `stub` mode.)
-- [ ] [AGENT] P0. **4.A-tail Per-service `--synthetic-input-uri` flags.** **PARTIAL** (slot 6 2026-05-12 reserve
-      pickup). **`setup-data-pipeline-vm.sh` synthetic-benchmark branch ✅ SHIPPED** (deployment-service@`3fde508` —
-      added `synthetic-benchmark` to the existing VM_TASK dispatch OR-list at line 670 alongside `mdps-backfill` /
-      `features-backfill` / `phantom-recon` / `expected-universe-enum` / `cross-asset-rescan`;
-      `launch-synthetic-benchmark-vm.sh` passes the UTL CLI via VM_BACKFILL_CMD). **Still DEFERRED — 6 service CLI
-      `--synthetic-input-uri` flags**: each of MTDS / MDPS / features-* / ML-inference / strategy / execution needs
-      a `--synthetic-input-uri <prefix>` flag (consumes the generator parquet under that prefix via its existing
-      reader path — no parallel reader, just a source override). Until then the harness `subprocess` mode raises
-      `HarnessStageNotWiredError` (covered by `test_harness_subprocess_mode_raises_not_wired`). **Per-service
-      wire-in spec (operator-runnable for next slot)**:
+- [x] [AGENT] P0. **4.A-tail Per-service `--synthetic-input-uri` flags.** ✅ SHIPPED 2026-05-12 (slot 7 Day-2). Framework
+      SSOT chosen over per-service duplication: the flag is declared at
+      `unified_trading_library.service_cli.ServiceCLI.build_parser()` (utl@`5aa356b`) and the post-`parse_args` hook
+      calls `set_synthetic_input_override(args.synthetic_input_uri)` (utl@`c80bfbf` — new SSOT helper in
+      `unified_trading_library.cloud_interface.bucket_naming`: process-wide override, `_OVERRIDE_EXCLUDED_KINDS`
+      keeps `events` / `config-store` / `ml-models-store` / `audit` / `secrets` resolving to prod). Every
+      ServiceCLI-backed CLI (MDPS / MTDS / ml-inference / strategy / execution + every features-service family CLI)
+      gets the flag for free — verified by re-building each parser and asserting `--synthetic-input-uri` in
+      `--help`. Slot 6's per-service additions consolidated: MTDS@`285b464` removes the duplicate from
+      `_add_service_args` (would have raised `ConflictingOptionError`); features-service@`6a604473` removes the
+      duplicate from the dispatcher's `_build_dispatch_parser` so `parse_known_args` forwards the flag verbatim
+      to the family CLI's framework parser. `setup-data-pipeline-vm.sh synthetic-benchmark` branch
+      (deployment-service@`3fde508`, slot 6) confirmed on remote — unchanged.
 
-      | Service | CLI entry | Reader override point | Pattern |
+      **Reader-override coverage** (the substantive Phase 4.A-tail outcome, supersedes the per-service-table spec
+      below):
+      - **Services that reach `resolve_bucket_uri`** — MDPS / features-service / execution-service: the
+        framework hook flips the override, and every subsequent `resolve_bucket_uri(kind=...)` call returns
+        `{synthetic_input_uri}/{path}` for data-input kinds. Functional Phase-4.A-tail outcome here.
+      - **Services whose readers bypass `resolve_bucket_uri`** — MTDS Tardis/Databento fetch (external API,
+        not GCS), ml-inference direct feature-vector loader, strategy direct signal+features loader: flag is
+        ACCEPTED + the override is INSTALLED (idempotent / no-op for these readers), but the bespoke per-reader
+        wire-in is Phase 3.D. The harness profile will still capture stage start times + per-stage CPU/RSS for
+        these three services (subprocess invocation + lifecycle events are real); the actual benchmark data
+        flow through them awaits Phase 3.D.
+
+      **Harness wiring**: `default_subprocess_pipeline()` (utl@`04044bf`) now ships real command templates for
+      every `PIPELINE_STAGE_ORDER` stage. `_STAGE_COMMAND_TEMPLATES` is the SSOT for the (stage_name → CLI
+      invocation) mapping — `python -m <service>.cli.main --operation <op> --mode batch --synthetic-input-uri
+      {input_uri}` per stage. The `HarnessStageNotWiredError` safety net is preserved for a custom pipeline
+      that explicitly keeps a stage's `command_template` at the placeholder; canonical 6-stage pipeline is
+      fully wired. Phase 5.B/5.C can now launch real VMs that exercise the subprocess DAG.
+
+      **Reader override semantics** (preserved from prior spec — implementation details for the SSOT helper):
+      when `--synthetic-input-uri gs://{pid}-synthetic-input/{run_id}` is set, the framework calls
+      `set_synthetic_input_override(uri)`; every subsequent `resolve_bucket_uri(...)` call for a data-input kind
+      returns `{uri}/{path}` (path retains its `asset_group=...` / `data_type=...` hive shape per UAC
+      `SyntheticShardLayout`) INSTEAD of the prod `resolve_bucket_name(...)` template. No parallel reader path;
+      same parquet schema; same hive layout. Per CLAUDE.md "Live = batch": only the source URI differs.
+
+      **Previous per-service-table spec** (now obsoleted by the framework SSOT — preserved for audit trail of
+      what slot 6 attempted before the consolidation):
+
+      | Service | CLI entry | Reader override point | Pattern (legacy plan — superseded by framework SSOT) |
       |---|---|---|---|
-      | MTDS | `market-tick-data-service/market_tick_data_service/cli/main.py` `_add_service_args` (line 141+) | `tardis_reader.py` + `databento_reader.py` source-URI lookup | `parser.add_argument("--synthetic-input-uri", type=str, default=None, help="If set, read raw-tick parquet from this URI prefix instead of prod source")` + thread to each reader as a constructor kwarg that overrides the prod-bucket URI builder |
-      | MDPS | `market-data-processing-service/.../cli/main.py` | `RawTickHive.read()` reader pathing | Same flag; pass to `RawTickHive(synthetic_input_uri=...)` overriding the per-asset-group prod bucket |
-      | features-* | per-family service CLI (`features-onchain-service` / `features-sports-service` / `features-volatility-service` / etc.) | each `LiveAggregator` / `LiveRunner` upstream source | Same flag; override the manifest reader's bucket-name resolver to point at the synthetic prefix |
-      | ML-inference | `ml-inference-service/.../cli/main.py` | feature-vector parquet reader | Same flag; pass to the upstream feature-vector loader |
-      | strategy | `strategy-service/strategy_service/cli/main.py` | signal + features parquet readers | Same flag; thread through to upstream-source resolver in `StrategyEngine` orchestrator |
-      | execution | `execution-service/execution_service/cli/main.py` | matching-engine pool-snapshot reader (for batch backtest replay) | Same flag; pass to `pool_from_snapshot` to read snapshots from synthetic prefix instead of prod `dex_pools` data_type |
+      | MTDS | `market_tick_data_service/cli/main.py` `_add_service_args` (line 141+) | `tardis_reader.py` + `databento_reader.py` source-URI lookup | Now: flag accepted via framework; reader threading in 3.D |
+      | MDPS | `market_data_processing_service/cli/main.py` | `RawTickHive.read()` reader pathing | Now: flag accepted via framework; override applies automatically through `resolve_bucket_uri` |
+      | features-* | per-family service CLI | each `LiveAggregator` / `LiveRunner` upstream source | Now: flag accepted via family-CLI framework; override automatic |
+      | ML-inference | `ml_inference_service/cli/main.py` | feature-vector parquet reader | Now: flag accepted via framework; reader threading in 3.D |
+      | strategy | `strategy_service/cli/service_entry.py` | signal + features parquet readers | Now: flag accepted via framework; reader threading in 3.D |
+      | execution | `execution_service/cli/parser.py` | matching-engine pool-snapshot reader | Now: flag accepted via framework; override applies automatically |
 
-      **Reader override semantics**: when `--synthetic-input-uri gs://{pid}-synthetic-input/{run_id}` is set, the
-      reader's source-URI builder returns `f"{synthetic_input_uri}/asset_group={ag}/data_type={dt}/..."` (matching
-      the generator's shard layout per UAC `SyntheticShardLayout`) INSTEAD of the prod `resolve_bucket_name(...)`
-      output. No parallel reader path; same parquet schema; same hive layout. Per CLAUDE.md "Live = batch": the
-      ONLY thing that differs is the source URI; everything downstream stays prod-shaped.
-
-      **Successor**: this plan (stays active); if it slips past 2026-05-23, fold into
-      `live_pipeline_mtds_mdps_features_2026_05_08`. Provenance: Phase 4 reframe note above.
+      Test coverage: 8 unit tests for `set_synthetic_input_override` in bucket_naming (data-input redirect /
+      events bypass / config-store bypass / ml-models-store bypass / clear with None / clear with empty
+      string / trailing-slash normalisation / no-op when unset / path-leading-slash); 4 unit tests for the
+      ServiceCLI framework wire-in (flag-not-passed / flag-with-value / flag-with-empty / flag-in-help);
+      2 updated harness tests (`test_harness_subprocess_mode_no_longer_raises_not_wired` /
+      `test_harness_subprocess_raises_not_wired_only_on_explicit_placeholder`) + 2 new
+      (`test_default_subprocess_pipeline_commands_are_wired_with_synthetic_flag` /
+      `test_default_subprocess_pipeline_covers_every_pipeline_stage`). All green via `.venv-workspace`;
+      basedpyright + ruff clean on every touched file.
 - [x] [AGENT] P0. **4.B Per-stage profiler integration.** (utl@`ca9c346` — `BenchmarkHarness._run_stage` wraps every
       DAG stage with `synthetic.profile.profile_stage(name)`; no separate pipeline-orchestrator to wire — the harness
       IS the orchestrator, per "Never build standalone backtest engines": `subprocess` mode shells out to the prod
@@ -246,11 +279,13 @@ in `stub` mode; a real per-stage profile needs `subprocess` mode → 4.A-tail). 
 
 ## Phase 5 — Real-VM benchmark runs (Days 9-11, ~2 AI-days)
 
-> **🟡 PREREQUISITE NOT MET (2026-05-12):** the real matrix run (5.B/5.C) needs Phase 4.A-tail (`--synthetic-input-uri`
-> in 6 service CLIs + the `setup-data-pipeline-vm.sh` `synthetic-benchmark` branch) AND the zombie-watchdog VM
-> relaunched (so the new `synbench-` prefix is picked up). Until both land, only `--mode stub` runs (meaningless
-> profiles). 5.A (launcher script + watchdog registration) is shipped; the actual runs are a documented handoff —
-> see § "Deferred work" below.
+> **🟢 PREREQUISITE PARTIALLY MET (2026-05-12 slot-7 Day-2):** Phase 4.A-tail framework SSOT shipped
+> (utl@`c80bfbf`/`5aa356b`/`04044bf`) + per-service flag-acceptance verified across all 6 CLIs.
+> `setup-data-pipeline-vm.sh synthetic-benchmark` branch confirmed on remote (deployment-svc@`3fde508`).
+> Remaining prerequisite for FULL data flow through MTDS / ml-inference / strategy: their bespoke reader
+> wire-in (Phase 3.D) — for those 3 services the override is a no-op and the subprocess profile captures
+> orchestration overhead but not real data movement. MDPS / features-service / execution-service get full
+> data redirection from the framework SSOT. Zombie-watchdog VM still needs relaunch (slot-1 main territory).
 
 - [x] [SCRIPT] P0. **5.A Per-archetype × per-VM-shape launcher.** (deployment-service — `scripts/vm/launch-synthetic-benchmark-vm.sh`:
       `--archetype <X> --shapes "c2-standard-8 c2-standard-16 c2-standard-32 c3-highcpu-44" --date-start.. --date-end.. --mode.. --env..`;
@@ -416,7 +451,7 @@ uniformly across the 5 chain shards.
 | Phase 4.A (benchmark CLI) | ✅ done — utl@`457fe19` (`python -m unified_trading_library.synthetic`) | — |
 | Phase 4.B (per-stage profiler integration) | ✅ done — in `BenchmarkHarness` | — |
 | Phase 4.C (profile-parquet emit) | ✅ done — in `cli.main` | — |
-| Phase 4.A-tail (`--synthetic-input-uri` flag in 6 service CLIs + `setup-data-pipeline-vm.sh` `synthetic-benchmark` branch) | 🟡 deferred (P0) | this plan; if slips past 2026-05-23 → `live_pipeline_mtds_mdps_features_2026_05_08` |
+| Phase 4.A-tail (`--synthetic-input-uri` flag in 6 service CLIs + `setup-data-pipeline-vm.sh` `synthetic-benchmark` branch) | ✅ done — framework SSOT (utl@`c80bfbf`/`5aa356b`/`04044bf` + mtds@`285b464` + features@`6a604473`); slot-6 deployment-svc@`3fde508` unchanged; per-reader threading for MTDS/ml-inference/strategy is Phase 3.D | — |
 | Phase 5.A (matrix launcher + watchdog registration) | ✅ done — deployment-service@`9e9bf42` (`launch-synthetic-benchmark-vm.sh` + `synbench-` prefix) | — |
 | Phase 5.B / 5.C (actual matrix VM runs + evidence) | 🟡 deferred (P0) | this plan; **blocked on Phase 4.A-tail + zombie-watchdog VM relaunch** |
 | Phase 6.A-C (aggregate report + VM-shape matrix + bottleneck callouts) | 🟡 deferred (P0) | this plan; **blocked on Phase 5 actual runs** |
@@ -432,11 +467,17 @@ yet; current state is "this plan stays active").
 
 ## Temporary states + their canonical follow-up plans
 
-- **`subprocess`-mode harness raises `HarnessStageNotWiredError`** until Phase 4.A-tail wires `--synthetic-input-uri`
-  into MTDS / MDPS / features-* / ML-inference / strategy / execution CLIs + a `setup-data-pipeline-vm.sh`
-  `synthetic-benchmark` branch. Canonical follow-up: **this plan** (Phase 4.A-tail); if it slips past 2026-05-23 →
-  `live_pipeline_mtds_mdps_features_2026_05_08`. Until then only `--mode stub` runs (meaningless profiles — exercises
-  wiring only).
+- ~~**`subprocess`-mode harness raises `HarnessStageNotWiredError`** until Phase 4.A-tail wires `--synthetic-input-uri`
+  into MTDS / MDPS / features-* / ML-inference / strategy / execution CLIs.~~ **RESOLVED 2026-05-12 slot-7 Day-2**
+  (utl@`04044bf`): `default_subprocess_pipeline()` ships real command templates for every `PIPELINE_STAGE_ORDER`
+  stage; framework-level `--synthetic-input-uri` accepted by every ServiceCLI-backed CLI (utl@`5aa356b`); per-reader
+  routing for the 3 services whose readers bypass `resolve_bucket_uri` (MTDS / ml-inference / strategy) deferred to
+  Phase 3.D — the flag is accepted there and the override is installed but the reader doesn't consult it.
+- **MTDS / ml-inference / strategy reader-side routing** — these services' readers don't go through
+  `resolve_bucket_uri`, so the Phase 4.A-tail framework override is a no-op for them. The bespoke per-reader wire-in
+  is Phase 3.D (prod-reader schema-parity verification + per-reader override threading). For Phase 5.B/5.C the
+  subprocess invocation still emits STARTED/STOPPED + per-stage profile data (CPU/RSS/wall-clock); only the actual
+  data redirection for these 3 services awaits 3.D.
 - **`launch-synthetic-benchmark-vm.sh` uses the conventional `${PROJECT}-benchmark-reports` bucket name** (no
   `resolve_bucket_name(kind="benchmark-reports")`) because that kind isn't in `cloud-providers.yaml` yet. Canonical
   follow-up: `bucket_name_ssot_canonicalisation_2026_05_10.md` adds the kind; then switch the CLI to derive it.
