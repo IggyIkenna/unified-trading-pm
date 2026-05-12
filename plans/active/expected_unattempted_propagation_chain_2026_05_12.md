@@ -144,7 +144,11 @@ pattern as existing ManifestWriter internals).
 
 Add 3 unit tests (mock GCS): empty result, filtered by date, all-rows path.
 
-- [ ] [CODE] P0. Verify ManifestReader bucket parameterization OR add `read_upstream_manifest()` to UTL. QG + push.
+- [x] [CODE] P0. Verify ManifestReader bucket parameterization OR add `read_upstream_manifest()` to UTL. QG + push.
+      **Discovery (2026-05-12)**: `read_availability_index(bucket: str)` in UTL `manifest_writer.py:3257` already
+      accepts any bucket name and returns the full v8-schema DataFrame. No new helper needed. Downstream services (MTDS,
+      MDPS, features) call `read_availability_index(upstream_bucket)` directly. Tests in
+      `tests/unit/test_manifest_completeness.py` already cover mock-GCS paths. No UTL code change; pattern documented.
 
 ---
 
