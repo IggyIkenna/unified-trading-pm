@@ -95,13 +95,14 @@ backtest fidelity** until this is fixed.
 
 **P0 — fix the MTDS lending_indices_handler to persist all 3 dropped fields**:
 
-1. **MTDS**: edit
+1. ✅ **MTDS — SHIPPED at mtds@`4b38a9b` (2026-05-12 slot 6)** — edit
    `market_tick_data_service/market_interface/adapters/defi/aave_lending.py`
-   `_parse_historical_reserve_record()` (line 549-553) to populate
-   `optimal_utilization_rate`, `variable_rate_slope1`, `variable_rate_slope2`
-   from the same raw reserve record the subgraph already returns. The fetch
-   query already requests them (line 77-79); the only fix is to wire them into
-   the output dict.
+   `_extract_lending_metadata` to populate `optimal_utilization_rate`,
+   `variable_rate_slope1`, `variable_rate_slope2` from the same raw reserve
+   record the subgraph already returns. New `_parse_ray` helper does ray
+   (1e27 unit) → decimal-fraction conversion matching `_parse_borrow_rate`
+   semantics. basedpyright clean. The fetch query already requested them
+   (line 77-79); the only fix was wiring them into the output dict.
 2. **MDPS**: extend the `lending_indices` parquet schema to include the 3 new
    columns. Per CLAUDE.md "Live = batch" + "Honest absence vs fake
    placeholders" — historical rows that were captured before this fix should
