@@ -1,5 +1,7 @@
 ---
 title: Multiple VM launchers hardcode a non-existent `data-pipeline-vm` SA (gcloud `serviceAccount of type was not found`)
+resolved: 2026-05-12
+resolution_commit: deployment-service@357438a
 created: 2026-05-12
 author: harsh-mock-data-benchmarking-tab (slot 7)
 source:
@@ -12,6 +14,8 @@ locked_since: 2026-05-12
 severity: P1
 suggested_owner: deployment-service maintainer (Ikenna-side, slot 1 main triage)
 ---
+
+> **✅ RESOLVED 2026-05-12** via Option A (env-var-override) — deployment-service@`357438a`. 1 launcher updated (`launch-alerting-quietness-baseline.sh`). The other launchers mentioned in this issue body (`launch-mdps-backfill-vm.sh`, `launch-cefi-sharded-backfill.sh`, `launch-mdps-sharded-backfill.sh`, `launch-sfi-forward-poll.sh`) had already been refactored to omit `--service-account` entirely — verified at fix time. Reference template: deployment-service@`91ee79e` (launch-synthetic-benchmark-vm.sh). Verified 0 `data-pipeline-vm@` references remain in `deployment-service/scripts/vm/`.
 
 ## What I found
 
