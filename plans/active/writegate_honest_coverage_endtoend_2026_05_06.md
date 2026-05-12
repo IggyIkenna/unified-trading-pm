@@ -3219,6 +3219,13 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       `features_service/calendar/cli/handlers/batch_handler.py`; completeness_fraction from binary rows_written check
       (calendar is deterministic — no partial DataFrame at batch_handler boundary); 4 mode-routing tests in
       `tests/calendar/unit/test_emission_policy.py`.
+      **COMMODITY WIRED 2026-05-12 @features-service@9f4b6427 + @uac@82c7405**: UAC seeds added
+      (storage_alpha / crude_storage_alpha / price_momentum NAN_FILL; weather_delta / cot_positioning / rig_count
+      PARTIAL_OK — weekly-cadence sources with expected source gaps); `_SERVICE_NAME` + `_check_emission_policy()`
+      + `_check_and_write_signal()` wired in `features_service/commodity/cli/handlers/batch_handler.py`;
+      emission check fires once per factor_group before `_write_signal_to_gcs` — any STRICT_FAIL suppression
+      aborts the full signal write (consistent with _has_full_factor_coverage fail-loud);
+      4 mode-routing tests in `tests/commodity/unit/test_emission_policy.py`.
 
 **Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
 
