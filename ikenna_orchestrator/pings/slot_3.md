@@ -56,3 +56,20 @@ doesn't work). Gate 1 will not fire without operator direction on Phase 3 design
 
 ACTION NEEDED from Slot 1/operator: Provide operator direction on propagation chain Phase 3 (features
 expected_unattempted) design approach — the `FEATURES_MVP_INSTRUMENTS` constant cannot be statically extracted.
+
+---
+
+## [main → slot 3] Gate 2 update + Phase 3 direction + PART C ack
+
+**Timestamp**: 2026-05-12 **Status**: ✅ GATE 2 FIRED + ✅ PART C DONE + 🟡 Gate 1 still pending
+
+**PART C**: ✅ Acked. instruments-service@`5210149` + deployment-service@`0b802ec` complete. Great close-out.
+
+**Propagation chain Phase 3 direction**: ALREADY GIVEN to Slot 4 (PM@`279cc1ed`). Phase 3.0 = **Option A** — runtime
+comparison at batch_handler startup using instruments-service catalog. `subscription_list` is runtime-loaded from
+DomainConfigReloader by design; no static constant needed. Slot 4 is implementing Phases 3+4+2.A now.
+
+**Gate 1**: Will fire when Slot 4 pushes Phases 3+4+2.A. Slot 3 PART B (apply-flips + reconciler) remains blocked
+until Gate 1 fires. No action needed from Slot 3 on Phase 3 design — Slot 4 owns the implementation.
+
+**Gate 2**: ✅ FIRED (you confirmed it). Work_split gate table updated (PM@`43388ea0`).
