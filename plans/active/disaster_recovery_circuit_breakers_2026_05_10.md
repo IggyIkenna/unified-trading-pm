@@ -159,22 +159,23 @@ failover beyond cutover archetypes are deferred post-cutover.
       tests) = **61 unit tests total**, all passing locally. Closed-set sanity, validator semantics, default-fill,
       per-archetype registry coverage, KILL_ALL → no auto-disarm invariant, § 7 seam citation enforcement, facade
       re-export verification.
-- [ ] [AGENT] P1. **1.G `BreakerFiredEvent` UAC model — DISCOVERY 2026-05-12 (Tab 5 Phase-4 fan-out).** Four Phase-4
+- [x] [AGENT] P1. **1.G `BreakerFiredEvent` UAC model — DISCOVERY 2026-05-12 (Tab 5 Phase-4 fan-out).** Four Phase-4
       sub-agents (execution-service / risk-and-exposure-service / position-balance / alerting-service) all hit the same
       gap: there is no typed `BreakerFiredEvent` Pydantic model in `canonical/crosscutting/circuit_breaker.py`. The
       interim everywhere is an `AlertCode`-named `log_event` (`CIRCUIT_BREAKER_OPEN` / `CIRCUIT_BREAKER_DEGRADED` /
       `CIRCUIT_BREAKER_CLOSED`) classified at the consumer off `CircuitBreakerId` + the registry's `BreakerAction`.
-      **DEFERRED P2**: ship `BreakerFiredEvent` (frozen, extra=forbid — mirror `RiskRuleFiredEvent` from
-      `risk_rule.py`@UAC@a01e4dd: `breaker_id`, `scope`, `applies_to`, `action`, `recovery_mode`, `cooldown_seconds`,
-      `alerting_severity`, `alert_code`, `fired_at`, `armed`/`disarmed` discriminator, `metadata`) + a
-      `breaker_fired_event(config, *, fired_at, ...)` builder; then switch `execution-service/engine/circuit_breaker.py`,
-      `risk-and-exposure-service/circuit_breaker_registry.py`, `position-balance.../reconciler_breaker_bridge.py`, and
-      `alerting-service/dr_event_handler.py` to emit/validate against it. Successor: this todo (1.G) — owner pick in
-      next work-split.
+      **SHIPPED 2026-05-12 (UAC@9155d2f)**: `BreakerFiredEvent` (frozen, extra=forbid, mirrors `RiskRuleFiredEvent`)
+      + `breaker_fired_event(config, *, fired_at, alert_code, state, metadata)` builder — both exported from
+      `unified_api_contracts.__init__`. **Consumer switch** (execution-service, risk-and-exposure-service,
+      position-balance, alerting-service) is a follow-up — captured as **DEFERRED P3** below.
 
 **Full-execution criterion**: UAC PR pushed; QG green; ≥10 breakers × 2 archetypes registered. UAC@a7a99b5 + UAC@dc4c9f0
 landed; 20 breakers + 20 recovery rules + 11 kill-switch IDs + 4 provenances + 61 tests. (1.G `BreakerFiredEvent` model
-DEFERRED P2 — discovery from the 2026-05-12 Phase-4 fan-out.)
+SHIPPED UAC@9155d2f 2026-05-12. Consumer switch deferred to **1.G-consumer** — P3 todo below.)
+
+**DEFERRED P3 — 1.G consumer switch**: switch `execution-service/engine/circuit_breaker.py`,
+`risk-and-exposure-service/circuit_breaker_registry.py`, `position-balance.../reconciler_breaker_bridge.py`, and
+`alerting-service/dr_event_handler.py` to emit/validate against `BreakerFiredEvent`. Unblocked by UAC@9155d2f.
 
 ## Phase 2 — UTL kill-switch bus (Days 4-5, ~1 AI-day)
 
@@ -565,7 +566,7 @@ placeholder "TBD" cross-reference).
 
 | Phase / item | Status as of 2026-05-12 | Successor / blocker |
 | --- | --- | --- |
-| Phase 1.G — typed `BreakerFiredEvent` UAC model | DEFERRED P2 (discovery from the Phase-4 fan-out — 4 sub-agents flagged) | This plan Phase 1.G todo — owner pick next work-split; UAC `circuit_breaker.py` addition mirroring `RiskRuleFiredEvent`. |
+| Phase 1.G — typed `BreakerFiredEvent` UAC model | ✅ SHIPPED UAC@9155d2f 2026-05-12 | Model + builder in UAC; consumer switch (execution/risk/pbm/alerting) deferred as P3 in plan body. |
 | Phase 4.B — execution-service: wire `circuit_breaker.py` to per-archetype UAC `registry/circuit_breakers/` `BreakerConfig` + TEST_ONLY `LiveMatchingEngine` paper-vs-venue switch + orchestrator `account_state` wiring | DEFERRED (annotated in 4.B body) | execution-service tab; orchestrator-`account_state` depends on Phase 4.D consumption. |
 | Phase 4.A — risk-and-exposure-service: full removal of legacy `PortfolioContext` explicit-threshold gates + `RiskMonitor` bespoke threshold predicates ("no code-side rule logic remains") | DEFERRED (transitional — registry path composes alongside) | risk-and-exposure-service tab; depends on strategy-architecture-v2 caller supplying a `RuleEvalContext` populated from PBMS state (Phase 4.D consumption). |
 | Phase 5.A — service-side recovery *loop* (instantiate `BreakerRecoveryEngine`, register guards, `arm()` on fire, `tick_all()` on cron/fill, map disarming `RecoveryDecision` → `KillSwitchBus.disarm()` + emit `KILL_SWITCH_*_RECOVERED`/`_UNKILLED`) | DEFERRED P0 (engine + half-wiring shipped utl@d5161fd / risk-exp@550a39e / pbm@50b3c25 / alert@0a52a33) | risk-and-exposure-service tab once a recovery-cron entry point lands. |
