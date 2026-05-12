@@ -334,3 +334,14 @@ firebase.admin and explicitly excludes prod firebase.admin.
 `unified-trading-system-ui/docs/core/DEPLOYMENT.md` is the SSOT for the portal-side build/deploy contract — local
 Firebase Emulator Suite setup, Resend domain caveats, the exact `gcloud run` / `firebase deploy` commands per env, and
 the API token-verification seam.
+
+---
+
+## Data-pipeline VM machine-type sizing — backed by the synthetic benchmark
+
+The default machine type for a data-pipeline VM (`setup-data-pipeline-vm.sh`) should be the *smallest shape that keeps
+the slowest cutover-pipeline stage inside the Group F item 18 "operationally-acceptable window"*, NOT a guessed
+`e2-standard-N`. The per-stage profile + per-`(archetype, vm_shape)` recommendation matrix come from the synthetic-data
+benchmark harness — see [`synthetic-data-benchmarking.md`](synthetic-data-benchmarking.md). Until that matrix is
+populated (real-VM runs are blocked on the Phase-4-tail per `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md`),
+machine-type defaults remain hand-set; treat them as provisional.

@@ -1546,3 +1546,18 @@ and as `- [ ]` plan todos / scoreboard rows. Summary + the pickup order:
 
 **No blocker for the May-15 freeze gate** — everything above is the Phase-2.6 cutover window or operator-gated, not the
 freeze-gate checklist.
+
+---
+
+### FINDING 2026-05-12 (slot 7, mock-data-benchmarking) — missing `benchmark-reports` bucket kind (P2, not freeze-gate-blocking)
+
+`mock_data_pipeline_benchmarking_2026_05_10.md` (Phase 4.A / 5.A) needs a `benchmark-reports` (and a
+`benchmark-synthetic-input`) storage kind in `cloud-providers.yaml` — where the synthetic-benchmark VMs write
+`stage_profile.parquet` + `synthetic_run_manifest.json` (and the synthetic generator input parquets). Neither exists.
+Until they're added: `deployment-service/scripts/vm/launch-synthetic-benchmark-vm.sh` uses the conventional
+`${PROJECT}-benchmark-reports` / `${PROJECT}-benchmark-synthetic-input` names + the benchmark CLI
+(`python -m unified_trading_library.synthetic`) takes `--report-uri` / `--input-uri` explicitly — so no QG STEP 5.69
+inline-formatter violation, but it should go through `resolve_bucket_name(kind="benchmark-reports")` eventually.
+**Suggested**: add both kinds to the `gcp:` and `aws:` storage blocks as cross-cutting Group-A-ish (env-tiered like
+`events`/`config-store`); then ping slot 7 / the mock-data-benchmarking plan to switch the CLI. Owner: this plan
+(bucket-ssot is the canonical owner of `cloud-providers.yaml`).

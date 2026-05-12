@@ -153,3 +153,14 @@ multiplier, 1 hour): **+15% RSS growth** maximum.
 | sustained | 5×         | 3600s    | Weekly    |
 
 Slow tests are marked `@pytest.mark.slow`. PR CI runs only `normal` scenario (excludes `slow`).
+
+---
+
+## Per-pipeline-stage targets — backed by the synthetic benchmark, not guessed
+
+Per-stage wall-clock / CPU / RSS / IO targets for the cutover pipeline (`mtds_read` → `mdps_compute` → `features` →
+`ml_inference` → `strategy` → `matching_engine`) should be derived from the synthetic-data benchmark harness's per-stage
+profile, NOT estimated. See [`../05-infrastructure/synthetic-data-benchmarking.md`](../05-infrastructure/synthetic-data-benchmarking.md)
+for the harness, the `StageProfile` shape, and the per-`(archetype, vm_shape)` recommendation matrix. Status (2026-05-12):
+the matrix is not yet populated (real-VM runs blocked on the Phase-4-tail per
+`plans/active/mock_data_pipeline_benchmarking_2026_05_10.md`); per-stage targets here remain provisional until then.

@@ -180,7 +180,12 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       (via the harness `subprocess` mode once Phase 4 wires the `--synthetic-input-uri` flag) and assert NO schema-drift
       error (CLAUDE.md "Reader/schema-drift bug → RAISE LOUD"). Any column the prod reader expects that the Phase 2.A
       skeleton omits → add it to the skeleton + a `# SCHEMA-PARITY: <reader>` provenance line. Provenance: Phase 3
-      full-execution criterion.
+      full-execution criterion. **Also fold (slot-8 handshake 2026-05-12, `harsh_orchestrator/pings/slot_8.md:15`)**:
+      (a) cefi fixtures cover the 21-venue zero-activity-bar matrix incl. the Cat-D shape (`catalogue_audit_cefi_2026_05_12.md`);
+      (b) tradfi re-point at the new `tradfi_etfs.py`/`tradfi_roots.py` SSOT once Ikenna's catalogue Phase 5 lands —
+      don't bake the fragmented 4-place ETF list into specs; (c) sports/prediction gaps (season-window +
+      `EXPECTED_PAUSED_LEAGUE`; `prediction_canonical_question_group` + `MARKET_LIFECYCLE` data_types) are already
+      covered by the DEFERRED-PER-USER post-cutover sports/prediction sub-plan — anticipate the PR-3/PR-4 fix there.
 
 **Full-execution criterion**: harness reads synthetic data through prod readers without schema-drift errors (3.D, gated
 on Phase 4); row counts match per-archetype data-shape table after calibration (3.C). Generator surface (3.A+3.B)
@@ -188,54 +193,106 @@ design-shipped. ✅(partial)
 
 ## Phase 4 — Benchmark harness wire-in (Days 7-9, ~2 AI-days)
 
-- [ ] [AGENT] P0. **4.A CLI flags.** Backtest CLI gains `--synthetic-generator <id>` + `--synthetic-params <yaml>`.
-      Mutually exclusive with real-data flags.
-- [ ] [AGENT] P0. **4.B Per-stage profiler integration.** Pipeline orchestrator wraps each named stage with
-      `synthetic.profile.profile_stage(name)`.
-- [ ] [AGENT] P0. **4.C Profile parquet emit.** Per-run
-      `gs://{pid}-benchmark-reports/{archetype}/{run_id}/stage_profile.parquet`.
+> **Note (slot 7 2026-05-12):** the plan's "Backtest CLI gains `--synthetic-generator`" framing assumed a single
+> top-level backtest CLI; in reality the harness drives the full DAG across 6 service CLIs, so the right shape is (a)
+> a UTL benchmark CLI that orchestrates (4.A — `python -m unified_trading_library.synthetic`), and (b) each service
+> CLI gaining a `--synthetic-input-uri` flag for the `subprocess` stage path (4.A-tail — deferred, see below). 4.B
+> (per-stage profiler integration) and 4.C (profile-parquet emit) are SATISFIED inside the harness/CLI already.
 
-**Full-execution criterion**: single archetype × single VM run emits non-empty profile.
+- [x] [AGENT] P0. **4.A CLI flags / benchmark CLI.** (utl@`457fe19` — `synthetic/cli.py` + `synthetic/__main__.py`:
+      `python -m unified_trading_library.synthetic --archetype <X> --date-start.. --date-end.. --input-uri.. --report-uri.. --mode stub|subprocess --row-count-scale.. [--venues.. --instruments.. --chains.. --protocols.. --strict-stages]`;
+      resolves the generator set for the archetype, generates synthetic input, drives the prod-pipeline DAG via
+      `BenchmarkHarness`, writes `stage_profile.parquet` + `synthetic_run_manifest.json` under `--report-uri`; mutually
+      exclusive with real-data backtest flags by construction (this CLI is the synthetic path only). Smoke-verified
+      end-to-end in `stub` mode.)
+- [ ] [AGENT] P0. **4.A-tail Per-service `--synthetic-input-uri` flags.** **DEFERRED** (slot 7 2026-05-12). For
+      `subprocess` mode the harness shells out to each service CLI; each of MTDS / MDPS / features-* / ML-inference /
+      strategy / execution needs a `--synthetic-input-uri <prefix>` flag (consumes the generator parquet under that
+      prefix via its existing reader path — no parallel reader, just a source override). Until then the harness
+      `subprocess` mode raises `HarnessStageNotWiredError` (covered by `test_harness_subprocess_mode_raises_not_wired`).
+      Also: `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` needs a `RUN_OPERATION=synthetic-benchmark`
+      branch consuming the `SYNTHETIC_*` metadata. **Successor**: this plan (stays active); if it slips past
+      2026-05-23, fold into `live_pipeline_mtds_mdps_features_2026_05_08`. Provenance: Phase 4 reframe note above.
+- [x] [AGENT] P0. **4.B Per-stage profiler integration.** (utl@`ca9c346` — `BenchmarkHarness._run_stage` wraps every
+      DAG stage with `synthetic.profile.profile_stage(name)`; no separate pipeline-orchestrator to wire — the harness
+      IS the orchestrator, per "Never build standalone backtest engines": `subprocess` mode shells out to the prod
+      service CLIs, the harness only sequences + profiles.)
+- [x] [AGENT] P0. **4.C Profile parquet emit.** (utl@`457fe19` — `cli.main` writes `stage_profile.parquet` +
+      `synthetic_run_manifest.json` to `<report-uri>/{archetype}/{run_id}/` via the generator's local-FS/`gs://`/`s3://`
+      writer abstraction; the launcher (Phase 5.A) sets `--report-uri gs://{pid}-benchmark-reports`.)
+
+**Full-execution criterion**: benchmark CLI emits a non-empty `stage_profile.parquet` for a single archetype (verified
+in `stub` mode; a real per-stage profile needs `subprocess` mode → 4.A-tail). ✅(partial)
 
 ## Phase 5 — Real-VM benchmark runs (Days 9-11, ~2 AI-days)
 
-- [ ] [SCRIPT] P0. **5.A Per-archetype × per-VM-shape matrix.** Launch VMs across `c2-standard-{4,8,16,32}` +
-      `c3-highcpu-44`; run cutover-archetype synthetic harness; emit profile parquet per (archetype, vm_shape).
-- [ ] [SCRIPT] P0. **5.B No fire-and-forget.** Per "No fire-and-forget VM launches" HARD RULE — STARTED + per-stage
-      progress + STOPPED events per VM.
-- [ ] [AGENT] P0. **5.C Evidence capture.**
+> **🟡 PREREQUISITE NOT MET (2026-05-12):** the real matrix run (5.B/5.C) needs Phase 4.A-tail (`--synthetic-input-uri`
+> in 6 service CLIs + the `setup-data-pipeline-vm.sh` `synthetic-benchmark` branch) AND the zombie-watchdog VM
+> relaunched (so the new `synbench-` prefix is picked up). Until both land, only `--mode stub` runs (meaningless
+> profiles). 5.A (launcher script + watchdog registration) is shipped; the actual runs are a documented handoff —
+> see § "Deferred work" below.
+
+- [x] [SCRIPT] P0. **5.A Per-archetype × per-VM-shape launcher.** (deployment-service — `scripts/vm/launch-synthetic-benchmark-vm.sh`:
+      `--archetype <X> --shapes "c2-standard-8 c2-standard-16 c2-standard-32 c3-highcpu-44" --date-start.. --date-end.. --mode.. --env..`;
+      fans out one VM per (archetype, machine-type), each running `python -m unified_trading_library.synthetic` via the
+      `setup-data-pipeline-vm.sh` bootstrap with `SYNTHETIC_*` metadata; VM name `synbench-{arch}-{shape}-{ts}`; the
+      `synbench-` prefix registered in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET` (heartbeat-only). bash + py syntax
+      clean. **Does NOT run yet** — see prerequisite banner.)
+- [ ] [SCRIPT] P0. **5.B No fire-and-forget — actual matrix run.** **DEFERRED (blocked on 4.A-tail + watchdog relaunch)**.
+      Launch the ≥10 (archetype × shape) VMs, verify STARTED+per-stage-progress+STOPPED per VM. Successor: this plan.
+- [ ] [AGENT] P0. **5.C Evidence capture.** **DEFERRED (blocked on 5.B)**. Successor: this plan.
 
 **Full-execution criterion**: ≥10 (archetype × shape) profile parquets in GCS; per-stage wall-clock + CPU max captured.
+Launcher script shipped (5.A); actual runs deferred (5.B/5.C — blocked on 4.A-tail). ✅(partial)
 
 ## Phase 6 — Per-stage profile + VM-shape matrix (Days 11-12, ~1 AI-day)
 
+> **DEFERRED (blocked on Phase 5 actual runs).** The aggregation code is a pandas/polars groupby over the
+> `stage_profile.parquet` files Phase 5 produces — trivial once the parquets exist; no point shipping it against
+> zero/stub data. Successor: this plan.
+
 - [ ] [AGENT] P0. **6.A Aggregate report.** Per-stage P50/P95/P99 wall-clock + CPU + RSS + IO. Output:
-      `benchmark_report.parquet` + markdown summary in plan body.
+      `benchmark_report.parquet` + markdown summary in plan body. **DEFERRED (blocked on Phase 5).**
 - [ ] [AGENT] P0. **6.B VM-shape recommendation matrix.** Per-archetype × per-stage recommended
-      `(min_cpu, min_ram, min_disk, min_iops)`. Justified per profile.
+      `(min_cpu, min_ram, min_disk, min_iops)`. Justified per profile. **DEFERRED (blocked on 6.A).**
 - [ ] [AGENT] P0. **6.C Bottleneck callouts.** Stages where wall-clock × scale-factor exceeds Group F item 18 budget
       ("operationally-acceptable window") flagged as P0 follow-ups for `live_pipeline_mtds_mdps_features_2026_05_08`
-      consumers.
+      consumers. **DEFERRED (blocked on 6.A).**
 
 **Full-execution criterion**: report committed to plan body; ≥1 recommendation per stage; bottleneck callouts filed if
-any.
+any. **DEFERRED (blocked on Phase 5).**
 
 ## Phase 7 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **7.A NEW `codex/05-infrastructure/synthetic-data-benchmarking.md`.** Generator contract, harness
-      shape, per-stage profile, VM-shape matrix.
-- [ ] [AGENT] P0. **7.B UPDATE `runtime-tiers-and-deployment.md`** — VM-shape recommendations cross-link.
-- [ ] [AGENT] P0. **7.C UPDATE `performance-targets.md`** — per-stage targets backed by profile data.
+- [x] [AGENT] P0. **7.A NEW `codex/05-infrastructure/synthetic-data-benchmarking.md`.** Generator contract, harness
+      shape, per-stage profile, VM-shape matrix. (PM — `codex/05-infrastructure/synthetic-data-benchmarking.md`:
+      5 contract axes (UAC), the generator (UTL), the per-stage profiler, the harness DAG, the benchmark CLI + launcher,
+      the VM-shape matrix (status: not-yet-populated, blocked on Phase 4-tail), the execution-owner block, the 4-step
+      "add a generator" workflow.)
+- [x] [AGENT] P0. **7.B UPDATE `runtime-tiers-and-deployment.md`** — VM-shape recommendations cross-link. (PM —
+      added "Data-pipeline VM machine-type sizing — backed by the synthetic benchmark" section pointing at the new doc;
+      machine-type defaults flagged provisional until the matrix is populated.)
+- [x] [AGENT] P0. **7.C UPDATE `performance-targets.md`** — per-stage targets backed by profile data. (PM — added
+      "Per-pipeline-stage targets — backed by the synthetic benchmark, not guessed" section; per-stage targets flagged
+      provisional until the matrix is populated.)
 
-**Full-execution criterion**: 1 NEW + 2 UPDATE; cross-references resolve.
+**Full-execution criterion**: 1 NEW + 2 UPDATE; cross-references resolve. ✅
 
 ## Phase 8 — Cutover gate (Day 13, ~0.25 AI-day)
 
 - [ ] [AGENT] P0. **8.A Master plan extension.** Group F item 18 row gains "VM-shape sized per benchmark report;
-      cutover-archetype profile green within Group F operationally-acceptable budget."
-- [ ] [AGENT] P0. **8.B Banners removed.**
+      cutover-archetype profile green within Group F operationally-acceptable budget." **DEFERRED (blocked on Phase 5/6
+      — there is no benchmark report yet to size against; editing the master-plan Group F row now would assert a green
+      that doesn't exist).** Successor: this plan, after Phase 5/6 land. The master plan (`master_to_live_defi_2026_05_23.md`)
+      Group F item 18 is Ikenna-side territory anyway — when the report lands, ping Ikenna's main to add the row +
+      continuous-verification column entry.
+- [ ] [AGENT] P0. **8.B Banners removed.** No `🟢 VM RUNNING` / `🟡 IN-FLIGHT REFACTOR` banner was ever added (no VM
+      launched, no on-disk-shape refactor — the synthetic generator writes to a dedicated benchmark prefix, not the prod
+      hive). Nothing to remove. (Note: when Phase 5 actually launches the matrix VMs, a `🟢 VM RUNNING` banner SHOULD be
+      added to this plan + `live_pipeline_mtds_mdps_features_2026_05_08` per the Cross-Plan Coordination Banners rule.)
 
-**Full-execution criterion**: master plan row green; banners gone.
+**Full-execution criterion**: master plan row green; banners gone. **DEFERRED (8.A blocked on Phase 5/6); 8.B is a
+no-op (no banner was added).**
 
 ## Cross-plan coordination
 
@@ -256,11 +313,15 @@ any.
 
 ## Done definition
 
-1. ✅ Phases 0-8 every checkbox flipped with evidence.
-2. ✅ UAC + UTL + MTDS + PM green.
-3. ✅ Per-archetype × per-VM-shape profile matrix; recommendations justified.
-4. ✅ Bottleneck callouts (if any) filed in `live_pipeline_mtds_mdps_features_2026_05_08`.
-5. ✅ Master plan Group F item 18 row gains the budget assertion.
+1. ⏳ Phases 0-8 every checkbox flipped with evidence — **Phases 0-4 + 7 done (2026-05-12 slot-7); Phase 5.A done; 3.C
+   / 3.D / 4.A-tail / 5.B / 5.C / 6.A-C / 8.A deferred (see § "Deferred work after 2026-05-12 slot-7 session").**
+2. ⏳ UAC + UTL + PM green — UAC (`d47b232`) + UTL (`ca9c346` + `457fe19`) basedpyright + ruff + unit tests verified
+   green via `.venv-workspace` (slot worktrees have no per-repo `.venv`); PM doc-only; deployment-service bash+py
+   syntax clean; CI confirms full QG. (Plan said "MTDS green" — MTDS is not touched this round; the MTDS
+   `--synthetic-input-uri` flag is in the deferred 4.A-tail.)
+3. ⏳ Per-archetype × per-VM-shape profile matrix; recommendations justified — **deferred (Phase 5/6 blocked on 4.A-tail).**
+4. ⏳ Bottleneck callouts (if any) filed in `live_pipeline_mtds_mdps_features_2026_05_08` — **deferred (Phase 6.C, blocked on Phase 5/6).**
+5. ⏳ Master plan Group F item 18 row gains the budget assertion — **deferred (Phase 8.A, blocked on Phase 5/6; Ikenna-side row).**
 
 ## Audit findings
 
@@ -322,6 +383,85 @@ keep the estimate + a `# ESTIMATE` marker. `defi_gas` non-uniform per-chain bloc
 the UTL generator (Phase 2.A) carries a per-chain block-rate weighting table; do NOT distribute `row_count_per_day`
 uniformly across the 5 chain shards.
 
+## Deferred work after 2026-05-12 slot-7 session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Phase 0 (pre-audit) | ✅ done | — |
+| Phase 1 (UAC contracts + registry) | ✅ done — uac@`d47b232` (13 generator ids, 70 tests) | — |
+| Phase 2 (UTL generator + profiler + harness) | ✅ done — utl@`ca9c346` (54 tests) | — |
+| Phase 3.A / 3.B (per-archetype generators) | ✅ design-shipped (Phase 1.B specs + Phase 2.A domain logic) | — |
+| Phase 3.C (real-backfill row-count + axis-2 byte-size calibration) | 🟡 deferred (P1) | this plan; if cutover backfill slips past 2026-05-23 → fold into `live_pipeline_mtds_mdps_features_2026_05_08` |
+| Phase 3.D (prod-reader schema-parity verification) | 🟡 deferred (P1) | this plan; **blocked on Phase 4.A-tail** (needs `subprocess` mode) |
+| Phase 4.A (benchmark CLI) | ✅ done — utl@`457fe19` (`python -m unified_trading_library.synthetic`) | — |
+| Phase 4.B (per-stage profiler integration) | ✅ done — in `BenchmarkHarness` | — |
+| Phase 4.C (profile-parquet emit) | ✅ done — in `cli.main` | — |
+| Phase 4.A-tail (`--synthetic-input-uri` flag in 6 service CLIs + `setup-data-pipeline-vm.sh` `synthetic-benchmark` branch) | 🟡 deferred (P0) | this plan; if slips past 2026-05-23 → `live_pipeline_mtds_mdps_features_2026_05_08` |
+| Phase 5.A (matrix launcher + watchdog registration) | ✅ done — deployment-service@`9e9bf42` (`launch-synthetic-benchmark-vm.sh` + `synbench-` prefix) | — |
+| Phase 5.B / 5.C (actual matrix VM runs + evidence) | 🟡 deferred (P0) | this plan; **blocked on Phase 4.A-tail + zombie-watchdog VM relaunch** |
+| Phase 6.A-C (aggregate report + VM-shape matrix + bottleneck callouts) | 🟡 deferred (P0) | this plan; **blocked on Phase 5 actual runs** |
+| Phase 7 (codex SSOTs) | ✅ done — `codex/05-infrastructure/synthetic-data-benchmarking.md` NEW + `runtime-tiers-and-deployment.md` + `performance-targets.md` cross-links | — |
+| Phase 8.A (master-plan Group F item 18 row) | 🟡 deferred (P0) | this plan; **blocked on Phase 5/6** (no report to assert green against); Ikenna-side row — ping when ready |
+| Phase 8.B (banner removal) | ✅ n/a (no banner was added — no VM launched, no on-disk-shape refactor) | — |
+| `benchmark-reports` bucket kind in `cloud-providers.yaml` | 🟡 deferred (P2) | finding routed to `bucket_name_ssot_canonicalisation_2026_05_10.md` (slot 4) — until then the launcher uses the conventional `${PROJECT}-benchmark-reports` name + the CLI takes `--report-uri` explicitly |
+
+**The active half of this plan** (it stays in `plans/active/`): Phase 4.A-tail → Phase 5.B/5.C → Phase 6 → Phase 8.A,
+plus 3.C/3.D. The cutover gate (Group F item 18) is the deadline driver. **Cannot archive until at least Phase 6
+lands** (or it explicitly hands the real-VM run to `live_pipeline_mtds_mdps_features_2026_05_08` — which it does NOT
+yet; current state is "this plan stays active").
+
+## Temporary states + their canonical follow-up plans
+
+- **`subprocess`-mode harness raises `HarnessStageNotWiredError`** until Phase 4.A-tail wires `--synthetic-input-uri`
+  into MTDS / MDPS / features-* / ML-inference / strategy / execution CLIs + a `setup-data-pipeline-vm.sh`
+  `synthetic-benchmark` branch. Canonical follow-up: **this plan** (Phase 4.A-tail); if it slips past 2026-05-23 →
+  `live_pipeline_mtds_mdps_features_2026_05_08`. Until then only `--mode stub` runs (meaningless profiles — exercises
+  wiring only).
+- **`launch-synthetic-benchmark-vm.sh` uses the conventional `${PROJECT}-benchmark-reports` bucket name** (no
+  `resolve_bucket_name(kind="benchmark-reports")`) because that kind isn't in `cloud-providers.yaml` yet. Canonical
+  follow-up: `bucket_name_ssot_canonicalisation_2026_05_10.md` adds the kind; then switch the CLI to derive it.
+- **`SyntheticGeneratorSpec.real_backfill_sample_uri` is empty + `default_row_count_per_day` are axis-1 estimates**
+  for all 13 specs. Canonical follow-up: **this plan** Phase 3.C (real-backfill calibration).
+- **Master plan Group F item 18 row does NOT yet assert the benchmark budget.** Canonical follow-up: **this plan**
+  Phase 8.A, after Phase 5/6 land — coordinated with Ikenna's main (the master-plan Group F rows are Ikenna-side).
+
 ## DONE block
 
-(Filled at completion.)
+### DONE-2026-05-12 — slot 7 (Harsh side, agent-tag harsh-mock-data-benchmarking-tab)
+
+**Shipped this session** (one continuous slot, ~14 cal AI-day budget):
+
+- **Phase 0** — § Audit findings 0.A (no reusable cross-pipeline generator exists; only per-service in-memory test
+  mock providers) + 0.B (13-spec data-shape table; row counts = realism-axis-1 estimates → 3.C calibration P1).
+- **Phase 1** — uac@`d47b232` `canonical/crosscutting/synthetic_generator.py` (`SyntheticGeneratorId` 13 ids /
+  `SyntheticDataDomain` 8 / `SyntheticRealismAxis` 4 / `SyntheticShardLayout` / `SyntheticParams` / `SyntheticGeneratorSpec`
+  / `SyntheticOutputManifest` / `SyntheticRunManifest` / `SYNTHETIC_GENERATOR_REGISTRY` + helpers, on the UAC facade)
+  + `registry/generators/{cefi,defi,tradfi}.py` (6 cefi + 5 defi + 2 tradfi specs for the 2 cutover archetypes +
+  cross-asset hedge overlay) + `tests/internal/unit/test_synthetic_generator.py` (70 tests, basedpyright+ruff clean).
+- **Phase 2** — utl@`ca9c346` `unified_trading_library/synthetic/{generator,profile,harness}.py`: realism-axis-1..3
+  parquet generator (per-domain column skeletons + per-row `available_at` + `PER_CHAIN_BLOCK_RATE_PER_DAY`-weighted
+  `defi_gas` distribution + deterministic per-shard RNG + local-FS/`gs://`/`s3://` writer + `_synthetic_manifest.json`
+  receipt); `profile_stage()` ctx-manager + `StageProfileAccumulator` (wall-clock/CPU/RSS/IO/cloud-listing →
+  `stage_profile.parquet`); `BenchmarkHarness` (generator → prod-pipeline DAG `mtds_read..matching_engine`; `subprocess`
+  mode shells out to service CLIs + raises `HarnessStageNotWiredError` until Phase 4-tail; `stub` mode for tests;
+  per-stage isolation). `tests/unit/synthetic/` 54 tests, basedpyright+ruff clean.
+- **Phase 3.A/3.B** — design-shipped (the per-archetype generators ARE the registry specs × the per-domain logic);
+  5-way asset_group fan-out NOT run (redundant given Phase 1+2 cover cefi/defi/tradfi; sports/prediction DEFERRED-PER-USER).
+- **Phase 4.A** — utl@`457fe19` `synthetic/cli.py` + `synthetic/__main__.py` (`python -m unified_trading_library.synthetic`);
+  4.B (profiler integration) + 4.C (profile-parquet emit) satisfied inside the harness/CLI; smoke-verified end-to-end
+  in `stub` mode.
+- **Phase 5.A** — deployment-service@`9e9bf42` `scripts/vm/launch-synthetic-benchmark-vm.sh` (one VM per
+  (archetype, machine-type)) + `synbench-` prefix in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET`.
+- **Phase 7** — `codex/05-infrastructure/synthetic-data-benchmarking.md` NEW + cross-link sections in
+  `runtime-tiers-and-deployment.md` + `performance-targets.md`.
+- **Plan flips** — PM@`a13ae989` (Phase 0+1), PM@`e880e823` (Phase 2+3), + this session's final flip (Phase 4+5.A+7+8
+  + Done-definition + scoreboard + Temporary-states).
+
+**Deferred (with successors)** — see § "Deferred work after 2026-05-12 slot-7 session" + § "Temporary states":
+3.C real-backfill calibration (P1), 3.D prod-reader schema-parity (P1, blocked on 4.A-tail), 4.A-tail per-service
+`--synthetic-input-uri` flags (P0), 5.B/5.C actual matrix VM runs (P0, blocked on 4.A-tail + watchdog relaunch),
+6.A-C aggregate report + VM-shape matrix (P0, blocked on Phase 5), 8.A master-plan Group F row (P0, blocked on Phase 5/6,
+Ikenna-side), `benchmark-reports` bucket kind (P2, routed to bucket-ssot plan / slot 4).
+
+**Plan stays active** — the cutover gate (Group F item 18, deadline 2026-05-23) is not closed; do not archive until
+≥ Phase 6 lands or it explicitly hands the real-VM run to `live_pipeline_mtds_mdps_features_2026_05_08`.
