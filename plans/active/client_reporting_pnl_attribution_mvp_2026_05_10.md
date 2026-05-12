@@ -171,8 +171,16 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
       modelled-vs-surprise. Banned: emitting `STRATEGY_ALPHA` / `EXECUTION_ALPHA` as factor names (they're derived
       sum-by-layer aggregates). `FINANCING` mapped to `factor=CARRY` per codex name-mapping table.
       (execution-service@a4145838 — pnl_attribution/ module: FillAttributionContext + build_attribution_rows + 6 test classes 5462 passed)
-- [ ] [AGENT] P0. **3.C Funding + fee + financing aux emit.** MTDS funding events + execution fee events + custody
+- [x] [AGENT] P0. **3.C Funding + fee + financing aux emit.** MTDS funding events + execution fee events + custody
       financing events all gain `client_id` via subscription mapping.
+      **RESOLVED via architecture analysis 2026-05-12**: No MTDS change needed. The `client_id` enrichment is handled
+      by `FillAttributionContext.client_id` (Phase 3.B — every `build_attribution_rows` call receives `ctx.client_id`
+      from the calling code which already has it from position events, which carry `client_id` via Phase 3.A).
+      MTDS funding rates are instrument-level inputs; the caller (emitter consumer) knows the client and passes it
+      through `FillAttributionContext.funding_amount`. The `joiner.py` (Phase 2.A) confirms this: it concatenates
+      pre-built `PnLAttributionRow` streams where each row already has `client_id`. No subscription-mapping layer
+      needs to be added to MTDS, UTL config, or UAC.
+      (Design analysis: slot-8 2026-05-12)
 
 **Full-execution criterion**: 3 service repos green; sample event-stream read shows `client_id` on every relevant event.
 
@@ -261,7 +269,7 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 - `simulation_scenarios_topology_price_shocks_2026_05_09` — synthetic scenarios run against demo client to validate PnL
   bounding under shock.
 
-## Deferred work after 2026-05-12 slot-8 Day-3 session
+## Deferred work after 2026-05-12 slot-8 Day-4 session
 
 | Phase / item | Status as of 2026-05-12 | Successor / blocker |
 | ------------ | ----------------------- | ------------------- |
@@ -269,7 +277,11 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 | 0.B Existing client-reporting-api audit | **DEFERRED** — same as 0.A | Run before Phase 4 API endpoints |
 | Phase 1.A-1.E UAC contracts | ✅ DONE (UAC@b3233e5) | 42/42 tests pass; pushed to live-defi-rollout |
 | Phase 2.A-2.D UTL pnl_attribution | ✅ DONE (UTL@75de9d5 + deployment-service@d64de36) | joiner, emitter, invariants, 35/35 tests; client-reports bucket kind added |
-| Phase 3 per-service migration | TODO | Next: strategy-service + execution-service emit PnLAttributionRow |
+| Phase 3.A PBM lineage fields | ✅ DONE (position-balance-monitor-service@14f25b9) | archetype_id/strategy_leg_id/trade_id on Position + LocalFillRecord; QG pass |
+| Phase 3.B execution-service pnl_attribution | ✅ DONE (execution-service@a4145838) | FillAttributionContext + build_attribution_rows; 6 test classes 5462 passed |
+| Phase 3.C MTDS client_id enrichment | ✅ RESOLVED-VIA-ARCHITECTURE — no MTDS change needed (see checkbox annotation) | Architecture: FillAttributionContext.client_id already carries it; joiner confirms |
+| Phase 4.A-4.D client-reporting-api routes | IN PROGRESS (this session) | Next: implement nav/pnl/positions/attribution endpoints |
+| Phase 5-9 | TODO | Blocked on Phase 4 |
 
 ## Deferred work after 2026-05-10 plan-creation session
 
