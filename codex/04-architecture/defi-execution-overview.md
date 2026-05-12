@@ -18,8 +18,12 @@ execution-service routes by operation type:
     STAKE    → execution-service DeFi LidoConnector / EtherFiConnector
     FLASH_*  → execution-service DeFi AAVEConnector.flash_loan()
     ↓
-execution-service fetches credentials from SM:
-    wallet_private_key  → defi-wallet-private-key
+execution-service fetches credentials from SM (single SSOT — codex audit EX-23 2026-05-12):
+    The canonical SM-secret-name map is in
+    `execution-service/.../cli/handlers/live_execution_handler.py` + extended by `interface-credential-convention.md`
+    § "Custody" (`private_key_secret_ref` / `kms_key_uri` for the cloud_kms cutover path per EX-10/EX-23 reconciliation).
+    Examples below are illustrative — refer to the live_execution_handler.py source for the actual fetch list.
+    wallet_private_key  → defi-wallet-private-key  (or `kms_key_uri` for cloud_kms_encrypted cutover default)
     alchemy_api_key     → alchemy-api-key
     ↓
 Resolves RPC URL from UAC CHAIN_RPC_TEMPLATES[chain_id]
@@ -62,21 +66,25 @@ execution-service DeFi connector executes:
 
 ## Error Classification
 
-Every on-chain revert maps to a structured error code with an action:
+Every on-chain revert maps to a structured error code with an action. SSOT for the closed set: UAC
+`unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (13 codes; see CLAUDE.md § "DeFi Execution
+Architecture"). Table refreshed 2026-05-12 per slot 8 exec audit EX-7 — earlier count was 11.
 
-| Code                              | Action | When                    |
-| --------------------------------- | ------ | ----------------------- |
-| INSUFFICIENT_COLLATERAL           | FAIL   | Borrow exceeds LTV      |
-| INSUFFICIENT_BALANCE              | FAIL   | Not enough tokens       |
-| ASSET_NOT_SUPPORTED               | FAIL   | Token not in pool       |
-| ZERO_AMOUNT                       | FAIL   | Amount must be > 0      |
-| TX_REVERTED                       | FAIL   | Generic revert          |
-| GAS_ESTIMATION_FAILED             | RETRY  | Node congestion         |
-| SLIPPAGE_EXCEEDED                 | RETRY  | Price moved             |
-| FLASH_LOAN_RECEIVER_INVALID       | FAIL   | Receiver not a contract |
-| FLASH_LOAN_INSUFFICIENT_LIQUIDITY | FAIL   | Pool drained            |
-| NO_OUTSTANDING_DEBT               | SKIP   | Nothing to repay        |
-| NO_COLLATERAL_DEPOSITED           | FAIL   | Can't borrow            |
+| Code                              | Action | When                            |
+| --------------------------------- | ------ | ------------------------------- |
+| INSUFFICIENT_COLLATERAL           | FAIL   | Borrow exceeds LTV              |
+| INSUFFICIENT_BALANCE              | FAIL   | Not enough tokens               |
+| NO_COLLATERAL_DEPOSITED           | FAIL   | Can't borrow                    |
+| ASSET_NOT_SUPPORTED               | FAIL   | Token not in pool               |
+| ZERO_AMOUNT                       | FAIL   | Amount must be > 0              |
+| TX_REVERTED                       | FAIL   | Generic revert                  |
+| GAS_ESTIMATION_FAILED             | RETRY  | Node congestion                 |
+| SLIPPAGE_EXCEEDED                 | RETRY  | Price moved                     |
+| FLASH_LOAN_RECEIVER_INVALID       | FAIL   | Receiver not a contract         |
+| FLASH_LOAN_INSUFFICIENT_LIQUIDITY | FAIL   | Pool drained                    |
+| NO_OUTSTANDING_DEBT               | SKIP   | Nothing to repay                |
+| BORROW_CAP_EXCEEDED               | FAIL   | Pool borrow-cap reached         |
+| SUPPLY_CAP_EXCEEDED               | FAIL   | Pool supply-cap reached         |
 
 Error format: `ERROR_CODE: AAVE V3 transaction failed -- <raw message>`
 
@@ -97,7 +105,11 @@ Uniswap swaps use on-chain slippage protection:
 1. Quote via Quoter contract → `expectedAmountOut`
 2. Apply tolerance: `minAmountOut = expected * (1 - slippage_bps / 10000)`
 3. SwapRouter02 reverts if actual output < minAmountOut
-4. Default: 50 bps (0.5%). Configurable via `config["max_slippage_bps"]`
+4. Default slippage tolerance: see code SSOT in `execution-service/.../defi_execution/protocols/uniswap.py`
+   (`max_slippage_bps` default; reconcile codex narrative against the code default on next exec audit pass — slot 8
+   audit EX-9 2026-05-12 flagged drift across mev-protection.md = 20 bps, this doc = 50 bps,
+   execution-policy.md examples = 10/20/30/50 bps; the per-rule examples are correct, the doc-narrative defaults need
+   alignment to the single code default). Configurable via `config["max_slippage_bps"]`.
 
 ## Integration Testing
 

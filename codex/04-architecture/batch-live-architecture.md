@@ -325,6 +325,14 @@ optimisation.
 **Execution alpha** is the P&L difference between live fills and benchmark fills. It measures how much the execution
 layer adds (or loses) relative to the idealised fill. Computed as:
 
+> **AMM matching-engine fidelity gate (codex audit EX-17 2026-05-12)**: the simulated-fill side of `execution_alpha`
+> must stay within tolerance of on-chain `Swap` events for the May-23 cutover archetypes. Owner-plan:
+> [`plans/active/defi_simulation_realism_2026_05_10.md`](../../plans/active/defi_simulation_realism_2026_05_10.md)
+> Phases 2 + 8C. Continuous-verification path: golden-set harness at
+> [`amm-slippage-simulation.md`](./amm-slippage-simulation.md) § "Golden test set harness" runs in
+> execution-service `scripts/quality-gates.sh` against the per-pool snapshot fixtures; tolerance gate fails the
+> matching-engine vs `Swap`-event delta out-of-band. Master-plan readiness checklist cross-link: Group B / B-13.
+
 ```
 execution_alpha = live_fills_pnl - benchmark_fills_pnl
 ```
