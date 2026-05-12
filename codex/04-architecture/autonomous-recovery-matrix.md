@@ -264,13 +264,40 @@ distinct from — Layer 3's `BreakerRecoveryMode` 2-set (`manual_unkill` / `auto
 
 **How they compose**: a venue rejection at Layer 4 maps to an ErrorAction; that ErrorAction may transition the breaker
 state machine (e.g. repeated `FAIL` classifications open the breaker). Once open, the breaker's
-`BreakerConfig.recovery_mode` (defaulted via `BREAKER_RECOVERY_DEFAULTS[action]`, or explicitly overridden) governs
-exit semantics. Layer 4 `ErrorAction` is per-attempt; Layer 3 `BreakerRecoveryMode` is per-state-transition.
+`BreakerConfig.recovery_mode` (defaulted via `BREAKER_RECOVERY_DEFAULTS[action]`, or explicitly overridden) governs exit
+semantics. Layer 4 `ErrorAction` is per-attempt; Layer 3 `BreakerRecoveryMode` is per-state-transition.
 
 **Cross-references**: [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) — `BreakerAction` +
-`BreakerRecoveryMode` taxonomy. [`kill-switch-event-bus.md`](kill-switch-event-bus.md) — arm/disarm event flow
-consuming recovery decisions. [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) — integrated
-state-machine narrative.
+`BreakerRecoveryMode` taxonomy. [`kill-switch-event-bus.md`](kill-switch-event-bus.md) — arm/disarm event flow consuming
+recovery decisions. [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) — integrated state-machine
+narrative.
+
+### Runtime: `BreakerRecoveryEngine` (UTL, DR plan Phase 5.A)
+
+The taxonomy declares _what_ recovery mode each breaker uses;
+`unified_trading_library.circuit_breaker.BreakerRecoveryEngine` (shipped UTL@d5161fd) is the _runtime_ state machine
+that drives it. One engine per process holds the armed-breaker registry:
+
+- `arm(config, recovery_rule, *, armed_at=...)` — record that a `CircuitBreakerId` fired; stores its `BreakerConfig`
+  (carrying `recovery_mode` + `cooldown_seconds`) + the matching `BreakerRecoveryRule` (carrying `guard_description`,
+  `retry_policy`, `auto_disarm_after_seconds`).
+- `register_guard(breaker_id, guard_fn)` — register the green-condition predicate (`Callable[[CircuitBreakerId], bool]`)
+  for an `auto_cooldown` breaker. **Fail-loud**: `evaluate()` on an `auto_cooldown` breaker with no registered guard
+  raises `MissingRecoveryGuardError` — no silent stuck state.
+- `evaluate(breaker_id, *, now=...) -> RecoveryDecision` — one recovery tick. `manual_unkill` mode → always `HOLD`.
+  `auto_cooldown` mode → run the guard; N consecutive `True` readings (default N=2) → `AUTO_DISARM`; if
+  `auto_disarm_after_seconds` has elapsed regardless of guard state → `TIMEOUT_DISARM` (a hard ceiling so a
+  permanently-red guard can't pin a least-restrictive breaker forever).
+- `manual_unkill(breaker_id, *, operator_id, now=...) -> RecoveryDecision` — operator-driven disarm (`MANUAL_DISARM`);
+  works for both modes (operators always override; the reverse — auto-disarming a `manual_unkill` breaker — is
+  forbidden); `operator_id` is mandatory for the `KILL_SWITCH_MANUAL_UNKILLED` audit trail.
+- `tick_all(*, now=...)` — `evaluate()` every armed `auto_cooldown` breaker (skips `manual_unkill`), deterministic
+  `CircuitBreakerId` order; for a cron / per-fill recovery sweep.
+
+The engine is **pure** — it never touches the `KillSwitchBus` or the alerting channels. The caller (DR Phase 5 service
+wiring) maps a disarming `RecoveryDecision` to `KillSwitchBus.disarm(...)` + emits `KILL_SWITCH_AUTO_RECOVERED` (for
+`AUTO_DISARM` / `TIMEOUT_DISARM`) or `KILL_SWITCH_MANUAL_UNKILLED` (for `MANUAL_DISARM`). `RecoveryDecision` carries
+`recovered_after_seconds` + the boolean `guard_trail` so the alert body can show the evaluation history.
 
 ## Related
 
