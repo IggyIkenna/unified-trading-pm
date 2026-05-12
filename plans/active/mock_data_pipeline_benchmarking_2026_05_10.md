@@ -116,36 +116,75 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
 
 ## Phase 2 — UTL synthetic primitives (Days 3-5, ~2 AI-days)
 
-- [ ] [AGENT] P0. **2.A `synthetic/generator.py`.** Per-data_type generator class; produces parquets with correct
+- [x] [AGENT] P0. **2.A `synthetic/generator.py`.** Per-data_type generator class; produces parquets with correct
       schema + cardinality + `available_at` discipline (per CLAUDE.md "available_at is write-time"). Realism axis 1-3.
-- [ ] [AGENT] P0. **2.B `synthetic/harness.py`.** Drives full pipeline end-to-end: generator → MTDS write → MDPS compute
+      (utl@`ca9c346` — `generate(SyntheticParams) -> SyntheticOutputManifest`: per-`SyntheticDataDomain` column
+      skeletons (8 families) + per-row `available_at = ts + emission-latency` + `PER_CHAIN_BLOCK_RATE_PER_DAY`-weighted
+      `defi_gas` shard distribution (NON-uniform per § Audit findings 0.B) + deterministic per-shard RNG +
+      local-FS/`gs://`/`s3://` writer abstraction + `_synthetic_manifest.json` receipt + `load_output_manifest()`.)
+- [x] [AGENT] P0. **2.B `synthetic/harness.py`.** Drives full pipeline end-to-end: generator → MTDS write → MDPS compute
       → features → ML → strategy → matching engine. Reuses prod entry points; no parallel pipeline.
-- [ ] [AGENT] P0. **2.C `synthetic/profile.py`.** Wraps each pipeline stage with per-stage profiler (psutil + GCS / S3
+      (utl@`ca9c346` — `BenchmarkHarness.run(archetype, ...)`: generator step (per-spec `generate()` → `SyntheticRunManifest`)
+      then prod-pipeline DAG `PIPELINE_STAGE_ORDER` (mtds_read..matching_engine, subset per `pipeline_stages_touching`,
+      optional stages skipped); `subprocess` mode shells out to each service CLI w/ `--synthetic-input-uri` (raises
+      `HarnessStageNotWiredError` until Phase 4 wires the flag — NO parallel pipeline); `stub` mode = in-process stubs
+      for tests/smoke; per-stage isolation (failed stage → exit_code≠0, harness continues unless `strict_stages`).)
+- [x] [AGENT] P0. **2.C `synthetic/profile.py`.** Wraps each pipeline stage with per-stage profiler (psutil + GCS / S3
       listing instrumentation). Output: `StageProfile` parquet (stage_name, wall_clock, cpu_max, rss_max, io_read_bytes,
-      io_write_bytes).
-- [ ] [AGENT] P0. **2.D Tests.** ≥30 unit tests.
+      io_write_bytes). (utl@`ca9c346` — `profile_stage(name)` ctx-manager: monotonic wall-clock + `cpu_seconds`/`cpu_max_percent`
+      + `rss_max_bytes` (sampler thread, process + children) + `io_read/write_bytes` (psutil io_counters delta) +
+      `cloud_list_calls`/`cloud_objects_listed` (via `record_cloud_listing()` thread-local); `StageProfileAccumulator`
+      collects + back-fills run_id/archetype/vm_shape + `write_parquet("stage_profile.parquet")`.)
+- [x] [AGENT] P0. **2.D Tests.** ≥30 unit tests. (utl@`ca9c346` — `tests/unit/synthetic/`: 54 tests pass (27 generator
+      + 14 profile + 13 harness); covers parquet write/schema/`available_at`/cardinality/`defi_gas` non-uniform/manifest
+      round-trip/deterministic-RNG; profiler wall-clock/cloud-listing/exception-recording; harness stub end-to-end +
+      `subprocess` NotWired + auto-resolve + optional-skip + strict/non-strict. basedpyright + ruff clean.)
 
-**Full-execution criterion**: UTL PR pushed; QG green; harness end-to-end on stub data emits non-empty
-`StageProfile.parquet`.
+**Full-execution criterion**: UTL PR pushed (utl@`ca9c346`); QG — basedpyright clean (`.venv-workspace`) + ruff clean
++ 54 unit tests green; CI confirms full QG. Harness `stub`-mode end-to-end emits non-empty `stage_profile.parquet`
+(verified in `test_harness_stub_mode_end_to_end` + `test_accumulator_writes_parquet`). ✅
 
-## Phase 3 — Per-archetype generators (Days 5-7, ~2 AI-days, 2 parallel sub-agents)
+## Phase 3 — Per-archetype generators (Days 5-7, ~2 AI-days)
 
-- [ ] [AGENT] P0. **3.A `carry_staked_basis` generators.** DeFi gas, LST rates (jitoSOL/mSOL/bSOL Solana +
+> **Scope note (slot 7 2026-05-12):** the per-archetype generators are the cross-product of (a) the registry specs
+> (Phase 1.B) and (b) the per-`SyntheticDataDomain` column-skeleton + cardinality + `available_at` logic (Phase 2.A) —
+> there is no additional "per-archetype generator class" to write. So 3.A/3.B are **design-shipped** with Phases 1.B +
+> 2.A; what remains is *calibration* (3.C — real-backfill row counts + axis-2 byte sizes) and *prod-reader schema-parity
+> verification* (3.D — gated on Phase 4 since it needs a real pipeline-stage run). The work-split's "5 asset_group
+> sub-agents" was NOT run as a 5-way fan-out: sports/prediction generators are DEFERRED-PER-USER (plan non-goals), and
+> cefi/defi/tradfi are fully covered by the 13 shipped specs + the Phase 2.A domain logic — a 5-way fan-out would have
+> been redundant work + 2 no-op confirmations.
+
+- [x] [AGENT] P0. **3.A `carry_staked_basis` generators.** DeFi gas, LST rates (jitoSOL/mSOL/bSOL Solana +
       wstETH/rETH/cbETH EVM), Aave + Morpho lending indices, Uniswap + Curve pool states, Pyth + Chainlink oracle feeds.
-      Per-day row counts calibrated to real-backfill samples.
-- [ ] [AGENT] P0. **3.B `ARBITRAGE_PRICE_DISPERSION` generators.** CeFi tick + ohlcv_1m + ohlcv_15m + funding_rate +
+      (design-shipped — uac@`d47b232` `registry/generators/defi.py` (5 specs: `defi_gas`/`defi_lst_rates`/`defi_lending_indices`/`defi_dex_pool_state`/`defi_oracle_feeds`,
+      shard atoms `(chain,)` / `(chain,protocol)` / `(chain,pool)` / `(chain,oracle_feed)`) + utl@`ca9c346` `synthetic/generator.py`
+      `DEFI_ONCHAIN`/`DEFI_RATES`/`DEFI_DEX`/`DEFI_ORACLE` column skeletons; cutover universe encoded in `CUTOVER_DEFI_CHAINS`/`CUTOVER_LST_PROTOCOLS`/`CUTOVER_LENDING_PROTOCOLS`/`CUTOVER_DEX_POOLS`/`CUTOVER_ORACLE_FEEDS`.
+      Real-backfill row-count calibration → 3.C P1.)
+- [x] [AGENT] P0. **3.B `ARBITRAGE_PRICE_DISPERSION` generators.** CeFi tick + ohlcv_1m + ohlcv_15m + funding_rate +
       OI + liquidations across cutover venues (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster) for the relevant
-      instrument set.
+      instrument set. (design-shipped — uac@`d47b232` `registry/generators/cefi.py` (6 specs, shard atom `(venue,instrument)`,
+      `CUTOVER_CEFI_VENUES` = the 6 cutover perp venues × `CUTOVER_CEFI_INSTRUMENTS` BTC/ETH/SOL) + utl@`ca9c346`
+      `CEFI_TICK`/`CEFI_OHLCV`/`CEFI_DERIVATIVES` column skeletons; row counts = axis-1 estimates, calibration → 3.C.)
 - [ ] [AGENT] P1. **3.C Real-backfill calibration.** **DEFERRED-from-Phase-0.B** (slot 7 2026-05-12). For each of the
       13 specs in `registry/generators/{cefi,defi,tradfi}.py`: where the real backfill has reached the cutover universe,
       populate `real_backfill_sample_uri` + tune `default_row_count_per_day` + the axis-2 byte-size model from
       `gs://central-element-323112-*-{raw,processed}/...` samples; where it hasn't, keep the estimate + a `# ESTIMATE`
       marker. The `defi_gas` non-uniform per-chain block-rate distribution (ETH 7.2k / ARB 350k / OP+BASE 43.2k / SOL
-      216k blocks per day) is the trickiest — the UTL generator (Phase 2.A) carries the per-chain weighting table; do
-      NOT distribute `row_count_per_day` uniformly across the 5 chain shards. Provenance: § Audit findings 0.B.
+      216k blocks per day) is in `PER_CHAIN_BLOCK_RATE_PER_DAY` (utl@`ca9c346`) — tune those numbers, do NOT switch to a
+      uniform split. Provenance: § Audit findings 0.B. **Successor for the calibration-blocked half**: this plan stays
+      active until 3.C lands or the cutover backfill horizon closes; if backfill slips past 2026-05-23, fold into
+      `live_pipeline_mtds_mdps_features_2026_05_08`.
+- [ ] [AGENT] P1. **3.D Prod-reader schema-parity verification.** **DEFERRED (gated on Phase 4)** (slot 7 2026-05-12).
+      Run each generator's output through the prod MTDS / MDPS / features-* reader for that `(asset_group, data_type)`
+      (via the harness `subprocess` mode once Phase 4 wires the `--synthetic-input-uri` flag) and assert NO schema-drift
+      error (CLAUDE.md "Reader/schema-drift bug → RAISE LOUD"). Any column the prod reader expects that the Phase 2.A
+      skeleton omits → add it to the skeleton + a `# SCHEMA-PARITY: <reader>` provenance line. Provenance: Phase 3
+      full-execution criterion.
 
-**Full-execution criterion**: harness reads synthetic data through prod readers without schema-drift errors; row counts
-match per-archetype data-shape table.
+**Full-execution criterion**: harness reads synthetic data through prod readers without schema-drift errors (3.D, gated
+on Phase 4); row counts match per-archetype data-shape table after calibration (3.C). Generator surface (3.A+3.B)
+design-shipped. ✅(partial)
 
 ## Phase 4 — Benchmark harness wire-in (Days 7-9, ~2 AI-days)
 
