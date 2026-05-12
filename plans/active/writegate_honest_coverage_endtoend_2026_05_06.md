@@ -3128,11 +3128,30 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.1 — MTDS raw capture (n/a per policy table — `record_captured` covers it; ~4hr verify)**
 
-- [ ] [MTDS] P0. Audit MTDS adapters to confirm raw-capture writes do NOT call `publish_with_policy` (they shouldn't —
+- [x] [MTDS] P0. Audit MTDS adapters to confirm raw-capture writes do NOT call `publish_with_policy` (they shouldn't —
       manifest 4-state is sufficient for raw capture; no derived/aggregated output). Document the n/a boundary in the
       per-service codex playbook so service-team owners don't mistakenly add it. Catch any drift in the audit: adapters
       that do compute a derived output (e.g. `ohlcv_1m` aggregated from `trades`) DO need wire-in — and
       `(market-tick-data-service, ohlcv_1m:from_trades)` would need a seed dict entry.
+      **✅ AUDIT SHIPPED 2026-05-12 by harsh slot 3** — workspace grep
+      `rg "publish_with_policy|publish_with_manifest_lookup" market_tick_data_service/`
+      returns **zero** callsites; MTDS adapters universally call `ManifestWriter.record_captured`
+      (no policy gating). Adapters that DO transform source responses
+      (`umi_tick_provider._fetch_databento_ohlcv_1m_async` → Databento direct
+      `ohlcv_1m` feed; `gas_price_adapter._aggregate` → block-level fee rollup
+      to hourly/daily; Hyperliquid `_aggregate` → orderbook depth bucketing)
+      are **source-side transformations**, NOT aggregations of MTDS upstream
+      rows — MTDS is the originator for these data_types, so the slice (c)
+      service-output policy doesn't apply (policy gates derived outputs against
+      *upstream service* completeness; MTDS reads from external APIs, not from
+      another MTDS service). MDPS retains exclusive ownership of `ohlcv_1m:from_trades`
+      / `ohlcv_24h` / `book_snapshot_5` policy-gated paths per Phase 6.2.
+      **No `(market-tick-data-service, *)` seed-dict entry needed.** Drift-watch:
+      if a future MTDS handler reads from a *prior MTDS write* to compute a
+      derived row (cross-handler aggregation), that's the trigger to wire
+      `publish_with_policy`; documented in the Phase 6.1 codex stub
+      (`codex/02-data/service-output-emission-semantics.md` § "MTDS is n/a"
+      pending a Phase 6.9 codex update).
 
 **Phase 6.2 — MDPS remaining data_types (P0, ~2 days)**
 
