@@ -33,11 +33,12 @@
     },
     "unified-trading": {
       "ui": "unified-trading-system-ui",
-      "ui_port": 5174,
+      "ui_port": 3000,
+      "ui_port_real_api": 3100,
       "api": "unified-trading-api",
       "api_port": 8030,
       "api_module": "unified_trading_api",
-      "$note": "Canonical UI + consolidated domain API (two-API model with deployment-api). Auth is Firebase, not a separate service. Legacy split UIs archived."
+      "$note": "Canonical UI + consolidated domain API (two-API model with deployment-api). UI: Next.js dev on :3000 (default mock), :3100 (real-API server, per next.config.mjs:9). Auth is Firebase, not a separate service. Legacy split UIs archived. Updated 2026-05-12 per UI-5 audit (was :5174 — Vite legacy)."
     },
     "auth": {
       "ui": null,

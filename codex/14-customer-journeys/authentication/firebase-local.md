@@ -57,16 +57,23 @@ The macOS `/usr/bin/java` shim is detected and bypassed — it only opens a "Ple
 
 ## Seeding personas
 
-Default state on first emulator boot is **empty Auth pool**. Two seed paths:
+> **Auto-seed on `dev-tiers.sh` startup (2026-05-12)** — the consolidated portal's `dev-tiers.sh` runs the 23-persona
+> seed idempotently on every T0/T1/T2 startup ("Demo personas auto-seed on startup. Login with
+> `admin@odum.internal / demo123`."). Manual `npm run emulators:seed` is now only needed for re-seed,
+> standalone-emulator runs (no `dev-tiers.sh`), or the custom-dev-persona path below.
 
-1. **Standard 23 personas** (mirrors what's in `odum-staging`):
+Default state on first emulator boot is **empty Auth pool** if running emulators standalone (without `dev-tiers.sh`).
+Two seed paths:
+
+1. **Standard 23 personas** (mirrors what's in `odum-staging`; auto-applied by `dev-tiers.sh`):
 
    ```bash
    npm run emulators:seed
    ```
 
    Creates the same email → role → entitlements mapping that staging uses. Single shared password `demo123` (≥ 6 chars
-   per Firebase minimum). Run once after first emulator boot; subsequent boots persist the pool via `--export-on-exit`.
+   per Firebase minimum). Idempotent — safe to re-run; `dev-tiers.sh` invokes it automatically. Subsequent boots persist
+   the pool via `--export-on-exit`.
 
 2. **Local-only dev personas** for whatever flow you're working on:
 

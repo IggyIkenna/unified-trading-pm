@@ -4,6 +4,29 @@ scope: [engineer, admin]
 
 # Runtime Tiers & Deployment Orchestration
 
+## UI/dev-stack startup decision table (codified 2026-05-12)
+
+> Single SSOT for "which UI startup script do I use when". Replaces the prior partial coverage scattered across
+> `local-dev.md` + CLAUDE.md "Local Development" § + per-tier shorthand.
+
+| Use case                                            | Startup script                                                    | Default mode                                                   | Ports        |
+| --------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------- | ------------ |
+| Consolidated portal (UI work, default)              | `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier 0`    | Mock (Firebase emulators + Next dev + auto-seed)               | 3000 (UI)    |
+| Portal + 2 API gateways (UI+gateway integration)    | `dev-tiers.sh --tier 1`                                           | Mock (MockStateStore in `unified-trading-api`)                 | 3000 + 8030  |
+| Portal + APIs + Services (full local stack)         | `dev-tiers.sh --tier 2`                                           | Mock (full engine)                                             | 3000 + fleet |
+| Static export (zero deps, browser-only)             | `dev-tiers.sh --tier static`                                      | N/A (pre-built HTML/JS)                                        | 3100         |
+| Deployment-stack (deployment-api + deployment-ui)   | `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh` | **REAL cloud** (`CLOUD_PROVIDER=gcp`, `CLOUD_MOCK_MODE=false`) | 8004 + 5183  |
+| Backend service ad-hoc spin-up (8004-8016 range)    | `bash unified-trading-pm/scripts/dev/dev-start.sh` + flags        | Per `--mode ci\|mock\|api-real\|real`                          | per service  |
+
+**Default mode rule (per-tier × mode matrix, codified 2026-05-12 per UI-10 audit)** — every script in this table runs
+in **mock mode by default** EXCEPT `restart-deployment-stack.sh`, which hardcodes real cloud mode (operators
+inspecting live cloud state). Both `dev-tiers.sh` and `dev-start.sh` accept explicit mode overrides via env / flags.
+
+For full env-axis matrix + the `runtime_profile` v7 collapse: § "Runtime Profiles (v7)" below + § Mode axes in
+[`local-dev.md`](../08-workflows/local-dev.md).
+
+---
+
 ## Core Invariant
 
 **Mock is always the service running in mock mode.** The ONLY variable between tiers is **topology** — whether calls are
@@ -298,18 +321,24 @@ deploy that needs to reach all customer regions.
 
 ### Sibling backend services (each in its own repo)
 
-| Repo                   | Cloud Run service      | Region(s)      | Purpose                                |
-| ---------------------- | ---------------------- | -------------- | -------------------------------------- |
-| `unified-trading-api`  | `unified-trading-api`  | varies per env | Main trading backend                   |
-| `user-management-api`  | `user-management-api`  | us-central1    | Auth / role / entitlement `/authorize` |
-| `client-reporting-api` | `client-reporting-api` | us-central1    | Client-facing reports                  |
-| `deployment-api`       | `deployment-api`       | us-central1    | Deployment automation                  |
+| Repo                   | Cloud Run service      | Region(s)      | Purpose                                                                    |
+| ---------------------- | ---------------------- | -------------- | -------------------------------------------------------------------------- |
+| `unified-trading-api`  | `unified-trading-api`  | varies per env | Main trading backend (now hosts user-management routes — see banner below) |
+| `client-reporting-api` | `client-reporting-api` | us-central1    | Client-facing reports                                                      |
+| `deployment-api`       | `deployment-api`       | us-central1    | Deployment automation                                                      |
+
+> **`user-management-api` archived (2026-05-12 UI-8 reconciliation)** — the standalone `user-management-api` Cloud Run
+> service + repo is **archived**. User management routes (`/authorize`, role/entitlement endpoints) are folded into
+> `unified-trading-api`. The earlier "DO NOT deploy a parallel `user-management-api` on `odum-staging`" advisory is
+> now structurally enforced — there is no `user-management-api` repo to deploy. The `user-management-ui` repo
+> remains active (operator-facing console) and calls `unified-trading-api`. This row is removed from the table above
+> to match the `ui-api-mapping.json` `user-management` stack `$note` ("ARCHIVED: auth-api removed. User management
+> routes in unified-trading-api.") and `workspace-manifest.json` (no `user-management-api` entry).
 
 The portal calls these via `NEXT_PUBLIC_*_URL` env vars baked at build time. **They are NOT inside the UI repo.** UAT
 today runs `NEXT_PUBLIC_MOCK_API=true` and never calls them. When UAT flips to `MOCK_API=false`, the API auth
 middlewares will need to dual-verify Firebase ID tokens (`['central-element-323112', 'odum-staging']`) — the
-cross-project IAM is already in place; only a small middleware change is needed. **Do NOT deploy a parallel
-`user-management-api` on `odum-staging`** — dual-verify is much smaller.
+cross-project IAM is already in place; only a small middleware change is needed.
 
 ### IAM admin matrix (humans only)
 

@@ -4,11 +4,19 @@ scope: [engineer, admin]
 
 # Deprecated UIs Notice
 
-**Date:** 2026-02-21
+**Date:** 2026-02-21 (LIFTED 2026-05-12 — see banner below for current state)
+
+> **STALENESS LIFT (2026-05-12)** — this doc tracks Round 1 of UI consolidation (3 UIs → `onboarding-ui`) but is
+> two rounds behind. The 2026-05-08 consolidation collapsed `onboarding-ui` + 7 more split UIs (`strategy-ui`,
+> `live-health-monitor-ui`, `batch-audit-ui`, `client-reporting-ui`, `execution-analytics-ui`, `logs-dashboard-ui`,
+> `ml-training-ui`, `trading-analytics-ui`) into the consolidated portal `unified-trading-system-ui`. The active
+> product UI surface is now **3 repos**: `unified-trading-system-ui` (consolidated portal) + `deployment-ui` +
+> `user-management-ui`. Full current-state inventory: `codex/05-infrastructure/ui-functionality-requirements.md`
+> § "Active UI surface". The body below documents Round 1 history; do NOT treat the 3-UI list below as current.
 
 ---
 
-## Deprecated Services
+## Deprecated Services (ROUND 1 — 2026-02-21 history, retained for archival reference only)
 
 The following UI services have been **deprecated** and consolidated into **onboarding-ui**:
 

@@ -18,6 +18,21 @@ sources:
 
 # Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes
 
+> **SSOT boundary with `data-status-drilldown.md` (codified 2026-05-12 per UI-7 audit)**: this doc is the **tab-shell
+> SSOT** (6 lifecycle tabs + 4 orthogonal axes + tier resolution); [`data-status-drilldown.md`](../02-data/data-status-drilldown.md)
+> is the **drilldown-detail SSOT** (`/api/data-status/*` endpoints + per-shard hierarchical drilldown semantics). A
+> future plan should NOT create a third doc covering the same surface — extend one of these two instead.
+> `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2F's `codex/03-deployment/data-status-ui-surface.md`
+> stub is review-flagged: either extend `data-status-drilldown.md` (drilldown half) or fold into this doc (tab-shell
+> half), not a fresh file.
+
+> **Stub status (codified 2026-05-08; refreshed 2026-05-12 per UI-16 audit)** — this doc's `status: stub` reflects
+> that body content is owned by `plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md` Phase A.3. Before May-23
+> cutover: if Phase A.3 has shipped, promote to `status: stable` with source-commit citations like
+> `data-status-drilldown.md`; if not, the master plan must know deployment-ui still presents the legacy 7-peer-tab
+> service-axis layout instead of the 6-tab lifecycle model documented here. Verification owner: ikenna +
+> deployment-ui maintainer.
+
 > **🟢 ALIGNED with operator decision (b+) 2026-05-11.** The per-env tier resolution pattern documented in this doc
 > (each tier has its own domain → own deployment-api Cloud Run → own GCS bucket scope → own service account scoped to
 > that env's projects only) **is already the architectural target** for the bucket-naming SSOT operator decision (b+)
