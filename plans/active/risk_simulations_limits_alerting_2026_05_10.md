@@ -415,8 +415,16 @@ returns full rule set; tests pass.
 
 ## Phase 6 — deployment-api + ui (Day 11, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **6.A `/api/risk/rules` endpoint.** Per-axis listing.
-- [ ] [AGENT] P0. **6.B `/api/risk/preflight-test` endpoint.** POST a hypothetical order; returns pre-flight result.
+- [x] [AGENT] P0. **6.A `/api/risk/rules` endpoint.** Per-axis listing. Shipped deployment-api@dc8be51 —
+      `routes/risk_routes.py` (`GET /api/risk/rules`; `?scope=` + `?applies_to=` filters via
+      `iter_applicable_rules` / `get_rules_for`; serialised rules carry `kill_switch_scope`) registered in `main.py`
+      under `/api/risk` (was unregistered); tests in `tests/unit/api/test_risk_routes.py` (no-params / scope-only /
+      scope+applies_to / 422 ambiguous / closed-set scope validation — all green).
+- [x] [AGENT] P0. **6.B `/api/risk/preflight-test` endpoint.** POST a hypothetical order; returns pre-flight result.
+      Shipped deployment-api@dc8be51 — `routes/risk_routes.py` (`POST /api/risk/preflight-test`; builds UTL
+      `RuleEvalContext` from the request, `iter_applicable_rules` → `risk_preflight`, returns `decision` /
+      `scale_factor` / `fired_rules` / `blocked_by` / `reason`; dry-run, no events); tests cover pass / fire /
+      scale-down / malformed body / `applicable_rules_filter` override.
 - [x] [AGENT] P0. **6.C deployment-ui Risk tab.** Per-axis rule browser + pre-flight playground. Shipped
       deployment-ui@33e6ea0 — `RiskTab.tsx` (top-level container composing RuleBrowser + PreflightPlayground via React
       state + nav buttons), `register.ts` (RISK_WIDGETS registry: RiskTab + RuleBrowser + PreflightPlayground),
@@ -730,7 +738,7 @@ Phase 1 freeze gate (2026-05-15) covers Phase 0+1+2+3+7 from this plan; Phase 4+
 | Phase 4.C — strategy-service: v2 orchestrator / output-builder signal paths adopt `apply_risk_preflight` (gate currently wired through `SignalPublisher.publish()`, the documented seam, call-site-less in-repo) | DEFERRED P3 | strategy-service tab — adopt when those paths next change; `apply_risk_preflight` + `build_signal_rule_context` are public. |
 | Phase 5.A — emit `RiskRuleFiredEvent` from `risk-and-exposure-service/v2/preflight.py::run_layer2_rule_preflight` (the Layer-2 evaluator rule-fire site); switch `strategy-service/risk_preflight_gate.py` from AlertCode-named `log_event`s to `risk_rule_fired_event()` | DEFERRED (now unblocked — UAC contract `RiskRuleFiredEvent`/`risk_rule_fired_event` on the `unified_api_contracts.risk` facade `@a01e4dd`; execution-service already emits the typed event `@07477886`) | risk-and-exposure-service tab (emit) + strategy-service tab (cleanup). |
 | Phase 5.B integration test (rule-fire → alert routed) | DEFERRED P1 (alerting-service consumer shipped `@0a52a33` with per-consequence channel/severity unit tests; the end-to-end rule-fire-in-a-running-service → alert-out test is pending) | bundled with Phase 5.A emit follow-on. |
-| Phase 6.A — `/api/risk/rules` endpoint; 6.B — `/api/risk/preflight-test` endpoint (6.C UI Risk tab shipped `deployment-ui@33e6ea0`) | TODO | Tab 5 Day 2+ / deployment-api tab (mind the deployment-api convergence-point collision callout — coordinate with the DART-surfaces slot). |
+| Phase 6.A — `/api/risk/rules` endpoint; 6.B — `/api/risk/preflight-test` endpoint (6.C UI Risk tab shipped `deployment-ui@33e6ea0`) | DONE — shipped `deployment-api@dc8be51` (both endpoints + 20 route tests; risk_routes registered under `/api/risk` in main.py — was unregistered) | — |
 | Phase 8 — real-VM per-rule synthetic-fire suite (8.A/8.B/8.C) | BLOCKED on Ikenna slot 7 `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 injection primitives (Day 2 2026-05-13) | Tab 5 Day 2+. |
 | UTL hygiene — root re-export of `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package root; clean the Phase-4 `# noqa: qg-deep-import` deep imports | DEFERRED P2 (`kill_switch/__init__` exports added `@d1a0d0d` — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works) | UTL hygiene follow-up — owner pick. |
 

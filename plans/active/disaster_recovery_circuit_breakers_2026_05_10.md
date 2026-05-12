@@ -388,8 +388,19 @@ registered.
 
 ## Phase 7 — deployment-api + ui kill-switch surface (Day 12, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **7.A `/api/kill-switch/{id}/arm` + `/disarm` endpoints.** Operator-auth-gated; emits
-      `KillSwitchArmRequest` to bus.
+- [x] [AGENT] P0. **7.A `/api/kill-switch/{id}/arm` + `/disarm` endpoints.** Operator-auth-gated; emits
+      `KillSwitchArmRequest` to bus. Shipped deployment-api@dc8be51 — `routes/kill_switch_routes.py` rewritten onto
+      the UTL typed `KillSwitchBus` API: `POST /{id}/arm` builds
+      `KillSwitchArmRequest(provenance=OPERATOR_MANUAL, requested_by=<authed op>)` → `bus.arm(...)`; `POST /{id}/disarm`
+      → `bus.disarm(... recovery_mode=MANUAL_UNKILL)` (synthesises a 200 event on the not-armed no-op); `GET
+      /api/kill-switch` (+ `/state` back-compat alias the deployment-ui polls) lists `bus.armed_switch_ids()`; `GET
+      /api/kill-switch/audit-log` (filter by `switch_id` / `start_date` / `end_date`, paginated) reads an in-process
+      `InMemoryAuditLogWriter` wired onto the bus. Scope mapping now via UTL `map_switch_id_to_scope` SSOT (dropped the
+      duplicate local map). Auth via the existing `verify_api_key` dependency on the router. Tests:
+      `tests/unit/api/test_kill_switch_routes.py` (28 — arm/disarm happy-path + idempotency + metadata round-trip,
+      no-op disarm, state listing, audit-log empty/populated/filter/pagination, auth-gate reject/accept, body
+      validation — all green). **NOTE**: arming on a *live wallet* remains a human hard-stop; the API endpoint here is
+      the operator's UI action, gated by auth.
 - [x] [AGENT] P0. **7.B deployment-ui Kill-switch tab.** Per-switch state + arm/disarm button + audit-log view +
       reconciler dashboard. Shipped deployment-ui@33e6ea0 — `register.ts` exports `KILL_SWITCH_WIDGETS` registry
       (KillSwitchTab + KillSwitchPanel + AuditLogViewer); `KillSwitchTab.test.tsx` adds 7 vitest tests (loading /
@@ -560,7 +571,7 @@ placeholder "TBD" cross-reference).
 | Phase 3 — aggregate dashboard endpoint (one deployment-api route returning all 8 reconciler statuses) | DEFERRED | Phase 4 service wiring (deployment-api). |
 | UTL hygiene — re-export `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package *root* | DEFERRED P2 (added `kill_switch/__init__` exports utl@d1a0d0d — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works; the very-root re-export + cleaning the Phase-4 `# noqa: qg-deep-import` deep imports remains) | UTL hygiene follow-up — owner pick. |
 | Phase 6 (chaos-drill cron), Phase 9 (real-VM DR drill) | BLOCKED on Ikenna slot 7 scenario primitives (Day 2 2026-05-13) | Tab 5 Day 2+ once `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 ships. |
-| Phase 7.A — `/api/kill-switch/{id}/arm` + `/disarm` deployment-api endpoints (7.B UI tab shipped deployment-ui@33e6ea0) | TODO | Tab 5 Day 2+ / deployment-api tab. |
+| Phase 7.A — `/api/kill-switch/{id}/arm` + `/disarm` deployment-api endpoints (7.B UI tab shipped deployment-ui@33e6ea0) | DONE — shipped `deployment-api@dc8be51` (arm/disarm via UTL typed `KillSwitchBus.arm`/`disarm` + `GET /api/kill-switch` listing + `GET /api/kill-switch/audit-log`; 28 route tests; scope map via UTL SSOT) | — |
 | Phase 8.A-8.E — codex docs | `circuit-breaker-rule-taxonomy.md` (8.A) + `kill-switch-event-bus.md` (8.B) already exist + are fleshed-out; `autonomous-recovery-matrix.md` (8.D) extended 2026-05-12 with the `BreakerRecoveryEngine` runtime subsection; 8.C `kill-switch-circuit-breaker.md` + 8.E `mev-protection.md` updates pending verify | Tab 5 EOD-audit / Day 2. |
 
 ## DONE block
