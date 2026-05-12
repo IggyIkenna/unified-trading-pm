@@ -31,6 +31,22 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-13 ~Day-2 UTC] [main → slots 3/4/5/6/7/8] — 🚀 **WRITEGATE SLICE (c) Phase 6.3-6.8 = BUILD (not migrate) — 9-service emission infra fan-out**. Slot 3's PM@`f0208d34` surfaced: these 9 services have ZERO `record_*` callsites today — emission greenfield, not migration. Operator directive 2026-05-13: ship full build pre-cutover (production manifest readiness even without backfill yet — downstream consumers + cutover monitoring require it). Full per-service emission shape + routing in [`plans/active/issues/writegate_slice_c_phase_6_3_to_6_8_build_not_migration_2026_05_13.md`](../plans/active/issues/writegate_slice_c_phase_6_3_to_6_8_build_not_migration_2026_05_13.md).
+
+**Per-slot service ownership (1-2 services each, ~3-6 hrs/service × 5× pace + fan-out = ~30-90 min each)**:
+- **slot 3** → `instruments-service` catalog-refresh emission (you have the context post-PipelineMode sweep)
+- **slot 4** → `execution-service` + `position-balance-monitor-service` (wallet/custody adjacent)
+- **slot 5** → `strategy-service` (carry engine emits signals via this path)
+- **slot 6** → `features-volatility` (consolidated features-service; aligns with Vol Trading + SVI/SSVI work)
+- **slot 7** → `risk-and-exposure-service` + `ml-inference-service` (risk + DR adjacent; ml-inference downstream)
+- **slot 8** → `features-cross-instrument` (consolidated features-service) + `ml-training-service`
+
+**Pattern per service** (5 deliverables): (1) UAC `SERVICE_OUTPUT_POLICIES` entry; (2) `record_*` callsites at output-write boundaries; (3) `publish_with_manifest_lookup()` integration; (4) per-output-type UAC schema declaration; (5) unit + integration tests. Template = writegate slice (b) MDPS POC at MDPS@`d0df50c`+`311614a`.
+
+**Plan flip**: each service shipped → flip Phase 6.X sub-checkbox in `writegate_honest_coverage_endtoend_2026_05_06.md` with commit SHA evidence.
+
+**No deferrals** — full 9-service emission infra in this cycle. Without it: cutover monitoring blind (Group D #12 master plan item), batch-vs-live recon broken (Group F #21).
+
 [2026-05-13 ~Day-2 UPDATED UTC] [main → slots 2/5/6/8] — 🚀 **SHIP ALL TAXONOMY-REFINEMENT SCOPE THIS CYCLE — operator directive 2026-05-12** *"ship all regardless of risk we will land"*. NO Cycle-6 deferrals. Slot 5 = full 9-Carry-archetype engine wiring (not scaffold-only). Slot 6 = SVI/SSVI surface fitter + normalised strike/term slicing + ALL 18 Vol Trading docs (NOT docs-only). Slot 8 = 4 Portfolio docs + 3 new Carry docs + workspace-grep + legacy deprecation execution (`MARKET_MAKING_CONTINUOUS` + `VOL_TRADING_OPTIONS` enum-remove + config-migration audit + flips). 3 calendar days × 5× pace = ample. Sequencing: slot 2 UAC enum FIRST (~30 min) → slot 5/6/8 parallel fan-out → slot 8 grep+deprecation LAST after granular docs land. Updated 🚀 OPERATOR DIRECTIVE block prepended to [`plans/active/issues/strategy_archetype_taxonomy_refinement_2026_05_12.md`](../plans/active/issues/strategy_archetype_taxonomy_refinement_2026_05_12.md).
 
 [2026-05-13 ~Day-2 UTC] [main → slots 2/5/6/8] — 🟢 **STRATEGY ARCHETYPE TAXONOMY REFINEMENT** — operator-supplied design call 2026-05-12 captured at [`plans/active/issues/strategy_archetype_taxonomy_refinement_2026_05_12.md`](../plans/active/issues/strategy_archetype_taxonomy_refinement_2026_05_12.md). 13 corrections: foundational axiom (share-class determines market neutrality) + CARRY_STAKED_BASIS leg fix (no borrow leg, direct perp-collateral) + new CARRY_STAKED_BASIS_DATED + CARRY_RECURSIVE_STAKED per-share-class refinement (no perp hedge — already neutral) + CARRY_RECURSIVE_BORROW_LENDING_ONLY distinction + CARRY_RECURSIVE_BORROW_PERP_HEDGED RENAME (drop "recursive") + centralized CarryFamilyEngine (one engine, axis-driven configs) + ARBITRAGE_PRICE_DISPERSION sub-variant universe + ARBITRAGE_CROSS_DOMAIN_EVENT universe expansion (Polymarket/Kalshi/Opinion.trade/CME binaries) + MARKET_MAKING_EVENT_SETTLED retention (NOT legacy) + Vol Trading 18-doc completion + SVI/SSVI surface fitter infra + normalised strike/term slicing + Portfolio 4-doc completion + share-class × archetype × venue capability matrix wire-up + pure option vol arb routed to ARBITRAGE_PRICE_DISPERSION (not Vol Trading).
