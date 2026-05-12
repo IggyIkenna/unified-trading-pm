@@ -12,6 +12,15 @@
 
 ---
 
+## Model Tier Selection — Sonnet 4.6 (default) vs Opus 4.7 (escalation only)
+
+**Default: Sonnet 4.6.** Use Opus 4.7 ONLY for: (1) slot-1 main orchestrator, (2) cross-repo architecture decisions
+requiring >200k context, (3) tasks whose context provably exceeds 200k. Every work-split slot row MUST declare
+`model_tier: sonnet-doable | opus-required`. Omitting it defaults to Sonnet 4.6. SSOT:
+`codex/06-coding-standards/model-tier-selection.md`.
+
+---
+
 ## Environment: Venv Split (SSOT: `cursor-rules/venv-usage-ssot.mdc`)
 
 | Use case                  | Venv                        | Command                                                      |
