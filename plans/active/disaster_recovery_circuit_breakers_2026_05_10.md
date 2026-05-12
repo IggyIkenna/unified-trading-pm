@@ -412,10 +412,10 @@ entry.
 
 ## Phase 8 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **8.A NEW `codex/04-architecture/circuit-breaker-rule-taxonomy.md`.**
-- [ ] [AGENT] P0. **8.B NEW `codex/04-architecture/kill-switch-event-bus.md`.**
-- [ ] [AGENT] P0. **8.C UPDATE `kill-switch-circuit-breaker.md`** — wired to new taxonomy + bus.
-- [ ] [AGENT] P0. **8.D UPDATE `autonomous-recovery-matrix.md`** — per-breaker recovery rule cross-link.
+- [x] [AGENT] P0. **8.A NEW `codex/04-architecture/circuit-breaker-rule-taxonomy.md`.** (PM@e1f7a25e — doc existed + fleshed-out; 350L covering CircuitBreakerId/BreakerAction/BreakerRecoveryMode/BreakerRecoveryEngine runtime subsection/trigger-sources/per-archetype registry/cross-refs. Verified current.)
+- [x] [AGENT] P0. **8.B NEW `codex/04-architecture/kill-switch-event-bus.md`.** (PM@e1f7a25e — doc existed + fleshed-out; 335L covering KillSwitchBus.arm/disarm/subscribe/typed-UAC events/audit-log persistence/provenance closed-enum/consumer cross-refs. Verified current vs UTL@18488c5 + UAC@a7a99b5.)
+- [x] [AGENT] P0. **8.C UPDATE `kill-switch-circuit-breaker.md`** — wired to new taxonomy + bus. (PM@e1f7a25e — added cross-refs to `circuit-breaker-rule-taxonomy.md` + `kill-switch-event-bus.md` in the Related section.)
+- [x] [AGENT] P0. **8.D UPDATE `autonomous-recovery-matrix.md`** — per-breaker recovery rule cross-link. (PM@0c4678b0 — BreakerRecoveryEngine runtime subsection added 2026-05-12 prior session; arm/evaluate/tick_all/manual_unkill state machine + per-action defaults table. Verified current at PM@e1f7a25e.)
 - [x] [AGENT] P0. **8.F NEW `codex/04-architecture/risk-breaker-seam.md` (co-owned with risk_simulations Phase 7.E per
       Q9 ratification 2026-05-10).** Distinct-enums-with-escalation-seam architecture: `RiskRuleConsequence` and
       `BreakerAction` are SEPARATE enums (different triggers, different layers). Seam: N consecutive
@@ -427,7 +427,7 @@ entry.
       cross-references the co-owned ship. Doc cites both plans + Q9 ratification provenance. Original codex commit
       PM@730914a9 was rebased to PM@d86c8b3c during force-push to per-slot branch tab/ikennaigboaka/7; risk plan Phase
       7.A-E flips at PM@da590057 cite the pre-rebase sha — same content, different sha.)
-- [ ] [AGENT] P0. **8.E UPDATE `mev-protection.md`** — MEV-driven breaker entry.
+- [x] [AGENT] P0. **8.E UPDATE `mev-protection.md`** — MEV-driven breaker entry. (PM@e1f7a25e — doc already contained the MEV-driven breaker trigger section (lines 383-406): MEV_DETECTED event → BreakerAction.BLOCK_NEW / BreakerRecoveryMode.AUTO_COOLDOWN; sandwich/front-run/stale-quote trigger conditions; recovery semantics; cross-refs to circuit-breaker-rule-taxonomy + kill-switch-event-bus. Verified current.)
 
 **Full-execution criterion**: 2 NEW + 3 UPDATE; cross-references resolve.
 
@@ -572,7 +572,7 @@ placeholder "TBD" cross-reference).
 | UTL hygiene — re-export `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package *root* | DEFERRED P2 (added `kill_switch/__init__` exports utl@d1a0d0d — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works; the very-root re-export + cleaning the Phase-4 `# noqa: qg-deep-import` deep imports remains) | UTL hygiene follow-up — owner pick. |
 | Phase 6 (chaos-drill cron), Phase 9 (real-VM DR drill) | BLOCKED on Ikenna slot 7 scenario primitives (Day 2 2026-05-13) | Tab 5 Day 2+ once `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 ships. |
 | Phase 7.A — `/api/kill-switch/{id}/arm` + `/disarm` deployment-api endpoints (7.B UI tab shipped deployment-ui@33e6ea0) | DONE — shipped `deployment-api@dc8be51` (arm/disarm via UTL typed `KillSwitchBus.arm`/`disarm` + `GET /api/kill-switch` listing + `GET /api/kill-switch/audit-log`; 28 route tests; scope map via UTL SSOT) | — |
-| Phase 8.A-8.E — codex docs | `circuit-breaker-rule-taxonomy.md` (8.A) + `kill-switch-event-bus.md` (8.B) already exist + are fleshed-out; `autonomous-recovery-matrix.md` (8.D) extended 2026-05-12 with the `BreakerRecoveryEngine` runtime subsection; 8.C `kill-switch-circuit-breaker.md` + 8.E `mev-protection.md` updates pending verify | Tab 5 EOD-audit / Day 2. |
+| Phase 8.A-8.E — codex docs | ✅ DONE PM@e1f7a25e — all 5 codex docs verified current + checkboxes flipped (8.C kill-switch-circuit-breaker.md got 2 new cross-refs; 8.A/8.B/8.D/8.E already had correct content). | — |
 
 ## DONE block
 
