@@ -298,11 +298,12 @@ in after reading instruments-service manifest for the asset_group + date range.
 **Note**: this is the same pre-flight pattern as Phase 1 (MTDS reads instruments-service manifest before fetching).
 Reconciler scripts should read instruments-service manifest once and pass into classifier.
 
-- [ ] [CODE] P1. Add `fixture_manifest` param to `_classify_sports()` in `legacy_reason_classifier.py`. Wire fixture
-      existence check BEFORE `SOURCE_RETURNED_ZERO` fallback. Add 3 unit tests (no fixture → expected_unattempted;
-      fixture exists + source limitation → SOURCE_RETURNED_ZERO; fixture exists + no limitation → attempted_failed).
-- [ ] [CODE] P1. Update `reconcile_legacy_blank_to_typed_reason.py` to read instruments-service fixture manifest for the
-      sports asset_group and pass it into the classifier.
+- [x] [CODE] P1. Add `fixture_manifest` param to `classify_blank_reason_row()` in `legacy_reason_classifier.py`. Wire
+      fixture existence check via `_fixture_exists_for_shard()` helper BEFORE `SOURCE_RETURNED_ZERO` fallback. Add 4 unit
+      tests (empty manifest → expected_unattempted; wrong league → expected_unattempted; fixture+limitation →
+      empty_confirmed; fixture+no limitation → attempted_failed). (utl@290a4150 — test_sports_fixture_classifier.py + 4 tests pass)
+- [x] [CODE] P1. Update `reconcile_legacy_blank_to_typed_reason.py` to read instruments-service fixture manifest for the
+      sports asset_group and pass it into the classifier. Add Shape (c) upgrade path. (instruments-service@715139a)
 - [ ] [RESEARCH] P1. Audit instruments-service manifest for transfermarkt data: does the manifest correctly track
       per-league transfer windows? Is `EXPECTED_OUTSIDE_TRANSFER_WINDOW` being correctly applied to all transfermarkt
       data_types (player_values, transfers) during non-window periods? Is `available_at` set to last day of the transfer
