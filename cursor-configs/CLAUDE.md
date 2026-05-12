@@ -14,11 +14,20 @@
 
 ## Model Tier Selection — Sonnet 4.6 (default) vs Opus 4.7 (escalation only)
 
-**Default: Sonnet 4.6.** Opus 4.7 ONLY for slot-1 main orchestrator, cross-repo architecture needing >200k context,
-or tasks provably exceeding 200k. **Every agent MUST self-check model at task start**: if Sonnet on an opus-required
-task → STOP + flag operator; if Opus on a sonnet-doable task → flag cost waste + proceed. Sub-agent spawns MUST set
-`model="sonnet"|"opus"` explicitly in every Agent tool call. Work-split slots MUST declare
-`model_tier: sonnet-doable | opus-required`. SSOT: `codex/06-coding-standards/model-tier-selection.md`.
+**Default: Sonnet 4.6 / thinking: medium.** Escalate deliberately — not by default.
+
+Three axes declared per slot and per spawn prompt:
+- `model_tier: sonnet-doable | opus-required` — Opus only for main orchestrator, cross-repo architecture, >200k context
+- `thinking: medium | high | max` — max always requires Opus; medium on Opus is always wrong
+- Sub-agent Agent tool calls MUST set `model="sonnet"|"opus"` explicitly — never inherit
+
+**Self-check at every task start (MANDATORY)**:
+1. Read running model from system prompt. Read declared tier + thinking from spawn prompt.
+2. Model mismatch → Sonnet on opus-required: **STOP**, output `⚠️ WRONG MODEL` block, wait for operator.
+   Opus on sonnet-doable: flag `💸 WRONG MODEL` + proceed.
+3. Thinking mismatch → flag `⚠️ THINKING EFFORT MISMATCH` + proceed (never blocks, operator decides).
+
+SSOT: `codex/06-coding-standards/model-tier-selection.md`.
 
 ---
 

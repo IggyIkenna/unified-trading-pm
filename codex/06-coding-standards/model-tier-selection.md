@@ -197,8 +197,113 @@ Sonnet-suitable work if the parent happens to be Opus.
 - Pre-escalating to Opus "just in case" without a provable context-size argument
 - Omitting `model_tier` from work-split slot rows
 - Using Opus for plan checkbox flips or codex doc edits
+- Enabling max thinking for mechanical sweeps (wastes budget with zero quality gain)
+- Enabling max thinking without declaring `thinking: max` in the spawn prompt (silent budget bleed)
+
+---
+
+## Thinking effort tiers
+
+Three levels. Declared alongside `model_tier` in every work-split slot row and spawn prompt.
+
+| Level | Declaration | When | Typical cost vs medium |
+|---|---|---|---|
+| `thinking: medium` | Default — omit or state explicitly | Mechanical, impl-from-spec, script runs | 1× |
+| `thinking: high` | State explicitly | Design, architecture within a single repo, plan writing | ~2-3× |
+| `thinking: max` | State explicitly + requires Opus 4.7 | Novel cross-repo design, complex debugging, trading judgment | ~8-15× |
+
+### What goes in each tier
+
+**`thinking: medium`** — standard reasoning, no extended thinking budget needed:
+- Ruff cleanup, callsite migration, import rename
+- Implementing from a clear spec (plan body + file = full context)
+- Script execution + output verification
+- Test writing for a known pattern
+- Plan checkbox flips, codex doc edits (single doc)
+- Sub-agent fan-out workers (each worker is bounded)
+- QG runs and lint fixes
+
+**`thinking: high`** — needs careful reasoning but not extended thinking:
+- Single-repo feature design where trade-offs exist
+- Codex doc authoring for a new pattern (must cover edge cases)
+- Per-service adapter implementation (protocol logic, error handling)
+- Plan phase design (phased DAG, success criteria, downstream impact)
+- Cross-service wiring where the interaction is non-trivial but bounded
+- Debugging a single service's failing test with non-obvious root cause
+
+**`thinking: max`** — requires extended thinking; always paired with Opus 4.7:
+- Novel trading archetype topology (carry_staked_basis, leveraged_funding_arb family decisions)
+- Cross-repo migration pre-audit (all consumers must be in context, breakage is non-obvious)
+- Complex multi-service debugging where the bug crosses 3+ system boundaries
+- Schema design decisions with long-tail correctness implications (manifest columns, shard atoms)
+- Trading judgment calls (position sizing, risk-limit calibration, archetype risk trade-offs)
+- Work-split drafting by main orchestrator (reads all 50+ active plans to allocate)
+- Anything where the agent must hold contradictory constraints and find a non-obvious resolution
+
+### Pairing rules
+
+`thinking: max` requires `model_tier: opus-required` — no exceptions. Extended thinking on Sonnet is not
+available in this workspace's Claude Code configuration.
+
+`thinking: high` works on either model tier. Sonnet 4.6 at high thinking is preferred over Opus at medium.
+
+`thinking: medium` on Opus is always wrong (use Sonnet instead).
+
+### Work-split slot declaration
+
+```markdown
+| Slot | Theme | Plan | model_tier | thinking | Cal AI-days |
+|------|-------|------|------------|----------|-------------|
+| 1    | Main orchestrator | LEDGER | opus-required | max | continuous |
+| 2    | defi_catalogue impl | defi_catalogue | sonnet-doable | high | ~16 |
+| 3    | ruff cleanup | ruff_workspace_cleanup | sonnet-doable | medium | ~0.4 |
+| 5    | archetype topology design | defi_recursive_borrow | opus-required | max | ~14 |
+```
+
+### Spawn prompt header (required fields)
+
+```
+MODEL TIER: Sonnet 4.6 | Opus 4.7
+THINKING: medium | high | max
+[If max]: OPUS-REQUIRED — REASON: <one-line reason>
+```
+
+---
+
+## Self-check — thinking effort (extend the Step 3 model check)
+
+After checking model tier, check thinking effort:
+
+**How the agent knows its thinking level**: The spawn prompt declares it. If not declared, the agent infers
+from the task description using the tier definitions above, then flags if it cannot confirm the setting matches.
+
+| Declared thinking | Task actually needs | Action |
+|---|---|---|
+| medium | medium | ✅ Proceed |
+| high | high | ✅ Proceed |
+| max (+ Opus) | max | ✅ Proceed |
+| **medium** | **high or max** | 🟡 Flag: "Task complexity exceeds declared thinking tier — escalating internally, notify operator" |
+| **high** | **max** | 🔴 Stop if also wrong model; 🟡 Flag + proceed if model is already Opus |
+| **max** | **medium or high** | 🟡 Flag cost waste + proceed |
+| **medium or high** | **max** | 🔴 Stop if Sonnet; flag if Opus (can proceed at lower thinking but flag the gap) |
+
+**Mismatch output block** (thinking under-provisioned, blocking case):
+
+```
+⚠️ THINKING EFFORT MISMATCH — FLAGGING BEFORE PROCEEDING
+Declared: thinking: <declared>
+Task requires: thinking: <required> — REASON: <one-line reason>
+Running model: <model>
+
+This task needs <extended thinking / Opus reasoning>. I will proceed but quality
+may be degraded. Operator should re-spawn with correct thinking tier for this slot.
+```
+
+Unlike the model-tier hard stop (Sonnet on opus-required), thinking effort mismatches do **not** block — the
+agent flags and proceeds, because the operator may have intentionally down-tiered for speed. The model hard stop
+remains the only blocking check.
 
 ---
 
 *Companion plan*: `plans/active/ruff_workspace_cleanup_*.md` (example of correctly classified Sonnet-suitable work).
-*Enforced by*: work-split review — any slot missing `model_tier` defaults to Sonnet 4.6.
+*Enforced by*: work-split review — any slot missing `model_tier` or `thinking` defaults to Sonnet 4.6 / medium.
