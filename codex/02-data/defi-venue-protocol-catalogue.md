@@ -69,6 +69,39 @@ mirrors the master-plan readiness-checklist Continuous-Verification column.
 IN-1 correction)**: `defi_venue_capabilities.py` IS canonical — covers the per-(venue, data_type) capability axis
 that `defi_venues.py` (per-venue chain support) does NOT. The two registries are complementary, not redundant.
 
+## Per-protocol shard-atom matrix
+
+> SSOT for Phase 2 adapter authors + Phase 3 MTDS adapter authors. Shard atom MUST be identical across
+> (a) writer atomicity, (b) manifest row key, (c) data-status display, (d) downstream pre-flight gate,
+> (e) deployment-UI drilldown (per CLAUDE.md "Shard-granularity SSOT" HARD RULE). Migrated from
+> [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
+> Phase 2 matrix block (lines ~380-388) — 2026-05-12 by slot 2 `ikenna-defi-catalogue-tab` (Day-2 follow-up).
+>
+> **Base shard atom for ALL DeFi protocols** (per
+> [`codex/02-data/per-asset-group-bucket-layouts.md`](per-asset-group-bucket-layouts.md) line 69 +
+> `unified_api_contracts/canonical/domain/defi/gcs_paths.py`):
+> `(date, asset_group=defi, chain, venue, instrument_type, data_type)`. Path:
+> `defi/{chain}/{venue}/{instrument_type}/{data_type}/date={YYYY-MM-DD}/`. Protocol families vary in
+> HOW they populate that path and whether they bundle or shard at the instrument level — the matrix below
+> is the authoritative per-family decision.
+
+| Protocol Family | Instrument count per (protocol, chain) | Shard atom | Hive key placement | Cluster-validation required? |
+| --------------- | -------------------------------------- | ---------- | ------------------ | ----------------------------- |
+| **Lending** (Aave / Spark / Compound / Morpho / Radiant / Fluid) | ~10-20 reserves per (protocol, chain) | **Per-(chain, protocol, asset, data_type, day)** = one manifest row per `(asset, day)` | `asset_symbol` IS a hive shard key (existing pattern at `lending_indices_handler.py`) | Not bundled (each asset is own shard) |
+| **DEX V3 + CLMM** (Uniswap V3 / Sushi V3 / PancakeSwap / Camelot / Aerodromeq / Velodrome / TraderJoe V2 / Balancer / Curve / Raydium / Orca) | 100-1000+ pools per (protocol, chain) | **BUNDLED per-(chain, protocol, data_type, day)** = one manifest row per protocol+chain+day; `pool_address` is row-level column INSIDE parquet | `pool_address` is ROW-LEVEL (NOT hive shard axis) | **MANDATORY** — `expected_root_clusters=set_of_pool_addresses` + `cluster_extractor=lambda row: row["pool_address"]` |
+| **DEX V2** (Uniswap V2 / Sushi V2) | smaller pool catalog | Same as DEX V3 — BUNDLED | row-level `pool_address` | MANDATORY |
+| **LST** (Lido / Ether.fi / Rocket Pool / Jito / Marinade / Solblaze + Ethena / Spark sDAI) | 1 token per (protocol, chain) | Per-(chain, protocol, token, data_type, day) — token is the shard atom in 1:1 case | `token_symbol` is hive shard key OR row-level (single-token protocols use hive) | Not bundled (1:1) |
+| **Restaking LRT — single-token** (Renzo ezETH / KelpDAO rsETH / Ether.fi weETH) | 1 token per (protocol, chain) | Same as LST — per-token shard | hive shard key on `token_symbol` | Not bundled |
+| **Restaking — multi-vault** (Symbiotic / Karak / EigenLayer / Puffer / Jito-restaking) | dozens of vaults per (protocol, chain) | **BUNDLED per-(chain, protocol, data_type, day)** = one manifest row per protocol+chain+day; `vault_address` is row-level | row-level `vault_address` | MANDATORY — `expected_root_clusters=set_of_vault_addresses` |
+| **Vaults / yield-aggregator** (Yearn / Convex / Beefy / Pendle / Idle) | 50-200+ vaults per (protocol, chain) | **BUNDLED per-(chain, protocol, data_type, day)** = one row per protocol+chain+day; `vault_address` is row-level | row-level `vault_address` | MANDATORY |
+| **Perp DEX / on-chain CLOB** (Hyperliquid / Aster / GMX / Drift / Pacifica) | per FLAG 1 RESOLVED 2026-05-10 → classified under `VENUES_BY_ASSET_GROUP["cefi"]` axis | **Per-(venue, instrument, data_type, day)** — same as CEFI venues, NOT DEFI shape | hive shard key on `instrument_id` | Not bundled (per-instrument shard already) |
+
+**Rationale — why BUNDLED for DEX/Vaults/multi-vault Restaking**: per-pool/per-vault shard would inflate
+manifest by 100-1000× per (protocol, chain) — 1000 Uniswap V3 pools × 5 data_types × 730 days = 3.65M
+manifest rows for one protocol alone. Cluster validation keeps the single-row contract honest: the bundled
+parquet MUST contain exactly the expected pool/vault set. Per-pool/per-vault detail is still fully recoverable
+by reading the parquet — `pool_address` / `vault_address` is a column in every bundled parquet.
+
 ## Lending protocols
 
 | Protocol | Chains | UAC | INSTR | MTDS | EXEC | Notes |

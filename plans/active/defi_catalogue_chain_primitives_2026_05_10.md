@@ -406,10 +406,11 @@ Owner: harsh + parallel agents per protocol.
 > Per the matrix above, the shard atom for each protocol family is documented here as the SSOT; Phase 2 adapter
 > implementations MUST honor this matrix; deployment-UI drilldowns roll up to this same granularity.
 >
-> **Codex SSOT update** (Phase 2 boundary, per HARD RULE Post-Plan-Phase Codex Audit) — slot 2 today extends
+> **Codex SSOT update** (Phase 2 boundary, per HARD RULE Post-Plan-Phase Codex Audit) — slot 2 extends
 > [`codex/02-data/defi-venue-protocol-catalogue.md`](../../codex/02-data/defi-venue-protocol-catalogue.md) with a
-> "Per-protocol shard-atom matrix" subsection (Phase 1J refresh) — DEFERRED to Day-2 follow-up commit (this 6-row
-> matrix is the canonical content).
+> "Per-protocol shard-atom matrix" subsection (Phase 1J refresh) — **✅ SHIPPED 2026-05-12 Day-2 by slot 2
+> (ikenna-defi-catalogue-tab)** at PM@`a11e0256` (IN-1 fix) + follow-up commit (this matrix). 8-row matrix
+> mirrors plan-body lines 380-388 verbatim into codex SSOT with rationale block.
 >
 > **Harsh implementation handoff**: per-protocol Phase 2 adapter authors consume this matrix at adapter-write time.
 > The bundled protocols (DEX / multi-vault Restaking / Vaults) MUST pass `expected_root_clusters` +
@@ -1160,7 +1161,7 @@ slot 5 Family-1 design.
 | ManifestFreshnessCache wire-in (P1, from `defi_master` handover-block (b)) | deferred-after-3-LENDING.4 | Refactor across `lending_indices_handler` + sibling MTDS DeFi backfill handlers (`gas_fees`/`lst_rates`/`dex_pools`/`liquidations`/`perp_funding`). Slot 2 or Harsh slot 2 Day 2-3 work. Not 2026-05-23-blocking but unlocks clean full-history re-run. |
 | Clean full-history all-chains lending-indices re-run (P2) | deferred-after-ManifestFreshnessCache | Cosmetic cleanup of ~142 LINEA + ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits to `EXPECTED_PRE_GENESIS_CHAIN`. |
 | `create-code-tarballs.sh` stale-repo list (P1, from `defi_master` handover-block (d)) | deferred-after-ManifestFreshnessCache | Tooling debt; not May-23-blocking. |
-| Phase 2 codex matrix subsection in `defi-venue-protocol-catalogue.md` | deferred-to-day-2 AM | Mirror the Phase 2 per-protocol shard-atom matrix from the plan body into the codex doc as a "Per-protocol shard-atom matrix" subsection (Phase 1J refresh extension). Quick edit, slot 2 Day 2 AM. |
+| Phase 2 codex matrix subsection in `defi-venue-protocol-catalogue.md` | ✅ DONE 2026-05-12 Day-2 | 8-row shard-atom matrix mirrored into codex "Per-protocol shard-atom matrix" section (before Lending protocols). PM@see next commit. |
 | Optional rename `cefi_margin_tiers.py` → `perp_margin_tiers.py` (visual clarity) | deferred-post-cutover | Mechanical refactor; not May-23-blocking. |
 | Optional rename legacy `canonical/domain/prediction/` → `prediction_mapping/` (visual disambiguation from new `predictions/`) | deferred-post-cutover | Mechanical refactor across 2 live consumers + facade re-export; not May-23-blocking. |
 | Polygon zkEVM `CHAIN_GENESIS_DATES` entry | deferred-until-needed | Add `"POLYGON_ZKEVM": "2023-03-27"` only when a protocol on that chain enters Phase 1A scope. |
