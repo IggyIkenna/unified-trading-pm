@@ -191,27 +191,61 @@ parallel. Only the `--apply-flips` run requires strict ordering.
 
 ## Dry-run command set — all 5 asset_groups (run on same-region GCE VM, asia-northeast1-c)
 
+> **CLI syntax note (2026-05-12 correction)**: `reconcile_phantom_manifest_rows_all.py` has a `--dry-run` flag.
+> `reconcile_expected_absence_reasons.py` and `reconcile_legacy_blank_to_typed_reason.py` do NOT — their default
+> (omitting `--apply-flips`) IS scan-only mode. Passing `--dry-run` to the latter two raises an error.
+
 ```bash
-# Run in parallel — ordering does not matter for dry-run (read-only audit)
+# Scan-only (dry-run) — ordering does not matter for audit pass (read-only)
+
+# Script 1: reconcile_phantom_manifest_rows_all — HAS --dry-run flag
 python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run
 python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run
 python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run
 python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group sports --dry-run
 python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group prediction --dry-run
 
-# Also run the expected-absence-reason reconciler (all 5 asset_groups):
-python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group cefi --dry-run
-python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group defi --dry-run
-python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group tradfi --dry-run
-python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group sports --dry-run
-python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group prediction --dry-run
+# Script 2: reconcile_expected_absence_reasons — scan-only = omit --apply-flips (NO --dry-run flag)
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group cefi
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group defi
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group tradfi
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group sports
+python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group prediction
 
-# And the legacy-blank-reason reconciler:
-python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi --dry-run
-python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group defi --dry-run
-python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group tradfi --dry-run
-python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group sports --dry-run
-python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group prediction --dry-run
+# Script 3: reconcile_legacy_blank_to_typed_reason — scan-only = omit --apply-flips (NO --dry-run flag)
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group defi
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group tradfi
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group sports
+python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group prediction
+```
+
+## Apply-flips command set (production — run on GCE VM, NOT locally)
+
+> Per CLAUDE.md "Plans Run To Actual Completion": `--apply-flips` must run with `MANIFEST_PER_VM_SHARDS=true` and a
+> unique `VM_NAME` to prevent concurrent write races. Run on same-region GCE VM (asia-northeast1-c) per the
+> `Phantom audit` recipe in `codex/02-data/availability-manifest-and-data-status.md`.
+
+```bash
+# Execution order: pass 1 (reference rows) → pass 2-4 (market data services). See "Reconciliation dependency
+# ordering" section above.
+
+# Pass 1 — instruments-service reference rows first (SERIAL gate)
+MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-phantom-cefi-$(date +%Y%m%d) \
+  python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --unphantom
+MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-phantom-defi-$(date +%Y%m%d) \
+  python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --unphantom
+# ... (tradfi / sports / prediction — parallel after cefi + defi complete)
+
+# Expected-absence reconciler (--apply-flips; PARALLEL across asset_groups within same pass)
+MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-reasons-cefi-$(date +%Y%m%d) \
+  python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group cefi --apply-flips
+# ... (defi / tradfi / sports / prediction)
+
+# Legacy-blank reconciler (--apply-flips; PARALLEL)
+MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-legacy-cefi-$(date +%Y%m%d) \
+  python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi --apply-flips
+# ... (defi / tradfi / sports / prediction)
 ```
 
 ## Open questions
