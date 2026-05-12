@@ -1548,6 +1548,59 @@ else
     log_success "STEP 5.69: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# STEP 5.70 — Explicit pipeline_mode= kwarg at every ManifestWriter.record_* call
+#
+# (5.6x is exhausted — 5.65/5.67/5.69 in use, 5.66/5.68 reserved above — so this
+# manifest-data-correctness ratchet takes 5.70.)
+#
+# Enforces manifest_schema_final_gate_2026_05_09 Phase 4 "explicit-or-fail"
+# contract: every `record_captured()` / `record_empty()` / `record_failed()` /
+# `record_expected_unattempted()` (and the legacy `ManifestWriter.add()` path)
+# call MUST pass an explicit `pipeline_mode=PipelineMode.<source>` kwarg matching
+# the UAC SOURCE_PRIORITY top entry for that (asset_group, data_type). Implicit /
+# inherited `pipeline_mode` is exactly how the availability manifest ended up
+# unable to say WHICH source served a given (asset_group, data_type) — the v8
+# schema makes `pipeline_mode` a first-class manifest column, and this ratchet
+# keeps it explicit at the write boundary forever (no `**kwargs` swallowing, no
+# orchestrator-inherited default).
+#
+# The check runs `check_pipeline_mode_explicit_at_record_calls.py` against the
+# calling repo's source tree (scripts/ + tests/ excluded — same exclusion shape
+# as STEP 5.67). It is a SHRINKING ratchet: occurrences listed in
+# `pipeline_mode_explicit_baseline.yaml` (status: pending_phase_4_mtds /
+# pending_phase_4_features — the Phase 4 sweep backlog) surface as WARNINGS
+# (exit-clean); any NEW occurrence not in the baseline fails CI. Delete a baseline
+# entry the moment its successor sweep ships the explicit kwarg; never ADD one.
+# Rare legitimate N/A (e.g. a base-class method that re-forwards `**kwargs`) gets
+# the inline marker `# QG-allow: pipeline-mode-not-applicable`.
+#
+# SSOT: manifest_schema_final_gate_2026_05_09.md Phase 4.GREP-VERIFY +
+# Phase 4.DEFAULT-REMOVAL; CLAUDE.md "Live = batch (CRITICAL)" (only legitimate
+# batch/live diff is which SOURCE serves a given (asset_group, data_type)).
+_PIPELINE_MODE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py"
+if [ -f "$_PIPELINE_MODE_CHECKER" ]; then
+    _PM_REPO=$(basename "$REPO_ROOT")
+    _PM_WS="$(dirname "$REPO_ROOT")"
+    _PM_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _PM_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_PIPELINE_MODE_CHECKER" \
+            --workspace-root "$_PM_WS" --scope "$_PM_REPO" "${_PM_SRC_ARG[@]}" >/tmp/pipeline_mode_explicit_qg.log 2>&1; then
+        # exit 0 — either no occurrences, or only baselined (pending Phase 4 sweep) ones.
+        if grep -q '^\[WARN\]' /tmp/pipeline_mode_explicit_qg.log 2>/dev/null; then
+            log_warn "STEP 5.70: $(grep -c '^\[WARN\]' /tmp/pipeline_mode_explicit_qg.log) baselined record_*() call(s) missing explicit pipeline_mode= (pending Phase 4 sweep); 0 new"
+        else
+            log_success "STEP 5.70: Every ManifestWriter.record_*() call passes explicit pipeline_mode= kwarg"
+        fi
+    else
+        log_fail "STEP 5.70: NEW ManifestWriter.record_*() call missing explicit pipeline_mode= kwarg (not in unified-trading-pm/scripts/quality_gates/pipeline_mode_explicit_baseline.yaml). Pass pipeline_mode=PipelineMode.<source> per UAC SOURCE_PRIORITY top entry, or add inline '# QG-allow: pipeline-mode-not-applicable' (manifest_schema_final_gate Phase 4 explicit-or-fail contract):"
+        cat /tmp/pipeline_mode_explicit_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py --workspace-root $_PM_WS --scope $_PM_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.70: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)

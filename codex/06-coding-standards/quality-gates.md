@@ -115,6 +115,8 @@ Rules (Quick Reference)" / "Service Infrastructure Requirements".
 | 5.65 | removed-symbol AST-walk                | [STEP 5.65: Removed-Symbol AST-Walk](#step-565-removed-symbol-ast-walk-citadel--6-extended)                                                | `scripts/quality_gates/check_removed_symbols.py` (driver)            | "Citadel-Grade Planning Standards § 6 Downstream Consumer Updates"                                                          |
 | 5.66 | per-VM shard isolation envvar AST walk | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Per-VM shard isolation for concurrent backfills"                                                                           |
 | 5.67 | banned NaN-placeholder method AST-walk | [STEP 5.67: Banned NaN-Placeholder / Bypass-`record_captured` AST-Walk](#step-567-banned-nan-placeholder--bypass-record_captured-ast-walk) | `scripts/quality_gates/check_banned_placeholder_methods.py` (driver) | "Honest absence vs fake placeholders" + "No double SSOT in data-saving methodology" + "Four-category empty-output decision" |
+| 5.69 | inline `f"gs://…"` / `f"s3://…"` URI ratchet | (no section here — see enforcement file)                                                                                                   | `scripts/quality_gates/check_inline_bucket_uri.py` (driver)          | "Bucket-name SSOT (b+)"                                                                                                     |
+| 5.70 | explicit `pipeline_mode=` at `record_*` calls | [STEP 5.70: Explicit `pipeline_mode=` at every `record_*` call](#step-570-explicit-pipeline_mode-at-every-record_-call-manifest-v8) | `scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (driver) | "Live = batch (CRITICAL)" + "Availability manifest v8 — `pipeline_mode` first-class column"                                 |
 
 When a STEP appears in CI output (e.g. `STEP 5.62 FAILED: api/main.py missing make_health_router`), open the enforcement
 file's matching block for the exact assertion + the CLAUDE.md cross-ref for the rationale + the linked anchor here for
@@ -567,6 +569,74 @@ an existing baselined occurrence that moved files in the same commit that moves 
   detection problem.
 - Track D audit findings doc (`plans/active/issues/wave3x_track_d_findings_2026_05_11.md` P0-2) — the audit that seeded
   the baseline; writegate Phase 2.A is the successor that shrinks it.
+
+---
+
+## STEP 5.70: Explicit `pipeline_mode=` at every `record_*` call (manifest v8)
+
+Enforces [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase 4
+"explicit-or-fail" contract + CLAUDE.md [**Live = batch (CRITICAL)**](../../cursor-configs/CLAUDE.md): the only legitimate
+difference between batch and live for a given `(asset_group, data_type)` is which SOURCE serves it — so the manifest must
+record that source. Manifest schema v8 makes `pipeline_mode` a first-class column; this ratchet keeps it explicit at the
+write boundary. Every `ManifestWriter.record_captured()` / `record_empty()` / `record_failed()` /
+`record_expected_unattempted()` call (and the legacy `ManifestWriter.add()` path) MUST pass an explicit
+`pipeline_mode=PipelineMode.<source>` kwarg matching the UAC `SOURCE_PRIORITY` top entry. Implicit / orchestrator-inherited
+`pipeline_mode`, or `**kwargs` that silently swallow it, is the anti-pattern this catches at PR time.
+
+**Reference incident**: the same 2026-05-05 MDPS data-correctness class as STEP 5.67 — when the manifest can't say which
+source produced a row, batch-vs-live reconciliation can't tell whether a divergence is a real alpha gap or just a
+slower-source artefact. The pre-audit (PM@`237d00b7` slot 2 sub-agent) found 26 MTDS files / 102 callsites with an
+inherited-or-implicit `pipeline_mode`; the slot-2 Phase 4 sweep cleared MDPS / instruments / deployment-api; the residue
+is baselined pending the MTDS sweep (gated on the operator's PipelineMode-enum triage) + the features-consolidation sweep.
+
+### How it works
+
+1. **Record-method name set + whitelist marker** — in
+   [`unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`](../../scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py):
+   `RECORD_METHOD_NAMES` = `record_captured` / `record_empty` / `record_failed` / `record_expected_unattempted` / `add`
+   (the legacy path). A call passes if and only if it has a literal `pipeline_mode=` keyword, OR the call's source line
+   carries the inline marker `# QG-allow: pipeline-mode-not-applicable` (the rare legitimate exemption — e.g. a base-class
+   method that re-forwards `**kwargs`).
+2. **Baseline** — `unified-trading-pm/scripts/quality_gates/pipeline_mode_explicit_baseline.yaml` is a **SHRINKING ratchet**:
+   each entry is a currently-known occurrence keyed `(repo, file, line, method)` with `status` (`pending_phase_4_mtds` /
+   `pending_phase_4_features`) + `successor` (the plan phase that clears it). As of 2026-05-12 the baseline holds **114**
+   entries (97 market-tick-data-service + 6 features-service + 11 unified-trading-library). DELETE an entry the moment its
+   successor sweep ships the explicit kwarg; never ADD one — a new implicit `record_*` call is a bug, not a baseline item.
+3. **AST walker** — parses every `.py` in scope (excluding `.venv*` / `node_modules` / `build` / `dist` / `__pycache__` /
+   `scripts/` / `tests/`) and flags any `ast.Call` whose `func` is an `ast.Attribute` named in `RECORD_METHOD_NAMES` and
+   whose keyword set lacks `pipeline_mode` (and whose line lacks the whitelist marker). Counts only real `Call` nodes — a
+   docstring / comment / dict-key / string-literal reference to a method name does not trip it (the naive
+   `grep -L "pipeline_mode="` approach returned 7 false positives; the AST walk is authoritative).
+4. **QG wiring** — `scripts/quality-gates-base/base-service.sh` STEP 5.70 invokes the checker scoped to the calling repo
+   (`--workspace-root <ws> --scope <repo> --source-dir <pkg>`). Baselined occurrences → warnings (exit 0); a non-baselined
+   occurrence → ERROR + `file:line` + the baseline's `default_successor` → exit 1. A workspace-wide sweep (no `--scope`)
+   walks every immediate sub-dir with a `pyproject.toml`. If the checker file is absent (older PM checkout), the STEP is
+   skipped clean. Unit tests: `scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py` (11 cases).
+
+### Adding a new occurrence? Don't — fix it instead.
+
+If STEP 5.70 fails on YOUR code, pass `pipeline_mode=PipelineMode.<source>` for the UAC `SOURCE_PRIORITY` top entry of the
+`(asset_group, data_type)` you're writing (the source that would actually serve that data in live mode — `BATCH_DATABENTO`
+/ `BATCH_TARDIS` / `BATCH_API_FOOTBALL` / `BATCH_INSTRUMENTS_SERVICE` for self-published catalog rows, etc.). The only
+legitimate baseline edits are **removal** when a successor sweep lands, or updating the `line:` of an existing baselined
+occurrence that shifted in the same commit. If a UAC `PipelineMode` enum member genuinely doesn't exist for your source
+yet, file the gap (precedent: `mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`) and stamp the closest documented
+workaround (precedent: instruments-service stamps `BATCH_API_FOOTBALL` for footystats pending the enum extension).
+
+### Composes with
+
+- [**Live = batch (CRITICAL)**](../../cursor-configs/CLAUDE.md) — STEP 5.70 is the static enforcement of "the only
+  legitimate batch/live diff is which SOURCE serves a given `(asset_group, data_type)`": no recorded source ⇒ unverifiable
+  batch-vs-live recon.
+- [**Availability manifest v5+**](../../cursor-configs/CLAUDE.md) + [`codex/02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+  — `pipeline_mode` joins the v8 manifest column set alongside `service_emission_state` /
+  `last_emission_decision_at` / `expected_window_completeness_fraction`; Phase 4.DEFAULT-REMOVAL drops the transitional
+  `None` defaults from the 5 `record_*` signatures so the column is explicit-or-fail.
+- STEP 5.67 (banned NaN-placeholder AST-walk) + STEP 5.65 (removed-symbol AST-walk) + STEP 5.64 (bundled-shard cluster
+  validation AST-walk) are the implementation precedents — STEP 5.70 follows the same baseline-aware-ratchet + `ast.walk()`
+  shape applied to the explicit-pipeline-mode problem.
+- `manifest_schema_final_gate_2026_05_09.md` Phase 4.MTDS / Phase 4.FEATURES / Phase 4.DEFAULT-REMOVAL — the successors
+  that shrink the baseline to zero; Phase 4.GREP-VERIFY is the phase that shipped this checker + baseline.
 
 ---
 
