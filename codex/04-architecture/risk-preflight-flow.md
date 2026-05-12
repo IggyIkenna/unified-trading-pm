@@ -180,6 +180,37 @@ is discarded.
 - **Don't cache the kill-switch state.** Query `KillSwitchBus` per pre-check; the bus has microsecond-latency local
   state + the safety-critical invariant is "fresh state per pre-check."
 
+### R-10 — Where the 4 checks live (call-graph implementation)
+
+> **🟡 PROPOSED 2026-05-12 by slot 8 audit — awaiting operator confirmation.**
+> **Recommendation: Option B — shared UTL helper.** A single
+> `unified_trading_library.risk_preflight.run_wallet_preflight_checks(instruction) -> WalletSpendingPreCheckResult`
+> function lives in UTL. Every consumer (execution-service runtime + DART `/manual/instruction` endpoint +
+> strategy-service forward path) calls it. The helper owns the 4-check strict-ordered short-circuit + audit-log row
+> write. **Rejected alternatives**: Option A (per-service implementation) — drift risk between services; Option C
+> (dedicated `preflight-service` microservice) — +20-50ms RPC hop unacceptable for live DeFi.
+>
+> **Why Option B**: matches the workspace's existing UTL-helper-as-SSOT pattern (e.g. `ApiKeyReloader`, `ManifestWriter`,
+> `availability_stamping`); zero network hop; single update point when invariants evolve; basedpyright catches the
+> "forgot to call it" case (every consumer's type-checker requires the helper). The discipline cost of Option A
+> (forgetting one check across N services) is a known failure mode in this workspace (see Findings Triage incidents).
+
+### R-11 — Wallet-USD vs archetype-USD aggregation semantics
+
+> **🟡 PROPOSED 2026-05-12 by slot 8 audit — awaiting operator confirmation.**
+> **Recommendation: AND-aggregate with wallet-tier as HARD floor.** The 4-check pre-flight returns
+> `min(wallet_headroom, archetype_headroom)` as the allowed action size; BOTH ledgers update on the spend (wallet
+> daily-spend AND archetype daily-spend tick down by the spent amount). **Multi-archetype wallets** (e.g. 3 archetypes
+> share `hot-trading-eth-1`): the wallet daily-spend aggregates ALL archetypes' activity on that wallet; per-archetype
+> ledgers stay archetype-scoped. **Rejected alternatives**: Subsume (tighter-wins-but-only-track-the-loser) — loses
+> visibility of the looser axis's spend; Hierarchical (one axis primary) — defeats the safety-net role of the
+> non-primary axis.
+>
+> **Why AND-aggregate**: wallet caps are the *operational* safety net (set by ops/treasury); archetype allocations are
+> the *strategy budget* (set by strategy/risk). Both should constrain; both should track; pre-flight returns the
+> binding constraint as the allowed action size. This matches how slot 4's `SpendingCaps` are already shaped (per-tx /
+> per-hour / per-day / per-protocol — designed as hard floors regardless of strategy budget).
+
 ## Aggregation semantics
 
 `risk_preflight()` returns a single `RiskPreflightResult`:

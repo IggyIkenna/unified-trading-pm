@@ -1431,6 +1431,41 @@ self-superseded artefacts.
 
 ---
 
+## Codex-vs-Citadel audit follow-up plans (2026-05-12 session)
+
+Slot 8 4-day cycle (2026-05-12 → 2026-05-15) shipped Phases 0-5 of
+[`codex_vs_citadel_infrastructure_audit_2026_05_10.md`](codex_vs_citadel_infrastructure_audit_2026_05_10.md) — ~250
+findings across 12 areas. Outstanding work + answered-then-deferred follow-ups:
+
+**Post-cutover consolidated successor plans** (Phase 5 file-as-plan):
+
+- [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)
+  — 12 codex-hygiene findings across multiple sweeps. POST_CUTOVER backlog.
+- [`governance_qg_automation_gaps_post_cutover_2026_05_12.md`](governance_qg_automation_gaps_post_cutover_2026_05_12.md)
+  — 11 QG-automation gaps (auto-fail vs warning enforcement; baseline-deletion ratchets). POST_CUTOVER backlog.
+- [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md`](alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)
+  — 7 operator-UX deliverables for alerting / on-call surface (post-cutover refinement of the May-23 minimum).
+
+**Pre-cutover consumer sweeps + operator gates** (live work in flight):
+
+- [`plans/active/issues/ml_artefact_path_resolver_consumer_sweep_2026_05_12.md`](issues/ml_artefact_path_resolver_consumer_sweep_2026_05_12.md)
+  — ML-1 consumer sweep: **17 inline `gs://...models...` callsites in 6 repos** still bypass
+  `resolve_bucket_name(kind="ml-models-store", ...)`. Routed to 3-slot coordinated retrofit per Findings Triage (NOT
+  unilateral cross-repo edit). Composes with cluster-D readiness (live ML serving).
+- **R-10 / R-11 operator gates** (genuine architecture decisions, slot 8 audit surfaced 2026-05-12):
+  R-10 = call-graph implementation strategy for the 4-layer pre-flight stack
+  (slot 8 recommendation: **Option B — shared UTL helper** `run_preflight_checks(instruction)` per Findings Triage
+  + latency budget; awaiting operator confirmation). R-11 = capital-allocation seam
+  (slot 8 recommendation: **AND-aggregate with wallet-tier as HARD floor**; pre-flight returns `min(wallet_headroom,
+  archetype_headroom)` + both ledgers update; awaiting operator confirmation).
+- **PB-17 / PB-18 P2 sub-gates** (4 items surfaced during contract codification): per-archetype recon tolerance
+  bands · cutover-window recon cadence · CEFFU-specific custody disconnect threshold · auto-pause-live vs alert-only
+  escalation policy. All surfaced for next-cycle main triage.
+
+**Cycle aggregate**: 232 findings shipped/filed/answered during the 4-day cycle (Phase 0 + Phases 1.A-1.L + Phase 3
+IMMEDIATE + Phase 4 PRE_CUTOVER + Phase 5 POST_CUTOVER + 12 of 13 BIG/operator-gate items resolved). Phase 6 audit
+sign-off + Phase 7 cutover gate = next-cycle scope.
+
 ## Recent shipments + open successor plans (2026-05-07 session)
 
 **Shipped this session** — backfill throughput unblock + observability uplift:
