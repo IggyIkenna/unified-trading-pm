@@ -3189,8 +3189,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [x] [features-onchain-service] P1. Audit for derived emissions (LST yield curves, gas-fee aggregates, vault-state
       summaries). **Seed shipped 2026-05-11 @uac@b570d49 — 11 entries** (lending_rates / lst_yields / onchain_perps /
       utilization / flash_loan_availability / rate_impact STRICT_FAIL; risk_params + health_factor BLOCK_CRITICAL;
-      macro_sentiment / rewards / liquidation_events PARTIAL_OK). **DEFERRED**: per-service wiring of
-      `publish_with_policy()` at `_dispatch_feature_group` callsites — Phase-2 consumer work.
+      macro_sentiment / rewards / liquidation_events PARTIAL_OK). **WIRED 2026-05-12
+      @features-service@6cbf50ff**: `_check_emission_policy()` + `_apply_emission_gate()` + `_handle_write_error()` in
+      `features_service/onchain/app/core/feature_writer.py`; emission check fires once per feature_group per date at
+      `write_features()` write boundary; BLOCK_CRITICAL emits `EMISSION_POLICY_BLOCKED` alert event; 4 mode-routing
+      tests in `tests/onchain/unit/test_emission_policy.py`.
 - [x] [features-sports-service] P1. Audit + seed (fixture-stat aggregates, transfer-window features, line-movement
       metrics). **Seed shipped 2026-05-11 @uac@b570d49 — 7 entries** (fixture_features / derived_features
       current+historical NAN_FILL; odds_features:current STRICT_FAIL, odds_features:historical NAN_FILL;
@@ -3210,7 +3213,7 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       **DELTA-ONE WIRED 2026-05-12 @features-service@5e24a18c**: `_check_emission_policy()` + `_apply_emission_policy()`
       in `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
       `tests/delta_one/unit/test_emission_policy.py`. cross-instrument wired @features-service@e31ef632 (Phase 6.4).
-      **STILL DEFERRED**: multi-timeframe wiring + sports wiring + onchain wiring.
+      **STILL DEFERRED**: multi-timeframe wiring + sports wiring. **onchain wiring DONE @features-service@6cbf50ff**.
 
 **Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
 
