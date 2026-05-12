@@ -5,6 +5,10 @@
 > memory of an older CLAUDE.md.
 >
 > Trim 2026-05-11: was 2758 lines / 211KB; now ~999 lines / ~58KB. SSOT pointers added; mature wisdom moved to codex.
+>
+> **Size budget (codified 2026-05-12 per G-10 audit)**: target ≤1200 lines / 70 KB. When budget is breached, do NOT
+> inline new rules — push to a codex SSOT + leave a 1-line pointer here. Drift-watcher cadence: weekly governance
+> audit (slot 1 main). Hard upper bound = 1500 lines / 90 KB; past that the file is review-blocking until trimmed.
 
 ---
 
@@ -377,7 +381,8 @@ Tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). SSOT:
 - **Network blocking**: `pytest --block-network`; `@pytest.mark.allow_network` opts out.
 - **WS tests**: `MockWebSocketFeed` from MTDS `tests/market_interface/fixtures/mock_ws_server.py`.
 - **DeFi unit tests**: `responses` library (Hyperliquid REST). Mock Web3 at signing level — never hit real RPCs.
-- **DeFi integration tests**: shared Tenderly fork fixtures in `execution-service/tests/integration/conftest.py`.
+- **DeFi integration tests**: shared Tenderly fork fixtures in `execution-service/tests/defi_execution/integration/conftest.py`
+  (path corrected 2026-05-12 per TS-12 audit — was `tests/integration/conftest.py`).
 - **Local stack**: `bash unified-trading-pm/scripts/demo-mode.sh --seed`.
 - **Cassette parity**: `cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py` (every commit).
 
@@ -385,7 +390,9 @@ Tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). SSOT:
 
 ## Local Development
 
-Full guide: `codex/08-workflows/local-dev.md`.
+Full guide: `codex/08-workflows/local-dev.md` (backend orchestration) +
+`codex/05-infrastructure/runtime-tiers-and-deployment.md` § "UI/dev-stack startup decision table" (codified 2026-05-12
+per UI-9 audit — single SSOT for "which UI startup script when").
 
 ### Deployment-stack restart (SSOT)
 
@@ -836,6 +843,12 @@ work-split allocation for the cycle in question.
 (`Plan | Class | Calibrated | Actual | Ratio | Notes`). When 8+ rows land for a class with median ratio drifting ±20%
 from 1.0, propose updated multiplier in `docs(codex):` PR.
 
+**Legacy-plan backfill cadence (codified 2026-05-12 per G-4 audit)**: ~30 active plans pre-date this rule and lack
+`estimate_class` / `estimate_baseline_ai_days` / `estimate_calibrated_ai_days` frontmatter. Do NOT mass-sweep (high
+collision risk per Findings Triage). Instead: on the next substantive touch of any legacy plan, the touching agent
+adds the 3 frontmatter fields in the same logical unit as the substantive change. Target backfill rate ≥3 plans/cycle
+until <10 unconverted; verified via weekly governance audit (slot 1 main runs the inventory regenerator).
+
 Full SSOT: `codex/08-workflows/estimation-calibration.md` (anti-patterns, "when not to apply" detail, per-phase override
 format, ledger governance).
 
@@ -1000,13 +1013,21 @@ implementation. Spawned tabs scoped implementers; tab count varies. Used for dyn
   `## Open questions` (🟡 BLOCKED), append ping in `_agent_pings.md`, continue with what you CAN.
 - **Plan-of-record + Q&A bus** — every spawned tab has single plan-of-record. Q&A in `## Open questions` with badges 🟡
   BLOCKED / ✅ RESOLVED. Resolved cleaned at daily ledger sweep.
-- **Ping ledger bifurcation** (codified 2026-05-08): TWO ledgers:
+- **Ping ledger bifurcation** (codified 2026-05-08; extended 2026-05-12 per G-16 audit): TWO ledgers:
   - **Workspace-shared `plans/active/_agent_pings.md`** — cross-side comms only (Ikenna ↔ Harsh hard-gate signalling).
   - **Per-side `<side>_orchestrator/pings/slot_<N>.md`** — intra-side comms (main ↔ spawned tabs). Per-slot files (zero
     collision). Bidirectional — main may append `[main → slot N]` messages.
+  - **Commit-sha retention rule (G-16, 2026-05-12)**: cross-side ping entries that name a SPECIFIC commit-sha (not
+    just a plan reference) MUST stay in the ledger until BOTH sides have acked, even if older than 24h. Daily
+    sweeps clean ✅ RESOLVED ping-only entries; commit-sha-bearing entries persist until acked.
 - **Polling cadence** (Model B main): ~1 min while operator active; 5 min when tabs quiet.
 - **Sub-agent fan-out**: send all `Task` calls in SINGLE message. Sub-agents inherit nothing — paste
   `SUB_AGENT_MANDATORY_RULES.md` at top of every Task prompt.
+- **Slot precedence on master plan (G-14, 2026-05-12)**: slot 1 main is the sole owner of master-plan refresh +
+  daily inventory regenerator. Other slots feed status via the per-side ping ledger; they do NOT edit
+  `master_to_live_defi_2026_05_23.md` directly. Single exception: spawn briefs that EXPLICITLY assign master-plan
+  refresh to a non-slot-1 slot. That assignment must be in the spawn brief body + cross-pinged to slot 1 main
+  BEFORE editing.
 
 ### Daily plan shape + reset
 
