@@ -471,8 +471,20 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       sweep + features-consolidation ships Phase 4.FEATURES sweep. **2026-05-12 slot 2 audit finding** confirmed:
       naive grep `grep -rln "record_captured" --include="*.py" | xargs grep -L "pipeline_mode="` returned 7
       false positives for docstring/comment/dict-key/string-literal references; AST-walk authoritatively counts only
-      actual `Call` nodes. **TODO Phase 4.GREP-VERIFY P1** [next slot]: wire QG check into per-repo `quality-gates.sh`
-      via `base-service.sh` new STEP (~5.6x) so per-PR CI ratchets workspace-wide before merge.
+      actual `Call` nodes. **✅ Phase 4.GREP-VERIFY P1 SHIPPED 2026-05-12 slot 6 (Harsh) @pm@`93459749`** — QG check
+      wired into the per-repo QG body via `scripts/quality-gates-base/base-service.sh` **STEP 5.70** (5.6x range was
+      exhausted — 5.65/5.67/5.69 in use, 5.66/5.68 reserved — so the ratchet takes 5.70; same baseline-aware
+      shrinking-ratchet shape as STEP 5.67 / 5.69: `--workspace-root <ws> --scope <repo> --source-dir <pkg>`; baselined
+      occurrences → `log_warn` exit-clean, NEW occurrence → `log_fail` + `V++`; checker-absent → skip clean). Every
+      service repo sources `base-service.sh` so the ratchet is workspace-wide on next push. Codex doc
+      [`codex/06-coding-standards/quality-gates.md`](../../codex/06-coding-standards/quality-gates.md) documents STEP 5.70
+      (table row + full How-it-works / Adding-a-new-occurrence / Composes-with sections) + backfills the missing STEP 5.69
+      table row. **TODO Phase 4.GREP-VERIFY P2** [optional, low-pri]: `base-library.sh` does NOT carry STEP 5.65/5.67/5.69
+      either (library repos skip the workspace AST-walk ratchets by current precedent) — UTL's 11 baselined `record_*`
+      callsites are cleared by Phase 4.DEFAULT-REMOVAL regardless + caught by any workspace-wide sweep, so per-library
+      enforcement is optional follow-up, not a gap. **NICE-TO-HAVE**: also add STEP 5.70 invocation to PM's own
+      `quality-gates.sh` (Phase 4.PM-SCRIPTS confirmed N/A — zero real `record_*` calls in PM scripts — so it'd be a
+      vacuous pass; defer).
 - [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — at end of Phase 4, **all four** transitional `None` defaults removed from
       ManifestWriter's 5 `record_*` methods (explicit-or-fail): `pipeline_mode=` + the 3 v8 emission-tracking kwargs
       (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`). **AND** bump
@@ -1058,17 +1070,21 @@ inside the manifest_schema_final_gate Phase 4 cluster:
 | Phase 4.DEPLOYMENT-API | ✅ shipped slot 2 (`deployment-api@2f833a7` + `deployment-ui@ab06bfe`) | Done                                                                                                     |
 | Phase 4.E2E           | ✅ N/A (slot 2 audit; zero actual record_* calls) | Done                                                                                                     |
 | Phase 4.PM-SCRIPTS    | ✅ N/A (slot 2 audit; zero actual record_* calls) | Done                                                                                                     |
-| Phase 4.GREP-VERIFY   | ✅ shipped slot 8 today (PM@`4159b7ae`)  | Done — see DONE block above                                                                              |
+| Phase 4.GREP-VERIFY   | ✅ checker shipped slot 8 (PM@`4159b7ae`) + P1 QG-wiring shipped slot 6 (PM@`93459749`, STEP 5.70)  | Done — ratchet live in every service repo's QG; see DONE blocks below                                    |
 | Phase 4.FEATURES      | ⚪ pre-audit shipped slot 8 today; sweep deferred-after-may-16 | Successor: features-consolidation merge gate; 6 callsites enumerated above                                |
 | Phase 4.MTDS          | 🟡 pre-audit shipped slot 2 (26 files / 102 callsites); sweep BLOCKED on operator triage of Q1-Q5 | Successor: slot 3 (code_freeze Phase 1.E audit) per `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` |
 | Phase 4.DEFAULT-REMOVAL | ⚪ blocked transitively on Phase 4.MTDS | Successor: same as Phase 4.MTDS                                                                          |
 
-**Phase 4.GREP-VERIFY ratchet** is now LIVE — any new `record_*(...)` call workspace-wide missing explicit
+**Phase 4.GREP-VERIFY ratchet** is now LIVE **and wired into every service repo's QG** — `Phase 4.GREP-VERIFY P1`
+shipped 2026-05-12 slot 6 (Harsh) @pm@`93459749`: `scripts/quality-gates-base/base-service.sh` **STEP 5.70** invokes
+`check_pipeline_mode_explicit_at_record_calls.py` scoped to the calling repo (every service repo `source`s
+`base-service.sh`, so the per-PR ratchet is workspace-wide on next push). Any new `record_*(...)` call missing explicit
 `pipeline_mode=` kwarg + not in `pipeline_mode_explicit_baseline.yaml` + no `# QG-allow: pipeline-mode-not-applicable`
-inline marker fails the check + blocks the PR. Baseline entries get DELETED (not re-statused) as Phase 4.MTDS sweep
-+ Phase 4.FEATURES sweep + Phase 4.DEFAULT-REMOVAL land. The next-cycle todo `[next slot] Phase 4.GREP-VERIFY P1`
-wires the QG check into per-repo `quality-gates.sh` via `base-service.sh` new STEP (~5.6x) so per-PR CI ratchets
-the workspace-wide baseline before merge.
+inline marker → `log_fail` + non-zero exit, blocking the PR. Baseline entries get DELETED (not re-statused) as
+Phase 4.MTDS sweep + Phase 4.FEATURES sweep + Phase 4.DEFAULT-REMOVAL land. Codex doc
+`codex/06-coding-standards/quality-gates.md` documents STEP 5.70 in full. P2 (library-repo enforcement / PM-repo
+invocation) noted as optional follow-up in the Phase 4.GREP-VERIFY checkbox above — not a gap (library callsites are
+cleared by Phase 4.DEFAULT-REMOVAL + caught by workspace-wide sweep; PM has zero real `record_*` calls).
 
 ## Decision log
 
