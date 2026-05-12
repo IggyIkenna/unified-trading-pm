@@ -167,7 +167,7 @@ gates: U1 → U3 → U4 (sequential); U2 → U5 (sequential); U6 sequential afte
 RULE every gcloud / aws ec2 launcher MUST live under `deployment-service/scripts/vm/`. Without these, no compliant
 paper/live deployment exists.
 
-- [ ] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-paper-vm.sh`**.
+- [x] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-paper-vm.sh`**.
   - VM-name pattern: `strategy-paper-{archetype}-{ts}` per CLAUDE.md VM Naming Convention.
   - Boots VM with `setup-data-pipeline-vm.sh` tarball mode (default; production path).
   - Boot script:
@@ -177,25 +177,29 @@ paper/live deployment exists.
   - Env required: `MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=$VM_NAME`, `RUN_TS="$(date +%Y%m%d-%H%M%S)"`.
   - Done: launcher exists; smoke-launch with `--dry-run` returns valid gcloud command; smoke-launch with real
     `--mode paper` for 90s emits STARTED event in `gs://${PID}-events/events/strategy-service/...` partition.
+  - (deployment-service@87f12f1 — launcher created; dry-run verified)
 
-- [ ] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-live-vm.sh`**.
+- [x] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-live-vm.sh`**.
   - VM-name pattern: `strategy-live-{archetype}-{ts}`.
   - Same shape as paper launcher but invokes `run-live.sh` with `--mode live`.
   - **Additional pre-flight**: refuses launch if `--dry-run-live-cutover-passed` flag absent in launch metadata (forces
     operator to run Phase 8 dry-run before any real-capital launch).
   - Singleton-locked per `(archetype, environment)`.
   - Done: launcher exists; `--dry-run` returns valid command; pre-flight refuses launch without metadata flag.
+  - (deployment-service@87f12f1 — launcher created; --dry-run smoke + gate verified)
 
-- [ ] [AGENT] P0. **Register prefixes in `VM_PREFIX_TO_BUCKET`** at
+- [x] [AGENT] P0. **Register prefixes in `VM_PREFIX_TO_BUCKET`** at
       [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../../deployment-service/scripts/vm/vm_zombie_watchdog.py).
   - Add `"strategy-paper-": None` (heartbeat-only — paper VMs don't write to a shard bucket).
   - Add `"strategy-live-": None` (same — live VMs emit events but don't write data shards).
   - Per CLAUDE.md: a VM whose prefix is not in the dict is invisible to the zombie watchdog.
+  - (deployment-service@87f12f1)
 
-- [ ] [SCRIPT] P0. **Bounce vm-zombie-watchdog VM** so it picks up the new prefixes.
+- [x] [SCRIPT] P0. **Bounce vm-zombie-watchdog VM** so it picks up the new prefixes.
   - `gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet`
   - `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`
   - Per CLAUDE.md: running watchdog only fetches Python at boot.
+  - (vm-zombie-watchdog-20260512-184112 RUNNING — bounced 2026-05-12 13:41 UTC)
 
 - [ ] [SCRIPT] P0. **Smoke-launch each launcher** with `--dry-run` (printed gcloud command), then with `--mode paper`
       for ≥90s, then verify events.

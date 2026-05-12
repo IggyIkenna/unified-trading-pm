@@ -320,12 +320,27 @@ Until the plan ships:
 - Source-repo callsites (Makefiles / READMEs / GHA workflows) keep their current paths; the migration plan updates them
   in lockstep with each move.
 
+## Strategy paper + live launchers (2026-05-12)
+
+Added in Phase 1 of `promote_workflow_may23_cli_path_2026_05_10.md`:
+
+| Launcher | VM prefix | Purpose |
+|---|---|---|
+| `launch-strategy-paper-vm.sh` | `strategy-paper-` | Tenderly paper-trade (no real capital) |
+| `launch-strategy-live-vm.sh` | `strategy-live-` | Copper MPC live-trade (real capital gate) |
+
+Both prefixes registered in `VM_PREFIX_TO_BUCKET` (heartbeat-only). Watchdog VM bounced 2026-05-12 to
+pick up the new prefixes (`vm-zombie-watchdog-20260512-184112`).
+
+Full shape + tarball routing + known gaps: [`strategy-vm-launcher-shape.md`](strategy-vm-launcher-shape.md).
+
 ## References
 
 - CLAUDE.md "VM launcher script SSOT" rule (cursor-configs/CLAUDE.md, codified 2026-05-07).
 - CLAUDE.md "VM tarball deployment" — `create-code-tarballs.sh --all` + boot path.
 - CLAUDE.md "VM Naming Convention" — `VM_PREFIX_TO_BUCKET` registry.
 - [`codex/05-infrastructure/vm-tarball-deployment.md`](vm-tarball-deployment.md) — tarball mechanics.
+- [`codex/05-infrastructure/strategy-vm-launcher-shape.md`](strategy-vm-launcher-shape.md) — paper + live launcher SSOT.
 - [`plans/ai/deploy_missing_auto_launch_2026_05_07.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md) —
   preview → auto-launch successor.
 - [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md) —
