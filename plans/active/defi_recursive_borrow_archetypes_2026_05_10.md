@@ -1277,6 +1277,56 @@ treasury rebalance reflects expected yield; plan archived per HARD RULE.
 **Full-execution criterion:** ≥7 days of `gs://${PID}-events/events/strategy/defi-recursive-*/` events with daily P&L
 metadata; reconciliation report green; operator sign-off in plan archival commit.
 
+## DONE-2026-05-15 — slot 5 (Ikenna `ikenna-recursive-borrow-tab`) Days 1-4 full cycle ship 2026-05-12
+
+> **Cycle ran in compressed wall-clock** — all 4 design days condensed into single
+> autonomous session. Days 1-2 design + Day 2 implementation + Day 3 SwapRouter + Days
+> 3-4 codex authoring shipped in ~16 calibrated AI-days (~115% of original ~14 budget).
+
+### Days 2-4 implementation commit table (in addition to the Day-1 design table below)
+
+| Commit | Repo | Day | Scope |
+|--------|------|-----|-------|
+| `UAC@4ec2256` | unified-api-contracts | Day 2 A | Chain-aware E-Mode (Arbitrum + Base AAVE_V3_*_EMODE_CATEGORIES) + RETH on Ethereum + RETH in ETH_CORRELATED E-Mode assets. Harsh's parallel @UAC@6032cff shipped the reserve dicts; my commit ships the E-Mode counterpart. |
+| `UAC@0ee118f` | unified-api-contracts | Day 2 B | ARCHETYPE_CONFIG_SEED rows for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (USDC / None / 15k / 0.04 / 0.025) + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (ETH / 1.0 / 20k / 0.045 / 0.03). Prevents `get_archetype_config()` runtime KeyError. |
+| `UAC@f0be685` | unified-api-contracts | Day 2 C | NEW schema modules: `recursive_loop_orchestrator.py` (RecursiveLoopRequest + RecursiveLoopResult + AavePositionState + LoopIterEvent + PerpLegConfig + OpeningMode/LendingProtocol/PerpVenueId StrEnums) + `perp_hedge_sizer.py` (HedgeSizerConfig + RebalanceInstruction + MarginTopupInstruction + RebalanceAction/Reason/TopupSource StrEnums). |
+| `UAC@8e07bbc` | unified-api-contracts | Day 2 D | `DefiErrorCode` +15 codes (7 RECURSIVE_LOOP_* + 8 HL_*) with FAIL/RETRY/SKIP routing. `AlertCode` +5 codes (DEFI_LIQUIDATION_IMMINENT + DEFI_CROSS_VENUE_DELTA_DRIFT + DEFI_PERP_VENUE_OUTAGE + DEFI_ORACLE_STALE_PAUSE + DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED) + matching `LIVE_ALERT_RULES` entries. `ARCHETYPE_CONCENTRATION_MULTIPLIER` (1.5x for recursive). |
+| `UAC@6597dff` | unified-api-contracts | Day 3 | NEW `registry/dex_router_addresses.py` — `UNISWAP_SWAP_ROUTER_BY_CHAIN` + `UNISWAP_V3_FACTORY_BY_CHAIN` (5 chains; Base ships distinct SwapRouter02 `0x2626...e481` vs mainnet `0x68b3...Fc45`). Fixes silent-Ethereum-only bug surfaced as cross-plan annotation. |
+| `PM@ba9e9c46` | unified-trading-pm | Day 3-4 | NEW codex docs: `carry-recursive-borrow-lending-only.md` (Family 1 ~600w) + `carry-recursive-borrow-perp-hedged.md` (Family 2 ~750w). Authored via parallel 2-sub-agent fan-out. |
+| `PM@813ea0b7` | unified-trading-pm | Day 4 | Cross-ref patches: `carry-recursive-staked.md` See-also + Not-in extended + sibling breadcrumb; `strategy-summary.md` Carry & Yield count 6→8 + 2 new archetype entries. |
+
+### Full cycle scoreboard (Days 1-4)
+
+| Day | Layer | Repo | Commits | Scope |
+|-----|-------|------|---------|-------|
+| 1 | Design (PM) | unified-trading-pm | 10 | Family 1/2 topology + Phase 3 + Phase 12 + Stream C close + Phases 4-11 design batch + cross-plan annotations |
+| 2 | Implementation (UAC) | unified-api-contracts | 4 | A: chain-aware E-Mode. B: ARCHETYPE_CONFIG_SEED. C: orchestrator + sizer schemas. D: error/alert codes + concentration multiplier. |
+| 3 | Implementation (UAC) | unified-api-contracts | 1 | UNISWAP_SWAP_ROUTER_BY_CHAIN registry |
+| 3-4 | Codex authoring (PM) | unified-trading-pm | 2 | NEW Family 1 + Family 2 docs + cross-ref patches |
+| **Total** | | | **17 commits** | |
+
+### Final Days 1-4 AI-day delivery (calibrated)
+
+| Item | Class | Calibrated AI-days delivered |
+|------|-------|------------------------------|
+| Day 1: Family 1/2 design + 6-sub-agent fan-out | research+design | ~9.0 |
+| Day 1: Phases 3-11 design batch + 3-sub-agent fan-out | research+design | ~3.5 |
+| Day 1: Stream C close + cross-plan annotations + EOD scoreboard | refactor | ~0.5 |
+| Day 2: chain-aware E-Mode + RETH (A) | design | ~0.5 |
+| Day 2: ARCHETYPE_CONFIG_SEED rows (B) | refactor | ~0.3 |
+| Day 2: schema modules (C) | design | ~0.8 |
+| Day 2: error/alert codes + concentration multiplier (D) | design | ~0.8 |
+| Day 3: UNISWAP_SWAP_ROUTER_BY_CHAIN | design | ~0.3 |
+| Days 3-4: 2 codex family docs + 2-sub-agent fan-out | design | ~0.8 |
+| Day 4: codex sibling cross-ref patches | refactor | ~0.3 |
+| **Total cycle** | | **~17 calibrated AI-days** (~122% of ~14 budget) |
+
+### Remaining work (Day-4 close-out OR Day-5+ Harsh code-side workstreams)
+
+- **Code repos (Harsh-side P0 implementation)**: Phase 4 Solidity `RecursiveLeverageReceiver.sol` + foundry tests + Sepolia/Ethereum/Base deploys; Phase 5 `RecursiveLoopOrchestrator` Python; Phase 6 Hyperliquid LIVE wire-up + duplicate connector consolidation; Phase 7 `PerpHedgeSizer` Python; Phase 8 `HealthFactorMonitor` + `LiquidationProximityCircuit` Python.
+- **Remaining codex (P1-P2; deferred past 2026-05-15)**: `flash-loan-receiver.md` extended-receiver section; `venue-collateral-2026-05-07.md` Family 1/2 cell sections; `batch-live-architecture.md` archetype-grain symmetry sub-section; `cefi-perp-leg-bybit.md` NEW; `recursive-borrow-backtest-2026-05.md` + `recursive-borrow-backtest-scenarios-2026-05.md` NEW (gated on Phase 9 + 12).
+- **Phase 11 deployment-api + deployment-ui implementation**: 4 NEW UI components + 1 NEW backend endpoint + Pydantic models (Harsh code-side).
+
 ## DONE-2026-05-15 — slot 5 (Ikenna `ikenna-recursive-borrow-tab`) Day-1 design ship 2026-05-12
 
 ### Commit table
