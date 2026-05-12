@@ -158,3 +158,30 @@ reason + suggested disposition (IMMEDIATE / PRE_CUTOVER / POST_CUTOVER). Cross-c
   EX-11 + EX-16 (custody flip) feed the master-plan continuous-verification column.
 - `cursor-configs/CLAUDE.md` § "DeFi Execution Architecture" / "DeFi Execution Architecture" pointer chain / "Removed
   providers" / "Batch = Live: Unified Pipeline Architecture" (the workspace rules being audited).
+
+## PRE_CUTOVER batch shipped 2026-05-12 (slot 8 sub-agent)
+
+Per the slot 8 sub-agent (`ikenna-precutover-batch-data-instruments-strategy-execution`), 12 Execution-area
+PRE_CUTOVER findings landed:
+- PM-side commit `e94e703a docs(codex,uac): PRE_CUTOVER batch — 10 Execution-area findings shipped`
+- UAC-side commit `c89e820 docs(uac): DefiErrorCode docstring — UDEI → execution-service` (EX-6 only)
+
+| Finding | Disposition | Brief |
+| ------- | ----------- | ----- |
+| EX-4 | PRE_CUTOVER ✅ DONE @e94e703a | flash-loan-receiver Holesky row + Tenderly fork-chain-id reconciliation |
+| EX-6 | PRE_CUTOVER ✅ DONE @c89e820 (UAC) | UAC DefiErrorCode docstring "UDEI" → "execution-service DeFi connectors" |
+| EX-7 | PRE_CUTOVER ✅ DONE @e94e703a | defi-execution-overview error count 11 → 13 (BORROW/SUPPLY_CAP_EXCEEDED added) |
+| EX-9 | PRE_CUTOVER ✅ DONE @e94e703a | slippage default reconciliation note in defi-execution-overview |
+| EX-11 | PRE_CUTOVER ✅ DONE @e94e703a | execution-modes perp_venues 5 → 6 (DERIBIT added) |
+| EX-12 | PRE_CUTOVER ✅ DONE @e94e703a | Morpho dropped from FLASH_BORROW + chain-count internal-consistency note |
+| EX-14 | PRE_CUTOVER ✅ DONE @e94e703a | mev-protection.md QG ratchet for inline addr/RPC detection |
+| EX-16 | PRE_CUTOVER ✅ DONE @e94e703a | interface-credential-convention custody hot-reload test + `execution:` block |
+| EX-17 | PRE_CUTOVER ✅ DONE @e94e703a | batch-live-architecture §6 AMM fidelity gate cross-link to Phase 2+8C |
+| EX-21 | PRE_CUTOVER ✅ DONE @e94e703a | colocated_engine "44 strategies" → registry-driven + QG-wiring caveat |
+| EX-23 | PRE_CUTOVER ✅ DONE @e94e703a | defi-execution-overview SM-secret-name SSOT note (single source of truth) |
+| EX-24 | PRE_CUTOVER ✅ DONE @e94e703a | NEW codex/04-architecture/order-state-machine.md SSOT-stub |
+
+ROUTED / DEFERRED:
+- EX-1 — already ✅ RESOLVED 2026-05-12 per issue doc (on-chain bytecode verified).
+- EX-2 / EX-3 / EX-5 / EX-8 / EX-10 / EX-19 / EX-20 / EX-22 — already shipped slot 8 IMMEDIATE @0fc4b3fd / @959ca3fc.
+- EX-15 / EX-18 / EX-25 / EX-26 / EX-27 — POST_CUTOVER tier; not in PRE_CUTOVER scope.

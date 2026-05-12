@@ -150,3 +150,25 @@ Audit-pass scope: 44 docs / ~11,400 lines across codex/02-data + UAC `honest_cov
   expansion lands here).
 - `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` (D-5 supersession of `bucket-naming-and-config.md`).
 - `plans/epics/manifest_migration_master_2026_05_07.md` (D-12 stub-content owner).
+
+## PRE_CUTOVER batch shipped 2026-05-12 (slot 8 sub-agent)
+
+Per the slot 8 sub-agent (`ikenna-precutover-batch-data-instruments-strategy-execution`), 11 Data-area PRE_CUTOVER
+findings landed in commit `d19d3bf2 docs(codex): PRE_CUTOVER batch — 11 Data-area findings shipped`:
+
+| Finding | Disposition | Brief |
+| ------- | ----------- | ----- |
+| D-3 | PRE_CUTOVER ✅ DONE @d19d3bf2 | Temporary-state block for `MANIFEST_SCHEMA_VERSION=7` transitional pin |
+| D-4 | PRE_CUTOVER ✅ DONE @d19d3bf2 | Reader-fallback retirement gate cross-link |
+| D-8 | PRE_CUTOVER ✅ DONE @d19d3bf2 | `category=` dual-vocab ~2026-06-15 cutoff date |
+| D-10 | PRE_CUTOVER ✅ DONE @d19d3bf2 | UAC `internal/` subpackage table regenerated |
+| D-11 | PRE_CUTOVER ✅ DONE @d19d3bf2 | `test_ac_uic_alignment.py` successor reference |
+| D-12 | PRE_CUTOVER ✅ DONE @d19d3bf2 | `manifest-migration-coordination.md` body expanded (5-phase) |
+| D-13 | PRE_CUTOVER ✅ DONE @d19d3bf2 | `live_workers.py:268-271` open-bug routed to writegate Phase 2.A |
+| D-15 | PRE_CUTOVER ✅ DONE @d19d3bf2 | `data-lineage-MTDS-features-ml.md` v8 currency refresh |
+| D-16 | PRE_CUTOVER ✅ DONE @d19d3bf2 | drilldown vocab note (legacy vs canonical) |
+| D-17 | PRE_CUTOVER ✅ DONE @d19d3bf2 | README TL;DR live-pipeline architecture corrected |
+| D-19 | PRE_CUTOVER ✅ DONE @d19d3bf2 | DLQ vs `record_failed()` routing rule table |
+| D-20 | PRE_CUTOVER ✅ DONE @d19d3bf2 | pipeline-mode reader-fallback `execution:` block |
+
+POST_CUTOVER tier (D-14 rollup-vs-drilldown denominator + D-18 QG STEP 5.64 cross-link) remain for backlog cleanup.

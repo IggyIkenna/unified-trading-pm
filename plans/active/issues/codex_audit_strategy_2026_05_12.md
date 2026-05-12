@@ -131,3 +131,29 @@ grep-then-READ — e.g. `mev-protection.md` looked like a 3-way drift but readin
 - `cursor-configs/CLAUDE.md` § "Signal Leasing / strategy-service signal broadcast" / "Live = batch" / "Batch = Live:
   Unified Pipeline Architecture" / "Master Plan Continuous-Verification Column" / "Runbook Execution-Owner SSOT" — the
   workspace rules being audited.
+
+## PRE_CUTOVER batch shipped 2026-05-12 (slot 8 sub-agent)
+
+Per the slot 8 sub-agent (`ikenna-precutover-batch-data-instruments-strategy-execution`), 9 Strategy-area
+PRE_CUTOVER findings landed in commit `87a09ca8 docs(codex): PRE_CUTOVER batch — 9 Strategy-area findings`:
+
+| Finding | Disposition | Brief |
+| ------- | ----------- | ----- |
+| ST-3 | PRE_CUTOVER ✅ DONE @87a09ca8 | MIGRATION.md Phase 9 update note (18-engine legacy → 55 canonical) |
+| ST-7 | PRE_CUTOVER ✅ DONE @87a09ca8 | `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` rename |
+| ST-8 | PRE_CUTOVER ✅ DONE @87a09ca8 | engine/ no-adapter-import invariant block (strategy-summary.md) |
+| ST-9 | PRE_CUTOVER ✅ DONE @87a09ca8 | signal_broadcast/ 5 service-infrastructure invariants block |
+| ST-10 | PRE_CUTOVER ✅ DONE @87a09ca8 | check_strategy_taxonomy_counts.py QG ratchet description |
+| ST-12 | PRE_CUTOVER ✅ DONE @87a09ca8 | prediction-markets-codification-gaps.md `execution:` frontmatter |
+| ST-13 | PRE_CUTOVER ✅ DONE @87a09ca8 | `_archived_pre_v2/` cross-refs repointed (onboarding + pnl-attribution) |
+| ST-14 | PRE_CUTOVER ✅ DONE @87a09ca8 | strategy-summary.md dead-issue-doc reference repointed |
+| ST-16 | PRE_CUTOVER ✅ DONE @87a09ca8 | category-instrument-coverage.md duplicate changelog stub removed |
+| ST-17 | PRE_CUTOVER ✅ DONE @87a09ca8 | NEW codex/09-strategy/architecture-v2/promote-workflow.md SSOT-stub |
+
+ROUTED / DEFERRED:
+- ST-5 — already ✅ DONE per prior slot 8 IMMEDIATE batch @f401a3c9.
+- ST-11 / ST-19 / ST-20 — POST_CUTOVER tier; not in PRE_CUTOVER scope.
+- ST-15-nit — routed to mev-protection canonical owner (cross-ref EX-8/EX-20 execution-area findings).
+- ST-6 — ROUTED-TO-master-plan-owner (master plan refresh not touched here — collision risk).
+
+IMMEDIATE tier (ST-1, ST-2, ST-4, ST-18) already DONE per prior slot 8 IMMEDIATE batch @f401a3c9.

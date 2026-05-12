@@ -128,3 +128,33 @@ lists 6 stale DeFi adapter paths (`adapters/eigenlayer.py` etc.) but there are n
 > (IN-17 PRE_CUTOVER defers execution to Phase 1.B Strategy). Catalogue-audit findings elevated to codex-doc fixes:
 > DF-1/DF-2/DF-3/DF-6/DF-8/DF-10/DF-11/DF-14/DF-15/DF-16/DF-18/DF-19/DF-20 (→ IN-1, IN-4, IN-10, IN-13, IN-15, IN-22),
 > CF-1/CF-2/CF-3/CF-4/CF-9/CF-10/CF-12 (→ IN-2, IN-3, IN-13, IN-22), TF-4/TF-5/TF-6 (→ IN-9, IN-11), SP-1/SP-2/SP-3/SP-6/SP-10 (→ IN-3, IN-9, IN-11, IN-12, IN-22), PR-1/PR-6/PR-7 (→ IN-2, IN-11, IN-22).
+
+## PRE_CUTOVER batch shipped 2026-05-12 (slot 8 sub-agent)
+
+Per the slot 8 sub-agent (`ikenna-precutover-batch-data-instruments-strategy-execution`), 13 Instruments-area
+PRE_CUTOVER findings landed in commit `38748f36 docs(codex): PRE_CUTOVER batch — 13 Instruments-area findings`
+(IN-17 + IN-21 + IN-22 also shipped as part of the same commit batch):
+
+| Finding | Disposition | Brief |
+| ------- | ----------- | ----- |
+| IN-3 | PRE_CUTOVER ✅ DONE @38748f36 | Case-folding contract section (venue-availability.md) |
+| IN-4 | PRE_CUTOVER ✅ DONE @38748f36 | DeFi adapters list refreshed to 25 under adapters/defi/ |
+| IN-5 | PRE_CUTOVER ✅ DONE @38748f36 | data-catalogue-schema.md `asset_group:` canonical key |
+| IN-6 | PRE_CUTOVER ✅ DONE @38748f36 | Phantom-audit reconciler `execution:` block |
+| IN-7 | PRE_CUTOVER ✅ DONE @38748f36 | defi-data-types-catalog.md `asset_group=defi/` canonical |
+| IN-8 | PRE_CUTOVER ✅ DONE @38748f36 | venue-availability.md v8/v7 reconciliation banner |
+| IN-9 | PRE_CUTOVER ✅ DONE @38748f36 | Venue-class taxonomy section (5 classes) |
+| IN-10 | PRE_CUTOVER ✅ DONE @38748f36 | defi-venue-protocol-catalogue ✅/🟢 split |
+| IN-11 | PRE_CUTOVER ✅ DONE @38748f36 | QG STEP 5.64 cluster-validation cross-link |
+| IN-12 | PRE_CUTOVER ✅ DONE @38748f36 | Per-asset-group + refdata empty-rule asymmetry |
+| IN-13 | PRE_CUTOVER ✅ DONE @38748f36 | factory.py auto-registration documented |
+| IN-14 | PRE_CUTOVER ✅ DONE @38748f36 | sentinel-rollout tier-promotion `execution:` |
+| IN-15 | PRE_CUTOVER ✅ DONE @38748f36 | DeFi 3-doc reconciliation banner |
+| IN-16 | PRE_CUTOVER ✅ DONE @38748f36 | Manifest-remediation script index |
+| IN-17 | PRE_CUTOVER ✅ DONE @38748f36 | Archetype-name supersession note |
+| IN-21 | PRE_CUTOVER ✅ DONE @38748f36 | Catalogue-completeness end-to-end runbook |
+| IN-22 | PRE_CUTOVER ✅ DONE @38748f36 | Venue-id-must-be-wired QG ratchet description |
+
+POST_CUTOVER tier (IN-19 currency stamps, IN-20 Solana DeFi adapter axis) remain for backlog.
+
+IMMEDIATE tier (IN-1, IN-2) already DONE per prior slot 8 batches (@959ca3fc / @71d24b2e).
