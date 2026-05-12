@@ -685,10 +685,12 @@ unverified — three plausible models (a/b/c — see issue body) need observatio
 vs genuinely-cancelled rows BEFORE the OUTCOMES split lands so the OUTCOMES rows aren't poisoned by mis-flagged
 cancellations.
 
-- [ ] [SCRIPT] P0. UAC `MatchStatus` typed StrEnum SSOT — closed set: `SCHEDULED`, `LIVE`, `HALFTIME`, `FINISHED`,
-      `POSTPONED`, `CANCELLED`, `ABANDONED`, `SUSPENDED`, `INTERRUPTED`. Lives at
-      `unified_api_contracts/canonical/domain/sports/fixture_status.py`. Replace freeform string status across all
-      sports adapters.
+- [x] [SCRIPT] P0. UAC `MatchStatus` typed StrEnum SSOT — 9 canonical states + `AF_STATUS_SHORT_MAP` + grouping
+      frozensets + `from_af_short()` classmethod. (UAC@1a831b0 —
+      `unified_api_contracts/canonical/domain/sports/fixture_status.py`; exported via domain `__init__`.)
+      **DEFERRED**: "Replace freeform string status across all sports adapters" — the SSOT is shipped; adapter
+      migration (replacing `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` / `MatchStatus` comparisons)
+      is a follow-up refactor across instruments-service adapters.
 - [ ] [SCRIPT] P0. Cross-source verifier integration at instruments-service orchestrator commit-time. When api_football
       reports `CANCELLED` BUT footystats / SFI / understat reports the fixture has match data (lineups + stats +
       events): emit `FIXTURES_STATUS_DISCREPANCY` event (NEW UAC LifecycleEventType) + flip api_football status to
