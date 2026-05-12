@@ -200,9 +200,9 @@ Run revision.
 
 ## Phase 5 — deployment-ui ClientReporting tab (Days 8-10, ~1.5 AI-days)
 
-- [ ] [AGENT] P0. **5.A NAV time-series chart.** Per-client; range-selector.
-- [ ] [AGENT] P0. **5.B PnL waterfall chart.** Per-archetype × per-component; reuses Recharts patterns.
-- [ ] [AGENT] P0. **5.C Per-leg drilldown.** Click an archetype bar → per-strategy-leg detail.
+- [x] [AGENT] P0. **5.A NAV time-series chart.** Per-client; range-selector. (deployment-ui@0044f96 — NavChart in ClientReportingTab.tsx; client-ID input + date range pickers)
+- [x] [AGENT] P0. **5.B PnL waterfall chart.** Per-archetype × per-component; reuses Recharts patterns. (deployment-ui@0044f96 — PnLChart stacked BarChart + AttributionChart waterfall in ClientReportingTab.tsx)
+- [x] [AGENT] P0. **5.C Per-leg drilldown.** Click an archetype bar → per-strategy-leg detail. (deployment-ui@0044f96 — DrilldownTable in ClientReportingTab.tsx; click attribution bar to filter)
 - [ ] [AGENT] P0. **5.C2 HWM crystallization timeline.** Per share-class HWM-vs-NAV chart with crystallization-event
       markers; per-period perf-fee summary card (period_start / period_end / hwm_at_start / hwm_at_end / gross_pnl /
       perf_fee_amount / perf_fee_rate). Reads from `wallet_treasury_client_flow_2026_05_10` Phase 5.F audit log +
@@ -210,8 +210,9 @@ Run revision.
       emits. **Joins INTO the NAV waterfall view as a separate row class** (NOT a `PnLAttributionRow.factor` value);
       keeps factor × layer attribution decoupled from fee-recognition accounting per codex `pnl-attribution.md` Hard
       Rule #4 + § Plan-vs-codex factor name mapping.
-- [ ] [AGENT] P0. **5.D Operator-MVP.** Demo client visible by default; switcher for future clients.
-- [ ] [AGENT] P0. **5.E Playwright smoke.** End-to-end test confirms tab loads + cards render against live API.
+      **DEFERRED**: blocked on `wallet_treasury_client_flow_2026_05_10` Phase 4.C (FeeRecognitionRow emit). Placeholder card renders in UI (opacity-60) at deployment-ui@0044f96.
+- [x] [AGENT] P0. **5.D Operator-MVP.** Demo client visible by default; switcher for future clients. (deployment-ui@0044f96 — default clientId="demo", input field for override)
+- [x] [AGENT] P0. **5.E Playwright smoke.** End-to-end test confirms tab loads + cards render against live API. (deployment-ui@0044f96 — 4 tests in tests/smoke/client_reporting_tab.spec.ts)
 
 **Full-execution criterion**: deployment-ui shows demo client NAV + PnL + waterfall against real cutover-archetype data.
 
@@ -284,7 +285,9 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 | Phase 3.B execution-service pnl_attribution | ✅ DONE (execution-service@a4145838) | FillAttributionContext + build_attribution_rows; 6 test classes 5462 passed |
 | Phase 3.C MTDS client_id enrichment | ✅ RESOLVED-VIA-ARCHITECTURE — no MTDS change needed (see checkbox annotation) | Architecture: FillAttributionContext.client_id already carries it; joiner confirms |
 | Phase 4.A-4.D client-reporting-api routes | ✅ DONE (client-reporting-api@a2555fa) | 4 routes + reader + stubs + 15 tests; pushed to live-defi-rollout |
-| Phase 5-9 | TODO | Blocked on Phase 4 (now unblocked); Phase 5 = deployment-ui ClientReporting tab |
+| Phase 5.A-5.E deployment-ui | ✅ DONE (deployment-ui@0044f96) | ClientReportingTab, clientReporting.ts, App.tsx wiring, 4 Playwright smoke tests |
+| Phase 5.C2 HWM crystallization | **DEFERRED** — blocked on wallet_treasury_client_flow_2026_05_10 Phase 4.C (FeeRecognitionRow emit) | Placeholder card in UI at opacity-60; unblock after wallet plan Phase 4.C ships |
+| Phase 6-9 | TODO | Next: Phase 6 demo client seed |
 
 ## Deferred work after 2026-05-10 plan-creation session
 
