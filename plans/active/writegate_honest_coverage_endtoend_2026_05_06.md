@@ -3214,6 +3214,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       in `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
       `tests/delta_one/unit/test_emission_policy.py`. cross-instrument wired @features-service@e31ef632 (Phase 6.4).
       **STILL DEFERRED**: multi-timeframe wiring + sports wiring. **onchain wiring DONE @features-service@6cbf50ff**.
+      **CALENDAR WIRED 2026-05-12 @features-service@4623c669 + @uac@c85ecc4**: UAC seeds added
+      (time_features NAN_FILL; economic_events PARTIAL_OK); `_SERVICE_NAME` + `_check_emission_policy()` wired in
+      `features_service/calendar/cli/handlers/batch_handler.py`; completeness_fraction from binary rows_written check
+      (calendar is deterministic — no partial DataFrame at batch_handler boundary); 4 mode-routing tests in
+      `tests/calendar/unit/test_emission_policy.py`.
 
 **Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
 
