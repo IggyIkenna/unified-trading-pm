@@ -240,12 +240,92 @@ expected_unattempted calls for unknown shards.
 
 ---
 
-## Phase 2 — MDPS: record_expected_unattempted on skip
+## Phase 1.5 — Sports: fixture-as-instrument SSOT fix in classifier + pre-flight
 
-**model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~0.5
+**model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~0.8
+
+**Goal**: For sports, the instruments-service fixture manifest is the canonical universe. A shard slot where no fixture
+exists for that (league, date) should be `expected_unattempted` — not `SOURCE_RETURNED_ZERO`. A shard where a fixture
+DID exist but data is missing AND there is no UAC-based source limitation (understat limited leagues, footystats
+pre/post-season, UAC per-source league filter) should be `attempted_failed`, not `SOURCE_RETURNED_ZERO`.
+
+The current classifier in `legacy_reason_classifier.py` does NOT check fixture existence — it falls through to
+`SOURCE_RETURNED_ZERO` for any sports shard without a matching UAC coverage-gap reason. This over-counts "empty" and
+under-counts "failed" for sports.
+
+### Pre-audit
+```bash
+grep -n "fixture\|FIXTURE\|api_football\|check.*fixture\|fixture.*exist" \
+  unified-trading-library/unified_trading_library/legacy_reason_classifier.py | head -20
+
+grep -rn "fixture.*manifest\|manifest.*fixture\|check.*fixture.*shard" \
+  instruments-service/instruments_service/ --include="*.py" | grep -v .venv | head -20
+```
+
+### Implementation pattern
+
+In `_classify_sports()` (after source-coverage + known-gap + source-limitation checks, before `SOURCE_RETURNED_ZERO` fallback):
+
+```python
+# Check fixture existence BEFORE falling through to SOURCE_RETURNED_ZERO
+# If no fixture exists for this (league_id, date) → expected_unattempted (not a real slot)
+if not fixture_exists_for_shard(venue, instrument_id, date, fixture_manifest):
+    return "EXPECTED_UNATTEMPTED"  # slot doesn't exist in fixture universe
+
+# Fixture exists + no UAC source limitation → attempted_failed (should have data)
+return None  # caller flips to attempted_failed
+```
+
+`fixture_manifest` is a lightweight read of instruments-service `data_type=fixtures` manifest rows, cached in-process.
+The classifier gains an optional `fixture_manifest: pd.DataFrame | None = None` param; callers in the reconciler pass it
+in after reading instruments-service manifest for the asset_group + date range.
+
+**Note**: this is the same pre-flight pattern as Phase 1 (MTDS reads instruments-service manifest before fetching).
+Reconciler scripts should read instruments-service manifest once and pass into classifier.
+
+- [ ] [CODE] P1. Add `fixture_manifest` param to `_classify_sports()` in `legacy_reason_classifier.py`. Wire fixture
+      existence check BEFORE `SOURCE_RETURNED_ZERO` fallback. Add 3 unit tests (no fixture → expected_unattempted;
+      fixture exists + source limitation → SOURCE_RETURNED_ZERO; fixture exists + no limitation → attempted_failed).
+- [ ] [CODE] P1. Update `reconcile_legacy_blank_to_typed_reason.py` to read instruments-service fixture manifest for
+      the sports asset_group and pass it into the classifier.
+- [ ] [RESEARCH] P1. Audit instruments-service manifest for transfermarkt data: does the manifest correctly track
+      per-league transfer windows? Is `EXPECTED_OUTSIDE_TRANSFER_WINDOW` being correctly applied to all transfermarkt
+      data_types (player_values, transfers) during non-window periods? Is `available_at` set to last day of the transfer
+      window for player values entering next season? File a follow-up todo if the design doesn't match the intent.
+- [ ] [QG] P1. `cd unified-trading-library && bash scripts/quality-gates.sh`. `cd instruments-service && bash scripts/quality-gates.sh`. Push.
+
+---
+
+## Phase 2 — MDPS: record_expected_unattempted on skip + forward-fill semantics codification
+
+**model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~0.8 (was ~0.5; +0.3 for forward-fill semantics)
 
 **Goal**: When MDPS's `DependencyChecker` finds upstream MTDS shard absent or empty, write `expected_unattempted` in
-MDPS's own manifest rather than returning silently.
+MDPS's own manifest rather than returning silently. ALSO codify the downstream consumption contract so MDPS knows exactly
+how to behave based on upstream manifest state.
+
+### MDPS downstream consumption contract (operator direction 2026-05-12)
+
+The whole point of correct upstream manifest classification is that MDPS can act intelligently:
+
+| Upstream MTDS `capture_status` | MDPS behaviour | Why |
+| ------------------------------ | -------------- | --- |
+| `captured` | Process normally | Data exists |
+| `empty_confirmed` + any reason | Write **zero-volume / forward-fill-last-price** bars for that time block | "Good missing" — confirmed no trades; price continuity preserved; not a data quality issue |
+| `attempted_failed` | Write **NaN** (do NOT forward-fill) | "Bad missing" — data may exist but fetch failed; downstream must not treat silence as zero-activity |
+| `expected_unattempted` | Write `expected_unattempted` in MDPS manifest + skip | Upstream said skip — MDPS propagates honest absence |
+
+This contract means MDPS must READ upstream MTDS capture_status per shard, not just check presence.
+
+- [ ] [CODE] P0. Add `record_expected_unattempted` call in MDPS `DependencyChecker` when skipping due to absent/empty
+      MTDS shard. Pass `manifest_writer` reference at construction if not already present.
+- [ ] [CODE] P0. Codify MDPS downstream consumption contract in MDPS orchestration_service: route MTDS
+      `empty_confirmed` → zero-vol/forward-fill; `attempted_failed` → NaN; `expected_unattempted` → propagate skip.
+      Add 4 unit tests (one per upstream status).
+- [ ] [CODEX] P1. Add `## MDPS downstream consumption contract` section to
+      `codex/02-data/honest-absence-downstream-handling.md` documenting the 4-row table above. Reference this plan +
+      writegate Phase 2.A.
+- [ ] [QG] P0. `cd market-data-processing-service && bash scripts/quality-gates.sh`. Push.
 
 ### Pre-audit
 

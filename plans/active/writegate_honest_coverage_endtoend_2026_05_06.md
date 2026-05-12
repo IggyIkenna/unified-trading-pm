@@ -4,8 +4,9 @@ role: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 created: 2026-05-06
+parent: manifest_evolution_master_2026_05_08
 companion_handover: plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-parent_plan: infrastructure_master_2026_05_07.md # peer/umbrella; was shard_granularity_ssot_propagation, now folded
+parent_plan: infrastructure_master_2026_05_07.md # legacy peer ref; superseded by parent above (folded into manifest_evolution_master 2026-05-08)
 related:
   - predictions_master_2026_05_07.md # folds in predictions_canonical_question_group_polymarket_migration
   - infrastructure_master_2026_05_07.md # folds in shard_granularity + data_status_multi_axis + deployment_service_build_infra

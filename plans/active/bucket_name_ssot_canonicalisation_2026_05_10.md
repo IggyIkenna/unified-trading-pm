@@ -9,6 +9,7 @@ deadline:
   for env-tier provisioning + flat→tiered data migration
 horizon: cross-cycle (Phase 1 code-complete in ~2 days, Phase 2 physical migration in 4-day window)
 spawned_from: plans/archive/issues/bucket_name_ssot_triple_drift_2026_05_10.md (archived 2026-05-10)
+parent: manifest_evolution_master_2026_05_08
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 execution:

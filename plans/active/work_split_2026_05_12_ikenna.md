@@ -295,6 +295,30 @@ QG STEP 5.69 ratchet enforces; confirm zero ratchet violations after migration.
 See bucket_name_ssot_canonicalisation_2026_05_10.md Phase 1 for exact scope (~60 files, 3 service repos).
 ```
 
+### Writegate phase-to-slot assignments (152 open todos)
+
+`writegate_honest_coverage_endtoend_2026_05_06.md` is the largest open-todo plan. Phases mapped to slots:
+
+| Writegate phase | Slot | Rationale |
+| --------------- | ---- | --------- |
+| Phase 2.A — MDPS forward-fill 4-state contract + delete `_create_empty_output` | **Slot 4** | Same repo as MDPS propagation chain Phase 2 — execute together |
+| Phase 2.B — MTDS partition validation + schema contract | **Slot 4** | Same repo as MTDS propagation chain Phase 1 |
+| Phase 2.C — features-sports honest-absence wiring | **Slot 4** | Same fan-out as features Phase 3 |
+| Phase 3A — retrospective reconcilers (legacy-blank + expected-absence-reason) | **Slot 3** | Slot 3 owns all reconciler passes |
+| Phase 4A — deployment-api typed-error rendering (UI shows typed reasons) | **Slot 8** | cross_cutting + manifest UI already on Slot 8 |
+| Phase 5 — coverage baseline ratchet + QG enforcement | **Slot 4** | closes writegate after code wiring |
+| Wave 4 slices (b)+(c) — generalised publisher rollout | **Slot 4** | continuation of MDPS POC shipped 2026-05-11 |
+
+Writegate Phase 2.A forward-fill semantics is codified in `expected_unattempted_propagation_chain_2026_05_12.md`
+Phase 2 (added 2026-05-12). Slot 4 executes both as a single logical unit.
+
+### check_shard_freshness retry — CONFIRMED WORKING (correction 2026-05-12)
+
+UTL ships `retry_failed: bool = True` as DEFAULT. Both MTDS (`tick_data_handler.py:190`) and MDPS
+(`orchestration_service.py:158`) call without overriding — so `attempted_failed` rows ARE treated as not-fresh and
+retried on next backfill. Memory note from 2026-05-06 ("retry doesn't work") pre-dates UTL@ba83a6f1 (shipped
+2026-05-07). No additional orchestrator wiring needed.
+
 ### Serial gate status tracking
 
 | Gate   | Condition                                                                       | Status  | Unblocks              |
