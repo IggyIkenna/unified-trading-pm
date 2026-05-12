@@ -3171,11 +3171,12 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.4 — features-cross-instrument (P0, ~3 days)**
 
-- [ ] [features-cross-instrument] P0. Wire at `paired_spec` (STRICT_FAIL — leak-risk-sensitive) + `pairwise_correlation`
+- [x] [features-cross-instrument] P0. Wire at `paired_spec` (STRICT_FAIL — leak-risk-sensitive) + `pairwise_correlation`
       (NAN_FILL). The STRICT_FAIL case is critical: a paired_spec row written when ONE leg has stale upstream is a
       leak-bias trap that produces confidently-wrong signal. Validate with a dedicated test: synthetic upstream where
       leg A is fully captured but leg B has 1% gaps → assert NO `paired_spec` row is written for the affected window +
       STALE_DATA event fires.
+      (features-service@e31ef632 — _check_emission_policy + 4 unit tests + UTL top-level export @09116fa3; 4/4 pass)
 
 **Phase 6.5 — Other features-\* services (P1, ~5 days bundled)**
 
