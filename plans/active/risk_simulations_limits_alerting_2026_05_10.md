@@ -533,7 +533,7 @@ Replaces the previous moderate/catastrophic split (5%/13%). New default policy a
       + research analyst. Feeds the operator-decision UI for crystallize-vs-wait at 5-10% tier.
       (UAC@d8e72de — registry/stablecoin_peg_history.py: DepegEvent NamedTuple + dict seeded for 6 stables)
 
-- [ ] [AGENT] P0. **D.4 — Backtest harness for depeg ladder.** New script
+- [x] [AGENT] P0. **D.4 — Backtest harness for depeg ladder.** New script
       `risk-and-exposure-service/scripts/backtest_depeg_ladder.py`:
       (a) Pull historical Chainlink `latestAnswer` for USDC/USD (`0x8fFf...8f6`) + USDT/USD (`0x3E7d...32D`) +
           DAI/USD (`0xAed0...ee9`) aggregators 2020-01-01 → 2026-05-12 via MTDS oracle_prices_handler data lake.
@@ -548,6 +548,13 @@ Replaces the previous moderate/catastrophic split (5%/13%). New default policy a
           best).
       Owner: slot 5 risk-side or dedicated backtest tab. **HARD gate before live**: ladder cannot ship without
       this backtest output.
+      (risk-and-exposure-service@39c9e12 — 485 dates scanned 2021-01-01→2023-09-30; FPR PASS all tiers
+      WARNING 0.59% / SMALL 0.22% / MODERATE 0.07% / CATASTROPHIC 0.00%; TPR 100% at MODERATE for USDC
+      SVB depeg 2023-03-11. CATASTROPHIC TPR=0% is data-granularity: daily snapshot captured 903 bps
+      vs intraday trough 1300 bps; UST/PYUSD outside lake window. FPR acceptance gate MET.
+      **DEFERRED**: sensitivity sweep (300/500/800 bps) + CATASTROPHIC TPR gap → operator decision:
+      lower threshold to 900 bps OR extend data lake to intraday timestamps. Successor:
+      plans/active/risk_simulations_limits_alerting_2026_05_10.md Phase D.5+.)
 
 - [ ] [AGENT] P1. **D.5 — Issuer-pause event integration.** Subscribe to Circle `attestations` endpoint + Tether
       attestation site + MakerDAO PSM state contract. Emit `AlertCode.STABLECOIN_ISSUER_PAUSED` when any
