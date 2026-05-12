@@ -1,0 +1,100 @@
+---
+title: "Codex audit — Governance area (Phase 1.J)"
+created: 2026-05-12
+author: ikenna-slot8
+source:
+  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.J
+  - cursor-configs/CLAUDE.md (the canonical workspace rules file)
+  - cursor-configs/SUB_AGENT_MANDATORY_RULES.md
+  - plans/PLAN_FORMAT.md
+  - codex/13-codex-governance/
+  - codex/11-project-management/
+locked_by: live-defi-rollout
+locked_since: 2026-05-12
+---
+
+# Codex audit — Governance area (Phase 1.J)
+
+> **Severity**: P1 — pre-cutover audit per `codex_vs_citadel_infrastructure_audit_2026_05_10.md` Phase 1.J.
+> **Scope**: CLAUDE.md HARD RULES self-consistency · SUB_AGENT_MANDATORY_RULES symlink · plan-format discipline · daily work-split process · codex/13-codex-governance/ · codex/11-project-management/.
+> **Owner**: Ikenna T8 (slot 8 Day-4 stretch); operator review for dispositions before Phase 3 ship.
+
+## Methodology
+
+Read every governance-area surface (CLAUDE.md + SUB_AGENT_MANDATORY_RULES.md + plans/PLAN_FORMAT.md + 4 codex/13 docs +
+8 codex/11 docs). For each rule / pattern / claim: cite file:line, classify as KEEP / LIFT / CONSOLIDATE / DELETE / ADD,
+attach a 1-line reason + suggested disposition (IMMEDIATE / PRE_CUTOVER / POST_CUTOVER).
+
+Audit pass scope: ~80-100 distinct rules / sub-rules across CLAUDE.md (currently 999 lines / 58KB after 2026-05-11 trim).
+
+## Findings
+
+### Tier 1 — Self-consistency findings (CLAUDE.md cross-references)
+
+| # | Finding | Disposition | Owner | Evidence |
+|---|---------|-------------|-------|----------|
+| G-1 | CLAUDE.md "Daily Work-Split Process" § "Universal mechanics" cites the per-side `<side>_orchestrator/_agent_pings.md` ping-ledger location, but `Per-tab worktrees` § "Reconciliation" references `slot-master-rebase.sh` which doesn't yet handle the per-side ledger split (only the workspace-shared `_agent_pings.md`). Reconciliation gap can leak intra-side pings into cross-side surface during conflict resolution. | PRE_CUTOVER 🟡 ROUTED-TO-SLOT-4 (slot-master-rebase.sh ownership — per-side ledger awareness wiring) | slot 4 (worktree-tooling owner) | `cursor-configs/CLAUDE.md` § "Daily Work-Split Process" + `unified-trading-pm/scripts/dev/slot-master-rebase.sh` |
+| G-2 ✅ FILED @ `plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md` (Group A) | CLAUDE.md "Capture Discoveries As Plan Todos Immediately" HARD RULE end-of-cycle audit clause requires every deferral to be a `- [ ]` plan todo or `**DEFERRED**` annotation, but no automated grep-check enforces this — relies on reviewer discipline. Every cycle has unscheduled work pile-up = silent rule violation. | POST_CUTOVER | governance maintainer | `cursor-configs/CLAUDE.md` § "Capture Discoveries As Plan Todos Immediately" |
+| G-3 | CLAUDE.md "Commit + Push + Flip" § "Foot-gun #4" workaround documents `--no-verify` as authorized when prek auto-restore symptoms observed, but contradicts top-level "Never skip hooks (--no-verify) … unless the user has explicitly asked for it" in the Bash-tool description. Both rules cite distinct user directions; the contradiction is real. | IMMEDIATE ✅ ALREADY-RESOLVED-AT-CLAUDE.md — precedence note already shipped inline at CLAUDE.md:569-572 ("G-3 reconciliation 2026-05-12: Foot-gun #4 IS the explicit user-ask scoped to prek auto-restore symptoms; outside this clause, --no-verify remains forbidden absent operator-ask per turn"). No further change needed. | Ikenna (governance) | `cursor-configs/CLAUDE.md` § "Foot-gun #4" + Bash-tool docstring |
+| G-4 | CLAUDE.md "Estimate Calibration" frontmatter convention requires `estimate_class` / `estimate_baseline_ai_days` / `estimate_calibrated_ai_days` on every plan written after 2026-05-11. ~30 active plans pre-date the rule and lack the fields; rule says "do NOT mass-sweep (collision risk per Findings Triage)" — net effect: enforcement is deferred indefinitely with no clear backfill cadence. | PRE_CUTOVER ✅ DONE @SLOT8-CLAUDE-MD-BUNDLE — "Legacy-plan backfill cadence" block added to "Estimate Calibration" § (touch-driven backfill at substantive-edit time + ≥3/cycle target + weekly slot-1 audit). | governance | `cursor-configs/CLAUDE.md` § "Estimate Calibration" |
+| G-5 ✅ FILED @ `plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md` (Group A) | CLAUDE.md "Plan Filename Convention" 3-layer model says `plans/active/` uses `<slug>.md`, but several active plans use `_2026_MM_DD.md` date-suffix (e.g. `manifest_schema_final_gate_2026_05_09.md`) which technically conforms but creates a parallel naming convention. Codify the date-suffix as canonical or normalize. | POST_CUTOVER | governance | `plans/PLAN_FORMAT.md` + `plans/active/*.md` filenames |
+| G-6 | CLAUDE.md "Sub-Agents & Autonomous Agents" rule says sub-agents start FRESH and DO NOT inherit, requires pasting `SUB_AGENT_MANDATORY_RULES.md` at TOP of every Task spawn. The Task tool description (system prompt) does NOT echo this requirement — sub-agent spawners must remember to do this manually. | PRE_CUTOVER ✅ DONE @SLOT8-GOVERNANCE-BATCH — SUB_AGENT_MANDATORY_RULES.md § "When you spawn YOUR OWN sub-agents" strengthened with explicit "Task tool description does NOT echo this requirement" note + fallback paste-impractical clause. System-prompt-side echo is out-of-scope (Anthropic-controlled). | governance | `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` + system prompt Agent tool description |
+
+### Tier 2 — Plan-format / work-split discipline findings
+
+| # | Finding | Disposition | Owner | Evidence |
+|---|---------|-------------|-------|----------|
+| G-7 | `plans/PLAN_FORMAT.md` § "Cursor-Friendly Todo Checkboxes" requires `- [x]` / `- [ ]` as first content line of every todo body. ~5-8% of active plan todos use sub-bullet checkboxes (`  - [ ]` indented 2-spaces) which Cursor renders correctly but doesn't satisfy the literal first-line rule. Either relax the rule or add a QG check. | PRE_CUTOVER ✅ DONE @SLOT8-GOVERNANCE-BATCH — chose RELAX-WITH-CONSTRAINT path: § "Sub-bullet checkboxes (explicit allowance)" added after the main checkbox table; nested checkboxes allowed as children of a parent `- [x]` / `- [ ]` only (not as standalone first content line). | governance | `plans/PLAN_FORMAT.md` § "Cursor-Friendly Todo Checkboxes" |
+| G-8 ✅ FILED @ `plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md` (Group E) | "Daily Work-Split Process" § "Polling cadence" Model B main agent polls ledger every ~1 min while operator active. No actual cron / scheduler enforces this — depends on the main agent staying foregrounded. If operator backgrounds the main, ledger backlogs unboundedly. | POST_CUTOVER | governance | `cursor-configs/CLAUDE.md` § "Daily Work-Split Process" |
+| G-9 | "Daily Work-Split Process" § "Cadence + split principle" says "Sized ~100-150 cal AI-days per side per 4-day cycle"; but reality (per slot 8 Day-1 PROGRESS line) shows individual slots shipping 6+ AI-days/day (~20-30/cycle). Aggregate across 7 slots × 4 days = 168-840 AI-days/cycle/side — well above the documented ceiling. **Underdocumented capacity** = operators undersell scope per Estimate Calibration's stated failure mode. | IMMEDIATE ✅ ALREADY-RESOLVED-AT-CLAUDE.md — bumped to "~65-75 AI-days/day per side measured (2026-05-11) ramping to ~120-150/side observed (2026-05-12 density-push Day-1), ~180+/side theoretical ceiling at full 7-slot fan-out" (CLAUDE.md:920-924) + "Sized ~250-400 cal AI-days per side per 4-day cycle" (CLAUDE.md:928-933). No further change needed. | governance | Slot ping ledger 2026-05-12 PROGRESS lines |
+| G-10 | `cursor-configs/CLAUDE.md` line 1 calls itself "Lean index" with "Trim 2026-05-11: was 2758 lines / 211KB; now ~999 lines / ~58KB". As of 2026-05-12 PM, 1043 lines / ~62KB after multiple intra-day appends (per slot 1 + slot 2 + slot 4). The "lean" framing is drifting; needs either a recurring trim cadence OR an explicit upper bound. | PRE_CUTOVER ✅ DONE @SLOT8-CLAUDE-MD-BUNDLE — size-budget banner added below "Trim" line (target ≤1200/70KB + hard upper ≤1500/90KB + weekly slot-1 drift-watcher cadence). | governance | `cursor-configs/CLAUDE.md` line 1 vs current size |
+
+### Tier 3 — codex/13-codex-governance + codex/11-project-management currency
+
+| # | Finding | Disposition | Owner | Evidence |
+|---|---------|-------------|-------|----------|
+| G-11 | `codex/13-codex-governance/` has 3 docs but no entry in `codex/00-SSOT-INDEX.md` (per `Post-Plan-Phase Codex Audit HARD RULE`). Either the directory is meta-codex (deliberately not indexed) or the index is missing entries — clarify which. | IMMEDIATE ✅ ALREADY-RESOLVED — 00-SSOT-INDEX.md already lists all 3 codex/13 docs (README, SECTION-REGISTRY, SSOT-BOUNDARY) at lines 193-195. No further change needed. | governance | `codex/13-codex-governance/` + `codex/00-SSOT-INDEX.md` |
+| G-12 ✅ FILED @ `plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md` (Group B) | `codex/11-project-management/` 8 docs vary widely in currency (some last-touched 2026-04-XX, some 2026-05-XX). No "last verified" front-matter convention enforces freshness — drift is invisible. | POST_CUTOVER | governance | `codex/11-project-management/*.md` mtimes |
+| G-13 ✅ FILED @ `plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md` (Group A) | "Plan Archival" HARD RULE requires audit of operational completeness + migration of every deferred item, but no automated check enforces this — relies on reviewer discipline at archive time. Several archived plans in `plans/archive/` lack the `## Deferred work — migrated to:` banner. | POST_CUTOVER | governance | `cursor-configs/CLAUDE.md` § "Plan Archival" + sampled archive plans |
+
+### Tier 4 — Specific governance-rule additions worth shipping
+
+| # | Finding | Disposition | Owner | Evidence |
+|---|---------|-------------|-------|----------|
+| G-14 | ADD: a "Slot 8 (or any slot) writing to master plan" rule. Currently `work_split_2026_05_12_ikenna.md` line 116 says "Master plan — slot 1 owns. Other slots feed status via ping ledger, don't edit directly" but spawn briefs CAN explicitly assign master-plan refresh to other slots (see slot 8 Day-1 spawn brief "Group F/G master plan refresh"). The collision risk is real (slot 1's daily refresh + slot 8's mid-cycle top-up overlap). Codify the precedence rule. | PRE_CUTOVER ✅ DONE @SLOT8-CLAUDE-MD-BUNDLE — slot-precedence bullet added to "Daily Work-Split Process" § "Universal mechanics" (slot 1 sole owner; spawn-brief exception requires cross-ping). | governance | `work_split_2026_05_12_ikenna.md:116` + slot 8 spawn brief |
+| G-15 | ADD: "Every UAC `internal/*.py` module touching cross-cutting consumer surfaces (e.g. `manual_audit_paths.py` shipped 2026-05-12 by slot 8) MUST cite the consumer in the module docstring + add a cross-reference to the corresponding codex doc." Prevents UAC contracts from becoming orphaned without documentation. | IMMEDIATE ✅ DONE 2026-05-12 — codified in new codex doc `codex/06-coding-standards/uac-internal-module-docstring.md` + indexed at 00-SSOT-INDEX.md. Manual_audit_paths.py cited as reference impl. QG ratchet deferred to P2 backlog. | governance | UAC `internal/manual_audit_paths.py` (does cite); other modules to audit |
+| G-16 | ADD: "Cross-side ping ledger (`plans/active/_agent_pings.md`) entries that name a SPECIFIC commit-sha (not just a plan reference) MUST stay in the ledger until BOTH sides have acked, even if older than 24h." Reference: 2026-05-12 slot 4 wallet ping included specific UAC@`d721b6a` for slot 5 + slot 8 to consume; if swept too eagerly, downstream slots lose the consume target. | PRE_CUTOVER ✅ DONE @SLOT8-CLAUDE-MD-BUNDLE — commit-sha retention rule added to "Daily Work-Split Process" § "Ping ledger bifurcation" sub-block. | governance | `plans/active/_agent_pings.md` historical sweeps |
+
+## Disposition aggregate
+
+- **IMMEDIATE**: 4 (G-3 / G-9 / G-11 / G-15) — codex doc rewrites + CLAUDE.md self-consistency fixes that ship in days.
+- **PRE_CUTOVER**: 6 (G-1 / G-4 / G-6 / G-7 / G-10 / G-14 / G-16) — architecture clean-ups composing with cutover hot path. Wait, count is 7 — recount.
+- **POST_CUTOVER**: 4 (G-2 / G-5 / G-8 / G-12 / G-13) — automated-enforcement + filename normalisation + cadence governance — all post-cutover backlog.
+
+(Recount precise: IMMEDIATE=4 / PRE_CUTOVER=7 / POST_CUTOVER=5 / total=16.)
+
+## Recommended next steps
+
+1. **Operator triage**: confirm dispositions above; flag any disagreements as P0 ping.
+2. **Phase 3 ship** (immediate items, ~1-2 AI-days):
+   - G-3 (Foot-gun #4 vs Bash-tool contradiction): pick one canonical answer; update both surfaces.
+   - G-9 (cadence ceiling underdocumented): bump CLAUDE.md "Cadence + split principle" to ~250-400 cal AI-days/cycle/side.
+   - G-11 (codex/13 not in SSOT-INDEX): index entries OR document why meta-codex is excluded.
+   - G-15 (UAC internal module docstring rule): codify in `codex/06-coding-standards/`.
+3. **Phase 4 ship** (pre-cutover items, ~2-3 AI-days):
+   - G-1 (slot-master-rebase.sh per-side ledger awareness): wire ledger-bifurcation into the rebase script.
+   - G-4 (estimate-calibration backfill cadence): codify a per-cycle backfill rate (e.g. ≥3 plans/cycle until <30 unconverted).
+   - G-6 (Task-tool description + SUB_AGENT_MANDATORY_RULES echo): system-prompt-level documentation.
+   - G-7 (PLAN_FORMAT relax sub-bullet checkboxes): either relax rule or add QG check.
+   - G-10 (CLAUDE.md size budget): codify ≤1100 lines / 65KB ceiling + recurring trim cadence.
+   - G-14 (slot precedence on master plan): codify the precedence rule.
+   - G-16 (cross-side ping commit-sha entries): codify the retention rule.
+4. **Phase 5 file** (post-cutover backlog):
+   - G-2, G-5, G-8, G-12, G-13 → file as separate active plans or fold into existing governance plans.
+
+## Composes with
+
+- `plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md` Phase 1.J (this audit slice).
+- `cursor-configs/CLAUDE.md` (the surface being audited).
+- `plans/PLAN_FORMAT.md` (rule referenced + finding G-7).
+- `plans/active/per_agent_worktrees_2026_05_10.md` (slot-master-rebase.sh ownership for finding G-1).

@@ -18,8 +18,12 @@ execution-service routes by operation type:
     STAKE    → execution-service DeFi LidoConnector / EtherFiConnector
     FLASH_*  → execution-service DeFi AAVEConnector.flash_loan()
     ↓
-execution-service fetches credentials from SM:
-    wallet_private_key  → defi-wallet-private-key
+execution-service fetches credentials from SM (single SSOT — codex audit EX-23 2026-05-12):
+    The canonical SM-secret-name map is in
+    `execution-service/.../cli/handlers/live_execution_handler.py` + extended by `interface-credential-convention.md`
+    § "Custody" (`private_key_secret_ref` / `kms_key_uri` for the cloud_kms cutover path per EX-10/EX-23 reconciliation).
+    Examples below are illustrative — refer to the live_execution_handler.py source for the actual fetch list.
+    wallet_private_key  → defi-wallet-private-key  (or `kms_key_uri` for cloud_kms_encrypted cutover default)
     alchemy_api_key     → alchemy-api-key
     ↓
 Resolves RPC URL from UAC CHAIN_RPC_TEMPLATES[chain_id]
@@ -49,6 +53,8 @@ execution-service DeFi connector executes:
 
 ## Supported Operations
 
+### Core Connectors (Phase 1–3)
+
 | Operation     | Connector        | Contract                         | Gas Estimate        |
 | ------------- | ---------------- | -------------------------------- | ------------------- |
 | Supply (lend) | AAVEConnector    | Aave V3 Pool                     | 200K                |
@@ -60,14 +66,63 @@ execution-service DeFi connector executes:
 | Stake         | LidoConnector    | Lido stETH                       | 150K                |
 | Unstake       | EtherFiConnector | EtherFi weETH                    | 200K                |
 
+### Phase 4 Connectors — LST/LRT, Restaking, Yield, Solana
+
+Shipped 2026-05-12 (`defi_catalogue_chain_primitives_2026_05_10.md` Phase 4).
+
+**LST / Liquid Restaking Tokens (EVM)**
+
+| Connector           | venue_id            | Chain    | Operations                    |
+| ------------------- | ------------------- | -------- | ----------------------------- |
+| RocketPoolConnector | ROCKETPOOL-ETHEREUM | Ethereum | stake / unstake               |
+| RenzoConnector      | RENZO-ETHEREUM      | Ethereum | deposit / withdraw / delegate |
+| KelpDAOConnector    | KELPDAO-ETHEREUM    | Ethereum | deposit / withdraw / delegate |
+| PufferConnector     | PUFFER-ETHEREUM     | Ethereum | deposit / withdraw            |
+
+**Restaking Middleware (EVM)**
+
+| Connector          | venue_id           | Chain    | Operations                    |
+| ------------------ | ------------------ | -------- | ----------------------------- |
+| SymbioticConnector | SYMBIOTIC-ETHEREUM | Ethereum | deposit / withdraw / delegate |
+| KarakConnector     | KARAK-ETHEREUM     | Ethereum | deposit / withdraw / delegate |
+
+**Yield Optimizers (EVM)**
+
+| Connector       | venue_id        | Chain    | Operations                         |
+| --------------- | --------------- | -------- | ---------------------------------- |
+| YearnConnector  | YEARN-ETHEREUM  | Ethereum | deposit / withdraw                 |
+| ConvexConnector | CONVEX-ETHEREUM | Ethereum | deposit / withdraw / claim_rewards |
+| BeefyConnector  | BEEFY-POLYGON   | Polygon  | deposit / withdraw                 |
+
+**Yield Derivatives (EVM)**
+
+| Connector       | venue_id        | Chain    | Operations         |
+| --------------- | --------------- | -------- | ------------------ |
+| PendleConnector | PENDLE-ETHEREUM | Ethereum | deposit / withdraw |
+| IdleConnector   | IDLE-ETHEREUM   | Ethereum | deposit / withdraw |
+
+**Solana LST / Restaking**
+
+| Connector              | venue_id              | Chain  | Operations                    |
+| ---------------------- | --------------------- | ------ | ----------------------------- |
+| SolBlazeConnector      | SOLBLAZE-SOLANA       | Solana | stake / unstake               |
+| JitoRestakingConnector | JITO-RESTAKING-SOLANA | Solana | deposit / withdraw / delegate |
+
+All Phase 4 connectors follow the same `connector.connect(config={...})` credential injection shape as the Phase 1–3
+connectors (see `interface-credential-convention.md`). Testnet validation (Sepolia/Holesky/devnet) and Tenderly fork
+integration tests are tracked in `defi_catalogue_chain_primitives_2026_05_10.md` Phase 4 full-execution criterion.
+
 ## Error Classification
 
-Every on-chain revert maps to a structured error code with an action:
+Every on-chain revert maps to a structured error code with an action. SSOT for the closed set: UAC
+`unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (13 codes; see CLAUDE.md § "DeFi Execution
+Architecture"). Table refreshed 2026-05-12 per slot 8 exec audit EX-7 — earlier count was 11.
 
 | Code                              | Action | When                    |
 | --------------------------------- | ------ | ----------------------- |
 | INSUFFICIENT_COLLATERAL           | FAIL   | Borrow exceeds LTV      |
 | INSUFFICIENT_BALANCE              | FAIL   | Not enough tokens       |
+| NO_COLLATERAL_DEPOSITED           | FAIL   | Can't borrow            |
 | ASSET_NOT_SUPPORTED               | FAIL   | Token not in pool       |
 | ZERO_AMOUNT                       | FAIL   | Amount must be > 0      |
 | TX_REVERTED                       | FAIL   | Generic revert          |
@@ -76,7 +131,8 @@ Every on-chain revert maps to a structured error code with an action:
 | FLASH_LOAN_RECEIVER_INVALID       | FAIL   | Receiver not a contract |
 | FLASH_LOAN_INSUFFICIENT_LIQUIDITY | FAIL   | Pool drained            |
 | NO_OUTSTANDING_DEBT               | SKIP   | Nothing to repay        |
-| NO_COLLATERAL_DEPOSITED           | FAIL   | Can't borrow            |
+| BORROW_CAP_EXCEEDED               | FAIL   | Pool borrow-cap reached |
+| SUPPLY_CAP_EXCEEDED               | FAIL   | Pool supply-cap reached |
 
 Error format: `ERROR_CODE: AAVE V3 transaction failed -- <raw message>`
 
@@ -97,7 +153,11 @@ Uniswap swaps use on-chain slippage protection:
 1. Quote via Quoter contract → `expectedAmountOut`
 2. Apply tolerance: `minAmountOut = expected * (1 - slippage_bps / 10000)`
 3. SwapRouter02 reverts if actual output < minAmountOut
-4. Default: 50 bps (0.5%). Configurable via `config["max_slippage_bps"]`
+4. Default slippage tolerance: see code SSOT in `execution-service/.../defi_execution/protocols/uniswap.py`
+   (`max_slippage_bps` default; reconcile codex narrative against the code default on next exec audit pass — slot 8
+   audit EX-9 2026-05-12 flagged drift across mev-protection.md = 20 bps, this doc = 50 bps, execution-policy.md
+   examples = 10/20/30/50 bps; the per-rule examples are correct, the doc-narrative defaults need alignment to the
+   single code default). Configurable via `config["max_slippage_bps"]`.
 
 ## Integration Testing
 
@@ -132,17 +192,16 @@ execution-service dispatches to the correct handler.
 
 ## MEV Protection Framework
 
-Atomic bundles (flash loan entry/exit) are vulnerable to MEV extraction. Three interchangeable providers handle
-protection based on the execution environment:
+> **SUPERSEDED 2026-05-10 by `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 4 — canonical MEV-protection SSOT
+> is [`mev-protection.md`](mev-protection.md). The legacy 3-provider table that previously lived here inverted the
+> mainnet/L2 provider selection (per slot 8 audit EX-8 / EX-20) and is replaced by the canonical `MevSubmissionMode`
+> enum + chain-aware default policies documented in `mev-protection.md` § "Provider Selection (Factory)". This section
+> retained as a redirect stub only.**
 
-| Provider                 | Method                          | When Used                                                                             |
-| ------------------------ | ------------------------------- | ------------------------------------------------------------------------------------- |
-| `FlashbotsProvider`      | Relay submission                | Mainnet live execution. Bundles submitted via `eth_sendBundle` to Flashbots builders. |
-| `PrivateMempoolProvider` | Flashbots Protect / MEV Blocker | L2 deployments. Routes via `rpc.mevblocker.io` or Flashbots Protect RPC.              |
-| `NoProtectionProvider`   | Standard broadcast              | Batch, paper trade, testnet. No MEV risk in these environments.                       |
-
-The provider is selected via `mev_protection` in strategy config, not hardcoded. Execution-service resolves the provider
-at runtime and wraps the transaction submission accordingly.
+The provider is selected via `mev_protection` in strategy config, not hardcoded; execution-service resolves the provider
+at runtime per the canonical `_DEFAULT_POLICIES` in `execution_service/v2/mev_router.py`. See
+[`mev-protection.md`](mev-protection.md) for the full provider matrix, the chain-aware default mode per asset, the
+`MevSubmissionMode` UAC enum, and the per-strategy artifact-versioned policy contract.
 
 ## Wrap Preprocessor
 
@@ -162,6 +221,28 @@ instruction is automatically prepended to the instruction sequence.
 Rebasing tokens (eETH, stETH) cannot be used as Aave collateral directly because their balance changes break Aave's
 scaled balance accounting. Wrapping converts them to non-rebasing equivalents where yield accrues via exchange rate
 appreciation instead of balance changes.
+
+## Strategy Architecture: DeFi Long + CeFi Short (Hybrid Venue Model)
+
+DeFi strategies combine an **on-chain long leg** (staking, lending, providing liquidity) with a **CeFi perp short leg**
+(hedge). The "DeFi" label refers to the strategy family, not venue restriction.
+
+```
+DeFi strategy = on-chain long (LST staking / Aave lending / AMM LP)
+              + CeFi perp short (hedge leg)
+```
+
+ALL CeFi perp venues are candidates for the short leg. Eligibility is archetype-specific:
+
+| Archetype                    | Margin mode   | Eligible CeFi venues                                                             |
+| ---------------------------- | ------------- | -------------------------------------------------------------------------------- |
+| `carry_staked_basis`         | LST_AS_MARGIN | Bybit UTA (stETH/METH/USDe), Deribit (stETH), OKX (wstETH), DRIFT (JitoSOL/mSOL) |
+| `arbitrage_price_dispersion` | USDC          | All venues: Binance, Bybit, OKX, Deribit, Kraken, Hyperliquid, Aster, DRIFT      |
+
+The venue-collateral matrix in UAC + per-archetype docs is the authoritative eligibility gate. Preflight rejects venues
+that fail the margin-mode check at strategy runtime — no hardcoded allowlist in code.
+
+SSOT: `codex/09-strategy/architecture-v2/archetypes/` (per-archetype venue matrices).
 
 ## Key Files
 

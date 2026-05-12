@@ -18,7 +18,7 @@ Paper mode bridges the gap by executing real smart contract calls on chain forks
 | **RPC target**        | Tenderly fork (historical block)        | Tenderly fork (live block)  | Mainnet                      |
 | **Smart contracts**   | Called on fork (same code path as live) | Called on fork (real-time)  | Called on mainnet            |
 | **Execution**         | Real connectors → fork                  | Real connectors → fork      | Real connectors → mainnet    |
-| **Signing**           | MockCustody (fork doesn't verify)       | MockCustody or sandbox      | Copper MPC                   |
+| **Signing**           | MockCustody (fork doesn't verify)       | MockCustody or sandbox      | CLOUD_KMS_ENCRYPTED (May-23 cutover default) → Copper MPC / CEFFU MirrorX / Fireblocks (June-1 flip targets) |
 | **Gas costs**         | Real from fork tx receipt               | Real from fork tx receipt   | Real from mainnet tx receipt |
 | **Fill prices**       | Real execution price (fork)             | Real execution price (fork) | Real execution price         |
 | **Data source**       | GCS (pre-downloaded features)           | Live feeds (real-time)      | Live feeds (real-time)       |
@@ -44,9 +44,15 @@ based on what exists on each date.
   "lending_basket": ["USDC", "USDT", "DAI"],
   "basis_coins": ["ETH", "BTC", "SOL", "AVAX"],
   "allowed_venues": ["UNISWAPV3-ETHEREUM", "CURVE-ETHEREUM"],
-  "perp_venues": ["HYPERLIQUID", "BINANCE-FUTURES", "OKX", "BYBIT", "ASTER"]
+  "perp_venues": ["HYPERLIQUID", "BINANCE-FUTURES", "OKX", "BYBIT", "DERIBIT", "ASTER"]
 }
 ```
+
+> **6-perp-venue master-plan parity (codex audit EX-11 2026-05-12)**: CLAUDE.md § "Master Plan" + the master-plan
+> readiness checklist name Bybit, Deribit, Binance, OKX, Hyperliquid, Aster as the **6 perp venues** for hedge legs.
+> DERIBIT added to the example above 2026-05-12 — earlier 5-venue list omitted Deribit. Operators wiring
+> `perp_venues` lists in strategy configs MUST include all 6 unless explicitly scoped down.
+
 
 The strategy config (GCS JSON) declares:
 
@@ -92,7 +98,11 @@ Implemented in UAC `registry/chain_env.py`. The `CHAIN_ENV` environment variable
 `fork`.
 
 ```python
-# UAC registry/chain_env.py — 21 chains mapped for both mainnet and testnet
+# UAC registry/chain_env.py — 21 chains mapped for both mainnet and testnet.
+# Chain-count internal-consistency note (codex audit EX-12 2026-05-12): downstream sections cite
+# "30 EVM + Solana in templates" (line 363 below) + "30 entries: 20 mainnets + 10 testnets" (line 250).
+# All three are consistent: 21 chains × 2 envs = 42 chain-id slots in registry; 30 EVM RPC URL templates
+# in CHAIN_RPC_TEMPLATES (mainnet+testnet); the registry-vs-RPC-templates split is intentional.
 from unified_api_contracts.registry import resolve_chain_id, resolve_rpc_url
 
 # Strategy says "ETHEREUM" — system resolves based on CHAIN_ENV:
@@ -229,8 +239,11 @@ boundaries) behave correctly across multi-day backtests.
 | `alchemy-api-key`        | All chain RPC calls              | All (same key, different endpoints) |
 | `tardis-api-key`         | CeFi historical data             | Batch only                          |
 | `thegraph-api-key`       | DeFi subgraph queries            | All                                 |
-| `copper-api-key`         | Transaction signing (production) | Live only                           |
+| Cloud KMS CMK (GCP/AWS)  | Transaction signing (May-23 default) | Live only — `CLOUD_KMS_ENCRYPTED` signing surface per `interface-credential-convention.md` |
+| `copper-api-key`         | Transaction signing (June-1 flip target) | Live only — MPC flip post client cred delivery |
 | `copper-sandbox-api-key` | Transaction signing (test)       | Paper only                          |
+| `ceffu-api-key`          | Transaction signing (June-1 flip target) | Live only — CEFFU MirrorX flip post client cred delivery |
+| `fireblocks-api-key`     | Transaction signing (June-1 flip target) | Live only — Fireblocks MPC flip post client cred delivery |
 
 ### RPC Endpoint Resolution
 
@@ -270,7 +283,9 @@ TENDERLY_FORK=true           # Create Tenderly VNet fork for execution
 CLOUD_PROVIDER=gcp
 CLOUD_MOCK_MODE=false
 CHAIN_ENV=mainnet            # Real mainnet chain IDs and RPC URLs
-CUSTODY_PROVIDER=copper      # Real MPC signing via Copper
+CUSTODY_PROVIDER=cloud_kms   # May-23 cutover default — CLOUD_KMS_ENCRYPTED signing surface
+                             # June-1 flip targets: copper / ceffu / fireblocks per client cred delivery
+                             # SSOT: interface-credential-convention.md (2026-05-12 refresh)
 ```
 
 ## Smart Contract & Atomic Transaction Handling
@@ -283,7 +298,9 @@ Strategy emits StrategyInstruction[]
   ▼
 execution-service InstructionRouter
   ├── is_atomic=True? → Execute all-or-nothing
-  │     ├── FLASH_BORROW → FlashLoanHandler (Morpho/AAVE)
+  │     ├── FLASH_BORROW → FlashLoanHandler (Aave V3 — only flash-loan connector in scope as of 2026-05-12; the
+  │     │                  earlier "Morpho/AAVE" framing was aspirational per slot 8 exec audit EX-12, Morpho out
+  │     │                  of scope until Phase 2-4 DeFi catalogue buildout)
   │     ├── SWAP → SwapHandler (Uniswap/Curve via SOR)
   │     ├── LEND → LendHandler (Aave supply)
   │     ├── BORROW → BorrowHandler (Aave borrow)
@@ -382,7 +399,7 @@ the execution provider is pluggable.
 | `run-batch.sh` (historical replay)                         | **Working** — `--strategy`, `--strategies`, `--asset-group`, `--skip-data` |
 | `run-paper.sh` (real-time on Tenderly fork)                | **Working** — creates Tenderly fork, uses `local-paper.env`                |
 | `run-live.sh` (real-time on mainnet)                       | **Working** — Copper custody, interactive safety confirmation              |
-| `colocated_engine.py` (shared memory, 44 strategies)       | **Working** — async GCS sink, shared-memory architecture                   |
+| `colocated_engine.py` (shared memory; strategy count is registry-driven, **not** the stale 44 figure cited prior to slot 8 exec audit EX-21 refresh 2026-05-12) | **Working** — async GCS sink, shared-memory architecture. **QG-wiring caveat**: per CLAUDE.md § "Peripheral Script Directories Under Primary-Consumer QG", `e2e-testing/scripts/defi/colocated_engine.py` MUST be wired into `strategy-service/scripts/quality-gates.sh` so symbol-removal incidents (2026-05-01 → 2026-05-08 silent rot of `get_strategy_factories` import) surface at PR time. Cross-reference: O-1 ops-area finding owns the QG-wiring fix. |
 
 ### Config Layer
 

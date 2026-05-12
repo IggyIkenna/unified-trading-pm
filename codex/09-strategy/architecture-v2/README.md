@@ -19,8 +19,10 @@ scope: [engineer, admin]
 
 Every strategy is a composition of:
 
-- **1 of 9 families** (orthogonal alpha styles) — what kind of edge you capture
-- **1 of 53 archetypes** (code paths under a family) — the specific code implementation
+- **1 of 9 families** (orthogonal alpha styles) — what kind of edge you capture (UAC `StrategyFamily` enum SSOT)
+- **1 of 55 archetypes** (code paths under a family) — the specific code implementation (UAC `StrategyArchetype`
+  enum SSOT; expanded from 53 → 55 when `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`
+  were split out of `CARRY_RECURSIVE_STAKED`)
 - **7 axes of composition** (signal × edge × staking × venue × expression × hold-policy × share-class)
 - **10 cross-cutting concerns** — shared infrastructure
 
@@ -96,7 +98,7 @@ with vol hedge as risk management, not a composite.
 - **No category prefixes on archetype IDs** — no `CEFI_ML_DIRECTIONAL`, no `TRADFI_ML_DIRECTIONAL`
 - **No hybrid families** — if genuinely two alpha sources → two separate strategies sharing correlation_id
 
-## 53 Archetypes
+## 55 Archetypes
 
 Archetypes distinguish different _code paths_ within a family. Distinguishing axis is usually **settlement model**
 (continuous vs event-settled), **signal logic shape** (fixed basket vs cross-sectional ranking), or **structural
@@ -104,14 +106,16 @@ sub-variant** (e.g. MM passive-spread vs inventory-skew vs ML-lean; VOL spread-s
 
 The 2026-04-17 baseline shipped 18 archetypes; the Phase 9 expansion (2026-04-25) added 35 more for full coverage of MEV
 (4), DeFi LP (3), Market Making sub-variants (5), VOL surface (17 variants from 1), prediction MM (1), cross-domain
-event arb (1), and Portfolio sleeves (4). SSOT: UAC
-`unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype`.
+event arb (1), and Portfolio sleeves (4); a subsequent split of `CARRY_RECURSIVE_STAKED` into
+`CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` brought the total to **55**. SSOT: UAC
+`unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` (`enum-wins` governance rule per
+`strategy-summary.md:27`).
 
 | Family                 | Archetypes                                                                                                                                                                                                                                                                                                                                                                                                                                    | Docs                     |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
 | ML Directional         | `ML_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_EVENT_SETTLED`                                                                                                                                                                                                                                                                                                                                                                                   | 2 docs under archetypes/ |
 | Rules Directional      | `RULES_DIRECTIONAL_CONTINUOUS`, `RULES_DIRECTIONAL_EVENT_SETTLED`                                                                                                                                                                                                                                                                                                                                                                             | 2 docs                   |
-| Carry & Yield          | `CARRY_BASIS_DATED`, `CARRY_BASIS_PERP`, `CARRY_STAKED_BASIS`, `CARRY_RECURSIVE_STAKED`, `YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`                                                                                                                                                                                                                                                                                                     | 6 docs                   |
+| Carry & Yield          | `CARRY_BASIS_DATED`, `CARRY_BASIS_PERP`, `CARRY_STAKED_BASIS`, `CARRY_RECURSIVE_STAKED`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`, `CARRY_RECURSIVE_BORROW_PERP_HEDGED`, `YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`                                                                                                                                                                                                                         | 8 docs                   |
 | Arbitrage / Structural | `ARBITRAGE_PRICE_DISPERSION`, `LIQUIDATION_CAPTURE`, `ARBITRAGE_MEV_SANDWICH`, `ARBITRAGE_MEV_JIT_LIQUIDITY`, `ARBITRAGE_MEV_BACKRUN`, `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, `ARBITRAGE_CROSS_DOMAIN_EVENT`                                                                                                                                                                                                                                     | 7 docs                   |
 | Market Making          | `MARKET_MAKING_CONTINUOUS` (legacy), `MARKET_MAKING_EVENT_SETTLED` (legacy), `MARKET_MAKING_PASSIVE_SPREAD`, `MARKET_MAKING_INVENTORY_SKEW`, `MARKET_MAKING_ML_LEAN`, `MARKET_MAKING_QUEUE_MICROSTRUCTURE`, `MARKET_MAKING_PREDICTION`, `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`, `DEFI_LP_VAULT`                                                                                                                                               | 10 docs                  |
 | Event-Driven           | `EVENT_DRIVEN`                                                                                                                                                                                                                                                                                                                                                                                                                                | 1 doc                    |
@@ -119,7 +123,7 @@ event arb (1), and Portfolio sleeves (4). SSOT: UAC
 | Stat Arb / Pairs       | `STAT_ARB_PAIRS_FIXED`, `STAT_ARB_CROSS_SECTIONAL`                                                                                                                                                                                                                                                                                                                                                                                            | 2 docs                   |
 | Portfolio              | `PORTFOLIO_MULTI_STRATEGY`, `PORTFOLIO_RISK_PARITY`, `PORTFOLIO_FACTOR_ALLOCATION`, `PORTFOLIO_TACTICAL_OVERLAY`                                                                                                                                                                                                                                                                                                                              | 4 docs                   |
 
-**Total: 53 archetypes.** Every strategy maps to exactly one. Per-archetype docs under `archetypes/` cover the May-23
+**Total: 55 archetypes.** Every strategy maps to exactly one. Per-archetype docs under `archetypes/` cover the May-23
 live + immediate-backtest subset; the Phase 9 expansions are catalogued in the UAC enum + cross-referenced from
 [`category-instrument-coverage.md`](category-instrument-coverage.md).
 

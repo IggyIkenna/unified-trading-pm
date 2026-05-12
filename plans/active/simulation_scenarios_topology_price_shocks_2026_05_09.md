@@ -12,7 +12,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-09
 related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/epics/live_defi_rollout_2026_05_23.epic.md
+  - plans/active/defi_master_2026_05_07.md  # SSOT for "May-23 deliverable" — the live_defi_rollout_2026_05_23.epic was SUPERSEDED 2026-05-08 (3-layer → 2-layer collapse) and folded into defi_master § "May-23 deliverable" per operator direction
   - plans/epics/cross_cutting_2026_05_23.epic.md
   - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
   - plans/active/alerting_service_live_rules_2026_05_07.md
@@ -416,31 +416,31 @@ and only then unblocks dependents.
 
 Each sub-task is a separate sub-agent assignment. Same Bash-bundling discipline per `Commit + Push + Flip` HARD RULE.
 
-- [ ] [AGENT] P0. **3.A MTDS raw-tick overlay.** `market-tick-data-service` adapters' fetch-result post-processing:
+- [ ] [AGENT] P0. **3.A MTDS raw-tick overlay.** **DEFERRED-PER-COMPRESSED-SCOPE** (scope compression note line 85: "Phases 3.A / 3.B / 3.C / 3.D / 3.G deferred — MTDS / MDPS / features / strategy taps + manifest scenario_id column = post-cutover infra"). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.A. `market-tick-data-service` adapters' fetch-result post-processing:
       after `record_captured` decision, if `ScenarioContext.has_overlay(layer=RAW_TICK)`, route through
       `ScenarioOverlayApplier`. Wire at `market_tick_data_service/adapters/base_adapter.py` `_post_fetch` hook — single
       edit point per the audit grep. Per-VM scenario_id passed via `VM_NAME` decoration + `ScenarioContext.from_env()`.
-- [ ] [AGENT] P0. **3.B MDPS feature-layer overlay.** `mdps/engine/orchestrator.py` after honest-absence guard, before
+- [ ] [AGENT] P0. **3.B MDPS feature-layer overlay.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.B. `mdps/engine/orchestrator.py` after honest-absence guard, before
       parquet write — invoke FEATURE-layer applier. Re-uses existing 4-category guard rails (no new banned-pattern
       surface). LookaheadBiasError downgrade per 2.E.
-- [ ] [AGENT] P0. **3.C features-\* overlay tap.** `features-service/feature_calculator/<calculator>.py`
+- [ ] [AGENT] P0. **3.C features-\* overlay tap.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.C. `features-service/feature_calculator/<calculator>.py`
       per-feature-group tap at `_compute_<group>` exit, before `record_captured`. Per the consolidated repo (post Harsh
       Tab 2 features-consolidation 2026-05-08).
-- [ ] [AGENT] P0. **3.D strategy-service signal tap + outcome hook.**
+- [ ] [AGENT] P0. **3.D strategy-service signal tap + outcome hook.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.D.
       `strategy-service/strategy_service/signal_generator.py` — SIGNAL-layer applier between feature read + signal
       emission; outcome-checker-callback registered at signal-emit boundary. Per-archetype hook list comes from UAC
       scenario registry.
-- [x] [AGENT] P0. **3.E execution-service matching-engine adversarial mode** — **`design-shipped` 2026-05-12 slot 7 Day-2.** Integration spec at [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md) § "Phase 3.E" — the 3-step recipe (subscribe to scenario context at engine init → route fill-attempt boundary through applier if active → emit `ObservedEvent` per state transition). Cross-side handshake invited to Harsh slot 5 for implementation per work-split row "Ikenna-7 ↔ Harsh-5 (risk + DR + simulation)." DEFERRED: full code wire-in (Harsh slot 5 implementation slot).
+- [x] [AGENT] P0. **3.E execution-service matching-engine adversarial mode** — **`done` 2026-05-12 Harsh slot 5.** Shipped: `execution-service@d0ec76f1` `AdversarialMatchingEngine` (RejectFills + LatencyInject + BookSpoof at fill-attempt boundary; `ObservedEvent` emission with `synthetic=True`; production default `scenario_id=None` → zero-overhead pass-through) + `execution-service@6bdf6136` 9 unit tests covering pass-through, registry validation, all 3 mutation types, ObservedEvent discipline + `execution-service@1c5923f3` CLI `python -m execution_service.cli.run_scenario --scenario-id X --archetype Y` operator-runtime entry. Design substrate in [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md) § "Phase 3.E".
       `execution-service/execution_service/matching_engine/{engine,trade_matcher}.py` — extend the existing slippage /
       latency / partial-fill hooks (per audit 0.A inventory) with `ScenarioOverlay`-driven mutations: `LatencyInject`,
       `RejectFills`, `BookSpoof`. **Do not replace the existing model** — extend via the existing hook interface. Sports
       adapter (`sports_matching.py`) gets fixture-cancellation / kickoff-delay mutations.
-- [x] [AGENT] P0. **3.F position-balance + risk + alerting consumers** — **`design-shipped` 2026-05-12 slot 7 Day-2.** Integration spec at [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md) § "Phase 3.F" — 3 consumer shapes (position-balance `KillSwitchProvenance.SCENARIO_SYNTHETIC` filter; risk-and-exposure `RiskOutcomeBridge` ObservedEvent emit on every breaker trip; alerting `synthetic=True` log-only path). Cross-side handshake invited to Harsh slot 5 for implementation. DEFERRED: full code wire-in (Harsh slot 5 implementation slot). `position-balance-monitor-service`: subscribe to
+- [x] [AGENT] P0. **3.F position-balance + risk + alerting consumers** — **`done` 2026-05-12 Harsh slot 5.** Shipped: (a) `position-balance-monitor-service@8b6c06f` `ScenarioKillSwitchSubscriber` pre-filter for `KillSwitchProvenance.SCENARIO_SYNTHETIC` arms + 7 unit tests; (b) `risk-and-exposure-service@0a8f024` `ScenarioOutcomeBridge` + `arm_breaker(synthetic=...)` kwarg → emits `BREAKER_ARMED` ObservedEvent on every arm + 8 unit tests; (c) `alerting-service@3c0d675` router `_is_synthetic()` + `_route_synthetic_log_only()` short-circuit in both `route_event` + `route_event_with_explicit_channels` (PagerDuty + Telegram skipped; `ALERT_SUPPRESSED_SYNTHETIC` audit + log_only delivery record) + 8 unit tests; (d) `execution-service@92aa4af2` per-archetype integration smoke (`tests/integration/scenarios/test_per_archetype_smoke.py` — 2 tests pass: APD × cefi_venue_circuit_breaker_trip + carry_staked_basis × defi_chain_rpc_outage_solana). Design substrate in [`scratch_scenarios_day1/12_phase3_integration_spec.md`](scratch_scenarios_day1/12_phase3_integration_spec.md) § "Phase 3.F". `position-balance-monitor-service`: subscribe to
       `synthetic=true` scenario events; emit per-scenario state snapshots. `risk-and-exposure-service`: outcome-checker
       hook fires on every breaker trip and emits `ScenarioOutcomeResult`. `alerting-service`: rule-eval respects
       `synthetic=true` filter — alert fires + report records, but on-call paging suppressed (synthetic events go to
       dashboard only).
-- [ ] [AGENT] P0. **3.G Manifest-layer scenario_id column.** `unified_trading_library/manifest/writer.py`
+- [ ] [AGENT] P0. **3.G Manifest-layer scenario_id column.** **DEFERRED-PER-COMPRESSED-SCOPE** (scope compression note line 85 — manifest scenario_id column = post-cutover infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.G. `unified_trading_library/manifest/writer.py`
       `record_captured` accepts optional `scenario_id: ScenarioId | None`. Adds a v5 manifest column `scenario_id` —
       additive, default null. Phantom-audit reconciler scripts gain awareness via 1-line filter (skip rows with
       `scenario_id is not null`).
@@ -632,11 +632,11 @@ engine state) and emits a real `ScenarioReport` parquet.
 
 ## Phase 10 — Cutover gate integration (Day 14, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **10.A Master plan extension.** `master_to_live_defi_2026_05_23.md` Group F gets new item 17.5 (or
+- [x] [AGENT] P0. **10.A Master plan extension.** `master_to_live_defi_2026_05_23.md` Group F gets new item 17.5 (or
       extension of item 20): "Scenario regression matrix green per archetype within ≤24h of cutover; matrix run as part
-      of pre-cutover dress rehearsal." Continuous-verification column populated.
-- [ ] [AGENT] P0. **10.B Epic banner.** `plans/epics/live_defi_rollout_2026_05_23.epic.md` epic-table gains a row for
-      this plan's matrix gate.
+      of pre-cutover dress rehearsal." Continuous-verification column populated. (done by slot-1 main 2026-05-12 per Q1.A
+      resolution; Group F item 17.5 added to master_to_live_defi_2026_05_23.md)
+- [x] [AGENT] P0. **10.B `defi_master` § "May-23 deliverable" annotation.** *(Re-routed 2026-05-12 — the originally-referenced `plans/epics/live_defi_rollout_2026_05_23.epic.md` was SUPERSEDED 2026-05-08 and folded into `defi_master_2026_05_07.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse direction; the archived file at `plans/archive/live_defi_rollout_may_23_2026.epic.md` carries the supersession banner.)* `defi_master_2026_05_07.md` § "May-23 deliverable" success-criteria table gains a row pointing at this plan's scenario-regression-matrix gate (Group F item 17.5). (PM@9cc8f04b — success-criteria row added by slot-6 2026-05-12)
 - [ ] [AGENT] P0. **10.C Cross-plan banners removed.** The 4 IN-FLIGHT REFACTOR banners from Phase 0.B come down once
       Phase 9 is green. Per the banner-remove-owner-by-launcher rule.
 - [ ] [AGENT] P0. **10.D Cron + continuous verification.** `mtds-scenario-matrix-` cron VM runs both matrices nightly;
@@ -667,7 +667,17 @@ This plan composes with — read these before touching any of the surfaces:
 
 ## Open questions
 
-(Filled as the plan executes — operator + agent iterate here.)
+### Q1 — [harsh-slot-6, 2026-05-12 12:59 UTC] — Phase 10.A/B authority + epic file missing
+
+**Status**: ✅ RESOLVED — main 2026-05-12 14:02 UTC
+
+**A1 (Phase 10.A)**: Done by slot-1 main 2026-05-12. Group F item 17.5 ("Scenario regression matrix green per archetype
+within ≤24h of cutover; matrix run as part of pre-cutover dress rehearsal") added to `master_to_live_defi_2026_05_23.md`.
+Phase 10.A checkbox flipped above with slot-1 attribution.
+
+**A2 (Phase 10.B)**: `plans/epics/live_defi_rollout_2026_05_23.epic.md` was SUPERSEDED 2026-05-08 and folded into
+`defi_master_2026_05_07.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse. Main fixed 4 stale references in
+this plan body pointing at the old epic path. Phase 10.B re-routed to defi_master; row added by slot-6 (PM@9cc8f04b).
 
 ## Deferred work after 2026-05-09 plan-creation session
 
@@ -810,3 +820,36 @@ Slot 5 Day-1 Phase 12 design (per-family backtest scenario set) introduces a Cat
 Recommendation: closed-set scenario IDs should NOT drift between plans. Either (a) this plan owns the canonical taxonomy and recursive-borrow plan references by ID, OR (b) recursive-borrow Phase 12 owns its own per-archetype taxonomy and this plan references by ID. Operator-call. Slot 5 NOT fixing (Findings Triage — slot 7 owns this plan).
 
 Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 design § Category B scenarios.
+
+## Deferred work after 2026-05-12 Harsh slot-6 Day-3 session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Phase 3.A/B/C/D/G | DEFERRED-PER-COMPRESSED-SCOPE (annotations added this session) | `simulation_scenarios_post_cutover_2026_06_01.md` Phases 3.A/B/C/D/G |
+| Phase 6 (backtest CLI) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 6 |
+| Phase 7 (UI surface) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 7 |
+| Phases 8.B-I (codex updates) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 8 |
+| Phase 9 (real-VM matrix runs) | DEFERRED-PER-COMPRESSED-SCOPE | Successor plan Phase 9 |
+| Phase 10.A (master plan extension) | 🟡 BLOCKED — slot-1 territory per CLAUDE.md G-14 | Main orchestrator slot-1 to add Group F item 17.5 |
+| Phase 10.B (defi_master § "May-23 deliverable" annotation) | ✅ Q1 RESOLVED 2026-05-12 — archived epic was SUPERSEDED 2026-05-08 + folded into `defi_master_2026_05_07.md`; re-routed | Successor plan adds row to `defi_master` "May-23 deliverable" success-criteria table |
+| Phase 10.C (banner removal) | Blocked on Phase 9 | Successor plan |
+| Phase 10.D (cron VM) | Blocked on Phase 9 + operator-runnable | Successor plan + operator |
+| DART scenario fold-in (cross_cutting #4) | Not in pre-cutover scope: Phase 7 (UI) DEFERRED; BUILD #1/#4/#5 Ikenna-blocked | Successor plan Phase 7 / post-Ikenna-D1/D4 resolution |
+| Scenario taxonomy SSOT alignment with slot-5 recursive-borrow SCN-B1..B5 | Needs operator call (option a or b above) | `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 12 owner |
+
+## DONE-2026-05-12 — Harsh slot 6 Day-3 session
+
+**Session theme**: `simulation_scenarios_topology_price_shocks_2026_05_09.md` impl tail
+
+**Post-rebase state verified (13:00 UTC)**: Phase 4 (scenario library) + Phase 5 (matrix) fully ✅ done by Ikenna slot 7 Day-3. Phase 3.E + 3.F ✅ done by Harsh slot 5. Phase 1/2/8.A ✅ done by Ikenna slot 7. All pre-cutover compressed scope is COMPLETE.
+
+**Shipped this session**:
+- `plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md` plan curation: DEFERRED annotations added to 3.A/B/C/D/G (these items were missing explicit DEFERRED markers even though scope compression note already said they're deferred). Q1 Open Question added for Phase 10.A/B authority + missing epic file.
+
+**Next step (slot-1 territory)**:
+- Phase 10.A: slot-1 to add "Scenario regression matrix green per archetype" as Group F item 17.5 in `master_to_live_defi_2026_05_23.md`
+- Phase 10.B: operator triage on epic file — see Q1 above
+
+**Real blockers (🟡)**:
+- Phase 10.A: G-14 slot-1 territory (✅ being taken by slot-1 main 2026-05-12 — item 17.5 added to `master_to_live_defi_2026_05_23.md` Group F)
+- Phase 10.B: ✅ RESOLVED 2026-05-12 — archived epic was SUPERSEDED 2026-05-08 + folded into `defi_master_2026_05_07.md` § "May-23 deliverable"; re-routed (successor plan adds the row there, not to a non-existent epic file)

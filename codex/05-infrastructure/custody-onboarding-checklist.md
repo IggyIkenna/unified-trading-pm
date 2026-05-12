@@ -1,5 +1,10 @@
 ---
 scope: [admin, operator]
+execution:
+  owner: operator (custody portal logins, KYC + approval flows are human-attended)
+  cadence: one-shot (May-23 cutover) + per-onboarding (June-1 client-credential integration repeats per new client)
+  verifier: each section's "verification" sub-step (custody portal confirmation, exchange-side balance pull match, signed approval doc in compliance vault); cross-ref `master_to_live_defi_2026_05_23.md` Group F-19.
+  last_executed: NEVER (May-23 cutover + June-1 client onboarding pending)
 ---
 
 # Custody onboarding operator-action checklist
@@ -14,6 +19,29 @@ scope: [admin, operator]
 This is the **operator-runnable** checklist for every custody-onboarding human action that cannot be automated by an
 agent. Each section declares: required form fields / document uploads / portal logins / approval steps + SLA + the
 execution-owner field per the `Runbook Execution-Owner SSOT` HARD RULE.
+
+---
+
+## 2026-05-12 PM scope contraction — May-23 = operator-self only
+
+Operator clarifications 2026-05-12 PM: **all custody-provider onboarding is post-cutover (June-1+).** May-23 ships
+on the Cloud-KMS path with the operator's own wallet — no client funds, no Copper, no CEFFU, no Fireblocks for the
+≥7-day live smoke.
+
+What this means for this checklist:
+
+- **§ A (Copper KYB)**: deferred to June-1+ window. Operator does NOT need to complete the Copper sandbox
+  sign-and-broadcast smoke (§ A.1.5) for May-23. The Copper code path (`COPPER_MPC` signing_surface) stays wired
+  for per-wallet flippability post-June-1.
+- **§ B (Cloud HSM CMK provisioning)**: stays in scope for May-23. Already ✅ DONE (10 HSM-backed CMKs in
+  `asia-northeast1` 2026-05-12, smoke PASSED).
+- **§ C (Fireblocks)**: deferred to June-1+. Successor plan
+  [`fireblocks_copper_client_integration_2026_06_01.md`](../../plans/active/fireblocks_copper_client_integration_2026_06_01.md).
+- **§ D (CEFFU KYB)**: deferred to June-1+. The 2-4 week SLA does NOT gate May-23 anymore — KYB submission can wait
+  until client-credential window is firm.
+
+**Operator pre-cutover-2026-05-22 work for May-23 reduces to**: run `credential-probe.sh --mode live --archetype
+carry_staked_basis` (Phase 8.D gate) + verify own-wallet test transactions sign cleanly via CloudKmsCustodyProvider.
 
 ---
 

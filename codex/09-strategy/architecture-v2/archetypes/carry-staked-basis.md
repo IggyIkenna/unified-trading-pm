@@ -120,6 +120,31 @@ Today's matrix (2026-05-07 — venue-matrix re-verification, see plan
 Bybit/METH + Bybit/USDe-as-stable-not-LST + OKX/wstETH; final count depends on Stream A live-probe haircut
 verifications). This **supersedes the prior 2026-05-05 claim** that DRIFT was the only venue.
 
+**Per-venue wrap-step discipline (added 2026-05-12 per
+[`pnl-attribution.md`](../cross-cutting/pnl-attribution.md) HARD RULE #5
+"Staking yield: wrapped (price-delta) vs rebasing (balance-delta)")**: the
+on-chain `STAKE` leg shape depends on the perp venue's accepted form:
+
+| perp_venue | LST form | `STAKE` leg sequence | P&L attribution factor |
+|---|---|---|---|
+| DRIFT (Solana) | JitoSOL / mSOL (natively non-rebasing) | `SWAP(USDC→SOL) → STAKE(SOL→jitoSOL via Jito stake pool) → TRANSFER(jitoSOL → Drift)` — no wrap step needed | `CARRY_BASE` (oracle price delta from Jito stake-pool getter) |
+| DERIBIT | stETH (rebasing; Deribit absorbs daily rebase server-side via 7.5% haircut + offset-credit calibration) | `SWAP(USDC→ETH) → STAKE(Lido.submit → stETH) → TRANSFER(stETH → Deribit)` — NO wrap | `CARRY_BASE_REBASING` (position-balance-monitor reads Deribit subaccount balance delta) |
+| BYBIT (UTA) | stETH + METH + USDe (rebasing; Bybit handles daily rebase at UTA layer) | `SWAP(USDC→ETH) → STAKE(Lido.submit → stETH) → TRANSFER(stETH → Bybit UTA)` — NO wrap | `CARRY_BASE_REBASING` (position-balance-monitor reads Bybit UTA balance delta) |
+| OKX (multi-currency margin) | wstETH (wrapped non-rebasing — OKX has no daily-rebase reconciliation) | `SWAP(USDC→ETH) → STAKE(Lido.submit → stETH → wstETH wrap via Lido wrap contract) → TRANSFER(wstETH → OKX)` | `CARRY_BASE` (oracle price delta from `wstETH.stEthPerToken()`) |
+
+**Banned** at archetype `_build_legs` time:
+
+- Posting wrapped `wstETH` to Bybit / Deribit — those venues calibrate their margin pricing on rebasing stETH; the
+  wrapped form's price diverges from the underlying share-price and the venue's offset-credit math breaks.
+- Posting rebasing `stETH` to OKX — OKX has no daily-rebase reconciliation; the position would mark as undersized
+  every Lido rebase epoch (typically daily) and re-collateralization risk compounds.
+- Treating jitoSOL / mSOL as needing a wrap step — they're natively non-rebasing, the issuer contract mints the
+  rate-accreting form directly.
+
+The archetype config (`default_basis_trade.yaml`) discriminator: each `(perp_venue, lst_asset)` row hardcodes
+whether the `STAKE` leg includes the wrap step. This is part of the leg-sequence builder, not a runtime decision —
+the matrix above is the SSOT.
+
 **Why the prior claim was stale.** The 2026-05-05 SSOT comment in `unified-api-contracts/.../venue_collateral.py`
 asserting _"NO production ETH-perp venue accepts an ETH LST as direct cross-margin today"_ predated three live venue
 updates: Deribit's 2026-01-13 stETH cross-collateral haircut cut from 15% → 7.5% with explicit "stETH offsets ETH

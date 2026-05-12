@@ -207,8 +207,9 @@ class IBKRMarketAdapter:
         self._ib = ib  # caller owns the lifecycle; no inline IB().connect() here
 ```
 
-This fixture is registered in each interface repo's `conftest.py` (UMI, UTEI, UPI, URDI). See
-`unified-trading-pm/codex/06-coding-standards/ibkr-mock-pattern.md` for the full pattern reference.
+This fixture is registered in each interface repo's `conftest.py` (UMI, UTEI, UPI, URDI). The full IBKR mock pattern
+lives inline above (this § "IBKR mock pattern" + the `MagicMock(spec=IB)` table below) — the dead cross-reference to
+a separate `ibkr-mock-pattern.md` was lifted 2026-05-12 per TS-6 audit (the file never existed).
 
 ### Why not VCR
 

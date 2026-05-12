@@ -25,8 +25,10 @@ the registry.
 
 ### `RiskRuleId` (UAC `canonical/crosscutting/risk_rule.py`)
 
-The closed-enum identifier for every rule shape. Twenty-two members shipped at UAC@945ad5d; extension closed-enum
-allowed for archetype-unique additions (Phase 2.A onward).
+The closed-enum identifier for every rule shape. **Twenty-eight members shipped at UAC@`risk_rule.py:53-130`** (counted
+2026-05-12 per slot 8 audit R-7 PRE_CUTOVER refresh; baseline was 22 at UAC@945ad5d, plus 6 `FAMILY_*` members added
+Phase 2.H — see § "Family-aggregate rules" below). Extension closed-enum allowed for archetype-unique additions
+(Phase 2.A onward).
 
 | `RiskRuleId`                          | One-line description                                                                                                                                |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -58,16 +60,19 @@ via the closed-enum extension pattern in Phase 2.A, not by wildcard `Any`.
 
 ### `RiskRuleScope` (UAC `canonical/crosscutting/risk_rule.py`)
 
-The closed-set axis on which a rule applies. Six axes; every rule declares exactly one scope.
+The closed-set axis on which a rule applies. **Seven axes** (slot 8 audit R-8 PRE_CUTOVER refresh 2026-05-12 — was
+6 at original ship, `PER_STRATEGY_FAMILY` added Phase 2.H for family-aggregate caps); every rule declares exactly one
+scope.
 
-| Scope            | Applies when …                                                                                                  |
-| ---------------- | --------------------------------------------------------------------------------------------------------------- |
-| `PER_ARCHETYPE`  | Rule is keyed by `ArchetypeId` (`carry_staked_basis`, `ARBITRAGE_PRICE_DISPERSION`, etc.).                      |
-| `PER_VENUE`      | Rule is keyed by venue (Binance, Aave, Polymarket, ...). Caps per-venue concentration / OI / size.              |
-| `PER_ACCOUNT`    | Rule is keyed by trading account (Bybit-live-account-1, paper-account-2). Caps exposure / loss / margin.        |
-| `PER_ASSET_GROUP`| Rule is keyed by asset_group (cefi / defi / tradfi / sports / prediction). Caps domain-level concentration.     |
-| `PER_CLIENT`     | Rule is keyed by client_id. Caps per-subscription size / drawdown / withdrawal pressure.                        |
-| `GLOBAL`         | Workspace-wide kill conditions. Single instance per rule_id.                                                    |
+| Scope                | Applies when …                                                                                                  |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `PER_ARCHETYPE`      | Rule is keyed by `ArchetypeId` (`carry_staked_basis`, `ARBITRAGE_PRICE_DISPERSION`, etc.).                      |
+| `PER_VENUE`          | Rule is keyed by venue (Binance, Aave, Polymarket, ...). Caps per-venue concentration / OI / size.              |
+| `PER_ACCOUNT`        | Rule is keyed by trading account (Bybit-live-account-1, paper-account-2). Caps exposure / loss / margin.        |
+| `PER_ASSET_GROUP`    | Rule is keyed by asset_group (cefi / defi / tradfi / sports / prediction). Caps domain-level concentration.     |
+| `PER_CLIENT`         | Rule is keyed by client_id. Caps per-subscription size / drawdown / withdrawal pressure.                        |
+| `PER_STRATEGY_FAMILY`| Rule is keyed by strategy family (e.g. LST-leverage family, funding-arb family). Caps family-aggregate exposure / correlation surveillance. Phase 2.H addition. |
+| `GLOBAL`             | Workspace-wide kill conditions. Single instance per rule_id.                                                    |
 
 The `RiskRule.kill_switch_scope()` method maps scopes to `KillSwitchScope` per the seam-diagram orthogonality
 declaration (`PER_VENUE → VENUE`, `PER_ARCHETYPE → ARCHETYPE`, `PER_CLIENT → CLIENT`, `GLOBAL → GLOBAL`; `PER_ACCOUNT`

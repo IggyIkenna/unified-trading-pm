@@ -1,5 +1,12 @@
 ---
 scope: [engineer, admin]
+execution:
+  owner: execution-service maintainer (audit-log path) + governance (retention-lock provisioning)
+  cadence: continuous (live emission per trade/order action; one-shot retention-lock setup pre-cutover)
+  verifier:
+    GCS object-listing under `audit/{client_id_or_order_id}/{YYYY/MM/DD}/` matches `EXECUTION_AUDIT.required_fields`
+    schema; retention-lock policy attached via `gsutil retention set`.
+  last_executed: NEVER (retention-lock provisioning P0 PRE_CUTOVER gap per slot 8 audit PB-2 / PB-8)
 ---
 
 # Audit Logging
@@ -128,7 +135,8 @@ persisted as immutable audit records.
 | `fill_price`         | Execution price (for fills)       |
 | `fill_quantity`      | Quantity filled                   |
 
-**GCS storage path:** `audit/{client_id}/{date}/{event_type}/`
+**GCS storage path:** `audit/{client_order_id}/{YYYY/MM/DD}/{iso-timestamp}-{event_type}.json` (per-event file; lineage
+axis is per-order — see Data Retention Summary for PB-3 threading note)
 
 **Retention:** minimum **7 years** (cold storage), per `AuditRetention(cold_years=7)` in `EXECUTION_AUDIT`.
 
@@ -136,7 +144,15 @@ persisted as immutable audit records.
 
 ## Strategy Audit
 
-Strategy decision events (`STRATEGY_INSTRUCTION`, `SIGNAL_GENERATED`) must also be persisted.
+> **STATUS 2026-05-12 (per slot 8 audit PB-4)**: schema declared in UAC; runtime emission today is `log_event(...)` into
+> the events JSONL bucket (`gs://{pid}-events/events/...`) ONLY — there is **no `persist_audit_log`-equivalent for
+> strategy events**, and `signal_publisher.py:188` hardcodes `"client": "system"` so the per-client lineage axis below
+> is design-intent, not present-tense. Strategy-audit GCS writer wiring is a PRE*CUTOVER follow-up per the slot 8 audit
+> doc; until shipped, treat the `audit/{client_id}/...` path as the \_target* shape, not the _current_ path.
+
+Strategy decision events (`STRATEGY_INSTRUCTION`, `SIGNAL_GENERATED`) **must** be persisted (design intent — writer
+PRE_CUTOVER pending per PB-4); they are emitted on the events stream today via `log_event(...)` and consumed by
+analytics from there.
 
 **Canonical schema:** `STRATEGY_AUDIT` in `unified-api-contracts/unified_api_contracts/internal/schemas/audit.py`
 
@@ -149,7 +165,8 @@ Strategy decision events (`STRATEGY_INSTRUCTION`, `SIGNAL_GENERATED`) must also 
 | `signal_source`     | Model or rule that produced the signal               |
 | `position_snapshot` | Serialised position state at decision time           |
 
-**GCS storage path:** `audit/{client_id}/{date}/strategy/`
+**GCS storage path:** `audit/{client_id}/{YYYY/MM/DD}/{iso-timestamp}-strategy.json` (per-event file, 4-level date
+split). Strategy-audit lineage IS per-client (strategy_id resolves to a single client).
 
 **Retention:** minimum **3 years** (cold storage).
 
@@ -157,22 +174,29 @@ Strategy decision events (`STRATEGY_INSTRUCTION`, `SIGNAL_GENERATED`) must also 
 
 ## Data Retention Summary
 
-| Audit Domain | Hot (days) | Warm (days) | Cold (years) | Path template                            |
-| ------------ | ---------- | ----------- | ------------ | ---------------------------------------- |
-| Execution    | 90         | 365         | 7            | `audit/{client_id}/{date}/{event_type}/` |
-| Strategy     | 90         | 365         | 3            | `audit/{client_id}/{date}/strategy/`     |
+| Audit Domain | Hot (days) | Warm (days) | Cold (years) | Path template                                                            | Lineage axis                                                                                                                                                                                                         |
+| ------------ | ---------- | ----------- | ------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Execution    | 90         | 365         | 7            | `audit/{client_order_id}/{YYYY/MM/DD}/{iso-timestamp}-{event_type}.json` | **per-order** (3 of 5 event types thread `client_order_id` / `order_id` / `operation_id` into the path slot; code-fix to thread real `client_id` = PRE_CUTOVER follow-up in execution-service per slot 8 audit PB-3) |
+| Strategy     | 90         | 365         | 3            | `audit/{client_id}/{YYYY/MM/DD}/{iso-timestamp}-strategy.json`           | per-client                                                                                                                                                                                                           |
+| Risk         | 90         | 365         | 3            | `audit/{client_id}/{YYYY/MM/DD}/{iso-timestamp}-risk.json`               | per-client                                                                                                                                                                                                           |
 
 Retention tiers are defined as `AuditRetention` models in
-`unified-api-contracts/unified_api_contracts/internal/schemas/audit.py`.
+`unified-api-contracts/unified_api_contracts/internal/schemas/audit.py`. Note: `gcs_path_template` on `AuditRetention`
+is **declared-but-unused** at runtime (per slot 8 audit PB-1) — execution-service `audit_log.py:60` hardcodes the
+4-level date split shape; align template with code OR wire template into runtime as PRE_CUTOVER follow-up.
 
 ---
 
 ## Immutability Rules
 
-- Audit records are **append-only**. Never delete or overwrite an existing audit record.
-- Use the GCS Object Versioning or Retention Lock feature on the audit bucket to enforce immutability at the storage
-  layer.
-- `log_event()` writes are non-destructive JSONL appends; always use the append mode.
+- Audit records are **append-only at the bucket level** — every event lands as a NEW per-event-filename object (PUT, NOT
+  append-to-existing-file). The per-event filename (ISO timestamp + event_type suffix) prevents overwrite by
+  construction.
+- GCS Object Versioning + Retention Lock on the audit bucket enforce immutability at the storage layer (**PRE_CUTOVER
+  follow-up routed to slot 4** per `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 3.C — audit bucket
+  Retention-Lock configuration).
+- `log_event()` writes are non-destructive: write-once per per-event filename; no in-place modification of existing
+  objects.
 
 ---
 

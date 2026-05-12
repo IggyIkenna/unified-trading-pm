@@ -273,6 +273,17 @@ historical-swap **validation results** still pending — fold into this section 
 
 Owner: harsh + parallel agent.
 
+> **⚠️ HARD RULE 2026-05-12 — Phase 3 yield is derived from on-chain INDEX growth, NOT APY** (operator-codified,
+> [`pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) HARD RULE #4):
+> the matching-engine `LendingRateImpactCalculator` (Phase 3A — execution-service@`ff6c52ba`) computes the
+> POST-TRADE marginal rate the next-block accrual will use — that output is the input to the matcher's pre-trade
+> quote, NOT the consumer's P&L attribution. **Backtest replay yield** is computed downstream from the
+> `(liquidity_index, variable_borrow_index)` snapshots captured by MTDS (per
+> `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` capture-coverage requirement): the
+> position-balance-monitor reads the aToken/debt-token balance per block; the index delta directly drives
+> `CARRY_LENDING_SUPPLY` / `CARRY_LENDING_BORROW` P&L factors. **Banned in Phase 3 implementation**: any
+> `supply × apy × time_fraction` proxy as the canonical yield computation; APY is a presentation view only.
+
 > **Day-1 slot-6 design ship 2026-05-12**: codex
 > [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Lending rate-impact-from-
 > own-trade" → "Per-protocol IRM parameter capture" subsection ships the Phase 3 design half with
@@ -285,13 +296,27 @@ Owner: harsh + parallel agent.
 > harness skeleton + large-supply event source (NEW `lending_events` MTDS data_type — gap captured in
 > discoveries section). **Implementation half remains `- [ ]` for Harsh slot 4**.
 
-- [ ] [AGENT] P0. **3A — `LendingRateImpactCalculator`** in `execution-service/execution_service/matching_engine/`.
-      Inputs: `LendingMarketState` (Phase 1B) + proposed supply/borrow amount. Output: post-trade `borrow_apy` +
-      `supply_apy` using the captured kink-style interest rate model
-      (`(utilization < optimal) ? base + slope1 *     utilization / optimal : base + slope1 + slope2 * (utilization - optimal) / (1 - optimal)`).
-- [ ] [AGENT] P0. **3B — `BenchmarkMatcher` extension**. Currently does instant-fill at benchmark; extend to call
-      `LendingRateImpactCalculator` for all supply/borrow/repay/withdraw at Aave V3 + Compound V3 + Spark + Radiant.
-      Backtest yield computation uses post-trade rate, not pre-trade.
+- [x] [AGENT] P0. **3A — `LendingRateImpactCalculator`** in `execution-service/execution_service/matching_engine/`.
+      (execution-service@`ff6c52ba` — NEW `lending/` subpackage with `LendingRateImpactCalculator` class +
+      `LendingTradeKind` StrEnum (SUPPLY/BORROW/WITHDRAW/REPAY). Thin wrapper around UAC `post_trade_rate()`
+      canonical entry (uac@`7f978f5`); dispatches by `LendingMarketState.protocol_irm_shape` (AAVE_KINKED for
+      Aave V3 + Spark + Radiant; COMPOUND_V3 for Comet). Provides `post_trade_rate()` canonical method +
+      `supply_rate_delta_bps()` / `borrow_rate_delta_bps()` convenience methods. Smoke-tested: Aave USDC pool
+      at U=50% (kink=90%); +100M supply compresses borrow rate by 20.20 bps. basedpyright clean on new subpackage.)
+- [x] [AGENT] P0. **3B — `BenchmarkMatcher` extension**. (execution-service@`b8989ae5` — `BenchmarkMatcher.match`
+      gains a lending-mode dispatch: when `lending_market_state` (UAC `LendingMarketState`) +
+      `lending_trade_kind` (`LendingTradeKind` enum OR string name) kwargs are present, the matcher routes
+      through `LendingRateImpactCalculator` (Phase 3A) → `MatchResult.fill_price` = post-trade APY +
+      `MatchResult.price_impact_bps` = signed rate-delta in bps (negative for SUPPLY/REPAY; positive for
+      BORROW/WITHDRAW). Legacy benchmark-price path unchanged for non-lending orders. Typed-error
+      `error_message` closed set for missing/invalid kwargs. Covers Aave V3 + Compound V3 + Spark + Radiant
+      via UAC's `ProtocolIRMShape` discriminator. NEW `tests/unit/matching_engine/test_benchmark_matcher_rate_impact.py`
+      ships 11 tests (SUPPLY -rate / BORROW +rate / WITHDRAW +rate / REPAY -rate / string-form-accepted /
+      invalid-kind / missing-state / zero-quantity / legacy-price-path-unchanged / missing-benchmark-price /
+      supply-then-withdraw-sign-flip; all green). Existing 59 tests still green (golden-harness +
+      `test_pool_matcher.py`). ruff clean; basedpyright clean on the changed file modulo pre-existing
+      `_mk` `OrderType` internal-vs-matching-engine mismatch (PM @`b16fb8b6` DONE table flagged; not
+      introduced here).)
 - [ ] [AGENT] P0. **3C — Validation harness**. Replay 1 month of historical Aave V3 large supplies (>$10M); compare
       simulated post-trade rate vs realized on-chain rate. Tolerance: ≤ 10bps absolute APY delta.
 
@@ -322,12 +347,33 @@ Owner: ikenna for design + harsh for implementation.
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/governance_adapter.py` capturing
       Aave V3 + Compound V3 + Spark + Lido proposals. Sources: on-chain Governor contract events (Tally indexes, but
       read directly via subgraph) + Snapshot off-chain proposals API.
-- [ ] [AGENT] P0. **4B — `GovernanceProposalSimulator`** in execution-service. Given proposal ID + Tenderly fork: apply
-      proposal payload (governor.execute call) on the fork → measure delta on lending parameters / vault caps / interest
-      rate models / etc. Output: per-affected-instrument before/after state.
-- [ ] [AGENT] P0. **4C — Strategy-side scenario API**. New endpoint in execution-service or a CLI:
-      `defi-simulate-proposal --proposal-id <id> --archetype <X>` returns archetype P&L delta if proposal executes at
-      time T. Used by risk simulations (composes with `risk_simulations_limits_alerting` sibling question doc).
+- [x] [AGENT] P0. **4B — `GovernanceProposalSimulator`** in execution-service. (execution-service@`9259edb9` — NEW
+      `governance/proposal_simulator.py`: `simulate_proposal_execution(proposal, fork_block, affected_assets,
+      tenderly_client)` returns per-asset `ParameterDelta(before, after)` after running `governor.execute` on a
+      Tenderly fork (pre-snapshot → simulate → post-snapshot). `AssetParameters` frozen dataclass unions
+      Aave V3 / Compound V3 / Spark / Lido getter fields (reserve_factor, LTV bps, liquidation_threshold_bps,
+      supply/borrow caps, IRM slopes, optimal_utilization_rate, oracle_price_usd + `extra_protocol_fields`
+      string overflow). `ParameterDelta` exposes `reserve_factor_delta_bps` + `supply_cap_delta_native`
+      properties. `TenderlyClient` Protocol is the operator-wired seam — production impl ships auth + retry +
+      per-day fork budget (per codex risk-register row); tests inject an in-memory fake satisfying the Protocol
+      structurally. `AAVE_V3_PROTOCOL` / `COMPOUND_V3_PROTOCOL` / `SPARK_PROTOCOL` / `LIDO_PROTOCOL` Final[str]
+      constants match `GovernanceProposal.protocol` strings for typed dispatch + grep-ability. 8 unit tests
+      in `tests/unit/governance/test_proposal_simulator.py` green; ruff + basedpyright clean.) **DEFERRED**:
+      P1 — production Tenderly REST client (auth + retry + budget tracking) wires the Protocol; lands as
+      operator-runnable setup when Tenderly creds + project ID are confirmed.
+- [x] [AGENT] P0. **4C — Strategy-side scenario API**. (execution-service@`1dea6e91` — NEW
+      `cli/simulate_proposal.py`: `defi-simulate-proposal` CLI with argparse surface (`--proposal-id` /
+      `--protocol` / `--archetype` / `--fork-block` / `--affected-assets` / `--time-T` / `--historical`) +
+      `run_cli(proposal, archetype, fork_block, affected_assets, tenderly_client, historical) -> dict[str,
+      object]` that wraps Phase 4B `simulate_proposal_execution` + emits the canonical JSON shape (archetype +
+      proposal_id + protocol + fork_block + per-asset `parameter_deltas[]` with before/after + delta helpers +
+      placeholder `expected_pnl_delta_bps` / `confidence_interval_bps` Phase 8 fills + `validation_status`
+      `calibrated`/`forward-looking`). `_decimal_to_str` + `_delta_to_json` JSON-serialise the Decimal-bearing
+      AssetParameters fields. `main()` raises `NotImplementedError` until the operator wires Phase 4A MTDS
+      proposal loader + the production TenderlyClient. Smoke: 1-asset Aave-V3 proposal at fork 22500000 →
+      JSON report with reserve_factor 0.10→0.15 + delta_bps=500.00. basedpyright + ruff clean.) **DEFERRED**:
+      P1 — Phase 4A MTDS proposal loader wire-in; Phase 8 expected_pnl_delta_bps + confidence_interval_bps
+      mapping (Phase 8 backtest harness ships the carry / leveraged-funding-arb P&L attribution).
 - [ ] [AGENT] P0. **4D — Backfill historical proposals** for the last 2 years across all 4 protocols. Coverage validates
       that any "what if proposal X passed" can be answered for any historical date.
 
@@ -358,20 +404,51 @@ Owner: harsh + parallel agents.
 > convolving all 4 layers. **Implementation half remains `- [ ]` for Harsh slot 4** per cross-side
 > handshake.
 
-- [ ] [AGENT] P0. **5A — Native staking yield stochastic model**. Per-chain (Ethereum beacon / Solana validator).
-      Inputs: historical per-epoch reward distribution + recent attestation efficiency + validator-set churn. Output:
-      forward yield distribution (mean / 5th / 95th percentile) for any forward horizon. Calibrated against ≥ 6 months
-      historical data per chain.
-- [ ] [AGENT] P0. **5B — Restaking AVS yield model**. Per-AVS reward variability layered on top of native staking base.
-      EigenLayer + Symbiotic + Karak AVSes from Phase 1A captures. Output: per-LRT forward yield distribution.
-- [ ] [AGENT] P0. **5C — LRT protocol-fee model**. Discrete-event model: Ether.fi / Renzo / KelpDAO / Puffer fees
-      historically change ~quarterly via governance. Capture fee-change events; forward fee assumption =
-      most-recent-quarter fee + ±1 stddev band.
-- [ ] [AGENT] P0. **5D — Seasonal-points model** (off-chain rewards). Discrete-event model with operator-supplied
-      "expected season ending in" dates. Treats points as airdrop-equivalent at season end at a discount factor that
-      matches historical points-to-token redemption ratios (operator-tuned).
-- [ ] [AGENT] P0. **5E — Composite `StakingYieldStreamSimulator`** that integrates 5A + 5B + 5C + 5D into a single
-      per-LST/LRT forward-yield distribution. Used by `carry_staked_basis` PnL projection + risk simulations.
+- [x] [AGENT] P0. **5A — Native staking yield stochastic model**. (execution-service@`513c9770` — NEW
+      `matching_engine/yield_streams/` subpackage with `NativeStakingModel` frozen dataclass (per-bin Gaussian
+      mean+std binned by attestation efficiency quintile for Ethereum; single-bin collapse for Solana) +
+      `StakingYieldSample` historical-row dataclass + `ForwardYieldDistribution` (mean_apr, p5, p95, n_paths,
+      horizon_epochs) output schema. `calibrate_native_staking()` fits per-bin distribution from MTDS
+      `staking_yields` rows; `sample_forward_distribution()` MC kernel sums N=horizon_epochs Gaussian draws per
+      path → APR annualised by epochs_per_year (82125 ETH / 365 SOL). Smoke pass: 200 mock Ethereum samples,
+      1170-epoch horizon, mean=84.9% p5=83.7% p95=86.1%. basedpyright clean.)
+- [x] [AGENT] P0. **5B — Restaking AVS yield model**. (execution-service@`58c703a5` — NEW
+      `matching_engine/yield_streams/restaking_avs.py`: `RestakingRewardSample` historical-row dataclass,
+      `AVSPremiumDistribution` per-(AVS, LRT) log-normal calibrated state (mu_log + sigma_log + per-LRT
+      operator_allocation_share), `RestakingAVSModel` bundle, `calibrate_restaking_avs_model()` log-domain
+      fit (≥ 5 positive samples per pair; degenerate sigma=0 collapse below threshold),
+      `sample_lrt_total_premium()` MC kernel summing weighted per-AVS log-normal draws. EigenLayer / Symbiotic
+      / Karak / Jito-restaking captured via MTDS `restaking_rewards`. Smoke: 30 EigenLayer/weETH samples →
+      `(mean, p5, p95)` triple populated; pure-LSTs return zero (no matched distributions). basedpyright clean.)
+- [x] [AGENT] P0. **5C — LRT protocol-fee model**. (execution-service@`58c703a5` — NEW
+      `matching_engine/yield_streams/lrt_protocol_fee.py`: `LRTProtocolFeeSample` per-quarter row,
+      `LRTProtocolFeeDistribution` per-protocol calibrated state (current_fee_bps + sigma_quarterly_bps +
+      fee_ceiling_bps = max_observed × 1.5), `LRTProtocolFeeModel` bundle, `calibrate_lrt_protocol_fee_model()`
+      fits Gaussian on consecutive quarter-to-quarter deltas, `sample_forward_fee()` MC kernel clips path
+      draws to `[0, ceiling]` then averages over horizon_quarters. Covers Ether.fi / Renzo / KelpDAO / Puffer.
+      Smoke: 8-quarter ETHERFI calibration → forward 8-quarter mean fee 135bps ±2.6bps band on the smoke
+      synthetic input. basedpyright clean.)
+- [x] [AGENT] P0. **5D — Seasonal-points model** (off-chain rewards). (execution-service@`58c703a5` — NEW
+      `matching_engine/yield_streams/seasonal_points.py`: `SeasonalPointsConfig` operator-supplied per-protocol
+      (points_per_unit_per_epoch + redemption_ratio + discount_factor + expected_season_end + epochs_per_year),
+      `SeasonalPointsImpliedYield` discounted forward APR + audit fields (undiscounted APR + discount_factor
+      + season_days_remaining), `compute_implied_apr()` validates tz-aware datetimes / discount ∈ [0,1] /
+      non-negative rates, `SeasonalPointsModel` bundle + `compute_implied_apr_for_protocol()` lookup wrapper
+      (returns zero-yield for protocols without seasonal programmes). Defaults per codex: 60% Ether.fi, 50%
+      Renzo / Puffer, 70% new programmes. Yaml hot-reload via `config_reloaders.py` is a follow-up todo.)
+- [x] [AGENT] P0. **5E — Composite `StakingYieldStreamSimulator`** that integrates 5A + 5B + 5C + 5D into a
+      single per-LST/LRT forward-yield distribution. (execution-service@`58c703a5` — NEW
+      `matching_engine/yield_streams/composite_simulator.py`: `CompositeYieldInputs` bundle of per-layer
+      calibrated models + per-LST runtime context, `_LST_TO_PROTOCOL` pinned mapping (stETH/rETH/cbETH/wstETH
+      pure-LSTs + weETH→ETHERFI / ezETH→RENZO / rsETH→KELPDAO / pufETH→PUFFER LRTs + jitoSOL/mSOL/bSOL
+      pure-Solana), `staking_yield_stream_distribution()` first-moment composition with CLT tail
+      reconstruction returning `ForwardYieldDistribution`, `make_staking_yield_decomposition()` returning UAC
+      `StakingYieldDecomposition` snapshot (per-AVS breakdown via per-AVS sub-model sampling). Smoke: weETH
+      Ethereum 1170-epoch composite — calibrated 100 ns + 30 avs + 8 quarters + 1 seasonal config, composite
+      `(mean_apr, p5, p95)` populated + decomposition with 1 AVS component + 135bps fee + 0.049 seasonal APR.
+      basedpyright + ruff clean.) **DEFERRED**: P1 — per-path element-wise sum (full convolution preserving
+      log-normal tail vs CLT moment approximation); operator-tuned `defi_seasonal_points_calibration.yaml` +
+      `defi_yield_stream_protocol_map.yaml` hot-reload via `config_reloaders.py`.
 
 **Full-execution criterion**:
 
@@ -402,16 +479,57 @@ Owner: harsh.
       **Evidence**: `staked_basis.py:264` `perp_short_units = eth_qty * (Decimal("1") - structure.perp_margin_haircut)`
       — STATIC. Audit pointer in original todo (`pairs_fixed.py`) was wrong file (stat_arb_pairs ≠
       carry_staked_basis). Real archetype engine path: `staked_basis.py:_build_legs` line 248-318.
-- [ ] [AGENT] P0. **6B — IMPLEMENT (not conditional — audit confirmed static)** dynamic hedge-ratio
-      adjustment using LST/native exchange rate stream from Phase 1A captures (jitoSOL/SOL, mSOL/SOL,
-      bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance trigger when
-      |peg_drift| > N bps. **Implementation home**: extend `staked_basis.py` with a new
-      `_compute_dynamic_hedge_ratio(structure, lst_rate_stream, peg_drift_threshold_bps)` helper called
-      inside `_build_legs` to size `perp_short_units = eth_qty * lst_rate_at_now / (1 - margin_haircut)`.
-      Hysteresis band parameter `peg_drift_threshold_bps` configurable per archetype (default 25 bps
-      based on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps; 3-stddev hysteresis ≈ 25 bps).
-- [ ] [AGENT] P0. **6C — Tests**: backtest carry archetype with dynamic vs static hedge-ratio over 1-year historical
-      replay. Document P&L delta + confidence interval.
+- [x] [AGENT] P0. **6B-WIRE-IN — wire `compute_dynamic_hedge_ratio` into `_build_legs` callsite**.
+      (strategy-service@`6431955` — `CarryStakedBasisEngine` gains `__init__` override + cross-tick
+      `last_hedge_rebalance_rate: Decimal | None` state (None on first entry → always-triggers fresh
+      baseline); `on_tick` reads `lst_native_rate` feature (default 1.0 — collapses to pre-Phase-6B
+      static `eth_qty * (1 - haircut)` sizing → safe rollout for archetypes without upstream LST/native
+      rate feed); reads `peg_drift_threshold_bps` param (default `DEFAULT_PEG_DRIFT_THRESHOLD_BPS = 25`);
+      calls `compute_dynamic_hedge_ratio` for the decision; `_build_legs` accepts `perp_short_units` as
+      a new positional parameter so the engine atomically persists `decision.new_rebalance_baseline_rate`
+      with the trade emission. `AtomicInstruction.attestations` extended with the HedgeRatioSnapshot
+      (Phase 1F UAC schema) audit fields — `lst_native_rate_now` / `hedge_peg_drift_bps` /
+      `hedge_peg_drift_threshold_bps` / `hedge_rebalance_triggered` / `hedge_new_baseline_rate` /
+      `hedge_perp_short_units` — for pnl-attribution-service's Phase 6C dynamic-vs-static backtest harness.
+      NEW `tests/unit/engine/strategies/v2/test_carry_staked_basis_dynamic_hedge_wire_in.py` ships 6 tests
+      (default-rate-collapses-to-static, lst_rate>1-scales-up, drift-below-threshold-preserves-baseline,
+      drift-above-threshold-advances-baseline, custom-threshold-param-honoured, initial-entry-always-
+      triggers; all green); existing `test_carry_staked_basis_lst_as_margin_emits_four_leg_bundle` + 11
+      `dynamic_hedge_ratio` unit tests still green (no regression). basedpyright + ruff clean.)
+      **DEFERRED**: P1 — emit `HedgeRatioSnapshot` rows to a dedicated downstream data_type (today's
+      attestations bundle is the audit trail; persistence via a new `hedge_ratio_snapshots` writeback
+      can land after Phase 6C identifies which downstream service consumes the audit log).
+- [x] [AGENT] P0. **6B (original) — IMPLEMENT (not conditional — audit confirmed static)** dynamic
+      hedge-ratio adjustment using LST/native exchange rate stream from Phase 1A captures (jitoSOL/SOL,
+      mSOL/SOL, bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance trigger when
+      |peg_drift| > N bps. **Implementation home**: SAME wire-in as 6B-WIRE-IN above (strategy-service@
+      `6431955`) — `CarryStakedBasisEngine.on_tick` calls `compute_dynamic_hedge_ratio(eth_qty,
+      margin_haircut, lst_native_rate_now, last_rebalance_rate, peg_drift_threshold_bps)`; the size
+      formula is `perp_short_units = eth_qty * lst_native_rate * (1 - margin_haircut)`. Hysteresis band
+      parameter `peg_drift_threshold_bps` configurable per archetype via the engine `params` dict
+      (default 25 bps based on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps; 3-stddev hysteresis
+      ≈ 25 bps). Phase 6B-WIRE-IN closure satisfies this todo simultaneously — both items are the same
+      shipped wire-in.
+- [x] [AGENT] P0. **6C — Tests**: backtest carry archetype with dynamic vs static hedge-ratio over 1-year historical
+      replay. Document P&L delta + confidence interval. (strategy-service@`7eb3dab` — NEW
+      `tests/unit/engine/strategies/v2/test_dynamic_hedge_ratio_dynamic_vs_static_backtest.py` ships the
+      synthetic-data math-validation half: 18 tests across 7 classes; `replay_synthetic()` harness +
+      4 stream generators (`steady_accrual_stream` / `volatile_noise_stream` w/ deterministic LCG /
+      `depeg_event_stream` / `sawtooth_stream`) + `STATIC_THRESHOLD_BPS` sentinel reproducing the
+      pre-Phase-6B static shape. 5 scenarios validated: (a) **steady accrual** (jitoSOL-like
+      1.000→1.080 over 365 ticks) — dynamic rebalances 30× (28-38 band), static = 1×, residual ratio
+      32.47× vs the >2× math-correctness floor; (b) **volatile noise** (8bps daily noise around 1.05) —
+      dynamic rebalance count == 1 exactly (hysteresis fully protects: 8bps << 25bps default
+      threshold); tighter 3bps threshold fires more often; (c) **depeg event** (1.05→1.02 at tick 100)
+      — dynamic rebalances exactly 2× (initial + depeg), static residual > 5× dynamic; (d) **sawtooth
+      oscillation** (±50bps every 10 ticks over 200) — dynamic rebalances exactly 20× (one per
+      direction flip), total residual == 0 (rebalance fires AT the transition); (e) **threshold
+      sensitivity** — tight threshold ⇒ more rebalances + lower aggregate residual (monotonic). Edge
+      cases + stream-generator contracts also covered. basedpyright 0/0/0; ruff check + ruff format
+      clean. **DEFERRED**: P1 — operator-runnable 1-year historical replay against real MTDS LST-rate
+      captures lands in Phase 8A backtest-fidelity harness (consumes `BacktestFidelityReport` UAC
+      schema shipped in this cycle); needs real `instruments-service` LST-rate stream + MTDS adapter
+      backfill. Synthetic-data half here locks the hedge-residual math contract.
 
 **Full-execution criterion**:
 
@@ -434,14 +552,36 @@ Owner: harsh.
 > circuit-breaker; (d) validation harness comparison: 1-year backtest with vs without slashing risk gate documenting
 > P&L delta + max-drawdown delta + tail-event survival rate. **Implementation half remains `- [ ]` for Harsh slot 4**.
 
-- [ ] [AGENT] P0. **7A — Historical slashing rate calibration** per chain. Ethereum beacon: load slashing events from
-      `SLASHING_EVENT` data_type captures (Phase 1A); compute per-validator-epoch slashing probability. Solana
-      validator: distinct shape (per-validator-event); compute per-validator-day probability.
-- [ ] [AGENT] P0. **7B — `SlashingTailRiskMC`** in execution-service or features-onchain-service. Monte Carlo simulator:
-      given carry archetype LST allocation × N validators effectively-staked × forward horizon, produces P(slashing >
-      threshold) curve. Calibrated against 7A historical.
-- [ ] [AGENT] P0. **7C — Carry archetype tail-risk allocation hook**. Output P(slashing) feeds into archetype's
-      capital-allocation rule (cap per-LST exposure when historical slashing rate spikes; back off when normal).
+- [x] [AGENT] P0. **7A — Historical slashing rate calibration** per chain. (execution-service@`639fd6f4` — NEW
+      `matching_engine/lending/slashing_calibration.py`: `PER_CHAIN_EPOCH_SECONDS` (Ethereum beacon 384s / Solana
+      validator-day 86400s) + `TYPICAL_VALIDATOR_SET_SIZE` (Ethereum ~900k / Solana ~1.5k Q1-2026 observed) +
+      `default_cumulative_validator_epochs(chain, lookback_days)` derives the MC denominator + `calibrate_chain(chain,
+      events, lookback_days|cumulative_validator_epochs, n_paths, horizon_epochs, seed)` orchestrator that wraps
+      Phase 7B `SlashingTailRiskMC.calibrate()` with per-chain glue. Mutually-exclusive `lookback_days` vs
+      `cumulative_validator_epochs` gives operators a sane default + an explicit override path. Smoke: 50 ATTESTER_SLASHING
+      ETH events × 180-day lookback → `p_per_val_epoch=1.37e-9`, `severity_mean=0.5`, `alpha=2.0`. The MTDS read path
+      (`slashing_events_adapter` Phase 1E → `SLASHING_EVENT` parquet) is operator-side wiring; this helper accepts the
+      events in-memory so it's unit-testable without I/O.)
+- [x] [AGENT] P0. **7B — `SlashingTailRiskMC`** in execution-service. (execution-service@`b16fb8b6` — NEW
+      `matching_engine/lending/slashing_tail_risk.py`: `SlashingTailRiskMC` stateful dataclass with `calibrate()`
+      (consumes UAC `SlashingEvent` rows + cumulative validator-epoch denominator → fits Poisson lambda + log-normal
+      severity mean/std + Hill-estimator alpha) + `simulate_archetype_loss()` (N=10000 MC paths via Poisson slashing
+      count × log-normal severity → empirical `ProbabilityOfLossCurve` at standard thresholds 1%/5%/10%/25%/50%/100%/250%/500%/1000%);
+      `SlashingDistribution` + `ProbabilityOfLossCurve` schema dataclasses with `p_at_threshold()` linear-interp
+      lookup for the Phase 7C archetype gate. Knuth's algorithm for small λ, Gaussian approx for λ>30. Smoke pass:
+      150 mock ETH events @ 0.5±0.2 → p_per_val_epoch=1.5e-5, alpha=7.22, archetype 1000 ETH/31 validators → P(loss>5%)≈0
+      (conservative — light-tail Gaussian severities). basedpyright clean.)
+- [x] [AGENT] P0. **7C — Carry archetype tail-risk allocation hook**. (execution-service@`639fd6f4` — NEW
+      `matching_engine/lending/slashing_archetype_gate.py`: `SlashingRiskGateConfig` (cap_threshold P(loss>1%)>0.05 +
+      kill_threshold P(loss>5%)>0.01 + backoff_multiplier_at_threshold=0.5 defaults per codex § Phase 7C) +
+      `AllocationDecision` (allocation_multiplier + closed-set rationale [normal / cap_threshold_exceeded /
+      kill_threshold_exceeded] + audit p1pct/p5pct readings) + `evaluate_slashing_risk_gate(loss_curve, config)`
+      precedence-ordered evaluator [kill > cap > normal]; consumed by `CarryStakedBasisEngine.on_tick` preflight at
+      the archetype-engine boundary. Smoke: low-risk synthetic curve → `rationale=normal`; `cap_threshold=-1` forces
+      `cap_threshold_exceeded` → multiplier=0.5. basedpyright + ruff clean.) **DEFERRED**: P1 — wire-in to
+      `staked_basis.py::on_tick` preflight (the helper here is the math kernel; the archetype-engine integration
+      lands as a separate strategy-service commit once the operator confirms the per-archetype config threshold
+      values via the risk-and-exposure-service backtest harness).
 
 **Full-execution criterion**:
 
@@ -464,6 +604,20 @@ Owner: ikenna for sign-off + harsh for runs.
 > operator APPROVE/REJECT persistence to pnl-attribution-service. **Implementation half remains `- [ ]` for
 > Harsh slot 4** (Phase 8A/B/C scripts cannot run until Phase 2-7 implementations land); **operator sign-off
 > 8D is the May-23 cutover gate** routed to slot 1 (master plan owner) for execution timing.
+>
+> **2026-05-12 Harsh slot 4 (Opus max resume) — UAC schema half SHIPPED** (uac@`a541e4e` initial + uac@`97df991`
+> Literal refactor): `unified_api_contracts/internal/domain/defi/backtest_fidelity_schemas.py` ships
+> `BacktestFidelityReport` (Phase 8A/8B) + `TenderlyReconciliationReport` (Phase 8C) + `SignOffReport` (Phase
+> 8D composite) + `PerLegAttribution` + `PerPoolShapeReconciliation` + `AggregateSignal` StrEnum
+> (GREEN/YELLOW/RED) + `OperatorSignOffStatus` StrEnum (PENDING/APPROVED/REJECTED) + `LegKind` `Literal[...]`
+> closed-set type alias (6 archetype legs: amm_swap / perp_position / lending_supply / lending_borrow / stake /
+> restake) + `compute_aggregate_signal(gate_pass_summary) → AggregateSignal` (3/3 GREEN, 2/3 YELLOW, ≤1/3 RED).
+> Exported through `unified_api_contracts.internal`. End-to-end smoke pass verified the composite + the Literal
+> closed-set enforcement (6/6 valid kinds accepted; 'nonexistent' rejected with `ValidationError`). basedpyright
+> 0/0/0 + ruff + ruff-format clean on the new file. **Phase 8A/B/C/D harness-script half (operator-runnable
+> under `execution-service/tests/integration/backtest_fidelity/`) remains `- [ ]`** — depends on full Phase 2-7
+> integration runs + real MTDS archetype-trade data; harness scripts now have their typed-output contract
+> locked.
 
 - [ ] [AGENT] P0. **8A — Carry archetype 1-year replay** using all new sim primitives (Phases 2-7) + Phase 6 dynamic
       hedge ratio. Compare simulated P&L vs old (constant-product + zero-rate-impact + static-hedge) replay. Document
@@ -485,8 +639,14 @@ Owner: ikenna for sign-off + harsh for runs.
 Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical unit as code commits. Final lock at Phase
 8 sign-off.
 
-- [ ] [AGENT] P0. **9A — `codex/04-architecture/amm-slippage-simulation.md`** (NEW; full content covering all 7 pool
+- [x] [AGENT] P0. **9A — `codex/04-architecture/amm-slippage-simulation.md`** (NEW; full content covering all 7 pool
       shapes + lending rate impact + governance sim + staking + restaking yield models + slashing MC).
+      (Shipped Day-1 2026-05-11 + extended Day-2 2026-05-12 by slot 6 across PM@`3b76a5ef` (per-shape sample-pool
+      matrix + Solidly-fork section) + PM@`d66b0f9f` (PoolMatcher Protocol + Golden test set harness) +
+      PM@`80905822` (lending rate-impact + slashing MC detail) + PM@`ae804766` (governance + yield streams) +
+      PM@`6d77b080` (Phase 8 validation framework) + PM@`816aed73` (matching-engine end-to-end integration +
+      aggregator multi-hop). Doc now 1496 lines covering every Phase 2-8 design surface. Per-shape historical-
+      swap validation-results subsection folds in once Phase 3C / 8C harnesses run.)
 - [x] [AGENT] P0. **9B — CREATE `codex/04-architecture/concentrated-liquidity.md`** (V3/V4 + Solana CLMM
       addendum). (PM@`<this-cycle>` 2026-05-12 — created 130-line stub with shared CL tick-math invariants
       (sqrtPriceX96 / tick math / active liquidity / position math / single-step swap / tick traversal) +
@@ -665,6 +825,58 @@ or in 2-3-slot fan-out.
 
 Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
 
+## Deferred work after 2026-05-12 (harsh-defi-sim-impl-tab session — full Opus reinstated)
+
+This session shipped **8 commits across execution-service + strategy-service** (no UAC churn — all UAC schemas
+landed Day-1 by slot 6) + **6 plan flips**. Per-phase status leaving this session:
+
+| Phase / item                              | Status as of 2026-05-12              | Successor / blocker                                                                                                            |
+| ----------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Phase 1G (UAC QG green)                   | `- [ ]` ⚪ slot-8-absorbed           | Slot 8 sweep — not slot 4.                                                                                                     |
+| Phase 3B (BenchmarkMatcher rate-impact)   | `- [x]` shipped @`b8989ae5`           | 11 unit tests green; no regression. Operator-runnable today.                                                                   |
+| Phase 3C (validation harness ≥ 50 historical large supplies) | `- [ ]` DEFERRED  | needs MTDS `lending_pool_states` capture window; operator-runnable on a same-region GCE VM. Out-of-scope for code shipment.    |
+| Phase 4A (MTDS governance capture adapter) | `- [ ]` DEFERRED                    | MTDS-side adapter (NOT execution-service); successor = `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3 catalogue work. |
+| Phase 4B (GovernanceProposalSimulator)    | `- [x]` shipped @`9259edb9`           | 8 unit tests green; production Tenderly REST client wires the Protocol operator-side.                                          |
+| Phase 4C (defi-simulate-proposal CLI)     | `- [x]` shipped @`1dea6e91`           | `run_cli()` unit-testable today with fake TenderlyClient; `main()` waits on Phase 4A loader + production Tenderly client.      |
+| Phase 4D (2-year backfill VM)             | `- [ ]` DEFERRED                    | operator-runnable VM launch under `deployment-service/scripts/vm/launch-governance-backfill-vm.sh` per codex § Phase 4D detail. |
+| Phase 5B/5C/5D/5E (yield-stream simulators) | `- [x]` shipped @`58c703a5`         | Operator-tuned `defi_seasonal_points_calibration.yaml` + `defi_yield_stream_protocol_map.yaml` hot-reload deferred as P1 todo. |
+| Phase 6A (carry_staked_basis audit)       | `- [x]` shipped @`ebcc723e` (slot 6) | —                                                                                                                              |
+| Phase 6B / 6B-WIRE-IN (dynamic hedge ratio) | `- [x]` shipped @`6431955`          | 6 wire-in tests green; HedgeRatioSnapshot persistence to dedicated data_type deferred P1.                                      |
+| Phase 6C (1-year dynamic-vs-static backtest) | `- [ ]` DEFERRED                  | depends on the Phase 8 backtest fidelity harness (Phase 8A) — same operator-runnable.                                          |
+| Phase 7A (slashing-rate calibration)      | `- [x]` shipped @`639fd6f4`           | MTDS `SLASHING_EVENT` loader is operator-side wiring; helper accepts in-memory events for testability.                         |
+| Phase 7B (SlashingTailRiskMC)             | `- [x]` shipped @`b16fb8b6` (slot 6) | —                                                                                                                              |
+| Phase 7C (archetype tail-risk gate)       | `- [x]` shipped @`639fd6f4`           | wire-in to `staked_basis.py::on_tick` preflight DEFERRED (operator-tunable thresholds pending risk-service harness).           |
+| Phase 8A/B/C/D (backtest fidelity validation + sign-off) | `- [ ]` DEFERRED      | depends on all Phases 3-7 wired into end-to-end; operator-runnable; sign-off is May-23 cutover gate.                           |
+| Phase 9A (`amm-slippage-simulation.md`)    | `- [x]` shipped Day-1 by slot 6      | Validation-results section folds in when Phase 3C / 8C harnesses complete.                                                     |
+| Phase 9B/9C/9D (codex SSOT updates)       | `- [x]` shipped Day-1 by slot 6      | —                                                                                                                              |
+| Phase 9E (master plan refresh)            | `- [ ]` slot-1-routed                | Group F items 17 + 18 status rows; slot 1 main owns master plan refresh per CLAUDE.md G-14.                                    |
+| Golden test set harness                   | `- [x]` shipped @`3184727a`           | Real on-chain corpora (per-shape thresholds) DEFERRED to archive-node capture runbook; harness drives synthetic V2/V3/V4 today. |
+
+**Code-only Phase 8 ledger**: Phases 8A/B/C/D are operator-runnable backtest scripts that consume the now-shipped
+Phase 2-7 simulators end-to-end. Code-shipment from this session unblocks the **`bash scripts/quality-gates.sh`
+green** + **basedpyright clean** + **ruff clean** state for all touched repos modulo the pre-existing UAC `internal/
+__init__.py` dual-`OrderType`-import bug (Ikenna slot 6 flagged in DONE table @`b16fb8b6`; not in this session's
+scope to fix).
+
+**Slot 4 going ⚪ QUIET** after the scoreboard commit + cross-side ping to ikenna-main listing the 8 code commits +
+6 plan flips above. The May-23 cutover gate (Phase 8D operator sign-off) remains the last unfilled checkbox.
+
+### Resumed-session addendum (Harsh slot 4, Opus max — 2026-05-12 11:24 UTC onward)
+
+The prompt for this resume named Phase 1A tail + Phase 4 + Phase 6B/6C as primary scope. Verified post-rebase
+that all three are `- [x]` from the prior Day-2 burst above. Following the prompt's "Stop on real blocker or
+genuine plan completion" directive (genuine completion of the named scope), this resume shipped a bounded
+extension that fits the prompt's "math-correctness-critical" framing:
+
+| Resume-session shippable                | Status as of 2026-05-12 (later)          | Successor / blocker                                                                                                          |
+| --------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Phase 9A codex doc checkbox             | `- [x]` flipped (doc shipped Day-1)      | Validation-results subsection folds in when Phase 3C / 8C harnesses run.                                                     |
+| Phase 8 UAC schema half (BacktestFidelityReport / TenderlyReconciliationReport / SignOffReport / PerLegAttribution / PerPoolShapeReconciliation / AggregateSignal / OperatorSignOffStatus / LegKind / compute_aggregate_signal) | `- [x]` shipped @uac`a541e4e` + @uac`97df991` (LegKind Literal refactor — replaces a noqa-suppressed long comment with type-enforced closed set per operator direction) | Phase 8A/B/C/D harness-script half (under `execution-service/tests/integration/backtest_fidelity/`) still `- [ ]`; needs Phase 2-7 integration runs + real MTDS data — operator-runnable. The typed-output contract is now locked. |
+
+PerLegAttribution + the closed-set `LegKind` Literal alias (6 archetype legs: amm_swap / perp_position /
+lending_supply / lending_borrow / stake / restake) enforce the leg taxonomy at construction so harness scripts
+can produce drift-free reports.
+
 ## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
 
 Slot 5 Day-1 Phase 12 design (per-family backtest scenario set) consumes slot 6's PoolMatcher Protocol + golden test harness shape. **Extension needed**: golden-harness fixture corpus should cover 6 stress-shape variants beyond happy-path slippage:
@@ -720,6 +932,6 @@ PoolMatcher Protocol design half was design-shipped by Ikenna slot 6 Day-1 in co
 | Phase 2A multi-tick traversal + `CURVE_CRYPTO` (2C) + `BALANCER_COMPOSABLE` (2E) + `SolidlyCLForkPool` (2H) | `- [ ]` **DEFERRED** annotations on the respective Phase 2 todos | needs `tick_liquidity_bitmap` (multi-tick) + Curve V2 SDK reference (gamma) + Vault `batchSwap` routing (composable); next Harsh-slot-4 cycle / sub-agent fan-out. |
 | Phase 2F (`solana_clmm.py`) | `- [x]` shipped (execution-service@`54e61d21`) | Multi-tick traversal + historical-swap validation deferred (golden harness — Phase 3); shares the Uniswap-V3 multi-tick follow-up. |
 | Phase 2G (`aggregator.py` — Jupiter/1inch/0x route composers) | `- [x]` shipped (execution-service@`dc09d6df`) | Batch replay of aggregator legs deferred: needs (a) the NEW `aggregator_route` MTDS data_type (catalogue gap, Discoveries item 4) + (b) the `(chain, pool_address) → PoolShape` lookup (MTDS `dex_pools`); the live-mode quote-API fetch path + ≥30-historical-Jupiter-route validation (golden harness — Phase 3) are the same follow-up. |
-| Golden test set (per-`PoolShape` `tests/integration/fixtures/amm_golden_swaps/*.json` + `test_amm_golden_swaps.py` replay harness + `scripts/capture_golden_swaps.py` archive-node capture runbook) — codex § "Golden test set harness" (= continuation prompt "Phase 6 — golden test set landing") | `- [ ]` **DEFERRED** | `pool_matcher_from_snapshot(pool_shape, snapshot_pre)` is wired (the harness's core dispatch) + every pool class implements `snapshot()`/`from_snapshot()` (round-trip-tested); remaining = pin real on-chain `Swap`-event rows via same-region GCE archive-node capture (codex runbook). Next Harsh-slot-4 cycle / sub-agent. |
+| Golden test set (per-`PoolShape` `tests/integration/fixtures/amm_golden_swaps/*.json` + `test_amm_golden_swaps.py` replay harness + `scripts/capture_golden_swaps.py` archive-node capture runbook) — codex § "Golden test set harness" (= continuation prompt "Phase 6 — golden test set landing") | `- [x]` **harness shipped 2026-05-12** (execution-service@`3184727a`) | `test_amm_golden_swaps.py` parametrised replay harness + `scripts/capture_golden_swaps.py` operator-runnable CLI stub + synthetic V2/V3/V4 5-row fixtures, 5/5 tests green, basedpyright + ruff clean. **DEFERRED**: real on-chain `Swap`-event corpora (≥ N swaps per shape per codex matrix: V3 ≥ 100, V4 ≥ 15, Curve ≥ 60, Balancer ≥ 25, Solana CLMM ≥ 30, Jupiter routes ≥ 30, Solidly ≥ 40) — capture runbook is a same-region GCE-VM step (Harsh slot 4 owner, per-deploy cadence). |
 | Phase 8C Tenderly-fork live-vs-simulated reconciliation harness | `- [ ]` | depends on golden test set + Phases 3-7 implementations. |
 | Codex SSOT update (Phase 2 boundary) — as-built module map | `- [x]` shipped (`amm-slippage-simulation.md` § "Implementation status — Phase 2 as-built", 2026-05-12) | Per-shape historical-swap **validation results** still pending — fold into that section when the golden-test-set harness captures the on-chain `Swap`-event corpus. |

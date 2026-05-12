@@ -159,22 +159,23 @@ failover beyond cutover archetypes are deferred post-cutover.
       tests) = **61 unit tests total**, all passing locally. Closed-set sanity, validator semantics, default-fill,
       per-archetype registry coverage, KILL_ALL → no auto-disarm invariant, § 7 seam citation enforcement, facade
       re-export verification.
-- [ ] [AGENT] P1. **1.G `BreakerFiredEvent` UAC model — DISCOVERY 2026-05-12 (Tab 5 Phase-4 fan-out).** Four Phase-4
+- [x] [AGENT] P1. **1.G `BreakerFiredEvent` UAC model — DISCOVERY 2026-05-12 (Tab 5 Phase-4 fan-out).** Four Phase-4
       sub-agents (execution-service / risk-and-exposure-service / position-balance / alerting-service) all hit the same
       gap: there is no typed `BreakerFiredEvent` Pydantic model in `canonical/crosscutting/circuit_breaker.py`. The
       interim everywhere is an `AlertCode`-named `log_event` (`CIRCUIT_BREAKER_OPEN` / `CIRCUIT_BREAKER_DEGRADED` /
       `CIRCUIT_BREAKER_CLOSED`) classified at the consumer off `CircuitBreakerId` + the registry's `BreakerAction`.
-      **DEFERRED P2**: ship `BreakerFiredEvent` (frozen, extra=forbid — mirror `RiskRuleFiredEvent` from
-      `risk_rule.py`@UAC@a01e4dd: `breaker_id`, `scope`, `applies_to`, `action`, `recovery_mode`, `cooldown_seconds`,
-      `alerting_severity`, `alert_code`, `fired_at`, `armed`/`disarmed` discriminator, `metadata`) + a
-      `breaker_fired_event(config, *, fired_at, ...)` builder; then switch `execution-service/engine/circuit_breaker.py`,
-      `risk-and-exposure-service/circuit_breaker_registry.py`, `position-balance.../reconciler_breaker_bridge.py`, and
-      `alerting-service/dr_event_handler.py` to emit/validate against it. Successor: this todo (1.G) — owner pick in
-      next work-split.
+      **SHIPPED 2026-05-12 (UAC@9155d2f)**: `BreakerFiredEvent` (frozen, extra=forbid, mirrors `RiskRuleFiredEvent`)
+      + `breaker_fired_event(config, *, fired_at, alert_code, state, metadata)` builder — both exported from
+      `unified_api_contracts.__init__`. **Consumer switch** (execution-service, risk-and-exposure-service,
+      position-balance, alerting-service) is a follow-up — captured as **DEFERRED P3** below.
 
 **Full-execution criterion**: UAC PR pushed; QG green; ≥10 breakers × 2 archetypes registered. UAC@a7a99b5 + UAC@dc4c9f0
 landed; 20 breakers + 20 recovery rules + 11 kill-switch IDs + 4 provenances + 61 tests. (1.G `BreakerFiredEvent` model
-DEFERRED P2 — discovery from the 2026-05-12 Phase-4 fan-out.)
+SHIPPED UAC@9155d2f 2026-05-12. Consumer switch deferred to **1.G-consumer** — P3 todo below.)
+
+**DEFERRED P3 — 1.G consumer switch**: switch `execution-service/engine/circuit_breaker.py`,
+`risk-and-exposure-service/circuit_breaker_registry.py`, `position-balance.../reconciler_breaker_bridge.py`, and
+`alerting-service/dr_event_handler.py` to emit/validate against `BreakerFiredEvent`. Unblocked by UAC@9155d2f.
 
 ## Phase 2 — UTL kill-switch bus (Days 4-5, ~1 AI-day)
 
@@ -339,7 +340,7 @@ nightly-cron wiring (Phase 6.A).
 
 ## Phase 5 — Auto-recovery rules (Days 10-11, ~1 AI-day)
 
-- [ ] [AGENT] P0. **5.A Per-breaker recovery rule.** Each `BreakerRecoveryRule` declared with named guard (e.g. "oracle
+- [x] [AGENT] P0. **5.A Per-breaker recovery rule.** Each `BreakerRecoveryRule` declared with named guard (e.g. "oracle
       deviation < 5σ for 5min" → auto-disarm). **Two recovery modes wired (Q8 ratification)**: (1) `manual_unkill` —
       breaker armed state persists until operator action via deployment-UI or `kill-switch unkill` CLI; recovery emits
       `KILL_SWITCH_MANUAL_UNKILLED` alert with `unkilled_by_operator_id`. (2) `auto_cooldown` — guard predicate
@@ -357,24 +358,28 @@ nightly-cron wiring (Phase 6.A).
       (manual). Half-wiring: risk-and-exposure-service `ArmedBreakerRegistry` (550a39e) stores the paired
       `BreakerRecoveryRule` per armed breaker; position-balance `ReconcilerBreakerBridge` (50b3c25) arms breakers;
       alerting-service `dr_event_handler` (0a52a33) emits the recovery AlertCodes on `KillSwitchDisarmEvent`.
-      **DEFERRED (P0, follow-on)**: the service-side recovery *loop* — a service (risk-and-exposure-service is the
-      natural host) instantiates a `BreakerRecoveryEngine`, registers a guard predicate per `auto_cooldown` breaker,
-      `arm()`s on each breaker fire, runs `tick_all()` on a per-minute cron / fill event, and maps each disarming
-      `RecoveryDecision` → `KillSwitchBus.disarm()` + the `KILL_SWITCH_*_RECOVERED`/`_UNKILLED` alert emit. Successor:
-      this todo (5.A) — owner = risk-and-exposure-service tab once a recovery-cron entry point lands.
-- [ ] [AGENT] P0. **5.B Recovery test matrix.** Per breaker × per recovery rule, integration test exercises the recovery
+      **service-side recovery loop SHIPPED 2026-05-12** (`risk-and-exposure-service@b7fe8b1`):
+      `recovery_loop.py` — `BreakerRecoveryEngine` singleton + `_false_guard` (conservative AUTO_COOLDOWN guard;
+      hard-timeout `TIMEOUT_DISARM` still fires) + `arm_recovery` (called by `arm_breaker` on first fire) +
+      `tick_recovery` (maps non-HOLD `RecoveryDecision` → `KillSwitchBus.disarm()` + `disarm_breaker()` + log_event) +
+      `start_recovery_ticker` (daemon thread, 60s interval) + `reset_recovery_engine_for_testing`.
+      `circuit_breaker_registry.py` extended: `armed_config()` export + `arm_breaker` calls `arm_recovery` on first arm.
+      12 unit tests in `test_recovery_loop.py`; 489 service unit tests pass.
+- [x] [AGENT] P0. **5.B Recovery test matrix.** Per breaker × per recovery rule, integration test exercises the recovery
       path. **unit-level matrix SHIPPED 2026-05-12** — `unified-trading-library@d5161fd`
       `tests/unit/circuit_breaker/test_recovery.py` (18 tests): `auto_cooldown` green/red-reset/timeout paths,
       `manual_unkill` (incl. overriding an `auto_cooldown` breaker), re-arm reset, `tick_all` skips `manual_unkill`,
       fail-loud on missing-guard / not-armed, + a **parametrised matrix over the real UAC `registry/circuit_breakers/`
       seeds** (`CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` — every `BreakerConfig` arms + evaluates against its
       matching `BreakerRecoveryRule`, `auto_cooldown` → `AUTO_DISARM`, `manual_unkill` → `HOLD` then operator
-      `MANUAL_DISARM`). **DEFERRED**: the *integration*-level matrix (against a running service's recovery loop +
-      KillSwitchBus + alerting) — bundled with the 5.A service-loop follow-on.
+      `MANUAL_DISARM`). **Integration-level matrix SHIPPED 2026-05-12** — `risk-and-exposure-service@b6315a9`
+      `tests/unit/test_recovery_loop.py` (4 new tests): TIMEOUT_DISARM full chain (real engine + registry, time
+      advancement), MANUAL_UNKILL stays armed past timeout, AUTO_DISARM full chain (true guard + 2 ticks), and
+      KillSwitchBus.disarm receives correct switch_id + recovery_mode. 16 total tests, all pass.
 
 **Full-execution criterion**: ≥10 recovery rules per archetype (✅ UAC@a7a99b5 — 10 per archetype × 2); recovery test
-matrix green (✅ unit-level — 18 tests utl@d5161fd incl. per-archetype-registry parametrisation; integration-level
-DEFERRED with the 5.A service-loop follow-on).
+matrix green (✅ unit-level — 18 tests utl@d5161fd incl. per-archetype-registry parametrisation; ✅ integration-level
+— 16 tests risk-and-exposure-service@b6315a9 full chain TIMEOUT_DISARM/AUTO_DISARM/MANUAL_UNKILL/bus-args 2026-05-12).
 
 ## Phase 6 — Chaos-drill cron (Day 11, ~0.5 AI-day)
 
@@ -412,10 +417,10 @@ entry.
 
 ## Phase 8 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **8.A NEW `codex/04-architecture/circuit-breaker-rule-taxonomy.md`.**
-- [ ] [AGENT] P0. **8.B NEW `codex/04-architecture/kill-switch-event-bus.md`.**
-- [ ] [AGENT] P0. **8.C UPDATE `kill-switch-circuit-breaker.md`** — wired to new taxonomy + bus.
-- [ ] [AGENT] P0. **8.D UPDATE `autonomous-recovery-matrix.md`** — per-breaker recovery rule cross-link.
+- [x] [AGENT] P0. **8.A NEW `codex/04-architecture/circuit-breaker-rule-taxonomy.md`.** (PM@e1f7a25e — doc existed + fleshed-out; 350L covering CircuitBreakerId/BreakerAction/BreakerRecoveryMode/BreakerRecoveryEngine runtime subsection/trigger-sources/per-archetype registry/cross-refs. Verified current.)
+- [x] [AGENT] P0. **8.B NEW `codex/04-architecture/kill-switch-event-bus.md`.** (PM@e1f7a25e — doc existed + fleshed-out; 335L covering KillSwitchBus.arm/disarm/subscribe/typed-UAC events/audit-log persistence/provenance closed-enum/consumer cross-refs. Verified current vs UTL@18488c5 + UAC@a7a99b5.)
+- [x] [AGENT] P0. **8.C UPDATE `kill-switch-circuit-breaker.md`** — wired to new taxonomy + bus. (PM@e1f7a25e — added cross-refs to `circuit-breaker-rule-taxonomy.md` + `kill-switch-event-bus.md` in the Related section.)
+- [x] [AGENT] P0. **8.D UPDATE `autonomous-recovery-matrix.md`** — per-breaker recovery rule cross-link. (PM@0c4678b0 — BreakerRecoveryEngine runtime subsection added 2026-05-12 prior session; arm/evaluate/tick_all/manual_unkill state machine + per-action defaults table. Verified current at PM@e1f7a25e.)
 - [x] [AGENT] P0. **8.F NEW `codex/04-architecture/risk-breaker-seam.md` (co-owned with risk_simulations Phase 7.E per
       Q9 ratification 2026-05-10).** Distinct-enums-with-escalation-seam architecture: `RiskRuleConsequence` and
       `BreakerAction` are SEPARATE enums (different triggers, different layers). Seam: N consecutive
@@ -427,7 +432,7 @@ entry.
       cross-references the co-owned ship. Doc cites both plans + Q9 ratification provenance. Original codex commit
       PM@730914a9 was rebased to PM@d86c8b3c during force-push to per-slot branch tab/ikennaigboaka/7; risk plan Phase
       7.A-E flips at PM@da590057 cite the pre-rebase sha — same content, different sha.)
-- [ ] [AGENT] P0. **8.E UPDATE `mev-protection.md`** — MEV-driven breaker entry.
+- [x] [AGENT] P0. **8.E UPDATE `mev-protection.md`** — MEV-driven breaker entry. (PM@e1f7a25e — doc already contained the MEV-driven breaker trigger section (lines 383-406): MEV_DETECTED event → BreakerAction.BLOCK_NEW / BreakerRecoveryMode.AUTO_COOLDOWN; sandwich/front-run/stale-quote trigger conditions; recovery semantics; cross-refs to circuit-breaker-rule-taxonomy + kill-switch-event-bus. Verified current.)
 
 **Full-execution criterion**: 2 NEW + 3 UPDATE; cross-references resolve.
 
@@ -561,7 +566,7 @@ placeholder "TBD" cross-reference).
 
 | Phase / item | Status as of 2026-05-12 | Successor / blocker |
 | --- | --- | --- |
-| Phase 1.G — typed `BreakerFiredEvent` UAC model | DEFERRED P2 (discovery from the Phase-4 fan-out — 4 sub-agents flagged) | This plan Phase 1.G todo — owner pick next work-split; UAC `circuit_breaker.py` addition mirroring `RiskRuleFiredEvent`. |
+| Phase 1.G — typed `BreakerFiredEvent` UAC model | ✅ SHIPPED UAC@9155d2f 2026-05-12 | Model + builder in UAC; consumer switch (execution/risk/pbm/alerting) deferred as P3 in plan body. |
 | Phase 4.B — execution-service: wire `circuit_breaker.py` to per-archetype UAC `registry/circuit_breakers/` `BreakerConfig` + TEST_ONLY `LiveMatchingEngine` paper-vs-venue switch + orchestrator `account_state` wiring | DEFERRED (annotated in 4.B body) | execution-service tab; orchestrator-`account_state` depends on Phase 4.D consumption. |
 | Phase 4.A — risk-and-exposure-service: full removal of legacy `PortfolioContext` explicit-threshold gates + `RiskMonitor` bespoke threshold predicates ("no code-side rule logic remains") | DEFERRED (transitional — registry path composes alongside) | risk-and-exposure-service tab; depends on strategy-architecture-v2 caller supplying a `RuleEvalContext` populated from PBMS state (Phase 4.D consumption). |
 | Phase 5.A — service-side recovery *loop* (instantiate `BreakerRecoveryEngine`, register guards, `arm()` on fire, `tick_all()` on cron/fill, map disarming `RecoveryDecision` → `KillSwitchBus.disarm()` + emit `KILL_SWITCH_*_RECOVERED`/`_UNKILLED`) | DEFERRED P0 (engine + half-wiring shipped utl@d5161fd / risk-exp@550a39e / pbm@50b3c25 / alert@0a52a33) | risk-and-exposure-service tab once a recovery-cron entry point lands. |
@@ -572,7 +577,7 @@ placeholder "TBD" cross-reference).
 | UTL hygiene — re-export `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package *root* | DEFERRED P2 (added `kill_switch/__init__` exports utl@d1a0d0d — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works; the very-root re-export + cleaning the Phase-4 `# noqa: qg-deep-import` deep imports remains) | UTL hygiene follow-up — owner pick. |
 | Phase 6 (chaos-drill cron), Phase 9 (real-VM DR drill) | BLOCKED on Ikenna slot 7 scenario primitives (Day 2 2026-05-13) | Tab 5 Day 2+ once `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 ships. |
 | Phase 7.A — `/api/kill-switch/{id}/arm` + `/disarm` deployment-api endpoints (7.B UI tab shipped deployment-ui@33e6ea0) | DONE — shipped `deployment-api@dc8be51` (arm/disarm via UTL typed `KillSwitchBus.arm`/`disarm` + `GET /api/kill-switch` listing + `GET /api/kill-switch/audit-log`; 28 route tests; scope map via UTL SSOT) | — |
-| Phase 8.A-8.E — codex docs | `circuit-breaker-rule-taxonomy.md` (8.A) + `kill-switch-event-bus.md` (8.B) already exist + are fleshed-out; `autonomous-recovery-matrix.md` (8.D) extended 2026-05-12 with the `BreakerRecoveryEngine` runtime subsection; 8.C `kill-switch-circuit-breaker.md` + 8.E `mev-protection.md` updates pending verify | Tab 5 EOD-audit / Day 2. |
+| Phase 8.A-8.E — codex docs | ✅ DONE PM@e1f7a25e — all 5 codex docs verified current + checkboxes flipped (8.C kill-switch-circuit-breaker.md got 2 new cross-refs; 8.A/8.B/8.D/8.E already had correct content). | — |
 
 ## DONE block
 

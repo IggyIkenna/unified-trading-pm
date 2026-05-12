@@ -8,9 +8,14 @@ scope: [engineer, admin]
 
 ## TL;DR
 
-All data follows standardized schemas (Pydantic), is partitioned by date (YYYY/MM/DD), stored in GCS (batch) or Pub/Sub
-(live), and validated before persistence. Service-owned schemas ensure loose coupling while unified-trading-services
-provides cross-cutting schemas (events, config).
+All data follows standardized schemas (Pydantic), is partitioned by date (YYYY/MM/DD), and validated before
+persistence. **Both batch and live pipelines write to GCS** via the same writers + manifest paths — the only legitimate
+difference is the `pipeline_mode=` partition column (`pipeline_mode=batch_*` vs `pipeline_mode=live_websocket`, per
+`pipeline-mode-partition.md`). Pub/Sub carries **lifecycle events + inter-service messages only**, NOT live tick data
+on a per-row write path. (Refreshed 2026-05-12 per codex audit D-17 — earlier TL;DR mis-stated live writes as
+Pub/Sub-only.) Service-owned schemas ensure loose coupling; cross-cutting schemas (events, config, contracts) live in
+`unified-api-contracts` (UAC `external` for source-side, `internal` for service-internal) and the
+`unified-trading-library` re-exports the parquet-write helpers.
 
 ---
 
@@ -35,11 +40,12 @@ class FeatureRow(BaseModel):
     # ... more features
 ```
 
-**Cross-cutting schemas:** unified-trading-services owns:
+**Cross-cutting schemas:** `unified-api-contracts` (UAC) owns the contracts; `unified-trading-library` (UTL)
+re-exports parquet-write helpers (`SchemaDefinition` / `ColumnSchema`) and the events SDK:
 
-- Lifecycle events (11 standard events)
-- Configuration base classes (UnifiedCloudServicesConfig)
-- Common types (InstrumentKey, Venue, InstrumentType)
+- Lifecycle events (11 standard events) — `unified_trading_library.events`
+- Configuration base classes (`UnifiedCloudConfig`) — UTL
+- Common types (InstrumentKey, Venue, InstrumentType) — UAC `unified_api_contracts.internal.domain`
 
 **Benefits:**
 

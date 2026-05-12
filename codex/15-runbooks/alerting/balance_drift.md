@@ -11,6 +11,11 @@ related:
   - codex/15-runbooks/alerting/operator-playbook.md
   - codex/15-runbooks/alerting/preflight_failed.md
   - codex/15-runbooks/alerting/margin_threshold_breach.md
+execution:
+  owner: alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call rotation (operator response)
+  cadence: continuous (custody-ping loop emits `BALANCE_DRIFT` per 5min; threshold review quarterly per `threshold-tuning.md`)
+  verifier: alert routes to Telegram + HIGH severity → PagerDuty; resolved via PBMS reconciliation API; WARN noise-floor `balance_drift_usd=1000`
+  last_executed: NEVER (live custody-ping activation pending master plan Group F-19 Copper+CEFFU)
 ---
 
 # `BALANCE_DRIFT` Runbook

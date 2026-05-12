@@ -96,14 +96,23 @@ Execution-service routes per `decompose(mode)`:
 
 ## Reconciliation
 
-3-way reconciliation (batch ↔ paper ↔ live) extends `batch-live-reconciliation-service` per `pvl-p21a`:
+> **DEFERRED — DESIGN-ONLY 2026-05-12 (per slot 8 audit PB-5)**: 3-way reconciliation (batch ↔ paper ↔ live) is the
+> *target* shape per `pvl-p21a`. Today the live `batch-live-reconciliation-service` stage DAG ships **5 logical
+> stages** (`stage0_config_pull` + `stage0_data_pipeline_recon` + `stage1_ml_recon` + `stage2_strategy_recon` +
+> `stage3_execution_recon` + `stage4_agent_analysis` + `stage5_results_writer`) and **per-stage thresholds only**
+> (`MLThresholds` / `StrategyThresholds` / `ExecutionThresholds` / `DataPipelineThresholds` in
+> `models/deviation_thresholds.py` — no per-pair batch/paper/live constants and no `paper_live_recon.py` /
+> `batch_paper_recon.py` stage). Successor plan: `pvl-p21a` (3-way recon design) + `master_to_live_defi_2026_05_23.md`
+> Group F-21.
 
-- **Batch-vs-live**: matches within slippage + commission tolerance over a window. The original recon target.
-- **Paper-vs-live**: matches more tightly (same data, similar API conditions). Useful pre-cutover signal.
-- **Batch-vs-paper**: matches within matching-engine fidelity tolerance. Validates simulator faithfulness.
+The target 3-way reconciliation (batch ↔ paper ↔ live) will extend `batch-live-reconciliation-service` per `pvl-p21a`:
 
-Per-pair tolerance thresholds codified in `models/deviation_thresholds.py`. Closed-set failure-routing policy: alert /
-auto-pause-live / auto-demote-to-paper.
+- **Batch-vs-live**: will match within slippage + commission tolerance over a window. The original recon target (ships today).
+- **Paper-vs-live**: will match more tightly (same data, similar API conditions). Useful pre-cutover signal (DEFERRED).
+- **Batch-vs-paper**: will match within matching-engine fidelity tolerance. Validates simulator faithfulness (DEFERRED).
+
+Once shipped, per-pair tolerance thresholds will be codified in `models/deviation_thresholds.py`. Closed-set
+failure-routing policy will be: alert / auto-pause-live / auto-demote-to-paper.
 
 ## Composes with
 

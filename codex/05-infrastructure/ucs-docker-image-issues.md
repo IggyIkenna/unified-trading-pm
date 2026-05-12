@@ -4,8 +4,14 @@ scope: [engineer, admin]
 
 # UCS Docker Image: Known Issues & Rollout Tracking
 
-**Owner:** Ikenna **Priority:** P1-high **Status:** Rollout complete (11/11 services); auto-trigger bug open **Last
-Updated:** 2026-02-12
+> **STALENESS BANNER (2026-05-12)** — this doc is 3 months stale (last touched 2026-02-12). The "11/11 services" rollout
+> count predates the 2026-05-08 features-service consolidation (which collapsed 8 per-family `features-*` services to a
+> single `features-service` dispatcher). The actual service count is now 8 (DeFi/CeFi/Sports/Predictions domain
+> services + features-service umbrella + supporting infra). Either bring the service inventory current OR archive this
+> doc to `codex/archive/`. **Owner**: UCS image rollout owner; **Action**: refresh OR archive before May-23 cutover.
+
+**Owner:** Ikenna **Priority:** P1-high **Status:** Rollout complete (legacy 11/11 count — see staleness banner above);
+auto-trigger bug open **Last Updated:** 2026-02-12 (drift warning issued 2026-05-12)
 
 ---
 

@@ -57,7 +57,17 @@ Never commit credentials. See `07-security/secrets-management.md`.
 
 ## VCR Cassette Matrix
 
-Status of VCR cassettes per interface. All interfaces must reach `complete` before Phase 5 deployment gate.
+> **DERIVED-MATRIX BANNER (codified 2026-05-12 per TS-8 audit)** — this table was a 2026-Q1 pre-collapse layout that
+> referenced interfaces (UMI/UTEI/UPI/URDI/USEI/UDEI/UCI) and cassette paths (`unified-api-contracts/mocks/<iface>/`)
+> that no longer exist. The interface repos collapsed into `execution-service` / `instruments-service` /
+> `position-balance-monitor-service` / `market-tick-data-service`; cassettes live at
+> `unified_api_contracts/external/<venue>/mocks/*.yaml` (per
+> [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md) "Current Cassettes" — ~22 VALIDATED
+> cassettes across crypto/sports/databento/onchain venues). **Treat this table as historical**; the live cassette
+> matrix is in `vcr-cassette-ownership.md` § "Current Cassettes", and the per-source path SSOT is the canonical
+> `external/<venue>/mocks/` layout (TS-2 fix). Inline rewrite of this table tracked as a P2 doc-clean.
+
+Historical layout (pre-collapse, 2026-Q1; retained for archival reference only — all rows are stale):
 
 | Interface                                                                | Venues Covered                                    | Cassette Location                          | Status  |
 | ------------------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------ | ------- |
@@ -69,8 +79,9 @@ Status of VCR cassettes per interface. All interfaces must reach `complete` befo
 | UDEI (unified-defi-execution-interface)                                  | aave, uniswap, thegraph                           | `unified-api-contracts/mocks/udei/`        | pending |
 | UCI (unified-cloud-interface)                                            | gcp (sm, gcs, bq, pubsub), aws (sm, s3, dynamodb) | `unified-cloud-interface/tests/cassettes/` | pending |
 
-**Cassette requirements per venue:** at minimum one cassette per endpoint called in normal operation (instrument list,
-order submit, position query, market data snapshot).
+**Cassette requirements per venue (still apply):** at minimum one cassette per endpoint called in normal operation
+(instrument list, order submit, position query, market data snapshot). Current cassette inventory + status:
+`vcr-cassette-ownership.md` § "Current Cassettes" (canonical SSOT).
 
 ---
 

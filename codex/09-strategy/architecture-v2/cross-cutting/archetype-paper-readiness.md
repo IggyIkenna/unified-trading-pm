@@ -2,11 +2,13 @@
 name: archetype-paper-readiness
 overview:
   Per-archetype 4-state taxonomy (paper-runnable / paper-shippable / backtest-only / stub) for every entry in
-  `strategy_service/portfolio_allocator/archetypes.py`. Pins the closed-set gate set every archetype must clear before
-  being eligible for `OperationalMode.PAPER`.
+  the canonical strategy archetype catalogue (UAC `StrategyArchetype` enum = 55 archetypes; full coverage
+  matrix at `codex/09-strategy/architecture-v2/category-instrument-coverage.md`). Pins the closed-set gate set
+  every strategy archetype must clear before being eligible for `OperationalMode.PAPER`.
 type: codex-ssot
 status: stub
 created: 2026-05-09
+last_verified: 2026-05-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
@@ -17,6 +19,13 @@ implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 18
 
 > **Stub doc.** Full content fills in as `master_to_live_defi_2026_05_23.md` Group F sub-items `pvl-p18a` / `pvl-p18b`
 > ship.
+
+> **Source file note (corrected 2026-05-12 per `codex_audit_strategy_2026_05_12.md` ST-4)**: the 4-state taxonomy is
+> for **strategy archetypes** per UAC `StrategyArchetype` (55 members) — the same set documented in
+> `codex/09-strategy/architecture-v2/README.md` "55 Archetypes" + the matrix in `category-instrument-coverage.md`. It
+> is NOT a taxonomy of `strategy_service/portfolio_allocator/archetypes.py`, which holds the 8
+> **PortfolioAllocator archetype engines** (risk-parity / factor / tactical-overlay / multi-strategy / etc.) — those
+> are allocator engines, a different concept. An earlier version of this doc pointed at the allocator file by mistake.
 
 ## 4-state taxonomy
 

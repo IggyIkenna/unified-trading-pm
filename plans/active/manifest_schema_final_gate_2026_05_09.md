@@ -360,22 +360,17 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
 Spawn 8 parallel sub-agents (one per repo) per CLAUDE.md "Sub-Agents & Autonomous Agents: Full Rules Required" rule —
 paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 
-- [ ] [AGENT] P0. Phase 4.MTDS — Each adapter (Databento / Tardis / CCXT / Barchart / Yahoo / Sports / DeFi /
+- [x] [AGENT] P0. Phase 4.MTDS — Each adapter (Databento / Tardis / CCXT / Barchart / Yahoo / Sports / DeFi /
       Prediction) explicitly passes `pipeline_mode=PipelineMode.BATCH_<source>` per UAC SOURCE_PRIORITY
   - emission-policy hooks via `publish_with_policy`. **Per E3 ratified item.**
-      **🟡 IN-PROGRESS 2026-05-12 — Q1+Q2 operator-triaged; Harsh slot 3 executing.**
-      Pre-audit found 26 files / 102 callsites needing fix. Design decisions resolved:
-      - **Q1 ✅ RESOLVED** — operator chose **(α)**: migrate `DefiManifestRecorder` to v8 `record_captured()` path.
-        UTL step pending (Step 2 — see below).
-      - **Q2 ✅ RESOLVED** — operator chose **(A)**: extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with 6 BATCH_*
-        values. **SHIPPED @uac@`52d289c`** — BATCH_YAHOO / BATCH_BARCHART / BATCH_FOOTYSTATS / BATCH_HYPERLIQUID_REST /
-        BATCH_PYTH_HERMES / BATCH_CHAINLINK added + 14 DeFi SOURCE_PRIORITY gap entries + 5 EMISSION_LATENCY entries.
-        55 round-trip tests passing (3 previously failing, all fixed). instruments-service BATCH_API_FOOTBALL footystats
-        workaround superseded — instruments-service cleanup deferred to its next slot.
-      - **Q3-Q5**: orchestrator dispatch strategy / reconciler preservation / test fixture updates — downstream of Q1-Q2,
-        being addressed inline during MTDS sweep. See `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`.
-
-      Next: Step 2 UTL `DefiManifestRecorder` v8 migration → Step 3 MTDS 97-callsite `pipeline_mode=` sweep.
+      **✅ SHIPPED 2026-05-12 by Ikenna slot 3 (`ikenna-codefreeze-audit-tab`)**: 3-sub-agent fan-out (MTDS + MDPS + instruments-service) executed in parallel after operator-relayed Q1+Q2 approval at PM@`4c573302`.
+      - **Q1 = (α)**: `DefiManifestRecorder` migrated to v8 record_* path at MTDS@`3da3f43` (record_empty + record_failed fully migrated; record_captured retains `add()`-path wrapper with explicit `pipeline_mode=` forward via **kwargs — bounded interpretation; full df-flow propagation through every DeFi handler tracked as Phase 4.DEFAULT-REMOVAL successor scope).
+      - **Q2 = (A)**: UAC@`52d289c` shipped 6 new PipelineMode batch values + 14 DeFi SOURCE_PRIORITY gap entries; UAC@`7d7ea4c` added 7 additive per-member round-trip tests pinning (enum value, source string) pairs.
+      - **MTDS sweep**: 97 callsites in 26 files at MTDS@`3da3f43` (20 DeFi handlers + DefiManifestRecorder + MTDSShardManifestRecorder + websocket_runner + orchestrator sentinel helper `_resolve_pipeline_mode_for_sentinel`). PM baseline shrunk 114 → 17 at PM@`88226bdb`.
+      - **UTL sweep**: 11 internal record_* callsites at UTL@`12d5e621` (4 streaming/candle_writer LIVE_WEBSOCKET + 1 streaming/parallel_per_symbol_runner threaded kwarg + 1 streaming/live_aggregator whitelist marker for Protocol method + 3 manifest_writer_normalising delegating-wrapper signatures + 1 per_leaf_failure dataclass field + 1 manifest_writer.py:1919 internal plumbing). PM baseline shrunk 17 → 6 at PM@`ea50eddc` (only Phase 4.FEATURES entries remain).
+      - **Q3-Q5**: orchestrator dispatch strategy / reconciler preservation / test fixture updates addressed inline. See `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` (flipped ✅ RESOLVED at PM@`4c573302`).
+      - **AST-walk QG STEP 5.70**: `OK — 6 baselined occurrences; 0 new occurrences` workspace-wide (6 remaining are Phase 4.FEATURES scope, separate slot).
+      - **DefiManifestRecorder record_captured full-v8 migration**: deferred to Phase 4.DEFAULT-REMOVAL (df-flow propagation through every DeFi handler needs separate plan or successor).
 - [x] [AGENT] P0. Phase 4.MDPS — candle writer + reprocess engine propagate `pipeline_mode` from input parquet's column.
       Emission-policy hooks at publish boundary.
       **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-mdps-sweep` sub-agent @MDPS@`a3c7198`** — 22 callsites across
@@ -387,7 +382,7 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       hooks already in `canonical_writer.write_candle_parquet` from prior Phase 6.2 ship @MDPS@`311614a`.
       QG: 1174 tests passing, 1 pre-existing foreign failure (`test_cli_main::test_cli_help`); basedpyright clean on
       edited files. Finding filed:
-      [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md).
+      [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md).
 - [x] [AGENT] P0. Phase 4.INSTRUMENTS — catalog refresh writes pass `pipeline_mode` per source. Update
       `reconcile_phantom_manifest_rows_all.py` to handle v8 row shape.
       **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-instruments-sweep` sub-agent @instruments-service@`e530906`** —
@@ -399,25 +394,28 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       `reconcile_phantom_manifest_rows_all.py` v8-aware (read-tolerant + write-preserving for all 4 new v8 columns —
       pandas round-trip is naturally column-preserving; added docstring banner + inline comment for future readers, no
       behaviour change needed). QG: identical pre-sweep baseline (zero new errors). Finding filed:
-      [`footystats_pipeline_mode_gap_2026_05_12.md`](issues/footystats_pipeline_mode_gap_2026_05_12.md).
-- [ ] [AGENT] P0. Phase 4.FEATURES — features-service (post-consolidation) + remaining features-\* repos pass propagated
-      `pipeline_mode` + emission-policy hooks. **GATED on features-consolidation merge by May 16.**
-      **Pre-audit shipped 2026-05-12 slot 8** via Phase 4.GREP-VERIFY AST-walk: 6 callsites enumerated, concentrated
-      in 2 files (mechanical sweep, ~30min once gate lifts):
-      - `features_service/calendar/engine/calendar_orchestrator.py:241` — `record_failed(...)` (calendar orchestrator)
-      - `features_service/calendar/engine/calendar_orchestrator.py:264` — `record_empty(...)` (calendar orchestrator)
-      - `features_service/sports/cli/handlers/batch_handler.py:474` — `record_empty(...)` (sports batch handler)
-      - `features_service/sports/cli/handlers/batch_handler.py:487` — `record_failed(...)` (sports batch handler)
-      - `features_service/sports/cli/handlers/batch_handler.py:538` — `record_empty(...)` (sports batch handler)
-      - `features_service/sports/cli/handlers/batch_handler.py:547` — `record_failed(...)` (sports batch handler)
-
-      Pipeline-mode mapping per existing UAC SOURCE_PRIORITY: calendar paths likely `BATCH_INSTRUMENTS_SERVICE`
-      (self-published catalog rows); sports paths inherit from upstream MTDS source (`BATCH_API_FOOTBALL` for
-      footystats workaround; `BATCH_TRANSFERMARKT` for player stats; `BATCH_UNDERSTAT` for xG; etc.) — per slot 2's
-      Phase 4.INSTRUMENTS mapping table at `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`. All 6 occurrences are baselined as
-      `pending_phase_4_features` in
-      [`scripts/quality_gates/pipeline_mode_explicit_baseline.yaml`](../../scripts/quality_gates/pipeline_mode_explicit_baseline.yaml)
-      pending post-consolidation sweep.
+      [`footystats_pipeline_mode_gap_2026_05_12.md`](../archive/issues/footystats_pipeline_mode_gap_2026_05_12.md).
+- [x] [AGENT] P0. Phase 4.FEATURES — features-service (post-consolidation) + remaining features-\* repos pass propagated
+      `pipeline_mode` + emission-policy hooks. **✅ SHIPPED 2026-05-12 by harsh slot 3** (features-consolidation Phase 7
+      already shipped 2026-05-11 per code_freeze freeze-gate item 6; gate was effectively lifted Day 2). 6 callsites in
+      2 files cleared:
+      - `features-service@842ff741` (sports/batch_handler 4 callsites lines 474+487+538+547) — adds module-level SSOT
+        `_FEATURE_GROUP_TO_PIPELINE_MODE` dict + `_resolve_pipeline_mode(name)` helper. Mapping per slot 2's Phase
+        4.INSTRUMENTS `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` precedent: fixture_features → `BATCH_API_FOOTBALL`,
+        odds_features → `BATCH_ODDS_API`, derived_features → `BATCH_FOOTYSTATS`; 14 reference-table TABLE_TO_EXPORT
+        catalog exports fall-through to `BATCH_API_FOOTBALL` default.
+      - `features-service@229a0963` (calendar_orchestrator 2 callsites lines 241+264) — adds module-level SSOT
+        `_FEATURE_GROUP_TO_PIPELINE_MODE` for `time_features` + `economic_events`. Both tagged
+        `BATCH_INSTRUMENTS_SERVICE` as a documented closed-set workaround pending UAC enum extension
+        (`BATCH_FRED` for economic_events FRED-sourced + `BATCH_FEATURES_CALENDAR_SERVICE` for time_features
+        pure-derived) — full finding + operator-decision menu at
+        [`issues/features_calendar_pipeline_mode_gap_2026_05_12.md`](issues/features_calendar_pipeline_mode_gap_2026_05_12.md).
+        Same logical-unit adjacent fix: `record_empty(...)` at line 264 now also passes `reason="SOURCE_RETURNED_ZERO"` —
+        original code would have crashed `LegacyBlankErrorReasonError` at runtime (UTL Wave-2 writegate blank-reason
+        guard, hardened 2026-05-07).
+      - PM baseline `pipeline_mode_explicit_baseline.yaml` shrunk **6 → 0** at PM@`<this-flip>` (full workspace
+        baseline now empty). STEP 5.70 `check_pipeline_mode_explicit_at_record_calls.py` workspace-wide: `OK — 0
+        baselined occurrences, 0 new occurrences`. Phase 4.DEFAULT-REMOVAL now UNBLOCKED on the FEATURES half.
 - [x] [AGENT] P0. Phase 4.DEPLOYMENT-API — manifest read endpoints surface v8 columns; data-status drilldown renders
       `service_emission_state` badges (4 states).
       **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-deployment-api-ui` sub-agent**:
@@ -479,13 +477,20 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       enforcement is optional follow-up, not a gap. **NICE-TO-HAVE**: also add STEP 5.70 invocation to PM's own
       `quality-gates.sh` (Phase 4.PM-SCRIPTS confirmed N/A — zero real `record_*` calls in PM scripts — so it'd be a
       vacuous pass; defer).
-- [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — at end of Phase 4, **all four** transitional `None` defaults removed from
-      ManifestWriter's 5 `record_*` methods (explicit-or-fail): `pipeline_mode=` + the 3 v8 emission-tracking kwargs
-      (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`). **AND** bump
-      `MANIFEST_SCHEMA_VERSION` from `7 → 8` at `manifest_writer.py:131` + reconcile codex doc
-      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-      lines 258-262 + 265 (drop the "transitional" wording — once defaults are gone, v8 IS the constant). Any future
-      regression caught at QG by basedpyright. Per Phase 2 P2 resolution (option b — line 291 above).
+- [x] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — `pipeline_mode=` default removed (explicit-or-fail) from all 6 public
+      `record_*` methods + `MANIFEST_SCHEMA_VERSION` bumped `7 → 8` at `manifest_writer.py:131` + codex doc
+      `availability-manifest-and-data-status.md` "transitional" prose updated to reflect v8 live.
+      (utl@`547ff3c` 2026-05-12 — Phase 4.DEFAULT-REMOVAL shipped)
+      **DEFERRED**: 3 v8 emission kwargs (`service_emission_state=` / `last_emission_decision_at=` /
+      `expected_window_completeness_fraction=`) still accept `= None` — removing their defaults requires a full
+      emission-policy callsite sweep across MTDS + instruments-service + any raw-tick adapters. Those callsites were
+      NOT swept in Phase 4 (only `pipeline_mode=` was). Tracked as follow-up deferred item below.
+- [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL-v8kwargs — **DEFERRED** — remove `= None` defaults from 3 v8 emission
+      kwargs (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`) in
+      all public `record_*` methods once MTDS + instruments-service + raw-tick adapter callsites are swept to pass
+      these explicitly. Predecessor: Phase 4.DEFAULT-REMOVAL (done, utl@`547ff3c`). Blocked by: callsite sweep not
+      yet done (emission-policy adapters only partially updated — only writegate slice (b) MDPS POC callsites pass v8
+      kwargs; remaining 8 services pending Phase 6.3-6.9 rollout per writegate plan).
 - QG: every affected repo quality-gates.sh clean. **Done-definition**: zero grep hits + every repo's QG green + Phase
   4.DEFAULT-REMOVAL committed.
 
@@ -989,8 +994,8 @@ Phase 4 + Phase 5.A/B".
 | Finding doc | Scope | Severity |
 |---|---|---|
 | [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md) | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0 |
-| [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry | P1 |
-| [`footystats_pipeline_mode_gap_2026_05_12.md`](issues/footystats_pipeline_mode_gap_2026_05_12.md) | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows | P1 |
+| [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry | P1 |
+| [`footystats_pipeline_mode_gap_2026_05_12.md`](../archive/issues/footystats_pipeline_mode_gap_2026_05_12.md) | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows | P1 |
 
 **Operator triage decision needed** (consolidated): extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` to add 6 missing
 values (`BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` /

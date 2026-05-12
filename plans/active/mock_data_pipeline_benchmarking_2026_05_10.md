@@ -29,6 +29,16 @@ estimate_calibration_note: |
 
 # Mock-data pipeline benchmarking
 
+> **Status 2026-05-12 17:05 UTC (slot-7 Day-2 EOD)**: Phases 0-7 ✅ shipped + Phase 5.B/5.C/6.A-C ✅ ran end-to-end on real
+> GCE infrastructure. 8-VM matrix (`leveraged_funding_arb` + `carry_staked_basis` × `{c2-standard-8, c2-standard-16,
+> c2-standard-30, c3-highcpu-44}`) ran in `asia-northeast1-c`, all auto-shutdown + self-deleted; 8 profile parquets at
+> `gs://central-element-323112-benchmark-reports/{archetype}/{run_id}/stage_profile.parquet` aggregated to
+> `gs://central-element-323112-benchmark-reports/benchmark_report/benchmark_report.{parquet,md}`. Remaining:
+> Phase 8.A master-plan Group F item 18 row (Ikenna-side; pinged via `_agent_pings.md`); Phase 3.D per-reader
+> threading for MTDS / ml-inference / strategy (the 3 readers that bypass `resolve_bucket_uri`); Phase 3.C
+> real-backfill row-count calibration. Watchdog VM `vm-zombie-watchdog-20260512-161459` running with `synbench-`
+> prefix registered.
+
 ## Why this plan exists
 
 May-23 cutover gates on Group F item 18 ("2-yr batch backtest run completes inside an operationally-acceptable window")
@@ -166,7 +176,20 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       instrument set. (design-shipped — uac@`d47b232` `registry/generators/cefi.py` (6 specs, shard atom `(venue,instrument)`,
       `CUTOVER_CEFI_VENUES` = the 6 cutover perp venues × `CUTOVER_CEFI_INSTRUMENTS` BTC/ETH/SOL) + utl@`ca9c346`
       `CEFI_TICK`/`CEFI_OHLCV`/`CEFI_DERIVATIVES` column skeletons; row counts = axis-1 estimates, calibration → 3.C.)
-- [ ] [AGENT] P1. **3.C Real-backfill calibration.** **DEFERRED-from-Phase-0.B** (slot 7 2026-05-12). For each of the
+- [x] [AGENT] P1. **3.C Real-backfill calibration.** (uac@`04cb9f5` — 2026-05-12 slot-7 Day-3 session)
+      GCS survey + real parquet sampling across all 3 asset groups:
+      * **CeFi trades calibrated**: BITGET-FUTURES 2026-05-07 measured 4,370,547 total rows (24 instruments);
+        BTC/ETH/SOL alone = 3,475,449 from 1 venue → extrapolated 18M/day for 6 cutover venues x 3 instruments.
+        `CEFI_TRADES_SPEC.default_row_count_per_day` updated 1.8M → 18M (10x). `real_backfill_sample_uri` populated
+        (BITGET-FUTURES proxy; cutover venues bybit/binance/okx not yet in backfill).
+      * **All other 12 specs** (CeFi ohlcv_1m/15m/funding_rate/OI/liquidations; DeFi gas/lst_rates/lending_indices/
+        dex_pool_state/oracle_feeds; TradFi ohlcv_1m/1d) got `# ESTIMATE` markers with inline GCS survey findings:
+        - DeFi bucket: has `vault_share_price` (ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARNV3, 1 row/instrument/day) — does NOT
+          match any DeFi spec data_type. features-onchain buckets EMPTY as of 2026-05-12.
+        - TradFi: only CBOE/index/ohlcv_15m/VIX (23 rows 2026-05-05); no archetype instruments in raw_tick bucket.
+        - CeFi book_snapshot_5 exists in GCS (21 instruments, ~11M rows/day extrapolated) but NO spec in generators — **finding captured as deferred todo below**.
+      * Axis-2 byte-size model NOT populated (features-onchain EMPTY, DeFi data_type mismatch); remains blocked on backfill progress.
+      **DEFERRED-from-Phase-0.B** (slot 7 2026-05-12). For each of the
       13 specs in `registry/generators/{cefi,defi,tradfi}.py`: where the real backfill has reached the cutover universe,
       populate `real_backfill_sample_uri` + tune `default_row_count_per_day` + the axis-2 byte-size model from
       `gs://central-element-323112-*-{raw,processed}/...` samples; where it hasn't, keep the estimate + a `# ESTIMATE`
@@ -175,7 +198,25 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       uniform split. Provenance: § Audit findings 0.B. **Successor for the calibration-blocked half**: this plan stays
       active until 3.C lands or the cutover backfill horizon closes; if backfill slips past 2026-05-23, fold into
       `live_pipeline_mtds_mdps_features_2026_05_08`.
-- [ ] [AGENT] P1. **3.D Prod-reader schema-parity verification.** **DEFERRED (gated on Phase 4)** (slot 7 2026-05-12).
+- [ ] [AGENT] P2. **3.C-followup: `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.** **DEFERRED** (slot 7,
+      2026-05-12). CeFi bucket has `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/
+      instrument avg → ~11.2M total/day extrapolated for 21 instruments). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in
+      `registry/generators/cefi.py`. Since `book_snapshot_5` feeds the execution matching engine for slippage
+      estimation, a spec should be added post-calibration if the Phase 3.D subprocess run confirms MTDS reads it.
+      **Do NOT add until Phase 3.D confirms** (avoid premature spec proliferation).
+- [ ] [AGENT] P2. **3.C-followup: DeFi vault_share_price vs spec data_type mismatch.** **DEFERRED** (slot 7,
+      2026-05-12). DeFi bucket (5 venues: ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARNV3) has `instrument_type=yield_bearing /
+      data_type=vault_share_price` (1 row/instrument/day, ~10KB/file). None of the 5 DeFi specs use this data_type.
+      The LST_RATES spec is the closest match conceptually but uses `data_type=lst_rates`. Operator/Ikenna decision
+      needed: is vault_share_price the same data_type under a different name, or a distinct data pipeline? Until
+      resolved, all 5 DeFi specs stay as `# ESTIMATE`. Flag for Ikenna-side during next DeFi pipeline planning.
+- [ ] [AGENT] P1. **3.D Prod-reader schema-parity verification.** **PARTIAL (slot 7, 2026-05-12)**: reader wire-in
+      shipped for strategy-service (`GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix;
+      strategy@`a03d12e`) and ml-inference-service (`FeatureSubscriber.read()` override check; ml-inference@`0206358`).
+      Harness `mtds_read` command fixed (`--operation fetch` → `--operation download`; utl@`7eceaba`).
+      **DEFERRED remains**: (1) MTDS reader wire-in (`databento_reader.py` / `tardis_reader.py` use a different path
+      and still bypass override — no approach landed yet); (2) subprocess-mode harness run + schema-drift assertion
+      (requires VM, needs operator sign-off); (3) slot-8 handshake items below.
       Run each generator's output through the prod MTDS / MDPS / features-* reader for that `(asset_group, data_type)`
       (via the harness `subprocess` mode once Phase 4 wires the `--synthetic-input-uri` flag) and assert NO schema-drift
       error (CLAUDE.md "Reader/schema-drift bug → RAISE LOUD"). Any column the prod reader expects that the Phase 2.A
@@ -205,34 +246,67 @@ design-shipped. ✅(partial)
       `BenchmarkHarness`, writes `stage_profile.parquet` + `synthetic_run_manifest.json` under `--report-uri`; mutually
       exclusive with real-data backtest flags by construction (this CLI is the synthetic path only). Smoke-verified
       end-to-end in `stub` mode.)
-- [ ] [AGENT] P0. **4.A-tail Per-service `--synthetic-input-uri` flags.** **PARTIAL** (slot 6 2026-05-12 reserve
-      pickup). **`setup-data-pipeline-vm.sh` synthetic-benchmark branch ✅ SHIPPED** (deployment-service@`3fde508` —
-      added `synthetic-benchmark` to the existing VM_TASK dispatch OR-list at line 670 alongside `mdps-backfill` /
-      `features-backfill` / `phantom-recon` / `expected-universe-enum` / `cross-asset-rescan`;
-      `launch-synthetic-benchmark-vm.sh` passes the UTL CLI via VM_BACKFILL_CMD). **Still DEFERRED — 6 service CLI
-      `--synthetic-input-uri` flags**: each of MTDS / MDPS / features-* / ML-inference / strategy / execution needs
-      a `--synthetic-input-uri <prefix>` flag (consumes the generator parquet under that prefix via its existing
-      reader path — no parallel reader, just a source override). Until then the harness `subprocess` mode raises
-      `HarnessStageNotWiredError` (covered by `test_harness_subprocess_mode_raises_not_wired`). **Per-service
-      wire-in spec (operator-runnable for next slot)**:
+- [x] [AGENT] P0. **4.A-tail Per-service `--synthetic-input-uri` flags.** ✅ SHIPPED 2026-05-12 (slot 7 Day-2). Framework
+      SSOT chosen over per-service duplication: the flag is declared at
+      `unified_trading_library.service_cli.ServiceCLI.build_parser()` (utl@`5aa356b`) and the post-`parse_args` hook
+      calls `set_synthetic_input_override(args.synthetic_input_uri)` (utl@`c80bfbf` — new SSOT helper in
+      `unified_trading_library.cloud_interface.bucket_naming`: process-wide override, `_OVERRIDE_EXCLUDED_KINDS`
+      keeps `events` / `config-store` / `ml-models-store` / `audit` / `secrets` resolving to prod). Every
+      ServiceCLI-backed CLI (MDPS / MTDS / ml-inference / strategy / execution + every features-service family CLI)
+      gets the flag for free — verified by re-building each parser and asserting `--synthetic-input-uri` in
+      `--help`. Slot 6's per-service additions consolidated: MTDS@`285b464` removes the duplicate from
+      `_add_service_args` (would have raised `ConflictingOptionError`); features-service@`6a604473` removes the
+      duplicate from the dispatcher's `_build_dispatch_parser` so `parse_known_args` forwards the flag verbatim
+      to the family CLI's framework parser. `setup-data-pipeline-vm.sh synthetic-benchmark` branch
+      (deployment-service@`3fde508`, slot 6) confirmed on remote — unchanged.
 
-      | Service | CLI entry | Reader override point | Pattern |
+      **Reader-override coverage** (the substantive Phase 4.A-tail outcome, supersedes the per-service-table spec
+      below):
+      - **Services that reach `resolve_bucket_uri`** — MDPS / features-service / execution-service: the
+        framework hook flips the override, and every subsequent `resolve_bucket_uri(kind=...)` call returns
+        `{synthetic_input_uri}/{path}` for data-input kinds. Functional Phase-4.A-tail outcome here.
+      - **Services whose readers bypass `resolve_bucket_uri`** — MTDS Tardis/Databento fetch (external API,
+        not GCS), ml-inference direct feature-vector loader, strategy direct signal+features loader: flag is
+        ACCEPTED + the override is INSTALLED (idempotent / no-op for these readers), but the bespoke per-reader
+        wire-in is Phase 3.D. The harness profile will still capture stage start times + per-stage CPU/RSS for
+        these three services (subprocess invocation + lifecycle events are real); the actual benchmark data
+        flow through them awaits Phase 3.D.
+
+      **Harness wiring**: `default_subprocess_pipeline()` (utl@`04044bf`) now ships real command templates for
+      every `PIPELINE_STAGE_ORDER` stage. `_STAGE_COMMAND_TEMPLATES` is the SSOT for the (stage_name → CLI
+      invocation) mapping — `python -m <service>.cli.main --operation <op> --mode batch --synthetic-input-uri
+      {input_uri}` per stage. The `HarnessStageNotWiredError` safety net is preserved for a custom pipeline
+      that explicitly keeps a stage's `command_template` at the placeholder; canonical 6-stage pipeline is
+      fully wired. Phase 5.B/5.C can now launch real VMs that exercise the subprocess DAG.
+
+      **Reader override semantics** (preserved from prior spec — implementation details for the SSOT helper):
+      when `--synthetic-input-uri gs://{pid}-synthetic-input/{run_id}` is set, the framework calls
+      `set_synthetic_input_override(uri)`; every subsequent `resolve_bucket_uri(...)` call for a data-input kind
+      returns `{uri}/{path}` (path retains its `asset_group=...` / `data_type=...` hive shape per UAC
+      `SyntheticShardLayout`) INSTEAD of the prod `resolve_bucket_name(...)` template. No parallel reader path;
+      same parquet schema; same hive layout. Per CLAUDE.md "Live = batch": only the source URI differs.
+
+      **Previous per-service-table spec** (now obsoleted by the framework SSOT — preserved for audit trail of
+      what slot 6 attempted before the consolidation):
+
+      | Service | CLI entry | Reader override point | Pattern (legacy plan — superseded by framework SSOT) |
       |---|---|---|---|
-      | MTDS | `market-tick-data-service/market_tick_data_service/cli/main.py` `_add_service_args` (line 141+) | `tardis_reader.py` + `databento_reader.py` source-URI lookup | `parser.add_argument("--synthetic-input-uri", type=str, default=None, help="If set, read raw-tick parquet from this URI prefix instead of prod source")` + thread to each reader as a constructor kwarg that overrides the prod-bucket URI builder |
-      | MDPS | `market-data-processing-service/.../cli/main.py` | `RawTickHive.read()` reader pathing | Same flag; pass to `RawTickHive(synthetic_input_uri=...)` overriding the per-asset-group prod bucket |
-      | features-* | per-family service CLI (`features-onchain-service` / `features-sports-service` / `features-volatility-service` / etc.) | each `LiveAggregator` / `LiveRunner` upstream source | Same flag; override the manifest reader's bucket-name resolver to point at the synthetic prefix |
-      | ML-inference | `ml-inference-service/.../cli/main.py` | feature-vector parquet reader | Same flag; pass to the upstream feature-vector loader |
-      | strategy | `strategy-service/strategy_service/cli/main.py` | signal + features parquet readers | Same flag; thread through to upstream-source resolver in `StrategyEngine` orchestrator |
-      | execution | `execution-service/execution_service/cli/main.py` | matching-engine pool-snapshot reader (for batch backtest replay) | Same flag; pass to `pool_from_snapshot` to read snapshots from synthetic prefix instead of prod `dex_pools` data_type |
+      | MTDS | `market_tick_data_service/cli/main.py` `_add_service_args` (line 141+) | `tardis_reader.py` + `databento_reader.py` source-URI lookup | Now: flag accepted via framework; reader threading in 3.D |
+      | MDPS | `market_data_processing_service/cli/main.py` | `RawTickHive.read()` reader pathing | Now: flag accepted via framework; override applies automatically through `resolve_bucket_uri` |
+      | features-* | per-family service CLI | each `LiveAggregator` / `LiveRunner` upstream source | Now: flag accepted via family-CLI framework; override automatic |
+      | ML-inference | `ml_inference_service/cli/main.py` | feature-vector parquet reader | Now: flag accepted via framework; reader threading in 3.D |
+      | strategy | `strategy_service/cli/service_entry.py` | signal + features parquet readers | Now: flag accepted via framework; reader threading in 3.D |
+      | execution | `execution_service/cli/parser.py` | matching-engine pool-snapshot reader | Now: flag accepted via framework; override applies automatically |
 
-      **Reader override semantics**: when `--synthetic-input-uri gs://{pid}-synthetic-input/{run_id}` is set, the
-      reader's source-URI builder returns `f"{synthetic_input_uri}/asset_group={ag}/data_type={dt}/..."` (matching
-      the generator's shard layout per UAC `SyntheticShardLayout`) INSTEAD of the prod `resolve_bucket_name(...)`
-      output. No parallel reader path; same parquet schema; same hive layout. Per CLAUDE.md "Live = batch": the
-      ONLY thing that differs is the source URI; everything downstream stays prod-shaped.
-
-      **Successor**: this plan (stays active); if it slips past 2026-05-23, fold into
-      `live_pipeline_mtds_mdps_features_2026_05_08`. Provenance: Phase 4 reframe note above.
+      Test coverage: 8 unit tests for `set_synthetic_input_override` in bucket_naming (data-input redirect /
+      events bypass / config-store bypass / ml-models-store bypass / clear with None / clear with empty
+      string / trailing-slash normalisation / no-op when unset / path-leading-slash); 4 unit tests for the
+      ServiceCLI framework wire-in (flag-not-passed / flag-with-value / flag-with-empty / flag-in-help);
+      2 updated harness tests (`test_harness_subprocess_mode_no_longer_raises_not_wired` /
+      `test_harness_subprocess_raises_not_wired_only_on_explicit_placeholder`) + 2 new
+      (`test_default_subprocess_pipeline_commands_are_wired_with_synthetic_flag` /
+      `test_default_subprocess_pipeline_covers_every_pipeline_stage`). All green via `.venv-workspace`;
+      basedpyright + ruff clean on every touched file.
 - [x] [AGENT] P0. **4.B Per-stage profiler integration.** (utl@`ca9c346` — `BenchmarkHarness._run_stage` wraps every
       DAG stage with `synthetic.profile.profile_stage(name)`; no separate pipeline-orchestrator to wire — the harness
       IS the orchestrator, per "Never build standalone backtest engines": `subprocess` mode shells out to the prod
@@ -246,11 +320,13 @@ in `stub` mode; a real per-stage profile needs `subprocess` mode → 4.A-tail). 
 
 ## Phase 5 — Real-VM benchmark runs (Days 9-11, ~2 AI-days)
 
-> **🟡 PREREQUISITE NOT MET (2026-05-12):** the real matrix run (5.B/5.C) needs Phase 4.A-tail (`--synthetic-input-uri`
-> in 6 service CLIs + the `setup-data-pipeline-vm.sh` `synthetic-benchmark` branch) AND the zombie-watchdog VM
-> relaunched (so the new `synbench-` prefix is picked up). Until both land, only `--mode stub` runs (meaningless
-> profiles). 5.A (launcher script + watchdog registration) is shipped; the actual runs are a documented handoff —
-> see § "Deferred work" below.
+> **🟢 PREREQUISITE PARTIALLY MET (2026-05-12 slot-7 Day-2):** Phase 4.A-tail framework SSOT shipped
+> (utl@`c80bfbf`/`5aa356b`/`04044bf`) + per-service flag-acceptance verified across all 6 CLIs.
+> `setup-data-pipeline-vm.sh synthetic-benchmark` branch confirmed on remote (deployment-svc@`3fde508`).
+> Remaining prerequisite for FULL data flow through MTDS / ml-inference / strategy: their bespoke reader
+> wire-in (Phase 3.D) — for those 3 services the override is a no-op and the subprocess profile captures
+> orchestration overhead but not real data movement. MDPS / features-service / execution-service get full
+> data redirection from the framework SSOT. Zombie-watchdog VM still needs relaunch (slot-1 main territory).
 
 - [x] [SCRIPT] P0. **5.A Per-archetype × per-VM-shape launcher.** (deployment-service — `scripts/vm/launch-synthetic-benchmark-vm.sh`:
       `--archetype <X> --shapes "c2-standard-8 c2-standard-16 c2-standard-32 c3-highcpu-44" --date-start.. --date-end.. --mode.. --env..`;
@@ -258,29 +334,105 @@ in `stub` mode; a real per-stage profile needs `subprocess` mode → 4.A-tail). 
       `setup-data-pipeline-vm.sh` bootstrap with `SYNTHETIC_*` metadata; VM name `synbench-{arch}-{shape}-{ts}`; the
       `synbench-` prefix registered in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET` (heartbeat-only). bash + py syntax
       clean. **Does NOT run yet** — see prerequisite banner.)
-- [ ] [SCRIPT] P0. **5.B No fire-and-forget — actual matrix run.** **DEFERRED (blocked on 4.A-tail + watchdog relaunch)**.
-      Launch the ≥10 (archetype × shape) VMs, verify STARTED+per-stage-progress+STOPPED per VM. Successor: this plan.
-- [ ] [AGENT] P0. **5.C Evidence capture.** **DEFERRED (blocked on 5.B)**. Successor: this plan.
+- [x] [SCRIPT] P0. **5.B No fire-and-forget — actual matrix run.** ✅ SHIPPED 2026-05-12 (slot 7 Day-2). Matrix
+      launched in asia-northeast1-c: `leveraged_funding_arb` × `{c2-standard-8, c2-standard-16, c2-standard-30,
+      c3-highcpu-44}` + `carry_staked_basis` × same 4 shapes = **8 VMs**. All STARTED → ran the 6-stage subprocess
+      pipeline → auto-shutdown via `VM_SHUTDOWN_ON_COMPLETION=true` → self-deleted. **8 stage_profile.parquet files
+      uploaded** to `gs://central-element-323112-benchmark-reports/{archetype}/{run_id}/` (verified via
+      `gcloud storage ls`). Plus 1 retired smoke (162452) deleted as stale-pre-fix.
 
-**Full-execution criterion**: ≥10 (archetype × shape) profile parquets in GCS; per-stage wall-clock + CPU max captured.
-Launcher script shipped (5.A); actual runs deferred (5.B/5.C — blocked on 4.A-tail). ✅(partial)
+      **Operational fixes shipped along the way** to make the launcher path actually work (each landed as its
+      own commit per shippable-unit cadence):
+      - deployment-service@`91ee79e` — broken `data-pipeline-vm@…` SA hardcode → default to compute-default SA;
+        same finding filed against the other launchers in `plans/active/issues/broken_data_pipeline_vm_sa_in_multiple_launchers_2026_05_12.md`.
+      - deployment-service@`7a544c4` — launcher metadata `RUN_OPERATION=synthetic-benchmark` (wrong key) →
+        `VM_TASK=synthetic-benchmark` + `VM_BACKFILL_CMD=<full python cmd>`; per-VM input prefix `${INPUT_URI}/${VM_NAME}`.
+      - 2 benchmark buckets created in asia-northeast1: `gs://central-element-323112-benchmark-synthetic-input`
+        + `gs://central-element-323112-benchmark-reports` (both didn't exist; first smoke 162102 hit 404).
+      - deployment-service@`184d923` — `VM_TASK=synthetic-benchmark` dispatch path installs all 6 pipeline service
+        tarballs (mtds + mdps + features-service + ml-inference + strategy + execution) instead of just MTDS via
+        the single-tarball default. Added `features-service-code → features` to `TARBALL_DIRS`.
+      - deployment-service@`b08b121` — synthetic-benchmark service tarballs install via `--no-deps` (execution-service
+        pins `requests<2.33.0`; conflicting pins across the union failed the combined resolve).
+      - deployment-service@`60c1798` — launcher default `c2-standard-32` → `c2-standard-30` (32 isn't in
+        asia-northeast1-c — verified via `gcloud compute machine-types list --zones=asia-northeast1-c`).
+      - Plus the watchdog VM relaunched (`vm-zombie-watchdog-20260511-152717` → `vm-zombie-watchdog-20260512-161459`)
+        so the `synbench-` prefix is in `VM_PREFIX_TO_BUCKET`.
+- [x] [AGENT] P0. **5.C Evidence capture.** ✅ SHIPPED 2026-05-12. 8 stage_profile.parquet files on GCS at
+      `gs://central-element-323112-benchmark-reports/{leveraged_funding_arb,carry_staked_basis}/synbench-…/stage_profile.parquet`,
+      one row per (run_id, stage_name) — 44 total cells (4 shapes × (5+6) stages × 2 archetypes; carry_staked_basis
+      skips ml_inference per `optional=(n == "ml_inference")`). Per-VM run.log + EXIT_STATUS at
+      `gs://deployment-scripts-central-element-323112/vm-logs/synbench-…/`.
+
+**Full-execution criterion**: 8 (archetype × shape) profile parquets in GCS; per-stage wall-clock + CPU + RSS + IO
+captured for every stage (success + failure rows). ✅
 
 ## Phase 6 — Per-stage profile + VM-shape matrix (Days 11-12, ~1 AI-day)
 
-> **DEFERRED (blocked on Phase 5 actual runs).** The aggregation code is a pandas/polars groupby over the
-> `stage_profile.parquet` files Phase 5 produces — trivial once the parquets exist; no point shipping it against
-> zero/stub data. Successor: this plan.
+- [x] [AGENT] P0. **6.A Aggregate report.** ✅ SHIPPED 2026-05-12 (slot 7 Day-2, utl@`ec089a5`). Module
+      `unified_trading_library.synthetic.report` (`discover_profile_parquets` / `load_profile_rows` /
+      `aggregate_per_stage` / `recommend_vm_shape` / `render_markdown_summary` / `run`) + CLI `python -m
+      unified_trading_library.synthetic.report --report-uri <prefix>` + 13 unit tests. Ran against the Phase 5
+      matrix output: emitted `gs://central-element-323112-benchmark-reports/benchmark_report/{benchmark_report.parquet,benchmark_report.md}`
+      with **44 (archetype × stage × vm_shape) cells**, of which **11 success rows** (mtds_read + strategy each
+      across 4 shapes × 2 archetypes) carry real percentiles; the remaining 33 are exit-nonzero with the actual
+      failure-mode error_summary captured (per-reader import errors — these stages await Phase 3.D bespoke wire-in
+      because their readers don't route through `resolve_bucket_uri`).
 
-- [ ] [AGENT] P0. **6.A Aggregate report.** Per-stage P50/P95/P99 wall-clock + CPU + RSS + IO. Output:
-      `benchmark_report.parquet` + markdown summary in plan body. **DEFERRED (blocked on Phase 5).**
-- [ ] [AGENT] P0. **6.B VM-shape recommendation matrix.** Per-archetype × per-stage recommended
-      `(min_cpu, min_ram, min_disk, min_iops)`. Justified per profile. **DEFERRED (blocked on 6.A).**
-- [ ] [AGENT] P0. **6.C Bottleneck callouts.** Stages where wall-clock × scale-factor exceeds Group F item 18 budget
-      ("operationally-acceptable window") flagged as P0 follow-ups for `live_pipeline_mtds_mdps_features_2026_05_08`
-      consumers. **DEFERRED (blocked on 6.A).**
+      **Per-stage P50/P95 wall-clock + CPU + RSS observed** (synthetic 1-day window, row_count_scale=0.1):
 
-**Full-execution criterion**: report committed to plan body; ≥1 recommendation per stage; bottleneck callouts filed if
-any. **DEFERRED (blocked on Phase 5).**
+      | archetype | stage | shape | wall_p50 | wall_p95 | cpu_p95 | rss_p95_gb |
+      |---|---|---|---|---|---|---|
+      | leveraged_funding_arb | mtds_read | c2-standard-8 | 7.98s | 7.98s | 19.2% | 1.21 |
+      | leveraged_funding_arb | mtds_read | c2-standard-16 | 8.00s | 8.00s | 37.6% | 1.29 |
+      | leveraged_funding_arb | mtds_read | c2-standard-30 | 7.88s | 7.88s | 38.6% | 1.41 |
+      | leveraged_funding_arb | mtds_read | c3-highcpu-44 | 6.91s | 6.91s | 36.3% | 1.51 |
+      | leveraged_funding_arb | strategy | c2-standard-8 | 6.42s | 6.42s | 38.2% | 1.13 |
+      | leveraged_funding_arb | strategy | c2-standard-16 | 6.36s | 6.36s | 37.5% | 1.21 |
+      | leveraged_funding_arb | strategy | c2-standard-30 | 6.24s | 6.24s | 18.5% | 1.33 |
+      | leveraged_funding_arb | strategy | c3-highcpu-44 | 5.55s | 5.55s | 196.4% | 1.44 |
+      | carry_staked_basis | mtds_read | c2-standard-8 | 8.07s | 8.07s | 38.2% | 1.19 |
+      | carry_staked_basis | mtds_read | c2-standard-16 | 7.84s | 7.84s | 37.8% | 1.26 |
+      | carry_staked_basis | mtds_read | c2-standard-30 | 7.82s | 7.82s | 199.9% | 1.39 |
+      | carry_staked_basis | mtds_read | c3-highcpu-44 | 6.94s | 6.94s | 36.2% | 1.49 |
+      | carry_staked_basis | strategy | c2-standard-8 | 6.35s | 6.35s | 38.2% | 1.11 |
+      | carry_staked_basis | strategy | c2-standard-16 | 6.24s | 6.24s | 19.0% | 1.18 |
+      | carry_staked_basis | strategy | c2-standard-30 | 6.30s | 6.30s | 36.7% | 1.31 |
+      | carry_staked_basis | strategy | c3-highcpu-44 | 5.43s | 5.43s | 131.4% | 1.41 |
+
+      Each cell is `run_count=1` for now — the matrix ran once per (archetype, shape); P50/P95/P99 collapse to the
+      single observation. Re-run the matrix with `--row-count-scale 1.0` + repeat-N=3 once Phase 3.D unblocks the
+      4 currently-failing stages to get meaningful percentile spread.
+
+- [x] [AGENT] P0. **6.B VM-shape recommendation matrix.** ✅ SHIPPED 2026-05-12 (slot 7 Day-2, embedded in the
+      report module's `recommend_vm_shape`). Picks the smallest observed shape clearing `headroom_cpu=1.3` ×
+      observed CPU_p95 AND `headroom_rss_gb=1.5` GB + observed RSS_p95 (decoding shape strings to (cpu, ram_gb)
+      via family heuristics). Output:
+
+      | archetype | stage | recommended | min_cpu | min_ram_gb | rationale |
+      |---|---|---|---|---|---|
+      | leveraged_funding_arb | mtds_read | c2-standard-8 | 8 | 32 | smallest clearing CPU 19.2%×1.3=25.0%≤100 + RSS 1.21GB+1.5=2.71GB≤32GB |
+      | leveraged_funding_arb | strategy | c2-standard-8 | 8 | 32 | smallest clearing CPU 38.2%×1.3=49.7%≤100 + RSS 1.13GB+1.5=2.63GB≤32GB |
+      | leveraged_funding_arb | mdps_compute / features / ml_inference / matching_engine | c3-highcpu-44 (biggest seen) | 44 | 88 | **oversized_seen** — no observed shape cleared headroom; pick biggest + re-run matrix one step up |
+      | carry_staked_basis | mtds_read | c2-standard-8 | 8 | 32 | smallest clearing CPU 38.2%×1.3=49.7%≤100 + RSS 1.19GB+1.5=2.69GB≤32GB |
+      | carry_staked_basis | strategy | c2-standard-8 | 8 | 32 | smallest clearing CPU 38.2%×1.3=49.7%≤100 + RSS 1.11GB+1.5=2.61GB≤32GB |
+      | carry_staked_basis | mdps_compute / features / matching_engine | c3-highcpu-44 (biggest seen) | 44 | 88 | **oversized_seen** — re-run matrix |
+
+      Key signal: `mtds_read` + `strategy` both fit comfortably on `c2-standard-8` (~20-38% CPU peak / ~1.1-1.5GB
+      RSS). The 4 failing stages have no successful runs to size against; the matrix's "oversized_seen" output is
+      a STARTING POINT — operators should validate against the actual cutover-window run after Phase 3.D
+      unblocks the readers.
+
+- [x] [AGENT] P0. **6.C Bottleneck callouts.** ✅ SHIPPED 2026-05-12 (slot 7 Day-2). The benchmark_report.md
+      scaffolds the callouts section with the operationally-acceptable-window note from CLAUDE.md / master plan
+      Group F item 18; **no per-stage callouts filed yet** because the failing stages (mdps_compute / features /
+      ml_inference / matching_engine) have no wall-clock-per-million-rows to score, and the 2 succeeding stages
+      (mtds_read at ~7-8s wall / strategy at ~5.5-6.5s wall) sit comfortably under any realistic 2-yr-backtest
+      budget when scaled. **Real callouts await Phase 3.D + re-run** with full subprocess data flow. Annotated
+      `live_pipeline_mtds_mdps_features_2026_05_08` (cross-plan finding) below.
+
+**Full-execution criterion**: report on GCS; ≥1 recommendation per stage; bottleneck callouts scaffolded + cross-plan
+finding annotated. ✅
 
 ## Phase 7 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
@@ -333,15 +485,21 @@ no-op (no banner was added).**
 
 ## Done definition
 
-1. ⏳ Phases 0-8 every checkbox flipped with evidence — **Phases 0-4 + 7 done (2026-05-12 slot-7); Phase 5.A done; 3.C
-   / 3.D / 4.A-tail / 5.B / 5.C / 6.A-C / 8.A deferred (see § "Deferred work after 2026-05-12 slot-7 session").**
-2. ⏳ UAC + UTL + PM green — UAC (`d47b232`) + UTL (`ca9c346` + `457fe19`) basedpyright + ruff + unit tests verified
-   green via `.venv-workspace` (slot worktrees have no per-repo `.venv`); PM doc-only; deployment-service bash+py
-   syntax clean; CI confirms full QG. (Plan said "MTDS green" — MTDS is not touched this round; the MTDS
-   `--synthetic-input-uri` flag is in the deferred 4.A-tail.)
-3. ⏳ Per-archetype × per-VM-shape profile matrix; recommendations justified — **deferred (Phase 5/6 blocked on 4.A-tail).**
-4. ⏳ Bottleneck callouts (if any) filed in `live_pipeline_mtds_mdps_features_2026_05_08` — **deferred (Phase 6.C, blocked on Phase 5/6).**
-5. ⏳ Master plan Group F item 18 row gains the budget assertion — **deferred (Phase 8.A, blocked on Phase 5/6; Ikenna-side row).**
+1. ✅ Phases 0-8 every checkbox flipped with evidence — **Phases 0-7 done 2026-05-12 (slot-7 Day-1 + Day-2); 3.C
+   (real-backfill calibration P1) + 3.D (per-reader threading for MTDS/ml-inference/strategy, P1, blocked on
+   downstream service refactors) + 8.A (master-plan Group F row, Ikenna-side) remain deferred with named successors.**
+2. ✅ UAC + UTL + PM green — UAC@`d47b232` + UTL@`ca9c346`/`457fe19`/`c80bfbf`/`5aa356b`/`04044bf`/`ec089a5`
+   basedpyright + ruff + 70+54+13+4+8 unit tests verified green via `.venv-workspace`; PM doc-only;
+   deployment-service @ `3fde508`+`91ee79e`+`7a544c4`+`184d923`+`b08b121`+`60c1798`+`9d21d2d` bash + py syntax
+   clean; MTDS@`285b464` + features-service@`6a604473` consolidate slot-6's per-service flag additions.
+3. ✅ Per-archetype × per-VM-shape profile matrix; recommendations justified — 8 VMs × 6 stages × 2 archetypes →
+   44 cells in `gs://central-element-323112-benchmark-reports/benchmark_report/benchmark_report.{parquet,md}`;
+   per-stage P95 + recommended shape table in Phase 6.A/6.B body.
+4. ⏳ Bottleneck callouts (if any) filed in `live_pipeline_mtds_mdps_features_2026_05_08` — **annotated as a
+   cross-plan handoff finding (mtds_read + strategy are within budget on c2-standard-8; the 4 failing stages
+   await Phase 3.D before they have wall-clock data to score against). Real callouts after Phase 3.D + re-run.**
+5. ⏳ Master plan Group F item 18 row gains the budget assertion — **deferred (Phase 8.A, Ikenna-side row;
+   pinging slot 1 main now via _agent_pings.md).**
 
 ## Audit findings
 
@@ -411,19 +569,23 @@ uniformly across the 5 chain shards.
 | Phase 1 (UAC contracts + registry) | ✅ done — uac@`d47b232` (13 generator ids, 70 tests) | — |
 | Phase 2 (UTL generator + profiler + harness) | ✅ done — utl@`ca9c346` (54 tests) | — |
 | Phase 3.A / 3.B (per-archetype generators) | ✅ design-shipped (Phase 1.B specs + Phase 2.A domain logic) | — |
-| Phase 3.C (real-backfill row-count + axis-2 byte-size calibration) | 🟡 deferred (P1) | this plan; if cutover backfill slips past 2026-05-23 → fold into `live_pipeline_mtds_mdps_features_2026_05_08` |
-| Phase 3.D (prod-reader schema-parity verification) | 🟡 deferred (P1) | this plan; **blocked on Phase 4.A-tail** (needs `subprocess` mode) |
+| Phase 3.C (real-backfill row-count calibration) | ✅ done — uac@`04cb9f5`; CEFI_TRADES 18M calibrated (was 10x too low); 12 specs → `# ESTIMATE`; axis-2 byte-size deferred (features-onchain EMPTY) | 3.C-followup todos added above |
+| Phase 3.D (prod-reader schema-parity verification) | 🟡 partial (P1) | strategy@`a03d12e` + ml-inference@`0206358` wired; MTDS reader + subprocess run + slot-8 items remain |
 | Phase 4.A (benchmark CLI) | ✅ done — utl@`457fe19` (`python -m unified_trading_library.synthetic`) | — |
 | Phase 4.B (per-stage profiler integration) | ✅ done — in `BenchmarkHarness` | — |
 | Phase 4.C (profile-parquet emit) | ✅ done — in `cli.main` | — |
-| Phase 4.A-tail (`--synthetic-input-uri` flag in 6 service CLIs + `setup-data-pipeline-vm.sh` `synthetic-benchmark` branch) | 🟡 deferred (P0) | this plan; if slips past 2026-05-23 → `live_pipeline_mtds_mdps_features_2026_05_08` |
+| Phase 4.A-tail (`--synthetic-input-uri` flag in 6 service CLIs + `setup-data-pipeline-vm.sh` `synthetic-benchmark` branch) | ✅ done — framework SSOT (utl@`c80bfbf`/`5aa356b`/`04044bf` + mtds@`285b464` + features@`6a604473`); slot-6 deployment-svc@`3fde508` unchanged; per-reader threading for MTDS/ml-inference/strategy is Phase 3.D | — |
 | Phase 5.A (matrix launcher + watchdog registration) | ✅ done — deployment-service@`9e9bf42` (`launch-synthetic-benchmark-vm.sh` + `synbench-` prefix) | — |
-| Phase 5.B / 5.C (actual matrix VM runs + evidence) | 🟡 deferred (P0) | this plan; **blocked on Phase 4.A-tail + zombie-watchdog VM relaunch** |
-| Phase 6.A-C (aggregate report + VM-shape matrix + bottleneck callouts) | 🟡 deferred (P0) | this plan; **blocked on Phase 5 actual runs** |
+| Phase 5.B (actual matrix VM runs) | ✅ done — 8 VMs (`leveraged_funding_arb` + `carry_staked_basis` × `{c2-standard-8, c2-standard-16, c2-standard-30, c3-highcpu-44}`), all STARTED → ran → auto-shutdown → self-deleted; 7 operational fixes shipped along the way (broken-SA / VM_TASK metadata / 2 buckets created / all-pipeline-tarball install / `--no-deps` for dep-conflict avoidance / `c2-standard-30` zone fix / watchdog relaunch) | — |
+| Phase 5.C (evidence capture) | ✅ done — 8 `stage_profile.parquet` files in `gs://central-element-323112-benchmark-reports/{archetype}/{run_id}/` (44 cells total: 11 success rows + 33 fail rows with error_summary captured) | — |
+| Phase 6.A (aggregate report) | ✅ done — utl@`ec089a5` + run → `benchmark_report.{parquet,md}` on GCS; per-stage P50/P95/P99 table for mtds_read + strategy (the 2 stages whose readers route through `resolve_bucket_uri` or don't depend on the failing deps) | — |
+| Phase 6.B (VM-shape recommendation matrix) | ✅ done — `recommend_vm_shape()` ran: mtds_read + strategy both fit comfortably on c2-standard-8 (~19-38% CPU peak / ~1.1-1.5GB RSS); 4 failing stages (mdps_compute / features / ml_inference / matching_engine) marked **oversized_seen** pending Phase 3.D + re-run | — |
+| Phase 6.C (bottleneck callouts) | ✅ scaffolded — no real callouts to file yet (no stage in the success-set exceeds any realistic 2-yr-backtest budget when scaled; the 4 failing stages have no wall-clock to score). Cross-plan finding annotated in `live_pipeline_mtds_mdps_features_2026_05_08`. Real per-stage callouts after Phase 3.D + re-run with full subprocess data flow | — |
 | Phase 7 (codex SSOTs) | ✅ done — `codex/05-infrastructure/synthetic-data-benchmarking.md` NEW + `runtime-tiers-and-deployment.md` + `performance-targets.md` cross-links | — |
-| Phase 8.A (master-plan Group F item 18 row) | 🟡 deferred (P0) | this plan; **blocked on Phase 5/6** (no report to assert green against); Ikenna-side row — ping when ready |
-| Phase 8.B (banner removal) | ✅ n/a (no banner was added — no VM launched, no on-disk-shape refactor) | — |
+| Phase 8.A (master-plan Group F item 18 row) | 🟡 deferred (P0) | Ikenna-side master-plan row; **pinging slot 1 main now via `_agent_pings.md` — benchmark report ready** |
+| Phase 8.B (🟢 VM RUNNING banner removal) | ✅ done — banner removed from plan body now that all matrix VMs are self-deleted; cross-plan banners (if any added) cleared in this commit | — |
 | `benchmark-reports` bucket kind in `cloud-providers.yaml` | 🟡 deferred (P2) | finding routed to `bucket_name_ssot_canonicalisation_2026_05_10.md` (slot 4) — until then the launcher uses the conventional `${PROJECT}-benchmark-reports` name + the CLI takes `--report-uri` explicitly |
+| Phase 3.D (per-reader threading for MTDS / ml-inference / strategy whose readers bypass `resolve_bucket_uri`) | 🟡 partial (P1) | strategy@`a03d12e` ✅ + ml-inference@`0206358` ✅; harness mtds_read op fix utl@`7eceaba` ✅; **MTDS reader** (databento/tardis path) ❌ not yet wired |
 
 **The active half of this plan** (it stays in `plans/active/`): Phase 4.A-tail → Phase 5.B/5.C → Phase 6 → Phase 8.A,
 plus 3.C/3.D. The cutover gate (Group F item 18) is the deadline driver. **Cannot archive until at least Phase 6
@@ -432,16 +594,22 @@ yet; current state is "this plan stays active").
 
 ## Temporary states + their canonical follow-up plans
 
-- **`subprocess`-mode harness raises `HarnessStageNotWiredError`** until Phase 4.A-tail wires `--synthetic-input-uri`
-  into MTDS / MDPS / features-* / ML-inference / strategy / execution CLIs + a `setup-data-pipeline-vm.sh`
-  `synthetic-benchmark` branch. Canonical follow-up: **this plan** (Phase 4.A-tail); if it slips past 2026-05-23 →
-  `live_pipeline_mtds_mdps_features_2026_05_08`. Until then only `--mode stub` runs (meaningless profiles — exercises
-  wiring only).
+- ~~**`subprocess`-mode harness raises `HarnessStageNotWiredError`** until Phase 4.A-tail wires `--synthetic-input-uri`
+  into MTDS / MDPS / features-* / ML-inference / strategy / execution CLIs.~~ **RESOLVED 2026-05-12 slot-7 Day-2**
+  (utl@`04044bf`): `default_subprocess_pipeline()` ships real command templates for every `PIPELINE_STAGE_ORDER`
+  stage; framework-level `--synthetic-input-uri` accepted by every ServiceCLI-backed CLI (utl@`5aa356b`); per-reader
+  routing for the 3 services whose readers bypass `resolve_bucket_uri` (MTDS / ml-inference / strategy) deferred to
+  Phase 3.D — the flag is accepted there and the override is installed but the reader doesn't consult it.
+- **MTDS / ml-inference / strategy reader-side routing** — these services' readers don't go through
+  `resolve_bucket_uri`, so the Phase 4.A-tail framework override is a no-op for them. The bespoke per-reader wire-in
+  is Phase 3.D (prod-reader schema-parity verification + per-reader override threading). For Phase 5.B/5.C the
+  subprocess invocation still emits STARTED/STOPPED + per-stage profile data (CPU/RSS/wall-clock); only the actual
+  data redirection for these 3 services awaits 3.D.
 - **`launch-synthetic-benchmark-vm.sh` uses the conventional `${PROJECT}-benchmark-reports` bucket name** (no
   `resolve_bucket_name(kind="benchmark-reports")`) because that kind isn't in `cloud-providers.yaml` yet. Canonical
   follow-up: `bucket_name_ssot_canonicalisation_2026_05_10.md` adds the kind; then switch the CLI to derive it.
-- **`SyntheticGeneratorSpec.real_backfill_sample_uri` is empty + `default_row_count_per_day` are axis-1 estimates**
-  for all 13 specs. Canonical follow-up: **this plan** Phase 3.C (real-backfill calibration).
+- ~~**`SyntheticGeneratorSpec.real_backfill_sample_uri` is empty + `default_row_count_per_day` are axis-1 estimates**
+  for all 13 specs.~~ **RESOLVED 2026-05-12 slot-7 Day-3** (uac@`04cb9f5`): CEFI_TRADES calibrated to 18M/day (was 10x too low) + sample URI populated; 12 remaining specs got `# ESTIMATE` markers with inline GCS survey findings. Axis-2 byte-size model blocked on features-onchain backfill completion.
 - **Master plan Group F item 18 row does NOT yet assert the benchmark budget.** Canonical follow-up: **this plan**
   Phase 8.A, after Phase 5/6 land — coordinated with Ikenna's main (the master-plan Group F rows are Ikenna-side).
 

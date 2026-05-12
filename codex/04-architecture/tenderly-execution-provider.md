@@ -124,8 +124,12 @@ code path as live, but gas costs are zero and state is isolated.
 ### Live Mode
 
 No fork. DeFi connectors receive the real chain RPC URL from `CHAIN_RPC_TEMPLATES` in UAC. The execution provider is not
-used for live mode -- connectors talk directly to Alchemy/Infura RPCs. Custody provider (Copper) handles transaction
-signing.
+used for live mode -- connectors talk directly to Alchemy RPCs (+ Helius for Solana). Infura is on the workspace
+"Removed providers" list (`cursor-configs/CLAUDE.md` § "DeFi Execution Architecture") and MUST NOT be referenced.
+Custody routing: **May-23 cutover default = CLOUD_KMS_ENCRYPTED (CloudKmsCustodyProvider)** per
+[`interface-credential-convention.md`](interface-credential-convention.md) 2026-05-12 refresh. **June-1 flip targets** =
+Copper MPC / CEFFU MirrorX / Fireblocks per client cred availability. Cross-ref:
+[`plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md`](../../plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md).
 
 ## Tenderly VNet API
 
@@ -224,16 +228,18 @@ combo:
 - **Governance proposal simulation** (`defi_simulation_realism_2026_05_10` Phase 4B / codex
   [`amm-slippage-simulation.md`](amm-slippage-simulation.md) § "Governance proposal simulation harness"): apply
   `governor.execute(proposalId)` on a fork pinned at the proposal-execution block; read affected protocol params
-  before + after; output per-asset parameter delta. Budget ~10 sims/day per
-  `defi_simulation_realism_2026_05_10.md` Risk register. Caller: `execution-service/execution_service/governance/proposal_simulator.py` (Phase 4B NEW).
+  before + after; output per-asset parameter delta. Budget ~10 sims/day per `defi_simulation_realism_2026_05_10.md` Risk
+  register. Caller: `execution-service/execution_service/governance/proposal_simulator.py` (Phase 4B NEW).
 - **AMM matching-engine fidelity validation** (`defi_simulation_realism_2026_05_10` Phase 2 + Phase 8C / codex
   [`amm-slippage-simulation.md`](amm-slippage-simulation.md) § "Golden test set harness"): replay historical swaps
   against Tenderly fork pinned at swap block; compare matcher-computed fill vs on-chain `Swap` event. Per-shape
-  validation thresholds (≥ 100 V3 swaps within 5 bps; ≥ 50 Curve; ≥ 20 Balancer + Velodrome + Aerodrome; etc.).
-  Caller: `execution-service/tests/integration/test_amm_golden_swaps.py` (Phase 3C NEW).
+  validation thresholds (≥ 100 V3 swaps within 5 bps; ≥ 50 Curve; ≥ 20 Balancer + Velodrome + Aerodrome; etc.). Caller:
+  `execution-service/tests/defi_execution/integration/test_amm_golden_swaps.py` (Phase 3C NEW; conftest path
+  corrected 2026-05-12 per TS-12 audit — Tenderly fork fixtures live in
+  `execution-service/tests/defi_execution/integration/conftest.py`, not the legacy `tests/integration/conftest.py`).
 - **High-impact swap pre-flight check** (`defi_simulation_realism_2026_05_10` Phase 4 implementation — Harsh slot 4
-  scope): for live swaps where size > N% of pool TVL, run a pre-flight `.quote()` against Tenderly fork of upstream
-  RPC state before broadcasting tx — protects against pool-state drift between strategy decision and tx inclusion.
+  scope): for live swaps where size > N% of pool TVL, run a pre-flight `.quote()` against Tenderly fork of upstream RPC
+  state before broadcasting tx — protects against pool-state drift between strategy decision and tx inclusion.
 
 ## References
 
@@ -242,5 +248,6 @@ combo:
 - [Interface Credential Convention](interface-credential-convention.md) -- how services get API keys
 - [Custody Providers](custody-providers.md) -- transaction signing layer
 - [Flash Loan Receiver](flash-loan-receiver.md) -- Aave flash loans on forks
-- [AMM Slippage Simulation](amm-slippage-simulation.md) -- governance sim harness + matching-engine fidelity validation downstream consumers
+- [AMM Slippage Simulation](amm-slippage-simulation.md) -- governance sim harness + matching-engine fidelity validation
+  downstream consumers
 - [Concentrated Liquidity](concentrated-liquidity.md) -- tick-math reference for V3/V4 fork-state interpretation

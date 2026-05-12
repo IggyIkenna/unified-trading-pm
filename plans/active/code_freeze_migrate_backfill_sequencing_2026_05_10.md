@@ -150,13 +150,13 @@ The freeze gate fires when ALL of the following are true. The umbrella `manifest
 
 - [x] **Schema columns frozen**: UAC manifest schema for v8 (incl. `service_emission_state`, `pipeline_mode`, `feature_family`) reviewed + merged + tagged. No further column adds. Column declaration is owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) per operator decision 2026-05-11 (resolves codex_audit F3 ambiguity — the final-gate plan is the canonical v8 owner; writegate slice (b)'s Phase 5.2 "UAC manifest schema columns" is SUPERSEDED, slice (b) retains the UTL `manifest_completeness` helper + MDPS POC + deployment-api/ui surfaces). **✅ Shipped 2026-05-11**: UAC@`174f401` + `@d938a69` + `@76f950a` per slot 6 / slot 2 sequence; `canonical/crosscutting/manifest_schema.py:59,134-138,158-162` declares `MANIFEST_SCHEMA_VERSION_V8=8` + `V8_NEW_COLUMNS` tuple + `V8_COLUMN_DEFAULTS` dict; no `# TODO v9` markers per slot 3 audit 2026-05-12. (Note: `MANIFEST_SCHEMA_VERSION` constant in `manifest_writer.py:131` is still `=7` transitionally per Phase 2 P2 option-b decision; bump-to-8 lands at Phase 4.DEFAULT-REMOVAL.)
 - [x] **error_reason taxonomy closed**: `EMPTY_CONFIRMED_REASONS` final set declared in UAC; `LegacyBlankErrorReasonError` rejecting any blank reason at write boundary (already shipped UTL@`68b3804a` per CLAUDE.md). New reason additions require explicit P0 RFC + this plan re-opens. **✅ Verified 2026-05-12 slot 3 audit**: `EmptyConfirmedReason` 15 members + `EMPTY_CONFIRMED_REASONS` frozenset (UAC `canonical/crosscutting/honest_coverage.py:68-170,121`); `LegacyBlankErrorReasonError` raises at blank reason (UTL `manifest_writer.py`).
-- [ ] **All 37 MDPS/MTDS callsites migrated** to `ManifestWriter.record_captured(...) / record_empty(...) / record_failed(...) / record_expected_unattempted(...)`. AST sweep (writegate plan QG STEP 5.64) green workspace-wide. **🟡 PARTIAL 2026-05-12** — 5/6 sub-items shipped per slot 3 audit: MDPS@`a3c7198` (22 callsites) ✅ + instruments-service@`e530906` (~50 callsites) ✅ + deployment-api@`2f833a7` + deployment-ui@`ab06bfe` ✅ + Phase 4.E2E + Phase 4.PM-SCRIPTS ✅ N/A + **Phase 4.GREP-VERIFY ✅ SHIPPED 2026-05-12 by slot 8 at PM@`4159b7ae`** (`check_pipeline_mode_explicit_at_record_calls.py` 291 lines + 11 unit tests + 112-entry baseline + STEP 5.70 wiring). **Phase 4.MTDS 🟢 NOW UNBLOCKED 2026-05-12 evening** — operator triaged Q1+Q2 at PM@`4c573302`: **Q1=(α)** migrate `DefiManifestRecorder.record_captured` legacy `ManifestWriter.add()` → v8 `record_captured()` path; **Q2=(A)** extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with 6 missing values (`BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK`). Slot 3 (me) directed to ship the ~60min mechanical sweep with 5-sub-agent fan-out (UAC + UTL + MTDS + MDPS + instruments-service) per [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § Ikenna slot 3 DAY-2 P0 INJECTED block. **Phase 4.FEATURES** 🟢 UNBLOCKED (features-consolidation Phase 7 shipped) — owner: slot 2 or 4 carry-forward; per [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) `c1414ed7` pre-audit 6 callsites enumerated. **Phase 4.DEFAULT-REMOVAL** ❌ blocked-after-MTDS+FEATURES (consolidated scope: 4 None defaults removal + bump `MANIFEST_SCHEMA_VERSION` 7→8 + reconcile codex).
+- [ ] **All 37 MDPS/MTDS callsites migrated** to `ManifestWriter.record_captured(...) / record_empty(...) / record_failed(...) / record_expected_unattempted(...)`. AST sweep (writegate plan QG STEP 5.64) green workspace-wide. **🟡 SUBSTANTIALLY COMPLETE 2026-05-12 Day 2-3 — 8/9 Phase 4 sub-items shipped; ONLY Phase 4.DEFAULT-REMOVAL remains**. Sub-items: Phase 4.MDPS @MDPS@`a3c7198` ✅ + Phase 4.MDPS VIX-gap Q2=(A) flip @MDPS@`2d4bb40` ✅ + Phase 4.INSTRUMENTS @instruments-service@`e530906` ✅ + Phase 4.INSTRUMENTS footystats Q2=(A) flip @instruments-service@`8f07db3` ✅ + Phase 4.DEPLOYMENT-API @deployment-api@`2f833a7` + Phase 4.UI @deployment-ui@`ab06bfe` ✅ + Phase 4.E2E + Phase 4.PM-SCRIPTS ✅ N/A + Phase 4.GREP-VERIFY @PM@`4159b7ae` (AST-walk STEP 5.70) ✅ + **Phase 4.MTDS ✅ SHIPPED 2026-05-12 Day 2 by Ikenna slot 3** (3-sub-agent fan-out post-operator-triage at PM@`4c573302`): MTDS@`3da3f43` 97 callsites in 26 files + DefiManifestRecorder partial Q1=(α) migration; UTL@`12d5e621` 11 internal record_* callsites; UAC@`52d289c` Q2=(A) 6 new PipelineMode batch values + 14 DeFi SOURCE_PRIORITY gap entries (Harsh race-won, my UAC@`7d7ea4c` shipped 7 additive round-trip tests on top); PM baseline @`88226bdb` + @`ea50eddc` shrunk **114 → 6** (only Phase 4.FEATURES entries remained) + **Phase 4.FEATURES ✅ SHIPPED 2026-05-12 by Harsh slot 3** — `features-service@842ff741` (sports/batch_handler 4 callsites via `_FEATURE_GROUP_TO_PIPELINE_MODE` SSOT: fixture_features→BATCH_API_FOOTBALL / odds_features→BATCH_ODDS_API / derived_features→BATCH_FOOTYSTATS + 14 reference tables fall-through BATCH_API_FOOTBALL) + `features-service@229a0963` (calendar_orchestrator 2 callsites with `BATCH_INSTRUMENTS_SERVICE` workaround per `features_calendar_pipeline_mode_gap_2026_05_12.md` operator-decision issue doc; same logical unit also adds `reason="SOURCE_RETURNED_ZERO"` to record_empty path that would have crashed `LegacyBlankErrorReasonError`); PM baseline @`<this-flip>` shrunk **6 → 0** (full workspace pipeline_mode_explicit_baseline.yaml now empty). **Phase 4.DEFAULT-REMOVAL (pipeline_mode= defaults)** ✅ DONE (utl@`547ff3c` 2026-05-12 — 4 transitional None defaults removed + MANIFEST_SCHEMA_VERSION 7→8 bumped + codex prose reconciled + DefiManifestRecorder df-flow propagation shipped). **Phase 4.DEFAULT-REMOVAL-v8kwargs DEFERRED** — 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults; blocked on Phase 6.3-6.9 Ikenna callsite sweep of 8 remaining services.
 - [x] **ServiceEmissionPolicy seed dict locked**: 19+ rows covering MDPS / features / ml-training / ml-inference / strategy / execution / position-balance / risk / instruments / alerting (+ any added during Phase 1). **✅ DONE 2026-05-12 slot 3 audit — 71 rows** in `unified-api-contracts/.../canonical/crosscutting/service_emission_policy.py:159-283`. Coverage: 5 MDPS + 11 Features (volatility / cross-instrument / delta-one / multi-timeframe) + ML training/inference + Strategy + Execution (order_intent / fill_confirmation) + Position-balance + Risk + Instruments + Onchain (11) + Sports (7). Default for unseeded pairs: STRICT_FAIL (line 315).
 - [ ] **available_at per-row stamping wired** at every write boundary; LookaheadBiasError strict-mode green at every features-* calculator. **🟡 PARTIAL 2026-05-12 slot 3 audit — 2/8 feature families**: features-sports ✅ shipped (`features-service/features_service/sports/data/writer.py:61` `PointInTimeEnforcer(as_of=as_of, strict=True)`); features-onchain 🟡 config-gated (production strict=True only; `feature_writer.py:143-146`); 6 other families (delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe) ❌ NO strict-mode wiring. Plan `available_at_lookahead_bias_completion_2026_05_08.md` 14/47 todos done (~30%); Phase 6 (calculator/writer enforcement) DEFERRED-AFTER chain links 0+1 + features-consolidation Phase 5.c gate-lift-into-UTL. **Action**: owner needs reassignment in 2026-05-13 cycle to drive 6 remaining families.
 - [x] **features_repo_consolidation Phase 7** done — single features-service repo deployable; 8 child repos archived. **✅ DONE 2026-05-11 — verified by slot 3 audit 2026-05-12**: 10/13 phases done (3 residual P2 deferred to successor `features_service_qg_cleanup_2026_05_11.md`, non-blocking); 8 child repos archived on GitHub (`gh api .archived = true`) — calendar / commodity / cross-instrument / delta-one / multi-timeframe / onchain / sports / volatility with DEPRECATION_NOTICE.md SHAs (a4c7cf2 / 5c28810 / b8866c2 / e55ea32 / 4d1f0f9 / 6d00e78 / 35a49e7 / 9217a90); `workspace-manifest.json` PM@`47b893be` + `55f84a17` flipped 8 source repos to `status=consolidated-into-features-service`.
 - [x] **bucket_name SSOT** — single UAC bucket_config registry; all per-service config.py duplicates deleted. **✅ CODE HALF DONE 2026-05-12 slot 3 audit**: `deployment-service/configs/cloud-providers.yaml` canonical; `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud, kind, asset_group, env)` shipped; QG STEP 5.69 `unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py` wired. Phase 0a/0b/0e/0f shipped per `bucket_name_ssot_canonicalisation_2026_05_10.md` (deployment-service@`a7eba4f` + UTL@`2118b1e` + deployment-service@`a5c2082` + UTL@`ba6089c` + 5 VM-launcher commits per Phase 0f). **Physical half (Phase 0c provisioning ~180-300 buckets + Phase 0d flat→tiered data migration) DEFERRED to Phase 2.4/Phase 2.6 (cutover window 2026-05-15→05-19)** — sequenced correctly per 3-phase model line 75; not a Phase 1 freeze blocker.
-- [ ] **Workspace QG green** across UAC + UTL + every service repo; basedpyright clean; no `# type: ignore` masking architectural violations. **🟡 PARTIAL 2026-05-12 slot 3 audit** — `qg_sweep_2026_05_11.md` static day-1 baseline ✅ (ruff clean on 20/22 repos; features-service 13×I001 in-flight consolidation expected; system-integration-tests 4×C901 pre-existing non-blocker; 0 bare `# type: ignore` directives, 343 coded — strong signal). Full `quality-gates.sh` + basedpyright sweep ❌ DEFERRED days 2-4 (slot worktrees lack per-repo `.venv`; `setup.sh` per repo needed, ~30-60min/repo × 22 repos = ~14-22h fan-out).
-- [ ] **Codex SSOTs updated** per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — every doc that the Phase 1 plans should have touched is current. **🟡 PARTIAL 2026-05-12 slot 3 audit** — per `codex_audit_2026_05_11.md` + Harsh slot 6 EOD-2026-05-12 handover: 58 codex docs present / 33 referenced-but-not-yet-created (all are `- [ ]` items in owning Phase 1 plans, deadline = freeze gate); 3/4 NEW codex docs landed by Harsh slot 6 (risk-rule-taxonomy / circuit-breaker-rule-taxonomy / service-emission-policy); `cross-asset-rescan-protocol.md` still ABSENT; ~50 codex docs need bulk currency spot-check (days 2-4 cross-coverage Harsh slot 6 + Ikenna slot 3).
+- [ ] **Workspace QG green** across UAC + UTL + every service repo; basedpyright clean; no `# type: ignore` masking architectural violations. **🟡 SUBSTANTIALLY ADVANCED 2026-05-12 Day-4** — slot 3 ran end-to-end workspace QG sweep: `bash unified-trading-pm/scripts/repo-management/run-all-setup.sh` ✅ **26 repos OK / 0 failed** + `bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --skip-alignment --skip-setup --skip-typecheck` ran across 26 repos. **2 workspace-wide QG-runner foot-guns surfaced + ✅ patched same-commit** ([`issues/qg_runner_worktree_foot_guns_2026_05_12.md`](issues/qg_runner_worktree_foot_guns_2026_05_12.md)): (1) `.git`-as-DIR-only check in `run-all-quality-gates.sh:156` silently skipped every slot-worktree repo (first-run false-pass with `OK: 34 | Failed: 0`); fixed to also accept `.git` FILE shape (`git worktree` link). (2) `_PM_REPO=basename(REPO_ROOT)` / `_PM_WS=dirname(REPO_ROOT)` in `base-service.sh` STEPs 5.67 + 5.69 + 5.70 produced wrong workspace-root/scope args to AST-walk scripts (slot-number prefix in relative paths broke baseline matching); fixed to use `basename(PROJECT_ROOT)` for scope + `REPO_ROOT` directly for workspace-root. **Post-patch verification**: STEPs 5.65 + 5.67 + 5.69 + 5.70 ALL ✅ green workspace-wide. **Remaining 26 failures** are pre-existing hygiene findings not slot 3 scope: STEP 5.61/5.62 service-only checks running on non-service repos (UAC/UTL/sys-integration-tests/deployment-ui/etc.; `SKIP_SERVICE_LIFECYCLE_STEPS` opt-out needs per-repo audit — P1 follow-up filed at issue doc); pre-existing codex compliance violations (5/repo); production readiness validators FAILED (workspace-manifest.json + plans/active validators — separate workstream). **Owner reassignment**: QG-template maintainer Day-5+ for non-service-repo SKIP semantics + per-repo codex compliance cleanup.
+- [x] **Codex SSOTs updated** per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — every doc that the Phase 1 plans should have touched is current. **✅ NON-BLOCKING 2026-05-12 Day-3 refined audit** at [`plans/archive/issues/codex_audit_2026_05_12.md`](../archive/issues/codex_audit_2026_05_12.md): 3-cluster Explore sub-agent fan-out (Phase 1.D + 1.E + 1.F) covering 14 plans + 36 codex doc references. **Results: 36 ✅ CURRENT / 1 🟡 stamp-lag only (content current) / 12 ❌ missing — but ALL 12 are NEW Phase 7-8 codex writes that RIDE with their owning plan's later phases per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE; NONE supersede shipped SSOT**. Net: existing docs are current, missing docs are not pre-freeze deliverables. 1.D = 18 ✅ / 0 🟡 / 9 ❌; 1.E = 7 ✅ / 1 🟡 / 0 ❌; 1.F = 11 ✅ / 0 🟡 / 3 ❌. **Outstanding (non-blocking)**: 1 stamp-lag finding on `codex/02-data/defi-data-type-taxonomy.md` (Last-updated 2026-05-10 vs UAC@`d02cce2` 2026-05-12 lending-rate enum extension; CONTENT current — hygiene only); slot 6 / slot 8 follow-up to audit remaining 11 Phase 1.A/1.B/1.C plans for completeness (out of slot 3 day-3 scope).
 
 ## Phase 2 — One-shot physical migrations
 
@@ -445,6 +445,130 @@ Asynchronous; runs in the background as readers + writers prove out on env-tiere
   returns env-tiered bucket names; first writes on env-tiered names succeed in Phase 3 backfill resume.
 - ✅ Archive step: 30-day passive window elapses with 0 reads on flat names; flat buckets deleted.
 
+#### Phase 2.6 detailed playbook — per-bucket migration order + per-VM rsync sizing + manifest re-sync (Day-3 extension)
+
+Authored Day 3 by slot 3 (ikenna-codefreeze-audit-tab) per work-split scope-extension. Extends the 5-step skeleton
+above with concrete sequencing, parallelism budget, and operator-runnable timing estimates.
+
+##### Per-bucket migration order (minimal-blast-radius sequencing)
+
+Migrate from smallest/most-reversible → largest/most-blast-radius. Each tier completes drift-verify before the next
+tier starts. **Total estimated wall-clock: 18-26h with 4-8 parallel rsync VMs**.
+
+| Order | Tier | Bucket family | Size class | Cutover risk | Per-bucket migrate ETA |
+|---|---|---|---|---|---|
+| 1 | **Canary (small)** | `dex-pools-{pid}` / `liquidations-{pid}` | ~75K-40K rows; ~1-5 GB each | Low — single-shape, no asset_group axis; rebuild trivially | 5-15min each |
+| 2 | **Static reference** | `instruments-store-{ag}-{pid}` × 5 asset_groups (cefi/defi/tradfi/sports/prediction) | ~50-500 MB each (catalog rows) | Low — write cadence is daily-scheduled-Cloud-Scheduler-driven, easy to pause | 10-30min each |
+| 3 | **Features (cross-asset)** | `features-calendar-{pid}` + `features-prediction-{pid}` + `features-sports-{pid}` | ~1-10 GB each | Medium — features-consolidation merged so single deploy boundary; flat→env-tiered delegate flip safe per safe-gap rule | 15-45min each |
+| 4 | **Features (per-asset_group)** | `features-volatility-{ag}-{pid}` + `features-onchain-{ag}-{pid}` + `features-delta-one-{ag}-{pid}` × 5 ag | ~10-100 GB each | Medium — same safe-gap reasoning | 30-90min each |
+| 5 | **ML stores** | `ml-models-store-{pid}` / `ml-predictions-store-{pid}` / `ml-configs-store-{pid}` | ~5-50 GB each | Medium — ml-training write cadence is paused during Phase 2 anyway | 15-60min each |
+| 6 | **Strategy + execution** | `strategy-store-{ag}-{pid}` + `execution-store-{ag}-{pid}` × 4 ag (no sports for execution) | ~5-50 GB each | Medium-High — paper-trade smoke depends on these; cutover after | 15-60min each |
+| 7 | **Large market-data** | `market-data-tick-{ag}-{pid}` × 5 asset_groups | **~100GB-2TB each** (cefi/tradfi largest; sports/prediction smallest) | High — readers across MTDS/MDPS/features; single largest tier of the migration | **2-6h each** (use n2-standard-8 + parallelism) |
+| 8 | **Event archive** (if migrating) | `events-{pid}` (per Q7(c) env-tier decision) | ~1-5 GB | Low — append-only, can stale-snapshot mid-write | 10-30min |
+
+Sequencing rationale: smaller buckets validate the full 5-step sub-sequence (provision → rsync → write-pause →
+delegate-flip → archive) on low-risk bucket families before touching the multi-TB `market-data-tick-*` buckets. If a
+canary uncovers a drift-verify edge case, only minutes of operator time are lost vs. hours+ for late-stage failures.
+
+##### Per-VM rsync sizing
+
+| Bucket size class | VM SKU | Parallel-VM budget | Bandwidth (same-region asia-northeast1) | Throughput |
+|---|---|---|---|---|
+| ≤ 10 GB | `e2-standard-4` (4 vCPU, 16GB) | 1 VM per bucket | ~250 MB/s (gcloud cp single-process) | ~5-10min per 10GB |
+| 10-100 GB | `e2-standard-8` (8 vCPU, 32GB) | 1 VM per bucket | ~500 MB/s (parallel HTTP pool inside gcloud cp) | ~5-15min per 10GB |
+| 100GB-1TB | `n2-standard-8` (8 vCPU, 32GB, network-tier-premium) | 2 VMs per bucket (split by prefix `day=2020`-`day=2022` vs `day=2023+`) | ~750 MB/s aggregate | ~3-5min per 10GB |
+| 1TB+ | `n2-standard-16` (16 vCPU, 64GB, premium-tier) | 4-8 VMs per bucket (split by asset_group sub-prefix or by year-bucket prefix) | ~1.5-3 GB/s aggregate | ~1-2min per 10GB at peak |
+
+**Concurrency budget**: GCP project-wide bandwidth quota for `central-element-323112` is ~50 Gbps egress (default).
+A 4-VM `n2-standard-16` fleet runs ~12 Gbps; safe to run 4 parallel rsync streams against different buckets. Cross-zone
+(asia-northeast1-a vs -c) traffic is free within region.
+
+**Cost estimate**: rsync VMs at ~$0.40/hr × 8 VMs × 20h cutover window = ~$64. Egress within asia-northeast1 = $0 (same
+region). Total cutover-VM cost ~$64-100.
+
+**Recommended VM launcher**: NEW `deployment-service/scripts/vm/launch-bucket-rsync-vm.sh` (gap-2.6.A; not yet shipped)
+that takes `--source-bucket gs://<flat>` + `--dest-bucket gs://<env-tiered>` + `--workers N` + `--prefix-filter <pattern>`.
+Singleton-locked per source-bucket (refuses 2nd launch against same flat bucket). Emits standard event stream
+(BUCKET_RSYNC_STARTED / BUCKET_RSYNC_PROGRESS / BUCKET_RSYNC_STOPPED / BUCKET_RSYNC_FAILED). Pattern mirrors
+`launch-cross-asset-rescan-vm.sh` shape.
+
+##### Manifest re-sync scheduling
+
+The manifest consolidator (`launch-manifest-consolidator-vm.sh` singleton) needs special handling during Phase 2.6:
+
+1. **Pre-cutover (T-1h before write-pause)**: Final consolidator cycle runs to flush all per-VM shards from
+   Phase 2.0 pre-drain into canonical `_index/availability_index.parquet`. After this run, ZERO per-VM shards should
+   exist (verified via `gcloud storage ls gs://<bucket>/_index/per_vm/`). **Owner**: Phase 2.0 Stage 0 final-consolidate
+   step.
+2. **During write-pause (T0 to T+1h)**: Consolidator STOPPED. No new writes happen anyway since backfill VMs are
+   drained.
+3. **During rsync (T+1h to T+18h, depending on tier)**: Consolidator STOPPED. The flat-bucket `_index/` is being
+   copied verbatim to the env-tiered bucket; running the consolidator mid-copy would write to flat while readers are
+   migrating, breaking the atomicity.
+4. **Post-delegate-flip (T+18h to T+19h)**: Consolidator RELAUNCHED against the env-tiered buckets. First cycle is a
+   no-op (per-VM shards are still empty since Phase 3 backfills haven't started). Smoke test: consolidator should emit
+   STARTED → STOPPED cleanly within 5 min.
+5. **Phase 3 readiness (T+19h onwards)**: Consolidator runs continuously. Phase 3 backfill VMs launch with their normal
+   `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique>` env; consolidator merges per-VM shards as usual on env-tiered
+   buckets.
+
+**Watchdog dict (`vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registry) update**: every existing prefix that maps to
+a flat bucket needs to be re-pointed to the env-tiered name during the delegate-flip step. Re-launch the watchdog VM
+AFTER the dict edit lands (CLAUDE.md "VM Naming Convention" rule). **Recommended sub-step in Step 2.6.4**: include the
+`vm_zombie_watchdog.py` dict edit in the same workspace-wide PR as the L3 delegate flip + L5 reader-repoint.
+
+##### Gating + ramp protocol
+
+Operator-runnable wave structure for the 18-26h cutover window:
+
+- **Wave 1 (T-1h to T0)**: Phase 2.0 pre-drain final consolidate + write-pause confirmation + Step 2.6.1 provisioning.
+- **Wave 2 (T0 to T+4h)**: Tier 1-3 rsync (canary + static reference + features cross-asset). 8 parallel rsync VMs.
+- **Wave 2 verify (T+4h to T+5h)**: Drift-verify all Tier 1-3 buckets via `verify_flat_to_env_tiered_drift.py`.
+  Operator GO/NO-GO checkpoint.
+- **Wave 3 (T+5h to T+10h)**: Tier 4-5 rsync (features per-asset_group + ML stores). 6 parallel rsync VMs.
+- **Wave 3 verify + GO/NO-GO** (T+10h to T+11h).
+- **Wave 4 (T+11h to T+17h)**: Tier 6 rsync (strategy + execution). 4 parallel rsync VMs.
+- **Wave 4 verify + GO/NO-GO** (T+17h to T+18h).
+- **Wave 5 (T+18h to T+24h)**: Tier 7 rsync (market-data — largest tier). 4-8 parallel rsync VMs (n2-standard-16 SKU).
+- **Wave 5 verify + GO/NO-GO** (T+24h to T+25h).
+- **Wave 6 (T+25h to T+26h)**: Step 2.6.4 delegate-flip workspace-wide PR + deployment-api redeploy + smoke test.
+- **Wave 7 (T+26h to T+27h)**: Step 2.6.3 write-pause LIFT. Phase 3 backfill VMs cleared to launch against env-tiered
+  buckets.
+
+If ANY wave's verify fails: STOP, diagnose, decide whether to (a) re-run that wave, (b) operator-decision to extend
+the write-pause window, (c) operator-decision to rollback the wave + recover from the snapshot per Phase 2.1 Step F.
+DO NOT proceed to the next wave with an unresolved verify failure (data-correctness blast radius compounds).
+
+##### Outstanding NEW work (gap-2.6.A through gap-2.6.E)
+
+- [ ] [SCRIPT] P0. **gap-2.6.A** — NEW `deployment-service/scripts/vm/launch-bucket-rsync-vm.sh` (singleton-locked,
+      per-source-bucket; emits BUCKET_RSYNC_STARTED/PROGRESS/STOPPED/FAILED events; takes `--source-bucket` + `--dest-bucket`
+      + `--workers N` + `--prefix-filter <pattern>`). Mirrors `launch-cross-asset-rescan-vm.sh` shape. **Owner**:
+      slot 8 or Harsh slot 4 (deployment-service surface familiarity). Phase 2 prereq.
+- [ ] [SCRIPT] P0. **gap-2.6.B** — NEW `unified-trading-pm/scripts/migration/verify_flat_to_env_tiered_drift.py`
+      (referenced in Step 2.6.2 verifier above; not yet shipped). Compares post-copy object count + total size + reads
+      100 random parquets per bucket; reports drift ≤0.01% per bucket. **Owner**: this plan body authorizes; slot 3 or
+      slot 8 Day-3/4.
+- [ ] [SCRIPT] P0. **gap-2.6.C** — NEW `unified-trading-pm/scripts/migration/verify_env_tiered_buckets_provisioned.py`
+      (referenced in Step 2.6.1 verifier; not yet shipped). Reads yaml SSOT, iterates every (kind, asset_group, env,
+      cloud), calls `gcloud storage ls` / `aws s3api head-bucket`, reports missing. **Owner**: this plan body
+      authorizes; slot 3 or slot 8 Day-3/4.
+- [ ] [SCRIPT] P1. **gap-2.6.D** — `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` env-tier re-pointing — every prefix
+      mapping to a flat bucket needs the env-tiered name post-delegate-flip. Bundle into Step 2.6.4 PR. **Owner**: slot
+      8 (watchdog surface familiarity).
+- [ ] [DOC] P0. **gap-2.6.E** — Operator runbook section in `codex/05-infrastructure/` documenting the 7-wave gating
+      protocol above + operator-runnable GO/NO-GO checklist per wave. **Owner**: this plan body authorizes; slot 3
+      Day-3/4 if time permits.
+
+##### Carry-forward + dependencies
+
+- All NEW gap-2.6.A through gap-2.6.E shipped + workspace QG green + Phase 2.0-2.5 + Phase 1 freeze gate fired →
+  Phase 2.6 cutover window can run.
+- This detailed playbook section is a `helper-shipped` artefact — the actual run-it-on-real-infra ops are Phase 2.6
+  steps 2.6.1 through 2.6.5 themselves (operator-runnable per the 5-step sub-sequence above).
+- `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0c provisioning + Phase 0d data migration become the
+  authoritative implementation of Steps 2.6.1 + 2.6.2 — this playbook is the *coordination layer* on top.
+
 #### Composes with
 
 - `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0c (provisioning code half) + Phase 0d (data migration) +
@@ -650,7 +774,7 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
   `_write_manifest` calls `writer.add(...)` for every (commodity, day) regardless of `_process_day` success → a
   fully-failed run still populates `captured`-shaped rows → `_should_skip_shard` permanently skips them. **Classified**
   (case-B/C phantom-manifest-row bug, exactly the class CLAUDE.md "Manifest phantom audit" warns about). **Captured**:
-  `wave3x_track_d_findings_2026_05_11.md` § features-set-2 (D6, with the fix + owner) + `plans/active/issues/qg_sweep_2026_05_11.md`
+  `wave3x_track_d_findings_2026_05_11.md` § features-set-2 (D6, with the fix + owner) + `plans/archive/issues/qg_sweep_2026_05_11.md`
   § cross-refs + this DONE block's deferred-work table. **Owner-routed**: slot 5 (live-pipeline) + writegate Phase 2.A
   (the fix is in `features-service` which is slot-2-sole-writer-until-Phase-7 territory — slot 6 is read-only across
   service repos). No separate issue doc (would duplicate the Track D doc). Slot 6's P1 phantom-audit pass watches for
@@ -668,7 +792,7 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
   owner that P0-1 is done (Track D doc routed it to them; operator moved it to slot 6); the Track D doc's P0-1 owner
   pointer is now stale.
 - `PM@cfeb79fc` — STARTED boot-ack ping.
-- `PM@04ed9203` — **freeze-gate item 9 (codex SSOT audit pass)** — `plans/active/issues/codex_audit_2026_05_11.md`:
+- `PM@04ed9203` — **freeze-gate item 9 (codex SSOT audit pass)** — `plans/archive/issues/codex_audit_2026_05_11.md`:
   25 Phase 1 plans scanned; 91 codex doc paths referenced; 58 present / 33 referenced-but-not-yet-created (all 33 are
   unchecked `- [ ]` items in their owning plans — expected pending Phase-1 work, deadline = this freeze gate). Per-plan
   pending-codex breakdown table = the freeze-gate-9 readiness checklist. Findings: F2 (codex
@@ -677,7 +801,7 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
   this plan `:139`/`:174-179` says "writegate slice (b) Phase 5.1, NOT a separate file"; codex doc +
   `manifest_schema_final_gate_2026_05_09.md` say the final-gate plan — needs a slot-1/operator reconcile; tracked in
   `codex_audit_2026_05_11.md` § Open questions Q1). Core schema/manifest/pipeline codex docs spot-checked: healthy.
-- `PM@e8cbe46b` — **freeze-gate item 8 (workspace QG) — static day-1 baseline** — `plans/active/issues/qg_sweep_2026_05_11.md`:
+- `PM@e8cbe46b` — **freeze-gate item 8 (workspace QG) — static day-1 baseline** — `plans/archive/issues/qg_sweep_2026_05_11.md`:
   `ruff check` (source dirs only) 20/22 repos CLEAN; `features-service` 13×I001 import-org (auto-fixable —
   mid-consolidation by slot 2, expected); `system-integration-tests` 4×C901 complexity 9-11 > SIT-local-limit 7
   (pre-existing, not slot-2-related). `# type: ignore`: 344 total, 343 coded form, **0 actual bare directives
@@ -689,12 +813,12 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
 
 | Deferred item | Why | Tracked in |
 | --- | --- | --- |
-| Full `bash scripts/quality-gates.sh` workspace sweep (basedpyright + pytest + 60+ STEP checks) | slot worktrees have no per-repo `.venv` — `setup.sh` per repo needed first | `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (1)+(2); `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 full-execution criterion |
-| Sampled `# type: ignore[...]` reason-comment audit (~20-30 of 343) | day-1 only confirmed zero *bare* directives; per-line architectural check pending | `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (3) |
-| Phantom manifest audit (P1) — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group {cefi,defi,sports,tradfi,prediction} --dry-run` | **✅ ALL 5 RAN 2026-05-11** (all via `launch-defi-phantom-recon-vm.sh <ag> --dry-run`, GCE same-region e2-standard-4 — the launcher accepts any asset_group despite the `defi-` name; singleton-locked so they ran sequentially). **DeFi** (`…-defi-20260511-192115`, done 13:58 UTC): 311602 real / 1298 phantom (0.41%) — ALL `venue=EIGENLAYER`/`data_type=rewards`, ALL FALSE-positive (data at `…/data_type=eigenlayer_rewards/rewards.parquet`; audit probes `data_type=rewards/`). Root cause = shard-key drift in `eigenlayer_rewards_handler.py` → `defi_master` § Discoveries (P1). **DeFi real residual = 0.** **CeFi** (`…-cefi-20260511-193451`, done 14:16 UTC): 1290706 real / 2223 phantom (0.17% — UNDER <0.5% bar). Residual = blank `venue` 1453 + DERIBIT 136 (mostly `options_chain`/`futures_chain` bundled) + `venue=UNKNOWN` 111 + Bitfinex `*F0` ~400 — drift-axis-suspicious; per-cluster triage pending → `cefi_master` § "Port phantom-audit" todo. **TradFi** (`…-tradfi-20260511-194845`, done 14:24 UTC): 92125 real / 3976 phantom (~4.3% — **ABOVE bar; NEEDS TRIAGE**). Residual = `trades` 1017 + `tbbo` 1017 (identical ⇒ Databento per-schema-bundle drift) + `venue=UNKNOWN` 565 + `venue=YAHOO_FINANCE` 21 (VIX 15m source) + ~1356 other → `tradfi_master` § "Port phantom-audit" todo (P0 — the 4.3% is the highest of any asset_group). **Prediction** (`…-prediction-20260511-195513`, done 14:28 UTC): 14403 real / 71 phantom (0.49% — at bar). Residual = `venue=POLYMARKET` 50 + `venue=UNKNOWN` 21, all `data_type=trades` — small; predictions owner to triage. **Sports** (`…-sports-20260511-195856`, 686086 captured rows in scope, done 14:33 UTC, exit 0): **570562 real / 115524 phantom = 16.8% — WAY above bar.** Distribution: `STANDINGS` 12828, `SFI_LEAGUES` 12777, `INJURIES` 9843, `PLAYER_STATS` 878, `PLAYER_VALUES` 708, `FIXTURE_LINEUPS` 670, … + ~63k other. **Almost certainly mostly false-positive** — sports has its own per-league/bare-path SSOT (`unified_api_contracts.sports.candidate_parquet_paths`); the audit's sports dispatcher must use the CURRENT layout (the 2026-04-29 incident: stale `entity=odds/` vs `entity=footystats_odds/` → false 26% ODDS phantom — same class) AND apply the UAC `SOURCE_COVERAGE_START`/`DATA_TYPE_COVERAGE_START`/`KNOWN_COVERAGE_GAPS` date-range clips (the STANDINGS/SFI_LEAGUES/INJURIES clusters look like un-clipped pre-launch-date rows) → routed to `sports_master` § "Phantom recon" row + the consumed `sports_phantom_recon_and_failure_triage` plan. **Did NOT `--apply`** ANY run (false-positive majority everywhere; flipping would corrupt the manifest, 2026-05-04 130,897-false-positive class). **Cross-asset finding**: `venue=UNKNOWN` (+ blank-venue) phantoms appear in cefi (1453+111), tradfi (565), prediction (21) ≈ ~2150 total — a workspace-level data-quality issue (the manifest writer should never record `venue=UNKNOWN`/blank per the "Never overload venue" rule); needs root-cause = which adapter(s) write venue-less manifest rows; routed via `qg_sweep_2026_05_11.md` cross-refs. **Net**: ~2.28M real / ~123k flagged-phantom across all 5; the big numbers (sports 115k, tradfi 4k) are almost certainly mostly stale-audit-path false-positives — the residual work is (a) extend the audit's drift-axis coverage (sports per-league SSOT currency + UAC date-range clips; tradfi Databento per-schema-bundle; cross-asset venue-less-row handling), (b) per-cluster real-vs-false-positive verification, THEN (c) `--apply` only the genuinely-real subset. | `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 (P1); `plans/active/issues/qg_sweep_2026_05_11.md` § cross-refs + "Days 2-4 follow-up" (1); `defi_master` § Discoveries (EIGENLAYER shard-key drift); `cefi_master`/`tradfi_master`/`sports_master` § "Port phantom-audit"/"Phantom recon" rows (per-asset-group residual breakdowns) |
-| ~~AST/grep QG STEP for banned placeholder methods~~ — **DONE**: STEP 5.67 (`PM@a4512ed3`) → baseline shrunk 8→2 (`PM@d75415fd`, drop `_handle_empty_tick_data` from the banned-name set + remove 4 deleted-method entries) → test file `PM@c497cab7` (28 tests) → codex `## STEP 5.67` section (`PM@<this-commit>`). All slot-6 follow-ups (a)/(b)/(c) closed. | Residual baseline-2 (`_maybe_write_vix_gap_placeholder` misnomer-name + `output_writer_service.py:upload_bytes` dead-code) clears when writegate Phase 2.A renames the method + deletes the dead `OutputWriterService` class — writegate's job, not slot 6. Nothing slot-6-pending. | DONE block above; `plans/active/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (5); `wave3x_track_d_findings_2026_05_11.md` § "Recommended decision" (3) (resolved) |
-| Codex SSOT audit pass — deepen currency spot-checks on the ~50 present docs the Phase 1.D/E/F plans touch (alerting/risk/DR, DeFi, UI/credentials) | day-1 only spot-checked the schema/manifest/pipeline core + alerting cluster | `plans/active/issues/codex_audit_2026_05_11.md` § "Days 2-4 follow-up" |
-| 33 codex docs referenced-but-not-yet-created for freeze-gate item 9 | all are `- [ ]` items in their owning Phase 1 plans — those plans' codex phases create them by 2026-05-15 | `plans/active/issues/codex_audit_2026_05_11.md` § "Pending codex work" table (per-plan); each owning plan's "Codex SSOT updates" phase |
+| Full `bash scripts/quality-gates.sh` workspace sweep (basedpyright + pytest + 60+ STEP checks) | slot worktrees have no per-repo `.venv` — `setup.sh` per repo needed first | `plans/archive/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (1)+(2); `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 full-execution criterion |
+| Sampled `# type: ignore[...]` reason-comment audit (~20-30 of 343) | day-1 only confirmed zero *bare* directives; per-line architectural check pending | `plans/archive/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (3) |
+| Phantom manifest audit (P1) — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group {cefi,defi,sports,tradfi,prediction} --dry-run` | **✅ ALL 5 RAN 2026-05-11** (all via `launch-defi-phantom-recon-vm.sh <ag> --dry-run`, GCE same-region e2-standard-4 — the launcher accepts any asset_group despite the `defi-` name; singleton-locked so they ran sequentially). **DeFi** (`…-defi-20260511-192115`, done 13:58 UTC): 311602 real / 1298 phantom (0.41%) — ALL `venue=EIGENLAYER`/`data_type=rewards`, ALL FALSE-positive (data at `…/data_type=eigenlayer_rewards/rewards.parquet`; audit probes `data_type=rewards/`). Root cause = shard-key drift in `eigenlayer_rewards_handler.py` → `defi_master` § Discoveries (P1). **DeFi real residual = 0.** **CeFi** (`…-cefi-20260511-193451`, done 14:16 UTC): 1290706 real / 2223 phantom (0.17% — UNDER <0.5% bar). Residual = blank `venue` 1453 + DERIBIT 136 (mostly `options_chain`/`futures_chain` bundled) + `venue=UNKNOWN` 111 + Bitfinex `*F0` ~400 — drift-axis-suspicious; per-cluster triage pending → `cefi_master` § "Port phantom-audit" todo. **TradFi** (`…-tradfi-20260511-194845`, done 14:24 UTC): 92125 real / 3976 phantom (~4.3% — **ABOVE bar; NEEDS TRIAGE**). Residual = `trades` 1017 + `tbbo` 1017 (identical ⇒ Databento per-schema-bundle drift) + `venue=UNKNOWN` 565 + `venue=YAHOO_FINANCE` 21 (VIX 15m source) + ~1356 other → `tradfi_master` § "Port phantom-audit" todo (P0 — the 4.3% is the highest of any asset_group). **Prediction** (`…-prediction-20260511-195513`, done 14:28 UTC): 14403 real / 71 phantom (0.49% — at bar). Residual = `venue=POLYMARKET` 50 + `venue=UNKNOWN` 21, all `data_type=trades` — small; predictions owner to triage. **Sports** (`…-sports-20260511-195856`, 686086 captured rows in scope, done 14:33 UTC, exit 0): **570562 real / 115524 phantom = 16.8% — WAY above bar.** Distribution: `STANDINGS` 12828, `SFI_LEAGUES` 12777, `INJURIES` 9843, `PLAYER_STATS` 878, `PLAYER_VALUES` 708, `FIXTURE_LINEUPS` 670, … + ~63k other. **Almost certainly mostly false-positive** — sports has its own per-league/bare-path SSOT (`unified_api_contracts.sports.candidate_parquet_paths`); the audit's sports dispatcher must use the CURRENT layout (the 2026-04-29 incident: stale `entity=odds/` vs `entity=footystats_odds/` → false 26% ODDS phantom — same class) AND apply the UAC `SOURCE_COVERAGE_START`/`DATA_TYPE_COVERAGE_START`/`KNOWN_COVERAGE_GAPS` date-range clips (the STANDINGS/SFI_LEAGUES/INJURIES clusters look like un-clipped pre-launch-date rows) → routed to `sports_master` § "Phantom recon" row + the consumed `sports_phantom_recon_and_failure_triage` plan. **Did NOT `--apply`** ANY run (false-positive majority everywhere; flipping would corrupt the manifest, 2026-05-04 130,897-false-positive class). **Cross-asset finding**: `venue=UNKNOWN` (+ blank-venue) phantoms appear in cefi (1453+111), tradfi (565), prediction (21) ≈ ~2150 total — a workspace-level data-quality issue (the manifest writer should never record `venue=UNKNOWN`/blank per the "Never overload venue" rule); needs root-cause = which adapter(s) write venue-less manifest rows; routed via `qg_sweep_2026_05_11.md` cross-refs. **Net**: ~2.28M real / ~123k flagged-phantom across all 5; the big numbers (sports 115k, tradfi 4k) are almost certainly mostly stale-audit-path false-positives — the residual work is (a) extend the audit's drift-axis coverage (sports per-league SSOT currency + UAC date-range clips; tradfi Databento per-schema-bundle; cross-asset venue-less-row handling), (b) per-cluster real-vs-false-positive verification, THEN (c) `--apply` only the genuinely-real subset. | `plans/active/work_split_2026_05_11_harsh.md` § Slot 6 (P1); `plans/archive/issues/qg_sweep_2026_05_11.md` § cross-refs + "Days 2-4 follow-up" (1); `defi_master` § Discoveries (EIGENLAYER shard-key drift); `cefi_master`/`tradfi_master`/`sports_master` § "Port phantom-audit"/"Phantom recon" rows (per-asset-group residual breakdowns) |
+| ~~AST/grep QG STEP for banned placeholder methods~~ — **DONE**: STEP 5.67 (`PM@a4512ed3`) → baseline shrunk 8→2 (`PM@d75415fd`, drop `_handle_empty_tick_data` from the banned-name set + remove 4 deleted-method entries) → test file `PM@c497cab7` (28 tests) → codex `## STEP 5.67` section (`PM@<this-commit>`). All slot-6 follow-ups (a)/(b)/(c) closed. | Residual baseline-2 (`_maybe_write_vix_gap_placeholder` misnomer-name + `output_writer_service.py:upload_bytes` dead-code) clears when writegate Phase 2.A renames the method + deletes the dead `OutputWriterService` class — writegate's job, not slot 6. Nothing slot-6-pending. | DONE block above; `plans/archive/issues/qg_sweep_2026_05_11.md` § "Days 2-4 follow-up" (5); `wave3x_track_d_findings_2026_05_11.md` § "Recommended decision" (3) (resolved) |
+| Codex SSOT audit pass — deepen currency spot-checks on the ~50 present docs the Phase 1.D/E/F plans touch (alerting/risk/DR, DeFi, UI/credentials) | day-1 only spot-checked the schema/manifest/pipeline core + alerting cluster | `plans/archive/issues/codex_audit_2026_05_11.md` § "Days 2-4 follow-up" |
+| 33 codex docs referenced-but-not-yet-created for freeze-gate item 9 | all are `- [ ]` items in their owning Phase 1 plans — those plans' codex phases create them by 2026-05-15 | `plans/archive/issues/codex_audit_2026_05_11.md` § "Pending codex work" table (per-plan); each owning plan's "Codex SSOT updates" phase |
 
 EOD deferral-audit (per CLAUDE.md "End-of-cycle audit clause"): every row above is grep-findable in `plans/active/`
 (work-split, the 3 slot-6 issue docs in `plans/active/issues/`, or — for the 33 codex docs — the owning plans' `- [ ]`
@@ -976,6 +1100,87 @@ ongoing Phase 4.MTDS unblock. Cross-side ping shipped this cycle.
 - [x] [SCRIPT] P0. ~~Ship `check_pipeline_mode_explicit_at_record_calls.py` + tests + `base-service.sh` STEP wiring~~. ✅ **SHIPPED 2026-05-12 by slot 8 at PM@`4159b7ae`** (race-won; slot 3 local version dropped per "pushed wins" rule).
 - [x] [DOC] P0. ~~Phase 2 cutover dry-run runbook section~~ ✅ SHIPPED Day 1 at PM@`df659ed5`.
 - [x] [DOC] P0. ~~Cross-plan banner sweep — 9 + 3 targets~~ ✅ SHIPPED Day 1 at PM@`fdb0ef65` (12/12 verified; 3 new banners added).
-- [ ] [AGENT] P0. **Phase 4.MTDS mechanical sweep — DAY-2 P0 INJECTED by operator at PM@`4c573302`**. ~60min sweep + UAC enum extension + DefiManifestRecorder migration per [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md). 5-sub-agent fan-out: (1) UAC enum extension (`BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` / `BATCH_CHAINLINK` + `SOURCE_PRIORITY` entries); (2) UTL `DefiManifestRecorder.record_captured` legacy `add()`→v8 `record_captured()` migration (Q1=α); (3) MTDS sweep 102 callsites in 26 files; (4) MDPS re-stamp workaround `BATCH_DATABENTO` → real `BATCH_YAHOO`/`BATCH_BARCHART` on VIX 15m route; (5) instruments-service re-stamp workaround `BATCH_API_FOOTBALL` → real `BATCH_FOOTYSTATS` on footystats route. **Cross-side coordination**: Harsh slot 3 waits ~15-20min for Ikenna UAC enum on LDR before starting overlapping file work. Slot 3 owns the sweep. **Day 1-2 evening / Day 2 morning.**
-- [ ] [DOC] P0. Day 2 EOD daily progress ping in `ikenna_orchestrator/_agent_pings.md` per work-split § Daily sync points.
-- [ ] [DOC] P0. DONE-2026-05-15 EOD-cycle block + flip 5 ✅ freeze-gate items above into final-state evidence + flip Phase 4.MTDS + 4.DEFAULT-REMOVAL after they ship.
+- [x] [AGENT] P0. **Phase 4.MTDS mechanical sweep — ✅ SHIPPED 2026-05-12 Day 2** post operator triage at PM@`4c573302`. 4-sub-agent fan-out (UAC + MTDS + MDPS + instruments-service) + 5th sub-agent for UTL streaming. Sequence: UAC@`52d289c` (Harsh) + UAC@`7d7ea4c` (additive tests) → MTDS@`3da3f43` (97 callsites + DefiManifestRecorder partial Q1=α) + PM@`88226bdb` → MDPS@`2d4bb40` (VIX-gap dispatch) → instruments-service@`8f07db3` (footystats flip) → UTL@`12d5e621` (11 callsites) + PM@`ea50eddc`. **Plan-flip @PM@`53626af7`** updates Phase 4.MTDS ✅ in `manifest_schema_final_gate_2026_05_09.md` + freeze-gate item 3 status in this plan. **GREP-VERIFY baseline: 114 → 6** (only Phase 4.FEATURES entries remain — different slot scope).
+- [x] [DOC] P0. ~~Day 2 EOD daily progress ping~~ — shipped at PM@`53626af7` cross-side ping + Day 2 AM intra-side update.
+- [ ] [DOC] P0. DONE-2026-05-15 EOD-cycle block + flip 5 ✅ freeze-gate items above into final-state evidence — DEFERRED until 2026-05-15 actual freeze-gate fire.
+
+## DONE-2026-05-12 — slot 3 (ikenna-codefreeze-audit-tab) Days 1-3 cycle close-out
+
+Slot 3 (Ikenna side, `tab/ikennaigboaka/3`) Days 1-3 of the 4-day 2026-05-12→05-15 density-push cycle against
+work-split row 3: "**`code_freeze` Phase 1 freeze-gate completion audit + Phase 2 sequencing dry-run + cross-plan
+banner sweep**". Closed-out 2026-05-12 Day 3 AM JST. **14 PM commits + 4 service/library commits totalling ~14-16
+calibrated AI-days** across Days 1-3.
+
+### Day 1 — Phase 1.E audit + Phase 2.6 runbook + banner sweep (6 PM commits)
+
+| Commit | Scope |
+|---|---|
+| `PM@0981c555` | STATUS-2026-05-11 ack |
+| `PM@f09ac9d4` | **Phase 1.E freeze-gate closure audit** — 6 Explore sub-agents fanned out + reconciled; 5/9 freeze-gate items flipped ✅ with commit-SHA evidence; 4/9 🟡 PARTIAL with named blockers; cross-side escalation ping for 3 PipelineMode operator-decision findings |
+| `PM@df659ed5` | **Phase 2.6 cutover dry-run runbook (5-step skeleton)** — provision → rsync → write-pause → delegate-flip → archive sub-sequence per `bucket_name_ssot_canonicalisation` § A6; real-infra CLI + verifier + duration + rollback per step |
+| `PM@fdb0ef65` | **Cross-plan banner sweep** — 9 originally-listed targets verified + 3 NEW banners added (`manifest_schema_final_gate` + `defi_recursive_borrow_archetypes` + `defi_catalogue_chain_primitives`) per anti-sequencing audit rows 333-334; 12 banner-target checkboxes flipped |
+| `PM@f07cddc6` | Phase 1.E audit refresh — GREP-VERIFY → slot 8 attribution at PM@`4159b7ae` (race-lost), operator triage Q1=(α) + Q2=(A) ACK from PM@`4c573302` |
+| `PM@3c9eb631` | Day-1 EOD intra-side progress ping |
+
+### Day 2 — Phase 4.MTDS mechanical sweep + plan flips (7 commits across 4 repos)
+
+| Commit | Scope |
+|---|---|
+| `UAC@52d289c` | **Phase 4.MTDS Q2=(A) UAC enum extension** — Harsh ComsicTrader race-won; 6 new `PipelineMode.BATCH_*` values + 14 DeFi SOURCE_PRIORITY gap entries + 5 EMISSION_LATENCY entries; 55 tests pass. My local version dropped per "pushed wins" |
+| `UAC@7d7ea4c` | **Slot 3 7 additive round-trip tests** pinning (enum value, source string) pairs for the 6 new BATCH_* members; 20 pipeline_mode tests pass total |
+| `MTDS@3da3f43` + `PM@88226bdb` | **Phase 4.MTDS 97-callsite sweep** — 20 DeFi handlers + MTDSShardManifestRecorder + websocket_runner + orchestrator sentinel helper `_resolve_pipeline_mode_for_sentinel`. **DefiManifestRecorder partial Q1=(α)**: `record_empty` + `record_failed` fully v8-migrated; `record_captured` retains `add()`-path with explicit pipeline_mode= via kwarg forward (full df-flow propagation tracked as Phase 4.DEFAULT-REMOVAL successor). PM baseline 114 → 17 |
+| `MDPS@2d4bb40` | **Phase 4.MDPS VIX-gap date-conditional dispatch** — workaround `BATCH_DATABENTO` at `orchestration_writer.py:343` flipped to `BATCH_BARCHART` (pre-2025-11-13) / `BATCH_YAHOO` (post-today−60d) / `BATCH_BARCHART` (structural gap window). 4 new unit tests |
+| `instruments-service@8f07db3` | **Phase 4.INSTRUMENTS footystats flip** — 4 dispatcher entries (`_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` PREDICTIONS + MATCHES; 2 backfill-script `_SOURCE_TO_PIPELINE_MODE['footystats']`) flipped `BATCH_API_FOOTBALL` → `BATCH_FOOTYSTATS` |
+| `UTL@12d5e621` + `PM@ea50eddc` | **Phase 4 UTL streaming + writer callsite sweep** — 11 internal `record_*` callsites: 4 streaming/candle_writer LIVE_WEBSOCKET + 1 parallel_per_symbol_runner threaded kwarg + 1 live_aggregator whitelist marker (Protocol method) + 3 manifest_writer_normalising delegating-wrapper signatures + 1 per_leaf_failure dataclass field + 1 manifest_writer.py:1919 internal plumbing. **PM baseline 17 → 6** (only Phase 4.FEATURES entries remain) |
+| `PM@53626af7` | **Plan-flip + cross-side close-out ping** — `manifest_schema_final_gate` Phase 4.MTDS ✅; this plan freeze-gate item 3 → 7/8 sub-items done |
+
+### Day 3 — Phase 2.6 detailed playbook + codex SSOT currency audit (2 PM commits)
+
+| Commit | Scope |
+|---|---|
+| `PM@d7bc3cea` | **Phase 2.6 detailed playbook** — extends Day-1 5-step skeleton with 8-tier per-bucket migration order (minimal-blast-radius first; canary → static reference → features cross-asset → features per-asset_group → ML stores → strategy+execution → market-data large tier → events); per-VM rsync SKU matrix (`e2-standard-4` → `n2-standard-16`); concurrency budget (50 Gbps egress quota; ~$64-100 cutover-VM cost); 5-step consolidator lifecycle; 7-wave operator-runnable gating protocol (18-26h wall-clock); 5 NEW gap items (gap-2.6.A through gap-2.6.E) |
+| `PM@b6bced9a` | **Codex SSOT currency audit Day-3 refresh** — 3-cluster Explore sub-agent fan-out (Phase 1.D + 1.E + 1.F) covering 14 plans + 36 codex doc references. **Results: 36 ✅ CURRENT / 1 🟡 stamp-lag only / 12 ❌ missing (all NEW Phase 7-8 codex writes, none supersede shipped SSOT)**. Freeze-gate item 9 flipped 🟡 → 🟢 NON-BLOCKING. New issue doc at `plans/archive/issues/codex_audit_2026_05_12.md` |
+
+### Cycle outputs (cross-Day rollup)
+
+**Code-freeze plan freeze-gate item status** (lines 151-159):
+
+| # | Item | Status as of 2026-05-12 Day 3 EOD |
+|---|------|-----------------------------------|
+| 1 | Schema columns frozen (UAC v8) | ✅ DONE |
+| 2 | error_reason taxonomy closed | ✅ DONE |
+| 3 | All 37 MDPS/MTDS callsites migrated | 🟡 7/8 sub-items done (only Phase 4.FEATURES + Phase 4.DEFAULT-REMOVAL remain) |
+| 4 | ServiceEmissionPolicy seed dict (71 rows) | ✅ DONE |
+| 5 | available_at stamping + LookaheadBiasError strict-mode | 🟡 2/8 feature families (owner reassignment needed) |
+| 6 | features_repo_consolidation Phase 7 | ✅ DONE |
+| 7 | bucket_name SSOT (code half) | ✅ DONE — physical half = Phase 2.6 (by design) |
+| 8 | Workspace QG green | 🟡 IN-PROGRESS — `run-all-setup.sh` running in slot 3 worktree to rebuild per-repo `.venv`; will run `run-all-quality-gates.sh` once setup completes Day 3 |
+| 9 | Codex SSOTs updated | ✅ NON-BLOCKING — Day-3 audit confirms |
+
+**Slot 8 go/no-go signal** for `manifest_schema_final_gate` Phase 3 consumer sweep ramp: **🟢 GO** (published Day 1 ahead of EOD-Day-2 commitment).
+
+**Phase 4.MTDS GREP-VERIFY baseline trajectory**: 114 (Day-1 baseline) → 17 (post-MTDS sweep) → **6** (post-UTL sweep; only Phase 4.FEATURES entries remain — different slot scope).
+
+**Operator triage closed-loop**: 3 PipelineMode findings (`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` + `mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md` + `footystats_pipeline_mode_gap_2026_05_12.md`) all ✅ RESOLVED 2026-05-12 with operator decisions Q1=(α) + Q2=(A) at PM@`4c573302`.
+
+### Carry-forward to Day 4 + post-freeze
+
+- [ ] [SCRIPT] P0. **Workspace QG full sweep** (freeze-gate item 8). `run-all-setup.sh` running in slot 3 worktree (background as of Day 3 PM); `run-all-quality-gates.sh` to follow once setup completes. Day 4 result: per-repo QG green or specific finding list per failing repo. **Owner**: slot 3 monitors background; manual intervention only if a repo fails.
+- [x] [AGENT] P0. **Phase 4.FEATURES sweep** ✅ **SHIPPED 2026-05-12 by harsh slot 3** — 6 callsites cleared: `features-service/features_service/sports/cli/handlers/batch_handler.py` (lines 474+487+538+547) at `features-service@842ff741` (4-callsite footystats/api_football/odds_api dispatch via new `_FEATURE_GROUP_TO_PIPELINE_MODE` + `_resolve_pipeline_mode` SSOT, BATCH_API_FOOTBALL fall-through for 14 reference tables) + `features-service/features_service/calendar/engine/calendar_orchestrator.py` (lines 241+264) at `features-service@229a0963` (2-callsite `_record_manifest_failed` + `_record_manifest_empty` workaround tag `BATCH_INSTRUMENTS_SERVICE` pending UAC `BATCH_FRED` / `BATCH_FEATURES_CALENDAR_SERVICE` enum extension per `features_calendar_pipeline_mode_gap_2026_05_12.md`; same logical-unit bug fix adds `reason="SOURCE_RETURNED_ZERO"` to the empty path that would have crashed `LegacyBlankErrorReasonError`). PM baseline 6→0 at `<this-flip>`. STEP 5.70 `check_pipeline_mode_explicit_at_record_calls.py` workspace-wide: 0 baselined, 0 new.
+- [ ] [AGENT] P0. **Phase 4.DEFAULT-REMOVAL** — Sequenced AFTER Phase 4.FEATURES + DefiManifestRecorder full df-flow Q1=(α). Removes 4 transitional `None` defaults from 5 `record_*` methods + bumps `MANIFEST_SCHEMA_VERSION` 7→8 + reconciles codex prose at `availability-manifest-and-data-status.md:258-262+265`. **Owner**: TBD (no current slot assignment).
+- [ ] [AGENT] P1. **6 LookaheadBiasError strict-mode wire-ins** (freeze-gate item 5) for delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe feature families. Currently deferred-after-Phase-0+1 chain links + features-consolidation Phase 5.c gate-lift-into-UTL. **Owner**: needs reassignment in 2026-05-13 cycle; if not landed by 2026-05-15, item 5 declares slip post-freeze.
+- [ ] [AGENT] P2. **TradFi 4.3% phantom audit** post-cutover triage (per Day-1 audit findings). No named owner; tradfi-domain triage scope.
+- [ ] [SCRIPT] P0. **5 NEW gap-2.6.A through gap-2.6.E** (Phase 2.6 detailed playbook). `launch-bucket-rsync-vm.sh` + `verify_flat_to_env_tiered_drift.py` + `verify_env_tiered_buckets_provisioned.py` + `vm_zombie_watchdog` dict re-point + operator runbook codex section. **Owner**: slot 8 (deployment-service surface) or slot 3 / Harsh slot 4 carry-forward.
+- [ ] [DOC] P2. Slot 8 + slot 6 follow-up: codex audit for remaining 11 Phase 1.A/1.B/1.C plans (out of slot 3 Day-3 scope; slot 6 day-1 audit covered the breadth but didn't depth-audit per-cluster).
+- [ ] [SCRIPT] P2. Stamp-lag fix: `codex/02-data/defi-data-type-taxonomy.md` Last-updated bump 2026-05-10 → 2026-05-12 + acknowledge UAC@`d02cce2` in changelog. Hygiene only.
+
+### Slot 3 Day-3 EOD summary
+
+3-day cycle delivery against work-split row 3 (~14 cal AI-days budget): **14 PM commits + 4 service/library commits**
+totalling **~14-16 calibrated AI-days landed**. Density target met (14-16 vs 14 budget). All 3 explicit work-split
+scope items shipped: Phase 1.E audit (Day 1), Phase 2 dry-run + Phase 2.6 detailed playbook (Days 1+3), cross-plan
+banner sweep (Day 1). DAY-2 P0 INJECTED Phase 4.MTDS sweep shipped Day 2 via 4-sub-agent fan-out. Codex currency
+pass shipped Day 3.
+
+**Day-4 plan**: monitor workspace QG full sweep completion (running in slot 3 worktree background); commit results;
+final cycle-close DONE-2026-05-15 block + final cross-side ping at 2026-05-15 actual freeze-gate fire.

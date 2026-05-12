@@ -4,8 +4,9 @@ role: umbrella
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 created: 2026-05-06
+parent: manifest_evolution_master_2026_05_08
 companion_handover: plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-parent_plan: infrastructure_master_2026_05_07.md # peer/umbrella; was shard_granularity_ssot_propagation, now folded
+parent_plan: infrastructure_master_2026_05_07.md # legacy peer ref; superseded by parent above (folded into manifest_evolution_master 2026-05-08)
 related:
   - predictions_master_2026_05_07.md # folds in predictions_canonical_question_group_polymarket_migration
   - infrastructure_master_2026_05_07.md # folds in shard_granularity + data_status_multi_axis + deployment_service_build_infra
@@ -23,6 +24,71 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+## STATUS BOARD — 2026-05-12 (agent orientation — read this, skip the 4000-line body)
+
+### Operator decisions (locked 2026-05-12)
+
+| Question                      | Decision                                                                                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 2.B amendment F         | **Option α** — orchestrator-boundary at `engine/orchestrator.py:2186-2218`; generalise ES.OPT manual check to all `BUNDLED_DATA_TYPES`; single SSOT     |
+| Phase 6.8 instruments-service | **Option (a)** — migrate all 41 `.add()` callsites → `record_captured()` then wire `publish_with_policy`; remove legacy path entirely                   |
+| Phase 2.D — all fields        | **SHIPS NOW (full scope, 2026-05-12)**: (1) `match_end_time` = SFI progressive-stats freeze. (2) `announced_at` = API Football fixture object (retroactive). (3) `SFI_DATA_LAG_P95_SECONDS` UAC constant + `UNDERSTAT_DATA_LAG_P95_SECONDS` + `FOOTYSTATS_DATA_LAG_P95_SECONDS` + `API_FOOTBALL_RESULT_LAG_P95_SECONDS` + `OPEN_METEO_HISTORICAL_LAG_SECONDS` — all in new `UAC registry/source_data_latency.py`. (4) `report_time = match_end_time + SOURCE_LAG` per source. (5) POSTPONED/CANCELLED both historical AND live: instruments-service API Football forward-poll overwrites manifest with `record_empty(reason=EXPECTED_FIXTURE_POSTPONED/CANCELLED)`; manifest audit trail records the transition — no separate state-machine needed. |
+| CeFi Tardis re-shape          | **Option A** — re-rescan all 252 shards; do not derive from existing parquet                                                                            |
+
+### Phase/Wave status
+
+| Phase                                                                       | Status     | Key commits / blocker                                                                                                |
+| --------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| P0-2 Steps 1-4 + 6                                                          | ✅         | mdps@d717c59…a964b96 + mdps@89eacc6                                                                                  |
+| P0-2 Step 5 (OHLCV nullability)                                             | 🔒         | Blocked: `hard_schema_enforcement_2026_05_08` → tradfi futures-expiry                                                |
+| 1A — UTL contract (record_captured + stamping + 14 tests)                   | ✅         | UTL@958634f9; open: QG ratchet step                                                                                  |
+| 1B — UAC SSOTs (honest_coverage + source_priority + availability_semantics) | ✅ partial | Open: DATA_TYPE_TO_CLUSTER_REGISTRY + SPORTS_FIXTURE_CLUSTERS + PREDICTION_GROUPS (blocked on predictions plan)      |
+| 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                          |
+| 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                     |
+| 2.B — MTDS cluster wiring                                                   | ❌         | Decision → α; build: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding      |
+| 2.C — features-sports stamping                                              | ❌         | coaches/rounds ✅ (features-service@842ff741); open: fixture_lineups + fixture_player_stats + per-table available_at |
+| 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                |
+| 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; open: QG AST-walk step                                                                   |
+| 2.E.2 — per-service writer migration                                        | ✅ partial | instruments + features-sports + MDPS done; open: partial-bundle → EXPECTED_INSTRUMENT_NOT_LISTED                     |
+| 2.E.3 — downstream consumer audit (7 services)                              | ❌         | Ready; ~3-4 days                                                                                                     |
+| 3.A — reconciliation scripts (4 scripts)                                    | ✅ partial | Open: pre-v5 row purge, category=→asset_group= GCS migration runbook                                                 |
+| 3.B/3.C — GCS backfills + reconciler observability                          | ❌         | Ready; ~2-3 days                                                                                                     |
+| 3.D.1 — reconcile_expected_absence_reasons.py                               | ✅         | instruments-service@1f93745 + UTL@c5c2669e                                                                           |
+| 3.D.2 — reader-side classify_legacy_empty_row                               | ✅         | UTL@c5c2669e + deployment-api@176c599                                                                                |
+| 3.D.4 — v1 enumerator (1,455,901 rows / 5 asset_groups)                     | ✅         | All 5 VMs complete; deployment-ui spot-check pending                                                                 |
+| 3.D.5 — v2 catalog-driven enumeration                                       | ❌         | 0% started; ~8-12 days                                                                                               |
+| Wave 3 — cross-service cascade (expected_unattempted)                       | ❌         | Depends on 3.D.5; ~5-7 days                                                                                          |
+| Wave 3.S — sports/prediction per-source rules                               | ❌         | ~2-3 days                                                                                                            |
+| Wave 3.M — CeFi zero-activity bars                                          | ❌         | 0% started; UTL zero_activity_bars helper doesn't exist yet                                                          |
+| Wave 3.X — dimensions audit (11 SSOTs)                                      | ❌         | ~5-8 days                                                                                                            |
+| Wave 4 Slice (a) — ServiceEmissionPolicy enum + 48 tests                    | ✅         | UAC@58c3b61 + UTL@1a7e1d4b                                                                                           |
+| Wave 4 Slice (b) — Phase 5.1-5.7 MDPS POC + API + UI                        | ✅         | MDPS@9e1a93e + deployment-api@3a0948e + deployment-ui@00132db                                                        |
+| Wave 4 Slice (c) Phase 6.1 — MTDS audit (n/a)                               | ✅         | MTDS is originator, no wiring needed                                                                                 |
+| Wave 4 Slice (c) Phase 6.2 — MDPS remaining 3 data_types                    | ✅         | MDPS@d0df50c + @311614a; 1 follow-on: v8 col passthrough to record_captured                                          |
+| Wave 4 Slice (c) Phase 6.3-6.9 — per-service rollout                        | ❌         | ~15-20 days; Phase 6.3 features-vol = BUILD FROM SCRATCH                                                             |
+| 4.A — deployment-api typed-reason rendering                                 | ✅         | deployment-api@3b0477a                                                                                               |
+| 4.B — deployment-ui (badges + stacks + leaf modal)                          | ✅         | deployment-ui@a7384a0+621f0b3+8f630a6                                                                                |
+| 4.A/4.B residual — live-vs-historical alert + badge                         | ❌         | Multi-repo; ~2-3 days                                                                                                |
+| 5 — baseline + ratchet helper                                               | ✅ partial | UTL@59996210 + PM@5c876f9d; open: measure script (needs GCE VM), CI gate, write-gate quartet integration test        |
+| CeFi Tardis re-shape (migrated issue)                                       | ❌         | Decision → Option A; re-rescan 252 shards                                                                            |
+| MDPS liquidity baseline (migrated issue)                                    | ❌         | TickRateBaseline VM + DATA_QUALITY_SUSPECTED_GAP reason                                                              |
+
+### Active blockers (external)
+
+- **P0-2 Step 5** ← `hard_schema_enforcement_2026_05_08` ← `tradfi_master_2026_05_07` (futures-expiry)
+- **1B PREDICTION_GROUPS** ← `predictions_master_2026_05_07` Phase 1A
+- **Phase 5 write-gate quartet test** ← Phase 1A NanRatioExceededError + SchemaMismatchError (future open)
+
+### Top 5 recommended next actions
+
+1. **Phase 6.3 features-volatility** — BUILD FROM SCRATCH (~3-4 days); no prior template
+2. **Phase 2.B MTDS cluster wiring** — Option α decided; start at `engine/orchestrator.py:2186-2218`
+3. **Phase 6.8 instruments-service** — Option (a) decided; migrate 41 `.add()` callsites → `record_captured()`
+4. **Phase 2.C features-sports** — fixture_lineups + fixture_player_stats stubs; self-contained ~2 days
+5. **Wave 3.M zero-activity bars** — build UTL `zero_activity_bars` helper first, then wire CeFi adapters
+
+---
+
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
 > This plan's manifest-touching scope MUST execute as part of the umbrella's gate sequence — NOT in isolation. Operator
@@ -37,7 +103,13 @@ estimate_calibration_note: |
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
 >
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) elevates this plan's **slice (b) Phase 5.1 (UAC manifest schema columns)** + **slice (c) Phase 6.1-6.9 (per-service rollout)** to **Phase 1 freeze blockers**. Schema column declaration here gates Phase 2.1 v8 atomic rename — there is no separate `manifest_v8_schema_migration_design` file because the design is intentionally split between this plan's slice (b) (column declaration) and `manifest_cross_asset_rescan_design_2026_05_08` (flip semantics + apply-flips execution). Reviewers reject any new "v8-schema-design" standalone plan; the split is canonical per operator direction 2026-05-08.
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> elevates this plan's **slice (b) Phase 5.1 (UAC manifest schema columns)** + **slice (c) Phase 6.1-6.9 (per-service
+> rollout)** to **Phase 1 freeze blockers**. Schema column declaration here gates Phase 2.1 v8 atomic rename — there is
+> no separate `manifest_v8_schema_migration_design` file because the design is intentionally split between this plan's
+> slice (b) (column declaration) and `manifest_cross_asset_rescan_design_2026_05_08` (flip semantics + apply-flips
+> execution). Reviewers reject any new "v8-schema-design" standalone plan; the split is canonical per operator direction
+> 2026-05-08.
 
 # Write-Gate + Honest-Coverage End-to-End — Plan (UMBRELLA)
 
@@ -782,12 +854,13 @@ orphans differ. Phase 2.A unifies to the broadest set and routes ALL caught exce
 
 ### P0-2 — MDPS dead write-gate surgery (2026-05-11 slot 8)
 
-Per [`wave3x_track_d_findings_2026_05_11.md`](issues/wave3x_track_d_findings_2026_05_11.md) § P0-2: the 2026-05-06 audit
-above (lines 746-768) called `orchestration_writer.py:413 _write_candles_to_gcs` orphaned, but missed the actual
-MRO-winning override at `orchestration_writer.py:328 _write_candles` (legacy `storage_client.upload_bytes`-direct path,
-no `ManifestWriter`, no 4-pillar gate). Result: every candle MDPS wrote in production had ZERO manifest record + ZERO
-NaN-ratio/cluster-coverage check — the entire honest-coverage infrastructure in `canonical_writer.py` +
-`candle_write_mixin.py` was dead code on the live path. 6-step fix executed by slot 8 ikenna-slot8-p0-2-surgery:
+Per [`wave3x_track_d_findings_2026_05_11.md`](../archive/issues/wave3x_track_d_findings_2026_05_11.md) § P0-2: the
+2026-05-06 audit above (lines 746-768) called `orchestration_writer.py:413 _write_candles_to_gcs` orphaned, but missed
+the actual MRO-winning override at `orchestration_writer.py:328 _write_candles` (legacy
+`storage_client.upload_bytes`-direct path, no `ManifestWriter`, no 4-pillar gate). Result: every candle MDPS wrote in
+production had ZERO manifest record + ZERO NaN-ratio/cluster-coverage check — the entire honest-coverage infrastructure
+in `canonical_writer.py` + `candle_write_mixin.py` was dead code on the live path. 6-step fix executed by slot 8
+ikenna-slot8-p0-2-surgery:
 
 - [x] **Step 1 (P0)**: Delete `CandleOrchestrationWriter._write_candles` + `BatchOrchestrationMixin._write_candles`
       NotImplementedError stub (the stub intercepted MRO before `CandleWriteMixin._write_candles`). Add `underlying`
@@ -795,85 +868,86 @@ NaN-ratio/cluster-coverage check — the entire honest-coverage infrastructure i
       the `live_workers.py:713` + `:1170` callsite contract. Net: `CandleOrchestrationService._write_candles` now
       resolves to the canonical writer path (`canonical_writer.write_candle_parquet` →
       `ManifestWriter.record_captured` + UTL 4-pillar gate). Shipped market-data-processing-service@d717c59 — 1171/1173
-      tests pass + 1 skip + 1 unrelated CLI env-validation failure (`test_cli_help` — `ENVIRONMENT='test'` not in
-      valid set; not P0-2 scope).
-- [x] **Step 2 (P0)**: Fix `tradfi/ohlcv_passthrough.py:266 _create_full_day_empty_output` — currently emits
-      `n_candles` rows of all-NaN OHLC on `tick_data.empty`. Replace with `BaseCandleAdapter._make_empty_candle_output()`
-      + route empty result through `record_empty(row_key=..., reason=...)`. Shipped
-      market-data-processing-service@93883b7 — `_create_full_day_empty_output` deleted, `process_to_candles` empty
-      branch returns `_make_empty_candle_output()` (zero-row CandleOutput, Path A). Upstream
-      `live_workers._process_all_timeframes` detects `candles_df.empty` and emits `record_empty_for_shard`. 27/27
-      tradfi adapter tests pass.
-- [x] **Step 3 (P0)**: Delete duplicated `_create_closed_market_candle` at `orchestration_writer.py:65` + `batch_workers.py:94`
-      (banned per CLAUDE.md "No double SSOT"); delete `_write_closed_market_candles` (uses the banned NaN-OHLC
-      helper). Update `_handle_empty_tick_data` TRADFI branch to route through `record_empty_for_shard` like every
-      other asset_group (instead of the deleted `_write_closed_market_candles`). Shipped
+      tests pass + 1 skip + 1 unrelated CLI env-validation failure (`test_cli_help` — `ENVIRONMENT='test'` not in valid
+      set; not P0-2 scope).
+- [x] **Step 2 (P0)**: Fix `tradfi/ohlcv_passthrough.py:266 _create_full_day_empty_output` — currently emits `n_candles`
+      rows of all-NaN OHLC on `tick_data.empty`. Replace with `BaseCandleAdapter._make_empty_candle_output()` + route
+      empty result through `record_empty(row_key=..., reason=...)`. Shipped market-data-processing-service@93883b7 —
+      `_create_full_day_empty_output` deleted, `process_to_candles` empty branch returns `_make_empty_candle_output()`
+      (zero-row CandleOutput, Path A). Upstream `live_workers._process_all_timeframes` detects `candles_df.empty` and
+      emits `record_empty_for_shard`. 27/27 tradfi adapter tests pass.
+- [x] **Step 3 (P0)**: Delete duplicated `_create_closed_market_candle` at `orchestration_writer.py:65` +
+      `batch_workers.py:94` (banned per CLAUDE.md "No double SSOT"); delete `_write_closed_market_candles` (uses the
+      banned NaN-OHLC helper). Update `_handle_empty_tick_data` TRADFI branch to route through `record_empty_for_shard`
+      like every other asset_group (instead of the deleted `_write_closed_market_candles`). Shipped
       market-data-processing-service@2f163c1. **KEPT** `_handle_empty_tick_data` itself — it's the production
       orchestration entry-point for empty-tick branches, NOT a banned placeholder; it already routes non-TRADFI
-      asset_groups through `record_empty_for_shard` correctly (per writegate AUDIT 2026-05-07 line 1156-1159).
-      **NOTE**: scope refined vs task spec — task said "also delete `_handle_empty_tick_data`", but examining its
-      body showed it's the orchestration handler (live_workers.py:279 calls it as the empty-tick dispatch), NOT a
+      asset_groups through `record_empty_for_shard` correctly (per writegate AUDIT 2026-05-07 line 1156-1159). **NOTE**:
+      scope refined vs task spec — task said "also delete `_handle_empty_tick_data`", but examining its body showed it's
+      the orchestration handler (live_workers.py:279 calls it as the empty-tick dispatch), NOT a
       `_create_empty_output()`-style synthesizer. Deleting it would break the live empty-tick branch. The correct
       surgery is to delete the TRADFI-special-case INSIDE `_handle_empty_tick_data` (which called the now-deleted
       `_write_closed_market_candles`), not the method itself. **DEFERRED-AFTER-writegate_phase_3.D.5_wave3**: per
       CLAUDE.md asset-group rule, cefi/defi/tradfi catalog-says-alive instrument-day with source-zero MUST flip to
       `attempted_failed`; until the catalog-aware writer-side guard ships (Wave 3 of writegate Phase 3.D.5), the
       conservative interim is `record_empty_for_shard(SOURCE_RETURNED_ZERO)`. Sister fix:
-      `_maybe_write_vix_gap_placeholder` (orchestration_writer.py:270) refactored from
-      `_write_closed_market_candles` (now deleted) to `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim
-      pending Step 4 enum ship. 22 NaN-bar-shape tests deleted across `test_orchestration_writer.py` +
-      `test_orchestration_workers.py` (they asserted the banned NaN-OHLC shape).
-- [ ] **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:270` post-Step-3 — was :417 pre-deletion)
-      → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`. **INTERIM SHIPPED in Step 3**
+      `_maybe_write_vix_gap_placeholder` (orchestration_writer.py:270) refactored from `_write_closed_market_candles`
+      (now deleted) to `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim pending Step 4 enum ship. 22 NaN-bar-shape
+      tests deleted across `test_orchestration_writer.py` + `test_orchestration_workers.py` (they asserted the banned
+      NaN-OHLC shape).
+- [ ] **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:270` post-Step-3 — was :417
+      pre-deletion) → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`. **INTERIM SHIPPED in Step 3**
       (market-data-processing-service@2f163c1): the method was refactored from the now-deleted
-      `_write_closed_market_candles` to emit `record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)` per timeframe so
-      the manifest carries `empty_confirmed` instead of the banned NaN-OHLC parquet. **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`**
-      Phase 1: UAC `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP` enum value lands there (operator-approved
-      2026-05-11 per wave3x TL;DR #2). Slot 3 owns the enum ship; slot 8 then trivially upgrades the reason kwarg
-      from `SOURCE_RETURNED_ZERO` → `EXPECTED_KNOWN_SOURCE_GAP` in one Edit. Until then the interim keeps the
-      manifest honest + the banned NaN-bar write removed — that's the P0-2 critical-path win.
+      `_write_closed_market_candles` to emit `record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)` per timeframe so the
+      manifest carries `empty_confirmed` instead of the banned NaN-OHLC parquet.
+      **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`** Phase 1: UAC
+      `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP` enum value lands there (operator-approved 2026-05-11 per wave3x
+      TL;DR #2). Slot 3 owns the enum ship; slot 8 then trivially upgrades the reason kwarg from `SOURCE_RETURNED_ZERO`
+      → `EXPECTED_KNOWN_SOURCE_GAP` in one Edit. Until then the interim keeps the manifest honest + the banned NaN-bar
+      write removed — that's the P0-2 critical-path win.
 - [ ] **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
-      **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked
-      by `tradfi_master_2026_05_07` futures-expiry shipping. Per task instructions, skipped.
+      **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by
+      `tradfi_master_2026_05_07` futures-expiry shipping. Per task instructions, skipped.
 - [ ] **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
-      instantiation sites to determine if (c) `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is
-      a live parallel SSOT or dead code. If live → file a finding annotation + flag for operator triage. If not live
-      → delete. **AUDIT COMPLETE 2026-05-11 (slot 8)**: `CandleProcessingService` IS instantiated at
+      instantiation sites to determine if (c) `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is a
+      live parallel SSOT or dead code. If live → file a finding annotation + flag for operator triage. If not live →
+      delete. **AUDIT COMPLETE 2026-05-11 (slot 8)**: `CandleProcessingService` IS instantiated at
       `market_data_processing_service/app/core/market_data_processing_service.py:58` inside the outer
       `MarketDataProcessingService` class. But **`MarketDataProcessingService` is NOT wired to the production CLI** —
       every production callsite (`cli/handlers/live_mode_handler.py:60`, `cli/handlers/process_handler.py:389`)
-      instantiates `CandleOrchestrationService` (the Step-1 surgery target) instead. The only `MarketDataProcessingService`
-      instantiations are in tests (`tests/unit/test_market_data_processing_service.py:49/90/132/174` + e2e at
+      instantiates `CandleOrchestrationService` (the Step-1 surgery target) instead. The only
+      `MarketDataProcessingService` instantiations are in tests
+      (`tests/unit/test_market_data_processing_service.py:49/90/132/174` + e2e at
       `tests/e2e/test_candle_processing_e2e.py:116`). **DEFERRED — operator triage**: this is a 100+ LOC refactor
       (delete `MarketDataProcessingService` + `CandleProcessingService` + `BatchProcessor` + `CloudCandleStorage` +
-      `CloudDataProvider` + their wrapping tests + the e2e). The deletion is safe per production-path-zero-impact
-      but the test-removal blast radius is significant. **Recommended action for next agent**: confirm with operator,
-      then file as a dedicated cleanup plan `plans/active/mdps_dead_candle_processing_service_cleanup_<YYYY_MM_DD>.md`
-      under the writegate Phase 2.A scope. Until then, the dead path co-exists with the live path —
-      annotated as known double-SSOT residue.
+      `CloudDataProvider` + their wrapping tests + the e2e). The deletion is safe per production-path-zero-impact but
+      the test-removal blast radius is significant. **Recommended action for next agent**: confirm with operator, then
+      file as a dedicated cleanup plan `plans/active/mdps_dead_candle_processing_service_cleanup_<YYYY_MM_DD>.md` under
+      the writegate Phase 2.A scope. Until then, the dead path co-exists with the live path — annotated as known
+      double-SSOT residue.
 
 ### DONE-2026-05-11 — slot 8 P0-2 surgery
 
 The 2026-05-11 ikenna-slot8-p0-2-surgery session shipped 4 of 6 P0-2 steps. Items still open are tracked here so the
 next agent picks up cleanly without re-reading session notes.
 
-| Step / item                                         | Status as of 2026-05-11                  | Successor / blocker                                                                                                                  |
-| --------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Step 1 — Delete legacy `_write_candles` override    | `done` (`mdps@d717c59`)                  | CandleOrchestrationService now resolves `_write_candles` to canonical writer via MRO. `underlying` param threaded through CandleWriteMixin. |
-| Step 2 — TradFi ohlcv_passthrough 1440-NaN-bar fix  | `done` (`mdps@93883b7`)                  | `_create_full_day_empty_output` deleted; `process_to_candles` empty branch returns `_make_empty_candle_output()` (zero-row Path A).        |
-| Step 3 — Delete `_create_closed_market_candle` dup + TRADFI branch refactor + VIX gap interim | `done` (`mdps@2f163c1`) | Both copies deleted. `_handle_empty_tick_data` TRADFI special-case removed; `record_empty_for_shard` is the canonical path for every asset_group. `_maybe_write_vix_gap_placeholder` refactored from the deleted helper to `record_empty(SOURCE_RETURNED_ZERO)` interim. |
-| Step 4 — VIX gap reason upgrade to EXPECTED_KNOWN_SOURCE_GAP | `done` (`mdps@fd270eb`)             | `record_empty_for_shard` + `_emit_status_for_shard` now accept `reason: EmptyConfirmedReason = SOURCE_RETURNED_ZERO` (backward-compat default for cefi/defi/tradfi `_handle_empty_tick_data` callers); `_maybe_write_vix_gap_placeholder` passes `reason=EXPECTED_KNOWN_SOURCE_GAP` (UAC@017b332 enum rebased in from origin/live-defi-rollout). Operator-approved 2026-05-11 per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2. |
-| Step 5 — `output_schemas.py:57-66` OHLCV nullability flip | `todo` (checkbox `- [ ]`)          | **OUT-OF-SCOPE for this session** per task instructions — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07` futures-expiry shipping.                  |
-| Step 6 — Triple-SSOT CandleProcessingService audit + deletion  | `done` (`mdps@fd62764`)                  | Audited + deleted: 4 source files (`market_data_processing_service.py` 253L + `candle_processing_service.py` 870L + `batch_processor.py` + `candle_metadata_helpers.py` 171L) + 5 test files (`test_market_data_processing_service.py` 185L + `test_candle_processing_service.py` 136L + `test_batch_processor.py` + `test_candle_metadata_helpers.py` 299L + `test_candle_processing_e2e.py` 169L). Surgical edits: `types.py` drops `CandleServiceConfigDict`; `test_timestamp_date_alignment.py` drops the dead-service inspect-getsource class. Net ~2090L deleted; coverage rose 73.18% → 74.63%. No production CLI consumer touched — only the dead branch + tests. |
+| Step / item                                                                                   | Status as of 2026-05-11   | Successor / blocker                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Step 1 — Delete legacy `_write_candles` override                                              | `done` (`mdps@d717c59`)   | CandleOrchestrationService now resolves `_write_candles` to canonical writer via MRO. `underlying` param threaded through CandleWriteMixin.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Step 2 — TradFi ohlcv_passthrough 1440-NaN-bar fix                                            | `done` (`mdps@93883b7`)   | `_create_full_day_empty_output` deleted; `process_to_candles` empty branch returns `_make_empty_candle_output()` (zero-row Path A).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Step 3 — Delete `_create_closed_market_candle` dup + TRADFI branch refactor + VIX gap interim | `done` (`mdps@2f163c1`)   | Both copies deleted. `_handle_empty_tick_data` TRADFI special-case removed; `record_empty_for_shard` is the canonical path for every asset_group. `_maybe_write_vix_gap_placeholder` refactored from the deleted helper to `record_empty(SOURCE_RETURNED_ZERO)` interim.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Step 4 — VIX gap reason upgrade to EXPECTED_KNOWN_SOURCE_GAP                                  | `done` (`mdps@fd270eb`)   | `record_empty_for_shard` + `_emit_status_for_shard` now accept `reason: EmptyConfirmedReason = SOURCE_RETURNED_ZERO` (backward-compat default for cefi/defi/tradfi `_handle_empty_tick_data` callers); `_maybe_write_vix_gap_placeholder` passes `reason=EXPECTED_KNOWN_SOURCE_GAP` (UAC@017b332 enum rebased in from origin/live-defi-rollout). Operator-approved 2026-05-11 per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2.                                                                                                                                                                                                                                       |
+| Step 5 — `output_schemas.py:57-66` OHLCV nullability flip                                     | `todo` (checkbox `- [ ]`) | **OUT-OF-SCOPE for this session** per task instructions — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07` futures-expiry shipping.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Step 6 — Triple-SSOT CandleProcessingService audit + deletion                                 | `done` (`mdps@fd62764`)   | Audited + deleted: 4 source files (`market_data_processing_service.py` 253L + `candle_processing_service.py` 870L + `batch_processor.py` + `candle_metadata_helpers.py` 171L) + 5 test files (`test_market_data_processing_service.py` 185L + `test_candle_processing_service.py` 136L + `test_batch_processor.py` + `test_candle_metadata_helpers.py` 299L + `test_candle_processing_e2e.py` 169L). Surgical edits: `types.py` drops `CandleServiceConfigDict`; `test_timestamp_date_alignment.py` drops the dead-service inspect-getsource class. Net ~2090L deleted; coverage rose 73.18% → 74.63%. No production CLI consumer touched — only the dead branch + tests. |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
-- **UAC EXPECTED_KNOWN_SOURCE_GAP enum**: ✅ landed `UAC@017b332` (rebased in from `origin/live-defi-rollout` to
-  slot 8's branch on 2026-05-11). Step 4 consumed it (see status above).
+- **UAC EXPECTED_KNOWN_SOURCE_GAP enum**: ✅ landed `UAC@017b332` (rebased in from `origin/live-defi-rollout` to slot
+  8's branch on 2026-05-11). Step 4 consumed it (see status above).
 - **Catalog-aware writer-side guard for cefi/defi/tradfi empty_confirmed → attempted_failed flip**: writegate Phase
   3.D.5 Wave 3 (instrument_catalog wired into MTDS/MDPS adapter construction). Until it ships, the conservative
-  `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim from Step 3 stays in place for non-VIX-gap callers — this
-  is the design intent per CLAUDE.md "Four-category empty-output decision" + "Reason taxonomy" sections.
+  `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim from Step 3 stays in place for non-VIX-gap callers — this is
+  the design intent per CLAUDE.md "Four-category empty-output decision" + "Reason taxonomy" sections.
 - **Hard schema enforcement (output_schemas.py OHLCV nullability)**: open in
   [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md) — Step 5 will land via that plan
   after futures-expiry tradfi work.
@@ -881,45 +955,46 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
 ### Finalization 2026-05-11 — slot 8 P0-2 finalize sub-agent
 
 - ✅ **Step 4 finalized**: `record_empty_for_shard` + `_emit_status_for_shard` accept `reason: EmptyConfirmedReason`
-  kwarg (default `SOURCE_RETURNED_ZERO` for backward compat on `_handle_empty_tick_data` cefi/defi/tradfi callers);
-  VIX gap route passes `reason=EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP`. Final commit (post-rebase):
-  `mdps@01f08b6` on `origin/live-defi-rollout`.
+  kwarg (default `SOURCE_RETURNED_ZERO` for backward compat on `_handle_empty_tick_data` cefi/defi/tradfi callers); VIX
+  gap route passes `reason=EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP`. Final commit (post-rebase): `mdps@01f08b6`
+  on `origin/live-defi-rollout`.
 - ✅ **Step 6 shipped**: `CandleProcessingService` + `MarketDataProcessingService` + `MarketDataBatchProcessor` +
   `candle_metadata_helpers` source files deleted (4 files); 5 test files deleted; `types.py` drops
-  `CandleServiceConfigDict` + docstring fix on `InstrumentMetadataDict`; `test_timestamp_date_alignment.py` drops
-  the `inspect.getsource(CandleProcessingService)` class but keeps `TestCloudCandleStorageValidation`. Net ~2090L
-  deleted; coverage 73.18% → 74.63% (1 pre-existing `test_cli_help` failure unrelated). Final commit (post-rebase):
+  `CandleServiceConfigDict` + docstring fix on `InstrumentMetadataDict`; `test_timestamp_date_alignment.py` drops the
+  `inspect.getsource(CandleProcessingService)` class but keeps `TestCloudCandleStorageValidation`. Net ~2090L deleted;
+  coverage 73.18% → 74.63% (1 pre-existing `test_cli_help` failure unrelated). Final commit (post-rebase):
   `mdps@a964b96` on `origin/live-defi-rollout`.
 - ✅ **Merged into `origin/live-defi-rollout`**: all 5 P0-2 MDPS commits (`fe7deb5` + `849d039` + `6677728` +
-  `01f08b6` + `a964b96` — steps 1/2/3/4/6) FF-pushed via `git push origin tab/ikennaigboaka/8:live-defi-rollout`.
-  PM plan-flip commits (`6c2b7170` + `fd955dca` + `3bff1871` + `7e68177e` + `71dc431b` + `5b3ea34d` + `0736e4b2` +
+  `01f08b6` + `a964b96` — steps 1/2/3/4/6) FF-pushed via `git push origin tab/ikennaigboaka/8:live-defi-rollout`. PM
+  plan-flip commits (`6c2b7170` + `fd955dca` + `3bff1871` + `7e68177e` + `71dc431b` + `5b3ea34d` + `0736e4b2` +
   `bf18c6db`) all on `origin/live-defi-rollout`. VMs pulling from `live-defi-rollout` now run the canonical_writer
-  + 4-pillar gate live path with the dead `CandleProcessingService` branch removed and VIX gap correctly tagged
-  `EXPECTED_KNOWN_SOURCE_GAP`.
-- **Step 5** (`output_schemas.py:57-66` OHLCV nullability flip) remains `todo`; per task brief out-of-scope,
-  blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07`
-  futures-expiry shipping. No change from prior DONE-2026-05-11 state.
+  - 4-pillar gate live path with the dead `CandleProcessingService` branch removed and VIX gap correctly tagged
+    `EXPECTED_KNOWN_SOURCE_GAP`.
+- **Step 5** (`output_schemas.py:57-66` OHLCV nullability flip) remains `todo`; per task brief out-of-scope, blocked by
+  `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07` futures-expiry shipping.
+  No change from prior DONE-2026-05-11 state.
 
 ### Step 6 follow-on 2026-05-11 — Slot 8 OutputWriterService dead-branch deletion
 
-Case-2 finding surfaced during Item 1 (QG STEP 5.67 verification post-P0-2). Structurally identical to the just-
-deleted `CandleProcessingService` triple-SSOT branch: an independent ~424L source file + 328L tests with its own
+Case-2 finding surfaced during Item 1 (QG STEP 5.67 verification post-P0-2). Structurally identical to the just- deleted
+`CandleProcessingService` triple-SSOT branch: an independent ~424L source file + 328L tests with its own
 `upload_bytes()` path bypassing `record_captured()`. Grep audit confirmed zero production wiring (only test files
-+ a stale docstring reference in `output_path_helpers.py`).
 
-- ✅ **`OutputWriterService` deleted**: `output_writer_service.py` (424L) + `test_output_writer_service.py` (328L)
-  + 1-line docstring update in `output_path_helpers.py`. Commit `mdps@89eacc6` on `tab/ikennaigboaka/8`. MDPS QG:
-  1105 passed / 1 skipped / 1 pre-existing failed (the same `test_cli_help` `ENVIRONMENT='test'` env-validation
-  failure flagged earlier, not P0-2 scope).
-- ✅ **Banned-placeholder baseline yaml pruned**:
+- a stale docstring reference in `output_path_helpers.py`).
+
+* ✅ **`OutputWriterService` deleted**: `output_writer_service.py` (424L) + `test_output_writer_service.py` (328L)
+  - 1-line docstring update in `output_path_helpers.py`. Commit `mdps@89eacc6` on `tab/ikennaigboaka/8`. MDPS QG: 1105
+    passed / 1 skipped / 1 pre-existing failed (the same `test_cli_help` `ENVIRONMENT='test'` env-validation failure
+    flagged earlier, not P0-2 scope).
+* ✅ **Banned-placeholder baseline yaml pruned**:
   `unified-trading-pm/scripts/quality_gates/banned_placeholder_methods_baseline.yaml` shrunk from 8 entries to 3.
   Removed the 5 stale entries (`_create_full_day_empty_output` / `_create_closed_market_candle` × 2 /
-  `orchestration_writer.py:upload_bytes` / `output_writer_service.py:upload_bytes`) — all those methods/patterns
-  are deleted in production. The 3 remaining entries (`batch_workers.py:_handle_empty_tick_data` /
-  `live_workers.py:_handle_empty_tick_data` / `_maybe_write_vix_gap_placeholder`) have honest bodies post-P0-2;
-  only their method NAMES still match the heuristic — successor text now describes a follow-up rename rather
-  than a deletion. QG STEP 5.67 re-run: 0 new occurrences, 3 baselined warnings (down from 4).
-- **Follow-on deferred** (not P0; cosmetic): rename the 3 body-honest methods so the heuristic no longer
+  `orchestration_writer.py:upload_bytes` / `output_writer_service.py:upload_bytes`) — all those methods/patterns are
+  deleted in production. The 3 remaining entries (`batch_workers.py:_handle_empty_tick_data` /
+  `live_workers.py:_handle_empty_tick_data` / `_maybe_write_vix_gap_placeholder`) have honest bodies post-P0-2; only
+  their method NAMES still match the heuristic — successor text now describes a follow-up rename rather than a deletion.
+  QG STEP 5.67 re-run: 0 new occurrences, 3 baselined warnings (down from 4).
+* **Follow-on deferred** (not P0; cosmetic): rename the 3 body-honest methods so the heuristic no longer
   false-positives. Tracked as a follow-up on slot 8 backlog; not on May-15 freeze-gate critical path.
 
 ### Phase 0 audit findings — MTDS bundle adapter inventory
@@ -1477,15 +1552,20 @@ grep.
 - [ ] [SCRIPT] P0. **Wire `fixture_player_stats` stub.** Same pattern as `fixture_lineups`. `_fetch_runner.py:173` logs
       row count but never stores. `export_fixture_player_stats()` returns empty. Fix: add `_fetched_player_stats`
       cache + accessor + real export. Stamping stays as `post_match` once wired.
-- [ ] [SCRIPT] P0. **Wire OR scope-out `coaches` stub.** `export_coaches()` at `exports.py:135-137` always returns
+- [x] [SCRIPT] P0. **Wire OR scope-out `coaches` stub.** `export_coaches()` at `exports.py:135-137` always returns
       empty; no source fetch is implemented anywhere in `_fetch_runner.py`. Decide: (a) implement an
       `api_football /coachs` endpoint fetch path, OR (b) explicitly mark `coaches` as deferred + emit
       `record_empty(row_key)` for every batch run so the manifest is honest. **Default if no decision: (b)** — surfaces
       the gap as honest absence rather than silent empty. Per workspace rule on path A/B/C decisions for empty exports
       (CLAUDE.md `§ Three-category empty-output decision`), the bug class is the same as MDPS Phase 2.A: silent empty
-      parquets with manifest `captured` is banned; route through `record_empty` instead.
-- [ ] [SCRIPT] P0. **Wire OR scope-out `rounds` stub.** Same status as `coaches` — `export_rounds()` at
+      parquets with manifest `captured` is banned; route through `record_empty` instead. (default-(b) in effect:
+      `_run_reference_tables` in `batch_handler.py:498-511` emits `manifest.record_empty(reason="SOURCE_RETURNED_ZERO")`
+      for every empty df — coaches always returns `_empty_df` → SOURCE_RETURNED_ZERO path; features-service@`842ff741`;
+      verified 2026-05-12 slot 3 audit.)
+- [x] [SCRIPT] P0. **Wire OR scope-out `rounds` stub.** Same status as `coaches` — `export_rounds()` at
       `exports.py:148-150` returns empty; no source fetch. Same decision: implement OR `record_empty`. Default (b).
+      (same as coaches: default-(b) in effect via `_run_reference_tables` empty-df path; features-service@`842ff741`;
+      verified 2026-05-12 slot 3 audit.)
 
 #### Phase 2.C body — `available_at` stamping migration (post-amendments)
 
@@ -2559,17 +2639,19 @@ manifest classification work but closely related — once Wave 2.M's blank-reaso
 next adapter behaviour to fix is "what to do when source returns nothing for an active instrument." Wave 3.M is that
 fix.
 
-> **🔎 FINDING 2026-05-12 (cross_asset_group_catalogue_audit slot-8 CeFi sub-agent, `plans/active/issues/catalogue_audit_cefi_2026_05_12.md` CF-15)** — Wave 3.M is **0% started for CeFi**: all 21 venues in
-> `VENUES_BY_ASSET_GROUP["cefi"]` still take the legacy path; none emit Category-D zero-activity bars. The
-> `unified_trading_library.zero_activity_bars` helper + `get_prior_ltp(...)` SSOT (the 2nd + 3rd tasks below) do
-> **not exist yet**. Mild good news: the banned `_create_empty_output` / `_handle_empty_tick_data` patterns were
-> NOT found in MTDS CeFi adapter source — current behaviour is honest `empty_confirmed` (Cat A), not fake-populated
-> NaN placeholders — so the gap is "Cat-D not yet implemented", not "Cat-D faked". DeFi-side note (per
-> `catalogue_audit_defi_2026_05_12.md`): DeFi subgraph data_types (`dex_pools`/`lending_indices`/`oracle_prices`/`lst_rates`) are pass-through
-> `NEEDS_CANDLE_PROCESSING=False`, so the relevant DeFi analogue is "subgraph returned zero rows" → `SOURCE_RETURNED_ZERO`,
-> which `honest_coverage.py:266` already declares legitimate at instrument-day grain. The cross_asset plan's Phase 3
-> (per-CeFi-venue zero-activity-bar verification) is the consumer of this wave; its sub-agent built a per-venue
-> Cat-A/B/C/D matrix that should seed the audit task below.
+> **🔎 FINDING 2026-05-12 (cross_asset_group_catalogue_audit slot-8 CeFi sub-agent,
+> `plans/archive/issues/catalogue_audit_cefi_2026_05_12.md` CF-15)** — Wave 3.M is **0% started for CeFi**: all 21
+> venues in `VENUES_BY_ASSET_GROUP["cefi"]` still take the legacy path; none emit Category-D zero-activity bars. The
+> `unified_trading_library.zero_activity_bars` helper + `get_prior_ltp(...)` SSOT (the 2nd + 3rd tasks below) do **not
+> exist yet**. Mild good news: the banned `_create_empty_output` / `_handle_empty_tick_data` patterns were NOT found in
+> MTDS CeFi adapter source — current behaviour is honest `empty_confirmed` (Cat A), not fake-populated NaN placeholders
+> — so the gap is "Cat-D not yet implemented", not "Cat-D faked". DeFi-side note (per
+> `catalogue_audit_defi_2026_05_12.md`): DeFi subgraph data_types
+> (`dex_pools`/`lending_indices`/`oracle_prices`/`lst_rates`) are pass-through `NEEDS_CANDLE_PROCESSING=False`, so the
+> relevant DeFi analogue is "subgraph returned zero rows" → `SOURCE_RETURNED_ZERO`, which `honest_coverage.py:266`
+> already declares legitimate at instrument-day grain. The cross_asset plan's Phase 3 (per-CeFi-venue zero-activity-bar
+> verification) is the consumer of this wave; its sub-agent built a per-venue Cat-A/B/C/D matrix that should seed the
+> audit task below.
 
 **Tasks:**
 
@@ -2970,7 +3052,15 @@ passes `completeness_fraction` for now.
 
 #### Slice (b) — MDPS `ohlcv_1h` end-to-end POC (GREENLIT 2026-05-08; ~2 days)
 
-> **🟡 SUPERSEDED 2026-05-11 — Phase 5.2 only** (per operator decision resolving codex_audit F3 ambiguity): the "UAC manifest schema columns" item under **Phase 5.2** below is **now owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md)** — the canonical v8 schema declaration plan. Slice (b)'s remaining scope is unchanged: UTL `manifest_completeness` helper (Phase 5.1), MDPS `ohlcv_1h:current` + `:historical` wire-in (Phase 5.3-5.4), deployment-api / deployment-ui surfaces (Phase 5.5), codex/CLAUDE.md (Phase 5.6), ship-gate (Phase 5.7). The new `EXPECTED_KNOWN_SOURCE_GAP` value for UAC `EmptyConfirmedReason` (operator-approved 2026-05-11 per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2 — covers VIX 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`) also lands in `manifest_schema_final_gate_2026_05_09.md` in the same Phase 1 window.
+> **🟡 SUPERSEDED 2026-05-11 — Phase 5.2 only** (per operator decision resolving codex_audit F3 ambiguity): the "UAC
+> manifest schema columns" item under **Phase 5.2** below is **now owned by
+> [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md)** — the canonical v8 schema
+> declaration plan. Slice (b)'s remaining scope is unchanged: UTL `manifest_completeness` helper (Phase 5.1), MDPS
+> `ohlcv_1h:current` + `:historical` wire-in (Phase 5.3-5.4), deployment-api / deployment-ui surfaces (Phase 5.5),
+> codex/CLAUDE.md (Phase 5.6), ship-gate (Phase 5.7). The new `EXPECTED_KNOWN_SOURCE_GAP` value for UAC
+> `EmptyConfirmedReason` (operator-approved 2026-05-11 per `wave3x_track_d_findings_2026_05_11.md` TL;DR #2 — covers VIX
+> 15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`) also lands in `manifest_schema_final_gate_2026_05_09.md` in the
+> same Phase 1 window.
 
 **Goal**: prove the slice-(a) schema floor works end-to-end on ONE real service emission boundary so per-service rollout
 (slice c) has a battle-tested template to copy. MDPS `ohlcv_1h` is the chosen POC: it has both real-time current-bar
@@ -2991,29 +3081,31 @@ shape codified in slice (a)'s seed dict.
       workspace coverage formula, and emits the `incomplete_window` list as the rows where
       `capture_status != captured AND capture_status != empty_confirmed`. Empty-confirmed rows DO count toward
       completeness (operator directive: empty-confirmed is honest absence, not a gap from the consumer's perspective;
-      only `attempted_failed` + `expected_unattempted` reduce completeness). Rows missing from the manifest entirely
-      are treated as `expected_unattempted` (caller declared them in the upstream window so absence-from-manifest is a
-      gap, not a no-op). Row-key canonicalisation matches `ManifestFreshnessCache` via `_coerce_row_key`.
+      only `attempted_failed` + `expected_unattempted` reduce completeness). Rows missing from the manifest entirely are
+      treated as `expected_unattempted` (caller declared them in the upstream window so absence-from-manifest is a gap,
+      not a no-op). Row-key canonicalisation matches `ManifestFreshnessCache` via `_coerce_row_key`.
 - [x] [UTL] P0. Wire `manifest_completeness.compute_completeness_fraction` to the existing
       `read_availability_index(bucket)` cached canonical-manifest read so consecutive calls within a 60s window don't
       burn redundant GCS reads (per the workspace "Manifest concurrency principle" rule). 60s TTL is the existing
-      in-process cache (`_INDEX_CACHE`); explicit `force_refresh=True` kwarg pops the entry. Pre-fetched `manifest_index`
-      kwarg short-circuits the read entirely for callers that have the index already. Shipped UTL@`ac5ade59`.
+      in-process cache (`_INDEX_CACHE`); explicit `force_refresh=True` kwarg pops the entry. Pre-fetched
+      `manifest_index` kwarg short-circuits the read entirely for callers that have the index already. Shipped
+      UTL@`ac5ade59`.
 - [x] [UTL] P0. NEW `unified_trading_library/emission_publisher.py::publish_with_manifest_lookup()` convenience wrapper
       (shipped UTL@`ac5ade59`) that combines `compute_completeness_fraction()` + `publish_with_policy()` into one call.
       Caller flow:
-      `publish_with_manifest_lookup(*, service, output_data_type, row_key, bucket, upstream_window, manifest_index=None, force_refresh=False, correlation_id=None, extra_event_details=None)` —
-      helper computes the fraction, calls publish_with_policy, returns the `EmissionDecision`. The pure
+      `publish_with_manifest_lookup(*, service, output_data_type, row_key, bucket, upstream_window, manifest_index=None, force_refresh=False, correlation_id=None, extra_event_details=None)`
+      — helper computes the fraction, calls publish_with_policy, returns the `EmissionDecision`. The pure
       `publish_with_policy()` from slice (a) stays available for callers that compute completeness via a non-manifest
       path (synthetic backtests, replay engines).
 - [x] [TEST] P0. 14 unit tests for `manifest_completeness` (shipped UTL@`ac5ade59` —
       `tests/unit/test_manifest_completeness.py`): empty upstream window raises `EmptyUpstreamWindowError`, all-captured
       (single + multi-row), all-empty_confirmed, mixed captured + empty_confirmed, attempted_failed reduces fraction,
       expected_unattempted reduces fraction, missing-from-manifest treated as `expected_unattempted`, pre-fetched
-      `manifest_index` short-circuits GCS read, `force_refresh=True` invalidates TTL cache, row-key case canonicalisation
-      (lowercase `binance` matches uppercase `BINANCE` in manifest), realistic 60/60 + 58/60 ohlcv_1h POC shape from
-      writegate Phase 5.3 (58/60 captured + 2 attempted_failed → fraction=58/60≈0.967 + 2-element incomplete_window). QG:
-      ruff clean, basedpyright clean (0 errors), 14 new tests + 18 existing emission_publisher tests pass.
+      `manifest_index` short-circuits GCS read, `force_refresh=True` invalidates TTL cache, row-key case
+      canonicalisation (lowercase `binance` matches uppercase `BINANCE` in manifest), realistic 60/60 + 58/60 ohlcv_1h
+      POC shape from writegate Phase 5.3 (58/60 captured + 2 attempted_failed → fraction=58/60≈0.967 + 2-element
+      incomplete_window). QG: ruff clean, basedpyright clean (0 errors), 14 new tests + 18 existing emission_publisher
+      tests pass.
 
 **Phase 5.2 — UAC manifest schema columns (P1, ~2hr — additive)**
 
@@ -3033,12 +3125,12 @@ shape codified in slice (a)'s seed dict.
       (`write_candle_parquet`). Per CLAUDE.md "Live = batch — same code path" the same canonical writer serves both
       `:current` (today's UTC date) and `:historical` (older dates); the slice is resolved at write-time via
       `_resolve_emission_slice(date_str)`. Policy fires only on the canonical `trades → ohlcv_1h` aggregation path
-      (`_is_ohlcv_1h_aggregation_path`); passthrough writes (source already in `ohlcv_*` form) bypass.
-      Upstream-window builder is `_build_ohlcv_1m_upstream_window` (single-row, day-grain manifest completeness —
-      sub-day bar-level is a future enhancement once manifest_schema_final_gate Phase 2 ships completeness columns).
-      Branch: `decision.should_publish_row=False` → skip `ManifestWriter.record_captured` entirely (publisher emitted
-      STALE_DATA / BLOCKED event already — heartbeat-only); `True` → fall through to legacy record_captured. **DEFERRED
-      to manifest_schema_final_gate Phase 2**: writing `completeness_fraction` + `incomplete_window` columns into the
+      (`_is_ohlcv_1h_aggregation_path`); passthrough writes (source already in `ohlcv_*` form) bypass. Upstream-window
+      builder is `_build_ohlcv_1m_upstream_window` (single-row, day-grain manifest completeness — sub-day bar-level is a
+      future enhancement once manifest_schema_final_gate Phase 2 ships completeness columns). Branch:
+      `decision.should_publish_row=False` → skip `ManifestWriter.record_captured` entirely (publisher emitted STALE_DATA
+      / BLOCKED event already — heartbeat-only); `True` → fall through to legacy record_captured. **DEFERRED to
+      manifest_schema_final_gate Phase 2**: writing `completeness_fraction` + `incomplete_window` columns into the
       parquet row + manifest row — the new column declarations are owned by manifest_schema_final_gate, not slice (b).
       Current POC emits the completeness fraction via the lifecycle event payload only.
 - [x] [TEST] P0. 17 MDPS unit tests covering: `_is_ohlcv_1h_aggregation_path` gate (trades→ohlcv_1h=True;
@@ -3070,26 +3162,26 @@ shape codified in slice (a)'s seed dict.
 
 **Phase 5.5 — deployment-api / deployment-ui surfaces the new columns (P1, ~3hr)**
 
-- [x] [deployment-api] P1. **SHIPPED forward-compatible** deployment-api@`3a0948e` per operator direction 2026-05-11
-      "do the not chat only stuff you have credentials". NEW `LeafCompletenessEnvelope` Pydantic model
-      (`deployment_api/types/shard_detail.py`) with fields `present` / `min_fraction` / `max_fraction` /
-      `mean_fraction` / `null_count` / `incomplete_window_present_count`; NEW `_compute_completeness_envelope()` helper
+- [x] [deployment-api] P1. **SHIPPED forward-compatible** deployment-api@`3a0948e` per operator direction 2026-05-11 "do
+      the not chat only stuff you have credentials". NEW `LeafCompletenessEnvelope` Pydantic model
+      (`deployment_api/types/shard_detail.py`) with fields `present` / `min_fraction` / `max_fraction` / `mean_fraction`
+      / `null_count` / `incomplete_window_present_count`; NEW `_compute_completeness_envelope()` helper
       (`deployment_api/services/shard_detail.py`) — extracts envelope when `completeness_fraction` column present in
       parquet, returns `present=False` otherwise. Wired into `get_leaf_parquet_stats()` after the existing
       `_compute_available_at_envelope()` call. `incomplete_window_present_count` counts rows where the
-      `incomplete_window` JSON column is non-empty / non-null / non-"[]". 8 new unit tests cover absent column,
-      all-1.0, mixed completeness with populated `incomplete_window`, null rows counted separately, all-null,
-      `incomplete_window` absent when `completeness` present, end-to-end via `get_leaf_parquet_stats`, backward-compat
-      absent-columns case. All 43 leaf-stats tests pass. Lights up automatically when slice (c) per-service rollout
-      starts writing the columns; no further deployment-api change needed at that point.
+      `incomplete_window` JSON column is non-empty / non-null / non-"[]". 8 new unit tests cover absent column, all-1.0,
+      mixed completeness with populated `incomplete_window`, null rows counted separately, all-null, `incomplete_window`
+      absent when `completeness` present, end-to-end via `get_leaf_parquet_stats`, backward-compat absent-columns case.
+      All 43 leaf-stats tests pass. Lights up automatically when slice (c) per-service rollout starts writing the
+      columns; no further deployment-api change needed at that point.
 - [x] [deployment-ui] P1. **SHIPPED forward-compatible** deployment-ui@`00132db` per the same operator direction.
       `LeafSchemaModal` renders the completeness envelope as a 4th block after the `available_at` envelope. NEW
-      `completenessColor()` helper (inverted from `nanRatioColor`: green ≥ 1.0; yellow 0.99-1.0; amber 0.95-0.99; red
-      < 0.95). Block renders min / max / mean / null_count / incomplete_window_present_count when
-      `data.completeness.present`; muted placeholder pill with slice-(c)-gate explainer (title attribute) otherwise.
-      NEW `LeafCompletenessEnvelope` TS interface in `src/api/client.ts` mirroring the Pydantic shape. 10 new vitest
-      tests (`completenessColor` boundary tests + 3 envelope-rendering scenarios). All 25 LeafSchemaModal tests pass;
-      vite smoke build green.
+      `completenessColor()` helper (inverted from `nanRatioColor`: green ≥ 1.0; yellow 0.99-1.0; amber 0.95-0.99; red <
+      0.95). Block renders min / max / mean / null_count / incomplete_window_present_count when
+      `data.completeness.present`; muted placeholder pill with slice-(c)-gate explainer (title attribute) otherwise. NEW
+      `LeafCompletenessEnvelope` TS interface in `src/api/client.ts` mirroring the Pydantic shape. 10 new vitest tests
+      (`completenessColor` boundary tests + 3 envelope-rendering scenarios). All 25 LeafSchemaModal tests pass; vite
+      smoke build green.
 
 **Phase 5.6 — Codex SSOT entry + CLAUDE.md key-rule (P0, ~2hr)**
 
@@ -3101,8 +3193,8 @@ shape codified in slice (a)'s seed dict.
       `manifest_schema_final_gate_2026_05_09.md` Phase 2 for parquet-row column writes.
 - [x] [DOCS] P0. NEW `unified-trading-pm/codex/02-data/service-output-emission-semantics.md` — full architecture
       document (shipped PM@`<this commit>`). Sections: (1) Three-stacked-layers diagram (manifest 4-state → service
-      emission policy → service output completeness); (2) The 4 policies with worked examples per asset_group; (3) The
-      4 lifecycle events with heartbeat semantics; (4) Slice differentiation (`:current` vs `:historical`); (5)
+      emission policy → service output completeness); (2) The 4 policies with worked examples per asset_group; (3) The 4
+      lifecycle events with heartbeat semantics; (4) Slice differentiation (`:current` vs `:historical`); (5)
       `publish_with_policy()` + `publish_with_manifest_lookup()` + `manifest_completeness.compute_completeness_fraction`
       API reference; (6) Worked examples (MDPS ohlcv_1h:current STRICT_FAIL, features-vol NAN_FILL, execution
       BLOCK_CRITICAL); (7) Anti-patterns; (8) Per-service rollout playbook (= slice-c Phase 6 sub-plan template).
@@ -3111,13 +3203,13 @@ shape codified in slice (a)'s seed dict.
 
 - [x] [PM] P0. Slice-(b) Phase 5.1 (UTL helper + tests) + Phase 5.3-5.4 (MDPS ohlcv_1h POC + 17 tests) + Phase 5.6
       (codex SSOT + CLAUDE.md key-rule) shipped PM@`<this commit>`. Phase 5.5 (deployment-api/ui surfaces)
-      **DEFERRED-AFTER** `manifest_schema_final_gate_2026_05_09.md` Phase 2 — the parquet-row column writes upstream
-      are gated on that plan's v8 schema column declaration. Phase 5.4 P1 30-day integration test **DEFERRED** to MDPS
-      integration test suite once slice (c) Phase 6.2 wires `publish_with_manifest_lookup` at every MDPS data_type.
-      Slot 2 (`ikenna-writegate-slice-b-tab`) ship-gate done; cross-side ping to Harsh slot 6 for workspace QG sweep
-      pending. Code commits: UTL@`ac5ade59` (Phase 5.1) + MDPS@`9e1a93e` (Phase 5.3+5.4). PM commits: PM@`f3153bd6`
-      (Q1 escalation, superseded by rebase to PM@`16b77c70`) + PM@`27cf5c6a` (Q1 ✅ RESOLVED close) + PM@`88baed07`
-      (Phase 5.1 flip) + PM@`74e8bf51` (Phase 5.3+5.4 flip) + PM@`<this commit>` (Phase 5.6 + 5.7).
+      **DEFERRED-AFTER** `manifest_schema_final_gate_2026_05_09.md` Phase 2 — the parquet-row column writes upstream are
+      gated on that plan's v8 schema column declaration. Phase 5.4 P1 30-day integration test **DEFERRED** to MDPS
+      integration test suite once slice (c) Phase 6.2 wires `publish_with_manifest_lookup` at every MDPS data_type. Slot
+      2 (`ikenna-writegate-slice-b-tab`) ship-gate done; cross-side ping to Harsh slot 6 for workspace QG sweep pending.
+      Code commits: UTL@`ac5ade59` (Phase 5.1) + MDPS@`9e1a93e` (Phase 5.3+5.4). PM commits: PM@`f3153bd6` (Q1
+      escalation, superseded by rebase to PM@`16b77c70`) + PM@`27cf5c6a` (Q1 ✅ RESOLVED close) + PM@`88baed07` (Phase
+      5.1 flip) + PM@`74e8bf51` (Phase 5.3+5.4 flip) + PM@`<this commit>` (Phase 5.6 + 5.7).
 
 #### Slice (c) — Per-service rollout (GREENLIT 2026-05-08; multi-week, ~3-5 weeks)
 
@@ -3128,46 +3220,75 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.1 — MTDS raw capture (n/a per policy table — `record_captured` covers it; ~4hr verify)**
 
-- [ ] [MTDS] P0. Audit MTDS adapters to confirm raw-capture writes do NOT call `publish_with_policy` (they shouldn't —
+- [x] [MTDS] P0. Audit MTDS adapters to confirm raw-capture writes do NOT call `publish_with_policy` (they shouldn't —
       manifest 4-state is sufficient for raw capture; no derived/aggregated output). Document the n/a boundary in the
       per-service codex playbook so service-team owners don't mistakenly add it. Catch any drift in the audit: adapters
       that do compute a derived output (e.g. `ohlcv_1m` aggregated from `trades`) DO need wire-in — and
-      `(market-tick-data-service, ohlcv_1m:from_trades)` would need a seed dict entry.
+      `(market-tick-data-service, ohlcv_1m:from_trades)` would need a seed dict entry. **✅ AUDIT SHIPPED 2026-05-12 by
+      harsh slot 3** — workspace grep `rg "publish_with_policy|publish_with_manifest_lookup" market_tick_data_service/`
+      returns **zero** callsites; MTDS adapters universally call `ManifestWriter.record_captured` (no policy gating).
+      Adapters that DO transform source responses (`umi_tick_provider._fetch_databento_ohlcv_1m_async` → Databento
+      direct `ohlcv_1m` feed; `gas_price_adapter._aggregate` → block-level fee rollup to hourly/daily; Hyperliquid
+      `_aggregate` → orderbook depth bucketing) are **source-side transformations**, NOT aggregations of MTDS upstream
+      rows — MTDS is the originator for these data_types, so the slice (c) service-output policy doesn't apply (policy
+      gates derived outputs against _upstream service_ completeness; MTDS reads from external APIs, not from another
+      MTDS service). MDPS retains exclusive ownership of `ohlcv_1m:from_trades` / `ohlcv_24h` / `book_snapshot_5`
+      policy-gated paths per Phase 6.2. **No `(market-tick-data-service, *)` seed-dict entry needed.** Drift-watch: if a
+      future MTDS handler reads from a _prior MTDS write_ to compute a derived row (cross-handler aggregation), that's
+      the trigger to wire `publish_with_policy`; documented in the Phase 6.1 codex stub
+      (`codex/02-data/service-output-emission-semantics.md` § "MTDS is n/a" pending a Phase 6.9 codex update).
 
 **Phase 6.2 — MDPS remaining data_types (P0, ~2 days)**
 
 - [x] [MDPS] P0. Wire `publish_with_manifest_lookup()` at every other MDPS emission boundary listed in the policy seed
       dict: `ohlcv_1m:current` / `ohlcv_1m:historical` / `ohlcv_24h` / `book_snapshot_5`. Same shape as Phase 5.3 / 5.4.
-      Each emission gets unit + integration tests mirroring the `ohlcv_1h` template.
-      **SHIPPED 2026-05-12** (slot 2 picked up slot 8 scaffolding after rate-limit pause):
-      - Scaffolding (slot 8, cherry-picked into slot 2): `market-data-processing-service@d0df50c` —
-        `_resolve_policy_output_data_type()` (option-α source-conceptual seed-key resolver for all 4 data_types) +
-        `_publish_emission_check()` (generalised publisher subsuming slice (b)'s `_publish_ohlcv_1h_emission_check`).
-      - Wiring + tests + cleanup: `market-data-processing-service@311614a` — replaced inline ohlcv_1h call site in
-        `write_candle_parquet` with `_resolve_policy_output_data_type` → `_publish_emission_check`; **deleted**
-        `_is_ohlcv_1h_aggregation_path` + `_publish_ohlcv_1h_emission_check` (subsumed; no double SSOT); rewrote
-        `tests/unit/test_canonical_writer_ohlcv_1h_policy.py` — new `TestResolvePolicyOutputDataType` (15 cases across
-        all 4 data_types + slice / negative paths), parametrised `TestPublishEmissionCheck` (6 happy-path data_types +
-        manifest-read-failure + DEPLOYMENT_FAILED event verification across 3 data_types), parametrised
-        `TestWriteCandleParquetPolicyIntegration` (skip + publish branches × all 4 data_types + truly-ungated DEFI
-        `dex_pool_swaps` case replacing the pre-Phase-6.2 ohlcv_1m-is-not-gated assertion).
-      - Runtime UAC regression guard (slot 8, already in LDR): `mdps@daf9988` —
-        `TestServiceEmissionPolicySeedRuntimeLookup` hits the REAL UAC seed for all 6 MDPS canonical keys (no mocks).
-      - QG: 1151 tests passed; 1 pre-existing foreign failure (`test_cli_main::test_cli_help` UTL
-        `StartupValidationError` on `ENVIRONMENT='test'` — unrelated to emission policy); basedpyright clean on edited
-        files (0 errors on canonical_writer slice-(b)/Phase-6.2 sections + test file).
+      Each emission gets unit + integration tests mirroring the `ohlcv_1h` template. **SHIPPED 2026-05-12** (slot 2
+      picked up slot 8 scaffolding after rate-limit pause): - Scaffolding (slot 8, cherry-picked into slot 2):
+      `market-data-processing-service@d0df50c` — `_resolve_policy_output_data_type()` (option-α source-conceptual
+      seed-key resolver for all 4 data_types) + `_publish_emission_check()` (generalised publisher subsuming slice (b)'s
+      `_publish_ohlcv_1h_emission_check`). - Wiring + tests + cleanup: `market-data-processing-service@311614a` —
+      replaced inline ohlcv_1h call site in `write_candle_parquet` with `_resolve_policy_output_data_type` →
+      `_publish_emission_check`; **deleted** `_is_ohlcv_1h_aggregation_path` + `_publish_ohlcv_1h_emission_check`
+      (subsumed; no double SSOT); rewrote `tests/unit/test_canonical_writer_ohlcv_1h_policy.py` — new
+      `TestResolvePolicyOutputDataType` (15 cases across all 4 data_types + slice / negative paths), parametrised
+      `TestPublishEmissionCheck` (6 happy-path data_types + manifest-read-failure + DEPLOYMENT_FAILED event verification
+      across 3 data_types), parametrised `TestWriteCandleParquetPolicyIntegration` (skip + publish branches × all 4
+      data_types + truly-ungated DEFI `dex_pool_swaps` case replacing the pre-Phase-6.2 ohlcv_1m-is-not-gated
+      assertion). - Runtime UAC regression guard (slot 8, already in LDR): `mdps@daf9988` —
+      `TestServiceEmissionPolicySeedRuntimeLookup` hits the REAL UAC seed for all 6 MDPS canonical keys (no mocks). -
+      QG: 1151 tests passed; 1 pre-existing foreign failure (`test_cli_main::test_cli_help` UTL `StartupValidationError`
+      on `ENVIRONMENT='test'` — unrelated to emission policy); basedpyright clean on edited files (0 errors on
+      canonical_writer slice-(b)/Phase-6.2 sections + test file).
 - [ ] [MDPS] P1. Audit MDPS for OTHER calculators that emit derived/aggregated outputs not yet in the policy seed (e.g.
       trade-flow imbalance metrics, microstructure features) — extend the UAC seed dict per finding. Each addition = one
       PR touching UAC + one PR touching MDPS + one PR flipping plan checkboxes.
+- [ ] [MDPS] P1. **🟡 FINDING (harsh slot 3, 2026-05-12)** — MDPS Phase 6.2 `_publish_emission_check` returns an
+      `EmissionDecision` whose `service_emission_state` / `last_emission_decision_at` / `completeness_fraction` v8
+      column values are **NOT forwarded** to the paired `ManifestWriter.record_captured` call at
+      `market_data_processing_service/app/core/canonical_writer.py:950-965`. Phase 6.2 wired the publish-or-not gate
+      cleanly (correctly skips `record_captured` when `decision.should_publish_row=False`), but the v8 manifest schema
+      columns (`service_emission_state`, `last_emission_decision_at`, `expected_window_completeness_fraction`) end up
+      `None` / default for MDPS rows that DO publish. Slot 2 / Ikenna writegate-slice-c-phase-6.2-tab to ship the v8
+      column passthrough in a follow-on commit, or fold into Phase 4.DEFAULT-REMOVAL. Workspace
+      `rg     "service_emission_state" market-data-processing-service/` returns zero hits in service source today. Same
+      shape will exist at every Phase 6.3+ wiring once those services adopt the publisher (single helper-side fix in
+      canonical_writer pattern + every consumer copies it). Out-of-scope for slot 3 (per "STAY OFF MDPS + UTL v8 schema"
+      assignment) — annotate-not-fix per CLAUDE.md Findings Triage Discipline.
 
 **Phase 6.3 — features-volatility (P0, ~3 days)**
 
 - [ ] [features-volatility] P0. Wire `publish_with_manifest_lookup()` at every features-volatility emission per the seed
-      dict: `high_low_24h` (PARTIAL_OK) / `vol_30d` (NAN_FILL) / `realised_vol_intraday` (PARTIAL_OK). Plus an audit
+      dict: `high_low_24h` (PARTIAL*OK) / `vol_30d` (NAN_FILL) / `realised_vol_intraday` (PARTIAL_OK). Plus an audit
       pass for OTHER feature_groups not yet in the seed (z-score normalisation, rolling correlation, etc.) — extend seed
       dict per finding. NAN_FILL boundary: ensure parquet rows with NaN values still carry a valid
       `completeness_fraction` (NaN cells contribute to incomplete_window per the column they affect, but the row IS
-      written; tree-based ML models tolerate NaN per CLAUDE.md "Honest absence vs fake placeholders").
+      written; tree-based ML models tolerate NaN per CLAUDE.md "Honest absence vs fake placeholders"). **🟡
+      SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace
+      `rg "\.record_captured|\.record_empty|\.record_failed|publish_with_policy"     features-service/features_service/volatility/`
+      returns **0** callsites today. The features-volatility sub-package has NO honest-coverage manifest writes — Phase
+      6.3 is not a "migration", it's a BUILD-FROM-SCRATCH: (a) introduce a
+      `\_record_manifest*\*`helper triad (mirroring the    `calendar_orchestrator`shape harsh slot 3 just shipped at`features-service@229a0963`),     (b) wire it at the `VolatilityWriter.write_features(...)`call sites in    `features_service/volatility/io/writer.py`+ service`write_features`callers,     (c) decide upstream-completeness computation (vol_30d needs 30 ×`ohlcv_24h`manifest     lookups; realised_vol_intraday is intraday-window per-day), AND     (d) thread the v8 columns from`publish_with_manifest_lookup`'s `EmissionDecision`    into the`record_captured`call (per the MDPS Phase 6.2 v8-column-passthrough     finding above — same shape gap will exist here unless wired together). Realistic     estimate ~3-4 cal AI-days under the`brand-new`
+      × 1.0 multiplier — the original 3 days under-bakes the manifest-write build half.
 
 **Phase 6.4 — features-cross-instrument (P0, ~3 days)**
 
@@ -3183,8 +3304,8 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 > **Service-name correction (2026-05-11)**: post-features-consolidation, the canonical service names are
 > `features-onchain-service` / `features-sports-service` / `features-cross-instrument-service` (covers
 > features-prediction polymarket scope) / `features-delta-one-service` + `features-cross-instrument-service` +
-> `features-multi-timeframe-service` (cover features-microstructure scope). The 4-agent audit fanned out across
-> all 5 actual services.
+> `features-multi-timeframe-service` (cover features-microstructure scope). The 4-agent audit fanned out across all 5
+> actual services.
 
 - [x] [features-onchain-service] P1. Audit for derived emissions (LST yield curves, gas-fee aggregates, vault-state
       summaries). **Seed shipped 2026-05-11 @uac@b570d49 — 11 entries** (lending_rates / lst_yields / onchain_perps /
@@ -3201,14 +3322,14 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [x] [features-cross-instrument-service (prediction scope)] P1. Audit + seed (canonical-question-group bundle metrics,
       market-mid time-series). **Seed shipped 2026-05-11 @uac@b570d49 — 6 polymarket entries**
       (polymarket_crowd_sentiment + polymarket_trade_flow + polymarket_whale_activity +
-      polymarket_market_microstructure + polymarket_temporal_patterns NAN_FILL; polymarket_cross_market STRICT_FAIL
-      for canonical-question-group arb signals). **DEFERRED**: wiring at cross_instrument orchestrator.
+      polymarket_market_microstructure + polymarket_temporal_patterns NAN_FILL; polymarket_cross_market STRICT_FAIL for
+      canonical-question-group arb signals). **DEFERRED**: wiring at cross_instrument orchestrator.
 - [x] [features-cross-instrument + delta-one + multi-timeframe (microstructure scope)] P1. Audit + seed (book-imbalance,
-      trade-flow toxicity, cross-TF alignment). **Seed shipped 2026-05-11 @uac@b570d49 — 30 entries**:
-      cross-instrument (15 non-polymarket: regime_detection / cross_asset_correlation / cross_instrument_dynamics /
-      realized_implied_vol / cointegration / liquidation_band_prediction / dxy_momentum NAN_FILL; cme_gap PARTIAL_OK;
-      cross_venue_spreads / book_depth_bands / liquidity_walls / liquidation_clusters / flow_interaction / composite_sr
-      / paired_price_dispersion STRICT_FAIL); delta-one (9 anchors); multi-timeframe (4 cross-TF alignment groups all
+      trade-flow toxicity, cross-TF alignment). **Seed shipped 2026-05-11 @uac@b570d49 — 30 entries**: cross-instrument
+      (15 non-polymarket: regime_detection / cross_asset_correlation / cross_instrument_dynamics / realized_implied_vol
+      / cointegration / liquidation_band_prediction / dxy_momentum NAN_FILL; cme_gap PARTIAL_OK; cross_venue_spreads /
+      book_depth_bands / liquidity_walls / liquidation_clusters / flow_interaction / composite_sr /
+      paired_price_dispersion STRICT_FAIL); delta-one (9 anchors); multi-timeframe (4 cross-TF alignment groups all
       STRICT_FAIL on paired_spec precedent). **DEFERRED**: per-service wiring of `publish_with_policy()`.
       **DELTA-ONE WIRED 2026-05-12 @features-service@5e24a18c**: `_check_emission_policy()` + `_apply_emission_policy()`
       in `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
@@ -3229,22 +3350,23 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
 
-- [ ] [features-delta-one-service] P2. ~24 ohlcv-derived feature_groups share NAN_FILL policy (e.g. moving_averages,
+- [ ] [features-delta-one-service] P2. ~24 ohlcv-derived feature*groups share NAN_FILL policy (e.g. moving_averages,
       oscillators, momentum, vwap, candlestick_patterns, market_structure, returns, streaks, supply_demand_zones,
       fibonacci, level_confluence, signal_confirmation, confluence, statistical_anomaly, order_flow_inference,
       polynomial_trendlines, risk_reward, wedge_quality, return_kurtosis, swing_outcome_targets, sr_memory). Adding 24
-      near-duplicate rows pads the seed dict. **Recommend** helper pattern: `OHLCV_DERIVED_FEATURE_GROUPS: frozenset[str]`
-      + auto-population loop at module load time, OR wildcard convention `("features-delta-one-service", "ohlcv_*")`.
-      Defer to Phase-2 expansion alongside the per-service `publish_with_policy()` wiring.
+      near-duplicate rows pads the seed dict. **Recommend** helper pattern:
+      `OHLCV_DERIVED_FEATURE_GROUPS: frozenset[str]` + auto-population loop at module load time, OR wildcard convention
+      `("features-delta-one-service",
+      "ohlcv*\*")`.     Defer to Phase-2 expansion alongside the per-service `publish_with_policy()` wiring.
 - [ ] [features-cross-instrument-service] P2. **Seed-vs-registry drift flag**: original seed `paired_spec` +
-      `pairwise_correlation` entries do NOT appear as `feature_group` names in the live
-      `CALCULATOR_REGISTRY` (`features-service/features_service/cross_instrument/engine/orchestrator.py`). Closest live
-      names: `paired_price_dispersion` (now seeded STRICT_FAIL) + `cross_asset_correlation` (now seeded NAN_FILL).
-      **Triage decision needed**: (a) intentional umbrella keys covering multiple groups, (b) reserved for future
+      `pairwise_correlation` entries do NOT appear as `feature_group` names in the live `CALCULATOR_REGISTRY`
+      (`features-service/features_service/cross_instrument/engine/orchestrator.py`). Closest live names:
+      `paired_price_dispersion` (now seeded STRICT_FAIL) + `cross_asset_correlation` (now seeded NAN_FILL). **Triage
+      decision needed**: (a) intentional umbrella keys covering multiple groups, (b) reserved for future
       re-architecture, (c) drift to be renamed. Preserved as-is in this seed extension; route to slice-(c) wave-2
       cleanup.
-- [ ] [features-multi-timeframe-service] P2. **Single-TF vs cross-TF ambiguity**: `intraday_regime` + `micro_regime`
-      may be single-TF derived (NAN_FILL ML feature, belongs in delta-one's bucket) rather than cross-TF aligned
+- [ ] [features-multi-timeframe-service] P2. **Single-TF vs cross-TF ambiguity**: `intraday_regime` + `micro_regime` may
+      be single-TF derived (NAN_FILL ML feature, belongs in delta-one's bucket) rather than cross-TF aligned
       (STRICT_FAIL on paired_spec precedent). Not seeded pending operator/service-maintainer confirmation.
 - [ ] [features-multi-timeframe-service] P2. `tf_risk_reward` + `wedge_confluence` are also cross-TF aggregates
       consuming poly-fit + ATR across timeframes (same STRICT_FAIL reasoning as the 4 seeded entries). Not seeded
@@ -3270,11 +3392,48 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       tolerated; missing venue balance → block + alert + manual triage.
 - [ ] [risk-and-exposure-service] P0. Wire at `risk_state` emission (BLOCK_CRITICAL). Same.
 
+**🟡 Phase 6.6 + 6.7 SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace grep across `ml-training-service/` +
+`ml-inference-service/` + `strategy-service/` + `execution-service/` + `position-balance-monitor-service/` +
+`risk-and-exposure-service/` for `\.record_captured|\.record_empty|\.record_failed|publish_with_policy` returns **0**
+callsites in service source today. BUT 5 of 6 services HAVE `ManifestWriter.add(...)` legacy-v7 callsites that need
+migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wiring on top:
+
+- `ml-training-service/ml_training_service/ml/model_registry.py:299-310` —
+  `writer.add(processing_date, row_count=1, model_family, training_period, job_id)`. Phase 6.6 needs this migrated to
+  `record_captured(...)` then wrapped with
+  `publish_with_policy(service="ml-training-service", output_data_type="model_version", ...)` per BLOCK_CRITICAL.
+- `ml-inference-service/.../prediction_publisher.py`, `strategy-service/.../cloud_strategy_storage.py`,
+  `execution-service/.../data_sink.py` + `results/save_operations.py`,
+  `risk-and-exposure-service/.../risk_snapshot_sink.py` — each holds existing `ManifestWriter` usage (mostly `.add()`);
+  auditor needs to enumerate per-service before writing the per-service rollout plan.
+- `position-balance-monitor-service` — NO `ManifestWriter` reference in source today (genuine from-scratch build).
+  Realistic Phase 6.6 + 6.7 estimate is closer to ~10-15 cal AI-days (mix of refactor 0.4× for the .add→record_captured
+  migration + brand-new 1.0× for the new publish-boundary wiring + the v8-column passthrough wiring + the
+  upstream-completeness arithmetic per BLOCK_CRITICAL emission). The helper exists at UTL but no service consumes it
+  yet.
+
 **Phase 6.8 — instruments-service catalog snapshot (P0, ~1 day)**
 
 - [ ] [instruments-service] P0. Wire at the catalog-snapshot emission (PARTIAL_OK — best-effort union of multiple
       sources). Per-source partial coverage is normal; the publish records the per-source breakdown in the
-      `incomplete_window` field so consumers can branch on which source is missing.
+      `incomplete_window` field so consumers can branch on which source is missing. **🟡 SCOPE-DISCOVERY 2026-05-12 by
+      harsh slot 3**: workspace
+      `rg "\.record_captured|\.record_empty|\.record_failed" instruments-service/instruments_service/` returns 41
+      callsites (Phase 4.INSTRUMENTS sweep landed them with explicit `pipeline_mode=` at instruments-service@e530906) —
+      BUT 41 calls go through `ManifestWriter.add(...)` (legacy v7 path) NOT through
+      `ManifestWriter.record_captured(...)`. So Phase 6.8 wiring requires EITHER (a) migrate the 41 `.add()` callsites
+      to `.record_captured()` first (Phase 4.DEFAULT-REMOVAL territory) then wire `publish_with_policy` on top, OR (b)
+      declare the "catalog_snapshot" emission as a NEW separate write boundary (a consolidator-style "today's catalog is
+      done" event-emitting helper that reads the existing per-source manifest rows + emits the `PARTIAL_OK` decision).
+      The seed-dict comment at `service_emission_policy.py:192-195` already says "Per-source partial coverage handled at
+      the manifest layer (per-row capture_status), not at the catalog-publish layer" — which suggests (b) is the
+      intended shape (a TODAY-consolidator), but the consolidator doesn't exist yet. Operator-decision needed to pick
+      (a) vs (b); ~1 day estimate stands ONLY for (b) build (a single new emission helper + cron VM); (a) is ~2-3 days
+      bundled with Phase 4.DEFAULT-REMOVAL. **🟢 PART A shipped 2026-05-12 (slot 8, instruments-service@27fbc90)**:
+      operator chose path (a) — all 25 `.add()` callsites migrated to `record_captured()` /
+      `record_captured_from_counts()` with full `available_at`, `pipeline_mode`, `service_emission_state` kwargs. Lint
+      clean. Zero `.add()` violations. Remaining: wire `publish_with_policy` on top (path (a) Phase 6.8 PART B — gated
+      on Phase 6.9 sweep).
 
 **Phase 6.9 — Slice-(c) workspace-wide audit + ship-gate (P0, ~2 days)**
 
@@ -3458,40 +3617,40 @@ per [`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) § "Slo
 
 ### Commits
 
-| Commit         | Repo                                | Summary                                                                                                   |
-| -------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| UTL@`ac5ade59` | unified-trading-library             | `manifest_completeness.py` + `publish_with_manifest_lookup()` wrapper + 14 unit tests (Phase 5.1)         |
-| MDPS@`9e1a93e` | market-data-processing-service      | `canonical_writer` ohlcv_1h emission-policy POC + 17 unit tests (Phase 5.3 + 5.4)                         |
-| PM@`27cf5c6a`  | unified-trading-pm                  | Q1 BLOCKED → ✅ RESOLVED close (cite of operator PM@`39ab61e5` decision)                                  |
-| PM@`88baed07`  | unified-trading-pm                  | Phase 5.1 flip (UTL helper + 14 tests evidence)                                                           |
-| PM@`74e8bf51`  | unified-trading-pm                  | Phase 5.3 + 5.4 flip (MDPS POC evidence)                                                                  |
-| PM@`989da6e0`  | unified-trading-pm                  | Phase 5.6 + 5.7 — codex SSOT `service-output-emission-semantics.md` + CLAUDE.md key-rule + ship-gate flip |
-| deployment-api@`3a0948e` | deployment-api                      | Phase 5.5 deployment-api half — `LeafCompletenessEnvelope` + `_compute_completeness_envelope()` + 8 tests (forward-compatible) |
-| deployment-ui@`00132db`  | deployment-ui                       | Phase 5.5 deployment-ui half — `LeafSchemaModal` 4th block + `completenessColor()` + 10 vitest (forward-compatible)            |
+| Commit                   | Repo                           | Summary                                                                                                                        |
+| ------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| UTL@`ac5ade59`           | unified-trading-library        | `manifest_completeness.py` + `publish_with_manifest_lookup()` wrapper + 14 unit tests (Phase 5.1)                              |
+| MDPS@`9e1a93e`           | market-data-processing-service | `canonical_writer` ohlcv_1h emission-policy POC + 17 unit tests (Phase 5.3 + 5.4)                                              |
+| PM@`27cf5c6a`            | unified-trading-pm             | Q1 BLOCKED → ✅ RESOLVED close (cite of operator PM@`39ab61e5` decision)                                                       |
+| PM@`88baed07`            | unified-trading-pm             | Phase 5.1 flip (UTL helper + 14 tests evidence)                                                                                |
+| PM@`74e8bf51`            | unified-trading-pm             | Phase 5.3 + 5.4 flip (MDPS POC evidence)                                                                                       |
+| PM@`989da6e0`            | unified-trading-pm             | Phase 5.6 + 5.7 — codex SSOT `service-output-emission-semantics.md` + CLAUDE.md key-rule + ship-gate flip                      |
+| deployment-api@`3a0948e` | deployment-api                 | Phase 5.5 deployment-api half — `LeafCompletenessEnvelope` + `_compute_completeness_envelope()` + 8 tests (forward-compatible) |
+| deployment-ui@`00132db`  | deployment-ui                  | Phase 5.5 deployment-ui half — `LeafSchemaModal` 4th block + `completenessColor()` + 10 vitest (forward-compatible)            |
 
 ### Deferred work after 2026-05-11 ikenna-writegate-slice-b-tab session
 
 The 2026-05-11 ikenna-writegate-slice-b-tab session closed slice (b) per the operator's re-threaded scope. Items still
 open are tracked here so the next agent picks up cleanly.
 
-| Phase / item                                              | Status as of 2026-05-11           | Successor / blocker                                                                                              |
-| --------------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Phase 5.1 — UTL `manifest_completeness` helper            | `done` (UTL@`ac5ade59`)           | —                                                                                                                |
-| Phase 5.2 — UAC v8 schema columns                         | SUPERSEDED                        | Owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1 per operator PM@`39ab61e5` |
-| Phase 5.3 — MDPS `ohlcv_1h:current` wire-in               | `done` (MDPS@`9e1a93e`)           | —                                                                                                                |
-| Phase 5.4 — MDPS `ohlcv_1h:historical` wire-in            | `done` (same MDPS@`9e1a93e` hook) | "Live = batch — same code path" — single canonical_writer serves both slices                                     |
-| Phase 5.4 P1 30-day integration test                      | `deferred-after-phase-6.2`        | DEFERRED-AFTER writegate slice (c) Phase 6.2 (per-MDPS-data_type publish_with_manifest_lookup rollout)            |
-| Phase 5.5 — deployment-api `/leaf-stats` envelope extension | `done` (deployment-api@`3a0948e`) | SHIPPED forward-compatible 2026-05-11 per operator "do the not chat only stuff" — lights up auto when slice (c) writes columns |
-| Phase 5.5 — deployment-ui `LeafSchemaModal` 4th block     | `done` (deployment-ui@`00132db`) | SHIPPED forward-compatible 2026-05-11; muted placeholder until slice (c) ships parquet columns                   |
-| Phase 5.6 — codex SSOT + CLAUDE.md key-rule               | `done` (PM@`989da6e0`)            | —                                                                                                                |
-| Phase 5.7 — slice (b) ship-gate                           | `done` (this commit)              | Cross-side INFO ping landed for Harsh slot 6 (no action needed; slot 6 QG-AST gate already shipped @PM`a4512ed3`) |
+| Phase / item                                                | Status as of 2026-05-11           | Successor / blocker                                                                                                                |
+| ----------------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 5.1 — UTL `manifest_completeness` helper              | `done` (UTL@`ac5ade59`)           | —                                                                                                                                  |
+| Phase 5.2 — UAC v8 schema columns                           | SUPERSEDED                        | Owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1 per operator PM@`39ab61e5` |
+| Phase 5.3 — MDPS `ohlcv_1h:current` wire-in                 | `done` (MDPS@`9e1a93e`)           | —                                                                                                                                  |
+| Phase 5.4 — MDPS `ohlcv_1h:historical` wire-in              | `done` (same MDPS@`9e1a93e` hook) | "Live = batch — same code path" — single canonical_writer serves both slices                                                       |
+| Phase 5.4 P1 30-day integration test                        | `deferred-after-phase-6.2`        | DEFERRED-AFTER writegate slice (c) Phase 6.2 (per-MDPS-data_type publish_with_manifest_lookup rollout)                             |
+| Phase 5.5 — deployment-api `/leaf-stats` envelope extension | `done` (deployment-api@`3a0948e`) | SHIPPED forward-compatible 2026-05-11 per operator "do the not chat only stuff" — lights up auto when slice (c) writes columns     |
+| Phase 5.5 — deployment-ui `LeafSchemaModal` 4th block       | `done` (deployment-ui@`00132db`)  | SHIPPED forward-compatible 2026-05-11; muted placeholder until slice (c) ships parquet columns                                     |
+| Phase 5.6 — codex SSOT + CLAUDE.md key-rule                 | `done` (PM@`989da6e0`)            | —                                                                                                                                  |
+| Phase 5.7 — slice (b) ship-gate                             | `done` (this commit)              | Cross-side INFO ping landed for Harsh slot 6 (no action needed; slot 6 QG-AST gate already shipped @PM`a4512ed3`)                  |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
 - **v8 manifest schema column declaration** (`service_emission_state` + `last_emission_decision_at` +
   `expected_window_completeness_pct`): open in
-  [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1.A/B/C.
-  Routed there per operator decision PM@`39ab61e5` option (b).
+  [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1.A/B/C. Routed there per
+  operator decision PM@`39ab61e5` option (b).
 - **`EXPECTED_KNOWN_SOURCE_GAP` enum addition** to `EmptyConfirmedReason`: open in `manifest_schema_final_gate` Phase 1
   per operator decision PM@`39ab61e5`. Originally raised by Harsh slot 3 Track D audit; covers VIX 15m mid-history gap +
   sports `KNOWN_COVERAGE_GAPS`.
@@ -3520,57 +3679,56 @@ No deferral lives only in chat or in the commit message.
 
 ## DONE-2026-05-12 — Slot 2 (ikenna-writegate-slice-c-phase-6.2-tab) — Slice (c) Phase 6.2
 
-Tab: `ikenna-writegate-slice-c-phase-6.2-tab` (slot 2 worktree at `.tabs/2/`). Session scope: writegate slice (c)
-Phase 6.2 — wire `publish_with_manifest_lookup` at the remaining 3 seeded MDPS data_types (`ohlcv_1m` / `ohlcv_24h` /
+Tab: `ikenna-writegate-slice-c-phase-6.2-tab` (slot 2 worktree at `.tabs/2/`). Session scope: writegate slice (c) Phase
+6.2 — wire `publish_with_manifest_lookup` at the remaining 3 seeded MDPS data_types (`ohlcv_1m` / `ohlcv_24h` /
 `book_snapshot_5`) on top of the slice (b) ohlcv_1h POC. Picked up slot 8's `mdps@ae0cada` scaffolding (paused
 2026-05-11 PM mid-task per Anthropic rate limit) and shipped the wiring + tests + cleanup in one shippable unit.
 
 ### Commits
 
-| Commit            | Repo                           | Summary                                                                                                |
-| ----------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| MDPS@`d0df50c`    | market-data-processing-service | Slot 8 scaffolding cherry-picked: `_resolve_policy_output_data_type` + `_publish_emission_check`       |
-| MDPS@`311614a`    | market-data-processing-service | Wiring + tests + cleanup — replace inline ohlcv_1h call site; delete subsumed helpers; rewrite tests   |
-| PM@`<this-flip>`  | unified-trading-pm             | Phase 6.2 flip `[ ] → [x]` + CLAUDE.md slice (b) reference update + DONE-2026-05-12 block + scoreboard |
+| Commit           | Repo                           | Summary                                                                                                |
+| ---------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| MDPS@`d0df50c`   | market-data-processing-service | Slot 8 scaffolding cherry-picked: `_resolve_policy_output_data_type` + `_publish_emission_check`       |
+| MDPS@`311614a`   | market-data-processing-service | Wiring + tests + cleanup — replace inline ohlcv_1h call site; delete subsumed helpers; rewrite tests   |
+| PM@`<this-flip>` | unified-trading-pm             | Phase 6.2 flip `[ ] → [x]` + CLAUDE.md slice (b) reference update + DONE-2026-05-12 block + scoreboard |
 
 ### What shipped (operationally)
 
-* **MDPS canonical_writer** — `write_candle_parquet` now gates emission across all 4 seeded MDPS data_types via the
+- **MDPS canonical_writer** — `write_candle_parquet` now gates emission across all 4 seeded MDPS data_types via the
   source-conceptual resolver pattern. Slice (b) ohlcv_1h-specific helpers (`_is_ohlcv_1h_aggregation_path` +
   `_publish_ohlcv_1h_emission_check`) DELETED — subsumed by `_resolve_policy_output_data_type` +
   `_publish_emission_check`. No double SSOT.
-* **Test surface** — `test_canonical_writer_ohlcv_1h_policy.py` rewritten (the file name is kept for git-history
+- **Test surface** — `test_canonical_writer_ohlcv_1h_policy.py` rewritten (the file name is kept for git-history
   archaeology; the docstring now reflects Phase 6.2 coverage):
-  * `TestResolvePolicyOutputDataType` — 13 cases × parametric expansion ≈ 17 assertions across all 4 data_types +
-    slice differentiation + 3 negative paths (passthrough / unmapped source / book_snapshot_5 with wrong mdps_dt).
-  * `TestPublishEmissionCheck` — 6 happy-path params (every gated `output_data_type`) + manifest-read-failure +
-    3-way DEPLOYMENT_FAILED event params pinning that the event carries the resolved token, not hardcoded ohlcv_1h.
-  * `TestWriteCandleParquetPolicyIntegration` — parametric skip (6 cases) + publish (4 cases) across all gated
-    paths; truly-ungated DEFI `dex_pool_swaps` test replaces the pre-Phase-6.2 ohlcv_1m-not-gated assertion (now
-    wrong — ohlcv_1m IS gated by Phase 6.2).
-  * `TestResolveEmissionSlice` + `TestBuildOhlcv1mUpstreamWindow` + `TestServiceEmissionPolicySeedRuntimeLookup`
+  - `TestResolvePolicyOutputDataType` — 13 cases × parametric expansion ≈ 17 assertions across all 4 data_types + slice
+    differentiation + 3 negative paths (passthrough / unmapped source / book_snapshot_5 with wrong mdps_dt).
+  - `TestPublishEmissionCheck` — 6 happy-path params (every gated `output_data_type`) + manifest-read-failure + 3-way
+    DEPLOYMENT_FAILED event params pinning that the event carries the resolved token, not hardcoded ohlcv_1h.
+  - `TestWriteCandleParquetPolicyIntegration` — parametric skip (6 cases) + publish (4 cases) across all gated paths;
+    truly-ungated DEFI `dex_pool_swaps` test replaces the pre-Phase-6.2 ohlcv_1m-not-gated assertion (now wrong —
+    ohlcv_1m IS gated by Phase 6.2).
+  - `TestResolveEmissionSlice` + `TestBuildOhlcv1mUpstreamWindow` + `TestServiceEmissionPolicySeedRuntimeLookup`
     unchanged (still cover the kept helpers + the Q2 Bug 1 runtime-UAC-lookup regression guard).
-* **QG state** — 1151 MDPS unit tests pass; 1 pre-existing foreign failure (`test_cli_main::test_cli_help` — UTL
-  `service_runtime.StartupValidationError` on `ENVIRONMENT='test'`, unrelated to emission policy). basedpyright
-  clean on edited functions; 2 pre-existing foreign basedpyright errors in `canonical_writer.py` (orphaned
-  `_timeframe_to_timedelta` from MDPS@`f004e12` off-by-one fix + foreign `int(ts_col.iloc[0])` line 348) — NOT my
-  edits. ruff clean.
-* **Full-execution criterion**: completeness envelope render verification deferred — the deployment-ui muted
-  placeholder lights up only once `manifest_schema_final_gate` Phase 2 ships parquet completeness_fraction columns
-  (per Phase 5.5 forward-compat surface). Phase 6.2 unblocks the column-write side; the render side waits on
-  Phase 2.
+- **QG state** — 1151 MDPS unit tests pass; 1 pre-existing foreign failure (`test_cli_main::test_cli_help` — UTL
+  `service_runtime.StartupValidationError` on `ENVIRONMENT='test'`, unrelated to emission policy). basedpyright clean on
+  edited functions; 2 pre-existing foreign basedpyright errors in `canonical_writer.py` (orphaned
+  `_timeframe_to_timedelta` from MDPS@`f004e12` off-by-one fix + foreign `int(ts_col.iloc[0])` line 348) — NOT my edits.
+  ruff clean.
+- **Full-execution criterion**: completeness envelope render verification deferred — the deployment-ui muted placeholder
+  lights up only once `manifest_schema_final_gate` Phase 2 ships parquet completeness_fraction columns (per Phase 5.5
+  forward-compat surface). Phase 6.2 unblocks the column-write side; the render side waits on Phase 2.
 
 ### Deferred work after 2026-05-12 ikenna-writegate-slice-c-phase-6.2-tab session
 
-| Phase / item                                                                | Status as of 2026-05-12         | Successor / blocker                                                                                                                          |
-| --------------------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 6.2 — MDPS remaining data_types                                       | `done` (MDPS@`311614a`)         | —                                                                                                                                            |
-| Phase 6.2 P1 — audit MDPS for OTHER calculators emitting derived outputs    | `todo` (`- [ ]` in plan body)   | Operator-triage; extend UAC seed dict per finding. Plan body Phase 6.2 P1 item explicit.                                                     |
-| Phase 5.4 P1 — 30-day integration test                                      | `todo` (`- [ ]` in plan body)   | Originally `deferred-after-phase-6.2`; now unblocked. Open for next slot 2 cycle to write — needs real MDPS parquet writes against live LDR. |
-| Phase 5.5 — completeness envelope full-execution render verification        | `deferred-after-phase-2`        | DEFERRED-AFTER `manifest_schema_final_gate_2026_05_09.md` Phase 2 (parquet completeness_fraction column write).                              |
-| Phase 6.3 — features-volatility (P0, ~3 days)                               | `todo` (`- [ ]` in plan body)   | Next slice (c) sub-plan owner. Wire `publish_with_manifest_lookup` at `high_low_24h` / `vol_30d` / `realised_vol_intraday`.                  |
-| Phase 6.4-6.8 — remaining services rollout                                  | `todo` (`- [ ]` in plan body)   | features-cross-instrument / ml-training / ml-inference / strategy / execution / position-balance / risk / instruments-service.               |
-| Phase 6.9 — slice-(c) workspace-wide audit + ship-gate                      | `todo` (`- [ ]` in plan body)   | New QG STEP (AST walk every `record_captured(` callsite paired with publisher call) + workspace flip-sweep.                                  |
+| Phase / item                                                             | Status as of 2026-05-12       | Successor / blocker                                                                                                                          |
+| ------------------------------------------------------------------------ | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 6.2 — MDPS remaining data_types                                    | `done` (MDPS@`311614a`)       | —                                                                                                                                            |
+| Phase 6.2 P1 — audit MDPS for OTHER calculators emitting derived outputs | `todo` (`- [ ]` in plan body) | Operator-triage; extend UAC seed dict per finding. Plan body Phase 6.2 P1 item explicit.                                                     |
+| Phase 5.4 P1 — 30-day integration test                                   | `todo` (`- [ ]` in plan body) | Originally `deferred-after-phase-6.2`; now unblocked. Open for next slot 2 cycle to write — needs real MDPS parquet writes against live LDR. |
+| Phase 5.5 — completeness envelope full-execution render verification     | `deferred-after-phase-2`      | DEFERRED-AFTER `manifest_schema_final_gate_2026_05_09.md` Phase 2 (parquet completeness_fraction column write).                              |
+| Phase 6.3 — features-volatility (P0, ~3 days)                            | `todo` (`- [ ]` in plan body) | Next slice (c) sub-plan owner. Wire `publish_with_manifest_lookup` at `high_low_24h` / `vol_30d` / `realised_vol_intraday`.                  |
+| Phase 6.4-6.8 — remaining services rollout                               | `todo` (`- [ ]` in plan body) | features-cross-instrument / ml-training / ml-inference / strategy / execution / position-balance / risk / instruments-service.               |
+| Phase 6.9 — slice-(c) workspace-wide audit + ship-gate                   | `todo` (`- [ ]` in plan body) | New QG STEP (AST walk every `record_captured(` callsite paired with publisher call) + workspace flip-sweep.                                  |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
@@ -3578,16 +3736,16 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
   [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 2. Phase 6.2 emits the
   EmissionDecision in the lifecycle event payload; Phase 2 is the parquet/manifest-row write.
 - **Per-service slice (c) rollout** (Phase 6.3-6.9): writegate plan body Phase 6.3-6.9 sub-todos enumerate; per-service
-  plans land as `wave4_emission_rollout_{service}_<YYYY_MM_DD>.md` sub-plans per codex SSOT
-  § "Per-service rollout playbook".
+  plans land as `wave4_emission_rollout_{service}_<YYYY_MM_DD>.md` sub-plans per codex SSOT § "Per-service rollout
+  playbook".
 
 ### EOD-audit (per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit clause")
 
 Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**DEFERRED**` annotation in
 `plans/active/`:
 
-- "Phase 6.2 P1 audit for OTHER MDPS calculators emitting derived outputs" — Phase 6.2 P1 todo in plan body (this
-  file, line ~3134-3136).
+- "Phase 6.2 P1 audit for OTHER MDPS calculators emitting derived outputs" — Phase 6.2 P1 todo in plan body (this file,
+  line ~3134-3136).
 - "Phase 5.4 P1 30-day integration test now unblocked" — Phase 5.4 P1 todo in plan body (this file).
 - "Phase 5.5 render verification deferred-after Phase 2" — Phase 5.5 already annotated in plan body + slice (b) DONE
   block above.
@@ -3601,12 +3759,13 @@ No deferral lives only in chat or in the commit message.
 
 Two foreign breakages observed during MDPS QG; both pre-date my edits and are someone else's plan to fix:
 
-1. `test_cli_main::test_cli_help` fails with UTL `StartupValidationError: Invalid env ENVIRONMENT='test'. Valid: dev,
-   development, staging, prod, production`. UTL `service_runtime.py` validator rejects `'test'`; the test calls
-   `run_cli()` which routes through `ServiceBootstrap.run()` which validates `ENVIRONMENT`. Foreign code, foreign test;
-   not in scope for slice (c) Phase 6.2.
-2. `basedpyright canonical_writer.py` flags `_timeframe_to_timedelta` (line 264) as unused — orphaned by
-   `mdps@f004e12` off-by-one-fix which dropped the `tf_delta` formula. Plus 1 `reportAny` at line 348 (foreign
+1. `test_cli_main::test_cli_help` fails with UTL
+   `StartupValidationError: Invalid env ENVIRONMENT='test'. Valid: dev, development, staging, prod, production`. UTL
+   `service_runtime.py` validator rejects `'test'`; the test calls `run_cli()` which routes through
+   `ServiceBootstrap.run()` which validates `ENVIRONMENT`. Foreign code, foreign test; not in scope for slice (c) Phase
+   6.2.
+2. `basedpyright canonical_writer.py` flags `_timeframe_to_timedelta` (line 264) as unused — orphaned by `mdps@f004e12`
+   off-by-one-fix which dropped the `tf_delta` formula. Plus 1 `reportAny` at line 348 (foreign
    `_stamp_candle_available_at` internals). Neither is my edit; both pre-existed before this commit.
 
 Both flagged here for the operator's awareness; no action taken (per "QG failure attribution" — fix on their own
@@ -3782,10 +3941,10 @@ signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Ph
 **Status**: ✅ RESOLVED 2026-05-11 by operator decision PM@`39ab61e5` — option (b) per the Q's recommended path.
 [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) is canonical v8 owner; writegate
 slice (b) Phase 5.2 SUPERSEDED (banner on `#### Slice (b)` header at line 2813). Slot 2's re-threaded scope = writegate
-Phase 5.1 (UTL `manifest_completeness` helper) + Phase 5.3-5.4 (MDPS `ohlcv_1h:current` + `:historical` POC) + Phase
-5.5 (deployment-api `/leaf-stats` + deployment-ui DataStatusTab surfaces) + Phase 5.6 (codex + CLAUDE.md) + Phase 5.7
-(ship-gate). Phase-numbering ambiguity in the work-split body lines 116-126 reconciled per work-split line 107: writegate
-plan body's own phase numbering is canonical. `EXPECTED_KNOWN_SOURCE_GAP` value addition routed to
+Phase 5.1 (UTL `manifest_completeness` helper) + Phase 5.3-5.4 (MDPS `ohlcv_1h:current` + `:historical` POC) + Phase 5.5
+(deployment-api `/leaf-stats` + deployment-ui DataStatusTab surfaces) + Phase 5.6 (codex + CLAUDE.md) + Phase 5.7
+(ship-gate). Phase-numbering ambiguity in the work-split body lines 116-126 reconciled per work-split line 107:
+writegate plan body's own phase numbering is canonical. `EXPECTED_KNOWN_SOURCE_GAP` value addition routed to
 manifest_schema_final_gate Phase 1 (not slot 2's scope).
 
 The slot-1 work-split task brief for slot 2 ([`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) §
@@ -3797,24 +3956,24 @@ surfaces **three concrete contradictions** the work-split brief did not account 
 
 1. **SSOT-ownership conflict (F3 known-open).** code_freeze plan `:139` + `:174-179` says writegate slice (b) Phase 5.1
    owns the v8 column declaration "(NOT a separate `manifest_v8_schema_migration_design` file)"; the active P0 plan
-   `manifest_schema_final_gate_2026_05_09.md` (created 2026-05-09, depends_on writegate-honest-coverage) Phase 1.A/1.B/1.C
-   ALSO claims ownership of `ServiceEmissionStateEnum` + `next_state` resolver + the schema column declaration. Both
-   plans active. Two writers on the same artifact = workspace "No double SSOT" rule violation. **Decision needed**: (a)
-   writegate slice (b) Phase 5.1 is canonical, manifest_schema_final_gate Phase 1 banners as "see writegate slice (b)"
-   + writegate slice (b) absorbs the work; OR (b) manifest_schema_final_gate Phase 1 is canonical, writegate slice (b)
-   Phase 5.1 banners SUPERSEDED + my slot 2 contributes to manifest_schema_final_gate Phase 1 instead.
+   `manifest_schema_final_gate_2026_05_09.md` (created 2026-05-09, depends_on writegate-honest-coverage) Phase
+   1.A/1.B/1.C ALSO claims ownership of `ServiceEmissionStateEnum` + `next_state` resolver + the schema column
+   declaration. Both plans active. Two writers on the same artifact = workspace "No double SSOT" rule violation.
+   **Decision needed**: (a) writegate slice (b) Phase 5.1 is canonical, manifest_schema_final_gate Phase 1 banners as
+   "see writegate slice (b)"
+   - writegate slice (b) absorbs the work; OR (b) manifest_schema_final_gate Phase 1 is canonical, writegate slice (b)
+     Phase 5.1 banners SUPERSEDED + my slot 2 contributes to manifest_schema_final_gate Phase 1 instead.
 
-2. **Column-name mismatch.** slot-1 brief lists v8 new columns as
-   `service_emission_state` + `pipeline_mode` + `feature_family`. But `pipeline_mode` + `feature_family` are **already
-   shipped in UTL `manifest_writer.py`** (v7 / pre-v8 columns at `manifest_writer.py:757` + `:819`). The actual NEW v8
-   columns per `manifest_schema_final_gate_2026_05_09.md` Phase 1.C are: **`service_emission_state` +
-   `last_emission_decision_at` + `expected_window_completeness_pct`**. Suspect the slot-1 brief paraphrased from the
-   code_freeze plan's freeze-gate item 9 (`:145`) which lists "v8 (incl. `service_emission_state`, `pipeline_mode`,
-   `feature_family`)" — the "incl." reads as "v8 includes these column names that are part of the v8 schema state" not
-   "these are the NEW columns being added." **Decision needed**: confirm the 3 new v8 columns are
-   `service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct` (per
-   manifest_schema_final_gate Phase 1.C, which has the authoritative `(str | None)` / `(timestamp | None)` /
-   `(float | None, 0.0-1.0)` type list).
+2. **Column-name mismatch.** slot-1 brief lists v8 new columns as `service_emission_state` + `pipeline_mode` +
+   `feature_family`. But `pipeline_mode` + `feature_family` are **already shipped in UTL `manifest_writer.py`** (v7 /
+   pre-v8 columns at `manifest_writer.py:757` + `:819`). The actual NEW v8 columns per
+   `manifest_schema_final_gate_2026_05_09.md` Phase 1.C are: **`service_emission_state` + `last_emission_decision_at` +
+   `expected_window_completeness_pct`**. Suspect the slot-1 brief paraphrased from the code_freeze plan's freeze-gate
+   item 9 (`:145`) which lists "v8 (incl. `service_emission_state`, `pipeline_mode`, `feature_family`)" — the "incl."
+   reads as "v8 includes these column names that are part of the v8 schema state" not "these are the NEW columns being
+   added." **Decision needed**: confirm the 3 new v8 columns are `service_emission_state` +
+   `last_emission_decision_at` + `expected_window_completeness_pct` (per manifest_schema_final_gate Phase 1.C, which has
+   the authoritative `(str | None)` / `(timestamp | None)` / `(float | None, 0.0-1.0)` type list).
 
 3. **Plan-body Phase 5.2 vs Phase 1.C column-set conflict.** This plan body's Phase 5.2 (line 2849-2858) declares
    manifest schema columns as `completeness_fraction` + `incomplete_window`. `manifest_schema_final_gate` Phase 1.C
@@ -3823,8 +3982,8 @@ surfaces **three concrete contradictions** the work-split brief did not account 
    level fraction; `expected_window_completeness_pct` is `(float | None, 0.0-1.0)` per the maximalist plan. Possible
    reconciliations: (α) they're the same column, one of the two names becomes canonical; (β) they're different columns
    serving different consumers (writegate's emission_publisher caller flow vs maximalist's emission-policy hook).
-   `incomplete_window` (string, JSON-encoded list per writegate Phase 5.2) may also need to migrate to a different
-   shape or be dropped in favor of event-stream `incomplete_window_count` only.
+   `incomplete_window` (string, JSON-encoded list per writegate Phase 5.2) may also need to migrate to a different shape
+   or be dropped in favor of event-stream `incomplete_window_count` only.
 
 **Recommendation**: writegate slice (b) Phase 5.1-5.7 ABSORBS into `manifest_schema_final_gate_2026_05_09.md` Phase 1
 work — they're effectively the same May-15-freeze-gate work, and the maximalist plan has the more rigorous Phase 1.A/B/C
@@ -3838,59 +3997,59 @@ domain. Phase 5.5-5.7 (deployment-api/ui + codex + CLAUDE.md + QG) stays in writ
 
 ### Q2 — [ikenna-slot8-phase6-2-mdps-wiring (slot 8), 2026-05-11 ~16:00 UTC] — UAC `SERVICE_OUTPUT_POLICIES` seed dict has MDPS service-name typo (`pipeline` vs `processing`) + `book_snapshot_5` key-shape ambiguity — blocks Phase 6.2 wiring + retroactively breaks slice (b) POC
 
-**Status**: ✅ RESOLVED 2026-05-11 PM — operator approval per Q2 AskUserQuestion → option (a) for Bug 1 + option
-(α) for Bug 2. Bug 1 shipped at UAC@`7be6bd5` (seed-dict rename) + UTL@`4d8de4ce` (docstring sweep across
-emission_publisher + manifest_completeness + tests). Bug 2 decision codified at PM@`fa806abe` (CLAUDE.md
-"Service-output emission policy" section extended with the seed-key-convention paragraph: source-conceptual
-data_type tokens, not per-cadence runtime tokens). Regression guard at MDPS@`daf9988` (8 new tests in
-`test_canonical_writer_ohlcv_1h_policy.py::TestServiceEmissionPolicySeedRuntimeLookup` — runtime UAC lookup
-assertions against the REAL seed dict, no mocks; would have caught Bug 1 immediately had they been in place).
-All 4 commits FF-pushed to `origin/live-defi-rollout`. Phase 6.2 wiring is now unblocked.
+**Status**: ✅ RESOLVED 2026-05-11 PM — operator approval per Q2 AskUserQuestion → option (a) for Bug 1 + option (α) for
+Bug 2. Bug 1 shipped at UAC@`7be6bd5` (seed-dict rename) + UTL@`4d8de4ce` (docstring sweep across emission_publisher +
+manifest_completeness + tests). Bug 2 decision codified at PM@`fa806abe` (CLAUDE.md "Service-output emission policy"
+section extended with the seed-key-convention paragraph: source-conceptual data_type tokens, not per-cadence runtime
+tokens). Regression guard at MDPS@`daf9988` (8 new tests in
+`test_canonical_writer_ohlcv_1h_policy.py::TestServiceEmissionPolicySeedRuntimeLookup` — runtime UAC lookup assertions
+against the REAL seed dict, no mocks; would have caught Bug 1 immediately had they been in place). All 4 commits
+FF-pushed to `origin/live-defi-rollout`. Phase 6.2 wiring is now unblocked.
 
 Surfaced 2026-05-11 ~16:00 UTC while bootstrapping Phase 6.2 (wire `publish_with_manifest_lookup` at MDPS
-`ohlcv_1m:current` / `ohlcv_1m:historical` / `ohlcv_24h` / `book_snapshot_5`). Two seed-dict bugs surface
-together; full evidence + recommended decision in the companion issue doc
+`ohlcv_1m:current` / `ohlcv_1m:historical` / `ohlcv_24h` / `book_snapshot_5`). Two seed-dict bugs surface together; full
+evidence + recommended decision in the companion issue doc
 [`plans/active/issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md`](issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md).
 
-**Bug 1 — service-name typo.** UAC `service_emission_policy.py:163-168` uses `"market-data-pipeline-service"` for 6
-MDPS seed entries. Workspace canonical (everywhere else: ServiceBootstrap calls, `manifest_service_name` defaults,
-the slice (b) POC at `canonical_writer.py:479`, all 17 slice (b) tests) is `"market-data-processing-service"`. Net
-effect: every runtime `publish_with_manifest_lookup` call from MDPS lookup-MISSES the seed and falls through to the
-`STRICT_FAIL` default at `service_emission_policy.py:228`. The slice (b) POC behaves as STRICT_FAIL for both
-`:current` AND `:historical` — even though the operator-msg-10 framing + UAC seed + codex SSOT all explicitly say
-`:historical` should be `PARTIAL_OK`. The `:current` STRICT_FAIL coincidence masks the bug (POC publishes a row
-either way at completeness=1.0); the `:historical` semantic difference (PARTIAL_OK should `PUBLISHED_DEGRADED`
-gappy rows) was never under test because the 17 unit tests mock `publish_with_manifest_lookup` entirely + only assert
-kwarg shape, never the runtime UAC dict-lookup behaviour. Provenance: UAC@`58c3b61` (2026-05-08 17:14 UTC) shipped the
-file with the typo; `grep -rn "market-data-pipeline-service" --include='*.py' .tabs/8/` returns 0 other hits, so it's
-a one-off typo at original ship, not a deliberate naming convention.
+**Bug 1 — service-name typo.** UAC `service_emission_policy.py:163-168` uses `"market-data-pipeline-service"` for 6 MDPS
+seed entries. Workspace canonical (everywhere else: ServiceBootstrap calls, `manifest_service_name` defaults, the slice
+(b) POC at `canonical_writer.py:479`, all 17 slice (b) tests) is `"market-data-processing-service"`. Net effect: every
+runtime `publish_with_manifest_lookup` call from MDPS lookup-MISSES the seed and falls through to the `STRICT_FAIL`
+default at `service_emission_policy.py:228`. The slice (b) POC behaves as STRICT_FAIL for both `:current` AND
+`:historical` — even though the operator-msg-10 framing + UAC seed + codex SSOT all explicitly say `:historical` should
+be `PARTIAL_OK`. The `:current` STRICT_FAIL coincidence masks the bug (POC publishes a row either way at
+completeness=1.0); the `:historical` semantic difference (PARTIAL_OK should `PUBLISHED_DEGRADED` gappy rows) was never
+under test because the 17 unit tests mock `publish_with_manifest_lookup` entirely + only assert kwarg shape, never the
+runtime UAC dict-lookup behaviour. Provenance: UAC@`58c3b61` (2026-05-08 17:14 UTC) shipped the file with the typo;
+`grep -rn "market-data-pipeline-service" --include='*.py' .tabs/8/` returns 0 other hits, so it's a one-off typo at
+original ship, not a deliberate naming convention.
 
 **Bug 2 — book_snapshot_5 key shape.** UAC seed key is `("market-data-pipeline-service", "book_snapshot_5")`. But MDPS
 `canonical_writer.py:76` maps source `book_snapshot_5` through `_SOURCE_OHLCV_PREFIX` so the runtime `mdps_dt` becomes
-`book5_ohlcv_<tf>` (5 timeframes). Two reconciliation paths, both architectural decisions:
-**(α)** UAC key stays at source-conceptual data_type (`"book_snapshot_5"`), gate function for Phase 6.2 passes
+`book5_ohlcv_<tf>` (5 timeframes). Two reconciliation paths, both architectural decisions: **(α)** UAC key stays at
+source-conceptual data_type (`"book_snapshot_5"`), gate function for Phase 6.2 passes
 `output_data_type="book_snapshot_5"` directly — consistent with slice (b) where `"ohlcv_1h:current"` is the
 source-conceptual token; OR **(β)** UAC key reflects post-mapping `mdps_dt` → seed dict expands 5x to per-cadence
-entries (`book5_ohlcv_1m`, `book5_ohlcv_5m`, etc.) optionally collapsed via slice differentiation. Recommendation
-in the issue doc is **(α)** — minimal seed-dict churn, consistent with slice (b) shape, preserves the operator-msg-10
-"5 policies seeded for MDPS" framing.
+entries (`book5_ohlcv_1m`, `book5_ohlcv_5m`, etc.) optionally collapsed via slice differentiation. Recommendation in the
+issue doc is **(α)** — minimal seed-dict churn, consistent with slice (b) shape, preserves the operator-msg-10 "5
+policies seeded for MDPS" framing.
 
 **Recommended fix (option a, ~10 surgical edits):** rename every `"market-data-pipeline-service"` to
 `"market-data-processing-service"` in (1) UAC `service_emission_policy.py:163-168 + :127 docstring + :216 docstring`,
 (2) UTL `emission_publisher.py:127 docstring + :267 docstring`, (3) workspace-canonical CLAUDE.md "Service-output
-emission policy" section, (4) writegate plan body's slice-(b) examples + Phase 5.6 cites. Bug 2 resolved via (α):
-extend the gate function in `canonical_writer.py` to also fire on `source_data_type ∈ {"book_snapshot_5", "trades"}`
-+ pass `output_data_type` derived from the source token (not mdps_dt). Could fold as a Phase 6.0 prerequisite to
-slice (c) OR ship as a standalone 30min ratchet PR.
+emission policy" section, (4) writegate plan body's slice-(b) examples + Phase 5.6 cites. Bug 2 resolved via (α): extend
+the gate function in `canonical_writer.py` to also fire on `source_data_type ∈ {"book_snapshot_5", "trades"}`
+
+- pass `output_data_type` derived from the source token (not mdps_dt). Could fold as a Phase 6.0 prerequisite to slice
+  (c) OR ship as a standalone 30min ratchet PR.
 
 **Why this is operator-triage, not "Clear context = implement" per CLAUDE.md** — touches UAC public-API surface +
 retroactively re-asserts the slice (b) POC commit's runtime behaviour + affects work-split routing for slice (c)
-per-service rollout (Phase 6.3-6.8 owners need the canonical naming convention pinned before wiring their own
-services).
+per-service rollout (Phase 6.3-6.8 owners need the canonical naming convention pinned before wiring their own services).
 
 **ASK**: confirm fix shape (option a + α) or redirect. While 🟡 BLOCKED I am NOT touching code; Slot 8's Phase 6.2
-wiring paused. Read-only audit of MDPS adapter sites where `ohlcv_1m` / `ohlcv_24h` / book_snapshot routes through
-will continue (those touchpoints don't change between options).
+wiring paused. Read-only audit of MDPS adapter sites where `ohlcv_1m` / `ohlcv_24h` / book_snapshot routes through will
+continue (those touchpoints don't change between options).
 
 ## Coordination with sibling plans
 

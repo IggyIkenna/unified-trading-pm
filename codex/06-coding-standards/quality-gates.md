@@ -4,6 +4,13 @@ scope: [engineer]
 
 # Quality Gates
 
+> **FLAT-DEPS BANNER (codified 2026-05-12 per TS-5 audit)** — the workspace is on **flat-deps-only**: every
+> `pyproject.toml` has ONE `[project.dependencies]` block; no `[project.optional-dependencies]`, no `.[dev]` extras.
+> Multiple inline examples below still show legacy `uv pip install -e ".[dev]"` / `[project.optional-dependencies] dev`
+> shapes (pre-2026-05 patterns); they will be scrubbed inline. New work: use the flat `dependencies` block + plain
+> `uv pip install -e .` per CLAUDE.md § "Dependencies + builds". Verification:
+> `grep optional-dependencies */pyproject.toml` returns 0 hits.
+
 ## Table of Contents
 
 1. [TL;DR](#tldr)
@@ -567,7 +574,7 @@ an existing baselined occurrence that moved files in the same commit that moves 
 - STEP 5.65 (removed-symbol AST-walk) + STEP 5.64 (bundled-shard cluster validation AST-walk) are the implementation
   precedents — STEP 5.67 follows the same baseline-aware-ratchet + `ast.walk()` shape applied to the placeholder-method
   detection problem.
-- Track D audit findings doc (`plans/active/issues/wave3x_track_d_findings_2026_05_11.md` P0-2) — the audit that seeded
+- Track D audit findings doc (`plans/archive/issues/wave3x_track_d_findings_2026_05_11.md` P0-2) — the audit that seeded
   the baseline; writegate Phase 2.A is the successor that shrinks it.
 
 ---
@@ -1897,7 +1904,7 @@ def test_pubsub_emulator_roundtrip(pubsub_emulator_host):
 Each `@pytest.mark.allow_network` opt-out emits a WARNING in CI logs. Monitor the count — it should be stable and
 explained.
 
-Plugin location: `unified-trading-pm/scripts/dev/network_block_plugin.py`
+Plugin location: `unified-api-contracts/unified_api_contracts/testing/network_block_plugin.py`
 
 ### Cassette Parity Testing (H5.2)
 

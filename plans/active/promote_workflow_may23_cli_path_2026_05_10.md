@@ -40,6 +40,8 @@ estimate_calibration_note: |
 
 # Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)
 
+> **🟡 IN-FLIGHT REFACTOR — UAC Phase 1 client-reporting contracts landed (UAC@b3233e5, 2026-05-12). `ClientReportingMode`, `ClientNAV` now in `unified_api_contracts.internal`. Promote CLI seeding demo client must use `DEMO_CLIENT_SEED` from UAC registry. Banner: `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 1.**
+
 > **🟡 IN-FLIGHT REFACTOR — `vm_zombie_watchdog.py` shape evolving + launcher-registry SSOT dependency** (added
 > 2026-05-10 cross-plan audit fix)
 >
@@ -167,7 +169,7 @@ gates: U1 → U3 → U4 (sequential); U2 → U5 (sequential); U6 sequential afte
 RULE every gcloud / aws ec2 launcher MUST live under `deployment-service/scripts/vm/`. Without these, no compliant
 paper/live deployment exists.
 
-- [ ] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-paper-vm.sh`**.
+- [x] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-paper-vm.sh`**.
   - VM-name pattern: `strategy-paper-{archetype}-{ts}` per CLAUDE.md VM Naming Convention.
   - Boots VM with `setup-data-pipeline-vm.sh` tarball mode (default; production path).
   - Boot script:
@@ -177,33 +179,47 @@ paper/live deployment exists.
   - Env required: `MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=$VM_NAME`, `RUN_TS="$(date +%Y%m%d-%H%M%S)"`.
   - Done: launcher exists; smoke-launch with `--dry-run` returns valid gcloud command; smoke-launch with real
     `--mode paper` for 90s emits STARTED event in `gs://${PID}-events/events/strategy-service/...` partition.
+  - (deployment-service@87f12f1 — launcher created; dry-run verified)
 
-- [ ] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-live-vm.sh`**.
+- [x] [AGENT] P0. **Write `deployment-service/scripts/vm/launch-strategy-live-vm.sh`**.
   - VM-name pattern: `strategy-live-{archetype}-{ts}`.
   - Same shape as paper launcher but invokes `run-live.sh` with `--mode live`.
   - **Additional pre-flight**: refuses launch if `--dry-run-live-cutover-passed` flag absent in launch metadata (forces
     operator to run Phase 8 dry-run before any real-capital launch).
   - Singleton-locked per `(archetype, environment)`.
   - Done: launcher exists; `--dry-run` returns valid command; pre-flight refuses launch without metadata flag.
+  - (deployment-service@87f12f1 — launcher created; --dry-run smoke + gate verified)
 
-- [ ] [AGENT] P0. **Register prefixes in `VM_PREFIX_TO_BUCKET`** at
+- [x] [AGENT] P0. **Register prefixes in `VM_PREFIX_TO_BUCKET`** at
       [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../../deployment-service/scripts/vm/vm_zombie_watchdog.py).
   - Add `"strategy-paper-": None` (heartbeat-only — paper VMs don't write to a shard bucket).
   - Add `"strategy-live-": None` (same — live VMs emit events but don't write data shards).
   - Per CLAUDE.md: a VM whose prefix is not in the dict is invisible to the zombie watchdog.
+  - (deployment-service@87f12f1)
 
-- [ ] [SCRIPT] P0. **Bounce vm-zombie-watchdog VM** so it picks up the new prefixes.
+- [x] [SCRIPT] P0. **Bounce vm-zombie-watchdog VM** so it picks up the new prefixes.
   - `gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet`
   - `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`
   - Per CLAUDE.md: running watchdog only fetches Python at boot.
+  - (vm-zombie-watchdog-20260512-184112 RUNNING — bounced 2026-05-12 13:41 UTC)
 
-- [ ] [SCRIPT] P0. **Smoke-launch each launcher** with `--dry-run` (printed gcloud command), then with `--mode paper`
+- [x] [SCRIPT] P0. **Smoke-launch each launcher** with `--dry-run` (printed gcloud command), then with `--mode paper`
       for ≥90s, then verify events.
   - Probe:
     `gcloud storage ls gs://${PID}-events/events/strategy-service/$(date +%Y-%m-%d)/strategy-paper-carry_staked_basis-*/`
     — directory exists with `hour=*` partition.
   - Read first JSONL, assert `event=="STARTED"`.
   - 10min recheck for new events with row counts (per CLAUDE.md _"No fire-and-forget VM launches"_).
+  - (deployment-service@4a4e2e1, VM strategy-paper-carry-staked-basis-20260512-192413 self-deleted 2026-05-12 13:57 UTC)
+  - Infrastructure smoke PASSES: launcher → tarball download (9 repos) → dep install → venv symlink → command dispatch →
+    colocated_engine.py ran to strategy resolver. DEPLOYMENT_STARTED emitted in deployment archive.
+  - **Phase 2 gaps discovered during smoke** (see Phase 2 todos below):
+    - `colocated_engine.py` lacks `ServiceBootstrap` → no STARTED event in `gs://central-element-323112-events/`
+      strategy-service event archive. Phase 2 must wire ServiceBootstrap into colocated_engine.py.
+    - `V2BatchHarness` has no resolver entry for `carry_staked_basis` → `Unknown strategy: carry_staked_basis`.
+      Phase 2 must register the archetype in the harness resolver.
+    - setup-data-pipeline-vm.sh startup failure leaves VM RUNNING indefinitely (self-delete only triggers via
+      vm-exec-with-gcs-tee.sh which doesn't run when install fails). Phase 2 should add self-delete on script error.
 
 - [ ] [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** once
       [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 ships
@@ -244,6 +260,20 @@ paper/live deployment exists.
 
 **Phase 1 QG**: workspace QG runs clean on deployment-service. Launcher bash-syntax check passes (per
 `codex/05-infrastructure/launcher-script-ssot.md`).
+
+## Phase 1 smoke-gaps → Phase 2 todos (discovered 2026-05-12 smoke run)
+
+- [ ] [AGENT] P0. **Wire `ServiceBootstrap` into `colocated_engine.py`** so paper/live VMs emit
+      `STARTED`/`STOPPED`/`FAILED` to `gs://central-element-323112-events/events/strategy-service/`.
+      Currently `colocated_engine.py` has no ServiceBootstrap; events go to the deployment heartbeat archive only.
+      Required for "No fire-and-forget VM launches" HARD RULE compliance.
+- [x] [AGENT] P0. **Register `carry_staked_basis` (and `leveraged_funding_arb`) in `V2BatchHarness`** resolver.
+      Observed error: `Unknown strategy: carry_staked_basis -- V2BatchHarness: no resolver entry for strategy_type`.
+      Phase 2 must add resolver entry (or confirm the archetype slug → strategy_type mapping).
+      (strategy-service@61dc112 + e2e-testing@8427dc0 — lowercase aliases added to _DEFI/_CEFI
+      in archetype_slot_resolver.py + STRATEGY_CATEGORIES in colocated_engine.py; tarballs refreshed 14:39 UTC 2026-05-12)
+- [ ] [AGENT] P1. **Add self-delete on startup-script failure** in `setup-data-pipeline-vm.sh`. When `set -euo pipefail`
+      exits the script early (e.g. dep conflict), the VM stays RUNNING indefinitely. Add a `trap "gcloud compute instances delete \$(hostname) ..." ERR EXIT` at script top for strategy-paper/live tasks.
 
 ## Phase 2 — Operator pre-flight checklist (P0, ~0.5d, SEQUENTIAL after Phase 1)
 
@@ -743,6 +773,20 @@ differs.
 - **Verification**: full event-archive trail from backtest → CandidateManifest → paper → live cutover for both
   archetypes via the chosen track; recon green per-day; P&L attribution captured; Promote UI button + DART manual-trade
   gate functional even if not used in production.
+
+## Deferred work after 2026-05-12 harsh-promote-workflow-tab session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+| --- | --- | --- |
+| Phase 1 — launcher scripts + infra | ✅ DONE (deployment-service@87f12f1 + watchdog bounced + smoke-pass @4a4e2e1) | — |
+| Phase 2 P0 — V2BatchHarness resolver aliases (`carry_staked_basis` + `leveraged_funding_arb`) | ✅ CODE SHIPPED (strategy-service@61dc112 + e2e-testing@8427dc0); NOT end-to-end VM-verified — smoke VM `strategy-paper-carry-staked-basis-20260512-200952` deleted per operator request before completion | Next session: re-run smoke VM with operator approval to verify resolver end-to-end |
+| Phase 2 P0 — Wire `ServiceBootstrap` into `colocated_engine.py` | ⏭ DEFERRED | Required for "No fire-and-forget" rule; no STARTED/STOPPED/FAILED in strategy-service archive until done |
+| Phase 2 P1 — Add self-delete `trap` on startup-script failure in `setup-data-pipeline-vm.sh` | ⏭ DEFERRED | VM stays RUNNING indefinitely on install failure without this |
+| Phases 3–10 | ⏭ DEFERRED | Require operator-approved actions (Copper sub-account, Tenderly fork, live rehearsal, etc.) per plan body |
+
+**Session notes (2026-05-12 harsh-promote-workflow-tab)**:
+- Tarballs refreshed in GCS at 14:39 UTC — code is ready for next VM launch.
+- Smoke VM `strategy-paper-carry-staked-basis-20260512-200952` was launched for end-to-end resolver verification then deleted at operator request. ikenna-main notified via `_agent_pings.md`.
 
 ## Temporary states + canonical follow-up plans
 

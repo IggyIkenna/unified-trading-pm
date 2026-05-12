@@ -153,7 +153,12 @@ is_codex_repo() { [[ "$(basename "$1")" == "unified-trading-codex" ]]; }
 
 run_qg() {
   local repo="$1" rp="$WORKSPACE_ROOT/$1"
-  [[ ! -d "$rp/.git" ]]  && { echo "  [SKIP] $repo — not found"; return 0; }
+  # Per-slot worktrees (`.tabs/<N>/<repo>/`) carry `.git` as a FILE (git-worktree
+  # link), not a directory — accept either shape so worktree-based slot QG
+  # sweeps don't silently skip every repo. Reference: slot 3 codefreeze-audit
+  # 2026-05-12 Day-4 finding (first run skipped 26/26 repos because of dir-only
+  # check). Main-checkout `.git/` directory case keeps identical semantics.
+  [[ ! -d "$rp/.git" && ! -f "$rp/.git" ]] && { echo "  [SKIP] $repo — not found"; return 0; }
   is_codex_repo "$rp"    && { echo "  [SKIP] $repo — docs-only"; return 0; }
 
   local log; log=$(mktemp)

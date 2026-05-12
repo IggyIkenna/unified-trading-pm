@@ -36,16 +36,44 @@ log_ok()      { :; }
 # ── PROJECT / REPO ROOT DETECTION ────────────────────────────────────────────
 # When a base-*.sh sources this file, the BASH_SOURCE stack is:
 #   [0] = qg-common.sh  [1] = base-*.sh  [2] = caller stub (repo's quality-gates.sh)
-# We derive PROJECT_ROOT from the caller stub's location (the repo that sourced us).
+# We derive PROJECT_ROOT by walking UP from the caller stub's directory to the
+# nearest pyproject.toml (the repo boundary marker). This is more robust than
+# `dirname dirname` because it:
+#   - handles non-standard repo layouts (scripts/ nested deeper than 1 level)
+#   - never jumps to a sibling worktree's root under .tabs/<N>/ per-tab layout
+#   - resolves correctly under symlinked invocations
 # If no caller stub (direct invocation), fall back to this file's own location.
 _QG_CALLER="${BASH_SOURCE[2]:-${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}}"
 QG_SCRIPT_DIR="$(cd "$(dirname "$_QG_CALLER")" && pwd)"
-QG_PROJECT_ROOT="$(dirname "$QG_SCRIPT_DIR")"
+_qg_walk_up_to_pyproject() {
+    local d="$1"
+    while [[ "$d" != "/" && -n "$d" ]]; do
+        [[ -f "$d/pyproject.toml" ]] && { echo "$d"; return 0; }
+        d="$(dirname "$d")"
+    done
+    return 1
+}
+QG_PROJECT_ROOT="$(_qg_walk_up_to_pyproject "$QG_SCRIPT_DIR")" \
+    || QG_PROJECT_ROOT="$(dirname "$QG_SCRIPT_DIR")"
+unset -f _qg_walk_up_to_pyproject
 
 # Export as the canonical names used by all base scripts
 SCRIPT_DIR="${SCRIPT_DIR:-$QG_SCRIPT_DIR}"
 PROJECT_ROOT="${PROJECT_ROOT:-$QG_PROJECT_ROOT}"
 REPO_ROOT="${REPO_ROOT:-$(cd "$PROJECT_ROOT/.." 2>/dev/null && pwd)}"
+
+# Banner — names the resolved repo so the operator can spot wrong-resolution at a glance.
+# Critical under per-tab worktrees (.tabs/<N>/<repo>/) where sibling-worktree confusion
+# was the root cause of slot_worktree_qg_repo_root_resolution_2026_05_11.
+if [[ -z "${QG_BANNER_SUPPRESS:-}" ]]; then
+    _qg_project_basename="$(basename "$PROJECT_ROOT")"
+    if [[ -n "${SERVICE_NAME:-}" && "${SERVICE_NAME}" != "${_qg_project_basename}" ]]; then
+        echo -e "\033[1;33m⚠️  [quality-gates] SERVICE_NAME='${SERVICE_NAME}' but PROJECT_ROOT='${PROJECT_ROOT}' (basename='${_qg_project_basename}') — possible sibling-worktree confusion\033[0m" >&2
+    else
+        echo -e "\033[0;34m[quality-gates] ${SERVICE_NAME:-${_qg_project_basename}} @ ${PROJECT_ROOT}\033[0m" >&2
+    fi
+    unset _qg_project_basename
+fi
 unset _QG_CALLER QG_SCRIPT_DIR QG_PROJECT_ROOT
 
 # ── CI_STATUS HANDLER (shared, locked) ───────────────────────────────────────

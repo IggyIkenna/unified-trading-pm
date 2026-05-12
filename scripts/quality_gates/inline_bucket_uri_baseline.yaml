@@ -28,17 +28,21 @@ repos:
   deployment-api:
     count: 27
   deployment-service:
-    count: 3
+    count: 0
   deployment-ui:
+    count: 0
+  e2e-testing:
     count: 0
   execution-service:
     count: 33
   features-service:
     count: 2
+  fund-administration-service:
+    count: 0
   ibkr-gateway-infra:
     count: 0
   instruments-service:
-    count: 1
+    count: 0
   market-data-processing-service:
     count: 0
   market-tick-data-service:

@@ -25,16 +25,23 @@ scope: [engineer, admin]
 
 ## MEV submission modes
 
-| Mode                                  | Relay                           | Protection                       | Speed               |
-| ------------------------------------- | ------------------------------- | -------------------------------- | ------------------- |
-| `PUBLIC_MEMPOOL`                      | standard eth_sendRawTransaction | None                             | Fastest propagation |
-| `FLASHBOTS_PROTECT`                   | Flashbots RPC (private pool)    | Strong (bundle-only inclusion)   | +200-1000ms typical |
-| `MEV_BLOCKER`                         | MEV Blocker RPC                 | Strong                           | +200-1000ms         |
-| `MANIFOLD`                            | Manifold relay                  | Strong; revenue share on backrun | +200-1000ms         |
-| `BLOXROUTE` (deprecated in our stack) | Bloxroute public                | Medium                           | Fastest             |
-| `CUSTOM_PRIVATE_RPC`                  | Operator-provided RPC           | Varies                           | Varies              |
+Mirrors UAC `MevSubmissionMode` enum (canonical:
+[`unified_api_contracts.internal.architecture_v2.enums.MevSubmissionMode`](../../../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py)).
+Implementation detail + provider table lives in
+[canonical mev-protection.md](../../../04-architecture/mev-protection.md) § "MEV submission modes (UAC `MevSubmissionMode`)".
+
+| Mode                         | Relay                                        | Protection                       | Speed               |
+| ---------------------------- | -------------------------------------------- | -------------------------------- | ------------------- |
+| `PUBLIC_MEMPOOL`             | standard eth_sendRawTransaction              | None                             | Fastest propagation |
+| `FLASHBOTS_PROTECT`          | Flashbots RPC (private pool)                 | Strong (bundle-only inclusion)   | +200-1000ms typical |
+| `MEV_BLOCKER`                | MEV Blocker RPC                              | Strong                           | +200-1000ms         |
+| `MANIFOLD`                   | Manifold relay                               | Strong; revenue share on backrun | +200-1000ms         |
+| `CUSTOM_PRIVATE_RPC`         | Operator-provided RPC                        | Varies (per relay)               | Varies              |
+| `JITO_BUNDLE` (NEW Phase 5A) | Jito block-engine RPC                        | Strong (Solana)                  | Solana-specific     |
+| `BLOXROUTE`                  | (REMOVED per CLAUDE.md; do not re-introduce) | n/a                              | n/a                 |
 
 **Note:** Bloxroute is removed from our stack (per CLAUDE.md). Do not re-introduce without explicit decision.
+Solana DeFi swaps use `JITO_BUNDLE` (private mempool via Jito block-engine RPC), resolved at dispatch time.
 
 ## Policy mapping
 

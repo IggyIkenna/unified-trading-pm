@@ -138,10 +138,14 @@ influenced. Reader contract: scan top-of-file banners before touching the affect
 
 ## When you spawn YOUR OWN sub-agents (Task tool)
 
-- **Paste this file at the TOP of the spawn prompt** — sub-agents do NOT inherit context.
+- **Paste this file at the TOP of the spawn prompt** — sub-agents do NOT inherit context. The Task tool description
+  (system prompt) does NOT echo this requirement, so it's on the spawning agent to remember. Forgetting = the
+  spawned sub-agent has no rules + no FOOT-GUN awareness + no commit/push/flip discipline.
 - For multi-sub-agent fan-out, send all `Task` tool calls in a SINGLE message so they run concurrently.
 - Each spawn gets a self-contained task with: WORKSPACE_ROOT, target repo, exact files to edit, done-definition,
   collision boundaries with other in-flight work.
+- If paste impractical (small-context spawn), prepend at TOP of prompt: "Before any action, read
+  `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules strictly."
 
 ## When in doubt
 

@@ -4,8 +4,9 @@ scope: [engineer]
 
 # DeFi Data Types Catalog
 
-> SSOT for all MTDS DeFi data type definitions, sources, shard keys, and implementation status. Last updated: 2026-04-24
-> (defi_data_types_completeness_2026_04_24)
+> SSOT for all MTDS DeFi data type definitions, sources, shard keys, and implementation status. Last updated: 2026-05-12
+> (codex audit IN-7 + IN-15 + IN-19 refresh — asset_group canonical hive vocab + 3-doc consolidation cross-link +
+> currency stamp added). Prior: 2026-04-24 (defi_data_types_completeness_2026_04_24).
 
 ## Overview
 
@@ -15,10 +16,24 @@ a canonical GCS path under the DeFi tick-data bucket.
 
 ### GCS Path Convention
 
+**Canonical** (per CLAUDE.md § "Asset-group vocabulary"; `asset_group=` hive key per
+`market_tick_data_service/raw_tick_hive.RAW_TICK_ASSET_GROUP_HIVE_KEY`):
+
 ```
-gs://{tick-defi-bucket}/raw_tick_data/by_date/day={date}/category=defi/
+{resolved-defi-tick-bucket}/raw_tick_data/by_date/day={date}/asset_group=defi/
   venue={VENUE}-{CHAIN}/instrument_type={type}/data_type={data_type}/ticks.parquet
 ```
+
+Bucket name is resolved via
+`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="market-data-tick",
+asset_group="defi", env=...)` per CLAUDE.md § "Bucket-name SSOT (b+)" — never inline `gs://...` / `s3://...` (QG
+STEP 5.69 ratchet enforces).
+
+**Legacy** (data coexists on disk until ~2026-06-15 deletion cutoff per
+[`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md) § "Asset-group hive vocabulary"):
+`category=defi/` instead of `asset_group=defi/`. Readers try canonical → fall back. Migration scripts at
+`instruments-service/scripts/migrate_defi_bare_to_asset_group.py` +
+`instruments-service/scripts/migrate_defi_legacy_venue_chain.py`.
 
 ### Instrument Type Mapping
 

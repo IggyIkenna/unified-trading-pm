@@ -191,6 +191,14 @@ that doesn't require strategy-service to be running.
 
 ## Recovery Timeline
 
+> **🟡 OPERATOR-UX NOTE (R-13 PRE_CUTOVER 2026-05-12, slot 8 audit)** — the timeline below shows the breaker state-
+> machine timing. **WHO recovers each step is a `BreakerRecoveryMode` decision** (§ "Layer-3 BreakerRecoveryMode
+> composes with Layer-4 ErrorAction" below): `auto_cooldown` actions self-recover on the timeline shown, but
+> `manual_unkill` actions (notably `KILL_ALL` + first-engagement of `STOP_NEW_ONLY` per-archetype) **stop at the
+> CRITICAL emit + require operator click to resume** — no `T+300s HALF_OPEN probe` for those, no `T+3600s backoff cap`
+> ever applies because they never auto-attempt. The `BREAKER_RECOVERY_DEFAULTS` mapping (shipped UAC@a7a99b5) is the
+> per-action lookup; operator-runbook reading this should consult it before assuming auto-recovery on any line.
+
 ```
 T+0s    Error detected, classify_venue_error()
 T+0-5s  Retry with backoff (if RETRY action)
@@ -198,11 +206,11 @@ T+5-15s Circuit breaker evaluates failure rate
 T+15s   If DEGRADED: throttle orders, emit alert
 T+30s   If OPEN: block venue, start cooldown, emit CRITICAL alert
 T+30s   Telegram + PagerDuty notification delivered
-T+300s  HALF_OPEN probe (first attempt)
+T+300s  HALF_OPEN probe (first attempt) — auto_cooldown actions only; manual_unkill stops at T+30s
 T+300s  If probe succeeds: CLOSED, resume normal
 T+600s  If probe fails: backoff doubles (next probe at T+900s)
 ...
-T+3600s Maximum backoff cap reached
+T+3600s Maximum backoff cap reached — auto_cooldown only
 ```
 
 For multi-venue cascade:
@@ -236,14 +244,19 @@ T+300s  PagerDuty CRITICAL: "Multiple venues down"
 
 ## Gap Implementation Status
 
-| ID  | Gap                                                            | Status  | Implementation                                                              |
-| --- | -------------------------------------------------------------- | ------- | --------------------------------------------------------------------------- |
-| G1  | Circuit breaker → kill switch escalation (multi-venue cascade) | PLANNED | execution-service: monitor venue breaker states, auto STOP_NEW_ONLY at >50% |
-| G2  | Reconciliation as pre-close gate                               | PLANNED | execution-service: check PBMS recon health before exit playbook             |
-| G3  | Dual failure event (recon + exec both down)                    | PLANNED | PBMS: detect when both are broken, emit DUAL_FAILURE_DETECTED               |
-| G4  | Position drift → auto STOP_NEW_ONLY                            | PLANNED | PBMS: on CRITICAL drift, call execution-service kill switch API             |
-| G5  | Connectivity loss → mark recon as stale                        | PLANNED | PBMS: subscribe to CIRCUIT_OPEN, mark venue recon as unreliable             |
-| G6  | Playbook-to-scenario mapping                                   | PLANNED | UAC: map EmergencyExitType to trigger scenarios in config                   |
+> **🟡 STATUS REFRESH (R-14 PRE_CUTOVER 2026-05-12, slot 8 audit)** — table refreshed against DR plan Phase 3 ship
+> at `kill-switch-circuit-breaker.md:218-244` (8 reconcilers shipped). Reviewers reading the PLANNED-when-shipped state
+> below before 2026-05-12 should treat the SHIPPED-status entries as authoritative; full implementation provenance
+> belongs to `plans/active/disaster_recovery_circuit_breakers_2026_05_10.md` Phase 3.
+
+| ID  | Gap                                                            | Status                      | Implementation                                                              |
+| --- | -------------------------------------------------------------- | --------------------------- | --------------------------------------------------------------------------- |
+| G1  | Circuit breaker → kill switch escalation (multi-venue cascade) | SHIPPED (DR Plan Phase 3)   | execution-service: monitor venue breaker states, auto STOP_NEW_ONLY at >50% — wired per `kill-switch-circuit-breaker.md:218-244` |
+| G2  | Reconciliation as pre-close gate                               | PLANNED                     | execution-service: check PBMS recon health before exit playbook             |
+| G3  | Dual failure event (recon + exec both down)                    | SHIPPED (DR Plan Phase 3)   | PBMS: detect when both are broken, emit DUAL_FAILURE_DETECTED — reconciler shipped per `kill-switch-circuit-breaker.md:218-244` |
+| G4  | Position drift → auto STOP_NEW_ONLY                            | SHIPPED (DR Plan Phase 3)   | PBMS: on CRITICAL drift, call execution-service kill switch API — reconciler shipped per `kill-switch-circuit-breaker.md:218-244` |
+| G5  | Connectivity loss → mark recon as stale                        | PLANNED                     | PBMS: subscribe to CIRCUIT_OPEN, mark venue recon as unreliable             |
+| G6  | Playbook-to-scenario mapping                                   | PLANNED                     | UAC: map EmergencyExitType to trigger scenarios in config                   |
 
 ---
 

@@ -133,6 +133,49 @@ Covers:
 **Not covered here**: predictions ML training + arb_calculator + Group E ML walk-forward (those belong in
 `predictions_master_2026_05_07.md`).
 
+## Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator
+
+> **Operator decision 2026-05-12 (verbatim)**: _"remove bet365 from the universe and docs and update plans we wont have
+> bet365 anytime soon. same for other scrapers if implemented"_.
+
+The 14 UK/EU scraper bookmakers (`bet365`, `bet888sport`, `betfred`, `betvictor`, `betway`, `boylesports`, `bwin`,
+`coral`, `ladbrokes`, `paddypower`, `sbo` / `sbobet`, `skybet`, `unibet`, `williamhill`) plus `DRAFTKINGS` and `FANDUEL`
+(US sportsbook browser-stub adapters) are **DEFERRED-INDEFINITELY** from the active sports universe. They do NOT
+participate in any pre-cutover work; sports_master scope is now anchored on the **3 remaining-active sports venues**:
+`ODDS_API` (multi-bookmaker aggregator, raw tick data), `PINNACLE` (sharp benchmark), `BETFAIR` (exchange / lay
+liquidity).
+
+Shipped 2026-05-12:
+
+- `uac@56d941e` — removed `DRAFTKINGS`, `FANDUEL`, `BET365` from `VENUES_BY_ASSET_GROUP["sports"]` +
+  `VENUE_DATA_TYPE_CAPABILITIES`; sports universe = `[ODDS_API, PINNACLE, BETFAIR]`.
+- `mtds@66df106` — deleted 14 scraper entries from MTDS `_ADAPTER_PATHS` (`market_interface/sports/registry.py`);
+  rewrote the 4 keep-venue paths (`betfair / matchbook / onexbet / odds_api`) from phantom
+  `unified_sports_execution_interface.adapters.*` to canonical `execution_service.sports_execution.adapters.*` (SP-13
+  hybrid fix). MTDS unit + integration tests updated (EXPECTED_KEYS 22→8).
+- `execution-service@63ba730c` — DEFERRED-INDEFINITELY docstring banners on
+  `execution_service/sports_execution/adapters/scrapers/__init__.py` + `adapters/browser/us_books.py`. Adapter source
+  modules retained as future-work scaffolding; reference from MTDS or any production code path is forbidden until
+  operator un-defers.
+
+Retained scaffolding (NOT removed, but inactive):
+
+- UAC `venue_constants.py`
+  `BET365 / DRAFTKINGS / FANDUEL / WILLIAMHILL / LADBROKES / CORAL / PADDYPOWER / SKYBET / BETWAY / BETVICTOR / BOYLESPORTS / BWIN / BET888SPORT / UNIBET / BETFRED / SBOBET`
+  venue constants + their `SPORTS_BOOKMAKER_WEB_VENUES` / `SPORTS_CAPTCHA_RISK` / `VENUE_EXECUTION_REGISTRY` /
+  `INSTRUMENT_TYPES_BY_VENUE` / `VENUE_FEE_MODEL_MAP` / `VENUE_ALPHA_PROFILE` rows (broader UAC venue-constants cleanup
+  is owned by the cross-asset catalogue audit plan Phase 1D `to_canonical_venue()` work; mass-sweep would collide with
+  that plan).
+- UAC `BETTING_SPORTS_VENUES` manifest entries for the 14 scrapers + `manifold` (manifold's a separate ghost — SP-1).
+- execution-service `adapters/scrapers/*.py` files (14 scrapers + `base_scraper.py` + `version_registry.py`) and
+  `adapters/browser/us_books.py` `_make_us_book` factory.
+
+Closes:
+
+- `plans/active/issues/catalogue_audit_sports_2026_05_12.md` SP-5 (universe-contraction).
+- `plans/active/issues/catalogue_audit_sports_2026_05_12.md` SP-13 (P0 phantom-import-path bug; resolved by 14-row
+  deletion + 4-row rewrite).
+
 ## Current state (2026-05-07)
 
 - **honest-coverage architecture**: 16/49 = 33% done. Phase 1 UAC `UpstreamReq` + `in_coverage` started; Phase 2
@@ -147,14 +190,14 @@ Covers:
 
 ## Critical path
 
-| Workstream                                                         | Status                              | Source                                      | Success gate                                                                                                                                                                                                                 |
-| ------------------------------------------------------------------ | ----------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sports `data_available_at` → `available_at` rename + GCS migration | Phase 1 shipped; Phase 2-4 pending  | `sports_data_available_at_rename`           | All sports parquets on disk carry the canonical `available_at` column; manifest entries reflect the rename; reader-side fallback path deleted; LookaheadBiasError fires correctly on stale `data_available_at`-only fixtures |
-| Sports honest-coverage architecture (Phase 1+2)                    | Phase 1 partial                     | `features_sports_honest_coverage`           | features-sports reconciler `--apply-flips` run completes; legacy null-reason `empty_confirmed` rows classified per UAC SSOT (`EXPECTED_PAUSED_LEAGUE` / `EXPECTED_PRE_SOURCE_COVERAGE_START` / `SOURCE_RETURNED_ZERO`)       |
-| Fixture truthset recovery — chain runner + drift audit             | 75% done; operator action pending   | `sports_fixtures_truthset_recovery`         | All 4 recovery VMs drained; `dedup_phantom_after_recovery.py` shipped + clean-run; phantom rate <1% per (league, source); chain runner emits `STARTED`+`PROCESSING_*` events for every fixture                               |
+| Workstream                                                         | Status                                                                                                                                                                                                                            | Source                                      | Success gate                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sports `data_available_at` → `available_at` rename + GCS migration | Phase 1 shipped; Phase 2-4 pending                                                                                                                                                                                                | `sports_data_available_at_rename`           | All sports parquets on disk carry the canonical `available_at` column; manifest entries reflect the rename; reader-side fallback path deleted; LookaheadBiasError fires correctly on stale `data_available_at`-only fixtures                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Sports honest-coverage architecture (Phase 1+2)                    | Phase 1 partial                                                                                                                                                                                                                   | `features_sports_honest_coverage`           | features-sports reconciler `--apply-flips` run completes; legacy null-reason `empty_confirmed` rows classified per UAC SSOT (`EXPECTED_PAUSED_LEAGUE` / `EXPECTED_PRE_SOURCE_COVERAGE_START` / `SOURCE_RETURNED_ZERO`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Fixture truthset recovery — chain runner + drift audit             | 75% done; operator action pending                                                                                                                                                                                                 | `sports_fixtures_truthset_recovery`         | All 4 recovery VMs drained; `dedup_phantom_after_recovery.py` shipped + clean-run; phantom rate <1% per (league, source); chain runner emits `STARTED`+`PROCESSING_*` events for every fixture                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Phantom recon — SFI_STANDINGS + open-meteo + UAC date ranges       | **SLOT-6 RE-RAN 2026-05-11 — 16.8% phantom rate, WAY above the <0.5% bar; needs audit-dispatcher + date-range-clip fixes (almost certainly mostly false-positive — the 2026-04-29 stale-sports-path-SSOT class). NOT --apply'd.** | `sports_phantom_recon_and_failure_triage`   | `reconcile_phantom_manifest_rows_all.py --asset-group sports --dry-run` reports <0.5% phantom rate; UAC `SOURCE_COVERAGE_START` + `KNOWN_COVERAGE_GAPS` reflect every probed gap. **SLOT-6 RUN** (`defi-phantom-recon-sports-20260511-195856`, 686086 captured rows in scope, done 14:33 UTC, exit 0): **570562 real / 115524 phantom = 16.8% phantom rate**. Phantom distribution (top): `STANDINGS` 12828, `SFI_LEAGUES` 12777, `INJURIES` 9843, `PLAYER_STATS` 878, `PLAYER_VALUES` 708, `FIXTURE_LINEUPS` 670, `FIXTURE_STATS` 492, `FIXTURE_EVENTS` 438, `TEAMS` 387, `ODDS` 279, `PREDICTIONS` 264, + ~63k in other data_types. **Almost certainly mostly false-positive** — sports has its own per-league/bare-path SSOT (`unified_api_contracts.sports.candidate_parquet_paths`) and `reconcile_phantom_manifest_rows_all.py`'s sports dispatcher (`"sports": { "prefix_tpls": [""], # handled separately via the unified UAC dispatcher`) must (a) use the CURRENT `candidate_parquet_paths` layout (the 2026-04-29 incident was a stale `entity=odds/` vs `entity=footystats_odds/` probe → false 26% ODDS phantom — same failure class), AND (b) apply the UAC `SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START` + `KNOWN_COVERAGE_GAPS` date-range clips (pre-coverage-start dates would otherwise be flagged as phantoms — and the STANDINGS/SFI_LEAGUES/INJURIES clusters smell exactly like un-clipped pre-launch-date rows). **Pending (sports phantom-recon owner)**: verify the audit's sports dispatcher against the current `candidate_parquet_paths` SSOT + confirm the date-range clips are applied; THEN re-run; only `--apply`-flip the genuinely-real residual. Do NOT `--apply` the current 115524 (would corrupt the manifest, 2026-04-29-class). Cross-ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md` DONE-2026-05-11 deferral table + `harsh_orchestrator/pings/slot_6.md` 2026-05-11 ~14:33 UTC. |
-| 288M ODDS_API legacy row migration + MDPS bucketing                | scoped; not started                 | `sports_predictions_e2e` (sports half)      | Migration script ships per-VM-shard isolation; legacy rows re-keyed to canonical hive shape; MDPS bucketing reflects per-(league_id, day) instead of monolithic; coverage % unchanged post-migration (no data loss)          |
-| Sports MTDS slice to ≥99%                                          | partial                             | `market_tick_data_to_100pct` (sports slice) | data-status drilldown shows ≥99% per (source, data_type, league_id) within each league's `SOURCE_COVERAGE_START` clip; residual stamped with typed `EMPTY_CONFIRMED_REASONS`                                                 |
+| 288M ODDS_API legacy row migration + MDPS bucketing                | scoped; not started                                                                                                                                                                                                               | `sports_predictions_e2e` (sports half)      | Migration script ships per-VM-shard isolation; legacy rows re-keyed to canonical hive shape; MDPS bucketing reflects per-(league_id, day) instead of monolithic; coverage % unchanged post-migration (no data loss)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Sports MTDS slice to ≥99%                                          | partial                                                                                                                                                                                                                           | `market_tick_data_to_100pct` (sports slice) | data-status drilldown shows ≥99% per (source, data_type, league_id) within each league's `SOURCE_COVERAGE_START` clip; residual stamped with typed `EMPTY_CONFIRMED_REASONS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Consolidated todos (P0/P1 only)
 
@@ -415,24 +458,25 @@ FIXTURES for those leagues.
 
 Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phases). Owner-side todo:
 
-- [ ] [SCRIPT] P0. UAC `unified_api_contracts/external/api_football/normalize.py:372-395` — replace 4 stub-pass-through
-      normalizers (`normalize_fixture_stats`, `normalize_fixture_event`, `normalize_lineup`, `normalize_injury`) with
-      real flatteners that unpack the nested `statistics: [...]` / `events: [...]` /
-      `startXI: [...] + substitutes: [...]` / `players: [...]` arrays into per-row records. [AUDIT 2026-05-07: FRESH —
-      actionable; UAC@fb02104 added event_time field on CanonicalFixtureEvent (Phase 2.D) which is pre-req prep]
-- [ ] [SCRIPT] P0. UAC contract update for the 4 data_types — declare the actual flattened columns (per-stat, per-event,
-      per-lineup-slot, per-injured-player), `cadence: "per_fixture"`. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [SCRIPT] P0. instruments-service AF batch_handler: switch from raw-passthrough to the flattening writer. [AUDIT
-      2026-05-07: FRESH — actionable]
+- [x] [SCRIPT] P0. UAC `unified_api_contracts/external/api_football/normalize.py:372-395` — replace 4 stub-pass-through
+      normalizers with real flatteners. (UAC@c76e6d0 — all 4 normalizers flatten nested structs into per-row dicts;
+      `_FIXTURE_STAT_TYPE_MAP` 18-entry closed set; `normalize_api_football_lineup` explodes startXI+subs.)
+- [x] [SCRIPT] P0. UAC contract update for the 4 data_types — declare the actual flattened columns (per-stat, per-event,
+      per-lineup-slot, per-injured-player), `cadence: "per_fixture"`. (UAC@c76e6d0 — SPORTS_FIXTURE_STATS /
+      FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES SchemaContracts extended with full ColumnSpec lists.)
+- [x] [SCRIPT] P0. instruments-service AF batch_handler: switch from raw-passthrough to the flattening writer.
+      (instruments-service@539130f — all 4 normalizers wired via chain.from_iterable in api_football adapter.)
 - [ ] [SCRIPT] P0. Migration shape: flip every existing manifest row for the 4 data_types →
       `record_failed(reason=INCOMPLETE_PAYLOAD_PRE_FLATTENING, attempted_at=now)`, delete the thin parquets, then
       re-fetch via a dedicated VM (`af-backfill-flatten-{ts}`). The 4 data_types use ISOLATED endpoints
       (`/fixtures/statistics`, `/fixtures/events`, `/fixtures/lineups`, `/injuries`) — separate from `/fixtures` itself
       — so quota cost is bounded to the 4-endpoint × historical-fixture-set product, NOT a full FIXTURES re-fetch.
       [AUDIT 2026-05-07: FRESH — actionable; coordinate with manifest_migration_master_2026_05_07:Stage 3]
-- [ ] [TEST] P0. Cassette parity test (`unified-api-contracts/tests/test_cassette_schema_parity.py` extension):
-      flattened normalizer output matches the per-row UAC schema for each of the 4 data_types. [AUDIT 2026-05-07: FRESH
-      — actionable]
+- [x] [TEST] P0. Normalizer output shape tests. (UAC@c76e6d0 — 13 unit tests in
+      `tests/unit/test_normalize_api_football.py` covering full payload shape, partial null-fill, unknown-stat-type
+      skip, no-coach lineup, missing-fixture injury, malformed-input returns. `test_sports_contracts.py` parametrized
+      cases verify schema registration for all 4 data_types. Note: `test_cassette_schema_parity.py` was NOT extended
+      — the per-normalizer unit tests satisfy the same invariant.)
 - [ ] [VERIFY] P0. After re-fetch VM completes for one league × one season, open deployment-ui schema modal for each of
       the 4 data_types and confirm full per-row column set (xG, shots-on-target, possession, goal-events with minute,
       starting-XI per slot, etc.). [AUDIT 2026-05-07: BLOCKED-ON above flatten ship + re-fetch VM]
@@ -508,12 +552,18 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
 
 - [ ] [SCRIPT] P0. **Step 1**: api_football FIXTURES write-time computation. When `status_short ∈ {FT, AET, PEN}`,
       compute `match_end_time ≈ kickoff + periods.second.duration + et.duration +     injury_time` from the API
-      response. Add `match_end_time` column to UAC FIXTURES contract. [AUDIT 2026-05-07: FRESH — actionable]
+      response. Add `match_end_time` column to UAC FIXTURES contract. [AUDIT 2026-05-07: FRESH — actionable] **PARTIAL
+      2026-05-12 slot 5 (instruments-service@9bffca2)**: UAC field `match_end_time: datetime | None` added to
+      `CanonicalFixture`; `detect_match_end_time()` helper shipped in SFI adapter. The write-path call
+      (instruments-service SFI progressive-stats writer → populate `fixture.match_end_time`) is NOT yet wired.
+      **DEFERRED**: wire `detect_match_end_time()` result into instruments-service SFI progressive-stats write path so
+      the `match_end_time` field is populated on the written `CanonicalFixture` object.
 - [ ] [SCRIPT] P0. **Step 2**: SFI progressive freeze detection. Add `ft_timer` (raw `timer_seconds` from the
       snapshot) + `match_end_time` (detected freeze point — the last snapshot where `timer_seconds` advances) columns to
       UAC `SFI_PROGRESSIVE_STATS` contract. Detect freeze at write-time in
       `instruments-service/instruments_service/sfi/normalize.py` (or wherever the SFI snapshot writer lives). [AUDIT
-      2026-05-07: FRESH — actionable]
+      2026-05-07: FRESH — actionable] **PARTIAL 2026-05-12 slot 5**: `detect_match_end_time()` ships;
+      SFI_PROGRESSIVE_STATS contract columns NOT yet added.
 - [ ] [SCRIPT] P0. **Step 3**: UTL helper
       `unified_trading_library.fixtures.resolve_match_end_time(fixture_id) -> tuple[datetime, str]` walking the cascade
       in priority order: api_football FIXTURES.match_end_time → SFI freeze → footystats/understat post-match timestamp →
@@ -523,8 +573,17 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       (FIXTURE_STATS / SFI_PROGRESSIVE_STATS / understat XG / fixture_player_stats) per CLAUDE.md "available_at per-row,
       write-time, equal-to-live-pipeline-arrival" rule. [AUDIT 2026-05-07: FRESH — actionable; coordinate with
       sports_master:Phase 3 rename]
+- [ ] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Wire `assert_available_at_present` into the
+      instruments-service SFI progressive-stats / FIXTURES write path (spawn prompt step 8). Blocked on Step 3 UTL
+      helper above. Successor: this item (step 3 + wire = same Phase 2.D completion sprint).
+- [x] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Derive
+      `report_time = match_end_time + SFI_DATA_LAG_P95_SECONDS` in instruments-service SFI progressive-stats write
+      path. (instruments-service@af06124 — `match_end_time` + `report_time` columns added to SFI progressive stats
+      rows in orchestrator per-match loop, using `detect_match_end_time()` + `SFI_DATA_LAG_P95_SECONDS=300`.)
 - [ ] [TEST] P0. Unit tests covering each branch of the cascade + the `kickoff + 120min` fallback shape. [AUDIT
-      2026-05-07: FRESH — actionable]
+      2026-05-07: FRESH — actionable] **PARTIAL 2026-05-12 slot 5 (instruments-service@9bffca2)**: 5 unit tests for
+      freeze-detect + announced_at + PST/CANC shipped in `test_phase2d_match_timing.py`. Cascade-branch tests (Step 3
+      UTL helper) still needed.
 - [ ] [VERIFY] P0. After ship + smoke, deployment-ui schema modal for FIXTURES / SFI_PROGRESSIVE_STATS / FIXTURE_STATS
       shows `match_end_time` column populated for completed fixtures. [AUDIT 2026-05-07: BLOCKED-ON above C.6 ship]
 
@@ -626,10 +685,12 @@ unverified — three plausible models (a/b/c — see issue body) need observatio
 vs genuinely-cancelled rows BEFORE the OUTCOMES split lands so the OUTCOMES rows aren't poisoned by mis-flagged
 cancellations.
 
-- [ ] [SCRIPT] P0. UAC `MatchStatus` typed StrEnum SSOT — closed set: `SCHEDULED`, `LIVE`, `HALFTIME`, `FINISHED`,
-      `POSTPONED`, `CANCELLED`, `ABANDONED`, `SUSPENDED`, `INTERRUPTED`. Lives at
-      `unified_api_contracts/canonical/domain/sports/fixture_status.py`. Replace freeform string status across all
-      sports adapters.
+- [x] [SCRIPT] P0. UAC `MatchStatus` typed StrEnum SSOT — 9 canonical states + `AF_STATUS_SHORT_MAP` + grouping
+      frozensets + `from_af_short()` classmethod. (UAC@1a831b0 —
+      `unified_api_contracts/canonical/domain/sports/fixture_status.py`; exported via domain `__init__`.)
+      **DEFERRED**: "Replace freeform string status across all sports adapters" — the SSOT is shipped; adapter
+      migration (replacing `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` / `MatchStatus` comparisons)
+      is a follow-up refactor across instruments-service adapters.
 - [ ] [SCRIPT] P0. Cross-source verifier integration at instruments-service orchestrator commit-time. When api_football
       reports `CANCELLED` BUT footystats / SFI / understat reports the fixture has match data (lineups + stats +
       events): emit `FIXTURES_STATUS_DISCREPANCY` event (NEW UAC LifecycleEventType) + flip api_football status to
@@ -802,6 +863,43 @@ backtest in the unified pipeline. No live trading. Bugs/backfills/schema fixes i
       market-implied probability at kickoff, no leakage since stamped `available_at = kickoff`). Top-5 bookmakers by
       EXPECTED_BOOKMAKER_MARKET_SETS coverage (Bet365 + Pinnacle + 1xBet + Marathonbet + William Hill). Slippage: 1%
       over closing for liquid markets, 3% for thin. MDPS odds horizon bucket DEFERRED with in-play archetype.
+
+## Catalogue audit findings (re-audited 2026-05-12)
+
+Folded from `plans/archive/issues/catalogue_audit_sports_2026_05_12.md` — re-audit verdicts (2026-05-12,
+ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
+
+- [ ] [SCRIPT] **P0**. **SP-13 — MTDS sports registry phantom-import bug (critical-path May-23 blocker)**.
+      `market-tick-data-service/market_tick_data_service/market_interface/sports/registry.py:23-40` `_ADAPTER_PATHS`
+      routes 18 sportsbook/exchange/bookmaker keys (betfair / matchbook / onexbet / odds_api / skybet / coral /
+      paddypower / betfred / betvictor / boylesports / bwin / ladbrokes / williamhill / betway / unibet / bet888sport /
+      bet365 / sbo) to `unified_sports_execution_interface.adapters.*` — a **phantom Python package** (no such package
+      exists workspace-wide; URDI ELIMINATED 2026-03-26 per codex/GLOSSARY.md). Every `adapter_for_bookmaker(key)` call
+      raises `ModuleNotFoundError` at the `importlib.import_module()` line. **Fix**: rewrite the 18 phantom paths to
+      `execution_service.sports_execution.adapters.<subdir>.<module>` per the post-merge layout in
+      `execution-service/execution_service/sports_execution/adapters/__init__.py:1-32`. Other agent in flight on this
+      fix.
+- [ ] [SCRIPT] **P1**. **SP-5 — bet365 + DK/FD scrapers**. bet365 wired wrong (phantom import per SP-13); DraftKings /
+      FanDuel have NO scraper (only `NotImplementedError` browser stubs in `sports_execution/adapters/scrapers/`). Fix
+      scope: either ship the scrapers OR delete the venue capability entries for DK/FD so they don't show as live in the
+      catalogue.
+- [ ] [SCRIPT] **P1**. **SP-10 — cluster-validation kwargs MISSING workspace-wide**. 0 hits for `expected_root_clusters`
+      / `cluster_extractor` in any sports adapter. CLAUDE.md cluster-validation mandate (`record_captured()` for bundled
+      data_types) not wired through `instruments_service/engine/orchestrator.py` for sports per-fixture bundles. Add
+      cluster kwargs at the bundle-writer boundary in orchestrator.
+- [ ] [SCRIPT] **P1**. **SP-12(a) — execution-service `sports_execution` missing `classify_venue_error()`**.
+      instruments-service sports reference adapters GREEN via `BaseSportsReferenceAdapter`; execution-service
+      sports_execution has 0 hits. Add classify wiring at adapter-base level.
+- [ ] [SCRIPT] **P2**. **SP-12(e) — capability-decl vs method match**. 17 caps declared vs 15 execution classes present.
+      Reconcile.
+- [ ] [SCRIPT] **P2**. **SP-12(f) — shard-level isolation**. Orchestrator-level catch preserves isolation but
+      per-adapter not enforced. Tighten.
+
+Already GREEN (re-audit closed): SP-1/SP-2/SP-3 case-folding (cross_asset_group Phase 1D), SP-4 data-type-namespace note
+(cross_asset_group Phase 1D), SP-6 KNOWN_COVERAGE_GAPS (folded to sports phantom-recon plan), SP-7 launch-dates
+asymmetry (docstring fix shipped), SP-8 EMPTY_CONFIRMED_REASONS taxonomy (closed-set verified), SP-9 LINEUPS_PRE/POST
+absent (clean), SP-11 sports-reference GCS paths (clean), SP-12(b) `ADAPTER_FETCH_FAILED` (ref adapters GREEN), SP-12(c)
+typed empty reasons (GREEN at orchestrator/triggers).
 
 ## Anti-patterns + workspace-rule cross-references
 

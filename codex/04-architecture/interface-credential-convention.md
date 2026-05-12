@@ -84,6 +84,44 @@ own `signing_surface` — operator flips the field in
 `gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` + service
 reloads via `ApiKeyReloader` — **no recompile, no service restart**.
 
+> **Hot-reload integration test (codex audit EX-16 2026-05-12)**: the `signing_surface` flip path
+> (`cloud_kms_encrypted` → `copper` for the June-1 client-cred cutover) MUST be verified by an end-to-end test that
+> (a) writes a fresh `wallet_provisioning.json` to the staging bucket, (b) asserts `get_custody_provider()` returns
+> the new provider class within `ApiKeyReloader`'s polling interval (no service restart), and (c) confirms the
+> `WALLET_PROVISIONING_RELOADED` event fires. Test location: `execution-service/tests/integration/test_signing_surface_hot_reload.py`
+> (to be added; tracked in `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`).
+>
+> ```yaml
+> execution:
+>   owner: execution-service custody owner (Ikenna for the May-23 cutover + June-1 flip)
+>   cadence: per-PR (CI runs on every change to custody/ / config_reloaders.py) + once before each cutover flip
+>   verifier: |
+>     Test exit code 0 + `WALLET_PROVISIONING_RELOADED` event observed in test event stream. CI runs at every PR
+>     touching `execution-service/execution_service/{trade_execution,defi_execution}/` or `interface-credential`
+>     codex doc; flip cutover gated on green CI.
+>   last_executed: NEVER (test to be written; first execution before May-23 cutover)
+> ```
+
+### Phase 4 DeFi Connectors — credential shape unchanged
+
+All 13 Phase 4 connectors (shipped 2026-05-12 per `defi_catalogue_chain_primitives_2026_05_10.md`):
+`RocketPoolConnector`, `RenzoConnector`, `KelpDAOConnector`, `PufferConnector`,
+`SymbioticConnector`, `KarakConnector`, `YearnConnector`, `ConvexConnector`, `BeefyConnector`,
+`PendleConnector`, `IdleConnector`, `SolBlazeConnector`, `JitoRestakingConnector` — all follow the
+**same credential injection pattern** as existing DeFi connectors:
+
+```python
+connector.connect(config={
+    "wallet_private_key": pk,   # fetched from SM by execution-service
+    "rpc_url": resolved_url,    # resolved from UAC CHAIN_RPC_TEMPLATES by service
+})
+```
+
+Solana connectors (`SolBlazeConnector`, `JitoRestakingConnector`) use Solana mainnet/devnet RPC URLs;
+credential shape is identical. No new secret names required — existing `defi-wallet-private-key` +
+`alchemy-api-key` cover all 13. Tenderly fork URLs follow the `fork_mode=tenderly` path in `base.py`
+`get_defi_rpc_url()`.
+
 ## Why This Convention
 
 - **Testability**: Interfaces can be tested without real credentials -- pass mocks/stubs

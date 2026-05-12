@@ -3,6 +3,15 @@ scope: [engineer, admin]
 doc_kind: gaps_register
 status: active
 ssot_for: prediction_market_codification_gaps
+execution:
+  owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master_2026_05_07.md`)
+  cadence: per-PR — every PR touching prediction registries / handlers / UAC predictions surface MUST review this
+    gaps register; weekly sweep during the May-23 cutover window to close gaps as they land
+  verifier: |
+    Each gap (G1..GN) is closed by (a) deleting from this register + (b) landing the corresponding UAC / UIC /
+    features-cross-instrument change in the same logical unit (per CLAUDE.md "Commit + Push + Flip" rule).
+    Reviewers reject PRs that land the change but don't delete the gap row, and vice versa.
+  last_executed: 2026-05-07 (file creation); ongoing per-PR review until predictions_master cutover
 ---
 
 # Prediction markets — codification gaps

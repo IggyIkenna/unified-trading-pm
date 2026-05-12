@@ -155,6 +155,40 @@ Downstream consumers reading the v8 manifest column MUST branch on the four stat
 | `BLOCKED`                   | **Skip + raise `ManifestRowBlockedError`** (`unified_api_contracts.canonical.crosscutting.service_emission_state`). The publish-boundary policy withheld the metric row + fired a P0 alert; any downstream read is a correctness-critical attempt to consume data deliberately withheld. |
 | `None` (legacy v7 row)      | Fall through to `capture_status`-based reasoning. The ≤30-day reader-fallback window (`READER_FALLBACK_WINDOW_DAYS = 30`) expires ~2026-06-14 per Phase 7 walk.        |
 
+> **Reader-fallback retirement gate** (per codex audit D-4 2026-05-12): the `READER_FALLBACK_WINDOW_DAYS = 30` fallback
+> chain is deleted at the Phase 7 walk owned by
+> [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+> Phase 7. Operator gating: deletion is permitted only when the `READER_FELL_BACK_TO_LEGACY_PATH` event-count threshold
+> reaches **zero across the workspace for 7 consecutive days** (per
+> [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) § "Reader fallback chain"). The QG step enforcing
+> deletion is `unified-trading-pm/scripts/quality_gates/check_reader_fallback_retired.py` (lands with Phase 7).
+> Cross-references: [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) § Reader fallback chain (line 104+).
+
+## When the policy gate is n/a — MTDS raw capture
+
+Not every service is a derived-output emitter. **MTDS is n/a per the slice (c) Phase 6.1 audit** (2026-05-12, harsh
+slot 3). MTDS is the ORIGINATOR of every data_type it produces: ticks / candles / book snapshots / DeFi reserve params
+all come from external APIs (Databento / Tardis / Hyperliquid REST / Pyth Hermes / chain RPCs / sportstats vendors).
+There is no *upstream MTDS service* whose completeness gates the write — the upstream is the venue / vendor, and the
+manifest layer (`record_captured` / `record_empty(reason=)` / `record_failed`) is sufficient.
+
+Workspace audit (2026-05-12): `rg "publish_with_policy|publish_with_manifest_lookup" market_tick_data_service/` returns
+**zero** callsites. MTDS adapters universally call `ManifestWriter.record_captured` for raw captures. Adapters that
+*do* transform source responses — `umi_tick_provider._fetch_databento_ohlcv_1m_async` (Databento direct 1m candle
+feed), `gas_price_adapter._aggregate` (block-level fee rollup to hourly/daily), Hyperliquid `_aggregate` (orderbook
+depth bucketing) — are SOURCE-side transformations, not aggregations of MTDS-written upstream rows. They stay on the
+raw-capture path.
+
+**Drift watch**: if a future MTDS handler reads from a *prior MTDS write* to compute a derived row (cross-handler
+aggregation), that's the trigger to wire `publish_with_policy` + register a `(market-tick-data-service, <output_dt>)`
+seed entry in `SERVICE_OUTPUT_POLICIES`. Today (post Phase 6.1 audit), no such handler exists.
+
+Same logic applies to `instruments-service` reference-data adapters that fetch directly from venue catalogs
+(api_football / footystats / Polymarket gamma_api / Databento product reference). Those route through the manifest
+layer's per-row `record_captured` without a service-output policy gate — the catalog_snapshot policy entry
+(`PARTIAL_OK`) only fires at a future "consolidated daily catalog snapshot" emission boundary which today is computed
+at read-time via `read_availability_index(bucket)`. Per writegate Phase 6.8 sub-plan ownership.
+
 ## Worked examples
 
 ### MDPS `ohlcv_1h:current` — STRICT_FAIL on gap

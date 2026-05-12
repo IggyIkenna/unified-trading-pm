@@ -46,6 +46,20 @@ between writer and reader.
 `market_tick_data_service/engine/orchestrator.py` is the MVP tier default that applies when the CLI flag is absent. This
 is the ONLY cap value hardcoded anywhere; Expanded and Full are operator-driven.
 
+```yaml
+execution:
+  owner: MTDS sentinel maintainer (Ikenna for MVP→Expanded design call; Harsh for the run-and-verify step)
+  cadence: one-shot per tier promotion (MVP → Expanded planned for day-91 gate; Expanded → Full observability-gated)
+  verifier: |
+    Per § 4 "Observability gates" checklist below — each promotion gate requires evidence from telemetry that the
+    prior tier's manifest-write-rate / object-budget / phantom-audit cadence are within tolerance.
+    Records last-promotion timestamp + cap value in `plans/active/issues/sentinel_rollout_history.md` (TBD).
+  last_executed: NEVER (MVP tier is the default; first Expanded promotion gated on day-91 bake)
+```
+
+(Added per codex audit IN-14 2026-05-12 — Runbook Execution-Owner SSOT HARD RULE compliance for tier-promotion
+operator decisions.)
+
 ## 3. Promotion criteria (MVP → Expanded → Full)
 
 Each promotion is a deliberate human decision informed by telemetry from the prior tier. No autonomous promotion —

@@ -115,6 +115,20 @@ Each fallback hit emits a `READER_FELL_BACK_TO_LEGACY_PATH` event so we can moni
 Fallback paths are **deleted T+30 days post-migration** per workspace "no double SSOT" rule. Tracked in the migration
 plan's Phase 8.
 
+```yaml
+execution:
+  owner: data-pipeline maintainer (slot 3 Ikenna in active work-split, fallback owner: manifest-evolution maintainer)
+  cadence: weekly check during the 30-day fallback window; daily for the final 7 days before deletion
+  verifier: |
+    `gcloud logging read 'jsonPayload.event="READER_FELL_BACK_TO_LEGACY_PATH"' --freshness=7d --limit=1` returns
+    zero rows for 7 consecutive days BEFORE the fallback deletion cutoff. Reader-side parity verified via
+    deployment-api `/api/data-status/shard-detail` smoke sample (5 asset_groups × 1 (venue, day) pair each).
+  last_executed: NEVER (first execution gated on manifest v7→v8 cutover landing per
+    `plans/active/manifest_schema_final_gate_2026_05_09.md` Phase 4)
+```
+
+(Added per codex audit D-20 2026-05-12 — Runbook Execution-Owner SSOT HARD RULE compliance.)
+
 ## Anti-patterns
 
 - Don't keep the `category=` reader fallback long-term. Phase 8 of the migration plan deletes it 2026-06-15.

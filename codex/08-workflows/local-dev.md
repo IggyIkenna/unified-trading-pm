@@ -1,34 +1,25 @@
 ---
 scope: [engineer, admin]
-status: PARTIALLY-STALE (frontend sections obsolete; backend orchestration still in use)
+status: BACKEND-ORCHESTRATION-SSOT (frontend sections trimmed 2026-05-12 per UI-1/UI-14)
+last_reviewed: 2026-05-12
 ---
 
-# Local Development Guide — frontend sections are STALE
+# Local Development Guide — backend orchestration SSOT
 
-> **⚠️ Read this banner before following any instruction below.**
+> **Decision table — which startup script when** (codified 2026-05-12 per UI-1/UI-14 audit):
 >
-> The **frontend** parts of this doc describe the pre-consolidation workspace where the portal was split across 10+ Vite
-> UIs (deployment-ui, strategy-ui, settlement-ui, etc.) on ports 5173-5183. **All those UIs were merged into
-> `unified-trading-system-ui`** and are no longer started via `dev-start.sh`.
+> | Use case | Script | Reference |
+> | --- | --- | --- |
+> | Consolidated portal / UI work (default) | `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier {static\|0\|1\|2}` | [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) |
+> | Firebase emulator suite (auth/admin work) | covered by `dev-tiers.sh --tier 0` (auto-seeds 23 demo personas) | [`firebase-local.md`](../14-customer-journeys/authentication/firebase-local.md) |
+> | deployment-api (port 8004) + deployment-ui (port 5183) only | `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh` | `cursor-configs/CLAUDE.md` § "Deployment-stack restart (SSOT)" |
+> | Backend service ad-hoc spin-up (8004-8016 range) | `bash unified-trading-pm/scripts/dev/dev-start.sh` (this doc) | — |
 >
-> **For the frontend / consolidated portal**, use:
->
-> - Tier model + boot script:
->   [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md)
-> - Boot command: `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier {static|0|1|2}`
-> - Firebase emulator setup:
->   [`codex/14-customer-journeys/authentication/firebase-local.md`](../14-customer-journeys/authentication/firebase-local.md)
->
-> Frontend axes that are obsolete: `VITE_MOCK_API`, `VITE_SKIP_AUTH`, the 5173-5183 port registry, the per-UI rows in
-> the port table.
->
-> **For backend services / APIs**, the `dev-start.sh` / `dev-stop.sh` / `dev-status.sh` scripts in
-> `unified-trading-pm/scripts/dev/` are **still in use** for orchestrating Python services that aren't part of
-> dev-tiers.sh's T1/T2 set (e.g. ad-hoc API spin-up, the 8004-8016 backend port range, MockStateStore semantics for APIs
-> that wire it). The mode-axis matrix below (`CLOUD_MOCK_MODE`, `DISABLE_AUTH`, `MOCK_STATE_MODE`) and the backend port
-> registry remain accurate for those workflows.
->
-> When in doubt: portal/UI → dev-tiers.sh; standalone backend service work → dev-start.sh.
+> This doc covers the **backend orchestration** half (`dev-start.sh` / `dev-stop.sh` / `dev-status.sh`). The
+> frontend / consolidated-portal half was trimmed 2026-05-12 (UI-1 + UI-3 + UI-5 + UI-14) — for portal startup,
+> mode-axis collapse to `runtime_profile` v7, and the live UI port mapping see
+> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) and
+> `unified-trading-pm/scripts/dev/ui-api-mapping.json` (the machine-readable port SSOT).
 
 ---
 
@@ -46,14 +37,21 @@ focuses on `dev-start.sh` presets and UI-specific toggles.
 
 ---
 
-## Mode System (5 Independent Axes)
+## Mode System — `dev-start.sh` backend axes
 
-The dev environment has 5 independent mode axes, controlled by environment variables:
+> **2026-05-12 UI-3 reconciliation**: the original 5-axis matrix
+> (`VITE_MOCK_API` / `VITE_SKIP_AUTH` / `CLOUD_MOCK_MODE` / `DISABLE_AUTH` / `MOCK_STATE_MODE`) was split
+> by the consolidated-portal migration. `VITE_*` axes are obsolete (Next.js uses `NEXT_PUBLIC_MOCK_API` /
+> `NEXT_PUBLIC_USE_FIREBASE_EMULATOR` — see `unified-trading-system-ui` repo). The 5 env vars also collapsed
+> into the single `runtime_profile` axis for deployment-api per
+> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) § "Runtime
+> Profiles (v7)". The backend axes documented below remain accurate for ad-hoc service spin-up via
+> `dev-start.sh` — they are NOT the SSOT for portal startup.
+
+The `dev-start.sh` backend stack has 3 independent mode axes (the UI axes above are deprecated):
 
 | Axis           | Env Var           | Mock value                                               | Real value                                       | Controls                            |
 | -------------- | ----------------- | -------------------------------------------------------- | ------------------------------------------------ | ----------------------------------- |
-| **UI data**    | `VITE_MOCK_API`   | `true` (mock-api.ts intercepts)                          | `false` (real API calls)                         | Client-side mock data vs backend    |
-| **UI auth**    | `VITE_SKIP_AUTH`  | `true` (no OAuth)                                        | `false` (real OAuth flow)                        | Login requirement                   |
 | **API data**   | `CLOUD_MOCK_MODE` | `true` (mock_data.py)                                    | `false` (cloud storage)                          | Sample data vs real cloud reads     |
 | **API auth**   | `DISABLE_AUTH`    | `true` (no tokens)                                       | unset (tokens required)                          | Token validation                    |
 | **Mock state** | `MOCK_STATE_MODE` | `interactive` (mutations persist in `.local-dev-cache/`) | `deterministic` (pure seed data, no persistence) | Stateful vs stateless mock behavior |
@@ -117,21 +115,14 @@ bash unified-trading-pm/scripts/dev/dev-start.sh --list
 
 ## Port Registry
 
-### UI Ports (5173-5183)
-
-| Port | UI Repo                | Stack               |
-| ---- | ---------------------- | ------------------- |
-| 5173 | onboarding-ui          | onboarding          |
-| 5174 | execution-analytics-ui | execution-analytics |
-| 5175 | strategy-ui            | strategy            |
-| 5176 | settlement-ui          | settlement          |
-| 5177 | live-health-monitor-ui | live-health-monitor |
-| 5178 | logs-dashboard-ui      | logs-dashboard      |
-| 5179 | ml-training-ui         | ml-training         |
-| 5180 | trading-analytics-ui   | trading-analytics   |
-| 5181 | batch-audit-ui         | batch-audit         |
-| 5182 | client-reporting-ui    | client-reporting    |
-| 5183 | deployment-ui          | deployment          |
+> **2026-05-12 UI-1 reconciliation**: the per-UI 5173-5183 table that lived here listed 11 split-Vite UIs
+> (`onboarding-ui` / `execution-analytics-ui` / `strategy-ui` / `settlement-ui` / `live-health-monitor-ui` /
+> `logs-dashboard-ui` / `ml-training-ui` / `trading-analytics-ui` / `batch-audit-ui` / `client-reporting-ui` /
+> `deployment-ui`). All but `deployment-ui` are archived (consolidated into `unified-trading-system-ui` per
+> `codex/DEPRECATED_UIS_NOTICE.md` + `05-infrastructure/ui-functionality-requirements.md`). For the live UI
+> port mapping see `unified-trading-pm/scripts/dev/ui-api-mapping.json` (machine-readable SSOT) +
+> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) (consolidated
+> portal ports: `unified-trading-system-ui` Next.js dev `:3000`, real-API server `:3100`; `deployment-ui` `:5183`).
 
 ### API Ports (8004-8016)
 
@@ -441,7 +432,8 @@ development.
 ```
 ┌─────────────────────────────┐     ┌──────────────────────────────┐
 │  unified-trading-system-ui  │     │  unified-trading-api         │
-│  (Next.js, port 5174)       │────▶│  (FastAPI, port 8030)        │
+│  (Next.js, port 3000;       │────▶│  (FastAPI, port 8030)        │
+│   real-API server :3100)    │     │                              │
 │                             │     │  CLOUD_MOCK_MODE=true        │
 │  next.config.mjs rewrites  │     │  seed_all_domains() on       │
 │  /api/* → localhost:8030    │     │  startup provides mock       │

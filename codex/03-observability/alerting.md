@@ -13,6 +13,15 @@ severities route to different channels, but nothing is silent.
 Alert delivery channels: **Telegram** (primary, all alerts) and **PagerDuty** (critical trading events). Slack is
 deprecated.
 
+> **🟡 SLACK DEPRECATION RECONCILIATION (AL-6 PRE_CUTOVER 2026-05-12, slot 8 audit)** — this doc declares Slack
+> deprecated; downstream references still treating Slack as a live channel are tracked for follow-up:
+> (a) `codex/04-architecture/alerting-batch-live.md:18` lists "PagerDuty / Telegram / Slack";
+> (b) `codex/15-runbooks/alerting/operator-playbook.md:48` references "pinned in the Slack channel";
+> (c) `codex/15-runbooks/alerting/alert-code-taxonomy.md:189-190` ML routing matrix lists SLACK as a live channel;
+> (d) code: `AlertChannel.SLACK` exists in `codes.py:271`; `alerting-service/notifiers/slack.py` + sibling modules
+> still ship. Operator-declared direction: Telegram + PagerDuty only. Code-removal + ML-routing updates routed to
+> alerting-service maintainer (cross-ref slot 8 ALERTING AL-6 PRE_CUTOVER follow-up).
+
 ---
 
 ## Alert Severity Tiers
@@ -115,40 +124,21 @@ Every autonomous recovery action the system takes, mapped to its alert tier:
 
 ## Alerting-Service Routing Rules
 
-The routing rules in `alerting-service/notifiers/router.py` must map events to channels. The canonical rules:
-
-```python
-# Default routing rules (config-driven, loaded from AlertingSystemConfig)
-ROUTING_RULES = [
-    # T1 CRITICAL — PagerDuty P1 + Telegram
-    {"event_pattern": "KILL_SWITCH_*",                "channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "CIRCUIT_BREAKER_OPEN",         "channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "MULTI_LEG_COMPENSATION_FAILED","channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "UNHEDGED_POSITION_ALERT",      "channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "DUAL_FAILURE_DETECTED",        "channels": ["pagerduty", "telegram"], "severity": "critical"},
-    {"event_pattern": "ORDER_RECOVERY_FAILED",        "channels": ["pagerduty", "telegram"], "severity": "critical"},
-
-    # T2 HIGH — PagerDuty P2 + Telegram
-    {"event_pattern": "CIRCUIT_BREAKER_BACKOFF_*",    "channels": ["pagerduty", "telegram"], "severity": "warning"},
-    {"event_pattern": "ORDER_ORPHANED",               "channels": ["pagerduty", "telegram"], "severity": "warning"},
-    {"event_pattern": "POSITION_DRIFT_DETECTED",      "channels": ["pagerduty", "telegram"], "severity": "warning"},
-    {"event_pattern": "RECON_DEGRADED_*",             "channels": ["pagerduty", "telegram"], "severity": "warning"},
-
-    # T3 WARNING — Telegram only
-    {"event_pattern": "CIRCUIT_BREAKER_DEGRADED",     "channels": ["telegram"]},
-    {"event_pattern": "CIRCUIT_BREAKER_CLOSED",       "channels": ["telegram"]},
-    {"event_pattern": "PREFLIGHT_FAILED",             "channels": ["telegram"]},
-    {"event_pattern": "SERVICE_DEGRADED",             "channels": ["telegram"]},
-    {"event_pattern": "POSITION_CORRECTION_*",        "channels": ["telegram"]},
-    {"event_pattern": "PORTFOLIO_REBALANCE_*",        "channels": ["telegram"]},
-    {"event_pattern": "ORDER_RECOVERY_*",             "channels": ["telegram"]},
-
-    # T4 INFO — Telegram (fallback for everything else)
-    {"event_pattern": "*",                            "channels": ["telegram"]},
-]
-```
-
-First match wins. The `*` fallback ensures nothing is silent.
+> **SSOT note (AL-3 reconciliation 2026-05-12).** Routing rules are **UAC-driven**, not an inline python block in
+> this codex doc. The runtime loads `[rule.to_routing_dict() for rule in LIVE_ALERT_RULES]` from
+> `alerting_service/config.py` (line 12-34), where `LIVE_ALERT_RULES` lives in UAC
+> `unified_api_contracts/canonical/crosscutting/alerting/rules.py` and ships **~56 `AlertRule(...)` entries** spanning
+> kill-switch / circuit-breaker / ML / risk-rule-consequence / kill-switch-recovery / tick-staleness / connectivity-gap /
+> DeFi / margin / position-recon / order-recovery / multi-leg / service-health / cross-cloud-egress codes. Operator
+> overrides flow via `AlertingSystemConfig.routing_rules`. The closed AlertCode set is governed in
+> [`../15-runbooks/alerting/alert-code-taxonomy.md`](../15-runbooks/alerting/alert-code-taxonomy.md); the
+> [`AlertRule._validate_kill_switch_scope_matches_code_family`](../15-runbooks/alerting/alert-code-taxonomy.md#construction-time-validation)
+> validator enforces per-rule consistency.
+>
+> Routing-rule philosophy (preserved verbatim): **first-match-wins** on `event_pattern` glob, with a `*` fallback
+> guaranteeing nothing is silent. T1 CRITICAL → PagerDuty P1 + Telegram; T2 HIGH → PagerDuty P2 + Telegram; T3 WARN →
+> Telegram only; T4 INFO → Telegram fallback. The per-code routing matrix lives in UAC `LIVE_ALERT_RULES` — see the
+> per-code playbook entries in `15-runbooks/alerting/operator-playbook.md` rather than re-deriving here.
 
 ---
 
@@ -156,8 +146,8 @@ First match wins. The `*` fallback ensures nothing is silent.
 
 | Alert           | Trigger                        | Detection                | Response                  | Status      |
 | --------------- | ------------------------------ | ------------------------ | ------------------------- | ----------- |
-| OOM Death Loop  | Serial log OOM >= 5 times      | UTD v2 auto-sync (30s)   | VM terminated             | IMPLEMENTED |
-| Startup Timeout | No SERVICE_STARTED after 5 min | UTD v2 auto-sync (30s)   | VM terminated             | IMPLEMENTED |
+| OOM Death Loop  | Serial log OOM >= 5 times      | deployment-service VM watchdog + `vm-exec-with-gcs-tee.sh` serial-log scrape (AL-9 PRE_CUTOVER 2026-05-12 refresh; "UTD v2" naming retired per Ops audit O-13) | VM terminated             | IMPLEMENTED |
+| Startup Timeout | No SERVICE_STARTED after 5 min | deployment-service VM watchdog + event-stream STARTED check (AL-9 PRE_CUTOVER 2026-05-12 refresh) | VM terminated             | IMPLEMENTED |
 | Memory Critical | memory_percent > 90%           | PerformanceMonitor (30s) | Log ERROR, resource_alert | IMPLEMENTED |
 | Memory Warning  | memory_percent > 85%           | PerformanceMonitor (30s) | Log WARNING               | IMPLEMENTED |
 

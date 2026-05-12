@@ -66,20 +66,28 @@ number is addressable. Both go in the registry entry for clarity.
 peak parallel work exceeds). All 26 active repos × 8 slots = 208 worktrees on branches `tab/ikennaigboaka/1` through
 `tab/ikennaigboaka/8`, each at head `6a6ae73b` at provisioning time.
 
-| Slot | Theme (2026-05-12 — density-push cycle through 2026-05-15 freeze gate)                              | Plan-of-record / scope                                                                                                          |
-| ---- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | main orchestrator + on-call governance + master plan refresh + cross-plan banner sweep + Q&A dispatch + ping triage | (this LEDGER) + [`master_to_live_defi_2026_05_23.md`](../plans/active/master_to_live_defi_2026_05_23.md)                       |
-| 2    | **CRITICAL PATH** — `defi_catalogue_chain_primitives` Phases 1-3 design lead (chain × protocol matrix; per-protocol shard atom decisions; lending-indices fix per defi_recursive_borrow Phase 0 dep) + 4 lending-indices residuals carry-forward | [`defi_catalogue_chain_primitives_2026_05_10.md`](../plans/active/defi_catalogue_chain_primitives_2026_05_10.md) Phases 1-3      |
-| 3    | **CRITICAL PATH** — `code_freeze_migrate_backfill` Phase 1.E freeze-gate audit + Phase 2 cutover dry-run + cross-plan banner sweep + Phase 4.MTDS Q1-Q5 + TradFi 4.3% phantom-audit P0-triage | [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase 1.E + Phase 2 dry-run |
-| 4    | `api_keys_wallets_accounts_readiness` design lead — Copper KYB onboarding kickoff + Fireblocks R9 operator gate dispatch + wallet provisioning schema | [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md) Phases 1-3 |
-| 5    | `defi_recursive_borrow_archetypes` Phases 1-2 design (Family 1 + Family 2 archetype topology) + Tier-2 carry-forward (available_at DeFi/TradFi/Pred stamping) + status-line resolve on Step 5 P0-2 MDPS + Phase 6.5 features-* status | [`defi_recursive_borrow_archetypes_2026_05_10.md`](../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md) Phases 1-2 |
-| 6    | `defi_simulation_realism` Phases 1-3 design (AMM family matrix + simulation contract + golden test set) + phantom audit items 8+9 carry-forward | [`defi_simulation_realism_2026_05_10.md`](../plans/active/defi_simulation_realism_2026_05_10.md) Phases 1-3                    |
-| 7    | `simulation_scenarios_topology_price_shocks` Phases 1-2 + handshakes to risk_simulations / DR plans + live-pipeline carry-forward (Phase 3.5/5/6/15 + Phase 4-5 design-ahead + Phase 13/14/15) | [`simulation_scenarios_topology_price_shocks_2026_05_09.md`](../plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md) + handshakes |
+| Slot | Theme (2026-05-12 — density-push cycle through 2026-05-15 freeze gate)                                                                                                                                                                                                                                                                                                                                                                                                                                                | Plan-of-record / scope                                                                                                                                                                                                                   |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | main orchestrator + on-call governance + master plan refresh + cross-plan banner sweep + Q&A dispatch + ping triage                                                                                                                                                                                                                                                                                                                                                                                                   | (this LEDGER) + [`master_to_live_defi_2026_05_23.md`](../plans/active/master_to_live_defi_2026_05_23.md)                                                                                                                                 |
+| 2    | **CRITICAL PATH** — `defi_catalogue_chain_primitives` Phases 1-3 design lead (chain × protocol matrix; per-protocol shard atom decisions; lending-indices fix per defi_recursive_borrow Phase 0 dep) + 4 lending-indices residuals carry-forward                                                                                                                                                                                                                                                                      | [`defi_catalogue_chain_primitives_2026_05_10.md`](../plans/active/defi_catalogue_chain_primitives_2026_05_10.md) Phases 1-3                                                                                                              |
+| 3    | **CRITICAL PATH** — `code_freeze_migrate_backfill` Phase 1.E freeze-gate audit + Phase 2 cutover dry-run + cross-plan banner sweep + Phase 4.MTDS Q1-Q5 + TradFi 4.3% phantom-audit P0-triage                                                                                                                                                                                                                                                                                                                         | [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase 1.E + Phase 2 dry-run                                                                             |
+| 4    | `api_keys_wallets_accounts_readiness` design lead — Copper KYB onboarding kickoff + Fireblocks R9 operator gate dispatch + wallet provisioning schema                                                                                                                                                                                                                                                                                                                                                                 | [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md) Phases 1-3                                                                                                      |
+| 5    | `defi_recursive_borrow_archetypes` Phases 1-2 design (Family 1 + Family 2 archetype topology) + Tier-2 carry-forward (available_at DeFi/TradFi/Pred stamping) + status-line resolve on Step 5 P0-2 MDPS + Phase 6.5 features-\* status                                                                                                                                                                                                                                                                                | [`defi_recursive_borrow_archetypes_2026_05_10.md`](../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md) Phases 1-2                                                                                                            |
+| 6    | `defi_simulation_realism` Phases 1-3 design (AMM family matrix + simulation contract + golden test set) + phantom audit items 8+9 carry-forward                                                                                                                                                                                                                                                                                                                                                                       | [`defi_simulation_realism_2026_05_10.md`](../plans/active/defi_simulation_realism_2026_05_10.md) Phases 1-3                                                                                                                              |
+| 7    | `simulation_scenarios_topology_price_shocks` Phases 1-2 + handshakes to risk_simulations / DR plans + live-pipeline carry-forward (Phase 3.5/5/6/15 + Phase 4-5 design-ahead + Phase 13/14/15)                                                                                                                                                                                                                                                                                                                        | [`simulation_scenarios_topology_price_shocks_2026_05_09.md`](../plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md) + handshakes                                                                                      |
 | 8    | `cross_cutting_may_23_deliverables` deliverable #4 (DART manual surfaces) + `manifest_schema_final_gate` Phase 3 consumer sweep + master plan Group F/G refresh. **Day-1 verification only** on Phase 3.D rescan VM (`cross-asset-rescan-20260511-172749` RUNNING; verify STARTED/STOPPED + triage.jsonl landing). Carry-forward: writegate Phase 6.2 PARTIAL scaffolding wire-up + writegate slice (b) Phase 5.X tail + bucket_name_ssot Phase 0f operational verification + Phase 0h first-execution post-Phase-2.6 | [`cross_cutting_may_23_deliverables_2026_05_08.md`](../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md) #4 + [`manifest_schema_final_gate_2026_05_09.md`](../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase 3 |
 
-**Per-slot full task brief + spawn prompts** in [`../plans/active/work_split_2026_05_11_ikenna.md`](../plans/active/work_split_2026_05_11_ikenna.md) § "Tab registry" + § "Spawn prompts." Reading order for fresh tab agents: (1) [AGENT_ONBOARDING.md](AGENT_ONBOARDING.md) → (2) CLAUDE.md → (3) per-tab-worktrees codex → (4) work-split § "Slot N" → (5) plan-of-record. Cross-cycle deadline: **Phase 1 code-freeze gate fires 2026-05-15** (4 days from today); slots 2 + 4 are gated on cross-side handshakes from Harsh slot 2.
+**Per-slot full task brief + spawn prompts** in
+[`../plans/active/work_split_2026_05_11_ikenna.md`](../plans/active/work_split_2026_05_11_ikenna.md) § "Tab registry" +
+§ "Spawn prompts." Reading order for fresh tab agents: (1) [AGENT_ONBOARDING.md](AGENT_ONBOARDING.md) → (2) CLAUDE.md →
+(3) per-tab-worktrees codex → (4) work-split § "Slot N" → (5) plan-of-record. Cross-cycle deadline: **Phase 1
+code-freeze gate fires 2026-05-15** (4 days from today); slots 2 + 4 are gated on cross-side handshakes from Harsh
+slot 2.
 
-> **NOTE for fresh tab agents** — slot worktrees were provisioned 2026-05-11 at HEAD `6a6ae73b` and are now ~37 commits behind `origin/live-defi-rollout` after a busy morning of cross-side shipping. Run `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>` from the main workspace clone (NOT from inside the slot worktree) before booting the slot's agent — fast-forward only, zero local commits queued, safe.
+> **NOTE for fresh tab agents** — slot worktrees were provisioned 2026-05-11 at HEAD `6a6ae73b` and are now ~37 commits
+> behind `origin/live-defi-rollout` after a busy morning of cross-side shipping. Run
+> `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>` from the main workspace clone (NOT from
+> inside the slot worktree) before booting the slot's agent — fast-forward only, zero local commits queued, safe.
 
 The daily work-split plan (`plans/active/work_split_<YYYY_MM_DD>_ikenna.md`) is the authoritative source for today's
 themes. This LEDGER's table mirrors that assignment for fresh tab-agents bootstrapping outside chat scrollback. When the
@@ -109,17 +117,95 @@ session" for full migration ledger + per-slot DONE evidence.
 
 ### Slot status (live; updated as slots ack STARTED / ship / hit blockers)
 
-> **Cycle status as of 2026-05-12 EOD (Day-1 of 4-day cycle)**: **🚀 PACE = 5× CALIBRATED.** 5 of 7 Ikenna implementer slots ✅ FULL-CYCLE-CLOSE on Day-1 (slot 2 / 4 / 5 / 6 / 8). Slot 3 deep in DAY-2 P0 PipelineMode sweep. Slot 7 design-shipped Phases 1-2. **3 calendar days of capacity (2026-05-13/14/15) open before freeze gate.** Cycle 1 SCOPE EXTENSION (Day-2-4 extensions per continuation_prompts § "🟢 SCOPE EXTENSION") + SCOPE EXTENSION 2 (Cycle 2 PREP pre-cutover work) shipped to absorb capacity. NO Cycle 2 EXECUTION pulled forward (gate-locked on Phase 1 closure). Cross-side: see [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md); no 🟡 BLOCKED items intra-side.
+> **Cycle status as of 2026-05-12 EOD (Day-1 of 4-day cycle)**: **🚀 PACE = 5× CALIBRATED.** 5 of 7 Ikenna implementer
+> slots ✅ FULL-CYCLE-CLOSE on Day-1 (slot 2 / 4 / 5 / 6 / 8). Slot 3 deep in DAY-2 P0 PipelineMode sweep. Slot 7
+> design-shipped Phases 1-2. **3 calendar days of capacity (2026-05-13/14/15) open before freeze gate.** Cycle 1 SCOPE
+> EXTENSION (Day-2-4 extensions per continuation_prompts § "🟢 SCOPE EXTENSION") + SCOPE EXTENSION 2 (Cycle 2 PREP
+> pre-cutover work) shipped to absorb capacity. NO Cycle 2 EXECUTION pulled forward (gate-locked on Phase 1 closure).
+> Cross-side: see [`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md); no 🟡 BLOCKED items intra-side.
 
 **Day-1 EOD shipments (per slot)**:
-- **Slot 1** — main orchestrator; today's shippables: PM@`1f9e8232` (continuation prompts) + `959390ae` (2026-05-11 scoreboards + migration) + `6445e059` (archive 2026-05-11 splits) + `c15267ef` (boot sweep ledger refresh) + `0529161f` (Phase 3.D ✅ completion ack + master plan top-up) + `b69d9898` (Harsh-side prompts) + `f85763cb` (per_agent_worktrees Phase 4.5 Ikenna input on ping-doc reset) + `4c573302` (operator Q1+Q2 routing to slot 3) + `d29d33eb`/`5de3d93b` (post-freeze roadmap 3 cycles) + `8fe841ec` (scope extension Day-2-4) + `d53b36fb` (roadmap Cycle 5+6 extension) + this commit (LEDGER Day-1 EOD refresh + SCOPE EXTENSION 2 Cycle 2 PREP layer).
-- **Slot 2** — ✅ FULL-CYCLE-CLOSE per PM@`a1b9d3a9` ("17 commits Days 1-4"). Shipped defi_catalogue Phase 1B/C/D/E/F/G/H + Phase 2 per-protocol shard-atom matrix + Phase 3 lending-indices spec for slot 5 Family-1 handshake. DONE-2026-05-15 block at PM@`95113b7c`. Day-2-4 extension active: cross_asset_group_catalogue_audit fan-out + DefiManifestRecorder ManifestFreshnessCache wire-in P1 + Cycle 2 PREP bucket provisioning script review.
-- **Slot 3** — 🟡 Day-1 PM EOD PROGRESS (PM@`3c9eb631`) — 5 PM commits shipped + DAY-2 P0 PipelineMode sweep queued (operator-approved Q1+Q2). Phase 1.E audit + Phase 2.6 cutover dry-run shipped (PM@`df659ed5`+`f07cddc6`). Day-2 mechanical sweep ~60 min when slot picks up Day-2 morning.
-- **Slot 4** — ✅ FULL-CYCLE-CLOSE per PM@`20bd7964` (api_keys_wallets full-cycle close). Wallet schema shipped UAC@`d721b6a`; R9 sub-(a) ✅ RESOLVED (CLOUD_KMS_ENCRYPTED for May-23 cutover); Phases 3.C + 4.A.SCHEMA flipped. Day-2-4 extension: Copper KYB checklist closure + Fireblocks integration spec + kill-switch wallet-tier wiring.
-- **Slot 5** — ✅ FULL-CYCLE-CLOSE per PM@`71786748` (EOD-2026-05-12 FULL CYCLE CLOSE). defi_recursive_borrow Phases 1-11 design batch shipped (PM@`b339a1db`) + Phase 12 backtest scenarios (PM@`03492b96`) + Phase 3 strategy-service factory spec (PM@`158dd8b1`) + cross-plan annotations (PM@`eaff29ac`). Day-2-4 extension: Phase 12 backtest harness implementation + Phase 4-6 impl + client_reporting reserve.
-- **Slot 6** — ✅ FULL-CYCLE-CLOSE per PM@`0c4b66f4` (defi_simulation_realism DONE-2026-05-15). Phases 1A+2A+3 design shipped via 3 codex sections (amm-slippage-simulation.md per-shape sample pools + simulation contract + golden test set harness). Phase 4+5 banners + Phase 9B concentrated-liquidity.md CREATE at PM@`30a01f3e`+`ae804766`. Phase 9C continuation at PM@`a39fdee1`. Day-2-4 extension: Phase 6-7 + Phase 9C/9D + mock_data_pipeline reserve.
-- **Slot 7** — ✅ DESIGN-SHIPPED per PM@`3daea56a` (scenarios topology+price-shock DESIGN-SHIPPED). Phase 1+2 10-scenario designs at PM@`bea269b1`. Day-2-4 extension: Phase 3-5 + risk/DR scenario fold-in + cutover communication template.
-- **Slot 8** — ✅ FULL-CYCLE-CLOSE per PM@`3fb30850` (Day-4 EOD CYCLE CLOSE — 11 ship lots / ~12 cal AI-days). manifest Phase 4 + codex_vs_citadel audit Phase 0 + Phase 1.J Governance shipped (PM@`81bfb15d`). Day-3 PROGRESS at PM@`bd0d4f28`. Day-3 DART precheck endpoint + audit-log persistence SSOT (PM@`cad821cc`). Master plan Group F/G mid-cycle refresh (PM@`7cdb1dce`). Day-2-4 extension: codex_vs_citadel hygiene + per_agent_worktrees Phase 4.5 design spec.
+
+- **Slot 1** — main orchestrator; today's shippables: PM@`1f9e8232` (continuation prompts) + `959390ae` (2026-05-11
+  scoreboards + migration) + `6445e059` (archive 2026-05-11 splits) + `c15267ef` (boot sweep ledger refresh) +
+  `0529161f` (Phase 3.D ✅ completion ack + master plan top-up) + `b69d9898` (Harsh-side prompts) + `f85763cb`
+  (per_agent_worktrees Phase 4.5 Ikenna input on ping-doc reset) + `4c573302` (operator Q1+Q2 routing to slot 3) +
+  `d29d33eb`/`5de3d93b` (post-freeze roadmap 3 cycles) + `8fe841ec` (scope extension Day-2-4) + `d53b36fb` (roadmap
+  Cycle 5+6 extension) + this commit (LEDGER Day-1 EOD refresh + SCOPE EXTENSION 2 Cycle 2 PREP layer).
+- **Slot 2** — ✅ FULL-CYCLE-CLOSE per PM@`a1b9d3a9` ("17 commits Days 1-4"). Shipped defi_catalogue Phase
+  1B/C/D/E/F/G/H + Phase 2 per-protocol shard-atom matrix + Phase 3 lending-indices spec for slot 5 Family-1 handshake.
+  DONE-2026-05-15 block at PM@`95113b7c`. Day-2-4 extension active: cross_asset_group_catalogue_audit fan-out +
+  DefiManifestRecorder ManifestFreshnessCache wire-in P1 + Cycle 2 PREP bucket provisioning script review.
+- **Slot 3** — 🟡 Day-1 PM EOD PROGRESS (PM@`3c9eb631`) — 5 PM commits shipped + DAY-2 P0 PipelineMode sweep queued
+  (operator-approved Q1+Q2). Phase 1.E audit + Phase 2.6 cutover dry-run shipped (PM@`df659ed5`+`f07cddc6`). Day-2
+  mechanical sweep ~60 min when slot picks up Day-2 morning.
+- **Slot 4** — ✅ FULL-CYCLE-CLOSE per PM@`20bd7964` (api_keys_wallets full-cycle close). Wallet schema shipped
+  UAC@`d721b6a`; R9 sub-(a) ✅ RESOLVED (CLOUD_KMS_ENCRYPTED for May-23 cutover); Phases 3.C + 4.A.SCHEMA flipped.
+  Day-2-4 extension: Copper KYB checklist closure + Fireblocks integration spec + kill-switch wallet-tier wiring.
+- **Slot 5** — ✅ FULL-CYCLE-CLOSE per PM@`71786748` (EOD-2026-05-12 FULL CYCLE CLOSE). defi_recursive_borrow Phases
+  1-11 design batch shipped (PM@`b339a1db`) + Phase 12 backtest scenarios (PM@`03492b96`) + Phase 3 strategy-service
+  factory spec (PM@`158dd8b1`) + cross-plan annotations (PM@`eaff29ac`). Day-2-4 extension: Phase 12 backtest harness
+  implementation + Phase 4-6 impl + client_reporting reserve.
+- **Slot 6** — ✅ FULL-CYCLE-CLOSE per PM@`0c4b66f4` (defi_simulation_realism DONE-2026-05-15). Phases 1A+2A+3 design
+  shipped via 3 codex sections (amm-slippage-simulation.md per-shape sample pools + simulation contract + golden test
+  set harness). Phase 4+5 banners + Phase 9B concentrated-liquidity.md CREATE at PM@`30a01f3e`+`ae804766`. Phase 9C
+  continuation at PM@`a39fdee1`. Day-2-4 extension: Phase 6-7 + Phase 9C/9D + mock_data_pipeline reserve.
+- **Slot 7** — ✅ DESIGN-SHIPPED per PM@`3daea56a` (scenarios topology+price-shock DESIGN-SHIPPED). Phase 1+2
+  10-scenario designs at PM@`bea269b1`. Day-2-4 extension: Phase 3-5 + risk/DR scenario fold-in + cutover communication
+  template.
+- **Slot 8** — ✅ FULL-CYCLE-CLOSE per PM@`3fb30850` (Day-4 EOD CYCLE CLOSE — 11 ship lots / ~12 cal AI-days). manifest
+  Phase 4 + codex_vs_citadel audit Phase 0 + Phase 1.J Governance shipped (PM@`81bfb15d`). Day-3 PROGRESS at
+  PM@`bd0d4f28`. Day-3 DART precheck endpoint + audit-log persistence SSOT (PM@`cad821cc`). Master plan Group F/G
+  mid-cycle refresh (PM@`7cdb1dce`). Day-2-4 extension: codex_vs_citadel hygiene + per_agent_worktrees Phase 4.5 design
+  spec.
+
+### Day-2 gate + progress update (2026-05-12 session 2)
+
+**🟢 Gate 0A FIRED** — uac@`0457b0e` + UTL helper pre-existed; PM@`fc429e43` (Slot 4 ping). Slot 4 now proceeding with
+propagation chain (expected_unattempted_propagation_chain plan): Phase 1.5 QG clean (PM@`ff2b46fb`).
+
+**Slot 1 Day-2 shippables**: PB-1 codex path fix (PM@`7c058ef0`) + Gate 0A flip in work_split + LEDGER update (this commit).
+
+**Cross-asset catalogue**: Phase 5 ✅ COMPLETE (Phases 5A/5B/5C/5D all shipped; PM@`fc6dc081..160f451c`). UAC
+tickers.py BIG FINDING from Slot 2 ping is a **false alarm** — re-exports fully intact (25 lines, 15 functions).
+
+**Current gate status** (updated):
+
+| Gate | Status | Evidence |
+|------|--------|----------|
+| 0A | 🟢 FIRED | uac@0457b0e + PM@fc429e43 |
+| 1 | 🟡 IN PROGRESS | Slot 4 at Phase 1.5; ~2-3 phases remaining |
+| 2 | 🟢 FIRED | Slot 3 — 16 STS jobs SUCCESS, parity verified ~19:00 UTC (PM@`c52ddffb`) |
+| 3 | 🔴 OPEN | Phantom audit pending |
+| 4 | 🔴 OPEN | Slots 6+7 features-service build pending; Slot 8 PART A done |
+
+**Slot 8 dependency**: PART B (Phase 6.9 sweep) waiting on Slots 6+7 ping confirming Phases 6.3/6.4/6.5 pushed. No
+ping files for slots 6+7 yet — operator may want to check those sessions.
+
+### Day-2 session-end scoreboard (2026-05-12 session 3 — slot 1 main)
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| Gate 0A | ✅ FIRED (pre-existing) | Slot 4 proceeding |
+| Gate 1 | 🟡 IN PROGRESS | Slot 4 given Phase 3.0 = Option A; Phases 3+4+2.A pending |
+| Gate 2 | ✅ FIRED this session | Slot 3 PART C (code migration) + Slot 8 PART C now unblocked |
+| Gate 3 | 🔴 OPEN | Phantom audit (needs GCE VM + manifest) |
+| Gate 4 | 🔴 OPEN | Slots 6+7 features-service build (no ping files yet) |
+| Slot 2 tickers.py BIG FINDING | ✅ FALSE ALARM resolved | PM@`caf36847`; file intact with all 15 re-exports |
+| Slot 2 Phase 1C GMX/DRIFT | 🟡 direction given (both DeFi) | Slot 2 can proceed; told to not block slot |
+| Slot 4 Phase 3.0 direction | ✅ Option A dispatched | PM@`279cc1ed`; Slot 4 proceeding |
+| MDPS EmissionDecision BIG FINDING | ✅ cross-side ping filed | Harsh-main triage needed (UTL schema drift) |
+| Slot 5 bookmaker BIG FINDING | ✅ resolved via Slot 2 UAC@`b73949d` | PM@`caf36847`; Slot 5 can pull + test |
+| PB-1 codex audit-log path fix | ✅ DONE (prior session) | PM@`7c058ef0` |
+| PB-3 client_id threading | 🟡 PRE_CUTOVER | Codex correctly marks as follow-up; no code change needed now |
+
+**Slot 8 PART C**: Gate 2 just fired. Notify Slot 8 (ping filed this session). Slot 8 should proceed with
+`bucket_name_ssot` code migration in instruments-service + deployment-service scripts.
+
+**Next operator / fresh agent priorities**:
+1. Check Slots 6+7 status — no ping files; they own Phases 6.3/6.4/6.5 (features-service build). Gate 4 unblocked once these ship.
+2. Gate 1 watch — Slot 4 will ping when Phases 3+4+2.A complete.
+3. Harsh-main triage — MDPS EmissionDecision 15 test failures (UTL schema drift; see `_agent_pings.md` entry).
 
 ### Workstream snapshot (cross-side activity already in flight; from origin scan 2026-05-11)
 
@@ -127,8 +213,8 @@ Visible from origin commits since the 2026-05-08 LEDGER snapshot rolled to "Hist
 
 - **Harsh side actively shipping** (~37 commits since 2026-05-09 across `tab/hk/<N>` slots): wave3x all 5 tracks DONE
   (Tracks A+B UAC SSOTs, Tracks C+E UTL stamping helpers, Track D adapter audit findings doc); features-consolidation
-  Phase 0-3 + features-service skeleton @d3d6e286 pushed; bucket-name SSOT canonical layer decided (yaml); workspace
-  QG static baseline 2026-05-11; codex audit pass 2026-05-11. Two open Q's flagged to Ikenna side via cross-side ping
+  Phase 0-3 + features-service skeleton @d3d6e286 pushed; bucket-name SSOT canonical layer decided (yaml); workspace QG
+  static baseline 2026-05-11; codex audit pass 2026-05-11. Two open Q's flagged to Ikenna side via cross-side ping
   2026-05-11 07:10 UTC (`EXPECTED_KNOWN_SOURCE_GAP` enum decision + v8-schema-owner ambiguity + MDPS dead write-gate
   P0-2). Ikenna slot 5 + slot 1 own resolution.
 - **Ikenna-side commits this cycle** (slot 1 main, this session): work-split files shipped PM@4682cbfb;
@@ -137,13 +223,15 @@ Visible from origin commits since the 2026-05-08 LEDGER snapshot rolled to "Hist
 
 ### LEDGER history before today
 
-The "Today's status (2026-05-08)" section that previously occupied this slot — covering the 6-tab Model A
-clustering against `work_split_2026_05_08_ikenna.md` (which was never archived per the EOD rule and is itself superseded
-by today's plan) — has been rolled into "Historical log" at the bottom of this file.
+The "Today's status (2026-05-08)" section that previously occupied this slot — covering the 6-tab Model A clustering
+against `work_split_2026_05_08_ikenna.md` (which was never archived per the EOD rule and is itself superseded by today's
+plan) — has been rolled into "Historical log" at the bottom of this file.
 
 ### Open questions across active plans (operator decisions pending)
 
-_(2026-05-12 boot: no 🟡 BLOCKED items intra-side. Cross-side has 1 operator-pending item: Q7(b) pnl/positions/risk shape-alignment (slot 8 → harsh-main ping 2026-05-12 AM in `plans/active/_agent_pings.md`). All 2026-05-11 cross-side Qs ✅ RESOLVED + acked in archived work_splits.)_
+_(2026-05-12 boot: no 🟡 BLOCKED items intra-side. Cross-side has 1 operator-pending item: Q7(b) pnl/positions/risk
+shape-alignment (slot 8 → harsh-main ping 2026-05-12 AM in `plans/active/_agent_pings.md`). All 2026-05-11 cross-side Qs
+✅ RESOLVED + acked in archived work_splits.)_
 
 ---
 

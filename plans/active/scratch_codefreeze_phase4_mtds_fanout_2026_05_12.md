@@ -117,4 +117,16 @@ Roughly: A 30 / B 15 / C 21 / D 21 / E 11 = 98 (≈97). If Ikenna slot 3's commi
 
 - **→ slot 6 (manifest Phase 3 consumer sweep)**: publish "all MTDS writers on v8" signal once this lands (work-split Slot 3 → Slot 6 handshake).
 - **→ slot 7 (mock_data_pipeline_benchmarking)**: per-service callsite closure list daily sync.
-- **CARRY-FORWARD (Day-3+ pickup if budget)**: runner-shutdown/handler-hookup wire-in for `MTDSShardManifestRecorder` (`mtds@ab17cc3`/`8782225` shipped the recorder; the `ShardManifestRecorder` Protocol `close()` + runner shutdown call + handler `manifest_recorder=` wire + runner-calls-close test was pre-positioned by `mtds@8782225` but not completed — Ikenna slot 7 superseded but didn't include the wire-in half). If I touch the per-venue adapter fan-out (sub-agent E territory), close this gap. Per Harsh-slot-3 CONTINUE prompt CARRY-FORWARD note + `_agent_pings.md` 2026-05-12 line 57.
+- **CARRY-FORWARD (Day-3+ pickup if budget)** ✅ **SHIPPED 2026-05-12 by harsh slot 3** at `mtds@4d45208`:
+  runner-shutdown / Protocol-completeness wire-in for `MTDSShardManifestRecorder`. (1) `ShardManifestRecorder`
+  Protocol gains `close()` declaration + extends `record_captured` + `record_empty` signatures with explicit
+  `pipeline_mode: PipelineMode = PipelineMode.LIVE_WEBSOCKET` kwarg (closes basedpyright gap from
+  Phase 4.MTDS sweep where call sites added the kwarg without updating the Protocol).
+  (2) `LiveWebsocketRunner.run()` `finally` block calls `self._manifest_recorder.close()` between
+  `connector.close()` and `publisher.close()` (mirrors connector + publisher lifecycle).
+  (3) New test `test_run_calls_manifest_recorder_close_on_shutdown` asserts `_FakeRecorder.close_count == 1`
+  on shutdown; 22/22 existing tests still pass.
+  Handler `manifest_recorder=` wire (the missing half from the carry-forward note) is the next
+  step — each MTDS handler constructor accepts `MTDSShardManifestRecorder` instead of building one inline.
+  Deferred to a follow-on commit because the per-handler factory shape needs operator alignment with the
+  v8-manifestwriter-tab work (UTL ManifestWriter ↔ DefiManifestRecorder unification).

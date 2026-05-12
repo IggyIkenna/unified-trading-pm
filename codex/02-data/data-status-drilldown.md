@@ -31,6 +31,10 @@ endpoint returns the leaf payload (schema, sample rows, signed URLs).
 GET /api/data-status/shard-detail
   ?service=<str>           # market-tick-data-service | instruments-service | features-* | …
   &category=<str>          # CEFI | TRADFI | DEFI | SPORTS | PREDICTION | INSTRUMENTS
+                           #   ^ LEGACY query-param name (preserved for backwards-compat on per-shard endpoint until
+                           #     deprecation cutoff ~2026-06-15); canonical workspace vocabulary is `asset_group=`
+                           #     (lowercase keys) per CLAUDE.md § "Asset-group vocabulary". Hierarchical endpoint
+                           #     below already uses the canonical `{asset_group}` path segment.
   &instrument_type=<str>   # lowercase UAC value: option | perpetual | spot_pair | pool | lending | spot_asset | …
   &data_type=<str>         # options_chain | trades | dex_pools | liquidation_events | oracle_prices | …
   &day=<YYYY-MM-DD>
@@ -38,6 +42,12 @@ GET /api/data-status/shard-detail
   &underlying=<str|null>   # BTC | ETH | … (for grouped bundles)
   &instrument_id=<str|null> # for per-symbol shards
 ```
+
+> **Vocab reconciliation (codex audit D-16 2026-05-12)**: the per-shard endpoint accepts the legacy `category=` query
+> param (uppercase asset-group enum names) while the hierarchical endpoint uses the canonical `{asset_group}` path
+> segment (lowercase dict-key form). Both endpoints accept the same set of asset-groups; the spelling difference is
+> preserved through the deprecation window. After 2026-06-15 the per-shard endpoint accepts `asset_group=` as primary
+> + `category=` as a deprecated alias that logs a `DEPRECATED_QUERY_PARAM` event.
 
 Sister endpoint `GET /api/data-status/venue-detail?service=<>&category=<>&venue=<>` powers the inline "Instrument
 breakdown" panel (DeFi-aware: chain-only returns protocols list, composite returns pools list).

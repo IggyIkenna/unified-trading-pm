@@ -267,7 +267,7 @@ todos:
       into the per-shard groupby loop before `StreamingParquetWriter.write_chunk`, with shard-level failure isolation
       (per-shard stamping failure → `failed_shards` dict → `record_failed` + `ADAPTER_FETCH_FAILED`, shard skipped —
       never raised). 5 unit tests at `market-tick-data-service/tests/unit/test_sports_odds_available_at.py`. Issue
-      doc reference: `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` (4 design Qs answered
+      doc reference: `plans/archive/issues/mtds_sports_available_at_wiring_2026_05_11.md` (4 design Qs answered
       in-doc; see Re-task (c) below). **DEFERRED**: (1) **conservative-rule promotion** — current shipped behaviour
       stamps `available_at = bm_time` (event-time); the strict Live=batch rule wants
       `bm_time + emission_latency_ms_for_source("odds_api")` (= `bm_time + 5000ms` for the 5s polling cadence).

@@ -34,7 +34,15 @@ deployment-service/contracts/FlashLoanReceiver.sol
 | Chain   | Chain ID | Address                                      | Aave Pool                                    |
 | ------- | -------- | -------------------------------------------- | -------------------------------------------- |
 | Sepolia | 11155111 | `0x480c9142C51A477e0D8A17E032463d81A3b611BA` | `0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951` |
+| Holesky | 17000    | `0x480c9142C51A477e0D8A17E032463d81A3b611BA` (same receiver address as Sepolia per UAC `testnet_contracts.yaml` comment; refreshed 2026-05-12 per slot 8 exec audit EX-4) | (per UAC `testnet_contracts.yaml`) |
 | Mainnet | 1        | `0x42c005e2Bc545a49B50Fee3E76B8558348CAAb4c` | `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2` |
+
+> **Fork-chain-id convention reconciliation (codex audit EX-4 2026-05-12)**: Tenderly fork deployments use the
+> aliased chain-id from `FORK_CHAIN_IDS` (== `MAINNET_CHAIN_IDS` per
+> [`execution-modes-and-chain-resolution.md`](./execution-modes-and-chain-resolution.md) § "Chain Resolution"). For
+> Ethereum mainnet fork the canonical fork chain-id is `1`, NOT `73571`. The `chain-id 73571` flag in the deployment
+> script below predates the alias convention + is retained only for legacy Tenderly fork-IDs operators may carry over;
+> new deployments use the canonical aliased chain-id from `MAINNET_CHAIN_IDS`.
 
 Addresses are registered in:
 
@@ -96,7 +104,7 @@ Then validates on-chain: `eth_getCode(address)` must return non-empty bytecode.
     FLASH_LOAN_RECEIVER: $(cat /tmp/receiver-address.txt)
     DEFI_RPC_URL: ${{ env.FORK_RPC }}
   run: |
-    cd execution-service cd unified-defi-execution-interface && bash scripts/quality-gates.shcd unified-defi-execution-interface && bash scripts/quality-gates.sh bash scripts/quality-gates.sh  # DeFi adapters now in execution-service
+    cd execution-service && bash scripts/quality-gates.sh  # DeFi adapters live in execution-service (UDEI archived 2026-05-08)
 ```
 
 ## Owner

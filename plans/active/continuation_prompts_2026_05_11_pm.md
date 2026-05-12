@@ -230,8 +230,8 @@ CONTEXT: workspace QG green sweep + codex audit pass + freeze-gate items 8 + 9 i
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
   2. unified-trading-pm/plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md freeze-gate items 8 + 9
-  3. unified-trading-pm/plans/active/issues/codex_audit_2026_05_11.md remaining open items
-  4. unified-trading-pm/plans/active/issues/qg_sweep_2026_05_11.md remaining open items
+  3. unified-trading-pm/plans/archive/issues/codex_audit_2026_05_11.md remaining open items
+  4. unified-trading-pm/plans/archive/issues/qg_sweep_2026_05_11.md remaining open items
 
 Agent-tag: harsh-qg-codex-final-push.
 

@@ -145,11 +145,16 @@ Retention policy: permanent for all artifacts referenced by any live or past str
 
 ## Artifact registry
 
-Every artifact is registered in an artifact registry (content-addressed store):
+Every artifact is registered in an artifact registry (content-addressed store). Bucket name MUST resolve via
+`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="ml-models-store",
+env=...)` per **Bucket-name SSOT (b+)** — never hardcode `s3://artifacts/` or `gs://...` (QG STEP 5.69 enforces).
+Canonical kind = `ml-models-store-{pid}`.
 
 ```
-s3://artifacts/{type}/{family}/{version}/
-  content.json (or .pkl for models)
+{bucket}/{type}/{family}/{version}/
+  content.json (or model.joblib for models — workspace no-pickle rule per python-backend.md;
+                ONNX export is the inference-serving format per ml-inference-service model_loader.py
+                docstring — pending ML-7 reconciliation in slot 8 audit ML-1/ML-7)
   meta.json (created_at, created_by, description, links to derived_from, input_hashes)
   conformance_tests_passed: true
 ```

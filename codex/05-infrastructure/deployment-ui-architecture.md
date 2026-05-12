@@ -2,8 +2,9 @@
 title: Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes
 scope: infrastructure
 owner: ikenna
-status: stub
+status: stable
 codified: 2026-05-08
+last_reviewed: 2026-05-12
 sources:
   - plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc)
   - plans/epics/instruments_live_master_2026_05_08.md (Phase G delegates UI scope here)
@@ -18,16 +19,34 @@ sources:
 
 # Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes
 
+> **SSOT boundary with `data-status-drilldown.md` (codified 2026-05-12 per UI-7 audit)**: this doc is the **tab-shell
+> SSOT** (6 lifecycle tabs + 4 orthogonal axes + tier resolution);
+> [`data-status-drilldown.md`](../02-data/data-status-drilldown.md) is the **drilldown-detail SSOT**
+> (`/api/data-status/*` endpoints + per-shard hierarchical drilldown semantics). A future plan should NOT create a third
+> doc covering the same surface — extend one of these two instead.
+> `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2F's
+> `codex/03-deployment/data-status-ui-surface.md` stub is review-flagged: either extend `data-status-drilldown.md`
+> (drilldown half) or fold into this doc (tab-shell half), not a fresh file.
+
+> **Status promoted to stable 2026-05-12 per UI-16 audit + operator decision** — the deployment-ui ships today + has
+> working `/api/data-status/*` surfaces per the canonical
+> [`restart-deployment-stack.sh`](../../scripts/dev/restart-deployment-stack.sh) SSOT (deployment-api on port 8004 +
+> deployment-ui Vite dev on port 5183, both real-cloud mode). The 6-tab lifecycle shell + Monitor sub-tabs +
+> orthogonal-axes design described below is the canonical UX shape the activation work
+> ([`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md))
+> is delivering against. Per the workspace "Plans Run To Actual Completion" rule, body content + per-section concrete
+> file paths gain commit-sha citations as activation phases land; the architectural shape is stable.
+
 > **🟢 ALIGNED with operator decision (b+) 2026-05-11.** The per-env tier resolution pattern documented in this doc
 > (each tier has its own domain → own deployment-api Cloud Run → own GCS bucket scope → own service account scoped to
 > that env's projects only) **is already the architectural target** for the bucket-naming SSOT operator decision (b+)
-> per [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+> per
+> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
 > Phase 0g. No additional UI work needed — env-aware bucket targeting works by the operator navigating to the matching
 > domain. **Post-Phase-0c (env-tiered bucket provisioning lands)**: the per-env deployment-api must resolve env-tiered
-> bucket names via `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)`; if any API code hardcodes
-> flat bucket names (audit at implementation time), fix in same logical unit as Phase 0c. The header env badge
-> tooltip should show the resolved env-tiered bucket name(s) for the operator's current page so cross-env
-> verification is one-glance.
+> bucket names via `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)`; if any API code hardcodes flat
+> bucket names (audit at implementation time), fix in same logical unit as Phase 0c. The header env badge tooltip should
+> show the resolved env-tiered bucket name(s) for the operator's current page so cross-env verification is one-glance.
 
 ## TL;DR
 

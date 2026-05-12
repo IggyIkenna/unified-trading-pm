@@ -1,0 +1,159 @@
+---
+title: "Codex audit — Strategy area (Phase 1.B)"
+created: 2026-05-12
+author: harsh-codex-audit-strategy-tab (slot 8 sub-agent)
+source:
+  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.B
+  - codex/09-strategy/strategy-summary.md + README.md
+  - codex/09-strategy/architecture-v2/README.md + strategy-registry-v2.md + naming-convention.md + MIGRATION.md
+  - codex/09-strategy/architecture-v2/cross-cutting/{mev-protection,benchmark-fills,archetype-paper-readiness,dart-manual-trade-spec,pnl-attribution}.md
+  - codex/09-strategy/operational/{onboarding-checklist,prediction-markets-codification-gaps}.md
+  - codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md
+  - codex/16-strategy-playbooks/README.md (+ playbook docs)
+  - codex/07-security/mev-protection.md + codex/04-architecture/mev-protection.md (3-way overlap)
+  - codex/00-SSOT-INDEX.md
+  - unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py (StrategyFamily / StrategyArchetype / InstructionActionV2)
+  - strategy-service/strategy_service/{engine,adapters,signal_broadcast,portfolio_allocator,cli}/
+locked_by: live-defi-rollout
+locked_since: 2026-05-12
+---
+
+# Codex audit — Strategy area (Phase 1.B)
+
+> **Severity**: P1 — pre-cutover audit per `codex_vs_citadel_infrastructure_audit_2026_05_10.md` Phase 1.B.
+> **Scope**: archetype canonicalisation (registry vs codex drift) · strategy-service co-location (engine has zero
+> imports from adapters) · signal-leasing / signal-broadcast (shard isolation + `classify_venue_error()` + HMAC creds
+> via `ApiKeyReloader`) · promote workflow (`promote_workflow_may23_cli_path`) · batch=live strategy-P&L backtest
+> (Group B = same code path, NOT a standalone engine) · `mev-protection.md` 3-way overlap (already consolidated).
+> **Owner**: Harsh T8 slot 8 sub-agent; operator review for dispositions before Phase 3 ship.
+
+## Methodology
+
+Read every Strategy-area surface in `codex/09-strategy/` (133 docs — anchored on `architecture-v2/` (README, registry,
+naming, MIGRATION, cross-cutting/), `strategy-summary.md`, `operational/`), `codex/16-strategy-playbooks/`, and
+`codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md`. For each rule / pattern / claim: cite
+file:line, classify KEEP / LIFT / CONSOLIDATE / DELETE / ADD, attach a 1-line reason + suggested disposition
+(IMMEDIATE / PRE_CUTOVER / POST_CUTOVER). Cross-checked against actual code — UAC `StrategyFamily` (9 members) /
+`StrategyArchetype` (55 members) / `InstructionActionV2` (14 members) enums; `strategy-service/strategy_service/engine/`
+(grepped imports — zero from `adapters/`); `strategy_service/signal_broadcast/` (12 modules present); UAC `signal_broadcast`
+facade package; `strategy_service/portfolio_allocator/archetypes.py` (= the 8 allocator engines, NOT strategy archetypes);
+`strategy_service/engine/backtest/runner.py` (GroupBRunner reuses `V2EngineOrchestrator`). Several findings come from
+grep-then-READ — e.g. `mev-protection.md` looked like a 3-way drift but reading the docs shows it was consolidated
+2026-05-10 with proper redirects.
+
+## Findings
+
+### Tier 1 — Codex doc vs implementation drift (real source-of-truth violations)
+
+| # | Finding | Disposition | Owner | Evidence |
+|---|---------|-------------|-------|----------|
+| ST-1 | LIFT — **Archetype count drift: codex says "53 archetypes" everywhere; UAC `StrategyArchetype` enum has 55 members.** The 2026-04-25 Phase 9 expansion is documented as "18 → 53", but the enum now also has `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (split out of `CARRY_RECURSIVE_STAKED`). Every "53 archetypes" reference (README:23,122 · strategy-summary:36,747,755 · category-instrument-coverage:1432 · MIGRATION) is now stale. The doc's own drift-correction note ("the enum wins") is the right governance call — but the counts must be refreshed to 55, and Carry & Yield's archetype list (README:108) needs the 2 new entries. | IMMEDIATE ✅ DONE @f401a3c9 (slot 8 sub-agent — architecture-v2/README.md headline + Carry & Yield row + Total row + 09-strategy/README.md companion link + strategy-summary.md headline + flatten/SSOT-matrix counts all updated to 55; canonical enum SSOT cited everywhere) | governance + strategy-architecture owner | `unified_api_contracts/internal/architecture_v2/enums.py` `StrategyArchetype` = 55 members vs `architecture-v2/README.md:23,122` "53 archetypes" |
+| ST-2 | LIFT — **`strategy-registry-v2.md` is frozen at the 2026-04-21 pre-Phase-9 shape**: line 32 "flattens 18 archetypes", line 33 "into 96 entries", line 65 "v2 StrategyFamily value (8 possibilities)" / "v2 StrategyArchetype value (18)", line 100 "now 96 slot-labelled entries". Reality: 9 families (PORTFOLIO added 2026-04-25), 55 archetypes, and the registry flattens far more than 96 entries today. The doc has no "superseded" or drift-correction banner — a reader trusts the 18/96/8 numbers. Either bring current OR add a `> **PARTIALLY SUPERSEDED 2026-04-25 by Phase 9 — counts below are the 2026-04-21 baseline; UAC enums are canonical**` banner like `strategy-summary.md:27` already has. | IMMEDIATE ✅ DONE @f401a3c9 (slot 8 sub-agent — added PARTIALLY SUPERSEDED banner at top with current enum counts (9/55/14) + enum-wins rule + ST-1/ST-2 audit refresh-trigger reference) | governance | `architecture-v2/strategy-registry-v2.md:32-33,65,100` vs UAC enums (9/55) + `strategy-summary.md:27` (which already has the correction note) |
+| ST-3 | LIFT — **`MIGRATION.md` still describes the v2 cutover as targeting "18 archetype engines"** (lines 115, 252, 311 — "53 existing strategy classes → 18 archetype engines"; "The 18 archetype engines need to clear their 14- or 28-day shadow"). Post-Phase-9 the target is the 55-archetype set. The doc is a migration record (some currency tolerance) but the 18-engine framing now contradicts the README it's the companion to. Add a "Phase 9 expanded the engine count to 55; below reflects the original 18-engine plan" note. | PRE_CUTOVER | governance | `architecture-v2/MIGRATION.md:115,252,311` vs `architecture-v2/README.md:122` |
+| ST-4 | DELETE / FIX — **`archetype-paper-readiness.md` overview claims it is the "Per-archetype 4-state taxonomy ... for every entry in `strategy_service/portfolio_allocator/archetypes.py`"** — but that file contains the **8 PortfolioAllocator archetype engines** (risk-parity / factor / tactical-overlay / multi-strategy etc.), NOT the 55 strategy archetypes. The doc's own body (the 4-state table, the `carry_staked_basis` / `ARBITRAGE_PRICE_DISPERSION` rows) is plainly about *strategy* archetypes. The file reference must point at the strategy archetype catalogue (UAC `StrategyArchetype` + `category-instrument-coverage.md`), not at the allocator module. A future agent reading this will look in the wrong place. | IMMEDIATE ✅ DONE @f401a3c9 (slot 8 sub-agent — rewrote frontmatter `overview:` to cite UAC `StrategyArchetype` (55) + `category-instrument-coverage.md`; added explicit "Source file note (corrected 2026-05-12 per ST-4)" callout distinguishing the 55 strategy archetypes from the 8 PortfolioAllocator engines) | governance + strategy-architecture owner | `archetype-paper-readiness.md` frontmatter `overview:` + `:55` vs `strategy-service/strategy_service/portfolio_allocator/archetypes.py:1` ("8 allocator archetype engines") |
+| ST-5 | LIFT — **`strategy-summary.md` says the polymorphic instruction has "13 action types"** (line 158: "polymorphic `StrategyInstruction` with 13 action types (TRADE, SWAP, ... CONVERT_DUST, LP_MINT/LP_BURN)") — counting LP_MINT/LP_BURN as one slash-pair. The README and the UAC `InstructionActionV2` enum are 14 (`TRADE, SWAP, LEND, BORROW, STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL, CONVERT_DUST, LP_MINT, LP_BURN`). README:30-31 says "14 action types per UAC `InstructionActionV2` SSOT" — internal contradiction within the same codex section. Normalise to 14. | PRE_CUTOVER ✅ DONE @f401a3c9 (slot 8 sub-agent — strategy-summary.md headline updated to 14 + clarified LP_MINT + LP_BURN are 2 distinct enum members not a slash-pair; pulled in with ST-1 batch since same file) | governance | `strategy-summary.md:158` "13 action types" vs `architecture-v2/README.md:30` "14 action types" vs UAC `InstructionActionV2` (14 members) |
+| ST-6 | FIX — **`master_to_live_defi_2026_05_23.md:150` "Strategy archetypes — `codex/09-strategy/strategy-summary.md` (8 families / 18 archetypes)"** — the master plan's own readiness-checklist row cites the pre-Phase-9 counts that `strategy-summary.md` itself has since corrected to 9/55-equivalent. Master-plan refresh PRs are review-blocked without `Last verified` updates (CLAUDE.md "Master Plan Continuous-Verification Column" rule), so this stale parenthetical should be fixed in the next master-plan refresh. (Cross-plan finding — annotate, do not fix here.) | IMMEDIATE — ROUTED TO master-plan owner (Ikenna). Slot 8 sub-agent did NOT touch master_to_live_defi_2026_05_23.md (concurrent foreign-agent edits in flight at PB-14 / EX-2 reconciliation). Stale parenthetical "(8 families / 18 archetypes)" at line 224 needs to flip to "(9 families / 55 archetypes / 14 InstructionActionV2)" in next master-plan refresh PR per Continuous-Verification rule. | master-plan owner (Ikenna) | `plans/active/master_to_live_defi_2026_05_23.md:150` (note: actual line is now 224 after intervening edits) vs `codex/09-strategy/strategy-summary.md:27` |
+| ST-7 | FIX — **Codex still uses the legacy archetype name `leveraged_funding_arb` in several places** (`category-instrument-coverage.md:611` "DEX-DEX leveraged_funding_arb sub-cell"); the workspace canonicalised this to `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) per Stream B 2026-05-07 (see `cefi_master:105-106`, `strategy_and_dart_master:213`, `instruments_live_master:597-598`, `archetype-paper-readiness.md` which uses the new name). The Phase 1.B audit brief itself names `leveraged_funding_arb` as the second live archetype — that brief term is also stale; the canonical pair is `carry_staked_basis` (lead) + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion`. Sweep codex for residual `leveraged_funding_arb` / `leveraged-funding-arb`. | PRE_CUTOVER | governance | `architecture-v2/category-instrument-coverage.md:611` vs `plans/epics/cefi_master_2026_05_07.md:105-106` (rename provenance) |
+
+### Tier 2 — Strategy governance gaps (rules with no enforcement)
+
+| # | Finding | Disposition | Owner | Evidence |
+|---|---------|-------------|-------|----------|
+| ST-8 | ADD — **No QG check enforces "strategy-service `engine/` has zero imports from `adapters/`"** (the co-location invariant in python-backend.md "engine/adapters/cli structure. engine/ has ZERO imports from adapters/"). Verified clean today (`rg 'from .adapters|strategy_service.adapters|\.\.adapters' strategy_service/engine/` → 0 hits), but enforcement is reviewer-discipline only. There IS `strategy_service/topology_enforcement.py` — confirm it covers this; if not, add a static check (`grep`-on-engine-imports or AST walk) to strategy-service `quality-gates.sh`. Engine-imports-adapter is the silent-rot shape the V1-RETIRE `colocated_engine.py` incident warned about. | PRE_CUTOVER | strategy-service maintainer | `strategy-service/strategy_service/topology_enforcement.py` (verify coverage) + python-backend.md "engine/ has ZERO imports from adapters/" |
+| ST-9 | ADD — **`signal-broadcast-architecture.md` enumerates 5 service-infrastructure invariants for the signal-broadcast sub-package but no QG step verifies them** for the `signal_broadcast/` module specifically: `ServiceBootstrap` wired, `make_health_router` `data_freshness` includes the nested `signal_broadcast` block, typed `SignalBroadcastConfig` reloaders (STEP 5.34 — no `object`/`getattr`), zero local schema definitions (all from UAC `signal_broadcast` facade), `ApiKeyReloader` for HMAC creds (not one-shot). The 12 modules exist (`emitter.py`, `router.py`, `transport.py`, `credentials.py`, `audit.py`, `failure_isolation.py`, `config.py`, `config_reloaders.py`, `broadcaster.py`, `observability_*`) but the invariant set is reviewer-discipline. Add to strategy-service QG: assert `failure_isolation.py` uses `classify_venue_error()` + emits `ADAPTER_FETCH_FAILED`, and `credentials.py` imports `ApiKeyReloader`. | PRE_CUTOVER | strategy-service maintainer + governance | `codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md` § "Service-infrastructure invariants" + `strategy-service/strategy_service/signal_broadcast/` (12 modules, no co-located QG check) |
+| ST-10 | ADD — **No QG check verifies the archetype-count "the enum wins" governance rule** — `strategy-summary.md:27` says "if this doc disagrees with `enums.py`, the enum wins" but nothing flags when a codex `.md` cites a hard archetype/family count that no longer matches `StrategyArchetype` / `StrategyFamily`. A `check_strategy_taxonomy_counts.py` QG step (parse `enums.py` member counts, grep codex for `N archetype` / `N families`, fail on mismatch) would have caught ST-1/ST-2/ST-3/ST-6 statically. | PRE_CUTOVER | governance | `strategy-summary.md:27` ("the enum wins") + the ST-1..ST-6 drift cluster (no static enforcement) |
+| ST-11 ✅ FILED @ `plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` (Group D) | ADD — **`block-list.md` and `category-instrument-coverage.md` have UI runtime mirrors kept in sync "manually"** (`block-list.md:8-11` — `unified-trading-system-ui/lib/architecture-v2/block-list.ts`; "kept in sync manually; when an entry changes, update both in the same PR"). Manual two-place sync is a drift generator. Either generate the `.ts` from the codex doc / UAC matrix, or add a CI parity check (mirror of UAC's cassette-parity pattern). Flag — the fix likely belongs to the UI repo's plan. | POST_CUTOVER | strategy-architecture owner + UI maintainer | `architecture-v2/block-list.md:8-11` (manual sync callout) |
+| ST-12 | ADD — **`prediction-markets-codification-gaps.md` is `status: active` `doc_kind: gaps_register` with `ssot_for: prediction_market_codification_gaps`** but has no `execution:` block (owner / cadence / verifier / last_executed) per the "Runbook Execution-Owner SSOT" rule — it's effectively an unowned gaps register. It should either declare an owning plan (`predictions_master_2026_05_07.md`?) with a cadence to drain it, or be folded into that plan's body. | PRE_CUTOVER | predictions-master owner | `codex/09-strategy/operational/prediction-markets-codification-gaps.md` frontmatter (no `execution:` block) + CLAUDE.md "Runbook Execution-Owner SSOT" |
+
+### Tier 3 — Stale / superseded / currency
+
+| # | Finding | Disposition | Owner | Evidence |
+|---|---------|-------------|-------|----------|
+| ST-13 | FIX — **`onboarding-checklist.md:11` cross-references `config-architecture.md` "section 5"** but that doc lives in `_archived_pre_v2/cross-cutting/config-architecture.md` (superseded, reference-only per `_archived_pre_v2/README.md`). A live operational checklist must not point its "atomic unit of execution" definition at an archived doc — repoint to the v2 config SSOT (`strategy-catalogue-3tier.md` / `strategy-registry-v2.md` / UAC `ConfigRegistry`). Same issue: `pnl-attribution.md:568` → `_archived_pre_v2/cross-cutting/share-classes.md`. | PRE_CUTOVER | governance | `codex/09-strategy/operational/onboarding-checklist.md:11` + `architecture-v2/cross-cutting/pnl-attribution.md:568` → `_archived_pre_v2/` targets |
+| ST-14 | FIX — **`strategy-summary.md:27` "Refresh trigger: cross_cutting Tab 6 audit (Option A path — see `plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`)"** — that issue-doc path does not exist under `plans/active/issues/` (likely archived or never landed). The drift-correction note's provenance link is dead; repoint to `plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md` Phase 1.B (this audit) or to wherever the catalogue-already-shipped finding actually lives. | PRE_CUTOVER | governance | `strategy-summary.md:27` reference vs `ls plans/active/issues/` (no match) |
+| ST-15 | KEEP — **`mev-protection.md` 3-way overlap is already resolved.** `07-security/mev-protection.md` is a 1-page redirect (MOVED 2026-05-10); `04-architecture/mev-protection.md` is the canonical (427 lines); `09-strategy/architecture-v2/cross-cutting/mev-protection.md` is the scope-narrowed strategy-side policy narrative with an explicit cross-link to the canonical. The `cross_asset_group_catalogue_audit_2026_05_10` Phase 4 consolidation landed. No further action — flagged here only because the Phase 1.B brief asked to check it. One nit: the strategy-side doc's submission-mode table (`PUBLIC_MEMPOOL` / `FLASHBOTS_PROTECT` / `MEV_BLOCKER` / `MANIFOLD` / `BLOXROUTE (deprecated)` / `CUSTOM_PRIVATE_RPC`) should be cross-checked against the canonical's `MEVProtectionConfig` provider list (NoProtection / PrivateMempool / Flashbots / Jito) — the naming differs (Jito vs none of the EVM modes; `MANIFOLD`/`MEV_BLOCKER` vs not in canonical's list). Reconcile during the next mev-protection edit. | PRE_CUTOVER (nit only) | mev-protection canonical owner | `codex/07-security/mev-protection.md:6` (MOVED banner) + `codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md:1-12` (cross-link) + `cross_asset_group_catalogue_audit_2026_05_10` Phase 4 |
+| ST-16 | LIFT — **`category-instrument-coverage.md` changelog (line 1430-1435) has TWO "2026-05-08 — Refresh stub: scope updated to '53 archetypes'" entries** (duplicated) but the matrix body still says "All 18 archetypes × 4 categories × 8 instrument types populated" (line 1430). A refresh stub that never refreshed. Either complete the 55-archetype × category × instrument-type expansion or remove the duplicate stub line and make the "53/55" status honest. | PRE_CUTOVER | strategy-architecture owner | `architecture-v2/category-instrument-coverage.md:1430,1432,1435` (duplicate stubs + unrefreshed body) |
+
+### Tier 4 — Additions worth shipping
+
+| # | Finding | Disposition | Owner | Evidence |
+|---|---------|-------------|-------|----------|
+| ST-17 | ADD — **No codex doc captures the promote workflow (backtest → paper → live) operator CLI path.** It lives only as plans: `plans/active/promote_workflow_may23_cli_path_2026_05_10.md` (May-23) + `plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` (post-cutover). `strategy-lifecycle-maturity.md` references `ShadowDeploymentPolicy` and the 14/28-day shadow gate but not the actual `--operation promote` CLI surface (`strategy_service/cli/handlers/group_b_handler.py:55` `promote: bool`). Per "Post-Plan-Phase Codex Audit" rule, a `codex/09-strategy/architecture-v2/promote-workflow.md` stub (entry-point + 14-step CLI sequence + state-machine + cross-ref to the two plans) should ship — codex is the intent, plans are orchestration. | PRE_CUTOVER | strategy-architecture owner | `plans/active/promote_workflow_may23_cli_path_2026_05_10.md` (no codex companion) + `strategy-service/strategy_service/cli/handlers/group_b_handler.py:55` |
+| ST-18 | ADD — **`codex/00-SSOT-INDEX.md` indexes only 1 of the 5+ Strategy SSOT docs.** `operational-modes-matrix.md` is in the index (rows 39, 272) but `strategy-registry-v2.md` (SSOT for UAC `registry.py`), `strategy-summary.md`, `naming-convention.md` (SSOT for `strategy_naming.py`), `signal-broadcast-architecture.md`, `archetype-paper-readiness.md` (SSOT for `prediction_market_codification_gaps`... wait, for paper readiness), `strategy-lifecycle-maturity.md` (SSOT for `lifecycle.py`) are all missing. Mirrors finding O-15 / G-11 from the Ops + Governance Phase-1 audits — the SSOT-INDEX completeness gap is workspace-wide, but the Strategy-area share is ≥5 entries. | IMMEDIATE ✅ DONE @f401a3c9 (slot 8 sub-agent — added 6 Strategy SSOT rows: taxonomy(README) / registry-v2 / naming-convention / archetype-paper-readiness / strategy-lifecycle-maturity / signal-broadcast-architecture. Rebased before push to absorb concurrent foreign edits to SSOT-INDEX) | governance | `codex/00-SSOT-INDEX.md` grep (1 strategy entry vs ≥5 SSOT docs declaring `SSOT for:` in `09-strategy/`) |
+| ST-19 ✅ FILED @ `plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md` (Group C) | ADD — **`benchmark-fills.md:12` warns "Standalone backtest engines that settle inline" cause batch/live divergence — but there is no QG step that flags a new standalone settlement path in `strategy-service`.** `engine/backtest/runner.py` is correct today (`GroupBRunner` reuses `V2EngineOrchestrator` with `BenchmarkFillEngine` swapping only the fill source; `engine/backtest/__init__.py:1-22` even has a "RETAIN: shared backtest infrastructure, NOT v1 strategy code" + "Do NOT delete this directory under V1-RETIRE" + "batch = live: same code path" docstring). But "no inline-settling backtest engine" is enforced by docstring discipline only. Add a QG check: any module under `strategy_service/engine/backtest/` that computes P&L without routing through `V2EngineOrchestrator` / `execution-service` matching engine fails. Composes with `04-architecture/backtest-groups.md`. | POST_CUTOVER | strategy-service maintainer + governance | `architecture-v2/cross-cutting/benchmark-fills.md:12` + `strategy-service/strategy_service/engine/backtest/runner.py:1-7` (correct today, unenforced) |
+| ST-20 ✅ FILED @ `plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` (Sweep 3) | ADD — **`signal-broadcast-architecture.md` § "Group C backtest" / observability claims a `<BacktestComparisonPanel>` ("Odum-held backtest numbers vs live signal aggregate")** but `archetype-paper-readiness.md`'s 4-state taxonomy doesn't include a "signal-leasing-ready" state. Signal Leasing is Sept-2026 (not May-23), so this is genuinely POST_CUTOVER, but the two docs should cross-reference: a leased archetype must be at least `paper-runnable` before its backtest numbers are shown to a counterparty. Add a one-line cross-ref in both. | POST_CUTOVER | strategy-architecture owner | `codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md` § Observability vs `archetype-paper-readiness.md` 4-state table (no signal-leasing-ready state) |
+
+## Disposition counts
+
+- **IMMEDIATE**: 5 — ST-1 (archetype 53→55 sweep), ST-2 (registry-v2.md superseded banner / refresh), ST-4 (paper-readiness wrong file ref), ST-6 (master-plan stale 8/18 parenthetical — cross-plan annotate), ST-18 (SSOT-INDEX strategy entries).
+- **PRE_CUTOVER**: 12 — ST-3, ST-5, ST-7, ST-8, ST-9, ST-10, ST-12, ST-13, ST-14, ST-15 (nit), ST-16, ST-17.
+- **POST_CUTOVER**: 3 — ST-11 (UI block-list mirror parity), ST-19 (no-inline-settling QG), ST-20 (signal-leasing readiness cross-ref).
+- **Total**: 20 findings (1 of which — ST-15 — is a KEEP confirming the mev-protection 3-way overlap is already resolved; the nit within it is the only carry-over).
+
+## Recommended next steps
+
+1. **Operator triage** — confirm dispositions; CRITICAL operator-attention items:
+   - **ST-1 / ST-2 / ST-4 / ST-6**: the "53 archetypes / 8 families / 18 engines" numbers are stale across `README.md`,
+     `strategy-registry-v2.md`, `MIGRATION.md`, `category-instrument-coverage.md`, AND the master plan readiness row.
+     UAC `StrategyArchetype` = 55, `StrategyFamily` = 9, `InstructionActionV2` = 14. `strategy-summary.md` already has
+     the "enum wins" correction note; the rest don't. None of these is a *correctness* bug (the enum is canonical and
+     code reads the enum), but they mislead operators reading codex during cutover prep, and the master-plan row is
+     review-blocking under the Continuous-Verification rule.
+   - **ST-4**: `archetype-paper-readiness.md` (the May-23 paper-mode readiness gate doc) names the wrong source file
+     — `portfolio_allocator/archetypes.py` is the 8 allocator engines, not the 55 strategy archetypes. A future agent
+     looking for "the archetype list" lands in the wrong module.
+   - **ST-18**: ≥5 Strategy SSOT docs are absent from `codex/00-SSOT-INDEX.md` (registry-v2, summary, naming-convention,
+     signal-broadcast, lifecycle-maturity, archetype-paper-readiness). Workspace-wide gap (mirrors O-15/G-11) but the
+     Strategy slice is large.
+2. **Phase 3 ship** (immediate, ~1 AI-day): ST-1 (count sweep across 09-strategy/), ST-2 (banner or refresh on
+   registry-v2.md), ST-4 (fix the file ref + the `overview:` frontmatter), ST-18 (add ≥6 strategy rows to SSOT-INDEX).
+   ST-6 → annotate `master_to_live_defi_2026_05_23.md` body, do not fix here (cross-plan, master-plan owner's call).
+3. **Phase 4 ship** (pre-cutover, ~3-4 AI-days): ST-3/ST-5/ST-7/ST-14/ST-16 (currency fixes), ST-8 (engine-no-adapter-import
+   QG — confirm `topology_enforcement.py` coverage first), ST-9 (signal_broadcast invariant QG), ST-10
+   (`check_strategy_taxonomy_counts.py` QG step), ST-12 (prediction-codification-gaps execution: block), ST-13
+   (repoint `_archived_pre_v2/` cross-refs), ST-15-nit (reconcile mev submission-mode naming), ST-17
+   (`promote-workflow.md` codex stub).
+4. **Phase 5 file** (post-cutover): ST-11 (UI block-list mirror parity check — UI repo plan), ST-19
+   (no-inline-settling backtest QG step), ST-20 (signal-leasing-readiness cross-ref — owned by the Sept-2026
+   signal-leasing plan).
+
+## Composes with
+
+- `plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md` Phase 1.B (this audit slice).
+- `plans/active/issues/codex_audit_ops_2026_05_12.md` — finding O-15 (SSOT-INDEX completeness) mirrored in ST-18.
+- `plans/active/promote_workflow_may23_cli_path_2026_05_10.md` + `..._post_cutover_ui_pipeline_2026_05_10.md` — the
+  promote-workflow plans that ST-17 says need a codex companion.
+- `plans/active/master_to_live_defi_2026_05_23.md` — Group F (`pvl-p18a/b` paper-readiness) + readiness-checklist row
+  150 (ST-6 stale parenthetical).
+- `plans/epics/strategy_and_dart_master_2026_05_07.md` + `cefi_master_2026_05_07.md` + `instruments_live_master_2026_05_08.md`
+  — the `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` rename provenance (ST-7).
+- `cross_asset_group_catalogue_audit_2026_05_10` Phase 4 — owns the mev-protection 3-way consolidation (ST-15, already done).
+- `cursor-configs/CLAUDE.md` § "Signal Leasing / strategy-service signal broadcast" / "Live = batch" / "Batch = Live:
+  Unified Pipeline Architecture" / "Master Plan Continuous-Verification Column" / "Runbook Execution-Owner SSOT" — the
+  workspace rules being audited.
+
+## PRE_CUTOVER batch shipped 2026-05-12 (slot 8 sub-agent)
+
+Per the slot 8 sub-agent (`ikenna-precutover-batch-data-instruments-strategy-execution`), 9 Strategy-area
+PRE_CUTOVER findings landed in commit `87a09ca8 docs(codex): PRE_CUTOVER batch — 9 Strategy-area findings`:
+
+| Finding | Disposition | Brief |
+| ------- | ----------- | ----- |
+| ST-3 | PRE_CUTOVER ✅ DONE @87a09ca8 | MIGRATION.md Phase 9 update note (18-engine legacy → 55 canonical) |
+| ST-7 | PRE_CUTOVER ✅ DONE @87a09ca8 | `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` rename |
+| ST-8 | PRE_CUTOVER ✅ DONE @87a09ca8 | engine/ no-adapter-import invariant block (strategy-summary.md) |
+| ST-9 | PRE_CUTOVER ✅ DONE @87a09ca8 | signal_broadcast/ 5 service-infrastructure invariants block |
+| ST-10 | PRE_CUTOVER ✅ DONE @87a09ca8 | check_strategy_taxonomy_counts.py QG ratchet description |
+| ST-12 | PRE_CUTOVER ✅ DONE @87a09ca8 | prediction-markets-codification-gaps.md `execution:` frontmatter |
+| ST-13 | PRE_CUTOVER ✅ DONE @87a09ca8 | `_archived_pre_v2/` cross-refs repointed (onboarding + pnl-attribution) |
+| ST-14 | PRE_CUTOVER ✅ DONE @87a09ca8 | strategy-summary.md dead-issue-doc reference repointed |
+| ST-16 | PRE_CUTOVER ✅ DONE @87a09ca8 | category-instrument-coverage.md duplicate changelog stub removed |
+| ST-17 | PRE_CUTOVER ✅ DONE @87a09ca8 | NEW codex/09-strategy/architecture-v2/promote-workflow.md SSOT-stub |
+
+ROUTED / DEFERRED:
+- ST-5 — already ✅ DONE per prior slot 8 IMMEDIATE batch @f401a3c9.
+- ST-11 / ST-19 / ST-20 — POST_CUTOVER tier; not in PRE_CUTOVER scope.
+- ST-15-nit — routed to mev-protection canonical owner (cross-ref EX-8/EX-20 execution-area findings).
+- ST-6 — ROUTED-TO-master-plan-owner (master plan refresh not touched here — collision risk).
+
+IMMEDIATE tier (ST-1, ST-2, ST-4, ST-18) already DONE per prior slot 8 IMMEDIATE batch @f401a3c9.

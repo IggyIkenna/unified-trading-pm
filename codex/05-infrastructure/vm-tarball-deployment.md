@@ -135,9 +135,13 @@ VMs launched **before** step 2 still run the stale code. Check the tarball times
 
 ---
 
-## Singleton-locked launchers (2026-04-20)
+## Singleton-locked launchers (2026-04-20; extended 2026-05-12)
 
-Three launchers enforce singleton locks to prevent rate-limit thundering herds against shared API keys / quotas:
+The singleton-lock pattern grew from 3 anchor launchers (2026-04-20) to **~36 launchers as of 2026-05-12** (grep
+`grep -l singleton deployment-service/scripts/vm/launch-*.sh | wc -l`). The pattern is now the workspace default for
+**any** launcher whose adapter shares API keys / per-IP rate-limits / consumer-group identity / per-AG WS feeds.
+
+**Original 3 anchors** (rate-limit thundering herd protection):
 
 - `launch-sfi-forward-poll.sh` — SFI/RapidAPI rate-limits per-key; 10 concurrent VMs thrash on 429 backoffs and produce
   no useful data. Lock: refuses launch if any `sfi-fwd-*` VM is RUNNING in the zone. `--force` bypass.
@@ -149,11 +153,27 @@ Three launchers enforce singleton locks to prevent rate-limit thundering herds a
   `CME:FUTURE:ES-YYYYMMDD`). Default `VM_DATA_TYPES=ohlcv_1m;trades`; override with `--data-types`. Override instruments
   with `--instrument-ids 'CME:FUTURE:ES-20260619;...'`. Machine `e2-standard-4` per shard.
 
+**Extended coverage (2026-05-12)** — singleton-locking is now applied across these categories:
+
+- **Live-pipeline producers**: `launch-mtds-live.sh` + `launch-mdps-features-live.sh` — per-asset-group lock
+  (`mtds-live-{asset_group}-*` / `mdps-features-live-{asset_group}-*`). Two concurrent producers for the same
+  asset_group thrash on the WS feed + race on the Redis Stream consumer group.
+- **Forward-poll launchers**: `launch-cefi-forward-poll.sh` / `launch-defi-forward-poll.sh` /
+  `launch-aster-forward-poll.sh` + per-source-provider variants.
+- **Backfill workers** with shared API quotas: features-service backfills (`launch-features-*`), instruments-service
+  backfills (`launch-cefi-instruments-backfill.sh`, `launch-api-football-backfill-vm.sh`).
+- **Single-resource daemons**: `launch-manifest-consolidator-vm.sh` (one daemon per zone is sufficient — multiple race
+  on the consolidator's sentinel-lock and waste API calls).
+- **Reconciliation / audit one-shots**: `launch-cross-asset-rescan-vm.sh`, `launch-blank-reason-recon-vm.sh`,
+  `launch-defi-phantom-recon-vm.sh`, `launch-fixtures-truthset-audit-vm.sh` — singleton prevents double-counting of
+  manifest flips.
+
 Incident reference: `memory/project_session_handover_2026_04_19.md` + the 2026-04-19 SFI herd that produced ~4
 successful writes across 10 VMs in 6 hours.
 
-**If you build a new launcher for a rate-limited adapter**: copy the singleton-lock pattern from the three above, not
-just the `gcloud compute instances create` boilerplate.
+**If you build a new launcher for a rate-limited / shared-quota / shared-feed adapter**: copy the singleton-lock pattern
+from any of the above (the closest-shape anchor is the best starting point), not just the
+`gcloud compute instances create` boilerplate.
 
 ---
 
@@ -279,6 +299,17 @@ wrapper — not per-launcher one-offs.
    `gcloud compute instances delete --self --delete-disks=all` in a detached subshell after the workload return code is
    captured. Launchers set this by default; omit it only for post-mortem SSH (rare).
 
+> **Three guarantees are NOT sufficient for honest-coverage observability (2026-05-12)** — the trio above answers "did
+> the VM run + complete + clean up?" but does NOT answer "did the VM produce real captured rows, or empty placeholders?"
+> Reference incident 2026-05-05: 21 MDPS VMs all emitted STARTED+STOPPED+self-deleted cleanly, but output was 1440 NaN
+> OHLC bars per day for years (caught only by hand-inspection). The correlated-validation guarantee is supplied by the
+> alerting-service / `unified-events-interface` UI: a STARTED+STOPPED pair MUST be correlated against a manifest
+> spot-check (sample parquet OHLC populated; cluster validation passing per writegate Phase 1A) before the run is
+> treated as operationally complete. See CLAUDE.md "No fire-and-forget VM launches"
+>
+> - `codex/02-data/honest-absence-downstream-handling.md` (the 1440-NaN incident framing) — both are part of the
+>   observability contract, not in addition to it.
+
 ### Workload identity — VM metadata keys
 
 The launcher injects identity via GCE instance metadata (visible to the VM as
@@ -369,6 +400,14 @@ done
 ```
 
 Default buckets: `instruments-store-{sports,cefi,defi,tradfi,prediction}-PROJECT_ID`. Default poll: 60s.
+
+> **Watchdog-dict asymmetry (2026-05-12)**: the consolidator polls all 5 asset_group buckets including
+> `instruments-store-prediction-PROJECT_ID`, but `VM_PREFIX_TO_BUCKET` in
+> `deployment-service/scripts/vm/vm_zombie_watchdog.py` only registers 4 of 5 `instr-backfill-*` prefixes (`cefi-` /
+> `defi` / `tradfi` / `sports`); `instr-backfill-prediction` is missing. Either (a) add `instr-backfill-prediction-`:
+> `instruments-store-prediction-{pid}` to the dict + relaunch watchdog, or (b) confirm that no prediction-bucket
+> instruments backfill launcher is shipped today and drop the prediction path from the consolidator's default bucket
+> list. Slot 11 (launcher-consolidation owner) to disambiguate.
 
 **Singleton lock:** the launcher refuses to start if any `manifest-consolidator-*` VM is RUNNING in the zone (multiple
 would race on the consolidator's sentinel-lock and waste API calls). One daemon per zone is sufficient.

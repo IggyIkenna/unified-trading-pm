@@ -5,7 +5,25 @@ scope: [engineer, admin]
 # DeFi Data-Type Taxonomy
 
 > SSOT for the per-venue × per-data_type matrix: what we capture, where, in what shape, with what cluster validation.
-> Last updated 2026-05-10 (defi_catalogue_chain_primitives_2026_05_10 Phase 3J).
+> Last updated 2026-05-12 (codex audit IN-15 — 3-doc consolidation cross-link added; this doc is the canonical
+> per-(venue, data_type) matrix); prior: 2026-05-10 (defi_catalogue_chain_primitives_2026_05_10 Phase 3J).
+
+> ## DeFi 3-doc reconciliation (codex audit IN-15 2026-05-12)
+>
+> Three DeFi codex docs form an overlapping set. **This doc — `defi-data-type-taxonomy.md` — is the canonical
+> per-(venue, data_type, cluster-validation, canonical-schema) matrix.** The other two reference it:
+>
+> | Doc                                                                  | Role                                                                                      |
+> | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+> | [`defi-venue-protocol-catalogue.md`](./defi-venue-protocol-catalogue.md) | Per-protocol status legend + per-venue PRODUCTION-DEV-PLANNED tracking                    |
+> | [`defi-data-types-catalog.md`](./defi-data-types-catalog.md)         | Per-data_type capture overview + GCS path convention                                      |
+> | **`defi-data-type-taxonomy.md`** (this doc)                          | **Canonical per-(venue, data_type) ↔ adapter ↔ handler ↔ cluster-validation matrix**     |
+>
+> When the three disagree, this doc + the UAC registries (`defi_venues.py` + `defi_venue_capabilities.py` +
+> `market_data_categories.py:NEEDS_CANDLE_PROCESSING`) win. The other two are refresh-as-they-go summaries. Catalogue
+> audits DF-14/DF-15/DF-16 motivate this rule — those findings flagged data_types declared in the taxonomy but with no
+> venue-capability row (i.e. the matrix had a hole). Going forward, every new (venue, data_type) row added to the
+> taxonomy MUST be matched by a UAC `defi_venue_capabilities.py` row.
 
 This doc complements
 [`defi-venue-protocol-catalogue.md`](defi-venue-protocol-catalogue.md) (which lists protocols)
@@ -113,7 +131,16 @@ Per the workspace asset-group vocabulary rule, new writes use `asset_group=defi`
 
 Per CLAUDE.md "Cluster validation MANDATORY at `record_captured` for bundled shards" — every bundled data_type
 requires `expected_root_clusters` + `cluster_extractor` kwargs at write time. This table declares the bundle
-unit + cluster registry source per data_type:
+unit + cluster registry source per data_type.
+
+**Static enforcement (codex audit IN-11 2026-05-12)**: QG STEP 5.64 ratchet enforces statically — the AST-walk
+script at `unified-trading-pm/scripts/quality_gates/check_cluster_validation_kwargs.py` (see CLAUDE.md § "Manifest +
+honest absence" cluster-validation rule) fails any callsite to `record_captured()` for a bundled data_type below
+without the two kwargs. UTL guard raises `MissingClusterValidationError` at runtime as second line of defence. **Which
+adapters MUST pass cluster kwargs** = every adapter writing a bundled data_type below; if a row is missing the
+kwargs at write time, the row is a candidate for catalogue-audit findings (cross-ref: catalogue_audit_sports SP-10
+"sports bundle writers", catalogue_audit_prediction PR-6 "PREDICTION_GROUPS empty placeholder",
+catalogue_audit_tradfi TF-6 "no futures_chain row for any TradFi venue").
 
 | data_type | Bundled? | Cluster unit | Cluster registry SSOT |
 | --------- | -------- | ------------ | --------------------- |

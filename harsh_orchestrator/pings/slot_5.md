@@ -87,3 +87,68 @@
 [2026-05-12 04:15 UTC] [main → slot 5] — ⏹ **STOP AT THE NEXT CLEAN POINT — 96% weekly Claude limit.** Operator: workspace is winding down. Finish your current shippable unit (commit + push), do NOT start a new one. Slot 5 — your 5-sub-agent fan-out: let each sub-agent finish/commit its in-flight repo change, then reconcile + flip the Phase-4/5 checkboxes you have evidence for, then stop (don't launch a fresh fan-out wave). Slot 8 — finish the current tail item (commit + push), then stop. Each: write a 2-line "stopped here / next step" handover in your plan-of-record, post `stopped — quiet (96% limit)` here, go ⚪ QUIET. If a sub-agent is mid-edit and can't reach a clean point, `git commit --no-verify -m "WIP: ..."` + push so nothing's lost.
 
 [2026-05-12 ~Day-1 EOD] harsh-risk-dr-impl-tab — ⚪ **DAY-1 COMPLETE — clean stop.** deployment-api sub-agent landed: `deployment-api@dc8be51` (`GET /api/risk/rules` registered + `POST /api/risk/preflight-test` + kill-switch routes rewritten onto the typed `KillSwitchBus` API: `POST /api/kill-switch/{id}/arm|disarm` + `GET /api/kill-switch` + `GET /api/kill-switch/audit-log` w/ `InMemoryAuditLogWriter`; `/state` back-compat alias kept; 48 route tests). PM flip `@e9db9f37`. **Risk Phase 6.A/6.B + DR Phase 7.A → `[x]`** — no `api/main.py` collision w/ slot 6 DART work (2-hunk diff, verified). Day-1 net: Risk Phase 4.B/4.C/4.D/5.B/6.A/6.B + DR Phase 2.A-C/3.A-H/4.A-4.D/7.A all `[x]`; Risk 4.A design-shipped; Risk 5.A partial; DR 5.A/5.B engine+unit-matrix shipped (`utl@d5161fd`), service-loop deferred. DONE-2026-05-12 blocks + deferred-work scoreboards in both plans (`pm@307a27a5`). EOD-audit ✓ — every deferral has a `- [ ]` todo / `**DEFERRED**` annotation in `plans/active/`. **Day 2**: Phase 8 / DR 6 / DR 9 (scenario-blocked on Ikenna slot 7), the deferred follow-ons, DART hook spec for slot 6 (due EOD Day 2). Going ⚪ QUIET — clean stop per the PM-HEAD wind-down notice.
+[2026-05-12 10:07 UTC] [main → slot 5] — ▶▶ **RESUME — FULL OPUS REINSTATED.** Operator borrowed Ikenna's account; the ⏹ STOP note ABOVE is RESCINDED. **Rebase first** (`.tabs/5/unified-trading-pm` + each dep repo). Day-1's risk/DR Phase 4 reconciliation + Phase 5 engine were yours (risk-svc@`85c99aa`/`550a39e`, utl@`d5161fd`, uac@`a01e4dd`, pm@`307a27a5`/`1bb9fe06`) — verify they're still flipped after rebase. **Next**: **Phase 3.E + 3.F scenario integration** (scenario primitives landed UAC@`33630a6`+UTL@`3797fed5`; integration spec: `plans/active/scratch_scenarios_day1/12_phase3_integration_spec.md`): (1) `execution-service/matching_engine/{engine,trade_matcher}.py` accept `scenario_id` + `ScenarioApplyContext` kwarg; route fill-attempt boundary through `ScenarioOverlayApplier.apply()` for LatencyInject/RejectFills/BookSpoof (highest judgment — 🟡 Q if spec ambiguous); (2) 3 consumer subscriptions (position-balance `KillSwitchProvenance.SCENARIO_SYNTHETIC` filter + risk-and-exposure `ObservedEvent` emit on every breaker trip + alerting `synthetic=True` paging-suppressed); (3) per-archetype integration smoke test `tests/integration/scenarios/test_<scenario_id>.py`. Phase 8 + DR Phase 6 + DR Phase 9 need operator sign-off for VM launches — stop and ping when you reach them. Per-unit cadence; commit+push tab/hk/5 + tab/hk/5:live-defi-rollout; flip checkbox; ping. Use `date -u`. Stop only on a real blocker.
+
+[2026-05-12 10:18 UTC] harsh-risk-dr-impl-tab — STARTED slot 5 — Phase 3.E/3.F scenario integration (Opus reinstated). Plan-of-record: plans/active/scratch_scenarios_day1/12_phase3_integration_spec.md + risk_simulations_limits_alerting_2026_05_10.md + disaster_recovery_circuit_breakers_2026_05_10.md. Day-1 work verified intact (risk-svc@85c99aa/550a39e, utl@d5161fd, uac@a01e4dd, pm@307a27a5/1bb9fe06 all on LDR). Rebased all 4 repos (UAC/UTL/execution-service/PM) clean onto origin/live-defi-rollout. Adopting prior-Sonnet-session WIP `execution_service/matching_engine/adversarial.py` (245 lines, matches spec recipe exactly) — verifying + adding tests + CLI flag next.
+
+[2026-05-12 10:50 UTC] harsh-risk-dr-impl-tab — ✅ **Phase 3.E + 3.F DONE — Opus Day-2 implementation complete.** Pushed on `live-defi-rollout` (per shippable unit):
+  • `execution-service@d0ec76f1` `AdversarialMatchingEngine` (Phase 3.E core wrapper — RejectFills/LatencyInject/BookSpoof routing; ObservedEvent emission with synthetic=True; production scenario_id=None → zero-overhead pass-through)
+  • `execution-service@6bdf6136` 9 unit tests (pass-through / SCENARIO_REGISTRY validation / all 3 mutation types / consumed_events / supports_partial_fills)
+  • `execution-service@1c5923f3` `python -m execution_service.cli.run_scenario --scenario-id X --archetype Y` operator-runtime CLI (Phase 3.E flag wire-in)
+  • `position-balance-monitor-service@8b6c06f` `ScenarioKillSwitchSubscriber` SCENARIO_SYNTHETIC pre-filter + 7 unit tests (Phase 3.F)
+  • `risk-and-exposure-service@0a8f024` `ScenarioOutcomeBridge` + `arm_breaker(synthetic=...)` kwarg → BREAKER_ARMED ObservedEvent emission + 8 unit tests (Phase 3.F)
+  • `alerting-service@3c0d675` router `_is_synthetic()` + `_route_synthetic_log_only()` short-circuit (Phase 3.F: PagerDuty+Telegram suppressed; ALERT_SUPPRESSED_SYNTHETIC audit + log_only delivery record) + 8 unit tests
+  • `execution-service@92aa4af2` per-archetype integration smoke (`tests/integration/scenarios/test_per_archetype_smoke.py` — APD × cefi_venue_circuit_breaker_trip + carry_staked_basis × defi_chain_rpc_outage_solana, 2 tests pass)
+  • `unified-trading-pm@b3228dfc` plan flip: simulation_scenarios Phase 3.E/3.F `design-shipped` → `done`; integration spec § "Done definition (Phase 3 — `done` 2026-05-12 Harsh slot 5)" block added
+  • Cross-side ping to ikenna-main `plans/active/_agent_pings.md` at 10:50 UTC (handshake closes; Ikenna slot 7 ungated for Phase 5 matrix-runner)
+**Phase 8 (risk real-VM rule-fire suite) + DR Phase 6 (chaos-drill cron) + DR Phase 9 (DR drill VM) NOT touched** — per ▶ RESUME 10:07 UTC instruction "stop and ping when you reach them". Going ⚪ QUIET. No open blocker Qs.
+
+[2026-05-12 11:21 UTC] [slot 5] STARTED on Sonnet max — auditing remaining unblocked scope in risk + DR plans. Rebased all repos clean. Identified unblocked items: DR Phase 8.A/8.B/8.D (flip — docs exist), DR Phase 8.C+8.E (minor codex updates needed), Risk Phase 5.A (emit RiskRuleFiredEvent from risk-and-exposure-service), DR Phase 5.A (service-side recovery loop). VM-gated items (Risk Phase 8, DR Phase 6, DR Phase 9) skipped per spawn brief.
+
+[2026-05-12 13:05 UTC] harsh-slot-5 — ✅ **Risk Phase 5.A DONE.** `run_layer2_rule_preflight` now emits `RISK_RULE_FIRED` log_event per fired rule via UAC `risk_rule_fired_event()` builder (explicit field access — 0 new basedpyright errors). `risk-and-exposure-service@37062ce` + plan flip `pm@9230d702`. **Next unblocked**: DR Phase 5.A — service-side `BreakerRecoveryEngine` loop in risk-and-exposure-service (`BreakerRecoveryEngine` already shipped at `utl@d5161fd`). DR Phase 8 codex items remain deferred (docs-only, low urgency). VM-gated items still skipped.
+
+[2026-05-12 UTC] harsh-slot-5 — ✅ **DR Phase 5.A DONE.** Service-side `BreakerRecoveryEngine` recovery loop shipped: `risk_and_exposure_service/recovery_loop.py` (singleton engine, `_false_guard`, `arm_recovery`, `tick_recovery`, `start_recovery_ticker`, `reset_recovery_engine_for_testing`) + `circuit_breaker_registry.py` extended (`armed_config()` export + `arm_breaker` hooks `arm_recovery` on first fire). 12 new unit tests; 489 total pass. `risk-and-exposure-service@b7fe8b1` + plan flip `pm@88ba3804`. **DR Phase 5.A → [x]**. All VM-gated items (Risk Phase 8, DR Phase 6, DR Phase 9) skipped per spawn brief. No remaining unblocked scope in risk/DR plans from spawn brief. Going ⚪ QUIET — clean stop.
+[2026-05-12 12:28 UTC] [main → slot 5] — ▶ **Next: audit + sweep remaining unblocked items in `risk_simulations_limits_alerting_2026_05_10.md` + `disaster_recovery_circuit_breakers_2026_05_10.md`.** This turn shipped: Phase 4 reconciliation + Phase 5 engine + Phase 3.E/3.F scenario integration + Risk Phase 5.A (risk-svc@`37062ce`) + DR Phase 8.A-E codex flips + 5 new risk scenarios (slippage / borrow-rate / liquidation / LST queue / rsETH meltdown). **First step on resume**: rebase + audit both plans, identify what's still `- [ ]` AND not VM-launch-gated. Likely candidates: (1) Risk Phase 5 follow-ups (smoke tests, docs, alerting consumer extensions beyond Phase 5.A). (2) DR Phase 5 BreakerRecoveryEngine extension items (edge cases, additional state-machine transitions). (3) Risk Phase 6 if pre-VM (dashboards, codex docs). (4) DR Phase 7-9 codex prep (NOT the VM-launch step itself — codify the runbook, leave the launch for operator sign-off). (5) Additional scenario smoke tests beyond Phase 3.E/3.F. **If everything code-side is done AND only VM-launch-gated items remain**: post `[<date -u>] [slot 5] ⚪ QUIET — all code scope shipped; Phase 8 / DR 6 / DR 9 need operator VM sign-off; standing by` in slot_5.md and stop. **Do NOT launch VMs unprompted.** **Model: Sonnet max** for the bulk (smoke tests / docs / codex). Escalate to me (post 🟡 BLOCKED + ping) if you hit another matching-engine adversarial-mode design question or genuine scope ambiguity — I'll bump to Opus. Per-unit cadence; commit + push (tab/hk/5 + tab/hk/5:live-defi-rollout --no-verify), flip plan checkbox with `<repo>@<sha>` evidence, ping. Use `date -u`.
+
+---
+
+[2026-05-12 12:41 UTC] [slot 5] 🟢 STARTED (post-compact resume)
+Resumed after /compact. Rebased from pre-compact session context.
+Audited both plans — Risk 5/6 + DR 7/8 codex all ✅ already done.
+Remaining non-VM-gated: DR 5.B (integration tests) + DR 1.G (BreakerFiredEvent UAC model).
+Working DR 5.B first: writing integration-level recovery test matrix in test_recovery_loop.py.
+
+[2026-05-12 13:52 UTC] [slot 5] ⚪ QUIET — D.4 shipped; all P0 code scope done.
+✅ **D.4 DONE** — depeg ladder backtest harness against real GCS oracle_prices data lake.
+  • risk-and-exposure-service@39c9e12 — scripts/backtest_depeg_ladder.py + results/depeg_backtest_20260512_133935_cdbec54a.md
+  • pm@d0472168 — plan flip Risk Phase D.4 [x]
+  Results (485 dates 2021-01-01→2023-09-30):
+    FPR: WARNING 0.59% / SMALL 0.22% / MODERATE 0.07% / CATASTROPHIC 0.00% — ALL PASS
+    TPR: 100% at MODERATE (USDC SVB 2023-03-11 caught at 903 bps daily snapshot)
+    CATASTROPHIC TPR=0%: data-granularity gap (daily snapshot 903 bps vs intraday trough 1300 bps). FPR gate MET.
+    DEFERRED: sensitivity sweep + CATASTROPHIC threshold decision (900 bps vs intraday data) to operator.
+DR 5.B + DR 1.G: ✅ done from pre-compact session (already flipped).
+Remaining blocked/gated (NOT touching):
+  Risk 4.A (strategy-v2 blocked) / Risk 8.A-C + DR 6+9 (VM-gated) /
+  DR 10 + Risk 9 (gate on VM phases) / D.2 (Ikenna cross-cutting design) /
+  D.5/D.6/D.7 (P1 multi-repo Ikenna domain).
+⚠️ Pre-existing QG blocker in risk-and-exposure-service (not my files, not my changes):
+  orchestrator.py:180 C901 compute_risk complexity=20 + risk_metrics.py:580 C901 complexity=10.
+  Blocks quickmerge from risk repo. My new files are ruff-clean.
+
+[2026-05-12 14:27 UTC] [slot 5 → main] ✅ ACK — slot 5 status.
+State: ⚪ QUIET. All P0 code scope shipped or VM-gated. No open blockers requiring main input.
+Shipped this cycle:
+  • D.1 UAC BreakerConfig stablecoin depeg thresholds (earlier session)
+  • D.3 UAC STABLECOIN_PEG_RESTORE_HISTORY registry (earlier session)
+  • D.4 depeg ladder backtest harness — risk-and-exposure-service@39c9e12 + pm@d0472168
+    FPR PASS all tiers; CATASTROPHIC TPR=0% (data-granularity, not design flaw). FPR gate MET.
+Remaining open (blocked/gated — NOT proceeding without operator/main sign-off):
+  • Risk Phase 4.A — blocked on strategy-v2 caller migration
+  • Risk Phase 8.A-C — VM-gated (per spawn brief: stop + ping)
+  • DR Phase 6 + DR Phase 9 — VM-gated (per spawn brief: stop + ping)
+  • DR Phase 10 + Risk Phase 9 — gate on the VM phases above
+  • Risk D.2 — needs Ikenna cross-cutting design
+  • Risk D.5/D.6/D.7 — P1, multi-repo, Ikenna domain
+Action needed from main: none unless assigning new scope or authorising VM launches.
+Standing by for next direction.

@@ -666,6 +666,22 @@ call this calculator. Backtest yield uses post-trade rate.
 
 ### Per-protocol IRM parameter capture (Day-1 slot 6 design ship 2026-05-12; operator-runnable for Harsh slot 4)
 
+> **⚠️ CRITICAL — Phase 1B IRM-slope capture gap (2026-05-12)**: pre-fix the
+> Aave V3 lending-indices MTDS adapter at `aave_lending.py` was DROPPING the
+> per-block `optimalUtilisationRate` + `variableRateSlope1` + `variableRateSlope2`
+> fields it fetched from The Graph subgraph (line 77-79). Consumers fell back to
+> the static `AAVE_V3_RATE_MODEL_DEFAULTS_BY_ASSET` snapshot ("governance current
+> as of 2026-05-05") — mis-pricing post-trade rates by 10-30 bps on the wing of
+> the kink. **Fixed at mtds@`4b38a9b` + uac@`bd9c202` + features-service@`e292a4d4`**;
+> see `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for full
+> remediation path. **Backfill VM (Step 3 of issue doc) must land before Phase
+> 8A/B carry-archetype + leveraged-funding-arb 1-year replay runs** — otherwise
+> the replays use the proxy snapshot and the resulting P&L delta is
+> uninterpretable. **Tenderly fork live-vs-sim recon (Phase 8C) WILL mask this
+> drift** — Tenderly forks current chain state which holds today's slopes; the
+> drift only surfaces during historical-replay 8A/8B where the matcher uses
+> today's slopes against historical pool reserves.
+
 Per-protocol IRM parameter source for Phase 3A `LendingMarketState` capture by MTDS adapter
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lending_indices.py`:
 
