@@ -632,10 +632,11 @@ engine state) and emits a real `ScenarioReport` parquet.
 
 ## Phase 10 — Cutover gate integration (Day 14, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **10.A Master plan extension.** `master_to_live_defi_2026_05_23.md` Group F gets new item 17.5 (or
+- [x] [AGENT] P0. **10.A Master plan extension.** `master_to_live_defi_2026_05_23.md` Group F gets new item 17.5 (or
       extension of item 20): "Scenario regression matrix green per archetype within ≤24h of cutover; matrix run as part
-      of pre-cutover dress rehearsal." Continuous-verification column populated.
-- [ ] [AGENT] P0. **10.B `defi_master` § "May-23 deliverable" annotation.** *(Re-routed 2026-05-12 — the originally-referenced `plans/epics/live_defi_rollout_2026_05_23.epic.md` was SUPERSEDED 2026-05-08 and folded into `defi_master_2026_05_07.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse direction; the archived file at `plans/archive/live_defi_rollout_may_23_2026.epic.md` carries the supersession banner.)* `defi_master_2026_05_07.md` § "May-23 deliverable" success-criteria table gains a row pointing at this plan's scenario-regression-matrix gate (Group F item 17.5).
+      of pre-cutover dress rehearsal." Continuous-verification column populated. (done by slot-1 main 2026-05-12 per Q1.A
+      resolution; Group F item 17.5 added to master_to_live_defi_2026_05_23.md)
+- [x] [AGENT] P0. **10.B `defi_master` § "May-23 deliverable" annotation.** *(Re-routed 2026-05-12 — the originally-referenced `plans/epics/live_defi_rollout_2026_05_23.epic.md` was SUPERSEDED 2026-05-08 and folded into `defi_master_2026_05_07.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse direction; the archived file at `plans/archive/live_defi_rollout_may_23_2026.epic.md` carries the supersession banner.)* `defi_master_2026_05_07.md` § "May-23 deliverable" success-criteria table gains a row pointing at this plan's scenario-regression-matrix gate (Group F item 17.5). (PM@9cc8f04b — success-criteria row added by slot-6 2026-05-12)
 - [ ] [AGENT] P0. **10.C Cross-plan banners removed.** The 4 IN-FLIGHT REFACTOR banners from Phase 0.B come down once
       Phase 9 is green. Per the banner-remove-owner-by-launcher rule.
 - [ ] [AGENT] P0. **10.D Cron + continuous verification.** `mtds-scenario-matrix-` cron VM runs both matrices nightly;
@@ -668,19 +669,15 @@ This plan composes with — read these before touching any of the surfaces:
 
 ### Q1 — [harsh-slot-6, 2026-05-12 12:59 UTC] — Phase 10.A/B authority + epic file missing
 
-**Status**: 🟡 BLOCKED — needs main / operator decision
+**Status**: ✅ RESOLVED — main 2026-05-12 14:02 UTC
 
-Post-rebase audit (2026-05-12 13:00 UTC): Phase 4 and Phase 5 were fully completed by Ikenna slot 7 Day-3 before this slot resumed. All remaining `- [ ]` items in this plan are either:
-- Explicitly DEFERRED-PER-COMPRESSED-SCOPE (Phases 3.A/B/C/D/G, 6, 7, 8.B-I, 9 + individual items 0.A/0.C/2.C/4.C/4.D/4.E)
-- Phase 10.A-D (gated on Phase 9, which is DEFERRED)
+**A1 (Phase 10.A)**: Done by slot-1 main 2026-05-12. Group F item 17.5 ("Scenario regression matrix green per archetype
+within ≤24h of cutover; matrix run as part of pre-cutover dress rehearsal") added to `master_to_live_defi_2026_05_23.md`.
+Phase 10.A checkbox flipped above with slot-1 attribution.
 
-**Two specific questions for main/operator**:
-
-1. **Phase 10.A** (master plan extension — add Group F item 17.5 "Scenario regression matrix green per archetype"): CLAUDE.md G-14 says slot 1 main is the sole owner of `master_to_live_defi_2026_05_23.md` edits. Can slot 1 take this? It's a small doc addition (1 row to Group F table).
-
-2. **Phase 10.B** (epic banner): The plan references `plans/epics/live_defi_rollout_2026_05_23.epic.md` — but this file DOES NOT EXIST in the worktree (`ls plans/epics/` returns 12 files, none named `live_defi_rollout_2026_05_23`). The archived version is `plans/archive/live_defi_rollout_may_23_2026.epic.md`. Where should the simulation scenarios matrix gate row go? Options: (a) cross_cutting epic (`plans/epics/cross_cutting_may_23_2026.epic.md` — this plan is cross-cutting); (b) a newly created `live_defi_rollout_2026_05_23.epic.md`; (c) this is a dead reference since Phase 9 is deferred — just annotate Phase 10.B as DEFERRED too.
-
-Continue on what I CAN do (plan curation + DONE block) while awaiting answer.
+**A2 (Phase 10.B)**: `plans/epics/live_defi_rollout_2026_05_23.epic.md` was SUPERSEDED 2026-05-08 and folded into
+`defi_master_2026_05_07.md` § "May-23 deliverable" per the 3-layer → 2-layer collapse. Main fixed 4 stale references in
+this plan body pointing at the old epic path. Phase 10.B re-routed to defi_master; row added by slot-6 (PM@9cc8f04b).
 
 ## Deferred work after 2026-05-09 plan-creation session
 
