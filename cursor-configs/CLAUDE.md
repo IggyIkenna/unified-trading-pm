@@ -498,6 +498,37 @@ Composes with: Commit/Push/Flip; Plan Archival; Findings Triage; Cross-Plan Bann
 
 ---
 
+## Active Plan Inventory + Done-vs-Left Dashboard (auto-tracked)
+
+Workspace-wide plan tracking surface. `unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py`
+scans every `plans/active/*.md` with `estimate_class` frontmatter, counts done/todo checkboxes, computes
+`cal_remaining = estimate_calibrated_ai_days × todo/(done+todo)`, looks up epic owner via reference grep across
+master + `plans/epics/*.md`, writes a sorted markdown table (cal_left desc) between `<!-- AUTO-INVENTORY-START -->`
+and `<!-- AUTO-INVENTORY-END -->` markers in `master_to_live_defi_2026_05_23.md` § "Active plan inventory +
+Done-vs-Left dashboard".
+
+**Run cadence** (main-orchestrator slot 1, both sides): morning ledger sweep + EOD + before any planning
+decision that depends on done-vs-left state. Idempotent; only rewrites content between markers.
+
+```bash
+python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py
+```
+
+**Reads** in the dashboard: `Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline`. Owner = `master`
+/ `<epic-name>` / `**orphan**` (not referenced by master or any epic — fold into appropriate epic on owner
+agent's next plan-touch, NOT via mass-sweep). TBD baselines (from 2026-05-11 calibration sweep scaffold) show
+`Cal left: TBD` until owner agent fills the baseline.
+
+**Note on the master plan filename**: `master_to_live_defi_2026_05_23.md` is historically named but is actually
+the **full May-23 cutover umbrella** across all asset groups (DeFi + CeFi + TradFi + Sports + Predictions +
+cross-cutting), per its own Epics index. The inventory tracks every active plan workspace-wide.
+
+Full SSOT: `codex/11-project-management/active-plan-inventory-tracker.md` — logic, refresh cadence, how-to-read
+the columns, when-to-use vs when-not-to-use, anti-patterns, deferred extensions (QG ratchet, per-epic rollup,
+cal-weighted %).
+
+---
+
 ## Commit + Push + Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
 
 Two halves; both non-negotiable. Under per-slot worktrees: cross-slot foot-guns #1-#3 unrepresentable. Within-slot
