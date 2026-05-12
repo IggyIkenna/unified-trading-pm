@@ -3178,6 +3178,18 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [ ] [MDPS] P1. Audit MDPS for OTHER calculators that emit derived/aggregated outputs not yet in the policy seed (e.g.
       trade-flow imbalance metrics, microstructure features) — extend the UAC seed dict per finding. Each addition = one
       PR touching UAC + one PR touching MDPS + one PR flipping plan checkboxes.
+- [ ] [MDPS] P1. **🟡 FINDING (harsh slot 3, 2026-05-12)** — MDPS Phase 6.2 `_publish_emission_check` returns an
+      `EmissionDecision` whose `service_emission_state` / `last_emission_decision_at` / `completeness_fraction` v8
+      column values are **NOT forwarded** to the paired `ManifestWriter.record_captured` call at
+      `market_data_processing_service/app/core/canonical_writer.py:950-965`. Phase 6.2 wired the publish-or-not gate
+      cleanly (correctly skips `record_captured` when `decision.should_publish_row=False`), but the v8 manifest schema
+      columns (`service_emission_state`, `last_emission_decision_at`, `expected_window_completeness_fraction`) end up
+      `None` / default for MDPS rows that DO publish. Slot 2 / Ikenna writegate-slice-c-phase-6.2-tab to ship the v8
+      column passthrough in a follow-on commit, or fold into Phase 4.DEFAULT-REMOVAL. Workspace `rg
+      "service_emission_state" market-data-processing-service/` returns zero hits in service source today. Same shape
+      will exist at every Phase 6.3+ wiring once those services adopt the publisher (single helper-side fix in
+      canonical_writer pattern + every consumer copies it). Out-of-scope for slot 3 (per "STAY OFF MDPS + UTL v8
+      schema" assignment) — annotate-not-fix per CLAUDE.md Findings Triage Discipline.
 
 **Phase 6.3 — features-volatility (P0, ~3 days)**
 
