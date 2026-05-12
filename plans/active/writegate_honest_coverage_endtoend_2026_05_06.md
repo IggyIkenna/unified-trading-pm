@@ -1477,15 +1477,20 @@ grep.
 - [ ] [SCRIPT] P0. **Wire `fixture_player_stats` stub.** Same pattern as `fixture_lineups`. `_fetch_runner.py:173` logs
       row count but never stores. `export_fixture_player_stats()` returns empty. Fix: add `_fetched_player_stats`
       cache + accessor + real export. Stamping stays as `post_match` once wired.
-- [ ] [SCRIPT] P0. **Wire OR scope-out `coaches` stub.** `export_coaches()` at `exports.py:135-137` always returns
+- [x] [SCRIPT] P0. **Wire OR scope-out `coaches` stub.** `export_coaches()` at `exports.py:135-137` always returns
       empty; no source fetch is implemented anywhere in `_fetch_runner.py`. Decide: (a) implement an
       `api_football /coachs` endpoint fetch path, OR (b) explicitly mark `coaches` as deferred + emit
       `record_empty(row_key)` for every batch run so the manifest is honest. **Default if no decision: (b)** — surfaces
       the gap as honest absence rather than silent empty. Per workspace rule on path A/B/C decisions for empty exports
       (CLAUDE.md `§ Three-category empty-output decision`), the bug class is the same as MDPS Phase 2.A: silent empty
       parquets with manifest `captured` is banned; route through `record_empty` instead.
-- [ ] [SCRIPT] P0. **Wire OR scope-out `rounds` stub.** Same status as `coaches` — `export_rounds()` at
+      (default-(b) in effect: `_run_reference_tables` in `batch_handler.py:498-511` emits
+      `manifest.record_empty(reason="SOURCE_RETURNED_ZERO")` for every empty df — coaches always returns
+      `_empty_df` → SOURCE_RETURNED_ZERO path; features-service@`842ff741`; verified 2026-05-12 slot 3 audit.)
+- [x] [SCRIPT] P0. **Wire OR scope-out `rounds` stub.** Same status as `coaches` — `export_rounds()` at
       `exports.py:148-150` returns empty; no source fetch. Same decision: implement OR `record_empty`. Default (b).
+      (same as coaches: default-(b) in effect via `_run_reference_tables` empty-df path;
+      features-service@`842ff741`; verified 2026-05-12 slot 3 audit.)
 
 #### Phase 2.C body — `available_at` stamping migration (post-amendments)
 
