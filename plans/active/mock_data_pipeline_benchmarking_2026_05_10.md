@@ -176,7 +176,20 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       instrument set. (design-shipped — uac@`d47b232` `registry/generators/cefi.py` (6 specs, shard atom `(venue,instrument)`,
       `CUTOVER_CEFI_VENUES` = the 6 cutover perp venues × `CUTOVER_CEFI_INSTRUMENTS` BTC/ETH/SOL) + utl@`ca9c346`
       `CEFI_TICK`/`CEFI_OHLCV`/`CEFI_DERIVATIVES` column skeletons; row counts = axis-1 estimates, calibration → 3.C.)
-- [ ] [AGENT] P1. **3.C Real-backfill calibration.** **DEFERRED-from-Phase-0.B** (slot 7 2026-05-12). For each of the
+- [x] [AGENT] P1. **3.C Real-backfill calibration.** (uac@`04cb9f5` — 2026-05-12 slot-7 Day-3 session)
+      GCS survey + real parquet sampling across all 3 asset groups:
+      * **CeFi trades calibrated**: BITGET-FUTURES 2026-05-07 measured 4,370,547 total rows (24 instruments);
+        BTC/ETH/SOL alone = 3,475,449 from 1 venue → extrapolated 18M/day for 6 cutover venues x 3 instruments.
+        `CEFI_TRADES_SPEC.default_row_count_per_day` updated 1.8M → 18M (10x). `real_backfill_sample_uri` populated
+        (BITGET-FUTURES proxy; cutover venues bybit/binance/okx not yet in backfill).
+      * **All other 12 specs** (CeFi ohlcv_1m/15m/funding_rate/OI/liquidations; DeFi gas/lst_rates/lending_indices/
+        dex_pool_state/oracle_feeds; TradFi ohlcv_1m/1d) got `# ESTIMATE` markers with inline GCS survey findings:
+        - DeFi bucket: has `vault_share_price` (ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARNV3, 1 row/instrument/day) — does NOT
+          match any DeFi spec data_type. features-onchain buckets EMPTY as of 2026-05-12.
+        - TradFi: only CBOE/index/ohlcv_15m/VIX (23 rows 2026-05-05); no archetype instruments in raw_tick bucket.
+        - CeFi book_snapshot_5 exists in GCS (21 instruments, ~11M rows/day extrapolated) but NO spec in generators — **finding captured as deferred todo below**.
+      * Axis-2 byte-size model NOT populated (features-onchain EMPTY, DeFi data_type mismatch); remains blocked on backfill progress.
+      **DEFERRED-from-Phase-0.B** (slot 7 2026-05-12). For each of the
       13 specs in `registry/generators/{cefi,defi,tradfi}.py`: where the real backfill has reached the cutover universe,
       populate `real_backfill_sample_uri` + tune `default_row_count_per_day` + the axis-2 byte-size model from
       `gs://central-element-323112-*-{raw,processed}/...` samples; where it hasn't, keep the estimate + a `# ESTIMATE`
@@ -185,6 +198,18 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       uniform split. Provenance: § Audit findings 0.B. **Successor for the calibration-blocked half**: this plan stays
       active until 3.C lands or the cutover backfill horizon closes; if backfill slips past 2026-05-23, fold into
       `live_pipeline_mtds_mdps_features_2026_05_08`.
+- [ ] [AGENT] P2. **3.C-followup: `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.** **DEFERRED** (slot 7,
+      2026-05-12). CeFi bucket has `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/
+      instrument avg → ~11.2M total/day extrapolated for 21 instruments). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in
+      `registry/generators/cefi.py`. Since `book_snapshot_5` feeds the execution matching engine for slippage
+      estimation, a spec should be added post-calibration if the Phase 3.D subprocess run confirms MTDS reads it.
+      **Do NOT add until Phase 3.D confirms** (avoid premature spec proliferation).
+- [ ] [AGENT] P2. **3.C-followup: DeFi vault_share_price vs spec data_type mismatch.** **DEFERRED** (slot 7,
+      2026-05-12). DeFi bucket (5 venues: ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARNV3) has `instrument_type=yield_bearing /
+      data_type=vault_share_price` (1 row/instrument/day, ~10KB/file). None of the 5 DeFi specs use this data_type.
+      The LST_RATES spec is the closest match conceptually but uses `data_type=lst_rates`. Operator/Ikenna decision
+      needed: is vault_share_price the same data_type under a different name, or a distinct data pipeline? Until
+      resolved, all 5 DeFi specs stay as `# ESTIMATE`. Flag for Ikenna-side during next DeFi pipeline planning.
 - [ ] [AGENT] P1. **3.D Prod-reader schema-parity verification.** **PARTIAL (slot 7, 2026-05-12)**: reader wire-in
       shipped for strategy-service (`GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix;
       strategy@`a03d12e`) and ml-inference-service (`FeatureSubscriber.read()` override check; ml-inference@`0206358`).
@@ -544,7 +569,7 @@ uniformly across the 5 chain shards.
 | Phase 1 (UAC contracts + registry) | ✅ done — uac@`d47b232` (13 generator ids, 70 tests) | — |
 | Phase 2 (UTL generator + profiler + harness) | ✅ done — utl@`ca9c346` (54 tests) | — |
 | Phase 3.A / 3.B (per-archetype generators) | ✅ design-shipped (Phase 1.B specs + Phase 2.A domain logic) | — |
-| Phase 3.C (real-backfill row-count + axis-2 byte-size calibration) | 🟡 deferred (P1) | this plan; if cutover backfill slips past 2026-05-23 → fold into `live_pipeline_mtds_mdps_features_2026_05_08` |
+| Phase 3.C (real-backfill row-count calibration) | ✅ done — uac@`04cb9f5`; CEFI_TRADES 18M calibrated (was 10x too low); 12 specs → `# ESTIMATE`; axis-2 byte-size deferred (features-onchain EMPTY) | 3.C-followup todos added above |
 | Phase 3.D (prod-reader schema-parity verification) | 🟡 partial (P1) | strategy@`a03d12e` + ml-inference@`0206358` wired; MTDS reader + subprocess run + slot-8 items remain |
 | Phase 4.A (benchmark CLI) | ✅ done — utl@`457fe19` (`python -m unified_trading_library.synthetic`) | — |
 | Phase 4.B (per-stage profiler integration) | ✅ done — in `BenchmarkHarness` | — |
@@ -583,8 +608,8 @@ yet; current state is "this plan stays active").
 - **`launch-synthetic-benchmark-vm.sh` uses the conventional `${PROJECT}-benchmark-reports` bucket name** (no
   `resolve_bucket_name(kind="benchmark-reports")`) because that kind isn't in `cloud-providers.yaml` yet. Canonical
   follow-up: `bucket_name_ssot_canonicalisation_2026_05_10.md` adds the kind; then switch the CLI to derive it.
-- **`SyntheticGeneratorSpec.real_backfill_sample_uri` is empty + `default_row_count_per_day` are axis-1 estimates**
-  for all 13 specs. Canonical follow-up: **this plan** Phase 3.C (real-backfill calibration).
+- ~~**`SyntheticGeneratorSpec.real_backfill_sample_uri` is empty + `default_row_count_per_day` are axis-1 estimates**
+  for all 13 specs.~~ **RESOLVED 2026-05-12 slot-7 Day-3** (uac@`04cb9f5`): CEFI_TRADES calibrated to 18M/day (was 10x too low) + sample URI populated; 12 remaining specs got `# ESTIMATE` markers with inline GCS survey findings. Axis-2 byte-size model blocked on features-onchain backfill completion.
 - **Master plan Group F item 18 row does NOT yet assert the benchmark budget.** Canonical follow-up: **this plan**
   Phase 8.A, after Phase 5/6 land — coordinated with Ikenna's main (the master-plan Group F rows are Ikenna-side).
 
