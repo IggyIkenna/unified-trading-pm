@@ -59,3 +59,37 @@ green.
 | market-tick-data-service | `tests/market_interface/clients/test_tardis_stream_processor.py:131` | B017 blind exception       | NOT slot 6 |
 | market-tick-data-service | `tests/unit/test_lst_rates_handler.py:223`                           | RUF002 multiplication sign | NOT slot 6 |
 | features-service         | `features_service/sports/schemas/feature_catalog.py:149`             | E402 module import         | NOT slot 6 |
+
+---
+
+## [slot 6 → main] 2026-05-12 — Part C: features-service consolidation rename COMPLETE
+
+**Status**: DONE — UAC + features-service pushed.
+
+**Commits**:
+
+- `unified-api-contracts@ee44796`
+- `features-service@f3ab8cc6`
+
+**What shipped**:
+
+Renamed all 8 `features-{family}-service` strings → `"features-service"` across UAC (10 files) and features-service (184
+files). Structural F601 (duplicate dict key) fixes applied:
+
+1. `registry.py` — merged 5 duplicate `EXPECTED_FEATURE_GROUPS_BY_SERVICE` entries into one; replaced
+   `_SERVICE_TO_FAMILY` + `_build_feature_group_to_family()` with explicit `_GROUP_FAMILY_MAP` (group-level family
+   dispatch, not service-name dispatch — needed because service name is now non-unique after consolidation).
+
+2. `data_status_axis_matrix.py` — deduped SHARD_AXIS_MATRIX / DISPLAY_AXES / PRIMARY_AXIS; delta-one shard shape chosen
+   as canonical for CEFI/TRADFI/DEFI `(venue, feature_group, timeframe, instrument_id)`.
+
+3. `data_freshness.py` — collapsed 8 per-family FEATURE_FRESHNESS entries to 1 canonical
+   `(max_age=300s / warn=150s / cadence=60s / critical)`.
+
+4. Tests updated: `test_feature_family.py`, `test_data_status_axis_matrix.py`, `test_data_freshness.py` — all structural
+   assertions updated to match consolidated shape.
+
+**Pre-existing QG failures (not introduced by slot 6)**:
+
+- `test_data_freshness.py`: 28 failures on `asset_group` vs `asset_class` field name mismatch (existed in HEAD before
+  rename work; pre-existing foreign issue).
