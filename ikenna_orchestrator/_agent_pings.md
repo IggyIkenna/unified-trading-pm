@@ -37,9 +37,9 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 - **slot 3** → `instruments-service` catalog-refresh emission (you have the context post-PipelineMode sweep)
 - **slot 4** → `execution-service` + `position-balance-monitor-service` (wallet/custody adjacent)
 - **slot 5** → `strategy-service` (carry engine emits signals via this path)
-- **slot 6** → `features-volatility` (consolidated features-service; aligns with Vol Trading + SVI/SSVI work)
+- **slot 6** → **`features-service` (ONE consolidated repo, ALL 8 family modules: calendar / commodity / cross_instrument / delta_one / multi_timeframe / onchain / sports / volatility)** — single repo integration in `features_service/common/`; per-family `data_type` declarations; storage split by family × asset_group × env per bucket-name SSOT (b+) e.g. `features-volatility-defi-${env}-${pid}`. Fan out 8 sub-agents per family.
 - **slot 7** → `risk-and-exposure-service` + `ml-inference-service` (risk + DR adjacent; ml-inference downstream)
-- **slot 8** → `features-cross-instrument` (consolidated features-service) + `ml-training-service`
+- **slot 8** → `ml-training-service` (slot 6 absorbed all features-* family work; slot 8 keeps the ML-training scope solo for focus on training-run lifecycle + per-family training_period rollover)
 
 **Pattern per service** (5 deliverables): (1) UAC `SERVICE_OUTPUT_POLICIES` entry; (2) `record_*` callsites at output-write boundaries; (3) `publish_with_manifest_lookup()` integration; (4) per-output-type UAC schema declaration; (5) unit + integration tests. Template = writegate slice (b) MDPS POC at MDPS@`d0df50c`+`311614a`.
 

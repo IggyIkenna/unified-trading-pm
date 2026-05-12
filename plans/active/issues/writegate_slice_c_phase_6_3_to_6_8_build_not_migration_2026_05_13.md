@@ -19,16 +19,15 @@ locked_since: 2026-05-13
 
 Writegate slice (c) Phase 6.3-6.8 plan body was framed as "migration" of `record_*` callsites. Reality: these 9 services have **ZERO `record_captured` / `record_empty` / `record_failed` callsites today** — they're emission-infrastructure-greenfield.
 
-The 9 services:
-1. `features-volatility-service` (consolidated under features-service)
-2. `features-cross-instrument-service` (consolidated under features-service)
-3. `ml-training-service`
-4. `ml-inference-service`
-5. `strategy-service`
-6. `execution-service`
-7. `position-balance-monitor-service`
-8. `risk-and-exposure-service`
-9. `instruments-service` (catalog-refresh emission, separate from data adapters)
+The 8 services (corrected 2026-05-13 — `features-service` is ONE consolidated repo per `features_repo_consolidation_2026_05_08.md` Phase 7 landed 2026-05-08; 8 family modules inside it):
+1. **`features-service`** (consolidated; 8 family modules: `calendar / commodity / cross_instrument / delta_one / multi_timeframe / onchain / sports / volatility`) — each family has its own output `data_type` but shares the emission integration surface in `features_service/common/`.
+2. `ml-training-service`
+3. `ml-inference-service`
+4. `strategy-service`
+5. `execution-service`
+6. `position-balance-monitor-service`
+7. `risk-and-exposure-service`
+8. `instruments-service` (catalog-refresh emission, separate from data adapters)
 
 ## Operator decision 2026-05-13: option (α) — BUILD emission infrastructure
 
@@ -70,18 +69,26 @@ For each of the 9 services, ship:
 
 6. **Plan-flip** — flip the relevant Phase 6.X sub-checkbox in `writegate_honest_coverage_endtoend_2026_05_06.md` + add evidence commit SHA.
 
-## Routing — 9 services × 1-2 slots each
+## Routing — 8 services × slot mapping (corrected for consolidated features-service)
 
-| Slot | Services to build | Rationale |
+| Slot | Service(s) | Rationale |
 |---|---|---|
-| **3** (Ikenna) | `instruments-service catalog` (catalog-refresh emission) — slot 3 just shipped PipelineMode sweep across MTDS + instruments + MDPS so has the context | Already deep in instruments-service code paths |
-| **4** (Ikenna) | `execution-service` + `position-balance-monitor-service` | Aligns with slot 4's `api_keys_wallets` + custody-routing context; execution + position are wallet-adjacent |
-| **5** (Ikenna) | `strategy-service` | Aligns with slot 5's `CarryFamilyEngine` refactor + defi_recursive_borrow context; strategy emits signals from same engine |
-| **6** (Ikenna) | `features-volatility-service` (under consolidated features-service) — aligns with slot 6's Vol Trading docs + SVI/SSVI surface fitter | Features ↔ Vol Trading tight coupling; surface fitter outputs ARE features |
-| **7** (Ikenna) | `risk-and-exposure-service` + `ml-inference-service` | Slot 7 already on risk + DR scenarios; ml-inference is downstream-ish of features/strategy |
-| **8** (Ikenna) | `features-cross-instrument-service` (under consolidated features-service) + `ml-training-service` | Slot 8 owns cross_asset + manifest Phase 3 consumer sweep |
+| **3** (Ikenna) | `instruments-service` catalog-refresh emission | Already deep in instruments-service post-PipelineMode sweep |
+| **4** (Ikenna) | `execution-service` + `position-balance-monitor-service` | Wallet/custody-adjacent; pairs with slot 4 api_keys_wallets context |
+| **5** (Ikenna) | `strategy-service` | Carry engine emits signals via this service; slot 5 CarryFamilyEngine context |
+| **6** (Ikenna) | **`features-service` (ONE consolidated repo, ALL 8 family modules)** — `calendar / commodity / cross_instrument / delta_one / multi_timeframe / onchain / sports / volatility` | ONE repo integration; per-family `data_type` declarations; storage layer split by family × asset_group × env per bucket-name SSOT (b+) — e.g. `features-volatility-defi-${env}-${pid}` |
+| **7** (Ikenna) | `risk-and-exposure-service` + `ml-inference-service` | Risk + DR scenarios alignment; ml-inference is downstream of features/strategy |
+| **8** (Ikenna) | `ml-training-service` | Slot 8 owns cross_asset_audit + manifest Phase 3 consumer sweep; ml-training is the heaviest single-service emission scope (model artefact lifecycle + training_period rollover + per-family training runs) |
 
-Each slot: 1-2 services × ~3-6 hours each = ~6-12 hours = ~1.5-3 calendar days at single-AI pace = **~30-90 min at 5× pace with fan-out**.
+**features-service emission shape (slot 6 single-repo scope)**:
+- ONE integration in `features_service/common/` (shared emission helper across families).
+- 8 family modules each declare per-`data_type` (volatility_features / cross_instrument_features / delta_one_features / onchain_features / sports_features / multi_timeframe_features / commodity_features / calendar_features).
+- Storage layer respects **family × asset_group × env split** per bucket-name SSOT (b+):
+  - `resolve_bucket_name(cloud=, kind=features-{family}, asset_group=, env=)` → e.g. `features-volatility-defi-${env}-${pid}`, `features-cross-instrument-cefi-${env}-${pid}` etc.
+- ONE `SERVICE_OUTPUT_POLICIES` entry per (family, asset_group) combo OR one entry per family with asset_group as policy axis.
+- Per-family integration tests + shared smoke for the common emission path.
+
+Each slot: 1-2 services (slot 6 = 1 repo / 8 families) × ~3-6 hours each = ~6-12 hours = ~1.5-3 calendar days at single-AI pace = **~30-90 min at 5× pace with sub-agent fan-out** (slot 6 fans out 8 sub-agents per family; slot 4/7 fans out 2 sub-agents per service).
 
 ## Critical-path coverage for 2026-05-23 cutover
 
