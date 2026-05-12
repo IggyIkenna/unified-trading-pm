@@ -164,31 +164,84 @@ UAC@dc4c9f0 landed; 20 breakers + 20 recovery rules + 11 kill-switch IDs + 4 pro
 
 ## Phase 2 — UTL kill-switch bus (Days 4-5, ~1 AI-day)
 
-- [ ] [AGENT] P0. **2.A `unified_trading_library/kill_switch/bus.py`.** `KillSwitchBus` with
-      `arm(switch_id, provenance, metadata)` + `disarm` + `subscribe(callback)`. Backed by Redis Stream + parquet audit
-      log.
-- [ ] [AGENT] P0. **2.B Subscriber pattern.** `KillSwitchSubscriber` base class; per-service callback.
-- [ ] [AGENT] P0. **2.C Tests.** ≥20 unit tests; arm-disarm idempotency; multi-subscriber broadcast; audit-log
-      persistence.
+- [x] [AGENT] P0. **2.A `unified_trading_library/kill_switch/bus.py`.** `KillSwitchBus` with
+      `arm(switch_id, provenance, metadata)` + `disarm` + `subscribe(callback)`. Backed by ~~Redis Stream +~~ parquet
+      audit log. (UTL@18488c5 — `kill_switch/bus.py` `KillSwitchBus` singleton (scope-keyed arm/disarm, in-process
+      pub-sub, `map_switch_id_to_scope()` per UAC SSOT) + `kill_switch/audit_log.py` (`ParquetAuditLogWriter` +
+      `InMemoryAuditLogWriter`, flattens typed `KillSwitchArmedEvent` / `KillSwitchDisarmEvent` UAC models to parquet
+      rows + writes via cloud-interface storage client; date-partitioned paths via `resolve_bucket_name`). **DEFERRED
+      (P2, post-cutover stretch per audit 0.C)**: cross-process Redis-Stream transport adapter — cutover MVP is
+      in-process bus + parquet audit log; the Redis fan-out only matters when arm/disarm crosses VM boundaries, which
+      cutover topology does not require (single-VM-per-archetype). Successor: `simulation_scenarios_post_cutover_2026_06_01.md`.)
+- [x] [AGENT] P0. **2.B Subscriber pattern.** `KillSwitchSubscriber` base class; per-service callback. (UTL@18488c5 —
+      `kill_switch/bus.py` `KillSwitchSubscriber(ABC)` with `on_armed` / `on_disarmed` hooks; `ServiceBootstrap`
+      auto-registers a subscriber per UTL@... bootstrap-wiring test. Consumed by execution-service
+      `kill_switch_bus_bridge.py`, risk-and-exposure-service `kill_switch_bus_subscriber.py`, alerting-service
+      `kill_switch_bus_subscriber.py` per audit 0.A.)
+- [x] [AGENT] P0. **2.C Tests.** ≥20 unit tests; arm-disarm idempotency; multi-subscriber broadcast; audit-log
+      persistence. (47 tests pass — `tests/unit/test_kill_switch_bus.py` + `tests/unit/kill_switch/test_bus_audit_log.py`
+      + `tests/unit/test_bootstrap_kill_switch_wiring.py`: arm/disarm idempotency, scope-keyed fan-out, multi-subscriber
+      broadcast, `InMemoryAuditLogWriter` event-capture invariants, parquet-row shape, bootstrap auto-registration.
+      `cd unified-trading-library && bash scripts/quality-gates.sh` venv-constrained in slot worktree — run via workspace
+      venv `python -m pytest tests/unit/test_kill_switch_bus.py tests/unit/kill_switch/ tests/unit/test_bootstrap_kill_switch_wiring.py`.)
 
 **Full-execution criterion**: UTL PR pushed; QG green; integration test arms+disarms across 3 stub subscribers.
+**Status 2026-05-12**: in-process bus + parquet audit log + subscriber base + 47 tests landed (UTL@18488c5). Redis
+cross-process transport DEFERRED post-cutover (single-VM-per-archetype topology doesn't need it).
 
 ## Phase 3 — Per-state-surface reconcilers (Days 5-8, ~3 AI-days, 8 parallel sub-agents)
 
-- [ ] [AGENT] P0. **3.A Position reconciler.** Diffs position-balance state vs venue REST + custody endpoint. Drift >
-      tolerance fires breaker.
-- [ ] [AGENT] P0. **3.B Balance reconciler.** Per-account total balance reconcile.
-- [ ] [AGENT] P0. **3.C Custody reconciler.** Copper + CEFFU pings + balance reconcile.
-- [ ] [AGENT] P0. **3.D On-chain reconciler.** Wallet on-chain balance vs internal state.
-- [ ] [AGENT] P0. **3.E Event reconciler.** Event-stream count + sequence vs expected per service.
-- [ ] [AGENT] P0. **3.F Manifest reconciler.** Phantom audit (per CLAUDE.md "Manifest phantom audit") wired as nightly
-      cron — extends existing script.
-- [ ] [AGENT] P0. **3.G Order-state reconciler.** Internal order state vs venue order state.
-- [ ] [AGENT] P0. **3.H PnL + clock + batch-vs-live reconcilers.** PnL invariant + clock-skew + UTL@908b1647
-      batch-vs-live extension.
+> **Module home**: all 8 reconcilers live under `unified_trading_library/reconcile/` — one sub-module per surface.
+> `reconcile/__init__.py` re-exports the full public surface (51 symbols) at the package level (UTL@fea6c7b — closed
+> the package-level export gap; positions/custody/onchain/event/manifest/order_state/pnl_clock_batch_live were
+> previously importable only via deep module paths). Shared shape: `reconcile_<surface>(...) -> <Surface>ReconcileResult`
+> pure function + `<Surface>Reconciler` class with `subscribe(callback)` for kill-switch / alerting fan-out + breaker
+> id returned as a UAC `CircuitBreakerId` (never free-form string).
+
+- [x] [AGENT] P0. **3.A Position reconciler.** Diffs position-balance state vs venue REST + custody endpoint. Drift >
+      tolerance fires breaker. (UTL@18488c5 — `reconcile/positions.py`: `reconcile_positions()` 3-surface diff
+      (internal / venue REST / custody), per-instrument `PositionDrift`, `PositionReconciler` subscriber wrapper.
+      17 tests `tests/unit/reconcile/test_positions.py`.)
+- [x] [AGENT] P0. **3.B Balance reconciler.** Per-account total balance reconcile. (UTL@5546b20 — `reconcile/balance.py`:
+      `reconcile_balance()` per-currency + total-USD drift between internal + venue views, `CurrencyDrift` rows,
+      `BalanceReconciler` wrapper. 21 tests `tests/unit/reconcile/test_balance.py`.)
+- [x] [AGENT] P0. **3.C Custody reconciler.** Copper + CEFFU pings + balance reconcile. (UTL@18488c5 —
+      `reconcile/custody.py`: `reconcile_custody()` pings Copper + CEFFU (closed-set `CustodyEndpoint`), diffs balances,
+      decides breaker; `_safe_ping` isolates unreachable endpoints. 18 tests `tests/unit/reconcile/test_custody.py`.)
+- [x] [AGENT] P0. **3.D On-chain reconciler.** Wallet on-chain balance vs internal state. (UTL@b8d6e12 helper +
+      UTL@cb6819a tests — `reconcile/onchain.py`: `reconcile_onchain()` per-(chain, token) drift vs internal state via
+      `RPCCaller` protocol, `RPCOutageError` fail-loud, base-unit→native conversion. 18 tests
+      `tests/unit/reconcile/test_onchain.py`.)
+- [x] [AGENT] P0. **3.E Event reconciler.** Event-stream count + sequence vs expected per service. (UTL@b8d6e12 helper +
+      UTL@e2ec23e tests — `reconcile/event.py`: `reconcile_event_stream()` per-service window reconcile against
+      `ExpectedEventSchema` (count shortfall / missing event types / `seq_id` gaps). 20 tests
+      `tests/unit/reconcile/test_event.py`.)
+- [x] [AGENT] P0. **3.F Manifest reconciler.** Phantom audit (per CLAUDE.md "Manifest phantom audit") wired as nightly
+      cron — extends existing script. (UTL@b8d6e12 helper + UTL@e713f66 tests — `reconcile/manifest.py`:
+      `reconcile_manifest_phantoms()` audits + optionally flips phantom rows; classifies misses against the 5 known
+      drift axes (`hive_vocab` / `instrument_type_casing` / `empty_schema_4` / `path_prefix` / `chain_bundle`);
+      `ManifestFlipWriter` / `ParquetProbe` / `CandidatePathGen` protocols. 17 tests `tests/unit/reconcile/test_manifest.py`.
+      **DEFERRED (P1)**: nightly-cron *wiring* — the library reconciler is shipped; scheduling it as a cron VM is Phase 6.A
+      scope (`disaster-drill-cron-` VM extends to run the manifest pass) + composes with instruments-service
+      `reconcile_phantom_manifest_rows_all.py`. Successor: this plan Phase 6.A.)
+- [x] [AGENT] P0. **3.G Order-state reconciler.** Internal order state vs venue order state. (UTL@b8d6e12 helper +
+      UTL@e713f66 tests — `reconcile/order_state.py`: `reconcile_order_state()` diffs `(venue, order_id)`-keyed internal
+      vs venue order state; classifies state-mismatch / orphan-venue / orphan-internal. 13 tests
+      `tests/unit/reconcile/test_order_state.py`.)
+- [x] [AGENT] P0. **3.H PnL + clock + batch-vs-live reconcilers.** PnL invariant + clock-skew + UTL@908b1647
+      batch-vs-live extension. (UTL@b8d6e12 helper + UTL@e713f66 tests — `reconcile/pnl_clock_batch_live.py`:
+      `reconcile_pnl_invariant()` (`realised + unrealised == total` per-archetype + no double-count),
+      `reconcile_clock_skew()` (per-venue skew vs threshold), `reconcile_batch_live_divergence()` (per-archetype bps
+      tolerance, extends `batch_live_reconciler.py`); `CombinedReconciler` rolls all three into one tick. 22 tests
+      `tests/unit/reconcile/test_pnl_clock_batch_live.py`.)
 
 **Full-execution criterion**: 8 reconcilers shipped; per-reconciler test green; aggregate dashboard endpoint returns 8
 reconciler statuses.
+**Status 2026-05-12**: 8 reconciler modules shipped (UTL@18488c5 + @5546b20 + @b8d6e12) + 146 unit tests green
+(positions 17, balance 21, custody 18, onchain 18, event 20, manifest 17, order_state 13, pnl_clock_batch_live 22) +
+`reconcile/__init__` package export gap closed (UTL@fea6c7b). REMAINING: aggregate dashboard endpoint (Phase 4
+service wiring — surfaces 8 reconciler statuses behind one deployment-api route) + manifest nightly-cron wiring
+(Phase 6.A).
 
 ## Phase 4 — Per-service breaker + bus integration (Days 8-10, ~2 AI-days, 4 parallel sub-agents)
 
