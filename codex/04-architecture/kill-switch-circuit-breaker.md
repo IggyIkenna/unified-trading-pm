@@ -433,3 +433,5 @@ before any action."
 - [`risk-rule-taxonomy.md`](risk-rule-taxonomy.md) — Layer 2 vocabulary that feeds the escalation seam
 - [`risk-preflight-flow.md`](risk-preflight-flow.md) — every-order pre-flight aggregation that emits seam events
 - [`risk-breaker-seam.md`](risk-breaker-seam.md) — distinct-enums-with-escalation contract; Q9 ratification 2026-05-10
+- [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) — closed-set `CircuitBreakerId` + `BreakerAction` + `BreakerRecoveryMode` SSOT (DR plan Phase 8.A)
+- [`kill-switch-event-bus.md`](kill-switch-event-bus.md) — UTL `KillSwitchBus` arm/disarm/subscribe API + audit-log persistence + typed UAC event shapes (DR plan Phase 8.B)
