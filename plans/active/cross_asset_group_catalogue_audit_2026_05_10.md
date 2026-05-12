@@ -145,14 +145,41 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
       [`catalogue_audit_prediction_2026_05_12.md`](issues/catalogue_audit_prediction_2026_05_12.md) PR-1/PR-2 +
       `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1F: `canonical/domain/prediction/` (singular,
       cross-venue mapping — `PredictionMarketMapper` etc.) and `canonical/domain/predictions/` (plural,
-      canonical-question-group taxonomy) are BOTH canonical and non-redundant. Actions: (a) KEEP BOTH; do NOT
-      delete. (b) Fix the one deep-import consumer `instruments-service/.../reference_data/adapters/prediction/polymarket.py:25`
-      to import via the `unified_api_contracts` facade rather than the deep `canonical.domain.prediction` path
-      (PR-2). (c) **OPTIONAL, POST_CUTOVER** — rename `canonical/domain/prediction/` → `canonical/domain/prediction_mapping/`
-      for clarity (singular-vs-plural is a footgun); file as a post-cutover issue doc, not in this plan. (d) Fold in
-      PR-3/PR-4: add `prediction_canonical_question_group` + `MARKET_LIFECYCLE` to `DATA_TYPES_BY_ASSET_GROUP["prediction"]`
-      (currently `["trades"]` only) so coverage-% aggregators don't under-count prediction expected shards. (e) Drop
-      the original "paste downstream-consumer table in commit message" — the consumer table is in the prediction
+      canonical-question-group taxonomy) are BOTH canonical and non-redundant. **Sub-todos (each its own shippable
+      unit; needs a venv-equipped checkout — the slot-8 worktree has no per-repo `.venv`, so QG-verify in main or hand
+      to a slot with one):**
+      - [ ] [SCRIPT] P0. **1A.a — KEEP BOTH** (no-op confirmation; `prediction/` is NOT deleted). Mark the original
+            "delete singular" instruction VOID.
+      - [ ] [SCRIPT] P0. **1A.b — facade-import fix (PR-2).** `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:25-27`:
+            `from unified_api_contracts.canonical.domain.prediction import (PredictionMarketMapper,)` → `from
+            unified_api_contracts.prediction import (PredictionMarketMapper,)` (the facade `unified_api_contracts/prediction.py`
+            does `from unified_api_contracts.canonical.domain.prediction import *`, and `PredictionMarketMapper` is a
+            non-underscore re-export → resolves clean; QG `check_uac_import_surface` then passes for this consumer).
+            **Note (out of 1A scope, file separately)**: the same file lines 28-36 also have deep `canonical.domain.sports`
+            imports (`build_*_prediction_id`, `POLYMARKET_MARKET_TO_CANONICAL`, `_slug`, ...) — those are a *separate*
+            UAC-import-surface violation; route to `sports_master_2026_05_07.md` or a `plans/active/issues/` doc, not here
+            (sports facade re-export coverage needs checking first; don't break it as a side-effect of the prediction fix).
+      - [ ] [DESIGN P0 — owner: ikenna] **1A.d — PR-3/PR-4 is NOT "add 2 strings"; it's a coverage-grain design call.**
+            🟡 **GOTCHA found on deeper read (slot 8, 2026-05-12) — contradicts the earlier "no operator gate" framing.**
+            `DATA_TYPES_BY_ASSET_GROUP["prediction"]` is `["trades"]` and the in-code comment there explicitly records
+            *why* `book_snapshot_5` was removed 2026-04-19: leaving a not-actually-emitted-per-(venue,day) data_type in
+            that list **phantom-inflated PREDICTION `completion_pct` (35k expected vs 5.7k observed)**. `prediction_canonical_question_group`
+            is **cluster-grain** (parquet key `(asset_group=prediction, venue, data_type, canonical_question_group, day)`)
+            and `MARKET_LIFECYCLE` is **market_id-grain** (per `market_id`, written by instruments-service) — neither is
+            instrument-day grain like `trades`. Naïvely appending them to `DATA_TYPES_BY_ASSET_GROUP["prediction"]` would
+            re-introduce the exact phantom-inflation the comment warns against, and would break `is_expected("prediction",
+            "POLYMARKET", "prediction_canonical_question_group")` semantics (`test_data_status_registries.py` asserts the
+            `trades` form). The *real* fix the prediction sub-agent's PR-3/PR-4 was pointing at: the honest-coverage
+            denominator for cluster-grain / market_id-grain prediction data_types must be computed against the
+            **`PREDICTION_GROUPS` cluster registry** (`honest_coverage.py:471` `CLUSTER_VALIDATION_DATA_TYPES["prediction_canonical_question_group"]="PREDICTION_GROUPS"`)
+            and the per-`market_id` lifecycle bounds — NOT a flat venue×day grid. That registry is **still a placeholder
+            awaiting full seeding (PR-6, a documented temporary-state)**, so 1A.d is **gated on PR-6** + an ikenna
+            coverage-aggregator-grain decision. Re-tagged: PRE_CUTOVER, gated; **NOT shippable as a quick dict edit**.
+            Compose with Phase 2 (`measure_honest_coverage.py` must handle non-venue×day grains).
+      - [ ] [SCRIPT] P2. **1A.c — OPTIONAL POST_CUTOVER** — rename `canonical/domain/prediction/` →
+            `canonical/domain/prediction_mapping/` for clarity (singular-vs-plural is a footgun); file as a post-cutover
+            issue doc, not in this plan.
+      Drop the original "paste downstream-consumer table in commit message" — the consumer table is in the prediction
       catalogue-audit issue doc's `## prediction/ → predictions/ migration table` (exactly 1 real deep-import consumer).
 - [ ] [AGENT] P0. **1B — Spark + Radiant SSOT consolidation**. (a) Build out Spark instruments-service adapter +
       MTDS adapter + execution connector per `defi_catalogue_chain_primitives_2026_05_10.md` Phases 2/3/4 (this
