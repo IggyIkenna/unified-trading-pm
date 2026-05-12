@@ -3292,17 +3292,12 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.4 — features-cross-instrument (P0, ~3 days)**
 
-- [ ] [features-cross-instrument] P0. Wire at `paired_spec` (STRICT_FAIL — leak-risk-sensitive) + `pairwise_correlation`
+- [x] [features-cross-instrument] P0. Wire at `paired_spec` (STRICT_FAIL — leak-risk-sensitive) + `pairwise_correlation`
       (NAN_FILL). The STRICT_FAIL case is critical: a paired_spec row written when ONE leg has stale upstream is a
       leak-bias trap that produces confidently-wrong signal. Validate with a dedicated test: synthetic upstream where
       leg A is fully captured but leg B has 1% gaps → assert NO `paired_spec` row is written for the affected window +
-      STALE_DATA event fires. **🟡 SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace
-      `rg "\.record_captured|\.record_empty|\.record_failed|publish_with_policy"     features-service/features_service/cross_instrument/`
-      returns **0** callsites today. Same shape as Phase 6.3 — build from scratch. Critical-path consideration: the
-      STRICT_FAIL on paired_spec means a runner-side `publish_with_manifest_lookup` call with both legs in
-      `upstream_window` MUST be the gate before the parquet write (vs. the post-hoc record_captured + NaN-tolerance
-      pattern at the calendar/sports paths). Add Phase 6.4 to the per-service rollout playbook codex doc as the
-      reference design for STRICT_FAIL emissions.
+      STALE_DATA event fires.
+      (features-service@e31ef632 — _check_emission_policy + 4 unit tests + UTL top-level export @09116fa3; 4/4 pass)
 
 **Phase 6.5 — Other features-\* services (P1, ~5 days bundled)**
 
@@ -3315,8 +3310,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [x] [features-onchain-service] P1. Audit for derived emissions (LST yield curves, gas-fee aggregates, vault-state
       summaries). **Seed shipped 2026-05-11 @uac@b570d49 — 11 entries** (lending_rates / lst_yields / onchain_perps /
       utilization / flash_loan_availability / rate_impact STRICT_FAIL; risk_params + health_factor BLOCK_CRITICAL;
-      macro_sentiment / rewards / liquidation_events PARTIAL_OK). **DEFERRED**: per-service wiring of
-      `publish_with_policy()` at `_dispatch_feature_group` callsites — Phase-2 consumer work.
+      macro_sentiment / rewards / liquidation_events PARTIAL_OK). **WIRED 2026-05-12
+      @features-service@6cbf50ff**: `_check_emission_policy()` + `_apply_emission_gate()` + `_handle_write_error()` in
+      `features_service/onchain/app/core/feature_writer.py`; emission check fires once per feature_group per date at
+      `write_features()` write boundary; BLOCK_CRITICAL emits `EMISSION_POLICY_BLOCKED` alert event; 4 mode-routing
+      tests in `tests/onchain/unit/test_emission_policy.py`.
 - [x] [features-sports-service] P1. Audit + seed (fixture-stat aggregates, transfer-window features, line-movement
       metrics). **Seed shipped 2026-05-11 @uac@b570d49 — 7 entries** (fixture_features / derived_features
       current+historical NAN_FILL; odds_features:current STRICT_FAIL, odds_features:historical NAN_FILL;
@@ -3333,6 +3331,22 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       book_depth_bands / liquidity_walls / liquidation_clusters / flow_interaction / composite_sr /
       paired_price_dispersion STRICT_FAIL); delta-one (9 anchors); multi-timeframe (4 cross-TF alignment groups all
       STRICT_FAIL on paired_spec precedent). **DEFERRED**: per-service wiring of `publish_with_policy()`.
+      **DELTA-ONE WIRED 2026-05-12 @features-service@5e24a18c**: `_check_emission_policy()` + `_apply_emission_policy()`
+      in `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
+      `tests/delta_one/unit/test_emission_policy.py`. cross-instrument wired @features-service@e31ef632 (Phase 6.4).
+      **STILL DEFERRED**: multi-timeframe wiring + sports wiring. **onchain wiring DONE @features-service@6cbf50ff**.
+      **CALENDAR WIRED 2026-05-12 @features-service@4623c669 + @uac@c85ecc4**: UAC seeds added
+      (time_features NAN_FILL; economic_events PARTIAL_OK); `_SERVICE_NAME` + `_check_emission_policy()` wired in
+      `features_service/calendar/cli/handlers/batch_handler.py`; completeness_fraction from binary rows_written check
+      (calendar is deterministic — no partial DataFrame at batch_handler boundary); 4 mode-routing tests in
+      `tests/calendar/unit/test_emission_policy.py`.
+      **COMMODITY WIRED 2026-05-12 @features-service@9f4b6427 + @uac@82c7405**: UAC seeds added
+      (storage_alpha / crude_storage_alpha / price_momentum NAN_FILL; weather_delta / cot_positioning / rig_count
+      PARTIAL_OK — weekly-cadence sources with expected source gaps); `_SERVICE_NAME` + `_check_emission_policy()`
+      + `_check_and_write_signal()` wired in `features_service/commodity/cli/handlers/batch_handler.py`;
+      emission check fires once per factor_group before `_write_signal_to_gcs` — any STRICT_FAIL suppression
+      aborts the full signal write (consistent with _has_full_factor_coverage fail-loud);
+      4 mode-routing tests in `tests/commodity/unit/test_emission_policy.py`.
 
 **Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
 
