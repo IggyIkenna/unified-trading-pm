@@ -69,19 +69,34 @@ def find_schema_definitions(content: str) -> list[str]:
     """Extract schema class names from file content.
 
     Skips: (a) underscore-prefixed (private) classes — `class _Foo` is service-internal by
-    convention; (b) any class whose `class <name>` line carries a `# CORRECT-LOCAL` marker —
+    convention; (b) any class whose declaration header carries a `# CORRECT-LOCAL` marker —
     mirrors the `base-service.sh` inline rg-checks (STEP 5.9 / lines ~799-823 / ~1061+) which
     `grep -v '#.*CORRECT-LOCAL'` on the matched class line. (Harsh slot-1 Q6 fix, 2026-05-11 —
     so the per-line `# CORRECT-LOCAL` marker is honored consistently across every QG schema check,
-    matching the operator's Q3-A1 disposition: features-service-only types stay local with the marker.)
+    matching the operator's Q3-A1 disposition: features-service-only types stay local with the marker.
+    Harsh slot-2 follow-up 2026-05-12 — the header may span multiple physical lines
+    (`class Foo(\n    BaseModel,\n):  # CORRECT-LOCAL ...`); scan the whole header block, not just
+    the `class <name>` line, so multi-line signatures honor the marker too.)
     """
     found: set[str] = set()
     lines = content.splitlines()
 
-    def _decl_line(name: str) -> str:
-        for ln in lines:
-            if re.search(rf"\bclass\s+{re.escape(name)}\b", ln):
-                return ln
+    def _decl_header(name: str) -> str:
+        """Return the full class-declaration header text (start line through the body `:`).
+
+        Handles single-line (`class Foo(BaseModel):  # marker`) and multi-line
+        (`class Foo(\n    BaseModel,\n):  # marker`) signatures alike.
+        """
+        for i, ln in enumerate(lines):
+            if not re.search(rf"\bclass\s+{re.escape(name)}\b", ln):
+                continue
+            block = [ln]
+            j = i
+            while not ln.split("#", 1)[0].rstrip().endswith(":") and j + 1 < len(lines):
+                j += 1
+                ln = lines[j]
+                block.append(ln)
+            return "\n".join(block)
         return ""
 
     for pat in (CLASS_BASEMODEL_RE, CLASS_TYPEDDICT_RE, CLASS_DATACLASS_RE, CLASS_DATACLASS_NO_PAREN_RE):
@@ -89,7 +104,7 @@ def find_schema_definitions(content: str) -> list[str]:
             name = m.group(1)
             if name.startswith("_"):
                 continue
-            if "CORRECT-LOCAL" in _decl_line(name):
+            if "CORRECT-LOCAL" in _decl_header(name):
                 continue
             found.add(name)
     return sorted(found)
