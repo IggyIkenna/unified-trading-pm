@@ -267,9 +267,11 @@ paper/live deployment exists.
       `STARTED`/`STOPPED`/`FAILED` to `gs://central-element-323112-events/events/strategy-service/`.
       Currently `colocated_engine.py` has no ServiceBootstrap; events go to the deployment heartbeat archive only.
       Required for "No fire-and-forget VM launches" HARD RULE compliance.
-- [ ] [AGENT] P0. **Register `carry_staked_basis` (and `leveraged_funding_arb`) in `V2BatchHarness`** resolver.
+- [x] [AGENT] P0. **Register `carry_staked_basis` (and `leveraged_funding_arb`) in `V2BatchHarness`** resolver.
       Observed error: `Unknown strategy: carry_staked_basis -- V2BatchHarness: no resolver entry for strategy_type`.
       Phase 2 must add resolver entry (or confirm the archetype slug → strategy_type mapping).
+      (strategy-service@61dc112 + e2e-testing@8427dc0 — lowercase aliases added to _DEFI/_CEFI
+      in archetype_slot_resolver.py + STRATEGY_CATEGORIES in colocated_engine.py; tarballs refreshed 14:39 UTC 2026-05-12)
 - [ ] [AGENT] P1. **Add self-delete on startup-script failure** in `setup-data-pipeline-vm.sh`. When `set -euo pipefail`
       exits the script early (e.g. dep conflict), the VM stays RUNNING indefinitely. Add a `trap "gcloud compute instances delete \$(hostname) ..." ERR EXIT` at script top for strategy-paper/live tasks.
 
