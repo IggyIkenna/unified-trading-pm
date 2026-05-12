@@ -405,7 +405,19 @@ Owner: harsh.
       **Evidence**: `staked_basis.py:264` `perp_short_units = eth_qty * (Decimal("1") - structure.perp_margin_haircut)`
       — STATIC. Audit pointer in original todo (`pairs_fixed.py`) was wrong file (stat_arb_pairs ≠
       carry_staked_basis). Real archetype engine path: `staked_basis.py:_build_legs` line 248-318.
-- [ ] [AGENT] P0. **6B — IMPLEMENT (not conditional — audit confirmed static)** dynamic hedge-ratio
+- [ ] [AGENT] P0. **6B-WIRE-IN — wire `compute_dynamic_hedge_ratio` into `_build_legs` callsite** (status:
+      helper-shipped). The pure-function helper landed at strategy-service@`0653c7a` —
+      `strategy_service/engine/strategies/v2/carry_and_yield/dynamic_hedge_ratio.py` with
+      `compute_dynamic_hedge_ratio(eth_qty, margin_haircut, lst_native_rate_now, last_rebalance_rate,
+      peg_drift_threshold_bps) -> DynamicHedgeDecision`. 10 unit tests pass: initial entry / drift below
+      threshold / drift above threshold (positive + negative) / zero haircut / default 3σ / custom threshold /
+      input validation. **Still DEFERRED — wire-in to `staked_basis.py::_build_legs` line 264** needs:
+      (a) UAC `HedgeRatioSnapshot` persistence wiring at archetype boundary; (b) per-tick handler in
+      `CarryStakedBasisEngine.on_tick()` for rebalance trade emission; (c) `StrategyState` extension to
+      carry `last_hedge_rebalance_rate`. Sequenced separately from helper ship per CLAUDE.md "Don't add
+      features beyond what the task requires" — helper ships first; wire-in lands once the comprehensive
+      backtest harness (Phase 6C) is ready to verify the live-flow change.
+- [ ] [AGENT] P0. **6B (original) — IMPLEMENT (not conditional — audit confirmed static)** dynamic hedge-ratio
       adjustment using LST/native exchange rate stream from Phase 1A captures (jitoSOL/SOL, mSOL/SOL,
       bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance trigger when
       |peg_drift| > N bps. **Implementation home**: extend `staked_basis.py` with a new
@@ -440,9 +452,15 @@ Owner: harsh.
 - [ ] [AGENT] P0. **7A — Historical slashing rate calibration** per chain. Ethereum beacon: load slashing events from
       `SLASHING_EVENT` data_type captures (Phase 1A); compute per-validator-epoch slashing probability. Solana
       validator: distinct shape (per-validator-event); compute per-validator-day probability.
-- [ ] [AGENT] P0. **7B — `SlashingTailRiskMC`** in execution-service or features-onchain-service. Monte Carlo simulator:
-      given carry archetype LST allocation × N validators effectively-staked × forward horizon, produces P(slashing >
-      threshold) curve. Calibrated against 7A historical.
+- [x] [AGENT] P0. **7B — `SlashingTailRiskMC`** in execution-service. (execution-service@`b16fb8b6` — NEW
+      `matching_engine/lending/slashing_tail_risk.py`: `SlashingTailRiskMC` stateful dataclass with `calibrate()`
+      (consumes UAC `SlashingEvent` rows + cumulative validator-epoch denominator → fits Poisson lambda + log-normal
+      severity mean/std + Hill-estimator alpha) + `simulate_archetype_loss()` (N=10000 MC paths via Poisson slashing
+      count × log-normal severity → empirical `ProbabilityOfLossCurve` at standard thresholds 1%/5%/10%/25%/50%/100%/250%/500%/1000%);
+      `SlashingDistribution` + `ProbabilityOfLossCurve` schema dataclasses with `p_at_threshold()` linear-interp
+      lookup for the Phase 7C archetype gate. Knuth's algorithm for small λ, Gaussian approx for λ>30. Smoke pass:
+      150 mock ETH events @ 0.5±0.2 → p_per_val_epoch=1.5e-5, alpha=7.22, archetype 1000 ETH/31 validators → P(loss>5%)≈0
+      (conservative — light-tail Gaussian severities). basedpyright clean.)
 - [ ] [AGENT] P0. **7C — Carry archetype tail-risk allocation hook**. Output P(slashing) feeds into archetype's
       capital-allocation rule (cap per-LST exposure when historical slashing rate spikes; back off when normal).
 
