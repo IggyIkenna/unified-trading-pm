@@ -193,12 +193,27 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
 - [ ] [AGENT] P0. **1D — Case-folding drift**. Decide canonical case (recommendation: keep
       `VENUES_BY_ASSET_GROUP` uppercase as the canonical user-facing identifier; lowercase elsewhere is for
       Python-symbol use). Add a `to_canonical_venue(venue_id: str) → str` helper in UAC; update consumers.
-- [ ] [AGENT] P0. **1E — `LST_TOKEN_TO_PROTOCOL_ASSET` SSOT verification + canonicalisation**. If absent, add at
-      `unified_api_contracts/canonical/domain/onchain/lst_protocol_mapping.py`. Map: `(lst_token_symbol, chain) →
-      (protocol, base_asset)`. Composes with `defi_catalogue_chain_primitives` Phase 1G.
-- [ ] [AGENT] P0. **1F — `GAS_FEE_CHAIN_START_DATES` location**. Audit: is it in `chain_env.py` (referenced in
-      comment but not located)? If missing, declare it: `dict[chain_id, date]` mapping each chain to the date
-      Alchemy archival RPC coverage starts (distinct from `CHAIN_GENESIS_DATES`).
+- [x] [AGENT] P0. **1E — `LST_TOKEN_TO_PROTOCOL_ASSET` SSOT verification + canonicalisation**. **DONE-AT-DIFFERENT-PATH
+      2026-05-12 (slot 8 catalogue-audit pass DF-12)** — exists at `unified-api-contracts/unified_api_contracts/internal/domain/defi/lst.py:37`
+      as `LST_TOKEN_TO_PROTOCOL_ASSET: dict[str, tuple[str, str]]` mapping LST token symbol → `(protocol, base_asset)`.
+      Initial todo predicted `canonical/domain/onchain/lst_protocol_mapping.py`; actual placement under `internal/`
+      reflects the Citadel internal-vs-canonical separation (LST→protocol mapping is internal-resolver scope, not a
+      contract-facing schema). Helpers `iter_lst_tokens_for_protocol()` + `resolve_lst_protocol_asset()` re-exported via
+      `__all__`. No code action needed; canonical pick stands.
+- [x] [AGENT] P0. **1F — `GAS_FEE_CHAIN_START_DATES` location (audit half)**. **DONE-AT-DIFFERENT-PATH 2026-05-12
+      (slot 8 catalogue-audit pass DF-13)** — exists at `unified-api-contracts/unified_api_contracts/registry/chain_env.py:61`
+      as `GAS_FEE_CHAIN_START_DATES: dict[int, str]` (int-keyed by `chain_id`; values are ISO date strings) +
+      `GAS_FEE_SOLANA_START_DATE: str = "2021-01-01"` at line 80. Audit half (does it exist?) → ✅ YES; placement at
+      `registry/` (not `canonical/domain/onchain/` as the original todo predicted) matches the registry layer for
+      chain-environment lookups. No code action needed for the audit half.
+- [ ] [AGENT] P1. **1F-extend — chain-set fragmentation reconciliation (extend half).** Catalogue-audit DF-7 still
+      open: `MAINNET_CHAIN_IDS=19` / `CHAIN_GENESIS_DATES=21` (adds SCROLL+ZKSYNC) / `_defi_chain_data.py:CHAIN_CONFIGS=35`
+      (mainnet+testnet, adds UNICHAIN/WORLDCHAIN/ABSTRACT/INK/ZORA not in `MAINNET_CHAIN_IDS`) / `GAS_FEE_CHAIN_START_DATES=14`
+      (missing BLAST/MODE/GNOSIS which have chain IDs + genesis dates). Inclusion is violated both ways. The "22 chains"
+      claim cited in CLAUDE.md + this plan's Phase 1 Full-execution criterion + per-protocol plans matches NO list.
+      Enforce: `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES keys ⊇ GAS_FEE_CHAIN_START_DATES keys` + correct the "22 chains"
+      wording workspace-wide + add a QG ratchet (cross-asset Phase 6A scope or a `check_chain_set_inclusion.py` QG step).
+      **PRE_CUTOVER; owner=ikenna (cross-cutting closed-set decision on chain universe).**
 - [ ] [AGENT] P0. **1G — UAC QG green** post-Phase-1.
 
 **Codex SSOT update (Phase 1 boundary)**:
