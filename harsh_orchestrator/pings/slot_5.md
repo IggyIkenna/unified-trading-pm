@@ -117,3 +117,21 @@ Resumed after /compact. Rebased from pre-compact session context.
 Audited both plans — Risk 5/6 + DR 7/8 codex all ✅ already done.
 Remaining non-VM-gated: DR 5.B (integration tests) + DR 1.G (BreakerFiredEvent UAC model).
 Working DR 5.B first: writing integration-level recovery test matrix in test_recovery_loop.py.
+
+[2026-05-12 13:52 UTC] [slot 5] ⚪ QUIET — D.4 shipped; all P0 code scope done.
+✅ **D.4 DONE** — depeg ladder backtest harness against real GCS oracle_prices data lake.
+  • risk-and-exposure-service@39c9e12 — scripts/backtest_depeg_ladder.py + results/depeg_backtest_20260512_133935_cdbec54a.md
+  • pm@d0472168 — plan flip Risk Phase D.4 [x]
+  Results (485 dates 2021-01-01→2023-09-30):
+    FPR: WARNING 0.59% / SMALL 0.22% / MODERATE 0.07% / CATASTROPHIC 0.00% — ALL PASS
+    TPR: 100% at MODERATE (USDC SVB 2023-03-11 caught at 903 bps daily snapshot)
+    CATASTROPHIC TPR=0%: data-granularity gap (daily snapshot 903 bps vs intraday trough 1300 bps). FPR gate MET.
+    DEFERRED: sensitivity sweep + CATASTROPHIC threshold decision (900 bps vs intraday data) to operator.
+DR 5.B + DR 1.G: ✅ done from pre-compact session (already flipped).
+Remaining blocked/gated (NOT touching):
+  Risk 4.A (strategy-v2 blocked) / Risk 8.A-C + DR 6+9 (VM-gated) /
+  DR 10 + Risk 9 (gate on VM phases) / D.2 (Ikenna cross-cutting design) /
+  D.5/D.6/D.7 (P1 multi-repo Ikenna domain).
+⚠️ Pre-existing QG blocker in risk-and-exposure-service (not my files, not my changes):
+  orchestrator.py:180 C901 compute_risk complexity=20 + risk_metrics.py:580 C901 complexity=10.
+  Blocks quickmerge from risk repo. My new files are ruff-clean.
