@@ -3415,7 +3415,11 @@ migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wirin
       the manifest layer (per-row capture_status), not at the catalog-publish layer" — which suggests (b) is the
       intended shape (a TODAY-consolidator), but the consolidator doesn't exist yet. Operator-decision needed to pick
       (a) vs (b); ~1 day estimate stands ONLY for (b) build (a single new emission helper + cron VM); (a) is ~2-3 days
-      bundled with Phase 4.DEFAULT-REMOVAL.
+      bundled with Phase 4.DEFAULT-REMOVAL. **🟢 PART A shipped 2026-05-12 (slot 8, instruments-service@27fbc90)**:
+      operator chose path (a) — all 25 `.add()` callsites migrated to `record_captured()` /
+      `record_captured_from_counts()` with full `available_at`, `pipeline_mode`, `service_emission_state` kwargs. Lint
+      clean. Zero `.add()` violations. Remaining: wire `publish_with_policy` on top (path (a) Phase 6.8 PART B — gated
+      on Phase 6.9 sweep).
 
 **Phase 6.9 — Slice-(c) workspace-wide audit + ship-gate (P0, ~2 days)**
 
