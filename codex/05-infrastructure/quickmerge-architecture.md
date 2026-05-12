@@ -24,9 +24,16 @@ creating a PR.
 # Standard (dependencies match main)
 bash scripts/quickmerge.sh "feat: description"
 
-# Differential branching (dependencies differ from main)
+# Agent sessions (Claude Code / sub-agents):
+bash scripts/quickmerge.sh "feat: description" --agent
+
+# Differential branching (dependencies differ from main) — HUMAN-ONLY
 bash scripts/quickmerge.sh "feat: description" --dep-branch "my-feature"
 ```
+
+> **`--dep-branch` is HUMAN-ONLY** (per CLAUDE.md "Git discipline"). Quickmerge exits(1) when `--dep-branch` is combined
+> with `--agent`. Sub-agents must NOT use this flag; if dep repos are dirty, commit + push directly to
+> `live-defi-rollout` instead (per CLAUDE.md "DO NOT quickmerge when dep repos are dirty" rule).
 
 ## Environment Awareness
 

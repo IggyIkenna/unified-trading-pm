@@ -18,6 +18,13 @@ related:
 
 > **Status:** PLANNED — stub created 2026-05-07 to anchor forward-references from active plans. Body to be filled in as
 > the work shipped by the referencing plan progresses.
+>
+> **CUTOVER DEADLINE 2026-05-12** — per the "Master Plan Continuous-Verification Column" HARD RULE, this doc MUST ship
+> body content (or explicit move to `codex/16-future-work/`) before the May-23 cutover. As of 2026-05-12, still a stub.
+> **Owner**: alerting-service + governance. **Action**: either (a) spawn an active plan to fill the 4 stub sections
+> (Lifecycle Events / Heartbeat Thresholds / Cross-Cloud Parity / Stall Detection) before May-23, or (b) move to
+> `codex/16-future-work/` and remove the `referenced_by: master_to_live_defi_2026_05_23.md` reference. Today the stub
+> anchors a forward-reference that doesn't actually exist.
 
 ## Purpose
 
