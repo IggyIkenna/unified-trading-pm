@@ -551,12 +551,18 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
 
 - [ ] [SCRIPT] P0. **Step 1**: api_football FIXTURES write-time computation. When `status_short ∈ {FT, AET, PEN}`,
       compute `match_end_time ≈ kickoff + periods.second.duration + et.duration +     injury_time` from the API
-      response. Add `match_end_time` column to UAC FIXTURES contract. [AUDIT 2026-05-07: FRESH — actionable]
+      response. Add `match_end_time` column to UAC FIXTURES contract. [AUDIT 2026-05-07: FRESH — actionable] **PARTIAL
+      2026-05-12 slot 5 (instruments-service@9bffca2)**: UAC field `match_end_time: datetime | None` added to
+      `CanonicalFixture`; `detect_match_end_time()` helper shipped in SFI adapter. The write-path call
+      (instruments-service SFI progressive-stats writer → populate `fixture.match_end_time`) is NOT yet wired.
+      **DEFERRED**: wire `detect_match_end_time()` result into instruments-service SFI progressive-stats write path so
+      the `match_end_time` field is populated on the written `CanonicalFixture` object.
 - [ ] [SCRIPT] P0. **Step 2**: SFI progressive freeze detection. Add `ft_timer` (raw `timer_seconds` from the
       snapshot) + `match_end_time` (detected freeze point — the last snapshot where `timer_seconds` advances) columns to
       UAC `SFI_PROGRESSIVE_STATS` contract. Detect freeze at write-time in
       `instruments-service/instruments_service/sfi/normalize.py` (or wherever the SFI snapshot writer lives). [AUDIT
-      2026-05-07: FRESH — actionable]
+      2026-05-07: FRESH — actionable] **PARTIAL 2026-05-12 slot 5**: `detect_match_end_time()` ships;
+      SFI_PROGRESSIVE_STATS contract columns NOT yet added.
 - [ ] [SCRIPT] P0. **Step 3**: UTL helper
       `unified_trading_library.fixtures.resolve_match_end_time(fixture_id) -> tuple[datetime, str]` walking the cascade
       in priority order: api_football FIXTURES.match_end_time → SFI freeze → footystats/understat post-match timestamp →
@@ -566,8 +572,18 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       (FIXTURE_STATS / SFI_PROGRESSIVE_STATS / understat XG / fixture_player_stats) per CLAUDE.md "available_at per-row,
       write-time, equal-to-live-pipeline-arrival" rule. [AUDIT 2026-05-07: FRESH — actionable; coordinate with
       sports_master:Phase 3 rename]
+- [ ] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Wire `assert_available_at_present` into the
+      instruments-service SFI progressive-stats / FIXTURES write path (spawn prompt step 8). Blocked on Step 3 UTL
+      helper above. Successor: this item (step 3 + wire = same Phase 2.D completion sprint).
+- [ ] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Derive
+      `report_time = match_end_time +     SFI_DATA_LAG_P95_SECONDS` in instruments-service SFI progressive-stats write
+      path. `SFI_DATA_LAG_P95_SECONDS=300` already in UAC `registry/source_data_latency.py@0a3d464`. Wire: call
+      `detect_match_end_time()`, compute `report_time = match_end_time + timedelta(seconds=SFI_DATA_LAG_P95_SECONDS)`,
+      set on the fixture object before write.
 - [ ] [TEST] P0. Unit tests covering each branch of the cascade + the `kickoff + 120min` fallback shape. [AUDIT
-      2026-05-07: FRESH — actionable]
+      2026-05-07: FRESH — actionable] **PARTIAL 2026-05-12 slot 5 (instruments-service@9bffca2)**: 5 unit tests for
+      freeze-detect + announced_at + PST/CANC shipped in `test_phase2d_match_timing.py`. Cascade-branch tests (Step 3
+      UTL helper) still needed.
 - [ ] [VERIFY] P0. After ship + smoke, deployment-ui schema modal for FIXTURES / SFI_PROGRESSIVE_STATS / FIXTURE_STATS
       shows `match_end_time` column populated for completed fixtures. [AUDIT 2026-05-07: BLOCKED-ON above C.6 ship]
 
