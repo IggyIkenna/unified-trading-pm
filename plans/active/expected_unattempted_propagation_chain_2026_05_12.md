@@ -537,7 +537,9 @@ wait
 
 Record baseline phantom counts per asset_group in `## Reconciliation baseline` section below.
 
-- [ ] [SCRIPT] P0. Run dry-run baseline across all 5 asset_groups × 3 scripts. Record counts below.
+- [x] [SCRIPT] P0. Run dry-run baseline across all 5 asset_groups × 3 scripts. Record counts below.
+      (2/3 done: absence-reason + legacy-blank scanned locally 2026-05-12 Slot 3 — results in baseline table above.
+      **DEFERRED**: phantom audit — CLAUDE.md requires GCE VM; pending dedicated VM launch on same-region instance.)
 
 ### Phase 5B — Apply-flips in dependency order (AFTER Phases 1–4 shipped)
 
@@ -606,23 +608,29 @@ Also run all 5 asset_groups through `reconcile_expected_absence_reasons.py --app
 
 ## Reconciliation baseline (fill after Phase 5A)
 
-| Script         | Asset group | Phantom count (dry-run) | Empty reason nulls | Legacy blank reasons | Date run |
-| -------------- | ----------- | ----------------------- | ------------------ | -------------------- | -------- |
-| phantom        | cefi        | TBD                     | —                  | —                    | —        |
-| phantom        | defi        | TBD                     | —                  | —                    | —        |
-| phantom        | tradfi      | TBD                     | —                  | —                    | —        |
-| phantom        | sports      | TBD                     | —                  | —                    | —        |
-| phantom        | prediction  | TBD                     | —                  | —                    | —        |
-| absence-reason | cefi        | —                       | TBD                | —                    | —        |
-| absence-reason | defi        | —                       | TBD                | —                    | —        |
-| absence-reason | tradfi      | —                       | TBD                | —                    | —        |
-| absence-reason | sports      | —                       | TBD                | —                    | —        |
-| absence-reason | prediction  | —                       | TBD                | —                    | —        |
-| legacy-blank   | cefi        | —                       | —                  | TBD                  | —        |
-| legacy-blank   | defi        | —                       | —                  | TBD                  | —        |
-| legacy-blank   | tradfi      | —                       | —                  | TBD                  | —        |
-| legacy-blank   | sports      | —                       | —                  | TBD                  | —        |
-| legacy-blank   | prediction  | —                       | —                  | TBD                  | —        |
+> Baseline populated 2026-05-12 Slot 3. Phantom audit requires GCE VM (CLAUDE.md rule) — pending VM launch.
+> absence-reason + legacy-blank scans run locally from `.tabs/3/` worktree.
+
+| Script         | Asset group | Phantom count (dry-run) | Empty reason nulls               | Legacy blank reasons | Date run   |
+| -------------- | ----------- | ----------------------- | -------------------------------- | -------------------- | ---------- |
+| phantom        | cefi        | PENDING (GCE VM req.)   | —                                | —                    | —          |
+| phantom        | defi        | PENDING (GCE VM req.)   | —                                | —                    | —          |
+| phantom        | tradfi      | PENDING (GCE VM req.)   | —                                | —                    | —          |
+| phantom        | sports      | PENDING (GCE VM req.)   | —                                | —                    | —          |
+| phantom        | prediction  | PENDING (GCE VM req.)   | —                                | —                    | —          |
+| absence-reason | cefi        | —                       | **3,146** (all SOURCE_RETURNED_ZERO) | —                | 2026-05-12 |
+| absence-reason | defi        | —                       | 0                                | —                    | 2026-05-12 |
+| absence-reason | tradfi      | —                       | 0                                | —                    | 2026-05-12 |
+| absence-reason | sports      | —                       | 0                                | —                    | 2026-05-12 |
+| absence-reason | prediction  | —                       | 0                                | —                    | 2026-05-12 |
+| legacy-blank   | cefi        | —                       | —                                | 0 (2,632,931 scanned) | 2026-05-12 |
+| legacy-blank   | defi        | —                       | —                                | 0 (604,951 candidates, 0 upgrades) | 2026-05-12 |
+| legacy-blank   | tradfi      | —                       | —                                | 0                    | 2026-05-12 |
+| legacy-blank   | sports      | —                       | —                                | 0 (1,868,285 candidates, 0 upgrades) | 2026-05-12 |
+| legacy-blank   | prediction  | —                       | —                                | 0 (41 candidates, 0 upgrades) | 2026-05-12 |
+
+**Key finding**: cefi has **3,146 empty_confirmed rows** with null `error_reason` (all propose `SOURCE_RETURNED_ZERO`).
+These are the only apply-flip candidates. All defi/tradfi/sports/prediction are clean.
 
 ---
 
