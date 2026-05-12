@@ -461,17 +461,26 @@ address, decimals, symbol, instrument_type, classification, lifecycle dates. Eac
 >   the adapter file + test only, main agent reconciles `factory.py` for all in one commit. (Pre-existing
 >   `factory.py:~366 reportRedeclaration` on `adapter` — unrelated, leave it.)
 >
-> **DONE 2026-05-12 (harsh slot 2):** `2.ROCKETPOOL` (rETH LST, instruments-service@`a490033`) + `2.RENZO`
+> **DONE 2026-05-12 (harsh slot 2) — Session 1:** `2.ROCKETPOOL` (rETH LST, instruments-service@`a490033`) + `2.RENZO`
 > (ezETH LRT) + `2.KELPDAO` (rsETH LRT) (instruments-service@`be12b56`) — 3 single-token ETH LST/LRT registry
-> adapters, registered in `factory.py`, 5 unit tests each (offline). **Phase 2 fan-out queue for next session**
-> (one sub-agent per clean-boundary protocol; create adapter + test, do NOT touch the shared `factory.py` —
-> main agent reconciles registrations after the fan-out): Yearn (vaults, ETH+ARB+OPT), Pendle (PT/YT/SY + maturity,
-> ETH+ARB — trickiest, needs the Pendle active-markets API or a curated active-markets snapshot), Beefy (vaults,
-> 6 chains), Idle (vaults, ETH+ARB+POLY), Convex (Curve-LP-staking vaults, ETH), Solblaze (bSOL LST, SOL — use
-> `_solana_utils.py` + `marinade.py` template), Symbiotic / Karak / Puffer (restaking vaults, ETH), Jito-restaking
-> (SOL — extend `jito.py` or add `jito_restaking.py`), Renzo-ARB (bridged ezETH multi-chain extension — parse `chain`
-> from venue name + per-chain address map + add to `defi_graph_adapters` set). Then main agent reconciles `factory.py`
-> registrations + flips each `2.<PROTOCOL>` checkbox + the `2J` codex update.
+> adapters, registered in `factory.py`, 5 unit tests each (offline).
+>
+> **DONE 2026-05-12 (harsh slot 2) — Session 2 (Sonnet):** 7 more static-registry adapters (instruments-service@`57a4f1f`):
+> `2.PUFFER` (pufETH LRT, ETH), `2.SOLBLAZE` (bSOL LST, SOL), `2.SYMBIOTIC` (wstETH/rETH/cbETH/ETHx vaults, ETH),
+> `2.KARAK` (wstETH/WETH vaults, ETH+ARB), `2.CONVEX` (CVX+cvxCRV, ETH), `2.IDLE` (DAI/USDC/USDT BEST vaults, ETH),
+> `2.YEARN` (yvWETH/yvDAI/yvUSDC/yvWBTC V3 vaults, ETH+ARB). All registered in `factory.py` (CANONICAL_VENUE_TO_ADAPTER
+> + _ADAPTERS + ADAPTER_DATA_SOURCES). 35 new unit tests (100 total in defi/ suite, 100/100 passing).
+> basedpyright 0 errors on new files; ruff clean.
+>
+> **DEFERRED — remaining Phase 2 gaps:**
+> - `2.BEEFY` (multi-vault, 6 chains) — **DEFERRED**: 200+ vaults across chains; static registry would be stale;
+>   needs Beefy API integration or curated snapshot. Successor: Phase 2 follow-up plan or Phase 3 MTDS.
+> - `2.PENDLE` (PT/YT/SY + maturity, ETH+ARB) — **DEFERRED**: instruments have expiry dates requiring Pendle API or
+>   curated snapshot; trickiest. Successor: Phase 2 follow-up plan.
+> - `2.JITO-RESTAKING` (Solana restaking vaults) — **DEFERRED**: separate from jito.py LST adapter; vault structure
+>   TBD. Successor: Phase 2 follow-up plan.
+> - `2.RENZO-ARB` (bridged ezETH multi-chain) — **DEFERRED**: needs `chain` parsing from venue name + per-chain
+>   address map + `renzo` added to `defi_graph_adapters` set. Successor: Phase 2 follow-up plan.
 
 Per-protocol todo template (instantiated 27 times):
 
@@ -501,6 +510,44 @@ Per-protocol todo template (instantiated 27 times):
       `0xA1290d69c65A6Fe4DF752f95823fae25cB99e5A7`, 18 decimals, launch 2023-11-09 per `PROTOCOL_LAUNCH_DATES`) +
       `test_kelpdao_metadata.py` (5 tests, offline) + `factory.py` registration (`KELPDAO-ETHEREUM`). instruments-service@`be12b56`.
       basedpyright clean on new file; ruff clean; pytest 5/5.
+- [x] [AGENT] P0. **2.PUFFER — Puffer Finance (pufETH) instruments-service adapter** — `adapters/defi/puffer.py` (static
+      single-token LRT registry; pufETH on Ethereum, `instrument_type=YIELD_BEARING`, contract
+      `0xD9A442856C234a39a81a089C06451EBAa4306a72`, 18 decimals, launch 2024-05-09 per `PROTOCOL_LAUNCH_DATES`) +
+      `test_puffer_metadata.py` (5 tests, offline) + `factory.py` registration (`PUFFER-ETHEREUM`).
+      instruments-service@`57a4f1f`. basedpyright 0 errors; ruff clean; pytest 5/5.
+- [x] [AGENT] P0. **2.SOLBLAZE — Solblaze (bSOL) instruments-service adapter** — `adapters/defi/solblaze.py` (static
+      single-token LST registry; bSOL on Solana, `instrument_type=YIELD_BEARING`, mint
+      `bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1`, 9 decimals, launch 2022-02-17 from chain records) +
+      `test_solblaze_metadata.py` (5 tests, offline) + `factory.py` registration (`SOLBLAZE-SOLANA`).
+      instruments-service@`57a4f1f`. basedpyright 0 errors; ruff clean; pytest 5/5.
+- [x] [AGENT] P0. **2.SYMBIOTIC — Symbiotic restaking vaults instruments-service adapter** — `adapters/defi/symbiotic.py`
+      (static curated 4-vault registry: wstETH/rETH/cbETH/ETHx vaults, `instrument_type=YIELD_BEARING`, launch 2024-06-11
+      per `PROTOCOL_LAUNCH_DATES`) + `test_symbiotic_metadata.py` (5 tests, offline) + `factory.py` registration
+      (`SYMBIOTIC-ETHEREUM`). instruments-service@`57a4f1f`. basedpyright 0 errors; ruff clean; pytest 5/5.
+- [x] [AGENT] P0. **2.KARAK — Karak restaking vaults instruments-service adapter** — `adapters/defi/karak.py` (static
+      curated multi-chain vault registry: wstETH/WETH on ETH + wstETH on ARB, `instrument_type=YIELD_BEARING`, launch
+      2024-04-08 per `PROTOCOL_LAUNCH_DATES`) + `test_karak_metadata.py` (5 tests, offline) + `factory.py`
+      registration (`KARAK-ETHEREUM` + `KARAK-ARBITRUM`). instruments-service@`57a4f1f`. basedpyright 0 errors; ruff clean; pytest 5/5.
+- [x] [AGENT] P0. **2.CONVEX — Convex Finance (CVX + cvxCRV) instruments-service adapter** — `adapters/defi/convex.py`
+      (static 2-token registry: CVX + cvxCRV, `instrument_type=YIELD_BEARING`, launch 2021-05-17 per
+      `PROTOCOL_LAUNCH_DATES`) + `test_convex_metadata.py` (5 tests, offline) + `factory.py` registration
+      (`CONVEX-ETHEREUM`). instruments-service@`57a4f1f`. basedpyright 0 errors; ruff clean; pytest 5/5.
+- [x] [AGENT] P0. **2.IDLE — Idle Finance yield vaults instruments-service adapter** — `adapters/defi/idle.py` (static
+      curated 3-vault registry: idleDAI/idleUSDC/idleUSDT BEST on ETH, `instrument_type=YIELD_BEARING`, launch
+      2019-08-13 per `PROTOCOL_LAUNCH_DATES`) + `test_idle_metadata.py` (5 tests, offline) + `factory.py`
+      registration (`IDLE-ETHEREUM` + `IDLE-ARBITRUM`). instruments-service@`57a4f1f`. basedpyright 0 errors; ruff clean; pytest 5/5.
+- [x] [AGENT] P0. **2.YEARN — Yearn Finance V3 vaults instruments-service adapter** — `adapters/defi/yearn.py` (static
+      curated vault registry: yvWETH/yvDAI/yvUSDC/yvWBTC on ETH + yvWETH/yvUSDC on ARB, `instrument_type=YIELD_BEARING`,
+      launch 2024-03-20 ETH / 2023-11-15 ARB per `PROTOCOL_LAUNCH_DATES`) + `test_yearn_metadata.py` (5 tests, offline) +
+      `factory.py` registration (`YEARN-ETHEREUM` + `YEARN-ARBITRUM`). instruments-service@`57a4f1f`. basedpyright 0 errors; ruff clean; pytest 5/5.
+- [ ] [AGENT] P0. **2.BEEFY — Beefy Finance multi-chain vaults** — **DEFERRED**: 200+ vaults across 6 chains; static
+      registry would be stale; needs Beefy API integration or curated snapshot. Successor: Phase 2 follow-up plan.
+- [ ] [AGENT] P0. **2.PENDLE — Pendle PT/YT/SY + maturity** — **DEFERRED**: instruments have expiry dates; needs Pendle
+      active-markets API or curated snapshot. Successor: Phase 2 follow-up plan.
+- [ ] [AGENT] P0. **2.JITO-RESTAKING — Jito restaking vaults (Solana)** — **DEFERRED**: separate from jito.py LST;
+      vault structure TBD. Successor: Phase 2 follow-up plan.
+- [ ] [AGENT] P0. **2.RENZO-ARB — Renzo bridged ezETH on Arbitrum** — **DEFERRED**: needs chain parsing + per-chain
+      address map + `renzo` added to `defi_graph_adapters`. Successor: Phase 2 follow-up plan.
 
 **Codex SSOT update (Phase 2 boundary)**:
 
