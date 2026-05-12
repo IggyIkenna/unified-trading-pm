@@ -278,16 +278,19 @@ Owner: harsh + parallel agent.
 - [x] [AGENT] P0. **2C — Deployment-api endpoint** at `GET /api/data-status/honest-coverage` returning the latest 2B
       output + per-asset-group + per-venue + per-data_type drilldowns. (deployment-api@2b6e7f2 — GET
       /api/data-status/honest-coverage; 404 when not yet measured)
-- [ ] [AGENT] P0. **2D — Deployment-ui surface**. Per-asset-group coverage % card at top of each asset_group's
+- [x] [AGENT] P0. **2D — Deployment-ui surface**. Per-asset-group coverage % card at top of each asset_group's
       data-status tab + drilldown chart: per-venue / per-data_type / per-day stacked-bar (captured / empty_confirmed /
       attempted_failed / expected_unattempted). Composes with existing data-status tab (deployment-stack at port 5183).
+      (deployment-ui@`4e476ee` — HonestCoverageCard.tsx + getHonestCoverage() in client.ts + DataStatusTab.tsx wiring)
 
 **Codex SSOT update (Phase 2 boundary)**:
 
-- [ ] [AGENT] P0. **2E — Update `codex/02-data/availability-manifest-and-data-status.md`** with the new measurement
-      script + UI surface contract.
-- [ ] [AGENT] P0. **2F — New `codex/03-deployment/data-status-ui-surface.md`** documenting the per-asset-group coverage
-      UI's data contract + which back-end endpoint feeds which widget.
+- [x] [AGENT] P0. **2E — Update `codex/02-data/availability-manifest-and-data-status.md`** with the new measurement
+      script + UI surface contract. (PM@`b9978acf` — § "Honest-coverage measurement script + UI surface" added;
+      JSON shape + formula + GCS path + API endpoint + UI component documented)
+- [x] [AGENT] P0. **2F — New `codex/03-deployment/data-status-ui-surface.md`** documenting the per-asset-group coverage
+      UI's data contract + which back-end endpoint feeds which widget. (PM@`b9978acf` — new SSOT created at
+      codex/03-deployment/data-status-ui-surface.md; data contract + API + UI component + styling + ops notes)
 
 **Full-execution criterion**:
 
@@ -316,16 +319,21 @@ Pre-audit: writegate Wave 3.M is PENDING. Some CeFi venues may still emit legacy
 - [x] [AGENT] P0. **3B — Per-venue remediation tickets**. For each venue still emitting legacy NaN placeholders, file an
       issue doc at `plans/active/issues/cefi_<venue>_zero_activity_bar_2026_05_<date>.md` with the audit finding +
       remediation owner. (N/A — Phase 3A audit found zero violations; no issue docs required)
-- [ ] [AGENT] P0. **3C — Reconciler script** `instruments-service/scripts/reconcile_legacy_nan_placeholder_bars.py` to
+- [x] [AGENT] P0. **3C — Reconciler script** `instruments-service/scripts/reconcile_legacy_nan_placeholder_bars.py` to
       convert existing NaN-placeholder rows in production manifests to either Category A `record_empty` (typed reason)
-      or Category D zero-activity bar per the catalogue-aware rule.
-- [ ] [AGENT] P0. **3D — Workspace-wide grep** for `_create_empty_output` / `_handle_empty_tick_data` — confirm
-      banned-pattern AST sweep (writegate Phase 2.A) is complete; if not, complete here.
+      or Category D zero-activity bar per the catalogue-aware rule. (instruments-service@`d3b3632` — scan-only by
+      default; `--apply-flips` requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME`; cefi scope; NAN_RATIO_THRESHOLD=0.95)
+- [x] [AGENT] P0. **3D — Workspace-wide grep** for `_create_empty_output` / `_handle_empty_tick_data` — confirm
+      banned-pattern AST sweep (writegate Phase 2.A) is complete; if not, complete here. (`_create_empty_output` = zero
+      actual defs/calls in non-test code — only in comments + check_banned_placeholder_methods.py itself;
+      `_handle_empty_tick_data` is the APPROVED MDPS replacement that routes through `record_empty_for_shard` — NOT
+      banned per QG checker line 77+. Pattern sweep complete: 0 violations.)
 
 **Codex SSOT update (Phase 3 boundary)**:
 
-- [ ] [AGENT] P0. **3E — Update `codex/02-data/honest-absence-downstream-handling.md`** with per-CeFi-venue audit
-      results + Category D coverage status.
+- [x] [AGENT] P0. **3E — Update `codex/02-data/honest-absence-downstream-handling.md`** with per-CeFi-venue audit
+      results + Category D coverage status. (PM@`b9978acf` — § "Phase 3A CeFi adapter audit results (2026-05-12)"
+      added; all 18 compliant; reconciler script documented; zero banned-pattern violations confirmed)
 
 **Full-execution criterion**:
 
@@ -473,9 +481,11 @@ Per Post-Plan-Phase Codex Audit HARD RULE:
 
 - [x] [AGENT] P0. **7A — `codex/02-data/contracts-scope-and-layout.md`** (UPDATE; Phase 1H + 5D). DONE — 5D:
       asset_group_registry section (PM@`58e5dbe0`); 1H: 6-item audit-confirmed canonical picks table (PM@`bd7a9ea6`).
-- [ ] [AGENT] P0. **7B — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 2E).
-- [ ] [AGENT] P0. **7C — `codex/03-deployment/data-status-ui-surface.md`** (NEW; Phase 2F).
-- [ ] [AGENT] P0. **7D — `codex/02-data/honest-absence-downstream-handling.md`** (UPDATE; Phase 3E).
+- [x] [AGENT] P0. **7B — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 2E). DONE
+      PM@`b9978acf`.
+- [x] [AGENT] P0. **7C — `codex/03-deployment/data-status-ui-surface.md`** (NEW; Phase 2F). DONE PM@`b9978acf`.
+- [x] [AGENT] P0. **7D — `codex/02-data/honest-absence-downstream-handling.md`** (UPDATE; Phase 3E). DONE
+      PM@`b9978acf`.
 - [x] [AGENT] P0. **7E — `codex/04-architecture/mev-protection.md`** (CONSOLIDATED; Phase 4). **DONE 2026-05-12
       (slot 8)** — `04-architecture/mev-protection.md` is the canonical SSOT (431 lines covering threat model + provider
       factory + protected RPC URLs SSOT + provider implementations + operational run-book + UAC `MevSubmissionMode` enum
