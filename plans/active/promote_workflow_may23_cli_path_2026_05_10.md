@@ -40,6 +40,8 @@ estimate_calibration_note: |
 
 # Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)
 
+> **🟡 IN-FLIGHT REFACTOR — UAC Phase 1 client-reporting contracts landed (UAC@b3233e5, 2026-05-12). `ClientReportingMode`, `ClientNAV` now in `unified_api_contracts.internal`. Promote CLI seeding demo client must use `DEMO_CLIENT_SEED` from UAC registry. Banner: `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 1.**
+
 > **🟡 IN-FLIGHT REFACTOR — `vm_zombie_watchdog.py` shape evolving + launcher-registry SSOT dependency** (added
 > 2026-05-10 cross-plan audit fix)
 >

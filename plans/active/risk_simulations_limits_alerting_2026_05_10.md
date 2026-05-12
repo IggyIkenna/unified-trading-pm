@@ -26,6 +26,8 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — UAC Phase 1 client-reporting contracts landed (UAC@b3233e5, 2026-05-12). `ClientNAV`, `ClientPosition`, `ClientPnLEntry`, `PnLFactor`, `PnLLayer` now in `unified_api_contracts.internal`. Risk-limit schema consumers must import from UAC.internal. Banner: `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 1.**
+
 # Risk rule taxonomy + per-archetype/venue/account/client limits + pre-flight checks
 
 > **🟢 § 7 SSOT RECONCILIATION CLOSED — Framing 1 (legitimate layered extension) picked by operator 2026-05-10.**

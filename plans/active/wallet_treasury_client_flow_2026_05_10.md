@@ -27,6 +27,8 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — UAC Phase 1 client-reporting contracts landed (UAC@b3233e5, 2026-05-12). `PnLFactor`, `PnLLayer`, `PnLAttributionRow`, `PnLAttribution`, `ClientReportingMode`, `ClientPosition`, `ClientPnLEntry`, `ClientNAV` are now in `unified_api_contracts.internal`. Any treasury/client-lifecycle type that duplicates these must import from UAC.internal. Banner: `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 1.**
+
 # Wallet / treasury / client lifecycle MVP
 
 > **🟡 IN-FLIGHT REFACTOR — `FeeRecognitionRow` UAC type added 2026-05-10 PM.** Per

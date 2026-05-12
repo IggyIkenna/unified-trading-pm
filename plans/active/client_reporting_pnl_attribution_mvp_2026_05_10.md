@@ -100,17 +100,19 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
       emitted today, what's missing for per-client decomposition, what's the current correlation_id flow.
 - [ ] [AGENT] P0. **0.B Existing client-reporting-api audit.** What endpoints exist, what's mocked, what's wired to real
       data.
-- [ ] [SCRIPT] P0. **0.C Banners on cross-plan files.**
+- [x] [SCRIPT] P0. **0.C Banners on cross-plan files.** (PM@pending — banners added to wallet_treasury_client_flow, risk_simulations_limits_alerting, promote_workflow_may23_cli_path 2026-05-12)
 
 **Full-execution criterion**: § Audit findings populated; banners on 3 plans.
 
+> **DEFERRED**: 0.A + 0.B pre-audit not yet done (Phase 1 shipped first per operator reserve direction). 0.A/0.B to be run as Phase 2 prep — see `## Deferred work` section below.
+
 ## Phase 1 — UAC client-reporting contracts (Days 2-3, ~1.5 AI-days)
 
-- [ ] [AGENT] P0. **1.A `ClientId` + `ClientShareClass` + `ClientReportingMode` enums.** Closed sets;
-      `ClientReportingMode ∈ {DEMO, PAPER, LIVE}`.
-- [ ] [AGENT] P0. **1.B `ClientPosition` + `ClientPnLEntry` + `ClientNAV` Pydantic dataclasses.** Per-position lineage
-      (archetype_id, strategy_leg_id, trade_id, venue, instrument, qty, mark, cost-basis, realized-pnl, unrealized-pnl).
-- [ ] [AGENT] P0. **1.C `PnLAttributionRow` factor × layer dual-axis** (per
+- [x] [AGENT] P0. **1.A `ClientId` + `ClientShareClass` + `ClientReportingMode` enums.** Closed sets;
+      `ClientReportingMode ∈ {DEMO, PAPER, LIVE}`. (UAC@b3233e5 — `ClientReportingMode(StrEnum)` in `internal/reporting/client_reporting.py`; reuses `ShareClass` from `canonical/crosscutting/share_class.py`)
+- [x] [AGENT] P0. **1.B `ClientPosition` + `ClientPnLEntry` + `ClientNAV` Pydantic dataclasses.** Per-position lineage
+      (archetype_id, strategy_leg_id, trade_id, venue, instrument, qty, mark, cost-basis, realized-pnl, unrealized-pnl). (UAC@b3233e5 — all three in `internal/reporting/client_reporting.py`; PII field on `client_id`)
+- [x] [AGENT] P0. **1.C `PnLAttributionRow` factor × layer dual-axis** (per
       `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` Hard Rule #4 + § PnLAttribution Schema + §
       Plan-vs-codex factor name mapping). Row carries `factor: PnLFactor` (canonical 16-factor closed set: `DELTA` /
       `FUNDING` / `BASIS` / `CARRY` / `CARRY_BASE` / `CARRY_AVS_CONTINUOUS` / `CARRY_ISSUER_SEASONAL` /
@@ -122,16 +124,16 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
       Pre-codex names mapped per the codex § Plan-vs-codex factor name mapping table: `FINANCING` / `BORROW` →
       `factor=CARRY` (sub-factor metadata); `REBALANCE` → not a factor (`PnLMetadata.fill_reason` instead);
       `HWM_CRYSTALLIZATION` → separate `FeeRecognitionRow` table (NEW UAC type owned by
-      `wallet_treasury_client_flow_2026_05_10` Phase 4.C extension — see this plan's Phase 5.C2 + cross-plan banner).
-- [ ] [AGENT] P0. **1.D Registry seed.** `registry/client_share_classes.py` with the demo share class + the live-DeFi
-      cutover share class.
-- [ ] [AGENT] P0. **1.E Tests** (per codex § Decomposition Invariants). ≥20 unit tests covering: round-trip
+      `wallet_treasury_client_flow_2026_05_10` Phase 4.C extension — see this plan's Phase 5.C2 + cross-plan banner). (UAC@b3233e5 — `PnLFactor`, `PnLLayer`, `PnLAttributionRow` frozen dataclass, `PnLAttribution` BaseModel in `internal/risk.py`)
+- [x] [AGENT] P0. **1.D Registry seed.** `registry/client_share_classes.py` with the demo share class + the live-DeFi
+      cutover share class. (UAC@b3233e5 — `DEMO_CLIENT_SEED` + `LIVE_DEFI_CUTOVER_ARCHETYPES` in `registry/client_share_classes.py`)
+- [x] [AGENT] P0. **1.E Tests** (per codex § Decomposition Invariants). ≥20 unit tests covering: round-trip
       serialisation, factor closed-set assertion (every row's `factor ∈ PnLFactor`), layer closed-set assertion
       (`layer ∈ PnLLayer`), per-mode coverage, **factor × layer dual-axis invariants**:
       `sum(rows over both layers, all factors) == realised_total_pnl`,
       `sum(rows where layer=STRATEGY) == strategy_alpha_total` (matches BENCHMARK matching-engine sum from
       execution-service), `sum(rows where layer=EXECUTION) == execution_alpha_total` (live − BENCHMARK residual),
-      `RESIDUAL` factor magnitude `< 1% of |total_pnl|`. Loud failure on violation; no silent placeholder.
+      `RESIDUAL` factor magnitude `< 1% of |total_pnl|`. Loud failure on violation; no silent placeholder. (UAC@b3233e5 — 42 tests in `tests/internal/unit/test_pnl_attribution_contracts.py`; 42/42 pass)
 
 **Full-execution criterion**: UAC PR pushed; QG green; round-trip test passes.
 
@@ -256,6 +258,15 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 - `promote_workflow_may23_cli_path_2026_05_10` — promote events emit per-client when archetype goes live.
 - `simulation_scenarios_topology_price_shocks_2026_05_09` — synthetic scenarios run against demo client to validate PnL
   bounding under shock.
+
+## Deferred work after 2026-05-12 slot-8 Day-3 session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+| ------------ | ----------------------- | ------------------- |
+| 0.A Existing PnL emission audit | **DEFERRED** — Phase 1 shipped first per operator reserve-plan direction; audit not done | Run as Phase 2 prep before 2.A joiner starts — add as first step in Phase 2 |
+| 0.B Existing client-reporting-api audit | **DEFERRED** — same as 0.A | Run before Phase 4 API endpoints |
+| Phase 1.A-1.E UAC contracts | ✅ DONE (UAC@b3233e5) | 42/42 tests pass; pushed to live-defi-rollout |
+| Phase 2 onwards | TODO | Next session: Phase 2 UTL PnL attribution emitter |
 
 ## Deferred work after 2026-05-10 plan-creation session
 
