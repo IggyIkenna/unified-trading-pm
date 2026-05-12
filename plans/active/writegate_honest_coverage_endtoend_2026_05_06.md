@@ -3207,6 +3207,10 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       cross_venue_spreads / book_depth_bands / liquidity_walls / liquidation_clusters / flow_interaction / composite_sr
       / paired_price_dispersion STRICT_FAIL); delta-one (9 anchors); multi-timeframe (4 cross-TF alignment groups all
       STRICT_FAIL on paired_spec precedent). **DEFERRED**: per-service wiring of `publish_with_policy()`.
+      **DELTA-ONE WIRED 2026-05-12 @features-service@5e24a18c**: `_check_emission_policy()` + `_apply_emission_policy()`
+      in `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
+      `tests/delta_one/unit/test_emission_policy.py`. cross-instrument wired @features-service@e31ef632 (Phase 6.4).
+      **STILL DEFERRED**: multi-timeframe wiring + sports wiring + onchain wiring.
 
 **Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
 
