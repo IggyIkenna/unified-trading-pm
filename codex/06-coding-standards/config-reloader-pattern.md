@@ -86,3 +86,53 @@ api_keys = self._key_reloader.current_keys
 6. Services with API keys MUST use `ApiKeyReloader` — never store keys in a frozen `self._api_keys` dict
 7. `config_reloaders.py` must type `start_domain_config_reloaders(service_config: TypedConfigClass)` — no `object` type,
    no `getattr()` with fallback defaults
+8. **Per-wallet credential reload (added 2026-05-12 per
+   [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+   Phase 9.H + 3.C.1)**: `execution-service/custody/cloud_kms.py` lazy-caches the
+   plaintext PK per-`CloudKmsCustodyProvider` instance. When operator flips
+   `WalletProvisioningConfig.signing_surface` (e.g. `CLOUD_KMS_ENCRYPTED` →
+   `FIREBLOCKS_MPC` June-1), `ApiKeyReloader` detects the change via the
+   wallet-config GCS poll + invalidates the cached PK + rebuilds the
+   `CustodyProvider` instance per-wallet via the factory. Per-wallet
+   `kms_key_uri` rotation (90d CMK auto-rotation per
+   [`rotation-runbook.md`](../05-infrastructure/rotation-runbook.md) § 2) is
+   the SAME pattern — invalidate the cache, refetch via KMS, swap PK. Pattern
+   reference: `unified_trading_library.config_reloaders.ApiKeyReloader.on_refresh()`
+   callback fires `WALLET_PROVISIONING_RELOADED` event consumed by
+   execution-service to rebuild affected providers.
+
+## Per-wallet credential class — added 2026-05-12 (Phase 9.H)
+
+UAC SSOT: [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+(`signing_surface` + `kms_key_uri` + `private_key_secret_ref` + `custodian_wallet_id`).
+
+The reloader treats per-wallet credentials as a special class because their
+shape varies per `signing_surface` (May-23 `CLOUD_KMS_ENCRYPTED` requires
+KMS-URI + wrapped-PK; June-1 `COPPER_MPC` / `FIREBLOCKS_MPC` requires
+custodian wallet ID + HMAC/RS256 keys). The reload event MUST trigger
+factory rebuild per-wallet, not bulk-invalidate the whole `_api_keys` dict.
+
+```python
+# Pattern (execution-service custody loader):
+class WalletCustodyReloader(ApiKeyReloader):
+    """Per-wallet custody provider rebuild on config flip."""
+
+    def on_refresh(self) -> None:
+        new_config = self._fetch_wallet_provisioning_config()  # GCS poll
+        for wallet_id, row in new_config.wallets.items():
+            old_surface = self._cached_surface.get(wallet_id)
+            if old_surface != row.signing_surface:
+                # Flip detected — rebuild provider via factory
+                self._providers[wallet_id] = get_custody_provider(
+                    CustodyConfig(
+                        provider=row.signing_surface_to_factory_name(),
+                        kms_key_uri=row.kms_key_uri,
+                        private_key_secret_ref=row.private_key_secret_ref,
+                        custodian_wallet_id=row.custodian_wallet_id,
+                    ),
+                )
+                self._cached_surface[wallet_id] = row.signing_surface
+                log_event("WALLET_CUSTODY_PROVIDER_RELOADED",
+                          wallet_id=wallet_id,
+                          old_surface=old_surface, new_surface=row.signing_surface)
+```

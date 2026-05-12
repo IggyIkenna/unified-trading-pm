@@ -150,3 +150,59 @@ with empty state).
   action is needed — but if you'd rather have the real binary, `brew install util-linux` provides it.
 - **"emulator hub on port 4400"** warning — benign; means a previous boot didn't shut down cleanly. Falls back to 4401
   and recovers.
+
+---
+
+## Firebase prod vs emulator credential split — added 2026-05-12 (Phase 9.J)
+
+Per [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+Phase 9.J — codifies the production / staging / development Firebase credential
+boundary now that the workspace ships ADC-only + per-environment Cloud Run.
+
+### Per-environment SA JSON storage
+
+| Environment | Firebase project | SA JSON location | Reload mechanism |
+|---|---|---|---|
+| **production** (`prod`) | `central-element-323112` | GCP Secret Manager: `firebase-sa-json` (Plan Phase 6.B) | Workload Identity Federation preferred — SA JSON only as fallback |
+| **staging** (`staging`) | `odum-staging` | GCP Secret Manager: `firebase-sa-json-staging` | Same WIF pattern |
+| **development** (local emulator) | (none — emulators only) | `.local-dev-cache/firebase/` (gitignored) | dev-tiers.sh seed script |
+
+### Credential routing per mode
+
+The Firebase auth layer in `unified-trading-system-ui` (and SSR layer) routes
+credential fetch by `FIREBASE_AUTH_MODE`:
+
+| Mode | Routing |
+|---|---|
+| `emulator` (default for `dev-tiers.sh --tier 0`) | Read `firebase-emulator-config.json` from `.local-dev-cache/`; no Secret Manager fetch |
+| `staging` | Workload Identity Federation token → Firebase Admin SDK on `odum-staging` project |
+| `prod` | Workload Identity Federation token → Firebase Admin SDK on `central-element-323112` project |
+
+### Per-tier credential discipline
+
+- `Tier 0` (Firebase emulators) — NEVER fetches Secret Manager. NEVER touches prod / staging Firebase projects.
+- `Tier 1` (2 API gateways) — `staging` mode by default; CI overrides to `prod` when smoke-testing pre-deploy.
+- `Tier 2` (full fleet) — mode = profile; `prod` profile uses prod Firebase project.
+
+### IAM boundaries
+
+Per [`aws-iam-matrix.md`](../../05-infrastructure/aws-iam-matrix.md) § 2 row
+`unified-trading-system-ui`: the Cloud Run service-account has
+`secretmanager.secretAccessor` ONLY on the `firebase-sa-json-{env}` secret.
+NO human principal has Read access. NO non-UI service has Read access.
+
+### Rotation cadence
+
+Per [`rotation-runbook.md`](../../05-infrastructure/rotation-runbook.md) § 5:
+- Firebase SA JSON — 90d rotation cadence (data/aux class).
+- Workload Identity Federation — indefinite (no long-lived key to rotate).
+
+When rotating manually (e.g. compromised SA), operator generates new JSON via
+GCP IAM dashboard + `gcloud secrets versions add firebase-sa-json --data-file=...`
++ Cloud Run service reloads via `ApiKeyReloader` within 60s.
+
+### References
+
+- [`credentials-matrix.md`](../../05-infrastructure/credentials-matrix.md) § 1 row "Firebase SA JSON".
+- [`secret-manager-naming.md`](../../05-infrastructure/secret-manager-naming.md) § 2.7 aux service naming.
+- [`runtime-tiers-and-deployment.md`](../../05-infrastructure/runtime-tiers-and-deployment.md) § per-mode credential subset.
