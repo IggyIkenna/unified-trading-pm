@@ -183,21 +183,19 @@ Every manual trade submitted via DART **must** be tagged with a derived strategy
 boundary. The schema is:
 
 ```text
-<archetype>.<venue>.<instrument_type>.v<N>     # codex 18-archetype baseline shape
+FAMILY.ARCHETYPE.slot_id
+# where slot_id = archetype@venue-asset-instrument-period-quote-env
+# e.g. CARRY.CARRY_STAKED_BASIS.carry_staked_basis@BYBIT-defi-ETH_STAKING-1d-USDC-prod
 ```
 
-> **Open dependency**: the canonical strategy_id grammar is owned by Tab 6.A (cross-cutting deliverable #2) and
-> currently 🟡 BLOCKED pending operator triage of
-> [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md).
-> The existing UAC v2 grammar is 6-axis (`FAMILY.ARCHETYPE.slot_id` where
-> `slot_id = venue-asset-instrument-period-quote-env`). Once the operator picks a grammar, this section's example string
-> is updated accordingly. The DART manual surface MUST consume the grammar that lands; it does NOT define a parallel
-> one.
+> **✅ RESOLVED 2026-05-08 via Option A** (`uac@5083d65`). Operator GREENLIT. The canonical grammar is the existing
+> 6-axis slot grammar: `FAMILY.ARCHETYPE.slot_id` where `slot_id = archetype@venue-asset-instrument-period-quote-env`.
+> No `vN` field — material config changes produce a new `slot_id` value rather than incrementing a version suffix.
+> Reference: `cross_cutting_may_23_deliverables_2026_05_08.md` § "Open questions" Q2/Q3.
 
 The `/manual/instruction` API already has a `strategy_id: str` field per
 [`manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md). DART UI populates this field from the
-selected archetype + venue + instrument_type combination using `unified_api_contracts.strategy.format_strategy_id` (or
-the equivalent helper that lands post-Tab-6.A-triage).
+selected archetype + venue + instrument_type combination using `unified_api_contracts.strategy.format_strategy_id`.
 
 **Used downstream by**:
 
