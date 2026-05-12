@@ -43,13 +43,29 @@ glossary for the full set of routing examples per tier.
 
 ## On-call rotation
 
-Primary / secondary / tertiary rotation lives in PagerDuty (synced from Google Calendar). Workspace rule: any change to
-the rotation must update the calendar AND the PagerDuty service-level config — they are not auto-synced beyond the
-weekly cron.
+**May-23 cutover rotation** (operator decision 2026-05-12; AL-14 RESOLVED):
+
+| Operator | Shift (UK time) | Coverage |
+| --- | --- | --- |
+| **Ikenna** (primary) | 14:30 → 02:30 UK | Afternoon + evening + early-night |
+| **Harsh** (primary)  | 02:30 → 14:30 UK | Late-night + early-morning + morning |
+
+**Shape**: 2-operator 12-hour split, fully-automated alert-checking workflow (no synchronous human reasoning loop —
+operator just verifies the alert + acks). No tertiary tier required because the workflow is automated; the 30-min
+"operator phone (Ikenna)" fallback in the escalation chain above still applies as final tier.
+
+**Calendar source**: rotation lives in PagerDuty (synced from Google Calendar). Workspace rule: any change to the
+rotation must update the calendar AND the PagerDuty service-level config — they are not auto-synced beyond the weekly
+cron.
+
+**Cross-cycle changes**: if either operator goes off-rotation (vacation / sickness / cycle handoff), the other covers
+24h until the calendar update lands. No secondary/tertiary named operators today; if cutover scope expands to 3+
+operators post-May-23, this section gets a named-tier table.
 
 ## Quiet-hours policy
 
-There are no quiet hours for live trading. P0 / P1 page 24/7.
+There are no quiet hours for live trading. P0 / P1 page 24/7. The 12-hour split above means each operator carries
+the night-shift half the time.
 
 ## Per-rule routing
 
