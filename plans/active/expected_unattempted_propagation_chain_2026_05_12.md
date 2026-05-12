@@ -19,8 +19,11 @@ migrated_from: plans/active/issues/expected_unattempted_propagation_gap_2026_05_
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 estimate_class: brand-new
-estimate_baseline_ai_days: 5.5
-estimate_calibrated_ai_days: 5.5
+estimate_baseline_ai_days: 6.6
+estimate_calibrated_ai_days: 6.6
+estimate_calibration_note: |
+  +1.1 added 2026-05-12 for Phase 1.5 (sports fixture SSOT fix ~0.8) + Phase 2 extension (MDPS forward-fill contract ~0.3).
+  brand-new class, multiplier 1.0×.
 effective_concurrent_slots: 4
 model_tier: sonnet-doable
 thinking: high
