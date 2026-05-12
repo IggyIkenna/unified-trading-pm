@@ -485,15 +485,20 @@ address, decimals, symbol, instrument_type, classification, lifecycle dates. Eac
 > + _ADAPTERS + ADAPTER_DATA_SOURCES). 35 new unit tests (100 total in defi/ suite, 100/100 passing).
 > basedpyright 0 errors on new files; ruff clean.
 >
-> **DEFERRED — remaining Phase 2 gaps (status as of 2026-05-12 ~10:30 UTC):**
-> - `2.RENZO-ARB` (bridged ezETH multi-chain) — ✅ **DONE** instruments-service@`38192e7` (multi-chain registry
->   shipped; factory.py register pending bundled reconcile).
-> - `2.BEEFY` (multi-vault, 6 chains) — **IN PROGRESS** via parallel sub-agent (curated TOP-vault snapshot per chain
->   instead of full 200+ enumeration; matches the pattern operator approved for yearn/idle/karak in session 2).
-> - `2.PENDLE` (PT/YT/SY + maturity, ETH+ARB) — **IN PROGRESS** via parallel sub-agent (curated active-markets
->   snapshot with maturity > today filter).
-> - `2.JITO-RESTAKING` (Solana restaking vaults) — **IN PROGRESS** via parallel sub-agent (separate adapter file
->   `jito_restaking.py` with `venue=jito_restaking`, distinct from existing `jito.py` LST adapter).
+> **Phase 2 ✅ COMPLETE — all 14 deferred adapters shipped (4-of-4 closed in 2026-05-12 Day-1):**
+> - `2.RENZO-ARB` ✅ instruments-service@`38192e7` (multi-chain registry + tests).
+> - `2.BEEFY` ✅ instruments-service@`b563afb` (16 vaults across 5 chains; POLYGON dropped — Beefy public API
+>   returned every Polygon vault as `status=eol` on 2026-05-12 audit).
+> - `2.PENDLE` ✅ instruments-service@`b563afb` (30 records = 5 markets × 3 PT/YT/SY × 2 chains; all maturities >
+>   2026-05-12).
+> - `2.JITO-RESTAKING` ✅ instruments-service@`b563afb` (3 VRTs — ezSOL/fragSOL/kySOL; distinct from existing
+>   `jito.py` LST adapter via `venue=jito_restaking` + canonical venue `JITORESTAKING-SOLANA`).
+>
+> Latent multi-chain bug fix bundled with `b563afb`: `defi_graph_adapters` set was missing
+> `renzo`/`karak`/`idle`/`yearn` (registered for non-ETH canonical venues earlier in session 2 but not in
+> this set, so non-ETH variants silently used the ETHEREUM default chain). Fixed simultaneously with the new
+> beefy/pendle/jito_restaking additions. End-to-end smoke (15 cases) pass: every (venue, expected_chain) tuple
+> resolves to the right adapter with the right chain attribute. 122/122 defi unit tests pass.
 
 Per-protocol todo template (instantiated 27 times):
 
@@ -553,12 +558,29 @@ Per-protocol todo template (instantiated 27 times):
       curated vault registry: yvWETH/yvDAI/yvUSDC/yvWBTC on ETH + yvWETH/yvUSDC on ARB, `instrument_type=YIELD_BEARING`,
       launch 2024-03-20 ETH / 2023-11-15 ARB per `PROTOCOL_LAUNCH_DATES`) + `test_yearn_metadata.py` (5 tests, offline) +
       `factory.py` registration (`YEARN-ETHEREUM` + `YEARN-ARBITRUM`). instruments-service@`57a4f1f`. basedpyright 0 errors; ruff clean; pytest 5/5.
-- [ ] [AGENT] P0. **2.BEEFY — Beefy Finance multi-chain vaults** — **DEFERRED**: 200+ vaults across 6 chains; static
-      registry would be stale; needs Beefy API integration or curated snapshot. Successor: Phase 2 follow-up plan.
-- [ ] [AGENT] P0. **2.PENDLE — Pendle PT/YT/SY + maturity** — **DEFERRED**: instruments have expiry dates; needs Pendle
-      active-markets API or curated snapshot. Successor: Phase 2 follow-up plan.
-- [ ] [AGENT] P0. **2.JITO-RESTAKING — Jito restaking vaults (Solana)** — **DEFERRED**: separate from jito.py LST;
-      vault structure TBD. Successor: Phase 2 follow-up plan.
+- [x] [AGENT] P0. **2.BEEFY — Beefy Finance multi-chain vaults** — `adapters/defi/beefy.py` (curated TOP-vault
+      snapshot per chain via api.beefy.finance/vaults/<chain>; 16 vaults across ETHEREUM/ARBITRUM/BASE/BSC/AVALANCHE).
+      `test_beefy_metadata.py` (7 tests, offline). `factory.py` registration (`BEEFY-{ETH,ARB,BASE,BSC,AVAX}` venues +
+      `_ADAPTERS["beefy"]` + `ADAPTER_DATA_SOURCES["beefy"]=""` + added to `defi_graph_adapters`).
+      instruments-service@`b563afb`. **POLYGON intentionally not registered**: Beefy public API returned every Polygon
+      vault as `status=eol` on the 2026-05-12 audit; chain re-added when Beefy ships fresh active Polygon vaults
+      (registry hook documented in adapter docstring). 7/7 tests pass; full defi/ unit-test suite 122/122 pass.
+- [x] [AGENT] P0. **2.PENDLE — Pendle PT/YT/SY + maturity** — `adapters/defi/pendle.py` (curated active-markets
+      snapshot via api-v2.pendle.finance/core/v1/<chainId>/markets/active queried 2026-05-12; 5 markets per chain
+      × 3 PT/YT/SY roles = 15 records per chain × 2 chains = 30 records; ETHEREUM markets wstETH/weETH/weETHs/sUSDe/USDe
+      + ARBITRUM markets wstETH/weETH/rETH/uniETH/USDai). All maturities strictly > 2026-05-12. PT/YT carry `expiry`;
+      SY carries `expiry=None`. Role encoded in instrument_key segment 2 (e.g. `PENDLE-ETHEREUM:PT:PT-stETH-25JUN2026`)
+      since `InstrumentType` has no PT/YT/SY-specific enum (closest match `YIELD_BEARING` already in
+      `DEFI_ONCHAIN_INSTRUMENT_TYPES` whitelist). `test_pendle_metadata.py` (7 tests). factory.py registration
+      (`PENDLE-{ETH,ARB}` + `_ADAPTERS["pendle"]` + ADAPTER_DATA_SOURCES + defi_graph_adapters).
+      instruments-service@`b563afb`. 7/7 tests pass.
+- [x] [AGENT] P0. **2.JITO-RESTAKING — Jito restaking vaults (Solana)** — `adapters/defi/jito_restaking.py` (curated
+      VRT registry; 3 vaults: ezSOL/Renzo + fragSOL/Fragmetric + kySOL/Kyros, all mainnet 2024-08-01 launch).
+      Distinct from existing `jito.py` LST adapter — `venue=jito_restaking` (vs `jito`); canonical venue
+      `JITORESTAKING-SOLANA` (vs `JITO-SOLANA`); `instrument_type=YIELD_BEARING`. `test_jito_restaking_metadata.py`
+      (6 tests including `test_distinct_from_jito_lst_venue`). factory.py registration (`JITORESTAKING-SOLANA`
+      + `_ADAPTERS["jito_restaking"]` + ADAPTER_DATA_SOURCES + defi_graph_adapters). instruments-service@`b563afb`.
+      6/6 tests pass.
 - [x] [AGENT] P0. **2.RENZO-ARB — Renzo bridged ezETH on Arbitrum** — extended existing
       `adapters/defi/renzo.py` to multi-chain via `_LRT_TOKENS_BY_CHAIN` keyed dict (mirrors
       karak/yearn pattern). ezETH on Arbitrum at canonical bridged address
