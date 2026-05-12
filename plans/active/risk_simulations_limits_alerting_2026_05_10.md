@@ -340,8 +340,21 @@ returns full rule set; tests pass.
       `RiskMonitor` bespoke threshold predicates are NOT yet removed — they compose with the registry path
       transitionally until the strategy-architecture-v2 caller supplies a `RuleEvalContext` and PBMS-state is wired into
       one (depends on risk plan Phase 4.D). Full "no code-side rule logic remains" cutover = follow-up under this todo.
-- [ ] [AGENT] P0. **4.B execution-service.** Order submission path inserts `risk_preflight` BEFORE venue submission.
-      Block / scale-down behaviour wired.
+- [x] [AGENT] P0. **4.B execution-service.** Order submission path inserts `risk_preflight` BEFORE venue submission.
+      Block / scale-down behaviour wired. (execution-service@07477886 — `engine/risk/preflight_gate.py`:
+      `build_rule_eval_context` (order + `account_state`) + `run_risk_preflight` → `RiskPreflightDecision`:
+      BLOCK → reject + `INSTRUCTION_REJECTED_RISK`; SCALE_DOWN → resize by `scale_factor` + `INSTRUCTION_ACCEPTED_PREFLIGHT`
+      (`size_adjusted=true`) + `RESIZED_EXECUTION`; MONITOR → unchanged; TEST_ONLY → tag `mode=TEST` + route-to-matching
+      flag; per-fired-rule `RISK_RULE_FIRED` via UAC `risk_rule_fired_event()`. Pre-filters the per-axis UAC rule set
+      (`iter_applicable_rules`) to rules evaluable from the order-time context (portfolio-state rules require
+      `account_state`). Wired into `engine/orchestrator.py::ExecutionOrchestrator.execute_instruction` BEFORE submission.
+      Deleted bespoke `engine/risk/pre_trade.py` (`check_multi_venue_balance`) + its test per § 7 seam. 7 new tests in
+      `tests/unit/test_risk_preflight_gate.py`; full unit suite green. **DEFERRED**: TEST_ONLY currently tags
+      `params["mode"]="TEST"` + flags `route_to_matching_engine`; the live `LiveMatchingEngine`-paper-vs-venue switch on
+      that tag is a follow-up under this todo. **DEFERRED**: orchestrator passes no `account_state` yet — portfolio-state
+      rules (drawdown/leverage/exposure/loss/correlation/funding/gas/CaR) are skipped at execution-service and enforced
+      by strategy-service (4.C) + risk-and-exposure-service (4.A); wiring PBMS-state into the orchestrator is a follow-up
+      under this todo (depends on Phase 4.D).
 - [x] [AGENT] P0. **4.C strategy-service.** Signal generator queries pre-flight before sizing; if pre-flight returns
       scale-down, signal scaled. (strategy-service@bf1ed6b — `strategy_service/risk_preflight_gate.py`:
       `build_signal_rule_context` (numeric-sentinel fill so the evaluator never raises on omitted fields) +

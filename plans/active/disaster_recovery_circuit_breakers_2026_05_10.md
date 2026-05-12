@@ -258,8 +258,21 @@ nightly-cron wiring (Phase 6.A).
       `kill_switch_bus_subscriber.py` already subscribed via `ServiceBootstrap(kill_switch_subscriber=on_bus_event)` — 2
       new round-trip tests at risk-and-exposure-service@85c99aa assert `bus.fire()` → halt-registry records →
       `bus.clear()` → resumes.
-- [ ] [AGENT] P0. **4.B execution-service.** Matching engine subscribes to KillSwitchBus; cancel-on-arm wired per scope;
-      new-order-block on arm.
+- [x] [AGENT] P0. **4.B execution-service.** Matching engine subscribes to KillSwitchBus; cancel-on-arm wired per scope;
+      new-order-block on arm. (execution-service@07477886 — `engine/kill_switch_bus_bridge.py::on_bus_event` is already
+      subscribed via `ServiceBootstrap(kill_switch_subscriber=on_bus_event)` in `cli/main.py`; on `FIRED` it calls
+      `kill_switch.activate()`, on GLOBAL `CLEARED` it calls `kill_switch.deactivate()` (resume). New `kill_switch.py`
+      `register_cancel_on_arm()` / `clear_cancel_callbacks()`: `activate()` invokes the cancel-on-arm callbacks on the
+      inactive → active transition (order owner registers a cancel-all-open-orders hook) and never on a re-arm;
+      callback exceptions are isolated. New-order blocking is the existing `is_active()` gate every order path checks.
+      6 new tests in `tests/unit/test_kill_switch.py` (cancel-on-arm fire + exception isolation), 1 new test in
+      `tests/unit/test_kill_switch_bus_bridge.py` (arm→cancel-open+block, disarm→resume). **CONFIRMED**: `circuit_breaker.py`
+      reads only the per-venue `CircuitBreakerConfigRegistry` (UAC-internal) — it does NOT yet read the UAC
+      `registry/circuit_breakers/` per-archetype `BreakerConfig` registry, and emits string-name events via `log_event`
+      (no typed `BreakerFiredEvent` UAC model exists). **DEFERRED — needs cross-repo (UAC) work**: (a) add a typed
+      `BreakerFiredEvent` model to UAC `canonical/crosscutting/circuit_breaker.py`; (b) wire `circuit_breaker.py` to load
+      `BreakerConfig` from `registry/circuit_breakers/{carry_staked_basis,arbitrage_price_dispersion}.py` for per-archetype
+      breakers + emit the typed event on transition. Tracked under this todo + flagged to operator.
 - [ ] [AGENT] P0. **4.C position-balance + alerting consumers.** Subscribe to breaker + kill-switch events; severity
       routing. **ALERTING HALF DONE 2026-05-12** (alerting-service@0a52a33 — `alerting_service/dr_event_handler.py`:
       `handle_kill_switch_armed_event` routes `KillSwitchArmedEvent` at CRITICAL+page for global/wallet/asset-group
