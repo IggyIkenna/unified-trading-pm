@@ -308,8 +308,11 @@ Reconciler scripts should read instruments-service manifest once and pass into c
       per-league transfer windows? Is `EXPECTED_OUTSIDE_TRANSFER_WINDOW` being correctly applied to all transfermarkt
       data_types (player_values, transfers) during non-window periods? Is `available_at` set to last day of the transfer
       window for player values entering next season? File a follow-up todo if the design doesn't match the intent.
-- [ ] [QG] P1. `cd unified-trading-library && bash scripts/quality-gates.sh`.
+- [x] [QG] P1. `cd unified-trading-library && bash scripts/quality-gates.sh`.
       `cd instruments-service && bash scripts/quality-gates.sh`. Push.
+      UTL: 4 new tests pass (test_sports_fixture_classifier.py); 109 pre-existing manifest_writer failures (foreign).
+      instruments-service: 6/6 reconciler tests pass (instruments-service@703d36b fixed Shape-b test gap from 3a05e4f);
+      84 pre-existing failures (orchestrator_coverage, phase2d, urdi — foreign). (instruments-service@703d36b)
 
 ---
 
