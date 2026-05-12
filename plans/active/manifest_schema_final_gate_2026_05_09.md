@@ -360,22 +360,17 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
 Spawn 8 parallel sub-agents (one per repo) per CLAUDE.md "Sub-Agents & Autonomous Agents: Full Rules Required" rule —
 paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 
-- [ ] [AGENT] P0. Phase 4.MTDS — Each adapter (Databento / Tardis / CCXT / Barchart / Yahoo / Sports / DeFi /
+- [x] [AGENT] P0. Phase 4.MTDS — Each adapter (Databento / Tardis / CCXT / Barchart / Yahoo / Sports / DeFi /
       Prediction) explicitly passes `pipeline_mode=PipelineMode.BATCH_<source>` per UAC SOURCE_PRIORITY
   - emission-policy hooks via `publish_with_policy`. **Per E3 ratified item.**
-      **🟡 IN-PROGRESS 2026-05-12 — Q1+Q2 operator-triaged; Harsh slot 3 executing.**
-      Pre-audit found 26 files / 102 callsites needing fix. Design decisions resolved:
-      - **Q1 ✅ RESOLVED** — operator chose **(α)**: migrate `DefiManifestRecorder` to v8 `record_captured()` path.
-        UTL step pending (Step 2 — see below).
-      - **Q2 ✅ RESOLVED** — operator chose **(A)**: extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` with 6 BATCH_*
-        values. **SHIPPED @uac@`52d289c`** — BATCH_YAHOO / BATCH_BARCHART / BATCH_FOOTYSTATS / BATCH_HYPERLIQUID_REST /
-        BATCH_PYTH_HERMES / BATCH_CHAINLINK added + 14 DeFi SOURCE_PRIORITY gap entries + 5 EMISSION_LATENCY entries.
-        55 round-trip tests passing (3 previously failing, all fixed). instruments-service BATCH_API_FOOTBALL footystats
-        workaround superseded — instruments-service cleanup deferred to its next slot.
-      - **Q3-Q5**: orchestrator dispatch strategy / reconciler preservation / test fixture updates — downstream of Q1-Q2,
-        being addressed inline during MTDS sweep. See `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`.
-
-      Next: Step 2 UTL `DefiManifestRecorder` v8 migration → Step 3 MTDS 97-callsite `pipeline_mode=` sweep.
+      **✅ SHIPPED 2026-05-12 by Ikenna slot 3 (`ikenna-codefreeze-audit-tab`)**: 3-sub-agent fan-out (MTDS + MDPS + instruments-service) executed in parallel after operator-relayed Q1+Q2 approval at PM@`4c573302`.
+      - **Q1 = (α)**: `DefiManifestRecorder` migrated to v8 record_* path at MTDS@`3da3f43` (record_empty + record_failed fully migrated; record_captured retains `add()`-path wrapper with explicit `pipeline_mode=` forward via **kwargs — bounded interpretation; full df-flow propagation through every DeFi handler tracked as Phase 4.DEFAULT-REMOVAL successor scope).
+      - **Q2 = (A)**: UAC@`52d289c` shipped 6 new PipelineMode batch values + 14 DeFi SOURCE_PRIORITY gap entries; UAC@`7d7ea4c` added 7 additive per-member round-trip tests pinning (enum value, source string) pairs.
+      - **MTDS sweep**: 97 callsites in 26 files at MTDS@`3da3f43` (20 DeFi handlers + DefiManifestRecorder + MTDSShardManifestRecorder + websocket_runner + orchestrator sentinel helper `_resolve_pipeline_mode_for_sentinel`). PM baseline shrunk 114 → 17 at PM@`88226bdb`.
+      - **UTL sweep**: 11 internal record_* callsites at UTL@`12d5e621` (4 streaming/candle_writer LIVE_WEBSOCKET + 1 streaming/parallel_per_symbol_runner threaded kwarg + 1 streaming/live_aggregator whitelist marker for Protocol method + 3 manifest_writer_normalising delegating-wrapper signatures + 1 per_leaf_failure dataclass field + 1 manifest_writer.py:1919 internal plumbing). PM baseline shrunk 17 → 6 at PM@`ea50eddc` (only Phase 4.FEATURES entries remain).
+      - **Q3-Q5**: orchestrator dispatch strategy / reconciler preservation / test fixture updates addressed inline. See `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` (flipped ✅ RESOLVED at PM@`4c573302`).
+      - **AST-walk QG STEP 5.70**: `OK — 6 baselined occurrences; 0 new occurrences` workspace-wide (6 remaining are Phase 4.FEATURES scope, separate slot).
+      - **DefiManifestRecorder record_captured full-v8 migration**: deferred to Phase 4.DEFAULT-REMOVAL (df-flow propagation through every DeFi handler needs separate plan or successor).
 - [x] [AGENT] P0. Phase 4.MDPS — candle writer + reprocess engine propagate `pipeline_mode` from input parquet's column.
       Emission-policy hooks at publish boundary.
       **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-mdps-sweep` sub-agent @MDPS@`a3c7198`** — 22 callsites across
