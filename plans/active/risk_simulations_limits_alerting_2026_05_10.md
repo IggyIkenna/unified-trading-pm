@@ -342,8 +342,20 @@ returns full rule set; tests pass.
       one (depends on risk plan Phase 4.D). Full "no code-side rule logic remains" cutover = follow-up under this todo.
 - [ ] [AGENT] P0. **4.B execution-service.** Order submission path inserts `risk_preflight` BEFORE venue submission.
       Block / scale-down behaviour wired.
-- [ ] [AGENT] P0. **4.C strategy-service.** Signal generator queries pre-flight before sizing; if pre-flight returns
-      scale-down, signal scaled.
+- [x] [AGENT] P0. **4.C strategy-service.** Signal generator queries pre-flight before sizing; if pre-flight returns
+      scale-down, signal scaled. (strategy-service@bf1ed6b — `strategy_service/risk_preflight_gate.py`:
+      `build_signal_rule_context` (numeric-sentinel fill so the evaluator never raises on omitted fields) +
+      `apply_risk_preflight` (wraps UTL `risk_preflight` over `iter_applicable_rules`; threads family-id via
+      `aggregate_family_state` for multi-archetype strategies). BLOCK → suppress signal + emit
+      `STRATEGY_SIGNAL_SUPPRESSED` + `RISK_RULE_BLOCKED` per fired rule; SCALE_DOWN → return `scale_factor` (resize at
+      signal time so execution-service sees an already-sized instruction); MONITOR/TEST_ONLY → passthrough;
+      AlertCode-aligned audit event per fired rule. `SignalPublisher.publish()` runs the gate when `archetype_id`
+      supplied — returns `None` on BLOCK, scales `conviction_pct` + `meta_signal` on SCALE_DOWN; legacy callers
+      unchanged; batch == live. 9 unit tests `tests/unit/test_risk_preflight_gate.py`. **DEFERRED P2**: UAC
+      `RiskRuleFiredEvent` / `risk_rule_fired_event` are NOT on the `unified_api_contracts.risk` facade — the gate emits
+      AlertCode-named `log_event`s as the interim; fold into Phase 5.A when the event model lands. **DEFERRED P3**: the
+      gate is wired through `SignalPublisher` (the documented signal-emission seam, currently call-site-less in-repo);
+      the v2 orchestrator / output-builder signal paths should adopt `apply_risk_preflight` when they next change.)
 - [ ] [AGENT] P0. **4.D position-balance.** Per-rule state-tracking (current draw-down, current leverage, current OI)
       emitted to rule_evaluator-readable format.
 
@@ -352,8 +364,22 @@ returns full rule set; tests pass.
 ## Phase 5 — Alerting wire (Day 10, ~0.5 AI-day)
 
 - [ ] [AGENT] P0. **5.A `RiskRuleFiredEvent` emit on every rule fire.** Severity per UAC `alerting_severity` field.
-- [ ] [AGENT] P0. **5.B Alerting-service consumer.** Routes to severity tier (CRITICAL → page, WARNING → dashboard, INFO
-      → log).
+      **NOTE 2026-05-12**: UAC `RiskRuleFiredEvent` + `risk_rule_fired_event` builder + `CONSEQUENCE_ALERT_CODES` now
+      shipped (UAC@a01e4dd, on `unified_api_contracts.risk` facade). The remaining emit-side work is in
+      risk-and-exposure-service (Phase 4.A rule_evaluator) — Phase 4.B-style follow-on; **DEFERRED to that service's
+      tab**.
+- [x] [AGENT] P0. **5.B Alerting-service consumer.** Routes to severity tier (CRITICAL → page, WARNING → dashboard, INFO
+      → log). (alerting-service@0a52a33 — `alerting_service/risk_rule_event_handler.py` consumes
+      `unified_api_contracts.risk.RiskRuleFiredEvent`, maps `event.alert_code` → the UAC-seeded `LIVE_ALERT_RULES`
+      entry, routes via `notifiers/router.route_event` at the rule's channel/severity tier per § 7 seam diagram
+      (BLOCK→`RISK_RULE_BLOCKED` HIGH+PagerDuty, SCALE_DOWN→`RISK_RULE_SCALED_DOWN` WARN+Telegram,
+      MONITOR/TEST_ONLY→INFO+LogOnly); `trigger_detail` + `metadata` rendered into the alert body; wired into
+      `subscribers/alert_subscriber.dispatch_event`. Also fixed `router._match_routing_rules` so a matched `log_only`
+      rule returns `{"log_only"}` (was `set()` → fell through to Telegram delivery). New tests
+      `tests/unit/test_risk_rule_event_handler.py` cover per-consequence channel+severity + `CONSEQUENCE_ALERT_CODES`
+      coverage; `tests/unit/test_uac_routing_rules_consumption.py` updated for the new RISK_RULE codes; 412 unit tests
+      pass. **DEFERRED P1**: end-to-end integration test fires a rule via risk-and-exposure-service → asserts alert
+      routed — blocked on Phase 5.A emit side landing in that service.)
 
 **Full-execution criterion**: integration test fires a rule → alert routes per severity.
 

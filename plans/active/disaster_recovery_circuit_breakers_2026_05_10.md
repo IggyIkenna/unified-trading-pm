@@ -262,8 +262,24 @@ nightly-cron wiring (Phase 6.A).
       new-order-block on arm.
 - [ ] [AGENT] P0. **4.C position-balance + alerting consumers.** Subscribe to breaker + kill-switch events; severity
       routing.
-- [ ] [AGENT] P0. **4.D strategy-service.** On `KILL_PER_ARCHETYPE` for owned archetype, signal generator stops; on
-      `KILL_ALL_LIVE`, all archetypes stop.
+- [x] [AGENT] P0. **4.D strategy-service.** On `KILL_PER_ARCHETYPE` for owned archetype, signal generator stops; on
+      `KILL_ALL_LIVE`, all archetypes stop. (strategy-service@bf1ed6b —
+      `strategy_service/archetype_kill_switch_subscriber.py`: `ArchetypeKillSwitchSubscriber(KillSwitchSubscriber)`
+      registered on the UTL bus singleton in `run_service_cli` (`get_kill_switch_bus().register_subscriber(...)`).
+      `on_armed`: `KILL_PER_ARCHETYPE_*` → halt that archetype only (case-normalised against the lowercase scope_key);
+      `KILL_ALL_LIVE` → global halt covering every archetype; per-venue/per-asset-group/per-wallet arms ignored.
+      `on_disarmed` → clear the matching halt (resume). 4-set halt behaviour from `KillSwitchArmedEvent.metadata` per
+      the risk-plan § 7 seam: `STOP_NEW_ONLY` default; `FAST_UNWIND` when `breaker_reason=MAX_DRAWDOWN_BREACH`;
+      `SLOW_UNWIND` on operator `slow_unwind` override (wins over drawdown); `DELTA_HEDGE` on `cross_venue_open`.
+      Per-archetype behaviour takes precedence over the global behaviour. Query API `is_archetype_halted` /
+      `halt_behaviour` / `is_all_halted` for archetype signal generators. 12 unit tests
+      `tests/unit/test_archetype_kill_switch_subscriber.py` (per-archetype isolation, KILL_ALL_LIVE, disarm-resume,
+      behaviour selection + precedence, per-venue ignored). Complements the legacy coarse-scope
+      `kill_switch_bus_subscriber.on_bus_event` already wired via `ServiceBootstrap`. **FLAG (UTL facade gap, P2)**:
+      `KillSwitchSubscriber` + `map_switch_id_to_scope` are NOT re-exported from the `unified_trading_library` top-level
+      facade (only `KillSwitchBus` / `KillSwitchEvent` / `KillSwitchEventType` / `get_kill_switch_bus` are) —
+      strategy-service imports them from `unified_trading_library.kill_switch.bus` with `# noqa: qg-deep-import` as the
+      interim; add the facade re-exports in a UTL follow-up.)
 
 **Full-execution criterion**: per-repo QG green; integration test fires a breaker → arms a kill switch → strategy stops
 → execution cancels — within named SLA.
