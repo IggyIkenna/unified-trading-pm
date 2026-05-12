@@ -347,9 +347,20 @@ Owner: ikenna for design + harsh for implementation.
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/governance_adapter.py` capturing
       Aave V3 + Compound V3 + Spark + Lido proposals. Sources: on-chain Governor contract events (Tally indexes, but
       read directly via subgraph) + Snapshot off-chain proposals API.
-- [ ] [AGENT] P0. **4B — `GovernanceProposalSimulator`** in execution-service. Given proposal ID + Tenderly fork: apply
-      proposal payload (governor.execute call) on the fork → measure delta on lending parameters / vault caps / interest
-      rate models / etc. Output: per-affected-instrument before/after state.
+- [x] [AGENT] P0. **4B — `GovernanceProposalSimulator`** in execution-service. (execution-service@`9259edb9` — NEW
+      `governance/proposal_simulator.py`: `simulate_proposal_execution(proposal, fork_block, affected_assets,
+      tenderly_client)` returns per-asset `ParameterDelta(before, after)` after running `governor.execute` on a
+      Tenderly fork (pre-snapshot → simulate → post-snapshot). `AssetParameters` frozen dataclass unions
+      Aave V3 / Compound V3 / Spark / Lido getter fields (reserve_factor, LTV bps, liquidation_threshold_bps,
+      supply/borrow caps, IRM slopes, optimal_utilization_rate, oracle_price_usd + `extra_protocol_fields`
+      string overflow). `ParameterDelta` exposes `reserve_factor_delta_bps` + `supply_cap_delta_native`
+      properties. `TenderlyClient` Protocol is the operator-wired seam — production impl ships auth + retry +
+      per-day fork budget (per codex risk-register row); tests inject an in-memory fake satisfying the Protocol
+      structurally. `AAVE_V3_PROTOCOL` / `COMPOUND_V3_PROTOCOL` / `SPARK_PROTOCOL` / `LIDO_PROTOCOL` Final[str]
+      constants match `GovernanceProposal.protocol` strings for typed dispatch + grep-ability. 8 unit tests
+      in `tests/unit/governance/test_proposal_simulator.py` green; ruff + basedpyright clean.) **DEFERRED**:
+      P1 — production Tenderly REST client (auth + retry + budget tracking) wires the Protocol; lands as
+      operator-runnable setup when Tenderly creds + project ID are confirmed.
 - [ ] [AGENT] P0. **4C — Strategy-side scenario API**. New endpoint in execution-service or a CLI:
       `defi-simulate-proposal --proposal-id <id> --archetype <X>` returns archetype P&L delta if proposal executes at
       time T. Used by risk simulations (composes with `risk_simulations_limits_alerting` sibling question doc).
