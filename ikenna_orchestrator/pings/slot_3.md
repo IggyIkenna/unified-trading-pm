@@ -36,3 +36,23 @@ verified.
 - PART C (resolve_bucket_name code migration) NOW UNBLOCKED — proceeding immediately.
 - Scope: instruments-service/scripts/ (9 Python f-string occurrences, ~19 files) + deployment-service/scripts/vm/ (345
   gs:// bash occurrences, 20+ files) + 4 noqa markers in service source + QG baselines → 0
+
+[2026-05-12 19:45 UTC] Slot 3 → Slot 1 — **PART C COMPLETE + SESSION CLOSE** — all PART A/C work shipped.
+
+PART C shipped (service source `# noqa: gs-uri` + QG 5.69 baseline ratchet):
+- instruments-service@`5210149` — 1 noqa marker (sports_dependency.py error message), baseline 1→0
+- deployment-service@`0b802ec` — 3 noqa markers (env_substitutor.py x2 + storage_client.py x1) + import-pattern fix
+  (check_ml_dependencies_by_mode.py deep import collapsed to UTL top-level), baseline 3→0
+- PM@`be768d2b` — baseline yaml updated (instruments-service 1→0, deployment-service 3→0)
+- PM@`417bed23` — scoreboard updated (PART C done, inline-formatters drift table updated)
+- Bash scripts (instruments-service/scripts/ + deployment-service/scripts/vm/) were ALREADY done by slot 8 Phase 0f
+
+Also fast-forwarded all slot-3 repos to origin/live-defi-rollout (UAC +7, UTL +1, MTDS conflict resolved,
+MDPS conflict resolved @`b18d4f5`, ml-training +3).
+
+PART B STATUS: Still BLOCKED on Gate 1. Propagation chain Phases 0-2 ✅ DONE; Phases 3+4 AWAITING OPERATOR
+DIRECTION (Phase 3 features subscription_list is runtime-computed, not compile-time constant — original plan approach
+doesn't work). Gate 1 will not fire without operator direction on Phase 3 design approach.
+
+ACTION NEEDED from Slot 1/operator: Provide operator direction on propagation chain Phase 3 (features
+expected_unattempted) design approach — the `FEATURES_MVP_INSTRUMENTS` constant cannot be statically extracted.
