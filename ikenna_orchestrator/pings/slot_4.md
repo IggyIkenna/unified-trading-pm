@@ -95,3 +95,49 @@ Phase 0i tail yaml SSOT shipped by slot 8 (`deployment-service@00a1288`):
 - Add to provisioning scripts if applicable.
 
 Plan ref: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0i tail (checkbox now `[x]`).
+
+---
+
+## [slot 4 → main] SESSION CLOSE — 2026-05-12 — full state handover
+
+**Timestamp**: 2026-05-12 **Status**: 🟡 SESSION CLOSED — Phase 3.1–3.N unblocked, ready to continue
+
+### What shipped this session
+
+| Item | Commit | Status |
+|---|---|---|
+| Phase 0A — UAC EXPECTED_OUTSIDE_PROCESSING_SCOPE + EXPECTED_UPSTREAM_EMPTY | `uac@0457b0e` | ✅ DONE |
+| Phase 0B — UTL helper pre-existed | no new commit | ✅ DONE |
+| Phase 1 — MTDS pre-flight wired | included in 0A push | ✅ DONE |
+| Phase 1.5 — sports classifier fixture-existence | `pm@ff2b46fb` | ✅ DONE |
+| Phase 2 — MDPS `record_expected_unattempted_for_shard` + `_record_expected_unattempted_on_skip` | `mdps@3f70cf6` | ✅ DONE (4 tests pass) |
+| Codex — honest-absence-downstream-handling.md 4-state table | `pm@5ab28423` | ✅ DONE |
+| Phase 3.0 design resolved | operator confirmed Option A | ✅ RESOLVED |
+
+### What's left (next slot to pick up)
+
+1. **Phase 3.1–3.N** — spawn 6 sub-agents simultaneously (delta_one, calendar, onchain, volatility, sports, commodity).
+   Pattern: Option A (runtime comparison). At `_get_instruments()` call, compare full catalog vs post-filter set,
+   write `expected_unattempted(EXPECTED_OUTSIDE_PROCESSING_SCOPE)` for `all - in_scope`. No UAC frozenset.
+   Spawn template in plan § "Phase fan-out".
+
+2. **Phase 4** — ml-training + ml-inference: same Option A pattern. After Phase 3.
+
+3. **PART C (writegate 2.A)** — MDPS 4-state output routing (delete `_create_empty_output`, wire empty_confirmed→
+   forward-fill, attempted_failed→NaN, expected_unattempted→propagate). Same MDPS repo. Can run PARALLEL with Phase 3.
+
+4. **Gate 1** — fires when Phases 3, 4, and 2.A all pushed. Ping Slot 1 when done.
+
+5. **Bucket provisioning handoff from Slot 8** — 6 buckets × 3 envs × 2 clouds still outstanding.
+   See [slot 8 → slot 4] ping above.
+
+### Pre-existing MDPS test failures (NOT slot 4 work — operator triage needed)
+
+19 failures: 15 from `EmissionDecision.__init__()` missing `service_emission_state` + `last_emission_decision_at`
+(UTL schema drift; writegate/emission team owns fix); 4 from sports config / env validation / freshness logic drift.
+Slot 4's Phase 2 code is clean — failures confirmed pre-existing before any Phase 2 changes.
+
+### Foreign WIP in MDPS (do NOT touch)
+
+`tests/unit/test_defi_bypass_routing.py` — unstaged modification (removes one import line). Left untouched per
+multi-agent isolation rules. Not slot 4 scope.
