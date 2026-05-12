@@ -361,9 +361,19 @@ Owner: ikenna for design + harsh for implementation.
       in `tests/unit/governance/test_proposal_simulator.py` green; ruff + basedpyright clean.) **DEFERRED**:
       P1 — production Tenderly REST client (auth + retry + budget tracking) wires the Protocol; lands as
       operator-runnable setup when Tenderly creds + project ID are confirmed.
-- [ ] [AGENT] P0. **4C — Strategy-side scenario API**. New endpoint in execution-service or a CLI:
-      `defi-simulate-proposal --proposal-id <id> --archetype <X>` returns archetype P&L delta if proposal executes at
-      time T. Used by risk simulations (composes with `risk_simulations_limits_alerting` sibling question doc).
+- [x] [AGENT] P0. **4C — Strategy-side scenario API**. (execution-service@`1dea6e91` — NEW
+      `cli/simulate_proposal.py`: `defi-simulate-proposal` CLI with argparse surface (`--proposal-id` /
+      `--protocol` / `--archetype` / `--fork-block` / `--affected-assets` / `--time-T` / `--historical`) +
+      `run_cli(proposal, archetype, fork_block, affected_assets, tenderly_client, historical) -> dict[str,
+      object]` that wraps Phase 4B `simulate_proposal_execution` + emits the canonical JSON shape (archetype +
+      proposal_id + protocol + fork_block + per-asset `parameter_deltas[]` with before/after + delta helpers +
+      placeholder `expected_pnl_delta_bps` / `confidence_interval_bps` Phase 8 fills + `validation_status`
+      `calibrated`/`forward-looking`). `_decimal_to_str` + `_delta_to_json` JSON-serialise the Decimal-bearing
+      AssetParameters fields. `main()` raises `NotImplementedError` until the operator wires Phase 4A MTDS
+      proposal loader + the production TenderlyClient. Smoke: 1-asset Aave-V3 proposal at fork 22500000 →
+      JSON report with reserve_factor 0.10→0.15 + delta_bps=500.00. basedpyright + ruff clean.) **DEFERRED**:
+      P1 — Phase 4A MTDS proposal loader wire-in; Phase 8 expected_pnl_delta_bps + confidence_interval_bps
+      mapping (Phase 8 backtest harness ships the carry / leveraged-funding-arb P&L attribution).
 - [ ] [AGENT] P0. **4D — Backfill historical proposals** for the last 2 years across all 4 protocols. Coverage validates
       that any "what if proposal X passed" can be answered for any historical date.
 
@@ -776,6 +786,42 @@ or in 2-3-slot fan-out.
 - ✅ Master plan Group F items 17 + 18 green via this plan's deliverables.
 
 Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
+
+## Deferred work after 2026-05-12 (harsh-defi-sim-impl-tab session — full Opus reinstated)
+
+This session shipped **8 commits across execution-service + strategy-service** (no UAC churn — all UAC schemas
+landed Day-1 by slot 6) + **6 plan flips**. Per-phase status leaving this session:
+
+| Phase / item                              | Status as of 2026-05-12              | Successor / blocker                                                                                                            |
+| ----------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Phase 1G (UAC QG green)                   | `- [ ]` ⚪ slot-8-absorbed           | Slot 8 sweep — not slot 4.                                                                                                     |
+| Phase 3B (BenchmarkMatcher rate-impact)   | `- [x]` shipped @`b8989ae5`           | 11 unit tests green; no regression. Operator-runnable today.                                                                   |
+| Phase 3C (validation harness ≥ 50 historical large supplies) | `- [ ]` DEFERRED  | needs MTDS `lending_pool_states` capture window; operator-runnable on a same-region GCE VM. Out-of-scope for code shipment.    |
+| Phase 4A (MTDS governance capture adapter) | `- [ ]` DEFERRED                    | MTDS-side adapter (NOT execution-service); successor = `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3 catalogue work. |
+| Phase 4B (GovernanceProposalSimulator)    | `- [x]` shipped @`9259edb9`           | 8 unit tests green; production Tenderly REST client wires the Protocol operator-side.                                          |
+| Phase 4C (defi-simulate-proposal CLI)     | `- [x]` shipped @`1dea6e91`           | `run_cli()` unit-testable today with fake TenderlyClient; `main()` waits on Phase 4A loader + production Tenderly client.      |
+| Phase 4D (2-year backfill VM)             | `- [ ]` DEFERRED                    | operator-runnable VM launch under `deployment-service/scripts/vm/launch-governance-backfill-vm.sh` per codex § Phase 4D detail. |
+| Phase 5B/5C/5D/5E (yield-stream simulators) | `- [x]` shipped @`58c703a5`         | Operator-tuned `defi_seasonal_points_calibration.yaml` + `defi_yield_stream_protocol_map.yaml` hot-reload deferred as P1 todo. |
+| Phase 6A (carry_staked_basis audit)       | `- [x]` shipped @`ebcc723e` (slot 6) | —                                                                                                                              |
+| Phase 6B / 6B-WIRE-IN (dynamic hedge ratio) | `- [x]` shipped @`6431955`          | 6 wire-in tests green; HedgeRatioSnapshot persistence to dedicated data_type deferred P1.                                      |
+| Phase 6C (1-year dynamic-vs-static backtest) | `- [ ]` DEFERRED                  | depends on the Phase 8 backtest fidelity harness (Phase 8A) — same operator-runnable.                                          |
+| Phase 7A (slashing-rate calibration)      | `- [x]` shipped @`639fd6f4`           | MTDS `SLASHING_EVENT` loader is operator-side wiring; helper accepts in-memory events for testability.                         |
+| Phase 7B (SlashingTailRiskMC)             | `- [x]` shipped @`b16fb8b6` (slot 6) | —                                                                                                                              |
+| Phase 7C (archetype tail-risk gate)       | `- [x]` shipped @`639fd6f4`           | wire-in to `staked_basis.py::on_tick` preflight DEFERRED (operator-tunable thresholds pending risk-service harness).           |
+| Phase 8A/B/C/D (backtest fidelity validation + sign-off) | `- [ ]` DEFERRED      | depends on all Phases 3-7 wired into end-to-end; operator-runnable; sign-off is May-23 cutover gate.                           |
+| Phase 9A (`amm-slippage-simulation.md`)    | `- [x]` shipped Day-1 by slot 6      | Validation-results section folds in when Phase 3C / 8C harnesses complete.                                                     |
+| Phase 9B/9C/9D (codex SSOT updates)       | `- [x]` shipped Day-1 by slot 6      | —                                                                                                                              |
+| Phase 9E (master plan refresh)            | `- [ ]` slot-1-routed                | Group F items 17 + 18 status rows; slot 1 main owns master plan refresh per CLAUDE.md G-14.                                    |
+| Golden test set harness                   | `- [x]` shipped @`3184727a`           | Real on-chain corpora (per-shape thresholds) DEFERRED to archive-node capture runbook; harness drives synthetic V2/V3/V4 today. |
+
+**Code-only Phase 8 ledger**: Phases 8A/B/C/D are operator-runnable backtest scripts that consume the now-shipped
+Phase 2-7 simulators end-to-end. Code-shipment from this session unblocks the **`bash scripts/quality-gates.sh`
+green** + **basedpyright clean** + **ruff clean** state for all touched repos modulo the pre-existing UAC `internal/
+__init__.py` dual-`OrderType`-import bug (Ikenna slot 6 flagged in DONE table @`b16fb8b6`; not in this session's
+scope to fix).
+
+**Slot 4 going ⚪ QUIET** after the scoreboard commit + cross-side ping to ikenna-main listing the 8 code commits +
+6 plan flips above. The May-23 cutover gate (Phase 8D operator sign-off) remains the last unfilled checkbox.
 
 ## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
 
