@@ -21,8 +21,16 @@ different implicit assumptions about SPORTS path shape and the mismatch surfaced
 **Status**: canonical. Any new service that reads or writes data partitioned by asset_group MUST consult this doc before
 assuming a single-shape layout works across all groups.
 
-**Asset-group hive vocabulary (2026-05-01 update)**: `asset_group=` is **canonical** for new MTDS writes (per
-`market_tick_data_service/raw_tick_hive.RAW_TICK_ASSET_GROUP_HIVE_KEY`). `category=` is the **legacy** form
+**Asset-group hive vocabulary (2026-05-01 update; codex audit D-8 refresh 2026-05-12)**: `asset_group=` is **canonical**
+for new MTDS writes (per `market_tick_data_service/raw_tick_hive.RAW_TICK_ASSET_GROUP_HIVE_KEY`). `category=` is the
+**legacy** form preserved on disk for backward-compat reads only; readers try canonical → fall back to legacy per the
+≤30-day reader-fallback window. **Legacy `category=` data + the reader-fallback is targeted for deletion ~2026-06-15**
+(co-incident with the reader-fallback retirement gate per
+[`service-output-emission-semantics.md`](./service-output-emission-semantics.md#manifest-read-protocol-per-service_emission_state)).
+Migration scripts owning the legacy-to-canonical rekey:
+[`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
++ instruments-service `scripts/migrate_*_bare_to_asset_group.py`. After 2026-06-15 the dual-vocab tolerance in
+this doc is removed; readers + writers go canonical-only. `category=` is the **legacy** form
 (`RAW_TICK_ASSET_GROUP_HIVE_KEY_LEGACY`) preserved on disk without a re-keying migration. Both coexist in production GCS
 — readers must try canonical first then fall back to legacy (`market_tick_data_service.reader` already does this;
 `deployment-api/utils/storage_facade.list_objects` transparently fans out to both vocabularies). Manifest pre-flight is

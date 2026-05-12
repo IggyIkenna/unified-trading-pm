@@ -74,6 +74,12 @@ Internal-only schemas (e.g. risk, VaR, stress testing) belong in `unified_api_co
 - **unified-api-contracts (external/canonical surface)**: stdlib + pydantic only; **no `unified-*` imports at all** —
   not even in tests. `test_ac_uic_alignment.py` (which imports from `unified_api_contracts.internal` inside the UAC
   external test suite) is a **known CIRCULAR violation** and must be moved to `unified_api_contracts/internal/tests/`.
+  **Successor plan (per CLAUDE.md "Temporary state must have a named successor plan" rule + codex audit D-11
+  2026-05-12)**: tracked as a sub-task under
+  [`plans/active/uac_citadel_architecture_2026_05_07.md`](../../plans/active/uac_citadel_architecture_2026_05_07.md)
+  (UAC import-surface enforcement workstream). Until that move lands, the file is permitted under the existing
+  `internal → canonical` cross-surface exception; no new circular-violating test files may be added (QG step
+  `unified-trading-pm/scripts/quality_gates/check_uac_internal_imports.py` enforces).
 - **unified_api_contracts.internal**: stdlib + pydantic + **permitted to import from `unified_api_contracts.canonical`**
   (normalization canonicals re-used in messaging). No cloud SDKs. `internal` → `canonical` is the **only** permitted
   cross-surface import direction within UAC.

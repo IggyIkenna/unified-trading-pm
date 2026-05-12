@@ -4,8 +4,23 @@ scope: [engineer, admin]
 
 # Data Lineage — MTDS → MDPS → features-\* → ml-training → ml-inference
 
-Status: active Last updated: 2026-04-18 Owner: data-pipeline agents 3 + 5 Related plan:
+Status: active Last updated: 2026-05-12 (codex audit D-15 refresh — currency banner cross-link; full rewrite tracked
+in ML-14) Owner: data-pipeline agents 3 + 5 Related plan:
 `unified-trading-pm/plans/archive/data_pipeline_completion_2026_04_18.plan.md` § Phase 10
+
+> **🟡 PARTIAL STALENESS 2026-05-12 (ML-14 PRE_CUTOVER, slot 8 audit)** — this doc was last revised 2026-04-18,
+> predating the 2026-04-25 venue-axis-vocabulary plan (`asset_group` is now the canonical axis, NOT `category`) and
+> the 2026-05-11 Bucket-name SSOT (b+) codification (`resolve_bucket_name(cloud=, kind=, asset_group=, env=)` is the
+> only legal lookup). The "Conventions" section (above) already cites the canonical `resolve_bucket_name(...)` rule,
+> but the per-layer flow sections (Layer 1 MTDS / Layer 2 features / Layer 3 ml-training / Layer 4 ml-inference)
+> still use literal `{category}` substitution + pre-SSOT-(b+) bucket-name patterns like
+> `market-data-tick-{category}-central-element-323112` / `features-{feature_group}-{category}-central-element-323112`
+> / `ml-models-{category}-central-element-323112` / `ml-predictions-{category}-central-element-323112`. The bucket
+> names cited inline are READ-the-doc-for-context illustrative only — **the canonical bucket-name SSOT is the
+> `resolve_bucket_name(...)` call**; treat the inline `{category}` substitutions as legacy + reconcile against
+> `deployment-service/configs/cloud-providers.yaml` + the asset_group hive-key vocabulary (`asset_group=` canonical,
+> `category=` legacy on-disk per `market_tick_data_service/raw_tick_hive.py`). Tracked in
+> `plans/active/issues/codex_audit_ml_2026_05_12.md` ML-14; full rewrite pending data-pipeline owner.
 
 ## Purpose
 
@@ -22,14 +37,16 @@ canonical feature paths; ml-inference writes canonical prediction paths) without
   bucket-name SSOT registration). For ML predictions: paths live UNDER the consumer's bucket, not their own kind.
   Never inline `gs://uts-models-{cloud}/...` or `s3://artifacts/...` (QG STEP 5.69 enforces).
 - **Hive partitioning** — `key=value`, not `key-value`. See `partitioning.md`.
-- **Manifest shard dims (v7 — current)** —
+- **Manifest shard dims (v8 — column shape ratified 2026-05-09; `MANIFEST_SCHEMA_VERSION` constant transitionally
+  pinned at `7` until Phase 4.DEFAULT-REMOVAL — see SSOT)** —
   `venue, chain, data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type, fixture_id, job_id`.
   v5 added `capture_status / error_reason / attempted_at` (honest-coverage). v6 added
   `quote_asset / margin_type / combo_type / leg_weights` (DERIBIT inverse-vs-linear + multi-leg). v7 added `fixture_id`
-  (sports per-fixture row column) + `job_id` (ML/strategy/execution experiment-keyed services). v8 (in design) adds
+  (sports per-fixture row column) + `job_id` (ML/strategy/execution experiment-keyed services). v8 adds
   `pipeline_mode / service_emission_state / last_emission_decision_at / expected_window_completeness_fraction`
-  (renamed from `_pct` per UAC@`76f950a` 2026-05-11 — fraction 0.0-1.0, not percentage 0-100). SSOT:
-  [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md).
+  (fraction 0.0-1.0, not percentage 0-100; renamed from `_pct` per UAC@`76f950a` 2026-05-11). SSOT:
+  [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md) § "Schema v8 (current;
+  ratified 2026-05-09)".
 - **SchemaContract** — every (category, instrument_type, data_type[, timeframe, feature_group]) registered in UAC
   `internal/schemas/contracts.py::CONTRACT_REGISTRY`.
 - **Derive-on-read** — `unified_trading_library.canonical.derive_instrument_id()` computes the canonical instrument_id

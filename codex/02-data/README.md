@@ -9,11 +9,13 @@ scope: [engineer, admin]
 ## TL;DR
 
 All data follows standardized schemas (Pydantic), is partitioned by date (YYYY/MM/DD), and validated before
-persistence. Both batch and live pipelines write to GCS (`pipeline_mode=batch_*` vs `pipeline_mode=live_websocket`
-partition columns — see `pipeline-mode-partition.md`). Pub/Sub carries lifecycle events and inter-service messages,
-NOT live tick data on a per-row write path. Service-owned schemas ensure loose coupling; cross-cutting schemas
-(events, config, contracts) live in `unified-api-contracts` (UAC `external` for source-side, `internal` for
-service-internal) and the `unified-trading-library` re-exports the parquet-write helpers.
+persistence. **Both batch and live pipelines write to GCS** via the same writers + manifest paths — the only legitimate
+difference is the `pipeline_mode=` partition column (`pipeline_mode=batch_*` vs `pipeline_mode=live_websocket`, per
+`pipeline-mode-partition.md`). Pub/Sub carries **lifecycle events + inter-service messages only**, NOT live tick data
+on a per-row write path. (Refreshed 2026-05-12 per codex audit D-17 — earlier TL;DR mis-stated live writes as
+Pub/Sub-only.) Service-owned schemas ensure loose coupling; cross-cutting schemas (events, config, contracts) live in
+`unified-api-contracts` (UAC `external` for source-side, `internal` for service-internal) and the
+`unified-trading-library` re-exports the parquet-write helpers.
 
 ---
 

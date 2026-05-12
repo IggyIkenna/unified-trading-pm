@@ -155,6 +155,15 @@ Downstream consumers reading the v8 manifest column MUST branch on the four stat
 | `BLOCKED`                   | **Skip + raise `ManifestRowBlockedError`** (`unified_api_contracts.canonical.crosscutting.service_emission_state`). The publish-boundary policy withheld the metric row + fired a P0 alert; any downstream read is a correctness-critical attempt to consume data deliberately withheld. |
 | `None` (legacy v7 row)      | Fall through to `capture_status`-based reasoning. The ≤30-day reader-fallback window (`READER_FALLBACK_WINDOW_DAYS = 30`) expires ~2026-06-14 per Phase 7 walk.        |
 
+> **Reader-fallback retirement gate** (per codex audit D-4 2026-05-12): the `READER_FALLBACK_WINDOW_DAYS = 30` fallback
+> chain is deleted at the Phase 7 walk owned by
+> [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+> Phase 7. Operator gating: deletion is permitted only when the `READER_FELL_BACK_TO_LEGACY_PATH` event-count threshold
+> reaches **zero across the workspace for 7 consecutive days** (per
+> [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) § "Reader fallback chain"). The QG step enforcing
+> deletion is `unified-trading-pm/scripts/quality_gates/check_reader_fallback_retired.py` (lands with Phase 7).
+> Cross-references: [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) § Reader fallback chain (line 104+).
+
 ## Worked examples
 
 ### MDPS `ohlcv_1h:current` — STRICT_FAIL on gap

@@ -243,6 +243,14 @@ reads the parquet rows.
 
 ## Schema v8 (current; ratified 2026-05-09)
 
+> **Temporary states + their canonical follow-up plans** (per CLAUDE.md HARD RULE — codex audit D-3 2026-05-12):
+>
+> | Temporary state                                                          | Successor plan                                                                                                                            | Successor phase                              |
+> | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+> | `MANIFEST_SCHEMA_VERSION = 7` constant (UTL `manifest_writer.py:131`) while column shape is v8 + None-default kwargs accepted | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 4.DEFAULT-REMOVAL — explicit-or-fail bump to `MANIFEST_SCHEMA_VERSION = 8` |
+> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 7 reader-fallback deletion (~2026-06-15) |
+
+
 The schema has evolved through six published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8
 (maximalist final gate per
@@ -1034,10 +1042,15 @@ impossible.
 consumer's modeling tolerance (tree-based ML, rank allocators, bounded forward-fill, drop-with-min-rows). Never
 fabricate placeholder rows, never `fillna(0)` at calc boundaries, never use sentinels. Pre-flight gates are per-service.
 
-**NEW BUG SURFACED (Phase 0 audit 2026-05-06)**: orchestrator prediction empty path at `live_workers.py:268-271` returns
-`success=True, candles_generated=0` with NO manifest record (no `record_empty`, no `record_captured`, no
-`record_failed`). Distinct from 1440-NaN class but equally opaque. Fix in writegate Phase 2.A scope expansion — adds
-`record_empty(row_key)` so prediction empties surface as honest absence.
+**Phase 0 audit 2026-05-06 finding — now owned + tracked (codex audit D-13 closure 2026-05-12)**: orchestrator
+prediction empty path at `live_workers.py:268-271` returned `success=True, candles_generated=0` with NO manifest record
+(no `record_empty`, no `record_captured`, no `record_failed`). Distinct from 1440-NaN class but equally opaque. Fix
+owned by [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+Phase 2.A scope expansion — adds `record_empty(row_key)` so prediction empties surface as honest absence. Per CLAUDE.md
+"Findings Triage" rule, open bugs do NOT live inside SSOT codex docs as long-form prose — this surface now points at
+the owning plan + the plan body's todo carries the closure status. When Phase 2.A flips
+`live_workers.py:268-271` → `record_empty(...)`, this paragraph is reduced to a one-line "Fixed at writegate Phase 2.A
+@<commit-sha>" historical note.
 
 ### 7. Per-VM shard isolation for concurrent backfills (workspace rule, codified 2026-05-06)
 
