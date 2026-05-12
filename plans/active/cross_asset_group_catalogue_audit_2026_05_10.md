@@ -425,8 +425,9 @@ Owner: harsh.
 
 **Codex SSOT update (Phase 5 boundary)**:
 
-- [ ] [AGENT] P0. **5D — Update `codex/02-data/contracts-scope-and-layout.md`** with the new asset-group registry index
-      entry-point.
+- [x] [AGENT] P0. **5D — Update `codex/02-data/contracts-scope-and-layout.md`** with the new asset-group registry index
+      entry-point. (PM@58e5dbe0 — added `canonical/asset_group_registry.py` + `canonical/domain/derivatives/` to
+      Package structure table + new "Cross-asset-group canonical inventory (Phase 5C SSOT)" subsection)
 
 **Full-execution criterion**:
 
@@ -519,7 +520,7 @@ Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
 | Phase 2 (manifest health script + UI)                     | ☐ TODO                                          | `measure_honest_coverage.py` confirmed NOT to exist; must validate venue-key↔capability-dict parity before computing % (CF-4/SP-6/DF-8 — coverage-start key mismatch silently zeros expected shards)                                                                                                                                                                                                                                                                                                        |
 | Phase 3 (per-CeFi-venue zero-activity-bar verify)         | ☐ TODO                                          | Wave 3.M is 0% started (all 21 cefi venues on legacy `empty_confirmed`; no Cat-D bars; UTL helpers don't exist) — callout added to `writegate_honest_coverage_endtoend_2026_05_06.md`; the cefi sub-agent's per-venue Cat-A/B/C/D matrix in `catalogue_audit_cefi_2026_05_12.md` seeds the audit                                                                                                                                                                                                             |
 | Phase 4 (3 mev-protection.md consolidation)               | ✅ DONE 2026-05-12 (slot 8 closeout)            | 3-way consolidation already landed 2026-05-10; slot 8 verified structure (54-line redirect + 431-line canonical + 156-line scope-narrowed strategy narrative) + reconciled UAC `MevSubmissionMode` enum drift (canonical missing CUSTOM_PRIVATE_RPC; strategy missing JITO_BUNDLE) — both tables now mirror UAC's 6-mode enum. EX-8/EX-20 sibling fix already shipped @`0fc4b3fd`. 1 NICE-TO-HAVE carried inline (71 vscode-webview links in `strategy-summary.md`). Phase 4 close-out commit: PM@`be7d7c84` |
-| Phase 5 (TradFi ETF/roots SSOT + asset_group_registry)    | 🟡 IN PROGRESS (5A+5B+5C ✅; 5D TODO) | `tradfi_etfs.py` / `tradfi_roots.py` / `asset_group_registry.py` confirmed NOT to exist; SSOT-fragmentation fully mapped — ETF list across 4 files, futures-roots across 3, VIX constants in `data_source_continuity.py` not `honest_coverage.py` (TF-1/TF-2/TF-7); `canonical/domain/derivatives/` has only `__init__.py`+`options.py`                                                                                                                                                                      |
+| Phase 5 (TradFi ETF/roots SSOT + asset_group_registry)    | ✅ DONE 2026-05-12 (slot 2) — 5A UAC@`9d80f43` + 5B UAC@`24dd517` + 5C UAC@`03f10f0` + 5D PM@`58e5dbe0` | `tradfi_etfs.py` (59-ETF dict) + `tradfi_roots.py` (60-root dict) + `asset_group_registry.py` (`get_canonical_inventory()` / `AssetGroupInventory`) shipped; codex `contracts-scope-and-layout.md` updated with derivatives sub-package + cross-asset-group entry-point section |
 | Phase 6 (validation)                                      | ☐ TODO                                          | gated on Phases 1-5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Phase 7A-D, 7F (codex SSOT updates)                       | ☐ TODO                                          | gated on Phases 1H + 2E + 2F + 3E + Phase-5; incl. CLAUDE.md VIX-15m pointer fix (TF-7), `contracts-scope-and-layout.md` venue-class taxonomy (DF-19), the 6 cross-asset cleanup items                                                                                                                                                                                                                                                                                                                       |
 | Phase 7E (codex `04-architecture/mev-protection.md` SSOT) | ✅ DONE 2026-05-12 (slot 8)                     | gated on Phase 4 which closed this turn; canonical SSOT confirmed at `codex/04-architecture/mev-protection.md` (431 lines, full spec); plan body 7E flipped @PM`<this commit>`                                                                                                                                                                                                                                                                                                                               |
@@ -528,6 +529,22 @@ Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
 7E ✅ DONE this cycle. Open: Phase 1C operator greenlight then implement (GMX/DRIFT P0); Phase 1B Spark+Radiant SSOT
 consolidation (fan out with slot 2 `defi_catalogue_chain_primitives` Phase 1A); Phase 1D `to_canonical_venue()` + parity
 test (gated on Ikenna case-folding decision); Phase 1F-extend chain-set fragmentation (PRE_CUTOVER, owner=ikenna); Phase
-2 (manifest health script + UI), Phase 3 (zero-activity-bar verify, gated on writegate Wave 3.M), Phase 5 (TradFi
-ETF/roots SSOT + asset_group_registry — all code work, needs venv-equipped checkout); then Phase 6 validation + Phase
-7A-D/7F codex SSOT updates.
+2 (manifest health script + UI), Phase 3 (zero-activity-bar verify, gated on writegate Wave 3.M); Phase 6 validation +
+Phase 7A-D/7F codex SSOT updates (Phase 5 ✅ DONE as of 2026-05-12 slot-2 session).
+
+---
+
+## Deferred work after 2026-05-12 slot-2 (ikenna-defi-catalogue-tab) session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+| --- | --- | --- |
+| Phase 5A — `tradfi_etfs.py` (59-ETF SSOT) | ✅ DONE — UAC@`9d80f43` | Phase 6 consumer migration |
+| Phase 5B — `tradfi_roots.py` (60-root SSOT) | ✅ DONE — UAC@`24dd517` | Phase 6 consumer migration; ICE US softs (CT/CC/KC/SB/OJ/DX/T) **DEFERRED** to Phase 6 (dataset ambiguity CME vs ICE between tradfi_symbology.py and tradfi_instrument_universe.py) |
+| Phase 5C — `asset_group_registry.py` (`get_canonical_inventory`) | ✅ DONE — UAC@`03f10f0` | Phase 6 consumer migration |
+| Phase 5D — codex `contracts-scope-and-layout.md` update | ✅ DONE — PM@`58e5dbe0` | — |
+| Phase 1C — GMX/DRIFT dual-classification | 🟡 BLOCKED — `OPERATOR-GREENLIT NEEDED` | Operator must confirm classification approach before Phase 1C can implement |
+| Phase 1G — UAC QG green | 🟡 BLOCKED — 137 pre-existing E501 errors in `market_data_categories.py` + RUF003 in `risk_rules/venue.py`; foreign debt | Phase 1 gate; needs foreign-owned file fixes |
+| Phase 2 — manifest health script + UI | ☐ TODO | Independent of Phase 5 |
+| Phase 3 — per-CeFi zero-activity-bar verify | ☐ TODO | Gated on writegate Wave 3.M |
+| Phase 6 — validation + downstream consumer migration | ☐ TODO | Gated on Phases 1-5 (Phase 5 now ✅) |
+| Phase 7A-D, 7F — codex SSOT updates | ☐ TODO | Gated on Phases 1H + 2E + 2F + 3E + 5 (5 now ✅) |
