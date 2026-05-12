@@ -34,7 +34,7 @@ deployment-service/contracts/FlashLoanReceiver.sol
 | Chain   | Chain ID | Address                                      | Aave Pool                                    |
 | ------- | -------- | -------------------------------------------- | -------------------------------------------- |
 | Sepolia | 11155111 | `0x480c9142C51A477e0D8A17E032463d81A3b611BA` | `0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951` |
-| Mainnet | 1        | Not yet deployed                             | `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2` |
+| Mainnet | 1        | `0x42c005e2Bc545a49B50Fee3E76B8558348CAAb4c` | `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2` |
 
 Addresses are registered in:
 
