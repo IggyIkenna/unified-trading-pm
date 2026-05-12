@@ -261,7 +261,20 @@ nightly-cron wiring (Phase 6.A).
 - [ ] [AGENT] P0. **4.B execution-service.** Matching engine subscribes to KillSwitchBus; cancel-on-arm wired per scope;
       new-order-block on arm.
 - [ ] [AGENT] P0. **4.C position-balance + alerting consumers.** Subscribe to breaker + kill-switch events; severity
-      routing.
+      routing. **ALERTING HALF DONE 2026-05-12** (alerting-service@0a52a33 — `alerting_service/dr_event_handler.py`:
+      `handle_kill_switch_armed_event` routes `KillSwitchArmedEvent` at CRITICAL+page for global/wallet/asset-group
+      switch ids, HIGH+page otherwise; `handle_kill_switch_disarm_event` routes `KillSwitchDisarmEvent` via the
+      RECOVERY AlertCodes per `BreakerRecoveryMode` (`AUTO_COOLDOWN`→`KILL_SWITCH_AUTO_RECOVERED`,
+      `MANUAL_UNKILL`→`KILL_SWITCH_MANUAL_UNKILLED` — both INFO+Telegram, UAC-seeded `LIVE_ALERT_RULES`);
+      `handle_circuit_breaker_fire` classifies severity off the breaker's `BreakerAction` from the UAC
+      `PER_ARCHETYPE_BREAKERS` registry (`KILL_ALL`→CRITICAL+page, `CANCEL_OPEN`→HIGH+page,
+      `SCALE_DOWN`/`BLOCK_NEW`→WARN+Telegram); new `router.route_event_with_explicit_channels` for caller-computed
+      severity; wired into `subscribers/alert_subscriber.dispatch_event`; tests `tests/unit/test_dr_event_handler.py`
+      cover arm/disarm/recovery routing + breaker-action tiering; 412 unit tests pass.) **PBM HALF DEFERRED** to the
+      position-balance-monitor-service tab. **DEFERRED P2 (alerting)**: no typed `BreakerFiredEvent` UAC model exists
+      yet — the breaker-fire handler classifies off `CircuitBreakerId` + the registry's `BreakerAction`; when a typed
+      `BreakerFiredEvent` lands in UAC, switch `handle_circuit_breaker_fire_payload` to validate against it. FLAGGED to
+      DR plan Phase 1 / risk plan owners.
 - [x] [AGENT] P0. **4.D strategy-service.** On `KILL_PER_ARCHETYPE` for owned archetype, signal generator stops; on
       `KILL_ALL_LIVE`, all archetypes stop. (strategy-service@bf1ed6b —
       `strategy_service/archetype_kill_switch_subscriber.py`: `ArchetypeKillSwitchSubscriber(KillSwitchSubscriber)`
