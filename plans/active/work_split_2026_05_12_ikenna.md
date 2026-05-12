@@ -267,20 +267,18 @@ recalibrates.
 MODEL TIER: Sonnet 4.6 / THINKING: high
 WORKSPACE_ROOT: /Users/ikennaigboaka/Code/unified-trading-system-repos
 
-PART A — NOW: Launch GCE VM (asia-northeast1-c, e2-standard-8) for dry-run baseline:
-  for ag in cefi defi tradfi sports prediction; do
-    python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group $ag --dry-run &
-    python instruments-service/scripts/reconcile_expected_absence_reasons.py --asset-group $ag --dry-run &
-    python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group $ag --dry-run &
-  done; wait
-  Record phantom counts in expected_unattempted_propagation_chain_2026_05_12.md § "Reconciliation baseline".
-
-PART B — NOW (PARALLEL with A): GCS production bucket provisioning per bucket_name_ssot_canonicalisation_2026_05_10.md.
+PART A — NOW: GCS production bucket provisioning per bucket_name_ssot_canonicalisation_2026_05_10.md.
   Production buckets only — staging/dev deferred (we need production data for DeFi cutover).
   Use Storage Transfer Service to copy flat→env-tiered. Verify object-count parity before any code switch.
   Record parity counts in bucket_name_ssot plan. When done: ping Slot 1 → GATE 2 condition met.
 
-PART C — AFTER GATE 1 (propagation chain Phases 1–4 + 2.A pushed to origin):
+PART B — AFTER GATE 1 (propagation chain Phases 1–4 + 2.A pushed to origin):
+  ⚠️ DO NOT run reconcile_expected_absence_reasons --apply-flips or reconcile_legacy_blank_to_typed_reason --apply-flips
+  BEFORE Gate 1. Reason: MTDS currently writes attempted_failed for instruments instruments-service says don't exist
+  (the propagation gap — see expected_unattempted_propagation_gap_2026_05_12.md). Classifiers would assign typed
+  reasons to rows that should become expected_unattempted — corruption, not cleanup.
+  First: run INFORMATIONAL dry-run (--dry-run, no writes) to record current phantom baseline counts.
+  Then Phase 1-4 + 2.A ship (Gate 1 fires). Then run the actionable dry-run + apply-flips below.
   Apply-flips in strict dependency order:
   Pass 1: instruments,venue_trading_calendar all 5 AGs (--apply-flips)
   Pass 2: MTDS data_types all 5 AGs
@@ -290,7 +288,7 @@ PART C — AFTER GATE 1 (propagation chain Phases 1–4 + 2.A pushed to origin):
   Also run: reconcile_legacy_blank_to_typed_reason.py --apply-flips all 5 AGs
   Verify phantom count = 0 (or <10 class-C). Record. Ping Slot 1 → GATE 3 condition.
 
-PART D — AFTER GATE 2: Code migration — replace hardcoded gs:// f-strings with resolve_bucket_name().
+PART C — AFTER GATE 2: Code migration — replace hardcoded gs:// f-strings with resolve_bucket_name().
   Scope: instruments-service scripts + deployment-service VM launchers (~60 files).
   QG STEP 5.69 ratchet must return zero violations. Push.
 ```
@@ -362,8 +360,20 @@ PART A — NOW: Phase 2.D ALL fields (full scope — all ship now):
     5. Derive: report_time = match_end_time + timedelta(seconds=SFI_DATA_LAG_P95_SECONDS) where match_end_time is known
     6. UAC: add EXPECTED_FIXTURE_POSTPONED + EXPECTED_FIXTURE_CANCELLED to EmptyConfirmedReason
     7. instruments-service: for fixtures with status POSTPONED or CANCELLED → record_empty(reason=EXPECTED_FIXTURE_POSTPONED/CANCELLED)
-       (historical clean state only — live postponement transitions handled in live-pipeline plan)
+       BOTH historical AND live: instruments-service forward-polls API Football for fixture status updates.
+       On POSTPONED/CANCELLED: overwrite manifest with record_empty (manifest history records the overwrite —
+       downstream can query status history). No state-machine needed — just overwrite + the manifest audit trail
+       shows the transition. Wire in the existing API Football polling loop, not a new path.
     8. assert_available_at_present wiring
+    9. UAC: source latency constants for ALL sports sources (calibrate once from historical data):
+         SFI_DATA_LAG_P95_SECONDS — already above
+         UNDERSTAT_DATA_LAG_P95_SECONDS — sample 500 fixtures: (understat data timestamp − match_end_time).quantile(0.95). Prior: 7200s (2hr)
+         FOOTYSTATS_DATA_LAG_P95_SECONDS — same method. Prior: 3600s (1hr)
+         API_FOOTBALL_RESULT_LAG_P95_SECONDS — time from FT whistle to API Football showing final score. Prior: 1800s (30min)
+         OPEN_METEO_HISTORICAL_LAG_SECONDS — weather actuals lag; minimal (~1hr). Prior: 3600s. Pre-match forecasts: available_at = scrape_time (no lookahead)
+       These feed into available_at stamping for features — report_time = match_end_time + SOURCE_LAG_P95_SECONDS per source.
+       Pre-match sources (API Football fixtures, Open-Meteo forecasts): available_at = scrape_time, not match_end_time.
+       Add all constants to UAC unified_api_contracts/registry/source_data_latency.py (new file).
     5 unit tests (freeze detected, no freeze yet, announced_at from API Football, postponed, cancelled). QG + push.
 
 PART B — AFTER defi_recursive Phase 2 design: Phase 2.C features-sports stubs:
