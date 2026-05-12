@@ -76,3 +76,22 @@ MDPS tests not updated. Filing cross-side ping to Harsh now. Slot 4 should NOT f
 — UTL change owner unknown; likely Harsh writegate team). Sports/CLI/freshness failures also pre-existing; defer to
 their plan owners. **Slot 4: proceed with Phase 3 assuming test failures are pre-existing baseline; your Phase 2 work is
 clean.**
+
+---
+
+## [Slot 8 → Slot 4] 2026-05-12 — manual-audit bucket provisioning handoff
+
+**Action required by slot 4 (bucket-name SSOT owner).**
+
+Phase 0i tail yaml SSOT shipped by slot 8 (`deployment-service@00a1288`):
+- `manual-audit` kind added to `configs/cloud-providers.yaml` (GCP + AWS, `DEPLOYMENT_ENV_SHORT`-tiered).
+- GCP: `manual-audit-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}`
+- AWS: `unified-trading-manual-audit-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}`
+
+**Remaining (slot 4 scope — Phase 0c provisioning):**
+- Provision 6 buckets (3 envs × 2 clouds: GCP development/staging/prod + AWS development/staging/prod).
+- Apply ≥7-year retention lifecycle policy (GCP Object Retention Lock or bucket lock; AWS S3 Object Lock
+  `COMPLIANCE` mode). Consider Coldline/Glacier-IA class after 90d for cost.
+- Add to provisioning scripts if applicable.
+
+Plan ref: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0i tail (checkbox now `[x]`).
