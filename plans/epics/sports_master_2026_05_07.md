@@ -944,6 +944,10 @@ plan flips for B.1 Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 - Sports rename plan (KEPT ACTIVE — its own DAG):
   [`sports_data_available_at_rename_2026_05_07.md`](../archive/sports_data_available_at_rename_2026_05_07.md).
 - Sports phantom-fixtures-recovery handover: `plans/ai/_sports_phantom_fixtures_recovery_handover_2026_05_06.md`.
+- Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
+  [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
+  `cross_asset_group_catalogue_audit_2026_05_10.md`.
+- Canonical asset_group registry: `unified_api_contracts.canonical.crosscutting.asset_group_registry` (Phase 5C/5D).
 
 ## Folded plans (archived 2026-05-07)
 

@@ -493,8 +493,9 @@ Per Post-Plan-Phase Codex Audit HARD RULE:
       stub) + `09-strategy/architecture-v2/cross-cutting/mev-protection.md` (scope-narrowed strategy-side narrative)
       walk back to canonical). EX-8/EX-20 (`defi-execution-overview.md` § MEV) supersession banner + redirect shipped
       @`0fc4b3fd`. Submission-mode enum drift reconciliation shipped @PM`be7d7c84`. Phase 7E closes with Phase 4.
-- [ ] [AGENT] P0. **7F — Each per-asset-group epic refreshed** (`cefi_master` / `tradfi_master` / `sports_master` /
+- [x] [AGENT] P0. **7F — Each per-asset-group epic refreshed** (`cefi_master` / `tradfi_master` / `sports_master` /
       `predictions_master` + `defi_master`) with the new canonical inventory entry-point + coverage % surface.
+      (this commit — honest-coverage surface + asset_group_registry ref added to Cross-references in all 5 masters)
 
 ## Cross-plan dependencies
 

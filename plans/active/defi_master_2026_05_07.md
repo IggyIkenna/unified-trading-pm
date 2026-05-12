@@ -1235,6 +1235,10 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - Carry tracer pipeline handoff: `plans/ai/carry_tracer_pipeline_handoff_2026_05_06.md` (in-flight Phase 9 catalog).
+- Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
+  [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
+  `cross_asset_group_catalogue_audit_2026_05_10.md`.
+- Canonical asset_group registry: `unified_api_contracts.canonical.crosscutting.asset_group_registry` (Phase 5C/5D).
 
 ## Folded plans (archived 2026-05-07)
 
