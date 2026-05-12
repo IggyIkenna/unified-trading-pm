@@ -153,14 +153,16 @@ exposes thin facade modules that re-export from internal sub-packages.
 
 | Package                    | Purpose                                                                 |
 | -------------------------- | ----------------------------------------------------------------------- |
-| `canonical/`               | Canonical normalized types, grouped by domain                           |
-| `canonical/domain/`        | Domain-specific canonicals (market_data, execution, defi, sports, etc.) |
-| `canonical/crosscutting/`  | Cross-domain canonicals (errors, pagination, metadata)                  |
-| `registry/`                | Capability registry + venue manifest                                    |
-| `registry/capability/`     | Per-source capability declarations (modes, envs, operations)            |
-| `registry/venue_manifest/` | Venue metadata, connection params, rate limits                          |
-| `external/`                | Raw per-source external schemas, flat layout (one module per source)    |
-| `normalize_utils/`         | Internal normalization helpers (not part of public import surface)      |
+| `canonical/`                        | Canonical normalized types, grouped by domain                           |
+| `canonical/domain/`                 | Domain-specific canonicals (market_data, execution, defi, sports, etc.) |
+| `canonical/domain/derivatives/`     | TradFi derivatives SSOTs: `tradfi_etfs.py` (ETF catalogue) + `tradfi_roots.py` (futures-root catalogue) |
+| `canonical/crosscutting/`           | Cross-domain canonicals (errors, pagination, metadata)                  |
+| `canonical/asset_group_registry.py` | **Cross-asset-group entry-point** — `get_canonical_inventory(asset_group)` → `AssetGroupInventory` (venues + data_types + source_coverage_start). Phase 5C SSOT. |
+| `registry/`                         | Capability registry + venue manifest                                    |
+| `registry/capability/`              | Per-source capability declarations (modes, envs, operations)            |
+| `registry/venue_manifest/`          | Venue metadata, connection params, rate limits                          |
+| `external/`                         | Raw per-source external schemas, flat layout (one module per source)    |
+| `normalize_utils/`                  | Internal normalization helpers (not part of public import surface)      |
 
 ### Import surface rules
 
@@ -170,6 +172,34 @@ exposes thin facade modules that re-export from internal sub-packages.
    sub-packages are permitted but not required.
 3. **`normalize_utils/`** is internal-only. Never import from outside UAC.
 4. **`external/`** modules are flat (one file per source). No nesting beyond one level.
+
+### Cross-asset-group canonical inventory (Phase 5C SSOT)
+
+`canonical/asset_group_registry.py` is the single entry-point that answers
+"give me everything for asset_group X":
+
+```python
+from unified_api_contracts.canonical.asset_group_registry import get_canonical_inventory
+
+inv = get_canonical_inventory("cefi")
+inv.venues                  # tuple[str, ...] — canonical venue IDs
+inv.data_types              # tuple[str, ...] — canonical data_type strings
+inv.source_coverage_start   # dict[str, date] — venue/source → earliest available date
+```
+
+**`KNOWN_ASSET_GROUPS`** (frozenset): `cefi` / `defi` / `tradfi` / `sports` / `prediction`.
+
+**`AssetGroupInventory`** fields:
+
+| Field                   | Type                  | Source SSOT                                      |
+| ----------------------- | --------------------- | ------------------------------------------------ |
+| `asset_group`           | `str`                 | key passed in (lowercased)                       |
+| `venues`                | `tuple[str, ...]`     | `registry.market_data_categories.VENUES_BY_ASSET_GROUP` |
+| `data_types`            | `tuple[str, ...]`     | `registry.market_data_categories.DATA_TYPES_BY_ASSET_GROUP` |
+| `source_coverage_start` | `dict[str, date]`     | per-asset-group `*_SOURCE_COVERAGE_START` in `canonical.coverage_starts` |
+
+Resolves § A1 problem from 2026-05-08 catalogue audit (data spread across 3 separate dicts).
+Migration of consumers to this surface: Phase 6 of `cross_asset_group_catalogue_audit_2026_05_10.md`.
 
 ### Capability registry
 
