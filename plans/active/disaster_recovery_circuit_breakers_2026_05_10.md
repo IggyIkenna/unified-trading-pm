@@ -364,19 +364,21 @@ nightly-cron wiring (Phase 6.A).
       `start_recovery_ticker` (daemon thread, 60s interval) + `reset_recovery_engine_for_testing`.
       `circuit_breaker_registry.py` extended: `armed_config()` export + `arm_breaker` calls `arm_recovery` on first arm.
       12 unit tests in `test_recovery_loop.py`; 489 service unit tests pass.
-- [ ] [AGENT] P0. **5.B Recovery test matrix.** Per breaker × per recovery rule, integration test exercises the recovery
+- [x] [AGENT] P0. **5.B Recovery test matrix.** Per breaker × per recovery rule, integration test exercises the recovery
       path. **unit-level matrix SHIPPED 2026-05-12** — `unified-trading-library@d5161fd`
       `tests/unit/circuit_breaker/test_recovery.py` (18 tests): `auto_cooldown` green/red-reset/timeout paths,
       `manual_unkill` (incl. overriding an `auto_cooldown` breaker), re-arm reset, `tick_all` skips `manual_unkill`,
       fail-loud on missing-guard / not-armed, + a **parametrised matrix over the real UAC `registry/circuit_breakers/`
       seeds** (`CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` — every `BreakerConfig` arms + evaluates against its
       matching `BreakerRecoveryRule`, `auto_cooldown` → `AUTO_DISARM`, `manual_unkill` → `HOLD` then operator
-      `MANUAL_DISARM`). **DEFERRED**: the *integration*-level matrix (against a running service's recovery loop +
-      KillSwitchBus + alerting) — bundled with the 5.A service-loop follow-on.
+      `MANUAL_DISARM`). **Integration-level matrix SHIPPED 2026-05-12** — `risk-and-exposure-service@b6315a9`
+      `tests/unit/test_recovery_loop.py` (4 new tests): TIMEOUT_DISARM full chain (real engine + registry, time
+      advancement), MANUAL_UNKILL stays armed past timeout, AUTO_DISARM full chain (true guard + 2 ticks), and
+      KillSwitchBus.disarm receives correct switch_id + recovery_mode. 16 total tests, all pass.
 
 **Full-execution criterion**: ≥10 recovery rules per archetype (✅ UAC@a7a99b5 — 10 per archetype × 2); recovery test
-matrix green (✅ unit-level — 18 tests utl@d5161fd incl. per-archetype-registry parametrisation; integration-level
-DEFERRED with the 5.A service-loop follow-on).
+matrix green (✅ unit-level — 18 tests utl@d5161fd incl. per-archetype-registry parametrisation; ✅ integration-level
+— 16 tests risk-and-exposure-service@b6315a9 full chain TIMEOUT_DISARM/AUTO_DISARM/MANUAL_UNKILL/bus-args 2026-05-12).
 
 ## Phase 6 — Chaos-drill cron (Day 11, ~0.5 AI-day)
 
