@@ -25,7 +25,7 @@ Three axes declared per slot and per spawn prompt:
 1. Read running model from system prompt. Read declared tier + thinking from spawn prompt.
 2. Model mismatch → Sonnet on opus-required: **STOP**, output `⚠️ WRONG MODEL` block, wait for operator.
    Opus on sonnet-doable: flag `💸 WRONG MODEL` + proceed.
-3. Thinking mismatch → flag `⚠️ THINKING EFFORT MISMATCH` + proceed (never blocks, operator decides).
+3. Thinking mismatch (either direction) → **HARD STOP**, output stop block, wait for operator "proceed anyway" override.
 
 SSOT: `codex/06-coding-standards/model-tier-selection.md`.
 

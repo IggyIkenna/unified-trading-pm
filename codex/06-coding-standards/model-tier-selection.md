@@ -282,26 +282,45 @@ from the task description using the tier definitions above, then flags if it can
 | medium | medium | ✅ Proceed |
 | high | high | ✅ Proceed |
 | max (+ Opus) | max | ✅ Proceed |
-| **medium** | **high or max** | 🟡 Flag: "Task complexity exceeds declared thinking tier — escalating internally, notify operator" |
-| **high** | **max** | 🔴 Stop if also wrong model; 🟡 Flag + proceed if model is already Opus |
-| **max** | **medium or high** | 🟡 Flag cost waste + proceed |
-| **medium or high** | **max** | 🔴 Stop if Sonnet; flag if Opus (can proceed at lower thinking but flag the gap) |
+| **under-provisioned** (medium→high, medium→max, high→max) | higher | 🔴 **HARD STOP — wait for operator override** |
+| **over-provisioned** (max→high, max→medium, high→medium) | lower | 🔴 **HARD STOP — wait for operator override** |
 
-**Mismatch output block** (thinking under-provisioned, blocking case):
+**Both directions are hard stops.** The operator gets to see the mismatch and decide — either confirm the
+deviation is intentional ("proceed anyway") or fix the spawn tier. This avoids silent quality degradation
+(under) and silent money burn (over).
+
+**Under-provisioned stop block:**
 
 ```
-⚠️ THINKING EFFORT MISMATCH — FLAGGING BEFORE PROCEEDING
+🔴 HARD STOP — THINKING UNDER-PROVISIONED
 Declared: thinking: <declared>
-Task requires: thinking: <required> — REASON: <one-line reason>
-Running model: <model>
+Task requires: thinking: <required>
+Reason: <one-line — e.g. "cross-repo migration pre-audit requires holding all consumer files simultaneously">
 
-This task needs <extended thinking / Opus reasoning>. I will proceed but quality
-may be degraded. Operator should re-spawn with correct thinking tier for this slot.
+I cannot start this task at the declared thinking tier without risking silent quality degradation.
+
+To proceed:
+  Option A — fix the tier: re-spawn with THINKING: <required> (and MODEL: Opus 4.7 if max)
+  Option B — override: reply "proceed anyway" and I will start at the declared tier with a quality caveat
 ```
 
-Unlike the model-tier hard stop (Sonnet on opus-required), thinking effort mismatches do **not** block — the
-agent flags and proceeds, because the operator may have intentionally down-tiered for speed. The model hard stop
-remains the only blocking check.
+**Over-provisioned stop block:**
+
+```
+🔴 HARD STOP — THINKING OVER-PROVISIONED (COST WASTE)
+Declared: thinking: <declared>
+Task needs: thinking: <required>
+Reason: <one-line — e.g. "ruff cleanup is mechanical; max thinking adds no quality, only cost">
+
+Estimated unnecessary spend: ~<N>× vs correct tier.
+
+To proceed:
+  Option A — fix the tier: re-spawn with THINKING: <required> (saves ~<N>× cost)
+  Option B — override: reply "proceed anyway" and I will start at the declared tier
+```
+
+**Override handling**: if the operator replies "proceed anyway" (or equivalent), the agent starts immediately
+with a one-line caveat in its first output ("proceeding at <tier> per operator override"). No further stops.
 
 ---
 
