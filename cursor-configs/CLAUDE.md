@@ -442,7 +442,7 @@ Key repo mapping: events → UTL · schemas → UAC (external + `unified_api_con
 unified-cloud-interface · config → unified-config-interface · market data → MTDS (UMI archived) · execution →
 execution-service · position → position-balance-monitor-service · reference data → instruments-service · domain utils
 + ML + feature orchestration → UTL · features → unified-features-interface · sports reference → URDI · execution algos
-+ matching engine → execution-service · UI → check existing 13 UIs first.
++ matching engine → execution-service · UI → check existing 3 UIs first (`unified-trading-system-ui` consolidated portal + `deployment-ui` + `user-management-ui`).
 
 **Citadel Import Rules (UAC)**: consumer repos import from UAC domain facades only
 (`from unified_api_contracts.{domain} import ...`). Never `unified_api_contracts.canonical.*` or
