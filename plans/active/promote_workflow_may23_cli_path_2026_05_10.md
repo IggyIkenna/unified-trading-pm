@@ -774,6 +774,20 @@ differs.
   archetypes via the chosen track; recon green per-day; P&L attribution captured; Promote UI button + DART manual-trade
   gate functional even if not used in production.
 
+## Deferred work after 2026-05-12 harsh-promote-workflow-tab session
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+| --- | --- | --- |
+| Phase 1 — launcher scripts + infra | ✅ DONE (deployment-service@87f12f1 + watchdog bounced + smoke-pass @4a4e2e1) | — |
+| Phase 2 P0 — V2BatchHarness resolver aliases (`carry_staked_basis` + `leveraged_funding_arb`) | ✅ CODE SHIPPED (strategy-service@61dc112 + e2e-testing@8427dc0); NOT end-to-end VM-verified — smoke VM `strategy-paper-carry-staked-basis-20260512-200952` deleted per operator request before completion | Next session: re-run smoke VM with operator approval to verify resolver end-to-end |
+| Phase 2 P0 — Wire `ServiceBootstrap` into `colocated_engine.py` | ⏭ DEFERRED | Required for "No fire-and-forget" rule; no STARTED/STOPPED/FAILED in strategy-service archive until done |
+| Phase 2 P1 — Add self-delete `trap` on startup-script failure in `setup-data-pipeline-vm.sh` | ⏭ DEFERRED | VM stays RUNNING indefinitely on install failure without this |
+| Phases 3–10 | ⏭ DEFERRED | Require operator-approved actions (Copper sub-account, Tenderly fork, live rehearsal, etc.) per plan body |
+
+**Session notes (2026-05-12 harsh-promote-workflow-tab)**:
+- Tarballs refreshed in GCS at 14:39 UTC — code is ready for next VM launch.
+- Smoke VM `strategy-paper-carry-staked-basis-20260512-200952` was launched for end-to-end resolver verification then deleted at operator request. ikenna-main notified via `_agent_pings.md`.
+
 ## Temporary states + canonical follow-up plans
 
 - **Minimal CandidateManifest only (no pinned shas / model refs / features manifest version)**: this plan ships
