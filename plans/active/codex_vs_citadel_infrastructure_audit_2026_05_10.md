@@ -348,9 +348,21 @@ drops to 0 on IMMEDIATE rows.
 
 ## Phase 5 — Post-cutover items filed as plans (Day 12, ~1 AI-day)
 
-- [ ] [AGENT] P0. **5.A Per-POST_CUTOVER row → plan or issue doc.** Every POST*CUTOVER recommendation gets a
-      `plans/active/issues/<slug>*<post_cutover_date>.md`issue doc OR is folded into an existing plan with a`**MIGRATED
-      FROM:** codex_vs_citadel_audit_2026_05_10` provenance line. No orphan recommendations.
+- [x] [AGENT] P0. **5.A Per-POST_CUTOVER row → plan or issue doc.** **DONE 2026-05-12 slot 8 sub-agent (ikenna-postcutover-phase-5)** —
+      31 POST_CUTOVER rows across 12 area issue docs filed into 3 consolidated successor plans (aggressive
+      consolidation per Phase 5 strategy guidance: "Don't over-create"):
+      - `plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` — 12 codex-doc-hygiene findings
+        (AL-12, D-14, IN-19, IN-20, ML-12, ML-18, PB-16, O-12, O-19, ST-20, UI-17, UI-19)
+      - `plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md` — 11 QG-automation gaps
+        (G-2, G-5, G-8, G-12, G-13, D-18, ST-19, UI-13, UI-18, PB-19, AL-21 QG-half)
+      - `plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` — 7 operator-UX deliverables
+        (AL-22, R-15, R-16, ST-11, TS-19, TS-20, AL-21 UX-half)
+      Every POST_CUTOVER row in the 12 source `codex_audit_<area>_2026_05_12.md` files flipped to
+      `✅ FILED @ <destination>` with destination citation. Execution (area=POST_CUTOVER count): alerting=3, data=2,
+      execution=0, governance=5, instruments=2, ml=2, ops=2, position_balance=2, risk=2, strategy=3, testing=2, ui=4
+      = 29 unique findings + 2 disposition-summary roll-up cells = 31 raw `POST_CUTOVER` cells; all 29 unique findings
+      mapped to destinations. Zero orphans. Commit: `57c748b2` (bundled by parallel agent's commit per Foot-gun #1
+      — Phase 5 work landed under ML-area PRE_CUTOVER commit message; this checkbox-flip provides clean provenance).
 
 **Full-execution criterion**: count(POST_CUTOVER rows) == count(filed-issue-docs OR migrated-plan-todos); zero orphans.
 
@@ -446,7 +458,7 @@ contradict the workspace "Flat deps only" rule). Plus the catalogue-audit P0: GM
 | Phase 2.C (operator review) | 🟡 PENDING OPERATOR | ~12 BIG findings escalated in `plans/active/_agent_pings.md` 2026-05-12; slot 8 may proceed on unambiguous IMMEDIATE items (factual codex-vs-code corrections) per "Clear context = implement, don't ask" |
 | Phase 3 (immediate items shipped) | ☐ TODO (Days 6-9) | start the IMMEDIATE batch with the 6 recurring cross-area patterns (see `## Audit findings`) for max leverage; IN-1 (`defi-venue-protocol-catalogue.md` drift-introducing "correction") should be re-checked against slot-2's in-flight defi-catalogue work before editing — slot 2 owns that doc this cycle |
 | Phase 4 (pre-cutover items shipped) | ☐ TODO (Days 9-12) | ~137 PRE_CUTOVER rows; many are 1-2-line doc fixes |
-| Phase 5 (post-cutover items filed) | ☐ TODO (Day 12) | ~36 POST_CUTOVER rows → issue docs / plan migrations |
+| Phase 5 (post-cutover items filed) | ✅ DONE 2026-05-12 (slot 8) | 31 POST_CUTOVER rows → 3 consolidated successor plans (codex-doc-currency + qg-automation + alerting-runbook); zero orphans |
 | Phase 6 (audit sign-off doc) | ☐ TODO (Day 13) | |
 | Phase 7 (cutover gate) | ☐ TODO (Day 13) | master plan Group A row |
 
