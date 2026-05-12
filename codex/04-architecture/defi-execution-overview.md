@@ -53,6 +53,8 @@ execution-service DeFi connector executes:
 
 ## Supported Operations
 
+### Core Connectors (Phase 1–3)
+
 | Operation     | Connector        | Contract                         | Gas Estimate        |
 | ------------- | ---------------- | -------------------------------- | ------------------- |
 | Supply (lend) | AAVEConnector    | Aave V3 Pool                     | 200K                |
@@ -63,6 +65,50 @@ execution-service DeFi connector executes:
 | Swap          | UniswapConnector | SwapRouter02                     | 300K + 100K approve |
 | Stake         | LidoConnector    | Lido stETH                       | 150K                |
 | Unstake       | EtherFiConnector | EtherFi weETH                    | 200K                |
+
+### Phase 4 Connectors — LST/LRT, Restaking, Yield, Solana
+
+Shipped 2026-05-12 (`defi_catalogue_chain_primitives_2026_05_10.md` Phase 4).
+
+**LST / Liquid Restaking Tokens (EVM)**
+
+| Connector          | venue_id              | Chain    | Operations                       |
+| ------------------ | --------------------- | -------- | -------------------------------- |
+| RocketPoolConnector | ROCKETPOOL-ETHEREUM  | Ethereum | stake / unstake                  |
+| RenzoConnector     | RENZO-ETHEREUM        | Ethereum | deposit / withdraw / delegate    |
+| KelpDAOConnector   | KELPDAO-ETHEREUM      | Ethereum | deposit / withdraw / delegate    |
+| PufferConnector    | PUFFER-ETHEREUM       | Ethereum | deposit / withdraw               |
+
+**Restaking Middleware (EVM)**
+
+| Connector          | venue_id              | Chain    | Operations                       |
+| ------------------ | --------------------- | -------- | -------------------------------- |
+| SymbioticConnector | SYMBIOTIC-ETHEREUM    | Ethereum | deposit / withdraw / delegate    |
+| KarakConnector     | KARAK-ETHEREUM        | Ethereum | deposit / withdraw / delegate    |
+
+**Yield Optimizers (EVM)**
+
+| Connector       | venue_id           | Chain    | Operations                          |
+| --------------- | ------------------ | -------- | ----------------------------------- |
+| YearnConnector  | YEARN-ETHEREUM     | Ethereum | deposit / withdraw                  |
+| ConvexConnector | CONVEX-ETHEREUM    | Ethereum | deposit / withdraw / claim_rewards  |
+| BeefyConnector  | BEEFY-POLYGON      | Polygon  | deposit / withdraw                  |
+
+**Yield Derivatives (EVM)**
+
+| Connector      | venue_id          | Chain    | Operations             |
+| -------------- | ----------------- | -------- | ---------------------- |
+| PendleConnector | PENDLE-ETHEREUM  | Ethereum | deposit / withdraw     |
+| IdleConnector  | IDLE-ETHEREUM     | Ethereum | deposit / withdraw     |
+
+**Solana LST / Restaking**
+
+| Connector              | venue_id                  | Chain  | Operations                    |
+| ---------------------- | ------------------------- | ------ | ----------------------------- |
+| SolBlazeConnector      | SOLBLAZE-SOLANA           | Solana | stake / unstake               |
+| JitoRestakingConnector | JITO-RESTAKING-SOLANA     | Solana | deposit / withdraw / delegate |
+
+All Phase 4 connectors follow the same `connector.connect(config={...})` credential injection shape as the Phase 1–3 connectors (see `interface-credential-convention.md`). Testnet validation (Sepolia/Holesky/devnet) and Tenderly fork integration tests are tracked in `defi_catalogue_chain_primitives_2026_05_10.md` Phase 4 full-execution criterion.
 
 ## Error Classification
 

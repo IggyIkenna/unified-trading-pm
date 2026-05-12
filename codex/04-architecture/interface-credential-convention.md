@@ -102,6 +102,26 @@ reloads via `ApiKeyReloader` — **no recompile, no service restart**.
 >   last_executed: NEVER (test to be written; first execution before May-23 cutover)
 > ```
 
+### Phase 4 DeFi Connectors — credential shape unchanged
+
+All 13 Phase 4 connectors (shipped 2026-05-12 per `defi_catalogue_chain_primitives_2026_05_10.md`):
+`RocketPoolConnector`, `RenzoConnector`, `KelpDAOConnector`, `PufferConnector`,
+`SymbioticConnector`, `KarakConnector`, `YearnConnector`, `ConvexConnector`, `BeefyConnector`,
+`PendleConnector`, `IdleConnector`, `SolBlazeConnector`, `JitoRestakingConnector` — all follow the
+**same credential injection pattern** as existing DeFi connectors:
+
+```python
+connector.connect(config={
+    "wallet_private_key": pk,   # fetched from SM by execution-service
+    "rpc_url": resolved_url,    # resolved from UAC CHAIN_RPC_TEMPLATES by service
+})
+```
+
+Solana connectors (`SolBlazeConnector`, `JitoRestakingConnector`) use Solana mainnet/devnet RPC URLs;
+credential shape is identical. No new secret names required — existing `defi-wallet-private-key` +
+`alchemy-api-key` cover all 13. Tenderly fork URLs follow the `fork_mode=tenderly` path in `base.py`
+`get_defi_rpc_url()`.
+
 ## Why This Convention
 
 - **Testability**: Interfaces can be tested without real credentials -- pass mocks/stubs

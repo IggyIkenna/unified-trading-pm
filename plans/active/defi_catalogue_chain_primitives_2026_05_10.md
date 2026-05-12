@@ -812,16 +812,22 @@ validated.
 
 Per-connector todo template:
 
-- [ ] [AGENT] P0. **4.<X> — `<protocol>` execution-service connector.** Implements credential-injection per
-      `codex/04-architecture/interface-credential-convention.md`. Error classification via UAC
-      `classify_venue_error()` + `DefiErrorCode` (extend taxonomy if new revert reasons). Tenderly fork integration test
-      green (per `tests/defi_execution/integration/conftest.py` shape). Testnet validation (Sepolia / devnet).
+- [x] [AGENT] P0. **4.<X> — `<protocol>` execution-service connector.** CODE SHIPPED 2026-05-12 by Harsh slot 2.
+      13 connectors shipped at execution-service@`b9078ee9` (reconcile commit; sub-agent group commits: `80e7ca60`,
+      `5ad2cd47`, `a91565b3`, and earlier). All 13 connector files + 13 unit test files, `__init__.py` exports,
+      `_VENUE_SOURCE_MAP` entries, type errors fixed.
+      **DEFERRED**: Tenderly fork integration tests + testnet tx validation (Sepolia/Holesky/devnet).
+      Credential-injection: follows `connector.connect(config={...})` per `interface-credential-convention.md` (updated 4J).
+      Error classification via `preflight_validate_operation()` wired; DefiErrorCode taxonomy extension deferred pending
+      actual Tenderly fork run (no new revert reasons surfaced in backtest-mode implementation).
+      **Successor for deferred items**: `defi_catalogue_chain_primitives_2026_05_10.md` Phase 4 full-execution criterion.
 
 **Codex SSOT update (Phase 4 boundary)**:
 
-- [ ] [AGENT] P0. **4J — Update `codex/04-architecture/interface-credential-convention.md`** with new connectors'
-      credential shapes.
-- [ ] [AGENT] P0. **4K — Update `codex/04-architecture/defi-execution-overview.md`** with connector inventory.
+- [x] [AGENT] P0. **4J — Update `codex/04-architecture/interface-credential-convention.md`** with new connectors'
+      credential shapes. (PM@`<flip-sha>` — added Phase 4 credential shape section; all 13 follow existing pattern)
+- [x] [AGENT] P0. **4K — Update `codex/04-architecture/defi-execution-overview.md`** with connector inventory.
+      (PM@`<flip-sha>` — added Phase 4 connector inventory tables by family: LST/LRT, restaking, yield, Solana)
 
 **Full-execution criterion**:
 
