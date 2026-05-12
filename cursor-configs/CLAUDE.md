@@ -14,10 +14,11 @@
 
 ## Model Tier Selection — Sonnet 4.6 (default) vs Opus 4.7 (escalation only)
 
-**Default: Sonnet 4.6.** Use Opus 4.7 ONLY for: (1) slot-1 main orchestrator, (2) cross-repo architecture decisions
-requiring >200k context, (3) tasks whose context provably exceeds 200k. Every work-split slot row MUST declare
-`model_tier: sonnet-doable | opus-required`. Omitting it defaults to Sonnet 4.6. SSOT:
-`codex/06-coding-standards/model-tier-selection.md`.
+**Default: Sonnet 4.6.** Opus 4.7 ONLY for slot-1 main orchestrator, cross-repo architecture needing >200k context,
+or tasks provably exceeding 200k. **Every agent MUST self-check model at task start**: if Sonnet on an opus-required
+task → STOP + flag operator; if Opus on a sonnet-doable task → flag cost waste + proceed. Sub-agent spawns MUST set
+`model="sonnet"|"opus"` explicitly in every Agent tool call. Work-split slots MUST declare
+`model_tier: sonnet-doable | opus-required`. SSOT: `codex/06-coding-standards/model-tier-selection.md`.
 
 ---
 

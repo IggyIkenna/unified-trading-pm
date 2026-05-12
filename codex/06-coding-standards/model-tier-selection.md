@@ -121,6 +121,75 @@ MODEL TIER: Opus 4.7 — REASON: [main orchestrator / cross-repo architecture / 
 
 ---
 
+## Self-check at task start (MANDATORY)
+
+Every agent MUST perform this check as the **first action** of every task, before reading files or writing code.
+
+### Step 1 — read your own model
+
+The running model is stated in the system prompt: `"You are powered by the model named <X>"`. Read it. You always
+know which model you are.
+
+### Step 2 — read the required tier
+
+From (in priority order):
+1. The spawn prompt: look for `MODEL TIER: Sonnet 4.6` or `MODEL TIER: Opus 4.7 — REASON: ...`
+2. The work-split slot row: `model_tier: sonnet-doable | opus-required`
+3. The plan frontmatter: `model_tier:` field
+4. If none of the above: apply the decision rule (main orchestrator → Opus; everything else → Sonnet)
+
+### Step 3 — check for mismatch and act
+
+| Running model | Required tier | Action |
+|---|---|---|
+| Sonnet 4.6 | sonnet-doable | ✅ Proceed |
+| Opus 4.7 | opus-required | ✅ Proceed |
+| **Sonnet 4.6** | **opus-required** | 🔴 **STOP — flag to operator, do not proceed** |
+| **Opus 4.7** | **sonnet-doable** | 🟡 **FLAG to operator, then proceed (don't block on money waste)** |
+
+**When Sonnet 4.6 detects opus-required task** — output this block and stop:
+
+```
+⚠️ WRONG MODEL — CANNOT PROCEED
+Task requires: Opus 4.7 (1M context)
+Running as: Sonnet 4.6 (200k context)
+Reason this task needs Opus: <state the reason from spawn prompt or decision rule>
+
+ACTION REQUIRED: Please reopen this tab/slot on Opus 4.7.
+In Claude Code: use /model claude-opus-4-7 or restart with --model claude-opus-4-7
+I will not start the task until the model is correct.
+```
+
+**When Opus 4.7 detects sonnet-doable task** — output this block then proceed:
+
+```
+💸 WRONG MODEL — PROCEEDING BUT FLAGGING COST WASTE
+Task is: sonnet-doable
+Running as: Opus 4.7 (unnecessary — ~5-10× more expensive)
+Reason I'm not stopping: money waste doesn't break correctness; operator should know.
+
+ACTION FOR NEXT RUN: Use Sonnet 4.6 for this task.
+In Claude Code: /model claude-sonnet-4-6
+Continuing now...
+```
+
+### Step 4 — sub-agent spawning: always set `model` explicitly
+
+When using the Agent tool, **always** pass the `model` parameter. Never inherit:
+
+```python
+# Sonnet-doable sub-agent
+Agent(model="sonnet", prompt="...")
+
+# Opus-required sub-agent  
+Agent(model="opus", prompt="... OPUS-REQUIRED: cross-repo architecture ...")
+```
+
+Omitting `model` in an Agent call is a bug — it inherits the parent model, silently costing Opus rates for
+Sonnet-suitable work if the parent happens to be Opus.
+
+---
+
 ## Anti-patterns (cost waste, review-blocking)
 
 - Using Opus for single-repo mechanical sweeps
