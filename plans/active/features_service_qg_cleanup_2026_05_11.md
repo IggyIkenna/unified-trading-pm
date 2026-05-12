@@ -63,6 +63,43 @@ org-naming tidy):
 - [x] [AGENT] P0. Phase 1.2 — Fix each violation at the root. **DONE 2026-05-11 (slot 2, sessions 2-4).** Session 2: removed 3 broken `.cursor/scripts/check-import-patterns.py` symlinks + hoisted `cross_instrument/cli/main.py` nested `run_mock_pipeline` import (features-svc@`45efbe44`). Session 3: 3-sub-agent fan-out (A=sports, B=onchain/volatility, C=delta_one/cross_instrument/calendar/commodity/multi_timeframe) — 28 commits, QG 16→9 (gcs_reader 1306L→4 modules + google.cloud→UCI + canonical.*→facade + 5 gs:// URIs dropped + both orchestrators split <900L + Files>900L 6→0 + imports-inside 28→4 + most func-size, features-svc up to @`e4b10570`). Session 4: Q4b (features-svc@`c9078cb2`), 3 more sub-agents (A's 5 deferred sports func-decomps `BatchHandler.run` 416→25 / `compute_team_form` 357→176 / `compute_h2h` 272→193 / `compute_player_lineup` 219→94 / `_build_registry` 389→12, 4 imports-inside hoisted, broad-except ×13 narrowed, asyncio de-nested, sports empty-fallbacks fail-loud-or-noqa; B's onchain ~17 empty-fallbacks root-fixed + `Dependency*` dedup'd from UTL root in volatility + `FeatureProcessingResult` double-def collapsed; C's `# CORRECT-LOCAL` markers + `PubSubMessage`→`DeltaOnePipelineMessage` rename), plus my fixes (12 E501s from verbose markers + `team_form` formatter follow-up + 7 `mock_data_provider.py` noqa-marker normalize + `_get_workspace_root` → canonical single-key `WORKSPACE_ROOT` form matching `multi_timeframe`). **QG progression: 8→4→2→1 codex-compliance violations.** Cleared this session: `asyncio.run-in-loop`, `imports-inside-functions`, `broad except Exception`, `Function/method size exceeded`, `Empty string fallback`, `Empty dict/list fallback`, `os.getenv()/os.environ`, `Env canon`, `Deep unified lib imports`, ruff E501. features-svc up to @`71023f20` (rebased onto slot-5's `225cc13b` Phase-5/6 live-runner wire-in). **Residual** = 1 codex-compliance category (`Schema provenance` — a QG-check FP, see Q6 below: `check_schema_provenance.py` flags every local `BaseModel`/`TypedDict`/`@dataclass` and doesn't honor `# CORRECT-LOCAL`; the ~40 types are correctly features-service-local per Q3 A1; needs an Ikenna PM-side fix) + the QG aborts even earlier at `[3.5/6] IMPORT PATTERNS` on 11 deep `from unified_trading_library.feature_service_base.live_aggregator import` calls from slot-5's `225cc13b` (NOT features-cleanup work — routed, see Q7). The features-service-side carry-forward is done.
 
 
+> **STATUS-2026-05-12 (harsh-defi-catalogue-impl-tab, slot 2 — Day-1 preamble).** Re-ran `bash
+> scripts/quality-gates.sh` on features-service. Found 3 *new* codex-compliance violations beyond yesterday's
+> Q6/Q7 close-out — all now fixed:
+> 1. `unified_api_contracts.events.streaming` deep import in `common/live_runner.py`, `common/live_cross_cutting.py`,
+>    `sports/live/runner.py` (the Phase-5/6 live-runner wire-in introduced a new deep path; the deep-import check is
+>    `__init__.py`-exempt so it slipped through on those 3 non-`__init__` files). → switched to the one-level
+>    `from unified_api_contracts.events import (...)` facade. **features-svc@`ee28a570`.**
+> 2. STEP 5.31 false-positive on `consumer_group_name=f"features-asset-scoped-{...}"` /
+>    `f"features-cross-cutting-{...}"` (pub/sub consumer-group ids, not GCS bucket names). → `# CORRECT-LOCAL`
+>    markers. **features-svc@`ee28a570`.**
+> 3. **Q6 was incompletely fixed 2026-05-11.** The check only inspected the single `class <name>` line for the
+>    `# CORRECT-LOCAL` marker, so multi-line signatures (`class Foo(\n    BaseModel,\n):  # CORRECT-LOCAL ...`)
+>    still flagged — 8 already-marked classes (`delta_one/models.py`×5 + `cross_instrument/sports_bridge.py`×2 +
+>    `delta_one/app/pubsub/subscriber.py`×1). AND 4 sports classes (`sports/service.py:SportsFeatureRequest/Result`,
+>    `sports/engine/feature_expectations.py:PITViolation/ValidationViolation`) never got markers at all (missed by
+>    the Phase-1.2e sub-agent fan-out per Row e). → `check_schema_provenance.py` now walks the full multi-line class
+>    header (`_decl_header`); the 4 sports classes got `# CORRECT-LOCAL`. **PM@`30bef62c` + features-svc@`ee28a570`.**
+>    `check_schema_provenance.py --repo features-service` now exits 0.
+>
+> **Net: all features-service-scoped QG steps GREEN** (ENVIRONMENT / AUTO-FIX / LINT / TESTS / IMPORT-PATTERNS /
+> CODEX-COMPLIANCE incl. schema-provenance). **Phase 1.3 + parent Phase 4.6 + Phase 6 STILL `- [ ]` (not flipped):**
+> the literal "fresh `quality-gates.sh` green" condition can't be met yet — the QG run also bundles **tab-wide
+> ratchets that fail on drift in OTHER repos**, none fixable from features-service:
+> - STEP 5.67 — `market-data-processing-service/.../app/core/orchestration_writer.py:271 _maybe_write_vix_gap_placeholder`
+>   banned NaN-placeholder method not in `banned_placeholder_methods_baseline.yaml` (successor: writegate Phase 2.A).
+> - STEP 5.69 — 107 inline `gs://`/`s3://` f-string formatters > baseline 0 (`batch-live-reconciliation-service/stages/stage0_*`,
+>   `deployment-api/.../data_status_drilldown.py`/`data_query_service.py`/`services.py`/`backfill_launch.py`, …) — the
+>   bucket-name-SSOT migration set baseline 0 but the callsite migration isn't complete (slot-4 / slot-8 carry-forward,
+>   `bucket_name_ssot_canonicalisation_2026_05_10.md`).
+> - `[6/6] PRODUCTION READINESS VALIDATORS` FAIL on `workspace-manifest.json` / `plans/active/*.md`
+>   (`run_validators.py --scope all`).
+>
+> So the **features-consolidation work itself is DONE**; flipping these checkboxes waits on those 3 tab-wide drifts
+> being cleared by their owning slots. Next agent: re-run `bash scripts/quality-gates.sh`; if the only remaining
+> reds are tab-wide-ratchet (i.e. features-service-scoped steps still all green), flip Phase 1.3 + parent 4.6 + 6
+> with the evidence above + write the parent DONE block.
+
 - [ ] [AGENT] P0. Phase 1.3 — `cd features-service && bash scripts/quality-gates.sh` returns green
       (CODEX_MAX_VIOLATIONS=0, no per-package ignores added). Flip `features_repo_consolidation_2026_05_08.md` Phase 4.6
       checkbox `- [x]` with the QG-green evidence; remove the `**DEFERRED**` annotation.
