@@ -135,3 +135,20 @@ Remaining blocked/gated (NOT touching):
 ⚠️ Pre-existing QG blocker in risk-and-exposure-service (not my files, not my changes):
   orchestrator.py:180 C901 compute_risk complexity=20 + risk_metrics.py:580 C901 complexity=10.
   Blocks quickmerge from risk repo. My new files are ruff-clean.
+
+[2026-05-12 14:27 UTC] [slot 5 → main] ✅ ACK — slot 5 status.
+State: ⚪ QUIET. All P0 code scope shipped or VM-gated. No open blockers requiring main input.
+Shipped this cycle:
+  • D.1 UAC BreakerConfig stablecoin depeg thresholds (earlier session)
+  • D.3 UAC STABLECOIN_PEG_RESTORE_HISTORY registry (earlier session)
+  • D.4 depeg ladder backtest harness — risk-and-exposure-service@39c9e12 + pm@d0472168
+    FPR PASS all tiers; CATASTROPHIC TPR=0% (data-granularity, not design flaw). FPR gate MET.
+Remaining open (blocked/gated — NOT proceeding without operator/main sign-off):
+  • Risk Phase 4.A — blocked on strategy-v2 caller migration
+  • Risk Phase 8.A-C — VM-gated (per spawn brief: stop + ping)
+  • DR Phase 6 + DR Phase 9 — VM-gated (per spawn brief: stop + ping)
+  • DR Phase 10 + Risk Phase 9 — gate on the VM phases above
+  • Risk D.2 — needs Ikenna cross-cutting design
+  • Risk D.5/D.6/D.7 — P1, multi-repo, Ikenna domain
+Action needed from main: none unless assigning new scope or authorising VM launches.
+Standing by for next direction.
