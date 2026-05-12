@@ -434,6 +434,41 @@ address, decimals, symbol, instrument_type, classification, lifecycle dates. Eac
 | Puffer              | Ethereum                                               | vault metadata                                                       | parallel-agent N |
 | Jito restaking      | Solana                                                 | restaking-vault metadata                                             | parallel-agent O |
 
+> **🟢 PHASE 2 PRE-AUDIT (harsh-defi-catalogue-impl-tab, 2026-05-12) — most of the matrix already ships; the genuine
+> gap is the vault / LST / LRT adapters, NOT the DEXes.** Grep-then-read of `instruments-service/instruments_service/
+> reference_data/adapters/defi/` + `reference_data/factory.py` (the canonical adapter registry — `CANONICAL_VENUE_TO_ADAPTER`
+> + `_ADAPTERS` + `_SUBGRAPH_VENUE_PREFIX_TO_PROTOCOL` + `_PROTOCOL_TO_ADAPTER_KEY` + `ADAPTER_DATA_SOURCES`):
+> - **Already shipped (dedicated adapter file)**: `aave_v3`, `balancer`, `benqi`, `compound_v3`, `curve`, `drift`,
+>   `eigenlayer`, `ethena`, `etherfi`, `ethfi` (gov), `euler_v2`, `fluid`, `jito`, `kamino`, `lido`, `marinade`,
+>   `morpho`, `orca`, `radiant`, `raydium`, `spark`, `uniswap_v2`, `uniswap_v3`, `uniswap_v4`, `venus`. (Adapters
+>   wired multi-chain dynamically via `_SUBGRAPH_VENUE_PREFIX_TO_PROTOCOL` × `get_supported_chains_for_protocol()` —
+>   e.g. `AAVEV3-ARBITRUM`/`MORPHO-BASE`/… auto-registered.)
+> - **DEX-fork "adapters" — ALREADY DONE via reuse**: `pancakeswap_v3`, `sushiswap_v3` (+ `sushiswap` V2), `aerodrome_v3`,
+>   `camelot_v3`, `velodrome_v2`, `trader_joe_v2`, `gmx` all map to the `uniswap_v3` adapter class (Messari/UniV3-schema
+>   subgraphs) via `_PROTOCOL_TO_ADAPTER_KEY` + carry their own subgraph IDs. So Phase 2 cells for those DEXes = ✅
+>   (no new adapter file needed; the `defi_simulation_realism` per-AMM connector work is separate, Phase 4 here).
+> - **Genuine gaps (need a new adapter file)** — the vault / LST / LRT / aggregator rows: **Yearn, Convex, Beefy,
+>   Pendle, Idle** (vaults/fixed-yield); **Rocket Pool ✅, Solblaze** (LSTs); **Symbiotic, Karak, Renzo, KelpDAO,
+>   Puffer, Jito-restaking** (restaking — note `jito.py` exists for jitoSOL LST, restaking-vault discovery may extend
+>   it or add `jito_restaking.py`); **Jupiter** = execution-only per factory.py comment (no instrument-discovery
+>   adapter — skip). Net: ~13-14 new adapter files, all clean per-protocol boundaries.
+> - **Template**: `adapters/defi/lido.py` / `etherfi.py` (single-token LST/LRT — subclass `BaseReferenceDataAdapter`,
+>   `venue` property, `async get_instruments()` → `list[InstrumentRecord]` from `unified_api_contracts.internal`, 4
+>   `NotImplementedError` stubs); `radiant.py` / `venus.py` / `euler_v2.py` (curated lending-reserve registry);
+>   `marinade.py` + `_solana_utils.py` (Solana). Registration = 4 dict entries in `factory.py` (`CANONICAL_VENUE_TO_ADAPTER`
+>   + `_ADAPTERS` + `ADAPTER_DATA_SOURCES`; add to `defi_graph_adapters` set only if the ctor needs the parsed `chain`).
+>   **`factory.py` is a SHARED hot file — do NOT have multiple sub-agents edit it concurrently**; sub-agents create
+>   the adapter file + test only, main agent reconciles `factory.py` for all in one commit. (Pre-existing
+>   `factory.py:~366 reportRedeclaration` on `adapter` — unrelated, leave it.)
+>
+> **DONE 2026-05-12 (harsh slot 2):** `2.ROCKETPOOL` (rETH LST, instruments-service@`a490033`). **Phase 2 fan-out
+> queue for next session** (one sub-agent per clean-boundary protocol; create adapter + test, don't touch factory.py):
+> Renzo (ezETH, ETH+ARB), KelpDAO (rsETH, ETH), Yearn (vaults, ETH+ARB+OPT), Pendle (PT/YT/SY + maturity, ETH+ARB —
+> trickiest, needs the Pendle active-markets API), Beefy (vaults, 6 chains), Idle (vaults, ETH+ARB+POLY), Convex
+> (Curve-LP vaults, ETH), Solblaze (bSOL, SOL), Symbiotic/Karak/Puffer (restaking vaults, ETH), Jito-restaking (SOL,
+> extend `jito.py`). Then main agent reconciles `factory.py` registrations + flips each `2.<PROTOCOL>` checkbox + the
+> `2J` codex update.
+
 Per-protocol todo template (instantiated 27 times):
 
 - [ ] [AGENT] P0. **2.<X> — `<protocol>` instruments-service adapter** at
@@ -441,6 +476,14 @@ Per-protocol todo template (instantiated 27 times):
       `<on-chain registry contract     OR off-chain catalog API>`. Output: per-instrument row matching UAC contract from
       Phase 1A. Cluster validation wired (per data_type if bundled). Manifest writes via `record_captured` with
       `expected_root_clusters` + `cluster_extractor` for bundled types.
+- [x] [AGENT] P0. **2.ROCKETPOOL — Rocket Pool (rETH) instruments-service adapter** — `adapters/defi/rocket_pool.py`
+      (static single-token registry; rETH LST on Ethereum, `instrument_type=YIELD_BEARING`, contract
+      `0xae78736Cd615f374D3085123A210448E74Fc6393`, 18 decimals, launch 2021-11-08 per `PROTOCOL_LAUNCH_DATES`) +
+      `tests/unit/reference_data/adapters/defi/test_rocket_pool_metadata.py` (5 tests, offline) + `factory.py`
+      registration (`CANONICAL_VENUE_TO_ADAPTER["ROCKETPOOL-ETHEREUM"]` + `_ADAPTERS` + `ADAPTER_DATA_SOURCES`).
+      instruments-service@`a490033`. basedpyright clean on new file; ruff clean; pytest 5/5. (Not bundled — single-token,
+      no cluster validation needed. Manifest `record_captured` happens in the orchestrator that calls `get_instruments`,
+      per the existing lido/etherfi pattern — no per-adapter manifest write.)
 
 **Codex SSOT update (Phase 2 boundary)**:
 
