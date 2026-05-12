@@ -96,7 +96,7 @@ Then validates on-chain: `eth_getCode(address)` must return non-empty bytecode.
     FLASH_LOAN_RECEIVER: $(cat /tmp/receiver-address.txt)
     DEFI_RPC_URL: ${{ env.FORK_RPC }}
   run: |
-    cd execution-service cd unified-defi-execution-interface && bash scripts/quality-gates.shcd unified-defi-execution-interface && bash scripts/quality-gates.sh bash scripts/quality-gates.sh  # DeFi adapters now in execution-service
+    cd execution-service && bash scripts/quality-gates.sh  # DeFi adapters live in execution-service (UDEI archived 2026-05-08)
 ```
 
 ## Owner

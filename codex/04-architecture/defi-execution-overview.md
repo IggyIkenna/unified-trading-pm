@@ -132,17 +132,16 @@ execution-service dispatches to the correct handler.
 
 ## MEV Protection Framework
 
-Atomic bundles (flash loan entry/exit) are vulnerable to MEV extraction. Three interchangeable providers handle
-protection based on the execution environment:
+> **SUPERSEDED 2026-05-10 by `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 4 — canonical MEV-protection SSOT
+> is [`mev-protection.md`](mev-protection.md). The legacy 3-provider table that previously lived here inverted the
+> mainnet/L2 provider selection (per slot 8 audit EX-8 / EX-20) and is replaced by the canonical `MevSubmissionMode`
+> enum + chain-aware default policies documented in `mev-protection.md` § "Provider Selection (Factory)". This section
+> retained as a redirect stub only.**
 
-| Provider                 | Method                          | When Used                                                                             |
-| ------------------------ | ------------------------------- | ------------------------------------------------------------------------------------- |
-| `FlashbotsProvider`      | Relay submission                | Mainnet live execution. Bundles submitted via `eth_sendBundle` to Flashbots builders. |
-| `PrivateMempoolProvider` | Flashbots Protect / MEV Blocker | L2 deployments. Routes via `rpc.mevblocker.io` or Flashbots Protect RPC.              |
-| `NoProtectionProvider`   | Standard broadcast              | Batch, paper trade, testnet. No MEV risk in these environments.                       |
-
-The provider is selected via `mev_protection` in strategy config, not hardcoded. Execution-service resolves the provider
-at runtime and wraps the transaction submission accordingly.
+The provider is selected via `mev_protection` in strategy config, not hardcoded; execution-service resolves the provider
+at runtime per the canonical `_DEFAULT_POLICIES` in `execution_service/v2/mev_router.py`. See
+[`mev-protection.md`](mev-protection.md) for the full provider matrix, the chain-aware default mode per asset, the
+`MevSubmissionMode` UAC enum, and the per-strategy artifact-versioned policy contract.
 
 ## Wrap Preprocessor
 
