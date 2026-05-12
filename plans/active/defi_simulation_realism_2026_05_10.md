@@ -586,6 +586,20 @@ Owner: ikenna for sign-off + harsh for runs.
 > operator APPROVE/REJECT persistence to pnl-attribution-service. **Implementation half remains `- [ ]` for
 > Harsh slot 4** (Phase 8A/B/C scripts cannot run until Phase 2-7 implementations land); **operator sign-off
 > 8D is the May-23 cutover gate** routed to slot 1 (master plan owner) for execution timing.
+>
+> **2026-05-12 Harsh slot 4 (Opus max resume) — UAC schema half SHIPPED** (uac@`a541e4e` initial + uac@`97df991`
+> Literal refactor): `unified_api_contracts/internal/domain/defi/backtest_fidelity_schemas.py` ships
+> `BacktestFidelityReport` (Phase 8A/8B) + `TenderlyReconciliationReport` (Phase 8C) + `SignOffReport` (Phase
+> 8D composite) + `PerLegAttribution` + `PerPoolShapeReconciliation` + `AggregateSignal` StrEnum
+> (GREEN/YELLOW/RED) + `OperatorSignOffStatus` StrEnum (PENDING/APPROVED/REJECTED) + `LegKind` `Literal[...]`
+> closed-set type alias (6 archetype legs: amm_swap / perp_position / lending_supply / lending_borrow / stake /
+> restake) + `compute_aggregate_signal(gate_pass_summary) → AggregateSignal` (3/3 GREEN, 2/3 YELLOW, ≤1/3 RED).
+> Exported through `unified_api_contracts.internal`. End-to-end smoke pass verified the composite + the Literal
+> closed-set enforcement (6/6 valid kinds accepted; 'nonexistent' rejected with `ValidationError`). basedpyright
+> 0/0/0 + ruff + ruff-format clean on the new file. **Phase 8A/B/C/D harness-script half (operator-runnable
+> under `execution-service/tests/integration/backtest_fidelity/`) remains `- [ ]`** — depends on full Phase 2-7
+> integration runs + real MTDS archetype-trade data; harness scripts now have their typed-output contract
+> locked.
 
 - [ ] [AGENT] P0. **8A — Carry archetype 1-year replay** using all new sim primitives (Phases 2-7) + Phase 6 dynamic
       hedge ratio. Compare simulated P&L vs old (constant-product + zero-rate-impact + static-hedge) replay. Document
@@ -607,8 +621,14 @@ Owner: ikenna for sign-off + harsh for runs.
 Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical unit as code commits. Final lock at Phase
 8 sign-off.
 
-- [ ] [AGENT] P0. **9A — `codex/04-architecture/amm-slippage-simulation.md`** (NEW; full content covering all 7 pool
+- [x] [AGENT] P0. **9A — `codex/04-architecture/amm-slippage-simulation.md`** (NEW; full content covering all 7 pool
       shapes + lending rate impact + governance sim + staking + restaking yield models + slashing MC).
+      (Shipped Day-1 2026-05-11 + extended Day-2 2026-05-12 by slot 6 across PM@`3b76a5ef` (per-shape sample-pool
+      matrix + Solidly-fork section) + PM@`d66b0f9f` (PoolMatcher Protocol + Golden test set harness) +
+      PM@`80905822` (lending rate-impact + slashing MC detail) + PM@`ae804766` (governance + yield streams) +
+      PM@`6d77b080` (Phase 8 validation framework) + PM@`816aed73` (matching-engine end-to-end integration +
+      aggregator multi-hop). Doc now 1496 lines covering every Phase 2-8 design surface. Per-shape historical-
+      swap validation-results subsection folds in once Phase 3C / 8C harnesses run.)
 - [x] [AGENT] P0. **9B — CREATE `codex/04-architecture/concentrated-liquidity.md`** (V3/V4 + Solana CLMM
       addendum). (PM@`<this-cycle>` 2026-05-12 — created 130-line stub with shared CL tick-math invariants
       (sqrtPriceX96 / tick math / active liquidity / position math / single-step swap / tick traversal) +
@@ -822,6 +842,22 @@ scope to fix).
 
 **Slot 4 going ⚪ QUIET** after the scoreboard commit + cross-side ping to ikenna-main listing the 8 code commits +
 6 plan flips above. The May-23 cutover gate (Phase 8D operator sign-off) remains the last unfilled checkbox.
+
+### Resumed-session addendum (Harsh slot 4, Opus max — 2026-05-12 11:24 UTC onward)
+
+The prompt for this resume named Phase 1A tail + Phase 4 + Phase 6B/6C as primary scope. Verified post-rebase
+that all three are `- [x]` from the prior Day-2 burst above. Following the prompt's "Stop on real blocker or
+genuine plan completion" directive (genuine completion of the named scope), this resume shipped a bounded
+extension that fits the prompt's "math-correctness-critical" framing:
+
+| Resume-session shippable                | Status as of 2026-05-12 (later)          | Successor / blocker                                                                                                          |
+| --------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Phase 9A codex doc checkbox             | `- [x]` flipped (doc shipped Day-1)      | Validation-results subsection folds in when Phase 3C / 8C harnesses run.                                                     |
+| Phase 8 UAC schema half (BacktestFidelityReport / TenderlyReconciliationReport / SignOffReport / PerLegAttribution / PerPoolShapeReconciliation / AggregateSignal / OperatorSignOffStatus / LegKind / compute_aggregate_signal) | `- [x]` shipped @uac`a541e4e` + @uac`97df991` (LegKind Literal refactor — replaces a noqa-suppressed long comment with type-enforced closed set per operator direction) | Phase 8A/B/C/D harness-script half (under `execution-service/tests/integration/backtest_fidelity/`) still `- [ ]`; needs Phase 2-7 integration runs + real MTDS data — operator-runnable. The typed-output contract is now locked. |
+
+PerLegAttribution + the closed-set `LegKind` Literal alias (6 archetype legs: amm_swap / perp_position /
+lending_supply / lending_borrow / stake / restake) enforce the leg taxonomy at construction so harness scripts
+can produce drift-free reports.
 
 ## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
 
