@@ -1079,6 +1079,11 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
       proxy); (c) staking — both wrapped (wstETH/weETH/jitoSOL price-delta) and rebasing (stETH balance-delta)
       attribution paths wired; CEX collateral form discipline (Bybit/Deribit rebasing; OKX wrapped; Drift native
       non-rebasing) baked into archetype `_build_legs` perp-venue dispatch.
+- [ ] **Scenario regression matrix passing** (Group F item 17.5, added 2026-05-12): 16-cell matrix
+      (2 cutover archetypes × ~8 registered scenarios each) all `ScenarioOutcomeResult.passed == True`
+      before live cutover. `ScenarioMatrixRunner` emits `matrix.parquet` as Phase 9 pre-cutover evidence.
+      Source plan: `simulation_scenarios_topology_price_shocks_2026_05_09.md` Phase 5. Registered scenarios
+      in `SCENARIO_REGISTRY` (UAC@`33630a6`); runner in UTL@`3797fed5` `scenario/runner.py`.
 
 ### IN/OUT scope
 
