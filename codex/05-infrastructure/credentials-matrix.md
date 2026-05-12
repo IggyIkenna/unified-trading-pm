@@ -15,6 +15,37 @@ health endpoints + operator runbook.
 
 ---
 
+## 2026-05-12 PM — May-23 scope contraction (operator directive)
+
+Operator clarifications consolidated this date contract the May-23 credential surface significantly:
+
+1. **Custody for May-23 = operator's own real money.** Copper, CEFFU, Fireblocks all stay as **June-1+ work**
+   (post-cutover). Cloud-KMS path (`CLOUD_KMS_ENCRYPTED` signing_surface) covers May-23 live. Per-wallet
+   flippability via `WalletProvisioningConfig.signing_surface` means flip to client-provided MPC creds is
+   config-only post-June-1.
+2. **Venue credentials for May-23 = the 4 CeFi perp accounts operator already holds** (Bybit, Deribit,
+   Binance, OKX). Per venue: **both testnet AND live API keys** required (testnet for paper-trading mode,
+   live for live-trading mode). 8 credential bundles total (4 venues × 2 envs). The 6 native-adapter rebuild +
+   per-scope key split + account-limits SSOT + rate-limit token bucket sub-work all **DEFERRED post-cutover**;
+   CCXT pass-through acceptable for operator-funds ≥7-day live smoke.
+3. **DeFi 2 venues (Hyperliquid, Aster)** use the shipped CloudKmsCustodyProvider wallet path; no separate
+   API-key credentials needed (signing is EVM-format on operator wallet).
+4. **Firebase fully DEFERRED from May-23**. Operator: "we don't wanna pay for Firebase at all by May-23; DeFi
+   client doesn't want Firebase so we need a non-Firebase auth path anyway." Firebase code stays as
+   feature-flag toggle (off by default). The `firebase-sa-json` row in § 1 below stays as a class definition
+   but is not provisioned for May-23.
+5. **Phase 1.B-H AWS↔GCP parity provisioning** stays a deferred 7-10 AI-day workstream — dual-cloud-active
+   steady state is the target, not May-23 gate.
+
+Net effect on the credential surface:
+- **Live custody**: `CLOUD_KMS_ENCRYPTED` only (per-wallet flippable to MPC June-1+).
+- **Venue trade**: 4 CeFi × 2 envs = 8 bundles. Other 6 venues (Upbit/Kraken/Bitfinex/Bitget/Hyperliquid/Aster)
+  either DEFERRED (CCXT pass-through Q1-Q2) or wallet-only (DeFi DEXes).
+- **Aux**: Anthropic budget cap shipped; Firebase deferred; Telegram per-env + GHA WIF still in scope as
+  hygiene.
+
+---
+
 ## § 1 — Credential classes
 
 | Class | Examples | Storage | Rotation cadence |

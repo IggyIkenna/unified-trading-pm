@@ -17,6 +17,29 @@ execution-owner field per the `Runbook Execution-Owner SSOT` HARD RULE.
 
 ---
 
+## 2026-05-12 PM scope contraction — May-23 = operator-self only
+
+Operator clarifications 2026-05-12 PM: **all custody-provider onboarding is post-cutover (June-1+).** May-23 ships
+on the Cloud-KMS path with the operator's own wallet — no client funds, no Copper, no CEFFU, no Fireblocks for the
+≥7-day live smoke.
+
+What this means for this checklist:
+
+- **§ A (Copper KYB)**: deferred to June-1+ window. Operator does NOT need to complete the Copper sandbox
+  sign-and-broadcast smoke (§ A.1.5) for May-23. The Copper code path (`COPPER_MPC` signing_surface) stays wired
+  for per-wallet flippability post-June-1.
+- **§ B (Cloud HSM CMK provisioning)**: stays in scope for May-23. Already ✅ DONE (10 HSM-backed CMKs in
+  `asia-northeast1` 2026-05-12, smoke PASSED).
+- **§ C (Fireblocks)**: deferred to June-1+. Successor plan
+  [`fireblocks_copper_client_integration_2026_06_01.md`](../../plans/active/fireblocks_copper_client_integration_2026_06_01.md).
+- **§ D (CEFFU KYB)**: deferred to June-1+. The 2-4 week SLA does NOT gate May-23 anymore — KYB submission can wait
+  until client-credential window is firm.
+
+**Operator pre-cutover-2026-05-22 work for May-23 reduces to**: run `credential-probe.sh --mode live --archetype
+carry_staked_basis` (Phase 8.D gate) + verify own-wallet test transactions sign cleanly via CloudKmsCustodyProvider.
+
+---
+
 ## R9 sub-(a) — RESOLVED 2026-05-12 (HSM-grade signing tier choice)
 
 **Operator direction 2026-05-12** (verbatim): *"client gives us [Copper/Fireblocks] credentials June 1st when we go

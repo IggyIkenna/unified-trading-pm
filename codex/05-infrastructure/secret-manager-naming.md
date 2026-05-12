@@ -14,15 +14,23 @@ scope: [engineer, admin]
 ## § 1 — General pattern
 
 ```
-<class>-<surface>-<role>-<version>
+<class>-<surface>-<env>-<role>-<version>
 ```
 
 | Token | Closed set | Examples |
 |---|---|---|
 | `class` | `custody` / `venue` / `data` / `aux` / `cloud_kms_cmk` / `wallet` | `copper-` / `bybit-` / `helius-` / `telegram-` / `cloud_kms_cmk_defi` |
 | `surface` | provider name (`copper` / `bybit` / `helius` / `fireblocks` / `ceffu` / `binance` / `okx` / `deribit` / `hyperliquid` / `aster` / `upbit` / `kraken` / `bitfinex` / `bitget` / `polymarket` / `kalshi` / `api-football` / `footystats` / `soccer-football-info` / `coingecko` / `tenderly` / `barchart` / `yahoo` / `telegram` / `firebase` / `anthropic`) | n/a |
+| `env` | `testnet` / `live` for venue trade creds (paper-mode reads testnet, live-mode reads live; one Secret Manager entry per env per venue). Omitted for surfaces that don't have a testnet/live split (most non-venue creds). | `bybit-testnet-trade-api-key` / `bybit-live-trade-api-key` / `deribit-testnet-trade-api-secret` / `binance-testnet-trade-api-key` / `okx-testnet-trade-api-key` |
 | `role` | `api-key` / `api-secret` / `passphrase` / `org-id` / `pem` (Fireblocks) / `read` / `trade` / `withdraw` (per-scope) | `api-key` / `read-api-key` / `trade-api-secret` / `read-passphrase` |
 | `version` | optional `v1` / `v2` / `sandbox` / `prod` suffix when ambiguous | `-v1` / `-sandbox` / (omitted = current) |
+
+**2026-05-12 PM operator clarification — testnet vs live for CeFi 4**: paper-trading mode (`--mode paper` per
+`credentials_per_mode.yaml`) reads `<venue>-testnet-<role>` keys from Secret Manager; live-trading mode reads
+`<venue>-live-<role>`. Operator generates 8 credential bundles for May-23 (Bybit/Deribit/Binance/OKX × testnet +
+live). Venue testnet endpoints: `testnet.bybit.com` / `test.deribit.com` / `testnet.binancefuture.com` / OKX
+demo-trading toggle in production app. Routing is config-only via `credentials_per_mode.yaml` keys on `paper`
+vs `live`.
 
 ---
 

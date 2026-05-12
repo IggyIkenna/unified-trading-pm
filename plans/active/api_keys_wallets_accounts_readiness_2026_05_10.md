@@ -87,6 +87,67 @@ question doc. Every phase has full-execution criteria with verifiable bullets pe
 12. **Codex SSOTs missing** — `credentials-matrix.md`, `aws-iam-matrix.md`, `secret-manager-naming.md`,
     `rotation-runbook.md` all need to be written.
 
+## 2026-05-12 PM operator scope contraction — May-23 reduced to operator-real-money path
+
+Operator clarifications 2026-05-12 PM session:
+
+1. **Custody for May-23 = operator's own real money, NOT client funds.** Copper + Fireblocks + CEFFU all stay as
+   June-1+ work (post-cutover). The Cloud-KMS path (Phase 3.C.1, shipped) handles the operator's wallet for the
+   May-23 ≥7-day live smoke. **Phase 3.A (Copper sandbox), 3.B (CEFFU KYB), 3.C.2 (Fireblocks) all
+   DEFERRED-AFTER-CUTOVER**; tracked in successor plan `fireblocks_copper_client_integration_2026_06_01.md`.
+
+2. **Venue accounts = the 4 CeFi perp accounts operator already holds** (Bybit, Deribit, Binance, OKX) + 2 DeFi
+   perp DEXes via wallet path (Hyperliquid, Aster). NOT a 10-venue native-adapter rebuild. **Phase 2 contracted**
+   to credentials-wiring for these 4 existing CeFi accounts + connector existence check for the 2 DeFi DEXes. The
+   "native adapter build for 6 venues" sub-work (Phase 2.B) is DEFERRED post-cutover — CCXT pass-through is
+   acceptable for ≥7-day live smoke on operator funds. Per-scope key separation (Phase 2.C), account-limits SSOT
+   (Phase 2.D), per-venue rate-limit token bucket (Phase 2.E) all DEFERRED post-cutover.
+
+   **2a. CeFi 4 requires BOTH testnet AND live credentials provisioned** (operator clarification 2026-05-12 PM):
+   - **Testnet/demo accounts** for paper-trading mode (`--mode paper` per `credentials_per_mode.yaml`). Each
+     venue's testnet/demo endpoint requires a separate account + separate API key:
+     - **Bybit testnet** — `testnet.bybit.com` (operator creates account → API key)
+     - **Deribit testnet** — `test.deribit.com` (operator creates account → API key)
+     - **Binance testnet** — `testnet.binancefuture.com` for perp futures (operator creates account → API key);
+       spot testnet is separate at `testnet.binance.vision` but perp-only is sufficient for May-23 archetypes
+     - **OKX demo trading** — production app has built-in demo-trading mode toggle; operator generates demo
+       API keys via the demo-mode account section (no separate signup needed; same login)
+   - **Live accounts** — operator already holds; just needs API key generation in each venue's live UI.
+   - Net: 8 credential bundles to provision (4 venues × 2 envs), all under the naming convention
+     `<venue>-<env>-<scope>-<role>` from `secret-manager-naming.md` codex SSOT. `credentials_per_mode.yaml`
+     already keys on `paper` vs `live` so testnet/live routing is config-only.
+   - Per-venue smoke test runs against BOTH envs: paper-mode signs a small testnet order (no real money);
+     live-mode signs a tiny live order (operator-approved minimal-balance test).
+
+3. **Firebase DEFERRED entirely from May-23.** Operator: "we don't wanna pay for Firebase at all by May-23, that
+   stuff can be deferred; in fact DeFi client doesn't want to use Firebase so we need a non-Firebase auth path
+   anyway." Firebase code stays in tree as a feature-flag toggle (off by default for May-23 + DeFi-client path);
+   **NO May-23 testing of Firebase**. **Phase 6.B fully DEFERRED**; Phase 6.A (Telegram per-env) + 6.C (GHA WIF
+   upgrade) stay open as low-risk hygiene; 6.D (Anthropic budget) shipped. Follow-up: DeFi-client non-Firebase
+   auth path is a separate issue (operator-spawned post-cutover).
+
+4. **Hyperliquid + Aster wallet path**: both sign EVM-format transactions; the CloudKmsCustodyProvider + Cloud
+   HSM CMK pipeline shipped 2026-05-12 (verified end-to-end on staging against operator's Trust Wallet) covers
+   them. Action remaining: verify Hyperliquid + Aster connector existence in execution-service (Hyperliquid
+   confirmed per DeFi master scope; Aster status TBD — slot 4 audit task).
+
+**Net May-23 remaining scope on this plan (post-contraction)**: ~6-10 calibrated AI-days.
+- Phase 2.A operator generates API keys for **8 credential bundles** (Bybit/Deribit/Binance/OKX × testnet +
+  live, ~10 min/venue/env = ~80 min operator-side) → slot 4 stores secrets + wires connector config (testnet +
+  live env routing) + smoke tests both envs → ~2-3 cal AI-days.
+- Phase 3.D Treasury rollup `/api/treasury/rollup` endpoint (deployment-api scope) → ~1-2 cal AI-days.
+- Phase 6.A Telegram per-env tokens → ~1 cal AI-day.
+- Phase 6.C GHA WIF upgrade (replace PATs) → ~1-2 cal AI-days.
+- Phase 8.D Pre-cutover sign-off gate (operator runs `credential-probe.sh --mode live --archetype
+  carry_staked_basis` on 2026-05-22) → ~0 cal AI-days agent work.
+- Hyperliquid + Aster connector audit + testnet account provisioning if connectors exist → ~0.5-1 cal AI-days.
+
+Original frontmatter `estimate_calibrated_ai_days: 64.5` reflects pre-contraction scope (full native-adapter
+rebuild + Firebase + Phase 1.B-H AWS parity + CEFFU + Copper). **Post-contraction calibrated effective
+remaining: ~5-8 cal AI-days.** Frontmatter not updated yet — owner agent flips on next substantive touch.
+
+---
+
 ## R9 sub-(a) — RESOLVED 2026-05-12 (operator gate closed)
 
 **Cutover path**: **May-23 ships on CLOUD_KMS_ENCRYPTED** (option (c) — HSM-backed CMK envelope encryption);
@@ -200,15 +261,15 @@ contaminated state.
       / `password=[^*]` / `token=[a-zA-Z0-9]{30,}`). If any leak found, rotate immediately + redact log via GitHub
       support.
 
-- [ ] [AGENT] P0. **0.D — Codex SSOT stubs (NEW docs, full content shipped at end of Phase 9).** Stub per
+- [x] [AGENT] P0. **0.D — Codex SSOT stubs (NEW docs, full content shipped at end of Phase 9).** Stub per
       `Post-Plan-Phase Codex Audit` HARD RULE. Each stub has TL;DR + key principles + cross-references back to this
       plan + placeholder section headers for Phase 9 fill-in:
-  - [ ] `codex/05-infrastructure/credentials-matrix.md` (NEW) — workspace credential SSOT.
-  - [ ] `codex/05-infrastructure/aws-iam-matrix.md` (NEW) — per-service AWS IAM.
-  - [ ] `codex/05-infrastructure/secret-manager-naming.md` (NEW) — naming convention.
-  - [ ] `codex/14-customer-journeys/credentials/rotation-runbook.md` (NEW) — rotation cadence + execution-owner.
-  - [ ] `codex/05-infrastructure/per-archetype-wallet-isolation.md` (NEW) — multi-wallet model.
-  - [ ] `codex/05-infrastructure/hsm-wallet-signing.md` (NEW) — HSM tier discipline.
+  - [x] `codex/05-infrastructure/credentials-matrix.md` (NEW) — workspace credential SSOT.
+  - [x] `codex/05-infrastructure/aws-iam-matrix.md` (NEW) — per-service AWS IAM.
+  - [x] `codex/05-infrastructure/secret-manager-naming.md` (NEW) — naming convention.
+  - [x] `codex/14-customer-journeys/credentials/rotation-runbook.md` (NEW) — rotation cadence + execution-owner.
+  - [x] `codex/05-infrastructure/per-archetype-wallet-isolation.md` (NEW) — multi-wallet model.
+  - [x] `codex/05-infrastructure/hsm-wallet-signing.md` (NEW) — HSM tier discipline.
 
 **Phase 0 done definition** (full-execution criterion):
 
@@ -223,7 +284,7 @@ contaminated state.
 
 Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutover.
 
-- [ ] [SCRIPT] P0. **1.A — GCP per-service SA matrix doc.** Enumerate every service's Cloud Run / GCE VM service-account
+- [x] [SCRIPT] P0. **1.A — GCP per-service SA matrix doc.** Enumerate every service's Cloud Run / GCE VM service-account
       email + IAM role bindings. Format: yaml SSOT at `deployment-service/configs/gcp_service_accounts.yaml`. Audit
       current bindings via `gcloud iam service-accounts list --project=central-element-323112` +
       `gcloud projects get-iam-policy central-element-323112`. Cross-reference against
@@ -408,7 +469,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 ## Phase 4 — DeFi mainnet + testnet provisioning — Day 3-13
 
-- [ ] [HUMAN+AGENT] P0. **4.A — Production wallets per chain × per archetype (multi-wallet R7).** N archetypes × M
+- [x] [HUMAN+AGENT] P0. **4.A — Production wallets per chain × per archetype (multi-wallet R7).** N archetypes × M
       chains = N×M wallets. For May-23: `carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION` (config variant
       `funding_rate_dispersion` — canonical name per
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md:37-40`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
@@ -435,7 +496,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
         slot 5 (defi_recursive_borrow archetype config — chain × protocol per-wallet rows) + slot 8
         (cross_cutting #4 DART manual surfaces — wallet-tier kill-switch button per row).
 
-- [ ] [AGENT] P0. **4.B — Per-protocol approvals SSOT + automation.** YAML at
+- [x] [AGENT] P0. **4.B — Per-protocol approvals SSOT + automation.** YAML at
       `unified-api-contracts/config/required_approvals.yaml` per (archetype, chain, protocol, asset). Pre-signing
       automation: `execution-service/scripts/vm/launch-defi-approval-presigner-vm.sh` per per-wallet × per-chain.
       Allowance ceiling: per-session-cap (safer) over `MAX_UINT256` (gas-cheaper) per CLAUDE.md security-grade default.
@@ -447,7 +508,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       movement Ethereum ↔ Solana for `carry_staked_basis` jitoSOL leg funding. Wormhole + LayerZero deferred unless
       carry archetype needs them.
 
-- [ ] [AGENT+HUMAN] P0. **4.D — Testnet replica per R1.** Per operator direction "all 5 testnets in scope":
+- [x] [AGENT+HUMAN] P0. **4.D — Testnet replica per R1.** Per operator direction "all 5 testnets in scope":
   - [ ] **4.D.1** — Add Arbitrum Sepolia (chain_id 421614), Base Sepolia (84532), Polygon Amoy (80002), Solana devnet to
         [unified-api-contracts/config/testnet_contracts.yaml](unified-api-contracts/config/testnet_contracts.yaml).
   - [ ] **4.D.2** — **Holesky decision**: Lido + EigenLayer testnet is Holesky, not Sepolia per `_defi_lst.py`. Either
@@ -464,7 +525,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - [ ] **4.D.7** — Faucet automation: Cloud Scheduler job per testnet that monitors operator wallet balance +
         auto-requests faucet drip when below threshold. Per-testnet faucet API.
 
-- [ ] [SCRIPT] P0. **4.E — Pyth-on-Solana real-data smoke (R8).** Trigger MTDS `oracle_prices_handler` against mainnet
+- [x] [SCRIPT] P0. **4.E — Pyth-on-Solana real-data smoke (R8).** Trigger MTDS `oracle_prices_handler` against mainnet
       Solana RPC + Hermes endpoint; capture per-LST price (jitoSOL / mSOL / bSOL); confirm against Pyth UI
       (pyth.network); verify event-stream emits per-asset progress events with row counts (CLAUDE.md "No fire-and-forget
       VM launches"). Sub-residuals: mSOL + bSOL Pyth-feed availability; Hermes rate-limit at production query frequency;
@@ -474,7 +535,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - **Verification**: `gcloud storage ls gs://${PID}-events/events/mtds/$(date +%Y-%m-%d)/<vm-name>/` shows STARTED +
     per-LST `INSTRUMENT_PROCESSED` events + STOPPED.
 
-- [ ] [SCRIPT] P0. **4.F — Chainlink-on-EVM real-data smoke per chain (Ethereum / Arbitrum / Base / Polygon).** Mirror
+- [x] [SCRIPT] P0. **4.F — Chainlink-on-EVM real-data smoke per chain (Ethereum / Arbitrum / Base / Polygon).** Mirror
       4.E shape; Chainlink reads on-chain (no off-chain credential beyond chain RPC) so simpler.
 
 **Phase 4 done definition** (full-execution criterion):
@@ -524,14 +585,19 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 - [ ] [SCRIPT] P1. **6.A — Telegram per-environment scoping.** Audit found repo-level scope only (no per-env split).
       Provision separate bot tokens per env (dev / staging / prod); update GHA workflows per repo.
 
-- [ ] [SCRIPT] P0. **6.B — Firebase service-account JSON storage.** Audit found `unified-trading-system-ui/.firebaserc`
-      lists prod (`central-element-323112`) + staging (`odum-staging`) projects; SA JSON storage location not surfaced.
-      Provision SA JSON in Secret Manager + Workload Identity Federation for Cloud Run → Firebase auth.
+- [ ] [SCRIPT] P0. **6.B — Firebase service-account JSON storage. — DEFERRED-AFTER-CUTOVER per operator
+      2026-05-12 PM directive**: "we don't wanna pay for Firebase at all by May-23, that stuff can be deferred;
+      DeFi client doesn't want to use Firebase so we need a non-Firebase auth path anyway." Firebase code stays
+      in tree as feature-flag toggle (off by default); NO May-23 provisioning or testing. Successor: when DeFi
+      client auth path is decided (likely non-Firebase), spawn `defi_client_auth_path_2026_06_XX.md` plan.
+      Audit found `unified-trading-system-ui/.firebaserc` lists prod (`central-element-323112`) + staging
+      (`odum-staging`) projects; SA JSON storage location not surfaced — those config rows stay as-is, just
+      unused during May-23.
 
 - [ ] [SCRIPT] P0. **6.C — GitHub Workload Identity Federation upgrade.** Audit found classic PATs (`secrets.GH_PAT` +
       `GH_TOKEN`) — replace with WIF (GCP / AWS → GitHub OIDC trust) per repo. Eliminates long-lived PATs.
 
-- [ ] [SCRIPT] P2. **6.D — Anthropic API budget cap.** Per workflow run budget cap on `ANTHROPIC_API_KEY` usage.
+- [x] [SCRIPT] P2. **6.D — Anthropic API budget cap.** Per workflow run budget cap on `ANTHROPIC_API_KEY` usage.
       Currently advisory/audit workflows only — low-risk but unbounded.
 
 **Phase 6 done definition** (full-execution criterion):
@@ -547,12 +613,12 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 Depends on Phases 2-6 having enumerated the universe of credentials.
 
-- [ ] [AGENT] P0. **7.A — Per-mode credential subset SSOT.** YAML at
+- [x] [AGENT] P0. **7.A — Per-mode credential subset SSOT.** YAML at
       `unified-api-contracts/config/credentials_per_mode.yaml`. Three top-level keys (`paper`, `batch`, `live`);
       per-mode list of required credentials. Paper = read-only venue keys + fork-wallet + cloud infra. Batch =
       historical-data sources + cloud infra + read-only venue keys (optional). Live = full set.
 
-- [ ] [AGENT] P0. **7.B — Per-archetype credential subset checklist.** YAML at
+- [x] [AGENT] P0. **7.B — Per-archetype credential subset checklist.** YAML at
       `unified-api-contracts/config/credentials_per_archetype.yaml`. Per archetype: minimum-viable credential subset to
       run live. Archetypes in scope per R4: `carry_staked_basis`, `ARBITRAGE_PRICE_DISPERSION` (canonical archetype;
       DeFi/CeFi cutover use the `funding_rate_dispersion` config variant per
@@ -573,7 +639,7 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
 
 ## Phase 8 — Audit recipe + continuous verification — Day 10-13
 
-- [ ] [AGENT] P0. **8.A — One-stop credential probe script.** `deployment-service/scripts/audit/credential-probe.sh`.
+- [x] [AGENT] P0. **8.A — One-stop credential probe script.** `deployment-service/scripts/audit/credential-probe.sh`.
       Per Block I.1 audit set: cloud SA / per-bucket / per-Secret-Manager-path / per-venue / per-chain RPC / per-wallet
       / per-custody / per-data-source / per-aux-service. `--mode {paper,batch,live}` + `--archetype <name>` flags
       consume Phase 7 SSOTs. Per-credential green/red + final sign-off line.
@@ -581,11 +647,11 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
     cadence = daily cron VM; verifier = event-stream `STARTED + STOPPED + non-empty per-credential progress events`;
     `last_executed: <YYYY-MM-DD>` populated on every run.
 
-- [ ] [AGENT] P1. **8.B — Health endpoint credential probes.** Extend `make_health_router()` per QG STEP 5.62 —
+- [x] [AGENT] P1. **8.B — Health endpoint credential probes.** Extend `make_health_router()` per QG STEP 5.62 —
       currently reports `data_freshness` only. Add `credentials_health` callback per service that probes credentials the
       service consumes (read-only API call; cache 60s TTL).
 
-- [ ] [AGENT] P0. **8.C — Master plan continuous-verification column.** Update
+- [x] [AGENT] P0. **8.C — Master plan continuous-verification column.** Update
       `plans/active/master_to_live_defi_2026_05_23.md` per-service readiness checklist (Groups A-G; 23 items) per
       `Master Plan Continuous-Verification Column` HARD RULE. Group F items 17-23 + Group G item 23 each declare cron /
       Tab / QG cadence + `Last verified` date.
@@ -607,37 +673,37 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
 
 Per `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in same logical unit as code commits, not deferred.
 
-- [ ] [AGENT] P0. **9.A — `codex/05-infrastructure/credentials-matrix.md`** (NEW) — workspace credential SSOT. Stub from
+- [x] [AGENT] P0. **9.A — `codex/05-infrastructure/credentials-matrix.md`** (NEW) — workspace credential SSOT. Stub from
       Phase 0.D; full content populated per Phase boundary (each phase's credentials added to matrix as they ship).
 
-- [ ] [AGENT] P0. **9.B — `codex/05-infrastructure/aws-iam-matrix.md`** (NEW) — per-service AWS IAM. Populated by Phase
+- [x] [AGENT] P0. **9.B — `codex/05-infrastructure/aws-iam-matrix.md`** (NEW) — per-service AWS IAM. Populated by Phase
       1.B.
 
-- [ ] [AGENT] P0. **9.C — `codex/05-infrastructure/secret-manager-naming.md`** (NEW) — naming convention SSOT. Codifies
+- [x] [AGENT] P0. **9.C — `codex/05-infrastructure/secret-manager-naming.md`** (NEW) — naming convention SSOT. Codifies
       the `<env>-<service>-<credential>` pattern + the `<venue>-<scope>-<key|secret>` extension from Phase 2.C.
 
-- [ ] [AGENT] P0. **9.D — `codex/14-customer-journeys/credentials/rotation-runbook.md`** (NEW) — rotation cadence +
+- [x] [AGENT] P0. **9.D — `codex/14-customer-journeys/credentials/rotation-runbook.md`** (NEW) — rotation cadence +
       execution-owner per credential class. Populated by Phase 5.A.2.
 
-- [ ] [AGENT] P0. **9.E — `codex/05-infrastructure/per-archetype-wallet-isolation.md`** (NEW) — multi-wallet model.
+- [x] [AGENT] P0. **9.E — `codex/05-infrastructure/per-archetype-wallet-isolation.md`** (NEW) — multi-wallet model.
       Populated by Phase 4.A.
 
-- [ ] [AGENT] P0. **9.F — `codex/05-infrastructure/hsm-wallet-signing.md`** (NEW) — HSM tier discipline. Populated by
+- [x] [AGENT] P0. **9.F — `codex/05-infrastructure/hsm-wallet-signing.md`** (NEW) — HSM tier discipline. Populated by
       Phase 3.C.
 
-- [ ] [AGENT] P0. **9.G — UPDATE `codex/04-architecture/interface-credential-convention.md`** — per-credential-class
+- [x] [AGENT] P0. **9.G — UPDATE `codex/04-architecture/interface-credential-convention.md`** — per-credential-class
       examples + cross-cloud guidance from this plan.
 
-- [ ] [AGENT] P0. **9.H — UPDATE `codex/06-coding-standards/config-reloader-pattern.md`** — `ApiKeyReloader` per-service
+- [x] [AGENT] P0. **9.H — UPDATE `codex/06-coding-standards/config-reloader-pattern.md`** — `ApiKeyReloader` per-service
       coverage matrix from Block H1 audit.
 
-- [ ] [AGENT] P1. **9.I — UPDATE `codex/05-infrastructure/runtime-tiers-and-deployment.md`** — credential subset per
+- [x] [AGENT] P1. **9.I — UPDATE `codex/05-infrastructure/runtime-tiers-and-deployment.md`** — credential subset per
       tier from Phase 7.A.
 
-- [ ] [AGENT] P1. **9.J — UPDATE `codex/14-customer-journeys/authentication/firebase-local.md`** — Firebase prod vs
+- [x] [AGENT] P1. **9.J — UPDATE `codex/14-customer-journeys/authentication/firebase-local.md`** — Firebase prod vs
       emulator credential split from Phase 6.B.
 
-- [ ] [AGENT] P0. **9.K — UPDATE `codex/04-architecture/custody-architecture.md`** (NEW or UPDATE) — Copper + CEFFU +
+- [x] [AGENT] P0. **9.K — UPDATE `codex/04-architecture/custody-architecture.md`** (NEW or UPDATE) — Copper + CEFFU +
       Fireblocks operational model from Phase 3.
 
 **Phase 9 done definition** (full-execution criterion):
