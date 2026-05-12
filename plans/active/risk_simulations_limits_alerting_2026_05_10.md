@@ -512,11 +512,12 @@ Replaces the previous moderate/catastrophic split (5%/13%). New default policy a
 | ≥1000bps (≥10%) | EMERGENCY (crystallize stable→ETH/BTC) | Full flatten; recovery_mode=manual_unkill |
 | Per-stable override | Synthetic/algo stables (USDE/CRVUSD/FRAX) trigger at HALF | KILL at 2.5%; reflects historical fragility |
 
-- [ ] [AGENT] P0. **D.1 — UAC `BreakerConfig` per-stable depeg thresholds.** Extend
+- [x] [AGENT] P0. **D.1 — UAC `BreakerConfig` per-stable depeg thresholds.** Extend
       `registry/circuit_breakers/carry_staked_basis.py` + add `registry/circuit_breakers/leveraged_funding_arb.py`
       with per-stable breaker configs: `stable_depeg_warning` / `_small` / `_moderate` / `_catastrophic` per
       (USDC, USDT, DAI, USDE, FRAX, GHO, CRVUSD, SUSDE). Override thresholds for synthetic stables (HALF).
       Owner: slot 5 or risk-side maintainer.
+      (UAC@2b49ef2 — 4 new CircuitBreakerId + PER_STABLE scope + _depeg_configs() helper; 32 configs × 2 archetypes)
 
 - [ ] [AGENT] P0. **D.2 — Aggregate stablecoin exposure feature.** New feature in
       `features-service/features_service/cross_instrument/` (or similar):
@@ -815,6 +816,7 @@ Phase 1 freeze gate (2026-05-15) covers Phase 0+1+2+3+7 from this plan; Phase 4+
 | Phase 5.B integration test (rule-fire → alert routed) | DEFERRED P1 (alerting-service consumer shipped `@0a52a33` with per-consequence channel/severity unit tests; the end-to-end rule-fire-in-a-running-service → alert-out test is pending) | bundled with Phase 5.A emit follow-on. |
 | Phase 6.A — `/api/risk/rules` endpoint; 6.B — `/api/risk/preflight-test` endpoint (6.C UI Risk tab shipped `deployment-ui@33e6ea0`) | DONE — shipped `deployment-api@dc8be51` (both endpoints + 20 route tests; risk_routes registered under `/api/risk` in main.py — was unregistered) | — |
 | Phase 8 — real-VM per-rule synthetic-fire suite (8.A/8.B/8.C) | BLOCKED on Ikenna slot 7 `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 injection primitives (Day 2 2026-05-13) | Tab 5 Day 2+. |
+| Phase D.1 — UAC BreakerConfig per-stable depeg thresholds (8 stables × 4 tiers) | ✅ SHIPPED UAC@2b49ef2 2026-05-12 | — |
 | UTL hygiene — root re-export of `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package root; clean the Phase-4 `# noqa: qg-deep-import` deep imports | DEFERRED P2 (`kill_switch/__init__` exports added `@d1a0d0d` — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works) | UTL hygiene follow-up — owner pick. |
 
 ### DONE-2026-05-12 — Tab 5 (Harsh) — risk Phase 4 fan-out + Phase 5.B + UAC `RiskRuleFiredEvent`
