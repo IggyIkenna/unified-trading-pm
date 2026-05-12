@@ -139,20 +139,20 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 
 ## Phase 2 — UTL PnL attribution emitter (Days 3-5, ~2 AI-days)
 
-- [ ] [AGENT] P0. **2.A `pnl_attribution/joiner.py`.** Joins position-balance + execution + funding + fee event streams
+- [x] [AGENT] P0. **2.A `pnl_attribution/joiner.py`.** Joins position-balance + execution + funding + fee event streams
       on `(client_id, archetype_id, trade_id, ts_window)`. Strict-mode: missing leg = `record_failed` with typed reason,
-      NOT silent zero (per honest-absence rule).
-- [ ] [AGENT] P0. **2.B `pnl_attribution/emitter.py`.** Per (client, archetype, day) parquet emit at
+      NOT silent zero (per honest-absence rule). (UTL@75de9d5 — join_attribution_streams + JoinError; 9 tests)
+- [x] [AGENT] P0. **2.B `pnl_attribution/emitter.py`.** Per (client, archetype, day) parquet emit at
       `gs://{pid}-client-reports/{client_id}/{archetype}/{YYYY-MM-DD}/attribution.parquet`. Reuses Tab 4's
-      `bucket_naming.py` SSOT.
-- [ ] [AGENT] P0. **2.C Decomposition-sum invariant check** — UTL helper at
+      `bucket_naming.py` SSOT. (UTL@75de9d5 + deployment-service@d64de36 — emit_attribution_parquet; kind=client-reports added to cloud-providers.yaml)
+- [x] [AGENT] P0. **2.C Decomposition-sum invariant check** — UTL helper at
       `unified_trading_library.pnl_attribution.invariants.assert_decomposition_invariants()` (canonical name fixed by
       codex § Decomposition Invariants). Per-day per-client enforces all 5 invariants: closed-set coverage
       (`sum(rows, all factors, both layers) == realised_total_pnl == ClientNAV.delta`), STRATEGY-layer sum =
       strategy_alpha_total (BENCHMARK matching-engine sum), EXECUTION-layer sum = execution_alpha_total (live −
       BENCHMARK residual), RESIDUAL `< 1% of |total_pnl|`, every row's `factor ∈ PnLFactor` and `layer ∈ PnLLayer`
-      closed sets. Fails loud on violation.
-- [ ] [AGENT] P0. **2.D Tests.** ≥30 unit tests; mocked event streams; invariant assertion.
+      closed sets. Fails loud on violation. (UTL@75de9d5 — assert_decomposition_invariants + DecompositionInvariantError; 16 tests)
+- [x] [AGENT] P0. **2.D Tests.** ≥30 unit tests; mocked event streams; invariant assertion. (UTL@75de9d5 — 35/35 pass: 16 invariant + 9 joiner + 10 emitter)
 
 **Full-execution criterion**: UTL PR pushed; QG green; integration test on stub streams emits non-empty parquet.
 
@@ -266,7 +266,8 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 | 0.A Existing PnL emission audit | **DEFERRED** — Phase 1 shipped first per operator reserve-plan direction; audit not done | Run as Phase 2 prep before 2.A joiner starts — add as first step in Phase 2 |
 | 0.B Existing client-reporting-api audit | **DEFERRED** — same as 0.A | Run before Phase 4 API endpoints |
 | Phase 1.A-1.E UAC contracts | ✅ DONE (UAC@b3233e5) | 42/42 tests pass; pushed to live-defi-rollout |
-| Phase 2 onwards | TODO | Next session: Phase 2 UTL PnL attribution emitter |
+| Phase 2.A-2.D UTL pnl_attribution | ✅ DONE (UTL@75de9d5 + deployment-service@d64de36) | joiner, emitter, invariants, 35/35 tests; client-reports bucket kind added |
+| Phase 3 per-service migration | TODO | Next: strategy-service + execution-service emit PnLAttributionRow |
 
 ## Deferred work after 2026-05-10 plan-creation session
 
