@@ -911,6 +911,31 @@ typed empty reasons (GREEN at orchestrator/triggers).
 - **`available_at` per-row stamping rules**: kickoff−60min for lineups; event_time for fixture_events; match_end_time
   for post-match (sfi_progressive / understat / fixture_stats); kickoff−72h for early refs (per orchestrator paths).
 
+## Deferred work after 2026-05-12 slot-5 session
+
+Session shipped: instruments-service@af06124 (SFI report_time), UAC@1a831b0 (MatchStatus SSOT),
+plan flips for B.1 Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+|---|---|---|
+| B.1 Phase 4: manifest flip + re-fetch VM | `[ ]` NOT RUN | Operational — needs VM launch + manifest migration; no code gap |
+| C.4 Transfermarkt per-player flatten | `[ ]` open | No blocker — new normalizer + contract + migration |
+| C.6 Step 1: AF FIXTURES write-path `match_end_time` | `[ ]` open | UAC `CanonicalFixture.match_end_time` exists; need AF write-path wiring in IS orchestrator |
+| C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns | `[ ]` open | Add `ft_timer` + `match_end_time` to schema contract |
+| C.6 Step 3: UTL `resolve_match_end_time()` cascade | `[ ]` open | New UTL helper — blocks Step 4 + assert_available_at_present wiring |
+| C.6 assert_available_at_present wiring | `[ ]` blocked | Blocked on Step 3 UTL helper |
+| C.7 Follow-up #1: STANDINGS flatten | `[ ]` open | Same B.1 pattern; isolated AF endpoint |
+| C.7 Follow-up #3: MATCHES `team_a_*` → `home_*` | `[ ]` open | FootyStats normalizer only; migration may not be needed |
+| MatchStatus adapter migration | `[ ]` open (DEFERRED) | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters |
+| Cross-source fixture status verifier | `[ ]` open | Uses MatchStatus SSOT (now shipped); no other blocker |
+| Codex doc `sports-fixtures-lifecycle.md` | `[ ]` open | Write after cross-source verifier design settles |
+| FIXTURES schema split (SCHEDULE + OUTCOMES) | `[ ]` P0 open | Large — coordinate with writegate strict-mode flip |
+
+**Next-agent entry point**: Pick any item from this table that has no blocker. Best candidates in priority order:
+1. C.7 Follow-up #3 MATCHES field mapping (quick win — FootyStats normalizer only, no migration needed)
+2. C.4 Transfermarkt per-player flatten (self-contained UAC + IS change)
+3. C.6 Step 2 SFI_PROGRESSIVE_STATS contract columns (UAC-only schema addition)
+
 ## Cross-references
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
