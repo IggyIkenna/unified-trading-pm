@@ -36,11 +36,11 @@ or revert to us-east-1."** The bias is toward ratify since the migration cost (a
 
 ## The 3 options
 
-| Option | Description                                                                  | Setup-script default match? | Migration cost                                                                                                  | Operational match |
-| ------ | ---------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------- |
-| **(a)**| **Ratify ap-northeast-1 as canonical AWS region** (matched with GCP Tokyo)   | ✅ Yes                        | Zero — already there. Update PM stub yaml `AWS_REGION` default to `ap-northeast-1`. Update plan body Phase 0i.   | Best — within-cloud + cross-cloud both Tokyo (~1ms RTT GCP↔AWS within Tokyo); $0 within-cloud egress; minimal cross-cloud egress (same metro). |
-| (b)    | Move AWS to us-east-1 (revert setup script + migrate the 10 DeFi buckets)    | ❌ No (script edit + data migration) | High — migrate 10 buckets from ap-northeast-1 → us-east-1 (~few hours data transfer + cross-region egress charges). Then provision Phase 0c bucket fleet in us-east-1.                                       | Worst — adds GCP-Tokyo ↔ AWS-Virginia ~150ms RTT + cross-region egress charges (~$0.09/GB GCP→AWS). |
-| (c)    | Multi-region split (some buckets us-east-1, some ap-northeast-1)             | Partial                       | High — ongoing operational complexity tracking which kind lives where.                                          | Worst — defeats the (b+) "single region per cloud for $0 within-cloud sync" target. |
+| Option  | Description                                                                | Setup-script default match?          | Migration cost                                                                                                                                                         | Operational match                                                                                                                               |
+| ------- | -------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **(a)** | **Ratify ap-northeast-1 as canonical AWS region** (matched with GCP Tokyo) | ✅ Yes                               | Zero — already there. Update PM stub yaml `AWS_REGION` default to `ap-northeast-1`. Update plan body Phase 0i.                                                         | Best — within-cloud + cross-cloud both Tokyo (~1ms RTT GCP↔AWS within Tokyo); $0 within-cloud egress; minimal cross-cloud egress (same metro). |
+| (b)     | Move AWS to us-east-1 (revert setup script + migrate the 10 DeFi buckets)  | ❌ No (script edit + data migration) | High — migrate 10 buckets from ap-northeast-1 → us-east-1 (~few hours data transfer + cross-region egress charges). Then provision Phase 0c bucket fleet in us-east-1. | Worst — adds GCP-Tokyo ↔ AWS-Virginia ~150ms RTT + cross-region egress charges (~$0.09/GB GCP→AWS).                                            |
+| (c)     | Multi-region split (some buckets us-east-1, some ap-northeast-1)           | Partial                              | High — ongoing operational complexity tracking which kind lives where.                                                                                                 | Worst — defeats the (b+) "single region per cloud for $0 within-cloud sync" target.                                                             |
 
 ## Recommendation
 
@@ -61,14 +61,14 @@ or revert to us-east-1."** The bias is toward ratify since the migration cost (a
 - **Live yaml verification** — confirm `deployment-service/configs/cloud-providers.yaml` doesn't have a stale
   `AWS_REGION` default elsewhere; if it does, fix to match.
 - **bucket_name_ssot plan body Phase 0i update** — replace "us-east-1 (Virginia) OR operator decides to move AWS to
-  ap-northeast-1 (Tokyo)" with "ap-northeast-1 (Tokyo) — ratified per operator decision 2026-05-11; matched-region
-  with GCP asia-northeast1 for $0 within-cloud egress + minimal cross-cloud egress."
+  ap-northeast-1 (Tokyo)" with "ap-northeast-1 (Tokyo) — ratified per operator decision 2026-05-11; matched-region with
+  GCP asia-northeast1 for $0 within-cloud egress + minimal cross-cloud egress."
 - **code_freeze GAP-2.4.F update** — same content update.
 - **Phase 0c provisioning** — Harsh slot 4 provisions the ~150 new AWS buckets in `ap-northeast-1` (matches existing
-  + setup script default).
-- **Cost projection** — for context: ~150 AWS buckets × variable storage. Same-region within-cloud sync (Phase 0h
-  prod → staging/dev) = $0 egress. Cross-cloud rsync (only for AWS migration parity, GCP→AWS or AWS→GCP) = ~$0.01-0.02/GB
-  metro (vs ~$0.09/GB trans-Pacific). For a 10TB cross-cloud sync: $100-200 metro vs $900+ trans-Pacific = ~5x savings.
+  - setup script default).
+- **Cost projection** — for context: ~150 AWS buckets × variable storage. Same-region within-cloud sync (Phase 0h prod →
+  staging/dev) = $0 egress. Cross-cloud rsync (only for AWS migration parity, GCP→AWS or AWS→GCP) = ~$0.01-0.02/GB metro
+  (vs ~$0.09/GB trans-Pacific). For a 10TB cross-cloud sync: $100-200 metro vs $900+ trans-Pacific = ~5x savings.
 - **CLAUDE.md key rule update** — bucket-name SSOT operator decision (b+) entry already says "GCP all asia-northeast1
   (Tokyo); AWS all us-east-1 (or ap-northeast-1 for matched region per operator decision)." Update to "AWS all
   ap-northeast-1 (Tokyo) — matched-region with GCP per operator ratification 2026-05-11."
@@ -93,8 +93,8 @@ us-east-1 — not the case for S3 / EC2 / Lambda we use) or compliance (no curre
   this brief is the operator-input doc for that phase.
 - [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../code_freeze_migrate_backfill_sequencing_2026_05_10.md)
   GAP-2.4.F — same.
-- [`aws_migration_defi_first_2026_05_07.md`](../aws_migration_defi_first_2026_05_07.md) Phase 2 — region default for
-  the ~150 NEW AWS buckets to provision.
+- [`aws_migration_defi_first_2026_05_07.md`](../aws_migration_defi_first_2026_05_07.md) Phase 2 — region default for the
+  ~150 NEW AWS buckets to provision.
 - CLAUDE.md "Bucket-name SSOT operator decision (b+)" key rule — region pinning sub-bullet.
 
 ## Operator action

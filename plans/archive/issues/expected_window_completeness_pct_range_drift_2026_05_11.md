@@ -8,7 +8,8 @@ resolution: option-a-rename-to-fraction
 resolution_commits:
   - unified-api-contracts@76f950a
 source:
-  - unified_api_contracts/canonical/crosscutting/manifest_schema.py:EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN docstring (UAC@174f401)
+  - unified_api_contracts/canonical/crosscutting/manifest_schema.py:EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN docstring
+    (UAC@174f401)
   - codex/02-data/availability-manifest-and-data-status.md:253
   - codex/02-data/availability-manifest-and-data-status.md:344
 locked_by: live-defi-rollout
@@ -18,13 +19,13 @@ locked_since: 2026-05-11
 # `expected_window_completeness_pct` range drift — Case-5 SSOT contradiction
 
 > **✅ RESOLVED 2026-05-11** — operator picked option (a) rename. Shipped at UAC@`76f950a`: column renamed from
-> `expected_window_completeness_pct` → `expected_window_completeness_fraction`; value range stays `[0.0, 1.0]`;
-> constant name `EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN` → `EXPECTED_WINDOW_COMPLETENESS_FRACTION_COLUMN`;
-> `V8_NEW_COLUMNS` tuple + `V8_COLUMN_DEFAULTS` dict + root facade `__all__` updated; tests + docstring naming-history
-> note shipped. Codex docs (`availability-manifest-and-data-status.md`, `service-output-emission-semantics.md`) +
-> plan body (`manifest_schema_final_gate_2026_05_09.md` Phase 1.C) updated in same logical unit at PM@<follow-up>.
-> Rename window was free (zero on-disk writes had shipped); the `_pct` constant name is banned post-`76f950a`.
-> Original analysis preserved below for audit trail.
+> `expected_window_completeness_pct` → `expected_window_completeness_fraction`; value range stays `[0.0, 1.0]`; constant
+> name `EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN` → `EXPECTED_WINDOW_COMPLETENESS_FRACTION_COLUMN`; `V8_NEW_COLUMNS`
+> tuple + `V8_COLUMN_DEFAULTS` dict + root facade `__all__` updated; tests + docstring naming-history note shipped.
+> Codex docs (`availability-manifest-and-data-status.md`, `service-output-emission-semantics.md`) + plan body
+> (`manifest_schema_final_gate_2026_05_09.md` Phase 1.C) updated in same logical unit at PM@<follow-up>. Rename window
+> was free (zero on-disk writes had shipped); the `_pct` constant name is banned post-`76f950a`. Original analysis
+> preserved below for audit trail.
 
 > **Severity**: P1 — silent correctness risk; not blocking 2026-05-15 freeze but **must** resolve before downstream
 > consumers (deployment-api drilldowns, Phase 4 sweep, batch-vs-live recon) start reading the column at runtime.
@@ -74,7 +75,8 @@ Same 0-100 fraction wording; same internal inconsistency.
 
 ### Layer 4 — column NAME
 
-The column is named `expected_window_completeness_pct` — the `_pct` suffix conventionally implies **percentage (0-100)**.
+The column is named `expected_window_completeness_pct` — the `_pct` suffix conventionally implies **percentage
+(0-100)**.
 
 ### Net
 
@@ -85,7 +87,8 @@ The column is named `expected_window_completeness_pct` — the `_pct` suffix con
   `"0.0 <= x <= 1.0"`).
 
 Three of four signals agree on 0-1 (UAC + UTL `completeness_fraction` + codex word "fraction"). One signal (column name
-+ codex range text) agrees on 0-100.
+
+- codex range text) agrees on 0-100.
 
 ## Why it matters
 
@@ -120,8 +123,8 @@ Rename `expected_window_completeness_pct` → `expected_window_completeness_frac
 ### Option (b) — Keep `_pct` name; multiply by 100 (percentage 0-100)
 
 UAC docstring updates to "0.0-100.0 percentage". Codex doc fixes the "fraction" wording to "percentage". UTL writer
-multiplies `completeness_fraction` × 100 at write time (or the kwarg API gets a second `expected_window_completeness_pct`
-arg the caller passes in pre-scaled).
+multiplies `completeness_fraction` × 100 at write time (or the kwarg API gets a second
+`expected_window_completeness_pct` arg the caller passes in pre-scaled).
 
 - **Pro**: column name stays stable, on-disk shape matches the name.
 - **Con**: introduces a `× 100` scaling step at every callsite that bridges UTL `completeness_fraction` (0-1) → manifest
@@ -131,8 +134,8 @@ arg the caller passes in pre-scaled).
 ### Option (c) — Codex was wrong; UAC + the name + the word "fraction" all coexist by declaring 0-1 stored as a `_pct`-named float
 
 UAC stays 0-1. Codex doc fixes the range text to "0.0-1.0 fraction" + adds a "(yes, the column is named `_pct` but the
-stored value is a 0-1 fraction; legacy naming, do not multiply by 100)" footnote. UTL passes through `completeness_fraction`
-as-is.
+stored value is a 0-1 fraction; legacy naming, do not multiply by 100)" footnote. UTL passes through
+`completeness_fraction` as-is.
 
 - **Pro**: zero code change post-`174f401`; minimal codex tightening.
 - **Con**: leaves a permanent naming foot-gun on disk — any future reader that doesn't read the footnote will assume
@@ -151,7 +154,8 @@ is open today (no writers yet); it's closed forever after the first row writes t
   threads the kwarg picks ONE convention).
 - `codex/02-data/availability-manifest-and-data-status.md` lines 253 + 344 (the codex side that needs updating).
 - `unified_trading_library/emission_publisher.py:75-78` (UTL `completeness_fraction` arg; canonical 0-1).
-- CLAUDE.md "No double SSOT in data-saving methodology" — three-way drift is the explicit anti-pattern this rule targets.
+- CLAUDE.md "No double SSOT in data-saving methodology" — three-way drift is the explicit anti-pattern this rule
+  targets.
 
 ## Audit cadence
 
