@@ -239,8 +239,12 @@ of on-chain real fill at the same block (verified via Tenderly fork comparison).
       `PoolShape.SOLIDLY_CL_FORK` — reuses V3 tick math + `(chain, CLFactory)` discriminator); ≥20-Velodrome +
       ≥20-Aerodrome historical-swap validation (golden harness).
 
-**Codex SSOT update (Phase 2 boundary)** — fill `codex/04-architecture/amm-slippage-simulation.md` § "Per-pool-shape
-models" with all 7 shapes' math + validation results.
+**Codex SSOT update (Phase 2 boundary)** — `codex/04-architecture/amm-slippage-simulation.md` § "Implementation
+status — Phase 2 as-built" shipped 2026-05-12 (the as-built module map: `pool_matcher.py` Protocol + registry +
+`BasePoolMatcher`; `amm.py` V2/V3/V4 conformance; `curve.py` / `balancer.py` / `solidly_fork.py` / `solana_clmm.py`
+/ `aggregator.py`; `engine.py` dispatch; the `OrderSide`-consolidation; the deferred-follow-ups list). Per-shape
+historical-swap **validation results** still pending — fold into this section once the golden-test-set harness
+(below) captures the on-chain `Swap`-event corpus.
 
 **Full-execution criterion**:
 
@@ -658,4 +662,4 @@ PoolMatcher Protocol design half was design-shipped by Ikenna slot 6 Day-1 in co
 | Phase 2G (`aggregator.py` — Jupiter/1inch/0x route composers) | `- [x]` shipped (execution-service@`dc09d6df`) | Batch replay of aggregator legs deferred: needs (a) the NEW `aggregator_route` MTDS data_type (catalogue gap, Discoveries item 4) + (b) the `(chain, pool_address) → PoolShape` lookup (MTDS `dex_pools`); the live-mode quote-API fetch path + ≥30-historical-Jupiter-route validation (golden harness — Phase 3) are the same follow-up. |
 | Golden test set (per-`PoolShape` `tests/integration/fixtures/amm_golden_swaps/*.json` + `test_amm_golden_swaps.py` replay harness + `scripts/capture_golden_swaps.py` archive-node capture runbook) — codex § "Golden test set harness" (= continuation prompt "Phase 6 — golden test set landing") | `- [ ]` **DEFERRED** | `pool_matcher_from_snapshot(pool_shape, snapshot_pre)` is wired (the harness's core dispatch) + every pool class implements `snapshot()`/`from_snapshot()` (round-trip-tested); remaining = pin real on-chain `Swap`-event rows via same-region GCE archive-node capture (codex runbook). Next Harsh-slot-4 cycle / sub-agent. |
 | Phase 8C Tenderly-fork live-vs-simulated reconciliation harness | `- [ ]` | depends on golden test set + Phases 3-7 implementations. |
-| Codex SSOT update (Phase 2 boundary) — fill `amm-slippage-simulation.md` § "Per-pool-shape models" with the as-built math + (once captured) validation results | `- [ ]` | next Harsh-slot-4 cycle (Post-Plan-Phase Codex Audit HARD RULE — folds in with the validation-results landing). |
+| Codex SSOT update (Phase 2 boundary) — as-built module map | `- [x]` shipped (`amm-slippage-simulation.md` § "Implementation status — Phase 2 as-built", 2026-05-12) | Per-shape historical-swap **validation results** still pending — fold into that section when the golden-test-set harness captures the on-chain `Swap`-event corpus. |

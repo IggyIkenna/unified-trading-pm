@@ -316,6 +316,66 @@ Pool-class implementations live in `execution-service/execution_service/matching
 **Multi-hop routing** (aggregator path) reuses the Protocol uniformly: each leg's pool is a `PoolMatcher`;
 the aggregator sums per-leg `SwapQuote`s into a composite route quote.
 
+### Implementation status — Phase 2 as-built (execution-service, 2026-05-12)
+
+Harsh slot 4 landed the Phase 2 implementation half against the design above:
+
+- **`pool_matcher.py`** (NEW) — `PoolMatcher` Protocol (`quote` / `apply` / `spot_price` property / `snapshot`),
+  `POOL_MATCHER_REGISTRY` + `@register_pool_matcher(shape)` class decorator (sets `cls.pool_shape`; rejects a
+  *different* class for an already-registered shape), `pool_matcher_from_snapshot(shape, dict)` (dispatches to the
+  registered class's `from_snapshot` classmethod), and a `BasePoolMatcher` mixin that implements
+  `quote`/`apply`/`snapshot` over three subclass primitives: `simulate_swap(amount_in, token_in)` (read-only),
+  `execute_swap(amount_in, token_in)` (mutating), `snapshot_state()` (+ classmethod `from_snapshot`). `side_to_token_in`
+  maps `SELL → "x"` (token0 in), `BUY → "y"` (token1 in); `amount_in` is in the input token's native decimals.
+  UAC schemas (`PoolShape` 15-member enum, `SwapQuote`, `FillResult`, `OrderSide`) live in
+  `unified_api_contracts/internal/domain/matching_engine/`.
+- **`amm.py`** — `UniswapV2Pool` / `UniswapV3Pool` / `UniswapV4Pool` mix in `BasePoolMatcher` + `@register_pool_matcher`
+  (`UNISWAP_V2` / `UNISWAP_V3` / `UNISWAP_V4_HOOK`); `execute_swap` added to V3/V4 (advances `sqrtPriceX96` + `tick`
+  within the active tick range — single-active-tick model; multi-tick-bitmap traversal is a Phase-3-validation
+  follow-up); `spot_price` property + `snapshot_state` + `from_snapshot` on all three.
+- **`curve.py`** (NEW) — `CurveStablePool` (`CURVE_STABLE`): n-token StableSwap D-invariant, Newton–Raphson `_get_d`
+  + `_get_y` (255-iter cap, 1e-18 tol), reserves normalised to human units (`balance / 10**decimals`) so
+  6-/8-/18-decimal baskets coexist, `admin_fee` removed from reserves on `execute_swap`, `get_amount_out_indexed(i, j, …)`
+  for >2-token baskets. `CURVE_CRYPTO` (D + γ + EMA oracle) is unimplemented — Phase-2C follow-up.
+- **`balancer.py`** (NEW) — `BalancerWeightedPool` (`BALANCER_WEIGHTED`): weighted-product curve, fee on input,
+  fee-free Balancer spot price `(B_j/W_j) / (B_i/W_i)`, `get_amount_out_indexed`. `BalancerBoostedPool`
+  (`BALANCER_BOOSTED`): linear-pool spread folded into the effective fee. `BALANCER_COMPOSABLE` (phantom-BPT + Vault
+  `batchSwap` routing) is unimplemented — Phase-2E follow-up.
+- **`solidly_fork.py`** (NEW) — `SolidlyForkPool` (`SOLIDLY_FORK`): shared matcher for all classic Solidly forks
+  (Velodrome / Aerodrome / Equalizer / Thena / Ramses…), discriminated by `(chain_id, factory_address)` + a per-pool
+  `stable: bool` flag — cubic stable invariant `x^3·y + x·y^3 = k` (Newton–Raphson `_get_y`, 255-iter cap,
+  revert-on-non-convergence) / `x·y = k` volatile branch; reserves normalised to human units BEFORE invariant math
+  (USDC 6-dec overflow edge case); fee siphoned to `PoolFees` (ve(3,3) flywheel — NOT added back to reserves, unlike
+  Uniswap V2 where the fee grows `k`); `_hooks_invoked → ("poolFeesNotify",)`. `SOLIDLY_CL_FORK` (Slipstream V3-tick
+  CL pools — reuses V3 tick math + `(chain, CLFactory)` discriminator) is unimplemented — Phase-2H follow-up.
+- **`solana_clmm.py`** (NEW) — `SolanaCLMMPool` (`SOLANA_CLMM`) subclasses `UniswapV3Pool` (same concentrated-liquidity
+  tick math); `SolanaAMMPool` (`SOLANA_AMM`) subclasses `UniswapV2Pool` (Raydium V4 standard `xy=k` pool).
+- **`aggregator.py`** (NEW) — `RouteLeg` (per-leg `pool_shape` + `pool_snapshot` + `side` + `input_share` + `chain_id`
+  + `pool_address`; `to_dict`/`from_dict`) + `AggregatorRouteMatcher` (`JUPITER_ROUTE_AGGREGATOR`): satisfies the
+  `PoolMatcher` Protocol; builds each leg's underlying `PoolMatcher` via `pool_matcher_from_snapshot` and composes
+  per-leg `quote()`/`apply()` into a route-level `SwapQuote`/`FillResult` with per-leg sub-quotes in `.legs`; two
+  route kinds — `"split"` (parallel — each leg takes `input_share` of route input, outputs summed) and `"chain"`
+  (serial multi-hop — leg *i* consumes 100 % of leg *i-1*'s output); `spot_price` = product (chain) /
+  share-weighted-sum (split) of per-leg effective rates; `snapshot`/`from_snapshot` round-trip the route + per-leg
+  pool snapshots (reflecting prior `apply` mutations); `FillResult.mempool_path ∈ {BATCH_SIM, PUBLIC, PRIVATE}` for
+  MEV-vs-slippage execution-alpha attribution. `OneInchRouteMatcher` / `ZeroExRouteMatcher` subclasses bind the same
+  logic to `ONEINCH_AGGREGATOR` / `ZEROX_AGGREGATOR`. **Batch replay** of aggregator legs is gated on the NEW
+  `aggregator_route` MTDS data_type (captured-route JSON persisted at decision time — catalogue gap) + the
+  `(chain, pool_address) → PoolShape` lookup (MTDS `dex_pools`); the **live-mode** quote-API fetch path
+  (`jup.ag/quote` / `1inch.io/.../quote` / `api.0x.org/swap/v1/quote`) is the same follow-up.
+- **`engine.py`** — `_amm_match_impl` dispatches via the `PoolMatcher` Protocol (`quote()` → slippage gate →
+  `apply()`); `AMMMatcher` accepts any `PoolMatcher`; the per-shape modules are side-effect-imported by `engine.py`
+  so the registry is populated; the local `OrderSide` enum was deleted in favour of
+  `unified_api_contracts.internal.OrderSide`.
+
+`bash scripts/quality-gates.sh` on a fresh execution-service `.venv` should be re-run to gate on the full suite —
+verified this session via the workspace `.venv-workspace` + `PYTHONPATH` override (`tests/unit/test_pool_matcher.py`
+54 tests + 593 across the matching-engine suite green; `ruff` + `basedpyright` clean on all touched files, modulo
+the pre-existing `engine.py:_mk` `OrderType` mismatch [a dual-`OrderType`-import bug in UAC `internal/__init__.py`]
+and `sports_matching.py:394` unnecessary comparison — neither introduced here). Per-shape historical-swap validation
+(the ≥ N-Tenderly-fork / on-chain-`Swap`-event corpus) lands with the golden-test-set harness below — until then the
+matchers are math-correct (round-trip-tested + invariant-tested) but not yet bps-validated against on-chain fills.
+
 ## Golden test set harness (Day-1 slot 6 design ship 2026-05-11)
 
 Phase 3 of `defi_simulation_realism` ships the per-shape fixture corpus that locks the matcher fidelity gate
