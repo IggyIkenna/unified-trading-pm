@@ -21,7 +21,14 @@ scope: [engineer, admin]
 > KelpDAO (rsETH) UAC + LST mapping rows flipped ✅ (UAC@`961af767` extended `LST_TOKEN_TO_PROTOCOL_ASSET`);
 > (d) Phase 1D Solana MEV cell flipped ✅ — `MevSubmissionMode.JITO_BUNDLE` shipped at UAC@`5241fad0` +
 > execution-service@`38710bef`; (e) Phase 1B slot 5 chain × protocol matrix shipping confirmed at uac@`458f17d`
-> (45/46 PROTOCOL_LAUNCH_DATES pairs). Remaining ◐ /✗ statuses reflect Phase 2+3+4 buildout not yet complete.
+> (45/46 PROTOCOL_LAUNCH_DATES pairs); (f) **Phase 2 INSTR fan-out ✅ COMPLETE 2026-05-12** (Harsh slot 2 sessions
+> 1+2 + Day-1 sub-agent fan-out) — 13 instruments-service adapters shipped: rocket_pool/solblaze (LSTs);
+> symbiotic/karak/renzo/kelpdao/puffer/jito_restaking (restaking + LRT); convex/idle/yearn/beefy/pendle (vaults).
+> Renzo extended to multi-chain (ETHEREUM + ARBITRUM) via instruments-service@`38192e7`; Beefy/Pendle/Jito-Restaking
+> shipped instruments-service@`b563afb` (parallel sub-agent fan-out). `factory.py` reconcile in same commit
+> bundled latent fix: `defi_graph_adapters` set was missing renzo/karak/idle/yearn — non-ETH canonical venues
+> silently used the ETHEREUM default chain. End-to-end smoke 15/15 pass; defi/ unit tests 122/122 pass. Remaining
+> ◐ /✗ statuses reflect Phase 2+3+4 buildout not yet complete.
 
 ## How to read this doc
 
@@ -105,30 +112,30 @@ that `defi_venues.py` (per-venue chain support) does NOT. The two registries are
 | **Ethena** | USDe | Ethereum | ✅ | ✗ | ✗ live (DefiLlama offline only) | ✗ | Limited use case for current archetypes |
 | **Jito (Solana)** | jitoSOL | Solana | ✅ | ✗ Solana-specific catalog gap | ✅ Pyth-oracle-based via `lst_adapters.py` | ✗ | Pyth unbanned 2026-05-06 for Solana LST yields. Coverage cadence ~monthly pending Pyth historical backfill |
 | **Marinade** | mSOL | Solana | ✅ | ✗ Solana-specific catalog gap | ✅ via `lst_adapters.py` | ✗ | Solana liquid-staking; read-only |
-| **Rocket Pool** | rETH | Ethereum | ✗ | ✗ | ✗ | ✗ | Orphan in CLAUDE.md. Phase 1A adds UAC entry; Phase 2/3/4 builds out |
-| **Solblaze** | bSOL | Solana | ✗ | ✗ | ✗ | ✗ | Orphan in CLAUDE.md. Phase 1A adds UAC entry; Phase 2/3/4 builds out |
+| **Rocket Pool** | rETH | Ethereum | ✅ (`PROTOCOL_LAUNCH_DATES[("ETHEREUM","ROCKETPOOL")]=2021-11-08`) | ✅ instruments-service@`a490033` (single-token rETH static registry; `factory.py` ROCKETPOOL-ETHEREUM) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12 (Sonnet session 2). MTDS + EXEC pending Phase 3+4 |
+| **Solblaze** | bSOL | Solana | ✅ (`PROTOCOL_LAUNCH_DATES[("SOLANA","SOLBLAZE")]=2022-02-17`) | ✅ instruments-service@`57a4f1f` (single-token bSOL static registry; `factory.py` SOLBLAZE-SOLANA) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12 (Sonnet session 2). MTDS + EXEC pending Phase 3+4 |
 
 ## Restaking + LRT (Liquid Restaking Token) protocols
 
 | Protocol | Token / Vault | Chain | UAC | INSTR | MTDS | EXEC | Notes |
 | -------- | ------------- | ----- | --- | ----- | ---- | ---- | ----- |
 | **EigenLayer** | (delegation, no token) | Ethereum | ✅ (rewards + staking_yields) | ✗ | ✗ | 🔍 claimed shipped 2026-03-13 but not in current `execution-service/venues/` or `defi_execution/protocols/` | Phase 4 verify-or-rebuild |
-| **Symbiotic** | (vault) | Ethereum | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent L |
-| **Karak** | (vault) | Ethereum, Arbitrum | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent M |
-| **Renzo** | ezETH | Ethereum, Arbitrum | ✅ (UAC@`495d262` venue entry + UAC@`961af767` LST mapping (RENZO, ETH)) | ✗ | ✗ | ✗ | Phase 2/3/4 — parallel-agent M. Reserve params + INSTR/MTDS/EXEC adapters pending. |
-| **KelpDAO** | rsETH | Ethereum | ✅ (UAC@`495d262` venue entry + UAC@`961af767` LST mapping (KELPDAO, ETH)) | ✗ | ✗ | ✗ | Phase 2/3/4 — parallel-agent N. Reserve params + INSTR/MTDS/EXEC adapters pending. |
-| **Puffer** | (vault) | Ethereum | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent N |
-| **Jito restaking (Solana)** | (vault) | Solana | ✗ | ✗ | ✗ | ✗ | Phase 1A adds UAC; Phase 2/3/4 — parallel-agent O |
+| **Symbiotic** | wstETH/rETH/cbETH/ETHx vaults | Ethereum | ✅ (`PROTOCOL_LAUNCH_DATES[("ETHEREUM","SYMBIOTIC")]=2024-06-11`) | ✅ instruments-service@`57a4f1f` (4-vault curated registry; `factory.py` SYMBIOTIC-ETHEREUM) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12 (Sonnet session 2). MTDS + EXEC pending Phase 3+4 |
+| **Karak** | wstETH/WETH vaults | Ethereum, Arbitrum | ✅ (`PROTOCOL_LAUNCH_DATES[("ETHEREUM","KARAK")]=2024-04-08`) | ✅ instruments-service@`57a4f1f` (multi-chain vault registry; `factory.py` KARAK-ETHEREUM/KARAK-ARBITRUM) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12. Multi-chain dispatch fixed instruments-service@`b563afb` (added `karak` to `defi_graph_adapters` set) |
+| **Renzo** | ezETH | Ethereum, Arbitrum | ✅ (UAC@`495d262` venue entry + UAC@`961af767` LST mapping (RENZO, ETH)) | ✅ instruments-service@`38192e7` (multi-chain ezETH; canonical bridged address `0x2416092f143378750bb29b79eD961ab195CcEea5` on ARB; `factory.py` RENZO-ETHEREUM/RENZO-ARBITRUM with `defi_graph_adapters` chain dispatch) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12 (Day-1 multi-chain extension). MTDS + EXEC pending Phase 3+4 |
+| **KelpDAO** | rsETH | Ethereum | ✅ (UAC@`495d262` venue entry + UAC@`961af767` LST mapping (KELPDAO, ETH)) | ✅ instruments-service@`be12b56` (single-token rsETH registry; `factory.py` KELPDAO-ETHEREUM) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12 (Sonnet session 1). MTDS + EXEC pending Phase 3+4 |
+| **Puffer** | pufETH | Ethereum | ✅ (`PROTOCOL_LAUNCH_DATES[("ETHEREUM","PUFFER")]=2024-05-09`) | ✅ instruments-service@`57a4f1f` (single-token pufETH registry; `factory.py` PUFFER-ETHEREUM) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12 (Sonnet session 2). MTDS + EXEC pending Phase 3+4 |
+| **Jito restaking (Solana)** | (NCN-vault VRTs: ezSOL/fragSOL/kySOL) | Solana | ✅ (`PROTOCOL_LAUNCH_DATES[("SOLANA","JITORESTAKING")]=2024-08-01`) | ✅ instruments-service@`b563afb` (3-VRT curated registry — Renzo ezSOL + Fragmetric fragSOL + Kyros kySOL; `factory.py` JITORESTAKING-SOLANA; **distinct from `jito.py` LST adapter** — `venue=jito_restaking` vs `venue=jito`) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12 (Day-1 sub-agent fan-out). MTDS + EXEC pending Phase 3+4 |
 
 ## Vault / yield-aggregator protocols
 
 | Protocol | Chains | UAC | INSTR | MTDS | EXEC | Notes |
 | -------- | ------ | --- | ----- | ---- | ---- | ----- |
-| **Yearn** | Ethereum, Arbitrum, Optimism | ✗ | ✗ | ✗ (orphan calculator `vault_share_price_apy_calculator.py` in features-onchain has no upstream) | ✗ | Phase 1A adds UAC; wire orphan calculator upstream as part of Phase 3 |
-| **Convex** | Ethereum | ✗ | ✗ | ✗ | ✗ | Curve-LP-staking-vault. Phase 2/3/4 — parallel-agent A |
-| **Beefy** | Ethereum, Arbitrum, Base, Polygon, BSC, Avalanche | ✗ | ✗ | ✗ | ✗ | Phase 2/3/4 — parallel-agent B |
-| **Pendle** | Ethereum, Arbitrum | ✗ | ✗ | ✗ | ✗ | PT/YT/SY tokens with maturity dates. Phase 2/3/4 — parallel-agent B |
-| **Idle** | Ethereum, Arbitrum, Polygon | ✗ | ✗ | ✗ | ✗ | Phase 2/3/4 — parallel-agent C |
+| **Yearn** | Ethereum, Arbitrum, Optimism | ✅ (`PROTOCOL_LAUNCH_DATES[("ETHEREUM","YEARNV3")]=2024-03-20`) | ✅ instruments-service@`57a4f1f` (multi-chain V3 vault registry — yvWETH/yvDAI/yvUSDC/yvWBTC ETH + yvWETH/yvUSDC ARB; `factory.py` YEARN-ETHEREUM/YEARN-ARBITRUM with `defi_graph_adapters` chain dispatch) | ✗ (orphan calculator `vault_share_price_apy_calculator.py` in features-onchain has no upstream) | ✗ | Phase 2 INSTR ✅ 2026-05-12. MTDS Phase 3 wires upstream into orphan calculator |
+| **Convex** | Ethereum | ✅ (`PROTOCOL_LAUNCH_DATES[("ETHEREUM","CONVEX")]=2021-05-17`) | ✅ instruments-service@`57a4f1f` (CVX + cvxCRV registry; `factory.py` CONVEX-ETHEREUM) | ✗ | ✗ | Curve-LP-staking-vault. Phase 2 INSTR ✅ 2026-05-12. MTDS + EXEC pending Phase 3+4 |
+| **Beefy** | Ethereum, Arbitrum, Base, BSC, Avalanche (Polygon dropped — see Notes) | ✅ (6 chains in `PROTOCOL_LAUNCH_DATES`) | ✅ instruments-service@`b563afb` (multi-chain TOP-vault snapshot — 16 vaults across ETH/ARB/BASE/BSC/AVAX via api.beefy.finance/vaults/<chain>; `factory.py` BEEFY-{ETH,ARB,BASE,BSC,AVAX} with `defi_graph_adapters` chain dispatch) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12 Day-1 sub-agent fan-out. **POLYGON intentionally not registered** — Beefy public API returned every Polygon vault as `status=eol` on 2026-05-12 audit (chain re-added when Beefy ships fresh active Polygon vaults) |
+| **Pendle** | Ethereum, Arbitrum | ✅ (`PROTOCOL_LAUNCH_DATES[("ETHEREUM","PENDLE")]=2021-06-15`, ARB 2024-01-26) | ✅ instruments-service@`b563afb` (curated PT/YT/SY active-markets snapshot via api-v2.pendle.finance/core/v1/<chainId>/markets/active queried 2026-05-12; 30 records = 5 markets × 3 PT/YT/SY × 2 chains; all maturities > 2026-05-12; PT/YT carry expiry, SY carries None; role encoded in instrument_key segment 2; `factory.py` PENDLE-{ETH,ARB} with `defi_graph_adapters`) | ✗ | ✗ | PT/YT/SY tokens with maturity dates. Phase 2 INSTR ✅ 2026-05-12 Day-1 sub-agent fan-out. MTDS + EXEC pending Phase 3+4 |
+| **Idle** | Ethereum, Arbitrum, Polygon | ✅ (`PROTOCOL_LAUNCH_DATES[("ETHEREUM","IDLE")]=2019-08-13`) | ✅ instruments-service@`57a4f1f` (3-vault BEST registry on ETH — idleDAI/idleUSDC/idleUSDT; `factory.py` IDLE-ETHEREUM/IDLE-ARBITRUM with `defi_graph_adapters` chain dispatch) | ✗ | ✗ | Phase 2 INSTR ✅ 2026-05-12. MTDS + EXEC pending Phase 3+4 |
 
 ## Perp DEX / on-chain CLOB venues
 
