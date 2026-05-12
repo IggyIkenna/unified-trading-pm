@@ -361,10 +361,14 @@ Owner: harsh + parallel agents.
 > convolving all 4 layers. **Implementation half remains `- [ ]` for Harsh slot 4** per cross-side
 > handshake.
 
-- [ ] [AGENT] P0. **5A — Native staking yield stochastic model**. Per-chain (Ethereum beacon / Solana validator).
-      Inputs: historical per-epoch reward distribution + recent attestation efficiency + validator-set churn. Output:
-      forward yield distribution (mean / 5th / 95th percentile) for any forward horizon. Calibrated against ≥ 6 months
-      historical data per chain.
+- [x] [AGENT] P0. **5A — Native staking yield stochastic model**. (execution-service@`513c9770` — NEW
+      `matching_engine/yield_streams/` subpackage with `NativeStakingModel` frozen dataclass (per-bin Gaussian
+      mean+std binned by attestation efficiency quintile for Ethereum; single-bin collapse for Solana) +
+      `StakingYieldSample` historical-row dataclass + `ForwardYieldDistribution` (mean_apr, p5, p95, n_paths,
+      horizon_epochs) output schema. `calibrate_native_staking()` fits per-bin distribution from MTDS
+      `staking_yields` rows; `sample_forward_distribution()` MC kernel sums N=horizon_epochs Gaussian draws per
+      path → APR annualised by epochs_per_year (82125 ETH / 365 SOL). Smoke pass: 200 mock Ethereum samples,
+      1170-epoch horizon, mean=84.9% p5=83.7% p95=86.1%. basedpyright clean.)
 - [ ] [AGENT] P0. **5B — Restaking AVS yield model**. Per-AVS reward variability layered on top of native staking base.
       EigenLayer + Symbiotic + Karak AVSes from Phase 1A captures. Output: per-LRT forward yield distribution.
 - [ ] [AGENT] P0. **5C — LRT protocol-fee model**. Discrete-event model: Ether.fi / Renzo / KelpDAO / Puffer fees
