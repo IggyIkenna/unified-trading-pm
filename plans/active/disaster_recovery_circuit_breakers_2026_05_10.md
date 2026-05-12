@@ -159,9 +159,22 @@ failover beyond cutover archetypes are deferred post-cutover.
       tests) = **61 unit tests total**, all passing locally. Closed-set sanity, validator semantics, default-fill,
       per-archetype registry coverage, KILL_ALL → no auto-disarm invariant, § 7 seam citation enforcement, facade
       re-export verification.
+- [ ] [AGENT] P1. **1.G `BreakerFiredEvent` UAC model — DISCOVERY 2026-05-12 (Tab 5 Phase-4 fan-out).** Four Phase-4
+      sub-agents (execution-service / risk-and-exposure-service / position-balance / alerting-service) all hit the same
+      gap: there is no typed `BreakerFiredEvent` Pydantic model in `canonical/crosscutting/circuit_breaker.py`. The
+      interim everywhere is an `AlertCode`-named `log_event` (`CIRCUIT_BREAKER_OPEN` / `CIRCUIT_BREAKER_DEGRADED` /
+      `CIRCUIT_BREAKER_CLOSED`) classified at the consumer off `CircuitBreakerId` + the registry's `BreakerAction`.
+      **DEFERRED P2**: ship `BreakerFiredEvent` (frozen, extra=forbid — mirror `RiskRuleFiredEvent` from
+      `risk_rule.py`@UAC@a01e4dd: `breaker_id`, `scope`, `applies_to`, `action`, `recovery_mode`, `cooldown_seconds`,
+      `alerting_severity`, `alert_code`, `fired_at`, `armed`/`disarmed` discriminator, `metadata`) + a
+      `breaker_fired_event(config, *, fired_at, ...)` builder; then switch `execution-service/engine/circuit_breaker.py`,
+      `risk-and-exposure-service/circuit_breaker_registry.py`, `position-balance.../reconciler_breaker_bridge.py`, and
+      `alerting-service/dr_event_handler.py` to emit/validate against it. Successor: this todo (1.G) — owner pick in
+      next work-split.
 
 **Full-execution criterion**: UAC PR pushed; QG green; ≥10 breakers × 2 archetypes registered. UAC@a7a99b5 + UAC@dc4c9f0
-landed; 20 breakers + 20 recovery rules + 11 kill-switch IDs + 4 provenances + 61 tests.
+landed; 20 breakers + 20 recovery rules + 11 kill-switch IDs + 4 provenances + 61 tests. (1.G `BreakerFiredEvent` model
+DEFERRED P2 — discovery from the 2026-05-12 Phase-4 fan-out.)
 
 ## Phase 2 — UTL kill-switch bus (Days 4-5, ~1 AI-day)
 
@@ -333,10 +346,35 @@ nightly-cron wiring (Phase 6.A).
       re-evaluated every `cooldown_seconds`; on N consecutive green readings the breaker auto-disarms; emits
       `KILL_SWITCH_AUTO_RECOVERED` alert with `recovered_after_seconds` + guard-evaluation trail. Per-action defaults
       drive selection per Phase 1.A `BREAKER_RECOVERY_DEFAULTS`; per-breaker override via `BreakerConfig.recovery_mode`.
+      **engine + half-wiring SHIPPED 2026-05-12** — `unified-trading-library@d5161fd` ships the NEW
+      `unified_trading_library/circuit_breaker/` package: `BreakerRecoveryEngine` (per-process armed-breaker registry +
+      recovery state machine — `arm(config, recovery_rule)`, `register_guard(id, fn)`,
+      `evaluate(id) -> RecoveryDecision`, `manual_unkill(id, operator_id) -> RecoveryDecision`, `tick_all()`):
+      `auto_cooldown` → N consecutive green guard readings (default N=2) → `AUTO_DISARM`, or `auto_disarm_after_seconds`
+      hard-timeout → `TIMEOUT_DISARM` regardless of guard; `manual_unkill` → always `HOLD` until operator; fail-loud on
+      missing-guard / not-armed. Pure — never touches the bus / alerting; caller maps a disarming `RecoveryDecision` to
+      `KillSwitchBus.disarm(...)` + emits `KILL_SWITCH_AUTO_RECOVERED` (auto/timeout) / `KILL_SWITCH_MANUAL_UNKILLED`
+      (manual). Half-wiring: risk-and-exposure-service `ArmedBreakerRegistry` (550a39e) stores the paired
+      `BreakerRecoveryRule` per armed breaker; position-balance `ReconcilerBreakerBridge` (50b3c25) arms breakers;
+      alerting-service `dr_event_handler` (0a52a33) emits the recovery AlertCodes on `KillSwitchDisarmEvent`.
+      **DEFERRED (P0, follow-on)**: the service-side recovery *loop* — a service (risk-and-exposure-service is the
+      natural host) instantiates a `BreakerRecoveryEngine`, registers a guard predicate per `auto_cooldown` breaker,
+      `arm()`s on each breaker fire, runs `tick_all()` on a per-minute cron / fill event, and maps each disarming
+      `RecoveryDecision` → `KillSwitchBus.disarm()` + the `KILL_SWITCH_*_RECOVERED`/`_UNKILLED` alert emit. Successor:
+      this todo (5.A) — owner = risk-and-exposure-service tab once a recovery-cron entry point lands.
 - [ ] [AGENT] P0. **5.B Recovery test matrix.** Per breaker × per recovery rule, integration test exercises the recovery
-      path.
+      path. **unit-level matrix SHIPPED 2026-05-12** — `unified-trading-library@d5161fd`
+      `tests/unit/circuit_breaker/test_recovery.py` (18 tests): `auto_cooldown` green/red-reset/timeout paths,
+      `manual_unkill` (incl. overriding an `auto_cooldown` breaker), re-arm reset, `tick_all` skips `manual_unkill`,
+      fail-loud on missing-guard / not-armed, + a **parametrised matrix over the real UAC `registry/circuit_breakers/`
+      seeds** (`CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` — every `BreakerConfig` arms + evaluates against its
+      matching `BreakerRecoveryRule`, `auto_cooldown` → `AUTO_DISARM`, `manual_unkill` → `HOLD` then operator
+      `MANUAL_DISARM`). **DEFERRED**: the *integration*-level matrix (against a running service's recovery loop +
+      KillSwitchBus + alerting) — bundled with the 5.A service-loop follow-on.
 
-**Full-execution criterion**: ≥10 recovery rules per archetype; recovery test matrix green.
+**Full-execution criterion**: ≥10 recovery rules per archetype (✅ UAC@a7a99b5 — 10 per archetype × 2); recovery test
+matrix green (✅ unit-level — 18 tests utl@d5161fd incl. per-archetype-registry parametrisation; integration-level
+DEFERRED with the 5.A service-loop follow-on).
 
 ## Phase 6 — Chaos-drill cron (Day 11, ~0.5 AI-day)
 
@@ -507,3 +545,48 @@ cross-reference to UAC@a7a99b5.
 
 The risk-plan Phase 1.F flip is now live with the actual UAC@a7a99b5 + UAC@c96447b commit citations (no longer the
 placeholder "TBD" cross-reference).
+
+## Deferred work after 2026-05-12 (Tab 5 — Harsh — risk+DR Phase 4/5 implementation session)
+
+| Phase / item | Status as of 2026-05-12 | Successor / blocker |
+| --- | --- | --- |
+| Phase 1.G — typed `BreakerFiredEvent` UAC model | DEFERRED P2 (discovery from the Phase-4 fan-out — 4 sub-agents flagged) | This plan Phase 1.G todo — owner pick next work-split; UAC `circuit_breaker.py` addition mirroring `RiskRuleFiredEvent`. |
+| Phase 4.B — execution-service: wire `circuit_breaker.py` to per-archetype UAC `registry/circuit_breakers/` `BreakerConfig` + TEST_ONLY `LiveMatchingEngine` paper-vs-venue switch + orchestrator `account_state` wiring | DEFERRED (annotated in 4.B body) | execution-service tab; orchestrator-`account_state` depends on Phase 4.D consumption. |
+| Phase 4.A — risk-and-exposure-service: full removal of legacy `PortfolioContext` explicit-threshold gates + `RiskMonitor` bespoke threshold predicates ("no code-side rule logic remains") | DEFERRED (transitional — registry path composes alongside) | risk-and-exposure-service tab; depends on strategy-architecture-v2 caller supplying a `RuleEvalContext` populated from PBMS state (Phase 4.D consumption). |
+| Phase 5.A — service-side recovery *loop* (instantiate `BreakerRecoveryEngine`, register guards, `arm()` on fire, `tick_all()` on cron/fill, map disarming `RecoveryDecision` → `KillSwitchBus.disarm()` + emit `KILL_SWITCH_*_RECOVERED`/`_UNKILLED`) | DEFERRED P0 (engine + half-wiring shipped utl@d5161fd / risk-exp@550a39e / pbm@50b3c25 / alert@0a52a33) | risk-and-exposure-service tab once a recovery-cron entry point lands. |
+| Phase 5.B — integration-level recovery test matrix (against a running service's recovery loop + KillSwitchBus + alerting) | DEFERRED (unit-level matrix shipped utl@d5161fd — 18 tests incl. per-archetype-registry parametrisation) | bundled with the 5.A service-loop follow-on. |
+| Phase 2.A — cross-process Redis-Stream kill-switch transport adapter | DEFERRED P2 (post-cutover stretch per audit 0.C — single-VM-per-archetype topology doesn't need it) | `simulation_scenarios_post_cutover_2026_06_01.md`. |
+| Phase 3.F — manifest reconciler nightly-cron *wiring* (library reconciler shipped utl@b8d6e12) | DEFERRED P1 | this plan Phase 6.A (`disaster-drill-cron-` VM extends to run the manifest pass) + composes with `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`. |
+| Phase 3 — aggregate dashboard endpoint (one deployment-api route returning all 8 reconciler statuses) | DEFERRED | Phase 4 service wiring (deployment-api). |
+| UTL hygiene — re-export `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package *root* | DEFERRED P2 (added `kill_switch/__init__` exports utl@d1a0d0d — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works; the very-root re-export + cleaning the Phase-4 `# noqa: qg-deep-import` deep imports remains) | UTL hygiene follow-up — owner pick. |
+| Phase 6 (chaos-drill cron), Phase 9 (real-VM DR drill) | BLOCKED on Ikenna slot 7 scenario primitives (Day 2 2026-05-13) | Tab 5 Day 2+ once `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 ships. |
+| Phase 7.A — `/api/kill-switch/{id}/arm` + `/disarm` deployment-api endpoints (7.B UI tab shipped deployment-ui@33e6ea0) | TODO | Tab 5 Day 2+ / deployment-api tab. |
+| Phase 8.A-8.E — codex docs | `circuit-breaker-rule-taxonomy.md` (8.A) + `kill-switch-event-bus.md` (8.B) already exist + are fleshed-out; `autonomous-recovery-matrix.md` (8.D) extended 2026-05-12 with the `BreakerRecoveryEngine` runtime subsection; 8.C `kill-switch-circuit-breaker.md` + 8.E `mev-protection.md` updates pending verify | Tab 5 EOD-audit / Day 2. |
+
+## DONE block
+
+### DONE-2026-05-12 — Tab 5 (Harsh) — DR Phase 2/3 flips + Phase 4 fan-out + Phase 5 engine
+
+**Cycle ownership**: `work_split_2026_05_12_harsh.md` slot 5 (risk + DR implementation). Day 1 of the 2026-05-12 → 2026-05-15 cycle (scenario-dependent items wait on Ikenna slot 7 Day-2 publish).
+
+**Shipped (all pushed to `live-defi-rollout`):**
+
+- **Phase 2 + Phase 3 flips** — `unified-trading-pm@a7ac36c6`: Phase 2.A-C (kill-switch bus + parquet audit log + subscriber base — 47 tests) + Phase 3.A-3.H (8 per-state-surface reconcilers — positions/balance/custody/onchain/event/manifest/order_state/pnl_clock_batch_live — 146 unit tests; helper-shipped prior cycle `utl@18488c5`+`@5546b20`+`@b8d6e12`, tests `utl@cb6819a`+`@e2ec23e`+`@e713f66`) all flipped `[x]`. Closed the `reconcile/__init__` package-export gap — `unified-trading-library@fea6c7b` (51 symbols re-exported at package level; was balance-only; + `\*` SyntaxWarning fix in `reconcile/event.py`).
+- **Phase 2 facade fix** — `unified-trading-library@d1a0d0d`: `kill_switch/__init__` now exports `KillSwitchSubscriber` + `map_switch_id_to_scope` + `AuditLogWriter`/`InMemoryAuditLogWriter`/`ParquetAuditLogWriter` + the callback type aliases (were deep-import-only — DR Phase 4 service subscribers need package-level imports).
+- **Phase 5 engine** — `unified-trading-library@d5161fd`: NEW `unified_trading_library/circuit_breaker/` package — `BreakerRecoveryEngine` (`manual_unkill` + `auto_cooldown` state machine; pure; `RecoveryDecision`/`RecoveryAction`; fail-loud) + 18 tests incl. parametrised over the real UAC `registry/circuit_breakers/` seeds. Codex currency: `codex/04-architecture/autonomous-recovery-matrix.md` extended with the `BreakerRecoveryEngine` runtime subsection (`unified-trading-pm@0c4678b0`).
+- **Phase 4 — per-service migration (5-sub-agent fan-out)**:
+  - `risk-and-exposure-service@85c99aa`+`@550a39e` — Layer-2 pre-flight evaluates the UAC `RiskRule` registry via UTL `risk_preflight`/`rule_evaluator` (`v2/preflight.py::run_layer2_rule_preflight`); `InMemoryRiskLimitsClient` a thin UAC-registry reader; per-archetype breakers registered against UAC + `ArmedBreakerRegistry` (stores paired `BreakerRecoveryRule` for the Phase-5 recovery engine) + typed breaker-fire events; kill-switch-bus round-trip verified. Risk Phase 4.A → design-shipped (legacy-gate removal DEFERRED); **DR Phase 4.A → `[x]`**. Plan flips `unified-trading-pm@4000ea0f`.
+  - `execution-service@07477886` — `risk_preflight` wired into the order-submission path BEFORE venue submission (`engine/risk/preflight_gate.py` + `engine/orchestrator.py`): BLOCK→reject+`INSTRUCTION_REJECTED_RISK`, SCALE_DOWN→resize+`RESIZED_EXECUTION`, MONITOR→passthrough, TEST_ONLY→tag `mode=TEST`+route-to-matching; per-fired-rule `RiskRuleFiredEvent` via UAC `risk_rule_fired_event()`; deleted bespoke `engine/risk/pre_trade.py` per the § 7 seam; `kill_switch.py` `register_cancel_on_arm()` + `activate()`-invokes-cancel-on-arm; new-order block via existing `is_active()` gate. **Risk Phase 4.B + DR Phase 4.B → `[x]`**. Plan flips `unified-trading-pm@52ab4e4f`.
+  - `strategy-service@bf1ed6b` — signal-time `risk_preflight` gate (`risk_preflight_gate.py` + `SignalPublisher.publish()`): BLOCK→suppress signal+`STRATEGY_SIGNAL_SUPPRESSED`, SCALE_DOWN→scale `conviction_pct`/`meta_signal`, threads family-id via `aggregate_family_state` + typed per-archetype `ArchetypeKillSwitchSubscriber` (per-archetype arm halts only that archetype; `KILL_ALL_LIVE` halts all; 4-set halt behaviour `STOP_NEW_ONLY`/`FAST_UNWIND`/`SLOW_UNWIND`/`DELTA_HEDGE` from `KillSwitchArmedEvent.metadata`). **Risk Phase 4.C + DR Phase 4.D → `[x]`**. Plan flips `unified-trading-pm@0b0f67e8`.
+  - `position-balance-monitor-service@50b3c25` — `core/rule_eval_context_builder.py` (`PortfolioRiskState` + `PeakNavTracker` + `build_rule_eval_context()` → UTL `RuleEvalContext` — emits authoritative drawdown-bps-from-peak / leverage / gross+net exposure / per-(venue,instrument) OI / daily-loss; deliberately omits keys not owned by position-balance) + `core/reconciler_breaker_bridge.py` (`ReconcilerBreakerBridge` hosts the 4 UTL `*Reconciler` instances; on `breaker_fired` → AlertCode-stamped AlertEvent + arms `KILL_ALL_LIVE` when `BreakerConfig.action is KILL_ALL`; `PositionBalanceKillSwitchSubscriber` → safe-read-only mode on arm). **Risk Phase 4.D + DR Phase 4.C (PBM half) → `[x]`**. Plan flips `unified-trading-pm@33e7f74c`.
+  - `alerting-service@0a52a33` — `risk_rule_event_handler.py` (consumes `RiskRuleFiredEvent`, routes by `alert_code` → UAC-seeded `LIVE_ALERT_RULES` entry at the rule's channel/severity) + `dr_event_handler.py` (`KillSwitchArmedEvent`→CRITICAL/HIGH+page; `KillSwitchDisarmEvent`→`KILL_SWITCH_AUTO_RECOVERED`/`_MANUAL_UNKILLED` per `BreakerRecoveryMode`; circuit-breaker fire→severity tier off `BreakerAction`) + `router.route_event_with_explicit_channels` + a router bug fix (matched empty-channels rule now returns `{"log_only"}` instead of falling through to Telegram); 412 unit tests. **Risk Phase 5.B + DR Phase 4.C (alerting half) → `[x]`**. Plan flips `unified-trading-pm@18896af7`.
+- **UAC** — `unified-api-contracts@a01e4dd`: NEW `RiskRuleFiredEvent` Pydantic model + `risk_rule_fired_event(rule, *, fired_at, ...)` SSOT builder in `canonical/crosscutting/risk_rule.py` (the taxonomy referenced it in docstrings + `CONSEQUENCE_EVENTS_EMITTED` but never shipped the model — risk plan Phase 1 follow-on / Phase 5 prereq) + `risk.py` facade re-export + 5 tests (109/109 UAC suite green).
+- **Operational fix** — FF-pulled root `unified-api-contracts` (was 3 behind) + `unified-trading-library` (was 5 behind) to `origin/live-defi-rollout` so `.venv-workspace` (editable-installed against the root checkouts) sees the fresh `RiskRuleFiredEvent` / kill-switch facade exports / `BreakerRecoveryEngine` / reconcile package — the Phase-4 sub-agents validate via `.venv-workspace`.
+
+**Findings raised:**
+- **`BreakerFiredEvent` UAC model gap** (P2 discovery — 4 sub-agents) — captured as Phase 1.G todo + deferred-work scoreboard above.
+- **Pre-existing red QG on `live-defi-rollout` (alerting-service)** — `tests/unit/notifiers/test_router_coalesce.py` `N802` (uppercase `test_*_NOT_coalesced` names from commit `e7a9e7c`) + 5 `reportAny`/`reportUnusedFunction` in `notifiers/router.py`; ruff 0.15.0 now enforces `N802`. Foreign in-flight file — flagged for triage (fits `alerting_service_live_rules_2026_05_07.md` or a quick `[tool.ruff.lint.per-file-ignores]` entry); NOT fixed (foreign-file rule). Surfaced to operator in chat.
+- **Pre-existing red QG (execution-service)** — `tests/unit/test_config.py::test_service_config_no_os_getenv` flags `execution_service/custody/cloud_kms.py` `os.environ` (committed `d45d24b4`, semver-rollout bot); pre-existing on base — not made worse. Flagged for triage.
+- **Pre-existing red QG (position-balance-monitor-service)** — local-schema/size + `unified-trading-library` `pipeline_mode` kwargs + PM `workspace-manifest.json`/validators + pip-audit; all pre-existing, unrelated to the Phase-4.D changes.
+
+**Cycle metrics**: ~10 commits (3 UTL feat + 1 UAC feat + 1 PM codex + 7 PM plan-flips across the fan-out — most by sub-agents) + 5 sub-agent fan-out (risk-and-exposure / execution / strategy / position-balance / alerting), all pushed `0 0` vs origin. ~250+ new tests across the touched repos. ruff + basedpyright clean on every new/changed file (per-repo `quality-gates.sh` red only on pre-existing breakage; per-slot worktrees have no per-repo `.venv` — validated via `.venv-workspace`).
