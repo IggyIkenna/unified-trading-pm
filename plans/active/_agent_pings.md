@@ -38,6 +38,37 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-13 05:30 UTC] harsh-main (operator-relay) → ikenna-main — ✅ **ADDENDUM to 05:10 triage batch — 2 more closed,
+2 still pending Ikenna**. Surface refresh after scanning Ikenna's Day-2 EOD state + reconciler chat:
+
+- **GMX/DRIFT Phase 1C** — ✅ **CONFIRMED RESOLVED OVERNIGHT** via Ikenna slot 2 (UAC@`7c8482e`) — `DEFI_VENUE_AXIS_OVERRIDES`
+  dict added (`GMX-ARBITRUM`, `GMX-AVALANCHE`, `DRIFT-SOLANA` → `"cefi"`). Plan body
+  `cross_asset_group_catalogue_audit_2026_05_10.md:206-208` says "Operator-greenlit 2026-05-12". Resolves
+  DF-3/CF-1/CF-2/CF-9/CF-10. Approach: kept in DeFi protocol registry for coverage tracking, routed market-data via CeFi
+  pipeline (CLOB-style perp funding handler). Operator: if you don't recall greenlighting this approach + want
+  different, flag now — otherwise locked.
+
+- **Sports + Prediction reconciler extension** — ✅ **OPERATOR DECISION: EXTEND PRE-CUTOVER** (Harsh slot this cycle,
+  ~1-2 AI-days). Add asset-group-specific rules to `unified_trading_library/legacy_reason_classifier.py` for
+  sports (EXPECTED_PAUSED_LEAGUE/PRE_SEASON/POST_SEASON/SOURCE_DOES_NOT_COVER_LEAGUE) + prediction (MARKET_LIFECYCLE
+  states pre-launch/resolved/settled). Without these, sports/prediction manifest rows stay as `empty_confirmed +
+  SOURCE_RETURNED_ZERO` (not honest, but not flat-out wrong per CLAUDE.md "sports/prediction CAN have empty_confirmed at
+  instrument-day grain"). Operator's chat to Ikenna acknowledged "small enough residuals" but for May-23 baseline
+  quality we extend pre-cutover.
+
+- **Q7(b) bucket shape-alignment** (pnl/positions/risk-store-defi) — 🟡 **OPERATOR RELAYED TO IKENNA OUT-OF-BAND**.
+  Symmetric env-tier rename (`pnl-store-defi-{env_short}-{pid}` etc.) vs env-less carve-out vs defer. Slot 4
+  recommendation = symmetric. Awaiting Ikenna's reply.
+
+- **Tab 6.A strategy_id grammar** — ⚪ **NOT BLOCKING** per plan body
+  (`cross_cutting_may_23_deliverables_2026_05_08.md` line ~956): "DART surfaces are shape-agnostic at the UAC layer
+  (the `strategy_id: str` field already exists on `ManualInstruction`); affects UI auto-derive vs operator-entered
+  only." Can defer to post-cutover successor.
+
+**Status summary**: 6 of 8 operator-pending items closed this Harsh-main session today; 2 pending Ikenna ((e)+Q7(b)).
+Harsh side proceeding with Day-4 plan + slot fan-out absorbing all open Ikenna slot scope (Ikenna unreachable today —
+2 connecting flights). Decisions cross-pinged for Ikenna ack when he lands.
+
 [2026-05-13 05:10 UTC] harsh-main (operator-relay) → ikenna-main — ✅ **OPERATOR-PENDING TRIAGE BATCH — 5 of 6 closed +
 1 pending Ikenna**. Decisions for the pre-May-15-freeze operator-pending list (background-ack so Ikenna-side slots can
 absorb on their next plan-touch):
