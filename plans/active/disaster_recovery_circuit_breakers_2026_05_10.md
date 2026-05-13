@@ -168,6 +168,17 @@ failover beyond cutover archetypes are deferred post-cutover.
       + `breaker_fired_event(config, *, fired_at, alert_code, state, metadata)` builder — both exported from
       `unified_api_contracts.__init__`. **Consumer switch** (execution-service, risk-and-exposure-service,
       position-balance, alerting-service) is a follow-up — captured as **DEFERRED P3** below.
+- [x] [SCRIPT] P1. **1.H CircuitBreakerId pre-cutover extensions + registry seeds (2026-05-13, Slot 7).** 4 items:
+      (a) `ORACLE_STALENESS_SECONDS` — new CircuitBreakerId: oracle data feed frozen >= threshold seconds; distinct from
+      `ORACLE_DEVIATION_BPS` (price divergence). Carry_staked_basis config: 120s BLOCK_NEW CRITICAL; recovery: 5
+      consecutive heartbeat intervals; (b) `LENDING_POOL_UNAVAILABLE_SECONDS` — Aave pool paused OR borrow-cap-locked >=
+      threshold seconds; covers PAUSED + BORROW_CAP_REACHED sub-modes. Config: 300s BLOCK_NEW HIGH; recovery: 3
+      consecutive borrow-quote probes green; (c) `RPC_OUTAGE_SECONDS` `applies_to="ARBITRAGE_PRICE_DISPERSION"` seed —
+      existing enum ID, new archetype seed with `scope=PER_ARCHETYPE` + matching recovery rule (was only seeded for
+      CARRY_STAKED_BASIS, APD needs chain-RPC protection too for on-chain legs); (d) 8 new taxonomy tests in
+      `test_circuit_breaker_taxonomy.py` verifying new IDs present, ORACLE_STALENESS_SECONDS ≠ ORACLE_DEVIATION_BPS,
+      per-archetype registry coverage for all 3 new entries, CRITICAL severity for oracle staleness.
+      Shipped UAC@086144e. `CircuitBreakerId` closed set: 22 → 24 members.
 
 **Full-execution criterion**: UAC PR pushed; QG green; ≥10 breakers × 2 archetypes registered. UAC@a7a99b5 + UAC@dc4c9f0
 landed; 20 breakers + 20 recovery rules + 11 kill-switch IDs + 4 provenances + 61 tests. (1.G `BreakerFiredEvent` model

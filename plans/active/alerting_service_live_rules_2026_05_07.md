@@ -544,6 +544,27 @@ pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in t
       [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md) covers all 4
       AlertCodes + the 30s coalesce semantics + cross-refs to UAC + alerting-service + tests.
 
+### Phase 1.E — Venue / lending / market-data / gas / oracle kill-switch AlertCode extensions (2026-05-13, Slot 7)
+
+8 new alert codes for DeFi operational readiness (GAP between existing taxonomy + pre-cutover alerting surface).
+Rationale: `carry_staked_basis` + `arbitrage_price_dispersion` going live needs venue-halt, lending-pool, gas-economics,
+and oracle-safety signals in the closed set BEFORE Phase 7 quietness baseline runs.
+
+- [x] [SCRIPT] P0. **Add 8 AlertCode members to UAC `codes.py` + 8 AlertRule entries in `rules.py` + 6 threshold entries
+      in `thresholds.py`**. New codes: `VENUE_HALTED` (HIGH, PagerDuty+Telegram), `LENDING_POOL_PAUSED` (HIGH,
+      PagerDuty+Telegram), `LENDING_BORROW_CAP_REACHED` (WARN, Telegram-only — transient condition; pool may clear in one
+      block), `LENDING_UTILIZATION_HIGH` (WARN, threshold `lending_utilization_high_bps`=9000 bps_of_one — early warning
+      before Aave kink at 9500), `MARKET_DATA_STALE` (HIGH, threshold `market_data_stale_seconds`=300 — generic
+      consuming-service layer staleness complementing TICK_STALENESS which is MDPS-specific), `GAS_PRICE_SPIKE` (WARN,
+      threshold `gas_price_spike_gwei`=200), `GAS_BUDGET_EXCEEDED` (HIGH, threshold `gas_budget_exceeded_eth`=1),
+      `KILL_SWITCH_ORACLE_DIVERGENCE` (CRITICAL, GLOBAL scope, `triggers_kill_switch=True` — covers BOTH oracle price
+      deviation AND oracle data staleness; stale oracle and diverging oracle are equally unsafe). Shipped
+      UAC@086144e. AlertCode closed set: 61 → 69.
+- [x] [SCRIPT] P0. **12 new taxonomy tests** added to `test_alerting_taxonomy.py`: presence, routing, no-shadowing,
+      closed-set ratchet (≥64), kill-switch GLOBAL scope, threshold key linkage per code, unit assertions for
+      `oracle_staleness_seconds` + `lending_utilization_high_bps`, channel severity assertions for VENUE_HALTED (HIGH,
+      PagerDuty) and LENDING_BORROW_CAP_REACHED (WARN, no PagerDuty). Shipped UAC@086144e.
+
 ## Cross-plan blockers
 
 **Blocked by**: nothing upstream.
