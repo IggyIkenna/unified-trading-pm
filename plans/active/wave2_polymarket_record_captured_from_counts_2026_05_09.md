@@ -75,9 +75,11 @@ that named successor.
 
 ### Phase 2 — Deprecation banner on legacy `add()` (P0, ~0.5 AI-day)
 
-- [ ] [SCRIPT] P0. Add a deprecation `DeprecationWarning` to `ManifestWriter.add()` for any call where the data_type is
+- [x] [SCRIPT] P0. Add a deprecation `DeprecationWarning` to `ManifestWriter.add()` for any call where the data_type is
       in `BUNDLED_DATA_TYPES` — points at `record_captured_from_counts` as the replacement. Helper logs the call-site
-      file:line so callsite migration is mechanical. status: todo note: ""
+      file:line so callsite migration is mechanical. status: done (UTL@446d75ce — 13 unit tests at
+      `tests/unit/test_manifest_writer_add_deprecation_warning.py`: 4 bundled-type triggers, 7 non-bundled passes, 1
+      caller-info, 1 suppressible. Warning embeds caller file:line + data_type name + replacement guidance.)
 
 ### Phase 3 — MTDS callsite migration (P0, ~1-2 AI-days)
 
@@ -95,11 +97,14 @@ that named successor.
       empty. **TEMPORARY**: expected market_id set = observed until MARKET_LIFECYCLE wiring ships per
       `predictions_master_2026_05_07` Phase 1. status: done
 
-- [ ] [SCRIPT] P0. Migrate the CME-OPTIONS legacy callsite at
-      [`market_tick_data_service/engine/orchestrator.py:2295-2356`](../../../market-tick-data-service/market_tick_data_service/engine/orchestrator.py#L2295-L2356)
+- [x] [SCRIPT] P0. Migrate the CME-OPTIONS legacy callsite at
+      [`market_tick_data_service/engine/orchestrator.py`](../../../market-tick-data-service/market_tick_data_service/engine/orchestrator.py)
       from `check_cluster_coverage_from_counts → record_failed | add` to a single `record_captured_from_counts` call.
-      Same shape, cleaner SSOT. Tests already exist for the CME-OPTIONS branch; verify they still pass post-migration.
-      status: todo note: ""
+      Same shape, cleaner SSOT. status: done (MTDS@616ac15 — adds `_chain_available_at_max` accumulator +
+      `chain_available_at_envelope` property to `PartitionedTickWriter`; finalize loop uses
+      `record_captured_from_counts(pipeline_mode=BATCH_DATABENTO)` for CME-OPTIONS; also fixes `pipeline_mode=` missing
+      from prediction finalize-loop call. 6 new tests at `tests/unit/test_cme_options_chain_bundle_finalize.py` + 4
+      pre-existing test fixes in `test_polymarket_bundling_finalize.py`.)
 
 - [ ] [SCRIPT] P1. Audit the workspace for any other callsite that uses `ManifestWriter.add()` with a bundled data_type
       (`grep -rn "manifest.add\|writer.add\|writer_manifest.add" --include="*.py"` across MTDS / instruments-service /
@@ -159,14 +164,14 @@ Phases 1 + 3 first item shipped. Phases 2 + 3-rest + 4 + 5 deferred to follow-up
 sequence (`add()` deprecation banner is a post-Phase-3 sweep; CME-OPTIONS migration + workspace-wide audit + `add()`
 deletion + QG enforcement + codex docs all sequenced after the predictions-bundle path proves itself in production).
 
-| Item                                     | Status                                          | Commits                                               |
-| ---------------------------------------- | ----------------------------------------------- | ----------------------------------------------------- |
-| Phase 1 — UTL helper                     | `done`                                          | unified-trading-library@ef47c81b (helper + 11 tests)  |
-| Phase 2 — Deprecation banner on add()    | `todo` (DEFERRED-AFTER-Phase-3-rest)            | (not shipped this session)                            |
-| Phase 3 — MTDS prediction finalize       | `done` (1 of 3 todos)                           | market-tick-data-service@a2f8d80 (finalize + 5 tests) |
-| Phase 3 — CME-OPTIONS migration          | `todo` (post-cutover; existing precedent works) | (not shipped this session)                            |
-| Phase 3 — Workspace add() callsite audit | `todo` (post-cutover sweep)                     | (not shipped this session)                            |
-| Phase 4 — Legacy add() deletion          | `todo` (sequenced behind Phase 3 P1 audit)      | (not shipped this session)                            |
-| Phase 5 — Codex SSOT updates             | `todo` (sequenced behind Phase 4)               | (not shipped this session)                            |
+| Item                                     | Status                                     | Commits                                                  |
+| ---------------------------------------- | ------------------------------------------ | -------------------------------------------------------- |
+| Phase 1 — UTL helper                     | `done`                                     | unified-trading-library@ef47c81b (helper + 11 tests)     |
+| Phase 2 — Deprecation banner on add()    | `done` (2026-05-13 session)                | unified-trading-library@446d75ce (13 tests)              |
+| Phase 3 — MTDS prediction finalize       | `done` (1 of 3 todos)                      | market-tick-data-service@a2f8d80 (finalize + 5 tests)    |
+| Phase 3 — CME-OPTIONS migration          | `done` (2026-05-13 session)                | market-tick-data-service@616ac15 (6 new tests + 4 fixes) |
+| Phase 3 — Workspace add() callsite audit | `todo` (post-cutover sweep)                | (not shipped this session)                               |
+| Phase 4 — Legacy add() deletion          | `todo` (sequenced behind Phase 3 P1 audit) | (not shipped this session)                               |
+| Phase 5 — Codex SSOT updates             | `todo` (sequenced behind Phase 4)          | (not shipped this session)                               |
 
 Plan-flip commits: PM@8d44424a (Phase 1) + PM@75e768a6 (Phase 3 first item + predictions Q2 resolution).
