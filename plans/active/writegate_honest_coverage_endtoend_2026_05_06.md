@@ -3278,12 +3278,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 **Phase 6.3 — features-volatility (P0, ~3 days)**
 
 - [x] [features-volatility] P0. Wire `_check_emission_policy()` + `_apply_emission_gate()` in
-      `VolatilityFeatureWriter._write_features_impl()`. Fires after WriteGate, before `_upload_parquet`.
-      UAC seeds: `high_low_24h` (PARTIAL_OK) / `vol_30d` (NAN_FILL) / `realised_vol_intraday` (PARTIAL_OK).
-      BLOCK_CRITICAL suppression emits `EMISSION_POLICY_BLOCKED` event. 4 unit tests: STRICT_FAIL×2 +
-      PARTIAL_OK with NaN + NAN_FILL with NaN. (features-service@d7514a08 — _check_emission_policy +
-      _apply_emission_gate + _SERVICE_NAME constant + 4 unit tests in
-      tests/volatility/unit/test_emission_policy.py; QG pre-existing 12 failures all UAC slot-7
+      `VolatilityFeatureWriter._write_features_impl()`. Fires after WriteGate, before `_upload_parquet`. UAC seeds:
+      `high_low_24h` (PARTIAL_OK) / `vol_30d` (NAN_FILL) / `realised_vol_intraday` (PARTIAL_OK). BLOCK_CRITICAL
+      suppression emits `EMISSION_POLICY_BLOCKED` event. 4 unit tests: STRICT_FAIL×2 + PARTIAL_OK with NaN + NAN_FILL
+      with NaN. (features-service@d7514a08 — \_check_emission_policy + \_apply_emission_gate + \_SERVICE_NAME constant +
+      4 unit tests in tests/volatility/unit/test_emission_policy.py; QG pre-existing 12 failures all UAC slot-7
       normalize_aster_ticker dep-version mismatch, not regression; ruff clean; 2026-05-13)
 
 **Phase 6.4 — features-cross-instrument (P0, ~3 days)**
@@ -3326,11 +3325,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       market-mid time-series). **Seed shipped 2026-05-11 @uac@b570d49 — 6 polymarket entries**
       (polymarket_crowd_sentiment + polymarket_trade_flow + polymarket_whale_activity +
       polymarket_market_microstructure + polymarket_temporal_patterns NAN_FILL; polymarket_cross_market STRICT_FAIL for
-      canonical-question-group arb signals). **WIRED 2026-05-13 @features-service@74080406**:
-      polymarket groups handled by existing Phase 6.4 generic `_check_emission_policy()` in
-      `features_service/cross_instrument/cli/handlers/batch_handler.py`; 2 polymarket mode-routing
-      tests in `tests/cross_instrument/unit/test_emission_policy.py`
-      (polymarket_cross_market STRICT_FAIL x1, polymarket_crowd_sentiment NAN_FILL x1).
+      canonical-question-group arb signals). **WIRED 2026-05-13 @features-service@74080406**: polymarket groups handled
+      by existing Phase 6.4 generic `_check_emission_policy()` in
+      `features_service/cross_instrument/cli/handlers/batch_handler.py`; 2 polymarket mode-routing tests in
+      `tests/cross_instrument/unit/test_emission_policy.py` (polymarket_cross_market STRICT_FAIL x1,
+      polymarket_crowd_sentiment NAN_FILL x1).
 - [x] [features-cross-instrument + delta-one + multi-timeframe (microstructure scope)] P1. Audit + seed (book-imbalance,
       trade-flow toxicity, cross-TF alignment). **Seed shipped 2026-05-11 @uac@b570d49 — 30 entries**: cross-instrument
       (15 non-polymarket: regime_detection / cross_asset_correlation / cross_instrument_dynamics / realized_implied_vol
@@ -3390,8 +3389,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       training run does NOT publish a model_version artifact + fires a P0 alert. Operator must manually triage. The P0
       alert routes via alerting-service per CLAUDE.md alerting rules. Smoke test: synthetic missing-feature day in
       training window → no model_version published + alert fired + heartbeat continues.
-- [ ] [ml-inference] P0. Wire at the per-strategy-signal emission boundary: STRICT_FAIL policy means a stale-feature
+- [x] [ml-inference] P0. Wire at the per-strategy-signal emission boundary: STRICT_FAIL policy means a stale-feature
       window produces no signal + STALE_DATA event. Strategy sees no signal → defers entry per its own handling.
+      (ml-inference-service@9fb5d50 — `_check_emission_policy()` + `_filter_by_emission_policy()` + `_upload_one_mode()`
+      in `prediction_publisher.py`; 4 STRICT_FAIL tests in `tests/unit/test_emission_policy_per_strategy_signal.py`;
+      lint ✅ basedpyright 0 errors; test conftest blocked by UAC `normalize_aster_ticker` in-flight in another agent)
 
 **Phase 6.7 — strategy-service + execution-service + position-balance + risk (P0, ~5 days)**
 
@@ -3453,8 +3455,9 @@ migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wirin
       `record_captured()` callsite for a derived-output data_type ALSO has a paired `publish_with_policy()` /
       `publish_with_manifest_lookup()` call within the same function. Catches drift where a service-team adds a new
       derived output without wiring the emission policy. Closed-set check against UAC `SERVICE_OUTPUT_POLICIES`.
-      (e7767b1a — check_emission_policy_paired_callsites.py created; 0c79d747 — ruff E501 fixes; base-service.sh STEP 5.71
-      wired; baselines/emission_policy_paired_callsites_baseline.yaml seeded empty; features-service passes 0 violations)
+      (e7767b1a — check_emission_policy_paired_callsites.py created; 0c79d747 — ruff E501 fixes; base-service.sh STEP
+      5.71 wired; baselines/emission_policy_paired_callsites_baseline.yaml seeded empty; features-service passes 0
+      violations)
 - [ ] [PM] P0. Workspace-wide flip-plan-checkboxes sweep: confirm every Phase 6.1-6.8 service has ALL rows of its slice
       in `SERVICE_OUTPUT_POLICIES` + every emission boundary wires the helper + every per-service plan checkbox is
       flipped with commit-sha evidence. Final memory entry: slice-(c) shipping for the year-of-the-tiger archive.
