@@ -24,7 +24,7 @@ estimate_calibration_note: |
   Updated 2026-05-13 (slot 6 substantive touch).
 ---
 
-> **✅ Dry-run COMPLETE 2026-05-13 ~09:00 UTC.** **🟢 Apply-flips VMs RUNNING 2026-05-13 08:19 UTC** — 3 apply VMs in flight (cefi/defi/tradfi; sports+prediction out of scope this slot). VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-081{928,941,953}`. Launcher: deployment-service@1a714ec. Do NOT modify cefi/defi/tradfi manifest until VMs complete.
+> **✅ Dry-run COMPLETE 2026-05-13 ~09:00 UTC.** **🟢 Apply-flips VMs RUNNING 2026-05-13 08:27 UTC (run 2)** — Run 1 (08:19) failed rc=2 (`--apply` not recognized; fixed to `--unphantom` in deployment-service@574c168). VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`. Do NOT modify cefi/defi/tradfi manifest until VMs complete.
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -207,9 +207,10 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       section populated. Run 1 failed silently (python path doubled by setup-script substitution); fixed in
       deployment-service@2ca80d5. Run 2 (07:47 UTC) all completed ~09:00 UTC.
       Log root: `gs://deployment-scripts-central-element-323112/vm-logs/manifest-recon-{ag}-20260513-074{716,736}/run.log`
-- [ ] [SCRIPT] P1. Apply-flips: cefi/defi/tradfi Scripts 1+2 — **IN FLIGHT 2026-05-13 08:19 UTC**.
-      (deployment-service@1a714ec): 3 VMs running via `launch-manifest-recon-apply-vm.sh`.
-      VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-081{928,941,953}`.
+- [ ] [SCRIPT] P1. Apply-flips: cefi/defi/tradfi Scripts 1+2 — **IN FLIGHT 2026-05-13 08:27 UTC (run 2)**.
+      Run 1 (08:19) failed rc=2 — `--apply` not recognized; fixed to `--unphantom` (deployment-service@574c168).
+      (deployment-service@1a714ec+@574c168): 3 VMs running via `launch-manifest-recon-apply-vm.sh`.
+      VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`.
       Expected: cefi ~30-60 min (2,223 phantom flips + 3,146 null-reason stamps), defi/tradfi ~15-20 min.
       Post-completion: pull apply counts from vm-logs + flip this checkbox + add Gate 4 results section.
       Sports/prediction apply-flips deferred — needs separate authorized slot (99,620 sports phantoms).
