@@ -378,9 +378,8 @@ matrix green (✅ unit-level — 18 tests utl@d5161fd incl. per-archetype-regist
       `launch-disaster-drill-cron-vm.sh` + watchdog registration. Dry-run validated.)
 - [x] [AGENT] P0. **6.B Drill report.** Pass/fail per scenario; alerting rule on red >24h.
       (utl@19a90b4 `drill_report.py`: `write_drill_report` GCS parquet + `check_drill_staleness` >24h gate;
-      `CHAOS_DRILL_FAILED` event emitted on stale/fail. **DEFERRED P2**: `AlertCode.CHAOS_DRILL_FAILED`
-      must be added to UAC `unified_api_contracts.canonical.crosscutting.alerting.codes.AlertCode` — callers
-      use string `"CHAOS_DRILL_FAILED"` until then. UAC is not owned by this slot.)
+      `AlertCode.CHAOS_DRILL_FAILED` event emitted on stale/fail. UAC@c0ca20a `AlertCode.CHAOS_DRILL_FAILED`
+      added; e2e-testing@f78b78b caller updated to typed enum; utl@23f6045 docstring cleaned.)
 
 **Full-execution criterion**: cron VM RUNNING; first nightly drill emits a `disaster_drill_report.parquet`; alert rule
 registered.
@@ -452,11 +451,10 @@ entry.
 - [x] [AGENT] P0. **10.B Banners removed.** (PM plan — 3 stale cross-plan banners removed 2026-05-13:
       § 7 seam mandate + risk plan Phase 1 active + Phase 7.B lifecycle-tab coordination. All 3 banners'
       conditions satisfied — shipped.)
-- [ ] [AGENT] P2. **DEFERRED P2 — `AlertCode.CHAOS_DRILL_FAILED` to UAC.**
-      `unified_api_contracts.canonical.crosscutting.alerting.codes.AlertCode` must gain a
-      `CHAOS_DRILL_FAILED` member. Until then `run_chaos_drill.py` + `drill_report.py` callers use
-      the string `"CHAOS_DRILL_FAILED"` directly. UAC is not owned by this slot — operator to assign.
-      See also utl@19a90b4 docstring + plan deferred-items section.
+- [x] [AGENT] P2. **DEFERRED P2 — `AlertCode.CHAOS_DRILL_FAILED` to UAC — DONE.**
+      UAC@c0ca20a adds `CHAOS_DRILL_FAILED` to `AlertCode` StrEnum (DR drill section after
+      `KILL_SWITCH_MANUAL_UNKILLED`). e2e-testing@f78b78b `run_chaos_drill.py` imports and uses typed
+      enum. utl@23f6045 `drill_report.py` docstring cleaned (DEFERRED P2 note removed).
 
 **Full-execution criterion**: master plan rows green; banners gone.
 
@@ -592,12 +590,12 @@ placeholder "TBD" cross-reference).
 | Phase / item | Status as of 2026-05-13 | Successor / blocker |
 | --- | --- | --- |
 | Phase 6.A — chaos-drill cron launcher SCRIPT | ✅ SHIPPED deployment-service@347d9df, e2e-testing@2b0d05b | VM launch (operator trigger — needs tarball refresh first). |
-| Phase 6.B — drill report tooling + staleness alerting | ✅ SHIPPED utl@19a90b4 | DEFERRED P2: `AlertCode.CHAOS_DRILL_FAILED` UAC enum (UAC slot to pick up). |
+| Phase 6.B — drill report tooling + staleness alerting | ✅ SHIPPED utl@19a90b4 | DEFERRED P2 RESOLVED: UAC@c0ca20a `AlertCode.CHAOS_DRILL_FAILED` added; e2e-testing@f78b78b + utl@23f6045 updated. |
 | Phase 9.A — cutover drill VM launcher SCRIPT | ✅ SHIPPED deployment-service@347d9df, e2e-testing@2b0d05b | VM launch (operator trigger). |
 | Phase 9.B — evidence capture dataclasses | ✅ SHIPPED utl@19a90b4 | — |
 | Phase 10.A — master plan rows green | 🟡 BLOCKED G-14 | Pinged slot 1 main via `harsh_orchestrator/pings/slot_3.md`. |
 | Phase 10.B — stale banners removed | ✅ DONE | 3 banners removed (§7 seam + risk Phase 1 + Phase 7.B lifecycle). |
-| DEFERRED P2 — `AlertCode.CHAOS_DRILL_FAILED` to UAC | OPEN | Operator to assign to UAC-owning slot. |
+| DEFERRED P2 — `AlertCode.CHAOS_DRILL_FAILED` to UAC | ✅ DONE 2026-05-13 | UAC@c0ca20a + e2e-testing@f78b78b + utl@23f6045. |
 
 ## DONE block
 
