@@ -267,11 +267,11 @@ report. No QG gates for the doc-only changes (PM repo uses doc-fast-path to main
 ## Phase 5: Codex SSOT updates
 
 - [x] [DOC] P1. **Update `codex/09-strategy/architecture-v2/archetypes/` index** to reflect Drift as a Solana LST-margin
-      hedge venue for `carry_staked_basis`. (PM@this-commit) Added Jito+Marinade DRIFT slot examples to
+      hedge venue for `carry_staked_basis`. (PM@5ec8ff9d) Added Jito+Marinade DRIFT slot examples to
       `architecture-v2/README.md` naming convention examples. `carry-staked-basis.md` already had the full matrix.
 
 - [x] [DOC] P2. **Update `dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`** with Phase 2 completion status.
-      (PM@this-commit) Added "Phase 2 completion status" table: Lighter-Tardis ✅, market_stats mapping ✅, Drift adapter ✅,
+      (PM@5ec8ff9d) Added "Phase 2 completion status" table: Lighter-Tardis ✅, market_stats mapping ✅, Drift adapter ✅,
       Pacifica funding ✅, Kraken/BitFinex routing ✅, symbol normalisation ⏳ DEFERRED.
 
 **Phase 5 success criteria:** Codex docs pushed to PM `live-defi-rollout`. No broken cross-references.
