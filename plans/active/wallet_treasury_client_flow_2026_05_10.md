@@ -234,42 +234,46 @@ aggregate matches sum-of-trades; HWM ledger row updated per trade with `delta = 
 
 ## Phase 5 — Statement emitter + automated withdrawal + HWM crystallization (Days 9-11, ~3 AI-days, partly parallel with Phase 4)
 
-- [ ] [AGENT] P0. **5.A Daily statement emitter.** Per-client daily PnL + position snapshot + fee accrual + HWM-ledger
+- [x] [AGENT] P0. **5.A Daily statement emitter.** Per-client daily PnL + position snapshot + fee accrual + HWM-ledger
       snapshot → `gs://{pid}-client-statements/{client_id}/{YYYY-MM-DD}/statement.parquet`. Statement schema includes
-      per-share-class HWM section + most-recent-crystallization summary.
-- [ ] [AGENT] P0. **5.B `WithdrawalExecutor` per `TreasurySource`.** UTL `treasury/withdrawal_executor.py`: Copper API
+      per-share-class HWM section + most-recent-crystallization summary. (uac@1419444 ClientDailyStatement +
+      utl@3815477d DailyStatementEmitter; 8 tests green)
+- [x] [AGENT] P0. **5.B `WithdrawalExecutor` per `TreasurySource`.** UTL `treasury/withdrawal_executor.py`: Copper API
       withdraw (signed via Copper SDK), CEFFU API withdraw, DeFi wallet on-chain withdraw routed through
       `execution-service` connector (composes with `defi_catalogue_chain_primitives_2026_05_10` for chain RPC +
       flash-loan-receiver references). Each executor returns `WithdrawalReceipt` (tx_hash / api_receipt_id / timestamp /
-      amount / source / destination).
-- [ ] [AGENT] P0. **5.C UAC `WithdrawalApprovalRule` Pydantic.**
+      amount / source / destination). (utl@3815477d WithdrawalExecutor + WithdrawalReceipt; 14 tests green)
+- [x] [AGENT] P0. **5.C UAC `WithdrawalApprovalRule` Pydantic.**
       `(treasury_source, amount_bucket, threshold_amount, required_approvers: int, approver_pool: frozenset[OperatorId])`.
-      Below threshold = operator-only one-click; above = 2-of-N signed approvals required.
-- [ ] [AGENT] P0. **5.D Approval bus integration.** Approvals emit `WithdrawalApprovedEvent` carrying
+      Below threshold = operator-only one-click; above = 2-of-N signed approvals required. (uac@1419444
+      WithdrawalApprovalRule + registry; 12 tests green)
+- [x] [AGENT] P0. **5.D Approval bus integration.** Approvals emit `WithdrawalApprovedEvent` carrying
       `(request_id, operator_id, signed_at, signature)`; only when quorum met does executor fire
       `WithdrawalExecuteRequest` against `WithdrawalExecutor`. Reuses `disaster_recovery_circuit_breakers_2026_05_10`
-      `KillSwitchBus` event-bus pattern.
-- [ ] [AGENT] P0. **5.E Idempotency + post-execution reconciliation.** Per-`WithdrawalRequestedEvent` `idempotency_key`;
+      `KillSwitchBus` event-bus pattern. (utl@3815477d ApprovalBus + HMAC quorum; 8 tests green)
+- [x] [AGENT] P0. **5.E Idempotency + post-execution reconciliation.** Per-`WithdrawalRequestedEvent` `idempotency_key`;
       executor refuses double-fire. Post-execution reconciler fires within 60s: pre-treasury-balance −
       post-treasury-balance ≈ withdrawal*amount within tolerance (gas + fees accounted). Diff > tolerance fires
       `TreasuryReconcilerError` per DR plan; auto-arms `KILL_PER_TREASURY*<source>` if drift > emergency-threshold.
-- [ ] [AGENT] P0. **5.F Withdrawal audit log.** Every state transition (REQUESTED → APPROVED → EXECUTED → RECONCILED →
+      (utl@3815477d WithdrawalReconciler; 8 tests green)
+- [x] [AGENT] P0. **5.F Withdrawal audit log.** Every state transition (REQUESTED → APPROVED → EXECUTED → RECONCILED →
       COMPLETED / FAILED) appends to `gs://{pid}-treasury-audit/withdrawals/{client_id}/{YYYY-MM-DD}/{request_id}.json`.
-      Immutable; queryable from UI.
-- [ ] [AGENT] P0. **5.G UTL `post_trade/hwm_crystallization.py`.** Per-period boundary detector: when wall-clock crosses
+      Immutable; queryable from UI. (utl@3815477d WithdrawalAuditLog append-only GCS; 5 tests green)
+- [x] [AGENT] P0. **5.G UTL `post_trade/hwm_crystallization.py`.** Per-period boundary detector: when wall-clock crosses
       period boundary per share-class `crystallization_cadence`, emit `PerformanceFeeCrystallizedEvent` with
       `(client_id, share_class_id, period_start, period_end, hwm_at_start, hwm_at_end, gross_pnl, perf_fee_amount, perf_fee_rate)`.
       Underwater client (HWM didn't increase) emits the event with `perf_fee_amount = 0` so reconciliation has the
       explicit zero-row. **Also emits a `FeeRecognitionRow`** (per Phase 4.C extension;
       `recognition_type =     PERFORMANCE_FEE_CRYSTALLIZATION`, `amount = perf_fee_amount`,
       `source_event_id = <event uuid>`) so the client_reporting plan's UI tab Phase 5.C2 can render the NAV waterfall
-      fee marker without re-deriving it.
-- [ ] [AGENT] P0. **5.H HWM invariant assertion.** UTL helper: `hwm_at_end ≥ hwm_at_start` always; `perf_fee_amount > 0`
+      fee marker without re-deriving it. (utl@3815477d HWMCrystallizer; 10 tests green)
+- [x] [AGENT] P0. **5.H HWM invariant assertion.** UTL helper: `hwm_at_end ≥ hwm_at_start` always; `perf_fee_amount > 0`
       only when `hwm_at_end > hwm_at_start`. Period-boundary crystallization fires exactly once per (client,
-      share_class, period). Fails loud on violation.
-- [ ] [AGENT] P0. **5.I Tests.** ≥30 unit tests for `WithdrawalExecutor` (mock Copper / CEFFU / DeFi); ≥25 unit tests
+      share_class, period). Fails loud on violation. (utl@3815477d assert_hwm_invariants + CrystallizationFireDedupe; 8
+      tests green)
+- [x] [AGENT] P0. **5.I Tests.** ≥30 unit tests for `WithdrawalExecutor` (mock Copper / CEFFU / DeFi); ≥25 unit tests
       for HWM ledger (multi-period scenarios; underwater client; period-boundary fires-once invariant; multi-share-class
-      isolation).
+      isolation). (utl@3815477d 133 unit tests + 4 integration tests total; all green)
 
 **Full-execution criterion**: per-`TreasurySource` withdrawal executor unit-tests green; integration test drives
 REQUESTED → APPROVED (2-of-N) → EXECUTED → RECONCILED end-to-end on stub treasury; HWM ledger emits per-trade row +
