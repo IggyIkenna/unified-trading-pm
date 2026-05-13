@@ -20,8 +20,8 @@ locked_since: 2026-05-08
 | Slot | Theme | State | Plan-of-record | Branch |
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + on-call + LEDGER + ping triage | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
-| 2 | 🆕 Wave 3: launcher_scripts_consolidation finalisation (73% → 100%) | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 2" below | `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md` | `tab/hk/2` |
-| 3 | 🆕 Wave 3: execution-service C901 cleanup + deployment-service pytest-timeout fix | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 3" below | (multi-blocker — see brief) | `tab/hk/3` |
+| 2 | Wave 3 ✅ DONE (launcher_scripts 15/15 — deployment-api@538e11b + PM@724a2029); 🆕 Wave 4: `data_status_drilldown_shard_atom_alignment_2026_05_07.md` finalisation (61% → 100%, 16 open items) | 🟡 NEW (Wave 4) — see § "Wave 4 task briefs — Slot 2" below | `data_status_drilldown_shard_atom_alignment_2026_05_07.md` | `tab/hk/2` |
+| 3 | Wave 3 ✅ DONE (C901 cleanup 11→2 + 12→8 — execution-service@2dee623f); 🆕 Wave 4: PoolStateResult ImportError P1 fix (slot 3's own finding in execution-service/defi_execution/protocols/__init__.py:78) | 🟡 NEW (Wave 4) — see § "Wave 4 task briefs — Slot 3" below | `issues/pool_state_result_import_error_2026_05_13.md` | `tab/hk/3` |
 | 4 | **Resume agenda (held pending 17-test-failures question)**: (1) explain the 17 pre-existing test failures slot 4 saw — what command, what's the test list. (2) Pop stash@{0} `slot4-preserved-foreign-wip-service_entry` in `.tabs/4/strategy-service` — commit `service_entry.py --synthetic-input-uri` arg (Phase 3.D/4.A-tail of mock_data). (3) `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` to refresh VM tarballs (normal ops, not gated on operator). (4) Launch Script 3 DRY-RUN VM for defi/sports/prediction (read-only — emits triage.jsonl, doesn't mutate manifest); capture upgrade counts; update issue doc `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` + plan body with findings. NO apply-flips. | 🟪 ON HOLD per operator (resume to ship the agenda above) | `issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` + mock_data Phase 3.D/4.A-tail | `tab/hk/4` |
 | 5 | (cleanup done 2026-05-13 — local tab/hk/5 hard-reset to LDR; cc62f02 preserved on origin/tab/hk/5 as historical record) | 🟪 RESERVE (ready) | — | `tab/hk/5` |
 | 6 | 🆕 Wave 3: per_agent_worktrees finalisation + api_football flattening finalisation | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 6" below | `per_agent_worktrees_2026_05_10.md` + `api_football_minimal_flattening_removal_2026_05_07.md` | `tab/hk/6` |
@@ -207,6 +207,33 @@ Each row is a full task brief. After `--reset-slot N` (done 2026-05-13 09:35 UTC
 
 ### Slots 5, 8 — RESERVE (no assignment)
 Both cleaned + ready. Available for spillover absorption if any Wave 3 slot finishes early or operator picks a reserve-list item to assign.
+
+---
+
+## Wave 4 task briefs (post Wave 3 close-out — 2026-05-13 PM)
+
+Slots 2 and 3 both finished Wave 3 cleanly. Reassigning for Wave 4. Slot 4 stays ON HOLD (17-test-failures + bundled agenda). Slots 6/7/9 still IN-FLIGHT on their Wave 3 work (check their pings before assuming free).
+
+### Slot 2 — data_status_drilldown finalisation (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `deployment-api` + `unified-trading-system-ui` (deployment-ui) + per-asset_group services + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md`](../plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md) (currently 25/41 = 61%, 16 open)
+- **Task**: Ship the 16 open `- [ ]` items. Read the plan first, scan open todos, ship in plan order. Likely a mix of: shard-atom alignment verification across `(asset_group, venue, data_type, instrument_id, day)` for the 5 asset_groups, deployment-api `/api/manifest/drilldown` endpoint refinements, deployment-ui DataStatusPanel drilldown surface. Cross-cutting infra cleanup.
+- **Done-def**: 25/41 → 41/41; data-status drilldown surfaces per-shard-atom granularity correctly across all 5 asset_groups.
+- **Why this**: Cross-cutting umbrella; closes out a 61%-done plan that's been sitting; aligns with slot 2's deployment/ops context from Wave 3 work.
+
+### Slot 3 — PoolStateResult ImportError P1 fix (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `execution-service` (+ possibly UAC if the symbol moved there) + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/issues/pool_state_result_import_error_2026_05_13.md`](../plans/active/issues/pool_state_result_import_error_2026_05_13.md) (P1, slot 3's own Wave 3 finding)
+- **Task**:
+  1. **Diagnose**: Read `execution_service/defi_execution/protocols/__init__.py:78` (import site) + `execution_service/defi_execution/protocols/base.py` (claimed source). Has `PoolStateResult` been renamed? Removed? Moved to UAC? `git log -p` on `base.py` to find when the export disappeared. Likely root cause: foreign UAC refactor (`DeFiPoolStateResult as PoolStateResult` re-export was removed; multiple slots saw this dirty earlier today as "ruff drift" but it may have been intentional UAC consolidation).
+  2. **Fix**: Either restore the re-export at `base.py` (if `PoolStateResult` still exists upstream) OR update `__init__.py:78` to import from the new canonical path (probably `unified_api_contracts.internal.DeFiPoolStateResult`). Pick the canonical path per current UAC SSOT — read UAC `internal/__init__.py` `__all__` to verify.
+  3. **Verify**: `bash scripts/quality-gates.sh` in execution-service goes green; tests pass; downstream consumers (any code that imports `PoolStateResult` from `execution_service.defi_execution.protocols`) still work.
+  4. **Update issue doc**: mark RESOLVED with fix SHA + root cause documented.
+- **Done-def**: ImportError gone; execution-service QG green; downstream consumers verified; issue doc closed.
+- **Why this**: Slot 3's own finding from Wave 3 work; their context is fresh on execution-service; small targeted fix (~30-60 min). After this they stand by for the next assignment.
+- **GREP-THEN-READ**: read the actual `base.py` file contents + `__init__.py:78` line + UAC `internal/__init__.py` BEFORE deciding the fix path. Don't grep-then-conclude on naming.
 
 ---
 
