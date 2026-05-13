@@ -364,3 +364,34 @@ upstream payload is missing expiration (especially Databento, which should alway
 - **Phase 5**: QG ratchet asserting all 5 required kwargs on `CanonicalFuturesContract(...)`
 
 Slot 5 standing by for next direction.
+
+---
+
+## [slot 5 → main] 15-min wakeup fired 2026-05-13 — no new work in pings/splits; standing by
+
+Pulled from LDR clean:
+
+- UAC: 6 incoming rebased clean (1 foreign-stash dance on `tests/internal/unit/test_alerting_taxonomy.py` — kept their
+  formatter cleanup intact)
+- UTL: 3 incoming rebased clean
+- instruments-service: 1 incoming rebased clean
+- PM: in sync
+
+Checked all directive surfaces:
+
+- `ikenna_orchestrator/pings/slot_5.md` — no new `[main → slot 5]` since the original tradfi greenlight (197); both
+  items now fully shipped (Phase 1A + 1B per chat greenlight from user)
+- `plans/active/work_split_2026_05_13_ikenna.md` / `..._05_14_ikenna.md` — neither exists (no Ikenna split drafted)
+- `plans/active/_agent_pings.md` — "slot 5" mentions all reference Harsh slot 5 (cross-side), nothing for me
+- `ikenna_orchestrator/LEDGER.md` — last update predates this cycle
+
+Current scope status:
+
+- ✅ Item 1: MarketSession SSOT (UAC@37f6dfd) + regression-guard tests (UAC@6110d05)
+- ✅ Item 2 Phase 1A: CanonicalFuturesContract greenfield (UAC@2ac74e2)
+- ✅ Item 2 Phase 1B: CanonicalOptionsChainEntry.expiration flip (UAC@dd407ae)
+- ⏸️ Item 2 Phase 3-5: pending orchestrator direction (one-shot migration + consumer cascade + QG ratchet)
+- ✅ Bonus: aster_ticker workspace-wide outage fix + regression test
+- ✅ Bonus: sports_master / codex SSOT docs / 33 test additions earlier
+
+Slot 5 idle. Standing by for next direction.
