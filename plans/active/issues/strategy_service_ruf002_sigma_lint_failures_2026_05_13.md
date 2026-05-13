@@ -45,5 +45,12 @@ descriptions of the dynamic hedge ratio calculation.
 
 **Owner**: carry_and_yield workstream owner (Ikenna per workstream tie-breaker — cross-repo design scope).
 
-**Fix is trivial** (2-line docstring edit) but files are outside slot-4-harsh scope — filing per Findings
-Triage Discipline.
+**RESOLVED 2026-05-13 (slot-4-harsh)**: operator directed fix. Replaced σ → `sigma` in:
+- `strategy_service/engine/core/gcs_feature_provider.py` — C901 complexity also fixed by extracting
+  `_load_date_frames()` helper (complexity 8→6); shipped at strategy-service@88f77c0
+- `strategy_service/engine/strategies/v2/carry_and_yield/dynamic_hedge_ratio.py:21` — sigma fix
+- `tests/unit/engine/strategies/v2/test_dynamic_hedge_ratio.py:88` — sigma fix
+- Both sigma fixes at strategy-service@fe1e81d
+
+QG lint now ✅ clean (0 RUF002 errors). 17 pre-existing test failures remain (orphan factory entries,
+slot-label parser, coverage module) — outside slot-4 scope, filed separately.
