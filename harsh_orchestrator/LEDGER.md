@@ -20,14 +20,14 @@ locked_since: 2026-05-08
 | Slot | Theme | State | Plan-of-record | Branch |
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + on-call + LEDGER + ping triage | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
-| 2 | risk_simulations finalisation (82% → 100%; P0 items + P1 stablecoin) | ✅ DONE Wave 2 — **40/40 P0 closed**. D.4 depeg ladder backtest (risk-and-exposure@39c9e12) + Phase 4.A rule_evaluator wired + Phase 8.A/8.B/8.C synthetic-fire 32 tests (risk-and-exposure@dbd543c — main rescued via foot-gun #5) + Phase 9.A master plan row 20 update + 9.B banners cleared from alerting+DR plans (PM@8632ec00). Standing by for new assignment. | `risk_simulations_limits_alerting_2026_05_10.md` | `tab/hk/2` |
-| 3 | DR Phase 6+9+10 finalisation (AGENT items + SCRIPT prep only; NO VM launch) | ✅ DONE Wave 2 — DR Phase 6.A/B + 9.A/B + 10.B all shipped (utl@19a90b4 drill_evidence+drill_report, e2e-testing@2b0d05b run_chaos_drill+run_dr_drill_cutover, deployment-service@347d9df launchers+watchdog, PM@729185a9 banners). **Slot 3 also picked up DEFERRED P2 AlertCode.CHAOS_DRILL_FAILED** (UAC@c0ca20a + e2e-testing@f78b78b + UTL@23f6045 + PM@a05097a1). Only Phase 10.A (master plan rows) outstanding — that's slot 1 territory per G-14 (slot 3's plan mis-numbered as Group F item 20+21; actually item 22). Standing by. | `disaster_recovery_circuit_breakers_2026_05_10.md` | `tab/hk/3` |
-| 4 | 🐛 Script 3 classifier P1 fix (instruments-service ↔ UTL signature) + arbitrage_price_dispersion final 2 items | ✅ DONE Wave 2 — arbitrage 20/20 (strategy-service@33697ce + PM@56b83750); classifier kwarg RESOLVED-AS-STALE (slot 4 RCA: bug doesn't exist on current LDR, was stale VM tarballs pre-UTL@290a415; PM@a9a6b0d0 issue doc updated); **σ → sigma refactor shipped operator-approved** (strategy-service@fe1e81d) + complexity refactor shipped (strategy-service@88f77c0). ⚠️ Foreign WIP found stashed at stash@{0} in tab/hk/4 strategy-service: `cli/service_entry.py --synthetic-input-uri` (Phase 3.D/4.A-tail — slot 9's scope) — needs owner to pop+commit. Standing by. | `issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` + `arbitrage_price_dispersion_finalisation_2026_05_09.md` | `tab/hk/4` |
+| 2 | 🆕 Wave 3: launcher_scripts_consolidation finalisation (73% → 100%) | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 2" below | `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md` | `tab/hk/2` |
+| 3 | 🆕 Wave 3: execution-service C901 cleanup + deployment-service pytest-timeout fix | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 3" below | (multi-blocker — see brief) | `tab/hk/3` |
+| 4 | (UNASSIGNED — operator holding for the "17 pre-existing test failures" question; do NOT auto-assign) | 🟪 ON HOLD per operator | — | `tab/hk/4` |
 | 5 | (cleanup done 2026-05-13 — local tab/hk/5 hard-reset to LDR; cc62f02 preserved on origin/tab/hk/5 as historical record) | 🟪 RESERVE (ready) | — | `tab/hk/5` |
-| 6 | wave3x_residual_ssots finalisation (73% → 100%) | ✅ DONE Wave 2 — Track D DOCS codex stub shipped (PM@84e29700); scoreboard + DONE block (PM@580176e7); 4 deferred items documented with named owners. All work on LDR. | `wave3x_residual_ssots_2026_05_08.md` | `tab/hk/6` |
-| 7 | cross_asset Phase 5A/5B/5C TradFi ETF + futures-roots consolidation | ✅ DONE Wave 2 — Phase 5A/5B/5C VERIFIED already shipped by slot-2-Day-3 (2026-05-12); slot 7 audited membership/consumer-migration clean. Shipped: Phase 5E T-WTI added to TRADFI_ROOTS (UAC@4b97104) + Phase 7G VIX-15m doc-pointer fix (CLAUDE.md + codex). PM@f9f61000 plan annotations. | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 5 | `tab/hk/7` |
+| 6 | 🆕 Wave 3: per_agent_worktrees finalisation + api_football flattening finalisation | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 6" below | `per_agent_worktrees_2026_05_10.md` + `api_football_minimal_flattening_removal_2026_05_07.md` | `tab/hk/6` |
+| 7 | 🆕 Wave 3: cross_asset Phase 6 validation suite (1G + 6A/6B/6C/6D) — **Opus 4.7** | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 7" below | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6 | `tab/hk/7` |
 | 8 | (cleanup done 2026-05-13 — local tab/hk/8 hard-reset to LDR; 949185c preserved on origin/tab/hk/8 as historical record) | 🟪 RESERVE (ready) | — | `tab/hk/8` |
-| 9 | 🆕 mock_data Phase 3.D per-reader threading (MTDS Tardis/Databento + ml-inference + strategy) — taken over from slot 5 since slot 5 is held | ✅ DONE Wave 2 — MTDS reader wire-in (mtds@82639e0 TickDataHandler synthetic-override early-return) + Phase 3.D ALL 3 readers shipped (strategy@a03d12e + ml-inference@0206358 pre-existing + mtds@82639e0 this wave) + **Phase 8.A/8.B + Group F item 18 master plan extension** (PM@af452df1 — shipped AFTER its initial done-ack ping). PM@33a40116 plan flip. DEFERRED (operator-pending): subprocess harness real-VM run (needs operator OK per Ikenna's manifest VM hold) + slot-8 handshake items. ⚠️ MODEL MISMATCH: LEDGER declared Opus 4.7 but slot ran as Sonnet 4.6 — operator continued; work shipped clean. Standing by. | `mock_data_pipeline_benchmarking_2026_05_10.md` | `tab/hk/9` |
+| 9 | 🆕 Wave 3: Sports classifier extension P1 (audit re-open) + foreign-WIP pop (slot 4's stash@{0} = slot 9's Phase 3.D/4.A-tail scope) | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 9" below | `issues/sports_classifier_extension_followup_2026_05_13.md` + slot 4 stash@{0} | `tab/hk/9` |
 | 10 | dex_perp Phase 2A/2D/2E + 2F P2 + EigenLayer Phase 3A/3B + Phase 4A/4B + codex 5.1/5.2 | ✅ DONE 2026-05-13 — all in-scope shipped (MDPS@c30d8e0 cherry-picked by main to rescue foot-gun #5: MDPS 19-test fix had been left on tab/hk/10 only); worktree reset complete; 4 items DEFERRED with successor refs in plan body | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
@@ -143,6 +143,73 @@ Each row is a full task brief. After `--reset-slot N` (done 2026-05-13 09:35 UTC
 - **Done-def**: mock_data 19/29 → ~25/29; Phase 3.D `[x]` flipped with shipped SHAs; benchmark report includes all 6 pipeline stages with REAL timings (currently extrapolated for these 3).
 - **GREP-THEN-READ warning**: Slot 9 in Wave 1 had a grep-then-conclude failure on sports classifier. Don't repeat — open each reader's function body before declaring shape.
 - **Escalated to Opus 4.7** per Wave 1 audit recommendation.
+
+---
+
+## Wave 3 task briefs (post Wave 2 finalisation — 2026-05-13 PM)
+
+5 slots reassigned (2, 3, 6, 7, 9). Slot 4 deliberately UNASSIGNED — operator holding for the "17 pre-existing test failures" question. Slot 1 = main. Slots 5, 8 = RESERVE. Slot 10 = ✅ DONE.
+
+### Slot 2 — launcher_scripts_consolidation finalisation (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `deployment-service` + `deployment-api` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](../plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md) (currently 11/15 = 73%)
+- **Task**: Ship the 4 open `- [ ]` items. Read the plan, scan open todos, ship in order. Likely Phase 2 (deployment-api `_SERVICE_LAUNCHER_SCRIPTS` registry extension — register strategy-paper + strategy-live launchers so Deploy-Missing UI button surfaces them).
+- **Done-def**: 11/15 → 15/15; all launchers registered in deployment-api; Deploy-Missing UI surfaces strategy launchers.
+- **Why this**: Closes out an in-flight consolidation; unblocks the `1.Y DEFERRED-AFTER-CONSOLIDATION-PHASE2` carry-forward in promote_workflow plan (operators can deploy via UI instead of manually).
+
+### Slot 3 — execution-service C901 cleanup + deployment-service pytest-timeout fix (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `execution-service` + `deployment-service` + `unified-trading-pm`
+- **Plans-of-record**:
+  - [`plans/active/issues/strategy_service_ruf002_sigma_lint_failures_2026_05_13.md`](../plans/active/issues/) (RESOLVED — sigma done by slot 4)
+  - Pre-existing QG blockers flagged by slot 4 + slot 5 today: `execution-service/execution_service/providers/rpc_fallback.py:69` (`__init__` complexity 11) + `execution-service/execution_service/api/manual_instruction_api.py:190` (`submit_manual_instruction` complexity 12)
+  - `deployment-service` `.venv` missing `pytest-timeout` (slot 5 flagged today)
+- **Task**:
+  1. **C901 cleanup**: refactor each function below complexity 10. `rpc_fallback.py:69` — extract config/state-setup helper. `manual_instruction_api.py:190` — extract validation + persistence helpers. Tests + basedpyright + ruff green. FF-push.
+  2. **pytest-timeout**: add `pytest-timeout = "*"` to `deployment-service/pyproject.toml` `[project.dependencies]` (or appropriate group); `uv pip install -e .[dev]`; verify QG Pass 1 green. FF-push.
+  3. File a P3 ack ping with the SHAs.
+- **Done-def**: 2 C901 violations cleared (complexity < 10); pytest-timeout installed + QG green in deployment-service. Both slot 4 + slot 5 blockers unblocked.
+- **Why this**: Pre-existing QG blockers that block ANY service-touch in those files. Small mechanical refactors (~1-2h total).
+
+### Slot 6 — per_agent_worktrees + api_football finalisation (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `unified-trading-pm` + `instruments-service` + per relevant repos
+- **Plans-of-record** (2 quick-finishes):
+  - [`plans/active/per_agent_worktrees_2026_05_10.md`](../plans/active/per_agent_worktrees_2026_05_10.md) (27/30 = 90%, 3 open)
+  - [`plans/active/api_football_minimal_flattening_removal_2026_05_07.md`](../plans/active/api_football_minimal_flattening_removal_2026_05_07.md) (11/16 = 69%, 5 open)
+- **Task**: Ship remaining open items in each plan (do per_agent_worktrees first — codex/docs cleanup of the worktrees system; then api_football — sports adapter flattening removal).
+- **Done-def**: per_agent_worktrees 30/30; api_football 16/16.
+- **Why this**: Two near-done plans; closing them removes residual tracking load. Slot 6's Track D work already adjacent to these (codex + docs).
+
+### Slot 7 — cross_asset Phase 6 validation suite (**Opus 4.7 / thinking: high** ⬆)
+
+- **Owned repos**: `unified-api-contracts` + `instruments-service` + `market-tick-data-service` + `features-service` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/cross_asset_group_catalogue_audit_2026_05_10.md`](../plans/active/cross_asset_group_catalogue_audit_2026_05_10.md) Phase 6 (5 open P0 items)
+- **Task**: Natural continuation of slot 7's Phase 5 Wave 2 work. Ship Phase 6 validation suite:
+  1. **1G — UAC QG green** post-Phase-1.
+  2. **6A — workspace-grep audit** for every deletion / rename / dual-source consolidation Phase 5 made; verify NO downstream consumer reads from old name.
+  3. **6B — Per-asset-group coverage % validation** post-Phase-2: probe canonical manifest manually for 5 asset_groups.
+  4. **6C — End-to-end smoke** running `measure_honest_coverage.py` against production manifest.
+  5. **6D — All Phase 1-5 QGs green** across UAC + instruments-service + MTDS + features.
+- **Done-def**: 5 P0 items shipped with evidence; QGs green across 4 repos; coverage % numbers documented in plan body.
+- **Why Opus**: Multi-callsite workspace-grep audit + cross-repo QG. Audit recommended Opus for this shape.
+
+### Slot 9 — Sports classifier extension P1 (audit re-open) + foreign-WIP pop (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `unified-trading-library` + `instruments-service` + `strategy-service` (for stash) + `unified-trading-pm`
+- **Plans-of-record**:
+  - [`plans/active/issues/sports_classifier_extension_followup_2026_05_13.md`](../plans/active/issues/sports_classifier_extension_followup_2026_05_13.md) — Wave 1 audit re-open (slot 9's own grep-miss); P1
+  - Slot 4's stash@{0} in `.tabs/4/strategy-service` named `slot4-preserved-foreign-wip-service_entry` — `cli/service_entry.py` adds `--synthetic-input-uri` arg (Phase 3.D/4.A-tail = slot 9's mock_data scope)
+- **Task**:
+  1. **Pop stash + commit `service_entry.py --synthetic-input-uri`**: it's slot 9's scope per mock_data plan. From `.tabs/9/strategy-service`: `git stash list` won't show slot 4's stash (different worktree); fetch the diff from `.tabs/4/strategy-service` via `git -C .tabs/4/strategy-service stash show -p stash@{0} > /tmp/foreign-wip.patch && git apply /tmp/foreign-wip.patch` (or similar). Commit + FF-push. Then `git -C .tabs/4/strategy-service stash drop stash@{0}` to clean up.
+  2. **Sports classifier extension** per issue doc § "What needs to happen": read `_classify_sports:191` body BEFORE concluding (GREP-THEN-READ HARD RULE — slot 9's Wave 1 failure was exactly this). Implement 4 sports rules (EXPECTED_PAUSED_LEAGUE / EXPECTED_PRE_SEASON / EXPECTED_POST_SEASON / EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE) in priority order; query instruments-service sports SSOT for league calendars + source-coverage windows; ≥4 unit tests per rule (16 total).
+  3. Re-run Script 3 DRY-RUN for sports after classifier extension; verify non-zero upgrades. NO apply-flips.
+- **Done-def**: stash@{0} committed; 4 sports rules shipped in UTL with 16 tests green; Script 3 dry-run shows non-zero upgrades for sports.
+- **Why this**: Slot 9 is the natural owner — Wave 1 audit re-opened their scope; their context is fresh on UTL classifier. The `service_entry.py` arg is also their plan's Phase 4.A-tail.
+
+### Slots 5, 8 — RESERVE (no assignment)
+Both cleaned + ready. Available for spillover absorption if any Wave 3 slot finishes early or operator picks a reserve-list item to assign.
 
 ---
 
