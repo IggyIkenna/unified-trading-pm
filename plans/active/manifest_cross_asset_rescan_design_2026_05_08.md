@@ -24,7 +24,7 @@ estimate_calibration_note: |
   Updated 2026-05-13 (slot 6 substantive touch).
 ---
 
-> **✅ Dry-run COMPLETE 2026-05-13 ~09:00 UTC.** **🟢 Apply-flips VMs RUNNING 2026-05-13 08:27 UTC (run 2)** — Run 1 (08:19) failed rc=2 (`--apply` not recognized; fixed to `--unphantom` in deployment-service@574c168). VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`. Do NOT modify cefi/defi/tradfi manifest until VMs complete.
+> **✅ Dry-run COMPLETE.** **✅ defi/tradfi apply COMPLETE 2026-05-13 ~08:34 UTC.** **🟢 cefi apply VM RUNNING** — `manifest-recon-apply-cefi-20260513-082713` finishing Script 1 scan (~08:37), Script 2 (3,146 stamps) in progress. Do NOT modify cefi manifest until VM completes.
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -335,10 +335,28 @@ VM names: `manifest-recon-{defi,cefi,tradfi,sports,prediction}-20260513-074{716,
 
 | Gate | Condition | Status |
 | ---- | --------- | ------ |
-| Gate 1 | Slot 2 `expected_unattempted_propagation_chain` Phase 3+4+2.A complete | 🔴 NOT FIRED — waiting on slot 2 ping |
+| Gate 1 | Slot 2 `expected_unattempted_propagation_chain` Phase 3+4+2.A complete | ✅ FIRED 07:30 UTC (_agent_pings.md) |
 | Script 3 classifier | `classify_blank_reason_row()` `fixture_manifest` kwarg fix | 🔴 BLOCKED — issue filed P1 |
-| cefi Script 2 apply | 3,146 null-reason → `SOURCE_RETURNED_ZERO` stamp | 🟡 READY (no Gate 1 dependency for Script 2) |
-| phantom apply-flips | Scripts 1+3 `--apply-flips` per AG | 🔴 BLOCKED on Gate 1 + Script 3 fix |
+| cefi Script 2 apply | 3,146 null-reason → `SOURCE_RETURNED_ZERO` stamp | 🟢 IN FLIGHT (cefi VM running) |
+| defi/tradfi phantom apply | Scripts 1+2 `--unphantom`/`--apply-flips` | ✅ COMPLETE (08:34 UTC) |
+| cefi phantom apply | Script 1 `--unphantom` | 🟢 IN FLIGHT |
+| Script 3 apply-flips | defi/sports/prediction legacy-blank upgrades | 🔴 BLOCKED on classifier fix |
+
+## Phantom audit Gate 4 results — 2026-05-13 apply-flips (PARTIAL — cefi in flight)
+
+Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-{defi,tradfi}-20260513-082713`.
+
+### Script 1 — phantom rows flipped to `attempted_failed`
+
+| asset_group | Manifest rows uploaded | Phantoms flipped | Script 2 stamped | Notes |
+| ----------- | ---------------------: | ---------------: | ---------------: | ----- |
+| defi        | 1,606,190              | **1,298**        | 0                | All `rewards` — complete |
+| cefi        | —                      | —                | —                | IN FLIGHT |
+| tradfi      | 141,401                | **3,976**        | 0                | Trades+tbbo+ohlcv_1m — complete |
+| sports      | —                      | —                | —                | Deferred (out of slot scope) |
+| prediction  | —                      | —                | —                | Deferred (out of slot scope) |
+
+> cefi Script 1: scanning 129,220 prefixes (~08:37 UTC), Script 2: 3,146 null-reason rows to stamp. Results pending.
 
 ## Open questions
 
