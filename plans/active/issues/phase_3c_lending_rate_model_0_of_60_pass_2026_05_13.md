@@ -121,3 +121,29 @@ execution:
   verifier: pass-rate ≥ 90% within 10 bps on aave-lending-rate-validation VM results.json
   last_executed: 2026-05-13 (fix run 3: DC2E6F61-ACD0-453D-AC3D-7A88FEDADD33 — pending)
 ```
+
+---
+
+## Update 2026-05-13 18:30 UTC — re-run regression
+
+After applying live-IRM-fetch fix (`execution-service@abb526a98`), re-launched VM
+`aave-lending-rate-val-20260513-185210` (corr_id `DC2E6F61-...`). Result: **0 events collected** in 5.5 min scan of 1.78M
+blocks. Previous run @ `a3639fdd6` (no IRM fix) found 60 events in the SAME block range.
+
+The diff `a3639fdd6..abb526a98` shows NO modifications to `_collect_supply_events` itself — only additions for live IRM
+fetch (`_fetch_irm_params_live`, `_RESERVE_STRATEGY_ABI`, `_POOL_FULL_ABI`, `_IRM_STRATEGY_CACHE`) plus modifications to
+`_enrich_events_with_rates` and `_reconstruct_lending_market_state`. The collector code is byte-identical between the
+two commits per `git diff`.
+
+Yet the new run collected 0. Likely root cause: UAC rebase brought in 42 upstream commits including a conflict-resolved
+`service_emission_policy.py`; one of these may have altered an import side-effect that affects `web3.eth.get_logs`
+return shape or address checksum normalisation. OR the `_POOL_FULL_ABI` definition added at module level may interact
+with the pool contract dispatch somehow.
+
+**Next investigation step** (deferred to next slot 6 cycle): run harness LOCALLY on `tab/ikennaigboaka/6` with
+`WEB3_PROVIDER_URI` set; reproduce the 0-events behaviour offline; bisect the diff to identify which addition broke the
+collector. Or: add per-batch progress logging + log first 1 successful event's log fields verbatim to compare against
+the old run's output.
+
+Status: **STILL BLOCKED** — Phase 3C validation gate NOT met (now FROM A DIFFERENT angle: collector returns 0 events,
+not 60-with-wrong-model). Infrastructure remains green; both bugs to fix.
