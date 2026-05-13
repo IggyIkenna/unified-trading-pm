@@ -1,114 +1,356 @@
 {
   "folders": [
     {
-      "path": ".",
+      "path": "../../",
       "name": "📁 Workspace Root"
     },
     {
-      "path": "unified-trading-api"
+      "path": "../../unified-trading-api"
     },
     {
-      "path": "unified-trading-library"
+      "path": "../../unified-trading-library"
     },
     {
-      "path": "unified-trading-pm",
+      "path": "../../unified-trading-pm",
       "name": "📋 Project Management"
     },
     {
-      "path": "unified-trading-system-ui",
+      "path": "../../unified-trading-system-ui",
       "name": "🎨 UI"
     },
     {
-      "path": "batch-live-reconciliation-service"
+      "path": "../../batch-live-reconciliation-service"
     },
     {
-      "path": "client-reporting-api"
+      "path": "../../client-reporting-api"
     },
     {
-      "path": "deployment-api"
+      "path": "../../deployment-api"
     },
     {
-      "path": "deployment-service"
+      "path": "../../deployment-service"
     },
     {
-      "path": "deployment-ui"
+      "path": "../../deployment-ui"
     },
     {
-      "path": "execution-service"
+      "path": "../../execution-service"
     },
     {
-      "path": "alerting-service"
-    },    {
-      "path": "features-service"
+      "path": "../../alerting-service"
     },
     {
-      "path": "ibkr-gateway-infra"
+      "path": "../../features-service"
     },
     {
-      "path": "instruments-service"
+      "path": "../../ibkr-gateway-infra"
     },
     {
-      "path": "market-data-processing-service"
+      "path": "../../instruments-service"
     },
     {
-      "path": "market-tick-data-service"
+      "path": "../../market-data-processing-service"
     },
     {
-      "path": "ml-inference-service"
+      "path": "../../market-tick-data-service"
     },
     {
-      "path": "ml-training-service"
+      "path": "../../ml-inference-service"
     },
     {
-      "path": "pnl-attribution-service"
+      "path": "../../ml-training-service"
     },
     {
-      "path": "position-balance-monitor-service"
+      "path": "../../pnl-attribution-service"
     },
     {
-      "path": "risk-and-exposure-service"
+      "path": "../../position-balance-monitor-service"
     },
     {
-      "path": "strategy-service"
+      "path": "../../risk-and-exposure-service"
     },
     {
-      "path": "system-integration-tests"
+      "path": "../../strategy-service"
     },
     {
-      "path": "trading-agent-service"
+      "path": "../../system-integration-tests"
     },
     {
-      "path": "unified-api-contracts"
+      "path": "../../trading-agent-service"
     },
     {
-      "path": "e2e-testing",
+      "path": "../../unified-api-contracts"
+    },
+    {
+      "path": "../../e2e-testing",
       "name": "🧪 E2E Testing"
-    },
-    {
-      "path": "new-sports-batting-services"
     }
   ],
   "settings": {
     "terminal.integrated.env.osx": {
-      "UNIFIED_TRADING_WORKSPACE_ROOT": "${workspaceFolder}"
+      "UNIFIED_TRADING_WORKSPACE_ROOT": "/Users/ikennaigboaka/Code/unified-trading-system-repos"
     },
-    "scm.repositories.visible": 100,
-    "scm.alwaysShowRepositories": true,
-    "git.autoRepositoryDetection": "subFolders",
-    "git.maxRepositoryCount": 100,
-    "git.repositoryScanMaxDepth": 2,
-    "git.detectSubmodules": true,
-    "git.autofetch": true,
-    "git.autofetchPeriod": 180,
-    "git.autorefresh": true,
-    "git.fetchOnPull": true,
-    "git.pruneOnFetch": true,
-    "git.showProgress": true,
-    "python.defaultInterpreterPath": "/home/hk/unified-trading-system-repos/.venv-workspace/bin/python",
-    "python.venvPath": "/home/hk/unified-trading-system-repos",
+    "scm.repositories.visible": 10,
+    "scm.alwaysShowRepositories": false,
+    "git.autoRepositoryDetection": false,
+    "git.ignoredRepositories": [
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/alerting-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/batch-live-reconciliation-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/client-reporting-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/deployment-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/deployment-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/deployment-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/e2e-testing",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/execution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/features-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/fund-administration-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/ibkr-gateway-infra",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/instruments-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/market-data-processing-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/market-tick-data-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/ml-inference-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/ml-training-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/pnl-attribution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/position-balance-monitor-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/risk-and-exposure-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/strategy-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/system-integration-tests",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/trading-agent-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-api-contracts",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-library",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-system-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/alerting-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/batch-live-reconciliation-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/client-reporting-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/deployment-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/deployment-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/deployment-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/e2e-testing",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/execution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/features-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/fund-administration-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/ibkr-gateway-infra",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/instruments-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/market-data-processing-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/market-tick-data-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/ml-inference-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/ml-training-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/pnl-attribution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/position-balance-monitor-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/risk-and-exposure-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/strategy-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/system-integration-tests",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/trading-agent-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-api-contracts",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-library",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-system-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/alerting-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/batch-live-reconciliation-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/client-reporting-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/deployment-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/deployment-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/deployment-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/e2e-testing",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/execution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/features-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/fund-administration-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/ibkr-gateway-infra",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/instruments-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/market-data-processing-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/market-tick-data-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/ml-inference-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/ml-training-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/pnl-attribution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/position-balance-monitor-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/risk-and-exposure-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/strategy-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/system-integration-tests",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/trading-agent-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/unified-api-contracts",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/unified-trading-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/unified-trading-library",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/unified-trading-pm",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/unified-trading-system-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/alerting-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/batch-live-reconciliation-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/client-reporting-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/deployment-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/deployment-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/deployment-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/e2e-testing",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/execution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/features-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/fund-administration-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/ibkr-gateway-infra",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/instruments-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/market-data-processing-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/market-tick-data-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/ml-inference-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/ml-training-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/pnl-attribution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/position-balance-monitor-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/risk-and-exposure-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/strategy-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/system-integration-tests",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/trading-agent-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/unified-api-contracts",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/unified-trading-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/unified-trading-library",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/unified-trading-pm",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/unified-trading-system-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/alerting-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/batch-live-reconciliation-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/client-reporting-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/deployment-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/deployment-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/deployment-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/e2e-testing",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/execution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/features-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/fund-administration-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/ibkr-gateway-infra",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/instruments-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/market-data-processing-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/market-tick-data-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/ml-inference-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/ml-training-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/pnl-attribution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/position-balance-monitor-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/risk-and-exposure-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/strategy-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/system-integration-tests",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/trading-agent-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/unified-api-contracts",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/unified-trading-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/unified-trading-library",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/unified-trading-pm",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/unified-trading-system-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/alerting-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/batch-live-reconciliation-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/client-reporting-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/deployment-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/deployment-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/deployment-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/e2e-testing",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/execution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/features-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/fund-administration-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/ibkr-gateway-infra",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/instruments-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/market-data-processing-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/market-tick-data-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/ml-inference-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/ml-training-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/pnl-attribution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/position-balance-monitor-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/risk-and-exposure-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/strategy-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/system-integration-tests",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/trading-agent-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-api-contracts",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-trading-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-trading-library",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-trading-pm",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/unified-trading-system-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/alerting-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/batch-live-reconciliation-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/client-reporting-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/deployment-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/deployment-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/deployment-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/e2e-testing",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/execution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/features-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/fund-administration-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/ibkr-gateway-infra",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/instruments-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/market-data-processing-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/market-tick-data-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/ml-inference-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/ml-training-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/pnl-attribution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/position-balance-monitor-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/risk-and-exposure-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/strategy-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/system-integration-tests",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/trading-agent-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/unified-api-contracts",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/unified-trading-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/unified-trading-library",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/unified-trading-pm",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/unified-trading-system-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/alerting-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/batch-live-reconciliation-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/client-reporting-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/deployment-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/deployment-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/deployment-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/e2e-testing",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/execution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/features-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/fund-administration-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/ibkr-gateway-infra",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/instruments-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/market-data-processing-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/market-tick-data-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/ml-inference-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/ml-training-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/pnl-attribution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/position-balance-monitor-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/risk-and-exposure-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/strategy-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/system-integration-tests",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/trading-agent-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-api-contracts",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-library",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-system-ui"
+    ],
+    "git.scanRepositories": [
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-library",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-system-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/batch-live-reconciliation-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/client-reporting-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/deployment-api",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/deployment-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/deployment-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/execution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/alerting-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/features-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/ibkr-gateway-infra",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/instruments-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/market-data-processing-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/market-tick-data-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/ml-inference-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/ml-training-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/pnl-attribution-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/position-balance-monitor-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/risk-and-exposure-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/strategy-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/system-integration-tests",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/trading-agent-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-api-contracts",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/e2e-testing"
+    ],
+    "git.maxRepositoryCount": 30,
+    "git.repositoryScanMaxDepth": 0,
+    "git.detectSubmodules": false,
+    "git.autofetch": false,
+    "git.autorefresh": false,
+    "git.fetchOnPull": false,
+    "git.pruneOnFetch": false,
+    "git.showProgress": false,
+    "python.defaultInterpreterPath": "/Users/ikennaigboaka/Code/unified-trading-system-repos/.venv-workspace/bin/python",
+    "python.venvPath": "/Users/ikennaigboaka/Code/unified-trading-system-repos",
     "python.venvFolders": [".venv-workspace"],
     "python.terminal.activateEnvironment": true,
-    "python.envFile": "/home/hk/unified-trading-system-repos/.env",
     "python.languageServer": "None",
     "mypy-type-checker.enabled": false,
     "ms-python.black-formatter.enabled": false,
@@ -153,7 +395,7 @@
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
-    "ruff.path": "/home/hk/unified-trading-system-repos/.venv-workspace/bin/ruff",
+    "ruff.path": "/Users/ikennaigboaka/Code/unified-trading-system-repos/.venv-workspace/bin/ruff",
     "ruff.format.args": [
       "--line-length",
       "120"
@@ -168,6 +410,7 @@
       "**/.pixi": true,
       "**/.venv.backup": true,
       "**/.extra": true,
+      "**/.tabs": true,
       "**/uv.lock": false
     },
     "files.watcherExclude": {
@@ -191,7 +434,9 @@
       "**/.cache/**": true,
       "**/.nyc_output/**": true,
       "**/htmlcov/**": true,
-      "**/coverage/**": true
+      "**/coverage/**": true,
+      "**/.tabs/**": true,
+      "**/.git/worktrees/**": true
     },
     "search.exclude": {
       "**/__pycache__": true,
@@ -200,6 +445,7 @@
       "**/.venv": true,
       "**/.venv-workspace": true,
       "**/.extra": true,
+      "**/.tabs": true,
       "**/uv.lock": false
     },
     "editor.insertSpaces": true,

@@ -17,6 +17,7 @@ repos_touched:
   - market-tick-data-service # Phase 2 — MTDS adapter additions
   - features-service # Phase 3 — EigenLayer yield aggregation
   - unified-trading-pm # Phase 4 — archetype docs + codex
+  - instruments-service # Phase 6 — pre-flight registration for all new venues
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
@@ -65,24 +66,23 @@ NOTE: UAC `BITFINEX-FUTURES` (existing) vs `BITFINEX-DERIVATIVES` (new Tardis-sp
       date-threshold routing in `umi_tick_provider.py`.
 
 - [x] [UAC] P0. **Add `KRAKEN-FUTURES` Tardis capability.** (UAC@06f0567) Fixed `venue_start_dates` 2020-01-01 →
-      2019-03-30. Added `("KRAKEN-FUTURES", "PERPETUAL"): "cryptofacilities"` and `("KRAKEN-FUTURES", "FUTURE"):
-      "cryptofacilities"` to `venue_instrument_type_to_tardis`. Pre-existing `tardis_to_venue` entry
-      `"cryptofacilities": "KRAKEN-FUTURES"` was already correct.
+      2019-03-30. Added `("KRAKEN-FUTURES", "PERPETUAL"): "cryptofacilities"` and
+      `("KRAKEN-FUTURES", "FUTURE"):     "cryptofacilities"` to `venue_instrument_type_to_tardis`. Pre-existing
+      `tardis_to_venue` entry `"cryptofacilities": "KRAKEN-FUTURES"` was already correct.
 
 - [x] [UAC] P0. **Resolve BITFINEX-FUTURES vs BITFINEX-DERIVATIVES naming.** (UAC@06f0567) Decision: kept
       `BITFINEX-FUTURES` (downstream parquet paths under that name; rename = manifest migration). Fixed
-      `venue_start_dates` 2020-01-01 → 2019-12-01. Added `("BITFINEX-FUTURES", "PERPETUAL"):
-      "bitfinex-derivatives"` and `("BITFINEX-FUTURES", "FUTURE"): "bitfinex-derivatives"` to
-      `venue_instrument_type_to_tardis`. Pre-existing `tardis_to_venue` entry `"bitfinex-derivatives":
-      "BITFINEX-FUTURES"` was already correct.
+      `venue_start_dates` 2020-01-01 → 2019-12-01. Added `("BITFINEX-FUTURES", "PERPETUAL"):     "bitfinex-derivatives"`
+      and `("BITFINEX-FUTURES", "FUTURE"): "bitfinex-derivatives"` to `venue_instrument_type_to_tardis`. Pre-existing
+      `tardis_to_venue` entry `"bitfinex-derivatives":     "BITFINEX-FUTURES"` was already correct.
 
 - [x] [UAC] P0. **Add `DRIFT` routing entries.** (UAC@06f0567) Added `"DRIFT"` to `all_cefi_onchain_clob_venues`;
       `"DRIFT": "2022-01-01"` to `venue_start_dates` (S3 archive origin); `"DRIFT": "drift_api"` to
       `venue_to_data_provider`. Canonical venue string is `DRIFT` (matches `market_data_categories.py` line 200). Alias
       `DRIFT-SOLANA: 2022-11-04` kept for backwards compat.
 
-- [x] [UAC] P1. **Add `LST_MARGIN_VENUES` dict.** (UAC@06f0567) Shipped as module-level constant in `venue_mapping.py`
-      + exported from `registry/__init__.py` `__all__`. Values: `"BYBIT": ["stETH"]`, `"DERIBIT": ["stETH"]`,
+- [x] [UAC] P1. **Add `LST_MARGIN_VENUES` dict.** (UAC@06f0567) Shipped as module-level constant in `venue_mapping.py` +
+      exported from `registry/__init__.py` `__all__`. Values: `"BYBIT": ["stETH"]`, `"DERIBIT": ["stETH"]`,
       `"DRIFT": ["JitoSOL", "mSOL"]`. Gates Phase 4 collateral verification script.
 
 - [ ] [UAC] P2. **Add `is_rebasing` + `rebase_rate` to `lst_rates` schema.** In UAC `canonical/domain/defi/` or wherever
@@ -104,66 +104,56 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `tardis.download_batch` with exchange from `_VM.get_tardis_exchange_for_venue("LIGHTER-ZKSYNC")` =
       `"lighter-zksync"`; pre-2026-04-17 falls back to `_fetch_lighter_rest`.
 
-- [x] [SCRIPT] P0. **Add `market_stats` → `derivative_ticker` column mapping for Lighter-Tardis.** (MTDS@78bde77)
-      Added `_TARDIS_DATA_TYPE_RENAMES = {"market_stats": "derivative_ticker"}` class attr to `TardisAdapter` +
-      updated `_canonical_data_type` to check the dict. Fixed `df["data_type"]` assignment in `_write_symbol_batch`
-      to use `_canonical_data_type(data_type)` so parquet column value matches GCS path. Added
-      `derivative_ticker→market_stats` translation in LIGHTER-ZKSYNC routing block of `umi_tick_provider.py` so
-      callers use canonical data_type and the adapter remaps transparently.
+- [ ] [SCRIPT] P0. **Add `market_stats` → `derivative_ticker` column mapping for Lighter-Tardis.** Tardis `market_stats`
+      message type carries funding_rate, mark_price, index_price, open_interest. Map to canonical `derivative_ticker`
+      output columns. Add normalisation in the Tardis parsing layer or in the Lighter-specific post-processor. Follow
+      the EXTENDED-STARKNET pattern at line ~1026.
 
-- [x] [TEST] P1. **Unit tests: Lighter routing date-threshold.** (MTDS@7fcc8b7) 5 cases in
-      `test_umi_tick_provider_routes.py::TestLighterZksyncRouting`: ohlcv_1m→candles always; pre-threshold→REST;
-      post-threshold→Tardis; derivative_ticker→market_stats translation; mixed types partial translation.
+- [ ] [TEST] P1. **Unit tests: Lighter routing date-threshold.** Parametrize: date < 2026-04-17 → REST path; date >=
+      2026-04-17 → Tardis path. Mock Tardis client at fetch boundary. ≥4 test cases.
 
 ### 2B: Kraken Futures adapter via Tardis (PARALLEL with 2A/2C/2D/2E)
 
 - [x] [SCRIPT] P0. **`KRAKEN-FUTURES` Tardis routing.** (UAC@06f0567 + pre-existing routing) KRAKEN-FUTURES was already
-      in `_TARDIS_CEFI_VENUES` via `tardis_to_venue["cryptofacilities"] = "KRAKEN-FUTURES"`. `get_tardis_exchange_for_venue`
-      returns `"cryptofacilities"`. Generic Tardis block at umi_tick_provider.py:216 handles routing. No explicit branch
-      needed. UAC Phase 1 fixed `venue_start_dates` 2020-01-01 → 2019-03-30 and added PERPETUAL/FUTURE entries to
-      `venue_instrument_type_to_tardis`.
+      in `_TARDIS_CEFI_VENUES` via `tardis_to_venue["cryptofacilities"] = "KRAKEN-FUTURES"`.
+      `get_tardis_exchange_for_venue` returns `"cryptofacilities"`. Generic Tardis block at umi_tick_provider.py:216
+      handles routing. No explicit branch needed. UAC Phase 1 fixed `venue_start_dates` 2020-01-01 → 2019-03-30 and
+      added PERPETUAL/FUTURE entries to `venue_instrument_type_to_tardis`.
 
 - [ ] [SCRIPT] P1. **Kraken Futures symbol normalisation.** Strip `PF_` prefix (perps) and `FF_` prefix (dated), extract
       underlying coin (e.g. `PF_XBTUSD` → `BTC`). Dated futures include expiry in filename — preserve expiry suffix in
       instrument_id as `BTC-20251226`. Add UAC constant for Tardis→canonical symbol map. Emit
       `record_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` for symbols absent from instruments-service.
-      **DEFERRED**: Requires UAC + MTDS dual-repo changes + careful coordination re on-disk symbol column convention.
-      Multi-repo scope → Ikenna slot preferred. Successor: this plan Phase 2B (leave open; next Ikenna touch).
 
 - [ ] [TEST] P1. **Unit tests: Kraken Futures symbol normalisation.** Test perp + dated + unknown symbol edge cases. ≥6
-      cases. **DEFERRED**: Blocked by implementation above.
+      cases.
 
 ### 2C: BitFinex Derivatives adapter via Tardis (PARALLEL with 2A/2B/2D/2E)
 
 - [x] [SCRIPT] P0. **`BITFINEX-FUTURES` Tardis routing.** (UAC@06f0567 + pre-existing routing) BITFINEX-FUTURES was
-      already in `_TARDIS_CEFI_VENUES` via `tardis_to_venue["bitfinex-derivatives"] = "BITFINEX-FUTURES"`. Generic Tardis
-      block handles routing, returns `"bitfinex-derivatives"` exchange name. UAC Phase 1 fixed `venue_start_dates`
-      2020-01-01 → 2019-12-01 and added PERPETUAL/FUTURE entries to `venue_instrument_type_to_tardis`. Name kept as
-      BITFINEX-FUTURES (downstream parquet paths exist; renaming = manifest migration out of scope).
+      already in `_TARDIS_CEFI_VENUES` via `tardis_to_venue["bitfinex-derivatives"] = "BITFINEX-FUTURES"`. Generic
+      Tardis block handles routing, returns `"bitfinex-derivatives"` exchange name. UAC Phase 1 fixed
+      `venue_start_dates` 2020-01-01 → 2019-12-01 and added PERPETUAL/FUTURE entries to
+      `venue_instrument_type_to_tardis`. Name kept as BITFINEX-FUTURES (downstream parquet paths exist; renaming =
+      manifest migration out of scope).
 
 - [ ] [SCRIPT] P1. **BitFinex symbol normalisation.** Pattern `tXXXF0:USTF0` → extract `XXX` as coin. Handle edge cases:
       XBTF0 → BTC (BitFinex uses XBT not BTC). Add normalisation constant to UAC.
-      **DEFERRED**: Requires UAC + MTDS dual-repo changes + careful coordination re on-disk symbol column convention.
-      Multi-repo scope → Ikenna slot preferred. Successor: this plan Phase 2C (leave open; next Ikenna touch).
 
 ### 2D: Drift adapter — S3 archive + Data API (PARALLEL with 2A/2B/2C/2E)
 
-- [x] [SCRIPT] P0. **Write `drift_adapter.py` in MTDS adapters directory.** (MTDS@66fb712) 360-line adapter with
-      two-source routing: S3 archive URL pattern
-      `https://drift-historical-data-v2.s3.eu-west-1.amazonaws.com/program/.../market/{SYMBOL}-PERP/tradeRecords/{YYYY}/{YYYYMMDD}`;
-      Data API `GET https://data.api.drift.trade/trades?marketName={SYMBOL}-PERP` and
-      `/fundingRates?marketName={SYMBOL}-PERP`. `_DRIFT_API_START = "2025-01-01"` date boundary. Shard-level isolation
-      via `PerLeafFailureRouter`. Classify errors via `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED`.
-      Entry point: `async def fetch_drift_data(date, data_types, instrument_ids, writer, ...)`.
+- [x] [SCRIPT] P0. **Write `drift_adapter.py` in MTDS adapters directory.** (MTDS@66fb712) Two-source adapter shipped:
+      S3 archive (2022-01-01 → 2024-12-31, public HTTP ndjson) + Data API (2025-01-01+, cursor-walk /trades +
+      /fundingRates). Shard-level isolation: per-symbol exceptions caught + PerLeafFailureRouter.record() + loop
+      continues. Output: trades + derivative_ticker rows. Default markets: SOL/BTC/ETH + 7 alts.
 
 - [x] [SCRIPT] P0. **Wire `DRIFT` venue routing in `umi_tick_provider.py`.** (MTDS@66fb712) Added
-      `if venue_upper in ("DRIFT", "DRIFT-SOLANA"):` branch (lines 180-191) importing and calling `fetch_drift_data`
-      from `drift_adapter`. Date routing (< / >= 2025-01-01) handled inside the adapter itself.
+      `if venue_upper in ("DRIFT", "DRIFT-SOLANA"):` block with lazy import of `fetch_drift_data`. Date routing is
+      inside drift_adapter.py (date < 2025-01-01 → S3; date >= 2025-01-01 → Data API).
 
-- [x] [TEST] P1. **Unit tests for Drift adapter.** (MTDS@7fcc8b7) 8 cases in `test_drift_adapter.py`: _parse_trade_row
-      unix-seconds normalisation; ms-direct path; out-of-window→None; _parse_funding_row parse; S3 path for pre-2025;
-      S3 404→empty; Data API path for 2025+ with trades+derivative_ticker; shard isolation one-symbol-fails. Used
-      unittest.mock.patch on `_make_session` (no external library needed).
+- [ ] [TEST] P1. **Unit tests for Drift adapter.** Mock S3 HTTP + Data API responses. Test date-routing boundary,
+      funding rate parse, shard-level isolation (one failed instrument doesn't abort loop). ≥8 cases. Use `responses`
+      library for HTTP mocking (consistent with DeFi unit test pattern per CLAUDE.md).
 
 ### 2E: Pacifica funding rate addition (PARALLEL with 2A/2B/2C/2D)
 
@@ -174,10 +164,8 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `derivative_ticker` rows with `funding_rate` + `mark_price` columns. Pre-June 2025 dates skip funding fetch
       (orchestrator emits `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`).
 
-- [x] [TEST] P1. **Unit test: Pacifica funding rate fetch + pre-launch empty emit.** (MTDS@7fcc8b7) 4 cases in
-      `test_pacifica_candles.py`: normal fetch (date >= 2025-06-01 → /funding_rate/history called, 2 rows returned);
-      pre-launch (date < 2025-06-01 → endpoint NOT called); empty response → 0 rows; aiohttp error → caught,
-      no propagation (shard isolation).
+- [ ] [TEST] P1. **Unit test: Pacifica funding rate fetch + pre-launch empty emit.** ≥4 cases: normal fetch, empty
+      response, pre-launch date, API error (→ record_failed not record_empty).
 
 ### 2F: Extended backfill planning
 
@@ -186,10 +174,9 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       backfill: API serves historical from 2024-07-26. Funding backfill: only from 2025-08-01 (already captured).
       Pre-2025-08-01 funding dates: emit `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`.
 
-- [x] [SCRIPT] P2. **API probe: confirm Drift trades rolling window depth.** One-shot script (not a continuous job) to
+- [ ] [SCRIPT] P2. **API probe: confirm Drift trades rolling window depth.** One-shot script (not a continuous job) to
       probe `data.api.drift.trade/trades` for oldest available date. If rolling window < full 2025-01-01 coverage,
       document gap range + emit `record_empty(EXPECTED_KNOWN_SOURCE_GAP)` for affected dates.
-      (MTDS@21ccab6 — `scripts/probe_drift_trades_window.py`; binary search + gap-range output + EXPECTED_KNOWN_SOURCE_GAP guidance)
 
 **Phase 2 success criteria:** `basedpyright` + `ruff` + MTDS unit tests green. Each new venue routing has ≥4 passing
 unit tests. Shard-level isolation confirmed: single venue error does not propagate.
@@ -204,20 +191,21 @@ unit tests. Shard-level isolation confirmed: single venue error does not propaga
 > `eigen_reward_apy`. Check if protocol-level aggregation (sum across all earners / divide by total restaked ETH) is
 > already present before implementing.
 
-- [x] [DESIGN] P0. **Audit `eigen_rewards_calculator.py` for protocol-level aggregation.** (features-service@6e7409be)
-      Audit complete: (a) ✅ `df["amount_usd"].sum()` aggregates all earner amounts; (b) ✅ `eigenlayer_tvl_usd` in
-      parquet IS `total_restaked_ETH_USD` — sourced via `userUnderlying()` at MTDS write time (no live RPC needed at
-      calculator time; adding one would be architecturally wrong); (c) ❌ `restaking_yield_rate` column was missing
-      (only `eigen_reward_apy` existed). → 3B implemented.
+- [ ] [DESIGN] P0. **Audit `eigen_rewards_calculator.py` for protocol-level aggregation.** Read the full calculator
+      implementation. Verify: (a) does it sum all earner amounts per distribution period? (b) does it fetch
+      `total_restaked_ETH` via `userUnderlying()` on EigenLayer strategy contract? (c) does it compute
+      `restaking_yield_rate = EIGEN_distributed_USD / total_restaked_ETH_USD` annualised? If all three present → mark
+      this phase done with evidence. If any missing → implement in 3B.
 
-- [x] [SCRIPT] P1. **Add protocol-level yield aggregation if missing (3B).** (features-service@6e7409be)
-      Added `eigen_restaking_yield_rate = (daily_rewards_usd / tvl_usd) * 365` (decimal rate, not percentage) to
-      `_calculate_from_mtds()` and to `feature_names` for MTDS path. Uses existing `eigenlayer_tvl_usd` from parquet
-      (= total_restaked_ETH_USD). No `userUnderlying()` RPC needed: data is already in MTDS parquet from collection time.
+- [ ] [SCRIPT] P1. **Add protocol-level yield aggregation if missing (3B).** In `eigen_rewards_calculator.py`: aggregate
+      per-earner EIGEN amounts to protocol total per distribution period. Add `userUnderlying()` RPC call to EigenLayer
+      strategy contract (use Alchemy/RPC URL from UAC `CHAIN_RPC_TEMPLATES`). Compute
+      `restaking_yield_rate = (EIGEN_distributed_USD / total_restaked_ETH_USD) * 365` as annualised rate. Emit as new
+      feature column `eigen_restaking_yield_rate`. Follow existing `OnChainCalculator` pattern. **DEFERRED if Phase 3A
+      audit finds all three already implemented.**
 
-- [x] [TEST] P1. **Unit test: protocol-level aggregation math.** (features-service@6e7409be) 4 cases added to
-      `tests/onchain/unit/test_eigen_rewards_calculator.py`: yield_rate = apy/100 arithmetic check; zero-TVL guard;
-      feature_names includes it for MTDS path only; output column present and positive for non-zero inputs.
+- [ ] [TEST] P1. **Unit test: protocol-level aggregation math.** Mock RPC + MTDS parquet. Assert `restaking_yield_rate`
+      = expected value given fixture data. ≥4 cases including zero-TVL guard.
 
 **Phase 3 success criteria:** `basedpyright` + `ruff` + features-service unit tests green. `eigen_restaking_yield_rate`
 feature available to downstream strategy-service consumers.
@@ -228,20 +216,20 @@ feature available to downstream strategy-service consumers.
 
 ### 4A: Archetype doc update (PARALLEL with 4B)
 
-- [x] [DOC] P1. **Update `carry-staked-basis.md` archetype doc.** (PM@e502de33) Matrix table already had DRIFT/JitoSOL+mSOL,
-      Deribit/stETH, Bybit/stETH+METH. Updated OKX row to explicitly label "pending live API verification, not yet confirmed"
-      (was "haircut TBD per Stream A live probe" — same meaning, now explicit). Binance row already correct
-      (BTC/ETH/BNB/etc. only, no LST margin). Codex doc reflects current state.
+- [ ] [DOC] P1. **Update `carry-staked-basis.md` archetype doc.** In
+      `unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`: add Drift/JitoSOL+mSOL as
+      Solana-native hedge leg option (alongside existing Bybit/Deribit stETH entries). LST-margin venue summary: Bybit
+      (stETH UTA), Deribit (stETH), Drift (JitoSOL+mSOL). Mark OKX as "pending live API verification" (not confirmed).
+      Mark Binance as "no LST margin — USDC/BTC/ETH only".
 
 ### 4B: stETH collateral live verification script (PARALLEL with 4A)
 
-- [x] [SCRIPT] P2. **Write `verify_lst_collateral_support.py`.** (MTDS@176e72e) Shipped under
-      `market-tick-data-service/scripts/verify_lst_collateral_support.py`. Probes: (1) Deribit
-      `/api/v2/public/get_currencies` — `cross_collateral_enabled` for STETH; (2) Bybit
-      `/v5/asset/coin/query-info` — `collateralSwitch`/`isMarginCoin` for STETH+METH; (3) OKX
-      `/api/v5/public/currencies` — WSTETH listed (collateral discount-rate needs auth); (4) Binance
-      `/papi/v1/margin/allCrossMarginPairs`. Output: CONFIRMED/REJECTED/NEEDS_AUTH_TO_VERIFY/ERROR per token.
-      No auth required for discovery phase.
+- [ ] [SCRIPT] P2. **Write `verify_lst_collateral_support.py`.** One-shot diagnostic (not a continuous job). Place under
+      `market-tick-data-service/scripts/verify_lst_collateral_support.py`. Queries: (1) Deribit
+      `/api/v2/public/get_currencies` — check `cross_collateral_enabled` for STETH; (2) Bybit
+      `/v5/account/collateral-info` — check STETH marginable status; (3) OKX portfolio margin collateral list endpoint;
+      (4) Binance multi-assets mode collateral list. Output: structured report (venue / token / confirmed / needs-auth /
+      API endpoint / timestamp). Execution owner: one-shot operator tab. No VM launcher needed.
 
       ```yaml
       execution:
@@ -267,13 +255,12 @@ report. No QG gates for the doc-only changes (PM repo uses doc-fast-path to main
 
 ## Phase 5: Codex SSOT updates
 
-- [x] [DOC] P1. **Update `codex/09-strategy/architecture-v2/archetypes/` index** to reflect Drift as a Solana LST-margin
-      hedge venue for `carry_staked_basis`. (PM@5ec8ff9d) Added Jito+Marinade DRIFT slot examples to
-      `architecture-v2/README.md` naming convention examples. `carry-staked-basis.md` already had the full matrix.
+- [ ] [DOC] P1. **Update `codex/09-strategy/architecture-v2/archetypes/` index** to reflect Drift as a Solana LST-margin
+      hedge venue for `carry_staked_basis`. Cross-reference venue collateral SSOT (`venue_collateral.py` already has
+      DRIFT rows).
 
-- [x] [DOC] P2. **Update `dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`** with Phase 2 completion status.
-      (PM@5ec8ff9d) Added "Phase 2 completion status" table: Lighter-Tardis ✅, market_stats mapping ✅, Drift adapter ✅,
-      Pacifica funding ✅, Kraken/BitFinex routing ✅, symbol normalisation ⏳ DEFERRED.
+- [ ] [DOC] P2. **Update `dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`** with Phase 2 completion status: Tardis
+      routing live for Lighter + Kraken Futures + BitFinex; Drift adapter shipped.
 
 **Phase 5 success criteria:** Codex docs pushed to PM `live-defi-rollout`. No broken cross-references.
 
@@ -290,7 +277,8 @@ Phase 2C (BitFinex-Tardis) ─┤
 Phase 2D (Drift adapter)   ─┤
 Phase 2E (Pacifica funding) ┘
 Phase 2F (Extended backfill VM) — PARALLEL with 2A-2E
-    ↓ (all Phase 2 complete)
+Phase 6 (instruments-service registration) — PARALLEL with Phase 2 (independent)
+    ↓ (all Phase 2 + 6 complete)
 Phase 3 (EigenLayer agg)
 Phase 4A + 4B + 4C (archetype docs + verification script) — PARALLEL with Phase 3
     ↓
@@ -299,27 +287,48 @@ Phase 5 (Codex updates) — SERIAL close-out
 
 ---
 
-## Deferred work after 2026-05-13 slot-10 Day-4 session
+---
 
-| Phase / item | Status as of 2026-05-13 | Successor / blocker |
-|---|---|---|
-| Phase 2A — LIGHTER-ZKSYNC routing + derivative_ticker mapping | ✅ DONE | MTDS@c936451 + MTDS@78bde77 |
-| Phase 2D — DRIFT adapter (S3 archive + Data API date-routing) | ✅ DONE | MTDS@66fb712 |
-| Phase 2E — DRIFT venue routing in umi_tick_provider.py | ✅ DONE | MTDS@66fb712 |
-| Phase 2F P1 — Extended OHLCV backfill VM launcher (2024-07-26→2025-07-31) | ⏳ NOT STARTED | Needs deployment-service VM launcher + singleton-lock + watchdog registration |
-| Phase 2F P2 — Drift trades rolling window probe script | ✅ DONE | MTDS@21ccab6 |
-| Phase 2B — Kraken Futures symbol normalisation | ⏳ DEFERRED | Requires UAC + MTDS dual-repo — Ikenna slot preferred |
-| Phase 2C — BitFinex-Derivatives symbol normalisation | ⏳ DEFERRED | Requires UAC + MTDS dual-repo — Ikenna slot preferred |
-| Phase 3A — EigenLayer protocol-level aggregation audit | ✅ DONE | evidence (a)✅ (b)✅-via-parquet (c)❌-missing (RPC-at-calc-time wrong arch) |
-| Phase 3B — eigen_restaking_yield_rate feature + 4 unit tests | ✅ DONE | features-service@93ca6219 |
-| Phase 4A — carry-staked-basis.md OKX row → "pending live API verification" | ✅ DONE | PM@e502de33 |
-| Phase 4B — verify_lst_collateral_support.py diagnostic script | ✅ DONE | MTDS@176e72e |
-| Phase 4C — Uniswap V3 Graph Studio research | ⏳ NICE-TO-HAVE P3 | Not blocking. Successor: uniswap_v3_tick_subgraph_<date>.md after Dune validation |
-| Phase 5.1 — README.md Drift/JitoSOL+mSOL slot naming examples | ✅ DONE | PM@5ec8ff9d |
-| Phase 5.2 — HANDOVER.md Phase 2 completion status table | ✅ DONE | PM@5ec8ff9d |
-| Phase 1 UAC P2 — is_rebasing + rebase_rate to lst_rates schema | ⏳ DEFERRED | UAC multi-repo change — Ikenna slot preferred |
+## Phase 6: instruments-service pre-flight registration (PARALLEL — independent of Phase 3-5)
 
-**Key blocker for Phase 2F P1**: VM launcher under `deployment-service/scripts/vm/` requires singleton-lock pattern, `vm_zombie_watchdog.py` registration, and tarball refresh — multi-repo scope makes it Ikenna-tier.
+> **Context (2026-05-12 session):** User surfaced that instruments-service and MTDS must both support all new venues for
+> manifest pre-flight checks to work. Drift is already fully registered (`drift.py` + factory + `_SOLANA_DEFI_VENUES`).
+> KRAKEN-FUTURES + BITFINEX-FUTURES were in `factory.py` but missing from `_CEFI_VENUES`. LIGHTER-ZKSYNC /
+> PACIFICA-SOLANA / EXTENDED-STARKNET had zero instruments-service presence.
+
+- [x] [SCRIPT] P0. **Add KRAKEN-FUTURES + BITFINEX-FUTURES to `_CEFI_VENUES`.** In
+      `instruments_service/engine/orchestrator.py:828-846`: append `"KRAKEN-FUTURES"` and `"BITFINEX-FUTURES"` to the
+      list. Factory entries `"KRAKEN-FUTURES": "tardis"` / `"BITFINEX-FUTURES": "tardis"` already existed. Without this
+      fix the orchestrator never generates expected instrument lists for these venues → manifest pre-flight skips them
+      silently. (instruments-service committed below)
+
+- [x] [SCRIPT] P0. **Write `lighter.py` reference data adapter.** In
+      `instruments_service/reference_data/adapters/defi/lighter.py`: `LighterReferenceDataAdapter` fetches
+      `GET /orderBookDetails` from `mainnet.zklighter.elliot.ai/api/v1`, filters `market_type=perp`, returns
+      `InstrumentRecord` list with `available_from_datetime=2024-08-01`. Fallback on network error returns empty list +
+      logs `ADAPTER_FETCH_FAILED`. (instruments-service committed below)
+
+- [x] [SCRIPT] P0. **Write `pacifica.py` reference data adapter.** In
+      `instruments_service/reference_data/adapters/defi/pacifica.py`: `PacificaReferenceDataAdapter` returns curated
+      top-10-coin list (mirrors MTDS `_PACIFICA_TOP_COINS`) as `InstrumentRecord` with
+      `available_from_datetime=2025-06-01`. No live API call — Pacifica has no public markets discovery endpoint (to be
+      upgraded when one is exposed). (committed below)
+
+- [x] [SCRIPT] P0. **Write `extended.py` reference data adapter.** In
+      `instruments_service/reference_data/adapters/defi/extended.py`: `ExtendedReferenceDataAdapter` fetches
+      `GET /info/markets` from `api.starknet.extended.exchange/api/v1`, filters `active=True AND status=ACTIVE`, returns
+      `InstrumentRecord` list with `available_from_datetime=2024-07-26`. Falls back to hardcoded 5-symbol list on
+      network error. (committed below)
+
+- [x] [SCRIPT] P0. **Register new adapters in factory.py + orchestrator.** In `factory.py`: import
+      `LighterReferenceDataAdapter` / `PacificaReferenceDataAdapter` / `ExtendedReferenceDataAdapter` + add to
+      `CANONICAL_VENUE_TO_ADAPTER` + `_ADAPTERS`. In orchestrator: add `PACIFICA-SOLANA` to `_SOLANA_DEFI_VENUES`; add
+      new `_L2_DEX_PERP_VENUES = ["LIGHTER-ZKSYNC", "EXTENDED-STARKNET"]` extended from `_build_defi_venues()`; add
+      `LIGHTER/PACIFICA/EXTENDED` epochs to `_VENUE_ADAPTER_EPOCH`. (committed below)
+
+**Phase 6 success criteria:** `basedpyright` + `ruff` + instruments-service QG green. All 5 new venues appear in
+`_DEFI_VENUES` or `_CEFI_VENUES`. Factory returns the correct adapter class for each venue. Orchestrator generates
+instrument pre-flight lists for LIGHTER-ZKSYNC, PACIFICA-SOLANA, EXTENDED-STARKNET, KRAKEN-FUTURES, BITFINEX-FUTURES.
 
 ---
 

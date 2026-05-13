@@ -336,11 +336,13 @@ Code commits:
   shipped checkboxes in this plan body with commit-sha + brief evidence; marks the 2 Phase 3 smoke-test items as
   `**DEFERRED**` with a hand-back note for operator-driven live-API + EPL forward-poll verification.
 
-Open items handed to operator:
+Open items (executable — credentials available via act-secrets):
 
-- Phase 3.B + 3.C (live-API smoke + EPL one-day forward-poll) — require API-Football credentials + recovery-mode VM
-  invocation + UI render verification. Local agent integration smoke verified the chain.from_iterable + normalizer
-  composition shape end-to-end on synthetic 2-team fixture (2 stat rows / 3 event rows / 29 lineup rows / 1 injury row).
+- Phase 3.B + 3.C (live-API smoke + EPL one-day forward-poll) — **READY TO RUN** (2026-05-13). API-Football credentials
+  available via act-secrets. Tasks: (1) invoke recovery-mode VM with live credentials, (2) run forward-poll for one
+  recent EPL day, (3) verify UI Schema modal shows ~18 columns (not 2), (4) spot-check a features-sports calculator
+  read. Local agent integration smoke already verified chain.from_iterable + normalizer composition end-to-end on
+  synthetic 2-team fixture (2 stat rows / 3 event rows / 29 lineup rows / 1 injury row).
 - Phase 4 (optional historical reprocessor) — left at `- [ ]` per plan default recommendation. Re-evaluate if
   features-sports calculators become critically blocked on historical thin rows; today's per-calculator NaN gate + UTL
   `assert_available_at_present` already absorbs the gap.
