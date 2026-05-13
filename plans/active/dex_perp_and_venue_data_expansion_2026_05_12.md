@@ -111,8 +111,9 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `derivative_ticker→market_stats` translation in LIGHTER-ZKSYNC routing block of `umi_tick_provider.py` so
       callers use canonical data_type and the adapter remaps transparently.
 
-- [ ] [TEST] P1. **Unit tests: Lighter routing date-threshold.** Parametrize: date < 2026-04-17 → REST path; date >=
-      2026-04-17 → Tardis path. Mock Tardis client at fetch boundary. ≥4 test cases.
+- [x] [TEST] P1. **Unit tests: Lighter routing date-threshold.** (MTDS@7fcc8b7) 5 cases in
+      `test_umi_tick_provider_routes.py::TestLighterZksyncRouting`: ohlcv_1m→candles always; pre-threshold→REST;
+      post-threshold→Tardis; derivative_ticker→market_stats translation; mixed types partial translation.
 
 ### 2B: Kraken Futures adapter via Tardis (PARALLEL with 2A/2C/2D/2E)
 
@@ -155,9 +156,10 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `if venue_upper in ("DRIFT", "DRIFT-SOLANA"):` branch (lines 180-191) importing and calling `fetch_drift_data`
       from `drift_adapter`. Date routing (< / >= 2025-01-01) handled inside the adapter itself.
 
-- [ ] [TEST] P1. **Unit tests for Drift adapter.** Mock S3 HTTP + Data API responses. Test date-routing boundary,
-      funding rate parse, shard-level isolation (one failed instrument doesn't abort loop). ≥8 cases. Use `responses`
-      library for HTTP mocking (consistent with DeFi unit test pattern per CLAUDE.md).
+- [x] [TEST] P1. **Unit tests for Drift adapter.** (MTDS@7fcc8b7) 8 cases in `test_drift_adapter.py`: _parse_trade_row
+      unix-seconds normalisation; ms-direct path; out-of-window→None; _parse_funding_row parse; S3 path for pre-2025;
+      S3 404→empty; Data API path for 2025+ with trades+derivative_ticker; shard isolation one-symbol-fails. Used
+      unittest.mock.patch on `_make_session` (no external library needed).
 
 ### 2E: Pacifica funding rate addition (PARALLEL with 2A/2B/2C/2D)
 
@@ -168,8 +170,10 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `derivative_ticker` rows with `funding_rate` + `mark_price` columns. Pre-June 2025 dates skip funding fetch
       (orchestrator emits `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`).
 
-- [ ] [TEST] P1. **Unit test: Pacifica funding rate fetch + pre-launch empty emit.** ≥4 cases: normal fetch, empty
-      response, pre-launch date, API error (→ record_failed not record_empty).
+- [x] [TEST] P1. **Unit test: Pacifica funding rate fetch + pre-launch empty emit.** (MTDS@7fcc8b7) 4 cases in
+      `test_pacifica_candles.py`: normal fetch (date >= 2025-06-01 → /funding_rate/history called, 2 rows returned);
+      pre-launch (date < 2025-06-01 → endpoint NOT called); empty response → 0 rows; aiohttp error → caught,
+      no propagation (shard isolation).
 
 ### 2F: Extended backfill planning
 
