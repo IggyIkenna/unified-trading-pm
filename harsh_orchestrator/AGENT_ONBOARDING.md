@@ -68,6 +68,30 @@ LEDGER + AGENT_ONBOARDING WIP — that drove it). Per-slot worktrees eliminate t
 gone, centralizing every push through the operator just adds latency for no safety gain, so we're back to the standard
 conditional-push model.
 
+### LDR alignment cadence (HARD RULE — codified 2026-05-13 after repeated foot-gun #5)
+
+**Three checkpoints, all required:**
+
+1. **Boot — rebase every owned repo onto LDR.** Not just PM; for every repo in your work-split § "Slot N" "Repos owned":
+   ```bash
+   cd "${WORKSPACE_ROOT}/.tabs/<N>/<repo>" && git fetch origin --quiet && git rebase origin/live-defi-rollout
+   ```
+   Stale base → outdated assumptions + messy merges later.
+
+2. **During work — FF-push per shippable unit, NOT end-of-session.** After every `git commit` on `tab/hk/<N>`, immediately push to LDR (conditional rebase first if behind). Do NOT batch 5-10 commits "to push at the end" — that IS foot-gun #5.
+
+3. **Pre-shutdown — verify your work is on LDR.** Before ending your session for ANY reason (idle / lunch / context-window / operator-close), in each owned repo:
+   ```bash
+   git rev-list --count HEAD ^origin/live-defi-rollout    # must be 0
+   ```
+   Non-zero → push remaining commits per (2) before closing.
+
+**Why this matters**: operator + Ikenna run 5-10 parallel slots per side. Agents pick up work / unblock based on LDR state. If you ship 3 plans in your first 2 hours but they sit on `tab/hk/<N>` only, every slot blocked on that work waits 2 hours unnecessarily. Worse: plan-flips `[x]` claim work is shipped while LDR lacks it — readers see "shipped" and find nothing, treating the flip as a false claim. Reference: 2026-05-13 slot 4 had to be rescued by main cherry-picking Phase 8A-D off `tab/hk/4` after slot self-ack'd DONE with the work invisible to LDR (execution-service@38b3e8a5).
+
+### Workspace-wide drift recognition (codified 2026-05-13)
+
+If you find 10+ dirty files at boot that look like ruff format / unused-imports cleanup (function signature wrapping, import reorders, tuple multi-line formatting), and the same pattern is dirty in other slots' worktrees (`git -C ${WORKSPACE_ROOT}/.tabs/<other-N>/<same-repo> status`), it's **workspace-wide foreign drift** — NOT yours, NOT real WIP. Discard with `git checkout -- .` per repo. Don't try to commit/integrate it. (2026-05-13: slot 3 had 23 such files in UAC, slot 6 had 30 in UTL, slot 7 had 26 in UTL — all the same diff, all discardable.)
+
 ## Your role in 3 sentences
 
 You are **slot N**, a scoped implementer spawned by Harsh's main orchestrator agent (slot 1, a separate Claude Code
