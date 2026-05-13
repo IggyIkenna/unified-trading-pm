@@ -267,3 +267,68 @@ Residual 5th bug (before_state at wrong block) documented above for next cycle.
 **Infrastructure status**: ✅ OPERATIONALLY GREEN — VM lifecycle, event stream, GCS persistence, dual-branch deploys
 all working. The data flowing is REAL. V2 ABI + per-asset cache key are confirmed correct.
 Remaining issue: harness before-state reads event_block instead of event_block-1.
+
+---
+
+## Update 2026-05-13 21:05 UTC — v4 run (V2 strategy ABI + per-asset cache fix)
+
+VM `aave-lending-rate-val-20260513-205909` (corr_id `51A5DE7C-BFA5-4147-BC81-A97247443A9E`). Fix
+`execution-service@0ff6615cb` shipped V2 strategy ABI (`getInterestRateData(asset)` returning 4×uint256 RAY) +
+per-asset cache key (was global → cache pollution).
+
+**Result**: 33/60 = **55% pass rate** (huge improvement from 0/60, but not at 90% threshold).
+
+Per-asset breakdown:
+
+| Asset | Pass rate | Notes |
+|-------|-----------|-------|
+| USDC | 22/26 = **85%** | Almost at 90% threshold; 4 outliers > 50bps |
+| USDT | 11/20 = 55% | Mixed pattern; some events match well, some > 70bps off |
+| DAI | 0/14 = 0% | All fail with same delta ~213bps (sim ~1.35% vs realized ~3.48%) |
+
+Tolerance histogram:
+
+| Bucket | Events |
+|--------|--------|
+| 0-2 bps | 12 |
+| 2-5 bps | 15 |
+| 5-10 bps | 6 |
+| 10-50 bps | 6 |
+| > 50 bps | 21 |
+
+33 events PASS within 10 bps ✅. 27 events fail (>10 bps).
+
+## Cumulative status board (4 runs)
+
+| Run | VM | Collector | IRM source | Pass rate | Notes |
+|-----|----|-----------|-----------|-----------|-------|
+| v1 | `...173601` | ✅ 60 | static stale | 0/60 (0%) | Static governance drift |
+| v2 | `...185210` | ❌ 0 | n/a | n/a | 3 collector bugs |
+| v3 | `...192426` | ✅ 60 | static (V1 ABI reverted) | 0/60 (0%) | Aave V3.1+ ABI mismatch |
+| v4 | `...205909` | ✅ 60 | live V2 strategy ABI | **33/60 (55%)** | Per-asset cache fix; **USDC 85%**, USDT 55%, DAI 0% |
+
+## Next-cycle fixes (operator hard-stop applied; defer to next slot 6 cycle)
+
+1. **DAI 0/14 root-cause** (P0): DAI shows same 200+ bps stale pattern as v1, suggesting cache fix didn't actually
+   reach the DAI path. Verify DAI fetches via the V2 strategy correctly — maybe DAI uses a different strategy address
+   AND that strategy's `getInterestRateData(asset)` returns different field order. Or DAI's strategy may need yet
+   another ABI variant.
+
+2. **Pre-trade block off-by-one** (P0, **5th bug, 1-line fix**): harness reads pool state at `event_block` (post-supply)
+   instead of `event_block - 1` (pre-supply). Verified via USDT event 1: sim computes U=66.5% / supply=2.81% but
+   correct U=74.3% / 3.51%. Change `cache_key_before = (asset, block)` → `(asset, block - 1)` + same for aToken
+   totalSupply fetch. Expected to lift USDT 55% → ~90%+ and tighten USDC 85% → 90%+.
+
+3. **Per-event IRM param logging** (P1): add INFO-level log of fetched live params per event so future failures are
+   easier to triage without SSH-ing into the VM.
+
+Estimated next-cycle effort: 0.5 cal AI-day (focused investigation + 2 small code fixes + re-run).
+
+## Status declaration 2026-05-13 EOD
+
+- **Phase 3C INFRASTRUCTURE**: ✅ OPERATIONALLY GREEN (4 VM runs confirm: tarball pipeline, event stream,
+  results.json persistence, dual-branch deploys all working).
+- **Phase 3C VALIDATION GATE**: 🟡 **PARTIAL** — 55% pass rate vs 90% target. Two concrete next-cycle fixes filed
+  above to close the remaining 35 pp gap.
+- **Cumulative work**: 5 bug fixes shipped across `execution-service` + 1 P1 issue with full diagnostic state for the
+  next cycle.
