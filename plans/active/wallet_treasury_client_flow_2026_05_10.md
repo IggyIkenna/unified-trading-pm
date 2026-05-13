@@ -282,7 +282,7 @@ emitted daily including HWM section.
 
 ## Phase 6 — deployment-api + ui Treasury tab (Days 10-11, ~1 AI-day)
 
-- [ ] [AGENT] P0. **6.A `/api/clients/{id}/treasury` endpoint — CONSUMER ROLE (ratified 2026-05-10 cross-plan audit Q7
+- [x] [AGENT] P0. **6.A `/api/clients/{id}/treasury` endpoint — CONSUMER ROLE (ratified 2026-05-10 cross-plan audit Q7
       per most-comprehensive-owner rule).** Per-client attribution view. Consumes the canonical multi-source rollup
       shipped by
       [`api_keys_wallets_accounts_readiness_2026_05_10.md`](api_keys_wallets_accounts_readiness_2026_05_10.md) Phase 3.D
@@ -292,7 +292,9 @@ emitted daily including HWM section.
       Phase 3. NAV reconciliation invariant:
       `Σ over all clients of /api/clients/{id}/treasury.nav == /api/treasury/rollup.nav` — tested in Phase 6.D
       Playwright smoke + an additional cross-endpoint reconciliation test.
-- [ ] [AGENT] P0. **6.B `/api/clients/{id}/subscriptions` endpoint.** Per-client share-class subscription list.
+      (deployment-api@b1aa800 — client_treasury.py; UAC schemas@66f1c1f; 15 tests pass incl 3 cross-endpoint reconciliation)
+- [x] [AGENT] P0. **6.B `/api/clients/{id}/subscriptions` endpoint.** Per-client share-class subscription list.
+      (deployment-api@b1aa800 — client_treasury.py; 6 subscription list tests pass; ClientSubscriptionListResponse with active_count + total_active_allocation_pct)
 - [ ] [AGENT] P0. **6.C deployment-ui Treasury tab.** Per-client view: subscriptions + allocations + custody pings +
       post-trade history + withdrawal request button.
 - [ ] [AGENT] P0. **6.D Playwright smoke.**
