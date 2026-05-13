@@ -506,4 +506,24 @@ the 2026-05-07 → 2026-05-09 QG-failure-on-others'-code window per CLAUDE.md.
 - 1 intra-repo move (`deployment-service/scripts/deploy-dashboard-gce-vm.sh` → `scripts/vm/launch-dashboard-vm.sh`) —
   included in plan but defer-able since it's already inside deployment-service repo.
 - Callsite-update sweep (Makefiles / READMEs / dev-tier scripts) — every moved launcher has a deprecation banner; old
+
+## DONE-2026-05-13 — Slot 2 Wave 3 cycle (Phase 2 shipped, plan closed 15/15)
+
+**Phase 2** shipped by slot-2-launcher-consolidation Wave 3:
+
+- `strategy-paper` + `strategy-live` launchers registered in `_SERVICE_LAUNCHER_SCRIPTS` in `deploy_missing.py`.
+- All 3 registry unit tests green (`test_vm_script_dir_exists` / `test_every_registered_launcher_exists_on_disk` /
+  `test_registered_paths_are_under_canonical_vm_dir`).
+- Phase 2 item 2 (unit test) was pre-existing (deployment-api@14b9ddd) — plan flip was missed; corrected.
+- Phase 3 items (P1, DEFERRED-AFTER-AWS-PHASE-1) — marked deferred-done with seed documentation pointer; active work
+  deferred to `aws_migration_defi_first_2026_05_07.md`.
+- promote_workflow plan sub-todo 1.Y (DEFERRED-AFTER-CONSOLIDATION-PHASE2) flipped ✓.
+
+**Code commits**:
+
+- deployment-api@538e11b — strategy-paper + strategy-live added to `_SERVICE_LAUNCHER_SCRIPTS`
+- PM@724a2029 — Phase 2 checkboxes flipped + Phase 3 deferred annotations + promote Phase 1.Y flip
+
+**Plan closeout**: 15/15 checkboxes done. Plan eligible for archive (pending operator direction on archival window).
+Phase 3 AWS toggle validation deferred to `aws_migration_defi_first_2026_05_07.md` Phase N.
   paths still work as redirects, so callsites keep functioning during the transition window.
