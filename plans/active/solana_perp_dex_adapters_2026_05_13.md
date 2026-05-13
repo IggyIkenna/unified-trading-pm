@@ -73,44 +73,52 @@ deferred MTDS work below).
 
 ### Phase 1 — UAC registry additions (SERIAL — prerequisite for adapters)
 
-- [ ] P0. [CODE] Add MANGO V4, ZETA, FLASH entries to `SOLANA_DEFI_PROTOCOLS` dict in
-      `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py`.
-- [ ] P0. [CODE] Add MANGO-SOLANA, ZETA-SOLANA, FLASH-SOLANA floor dates to `SOLANA_PROTOCOL_DEPLOY_DATES` in
+- [x] P0. [CODE] Add MANGO V4, ZETA, FLASH entries to `SOLANA_DEFI_PROTOCOLS` dict in
+      `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py`. (UAC@5c83b64 —
+      3 new protocol entries: mango/zeta/flash_trade)
+- [x] P0. [CODE] Add MANGO-SOLANA, ZETA-SOLANA, FLASH-SOLANA floor dates to `SOLANA_PROTOCOL_DEPLOY_DATES` in
       `instruments-service/instruments_service/reference_data/adapters/defi/_solana_utils.py`.
+      (instruments-service@5624624 — deploy dates: mango=2023-08-01, zeta=2022-04-01, flash_trade=2023-11-01)
 
 Success gate: `basedpyright unified_api_contracts/` clean.
 
 ### Phase 2 — MANGO V4 perps adapter (PARALLEL with phases 3, 4)
 
-- [ ] P0. [CODE] Create `instruments-service/instruments_service/reference_data/adapters/defi/mango.py` — MANGO V4
-      perpetual market discovery via `https://api.mngo.cloud/data/v4/markets/perp`.
-- [ ] P0. [CODE] Register MANGO-SOLANA in factory (`factory.py`: import + `CANONICAL_VENUE_TO_ADAPTER` + `_ADAPTERS` +
-      `ADAPTER_DATA_SOURCES`).
-- [ ] P0. [TEST] ≥10 tests in `tests/unit/reference_data/adapters/defi/test_mango_metadata.py` — adapter init, REST
-      fetch happy path, rate limit, error classification, manifest write.
-- [ ] P0. [QG] `basedpyright instruments_service/reference_data/adapters/defi/mango.py` clean.
+- [x] P0. [CODE] Create `instruments-service/instruments_service/reference_data/adapters/defi/mango.py` — MANGO V4
+      perpetual market discovery via `https://api.mngo.cloud/data/v4/markets/perp`. (instruments-service@5624624)
+- [x] P0. [CODE] Register MANGO-SOLANA in factory (`factory.py`: import + `CANONICAL_VENUE_TO_ADAPTER` + `_ADAPTERS` +
+      `ADAPTER_DATA_SOURCES`). (instruments-service@5624624)
+- [x] P0. [TEST] ≥10 tests in `tests/unit/reference_data/adapters/defi/test_mango_metadata.py` — adapter init, REST
+      fetch happy path, rate limit, error classification, manifest write. (14 tests shipped;
+      instruments-service@5624624)
+- [x] P0. [QG] `basedpyright instruments_service/reference_data/adapters/defi/mango.py` clean.
+      (instruments-service@5624624 — ruff + basedpyright clean)
 
 ### Phase 3 — ZETA perps adapter (PARALLEL with phases 2, 4)
 
-- [ ] P0. [CODE] Create `instruments-service/instruments_service/reference_data/adapters/defi/zeta.py` — Zeta Markets
-      perp discovery via `https://dex.zeta.markets/api/markets`.
-- [ ] P0. [CODE] Register ZETA-SOLANA in factory.
-- [ ] P0. [TEST] ≥8 tests in `tests/unit/reference_data/adapters/defi/test_zeta_metadata.py`.
-- [ ] P0. [QG] basedpyright clean.
+- [x] P0. [CODE] Create `instruments-service/instruments_service/reference_data/adapters/defi/zeta.py` — Zeta Markets
+      perp discovery via `https://dex.zeta.markets/api/markets`. (instruments-service@5624624)
+- [x] P0. [CODE] Register ZETA-SOLANA in factory. (instruments-service@5624624)
+- [x] P0. [TEST] ≥8 tests in `tests/unit/reference_data/adapters/defi/test_zeta_metadata.py`.
+      (instruments-service@5624624 — 10 tests)
+- [x] P0. [QG] basedpyright clean. (instruments-service@5624624)
 
 ### Phase 4 — FLASH perps adapter (PARALLEL with phases 2, 3)
 
-- [ ] P0. [CODE] Create `instruments-service/instruments_service/reference_data/adapters/defi/flash_trade.py` — Flash
-      Trade perp discovery via `https://api.flash.trade/api/v1/markets`.
-- [ ] P0. [CODE] Register FLASH-SOLANA in factory.
-- [ ] P0. [TEST] ≥8 tests in `tests/unit/reference_data/adapters/defi/test_flash_trade_metadata.py`.
-- [ ] P0. [QG] basedpyright clean.
+- [x] P0. [CODE] Create `instruments-service/instruments_service/reference_data/adapters/defi/flash_trade.py` — Flash
+      Trade perp discovery via `https://api.flash.trade/api/v1/markets`. (instruments-service@5624624)
+- [x] P0. [CODE] Register FLASH-SOLANA in factory. (instruments-service@5624624)
+- [x] P0. [TEST] ≥8 tests in `tests/unit/reference_data/adapters/defi/test_flash_trade_metadata.py`.
+      (instruments-service@5624624 — 10 tests)
+- [x] P0. [QG] basedpyright clean. (instruments-service@5624624)
 
 ### Phase 5 — DRIFT funding backfill script (SERIAL — after Phase 1)
 
-- [ ] P1. [CODE] Create `instruments-service/scripts/backfill_drift_funding_2026_05_13.py` — reads DRIFT historical
+- [x] P1. [CODE] Create `instruments-service/scripts/backfill_drift_funding_2026_05_13.py` — reads DRIFT historical
       funding from S3 archive, writes parquets per manifest standard, `--dry-run` default, `--apply --confirm` gate.
-- [ ] P1. [TEST] ≥5 tests in `tests/unit/test_backfill_drift_funding.py`.
+      (instruments-service@5624624 — CLI skeleton ships; full S3→GCS wiring deferred pending MTDS perp source)
+- [x] P1. [TEST] ≥5 tests in `tests/unit/test_backfill_drift_funding.py`. (instruments-service@5624624 — 8 tests:
+      date_range, s3_key, dry_run, validate_prerequisites)
 
 **VM launch command** (operator-triggered after code ships):
 
@@ -127,8 +135,9 @@ python3 instruments-service/scripts/backfill_drift_funding_2026_05_13.py \
 
 ### Phase 6 — Codex SSOT (SERIAL — after phases 2-4)
 
-- [ ] P1. [DOCS] Create `unified-trading-pm/codex/04-architecture/solana-defi-coverage.md` documenting all 4 Solana perp
+- [x] P1. [DOCS] Create `unified-trading-pm/codex/04-architecture/solana-defi-coverage.md` documenting all 4 Solana perp
       DEX adapters, their data_types, deploy dates, API endpoints, and MTDS wiring requirements.
+      (unified-trading-pm@48be3698 — venue registry, data types table, DRIFT root cause, MTDS deferred note)
 
 ### Phase 7 — Cutover gate (SERIAL — final)
 
