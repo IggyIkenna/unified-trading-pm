@@ -248,7 +248,7 @@ instead of writing nothing.
       "Zero-activity-bar shape" — table of bar-shape per data_type, with explicit pre-LTP-carry-forward semantics + the
       volatility-smile use case (operator-flagged: every strike must be visible even on zero-volume days for
       cross-instrument analysis).
-      **SHIPPED 2026-05-13 (slot 6 wave 2, PM@<sha>)**: added `## Zero-activity-bar shape (case-D design —
+      **SHIPPED 2026-05-13 (slot 6 wave 2, PM@84e29700)**: added `## Zero-activity-bar shape (case-D design —
       implementation deferred post-cutover)` section to `codex/02-data/honest-absence-downstream-handling.md` —
       per-data_type carry-forward table (ohlcv/trades/book_snapshot/derivative_ticker/options_chain/DeFi-continuous/prediction
       CLOB), vol-smile constraint, Wave 3.M implementation requirements, and successor-plan pointer.
