@@ -14,6 +14,45 @@ locked_since: 2026-05-08
 > [`AGENT_ONBOARDING.md`](AGENT_ONBOARDING.md) and [`../cursor-configs/CLAUDE.md`](../cursor-configs/CLAUDE.md) §
 > "Daily Work-Split Process".
 
+> ## ▶ NEW SHIFT 2026-05-13 — Day-4 close (cycle ends 2026-05-15); **HARSH-SIDE ONLY** (Ikenna on 2 connecting flights all day, signal sporadic, ~12h offline window). **10-slot Model A** (slots 9+10 NEW worktrees provisioned this morning). Work-split: [`../../plans/active/work_split_2026_05_13_harsh.md`](../../plans/active/work_split_2026_05_13_harsh.md). Continuation prompts: [`../../plans/active/continuation_prompts_2026_05_13_harsh.md`](../../plans/active/continuation_prompts_2026_05_13_harsh.md).
+>
+> **Day-4 scope absorbs ALL open Ikenna-side work** per operator+Ikenna chat 22:42 IST 2026-05-12 ("if I run out of time just tell your agents to take all my agents work"). Ikenna's slot 4 (propagation chain) + slot 6 (defi_simulation_realism) + slot 8 (manual-audit bucket provisioning handoff) all rolled into Harsh slots.
+>
+> **6 of 8 operator-pending items CLOSED this session** (2026-05-13 morning):
+> - ✅ **(a) 12 AlertCodes + 4 CircuitBreakers PRE-cutover** + **Telegram channel split** (CI vs Live-Ops; same bot, new chat_id) → slot 7
+> - ✅ **(b) Honest-coverage Phase 0.B baseline** → DEFER to post-May-15-freeze + pre-May-23-cutover window (after v8 manifest schema migration + writegate cleanup + phantom audits land)
+> - ✅ **(c) 6 LookaheadBiasError strict-mode wire-ins** → Harsh slot 9 (6-sub-agent fan-out, closes freeze-gate item 5)
+> - ✅ **(d) Audit-records PB-1/2/3** → all 3 pre-cutover (slot 5 NEW PLAN)
+> - ✅ **(e) GMX/DRIFT direction** → CORRECTION: REVERT axis_override (UAC@`7c8482e`), make perp-eligibility a venue capability not asset_group filter (slot 8 3-sub-agent fan-out, per operator+Ikenna chat 11:22 IST)
+> - ✅ **Sports + Prediction reconciler** → extend `legacy_reason_classifier.py` pre-cutover with asset-group-specific rules (slot 9)
+> - ✅ **(f) TradFi phantom-audit** → Harsh slot 6 extends Databento-aware + runs triage pre-cutover
+>
+> **🟡 2 still pending** (Ikenna out-of-band): Q7(b) pnl/positions/risk-store-defi bucket shape-alignment (relayed); confirmation that GMX/DRIFT capability refactor approach is acceptable (the operator-Ikenna chat at 11:22 IST aligned on direction; slot 8 implementing today).
+>
+> **Today's slot table (10-slot Model A)**:
+> | Slot | Theme | State |
+> |---|---|---|
+> | 1 | Main orchestrator + on-call + LEDGER + ping triage (this session) | 🟢 ONLINE (poll loop being re-armed for Day-4) |
+> | 2 | 🔴 **Propagation chain Phase 3.1-3.N + 4 + 2.A** (Ikenna slot 4 leftover — Gate 1 fires when done; unblocks slots 3 + 6) | 🟡 SPAWN PENDING (continuation prompt ready) |
+> | 3 | Bucket SSOT residuals — provision 6 manual-audit buckets + Q5 features rename + PART B apply-flips (gated on Gate 1) | 🟡 SPAWN PENDING |
+> | 4 | defi_simulation_realism Phases 4-6 (Ikenna slot 6 leftover) + Harsh Phases 5B/5C/6B/6C carry-forward | 🟡 SPAWN PENDING |
+> | 5 | **(d) Audit-records PB-1/2/3 all 3 pre-cutover** — NEW PLAN to file | 🟡 SPAWN PENDING |
+> | 6 | **(f) TradFi phantom-audit Databento-aware** + manifest reconciliation 15 dry-runs + apply-flips + Gate 3 phantom audit | 🟡 SPAWN PENDING |
+> | 7 | **(a) 12 AlertCodes + 4 Breakers** + Telegram channel split + mock_data Phase 3.C/3.D tail | 🟡 SPAWN PENDING |
+> | 8 | 🆕 **GMX/DRIFT venue capability refactor** — REVERT axis_override + 3-sub-agent fan-out (UAC + strategy + MTDS) | 🟡 SPAWN PENDING |
+> | 9 | **Sports+Prediction reconciler extension** + **(c) LookaheadBias 6 wire-ins** (6-sub-agent fan-out) + strategy-paper VM verification (slot 9 = NEW worktree `.tabs/9/` on `tab/hk/9`) | 🟡 SPAWN PENDING |
+> | 10 | **Day-3 quick wins**: MDPS 19 test fixes + Phase 4.FEATURES sweep (freeze-gate item 3 → 9/9) + dex_perp Phase 2 remainder + EigenLayer Phase 3 (slot 10 = NEW worktree `.tabs/10/` on `tab/hk/10`) | 🟡 SPAWN PENDING |
+>
+> **Operator-pending list refreshed**: 8 → 1 (Q7(b) bucket shape only — Ikenna response pending).
+>
+> **Manual operator step (1-shot, ~5 min)**: create new Telegram channel for live-ops alerts; add existing bot; provide chat_id (`-100xxx` format) to slot 1. Slot 1 wires `TELEGRAM_CHAT_ID_OPS` as GHA repo var across all repos so slot 7 alerting-service notifier can route runtime alerts there (CI/QG stays on existing channel).
+>
+> **CRITICAL-PATH sequencing** (slot 1 monitors):
+> 1. Slot 2 Gate 1 fires → unblocks slot 3 PART B + slot 6 apply-flips
+> 2. Slot 10 closes Phase 4.FEATURES → freeze-gate item 3 hits 9/9
+> 3. Slot 8 ships UAC revert → unblocks any strategy-service archetype work touching perp-venue eligibility
+> 4. All other slots independent — fully parallel
+
 > ## ⏹ HARSH SHIFT ENDED 2026-05-11 ~14:55 UTC — all 5 implementer slots ⚪ DONE, handed over to Ikenna's side. Slot 1 orchestrator + 5-min poll loop stopped.
 >
 > Each slot wrote an end-of-shift `## DONE-2026-05-12 — Harsh slot N end-of-shift handover` block in its plan-of-record + a status line in its `pings/slot_N.md` + a cross-side INFO ping in `plans/active/_agent_pings.md`; everything pushed to `live-defi-rollout`. **Pickup-points for Ikenna's agents (next-step per slot):**
