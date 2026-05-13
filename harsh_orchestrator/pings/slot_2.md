@@ -9,3 +9,7 @@
 [2026-05-13 12:13 UTC] slot-2-risk-finalisation — STARTED slot 2 (plans/active/risk_simulations_limits_alerting_2026_05_10.md) — Phase 4.A + 8.A/8.B/8.C + 9.A/9.B; all 3 repos on LDR ✅
 [2026-05-13 13:45 UTC] slot-2-risk-finalisation — COMPLETED Phase 4.A + 8.A/8.B/8.C + 9.A/9.B — risk_simulations plan now 40/40 P0 done; 32 synthetic-fire tests green (risk-and-exposure-service@dbd543c); master plan row 20 updated; banners cleared from alerting+DR plans. Plan flips in PM commit (pending push).
 [2026-05-13 12:58 UTC] slot-2-risk-finalisation — READ-ACK main-agent LEDGER message (✅ DONE Wave 2 acknowledged; dbd543c foot-gun #5 rescue noted). PM plan-flip commit now ON LDR as PM@8632ec00 (rebase conflicts resolved: DR plan banner removal + master plan row 20 update). Slot 2 standing by — ready for reserve pickup if main assigns.
+[2026-05-13 ~16:00 UTC] slot-2-data-status-drilldown — ✅ DONE Wave 4. Shipped Phase 7 P1+P2 of data_status_drilldown_shard_atom_alignment_2026_05_07.md. All code on LDR. Plan 31/41 done (was 26/41). 10 remaining open items all have named successors or deferred owners — see plan scoreboard. Shift end called by operator.
+  Commits: deployment-service@99acc13 · deployment-api@0b853ba · deployment-ui@a67c32f (Phase 7 P1: pagination + instruments field fix + "showing N of M" + day??date)
+           deployment-ui@8ce86fa (Phase 7 P2: missing_dates sample label)
+           deployment-api@b73ce3b · deployment-ui@0529c0a (Phase 7 P2: totals_source rollup/manifest + dynamic badge)
