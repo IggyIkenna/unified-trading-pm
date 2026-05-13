@@ -2,9 +2,9 @@
 
 ---
 
-## [Slot 8 → Slot 1] 2026-05-13 (session 2)
+## [Slot 8 → Slot 1] 2026-05-13 (session 3 — GATE 1 FIRED + PART B UNBLOCKED)
 
-**Status: cross_cutting #4 D1+D4 design fully shipped. UAC helpers live. PART B/C still gated.**
+**Status: D1+D4 design shipped ✅. PART B now READY TO EXECUTE. PART C already done by slot 3.**
 
 Shipped this session:
 
@@ -13,13 +13,26 @@ Shipped this session:
 - **D4 design** — `get_venue_asset_group(venue: str) -> str` helper added to `unified_api_contracts.execution` facade.
   Builds reverse lookup from `CEFI/DEFI/SPORTS/TRADFI_CAPABILITIES` at module load; sports vs prediction split via
   `_PREDICTION_SOURCES`. `UAC@51f6e28`. Unblocks Harsh BUILD #4/#5 side-validator widening.
-- **Plan flips** — D1 + D4 checkboxes flipped in `cross_cutting_may_23_deliverables_2026_05_08.md`. `PM@<flip-commit>`.
+- **Master plan flip** — Group F/G D1+D4 design unblocking documented. `PM@ec8a8f1f`.
 
-**Note**: UAC QG is failing on pre-existing foreign issues (`normalize_aster_ticker` missing from Harsh's uncommitted
-`normalize_utils/tickers.py` WIP + 134 ruff errors in `chain_env.py`/`risk_rules/venue.py`). Not slot 8's issue to fix.
+**GATE 1 FIRED** (2026-05-13 ~19:50 UTC by Harsh slot 2): propagation chain Phases 3+4+2.A shipped. Phase 3.5 (sports)
+deferred.
 
-**Next**: manifest_schema_final_gate Phase 3 (primary slot 8 assignment — consumer sweep). Also: PART B gate still
-waiting (Slots 6+7), PART C (instruments-service noqa markers) unblocked.
+**PART C COMPLETE** (slot 3, 2026-05-12 19:45 UTC): instruments-service + deployment-service source noqa markers + QG
+baselines → 0. Work already shipped.
+
+**PART B STATUS: READY TO EXECUTE** (2–3 hours, GCS operations across 5 AGs):
+
+- Pass 1: instruments + venue_trading_calendar all 5 AGs (--apply-flips)
+- Pass 2: MTDS data_types all 5 AGs
+- Pass 3: MDPS data_types
+- Pass 4: features + ML data_types
+- Also: reconcile_expected_absence_reasons.py --apply-flips all 5 AGs
+- Also: reconcile_legacy_blank_to_typed_reason.py --apply-flips all 5 AGs
+- Verify phantom count = 0 (or <10 class-C)
+- Ping Slot 1 → GATE 3 condition when complete
+
+**Next**: PART B apply-flips execution (primary). Reserve items if time permits after verification.
 
 ---
 
