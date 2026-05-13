@@ -92,6 +92,28 @@ conditional-push model.
 
 If you find 10+ dirty files at boot that look like ruff format / unused-imports cleanup (function signature wrapping, import reorders, tuple multi-line formatting), and the same pattern is dirty in other slots' worktrees (`git -C ${WORKSPACE_ROOT}/.tabs/<other-N>/<same-repo> status`), it's **workspace-wide foreign drift** — NOT yours, NOT real WIP. Discard with `git checkout -- .` per repo. Don't try to commit/integrate it. (2026-05-13: slot 3 had 23 such files in UAC, slot 6 had 30 in UTL, slot 7 had 26 in UTL — all the same diff, all discardable.)
 
+### Fetch-first discipline (HARD RULE — codified 2026-05-13 after main misread stale plan state)
+
+**Before reading any plan / ping / LEDGER state to make a claim or write back, `git fetch origin --quiet` on the relevant repo in the SAME bash call as the read.** If you didn't fetch first, the claim is null — re-fetch and re-read before declaring "X has gap" or "Y is done" or writing direction pings.
+
+Default assumption when looking at slot state: **agents are working**. Burden of proof = "I just fetched and origin/live-defi-rollout shows stalled state", NOT "my local plan-of-record shows N open items".
+
+**Why** (HARD RULE, not optional): on 2026-05-13 Wave 2 close-out, main agent reported "significant scope gap on slots 2/6/7/9" — all four reports were wrong because main read plan-checkbox state from a local clone that hadn't fetched in 20-30 min. At the moment of the "gap" claim:
+- Slot 2 had already shipped 40/40 P0 via PM@`8632ec00` (risk_simulations finalisation).
+- Slot 3 had already shipped the "DEFERRED P2" AlertCode.CHAOS_DRILL_FAILED via PM@`a05097a1`.
+- Slot 6's "open" items were correctly tagged DEFERRED-POST-CUTOVER in the plan body (slot 6's read was right, main's was wrong).
+- Slot 9 had shipped Phase 8.A/8.B + Group F item 18 master plan extension via PM@`af452df1`.
+
+Main then wrote "🟡 CONTINUE — gap exists" pings telling agents to do work they'd already done. Pings raced agents' done-acks; caused merge conflicts; gave operator a misleading status report. Cost to operator: lost trust + ~20 min of confusion + manual reconciliation.
+
+**Always-fetch operations** (cheap; ~50ms per repo):
+- Reading plan-of-record before reporting gap → fetch the PM repo first.
+- Reading slot N's ping before writing direction → fetch PM first.
+- Counting open `- [ ]` items → fetch PM first, AND ensure DEFERRED-POST-CUTOVER / DEFERRED-AFTER-X items aren't miscounted as "open gaps".
+- Claiming a slot shipped / hasn't shipped → fetch the relevant service repo first + verify SHA on `origin/live-defi-rollout`.
+
+Embed the fetch in the same bash call: `cd <repo> && git fetch origin --quiet && grep "^- \[ \]" plan.md`. Don't lazy-read.
+
 ## Your role in 3 sentences
 
 You are **slot N**, a scoped implementer spawned by Harsh's main orchestrator agent (slot 1, a separate Claude Code
