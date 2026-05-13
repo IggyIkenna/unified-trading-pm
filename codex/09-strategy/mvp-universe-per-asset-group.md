@@ -83,15 +83,19 @@ capture-scope cap.
 
 ### TradFi (data capture: scoped; backtest scope: same)
 
-**Backtest universe**:
-- **S&P 500** (CME ES futures + ES.OPT options + SPY ETF cash equity)
+**Backtest universe** (operator clarification 2026-05-13: **SPY NOT included** — ES futures has more trading hours; ES is the canonical S&P 500 surface):
+
+- **S&P 500**: CME ES futures (front-month + back-months) + ES.OPT options (**weeklies + dailies + standard expiries** all in scope per operator direction)
 - **BTC-related**: NASDAQ IBIT (BlackRock spot BTC ETF) + CME MBT (micro BTC futures) + CBOE BTC options on IBIT
 - **ETH-related**: NASDAQ ETHA (BlackRock spot ETH ETF) + CME MET (micro ETH futures)
-- **Up/down markets** (some additional TradFi instruments — exact list owned by `tradfi_master_2026_05_07.md` deliverable A): plus VIX 15m (CBOE) for vol regime
-- **Other TradFi MVP**: GLD (gold ETF), USO (oil ETF), UNG (nat-gas ETF) per `defi_master` line 326 cross-instrument carry
+- **VIX 15m** (CBOE): vol regime feature
+- **Commodity futures + ETFs for cross-instrument carry / arb** (per operator direction 2026-05-13: "natural gas, gold, and other futures commodities are there for cross-instrument carry / arb"):
+  - **Gold**: GLD (ETF) + CME GC (futures, front-month + back-months)
+  - **Natural gas**: UNG (ETF) + CME NG (futures, front-month + back-months)
+  - **Oil**: USO (ETF) + CME CL (futures, front-month + back-months)
+  - **Other commodities**: as needed by `paired_price_dispersion` calculator pair specs (owner: `defi_master` Fork 1 + features-cross-instrument-service)
 
-**TradFi data capture**: Databento bulk (S&P + crypto-ETF universe) + Yahoo (VIX 15m gap window) + Barchart preload
-(VIX 15m historical). All per UAC `SOURCE_PRIORITY` rules.
+**TradFi data capture**: Databento bulk (S&P + crypto-ETF + commodity-futures universe) + Yahoo (VIX 15m gap window) + Barchart preload (VIX 15m historical). All per UAC `SOURCE_PRIORITY` rules.
 
 **Out of TradFi MVP** (post-cutover): full ETF universe (NYSE GBTC / ETHE etc. cleanup), individual equities beyond
 S&P 500 components, fixed-income.
@@ -125,33 +129,48 @@ backtest-scope SUBSET.
 
 ### Backtest config-grid sizing math
 
-| Asset group | Instruments in backtest | Days (2-yr) | Config cells | Total workers (rough) |
+**Backtest window by asset group** (operator direction 2026-05-13: walk-forward training validation loops require longer history for CeFi/TradFi/Sports):
+
+| Asset group | Backtest window | Days | Rationale |
+|---|---|---:|---|
+| DeFi | 2 years | 730 | DeFi venues mostly < 5yr old (Aave V3 launched 2022, Uniswap V3 2021); 2yr captures full venue lifecycle |
+| **CeFi** | **5 years** | **1825** | Walk-forward ML training validation loops require multi-regime history (2021 bull → 2022 bear → 2023 recovery → 2024 ETF cycle) |
+| **TradFi** | **5 years** | **1825** | Same — walk-forward validation; spans 2020-COVID + 2022 inflation + 2024 ETF launches |
+| **Sports** | **≥5 years** | **1825+** | Per-season variation requires multi-season training; team rosters/managers/tactical regimes cycle ~3-5yr |
+| Prediction | 2 years | 730 | Polymarket venue launched 2020; full venue lifecycle within 2-yr window |
+
+| Asset group | Instruments in backtest | Days | Config cells | Total workers (rough) |
 |---|---:|---:|---:|---:|
 | DeFi | ~12 LST + 4 AMM venues | 730 | ~15-20 | ~10K |
-| CeFi | 30 coins × 6 perp venues | 730 | ~15-20 | ~50-65K |
-| TradFi | ~10 instruments (S&P + crypto-ETF + futures + options) | 730 | ~10-15 | ~7-10K |
-| Sports | ~1000 fixtures/yr × 5 leagues × 4 markets | n/a (fixture-bound) | ~10 | ~80K-200K |
+| CeFi | 30 coins × 6 perp venues | **1825** | ~15-20 | **~125-160K** (2.5× prior 2-yr) |
+| TradFi | ~10 instruments (ES + crypto-ETF + futures + commodities; **no SPY**) | **1825** | ~10-15 | **~18-27K** (2.5× prior 2-yr) |
+| Sports | ~1000 fixtures/yr × 5 leagues × 4 markets × 5yr | **5×fixture-bound** | ~10 | **~400K-1M** (5× prior 2-yr) |
 | Prediction | Polymarket subset (~50 questions/day × 2yr) | 730 | ~10 | ~30-40K |
 
-**Total backtest scope**: ~180K-400K worker-runs across the cutover-window 2-yr config-grid. At ~5s per worker on
-`c3-highcpu-44` parallel-shard (per `mock_data_pipeline_benchmarking_2026_05_10` benchmark output), that's
-~250K × 5s ÷ 176-way-parallel (`c3-highcpu-176`) = **~7000s ≈ 2 hours per archetype-bundle**, achievable in cutover
-window.
+**Total backtest scope**: ~580K-1.3M worker-runs across the cutover-window config-grid (CeFi/TradFi at 5yr × walk-forward + DeFi/Prediction at 2yr + Sports at 5yr).
 
-**Without the MVP narrowing** (e.g., if CeFi expanded to 500 coins): worker count balloons 10×, wall-clock becomes
-20+ hours per archetype — would not fit cutover window.
+At ~5s per worker on `c3-highcpu-44` parallel-shard (per `mock_data_pipeline_benchmarking_2026_05_10` benchmark output): ~1M × 5s ÷ 176-way-parallel (`c3-highcpu-176`) = **~28K seconds ≈ 8 hours per full Tier A**.
+
+With per-archetype workers running in parallel across multiple SKUs (4× `c3-highcpu-176` concurrent = ~2 hours wall-clock per archetype-bundle). **Still achievable in cutover window** but requires bigger-SKU strategy from `compute_optimization_mock_data_2026_05_13.md` Phase 5.
+
+**Without the MVP narrowing** (e.g., if CeFi expanded to 500 coins or backtest extended to 10yr): worker count balloons 5-10×, wall-clock becomes 1-2 days per archetype-bundle — would push past cutover window.
 
 ### ML training data volume
 
-ML training scope is tied to the backtest universe (only MVP-universe features are used as training inputs):
-- TradFi S&P swing-prediction: ~10 instruments × 730 days × ~50 features = ~365K training rows
-- DeFi carry_staked_basis: ~12 LST × ~5 venues × 730 days × ~30 features = ~1.3M rows
-- CeFi perp arbitrage: 30 coins × 6 venues × 730 days × ~20 features = ~2.6M rows
-- Sports: ~5000 fixtures/yr × 2 yrs × ~80 features = ~800K rows
-- Prediction: ~50 q/day × 730 days × ~25 features = ~900K rows
+ML training scope is tied to the backtest universe + window. With CeFi/TradFi/Sports at 5-yr (walk-forward validation):
 
-**Total**: ~6M training rows across all archetypes. Comfortable for lightgbm + small torch models on
-`c3-highcpu-44` or `n2d-standard-32`.
+- **TradFi** S&P swing-prediction (ml-continuous): ~10 instruments × **1825 days** × ~50 features = ~**910K** training rows
+- **DeFi** carry-family: ~12 LST × ~5 venues × 730 days × ~30 features = ~1.3M rows (unchanged)
+- **CeFi** perp arbitrage + ml-continuous: 30 coins × 6 venues × **1825 days** × ~20 features = ~**6.6M rows** (2.5× prior)
+- **Sports** ml-settled: ~5000 fixtures/yr × **5 yrs** × ~80 features = ~**2M rows** (2.5× prior)
+- **Prediction** Polymarket: ~50 q/day × 730 days × ~25 features = ~900K rows
+
+**Total**: ~**11.7M training rows** across all archetypes (was 6M at 2-yr).
+
+ML training data volume is still comfortable for lightgbm + small torch models on `c3-highcpu-44` (~10-15 GB RAM
+footprint per archetype for fully-cached training data), or `c3-highcpu-88` for parallel hyperparam grid sweeps.
+Walk-forward validation loops (rolling re-train every 30-90d window) multiply CPU but not data volume — each loop
+fits in same memory.
 
 ### Feature compute parallelism multiplier
 
@@ -174,7 +193,19 @@ These archetypes MUST have a runnable 2-year backtest config-grid by 2026-05-23.
 | **arbitrage-funding-rate** | cross-venue perp funding spread arb | CeFi (6 perp venues × 30 MVP coins) + DeFi perp legs (Hyperliquid, Aster) | This IS `arbitrage_price_dispersion` archetype per defi_master |
 | **arbitrage-sports-book** | Polymarket vs Betfair odds discrepancy | Prediction (Polymarket) + Sports (Betfair odds) | Cross-domain — books on same event, different liquidity profile |
 | **arbitrage-event-markets** | Polymarket vs CME event-contract arbitrage | Prediction (Polymarket) + TradFi (CME EVENT_CONTRACT) | Same event traded on prediction-market + CME futures (`cme_polymarket_arb_2026_05_08.md` covers this) |
-| **defi-carry-family** | `carry_staked_basis`, `carry_recursive_borrow_lending_only`, `carry_recursive_borrow_perp_hedged`, `arbitrage_price_dispersion`, all other carry-family archetypes per `codex/09-strategy/architecture-v2/archetypes/` | DeFi (LST + AMM + lending) + CeFi (perp hedge legs) | ALL carry-family archetypes ship backtest-ready by May-23 |
+| **defi-carry-family** | `CARRY_STAKED_BASIS`, `CARRY_BASIS_DATED` (cross-venue fixed-delivery futures basis — see below), `CARRY_BASIS_PERP`, `CARRY_RECURSIVE_STAKED`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`, `CARRY_RECURSIVE_BORROW_PERP_HEDGED`, `ARBITRAGE_PRICE_DISPERSION` (cross-venue spreads — funding-rate-dispersion + dated-cross-venue config variants), all other carry-family archetypes per `codex/09-strategy/architecture-v2/archetypes/` | DeFi (LST + AMM + lending) + CeFi (perp hedge legs + crypto perp pairs) + TradFi (crypto-ETF + commodity futures + paired-dispersion cross-instrument) | ALL carry-family archetypes ship backtest-ready by May-23 |
+
+### Cross-venue fixed-delivery futures arb (operator question 2026-05-13: "arb or carry?")
+
+**Both** — depends on exit rule:
+- **CARRY classification** if held to expiry to capture basis convergence (e.g., long spot ETF + short dated future, held to settlement) → `CARRY_BASIS_DATED` archetype
+- **ARBITRAGE classification** if spread closed early when convergence is sufficient → `ARBITRAGE_PRICE_DISPERSION` archetype with `dated-cross-venue` config variant (same-expiry, different-venue)
+
+**Both archetypes**:
+- **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](../../plans/active/defi_master_2026_05_07.md) Fork 1 (DeFi master owns the archetype family even though it spans cross-asset — single owner avoids cross-plan ambiguity).
+- **Shared infrastructure**: `paired_price_dispersion` calculator in `features-cross-instrument-service` powers BOTH (per defi_master line ~342). Catalog pair specs at UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
+- **Specs in scope** (per defi_master 2026-05-06 user direction): 7 existing CARRY_BASIS_DATED + NASDAQ-IBIT/CME-MBT (BTC ETF vs micro BTC) + NASDAQ-ETHA/CME-MET (ETH ETF vs micro ETH) + DERIBIT spot-vs-dated (BTC + ETH intra-Deribit basis) + GLD/CME-GC (gold ETF vs futures) + USO/CME-CL (oil ETF vs futures) + UNG/CME-NG (nat-gas ETF vs futures). ARBITRAGE_PRICE_DISPERSION adds CME-MBT vs DERIBIT-dated + CME-MET vs DERIBIT-dated (cross-venue same-expiry).
+- **Funding-rate variant of ARBITRAGE_PRICE_DISPERSION** (perp funding spread across venues): same archetype, `funding-rate-dispersion` config variant — also in defi_master Fork 1, also Tier A backtest-by-May-23.
 
 **Note on arbitrage-price-dispersion vs arbitrage-funding-rate**: master plan + defi_master use `arbitrage_price_dispersion` as the archetype name; the user-facing term is "funding-rate arbitrage" (same thing). Cross-venue funding spread is the price-dispersion signal.
 

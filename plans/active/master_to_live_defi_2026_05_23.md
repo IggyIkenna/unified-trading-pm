@@ -97,7 +97,7 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-05-13 16:44 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-05-13 16:53 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
@@ -146,7 +146,6 @@ _Last regenerated: 2026-05-13 16:44 UTC via `scripts/plans/regenerate_active_pla
 | [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12`](./codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md) | master | design | 0/4 | 0% | 1.8 | 2026-05-23 |
 | [`client_reporting_pnl_attribution_mvp_2026_05_10`](./client_reporting_pnl_attribution_mvp_2026_05_10.md) | master | design | 27/36 | 75% | 1.6 | 2026-05-23 |
 | [`AUDIT_pre_may_8_cleanup_2026_05_13`](./AUDIT_pre_may_8_cleanup_2026_05_13.md) | master | design | — | — | 1.5 | 2026-05-15 |
-| [`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13`](./tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md) | master | brand-new | 0/6 | 0% | 1.5 | 2026-05-23 |
 | [`codex_vs_citadel_infrastructure_audit_2026_05_10`](./codex_vs_citadel_infrastructure_audit_2026_05_10.md) | master | research | 30/33 | 91% | 1.4 | 2026-05-23 |
 | [`manifest_schema_final_gate_2026_05_09`](./manifest_schema_final_gate_2026_05_09.md) | manifest_evolution_master_2026_05_08 | design | 23/56 | 41% | 1.2 | 2026-05-23 |
 | [`api_football_phase_3b_3c_smoke_forward_poll_2026_05_13`](./api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md) | master | infra | — | — | 1.2 | 2026-05-14 EOD |
@@ -162,6 +161,7 @@ _Last regenerated: 2026-05-13 16:44 UTC via `scripts/plans/regenerate_active_pla
 | [`risk_simulations_limits_alerting_2026_05_10`](./risk_simulations_limits_alerting_2026_05_10.md) | master | design | 43/47 | 91% | 0.6 | 2026-05-23 |
 | [`features_modehandler_lift_2026_05_08`](./features_modehandler_lift_2026_05_08.md) | master | design | — | — | 0.3 | post-2026-05-23 |
 | [`audit_records_pb_1_2_3_pre_cutover_2026_05_13`](./audit_records_pb_1_2_3_pre_cutover_2026_05_13.md) | master | brand-new | 13/16 | 81% | 0.3 | 2026-05-23 |
+| [`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13`](./tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md) | master | brand-new | 5/6 | 83% | 0.2 | 2026-05-23 |
 | [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md) | master | refactor | 16/30 | 53% | 0.2 | — |
 | [`disaster_recovery_circuit_breakers_2026_05_10`](./disaster_recovery_circuit_breakers_2026_05_10.md) | master | design | 43/44 | 98% | 0.2 | 2026-05-23 |
 | [`arbitrage_price_dispersion_finalisation_2026_05_09`](./arbitrage_price_dispersion_finalisation_2026_05_09.md) | master | design | 20/20 | 100% | 0.0 | 2026-05-23 |
@@ -170,7 +170,7 @@ _Last regenerated: 2026-05-13 16:44 UTC via `scripts/plans/regenerate_active_pla
 | [`per_agent_worktrees_2026_05_10`](./per_agent_worktrees_2026_05_10.md) | master | design | 31/31 | 100% | 0.0 | 2026-05-23 |
 | [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md) | master | design | — | — | TBD | — |
 | [`deployment_ui_lifecycle_tabs_2026_05_08`](./deployment_ui_lifecycle_tabs_2026_05_08.md) | cross_cutting_may_23_2026 | infra | — | — | TBD | — |
-| **TOTAL** (69 plans) | 0 orphans, 2 TBD | — | — | **42% done** | **572** | — |
+| **TOTAL** (69 plans) | 0 orphans, 2 TBD | — | — | **42% done** | **571** | — |
 <!-- AUTO-INVENTORY-END -->
 
 ---
@@ -624,10 +624,15 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 
 > **MVP universe SSOT (2026-05-13)**: backtest-complete by May-23 scope is bounded per
 > [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md).
-> Tier A archetypes (must complete 2-yr backtest by 2026-05-23): ml-continuous (CeFi + ES), ml-settled (Sports),
-> arbitrage-funding-rate, arbitrage-sports-book, arbitrage-event-markets, defi-carry-family. Tier B (code-ready
-> only, post-cutover backtest): options-strategy, other DeFi non-carry, long-tail prediction. Group F items 17/18/20/21
-> verify against Tier A.
+> Tier A archetypes (must complete backtest by 2026-05-23). Backtest windows DIFFER per asset_group per operator
+> direction 2026-05-13: **CeFi + TradFi + Sports = 5-year walk-forward** (multi-regime ML validation); DeFi +
+> Prediction = 2-year (venue lifecycle limits). Tier A: ml-continuous (CeFi 30 coins + ES with weeklies/dailies, **SPY
+> not included** — ES has more hours), ml-settled (Sports Top-5 EU football × 4 markets), arbitrage-funding-rate,
+> arbitrage-sports-book, arbitrage-event-markets, defi-carry-family (incl. CARRY_BASIS_DATED cross-venue fixed-delivery
+> futures + ARBITRAGE_PRICE_DISPERSION dated-cross-venue variant — both owned by `defi_master_2026_05_07.md` Fork 1;
+> share `paired_price_dispersion` calculator). Commodity futures (GLD/CME-GC, UNG/CME-NG, USO/CME-CL) in scope for
+> cross-instrument carry/arb. Tier B (code-ready only, post-cutover backtest): options-strategy, other DeFi non-carry,
+> long-tail prediction. Group F items 17/18/20/21 verify against Tier A.
 
 > **🟢 LIVE-PIPELINE ACTIVATION 2026-05-08** — Three new plans landed 2026-05-08 cover the live-mode portion of Group F
 > items 21 (Reconciliation suite) + 22 (Trading guardrails) for MTDS / MDPS / features-service:

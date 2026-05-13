@@ -893,3 +893,42 @@ Plan body annotated: `wallet_treasury_post_cutover_custody_signing_2026_06_01.md
 3. No descope on any Tier A archetype. Tier B (options) stays code-ready not backtest-complete — architecture-driver value preserved.
 
 Plan + codex + epic edits + sub-plan cross-refs all pushing in this commit batch.
+
+---
+
+[2026-05-13 19:00 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — ⚠️ **CORRECTIONS to MVP SSOT** (operator clarifications 2026-05-13 post earlier ping).
+
+**4 corrections applied to `codex/09-strategy/mvp-universe-per-asset-group.md`**:
+
+1. **SPY removed from TradFi MVP** — ES futures has more trading hours and is the canonical S&P 500 surface for backtest + ML. Operator quote: _"spy isnt needed for s&p 500 as es has more hours. weeklies and dailies are part of it"_. ES.OPT scope now explicitly includes **weeklies + dailies + standard expiries**.
+
+2. **Commodity futures + ETFs added to TradFi MVP** for cross-instrument carry/arb (operator quote: _"natural gas, gold, and other futures commodities are there for cross-instrument carry / arb"_):
+   - Gold: GLD (ETF) + CME GC (futures)
+   - Natural gas: UNG (ETF) + CME NG (futures)
+   - Oil: USO (ETF) + CME CL (futures)
+   - These feed `paired_price_dispersion` calculator in features-cross-instrument-service (owner: defi_master Fork 1).
+
+3. **Backtest windows updated per asset_group** — walk-forward ML training validation loops require longer history:
+   - **DeFi + Prediction**: 2 years (venue lifecycle limits)
+   - **CeFi + TradFi + Sports**: **5 years** (multi-regime walk-forward — 2021 bull → 2022 bear → 2023 recovery → 2024 ETF cycle for crypto; 2020-COVID → 2022 inflation → 2024 ETF launches for TradFi; per-season variation for sports)
+   - Worker counts ~2.5× larger than prior 2-yr estimate. Total Tier A worker-runs now ~580K-1.3M (was ~250K).
+   - ML training data ~11.7M rows total (was ~6M). Still fits on `c3-highcpu-44` per archetype.
+   - Wall-clock with 4× `c3-highcpu-176` concurrent shards ≈ 2 hours per archetype-bundle. **Phase 5 big-SKU strategy now CRITICAL, not optional**.
+
+4. **CARRY_BASIS_DATED + cross-venue fixed-delivery futures arb ownership answered** (operator question: _"arb or carry I forget, where is that going which asset group master plan"_):
+   - **Both** — same archetype family, exit-rule distinguishes:
+     - `CARRY_BASIS_DATED` (held to expiry capturing basis convergence)
+     - `ARBITRAGE_PRICE_DISPERSION` config variant `dated-cross-venue` (closed early when convergence sufficient)
+   - **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](../plans/active/defi_master_2026_05_07.md) **Fork 1** — DeFi master owns the archetype family even though it spans cross-asset (single owner avoids cross-plan ambiguity).
+   - **Shared infrastructure**: `paired_price_dispersion` calculator in features-cross-instrument-service powers BOTH. Catalog pair specs at UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
+   - **Specs in scope** (per defi_master 2026-05-06 + commodity-futures addition 2026-05-13): 7 existing CARRY_BASIS_DATED + NASDAQ-IBIT/CME-MBT + NASDAQ-ETHA/CME-MET + DERIBIT spot-vs-dated (BTC+ETH) + GLD/CME-GC + USO/CME-CL + UNG/CME-NG. ARBITRAGE_PRICE_DISPERSION adds CME-MBT vs DERIBIT-dated + CME-MET vs DERIBIT-dated.
+   - **Funding-rate variant** (perp funding spread cross-venue) = same ARBITRAGE_PRICE_DISPERSION archetype, `funding-rate-dispersion` config variant, also in defi_master Fork 1, also Tier A.
+
+**Plan body updates**:
+- `codex/09-strategy/mvp-universe-per-asset-group.md` — TradFi section + sizing math tables + ML training data + new "Cross-venue fixed-delivery futures arb (operator question)" sub-section
+- `plans/active/compute_optimization_mock_data_2026_05_13.md` — new "Backtest window per asset_group" section
+- `plans/active/master_to_live_defi_2026_05_23.md` — Group F MVP banner annotates the 5-yr/2-yr split + commodity-futures + SPY-not-needed + CARRY_BASIS_DATED ownership
+
+**No new slot ask** beyond prior pings — corrections to in-flight scope. But **Phase 5 big-SKU strategy in compute_optimization is now CRITICAL** (was "important"); the 5-yr CeFi/TradFi/Sports + commodity futures pushes worker count 2.5× and m3-ultramem-160 / c3-highcpu-176 multi-SKU concurrency becomes the wall-clock-saving lever.
+
+**No descope, perfect cutover** — operator direction holds. The 5-yr extension is scope ADDITION (better walk-forward validation), not scope reduction.

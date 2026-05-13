@@ -56,6 +56,17 @@ even when working perfectly), and three downstream stages stack on top:
 These stages are I/O-light + compute-heavy. They can be pre-tuned with synthetic data NOW (schemas stable per
 `unified_api_contracts.canonical.domain.*`) without waiting for real backfills.
 
+### Backtest window per asset_group (operator clarification 2026-05-13)
+
+Walk-forward training validation loops require longer history for ML-heavy archetypes:
+
+- **DeFi + Prediction**: 2-year backtest window (730 days). DeFi venues mostly <5yr old; Polymarket launched 2020.
+- **CeFi + TradFi + Sports**: **5-year backtest window** (1825 days). Walk-forward ML validation requires multi-regime history. Worker counts ~2.5× larger than the prior 2-yr estimates.
+
+Per `codex/09-strategy/mvp-universe-per-asset-group.md` § "Backtest config-grid sizing math" — total ~580K-1.3M
+worker-runs at the 5-yr/2-yr mix. With 4× `c3-highcpu-176` concurrent shards: ~2 hours wall-clock per
+archetype-bundle. Bigger-SKU strategy in Phase 5 is now critical (not optional).
+
 **Strategic value**: optimization shortens cutover-window critical-path wall-clock + de-risks "live trading day 1 hits a
 slow code path and times out". Mock-data approach means **we don't gate this work on real-backfill completion** — full
 parallel track to the data-pipeline workstream.
