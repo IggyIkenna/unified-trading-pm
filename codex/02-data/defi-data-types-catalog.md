@@ -1,5 +1,7 @@
 ---
 scope: [engineer]
+status: canonical
+last_reviewed: 2026-05-13
 ---
 
 # DeFi Data Types Catalog

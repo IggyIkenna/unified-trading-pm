@@ -303,9 +303,11 @@ emitted daily including HWM section.
 
 ## Phase 7 — Demo client seed (Day 11, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **7.A Demo client onboarding.** Walk demo client DRAFT → LIVE through onboarding state machine; KYC
+- [x] [AGENT] P0. **7.A Demo client onboarding.** Walk demo client DRAFT → LIVE through onboarding state machine; KYC
       stub approved; deposit recorded; share-class subscriptions to both cutover archetypes.
-- [ ] [AGENT] P0. **7.B Treasury wired.** Copper + CEFFU + DeFi PK pingable; sub-accounts assigned per cutover venue.
+      (client-reporting-api@73116ab — scripts/seed_demo_client.py; 12 unit tests all green; idempotent re-run guard)
+- [x] [AGENT] P0. **7.B Treasury wired.** Copper + CEFFU + DeFi PK pingable; sub-accounts assigned per cutover venue.
+      (client-reporting-api@73116ab — wire_demo_treasury + CustodyPinger.ping_all; all 3 sources reachable asserted)
 
 **Full-execution criterion**: demo client `ClientOnboardingState == LIVE`; treasury pings green for all sources.
 

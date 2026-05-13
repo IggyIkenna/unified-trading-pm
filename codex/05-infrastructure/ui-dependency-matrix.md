@@ -1,6 +1,16 @@
 ---
 scope: [engineer, admin]
+status: superseded
+superseded_by: ui-architecture.md
+last_reviewed: 2026-05-13
 ---
+
+> **🟡 SUPERSEDED 2026-05-13 by [`ui-architecture.md`](./ui-architecture.md)**
+>
+> This doc remains for API wiring / ports / repo registry / dependency matrix detail. New readers should start at
+> `ui-architecture.md` for the navigation index. Full content merge into `ui-architecture.md` tracked in
+> [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)
+> Sweep 2 (UI-17 finding).
 
 # UI Dependency Matrix
 

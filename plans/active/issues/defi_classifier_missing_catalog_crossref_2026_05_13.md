@@ -78,6 +78,51 @@ exist in catalog for that day) and should stay `empty_confirmed`, not flip to `a
 4. **Same gap exists for cefi/tradfi** — same docstring on `_classify_cefi:296-298` confirms. Tradfi already ran 0
    candidates so no immediate impact, but the gap is structural.
 
+---
+
+## UPDATE 2026-05-13 ~16:25 BST — PARTIALLY RESOLVED by slot 3 (venue-launch portion)
+
+**The venue-launch portion of Wave 3 is shipped:**
+
+- **UAC@`ca62a19`** — `DEFI_VENUE_LAUNCH_DATES` dict added (40 protocol-chain combos).
+- **UTL@`b0c38a21`** — `_classify_defi` now checks `get_venue_launch_date("defi", venue)` per the cefi pattern. Returns
+  `EXPECTED_PRE_VENUE_LAUNCH` for pre-protocol-launch dates.
+- **instruments-service@`fafaa0c`** — corrector script `reconcile_correct_legacy_blank_misflips_2026_05_13.py` reverses
+  wrong direction.
+
+**Acknowledgement of the cap-raise-considered-harmful warning**: Slot 3 raised the cap to 1M and ran apply-flips at
+2026-05-13 14:17 UTC BEFORE this issue doc was visible to slot 3. The 604,951 bad flips DID happen. The corrector script
+written + run at 15:20 UTC reverted **599,486** of them to `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`. Remaining
+**5,584** correctly stay `attempted_failed/LegacyBlankErrorReasonError` (post-protocol-launch dates that genuinely need
+re-fetch).
+
+**Cefi parity finding**: corrector on cefi found 789,201 candidates already in
+`attempted_failed/LegacyBlankErrorReasonError` (mostly NOT from this session — accumulated from prior runs); 0
+corrections applied because all are at dates where the CEFI venue WAS already launched per existing
+`CEFI_VENUE_LAUNCH_DATES`. These 789k need:
+
+- MTDS re-fetch attempts (will overwrite with real `classify_venue_error()` reason), OR
+- **FULL Wave 3 enhancement** — per-instrument `available_from` / `available_to` catalog cross-reference (still
+  missing).
+
+**What's still NOT shipped from this issue's full scope**:
+
+Per-instrument-grain catalog cross-reference (Wave 3 of writegate Phase 3.D.5). Requires reading instruments-service
+catalog `available_from` / `available_to` columns per instrument and passing per-(venue, instrument_id) lifecycle bounds
+into the classifier. Slot 3 did NOT implement this in 2026-05-13 session — out of scope of bucket_name_ssot PART B.
+
+**Recommended status**: severity P0 → P1; keep open as the per-instrument catalog cross-reference is the meaningful
+remaining work for clearing the 789k cefi rows + improving future runs. Re-route from slot 9 to a dedicated Wave 3
+implementer.
+
+**Related slot-3 issue docs filed in same session**:
+
+- `defi_legacy_blank_reclassification_2026_05_13.md` — full RESOLVED section + commit refs.
+- `emerging_perp_venue_adapters_broken_2026_05_13.md` — P0, ASTER 0% capture + HYPERLIQUID 68% failure across 5 emerging
+  perp venues.
+- `solana_defi_coverage_gaps_2026_05_13.md` — P0, comprehensive Solana DeFi audit
+  (LST/swap/lending/perp/native-staking/restaking/oracle-prices) + 5 successor plans recommended.
+
 ## Recommended decision
 
 **P0 block on defi apply-flips for `reconcile_legacy_blank_to_typed_reason.py` until Wave 3 ships.** Three options:
@@ -118,9 +163,54 @@ new-classifier returns `SOURCE_RETURNED_ZERO` — i.e. trust the original sweep 
 **Recommendation: Option A** if Wave 3 fits in the cycle; **Option B + Option C as defensive guard** otherwise. Operator
 triage on cycle priority.
 
+## UPDATE 2026-05-13 — RESOLVED (cefi) by slot 2 — Wave 3 per-instrument catalog cross-ref shipped
+
+**Slot 2 (ikenna tab/2) shipped the full Wave 3 per-instrument catalog cross-reference for cefi.**
+
+### What was implemented
+
+- **UTL@`e077bb55`** (`live-defi-rollout`) — new `unified_trading_library/instruments_catalog_reader.py`:
+  - `CatalogBounds(available_from: date, available_to: date | None)` frozen dataclass.
+  - `read_instruments_catalog_bounds(asset_group, venue, instrument_id) -> CatalogBounds | None` with 300s TTL cache.
+  - Three lookup strategies: `instrument_key` exact match → `raw_symbol + venue` → `base_asset + venue`.
+  - All GCS errors return `None` (graceful fallback to `SOURCE_RETURNED_ZERO`).
+  - Exported from `unified_trading_library.__init__`.
+  - 31 unit tests — all green.
+
+- **UTL@`e077bb55`** — `legacy_reason_classifier._classify_cefi` extended:
+  - Priority 1: `get_venue_launch_date("cefi", venue)` → `EXPECTED_PRE_VENUE_LAUNCH` (unchanged).
+  - Priority 2 (NEW): `read_instruments_catalog_bounds("cefi", venue, inst_id)` → `EXPECTED_INSTRUMENT_NOT_LISTED` if
+    `day < bounds.available_from`, → `EXPECTED_INSTRUMENT_DELISTED` if `day > bounds.available_to`.
+  - Exception wrapper ensures any catalog read error falls through to `SOURCE_RETURNED_ZERO`.
+
+- **instruments-service@`3055b9e`** (`live-defi-rollout`) — new corrector script
+  `scripts/reconcile_correct_legacy_blank_misflips_cefi_2026_05_13.py`:
+  - Candidate mask: `capture_status=attempted_failed AND error_reason.startswith("LegacyBlankErrorReasonError")`.
+  - Re-classifies via extended `classify_blank_reason_row("cefi", row)`.
+  - Correction condition: `new_status == "empty_confirmed" AND new_reason in VALID_CORRECTION_REASONS`.
+  - Per-VM shard isolation + `--max-flips 1000000` halt-safety + `--confirm` intent gate.
+  - 16 unit tests (constants, mask, dry-run smoke, apply-flips fixture, idempotency, env guards) — all green.
+
+### Pending operational step
+
+The corrector must be **run on a GCE VM in asia-northeast1** with:
+
+```bash
+MANIFEST_PER_VM_SHARDS=true VM_NAME=ikenna-slot2-corrector-cefi-<date> \
+python scripts/reconcile_correct_legacy_blank_misflips_cefi_2026_05_13.py \
+  --asset-group cefi --apply-flips --max-flips 1000000 --confirm
+```
+
+The instruments-service catalog parquet (`reference_data/instruments/cefi/all.parquet`) must be built first via
+`instruments-service build-catalogue --asset-group cefi`. Without the catalog built on GCS, the corrector will find no
+corrections (all rows fall through to `SOURCE_RETURNED_ZERO`) and exit cleanly — no harm done.
+
+**Status: code shipped, VM run pending.**
+
 ## Provenance
 
 - Slot 8 (ikenna tab/8) flagged 2026-05-13 ~16:15 UTC after Slot 3 ran into 100k cap on defi
 - Slot 3 (ikenna tab/3) executed reconciler, hit cap, paused PART B defi apply-flips
+- Slot 2 (ikenna tab/2) implemented Wave 3 cefi catalog cross-ref 2026-05-13 ~17:50 UTC
 - Earlier context: `_classify_cefi:296-298` docstring TODO explicit; `_classify_defi:256-279` lacks catalog branch
   silently

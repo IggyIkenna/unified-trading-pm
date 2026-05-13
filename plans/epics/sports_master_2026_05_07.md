@@ -135,12 +135,20 @@ Covers:
 
 ## Sub-plans (referenced from this epic)
 
-- **`plans/active/sports_retired_data_types_code_cleanup_2026_05_13.md`** — Retired-data-type cleanup (refactor class, ~1.2 cal-AI-days, deadline 2026-05-20). Removes stale references to data types that were retired in the manifest migration.
-- **`plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md`** — Phase 3B/3C api-football smoke + forward-poll operational verification (P0, deadline 2026-05-14 EOD).
-- **`plans/active/api_football_minimal_flattening_removal_2026_05_07.md`** — API-football payload flattening removal (near complete, 13/16 done).
-- **`plans/active/wave2_polymarket_record_captured_from_counts_2026_05_09.md`** (Polymarket subset May-23) — bundled-shard SSOT migration; Kalshi + opinion.trade Phase 3 stays 2026-06-15.
+- **`plans/active/sports_retired_data_types_code_cleanup_2026_05_13.md`** — Retired-data-type cleanup (refactor class,
+  ~1.2 cal-AI-days, deadline 2026-05-20). Removes stale references to data types that were retired in the manifest
+  migration.
+- **`plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md`** — Phase 3B/3C api-football smoke +
+  forward-poll operational verification (P0, deadline 2026-05-14 EOD).
+- **`plans/active/api_football_minimal_flattening_removal_2026_05_07.md`** — API-football payload flattening removal
+  (near complete, 13/16 done).
+- **`plans/active/wave2_polymarket_record_captured_from_counts_2026_05_09.md`** (Polymarket subset May-23) —
+  bundled-shard SSOT migration; Kalshi + opinion.trade Phase 3 stays 2026-06-15.
 
-**MVP scope SSOT** for sports backtest universe: [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md) — Top-5 EU football (EPL + LaLiga + Serie A + Bundesliga + Ligue 1) × 4 markets (1X2 / Over-Under 2.5 / BTTS / Asian Handicap). MLS + other leagues post-cutover. Tier A archetype = `ml-settled` (post-fixture-settlement ML).
+**MVP scope SSOT** for sports backtest universe:
+[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md) — Top-5
+EU football (EPL + LaLiga + Serie A + Bundesliga + Ligue 1) × 4 markets (1X2 / Over-Under 2.5 / BTTS / Asian Handicap).
+MLS + other leagues post-cutover. Tier A archetype = `ml-settled` (post-fixture-settlement ML).
 
 ## Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator
 
@@ -581,11 +589,12 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       `instruments-service/instruments_service/sfi/normalize.py` (or wherever the SFI snapshot writer lives). [AUDIT
       2026-05-07: FRESH — actionable] **COMPLETED 2026-05-13**: UAC@1848647 — added ft_timer (int64) + match_end_time
       (datetime64[ns, UTC]) to SFI_PROGRESSIVE_STATS schema contract.
-- [ ] [SCRIPT] P0. **Step 3**: UTL helper
-      `unified_trading_library.fixtures.resolve_match_end_time(fixture_id) -> tuple[datetime, str]` walking the cascade
-      in priority order: api_football FIXTURES.match_end_time → SFI freeze → footystats/understat post-match timestamp →
-      low-confidence `kickoff + 120min` fallback. Returns the timestamp + provenance string. [AUDIT 2026-05-07: FRESH —
-      actionable]
+- [x] [SCRIPT] P0. **Step 3**: UTL helper
+      `unified_trading_library.fixtures.resolve_match_end_time(fixture_id) -> MatchEndTimeResolution(datetime, str)`
+      walking the cascade in priority order: api_football FIXTURES.match_end_time → SFI freeze → footystats/understat
+      post-match timestamp → low-confidence `kickoff + 120min` fallback. Returns MatchEndTimeResolution with timestamp +
+      provenance. [AUDIT 2026-05-07: FRESH — actionable] **COMPLETED 2026-05-13**: UTL@89c0ae15 — implemented
+      resolve_match_end_time() with NamedTuple return + cascade logic. Tests: UTL@520cbb2a (8 unit tests).
 - [ ] [SCRIPT] P0. Wire `resolve_match_end_time()` into per-source `available_at` stamping for post-match data_types
       (FIXTURE_STATS / SFI_PROGRESSIVE_STATS / understat XG / fixture_player_stats) per CLAUDE.md "available_at per-row,
       write-time, equal-to-live-pipeline-arrival" rule. [AUDIT 2026-05-07: FRESH — actionable; coordinate with
@@ -941,26 +950,28 @@ typed empty reasons (GREEN at orchestrator/triggers).
 Session shipped: instruments-service@af06124 (SFI report_time), UAC@1a831b0 (MatchStatus SSOT), plan flips for B.1
 Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 
-| Phase / item                                        | Status as of 2026-05-12 | Successor / blocker                                                                        |
-| --------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------ |
-| B.1 Phase 4: manifest flip + re-fetch VM            | `[ ]` NOT RUN           | Operational — needs VM launch + manifest migration; no code gap                            |
-| C.4 Transfermarkt per-player flatten                | `[ ]` open              | No blocker — new normalizer + contract + migration                                         |
-| C.6 Step 1: AF FIXTURES write-path `match_end_time` | `[ ]` open              | UAC `CanonicalFixture.match_end_time` exists; need AF write-path wiring in IS orchestrator |
-| C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns  | `[x]` shipped           | UAC@1848647 — added ft_timer + match_end_time columns; next: Step 3 (UTL resolver)         |
-| C.6 Step 3: UTL `resolve_match_end_time()` cascade  | `[ ]` open              | New UTL helper — blocks Step 4 + assert_available_at_present wiring                        |
-| C.6 assert_available_at_present wiring              | `[ ]` blocked           | Blocked on Step 3 UTL helper                                                               |
-| C.7 Follow-up #1: STANDINGS flatten                 | `[ ]` open              | Same B.1 pattern; isolated AF endpoint                                                     |
-| C.7 Follow-up #3: MATCHES `team_a_*` → `home_*`     | `[ ]` open              | FootyStats normalizer only; migration may not be needed                                    |
-| MatchStatus adapter migration                       | `[ ]` open (DEFERRED)   | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters      |
-| Cross-source fixture status verifier                | `[ ]` open              | Uses MatchStatus SSOT (now shipped); no other blocker                                      |
-| Codex doc `sports-fixtures-lifecycle.md`            | `[ ]` open              | Write after cross-source verifier design settles                                           |
-| FIXTURES schema split (SCHEDULE + OUTCOMES)         | `[ ]` P0 open           | Large — coordinate with writegate strict-mode flip                                         |
+| Phase / item                                        | Status as of 2026-05-12 | Successor / blocker                                                                     |
+| --------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------- |
+| B.1 Phase 4: manifest flip + re-fetch VM            | `[ ]` NOT RUN           | Operational — needs VM launch + manifest migration; no code gap                         |
+| C.4 Transfermarkt per-player flatten                | `[~]` partial-shipped   | UAC@3b29f7e — normalizer + schema done; migration/test deferred pending features-sports |
+| C.6 Step 1: AF FIXTURES write-path `match_end_time` | `[~]` UAC-half-shipped  | UAC@0ba9e5b — schema column added; IS orchestrator write-path wiring still pending      |
+| C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns  | `[x]` shipped           | UAC@1848647 — added ft_timer + match_end_time columns                                   |
+| C.6 Step 3: UTL `resolve_match_end_time()` cascade  | `[x]` shipped           | UTL@89c0ae15 + UTL@520cbb2a tests — cascade resolver with NamedTuple return             |
+| C.6 assert_available_at_present wiring              | `[ ]` open (UNBLOCKED)  | Was blocked on Step 3 UTL helper (now shipped); needs IS adapter wiring                 |
+| C.7 Follow-up #1: STANDINGS flatten                 | `[~]` partial-shipped   | UAC@ac12d80 — normalizer + schema flatten (14→32 cols); migration deferred (VM op)      |
+| C.7 Follow-up #3: MATCHES `team_a_*` → `home_*`     | `[x]` shipped           | UAC@4e23bd9 — FootyStats field mappings (12 home/away variants); migration deferred     |
+| MatchStatus adapter migration                       | `[ ]` open (DEFERRED)   | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters   |
+| Cross-source fixture status verifier                | `[x]` design-shipped    | PM@1a86b6ab — design in codex/02-data/sports-fixtures-lifecycle.md § verifier           |
+| Codex doc `sports-fixtures-lifecycle.md`            | `[x]` shipped           | PM@1a86b6ab — 8-state lifecycle + per-state available_at + verifier design              |
+| FIXTURES schema split (SCHEDULE + OUTCOMES)         | `[ ]` P0 open           | Large — coordinate with writegate strict-mode flip                                      |
 
 **Next-agent entry point**: Pick any item from this table that has no blocker. Best candidates in priority order:
 
-1. C.7 Follow-up #3 MATCHES field mapping (quick win — FootyStats normalizer only, no migration needed)
-2. C.4 Transfermarkt per-player flatten (self-contained UAC + IS change)
-3. C.6 Step 3 UTL helper (requires resolve_match_end_time() cascade implementation)
+1. C.6 Step 4: Wire `resolve_match_end_time()` cascade into `available_at` stamping (now unblocked by Step 3)
+2. C.6 Step 1 + assert_available_at_present wiring: IS orchestrator write-path wiring for `match_end_time` column
+3. C.4 + C.7 #1 migrations: operational VM launches for flip-to-failed + delete + re-fetch (B.1 pattern)
+4. MatchStatus adapter migration: replace `{"FT","AET","PEN"}` literal sets with `AF_COMPLETED_CODES` across IS adapters
+5. FIXTURES schema split (SCHEDULE + OUTCOMES): coordinate with writegate strict-mode flip
 
 ## Cross-references
 

@@ -644,13 +644,22 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
       `entity=standings/` SKIPPED pending issue resolution:
       `plans/active/issues/standings_entity_gcs_ambiguity_2026_05_13.md`.
 
-**Special handling — defi script-3 legacy_blank flips (held pending review)**:
+**Special handling — defi script-3 legacy_blank flips (RESOLVED 2026-05-13 by slot 3 — full smart fix)**:
 
-- [ ] [SCRIPT] P0. Apply 604,951 defi script-3 flips (`empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` →
-      `attempted_failed/LegacyBlankErrorReasonError`) after CSV review. **HELD 2026-05-13** — Round 3 dry-run found
-      604,951 SSOT-violating rows (defi/cefi/tradfi cannot have empty_confirmed at instrument-day grain per CLAUDE.md).
-      Awaiting Ikenna review of CSV at `/tmp/recon-legacy-typed-defi-20260513-135213.csv` (on VM — needs export to GCS
-      for review).
+- [x] [SCRIPT] P0. Defi pre-venue-launch reclassification — RESOLVED 2026-05-13 by slot 3.
+      Original Round 3 dry-run proposed `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED →
+      attempted_failed/LegacyBlankErrorReasonError` for 604,951 rows (would have violated SSOT —
+      pre-launch dates treated as failures). Slot 3 diagnosed correctly: these are pre-venue-launch
+      dates where defi protocols didn't exist yet on a given chain. Full smart fix shipped:
+      - `uac@ca62a19` — `DEFI_VENUE_LAUNCH_DATES` dict (40 protocol-chain combos)
+      - `utl@b0c38a21` — `_classify_defi` checks venue launch (mirrors `_classify_cefi`)
+      - `instruments-service@fafaa0c` — corrector script
+      - **599,486 defi rows reclassified**: `attempted_failed/LegacyBlank` →
+        `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` (correct SSOT-compliant state)
+      - 0 cefi corrections (all post-launch)
+      Cross-finding (flagged for operator triage): cefi 789k `attempted_failed` rows still need
+      re-fetch (NOT reclassification — these are real fetch failures, not pre-launch dates).
+      Plan ref: `pm@4e6ed0eb`.
 
 ---
 

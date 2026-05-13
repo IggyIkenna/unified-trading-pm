@@ -15,35 +15,75 @@ eves. A feature calculator that ignores session structure produces three classes
    aggregates.
 3. The honest-absence layer can't tell "session was closed" from "data was missing" — both look like zero rows.
 
-## SSOT — UAC `venue_trading_calendar` + session helpers
+## SSOT — UAC `market_session` (shipped UAC@37f6dfd, 2026-05-13)
 
-`unified_api_contracts.canonical.crosscutting.venue_trading_calendar` exposes:
+`unified_api_contracts.canonical.crosscutting.market_session` exposes:
 
 ```python
-HALF_DAY_SESSIONS: dict[Venue, set[date]]                  # holiday-eve half-days
-VENUE_SESSION_HOURS: dict[Venue, list[SessionWindow]]      # regular + extended sessions per venue
-classify_session(venue: Venue, ts: datetime) -> SessionClass  # OPEN / CLOSED / HALF_DAY / PRE_MARKET / AFTER_HOURS
+class MarketSession(StrEnum):
+    REGULAR = "regular"
+    PRE_MARKET = "pre_market"
+    POST_MARKET = "post_market"
+    OVERNIGHT = "overnight"
+    HALTED = "halted"
+    CLOSED = "closed"
+
+class SessionPhase(StrEnum):
+    OPEN_AUCTION = "open_auction"
+    CONTINUOUS = "continuous"
+    CLOSE_AUCTION = "close_auction"
+    AFTER_HOURS_AUCTION = "after_hours_auction"
+    NONE = "none"
+
+@dataclass(frozen=True, slots=True)
+class SessionWindow:
+    session: MarketSession
+    phase: SessionPhase
+    weekday_mask: frozenset[int]   # 0=Monday, 6=Sunday
+    start_time: time
+    end_time: time
+    tz: str                         # IANA timezone (e.g. "America/Chicago")
+
+VENUE_SESSION_SCHEDULE: dict[str, list[SessionWindow]]
+# Keys (shipped 2026-05-13): "CME", "NYSE", "NASDAQ", "ICE", "CBOE"
+# More venues added iteratively per-venue PR cycles.
+
+def classify_session(venue: str, dt: datetime) -> tuple[MarketSession, SessionPhase]:
+    """First-match-wins cascade over the venue's SessionWindow list.
+    Accepts any tz-aware datetime; handles cross-midnight windows + DST +
+    UTC↔local conversion. Returns (CLOSED, NONE) when no window matches."""
 ```
 
-`SessionClass` is a closed enum. Calculators NEVER hand-roll session detection from clock time.
+`MarketSession` + `SessionPhase` are closed enums. Calculators NEVER hand-roll session detection from clock time.
+
+**Half-day / holiday / ICE Brent calendars are DEFERRED** per operator direction (per-venue iteration; the enum SSOT
+ships first, schedules backfill behind it). The regular-week schedule is correct for the 5 registered venues; non-
+regular-week deviations require either an explicit calendar (TBD) OR caller-side adjustment.
 
 ## The pattern
 
 ```python
+from unified_api_contracts.canonical.crosscutting.market_session import (
+    MarketSession,
+    classify_session,
+)
+
 class MyTradFiCalculator(BaseCalculator):
     def compute(self, target_ts: datetime, inputs: list[Tick]) -> Row:
-        session_class = classify_session(self.venue, target_ts)
+        session, phase = classify_session(self.venue, target_ts)
 
-        if session_class == SessionClass.CLOSED:
+        if session == MarketSession.CLOSED:
             # No row written; manifest gets record_empty(reason=EXPECTED_PARTIAL_HALF_DAY|EXPECTED_HOLIDAY)
-            return Row.empty(reason=self._reason_from_session(session_class))
+            return Row.empty(reason=self._reason_from_session(session))
 
-        # Filter inputs to those that fall WITHIN the relevant session window.
-        in_session = [t for t in inputs
-                      if classify_session(self.venue, t.timestamp) == session_class]
+        # Filter inputs to those that fall WITHIN the same session regime.
+        in_session = [
+            t for t in inputs
+            if classify_session(self.venue, t.timestamp)[0] == session
+        ]
 
         # Rolling-window denominators MUST adjust to the in-session bar count, not wall-clock minutes.
-        return self._compute_session_aware(target_ts, in_session, session_class)
+        return self._compute_session_aware(target_ts, in_session, session, phase)
 ```
 
 ## Rolling-window rule
@@ -60,8 +100,9 @@ For a rolling-window feature with window size `W` (e.g. 20-bar SMA on 1-min OHLC
 
 For features that aggregate "today" (VWAP, OHLC, daily_return):
 
-- Half-day sessions emit a row, but the row carries `session_class=HALF_DAY` so downstream consumers can choose to
-  exclude or to scale.
+- Half-day sessions emit a row with `session=REGULAR` (the session enum doesn't currently distinguish half-day from
+  full-day — half-day calendar is DEFERRED). Downstream consumers detect half-day via the absent-row gap or the separate
+  half-day calendar (TBD).
 - `available_at` is stamped at the session-close bar's timestamp (NOT wall-clock midnight), so live and batch agree.
 
 ## Cross-instrument calculation rule
@@ -76,7 +117,9 @@ emitted with the cross-instrument component set to NaN and a typed reason in hon
   [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md) §
   "Session-typed availability"
 - Availability semantics SSOT: `unified_api_contracts.canonical.crosscutting.availability_semantics`
-- Venue trading calendar SSOT: `unified_api_contracts.canonical.crosscutting.venue_trading_calendar`
+- Market-session SSOT (shipped UAC@37f6dfd 2026-05-13): `unified_api_contracts.canonical.crosscutting.market_session`
 - Feature service pattern (BaseCalculator): [`feature-service-pattern.md`](feature-service-pattern.md)
 - TradFi shard atom (per-root + half-day handling):
   [`../02-data/per-asset-group-bucket-layouts.md`](../02-data/per-asset-group-bucket-layouts.md)
+- TradFi futures lifecycle (`CanonicalFuturesContract` + `FuturesContractLifecyclePhase`, shipped UAC@2ac74e2
+  2026-05-13): `unified_api_contracts.canonical.domain.derivatives.futures`

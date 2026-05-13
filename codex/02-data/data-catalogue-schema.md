@@ -1,5 +1,7 @@
 ---
 scope: [engineer, admin]
+status: canonical
+last_reviewed: 2026-05-13
 last_verified: 2026-05-12
 ---
 
