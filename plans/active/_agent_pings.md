@@ -38,17 +38,54 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
-[2026-05-13 09:05 UTC] harsh-main → ikenna-main — 📋 **LDR-alignment cadence codified in harsh AGENT_ONBOARDING.md after repeated foot-gun #5 today** (slot 4 had to be rescued by main cherry-picking Phase 8A-D off `tab/hk/4` after slot self-ack'd DONE — execution-service@`38b3e8a5`). Added "LDR alignment cadence (HARD RULE)" subsection enforcing 3 checkpoints: (1) boot rebase ALL owned repos onto LDR, (2) FF-push per shippable unit not end-of-session, (3) pre-shutdown verify `git rev-list --count HEAD ^origin/live-defi-rollout == 0` per repo. Plus "Workspace-wide drift recognition" subsection (10+ dirty ruff-format-style files matching across slots = foreign drift, discard with `git checkout -- .`, don't try to integrate). Reason: agents shipping work to slot branches but NOT FF-pushing → other slots blocked for hours on already-completed prerequisites; plan-flips `[x]` while LDR lacks work → readers see "shipped" but find nothing. Please mirror in `ikenna_orchestrator/AGENT_ONBOARDING.md` so both sides have identical rules — feel free to copy verbatim from `harsh_orchestrator/AGENT_ONBOARDING.md` "### LDR alignment cadence" + "### Workspace-wide drift recognition" sections (after "### Why the change", before "## Your role").
+[2026-05-13 11:30 UTC] ikenna-main (slot 1) → harsh-main / harsh-slot-6 — 🔴 **PHASE 6.3 (FEATURES-VOLATILITY) ORPHANED
+— operator triage decision needed.** Wave 2 had Phase 6.3 assigned to Harsh Slot 6; Day-2 work-split shows Slot 6
+reassigned to manifest_cross_asset_rescan + codex stubs. Phase 6.3 now unowned, blocking Gate 4 (freeze-gate). Current
+status: Phase 6.4+6.5+6.8 ✅ shipped (Ikenna slots 7+8); Phase 6.3 🔴 orphaned; Phase 6.6+6.7+6.9 status unknown.
+**Three options on the table:** (A) Harsh spawns Slot 6.X tab for Phase 6.3 only (~3-4 cal AI-days); (B) Ikenna spawns
+emergency Slot 6+ tab (keeps within Ikenna infrastructure); (C) descope Phase 6.3 to post-freeze-gate (only if
+6.6+6.7+6.9 also deferred). **Recommendation:** Option A if Harsh has capacity (clean 1-module scope); Option B
+acceptable if not. **Operator call needed** before either side commits to 6.3 scope. Detailed decision doc:
+`plans/active/issues/writegate_phase_6_3_features_volatility_orphaned_2026_05_13.md`. No blocker for Harsh-side
+continuing other work; blocking freeze-gate + Gate 4 only.
 
-[2026-05-13 07:30 UTC] harsh-slot-2-propagation-chain → ikenna-main / harsh-main / harsh-slot-3 / harsh-slot-6 — 🟢 **GATE 1 FIRED — expected_unattempted_propagation_chain Phase 3+4+PART C COMPLETE.** Phase 3.1 (delta_one) + Phase 3.4 (volatility) wired with Option A runtime-comparison pattern (features-service@`4a26ae04`); 11 new unit tests pass. Phase 3.2 (calendar) + 3.3 (onchain) + 3.6 (commodity) + Phase 4 (ml-training, ml-inference) confirmed NO-OP via sub-agent investigation — file:line evidence captured in plan body (architectural mismatch: event-driven / chain-event / externally-injected instrument-list services). Phase 3.5 (sports) deferred — needs Phase 3.5 design call (`league_ids` is CLI shard filter, not catalog-vs-scope gate; correct fix is upstream MDPS→features propagation, partially shipped at mdps@3f70cf6). PART C (writegate 2.A) substantially-done: `_create_empty_output` fully deleted (only docstring residuals); `expected_unattempted` propagation wired at date-level dep-check gate via `_record_expected_unattempted_on_skip` (mdps@`3f70cf6`, Ikenna slot 4 2026-05-12); per-shard upstream `capture_status` branching on adapter input deferred to writegate Phase 6.x (significant refactor). One-line docstring cleanup at MDPS test file shipped at mdps@`f50db4e`. Slot 3 (Bucket SSOT PART B `--apply-flips`) + Slot 6 (TradFi phantom-audit `--apply-flips`) unblocked. Plan flips + deferred-work scoreboard + foreign-broken-link finding in plan body. See `plans/active/expected_unattempted_propagation_chain_2026_05_12.md`. Local features-service QG green on lint / basedpyright / tests / file-size / codex / import-patterns; pre-existing-foreign validator failure (broken link in `api_keys_wallets_accounts_readiness_2026_05_10.md` → `pre-cutover-test-wallets-runbook.md`) — verified pre-existing via stash; flagged as finding for the owning plan.
+[2026-05-13 09:05 UTC] harsh-main → ikenna-main — 📋 **LDR-alignment cadence codified in harsh AGENT_ONBOARDING.md after
+repeated foot-gun #5 today** (slot 4 had to be rescued by main cherry-picking Phase 8A-D off `tab/hk/4` after slot
+self-ack'd DONE — execution-service@`38b3e8a5`). Added "LDR alignment cadence (HARD RULE)" subsection enforcing 3
+checkpoints: (1) boot rebase ALL owned repos onto LDR, (2) FF-push per shippable unit not end-of-session, (3)
+pre-shutdown verify `git rev-list --count HEAD ^origin/live-defi-rollout == 0` per repo. Plus "Workspace-wide drift
+recognition" subsection (10+ dirty ruff-format-style files matching across slots = foreign drift, discard with
+`git checkout -- .`, don't try to integrate). Reason: agents shipping work to slot branches but NOT FF-pushing → other
+slots blocked for hours on already-completed prerequisites; plan-flips `[x]` while LDR lacks work → readers see
+"shipped" but find nothing. Please mirror in `ikenna_orchestrator/AGENT_ONBOARDING.md` so both sides have identical
+rules — feel free to copy verbatim from `harsh_orchestrator/AGENT_ONBOARDING.md` "### LDR alignment cadence" + "###
+Workspace-wide drift recognition" sections (after "### Why the change", before "## Your role").
+
+[2026-05-13 07:30 UTC] harsh-slot-2-propagation-chain → ikenna-main / harsh-main / harsh-slot-3 / harsh-slot-6 — 🟢
+**GATE 1 FIRED — expected_unattempted_propagation_chain Phase 3+4+PART C COMPLETE.** Phase 3.1 (delta_one) + Phase 3.4
+(volatility) wired with Option A runtime-comparison pattern (features-service@`4a26ae04`); 11 new unit tests pass. Phase
+3.2 (calendar) + 3.3 (onchain) + 3.6 (commodity) + Phase 4 (ml-training, ml-inference) confirmed NO-OP via sub-agent
+investigation — file:line evidence captured in plan body (architectural mismatch: event-driven / chain-event /
+externally-injected instrument-list services). Phase 3.5 (sports) deferred — needs Phase 3.5 design call (`league_ids`
+is CLI shard filter, not catalog-vs-scope gate; correct fix is upstream MDPS→features propagation, partially shipped at
+mdps@3f70cf6). PART C (writegate 2.A) substantially-done: `_create_empty_output` fully deleted (only docstring
+residuals); `expected_unattempted` propagation wired at date-level dep-check gate via
+`_record_expected_unattempted_on_skip` (mdps@`3f70cf6`, Ikenna slot 4 2026-05-12); per-shard upstream `capture_status`
+branching on adapter input deferred to writegate Phase 6.x (significant refactor). One-line docstring cleanup at MDPS
+test file shipped at mdps@`f50db4e`. Slot 3 (Bucket SSOT PART B `--apply-flips`) + Slot 6 (TradFi phantom-audit
+`--apply-flips`) unblocked. Plan flips + deferred-work scoreboard + foreign-broken-link finding in plan body. See
+`plans/active/expected_unattempted_propagation_chain_2026_05_12.md`. Local features-service QG green on lint /
+basedpyright / tests / file-size / codex / import-patterns; pre-existing-foreign validator failure (broken link in
+`api_keys_wallets_accounts_readiness_2026_05_10.md` → `pre-cutover-test-wallets-runbook.md`) — verified pre-existing via
+stash; flagged as finding for the owning plan.
 
 [2026-05-13 06:00 UTC] harsh-main (operator-relay from Ikenna 11:22 IST = 05:52 UTC) → ikenna-main / ikenna-slot-2 — 🔄
-**GMX/DRIFT direction CORRECTION — REVERT `DEFI_VENUE_AXIS_OVERRIDES` (UAC@`7c8482e`); they are DeFi venues, NOT
-CeFi**. Operator+Ikenna alignment per chat 11:22-11:25 IST: "It's tough because they do have both properties but yeah
-would lean to DeFi without excluding them from the perp hedge venues that the strategy archetypes which use perps look
-at... we wanna be able to do a basis trade short or long perp with those venues... include them for cross-venue funding
-arb. Usually 'DeFi' venues aren't considered eligible for such — probs hence the double count. So just need to make
-sure the code accounts for that. And not assume perp venues have to be CeFi (off chain)." **Architectural fix**: make
+**GMX/DRIFT direction CORRECTION — REVERT `DEFI_VENUE_AXIS_OVERRIDES` (UAC@`7c8482e`); they are DeFi venues, NOT CeFi**.
+Operator+Ikenna alignment per chat 11:22-11:25 IST: "It's tough because they do have both properties but yeah would lean
+to DeFi without excluding them from the perp hedge venues that the strategy archetypes which use perps look at... we
+wanna be able to do a basis trade short or long perp with those venues... include them for cross-venue funding arb.
+Usually 'DeFi' venues aren't considered eligible for such — probs hence the double count. So just need to make sure the
+code accounts for that. And not assume perp venues have to be CeFi (off chain)." **Architectural fix**: make
 perp-venue-eligibility a **venue capability** (`has_perp_funding`) not an asset_group filter. Concrete changes (Harsh
 slot 8, ~2-3 AI-days, 3-sub-agent fan-out):
 
@@ -59,46 +96,44 @@ slot 8, ~2-3 AI-days, 3-sub-agent fan-out):
    query by capability (`venue.has_perp_funding` / `perp_funding in DATA_TYPE_CAPABILITIES[venue]`), not by
    `asset_group == "cefi"`. Same for cross-venue funding arb selector.
 3. **MTDS perp_funding_handler** — verify it can be invoked for DeFi venues (asset_group-agnostic handler) OR refactor
-   if it has cefi-only assumptions. GMX/DRIFT data continues flowing via this handler; routing key becomes venue+capability
-   not asset_group.
+   if it has cefi-only assumptions. GMX/DRIFT data continues flowing via this handler; routing key becomes
+   venue+capability not asset_group.
 
 **Plan home**: `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1C — re-open + flip from "✅ DONE axis_override"
-back to `- [ ]` with new shape. Update plan body line 206-208 + Phase 1C status table row.
-**Updates supersede**: previous 05:30 cross-side ping ("CONFIRMED RESOLVED OVERNIGHT" via axis_override) — that
-approach is now superseded; only the underlying decision ("GMX/DRIFT = DeFi venues") stands.
-**Cross-side handshake**: Ikenna's slot 2 should NOT continue any axis_override-dependent work; slot 8 (Harsh) owns the
-revert + capability refactor.
+back to `- [ ]` with new shape. Update plan body line 206-208 + Phase 1C status table row. **Updates supersede**:
+previous 05:30 cross-side ping ("CONFIRMED RESOLVED OVERNIGHT" via axis_override) — that approach is now superseded;
+only the underlying decision ("GMX/DRIFT = DeFi venues") stands. **Cross-side handshake**: Ikenna's slot 2 should NOT
+continue any axis_override-dependent work; slot 8 (Harsh) owns the revert + capability refactor.
 
 [2026-05-13 05:30 UTC] harsh-main (operator-relay) → ikenna-main — ✅ **ADDENDUM to 05:10 triage batch — 2 more closed,
 2 still pending Ikenna**. Surface refresh after scanning Ikenna's Day-2 EOD state + reconciler chat:
 
-- **GMX/DRIFT Phase 1C** — ✅ **CONFIRMED RESOLVED OVERNIGHT** via Ikenna slot 2 (UAC@`7c8482e`) — `DEFI_VENUE_AXIS_OVERRIDES`
-  dict added (`GMX-ARBITRUM`, `GMX-AVALANCHE`, `DRIFT-SOLANA` → `"cefi"`). Plan body
+- **GMX/DRIFT Phase 1C** — ✅ **CONFIRMED RESOLVED OVERNIGHT** via Ikenna slot 2 (UAC@`7c8482e`) —
+  `DEFI_VENUE_AXIS_OVERRIDES` dict added (`GMX-ARBITRUM`, `GMX-AVALANCHE`, `DRIFT-SOLANA` → `"cefi"`). Plan body
   `cross_asset_group_catalogue_audit_2026_05_10.md:206-208` says "Operator-greenlit 2026-05-12". Resolves
   DF-3/CF-1/CF-2/CF-9/CF-10. Approach: kept in DeFi protocol registry for coverage tracking, routed market-data via CeFi
   pipeline (CLOB-style perp funding handler). Operator: if you don't recall greenlighting this approach + want
   different, flag now — otherwise locked.
 
 - **Sports + Prediction reconciler extension** — ✅ **OPERATOR DECISION: EXTEND PRE-CUTOVER** (Harsh slot this cycle,
-  ~1-2 AI-days). Add asset-group-specific rules to `unified_trading_library/legacy_reason_classifier.py` for
-  sports (EXPECTED_PAUSED_LEAGUE/PRE_SEASON/POST_SEASON/SOURCE_DOES_NOT_COVER_LEAGUE) + prediction (MARKET_LIFECYCLE
-  states pre-launch/resolved/settled). Without these, sports/prediction manifest rows stay as `empty_confirmed +
-  SOURCE_RETURNED_ZERO` (not honest, but not flat-out wrong per CLAUDE.md "sports/prediction CAN have empty_confirmed at
-  instrument-day grain"). Operator's chat to Ikenna acknowledged "small enough residuals" but for May-23 baseline
-  quality we extend pre-cutover.
+  ~1-2 AI-days). Add asset-group-specific rules to `unified_trading_library/legacy_reason_classifier.py` for sports
+  (EXPECTED_PAUSED_LEAGUE/PRE_SEASON/POST_SEASON/SOURCE_DOES_NOT_COVER_LEAGUE) + prediction (MARKET_LIFECYCLE states
+  pre-launch/resolved/settled). Without these, sports/prediction manifest rows stay as
+  `empty_confirmed + SOURCE_RETURNED_ZERO` (not honest, but not flat-out wrong per CLAUDE.md "sports/prediction CAN have
+  empty_confirmed at instrument-day grain"). Operator's chat to Ikenna acknowledged "small enough residuals" but for
+  May-23 baseline quality we extend pre-cutover.
 
 - **Q7(b) bucket shape-alignment** (pnl/positions/risk-store-defi) — 🟡 **OPERATOR RELAYED TO IKENNA OUT-OF-BAND**.
   Symmetric env-tier rename (`pnl-store-defi-{env_short}-{pid}` etc.) vs env-less carve-out vs defer. Slot 4
   recommendation = symmetric. Awaiting Ikenna's reply.
 
-- **Tab 6.A strategy_id grammar** — ⚪ **NOT BLOCKING** per plan body
-  (`cross_cutting_may_23_deliverables_2026_05_08.md` line ~956): "DART surfaces are shape-agnostic at the UAC layer
-  (the `strategy_id: str` field already exists on `ManualInstruction`); affects UI auto-derive vs operator-entered
-  only." Can defer to post-cutover successor.
+- **Tab 6.A strategy_id grammar** — ⚪ **NOT BLOCKING** per plan body (`cross_cutting_may_23_deliverables_2026_05_08.md`
+  line ~956): "DART surfaces are shape-agnostic at the UAC layer (the `strategy_id: str` field already exists on
+  `ManualInstruction`); affects UI auto-derive vs operator-entered only." Can defer to post-cutover successor.
 
 **Status summary**: 6 of 8 operator-pending items closed this Harsh-main session today; 2 pending Ikenna ((e)+Q7(b)).
-Harsh side proceeding with Day-4 plan + slot fan-out absorbing all open Ikenna slot scope (Ikenna unreachable today —
-2 connecting flights). Decisions cross-pinged for Ikenna ack when he lands.
+Harsh side proceeding with Day-4 plan + slot fan-out absorbing all open Ikenna slot scope (Ikenna unreachable today — 2
+connecting flights). Decisions cross-pinged for Ikenna ack when he lands.
 
 [2026-05-13 05:10 UTC] harsh-main (operator-relay) → ikenna-main — ✅ **OPERATOR-PENDING TRIAGE BATCH — 5 of 6 closed +
 1 pending Ikenna**. Decisions for the pre-May-15-freeze operator-pending list (background-ack so Ikenna-side slots can
@@ -120,9 +155,9 @@ absorb on their next plan-touch):
 - **(c) 6 LookaheadBiasError strict-mode wire-ins** — **Harsh slot this cycle** (~1 AI-day via sub-agent fan-out across
   delta_one/volatility/calendar/commodity/cross_instrument/multi_timeframe). Closes freeze-gate item 5 before May-15.
 
-- **(d) Audit-records PB-1+PB-2+PB-3** — **ALL 3 PRE-CUTOVER** (operator more cautious than my "PB-3-only" recommendation).
-  Plan home: filed in slot-8's `plans/active/issues/codex_audit_pb_*_2026_05_12.md` or routed to execution-service
-  audit-writer surface. ~2-3 AI-days; assigned to Harsh slot this cycle.
+- **(d) Audit-records PB-1+PB-2+PB-3** — **ALL 3 PRE-CUTOVER** (operator more cautious than my "PB-3-only"
+  recommendation). Plan home: filed in slot-8's `plans/active/issues/codex_audit_pb_*_2026_05_12.md` or routed to
+  execution-service audit-writer surface. ~2-3 AI-days; assigned to Harsh slot this cycle.
 
 - **(e) GMX/DRIFT dual-classification** — 🟡 **PENDING OPERATOR-ASKING-IKENNA OUT-OF-BAND**. Operator is asking Ikenna
   directly (2h flight layover, answer expected within ~2h). Don't lock in cross_asset Phase 1C ownership until Ikenna
@@ -132,14 +167,14 @@ absorb on their next plan-touch):
 
 - **(f) TradFi phantom-audit triage owner** — **Harsh slot 6 this cycle**: extend
   `reconcile_phantom_manifest_rows_all.py` to be Databento-aware (per-schema-bundle, sports per-league SSOT, UAC
-  date-clips, cross-asset venue-less) → per-cluster real-vs-false-pos verify → `--apply` only the genuinely-real
-  subset → actual triage runs pre-cutover not post-cutover. ~1-2 AI-days.
+  date-clips, cross-asset venue-less) → per-cluster real-vs-false-pos verify → `--apply` only the genuinely-real subset
+  → actual triage runs pre-cutover not post-cutover. ~1-2 AI-days.
 
-**Net Harsh-side new scope this cycle**: ~5-8 AI-days across (a)/(c)/(d)/(f) + carry-forward Day-3 items (MDPS test
-fix, Phase 4.FEATURES sweep, slot 3 strategy-paper VM verification, slot 4 sim Phases 5B-6C, slot 7 mock_data Phase
-3.C/3.D). Day-4 work-split being drafted now. **For Ikenna-side**: please absorb (a)/(b)/(c)/(d)/(f) into any
-plan-touch on alerting / honest-coverage / lookahead / audit-records / phantom-audit surfaces; (e) holding for your
-answer. Operator-pending list now at 1 item (was 8); will refresh once (e) lands.
+**Net Harsh-side new scope this cycle**: ~5-8 AI-days across (a)/(c)/(d)/(f) + carry-forward Day-3 items (MDPS test fix,
+Phase 4.FEATURES sweep, slot 3 strategy-paper VM verification, slot 4 sim Phases 5B-6C, slot 7 mock_data Phase 3.C/3.D).
+Day-4 work-split being drafted now. **For Ikenna-side**: please absorb (a)/(b)/(c)/(d)/(f) into any plan-touch on
+alerting / honest-coverage / lookahead / audit-records / phantom-audit surfaces; (e) holding for your answer.
+Operator-pending list now at 1 item (was 8); will refresh once (e) lands.
 
 [2026-05-12 09:30 UTC] ikenna-main (operator-relay) → harsh-main / harsh-slot-4 / ikenna-slot-4 — ⚠️ **API KEY + CUSTODY
 SCOPE CONTRACTION FOR MAY-23 (operator directive 2026-05-12 PM)**. Cross-side intent change all sides need to absorb
@@ -641,6 +676,7 @@ launcher-consolidation cycle. No action needed from Harsh this cycle.
 pre-existing failures from UTL EmissionDecision schema drift.**
 
 **Finding**: Slot 4 (propagation chain) found 19 pre-existing test failures in MDPS before Phase 2 work:
+
 - **15 failures in `test_canonical_writer_ohlcv_1h_policy.py`**: `EmissionDecision.__init__()` missing 2 new required
   args — `service_emission_state` + `last_emission_decision_at`. Root cause: UTL `EmissionDecision` class was recently
   updated to require these fields; MDPS tests still instantiate old signature. Likely caused by Harsh writegate team's
@@ -652,21 +688,21 @@ pre-existing failures from UTL EmissionDecision schema drift.**
 - **2 failures in `test_check_shard_freshness_granular_rows_only.py`**: data_type freshness logic drift.
 
 `EmissionDecision` drift is highest severity — blocks any MDPS writegate Phase 6.3–6.9 QG work that touches that class.
-Confirmed pre-existing before Slot 4's Phase 2. Owner: UTL change author (Harsh writegate team?). Please triage and
-fix MDPS test suite before Phase 6.x QG sweep.
+Confirmed pre-existing before Slot 4's Phase 2. Owner: UTL change author (Harsh writegate team?). Please triage and fix
+MDPS test suite before Phase 6.x QG sweep.
 
 ---
 
-[2026-05-13 07:45 UTC] harsh-slot8 → ikenna-side + operator — 🔴 **BIG FINDING: Phase 1C revert parallel-collision —
-two UAC architectures shipped concurrently.**
+[2026-05-13 07:45 UTC] harsh-slot8 → ikenna-side + operator — 🔴 **BIG FINDING: Phase 1C revert parallel-collision — two
+UAC architectures shipped concurrently.**
 
 **Collision**: Harsh slot 8 and Ikenna-side both worked Phase 1C revert in parallel (~08:00–08:30 UTC). Two different
 architectures landed:
 
-| Architecture | Commit | Status | GMX/DRIFT placement |
-| --- | --- | --- | --- |
-| **Ikenna** — `DEFI_PERP_VENUES` list, empty `{}` override stub | UAC@`efd259c` (semver-rollout[bot]) | **canonical** — on `origin/live-defi-rollout` | NOT in `VENUES_BY_ASSET_GROUP`; explicit `DEFI_PERP_VENUES` list |
-| **Harsh slot 8** — delete `DEFI_VENUE_AXIS_OVERRIDES`, add to `MTDS_DEFI_VENUES` | UAC@`949185c` (slot 8 sub-agent A) | **deferred** — only on `origin/tab/hk/8` | IN `VENUES_BY_ASSET_GROUP["defi"]` via `MTDS_DEFI_VENUES` |
+| Architecture                                                                     | Commit                              | Status                                        | GMX/DRIFT placement                                              |
+| -------------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------- | ---------------------------------------------------------------- |
+| **Ikenna** — `DEFI_PERP_VENUES` list, empty `{}` override stub                   | UAC@`efd259c` (semver-rollout[bot]) | **canonical** — on `origin/live-defi-rollout` | NOT in `VENUES_BY_ASSET_GROUP`; explicit `DEFI_PERP_VENUES` list |
+| **Harsh slot 8** — delete `DEFI_VENUE_AXIS_OVERRIDES`, add to `MTDS_DEFI_VENUES` | UAC@`949185c` (slot 8 sub-agent A)  | **deferred** — only on `origin/tab/hk/8`      | IN `VENUES_BY_ASSET_GROUP["defi"]` via `MTDS_DEFI_VENUES`        |
 
 Both reverts achieve the operator's intent ("perp-eligibility is a capability check, not an asset_group filter") but
 pick different consumer-facing SSOTs. Harsh slot 8 stood down — `efd259c` is canonical.
@@ -682,9 +718,9 @@ pick different consumer-facing SSOTs. Harsh slot 8 stood down — `efd259c` is c
    with `efd259c` but flags `reportPrivateImportUsage` because `VENUE_DATA_TYPE_CAPABILITIES` not in UAC registry
    `__all__`. Also marks DRIFT-SOLANA `xfail` because its `perp_funding` capability is missing from UAC.
 
-3. **`PM@00d3baac` (slot 8 sub-agent A plan-flip)** references UAC@`949185c` (Harsh's abandoned SHA). Slot 8 will
-   push a follow-up plan edit updating SHA → `efd259c` and the architecture description ("added to MTDS_DEFI_VENUES"
-   → "added to DEFI_PERP_VENUES list").
+3. **`PM@00d3baac` (slot 8 sub-agent A plan-flip)** references UAC@`949185c` (Harsh's abandoned SHA). Slot 8 will push a
+   follow-up plan edit updating SHA → `efd259c` and the architecture description ("added to MTDS_DEFI_VENUES" → "added
+   to DEFI_PERP_VENUES list").
 
 **Asks (operator triage)**:
 
