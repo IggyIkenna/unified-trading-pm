@@ -318,8 +318,14 @@ Owner: harsh + parallel agent.
       deployment-service@`f87bcb3` — VM launcher `launch-aave-lending-rate-validation-vm.sh` (singleton-locked on
       Alchemy key, n2-standard-4, asia-northeast1-a) + watchdog registration `aave-lending-rate-val-` +
       `defi-validation` bucket in cloud-providers.yaml. GCS bucket `gs://central-element-323112-defi-validation/`
-      provisioned 2026-05-13. **DEFERRED**: actual VM run with real RPC events — operator runs launcher after watchdog
-      relaunch.)
+      provisioned 2026-05-13. **OPERATIONAL RUN 2026-05-13**: VM `aave-lending-rate-val-20260513-173601` (corr_id
+      `41F37242-...`) executed end-to-end on mainnet (blocks 23.3M→25.086M); 60 events collected (USDC:26, USDT:20,
+      DAI:14); `results.json` persisted to `gs://central-element-323112-defi-validation/results/lending/2026-05-13/41F37242-.../results.json`.
+      **Validation gate ❌ 0/60 events pass** — sim ~40-70% LOW vs realized; root cause = stale
+      `AAVE_V3_RATE_MODEL_DEFAULTS_BY_ASSET` (governance drift since table written). P1 follow-up filed:
+      `plans/active/issues/phase_3c_lending_rate_model_0_of_60_pass_2026_05_13.md`. Fix in flight: replace static IRM
+      defaults with live RPC fetch from `Pool.getReserveData → interestRateStrategyAddress →
+      ReserveStrategy.getVariableRateSlope1/2 + OPTIMAL_USAGE_RATIO` per event. Re-run VM after fix lands.)
   - [x] **3C.1 — Event Collector** (RPC `eth_getLogs` batching). Query mainnet for Aave V3 Pool `Supply` events Sep 2025
         → May 2026; filter events >$10M `amount`; extract (block, txhash, pool_address, asset, user, amount, timestamp).
         Target ≥50 events. Store as JSON fixture `tests/defi_execution/integration/fixtures/aave_large_supplies.json`.
