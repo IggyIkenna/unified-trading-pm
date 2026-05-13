@@ -3341,15 +3341,21 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       WIRED 2026-05-12 @features-service@5e24a18c**: `_check_emission_policy()` + `_apply_emission_policy()` in
       `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
       `tests/delta_one/unit/test_emission_policy.py`. cross-instrument wired @features-service@e31ef632 (Phase 6.4).
-      **STILL DEFERRED**: multi-timeframe wiring. **onchain wiring DONE @features-service@6cbf50ff**. **SPORTS
-      BATCH_HANDLER WIRED 2026-05-13 @features-service@a93dc3b4**. **CALENDAR WIRED 2026-05-12
-      @features-service@4623c669 + @uac@c85ecc4**: UAC seeds added (time_features NAN_FILL; economic_events PARTIAL_OK);
-      `_SERVICE_NAME` + `_check_emission_policy()` wired in `features_service/calendar/cli/handlers/batch_handler.py`;
-      completeness_fraction from binary rows_written check (calendar is deterministic — no partial DataFrame at
-      batch_handler boundary); 4 mode-routing tests in `tests/calendar/unit/test_emission_policy.py`. **COMMODITY WIRED
-      2026-05-12 @features-service@9f4b6427 + @uac@82c7405**: UAC seeds added (storage_alpha / crude_storage_alpha /
-      price_momentum NAN_FILL; weather_delta / cot_positioning / rig_count PARTIAL_OK — weekly-cadence sources with
-      expected source gaps); `_SERVICE_NAME` + `_check_emission_policy()` + `_check_and_write_signal()` wired in
+      **MULTI-TIMEFRAME WIRED 2026-05-13 @features-service@3f67c1e8**: `_SERVICE_NAME` + `_SEEDED_FEATURE_GROUPS` +
+      `_check_emission_policy()` + `_emit_group_policies()` in
+      `features_service/multi_timeframe/cli/handlers/batch_handler.py`; completeness_fraction from binary batch success
+      (1.0 on success, 0.0 on exception — same pattern as calendar, no DataFrame at batch_handler boundary); all 4
+      STRICT_FAIL groups (tf_momentum_alignment / tf_structure_context / tf_vol_compression / tf_confluence_signals); 4
+      mode-routing tests in `tests/multi_timeframe/unit/test_emission_policy.py`. **onchain wiring DONE
+      @features-service@6cbf50ff**. **SPORTS BATCH_HANDLER WIRED 2026-05-13 @features-service@a93dc3b4**. **CALENDAR
+      WIRED 2026-05-12 @features-service@4623c669 + @uac@c85ecc4**: UAC seeds added (time_features NAN_FILL;
+      economic_events PARTIAL_OK); `_SERVICE_NAME` + `_check_emission_policy()` wired in
+      `features_service/calendar/cli/handlers/batch_handler.py`; completeness_fraction from binary rows_written check
+      (calendar is deterministic — no partial DataFrame at batch_handler boundary); 4 mode-routing tests in
+      `tests/calendar/unit/test_emission_policy.py`. **COMMODITY WIRED 2026-05-12 @features-service@9f4b6427 +
+      @uac@82c7405**: UAC seeds added (storage_alpha / crude_storage_alpha / price_momentum NAN_FILL; weather_delta /
+      cot_positioning / rig_count PARTIAL_OK — weekly-cadence sources with expected source gaps); `_SERVICE_NAME` +
+      `_check_emission_policy()` + `_check_and_write_signal()` wired in
       `features_service/commodity/cli/handlers/batch_handler.py`; emission check fires once per factor_group before
       `_write_signal_to_gcs` — any STRICT_FAIL suppression aborts the full signal write (consistent with
       \_has_full_factor_coverage fail-loud); 4 mode-routing tests in `tests/commodity/unit/test_emission_policy.py`.
