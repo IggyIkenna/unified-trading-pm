@@ -650,3 +650,48 @@ pre-existing failures from UTL EmissionDecision schema drift.**
 `EmissionDecision` drift is highest severity — blocks any MDPS writegate Phase 6.3–6.9 QG work that touches that class.
 Confirmed pre-existing before Slot 4's Phase 2. Owner: UTL change author (Harsh writegate team?). Please triage and
 fix MDPS test suite before Phase 6.x QG sweep.
+
+---
+
+[2026-05-13 07:45 UTC] harsh-slot8 → ikenna-side + operator — 🔴 **BIG FINDING: Phase 1C revert parallel-collision —
+two UAC architectures shipped concurrently.**
+
+**Collision**: Harsh slot 8 and Ikenna-side both worked Phase 1C revert in parallel (~08:00–08:30 UTC). Two different
+architectures landed:
+
+| Architecture | Commit | Status | GMX/DRIFT placement |
+| --- | --- | --- | --- |
+| **Ikenna** — `DEFI_PERP_VENUES` list, empty `{}` override stub | UAC@`efd259c` (semver-rollout[bot]) | **canonical** — on `origin/live-defi-rollout` | NOT in `VENUES_BY_ASSET_GROUP`; explicit `DEFI_PERP_VENUES` list |
+| **Harsh slot 8** — delete `DEFI_VENUE_AXIS_OVERRIDES`, add to `MTDS_DEFI_VENUES` | UAC@`949185c` (slot 8 sub-agent A) | **deferred** — only on `origin/tab/hk/8` | IN `VENUES_BY_ASSET_GROUP["defi"]` via `MTDS_DEFI_VENUES` |
+
+Both reverts achieve the operator's intent ("perp-eligibility is a capability check, not an asset_group filter") but
+pick different consumer-facing SSOTs. Harsh slot 8 stood down — `efd259c` is canonical.
+
+**Cascading consequences already on `live-defi-rollout`**:
+
+1. **`mtds@6d0ad2a` (slot 8 sub-agent C)** added `TestVenueToAssetGroupLookup` with WRONG assertions —
+   `("GMX", "cefi")`, `("HYPERLIQUID", "cefi")`, etc. Under canonical `efd259c`, `VENUE_TO_ASSET_GROUP["GMX"]` raises
+   `KeyError` (GMX removed from cefi, not added to defi). Test is broken in tree right now. Slot 8 will fix in a
+   follow-up commit (remove the GMX line + rewrite to use `DEFI_PERP_VENUES` membership, OR remove the test class).
+
+2. **`strategy-service@0a62ba1` (slot 8 sub-agent B)** uses `VENUE_DATA_TYPE_CAPABILITIES` for capability check — works
+   with `efd259c` but flags `reportPrivateImportUsage` because `VENUE_DATA_TYPE_CAPABILITIES` not in UAC registry
+   `__all__`. Also marks DRIFT-SOLANA `xfail` because its `perp_funding` capability is missing from UAC.
+
+3. **`PM@00d3baac` (slot 8 sub-agent A plan-flip)** references UAC@`949185c` (Harsh's abandoned SHA). Slot 8 will
+   push a follow-up plan edit updating SHA → `efd259c` and the architecture description ("added to MTDS_DEFI_VENUES"
+   → "added to DEFI_PERP_VENUES list").
+
+**Asks (operator triage)**:
+
+- **A**: Confirm `efd259c` (DEFI_PERP_VENUES) is canonical and slot 8's MTDS_DEFI_VENUES inclusion is rejected. If yes,
+  slot 8 cleans up as described above. If no (operator prefers Harsh's architecture), Ikenna-side will need a follow-up
+  revert of `efd259c` + re-apply `949185c`-style.
+- **B**: DRIFT-SOLANA `perp_funding` capability appears missing in UAC `DEFI_VENUE_DATA_TYPE_CAPABILITIES`. Sub-agent B
+  marked the DRIFT test `xfail` pending the UAC declaration. Who lands the UAC fix — Ikenna or slot 8?
+- **C**: Add `VENUE_DATA_TYPE_CAPABILITIES` to UAC `registry/__init__.py` `__all__` (currently imported into namespace
+  but not exported). Purely additive; slot 8 can ship if no objections.
+
+Slot 8 holding bigger cleanup pending operator response on (A)/(B). Will proceed with (C) (additive) + test-fix for
+cascade #1 (sub-agent C tests are clearly wrong regardless of architecture choice). Strategy/MTDS commits already on
+`live-defi-rollout` — cannot fully back out without operator direction.
