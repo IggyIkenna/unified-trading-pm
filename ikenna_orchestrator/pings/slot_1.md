@@ -1,5 +1,64 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] Writegate Phase 6.x scoreboard refresh + 6.6/6.7/6.9 assignment — 2026-05-13
+
+**Status**: ✅ Phase 6.3 AUTO-SHIPPED; ✅ Phases 6.6/6.7/6.9 ASSIGNED to Ikenna
+
+### Phase 6.x complete status (corrected from earlier "Phase 6.3 orphaned" finding)
+
+| Phase | Scope | Status | Commit / Slot |
+|-------|-------|--------|---------------|
+| **6.3 volatility** | features-service | ✅ SHIPPED 2026-05-13 14:16 UTC | `features-service@d7514a08` (Rollout Agent — auto-shipped while orphan triage was in flight) |
+| **6.4 cross_instrument** | features-service | ✅ SHIPPED | `features-service@e31ef632` (Ikenna slot 7 PART A) |
+| **6.5 delta_one+onchain+calendar+commodity** | features-service | ✅ SHIPPED | `features-service@5e24a18c` / `@6cbf50ff` / `@4623c669` / `@9f4b6427` (Ikenna slot 7 PART B) |
+| **6.6 ml-training + ml-inference** | 2 services | 🔴 NOT STARTED | **👉 Ikenna next-cycle slot (post-Wave 4)** |
+| **6.7 strategy + execution + position + risk** | 4 services | 🔴 NOT STARTED | **👉 Ikenna next-cycle slot (sub-agent fan-out, ~10-15 cal days)** |
+| **6.8 instruments-service catalog** | PART A ✅ / PART B 🔴 | PART A shipped | `instruments-service@27fbc90` (Ikenna slot 8). PART B gated on 6.9 sweep. |
+| **6.9 workspace QG ratchet + flip-sweep** | workspace-wide | 🔴 NOT STARTED | **👉 Ikenna slot 1 main (Gate 4 firing slot, serial after 6.6/6.7/6.8 PART B)** |
+
+### Why Ikenna owns 6.6/6.7/6.9
+
+Per Harsh slot_2.md note (2026-05-13 08:38 UTC): _"Phase 6.3-6.9 = Ikenna slots 6/7/8. Harsh slot 3 clear."_
+Harsh-side never owned the writegate slice (c) tail; it was always Ikenna's. The earlier "Phase 6.3 orphaning"
+issue was a transient mid-cycle Slot 6 reassignment — now obsolete since 6.3 auto-shipped.
+
+### Slot freed: Slot 6+ spawn no longer needed
+
+Phase 6.3 Option B (Ikenna spawns emergency Slot 6+ tab for volatility) is **CANCELLED**. Phase 6.3 was
+auto-shipped by Rollout Agent at `d7514a08` while the orphan triage was still being acted on. Slot capacity
+freed for higher-priority work next cycle (likely Phase 6.6 fan-out).
+
+### Updated Gate 4 fire conditions
+
+Gate 4 (writegate slice-c complete) now requires:
+- ✅ Phase 6.3 (done)
+- ✅ Phase 6.4 (done)
+- ✅ Phase 6.5 (done — all 4 modules)
+- 🔴 Phase 6.6 (Ikenna next-cycle, ~3-10 cal AI-days)
+- 🔴 Phase 6.7 (Ikenna next-cycle, ~5-15 cal AI-days, sub-agent fan-out)
+- 🟡 Phase 6.8 PART B (gated on 6.9 sweep, ~1-2 cal AI-days)
+- 🔴 Phase 6.9 (Ikenna slot 1 main — serial after 6.6/6.7/6.8 PART B, ~2 cal AI-days)
+
+**Estimated Gate 4 fire** (per density-push pace ~100-200 cal AI-days/side/day; ref `feedback_pace_calibration`):
+Total ~10-30 cal AI-days at ~100-200/day = **0.5-1.5 calendar days from 2026-05-13** = **2026-05-14 to 2026-05-15**.
+Phase 6.9 freeze-gate workspace flip lands **PRE-FREEZE-GATE** and **PRE-CUTOVER**. Workspace QG baseline reset
+completes inside the May-15 freeze window — does NOT roll into post-cutover backlog.
+
+**Earlier (incorrect) estimate** of 2026-05-26 to 2026-06-02 mis-applied 1 cal-day = 1 calendar-day. Per the
+2026-05-12 Day-1 measured pace (5 of 7 Ikenna slots closed entire 4-day cycle in 1 calendar day = ~5× prior
+calibration), the workspace runs ~100-200 cal AI-days/side/day. Corrected here.
+
+### Updated coordination plan
+
+- Cross-side ping to be filed in `_agent_pings.md`: Ikenna formally claims Phase 6.6/6.7/6.9 ownership (no
+  Harsh-side action required; just informational).
+- Writegate plan body annotated with Ikenna ownership at Phase 6.6/6.7/6.9 (this commit).
+- Master plan inventory regenerator to be re-run EOD to pick up the new flip + ownership annotations.
+
+---
+
+
+
 ## [slot 1 main] Operator decisions locked + coordination ledger filed — 2026-05-13
 
 **Status**: ✅ DECISIONS LOCKED; 🟡 AWAITING HARSH-MAIN PHASE 6.x STATUS

@@ -710,9 +710,12 @@ cancellations.
       api_football across 2024-2026; confirm for each whether: (a) same `fixture_id` retained at the new kickoff, OR (b)
       new `fixture_id` issued at reschedule, OR (c) original `fixture_id` deleted + replaced. Document the
       empirically-correct model in `codex/02-data/sports-fixtures-lifecycle.md` (NEW codex doc; see codex todo below).
-- [ ] [AGENT] P0. NEW codex doc `unified-trading-pm/codex/02-data/sports-fixtures-lifecycle.md` capturing: status enum
+- [x] [AGENT] P0. NEW codex doc `unified-trading-pm/codex/02-data/sports-fixtures-lifecycle.md` capturing: status enum
       taxonomy, postponed-fixture identity model (case a/b/c), cross-source verifier rules, FIXTURES_STATUS_DISCREPANCY
-      event semantics. SSOT for both this section + Issue-1 schema split.
+      event semantics. SSOT for both this section + Issue-1 schema split. **COMPLETED 2026-05-13**: PM@1a86b6ab —
+      shipped sports-fixtures-lifecycle.md with 8-state lifecycle + per-state available_at table + cross-source verifier
+      design (responsibilities + architecture diagram + consensus decision logic + adapter integration via MatchStatus
+      SSOT). Postponed-fixture identity model (cases a/b/c) deferred pending empirical investigation (sibling todo).
 
 ### Match HT/ET/PEN timestamps + score-distinction columns + pre-features extractor (Q5 + Q6 + Q7 from `instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08`)
 

@@ -746,6 +746,44 @@ either create the missing runbook stub or update the markdown link.
 
 ---
 
+## 🔴 BIG FINDING 2026-05-13 slot 4 — sports phantom audit reveals retired-data-type tech debt
+
+**Discovered**: Round 3 phantom dry-run (post-tarball-refresh) for sports identified 99,620 phantom captures.
+Distribution by data_type:
+
+| Data Type | Phantoms | Status |
+|-----------|----------|--------|
+| TRANSFERMARKT_LEAGUES | 75,960 | **RETIRED 2026-05-05** — moved to UAC `TRANSFERMARKT_IDS` constant |
+| SFI_LEAGUES | 12,777 | **RETIRED 2026-05-05** — moved to UAC `SOCCER_FOOTBALL_INFO_IDS` constant |
+| INJURIES | 9,843 | REAL phantoms (api_football) — phantom reconciler handles |
+| Other | ~1,040 | Mixed — likely real phantoms |
+
+**88,737 of the 99,620 "phantoms" are LEGACY rows from RETIRED data types.** These are NOT real phantoms (the data
+type itself no longer exists). They should be flipped to `empty_confirmed` + `error_reason=EXPECTED_DEPRECATED_DATA_TYPE`
+per `manifest_migration_master_2026_05_07.md` § C.1 LEAGUES kill (UAC reason code shipped `uac@97dccc3`).
+
+**Why this matters**: Running `--unphantom` on sports would flip 88,737 retired-data-type rows to `attempted_failed`,
+which is the WRONG state. The migration script approach is correct: flip to `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE`
+which clips the denominator in deployment-api data-status panel (per codex SSOT).
+
+**Existing migration script** (`instruments-service/scripts/migrate_leagues_kill_2026_05_07.py`):
+- Handles ONLY `LEAGUES` (api_football data type) — `RETIRED_DATA_TYPE = "LEAGUES"` hardcoded
+- DOES NOT handle TRANSFERMARKT_LEAGUES, SFI_LEAGUES, SFI_STANDINGS
+
+**Slot 4 task (assigned 2026-05-13)**:
+1. Generalize `migrate_leagues_kill_2026_05_07.py` to accept multiple retired data_types (parameterize the constant)
+2. Run via same-region GCE VM with `--apply` against sports manifest
+3. After successful flip + panel verification, delete daily parquets via `gcloud storage rm -r`
+4. THEN run phantom reconciler `--unphantom` on remaining ~10,883 real phantoms (INJURIES + others)
+
+**Follow-up tech debt** (deferred to separate plan):
+- instruments-service `engine/orchestrator.py` still has TRANSFERMARKT_LEAGUES + SFI_LEAGUES + SFI_STANDINGS entries
+  in `_DATA_TYPE_TO_PIPELINE_MODE` (lines 156-160) and entity-wanted dispatching (multiple sites). Code should be
+  cleanly removed (write-path kill, similar to api_football LEAGUES kill at `instruments-service@93efebf`).
+- deployment-api `data_status_service.py` has 6+ references that should filter retired types out of the panel.
+
+---
+
 ## Deferred work after 2026-05-12 slot-4-session-close session
 
 | Phase / item | Status as of 2026-05-12 | Successor / blocker |
