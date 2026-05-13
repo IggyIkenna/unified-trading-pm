@@ -34,14 +34,19 @@ Gate 4 (writegate slice-c complete) now requires:
 - ✅ Phase 6.3 (done)
 - ✅ Phase 6.4 (done)
 - ✅ Phase 6.5 (done — all 4 modules)
-- 🔴 Phase 6.6 (Ikenna next-cycle)
-- 🔴 Phase 6.7 (Ikenna next-cycle)
-- 🟡 Phase 6.8 PART B (gated on 6.9 sweep)
-- 🔴 Phase 6.9 (Ikenna slot 1 main — serial after 6.6/6.7/6.8 PART B)
+- 🔴 Phase 6.6 (Ikenna next-cycle, ~3-10 cal AI-days)
+- 🔴 Phase 6.7 (Ikenna next-cycle, ~5-15 cal AI-days, sub-agent fan-out)
+- 🟡 Phase 6.8 PART B (gated on 6.9 sweep, ~1-2 cal AI-days)
+- 🔴 Phase 6.9 (Ikenna slot 1 main — serial after 6.6/6.7/6.8 PART B, ~2 cal AI-days)
 
-Estimated Gate 4 fire: ~12-20 calibrated AI-days from 2026-05-13 = **2026-05-26 to 2026-06-02** (1-2 weeks
-post May-23 cutover; falls into post-cutover work envelope). Phase 6.9 freeze-gate workspace flip is therefore
-**post-cutover** — does not block May-23 live launch but DOES block the workspace QG baseline reset.
+**Estimated Gate 4 fire** (per density-push pace ~100-200 cal AI-days/side/day; ref `feedback_pace_calibration`):
+Total ~10-30 cal AI-days at ~100-200/day = **0.5-1.5 calendar days from 2026-05-13** = **2026-05-14 to 2026-05-15**.
+Phase 6.9 freeze-gate workspace flip lands **PRE-FREEZE-GATE** and **PRE-CUTOVER**. Workspace QG baseline reset
+completes inside the May-15 freeze window — does NOT roll into post-cutover backlog.
+
+**Earlier (incorrect) estimate** of 2026-05-26 to 2026-06-02 mis-applied 1 cal-day = 1 calendar-day. Per the
+2026-05-12 Day-1 measured pace (5 of 7 Ikenna slots closed entire 4-day cycle in 1 calendar day = ~5× prior
+calibration), the workspace runs ~100-200 cal AI-days/side/day. Corrected here.
 
 ### Updated coordination plan
 

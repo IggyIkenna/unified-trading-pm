@@ -767,7 +767,7 @@ cascade #1 (sub-agent C tests are clearly wrong regardless of architecture choic
 - **Phase 6.7** (strategy + execution + position-balance + risk): Ikenna next-cycle slot, ~5-15 cal AI-days (largest writegate phase; sub-agent fan-out across 4 services)
 - **Phase 6.9** (workspace QG ratchet + flip-sweep): Ikenna slot 1 main, ~2 cal AI-days, serial after 6.6/6.7/6.8 PART B
 
-**Updated Gate 4 fire estimate**: ~12-20 calibrated AI-days from today = **2026-05-26 to 2026-06-02** (1-2 weeks post May-23 cutover). Phase 6.9 freeze-gate workspace flip is therefore **post-cutover** — does not block May-23 live launch but does block the workspace QG baseline reset.
+**Updated Gate 4 fire estimate** (corrected per density-push pace ~100-200 cal AI-days/side/day): total ~10-30 cal AI-days at ~100-200/day = **0.5-1.5 calendar days from today** = **2026-05-14 to 2026-05-15**. Phase 6.9 freeze-gate workspace flip lands **PRE-CUTOVER** + **inside the May-15 freeze window**. Workspace QG baseline reset completes pre-cutover (removed from post-cutover backlog).
 
 **Writegate plan body** annotated at Phase 6.3 (flipped `[x]`) + Phase 6.6/6.7/6.9 (Ikenna ownership lines). `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` is the canonical source.
 

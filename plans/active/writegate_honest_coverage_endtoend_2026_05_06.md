@@ -3372,9 +3372,9 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       consuming poly-fit + ATR across timeframes (same STRICT_FAIL reasoning as the 4 seeded entries). Not seeded
       because operator estimate was ~2 entries; add in Phase-2 alongside the rest of the wedge/RR layer.
 
-**Phase 6.6 — ml-training + ml-inference (P0, ~3-10 days)** — 👉 **OWNER: Ikenna (next-cycle slot, post-Wave 4)**
+**Phase 6.6 — ml-training + ml-inference (P0, ~3-10 cal AI-days)** — 👉 **OWNER: Ikenna (this-cycle Wave 4/5 spawn — pre-2026-05-15 freeze)**
 
-> **Ownership annotation 2026-05-13** (ikenna-main, slot 1): Phase 6.6 inherited per Harsh slot_2.md "Phase 6.3-6.9 = Ikenna slots 6/7/8" + Phase 6.3 auto-shipping at `features-service@d7514a08` (Rollout Agent). Composes with Phase 4.DEFAULT-REMOVAL prerequisite (5 of 6 services have legacy `ManifestWriter.add()` callsites; ~10-15 cal AI-days mix of refactor 0.4× + brand-new 1.0×). Slot assignment: next-cycle Ikenna spawn after current Wave 4 closes.
+> **Ownership annotation 2026-05-13** (ikenna-main, slot 1): Phase 6.6 inherited per Harsh slot_2.md "Phase 6.3-6.9 = Ikenna slots 6/7/8". Composes with Phase 4.DEFAULT-REMOVAL prerequisite (5 of 6 services have legacy `ManifestWriter.add()`; ~10-15 cal AI-days mix of refactor 0.4× + brand-new 1.0×). Per density-push pace ~100-200 cal AI-days/side/day (`feedback_pace_calibration`), this is **~0.5 calendar days** of work — fits this-cycle Wave 4/5 slot, NOT next-cycle. Target: pre-2026-05-15 freeze gate.
 
 - [ ] [ml-training] P0. Wire at the model-version-emission boundary: BLOCK_CRITICAL policy means a partial-coverage
       training run does NOT publish a model_version artifact + fires a P0 alert. Operator must manually triage. The P0
@@ -3383,9 +3383,9 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [ ] [ml-inference] P0. Wire at the per-strategy-signal emission boundary: STRICT_FAIL policy means a stale-feature
       window produces no signal + STALE_DATA event. Strategy sees no signal → defers entry per its own handling.
 
-**Phase 6.7 — strategy-service + execution-service + position-balance + risk (P0, ~5-15 days)** — 👉 **OWNER: Ikenna (next-cycle slot, post-Wave 4)**
+**Phase 6.7 — strategy-service + execution-service + position-balance + risk (P0, ~5-15 cal AI-days)** — 👉 **OWNER: Ikenna (this-cycle Wave 4/5 spawn — pre-2026-05-15 freeze)**
 
-> **Ownership annotation 2026-05-13** (ikenna-main, slot 1): Phase 6.7 inherited per Harsh slot_2.md "Phase 6.3-6.9 = Ikenna slots 6/7/8". Largest writegate phase (4 services). Composes with Phase 4.DEFAULT-REMOVAL prerequisite (each service has existing ManifestWriter `.add()` usage that needs migration before slice-(c) wiring on top). Realistic estimate per harsh slot 3 scope-discovery: ~10-15 cal AI-days. Slot assignment: next-cycle Ikenna sub-agent fan-out (one slot can drive 4 sub-agents, one per service) after current Wave 4 closes.
+> **Ownership annotation 2026-05-13** (ikenna-main, slot 1): Phase 6.7 inherited per Harsh slot_2.md "Phase 6.3-6.9 = Ikenna slots 6/7/8". Largest writegate phase (4 services). Composes with Phase 4.DEFAULT-REMOVAL prerequisite. Realistic ~10-15 cal AI-days mix. Per density-push pace ~100-200 cal AI-days/side/day, this is **~0.5-1 calendar day** of work via sub-agent fan-out (1 slot → 4 sub-agents, one per service). Target: pre-2026-05-15 freeze gate, parallel with Phase 6.6.
 
 - [ ] [strategy-service] P0. Wire at the per-archetype-signal emission boundary (STRICT_FAIL). Includes both the
       live-mode signal generation AND the batch-mode replay path — same shape per the Batch=Live rule.
@@ -3439,9 +3439,9 @@ migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wirin
       clean. Zero `.add()` violations. Remaining: wire `publish_with_policy` on top (path (a) Phase 6.8 PART B — gated
       on Phase 6.9 sweep).
 
-**Phase 6.9 — Slice-(c) workspace-wide audit + ship-gate (P0, ~2 days)** — 👉 **OWNER: Ikenna (Gate 4 firing slot, post-6.6/6.7/6.8)**
+**Phase 6.9 — Slice-(c) workspace-wide audit + ship-gate (P0, ~2 cal AI-days)** — 👉 **OWNER: Ikenna slot 1 main (Gate 4 firing — pre-2026-05-15 freeze)**
 
-> **Ownership annotation 2026-05-13** (ikenna-main, slot 1): Phase 6.9 inherited per Harsh slot_2.md "Phase 6.3-6.9 = Ikenna slots 6/7/8". Gate 4 firing condition. Serial-dependent on Phase 6.6 + 6.7 + 6.8 PART B completion. Slot 1 main directly owns the workspace-wide flip-sweep + QG STEP ratchet authoring (single-operator coordination; flip-sweep touches every service plan).
+> **Ownership annotation 2026-05-13** (ikenna-main, slot 1): Phase 6.9 inherited per Harsh slot_2.md "Phase 6.3-6.9 = Ikenna slots 6/7/8". Gate 4 firing condition. Serial-dependent on Phase 6.6 + 6.7 + 6.8 PART B. Per density-push pace ~100-200 cal AI-days/side/day, the 2 cal AI-days = **~1-2 hours** calendar time. Lands inside the May-15 freeze gate window — **PRE-CUTOVER**, not post-cutover. Slot 1 main directly owns the workspace-wide flip-sweep + QG STEP ratchet authoring.
 
 - [ ] [QG] P0. NEW QG STEP that statically walks every service repo's calculator/adapter source tree + asserts every
       `record_captured()` callsite for a derived-output data_type ALSO has a paired `publish_with_policy()` /
