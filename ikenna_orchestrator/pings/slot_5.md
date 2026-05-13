@@ -395,3 +395,44 @@ Current scope status:
 - ✅ Bonus: sports_master / codex SSOT docs / 33 test additions earlier
 
 Slot 5 idle. Standing by for next direction.
+
+---
+
+## [slot 5 → main] Phase 3 (partial) + Phase 5 SHIPPED — 2026-05-13 (post-15min-wakeup)
+
+User direction "check again whats on your total list now on your slot must be something even if not scoped for today" →
+audited deferred items and pushed forward on bounded autonomous-safe scope.
+
+### Workspace unblock (incidental but critical)
+
+- **UAC@6c3865b** — Fixed 2 duplicate `CircuitBreakerId` enum values (`ORACLE_STALENESS_SECONDS` lines 147+173,
+  `LENDING_POOL_UNAVAILABLE_SECONDS` lines 153+197) introduced by commit `adcfcf5`. StrEnum raises TypeError on
+  duplicate names → **all UAC consumer imports were failing workspace-wide**. Same outage class as the aster_ticker fix
+  earlier. Inline comments preserved the second-add's docstring intent (threshold defaults belong in breaker registry,
+  not enum docstring).
+
+### tradfi futures plan progress
+
+- **UAC@6c3865b** also adds Phase 3 enum entry: `EmptyConfirmedReason.LEGACY_MIGRATION_MISSING_EXPIRY` (member #24).
+  Used by the future migration script to mark legacy options/futures rows where Databento RDC lookup can't resolve
+  expiration. Tagged into the bundled commit since both files touched the same `crosscutting/` directory.
+
+- **PM@32c7ea52** — Phase 5 QG ratchet: `check_canonical_futures_construction.py` (182 lines) + 7 unit tests. AST-walks
+  every `CanonicalFuturesContract(...)` callsite + validates all 11 required kwargs are present. Exempts `**kwargs`
+  spread as warning (test files use this intentionally). Default mode: errors → exit 1, warnings → exit 0.
+
+### tradfi futures plan checklist state
+
+- ✅ Phase 0: pre-audit
+- ✅ Phase 1A: greenfield class + enum (UAC@2ac74e2)
+- ✅ Phase 1B: `expiration` flip + Deribit parser + Databento guards (UAC@dd407ae)
+- ✅ Phase 2: pre-audit grep manifest (composed with Phase 0)
+- 🟡 Phase 3: enum entry SHIPPED (UAC@6c3865b); migration script DEFERRED (touches real GCS data, needs operator
+  approval)
+- ⏸️ Phase 4: consumer cascade — pending coordination with `hard_schema_enforcement_2026_05_08`
+- ✅ Phase 5: QG ratchet (PM@32c7ea52, 7 tests green)
+
+Plan status: `phase_1_3_5_complete`. Only Phase 3 migration script (real-infra op) + Phase 4 consumer cascade
+(cross-plan coordination) remain. Both await orchestrator direction.
+
+Slot 5 idle, standing by for next direction.

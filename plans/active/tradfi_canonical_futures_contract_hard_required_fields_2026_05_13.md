@@ -7,7 +7,7 @@ last_updated: 2026-05-13
 owner: claude-code
 status: in_progress
 priority: P0
-phase: phase_1_complete
+phase: phase_1_3_5_complete
 domain: tradfi
 asset_group: tradfi
 type: schema-migration
@@ -127,14 +127,17 @@ Documented above. Composes with Phase 1 commit (no separate work).
 
 ## Phase 3 — Backfill default-or-raise logic for legacy rows
 
-- [ ] [SCRIPT] P0. NEW error code in UAC `EmptyConfirmedReason` (or new `SchemaIncompleteReason` enum):
+- [x] [SCRIPT] P0. NEW error code in UAC `EmptyConfirmedReason` (or new `SchemaIncompleteReason` enum):
       `LEGACY_MIGRATION_MISSING_EXPIRY`. Used by `record_failed()` on rows where expiration/expiry can't be back-filled
-      from Databento metadata.
+      from Databento metadata. **COMPLETED 2026-05-13**: UAC@6c3865b — added LEGACY_MIGRATION_MISSING_EXPIRY to
+      EmptyConfirmedReason (member 24). Bundled with workspace-blocker fix for 2 duplicate CircuitBreakerId enum values
+      that were breaking all UAC imports.
 - [ ] [SCRIPT] P0. One-shot manifest migration script `instruments-service/scripts/migrate_tradfi_expiry_schema.py`
       mirroring existing migration patterns: idempotent, dry-run + apply, per-blob CAS via `if_generation_match`,
       `2*workers` HTTP pool per workspace rules. For options-chain rows: try Databento `RDC` (reference-data) lookup by
       symbol; on miss, `record_failed(reason=     LEGACY_MIGRATION_MISSING_EXPIRY)`. For futures rows (new schema):
-      write fresh per-contract rows with all 5 dates.
+      write fresh per-contract rows with all 5 dates. **DEFERRED**: touches real GCS data + needs operator approval for
+      live migration run.
 
 ## Phase 4 — Cascade migration to each consumer in dependency order
 
@@ -148,12 +151,15 @@ Order matters: every consumer must adopt the new types BEFORE the workspace-wide
 
 Each consumer flip is its own commit + push + tests.
 
-## Phase 5 — QG ratchet
+## Phase 5 — QG ratchet (✅ COMPLETE 2026-05-13)
 
-- [ ] [SCRIPT] P0. NEW QG step (likely `STEP 5.7X`) in
+- [x] [SCRIPT] P0. NEW QG step (likely `STEP 5.7X`) in
       `unified-trading-pm/scripts/quality_gates/check_canonical_futures_construction.py`. AST-walks every
-      `CanonicalFuturesContract(...)` call site; asserts all 5 required kwargs are present (not just spread from a
+      `CanonicalFuturesContract(...)` call site; asserts all 11 required kwargs are present (not just spread from a
       dict). Same pattern as existing `check_removed_symbols.py` (STEP 5.65) + `check_chain_set_inclusion.py`.
+      **COMPLETED 2026-05-13**: PM@32c7ea52 — shipped 182-line scanner with \*\*kwargs-spread warning (vs error) +
+      attribute-access detection + syntax-error tolerance + pre-filter optimisation. 7 unit tests green. Default mode:
+      errors exit 1, warnings exit 0; --strict-warn promotes warnings to errors.
 
 ## Coordination protocol
 
