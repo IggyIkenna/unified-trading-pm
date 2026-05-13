@@ -244,13 +244,21 @@ instead of writing nothing.
       correct shape; instrument-not-yet-listed day → record_empty with EXPECTED_INSTRUMENT_NOT_LISTED (existing rule);
       pre-genesis-chain day for DeFi → record_empty with EXPECTED_PRE_GENESIS_CHAIN.
       **DEFERRED — part of the case-D *implementation*, post-cutover** (tests pair with the adapter wiring above).
-- [ ] [DOCS] P0. Codex update to `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` §
+- [x] [DOCS] P0. Codex update to `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` §
       "Zero-activity-bar shape" — table of bar-shape per data_type, with explicit pre-LTP-carry-forward semantics + the
       volatility-smile use case (operator-flagged: every strike must be visible even on zero-volume days for
       cross-instrument analysis).
-      **DEFERRED — stub the case-D design + deferral pointer; deferrable since case-D impl itself is post-cutover.** The
-      audit findings (`../archive/issues/wave3x_track_d_findings_2026_05_11.md`) are the substantive interim record; slot 1 / a
-      Wave 3.M follow-up adds the codex stub alongside the implementation plan.
+      **SHIPPED 2026-05-13 (slot 6 wave 2, PM@<sha>)**: added `## Zero-activity-bar shape (case-D design —
+      implementation deferred post-cutover)` section to `codex/02-data/honest-absence-downstream-handling.md` —
+      per-data_type carry-forward table (ohlcv/trades/book_snapshot/derivative_ticker/options_chain/DeFi-continuous/prediction
+      CLOB), vol-smile constraint, Wave 3.M implementation requirements, and successor-plan pointer.
+- [ ] [PLAN] P2. **DEFERRED-AFTER-CUTOVER** File `plans/active/wave3x_track_d_implementation_<date>.md` — the Wave 3.M
+      case-D implementation plan. Scope: NEW UTL `zero_activity_bars(last_snapshot, data_type, interval_close)` primitive
+      + `instrument_catalog` threaded at adapter construction (MTDS/MDPS/features) + per-adapter case-D wire-in per the
+      carry-forward table in `codex/02-data/honest-absence-downstream-handling.md` § "Zero-activity-bar shape" + sports
+      historical case-D re-scoped to instruments-service (NOT MTDS — per D3 audit finding). Per operator decision #4 in
+      `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`. Owner: slot 1 or the writegate Phase 3.D.5 Wave 2/3
+      owner, post-2026-05-23 cutover.
 
 ### Track E — Wave 3.S sports per-source rules (sports services, ~3 days)
 
