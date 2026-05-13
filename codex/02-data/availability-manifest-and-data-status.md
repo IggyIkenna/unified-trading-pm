@@ -174,19 +174,25 @@ caller code or assuming the legacy contract:
 
 **Streaming-writer companion — `record_captured_from_counts` (shipped UTL@`ef47c81b` per
 [`wave2_polymarket_record_captured_from_counts_2026_05_09.md`](../../plans/active/wave2_polymarket_record_captured_from_counts_2026_05_09.md):49-60).**
-`ManifestWriter.record_captured_from_counts(row_key, total_rows, expected_root_clusters, cluster_extractor, observed_clusters, available_at_envelope)`
+`ManifestWriter.record_captured_from_counts(row_key, total_rows, expected_root_clusters, cluster_extractor, observed_clusters, available_at_envelope, pipeline_mode)`
 is the streaming-writer-friendly variant of `record_captured`. Accepts `total_rows` (int) + `cluster_counts`
-(`observed_clusters` mapping) + `available_at_envelope` (UTC timestamp) instead of a pandas DataFrame — used by
-streaming writers (PartitionedTickWriter et al) that need to satisfy the BUNDLED_DATA_TYPES cluster validation gate
-without reconstructing per-row DataFrames at finalize time. Internally calls the same `_check_cluster_coverage` private
-gate + `assert_available_at_present` on the envelope timestamp + writes the manifest row. Failure modes mirror
-`record_captured`: under-coverage → `record_failed(ClusterCoverageError)`, missing/null envelope → `LookaheadBiasError`,
-empty observed → `record_empty(SOURCE_RETURNED_ZERO)`. 11 unit tests at
+(`observed_clusters` mapping) + `available_at_envelope` (UTC timestamp) + `pipeline_mode` (required) instead of a
+pandas DataFrame — used by streaming writers (PartitionedTickWriter et al) that need to satisfy the BUNDLED_DATA_TYPES
+cluster validation gate without reconstructing per-row DataFrames at finalize time. Internally calls the same
+`_check_cluster_coverage` private gate + `assert_available_at_present` on the envelope timestamp + writes the manifest
+row. Failure modes mirror `record_captured`: under-coverage → `record_failed(ClusterCoverageError)`, missing/null
+envelope → `LookaheadBiasError`, empty observed → `record_empty(SOURCE_RETURNED_ZERO)`. 11 unit tests at
 `tests/unit/test_manifest_writer_record_captured_from_counts.py` cover full-coverage success, under-coverage routing,
 None/NaT/naive envelope, total_rows=0, unknown row_key column, multiple-call idempotency, non-UTC tz acceptance,
-feature_group sibling-presence guard, attempted_at honored. Long-term plan deletes the legacy `add()` path entirely once
-every bundled-shard callsite migrates (Wave-2 Phases 3-4); reviewers reject any new `add()` callsite for bundled
-data_types post-migration.
+feature_group sibling-presence guard, attempted_at honored.
+
+**Legacy `add()` ban for bundled data_types (Wave-2 Phase 4, 2026-05-13):** `ManifestWriter.add()` now raises
+`ValueError` when called with any bundled data_type (Phase 2 DeprecationWarning promoted to hard error). QG STEP 5.73
+adds a static grep ratchet banning `add(data_type="<bundled>")` literal callsites. The Phase 3 P1 workspace audit
+(2026-05-13) confirmed ALL bundled-shard callsites (MTDS Polymarket + CME-OPTIONS) are migrated. Non-bundled callers
+(instruments-service, features-service, strategy-service) continue to use `add()` — full deletion of `add()` follows
+when non-bundled callers migrate to `record_captured` (successor plan TBD). 14 unit tests at
+`tests/unit/test_manifest_writer_add_deprecation_warning.py` enforce the ValueError behavior.
 
 **Bundled data_types (cluster validation mandatory):**
 
