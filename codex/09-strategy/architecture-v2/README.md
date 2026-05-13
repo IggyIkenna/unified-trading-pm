@@ -535,6 +535,8 @@ ML_DIRECTIONAL_CONTINUOUS@hyperliquid-btc-5m-usdt-prod
 ML_DIRECTIONAL_CONTINUOUS@hyperliquid-btc-5m-usdt-v2-prod       (model swap, same archetype)
 CARRY_BASIS_PERP@uniswap-hyperliquid-eth-usdt-prod
 CARRY_STAKED_BASIS@lido-aave-hyperliquid-eth-prod
+CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod    # Solana-native: JitoSOL as Drift cross-margin
+CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod # Solana-native: mSOL as Drift cross-margin
 YIELD_ROTATION_LENDING@aave-multichain-usdc-prod
 ARBITRAGE_PRICE_DISPERSION@unity-epl-1x2-usd-prod
 MARKET_MAKING_EVENT_SETTLED@betfair-epl-mm-gbp-prod
