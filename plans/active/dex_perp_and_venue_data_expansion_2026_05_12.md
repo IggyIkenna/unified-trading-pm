@@ -104,10 +104,12 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `tardis.download_batch` with exchange from `_VM.get_tardis_exchange_for_venue("LIGHTER-ZKSYNC")` =
       `"lighter-zksync"`; pre-2026-04-17 falls back to `_fetch_lighter_rest`.
 
-- [ ] [SCRIPT] P0. **Add `market_stats` → `derivative_ticker` column mapping for Lighter-Tardis.** Tardis `market_stats`
-      message type carries funding_rate, mark_price, index_price, open_interest. Map to canonical `derivative_ticker`
-      output columns. Add normalisation in the Tardis parsing layer or in the Lighter-specific post-processor. Follow
-      the EXTENDED-STARKNET pattern at line ~1026.
+- [x] [SCRIPT] P0. **Add `market_stats` → `derivative_ticker` column mapping for Lighter-Tardis.** (MTDS@78bde77)
+      Added `_TARDIS_DATA_TYPE_RENAMES = {"market_stats": "derivative_ticker"}` class attr to `TardisAdapter` +
+      updated `_canonical_data_type` to check the dict. Fixed `df["data_type"]` assignment in `_write_symbol_batch`
+      to use `_canonical_data_type(data_type)` so parquet column value matches GCS path. Added
+      `derivative_ticker→market_stats` translation in LIGHTER-ZKSYNC routing block of `umi_tick_provider.py` so
+      callers use canonical data_type and the adapter remaps transparently.
 
 - [ ] [TEST] P1. **Unit tests: Lighter routing date-threshold.** Parametrize: date < 2026-04-17 → REST path; date >=
       2026-04-17 → Tardis path. Mock Tardis client at fetch boundary. ≥4 test cases.
@@ -141,18 +143,17 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 ### 2D: Drift adapter — S3 archive + Data API (PARALLEL with 2A/2B/2C/2E)
 
-- [ ] [SCRIPT] P0. **Write `drift_adapter.py` in MTDS adapters directory.** Two-source adapter: S3 archive (2022 →
-      2025-01-01): GET
-      `https://drift-historical-data-v2.s3.eu-west-1.amazonaws.com/program/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/market/{SYMBOL}-PERP/tradeRecords/{YYYY}/{YYYYMMDD}`.
-      Data API (2025-01-01 → present): `GET https://data.api.drift.trade/trades?marketName=SOL-PERP`. Funding rates:
-      same pattern via `fundingRates` endpoint. Output data_types: `trades` + `derivative_ticker` (funding_rate).
-      Markets: SOL-PERP, BTC-PERP, ETH-PERP + major alts. Shard-level failure isolation: catch per-instrument errors,
-      emit `record_failed(error=...)`, continue. Classify all venue errors via UAC `classify_venue_error()` + emit
-      `ADAPTER_FETCH_FAILED`.
+- [x] [SCRIPT] P0. **Write `drift_adapter.py` in MTDS adapters directory.** (MTDS@66fb712) 360-line adapter with
+      two-source routing: S3 archive URL pattern
+      `https://drift-historical-data-v2.s3.eu-west-1.amazonaws.com/program/.../market/{SYMBOL}-PERP/tradeRecords/{YYYY}/{YYYYMMDD}`;
+      Data API `GET https://data.api.drift.trade/trades?marketName={SYMBOL}-PERP` and
+      `/fundingRates?marketName={SYMBOL}-PERP`. `_DRIFT_API_START = "2025-01-01"` date boundary. Shard-level isolation
+      via `PerLeafFailureRouter`. Classify errors via `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED`.
+      Entry point: `async def fetch_drift_data(date, data_types, instrument_ids, writer, ...)`.
 
-- [ ] [SCRIPT] P0. **Wire `DRIFT` venue routing in `umi_tick_provider.py`.** Add
-      `if venue_upper in ("DRIFT", "DRIFT-SOLANA"):` branch calling `drift_adapter`. Date routing: date < 2025-01-01 →
-      S3 archive fetch; date >= 2025-01-01 → Data API. No auth required (free APIs).
+- [x] [SCRIPT] P0. **Wire `DRIFT` venue routing in `umi_tick_provider.py`.** (MTDS@66fb712) Added
+      `if venue_upper in ("DRIFT", "DRIFT-SOLANA"):` branch (lines 180-191) importing and calling `fetch_drift_data`
+      from `drift_adapter`. Date routing (< / >= 2025-01-01) handled inside the adapter itself.
 
 - [ ] [TEST] P1. **Unit tests for Drift adapter.** Mock S3 HTTP + Data API responses. Test date-routing boundary,
       funding rate parse, shard-level isolation (one failed instrument doesn't abort loop). ≥8 cases. Use `responses`
