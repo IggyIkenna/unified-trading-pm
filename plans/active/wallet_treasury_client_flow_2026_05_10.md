@@ -295,9 +295,15 @@ emitted daily including HWM section.
       (deployment-api@b1aa800 — client_treasury.py; UAC schemas@66f1c1f; 15 tests pass incl 3 cross-endpoint reconciliation)
 - [x] [AGENT] P0. **6.B `/api/clients/{id}/subscriptions` endpoint.** Per-client share-class subscription list.
       (deployment-api@b1aa800 — client_treasury.py; 6 subscription list tests pass; ClientSubscriptionListResponse with active_count + total_active_allocation_pct)
-- [ ] [AGENT] P0. **6.C deployment-ui Treasury tab.** Per-client view: subscriptions + allocations + custody pings +
+- [x] [AGENT] P0. **6.C deployment-ui Treasury tab.** Per-client view: subscriptions + allocations + custody pings +
       post-trade history + withdrawal request button.
-- [ ] [AGENT] P0. **6.D Playwright smoke.**
+      (unified-trading-system-ui@456459f0 — /services/treasury landing + /services/treasury/[clientId] deep-dive;
+      5 components: TreasuryRollupCard + ClientTreasuryCard + SubscriptionsList + CustodyPingBadges +
+      WithdrawalRequestButton modal; API client treasury-client.ts + mock fixtures mocks/treasury.ts; ESLint+TS clean)
+- [x] [AGENT] P0. **6.D Playwright smoke.**
+      (unified-trading-system-ui@3da36251 — tests/e2e/treasury-flow.spec.ts; 13 tests: rollup card + source rows +
+      recon badge + client deep-dive + subscriptions archetypes + custody pings + post-trade history +
+      withdrawal modal open/submit/cancel + back navigation; mock mode, no backend required)
 
 **Full-execution criterion**: operator can drive demo client treasury view end-to-end in real-cloud mode.
 
