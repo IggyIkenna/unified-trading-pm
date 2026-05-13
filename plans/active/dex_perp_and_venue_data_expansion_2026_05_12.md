@@ -127,9 +127,11 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       underlying coin (e.g. `PF_XBTUSD` → `BTC`). Dated futures include expiry in filename — preserve expiry suffix in
       instrument_id as `BTC-20251226`. Add UAC constant for Tardis→canonical symbol map. Emit
       `record_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` for symbols absent from instruments-service.
+      **DEFERRED**: Requires UAC + MTDS dual-repo changes + careful coordination re on-disk symbol column convention.
+      Multi-repo scope → Ikenna slot preferred. Successor: this plan Phase 2B (leave open; next Ikenna touch).
 
 - [ ] [TEST] P1. **Unit tests: Kraken Futures symbol normalisation.** Test perp + dated + unknown symbol edge cases. ≥6
-      cases.
+      cases. **DEFERRED**: Blocked by implementation above.
 
 ### 2C: BitFinex Derivatives adapter via Tardis (PARALLEL with 2A/2B/2D/2E)
 
@@ -141,6 +143,8 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 - [ ] [SCRIPT] P1. **BitFinex symbol normalisation.** Pattern `tXXXF0:USTF0` → extract `XXX` as coin. Handle edge cases:
       XBTF0 → BTC (BitFinex uses XBT not BTC). Add normalisation constant to UAC.
+      **DEFERRED**: Requires UAC + MTDS dual-repo changes + careful coordination re on-disk symbol column convention.
+      Multi-repo scope → Ikenna slot preferred. Successor: this plan Phase 2C (leave open; next Ikenna touch).
 
 ### 2D: Drift adapter — S3 archive + Data API (PARALLEL with 2A/2B/2C/2E)
 
