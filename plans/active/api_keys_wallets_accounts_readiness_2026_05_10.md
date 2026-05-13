@@ -1076,7 +1076,7 @@ The N×M wallet topology has TWO axes that are orthogonal but commonly conflated
 
 ### Provisioning implication
 
-In the envelope-encrypt flow ([`pre-cutover-test-wallets-runbook.md`](pre-cutover-test-wallets-runbook.md) § 2.2):
+In the envelope-encrypt flow ([`pre-cutover-test-wallets-runbook.md`](../../codex/05-infrastructure/pre-cutover-test-wallets-runbook.md) § 2.2):
 
 - **EVM**: operator hands one PK; agent wraps once; agent creates N config rows (one per EVM chain in scope) with the same `private_key_secret_ref` but different `chain` + `allowed_protocols` + `spending_caps` + `kill_switch_id`.
 - **Solana / Hyperliquid / Bitcoin**: per-chain PK; per-chain wrap; per-chain config row.
