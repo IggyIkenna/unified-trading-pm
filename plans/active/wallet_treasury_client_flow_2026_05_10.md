@@ -282,7 +282,7 @@ emitted daily including HWM section.
 
 ## Phase 6 — deployment-api + ui Treasury tab (Days 10-11, ~1 AI-day)
 
-- [ ] [AGENT] P0. **6.A `/api/clients/{id}/treasury` endpoint — CONSUMER ROLE (ratified 2026-05-10 cross-plan audit Q7
+- [x] [AGENT] P0. **6.A `/api/clients/{id}/treasury` endpoint — CONSUMER ROLE (ratified 2026-05-10 cross-plan audit Q7
       per most-comprehensive-owner rule).** Per-client attribution view. Consumes the canonical multi-source rollup
       shipped by
       [`api_keys_wallets_accounts_readiness_2026_05_10.md`](api_keys_wallets_accounts_readiness_2026_05_10.md) Phase 3.D
@@ -291,11 +291,15 @@ emitted daily including HWM section.
       `(treasury_sources, custody_ping_results, allocations, last_settled)` from PBM state populated by api_keys
       Phase 3. NAV reconciliation invariant:
       `Σ over all clients of /api/clients/{id}/treasury.nav == /api/treasury/rollup.nav` — tested in Phase 6.D
-      Playwright smoke + an additional cross-endpoint reconciliation test.
-- [ ] [AGENT] P0. **6.B `/api/clients/{id}/subscriptions` endpoint.** Per-client share-class subscription list.
-- [ ] [AGENT] P0. **6.C deployment-ui Treasury tab.** Per-client view: subscriptions + allocations + custody pings +
-      post-trade history + withdrawal request button.
-- [ ] [AGENT] P0. **6.D Playwright smoke.**
+      Playwright smoke + an additional cross-endpoint reconciliation test. (deployment-api@a0f68a3 — routes/treasury.py
+      GET /api/clients/{id}/treasury; 16 unit tests green)
+- [x] [AGENT] P0. **6.B `/api/clients/{id}/subscriptions` endpoint.** Per-client share-class subscription list.
+      (deployment-api@a0f68a3 — routes/treasury.py GET /api/clients/{id}/subscriptions; covered by 16 unit tests)
+- [x] [AGENT] P0. **6.C deployment-ui Treasury tab.** Per-client view: subscriptions + allocations + custody pings +
+      post-trade history + withdrawal request button. (deployment-ui@d1d892a — TreasuryTab.tsx + api/treasury.ts +
+      TreasuryTab.test.tsx; 5 Vitest tests green)
+- [x] [AGENT] P0. **6.D Playwright smoke.** (deployment-ui@353c28c — tests/smoke/treasury_tab.spec.ts; 5 smoke tests
+      covering nav render, COPPER UNREACHABLE, withdrawal dialog, NAV reconciliation invariant)
 
 **Full-execution criterion**: operator can drive demo client treasury view end-to-end in real-cloud mode.
 
