@@ -460,7 +460,7 @@ features-\* service. Three real drifts found, one fixed in this session, two rec
 
 ### Fixed this session
 
-- [x] [UAC] P0 (shipped UAC@600bd21). `SHARD_AXIS_MATRIX[("features-onchain-service", DEFI)]` referenced `protocol_id`
+- [x] [UAC] P0 (shipped UAC@600bd21). `SHARD_AXIS_MATRIX[("features-service (onchain family)", DEFI)]` referenced `protocol_id`
       as a shard axis. `protocol_id` is **NOT** in UTL `_ROW_KEY_COLUMNS` (manifest_writer.py) — i.e. not a real
       manifest column. The hierarchical-drilldown `_filter_manifest` silently no-ops on axes missing from the manifest
       DataFrame, so every features-onchain DEFI drilldown collapsed at that level. Per the codex DeFi shard atom

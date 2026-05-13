@@ -257,7 +257,7 @@ Every emitter must use `AlertCode` enum, not raw strings. Fail-loud on unknown.
 - [ ] [SCRIPT] P0. `position-balance-monitor-service/`: emit `BALANCE_DRIFT`, `POSITION_DRIFT`.
 - [ ] [SCRIPT] P0. `execution-service/`: emit `KILL_SWITCH_*` from KillSwitchBus + `ORDER_REJECTION_SPIKE` from
       rejection-tracker.
-- [ ] [SCRIPT] P0. `features-onchain-service/`: emit `DEFI_HEALTH_FACTOR_CRITICAL` (from Aave health-factor calculator),
+- [ ] [SCRIPT] P0. `features-service (onchain family)/`: emit `DEFI_HEALTH_FACTOR_CRITICAL` (from Aave health-factor calculator),
       `DEFI_AAVE_UTILIZATION_SPIKE` (from Aave pool-utilization calc), `DEFI_FUNDING_RATE_FLIP` (from perp funding
       calc), `DEFI_FEATURE_STALE` (from feature-staleness watchdog), `DEFI_WEETH_DEPEG` (from LST-peg deviation calc).
 - [ ] [SCRIPT] P0. Each emitter: add unit test asserting alert payload conforms to `DefiAlert` envelope + `AlertCode`
@@ -623,7 +623,7 @@ tracked here so the next agent picks up cleanly without re-reading session notes
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
-- **Phase 3 producer-side emission for `features-onchain-service`**: 4 of 5 services done per existing audit; features-
+- **Phase 3 producer-side emission for `features-service (onchain family)`**: 4 of 5 services done per existing audit; features-
   onchain DEFERRED to defi_master Fork 1 (per Sub-B finding 2026-05-08).
 - **Codex `alert-code-taxonomy.md` ML category section**: still open under DEFERRED-PER-FOOTGUN-3 from 2026-05-08;
   unrelated to this session's Phase 4 / 7 scope.
@@ -731,7 +731,7 @@ operator-decision finding (Sub-B), 1 hit usage cap mid-Wave-2 (Sub-G — partial
   - position-balance-monitor-service@`d206ab3` (Sub-G Wave 2) — reconciliation_engine + fee_reconciliation_engine
     AlertEvents stamped with AlertCode.
   - risk-and-exposure-service@`915f0de` (Sub-G Wave 2) — RiskMonitor.\_send_alert AlertMessage stamped with AlertCode.
-  - features-onchain-service: **DEFERRED** (calculators not yet wired; defi_master Fork 1 territory per Sub-B finding).
+  - features-service (onchain family): **DEFERRED** (calculators not yet wired; defi_master Fork 1 territory per Sub-B finding).
 - **Phase 5 — DART integration**:
   - unified-trading-system-ui@`e9559565` (Sub-D) — AlertDetailModal + SeverityBreakdownWidget + notification-bell
     poll-interval + critical-only badge filter + Playwright `live-operator` ack-flow spec. 19/19 vitest green.

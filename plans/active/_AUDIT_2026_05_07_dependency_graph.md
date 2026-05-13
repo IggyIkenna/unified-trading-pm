@@ -479,7 +479,7 @@ Closest candidates (not yet — listed for follow-up tracking):
    `inference_shap.py` + orchestrator wiring). Plan body says "no schema field" but verified at
    `internal/domain/ml/schemas.py:605`. Flipped to DONE.
 9. **cda-p2-microstructure (consolidated_strategy_and_ui)**:
-   `features-delta-one-service/.../calculators/microstructure.py` + tests shipped. Flipped to DONE.
+   `features-service (delta-one family)/.../calculators/microstructure.py` + tests shipped. Flipped to DONE.
 10. **features-cross-instrument paired-dispersion stack** (UAC@`0e7ba95` +
     features-cross-instrument@`d1da107`/`071604f`/etc.) belongs to **strategy v2 Phase 9**, NOT to feature_dag plan.
     Confusion risk: anyone reading "features-cross-instrument shipped" in commit logs may falsely flip feature_dag items

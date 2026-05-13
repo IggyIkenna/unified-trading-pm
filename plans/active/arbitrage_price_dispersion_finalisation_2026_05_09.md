@@ -287,7 +287,7 @@ in plan order).
 3. **Leverage cap → `target_leverage = 5.0`.** 5× max (operator override of the 3× conservative default). Slot config
    field `target_leverage: "5.0"`. Live-cutover risk discipline relies on the vol-cap clamp (Q4) + position-balance-
    monitor + kill-switch wiring rather than a low static cap.
-4. **Volatility-cap clamp → short-term realised-vol features (NOT 60-day).** Use `features-volatility-service`'s
+4. **Volatility-cap clamp → short-term realised-vol features (NOT 60-day).** Use `features-service (volatility family)`'s
    short-window outputs: `realized_vol_5` / `realized_vol_10` / `realized_vol_20` (5/10/20 bar annualized close-to-
    close, computed at
    [`features_service/volatility/calculators/realized_vol_calculator.py`](../../../features-service/features_service/volatility/calculators/realized_vol_calculator.py)).

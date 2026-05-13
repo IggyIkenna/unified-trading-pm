@@ -161,14 +161,14 @@ master_to_live_defi Group F todo flipped.
 
 ---
 
-## Phase 5 — Critical code-finding ISSUE-1 — owner: features-onchain-service
+## Phase 5 — Critical code-finding ISSUE-1 — owner: features-service (onchain family)
 
 **Target ship:** 2026-05-12 (3 days). Carry_staked_basis archetype features depend on this calculator; suppression
 violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
 - [ ] [AGENT] P0. **ISSUE-1**: File issue doc at
       `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` (covered by this plan's Phase 0
-      below). Then fix: `features-onchain-service/features_onchain_service/app/core/feature_writer.py:125-131` — remove
+      below). Then fix: `features-service (onchain family)/features_onchain_service/app/core/feature_writer.py:125-131` — remove
       `contextlib.suppress(LookaheadBiasError)` wrapper around `PointInTimeEnforcer(strict=True)`. Investigate WHY
       suppression was added (likely upstream `available_at` stamping gap from writegate Phase 2.D) and either fix
       upstream stamping OR file blocker on writegate Phase 2.D landing first. Done = wrapper removed + tests green +

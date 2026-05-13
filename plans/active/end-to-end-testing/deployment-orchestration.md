@@ -117,7 +117,7 @@ pipeline:
   - service: market-data-processing-service
     operation: compute
     depends_on: [market-tick-data-service]
-  - service: features-onchain-service
+  - service: features-service (onchain family)
     operation: compute
     depends_on: [market-data-processing-service]
   # ... rest of pipeline

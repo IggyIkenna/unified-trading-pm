@@ -1,17 +1,17 @@
 ---
-title: "E2E Test: features-multi-timeframe-service"
-service: features-multi-timeframe-service
+title: "E2E Test: features-service (multi-timeframe family)"
+service: features-service (multi-timeframe family)
 date: 2026-03-22
 status: pending
 ---
 
-# E2E Test: features-multi-timeframe-service
+# E2E Test: features-service (multi-timeframe family)
 
 Follows `procedure.md`. Pipeline position: #9 (L3b features layer — multi-resolution aggregation of delta-one features).
 
 ## Upstream Dependencies
 
-- **features-delta-one-service** — single-timeframe delta-one features (`delta_one_features_multi_tf` source spec)
+- **features-service (delta-one family)** — single-timeframe delta-one features (`delta_one_features_multi_tf` source spec)
 
 This service reads delta-one features computed at a base timeframe and re-aggregates them at multiple higher timeframes
 (5m, 15m, 1h, 4h, 1d). It does NOT re-fetch market data — it operates entirely on pre-computed feature outputs.
@@ -33,7 +33,7 @@ features-multi-timeframe
   --run-tag TAG         GCS output prefix (default: batch; use t1-recon for T+1 reconciliation)
 ```
 
-**Note:** This service uses `--operation` (standard CLI convention) unlike features-cross-instrument-service. The `info`
+**Note:** This service uses `--operation` (standard CLI convention) unlike features-service (cross-instrument family). The `info`
 operation prints service metadata (base timeframe, supported timeframes, enabled feature groups, source specs) without
 doing any computation. Category defaults to `crypto` (maps to CEFI/DEFI) and is free-text — no argparse `choices`
 restriction. No `--dry-run` flag — use `info` operation for validation. No `--feature-groups` filtering.
@@ -243,7 +243,7 @@ diff <(head -1 ./data/samples/mock/*.csv) <(head -1 ./data/samples/real/*.csv)
 | 7.4 | Info operation        | Clean metadata output, exit code 0                          |        |
 | 7.5 | Error classification  | Upstream read failures emit structured error events         |        |
 | 7.6 | Memory watchdog       | "Memory watchdog started" logged via start_memory_watchdog  |        |
-| 7.7 | Tracing               | setup_tracing called for "features-multi-timeframe-service" |        |
+| 7.7 | Tracing               | setup_tracing called for "features-service (multi-timeframe family)" |        |
 | 7.8 | Async lifecycle       | `svc.startup()` and `svc.shutdown()` both called cleanly    |        |
 
 ## Known Issues Audit
@@ -299,4 +299,4 @@ definitions in UAC.
 
 ## Next Service
 
-After features-multi-timeframe-service passes all phases → proceed to `010_ml_training_service.md`
+After features-service (multi-timeframe family) passes all phases → proceed to `010_ml_training_service.md`

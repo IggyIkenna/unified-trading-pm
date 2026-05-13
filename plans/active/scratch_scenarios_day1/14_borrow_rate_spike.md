@@ -61,5 +61,5 @@ action_c: IMMEDIATE_UNWIND (≤ recall_window_hours / 2 deadline)
 ### Open questions
 
 - **Baseline window for "spike" definition** — 24h median vs 7d median vs 30d. Recommend 7d (smooths weekly cyclicality but catches regime shift). Per-asset override needed for stablecoins (different volatility profile).
-- **`funding_arb_breakeven_minutes_remaining` feature** — does this exist in features-cross-instrument? If not, propose adding under `features-cross-instrument-service/scripts/derived_features/`. **DEFERRED-TO-PHASE-2-IMPL**.
+- **`funding_arb_breakeven_minutes_remaining` feature** — does this exist in features-cross-instrument? If not, propose adding under `features-service (cross-instrument family)/scripts/derived_features/`. **DEFERRED-TO-PHASE-2-IMPL**.
 - **CeFi recall-notice schema** — Bybit + Binance margin-loan-recall API formats differ; need adapter normalization in MTDS `market_interface/cefi/margin_rates_adapter/` (or wherever per-venue margin-rate fetch lives). Worth a separate small plan if not already covered.

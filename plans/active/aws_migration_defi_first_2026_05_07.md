@@ -158,7 +158,7 @@ bot, PagerDuty key — see [alerting_service_live_rules_2026_05_07.md](alerting_
 ### ECR repos — partial coverage
 
 Have: `instruments-service`, `unified-trading-library`, `unified-trading-system`, `market-tick-data-service`. Need for
-DeFi cutover: `features-onchain-service`, `strategy-service`, `execution-service`, `risk-and-exposure-service`,
+DeFi cutover: `features-service (onchain family)`, `strategy-service`, `execution-service`, `risk-and-exposure-service`,
 `position-balance-monitor-service`, `alerting-service`, `deployment-api`, `deployment-service`. **8 ECR repos to
 create.**
 
@@ -364,7 +364,7 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
 
 ### Phase 3 — ECR repos + per-service buildspec.aws.yaml (1 day, **PARALLEL** with Phase 2)
 
-- [ ] [SCRIPT] P0. `aws ecr create-repository` for the 8 missing service ECR repos: `features-onchain-service`,
+- [ ] [SCRIPT] P0. `aws ecr create-repository` for the 8 missing service ECR repos: `features-service (onchain family)`,
       `strategy-service`, `execution-service`, `risk-and-exposure-service`, `position-balance-monitor-service`,
       `alerting-service`, `deployment-api`, `deployment-service`. Region `ap-northeast-1`.
 - [ ] [SCRIPT] P0. Copy `deployment-service/buildspec.aws.yaml` to each of the 8 service repos, parameterise per-service
@@ -414,7 +414,7 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
 
 ### Phase 6 — ECS Fargate / App Runner deployment of DeFi-live services (2 days)
 
-For 6 always-on DeFi-live services: `alerting-service`, `execution-service`, `features-onchain-service`,
+For 6 always-on DeFi-live services: `alerting-service`, `execution-service`, `features-service (onchain family)`,
 `strategy-service`, `risk-and-exposure-service`, `position-balance-monitor-service`. Plus `deployment-api` (operator
 UX).
 
@@ -469,7 +469,7 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
 Both GCP and AWS prod-DeFi pipelines run simultaneously, reading the same manifest, writing to their respective stores.
 Operator verifies parity.
 
-- [ ] [SCRIPT] P0. Configure `instruments-service` + `features-onchain-service` + `strategy-service` to dual-write: GCP
+- [ ] [SCRIPT] P0. Configure `instruments-service` + `features-service (onchain family)` + `strategy-service` to dual-write: GCP
       for primary, AWS for secondary. Use a feature flag `DUAL_CLOUD_DEFI=true`.
 - [ ] [SCRIPT] P0. Run for 24h continuous. After 24h, sample 10% of DeFi shards + diff GCP vs AWS parquets. Acceptance:
       byte-equal or schema+row-count match (NaN-aware compare).

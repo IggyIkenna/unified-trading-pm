@@ -1,11 +1,11 @@
 ---
-title: "E2E Test: features-onchain-service"
-service: features-onchain-service
+title: "E2E Test: features-service (onchain family)"
+service: features-service (onchain family)
 date: 2026-03-22
 status: pending
 ---
 
-# E2E Test: features-onchain-service
+# E2E Test: features-service (onchain family)
 
 Follows `procedure.md`. Pipeline position: #7 (L3 features layer).
 
@@ -44,7 +44,7 @@ Uses `ServiceCLI` from unified-trading-library with custom `_extra_args`:
 - `--dry-run`, `--force`, `--log-level`
 
 Note: `onchain_perps` feature group is DEPRECATED — Hyperliquid/Aster now use CEFI bucket via
-features-delta-one-service.
+features-service (delta-one family).
 
 ## Test Matrix
 
@@ -154,7 +154,7 @@ The parser accepts `live` mode (and `incremental` as deprecated alias). Verify l
 | 7.6 | Memory watchdog         | "Memory watchdog started" logged                      |        |
 | 7.7 | Graceful shutdown       | GracefulShutdownHandler registered + cleanup callback |        |
 | 7.8 | Correlation ID          | correlation_id present in error events                |        |
-| 7.9 | Tracing                 | `setup_tracing("features-onchain-service")` called    |        |
+| 7.9 | Tracing                 | `setup_tracing("features-service (onchain family)")` called    |        |
 
 ## Known Issues Audit
 
@@ -198,4 +198,4 @@ Verify that the output schema from this service matches what the API layer expec
 
 ## Next Service
 
-After features-onchain-service passes all phases -> proceed to `008_ml_training_service.md`
+After features-service (onchain family) passes all phases -> proceed to `008_ml_training_service.md`

@@ -1,11 +1,11 @@
 ---
-title: "E2E Test: features-commodity-service"
-service: features-commodity-service
+title: "E2E Test: features-service (commodity family)"
+service: features-service (commodity family)
 date: 2026-03-22
 status: pending
 ---
 
-# E2E Test: features-commodity-service
+# E2E Test: features-service (commodity family)
 
 Follows `procedure.md`. Pipeline position: L3 features layer. Computes commodity-specific factor signals
 (contango/backwardation, roll yield, seasonal patterns, inventory signals, weather-related factors, COT positioning, rig
@@ -185,4 +185,4 @@ Live is the default mode. The service iterates over `enabled_commodities` from c
 
 ## Next Service
 
-After features-commodity-service passes all phases, proceed to `011_features_sports_service.md`
+After features-service (commodity family) passes all phases, proceed to `011_features_sports_service.md`

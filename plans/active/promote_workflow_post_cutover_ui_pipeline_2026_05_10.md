@@ -135,9 +135,9 @@ Phase 12 (codex SSOT batch)             ── runs alongside, codex per phase p
   - `strategy_instance_id: str`.
   - `version_id: str` (links to `StrategyVersion`).
   - `archetype: StrategyArchetype`.
-  - `pinned_shas: dict[str, str]` (workspace-manifest snapshot — UAC, UTL, strategy-service, execution-service, features-onchain-service, instruments-service, etc.).
+  - `pinned_shas: dict[str, str]` (workspace-manifest snapshot — UAC, UTL, strategy-service, execution-service, features-service (onchain family), instruments-service, etc.).
   - `model_refs: list[ModelRef]` (model_id, model_version, training_run_id per ML prediction consumed).
-  - `features_manifest_version: str` (per features-onchain-service feature_group versions).
+  - `features_manifest_version: str` (per features-service (onchain family) feature_group versions).
   - `venue_keys_ref: list[SecretManagerPath]` (Secret Manager paths for venue keys; resolved at boot but PINNED at promote-time so future changes don't silently affect the live deployment).
   - `chain_rpc_pins: dict[str, str]` (chain_name → RPC URL snapshot from `CHAIN_RPC_TEMPLATES`).
   - `wallet_ref: WalletRef` (custody endpoint + wallet address).

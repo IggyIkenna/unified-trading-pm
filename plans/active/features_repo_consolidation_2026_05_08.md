@@ -33,35 +33,35 @@ repo_gates:
     code: C0
     deployment: none
     business: none
-  - repo: features-calendar-service
+  - repo: features-service (calendar family)
     code: C0
     deployment: none
     business: none
-  - repo: features-commodity-service
+  - repo: features-service (commodity family)
     code: C0
     deployment: none
     business: none
-  - repo: features-cross-instrument-service
+  - repo: features-service (cross-instrument family)
     code: C0
     deployment: none
     business: none
-  - repo: features-delta-one-service
+  - repo: features-service (delta-one family)
     code: C0
     deployment: none
     business: none
-  - repo: features-multi-timeframe-service
+  - repo: features-service (multi-timeframe family)
     code: C0
     deployment: none
     business: none
-  - repo: features-onchain-service
+  - repo: features-service (onchain family)
     code: C0
     deployment: none
     business: none
-  - repo: features-sports-service
+  - repo: features-service (sports family)
     code: C0
     deployment: none
     business: none
-  - repo: features-volatility-service
+  - repo: features-service (volatility family)
     code: C0
     deployment: none
     business: none
@@ -758,7 +758,7 @@ todos:
         - **deployment-api@b91bca2d** — `_SERVICE_LAUNCHER_SCRIPTS` in
           `deployment_api/services/deploy_missing.py` updated: every legacy `features-<family>-service` slug
           + the new `features-service` slug + two previously-missing slugs
-          (`features-commodity-service`, `features-multi-timeframe-service`) all point at the consolidated
+          (`features-service (commodity family)`, `features-service (multi-timeframe family)`) all point at the consolidated
           `launch-features-vm.sh`. The Deploy-Missing UI button now generates the parameterised launcher
           CLI for all 8 family slugs.
 
@@ -916,7 +916,7 @@ todos:
 
         **DEFERRED**: features-service repo itself has 345 ruff lint errors (RUF002/RUF003/RUF005/RUF012/SIM117/etc.
         across all 8 sub-packages) — these are pre-existing source-repo style violations that were masked in source
-        repos via `per-file-ignores` (e.g. features-calendar-service had `"features_calendar_service/**/*.py" = ["C901"]`
+        repos via `per-file-ignores` (e.g. features-service (calendar family) had `"features_calendar_service/**/*.py" = ["C901"]`
         + `tests/**/E501`). The consolidation pyproject.toml dropped these per-source per-file-ignores. Fixing 345
         errors is its own work-stream beyond Phase 10 sweep scope; the consolidation-induced routing-test fix
         (deployment-api@8012a12 — adds 3 missing representative row_keys for features-service / features-commodity /
@@ -1138,21 +1138,21 @@ loud at every features-\* + MDPS compute, not warn-mode").
 
 **Status today** (per Phase 0 audit § 9.3):
 
-- `features-onchain-service` ✅ enforces production-side
-- `features-sports-service` ✅ enforces production-side
-- `features-calendar-service` ❌ references only in tests
-- `features-cross-instrument-service` ❌ references only in tests
-- `features-multi-timeframe-service` ❌ references only in tests
-- `features-volatility-service` ❌ references only in tests
-- `features-commodity-service` ❌ **zero references**
-- `features-delta-one-service` ❌ **zero references**
+- `features-service (onchain family)` ✅ enforces production-side
+- `features-service (sports family)` ✅ enforces production-side
+- `features-service (calendar family)` ❌ references only in tests
+- `features-service (cross-instrument family)` ❌ references only in tests
+- `features-service (multi-timeframe family)` ❌ references only in tests
+- `features-service (volatility family)` ❌ references only in tests
+- `features-service (commodity family)` ❌ **zero references**
+- `features-service (delta-one family)` ❌ **zero references**
 
 **Action — add Phase 5 sub-todo**: while lifting `LookaheadBiasError` per the existing Phase 5 todo, ALSO extend the
 gate to fire production-side in all 8 families. Each family's compute entry-point gets an
 `assert_no_lookahead_for_feature_group(...)` call before processing inputs. Per-family unit tests asserting raise on
 stale input. Lands as part of the same logical unit as the helper lift to UTL (avoids two churn cycles).
 
-### F2 — `features-onchain-service/config.py` does not import `UnifiedCloudConfig` ⚠️ SSOT-violation
+### F2 — `features-service (onchain family)/config.py` does not import `UnifiedCloudConfig` ⚠️ SSOT-violation
 
 **Severity**: P1 / workspace SSOT violation per CLAUDE.md Key Rules ("`UnifiedCloudConfig` / `config.key_name` — never
 `os.getenv('KEY', '')`"). Other 7 features-\* repos all import it.
@@ -1188,14 +1188,14 @@ FeatureBatchHandler / ManifestFreshnessCache greenfields if not landed by `ml_an
 
 Plan-body Phase 4.1 talked about `features_<f1>` importing from `features_<f2>` as a routine concern (cross-instrument
 depending on delta-one outputs, etc.). **Phase 0 audit found ZERO production cross-family imports.** Only ONE
-cross-family Python dep exists workspace-wide: `features-delta-one-service/tests/unit/.../test_temporal.py` imports
+cross-family Python dep exists workspace-wide: `features-service (delta-one family)/tests/unit/.../test_temporal.py` imports
 `features_calendar_service`. Phase 4.1's grep+sed pass is essentially trivial — one test-file rewrite + the 11 external
 import lines documented in Phase 0 § (b).
 
 **Action — none required.** Phase 4.1 is shorter than scoped; no plan change. Documented for future agent so they don't
 expect to find dozens of cross-family imports.
 
-### F5 — `features-sports-service` is the largest family by every dimension
+### F5 — `features-service (sports family)` is the largest family by every dimension
 
 **Severity**: P2 / Phase 3 sequencing.
 
@@ -1314,12 +1314,12 @@ replayed. Source SHAs ARE preserved (in commit messages); to see source-side his
 parquet outputs, not git history). Decision recorded for future agents who go looking for per-file history and find a
 single import commit.
 
-### F12 — Stray `=0.3.0` file in `features-cross-instrument-service` source repo
+### F12 — Stray `=0.3.0` file in `features-service (cross-instrument family)` source repo
 
 **Severity**: P3 / out-of-plan finding / file as separate issue.
 
 Phase 3 sub-agent discovered a literal file named `=0.3.0` (140 bytes, contents = stdout of an `uv pip install` run that
-got redirected via shell-glob bug `>= 0.3.0`) in the `features-cross-instrument-service` source repo. Stripped during
+got redirected via shell-glob bug `>= 0.3.0`) in the `features-service (cross-instrument family)` source repo. Stripped during
 Phase 3 restructure. **Out-of-scope for this plan** — but worth filing as an issue against the source repo before Phase
 7 archives it (otherwise the bug history is preserved in the consolidation merge but the source-repo commit is not
 addressable as a regression).
@@ -1377,7 +1377,7 @@ workspace conditional-push protocol; workspace-manifest.json entry registration 
 additional lift candidates, Phase 4.1 scope-shrink, sports-as-largest, `add()` migration dependency, validate_df +
 NormalisingManifestWriter follow-ups, PM coverage-floor-guard MIN_COVERAGE path bug, **CosmicTrader vs IggyIkenna
 GitHub-org convention deviation**, plan-body `--squash=false` syntax bug corrected in-place, git-subtree squash-style
-behavior calibration, stray `=0.3.0` file in features-cross-instrument-service source).
+behavior calibration, stray `=0.3.0` file in features-service (cross-instrument family) source).
 
 ## Phase 2 hand-off — operator action items (status late 2026-05-08)
 
@@ -1516,7 +1516,7 @@ evening.
   the Phase 2 stub per inspection — `STUB — Phase 2 skeleton`. Family `run()` entry-points to be added to each
   `features_service/<family>/__init__.py`; new `tests/unit/test_cli_dispatch.py` to be written.
 - **F2 is a NO-OP.** `features_service/onchain/config.py` already imports `UnifiedCloudConfig` (line 13) and extends it
-  (line 17) — the subtree merge brought the modern shape. Audit was reading the legacy `features-onchain-service` repo
+  (line 17) — the subtree merge brought the modern shape. Audit was reading the legacy `features-service (onchain family)` repo
   state pre-merge. Mark F2 resolved with no code change.
 - **F6 is real.** `grep` finds 2 `manifest.add(` call sites in `features_service/sports/cli/handlers/batch_handler.py`
   lines 797, 805. Other families' `.add(` calls in the loose grep are dict/list/set call false-positives but a precise

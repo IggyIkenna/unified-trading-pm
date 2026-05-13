@@ -660,7 +660,7 @@ For each `features-service/features_service/{family}/config.py` (`calendar` / `c
    - `instruments_store_bucket_template` (`instruments-store-{ag}-{pid}`) → `kind="instruments-store"`, per-AG ✓
    - `io_input_bucket_template` (`instruments-store-defi-{pid}`) → `kind="instruments-store"`, asset_group="defi"
    - `io_output_bucket_template` (`features-onchain-defi-{pid}`) → `kind="features-onchain"`, asset_group="defi"
-   - `source_bucket_template` for `calendar` (`features-calendar-service`?? — verify; the real yaml has NO GCP
+   - `source_bucket_template` for `calendar` (`features-service (calendar family)`?? — verify; the real yaml has NO GCP
      features-calendar entry — see § "Composes with" + Q2) → `kind="features-calendar"`, flat (AWS-only today)
 3. **Delete the `Field(default="...")` template** + repoint the `get_*_bucket(asset_group)` method body:
    ```python
@@ -731,12 +731,12 @@ migrated:
 1. Replace L5.1 + L5.2 + L5.3 + L5.5 + L5.6 with
    `resolve_bucket_name(cloud=get_cloud_provider().value, kind=<kind>, asset_group=<ag>)` calls. The `service → kind`
    map: `instruments-service`/`corporate-actions` → `instruments-store`;
-   `market-tick-data-service`/`market-data-processing-service` → `market-data`; `features-delta-one-service` →
-   `features-delta-one`; `features-volatility-service` → `features-volatility`; `features-onchain-service` →
-   `features-onchain` (asset_group="defi"); `features-sports-service` → `features-sports`; `features-calendar-service` →
-   `features-calendar`; `features-multi-timeframe-service` → `features-multi-timeframe` (→ alias `features-mtf`);
-   `features-cross-instrument-service` → `features-cross-instrument` (→ alias `features-xinstrument`);
-   `features-commodity-service` → `features-commodity`; `ml-training-service` → `ml-models-store`;
+   `market-tick-data-service`/`market-data-processing-service` → `market-data`; `features-service (delta-one family)` →
+   `features-delta-one`; `features-service (volatility family)` → `features-volatility`; `features-service (onchain family)` →
+   `features-onchain` (asset_group="defi"); `features-service (sports family)` → `features-sports`; `features-service (calendar family)` →
+   `features-calendar`; `features-service (multi-timeframe family)` → `features-multi-timeframe` (→ alias `features-mtf`);
+   `features-service (cross-instrument family)` → `features-cross-instrument` (→ alias `features-xinstrument`);
+   `features-service (commodity family)` → `features-commodity`; `ml-training-service` → `ml-models-store`;
    `ml-inference-service` → `ml-predictions-store`; `strategy-service` → `strategy-store`; `execution-service` →
    `execution-store`. (Reconcile the L5.1-vs-L5.2 ml-\* drift in the same pass — the yaml SSOT wins: `ml-models-store` /
    `ml-predictions-store`.)

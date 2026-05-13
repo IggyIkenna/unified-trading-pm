@@ -20,7 +20,7 @@ repo_gates:
     code: C2
     deployment: none
     business: none
-  - repo: features-sports-service
+  - repo: features-service (sports family)
     code: C2
     deployment: none
     business: none
@@ -157,7 +157,7 @@ rows survive until features-sports needs them. Decide post-Phase-3.
 - Manifest writer: already records 1 row per (fixture_id, day). Stays per-fixture even though parquet has 2 rows per
   fixture (sports shard atom is `(league_id, day)`, not `(fixture_id, team_id, day)`).
 
-**features-sports-service**:
+**features-service (sports family)**:
 
 - Calculators that today read `fixture_stats.parquet` and find no useful columns: this is where the win lands. Extend
   the relevant calculators to consume the new columns (xg_advantage, shots_on_target_diff, etc.). Out-of-scope for this

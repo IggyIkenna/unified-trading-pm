@@ -261,10 +261,10 @@ Services are tested in pipeline order (upstream first → downstream):
 
 1. **instruments-service** — pure data fetch, no upstream deps
 2. **market-tick-data-service** — depends on instruments, has WebSocket/REST live mode
-3. **features-onchain-service** — depends on market data, DeFi-specific
-4. **features-delta-one-service** — depends on market data
-5. **features-volatility-service** — depends on market data
-6. **features-calendar-service** — depends on market data
+3. **features-service (onchain family)** — depends on market data, DeFi-specific
+4. **features-service (delta-one family)** — depends on market data
+5. **features-service (volatility family)** — depends on market data
+6. **features-service (calendar family)** — depends on market data
 7. **ml-training-service** — depends on features
 8. **ml-inference-service** — depends on ML models
 9. **strategy-service** — depends on features + ML, has live mode

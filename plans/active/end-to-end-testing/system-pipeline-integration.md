@@ -18,7 +18,7 @@ market-tick-data-service (DEFI)
 market-data-processing-service (DEFI)
     │ GCS: processed-market-data-store-defi-{project_id}/day=YYYY-MM-DD/
     ▼
-features-onchain-service
+features-service (onchain family)
     │ GCS: features-store-onchain-{project_id}/day=YYYY-MM-DD/
     ▼
 strategy-service (DEFI strategies)
@@ -61,7 +61,7 @@ position-balance-monitor-service
 | --- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------ |
 | 2.1 | Run MDPS `--asset-group DEFI --start-date 2026-03-20 --end-date 2026-03-20`  | Reads tick data from 1.3, produces candles/processed data                                                                    |        |
 | 2.2 | Processed data schema                                                        | Candle schema: `open`, `high`, `low`, `close`, `volume`, `timestamp` + DeFi fields (`tvl`, `pool_fee_tier` where applicable) |        |
-| 2.3 | Run features-onchain-service `--start-date 2026-03-20 --end-date 2026-03-20` | Reads processed market data + on-chain sources, writes features                                                              |        |
+| 2.3 | Run features-service (onchain family) `--start-date 2026-03-20 --end-date 2026-03-20` | Reads processed market data + on-chain sources, writes features                                                              |        |
 | 2.4 | Feature completeness                                                         | Features written for: lending (Aave rates, utilization), TVL (DefiLlama), staking (LST rates), protocol rewards              |        |
 | 2.5 | Feature temporal alignment                                                   | Feature timestamps align with market data timestamps (no look-ahead bias)                                                    |        |
 
@@ -126,7 +126,7 @@ Run the entire pipeline in `CLOUD_MOCK_MODE=true CLOUD_PROVIDER=local` to verify
 | instruments-service        | `instruments-store-defi-{project_id}`           | `day=YYYY-MM-DD/{venue}.parquet`          |
 | market-tick-data-service   | `market-tick-data-store-defi-{project_id}`      | `day=YYYY-MM-DD/{venue}/{symbol}.parquet` |
 | market-data-processing-svc | `processed-market-data-store-defi-{project_id}` | `day=YYYY-MM-DD/{candle_size}/`           |
-| features-onchain-service   | `features-store-onchain-{project_id}`           | `day=YYYY-MM-DD/{feature_group}/`         |
+| features-service (onchain family)   | `features-store-onchain-{project_id}`           | `day=YYYY-MM-DD/{feature_group}/`         |
 | strategy-service           | `strategy-store-{project_id}`                   | `backtest/{grid_id}/{strategy_id}/`       |
 | execution-service          | `execution-store-{project_id}`                  | `execution_fills/day=YYYY-MM-DD/`         |
 | pnl-attribution-service    | `pnl-store-{project_id}`                        | `pnl/day=YYYY-MM-DD/`                     |

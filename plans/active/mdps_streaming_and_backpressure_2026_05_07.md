@@ -128,11 +128,11 @@ todos:
       - **Out-of-scope (other plans)**: Many services still use legacy v4 `writer.add(...)` —
         `market-data-processing-service/scripts/reprocess_sports_odds.py:563,570`,
         `deployment-service/scripts/rebuild_sports_manifest.py:208`,
-        `features-delta-one-service/.../engine/orchestrator.py:316,322`,
-        `features-volatility-service/.../engine/orchestrator.py:198,204,270,276,651,657`,
-        `features-multi-timeframe-service/.../engine/orchestrator.py:254,261`,
-        `features-cross-instrument-service/.../cli/handlers/batch_handler.py:472,479`,
-        `features-commodity-service/.../cli/handlers/batch_handler.py:275`,
+        `features-service (delta-one family)/.../engine/orchestrator.py:316,322`,
+        `features-service (volatility family)/.../engine/orchestrator.py:198,204,270,276,651,657`,
+        `features-service (multi-timeframe family)/.../engine/orchestrator.py:254,261`,
+        `features-service (cross-instrument family)/.../cli/handlers/batch_handler.py:472,479`,
+        `features-service (commodity family)/.../cli/handlers/batch_handler.py:275`,
         `features-service/features_service/{calendar,onchain,volatility}/engine/...`,
         `instruments-service/.../engine/orchestrator.py:6561`,
         `strategy-service/.../engine/core/cloud_strategy_storage.py:197,276,355`. These are tracked

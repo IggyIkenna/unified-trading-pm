@@ -313,9 +313,9 @@ DONE when: 4 STEPs (L1+L5+L2+L3) enabled + workspace CI green for 2h continuous 
 
 ### Todos
 
-- [ ] [SCRIPT] P0. **commodity family** — lift `features-commodity-service/.../service.py:CommodityFeatureService` to
+- [ ] [SCRIPT] P0. **commodity family** — lift `features-service (commodity family)/.../service.py:CommodityFeatureService` to
       ModeHandler ABC per template at
-      `features-volatility-service/features_volatility_service/cli/handlers/base_handler.py:24`.
+      `features-service (volatility family)/features_volatility_service/cli/handlers/base_handler.py:24`.
       `LiveHandler` + `BatchHandler` subclasses; abstract `compute()` + `execute()`.
 - [ ] [SCRIPT] P0. **cross_instrument family** — same lift pattern.
 - [ ] [SCRIPT] P0. **multi_timeframe family** — same.
@@ -333,7 +333,7 @@ You are Tab 4 main — features-service ModeHandler lift for batch_live_symmetry
 BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 4
   2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab4 + § 7
-  3. features-volatility-service/features_volatility_service/cli/handlers/base_handler.py (reference impl)
+  3. features-service (volatility family)/features_volatility_service/cli/handlers/base_handler.py (reference impl)
   4. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
 Your agent-tag: tab4-features-lift.

@@ -1,11 +1,11 @@
 ---
-title: "E2E Test: features-sports-service"
-service: features-sports-service
+title: "E2E Test: features-service (sports family)"
+service: features-service (sports family)
 date: 2026-03-22
 status: pending
 ---
 
-# E2E Test: features-sports-service
+# E2E Test: features-service (sports family)
 
 Follows `procedure.md`. Pipeline position: L3 features layer. Computes sports-domain features: form indicators,
 head-to-head stats, league position, injury impact, home/away factors, odds movement features, pre-match and in-play
@@ -167,7 +167,7 @@ Live mode subscribes to a PubSub subscription and publishes computed features.
 | K.1 | No `--dry-run` flag                  | Parser does not define `--dry-run`. Every other service in the procedure uses it. Compliance gap.                                           |        |
 | K.2 | No `--operation` flag                | CLI uses `--mode` only, not the standardised `--operation/--mode/--asset-group` axes from `cli-convention.md`.                              |        |
 | K.3 | No `--asset-group` flag              | Service is SPORTS-only. Acceptable if documented, but breaks the universal category sweep pattern.                                          |        |
-| K.4 | `--mode` is required (no default)    | Unlike features-commodity-service which defaults to `live`, this service requires explicit `--mode`. Inconsistency across feature services. |        |
+| K.4 | `--mode` is required (no default)    | Unlike features-service (commodity family) which defaults to `live`, this service requires explicit `--mode`. Inconsistency across feature services. |        |
 | K.5 | Future date validation only in batch | `validate_args()` rejects future dates for batch. Live mode has no date validation (correct -- live is real-time).                          |        |
 | K.6 | `load_dotenv` location               | Need to verify `load_dotenv(override=False)` is used (not visible in parser.py, check main.py).                                             |        |
 | K.7 | reference_data dependency            | Service depends on instruments-service reference_data sub-package for reference data. Verify it is installed in service `.venv`.            |        |
@@ -204,4 +204,4 @@ Live mode subscribes to a PubSub subscription and publishes computed features.
 
 ## Next Service
 
-After features-sports-service passes all phases, proceed to `012_features_calendar_service.md`
+After features-service (sports family) passes all phases, proceed to `012_features_calendar_service.md`

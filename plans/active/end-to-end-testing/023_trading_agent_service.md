@@ -26,7 +26,7 @@ commentary into a multi-loop agent architecture.
 
 | Loop | Name            | Cadence (default) | What it does                                                    |
 | ---- | --------------- | ----------------- | --------------------------------------------------------------- |
-| L1   | Data Refresh    | 300s              | Triggers features-commodity-service cache refresh               |
+| L1   | Data Refresh    | 300s              | Triggers features-service (commodity family) cache refresh               |
 | L2   | Signal          | 120s              | Recomputes/subscribes to CommoditySignal updates (SignalCache)  |
 | L3   | Trade Decision  | 300s              | Evaluates new trades: risk gate -> strategy ranking -> submit   |
 | L5   | Exit Management | 60s               | Checks open positions for exit conditions                       |

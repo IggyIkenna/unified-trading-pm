@@ -270,7 +270,7 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 - [ ] [AGENT] P0. strategy-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. execution-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. risk-and-exposure-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P0. features-onchain-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable;
+- [ ] [AGENT] P0. features-service (onchain family) `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable;
       multi-recent-commit pattern of fixes shows ongoing work (7f1b2a1, c90d01a, 955abb5, 266f512, f3db4ca, 82d94b6)]
 - [ ] [AGENT] P0. basedpyright clean across all 4 DeFi service repos. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. CARRY_RECURSIVE_STAKED batch e2e produces non-zero PnL row in
@@ -291,7 +291,7 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 - [ ] [AGENT] P0. All 8 archetypes pass Phase 1 batch e2e: CARRY_RECURSIVE_STAKED, CARRY_STAKED_BASIS, CARRY_BASIS_PERP,
       [+5 more]. [AUDIT 2026-05-07: FRESH — actionable; CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION specs landed
       strategy@e4a0cdd]
-- [ ] [AGENT] P0. features-onchain-service Docker image rebuild — Cloud Build emits new `:latest` tag with Phase
+- [ ] [AGENT] P0. features-service (onchain family) Docker image rebuild — Cloud Build emits new `:latest` tag with Phase
       changes. [AUDIT 2026-05-07: FRESH — actionable]
 
 #### Carry tracer verification gates (folded-in 2026-05-07 from `defi_data_to_strategy_4phase_handoff` Phase A + D)
@@ -339,7 +339,7 @@ archetype before adding new specs:
 4. **Strategy engine** (`strategy-service/engine/strategies/v2/*_engine.py`) — entry triggers, exit triggers, roll on
    expiry, rotation cost gating. Per-archetype subclass.
 
-The `paired_price_dispersion` calculator in features-cross-instrument-service is the cross-asset-group greenfield that
+The `paired_price_dispersion` calculator in features-service (cross-instrument family) is the cross-asset-group greenfield that
 powers BOTH CARRY_BASIS_DATED (one leg spot/ETF, other dated future, held to convergence) and ARBITRAGE_PRICE_DISPERSION
 (both legs futures of same expiry on different venues, exit on convergence). Single calculator, two consumers; the
 per-archetype filter logic is in the catalog spec rows, not duplicated in the calculator.
@@ -849,13 +849,13 @@ shipping with the Fork-1 prep batches below).
 - [ ] [SCRIPT] P1. **EIGENLAYER `rewards` shard-key drift — manifest row `data_type=rewards` vs parquet path `data_type=eigenlayer_rewards/` (slot-6 phantom-audit finding 2026-05-11).** The DeFi phantom recon (`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run` on `defi-phantom-recon-defi-20260511-192115`, completed 2026-05-11 13:58 UTC) reported **1298 "phantom captures", ALL `venue=EIGENLAYER` / `data_type=rewards`** — but they're **FALSE positives** (the data exists on disk, the audit's path template doesn't match). Root cause = a **shard-key-SSOT violation** in `market-tick-data-service/market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py`: it `recorder.record_captured(...)` with `data_type="rewards"` (`_EIGENLAYER_DATA_TYPE = "rewards"`, used at :184/193/203) + `instrument_type="staking"` (:186) but **writes the parquet** at a path built with `data_type="eigenlayer_rewards"` (:296) + `file_name="rewards.parquet"` (:298) → on-disk:
       `raw_tick_data/by_date/day={D}/asset_group=defi/venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards/rewards.parquet` (confirmed 2026-05-11: `gs://market-data-tick-defi-{pid}/raw_tick_data/by_date/day=2024-08-15/asset_group=defi/venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards/rewards.parquet` exists). The audit probes the manifest row's `data_type=rewards` segment → `.../instrument_type=staking/data_type=rewards/` → empty → false phantom. **Do NOT `--apply` the flip** — flipping 1298 good rows to `attempted_failed` would corrupt the manifest (same class as the 2026-05-04 130,897-false-positive incident). **Also**: the handler docstring (:21) is stale on 3 axes — says `venue=EIGENLAYER-ETHEREUM/instrument_type=restaking/data_type=rewards/ticks.parquet`; actual is `venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards/rewards.parquet`. **Fix** (shard-key-SSOT decision — defi-pipeline owner): make the `record_captured`/`record_empty` `data_type` match the parquet path (`eigenlayer_rewards` is the Phase-2-event-typed canonical token per deployment-api `data_status_service.py`'s comment — so flip `_EIGENLAYER_DATA_TYPE` to `"eigenlayer_rewards"`, NOT the parquet path to `rewards/`) + a one-time migration of the existing manifest rows from `data_type=rewards` → `data_type=eigenlayer_rewards` (per the "Manifest migration, NOT fallback" rule) + fix the docstring. Optionally also add the `data_type=eigenlayer_rewards`-on-disk-vs-manifest layout to `reconcile_phantom_manifest_rows_all.py`'s DeFi drift-axis list as a safety net, but the root fix is the handler's shard-key consistency. **Owner**: defi-pipeline / `defi_master` (the eigenlayer Phase-2 event handler) — coordinate with the shard-granularity-SSOT umbrella (`infrastructure_master_2026_05_07.md`). **Net phantom-audit result for DeFi**: 1298 reported, all false-positive (path drift), **real residual = 0** (data exists) — but the shard-key drift is a latent inconsistency that needs the handler fix.
 - [ ] [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list + non-graceful skip** — its `DEFI_REPOS`/EXTRA_REPOS
-      list references `features-onchain-service` (consolidated into `features-service` by the 2026-05-08 features-*
+      list references `features-service (onchain family)` (consolidated into `features-service` by the 2026-05-08 features-*
       consolidation); the "SKIP <repo> — not found" path trips `set -e` so a missing repo aborts the whole tarball build
       with `EXIT=1` (it logs the SKIP message but then dies). Blocks `create-code-tarballs.sh --asset-group DEFI` from
-      `.tabs/*` worktrees (which have `features-service` not `features-onchain-service`). Workaround for Priority #5:
+      `.tabs/*` worktrees (which have `features-service` not `features-service (onchain family)`). Workaround for Priority #5:
       none needed — the deployed `mtds-code.tar.gz` (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit)
       + the latest lending_indices code, so the VM ran current code without a refresh. Fix: (a) update the repo lists to
-      post-consolidation names (`features-service` instead of `features-onchain-service`/`features-defi-service`/etc.);
+      post-consolidation names (`features-service` instead of `features-service (onchain family)`/`features-defi-service`/etc.);
       (b) make the missing-repo case actually `continue` past `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball
       ...; else log "SKIP ..."; fi`). Owner: features-* consolidation follow-up — coordinate with
       `features_repo_consolidation_2026_05_08` (archived?) or `infrastructure_master_2026_05_07`. **MIGRATE** to whichever
@@ -1034,7 +1034,7 @@ remains open. Folds into the existing "Lending-indices VM run-quality bugs" sect
       timestamp (depends on coordinator Phase 0 MDPS bar boundary contract). Insert call before `record_captured`.
 - [ ] [SCRIPT] P1. **DeFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. The 10 currently-registered cover defi
       yields; cross-protocol carry, bridge-flow, MEV-leakage, gas-fee bands etc. likely need additions. Audit
-      `features-defi-service/` + `features-onchain-service/` calculator metadata. Coordinator Phase 4.
+      `features-defi-service/` + `features-service (onchain family)/` calculator metadata. Coordinator Phase 4.
 
 ## May-23 deliverable (folded from `live_defi_rollout_may_23_2026.epic` 2026-05-08)
 

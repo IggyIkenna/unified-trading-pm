@@ -1,11 +1,11 @@
 ---
-title: "E2E Test: features-delta-one-service"
-service: features-delta-one-service
+title: "E2E Test: features-service (delta-one family)"
+service: features-service (delta-one family)
 date: 2026-03-22
 status: pending
 ---
 
-# E2E Test: features-delta-one-service
+# E2E Test: features-service (delta-one family)
 
 Follows `procedure.md`. Pipeline position: #4 (L3 features layer -- depends on processed OHLCV candles from upstream).
 
@@ -14,8 +14,8 @@ Follows `procedure.md`. Pipeline position: #4 (L3 features layer -- depends on p
 - **Cluster:** features (L3)
 - **Upstream:** market-data-processing-service (processed_candles_ohlcv via GCS), instruments-service
   (instruments_universe via GCS)
-- **Downstream:** ml-training-service, ml-inference-service, features-cross-instrument-service,
-  features-multi-timeframe-service
+- **Downstream:** ml-training-service, ml-inference-service, features-service (cross-instrument family),
+  features-service (multi-timeframe family)
 - **Schedule:** Batch = date-range historical compute; Live = Pub/Sub subscriber computing features on candle events
 - **Computes:** returns, spreads, rolling stats, momentum indicators, VWAP, candlestick patterns, market structure,
   microstructure, funding/OI (CEFI/DEFI), futures basis (TRADFI), swing outcome targets
@@ -184,4 +184,4 @@ structure regardless.
 
 ## Next Service
 
-After features-delta-one-service passes all phases -> proceed to `005_features_volatility_service.md`
+After features-service (delta-one family) passes all phases -> proceed to `005_features_volatility_service.md`

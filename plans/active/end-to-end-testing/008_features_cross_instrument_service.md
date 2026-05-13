@@ -1,18 +1,18 @@
 ---
-title: "E2E Test: features-cross-instrument-service"
-service: features-cross-instrument-service
+title: "E2E Test: features-service (cross-instrument family)"
+service: features-service (cross-instrument family)
 date: 2026-03-22
 status: pending
 ---
 
-# E2E Test: features-cross-instrument-service
+# E2E Test: features-service (cross-instrument family)
 
 Follows `procedure.md`. Pipeline position: #8 (L3 features layer — aggregates upstream feature outputs).
 
 ## Upstream Dependencies
 
-- **features-delta-one-service** — delta-one features (returns, momentum, trend) per instrument
-- **features-volatility-service** — volatility features (realized vol, vol-of-vol, term structure) per instrument
+- **features-service (delta-one family)** — delta-one features (returns, momentum, trend) per instrument
+- **features-service (volatility family)** — volatility features (realized vol, vol-of-vol, term structure) per instrument
 - **market-data-processing-service** — multi-venue candle data (needed for cross-venue spread calculation)
 - **instruments-service** — instrument universe definitions per category
 
@@ -27,7 +27,7 @@ output. In mock mode, pre-generated seed data bypasses upstream dependencies.
 ## CLI Interface
 
 ```
-features-cross-instrument-service
+features-service (cross-instrument family)
   --date DATE           Processing date (YYYY-MM-DD) [required]
   --asset-group CATEGORY   CEFI | DEFI | TRADFI [required]
   --mode MODE           batch | live [default: batch]
@@ -282,4 +282,4 @@ definitions in UAC.
 
 ## Next Service
 
-After features-cross-instrument-service passes all phases → proceed to `009_features_multi_timeframe_service.md`
+After features-service (cross-instrument family) passes all phases → proceed to `009_features_multi_timeframe_service.md`

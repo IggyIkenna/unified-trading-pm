@@ -163,7 +163,7 @@ touched by this plan, enumerated.
 | `deployment-service`               | extended `FlashLoanReceiver.sol` (or new `RecursiveLeverageReceiver.sol`); `scripts/vm/launch-defi-recursive-borrow-vm.sh` (new launcher per VM-launcher-SSOT rule)                                                                                                                                       | 4, 13     |
 | `deployment-api`                   | `/data-status/recursive-borrow-coverage` endpoint; ArchetypeMatrix variant rendering                                                                                                                                                                                                                      | 11        |
 | `deployment-ui`                    | ArchetypeMatrix entry for both variants; HealthFactorMonitor live tile; Recursive-Borrow data-status drilldown                                                                                                                                                                                            | 11        |
-| `features-onchain-service`         | per-protocol rate-feature consumer; cross-protocol rate-spread feature                                                                                                                                                                                                                                    | 10        |
+| `features-service (onchain family)`         | per-protocol rate-feature consumer; cross-protocol rate-spread feature                                                                                                                                                                                                                                    | 10        |
 | `unified-config-interface`         | `testnet_contracts.yaml` (extended-receiver address per chain); RPC URL templates already in `_defi.py`                                                                                                                                                                                                   | 4         |
 | `unified-trading-pm/codex/`        | new doc `codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md`; update `codex/04-architecture/flash-loan-receiver.md`; update `carry-recursive-staked.md` to cite variants; update `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` for new venue rows | 10        |
 | `e2e-testing/scripts/defi/`        | new `recursive_borrow_paper_smoke.py` paper-trade harness (under primary-consumer QG of strategy-service per peripheral-script-dirs HARD RULE)                                                                                                                                                            | 12        |
@@ -379,7 +379,7 @@ usdc_margin_buffer_min_pct: 0.30  # config field per Phase 2 schema
 
 ### Funding regime adaptive sizing (Phase 7.5 — NICE-TO-HAVE, may defer past May-23)
 
-- Rolling 7d + 30d funding-APR mean per `(perp_venue, perp_pair)` — feature owned by features-onchain-service (NEW row).
+- Rolling 7d + 30d funding-APR mean per `(perp_venue, perp_pair)` — feature owned by features-service (onchain family) (NEW row).
 - Conservative thresholds (hysteresis 5% APR to avoid thrashing):
   - 30d-avg `< −5% APR`: REDUCE perp short by 50%.
   - 30d-avg `< −15% APR`: SET perp short to 0 (cell paused; reverts to Family 1 mechanics).
@@ -433,7 +433,7 @@ In-plan P0 (blocks Phase 5-8 implementation):
 
 In-plan P1 (blocks polish, may defer to Phase 9-12):
 
-- [ ] [features-onchain-service] **P1**. New feature: `funding_rate_apr_rolling_30d_mean` per `(perp_venue, perp_pair)` — feeds Phase 7.5 adaptive sizing. Defer past May-23 if Phase 7 baseline ships green.
+- [ ] [features-service (onchain family)] **P1**. New feature: `funding_rate_apr_rolling_30d_mean` per `(perp_venue, perp_pair)` — feeds Phase 7.5 adaptive sizing. Defer past May-23 if Phase 7 baseline ships green.
 - [ ] [risk-and-exposure-service] **P1**. Integration test: cross-venue netting `(aETH × er) + free_ETH − ETH_debt + perp_short = target_net_delta` within ±0.001 ETH on Tenderly fork + Hyperliquid testnet. Folds into Phase 7 deliverable.
 - [ ] [pnl-attribution-service] **P1**. Per-venue funding separation: HL funds 1h (24×/day); Bybit funds 8h (3×/day). Daily funding cost = `Σ_HL_hourly + Σ_Bybit_8h`. Avoid double-attribution in Family 2 P&L.
 - [ ] [execution-service] **P1**. Per-archetype subaccount + per-archetype API key for Bybit (blast-radius isolation): `carry_recursive_borrow_perp_hedged` key separate from `leveraged_funding_arb` key. Trading-only scope, no withdrawal, IP-whitelist to GCE static egress. Bybit subaccount provisioning runbook → `deployment-service/runbooks/` (NEW).
@@ -710,7 +710,7 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
 - [ ] [UAC] **P0**. Add `internal/architecture_v2/backtest_scenarios.py` (NEW) with `BACKTEST_SCENARIOS` list + `BacktestScenario` dataclass; 4 Category A + 5 Category B + 5 Category C scenarios = 14 total.
 - [ ] [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over cells × scenarios; runs via slot 6 PoolMatcher fixtures + Tenderly fork.
 - [ ] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset against live testnet; wired into strategy-service QG per peripheral-script-dirs HARD RULE.
-- [ ] [features-onchain-service] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay.
+- [ ] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay.
 - [ ] [codex] **P1**. Author `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (NEW) per spec above.
 - [ ] [codex] **P1**. Update `carry-recursive-staked.md` + `venue-collateral-2026-05-07.md` with backtest-scenario refs.
 

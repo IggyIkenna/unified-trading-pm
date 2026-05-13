@@ -58,15 +58,15 @@ repo_gates:
     code: C2
     deployment: none
     business: none
-  - repo: features-onchain-service
+  - repo: features-service (onchain family)
     code: C1
     deployment: none
     business: none
-  - repo: features-sports-service
+  - repo: features-service (sports family)
     code: C4
     deployment: none
     business: none
-  - repo: features-delta-one-service
+  - repo: features-service (delta-one family)
     code: C0
     deployment: none
     business: none
@@ -405,7 +405,7 @@ todos:
       **DEFERRED**: enumerator audit 2026-05-11 (`ikenna-available-at-tab`) confirmed sports feature_groups remain
       deferred pending sports-domain upstream `(asset_group, data_type)` vocabulary stabilisation — calculators
       currently declare `["target_fixtures", "fixtures_history"]`-style symbolic inputs not yet a UAC pair. Sources of
-      truth: `features-sports-service/features_sports_service/calculators/` calculator metadata + the existing
+      truth: `features-service (sports family)/features_sports_service/calculators/` calculator metadata + the existing
       "Temporary states" entry in `feature_dag_uac_ssot_and_features_coverage_2026_05_06.md`. Successor: ship here
       AFTER `sports_master_2026_05_07` Phase 1-2 stabilises sports data_type vocabulary.
 
@@ -432,7 +432,7 @@ todos:
       (`ikenna-available-at-tab`) confirmed the existing 10 onchain feature_groups in FEATURE_REQUIRED_INPUTS plus
       the 2 deferred external-API pass-throughs (`fear_greed` / `macro_sentiment`) cover the current DeFi calculator
       surface; cross-protocol carry / bridge-flow / MEV-leakage / gas-fee-band feature_groups are not yet declared in
-      `features-defi-service/` / `features-onchain-service/` calculator metadata. Re-audit AFTER
+      `features-defi-service/` / `features-service (onchain family)/` calculator metadata. Re-audit AFTER
       `features_repo_consolidation_2026_05_08.md` Phase 7 ships the consolidated features-service.
 
 ---
@@ -467,7 +467,7 @@ todos:
       Phase 5.c ships.
 
 - [ ] [SCRIPT] P0. **features-onchain `suppress()` removal**. Single-line edit at
-      `features-onchain-service/features_onchain_service/app/core/feature_writer.py` once chain link 1 ships for onchain
+      `features-service (onchain family)/features_onchain_service/app/core/feature_writer.py` once chain link 1 ships for onchain
       adapters. Replace `with contextlib.suppress(LookaheadBiasError):` with direct call; let it raise. Verifies the
       gate is live.
 

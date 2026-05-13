@@ -74,7 +74,7 @@ Concrete pre-audit deltas (the 22-blocker list condensed by category, with file:
 
 - **Vaults (Cat 1 — fully zero)**: Yearn / Convex / Beefy / Pendle / Idle. Zero UAC entries. Zero instruments. Zero MTDS
   adapters. Zero connectors. Orphan calculator
-  `features-onchain-service/app/calculators/vault_share_price_apy_calculator.py` exists with no upstream.
+  `features-service (onchain family)/app/calculators/vault_share_price_apy_calculator.py` exists with no upstream.
 - **Lending (Cat 2 — partial)**: Aave V3 Ethereum captured (silent-zero bug 0/343 shards 2026-05-07; deferred to
   writegate Phase 2.A). Aave V3 9 non-Ethereum chains: UAC declared, instruments+MTDS+connectors zero. Spark: UAC
   declared (Ethereum live 2024-01-01), instruments+MTDS+connector zero. Radiant: instruments-service adapter exists, UAC

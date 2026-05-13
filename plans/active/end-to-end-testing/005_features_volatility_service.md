@@ -1,11 +1,11 @@
 ---
-title: "E2E Test: features-volatility-service"
-service: features-volatility-service
+title: "E2E Test: features-service (volatility family)"
+service: features-service (volatility family)
 date: 2026-03-22
 status: pending
 ---
 
-# E2E Test: features-volatility-service
+# E2E Test: features-service (volatility family)
 
 Follows `procedure.md`. Pipeline position: #5 (L3 features layer -- depends on processed OHLCV candles from upstream).
 
@@ -14,7 +14,7 @@ Follows `procedure.md`. Pipeline position: #5 (L3 features layer -- depends on p
 - **Cluster:** features (L3)
 - **Upstream:** market-data-processing-service (processed_candles_ohlcv via GCS), instruments-service
   (instruments_universe via GCS)
-- **Downstream:** ml-training-service, ml-inference-service, features-cross-instrument-service
+- **Downstream:** ml-training-service, ml-inference-service, features-service (cross-instrument family)
 - **Schedule:** Batch = date-range historical compute; Live = interval-based periodic recomputation (default 15 min)
 - **Computes:** options implied vol, options term structure, futures basis, futures term structure, vol surfaces, skew
   metrics
@@ -26,7 +26,7 @@ Follows `procedure.md`. Pipeline position: #5 (L3 features layer -- depends on p
 | `compute` | Compute volatility features (batch or live mode) | Parquet per instrument per date per group |
 
 **Note:** This service has a single `compute` operation that dispatches to batch or live based on `--mode`. Unlike
-features-delta-one-service which has separate `compute` and `compute-live` operations, volatility uses one operation
+features-service (delta-one family) which has separate `compute` and `compute-live` operations, volatility uses one operation
 with mode-based routing via `VolatilityComputeHandler._dispatch()`.
 
 ## Feature Groups
@@ -175,4 +175,4 @@ structure regardless.
 
 ## Next Service
 
-After features-volatility-service passes all phases -> proceed to `006_features_calendar_service.md`
+After features-service (volatility family) passes all phases -> proceed to `006_features_calendar_service.md`

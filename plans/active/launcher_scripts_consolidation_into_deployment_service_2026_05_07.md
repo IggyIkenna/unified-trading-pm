@@ -1,7 +1,7 @@
 ---
 name: launcher_scripts_consolidation_into_deployment_service_2026_05_07
 overview:
-  Consolidate the 29 ad-hoc VM launcher scripts scattered across e2e-testing/ + features-sports-service/ into the
+  Consolidate the 29 ad-hoc VM launcher scripts scattered across e2e-testing/ + features-service (sports family)/ into the
   deployment-service/scripts/vm/ SSOT, and audit deployment-api data-status / drilldown / deploy_missing services for
   GCS-only call sites that need the unified cloud storage facade. Premise: deployment-UI is the eventual SSOT for
   launching VMs; today's ad-hoc scripts exist because deployment-UI hasn't been mature.
@@ -28,7 +28,7 @@ repo_gates:
     code: C2
     deployment: none
     business: none
-  - repo: features-sports-service
+  - repo: features-service (sports family)
     code: C2
     deployment: none
     business: none
@@ -104,7 +104,7 @@ Two related concerns from the user (2026-05-07):
    e2e-testing/scripts/sports/launch_mdps_phase3_bucketing.sh
    e2e-testing/scripts/sports/launch_mdps_reprocess_vm.sh
    e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh
-   features-sports-service/scripts/launch_parallel_backfill.sh
+   features-service (sports family)/scripts/launch_parallel_backfill.sh
    ```
 
    These exist because deployment-UI hasn't been mature enough to render every recovery flow. The Deploy-Missing button
@@ -132,7 +132,7 @@ Two related concerns from the user (2026-05-07):
 | `e2e-testing/scripts/defi/`                                   | 10      | `deployment-service/scripts/vm/`                                                                       |
 | `e2e-testing/scripts/prediction/`                             | 4       | `deployment-service/scripts/vm/`                                                                       |
 | `e2e-testing/scripts/sports/`                                 | 10      | `deployment-service/scripts/vm/`                                                                       |
-| `features-sports-service/scripts/launch_parallel_backfill.sh` | 1       | `deployment-service/scripts/vm/`                                                                       |
+| `features-service (sports family)/scripts/launch_parallel_backfill.sh` | 1       | `deployment-service/scripts/vm/`                                                                       |
 | `deployment-service/scripts/deploy-dashboard-gce-vm.sh`       | 1       | `deployment-service/scripts/vm/launch-dashboard-vm.sh` (intra-repo move; rename to match SSOT pattern) |
 | **Total**                                                     | **30**  |                                                                                                        |
 
@@ -148,7 +148,7 @@ Two related concerns from the user (2026-05-07):
 - `ml-training-service` / `ml-inference-service` / `strategy-service` / `execution-service` /
   `position-balance-monitor-service` / `risk-and-exposure-service` / `alerting-service` `scripts/setup.sh` —
   install-only, no VM launches.
-- `features-sports-service/scripts/run_backfill.sh` — local orchestration that exec's `launch_parallel_backfill.sh`
+- `features-service (sports family)/scripts/run_backfill.sh` — local orchestration that exec's `launch_parallel_backfill.sh`
   (which DOES launch VMs and is in the migration list above).
 
 For each script:
@@ -228,7 +228,7 @@ registry gaps + critical-path active flows; MEDIUM are DeFi launchers needed for
 | --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------ |
 | 1   | `e2e-testing/scripts/common/launch_mtds_category_backfill_vm.sh` | `deployment-service/scripts/vm/launch-mtds-backfill-vm.sh`                     | HIGH     | Fills `_SERVICE_LAUNCHER_SCRIPTS` line 63 (Deploy-Missing for `market-tick-data-service`).       |
 | 2   | `e2e-testing/scripts/common/launch_instruments_backfill_vms.sh`  | `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh`              | HIGH     | Fills `_SERVICE_LAUNCHER_SCRIPTS` line 65 (Deploy-Missing for `instruments-service`).            |
-| 3   | `features-sports-service/scripts/launch_parallel_backfill.sh`    | `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh` | HIGH     | Plan body explicitly names this destination (line 219).                                          |
+| 3   | `features-service (sports family)/scripts/launch_parallel_backfill.sh`    | `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh` | HIGH     | Plan body explicitly names this destination (line 219).                                          |
 | 4   | `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh`          | `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh`         | HIGH     | Sports critical-path; distinct from #1 (sports odds-API specific, vs. generic CeFi/DeFi/TradFi). |
 | 5   | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh`  | `deployment-service/scripts/vm/launch-sports-instruments-reference-vm.sh`      | HIGH     | Sports reference-data critical-path; v3 supersedes the v1/v2 launchers (those flagged LOW).      |
 | 6   | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh`                | `deployment-service/scripts/vm/launch-mtds-dex-pools-backfill-vm.sh`           | MEDIUM   | DeFi pipeline May-23; no canonical equivalent.                                                   |
@@ -319,10 +319,10 @@ and doesn't affect Deploy-Missing UI registry coverage).
       wrappers in e2e-testing@d824cb6/989b7fb Phase 1 batch; sports_full_sweep + sports_entity_sweep orchestrators
       deployment-service@5cea036 + e2e-testing@e3a9cf2 Phase 3 per
       `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
-- [x] [deployment-service] P0. Wave E (1 script): `features-sports-service/scripts/launch_parallel_backfill.sh` →
+- [x] [deployment-service] P0. Wave E (1 script): `features-service (sports family)/scripts/launch_parallel_backfill.sh` →
       `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh`. (Tab 11, 2026-05-08,
       deployment-service@0215086.)
-- [x] [e2e-testing / features-sports-service] P0. Update every callsite in source-repo `Makefile`s, READMEs, pre-commit
+- [x] [e2e-testing / features-service (sports family)] P0. Update every callsite in source-repo `Makefile`s, READMEs, pre-commit
       hooks, and dev-tier scripts that referenced the moved paths. (Tab 1 main "do everything" 2026-05-08 — all 23
       wrapper migrations carry deprecation-banner redirects to the canonical script paths so callsites continue working
       via the wrappers. Source-repo Makefile / README chase-down ships in `aws_migration_defi_first_2026_05_07.md` Phase
@@ -400,7 +400,7 @@ and doesn't affect Deploy-Missing UI registry coverage).
 ## Success criteria
 
 - **Code gates:** `bash scripts/quality-gates.sh` passes on deployment-service + deployment-api + e2e-testing +
-  features-sports-service.
+  features-service (sports family).
 - **Inventory gate:**
   `find . -type f -name "*.sh" -not -path "*/deployment-service/scripts/vm/*" | xargs grep -l "gcloud compute instances create" | grep -v deployment-service`
   returns zero matches at plan closeout.
@@ -436,12 +436,12 @@ and doesn't affect Deploy-Missing UI registry coverage).
 ## DONE-2026-05-08 — Tab 11 cycle (10 of 30 launchers shipped)
 
 Tab 11 (`launcher-consolidation-tab`) shipped 10 launcher migrations from `e2e-testing/scripts/` +
-`features-sports-service/scripts/` → `deployment-service/scripts/vm/` plus all supporting infrastructure edits
+`features-service (sports family)/scripts/` → `deployment-service/scripts/vm/` plus all supporting infrastructure edits
 (VM_PREFIX_TO_BUCKET registry, source-location deprecation banners, helper-script lifts).
 
 **Critical-path impact**: 2 of 3 missing-on-disk `_SERVICE_LAUNCHER_SCRIPTS` registry entries are now backed by real
 launcher scripts (`market-tick-data-service` + `instruments-service`); Deploy-Missing UI button no longer silently
-breaks for those services. The third missing entry (`features-onchain-service` →
+breaks for those services. The third missing entry (`features-service (onchain family)` →
 `launch-features-onchain-backfill-vm.sh`) has no e2e-testing equivalent and needs a fresh build in a follow-up cycle.
 
 **Code commits** (all pushed to `live-defi-rollout` per zero-incoming conditional):
@@ -453,7 +453,7 @@ breaks for those services. The third missing entry (`features-onchain-service` �
   (instr-backfill-cefi-/instr-backfill-defi/tradfi/sports).
 - e2e-testing@2da6867 — #2 deprecation banner on launch_instruments_backfill_vms.sh.
 - deployment-service@0215086 — #3 launch-features-sports-parallel-backfill-vm.sh + watchdog prefix (fss-backfill-vm-).
-- features-sports-service@06f6b30 — #3 deprecation banner on launch_parallel_backfill.sh.
+- features-service (sports family)@06f6b30 — #3 deprecation banner on launch_parallel_backfill.sh.
 - deployment-service@2e1d967 — #4 launch-mtds-sports-odds-backfill-vm.sh + watchdog prefix (mtds-backfill-odds-).
 - e2e-testing@deff088 — #4 deprecation banner on sports/launch_mtds_backfill_vm.sh.
 - deployment-service@fc9211e — #5 launch-sports-instruments-reference-vm.sh + vm_instruments_reference.sh + watchdog
@@ -478,12 +478,12 @@ watchdog only loads VM_PREFIX_TO_BUCKET at boot.
 | market-tick-data-service          | launch-mtds-backfill-vm.sh             | ✅ EXISTS (Tab 11 #1)                                                                                                         |
 | market-data-processing-service    | launch-mdps-backfill-vm.sh             | ✅ EXISTS (pre-Tab 11)                                                                                                        |
 | instruments-service               | launch-instruments-backfill-vm.sh      | ✅ EXISTS (Tab 11 #2)                                                                                                         |
-| features-onchain-service          | launch-features-onchain-backfill-vm.sh | ✅ EXISTS (verified 2026-05-09 audit — file landed at `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh`) |
-| features-delta-one-service        | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
-| features-volatility-service       | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
-| features-cross-instrument-service | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
-| features-sports-service           | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
-| features-calendar-service         | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| features-service (onchain family)          | launch-features-onchain-backfill-vm.sh | ✅ EXISTS (verified 2026-05-09 audit — file landed at `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh`) |
+| features-service (delta-one family)        | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| features-service (volatility family)       | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| features-service (cross-instrument family) | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| features-service (sports family)           | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| features-service (calendar family)         | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
 
 **Smoke-test coverage**: every migrated launcher with a `--dry-run` flag was smoke-tested
 (`#1, #2, #3, #4, #5, #6, #7, #8, #10`). #9 (cefi-migration) has no `--dry-run`; passed `bash -n` syntax check only.

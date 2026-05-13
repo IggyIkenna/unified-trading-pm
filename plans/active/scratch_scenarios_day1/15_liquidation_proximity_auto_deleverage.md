@@ -25,7 +25,7 @@ Both variants `synthetic=true` correlation per Phase 1.B; both layer-tap at RAW_
 
 ### Observable signature (in event stream + dashboards)
 
-- **`time_to_liquidation_minutes`** rolling feature (proposed UAC; lives in features-cross-instrument-service):
+- **`time_to_liquidation_minutes`** rolling feature (proposed UAC; lives in features-service (cross-instrument family)):
   ```
   time_to_liquidation_minutes = (current_health_factor - 1.0) / health_factor_velocity_per_minute
   ```

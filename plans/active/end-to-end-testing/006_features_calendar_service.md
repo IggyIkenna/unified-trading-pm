@@ -1,11 +1,11 @@
 ---
-title: "E2E Test: features-calendar-service"
-service: features-calendar-service
+title: "E2E Test: features-service (calendar family)"
+service: features-service (calendar family)
 date: 2026-03-22
 status: pending
 ---
 
-# E2E Test: features-calendar-service
+# E2E Test: features-service (calendar family)
 
 Follows `procedure.md`. Pipeline position: #6 (L3 features layer).
 
@@ -188,4 +188,4 @@ Verify that the output schema from this service matches what the API layer expec
 
 ## Next Service
 
-After features-calendar-service passes all phases -> proceed to `008_ml_training_service.md`
+After features-service (calendar family) passes all phases -> proceed to `008_ml_training_service.md`

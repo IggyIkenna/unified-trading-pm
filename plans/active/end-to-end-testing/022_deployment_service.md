@@ -103,11 +103,11 @@ Verify all 15 sharding config YAMLs load without error and produce valid shards:
 | ---- | ------------------------------------------------ | ----------------------------------------------- | ------ |
 | 4.1  | `sharding.instruments-service.yaml`              | Valid dimensions, venues resolved               |        |
 | 4.2  | `sharding.market-tick-data-service.yaml`         | Valid dimensions with data_types                |        |
-| 4.3  | `sharding.features-delta-one-service.yaml`       | Valid dimensions with feature_groups            |        |
-| 4.4  | `sharding.features-volatility-service.yaml`      | Valid dimensions                                |        |
-| 4.5  | `sharding.features-onchain-service.yaml`         | Valid dimensions (DeFi protocols)               |        |
-| 4.6  | `sharding.features-calendar-service.yaml`        | Valid dimensions                                |        |
-| 4.7  | `sharding.features-sports-service.yaml`          | Valid dimensions (leagues)                      |        |
+| 4.3  | `sharding.features-service (delta-one family).yaml`       | Valid dimensions with feature_groups            |        |
+| 4.4  | `sharding.features-service (volatility family).yaml`      | Valid dimensions                                |        |
+| 4.5  | `sharding.features-service (onchain family).yaml`         | Valid dimensions (DeFi protocols)               |        |
+| 4.6  | `sharding.features-service (calendar family).yaml`        | Valid dimensions                                |        |
+| 4.7  | `sharding.features-service (sports family).yaml`          | Valid dimensions (leagues)                      |        |
 | 4.8  | `sharding.market-data-processing-service.yaml`   | Valid dimensions with timeframes                |        |
 | 4.9  | `sharding.ml-training-service.yaml`              | Valid dimensions (dynamic GCS)                  |        |
 | 4.10 | `sharding.ml-inference-service.yaml`             | Valid dimensions                                |        |
