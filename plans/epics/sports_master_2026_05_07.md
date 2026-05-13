@@ -533,16 +533,19 @@ The two data_types collide visually in the data-status panel without a clear dis
 Same minimal-flattening pattern as B.1. Current PLAYER_VALUES carries team-level aggregates (`squad_size`,
 `player_count`); per-player `market_value_eur` is dropped at write-time.
 
-- [ ] [SCRIPT] P0. UAC `unified_api_contracts/external/transfermarkt/normalize.py` — extend `normalize_player_values` to
+- [x] [SCRIPT] P0. UAC `unified_api_contracts/external/transfermarkt/normalize.py` — extend `normalize_player_values` to
       emit per-(team, player, season, fetch_day) rows with `player_id`, `player_name`, `position`, `age`,
       **`market_value_eur`**, `contract_until`, `current_club_id`, `nationality_iso`. [AUDIT 2026-05-07: FRESH —
-      actionable]
-- [ ] [SCRIPT] P0. UAC contract: bump PLAYER_VALUES schema to per-player shape; old team-aggregate becomes a derived
+      actionable] **COMPLETED 2026-05-13**: UAC@3b29f7e — added normalize_player_values() function + PlayerValue
+      NamedTuple.
+- [x] [SCRIPT] P0. UAC contract: bump PLAYER_VALUES schema to per-player shape; old team-aggregate becomes a derived
       view in features-sports OR is dropped if features-sports is happy rolling per-player at compute time. [AUDIT
-      2026-05-07: FRESH — actionable]
-- [ ] [SCRIPT] P0. Migration shape: same flip-to-failed + delete + re-fetch pattern as B.1; Transfermarkt's
-      per-team-per-season endpoint is already isolated, no upstream impact. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [TEST] P0. Cassette parity test for the new per-player shape. [AUDIT 2026-05-07: FRESH — actionable]
+      2026-05-07: FRESH — actionable] **COMPLETED 2026-05-13**: UAC@3b29f7e — updated SPORTS_PLAYER_VALUES to per-player
+      granularity (player_id symbol column, dropped squad_size/player_count team aggregates).
+- [ ] [SCRIPT] P0. **DEFERRED**: Migration shape: same flip-to-failed + delete + re-fetch pattern as B.1;
+      Transfermarkt's per-team-per-season endpoint is already isolated, no upstream impact. [AUDIT 2026-05-07:
+      actionable; depends on features-sports readiness to consume per-player shape]
+- [ ] [TEST] P0. **DEFERRED**: Cassette parity test for the new per-player shape. [Requires migration to be spec'd]
 
 #### C.6 + C.10 — `match_end_time` cascade implementation (groups together)
 
@@ -922,7 +925,7 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 | Phase / item                                        | Status as of 2026-05-12 | Successor / blocker                                                                        |
 | --------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------ |
 | B.1 Phase 4: manifest flip + re-fetch VM            | `[ ]` NOT RUN           | Operational — needs VM launch + manifest migration; no code gap                            |
-| C.4 Transfermarkt per-player flatten                | `[ ]` open              | No blocker — new normalizer + contract + migration                                         |
+| C.4 Transfermarkt per-player flatten                | `[~]` partial-shipped   | UAC@3b29f7e — normalizer + schema done; migration/test deferred pending features-sports    |
 | C.6 Step 1: AF FIXTURES write-path `match_end_time` | `[ ]` open              | UAC `CanonicalFixture.match_end_time` exists; need AF write-path wiring in IS orchestrator |
 | C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns  | `[x]` shipped           | UAC@1848647 — added ft_timer + match_end_time columns; next: Step 3 (UTL resolver)         |
 | C.6 Step 3: UTL `resolve_match_end_time()` cascade  | `[x]` shipped           | UTL@89c0ae15 — cascade resolver with NamedTuple return; next: Step 4 wiring                |
