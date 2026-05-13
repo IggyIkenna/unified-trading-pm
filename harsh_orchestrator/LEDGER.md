@@ -157,6 +157,41 @@ You are slot N. Do this in order, nothing else until done:
 
 ---
 
+## Default agent-spawn workflow (HARD RULE — codified 2026-05-13)
+
+**This is the default for every wave / morning / mid-day relaunch.** Operator should NEVER receive a verbose paste-ready spawn prompt from main unless they explicitly ask for one. Task briefs live in this LEDGER § "Wave N task briefs" — agents read them from there.
+
+**Step 1 (slot 1 main runs, background, parallel)** — reset all 6 slots in one shot:
+
+```bash
+cd /home/hk/unified-trading-system-repos
+for n in 2 3 4 6 7 9; do
+  (
+    find ".tabs/$n" -maxdepth 2 -name ".git" 2>/dev/null | while read g; do
+      git -C "$(dirname $g)" checkout -- . 2>/dev/null
+    done
+    bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot $n 2>&1 | grep -E "Resetting|complete|ERROR" | sed "s/^/[slot $n] /"
+  ) &
+done
+wait
+```
+
+Swap the slot list `2 3 4 6 7 9` for whichever slots the operator wants to spawn this wave. The `git checkout -- .` step silently discards any leftover uncommitted state from the prior agent (usually a STARTED ack — no real work lost). Reset then rebases `tab/hk/N` cleanly onto `origin/live-defi-rollout`.
+
+**Step 2 (operator opens N terminals)** — paste this lean prompt (swap `N`):
+
+```
+You are Harsh-side slot N. Pull origin/live-defi-rollout in unified-trading-pm, read harsh_orchestrator/LEDGER.md to find your Slot N task brief, then start working on it. If any owned repo in your worktree at /home/hk/unified-trading-system-repos/.tabs/N/ is behind LDR, fetch + rebase first. Follow harsh_orchestrator/AGENT_ONBOARDING.md for git discipline + ping mechanics + LDR-alignment HARD RULE.
+```
+
+That's it. No COMPACT-CYCLE GUARD lectures, no LDR-alignment explanations, no GREP-THEN-READ warnings inline — all that lives in `AGENT_ONBOARDING.md` (universal mechanics) and the LEDGER task brief (per-slot specifics including model tier + grep-then-read warnings on multi-callsite scopes).
+
+**Step 3 (main monitors)** — agent reads LEDGER + plan-of-record + boots. If agent asks clarifying questions, the answer is "the LEDGER brief is the SSOT — re-read it; if still unclear, ping `pings/slot_N.md`". Don't expand the prompt; expand the LEDGER brief.
+
+**Deviation only when operator explicitly says**: "give me a direct prompt for slot N" or "use a custom prompt for X reason". Otherwise: default workflow.
+
+---
+
 ## Main orchestrator — fresh boot (slot 1)
 
 Fresh main-agent chat (context window died, new session):
