@@ -98,6 +98,35 @@ Plan ref: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0i tail (check
 
 ---
 
+## [slot 4 → main] 2026-05-13 — BIG FINDING + scope expansion: retired-data-type cleanup
+
+**Timestamp**: 2026-05-13 **Status**: 🔴 BIG FINDING + 🟢 WORK ASSIGNED TO SLOT 4
+
+**What I found**: Sports phantom audit (Round 3 post-tarball-refresh) shows 99,620 phantoms but **88,737 are LEGACY
+rows from RETIRED data types**:
+- TRANSFERMARKT_LEAGUES: 75,960 (retired 2026-05-05 → UAC `TRANSFERMARKT_IDS`)
+- SFI_LEAGUES: 12,777 (retired 2026-05-05 → UAC `SOCCER_FOOTBALL_INFO_IDS`)
+- Only ~10,883 are REAL phantoms (INJURIES + others)
+
+**Why this matters**: Running `--unphantom` on sports would flip 88,737 retired-data-type rows to `attempted_failed`,
+the WRONG state. Per `manifest_migration_master_2026_05_07.md` § C.1, they should be flipped to
+`empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` (UAC reason already shipped at `uac@97dccc3`).
+
+**Existing migration script** (`instruments-service/scripts/migrate_leagues_kill_2026_05_07.py`) handles ONLY the
+api_football `LEAGUES` type — needs generalization to also cover TRANSFERMARKT_LEAGUES + SFI_LEAGUES + SFI_STANDINGS.
+
+**Work plan (slot 4, 2026-05-13)**:
+1. Generalize migration script to support multiple retired data_types
+2. Launch same-region GCE VM with `--apply` against sports manifest
+3. After verification, delete daily parquets via `gcloud storage rm -r`
+4. THEN run phantom reconciler on remaining ~10,883 real phantoms
+
+**Cross-side tech debt (deferred to separate plan)**:
+- instruments-service orchestrator still references retired types in 23+ places
+- deployment-api data_status_service.py still references retired types in 6+ places
+
+---
+
 ## [slot 4 → main] Phase 5B Pass 2 in progress — 2026-05-13 continuation session
 
 **Timestamp**: 2026-05-13 11:52 UTC **Status**: 🔄 Phase 5B Pass 2 EXECUTING (MTDS reconciliation)
