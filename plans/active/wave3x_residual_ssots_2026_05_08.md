@@ -344,9 +344,10 @@ The 2026-05-11 slot-3 (`harsh-wave3x-tab`) session shipped Tracks A-UTL + B + C 
 | Track D — `[MTDS]` / `[MDPS]` / `[features-*]` AUDIT | `done` 2026-05-11 — findings: `../archive/issues/wave3x_track_d_findings_2026_05_11.md` | — (audit complete; per-adapter A/B/C/D classification filed)                                                                                                                  |
 | Track D — case-D *implementation* (zero-activity-bar adapter wiring) | `deferred-post-cutover` — no schema change forced (anti-seq verdict: no new manifest dim) | DEFERRED post-cutover; needs a NEW UTL `zero_activity_bars` primitive + `instrument_catalog` threaded into adapter construction (Wave 2/3 of writegate Phase 3.D.5, "pending"); sports half re-scopes to instruments-service. Slot 1 / a Wave 3.M follow-up owns the impl plan. |
 | Track D — `[TEST]` per-adapter smoke tests  | `deferred-post-cutover`        | Pairs with the case-D adapter wiring above.                                                                                                                                   |
-| Track D — `[DOCS]` codex zero-activity-bar shape stub | `deferred-post-cutover`        | Slot 1 / a Wave 3.M follow-up adds the codex stub alongside the case-D impl plan. The audit findings doc is the substantive interim record.                                    |
-| Track D — `EXPECTED_KNOWN_SOURCE_GAP` candidate new `EmptyConfirmedReason` | `blocked` — operator/Ikenna-slot-5 decision pending | DECISION NEEDED (Ikenna slot 5 + slot 1): add to UAC `EmptyConfirmedReason` in the Phase 1 schema window (before 2026-05-15 freeze — it's a tiny additive enum) OR defer post-cutover. Surfaced in the findings doc + the cross-side ping (PM@fcf99e52 routed it). |
-| Track D — P0 bugs surfaced (MTDS blank-reason sentinel-abort; MDPS dead canonical-writer path + 1440-NaN TradFi passthrough; commodity phantom-row; cross_instrument np.zeros; sports fillna-magic) | `routed` — owners = writegate Phase 2.A/2.E + Harsh slots 5+6 | Escalated in `../archive/issues/wave3x_track_d_findings_2026_05_11.md` + the cross-side ping; NOT slot-3's repos to fix per the Track D read-only brief.                                  |
+| Track D — `[DOCS]` codex zero-activity-bar shape stub | `done` (PM@84e29700 + PM@e1185105, 2026-05-13 slot 6 wave 2) | — (codex stub written; see `honest-absence-downstream-handling.md` § "Zero-activity-bar shape"; Wave 3.M follow-up todo added to plan body) |
+| Track D — `[PLAN]` Wave 3.M case-D implementation plan | `deferred-after-cutover` | File `wave3x_track_d_implementation_<date>.md` post-2026-05-23. Owner: slot 1 or writegate Phase 3.D.5 Wave 2/3 owner. |
+| Track D — `EXPECTED_KNOWN_SOURCE_GAP` candidate new `EmptyConfirmedReason` | `done` (UAC@174f401 2026-05-11) | — (enum added by Ikenna slot 6 in Phase 1 schema window; see findings doc § "Recommended decision" operator A1) |
+| Track D — P0 bugs surfaced (MTDS blank-reason sentinel-abort; MDPS dead canonical-writer path + 1440-NaN TradFi passthrough; commodity phantom-row; cross_instrument np.zeros; sports fillna-magic) | `mostly-done` — P0-1 SHIPPED (MTDS@3da026d); P0-2 steps 1-4+6 SHIPPED (Ikenna slot 8); P0-2 Step 5 (output_schemas nullability) deferred; QG AST gate (Step 6) done (PM@a4512ed3) | Residual: P0-2 Step 5 deferred-after `hard_schema_enforcement_2026_05_08`; commodity phantom-row + sports fillna + cross_instrument np.zeros → features-service owners (unscheduled). |
 | Track E `[UTL]` 3 stamping helpers + `[TEST]` + `[DOCS]` | `done` (UTL@2ab3685; codex@bce1822e) | —                                                                                                                                                                            |
 | Track E `[features-sports]` calculator wire-in of the stamp helpers | `deferred` — per-service half | DEFERRED to Harsh slot 4 (MTDS sports adapter stamping wiring) + Ikenna slot 3 (available_at Phase 1 per-asset_group cascade) per the 2026-05-11 work-split. UTL helpers are ready to consume; see `plans/active/issues/` for slot 4's MTDS-slice sports `available_at` wiring issue doc. |
 | Track A `[UTL]` adjacent: pre-existing `reportPrivateImportUsage` on `from unified_api_contracts import non_trading_day_reason` (legacy_reason_classifier.py:162) | `noted` — pre-existing, not introduced this session | Picked up by the workspace QG sweep (Ikenna) or the writegate owner; fix = deep import `from unified_api_contracts.registry.venue_trading_calendar import non_trading_day_reason` with a `# noqa: ... qg-deep-import` comment. |
@@ -458,3 +459,34 @@ Code, tests, ruff, basedpyright all green; full-execution criterion met locally 
 - Phase 4.A items 1/2/3 of `writegate_honest_coverage_endtoend_2026_05_06.md` — already shipped (deployment-api@453836d
   / @7d57056 / @3b0477a, verified). Phase 4.A item 4 (live-vs-historical envelope alert) is `- [ ]` and explicitly
   multi-repo deferred (UAC + UTL + 3 services) — out of clean context for a single tab.
+
+## DONE-2026-05-13 (slot 6 wave 2 — Track D DOCS codex stub)
+
+Slot 6 wave 2 (`slot-6-w2`, `tab/hk/6`) shipped the only actionable remaining item: Track D `[DOCS]` codex stub. All
+other 5 remaining `- [ ]` items confirmed deferred with named owners.
+
+**Plan-flip + codex commits:**
+
+- `unified-trading-pm@84e29700` — Track D `[DOCS]` checkbox flipped `- [ ]` → `- [x]`; codex
+  `honest-absence-downstream-handling.md` § "Zero-activity-bar shape (case-D design — implementation deferred
+  post-cutover)" added (per-data_type carry-forward table, vol-smile constraint, Wave 3.M implementation requirements,
+  successor-plan pointer); Wave 3.M follow-up `[PLAN]` P2 todo added to Track D; boot ack in `pings/slot_6.md`.
+- `unified-trading-pm@e1185105` — SHA placeholder corrected to `PM@84e29700`; deferred-work scoreboard updated
+  (Track D DOCS row → done; EXPECTED_KNOWN_SOURCE_GAP row → done per UAC@174f401; P0 bugs row → mostly-done summary).
+
+**Full-execution evidence:**
+
+- Codex doc update is pure markdown; no code tests required. Push verified:
+  `git rev-list --left-right --count HEAD...origin/live-defi-rollout` → `0 0` after both pushes.
+
+**Deferred after 2026-05-13 wave 2 session:**
+
+| Track / item | Status | Successor / owner |
+|---|---|---|
+| Track D `[MTDS]` / `[MDPS]` / `[features-*]` case-D *implementation* | `deferred-post-cutover` | Wave 3.M plan `wave3x_track_d_implementation_<date>.md` (to file post-2026-05-23) |
+| Track D `[TEST]` per-adapter smoke tests | `deferred-post-cutover` | Pairs with case-D adapter wiring |
+| Track D `[PLAN]` Wave 3.M filing | `deferred-after-cutover` | Slot 1 or writegate Phase 3.D.5 Wave 2/3 owner |
+| Track E `[features-sports]` stamp-helper wire-in | `deferred` — per-service half | Harsh slot 4 (MTDS sports stamping) + Ikenna slot 3 (available_at Phase 1 cascade) |
+
+Plan checkpoint count: 17/23 done (the new `[PLAN]` todo adds 1 to total; 1 more `[x]` flipped this session → 17 done
+of 23 total).
