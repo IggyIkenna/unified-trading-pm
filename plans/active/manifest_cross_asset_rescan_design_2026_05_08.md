@@ -110,9 +110,13 @@ follow the same protocol.
 
 The rescan IS a superset of the existing phantom audit
 (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`). Pre-rescan baseline: 354 residual phantom rows
-from 2026-05-04 audit. Post-rescan target: **0 phantoms across all 5 asset_groups**. The 5 drift axes (hive-vocab,
-path-prefix, instrument_type casing, schema-4 empty instrument_type, chain-bundle equivalence) auto-fix via class A
-above; any residual goes to class C triage.
+from 2026-05-04 audit. Post-rescan target: **0 phantoms across all 5 asset_groups**. **9 drift axes** now handled:
+1. Hive-key vocab (category= vs asset_group=), 2. Path-prefix drift (raw_tick_data/by_date/ vs top-level),
+3. instrument_type casing, 4. schema-4 empty instrument_type, 5. chain-bundle equivalence,
+6. DeFi protocol underscore (AAVEV3 ↔ AAVE_V3). **Added 2026-05-13 (instruments-service@1a62547)**:
+7. TradFi Databento per-schema-bundle (trades ↔ tbbo), 8. cross-asset venue=UNKNOWN skip,
+9. Sports pre-coverage + known-gap UAC clips.
+All 9 auto-fix via class A above; any residual goes to class C triage.
 
 ## Cross-plan coordination (banner)
 
@@ -178,6 +182,15 @@ Flipping downstream phantom rows before instruments-service state is clean produ
 parallel. Only the `--apply-flips` run requires strict ordering.
 
 **Action items** (todos below):
+
+- [x] [SCRIPT] P0. Extend `reconcile_phantom_manifest_rows_all.py` with 3 Databento-aware drift axes to eliminate
+      false-positive phantoms identified in the 2026-05-11 dry-run (instruments-service@1a62547 2026-05-13):
+      - **Axis 7** (TradFi Databento per-schema-bundle): `trades` and `tbbo` paired schemas share the same prefix;
+        accept either data_type needle as capture evidence. Eliminates ~1,017 per-data_type false positives.
+      - **Axis 8** (cross-asset venue=UNKNOWN): UNKNOWN sentinel has no resolvable path; skip the venue needle.
+        Eliminates ~565 TradFi + ~2k cross-asset false positives.
+      - **Axis 9** (Sports pre-coverage + known-gap): rows before source launch date or in registered gaps excluded
+        from phantom check via `is_pre_launch_date` + `is_in_known_gap`. Eliminates bulk of 16.8% sports false-positive rate.
 
 - [ ] [DESIGN] P1. Add `## Reconciliation execution order` section to this plan documenting the pass sequence with exact
       `--data-types` values per pass, derived from authoritative scan of each service's `record_captured()` callsites.
