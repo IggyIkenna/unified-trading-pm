@@ -133,6 +133,15 @@ Covers:
 **Not covered here**: predictions ML training + arb_calculator + Group E ML walk-forward (those belong in
 `predictions_master_2026_05_07.md`).
 
+## Sub-plans (referenced from this epic)
+
+- **`plans/active/sports_retired_data_types_code_cleanup_2026_05_13.md`** — Retired-data-type cleanup (refactor class, ~1.2 cal-AI-days, deadline 2026-05-20). Removes stale references to data types that were retired in the manifest migration.
+- **`plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md`** — Phase 3B/3C api-football smoke + forward-poll operational verification (P0, deadline 2026-05-14 EOD).
+- **`plans/active/api_football_minimal_flattening_removal_2026_05_07.md`** — API-football payload flattening removal (near complete, 13/16 done).
+- **`plans/active/wave2_polymarket_record_captured_from_counts_2026_05_09.md`** (Polymarket subset May-23) — bundled-shard SSOT migration; Kalshi + opinion.trade Phase 3 stays 2026-06-15.
+
+**MVP scope SSOT** for sports backtest universe: [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md) — Top-5 EU football (EPL + LaLiga + Serie A + Bundesliga + Ligue 1) × 4 markets (1X2 / Over-Under 2.5 / BTTS / Asian Handicap). MLS + other leagues post-cutover. Tier A archetype = `ml-settled` (post-fixture-settlement ML).
+
 ## Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator
 
 > **Operator decision 2026-05-12 (verbatim)**: _"remove bet365 from the universe and docs and update plans we wont have

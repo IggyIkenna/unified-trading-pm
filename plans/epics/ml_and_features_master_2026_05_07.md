@@ -80,6 +80,12 @@ deployment-api/ui) and the same downstream consumer chain. Splitting them across
 owned `LookaheadBiasError` strict-mode wiring, the `ManifestFreshnessCache` adoption, or the `FeatureBatchHandler` lift;
 the umbrella collapses that ambiguity by sequencing the work as a single critical path.
 
+**MVP backtest scope** (per [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)):
+ML training data volume bounded by Tier A archetype universe: ~6M training rows total across all archetypes
+(TradFi S&P ~365K, DeFi carry ~1.3M, CeFi perp arb ~2.6M, Sports ~800K, Prediction ~900K). ml-continuous (CeFi + ES)
++ ml-settled (Sports) are the two ML archetype families May-23 must complete; broader ML framework supports the rest
+code-ready.
+
 ## Codex SSOTs
 
 Read these BEFORE making code changes; drift between code and these docs is a review-blocking failure per

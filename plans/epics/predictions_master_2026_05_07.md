@@ -87,6 +87,11 @@ Covers:
 - **Predictions ML half of `sports_predictions_e2e`**: ml-training Model 2A walk-forward + arb_calculator + Group E/F ML
   gates. Sports half (288M ODDS_API row migration + MDPS bucketing + FSS) lives in `sports_master`.
 
+**MVP backtest scope** (per [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)):
+Polymarket subset only by May-23 (BTC_UP_DOWN_HOURLY + other canonical question groups in scope). Kalshi +
+opinion.trade backtest/live → 2026-06-15 (per wave2_polymarket plan split 2026-05-13). Tier A archetypes touching
+Prediction: arbitrage-event-markets (Polymarket vs CME) + arbitrage-sports-book (Polymarket vs Betfair).
+
 ## Current state (2026-05-07)
 
 - **predictions_canonical_question_group_polymarket_migration**: 14/37 = 38% done. Phase 0 audit + classifier shape

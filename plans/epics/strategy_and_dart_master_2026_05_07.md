@@ -456,6 +456,13 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
   wiring is post-May-23.
 - Everything else: post-May-23. **Phase 1.3 (Live Unity UAT) is explicitly post-May-23.**
 
+## Sub-plans (referenced from this epic)
+
+- **`plans/active/compute_optimization_mock_data_2026_05_13.md`** (~4.8 cal-AI-days, P1, deadline 2026-05-23) — Mock-data optimization sprint covering: per-stage parallelization (MDPS / features-service / strategy / execution-alpha / ml-training), big-machine SKU matrix extension (`c3-highcpu-88` / `-176` / `m3-megamem-128` / `m3-ultramem-160`), `strategy-service/scripts/run_2yr_config_grid_backtest.py` extension to cover all 6 Tier A archetype families, codex SSOTs for performance-targets + cutover-window dependency-order. Mock-data approach lets this run in parallel with real-backfill workstream (no I/O dependency). MVP universe scope per `codex/09-strategy/mvp-universe-per-asset-group.md`.
+- **`plans/active/strategy_archetype_taxonomy_2026_05_12.md`** — archetype taxonomy refinement (separately cross-referenced earlier; parent_epic already set).
+
+**MVP scope SSOT for backtest config-grid + ML training sizing**: [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md) defines Tier A (backtest-complete by May-23) vs Tier B (code-ready architecture only). Tier A = ml-continuous (CeFi + ES) + ml-settled (Sports) + arbitrage-funding-rate + arbitrage-sports-book + arbitrage-event-markets + defi-carry-family.
+
 ## Coordination with sibling plans
 
 - **`ml_and_features_master_2026_05_07`**: Phase 4D (strategy-service calibrated-signal consumption

@@ -107,6 +107,12 @@ Covers:
 - **S&P 500 ML readiness**: ES futures continuous-series, VIX 15m + features, full backtest train/test split.
 - **MTDS TradFi slice to ≥99%** (ETFs per-instrument; futures/options bundled by root).
 
+**MVP backtest scope** (per [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)):
+S&P 500 (CME ES + ES.OPT + SPY) + BTC/ETH ETFs (NASDAQ IBIT, NASDAQ ETHA) + crypto futures (CME MBT, CME MET) + CBOE
+BTC options on IBIT + VIX 15m + GLD/USO/UNG cross-instrument carry. Tier A archetypes touching TradFi: ml-continuous
+(ES) + arbitrage-event-markets (CME EVENT_CONTRACT vs Polymarket). Tier B includes ES.OPT options-strategy archetypes
+(code-ready, full backtest post-cutover).
+
 **Not covered here**: live TradFi trading (out-of-cycle for May 23). DeFi / CeFi / Sports / Predictions live in their
 respective umbrellas.
 

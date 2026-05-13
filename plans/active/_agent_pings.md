@@ -839,3 +839,57 @@ Plan body annotated: `wallet_treasury_post_cutover_custody_signing_2026_06_01.md
 - Slots best-suited per item: basefc → features-service maintainer pair (UTL + features); governance_qg → slot 1 main or platform slot; wave2_polymarket → MTDS/prediction slot; codex_doc_currency → any researcher slot; treasury rollup → deployment-api slot; DART UX → UTS-UI slot; DeFi alert codes → features-onchain + alerting slot.
 
 **TOP ASK**: confirm slots 1 main (governance_qg) + 1 features (basefc + DeFi alert codes producer wiring) + 1 deployment-api (treasury rollup) + 1 UTS-UI (DART UX) + 1 prediction/MTDS (wave2_polymarket Polymarket subset) + 1 codex/research (codex_doc_currency) ≈ 6 slot-touches across next 9 days. Most can fit existing cycles without new spawns. **No descope. Perfect cutover.**
+
+---
+
+[2026-05-13 18:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — 🎯 **MVP universe SSOT codified + 7 backtest-archetype tiers + new compute-optimization plan** (operator scope clarification 2026-05-13).
+
+**NEW codex SSOT**: [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md). Resolves a real scoping ambiguity (CeFi 30 MVP coins, TradFi crypto-ETF subset, etc. were sprinkled across plans, not consolidated). References existing canonical SSOTs (UAC `StrategyArchetype` enum, `category-instrument-coverage.md`, `target_universe/catalog.py`, `paired_dispersion_catalog.py`, `VENUE_DATA_TYPE_CAPABILITIES`, `KNOWN_VENUE_TOKENS`, `venue_collateral.venue_accepts_collateral`) — adds the cutover-scope layer, does NOT duplicate cell-level data.
+
+**Two-tier archetype scope** (operator direction):
+
+**Tier A — backtest-complete by 2026-05-23** (THE goalposts):
+1. **ml-continuous** — CeFi (30 coins × 6 perp venues) + ES (S&P 500 futures). Online retraining.
+2. **ml-settled** — Sports (Top-5 EU football × 4 markets, ~5000 fixtures/yr). Per-fixture settlement training.
+3. **arbitrage-funding-rate** — cross-venue perp funding spread (this IS `arbitrage_price_dispersion` archetype; user-facing term differs). 30 coins × 6 venues + DeFi perp legs.
+4. **arbitrage-sports-book** — Polymarket vs Betfair on Top-5 EU fixtures. Cross-domain.
+5. **arbitrage-event-markets** — Polymarket vs CME EVENT_CONTRACT (covered by `cme_polymarket_arb_2026_05_08.md`).
+6. **defi-carry-family** — ALL carry-family archetypes: `carry_staked_basis`, `carry_recursive_borrow_lending_only`, `carry_recursive_borrow_perp_hedged`, `arbitrage_price_dispersion`, etc. per `codex/09-strategy/architecture-v2/archetypes/`.
+
+**Tier B — code-ready architecture only by May-23, full backtest post-cutover**:
+- Options-strategy archetypes (ES.OPT, CME crypto options, Deribit options, CBOE crypto-ETF options) — code-ready drives correct matcher class hierarchy + closed-set registry. Descoping = bad architecture.
+- Other DeFi non-carry archetypes.
+- Long-tail prediction (Kalshi + opinion.trade per `wave2_polymarket` split → 2026-06-15).
+
+**Backtest config-grid sizing** (per MVP SSOT § "Cross-asset implications"):
+- Total Tier A worker-runs ~2.6M (funding-rate arb is the heaviest single component at ~1.3M due to venue-pair combinatorial).
+- At ~5s/worker on `c3-highcpu-176` fully parallel ≈ **1.3 days wall-clock for full Tier A**. Fits cutover window.
+- ML training data volume ~6M rows total across archetypes; comfortable on `c3-highcpu-44`.
+
+**NEW plan**: `plans/active/compute_optimization_mock_data_2026_05_13.md` (~4.8 cal-AI-days, P1, deadline 2026-05-23). Mock-data approach lets it run **in parallel with real-backfill workstream** (no I/O dependency on data being ready). Phases:
+0. Pre-audit + stage classification (uses existing benchmark plan Phase 5/6 outputs)
+1. **VERIFY + EXTEND** `strategy-service/scripts/run_2yr_config_grid_backtest.py` (CORRECTION: this script ALREADY EXISTS at 886 lines, master plan flag "AUTHOR-MISSING" is stale — scope is verification + Tier A extension, not greenfield authoring)
+2. Features-service parallel batching
+3. Execution-alpha measurement at scale
+4. ML training parallel hyperparam grid (uses synthetic features)
+5. Big-machine SKU matrix extension (`c3-highcpu-88` / `-176` / `m3-megamem-128` / `m3-ultramem-160`)
+6. **Dependency-ordering doc for orchestrator** at `codex/08-workflows/cutover-window-dependency-order.md` (NEW) — which stages can run while real backfill happens vs which must follow
+7. Performance-targets codex SSOT (NEW)
+
+**Cleanup applied**:
+- 2 orphan plans (compute_optimization + sports_retired_data_types) assigned `parent_epic` → strategy_and_dart_master + sports_master respectively; both epics now list them as sub-plans.
+- 6 plans cross-reference the new MVP SSOT: master plan + 5 asset_group epics (cefi/tradfi/predictions/ml_and_features/cross_cutting).
+- Existing SSOTs (`category-instrument-coverage.md` + `target_universe/catalog.py` + UAC registries) preserved — new doc references them, doesn't duplicate.
+
+**Orchestrator dependency-order insight** (the critical value for slot scheduling):
+- Mock-data optimization work (Phases 0-5) runs RIGHT NOW alongside real backfill — don't gate on backfill.
+- Real backfill drains 2026-05-15 → 2026-05-19 per `code_freeze_migrate_backfill_sequencing` Phase 2.
+- First real-data cutover-window dress rehearsal 2026-05-18 → 2026-05-21 = critical test.
+- Phase 6 dependency-order doc will be the orchestrator's slot-scheduling reference.
+
+**TOP ASK from slot 1**:
+1. Confirm strategy_and_dart_master is the right epic-parent for compute_optimization (vs ml_and_features_master). Strategy-backtest-centric → strategy epic feels right.
+2. Allocate slots for compute_optimization Phase 0 (today, ~0.5 day) so the harness extension starts in parallel with real backfill.
+3. No descope on any Tier A archetype. Tier B (options) stays code-ready not backtest-complete — architecture-driver value preserved.
+
+Plan + codex + epic edits + sub-plan cross-refs all pushing in this commit batch.

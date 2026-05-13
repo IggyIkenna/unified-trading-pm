@@ -28,6 +28,10 @@ non-negotiable for cutover. Per operator direction 2026-05-08:
 
 ## The 5 cross-cutting deliverables
 
+**MVP universe SSOT** (codified 2026-05-13): [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md).
+Defines the 2-tier scope model — data capture (broad) vs backtest scope (narrow per asset_group) — and Tier A vs Tier B
+archetype classification. Binding constraint for backtest config-grid sizing in `compute_optimization_mock_data_2026_05_13.md`.
+
 ### 1. Strategy catalogue (HARD requirement)
 
 Every archetype × every venue combination must be enumerated in the strategy catalogue, **even if not launching this

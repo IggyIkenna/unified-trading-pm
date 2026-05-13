@@ -109,6 +109,11 @@ Single source of truth for **CeFi asset_group** work toward live DeFi 2026-05-23
 - **MTDS coverage to 100% for the CeFi slice** (per-instrument-per-day for spot/perp; bundled-by-root for
   options/futures).
 
+**MVP backtest scope** (per [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)):
+~30 MVP coins × 6 perp venues for arbitrage-funding-rate archetype. Dust-conversion spot coins (e.g. EIGEN) captured
+for prices, NOT in backtest config-grid. Data capture remains broad (all instruments per venue catalog). Tier A
+archetypes touching CeFi: ml-continuous + arbitrage-funding-rate + defi-carry-family (perp hedge legs).
+
 **Not covered here** (out of asset_group scope):
 
 - TradFi (CME / CBOE / NYSE / NASDAQ) → see `tradfi_master_2026_05_07.md`.
