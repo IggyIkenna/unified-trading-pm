@@ -413,11 +413,12 @@ request (or each slot reads work-split § "Slot N" + plan-of-record + does its o
 | 2 | risk_simulations finalisation (82% → 100%) | 🟡 READY-TO-SPAWN | `risk_simulations_limits_alerting_2026_05_10.md` | ~0.8 |
 | 3 | DR Phase 6+9+10 finalisation (AGENT items only; no VM launch) | 🟡 READY-TO-SPAWN | `disaster_recovery_circuit_breakers_2026_05_10.md` | ~1.0 |
 | 4 | 🐛 Script 3 classifier P1 bug fix + arbitrage_price_dispersion final 2 items | 🟡 READY-TO-SPAWN | `issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` + `arbitrage_price_dispersion_finalisation_2026_05_09.md` | ~0.6 |
-| 5 | mock_data Phase 3.D per-reader threading (MTDS Tardis/Databento + ml-inference + strategy) | 🟡 READY-TO-SPAWN | `mock_data_pipeline_benchmarking_2026_05_10.md` | ~1.2 |
+| 5 | (HELD — rebase failed during Wave 2 reset; MTDS cc62f02 Day-2 collision casualty) | 🔴 HOLD-FOR-CLEANUP | — | — |
 | 6 | wave3x_residual_ssots finalisation (73% → 100%) | 🟡 READY-TO-SPAWN | `wave3x_residual_ssots_2026_05_08.md` | ~0.6 |
 | 7 | cross_asset catalogue Phase 5A/5B/5C TradFi ETF + futures-roots consolidation | 🟡 READY-TO-SPAWN | `cross_asset_group_catalogue_audit_2026_05_10.md` (Phase 5) | ~1.0 |
-| 8/9 | (idle — held in reserve for spillover absorption from slots 2-7) | 🟪 RESERVE | — | — |
-| 10 | dex_perp Phase 2B/2C + EigenLayer Phase 3 | 🟢 IN FLIGHT | `dex_perp_and_venue_data_expansion_2026_05_12.md` | ~1.5 (carry) |
+| 8 | (HELD — UAC rebase failed during Wave 2 reset; 949185c collision casualty) | 🔴 HOLD-FOR-CLEANUP | — | — |
+| 9 | 🆕 mock_data Phase 3.D per-reader threading (MTDS Tardis/Databento + ml-inference + strategy) — moved from slot 5 | 🟡 READY-TO-SPAWN | `mock_data_pipeline_benchmarking_2026_05_10.md` | ~1.2 |
+| 10 | dex_perp Phase 2A/2D/2E + 2F P2 + EigenLayer Phase 3A/3B + Phase 4A/4B + codex 5.1/5.2 | ✅ DONE 2026-05-13 (~13:00 UTC) — 4 deferrals annotated with successors; worktree reset deferred to cleanup pass | `dex_perp_and_venue_data_expansion_2026_05_12.md` | — |
 
 ### Slot scope details (Wave 2)
 
@@ -438,7 +439,11 @@ request (or each slot reads work-split § "Slot N" + plan-of-record + does its o
   - **(2)** Close `arbitrage_price_dispersion_finalisation_2026_05_09.md` final 2 P1 items (canonical BTC/USDT slot entry in strategy-service + tests).
 - **Done definition**: Script 3 classifier signature aligned + dry-run shows non-zero upgrades for defi/sports/prediction (apply-flips deferred); arbitrage_price_dispersion 18/20 → 20/20.
 
-#### Slot 5 — mock_data Phase 3.D per-reader threading
+#### Slot 5 — HELD (rebase failed during Wave 2 reset)
+- **State**: Manual cleanup pending. tab/hk/5 MTDS branch has cc62f02 (Day-2 Phase 3.5 collision casualty) that can't apply over LDR's canonical Phase 3.5 (Ikenna ab17cc3 + ComsicTrader 4d45208). The commit was intentionally abandoned per its own commit message; durable on origin/tab/hk/5 as historical record.
+- **Cleanup plan** (slot 1 main, post-spawn): hard-reset tab/hk/5 to LDR (`git reset --hard origin/live-defi-rollout` in each repo of `.tabs/5/`); branches stay preserved on origin.
+
+#### Slot 9 — 🆕 mock_data Phase 3.D per-reader threading (moved from slot 5)
 - **Repos**: MTDS + ml-inference-service + strategy-service + UTL + PM
 - **Scope**: Wire `default_subprocess_pipeline()` benchmark harness into 3 readers that bypass `resolve_bucket_uri`: (a) MTDS Tardis/Databento fetch — handle external-API non-GCS path via a benchmark-specific instrumentation; (b) ml-inference direct feature-vector loader; (c) strategy direct signal+features loader. Each gets bespoke `_STAGE_COMMAND_TEMPLATES` entry. Verify with subprocess-pipeline benchmark run on 1-day batch.
 - **Done definition**: mock_data 19/29 → ~25/29; Phase 3.D `[x]` flipped; benchmark report includes all 6 pipeline stages with real timings (not extrapolated).
@@ -479,7 +484,7 @@ If operator wants to launch 2 slots before leaving (so they finish before return
 - **Slot 4** (Script 3 classifier P1 bug fix + arbitrage final): ~30-90 min total, **zero ambiguity**, smallest scope. Concrete signature alignment + dry-run verification + 2 small finalisation items. Highest "definitely done before lunch ends" probability.
 - **Slot 2** (risk_simulations finalisation): ~6-8h scope but the P0 items are well-defined; agent can ship steady cadence. Even partial completion is valuable. Per-shippable-unit FF-push cadence per the new HARD RULE keeps work visible to LDR.
 
-Slots 3, 5, 6, 7 can wait until operator returns (some involve more cross-repo work or VM-adjacent considerations).
+Slots 3, 6, 7, 9 can spawn post-lunch (some involve more cross-repo work or longer real-data verification).
 
 ### Spawn prompts (paste-ready, lean — applies LDR-alignment HARD RULE per AGENT_ONBOARDING.md update)
 
@@ -518,7 +523,37 @@ Then start work, in this order:
 COMPACT-CYCLE GUARD: do NOT read repo-level .claude/CLAUDE.md files.
 ```
 
-**Slots 3, 5, 6, 7 spawns** (use the same template as slot 4 above, swap slot number / repos / scope per the slot table). Operator pastes when returning from lunch.
+**Slots 3, 6, 7 spawns** (use the same template as slot 4 above, swap slot number / repos / scope per the slot table). Operator pastes ad-hoc.
+
+**Slot 9 spawn** (mock_data Phase 3.D — moved from slot 5):
+```
+You are Harsh-side slot 9, branch tab/hk/9. Sonnet 4.6 / thinking: high.
+
+Boot:
+1. cd /home/hk/unified-trading-system-repos/.tabs/9/unified-trading-pm
+2. Read harsh_orchestrator/AGENT_ONBOARDING.md FULLY — especially "LDR alignment cadence (HARD RULE)" (new 2026-05-13). Three checkpoints: boot rebase ALL owned repos / FF-push per shippable unit / pre-shutdown verify HEAD == LDR per repo.
+3. Find Slot 9 in LEDGER + work-split § "Slot 9 (Wave 2)".
+4. Rebase tab/hk/9 onto origin/live-defi-rollout in each owned repo (market-tick-data-service + ml-inference-service + strategy-service + unified-trading-library + unified-trading-pm). Note: tab/hk/9 was reset to LDR-clean during Wave 2 reset (2026-05-13 09:35 UTC) — your rebase should be a no-op fast-forward.
+5. Boot ack in harsh_orchestrator/pings/slot_9.md (use `date -u`).
+
+Then start work: `mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3.D per-reader threading. Wire `default_subprocess_pipeline()` benchmark harness into 3 readers that bypass `resolve_bucket_uri`:
+
+(a) MTDS Tardis/Databento fetch — external-API non-GCS path; needs benchmark-specific instrumentation hook (not the standard `resolve_bucket_uri` override since these readers don't go through GCS).
+(b) ml-inference direct feature-vector loader — bypasses bucket-uri resolver; add bespoke `_STAGE_COMMAND_TEMPLATES` entry.
+(c) strategy direct signal+features loader — same pattern.
+
+Verify with subprocess-pipeline benchmark run on 1-day batch; expect all 6 stages timed (not extrapolated).
+
+GREP-THEN-READ: when refactoring readers, do NOT grep-then-conclude. Open the function body of each reader before declaring shape. (Audit retrospective from Wave 1: 3 of 3 Sonnet slots had grep-then-conclude failures today — Slot 9 Wave 1 was one of them.)
+
+COMPACT-CYCLE GUARD: do NOT read repo-level .claude/CLAUDE.md files.
+
+Done-def: mock_data 19/29 → ~25/29; Phase 3.D `[x]` flipped with shipped SHAs; benchmark report includes all 6 pipeline stages with real timings.
+```
+
+### Slot 8 — HELD (UAC rebase failed during Wave 2 reset)
+- **State**: Manual cleanup pending. tab/hk/8 UAC branch has 949185c (Phase 1C revert casualty from this morning's parallel-collision with Ikenna's efd259c). The commit was intentionally abandoned per the BIG FINDING in cross-side `_agent_pings.md`; durable on origin/tab/hk/8 as historical record.
+- **Cleanup plan** (slot 1 main, post-spawn): hard-reset UAC tab/hk/8 to LDR (`git reset --hard origin/live-defi-rollout` in `.tabs/8/unified-api-contracts/`); branches stay preserved on origin. Also need to verify slot 8's stash (`stash@{?}` named `slot8-preexisting-wallet-provisioning-configs-2026-05-13`) is preserved or applied as needed.
 
 ### LEDGER table update for Wave 2
 
