@@ -24,7 +24,7 @@ estimate_calibration_note: |
   Updated 2026-05-13 (slot 6 substantive touch).
 ---
 
-> **🟢 VMs RUNNING 2026-05-13 07:21 UTC** — 5 manifest-recon-all VMs launched for all asset_groups (cefi/defi/tradfi/sports/prediction). All 3 reconcilers running per VM (phantom --dry-run + expected-absence scan + legacy-blank scan). ETA: defi ~15 min, sports/prediction ~10 min, cefi/tradfi ~45-60 min. Do NOT modify manifest or reconciler scripts until VMs complete. VM names: `manifest-recon-{ag}-20260513-07...`
+> **🟢 VMs RUNNING 2026-05-13 07:47 UTC (run 2)** — 5 manifest-recon-all VMs relaunched (deployment-service@2ca80d5 fixes python double-substitution). All 3 reconcilers running per VM. ETA: defi ~14 min, sports/prediction ~10 min, cefi/tradfi ~45-60 min. Do NOT modify manifest or reconciler scripts until VMs complete. VM names: `manifest-recon-{defi,cefi,tradfi,sports,prediction}-20260513-074{716,736}`. Run 1 (07:21) failed silently — setup script substitution doubled venv path.
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -202,11 +202,10 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) — pass 1 completes before pass 2 starts.
       Implement as sequential VM invocations or as a sequenced CLI flag `--pass 1|2|3|4` that the launcher orchestrates.
       **Blocker**: launcher not yet shipped (see "Launcher script" section above).
-- [x] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
-      before `--apply-flips`. (deployment-service@b5f25cc 2026-05-13): 5 VMs launched via new
-      `launch-manifest-recon-all-vm.sh` running all 3 reconcilers per asset_group. VM names:
-      `manifest-recon-{ag}-20260513-07...`. **IN FLIGHT** — waiting for logs at
-      `gs://deployment-scripts-central-element-323112/recon-logs/2026-05-13/`.
+- [ ] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
+      before `--apply-flips`. (deployment-service@b5f25cc 2026-05-13): 5 VMs launched via new `launch-manifest-recon-all-vm.sh`.
+      Run 1 failed silently (python path doubled by setup-script substitution); fixed in deployment-service@2ca80d5.
+      Run 2 (07:47 UTC) in flight: `manifest-recon-{ag}-20260513-074{716,736}`. **IN FLIGHT** — results pending.
 - [ ] [SCRIPT] P1. **PRE_CUTOVER — switch all 3 reconciliation scripts to `resolve_bucket_name`** (blocked on physical
       bucket migration landing). Currently all 3 scripts hardcode legacy non-env-tiered bucket names (e.g.
       `market-data-tick-cefi-{PROJECT_ID}`) violating the bucket-name SSOT (b+) codified 2026-05-11.
