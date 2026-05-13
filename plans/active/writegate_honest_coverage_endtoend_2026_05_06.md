@@ -3330,7 +3330,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       market-mid time-series). **Seed shipped 2026-05-11 @uac@b570d49 — 6 polymarket entries**
       (polymarket_crowd_sentiment + polymarket_trade_flow + polymarket_whale_activity +
       polymarket_market_microstructure + polymarket_temporal_patterns NAN_FILL; polymarket_cross_market STRICT_FAIL for
-      canonical-question-group arb signals). **DEFERRED**: wiring at cross_instrument orchestrator.
+      canonical-question-group arb signals). **WIRED 2026-05-13 @features-service@74080406**:
+      polymarket groups handled by existing Phase 6.4 generic `_check_emission_policy()` in
+      `features_service/cross_instrument/cli/handlers/batch_handler.py`; 2 polymarket mode-routing
+      tests in `tests/cross_instrument/unit/test_emission_policy.py`
+      (polymarket_cross_market STRICT_FAIL x1, polymarket_crowd_sentiment NAN_FILL x1).
 - [x] [features-cross-instrument + delta-one + multi-timeframe (microstructure scope)] P1. Audit + seed (book-imbalance,
       trade-flow toxicity, cross-TF alignment). **Seed shipped 2026-05-11 @uac@b570d49 — 30 entries**: cross-instrument
       (15 non-polymarket: regime_detection / cross_asset_correlation / cross_instrument_dynamics / realized_implied_vol
