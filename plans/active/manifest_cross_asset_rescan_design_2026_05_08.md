@@ -15,13 +15,16 @@ related_plans:
   - writegate_honest_coverage_endtoend_2026_05_06
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-estimate_class: design
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_class: infra
+estimate_baseline_ai_days: 3.0
+estimate_calibrated_ai_days: 2.4
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Dominant work: infra (VM launches, reconciler runs, log analysis) + design (drift-axis extensions). Using infra class (0.8×).
+  Baseline 3 AI-days covers: axis 7-8-9 extension (0.5d), 5-VM dry-runs + log analysis (1.0d), apply-flips per AG (1.0d), codex updates (0.5d).
+  Updated 2026-05-13 (slot 6 substantive touch).
 ---
+
+> **🟢 VMs RUNNING 2026-05-13 07:21 UTC** — 5 manifest-recon-all VMs launched for all asset_groups (cefi/defi/tradfi/sports/prediction). All 3 reconcilers running per VM (phantom --dry-run + expected-absence scan + legacy-blank scan). ETA: defi ~15 min, sports/prediction ~10 min, cefi/tradfi ~45-60 min. Do NOT modify manifest or reconciler scripts until VMs complete. VM names: `manifest-recon-{ag}-20260513-07...`
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -199,8 +202,11 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) — pass 1 completes before pass 2 starts.
       Implement as sequential VM invocations or as a sequenced CLI flag `--pass 1|2|3|4` that the launcher orchestrates.
       **Blocker**: launcher not yet shipped (see "Launcher script" section above).
-- [ ] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
-      before `--apply-flips`. Commands: see "Dry-run command set" section below.
+- [x] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
+      before `--apply-flips`. (deployment-service@b5f25cc 2026-05-13): 5 VMs launched via new
+      `launch-manifest-recon-all-vm.sh` running all 3 reconcilers per asset_group. VM names:
+      `manifest-recon-{ag}-20260513-07...`. **IN FLIGHT** — waiting for logs at
+      `gs://deployment-scripts-central-element-323112/recon-logs/2026-05-13/`.
 - [ ] [SCRIPT] P1. **PRE_CUTOVER — switch all 3 reconciliation scripts to `resolve_bucket_name`** (blocked on physical
       bucket migration landing). Currently all 3 scripts hardcode legacy non-env-tiered bucket names (e.g.
       `market-data-tick-cefi-{PROJECT_ID}`) violating the bucket-name SSOT (b+) codified 2026-05-11.
