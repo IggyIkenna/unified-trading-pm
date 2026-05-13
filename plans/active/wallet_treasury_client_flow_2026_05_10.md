@@ -197,8 +197,9 @@ all UAC imports. (unified-api-contracts@bb4a718)
       PositionTracker wiring + 21 unit tests; QG green)
 - [ ] [AGENT] P0. **3.B execution-service custody-pinger pre-trade.** Before any live order, pings the relevant custody
       endpoint; failure → `CustodyDisconnect` breaker fires (per DR plan).
-- [ ] [AGENT] P0. **3.C Allocation engine subscription.** Strategy-service signal generator queries
-      `allocation/engine.py` per signal to size per-client.
+- [x] [AGENT] P0. **3.C Allocation engine subscription.** Strategy-service signal generator queries
+      `allocation/engine.py` per signal to size per-client. (strategy-service@9a36f77 — AllocationSizer +
+      PerClientSignal frozen envelope + InMemorySubscriptionRepository + 23 unit tests; QG green)
 
 **Full-execution criterion**: per-repo QG green; integration test verifies pre-trade ping + allocation per-client.
 
