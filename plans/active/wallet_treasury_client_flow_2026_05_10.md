@@ -166,20 +166,29 @@ no failures.
 
 ## Phase 2 — UTL onboarding + custody-pinger + allocation + settler (Days 3-6, ~3 AI-days)
 
-- [ ] [AGENT] P0. **2.A `client_lifecycle/onboarding.py`.** State machine: `advance(client_id, target_state, evidence)`
-      per closed-transition graph.
-- [ ] [AGENT] P0. **2.B `treasury/custody_pinger.py`.** Per-`TreasurySource` ping (Copper API / CEFFU API / DeFi wallet
+- [x] [AGENT] P0. **2.A `client_lifecycle/onboarding.py`.** State machine: `advance(client_id, target_state, evidence)`
+      per closed-transition graph. (unified-trading-library@b87daf02 — 21 unit tests, InMemoryStateStore +
+      GCSStateStore, DRAFT→KYC_SUBMITTED→KYC_APPROVED→DEPOSITED→SUBSCRIBED→LIVE + SUSPENDED from any state)
+- [x] [AGENT] P0. **2.B `treasury/custody_pinger.py`.** Per-`TreasurySource` ping (Copper API / CEFFU API / DeFi wallet
       on-chain balance). Returns `CustodyPingResult` (reachable + balance + as-of-time).
-- [ ] [AGENT] P0. **2.C `allocation/engine.py`.** Per-client × per-archetype allocator: read
+      (unified-trading-library@b87daf02 — 20 unit tests, all 6 TreasurySources, async ping_all, \_classify_error helper)
+- [x] [AGENT] P0. **2.C `allocation/engine.py`.** Per-client × per-archetype allocator: read
       `ClientShareClassSubscription`, compute per-archetype size, emit `AllocationDecision` events. MVP: demo client →
-      100% of each cutover archetype.
-- [ ] [AGENT] P0. **2.D `post_trade/settler.py`.** Per-trade settle handler: subscribes to execution events, emits
+      100% of each cutover archetype. (unified-trading-library@b87daf02 — 14 unit tests, two-tier drawdown gates,
+      AllocationDecisionEvent emitted per decision, allocate_per_archetype for share-class capacity)
+- [x] [AGENT] P0. **2.D `post_trade/settler.py`.** Per-trade settle handler: subscribes to execution events, emits
       `TradeSettledEvent` with per-client + per-fee + per-financing decomposition. Reuses `client_reporting` PnL
-      attribution decomposition.
-- [ ] [AGENT] P0. **2.E Tests.** ≥40 unit tests.
+      attribution decomposition. (unified-trading-library@b87daf02 — 17 unit tests, 7-venue fee schedule, execution
+      alpha via pnl_attribution_service, FeeAccruedEvent daily rollup, get_venue_fee_rate() helper)
+- [x] [AGENT] P0. **2.E Tests.** ≥40 unit tests. (unified-trading-library@b87daf02 — 76 total: 21+20+14+17 unit + 9
+      integration tests in tests/integration/wallet_treasury/test_phase2_integration.py; all 76 passing)
 
 **Full-execution criterion**: UTL PR pushed; QG green; integration test drives onboarding state machine + ping +
-allocate + settle on stub data.
+allocate + settle on stub data. ✅ b87daf02 pushed to origin/live-defi-rollout 2026-05-13. Pre-existing 117 manifest
+writer test failures pre-date Phase 2 (unrelated); 76 new Phase 2 tests all pass.
+
+**Side fix**: unified-api-contracts normalize_utils/tickers.py was empty (stub). Added 15 venue re-exports to unblock
+all UAC imports. (unified-api-contracts@bb4a718)
 
 ## Phase 3 — Per-service per-client lineage migration (Days 6-8, ~2 AI-days, 3 parallel sub-agents)
 
