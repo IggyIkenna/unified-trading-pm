@@ -318,8 +318,20 @@ Owner: harsh + parallel agent.
       deployment-service@`f87bcb3` — VM launcher `launch-aave-lending-rate-validation-vm.sh` (singleton-locked on
       Alchemy key, n2-standard-4, asia-northeast1-a) + watchdog registration `aave-lending-rate-val-` +
       `defi-validation` bucket in cloud-providers.yaml. GCS bucket `gs://central-element-323112-defi-validation/`
-      provisioned 2026-05-13. **DEFERRED**: actual VM run with real RPC events — operator runs launcher after watchdog
-      relaunch.)
+      provisioned 2026-05-13. **OPERATIONAL RUN 2026-05-13**: VM `aave-lending-rate-val-20260513-173601` (corr_id
+      `41F37242-...`) executed end-to-end on mainnet (blocks 23.3M→25.086M); 60 events collected (USDC:26, USDT:20,
+      DAI:14); `results.json` persisted to
+      `gs://central-element-323112-defi-validation/results/lending/2026-05-13/41F37242-.../results.json`. **Validation
+      gate ❌ 0/60 events pass** — sim ~40-70% LOW vs realized; root cause = stale
+      `AAVE_V3_RATE_MODEL_DEFAULTS_BY_ASSET` (governance drift since table written). P1 follow-up filed:
+      `plans/active/issues/phase_3c_lending_rate_model_0_of_60_pass_2026_05_13.md`. **FIX SHIPPED
+      execution-service@`abb526a98` 2026-05-13**: `_fetch_irm_params_live()` added — fetches live IRM params from
+      on-chain `ReserveStrategy` per event (`getBaseVariableBorrowRate` / `getVariableRateSlope1/2` /
+      `OPTIMAL_USAGE_RATIO`), with strategy-addr cache; `_enrich_events_with_rates` stores
+      `live_slope1/slope2/optimal_utilization/reserve_factor` in fixture; `_reconstruct_lending_market_state` reads live
+      fields first, falls back to stale defaults only with WARNING. Math: stale slope1=0.04 at U=86% = 2.96% vs live
+      slope1=0.06 = 4.34% (matches sim≈2.7% vs realized≈4.36% divergence). VM re-run launched:
+      `aave-lending-rate-val-20260513-182201` corr_id `8849FD14-B34D-43F8-B6CA-5265DCA2CCAB`.)
   - [x] **3C.1 — Event Collector** (RPC `eth_getLogs` batching). Query mainnet for Aave V3 Pool `Supply` events Sep 2025
         → May 2026; filter events >$10M `amount`; extract (block, txhash, pool_address, asset, user, amount, timestamp).
         Target ≥50 events. Store as JSON fixture `tests/defi_execution/integration/fixtures/aave_large_supplies.json`.
