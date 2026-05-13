@@ -334,6 +334,33 @@ pick up the new prefixes (`vm-zombie-watchdog-20260512-184112`).
 
 Full shape + tarball routing + known gaps: [`strategy-vm-launcher-shape.md`](strategy-vm-launcher-shape.md).
 
+## Hardcoded-name vs prefix-{ts} naming patterns (O-19, added 2026-05-13)
+
+Two naming patterns exist in `deployment-service/scripts/vm/` launchers with different
+watchdog + singleton implications:
+
+| Pattern | Example | Use case | Watchdog behaviour | Singleton-lock behaviour |
+|---|---|---|---|---|
+| **`prefix-{ts}`** (default) | `mtds-cefi-backfill-20260508-152400` | Most backfill / one-shot VMs | Watchdog kills idle VMs matching the prefix after timeout; multiple parallel VMs OK | None — concurrent runs allowed |
+| **Hardcoded name** (singleton) | `vm-zombie-watchdog`, certain `strategy-paper-{archetype}` | Singleton services that MUST NOT run as duplicates (shared API keys, per-IP rate-limited adapters, kill-switch coordinators) | Watchdog skips kill-by-prefix (would self-terminate) | Launcher refuses launch if same-name VM RUNNING in zone; `--force` bypass for operator |
+
+**Implications when adding a new launcher:**
+
+1. **Choose the right pattern**: hardcoded name only for genuine singletons (shared rate-limited API,
+   kill-switch coordinator, zombie-watchdog). Anything else → `prefix-{ts}`.
+2. **Hardcoded-name singletons** still register their bare name as a prefix in `VM_PREFIX_TO_BUCKET`
+   so the watchdog routes their logs correctly — but the watchdog's idle-kill logic must skip them
+   (look at `vm_zombie_watchdog.py` skip-list).
+3. **Singleton-lock check** lives in the launcher script itself — pattern from
+   `launch-sfi-backfill-vm.sh` (SFI thundering-herd 2026-04-19 reference incident): query
+   `gcloud compute instances list --filter='name=<hardcoded-name> AND status=RUNNING'`; if non-empty
+   AND `--force` not passed → exit 1 with the running VM's creation timestamp + zone.
+4. **Cross-ref**: CLAUDE.md "Singleton-locked launchers" rule + "No fire-and-forget VM launches" rule.
+
+Reference: Sweep 3 of `codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` (O-19 finding).
+
+---
+
 ## References
 
 - CLAUDE.md "VM launcher script SSOT" rule (cursor-configs/CLAUDE.md, codified 2026-05-07).

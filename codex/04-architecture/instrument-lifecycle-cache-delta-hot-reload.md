@@ -1,8 +1,32 @@
 ---
 scope: [engineer, admin]
+status: canonical
+last_reviewed: 2026-05-13
 ---
 
 # Instrument Lifecycle = Event-Publish + Downstream Cache-Delta Hot-Reload (workspace pattern)
+
+## Two reload mechanisms across the workspace (ML-18 matrix, 2026-05-13)
+
+The workspace has **two distinct hot-reload mechanisms** that share the cache-delta shape but differ in
+trigger + payload + consumer. Codified here so future designs reuse the matching mechanism per use case:
+
+| Aspect | Mechanism 1 — Instrument-lifecycle delta-reloader | Mechanism 2 — Model Pub/Sub cache-bust |
+|---|---|---|
+| **Trigger source** | instruments-service catalog refresh (cron + on-demand) | ml-training-service post-training run + model-registry write |
+| **Pub/Sub topic** | `streaming.{asset_group}.instrument_cache_refresh_trigger` | `streaming.ml.model_registry_cache_bust` |
+| **Payload shape** | `INSTRUMENT_CACHE_REFRESH_TRIGGER` event with catalog-version hash | `MODEL_REGISTRY_CACHE_BUST` event with `(model_family, training_run_id)` |
+| **Consumer-side state** | In-memory catalog dict + per-instrument subscription state | UTL `ModelRegistry` instance cache + warm-loaded model artefacts |
+| **Delta strategy** | Fetch new catalog, compute (added/removed/changed) deltas, hot-reload affected subscription state | Invalidate cached entry for `(model_family, training_run_id)`, re-load on next access |
+| **Latency budget** | <30s end-to-end (instrument-day grain) | <60s (model warm-load is heavier) |
+| **Downstream consumers** | MTDS / MDPS / features-service (each maintains own cache) | strategy-service (`ML_DIRECTIONAL` archetypes), features-\* (ML-derived calculators) |
+| **Doc** | This file (continues below) | UTL `ml/model_registry.py` docstrings + `catalogue-ml-model.md` |
+
+Both mechanisms compose with `ApiKeyReloader` / `start_domain_config_reloaders` — "service is effectively a
+config" applies uniformly. Reference: Sweep 3 of
+[`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md).
+
+---
 
 > **STATUS** — Workspace pattern doc codified during the live-pipeline activation 2026-05-08. Work plan in
 > [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)

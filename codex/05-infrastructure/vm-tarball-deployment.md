@@ -211,6 +211,12 @@ bash launch-ml-training-vm.sh \
 
 ## How to debug a failed VM run
 
+> **Cross-ref (O-12, added 2026-05-13)**: when sizing the next VM after an OOM or memory-pressure
+> failure, use the `recommended_machine_type` runbook in
+> `market-tick-data-service/market_tick_data_service/engine/shard_memory_profile.py` — it
+> reads the per-shard memory profile from past runs and recommends `e2-standard-N` / `e2-highmem-N`
+> tiers based on observed peak RSS. Referenced from rc=137 row in the Exit codes table below.
+
 ```
 1. gcloud compute instances list --filter='name~"<vm-name-prefix>"' --format='table(name,status,creationTimestamp.date())'
 

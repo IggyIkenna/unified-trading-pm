@@ -309,6 +309,35 @@ Deploy form. The new shape makes "fresh" and "re-run" structurally distinct:
 | VM-launcher registry                                 | REUSED            | `deployment-service/scripts/vm/` (existing)                                         |
 | Build history + log retrieval                        | REUSED            | `builds.py` / `cloud_builds.py` (existing)                                          |
 
+## Health-page connector-status contract (UI-19, added 2026-05-13)
+
+The deployment-ui health page (under Monitor → Health) probes a closed set of connectors at
+configured cadence. Codified here so both the UI maintainer and backend probe owners read the
+same contract.
+
+**Probed connectors (closed set):**
+
+| Connector | Probe endpoint | Healthy-state criterion | Latency threshold | Startup hint |
+|---|---|---|---|---|
+| `deployment-api` | `GET /healthz` | HTTP 200 + JSON `{status: "ok"}` | <500 ms p99 | Cold-start within 60s of Cloud Run revision rollout |
+| Pub/Sub publish | dummy publish to `lifecycle-events-health` topic | publish ack received | <1s p99 | Re-arm subscriber on subscription not-found |
+| GCS read | HEAD on `gs://deployment-scripts-{pid}/health/probe.txt` | HTTP 200 + body matches expected hash | <1s p99 | Empty body indicates stale probe-writer cron |
+| BigQuery (optional) | `SELECT 1 LIMIT 1` against `${pid}.deploy_missing_audit.launches` | row returned | <2s p99 | Skip when BigQuery dataset absent (dev tier) |
+| Firebase Auth (UI-side) | `firebase.auth().currentUser` resolution | non-null user | <500 ms p99 | Show "sign in to view monitoring" if null |
+
+**Latency budgets** are p99 over a rolling 5-minute window. Breaches trigger a YELLOW dot;
+3-consecutive-fail or 30s-no-response triggers RED.
+
+**Startup hints** surface in the UI under the per-connector tile when the connector is
+unreachable for >60s — operator gets actionable text rather than a bare red dot.
+
+**SSOT for the probe set**: `deployment-ui/src/health/connectors.ts` (closed-set TypeScript
+literal). When adding a new probed connector, update both that file AND this table.
+
+Reference: Sweep 3 of `codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` (UI-19 finding).
+
+---
+
 ## Cross-references
 
 - [`codex/04-architecture/runtime-deployment-topology.md`](../04-architecture/runtime-deployment-topology.md) —

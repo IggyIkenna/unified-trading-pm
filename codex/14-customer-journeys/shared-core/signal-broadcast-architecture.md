@@ -155,6 +155,10 @@ Two surfaces, both backed by the UTL event stream and the BQ billing log.
 - **Counterparty dashboard** (`/services/signals/dashboard`). Four panels:
   - `<SignalHistoryTable>` — last N emissions scoped to entitled slots; filter by slot / date / status.
   - `<BacktestComparisonPanel>` — Odum-held backtest numbers vs live signal aggregate (read-only).
+    Per-archetype paper-readiness gate (paper-runnable / paper-shippable / backtest-only / stub) determines
+    which strategies surface their backtest comparisons here — see
+    [`archetype-paper-readiness.md`](../../09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md)
+    for the 4-state taxonomy SSOT (ST-20 cross-ref, added 2026-05-13).
   - `<DeliveryHealthPanel>` — webhook success rate, retry counts, avg latency, last-delivery timestamp.
   - `<PnlAttributionPanel>` — renders null until `Counterparty.pnl_reporting_enabled` (post-Sept-2026 follow-up).
 - **Admin surface** (`/services/signals/counterparties`). Counterparty table, detail panel, entitlement toggle, active

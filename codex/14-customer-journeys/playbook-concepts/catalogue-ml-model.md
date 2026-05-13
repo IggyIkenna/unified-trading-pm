@@ -1,22 +1,37 @@
 ---
 scope: [engineer, admin, sales]
+status: canonical
+last_reviewed: 2026-05-13
 ---
 
 # ML Model Catalogue
 
 One of the four catalogues. See [catalogues.md](catalogues.md) for the umbrella pattern.
 
-## Status: ⚠ SSOT exists in library; UAC + UI surface need audit + unification
+## Status: ✅ SSOT resolved — UAC schemas + UTL registry boundary clarified 2026-05-13
 
-## Service SSOT
+## Service SSOT — UAC ↔ UTL boundary (ML-12 resolution, 2026-05-13)
+
+**Boundary (verified 2026-05-13 per Sweep 3 of
+`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`):**
+
+| Concern | Lives in | Files |
+|---|---|---|
+| **UAC schemas** (typed `ModelMetadata`, `TrainingRun`, `ModelFamily`, ML domain enums) | `unified-api-contracts` | `unified_api_contracts/internal/ml.py`, `internal/domain/ml/schemas.py` |
+| **UTL registry** (runtime `ModelRegistry`, training run abstractions, model loading) | `unified-trading-library` | `unified_trading_library/ml/model_registry.py`, `ml/models.py`, `ml/__init__.py` |
+
+UTL `ModelRegistry` consumes UAC ML schemas as its typed contract surface; ML domain types
+are NOT duplicated. Consuming services (strategy-service for `ML_DIRECTIONAL` archetypes,
+features-\* services) import from UTL for runtime, UAC for typing. This was the historical
+gap flagged in the prior § "Audit needed" — closed by Sweep 3.
 
 - [unified-trading-library/ml/](https://) sub-package — ML registry + training run abstractions + model families
 - Consuming services: strategy-service (uses ML models in ML_DIRECTIONAL archetypes), features-\* services
 
 ## UAC registry
 
-**Audit needed** — verify whether model families / training runs are exposed as UAC types or remain service-local. If
-missing, flag as a UAC gap.
+ML schemas live at `unified-api-contracts/unified_api_contracts/internal/ml.py` +
+`internal/domain/ml/schemas.py`. No UAC gap — closed 2026-05-13.
 
 ## UI route (today)
 

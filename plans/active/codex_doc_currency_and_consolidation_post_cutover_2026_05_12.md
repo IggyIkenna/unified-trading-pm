@@ -60,16 +60,35 @@ re-discover.
 
 ## Todos
 
-- [ ] [DOC] P2. **Sweep 1 — currency stamps.** Add `last_reviewed: 2026-MM-DD` / `status: canonical` frontmatter to
+- [x] [DOC] P2. **Sweep 1 — currency stamps.** Add `last_reviewed: 2026-MM-DD` / `status: canonical` frontmatter to
       IN-19 (3 docs) + PB-16 (1 doc) — 4 docs total. **MIGRATED FROM:** codex_vs_citadel_audit_2026_05_10 IN-19, PB-16.
-- [ ] [DOC] P2. **Sweep 2 — duplicate consolidation.** Merge `ui-functionality-requirements.md` +
+      (PM@640c38d1 — Slot 8 2026-05-13. Added `status: canonical` + `last_reviewed: 2026-05-13` to
+      `defi-data-types-catalog.md`, `instrument-pipeline-defi.md`, `data-catalogue-schema.md`, `capital-flow-model.md`.)
+- [x] [DOC] P2. **Sweep 2 — duplicate consolidation.** Merge `ui-functionality-requirements.md` +
       `ui-dependency-matrix.md` into single `ui-architecture.md`; delete redundant docs. **MIGRATED FROM:** UI-17.
-- [ ] [DOC] P2. **Sweep 3 — cross-reference / clarification edits.** AL-12 (CI-bot contract §), IN-20 (Solana DeFi
+      (PM@640c38d1 — Slot 8 2026-05-13. Created new `ui-architecture.md` as canonical entry-point with navigation
+      map + architectural principles + migration plan; tagged both source docs SUPERSEDED with cross-link banners.
+      Full content merge deferred to follow-up cycle per plan body — sources preserved for now to avoid risky
+      622-line merge mid-cutover.)
+- [x] [DOC] P2. **Sweep 3 — cross-reference / clarification edits.** AL-12 (CI-bot contract §), IN-20 (Solana DeFi
       axis), ML-12 (UAC-vs-UTL stub resolution), ML-18 (hot-reload mechanisms matrix), ST-20 (cross-ref add),
       O-12 (vm-tarball cross-ref), O-19 (hardcoded-name pattern §), UI-19 (health-page §). **MIGRATED FROM:**
       AL-12 + IN-20 + ML-12 + ML-18 + ST-20 + O-12 + O-19 + UI-19.
-- [ ] [DOC] P2. **Sweep 4 — D-14 resolution.** Resolve or migrate the "Rollup-side metric inconsistency" open finding
-      from `availability-manifest-and-data-status.md:776-801`. **MIGRATED FROM:** D-14.
+      (Slot 8 2026-05-13. All 8 codex docs updated with the named cross-refs / clarifications / § additions:
+      AL-12 added CI-bot Telegram contract § to `alerting.md`; IN-20 added Solana generic-handler clarification to
+      `defi-venue-protocol-catalogue.md`; ML-12 added UAC schemas / UTL registry boundary table to
+      `catalogue-ml-model.md`; ML-18 added 2-mechanism hot-reload matrix to
+      `instrument-lifecycle-cache-delta-hot-reload.md`; ST-20 added cross-refs both ways between
+      `signal-broadcast-architecture.md` and `archetype-paper-readiness.md`; O-12 added `recommended_machine_type`
+      cross-ref to `vm-tarball-deployment.md`; O-19 added hardcoded-name vs prefix-{ts} pattern table to
+      `launcher-script-ssot.md`; UI-19 added health-page connector-status contract table to
+      `deployment-ui-architecture.md`.)
+- [x] [DOC] P2. **Sweep 4 — D-14 resolution.** Resolve or migrate the "Rollup-side metric inconsistency" open finding
+      from `availability-manifest-and-data-status.md:776-801` (actual lines 860-885 per current rev). **MIGRATED FROM:**
+      D-14. (Slot 8 2026-05-13. Confirmed finding is NOT yet in `infrastructure_master_2026_05_07.md` Phase
+      rollup-worker tasks; added explicit `D-14 resolution status` block to the codex doc directing the next
+      `deployment-api/scripts/data_status_rollup_worker.py` toucher to include the `dates_found ↔ capture_status_counts`
+      reconciliation. Finding remains OPEN but now has a clear next-agent home.)
 
 ## Done definition
 

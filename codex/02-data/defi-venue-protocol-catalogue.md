@@ -69,6 +69,17 @@ mirrors the master-plan readiness-checklist Continuous-Verification column.
 IN-1 correction)**: `defi_venue_capabilities.py` IS canonical — covers the per-(venue, data_type) capability axis
 that `defi_venues.py` (per-venue chain support) does NOT. The two registries are complementary, not redundant.
 
+> **IN-20 clarification (added 2026-05-13)** — the `MTDS adapter` column for Solana DeFi protocols
+> (Kamino / Raydium / Orca / Jupiter / Drift / Jito / Marinade / mSOL etc.) does NOT indicate a
+> dedicated per-protocol Solana MTDS adapter. The Solana capture path uses a **generic Solana
+> RPC handler** in `market_interface/adapters/solana/` that resolves per-protocol behaviour via
+> program-id + IDL dispatch (PythNet + Hermes for prices, Helius RPC for state) rather than per-protocol
+> Python adapter files. Read the `MTDS adapter` ✅ marks on Solana rows as "generic handler covers this
+> venue's data_types" — not "dedicated `solana/<protocol>.py` adapter exists". For EVM protocols the
+> MTDS adapter column DOES indicate per-protocol Python files under
+> `market_interface/adapters/defi/<protocol>.py`. Sourced from
+> `codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` Sweep 3.
+
 ## Per-protocol shard-atom matrix
 
 > SSOT for Phase 2 adapter authors + Phase 3 MTDS adapter authors. Shard atom MUST be identical across

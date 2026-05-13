@@ -38,6 +38,13 @@ Every archetype lands in exactly one of four states for `OperationalMode.PAPER` 
 | **backtest-only**      | Only batch-mode evidence exists; paper plumbing not wired. Most archetypes today.                                                                              |
 | **stub / placeholder** | Archetype name exists in catalogue but no engine code, or engine code is sketch-only. Not eligible for paper-mode.                                             |
 
+**Downstream consumer of this taxonomy**: `<BacktestComparisonPanel>` in the Signal Broadcast
+Counterparty dashboard reads paper-readiness state to decide which archetypes surface their
+backtest comparisons. Cross-ref:
+[`signal-broadcast-architecture.md`](../../../14-customer-journeys/shared-core/signal-broadcast-architecture.md)
+§ "Counterparty dashboard" (ST-20 cross-ref, added 2026-05-13 per
+`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` Sweep 3).
+
 ## Paper-runnable gate set (closed set)
 
 An archetype graduates from `paper-shippable` → `paper-runnable` only when ALL of the following are met:

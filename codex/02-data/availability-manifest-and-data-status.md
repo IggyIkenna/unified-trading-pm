@@ -884,6 +884,15 @@ derive `dates_found` from the same source as `capture_status_counts` (the manife
 Without this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading. Owner: data-status
 multi-axis stream.
 
+> **D-14 resolution status (2026-05-13)**: This finding is logged here AND in the codex doc audit findings issue
+> [`codex_audit_data_2026_05_12.md`](../../plans/active/issues/codex_audit_data_2026_05_12.md) under D-14. It has NOT
+> been explicitly added as a new todo in `infrastructure_master_2026_05_07.md` (verified by grep 2026-05-13: the rollup
+> worker P5 task at line 202 is about emitting `breakdowns`, not about reconciling `dates_found` ↔ `capture_status_counts`).
+> The finding remains OPEN — the rollup worker still derives `dates_found` from a different source than
+> `capture_status_counts`. Next agent touching `deployment-api/scripts/data_status_rollup_worker.py` SHOULD include this
+> reconciliation. Tracked via Sweep 4 of
+> [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md).
+
 When adding a new adapter, document any path duality here BEFORE merging the writer — silent dual-schemas are the
 canonical phantom-audit blast radius.
 

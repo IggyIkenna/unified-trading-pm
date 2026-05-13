@@ -213,6 +213,42 @@ Operator sees alert in Telegram / PagerDuty on-call
 
 ---
 
+## CI-bot Telegram contract (AL-12 — added 2026-05-13)
+
+Workspace-CI delivery to operators runs through a dedicated Telegram bot, **separate from
+the alerting-service runtime delivery surface above**. Documenting the contract here so
+agents don't conflate the two channels.
+
+**Trigger:** every `git push` to a branch that triggers remote CI (pushes to `main` +
+PRs targeting `main`). Pushes to `live-defi-rollout` and other `feat/*` branches DO NOT
+trigger remote CI — quality is enforced locally via `bash scripts/quality-gates.sh`
+before push.
+
+**Payload contract:** the CI bot reports the underlying repo's QG status, not its own
+delivery result.
+
+| `client_payload.status` | Telegram severity | Body shape |
+|---|---|---|
+| `FAILING` | ❌ `CRITICAL` | Failure excerpt inline (last 30 lines QG output, ANSI-stripped, in `<pre>` block) |
+| anything else | ✅ `INFO` | Repo + commit + status summary |
+
+**Operator response cadence:** CI failures on `live-defi-rollout` and `main` are NOT
+issues to flag — fix in real time. Red CI on `live-defi-rollout` blocks workspace.
+
+**Watcher pattern:** after a CI-triggering push, set up a background watcher (sub-agent
+OR `ScheduleWakeup` ~3-5min after push) checking
+`gh run list --branch <branch> --repo <owner>/<repo> --limit 5`. Continue with other
+work; react asynchronously.
+
+**Diagnosis on fail:** `gh run view <run-id> --log-failed --repo <owner>/<repo>` (NOT
+local re-run; only run quality-gates locally on the SPECIFIC files in your diff).
+
+**SSOT for the rule:** workspace `CLAUDE.md` § "CI Verification After Every Push (HARD
+RULE)". The § above mirrors the contract for cross-agent discoverability inside the
+codex (per AL-12 codex_doc_currency_and_consolidation_post_cutover_2026_05_12 Sweep 3).
+
+---
+
 ## Related
 
 - `04-architecture/autonomous-recovery-matrix.md` — full decision tree for failure scenarios
