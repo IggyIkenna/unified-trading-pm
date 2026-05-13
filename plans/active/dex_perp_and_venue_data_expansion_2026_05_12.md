@@ -203,21 +203,20 @@ unit tests. Shard-level isolation confirmed: single venue error does not propaga
 > `eigen_reward_apy`. Check if protocol-level aggregation (sum across all earners / divide by total restaked ETH) is
 > already present before implementing.
 
-- [ ] [DESIGN] P0. **Audit `eigen_rewards_calculator.py` for protocol-level aggregation.** Read the full calculator
-      implementation. Verify: (a) does it sum all earner amounts per distribution period? (b) does it fetch
-      `total_restaked_ETH` via `userUnderlying()` on EigenLayer strategy contract? (c) does it compute
-      `restaking_yield_rate = EIGEN_distributed_USD / total_restaked_ETH_USD` annualised? If all three present → mark
-      this phase done with evidence. If any missing → implement in 3B.
+- [x] [DESIGN] P0. **Audit `eigen_rewards_calculator.py` for protocol-level aggregation.** (features-service@6e7409be)
+      Audit complete: (a) ✅ `df["amount_usd"].sum()` aggregates all earner amounts; (b) ✅ `eigenlayer_tvl_usd` in
+      parquet IS `total_restaked_ETH_USD` — sourced via `userUnderlying()` at MTDS write time (no live RPC needed at
+      calculator time; adding one would be architecturally wrong); (c) ❌ `restaking_yield_rate` column was missing
+      (only `eigen_reward_apy` existed). → 3B implemented.
 
-- [ ] [SCRIPT] P1. **Add protocol-level yield aggregation if missing (3B).** In `eigen_rewards_calculator.py`: aggregate
-      per-earner EIGEN amounts to protocol total per distribution period. Add `userUnderlying()` RPC call to EigenLayer
-      strategy contract (use Alchemy/RPC URL from UAC `CHAIN_RPC_TEMPLATES`). Compute
-      `restaking_yield_rate = (EIGEN_distributed_USD / total_restaked_ETH_USD) * 365` as annualised rate. Emit as new
-      feature column `eigen_restaking_yield_rate`. Follow existing `OnChainCalculator` pattern. **DEFERRED if Phase 3A
-      audit finds all three already implemented.**
+- [x] [SCRIPT] P1. **Add protocol-level yield aggregation if missing (3B).** (features-service@6e7409be)
+      Added `eigen_restaking_yield_rate = (daily_rewards_usd / tvl_usd) * 365` (decimal rate, not percentage) to
+      `_calculate_from_mtds()` and to `feature_names` for MTDS path. Uses existing `eigenlayer_tvl_usd` from parquet
+      (= total_restaked_ETH_USD). No `userUnderlying()` RPC needed: data is already in MTDS parquet from collection time.
 
-- [ ] [TEST] P1. **Unit test: protocol-level aggregation math.** Mock RPC + MTDS parquet. Assert `restaking_yield_rate`
-      = expected value given fixture data. ≥4 cases including zero-TVL guard.
+- [x] [TEST] P1. **Unit test: protocol-level aggregation math.** (features-service@6e7409be) 4 cases added to
+      `tests/onchain/unit/test_eigen_rewards_calculator.py`: yield_rate = apy/100 arithmetic check; zero-TVL guard;
+      feature_names includes it for MTDS path only; output column present and positive for non-zero inputs.
 
 **Phase 3 success criteria:** `basedpyright` + `ruff` + features-service unit tests green. `eigen_restaking_yield_rate`
 feature available to downstream strategy-service consumers.
