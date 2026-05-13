@@ -203,22 +203,23 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. Port phantom-audit + manifest-rebuild scripts to TradFi (legacy disk path differs). [AUDIT 2026-05-07:
       FRESH — actionable; instruments-service `reconcile_phantom_manifest_rows_all.py --asset-group tradfi` per
-      CLAUDE.md is multi-asset-group; needs per-tradfi axis verification (TradFi options 11-cluster taxonomy)]
-      [SLOT-6 RAN 2026-05-11 — `launch-defi-phantom-recon-vm.sh tradfi --dry-run` → `defi-phantom-recon-tradfi-20260511-194845`
+      CLAUDE.md is multi-asset-group; needs per-tradfi axis verification (TradFi options 11-cluster taxonomy)] [SLOT-6
+      RAN 2026-05-11 — `launch-defi-phantom-recon-vm.sh tradfi --dry-run` → `defi-phantom-recon-tradfi-20260511-194845`
       (e2-standard-4, asia-northeast1-c; 37076 prefixes @~467/sec; completed 14:24 UTC, exit 0, VM self-deleted):
-      **92125 real captures / 3976 "phantom captures" = ~4.3% phantom rate — ABOVE the implicit <0.5% bar; NEEDS TRIAGE.**
-      Residual 3976 across clusters: `data_type=trades` 1017 + `data_type=tbbo` 1017 (IDENTICAL counts ⇒ Databento
-      `trades;tbbo` per-schema-bundle drift — manifest has per-schema rows but the parquet is bundled, or a partial-write
-      à la the CLAUDE.md "Databento per-schema drop" reference), `venue=UNKNOWN` 565 (data-quality — see the cross-asset
-      UNKNOWN-venue finding below), `venue=YAHOO_FINANCE` 21 (the VIX 15m source — per CLAUDE.md VIX-layering rule;
-      possibly the Barchart-vs-Yahoo layering or a path drift), + ~1356 in other clusters (not in the top-15). **Did NOT
-      `--apply`** — flipping all 3976 would corrupt the manifest for the false-positive majority (2026-05-04 130,897-
-      false-positive class). **Pending (tradfi owner)**: per-cluster real-vs-false-positive triage — especially the
-      `trades`/`tbbo` 2034 (verify whether the parquet exists bundled vs per-schema; if bundled-on-disk-but-per-schema-
-      in-manifest, that's a shard-key/bundle drift to fix in the Databento adapter + add a per-schema-bundle drift axis
-      to `reconcile_phantom_manifest_rows_all.py`'s tradfi templates) + the TradFi options 11-cluster taxonomy (the
-      bundled `options_chain`/`futures_chain` paths). Cross-ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md`
-      DONE-2026-05-11 deferral table + `harsh_orchestrator/pings/slot_6.md` 2026-05-11 ~14:25 UTC.]
+      **92125 real captures / 3976 "phantom captures" = ~4.3% phantom rate — ABOVE the implicit <0.5% bar; NEEDS
+      TRIAGE.** Residual 3976 across clusters: `data_type=trades` 1017 + `data_type=tbbo` 1017 (IDENTICAL counts ⇒
+      Databento `trades;tbbo` per-schema-bundle drift — manifest has per-schema rows but the parquet is bundled, or a
+      partial-write à la the CLAUDE.md "Databento per-schema drop" reference), `venue=UNKNOWN` 565 (data-quality — see
+      the cross-asset UNKNOWN-venue finding below), `venue=YAHOO_FINANCE` 21 (the VIX 15m source — per CLAUDE.md
+      VIX-layering rule; possibly the Barchart-vs-Yahoo layering or a path drift), + ~1356 in other clusters (not in the
+      top-15). **Did NOT `--apply`** — flipping all 3976 would corrupt the manifest for the false-positive majority
+      (2026-05-04 130,897- false-positive class). **Pending (tradfi owner)**: per-cluster real-vs-false-positive triage
+      — especially the `trades`/`tbbo` 2034 (verify whether the parquet exists bundled vs per-schema; if
+      bundled-on-disk-but-per-schema- in-manifest, that's a shard-key/bundle drift to fix in the Databento adapter + add
+      a per-schema-bundle drift axis to `reconcile_phantom_manifest_rows_all.py`'s tradfi templates) + the TradFi
+      options 11-cluster taxonomy (the bundled `options_chain`/`futures_chain` paths). Cross-ref:
+      `code_freeze_migrate_backfill_sequencing_2026_05_10.md` DONE-2026-05-11 deferral table +
+      `harsh_orchestrator/pings/slot_6.md` 2026-05-11 ~14:25 UTC.]
 - [ ] [AGENT] P2. Cleanup stale ETF rows: NYSE ETHE 27, GBTC 27, [other ETFs in MVP scope reduction]. [AUDIT 2026-05-07:
       FRESH — actionable]
 - [ ] [AGENT] P2. Yahoo Finance manifest cleanup — 2,211 abandoned `empty_confirmed` rows under `venue=YAHOO_FINANCE`.
@@ -277,12 +278,14 @@ execution, risk).
 — liquidity baselines must be axis-typed by session_type or they conflate pre-market thin volume with regular- session
 volume.
 
-- [ ] [SCRIPT] P0. **UAC `MarketSession` + `SessionPhase` enums + `VENUE_SESSION_SCHEDULE` SSOT.** Closed sets:
+- [x] [SCRIPT] P0. **UAC `MarketSession` + `SessionPhase` enums + `VENUE_SESSION_SCHEDULE` SSOT.** Closed sets:
       `MarketSession ∈ {REGULAR, PRE_MARKET, POST_MARKET, OVERNIGHT, HALTED, CLOSED}`;
       `SessionPhase ∈ {OPEN_AUCTION,     CONTINUOUS, CLOSE_AUCTION, AFTER_HOURS_AUCTION, NONE}`.
       `VENUE_SESSION_SCHEDULE: dict[VenueKey,     list[SessionWindow]]` where `SessionWindow` carries
       `(session, phase, weekday_mask, start_time, end_time,     tz)`. Lives at
-      `unified_api_contracts/canonical/crosscutting/market_session.py`.
+      `unified_api_contracts/canonical/crosscutting/market_session.py`. **COMPLETED 2026-05-13**: UAC@37f6dfd — shipped
+      module with 5 venue schedules (CME / NYSE / NASDAQ / ICE / CBOE) + `classify_session()` cascade helper + 33 unit
+      tests. Half-day / holiday calendars + ICE Brent (London) DEFERRED per operator direction (per-venue iteration).
 - [ ] [SCRIPT] P0. **Databento adapter `session_type` column write-time stamp.** Compare each bar's timestamp against
       the venue's `VENUE_SESSION_SCHEDULE`; stamp `session: MarketSession`, `phase: SessionPhase` on every OHLCV row at
       write-time. NEW columns added to canonical OHLCV schema. Backfill: one-shot reclassification VM walks existing

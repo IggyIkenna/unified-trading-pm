@@ -19,6 +19,16 @@ locked_since: 2026-05-08
 
 # MDPS liquidity-baseline 3rd state + live tick-staleness watchdog
 
+> **🟢 CROSS-PLAN BANNER 2026-05-13 — session axis available for baseline computation**
+>
+> `MarketSession` / `SessionPhase` enums + `VENUE_SESSION_SCHEDULE` registry shipped in **UAC@37f6dfd** at
+> `unified_api_contracts.canonical.crosscutting.market_session`. Per-(venue, instrument, period) liquidity baselines
+> MUST be axis-typed by `MarketSession` (regular / pre_market / post_market / overnight) — landing baseline computation
+> without session axis would conflate pre-market thin volume with regular-session volume (known bug class). Use
+> `classify_session(venue, dt) -> (MarketSession, SessionPhase)` at write-time.
+>
+> Half-day / holiday / ICE Brent calendars DEFERRED per operator direction; per-venue iteration acceptable.
+
 > **Severity**: P1 — live-only readiness item (Group F+G in master plan); doesn't strictly block May 23 paper-trade
 > smoke but blocks honest-coverage promise + production live observability. **Blast radius**:
 > market-data-processing-service (write-gate) + UAC (per-(venue, instrument, period) baseline SSOT) + alerting-service
