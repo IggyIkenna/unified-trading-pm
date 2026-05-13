@@ -1,14 +1,48 @@
 ---
 title: "Sports `entity=standings/` GCS directory — SFI vs api_football provenance ambiguity"
 created: 2026-05-13
+resolved: 2026-05-13
 author: slot-4-ikenna
 source:
   - expected_unattempted_propagation_chain_2026_05_12
   - manifest_migration_master_2026_05_07
 severity: P2
+status: RESOLVED — entity=standings/ is api_football, NOT SFI; no GCS action needed
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 ---
+
+## ✅ RESOLUTION 2026-05-13 (slot 4 — same session)
+
+Investigated by reading `gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2024-01-01/entity=standings/standings.parquet`.
+
+**Result: `entity=standings/` is `api_football` STANDINGS, NOT `SFI_STANDINGS`.**
+
+Evidence:
+
+- **Logo URLs**: `https://media.api-sports.io/football/teams/...` (api-sports.io is api_football's CDN).
+- **Schema columns**: `rank` / `team` / `points` / `goalsDiff` / `group` / `form` / `status` / `description` / `all` /
+  `home` / `away` / `update` / `league_id` / `data_available_at` — classic api_football `/leagues/standings` response.
+- **League IDs**: `league_id=39` (Premier League per api_football's mapping).
+- **Team objects**: `{'id': 42, 'name': 'Arsenal', 'logo': '...'}` — api_football team-ID universe.
+
+**Conclusion: NO GCS DELETION NEEDED.**
+
+The 42 SFI_STANDINGS manifest rows that the migration script flipped on 2026-05-13 were rows that
+WRITE-TIME logic created (probably during the pre-2026-04-24 era when SFI_STANDINGS was a thing) but
+the **on-disk parquets at `entity=standings/` are populated by api_football's standings endpoint** —
+a legitimate, currently-active data source. Deleting these would have lost real data.
+
+The manifest is now honest (`empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` for the 42 SFI_STANDINGS
+rows). The api_football standings parquets remain intact and continue serving downstream consumers.
+
+**Cross-side ping (Harsh sports plane)**: not needed — the resolution is self-contained. Just noting
+the finding here.
+
+---
+
+## ORIGINAL FINDING (preserved for audit)
+
 
 ## What I found
 
