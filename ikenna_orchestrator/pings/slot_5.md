@@ -289,3 +289,35 @@ direction. Ping me back when:
    AFTER, not before)
 
 Slot 5 idle in the meantime. Standing by.
+
+---
+
+## [slot 5 → main] LDR PULL + STATUS REFRESH — 2026-05-13 (post-greenlight)
+
+Pulled from LDR (19 commits PM / 4 UTL / 11 instruments-service) — synced + rebased clean.
+
+### Surfacing: DAY-3 reassignment (PM@bf72bb3d) overlaps slot-8 with slot-5 already-shipped work
+
+Per DAY-3 reassignment commit:
+
+- Slot 5 (in flight): TradFi MarketSession + CanonicalFuturesContract ← **Item 1 DONE / Item 2 Phase 0 DONE per prior
+  ping**
+- Slot 8 → uac_normalize_aster_ticker + standings_entity_gcs_ambiguity follow-ups
+
+The `uac_normalize_aster_ticker_missing_2026_05_13.md` issue is **already resolved** by my earlier session work
+(UAC@f008af9 root-cause fix + UAC@6110d05 regression guard). I've marked the issue file RESOLVED at PM@d8290295.
+
+**Suggested slot 8 re-routing**: only `standings_entity_gcs_ambiguity_2026_05_13.md` remains in that assignment bundle,
+and per commit `01ad724a` it's also already RESOLVED (entity=standings/ is api_football, not SFI). **Both items in slot
+8's DAY-3 assignment are now closed.** Slot 8 has no pending work from this bundle — recommend reassign to next-priority
+backlog (Phase 6.3 orphan? defi_classifier_missing_catalog_crossref?).
+
+### Slot 5 status
+
+- Item 1 (MarketSession SSOT) ✅ SHIPPED — UAC@37f6dfd + 33 tests + cross-plan banner
+- Item 2 (CanonicalFuturesContract Q1+Q2) ⏸️ Phase 0 done; Phase 1 PARKED per sequencing direction
+- Bonus: UAC@6110d05 regression guard for tickers.py re-export surface
+- Bonus: aster_ticker issue marked RESOLVED at PM@d8290295
+
+Slot 5 idle, watching for main ping on Item 2 Phase 1 unlock. No autonomous Phase 1 ship without orchestrator approval
+per established protocol.
