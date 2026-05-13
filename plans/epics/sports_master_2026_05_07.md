@@ -927,7 +927,7 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 | C.6 Step 3: UTL `resolve_match_end_time()` cascade  | `[ ]` open              | New UTL helper — blocks Step 4 + assert_available_at_present wiring                        |
 | C.6 assert_available_at_present wiring              | `[ ]` blocked           | Blocked on Step 3 UTL helper                                                               |
 | C.7 Follow-up #1: STANDINGS flatten                 | `[ ]` open              | Same B.1 pattern; isolated AF endpoint                                                     |
-| C.7 Follow-up #3: MATCHES `team_a_*` → `home_*`     | `[ ]` open              | FootyStats normalizer only; migration may not be needed                                    |
+| C.7 Follow-up #3: MATCHES `team_a_*` → `home_*`     | `[x]` shipped           | UAC@4e23bd9 — FootyStats field mappings (12 home/away variants); migration deferred        |
 | MatchStatus adapter migration                       | `[ ]` open (DEFERRED)   | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters      |
 | Cross-source fixture status verifier                | `[ ]` open              | Uses MatchStatus SSOT (now shipped); no other blocker                                      |
 | Codex doc `sports-fixtures-lifecycle.md`            | `[ ]` open              | Write after cross-source verifier design settles                                           |
