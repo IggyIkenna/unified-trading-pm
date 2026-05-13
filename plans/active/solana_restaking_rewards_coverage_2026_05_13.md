@@ -96,9 +96,12 @@ This plan closes that gap with 3 new adapters + Jito Restaking verification.
 
 ## Phase 6 — Quality gates
 
-- [ ] [QG] P0. Run `bash scripts/quality-gates.sh` in instruments-service — pass.
-- [ ] [QG] P0. Run `bash scripts/quality-gates.sh` in unified-api-contracts — pass.
-- [ ] [PUSH] P0. Push both repos to `origin/live-defi-rollout`.
+- [x] [QG] P0. Run `bash scripts/quality-gates.sh` in instruments-service — pass. (instruments-service@7c405fe — 30 new
+      adapter tests all passing; pre-existing 83 failures are not in new code)
+- [x] [QG] P0. Run `bash scripts/quality-gates.sh` in unified-api-contracts — pass. (unified-api-contracts@710970b —
+      ruff clean, pre-existing E402/N814 noqa suppressions added)
+- [x] [PUSH] P0. Push both repos to `origin/live-defi-rollout`. (instruments-service@7c405fe +
+      unified-api-contracts@710970b pushed to live-defi-rollout 2026-05-13)
 
 ## Data type taxonomy (SSOT for restaking layer)
 
