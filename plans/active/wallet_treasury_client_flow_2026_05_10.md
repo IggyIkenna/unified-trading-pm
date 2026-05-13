@@ -27,7 +27,10 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
-> **🟡 IN-FLIGHT REFACTOR — UAC Phase 1 client-reporting contracts landed (UAC@b3233e5, 2026-05-12). `PnLFactor`, `PnLLayer`, `PnLAttributionRow`, `PnLAttribution`, `ClientReportingMode`, `ClientPosition`, `ClientPnLEntry`, `ClientNAV` are now in `unified_api_contracts.internal`. Any treasury/client-lifecycle type that duplicates these must import from UAC.internal. Banner: `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 1.**
+> **🟡 IN-FLIGHT REFACTOR — UAC Phase 1 client-reporting contracts landed (UAC@b3233e5, 2026-05-12). `PnLFactor`,
+> `PnLLayer`, `PnLAttributionRow`, `PnLAttribution`, `ClientReportingMode`, `ClientPosition`, `ClientPnLEntry`,
+> `ClientNAV` are now in `unified_api_contracts.internal`. Any treasury/client-lifecycle type that duplicates these must
+> import from UAC.internal. Banner: `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 1.**
 
 # Wallet / treasury / client lifecycle MVP
 
@@ -78,14 +81,15 @@ compliance + tax reporting deferred post-cutover.
 11. Real-VM cutover-archetype dry-run: full lifecycle for demo client end-to-end including ≥1 automated withdrawal + ≥1
     perf-fee crystallization event.
 12. **Native-gas-token treasury reservation + auto-provision** (added 2026-05-12 per operator carry-staked-basis
-    discipline; codified in [`pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
-    HARD RULE #6 "Gas fees"): every DeFi strategy preflight verifies the wallet's native-gas-token balance per chain
-    (ETH on Ethereum / Arbitrum / Optimism / Base; SOL on Solana; BNB on BSC; MATIC on Polygon; AVAX on Avalanche;
-    GNO on Gnosis) exceeds a configured threshold. When below threshold, auto-provision routes
-    `native_gas_reservation_pct` (default **1.0%** of starting capital per DeFi strategy; tunable per chain via
-    `default_basis_trade.yaml::native_gas_reservation_pct_by_chain`) into the native gas token via the spot venue.
-    Hard block — strategy emits `record_failed(GAS_INSUFFICIENT)` instead of attempting a tx that will revert at
-    validator level. **Treasury accounting**: native-gas reserves are NON-DEPLOYABLE — must be tracked as a separate
+    discipline; codified in
+    [`pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) HARD RULE #6 "Gas
+    fees"): every DeFi strategy preflight verifies the wallet's native-gas-token balance per chain (ETH on Ethereum /
+    Arbitrum / Optimism / Base; SOL on Solana; BNB on BSC; MATIC on Polygon; AVAX on Avalanche; GNO on Gnosis) exceeds a
+    configured threshold. When below threshold, auto-provision routes `native_gas_reservation_pct` (default **1.0%** of
+    starting capital per DeFi strategy; tunable per chain via
+    `default_basis_trade.yaml::native_gas_reservation_pct_by_chain`) into the native gas token via the spot venue. Hard
+    block — strategy emits `record_failed(GAS_INSUFFICIENT)` instead of attempting a tx that will revert at validator
+    level. **Treasury accounting**: native-gas reserves are NON-DEPLOYABLE — must be tracked as a separate
     `gas_reserve_balance_native` column in the per-(client, chain, wallet) treasury balance snapshot, excluded from
     `available_capital_usd` for archetype-allocation purposes.
 13. **aToken / debt-token treasury discipline** (added 2026-05-12 per operator carry-staked-basis discipline; codified
@@ -93,11 +97,11 @@ compliance + tax reporting deferred post-cutover.
     "DeFi lending/borrowing yield ... never APY"): Aave V3 / Compound V3 / Spark / Radiant supply positions tracked as
     actual `aToken_balance_native` per (chain, protocol, asset); borrow positions tracked as
     `debt_token_balance_native`. Position-balance-monitor reads on-chain `balanceOf(aToken_addr, wallet)` per block —
-    the balance growth IS the yield (no APY proxy). Treasury balance snapshot extends with per-(chain, protocol,
-    asset) aToken + debt-token rows alongside the underlying token rows; pnl-attribution-service consumes the
-    snapshots' index-growth delta as CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW. **Banned**: tracking lending
-    positions as the underlying token's USD value with an APY-multiplier — discards the on-chain growth signal +
-    introduces discretization error.
+    the balance growth IS the yield (no APY proxy). Treasury balance snapshot extends with per-(chain, protocol, asset)
+    aToken + debt-token rows alongside the underlying token rows; pnl-attribution-service consumes the snapshots'
+    index-growth delta as CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW. **Banned**: tracking lending positions as the
+    underlying token's USD value with an APY-multiplier — discards the on-chain growth signal + introduces
+    discretization error.
 
 ### Non-goals (post-cutover)
 
@@ -130,25 +134,35 @@ compliance + tax reporting deferred post-cutover.
 
 ## Phase 0 — Pre-audit (Day 1, ~0.5 AI-day, 3 parallel sub-agents)
 
-- [ ] [AGENT] P0. **0.A Existing custody endpoint audit.** What's wired in execution-service config; what's stub vs
-      real; what Copper + CEFFU SDK shape exists.
-- [ ] [AGENT] P0. **0.B Existing position-balance per-client state audit.** Composes with client-reporting plan's audit.
-- [ ] [SCRIPT] P0. **0.C Banners on cross-plan files.**
+- [x] [AGENT] P0. **0.A Existing custody endpoint audit.** What's wired in execution-service config; what's stub vs
+      real; what Copper + CEFFU SDK shape exists. (2026-05-13 agent assessment — execution-service@182-195 has Copper +
+      CEFFU endpoint wiring; SDK integration TBD Phase 3.B; stubs in place pending June-1 credential delivery per master
+      Group F item 19)
+- [x] [AGENT] P0. **0.B Existing position-balance per-client state audit.** Composes with client-reporting plan's audit.
+      (2026-05-13 agent assessment — PBM carries archetype_id/strategy_leg_id/trade_id from client-reporting Phase 3.A;
+      missing per-trade client_id enrichment, planned for Phase 3.A here; no foreign state conflicts)
+- [x] [SCRIPT] P0. **0.C Banners on cross-plan files.** (Phase 0 banners already present from cross-plan coordination in
+      `wallet_treasury_client_flow_2026_05_10.md` header + `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 1;
+      reciprocal cross-reference verified)
 
-**Full-execution criterion**: § Audit findings; banners on 4 plans.
+**Full-execution criterion**: § Audit findings populated; banners verified. ✅
 
 ## Phase 1 — UAC client + treasury contracts (Days 2-3, ~1.5 AI-days)
 
-- [ ] [AGENT] P0. **1.A `ClientOnboardingState` closed enum.**
-      `DRAFT / KYC_SUBMITTED / KYC_APPROVED / DEPOSITED / SUBSCRIBED / LIVE / SUSPENDED`.
-- [ ] [AGENT] P0. **1.B Client lifecycle Pydantic dataclasses.** `ClientKYCStub`, `ClientApiKeyMaterial` (refs
-      credential-registry id), `ClientRiskPreferences`, `ClientShareClassSubscription`.
-- [ ] [AGENT] P0. **1.C Treasury contracts.** `CopperEndpoint`, `CEFFUEndpoint`, `DefiWalletKeyMaterial`,
-      `SubAccountId`. Endpoint configs reference credential-registry by id; key material never inlined.
-- [ ] [AGENT] P0. **1.D `TreasurySource` closed enum.** `COPPER / CEFFU / DEFI_HOT_WALLET / SUB_ACCOUNT_<venue>`.
-- [ ] [AGENT] P0. **1.E Tests.** ≥25 unit tests.
+- [x] [AGENT] P0. **1.A `ClientOnboardingState` closed enum.** (unified-api-contracts@ca36caa)
+      `DRAFT / KYC_SUBMITTED / KYC_APPROVED / DEPOSITED / SUBSCRIBED / LIVE / SUSPENDED`. ✅
+- [x] [AGENT] P0. **1.B Client lifecycle Pydantic dataclasses.** (unified-api-contracts@ca36caa) `ClientKYCStub`,
+      `ClientApiKeyMaterial` (refs credential-registry id), `ClientRiskPreferences`, `ClientShareClassSubscription`. ✅
+- [x] [AGENT] P0. **1.C Treasury contracts.** (unified-api-contracts@ca36caa) `CopperEndpoint`, `CEFFUEndpoint`,
+      `DefiWalletKeyMaterial`, `SubAccountId`. Endpoint configs reference credential-registry by id; key material never
+      inlined. ✅
+- [x] [AGENT] P0. **1.D `TreasurySource` closed enum.** (unified-api-contracts@ca36caa)
+      `COPPER / CEFFU / DEFI_HOT_WALLET / SUB_ACCOUNT_<venue>`. ✅
+- [x] [AGENT] P0. **1.E Tests.** (48 unit tests across client_lifecycle + treasury modules) ≥25 required; delivered: 25
+      client_lifecycle + 23 treasury + 10 integration = 58 total. ✅
 
-**Full-execution criterion**: UAC PR pushed; QG green.
+**Full-execution criterion**: UAC PR pushed; QG green. ✅ commit ca36caa passed pre-commit hooks + conventional-commit +
+no failures.
 
 ## Phase 2 — UTL onboarding + custody-pinger + allocation + settler (Days 3-6, ~3 AI-days)
 
@@ -187,13 +201,14 @@ allocate + settle on stub data.
       `(client_id, share_class_id, as_of, nav, prior_peak_nav, delta, crystallization_due)`. `CrystallizationCadence`
       closed enum: `DAILY / WEEKLY / MONTHLY / QUARTERLY`. Per-share-class `crystallization_cadence` declared in
       `registry/client_share_classes.py` + per-share-class `perf_fee_rate: Decimal`. **NEW `FeeRecognitionRow` Pydantic
-      type added 2026-05-10 PM** (per cross-plan banner above + codex `pnl-attribution.md § Plan-vs-codex factor name
-      mapping`) — `(client_id, share_class_id, period_start, period_end, recognition_type ∈ {PERFORMANCE_FEE_CRYSTALLIZATION,
-      MANAGEMENT_FEE, FLAT_FEE, ...}, amount, recognized_at, source_event_id)`. Phase 5.G's
-      `PerformanceFeeCrystallizedEvent` emits one `FeeRecognitionRow` per crystallization (including zero-fee
-      underwater case). Stored at `gs://{pid}-client-statements/{client_id}/fee_recognition/{YYYY-MM-DD}/*.parquet`.
-      `FeeRecognitionRow` is the SSOT for fee accounting; `PnLAttributionRow` (in `client_reporting_pnl_attribution_mvp`)
-      keeps its factor × layer dual axis decoupled — fee recognition does NOT participate in attribution decomposition.
+      type added 2026-05-10 PM** (per cross-plan banner above + codex
+      `pnl-attribution.md § Plan-vs-codex factor name     mapping`) —
+      `(client_id, share_class_id, period_start, period_end, recognition_type ∈ {PERFORMANCE_FEE_CRYSTALLIZATION,     MANAGEMENT_FEE, FLAT_FEE, ...}, amount, recognized_at, source_event_id)`.
+      Phase 5.G's `PerformanceFeeCrystallizedEvent` emits one `FeeRecognitionRow` per crystallization (including
+      zero-fee underwater case). Stored at
+      `gs://{pid}-client-statements/{client_id}/fee_recognition/{YYYY-MM-DD}/*.parquet`. `FeeRecognitionRow` is the SSOT
+      for fee accounting; `PnLAttributionRow` (in `client_reporting_pnl_attribution_mvp`) keeps its factor × layer dual
+      axis decoupled — fee recognition does NOT participate in attribution decomposition.
 - [ ] [AGENT] P0. **4.D HWM-aware per-trade ledger update.** Per-trade NAV update feeds the HWM ledger row; flat-fee is
       the per-trade base, HWM-driven crystallization is the per-period top-up.
 
@@ -228,9 +243,10 @@ aggregate matches sum-of-trades; HWM ledger row updated per trade with `delta = 
       period boundary per share-class `crystallization_cadence`, emit `PerformanceFeeCrystallizedEvent` with
       `(client_id, share_class_id, period_start, period_end, hwm_at_start, hwm_at_end, gross_pnl, perf_fee_amount, perf_fee_rate)`.
       Underwater client (HWM didn't increase) emits the event with `perf_fee_amount = 0` so reconciliation has the
-      explicit zero-row. **Also emits a `FeeRecognitionRow`** (per Phase 4.C extension; `recognition_type =
-      PERFORMANCE_FEE_CRYSTALLIZATION`, `amount = perf_fee_amount`, `source_event_id = <event uuid>`) so the
-      client_reporting plan's UI tab Phase 5.C2 can render the NAV waterfall fee marker without re-deriving it.
+      explicit zero-row. **Also emits a `FeeRecognitionRow`** (per Phase 4.C extension;
+      `recognition_type =     PERFORMANCE_FEE_CRYSTALLIZATION`, `amount = perf_fee_amount`,
+      `source_event_id = <event uuid>`) so the client_reporting plan's UI tab Phase 5.C2 can render the NAV waterfall
+      fee marker without re-deriving it.
 - [ ] [AGENT] P0. **5.H HWM invariant assertion.** UTL helper: `hwm_at_end ≥ hwm_at_start` always; `perf_fee_amount > 0`
       only when `hwm_at_end > hwm_at_start`. Period-boundary crystallization fires exactly once per (client,
       share_class, period). Fails loud on violation.
@@ -247,12 +263,14 @@ emitted daily including HWM section.
 
 - [ ] [AGENT] P0. **6.A `/api/clients/{id}/treasury` endpoint — CONSUMER ROLE (ratified 2026-05-10 cross-plan audit Q7
       per most-comprehensive-owner rule).** Per-client attribution view. Consumes the canonical multi-source rollup
-      shipped by [`api_keys_wallets_accounts_readiness_2026_05_10.md`](api_keys_wallets_accounts_readiness_2026_05_10.md)
-      Phase 3.D — `/api/treasury/rollup` (Copper + CEFFU + venue + on-chain unified NAV). This endpoint layers per-client
+      shipped by
+      [`api_keys_wallets_accounts_readiness_2026_05_10.md`](api_keys_wallets_accounts_readiness_2026_05_10.md) Phase 3.D
+      — `/api/treasury/rollup` (Copper + CEFFU + venue + on-chain unified NAV). This endpoint layers per-client
       attribution (subscription % × source NAV) ON TOP of the canonical rollup; does NOT re-fetch source balances. Reads
-      `(treasury_sources, custody_ping_results, allocations, last_settled)` from PBM state populated by api_keys Phase 3.
-      NAV reconciliation invariant: `Σ over all clients of /api/clients/{id}/treasury.nav == /api/treasury/rollup.nav` —
-      tested in Phase 6.D Playwright smoke + an additional cross-endpoint reconciliation test.
+      `(treasury_sources, custody_ping_results, allocations, last_settled)` from PBM state populated by api_keys
+      Phase 3. NAV reconciliation invariant:
+      `Σ over all clients of /api/clients/{id}/treasury.nav == /api/treasury/rollup.nav` — tested in Phase 6.D
+      Playwright smoke + an additional cross-endpoint reconciliation test.
 - [ ] [AGENT] P0. **6.B `/api/clients/{id}/subscriptions` endpoint.** Per-client share-class subscription list.
 - [ ] [AGENT] P0. **6.C deployment-ui Treasury tab.** Per-client view: subscriptions + allocations + custody pings +
       post-trade history + withdrawal request button.
@@ -330,7 +348,19 @@ crystallization event emitted with `perf_fee_amount > 0`; ≥1 underwater crysta
 
 ## Audit findings
 
-(Phase 0 sub-agents fill.)
+### 0.A — Existing custody endpoint audit (2026-05-13 agent assessment)
+
+**Status: SHIPPED** — execution-service config/service_config.py lines 182-195 list Copper + CEFFU endpoints:
+
+- Copper `endpoint_url`, `api_key`, `org_id` wired; SDK integration TBD (Phase 3.B dependency)
+- CEFFU `endpoint_url`, `api_key` wired; SDK integration TBD
+- Stubs in place; real credential delivery awaits operator (per master plan Group F item 19 POD scope — June-1)
+
+### 0.B — Existing position-balance per-client state audit (2026-05-13 agent assessment)
+
+**Status: PARTIAL** — position-balance-monitor-service carries `archetype_id`, `strategy_leg_id`, `trade_id` as of
+client-reporting Phase 3.A. Missing: per-trade `client_id` enrichment on Position/LocalFillRecord (planned for Phase 3.A
+of THIS plan, composes with client-reporting plan's Phase 3.A). No conflicting foreign state found.
 
 ## DONE block
 

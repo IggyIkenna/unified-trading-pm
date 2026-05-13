@@ -591,15 +591,16 @@ Record baseline phantom counts per asset_group in `## Reconciliation baseline` s
 
 ### Phase 5B — Apply-flips in dependency order (AFTER Phases 1–4 shipped)
 
-Run in strict sequence:
+Run in strict sequence. **CLI flags corrected 2026-05-13**: `reconcile_phantom_manifest_rows_all.py` uses `--unphantom` (not `--apply-flips`). The other 3 reconcilers (`expected_absence_reasons`, `legacy_blank_to_typed_reason`, `cefi_tardis_thirdkey_drift`) use `--apply-flips`.
 
 ```bash
 # Pass 1: instruments-service reference data_types FIRST (root)
-python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
-  --asset-group cefi --data-types instruments,venue_trading_calendar --apply-flips
-python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
-  --asset-group defi --data-types instruments,venue_trading_calendar --apply-flips
-# ... repeat for tradfi, sports, prediction
+# NOTE: phantom reconciler uses --unphantom instead of --apply-flips
+for ag in cefi defi tradfi sports prediction; do
+  python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
+    --asset-group $ag --unphantom &
+done
+wait
 
 # Wait for Pass 1 to complete + verify:
 # - manifest captured row count for instruments/venue_trading_calendar is stable

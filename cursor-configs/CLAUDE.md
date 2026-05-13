@@ -783,9 +783,19 @@ When you find something broken / drifting outside your task:
 | ------------------------------------------- | ---------------------------------------------------------------------- |
 | In your code / file you own                 | **Fix yourself** in same commit                                        |
 | Adjacent to your plan                       | Document + fix now in YOUR plan (same workstream)                      |
-| Outside your plan, fits another active plan | **Annotate that plan body** with finding callout — DO NOT fix yourself |
+| Outside your plan, small + clear-diagnosis  | **Fix yourself** if ≤30 min + you can verify; don't deflect            |
+| Outside your plan, ambiguous diagnosis      | **Diagnose first**: is the code stale or the test stale? Read both sides of the broken contract (caller + callee; reproducer + fixture). If you can tell which side is wrong → fix that side. If you genuinely can't tell → annotate other plan body / file issue doc; don't guess. |
 | Outside every active plan                   | File `plans/active/issues/<short-name>_<YYYY_MM_DD>.md`                |
 | **Big finding**                             | NOTIFY OPERATOR IMMEDIATELY in chat AND file an issue doc              |
+
+**"Pre-existing" is NOT a triage criterion** (HARD RULE codified 2026-05-13). Broken-before-you-arrived ≠ acceptable-to-leave. If you found it during your work, you have context — that context is exactly what the next agent would need to re-derive. Fix it now if you can; only file/annotate if the diagnosis is genuinely ambiguous (e.g., is the new code wrong or is the test wrong? — needs design call) or fixing exceeds reasonable scope (multi-day, cross-repo, multi-team).
+
+**Diagnose before fix** (the partner principle): blindly "make tests pass" by patching tests is anti-correctness. For a failing test the question is always "is the code wrong or the test wrong?". Read both sides of the contract:
+- What was the test asserting? Is the assertion still the correct invariant per current SSOT / plan-of-record?
+- What does the code under test actually do? Does its behaviour match the assertion's intent?
+- If code drifted from test intent → fix code. If test drifted from new SSOT → fix test. If neither side is unambiguously correct → that's the ambiguous-diagnosis row above → don't guess.
+
+Reference 2026-05-13: slot 4 catalogued 17 pre-existing strategy-service test failures during Wave 2; initial reaction was "file as not-my-scope". Operator direction: fix them, you have the context. Slot 9 on the same day applied this principle prophylactically — read `_classify_sports:191` body before re-implementing per Wave 1 audit re-open and discovered the rules were ALREADY SHIPPED at commit 3fbc6b3; saved redundant re-implementation work.
 
 "Big" = data correctness for ≥1 asset_group / May-23 critical path / cross-repo / contradicts workspace SSOT / would
 change work-split / contradicts in-flight VM run.
@@ -1056,10 +1066,15 @@ implementation. Spawned tabs scoped implementers; tab count varies. Used for dyn
   `## Open questions` (🟡 BLOCKED), append ping in `_agent_pings.md`, continue with what you CAN.
 - **Plan-of-record + Q&A bus** — every spawned tab has single plan-of-record. Q&A in `## Open questions` with badges 🟡
   BLOCKED / ✅ RESOLVED. Resolved cleaned at daily ledger sweep.
-- **Ping ledger bifurcation** (codified 2026-05-08; extended 2026-05-12 per G-16 audit): TWO ledgers:
+- **Ping ledger bifurcation** (codified 2026-05-08; extended 2026-05-12 per G-16 audit; ping-reset codified 2026-05-13
+  per per_agent_worktrees Phase 4.5 P1): TWO ledgers:
   - **Workspace-shared `plans/active/_agent_pings.md`** — cross-side comms only (Ikenna ↔ Harsh hard-gate signalling).
   - **Per-side `<side>_orchestrator/pings/slot_<N>.md`** — intra-side comms (main ↔ spawned tabs). Per-slot files (zero
     collision). Bidirectional — main may append `[main → slot N]` messages.
+  - **Ping-doc reset rule (2026-05-13)**: per-slot ping files reset on slot **re-theme** via `setup-tab-worktrees.sh
+    --reset-slot <N>` (NOT daily). Script truncates to a fresh stub + commits with `[reset-slot]` tag. For same-theme
+    continuations, run `python3 scripts/agents/rollup_resolved_pings.py <ping_file>` at slot boot to roll up stale ✅
+    RESOLVED entries (older than 24h) into a `## Prior context (rolled)` section without data loss.
   - **Commit-sha retention rule (G-16, 2026-05-12)**: cross-side ping entries that name a SPECIFIC commit-sha (not just
     a plan reference) MUST stay in the ledger until BOTH sides have acked, even if older than 24h. Daily sweeps clean ✅
     RESOLVED ping-only entries; commit-sha-bearing entries persist until acked.
@@ -1080,9 +1095,10 @@ Frontmatter: `title` / `type: coordination-doc` / `status: active` / `created` /
 Body: Why this split today / Working model (A or B) / Today's status → Tab registry / Cross-tab handshakes / Cross-side
 handshakes / Collision-risk callouts / Spawn prompts (Model B) / Daily sync points / Defer post-deadline.
 
-Daily reset: `git fetch` + summarise; re-read yesterday's splits + `_agent_pings.md`; sweep ✅ RESOLVED >24h Q&As; draft
-today's two splits; slot-reset for theme changes (`setup-tab-worktrees.sh --reset-slot <N>`); mirror slot↔theme into
-`<operator>_orchestrator/LEDGER.md`; report to operator.
+Daily reset: `git fetch` + summarise; re-read yesterday's splits + `_agent_pings.md`; sweep ✅ RESOLVED >24h Q&As from
+**cross-side** `_agent_pings.md` only (per-slot ping files reset via `--reset-slot <N>` on re-theme, NOT daily); draft
+today's two splits; slot-reset for theme changes (`setup-tab-worktrees.sh --reset-slot <N>` — also truncates ping
+stub); mirror slot↔theme into `<operator>_orchestrator/LEDGER.md`; report to operator.
 
 Anti-patterns: Q&A in work-split plan (use plan-of-record); spawn prompts in chat (belong in plan body); 5-tab Model A
 when work is dynamic (switch to B); thin plans <10 AI-days; archive mid-cycle.

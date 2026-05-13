@@ -315,6 +315,7 @@ bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>
 # → Verifies every repo's worktree clean (aborts with file list if dirty)
 # → Fetches origin
 # → Rebases tab/<operator>/<N> onto origin/live-defi-rollout
+# → Truncates <side>_orchestrator/pings/slot_<N>.md to a fresh stub (commits with [reset-slot] tag)
 # → Slot is ready for the new theme.
 ```
 
@@ -322,8 +323,35 @@ The script **aborts on dirty state** rather than silently rebasing over it. If a
 commit, stash, or `git checkout --` per-file (only for tracked runtime artifacts that regenerate naturally — never for
 foreign agents' WIP per the CLAUDE.md "Two teammates" rule). Then re-run `--reset-slot`.
 
-Pinned to the daily work-split plan's "Daily reset" checklist. Operators should habituate to running it before assigning
-a slot to a different theme.
+### Ping-doc reset on re-theme
+
+The `--reset-slot` truncate step writes a stub like:
+
+```text
+# Slot N ping file — re-themed YYYY-MM-DD
+[YYYY-MM-DD HH:MM UTC] [main → slot N] — RE-THEMED via --reset-slot.
+Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block on first read).
+New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
+```
+
+Slot main fills the two `TBD` lines on first read. The prior content survives in git history + the prior plan's
+`## DONE` block — nothing is lost. The `[reset-slot]` commit tag makes the truncate recognisable in cross-side acks.
+
+**For same-theme continuations** (slot stays on the same plan across sessions), do NOT run `--reset-slot`. Use `/clear`
+in the Claude Code session to clear conversation context; the ping file retains day-context. To prevent unbounded growth
+within a multi-day same-theme run, call the read-time rollup helper at slot boot:
+
+```bash
+python3 unified-trading-pm/scripts/agents/rollup_resolved_pings.py \
+    unified-trading-pm/<side>_orchestrator/pings/slot_<N>.md
+```
+
+This helper rolls up entries that are both (a) ✅ DONE / ✅ RESOLVED and (b) older than 24 hours into a
+`## Prior context (rolled)` section at the bottom of the file. It is triggered at read-time (NOT by the script), to
+avoid racing with concurrent append-writes from sub-agents.
+
+Pinned to the daily work-split plan's "Daily reset" checklist. Operators should habituate to running `--reset-slot`
+before assigning a slot to a different theme.
 
 ## Foot-gun mitigations vs. shared-tree model
 

@@ -638,8 +638,9 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
     classes — they're swap/settlement modes within the AMM matcher. Either fold transfers into the AMM matcher's scope
     statement (current shipped reality) or open a follow-up to add a Transfers matcher (low-likelihood given DeFi
     transfers are atomic-by-default on-chain). Recommend folding into AMM matcher scope.
-18. **2-year batch backtest run** — completed across config grid; P&L variance per archetype configuration captured so
-    the live-trading config is informed, not guessed. **Deep audit 2026-05-07**: no dedicated 2-year batch backtest
+18. **2-year batch backtest run + VM-shape sizing** — completed across config grid; P&L variance per archetype
+    configuration captured so the live-trading config is informed, not guessed; per-stage bottleneck profiled via
+    synthetic-data benchmark to inform VM-shape selection. **Deep audit 2026-05-07**: no dedicated 2-year batch backtest
     runner script found. `strategy-service/scripts/` has `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py`
     (May 5+7) — tracing/simulation, not config-grid sweep. P0 follow-up: author
     `strategy-service/scripts/run_2yr_config_grid_backtest.py` for `carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION`
@@ -657,7 +658,17 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
     per `gs://deployment-scripts-central-element-323112/vm-logs/{vm-name}/run.log`; ETA ~8-12h per archetype. Output
     will land at `gs://strategy-store-central-element-323112/backtests/config_grid_2yr/{archetype}/{run_id}/`. Final
     operational closure (parquet row inspection + sample read) lands when the runners finish per
-    `strategy_2yr_grid_run_launcher_authoring_2026_05_10.md`.
+    `strategy_2yr_grid_run_launcher_authoring_2026_05_10.md`. **2026-05-13 update — SYNTHETIC-DATA BENCHMARK MATRIX
+    COMPLETE** (`mock_data_pipeline_benchmarking_2026_05_10` Phase 5+6 SHIPPED 2026-05-12): 8-VM matrix
+    (`leveraged_funding_arb` + `carry_staked_basis` × {c2-standard-8, c2-standard-16, c2-standard-30, c3-highcpu-44})
+    ran in `asia-northeast1-c`; 44 cells × per-stage profile (wall-clock / CPU% / RSS / IO read/write bytes) captured.
+    **Key findings**: `mtds_read` + `strategy` both fit comfortably on `c2-standard-8` (~20-38% CPU peak / ~1.1-1.5GB
+    RSS). The 4 failing stages (mdps_compute / features / ml_inference / matching_engine) await Phase 3.D per-reader
+    bespoke wire-in for full data redirection. **Per-stage P95 recommendation**: all measured stages recommend
+    `c2-standard-8` minimum; no stage exceeded c2-standard-8 headroom. Aggregate report + bottleneck analysis at
+    `gs://central-element-323112-benchmark-reports/benchmark_report/{.parquet,.md}`. Per
+    `codex/05-infrastructure/runtime-tiers-and-deployment.md` "Data-pipeline VM machine-type sizing", provisional
+    recommendations flagged pending Phase 3.D + full-data-flow re-run with real backfill row counts.
 19. **Treasury / custody integration** — Copper for DeFi side; CEFFU for Binance institutional flow; cross-wallet
     transfer paths verified. Single SSOT: `codex/04-architecture/custody-providers.md` (folded 2026-05-08, replaces the
     former per-provider docs). **Deep audit 2026-05-07 / merged 2026-05-08**: Copper section is full; CEFFU section is

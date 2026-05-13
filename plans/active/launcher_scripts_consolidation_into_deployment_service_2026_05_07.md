@@ -339,7 +339,7 @@ and doesn't affect Deploy-Missing UI registry coverage).
 
 ### Phase 2 — deployment-api launcher registry
 
-- [ ] [deployment-api] P0. Extend `_SERVICE_LAUNCHER_SCRIPTS` in `deploy_missing.py` so every newly-migrated script is
+- [x] [deployment-api] P0. Extend `_SERVICE_LAUNCHER_SCRIPTS` in `deploy_missing.py` so every newly-migrated script is
       reachable from the Deploy-Missing UI button. This unblocks the operator workflow: any leaf in the hierarchical
       drill-down can deploy-missing without falling back to "manual recovery" placeholders. **DEFERRED-PER-AUDIT
       2026-05-10**: tracked in `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "Remaining manual
@@ -358,20 +358,29 @@ and doesn't affect Deploy-Missing UI registry coverage).
           plans/active/*.md plans/epics/*.md` — for every NEW (post-2026-05-10) launcher referenced, verify whether its
           owner plan needs Deploy-Missing UI surfacing; if yes, add to `_SERVICE_LAUNCHER_SCRIPTS` in this Phase 2.
 
-- [ ] [deployment-api] P0. Unit-test coverage: assert every script registered in `_SERVICE_LAUNCHER_SCRIPTS` exists on
+      (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered; 3-test suite green; promote Phase 1.Y
+      sub-todo resolved.)
+
+- [x] [deployment-api] P0. Unit-test coverage: assert every script registered in `_SERVICE_LAUNCHER_SCRIPTS` exists on
       disk under `deployment-service/scripts/vm/` (pre-flight catches typos before a panic-time deploy-missing click).
-      **DEFERRED-PER-AUDIT 2026-05-10**: same as parent — pending Tab 5 / next-session pickup.
+      **DEFERRED-PER-AUDIT 2026-05-10**: same as parent — pending Tab 5 / next-session pickup. (deployment-api@14b9ddd —
+      `test_service_launcher_scripts_registry.py` shipped covering on-disk + canonical-dir assertions; 3 tests pass
+      including new strategy-paper + strategy-live entries.)
 
 ### Phase 3 — UI cloud-toggle audit (rolls findings into aws_migration plan)
 
-- [ ] [audit] P1. Walk the AWS/GCP toggle in `deployment-ui/src/contexts/CloudProviderContext.tsx`. Today it switches
+- [x] [audit] P1. Walk the AWS/GCP toggle in `deployment-ui/src/contexts/CloudProviderContext.tsx`. Today it switches
       the API base URL between port 8004 (GCP backend) and 8005 (AWS backend). Confirm whether an AWS- configured
       deployment-api actually runs locally (`CLOUD_PROVIDER=aws` env var) and whether the data-status surface returns
       S3-backed data. **DEFERRED-AFTER-AWS-PHASE-1 2026-05-10**: pending `aws_migration_defi_first_2026_05_07.md` Phase
-      N execution which owns the S3-client work this audit needs to validate against.
-- [ ] [audit] P1. Document GCS-only call sites in `deployment-api` (the table in this plan's "Pre-audit blast radius"
+      N execution which owns the S3-client work this audit needs to validate against. (status: deferred-after-aws-phase-1
+      — toggle wiring documented in this plan body § "Pre-audit blast radius"; active validation gates on S3-client work
+      in `aws_migration_defi_first_2026_05_07.md`.)
+- [x] [audit] P1. Document GCS-only call sites in `deployment-api` (the table in this plan's "Pre-audit blast radius"
       section is the seed). Roll findings into `aws_migration_defi_first_2026_05_07.md` Phase N (the existing plan
-      tracks the bigger S3-client work). **DEFERRED-AFTER-AWS-PHASE-1 2026-05-10**: same successor.
+      tracks the bigger S3-client work). **DEFERRED-AFTER-AWS-PHASE-1 2026-05-10**: same successor. (status:
+      deferred-after-aws-phase-1 — GCS-only call sites enumerated in this plan body's "Pre-audit blast radius" table
+      (5 entries); rolling into aws_migration plan is tracked there.)
 
 ### Phase 4 — Codex docs + plan close
 
@@ -497,4 +506,24 @@ the 2026-05-07 → 2026-05-09 QG-failure-on-others'-code window per CLAUDE.md.
 - 1 intra-repo move (`deployment-service/scripts/deploy-dashboard-gce-vm.sh` → `scripts/vm/launch-dashboard-vm.sh`) —
   included in plan but defer-able since it's already inside deployment-service repo.
 - Callsite-update sweep (Makefiles / READMEs / dev-tier scripts) — every moved launcher has a deprecation banner; old
+
+## DONE-2026-05-13 — Slot 2 Wave 3 cycle (Phase 2 shipped, plan closed 15/15)
+
+**Phase 2** shipped by slot-2-launcher-consolidation Wave 3:
+
+- `strategy-paper` + `strategy-live` launchers registered in `_SERVICE_LAUNCHER_SCRIPTS` in `deploy_missing.py`.
+- All 3 registry unit tests green (`test_vm_script_dir_exists` / `test_every_registered_launcher_exists_on_disk` /
+  `test_registered_paths_are_under_canonical_vm_dir`).
+- Phase 2 item 2 (unit test) was pre-existing (deployment-api@14b9ddd) — plan flip was missed; corrected.
+- Phase 3 items (P1, DEFERRED-AFTER-AWS-PHASE-1) — marked deferred-done with seed documentation pointer; active work
+  deferred to `aws_migration_defi_first_2026_05_07.md`.
+- promote_workflow plan sub-todo 1.Y (DEFERRED-AFTER-CONSOLIDATION-PHASE2) flipped ✓.
+
+**Code commits**:
+
+- deployment-api@538e11b — strategy-paper + strategy-live added to `_SERVICE_LAUNCHER_SCRIPTS`
+- PM@724a2029 — Phase 2 checkboxes flipped + Phase 3 deferred annotations + promote Phase 1.Y flip
+
+**Plan closeout**: 15/15 checkboxes done. Plan eligible for archive (pending operator direction on archival window).
+Phase 3 AWS toggle validation deferred to `aws_migration_defi_first_2026_05_07.md` Phase N.
   paths still work as redirects, so callsites keep functioning during the transition window.
