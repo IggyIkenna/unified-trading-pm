@@ -494,13 +494,15 @@ for instrument_id in all_candidate_instruments - in_scope_instruments:
       wiring + 6 unit tests pass; `_get_instruments` IS catalog+scope combined for volatility, so the
       `max_results` boundary defines out-of-scope; Harsh slot 2 2026-05-13)
 - [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `sports` batch handler.
-      **NO-OP-WITH-INVESTIGATION-NEEDED** — sports has no `_get_instruments` catalog query; `league_ids`
-      CLI arg at `batch_handler.py:769` is a per-shard filter applied to provider responses, not a
-      catalog-vs-scope gate. The correct fix is UPSTREAM (MDPS Phase 2 propagates instruments-service
-      manifest empties down — partially shipped at mdps@3f70cf6). Sub-agent recommends: (a) record
-      `expected_unattempted` for leagues in `league_ids` that produced no data, (b) defer the
-      catalog-enumeration approach to a Phase 3.5 design call. Operator direction needed.
-      **DEFERRED** — Phase 3.5 design call required. (sub-agent investigation 2026-05-13)
+      **PHASE 3.5 DESIGN DIRECTION: OPTION A (operator confirmed 2026-05-13)**
+      Sports has no `_get_instruments` catalog query; `league_ids` CLI arg at `batch_handler.py:769`
+      is a per-shard provider response filter, not a catalog-vs-scope gate. Option A: record
+      `expected_unattempted` for leagues in `league_ids` that produced zero data rows. This is league-level
+      propagation from MDPS Phase 2 (which already reads upstream manifest per shard). Does NOT change what
+      gets processed — just records the honest absence when MDPS upstream says skip. Scope: features-sports
+      `batch_handler.py` around line 880–900 where zero-row path exists. Unit tests: 2 (league with data,
+      league with zero rows). Target: features-service@TBD (slot 4 next push). **DEFERRED TO NEXT SESSION**
+      — awaiting sub-agent implementation (design direction cleared).
 - [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `commodity` batch handler (if exists).
       **NO-OP** — `(if exists)` caveat resolved: commodity has no upstream catalog. `enabled_commodities`
       = `["NG", "CL"]` IS the full universe; no catalog-minus-scope dichotomy exists. Manifest grain is
@@ -591,15 +593,16 @@ Record baseline phantom counts per asset_group in `## Reconciliation baseline` s
 
 ### Phase 5B — Apply-flips in dependency order (AFTER Phases 1–4 shipped)
 
-Run in strict sequence:
+Run in strict sequence. **CLI flags corrected 2026-05-13**: `reconcile_phantom_manifest_rows_all.py` uses `--unphantom` (not `--apply-flips`). The other 3 reconcilers (`expected_absence_reasons`, `legacy_blank_to_typed_reason`, `cefi_tardis_thirdkey_drift`) use `--apply-flips`.
 
 ```bash
 # Pass 1: instruments-service reference data_types FIRST (root)
-python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
-  --asset-group cefi --data-types instruments,venue_trading_calendar --apply-flips
-python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
-  --asset-group defi --data-types instruments,venue_trading_calendar --apply-flips
-# ... repeat for tradfi, sports, prediction
+# NOTE: phantom reconciler uses --unphantom instead of --apply-flips
+for ag in cefi defi tradfi sports prediction; do
+  python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
+    --asset-group $ag --unphantom &
+done
+wait
 
 # Wait for Pass 1 to complete + verify:
 # - manifest captured row count for instruments/venue_trading_calendar is stable
