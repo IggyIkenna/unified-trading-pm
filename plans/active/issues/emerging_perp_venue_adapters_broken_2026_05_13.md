@@ -127,3 +127,34 @@ instrument-day grain" rule — could be a separate cleanup target if confirmed.
   archetype-to-venue eligibility matrix.
 - DOES NOT BLOCK slot 3 PART B work — that's complete. This is a NEW finding
   filed for operator triage.
+
+---
+
+## UPDATE 2026-05-13 ~18:30 BST — slot 3 deeper investigation: 3 of 5 are MIS-FLIPS
+
+Per operator direction "but was the data in the right place", slot 3 ran direct GCS spot-checks on canonical paths:
+
+| Venue | Blobs found at 3 recent dates | Real status |
+|---|---|---|
+| **HYPERLIQUID** | 15 (data on disk) | ✅ MIS-FLIPS — 30,658 rows in attempted_failed/LegacyBlank actually have parquet at canonical path |
+| **LIGHTER-ZKSYNC** | 15 (data on disk) | ✅ MIS-FLIPS — same |
+| **PACIFICA-SOLANA** | 15 (data on disk) | ✅ MIS-FLIPS — same |
+| **ASTER** | **0** | ❌ NO DATA — adapter genuinely broken |
+| **EXTENDED-STARKNET** | **0** | ❌ NO DATA — adapter genuinely broken |
+
+5/5 random HYPERLIQUID attempted_failed sample rows ✅ have real parquet. The 68% "failure" headline is mostly an artifact of the legacy_blank reconciler converting `SOURCE_RETURNED_ZERO` → `attempted_failed/LegacyBlankErrorReasonError` per the cefi instrument-day grain SSOT rule. For HYPERLIQUID/LIGHTER/PACIFICA, the parquets exist — the manifest just doesn't know.
+
+### Mitigation: reverse-phantom reconciler shipped at instruments-service@`35f920e`
+
+File: `scripts/reconcile_attempted_failed_to_captured_2026_05_13.py`
+
+Sister to `reconcile_phantom_manifest_rows_all.py` — flips `attempted_failed → captured` when parquet exists at the canonical path. Bulk-listing strategy, 32-worker parallelised, per-VM shard isolation enforced. Slot 3 dry-running on HYPERLIQUID now; if 99%+ of HYPERLIQUID candidates resolve to captured, the same reconciler should be run for the full cefi attempted_failed residual.
+
+### Real adapter problem isolated to ASTER + EXTENDED-STARKNET
+
+These 2 of 5 perp venues genuinely have no parquet data anywhere (not 5 of 5 as initially feared). Recommend:
+
+- 1 slot to debug ASTER adapter (`instruments-service/.../adapters/cefi/aster.py` + MTDS data-fetch path)
+- 1 slot to debug EXTENDED-STARKNET adapter (`extended.py`)
+
+The other 3 (HYPERLIQUID/LIGHTER/PACIFICA) are recoverable via the reverse-phantom reconciler — no adapter debug needed.

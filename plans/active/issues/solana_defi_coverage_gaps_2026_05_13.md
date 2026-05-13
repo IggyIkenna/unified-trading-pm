@@ -200,6 +200,36 @@ slot assignment + cycle allocation.
 - Related: `emerging_perp_venue_adapters_broken_2026_05_13.md` (filed in this same session — covers ASTER/EXTENDED/PACIFICA/LIGHTER/HYPERLIQUID failures).
 - Related: `defi_legacy_blank_reclassification_2026_05_13.md` (also filed this session — the 599,486 Solana-included corrections to EXPECTED_PRE_VENUE_LAUNCH).
 
+## UPDATE 2026-05-13 ~18:30 BST — refined research (slot 3)
+
+Per operator direction "research all options before assuming things don't exist", deeper grep across the workspace reveals more existing infrastructure than the initial audit captured:
+
+- **SANCTUM**: NOT a phantom name — `_SANCTUM_RULES` exists in `unified-api-contracts/unified_api_contracts/registry/risk_rules/venue.py:318` (risk rule set), so SANCTUM IS recognised in UAC. Just no instruments-service adapter file yet. Adapter implementation is the gap; UAC capability declarations would extend the existing pattern.
+
+- **Pyth Hermes IS wired in MTDS**: `market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py:375,708` has `_fetch_pyth_hermes_latest` calling `https://hermes.pyth.network/v2/updates/price/latest`. Pyth Hermes is the primary source priority for oracle_prices per `unified_api_contracts/canonical/crosscutting/source_priority.py:162,269`. So staked-token oracle price capture is NOT blocked on adapter — it's blocked on:
+  1. UAC `staked_token_oracle_prices` (or extending `oracle_prices`) per-instrument config for JITOSOL / mSOL / bSOL / INF (xSOL) feeds.
+  2. Actual MTDS batch run scheduling for these feeds.
+
+- **native_staking_apr**: declared in `unified-api-contracts/unified_api_contracts/internal/domain/defi/sim_schemas.py:101-103` (as a schema field on simulation events). So native staking is acknowledged at the schema layer. No CAPTURE adapter — needs Solana RPC + Helius / Jito Labs APIs.
+
+- **strategy_family** SSOT already references _"Solana on-chain oracle depeg (Pyth Hermes), LST tracking-error vs SOL, restaking yields"_ as the target strategy archetype at `unified-api-contracts/unified_api_contracts/canonical/crosscutting/strategy_family.py:72,151`. So the **strategy-design layer expects** these data feeds — but the **adapter/capture layer** hasn't shipped them.
+
+- **`_defi_oracle_coverage.py:12`** references Pyth Hermes archive at `https://hermes.pyth.network/v2/updates/price/{publish_time}` — so historical backfill path is also identified.
+
+### Refined successor-plan scope (per the deeper research)
+
+The 5 successor plans (A-E) in the body above remain the right shape, but with refined entry-points:
+
+- **Plan A (Solana LST + native staking)**: SANCTUM adapter can extend the existing risk-rules pattern (`_SANCTUM_RULES` already in UAC); `staked_token_oracle_prices` may not need a new data_type — could extend `oracle_prices` with per-feed config (JITOSOL/mSOL/bSOL/INF) routed through the already-wired Pyth Hermes path; native_staking adapter needs new code BUT the schema field (`native_staking_apr`) already exists.
+
+- **Plan B (Solana perps)**: DRIFT adapter exists (`instruments-service/.../drift.py`); 0% capture suggests adapter-debug needed, not new code. MANGO V4 / ZETA / FLASH need new adapters.
+
+- **Plan C-E**: scope unchanged.
+
+**Net**: the actual implementation work is smaller than initial issue body suggested. ~5-10 slot-AI-days total across the 5 successor plans (was estimated 12-18). Slot 3 hands off without claiming the implementation.
+
+---
+
 ## Pre-audit verification commands (for the slot picking this up)
 
 ```bash
