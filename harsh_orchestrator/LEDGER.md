@@ -62,15 +62,96 @@ locked_since: 2026-05-08
 
 ---
 
+## Wave 2 task briefs (slot N agents — read your row)
+
+Each row is a full task brief. After `--reset-slot N` (done 2026-05-13 09:35 UTC), your worktree at `.tabs/N/` is clean on `tab/hk/N` matching `origin/live-defi-rollout`. Just boot + read your row + start.
+
+### Slot 2 — risk_simulations finalisation (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `risk-and-exposure-service` + `unified-api-contracts` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/risk_simulations_limits_alerting_2026_05_10.md`](../plans/active/risk_simulations_limits_alerting_2026_05_10.md) (currently 33/40 P0 = 82%)
+- **Task**: Ship the 7 open P0 items:
+  1. Phase 4.A — risk-and-exposure-service rule migration to UAC registry; rule_evaluator wired
+  2. Phase 8.A — Per-rule synthetic-fire test (uses `simulation_scenarios_topology_price_shocks_2026_05_09`)
+  3. Phase 8.B — Per-archetype suite: ≥10 rules per archetype fire on schedule + alert routes per archetype
+  4. Phase 8.C — Evidence capture
+  5. Phase 9.A — Master plan Group F item 20 row gains "risk rule taxonomy + pre-flight + alerting wire"
+  6. Phase 9.B — Banners removed
+  7. (4 P1 stablecoin items D.2/D.5/D.6/D.7 — only if time after P0s done)
+- **Done-def**: 33/40 → 40/40 P0; rule_evaluator wired; per-archetype suite green; Group F item 20 flipped.
+- **No big decisions needed.**
+
+### Slot 3 — DR finalisation (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `deployment-service` + `unified-trading-library` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/disaster_recovery_circuit_breakers_2026_05_10.md`](../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md) (currently 28/42 = 67%)
+- **Task**: Write scripts + master-plan rows. **DO NOT LAUNCH ANY VMs** — Ikenna's hold direction on backfill/recon VMs is conservative; treat DR-drill VM launches the same and gate execution on operator OK.
+  1. Phase 6.A — Cron VM `disaster-drill-cron-` launcher SCRIPT (writes only; no launch)
+  2. Phase 6.B — Drill-report tooling (pass/fail per scenario; alerting rule on red >24h)
+  3. Phase 9.A — Per-archetype `dr-drill-cutover-` launcher SCRIPT (arm `KILL_PER_ARCHETYPE`, etc.)
+  4. Phase 9.B — Evidence-capture format
+  5. Phase 10.A — Master plan rows Group F item 20 + 21 green
+  6. Phase 10.B — Banners removed
+- **Done-def**: 28/42 → ~38/42; SCRIPT artifacts written + linted + dry-run validated locally; ping `pings/slot_3.md` when scripts ready for operator OK to launch VMs.
+- **No big decisions needed.**
+
+### Slot 4 — 🐛 Script 3 classifier P1 + arbitrage final (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `instruments-service` + `unified-trading-library` + `strategy-service` + `unified-trading-pm`
+- **Plans-of-record**:
+  - [`plans/active/issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md`](../plans/active/issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md) (P1 bug, slot 6 Wave-1 filed)
+  - [`plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md`](../plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md) (18/20 = 90%, 2 P1 items left)
+- **Task**:
+  1. **Fix `classify_blank_reason_row()` `fixture_manifest` kwarg mismatch**: Read UTL `unified_trading_library.manifest.classify_blank_reason_row` signature; read `instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py` call-site; align (add `fixture_manifest` handling to reconciler OR drop from UTL — pick per which is canonical intent). FF-push.
+  2. **Re-run Script 3 DRY-RUN** for defi/sports/prediction (NO `--apply-flips` — Ikenna's hold direction on manifest reconciliation VMs still applies). Update the issue doc with dry-run upgrade counts. FF-push.
+  3. **Arbitrage final 2 items**: canonical BTC/USDT slot entry in strategy-service + tests (per plan-of-record line `^- \[ \]`). FF-push.
+- **Done-def**: Script 3 classifier signature aligned + dry-run shows non-zero upgrades for defi/sports/prediction; arbitrage_price_dispersion 18/20 → 20/20.
+- **No big decisions needed.**
+
+### Slot 6 — wave3x_residual_ssots finalisation (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `unified-api-contracts` + `unified-trading-library` + per-asset_group services (as items dictate) + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/wave3x_residual_ssots_2026_05_08.md`](../plans/active/wave3x_residual_ssots_2026_05_08.md) (currently 16/22 = 73%, 6 items left across Tracks B/C/D/E)
+- **Task**: Read the plan. Scan open `- [ ]` todos under Tracks B (sports per-source SSOTs) / C (reconcilers) / D (zero-activity-bar audit) / E (sports availability stamping cascade). Ship in plan order. FF-push per shippable unit.
+- **Done-def**: 16/22 → 22/22; all Wave 3.X dimensions covered.
+- **No big decisions needed.**
+
+### Slot 7 — cross_asset Phase 5 TradFi consolidation (**Opus 4.7 / thinking: high** ⬆ — multi-callsite refactor)
+
+- **Owned repos**: `unified-api-contracts` + `instruments-service` + `market-tick-data-service` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/cross_asset_group_catalogue_audit_2026_05_10.md`](../plans/active/cross_asset_group_catalogue_audit_2026_05_10.md) § Phase 5 + reference [`plans/archive/issues/catalogue_audit_tradfi_2026_05_12.md`](../plans/archive/issues/catalogue_audit_tradfi_2026_05_12.md) for TF-1..TF-10 detail
+- **Task**:
+  1. **Phase 5A — `tradfi_etfs.py`**: Diff-merge 4 ETF universes → single SSOT at `unified_api_contracts/canonical/domain/derivatives/tradfi_etfs.py`. Sources: `tradfi_symbology.py:459` `KNOWN_ETFS` + `tradfi_ticker_universe.py:295` `ETF_TICKERS` + `tradfi_instrument_universe.py:151` `_BTC_SPOT_ETFS`+`_ETH_SPOT_ETFS` + `TRADFI_TICKER_COVERAGE_START` ETF subset. **READ each source file body** — do not grep-then-conclude on membership equivalence. Escalate membership conflicts to operator via `pings/slot_7.md`.
+  2. **Phase 5B — `tradfi_roots.py`**: Diff-merge 3 futures-roots universes (`TRADFI_INSTRUMENTS` + `TRADFI_DATABENTO_INSTRUMENTS` + `databento_cme_converter.py:57` `SUPPORTED_UNDERLYINGS`) → single SSOT.
+  3. **Phase 5C — `asset_group_registry.py`**: TradFi entries point at new SSOTs.
+  4. **Phase 7 (small) — VIX-15m doc-pointer fix (TF-7)**: VIX-15m constants live in `registry/data_source_continuity.py` NOT `canonical/crosscutting/honest_coverage.py` as CLAUDE.md L535 claims. Fix the doc reference in CLAUDE.md + any codex doc that mirrors the wrong pointer.
+- **Done-def**: 4 ETF universes → 1 SSOT (membership diff documented in plan body); 3 futures-roots → 1 SSOT; cross_asset audit Phase 5 checkboxes flipped with evidence; VIX-15m doc-pointer corrected.
+- **GREP-THEN-READ warning**: This is multi-callsite refactor. Wave 1 audit found Sonnet had grep-then-conclude failures on this exact shape (3 of 3 slots). Read each source file's actual dict/tuple contents — don't trust the variable name to imply the contents.
+- **Escalated to Opus 4.7** per Wave 1 audit recommendation.
+
+### Slot 9 — mock_data Phase 3.D per-reader threading (**Opus 4.7 / thinking: high** ⬆ — 3-reader bespoke wire-in)
+
+- **Owned repos**: `market-tick-data-service` + `ml-inference-service` + `strategy-service` + `unified-trading-library` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/mock_data_pipeline_benchmarking_2026_05_10.md`](../plans/active/mock_data_pipeline_benchmarking_2026_05_10.md) § Phase 3.D (currently 19/29 = 66%)
+- **Task**: Wire `default_subprocess_pipeline()` benchmark harness into 3 readers that bypass `resolve_bucket_uri`. For EACH reader, OPEN the function body before deciding the wire-in shape:
+  1. **MTDS Tardis/Databento fetch**: External-API non-GCS readers. Needs benchmark-specific instrumentation hook (NOT standard `resolve_bucket_uri` override since these don't go through GCS).
+  2. **ml-inference direct feature-vector loader**: Add bespoke `_STAGE_COMMAND_TEMPLATES` entry.
+  3. **strategy direct signal+features loader**: Same pattern as (b).
+  Then verify with subprocess-pipeline benchmark on 1-day batch.
+- **Done-def**: mock_data 19/29 → ~25/29; Phase 3.D `[x]` flipped with shipped SHAs; benchmark report includes all 6 pipeline stages with REAL timings (currently extrapolated for these 3).
+- **GREP-THEN-READ warning**: Slot 9 in Wave 1 had a grep-then-conclude failure on sports classifier. Don't repeat — open each reader's function body before declaring shape.
+- **Escalated to Opus 4.7** per Wave 1 audit recommendation.
+
+---
+
 ## Spawned tab — boot
 
 You are slot N. Do this in order, nothing else until done:
 
-1. Read [`AGENT_ONBOARDING.md`](AGENT_ONBOARDING.md) — role, git discipline, communication bus, pre-commit check, sub-agent rules.
-2. Find your **Slot N row** in the table above → note plan-of-record path + worktree branch.
-3. Read today's **work-split § "Slot N"** for full task brief, done-definition, and repos owned.
-4. Read your **plan-of-record** — scan open `- [ ]` todos for your phase.
-5. Append boot ack to [`pings/slot_N.md`](pings/) using `date -u` for timestamp, then start work.
+1. Read [`AGENT_ONBOARDING.md`](AGENT_ONBOARDING.md) — git discipline, LDR-alignment HARD RULE, workspace-drift recognition, communication bus, pre-commit check, sub-agent rules.
+2. Find your **Slot N task brief** in this LEDGER § "Wave 2 task briefs" above → that's your full assignment (owned repos + scope items + done-def + model tier).
+3. Read your **plan-of-record** (named in your brief) — scan open `- [ ]` todos for your phase.
+4. Append boot ack to [`pings/slot_N.md`](pings/) using `date -u` for timestamp, then start work.
 
 **COMPACT-CYCLE GUARD**: Do NOT read repo-level `.claude/CLAUDE.md` files from repos you're working in — the workspace CLAUDE.md (auto-loaded in system context) covers all critical cross-cutting rules. Only read a repo's CLAUDE.md if it's explicitly named in your task brief.
 
