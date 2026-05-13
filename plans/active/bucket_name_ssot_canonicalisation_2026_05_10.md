@@ -218,31 +218,30 @@ this plan and **Q4** below (operator decision).
       flat data (2026-05-15→05-19). features-service config.py already routes through `resolve_bucket()` (Done-def #2
       @`8f03ceeb`) so it picks up the new shape. The remaining env-less GCP entries are split into the new sub-todo
       below."
-- [ ] **[SCRIPT] P1**. **DEFERRED (split off from Phase 0e) — PARTIAL: DeFi-raw + config-store SHIPPED 2026-05-11 (slot
-      4 cont. 3); `pnl-store-defi`/etc + `events` still open** — env-tier the remaining env-less GCP yaml entries: **(a)
-      ✅ DONE** — `dex-pools` / `dex-swaps` / `evm-defi` / `eigenlayer-rewards` / `solana-defi` + `config-store` →
+- [x] **[SCRIPT] P1**. **DONE 2026-05-13 — DeFi-raw + config-store SHIPPED 2026-05-11; pnl/positions/risk-store-defi
+      SHIPPED 2026-05-13; `events` POST-CUTOVER** — env-tier the remaining env-less GCP yaml entries: **(a) ✅ DONE** —
+      `dex-pools` / `dex-swaps` / `evm-defi` / `eigenlayer-rewards` / `solana-defi` + `config-store` →
       `{kind}-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}` (was env-less; mirrors the AWS side which was already
       env-tiered). Evidence: deployment-service@`070c897` (yaml + §-header comment) + unified-trading-library@`5058381`
       (parity test snapshot). On-disk flat `dex-pools-{pid}` etc. → env-tiered names migrates in code_freeze Phase 2.6.
-      **(b) STILL OPEN** — `pnl-store-defi` / `positions-store-defi` / `risk-store-defi`: GCP shape is
-      `pnl-store-{pid}-defi` / `risk-store-defi-{pid}` (asset-group-as-suffix/infix) vs AWS
-      `unified-trading-pnl-store-defi-{env}-{account}` — needs a SHAPE-ALIGNMENT decision (not just an env-tier add) + a
-      data migration since the GCP bucket names change. **Operator/Ikenna call.** **(c) STILL OPEN** — `events`: GCP
-      `{pid}-events` vs AWS env-tiered — **HIGH blast radius**: `{pid}-events` is referenced workspace-wide per the "No
-      fire-and-forget VM launches" rule (`gs://{pid}-events/events/{service}/...`) — needs operator confirm whether
-      `events` stays env-less like `terraform-state`/`secrets` or goes env-tiered. status: helper-shipped — note:
-      "2026-05-11 slot 4 (cont. 3) — DeFi-raw + config-store env-tiered @deployment-service`070c897` + UTL`5058381`;
-      checkbox stays `- [ ]` until (b) the pnl/positions/risk shape decision + migration AND (c) the `events` operator
-      sign-off land — both operator-gated. **(b)+(c) written up as Q7 in § Open questions 2026-05-11 (slot 4, this
-      session)** with the full shape-mismatch table + slot-4 recs (b-i = align GCP to symmetric
-      `{kind}-defi-{env}-{pid}`; c-i = env-tier `events` as a dedicated Phase-2.6 sub-step / c-ii = document as 3rd
-      permitted env-less exception); routed cross-side to Ikenna. **OPERATOR DECISION 2026-05-11 PM (Q7(c) RESOLVED)**:
-      events bucket goes **env-tiered (option c-i)**. Implication: `gs://{pid}-events-{env}/events/{service}/...` per
-      env; deployment-service yaml + UTL `resolve_bucket_name` need `events` flipped to env-tiered shape (Phase 2.6
-      sub-step). **Watchdog architecture follow-up (P1)**: vm_zombie_watchdog.py reads from single `{pid}-events` today;
-      with env-tiered events, either (i) single watchdog reads all 3 env buckets concurrently, or (ii) 3 per-env
-      watchdog VMs if throughput is too much for one machine. Operator direction 2026-05-11 PM: 'depends on throughput'.
-      **Q7(b)** `pnl-store-defi` / `positions-store-defi` / `risk-store-defi` shape-alignment remains operator-pending."
+      **(b) ✅ RESOLVED 2026-05-13** — operator decision: symmetric env-tier, drop "unified-trading-" prefix from AWS.
+      GCP: deployment-service@`acf00a7`; AWS: deployment-service@`54aca96`. On-disk migration → Phase 2.6 (buckets were
+      empty at decision time). **Operator/Ikenna call.** **(c) STILL OPEN** — `events`: GCP `{pid}-events` vs AWS
+      env-tiered — **HIGH blast radius**: `{pid}-events` is referenced workspace-wide per the "No fire-and-forget VM
+      launches" rule (`gs://{pid}-events/events/{service}/...`) — needs operator confirm whether `events` stays env-less
+      like `terraform-state`/`secrets` or goes env-tiered. status: helper-shipped — note: "2026-05-11 slot 4 (cont. 3) —
+      DeFi-raw + config-store env-tiered @deployment-service`070c897` + UTL`5058381`; checkbox stays `- [ ]` until (b)
+      the pnl/positions/risk shape decision + migration AND (c) the `events` operator sign-off land — both
+      operator-gated. **(b)+(c) written up as Q7 in § Open questions 2026-05-11 (slot 4, this session)** with the full
+      shape-mismatch table + slot-4 recs (b-i = align GCP to symmetric `{kind}-defi-{env}-{pid}`; c-i = env-tier
+      `events` as a dedicated Phase-2.6 sub-step / c-ii = document as 3rd permitted env-less exception); routed
+      cross-side to Ikenna. **OPERATOR DECISION 2026-05-11 PM (Q7(c) RESOLVED)**: events bucket goes **env-tiered
+      (option c-i)**. Implication: `gs://{pid}-events-{env}/events/{service}/...` per env; deployment-service yaml + UTL
+      `resolve_bucket_name` need `events` flipped to env-tiered shape (Phase 2.6 sub-step). **Watchdog architecture
+      follow-up (P1)**: vm_zombie_watchdog.py reads from single `{pid}-events` today; with env-tiered events, either (i)
+      single watchdog reads all 3 env buckets concurrently, or (ii) 3 per-env watchdog VMs if throughput is too much for
+      one machine. Operator direction 2026-05-11 PM: 'depends on throughput'. **Q7(b)** `pnl-store-defi` /
+      `positions-store-defi` / `risk-store-defi` shape-alignment remains operator-pending."
 - [x] **[SCRIPT] P0**. **Phase 0f — VM launcher scripts read `DEPLOYMENT_ENV` (Phase 1 code-complete scope).** Audit
       every script under `deployment-service/scripts/vm/` for hardcoded bucket references; ensure each launcher reads
       `DEPLOYMENT_ENV` from env / CLI flag and passes it to the VM via `metadata` so the VM's bucket-resolution call
@@ -329,21 +328,15 @@ this plan and **Q4** below (operator decision).
       [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) § "Audit
       log persistence (GCS / S3)" + UAC path SSOT `unified_api_contracts/internal/manual_audit_paths.py` (shipped at
       uac@`003b5ff`). Proposed shape under (b+) env-tier:
-      ```yaml
-      # GCP
-      manual-audit: "manual-audit-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
-      # AWS
-      manual-audit: "unified-trading-manual-audit-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
-      ```
+      `yaml     # GCP     manual-audit: "manual-audit-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"     # AWS     manual-audit: "unified-trading-manual-audit-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"     `
       Plus retention/lifecycle config (≥7 years for compliance; consider Coldline class after 90d for cost). Adds 6
       buckets to Phase 0c provisioning scope (3 envs × 2 clouds). Owner: slot 4 (bucket-name SSOT owner). Pre-Phase-0i:
       execution-service + ml-training-service audit-log writers BLOCK on this entry — UAC path SSOT module already
-      declares `BUCKET_KIND_MANUAL_AUDIT = "manual-audit"` to mark the dependency.
-      **🟢 SHIPPED 2026-05-12 (slot 8)**: deployment-service@`00a1288` — yaml SSOT updated (GCP + AWS, using
-      `DEPLOYMENT_ENV_SHORT` for both). Also export `resolve_bucket_name` from UTL top-level facade (UTL@`aeff9c19`)
-      to fix pre-existing import-pattern QG violation in tools/check_ml_dependencies_by_mode.py.
-      **Handoff**: bucket provisioning (6 buckets × 3 envs × 2 clouds + lifecycle/retention config) deferred to
-      Phase 0c scope — owner slot 4.
+      declares `BUCKET_KIND_MANUAL_AUDIT = "manual-audit"` to mark the dependency. **🟢 SHIPPED 2026-05-12 (slot 8)**:
+      deployment-service@`00a1288` — yaml SSOT updated (GCP + AWS, using `DEPLOYMENT_ENV_SHORT` for both). Also export
+      `resolve_bucket_name` from UTL top-level facade (UTL@`aeff9c19`) to fix pre-existing import-pattern QG violation
+      in tools/check_ml_dependencies_by_mode.py. **Handoff**: bucket provisioning (6 buckets × 3 envs × 2 clouds +
+      lifecycle/retention config) deferred to Phase 0c scope — owner slot 4.
 
 - [x] **[AGENT] P1**. **Phase 0i — region-pinning audit + enforcement (Phase 1 code-complete scope; OPERATOR RATIFIED
       ap-northeast-1 2026-05-11).** Audit yaml entries for region: GCP entries are all `asia-northeast1` (per
@@ -1184,8 +1177,11 @@ re-sequenced to Phase 2.6.
 
 ### Q7 — [harsh-bucket-and-adapter-tab, 2026-05-11] — env-less-GCP-entries remainder: `pnl-store-defi`/`positions-store-defi`/`risk-store-defi` shape-alignment + `events` env-tier sign-off (both operator-gated)
 
-**Status**: 🟡 PARTIAL — Q7(c) `events` env-tier ✅ RESOLVED 2026-05-11 PM (operator: env-tiered, option c-i); Q7(b)
-pnl/positions/risk shape-alignment still open (Ikenna call).
+**Status**: ✅ FULLY RESOLVED — Q7(c) `events` env-tier ✅ RESOLVED 2026-05-11 PM; Q7(b) pnl/positions/risk
+shape-alignment ✅ RESOLVED 2026-05-13 (operator decision: env-tier GCP, drop "unified-trading-" prefix from AWS). GCP:
+deployment-service@`acf00a7` (pnl/positions/risk-store-defi → `{kind}-defi-{env}-{project_id}`). AWS:
+deployment-service@`54aca96` (drops "unified-trading-" prefix → `{kind}-defi-{env}-{account_id}`). On-disk GCS bucket
+rename deferred to Phase 2.6 (buckets were empty at time of decision).
 
 **Q7(c) `events` — RESOLVED 2026-05-11 PM (operator: env-tiered).** Events bucket goes env-tiered:
 `gs://{pid}-events-{env}/events/{service}/...`. yaml flip + UTL `resolve_bucket_name` env-tier extension queues as a
@@ -1607,9 +1603,9 @@ inline-formatter violation, but it should go through `resolve_bucket_name(kind="
 | Phase 0c — dex-pools 1-object transient failure                                       | ✅ FIXED — manually copied `_index/availability_index.parquet`; parity 185079/185079                                                                                                                                                                                           | No blocker — complete                                                                             |
 | PART C — service source `# noqa: gs-uri` markers + QG 5.69 baseline ratchet           | ✅ DONE — instruments-service@`5210149` (1 noqa marker, baseline 1→0) + deployment-service@`0b802ec` (3 noqa markers, baseline 3→0) + import-pattern fix (check_ml_dependencies_by_mode.py) + PM@`be768d2b` (baseline yaml updated). QG 5.69 now zero-tolerance for both repos | No blocker — complete                                                                             |
 | PART C — bash scripts (instruments-service/scripts/ + deployment-service/scripts/vm/) | ✅ ALREADY DONE by slot 8 Phase 0f (2026-05-12, @`<slot8-sha>`) — bash scripts excluded from QG 5.69 scope                                                                                                                                                                     | No blocker — complete                                                                             |
-| Phase 0i tail — manual-audit provisioning script                                      | ✅ SHIPPED — `scripts/provision_manual_audit_buckets.sh` (new) + `--lock-retention-period` bugfix in `provision_audit_records_retention_lock.sh`; deployment-service@`2965905`                                                                                                  | No blocker — script shipped                                                                       |
-| Phase 0i tail — GCP manual-audit prd/stg/dev buckets                                  | ✅ DONE — `manual-audit-prd/stg/dev-central-element-323112` created, Coldline lifecycle (90d), retention=220752000s locked (isLocked=True). Verified via `gcloud storage buckets describe`.                                                                                     | No blocker — all 3 GCP envs locked                                                               |
-| Phase 0i tail — AWS manual-audit prd/stg/dev buckets                                  | ❌ NOT DONE — `aws` CLI not present on this machine. Run `provision_manual_audit_buckets.sh` from GCE VM with aws CLI + ADC configured.                                                                                                                                         | **DEFERRED**: provision from GCE VM (code_freeze Phase 2.6 window 2026-05-15→05-19)              |
+| Phase 0i tail — manual-audit provisioning script                                      | ✅ SHIPPED — `scripts/provision_manual_audit_buckets.sh` (new) + `--lock-retention-period` bugfix in `provision_audit_records_retention_lock.sh`; deployment-service@`2965905`                                                                                                 | No blocker — script shipped                                                                       |
+| Phase 0i tail — GCP manual-audit prd/stg/dev buckets                                  | ✅ DONE — `manual-audit-prd/stg/dev-central-element-323112` created, Coldline lifecycle (90d), retention=220752000s locked (isLocked=True). Verified via `gcloud storage buckets describe`.                                                                                    | No blocker — all 3 GCP envs locked                                                                |
+| Phase 0i tail — AWS manual-audit prd/stg/dev buckets                                  | ❌ NOT DONE — `aws` CLI not present on this machine. Run `provision_manual_audit_buckets.sh` from GCE VM with aws CLI + ADC configured.                                                                                                                                        | **DEFERRED**: provision from GCE VM (code_freeze Phase 2.6 window 2026-05-15→05-19)               |
 | Phase 0c — AWS prod provision (Group-A/B buckets)                                     | ❌ NOT STARTED                                                                                                                                                                                                                                                                 | Deferred to code_freeze Phase 2.6 window (2026-05-15→05-19) per plan                              |
 | Phase 0c — staging/dev provision (Group-A/B buckets)                                  | ❌ NOT STARTED                                                                                                                                                                                                                                                                 | Deferred to code_freeze Phase 2.6 window per plan                                                 |
 | Phase 5A phantom audit (GCE VM)                                                       | 🔴 DEFERRED — CLAUDE.md requires GCE VM (same-region)                                                                                                                                                                                                                          | Needs dedicated GCE VM launch in asia-northeast1-c; deferred to next Slot 3 session or Harsh slot |

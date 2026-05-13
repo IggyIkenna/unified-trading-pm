@@ -65,6 +65,7 @@ estimate_calibration_note: |
 
 > **🟢 SCOPE CLARIFICATION — RATIFIED 2026-05-10 cross-plan audit L4.** Two areas where May-10 plans pulled scope
 > forward from this plan:
+>
 > - **Performance-fee HWM accounting** (originally fund_administration's settlement scope) → pulled into
 >   [`wallet_treasury_client_flow_2026_05_10.md`](wallet_treasury_client_flow_2026_05_10.md) Phase 5.G for May-23
 >   cutover (operator direction 2026-05-10). `PerformanceFeeCrystallizedEvent` is shipped by wallet_treasury; this plan
