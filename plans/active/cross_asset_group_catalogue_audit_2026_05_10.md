@@ -450,6 +450,22 @@ Owner: harsh.
       `AssetGroupInventory` dataclass (asset_group/venues/ data_types/source_coverage_start) +
       `get_canonical_inventory()` composing `VENUES_BY_ASSET_GROUP` + `DATA_TYPES_BY_ASSET_GROUP` + 5 per-asset-group
       `*_SOURCE_COVERAGE_START` dicts.
+- [x] [AGENT] P0. **5E — Phase 5 membership verification + T-ICE-Europe correction** (slot 7 audit, Opus 4.7).
+      Diff-merge audit against the 4 ETF + 3 futures-root source universes confirmed: TRADFI_ETFS (59 entries) is a
+      clean superset of `KNOWN_ETFS` + `ETF_TICKERS` + `_BTC_SPOT_ETFS`/`_ETH_SPOT_ETFS` +
+      `TRADFI_TICKER_COVERAGE_START`; listing dates match exactly (IBIT/FBTC/ARKB/GBTC 2024-01-11, ETHA/FETH/ETHE
+      2024-07-23, BITO 2021-10-19); `in_known_etfs=False` correctly tracks the IVV/VOO-vs-ETF_TICKERS + ETH ETFs-vs-
+      KNOWN_ETFS asymmetries. TRADFI_ROOTS (61 entries after this commit) captures all CME index/energy/metals/grains/
+      fixed-income/FX/livestock/sector/crypto futures + MES + MBT/MET + ES options cluster sub-series + CME event
+      contracts + ICE Europe (BRN/G/T) + CFE VX + CBOE VIX spot; EW3 correctly dropped (deprecated CME product per
+      `_CME_ES_OPTIONS` comment); ICE US softs (CT/CC/KC/SB/OJ/DX) remain deferred for dataset disambiguation per 5B
+      annotation. **T (ICE Europe WTI) added** in UAC@`4b97104` — TF-2 audit table's deferred list had T mis-grouped
+      with "ICE US softs" but T uses IFEU.IMPACT (unambiguous, matches BRN/G pattern), only legacy-only presence in
+      `tradfi_symbology.py` (not a dataset ambiguity). VX dataset name `XCBF.PITCH` in new SSOT correctly supersedes
+      stale `XCBF.MDP3` in `tradfi_symbology.py:397` (per `_CBOE_INSTRUMENTS` comment: PITCH protocol only supports
+      raw_symbol stype + instruments-service `tradfi/databento.py:74,87` already uses PITCH). Phase 6 consumer-
+      migration scope remains owner of the 4 source-file deletion + re-wiring; no downstream-consumer audit triggered
+      by this addition (TRADFI_ROOTS is additive).
 
 **Codex SSOT update (Phase 5 boundary)**:
 
@@ -506,6 +522,15 @@ Per Post-Plan-Phase Codex Audit HARD RULE:
 - [x] [AGENT] P0. **7F — Each per-asset-group epic refreshed** (`cefi_master` / `tradfi_master` / `sports_master` /
       `predictions_master` + `defi_master`) with the new canonical inventory entry-point + coverage % surface.
       (this commit — honest-coverage surface + asset_group_registry ref added to Cross-references in all 5 masters)
+- [x] [AGENT] P0. **7G — CLAUDE.md VIX-15m doc-pointer fix (TF-7)** (slot 7, 2026-05-13). The "VIX 15m source
+      layering" SSOT-pointer in CLAUDE.md previously named the constants without specifying the file path; pre-trim
+      versions (per TF-7 audit) had pointed at `canonical/crosscutting/honest_coverage.py` which is WRONG —
+      constants `BARCHART_VIX_FIRST/LAST_DATE`, `YAHOO_VIX_15M_WINDOW_DAYS`, `is_vix_15m_gap_date()`,
+      `get_vix_15m_source()` actually live in `unified_api_contracts/registry/data_source_continuity.py:63-192`.
+      `honest_coverage.py` only references the gap via the `EXPECTED_KNOWN_SOURCE_GAP` empty-reason for per-shard
+      recording. Workspace-grep confirms no codex doc mirrors the stale pointer (all codex VIX-15m references are
+      conceptual, not file-path). Fix shipped this commit — explicit `data_source_continuity.py` path added +
+      anti-correction noting `honest_coverage.py` is NOT the SSOT.
 
 ## Cross-plan dependencies
 
@@ -580,3 +605,16 @@ Phase 7A-D/7F codex SSOT updates (Phase 5 ✅ DONE as of 2026-05-12 slot-2 sessi
 | Phase 3 — per-CeFi zero-activity-bar verify                      | ☐ TODO                                                                                                                   | Gated on writegate Wave 3.M                                                                                                                                                         |
 | Phase 6 — validation + downstream consumer migration             | ☐ TODO                                                                                                                   | Gated on Phases 1-5 (Phase 5 now ✅)                                                                                                                                                |
 | Phase 7A-D, 7F — codex SSOT updates                              | ☐ TODO                                                                                                                   | Gated on Phases 1H + 2E + 2F + 3E + 5 (5 now ✅)                                                                                                                                    |
+
+### DONE-2026-05-13 — slot 7 (harsh-cross-asset-tradfi-tab, Opus 4.7 / max effort) — Phase 5 verification + Phase 7G TF-7 doc-pointer fix
+
+| Phase / item                                                     | Status as of 2026-05-13 | Evidence / successor / blocker                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 5A/5B/5C/5D verification                                   | ✅ DONE                 | Diff-merge audit confirmed clean coverage of 4 ETF + 3 futures-root sources. TRADFI_ETFS 59-entry superset; listing dates match TRADFI_TICKER_COVERAGE_START exactly; ETF asymmetries (IVV/VOO in KNOWN_ETFS not ETF_TICKERS; ETHA/FETH/ETHE in ETF_TICKERS not KNOWN_ETFS) correctly reconciled via `in_known_etfs` flag.                                       |
+| Phase 5E — T (ICE Europe WTI) addition                           | ✅ DONE — UAC@`4b97104` | TF-2 audit table's deferred list had T mis-grouped with "ICE US softs"; corrected — T uses unambiguous IFEU.IMPACT dataset matching BRN/G pattern. 3-line additive change (no consumer audit needed). TRADFI_ROOTS grew from 60 → 61. EW3 deprecation correctly preserved. ICE US softs (CT/CC/KC/SB/OJ/DX) remain deferred for Phase 6 dataset disambiguation. |
+| Phase 7G — CLAUDE.md VIX-15m doc-pointer (TF-7)                  | ✅ DONE — PM@`<this>`   | CLAUDE.md "VIX 15m source layering" pointer now explicitly cites `unified_api_contracts/registry/data_source_continuity.py` + anti-corrects the stale `canonical/crosscutting/honest_coverage.py` reference. Workspace-grep confirmed no codex doc mirrors the stale pointer (all codex VIX-15m references are conceptual, not file-path).                      |
+
+**Carry-forward**: nothing new opens. Phase 6 (consumer migration) remains the gate for retiring the 4 ETF + 3 roots
+source files; Phase 6A workspace-grep audit will surface zero downstream consumers of the new SSOTs (verified during
+this session). ICE US softs (CT/CC/KC/SB/OJ/DX) dataset disambiguation (TF-2 ambiguity between
+`tradfi_symbology.py` IFUS.IMPACT and `tradfi_instrument_universe.py` GLBX.MDP3 entries) remains Phase 6 scope.
