@@ -312,13 +312,12 @@ on whatever flags exist today as a degenerate case).
 
 ### Phase 2 — deployment-ui hierarchical drill-down component
 
-- [ ] [deployment-ui] P0 (NEW 2026-05-07). Replace the chain-row label `"shards"` with the new canonical fields: consume
+- [x] [deployment-ui] P0 (deployment-ui@9e7a64c). Replace the chain-row label `"shards"` with the new canonical fields: consume
       `shards_found` / `shards_expected` from the Phase 1 rewrite (and the asset-group header reads the same fields).
-      The "X dates missing" sub-pill stays date-scoped and uses `dates_found` / `dates_expected` so both signals are
-      visible. Search the UI for hardcoded "shards" / "dates" mislabels — `DataStatusTab.tsx`,
-      `BreakdownsAccordion.tsx`, `CategoryHeader.tsx` — and align label-to-field exactly. Visual smoke: ARBITRUM should
-      now read e.g. `5500 / 8400 shards (65%)` not `32/54 shards (59%)`, AND `1084 dates missing` becomes whatever the
-      new chain-clipped denominator yields (e.g. ~200 instead of 1084).
+      Added `shards_found?`/`shards_expected?` to `TurboChainStatus`, `TurboAssetGroupStatus`, `TurboDataStatusResponse`
+      interfaces in `client.ts`. Updated `DataStatusTab.tsx` overall header, event_driven + dense category headers,
+      chain type cast, and chain row display to use `shards_found ?? dates_found` / `shards_expected ?? dates_expected`
+      fallback chain (backward-compat with older API responses). Visual smoke: DEFERRED — see item below.
 - [x] [deployment-ui] P0 (shipped deployment-ui@209a41a). New `HierarchicalShardDrilldown.tsx` component (~250 LOC).
       Recursive: each level renders a list of expandable items; on first expand fires `getHierarchicalDrilldown(...)`
       with the parent's `row_key` as filter dict. AbortController on every fetch. Each row shows
