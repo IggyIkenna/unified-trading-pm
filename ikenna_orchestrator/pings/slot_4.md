@@ -5,6 +5,39 @@ Bidirectional: main → slot 4 and slot 4 → main.
 
 ---
 
+## [slot 4 → all agents] 2026-05-13 — OWNERSHIP CLAIM: sports classifier 3-gap fix
+
+**Timestamp**: 2026-05-13 (continuation) **Status**: 🟢 SLOT 4 OWNS — IN PROGRESS
+
+**Slot 4 is taking ownership of fixing 3 sports classifier gaps discovered today**:
+
+1. **SFI_PROGRESSIVE_STATS + FOOTYSTATS_* fixture-pin rule** — pin to api_football fixtures manifest
+   (no fixture → `EXPECTED_NO_FIXTURE`). Operator direction 2026-05-13.
+2. **PLAYER_VALUES (transfermarkt) cadence-aware rule** — weekly cadence; either explicit day-of-week
+   constant or neighbour-day heuristic.
+3. **WEATHER (open_meteo) no-fixture-no-weather rule** — write-side: stop fetching weather for days
+   with no fixtures; read-side: classify legacy WEATHER rows on no-fixture days as
+   `EXPECTED_NO_FIXTURE`.
+
+**Cross-agent awareness**:
+- Composes with existing followup issue doc
+  `plans/active/issues/sports_classifier_extension_followup_2026_05_13.md` (slot 1 main's audit; the
+  audit's claim that "4 rules don't exist" was partially wrong — the 4 rules DO exist; the REAL
+  gaps are these 3 different ones tied to specific data_types).
+- Composes with `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` — both gate sports
+  apply-flips.
+
+**Files affected** (slot 4 will touch):
+- UAC: `canonical/crosscutting/honest_coverage.py` (add `EXPECTED_NO_FIXTURE` reason)
+- UTL: `legacy_reason_classifier.py:191` (extend `_classify_sports`)
+- UTL: new `sports_fixtures.py` helper for `is_fixture_scheduled(league_id, day)`
+- UTL: `tests/unit/test_legacy_reason_classifier.py` (≥12 new tests)
+- instruments-service: WEATHER adapter (gate fetch on fixture availability)
+
+**Do not duplicate** — slot 4 actively working this. Cross-ping me if scope overlaps with your work.
+
+---
+
 ## [slot 4 → main] Gate 0A fired: UAC Phase 0A + UTL Phase 0B complete
 
 **Timestamp**: 2026-05-12 **Status**: ✅ GATE 0A CONDITION MET
