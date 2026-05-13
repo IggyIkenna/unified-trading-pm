@@ -475,8 +475,8 @@ Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phas
 - [x] [TEST] P0. Normalizer output shape tests. (UAC@c76e6d0 — 13 unit tests in
       `tests/unit/test_normalize_api_football.py` covering full payload shape, partial null-fill, unknown-stat-type
       skip, no-coach lineup, missing-fixture injury, malformed-input returns. `test_sports_contracts.py` parametrized
-      cases verify schema registration for all 4 data_types. Note: `test_cassette_schema_parity.py` was NOT extended
-      — the per-normalizer unit tests satisfy the same invariant.)
+      cases verify schema registration for all 4 data_types. Note: `test_cassette_schema_parity.py` was NOT extended —
+      the per-normalizer unit tests satisfy the same invariant.)
 - [ ] [VERIFY] P0. After re-fetch VM completes for one league × one season, open deployment-ui schema modal for each of
       the 4 data_types and confirm full per-row column set (xG, shots-on-target, possession, goal-events with minute,
       starting-XI per slot, etc.). [AUDIT 2026-05-07: BLOCKED-ON above flatten ship + re-fetch VM]
@@ -577,9 +577,9 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       instruments-service SFI progressive-stats / FIXTURES write path (spawn prompt step 8). Blocked on Step 3 UTL
       helper above. Successor: this item (step 3 + wire = same Phase 2.D completion sprint).
 - [x] [SCRIPT] P0. **DEFERRED from slot 5 Phase 2.D (2026-05-12)**: Derive
-      `report_time = match_end_time + SFI_DATA_LAG_P95_SECONDS` in instruments-service SFI progressive-stats write
-      path. (instruments-service@af06124 — `match_end_time` + `report_time` columns added to SFI progressive stats
-      rows in orchestrator per-match loop, using `detect_match_end_time()` + `SFI_DATA_LAG_P95_SECONDS=300`.)
+      `report_time = match_end_time + SFI_DATA_LAG_P95_SECONDS` in instruments-service SFI progressive-stats write path.
+      (instruments-service@af06124 — `match_end_time` + `report_time` columns added to SFI progressive stats rows in
+      orchestrator per-match loop, using `detect_match_end_time()` + `SFI_DATA_LAG_P95_SECONDS=300`.)
 - [ ] [TEST] P0. Unit tests covering each branch of the cascade + the `kickoff + 120min` fallback shape. [AUDIT
       2026-05-07: FRESH — actionable] **PARTIAL 2026-05-12 slot 5 (instruments-service@9bffca2)**: 5 unit tests for
       freeze-detect + announced_at + PST/CANC shipped in `test_phase2d_match_timing.py`. Cascade-branch tests (Step 3
@@ -627,13 +627,15 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       `us-backfill-shots-flatten-{ts}` VM + cassette parity). features-sports consumers updated to read per-shot
       dimensions; XG features become much richer (position-on-pitch, shot-quality decomposition, set-piece vs open-play
       splits).
-- [ ] [SCRIPT] P1. **Follow-up #3 — MATCHES field-mapping fix.** Smaller-scope fix to `normalize_footystats_match`:
+- [x] [SCRIPT] P1. **Follow-up #3 — MATCHES field-mapping fix.** Smaller-scope fix to `normalize_footystats_match`:
       replace 15+ hardcoded `None` with proper `team_a_*` / `team_b_*` → `home_*` / `away_*` mappings from the
       FootyStatsMatch source dataclass. Add `referee` mapping if FootyStats provides it on the match endpoint (verify
       via raw-payload sample). Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new
       normalizer + re-fetching going forward writes populated columns from now on; historical rows stay None-populated
       and are NaN-tolerant); if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full
       B.1-shape migration (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
+      (UAC@4e23bd9 — added home*goals_halftime/halftime, home_shots_on_target, home_yellow_cards, home_red_cards,
+      home_fouls, home_offsides + away*\* variants to FootyStatsMatch; normalized to CanonicalFixture fields)
 
 ### FIXTURES schema split — SCHEDULE + OUTCOMES (migrated from issue `fixtures_lookahead_bias_post_match_scores_2026_05_08`)
 
@@ -687,10 +689,10 @@ cancellations.
 
 - [x] [SCRIPT] P0. UAC `MatchStatus` typed StrEnum SSOT — 9 canonical states + `AF_STATUS_SHORT_MAP` + grouping
       frozensets + `from_af_short()` classmethod. (UAC@1a831b0 —
-      `unified_api_contracts/canonical/domain/sports/fixture_status.py`; exported via domain `__init__`.)
-      **DEFERRED**: "Replace freeform string status across all sports adapters" — the SSOT is shipped; adapter
-      migration (replacing `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` / `MatchStatus` comparisons)
-      is a follow-up refactor across instruments-service adapters.
+      `unified_api_contracts/canonical/domain/sports/fixture_status.py`; exported via domain `__init__`.) **DEFERRED**:
+      "Replace freeform string status across all sports adapters" — the SSOT is shipped; adapter migration (replacing
+      `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` / `MatchStatus` comparisons) is a follow-up refactor
+      across instruments-service adapters.
 - [ ] [SCRIPT] P0. Cross-source verifier integration at instruments-service orchestrator commit-time. When api_football
       reports `CANCELLED` BUT footystats / SFI / understat reports the fixture has match data (lineups + stats +
       events): emit `FIXTURES_STATUS_DISCREPANCY` event (NEW UAC LifecycleEventType) + flip api_football status to
@@ -913,25 +915,26 @@ typed empty reasons (GREEN at orchestrator/triggers).
 
 ## Deferred work after 2026-05-12 slot-5 session
 
-Session shipped: instruments-service@af06124 (SFI report_time), UAC@1a831b0 (MatchStatus SSOT),
-plan flips for B.1 Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
+Session shipped: instruments-service@af06124 (SFI report_time), UAC@1a831b0 (MatchStatus SSOT), plan flips for B.1
+Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-|---|---|---|
-| B.1 Phase 4: manifest flip + re-fetch VM | `[ ]` NOT RUN | Operational — needs VM launch + manifest migration; no code gap |
-| C.4 Transfermarkt per-player flatten | `[ ]` open | No blocker — new normalizer + contract + migration |
-| C.6 Step 1: AF FIXTURES write-path `match_end_time` | `[ ]` open | UAC `CanonicalFixture.match_end_time` exists; need AF write-path wiring in IS orchestrator |
-| C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns | `[ ]` open | Add `ft_timer` + `match_end_time` to schema contract |
-| C.6 Step 3: UTL `resolve_match_end_time()` cascade | `[ ]` open | New UTL helper — blocks Step 4 + assert_available_at_present wiring |
-| C.6 assert_available_at_present wiring | `[ ]` blocked | Blocked on Step 3 UTL helper |
-| C.7 Follow-up #1: STANDINGS flatten | `[ ]` open | Same B.1 pattern; isolated AF endpoint |
-| C.7 Follow-up #3: MATCHES `team_a_*` → `home_*` | `[ ]` open | FootyStats normalizer only; migration may not be needed |
-| MatchStatus adapter migration | `[ ]` open (DEFERRED) | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters |
-| Cross-source fixture status verifier | `[ ]` open | Uses MatchStatus SSOT (now shipped); no other blocker |
-| Codex doc `sports-fixtures-lifecycle.md` | `[ ]` open | Write after cross-source verifier design settles |
-| FIXTURES schema split (SCHEDULE + OUTCOMES) | `[ ]` P0 open | Large — coordinate with writegate strict-mode flip |
+| Phase / item                                        | Status as of 2026-05-12 | Successor / blocker                                                                        |
+| --------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------ |
+| B.1 Phase 4: manifest flip + re-fetch VM            | `[ ]` NOT RUN           | Operational — needs VM launch + manifest migration; no code gap                            |
+| C.4 Transfermarkt per-player flatten                | `[ ]` open              | No blocker — new normalizer + contract + migration                                         |
+| C.6 Step 1: AF FIXTURES write-path `match_end_time` | `[ ]` open              | UAC `CanonicalFixture.match_end_time` exists; need AF write-path wiring in IS orchestrator |
+| C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns  | `[ ]` open              | Add `ft_timer` + `match_end_time` to schema contract                                       |
+| C.6 Step 3: UTL `resolve_match_end_time()` cascade  | `[ ]` open              | New UTL helper — blocks Step 4 + assert_available_at_present wiring                        |
+| C.6 assert_available_at_present wiring              | `[ ]` blocked           | Blocked on Step 3 UTL helper                                                               |
+| C.7 Follow-up #1: STANDINGS flatten                 | `[ ]` open              | Same B.1 pattern; isolated AF endpoint                                                     |
+| C.7 Follow-up #3: MATCHES `team_a_*` → `home_*`     | `[ ]` open              | FootyStats normalizer only; migration may not be needed                                    |
+| MatchStatus adapter migration                       | `[ ]` open (DEFERRED)   | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters      |
+| Cross-source fixture status verifier                | `[ ]` open              | Uses MatchStatus SSOT (now shipped); no other blocker                                      |
+| Codex doc `sports-fixtures-lifecycle.md`            | `[ ]` open              | Write after cross-source verifier design settles                                           |
+| FIXTURES schema split (SCHEDULE + OUTCOMES)         | `[ ]` P0 open           | Large — coordinate with writegate strict-mode flip                                         |
 
 **Next-agent entry point**: Pick any item from this table that has no blocker. Best candidates in priority order:
+
 1. C.7 Follow-up #3 MATCHES field mapping (quick win — FootyStats normalizer only, no migration needed)
 2. C.4 Transfermarkt per-player flatten (self-contained UAC + IS change)
 3. C.6 Step 2 SFI_PROGRESSIVE_STATS contract columns (UAC-only schema addition)
