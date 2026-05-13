@@ -1,5 +1,68 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] CORRECTIONS to DAY-3 reassignment — 2026-05-13 ~18:00 UTC
+
+**Operator caught mis-marks based on agent ping responses**. Fixes:
+
+### Correction 1: Issues I assigned were ALREADY RESOLVED
+
+| Slot | Previous direction | Actual state |
+|------|-------------------|--------------|
+| Slot 8 (a) | `uac_normalize_aster_ticker_missing_2026_05_13.md` | ✅ RESOLVED `d8290295` — archived |
+| Slot 8 (b) | `standings_entity_gcs_ambiguity_2026_05_13.md` | ✅ RESOLVED `01ad724a` (entity=standings/ is api_football, NOT SFI; no GCS action) — archived |
+| Slot 3 | "in flight ~1-2h sports corrector" | ✅ DONE at `7319d4ac` — `DEFI_VENUE_LAUNCH_DATES` + corrector shipped + 599,486 defi rows corrected |
+
+### Correction 2: Phase 2 (Copper/CEFFU) is NOT our blocker — it's CLIENT-SIDE
+
+Per harsh-side 1M-context audit slot ping `[2026-05-13 14:50 UTC]` shipped at `PM@e1e67656`:
+
+> _"Copper / CEFFU → marked client-side, NOT our blocker per operator direction 2026-05-13. Master plan Group F Week 2 Treasury row + api_keys_wallets 3.A/3.B flipped."_
+
+I framed Phase 2 as "STAYS post-cutover due to hard external dependency on operator-provisioned Copper API key + CEFFU institutional account". **Wrong**. The Copper / CEFFU integration is the client's responsibility — not ours. If/when the client provisions, we flip `WalletProvisioningConfig.signing_surface` (config-only, per `codex/04-architecture/custody-providers.md`). No build work needed from us.
+
+**Plan body updated** (`wallet_treasury_post_cutover_custody_signing_2026_06_01.md` frontmatter + PULL-FORWARD UPDATE section): Phase 2 DESCOPED; deadline now 2026-05-15 only (Phase 1 + Phase 3); estimate corrected 9.6 → 4.8 cal AI-days.
+
+### Correction 3: NEW work surfaced by Harsh audit slot — slot reallocation asks
+
+Per same harsh-audit-slot ping (14:50 UTC):
+
+- **2 slots needed** on `batch_live_symmetry` (confirmed 0/70 done is real; codex `cefi-batch-live.md` + `mode-axis-discipline.md` missing; **drives Tabs 1-3 before 2026-05-23**)
+- **2 slots needed** on `defi_recursive_borrow_archetypes` Solidity (`RecursiveLeverageReceiver.sol`) + execution-service orchestrator/tracer (genuinely unshipped; revised 3% → 7% after silent shipments flipped). **OR operator descope decision**
+- NEW P0 filed: `emerging_perp_venue_adapters_broken_2026_05_13.md` (5 perp venues at 0-32% capture rate — ASTER 0%, EXTENDED-STARKNET, PACIFICA-SOLANA, LIGHTER-ZKSYNC, HYPERLIQUID; affects DeFi hedge legs)
+- NEW P0 filed: `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` (deadline 2026-05-14 EOD)
+
+### Corrected Ikenna slot table
+
+| Slot | Status | Direction |
+|------|--------|-----------|
+| **1 main** | 🟢 active | Coordination + corrections refresh |
+| **2** | 🟡 picking up | `defi_classifier_missing_catalog_crossref` P0 (UNCHANGED — still valid) |
+| **3** | ✅ DONE | `DEFI_VENUE_LAUNCH_DATES` + corrector shipped @`7319d4ac` (599,486 defi rows corrected). 🟪 FREE for next pickup |
+| **4** | 🟡 picking up | propagation chain Phases 3+4+2.A + bucket provisioning handshake (UNCHANGED) |
+| **5** | 🟢 in flight | TradFi `MarketSession` SSOT + `CanonicalFuturesContract` (UNCHANGED — greenlit @`1e81aceb`) |
+| **6** | 🟡 picking up | wallet_treasury_post_cutover Phase 1 PULL FORWARD (UNCHANGED) |
+| **7** | 🟡 picking up | wallet_treasury_post_cutover Phase 3 PULL FORWARD (UNCHANGED) |
+| **8** | 🟡 picking up | **REASSIGNED** → `emerging_perp_venue_adapters_broken` P0 (5 venues; investigate root cause + propose fix) — previous 2 issues archived |
+| **9** | 🟡 picking up | **REASSIGNED** → `api_football_phase_3b_3c_smoke_forward_poll` P0 (deadline 2026-05-14 EOD) — previous `defi_legacy_blank_reclassification` was the corrector pickup which slot 3 already shipped; remaining reclass scope folds into slot 2's P0 fix |
+| **Slot 3 NEW** | 🟡 free | **NEW PICKUP** → 1 slot on `batch_live_symmetry` Tab 1 (codex `cefi-batch-live.md` doc) — per harsh-audit-slot ask. Operator may want to assign 2nd slot. |
+
+### Operator decisions pending
+
+1. **`batch_live_symmetry` 2-slot allocation**: confirm or descope to "principle documented, full enforcement post-cutover" with successor plan. I've parked Slot 3 on Tab 1 as starter; second slot can come from Harsh-side (their idle capacity is symmetric).
+2. **`defi_recursive_borrow_archetypes` Solidity + execution**: confirm 2-slot push for May-23 OR descope archetype to "documented, Phase 2-3 deferred". This needs operator decision — the Solidity contract is bespoke May-23 scope.
+3. **Harsh audit slot's framing of 530 cal AI-days remaining**: this is the corrected number (was 566 visible / actual ~530 post TBD-backfill calibration). Acknowledge.
+
+### What I'm acking back to Harsh-audit-slot
+
+Filing cross-side ack in `_agent_pings.md` confirming:
+- Phase 2 reframing applied
+- 2 RESOLVED issues archived
+- Slot 8 / 9 reassigned to new P0s
+- Operator decisions queued on batch_live_symmetry + recursive_borrow
+
+---
+
+
 ## [slot 1 main] DAY-3 reassignment — pulling post-cutover work into May-15 freeze window — 2026-05-13 ~17:00 UTC
 
 **Why now**: Harsh-side reported all 6 active implementor slots DONE Wave 4 at PM@`6bf6e932`. Combined idle Ikenna+Harsh capacity ≈ 15 slots. At density-push pace ~100-200 cal AI-days/side/day, the workspace's remaining 566 cal AI-days backlog (per latest inventory regen `2026-05-13 15:05 UTC`) clears in 1.5-3 calendar days at full capacity. We're 2 days from May-15 freeze gate, 10 days from May-23 cutover — there's room to pull post-cutover work into the pre-freeze window.

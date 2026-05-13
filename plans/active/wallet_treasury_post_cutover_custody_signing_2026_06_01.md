@@ -1,39 +1,47 @@
 ---
-title: "Wallet / Treasury — Phase 1+3 PULLED FORWARD pre-May-15; Phase 2 stays post-cutover (June 1+)"
+title: "Wallet / Treasury — Phase 1+3 PULLED FORWARD pre-May-15; Phase 2 DESCOPED (Copper/CEFFU is client-side)"
 created: 2026-05-13
 updated: 2026-05-13
 type: plan
-status: phase-1-3-pulled-forward + phase-2-pending-operator-credentials
-deadline: 2026-05-15 (Phase 1 + Phase 3) / 2026-06-15 (Phase 2)
-horizon: split — 2 days pre-freeze for Phase 1+3; 15-day post-cutover for Phase 2
+status: phase-1-3-pulled-forward + phase-2-descoped-client-side
+deadline: 2026-05-15 (Phase 1 + Phase 3 only)
+horizon: 2 days pre-freeze for Phase 1+3
 predecessor: wallet_treasury_client_flow_2026_05_10.md (deferred Q3 + Q5 from design decisions 2026-05-13)
 companion_to: master_to_live_defi_2026_05_23.md Group G (post-cutover operator UX + compliance)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 estimate_class: infra
-estimate_baseline_ai_days: 12
-estimate_calibrated_ai_days: 9.6
+estimate_baseline_ai_days: 6
+estimate_calibrated_ai_days: 4.8
 parent_epic: master_to_live_defi_2026_05_23.md
-priority: P1 (Phase 1+3 pulled-forward) / P2 (Phase 2 post-cutover)
+priority: P1 (Phase 1+3 pulled-forward)
 ---
 
-## 🟢 PULL-FORWARD UPDATE 2026-05-13 ~17:00 UTC (slot 1 main)
+## 🟢 PULL-FORWARD UPDATE 2026-05-13 ~17:00 UTC (slot 1 main) — CORRECTED ~18:00 UTC
 
 Per density-push capacity assessment, **Phase 1 (Real HMAC withdrawal approval chain) and Phase 3 (Audit log
-immutability + 7-year retention) PULLED FORWARD to pre-May-15 freeze window**. Phase 2 (Real Copper + CEFFU
-integrations) STAYS post-cutover due to hard external dependency (operator-provisioned Copper API key + CEFFU
-institutional account between May-23 and June-1).
+immutability + 7-year retention) PULLED FORWARD to pre-May-15 freeze window**.
 
-**Slot assignments**:
+**Phase 2 (Real Copper + CEFFU integrations) DESCOPED from this plan**. Per Harsh-side 1M-context audit slot
+ping 2026-05-13 14:50 UTC (PM@`e1e67656`): _"Copper / CEFFU → marked client-side, NOT our blocker per operator
+direction 2026-05-13. Master plan Group F Week 2 Treasury row + api_keys_wallets 3.A/3.B flipped."_
+
+The Copper / CEFFU integration is the **client's** responsibility (their account provisioning + key management),
+not ours. We don't build the integration; if/when the client provisions Copper or CEFFU, we wire the existing UTL
+custody adapter to their credentials — which is a config-only flip on `WalletProvisioningConfig.signing_surface`
+per `codex/04-architecture/custody-providers.md`. No standalone Phase 2 build required.
+
+**Slot assignments (corrected)**:
 - **Phase 1** → Ikenna slot 6 (Cloud-KMS withdrawal signing + deployment-api endpoint + 8 unit tests, ~3.2 cal days = hours)
-- **Phase 2** → Stays unassigned until operator credentials provisioned (June 1+)
+- **Phase 2** → DESCOPED (client-side, no Ikenna/Harsh work needed; config flip only when credentials arrive)
 - **Phase 3** → Ikenna slot 7 (GCS Object Versioning + 7-year retention lock + Cloud Audit Logs + 4 compliance tests, ~1.6 cal days = hours)
 
 Phase 1 + Phase 3 are fully independent — touch different code paths — parallel across slots 6+7. ~4.8 cal AI-days
 combined → ~hours calendar time at density-push pace (~100-200 cal AI-days/side/day).
 
-**Rationale**: workspace remaining backlog ≈ 566 cal AI-days; combined idle capacity ≈ 15 slots at ~5-7× compression;
-operator guidance "well over halfway to May-23 already" + "100-200 AI-days per day" + "more to the 15th deadline".
+**Rationale**: workspace remaining backlog ≈ 530 cal AI-days (corrected per Harsh audit slot TBD-backfill);
+combined idle capacity ≈ 15 slots at ~5-7× compression; operator guidance "well over halfway to May-23 already"
++ "100-200 AI-days per day" + "more to the 15th deadline".
 
 ---
 
