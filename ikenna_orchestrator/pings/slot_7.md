@@ -98,6 +98,74 @@ UAC: tab branch pushed; quickmerge deferred if foreign dirty files still present
 
 ---
 
+## [slot 7 → main] FULL DAY-2-3 SHIP CYCLE — 2026-05-13 (18 sub-agents)
+
+**Status**: ✅ ALL 4 WAVES COMPLETE — DAY-3 reassignment stack FULLY SHIPPED + Phase 6.3-6.9 + week's Treasury/DART scope
+
+### Wave 3 — DAY-3 reassignment stack (3 sub-agents)
+
+| Deliverable | Commits | Tests |
+|-------------|---------|-------|
+| Treasury rollup canonical (`/api/treasury/rollup` + `/treasury/nav`) | uac@66f1c1f + pbms@1b55239 + deployment-api@b1aa800/dc5c68a + pm@49e34abb | 13 unit (PBMS) + 9 integration (deployment-api) ✅ |
+| wallet_treasury Phase 6.A + 6.B consumer endpoints (`/api/clients/{id}/treasury` + `/api/clients/{id}/subscriptions`) | uac@66f1c1f + deployment-api@b1aa800 + pm@8c788ca5 | 15 unit (6 treasury + 6 subscription + 3 cross-endpoint recon) ✅ |
+| DART manual-trade UX refactor — Phase C+D (Sheet → routes + dart-client.ts + Playwright e2e + 2 codex updates + 2 plan flips) | unified-trading-system-ui@f55478ac/33e56c19/a3fcded2 + pm@6769096e/971278f7 | 8-case Playwright e2e ✅ |
+
+### Wave 4 — Treasury UI tab (1 sub-agent)
+
+| Deliverable | Commits | Tests |
+|-------------|---------|-------|
+| wallet_treasury Phase 6.C + 6.D — Treasury tab + 5 components + API client + Playwright | unified-trading-system-ui@51774a54/c0416e26/456459f0/3da36251 + pm@05881ad9 | 13-case Playwright e2e ✅ |
+
+### Total Wave 1+2+3+4 — 18 sub-agents shipped
+
+**Code commits across 12 repos**:
+- features-service: 8 modules wired (Phase 6.3-6.5)
+- ml-training-service, ml-inference-service, strategy-service, execution-service: Phase 6.6+6.7 emission policy
+- position-balance-monitor-service, risk-and-exposure-service: Phase 6.7 BLOCK_CRITICAL + Treasury rollup logic
+- instruments-service: Phase 6.8 PART B + Phase 6.9 QG-allow exemption + DEFI_VENUE_LAUNCH_DATES corrector
+- market-data-processing-service: Phase 6.9 QG-allow exemption on caller-gated boundary
+- deployment-api: Treasury rollup + per-client endpoints (4 new routes)
+- unified-trading-system-ui: DART refactor (5 components + dart-client + Playwright) + Treasury tab (5 components + treasury-client + Playwright)
+- unified-trading-library: top-level exports for EmissionDecision + publish_with_policy
+- unified-api-contracts: 8 AlertCodes + 4 CircuitBreakerIds + 2 error classes + Treasury schemas (7 dataclasses)
+- unified-trading-pm: 30+ plan flips + 8 codex sections + Phase 6.9 audit table + Day-2 + Day-3 scoreboards
+
+**Tests added across all waves**: ~75 unit tests + 21 integration tests + 21 Playwright cases
+
+**Plan checkboxes flipped** (writegate / wallet_treasury / DART / api_keys_wallets / simulation_scenarios / alerting / DR / master plan Group F+G):
+- writegate Phase 6.3-6.9 (10 sub-items)
+- wallet_treasury Phase 6.A/6.B/6.C/6.D (4)
+- api_keys_wallets Phase 3.D (1)
+- DART manual-trade UX (13)
+- simulation_scenarios Phase 1/2/6/7/8.B-I/9 (~13)
+- master Group G Item 23 + cross_cutting #4 BUILD (2)
+
+**Phase 6.9 ship-gate**: ✅ READY (full 9-service emission infra + QG STEP 5.71 GREEN + audit table shipped)
+
+### Pace report (Day-2 + Day-3 combined)
+
+- **18 parallel sub-agents** shipped in single session
+- ~75 unit + 21 integration + 21 Playwright = **117 new tests**
+- ~7-10× calibrated pace per workspace G-9 metric
+- Operator authorized continued density push; landed full stack within Day-2-3 calendar window
+
+### Remaining slot 7 stack (post-Wave-4)
+
+- `wallet_treasury` Phase 7.A demo client onboarding — needs operator (KYC stub + share-class subscribe)
+- `wallet_treasury` Phase 7.B Treasury wired — needs operator (Copper + CEFFU + DeFi PK ping setup)
+- `wallet_treasury` Phase 9.A cutover dry-run — needs VM launch + 24h paper-trade
+- `wallet_treasury` Phase 9.B/10 — agent-doable AFTER 9.A runs (evidence capture + master plan flips + banner removal)
+
+These are gated on operator/VM actions, not agent work. Slot 7 is **standing by** for next directive or operator-completion of 7.A/7.B/9.A.
+
+### Outstanding pre-existing QG blockers (workspace-wide, unchanged)
+
+- UAC `normalize_aster_ticker` was missing from `tickers.py` (RESOLVED upstream via uac@bb4a718)
+- STEP 5.67 MDPS `_maybe_write_vix_gap_placeholder` baseline (separate fix)
+- STEP 5.69 batch-live-recon + deployment-api inline `gs://` formatters (107 occurrences)
+
+---
+
 ## [slot 7 → main] DAY-2 EOD SCOREBOARD — 2026-05-13
 
 **Status**: ✅ MASSIVE DENSITY-PUSH SHIP — 14 parallel sub-agents shipped end-to-end, all on `live-defi-rollout`
