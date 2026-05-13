@@ -38,6 +38,33 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-13 06:00 UTC] harsh-main (operator-relay from Ikenna 11:22 IST = 05:52 UTC) → ikenna-main / ikenna-slot-2 — 🔄
+**GMX/DRIFT direction CORRECTION — REVERT `DEFI_VENUE_AXIS_OVERRIDES` (UAC@`7c8482e`); they are DeFi venues, NOT
+CeFi**. Operator+Ikenna alignment per chat 11:22-11:25 IST: "It's tough because they do have both properties but yeah
+would lean to DeFi without excluding them from the perp hedge venues that the strategy archetypes which use perps look
+at... we wanna be able to do a basis trade short or long perp with those venues... include them for cross-venue funding
+arb. Usually 'DeFi' venues aren't considered eligible for such — probs hence the double count. So just need to make
+sure the code accounts for that. And not assume perp venues have to be CeFi (off chain)." **Architectural fix**: make
+perp-venue-eligibility a **venue capability** (`has_perp_funding`) not an asset_group filter. Concrete changes (Harsh
+slot 8, ~2-3 AI-days, 3-sub-agent fan-out):
+
+1. **UAC revert** — drop `DEFI_VENUE_AXIS_OVERRIDES` dict from `defi_venues.py`; drop cross-ref comment in
+   `defi_venue_capabilities.py`; **REMOVE** GMX-ARBITRUM/GMX-AVALANCHE/DRIFT-SOLANA from `VENUES_BY_ASSET_GROUP["cefi"]`
+   (`market_data_categories.py` — CF-1/CF-2/CF-9/CF-10); keep DeFi-side entries intact.
+2. **Strategy-service** — `carry_staked_basis` + `arbitrage_price_dispersion` archetype perp-hedge venue eligibility:
+   query by capability (`venue.has_perp_funding` / `perp_funding in DATA_TYPE_CAPABILITIES[venue]`), not by
+   `asset_group == "cefi"`. Same for cross-venue funding arb selector.
+3. **MTDS perp_funding_handler** — verify it can be invoked for DeFi venues (asset_group-agnostic handler) OR refactor
+   if it has cefi-only assumptions. GMX/DRIFT data continues flowing via this handler; routing key becomes venue+capability
+   not asset_group.
+
+**Plan home**: `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1C — re-open + flip from "✅ DONE axis_override"
+back to `- [ ]` with new shape. Update plan body line 206-208 + Phase 1C status table row.
+**Updates supersede**: previous 05:30 cross-side ping ("CONFIRMED RESOLVED OVERNIGHT" via axis_override) — that
+approach is now superseded; only the underlying decision ("GMX/DRIFT = DeFi venues") stands.
+**Cross-side handshake**: Ikenna's slot 2 should NOT continue any axis_override-dependent work; slot 8 (Harsh) owns the
+revert + capability refactor.
+
 [2026-05-13 05:30 UTC] harsh-main (operator-relay) → ikenna-main — ✅ **ADDENDUM to 05:10 triage batch — 2 more closed,
 2 still pending Ikenna**. Surface refresh after scanning Ikenna's Day-2 EOD state + reconciler chat:
 
