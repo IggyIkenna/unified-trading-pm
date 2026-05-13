@@ -234,12 +234,13 @@ feature available to downstream strategy-service consumers.
 
 ### 4B: stETH collateral live verification script (PARALLEL with 4A)
 
-- [ ] [SCRIPT] P2. **Write `verify_lst_collateral_support.py`.** One-shot diagnostic (not a continuous job). Place under
-      `market-tick-data-service/scripts/verify_lst_collateral_support.py`. Queries: (1) Deribit
-      `/api/v2/public/get_currencies` — check `cross_collateral_enabled` for STETH; (2) Bybit
-      `/v5/account/collateral-info` — check STETH marginable status; (3) OKX portfolio margin collateral list endpoint;
-      (4) Binance multi-assets mode collateral list. Output: structured report (venue / token / confirmed / needs-auth /
-      API endpoint / timestamp). Execution owner: one-shot operator tab. No VM launcher needed.
+- [x] [SCRIPT] P2. **Write `verify_lst_collateral_support.py`.** (MTDS@176e72e) Shipped under
+      `market-tick-data-service/scripts/verify_lst_collateral_support.py`. Probes: (1) Deribit
+      `/api/v2/public/get_currencies` — `cross_collateral_enabled` for STETH; (2) Bybit
+      `/v5/asset/coin/query-info` — `collateralSwitch`/`isMarginCoin` for STETH+METH; (3) OKX
+      `/api/v5/public/currencies` — WSTETH listed (collateral discount-rate needs auth); (4) Binance
+      `/papi/v1/margin/allCrossMarginPairs`. Output: CONFIRMED/REJECTED/NEEDS_AUTH_TO_VERIFY/ERROR per token.
+      No auth required for discovery phase.
 
       ```yaml
       execution:
