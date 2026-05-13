@@ -1,5 +1,100 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] DAY-3 REASSIGNMENT v2 — full slot stacks for May-23 cutover — 2026-05-13 ~19:00 UTC
+
+**Operator direction**: _"anything within 23rd may cutover so that each slot has a decent list because we are moving at 200 ai days per day"_
+
+**Pace**: ~200 cal AI-days/side/day combined = each slot ships ~20-25 cal AI-days/day at sub-agent fan-out compression. So each slot needs a stacked queue, not a single assignment.
+
+### Status changes since DAY-3 v1 (per latest LDR + agent pings)
+
+- ✅ Slot 3 SHIPPED: defi_legacy_blank_reclassification (599,486 rows corrected via `7319d4ac` + UAC@ca62a19 + UTL@b0c38a21 + IS@fafaa0c). Now free for next pickup.
+- ✅ Slot 5 SHIPPED: TradFi Item 1 (UAC@37f6dfd + UAC@6110d05) + Item 2 Phase 1A (UAC@2ac74e2) + Phase 1B (UAC@dd407ae). Now free for Phase 3-5 cascade + new pickups.
+- ✅ Slot 4 CLAIMED: 3 sports classifier gap issues (per `ee21e9c2`); still has propagation chain Phase 3.1-3.N + Phase 4 + PART C + bucket provisioning handshake in queue.
+- ✅ MASSIVE wallet_treasury work shipped: Phase 4.A-D (`73af5895`) + Phase 5.A-5.I (`35ac17e2`) + Phase 8.A-D (`96fe459a`). Slot 6 (Phase 1) + Slot 7 (Phase 3) still doing the pulled-forward work.
+- ✅ Writegate Phase 6.9 [PM] P0 checkbox FLIPPED (`06688e7f`).
+- ✅ Sports Phase 3.5 SHIPPED + api_football pre-flight P1 FIXED (`54e8d253`).
+
+### Full slot stacks (priority-ordered; each slot rolls through their queue)
+
+#### Slot 1 main (me)
+1. ✅ This reassignment ping + coordination + cross-side acks
+2. **`governance_qg_automation_gaps_post_cutover_2026_05_12.md`** (~3 cal days, P1) — HARD RULE automation + QG ratchet authoring
+3. **Phase 6.9 workspace QG flip-sweep** (~2 cal days, serial after 6.6/6.7/6.8 PART B fully ships) — Gate 4 firing
+4. **Master plan refresh** + active-plan-inventory regenerator (EOD)
+5. **`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`** (~1.8 cal days, P2) — IF Harsh-side doesn't take
+
+#### Slot 2 (currently on defi_classifier_missing_catalog_crossref)
+1. **Verify scope remaining**: slot 3 shipped `EXPECTED_PRE_VENUE_LAUNCH` for 599k pre-launch rows. Remaining for slot 2 = **Wave 3 per-instrument catalog cross-ref** for the 789k cefi cleanup (post-launch rows that need `EXPECTED_INSTRUMENT_NOT_LISTED` based on `instruments-service` catalog `available_from`/`available_to`).
+2. **`wave2_polymarket_record_captured_from_counts_2026_05_09.md`** Polymarket subset (~2 cal days, P1) — Phases 1/2/4/5 shared foundation + Phase 3 Polymarket-only
+3. **`solana_defi_coverage_gaps_2026_05_13.md`** — successor plan B (Lido/Marinade/Jito LST capture) — 1 of 5 successor plans
+4. After: pick from Solana plan A/C/D/E or `code_freeze` Phase 2 entry tasks
+
+#### Slot 3 (just freed — 4 deliverables shipped in 1h)
+1. **`emerging_perp_venue_adapters_broken_2026_05_13.md`** P0 — own filed issue, manifest evidence loaded (ASTER 0%, HYPERLIQUID 68% failure across 5 venues)
+2. **`batch_live_symmetry`** Tab 1 — codex `cefi-batch-live.md` + `mode-axis-discipline.md` (Harsh audit slot deadline-eligible ask)
+3. **`solana_defi_coverage_gaps`** successor plan A (full audit context already loaded)
+4. **`code_freeze` Phase 2** entry tasks (post-freeze-gate cutover work)
+
+#### Slot 4 (claimed sports gaps; still has propagation chain queue)
+1. **3 sports classifier gap issues** (already claimed `ee21e9c2`):
+   - `sports_classifier_sfi_footystats_fixture_pin_2026_05_13` (P1)
+   - `sports_classifier_player_values_cadence_2026_05_13` (P1)
+   - `sports_classifier_weather_no_fixture_2026_05_13` (P1)
+2. **Propagation chain Phase 3.1-3.N** — spawn 6 sub-agents (delta_one + calendar + onchain + volatility + sports + commodity); Option A runtime comparison
+3. **Phase 4 ml-training + ml-inference** propagation (post-Phase 3)
+4. **PART C writegate 2.A** — MDPS 4-state output routing (parallel with Phase 3)
+5. **6-bucket provisioning** (3 envs × 2 clouds with ≥7yr retention) — slot 8 awaiting handoff
+6. **Sports/prediction phantom apply-flips on VMs** (slot 4 owns per work-split)
+
+#### Slot 5 (TradFi Item 1+2 Phase 1A+1B shipped — Phase 3-5 cascade pending)
+1. **TradFi Item 2 Phase 3** — one-shot manifest migration script `migrate_tradfi_expiry_schema.py` (~0.5 cal days)
+2. **TradFi Item 2 Phase 4** — Downstream consumer cascade (instruments-service futures factory → MTDS Databento bridge → mtds-tradfi-staleness → features-service → strategy-service `FuturesRollInstruction`) ~1-2 cal days
+3. **TradFi Item 2 Phase 5** — QG ratchet asserting all 5 required kwargs on `CanonicalFuturesContract(...)` ~0.5 cal days
+4. **`solana_defi_coverage_gaps`** successor plan C (own pickup if interested)
+5. After: `sports_retired_data_types_code_cleanup_2026_05_13.md` (new plan filed 18e971df)
+
+#### Slot 6 (wallet_treasury Phase 1 — Real HMAC withdrawal chain)
+1. **wallet_treasury_post_cutover Phase 1** — Cloud-KMS withdrawal signing + deployment-api `/api/clients/{id}/withdrawal/{id}/approve` + 8 unit tests (~3.2 cal days)
+2. **4 DeFi-specific alert codes** (`DEFI_AAVE_UTILIZATION_SPIKE` / `FUNDING_RATE_FLIP` / `FEATURE_STALE` / `WEETH_DEPEG`) — features-onchain producer-side emission wiring + alerting-service rule wiring (~1 cal day)
+3. **`basefc_validation_flip_2026_05_10.md`** — ClassVar enforcement × 75 BaseFeatureCalculators (~3 cal days, P1) — features-service maintainer scope
+4. After: any remaining wallet_treasury phases or features tail work
+
+#### Slot 7 (wallet_treasury Phase 3 — Audit log immutability)
+1. **wallet_treasury_post_cutover Phase 3** — GCS Object Versioning + 7-year retention lock on audit bucket + Cloud Audit Logs wire-in + 4 compliance tests (~1.6 cal days)
+2. **Treasury rollup endpoint `/api/treasury/rollup`** — deployment-api Phase 3.D ~1-2 cal days (collision with slot 8 cross_cutting #4 RESOLVED)
+3. **DART manual-trade UX refactor** (`dart_manual_trade_ux_refactor_2026_05_13`) — Sheet → dedicated `/dart/terminal/manual/*` route extraction (1,256-line panel) + unified `lib/api/dart-client.ts` + Playwright e2e (~2.4 cal days, P1)
+4. After: any remaining wallet_treasury phases
+
+#### Slot 8 (slot 3 took emerging_perp; needs new direction)
+1. **`AUDIT_pre_may_8_cleanup_2026_05_13`** (P1, from harsh audit slot orphan-plan assignment)
+2. **Wave 3 per-instrument catalog cross-ref for 789k cefi cleanup** (coordinate with slot 2; either slot can lead — partition by venue)
+3. **`solana_defi_coverage_gaps`** successor plan D
+4. After: any new findings or pickup from reserve queue
+
+#### Slot 9 (api_football_phase_3b_3c may be obsolete; verify first)
+1. **VERIFY**: `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` — sports Phase 3.5 just shipped (`54e8d253`); may be done. Read issue + check status before picking up.
+2. **If done**: pick `sports_retired_data_types_code_cleanup_2026_05_13.md` (new plan from `18e971df`)
+3. **OR**: `solana_defi_coverage_gaps` successor plan E
+4. After: any remaining sports / sports_master deferred items
+
+### Items NOT assigned (awaiting operator decision)
+
+- **`defi_recursive_borrow_archetypes` Solidity (`RecursiveLeverageReceiver.sol`) + execution-service orchestrator/tracer** — Harsh audit slot ask: 1 Solidity + 1 execution-service slot for May-23 push, OR descope. **OPERATOR DECISION PENDING.**
+- **`batch_live_symmetry` Tab 2/3** — Tab 1 is slot 3; Tab 2/3 still need second slot allocation (could come from Harsh-side or another Ikenna slot once their queue clears).
+
+### Cross-side notes
+
+- Harsh-side has ~9 idle slots per shift-end LEDGER `PM@6bf6e932` — symmetric capacity. If they want to absorb `codex_doc_currency` (item 4 in their pull-forward) or `batch_live_symmetry` Tab 2/3, all good.
+- 117 UTL test failures debt = Harsh's per their own ownership claim; not pulling.
+
+### What this looks like by end of cycle (May-15 target)
+
+If every slot rolls through 2-3 items in its stack (which is realistic at 200 cal AI-days/side/day), we ship ~30-40 distinct items across both sides → wipes out the 542 cal AI-day backlog and pulls additional reserve work forward. **No descope. Perfect cutover.**
+
+---
+
+
 ## [slot 1 main] CORRECTIONS to DAY-3 reassignment — 2026-05-13 ~18:00 UTC
 
 **Operator caught mis-marks based on agent ping responses**. Fixes:
