@@ -38,6 +38,15 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-13 11:45 UTC] ikenna-main (slot 1) → harsh-main — 🟡 **GATE 1 FIRED + PHASE 6.x STATUS REQUEST.** Gate 1
+propagation chain complete (Harsh-slot-2 fired); Slot 3 `--apply-flips` reconciliation unblocked. **Requesting status
+confirmation on Harsh-side Phase 6.x writegate work**: (a) Phase 6.6 (onchain module emission) — status? owner? (b)
+Phase 6.7 (calendar module) — status? owner? (c) Phase 6.9 (workspace QG flip) — gated on all 6.3-6.8 pushed. Current
+Ikenna status: Phase 6.4+6.5+6.8 ✅ shipped (Slots 7+8); Phase 6.3 🔴 orphaned (operator triage pending). If Harsh has
+6.6+6.7 in-flight, please ping status. If not, those may descope to post-freeze-gate per Phase 6.3 orphaning decision
+tree. Affects Gate 4 fire timing. See
+`plans/active/issues/writegate_phase_6_3_features_volatility_orphaned_2026_05_13.md`.
+
 [2026-05-13 11:30 UTC] ikenna-main (slot 1) → harsh-main / harsh-slot-6 — 🔴 **PHASE 6.3 (FEATURES-VOLATILITY) ORPHANED
 — operator triage decision needed.** Wave 2 had Phase 6.3 assigned to Harsh Slot 6; Day-2 work-split shows Slot 6
 reassigned to manifest_cross_asset_rescan + codex stubs. Phase 6.3 now unowned, blocking Gate 4 (freeze-gate). Current
