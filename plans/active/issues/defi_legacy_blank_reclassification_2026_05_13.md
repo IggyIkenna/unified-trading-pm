@@ -140,3 +140,84 @@ cause data loss; they incorrectly classified the reason from "EXPECTED_INSTRUMEN
 5. QG, push, codex updates.
 
 Estimated time: 1-2 hours focused work.
+
+---
+
+## RESOLVED 2026-05-13 ~16:25 BST — full fix shipped
+
+### Commits
+
+- **UAC@`ca62a19`** — `feat(registry): add DEFI_VENUE_LAUNCH_DATES dict (40 protocol-chain combos)`. Sister to
+  `CEFI_VENUE_LAUNCH_DATES` + `PREDICTION_VENUE_LAUNCH_DATES`. Coverage: Aave V3 (9 chains), Compound V3 (6 chains),
+  Uniswap V2/V3/V4, SushiSwap V3, Curve, Balancer, Lido, Frax, Rocket Pool, Ether.fi, Ethena, Yearn V3, Morpho
+  Vaults, Maker, GMX (Arbitrum + Avalanche), plus Solana DeFi (Kamino, Jito, Marinade, Drift, Raydium, Orca).
+- **UTL@`b0c38a21`** — `feat(legacy-classifier): _classify_defi now checks DEFI_VENUE_LAUNCH_DATES`. Mirror of
+  `_classify_cefi`. Priority order: (1) pre-protocol-launch → `EXPECTED_PRE_VENUE_LAUNCH`, (2) pre-chain-genesis →
+  `EXPECTED_PRE_GENESIS_CHAIN`, (3) default → `SOURCE_RETURNED_ZERO`.
+- **instruments-service@`fafaa0c`** — corrector script
+  `scripts/reconcile_correct_legacy_blank_misflips_2026_05_13.py`. Reads
+  `attempted_failed/LegacyBlankErrorReasonError` rows, re-runs `classify_blank_reason_row`, flips back to
+  `empty_confirmed/EXPECTED_*` where applicable. Idempotent on already-corrected rows.
+- **instruments-service@`f62e3e2`** — `fix(reconciler): case-insensitive data_type match for sports`.
+  Pre-fix: lowercase `"fixtures"` comparison matched 0 of 2.67M sports rows. Post-fix: matches the 63,857
+  UPPERCASE `FIXTURES` rows the sports manifest actually writes.
+
+### Corrector run outcomes (2026-05-13 ~16:21 BST)
+
+**Defi corrector** (per-VM shard: `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot3-corrector.parquet`):
+
+- 605,070 candidates scanned (includes my 604,951 from earlier + 119 from prior runs)
+- **599,486 rows corrected**: `attempted_failed/LegacyBlankErrorReasonError` → `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`
+- 5,584 correctly stay `attempted_failed/LegacyBlankErrorReasonError` (post-launch dates — genuinely need
+  actual re-fetch, not classification fix)
+- Elapsed: 14.1s
+
+**Cefi corrector**:
+
+- 789,201 candidates scanned (~786k pre-dated my session — likely from Harsh slot 4 VM runs + earlier
+  reconciler runs by other slots)
+- **0 corrections** — all 789k candidates are at post-launch dates per `CEFI_VENUE_LAUNCH_DATES`. They genuinely
+  need real fetch attempts (MTDS re-runs), not classification fixes.
+
+### Defi capture-state breakdown post-correction
+
+Total defi manifest rows: 1,606,190.
+
+| Status | Count | % |
+|---|---|---|
+| empty_confirmed | 688,220 | 42.8% |
+| attempted_failed | 606,368 | 37.8% |
+| **captured** | **311,602** | **19.4%** |
+
+Captured venues (top): UNISWAPV3 (187,769), MORPHO (45,936), AAVEV3 (29,782), UNISWAPV2 (22,168),
+UNISWAPV4 (15,093), CURVE (2,905), ETHENA (1,537), ETHERFI (1,225), MAKER (1,207), FRAX (933). Solana captures
+thin (KAMINO 32, RAYDIUM 31, ORCA 31, MARINADE 30, SOLEND 29, MARGINFI 16). Captured date range:
+2022-11-01 → 2026-05-08.
+
+### Sample-verification of corrections (5/5 ✅ no parquet, as expected)
+
+- 2019-07-25 CURVE-ETHEREUM (Curve launched 2020-01-19)
+- 2021-06-30 DRIFT-SOLANA (Drift launched 2021-11-08)
+- 2020-01-26 UNISWAPV2-ETHEREUM (V2 launched 2020-05-05)
+- 2023-08-01 ETHENA-ETHEREUM (Ethena launched 2024-02-20)
+- 2022-01-29 AAVEV3-POLYGON (V3 launched 2022-03-16)
+
+### Open follow-up — cefi 789k re-fetch needed
+
+The cefi 789,201 attempted_failed/LegacyBlankErrorReasonError rows are NOT my problem to flip (they're at
+post-launch dates per current SSOT). They need either:
+
+1. **MTDS re-fetch runs** to attempt actual fetch + classify properly via `classify_venue_error()`, OR
+2. **New audit reconciler** that uses per-instrument lifecycle (`available_from` / `available_to` from
+   instruments-service catalog) to detect rows that should be `EXPECTED_INSTRUMENT_NOT_LISTED` or
+   `EXPECTED_INSTRUMENT_DELISTED` — Wave 3 of writegate Phase 3.D.5.
+
+Slot 3 will NOT fix these in this session — out of scope, requires either VM time (MTDS) or new tool (audit
+reconciler). Flagged for operator triage. The functional impact is minimal (downstream readers treat all
+attempted_failed as "write NaN, don't forward-fill"); cosmetic issue in data-status panel only.
+
+### Cefi venue-launch-date GAPS (potential SSOT addition)
+
+Sample cefi attempted_failed rows might benefit from `CEFI_VENUE_LAUNCH_DATES` additions (existing dict covers
+14 venues; not exhaustive). Manual audit of cefi candidates' venues would identify which venues are missing
+from `CEFI_VENUE_LAUNCH_DATES`. Out of scope for this session.

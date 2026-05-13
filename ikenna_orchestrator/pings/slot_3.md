@@ -167,3 +167,37 @@ Pass 1 (phantom reconciler --unphantom locally) FAILED with exit 144 (OOM/networ
 **Cross-side coord with slot 4 (Harsh)**: Cefi/defi/tradfi phantom apply-flips done on VMs (7,497 rows). Sports + prediction phantom VMs still needed.
 
 **Estimated time to ship corrector**: 1-2 hours (research + UAC dict + corrector script + run + verify + push).
+
+---
+
+[2026-05-13 ~16:25 BST] Slot 3 → Slot 1 — **✅ FULL SMART FIX SHIPPED** (per operator direction "do this please dont defer")
+
+All 4 deliverables landed in ~1 hour focused work:
+
+1. **UAC@`ca62a19`** — `DEFI_VENUE_LAUNCH_DATES` dict (40 protocol-chain combos: Aave V3 × 9 chains, Compound V3 × 6, Uniswap V2/V3/V4, SushiSwap V3, Curve, Balancer, Lido, Frax, Rocket Pool, Ether.fi, Ethena, Yearn V3, Morpho Vaults, Maker, GMX × 2, Kamino/Jito/Marinade/Drift/Raydium/Orca on Solana).
+2. **UTL@`b0c38a21`** — `_classify_defi` now checks venue launch (mirror of `_classify_cefi`). Priority: pre-protocol-launch → `EXPECTED_PRE_VENUE_LAUNCH`; pre-chain-genesis → `EXPECTED_PRE_GENESIS_CHAIN`; default → `SOURCE_RETURNED_ZERO`.
+3. **instruments-service@`fafaa0c`** — corrector script `scripts/reconcile_correct_legacy_blank_misflips_2026_05_13.py` (one-shot tool, idempotent on already-corrected rows).
+4. **instruments-service@`f62e3e2`** — sports case-fix (already documented above).
+
+**Corrector run outcomes**:
+- **Defi**: 605,070 candidates → **599,486 corrected** to `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` (5,584 correctly stay attempted_failed — post-launch dates). Per-VM shard: `gs://market-data-tick-defi.../_index/per_vm/ikenna-slot3-corrector.parquet`. Elapsed 14s.
+- **Cefi**: 789,201 candidates scanned, **0 corrections** — all at post-launch dates per existing `CEFI_VENUE_LAUNCH_DATES`. ~786k of the 789k pre-date my session (from prior Harsh slot 4 VM runs). These need re-fetch attempts, not classification fixes.
+
+**Sample-verified corrections** (5/5 ✅ no parquet on disk, as expected — proves the fix is directionally correct, not just shifting labels).
+
+**Defi capture-state post-correction**:
+| Status | Count | % |
+|---|---|---|
+| empty_confirmed | 688,220 | 42.8% |
+| attempted_failed | 606,368 | 37.8% |
+| **captured** | **311,602** | **19.4%** |
+
+We DO have 311k captured defi rows (UNISWAPV3 187k, MORPHO 45k, AAVEV3 29k, etc.). Pre-correction, the 599k were mis-labelled as "attempted_failed" (false-positive failures); now correctly labelled as pre-protocol-launch.
+
+**Issue doc** `plans/active/issues/defi_legacy_blank_reclassification_2026_05_13.md` updated with full RESOLVED section + commit refs + verification evidence + cefi 789k follow-up flagged for operator triage.
+
+**Cross-side ping** to harsh-slot-4 already posted (sports case-fix evidence + defi misclass alert).
+
+**Wake-up timer set for 16:44 BST** (15 min) — will pull LDR + check slot 1 pings for any new work after this session. Operator wants work continuing today even if market tomorrow/Friday.
+
+**Status**: PART B core scope (legacy blank reconciliation) complete. Sports/prediction phantom apply-flips on VMs remain pending (slot 4 owns per work-split). All slot-3-owned work in this surface is shipped.
