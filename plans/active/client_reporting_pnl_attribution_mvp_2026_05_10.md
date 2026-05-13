@@ -218,8 +218,12 @@ Run revision.
 
 ## Phase 6 — Demo client seed (Day 10, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **6.A Seed config.** UAC registry: 1 demo client, both cutover archetypes subscribed, demo share
-      class.
+- [x] [AGENT] P0. **6.A Seed config.** UAC registry: 1 demo client, both cutover archetypes subscribed, demo share
+      class. (UAC registry seeded Phase 1.D; mock_performance_data.py "demo-internal" entry added
+      client-reporting-api@c0a4ff3 2026-05-13)
+      **DEFERRED finding**: deployment-ui Phase 5.D hardcodes `clientId="demo"` but UAC canonical is
+      `"demo-internal"`. UI has an override input field — functional, but should be aligned. Track as
+      deployment-ui P2 fix in Phase 9 or follow-up plan.
 - [ ] [AGENT] P0. **6.B Position seeding.** position-balance bootstraps demo client's positions from existing
       paper-trade state.
 
@@ -227,10 +231,10 @@ Run revision.
 
 ## Phase 7 — Codex SSOTs (Day 11, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **7.A NEW `codex/04-architecture/client-reporting-architecture.md`.** Per-client lineage flow,
+- [x] [AGENT] P0. **7.A NEW `codex/04-architecture/client-reporting-architecture.md`.** Per-client lineage flow,
       attribution rollup view, parquet shape (per (client, archetype, day)). Cross-links to
       `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` for the underlying factor × layer model (do
-      NOT duplicate the factor closed set here; reference it).
+      NOT duplicate the factor closed set here; reference it). (PM@2ec3296b 2026-05-13)
 - [x] **7.B UPDATE existing `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`** — DONE 2026-05-10
       (this plan-creation session). Extended the existing canonical SSOT with: Hard Rule #4 (factor × layer dual axis,
       enums stay decoupled), § Layer Decomposition profile table per factor, § Decomposition Invariants (5 invariants
@@ -240,9 +244,13 @@ Run revision.
       16-factor closed set). **Did NOT create the previously-planned NEW `pnl-attribution-decomposition.md` doc** —
       would have duplicated the canonical SSOT and created codex drift; per codex governance "extend existing doc, don't
       fork."
-- [ ] [AGENT] P0. **7.C UPDATE `backtest-groups.md`** — attribution emit applies to backtest groups.
-- [ ] [AGENT] P0. **7.D UPDATE `strategy-summary.md`** — cross-link to `pnl-attribution.md § 4` (factor × layer dual
+- [x] [AGENT] P0. **7.C UPDATE `backtest-groups.md`** — attribution emit applies to backtest groups.
+      (PM@2ec3296b 2026-05-13 — added Group C fills → UTL attribution joiner cross-ref + client-reporting-architecture
+      pointer)
+- [x] [AGENT] P0. **7.D UPDATE `strategy-summary.md`** — cross-link to `pnl-attribution.md § 4` (factor × layer dual
       axis) for strategy-alpha vs execution-alpha framing; do NOT inline the explanation (lives in pnl-attribution.md).
+      (PM@2ec3296b 2026-05-13 — extended "Batch = live" item with pnl-attribution.md § 7 cross-link + decomposition
+      invariant context)
 
 **Full-execution criterion**: 1 NEW (client-reporting-architecture.md) + 3 UPDATE (pnl-attribution.md DONE, plus
 backtest-groups + strategy-summary); cross-references resolve. **No new codex doc forking the pnl-attribution SSOT.**
