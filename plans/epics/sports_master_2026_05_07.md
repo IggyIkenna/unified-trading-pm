@@ -558,12 +558,12 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       (instruments-service SFI progressive-stats writer → populate `fixture.match_end_time`) is NOT yet wired.
       **DEFERRED**: wire `detect_match_end_time()` result into instruments-service SFI progressive-stats write path so
       the `match_end_time` field is populated on the written `CanonicalFixture` object.
-- [ ] [SCRIPT] P0. **Step 2**: SFI progressive freeze detection. Add `ft_timer` (raw `timer_seconds` from the
+- [x] [SCRIPT] P0. **Step 2**: SFI progressive freeze detection. Add `ft_timer` (raw `timer_seconds` from the
       snapshot) + `match_end_time` (detected freeze point — the last snapshot where `timer_seconds` advances) columns to
       UAC `SFI_PROGRESSIVE_STATS` contract. Detect freeze at write-time in
       `instruments-service/instruments_service/sfi/normalize.py` (or wherever the SFI snapshot writer lives). [AUDIT
-      2026-05-07: FRESH — actionable] **PARTIAL 2026-05-12 slot 5**: `detect_match_end_time()` ships;
-      SFI_PROGRESSIVE_STATS contract columns NOT yet added.
+      2026-05-07: FRESH — actionable] **COMPLETED 2026-05-13**: UAC@1848647 — added ft_timer (int64) + match_end_time
+      (datetime64[ns, UTC]) to SFI_PROGRESSIVE_STATS schema contract.
 - [ ] [SCRIPT] P0. **Step 3**: UTL helper
       `unified_trading_library.fixtures.resolve_match_end_time(fixture_id) -> tuple[datetime, str]` walking the cascade
       in priority order: api_football FIXTURES.match_end_time → SFI freeze → footystats/understat post-match timestamp →
@@ -923,7 +923,7 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 | B.1 Phase 4: manifest flip + re-fetch VM            | `[ ]` NOT RUN           | Operational — needs VM launch + manifest migration; no code gap                            |
 | C.4 Transfermarkt per-player flatten                | `[ ]` open              | No blocker — new normalizer + contract + migration                                         |
 | C.6 Step 1: AF FIXTURES write-path `match_end_time` | `[ ]` open              | UAC `CanonicalFixture.match_end_time` exists; need AF write-path wiring in IS orchestrator |
-| C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns  | `[ ]` open              | Add `ft_timer` + `match_end_time` to schema contract                                       |
+| C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns  | `[x]` shipped           | UAC@1848647 — added ft_timer + match_end_time columns; next: Step 3 (UTL resolver)         |
 | C.6 Step 3: UTL `resolve_match_end_time()` cascade  | `[ ]` open              | New UTL helper — blocks Step 4 + assert_available_at_present wiring                        |
 | C.6 assert_available_at_present wiring              | `[ ]` blocked           | Blocked on Step 3 UTL helper                                                               |
 | C.7 Follow-up #1: STANDINGS flatten                 | `[ ]` open              | Same B.1 pattern; isolated AF endpoint                                                     |
@@ -937,7 +937,7 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 
 1. C.7 Follow-up #3 MATCHES field mapping (quick win — FootyStats normalizer only, no migration needed)
 2. C.4 Transfermarkt per-player flatten (self-contained UAC + IS change)
-3. C.6 Step 2 SFI_PROGRESSIVE_STATS contract columns (UAC-only schema addition)
+3. C.6 Step 3 UTL helper (requires resolve_match_end_time() cascade implementation)
 
 ## Cross-references
 
