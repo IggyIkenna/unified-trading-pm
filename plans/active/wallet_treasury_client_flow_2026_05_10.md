@@ -309,12 +309,14 @@ emitted daily including HWM section.
 
 ## Phase 8 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **8.A NEW `codex/04-architecture/client-lifecycle-state-machine.md`.** Onboarding states +
-      transitions.
-- [ ] [AGENT] P0. **8.B NEW `codex/04-architecture/treasury-custody-flow.md`.** Custody-source taxonomy, pre-trade ping,
-      sub-account allocation.
-- [ ] [AGENT] P0. **8.C UPDATE `interface-credential-convention.md`** — custody endpoint credentials via registry.
-- [ ] [AGENT] P0. **8.D UPDATE `capital-efficiency-patterns.md`** — per-client allocation cross-link.
+- [x] [AGENT] P0. **8.A NEW `codex/04-architecture/client-lifecycle-state-machine.md`.** Onboarding states +
+      transitions. (pm@d99ce232 — 7-state machine, Mermaid diagram, evidence table, idempotency contract, UAC/UTL cross-refs)
+- [x] [AGENT] P0. **8.B NEW `codex/04-architecture/treasury-custody-flow.md`.** Custody-source taxonomy, pre-trade ping,
+      sub-account allocation. (pm@d99ce232 — 6-source taxonomy, ping sequence diagram, withdrawal state machine, reconciliation invariant)
+- [x] [AGENT] P0. **8.C UPDATE `interface-credential-convention.md`** — custody endpoint credentials via registry.
+      (pm@d99ce232 — "Custody endpoint credentials" section added; CopperEndpoint/CEFFUEndpoint/DefiWalletKeyMaterial cross-refs)
+- [x] [AGENT] P0. **8.D UPDATE `capital-efficiency-patterns.md`** — per-client allocation cross-link.
+      (pm@d99ce232 — "Per-client capital allocation" section added; AllocationEngine, sum ≤ 100%, SUSPENDED_DRAWDOWN)
 
 **Full-execution criterion**: 2 NEW + 2 UPDATE; cross-references resolve.
 
