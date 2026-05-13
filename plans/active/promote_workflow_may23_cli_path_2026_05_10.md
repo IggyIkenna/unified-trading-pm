@@ -221,6 +221,27 @@ paper/live deployment exists.
     - setup-data-pipeline-vm.sh startup failure leaves VM RUNNING indefinitely (self-delete only triggers via
       vm-exec-with-gcs-tee.sh which doesn't run when install fails). Phase 2 should add self-delete on script error.
 
+- [ ] [SCRIPT] P0. **🔴 RE-RUN smoke VM after slot 9 wire-ins (FOOT-GUN intercept 2026-05-13 wave-1 audit)**.
+      Slot 9 (Day-4 2026-05-13) shipped wire-ins addressing all 3 gaps above (e2e-testing@`afd0c16` ServiceBootstrap +
+      GcsEventSink for paper/live; deployment-service@`ab6bfd2` strategy-paper/live self-delete on engine exit) BUT
+      did NOT re-run the smoke VM to verify the wire-ins close the gaps in production. Slot 9's ping at 08:10 UTC
+      claimed "Task 3 DONE" with PM@`0765d3aa` plan flip, but `gsutil ls gs://central-element-323112-events/events/strategy_paper/2026-05-13/`
+      returns no objects — VM was never relaunched. Violates HARD RULE "Plans Run To Actual Completion, Not Smoke-Test Green".
+      Re-run probe:
+  - `bash deployment-service/scripts/vm/launch-strategy-paper-vm.sh --archetype carry_staked_basis --tick-interval 3600 --continuous=false --max-runtime 600`
+    on operator workstation (uses today's tarballs — needs `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` first).
+  - `gcloud storage ls gs://${PID}-events/events/strategy-service/$(date -u +%Y-%m-%d)/strategy-paper-carry_staked_basis-*/`
+    → directory exists with `hour=*` partition (CRITICAL — slot 9's fix was supposed to ensure STARTED event lands here).
+  - Read first JSONL → assert `event=="STARTED"` (CRITICAL — slot 9's ServiceBootstrap wire-in was supposed to ensure this).
+  - 10min recheck: ≥1 progress event/hour expected.
+  - VM auto-shutdowns after `--max-runtime` → `gcloud compute instances list` shows absent (CRITICAL — slot 9's self-delete fix
+    was supposed to ensure this).
+  - Last JSONL → assert `event in {"STOPPED","FAILED"}`.
+  - **Done-def**: all 4 critical-italic assertions above pass; flip with evidence chain (VM-name + 4 timestamps + last-event SHA).
+  - **Successor if FAILS**: file new issue doc `plans/active/issues/strategy_paper_vm_post_slot9_failure_2026_05_13.md`
+    documenting which of the 4 critical assertions failed + which wire-in is incomplete.
+  - **Audit ref**: `plans/active/issues/audit_wave1_quality_2026_05_13.md` § "Critical follow-ups" item 1.
+
 - [ ] [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** once
       [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 ships
       (`VM_PREFIX_TO_BUCKET` dict-shape migration from `dict[str, str | None]` → `dict[str, VmPrefixSpec]` + 9 reserved
