@@ -98,6 +98,89 @@ Plan ref: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0i tail (check
 
 ---
 
+## [slot 4 → main] 2026-05-13 — Retired-data-type cleanup EXECUTED — 88,779 rows flipped, GCS deletion in progress
+
+**Timestamp**: 2026-05-13 16:05 UTC **Status**: ✅ MIGRATION DONE + 🔄 GCS DELETION RUNNING
+
+**Shipped this iteration**:
+
+1. **Migration script** (instruments-service@50346ed): `migrate_sports_retired_types_2026_05_13.py`
+   — generalizes `migrate_leagues_kill_2026_05_07.py` for TRANSFERMARKT_LEAGUES + SFI_LEAGUES + SFI_STANDINGS.
+   Same pattern: --apply requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME`; CSV audit; idempotent.
+
+2. **Tarball refresh** (2026-05-13 14:59 UTC): instruments-service tarball pushed to GCS with new script.
+
+3. **Migration VM** `migrate-sports-retired-20260513-160205` (asia-northeast1-c) ran successfully:
+   - Manifest rows: 2,675,696 (total)
+   - **88,779 rows flipped** to `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE`
+     (75,960 TRANSFERMARKT_LEAGUES + 12,777 SFI_LEAGUES + ~42 SFI_STANDINGS, with idempotent skip
+     accounting for some pre-flipped retired-type rows)
+   - CSV audit on VM at `/tmp/migrate-sports-retired-20260513T150436Z.csv`
+   - VM auto-shutdown ✅
+
+4. **GCS parquet deletion** (in progress in background):
+   - `entity=transfermarkt_leagues/` deletion running
+   - `entity=sfi_leagues/` deletion running
+   - **`entity=standings/` SKIPPED** — provenance ambiguous (SFI vs api_football). Filed issue doc
+     `plans/active/issues/standings_entity_gcs_ambiguity_2026_05_13.md` (P2, owner = sports data
+     plane). Only 42 SFI_STANDINGS rows; manifest already honest; risk of erroneous delete > value.
+
+**Next**: After GCS deletion completes, run phantom reconciler on remaining ~10,883 REAL sports
+phantoms (INJURIES + others — api_football-sourced, not retired data types).
+
+---
+
+## [slot 4 → main] 2026-05-13 — BIG FINDING + scope expansion: retired-data-type cleanup
+
+**Timestamp**: 2026-05-13 **Status**: 🔴 BIG FINDING + 🟢 WORK ASSIGNED TO SLOT 4
+
+**What I found**: Sports phantom audit (Round 3 post-tarball-refresh) shows 99,620 phantoms but **88,737 are LEGACY
+rows from RETIRED data types**:
+- TRANSFERMARKT_LEAGUES: 75,960 (retired 2026-05-05 → UAC `TRANSFERMARKT_IDS`)
+- SFI_LEAGUES: 12,777 (retired 2026-05-05 → UAC `SOCCER_FOOTBALL_INFO_IDS`)
+- Only ~10,883 are REAL phantoms (INJURIES + others)
+
+**Why this matters**: Running `--unphantom` on sports would flip 88,737 retired-data-type rows to `attempted_failed`,
+the WRONG state. Per `manifest_migration_master_2026_05_07.md` § C.1, they should be flipped to
+`empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` (UAC reason already shipped at `uac@97dccc3`).
+
+**Existing migration script** (`instruments-service/scripts/migrate_leagues_kill_2026_05_07.py`) handles ONLY the
+api_football `LEAGUES` type — needs generalization to also cover TRANSFERMARKT_LEAGUES + SFI_LEAGUES + SFI_STANDINGS.
+
+**Work plan (slot 4, 2026-05-13)**:
+1. Generalize migration script to support multiple retired data_types
+2. Launch same-region GCE VM with `--apply` against sports manifest
+3. After verification, delete daily parquets via `gcloud storage rm -r`
+4. THEN run phantom reconciler on remaining ~10,883 real phantoms
+
+**Cross-side tech debt (deferred to separate plan)**:
+- instruments-service orchestrator still references retired types in 23+ places
+- deployment-api data_status_service.py still references retired types in 6+ places
+
+---
+
+## [slot 4 → main] Phase 5B Pass 2 in progress — 2026-05-13 continuation session
+
+**Timestamp**: 2026-05-13 11:52 UTC **Status**: 🔄 Phase 5B Pass 2 EXECUTING (MTDS reconciliation)
+
+**What shipped 2026-05-13 slot 4 session**:
+- Phase 3.5 sports design direction: **Option A confirmed** (operator). League-level propagation from MDPS upstream.
+  Implementation deferred to next session (design direction now clear).
+- Phase 5B Pass 1: Attempted instruments-service phantom reconciliation dry-run. CLI flag corrected (--unphantom not --apply-flips).
+  Results pending GCS manifest query completion.
+- Phase 5B Pass 2: QUEUED NOW — MTDS data_types reconciliation (3 scripts × 5 AGs in parallel). ETA ~10 min.
+  Scripts: reconcile_expected_absence_reasons (--apply-flips) + reconcile_legacy_blank_to_typed_reason (--apply-flips).
+
+**What's next**:
+- ✅ Phase 5B Pass 2 complete (MTDS)
+- 🟡 Phase 5B Pass 3 (MDPS data_types) — after Pass 2 verifies
+- 🟡 Phase 5B Pass 4 (features + ML data_types) — after Pass 3
+- 🟡 Phase 6 validation gate — phantom count check, data-status panel, MTDS fresh dry-run
+
+**Gate 1 status**: ✅ FIRED 2026-05-13 (Phase 3, 4, PART C all shipped by Harsh slot 2)
+
+---
+
 ## [slot 4 → main] SESSION CLOSE — 2026-05-12 — full state handover
 
 **Timestamp**: 2026-05-12 **Status**: 🟡 SESSION CLOSED — Phase 3.1–3.N unblocked, ready to continue
