@@ -98,16 +98,26 @@ Failed on startup: `ImportError: cannot import name 'EmissionDecision' from 'uni
 `InvalidCompletenessFractionError`, `publish_with_manifest_lookup` to UTL `__init__.py` `__all__`. Tarballs refreshed
 (UTL + execution-service both rebuilt `2026-05-13T17:39–17:40Z`).
 
-**VM re-run 2 (IN PROGRESS)**: `aave-lending-rate-val-20260513-184158`, corr_id `044C83D0-DE9D-47BC-8595-E68B30445D17`.
+**VM re-run 2 (FAILED)**: `aave-lending-rate-val-20260513-184158`, corr_id `044C83D0-DE9D-47BC-8595-E68B30445D17`.
+Failed on startup: `AttributeError: type object 'KillSwitchId' has no attribute 'KILL_PER_TREASURY_COPPER'` — UTL
+`kill_switch/bus.py` references treasury kill-switch IDs added by remote LDR commits but the UAC tab/6 was 42 commits
+behind, so the tarball had a stale `KillSwitchId` enum without those members.
+
+**Tertiary fix**: `unified-api-contracts@c3f3562` — rebased UAC tab/6 onto `origin/live-defi-rollout` (42 new commits
+including `feat(uac): wallet_treasury Phase 5 — kill-switch IDs` which adds `KILL_PER_TREASURY_COPPER`). Merged conflict
+in `service_emission_policy.py` keeping both remote calendar/commodity entries + local `features-service` rename. UAC
+tarball rebuilt `2026-05-13T17:51:10Z`.
+
+**VM re-run 3 (IN PROGRESS)**: `aave-lending-rate-val-20260513-185210`, corr_id `DC2E6F61-ACD0-453D-AC3D-7A88FEDADD33`.
 Results at
-`gs://central-element-323112-defi-validation/results/lending/2026-05-13/044C83D0-DE9D-47BC-8595-E68B30445D17/results.json`.
+`gs://central-element-323112-defi-validation/results/lending/2026-05-13/DC2E6F61-ACD0-453D-AC3D-7A88FEDADD33/results.json`.
 
 ## Execution metadata
 
 ```yaml
 execution:
-  owner: slot 6 (fix shipped 2026-05-13; VM re-run 2 in progress)
+  owner: slot 6 (fix shipped 2026-05-13; VM re-run 3 in progress)
   cadence: one-shot; recurring once pass-rate verified via amm-golden-* recurring VM
   verifier: pass-rate ≥ 90% within 10 bps on aave-lending-rate-validation VM results.json
-  last_executed: 2026-05-13 (fix run 2: 044C83D0-DE9D-47BC-8595-E68B30445D17 — pending)
+  last_executed: 2026-05-13 (fix run 3: DC2E6F61-ACD0-453D-AC3D-7A88FEDADD33 — pending)
 ```
