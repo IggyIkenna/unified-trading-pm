@@ -1,0 +1,167 @@
+---
+title: "Solana perp DEX adapters — DRIFT debug + MANGO V4 + ZETA + FLASH + DRIFT funding backfill"
+type: plan
+status: active
+created: 2026-05-13
+deadline: 2026-05-23
+priority: P0
+companion_to: plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md
+spawned_from: "plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md (Successor plan B)"
+locked_by: live-defi-rollout
+locked_since: 2026-05-13
+estimate_class: brand-new
+estimate_baseline_ai_days: 4.0
+estimate_calibrated_ai_days: 4.0
+effective_concurrent_slots: 2-4
+---
+
+> **Scope: Successor Plan B from `solana_defi_coverage_gaps_2026_05_13.md`.** Plan A (LST + native staking) and Plan C
+> (AMM coverage) are separate concurrent plans. This plan covers only Solana perp DEX adapters.
+
+## Why this plan
+
+`arbitrage_price_dispersion` archetype needs Solana perp DEX hedge legs. Currently:
+
+- **DRIFT-SOLANA**: adapter code exists, factory registered, MTDS referenced → 0% captured (28,340 rows at 0% capture).
+- **MANGO-SOLANA**: no adapter, no UAC registry, not in manifest.
+- **ZETA-SOLANA**: no adapter, no UAC registry, not in manifest.
+- **FLASH-SOLANA**: MTDS references it, no instruments-service adapter, not in manifest.
+
+Root cause (Phase 0 audit): DRIFT-SOLANA instrument `available_from` mismatch. The Drift v2 mainnet launch date in
+`_solana_utils.SOLANA_PROTOCOL_DEPLOY_DATES["drift"]` is `2022-11-04`, but the manifest was pre-populated with rows
+starting `2018-01-01`. Slot 3 corrected the `expected_unattempted` rows to `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`
+via `defi_legacy_blank_reclassification_2026_05_13.md`, but the LIVE capture problem persists: the Drift Data API
+(`https://data.api.drift.trade/stats/markets`) returns markets, but the instruments-service adapter at
+`adapters/defi/drift.py` implements only `get_instruments()` (reference data) — it does NOT fetch `perp_funding` /
+`perp_open_interest` / `perp_mark_prices` data_types. Those are MTDS responsibilities, but MTDS is missing the Solana
+perp DEX source wiring needed to call the Drift historical S3 archive.
+
+**Corrected root cause**: The instruments-service DRIFT adapter is correctly serving reference data (instrument
+discovery). The 0% capture is in MTDS (market data), not instruments-service. This plan adds instruments-service
+adapters for MANGO / ZETA / FLASH (missing adapters), and documents MTDS wiring required for all 4 venues (tracked as
+deferred MTDS work below).
+
+## Pre-audit manifest
+
+| Repo                | File                                                   | Line | Symbol                             | Action                       |
+| ------------------- | ------------------------------------------------------ | ---- | ---------------------------------- | ---------------------------- |
+| instruments-service | `reference_data/factory.py`                            | 29   | `DriftReferenceDataAdapter` import | KEEP — already registered    |
+| instruments-service | `reference_data/factory.py`                            | 164  | `"DRIFT-SOLANA": "drift"`          | KEEP — already registered    |
+| instruments-service | `reference_data/adapters/defi/`                        | —    | `mango.py`                         | NEW — this plan              |
+| instruments-service | `reference_data/adapters/defi/`                        | —    | `zeta.py`                          | NEW — this plan              |
+| instruments-service | `reference_data/adapters/defi/`                        | —    | `flash_trade.py`                   | NEW — this plan              |
+| instruments-service | `reference_data/factory.py`                            | —    | MANGO/ZETA/FLASH entries           | NEW — this plan              |
+| UAC                 | `registry/capability_declarations/_defi_chain_data.py` | 539  | `SOLANA_DEFI_PROTOCOLS`            | ADD mango/zeta/flash entries |
+| UAC                 | `registry/capability_declarations/_defi_chain_data.py` | 41   | `SOLANA_PROTOCOL_DEPLOY_DATES`     | ADD mango/zeta/flash entries |
+| instruments-service | `scripts/backfill_drift_funding_2026_05_13.py`         | —    | backfill script                    | NEW — this plan              |
+| unified-trading-pm  | `codex/04-architecture/solana-defi-coverage.md`        | —    | codex SSOT                         | NEW — this plan Phase 6      |
+
+## Phases
+
+### Phase 0 — Audit + root cause (SERIAL — prerequisite)
+
+- [x] P0. Audit DRIFT-SOLANA 0% capture root cause. Root cause identified: instruments-service DRIFT adapter is healthy
+      (correctly serves instrument discovery via Drift Data API). MTDS has no Solana perp funding source wired. DRIFT
+      historical S3 archive (`drift-historical-data-v2.s3.eu-west-1.amazonaws.com`) is documented in UAC
+      `SOLANA_DEFI_PROTOCOLS["drift"]["s3_historical_url"]` but MTDS has no consumer for it. Capture fix requires MTDS
+      work (deferred below). The instruments-service adapter deploy-date (`2022-11-04` Drift v2) is correct. The
+      pre-populated manifest rows (2018-01-01 start) were incorrectly `expected_unattempted`; slot 3 reclassified them
+      to `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` on 2026-05-13.
+
+**Deferred MTDS follow-up**: `EXPECTED_PRE_VENUE_LAUNCH` correction complete. MTDS perp funding wiring deferred to
+`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md` until MTDS Solana perp DEX source is implemented.
+
+### Phase 1 — UAC registry additions (SERIAL — prerequisite for adapters)
+
+- [ ] P0. [CODE] Add MANGO V4, ZETA, FLASH entries to `SOLANA_DEFI_PROTOCOLS` dict in
+      `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py`.
+- [ ] P0. [CODE] Add MANGO-SOLANA, ZETA-SOLANA, FLASH-SOLANA floor dates to `SOLANA_PROTOCOL_DEPLOY_DATES` in
+      `instruments-service/instruments_service/reference_data/adapters/defi/_solana_utils.py`.
+
+Success gate: `basedpyright unified_api_contracts/` clean.
+
+### Phase 2 — MANGO V4 perps adapter (PARALLEL with phases 3, 4)
+
+- [ ] P0. [CODE] Create `instruments-service/instruments_service/reference_data/adapters/defi/mango.py` — MANGO V4
+      perpetual market discovery via `https://api.mngo.cloud/data/v4/markets/perp`.
+- [ ] P0. [CODE] Register MANGO-SOLANA in factory (`factory.py`: import + `CANONICAL_VENUE_TO_ADAPTER` + `_ADAPTERS` +
+      `ADAPTER_DATA_SOURCES`).
+- [ ] P0. [TEST] ≥10 tests in `tests/unit/reference_data/adapters/defi/test_mango_metadata.py` — adapter init, REST
+      fetch happy path, rate limit, error classification, manifest write.
+- [ ] P0. [QG] `basedpyright instruments_service/reference_data/adapters/defi/mango.py` clean.
+
+### Phase 3 — ZETA perps adapter (PARALLEL with phases 2, 4)
+
+- [ ] P0. [CODE] Create `instruments-service/instruments_service/reference_data/adapters/defi/zeta.py` — Zeta Markets
+      perp discovery via `https://dex.zeta.markets/api/markets`.
+- [ ] P0. [CODE] Register ZETA-SOLANA in factory.
+- [ ] P0. [TEST] ≥8 tests in `tests/unit/reference_data/adapters/defi/test_zeta_metadata.py`.
+- [ ] P0. [QG] basedpyright clean.
+
+### Phase 4 — FLASH perps adapter (PARALLEL with phases 2, 3)
+
+- [ ] P0. [CODE] Create `instruments-service/instruments_service/reference_data/adapters/defi/flash_trade.py` — Flash
+      Trade perp discovery via `https://api.flash.trade/api/v1/markets`.
+- [ ] P0. [CODE] Register FLASH-SOLANA in factory.
+- [ ] P0. [TEST] ≥8 tests in `tests/unit/reference_data/adapters/defi/test_flash_trade_metadata.py`.
+- [ ] P0. [QG] basedpyright clean.
+
+### Phase 5 — DRIFT funding backfill script (SERIAL — after Phase 1)
+
+- [ ] P1. [CODE] Create `instruments-service/scripts/backfill_drift_funding_2026_05_13.py` — reads DRIFT historical
+      funding from S3 archive, writes parquets per manifest standard, `--dry-run` default, `--apply --confirm` gate.
+- [ ] P1. [TEST] ≥5 tests in `tests/unit/test_backfill_drift_funding.py`.
+
+**VM launch command** (operator-triggered after code ships):
+
+```bash
+VM_NAME=ikenna-slot2-drift-funding-backfill \
+MANIFEST_PER_VM_SHARDS=true \
+DEPLOYMENT_ENV=prod \
+python3 instruments-service/scripts/backfill_drift_funding_2026_05_13.py \
+  --start-date 2021-11-05 \
+  --end-date 2026-05-13 \
+  --venue DRIFT-SOLANA \
+  --apply --confirm
+```
+
+### Phase 6 — Codex SSOT (SERIAL — after phases 2-4)
+
+- [ ] P1. [DOCS] Create `unified-trading-pm/codex/04-architecture/solana-defi-coverage.md` documenting all 4 Solana perp
+      DEX adapters, their data_types, deploy dates, API endpoints, and MTDS wiring requirements.
+
+### Phase 7 — Cutover gate (SERIAL — final)
+
+- [ ] P0. [QG] Full quality-gates pass: `cd instruments-service && bash scripts/quality-gates.sh`.
+- [ ] P0. [QG] Full quality-gates pass: `cd unified-api-contracts && bash scripts/quality-gates.sh`.
+- [ ] P0. [VERIFY] DRIFT-SOLANA manifest state confirmed `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` for pre-launch
+      dates and `expected_unattempted` (awaiting MTDS) for post-launch dates.
+
+## Deferred MTDS work (tracked here, not in scope)
+
+**DEFERRED**: MTDS Solana perp DEX source wiring (all 4 venues: DRIFT, MANGO, ZETA, FLASH) deferred to
+`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`. This plan delivers:
+
+- instruments-service reference data adapters (instrument discovery)
+- UAC registry entries (protocol metadata, deploy dates)
+- Backfill script skeleton (requires MTDS source before full execution)
+
+MTDS source must wire Drift S3 historical archive + MANGO/ZETA/FLASH REST APIs to emit `perp_funding` parquets. That is
+owned by the MTDS perp DEX source implementer (not this slot).
+
+## Temporary states + their canonical follow-up plans
+
+- MANGO/ZETA/FLASH adapters ship instrument discovery but have no MTDS capture: successor plan C (AMM coverage + capture
+  wiring) or a dedicated MTDS sub-plan.
+- Backfill script ships as dry-run skeleton: operational run pending MTDS perp source + operator VM launch.
+
+## Full-execution criterion
+
+- Instruments-service discovers MANGO V4, ZETA, and FLASH perpetual markets via reference data adapters.
+  - **What ran**: `pytest tests/unit/reference_data/adapters/defi/test_mango_metadata.py` + zeta + flash.
+  - **Verification**: ≥35 tests passing total across 3 new adapters + 5 backfill script tests.
+- DRIFT-SOLANA manifest state is honest: pre-launch dates `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`.
+  - **Verification**: already done by slot 3 reclassification on 2026-05-13.
+
+**Handoff exception**: DRIFT perp_funding actual backfill deferred to MTDS perp source implementation + operator VM
+authorization per `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`.
