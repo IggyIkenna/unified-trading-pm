@@ -395,6 +395,64 @@ on `capture_status`:
 
 ---
 
+## Zero-activity-bar shape (case-D design — implementation deferred post-cutover)
+
+> **Status**: audit complete (2026-05-11, `wave3x_residual_ssots_2026_05_08.md` Track D);
+> **implementation deferred post-2026-05-23 cutover** — requires a NEW UTL `zero_activity_bars` primitive +
+> `instrument_catalog` threaded at adapter construction (writegate Phase 3.D.5 Wave 2/3, "pending"). This section is
+> the design stub so consumers know what shape to expect when case-D ships. Reference audit:
+> `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`.
+
+Case-D fires when: source returned 0 rows AND `instrument_catalog` says the instrument is alive on that date AND the
+date falls within the venue's published trading hours. The adapter writes **carry-forward bars** (not NaN-fill) and calls
+`record_captured` so downstream consumers see a fully-populated row. The absence of real ticks is transparent via a
+`zero_activity=True` column on each bar.
+
+### Carry-forward rule per data_type
+
+| data_type | Zero-activity bar shape | `available_at` |
+|---|---|---|
+| `ohlcv_1m` / `ohlcv_15m` / `ohlcv_1h` / `ohlcv_24h` | O=H=L=C = prior last-trade-price (LTP carry-forward), `volume=0`, `trade_count=0`, `zero_activity=True` | Interval close time (`window_close` for the candle) |
+| `trades` | Zero-row parquet (empty DataFrame, 0 rows); `record_captured(row_count=0)`; no rows on disk is the honest shape — a zero-activity day has no individual trades | Interval close time |
+| `book_snapshot_5` / `book_snapshot_25` | Carry-forward last known bid/ask levels (all N levels); `bid_size_*=0`, `ask_size_*=0`, `zero_activity=True` (quoted spread present but no resting volume) | Snapshot window close |
+| `derivative_ticker` | Carry-forward last known `open_interest`, `mark_price`, `index_price`; `funding_rate=0` (no funding accrual on zero-activity period); `zero_activity=True` | Interval close time |
+| `options_chain` / `futures_chain` | Carry-forward last known bid/ask across ALL active strikes/expiries (see volatility-smile note below); `volume=0`, `open_interest` unchanged, `zero_activity=True` | Interval close time |
+| DeFi continuous series (`lst_rates`, `staking_yields`, `lending_indices`, `oracle_prices`, `vault_share_price`, `perp_funding`) | Carry-forward last known rate/price; `zero_activity=True` | Block-close time |
+| Prediction market depth / CLOB (`market_depth`, `order_book`) | Carry-forward last known mid/best-bid/best-ask; `zero_activity=True` | Snapshot window close |
+
+### The volatility-smile constraint (operator-flagged)
+
+Every active strike must be visible even on zero-volume days for cross-instrument analysis. A zero-volume options bar
+that disappears from the grid is worse than a carry-forward row because:
+
+1. `features-service cross_instrument` computes cross-strike spreads (basis, put-call parity, skew) across the full
+   smile. A missing strike silently widens the observable grid and corrupts skew estimates.
+2. ML training on vol-surface features expects a fixed-width grid per day. A narrower grid on quiet days is a
+   model-corruption risk even if the missing entries are genuinely zero-volume.
+
+Therefore: for `options_chain`, a zero-volume day writes a carry-forward bar for **every strike that was in the active
+catalog on that date**. The `zero_activity=True` column lets downstream consumers optionally drop or down-weight these
+rows.
+
+### What the implementation needs (Wave 3.M)
+
+When the case-D implementation ships (writegate Phase 3.D.5 Wave 2/3, post-2026-05-23), it needs:
+
+1. **UTL primitive `zero_activity_bars(last_snapshot: pd.DataFrame, data_type: str, interval_close: datetime) ->
+   pd.DataFrame`** — per-data_type carry-forward logic per the table above; raises `ValueError` for unknown data_type.
+2. **`instrument_catalog` threaded at adapter construction** — adapter checks
+   `catalog.is_alive(instrument_id, day)` before deciding case-A vs case-D.
+3. **`record_captured(df=zero_activity_df, ...)` call** — manifest records this as a real capture (not
+   `empty_confirmed`); the `zero_activity=True` column distinguishes it from a genuine high-volume day.
+4. **Sports historical re-scope**: sports HISTORICAL capture lives in `instruments-service` (not MTDS); the case-D
+   implementation for sports per-fixture zero-activity belongs there, not in MTDS (per D3 audit finding).
+
+Successor plan: `wave3x_track_d_implementation_<date>.md` (to be filed when the writegate Phase 3.D.5 Wave 2/3
+planning window opens post-2026-05-23 cutover). Reference: operator decision #4 in
+`plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`.
+
+---
+
 ## Phase 3A CeFi adapter audit results (2026-05-12)
 
 Full per-CeFi-venue adapter audit across all 18 implemented CeFi venues in `VENUES_BY_ASSET_GROUP["cefi"]`, run by slot
