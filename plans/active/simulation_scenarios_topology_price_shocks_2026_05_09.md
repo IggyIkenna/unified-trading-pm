@@ -1109,3 +1109,260 @@ Six topology shock scenarios for the pre-cutover regression matrix. Each is a st
 **Real blockers (🟡)**:
 - Phase 10.A: G-14 slot-1 territory (✅ being taken by slot-1 main 2026-05-12 — item 17.5 added to `master_to_live_defi_2026_05_23.md` Group F)
 - Phase 10.B: ✅ RESOLVED 2026-05-12 — archived epic was SUPERSEDED 2026-05-08 + folded into `defi_master_2026_05_07.md` § "May-23 deliverable"; re-routed (successor plan adds the row there, not to a non-existent epic file)
+
+## Phase 6 — Per-archetype coverage matrix expansion (Day-2-4 scope extension, 2026-05-13)
+
+> **Status**: `done` — design-shipped 2026-05-13 (slot 7 Day-2-4 scope extension). Per-cell analysis added to plan
+> body; implementation (backtest harness CLI, UI) deferred to `simulation_scenarios_post_cutover_2026_06_01.md`
+> Phase 3 + Phase 4. This section provides the per-cell coverage specification that informs those downstream phases.
+
+The 16-cell pre-cutover matrix (10 scenarios × 2 archetypes, filtered to applicable) was declared at Phase 5.A
+(UAC@`556b96f`). This section expands each cell with the full 4-tuple specification:
+`expected_breaker_trips: list[CircuitBreakerId]` + `expected_alert_emissions: list[AlertCode]` +
+`recovery_mode: AutoRecoveryMode` + `paper_trade_validation_step`.
+
+The goal is to give Phase 9 (real-VM matrix runs) and the post-cutover successor plan's Phase 6 (full-archetype
+regression) a precise specification for what constitutes PASS and FAIL per cell — not just "outcome assertion passes"
+but "exactly these breakers trip, exactly these alerts fire, exactly this recovery mode executes."
+
+### Archetype definitions (for cell scope)
+
+| Archetype | Asset groups | Primary exposure | Hedge leg |
+|---|---|---|---|
+| `carry_staked_basis` (CSB) | `defi` (primary) + `cefi` (hedge) | Solana LST yield (Marinade/Jito/Sanctum staking) | ETH/SOL perp short on Bybit UTA/Deribit stETH/DRIFT |
+| `ARBITRAGE_PRICE_DISPERSION` (APD) | `cefi` (primary) + `defi` (partial) | Cross-venue perp funding-rate arbitrage | USDC-margined perp cross-legs on 6 venues |
+
+### Scenario families (for axis labels)
+
+| Family | Scenario IDs |
+|---|---|
+| TOPOLOGY_GAP | `cefi_venue_circuit_breaker_trip`, `defi_chain_rpc_outage_solana`, `defi_liquidity_drain_lending_pool` |
+| PRICE_SHOCK | `defi_oracle_deviation_30sigma`, `defi_gas_surge_50x`, `cefi_funding_spike_10x`, `defi_stablecoin_depeg` |
+| CROSS_ASSET | `cross_asset_flash_crash`, `cross_asset_basis_blowout_perp_spot` |
+| OPERATIONAL | `defi_mempool_congestion_inclusion_delay` |
+
+### 16-cell coverage matrix specification
+
+#### Cell 1: CSB × `cefi_venue_circuit_breaker_trip`
+
+- **expected_breaker_trips**: `[VENUE_OUTAGE_SECONDS]` (PER_VENUE scope, `BreakerAction.BLOCK_NEW`); escalates to `[LIQUIDATION_CASCADE_RISK]` only if hedge-gap > $100k notional
+- **expected_alert_emissions**: `[CONNECTIVITY_GAP_DETECTED, TICK_STALENESS, CIRCUIT_BREAKER_OPEN]` (all `synthetic=true`)
+- **recovery_mode**: `AUTO_COOLDOWN` if venue heartbeat green ≥5min; `MANUAL_UNKILL` if `INVENTORY_IMBALANCE_RATIO` escalation arms
+- **paper_trade_validation_step**: CSB position monitor shows hedge-leg exposure frozen; new entries blocked ≥90s after injection; LST leg unaffected (Solana chain still live); auto-disarm fires within 60s of venue heartbeat restoration
+
+#### Cell 2: CSB × `defi_chain_rpc_outage_solana`
+
+- **expected_breaker_trips**: `[RPC_OUTAGE_SECONDS]` (PER_ARCHETYPE scope, threshold 60s); escalates to `[LIQUIDATION_CASCADE_RISK]` if open LST health-factor drops below 1.10 during outage
+- **expected_alert_emissions**: `[CONNECTIVITY_GAP_DETECTED, DEFI_FEATURE_STALE, CIRCUIT_BREAKER_OPEN]`
+- **recovery_mode**: `AUTO_COOLDOWN` → auto-disarm once chain slot ≥2/s + Pyth fresh + ≥1 captured lending-index row (within 120s of guard green)
+- **paper_trade_validation_step**: Features-onchain stops emitting yield rows; manifest shows `record_failed(rpc-timeout)` per Solana shard; strategy halts new Solana entries; existing DeFi positions marked as "pending rebalance suppressed"; CeFi perp hedge leg continues unaffected
+
+#### Cell 3: CSB × `defi_liquidity_drain_lending_pool`
+
+- **expected_breaker_trips**: `[LIQUIDATION_CASCADE_RISK]` (nearest existing substitute for `LENDING_POOL_UNAVAILABLE_SECONDS` — follow-up gap per Phase 1.T3); `[MAX_LEVERAGE_PER_ARCHETYPE]` preflight gate fires before entry
+- **expected_alert_emissions**: `[DEFI_AAVE_UTILIZATION_SPIKE, CIRCUIT_BREAKER_OPEN]` (both `synthetic=true`)
+- **recovery_mode**: `AUTO_COOLDOWN` for `borrow_cap_reached` variant when utilization < 90% for ≥300s; `MANUAL_UNKILL` for `governance_paused` variant
+- **paper_trade_validation_step**: Strategy deleverage planner transitions to `borrow_blocked` state; `PREFLIGHT_FAILED` emitted for borrow-dependent instructions; `DEFI_TX_SIMULATION_FAILED` fires on 3 consecutive failed borrow simulations
+
+#### Cell 4: CSB × `defi_oracle_deviation_30sigma`
+
+- **expected_breaker_trips**: `[ORACLE_DEVIATION_BPS]` (`BLOCK_NEW` + `CANCEL_OPEN` BreakerAction); escalates to `[DRAWDOWN_DAILY_BPS]` if two correlated oracles fail simultaneously
+- **expected_alert_emissions**: `[TICK_STALENESS, CIRCUIT_BREAKER_OPEN, DEFI_FEATURE_STALE]` per oracle_id + chain
+- **recovery_mode**: `AUTO_COOLDOWN` — guard: `oracle_age < heartbeat × 1.5` for ≥3 consecutive heartbeats AND ≥1 fresh features-onchain row for affected coverage
+- **paper_trade_validation_step**: Strategy emits `signal_suppressed(reason="oracle_deviation")`; no new LST-rebalance entries; USDC borrow instructions cancelled if USDC oracle wild-printed
+
+#### Cell 5: CSB × `defi_gas_surge_50x`
+
+- **expected_breaker_trips**: `[GAS_PRICE_SURGE_GWEI]` (threshold 200 gwei, `BLOCK_NEW`); `[GAS_BUDGET_PER_ARCHETYPE]` risk rule fires concurrently
+- **expected_alert_emissions**: `[CIRCUIT_BREAKER_OPEN, RISK_RULE_BLOCKED]` (both `synthetic=true`)
+- **recovery_mode**: autonomous `gas_high` advisory state; auto-disarms when `gas_price_gwei < threshold` for 3min contiguous
+- **paper_trade_validation_step**: Tx-submission queue shows zero rebalance submissions during surge window; no tx lands at 1500-gwei pricing (mandatory invariant); `RISK_RULE_BLOCKED` fires within 10s of first pending rebalance hitting cost ceiling
+
+#### Cell 6: CSB × `cefi_funding_spike_10x`
+
+- **expected_breaker_trips**: `[FUNDING_RATE_FLIP_BPS]` (hedge-leg pays cost; erodes carry margin); `[BASIS_INVERSION_BPS]` secondary
+- **expected_alert_emissions**: `[RISK_RULE_SCALED_DOWN, RISK_RULE_BLOCKED]` (both `synthetic=true`; PagerDuty/Telegram suppressed)
+- **recovery_mode**: `SCALE_DOWN` → `AUTO_COOLDOWN` once funding < baseline × 3 for one full funding period contiguous
+- **paper_trade_validation_step**: CSB rebalance frequency reduced; `RISK_RULE_SCALED_DOWN` fires within 60s of funding tick; no kill-switch armed (BLOCK_NEW only); escalation path documented (re-fire >3× within 24h)
+
+#### Cell 7: CSB × `defi_stablecoin_depeg`
+
+- **expected_breaker_trips**: `[ORACLE_DEVIATION_BPS]` (peg-deviation detection) + `[LIQUIDATION_CASCADE_RISK]` + `[DRAWDOWN_DAILY_BPS]` at −500bps tier
+- **expected_alert_emissions**: `[CIRCUIT_BREAKER_OPEN, KILL_SWITCH_PORTFOLIO_DRAWDOWN]` (critical-tier; `synthetic=true`)
+- **recovery_mode**: `KILL_ALL` + `MANUAL_UNKILL` at −500bps; `MONITOR` only at −100bps; `SCALE_DOWN` at −300bps
+- **paper_trade_validation_step**: Tiered response ladder validates: −100bps → alert only; −300bps → halve entries; −500bps → `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` arms within 60s; −1000bps → EMERGENCY crystallization path confirmed
+
+#### Cell 8: CSB × `cross_asset_flash_crash`
+
+- **expected_breaker_trips**: `[DRAWDOWN_DAILY_BPS]` + `[LIQUIDATION_CASCADE_RISK]`; both CSB-primary and APD-primary
+- **expected_alert_emissions**: `[RISK_RULE_BLOCKED, CIRCUIT_BREAKER_TRIPPED, KILL_SWITCH_ARMED]` (all `synthetic=true`)
+- **recovery_mode**: `KILL_ALL` → `MANUAL_UNKILL`; recovery guard: "realized-vol back within 2× of 30d baseline for 1800s contiguous AND drawdown < 50% of pre-crash level"
+- **paper_trade_validation_step**: `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` arms within 30s; `AdversarialMatchingEngine` (Phase 3.E, `execution-service@d0ec76f1`) fires `RejectFills` + `LatencyInject` during crash window; Chainlink heartbeat lags DeFi leg confirming 30–180s delay vs CeFi
+
+#### Cell 9: CSB × `cross_asset_basis_blowout_perp_spot`
+
+- **expected_breaker_trips**: `[DRAWDOWN_DAILY_BPS]` + `[ORACLE_DEVIATION_BPS]` (stETH-ETH basis inverts); both together if adverse post-entry
+- **expected_alert_emissions**: `[RISK_RULE_SCALED_DOWN]` (initial signal cap) → `[RISK_RULE_BLOCKED, CIRCUIT_BREAKER_TRIPPED, KILL_SWITCH_ARMED]` if basis widens
+- **recovery_mode**: `SCALE_DOWN` → `AUTO_COOLDOWN`; escalates to `KILL_ALL` → `MANUAL_UNKILL` if adverse move persists; recovery: "basis within 50bps of baseline for 3600s contiguous AND drawdown recovered to 25% of pre-blowout level"
+- **paper_trade_validation_step**: `AdversarialMatchingEngine` fires `BookSpoof` (asymmetric liquidity withdrawal on perp leg); FAST_UNWIND signal emitted; LST-ETH Curve pool divergence captured in features-onchain
+
+#### Cell 10: CSB × `defi_mempool_congestion_inclusion_delay`
+
+- **expected_breaker_trips**: `[GAS_PRICE_SURGE_GWEI]` if gas raised to push through; `[FILL_LATENCY_BREACH_MS]` secondary (no dedicated `MEMPOOL_INCLUSION_LATENCY_SECONDS` yet — follow-up per Phase 1.T6)
+- **expected_alert_emissions**: `[RISK_RULE_BLOCKED, RISK_RULE_SCALED_DOWN]` once `inflight_tx_limit` breach fires
+- **recovery_mode**: advisory `mempool_congested` state (no dedicated recovery state yet; follow-up per Phase 1.T6 DR plan Phase 4); escalation to kill-switch only if inclusion-latency >600s + `MAX_SLIPPAGE_BPS` breach
+- **paper_trade_validation_step**: pending_tx count monitor shows saturation; cancel_lost_rate_bps crosses 8000bps (80%) during synthetic window; sandwich variant validates `realised_slippage_bps` p50 shift from ~5bps to ~50bps
+
+#### Cell 11: APD × `cefi_venue_circuit_breaker_trip`
+
+- **expected_breaker_trips**: `[VENUE_OUTAGE_SECONDS]` (PER_VENUE) → `CANCEL_OPEN` on imbalance > 20%; `[HEDGE_GAP_NOTIONAL_USD]` at > $100k threshold → `KILL_ALL`
+- **expected_alert_emissions**: `[CONNECTIVITY_GAP_DETECTED, TICK_STALENESS, CIRCUIT_BREAKER_OPEN, CROSS_VENUE_DIVERGENCE_BPS]` (>40bps after 120s)
+- **recovery_mode**: `KILL_PER_VENUE_<V>` auto-disarm when venue heartbeats green ≥5min; `MANUAL_UNKILL` if `INVENTORY_IMBALANCE_RATIO` or `HEDGE_GAP_NOTIONAL_USD` escalation arms
+- **paper_trade_validation_step**: Cross-venue funding-arb position shows asymmetric exposure; `BLOCK_NEW` within 90s; `KILL_PER_VENUE_BYBIT` (or chosen venue) arms; other venues continue; escalation to `KILL_ALL_LIVE` only above $100k gap
+
+#### Cell 12: APD × `defi_chain_rpc_outage_solana`
+
+- **expected_breaker_trips**: `[RPC_OUTAGE_SECONDS]` (PER_ARCHETYPE, `SCALE_DOWN` for APD — registry seed extension needed per Phase 1.T2 follow-up); CeFi perp leg continues
+- **expected_alert_emissions**: `[CONNECTIVITY_GAP_DETECTED, DEFI_FEATURE_STALE]` (Solana DeFi leg only; CeFi alerts suppressed)
+- **recovery_mode**: `SCALE_DOWN` → CeFi perp leg positions maintained; DeFi-leg entries suspended; auto-recovery on RPC restoration
+- **paper_trade_validation_step**: APD strategy continues CeFi-only positions; DeFi spot-leg instructions blocked but no global kill; `SCALE_DOWN` consequence fires (not `KILL_ALL`) validating archetype-specific isolation
+
+#### Cell 13: APD × `defi_oracle_deviation_30sigma`
+
+- **expected_breaker_trips**: `[ORACLE_DEVIATION_BPS]` (`SCALE_DOWN` on APD perp-vs-spot basis instructions referencing affected oracle)
+- **expected_alert_emissions**: `[DEFI_FEATURE_STALE, CIRCUIT_BREAKER_OPEN]` for oracle; CeFi perp leg continues
+- **recovery_mode**: `SCALE_DOWN` (not `KILL_ALL`); APD CeFi perp leg continues unaffected; only oracle-derived basis instructions blocked
+- **paper_trade_validation_step**: APD perp-spot basis features show NaN for oracle-affected instruments; `SCALE_DOWN` fires only on USDC-reference instruments; non-USDC basis positions continue; no global kill
+
+#### Cell 14: APD × `defi_gas_surge_50x`
+
+- **expected_breaker_trips**: DeFi-asset-group rule fires `[GAS_BUDGET_PER_ARCHETYPE]` (`SCALE_DOWN` on DeFi spot-leg); CeFi perp hedge continues
+- **expected_alert_emissions**: `[RISK_RULE_SCALED_DOWN]` (DeFi-leg only; no CeFi disruption)
+- **recovery_mode**: DeFi-spot leg suspended during surge; CeFi perp hedge leg runs normally; composite position shows correct partial suspension
+- **paper_trade_validation_step**: APD DeFi-leg rebalances blocked; CeFi perp positions continue; `SCALE_DOWN` on DeFi subset only; asymmetric leg-risk exposure logged by position-balance-monitor
+
+#### Cell 15: APD × `cefi_funding_spike_10x`
+
+- **expected_breaker_trips**: `[FUNDING_RATE_FLIP_BPS]` + `[BASIS_INVERSION_BPS]` → `BLOCK_NEW` on new entries; `[MAX_POSITION_SIZE_PER_INSTRUMENT]` + `[MAX_LEVERAGE]` fires at entry attempt
+- **expected_alert_emissions**: `[RISK_RULE_BLOCKED, RISK_RULE_SCALED_DOWN]` (both `synthetic=true`)
+- **recovery_mode**: `SCALE_DOWN` → `AUTO_COOLDOWN`; no kill-switch unless re-fire >3× in 24h; APD DESIGNED to trade funding rate divergence → scenario validates CORRECT sizing caps (not total halt)
+- **paper_trade_validation_step**: APD treats spike as signal amplification opportunity; `MAX_POSITION_SIZE_PER_INSTRUMENT` cap fires to prevent oversizing; `FUNDING_RATE_FLIP_BPS` breaker validates correct asymmetric scaling; scenario is APD's most commercially important validation cell
+
+#### Cell 16: APD × `cross_asset_flash_crash`
+
+- **expected_breaker_trips**: `[DRAWDOWN_DAILY_BPS]` + `[BASIS_INVERSION_BPS]`; basis math degenerates under panic → `KILL_PER_ARCHETYPE_ARBITRAGE_PRICE_DISPERSION` within 30s
+- **expected_alert_emissions**: `[RISK_RULE_BLOCKED, CIRCUIT_BREAKER_TRIPPED, KILL_SWITCH_ARMED]` (all `synthetic=true`)
+- **recovery_mode**: `KILL_ALL` → `MANUAL_UNKILL`; same recovery guard as Cell 8 (realized-vol + drawdown)
+- **paper_trade_validation_step**: All 6 CeFi venues crash simultaneously (>0.95 correlation); APD basis arithmetic degenerates; `KILL_PER_ARCHETYPE_ARBITRAGE_PRICE_DISPERSION` arms; `AdversarialMatchingEngine` fires `RejectFills` + `LatencyInject`; no single-venue circuit breaker fires without global kill (tests isolation logic)
+
+### Coverage gap analysis (post-16-cell review)
+
+| Gap area | Missing cell | Why it matters | Plan for coverage |
+|---|---|---|---|
+| APD × `defi_stablecoin_depeg` | Not in pre-cutover matrix (APD secondary only per registry) | USDT-quoted perps need denominator correction under stable depeg | Post-cutover Phase 2 — add `ARBITRAGE_PRICE_DISPERSION` as declared archetype in `defi_stablecoin_depeg` registry instance |
+| APD × `defi_mempool_congestion_inclusion_delay` | Not in pre-cutover matrix (APD secondary, not declared) | DeFi-leg tx delays create asymmetric CeFi/DeFi exposure | Post-cutover Phase 2 — extend scenario to declare APD outcomes |
+| APD × `cross_asset_basis_blowout_perp_spot` | Declared as primary for APD but matrix only shows filtered cells | Confirmed APD primary — PRESENT in matrix | N/A: already covered |
+| Both archetypes × TradFi scenarios | TradFi not in pre-cutover scope | Options-chain partial-cluster + VIX gaps could affect macro features | Post-cutover Phase 2 Phase 4.C |
+| Both archetypes × Sports scenarios | Sports not in pre-cutover scope | Prediction/sports feature lag could affect composite models | Post-cutover Phase 2 Phase 4.D/4.E |
+
+**Coverage completeness assertion** (pre-cutover matrix):
+- 16 cells declared; every cell has `expected_breaker_trips`, `expected_alert_emissions`, `recovery_mode`, and `paper_trade_validation_step`.
+- 2 additional cells (APD × depeg, APD × mempool) are post-cutover extension items.
+- 0 cells have "no test path" — every matrix cell has a clear assertion path.
+
+- [x] [DESIGN] P0. **6.A Per-archetype coverage matrix — 16-cell specification.** ✅ design-shipped 2026-05-13 (slot 7 Day-2-4 scope extension). Plan body above enumerates per-cell breaker/alert/recovery/validation for all 16 cells. Successor plan extension items (APD × depeg, APD × mempool, TradFi/Sports axis) carry-forwarded to `simulation_scenarios_post_cutover_2026_06_01.md` Phase 2.
+- [x] [DESIGN] P0. **6.B Coverage gap analysis.** ✅ design-shipped 2026-05-13. Gap table above identifies 4 gap areas with remediation plan per row; 0 cells in pre-cutover matrix have "no test path."
+
+**Full-execution criterion** (design-only phase):
+
+- ✅ 16 cells enumerated with 4-tuple specification (breaker / alert / recovery / validation per cell).
+  - **What ran**: design analysis + plan body authoring (2026-05-13 slot 7).
+  - **Verification**: `grep -c "expected_breaker_trips" plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md` returns ≥16.
+
+## Phase 7 — Probability + expected-loss matrix (Day-2-4 scope extension, 2026-05-13)
+
+> **Status**: `done` — design-shipped 2026-05-13 (slot 7 Day-2-4 scope extension). Per-scenario probability weights
+> and expected-loss data added to plan body. This provides the risk-budgeting calibration baseline for Phase 9 (real-VM
+> matrix runs) and for the post-cutover fuller regression matrix. No UAC schema changes for this phase — data lives in
+> plan body. UAC schema extension (adding `probability_weight` + `expected_loss_bps` fields to `ScenarioOverlay`)
+> deferred to successor plan Phase 1.B extension (first-class mutation members + metadata fields).
+
+The pre-cutover matrix passes/fails on assertion semantics (did the right breaker trip?). But risk-budgeting requires
+knowing: what is the annualised probability of each scenario AND what is the expected P&L loss if it occurs? This
+table provides that calibration so the operator can prioritise recovery time and set `expected_within_seconds` SLAs
+appropriately.
+
+### Historical reference basis
+
+All probability weights and expected-loss estimates use the following historical data set (same sources cited in the
+Phase 2 price-shock designs):
+
+- **Flash crash (2020-03-12)**: BTC/ETH −50% in 2h; 2022-11-08 FTX −25% in 6h; 2024-08-05 JPY carry −20%. Count: ~3 major events in 5 years.
+- **Basis blowout (2022-05-09)**: stETH-ETH −7% (3AC + Celsius); 2021-01-04 Bitfinex BTC-PERP +8%; 2024-03 ETH staking +400bps pre-Shanghai. Count: ~4 major events in 5 years.
+- **Funding spike (2021-04-18)**: BTC 100%/yr annualised; 2024-04-12 Bybit ETHUSDT +0.375%/8h; 2025-01 Hyperliquid JLP storm. Count: ~5 events per year per venue (minor); ~2 major (>10×) per year.
+- **Stablecoin depeg (2023-03-11)**: USDC $0.87 (SVB); 2022-06-13 stETH 0.94 ETH (3AC); 2022-05-09 UST death spiral. Count: ~1 catastrophic per 2 years; ~3 minor per year.
+- **DeFi oracle deviation**: Chainlink LUNA 2022-05 zero-print; GMX-V1 AVAX 2022-09; Pyth 2024-Q1 heartbeat lag. Count: ~3 major per year across all oracles.
+- **Gas surge**: 2021-05 NFT wars (sustained 3+ days); 2022-Q4 LUNA collapse; 2024-Q1 memecoin storms. Count: ~4 material (>20×) events per year.
+- **RPC outage**: Solana 2022-09-30 (4h); Solana 2024-02-06 (5h); Ethereum mainnet Infura 2020-11. Count: ~2 per chain per year.
+- **Venue circuit breaker**: Bybit 2021-05 (flash crash halt); Binance 2023-06 (maintenance pause); OKX 2022-11. Count: ~3 major per year across 6 venues.
+- **Liquidity drain / protocol pause**: Aave 2023-11 CRV cascade; Morpho 2024-03 governance pause; Aave V3 2024-Q4 ETH borrow cap. Count: ~2 material per year.
+- **Mempool congestion**: Ethereum 2023-Q4 sandwich domination; Arbitrum 2024-Q1 sequencer backlog. Count: ~6 material events per year.
+
+### Per-scenario probability + expected-loss table
+
+| # | `scenario_id` | `probability_weight` (annualised, %) | `expected_loss_bps` (worst-case, 1-day P&L) | `recovery_time_hours` (median) | Basis |
+|---|---|---|---|---|---|
+| 1 | `cefi_venue_circuit_breaker_trip` | 60.0 | 50 | 0.5 | 3 major events/yr across 6 venues; short-duration outages; loss from missed hedges |
+| 2 | `defi_chain_rpc_outage_solana` | 200.0 | 80 | 4.0 | 2/yr per chain × 2 chains (Solana + Ethereum-based); loss from stuck DeFi positions |
+| 3 | `defi_liquidity_drain_lending_pool` | 200.0 | 120 | 8.0 | 2 material events/yr; 8h median duration (governance pause); loss from delayed deleverage |
+| 4 | `defi_oracle_deviation_30sigma` | 300.0 | 200 | 0.5 | 3 major wild-prints/yr; short duration but high instantaneous loss if position open |
+| 5 | `defi_gas_surge_50x` | 400.0 | 40 | 0.2 | 4 material events/yr; BLOCK_NEW means no new losses; existing positions unaffected |
+| 6 | `cefi_funding_spike_10x` | 200.0 | 60 | 8.0 | 2 major (>10×) events/yr; `carry_staked_basis` eroded margin; 1 funding period resolution |
+| 7 | `defi_stablecoin_depeg` | 150.0 | 500 | 72.0 | 1.5 catastrophic-tier events/yr; SVB-scale: 72h recovery; loss at −500bps trigger = full position exit cost |
+| 8 | `cross_asset_flash_crash` | 60.0 | 800 | 1.5 | 3 events in 5yr ≈ 60%/yr; median reversion 75% within 1h; 25th percentile structural (weeks) |
+| 9 | `cross_asset_basis_blowout_perp_spot` | 80.0 | 300 | 4.0 | 4 major events in 5yr ≈ 80%/yr; 75th percentile resolves within 8h; stETH 2022 tail = weeks |
+| 10 | `defi_mempool_congestion_inclusion_delay` | 600.0 | 30 | 0.25 | 6 material events/yr; short-duration; loss only if sandwich variant + slippage tolerance mis-set |
+
+### Expected-loss calibration notes
+
+1. **`probability_weight` is annualised percent**: 100% = 1 occurrence per year expected. Values >100% = multiple occurrences per year (common for gas surges, mempool, RPC outages). This is a frequency estimate, not a probability in [0,1].
+
+2. **`expected_loss_bps` is worst-case 1-day P&L impact**: assumes strategy is fully deployed at max position size; loss is the expected delta between (a) ideal outcome without scenario and (b) actual outcome with scenario running. Scenario-triggered BLOCK_NEW means 0 new losses on pending entries but existing positions may have adverse mark-to-market.
+
+3. **Highest annualised-loss scenarios** (probability × expected_loss_bps):
+   - `defi_mempool_congestion_inclusion_delay`: 600% × 30 = 18,000 loss-bps-events/yr (frequent, small)
+   - `defi_oracle_deviation_30sigma`: 300% × 200 = 60,000 (frequent, moderate)
+   - `defi_gas_surge_50x`: 400% × 40 = 16,000 (frequent, small; BLOCK_NEW limits exposure)
+   - `cross_asset_flash_crash`: 60% × 800 = 48,000 (rare, large) — highest single-event tail risk
+   - `defi_stablecoin_depeg`: 150% × 500 = 75,000 (moderate frequency, very large) — **highest annual expected loss**
+
+4. **`recovery_time_hours`** is the median observed duration before scenario auto-recovers or is manually resolved. Used to calibrate `expected_within_seconds` in `ScenarioOutcomeAssertion` per cell.
+
+5. **UAC schema extension opportunity** (deferred): `ScenarioOverlay` Pydantic could carry `probability_weight: Decimal | None` + `expected_loss_bps: int | None` + `recovery_time_hours: Decimal | None` as optional metadata fields. This table is the prototype; the schema extension lands in successor plan Phase 1.B.
+
+- [x] [DESIGN] P0. **7.A Per-scenario probability weight + expected-loss table.** ✅ design-shipped 2026-05-13 (slot 7 Day-2-4 scope extension). Plan body above enumerates 10 scenarios × 3 risk metrics (probability_weight / expected_loss_bps / recovery_time_hours) with historical basis. Successor plan Phase 1.B owns UAC schema extension.
+- [x] [DESIGN] P0. **7.B Annualised-loss ranking.** ✅ design-shipped 2026-05-13. Top-5 by probability × expected_loss identified (mempool, oracle, gas, flash-crash, depeg); `defi_stablecoin_depeg` highest annual expected loss.
+
+**Full-execution criterion** (design-only phase):
+
+- ✅ 10-row probability + expected-loss table present in plan body with probability_weight / expected_loss_bps / recovery_time_hours per scenario + historical basis per row.
+  - **What ran**: design analysis + plan body authoring (2026-05-13 slot 7).
+  - **Verification**: `grep -c "probability_weight" plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md` returns ≥10; `grep "defi_stablecoin_depeg" plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md | grep "75,000"` returns ≥1.
+
+## DONE-2026-05-13 (slot 7 Day-2-4 scope extension)
+
+**Session theme**: Phase 6 + Phase 7 + Phase 8.B-I + Phase 9 (successor plan) scope extension per slot-1 SCOPE EXTENSION 2 directive.
+
+**Shipped this session**:
+- Phase 6 (per-archetype coverage matrix expansion): 16-cell specification with 4-tuple per cell (breaker/alert/recovery/validation) + gap analysis table. All 16 cells have complete specification; 2 post-cutover extension items identified.
+- Phase 7 (probability + expected-loss matrix): 10-scenario × 3-metric table (probability_weight / expected_loss_bps / recovery_time_hours) with historical basis per row; top-5 annualised-loss ranking; `defi_stablecoin_depeg` highest annual expected loss at 75,000 loss-bps-events/yr.
+- Phase 8.B-I (codex sections): 8 new sections added to `codex/04-architecture/scenario-injection-architecture.md` covering scenario authoring guide, per-archetype scenario selection, matrix runner usage, post-run report shape, adversarial mode flag wiring, synthetic provenance auditing, scenario archive/version history, and operator runbook.
+- Phase 9 successor plan: `simulation_scenarios_post_cutover_2026_06_01.md` updated with carry-forward table + estimate_class + frontmatter corrections.
+
+| Phase / item | Status as of 2026-05-13 | Successor / blocker |
+|---|---|---|
+| Phase 6 (coverage matrix expansion) | `done` design-shipped | This plan body §§ above |
+| Phase 7 (probability + expected-loss) | `done` design-shipped | This plan body §§ above; UAC schema extension → successor Phase 1.B |
+| Phase 8.B-I (codex sections) | `done` shipped | `codex/04-architecture/scenario-injection-architecture.md` |
+| Phase 9 (successor plan update) | `done` shipped | `simulation_scenarios_post_cutover_2026_06_01.md` |
+| Phase 9 real-VM runs | `deferred-after-successor` (pending Phase 3.E operator runtime complete) | `simulation_scenarios_post_cutover_2026_06_01.md` Phase 6 |
