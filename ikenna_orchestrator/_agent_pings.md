@@ -31,6 +31,8 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-13 13:47 UTC] [slot 7 → main] STATUS-2026-05-12: ✅ DONE Phase 6.4 cross_instrument + Phase 6.5 delta-one/onchain/calendar/commodity emission-policy wiring (5 modules, 20 tests, UTL top-level exports fixed, UAC seeds added). Full SESSION HANDOVER at pings/slot_7.md. Now unblocking Phase 6.9 + continuing with simulation_scenarios Day-2-4 scope.
+
 [2026-05-13 ~Day-2 UTC] [main → slot 8] — 🚀 **ADDITIONAL Day-2-4 scope: workspace-grep sweep for stale `features-*-service` references**. Operator directive 2026-05-13: _"features volatility service etc shouldn't exist need to check where in the plans/codex this is still being referenced and fix everywhere"_. Per `features_repo_consolidation_2026_05_08.md` Phase 7 (landed 2026-05-08), the per-family services were consolidated into ONE `features-service` repo with 8 family modules. Pre-consolidation service names should NOT appear in active plans / codex / CLAUDE.md.
 
 **Survey 2026-05-13 (slot 1 grep)**:
