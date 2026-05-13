@@ -565,6 +565,19 @@ and oracle-safety signals in the closed set BEFORE Phase 7 quietness baseline ru
       `oracle_staleness_seconds` + `lending_utilization_high_bps`, channel severity assertions for VENUE_HALTED (HIGH,
       PagerDuty) and LENDING_BORROW_CAP_REACHED (WARN, no PagerDuty). Shipped UAC@086144e.
 
+### Phase 1.F — Telegram ops channel split (2026-05-13, Slot 7)
+
+Split Telegram delivery into two channels: live-ops runtime alerts → `TELEGRAM_CHAT_ID_OPS`; CI/QG/internal
+events → existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channel until operator sets OPS chat_id.
+
+- [x] [SCRIPT] P0. **alerting-service code**: Added `telegram_chat_id_ops: str = Field(default="")` to
+      `AlertingSystemConfig`; added `_is_runtime_alert()` helper (fnmatch against `LIVE_ALERT_RULES`); modified
+      `_deliver_message()` to route `LIVE_ALERT_RULES` events to ops channel when `telegram_chat_id_ops` is set, else
+      fall back to `telegram_chat_id`. 3 new tests in `TestTelegramOpsChannelRouting`. Shipped alerting-service@14002b1.
+- [ ] [OPERATOR] P1. **Set `TELEGRAM_CHAT_ID_OPS` GHA repo variable** in alerting-service repo settings once operator
+      has created the ops Telegram channel and knows the new chat_id. No code change needed — env var wired directly.
+      **DEFERRED-PER-USER**: gated on operator providing new chat_id.
+
 ## Cross-plan blockers
 
 **Blocked by**: nothing upstream.
