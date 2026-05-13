@@ -50,46 +50,44 @@ into **execution-service** (matching_engine/ sub-package).
 
 ## Pattern by Repo/Adapter
 
-| Repo/Adapter               | Factory Signature                                                      | What Services Pass                         |
-| -------------------------- | ---------------------------------------------------------------------- | ------------------------------------------ |
-| execution-service (CeFi)   | `get_order_adapter(venue, api_key, api_secret, ...)`                   | Exchange API key + secret                  |
-| execution-service (DeFi)   | `connector.connect(config={"wallet_private_key": pk, "rpc_url": url})` | Wallet key + resolved RPC URL              |
-| execution-service (Sports) | `adapter(credentials={"api_key": key, ...})`                           | Venue-specific credentials                 |
+| Repo/Adapter                | Factory Signature                                                      | What Services Pass                           |
+| --------------------------- | ---------------------------------------------------------------------- | -------------------------------------------- |
+| execution-service (CeFi)    | `get_order_adapter(venue, api_key, api_secret, ...)`                   | Exchange API key + secret                    |
+| execution-service (DeFi)    | `connector.connect(config={"wallet_private_key": pk, "rpc_url": url})` | Wallet key + resolved RPC URL                |
+| execution-service (Sports)  | `adapter(credentials={"api_key": key, ...})`                           | Venue-specific credentials                   |
 | execution-service (Custody) | `get_custody_provider(CustodyConfig(provider, ...))`                   | Per-`signing_surface` config (see § Custody) |
-| instruments-service        | `create_adapter(venue, api_key=key)`                                   | Data provider API key                      |
-| UMI                        | `get_adapter(venue)`                                                   | None (public endpoints)                    |
-| UEI                        | `setup_events()`                                                       | None (ADC for PubSub)                      |
-| UFI                        | N/A                                                                    | None (public APIs)                         |
-| UCI                        | N/A                                                                    | Provides `get_secret_client()` to services |
+| instruments-service         | `create_adapter(venue, api_key=key)`                                   | Data provider API key                        |
+| UMI                         | `get_adapter(venue)`                                                   | None (public endpoints)                      |
+| UEI                         | `setup_events()`                                                       | None (ADC for PubSub)                        |
+| UFI                         | N/A                                                                    | None (public APIs)                           |
+| UCI                         | N/A                                                                    | Provides `get_secret_client()` to services   |
 
 ### Custody (per-wallet signing surface — added 2026-05-12 by Phase 3.C SPLIT)
 
-Per [`custody-providers.md`](custody-providers.md) § 1, custody signing routes
-through a single factory `get_custody_provider(config: CustodyConfig)` that
-picks the right `CustodyProvider` implementation per `config.provider`. The
-provider name comes from UAC `WalletProvisioningConfig.signing_surface` (per
-[`per-archetype-wallet-isolation.md`](../05-infrastructure/per-archetype-wallet-isolation.md)
-§ 6 + UAC@`d721b6a` schema):
+Per [`custody-providers.md`](custody-providers.md) § 1, custody signing routes through a single factory
+`get_custody_provider(config: CustodyConfig)` that picks the right `CustodyProvider` implementation per
+`config.provider`. The provider name comes from UAC `WalletProvisioningConfig.signing_surface` (per
+[`per-archetype-wallet-isolation.md`](../05-infrastructure/per-archetype-wallet-isolation.md) § 6 + UAC@`d721b6a`
+schema):
 
-| `signing_surface`         | `config.provider` | Required `CustodyConfig` fields                     | Notes |
-|---------------------------|--------------------|------------------------------------------------------|-------|
-| `LOCAL_KEY`               | `local_key`        | `private_key` (raw PK), `rpc_url`                    | Dev / testnet only |
-| `CLOUD_KMS_ENCRYPTED`     | `cloud_kms`        | `kms_key_uri`, `private_key_secret_ref`, `rpc_url`   | **May-23 cutover default** (per R9 RESOLVED 2026-05-12) — shipped at execution-service@`d45d24b4` |
-| `COPPER_MPC`              | `copper`           | `api_key`, `api_secret`, `organization_id`           | June-1 client-cred flip target |
-| `FIREBLOCKS_MPC`          | `fireblocks`       | `api_key`, `api_secret`, `vault_account_id` (via `organization_id`) | June-1 client-cred flip target (Phase 3.C.2 deferred-after-cutover) |
-| `MOCK`                    | `mock`             | None                                                 | Test-only |
+| `signing_surface`     | `config.provider` | Required `CustodyConfig` fields                                     | Notes                                                                                             |
+| --------------------- | ----------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `LOCAL_KEY`           | `local_key`       | `private_key` (raw PK), `rpc_url`                                   | Dev / testnet only                                                                                |
+| `CLOUD_KMS_ENCRYPTED` | `cloud_kms`       | `kms_key_uri`, `private_key_secret_ref`, `rpc_url`                  | **May-23 cutover default** (per R9 RESOLVED 2026-05-12) — shipped at execution-service@`d45d24b4` |
+| `COPPER_MPC`          | `copper`          | `api_key`, `api_secret`, `organization_id`                          | June-1 client-cred flip target                                                                    |
+| `FIREBLOCKS_MPC`      | `fireblocks`      | `api_key`, `api_secret`, `vault_account_id` (via `organization_id`) | June-1 client-cred flip target (Phase 3.C.2 deferred-after-cutover)                               |
+| `MOCK`                | `mock`            | None                                                                | Test-only                                                                                         |
 
-**Per-wallet flippability**: each `WalletProvisioningConfig` row carries its
-own `signing_surface` — operator flips the field in
-`gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` + service
-reloads via `ApiKeyReloader` — **no recompile, no service restart**.
+**Per-wallet flippability**: each `WalletProvisioningConfig` row carries its own `signing_surface` — operator flips the
+field in `gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` + service reloads via `ApiKeyReloader` — **no
+recompile, no service restart**.
 
-> **Hot-reload integration test (codex audit EX-16 2026-05-12)**: the `signing_surface` flip path
-> (`cloud_kms_encrypted` → `copper` for the June-1 client-cred cutover) MUST be verified by an end-to-end test that
-> (a) writes a fresh `wallet_provisioning.json` to the staging bucket, (b) asserts `get_custody_provider()` returns
-> the new provider class within `ApiKeyReloader`'s polling interval (no service restart), and (c) confirms the
-> `WALLET_PROVISIONING_RELOADED` event fires. Test location: `execution-service/tests/integration/test_signing_surface_hot_reload.py`
-> (to be added; tracked in `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`).
+> **Hot-reload integration test (codex audit EX-16 2026-05-12)**: the `signing_surface` flip path (`cloud_kms_encrypted`
+> → `copper` for the June-1 client-cred cutover) MUST be verified by an end-to-end test that (a) writes a fresh
+> `wallet_provisioning.json` to the staging bucket, (b) asserts `get_custody_provider()` returns the new provider class
+> within `ApiKeyReloader`'s polling interval (no service restart), and (c) confirms the `WALLET_PROVISIONING_RELOADED`
+> event fires. Test location: `execution-service/tests/integration/test_signing_surface_hot_reload.py` (to be added;
+> tracked in `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`).
 >
 > ```yaml
 > execution:
@@ -105,10 +103,9 @@ reloads via `ApiKeyReloader` — **no recompile, no service restart**.
 ### Phase 4 DeFi Connectors — credential shape unchanged
 
 All 13 Phase 4 connectors (shipped 2026-05-12 per `defi_catalogue_chain_primitives_2026_05_10.md`):
-`RocketPoolConnector`, `RenzoConnector`, `KelpDAOConnector`, `PufferConnector`,
-`SymbioticConnector`, `KarakConnector`, `YearnConnector`, `ConvexConnector`, `BeefyConnector`,
-`PendleConnector`, `IdleConnector`, `SolBlazeConnector`, `JitoRestakingConnector` — all follow the
-**same credential injection pattern** as existing DeFi connectors:
+`RocketPoolConnector`, `RenzoConnector`, `KelpDAOConnector`, `PufferConnector`, `SymbioticConnector`, `KarakConnector`,
+`YearnConnector`, `ConvexConnector`, `BeefyConnector`, `PendleConnector`, `IdleConnector`, `SolBlazeConnector`,
+`JitoRestakingConnector` — all follow the **same credential injection pattern** as existing DeFi connectors:
 
 ```python
 connector.connect(config={
@@ -117,10 +114,39 @@ connector.connect(config={
 })
 ```
 
-Solana connectors (`SolBlazeConnector`, `JitoRestakingConnector`) use Solana mainnet/devnet RPC URLs;
-credential shape is identical. No new secret names required — existing `defi-wallet-private-key` +
-`alchemy-api-key` cover all 13. Tenderly fork URLs follow the `fork_mode=tenderly` path in `base.py`
-`get_defi_rpc_url()`.
+Solana connectors (`SolBlazeConnector`, `JitoRestakingConnector`) use Solana mainnet/devnet RPC URLs; credential shape
+is identical. No new secret names required — existing `defi-wallet-private-key` + `alchemy-api-key` cover all 13.
+Tenderly fork URLs follow the `fork_mode=tenderly` path in `base.py` `get_defi_rpc_url()`.
+
+## Custody Endpoint Credentials
+
+Custody endpoints (Copper, CEFFU, DeFi wallet) follow the **same credential-registry-id reference pattern** as venue
+execution credentials. The credential field always carries a Secret Manager id reference — the actual secret value is
+never inlined.
+
+| Custody type        | UAC type                | Credential field        | What it holds                                           |
+| ------------------- | ----------------------- | ----------------------- | ------------------------------------------------------- |
+| Copper MPC          | `CopperEndpoint`        | `api_key_id`            | Secret Manager id referencing Copper API key            |
+| CEFFU institutional | `CEFFUEndpoint`         | `api_key_id`            | Secret Manager id referencing CEFFU API key             |
+| DeFi on-chain       | `DefiWalletKeyMaterial` | `private_key_secret_id` | Secret Manager id; envelope-encrypted via Cloud HSM CMK |
+
+**`CopperEndpoint.api_key_id`** — the execution-service resolves the actual Copper API key from Secret Manager at
+runtime via UCI `get_secret_client()`. The id is a string constant in `CredentialsRegistry`; the interface
+(`CustodyProvider`) receives the resolved key as a constructor parameter.
+
+**`CEFFUEndpoint.api_key_id`** — same pattern. CEFFU API key resolved at runtime by execution-service; never passed as a
+literal string in config files.
+
+**`DefiWalletKeyMaterial.private_key_secret_id`** — the private key is stored as a Cloud HSM CMK-encrypted envelope in
+Secret Manager. The execution-service fetches the encrypted envelope, decrypts via the KMS path (per
+`custody-providers.md`), and passes the raw key to the connector for the duration of the signing session only. It is
+never cached in service memory beyond the signing window.
+
+**Cross-references:**
+
+- UAC `CopperEndpoint`, `CEFFUEndpoint`, `DefiWalletKeyMaterial` — `unified_api_contracts.canonical.domain.treasury`
+- Full custody taxonomy + endpoint config fields + withdrawal lifecycle:
+  [`treasury-custody-flow.md`](treasury-custody-flow.md)
 
 ## Why This Convention
 
