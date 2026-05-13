@@ -208,10 +208,11 @@ all UAC imports. (unified-api-contracts@bb4a718)
 
 ## Phase 4 — Post-trade settlement events + HWM ledger contracts (Days 8-9, ~1.5 AI-days)
 
-- [ ] [AGENT] P0. **4.A `TradeSettledEvent` per trade.** Emitted within named SLA of execution fill.
-- [ ] [AGENT] P0. **4.B Per-day fee accrual.** UTL `post_trade/settler.py` aggregates per-client fees daily; emits
-      `FeeAccruedEvent`.
-- [ ] [AGENT] P0. **4.C UAC HWM + FeeRecognition contracts.** `HighWaterMarkLedgerRow` Pydantic —
+- [x] [AGENT] P0. **4.A `TradeSettledEvent` per trade.** Emitted within named SLA of execution fill. (utl@a93f78be —
+      execution_fill_at + emitted_within_sla added; 4 SLA tests)
+- [x] [AGENT] P0. **4.B Per-day fee accrual.** UTL `post_trade/settler.py` aggregates per-client fees daily; emits
+      `FeeAccruedEvent`. (utl@a93f78be — daily_fee_breakdown dict TRADING/FINANCING/FLAT/OTHER; 3 breakdown tests)
+- [x] [AGENT] P0. **4.C UAC HWM + FeeRecognition contracts.** `HighWaterMarkLedgerRow` Pydantic —
       `(client_id, share_class_id, as_of, nav, prior_peak_nav, delta, crystallization_due)`. `CrystallizationCadence`
       closed enum: `DAILY / WEEKLY / MONTHLY / QUARTERLY`. Per-share-class `crystallization_cadence` declared in
       `registry/client_share_classes.py` + per-share-class `perf_fee_rate: Decimal`. **NEW `FeeRecognitionRow` Pydantic
@@ -222,9 +223,11 @@ all UAC imports. (unified-api-contracts@bb4a718)
       zero-fee underwater case). Stored at
       `gs://{pid}-client-statements/{client_id}/fee_recognition/{YYYY-MM-DD}/*.parquet`. `FeeRecognitionRow` is the SSOT
       for fee accounting; `PnLAttributionRow` (in `client_reporting_pnl_attribution_mvp`) keeps its factor × layer dual
-      axis decoupled — fee recognition does NOT participate in attribution decomposition.
-- [ ] [AGENT] P0. **4.D HWM-aware per-trade ledger update.** Per-trade NAV update feeds the HWM ledger row; flat-fee is
-      the per-trade base, HWM-driven crystallization is the per-period top-up.
+      axis decoupled — fee recognition does NOT participate in attribution decomposition. (uac@3f8bd3b — hwm_ledger.py +
+      client_share_classes.py updated; 25 unit tests)
+- [x] [AGENT] P0. **4.D HWM-aware per-trade ledger update.** Per-trade NAV update feeds the HWM ledger row; flat-fee is
+      the per-trade base, HWM-driven crystallization is the per-period top-up. (utl@a93f78be — hwm_periods.py +
+      update_hwm_ledger() + HWMLedgerUpdatedEvent; 21 tests)
 
 **Full-execution criterion**: every paper-trade fill produces matching `TradeSettledEvent` within SLA; daily fee
 aggregate matches sum-of-trades; HWM ledger row updated per trade with `delta = max(0, nav − prior_peak_nav)`.
