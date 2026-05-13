@@ -301,22 +301,27 @@ emitted daily including HWM section.
 
 ## Phase 7 — Demo client seed (Day 11, ~0.5 AI-day)
 
-- [ ] [AGENT] P0. **7.A Demo client onboarding.** Walk demo client DRAFT → LIVE through onboarding state machine; KYC
+- [x] [AGENT] P0. **7.A Demo client onboarding.** Walk demo client DRAFT → LIVE through onboarding state machine; KYC
       stub approved; deposit recorded; share-class subscriptions to both cutover archetypes.
-- [ ] [AGENT] P0. **7.B Treasury wired.** Copper + CEFFU + DeFi PK pingable; sub-accounts assigned per cutover venue.
+      (client-reporting-api@73116ab — scripts/seed_demo_client.py; 12 unit tests all green; idempotent re-run guard)
+- [x] [AGENT] P0. **7.B Treasury wired.** Copper + CEFFU + DeFi PK pingable; sub-accounts assigned per cutover venue.
+      (client-reporting-api@73116ab — wire_demo_treasury + CustodyPinger.ping_all; all 3 sources reachable asserted)
 
 **Full-execution criterion**: demo client `ClientOnboardingState == LIVE`; treasury pings green for all sources.
 
 ## Phase 8 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
 - [x] [AGENT] P0. **8.A NEW `codex/04-architecture/client-lifecycle-state-machine.md`.** Onboarding states +
-      transitions. (pm@d99ce232 — 7-state machine, Mermaid diagram, evidence table, idempotency contract, UAC/UTL cross-refs)
+      transitions. (pm@d99ce232 — 7-state machine, Mermaid diagram, evidence table, idempotency contract, UAC/UTL
+      cross-refs)
 - [x] [AGENT] P0. **8.B NEW `codex/04-architecture/treasury-custody-flow.md`.** Custody-source taxonomy, pre-trade ping,
-      sub-account allocation. (pm@d99ce232 — 6-source taxonomy, ping sequence diagram, withdrawal state machine, reconciliation invariant)
+      sub-account allocation. (pm@d99ce232 — 6-source taxonomy, ping sequence diagram, withdrawal state machine,
+      reconciliation invariant)
 - [x] [AGENT] P0. **8.C UPDATE `interface-credential-convention.md`** — custody endpoint credentials via registry.
-      (pm@d99ce232 — "Custody endpoint credentials" section added; CopperEndpoint/CEFFUEndpoint/DefiWalletKeyMaterial cross-refs)
-- [x] [AGENT] P0. **8.D UPDATE `capital-efficiency-patterns.md`** — per-client allocation cross-link.
-      (pm@d99ce232 — "Per-client capital allocation" section added; AllocationEngine, sum ≤ 100%, SUSPENDED_DRAWDOWN)
+      (pm@d99ce232 — "Custody endpoint credentials" section added; CopperEndpoint/CEFFUEndpoint/DefiWalletKeyMaterial
+      cross-refs)
+- [x] [AGENT] P0. **8.D UPDATE `capital-efficiency-patterns.md`** — per-client allocation cross-link. (pm@d99ce232 —
+      "Per-client capital allocation" section added; AllocationEngine, sum ≤ 100%, SUSPENDED_DRAWDOWN)
 
 **Full-execution criterion**: 2 NEW + 2 UPDATE; cross-references resolve.
 
