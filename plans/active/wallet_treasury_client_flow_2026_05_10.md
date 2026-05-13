@@ -332,18 +332,54 @@ emitted daily including HWM section.
 
 ## Phase 9 — Real-VM cutover dry-run (Days 12-13, ~1 AI-day)
 
+> **READY-FOR-OPERATOR (2026-05-13)**: Launcher + evidence capture scripts shipped.
+> When back from flights, run in one command:
+> ```bash
+> bash deployment-service/scripts/vm/launch-wallet-treasury-cutover-vm.sh
+> ```
+> Then after ~24h when VM completes:
+> ```bash
+> python3 position-balance-monitor-service/scripts/capture_phase_9_evidence.py \
+>   --run-id <wallet-treasury-cutover-{timestamp}>
+> ```
+> Phase 10 operator checklist is pre-staged below. Checkboxes 9.A + 9.B + 10.A + 10.B
+> require the actual VM run to complete — DO NOT flip until evidence is captured.
+
 - [ ] [SCRIPT] P0. **9.A Cutover-archetype demo client dry-run.** VM `wallet-treasury-cutover-` runs full lifecycle:
       onboarding → treasury ping → allocation → 24h paper-trade → settle → fee accrual + HWM-ledger update → daily
       statement → ≥1 automated withdrawal (REQUESTED → APPROVED 2-of-N → EXECUTED → RECONCILED) → ≥1 forced
       period-boundary crystallization with non-zero perf-fee + ≥1 underwater zero-fee crystallization.
+      **Launcher**: `deployment-service/scripts/vm/launch-wallet-treasury-cutover-vm.sh`
+      (deployment-service@PENDING — shipped 2026-05-13; awaiting operator VM run).
 - [ ] [AGENT] P0. **9.B Evidence capture.** Per-stage event log; statement parquet sample; HWM ledger sample; withdrawal
       audit log sample; reconciliation green.
+      **Script**: `position-balance-monitor-service/scripts/capture_phase_9_evidence.py`
+      (position-balance-monitor-service@PENDING — shipped 2026-05-13; awaiting VM run + evidence capture).
 
 **Full-execution criterion**: full lifecycle log green; statement parquet emitted; HWM invariant green across forced
 multi-period scenario; ≥1 withdrawal completed end-to-end with reconciliation diff < tolerance; ≥1 perf-fee
 crystallization event emitted with `perf_fee_amount > 0`; ≥1 underwater crystallization with `perf_fee_amount == 0`.
 
 ## Phase 10 — Cutover gate (Day 13, ~0.25 AI-day)
+
+> **Operator-runnable checklist (post-9.A evidence capture)**
+>
+> This is a mechanical phase — no agent work required. Once Phase 9.A VM has
+> run and Phase 9.B evidence capture exits 0, the operator performs:
+>
+> 1. Verify `gs://{project_id}-evidence/wallet-treasury-cutover/{run_id}/evidence_summary.json`
+>    shows `"overall": "PASS"` and `reconciliation_diff.json` max_diff_usd < 0.01.
+> 2. Verify `statement_sample.parquet` has ≥1 row with `perf_fee_amount > 0`.
+> 3. Flip checkbox **10.A** below with commit SHA evidence from step 1+2.
+> 4. Flip checkbox **10.B** below and remove all `🟡 IN-FLIGHT REFACTOR` banners from
+>    cross-plan files: `client_reporting_pnl_attribution_mvp_2026_05_10.md`,
+>    `api_keys_wallets_accounts_readiness_2026_05_10.md`.
+> 5. Push both flips to `live-defi-rollout`:
+>    ```bash
+>    git add plans/active/wallet_treasury_client_flow_2026_05_10.md
+>    git commit -m "docs(plans): wallet_treasury Phase 10 — cutover gate green (evidence captured)"
+>    git push origin live-defi-rollout
+>    ```
 
 - [ ] [AGENT] P0. **10.A Master plan rows.** Group F item 19 + Group G item 23 rows include "demo client lifecycle
       end-to-end green."
