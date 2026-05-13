@@ -24,7 +24,7 @@ estimate_calibration_note: |
   Updated 2026-05-13 (slot 6 substantive touch).
 ---
 
-> **✅ Dry-run COMPLETE.** **✅ defi/tradfi apply COMPLETE 2026-05-13 ~08:34 UTC.** **🟢 cefi apply VM RUNNING** — `manifest-recon-apply-cefi-20260513-082713` finishing Script 1 scan (~08:37), Script 2 (3,146 stamps) in progress. Do NOT modify cefi manifest until VM completes.
+> **✅ Dry-run COMPLETE.** **✅ cefi/defi/tradfi apply-flips COMPLETE 2026-05-13** (cefi Scripts 1+2 done ~08:39 UTC; defi/tradfi ~08:34 UTC). Script 3 apply-flips **BLOCKED** on classifier fix — P1 issue filed (`classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md`). Sports/prediction apply-flips deferred (separate authorized slot needed).
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -207,14 +207,14 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       section populated. Run 1 failed silently (python path doubled by setup-script substitution); fixed in
       deployment-service@2ca80d5. Run 2 (07:47 UTC) all completed ~09:00 UTC.
       Log root: `gs://deployment-scripts-central-element-323112/vm-logs/manifest-recon-{ag}-20260513-074{716,736}/run.log`
-- [ ] [SCRIPT] P1. Apply-flips: cefi/defi/tradfi Scripts 1+2 — **IN FLIGHT 2026-05-13 08:27 UTC (run 2)**.
+- [x] [SCRIPT] P1. Apply-flips: cefi/defi/tradfi Scripts 1+2 — COMPLETE 2026-05-13 (deployment-service@1a714ec+@574c168).
       Run 1 (08:19) failed rc=2 — `--apply` not recognized; fixed to `--unphantom` (deployment-service@574c168).
-      (deployment-service@1a714ec+@574c168): 3 VMs running via `launch-manifest-recon-apply-vm.sh`.
-      VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`.
-      Expected: cefi ~30-60 min (2,223 phantom flips + 3,146 null-reason stamps), defi/tradfi ~15-20 min.
-      Post-completion: pull apply counts from vm-logs + flip this checkbox + add Gate 4 results section.
+      VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`. All 3 self-deleted after completion.
+      **cefi**: 2,223 phantom flips + 3,146 null-reason stamps (SOURCE_RETURNED_ZERO) ~08:29–08:39 UTC.
+      **defi**: 1,298 phantom flips (rewards) + 0 stamps ~08:27–08:34 UTC.
+      **tradfi**: 3,976 phantom flips (trades+tbbo+ohlcv_1m) + 0 stamps ~08:27–08:34 UTC.
       Sports/prediction apply-flips deferred — needs separate authorized slot (99,620 sports phantoms).
-      **DEFERRED**: Script 3 apply-flips for defi/sports/prediction blocked on classifier fix.
+      **DEFERRED**: Script 3 apply-flips for defi/sports/prediction blocked on classifier fix (P1 issue filed).
 - [ ] [SCRIPT] P1. **PRE_CUTOVER — switch all 3 reconciliation scripts to `resolve_bucket_name`** (blocked on physical
       bucket migration landing). Currently all 3 scripts hardcode legacy non-env-tiered bucket names (e.g.
       `market-data-tick-cefi-{PROJECT_ID}`) violating the bucket-name SSOT (b+) codified 2026-05-11.
@@ -337,26 +337,41 @@ VM names: `manifest-recon-{defi,cefi,tradfi,sports,prediction}-20260513-074{716,
 | ---- | --------- | ------ |
 | Gate 1 | Slot 2 `expected_unattempted_propagation_chain` Phase 3+4+2.A complete | ✅ FIRED 07:30 UTC (_agent_pings.md) |
 | Script 3 classifier | `classify_blank_reason_row()` `fixture_manifest` kwarg fix | 🔴 BLOCKED — issue filed P1 |
-| cefi Script 2 apply | 3,146 null-reason → `SOURCE_RETURNED_ZERO` stamp | 🟢 IN FLIGHT (cefi VM running) |
+| cefi Script 2 apply | 3,146 null-reason → `SOURCE_RETURNED_ZERO` stamp | ✅ COMPLETE (08:39 UTC) |
 | defi/tradfi phantom apply | Scripts 1+2 `--unphantom`/`--apply-flips` | ✅ COMPLETE (08:34 UTC) |
-| cefi phantom apply | Script 1 `--unphantom` | 🟢 IN FLIGHT |
+| cefi phantom apply | Script 1 `--unphantom` (2,223 flips) | ✅ COMPLETE (08:39 UTC) |
 | Script 3 apply-flips | defi/sports/prediction legacy-blank upgrades | 🔴 BLOCKED on classifier fix |
 
-## Phantom audit Gate 4 results — 2026-05-13 apply-flips (PARTIAL — cefi in flight)
+## Phantom audit Gate 4 results — 2026-05-13 apply-flips (cefi/defi/tradfi COMPLETE)
 
-Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-{defi,tradfi}-20260513-082713`.
+Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`.
+All 3 VMs self-deleted on completion (`VM_SHUTDOWN_ON_COMPLETION=true`).
 
 ### Script 1 — phantom rows flipped to `attempted_failed`
 
 | asset_group | Manifest rows uploaded | Phantoms flipped | Script 2 stamped | Notes |
 | ----------- | ---------------------: | ---------------: | ---------------: | ----- |
-| defi        | 1,606,190              | **1,298**        | 0                | All `rewards` — complete |
-| cefi        | —                      | —                | —                | IN FLIGHT |
-| tradfi      | 141,401                | **3,976**        | 0                | Trades+tbbo+ohlcv_1m — complete |
-| sports      | —                      | —                | —                | Deferred (out of slot scope) |
-| prediction  | —                      | —                | —                | Deferred (out of slot scope) |
+| defi        | 1,606,190              | **1,298**        | 0                | All `rewards` — complete ~08:34 UTC |
+| cefi        | 2,632,931              | **2,223**        | **3,146**        | Scripts 1+2 both ran — complete ~08:39 UTC |
+| tradfi      | 141,401                | **3,976**        | 0                | Trades+tbbo+ohlcv_1m — complete ~08:34 UTC |
+| sports      | —                      | —                | —                | Deferred (out of slot scope; 99,620 phantoms need separate authorized slot) |
+| prediction  | —                      | —                | —                | Deferred (out of slot scope; 50 phantoms) |
+| **TOTAL**   |                        | **7,497**        | **3,146**        | cefi/defi/tradfi only |
 
-> cefi Script 1: scanning 129,220 prefixes (~08:37 UTC), Script 2: 3,146 null-reason rows to stamp. Results pending.
+> cefi Script 2 `SOURCE_RETURNED_ZERO` reason distribution: all 3,146 stamped rows → `SOURCE_RETURNED_ZERO`.
+> Per-VM shard at `gs://market-data-tick-cefi-central-element-323112/_index/per_vm/manifest-recon-apply-cefi-20260513-082713.parquet`; consolidator merges within ~5 min.
+
+## Deferred work after 2026-05-13 slot-6 session
+
+| Phase / item | Status as of 2026-05-13 | Successor / blocker |
+| ------------ | ----------------------- | ------------------- |
+| Script 1+2 apply-flips cefi/defi/tradfi | ✅ COMPLETE (all 3 VMs done, 7,497 phantoms flipped, 3,146 stamps) | — |
+| Script 3 apply-flips (defi/sports/prediction) | 🔴 BLOCKED — 0 upgrades due to `fixture_manifest` kwarg error | Fix in `classify_blank_reason_row()` UTL/reconciler; re-run dry-run first. Issue: `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` |
+| Sports/prediction apply-flips Scripts 1+2 | ⏸ DEFERRED — not in slot 6 scope | Needs separate authorized slot; sports has 99,620 phantoms, prediction 50 |
+| `--data-types` pass-ordering for apply-flips | ⏸ DEFERRED — `launch-manifest-recon-apply-vm.sh` does not implement pass 1→2 ordering | Todo in plan: `[SCRIPT] P0. Add execution order enforcement to rescan launcher`. Needs launcher (not yet shipped) |
+| Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`) | ⏸ DEFERRED — spec written in plan; script not yet shipped | Blocker: reconciliation pass ordering must be settled first |
+| `resolve_bucket_name` migration for 3 reconciler scripts | ⏸ DEFERRED — blocked on physical bucket rename (bucket_name_ssot Phase 2.6) | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 must land first |
+| Codex SSOT updates (phantom audit doc + cross-asset-rescan stub) | ⏸ DEFERRED — no new patterns established this session; existing plan stub stands | Ship with cross-asset-rescan launcher |
 
 ## Open questions
 
