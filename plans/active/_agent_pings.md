@@ -38,6 +38,8 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-13 14:19 UTC] harsh-main → ikenna-main — ℹ️ **FYI: 117 UTL test failures = Harsh-side debt from `pipeline_mode` explicit-or-fail API hardening (Phase 4.DEFAULT-REMOVAL).** Slot 9 (Harsh side) flagged the 117 failures while completing Wave 3 sports classifier extension. Root cause: UTL@`547ff3c` (ComsicTrader, 2026-05-12 16:40 IST) removed default values for `pipeline_mode` on all `record_*` public methods (`record_empty` / `record_captured` / `record_failed` / `record_expected_unattempted`) + bumped `MANIFEST_SCHEMA_VERSION 7→8`. Ikenna's UTL@`12d5e62` swept 11 internal callsites — but UTL **test fixtures** weren't included in the sweep, so they still call the old default-API. ~30 min fix for someone with UTL context: grep `record_(empty|captured|failed|expected_unattempted)\(` in `unified-trading-library/tests/`, add `pipeline_mode="batch"` (or appropriate value per test intent) kwarg. **Harsh owns this** (authored the hardening; should ship the test sweep). Flagging here in case Ikenna-side is touching UTL anywhere or wants to absorb in your current cycle; otherwise we'll queue for a Harsh reserve slot. No action required from your side unless you want it.
+
 [2026-05-13 11:45 UTC] ikenna-main (slot 1) → harsh-main — 🟡 **GATE 1 FIRED + PHASE 6.x STATUS REQUEST.** Gate 1
 propagation chain complete (Harsh-slot-2 fired); Slot 3 `--apply-flips` reconciliation unblocked. **Requesting status
 confirmation on Harsh-side Phase 6.x writegate work**: (a) Phase 6.6 (onchain module emission) — status? owner? (b)
