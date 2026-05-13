@@ -344,11 +344,14 @@ in plan order).
 | 2      | ✅     | strategy-service@0b4ef0e | `arbitrage_structural/funding_rate_dispersion.py` helper module (5 exports + 25 unit tests)                           |
 | 3      | ✅     | strategy-service@04c0d52 | Engine 8-step loop wire-in (`_on_tick_funding_rate_dispersion` consumes the helper) + 13 integration tests            |
 
-- [ ] [strategy-service] P1. Add the canonical BTC/USDT slot entry (ETH/USDT + SOL/USDT + top-10 enumeration ship in
+- [x] [strategy-service] P1. Add the canonical BTC/USDT slot entry (ETH/USDT + SOL/USDT + top-10 enumeration ship in
       A.6) to `strategy-service/strategy_service/engine/strategies/v2/archetype_slot_resolver.py` per the existing
       pattern (e.g. after the current ARBITRAGE_PRICE_DISPERSION rows ~L225–L811). The slot wires the **6-venue
       universe** with dynamic best-long/best-short selection (NOT a fixed venue pair) + Layer 1 + Layer 2 knobs +
       sign-match entry filter + short-term-vol clamp; engine implements all 3 Layer 1 modes day 1:
+      **DONE-2026-05-13 (slot-4-harsh)**: `BTC_FUNDING_RATE_DISPERSION` slot was shipped in Commit 1 at
+      strategy-service@24f8494 (6-venue universe, all Layer 1/Layer 2 knobs, sign-match + vol-clamp). Verified via
+      grep-then-read at `archetype_slot_resolver.py:780-819`. Checkbox was stale-unchecked.
 
       ```python
       Slot(
@@ -487,9 +490,11 @@ in plan order).
       zscore breach + calm regime, missing-funding-rates short-circuit, and cycle-counts attestations. All 88 adjacent
       tests stay green.
 
-- [ ] [strategy-service] P1. Tests:
-      `tests/unit/test_archetype_slot_resolver.py::test_arbitrage_price_dispersion_funding_rate_slot_exists`. QG green.
-      Commit + push.
+- [x] [strategy-service] P1. Tests:
+      `tests/unit/engine/strategies/v2/test_archetype_slot_resolver.py::test_arbitrage_price_dispersion_funding_rate_slot_exists`. QG green.
+      Commit + push. **DONE-2026-05-13 (slot-4-harsh)**: strategy-service@33697ce — added to
+      `TestArbitragePriceDispersionFundingRateSlot` class; asserts slot exists + correct archetype + dispersion_type.
+      (Note: path corrected from plan — actual test file is under `engine/strategies/v2/`, not `tests/unit/` directly.)
 
 - [x] [VERIFY] P0. From within strategy-service repo:
       `grep -n "funding-rate-dispersion" strategy_service/engine/strategies/v2/archetype_slot_resolver.py` returns ≥ 1
