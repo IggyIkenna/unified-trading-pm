@@ -28,12 +28,12 @@ estimate_calibration_note: |
 
 ### Operator decisions (locked 2026-05-12)
 
-| Question                      | Decision                                                                                                                                                |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 2.B amendment F         | **Option α** — orchestrator-boundary at `engine/orchestrator.py:2186-2218`; generalise ES.OPT manual check to all `BUNDLED_DATA_TYPES`; single SSOT     |
-| Phase 6.8 instruments-service | **Option (a)** — migrate all 41 `.add()` callsites → `record_captured()` then wire `publish_with_policy`; remove legacy path entirely                   |
+| Question                      | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 2.B amendment F         | **Option α** — orchestrator-boundary at `engine/orchestrator.py:2186-2218`; generalise ES.OPT manual check to all `BUNDLED_DATA_TYPES`; single SSOT                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Phase 6.8 instruments-service | **Option (a)** — migrate all 41 `.add()` callsites → `record_captured()` then wire `publish_with_policy`; remove legacy path entirely                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Phase 2.D — all fields        | **SHIPS NOW (full scope, 2026-05-12)**: (1) `match_end_time` = SFI progressive-stats freeze. (2) `announced_at` = API Football fixture object (retroactive). (3) `SFI_DATA_LAG_P95_SECONDS` UAC constant + `UNDERSTAT_DATA_LAG_P95_SECONDS` + `FOOTYSTATS_DATA_LAG_P95_SECONDS` + `API_FOOTBALL_RESULT_LAG_P95_SECONDS` + `OPEN_METEO_HISTORICAL_LAG_SECONDS` — all in new `UAC registry/source_data_latency.py`. (4) `report_time = match_end_time + SOURCE_LAG` per source. (5) POSTPONED/CANCELLED both historical AND live: instruments-service API Football forward-poll overwrites manifest with `record_empty(reason=EXPECTED_FIXTURE_POSTPONED/CANCELLED)`; manifest audit trail records the transition — no separate state-machine needed. |
-| CeFi Tardis re-shape          | **Option A** — re-rescan all 252 shards; do not derive from existing parquet                                                                            |
+| CeFi Tardis re-shape          | **Option A** — re-rescan all 252 shards; do not derive from existing parquet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### Phase/Wave status
 
@@ -3230,8 +3230,8 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       Adapters that DO transform source responses (`umi_tick_provider._fetch_databento_ohlcv_1m_async` → Databento
       direct `ohlcv_1m` feed; `gas_price_adapter._aggregate` → block-level fee rollup to hourly/daily; Hyperliquid
       `_aggregate` → orderbook depth bucketing) are **source-side transformations**, NOT aggregations of MTDS upstream
-      rows — MTDS is the originator for these data_types, so the slice (c) service-output policy doesn't apply (policy
-      gates derived outputs against _upstream service_ completeness; MTDS reads from external APIs, not from another
+      rows — MTDS is the originator for these data*types, so the slice (c) service-output policy doesn't apply (policy
+      gates derived outputs against \_upstream service* completeness; MTDS reads from external APIs, not from another
       MTDS service). MDPS retains exclusive ownership of `ohlcv_1m:from_trades` / `ohlcv_24h` / `book_snapshot_5`
       policy-gated paths per Phase 6.2. **No `(market-tick-data-service, *)` seed-dict entry needed.** Drift-watch: if a
       future MTDS handler reads from a _prior MTDS write_ to compute a derived row (cross-handler aggregation), that's
@@ -3296,8 +3296,8 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       (NAN_FILL). The STRICT_FAIL case is critical: a paired_spec row written when ONE leg has stale upstream is a
       leak-bias trap that produces confidently-wrong signal. Validate with a dedicated test: synthetic upstream where
       leg A is fully captured but leg B has 1% gaps → assert NO `paired_spec` row is written for the affected window +
-      STALE_DATA event fires.
-      (features-service@e31ef632 — _check_emission_policy + 4 unit tests + UTL top-level export @09116fa3; 4/4 pass)
+      STALE_DATA event fires. (features-service@e31ef632 — \_check_emission_policy + 4 unit tests + UTL top-level export
+      @09116fa3; 4/4 pass)
 
 **Phase 6.5 — Other features-\* services (P1, ~5 days bundled)**
 
@@ -3310,8 +3310,8 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [x] [features-onchain-service] P1. Audit for derived emissions (LST yield curves, gas-fee aggregates, vault-state
       summaries). **Seed shipped 2026-05-11 @uac@b570d49 — 11 entries** (lending_rates / lst_yields / onchain_perps /
       utilization / flash_loan_availability / rate_impact STRICT_FAIL; risk_params + health_factor BLOCK_CRITICAL;
-      macro_sentiment / rewards / liquidation_events PARTIAL_OK). **WIRED 2026-05-12
-      @features-service@6cbf50ff**: `_check_emission_policy()` + `_apply_emission_gate()` + `_handle_write_error()` in
+      macro_sentiment / rewards / liquidation_events PARTIAL_OK). **WIRED 2026-05-12 @features-service@6cbf50ff**:
+      `_check_emission_policy()` + `_apply_emission_gate()` + `_handle_write_error()` in
       `features_service/onchain/app/core/feature_writer.py`; emission check fires once per feature_group per date at
       `write_features()` write boundary; BLOCK_CRITICAL emits `EMISSION_POLICY_BLOCKED` alert event; 4 mode-routing
       tests in `tests/onchain/unit/test_emission_policy.py`.
@@ -3330,23 +3330,22 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       / cointegration / liquidation_band_prediction / dxy_momentum NAN_FILL; cme_gap PARTIAL_OK; cross_venue_spreads /
       book_depth_bands / liquidity_walls / liquidation_clusters / flow_interaction / composite_sr /
       paired_price_dispersion STRICT_FAIL); delta-one (9 anchors); multi-timeframe (4 cross-TF alignment groups all
-      STRICT_FAIL on paired_spec precedent). **DEFERRED**: per-service wiring of `publish_with_policy()`.
-      **DELTA-ONE WIRED 2026-05-12 @features-service@5e24a18c**: `_check_emission_policy()` + `_apply_emission_policy()`
-      in `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
+      STRICT_FAIL on paired_spec precedent). **DEFERRED**: per-service wiring of `publish_with_policy()`. **DELTA-ONE
+      WIRED 2026-05-12 @features-service@5e24a18c**: `_check_emission_policy()` + `_apply_emission_policy()` in
+      `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
       `tests/delta_one/unit/test_emission_policy.py`. cross-instrument wired @features-service@e31ef632 (Phase 6.4).
       **STILL DEFERRED**: multi-timeframe wiring + sports wiring. **onchain wiring DONE @features-service@6cbf50ff**.
-      **CALENDAR WIRED 2026-05-12 @features-service@4623c669 + @uac@c85ecc4**: UAC seeds added
-      (time_features NAN_FILL; economic_events PARTIAL_OK); `_SERVICE_NAME` + `_check_emission_policy()` wired in
+      **CALENDAR WIRED 2026-05-12 @features-service@4623c669 + @uac@c85ecc4**: UAC seeds added (time_features NAN_FILL;
+      economic_events PARTIAL_OK); `_SERVICE_NAME` + `_check_emission_policy()` wired in
       `features_service/calendar/cli/handlers/batch_handler.py`; completeness_fraction from binary rows_written check
       (calendar is deterministic — no partial DataFrame at batch_handler boundary); 4 mode-routing tests in
-      `tests/calendar/unit/test_emission_policy.py`.
-      **COMMODITY WIRED 2026-05-12 @features-service@9f4b6427 + @uac@82c7405**: UAC seeds added
-      (storage_alpha / crude_storage_alpha / price_momentum NAN_FILL; weather_delta / cot_positioning / rig_count
-      PARTIAL_OK — weekly-cadence sources with expected source gaps); `_SERVICE_NAME` + `_check_emission_policy()`
-      + `_check_and_write_signal()` wired in `features_service/commodity/cli/handlers/batch_handler.py`;
-      emission check fires once per factor_group before `_write_signal_to_gcs` — any STRICT_FAIL suppression
-      aborts the full signal write (consistent with _has_full_factor_coverage fail-loud);
-      4 mode-routing tests in `tests/commodity/unit/test_emission_policy.py`.
+      `tests/calendar/unit/test_emission_policy.py`. **COMMODITY WIRED 2026-05-12 @features-service@9f4b6427 +
+      @uac@82c7405**: UAC seeds added (storage_alpha / crude_storage_alpha / price_momentum NAN_FILL; weather_delta /
+      cot_positioning / rig_count PARTIAL_OK — weekly-cadence sources with expected source gaps); `_SERVICE_NAME` +
+      `_check_emission_policy()` + `_check_and_write_signal()` wired in
+      `features_service/commodity/cli/handlers/batch_handler.py`; emission check fires once per factor_group before
+      `_write_signal_to_gcs` — any STRICT_FAIL suppression aborts the full signal write (consistent with
+      \_has_full_factor_coverage fail-loud); 4 mode-routing tests in `tests/commodity/unit/test_emission_policy.py`.
 
 **Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
 
@@ -3379,8 +3378,12 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [ ] [ml-training] P0. Wire at the model-version-emission boundary: BLOCK_CRITICAL policy means a partial-coverage
       training run does NOT publish a model_version artifact + fires a P0 alert. Operator must manually triage. The P0
       alert routes via alerting-service per CLAUDE.md alerting rules. Smoke test: synthetic missing-feature day in
-      training window → no model_version published + alert fired + heartbeat continues.
-- [ ] [ml-inference] P0. Wire at the per-strategy-signal emission boundary: STRICT_FAIL policy means a stale-feature
+      training window → no model_version published + alert fired + heartbeat continues. (ml-training-service@ff20617 —
+      `_check_emission_policy()` + emission gate in `store_model()` in `ml_training_service/ml/model_registry.py`;
+      `training_completeness_fraction` param added (default 1.0, backwards-compatible); 5 BLOCK_CRITICAL tests in
+      `tests/unit/test_emission_policy.py`; ruff ✅ on my files; test collection blocked by pre-existing UAC
+      `normalize_aster_ticker` gap in slot 7 worktree)
+- [x] [ml-inference] P0. Wire at the per-strategy-signal emission boundary: STRICT_FAIL policy means a stale-feature
       window produces no signal + STALE_DATA event. Strategy sees no signal → defers entry per its own handling.
 
 **Phase 6.7 — strategy-service + execution-service + position-balance + risk (P0, ~5-15 cal AI-days)** — 👉 **OWNER: Ikenna (this-cycle Wave 4/5 spawn — pre-2026-05-15 freeze)**
@@ -3392,9 +3395,13 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [ ] [execution-service] P0. Wire at TWO boundaries: `order_intent` emission (STRICT_FAIL) + `fill_confirmation`
       emission (BLOCK_CRITICAL). Order intent without current signal = wrong order; fill confirmation without complete
       venue-side state = position-truth violation.
-- [ ] [position-balance-monitor-service] P0. Wire at `portfolio_state` emission (BLOCK_CRITICAL). No partial truth
-      tolerated; missing venue balance → block + alert + manual triage.
-- [ ] [risk-and-exposure-service] P0. Wire at `risk_state` emission (BLOCK_CRITICAL). Same.
+- [x] [position-balance-monitor-service] P0. Wire at `portfolio_state` emission (BLOCK_CRITICAL). No partial truth
+      tolerated; missing venue balance → block + alert + manual triage. (position-balance-monitor-service@65fd32b —
+      `_check_emission_policy` + gate in `NAVSnapshotPublisher.publish()`; 4 tests; pushed tab/ikennaigboaka/7 +
+      live-defi-rollout 2026-05-13)
+- [x] [risk-and-exposure-service] P0. Wire at `risk_state` emission (BLOCK_CRITICAL). Same.
+      (risk-and-exposure-service@df4849f — `_check_emission_policy` + gate in `RiskSnapshotSink.write()`; 4 tests;
+      pushed tab/ikennaigboaka/7 + live-defi-rollout 2026-05-13)
 
 **🟡 Phase 6.6 + 6.7 SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace grep across `ml-training-service/` +
 `ml-inference-service/` + `strategy-service/` + `execution-service/` + `position-balance-monitor-service/` +
@@ -3418,7 +3425,7 @@ migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wirin
 
 **Phase 6.8 — instruments-service catalog snapshot (P0, ~1 day)**
 
-- [ ] [instruments-service] P0. Wire at the catalog-snapshot emission (PARTIAL_OK — best-effort union of multiple
+- [x] [instruments-service] P0. Wire at the catalog-snapshot emission (PARTIAL_OK — best-effort union of multiple
       sources). Per-source partial coverage is normal; the publish records the per-source breakdown in the
       `incomplete_window` field so consumers can branch on which source is missing. **🟡 SCOPE-DISCOVERY 2026-05-12 by
       harsh slot 3**: workspace
@@ -3436,8 +3443,11 @@ migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wirin
       bundled with Phase 4.DEFAULT-REMOVAL. **🟢 PART A shipped 2026-05-12 (slot 8, instruments-service@27fbc90)**:
       operator chose path (a) — all 25 `.add()` callsites migrated to `record_captured()` /
       `record_captured_from_counts()` with full `available_at`, `pipeline_mode`, `service_emission_state` kwargs. Lint
-      clean. Zero `.add()` violations. Remaining: wire `publish_with_policy` on top (path (a) Phase 6.8 PART B — gated
-      on Phase 6.9 sweep).
+      clean. Zero `.add()` violations. **🟢 PART B shipped 2026-05-13 (slot 7, instruments-service@29d511d)**:
+      `_check_emission_policy()` + `publish_with_policy()` wired at catalog_snapshot emission boundary in
+      `process_instruments()` (after completeness_pct computed, before PROCESSING_COMPLETED event); 4 unit tests cover
+      PARTIAL_OK routing (full/partial/zero completeness); lint + all 4 tests pass. QG STEP 5.71 emission-policy paired
+      callsite check passes.
 
 **Phase 6.9 — Slice-(c) workspace-wide audit + ship-gate (P0, ~2 cal AI-days)** — 👉 **OWNER: Ikenna slot 1 main (Gate 4 firing — pre-2026-05-15 freeze)**
 
