@@ -91,109 +91,110 @@ question doc. Every phase has full-execution criteria with verifiable bullets pe
 
 Operator clarifications 2026-05-12 PM session:
 
-1. **Custody for May-23 = operator's own real money, NOT client funds.** Copper + Fireblocks + CEFFU all stay as
-   June-1+ work (post-cutover). The Cloud-KMS path (Phase 3.C.1, shipped) handles the operator's wallet for the
-   May-23 ≥7-day live smoke. **Phase 3.A (Copper sandbox), 3.B (CEFFU KYB), 3.C.2 (Fireblocks) all
-   DEFERRED-AFTER-CUTOVER**; tracked in successor plan `fireblocks_copper_client_integration_2026_06_01.md`.
+1. **Custody for May-23 = operator's own real money, NOT client funds.** Copper + Fireblocks + CEFFU all stay as June-1+
+   work (post-cutover). The Cloud-KMS path (Phase 3.C.1, shipped) handles the operator's wallet for the May-23 ≥7-day
+   live smoke. **Phase 3.A (Copper sandbox), 3.B (CEFFU KYB), 3.C.2 (Fireblocks) all DEFERRED-AFTER-CUTOVER**; tracked
+   in successor plan `fireblocks_copper_client_integration_2026_06_01.md`.
 
-2. **Venue accounts = the 4 CeFi perp accounts operator already holds** (Bybit, Deribit, Binance, OKX) + 2 DeFi
-   perp DEXes via wallet path (Hyperliquid, Aster). NOT a 10-venue native-adapter rebuild. **Phase 2 contracted**
-   to credentials-wiring for these 4 existing CeFi accounts + connector existence check for the 2 DeFi DEXes. The
-   "native adapter build for 6 venues" sub-work (Phase 2.B) is DEFERRED post-cutover — CCXT pass-through is
-   acceptable for ≥7-day live smoke on operator funds. Per-scope key separation (Phase 2.C), account-limits SSOT
-   (Phase 2.D), per-venue rate-limit token bucket (Phase 2.E) all DEFERRED post-cutover.
+2. **Venue accounts = the 4 CeFi perp accounts operator already holds** (Bybit, Deribit, Binance, OKX) + 2 DeFi perp
+   DEXes via wallet path (Hyperliquid, Aster). NOT a 10-venue native-adapter rebuild. **Phase 2 contracted** to
+   credentials-wiring for these 4 existing CeFi accounts + connector existence check for the 2 DeFi DEXes. The "native
+   adapter build for 6 venues" sub-work (Phase 2.B) is DEFERRED post-cutover — CCXT pass-through is acceptable for
+   ≥7-day live smoke on operator funds. Per-scope key separation (Phase 2.C), account-limits SSOT (Phase 2.D), per-venue
+   rate-limit token bucket (Phase 2.E) all DEFERRED post-cutover.
 
    **2a. CeFi 4 requires BOTH testnet AND live credentials provisioned** (operator clarification 2026-05-12 PM):
-   - **Testnet/demo accounts** for paper-trading mode (`--mode paper` per `credentials_per_mode.yaml`). Each
-     venue's testnet/demo endpoint requires a separate account + separate API key:
+   - **Testnet/demo accounts** for paper-trading mode (`--mode paper` per `credentials_per_mode.yaml`). Each venue's
+     testnet/demo endpoint requires a separate account + separate API key:
      - **Bybit testnet** — `testnet.bybit.com` (operator creates account → API key)
      - **Deribit testnet** — `test.deribit.com` (operator creates account → API key)
-     - **Binance testnet** — `testnet.binancefuture.com` for perp futures (operator creates account → API key);
-       spot testnet is separate at `testnet.binance.vision` but perp-only is sufficient for May-23 archetypes
-     - **OKX demo trading** — production app has built-in demo-trading mode toggle; operator generates demo
-       API keys via the demo-mode account section (no separate signup needed; same login)
+     - **Binance testnet** — `testnet.binancefuture.com` for perp futures (operator creates account → API key); spot
+       testnet is separate at `testnet.binance.vision` but perp-only is sufficient for May-23 archetypes
+     - **OKX demo trading** — production app has built-in demo-trading mode toggle; operator generates demo API keys via
+       the demo-mode account section (no separate signup needed; same login)
    - **Live accounts** — operator already holds; just needs API key generation in each venue's live UI.
    - Net: 8 credential bundles to provision (4 venues × 2 envs), all under the naming convention
-     `<venue>-<env>-<scope>-<role>` from `secret-manager-naming.md` codex SSOT. `credentials_per_mode.yaml`
-     already keys on `paper` vs `live` so testnet/live routing is config-only.
-   - Per-venue smoke test runs against BOTH envs: paper-mode signs a small testnet order (no real money);
-     live-mode signs a tiny live order (operator-approved minimal-balance test).
+     `<venue>-<env>-<scope>-<role>` from `secret-manager-naming.md` codex SSOT. `credentials_per_mode.yaml` already keys
+     on `paper` vs `live` so testnet/live routing is config-only.
+   - Per-venue smoke test runs against BOTH envs: paper-mode signs a small testnet order (no real money); live-mode
+     signs a tiny live order (operator-approved minimal-balance test).
 
-3. **Firebase DEFERRED entirely from May-23.** Operator: "we don't wanna pay for Firebase at all by May-23, that
-   stuff can be deferred; in fact DeFi client doesn't want to use Firebase so we need a non-Firebase auth path
-   anyway." Firebase code stays in tree as a feature-flag toggle (off by default for May-23 + DeFi-client path);
-   **NO May-23 testing of Firebase**. **Phase 6.B fully DEFERRED**; Phase 6.A (Telegram per-env) + 6.C (GHA WIF
-   upgrade) stay open as low-risk hygiene; 6.D (Anthropic budget) shipped. Follow-up: DeFi-client non-Firebase
-   auth path is a separate issue (operator-spawned post-cutover).
+3. **Firebase DEFERRED entirely from May-23.** Operator: "we don't wanna pay for Firebase at all by May-23, that stuff
+   can be deferred; in fact DeFi client doesn't want to use Firebase so we need a non-Firebase auth path anyway."
+   Firebase code stays in tree as a feature-flag toggle (off by default for May-23 + DeFi-client path); **NO May-23
+   testing of Firebase**. **Phase 6.B fully DEFERRED**; Phase 6.A (Telegram per-env) + 6.C (GHA WIF upgrade) stay open
+   as low-risk hygiene; 6.D (Anthropic budget) shipped. Follow-up: DeFi-client non-Firebase auth path is a separate
+   issue (operator-spawned post-cutover).
 
-4. **Hyperliquid + Aster wallet path**: both sign EVM-format transactions; the CloudKmsCustodyProvider + Cloud
-   HSM CMK pipeline shipped 2026-05-12 (verified end-to-end on staging against operator's Trust Wallet) covers
-   them. Action remaining: verify Hyperliquid + Aster connector existence in execution-service (Hyperliquid
-   confirmed per DeFi master scope; Aster status TBD — slot 4 audit task).
+4. **Hyperliquid + Aster wallet path**: both sign EVM-format transactions; the CloudKmsCustodyProvider + Cloud HSM CMK
+   pipeline shipped 2026-05-12 (verified end-to-end on staging against operator's Trust Wallet) covers them. Action
+   remaining: verify Hyperliquid + Aster connector existence in execution-service (Hyperliquid confirmed per DeFi master
+   scope; Aster status TBD — slot 4 audit task).
 
 **Net May-23 remaining scope on this plan (post-contraction)**: ~6-10 calibrated AI-days.
-- Phase 2.A operator generates API keys for **8 credential bundles** (Bybit/Deribit/Binance/OKX × testnet +
-  live, ~10 min/venue/env = ~80 min operator-side) → slot 4 stores secrets + wires connector config (testnet +
-  live env routing) + smoke tests both envs → ~2-3 cal AI-days.
+
+- Phase 2.A operator generates API keys for **8 credential bundles** (Bybit/Deribit/Binance/OKX × testnet + live, ~10
+  min/venue/env = ~80 min operator-side) → slot 4 stores secrets + wires connector config (testnet + live env routing) +
+  smoke tests both envs → ~2-3 cal AI-days.
 - Phase 3.D Treasury rollup `/api/treasury/rollup` endpoint (deployment-api scope) → ~1-2 cal AI-days.
 - Phase 6.A Telegram per-env tokens → ~1 cal AI-day.
 - Phase 6.C GHA WIF upgrade (replace PATs) → ~1-2 cal AI-days.
-- Phase 8.D Pre-cutover sign-off gate (operator runs `credential-probe.sh --mode live --archetype
-  carry_staked_basis` on 2026-05-22) → ~0 cal AI-days agent work.
+- Phase 8.D Pre-cutover sign-off gate (operator runs `credential-probe.sh --mode live --archetype carry_staked_basis` on
+  2026-05-22) → ~0 cal AI-days agent work.
 - Hyperliquid + Aster connector audit + testnet account provisioning if connectors exist → ~0.5-1 cal AI-days.
 
-Original frontmatter `estimate_calibrated_ai_days: 64.5` reflects pre-contraction scope (full native-adapter
-rebuild + Firebase + Phase 1.B-H AWS parity + CEFFU + Copper). **Post-contraction calibrated effective
-remaining: ~5-8 cal AI-days.** Frontmatter not updated yet — owner agent flips on next substantive touch.
+Original frontmatter `estimate_calibrated_ai_days: 64.5` reflects pre-contraction scope (full native-adapter rebuild +
+Firebase + Phase 1.B-H AWS parity + CEFFU + Copper). **Post-contraction calibrated effective remaining: ~5-8 cal
+AI-days.** Frontmatter not updated yet — owner agent flips on next substantive touch.
 
 ---
 
 ## R9 sub-(a) — RESOLVED 2026-05-12 (operator gate closed)
 
-**Cutover path**: **May-23 ships on CLOUD_KMS_ENCRYPTED** (option (c) — HSM-backed CMK envelope encryption);
-**June-1 flips per-wallet to COPPER_MPC / FIREBLOCKS_MPC** (options (a) + (b)) once client provides their
-Copper + Fireblocks credentials.
+**Cutover path**: **May-23 ships on CLOUD_KMS_ENCRYPTED** (option (c) — HSM-backed CMK envelope encryption); **June-1
+flips per-wallet to COPPER_MPC / FIREBLOCKS_MPC** (options (a) + (b)) once client provides their Copper + Fireblocks
+credentials.
 
-Operator rationale (verbatim 2026-05-12): *"client gives us [Copper/Fireblocks] credentials June 1st when we go
-live with them — we need best equivalent to test earlier or use our trust wallet but be ready for integration
-with them June 1st."*
+Operator rationale (verbatim 2026-05-12): _"client gives us [Copper/Fireblocks] credentials June 1st when we go live
+with them — we need best equivalent to test earlier or use our trust wallet but be ready for integration with them June
+1st."_
 
 **Architectural implication**: per-wallet `signing_surface` field on
-[`WalletProvisioningConfig`](unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
-is a closed-set StrEnum supporting BOTH cutover paths from day 1 (no recompile when client creds land):
+[`WalletProvisioningConfig`](unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py) is a
+closed-set StrEnum supporting BOTH cutover paths from day 1 (no recompile when client creds land):
 
-| Surface | Phase | Detail |
-|---|---|---|
+| Surface               | Phase                      | Detail                                                                                                                                                                                                                           |
+| --------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CLOUD_KMS_ENCRYPTED` | **May-23 cutover default** | Envelope-encrypted private key in Secret Manager; HSM-backed CMK (GCP Cloud HSM / AWS CloudHSM, FIPS 140-2 L3) wraps. Trading-VM SA is the only principal with KMS Decrypter on the CMK. In-memory decrypt at signing time only. |
-| `COPPER_MPC` | June-1 flip per-wallet | Client-provided Copper.co credentials. Wired in execution-service `custody/copper.py` since 2026-05-10; flip is config-only. |
-| `FIREBLOCKS_MPC` | June-1 flip per-wallet | Client-provided Fireblocks credentials. Requires `custody/fireblocks.py` (NEW per Phase 3.C) + factory registration. |
-| `LOCAL_KEY` | Dev / testnet only | Raw key from Secret Manager. Never production. |
-| `MOCK` | Test-only | Deterministic SHA256 fake. |
+| `COPPER_MPC`          | June-1 flip per-wallet     | Client-provided Copper.co credentials. Wired in execution-service `custody/copper.py` since 2026-05-10; flip is config-only.                                                                                                     |
+| `FIREBLOCKS_MPC`      | June-1 flip per-wallet     | Client-provided Fireblocks credentials. Requires `custody/fireblocks.py` (NEW per Phase 3.C) + factory registration.                                                                                                             |
+| `LOCAL_KEY`           | Dev / testnet only         | Raw key from Secret Manager. Never production.                                                                                                                                                                                   |
+| `MOCK`                | Test-only                  | Deterministic SHA256 fake.                                                                                                                                                                                                       |
 
-**Per-wallet flippability**: each `WalletProvisioningConfig` row carries its own `signing_surface` so we can run
-a HOT_TRADING wallet on CLOUD_KMS while a TREASURY wallet sits on COPPER_MPC, etc. Wallet-level kill-switch
-binding (`kill_switch_id` field) gives operator the FINEST-grain freeze beyond per-venue + per-archetype.
+**Per-wallet flippability**: each `WalletProvisioningConfig` row carries its own `signing_surface` so we can run a
+HOT_TRADING wallet on CLOUD_KMS while a TREASURY wallet sits on COPPER_MPC, etc. Wallet-level kill-switch binding
+(`kill_switch_id` field) gives operator the FINEST-grain freeze beyond per-venue + per-archetype.
 
-**Cloud-KMS safety note** (operator question): GCP Cloud HSM + AWS CloudHSM are FIPS 140-2 Level 3 hardware
-modules — strictly safer than raw-key-in-Secret-Manager (current Phase 3.C "today" state) but strictly less
-rigorous than MPC (Copper/Fireblocks). Single point of compromise = KMS Decrypter IAM role. Mitigations:
-(a) IAM bound to trading-VM SA only, no human principals; (b) per-wallet kill-switch wiring; (c) per-wallet
-spending caps via `SpendingCaps` field; (d) `allowed_destinations` withdraw whitelist; (e) audit-log
-on every `kms.decrypt` call. Sufficient for ≤7-day live smoke; June-1 hardens to MPC.
+**Cloud-KMS safety note** (operator question): GCP Cloud HSM + AWS CloudHSM are FIPS 140-2 Level 3 hardware modules —
+strictly safer than raw-key-in-Secret-Manager (current Phase 3.C "today" state) but strictly less rigorous than MPC
+(Copper/Fireblocks). Single point of compromise = KMS Decrypter IAM role. Mitigations: (a) IAM bound to trading-VM SA
+only, no human principals; (b) per-wallet kill-switch wiring; (c) per-wallet spending caps via `SpendingCaps` field; (d)
+`allowed_destinations` withdraw whitelist; (e) audit-log on every `kms.decrypt` call. Sufficient for ≤7-day live smoke;
+June-1 hardens to MPC.
 
 **Phase 3.C scope SPLIT** per R9 resolution:
 
-- **Phase 3.C.1 — Cloud-KMS-encrypted wallet provisioning (May-23 path, P0)**: KMS CMK provisioning per
-  asset_group + per-wallet envelope-encrypted PK in Secret Manager + execution-service
-  `CloudKmsCustodyProvider` (NEW) implementing `CustodyProvider` protocol via in-memory decrypt → web3.py /
-  Solana sdk signing. Tests + Sepolia smoke. **Owner: slot 4 (this tab) + Harsh implementation handoff.**
-- **Phase 3.C.2 — Fireblocks integration (June-1 path, P0 post-cutover)**: original Phase 3.C content
-  unchanged — wired but DEFERRED-AFTER-CUTOVER per client-credential schedule. Operator manual entry to flip
-  via deployment-UI Live-Cluster button once client confirms credentials available.
+- **Phase 3.C.1 — Cloud-KMS-encrypted wallet provisioning (May-23 path, P0)**: KMS CMK provisioning per asset_group +
+  per-wallet envelope-encrypted PK in Secret Manager + execution-service `CloudKmsCustodyProvider` (NEW) implementing
+  `CustodyProvider` protocol via in-memory decrypt → web3.py / Solana sdk signing. Tests + Sepolia smoke. **Owner: slot
+  4 (this tab) + Harsh implementation handoff.**
+- **Phase 3.C.2 — Fireblocks integration (June-1 path, P0 post-cutover)**: original Phase 3.C content unchanged — wired
+  but DEFERRED-AFTER-CUTOVER per client-credential schedule. Operator manual entry to flip via deployment-UI
+  Live-Cluster button once client confirms credentials available.
 
-`Phase 3.C.2` stays open in this plan body but tagged `**DEFERRED-AFTER-CUTOVER (2026-06-01)**` —
-materialised post-cutover in successor plan `plans/active/fireblocks_copper_client_integration_2026_06_01.md`
-(operator-spawned when client creds land).
+`Phase 3.C.2` stays open in this plan body but tagged `**DEFERRED-AFTER-CUTOVER (2026-06-01)**` — materialised
+post-cutover in successor plan `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when
+client creds land).
 
 ## Execution DAG
 
@@ -415,19 +416,16 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - [ ] [AGENT] **3.B.5** — Operational-model decision: CEFFU replaces or augments Copper for `carry_staked_basis` spot
         leg. Document in `codex/04-architecture/custody-architecture.md` (NEW or UPDATE).
 
-- [x] [DECISION] P0. **3.C — HSM-grade wallet signing path RESOLVED 2026-05-12** (operator R9 sub-(a) gate closed
-      via AskUserQuestion). May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`; June-1 flips per-wallet to
-      `COPPER_MPC` / `FIREBLOCKS_MPC` on client-provided creds. See "R9 sub-(a) — RESOLVED" section above for
-      full rationale + per-wallet flippability architecture. Split into 3.C.1 (cutover path) + 3.C.2
-      (post-cutover Fireblocks).
-
+- [x] [DECISION] P0. **3.C — HSM-grade wallet signing path RESOLVED 2026-05-12** (operator R9 sub-(a) gate closed via
+      AskUserQuestion). May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`; June-1 flips per-wallet to `COPPER_MPC` /
+      `FIREBLOCKS_MPC` on client-provided creds. See "R9 sub-(a) — RESOLVED" section above for full rationale +
+      per-wallet flippability architecture. Split into 3.C.1 (cutover path) + 3.C.2 (post-cutover Fireblocks).
   - [ ] [AGENT] P0. **3.C.1 — Cloud-KMS-encrypted wallet provisioning (May-23 cutover path).** Implementation:
-        `execution-service/execution_service/custody/cloud_kms.py` (NEW) implementing `CustodyProvider` protocol
-        — fetch envelope-encrypted private key from Secret Manager → call GCP `cloudkms.decrypt` (or AWS
-        `kms.decrypt`) with the per-wallet CMK URI → in-memory decrypt → web3.py / solana-py signing → discard
-        plaintext. Per-wallet CMK URI carried on
-        `WalletProvisioningConfig.kms_key_uri` (UAC@`d721b6a`, shipped 2026-05-12). KMS Decrypter IAM bound to
-        trading-VM SA only.
+        `execution-service/execution_service/custody/cloud_kms.py` (NEW) implementing `CustodyProvider` protocol — fetch
+        envelope-encrypted private key from Secret Manager → call GCP `cloudkms.decrypt` (or AWS `kms.decrypt`) with the
+        per-wallet CMK URI → in-memory decrypt → web3.py / solana-py signing → discard plaintext. Per-wallet CMK URI
+        carried on `WalletProvisioningConfig.kms_key_uri` (UAC@`d721b6a`, shipped 2026-05-12). KMS Decrypter IAM bound
+        to trading-VM SA only.
     - **Verification**: smoke test on Sepolia + Solana devnet via singleton-locked launcher
       `launch-defi-paper-trade-vm.sh` signs a transaction; latency budget ≤200ms KMS decrypt + ≤100ms web3 signing.
     - **Sub-residual**: per-wallet CMK rotation cadence (90-day default, configurable per asset_group);
@@ -435,15 +433,15 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
   - [ ] [AGENT] P0. **3.C.2 — Fireblocks signer integration (June-1 post-cutover path).** **DEFERRED-AFTER-CUTOVER
         (2026-06-01)** — client provides Fireblocks credentials June 1st. Implementation:
-        `execution-service/execution_service/custody/fireblocks.py` (NEW) mirroring Copper factory shape.
-        Per-wallet flip from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` is config-only (no recompile) per
+        `execution-service/execution_service/custody/fireblocks.py` (NEW) mirroring Copper factory shape. Per-wallet
+        flip from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` is config-only (no recompile) per
         `WalletProvisioningConfig.signing_surface` field. Successor plan:
         `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when client creds land).
     - **Verification**: smoke test on Sepolia signs a transaction via Fireblocks vault; latency budget within
       strategy-execution end-to-end target (HSM signing adds 100-500ms; verify under load).
     - **Sub-residual**: HD-wallet derivation under Fireblocks-protected master key → N×M wallets per R7 derive cleanly.
 
-- [ ] [AGENT] P0. **3.D — Treasury rollup view — CANONICAL OWNER (ratified 2026-05-10 cross-plan audit Q7 per
+- [x] [AGENT] P0. **3.D — Treasury rollup view — CANONICAL OWNER (ratified 2026-05-10 cross-plan audit Q7 per
       most-comprehensive-owner rule).** Combine custody balance (Copper + CEFFU) + venue margin balances + on-chain
       wallet balances into unified-NAV view. Extends `position-balance-monitor-service/.../core/treasury_monitor.py`.
       Composes with client-reporting question doc. Per-archetype-per-chain wallet rollup ties into R7 multi-wallet.
@@ -457,6 +455,10 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
     `Σ (custody_balance × mark_price)` + `Σ (venue_margin × mark_price)` + `Σ (on_chain × mark_price)` summed without
     double-counting. Cross-check vs wallet plan's `/api/clients/{id}/treasury` returning same totals with per-client
     decomposition (NAV reconciles across both endpoints).
+  - (pbms@1b55239 compute_unified_nav + compute_nav_by_client + 13 unit tests; deployment-api@dc5c68a treasury_routes.py
+    committed via sibling agent b1aa800 + integration tests dc5c68a; uac@66f1c1f
+    TreasurySourceBalance/TreasuryRollupResponse/TreasuryNAVByClient + sibling Phase 6.A types; 9/9 integration tests
+    pass; 13/13 unit tests pass; Copper+CEFFU stubs with BLOCK_CRITICAL policy)
 
 **Phase 3 done definition** (full-execution criterion):
 
@@ -477,24 +479,21 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
       §28+§48-53; superseded the legacy `leveraged_funding_arb` standalone-archetype name 2026-05-09) — ≥2 archetypes ×
       5 chains (Ethereum, Arbitrum, Base, Polygon, Solana) = ≥10 mainnet wallets. HD-wallet derivation under
-      `CLOUD_KMS_ENCRYPTED` per-asset_group master CMK for May-23 cutover; flippable to Fireblocks master seed
-      per Phase 3.C.2 once June-1 client creds land. UAC type extension SHIPPED 2026-05-12: `WalletProvisioningConfig`
-      at UAC@`d721b6a` carries (chain + signing_surface + kms_key_uri | custodian_wallet_id +
-      allowed_protocols frozenset + allowed_destinations frozenset + spending_caps + kill_switch_id +
-      archetype_id + derivation_path).
+      `CLOUD_KMS_ENCRYPTED` per-asset_group master CMK for May-23 cutover; flippable to Fireblocks master seed per Phase
+      3.C.2 once June-1 client creds land. UAC type extension SHIPPED 2026-05-12: `WalletProvisioningConfig` at
+      UAC@`d721b6a` carries (chain + signing_surface + kms_key_uri | custodian_wallet_id + allowed_protocols frozenset +
+      allowed_destinations frozenset + spending_caps + kill_switch_id + archetype_id + derivation_path).
   - **Sub-residuals captured**: per-wallet nonce queue management; per-wallet RPC rate-limit sub-budget; cross-archetype
     rebalancing flow; per-wallet protocol-approval pre-signing.
-  - [x] **4.A.SCHEMA — UAC wallet provisioning schema** SHIPPED 2026-05-12 by slot 4 at UAC@`d721b6a`:
-        `SigningSurface` StrEnum (5 values) + `WalletKind` StrEnum (4 values) + `SpendingCaps` frozen
-        dataclass (per_tx / per_hour / per_day + per_protocol_usd map) + `WalletProvisioningConfig` frozen
-        dataclass with `validate()` enforcing 6 invariants (surface ↔ credential-pointer match, HOT_TRADING
-        needs archetype_id, HOT_TRADING + GAS_RESERVE reject withdraw whitelist, kill_switch_id uses known
-        KillSwitchId prefixes). 27 schema-validation tests at
+  - [x] **4.A.SCHEMA — UAC wallet provisioning schema** SHIPPED 2026-05-12 by slot 4 at UAC@`d721b6a`: `SigningSurface`
+        StrEnum (5 values) + `WalletKind` StrEnum (4 values) + `SpendingCaps` frozen dataclass (per_tx / per_hour /
+        per_day + per_protocol_usd map) + `WalletProvisioningConfig` frozen dataclass with `validate()` enforcing 6
+        invariants (surface ↔ credential-pointer match, HOT_TRADING needs archetype_id, HOT_TRADING + GAS_RESERVE
+        reject withdraw whitelist, kill_switch_id uses known KillSwitchId prefixes). 27 schema-validation tests at
         `tests/internal/unit/test_wallet_provisioning_schema.py` (all green). Imports:
-        `from unified_api_contracts.internal.domain.defi import (SigningSurface, WalletKind, SpendingCaps,
-        WalletProvisioningConfig, WalletProvisioningError)`. **Cross-tab handshake artefact** consumed by
-        slot 5 (defi_recursive_borrow archetype config — chain × protocol per-wallet rows) + slot 8
-        (cross_cutting #4 DART manual surfaces — wallet-tier kill-switch button per row).
+        `from unified_api_contracts.internal.domain.defi import (SigningSurface, WalletKind, SpendingCaps,     WalletProvisioningConfig, WalletProvisioningError)`.
+        **Cross-tab handshake artefact** consumed by slot 5 (defi_recursive_borrow archetype config — chain × protocol
+        per-wallet rows) + slot 8 (cross_cutting #4 DART manual surfaces — wallet-tier kill-switch button per row).
 
 - [x] [AGENT] P0. **4.B — Per-protocol approvals SSOT + automation.** YAML at
       `unified-api-contracts/config/required_approvals.yaml` per (archetype, chain, protocol, asset). Pre-signing
@@ -556,52 +555,85 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 > 2026-05-12 (R-10 = Option B shared UTL helper; R-11 = AND-aggregate w/ wallet-tier HARD floor; R-17 = NEW Layer 4
 > position-health; R-18 = SpendingCaps `min(fixed, proportional)`). Codex SSOT:
 > [`codex/04-architecture/risk-preflight-flow.md`](../../codex/04-architecture/risk-preflight-flow.md) §§ R-10..R-13.
-> Source issue docs: [`../archive/issues/codex_audit_risk_2026_05_12.md`](../archive/issues/codex_audit_risk_2026_05_12.md) R-10/R-11 +
+> Source issue docs:
+> [`../archive/issues/codex_audit_risk_2026_05_12.md`](../archive/issues/codex_audit_risk_2026_05_12.md) R-10/R-11 +
 > `risk-preflight-flow.md` § R-17/R-18.
 
 ### 4.C.A — UAC schema extensions (slot 4 owned; ~1 cal AI-day)
 
-- [ ] [UAC] **R-18: extend `SpendingCaps` with `pct_of_balance` fields** — `unified_api_contracts/internal/domain/defi/wallet_config.py:106-141` add per-period `pct_of_balance: Decimal | None = None` field (per_tx / per_hour / per_day / per_protocol). Add helper `effective_cap(period, current_balance) → min(per_period_usd, pct_of_balance × current_balance)` returning the binding cap (or `None` if neither set). 3-4 new unit tests. **Owner**: slot 4 (wallet schema).
-- [ ] [UAC] **R-17: extend `WalletSpendingPreCheckResult` with 4 position-health fields** — `unified_api_contracts/internal/execution.py` add `position_health_check: bool | None`, `projected_ltv: Decimal | None`, `projected_margin_ratio: Decimal | None`, `position_health_denial_reason: str = ""`. Update `_now()`-based tests in `tests/unit/test_dart_manual_action_contracts.py` + add 2 new tests (lending Layer-4 path + perp Layer-4 path). **Owner**: slot 8 successor (DART contract surface; closest fit).
+- [ ] [UAC] **R-18: extend `SpendingCaps` with `pct_of_balance` fields** —
+      `unified_api_contracts/internal/domain/defi/wallet_config.py:106-141` add per-period
+      `pct_of_balance: Decimal | None = None` field (per_tx / per_hour / per_day / per_protocol). Add helper
+      `effective_cap(period, current_balance) → min(per_period_usd, pct_of_balance × current_balance)` returning the
+      binding cap (or `None` if neither set). 3-4 new unit tests. **Owner**: slot 4 (wallet schema).
+- [ ] [UAC] **R-17: extend `WalletSpendingPreCheckResult` with 4 position-health fields** —
+      `unified_api_contracts/internal/execution.py` add `position_health_check: bool | None`,
+      `projected_ltv: Decimal | None`, `projected_margin_ratio: Decimal | None`,
+      `position_health_denial_reason: str = ""`. Update `_now()`-based tests in
+      `tests/unit/test_dart_manual_action_contracts.py` + add 2 new tests (lending Layer-4 path + perp Layer-4 path).
+      **Owner**: slot 8 successor (DART contract surface; closest fit).
 
 ### 4.C.B — PBM position-health endpoint (PBM owned; ~2 cal AI-days)
 
-- [ ] [SERVICE] **R-17: add `GET /positions/health?wallet_id=X` to position-balance-monitor-service** — returns current `{ltv, margin_ratio, liquidation_threshold, maintenance_margin}` per open position keyed by wallet. Reads PBMS rolling state (Aave/Compound LTV from on-chain `getUserAccountData`; perp margin ratios from venue REST). 5-second cache. Pydantic response per UAC `PositionHealthSnapshot` (new type — add in same UAC commit as 4.C.A). **Owner**: PBM service maintainer; gated on R-17 UAC schema (4.C.A) shipping first.
+- [ ] [SERVICE] **R-17: add `GET /positions/health?wallet_id=X` to position-balance-monitor-service** — returns current
+      `{ltv, margin_ratio, liquidation_threshold, maintenance_margin}` per open position keyed by wallet. Reads PBMS
+      rolling state (Aave/Compound LTV from on-chain `getUserAccountData`; perp margin ratios from venue REST). 5-second
+      cache. Pydantic response per UAC `PositionHealthSnapshot` (new type — add in same UAC commit as 4.C.A). **Owner**:
+      PBM service maintainer; gated on R-17 UAC schema (4.C.A) shipping first.
 
 ### 4.C.C — UTL shared pre-flight helper (UTL owned; ~2 cal AI-days)
 
-- [ ] [LIB] **R-10: ship `run_wallet_preflight_checks(instruction) → WalletSpendingPreCheckResult`** — NEW module `unified_trading_library/risk_preflight/wallet_preflight.py`. 5-layer strict-ordered short-circuit:
+- [ ] [LIB] **R-10: ship `run_wallet_preflight_checks(instruction) → WalletSpendingPreCheckResult`** — NEW module
+      `unified_trading_library/risk_preflight/wallet_preflight.py`. 5-layer strict-ordered short-circuit:
   1. Kill-switch (KillSwitchBus query — local, microseconds)
   2. Wallet caps (SpendingCaps effective_cap per R-13)
   3. Archetype allocation (CapitalAllocation lookup)
   4. Position health (PBM `/positions/health` query per R-17; 5s cache)
-  5. Venue eligibility (CAPABILITY_DECLARATIONS + WalletProvisioningConfig.allowed_protocols)
-  Audit-log row write at end (success OR failure). 12-15 unit tests covering each layer's pass/fail + ordering invariant + 5s cache. **Owner**: UTL maintainer; gated on 4.C.A + 4.C.B contracts shipping first.
+  5. Venue eligibility (CAPABILITY_DECLARATIONS + WalletProvisioningConfig.allowed_protocols) Audit-log row write at end
+     (success OR failure). 12-15 unit tests covering each layer's pass/fail + ordering invariant + 5s cache. **Owner**:
+     UTL maintainer; gated on 4.C.A + 4.C.B contracts shipping first.
 
 ### 4.C.D — Execution-service runtime wire-in (execution-service owned; ~1 cal AI-day)
 
-- [ ] [SERVICE] **R-10: wire `run_wallet_preflight_checks` into execution-service order-submission path** — `execution-service/.../order_adapter.py` calls UTL helper before every venue submission; on `passed=False` emit `INSTRUCTION_REJECTED_WALLET_PRECHECK` lifecycle event + persist `ManualInstructionAuditLog` row + return rejection to caller. **Owner**: execution-service maintainer; gated on 4.C.C UTL helper shipping.
+- [ ] [SERVICE] **R-10: wire `run_wallet_preflight_checks` into execution-service order-submission path** —
+      `execution-service/.../order_adapter.py` calls UTL helper before every venue submission; on `passed=False` emit
+      `INSTRUCTION_REJECTED_WALLET_PRECHECK` lifecycle event + persist `ManualInstructionAuditLog` row + return
+      rejection to caller. **Owner**: execution-service maintainer; gated on 4.C.C UTL helper shipping.
 
 ### 4.C.E — DART /manual/instruction wire-in (already partial per slot 8 Day-3; ~0.5 cal AI-days completion)
 
-- [ ] [SERVICE] **R-10: DART endpoints consume the shared helper** — `execution-service/.../manual_instruction_api.py` `POST /manual/instruction` + `POST /manual/instruction/precheck` (slot 8 Day-3 `ManualInstructionPrecheckResponse` contract at uac@`fe8e50e`) both call `run_wallet_preflight_checks`. Precheck endpoint returns the result without forwarding to executor (dry-run). **Owner**: execution-service maintainer; same logical unit as 4.C.D.
+- [ ] [SERVICE] **R-10: DART endpoints consume the shared helper** — `execution-service/.../manual_instruction_api.py`
+      `POST /manual/instruction` + `POST /manual/instruction/precheck` (slot 8 Day-3 `ManualInstructionPrecheckResponse`
+      contract at uac@`fe8e50e`) both call `run_wallet_preflight_checks`. Precheck endpoint returns the result without
+      forwarding to executor (dry-run). **Owner**: execution-service maintainer; same logical unit as 4.C.D.
 
 ### 4.C.F — Strategy-service forward wire-in (strategy-service owned; ~0.5 cal AI-days)
 
-- [ ] [SERVICE] **R-10: strategy emission also runs pre-flight** — `strategy-service` forward path to execution calls `run_wallet_preflight_checks` BEFORE handoff. Failure rejects the strategy emission + emits alert. **Owner**: strategy-service maintainer; gated on 4.C.C.
+- [ ] [SERVICE] **R-10: strategy emission also runs pre-flight** — `strategy-service` forward path to execution calls
+      `run_wallet_preflight_checks` BEFORE handoff. Failure rejects the strategy emission + emits alert. **Owner**:
+      strategy-service maintainer; gated on 4.C.C.
 
 ### 4.C.G — Per-venue safety-margin tuning (operator + risk-plan owner; ~0.5 cal AI-day)
 
-- [ ] [HUMAN+AGENT] **R-17: tune `ltv_safety_margin` + `margin_safety_factor` per-protocol/per-venue** — defaults shipped by 4.C.C (`ltv_safety_margin=0.85` lending; `margin_safety_factor=1.5` perps). Operator/risk-plan owner reviews per-protocol (Aave's 90% liquidation threshold ≠ Compound's 85%; Hyperliquid's maintenance margin ≠ Deribit's). Codify in UAC registry (new `PROTOCOL_LIQUIDATION_PARAMS` if needed). **Owner**: risk-plan owner + operator.
+- [ ] [HUMAN+AGENT] **R-17: tune `ltv_safety_margin` + `margin_safety_factor` per-protocol/per-venue** — defaults
+      shipped by 4.C.C (`ltv_safety_margin=0.85` lending; `margin_safety_factor=1.5` perps). Operator/risk-plan owner
+      reviews per-protocol (Aave's 90% liquidation threshold ≠ Compound's 85%; Hyperliquid's maintenance margin ≠
+      Deribit's). Codify in UAC registry (new `PROTOCOL_LIQUIDATION_PARAMS` if needed). **Owner**: risk-plan owner +
+      operator.
 
 **Phase 4.C done definition** (full-execution criterion):
 
-- ✅ All 5 layers fire on every DeFi trade + manual-trade + strategy-emitted order; verified end-to-end via integration tests.
+- ✅ All 5 layers fire on every DeFi trade + manual-trade + strategy-emitted order; verified end-to-end via integration
+  tests.
 - ✅ `WalletSpendingPreCheckResult` audit-log rows written for every pre-flight evaluation (pass OR fail).
-- ✅ Position-health rejection demonstrably blocks a leveraged-Aave-borrow that would tip projected_ltv above the safety threshold (smoke test on Sepolia fork).
-- ✅ `SpendingCaps` proportional path tested: wallet with $50k balance + 5%/day pct_of_balance returns $2.5k cap (not the fixed $100k cap that would apply at scale).
+- ✅ Position-health rejection demonstrably blocks a leveraged-Aave-borrow that would tip projected_ltv above the safety
+  threshold (smoke test on Sepolia fork).
+- ✅ `SpendingCaps` proportional path tested: wallet with $50k balance + 5%/day pct_of_balance returns $2.5k cap (not
+  the fixed $100k cap that would apply at scale).
 
-**Phase 4.C estimate**: ~7-8 cal AI-days total (5 service touchpoints + 1 UAC + per-venue tuning). Multi-slot fan-out feasible: UAC schema (4.C.A) + PBM endpoint (4.C.B) parallel; UTL helper (4.C.C) gates 4.C.D + 4.C.E + 4.C.F (all parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
+**Phase 4.C estimate**: ~7-8 cal AI-days total (5 service touchpoints + 1 UAC + per-venue tuning). Multi-slot fan-out
+feasible: UAC schema (4.C.A) + PBM endpoint (4.C.B) parallel; UTL helper (4.C.C) gates 4.C.D + 4.C.E + 4.C.F (all
+parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
 
 ---
 
@@ -640,14 +672,13 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 - [ ] [SCRIPT] P1. **6.A — Telegram per-environment scoping.** Audit found repo-level scope only (no per-env split).
       Provision separate bot tokens per env (dev / staging / prod); update GHA workflows per repo.
 
-- [ ] [SCRIPT] P0. **6.B — Firebase service-account JSON storage. — DEFERRED-AFTER-CUTOVER per operator
-      2026-05-12 PM directive**: "we don't wanna pay for Firebase at all by May-23, that stuff can be deferred;
-      DeFi client doesn't want to use Firebase so we need a non-Firebase auth path anyway." Firebase code stays
-      in tree as feature-flag toggle (off by default); NO May-23 provisioning or testing. Successor: when DeFi
-      client auth path is decided (likely non-Firebase), spawn `defi_client_auth_path_2026_06_XX.md` plan.
-      Audit found `unified-trading-system-ui/.firebaserc` lists prod (`central-element-323112`) + staging
-      (`odum-staging`) projects; SA JSON storage location not surfaced — those config rows stay as-is, just
-      unused during May-23.
+- [ ] [SCRIPT] P0. **6.B — Firebase service-account JSON storage. — DEFERRED-AFTER-CUTOVER per operator 2026-05-12 PM
+      directive**: "we don't wanna pay for Firebase at all by May-23, that stuff can be deferred; DeFi client doesn't
+      want to use Firebase so we need a non-Firebase auth path anyway." Firebase code stays in tree as feature-flag
+      toggle (off by default); NO May-23 provisioning or testing. Successor: when DeFi client auth path is decided
+      (likely non-Firebase), spawn `defi_client_auth_path_2026_06_XX.md` plan. Audit found
+      `unified-trading-system-ui/.firebaserc` lists prod (`central-element-323112`) + staging (`odum-staging`) projects;
+      SA JSON storage location not surfaced — those config rows stay as-is, just unused during May-23.
 
 - [ ] [SCRIPT] P0. **6.C — GitHub Workload Identity Federation upgrade.** Audit found classic PATs (`secrets.GH_PAT` +
       `GH_TOKEN`) — replace with WIF (GCP / AWS → GitHub OIDC trust) per repo. Eliminates long-lived PATs.
@@ -866,100 +897,106 @@ cycle:
 
 ## DONE-2026-05-15 — slot 4 FULL CYCLE CLOSE (2026-05-12) `ikenna-keys-wallets-tab`
 
-> **Full cycle scope CLOSED on Day 1** at high density (~18-22 calibrated AI-days
-> shipped vs ~16 budgeted = ~120% of cycle scope on Day 1). Operator direction
-> 2026-05-12: *"finish the job do everything"* — Day 2-4 scope absorbed.
+> **Full cycle scope CLOSED on Day 1** at high density (~18-22 calibrated AI-days shipped vs ~16 budgeted = ~120% of
+> cycle scope on Day 1). Operator direction 2026-05-12: _"finish the job do everything"_ — Day 2-4 scope absorbed.
 
 ### What shipped Day 1 (2026-05-12) — full cycle
 
-| Phase / item | Status | Shipped at | Notes |
-|---|---|---|---|
-| **Phase 1 — Custody KYB checklist** | ✅ DONE | PM@`2e198794` | `codex/05-infrastructure/custody-onboarding-checklist.md` NEW + Cloud-KMS provisioning operator-action issue doc |
-| **Phase 2 — Fireblocks R9 decision dispatch** | ✅ RESOLVED | 2026-05-12 via AskUserQuestion | CLOUD_KMS for May-23 → COPPER/FIREBLOCKS June-1 |
-| **Phase 3 — UAC wallet provisioning schema** | ✅ DONE | UAC@`d721b6a` | `SigningSurface` (5 values) + `WalletKind` (4 values) + `SpendingCaps` + `WalletProvisioningConfig` + 27 tests |
-| **Phase 4.A.SCHEMA** | ✅ DONE | UAC@`d721b6a` | Wallet schema with chain + protocol + signing surface + allowlist + spending cap + kill-switch hook |
-| **Phase 4.A — May-23 cutover wallet template** | ✅ DONE | UAC@`b9050d7` | 10 HOT_TRADING + 5 GAS_RESERVE wallets across 2 archetypes × 5 chains. 15 validation tests. |
-| **Phase 4.B — required_approvals.yaml** | ✅ DONE | UAC@`d8e2dbc` | 38 approval rows across 2 archetypes × 5 chains × 4-8 protocols. 12 tests. |
-| **Phase 5 — KillSwitchId.KILL_PER_WALLET sentinel** | ✅ DONE | UAC@`5c2d70b` | Runtime-targeted wallet-tier kill-switch via target_wallet_id field. 3 new tests. |
-| **Phase 7.A — credentials_per_mode.yaml** | ✅ DONE | UAC@`d8e2dbc` | 3 modes (paper/batch/live) × full credential subsets. 9 tests. |
-| **Phase 7.B — credentials_per_archetype.yaml** | ✅ DONE | UAC@`d8e2dbc` | 5 archetypes × full credential bundles. 9 tests. |
-| **Phase 8.A — credential-probe.sh** | ✅ DONE | deployment-service@`15f5a1b` | One-stop audit reading per-mode + per-archetype YAMLs. Dry-run validated 6 (paper) → 34 (live + carry_staked_basis). |
-| **Phase 9.A — credentials-matrix.md** | ✅ DONE | PM@`e4c49a88` | Workspace credential SSOT (7 classes, per-cloud parity, continuous-verification) |
-| **Phase 9.C — secret-manager-naming.md** | ✅ DONE | PM@`e4c49a88` | `<class>-<surface>-<role>-<version>` pattern SSOT |
-| **Phase 9.E — per-archetype-wallet-isolation.md** | ✅ DONE | PM@`e4c49a88` | N×M multi-wallet model SSOT |
-| **Phase 9.F — hsm-wallet-signing.md** | ✅ DONE | PM@`e4c49a88` | 5-tier HSM ladder SSOT |
-| **Phase 9.K — custody-providers.md banner + factory table** | ✅ DONE | PM@`2e198794` | R9 propagation; per-wallet flippability |
-| **Phase 3.C.2 — Fireblocks integration spec** | ✅ DESIGN-SHIPPED | PM@`e4c49a88` | Paste-ready engineering spec for June-1 implementation |
-| **Phase 3.C.1 — CloudKmsCustodyProvider impl** | ✅ DONE — **THE MAY-23 CUTOVER SIGNING GATE** | execution-service@`d45d24b4` | 372-line provider (GCP + AWS paths) + factory wire + base.py extension + 23 unit tests via DI seam. Operator now blocked ONLY on Cloud HSM CMK provisioning runbook § B.3. |
-| **Phase 8.C — Master plan Item 19 refresh** | ✅ DONE | PM@`d608dfa4` | Continuous-verification cell fully populated with full shipment chain |
-| **Phase 9.D — rotation-runbook.md** | ✅ DONE | PM@`d608dfa4` | Per-class rotation cadence + 90d CMK re-wrap operator-runbook + pre-cutover rotation gate |
-| **Phase 9.G — interface-credential-convention.md update** | ✅ DONE | PM@`d608dfa4` | Custody factory row + per-signing_surface fields + flippability |
-| **Phase 9.I — runtime-tiers-and-deployment.md update** | ✅ DONE | PM@`d608dfa4` | NEW per-mode credential subset § |
-| **Phase 4.D — Testnet contracts extension** | ✅ DONE | UAC@`818aaf1` | 4 new chains (Arbitrum Sepolia + Base Sepolia + Polygon Amoy + Solana devnet) + 11 tests |
-| **Phase 8.B — Health endpoint credential probes** | ✅ DONE | utl@`1632e0fa` | `make_health_router` credentials_health callback + `/health/credentials` sub-route + 8 tests |
-| **Phase 9.B — aws-iam-matrix.md stub** | ✅ DONE | PM@`810ce4c7` | Per-service IAM SSOT (19 services × `uts-{svc}-{env}`) + closed-set policies + WIF + KMS Decrypter for execution-only |
-| **Phase 9.H — config-reloader-pattern.md update** | ✅ DONE | PM@`810ce4c7` | Rule 8 NEW + per-wallet WalletCustodyReloader skeleton |
-| **Phase 9.J — firebase-local.md update** | ✅ DONE | PM@`810ce4c7` | Per-env SA JSON + FIREBASE_AUTH_MODE routing + per-tier discipline |
-| **Phase 6.D — Anthropic API budget cap** | ✅ DONE | deployment-service@`c0a30fe` | `configs/anthropic_budget.yaml` per-workflow caps + alert codes |
-| **Phase 4.E — Pyth-on-Solana real-data smoke runbook** | ✅ DONE | deployment-service@`c0a30fe` | `scripts/audit/pyth-realdata-smoke.sh` event-stream verified runbook |
-| **Phase 4.F — Chainlink-on-EVM real-data smoke runbook** | ✅ DONE | deployment-service@`c0a30fe` | `scripts/audit/chainlink-realdata-smoke.sh` per-chain runbook |
-| **Phase 1.A — GCP per-service SA matrix yaml SSOT** | ✅ DONE | deployment-service@`c0a30fe` | 57-SA matrix (19 services × 3 envs) + per-service IAM bindings |
-| **Cloud HSM CMK provisioning (operator-action issue doc)** | ✅ DONE — agent-self-provisioned via ADC | gcloud-self-provisioned 2026-05-12 | 10 HSM-backed CMKs (5 asset_groups × 2 envs) in asia-northeast1 + IAM Decrypter on unified-trading-sa + 90d auto-rotation + encrypt/decrypt smoke PASSED. Issue doc ✅ RESOLVED at PM@`4d50956c`. |
-| **POD client scope codification** | ✅ DONE | PM@`4d50956c` | NEW `codex/14-customer-journeys/pod-elysium-client-onboarding.md`. POD = Elysium sub-entity AIFM Ireland → BVI fund. Fireblocks OUT OF SCOPE per POD stack choice. |
-| **Pre-cutover test wallet runbook** | ✅ DONE | PM@`4d50956c` | NEW `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md` — MetaMask EVM networks + Phantom/solana-cli + envelope-encrypt handover flow. |
-| **CEFFU adapter OES + direct-custody dual-surface stub** | ✅ DONE | execution-service@`027a8153` | 3 new OES method stubs + direct_custody_sign passthrough. Pending POD-delivered API spec for real impl. |
-| **Real test wallet provisioning JSON (5 EVM chains)** | ✅ DONE — **END-TO-END SIGNING PIPELINE VERIFIED** | UAC@`88e4e5a` | 5-row testnet wallet config pointing at operator's `defi-wallet-private-key-wrapped` Secret Manager entry. CloudKmsCustodyProvider fetched wrapped PK → KMS Decrypt → web3.py derived address → matched Trust Wallet `0x992ebFe04DB...` operator existing address. 10 schema tests green. **PROVES CUTOVER SIGNING PIPELINE OPERATIONAL ON STAGING INFRA.** |
-| **Cross-tab handshakes** — slots 5 + 8 | ✅ PUBLISHED | PM@`8aaf70da` | Schema importable; slot 5 EOD confirms consumed via Family-1/2 catalog config |
-| **Plan flips Phase 3.C SPLIT + 4.A + R9** | ✅ DONE | PM@`5cc47002` | Plan body codifies decision tree |
-| **Cloud-KMS operator-action issue doc** | ✅ FILED | PM@`2e198794` | `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` P0 |
+| Phase / item                                                | Status                                             | Shipped at                         | Notes                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------------------------------------------------- | -------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase 1 — Custody KYB checklist**                         | ✅ DONE                                            | PM@`2e198794`                      | `codex/05-infrastructure/custody-onboarding-checklist.md` NEW + Cloud-KMS provisioning operator-action issue doc                                                                                                                                                                                                                                            |
+| **Phase 2 — Fireblocks R9 decision dispatch**               | ✅ RESOLVED                                        | 2026-05-12 via AskUserQuestion     | CLOUD_KMS for May-23 → COPPER/FIREBLOCKS June-1                                                                                                                                                                                                                                                                                                             |
+| **Phase 3 — UAC wallet provisioning schema**                | ✅ DONE                                            | UAC@`d721b6a`                      | `SigningSurface` (5 values) + `WalletKind` (4 values) + `SpendingCaps` + `WalletProvisioningConfig` + 27 tests                                                                                                                                                                                                                                              |
+| **Phase 4.A.SCHEMA**                                        | ✅ DONE                                            | UAC@`d721b6a`                      | Wallet schema with chain + protocol + signing surface + allowlist + spending cap + kill-switch hook                                                                                                                                                                                                                                                         |
+| **Phase 4.A — May-23 cutover wallet template**              | ✅ DONE                                            | UAC@`b9050d7`                      | 10 HOT_TRADING + 5 GAS_RESERVE wallets across 2 archetypes × 5 chains. 15 validation tests.                                                                                                                                                                                                                                                                 |
+| **Phase 4.B — required_approvals.yaml**                     | ✅ DONE                                            | UAC@`d8e2dbc`                      | 38 approval rows across 2 archetypes × 5 chains × 4-8 protocols. 12 tests.                                                                                                                                                                                                                                                                                  |
+| **Phase 5 — KillSwitchId.KILL_PER_WALLET sentinel**         | ✅ DONE                                            | UAC@`5c2d70b`                      | Runtime-targeted wallet-tier kill-switch via target_wallet_id field. 3 new tests.                                                                                                                                                                                                                                                                           |
+| **Phase 7.A — credentials_per_mode.yaml**                   | ✅ DONE                                            | UAC@`d8e2dbc`                      | 3 modes (paper/batch/live) × full credential subsets. 9 tests.                                                                                                                                                                                                                                                                                              |
+| **Phase 7.B — credentials_per_archetype.yaml**              | ✅ DONE                                            | UAC@`d8e2dbc`                      | 5 archetypes × full credential bundles. 9 tests.                                                                                                                                                                                                                                                                                                            |
+| **Phase 8.A — credential-probe.sh**                         | ✅ DONE                                            | deployment-service@`15f5a1b`       | One-stop audit reading per-mode + per-archetype YAMLs. Dry-run validated 6 (paper) → 34 (live + carry_staked_basis).                                                                                                                                                                                                                                        |
+| **Phase 9.A — credentials-matrix.md**                       | ✅ DONE                                            | PM@`e4c49a88`                      | Workspace credential SSOT (7 classes, per-cloud parity, continuous-verification)                                                                                                                                                                                                                                                                            |
+| **Phase 9.C — secret-manager-naming.md**                    | ✅ DONE                                            | PM@`e4c49a88`                      | `<class>-<surface>-<role>-<version>` pattern SSOT                                                                                                                                                                                                                                                                                                           |
+| **Phase 9.E — per-archetype-wallet-isolation.md**           | ✅ DONE                                            | PM@`e4c49a88`                      | N×M multi-wallet model SSOT                                                                                                                                                                                                                                                                                                                                 |
+| **Phase 9.F — hsm-wallet-signing.md**                       | ✅ DONE                                            | PM@`e4c49a88`                      | 5-tier HSM ladder SSOT                                                                                                                                                                                                                                                                                                                                      |
+| **Phase 9.K — custody-providers.md banner + factory table** | ✅ DONE                                            | PM@`2e198794`                      | R9 propagation; per-wallet flippability                                                                                                                                                                                                                                                                                                                     |
+| **Phase 3.C.2 — Fireblocks integration spec**               | ✅ DESIGN-SHIPPED                                  | PM@`e4c49a88`                      | Paste-ready engineering spec for June-1 implementation                                                                                                                                                                                                                                                                                                      |
+| **Phase 3.C.1 — CloudKmsCustodyProvider impl**              | ✅ DONE — **THE MAY-23 CUTOVER SIGNING GATE**      | execution-service@`d45d24b4`       | 372-line provider (GCP + AWS paths) + factory wire + base.py extension + 23 unit tests via DI seam. Operator now blocked ONLY on Cloud HSM CMK provisioning runbook § B.3.                                                                                                                                                                                  |
+| **Phase 8.C — Master plan Item 19 refresh**                 | ✅ DONE                                            | PM@`d608dfa4`                      | Continuous-verification cell fully populated with full shipment chain                                                                                                                                                                                                                                                                                       |
+| **Phase 9.D — rotation-runbook.md**                         | ✅ DONE                                            | PM@`d608dfa4`                      | Per-class rotation cadence + 90d CMK re-wrap operator-runbook + pre-cutover rotation gate                                                                                                                                                                                                                                                                   |
+| **Phase 9.G — interface-credential-convention.md update**   | ✅ DONE                                            | PM@`d608dfa4`                      | Custody factory row + per-signing_surface fields + flippability                                                                                                                                                                                                                                                                                             |
+| **Phase 9.I — runtime-tiers-and-deployment.md update**      | ✅ DONE                                            | PM@`d608dfa4`                      | NEW per-mode credential subset §                                                                                                                                                                                                                                                                                                                            |
+| **Phase 4.D — Testnet contracts extension**                 | ✅ DONE                                            | UAC@`818aaf1`                      | 4 new chains (Arbitrum Sepolia + Base Sepolia + Polygon Amoy + Solana devnet) + 11 tests                                                                                                                                                                                                                                                                    |
+| **Phase 8.B — Health endpoint credential probes**           | ✅ DONE                                            | utl@`1632e0fa`                     | `make_health_router` credentials_health callback + `/health/credentials` sub-route + 8 tests                                                                                                                                                                                                                                                                |
+| **Phase 9.B — aws-iam-matrix.md stub**                      | ✅ DONE                                            | PM@`810ce4c7`                      | Per-service IAM SSOT (19 services × `uts-{svc}-{env}`) + closed-set policies + WIF + KMS Decrypter for execution-only                                                                                                                                                                                                                                       |
+| **Phase 9.H — config-reloader-pattern.md update**           | ✅ DONE                                            | PM@`810ce4c7`                      | Rule 8 NEW + per-wallet WalletCustodyReloader skeleton                                                                                                                                                                                                                                                                                                      |
+| **Phase 9.J — firebase-local.md update**                    | ✅ DONE                                            | PM@`810ce4c7`                      | Per-env SA JSON + FIREBASE_AUTH_MODE routing + per-tier discipline                                                                                                                                                                                                                                                                                          |
+| **Phase 6.D — Anthropic API budget cap**                    | ✅ DONE                                            | deployment-service@`c0a30fe`       | `configs/anthropic_budget.yaml` per-workflow caps + alert codes                                                                                                                                                                                                                                                                                             |
+| **Phase 4.E — Pyth-on-Solana real-data smoke runbook**      | ✅ DONE                                            | deployment-service@`c0a30fe`       | `scripts/audit/pyth-realdata-smoke.sh` event-stream verified runbook                                                                                                                                                                                                                                                                                        |
+| **Phase 4.F — Chainlink-on-EVM real-data smoke runbook**    | ✅ DONE                                            | deployment-service@`c0a30fe`       | `scripts/audit/chainlink-realdata-smoke.sh` per-chain runbook                                                                                                                                                                                                                                                                                               |
+| **Phase 1.A — GCP per-service SA matrix yaml SSOT**         | ✅ DONE                                            | deployment-service@`c0a30fe`       | 57-SA matrix (19 services × 3 envs) + per-service IAM bindings                                                                                                                                                                                                                                                                                              |
+| **Cloud HSM CMK provisioning (operator-action issue doc)**  | ✅ DONE — agent-self-provisioned via ADC           | gcloud-self-provisioned 2026-05-12 | 10 HSM-backed CMKs (5 asset_groups × 2 envs) in asia-northeast1 + IAM Decrypter on unified-trading-sa + 90d auto-rotation + encrypt/decrypt smoke PASSED. Issue doc ✅ RESOLVED at PM@`4d50956c`.                                                                                                                                                           |
+| **POD client scope codification**                           | ✅ DONE                                            | PM@`4d50956c`                      | NEW `codex/14-customer-journeys/pod-elysium-client-onboarding.md`. POD = Elysium sub-entity AIFM Ireland → BVI fund. Fireblocks OUT OF SCOPE per POD stack choice.                                                                                                                                                                                          |
+| **Pre-cutover test wallet runbook**                         | ✅ DONE                                            | PM@`4d50956c`                      | NEW `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md` — MetaMask EVM networks + Phantom/solana-cli + envelope-encrypt handover flow.                                                                                                                                                                                                            |
+| **CEFFU adapter OES + direct-custody dual-surface stub**    | ✅ DONE                                            | execution-service@`027a8153`       | 3 new OES method stubs + direct_custody_sign passthrough. Pending POD-delivered API spec for real impl.                                                                                                                                                                                                                                                     |
+| **Real test wallet provisioning JSON (5 EVM chains)**       | ✅ DONE — **END-TO-END SIGNING PIPELINE VERIFIED** | UAC@`88e4e5a`                      | 5-row testnet wallet config pointing at operator's `defi-wallet-private-key-wrapped` Secret Manager entry. CloudKmsCustodyProvider fetched wrapped PK → KMS Decrypt → web3.py derived address → matched Trust Wallet `0x992ebFe04DB...` operator existing address. 10 schema tests green. **PROVES CUTOVER SIGNING PIPELINE OPERATIONAL ON STAGING INFRA.** |
+| **Cross-tab handshakes** — slots 5 + 8                      | ✅ PUBLISHED                                       | PM@`8aaf70da`                      | Schema importable; slot 5 EOD confirms consumed via Family-1/2 catalog config                                                                                                                                                                                                                                                                               |
+| **Plan flips Phase 3.C SPLIT + 4.A + R9**                   | ✅ DONE                                            | PM@`5cc47002`                      | Plan body codifies decision tree                                                                                                                                                                                                                                                                                                                            |
+| **Cloud-KMS operator-action issue doc**                     | ✅ FILED                                           | PM@`2e198794`                      | `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` P0                                                                                                                                                                                                                                                                         |
 
 ### Sub-residuals + deferrals (Half 3 scoreboard)
 
-| Phase / item | Status | Successor / blocker |
-|---|---|---|
-| Phase 3.A — Copper sandbox sign-and-broadcast smoke | 🟢 **CLIENT-SIDE — NOT OUR BLOCKER** (operator direction 2026-05-13) | Copper integration is the client's onboarding workstream (post-May-23); not a May-23 cutover gate. Re-open as a successor plan when client onboarding kicks off. |
-| Phase 3.B — CEFFU KYB onboarding | 🟢 **CLIENT-SIDE — NOT OUR BLOCKER** (operator direction 2026-05-13) | CEFFU KYB is the client's institutional onboarding (post-cutover); does NOT gate May-23. Migrated to `alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` Group H. |
-| Phase 3.C.1 — CloudKmsCustodyProvider implementation | ✅ DONE | SHIPPED 2026-05-12 by slot 4 at execution-service@`d45d24b4` (372-line provider + factory wire + 23 unit tests via DI seam, all green). Wired up `cloud_kms` factory branch alongside copper/ceffu/local_key/mock. **Operational gate**: now blocked ONLY on operator Cloud HSM CMK provisioning per `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` (4-6 op-hours). |
-| Phase 3.C.2 — FireblocksCustodyProvider implementation | 🟡 DEFERRED-AFTER-CUTOVER (2026-06-01) | Successor plan: `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned post-creds) — design fully spec'd at PM@`e4c49a88` |
-| Phase 3.D — Treasury rollup `/api/treasury/rollup` endpoint | 🟢 **PULLED FORWARD May-23** | operator direction 2026-05-13: pre-cutover scope; ~1-2 cal-AI-days deployment-api work. Was previously deferred for collision avoidance with slot 8 cross_cutting #4; throughput margin (~5-6x) absorbs the pull-forward without descope. Owner: deployment-api scope (slot 4 successor or next work-split). |
-| Phase 4.A wallet-row JSON real-address fill | 🟢 **UNBLOCKED 2026-05-13** — GCP CMK provisioning shipped 2026-05-12 (verified: `gcloud kms keys list --location=asia-northeast1 --keyring=wallets-prod` returns 5 CMKs across cefi/defi/tradfi/sports/prediction × prod+staging keyrings; auto-rotation 90d). Real-address fill in flight per UAC@`88e4e5a` operator wallet smoke. | — |
-| Phase 4.C — Bridge protocol adapters (CCTP / Wormhole / LayerZero) | 🟡 DEFERRED P1 — not gating | Slot 4 successor or post-cutover |
-| Phase 4.D — Testnet replicas + faucet automation | ✅ DONE | UAC@`818aaf1` — 4 new chains (Arbitrum Sepolia + Base Sepolia + Polygon Amoy + Solana devnet) added to `config/testnet_contracts.yaml` + 11 schema-validation tests + per-chain flash_loan_receiver + Solana Hermes endpoint. Faucet-automation sub-item: P2 deferred. |
-| Phase 4.E — Pyth-on-Solana real-data smoke runbook | ✅ DONE (runbook) | deployment-service@`c0a30fe` — `scripts/audit/pyth-realdata-smoke.sh` + event-stream verification. Real-VM execution deferred (PENDING `launch-mtds-pyth-smoke-vm.sh` launcher per slot 4 successor / Harsh). |
-| Phase 4.F — Chainlink-on-EVM real-data smoke runbook per chain | ✅ DONE (runbook) | deployment-service@`c0a30fe` — `scripts/audit/chainlink-realdata-smoke.sh` per chain. Real-VM execution deferred (PENDING `launch-mtds-chainlink-smoke-vm.sh` launcher). |
-| Phase 6.A — Telegram per-environment scoping | 🟡 OPEN | Deployment-service scope |
-| Phase 6.B — Firebase SA JSON + WIF | 🟡 OPEN | Deployment-service scope |
-| Phase 6.C — GHA WIF upgrade (replace PATs) | 🟡 OPEN | GHA scope |
-| Phase 6.D — Anthropic API budget cap | ✅ DONE | deployment-service@`c0a30fe` — `configs/anthropic_budget.yaml` per-workflow caps + 75%/100% warning/block thresholds + `WORKFLOW_BUDGET_EXCEEDED` alert codes. |
-| Phase 8.B — Health endpoint credential probes | ✅ DONE | utl@`1632e0fa` — `make_health_router` `credentials_health` callback + `/health/credentials` sub-route + 8 standalone tests. Closed-set status: ok / fail / pending_kyb / post_cutover_only / unknown. |
-| Phase 8.C — Master plan continuous-verification column | ✅ DONE | Item 19 row refreshed at PM@`d608dfa4` with full shipment chain (3.C.1 + 3.C.2 design + checklist + template + probe-script) + Last verified bumped 2026-05-12. |
-| Phase 8.D — Pre-cutover sign-off gate | 🟡 OPEN | Operator-runnable on 2026-05-22 via `credential-probe.sh --mode live --archetype carry_staked_basis` (target 100% pass) |
-| Phase 9.B — aws-iam-matrix.md (PENDING Phase 1.B) | ✅ DONE (stub) | PM@`810ce4c7` — `codex/05-infrastructure/aws-iam-matrix.md` per-service IAM SSOT. 19 services × `uts-{service}-{env}` naming + closed-set policy attachments + KMS Decrypter for execution-only. PENDING Phase 1.B Terraform/CDK provisioning. |
-| Phase 9.D — rotation-runbook.md | ✅ DONE | `codex/05-infrastructure/rotation-runbook.md` NEW at PM@`d608dfa4`. Per-class cadence + 90d CMK auto-rotation re-wrap operator-runbook + pre-cutover rotation gate 2026-05-22. |
-| Phase 9.G — Update interface-credential-convention.md | ✅ DONE | PM@`d608dfa4` — factory table extended with execution-service (Custody) row + per-signing_surface CustodyConfig fields + per-wallet flippability. |
-| Phase 9.H — Update config-reloader-pattern.md | ✅ DONE | PM@`810ce4c7` — Rule 8 NEW: per-wallet credential reload + `WalletCustodyReloader` skeleton. NEW § "Per-wallet credential class". |
-| Phase 9.I — Update runtime-tiers-and-deployment.md | ✅ DONE | PM@`d608dfa4` — NEW § "Per-mode credential subset" cross-references credentials_per_mode.yaml + credentials_per_archetype.yaml + credential-probe.sh. |
-| Phase 9.J — Update firebase-local.md | ✅ DONE | PM@`810ce4c7` — NEW § "Firebase prod vs emulator credential split" + per-env SA JSON storage + FIREBASE_AUTH_MODE routing + per-tier credential discipline. |
-| Phase 1.A — GCP per-service SA matrix yaml SSOT | ✅ DONE | deployment-service@`c0a30fe` — `configs/gcp_service_accounts.yaml` SSOT covering 19 services × 3 envs (57 SAs) + per-service IAM roles + bucket + secrets + KMS Decrypter on 5 CMKs (execution-prod). |
-| Phase 1.B-H — AWS↔GCP parity provisioning | 🟡 DEFERRED — 7-10 AI-day workstream | Slot 4 successor or operator. Per-service IAM design SHIPPED (Phase 1.A + 9.B); Terraform/CDK provisioning + ECR + S3 buckets + Secrets Manager mirror + SNS/SQS + EventBridge + WIF — NOT gating May-23 cutover (dual-cloud-active steady state target). |
-| Phase 2 — Trading venue credentials native adapters | 🟡 DEFERRED — 10-15 AI-day workstream | Slot 4 successor or Harsh; uses Phase 4.A schema + secret-manager-naming SSOT |
+| Phase / item                                                       | Status                                                                                                                                                                                                                                                                                                                               | Successor / blocker                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 3.A — Copper sandbox sign-and-broadcast smoke                | 🟢 **CLIENT-SIDE — NOT OUR BLOCKER** (operator direction 2026-05-13)                                                                                                                                                                                                                                                                 | Copper integration is the client's onboarding workstream (post-May-23); not a May-23 cutover gate. Re-open as a successor plan when client onboarding kicks off.                                                                                                                                                                                                                                      |
+| Phase 3.B — CEFFU KYB onboarding                                   | 🟢 **CLIENT-SIDE — NOT OUR BLOCKER** (operator direction 2026-05-13)                                                                                                                                                                                                                                                                 | CEFFU KYB is the client's institutional onboarding (post-cutover); does NOT gate May-23. Migrated to `alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` Group H.                                                                                                                                                                                                                           |
+| Phase 3.C.1 — CloudKmsCustodyProvider implementation               | ✅ DONE                                                                                                                                                                                                                                                                                                                              | SHIPPED 2026-05-12 by slot 4 at execution-service@`d45d24b4` (372-line provider + factory wire + 23 unit tests via DI seam, all green). Wired up `cloud_kms` factory branch alongside copper/ceffu/local_key/mock. **Operational gate**: now blocked ONLY on operator Cloud HSM CMK provisioning per `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` (4-6 op-hours). |
+| Phase 3.C.2 — FireblocksCustodyProvider implementation             | 🟡 DEFERRED-AFTER-CUTOVER (2026-06-01)                                                                                                                                                                                                                                                                                               | Successor plan: `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned post-creds) — design fully spec'd at PM@`e4c49a88`                                                                                                                                                                                                                                                |
+| Phase 3.D — Treasury rollup `/api/treasury/rollup` endpoint        | 🟢 **PULLED FORWARD May-23**                                                                                                                                                                                                                                                                                                         | operator direction 2026-05-13: pre-cutover scope; ~1-2 cal-AI-days deployment-api work. Was previously deferred for collision avoidance with slot 8 cross_cutting #4; throughput margin (~5-6x) absorbs the pull-forward without descope. Owner: deployment-api scope (slot 4 successor or next work-split).                                                                                          |
+| Phase 4.A wallet-row JSON real-address fill                        | 🟢 **UNBLOCKED 2026-05-13** — GCP CMK provisioning shipped 2026-05-12 (verified: `gcloud kms keys list --location=asia-northeast1 --keyring=wallets-prod` returns 5 CMKs across cefi/defi/tradfi/sports/prediction × prod+staging keyrings; auto-rotation 90d). Real-address fill in flight per UAC@`88e4e5a` operator wallet smoke. | —                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Phase 4.C — Bridge protocol adapters (CCTP / Wormhole / LayerZero) | 🟡 DEFERRED P1 — not gating                                                                                                                                                                                                                                                                                                          | Slot 4 successor or post-cutover                                                                                                                                                                                                                                                                                                                                                                      |
+| Phase 4.D — Testnet replicas + faucet automation                   | ✅ DONE                                                                                                                                                                                                                                                                                                                              | UAC@`818aaf1` — 4 new chains (Arbitrum Sepolia + Base Sepolia + Polygon Amoy + Solana devnet) added to `config/testnet_contracts.yaml` + 11 schema-validation tests + per-chain flash_loan_receiver + Solana Hermes endpoint. Faucet-automation sub-item: P2 deferred.                                                                                                                                |
+| Phase 4.E — Pyth-on-Solana real-data smoke runbook                 | ✅ DONE (runbook)                                                                                                                                                                                                                                                                                                                    | deployment-service@`c0a30fe` — `scripts/audit/pyth-realdata-smoke.sh` + event-stream verification. Real-VM execution deferred (PENDING `launch-mtds-pyth-smoke-vm.sh` launcher per slot 4 successor / Harsh).                                                                                                                                                                                         |
+| Phase 4.F — Chainlink-on-EVM real-data smoke runbook per chain     | ✅ DONE (runbook)                                                                                                                                                                                                                                                                                                                    | deployment-service@`c0a30fe` — `scripts/audit/chainlink-realdata-smoke.sh` per chain. Real-VM execution deferred (PENDING `launch-mtds-chainlink-smoke-vm.sh` launcher).                                                                                                                                                                                                                              |
+| Phase 6.A — Telegram per-environment scoping                       | 🟡 OPEN                                                                                                                                                                                                                                                                                                                              | Deployment-service scope                                                                                                                                                                                                                                                                                                                                                                              |
+| Phase 6.B — Firebase SA JSON + WIF                                 | 🟡 OPEN                                                                                                                                                                                                                                                                                                                              | Deployment-service scope                                                                                                                                                                                                                                                                                                                                                                              |
+| Phase 6.C — GHA WIF upgrade (replace PATs)                         | 🟡 OPEN                                                                                                                                                                                                                                                                                                                              | GHA scope                                                                                                                                                                                                                                                                                                                                                                                             |
+| Phase 6.D — Anthropic API budget cap                               | ✅ DONE                                                                                                                                                                                                                                                                                                                              | deployment-service@`c0a30fe` — `configs/anthropic_budget.yaml` per-workflow caps + 75%/100% warning/block thresholds + `WORKFLOW_BUDGET_EXCEEDED` alert codes.                                                                                                                                                                                                                                        |
+| Phase 8.B — Health endpoint credential probes                      | ✅ DONE                                                                                                                                                                                                                                                                                                                              | utl@`1632e0fa` — `make_health_router` `credentials_health` callback + `/health/credentials` sub-route + 8 standalone tests. Closed-set status: ok / fail / pending_kyb / post_cutover_only / unknown.                                                                                                                                                                                                 |
+| Phase 8.C — Master plan continuous-verification column             | ✅ DONE                                                                                                                                                                                                                                                                                                                              | Item 19 row refreshed at PM@`d608dfa4` with full shipment chain (3.C.1 + 3.C.2 design + checklist + template + probe-script) + Last verified bumped 2026-05-12.                                                                                                                                                                                                                                       |
+| Phase 8.D — Pre-cutover sign-off gate                              | 🟡 OPEN                                                                                                                                                                                                                                                                                                                              | Operator-runnable on 2026-05-22 via `credential-probe.sh --mode live --archetype carry_staked_basis` (target 100% pass)                                                                                                                                                                                                                                                                               |
+| Phase 9.B — aws-iam-matrix.md (PENDING Phase 1.B)                  | ✅ DONE (stub)                                                                                                                                                                                                                                                                                                                       | PM@`810ce4c7` — `codex/05-infrastructure/aws-iam-matrix.md` per-service IAM SSOT. 19 services × `uts-{service}-{env}` naming + closed-set policy attachments + KMS Decrypter for execution-only. PENDING Phase 1.B Terraform/CDK provisioning.                                                                                                                                                        |
+| Phase 9.D — rotation-runbook.md                                    | ✅ DONE                                                                                                                                                                                                                                                                                                                              | `codex/05-infrastructure/rotation-runbook.md` NEW at PM@`d608dfa4`. Per-class cadence + 90d CMK auto-rotation re-wrap operator-runbook + pre-cutover rotation gate 2026-05-22.                                                                                                                                                                                                                        |
+| Phase 9.G — Update interface-credential-convention.md              | ✅ DONE                                                                                                                                                                                                                                                                                                                              | PM@`d608dfa4` — factory table extended with execution-service (Custody) row + per-signing_surface CustodyConfig fields + per-wallet flippability.                                                                                                                                                                                                                                                     |
+| Phase 9.H — Update config-reloader-pattern.md                      | ✅ DONE                                                                                                                                                                                                                                                                                                                              | PM@`810ce4c7` — Rule 8 NEW: per-wallet credential reload + `WalletCustodyReloader` skeleton. NEW § "Per-wallet credential class".                                                                                                                                                                                                                                                                     |
+| Phase 9.I — Update runtime-tiers-and-deployment.md                 | ✅ DONE                                                                                                                                                                                                                                                                                                                              | PM@`d608dfa4` — NEW § "Per-mode credential subset" cross-references credentials_per_mode.yaml + credentials_per_archetype.yaml + credential-probe.sh.                                                                                                                                                                                                                                                 |
+| Phase 9.J — Update firebase-local.md                               | ✅ DONE                                                                                                                                                                                                                                                                                                                              | PM@`810ce4c7` — NEW § "Firebase prod vs emulator credential split" + per-env SA JSON storage + FIREBASE_AUTH_MODE routing + per-tier credential discipline.                                                                                                                                                                                                                                           |
+| Phase 1.A — GCP per-service SA matrix yaml SSOT                    | ✅ DONE                                                                                                                                                                                                                                                                                                                              | deployment-service@`c0a30fe` — `configs/gcp_service_accounts.yaml` SSOT covering 19 services × 3 envs (57 SAs) + per-service IAM roles + bucket + secrets + KMS Decrypter on 5 CMKs (execution-prod).                                                                                                                                                                                                 |
+| Phase 1.B-H — AWS↔GCP parity provisioning                         | 🟡 DEFERRED — 7-10 AI-day workstream                                                                                                                                                                                                                                                                                                 | Slot 4 successor or operator. Per-service IAM design SHIPPED (Phase 1.A + 9.B); Terraform/CDK provisioning + ECR + S3 buckets + Secrets Manager mirror + SNS/SQS + EventBridge + WIF — NOT gating May-23 cutover (dual-cloud-active steady state target).                                                                                                                                             |
+| Phase 2 — Trading venue credentials native adapters                | 🟡 DEFERRED — 10-15 AI-day workstream                                                                                                                                                                                                                                                                                                | Slot 4 successor or Harsh; uses Phase 4.A schema + secret-manager-naming SSOT                                                                                                                                                                                                                                                                                                                         |
 
 ### Cycle-1 → Cycle-2 (2026-05-16+) priority — REFRESHED 2026-05-13
 
-1. ~~**Phase 3.C.1** `CloudKmsCustodyProvider` impl~~ — ✅ **DONE** at execution-service@`d45d24b4` (shipped 2026-05-12).
-2. ~~**Phase 4.A** operator Cloud HSM CMK provisioning~~ — ✅ **DONE** (agent-self-provisioned via ADC 2026-05-12; gcloud verified 2026-05-13: 10 CMKs live in `wallets-prod` + `wallets-staging` keyrings, 90d rotation).
-3. ~~**Phase 3.A** Copper sandbox smoke~~ — 🟢 **CLIENT-SIDE** per operator direction 2026-05-13. Copper integration is the client's onboarding workstream; not a May-23 gate.
-4. **Phase 8.D** pre-cutover sign-off (May-22) — operator-runnable via `credential-probe.sh --mode live --archetype carry_staked_basis`.
-5. **Phase 1** AWS↔GCP parity — **DEFERRED past May-23** per operator direction 2026-05-13: AWS migration runs AFTER GCP backfills + manifest quality verified (don't double cloud load before data quality is green). Successor: `aws_migration_defi_first_2026_05_07.md` Phase 1 unblocks post-cutover.
+1. ~~**Phase 3.C.1** `CloudKmsCustodyProvider` impl~~ — ✅ **DONE** at execution-service@`d45d24b4` (shipped
+   2026-05-12).
+2. ~~**Phase 4.A** operator Cloud HSM CMK provisioning~~ — ✅ **DONE** (agent-self-provisioned via ADC 2026-05-12;
+   gcloud verified 2026-05-13: 10 CMKs live in `wallets-prod` + `wallets-staging` keyrings, 90d rotation).
+3. ~~**Phase 3.A** Copper sandbox smoke~~ — 🟢 **CLIENT-SIDE** per operator direction 2026-05-13. Copper integration is
+   the client's onboarding workstream; not a May-23 gate.
+4. **Phase 8.D** pre-cutover sign-off (May-22) — operator-runnable via
+   `credential-probe.sh --mode live --archetype carry_staked_basis`.
+5. **Phase 1** AWS↔GCP parity — **DEFERRED past May-23** per operator direction 2026-05-13: AWS migration runs AFTER
+   GCP backfills + manifest quality verified (don't double cloud load before data quality is green). Successor:
+   `aws_migration_defi_first_2026_05_07.md` Phase 1 unblocks post-cutover.
 
-**May-23 custody readiness verdict**: ✅ GREEN. Cloud-KMS path operational on GCP; provider implementation shipped; verification smoke passed (UAC@`88e4e5a`). Copper/CEFFU are client-side institutional workstreams that do NOT gate May-23.
+**May-23 custody readiness verdict**: ✅ GREEN. Cloud-KMS path operational on GCP; provider implementation shipped;
+verification smoke passed (UAC@`88e4e5a`). Copper/CEFFU are client-side institutional workstreams that do NOT gate
+May-23.
 
 ### Continuous-verification (per Runbook Execution-Owner SSOT HARD RULE)
 
-`codex/05-infrastructure/custody-onboarding-checklist.md` § F declares cadence per surface.
-`credential-probe.sh` is the verification harness — daily cron VM owner =
-deployment-service maintainer; cadence = daily; verifier = exit 0 + per-credential
-events; last_executed = NEVER (pending first operator run).
+`codex/05-infrastructure/custody-onboarding-checklist.md` § F declares cadence per surface. `credential-probe.sh` is the
+verification harness — daily cron VM owner = deployment-service maintainer; cadence = daily; verifier = exit 0 +
+per-credential events; last_executed = NEVER (pending first operator run).
 
 ## DONE-2026-05-15 — slot 4 Day 1 (2026-05-12) `ikenna-keys-wallets-tab`
 
@@ -970,40 +1007,40 @@ custody onboarding checklist + R9 codex propagation + Cloud-KMS issue doc); meet
 
 ### What shipped Day 1 (2026-05-12)
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-|---|---|---|
-| Phase 4.A.SCHEMA — UAC `WalletProvisioningConfig` schema | ✅ DONE — UAC@`d721b6a` + 27 tests | Unblocks slot 5 Family-1/2 archetype config + slot 8 cross_cutting #4 DART surfaces (handshake ping shipped PM@`8aaf70da`) |
-| Phase 2 — Fireblocks R9 sub-(a) operator gate | ✅ RESOLVED 2026-05-12 via AskUserQuestion → CLOUD_KMS for May-23 → COPPER/FIREBLOCKS June-1 | Decision codified in plan body § R9 RESOLVED + propagated to `defi_master_2026_05_07.md` + `codex/04-architecture/custody-providers.md` top banner |
-| Phase 3.C SPLIT into 3.C.1 (Cloud-KMS) + 3.C.2 (Fireblocks) | ✅ design-shipped at PM@`5cc47002` | 3.C.1 implementation `CloudKmsCustodyProvider` PENDING — owner: slot-4 successor + Harsh side |
-| Phase 1 operator-action checklist — codex doc | ✅ DONE — `codex/05-infrastructure/custody-onboarding-checklist.md` at PM@`2e198794` | Covers Copper verification (§ A) + Cloud-KMS provisioning (§ B) + Fireblocks June-1 path (§ C) + CEFFU KYB (§ D) + risk wiring (§ E) + continuous-verification cadence (§ F) |
-| Phase 1 — Cloud HSM CMK provisioning operator-action issue doc | ✅ DONE — `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` | P0; 4-6 operator-hours; May-21 acceptance gate |
+| Phase / item                                                   | Status as of 2026-05-12                                                                      | Successor / blocker                                                                                                                                                          |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 4.A.SCHEMA — UAC `WalletProvisioningConfig` schema       | ✅ DONE — UAC@`d721b6a` + 27 tests                                                           | Unblocks slot 5 Family-1/2 archetype config + slot 8 cross_cutting #4 DART surfaces (handshake ping shipped PM@`8aaf70da`)                                                   |
+| Phase 2 — Fireblocks R9 sub-(a) operator gate                  | ✅ RESOLVED 2026-05-12 via AskUserQuestion → CLOUD_KMS for May-23 → COPPER/FIREBLOCKS June-1 | Decision codified in plan body § R9 RESOLVED + propagated to `defi_master_2026_05_07.md` + `codex/04-architecture/custody-providers.md` top banner                           |
+| Phase 3.C SPLIT into 3.C.1 (Cloud-KMS) + 3.C.2 (Fireblocks)    | ✅ design-shipped at PM@`5cc47002`                                                           | 3.C.1 implementation `CloudKmsCustodyProvider` PENDING — owner: slot-4 successor + Harsh side                                                                                |
+| Phase 1 operator-action checklist — codex doc                  | ✅ DONE — `codex/05-infrastructure/custody-onboarding-checklist.md` at PM@`2e198794`         | Covers Copper verification (§ A) + Cloud-KMS provisioning (§ B) + Fireblocks June-1 path (§ C) + CEFFU KYB (§ D) + risk wiring (§ E) + continuous-verification cadence (§ F) |
+| Phase 1 — Cloud HSM CMK provisioning operator-action issue doc | ✅ DONE — `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md`   | P0; 4-6 operator-hours; May-21 acceptance gate                                                                                                                               |
 
 ### Deferred / open after 2026-05-12 session (Half 3 scoreboard)
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-|---|---|---|
-| Phase 3.A — Copper sandbox real sign-and-broadcast smoke | OPEN | Operator-runnable (§ A.1.5 in checklist) before 2026-05-21 |
-| Phase 3.B.1 — CEFFU institutional KYB onboarding | 🟡 BLOCKED on operator KYB submission | 2-4 week SLA; KYB form upload (§ D.1 in checklist) |
-| Phase 3.B.2-5 — CEFFU API spec ingestion + adapter + test | 🟡 BLOCKED on D.1 + CEFFU spec delivery | Successor: same plan Phase 3.B.3 once spec lands |
-| Phase 3.C.1 — `CloudKmsCustodyProvider` implementation | OPEN | Owner: slot-4 successor or Harsh implementation handoff; **gates May-23 cutover** |
-| Phase 3.C.2 — `FireblocksCustodyProvider` implementation | 🟡 DEFERRED-AFTER-CUTOVER (2026-06-01) | Gated on client June-1 credential delivery; successor plan named: `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when creds land) |
-| Phase 3.D — Treasury rollup view canonical owner | 🟢 **PULLED FORWARD May-23** (operator direction 2026-05-13) — wallet-tier surfaces ready via schema | Owner: slot 4 (continuing) — deployment-api `/api/treasury/rollup` + `/treasury/nav` endpoint + PBMS wiring; ~1-2 cal-AI-days |
-| Phase 4.A — N×M mainnet wallets provisioning | OPEN (schema shipped; wallet rows pending) | Gated on Cloud-KMS CMK provisioning per issue doc; Day 2-3 scope once operator completes B.1-B.3 |
-| Phase 4.B — Per-protocol approvals SSOT + automation | OPEN | Day 2-3 scope |
-| Phase 7 — Per-mode + per-archetype credential subset SSOTs | OPEN | Depends on Phases 2-6 enumeration; Day 3-4 scope |
-| Phase 8 — Audit recipe + continuous verification | OPEN | Depends on Phase 7; Day 3-4 scope |
-| Phase 9 — Codex SSOT updates | PARTIAL — `custody-providers.md` + `custody-onboarding-checklist.md` shipped today; remaining 9 docs Day 2-4 | Per-phase as remaining phases ship |
+| Phase / item                                               | Status as of 2026-05-12                                                                                      | Successor / blocker                                                                                                                                                    |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 3.A — Copper sandbox real sign-and-broadcast smoke   | OPEN                                                                                                         | Operator-runnable (§ A.1.5 in checklist) before 2026-05-21                                                                                                             |
+| Phase 3.B.1 — CEFFU institutional KYB onboarding           | 🟡 BLOCKED on operator KYB submission                                                                        | 2-4 week SLA; KYB form upload (§ D.1 in checklist)                                                                                                                     |
+| Phase 3.B.2-5 — CEFFU API spec ingestion + adapter + test  | 🟡 BLOCKED on D.1 + CEFFU spec delivery                                                                      | Successor: same plan Phase 3.B.3 once spec lands                                                                                                                       |
+| Phase 3.C.1 — `CloudKmsCustodyProvider` implementation     | OPEN                                                                                                         | Owner: slot-4 successor or Harsh implementation handoff; **gates May-23 cutover**                                                                                      |
+| Phase 3.C.2 — `FireblocksCustodyProvider` implementation   | 🟡 DEFERRED-AFTER-CUTOVER (2026-06-01)                                                                       | Gated on client June-1 credential delivery; successor plan named: `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when creds land) |
+| Phase 3.D — Treasury rollup view canonical owner           | 🟢 **PULLED FORWARD May-23** (operator direction 2026-05-13) — wallet-tier surfaces ready via schema         | Owner: slot 4 (continuing) — deployment-api `/api/treasury/rollup` + `/treasury/nav` endpoint + PBMS wiring; ~1-2 cal-AI-days                                          |
+| Phase 4.A — N×M mainnet wallets provisioning               | OPEN (schema shipped; wallet rows pending)                                                                   | Gated on Cloud-KMS CMK provisioning per issue doc; Day 2-3 scope once operator completes B.1-B.3                                                                       |
+| Phase 4.B — Per-protocol approvals SSOT + automation       | OPEN                                                                                                         | Day 2-3 scope                                                                                                                                                          |
+| Phase 7 — Per-mode + per-archetype credential subset SSOTs | OPEN                                                                                                         | Depends on Phases 2-6 enumeration; Day 3-4 scope                                                                                                                       |
+| Phase 8 — Audit recipe + continuous verification           | OPEN                                                                                                         | Depends on Phase 7; Day 3-4 scope                                                                                                                                      |
+| Phase 9 — Codex SSOT updates                               | PARTIAL — `custody-providers.md` + `custody-onboarding-checklist.md` shipped today; remaining 9 docs Day 2-4 | Per-phase as remaining phases ship                                                                                                                                     |
 
 ### Day 2-4 plan (2026-05-13 → 2026-05-15)
 
-1. **Day 2** (2026-05-13): Phase 3.D treasury rollup `/api/treasury/rollup` endpoint design + PBMS wiring spec.
-   Phase 4.A wallet-row JSON generation (10+ mainnet wallets) — depends on operator Cloud HSM CMKs provisioning (issue
-   doc). Phase 9 codex stubs (`credentials-matrix.md`, `aws-iam-matrix.md`, `secret-manager-naming.md`,
+1. **Day 2** (2026-05-13): Phase 3.D treasury rollup `/api/treasury/rollup` endpoint design + PBMS wiring spec. Phase
+   4.A wallet-row JSON generation (10+ mainnet wallets) — depends on operator Cloud HSM CMKs provisioning (issue doc).
+   Phase 9 codex stubs (`credentials-matrix.md`, `aws-iam-matrix.md`, `secret-manager-naming.md`,
    `per-archetype-wallet-isolation.md`, `hsm-wallet-signing.md`).
 2. **Day 3** (2026-05-14): Phase 4.B per-protocol approvals YAML + pre-signing automation script. Phase 7 per-mode +
    per-archetype credential subset YAMLs.
-3. **Day 4** (2026-05-15): Phase 8 audit script `credential-probe.sh` + health endpoint extension. Phase 8.C master
-   plan continuous-verification column. EOD reset to 2026-05-16 cycle plan.
+3. **Day 4** (2026-05-15): Phase 8 audit script `credential-probe.sh` + health endpoint extension. Phase 8.C master plan
+   continuous-verification column. EOD reset to 2026-05-16 cycle plan.
 
 ### Continuous-verification (per Runbook Execution-Owner SSOT HARD RULE)
 
@@ -1033,17 +1070,29 @@ in checklist § A-D drive first executions.
 
 ## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
 
-**Finding (P2)**: cross-chain keypair axis is implicit but not explicit across the wallet codex + UAC schemas. All artifacts use chain-aware shapes + per-chain `wallet_id`s (`csb-eth-hot-lido-v1` vs `csb-arb-hot-lido-v1` in [`per-archetype-wallet-isolation.md`](../../codex/05-infrastructure/per-archetype-wallet-isolation.md) § 2), but **none state**:
+**Finding (P2)**: cross-chain keypair axis is implicit but not explicit across the wallet codex + UAC schemas. All
+artifacts use chain-aware shapes + per-chain `wallet_id`s (`csb-eth-hot-lido-v1` vs `csb-arb-hot-lido-v1` in
+[`per-archetype-wallet-isolation.md`](../../codex/05-infrastructure/per-archetype-wallet-isolation.md) § 2), but **none
+state**:
 
-1. **EVM secp256k1 keypair is shared across all EVM chains** — one PK derives the same address on Ethereum / Arbitrum / Base / Optimism / Polygon (implicit in [`pre-cutover-test-wallets-runbook.md`](../../codex/05-infrastructure/pre-cutover-test-wallets-runbook.md) § 2.1 "operator extends MetaMask with new networks" but never explicit).
-2. **Per-chain config rows exist anyway** because `allowed_protocols` / `spending_caps` / `kill_switch_id` differ per chain even when the underlying PK is shared.
-3. **Non-EVM chains need distinct keypairs** — Solana ed25519 (test-wallet runbook § 3) + Hyperliquid L1 EIP-712-over-own-L1 + Bitcoin. Cryptographic primitives not codified.
+1. **EVM secp256k1 keypair is shared across all EVM chains** — one PK derives the same address on Ethereum / Arbitrum /
+   Base / Optimism / Polygon (implicit in
+   [`pre-cutover-test-wallets-runbook.md`](../../codex/05-infrastructure/pre-cutover-test-wallets-runbook.md) § 2.1
+   "operator extends MetaMask with new networks" but never explicit).
+2. **Per-chain config rows exist anyway** because `allowed_protocols` / `spending_caps` / `kill_switch_id` differ per
+   chain even when the underlying PK is shared.
+3. **Non-EVM chains need distinct keypairs** — Solana ed25519 (test-wallet runbook § 3) + Hyperliquid L1
+   EIP-712-over-own-L1 + Bitcoin. Cryptographic primitives not codified.
 
-**Why it matters**: an implementer wiring this plan could either (a) over-provision — generate fresh PK per EVM chain → loses address-fungibility (cross-chain bridges, ENS, on-chain reputation), or (b) under-provision — one config row per EVM keypair → loses per-chain spending caps + kill-switch scoping.
+**Why it matters**: an implementer wiring this plan could either (a) over-provision — generate fresh PK per EVM chain →
+loses address-fungibility (cross-chain bridges, ENS, on-chain reputation), or (b) under-provision — one config row per
+EVM keypair → loses per-chain spending caps + kill-switch scoping.
 
 **Recommended fix** (slot 4 owns; ~50 LOC addition):
 
-Append a new section to [`codex/05-infrastructure/per-archetype-wallet-isolation.md`](../../codex/05-infrastructure/per-archetype-wallet-isolation.md) (best home; sibling section after § 2):
+Append a new section to
+[`codex/05-infrastructure/per-archetype-wallet-isolation.md`](../../codex/05-infrastructure/per-archetype-wallet-isolation.md)
+(best home; sibling section after § 2):
 
 ```markdown
 ## § N — Cross-chain keypair axis (the orthogonality rule)
@@ -1051,39 +1100,49 @@ Append a new section to [`codex/05-infrastructure/per-archetype-wallet-isolation
 The N×M wallet topology has TWO axes that are orthogonal but commonly conflated:
 
 1. **Keypair axis** — which cryptographic keypair signs.
-2. **Config-row axis** — which (`wallet_id`, `chain`) row carries operational envelope (`allowed_protocols`, `spending_caps`, `kill_switch_id`).
+2. **Config-row axis** — which (`wallet_id`, `chain`) row carries operational envelope (`allowed_protocols`,
+   `spending_caps`, `kill_switch_id`).
 
 ### Per-chain-family keypair rules
 
-| Chain family | Cryptographic primitive | Keypair sharing |
-|---|---|---|
-| EVM (Ethereum / Arbitrum / Base / Optimism / Polygon / Sepolia / Holesky / Base Sepolia / Arbitrum Sepolia) | secp256k1 ECDSA | **Shared** — one keypair derives the same `0x...` address on every EVM chain |
-| Solana mainnet / devnet | ed25519 | Distinct keypair (no sharing with EVM) |
-| Hyperliquid L1 | secp256k1 ECDSA + EIP-712 over chain_id 1337 (mainnet) / 421614 (testnet) | Distinct from EVM despite shared primitive — different EIP-712 domain |
-| Bitcoin / Bitcoin testnet | secp256k1 ECDSA (Schnorr for Taproot) | Distinct from EVM (different address derivation) |
+| Chain family                                                                                                | Cryptographic primitive                                                   | Keypair sharing                                                              |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| EVM (Ethereum / Arbitrum / Base / Optimism / Polygon / Sepolia / Holesky / Base Sepolia / Arbitrum Sepolia) | secp256k1 ECDSA                                                           | **Shared** — one keypair derives the same `0x...` address on every EVM chain |
+| Solana mainnet / devnet                                                                                     | ed25519                                                                   | Distinct keypair (no sharing with EVM)                                       |
+| Hyperliquid L1                                                                                              | secp256k1 ECDSA + EIP-712 over chain_id 1337 (mainnet) / 421614 (testnet) | Distinct from EVM despite shared primitive — different EIP-712 domain        |
+| Bitcoin / Bitcoin testnet                                                                                   | secp256k1 ECDSA (Schnorr for Taproot)                                     | Distinct from EVM (different address derivation)                             |
 
 ### Per-chain config-row rules
 
-`WalletProvisioningConfig` row count = `(chains × kinds × archetypes)`, not `keypairs`. Two `csb-eth-hot-lido-v1` and `csb-arb-hot-lido-v1` rows share the same EVM keypair → same `0x...` address → but have distinct rows because:
+`WalletProvisioningConfig` row count = `(chains × kinds × archetypes)`, not `keypairs`. Two `csb-eth-hot-lido-v1` and
+`csb-arb-hot-lido-v1` rows share the same EVM keypair → same `0x...` address → but have distinct rows because:
 
-- Per-chain `allowed_protocols` (Aave V3 cap LTV differs per chain; Uniswap router address differs per chain per [`UNISWAP_SWAP_ROUTER_BY_CHAIN`](../../../unified-api-contracts/unified_api_contracts/registry/dex_router_addresses.py)).
+- Per-chain `allowed_protocols` (Aave V3 cap LTV differs per chain; Uniswap router address differs per chain per
+  [`UNISWAP_SWAP_ROUTER_BY_CHAIN`](../../../unified-api-contracts/unified_api_contracts/registry/dex_router_addresses.py)).
 - Per-chain `spending_caps` (gas-cost-per-tx + chain-specific risk budget).
-- Per-chain `kill_switch_id` (per-chain kill-switch tier-up; `KILL_PER_ASSET_GROUP_DEFI` is chain-agnostic, but `KILL_PER_VENUE_AAVEV3_BASE` is chain-specific).
+- Per-chain `kill_switch_id` (per-chain kill-switch tier-up; `KILL_PER_ASSET_GROUP_DEFI` is chain-agnostic, but
+  `KILL_PER_VENUE_AAVEV3_BASE` is chain-specific).
 
 ### Wallet-id naming convention
 
-- EVM cells: `{archetype}-{chain}-{kind}-{venue}-v{N}` (e.g. `csb-eth-hot-lido-v1` / `csb-arb-hot-lido-v1`). Same EVM keypair, separate config rows.
+- EVM cells: `{archetype}-{chain}-{kind}-{venue}-v{N}` (e.g. `csb-eth-hot-lido-v1` / `csb-arb-hot-lido-v1`). Same EVM
+  keypair, separate config rows.
 - Solana cells: `{archetype}-sol-{kind}-{venue}-v{N}` (e.g. `csb-sol-hot-jito-v1`). Distinct ed25519 keypair.
 - Hyperliquid: `{archetype}-hl-{kind}-v{N}` (e.g. `apd-hl-hot-eth-perp-v1`). Distinct secp256k1 keypair.
 
 ### Provisioning implication
 
-In the envelope-encrypt flow ([`pre-cutover-test-wallets-runbook.md`](../../codex/05-infrastructure/pre-cutover-test-wallets-runbook.md) § 2.2):
+In the envelope-encrypt flow
+([`pre-cutover-test-wallets-runbook.md`](../../codex/05-infrastructure/pre-cutover-test-wallets-runbook.md) § 2.2):
 
-- **EVM**: operator hands one PK; agent wraps once; agent creates N config rows (one per EVM chain in scope) with the same `private_key_secret_ref` but different `chain` + `allowed_protocols` + `spending_caps` + `kill_switch_id`.
+- **EVM**: operator hands one PK; agent wraps once; agent creates N config rows (one per EVM chain in scope) with the
+  same `private_key_secret_ref` but different `chain` + `allowed_protocols` + `spending_caps` + `kill_switch_id`.
 - **Solana / Hyperliquid / Bitcoin**: per-chain PK; per-chain wrap; per-chain config row.
 ```
 
-Optional: also surface the rule in [`hsm-wallet-signing.md`](../../codex/05-infrastructure/hsm-wallet-signing.md) § 2.3 (CLOUD_KMS_ENCRYPTED section) as a 2-line callout pointing at the new section.
+Optional: also surface the rule in [`hsm-wallet-signing.md`](../../codex/05-infrastructure/hsm-wallet-signing.md) § 2.3
+(CLOUD_KMS_ENCRYPTED section) as a 2-line callout pointing at the new section.
 
-**Slot 5 NOT fixing** (Findings Triage — outside-plan scope; slot 4 owns wallet codex surface). Source: `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 PerpHedgeSizer + Phase 8 monitor design + Family 2 design § "USDC margin buffer + top-up automation".
+**Slot 5 NOT fixing** (Findings Triage — outside-plan scope; slot 4 owns wallet codex surface). Source:
+`defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7 PerpHedgeSizer + Phase 8 monitor design + Family 2 design §
+"USDC margin buffer + top-up automation".
