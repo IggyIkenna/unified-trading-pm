@@ -114,6 +114,13 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 
 ### #4 UI replication / DART manual-trade lane
 
+> **Route infrastructure shipped 2026-05-13 (Ikenna slot 7)**: `unified-trading-system-ui@f55478ac` — Sheet →
+> `/dart/terminal/manual/*` dedicated route + 3 extracted components (`manual-trade-form.tsx` / `trade-preview.tsx` /
+> `execution-dispatch.tsx`) + unified `lib/api/dart-client.ts` + `lib/api/mocks/dart.ts` + mock-handler DART routes
+> wired. `ui@33e56c19` — 8-case Playwright e2e. This is the UI infrastructure layer for the 5 BUILDs below — each BUILD
+> now has a working form/preview/dispatch surface to wire into. Plan: `dart_manual_trade_ux_refactor_2026_05_13.md` (all
+> 13 todos closed).
+
 - [x] [DESIGN] **DART scope decision** — per-archetype list of operator-replicable manual surfaces. Operator-confirmed
       bar: every live archetype must have a manual fallback. Sports backtest exec validation manual surface acceptable
       (not live). Owner: Ikenna T6. **DONE 2026-05-08 (Tab 6.C)** — `unified-trading-pm@ab595616` shipped
