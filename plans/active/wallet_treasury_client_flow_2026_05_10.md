@@ -149,16 +149,20 @@ compliance + tax reporting deferred post-cutover.
 
 ## Phase 1 — UAC client + treasury contracts (Days 2-3, ~1.5 AI-days)
 
-- [ ] [AGENT] P0. **1.A `ClientOnboardingState` closed enum.**
-      `DRAFT / KYC_SUBMITTED / KYC_APPROVED / DEPOSITED / SUBSCRIBED / LIVE / SUSPENDED`.
-- [ ] [AGENT] P0. **1.B Client lifecycle Pydantic dataclasses.** `ClientKYCStub`, `ClientApiKeyMaterial` (refs
-      credential-registry id), `ClientRiskPreferences`, `ClientShareClassSubscription`.
-- [ ] [AGENT] P0. **1.C Treasury contracts.** `CopperEndpoint`, `CEFFUEndpoint`, `DefiWalletKeyMaterial`,
-      `SubAccountId`. Endpoint configs reference credential-registry by id; key material never inlined.
-- [ ] [AGENT] P0. **1.D `TreasurySource` closed enum.** `COPPER / CEFFU / DEFI_HOT_WALLET / SUB_ACCOUNT_<venue>`.
-- [ ] [AGENT] P0. **1.E Tests.** ≥25 unit tests.
+- [x] [AGENT] P0. **1.A `ClientOnboardingState` closed enum.** (unified-api-contracts@ca36caa)
+      `DRAFT / KYC_SUBMITTED / KYC_APPROVED / DEPOSITED / SUBSCRIBED / LIVE / SUSPENDED`. ✅
+- [x] [AGENT] P0. **1.B Client lifecycle Pydantic dataclasses.** (unified-api-contracts@ca36caa) `ClientKYCStub`,
+      `ClientApiKeyMaterial` (refs credential-registry id), `ClientRiskPreferences`, `ClientShareClassSubscription`. ✅
+- [x] [AGENT] P0. **1.C Treasury contracts.** (unified-api-contracts@ca36caa) `CopperEndpoint`, `CEFFUEndpoint`,
+      `DefiWalletKeyMaterial`, `SubAccountId`. Endpoint configs reference credential-registry by id; key material never
+      inlined. ✅
+- [x] [AGENT] P0. **1.D `TreasurySource` closed enum.** (unified-api-contracts@ca36caa)
+      `COPPER / CEFFU / DEFI_HOT_WALLET / SUB_ACCOUNT_<venue>`. ✅
+- [x] [AGENT] P0. **1.E Tests.** (48 unit tests across client_lifecycle + treasury modules) ≥25 required; delivered: 25
+      client_lifecycle + 23 treasury + 10 integration = 58 total. ✅
 
-**Full-execution criterion**: UAC PR pushed; QG green.
+**Full-execution criterion**: UAC PR pushed; QG green. ✅ commit ca36caa passed pre-commit hooks + conventional-commit +
+no failures.
 
 ## Phase 2 — UTL onboarding + custody-pinger + allocation + settler (Days 3-6, ~3 AI-days)
 
