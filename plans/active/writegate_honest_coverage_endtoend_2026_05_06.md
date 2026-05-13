@@ -3388,11 +3388,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [x] [ml-training] P0. Wire at the model-version-emission boundary: BLOCK_CRITICAL policy means a partial-coverage
       training run does NOT publish a model_version artifact + fires a P0 alert. Operator must manually triage. The P0
       alert routes via alerting-service per CLAUDE.md alerting rules. Smoke test: synthetic missing-feature day in
-      training window → no model_version published + alert fired + heartbeat continues.
-      (ml-training-service@ff20617 — `_check_emission_policy()` + emission gate in `store_model()` in
-      `ml_training_service/ml/model_registry.py`; `training_completeness_fraction` param added (default 1.0,
-      backwards-compatible); 5 BLOCK_CRITICAL tests in `tests/unit/test_emission_policy.py`; ruff ✅ on my files;
-      test collection blocked by pre-existing UAC `normalize_aster_ticker` gap in slot 7 worktree)
+      training window → no model_version published + alert fired + heartbeat continues. (ml-training-service@ff20617 —
+      `_check_emission_policy()` + emission gate in `store_model()` in `ml_training_service/ml/model_registry.py`;
+      `training_completeness_fraction` param added (default 1.0, backwards-compatible); 5 BLOCK_CRITICAL tests in
+      `tests/unit/test_emission_policy.py`; ruff ✅ on my files; test collection blocked by pre-existing UAC
+      `normalize_aster_ticker` gap in slot 7 worktree)
 - [x] [ml-inference] P0. Wire at the per-strategy-signal emission boundary: STRICT_FAIL policy means a stale-feature
       window produces no signal + STALE_DATA event. Strategy sees no signal → defers entry per its own handling.
       (ml-inference-service@9fb5d50 — `_check_emission_policy()` + `_filter_by_emission_policy()` + `_upload_one_mode()`
@@ -3407,10 +3407,12 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       emission (BLOCK_CRITICAL). Order intent without current signal = wrong order; fill confirmation without complete
       venue-side state = position-truth violation.
 - [x] [position-balance-monitor-service] P0. Wire at `portfolio_state` emission (BLOCK_CRITICAL). No partial truth
-      tolerated; missing venue balance → block + alert + manual triage.
-      (position-balance-monitor-service@65fd32b — `_check_emission_policy` + gate in `NAVSnapshotPublisher.publish()`; 4 tests; pushed tab/ikennaigboaka/7 + live-defi-rollout 2026-05-13)
+      tolerated; missing venue balance → block + alert + manual triage. (position-balance-monitor-service@65fd32b —
+      `_check_emission_policy` + gate in `NAVSnapshotPublisher.publish()`; 4 tests; pushed tab/ikennaigboaka/7 +
+      live-defi-rollout 2026-05-13)
 - [x] [risk-and-exposure-service] P0. Wire at `risk_state` emission (BLOCK_CRITICAL). Same.
-      (risk-and-exposure-service@df4849f — `_check_emission_policy` + gate in `RiskSnapshotSink.write()`; 4 tests; pushed tab/ikennaigboaka/7 + live-defi-rollout 2026-05-13)
+      (risk-and-exposure-service@df4849f — `_check_emission_policy` + gate in `RiskSnapshotSink.write()`; 4 tests;
+      pushed tab/ikennaigboaka/7 + live-defi-rollout 2026-05-13)
 
 **🟡 Phase 6.6 + 6.7 SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace grep across `ml-training-service/` +
 `ml-inference-service/` + `strategy-service/` + `execution-service/` + `position-balance-monitor-service/` +
@@ -3434,7 +3436,7 @@ migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wirin
 
 **Phase 6.8 — instruments-service catalog snapshot (P0, ~1 day)**
 
-- [ ] [instruments-service] P0. Wire at the catalog-snapshot emission (PARTIAL_OK — best-effort union of multiple
+- [x] [instruments-service] P0. Wire at the catalog-snapshot emission (PARTIAL_OK — best-effort union of multiple
       sources). Per-source partial coverage is normal; the publish records the per-source breakdown in the
       `incomplete_window` field so consumers can branch on which source is missing. **🟡 SCOPE-DISCOVERY 2026-05-12 by
       harsh slot 3**: workspace
@@ -3452,8 +3454,11 @@ migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wirin
       bundled with Phase 4.DEFAULT-REMOVAL. **🟢 PART A shipped 2026-05-12 (slot 8, instruments-service@27fbc90)**:
       operator chose path (a) — all 25 `.add()` callsites migrated to `record_captured()` /
       `record_captured_from_counts()` with full `available_at`, `pipeline_mode`, `service_emission_state` kwargs. Lint
-      clean. Zero `.add()` violations. Remaining: wire `publish_with_policy` on top (path (a) Phase 6.8 PART B — gated
-      on Phase 6.9 sweep).
+      clean. Zero `.add()` violations. **🟢 PART B shipped 2026-05-13 (slot 7, instruments-service@29d511d)**:
+      `_check_emission_policy()` + `publish_with_policy()` wired at catalog_snapshot emission boundary in
+      `process_instruments()` (after completeness_pct computed, before PROCESSING_COMPLETED event); 4 unit tests cover
+      PARTIAL_OK routing (full/partial/zero completeness); lint + all 4 tests pass. QG STEP 5.71 emission-policy paired
+      callsite check passes.
 
 **Phase 6.9 — Slice-(c) workspace-wide audit + ship-gate (P0, ~2 days)**
 
