@@ -583,9 +583,21 @@ placeholder "TBD" cross-reference).
 | Phase 3.F — manifest reconciler nightly-cron *wiring* (library reconciler shipped utl@b8d6e12) | DEFERRED P1 | this plan Phase 6.A (`disaster-drill-cron-` VM extends to run the manifest pass) + composes with `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`. |
 | Phase 3 — aggregate dashboard endpoint (one deployment-api route returning all 8 reconciler statuses) | DEFERRED | Phase 4 service wiring (deployment-api). |
 | UTL hygiene — re-export `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package *root* | DEFERRED P2 (added `kill_switch/__init__` exports utl@d1a0d0d — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works; the very-root re-export + cleaning the Phase-4 `# noqa: qg-deep-import` deep imports remains) | UTL hygiene follow-up — owner pick. |
-| Phase 6 (chaos-drill cron), Phase 9 (real-VM DR drill) | BLOCKED on Ikenna slot 7 scenario primitives (Day 2 2026-05-13) | Tab 5 Day 2+ once `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 ships. |
+| Phase 6 (chaos-drill cron), Phase 9 (real-VM DR drill) | ✅ SCRIPTS SHIPPED 2026-05-13 (see scoreboard below) | VM launch deferred to after code tarballs are refreshed. |
 | Phase 7.A — `/api/kill-switch/{id}/arm` + `/disarm` deployment-api endpoints (7.B UI tab shipped deployment-ui@33e6ea0) | DONE — shipped `deployment-api@dc8be51` (arm/disarm via UTL typed `KillSwitchBus.arm`/`disarm` + `GET /api/kill-switch` listing + `GET /api/kill-switch/audit-log`; 28 route tests; scope map via UTL SSOT) | — |
 | Phase 8.A-8.E — codex docs | ✅ DONE PM@e1f7a25e — all 5 codex docs verified current + checkboxes flipped (8.C kill-switch-circuit-breaker.md got 2 new cross-refs; 8.A/8.B/8.D/8.E already had correct content). | — |
+
+## Deferred work after 2026-05-13 (Slot 3 — Harsh — DR Phase 6/9/10 implementation session)
+
+| Phase / item | Status as of 2026-05-13 | Successor / blocker |
+| --- | --- | --- |
+| Phase 6.A — chaos-drill cron launcher SCRIPT | ✅ SHIPPED deployment-service@347d9df, e2e-testing@2b0d05b | VM launch (operator trigger — needs tarball refresh first). |
+| Phase 6.B — drill report tooling + staleness alerting | ✅ SHIPPED utl@19a90b4 | DEFERRED P2: `AlertCode.CHAOS_DRILL_FAILED` UAC enum (UAC slot to pick up). |
+| Phase 9.A — cutover drill VM launcher SCRIPT | ✅ SHIPPED deployment-service@347d9df, e2e-testing@2b0d05b | VM launch (operator trigger). |
+| Phase 9.B — evidence capture dataclasses | ✅ SHIPPED utl@19a90b4 | — |
+| Phase 10.A — master plan rows green | 🟡 BLOCKED G-14 | Pinged slot 1 main via `harsh_orchestrator/pings/slot_3.md`. |
+| Phase 10.B — stale banners removed | ✅ DONE | 3 banners removed (§7 seam + risk Phase 1 + Phase 7.B lifecycle). |
+| DEFERRED P2 — `AlertCode.CHAOS_DRILL_FAILED` to UAC | OPEN | Operator to assign to UAC-owning slot. |
 
 ## DONE block
 
