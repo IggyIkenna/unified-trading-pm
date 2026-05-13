@@ -520,10 +520,11 @@ cannot reach the truncated tail. **Two related shape problems**:
       Would have caught both `protocol_id` + `canonical_question_group` at QG time. Defers until predictions Plan A
       lands so the allowlist isn't mostly-empty.
 
-- [ ] [codex] P2. **Manifest schema version doc drift.** `availability-manifest-and-data-status.md` § "Schema v6
+- [x] [codex] P2. **Manifest schema version doc drift.** `availability-manifest-and-data-status.md` § "Schema v6
       (current)" cites `MANIFEST_SCHEMA_VERSION = 6`. UTL ships v7 today (added `fixture_id`, `job_id` per the
       multi-axis correction 2026-05-06). The doc's "v5 → v6" + "Per-VM shard layout" sections document v7 columns but
       the heading + version constant lag. Update to "Schema v7 (current)" with v6 → v7 migration notes.
+      (**Already resolved**: doc now documents v8 as current — v7 + v8 both landed since this was written. No further action needed.)
 
 - [ ] [deployment-api / codex finding] P1. **Rollup-side metric inconsistency** (already flagged in
       `availability-manifest-and-data-status.md` § "Rollup-side metric inconsistency 2026-05-07 — open finding"). The
@@ -540,25 +541,33 @@ The launcher-audit issue surfaced 5 todos not covered by Phase 6 (which targets 
 distinct from the **venue-detail panel** + **per-league detail** + **rollup vs manifest** widgets). The codex
 documentation todo already shipped at PM@372e23aa. The remaining 4 are carried here for ownership transfer:
 
-- [ ] **[deployment-service]** P1. `manifest_reader.py:584` — replace `df.head(30)` with paginated `top_instruments` on
+- [x] **[deployment-service]** P1. `manifest_reader.py:584` — replace `df.head(30)` with paginated `top_instruments` on
       the venue-detail endpoint. Add `instrument_offset: int = 0` + `instrument_limit: int | None = None` query params;
       default `instrument_limit = 200` (matches drilldown UI page size); return `total_instruments_unfiltered: int` so
       the UI can render "showing N–M of T" + a load-more button. Bump cap from 30 → 200 (or remove with explicit
       pagination). Distinct from the hierarchical drilldown's `instrument_id` axis (Phase 6) — this is the venue-detail
       panel sample. Source:
       [`../archive/issues/defi_launcher_audit_2026_05_07.md`](./issues/defi_launcher_audit_2026_05_07.md) § Q5 todo 1.
-- [ ] **[deployment-ui]** P1. `VenueDetailPanel.tsx:200-208` — add pagination controls to the `top_instruments`
+      (deployment-service@99acc13 + deployment-api@0b853ba — pagination params + total_instruments_unfiltered; also
+      fixed field name mismatch: `top_instruments` → `instruments` in VenueDetailResult + VenueDetailPanel so the
+      instruments list actually renders at runtime)
+- [x] **[deployment-ui]** P1. `VenueDetailPanel.tsx:200-208` — add pagination controls to the `top_instruments`
       rendering. When `total_instruments_unfiltered > top_instruments.length`, render "Show more (N remaining)" + count
       label. Mirror the pattern from `HierarchicalShardDrilldown.tsx:218` shipped in Phase 6. Source: launcher-audit §
       Q5 todo 2.
-- [ ] **[deployment-api]** P2. `data_status_service.py:602` — `missing_dates: missing_pf[:50]` is fine as a sample
+      (deployment-ui@a67c32f — renamed `top_instruments` → `instruments` in VenueDetailResult + VenueDetailPanel.tsx;
+      added "showing N of M" label when total_instruments_unfiltered > instruments.length; fixed date rendering to
+      use `v1.day ?? v1.date` to align with actual API response field)
+- [x] **[deployment-api]** P2. `data_status_service.py:602` — `missing_dates: missing_pf[:50]` is fine as a sample
       preview but the UI should label it "sample of 50 / total N missing" rather than "the missing dates". Pure label
       fix, no behaviour change. Source: launcher-audit § Q5 todo 3.
-- [ ] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response so the UI
+      (deployment-ui@8ce86fa — added missing_count field to TurboLeagueStatus + missingIsSample logic in DataStatusTab)
+- [x] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response so the UI
       can render a tooltip explaining where each number came from and why they may differ until writegate Phase 3.D.4
       `--apply-write` lands per asset_group. Defensive observability — no behaviour change. Source: launcher-audit § Q5
       todo 5. Closes once writegate Phase 3.D.4 `--apply-write` ships across all 5 asset_groups (rollup and manifest
       converge).
+      (deployment-api@b73ce3b + deployment-ui@0529c0a — added totals_source to both code paths + dynamic ROLLUP/MANIFEST badge with tooltip)
 
 ### Confirmed correct (no drift)
 
