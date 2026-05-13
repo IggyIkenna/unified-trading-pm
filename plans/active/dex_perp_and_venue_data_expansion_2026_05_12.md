@@ -186,9 +186,10 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       backfill: API serves historical from 2024-07-26. Funding backfill: only from 2025-08-01 (already captured).
       Pre-2025-08-01 funding dates: emit `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`.
 
-- [ ] [SCRIPT] P2. **API probe: confirm Drift trades rolling window depth.** One-shot script (not a continuous job) to
+- [x] [SCRIPT] P2. **API probe: confirm Drift trades rolling window depth.** One-shot script (not a continuous job) to
       probe `data.api.drift.trade/trades` for oldest available date. If rolling window < full 2025-01-01 coverage,
       document gap range + emit `record_empty(EXPECTED_KNOWN_SOURCE_GAP)` for affected dates.
+      (MTDS@21ccab6 — `scripts/probe_drift_trades_window.py`; binary search + gap-range output + EXPECTED_KNOWN_SOURCE_GAP guidance)
 
 **Phase 2 success criteria:** `basedpyright` + `ruff` + MTDS unit tests green. Each new venue routing has ≥4 passing
 unit tests. Shard-level isolation confirmed: single venue error does not propagate.
@@ -295,6 +296,30 @@ Phase 4A + 4B + 4C (archetype docs + verification script) — PARALLEL with Phas
     ↓
 Phase 5 (Codex updates) — SERIAL close-out
 ```
+
+---
+
+## Deferred work after 2026-05-13 slot-10 Day-4 session
+
+| Phase / item | Status as of 2026-05-13 | Successor / blocker |
+|---|---|---|
+| Phase 2A — LIGHTER-ZKSYNC routing + derivative_ticker mapping | ✅ DONE | MTDS@c936451 + MTDS@78bde77 |
+| Phase 2D — DRIFT adapter (S3 archive + Data API date-routing) | ✅ DONE | MTDS@66fb712 |
+| Phase 2E — DRIFT venue routing in umi_tick_provider.py | ✅ DONE | MTDS@66fb712 |
+| Phase 2F P1 — Extended OHLCV backfill VM launcher (2024-07-26→2025-07-31) | ⏳ NOT STARTED | Needs deployment-service VM launcher + singleton-lock + watchdog registration |
+| Phase 2F P2 — Drift trades rolling window probe script | ✅ DONE | MTDS@21ccab6 |
+| Phase 2B — Kraken Futures symbol normalisation | ⏳ DEFERRED | Requires UAC + MTDS dual-repo — Ikenna slot preferred |
+| Phase 2C — BitFinex-Derivatives symbol normalisation | ⏳ DEFERRED | Requires UAC + MTDS dual-repo — Ikenna slot preferred |
+| Phase 3A — EigenLayer protocol-level aggregation audit | ✅ DONE | evidence (a)✅ (b)✅-via-parquet (c)❌-missing (RPC-at-calc-time wrong arch) |
+| Phase 3B — eigen_restaking_yield_rate feature + 4 unit tests | ✅ DONE | features-service@93ca6219 |
+| Phase 4A — carry-staked-basis.md OKX row → "pending live API verification" | ✅ DONE | PM@e502de33 |
+| Phase 4B — verify_lst_collateral_support.py diagnostic script | ✅ DONE | MTDS@176e72e |
+| Phase 4C — Uniswap V3 Graph Studio research | ⏳ NICE-TO-HAVE P3 | Not blocking. Successor: uniswap_v3_tick_subgraph_<date>.md after Dune validation |
+| Phase 5.1 — README.md Drift/JitoSOL+mSOL slot naming examples | ✅ DONE | PM@5ec8ff9d |
+| Phase 5.2 — HANDOVER.md Phase 2 completion status table | ✅ DONE | PM@5ec8ff9d |
+| Phase 1 UAC P2 — is_rebasing + rebase_rate to lst_rates schema | ⏳ DEFERRED | UAC multi-repo change — Ikenna slot preferred |
+
+**Key blocker for Phase 2F P1**: VM launcher under `deployment-service/scripts/vm/` requires singleton-lock pattern, `vm_zombie_watchdog.py` registration, and tarball refresh — multi-repo scope makes it Ikenna-tier.
 
 ---
 
