@@ -3402,9 +3402,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [ ] [execution-service] P0. Wire at TWO boundaries: `order_intent` emission (STRICT_FAIL) + `fill_confirmation`
       emission (BLOCK_CRITICAL). Order intent without current signal = wrong order; fill confirmation without complete
       venue-side state = position-truth violation.
-- [ ] [position-balance-monitor-service] P0. Wire at `portfolio_state` emission (BLOCK_CRITICAL). No partial truth
+- [x] [position-balance-monitor-service] P0. Wire at `portfolio_state` emission (BLOCK_CRITICAL). No partial truth
       tolerated; missing venue balance → block + alert + manual triage.
-- [ ] [risk-and-exposure-service] P0. Wire at `risk_state` emission (BLOCK_CRITICAL). Same.
+      (position-balance-monitor-service@65fd32b — `_check_emission_policy` + gate in `NAVSnapshotPublisher.publish()`; 4 tests; pushed tab/ikennaigboaka/7 + live-defi-rollout 2026-05-13)
+- [x] [risk-and-exposure-service] P0. Wire at `risk_state` emission (BLOCK_CRITICAL). Same.
+      (risk-and-exposure-service@df4849f — `_check_emission_policy` + gate in `RiskSnapshotSink.write()`; 4 tests; pushed tab/ikennaigboaka/7 + live-defi-rollout 2026-05-13)
 
 **🟡 Phase 6.6 + 6.7 SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace grep across `ml-training-service/` +
 `ml-inference-service/` + `strategy-service/` + `execution-service/` + `position-balance-monitor-service/` +
