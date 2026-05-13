@@ -921,18 +921,16 @@ slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log *writ
 
 ### Discoveries during pre-audit (Capture-Discoveries-As-Plan-Todos HARD RULE)
 
-- [ ] **D1 — P1 — `order_type` semantic-mismatch needs an Ikenna design call before BUILD #1 wiring.** Ikenna T8's
-  handoff says "constrain `ManualInstruction.order_type: str` to `OperationType.value` membership at the endpoint
-  validator". But in `execution-service/execution_service/api/manual_instruction_api.py` today, `ManualInstruction.order_type`
-  is populated from `request.algo or "MARKET"` (`manual_instruction_api.py:324` EXECUTE flow; `:608` sets `"RECORD_ONLY"`)
-  — i.e. it currently carries the **execution algo** (MARKET / TWAP / VWAP / ICEBERG / SOR / BEST_PRICE / BENCHMARK_FILL),
-  none of which are `OperationType` values. And `ManualInstructionRequest` has only `side` (BUY/SELL) + `algo`, no
-  `operation_type` field. So a DeFi-action selector (SWAP/STAKE/UNSTAKE/LEND/BORROW/ATOMIC per `dart-manual-trade-spec.md`
-  § 4 BUILD #1) needs a NEW `operation_type: OperationType` field on `ManualInstructionRequest` + a decision on what
-  `ManualInstruction.order_type` canonically means (algo vs. operation verb vs. add a third field). **Closed-set design
-  call → Ikenna lane** per CLAUDE.md "Daily Work-Split Process" tie-breaker. Cross-side: annotate Ikenna slot-8's next
-  ping / the `dart-manual-trade-spec.md` § 5 area; Harsh BUILD #1 backend wiring waits on the resolution. Provenance:
-  Harsh slot-6 pre-audit 2026-05-12, grep-then-read on `manual_instruction_api.py`.
+- [x] **D1 — P1 — `order_type` semantic-mismatch — ✅ RESOLVED 2026-05-13 (Ikenna slot 8).** Design
+  decision: **keep `order_type` as the execution algo (HOW) + add new `operation_type: str = ""`
+  field to `ManualInstruction` as the operation verb (WHAT)**. Zero breaking change — default empty,
+  all existing CeFi code unchanged. `ManualInstructionRequest.instruction_type` (already exists at
+  `manual_schemas.py:45`) is the request-side field; execution-service BUILD #1 wiring populates
+  `ManualInstruction.operation_type` from it. Contract shipped at `uac@14a0292` —
+  `unified_api_contracts/internal/execution.py`. Harsh BUILD #1 backend wiring is now UNBLOCKED for
+  `operation_type` (still blocked on slot-5 kill-switch spec + slot-4 manual-audit bucket until those
+  land). D4 approved approach: see D4 annotation below. Provenance: Harsh slot-6 pre-audit 2026-05-12 +
+  Ikenna slot-8 resolution 2026-05-13.
 - [x] **D2 — P2 — `manual-trade-booking.md` "Dynamic Venue List" claim drifts from the UI.** The codex doc says the
   venue list "resolves dynamically from UAC `CAPABILITY_DECLARATIONS`" — true on the backend (`_get_supported_venues()`)
   but the **UI** (`components/trading/manual/single-order-form.tsx:13` → `constants.ts` `VENUES`) uses a hand-maintained
@@ -1012,6 +1010,12 @@ stale. Remaining D2 work is UI-side (switch dropdowns from `constants.ts` to dyn
       Provenance: Harsh slot-6 Day-2 audit 2026-05-12 — grep-then-read pass on `_validate_instruction_request` lines
       116-186 + UAC `SPORTS_CAPABILITIES`. **Scope**: BUILD #4 + BUILD #5 backend-wiring tail; non-blocking for D1
       (operation_type design call) but is the second backend gate after D1.
+      **✅ APPROVED 2026-05-13 (Ikenna slot 8)**: implement option (a). Helper signature:
+      `unified_api_contracts.execution.get_venue_asset_group(venue: str) -> str` — reads from
+      `CAPABILITY_DECLARATIONS` (already used by `_get_supported_venues()`). Side closed sets:
+      `cefi`/`defi` → `{"BUY","SELL"}`; `sports` → `{"HOME","AWAY","DRAW","OVER","UNDER"}`;
+      `prediction` → `{"YES","NO","BUY","SELL"}`. Unknown venue → fall back to `{"BUY","SELL"}` (safe
+      default; matching-engine validates further). Harsh BUILD #4/#5 wiring can proceed on this spec.
 
 - [ ] **D5 — P2 — `_SUPPORTED_ALGOS` hardcoded list in `manual_instruction_api.py:113` covers only CeFi exec algos
       (MARKET / TWAP / VWAP / ICEBERG / SOR / BEST_PRICE / BENCHMARK_FILL).**
@@ -1023,16 +1027,18 @@ stale. Remaining D2 work is UI-side (switch dropdowns from `constants.ts` to dyn
       D5 fix until D1 lands.
       Provenance: Harsh slot-6 Day-2 audit 2026-05-12.
 
-#### Cross-side handshake status (Day-2 RESUME)
+#### Cross-side handshake status (Day-3, Ikenna slot 8, 2026-05-13)
 
 - **Ikenna T8 → Harsh T6 contract layer** — ✅ DONE per the 4 DONE blocks above (Day-1 + Day-2 + Day-3 contract layers).
-- **slot 5 → Harsh T6 (BUILD #1 kill-switch)** — status unchanged: spec handoff EOD Day 2 per work-split (no commit-sha
-  on the kill-switch bus yet at the time of this audit).
-- **slot 4 → Harsh T6 (BUILD #1 + #3 audit-log writers)** — status unchanged: `manual-audit` bucket-kind in
-  `cloud-providers.yaml` still pending Phase 0i. BUILD #3 handles gracefully via try/except on `BucketNamingError`;
-  audit-log persistence comes online automatically once the yaml entry lands.
-- **D1 (`ManualInstruction.operation_type` design call)** — status unchanged: Ikenna-lane, no response yet at the time
-  of this audit. BUILD #1 backend wiring remains 🟡 BLOCKED.
+- **slot 5 → Harsh T6 (BUILD #1 kill-switch)** — status unchanged.
+- **slot 4 → Harsh T6 (BUILD #1 + #3 audit-log writers)** — ✅ **UNBLOCKED**: `manual-audit` bucket-kind shipped
+  in `deployment-service/configs/cloud-providers.yaml` at `deployment-service@00a1288` (slot 8 reserve item
+  bucket_name_ssot Phase 0i 2026-05-13). BUILD #3 try/except now resolves; BUILD #1 audit-log leg also clear.
+- **D1 (`ManualInstruction.operation_type`)** — ✅ **RESOLVED 2026-05-13 (Ikenna slot 8)**: `operation_type: str = ""`
+  added to `ManualInstruction` at `uac@14a0292`. BUILD #1 backend `operation_type` wiring is UNBLOCKED.
+  Remaining BUILD #1 blocks: slot-5 kill-switch spec only.
+- **D4 (side validator for sports/prediction)** — ✅ **APPROVED 2026-05-13 (Ikenna slot 8)**: option (a) with
+  `get_venue_asset_group()` UAC helper. See D4 annotation above for full spec. BUILD #4/#5 wiring can proceed.
 
 #### What Day-2 leaves for the cycle
 
