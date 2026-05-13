@@ -617,12 +617,15 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
     passes_total/accuracy) **despite the FootyStatsMatch source dataclass carrying**
     `team_a*_`/    `team*b*_`for shots_on_target / yellow_cards / red_cards / fouls (verified via`rg` on schemas.py).     Source-to-canonical name-mapping miss (`team_a`→`home`, `team_b`→`away`).
     Smaller scope than full flatten; just rewire the field assignments. **Follow-up #3 below.**
-- [ ] [SCRIPT] P1. **Follow-up #1 — STANDINGS flatten.** UAC `normalize_api_football_standing` rewrite to unpack the
+- [x] [SCRIPT] P1. **Follow-up #1 — STANDINGS flatten.** UAC `normalize_api_football_standing` rewrite to unpack the
       nested `league.standings: [[...]]` array into per-(league, team, season, position) row records with full stats
       subobjects (all/home/away each have played/win/draw/lose/goals/goalsAgainst/goalDifference/points). Same migration
       shape as B.1: flip manifest STANDINGS rows → `attempted_failed reason=INCOMPLETE_PAYLOAD_PRE_FLATTENING` + delete
       thin parquets + re-fetch via dedicated VM (`af-backfill-standings-{ts}` if isolated, or fold into
-      af-backfill-flatten-{ts} from B.1). Cassette parity test extension to lock the flat shape.
+      af-backfill-flatten-{ts} from B.1). Cassette parity test extension to lock the flat shape. **COMPLETED
+      2026-05-13**: UAC@ac12d80 — normalize_api_football_standing() rewrite + SPORTS_STANDINGS schema flatten (14 → 32
+      columns: team_id/name/logo + all/home/away × played/win/draw/lose/goals_for/goals_against). Migration still
+      deferred (operational VM launch).
 - [ ] [SCRIPT] P1. **Follow-up #2 — XG per-shot flatten (BIG WIN).** UAC `normalize_understat_feature_record` is
       currently ONE feature value per shot. Replace with `normalize_understat_shot` returning a flat dict with all ~15
       fields: `xg`, `xa`, `minute`, `player_id`, `player_name`, `situation` (open_play / set_piece / penalty),
@@ -931,7 +934,7 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 | C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns  | `[x]` shipped           | UAC@1848647 — added ft_timer + match_end_time columns; next: Step 3 (UTL resolver)      |
 | C.6 Step 3: UTL `resolve_match_end_time()` cascade  | `[x]` shipped           | UTL@89c0ae15 — cascade resolver with NamedTuple return; next: Step 4 wiring             |
 | C.6 assert_available_at_present wiring              | `[ ]` blocked           | Blocked on Step 3 UTL helper                                                            |
-| C.7 Follow-up #1: STANDINGS flatten                 | `[ ]` open              | Same B.1 pattern; isolated AF endpoint                                                  |
+| C.7 Follow-up #1: STANDINGS flatten                 | `[~]` partial-shipped   | UAC@ac12d80 — normalizer + schema flatten (14→32 cols); migration deferred (VM op)      |
 | C.7 Follow-up #3: MATCHES `team_a_*` → `home_*`     | `[x]` shipped           | UAC@4e23bd9 — FootyStats field mappings (12 home/away variants); migration deferred     |
 | MatchStatus adapter migration                       | `[ ]` open (DEFERRED)   | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters   |
 | Cross-source fixture status verifier                | `[ ]` open              | Uses MatchStatus SSOT (now shipped); no other blocker                                   |
