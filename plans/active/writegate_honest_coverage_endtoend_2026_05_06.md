@@ -3449,10 +3449,12 @@ migration to v8 first (Phase 4.DEFAULT-REMOVAL territory) before slice (c) wirin
 
 **Phase 6.9 — Slice-(c) workspace-wide audit + ship-gate (P0, ~2 days)**
 
-- [ ] [QG] P0. NEW QG STEP that statically walks every service repo's calculator/adapter source tree + asserts every
+- [x] [QG] P0. NEW QG STEP that statically walks every service repo's calculator/adapter source tree + asserts every
       `record_captured()` callsite for a derived-output data_type ALSO has a paired `publish_with_policy()` /
       `publish_with_manifest_lookup()` call within the same function. Catches drift where a service-team adds a new
       derived output without wiring the emission policy. Closed-set check against UAC `SERVICE_OUTPUT_POLICIES`.
+      (e7767b1a — check_emission_policy_paired_callsites.py created; 0c79d747 — ruff E501 fixes; base-service.sh STEP 5.71
+      wired; baselines/emission_policy_paired_callsites_baseline.yaml seeded empty; features-service passes 0 violations)
 - [ ] [PM] P0. Workspace-wide flip-plan-checkboxes sweep: confirm every Phase 6.1-6.8 service has ALL rows of its slice
       in `SERVICE_OUTPUT_POLICIES` + every emission boundary wires the helper + every per-service plan checkbox is
       flipped with commit-sha evidence. Final memory entry: slice-(c) shipping for the year-of-the-tiger archive.
