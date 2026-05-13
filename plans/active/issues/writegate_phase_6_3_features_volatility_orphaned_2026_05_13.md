@@ -89,7 +89,16 @@ Slot 6 is handling). **Option B (Ikenna emergency tab) is acceptable alternative
 (descope) is valid only if 6.6+6.7+6.9 are also post-freeze** (the freeze-gate depends on Phase 6.9 workspace flip;
 partial Phase 6 work is worse than deferred Phase 6).
 
-**Operator decision needed**: Which path do you want to take?
+## ✅ OPERATOR DECISION (2026-05-13 ~12:00 UTC)
+
+**CHOSEN**: **Option B — Ikenna spawns emergency Slot 6+ tab this cycle.**
+
+Rationale: Single-operator coordination preferred; Ikenna already proven at sub-agent fan-out scale. Harsh-side at
+capacity with manifest + codex work. Timeline compression acceptable (3-4 cal days within 4-day cycle margin).
+
+**ACTION**: Ikenna Slot 1 main to spawn Slot 6+ (volatility emission semantics) after Slot 7+8 close (estimated Day 3
+AM). Scope: `features-service/features_service/volatility/` module, 5 implementation steps (add policy checks, wiring,
+tests, QG). Reference: Slot 7 Phase 6.4+6.5 commits for exact pattern.
 
 ---
 
