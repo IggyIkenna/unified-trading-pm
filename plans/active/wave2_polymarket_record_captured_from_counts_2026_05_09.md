@@ -106,10 +106,27 @@ that named successor.
       from prediction finalize-loop call. 6 new tests at `tests/unit/test_cme_options_chain_bundle_finalize.py` + 4
       pre-existing test fixes in `test_polymarket_bundling_finalize.py`.)
 
-- [ ] [SCRIPT] P1. Audit the workspace for any other callsite that uses `ManifestWriter.add()` with a bundled data_type
+- [x] [SCRIPT] P1. Audit the workspace for any other callsite that uses `ManifestWriter.add()` with a bundled data_type
       (`grep -rn "manifest.add\|writer.add\|writer_manifest.add" --include="*.py"` across MTDS / instruments-service /
       features-\* / strategy-service / e2e-testing). Migrate every one. Reviewers reject any remaining `add()` callsite
-      for bundled data_types after this phase ships. status: todo note: ""
+      for bundled data_types after this phase ships. status: done (2026-05-13 session — zero callsites pass a bundled
+      data_type to `add()` outside MTDS orchestrator which is already fully migrated). Audit findings: -
+      `market-tick-data-service/market_tick_data_service/engine/orchestrator.py:2624` — `else` branch for
+      non-CME-OPTIONS, non-bundled shards; `data_type_key` is always a non-bundled type (trades, ohlcv_1h, etc.). This
+      call is legitimate and stays until Phase 4 deletes `add()` entirely. -
+      `market-tick-data-service/market_tick_data_service/scripts/migrate_deribit_margin_split_v6.py:175` —
+      `data_type="trades"` with `instrument_type="options_chain"/"futures_chain"`. The `data_type` kwarg is `"trades"`
+      (not a bundled type). Not a violation. - `market-tick-data-service/scripts/rebuild_mtds_manifest.py:189` —
+      `data_type=dt` derived from GCS hive path key `data_type=Y/` (e.g. `trades`, `ohlcv_1h`). Bundled types appear
+      only in the `instrument_type=` hive key; can't land as `data_type` value in this scan. Not a violation. -
+      `features-service/features_service/sports/cli/handlers/batch_handler.py:612,621` — data_types: FIXTURE_FEATURES,
+      ODDS_FEATURES, DERIVED_FEATURES. Not in BUNDLED_DATA_TYPES. Not a violation. -
+      `strategy-service/strategy_service/engine/core/cloud_strategy_storage.py:197,276,355` — no `data_type` kwarg; uses
+      `strategy_id` + `job_id`. Not a violation. - `instruments-service/scripts/full_polymarket_dump.py:314` —
+      `data_type=mkt_str` (market identifier strings like "CRYPTO", "SPORTS"; not canonical bundled types). Not a
+      violation. - All other instruments-service scripts — FIXTURES, FIXTURE_STATS, WEATHER, PLAYERS, FIXTURE_FEATURES
+      etc. Not in BUNDLED_DATA_TYPES. Not violations. **Conclusion**: No migration needed beyond MTDS orchestrator
+      (Phases 3a + 3b). Phase 4 can proceed. note: "PM checkbox flip — no code commit (audit only)"
 
 ### Phase 4 — Legacy `add()` deletion + QG enforcement (P0, ~1 AI-day)
 
@@ -164,14 +181,14 @@ Phases 1 + 3 first item shipped. Phases 2 + 3-rest + 4 + 5 deferred to follow-up
 sequence (`add()` deprecation banner is a post-Phase-3 sweep; CME-OPTIONS migration + workspace-wide audit + `add()`
 deletion + QG enforcement + codex docs all sequenced after the predictions-bundle path proves itself in production).
 
-| Item                                     | Status                                     | Commits                                                  |
-| ---------------------------------------- | ------------------------------------------ | -------------------------------------------------------- |
-| Phase 1 — UTL helper                     | `done`                                     | unified-trading-library@ef47c81b (helper + 11 tests)     |
-| Phase 2 — Deprecation banner on add()    | `done` (2026-05-13 session)                | unified-trading-library@446d75ce (13 tests)              |
-| Phase 3 — MTDS prediction finalize       | `done` (1 of 3 todos)                      | market-tick-data-service@a2f8d80 (finalize + 5 tests)    |
-| Phase 3 — CME-OPTIONS migration          | `done` (2026-05-13 session)                | market-tick-data-service@616ac15 (6 new tests + 4 fixes) |
-| Phase 3 — Workspace add() callsite audit | `todo` (post-cutover sweep)                | (not shipped this session)                               |
-| Phase 4 — Legacy add() deletion          | `todo` (sequenced behind Phase 3 P1 audit) | (not shipped this session)                               |
-| Phase 5 — Codex SSOT updates             | `todo` (sequenced behind Phase 4)          | (not shipped this session)                               |
+| Item                                     | Status                                                                  | Commits                                                  |
+| ---------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- |
+| Phase 1 — UTL helper                     | `done`                                                                  | unified-trading-library@ef47c81b (helper + 11 tests)     |
+| Phase 2 — Deprecation banner on add()    | `done` (2026-05-13 session)                                             | unified-trading-library@446d75ce (13 tests)              |
+| Phase 3 — MTDS prediction finalize       | `done` (1 of 3 todos)                                                   | market-tick-data-service@a2f8d80 (finalize + 5 tests)    |
+| Phase 3 — CME-OPTIONS migration          | `done` (2026-05-13 session)                                             | market-tick-data-service@616ac15 (6 new tests + 4 fixes) |
+| Phase 3 — Workspace add() callsite audit | `done` (2026-05-13 session — zero bundled callsites found outside MTDS) | PM checkbox flip only (audit finding)                    |
+| Phase 4 — Legacy add() deletion          | `todo` (sequenced behind Phase 3 P1 audit)                              | (not shipped this session)                               |
+| Phase 5 — Codex SSOT updates             | `todo` (sequenced behind Phase 4)                                       | (not shipped this session)                               |
 
 Plan-flip commits: PM@8d44424a (Phase 1) + PM@75e768a6 (Phase 3 first item + predictions Q2 resolution).
