@@ -26,7 +26,9 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
-> **🟡 IN-FLIGHT REFACTOR — UAC Phase 1 client-reporting contracts landed (UAC@b3233e5, 2026-05-12). `ClientNAV`, `ClientPosition`, `ClientPnLEntry`, `PnLFactor`, `PnLLayer` now in `unified_api_contracts.internal`. Risk-limit schema consumers must import from UAC.internal. Banner: `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 1.**
+> **🟡 IN-FLIGHT REFACTOR — UAC Phase 1 client-reporting contracts landed (UAC@b3233e5, 2026-05-12). `ClientNAV`,
+> `ClientPosition`, `ClientPnLEntry`, `PnLFactor`, `PnLLayer` now in `unified_api_contracts.internal`. Risk-limit schema
+> consumers must import from UAC.internal. Banner: `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 1.**
 
 # Risk rule taxonomy + per-archetype/venue/account/client limits + pre-flight checks
 
@@ -333,26 +335,26 @@ returns full rule set; tests pass.
 
 - [x] [AGENT] P0. **4.A risk-and-exposure-service.** Existing rules migrate to UAC registry; rule_evaluator wired.
       (risk-and-exposure-service@85c99aa + tests@dbd543c — `v2/preflight.py` `run_layer2_rule_preflight()` builds
-      `RuleEvalContext` + axis-ids, resolves rules via UAC `iter_applicable_rules()`, runs UTL `risk_preflight()`,
-      maps `RiskRuleConsequence` → `RiskGateDecision`; 32 synthetic-fire tests green Phase 8.A/8.B)
-      **DEFERRED**: legacy explicit-threshold `PortfolioContext` gates (daily-loss/drawdown/family-cap) +
-      `RiskMonitor` bespoke threshold predicates remain until strategy-architecture-v2 caller supplies
-      `RuleEvalContext` + PBMS-state wired (depends on Phase 4.D). Follow-up under this todo.
+      `RuleEvalContext` + axis-ids, resolves rules via UAC `iter_applicable_rules()`, runs UTL `risk_preflight()`, maps
+      `RiskRuleConsequence` → `RiskGateDecision`; 32 synthetic-fire tests green Phase 8.A/8.B) **DEFERRED**: legacy
+      explicit-threshold `PortfolioContext` gates (daily-loss/drawdown/family-cap) + `RiskMonitor` bespoke threshold
+      predicates remain until strategy-architecture-v2 caller supplies `RuleEvalContext` + PBMS-state wired (depends on
+      Phase 4.D). Follow-up under this todo.
 - [x] [AGENT] P0. **4.B execution-service.** Order submission path inserts `risk_preflight` BEFORE venue submission.
       Block / scale-down behaviour wired. (execution-service@07477886 — `engine/risk/preflight_gate.py`:
-      `build_rule_eval_context` (order + `account_state`) + `run_risk_preflight` → `RiskPreflightDecision`:
-      BLOCK → reject + `INSTRUCTION_REJECTED_RISK`; SCALE_DOWN → resize by `scale_factor` + `INSTRUCTION_ACCEPTED_PREFLIGHT`
+      `build_rule_eval_context` (order + `account_state`) + `run_risk_preflight` → `RiskPreflightDecision`: BLOCK →
+      reject + `INSTRUCTION_REJECTED_RISK`; SCALE_DOWN → resize by `scale_factor` + `INSTRUCTION_ACCEPTED_PREFLIGHT`
       (`size_adjusted=true`) + `RESIZED_EXECUTION`; MONITOR → unchanged; TEST_ONLY → tag `mode=TEST` + route-to-matching
       flag; per-fired-rule `RISK_RULE_FIRED` via UAC `risk_rule_fired_event()`. Pre-filters the per-axis UAC rule set
       (`iter_applicable_rules`) to rules evaluable from the order-time context (portfolio-state rules require
-      `account_state`). Wired into `engine/orchestrator.py::ExecutionOrchestrator.execute_instruction` BEFORE submission.
-      Deleted bespoke `engine/risk/pre_trade.py` (`check_multi_venue_balance`) + its test per § 7 seam. 7 new tests in
-      `tests/unit/test_risk_preflight_gate.py`; full unit suite green. **DEFERRED**: TEST_ONLY currently tags
-      `params["mode"]="TEST"` + flags `route_to_matching_engine`; the live `LiveMatchingEngine`-paper-vs-venue switch on
-      that tag is a follow-up under this todo. **DEFERRED**: orchestrator passes no `account_state` yet — portfolio-state
-      rules (drawdown/leverage/exposure/loss/correlation/funding/gas/CaR) are skipped at execution-service and enforced
-      by strategy-service (4.C) + risk-and-exposure-service (4.A); wiring PBMS-state into the orchestrator is a follow-up
-      under this todo (depends on Phase 4.D).
+      `account_state`). Wired into `engine/orchestrator.py::ExecutionOrchestrator.execute_instruction` BEFORE
+      submission. Deleted bespoke `engine/risk/pre_trade.py` (`check_multi_venue_balance`) + its test per § 7 seam. 7
+      new tests in `tests/unit/test_risk_preflight_gate.py`; full unit suite green. **DEFERRED**: TEST_ONLY currently
+      tags `params["mode"]="TEST"` + flags `route_to_matching_engine`; the live `LiveMatchingEngine`-paper-vs-venue
+      switch on that tag is a follow-up under this todo. **DEFERRED**: orchestrator passes no `account_state` yet —
+      portfolio-state rules (drawdown/leverage/exposure/loss/correlation/funding/gas/CaR) are skipped at
+      execution-service and enforced by strategy-service (4.C) + risk-and-exposure-service (4.A); wiring PBMS-state into
+      the orchestrator is a follow-up under this todo (depends on Phase 4.D).
 - [x] [AGENT] P0. **4.C strategy-service.** Signal generator queries pre-flight before sizing; if pre-flight returns
       scale-down, signal scaled. (strategy-service@bf1ed6b — `strategy_service/risk_preflight_gate.py`:
       `build_signal_rule_context` (numeric-sentinel fill so the evaluator never raises on omitted fields) +
@@ -371,11 +373,11 @@ returns full rule set; tests pass.
       emitted to rule_evaluator-readable format. (position-balance-monitor-service@50b3c25 —
       `core/rule_eval_context_builder.py`: `PortfolioRiskState` (authoritative NAV / equity / gross+net exposure /
       per-(venue,instrument) OI / daily-loss snapshot), `PeakNavTracker` (per-(account,archetype) high-water mark →
-      drawdown bps from peak NAV), `build_rule_eval_context()` mapping to UTL `RuleEvalContext` — populates
-      `account_id` / `current_drawdown_bps` / `current_leverage` / `gross_exposure_usd` / `net_exposure_usd` /
-      `daily_loss_usd` + scope keys + `open_interest_usd` (venue+instrument) + `instruction_size_usd` passthrough;
-      deliberately omits the keys not owned by position-balance (concentration / correlation / funding / gas / VaR /
-      slippage) so risk/execution/strategy layer those in. No rule logic duplicated — emits state only. 13 unit tests
+      drawdown bps from peak NAV), `build_rule_eval_context()` mapping to UTL `RuleEvalContext` — populates `account_id`
+      / `current_drawdown_bps` / `current_leverage` / `gross_exposure_usd` / `net_exposure_usd` / `daily_loss_usd` +
+      scope keys + `open_interest_usd` (venue+instrument) + `instruction_size_usd` passthrough; deliberately omits the
+      keys not owned by position-balance (concentration / correlation / funding / gas / VaR / slippage) so
+      risk/execution/strategy layer those in. No rule logic duplicated — emits state only. 13 unit tests
       `tests/unit/test_rule_eval_context_builder.py` (one drives `unified_trading_library.risk.evaluate_rule`
       end-to-end). FLAG: UTL does not re-export the `risk` sub-package surface at the package root — used
       `# noqa: qg-deep-import`; UTL should re-export `RuleEvalContext` / `evaluate_rule` / `risk_preflight` at top
@@ -388,10 +390,10 @@ returns full rule set; tests pass.
 - [x] [AGENT] P0. **5.A `RiskRuleFiredEvent` emit on every rule fire.** Severity per UAC `alerting_severity` field.
       (risk-and-exposure-service@37062ce — `run_layer2_rule_preflight` now builds a rule-id lookup, calls
       `risk_rule_fired_event()` per fired rule, emits `RISK_RULE_FIRED` via `log_event` with typed key fields:
-      `rule_id/scope/consequence/alerting_severity/alert_code/fired_at/instruction_id/triggers_kill_switch`. Basedpyright
-      clean on preflight.py; ruff OK at line-length 100. UAC `RiskRuleFiredEvent` + builder already on facade since
-      `unified-api-contracts@a01e4dd`. execution-service@07477886 + strategy-service@bf1ed6b also emit per their fire
-      sites. **DEFERRED P3**: strategy-service `risk_preflight_gate.py` cleanup — switch from AlertCode-named
+      `rule_id/scope/consequence/alerting_severity/alert_code/fired_at/instruction_id/triggers_kill_switch`.
+      Basedpyright clean on preflight.py; ruff OK at line-length 100. UAC `RiskRuleFiredEvent` + builder already on
+      facade since `unified-api-contracts@a01e4dd`. execution-service@07477886 + strategy-service@bf1ed6b also emit per
+      their fire sites. **DEFERRED P3**: strategy-service `risk_preflight_gate.py` cleanup — switch from AlertCode-named
       `log_event`s to typed `risk_rule_fired_event()` calls; tracked as Phase 5 follow-up.)
 - [x] [AGENT] P0. **5.B Alerting-service consumer.** Routes to severity tier (CRITICAL → page, WARNING → dashboard, INFO
       → log). (alerting-service@0a52a33 — `alerting_service/risk_rule_event_handler.py` consumes
@@ -411,10 +413,10 @@ returns full rule set; tests pass.
 ## Phase 6 — deployment-api + ui (Day 11, ~0.5 AI-day)
 
 - [x] [AGENT] P0. **6.A `/api/risk/rules` endpoint.** Per-axis listing. Shipped deployment-api@dc8be51 —
-      `routes/risk_routes.py` (`GET /api/risk/rules`; `?scope=` + `?applies_to=` filters via
-      `iter_applicable_rules` / `get_rules_for`; serialised rules carry `kill_switch_scope`) registered in `main.py`
-      under `/api/risk` (was unregistered); tests in `tests/unit/api/test_risk_routes.py` (no-params / scope-only /
-      scope+applies_to / 422 ambiguous / closed-set scope validation — all green).
+      `routes/risk_routes.py` (`GET /api/risk/rules`; `?scope=` + `?applies_to=` filters via `iter_applicable_rules` /
+      `get_rules_for`; serialised rules carry `kill_switch_scope`) registered in `main.py` under `/api/risk` (was
+      unregistered); tests in `tests/unit/api/test_risk_routes.py` (no-params / scope-only / scope+applies_to / 422
+      ambiguous / closed-set scope validation — all green).
 - [x] [AGENT] P0. **6.B `/api/risk/preflight-test` endpoint.** POST a hypothetical order; returns pre-flight result.
       Shipped deployment-api@dc8be51 — `routes/risk_routes.py` (`POST /api/risk/preflight-test`; builds UTL
       `RuleEvalContext` from the request, `iter_applicable_rules` → `risk_preflight`, returns `decision` /
@@ -470,8 +472,8 @@ returns full rule set; tests pass.
       UAC registry fires individually via `explicit_rules=(rule,)`; correct gate decision + RISK_RULE_FIRED event
       asserted. (risk-and-exposure-service@dbd543c)
 - [x] [AGENT] P0. **8.B Per-archetype suite green.** Full-archetype suite tests: `archetype_id="CARRY_STAKED_BASIS"` +
-      `archetype_id="ARBITRAGE_PRICE_DISPERSION"` — 13 RISK_RULE_FIRED events per archetype (12 archetype + GLOBAL_DATA_STALENESS);
-      REJECTED gate outcome. (risk-and-exposure-service@dbd543c)
+      `archetype_id="ARBITRAGE_PRICE_DISPERSION"` — 13 RISK_RULE_FIRED events per archetype (12 archetype +
+      GLOBAL_DATA_STALENESS); REJECTED gate outcome. (risk-and-exposure-service@dbd543c)
 - [x] [AGENT] P0. **8.C Evidence capture.** Module docstring in test file: CARRY 15/15 rules fire; APD 15/15 rules fire;
       Phase 8.B suite: ≥13 events per archetype; REJECTED. (risk-and-exposure-service@dbd543c)
 
@@ -483,8 +485,8 @@ returns full rule set; tests pass.
       wire green per archetype (master_to_live_defi_2026_05_23 row 20: risk-and-exposure-service@85c99aa+dbd543c
       evidence; Last verified 2026-05-13).
 - [x] [AGENT] P0. **9.B Banners removed.** CROSS-PLAN BANNER removed from alerting_service_live_rules_2026_05_07.md
-      (Phase 1 shipped; UAC@945ad5d) + CROSS-PLAN BANNER removed from
-      disaster_recovery_circuit_breakers_2026_05_10.md (Phase 1 shipped).
+      (Phase 1 shipped; UAC@945ad5d) + CROSS-PLAN BANNER removed from disaster_recovery_circuit_breakers_2026_05_10.md
+      (Phase 1 shipped).
 
 **Full-execution criterion**: master plan row green; banners gone.
 
@@ -498,84 +500,88 @@ returns full rule set; tests pass.
 ## Stablecoin depeg additions (operator-direction 2026-05-12) — INJECTED
 
 Operator direction 2026-05-12 PM: tighten stablecoin-depeg response thresholds + add aggregate-exposure awareness +
-require historical backtest before shipping new ladder to live. Composes with `scratch_scenarios_day1/10_defi_stablecoin_depeg.md`
-(revised 2026-05-12) + `scratch_scenarios_day1/17_lrt_lending_meltdown_composite.md`.
+require historical backtest before shipping new ladder to live. Composes with
+`scratch_scenarios_day1/10_defi_stablecoin_depeg.md` (revised 2026-05-12) +
+`scratch_scenarios_day1/17_lrt_lending_meltdown_composite.md`.
 
 ### Tightened depeg ladder (revised 2026-05-12)
 
 Replaces the previous moderate/catastrophic split (5%/13%). New default policy across `carry_staked_basis` +
 `LEVERAGED_FUNDING_ARB` + `ARBITRAGE_PRICE_DISPERSION`:
 
-| Magnitude | Action | Notes |
-|---|---|---|
-| 100bps–300bps (1–3%) | MONITOR (alert only) | No auto-action |
-| 300bps–500bps (3–5%) | SCALE_DOWN | Halve new entries; pause cross-stable arb |
-| **≥500bps (≥5%)** | **KILL_ALL + FAST_UNWIND** | Was 1300bps (13%); operator-tightened |
-| ≥1000bps (≥10%) | EMERGENCY (crystallize stable→ETH/BTC) | Full flatten; recovery_mode=manual_unkill |
-| Per-stable override | Synthetic/algo stables (USDE/CRVUSD/FRAX) trigger at HALF | KILL at 2.5%; reflects historical fragility |
+| Magnitude            | Action                                                    | Notes                                       |
+| -------------------- | --------------------------------------------------------- | ------------------------------------------- |
+| 100bps–300bps (1–3%) | MONITOR (alert only)                                      | No auto-action                              |
+| 300bps–500bps (3–5%) | SCALE_DOWN                                                | Halve new entries; pause cross-stable arb   |
+| **≥500bps (≥5%)**    | **KILL_ALL + FAST_UNWIND**                                | Was 1300bps (13%); operator-tightened       |
+| ≥1000bps (≥10%)      | EMERGENCY (crystallize stable→ETH/BTC)                    | Full flatten; recovery_mode=manual_unkill   |
+| Per-stable override  | Synthetic/algo stables (USDE/CRVUSD/FRAX) trigger at HALF | KILL at 2.5%; reflects historical fragility |
 
 - [x] [AGENT] P0. **D.1 — UAC `BreakerConfig` per-stable depeg thresholds.** Extend
-      `registry/circuit_breakers/carry_staked_basis.py` + add `registry/circuit_breakers/leveraged_funding_arb.py`
-      with per-stable breaker configs: `stable_depeg_warning` / `_small` / `_moderate` / `_catastrophic` per
-      (USDC, USDT, DAI, USDE, FRAX, GHO, CRVUSD, SUSDE). Override thresholds for synthetic stables (HALF).
-      Owner: slot 5 or risk-side maintainer.
-      (UAC@2b49ef2 — 4 new CircuitBreakerId + PER_STABLE scope + _depeg_configs() helper; 32 configs × 2 archetypes)
+      `registry/circuit_breakers/carry_staked_basis.py` + add `registry/circuit_breakers/leveraged_funding_arb.py` with
+      per-stable breaker configs: `stable_depeg_warning` / `_small` / `_moderate` / `_catastrophic` per (USDC, USDT,
+      DAI, USDE, FRAX, GHO, CRVUSD, SUSDE). Override thresholds for synthetic stables (HALF). Owner: slot 5 or risk-side
+      maintainer. (UAC@2b49ef2 — 4 new CircuitBreakerId + PER_STABLE scope + \_depeg_configs() helper; 32 configs × 2
+      archetypes)
 
-- [ ] [AGENT] P0. **D.2 — Aggregate stablecoin exposure feature.** New feature in
-      `features-service/features_service/cross_instrument/` (or similar):
-      `stablecoin_aggregate_exposure_<stable>` — sums across all venues, all chains, all protocols, all wallets.
-      Returns `gross_long`, `gross_short`, `net`, `delta_1` (sensitivity to 1bps peg move). Required for the
-      depeg ladder to be actionable — without aggregate view, the KILL_ALL trigger can't compute the impact
-      magnitude. Owner: features-service maintainer + Ikenna (cross-cutting design).
+- [x] [AGENT] P0. **D.2 — Aggregate stablecoin exposure feature.** New feature in
+      `features-service/features_service/cross_instrument/` (or similar): `stablecoin_aggregate_exposure_<stable>` —
+      sums across all venues, all chains, all protocols, all wallets. Returns `gross_long`, `gross_short`, `net`,
+      `delta_1` (sensitivity to 1bps peg move). Required for the depeg ladder to be actionable — without aggregate view,
+      the KILL_ALL trigger can't compute the impact magnitude. Owner: features-service maintainer + Ikenna
+      (cross-cutting design). (UAC@83c9e10 StablecoinExposure+VenueExposureBreakdown internal models;
+      features-service@8332f0de StablecoinAggregateExposureCalculator + 13 tests — all 10 stables, cross-venue,
+      delta_1bps math)
 
 - [x] [AGENT] P0. **D.3 — UAC `STABLECOIN_PEG_RESTORE_HISTORY` registry.** Per-stable historical depeg events:
       `(stable, event_date, trough_depeg_bps, restore_duration_hours, was_structural: bool)`. Seeds: USDC 2023-03-11
-      (-1300bps, 72h, false), UST 2022-05-09 (-10000bps, never, true), PYUSD 2024-07 (-700bps, ~14d, false),
-      USDE 2024-Q4 (multiple <-300bps, <72h, false), BUSD 2024-12 (-200bps, never reissued, true). Owner: UAC
-      + research analyst. Feeds the operator-decision UI for crystallize-vs-wait at 5-10% tier.
-      (UAC@d8e72de — registry/stablecoin_peg_history.py: DepegEvent NamedTuple + dict seeded for 6 stables)
+      (-1300bps, 72h, false), UST 2022-05-09 (-10000bps, never, true), PYUSD 2024-07 (-700bps, ~14d, false), USDE
+      2024-Q4 (multiple <-300bps, <72h, false), BUSD 2024-12 (-200bps, never reissued, true). Owner: UAC + research
+      analyst. Feeds the operator-decision UI for crystallize-vs-wait at 5-10% tier. (UAC@d8e72de —
+      registry/stablecoin_peg_history.py: DepegEvent NamedTuple + dict seeded for 6 stables)
 
 - [x] [AGENT] P0. **D.4 — Backtest harness for depeg ladder.** New script
-      `risk-and-exposure-service/scripts/backtest_depeg_ladder.py`:
-      (a) Pull historical Chainlink `latestAnswer` for USDC/USD (`0x8fFf...8f6`) + USDT/USD (`0x3E7d...32D`) +
-          DAI/USD (`0xAed0...ee9`) aggregators 2020-01-01 → 2026-05-12 via MTDS oracle_prices_handler data lake.
-      (b) Compute rolling peg-deviation per stable per day; identify all `peg_dev > 100bps` events.
-      (c) Simulate the new ladder per archetype × event; output `n_triggers`, `false_positive_rate` (events
-          where peg recovered <72h without intervention), `true_positive_rate` (events where intervention saved
-          drawdown vs do-nothing).
-      (d) **Acceptance criterion**: false-positive rate <5% at 500bps KILL_ALL OR operator-tunable per-stable
-          override; true-positive rate >90% on capture of 2023-03 USDC + 2022-05 UST + 2024-07 PYUSD.
-      (e) Output: `risk-and-exposure-service/results/depeg_backtest_<run_id>.md` with per-event table + ladder
-          parameter sensitivity sweep (sweep across 300bps / 500bps / 800bps KILL_ALL thresholds; recommend
-          best).
-      Owner: slot 5 risk-side or dedicated backtest tab. **HARD gate before live**: ladder cannot ship without
-      this backtest output.
-      (risk-and-exposure-service@39c9e12 — 485 dates scanned 2021-01-01→2023-09-30; FPR PASS all tiers
-      WARNING 0.59% / SMALL 0.22% / MODERATE 0.07% / CATASTROPHIC 0.00%; TPR 100% at MODERATE for USDC
-      SVB depeg 2023-03-11. CATASTROPHIC TPR=0% is data-granularity: daily snapshot captured 903 bps
-      vs intraday trough 1300 bps; UST/PYUSD outside lake window. FPR acceptance gate MET.
-      **DEFERRED**: sensitivity sweep (300/500/800 bps) + CATASTROPHIC TPR gap → operator decision:
-      lower threshold to 900 bps OR extend data lake to intraday timestamps. Successor:
-      plans/active/risk_simulations_limits_alerting_2026_05_10.md Phase D.5+.)
+      `risk-and-exposure-service/scripts/backtest_depeg_ladder.py`: (a) Pull historical Chainlink `latestAnswer` for
+      USDC/USD (`0x8fFf...8f6`) + USDT/USD (`0x3E7d...32D`) + DAI/USD (`0xAed0...ee9`) aggregators 2020-01-01 →
+      2026-05-12 via MTDS oracle*prices_handler data lake. (b) Compute rolling peg-deviation per stable per day;
+      identify all `peg_dev > 100bps` events. (c) Simulate the new ladder per archetype × event; output `n_triggers`,
+      `false_positive_rate` (events where peg recovered <72h without intervention), `true_positive_rate` (events where
+      intervention saved drawdown vs do-nothing). (d) **Acceptance criterion**: false-positive rate <5% at 500bps
+      KILL_ALL OR operator-tunable per-stable override; true-positive rate >90% on capture of 2023-03 USDC + 2022-05
+      UST + 2024-07 PYUSD. (e) Output: `risk-and-exposure-service/results/depeg_backtest*<run_id>.md` with per-event
+      table + ladder parameter sensitivity sweep (sweep across 300bps / 500bps / 800bps KILL_ALL thresholds; recommend
+      best). Owner: slot 5 risk-side or dedicated backtest tab. **HARD gate before live**: ladder cannot ship without
+      this backtest output. (risk-and-exposure-service@39c9e12 — 485 dates scanned 2021-01-01→2023-09-30; FPR PASS all
+      tiers WARNING 0.59% / SMALL 0.22% / MODERATE 0.07% / CATASTROPHIC 0.00%; TPR 100% at MODERATE for USDC SVB depeg
+      2023-03-11. CATASTROPHIC TPR=0% is data-granularity: daily snapshot captured 903 bps vs intraday trough 1300 bps;
+      UST/PYUSD outside lake window. FPR acceptance gate MET. **DEFERRED**: sensitivity sweep (300/500/800 bps) +
+      CATASTROPHIC TPR gap → operator decision: lower threshold to 900 bps OR extend data lake to intraday timestamps.
+      Successor: plans/active/risk_simulations_limits_alerting_2026_05_10.md Phase D.5+.)
 
-- [ ] [AGENT] P1. **D.5 — Issuer-pause event integration.** Subscribe to Circle `attestations` endpoint + Tether
-      attestation site + MakerDAO PSM state contract. Emit `AlertCode.STABLECOIN_ISSUER_PAUSED` when any
-      stablecoin issuer flips to paused state. Feeds into the crystallize-vs-wait decision (issuer_paused=true
-      shifts decision toward crystallize). Owner: alerting-service or instruments-service maintainer.
+- [x] [AGENT] P1. **D.5 — Issuer-pause event integration.** Subscribe to Circle `attestations` endpoint + Tether
+      attestation site + MakerDAO PSM state contract. Emit `AlertCode.STABLECOIN_ISSUER_PAUSED` when any stablecoin
+      issuer flips to paused state. Feeds into the crystallize-vs-wait decision (issuer_paused=true shifts decision
+      toward crystallize). Owner: alerting-service or instruments-service maintainer. (alerting-service@cbaf8d8
+      StablecoinIssuerPauseSubscriber: Circle+Tether+MakerDAO PSM pollers; AlertCode.STABLECOIN_ISSUER_PAUSED wired in
+      rules; 10 tests with respx mocks)
 
-- [ ] [AGENT] P1. **D.6 — Stablecoin→non-stable emergency-exit route registry.** UAC
-      `STABLECOIN_EMERGENCY_EXIT_ROUTES` per-stable: list of {DEX-pool / CEX-spot} paths sorted by depth +
-      slippage cost at typical exit-size. Used by the FAST_UNWIND + CRYSTALLIZE actions to pick cheapest exit.
-      Owner: execution-service + UAC.
+- [x] [AGENT] P1. **D.6 — Stablecoin→non-stable emergency-exit route registry.** UAC `STABLECOIN_EMERGENCY_EXIT_ROUTES`
+      per-stable: list of {DEX-pool / CEX-spot} paths sorted by depth + slippage cost at typical exit-size. Used by the
+      FAST_UNWIND + CRYSTALLIZE actions to pick cheapest exit. Owner: execution-service + UAC. (UAC@83c9e10
+      registry/stablecoin_exit_routes.py: ExitRoute frozen dataclass + 33 routes across 10 stables +
+      get_emergency_exit_routes() helper with size-overflow ranking; 12 tests all green)
 
-- [ ] [AGENT] P1. **D.7 — Governance-forum watcher for stablecoin issuer + Aave/Spark.** Same surface as
-      scenario 17 `governance_forum_watcher` trigger_d — Snapshot + Tally + Discord polling for tagged
-      `incident` / `freeze` / `<stable-name>` threads. Operator-page alert only; not auto-action. Owner:
-      alerting-service.
+- [x] [AGENT] P1. **D.7 — Governance-forum watcher for stablecoin issuer + Aave/Spark.** Same surface as scenario 17
+      `governance_forum_watcher` trigger_d — Snapshot + Tally + Discord polling for tagged `incident` / `freeze` /
+      `<stable-name>` threads. Operator-page alert only; not auto-action. Owner: alerting-service.
+      (alerting-service@cbaf8d8 GovernanceForumWatcher: Snapshot GraphQL + Tally REST pollers; RISK_KEYWORDS frozenset
+      18 kw; dedup via seen_ids; AlertCode.GOVERNANCE_INCIDENT_DETECTED wired; 8 tests; **DEFERRED** Discord ingestion —
+      successor: this plan Phase D.7 Discord item)
 
 ### Cross-references
 
-- Scenario specs: `scratch_scenarios_day1/10_defi_stablecoin_depeg.md` (revised 2026-05-12) + `17_lrt_lending_meltdown_composite.md`
+- Scenario specs: `scratch_scenarios_day1/10_defi_stablecoin_depeg.md` (revised 2026-05-12) +
+  `17_lrt_lending_meltdown_composite.md`
 - `defi_recursive_borrow_archetypes_2026_05_10.md` — recursive-borrow archetype carries primary USDC/USDT exposure
 - `disaster_recovery_circuit_breakers_2026_05_10.md` — auto-response wiring for KILL_ALL + FAST_UNWIND + CRYSTALLIZE
 - `BREAKER_RECOVERY_DEFAULTS` SSOT at UAC@`a7a99b5` — recovery_mode=manual_unkill mapping for catastrophic-tier
@@ -817,37 +823,90 @@ Phase 1 freeze gate (2026-05-15) covers Phase 0+1+2+3+7 from this plan; Phase 4+
 
 ## Deferred work after 2026-05-12 (Tab 5 — Harsh — risk Phase 4/5 implementation session)
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-| --- | --- | --- |
-| Phase 4.A — risk-and-exposure-service: full removal of legacy `PortfolioContext` explicit-threshold gates + `RiskMonitor` bespoke threshold predicates ("no code-side rule logic remains") | DEFERRED (design-shipped `@85c99aa` — registry path composes transitionally alongside) | risk-and-exposure-service tab; depends on the strategy-architecture-v2 caller supplying a `RuleEvalContext` populated from PBMS state (Phase 4.D `build_rule_eval_context` consumption). |
-| Phase 4.B — execution-service: TEST_ONLY `LiveMatchingEngine` paper-vs-venue switch on `params["mode"]="TEST"`; orchestrator `account_state` wiring (portfolio-state rules currently skipped at execution-service, enforced by 4.A + 4.C) | DEFERRED (annotated in 4.B body `@07477886`) | execution-service tab; `account_state` depends on Phase 4.D consumption. |
-| Phase 4.C — strategy-service: v2 orchestrator / output-builder signal paths adopt `apply_risk_preflight` (gate currently wired through `SignalPublisher.publish()`, the documented seam, call-site-less in-repo) | DEFERRED P3 | strategy-service tab — adopt when those paths next change; `apply_risk_preflight` + `build_signal_rule_context` are public. |
-| Phase 5.A — emit `RiskRuleFiredEvent` from `risk-and-exposure-service/v2/preflight.py::run_layer2_rule_preflight` (the Layer-2 evaluator rule-fire site); switch `strategy-service/risk_preflight_gate.py` from AlertCode-named `log_event`s to `risk_rule_fired_event()` | ✅ DONE risk-and-exposure-service@37062ce (emit side). **DEFERRED P3**: strategy-service cleanup (`risk_preflight_gate.py` → typed `risk_rule_fired_event()` calls) — tracked as Phase 5 follow-up. | strategy-service tab (cleanup, P3). |
-| Phase 5.B integration test (rule-fire → alert routed) | DEFERRED P1 (alerting-service consumer shipped `@0a52a33` with per-consequence channel/severity unit tests; the end-to-end rule-fire-in-a-running-service → alert-out test is pending) | bundled with Phase 5.A emit follow-on. |
-| Phase 6.A — `/api/risk/rules` endpoint; 6.B — `/api/risk/preflight-test` endpoint (6.C UI Risk tab shipped `deployment-ui@33e6ea0`) | DONE — shipped `deployment-api@dc8be51` (both endpoints + 20 route tests; risk_routes registered under `/api/risk` in main.py — was unregistered) | — |
-| Phase 8 — real-VM per-rule synthetic-fire suite (8.A/8.B/8.C) | BLOCKED on Ikenna slot 7 `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 injection primitives (Day 2 2026-05-13) | Tab 5 Day 2+. |
-| Phase D.1 — UAC BreakerConfig per-stable depeg thresholds (8 stables × 4 tiers) | ✅ SHIPPED UAC@2b49ef2 2026-05-12 | — |
-| Phase D.3 — UAC STABLECOIN_PEG_RESTORE_HISTORY registry (6 stables seeded) | ✅ SHIPPED UAC@d8e72de 2026-05-12 | — |
-| UTL hygiene — root re-export of `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package root; clean the Phase-4 `# noqa: qg-deep-import` deep imports | DEFERRED P2 (`kill_switch/__init__` exports added `@d1a0d0d` — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works) | UTL hygiene follow-up — owner pick. |
+| Phase / item                                                                                                                                                                                                                                                              | Status as of 2026-05-12                                                                                                                                                                             | Successor / blocker                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 4.A — risk-and-exposure-service: full removal of legacy `PortfolioContext` explicit-threshold gates + `RiskMonitor` bespoke threshold predicates ("no code-side rule logic remains")                                                                                | DEFERRED (design-shipped `@85c99aa` — registry path composes transitionally alongside)                                                                                                              | risk-and-exposure-service tab; depends on the strategy-architecture-v2 caller supplying a `RuleEvalContext` populated from PBMS state (Phase 4.D `build_rule_eval_context` consumption). |
+| Phase 4.B — execution-service: TEST_ONLY `LiveMatchingEngine` paper-vs-venue switch on `params["mode"]="TEST"`; orchestrator `account_state` wiring (portfolio-state rules currently skipped at execution-service, enforced by 4.A + 4.C)                                 | DEFERRED (annotated in 4.B body `@07477886`)                                                                                                                                                        | execution-service tab; `account_state` depends on Phase 4.D consumption.                                                                                                                 |
+| Phase 4.C — strategy-service: v2 orchestrator / output-builder signal paths adopt `apply_risk_preflight` (gate currently wired through `SignalPublisher.publish()`, the documented seam, call-site-less in-repo)                                                          | DEFERRED P3                                                                                                                                                                                         | strategy-service tab — adopt when those paths next change; `apply_risk_preflight` + `build_signal_rule_context` are public.                                                              |
+| Phase 5.A — emit `RiskRuleFiredEvent` from `risk-and-exposure-service/v2/preflight.py::run_layer2_rule_preflight` (the Layer-2 evaluator rule-fire site); switch `strategy-service/risk_preflight_gate.py` from AlertCode-named `log_event`s to `risk_rule_fired_event()` | ✅ DONE risk-and-exposure-service@37062ce (emit side). **DEFERRED P3**: strategy-service cleanup (`risk_preflight_gate.py` → typed `risk_rule_fired_event()` calls) — tracked as Phase 5 follow-up. | strategy-service tab (cleanup, P3).                                                                                                                                                      |
+| Phase 5.B integration test (rule-fire → alert routed)                                                                                                                                                                                                                     | DEFERRED P1 (alerting-service consumer shipped `@0a52a33` with per-consequence channel/severity unit tests; the end-to-end rule-fire-in-a-running-service → alert-out test is pending)              | bundled with Phase 5.A emit follow-on.                                                                                                                                                   |
+| Phase 6.A — `/api/risk/rules` endpoint; 6.B — `/api/risk/preflight-test` endpoint (6.C UI Risk tab shipped `deployment-ui@33e6ea0`)                                                                                                                                       | DONE — shipped `deployment-api@dc8be51` (both endpoints + 20 route tests; risk_routes registered under `/api/risk` in main.py — was unregistered)                                                   | —                                                                                                                                                                                        |
+| Phase 8 — real-VM per-rule synthetic-fire suite (8.A/8.B/8.C)                                                                                                                                                                                                             | BLOCKED on Ikenna slot 7 `simulation_scenarios_topology_price_shocks_2026_05_09` Phase 3-4 injection primitives (Day 2 2026-05-13)                                                                  | Tab 5 Day 2+.                                                                                                                                                                            |
+| Phase D.1 — UAC BreakerConfig per-stable depeg thresholds (8 stables × 4 tiers)                                                                                                                                                                                           | ✅ SHIPPED UAC@2b49ef2 2026-05-12                                                                                                                                                                   | —                                                                                                                                                                                        |
+| Phase D.3 — UAC STABLECOIN_PEG_RESTORE_HISTORY registry (6 stables seeded)                                                                                                                                                                                                | ✅ SHIPPED UAC@d8e72de 2026-05-12                                                                                                                                                                   | —                                                                                                                                                                                        |
+| Phase D.2 — StablecoinAggregateExposureCalculator + UAC StablecoinExposure                                                                                                                                                                                                | ✅ SHIPPED UAC@83c9e10 + features-service@8332f0de 2026-05-13                                                                                                                                       | —                                                                                                                                                                                        |
+| Phase D.5 — StablecoinIssuerPauseSubscriber (Circle+Tether+MakerDAO PSM)                                                                                                                                                                                                  | ✅ SHIPPED alerting-service@cbaf8d8 2026-05-13                                                                                                                                                      | —                                                                                                                                                                                        |
+| Phase D.6 — STABLECOIN_EMERGENCY_EXIT_ROUTES registry (33 routes / 10 stables)                                                                                                                                                                                            | ✅ SHIPPED UAC@83c9e10 2026-05-13                                                                                                                                                                   | —                                                                                                                                                                                        |
+| Phase D.7 — GovernanceForumWatcher (Snapshot+Tally)                                                                                                                                                                                                                       | ✅ SHIPPED alerting-service@cbaf8d8 2026-05-13                                                                                                                                                      | Discord ingestion DEFERRED (D.7 follow-up item)                                                                                                                                          |
+| UTL hygiene — root re-export of `risk` / `reconcile` sub-package surfaces + `KillSwitchSubscriber` / `map_switch_id_to_scope` at the `unified_trading_library` package root; clean the Phase-4 `# noqa: qg-deep-import` deep imports                                      | DEFERRED P2 (`kill_switch/__init__` exports added `@d1a0d0d` — `from unified_trading_library.kill_switch import KillSwitchSubscriber` now works)                                                    | UTL hygiene follow-up — owner pick.                                                                                                                                                      |
 
 ### DONE-2026-05-12 — Tab 5 (Harsh) — risk Phase 4 fan-out + Phase 5.B + UAC `RiskRuleFiredEvent`
 
-**Cycle ownership**: `work_split_2026_05_12_harsh.md` slot 5 (risk + DR implementation). Day 1 of the 2026-05-12 → 2026-05-15 cycle; scenario-dependent items (Phase 8) wait on Ikenna slot 7's Day-2 publish.
+**Cycle ownership**: `work_split_2026_05_12_harsh.md` slot 5 (risk + DR implementation). Day 1 of the 2026-05-12 →
+2026-05-15 cycle; scenario-dependent items (Phase 8) wait on Ikenna slot 7's Day-2 publish.
 
 **Shipped (all pushed to `live-defi-rollout`):**
 
-- **UAC `RiskRuleFiredEvent`** — `unified-api-contracts@a01e4dd`: NEW `RiskRuleFiredEvent` Pydantic model (frozen, extra=forbid — `rule_id` / `scope` / `applies_to` / `consequence` / `alerting_severity` / `alert_code` / `fired_at` / `instruction_id` / `triggers_kill_switch` / `kill_switch_scope` / `trigger_detail` / `metadata`) + `risk_rule_fired_event(rule, *, fired_at, ...)` SSOT builder in `canonical/crosscutting/risk_rule.py` + `risk.py` facade re-export + 5 new unit tests (`test_risk_rule_taxonomy.py` 42 in file; UAC suite 109/109 green; ruff + basedpyright clean). Closes a Phase-1 oversight — the taxonomy referenced `RiskRuleFiredEvent` in docstrings + `CONSEQUENCE_EVENTS_EMITTED` but never shipped the model; Phase 5 (alerting wire) + Phase 4 (per-service emit) need it.
+- **UAC `RiskRuleFiredEvent`** — `unified-api-contracts@a01e4dd`: NEW `RiskRuleFiredEvent` Pydantic model (frozen,
+  extra=forbid — `rule_id` / `scope` / `applies_to` / `consequence` / `alerting_severity` / `alert_code` / `fired_at` /
+  `instruction_id` / `triggers_kill_switch` / `kill_switch_scope` / `trigger_detail` / `metadata`) +
+  `risk_rule_fired_event(rule, *, fired_at, ...)` SSOT builder in `canonical/crosscutting/risk_rule.py` + `risk.py`
+  facade re-export + 5 new unit tests (`test_risk_rule_taxonomy.py` 42 in file; UAC suite 109/109 green; ruff +
+  basedpyright clean). Closes a Phase-1 oversight — the taxonomy referenced `RiskRuleFiredEvent` in docstrings +
+  `CONSEQUENCE_EVENTS_EMITTED` but never shipped the model; Phase 5 (alerting wire) + Phase 4 (per-service emit) need
+  it.
 - **Phase 4 — per-service migration (5-sub-agent fan-out)**:
-  - `risk-and-exposure-service@85c99aa`+`@550a39e` — `v2/preflight.py::run_layer2_rule_preflight` builds the runtime `RuleEvalContext` + axis-ids, resolves the per-axis UAC `RiskRule` registry via `iter_applicable_rules()`, runs UTL `risk_preflight()`, maps `RiskRuleConsequence` → `RiskGateDecision`; `run_layer2_preflight()` folds the registry outcome in most-restrictively when a `rule_context` is supplied; `InMemoryRiskLimitsClient`/`RiskLimitsDomainClient` a thin reader over the UAC registry; per-archetype circuit breakers registered against the UAC `registry/circuit_breakers/` package + `ArmedBreakerRegistry` (stores the paired `BreakerRecoveryRule` for the Phase-5 recovery engine) + typed breaker-fire events; kill-switch-bus round-trip verified. **Risk Phase 4.A → design-shipped** (legacy-gate removal DEFERRED — see scoreboard); plan flips `unified-trading-pm@4000ea0f`.
-  - `execution-service@07477886` — `engine/risk/preflight_gate.py` + `engine/orchestrator.py`: `risk_preflight` inserted into the order-submission path BEFORE venue submission — BLOCK→reject+`INSTRUCTION_REJECTED_RISK`, SCALE_DOWN→resize by `scale_factor`+`RESIZED_EXECUTION`, MONITOR→passthrough, TEST_ONLY→tag `mode=TEST`+route-to-matching; per-fired-rule `RiskRuleFiredEvent` via UAC `risk_rule_fired_event()`; deleted bespoke `engine/risk/pre_trade.py` per the § 7 seam; 7 new tests. **Risk Phase 4.B → `[x]`**; plan flips `unified-trading-pm@52ab4e4f`.
-  - `strategy-service@bf1ed6b` — `strategy_service/risk_preflight_gate.py` (`build_signal_rule_context` + `apply_risk_preflight` — wraps UTL `risk_preflight` over `iter_applicable_rules`, threads family-id via `aggregate_family_state`) + `SignalPublisher.publish()` runs the gate when `archetype_id` supplied (BLOCK→`None`+`STRATEGY_SIGNAL_SUPPRESSED`+per-rule AlertCode event; SCALE_DOWN→scale `conviction_pct`/`meta_signal`); 9 new tests. **Risk Phase 4.C → `[x]`**; plan flips `unified-trading-pm@0b0f67e8`.
-  - `position-balance-monitor-service@50b3c25` — `core/rule_eval_context_builder.py` (`PortfolioRiskState` + `PeakNavTracker` + `build_rule_eval_context()` → UTL `RuleEvalContext` — emits authoritative drawdown-bps-from-peak / leverage / gross+net exposure / per-(venue,instrument) OI / daily-loss; deliberately omits the keys not owned by position-balance so risk/execution/strategy layer those in; no rule logic duplicated); 13 new tests (one drives `unified_trading_library.risk.evaluate_rule` end-to-end). **Risk Phase 4.D → `[x]`**; plan flips `unified-trading-pm@33e7f74c`.
-  - `alerting-service@0a52a33` — `risk_rule_event_handler.py` (consumes `RiskRuleFiredEvent`, maps `event.alert_code` → the UAC-seeded `LIVE_ALERT_RULES` entry, routes via `notifiers/router.route_event` at the rule's channel/severity tier per the § 7 seam — BLOCK→`RISK_RULE_BLOCKED` HIGH+PagerDuty, SCALE_DOWN→WARN+Telegram, MONITOR/TEST_ONLY→INFO+LogOnly; `trigger_detail` + `metadata` rendered into the body) + a router bug fix (matched empty-channels rule now returns `{"log_only"}` instead of falling through to Telegram); new `test_risk_rule_event_handler.py`; 412 unit tests. **Risk Phase 5.B → `[x]`**; plan flips `unified-trading-pm@18896af7`.
-- **Phase 5.A** — ✅ FULLY SHIPPED: risk-and-exposure-service@37062ce (`run_layer2_rule_preflight` emits `RISK_RULE_FIRED` per fired rule via `risk_rule_fired_event()` builder — typed key fields, basedpyright clean, ruff OK); execution-service@07477886 (order path); strategy-service@bf1ed6b (AlertCode-named events — P3 cleanup to typed `risk_rule_fired_event()` tracked above). All three Layer-2 fire sites now emit.
-- **Operational fix** — FF-pulled root `unified-api-contracts` (3 behind) + `unified-trading-library` (5 behind) to `origin/live-defi-rollout` so `.venv-workspace` (editable-installed against the root checkouts) sees the fresh `RiskRuleFiredEvent` / kill-switch facade exports / `BreakerRecoveryEngine` / reconcile package — the Phase-4 sub-agents validate via `.venv-workspace`.
+  - `risk-and-exposure-service@85c99aa`+`@550a39e` — `v2/preflight.py::run_layer2_rule_preflight` builds the runtime
+    `RuleEvalContext` + axis-ids, resolves the per-axis UAC `RiskRule` registry via `iter_applicable_rules()`, runs UTL
+    `risk_preflight()`, maps `RiskRuleConsequence` → `RiskGateDecision`; `run_layer2_preflight()` folds the registry
+    outcome in most-restrictively when a `rule_context` is supplied; `InMemoryRiskLimitsClient`/`RiskLimitsDomainClient`
+    a thin reader over the UAC registry; per-archetype circuit breakers registered against the UAC
+    `registry/circuit_breakers/` package + `ArmedBreakerRegistry` (stores the paired `BreakerRecoveryRule` for the
+    Phase-5 recovery engine) + typed breaker-fire events; kill-switch-bus round-trip verified. **Risk Phase 4.A →
+    design-shipped** (legacy-gate removal DEFERRED — see scoreboard); plan flips `unified-trading-pm@4000ea0f`.
+  - `execution-service@07477886` — `engine/risk/preflight_gate.py` + `engine/orchestrator.py`: `risk_preflight` inserted
+    into the order-submission path BEFORE venue submission — BLOCK→reject+`INSTRUCTION_REJECTED_RISK`, SCALE_DOWN→resize
+    by `scale_factor`+`RESIZED_EXECUTION`, MONITOR→passthrough, TEST_ONLY→tag `mode=TEST`+route-to-matching;
+    per-fired-rule `RiskRuleFiredEvent` via UAC `risk_rule_fired_event()`; deleted bespoke `engine/risk/pre_trade.py`
+    per the § 7 seam; 7 new tests. **Risk Phase 4.B → `[x]`**; plan flips `unified-trading-pm@52ab4e4f`.
+  - `strategy-service@bf1ed6b` — `strategy_service/risk_preflight_gate.py` (`build_signal_rule_context` +
+    `apply_risk_preflight` — wraps UTL `risk_preflight` over `iter_applicable_rules`, threads family-id via
+    `aggregate_family_state`) + `SignalPublisher.publish()` runs the gate when `archetype_id` supplied
+    (BLOCK→`None`+`STRATEGY_SIGNAL_SUPPRESSED`+per-rule AlertCode event; SCALE_DOWN→scale
+    `conviction_pct`/`meta_signal`); 9 new tests. **Risk Phase 4.C → `[x]`**; plan flips `unified-trading-pm@0b0f67e8`.
+  - `position-balance-monitor-service@50b3c25` — `core/rule_eval_context_builder.py` (`PortfolioRiskState` +
+    `PeakNavTracker` + `build_rule_eval_context()` → UTL `RuleEvalContext` — emits authoritative drawdown-bps-from-peak
+    / leverage / gross+net exposure / per-(venue,instrument) OI / daily-loss; deliberately omits the keys not owned by
+    position-balance so risk/execution/strategy layer those in; no rule logic duplicated); 13 new tests (one drives
+    `unified_trading_library.risk.evaluate_rule` end-to-end). **Risk Phase 4.D → `[x]`**; plan flips
+    `unified-trading-pm@33e7f74c`.
+  - `alerting-service@0a52a33` — `risk_rule_event_handler.py` (consumes `RiskRuleFiredEvent`, maps `event.alert_code` →
+    the UAC-seeded `LIVE_ALERT_RULES` entry, routes via `notifiers/router.route_event` at the rule's channel/severity
+    tier per the § 7 seam — BLOCK→`RISK_RULE_BLOCKED` HIGH+PagerDuty, SCALE_DOWN→WARN+Telegram,
+    MONITOR/TEST_ONLY→INFO+LogOnly; `trigger_detail` + `metadata` rendered into the body) + a router bug fix (matched
+    empty-channels rule now returns `{"log_only"}` instead of falling through to Telegram); new
+    `test_risk_rule_event_handler.py`; 412 unit tests. **Risk Phase 5.B → `[x]`**; plan flips
+    `unified-trading-pm@18896af7`.
+- **Phase 5.A** — ✅ FULLY SHIPPED: risk-and-exposure-service@37062ce (`run_layer2_rule_preflight` emits
+  `RISK_RULE_FIRED` per fired rule via `risk_rule_fired_event()` builder — typed key fields, basedpyright clean, ruff
+  OK); execution-service@07477886 (order path); strategy-service@bf1ed6b (AlertCode-named events — P3 cleanup to typed
+  `risk_rule_fired_event()` tracked above). All three Layer-2 fire sites now emit.
+- **Operational fix** — FF-pulled root `unified-api-contracts` (3 behind) + `unified-trading-library` (5 behind) to
+  `origin/live-defi-rollout` so `.venv-workspace` (editable-installed against the root checkouts) sees the fresh
+  `RiskRuleFiredEvent` / kill-switch facade exports / `BreakerRecoveryEngine` / reconcile package — the Phase-4
+  sub-agents validate via `.venv-workspace`.
 
-**Findings raised** (mirrored in the DR plan DONE block — see `disaster_recovery_circuit_breakers_2026_05_10.md`): no typed `BreakerFiredEvent` UAC model (P2 discovery — captured as DR Phase 1.G); pre-existing red QG on `live-defi-rollout` for alerting-service (`test_router_coalesce.py` N802 + `router.py` reportAny — foreign in-flight file, flagged not fixed), execution-service (`cloud_kms.py` os.environ), position-balance-monitor-service (local-schema/size + UTL pipeline_mode kwargs + PM manifest validators + pip-audit) — all pre-existing, not made worse.
+**Findings raised** (mirrored in the DR plan DONE block — see `disaster_recovery_circuit_breakers_2026_05_10.md`): no
+typed `BreakerFiredEvent` UAC model (P2 discovery — captured as DR Phase 1.G); pre-existing red QG on
+`live-defi-rollout` for alerting-service (`test_router_coalesce.py` N802 + `router.py` reportAny — foreign in-flight
+file, flagged not fixed), execution-service (`cloud_kms.py` os.environ), position-balance-monitor-service
+(local-schema/size + UTL pipeline_mode kwargs + PM manifest validators + pip-audit) — all pre-existing, not made worse.
 
 **Cycle metrics**: see the DR plan DONE-2026-05-12 block (this session covered both plans jointly).
 
-Codex audit (Phase 7): all Phase-7 codex docs (`risk-rule-taxonomy.md` / `risk-preflight-flow.md` / `risk-breaker-seam.md` / `kill-switch-circuit-breaker.md` UPDATE / `capital-efficiency-patterns.md` UPDATE) shipped + flipped prior cycle (`unified-trading-pm@d86c8b3c`/`@730914a9`/`@bf1ebc54`) — verified still current; the `RiskRuleFiredEvent` model addition is a small follow-on that fits `risk-preflight-flow.md`'s event-emission section (NICE-TO-HAVE — `codex/04-architecture/risk-preflight-flow.md` already documents the `RiskRuleFiredEvent` name; the model shape can be appended on the next substantive touch).
+Codex audit (Phase 7): all Phase-7 codex docs (`risk-rule-taxonomy.md` / `risk-preflight-flow.md` /
+`risk-breaker-seam.md` / `kill-switch-circuit-breaker.md` UPDATE / `capital-efficiency-patterns.md` UPDATE) shipped +
+flipped prior cycle (`unified-trading-pm@d86c8b3c`/`@730914a9`/`@bf1ebc54`) — verified still current; the
+`RiskRuleFiredEvent` model addition is a small follow-on that fits `risk-preflight-flow.md`'s event-emission section
+(NICE-TO-HAVE — `codex/04-architecture/risk-preflight-flow.md` already documents the `RiskRuleFiredEvent` name; the
+model shape can be appended on the next substantive touch).
