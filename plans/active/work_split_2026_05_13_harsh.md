@@ -396,3 +396,130 @@ request (or each slot reads work-split § "Slot N" + plan-of-record + does its o
   scope + LookaheadBias owner + audit-records PB-1/2/3 scope + TradFi phantom-audit owner
 - Add 🔴 critical-path callouts: slot 2 Gate 1 + slot 10 freeze-gate item 3 closure
 - Cross-side handshake banner: Ikenna's slot 2's GMX/DRIFT axis_override being reverted (preserve git history)
+
+---
+
+## Wave 2 — Post-lunch 2026-05-13 (6 implementor slots)
+
+**Operator returning ~1-2h.** Wave 1 closed: slots 2-9 ✅ DONE (PM@3b317e65 / 3a16656d / 42755747 / 3d3d5c14), slot 10 still finishing Phase 2 dex_perp + EigenLayer; LDR-alignment cadence codified (PM@f49d5f7d). Slot 4 hit foot-gun #5; Phase 8A-D rescued via cherry-pick (execution-service@38b3e8a5).
+
+**Scope filter for Wave 2**: implementation-from-spec only. No plans requiring big operator decisions (those defer to Ikenna). No new backfill / manifest-reconciliation VM launches (per Ikenna direction 2026-05-13 12:56 IST). Smaller cap (6 slots not 10) per operator preference.
+
+### Slot table (Wave 2)
+
+| Slot | Theme | State | Plan-of-record | Est. AI-d |
+|------|-------|-------|----------------|-----------|
+| 1 | Main orchestrator (continuous) | 🟢 ONLINE | — | — |
+| 2 | risk_simulations finalisation (82% → 100%) | 🟡 READY-TO-SPAWN | `risk_simulations_limits_alerting_2026_05_10.md` | ~0.8 |
+| 3 | DR Phase 6+9+10 finalisation (AGENT items only; no VM launch) | 🟡 READY-TO-SPAWN | `disaster_recovery_circuit_breakers_2026_05_10.md` | ~1.0 |
+| 4 | 🐛 Script 3 classifier P1 bug fix + arbitrage_price_dispersion final 2 items | 🟡 READY-TO-SPAWN | `issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` + `arbitrage_price_dispersion_finalisation_2026_05_09.md` | ~0.6 |
+| 5 | mock_data Phase 3.D per-reader threading (MTDS Tardis/Databento + ml-inference + strategy) | 🟡 READY-TO-SPAWN | `mock_data_pipeline_benchmarking_2026_05_10.md` | ~1.2 |
+| 6 | wave3x_residual_ssots finalisation (73% → 100%) | 🟡 READY-TO-SPAWN | `wave3x_residual_ssots_2026_05_08.md` | ~0.6 |
+| 7 | cross_asset catalogue Phase 5A/5B/5C TradFi ETF + futures-roots consolidation | 🟡 READY-TO-SPAWN | `cross_asset_group_catalogue_audit_2026_05_10.md` (Phase 5) | ~1.0 |
+| 8/9 | (idle — held in reserve for spillover absorption from slots 2-7) | 🟪 RESERVE | — | — |
+| 10 | dex_perp Phase 2B/2C + EigenLayer Phase 3 | 🟢 IN FLIGHT | `dex_perp_and_venue_data_expansion_2026_05_12.md` | ~1.5 (carry) |
+
+### Slot scope details (Wave 2)
+
+#### Slot 2 — risk_simulations finalisation
+- **Repos**: risk-and-exposure-service + UAC + PM
+- **Scope**: 7 P0 items left (Phase 4.A rule migration to UAC registry; 8.A-C per-rule synthetic-fire tests + per-archetype suite + evidence capture; 9.A-B master plan row + banners) + 4 P1 stablecoin items (D.2 aggregate stablecoin exposure feature; D.5 issuer-pause integration; D.6 emergency-exit route registry; D.7 governance-forum watcher) — ship the P0s first, P1s if time.
+- **Done definition**: 33/40 → 40/40 P0s; risk-and-exposure-service rule_evaluator wired; per-archetype suite green.
+
+#### Slot 3 — DR finalisation (AGENT items only)
+- **Repos**: deployment-service + UTL + PM
+- **Scope**: Write Phase 6.A `disaster-drill-cron-` VM launcher SCRIPT + drill-report tooling + Phase 9.A `dr-drill-cutover-` launcher SCRIPT (per archetype: arm `KILL_PER_ARCHETYPE` etc.) + Phase 9.B evidence-capture format + Phase 10.A/10.B master plan rows + banners. **DO NOT LAUNCH VMs** — write the scripts + dry-run validate the launchers locally; VM execution awaits operator OK post-lunch.
+- **Done definition**: 28/42 → ~38/42; all SCRIPT artifacts written + linted + dry-run validated; VM execution gated on operator.
+
+#### Slot 4 — Script 3 classifier P1 bug fix + arbitrage final
+- **Repos**: instruments-service + UTL + strategy-service + PM
+- **Scope**:
+  - **(1)** Fix `classify_blank_reason_row()` `fixture_manifest` kwarg signature mismatch per `plans/active/issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` recommended decision: read UTL `unified_trading_library.manifest.classify_blank_reason_row` signature, read `instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py` call-site, align. Then re-run Script 3 **DRY-RUN ONLY** for defi/sports/prediction (NO apply-flips — verify non-zero upgrade count, then stop).
+  - **(2)** Close `arbitrage_price_dispersion_finalisation_2026_05_09.md` final 2 P1 items (canonical BTC/USDT slot entry in strategy-service + tests).
+- **Done definition**: Script 3 classifier signature aligned + dry-run shows non-zero upgrades for defi/sports/prediction (apply-flips deferred); arbitrage_price_dispersion 18/20 → 20/20.
+
+#### Slot 5 — mock_data Phase 3.D per-reader threading
+- **Repos**: MTDS + ml-inference-service + strategy-service + UTL + PM
+- **Scope**: Wire `default_subprocess_pipeline()` benchmark harness into 3 readers that bypass `resolve_bucket_uri`: (a) MTDS Tardis/Databento fetch — handle external-API non-GCS path via a benchmark-specific instrumentation; (b) ml-inference direct feature-vector loader; (c) strategy direct signal+features loader. Each gets bespoke `_STAGE_COMMAND_TEMPLATES` entry. Verify with subprocess-pipeline benchmark run on 1-day batch.
+- **Done definition**: mock_data 19/29 → ~25/29; Phase 3.D `[x]` flipped; benchmark report includes all 6 pipeline stages with real timings (not extrapolated).
+
+#### Slot 6 — wave3x_residual_ssots finalisation
+- **Repos**: UAC + UTL + per-asset_group services + PM
+- **Scope**: 6 remaining items in `wave3x_residual_ssots_2026_05_08.md`. Read the plan, scan open `- [ ]` todos, ship in order.
+- **Done definition**: 16/22 → 22/22; all Wave 3.X dimensions covered.
+
+#### Slot 7 — cross_asset Phase 5A/5B/5C TradFi consolidation
+- **Repos**: UAC + instruments-service + market-tick-data-service + PM
+- **Scope**: TradFi catalogue audit (TF-1..TF-10 in `plans/archive/issues/catalogue_audit_tradfi_2026_05_12.md`) requires consolidating fragmented universes:
+  - **Phase 5A — tradfi_etfs.py**: Unify 4 ETF universes (`KNOWN_ETFS` `tradfi_symbology.py:459` + `ETF_TICKERS` `tradfi_ticker_universe.py:295` + `_BTC_SPOT_ETFS`+`_ETH_SPOT_ETFS` `tradfi_instrument_universe.py:151` + `TRADFI_TICKER_COVERAGE_START` ETF subset) → single `unified_api_contracts/canonical/domain/derivatives/tradfi_etfs.py` SSOT. Diff-merge memberships, escalate conflicts to operator.
+  - **Phase 5B — tradfi_roots.py**: Unify 3 futures-roots universes (`TRADFI_INSTRUMENTS` + `TRADFI_DATABENTO_INSTRUMENTS` + hard-coded `SUPPORTED_UNDERLYINGS` in `databento_cme_converter.py:57`) → single SSOT.
+  - **Phase 5C — asset_group_registry.py**: TradFi entries updated to point at new SSOTs.
+  - **Phase 7 (small) — codex + CLAUDE.md VIX-pointer fix**: VIX-15m constants are in `registry/data_source_continuity.py` NOT `canonical/crosscutting/honest_coverage.py` as CLAUDE.md claims (TF-7). Fix the doc references.
+- **Done definition**: 4 ETF universes + 3 futures-roots universes consolidated to single SSOT each; cross_asset audit Phase 5 checkboxes flipped; VIX-15m doc-pointer corrected.
+
+### Reserve list — pull from when a slot finishes early
+
+In rough priority order:
+
+1. **C901 cleanup** (P1 from slot 5 today): `execution-service/execution_service/providers/rpc_fallback.py:69` (`__init__` complexity 11) + `execution-service/execution_service/api/manual_instruction_api.py:190` (`submit_manual_instruction` complexity 12). Refactor each below 10. Unblocks full execution-service QG green.
+2. **`available_at_lookahead_bias_completion_2026_05_08`** finalisation (30%, 33 items). Pick from open `- [ ]` todos. Cefi/master umbrella.
+3. **`data_status_drilldown_shard_atom_alignment_2026_05_07`** finalisation (61%, 16 items). cross_cutting umbrella.
+4. **`api_football_minimal_flattening_removal_2026_05_07`** finalisation (69%, 5 items). Sports parallel track.
+5. **`launcher_scripts_consolidation_into_deployment_service_2026_05_07`** finalisation (73%, 4 items). Infra cleanup.
+6. **`per_agent_worktrees_2026_05_10`** finalisation (87%, 4 items). Doc/codex cleanup of the worktrees system slots already use.
+7. **cross_asset Phase 1D — venue-id casing fix** (cross-cutting): `to_canonical_venue()` helper + test enumerating every venue-keyed dict across all asset_groups; fixes CF-3 + SP-3 + DF-4/5/17.
+8. **pytest-timeout missing** in deployment-service `.venv` (slot 5 pre-existing QG blocker). Add to dependencies + verify QG green.
+9. **TradFi parallel track** next phase (per `epics/tradfi_master_2026_05_07.md` — pick next open item).
+10. **Sports parallel track** next phase (per `epics/sports_master_2026_05_07.md` — pick next open item).
+
+### Pre-lunch spawn recommendations
+
+If operator wants to launch 2 slots before leaving (so they finish before return), the safest picks are:
+
+- **Slot 4** (Script 3 classifier P1 bug fix + arbitrage final): ~30-90 min total, **zero ambiguity**, smallest scope. Concrete signature alignment + dry-run verification + 2 small finalisation items. Highest "definitely done before lunch ends" probability.
+- **Slot 2** (risk_simulations finalisation): ~6-8h scope but the P0 items are well-defined; agent can ship steady cadence. Even partial completion is valuable. Per-shippable-unit FF-push cadence per the new HARD RULE keeps work visible to LDR.
+
+Slots 3, 5, 6, 7 can wait until operator returns (some involve more cross-repo work or VM-adjacent considerations).
+
+### Spawn prompts (paste-ready, lean — applies LDR-alignment HARD RULE per AGENT_ONBOARDING.md update)
+
+**Slot 2 spawn:**
+```
+You are Harsh-side slot 2, branch tab/hk/2. Sonnet 4.6 / thinking: high.
+
+Boot:
+1. cd /home/hk/unified-trading-system-repos/.tabs/2/unified-trading-pm
+2. Read harsh_orchestrator/AGENT_ONBOARDING.md FULLY — especially the NEW "LDR alignment cadence (HARD RULE)" section (codified 2026-05-13 after repeated foot-gun #5). Three checkpoints: boot rebase ALL owned repos / FF-push per shippable unit / pre-shutdown verify HEAD == LDR per repo.
+3. Find Slot 2 in harsh_orchestrator/LEDGER.md "Current shift" + work-split § "Slot 2 (Wave 2)".
+4. cd into each owned repo (risk-and-exposure-service + unified-api-contracts + unified-trading-pm) and rebase tab/hk/2 onto origin/live-defi-rollout per the boot checkpoint.
+5. Boot ack in harsh_orchestrator/pings/slot_2.md (use `date -u`).
+
+Then start work: risk_simulations_limits_alerting_2026_05_10.md — ship the 7 open P0 items (Phase 4.A risk-and-exposure-service rule migration + 8.A/8.B/8.C synthetic-fire tests + 9.A/9.B master plan row & banners). FF-push per shippable unit. P1 stablecoin items (D.2/D.5/D.6/D.7) if time after P0s done.
+
+COMPACT-CYCLE GUARD: do NOT read repo-level .claude/CLAUDE.md files — workspace CLAUDE.md (in system context) covers them.
+```
+
+**Slot 4 spawn:**
+```
+You are Harsh-side slot 4, branch tab/hk/4. Sonnet 4.6 / thinking: high.
+
+Boot:
+1. cd /home/hk/unified-trading-system-repos/.tabs/4/unified-trading-pm
+2. Read harsh_orchestrator/AGENT_ONBOARDING.md FULLY — especially "LDR alignment cadence (HARD RULE)" (new 2026-05-13).
+3. Find Slot 4 in LEDGER + work-split § "Slot 4 (Wave 2)".
+4. Rebase tab/hk/4 onto origin/live-defi-rollout in each owned repo (instruments-service + unified-trading-library + strategy-service + unified-trading-pm).
+5. Boot ack in harsh_orchestrator/pings/slot_4.md.
+
+Then start work, in this order:
+(1) Fix `classify_blank_reason_row()` fixture_manifest kwarg mismatch per `plans/active/issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` § "Recommended decision". Read UTL `unified_trading_library.manifest.classify_blank_reason_row` signature, read `instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py` call-site, align (add fixture_manifest handling OR remove from UTL). FF-push immediately.
+(2) Re-run Script 3 DRY-RUN for defi/sports/prediction to verify non-zero upgrades. DO NOT --apply-flips (per Ikenna's hold direction). Update the issue doc with the dry-run upgrade counts. FF-push.
+(3) Then ship `arbitrage_price_dispersion_finalisation_2026_05_09.md` final 2 items (BTC/USDT slot entry + tests). FF-push.
+
+COMPACT-CYCLE GUARD: do NOT read repo-level .claude/CLAUDE.md files.
+```
+
+**Slots 3, 5, 6, 7 spawns** (use the same template as slot 4 above, swap slot number / repos / scope per the slot table). Operator pastes when returning from lunch.
+
+### LEDGER table update for Wave 2
+
+Replace the Wave 1 table in harsh_orchestrator/LEDGER.md "Current shift" section with the Wave 2 layout above. Slot 1 (main) handles the LEDGER edit.
