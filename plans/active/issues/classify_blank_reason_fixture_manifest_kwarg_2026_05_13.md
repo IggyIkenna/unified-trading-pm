@@ -38,29 +38,48 @@ asset_groups. `cefi` and `tradfi` are unaffected (0 candidates, clean).
 - Per CLAUDE.md "Findings Triage: Big finding" — affects data correctness for 3 of 5 asset_groups, blocks
   a manifest health reconciliation that has 1,868,285 + 604,951 = 2,473,277 affected rows.
 
-## Likely root cause
+## Root cause (investigated 2026-05-13 by slot-4-harsh)
 
-Either:
-1. `classify_blank_reason_row()` in UTL gained a required/keyword argument `fixture_manifest` (not passed
-   by the reconciler), OR
-2. The reconciler calls `classify_blank_reason_row(row, fixture_manifest=...)` but the UTL function no
-   longer accepts that kwarg.
+**No code bug in LDR.** Both sides are already aligned on `live-defi-rollout`:
 
-Check `instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py` call-site vs current UTL
-`unified_trading_library.manifest.classify_blank_reason_row` signature.
+- **UTL** `unified_trading_library/legacy_reason_classifier.py:479` has:
+  ```python
+  def classify_blank_reason_row(
+      asset_group: str,
+      row: Mapping[str, object],
+      *,
+      fixture_manifest: pd.DataFrame | None = None,
+  ) -> tuple[str, str]:
+  ```
+  Added in UTL commit `290a415` (`feat(legacy-classifier): Phase 1.5 sports fixture-existence check`).
 
-## Recommended decision
+- **Reconciler** `instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py:260` passes:
+  ```python
+  classify_blank_reason_row(asset_group, row, fixture_manifest=fixture_manifest)
+  ```
 
-**P1** — fix before next reconciliation run.
+**Actual root cause**: The VM run on 2026-05-13 07:47 UTC used **OLD UTL tarballs** (pre-`290a415`) where
+`fixture_manifest` kwarg did not yet exist, while the reconciler script had already been updated to pass it.
+This is a VM tarball staleness issue — not a source code bug.
 
-1. Find `classify_blank_reason_row` in UTL and read its current signature.
-2. Find the call-site in `reconcile_legacy_blank_to_typed_reason.py`.
-3. Align: either add `fixture_manifest` kwarg handling to the reconciler (pass the right value) or remove
-   from the UTL function if it was added incorrectly.
-4. Re-run Script 3 dry-run for defi/sports/prediction after fix to verify non-zero upgrades.
-5. Only then run apply-flips.
+**Per workspace rules**: VMs always run from tarballs. After code changes, tarballs must be refreshed via
+`bash deployment-service/scripts/vm/create-code-tarballs.sh`. The reconciler-VM launcher was not re-tarred
+after UTL commit `290a415` landed.
+
+## Recommended decision (updated 2026-05-13)
+
+**No code change needed** — both call-site and UTL signature are aligned on LDR.
+
+**Fix path**: Refresh UTL + instruments-service tarballs, then re-run Script 3 dry-run for
+defi/sports/prediction to confirm non-zero upgrades. Only then proceed with `--apply-flips` (subject to
+Ikenna's hold direction on manifest reconciliation VMs — see manifest_cross_asset_rescan_design_2026_05_08).
+
+1. `bash deployment-service/scripts/vm/create-code-tarballs.sh --unified-trading-library --instruments-service`
+2. Re-run Script 3 dry-run (NO `--apply-flips`).
+3. Confirm upgrade counts are non-zero for defi/sports/prediction.
+4. Await Ikenna direction on `--apply-flips`.
 
 **Owner**: instruments-service maintainer (Ikenna per workstream — instruments-service is cross-cutting
-design scope).
+design scope). Tarball refresh is operator-executable.
 
-**Suggested resolution slot**: next instruments-service touch by slot 1 or 3.
+**Status**: P1 → resolved at source-code level; P1 remains for tarball refresh + re-run verification.
