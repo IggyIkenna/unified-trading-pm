@@ -8,7 +8,7 @@ For restaking-eligible LSTs (`weETH`, `pufETH`, `ankrETH`, `ETHx` on Ethereum; `
 Solana) the realised yield comes from **three distinct on-chain-discoverable layers**, each with its own data source,
 cadence, and reward-token mix. This doc names the layers, the per-LST stream registry, the dust-conversion mechanic that
 realises non-target-denomination rewards via simulated swaps, and the integration points across pnl-attribution-service,
-features-onchain-service, and execution-service algo_library.
+features-service (onchain family), and execution-service algo_library.
 
 ## Hard Rules
 
@@ -97,7 +97,7 @@ market-tick-data-service Solana feeds.
 
 ## On-chain discovery for layer-3 (issuer seasonal)
 
-features-onchain-service indexes `Transfer(from=registered_distributor, to=*)` events for every distributor in
+features-service (onchain family) indexes `Transfer(from=registered_distributor, to=*)` events for every distributor in
 `LST_REWARD_STREAMS`. Output: `gs://lst-seasonal-rewards-{pid}/by_date/day=YYYY-MM-DD/issuer={E}/{C}/rewards.parquet`
 with schema:
 
@@ -166,7 +166,7 @@ For each new restaking-eligible LST or AVS:
 3. **instruments-service**: register the reward token's instrument record (token_address, decimals, chain) + DEX pool
    index entries for {reward_token}/USDC and {reward_token}/WETH (or {reward_token}/USDC and {reward_token}/SOL on
    Solana). Without DEX pools registered the dust router falls back to CEX-only routing.
-4. **features-onchain-service**: add the distributor address to the layer-3 collector's scan set; verify the daily
+4. **features-service (onchain family)**: add the distributor address to the layer-3 collector's scan set; verify the daily
    `lst_seasonal_rewards` parquet writes correctly
 5. **market-tick-data-service**: confirm the reward token's CEX listings have spot-tick coverage in the relevant tick
    feeds (Binance / Coinbase / Bybit / OKX). For Solana tokens, confirm Jupiter aggregator quote endpoint coverage

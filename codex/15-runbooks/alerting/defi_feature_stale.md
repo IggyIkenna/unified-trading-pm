@@ -30,7 +30,7 @@ source is up + restarts the feature compute if needed.
 - **Threshold key:** `defi_feature_stale_minutes`.
 - **Default value:** 15 min. LST yields update on epoch boundaries (≈12 min Solana, ≈12s Ethereum); 15 min is a generous
   lower bound. See [`threshold-tuning.md`](./threshold-tuning.md).
-- **Emitter(s):** `features-onchain-service` (feature-staleness watchdog, runs every 5 min).
+- **Emitter(s):** `features-service (onchain family)` (feature-staleness watchdog, runs every 5 min).
 - **Upstream signal:** `now() - feature.available_at > threshold_minutes` for any feature in the `carry_staked_basis` or
   `leveraged_funding_arb` required-feature set.
 - **De-dup window:** 600s.
@@ -66,7 +66,7 @@ source is up + restarts the feature compute if needed.
      ```bash
      cast gas-price --rpc-url ${ETH_RPC_URL}
      ```
-4. **Check features-onchain-service health endpoint:**
+4. **Check features-service (onchain family) health endpoint:**
    ```bash
    curl -sH "Authorization: Bearer $(gcloud auth print-access-token)" \
      https://${FEATURES_ONCHAIN_URL}/health | jq '.data_freshness'
@@ -79,7 +79,7 @@ source is up + restarts the feature compute if needed.
 
 ### Path 1 — Auto-recovery (next compute cycle succeeds)
 
-If diagnosis step 3 shows upstream source is healthy AND step 4 shows features-onchain-service is running, the next
+If diagnosis step 3 shows upstream source is healthy AND step 4 shows features-service (onchain family) is running, the next
 compute cycle (typically every 5 min) should resolve the staleness:
 
 ```bash
@@ -90,7 +90,7 @@ watch -n 60 "curl -sH 'Authorization: Bearer \$(gcloud auth print-access-token)'
 
 **Success:** `staleness_minutes < threshold` sustained 5 min.
 
-### Path 2 — Restart features-onchain-service (compute hung)
+### Path 2 — Restart features-service (onchain family) (compute hung)
 
 If the service is running but the compute is hung (e.g. waiting on a dead RPC handle):
 
@@ -100,7 +100,7 @@ gcloud run services list --platform=managed --format=json \
   | jq '.[] | select(.metadata.name | contains("features-onchain"))'
 
 # Force redeploy = fresh compute pods
-gcloud run services update features-onchain-service --region=asia-northeast1 \
+gcloud run services update features-service (onchain family) --region=asia-northeast1 \
   --update-env-vars=FORCE_RESTART=$(date +%s)
 ```
 
@@ -116,7 +116,7 @@ fallback):
 1. Operator pauses the affected archetype via DART → Strategy Config → "Pause Archetype" with reason
    `feature_blackout: <feature_name>`.
 2. Existing positions hold flat-only; no new entries.
-3. Resume when upstream source returns + features-onchain-service `data_freshness` recovers.
+3. Resume when upstream source returns + features-service (onchain family) `data_freshness` recovers.
 
 **Success:** archetype paused; Telegram noise stops.
 
@@ -151,7 +151,7 @@ Escalate to tier-3 strategy lead when:
 ## Post-incident
 
 Required if Path 3 (archetype pause) was used. Action items: upstream-source SLA review, fallback-source plan,
-features-onchain-service health-check tightening.
+features-service (onchain family) health-check tightening.
 
 ## Cross-references
 

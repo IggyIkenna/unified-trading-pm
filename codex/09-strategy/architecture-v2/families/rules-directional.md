@@ -78,7 +78,7 @@ The Rules Directional family engine provides:
 | ---------------------------------- | ------------------------------------------------------------------------------ |
 | Technical indicators               | RSI, MACD, Bollinger Bands, Stochastic, ATR, VWAP, moving-average crossovers   |
 | Statistical thresholds             | Z-score, percentile rank, rolling vol, cointegration residual                  |
-| Feature-threshold combinations     | Multi-feature AND/OR conditions on any FSS / features-sports-service output    |
+| Feature-threshold combinations     | Multi-feature AND/OR conditions on any FSS / features-service (sports family) output    |
 | Regime classifiers (rule-based)    | "Trending" vs "mean-reverting" regime based on hurst exponent or vol threshold |
 | Event-timing rules (sports)        | "scored_first_home AND minute < 20"                                            |
 | Pattern match (candlestick, chart) | Head-and-shoulders, double-top, etc.                                           |

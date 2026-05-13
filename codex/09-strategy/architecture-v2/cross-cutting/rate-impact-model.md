@@ -52,7 +52,7 @@ supply_rate = borrow_rate * U * (1 - reserve_factor)
 - Functions: `compute_borrow_rate()`, `compute_supply_rate()`, `simulate_rate_impact()`
 - Location: `unified_api_contracts/internal/domain/defi/rate_model.py`
 
-### Feature Calculator (features-onchain-service)
+### Feature Calculator (features-service (onchain family))
 
 - `AaveRateImpactCalculator` -- computes projected rates per pool
 - Features: `projected_supply_apy`, `projected_borrow_apy`, `rate_impact_supply_bps`, `rate_impact_borrow_bps`

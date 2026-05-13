@@ -47,8 +47,8 @@ Defined in `seed_spec.yaml` → read by pipeline orchestrator:
 backfill:
   instruments-service:       { min_days: 0,   recommended_days: 0,   cold_start: true }
   market-tick-data-service:  { min_days: 1,   recommended_days: 7,   cold_start: false }
-  features-delta-one-service:{ min_days: 30,  recommended_days: 90,  cold_start: false }
-  features-calendar-service: { min_days: 0,   recommended_days: 365, cold_start: true }
+  features-service (delta-one family):{ min_days: 30,  recommended_days: 90,  cold_start: false }
+  features-service (calendar family): { min_days: 0,   recommended_days: 365, cold_start: true }
   ml-training-service:       { min_days: 180, recommended_days: 365, cold_start: false }
   ml-inference-service:      { min_days: 0,   recommended_days: 0,   cold_start: true, requires: [ml-training-service] }
   strategy-service:          { min_days: 1,   recommended_days: 30,  cold_start: false }

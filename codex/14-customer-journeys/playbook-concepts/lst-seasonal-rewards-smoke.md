@@ -210,6 +210,6 @@ for the affected strategies on the affected day. No corruption, no cascading fai
 - Architecture SSOT: `codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`
 - Plan: `unified-trading-pm/plans/archive/leveraged_leg_controller_2026_05_01.plan.md` (Phase 6)
 - Terraform: `deployment-service/terraform/gcp/lst_seasonal_rewards_scheduler.tf`
-- Daily script: `features-onchain-service/scripts/collect_lst_seasonal_rewards_daily.py`
-- Bootstrap: `features-onchain-service/features_onchain_service/collectors/lst_rewards_bootstrap.py`
-- Loader: `features-onchain-service/features_onchain_service/collectors/parquet_dust_loader.py`
+- Daily script: `features-service (onchain family)/scripts/collect_lst_seasonal_rewards_daily.py`
+- Bootstrap: `features-service (onchain family)/features_onchain_service/collectors/lst_rewards_bootstrap.py`
+- Loader: `features-service (onchain family)/features_onchain_service/collectors/parquet_dust_loader.py`

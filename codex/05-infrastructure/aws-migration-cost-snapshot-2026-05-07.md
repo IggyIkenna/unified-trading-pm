@@ -129,7 +129,7 @@ side-services) and `us-central1` / `us-multi-region` (firebase/odum-portal).
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repos              | 57 Docker repos (`unified-trading-library`, `execution`, `strategy-service`, `ml-training-service`, `features-*-service`, …)                                                                                                                                                                   |
 | Total size         | **608 GB** (`sizeBytes` field is megabytes per gcloud output)                                                                                                                                                                                                                                  |
-| Top consumers (MB) | cloud-run-source-deploy 178k + 23k + 11k, unified-trading-system 137k, unified-trading-library 73k, execution 30k, strategy-service 24k, ml-training-service 21k, features-volatility-service 16k, features-onchain-service 13k, features-calendar-service 12k, features-delta-one-service 11k |
+| Top consumers (MB) | cloud-run-source-deploy 178k + 23k + 11k, unified-trading-system 137k, unified-trading-library 73k, execution 30k, strategy-service 24k, ml-training-service 21k, features-service (volatility family) 16k, features-service (onchain family) 13k, features-service (calendar family) 12k, features-service (delta-one family) 11k |
 
 ---
 

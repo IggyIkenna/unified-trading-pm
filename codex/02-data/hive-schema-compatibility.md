@@ -140,7 +140,7 @@ await parquet_writer.write_to_gcs(bucket, path, rows)  # Add new
 **Example services to migrate:**
 
 - `ml-training-service`: Read historical data from GCS instead of BigQuery
-- `features-volatility-service`: Read tick data from GCS
+- `features-service (volatility family)`: Read tick data from GCS
 - `strategy-service`: Read backtest data from GCS
 
 **Migration order:**

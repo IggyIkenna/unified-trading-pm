@@ -39,7 +39,7 @@ Every artifact listed below is versioned, content-hashed, and consumer-opt-in:
 
 | Artifact                         | Owner                                                 | Versioned by                                |
 | -------------------------------- | ----------------------------------------------------- | ------------------------------------------- |
-| Feature groups                   | features-onchain-service, features-ohlc-service, etc. | content hash + monotonic v                  |
+| Feature groups                   | features-service (onchain family), features-ohlc-service, etc. | content hash + monotonic v                  |
 | ML models                        | ml-training-service                                   | content hash + monotonic v                  |
 | Execution policies (rule tables) | execution-service                                     | content hash + monotonic v                  |
 | Cost models                      | execution-service                                     | content hash + monotonic v                  |

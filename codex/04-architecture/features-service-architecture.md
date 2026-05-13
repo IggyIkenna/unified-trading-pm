@@ -204,14 +204,14 @@ Eight predecessor repos archived (commit history preserved via `git subtree add`
 
 | Predecessor repo                    | Sub-package destination              |
 | ----------------------------------- | ------------------------------------ |
-| `features-onchain-service`          | `features_service/onchain/`          |
-| `features-volatility-service`       | `features_service/volatility/`       |
-| `features-cross-instrument-service` | `features_service/cross_instrument/` |
-| `features-sports-service`           | `features_service/sports/`           |
-| `features-calendar-service`         | `features_service/calendar/`         |
-| `features-commodity-service`        | `features_service/commodity/`        |
-| `features-delta-one-service`        | `features_service/delta_one/`        |
-| `features-multi-timeframe-service`  | `features_service/multi_timeframe/`  |
+| `features-service (onchain family)`          | `features_service/onchain/`          |
+| `features-service (volatility family)`       | `features_service/volatility/`       |
+| `features-service (cross-instrument family)` | `features_service/cross_instrument/` |
+| `features-service (sports family)`           | `features_service/sports/`           |
+| `features-service (calendar family)`         | `features_service/calendar/`         |
+| `features-service (commodity family)`        | `features_service/commodity/`        |
+| `features-service (delta-one family)`        | `features_service/delta_one/`        |
+| `features-service (multi-timeframe family)`  | `features_service/multi_timeframe/`  |
 
 Plan:
 [`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../plans/active/features_repo_consolidation_2026_05_08.md)

@@ -202,7 +202,7 @@ Determined by venue (from `venues.yaml`):
 
 ### timeframe
 
-Used by market-data-processing-service and features-delta-one-service:
+Used by market-data-processing-service and features-service (delta-one family):
 
 ```
 15s, 1m, 5m, 15m, 1h, 4h, 24h
@@ -210,7 +210,7 @@ Used by market-data-processing-service and features-delta-one-service:
 
 ### feature_group
 
-Used by features-delta-one-service (~20 groups):
+Used by features-service (delta-one family) (~20 groups):
 
 ```
 technical_indicators, moving_averages, oscillators, volatility_realized,

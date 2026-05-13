@@ -122,7 +122,7 @@ etc.
 | Internal storage contracts     | UIC                            | `sports.py` (fixture storage schema)                                                                                                                                                                 |
 | Domain data client             | UDC/UTL                        | `sports/fixtures_client.py` (GCS read/write)                                                                                                                                                         |
 | Instrument orchestration       | instruments-service            | `--SPORTS` flag — **CURRENTLY BROKEN: uses local parser, not USRI/URDI**                                                                                                                             |
-| Feature computation            | features-sports-service        | Features from fixture/odds data                                                                                                                                                                      |
+| Feature computation            | features-service (sports family)        | Features from fixture/odds data                                                                                                                                                                      |
 | Config                         | UCI                            | Which leagues, which venues, polling intervals                                                                                                                                                       |
 
 ### Current state: NEEDS WORK
@@ -146,7 +146,7 @@ etc.
 **Migration path** (from `new-sports-batting-services`):
 
 1. Normalize functions → UAC `external/{source}/normalize.py` (per venue)
-2. Feature calculators → `features-sports-service`
+2. Feature calculators → `features-service (sports family)`
 3. Fixture/odds models → already in UAC canonical (verify field parity)
 4. Team/league mapping data → already partially in UAC `canonical/domain/sports/`
 5. Competition phase logic → USRI `competition_phase.py`

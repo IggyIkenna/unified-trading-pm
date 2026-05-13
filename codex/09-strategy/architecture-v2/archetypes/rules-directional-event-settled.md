@@ -24,7 +24,7 @@ within 20 min, back away team in HT draw").
 
 ```
 Pre-game or in-play tick:
-  1. FEATURE READ: features-sports-service provides current feature values for fixture
+  1. FEATURE READ: features-service (sports family) provides current feature values for fixture
   2. RULE EVAL: apply rule registry → list of (rule_id, fires, target_market, target_outcome, stake)
   3. MARKET CHECK: verify target market is available + open on eligible venues
   4. ODDS CHECK: verify decimal_odds <= max_odds (skip longshots)

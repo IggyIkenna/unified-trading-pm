@@ -48,12 +48,12 @@ diagram (`mmdc -i runtime-deployment-topology.md -o pipeline-service-layers.svg`
 flowchart TD
     subgraph L1["Layer 1 — Reference Data"]
         instr[instruments-service]
-        cal[features-calendar-service]
+        cal[features-service (calendar family)]
     end
 
     subgraph L2["Layer 2 — Raw Market Data"]
         ticks[market-tick-data-service]
-        corp[features-calendar-service (corporate-actions, earnings, FRED macro)]
+        corp[features-service (calendar family) (corporate-actions, earnings, FRED macro)]
     end
 
     subgraph L3["Layer 3 — Market Data Processing"]
@@ -61,9 +61,9 @@ flowchart TD
     end
 
     subgraph L4["Layer 4 — Feature Engineering"]
-        d1[features-delta-one-service\ntechnical indicators]
-        vol[features-volatility-service\nvolatility surfaces]
-        oc[features-onchain-service\non-chain signals]
+        d1[features-service (delta-one family)\ntechnical indicators]
+        vol[features-service (volatility family)\nvolatility surfaces]
+        oc[features-service (onchain family)\non-chain signals]
     end
 
     subgraph L5["Layer 5 — Machine Learning"]
@@ -94,10 +94,10 @@ flowchart TD
 
 | Layer                    | Services                                                                                 | Input                          | Output                                        |
 | ------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------ | --------------------------------------------- |
-| 1 — Reference Data       | instruments-service, features-calendar-service                                           | External APIs, exchange feeds  | Instrument universe, trading calendars        |
-| 2 — Raw Market Data      | market-tick-data-service, features-calendar-service (corporate actions, earnings, macro) | Exchange websockets, REST APIs | Raw ticks, corporate action events            |
+| 1 — Reference Data       | instruments-service, features-service (calendar family)                                           | External APIs, exchange feeds  | Instrument universe, trading calendars        |
+| 2 — Raw Market Data      | market-tick-data-service, features-service (calendar family) (corporate actions, earnings, macro) | Exchange websockets, REST APIs | Raw ticks, corporate action events            |
 | 3 — Processing           | market-data-processing-service                                                           | Raw ticks                      | OHLCV candles (15s, 1m, 5m, 15m, 1h, 4h, 24h) |
-| 4 — Features             | features-delta-one-service, features-volatility-service, features-onchain-service        | OHLCV candles                  | Feature vectors                               |
+| 4 — Features             | features-service (delta-one family), features-service (volatility family), features-service (onchain family)        | OHLCV candles                  | Feature vectors                               |
 | 5 — ML                   | ml-training-service, ml-inference-service                                                | Feature vectors                | Trained models, predictions                   |
 | 6 — Strategy & Execution | strategy-service, execution-service                                                      | Predictions                    | Orders, fills                                 |
 | 7 — Post-Trade           | position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service     | Fills                          | P&L, risk metrics, position state             |
@@ -164,7 +164,7 @@ Each tier of batch research work has its own dedicated UI. These are separate re
 - `execution-analytics-ui` — COMPLETE. GitHub repo and local directory renamed from `execution-analytics-ui`. Content
   migration (extraction of `execution-service/visualizer-ui/` into this repo) tracked separately as
   `arch-exec-services-visualizer-extract`.
-- `features-multi-timeframe-service` — COMPLETE. GitHub repo created, initial implementation pushed.
+- `features-service (multi-timeframe family)` — COMPLETE. GitHub repo created, initial implementation pushed.
 - `strategy-api` — new planned repo. Thin FastAPI gateway over strategy-service batch outputs (signals_backtest_results
   GCS). Port 8004.
 
@@ -291,26 +291,26 @@ see/experience differently.
 
 ### Layer 3 — Features
 
-**features-calendar-service**
+**features-service (calendar family)**
 
 - **Batch only.** Computes calendar-based features (holidays, trading hours, economic events). No live mode — calendar
   data changes infrequently.
 - **Data produced:** `calendar_features` (GCS)
 
-**features-delta-one-service**
+**features-service (delta-one family)**
 
 - **Batch:** Reads processed candles from GCS, computes delta-one features, writes to GCS.
 - **Live:** Receives live candle stream from MDPS (PubSub), computes features in real-time, publishes to PubSub.
   Persists to GCS.
 - **Data produced:** `delta_one_features` (GCS), live features (PubSub)
 
-**features-volatility-service**
+**features-service (volatility family)**
 
 - **Batch:** Same pattern as delta-one — reads candles, computes vol features, writes GCS.
 - **Live:** Receives live candles, computes realized/implied vol, publishes to PubSub. Persists to GCS.
 - **Data produced:** `volatility_features` (GCS), live features (PubSub)
 
-**features-cross-instrument-service**
+**features-service (cross-instrument family)**
 
 - **Batch:** Reads processed candles from GCS for all instruments of an underlying, computes cross-instrument features
   (basis, correlation, spread, funding rate, liquidity dispersion), writes to GCS.
@@ -325,7 +325,7 @@ see/experience differently.
   one downstream topic (one per underlying).
 - **See:** `02-data/cross-instrument-features-architecture.md` for full design.
 
-**features-onchain-service**
+**features-service (onchain family)**
 
 - **Batch only.** Reads on-chain data (Aave, Uniswap, Curve), computes DeFi features. No live mode — on-chain data is
   fetched periodically.
@@ -525,11 +525,11 @@ Every dataset has exactly ONE authoritative producer. Consumers read from GCS (b
 | instruments_universe      | instruments-service               | `instruments/by_date/`       | `instrument-events`                      |
 | raw_tick_data             | market-tick-data-service          | `ticks/raw/by_venue/`        | `raw-ticks-{venue}`                      |
 | processed_candles_ohlcv   | market-data-processing-service    | `candles/by_venue/`          | `processed-candles-{venue}`              |
-| calendar_features         | features-calendar-service         | `features/calendar/`         | — (batch only)                           |
-| delta_one_features        | features-delta-one-service        | `features/delta_one/`        | `features-delta-one`                     |
-| volatility_features       | features-volatility-service       | `features/volatility/`       | `features-volatility`                    |
-| cross_instrument_features | features-cross-instrument-service | `features/cross_instrument/` | `features-cross-instrument-{underlying}` |
-| onchain_features          | features-onchain-service          | `features/onchain/`          | — (batch only)                           |
+| calendar_features         | features-service (calendar family)         | `features/calendar/`         | — (batch only)                           |
+| delta_one_features        | features-service (delta-one family)        | `features/delta_one/`        | `features-delta-one`                     |
+| volatility_features       | features-service (volatility family)       | `features/volatility/`       | `features-volatility`                    |
+| cross_instrument_features | features-service (cross-instrument family) | `features/cross_instrument/` | `features-cross-instrument-{underlying}` |
+| onchain_features          | features-service (onchain family)          | `features/onchain/`          | — (batch only)                           |
 | model_artifacts_registry  | ml-training-service               | `ml/models/`                 | — (batch only)                           |
 | predictions               | ml-inference-service              | `predictions/by_date/`       | `predictions-live`                       |
 | signals_backtest_results  | strategy-service                  | `signals/by_date/`           | `trade-signals`                          |
@@ -564,8 +564,8 @@ subsets:
 - **Minimal:** instruments → MTDH → MDPS → execution (no ML, no features)
 - **With ML:** adds features → ML training → ML inference → strategy
 - **With risk:** adds PBM → risk → PnL → client-reporting
-- **DeFi:** adds features-onchain-service + unified-defi-execution-interface
-- **Sports:** adds features-sports-service + unified-sports-execution-interface (future)
+- **DeFi:** adds features-service (onchain family) + unified-defi-execution-interface
+- **Sports:** adds features-service (sports family) + unified-sports-execution-interface (future)
 
 Each service checks config for which upstream data is available. Missing optional upstream data = service runs without
 that input (gracefully). Required upstream data = service fails fast with clear error.
@@ -897,14 +897,14 @@ On connectivity loss:
 | **risk-and-exposure-service**         | Cloud Run Service | always-on                                | Live PubSub subscriber; computes risk on every position update                                |
 | **alerting-service**                  | Cloud Run Service | always-on                                | Must be available 24/7; auto-restart + PubSub retention for recovery                          |
 | **ml-inference-service**              | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent: live needs persistent PubSub subscription                                     |
-| **features-delta-one-service**        | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent: live needs MDPS event subscription                                            |
-| **features-volatility-service**       | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent                                                                                |
-| **features-cross-instrument-service** | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent; subscribes to multiple MDPS topics per underlying                             |
+| **features-service (delta-one family)**        | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent: live needs MDPS event subscription                                            |
+| **features-service (volatility family)**       | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent                                                                                |
+| **features-service (cross-instrument family)** | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent; subscribes to multiple MDPS topics per underlying                             |
 | **instruments-service**               | Cloud Run Job     | scale-to-zero                            | Infrequent (~15min polls); one-shot batch runs; no persistent state needed                    |
-| **features-calendar-service**         | Cloud Run Job     | scale-to-zero                            | Batch only; calendar data changes rarely                                                      |
-| **features-onchain-service**          | Cloud Run Job     | scale-to-zero                            | Batch only; periodic on-chain data fetch                                                      |
+| **features-service (calendar family)**         | Cloud Run Job     | scale-to-zero                            | Batch only; calendar data changes rarely                                                      |
+| **features-service (onchain family)**          | Cloud Run Job     | scale-to-zero                            | Batch only; periodic on-chain data fetch                                                      |
 | **pnl-attribution-service**           | Cloud Run Service | always-on                                | Continuous subscriber to execution + risk PubSub events; runs P&L attribution on every update |
-| **features-multi-timeframe-service**  | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent: live subscribes to FDS completion events                                      |
+| **features-service (multi-timeframe family)**  | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent: live subscribes to FDS completion events                                      |
 | **execution-results-api**             | Cloud Run Service | auto-scale                               | Scales with HTTP/SSE connection count; min-instances configurable                             |
 | **deployment-api**                    | Cloud Run Service | auto-scale                               | Request-driven; SSE for health monitoring stream                                              |
 | **client-reporting-api**              | Cloud Run Job     | scale-to-zero                            | Batch report generation; occasional live SSE (target state)                                   |
@@ -979,11 +979,11 @@ In batch mode, every service is a separate container. Communication is exclusive
 graph TD
     subgraph Layer1[Layer 1: Data Ingestion]
         Instruments[instruments-service<br/>Container]
-        Calendar[features-calendar-service<br/>Container]
+        Calendar[features-service (calendar family)<br/>Container]
     end
 
     subgraph Layer2[Layer 2: Raw Market Data]
-        CorporateActions[features-calendar-service (corporate-actions, earnings, FRED macro)<br/>Container]
+        CorporateActions[features-service (calendar family) (corporate-actions, earnings, FRED macro)<br/>Container]
         TickHandler[market-tick-data-service<br/>Container]
     end
 
@@ -992,9 +992,9 @@ graph TD
     end
 
     subgraph Layer4[Layer 4: Features]
-        FeatDelta[features-delta-one-service<br/>Container]
-        FeatVol[features-volatility-service<br/>Container]
-        FeatOnchain[features-onchain-service<br/>Container]
+        FeatDelta[features-service (delta-one family)<br/>Container]
+        FeatVol[features-service (volatility family)<br/>Container]
+        FeatOnchain[features-service (onchain family)<br/>Container]
     end
 
     subgraph Layer5[Layer 5: ML]
@@ -1077,11 +1077,11 @@ graph TB
     end
 
     subgraph FeaturesCalendar[Deploy 3: Calendar Features]
-        FeatCalLive[features-calendar-service<br/>mode: live<br/>timer: daily]
+        FeatCalLive[features-service (calendar family)<br/>mode: live<br/>timer: daily]
     end
 
     subgraph FeaturesDeltaDeploy[Deploy 4: Delta-One Features]
-        FeatDeltaLive[features-delta-one-service<br/>mode: live]
+        FeatDeltaLive[features-service (delta-one family)<br/>mode: live]
         MDPSPackage1[market-data-processing<br/>EMBEDDED PACKAGE]
         TickPackage1[market-tick-data-service<br/>EMBEDDED in MDPS]
 
@@ -1090,7 +1090,7 @@ graph TB
     end
 
     subgraph FeaturesVolDeploy[Deploy 5: Volatility Features]
-        FeatVolLive[features-volatility-service<br/>mode: live]
+        FeatVolLive[features-service (volatility family)<br/>mode: live]
         MDPSPackage2[market-data-processing<br/>EMBEDDED PACKAGE]
         TickPackage2[market-tick-data-service<br/>EMBEDDED in MDPS]
 
@@ -1099,7 +1099,7 @@ graph TB
     end
 
     subgraph FeaturesOnchainDeploy[Deploy 6: Onchain Features]
-        FeatOnchainLive[features-onchain-service<br/>mode: live]
+        FeatOnchainLive[features-service (onchain family)<br/>mode: live]
         MDPSPackage3[market-data-processing<br/>EMBEDDED PACKAGE]
         TickPackage3[market-tick-data-service<br/>EMBEDDED in MDPS]
 
@@ -1241,7 +1241,7 @@ graph LR
     subgraph Batch[Batch Pipeline - 12 Independent Deployments]
         direction TB
         B1[instruments-service]
-        B2[features-calendar-service (corporate-actions, earnings, FRED macro)]
+        B2[features-service (calendar family) (corporate-actions, earnings, FRED macro)]
         B3[market-tick-data-service]
         B4[market-data-processing]
         B5[features-calendar]
@@ -1288,19 +1288,19 @@ graph TB
         end
 
         subgraph D3[Deploy 3: Calendar Features]
-            L3[features-calendar-service<br/>standalone<br/>deterministic]
+            L3[features-service (calendar family)<br/>standalone<br/>deterministic]
         end
 
         subgraph D4[Deploy 4: Delta-One Features]
-            L4[features-delta-one-service<br/>+ market-data-processing pkg<br/>+ market-tick-data-service pkg]
+            L4[features-service (delta-one family)<br/>+ market-data-processing pkg<br/>+ market-tick-data-service pkg]
         end
 
         subgraph D5[Deploy 5: Volatility Features]
-            L5[features-volatility-service<br/>+ market-data-processing pkg<br/>+ market-tick-data-service pkg]
+            L5[features-service (volatility family)<br/>+ market-data-processing pkg<br/>+ market-tick-data-service pkg]
         end
 
         subgraph D6[Deploy 6: Onchain Features]
-            L6[features-onchain-service<br/>+ market-data-processing pkg<br/>+ market-tick-data-service pkg]
+            L6[features-service (onchain family)<br/>+ market-data-processing pkg<br/>+ market-tick-data-service pkg]
         end
 
         subgraph D7[Deploy 7: Strategy]
@@ -1384,7 +1384,7 @@ for data ingestion, so duplicate WebSocket connections are cost-acceptable.
 
 ```mermaid
 graph LR
-    subgraph FeatureService[features-delta-one-service Deploy]
+    subgraph FeatureService[features-service (delta-one family) Deploy]
         direction TB
         FeatMain[Main Process]
 
@@ -1413,7 +1413,7 @@ graph LR
 
 **Nested package embedding:**
 
-- `features-delta-one-service` imports `market-data-processing-service` as a package
+- `features-service (delta-one family)` imports `market-data-processing-service` as a package
 - `market-data-processing-service` imports `market-tick-data-service` as a package
 - All three run in the same process
 - Exchange ticks flow: WebSocket -> tick handler package -> MDPS package -> features main process
@@ -1462,7 +1462,7 @@ services with venue-specific logic.
 Sports data flows through the **existing** batch pipeline services, not separate sports-specific services. The 4
 sports-specific pipeline services (`sports-reference-data-service`, `sports-odds-processing-service`,
 `sports-strategy-service`, `sports-execution-service`) are **DEPRECATED/ARCHIVED** as of 2026-03-01. Only
-`features-sports-service` and `execution-service` (USEI) remain as standalone.
+`features-service (sports family)` and `execution-service` (USEI) remain as standalone.
 
 ```mermaid
 graph TD
@@ -1475,7 +1475,7 @@ graph TD
     end
 
     subgraph BatchC [Batch C: Features]
-        FeatSports[features-sports-service<br/>NEW standalone<br/>19 categories + horizons]
+        FeatSports[features-service (sports family)<br/>NEW standalone<br/>19 categories + horizons]
     end
 
     subgraph BatchD [Batch D: Strategy]

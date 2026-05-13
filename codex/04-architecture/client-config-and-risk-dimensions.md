@@ -64,7 +64,7 @@ HF = Σ(collateral_i × liquidation_threshold_i) / total_debt
 HF < 1.0 triggers on-chain liquidation. System alerts at HF < `min_health_factor` (default 1.5). Emergency exit triggers
 at HF < `emergency_exit_hf` (default 1.2).
 
-Monitored in: `features-onchain-service` → `health_factor` feature → `risk-and-exposure-service` alert handler.
+Monitored in: `features-service (onchain family)` → `health_factor` feature → `risk-and-exposure-service` alert handler.
 
 ### 3. Counterparty Risk (Venue Concentration)
 

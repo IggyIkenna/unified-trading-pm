@@ -68,8 +68,8 @@ of the helper-refactor pattern.
 
 | File                                                                                      | Notes                                                              |
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `features-commodity-service/features_commodity_service/cli/main.py`                       | Service CLI                                                        |
-| `features-sports-service/features_sports_service/scripts/compute_sfi_progressive_only.py` | One-off compute                                                    |
+| `features-service (commodity family)/features_commodity_service/cli/main.py`                       | Service CLI                                                        |
+| `features-service (sports family)/features_sports_service/scripts/compute_sfi_progressive_only.py` | One-off compute                                                    |
 | `ml-training-service/ml_training_service/cli/handlers/__init__.py`                        | Handlers package; lifecycle on the dispatch shape, not per-handler |
 
 ### MTDS handlers

@@ -38,7 +38,7 @@ deleverage tx via the flash-loan receiver. Operator MUST confirm the auto-deleve
 - **Threshold key:** `defi_health_factor_critical`.
 - **Default value:** 1.05 (Aave HF; below 1.0 triggers liquidation; 5% buffer matches Tenderly / Hypernative / Gauntlet
   industry default — see [`threshold-tuning.md`](./threshold-tuning.md)).
-- **Emitter(s):** `features-onchain-service` (Aave HF calculator); `risk-and-exposure-service` (cross-position
+- **Emitter(s):** `features-service (onchain family)` (Aave HF calculator); `risk-and-exposure-service` (cross-position
   aggregator).
 - **Upstream signal:** Real-time Aave `getUserAccountData(user)` call returning `healthFactor` < 1.05e18 (RAY units).
 - **De-dup window:** 60s — bursty oracle reads collapse to one alert.
@@ -158,7 +158,7 @@ After ANY resolution path:
 
 - **Oracle stale read:** Chainlink oracle's last-update timestamp > 1h old. Symptom: HF in alert payload ≠ HF on
   direct-RPC read. Action: ack + raise via [`threshold-tuning.md`](./threshold-tuning.md) — likely needs an oracle-
-  staleness pre-check in features-onchain-service.
+  staleness pre-check in features-service (onchain family).
 - **HF dip during a borrowing tx:** during a leverage-up tx the HF temporarily dips before rebalance. If diagnosis step
   4 shows the alert's wallet was mid-tx (`PENDING_TX_DETECTED` event within 30s prior), this is benign. Action: ack +
   log; do NOT page tier-2.

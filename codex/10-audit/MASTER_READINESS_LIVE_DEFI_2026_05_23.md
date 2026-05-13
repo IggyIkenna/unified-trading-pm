@@ -147,9 +147,9 @@ The 7-group readiness applies to:
 - instruments-service
 - market-tick-data-service
 - market-data-processing-service
-- features-onchain-service
-- features-volatility-service
-- features-cross-instrument-service
+- features-service (onchain family)
+- features-service (volatility family)
+- features-service (cross-instrument family)
 - ml-training-service
 - ml-inference-service
 - strategy-service
@@ -181,8 +181,8 @@ The 7-group readiness applies to:
 - deployment-ui
 - unified-trading-system-ui
 
-**Tier-2 (parallel ML ladder, NOT live):** features-sports-service · features-calendar-service ·
-features-delta-one-service · features-commodity-service.
+**Tier-2 (parallel ML ladder, NOT live):** features-service (sports family) · features-service (calendar family) ·
+features-service (delta-one family) · features-service (commodity family).
 
 **Tier-3 (post-launch):** client-reporting-api · fund-administration-service · trading-agent-service.
 

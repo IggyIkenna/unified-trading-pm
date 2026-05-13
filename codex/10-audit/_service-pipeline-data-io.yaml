@@ -2,7 +2,7 @@
 # Service Template: Pipeline - Data I/O Group
 # ==============================================================================
 #
-# Applies to: instruments-service, corporate-actions, features-calendar-service
+# Applies to: instruments-service, corporate-actions, features-service (calendar family)
 #
 # Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
 # Group additions: DATA-01 through DATA-03
@@ -11,7 +11,7 @@
 
 template_version: "1.0"
 applies_to: "Pipeline services - Data I/O group (Layer 1)"
-services: ["instruments-service", "corporate-actions", "features-calendar-service"]
+services: ["instruments-service", "corporate-actions", "features-service (calendar family)"]
 
 # Inherit all baseline items (BASE-01 through BASE-18)
 extends: "_service-baseline-template.yaml"

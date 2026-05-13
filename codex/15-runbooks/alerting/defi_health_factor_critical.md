@@ -33,7 +33,7 @@ kill-switch event.
 - **Threshold key:** `defi_health_factor_critical`.
 - **Default value:** 1.05 (Aave HF; below 1.0 triggers liquidation; 5% buffer = 5pp above liquidation). Per-archetype
   override for `leveraged_funding_arb` may be tighter (1.10) — see [`threshold-tuning.md`](./threshold-tuning.md).
-- **Emitter(s):** `features-onchain-service` (Aave HF calculator, 5s polling).
+- **Emitter(s):** `features-service (onchain family)` (Aave HF calculator, 5s polling).
 - **Upstream signal:** Aave `getUserAccountData(user).healthFactor` < threshold sustained ≥ 30s.
 - **De-dup window:** 60s.
 

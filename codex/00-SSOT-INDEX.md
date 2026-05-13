@@ -268,7 +268,7 @@ service graph.
 | `sports-strategy-service`        | `strategy-service`               | Arbitrage, value betting, Kelly criterion           |
 | `sports-execution-service`       | `execution-service`              | Betfair, Pinnacle, Polymarket via sports adapters   |
 
-**Standalone services that remain:** `features-sports-service` (new). NOTE: `unified-sports-execution-interface` (USEI)
+**Standalone services that remain:** `features-service (sports family)` (new). NOTE: `unified-sports-execution-interface` (USEI)
 has been merged into `execution-service`. `unified-sports-reference-interface` (USRI) has been merged into
 `unified-reference-data-interface` (sports/ sub-package). See `04-architecture/sports-integration-plan.md` Changelog
 2026-03-01 for full rationale.

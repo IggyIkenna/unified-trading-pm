@@ -248,8 +248,8 @@ df.to_parquet(
 | instruments-service            | `schemas/output_schemas.py`     | instrument_definitions                |
 | market-tick-data-service       | `schemas/tick_data_schemas.py`  | raw tick data (trades, book, etc.)    |
 | market-data-processing-service | `schemas/output_schemas.py`     | processed candles                     |
-| features-delta-one-service     | `schemas/output_schemas.py`     | feature matrices                      |
-| features-volatility-service    | `schemas/output_schemas.py`     | volatility features                   |
+| features-service (delta-one family)     | `schemas/output_schemas.py`     | feature matrices                      |
+| features-service (volatility family)    | `schemas/output_schemas.py`     | volatility features                   |
 | strategy-service               | `schemas/output_schemas.py`     | instructions, positions, equity curve |
 | execution-service              | internal NautilusTrader schemas | fills, trades, execution results      |
 

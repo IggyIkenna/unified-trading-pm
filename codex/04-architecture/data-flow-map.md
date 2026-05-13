@@ -54,7 +54,7 @@ instruments-service
 Readers:
   execution-service         <- instruments-store-{category}-{P}/ (instrument definitions)
   execution-results-api     <- instruments-store-{category}-{P}/ (instrument browsing)
-  features-delta-one-service <- instruments-store-{category}-{P}/ (instrument defs for batch)
+  features-service (delta-one family) <- instruments-store-{category}-{P}/ (instrument defs for batch)
   deployment-api            <- instruments-store-{category}-{P}/ (data status dashboards)
 ```
 
@@ -68,7 +68,7 @@ market-tick-data-service
   (categories: cefi, tradfi, defi)
 
 Readers:
-  features-delta-one-service <- market-data-tick-{category}-{P}/ (input for feature calculation)
+  features-service (delta-one family) <- market-data-tick-{category}-{P}/ (input for feature calculation)
   execution-results-api      <- market-data-tick-{category}-{P}/ (/api/v1/data/tick-data)
   deployment-api             <- market-data-tick-{category}-{P}/ (data status checks)
 ```
@@ -78,18 +78,18 @@ Readers:
 ## 4. Features Pipeline
 
 ```
-features-delta-one-service
+features-service (delta-one family)
   reads  <- market-data-tick-{category}-{P}/ (candle data)
   writes -> features-delta-one-{category}-{P}/{feature_group}/{date}/*.parquet
 
 Other feature services (same pattern, different bucket prefix):
-  features-calendar-service  -> calendar-features-{P}/ (via get_writer("calendar_features"))
-  features-volatility-service -> features-volatility-{category}-{P}/
-  features-commodity-service  -> features-commodity-{category}-{P}/
-  features-cross-instrument-service -> features-cross-instrument-{category}-{P}/
-  features-multi-timeframe-service  -> features-multi-timeframe-{category}-{P}/
-  features-onchain-service   -> features-onchain-{P}/
-  features-sports-service    -> features-sports-{P}/
+  features-service (calendar family)  -> calendar-features-{P}/ (via get_writer("calendar_features"))
+  features-service (volatility family) -> features-volatility-{category}-{P}/
+  features-service (commodity family)  -> features-commodity-{category}-{P}/
+  features-service (cross-instrument family) -> features-cross-instrument-{category}-{P}/
+  features-service (multi-timeframe family)  -> features-multi-timeframe-{category}-{P}/
+  features-service (onchain family)   -> features-onchain-{P}/
+  features-service (sports family)    -> features-sports-{P}/
 
 Readers:
   ml-inference-service <- features-*-{P}/ (feature input for predictions)
@@ -251,13 +251,13 @@ config-api (self-contained)
 
 | Written By                        | Path Pattern                                | Status                                                              |
 | --------------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
-| features-sports-service           | `features-sports-{P}/`                      | No API reader -- ML pipeline bulk consumes (by design)              |
-| features-onchain-service          | `features-onchain-{P}/`                     | No API reader -- ML pipeline bulk consumes (by design)              |
-| features-volatility-service       | `features-volatility-{category}-{P}/`       | No API reader -- ML pipeline bulk consumes (by design)              |
-| features-commodity-service        | `features-commodity-{category}-{P}/`        | No API reader -- ML pipeline bulk consumes (by design)              |
-| features-cross-instrument-service | `features-cross-instrument-{category}-{P}/` | No API reader -- ML pipeline bulk consumes (by design)              |
-| features-multi-timeframe-service  | `features-multi-timeframe-{category}-{P}/`  | No API reader -- ML pipeline bulk consumes (by design)              |
-| features-calendar-service         | `calendar-features-{P}/`                    | No API reader -- ML pipeline bulk consumes (by design)              |
+| features-service (sports family)           | `features-sports-{P}/`                      | No API reader -- ML pipeline bulk consumes (by design)              |
+| features-service (onchain family)          | `features-onchain-{P}/`                     | No API reader -- ML pipeline bulk consumes (by design)              |
+| features-service (volatility family)       | `features-volatility-{category}-{P}/`       | No API reader -- ML pipeline bulk consumes (by design)              |
+| features-service (commodity family)        | `features-commodity-{category}-{P}/`        | No API reader -- ML pipeline bulk consumes (by design)              |
+| features-service (cross-instrument family) | `features-cross-instrument-{category}-{P}/` | No API reader -- ML pipeline bulk consumes (by design)              |
+| features-service (multi-timeframe family)  | `features-multi-timeframe-{category}-{P}/`  | No API reader -- ML pipeline bulk consumes (by design)              |
+| features-service (calendar family)         | `calendar-features-{P}/`                    | No API reader -- ML pipeline bulk consumes (by design)              |
 | risk-and-exposure-service         | `{P}-risk/risk/{client_id}/{date}/`         | No API reader -- client-reporting-api reads PnL, not risk snapshots |
 | position-balance-monitor-service  | `positions-{P}/`                            | No API reader                                                       |
 | ml-inference-service              | `predictions-{P}/`                          | No direct API reader -- consumed by strategy-service via GCS/PubSub |
@@ -310,7 +310,7 @@ instruments-service ────────> instruments-store-*-{P}/
 market-tick-data-service ──> market-data-tick-*-{P}/
   (DATA_READY pub) ──────────────────────────────────> (no subscriber -- GAP)
                                    │
-                                   ├──> features-delta-one-service ──> features-delta-one-*-{P}/
+                                   ├──> features-service (delta-one family) ──> features-delta-one-*-{P}/
                                    │     (FEATURES_READY pub) ─────> (no subscriber -- GAP)
                                    │                                          │
                                    │                                          └──> ml-inference-service ──> predictions-{P}/

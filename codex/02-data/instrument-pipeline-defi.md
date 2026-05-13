@@ -31,7 +31,7 @@ market-data-processing-service (MDPS)
     │  Produces: processed_candles/by_date/day={date}/timeframe={tf}/data_type={dt}/instrument_type={it}/venue={v}/{id}.parquet
     │  PATH_REGISTRY template: "processed_candles" — partition_keys = [date, timeframe, data_type, instrument_type, venue]
     ▼
-features-onchain-service
+features-service (onchain family)
     │  Consumes: processed_candles + on-chain RPC data (Aave, EigenLayer, EtherFi)
     │  Produces: feature vectors (eigen_claimable_amount, lido_staking_apy, health_factor, ...)
     │  GCS bucket: features/
@@ -180,7 +180,7 @@ handles it. For on-chain tokens, ensure the venue adapter fetches from the corre
 
 ### Step 3: Add Features-Onchain Feature
 
-If the instrument has on-chain state (claimable balance, APY), add a feature in `features-onchain-service`:
+If the instrument has on-chain state (claimable balance, APY), add a feature in `features-service (onchain family)`:
 
 ```python
 # Example: my_token_claimable_amount

@@ -225,7 +225,7 @@ strategies:
     timeframes). No ML in DeFi for MVP.
 services:
   included:
-    - features-sports-service
+    - features-service (sports family)
   excluded:
     - sports-betting-services
   rationale:
@@ -258,10 +258,10 @@ conflicts:
     issue: These protocols ARE in venues.yaml (available data) but excluded from MVP
     status: resolved
     resolution: Correct behavior - venues.yaml tracks available data, MVP tracks minimum viable scope. No action needed.
-  - service: features-sports-service
+  - service: features-service (sports family)
     issue: Previously excluded from MVP
     status: resolved
-    resolution: Sports arb in scope for MVP (March 2026). features-sports-service now included.
+    resolution: Sports arb in scope for MVP (March 2026). features-service (sports family) now included.
   - services:
       - position-balance-monitor-service
       - risk-and-exposure-service

@@ -132,19 +132,19 @@ required_repos:
     min_br_stage: br5
     asset_group: cefi
 
-  - repo: features-delta-one-service
+  - repo: features-service (delta-one family)
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
     asset_group: cefi
 
-  - repo: features-calendar-service
+  - repo: features-service (calendar family)
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
     asset_group: cefi
 
-  - repo: features-volatility-service
+  - repo: features-service (volatility family)
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
@@ -203,6 +203,6 @@ optional_repos:
     asset_group: defi
     note: "Required for DeFi epic. Optional for CeFi."
 
-  - repo: features-onchain-service
+  - repo: features-service (onchain family)
     asset_group: defi
     note: "DeFi onchain features not required for CeFi."

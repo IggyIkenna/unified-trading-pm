@@ -60,11 +60,11 @@ Required:
 - Aggregate implied probabilities across grouped markets for stronger signal.
 - Track historical accuracy per market group (calibration curve).
 
-Owner: features-cross-instrument-service.
+Owner: features-service (cross-instrument family).
 
 ## G4 — Automated market classifier
 
-Required: `prediction_market_classifier.py` in features-cross-instrument-service that periodically pulls all markets
+Required: `prediction_market_classifier.py` in features-service (cross-instrument family) that periodically pulls all markets
 from Polymarket + Kalshi, classifies them against G1, identifies cross-platform matches per G3, and publishes a
 classified market registry to GCS. That registry becomes the SSOT for which prediction markets are useful and how.
 
@@ -92,7 +92,7 @@ Required:
 - Adopt Kalshi's 1-min candlestick endpoints for backfill and live ingestion.
 - Align both into the standard MTDS market-tick schema.
 
-Owner: MTDS + features-cross-instrument-service.
+Owner: MTDS + features-service (cross-instrument family).
 
 ## Closing gaps
 

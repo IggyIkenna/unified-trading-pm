@@ -18,7 +18,7 @@ for the three connectivity paths and the trade-offs (especially login/scrape).
 | **Scrapers** (SkyBet, Coral, etc.)                   | Browser automation → Pub/Sub | Yes (login + geo)  | 60s+; high maintenance         |
 
 **Live “beef”:** `market-data-processing-service` (with `asset_group=SPORTS`, Batch B) is the producer: it polls these
-adapters on a schedule and writes snapshots to GCS + publishes deltas to Pub/Sub. `features-sports-service` consumes via
+adapters on a schedule and writes snapshots to GCS + publishes deltas to Pub/Sub. `features-service (sports family)` consumes via
 **Pub/Sub** (live seam). So “connecting live” = that service calling USEI adapters on an interval and pushing to
 Pub/Sub.
 
@@ -93,7 +93,7 @@ Pub/Sub.
   - Publishes delta events to Pub/Sub topic `market-data-updated` (with asset_group=SPORTS attribute).
   - Performs arbitrage detection and normalization inline (previously in separate `sports-odds-processing-service`).
 - **Consumers:**
-  - `features-sports-service` in live mode uses `LiveDataSource` (Pub/Sub subscription) to receive records (fixture +
+  - `features-service (sports family)` in live mode uses `LiveDataSource` (Pub/Sub subscription) to receive records (fixture +
     odds or derived data) and runs the feature pipeline per fixture.
 - So **connecting to bookmakers live** = ensuring `market-data-processing-service` is running with SPORTS category, the
   right adapters and config (Odds API key, exchange keys, and optionally scraper credentials/sessions) and that it

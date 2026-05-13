@@ -6,9 +6,9 @@ scope: [engineer]
 
 ## Consolidation status
 
-The pre-2026-05-08 layout had **8 separate** `features-*-service` repos (features-onchain-service,
-features-volatility-service, features-cross-instrument-service, features-sports-service, features-calendar-service,
-features-commodity-service, features-delta-one-service, features-multi-timeframe-service). The current target state is a
+The pre-2026-05-08 layout had **8 separate** `features-*-service` repos (features-service (onchain family),
+features-service (volatility family), features-service (cross-instrument family), features-service (sports family), features-service (calendar family),
+features-service (commodity family), features-service (delta-one family), features-service (multi-timeframe family)). The current target state is a
 single workspace repo `features-service` with one sub-package per family
 ([`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md) —
 canonical SSOT for the consolidated shape, the `--feature-family` CLI dispatcher, the Health-API aggregator, and the 7
@@ -102,7 +102,7 @@ Lifecycle wiring in FastAPI:
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-svc = CalendarService(service_name="features-calendar-service")
+svc = CalendarService(service_name="features-service (calendar family)")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -126,7 +126,7 @@ class (e.g. in standalone scripts or tests).
 from unified_feature_calculator.service_base import build_feature_metrics, FeatureServiceMetrics
 
 # Only needed outside BaseFeatureServiceV2 context:
-metrics: FeatureServiceMetrics = build_feature_metrics("features-calendar-service")
+metrics: FeatureServiceMetrics = build_feature_metrics("features-service (calendar family)")
 ```
 
 `FeatureServiceMetrics` is a frozen dataclass:
@@ -150,7 +150,7 @@ Histogram latency buckets (seconds): `0.005 0.01 0.025 0.05 0.1 0.25 0.5 1.0 2.5
 ```python
 from unified_feature_calculator.service_base import build_health_router
 
-router = build_health_router("features-calendar-service")
+router = build_health_router("features-service (calendar family)")
 app.include_router(router)
 ```
 

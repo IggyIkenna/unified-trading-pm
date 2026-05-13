@@ -87,7 +87,7 @@ matrix:
     NYSE: "⚪ planned"
     # Other venues: n/a (no corporate actions for DeFi/Sports)
 
-  features-calendar-service:
+  features-service (calendar family):
     ALL_VENUES: "✅ full" # Cross-venue calendar
 
   # ---------------------------------------------------------------------------
@@ -136,7 +136,7 @@ matrix:
   # Pipeline Services - Features
   # ---------------------------------------------------------------------------
 
-  features-delta-one-service:
+  features-service (delta-one family):
     BINANCE-SPOT: "✅ full"
     BINANCE-FUTURES: "✅ full"
     COINBASE: "✅ full"
@@ -144,14 +144,14 @@ matrix:
     OKX: "⚪ planned"
     # Other venues: n/a (delta-one specific to CeFi spot)
 
-  features-volatility-service:
+  features-service (volatility family):
     BINANCE-SPOT: "🟡 batch-only"
     BINANCE-FUTURES: "🟡 batch-only"
     DERIBIT: "🟡 batch-only"
     CME: "⚪ planned"
     # Other venues: n/a (volatility specific to options venues)
 
-  features-onchain-service:
+  features-service (onchain family):
     AAVEV3_ETHEREUM: "✅ full"
     UNISWAPV3-ETHEREUM: "✅ full"
     COMPOUND_V3_ETH: "⚪ planned"
@@ -159,7 +159,7 @@ matrix:
     BALANCER-ETH: "⚪ planned"
     # Other venues: n/a (onchain specific to DeFi)
 
-  features-sports-service:
+  features-service (sports family):
     POLYMARKET: "🟡 batch-only"
     BETFAIR: "⚪ planned"
     DRAFTKINGS: "⚪ planned"

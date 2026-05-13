@@ -85,7 +85,7 @@ Family 2-specific alert codes (Phase 8, additive to Family 1's `DEFI_HEALTH_FACT
 
 ## Funding-regime degradation policy
 
-Phase 7.5 adaptive sizing (NICE-TO-HAVE; may defer past May-23 if Phase 7 baseline ships green). Rolling 7d + 30d funding-APR mean per `(perp_venue, perp_pair)` - feature owned by features-onchain-service. Hysteresis 5% APR to avoid thrashing:
+Phase 7.5 adaptive sizing (NICE-TO-HAVE; may defer past May-23 if Phase 7 baseline ships green). Rolling 7d + 30d funding-APR mean per `(perp_venue, perp_pair)` - feature owned by features-service (onchain family). Hysteresis 5% APR to avoid thrashing:
 - 30d-avg `< -5% APR`: REDUCE perp short by 50%.
 - 30d-avg `< -15% APR`: SET perp short to 0 (cell paused; reverts to Family 1 mechanics).
 - 30d-avg `> +30% APR`: maintain or INCREASE perp short toward `target_net_delta - 0.5`.

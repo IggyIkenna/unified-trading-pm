@@ -116,7 +116,7 @@ Phase 0 is complete when ALL repos have:
 
 | Repo                             | Violation                        | Status                  |
 | -------------------------------- | -------------------------------- | ----------------------- |
-| features-delta-one-service       | Python 3.9 in CI (requires 3.13) | Must fix before Phase 3 |
+| features-service (delta-one family)       | Python 3.9 in CI (requires 3.13) | Must fix before Phase 3 |
 | (run Phase 0 to discover others) |                                  |                         |
 
 ---

@@ -91,10 +91,10 @@ market-data-processing-service
   publishes ──> DATA_READY
                     │
                     └──> (NO SUBSCRIBER WIRED)
-                         Intended: features-delta-one-service should subscribe in live mode
+                         Intended: features-service (delta-one family) should subscribe in live mode
                          Currently: features-* services run on batch schedule, not event-driven
 
-features-delta-one-service
+features-service (delta-one family)
   publishes ──> FEATURES_READY
                     │
                     └──> (NO SUBSCRIBER WIRED)
@@ -134,7 +134,7 @@ strategy-service (sports_feature_subscriber.py)
 | -------------------------- | --------------------------------- | ------------------------ | ------------ |
 | `INSTRUMENTS_READY`        | instruments-service               | market-tick-data-service | WIRED        |
 | `DATA_READY`               | market-data-processing-service    | (none)                   | PUBLISH ONLY |
-| `FEATURES_READY`           | features-delta-one-service        | (none)                   | PUBLISH ONLY |
+| `FEATURES_READY`           | features-service (delta-one family)        | (none)                   | PUBLISH ONLY |
 | `PREDICTIONS_READY`        | ml-inference-service              | (none)                   | PUBLISH ONLY |
 | `SIGNALS_READY`            | strategy-service                  | (none)                   | PUBLISH ONLY |
 | `INSTRUCTIONS_READY`       | (none)                            | (none)                   | DEFINED ONLY |
@@ -152,10 +152,10 @@ remaining 5 published events have no subscriber, and 4 events are defined but ne
 
 ### GAP-1: DATA_READY subscriber missing
 
-**Flow:** `market-data-processing-service` --> `DATA_READY` --> `features-delta-one-service`
+**Flow:** `market-data-processing-service` --> `DATA_READY` --> `features-service (delta-one family)`
 
 - Publisher: `market_data_processing_service/app/core/orchestration_service.py:147`
-- Subscriber needed: features-delta-one-service live mode handler
+- Subscriber needed: features-service (delta-one family) live mode handler
 - Currently, features services run on batch schedules. In live mode, they should subscribe to `DATA_READY` to trigger
   feature recalculation when new candles arrive.
 
@@ -163,7 +163,7 @@ remaining 5 published events have no subscriber, and 4 events are defined but ne
 
 **Flow:** `features-*` --> `FEATURES_READY` --> `ml-inference-service` --> `PREDICTIONS_READY` --> `strategy-service`
 
-- features-delta-one-service publishes `FEATURES_READY` at
+- features-service (delta-one family) publishes `FEATURES_READY` at
   `features_delta_one_service/cli/handlers/batch_handler.py:382`
 - ml-inference-service publishes `PREDICTIONS_READY` at
   `ml_inference_service/app/core/cascade_prediction_publisher.py:132`

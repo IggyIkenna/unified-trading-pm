@@ -33,7 +33,7 @@ paging alert because borrow-rate spikes can be transient.
 - **Default value:** 9500 (95.00% in `BPS_OF_ONE` units). Per-archetype override: `leveraged_funding_arb=9000` (90% —
   tighter signal). See [`threshold-tuning.md`](./threshold-tuning.md) for citation to Aave V3 InterestRateStrategy
   `optimalUsageRatio=0.95 RAY` for WETH/USDC/USDT/DAI.
-- **Emitter(s):** `features-onchain-service` (Aave pool-utilization calc, 1m polling).
+- **Emitter(s):** `features-service (onchain family)` (Aave pool-utilization calc, 1m polling).
 - **Upstream signal:** `getReserveData(asset).totalDebt / (totalDebt + availableLiquidity)` exceeds threshold sustained
   ≥ 60s.
 - **De-dup window:** 600s.

@@ -2,8 +2,8 @@
 # Service Template: Pipeline - Feature Engineering Group
 # ==============================================================================
 #
-# Applies to: features-delta-one-service, features-volatility-service,
-#             features-onchain-service, (future: features-sports-service)
+# Applies to: features-service (delta-one family), features-service (volatility family),
+#             features-service (onchain family), (future: features-service (sports family))
 #
 # Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
 # Group additions: FEAT-01 through FEAT-03
@@ -13,10 +13,10 @@
 template_version: "1.0"
 applies_to: "Pipeline services - Feature Engineering group (Layer 4)"
 services:
-  - "features-delta-one-service"
-  - "features-volatility-service"
-  - "features-onchain-service"
-  - "features-sports-service"
+  - "features-service (delta-one family)"
+  - "features-service (volatility family)"
+  - "features-service (onchain family)"
+  - "features-service (sports family)"
 
 # Inherit all baseline items
 extends: "_service-baseline-template.yaml"
@@ -75,7 +75,7 @@ group_items:
     priority: P1-high
     title: "Sports feature horizons (if applicable)"
     description: |
-      For features-sports-service: Compute features at multiple time horizons.
+      For features-service (sports family): Compute features at multiple time horizons.
       - T-24h: 24 hours before kickoff (opening odds)
       - T-60m: 60 minutes before kickoff (common cutoff)
       - T-0: At kickoff (closing odds)
@@ -91,7 +91,7 @@ group_items:
 
       ✅ Pass: Multi-horizon support, 19 feature categories implemented
       ❌ Fail: No horizon support OR <10 feature categories
-      ⚠️ N/A: Service is not features-sports-service
+      ⚠️ N/A: Service is not features-service (sports family)
     evidence: "Check --horizon flag, feature calculators, storage structure"
     codex_ref: "01-domain/asset-classes.md#sports, 04-architecture/sports-feature-horizons.md"
 # ==============================================================================

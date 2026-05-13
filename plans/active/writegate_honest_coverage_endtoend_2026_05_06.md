@@ -3420,9 +3420,11 @@ Ikenna (this-cycle Wave 4/5 spawn — pre-2026-05-15 freeze)**
       (strategy-service@88eb085 — `_check_emission_policy` + gate in `SignalPublisher.publish()`; 4 tests in
       `test_emission_policy.py` + xdist isolation mocks in `test_risk_preflight_gate.py`; pushed tab/ikennaigboaka/7 +
       live-defi-rollout 2026-05-13)
-- [ ] [execution-service] P0. Wire at TWO boundaries: `order_intent` emission (STRICT_FAIL) + `fill_confirmation`
+- [x] [execution-service] P0. Wire at TWO boundaries: `order_intent` emission (STRICT_FAIL) + `fill_confirmation`
       emission (BLOCK_CRITICAL). Order intent without current signal = wrong order; fill confirmation without complete
-      venue-side state = position-truth violation.
+      venue-side state = position-truth violation. (execution-service@767bd7db5 — `_check_emission_policy` +
+      `order_intent` gate in `_submit_orders_with_timing()` + `fill_confirmation` gate in `on_fill()`; 6 tests in
+      `test_emission_policy.py`; pushed tab/ikennaigboaka/7 + live-defi-rollout 2026-05-13)
 - [x] [position-balance-monitor-service] P0. Wire at `portfolio_state` emission (BLOCK_CRITICAL). No partial truth
       tolerated; missing venue balance → block + alert + manual triage. (position-balance-monitor-service@65fd32b —
       `_check_emission_policy` + gate in `NAVSnapshotPublisher.publish()`; 4 tests; pushed tab/ikennaigboaka/7 +

@@ -160,7 +160,7 @@ per-shard gating. Opt-in via `--per-shard-check` CLI flag (wired in fde923d).
    `2026-04-19 (ca246a9)` to use canonical `trades`. Old parquet files still have both; manifest reconciliation handles
    the merge.
 3. **DeFi `chain=` partition uses the UAC canonical name** — `ETHEREUM`, `ARBITRUM`, `BASE`, `SOLANA` — NOT aliases.
-   MDPS does NOT handle `chain=` in its DependencyChecker; DeFi processing routes through `features-onchain-service` for
+   MDPS does NOT handle `chain=` in its DependencyChecker; DeFi processing routes through `features-service (onchain family)` for
    chain-specific logic.
 4. **MDPS `_list_instrument_files` matches by `data_type=` substring**, not by full partition match. For SPORTS where
    the path has `data_type=odds/` but the orchestrator loops for `data_type=arbitrage_opportunity` etc., the mismatch

@@ -100,7 +100,7 @@ required_repos:
     asset_group: sports
     rationale: "USEI provides Betfair CLOB (via UTEI) and Pinnacle adapters."
 
-  - repo: features-sports-service
+  - repo: features-service (sports family)
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
@@ -108,7 +108,7 @@ required_repos:
     rationale: "Pre-match ML features (team form, H2H, venue, weather, market odds)."
 
 optional_repos:
-  - repo: features-delta-one-service
+  - repo: features-service (delta-one family)
     asset_group: cefi
     note: "CeFi feature service. Not required for sports arb strategy."
 
@@ -123,5 +123,5 @@ optional_repos:
   - repo: unified-defi-execution-interface
     asset_group: defi
 
-  - repo: features-onchain-service
+  - repo: features-service (onchain family)
     asset_group: defi

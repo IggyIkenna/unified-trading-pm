@@ -709,7 +709,7 @@ only `PNL_FACTOR_STAKING_YIELD` applies -- there are no separate reward tokens.
 | Settlement service     | SettlementService          | `strategy-service/strategy_service/settlement_service.py` |
 | PnL attribution schema | UIC                        | `unified-api-contracts (internal/)/`                      |
 | Fill schema            | CanonicalFill (UIC)        | `unified-api-contracts (internal/)/`                      |
-| Funding rate features  | features-delta-one-service | `features-delta-one-service/`                             |
+| Funding rate features  | features-service (delta-one family) | `features-service (delta-one family)/`                             |
 | Options greeks         | features-options-service   | `features-options-service/`                               |
 | Cost factors           | See execution-policy       | `codex/04-architecture/execution-policy.md`               |
 | PnL storage            | GCS archives               | `gs://pnl/{strategy_id}/{client_id}/{date}/`              |

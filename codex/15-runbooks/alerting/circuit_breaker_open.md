@@ -34,7 +34,7 @@ if the venue recovers within ~60s. Operator only acts if (a) the breaker stays O
 - **Threshold key:** none (binary state transition).
 - **Default value:** N/A — circuit breaker's own internal failure-rate config drives this; see
   `unified-api-contracts/unified_api_contracts/internal/reference/circuit_breaker_config.py`.
-- **Emitter(s):** `execution-service`, `features-onchain-service`, `features-cross-service`, `market-tick-data-service`
+- **Emitter(s):** `execution-service`, `features-service (onchain family)`, `features-cross-service`, `market-tick-data-service`
   — any service that wraps a venue adapter via the standard circuit-breaker decorator emits this.
 - **Upstream signal:** ≥ N consecutive failures within window (default 5 in 60s) on the venue adapter — see
   `circuit_breaker_config.py` for per-adapter overrides.

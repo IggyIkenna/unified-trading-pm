@@ -75,19 +75,19 @@ automation items feed into CR1/CR4 criteria.
 ## Gap 3: batch/live split structure
 
 The existing `10-audit/batch/` and `10-audit/live/` directories contain per-service files. The same service appears in
-BOTH directories if it supports both modes (e.g. execution-service, features-calendar-service). This duplication is
+BOTH directories if it supports both modes (e.g. execution-service, features-service (calendar family)). This duplication is
 intentional for the old schema but creates drift risk.
 
 **Repos with entries in BOTH batch and live directories**:
 
-- execution-service, features-calendar-service, features-delta-one-service, features-onchain-service,
-  features-sports-service, features-volatility-service, instruments-service, market-data-processing-service,
+- execution-service, features-service (calendar family), features-service (delta-one family), features-service (onchain family),
+  features-service (sports family), features-service (volatility family), instruments-service, market-data-processing-service,
   market-tick-data-service, ml-inference-service, ml-training-service, pnl-attribution-service,
   position-balance-monitor-service, risk-and-exposure-service, strategy-service
 
 **Repos in batch/ only**: alerting-system, backtest-ui, batch-audit-ui, client-reporting-ui, cross-service,
 exchange-interface-library, live-health-monitor-ui, logs-dashboard-ui, ml-deployment-ui (corporate actions are owned by
-`features-calendar-service`, not a standalone repo; the legacy `corporate-actions` label referred to archived paths, not
+`features-service (calendar family)`, not a standalone repo; the legacy `corporate-actions` label referred to archived paths, not
 a separate repository)
 
 **Repos in live/ only**: cross-service (also in batch)

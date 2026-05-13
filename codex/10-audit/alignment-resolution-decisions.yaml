@@ -82,12 +82,12 @@ resolutions:
     estimated_effort: "1 hour"
 
   - conflict_id: "epics_not_operational"
-    title: "features-sports-service in epic but excluded from MVP"
+    title: "features-service (sports family) in epic but excluded from MVP"
     decision: "flag_as_mvp_exclusion"
     action: |
       In mvp-universe.yaml:
       excluded_services:
-        - features-sports-service
+        - features-service (sports family)
       rationale: "Sports explicitly excluded from MVP scope"
 
       In sports-integration-epic.md:

@@ -313,7 +313,7 @@ Service                    | Deps | Critical | High | Medium | Low | Last Scan
 ---------------------------|------|----------|------|--------|-----|----------
 instruments-service        |  24  |    0     |   0  |    1   |  2  | 2025-01-15
 market-tick-data-service   |  31  |    0     |   1  |    0   |  1  | 2025-01-15
-features-delta-one-service |  28  |    0     |   0  |    2   |  0  | 2025-01-15
+features-service (delta-one family) |  28  |    0     |   0  |    2   |  0  | 2025-01-15
 ...
 ```
 

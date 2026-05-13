@@ -23,7 +23,7 @@ services:
     batch_readiness_pct: 44.8
     live_readiness_pct: 48.0
 
-  features-delta-one-service:
+  features-service (delta-one family):
     audit_date: "2026-02-11"
     batch_readiness_pct: 42.3
     live_readiness_pct: 42.5
@@ -45,19 +45,19 @@ services:
     live_readiness_pct: 44.0
     note: "Pending re-audit for 8 new checklist items (COD-21..25, DAT-19..20, ARC-11)"
 
-  features-calendar-service:
+  features-service (calendar family):
     audit_date: "2026-02-10"
     batch_readiness_pct: 51.2
     live_readiness_pct: 52.9
     note: "Pending re-audit for 8 new checklist items (COD-21..25, DAT-19..20, ARC-11)"
 
-  features-volatility-service:
+  features-service (volatility family):
     audit_date: "2026-02-10"
     batch_readiness_pct: 57.3
     live_readiness_pct: 60.0
     note: "Pending re-audit for 8 new checklist items (COD-21..25, DAT-19..20, ARC-11)"
 
-  features-onchain-service:
+  features-service (onchain family):
     audit_date: "2026-02-10"
     batch_readiness_pct: 55.1
     live_readiness_pct: 56.9

@@ -140,7 +140,7 @@ volatility = create_features_client(feature_type='volatility')
 Services don't hardcode GCS paths. Instead, they declare their upstream dependencies in `dependencies.yaml`:
 
 ```yaml
-features-delta-one-service:
+features-service (delta-one family):
   upstream:
     - service: market-data-processing-service
       required: true
@@ -148,7 +148,7 @@ features-delta-one-service:
       check:
         bucket_template: "market-data-tick-{category_lower}-{project_id}"
         path_template: "processed_candles/by_date/day={date}/"
-    - service: features-calendar-service
+    - service: features-service (calendar family)
       required: true
       description: Reads pre-computed calendar features
       check:
@@ -161,7 +161,7 @@ At runtime, each service runs a `BaseDependencyChecker` that validates upstream 
 ```python
 from unified_trading_services import BaseDependencyChecker
 
-checker = BaseDependencyChecker(service_name="features-delta-one-service")
+checker = BaseDependencyChecker(service_name="features-service (delta-one family)")
 report = checker.check_dependencies(date=processing_date, category="CEFI")
 
 if not report.all_satisfied:
@@ -207,10 +207,10 @@ The data catalogue tracks what data exists across all services:
 | instruments-service            | category, venue, date                                        | CEFI / BINANCE-FUTURES / 2024-01-15                           |
 | market-tick-data-service       | category, venue, instrument_type, data_type, date            | CEFI / BINANCE-FUTURES / PERPETUAL / trades / 2024-01-15      |
 | market-data-processing-service | category, venue, instrument_type, data_type, timeframe, date | CEFI / BINANCE-FUTURES / PERPETUAL / trades / 5m / 2024-01-15 |
-| features-delta-one-service     | category, feature_group, timeframe, date                     | CEFI / momentum / 5m / 2024-01-15                             |
-| features-volatility-service    | category, feature_group, timeframe, date                     | CEFI / iv_surface / 1h / 2024-01-15                           |
-| features-onchain-service       | feature_group, date                                          | tvl / 2024-01-15                                              |
-| features-calendar-service      | date                                                         | 2024-01-15                                                    |
+| features-service (delta-one family)     | category, feature_group, timeframe, date                     | CEFI / momentum / 5m / 2024-01-15                             |
+| features-service (volatility family)    | category, feature_group, timeframe, date                     | CEFI / iv_surface / 1h / 2024-01-15                           |
+| features-service (onchain family)       | feature_group, date                                          | tvl / 2024-01-15                                              |
+| features-service (calendar family)      | date                                                         | 2024-01-15                                                    |
 | ml-training-service            | model_id, training_period                                    | swing-high-v1 / 2023-Q4                                       |
 | ml-inference-service           | mode, instrument, date                                       | batch / BTC / 2024-01-15                                      |
 | strategy-service               | strategy_id, date                                            | momentum_btc_1h / 2024-01-15                                  |
@@ -296,10 +296,10 @@ Per-service subscribe/publish map showing what each service consumes and produce
 | instruments-service (corporate-actions domain) | instruments-service                             | Downstream (TRADFI only)                                 | ONE-TO-ONE                           | GCS             | N/A (batch only)                                               | Batch only                                                                       |
 | market-tick-data-service                       | instruments-service + external APIs             | market-data-processing + features-volatility + execution | ONE-TO-MANY                          | GCS             | WebSocket stream [PLANNED]                                     | Embedded in feature services + execution-service + standalone TARDIS persistence |
 | market-data-processing-service                 | market-tick-data-service + instruments          | features-delta-one + features-onchain                    | ONE-TO-MANY                          | GCS             | Embedded package [PLANNED]                                     | **Embedded in feature services (no standalone)**                                 |
-| features-calendar-service                      | External APIs (FRED, earnings)                  | features-delta-one                                       | ONE-TO-ONE                           | GCS             | Timer-based refresh [PLANNED]                                  | Standalone                                                                       |
-| features-delta-one-service                     | market-data-processing + features-calendar      | ml-training + ml-inference + strategy                    | ONE-TO-MANY (key publisher)          | GCS             | Embedded package [PLANNED]                                     | Standalone (embeds market-data-processing + market-tick-data-service)            |
-| features-volatility-service                    | market-tick-data-service                        | ml-training (optional)                                   | ONE-TO-ONE                           | GCS             | Embedded [PLANNED]                                             | Standalone (embeds market-data-processing + market-tick-data-service)            |
-| features-onchain-service                       | market-data-processing                          | ml-training (optional)                                   | ONE-TO-ONE                           | GCS             | Embedded [PLANNED]                                             | Standalone (embeds market-data-processing + market-tick-data-service)            |
+| features-service (calendar family)                      | External APIs (FRED, earnings)                  | features-delta-one                                       | ONE-TO-ONE                           | GCS             | Timer-based refresh [PLANNED]                                  | Standalone                                                                       |
+| features-service (delta-one family)                     | market-data-processing + features-calendar      | ml-training + ml-inference + strategy                    | ONE-TO-MANY (key publisher)          | GCS             | Embedded package [PLANNED]                                     | Standalone (embeds market-data-processing + market-tick-data-service)            |
+| features-service (volatility family)                    | market-tick-data-service                        | ml-training (optional)                                   | ONE-TO-ONE                           | GCS             | Embedded [PLANNED]                                             | Standalone (embeds market-data-processing + market-tick-data-service)            |
+| features-service (onchain family)                       | market-data-processing                          | ml-training (optional)                                   | ONE-TO-ONE                           | GCS             | Embedded [PLANNED]                                             | Standalone (embeds market-data-processing + market-tick-data-service)            |
 | ml-training-service                            | features-delta-one + volatility + onchain       | ml-inference (model artifacts)                           | MANY-TO-ONE input, ONE-TO-ONE output | Batch only      | N/A                                                            | Batch only                                                                       |
 | ml-inference-service                           | ml-training + features-delta-one                | strategy                                                 | ONE-TO-ONE                           | GCS             | FeatureSubscriber + PredictionPublisher [IMPLEMENTED: partial] | Embedded in strategy-service                                                     |
 | strategy-service                               | ml-inference + features-delta-one + instruments | execution                                                | MANY-TO-ONE input, ONE-TO-ONE output | GCS             | Signal stream [PLANNED]                                        | Standalone (embeds features-delta-one + ml-inference)                            |

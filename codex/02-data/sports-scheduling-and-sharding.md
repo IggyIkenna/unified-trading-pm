@@ -48,7 +48,7 @@ matrix). UTL guard `MissingClusterValidationError` if absent; QG STEP 5.64 stati
 
 **Consequence:** the availability manifest's primary per-shard key for sports is `(league_id, day)`. For venue-native or
 player-native data (weather, Transfermarkt values, league standings), we still write shard-native rows in their own
-storage layout, but **features-sports-service denormalises them onto each fixture** at feature-compute time so every
+storage layout, but **features-service (sports family) denormalises them onto each fixture** at feature-compute time so every
 fixture has a complete as-of snapshot without lookahead leakage.
 
 `(date, league_id)` is BOTH the **query-time index** + **backfill horizon** + **shard atom** — it's what the daily cron
@@ -94,7 +94,7 @@ For each provider, four dimensions:
   press announcement.
 - **Shard key:** `(player_id, as_of_date)` for values; `(transfer_id)` for transfers; `(team_id, season)` for squads.
   Not fixture-native.
-- **Denormalisation to fixture:** features-sports-service materialises
+- **Denormalisation to fixture:** features-service (sports family) materialises
   `fixture_id → [{player_id, value_eur_as_of_kickoff}]` by joining `FIXTURE_LINEUPS` (who played) × `PLAYER_VALUES` (≤
   kickoff). The player value is the most-recent snapshot with `as_of_date <= kickoff_date`. **Duplicating the value onto
   every fixture is correct** — it preserves the as-of invariant and keeps the features table flat.
@@ -104,7 +104,7 @@ For each provider, four dimensions:
   window; on a cache-hit non-trigger date (`get_leagues_needing_refresh(date) == []`) the adapter short-circuits the
   per-league API loop, populates `_captured_league_counts` from the cache, and emits `UPSTREAM_FETCH_COMPLETED` with
   `details.cached=True`. The cache is rewritten on every live-fetch branch, keeping `last_fetched_at` fresh. Reader:
-  [`features-sports-service/features_sports_service/data/gcs_reader.py::read_transfermarkt_team_mapping(season: int)`](../../../features-sports-service/features_sports_service/data/gcs_reader.py).
+  [`features-service (sports family)/features_sports_service/data/gcs_reader.py::read_transfermarkt_team_mapping(season: int)`](../../../features-service (sports family)/features_sports_service/data/gcs_reader.py).
 
 ### 2.3 FootyStats (`footystats.py`)
 
@@ -125,7 +125,7 @@ For each provider, four dimensions:
   standings endpoint. This was confirmed against the archived service and is enforced by
   [`instruments-service/instruments_service/engine/orchestrator.py`](../../instruments-service/instruments_service/engine/orchestrator.py)
   L4365-4367 (`_want_sfi_standings = False`). Pre-match league position / points come from the API-Football `STANDINGS`
-  endpoint (see §2.1); `features-sports-service` reads that pre-match partition via
+  endpoint (see §2.1); `features-service (sports family)` reads that pre-match partition via
   `data/gcs_reader.py::read_pre_match_standings` (`day=kickoff_date - 1` with 7-day fallback).
 - **Cadence:** Tier-1 every 6h for `SFI_LEAGUES`; Tier-4 T+24h for `SFI_PROGRESSIVE_STATS` (needs completed-matchday
   state).
@@ -141,7 +141,7 @@ For each provider, four dimensions:
   long-lived). Columns: `canonical_league_id, sfi_league_hex, name, last_fetched_at`. 24h staleness window. Cache-hit on
   non-trigger dates skips the paid `get_leagues` call and feeds `sfi_league_ids` directly from the cache;
   progressive-stats per-match fetches still run because they're date-scoped. Reader:
-  [`features-sports-service/features_sports_service/data/gcs_reader.py::read_sfi_league_mapping()`](../../../features-sports-service/features_sports_service/data/gcs_reader.py).
+  [`features-service (sports family)/features_sports_service/data/gcs_reader.py::read_sfi_league_mapping()`](../../../features-service (sports family)/features_sports_service/data/gcs_reader.py).
 
 ### 2.5 OpenMeteo / Weather (`open_meteo.py`)
 
@@ -152,7 +152,7 @@ For each provider, four dimensions:
   - **Observed** (dates ≤ today): single fetch at T+1h post-kickoff from the ERA5 archive endpoint.
 - **Published:** OpenMeteo refreshes forecast every hour; ERA5 archive finalised several days post-date.
 - **Shard key:** `(venue_lat, venue_lon, date)` — one weather fetch per venue per day covers all fixtures at that venue.
-- **Denormalisation to fixture:** features-sports-service joins `(venue_id → lat/lon)` ×
+- **Denormalisation to fixture:** features-service (sports family) joins `(venue_id → lat/lon)` ×
   `(lat/lon, date) → hourly weather` and picks the hourly bucket containing `kickoff_utc`. Duplicated onto every fixture
   at that venue on that day.
 
@@ -337,7 +337,7 @@ watchdog).
 
 Fixture-native providers (API-Football fixture-scope entities, FootyStats, Understat) write directly to per-fixture
 parquets. Non-fixture providers (Transfermarkt, SFI standings, OpenMeteo weather) write to their natural shard and are
-denormalised onto fixtures by features-sports-service:
+denormalised onto fixtures by features-service (sports family):
 
 ```
 Raw shards                                   Denormalised per-fixture table
@@ -366,13 +366,13 @@ sports_reference/
 > migration; archived legacy parquets are at `gs://instruments-store-sports-{pid}/sports_reference_v1_archive/` until
 > 2026-05-05 then deleted.
 
-The denormalisation happens at feature-compute time (features-sports-service), not at ingestion. The raw shards stay
+The denormalisation happens at feature-compute time (features-service (sports family)), not at ingestion. The raw shards stay
 normalised (single source of truth per data class); the feature pipeline owns the join + as-of discipline.
 
 ### 9.1 Shipped implementation (2026-04-21)
 
 As of 2026-04-21, this contract is implemented by
-`features-sports-service/features_sports_service/pipeline/fixture_features.py`:
+`features-service (sports family)/features_sports_service/pipeline/fixture_features.py`:
 
 - **UAC schema:** `unified_api_contracts.internal.FixtureFeatures` (Pydantic, `frozen=True`, `extra="forbid"`) declares
   every column — 21 value-bearing fields plus provenance (`transfermarkt_values_partition_used`,
@@ -410,7 +410,7 @@ As of 2026-04-21, this contract is implemented by
 ### 9.2 Derived-features data-crime fixes (2026-04-21)
 
 Paired follow-up plan `features_sports_derived_data_crime_fixes_2026_04_21` removed two pre-existing crimes from
-`features-sports-service` on 2026-04-21 (FSS commit `576d210`):
+`features-service (sports family)` on 2026-04-21 (FSS commit `576d210`):
 
 - **`calculators/squad_value_calculator.py`** — every `0.0` default flipped to `np.nan`. Missing-team / missing-row /
   divide-by-zero-guard paths now propagate NaN so ML downstream can distinguish "Transfermarkt coverage unknown" from
@@ -437,7 +437,7 @@ parent plan's dry-run saw `weather_source='none'` for 100% of fixtures despite p
 
 **Shipped fix** (FSS commit `???` from plan `features_sports_upstream_coverage_gaps_2026_04_21`):
 
-- `features-sports-service/features_sports_service/pipeline/fixture_features.py::_lookup_weather` now accepts the
+- `features-service (sports family)/features_sports_service/pipeline/fixture_features.py::_lookup_weather` now accepts the
   fixture's `venue_name` alongside `venue_id` and tries two lookups in order: (1) raw `venue_id` (future-friendly if
   upstream ever migrates to numeric weather keys — Option A) then (2) SCREAMING_SNAKE(venue_name) via
   `_venue_name_to_canonical` which replicates the orchestrator's `_to_snake` transform exactly.
@@ -459,7 +459,7 @@ migration. This removes the downstream resolution hop and aligns all three entit
 | Tier-1 discovery  | 6h                              | FIXTURES (rolling +7d), STANDINGS, LEAGUES, TEAMS                  |
 | Tier-2 reference  | 24h                             | INJURIES, TRANSFERS (window-aware), TRANSFERMARKT_VALUES           |
 | Tier-3 pre-match  | Per-fixture T-24h / T-6h / T-1h | ODDS snapshots, PREDICTIONS, LINEUPS, WEATHER                      |
-| Tier-3 features   | Per-fixture T-1h                | features-sports-service denormalised join                          |
+| Tier-3 features   | Per-fixture T-1h                | features-service (sports family) denormalised join                          |
 | Tier-3 inference  | Per-fixture T-1h                | ml-inference-service pre-match                                     |
 | Live odds loop    | Per-venue continuous            | market-tick-data-service sports adapter                            |
 | Tier-4 post-match | T+30m / T+24h                   | FIXTURE_STATS, FIXTURE_EVENTS, PLAYER_STATS, XG, PROGRESSIVE_STATS |
@@ -544,7 +544,7 @@ VM-daemon path). `[x] done` / `[ ] open` is the mechanical checkbox count in eac
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------- |
 | [`sports_scheduler_periodic_tier_dispatch`](../../plans/archive/sports_scheduler_periodic_tier_dispatch_2026_04_21.plan.md)           | deployment-service                              | C5 (`d9652cd`)             |
 | [`instruments_service_rolling_window_cli_flags`](../../plans/archive/instruments_service_rolling_window_cli_flags_2026_04_21.plan.md) | instruments-service + deployment-service        | C5 (`70517b2` + `b0eb874`) |
-| [`features_sports_denormalisation_pipeline`](../../plans/archive/features_sports_denormalisation_pipeline_2026_04_21.plan.md)         | unified-api-contracts + features-sports-service | C5 (`ef1e89f` + `c7a363d`) |
+| [`features_sports_denormalisation_pipeline`](../../plans/archive/features_sports_denormalisation_pipeline_2026_04_21.plan.md)         | unified-api-contracts + features-service (sports family) | C5 (`ef1e89f` + `c7a363d`) |
 | [`utl_manifest_migration_primitives`](../../plans/archive/utl_manifest_migration_primitives_2026_04_21.plan.md)                       | unified-trading-library + instruments-service   | C5 (`b2ad7d0c`, 17/0)      |
 | [`vm_observability_codex_update`](../../plans/archive/vm_observability_codex_update_2026_04_21.plan.md)                               | unified-trading-pm                              | C5 (7/0)                   |
 
@@ -555,7 +555,7 @@ VM-daemon path). `[x] done` / `[ ] open` is the mechanical checkbox count in eac
 | **P0**   | [`apifootball_enrichment_historical_backfill`](../../plans/archive/apifootball_enrichment_historical_backfill_2026_04_21.plan.md)                             | deployment-service                                                                         | —                                                                                                                                        | Biggest SPORTS coverage lift: FIXTURE_STATS / EVENTS / LINEUPS / PLAYER_STATS / INJURIES over 2019-01-16..2026-04-20. Takes attempted-coverage 17.8% → 50%+                                                                                                                                                                                       |
 | **P1**   | [`non_apifootball_provider_backfill_launchers`](../../plans/archive/non_apifootball_provider_backfill_launchers_2026_04_21.plan.md)                           | deployment-service                                                                         | —                                                                                                                                        | 4 new launchers for Transfermarkt / FootyStats / OpenMeteo / Understat mirroring the AF launcher                                                                                                                                                                                                                                                  |
 | **P1**   | [`instruments_service_orchestrator_reliability_fixes`](../../plans/archive/instruments_service_orchestrator_reliability_fixes_2026_04_21.plan.md)             | instruments-service                                                                        | —                                                                                                                                        | 8 bugs: 3 reliability (Pydantic None-goals, UnboundLocalError, 404 on future dates) + 1 adapter-output dict coercion (**shipped `7f2cbf0`**) + 4 per-league shard uniformity (WEATHER + XG **shipped `8a91324`**; AF enrichments + STANDINGS open — Bugs 7-8). **Currently C1** — Phases 1-3, 3b, 4 shipped; Phase 5 (Bugs 7-8) + Phases 6-7 open |
-| **P2**   | [`transfermarkt_sfi_team_mapping_cache_and_drift_detection`](../../plans/archive/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md) | unified-api-contracts + instruments-service + features-sports-service + unified-trading-pm | `features_sports_denormalisation_pipeline` ✅ C5 + `features_sports_derived_data_crime_fixes` + `features_sports_upstream_coverage_gaps` | Cut redundant TM + SFI API calls via `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + `sfi_league_mapping.parquet`. Adds UAC `LeagueDefinition.expected_team_count_per_season` + `get_expected_team_count_for_league`; emits `ADAPTER_FETCH_ANOMALY` when `                                                   | got - expected | /expected > 10%`without blocking manifest writes. 22 todos / 4 tracks / 4 repos. **Authored 2026-04-22`e5d941e1`\*\* |
+| **P2**   | [`transfermarkt_sfi_team_mapping_cache_and_drift_detection`](../../plans/archive/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md) | unified-api-contracts + instruments-service + features-service (sports family) + unified-trading-pm | `features_sports_denormalisation_pipeline` ✅ C5 + `features_sports_derived_data_crime_fixes` + `features_sports_upstream_coverage_gaps` | Cut redundant TM + SFI API calls via `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + `sfi_league_mapping.parquet`. Adds UAC `LeagueDefinition.expected_team_count_per_season` + `get_expected_team_count_for_league`; emits `ADAPTER_FETCH_ANOMALY` when `                                                   | got - expected | /expected > 10%`without blocking manifest writes. 22 todos / 4 tracks / 4 repos. **Authored 2026-04-22`e5d941e1`\*\* |
 
 ### 12.3 Open — manifest + UI hygiene (gated on 12.2)
 
@@ -577,7 +577,7 @@ forked coordinator/worker logic in `instruments-service`.
 | **P0**   | [`utl_base_image_rebuild_and_workflow_unblock`](../../plans/ai/utl_base_image_rebuild_and_workflow_unblock_2026_04_22.plan.md)            | unified-trading-library                      | —                                                                                                                                                  | Rebuild UTL base image in AR (frozen since 2026-04-15, 20+ commits behind). Fix `cloudbuild.yaml` Docker build step which fails because `uv pip install -e .` can't resolve UAC from AR. Option A: clone UAC into Docker build context via new cloudbuild step. **Blocks Plan 6 Phase 3 (features-sports smoke), features-onchain daily workflow, Plan 3 sports-scheduler Cloud Run activation (also gated on Plan 12).** |
 | **P0**   | [`deployment_service_build_infrastructure_repair`](../../plans/archive/deployment_service_build_infrastructure_repair_2026_04_22.plan.md) | deployment-service                           | —                                                                                                                                                  | Repair 6 bugs in Dockerfile + cloudbuild.yaml blocking all Cloud Builds since 2026-02-20. Lands first fresh `deployment-dashboard` + `sports-scheduler` AR image in 2+ months. **Blocks Plan 5** below.                                                                                                                                                                                                                   |
 | **P0**   | [`sports_scheduler_cron_activation`](../../plans/ai/sports_scheduler_cron_activation_2026_04_21.plan.md)                                  | deployment-service                           | `sports_scheduler_periodic_tier_dispatch` ✅ C5 + `deployment_service_build_infrastructure_repair` + `utl_base_image_rebuild_and_workflow_unblock` | Cloud Run + Cloud Scheduler cron so Tier-1/2 actually fire in prod                                                                                                                                                                                                                                                                                                                                                        |
-| **P1**   | [`features_sports_pipeline_deployment`](../../plans/archive/features_sports_pipeline_deployment_2026_04_21.plan.md)                       | features-sports-service + deployment-service | `features_sports_denormalisation_pipeline` ✅ C5 + `utl_base_image_rebuild_and_workflow_unblock`                                                   | Cloud Run deployment + historical FixtureFeatures backfill 2018-2026                                                                                                                                                                                                                                                                                                                                                      |
+| **P1**   | [`features_sports_pipeline_deployment`](../../plans/archive/features_sports_pipeline_deployment_2026_04_21.plan.md)                       | features-service (sports family) + deployment-service | `features_sports_denormalisation_pipeline` ✅ C5 + `utl_base_image_rebuild_and_workflow_unblock`                                                   | Cloud Run deployment + historical FixtureFeatures backfill 2018-2026                                                                                                                                                                                                                                                                                                                                                      |
 
 ### 12.5 Open — docs
 

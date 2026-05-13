@@ -95,7 +95,7 @@ services:
       coding_standards_compliant: false
       cloud_compatibility:
         - GCP
-  - service: features-calendar-service
+  - service: features-service (calendar family)
     type: pipeline
     owner_default: Femi
     priority: P3-low
@@ -233,7 +233,7 @@ services:
       cloud_compatibility:
         - GCP
       latency_target: <2s
-  - service: features-delta-one-service
+  - service: features-service (delta-one family)
     type: pipeline
     owner_default: Femi
     priority: P2-medium
@@ -243,7 +243,7 @@ services:
       group: features
       upstream_dependencies:
         - market-data-processing-service
-        - features-calendar-service
+        - features-service (calendar family)
       output_bucket: gs://features-delta-one
     domain_coverage:
       venues:
@@ -285,7 +285,7 @@ services:
       strategies:
         - basis-arb
         - funding-arb
-  - service: features-volatility-service
+  - service: features-service (volatility family)
     type: pipeline
     owner_default: Femi
     priority: P3-low
@@ -339,7 +339,7 @@ services:
         - options-strategies
       strategies:
         - vol-surface-arb
-  - service: features-onchain-service
+  - service: features-service (onchain family)
     type: pipeline
     owner_default: Harsh
     priority: P2-medium
@@ -391,7 +391,7 @@ services:
         - defi-arb
       strategies:
         - defi-arb
-  - service: features-sports-service
+  - service: features-service (sports family)
     type: pipeline
     owner_default: Harsh
     priority: P2-medium
@@ -491,9 +491,9 @@ services:
       layer: 5
       group: ml
       upstream_dependencies:
-        - features-delta-one-service
-        - features-volatility-service
-        - features-onchain-service
+        - features-service (delta-one family)
+        - features-service (volatility family)
+        - features-service (onchain family)
       output_bucket: gs://ml-models
     domain_coverage:
       venues:
@@ -536,9 +536,9 @@ services:
       group: ml
       upstream_dependencies:
         - ml-training-service
-        - features-delta-one-service
-        - features-volatility-service
-        - features-onchain-service
+        - features-service (delta-one family)
+        - features-service (volatility family)
+        - features-service (onchain family)
       output_bucket: gs://ml-predictions
     domain_coverage:
       venues:
@@ -578,9 +578,9 @@ services:
       group: strategy-execution
       upstream_dependencies:
         - ml-inference-service
-        - features-delta-one-service
-        - features-volatility-service
-        - features-onchain-service
+        - features-service (delta-one family)
+        - features-service (volatility family)
+        - features-service (onchain family)
       output_bucket: gs://strategy-signals
     domain_coverage:
       venues:

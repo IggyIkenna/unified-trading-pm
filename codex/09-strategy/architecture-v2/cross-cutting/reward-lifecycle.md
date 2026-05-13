@@ -27,7 +27,7 @@ Strategies using Lido skip the reward lifecycle entirely.
 ### 1. Accrue
 
 Rewards accumulate on the protocol between distribution events. The strategy tracks expected accrual via the
-`weekly_rewards` feature from `features-onchain-service`. During this stage, rewards are attributed to
+`weekly_rewards` feature from `features-service (onchain family)`. During this stage, rewards are attributed to
 `PNL_FACTOR_REWARD_UNREALISED` in P&L reporting.
 
 No on-chain action is required during accrual. The unrealised reward amount is estimated from protocol distribution

@@ -194,7 +194,7 @@ Tier 1 (always on):
 
 Tier 2 (data pipeline):
     market-data-processing-service — MDPS candles
-    features-onchain-service       — on-chain features
+    features-service (onchain family)       — on-chain features
 
 Tier 3 (strategy + execution):
     strategy-service          — signal generation

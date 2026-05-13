@@ -145,13 +145,13 @@ category of service.
 **Batch & Live (14 services)**:
 
 - instruments-service
-- features-calendar-service (includes `corporate_actions` data path)
+- features-service (calendar family) (includes `corporate_actions` data path)
 - market-tick-data-service
 - market-data-processing-service
-- features-delta-one-service
-- features-volatility-service
-- features-onchain-service
-- features-sports-service
+- features-service (delta-one family)
+- features-service (volatility family)
+- features-service (onchain family)
+- features-service (sports family)
 - ml-inference-service
 - strategy-service
 - execution-service

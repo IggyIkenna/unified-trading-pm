@@ -31,7 +31,7 @@ Operator should reduce LST exposure if depeg widens; pre-emptive deleverage if H
 - **Threshold key:** `defi_weeth_depeg_bps`.
 - **Default value:** 50 bps (0.5% from peg). weETH historical max-depeg under normal conditions ≈ 30bps; 50bps catches
   abnormal events without firing on normal chop. See [`threshold-tuning.md`](./threshold-tuning.md) for citation.
-- **Emitter(s):** `features-onchain-service` (LST-peg deviation calculator, 30s polling).
+- **Emitter(s):** `features-service (onchain family)` (LST-peg deviation calculator, 30s polling).
 - **Upstream signal:** `(weETH_amm_price / weETH_redemption_rate) - 1` exceeds threshold (in absolute value) sustained
   ≥30s.
 - **De-dup window:** 300s.
@@ -129,7 +129,7 @@ If multiple LSTs depeg simultaneously (sector-wide event), exit all LST position
   resolved, ack + log.
 - **Oracle-vs-AMM diff (NOT actual depeg):** `defi_weeth_depeg` measures AMM mid vs redemption rate; if the alert source
   incorrectly reads oracle-USD vs AMM-USD, this is a code bug not a real depeg. Action: investigate
-  features-onchain-service emitter.
+  features-service (onchain family) emitter.
 
 If FP > 5% per 24h sustained, raise via [`threshold-tuning.md`](./threshold-tuning.md).
 

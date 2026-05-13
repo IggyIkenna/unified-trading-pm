@@ -127,7 +127,7 @@ required_repos:
     asset_group: defi
     rationale: "UDEI provides SWAP/LEND/BORROW/STAKE execution contracts for DeFi protocols."
 
-  - repo: features-onchain-service
+  - repo: features-service (onchain family)
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
@@ -137,11 +137,11 @@ required_repos:
 optional_repos:
   # Present in the workspace but NOT required for DeFi epic = 100%.
 
-  - repo: features-delta-one-service
+  - repo: features-service (delta-one family)
     asset_group: cefi
-    note: "Required for CeFi epic. Optional for DeFi — DeFi uses features-onchain-service."
+    note: "Required for CeFi epic. Optional for DeFi — DeFi uses features-service (onchain family)."
 
-  - repo: features-volatility-service
+  - repo: features-service (volatility family)
     asset_group: cefi
     note: "Volatility features are CeFi/TradFi-specific for MVP."
 
@@ -157,10 +157,10 @@ optional_repos:
     asset_group: cefi
     note: "Tick data pipeline is CeFi/TradFi-specific. DeFi uses onchain data."
 
-  - repo: features-sports-service
+  - repo: features-service (sports family)
     asset_group: sports
 
-  - repo: features-commodity-service
+  - repo: features-service (commodity family)
     asset_group: tradfi
 
   - repo: ibkr-gateway-infra

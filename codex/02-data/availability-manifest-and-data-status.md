@@ -223,7 +223,7 @@ column inside the parquet, NOT a hive-partition shard axis** (per the
 [canonical banner above](#multi-axis-correction-banner-canonical)) — per-fixture detail at drill-down comes from reading
 the parquet rows, not from a separate manifest row. Avoids ~10× manifest inflation. Per-fixture cluster validation
 enforced via UAC `SPORTS_FIXTURE_CLUSTERS` + UTL `MissingClusterValidationError` (see banner) — clusters are checked
-INSIDE the per-(league, day) parquet at write time. ML predictions remain fixture-level because features-sports-service
+INSIDE the per-(league, day) parquet at write time. ML predictions remain fixture-level because features-service (sports family)
 reads the parquet rows.
 
 **`available_at` stamping per source** (writegate plan Phase 1B `AVAILABILITY_AT_SEMANTICS` registry):

@@ -31,7 +31,7 @@ from datetime import datetime
 from decimal import Decimal
 
 class FeatureRow(BaseModel):
-    """Output schema for features-delta-one-service."""
+    """Output schema for features-service (delta-one family)."""
     timestamp: datetime
     instrument_id: str
     momentum_5m: Decimal
@@ -105,8 +105,8 @@ projects/{project}/topics/{topic-name}
 | `instruments-updates` | instruments-service        | InstrumentDefinition | 7 days    |
 | `market-ticks`        | market-tick-data-service   | CanonicalTrade       | 1 day     |
 | `market-ohlcv`        | market-data-processing     | OHLCVCandle          | 7 days    |
-| `features-delta-one`  | features-delta-one-service | FeatureRow           | 7 days    |
-| `features-sports`     | features-sports-service    | SportsFeatureVector  | 7 days    |
+| `features-delta-one`  | features-service (delta-one family) | FeatureRow           | 7 days    |
+| `features-sports`     | features-service (sports family)    | SportsFeatureVector  | 7 days    |
 | `ml-predictions`      | ml-inference-service       | Prediction           | 7 days    |
 | `strategy-signals`    | strategy-service           | StrategyInstruction  | 30 days   |
 | `order-requests`      | execution-service          | Order                | 30 days   |

@@ -30,14 +30,14 @@ test-bucket routing for free. Services that build bucket names manually (via `*_
 | 1   | instruments-service               | YES (pre-existing)       | orchestrator: `cfg.is_test_run` → `instruments-store-*-test-*`  | n/a (no dep-checker)                |
 | 2   | market-tick-data-service          | YES (pre-existing)       | orchestrator `get_tick_data_bucket()` honours `cfg.is_test_run` | n/a (no dep-checker)                |
 | 3   | market-data-processing-service    | YES (Phase 1 added)      | dep-checker: `test_mode=True` swaps via UPSTREAM_DEPS_TEST      | YES (Phase 1 — IS_TEST_RUN env)     |
-| 4   | features-sports-service           | YES (Phase 1 added)      | service writes via UTL `get_write_bucket_name()` → auto-test    | n/a (no dep-checker)                |
-| 5   | features-calendar-service         | YES (Phase 1 added)      | shared bucket (no category) — `cfg.is_test_run` swaps suffix    | n/a (no dep-checker)                |
-| 6   | features-onchain-service          | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
-| 7   | features-delta-one-service        | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
-| 8   | features-volatility-service       | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
-| 9   | features-cross-instrument-service | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
-| 10  | features-multi-timeframe-service  | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
-| 11  | features-commodity-service        | YES (Phase 1 added)      | `commodity_profiles_bucket` + `cfg.is_test_run` swaps           | n/a (no dep-checker)                |
+| 4   | features-service (sports family)           | YES (Phase 1 added)      | service writes via UTL `get_write_bucket_name()` → auto-test    | n/a (no dep-checker)                |
+| 5   | features-service (calendar family)         | YES (Phase 1 added)      | shared bucket (no category) — `cfg.is_test_run` swaps suffix    | n/a (no dep-checker)                |
+| 6   | features-service (onchain family)          | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
+| 7   | features-service (delta-one family)        | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
+| 8   | features-service (volatility family)       | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
+| 9   | features-service (cross-instrument family) | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
+| 10  | features-service (multi-timeframe family)  | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
+| 11  | features-service (commodity family)        | YES (Phase 1 added)      | `commodity_profiles_bucket` + `cfg.is_test_run` swaps           | n/a (no dep-checker)                |
 | 12  | ml-training-service               | YES (Phase 1 added)      | per-bucket templates + `cfg.is_test_run` to swap suffix         | n/a (no dep-checker)                |
 | 13  | ml-inference-service              | YES (Phase 1 added)      | per-bucket templates + `cfg.is_test_run` to swap suffix         | n/a (no dep-checker)                |
 
@@ -90,14 +90,14 @@ class MyServiceConfig(UnifiedCloudConfig):
 | instruments-service               | UTL `get_bucket_name("instruments", category)`              | `engine/orchestrator.py` (uses cfg.is_test_run separately)     |
 | market-tick-data-service          | `get_tick_data_bucket(config, category)`                    | `engine/orchestrator.py:1313`                                  |
 | market-data-processing-service    | `_resolve_upstream_bucket()` + `OUTPUT_BUCKETS_TEST` map    | `app/core/dependency_checker.py:349`                           |
-| features-sports-service           | UTL `get_bucket_name("features_sports")`                    | (no shared category) — call `get_write_bucket_name()` at write |
-| features-calendar-service         | `cfg.source_bucket_template` (shared)                       | `config.py:40` — wrap with `cfg.is_test_run` swap              |
-| features-onchain-service          | `cfg.output_bucket_template`                                | `config.py:69` — wrap with `cfg.is_test_run` swap              |
-| features-delta-one-service        | `cfg.output_bucket_template`                                | `config.py:147` — wrap with `cfg.is_test_run` swap             |
-| features-volatility-service       | `cfg.output_bucket_template`                                | `config.py:40` — wrap with `cfg.is_test_run` swap              |
-| features-cross-instrument-service | `cfg.output_bucket_template`                                | `config.py:129` — wrap with `cfg.is_test_run` swap             |
-| features-multi-timeframe-service  | `cfg.output_bucket_template`                                | `config.py:165` — wrap with `cfg.is_test_run` swap             |
-| features-commodity-service        | `cfg.commodity_profiles_bucket`                             | `config.py:64` — wrap with `cfg.is_test_run` swap              |
+| features-service (sports family)           | UTL `get_bucket_name("features_sports")`                    | (no shared category) — call `get_write_bucket_name()` at write |
+| features-service (calendar family)         | `cfg.source_bucket_template` (shared)                       | `config.py:40` — wrap with `cfg.is_test_run` swap              |
+| features-service (onchain family)          | `cfg.output_bucket_template`                                | `config.py:69` — wrap with `cfg.is_test_run` swap              |
+| features-service (delta-one family)        | `cfg.output_bucket_template`                                | `config.py:147` — wrap with `cfg.is_test_run` swap             |
+| features-service (volatility family)       | `cfg.output_bucket_template`                                | `config.py:40` — wrap with `cfg.is_test_run` swap              |
+| features-service (cross-instrument family) | `cfg.output_bucket_template`                                | `config.py:129` — wrap with `cfg.is_test_run` swap             |
+| features-service (multi-timeframe family)  | `cfg.output_bucket_template`                                | `config.py:165` — wrap with `cfg.is_test_run` swap             |
+| features-service (commodity family)        | `cfg.commodity_profiles_bucket`                             | `config.py:64` — wrap with `cfg.is_test_run` swap              |
 | ml-training-service               | `cfg.features_*_bucket_template` + `ml-models-store-*`      | `config.py:54+` — wrap with `cfg.is_test_run` swap             |
 | ml-inference-service              | `cfg.features_*_bucket_template` + `ml-predictions-store-*` | per-bucket — wrap with `cfg.is_test_run` swap                  |
 

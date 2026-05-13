@@ -101,13 +101,13 @@ required_repos:
     min_br_stage: br5
     asset_group: tradfi
 
-  - repo: features-delta-one-service
+  - repo: features-service (delta-one family)
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
     asset_group: tradfi
 
-  - repo: features-calendar-service
+  - repo: features-service (calendar family)
     arch_tier: service
     min_stage: cr5
     min_br_stage: br5
@@ -159,12 +159,12 @@ required_repos:
     rationale: "IBKR gateway required for TradFi order routing. CR4 only (infra repo)."
 
 optional_repos:
-  - repo: features-commodity-service
+  - repo: features-service (commodity family)
     asset_group: tradfi
     note: "Commodity features (energy) useful for TradFi but not required for MVP scope (ES/MES/SPY/VIX)."
 
   - repo: unified-defi-execution-interface
     asset_group: defi
 
-  - repo: features-onchain-service
+  - repo: features-service (onchain family)
     asset_group: defi

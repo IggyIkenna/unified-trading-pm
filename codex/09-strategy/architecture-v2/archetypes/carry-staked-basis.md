@@ -228,7 +228,7 @@ STAKE + TRANSFER legs are unwound (TRANSFER LST back + UNSTAKE + reverse SWAP) â
 
 `staking_apy_total_bps` is the aggregated staking APY: base on-chain rate-diff + EIGEN AVS rewards (when the LST is
 restaked) + ETHFI / ANKR / Jito seasonal rewards âˆ’ dust realisation slippage. Source: features-onchain
-[`engine/staking_apy_total.py`](../../../../features-onchain-service/features_onchain_service/engine/staking_apy_total.py)
+[`engine/staking_apy_total.py`](../../../../features-service (onchain family)/features_onchain_service/engine/staking_apy_total.py)
 aggregator. The same value is consumed by `YieldStakingSimpleRankAllocator` and `CarryStakedBasisRankAllocator` so both
 batch and live allocators see the same number. Restaking economics detail:
 [restaking-reward-economics.md](../cross-cutting/restaking-reward-economics.md).

@@ -31,7 +31,7 @@ are simultaneously a data source, an execution venue, and an arbitrage surface.
 | PredictionArbStrategy                  | IMPLEMENTED | `strategy-service/engine/strategies/prediction_arb/prediction_arb_strategy.py`                                 |
 | Prediction mapping / categorisation    | IMPLEMENTED | `strategy-service/engine/strategies/prediction/prediction_mapping.py`                                          |
 | Cross-venue arb schemas (UAC internal) | IMPLEMENTED | `unified-api-contracts/unified_api_contracts/internal/domain/prediction_market/prediction_market_arb.py`       |
-| Polymarket crowd sentiment feature     | IMPLEMENTED | `features-cross-instrument-service/calculators/polymarket_crowd_sentiment_calculator.py`                       |
+| Polymarket crowd sentiment feature     | IMPLEMENTED | `features-service (cross-instrument family)/calculators/polymarket_crowd_sentiment_calculator.py`                       |
 | Execution handler                      | IMPLEMENTED | `execution-service/engine/handlers/prediction_handler.py`                                                      |
 | VCR cassettes                          | EXIST       | `unified-api-contracts/tests/`                                                                                 |
 
@@ -163,7 +163,7 @@ Codification gap:
 
 ### How It Works Today
 
-`polymarket_crowd_sentiment_calculator.py` in features-cross-instrument-service:
+`polymarket_crowd_sentiment_calculator.py` in features-service (cross-instrument family):
 
 - Polls Polymarket CLOB API for implied probabilities
 - Feeds into cross-instrument feature signals
@@ -342,7 +342,7 @@ registry wiring (G5), Kalshi testnet (G6), and historical data pipeline (G7).
   `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`
 - **Execution:** `execution-service/adapters/exchanges/polymarket_clob.py`
 - **Strategy:** `strategy-service/engine/strategies/prediction_arb/prediction_arb_strategy.py`
-- **Features:** `features-cross-instrument-service/calculators/polymarket_crowd_sentiment_calculator.py`
+- **Features:** `features-service (cross-instrument family)/calculators/polymarket_crowd_sentiment_calculator.py`
 - **Arb schemas:**
   `unified-api-contracts/unified_api_contracts/internal/domain/prediction_market/prediction_market_arb.py`
 - **Polymarket docs:** https://docs.polymarket.com/

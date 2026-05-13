@@ -31,9 +31,9 @@ graph TD
     end
 
     subgraph features_layer [Features Layer]
-        FV[features-volatility-service<br/>Crypto]
-        FO[features-onchain-service<br/>DeFi]
-        FS[features-sports-service<br/>Sports NEW]
+        FV[features-service (volatility family)<br/>Crypto]
+        FO[features-service (onchain family)<br/>DeFi]
+        FS[features-service (sports family)<br/>Sports NEW]
     end
 
     subgraph ml_layer [ML Layer]
@@ -71,7 +71,7 @@ graph TD
 | ------------------------------ | ----------- | ------------------------------------------------------------ |
 | instruments-service            | AUGMENT     | Sports parser, fixture matching, team normalization          |
 | market-data-processing-service | AUGMENT     | Odds API (batch), Betfair Stream (live), API-Football        |
-| **features-sports-service**    | **CREATE**  | 19 feature categories, time horizons (T-24h, T-60m, T-0, HT) |
+| **features-service (sports family)**    | **CREATE**  | 19 feature categories, time horizons (T-24h, T-60m, T-0, HT) |
 | ml-training-service            | AUGMENT     | Sports configs, walk-forward validation (k-fold + standard)  |
 | ml-inference-service           | AUGMENT     | Sports model loading, prediction endpoint                    |
 | strategy-service               | AUGMENT     | Arbitrage, value betting, Kelly criterion                    |
@@ -183,7 +183,7 @@ FOOTBALL:POLYMARKET:MATCH_WINNER:UNKNOWN:2024-2025:TEAM_A-TEAM_B::TEAM_A
 
 ---
 
-## features-sports-service (New Service)
+## features-service (sports family) (New Service)
 
 ### Purpose
 
@@ -496,7 +496,7 @@ gs://ml-models/SPORTS/
 
 ### Phase 2: Features (Q3 2026)
 
-- Create features-sports-service (19 feature categories)
+- Create features-service (sports family) (19 feature categories)
 - Implement horizon support (T-24h, T-60m, T-0, HT)
 - Validate anti-leakage
 
@@ -509,7 +509,7 @@ gs://ml-models/SPORTS/
 >
 > **Standalone services that remain:**
 >
-> - `features-sports-service` — new standalone (sports-specific feature engineering with horizon support)
+> - `features-service (sports family)` — new standalone (sports-specific feature engineering with horizon support)
 > - `execution-service` (USEI) — new standalone (bookmaker/exchange adapter layer)
 
 **Batch ordering (sports data flows through existing services with SPORTS category):**
@@ -518,7 +518,7 @@ gs://ml-models/SPORTS/
 | ----- | ------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | **A** | instruments-service (AUGMENTED)            | Sports parser, fixture matching, team normalization             | GCS canonical fixtures/teams/leagues; PubSub instruments-updated (asset_group=SPORTS)                         |
 | **B** | market-data-processing-service (AUGMENTED) | Odds API (batch), Betfair Stream (live), API-Football ingestion | GCS odds snapshots + ProcessedOddsOutput; PubSub market-data-updated (asset_group=SPORTS), arbitrage-detected |
-| **C** | features-sports-service (NEW standalone)   | 19 feature categories, time horizons (T-24h, T-60m, T-0, HT)    | GCS features; PubSub sports-features-computed                                                                 |
+| **C** | features-service (sports family) (NEW standalone)   | 19 feature categories, time horizons (T-24h, T-60m, T-0, HT)    | GCS features; PubSub sports-features-computed                                                                 |
 | **D** | strategy-service (AUGMENTED)               | Arbitrage, value betting, Kelly criterion for SPORTS            | PubSub bet-orders (asset_group=SPORTS); GCS orders                                                            |
 | **E** | execution-service (AUGMENTED)              | Betfair, Smarkets, Polymarket API clients via USEI              | GCS BetExecution; PubSub bet-executions (asset_group=SPORTS)                                                  |
 
@@ -595,7 +595,7 @@ increases operational overhead, duplicates observability/deployment infrastructu
 
 **What stays standalone:**
 
-- `features-sports-service` — sports-specific feature engineering (19 categories, time horizons) has no crypto/tradfi
+- `features-service (sports family)` — sports-specific feature engineering (19 categories, time horizons) has no crypto/tradfi
   analog; remains a new standalone service
 - `execution-service` (USEI) — bookmaker/exchange adapter library; remains standalone as a venue adapter layer
 

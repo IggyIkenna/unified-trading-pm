@@ -962,8 +962,8 @@ Every peripheral script directory that imports from a service's Python package M
 | Peripheral dir                       | Primary consumer service       | QG path                                                              |
 | ------------------------------------ | ------------------------------ | -------------------------------------------------------------------- |
 | `e2e-testing/scripts/defi/`          | strategy-service               | `strategy-service/scripts/quality-gates.sh` runs basedpyright on dir |
-| `e2e-testing/scripts/sports/`        | features-sports-service / mtds | features-sports-service QG                                           |
-| `e2e-testing/scripts/prediction/`    | mtds + features-onchain        | mtds QG                                                              |
+| `e2e-testing/scripts/sports/`        | features-service (sports family) / mtds | features-service sports family QG                                           |
+| `e2e-testing/scripts/prediction/`    | mtds + features-service (onchain family) | mtds QG                                                              |
 | `*_service/scripts/migration_*.py`   | own service                    | own service QG                                                       |
 | `deployment-service/scripts/vm/*.sh` | bash; no Python                | bash-syntax check in deployment-service QG                           |
 | `unified-trading-pm/scripts/*.py`    | PM library + various           | PM QG                                                                |

@@ -85,7 +85,7 @@ instruments-service --operation instruments --asset-group DEFI --start-date 2026
 
 ### 3. Strategy Reads Features (Not Instruments Directly)
 
-In batch: strategy reads pre-computed features from GCS (features-onchain-service output). In live: strategy subscribes
+In batch: strategy reads pre-computed features from GCS (features-service (onchain family) output). In live: strategy subscribes
 to feature events via Pub/Sub.
 
 The strategy doesn't query instruments-service at runtime — it relies on the pipeline having already run instruments →

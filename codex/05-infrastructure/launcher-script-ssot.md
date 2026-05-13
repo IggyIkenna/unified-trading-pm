@@ -210,7 +210,7 @@ Source repo bucket counts (baseline 30):
 | `e2e-testing/scripts/defi/`        | 10     | `launch_*_vm.sh`                                       |
 | `e2e-testing/scripts/prediction/`  | 4      | `launch_*_vm.sh` + `setup-backfill-vm.sh`              |
 | `e2e-testing/scripts/sports/`      | 10     | `launch_*_vm.sh` + sweep wrappers                      |
-| `features-sports-service/scripts/` | 1      | `launch_parallel_backfill.sh`                          |
+| `features-service (sports family)/scripts/` | 1      | `launch_parallel_backfill.sh`                          |
 | `deployment-service/scripts/`      | 1      | `deploy-dashboard-gce-vm.sh` (move into `scripts/vm/`) |
 | **Total**                          | **30** |                                                        |
 
@@ -220,7 +220,7 @@ Source repo bucket counts (baseline 30):
 | --- | ---------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
 | 1   | `e2e-testing/scripts/common/launch_mtds_category_backfill_vm.sh` | `launch-mtds-backfill-vm.sh`                              | shipped — deployment-service@76f4ecc + e2e-testing@8daba1a     |
 | 2   | `e2e-testing/scripts/common/launch_instruments_backfill_vms.sh`  | `launch-instruments-backfill-vm.sh`                       | shipped — deployment-service@fbb3673 + e2e-testing@2da6867     |
-| 3   | `features-sports-service/scripts/launch_parallel_backfill.sh`    | `launch-features-sports-parallel-backfill-vm.sh`          | shipped — deployment-service@0215086 + features-sports@06f6b30 |
+| 3   | `features-service (sports family)/scripts/launch_parallel_backfill.sh`    | `launch-features-sports-parallel-backfill-vm.sh`          | shipped — deployment-service@0215086 + features-sports@06f6b30 |
 | 4   | `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh`          | `launch-mtds-sports-odds-backfill-vm.sh`                  | shipped — deployment-service@2e1d967 + e2e-testing@deff088     |
 | 5   | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh`  | `launch-sports-instruments-reference-vm.sh`               | shipped — deployment-service@fc9211e + e2e-testing@db7ace3     |
 | 6   | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh`                | `launch-mtds-dex-pools-backfill-vm.sh`                    | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
@@ -272,11 +272,11 @@ drift risk is contained; intra-repo move ships in a follow-up cycle.
 | `e2e-testing/scripts/launch-sports-backfill.sh`                      | `launch-sports-{source}-vm.sh`                         | shipped (canonical sports launchers)      |
 | `e2e-testing/scripts/launch-prediction-backfill.sh`                  | `launch-prediction-{venue}-vm.sh`                      | shipped (canonical prediction launchers)  |
 | `e2e-testing/scripts/launch-defi-backfill.sh`                        | `launch-defi-{chain}-{flavor}-vm.sh`                   | per-chain migration pattern               |
-| `features-onchain-service/scripts/launch-*.sh`                       | `launch-features-onchain-vm.sh` (or asset-scoped)      | folds into features-service consolidation |
-| `features-volatility-service/scripts/launch-*.sh`                    | `launch-features-volatility-vm.sh`                     | folds into features-service consolidation |
-| `features-cross-instrument-service/scripts/launch-*.sh`              | `launch-features-cross-instrument-vm.sh`               | folds into features-service consolidation |
-| `features-sports-service/scripts/launch-*.sh`                        | `launch-features-sports-vm.sh`                         | folds into features-service consolidation |
-| `features-prediction-service/scripts/launch-*.sh`                    | `launch-features-prediction-vm.sh`                     | folds into features-service consolidation |
+| `features-service (onchain family)/scripts/launch-*.sh`                       | `launch-features-onchain-vm.sh` (or asset-scoped)      | folds into features-service consolidation |
+| `features-service (volatility family)/scripts/launch-*.sh`                    | `launch-features-volatility-vm.sh`                     | folds into features-service consolidation |
+| `features-service (cross-instrument family)/scripts/launch-*.sh`              | `launch-features-cross-instrument-vm.sh`               | folds into features-service consolidation |
+| `features-service (sports family)/scripts/launch-*.sh`                        | `launch-features-sports-vm.sh`                         | folds into features-service consolidation |
+| `features-service (prediction family)/scripts/launch-*.sh`                    | `launch-features-prediction-vm.sh`                     | folds into features-service consolidation |
 | `deployment-service/scripts/deploy-dashboard-gce-vm.sh` (intra-repo) | `deployment-service/scripts/vm/launch-dashboard-vm.sh` | intra-repo move (deferred)                |
 
 > **Folded in from `launcher-script-consolidation-2026-05-07.md`** (deleted by `codex_refactor_2026_05_08.md` Phase

@@ -42,7 +42,7 @@ from unified_trading_library import ServiceRuntime
 runtime = ServiceRuntime.from_env_and_args(
     operation="compute",
     mode="batch",
-    service_name="features-onchain-service",
+    service_name="features-service (onchain family)",
     category=["DEFI"],
     scenario="default",
     log_level="INFO",
@@ -126,7 +126,7 @@ PM `workspace-manifest.json` has a `cli_capabilities` section per service:
     "extra_args": ["--venues", "--tickers"]
   }
 },
-"features-calendar-service": {
+"features-service (calendar family)": {
   "cli_capabilities": {
     "operations": ["compute", "corporate_actions", "economic_results"],
     "categories": ["CEFI", "TRADFI", "DEFI", "SPORTS"],
