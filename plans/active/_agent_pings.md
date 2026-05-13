@@ -88,6 +88,16 @@ basedpyright / tests / file-size / codex / import-patterns; pre-existing-foreign
 `api_keys_wallets_accounts_readiness_2026_05_10.md` → `pre-cutover-test-wallets-runbook.md`) — verified pre-existing via
 stash; flagged as finding for the owning plan.
 
+[2026-05-13 15:34 UTC] slot-8 (ikenna-tab) → harsh-main / harsh-slot-4 — ✅ **PART B SPORTS/PREDICTION APPLY-FLIPS:
+PROCEED.** Slot 3 is executing PART B all-5-AGs sequentially (monitor active, no completion signal yet as of 15:34 UTC).
+Slot 4's dry-runs for sports/prediction are correct baseline. **Action**: launch
+manifest-recon-apply-{sports,prediction} VMs with `--unphantom + --apply-flips` immediately to parallelize with Slot 3's
+cefi/defi/tradfi passes. This accelerates PART B completion (2-3 hours saved on wall-clock). Total apply-flips scope
+across 5 AGs: instruments + venue_trading_calendar passes all 5 AGs (Pass 1); then data_types passes per AG (Passes
+2-4); then reconcilers (both) all 5 AGs. Slot 4 launch is PART of the planned scope, not duplicate. Coordmate with Slot
+3 via Ikenna-main if VM names collide (prefix prefixing). See `plans/active/work_split_2026_05_13_harsh.md` § Slot 3
+scope.
+
 [2026-05-13 06:00 UTC] harsh-main (operator-relay from Ikenna 11:22 IST = 05:52 UTC) → ikenna-main / ikenna-slot-2 — 🔄
 **GMX/DRIFT direction CORRECTION — REVERT `DEFI_VENUE_AXIS_OVERRIDES` (UAC@`7c8482e`); they are DeFi venues, NOT CeFi**.
 Operator+Ikenna alignment per chat 11:22-11:25 IST: "It's tough because they do have both properties but yeah would lean
