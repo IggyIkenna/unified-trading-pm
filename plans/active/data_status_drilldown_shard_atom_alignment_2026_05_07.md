@@ -415,6 +415,25 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
 - **Surgical recovery gate:** clicking "Deploy Missing" on a single leaf in the data-status panel fires an MTDS VM with
   `--shard-key=...` that re-runs ONLY that shard (verify by inspecting the VM startup script metadata).
 
+## Deferred work after 2026-05-13 slot-2 session
+
+| Phase / item | Status as of 2026-05-13 | Successor / blocker |
+|---|---|---|
+| Phase 7 P1 — venue-detail pagination + field rename | ✅ DONE (deployment-service@99acc13 + deployment-api@0b853ba + deployment-ui@a67c32f) | — |
+| Phase 7 P2 — missing_dates sample label | ✅ DONE (deployment-ui@8ce86fa) | — |
+| Phase 7 P2 — totals_source field | ✅ DONE (deployment-api@b73ce3b + deployment-ui@0529c0a) | — |
+| Codex manifest schema version drift | ✅ DONE (already resolved to v8 pre-session) | — |
+| Phase 0 audit — codex shard-atom matrix verify | `- [ ]` open, never closed | Pre-flight; Phase 1-7 implementation implicitly verified it. Close next touch if no new drift found |
+| Phase 0 audit — 5 sample parquets on-disk | `- [ ]` open, never closed | Operator-doable smoke; not blocking current work |
+| Phase 1 download-csv leaf row_key | `- [ ] **DEFERRED**` to Phase 3 | Phase 3 SmartDownloadButton consumer |
+| Phase 2 visual smoke | `- [ ] **DEFERRED**` | Operator-doable at localhost:5183 |
+| Phase 3 /coverage-summary leaf counts | `- [ ] **DEFERRED**` | data-status multi-axis stream |
+| Phase 5 closeout | `- [ ]` pending Phase 3 completion + Playwright smoke | Deferred per above |
+| Phase 6 Playwright smoke | `- [ ] **DEFERRED**` | Operator-doable once stack running |
+| canonical_question_group shard axis | `- [ ]` named successor: predictions_master_2026_05_07.md | predictions Plan A |
+| cross-registry consistency test | `- [ ]` defers until predictions Plan A | — |
+| Rollup-side metric inconsistency | `- [ ]` owner: infrastructure_master_2026_05_07.md | data-status multi-axis stream |
+
 ## Temporary states + their canonical follow-up plans
 
 - **Phase 4 lags Phase 1–3:** Until MTDS gains `--shard-key`, Deploy- Missing on a leaf falls back to a service-wide
