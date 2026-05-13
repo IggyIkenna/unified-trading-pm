@@ -142,6 +142,18 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
 - [ ] [SCRIPT] P0. **VERIFY** `strategy-service/scripts/run_2yr_config_grid_backtest.py` actually covers all 6 Tier A
       archetype families + uses `target_universe/catalog.py` as the rollout-instance SSOT + uses UAC `StrategyArchetype`
       enum for archetype iteration. If gaps found, **EXTEND** rather than rewrite.
+      **VERIFY-2026-05-13** (slot 6): Script `SUPPORTED_ARCHETYPES` currently only contains
+      `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` (2 of 53 enum members; covers ~2 of 6 Tier A families:
+      defi-carry-family partial, arbitrage-funding-rate=ARBITRAGE_PRICE_DISPERSION). **MISSING**: ml-continuous +
+      ml-settled (need `ML_DIRECTIONAL_CONTINUOUS` + `ML_DIRECTIONAL_EVENT_SETTLED` from
+      `StrategyArchetype` enum), arbitrage-sports-book (need sports vs Polymarket archetype), arbitrage-event-markets
+      (need Polymarket vs CME from `cme_polymarket_arb_2026_05_08.md`), plus 6 more defi-carry-family members
+      (`CARRY_BASIS_DATED`, `CARRY_BASIS_PERP`, `CARRY_RECURSIVE_STAKED`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`,
+      `CARRY_RECURSIVE_BORROW_PERP_HEDGED`, and any other `CARRY_*` archetypes in v2 enum). EXTEND scope = add
+      per-archetype `_DIMENSIONS_BY_ARCHETYPE` grid dimensions + `_dim_kwargs` + `_build_config_grid` branches +
+      `specs_for_archetype` integration test. Estimated ~3-5 cal AI-days (design class 0.6× — 6 new archetype dimension
+      sets + verification pass). **OWNER FOLLOW-UP**: needs design call on per-archetype grid dimension choices (rate
+      window / threshold / slippage tier per archetype family). Spawn sub-plan or assign focused agent.
 - [ ] [SCRIPT] P0. Add `--max-parallel` CLI flag (default = SKU's CPU count); writer-side use UTL
       `ParallelPerSymbolRunner` pattern with shard-level isolation (CLAUDE.md HARD RULE).
 - [ ] [SCRIPT] P0. Wire results aggregation: per-(config_cell, date_chunk) summary → cross-chunk P&L roll-up → master
