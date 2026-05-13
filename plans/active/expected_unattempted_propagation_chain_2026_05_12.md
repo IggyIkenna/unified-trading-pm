@@ -473,13 +473,44 @@ for instrument_id in all_candidate_instruments - in_scope_instruments:
 # NOTE: subscription_list IS the scope gate — this does NOT change what gets processed.
 ```
 
-- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `delta_one` batch handler.
-- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `calendar` batch handler.
-- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `onchain` batch handler.
-- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `volatility` batch handler.
+- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `delta_one` batch handler.
+      (features-service@4a26ae04 — `_expected_unattempted.py` helper + `_resolve_instrument_list`
+      catalog/in_scope comparison + 5 unit tests pass; Harsh slot 2 2026-05-13)
+- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `calendar` batch handler.
+      **NO-OP** — calendar is event-driven (`feature_group=time_features|economic_events` × `date` shard
+      atom, no `instrument_id` dimension). `_manifest_row_key` at `calendar_orchestrator.py:216–222`
+      explicitly documents "Calendar features have no venue/instrument"; `_get_active_instruments` is loaded
+      by `config_reloaders.py` but never consumed by the batch handler or orchestrator. No catalog-vs-scope
+      gate exists; force-wiring would fabricate a nonexistent instrument catalog. (sub-agent investigation
+      2026-05-13; Harsh slot 2)
+- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `onchain` batch handler.
+      **NO-OP** — onchain dispatches by `feature_group` name across 11 chain-event/protocol-driven groups
+      (Aave rates, LST yields, perp funding, etc.). Manifest grain is `(feature_group, date)`. The
+      `lst_filter` in `lst_rewards_bootstrap.py:161` is a collector-level optional filter (defaults to
+      None=ALL LSTs), not the same shape as a catalog-vs-subscription_list filter. Same
+      `subscription_list`-loaded-but-unused pattern as calendar. (sub-agent investigation 2026-05-13)
+- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `volatility` batch handler.
+      (features-service@4a26ae04 — `_record_out_of_scope_instruments` private method + `_run_processing`
+      wiring + 6 unit tests pass; `_get_instruments` IS catalog+scope combined for volatility, so the
+      `max_results` boundary defines out-of-scope; Harsh slot 2 2026-05-13)
 - [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `sports` batch handler.
-- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `commodity` batch handler (if exists).
-- [ ] [QG] P1. `cd features-service && bash scripts/quality-gates.sh`. Push.
+      **NO-OP-WITH-INVESTIGATION-NEEDED** — sports has no `_get_instruments` catalog query; `league_ids`
+      CLI arg at `batch_handler.py:769` is a per-shard filter applied to provider responses, not a
+      catalog-vs-scope gate. The correct fix is UPSTREAM (MDPS Phase 2 propagates instruments-service
+      manifest empties down — partially shipped at mdps@3f70cf6). Sub-agent recommends: (a) record
+      `expected_unattempted` for leagues in `league_ids` that produced no data, (b) defer the
+      catalog-enumeration approach to a Phase 3.5 design call. Operator direction needed.
+      **DEFERRED** — Phase 3.5 design call required. (sub-agent investigation 2026-05-13)
+- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `commodity` batch handler (if exists).
+      **NO-OP** — `(if exists)` caveat resolved: commodity has no upstream catalog. `enabled_commodities`
+      = `["NG", "CL"]` IS the full universe; no catalog-minus-scope dichotomy exists. Manifest grain is
+      `(commodity_code, date)`. (sub-agent investigation 2026-05-13)
+- [x] [QG] P1. `cd features-service && bash scripts/quality-gates.sh`. Push.
+      (features-service@4a26ae04 pushed to live-defi-rollout 2026-05-13. Local QG green on lint /
+      basedpyright / tests / file-size / codex / import patterns. Pre-existing-foreign validator failure
+      in `api_keys_wallets_accounts_readiness_2026_05_10.md` broken markdown link to non-existent
+      `pre-cutover-test-wallets-runbook.md` — confirmed pre-existing via stash; reported as
+      finding under the owning plan; Harsh slot 2)
 
 ---
 
@@ -497,11 +528,27 @@ grep -rn "subscription_list\|instrument_list\|scope\|predict.*instrument" \
   --include="*.py" | grep -v .venv | head -20
 ```
 
-- [ ] [CODE] P2. Pre-audit: extract ML instrument scope → add `ML_SCOPE_INSTRUMENTS` to UAC
+- [x] [CODE] P2. Pre-audit: extract ML instrument scope → add `ML_SCOPE_INSTRUMENTS` to UAC
       `registry/processing_scope.py` (same file as Phase 3.0).
-- [ ] [CODE] P2. Wire `expected_unattempted` for out-of-scope instruments in `ml-training` batch handler.
-- [ ] [CODE] P2. Wire `expected_unattempted` for out-of-scope instruments in `ml-inference-service` batch handler.
-- [ ] [QG] P2. QG on each repo. Push.
+      **NO-OP** — same Option A rationale as Phase 3.0: ML services don't have a static scope list to
+      extract. ml-training takes instruments via CLI `--instruments`; ml-inference takes them via
+      `BatchHandler.handle(instrument_ids=[...])`. No UAC constant needed. (sub-agent investigation
+      2026-05-13)
+- [x] [CODE] P2. Wire `expected_unattempted` for out-of-scope instruments in `ml-training` batch handler.
+      **NO-OP** — ml-training-service trains models on CLI-injected instrument lists; never queries an
+      instruments-service catalog internally. `ManifestWriter` is used in `model_registry.store_model()`
+      to track ML training artifacts (`model_family`, `training_period`, `job_id`), NOT per-instrument
+      data availability. Wiring would be a category error: emitting ML-training-scope metadata into the
+      data-availability manifest. Correct fix is at the launcher/orchestrator layer (VM that invokes
+      ml-training), not inside the service. (sub-agent investigation 2026-05-13; Harsh slot 2)
+- [x] [CODE] P2. Wire `expected_unattempted` for out-of-scope instruments in `ml-inference-service` batch handler.
+      **NO-OP** — same architecture as ml-training: instrument list is externally injected via
+      `resolve_instrument_ids()` in `cli/parser.py` (CLI arg or hardcoded category default). No catalog
+      query; no internal scope filter. `InstrumentDomainConfig.subscription_list` is loaded in
+      `config_reloaders.py:40,48` for log-line use only — never gates inference. (sub-agent investigation
+      2026-05-13; Harsh slot 2)
+- [x] [QG] P2. QG on each repo. Push.
+      **N/A** — no code changes shipped for Phase 4 (both ml services NO-OP). No QG run needed.
 
 ---
 
@@ -669,6 +716,32 @@ for module in ["delta_one", "calendar", "onchain", "volatility", "sports", "comm
                f"already be shipped). QG + push."
     )
 ```
+
+---
+
+## Deferred work after 2026-05-13 Harsh-slot-2 session
+
+| Phase / item | Status as of 2026-05-13 | Successor / blocker |
+|---|---|---|
+| Phase 3.1 (delta_one) | ✅ DONE — features-service@4a26ae04 (Option A wiring + 5 unit tests) | n/a |
+| Phase 3.2 (calendar) | ✅ NO-OP-DONE — event-driven, no instrument-grain shard | n/a (architectural mismatch) |
+| Phase 3.3 (onchain) | ✅ NO-OP-DONE — 11 chain-event feature groups, no instrument catalog | n/a (architectural mismatch) |
+| Phase 3.4 (volatility) | ✅ DONE — features-service@4a26ae04 (Option A wiring + 6 unit tests) | n/a |
+| Phase 3.5 (sports) | 🟡 DEFERRED — needs Phase 3.5 design call beyond Option A (league_ids is shard filter, not catalog gate); correct upstream fix is MDPS→features propagation | Successor: operator triage + Phase 3.5 design decision; not blocking Gate 1 |
+| Phase 3.6 (commodity) | ✅ NO-OP-DONE — enabled_commodities IS the full universe | n/a (architectural mismatch) |
+| Phase 4 (ml-training, ml-inference) | ✅ NO-OP-DONE — externally-injected instrument lists; correct fix at launcher layer | n/a |
+| PART C (writegate 2.A — MDPS 4-state routing) | ✅ SUBSTANTIALLY-DONE — `_create_empty_output` deleted (only docstring residuals remain), `expected_unattempted` propagation wired at date-level dep-check gate via `_record_expected_unattempted_on_skip` (mdps@3f70cf6, Ikenna slot 4 2026-05-12). One-line docstring cleanup at `tests/unit/test_futures_chain_adapter.py` shipped at mdps@f50db4e (Harsh slot 2 2026-05-13). | Successor: writegate Phase 6.x for per-shard upstream `capture_status` branching on adapter input (`live_workers.py` + new `read_upstream_capture_status` helper) — significant refactor beyond 1-sub-agent scope |
+| **GATE 1** | 🟢 **FIRED 2026-05-13** — Phase 3+4+PART C scope complete (substantive + NO-OP rationale captured). Slot 3 (Bucket SSOT PART B) + Slot 6 (TradFi phantom-audit apply-flips) unblocked. | n/a |
+
+### Finding (foreign) — pre-existing broken plan link
+
+`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` references
+`plans/active/pre-cutover-test-wallets-runbook.md` which does not exist on `origin/live-defi-rollout`
+or in the local worktree. Verified pre-existing via `git stash` round-trip (validator
+`run_validators.py --scope all` reports `BROKEN: active/api_keys_wallets_accounts_readiness_2026_05_10.md`
+both before and after my changes). This blocks the production-readiness QG step on every
+features-service / MDPS run. Owner of `api_keys_wallets_accounts_readiness_2026_05_10.md` should
+either create the missing runbook stub or update the markdown link.
 
 ---
 
