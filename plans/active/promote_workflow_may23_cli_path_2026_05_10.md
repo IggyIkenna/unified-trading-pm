@@ -251,7 +251,7 @@ paper/live deployment exists.
       **DEFERRED-AFTER-LIFECYCLE-A2** — sequencing per top-of-file banner. Successor gate: lifecycle Phase A.2 commit
       lands + `VmPrefixSpec` type importable from `deployment-service/scripts/vm/vm_zombie_watchdog.py`.
 
-- [ ] [AGENT] P1. **1.Y DEFERRED-AFTER-CONSOLIDATION-PHASE2 — register strategy launchers in
+- [x] [AGENT] P1. **1.Y DEFERRED-AFTER-CONSOLIDATION-PHASE2 — register strategy launchers in
       `_SERVICE_LAUNCHER_SCRIPTS`** so the Deploy-Missing UI button surfaces them. Owner plan:
       [`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
       Phase 2 (currently DEFERRED-PER-AUDIT 2026-05-10). Add `launch-strategy-paper-vm.sh` +
@@ -259,7 +259,7 @@ paper/live deployment exists.
       `_SERVICE_LAUNCHER_SCRIPTS` dict so operators can deploy via Deploy-Missing UI button instead of running scripts
       manually from workstation. **DEFERRED-AFTER-CONSOLIDATION-PHASE2** — gates on launcher_scripts_consolidation Phase
       2 shipping. Acceptable to ship Phase 1 without this; operators run launchers manually until then (see top-of-file
-      IN-FLIGHT REFACTOR banner).
+      IN-FLIGHT REFACTOR banner). (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered; launcher_scripts_consolidation Phase 2 shipped 2026-05-13.)
 
 **Phase 1 done definition** (per _"Plans Run To Actual Completion"_ HARD RULE):
 
