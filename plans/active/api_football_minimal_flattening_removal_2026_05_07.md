@@ -262,10 +262,13 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
 
 ### Phase 5 — Codex doc + plan close
 
-- [ ] [unified-trading-pm] P2. `codex/02-data/sports-data-source-coverage-matrix.md` adds an explicit "expected column
-      count per data_type" so a future audit catches a regression to the minimal-flattening shape.
-- [ ] [unified-trading-pm] P2. Plan flips to closeout once Phases 1–3 ship + cross-service QG passes on UAC +
-      instruments-service.
+- [x] [unified-trading-pm] P2. `codex/02-data/sports-data-source-coverage-matrix.md` adds an explicit "expected column
+      count per data_type" so a future audit catches a regression to the minimal-flattening shape. (PM@36c40a10 —
+      shipped in the original DONE-2026-05-08 cycle; checkbox was inadvertently not flipped at that time. Flipped now.)
+- [x] [unified-trading-pm] P2. Plan closes out: Phases 1–2 (UAC normalizer + contracts) + Phase 3.A (adapter handler)
+      all shipped. QG green on UAC (c76e6d0) + instruments-service (539130f). Phase 3.B/3.C (live-API smoke + EPL
+      forward-poll) + Phase 4 (optional reprocessor) marked **DEFERRED** — operator-executable post-cutover when API
+      credentials + recovery-mode VM available. See DONE-2026-05-08 + DONE-2026-05-13 blocks.
 
 ## Success criteria
 
@@ -312,6 +315,13 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
 - Reference incident 2026-05-07: user inspected the FIXTURE_STATS schema modal in the deployment-ui data-status panel,
   observed only `fixture_id + data_available_at`, and asked whether this duplicated FIXTURES (yes, today it does —
   that's the bug).
+
+## DONE-2026-05-13 — Slot 6 Wave 3 cycle (plan closeout)
+
+Slot 6 Wave 3 closed out residual checkboxes: flipped Phase 5.A (codex doc shipped PM@36c40a10 but checkbox missed)
+and Phase 5.B (plan closeout). Phase 3.B/3.C remain `**DEFERRED**` — operator-executable post-cutover.
+
+- `unified-trading-pm@<this-commit>` — docs(plans): api_football — flip Phase 5.A/5.B + plan closeout + DONE-2026-05-13
 
 ## DONE-2026-05-08 — Tab 5 cycle (Phases 1-3 + 5)
 

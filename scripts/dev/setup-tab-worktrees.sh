@@ -89,6 +89,57 @@ PY
 slot_branch() { printf 'tab/%s/%s\n' "${OPERATOR}" "$1"; }
 slot_dir()    { printf '%s/%s\n' "${TABS_DIR}" "$1"; }
 
+# Maps $USER/OPERATOR to the per-side orchestrator directory name.
+_orchestrator_dir() {
+    case "${OPERATOR}" in
+        hk)              printf 'harsh_orchestrator';;
+        ikennaigboaka)   printf 'ikenna_orchestrator';;
+        *)               printf '%s_orchestrator' "${OPERATOR}";;
+    esac
+}
+
+# Truncate a slot's per-slot ping file to a fresh stub.
+# Called by --reset-slot after the worktree rebase succeeds.
+# Writes the stub + commits with [reset-slot] tag so CI / cross-side acks
+# recognise this as a known reset event.
+truncate_slot_ping() {
+    local slot="$1"
+    local orch_dir ping_file today
+    orch_dir="${PM_DIR}/$(_orchestrator_dir)/pings"
+    ping_file="${orch_dir}/slot_${slot}.md"
+    today="$(date -u +'%Y-%m-%d %H:%M UTC')"
+
+    # Ensure pings directory exists (first --init may race with provision).
+    mkdir -p "${orch_dir}"
+
+    cat > "${ping_file}" <<EOF
+# Slot ${slot} ping file — re-themed $(date -u +'%Y-%m-%d')
+
+> Doorbell only. One line per active blocker/question (slot N → main) or direction (main → slot N).
+> Full Q&A lives in the slot's plan-of-record § "Open questions". Resolved entries removed by main.
+> Format: \`[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>\`
+
+[${today}] [main → slot ${slot}] — RE-THEMED via --reset-slot.
+Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block on first read).
+New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
+EOF
+    log "  PING  slot ${slot} ping stub written (${ping_file})"
+
+    # Commit the truncated stub from the PM worktree.
+    local pm_wt
+    pm_wt="$(slot_dir "${slot}")/unified-trading-pm"
+    if [[ -d "${pm_wt}/.git" || -f "${pm_wt}/.git" ]]; then
+        git -C "${pm_wt}" add "${ping_file}" 2>/dev/null || true
+        if ! git -C "${pm_wt}" diff --cached --quiet; then
+            git -C "${pm_wt}" commit -m "[reset-slot] slot ${slot} ping stub reset for re-theme" \
+                --no-verify 2>/dev/null && log "  COMMIT slot ${slot} ping stub ([reset-slot] tag)" || \
+                log "  WARN  ping stub commit failed — file still written, commit manually."
+        fi
+    else
+        log "  WARN  no PM worktree at ${pm_wt}; ping stub written but NOT committed."
+    fi
+}
+
 ensure_repo_worktree() {
     # Create worktree for one repo at one slot. Idempotent.
     local repo="$1" slot="$2"
@@ -224,6 +275,7 @@ case "${MODE}" in
         log "Resetting slot ${SLOT_NUM} for new theme (operator '${OPERATOR}')"
         verify_slot_clean "${SLOT_NUM}" || { err "Slot ${SLOT_NUM} dirty — see above. Aborting reset."; exit 2; }
         rebase_slot "${SLOT_NUM}" || { err "Slot ${SLOT_NUM} rebase failed. Resolve manually, then re-run."; exit 3; }
+        truncate_slot_ping "${SLOT_NUM}"
         log "Slot ${SLOT_NUM} reset complete. Ready for new theme assignment."
         ;;
     list)
