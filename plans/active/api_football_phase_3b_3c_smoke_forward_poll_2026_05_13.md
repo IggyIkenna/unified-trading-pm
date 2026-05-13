@@ -14,6 +14,8 @@ estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
+parent_epic: sports_master_2026_05_07.md
+priority: P0
 ---
 
 > **🟢 RESERVE WORK — pulled from api_football_minimal_flattening_removal_2026_05_07**

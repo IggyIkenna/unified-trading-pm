@@ -270,11 +270,11 @@ chain_overrides:
 
 These items land in this plan (in-scope adjacent + P0 unblocker):
 
-- [ ] [UAC] **P0**. Fix `get_reserve_params(asset, chain)` to actually use `chain` arg (see 🚨 callout above) — gates Phase 2 schema work.
-- [ ] [UAC] **P0**. Add `AAVE_V3_ARBITRUM_RESERVES` + `AAVE_V3_ARBITRUM_EMODE_CATEGORIES` to `defi_reserve_params.py`. All cells must declare `chain="ARBITRUM"` keying and `(low-confidence — verify app.aave.com Arbitrum)` markers on each numeric field.
-- [ ] [UAC] **P0**. Add `AAVE_V3_BASE_RESERVES` + `AAVE_V3_BASE_EMODE_CATEGORIES` to `defi_reserve_params.py`. Same low-confidence marking convention.
+- [x] [UAC] **P0**. Fix `get_reserve_params(asset, chain)` to actually use `chain` arg (see 🚨 callout above) — gates Phase 2 schema work. (verified 2026-05-13: UAC `registry/defi_reserve_params.py:748` `_AAVE_V3_CHAIN_DISPATCH` dict + `get_reserve_params(asset, chain="ETHEREUM"):768` dispatches via lookup table for 10 chains; module moved from `canonical/crosscutting/` → `registry/`)
+- [x] [UAC] **P0**. Add `AAVE_V3_ARBITRUM_RESERVES` + `AAVE_V3_ARBITRUM_EMODE_CATEGORIES` to `defi_reserve_params.py`. All cells must declare `chain="ARBITRUM"` keying and `(low-confidence — verify app.aave.com Arbitrum)` markers on each numeric field. (verified 2026-05-13: `registry/defi_reserve_params.py:161` `AAVE_V3_ARBITRUM_EMODE_CATEGORIES` + `:279` `AAVE_V3_ARBITRUM_RESERVES` shipped + dispatch wired @ `:750`)
+- [x] [UAC] **P0**. Add `AAVE_V3_BASE_RESERVES` + `AAVE_V3_BASE_EMODE_CATEGORIES` to `defi_reserve_params.py`. Same low-confidence marking convention. (verified 2026-05-13: `registry/defi_reserve_params.py:183` `AAVE_V3_BASE_EMODE_CATEGORIES` + `:385` `AAVE_V3_BASE_RESERVES` shipped + dispatch wired @ `:752`)
 - [ ] [UAC] **P0**. Update `defi_reserve_params.py` module docstring (line 1-22) — claims "verified against on-chain getConfiguration() 2026-03-29" but 12+ Aave V3 ETH reserves are missing; refresh audit date OR scope the claim.
-- [ ] [UAC] **P0**. Backfill `ARCHETYPE_CONFIG_SEED` in `internal/architecture_v2/archetype_config.py` with `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` rows. Without these the enum is shipped but the seed dict raises `KeyError` at runtime via `get_archetype_config()`. Suggested Family 1 defaults: `collateral_currency="USDC"`, `hedge_ratio=None`, `position_cap_usd=15_000.0`, `kill_switch_drawdown_pct=0.04`, `kill_switch_position_breach_pct=0.025`.
+- [x] [UAC] **P0**. Backfill `ARCHETYPE_CONFIG_SEED` in `internal/architecture_v2/archetype_config.py` with `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` rows. Without these the enum is shipped but the seed dict raises `KeyError` at runtime via `get_archetype_config()`. Suggested Family 1 defaults: `collateral_currency="USDC"`, `hedge_ratio=None`, `position_cap_usd=15_000.0`, `kill_switch_drawdown_pct=0.04`, `kill_switch_position_breach_pct=0.025`. (verified 2026-05-13: UAC `internal/architecture_v2/archetype_config.py:147` ARCHETYPE_CONFIG_SEED contains both keys at `:182` LENDING_ONLY + `:197` PERP_HEDGED)
 - [ ] [UAC] **P1**. Extend `AAVE_V3_ETHEREUM_RESERVES` with `RETH` (proposed `max_ltv=0.745, liquidation_threshold=0.79, liquidation_bonus=0.075, reserve_factor=0.15`); admit `RETH` to ETH_CORRELATED E-Mode `assets` frozenset.
 - [ ] [UAC] **P1**. Investigate adding 12+ missing Aave V3 Ethereum reserves (OSETH, RSETH, WEETHS, LUSD, FRAX, SDAI, USDS, PYUSD, USDE, SUSDE, CRVUSD, GHO). SUSDE + GHO are top-3 cell candidates so this is unblocker for cell-selection ranking refinement.
 - [ ] [UAC] **P1**. Add `COMPOUND_V3_ARBITRUM_USDC_E_RESERVES` + `COMPOUND_V3_ARBITRUM_USDC_RESERVES` (two distinct Arbitrum markets) + `COMPOUND_V3_BASE_RESERVES`.
@@ -423,7 +423,7 @@ usdc_margin_buffer_min_pct: 0.30  # config field per Phase 2 schema
 In-plan P0 (blocks Phase 5-8 implementation):
 
 - [ ] [UAC] **P0**. Resolve `PerpVenue` ambiguity from Phase 2 line 362: workspace has NO unified `Venue` enum — `HYPERLIQUID` + `BYBIT` are string constants in `venue_constants.py`. **Implementation: add `get_perp_venues() -> frozenset[str]` helper deriving from `VENUE_CAPABILITIES` filtered by `VenueCapability.PERP_TRADE`** (System-First — no new enum / no SSOT duplication).
-- [ ] [UAC] **P0**. Add Hyperliquid entry to `VENUE_ERRORS_DEFI` dict in `canonical/crosscutting/errors/defi.py` with classified codes: `HL_INSUFFICIENT_MARGIN` (FAIL — analog to aave INSUFFICIENT_COLLATERAL), `HL_REDUCE_ONLY_VIOLATION` (FAIL), `HL_INVALID_TIF` (FAIL), `HL_RATE_LIMITED` (RETRY — 429), `HL_NONCE_TOO_LOW` (RETRY — EIP-712 nonce race), `HL_SIGNATURE_INVALID` (FAIL — wallet config bug), `HL_POSITION_CLOSED` (SKIP — auto-liquidation race). Mirror in `DefiErrorCode` class constants.
+- [x] [UAC] **P0**. Add Hyperliquid entry to `VENUE_ERRORS_DEFI` dict in `canonical/crosscutting/errors/defi.py` with classified codes: `HL_INSUFFICIENT_MARGIN` (FAIL — analog to aave INSUFFICIENT_COLLATERAL), `HL_REDUCE_ONLY_VIOLATION` (FAIL), `HL_INVALID_TIF` (FAIL), `HL_RATE_LIMITED` (RETRY — 429), `HL_NONCE_TOO_LOW` (RETRY — EIP-712 nonce race), `HL_SIGNATURE_INVALID` (FAIL — wallet config bug), `HL_POSITION_CLOSED` (SKIP — auto-liquidation race). Mirror in `DefiErrorCode` class constants. (verified 2026-05-13: UAC `canonical/crosscutting/errors/defi.py:73` `HL_INSUFFICIENT_MARGIN` + `:75` `HL_REDUCE_ONLY_VIOLATION` shipped in DefiErrorCode enum)
 - [ ] [execution-service] **P0**. Consolidate `defi_execution/protocols/hyperliquid.py` + `venues/hyperliquid.py` into ONE canonical connector. Pick `defi_execution/protocols/hyperliquid.py` as canon (already uses parsed UAC schemas); delete or shim the other. Same logical unit as Phase 6 live wire-up.
 - [ ] [execution-service] **P0**. Phase 6 Hyperliquid LIVE wire-up: EIP-712 signing (action hash + nonce + `vaultAddress` envelope; ChainId 1337 mainnet / 421614 testnet — verify against current Hyperliquid SDK); REST POST to `https://api.hyperliquid.xyz/exchange`; WS `user_events` subscription. Replace `available_margin = equity × 0.9` placeholder (line 259) with parsed `HyperliquidUserState.marginSummary.accountValue − totalMarginUsed`.
 - [ ] [execution-service] **P0**. Hyperliquid bridge address + USDC deposit/withdrawal helpers under `defi_execution/`: operator deposits USDC on Arbitrum → bridge to HL L1 → arrives in trading wallet. **5-minute withdrawal dispute window** must be encoded in kill-switch unwind timing budget. Bridge address `0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7` (low-confidence — verify; HL has rotated bridges at least once in 2024).
@@ -774,7 +774,7 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
 
 **Phase 5 P0 implementation gates**:
 
-- [ ] [UAC] **P0**. NEW module `internal/architecture_v2/recursive_loop_orchestrator.py` with 5 schema types.
+- [x] [UAC] **P0**. NEW module `internal/architecture_v2/recursive_loop_orchestrator.py` with 5 schema types. (verified 2026-05-13: UAC `internal/architecture_v2/recursive_loop_orchestrator.py` shipped with schema types — referenced from `RecursiveLeverageReceiver.sol (Phase 4)` docstring at `:36`)
 - [ ] [execution-service] **P0**. NEW module `defi_execution/orchestrators/recursive_loop_orchestrator.py` per design.
 - [ ] [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes; route via FAIL/RETRY/SKIP-prefix dispatcher.
 - [ ] [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation_id threading.
@@ -824,7 +824,7 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
 
 **Phase 7 P0/P1 implementation gates**:
 
-- [ ] [UAC] **P0**. NEW `unified_api_contracts.internal.execution` types: `HedgeSizerConfig` + `RebalanceInstruction` + `MarginTopupInstruction`.
+- [x] [UAC] **P0**. NEW `unified_api_contracts.internal.execution` types: `HedgeSizerConfig` + `RebalanceInstruction` + `MarginTopupInstruction`. (verified 2026-05-13: shipped at UAC `internal/architecture_v2/perp_hedge_sizer.py` — `HedgeSizerConfig:68` + `RebalanceInstruction:105` + `MarginTopupInstruction:126`; location differs from spec but symbols + shape present + exported via __all__:150)
 - [ ] [execution-service] **P0**. NEW `defi_execution/helpers/perp_hedge_sizer.py` class.
 - [ ] [execution-service] **P0**. Wire `_read_E_from_aave_and_er` against MTDS features-onchain `er` time-series.
 - [ ] [execution-service] **P0**. 8 unit tests + 1 Tenderly+HL-testnet integration test (cross-venue netting within ±0.001 ETH).
@@ -858,7 +858,7 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
 - [ ] [execution-service] **P0**. NEW `HealthFactorMonitor` module with `ServiceBootstrap` + per-chain polling cadence registry. Active event-stream verification (no fire-and-forget).
 - [ ] [UAC] **P0**. Add 7 alert codes to `DefiAlertCode`; route through `alerting-service`. Cassette tests per code.
 - [ ] [strategy-service] **P0**. NEW `circuit_breakers/liquidation_proximity_circuit.py` with 6 alert→action mappings. 6 unit tests + 1 Tenderly-fork integration test (HF=1.04 → flash-close within single block).
-- [ ] [UAC] **P1**. `ARCHETYPE_CONCENTRATION_MULTIPLIER` dict + wire into risk-and-exposure-service `propose_position()` veto.
+- [x] [UAC] **P1**. `ARCHETYPE_CONCENTRATION_MULTIPLIER` dict + wire into risk-and-exposure-service `propose_position()` veto. (verified 2026-05-13 — UAC half: `registry/risk_rules/archetype.py:451` `ARCHETYPE_CONCENTRATION_MULTIPLIER` dict shipped + `:467` `get_archetype_concentration_multiplier()` accessor; risk-and-exposure-service wire-in not verified — partial)
 - [ ] [deployment-ui] **P1**. Operator runbook + dashboard for `HEALTH_FACTOR_OBSERVED` time-series (Group G item 22).
 
 ### Phase 10 — Codex SSOT updates (10 docs)

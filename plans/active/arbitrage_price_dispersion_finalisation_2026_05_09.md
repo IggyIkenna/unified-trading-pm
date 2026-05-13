@@ -33,11 +33,10 @@ completion_gates:
 todos: []
 isProject: false
 estimate_class: design
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_baseline_ai_days: 2
+estimate_calibrated_ai_days: 1.2
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: 20/20 todos done (100%). Plan body claims residual cleanup only — codex circular ref + final flips. Tiny residual baseline 2 × 0.6 = 1.2. **FLAG**: status:active despite 100% checkbox count; operator should consider flipping to status:complete after residual codex ref closes.
 ---
 
 # ARBITRAGE_PRICE_DISPERSION canonicalisation finalisation

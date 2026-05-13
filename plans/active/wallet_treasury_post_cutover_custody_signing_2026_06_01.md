@@ -12,6 +12,8 @@ locked_since: 2026-05-13
 estimate_class: infra
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 9.6
+parent_epic: master_to_live_defi_2026_05_23.md
+priority: P2
 ---
 
 # Wallet / Treasury — Post-Cutover Custody + Signing (June 1+)

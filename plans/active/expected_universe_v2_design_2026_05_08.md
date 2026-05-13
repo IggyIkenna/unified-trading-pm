@@ -17,11 +17,10 @@ related_plans:
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 estimate_class: design
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_baseline_ai_days: 10
+estimate_calibrated_ai_days: 6
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: 15 todos / 0 done; v2 enumerator extends v1 with instruments-catalog × dates × data_types cross-product at per-instrument grain. BLOCKED on G4 v8 schema (manifest_schema_final_gate). Design class (UAC SSOT design + enumerator semantics across 5 asset_groups). Baseline 10 (~0.7 AI-day per substantive todo); × 0.6 = 6.
 ---
 
 > **🟡 BLOCKED-ON G4 v8 SCHEMA** — execution can't start until `manifest_schema_final_gate_2026_05_09` ships the

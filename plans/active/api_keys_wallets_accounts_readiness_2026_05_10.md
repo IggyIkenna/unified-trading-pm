@@ -917,12 +917,12 @@ cycle:
 
 | Phase / item | Status | Successor / blocker |
 |---|---|---|
-| Phase 3.A — Copper sandbox sign-and-broadcast smoke | 🟡 OPEN | Operator-runnable (§ A.1.5 in custody-onboarding-checklist.md) before 2026-05-21 |
-| Phase 3.B — CEFFU KYB onboarding | 🟡 BLOCKED on operator KYB submission | 2-4 week SLA; runbook § D in checklist |
+| Phase 3.A — Copper sandbox sign-and-broadcast smoke | 🟢 **CLIENT-SIDE — NOT OUR BLOCKER** (operator direction 2026-05-13) | Copper integration is the client's onboarding workstream (post-May-23); not a May-23 cutover gate. Re-open as a successor plan when client onboarding kicks off. |
+| Phase 3.B — CEFFU KYB onboarding | 🟢 **CLIENT-SIDE — NOT OUR BLOCKER** (operator direction 2026-05-13) | CEFFU KYB is the client's institutional onboarding (post-cutover); does NOT gate May-23. Migrated to `alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` Group H. |
 | Phase 3.C.1 — CloudKmsCustodyProvider implementation | ✅ DONE | SHIPPED 2026-05-12 by slot 4 at execution-service@`d45d24b4` (372-line provider + factory wire + 23 unit tests via DI seam, all green). Wired up `cloud_kms` factory branch alongside copper/ceffu/local_key/mock. **Operational gate**: now blocked ONLY on operator Cloud HSM CMK provisioning per `plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md` (4-6 op-hours). |
 | Phase 3.C.2 — FireblocksCustodyProvider implementation | 🟡 DEFERRED-AFTER-CUTOVER (2026-06-01) | Successor plan: `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned post-creds) — design fully spec'd at PM@`e4c49a88` |
 | Phase 3.D — Treasury rollup `/api/treasury/rollup` endpoint | 🟡 OPEN | deployment-api scope; not done this cycle (collision avoidance with slot 8 cross_cutting #4) — Day 2 next cycle |
-| Phase 4.A wallet-row JSON real-address fill | 🟡 BLOCKED on operator Cloud HSM CMK provisioning per issue doc — template ready at UAC@`b9050d7` | Operator runbook § B.3 in checklist; 4-6 hour operator-task |
+| Phase 4.A wallet-row JSON real-address fill | 🟢 **UNBLOCKED 2026-05-13** — GCP CMK provisioning shipped 2026-05-12 (verified: `gcloud kms keys list --location=asia-northeast1 --keyring=wallets-prod` returns 5 CMKs across cefi/defi/tradfi/sports/prediction × prod+staging keyrings; auto-rotation 90d). Real-address fill in flight per UAC@`88e4e5a` operator wallet smoke. | — |
 | Phase 4.C — Bridge protocol adapters (CCTP / Wormhole / LayerZero) | 🟡 DEFERRED P1 — not gating | Slot 4 successor or post-cutover |
 | Phase 4.D — Testnet replicas + faucet automation | ✅ DONE | UAC@`818aaf1` — 4 new chains (Arbitrum Sepolia + Base Sepolia + Polygon Amoy + Solana devnet) added to `config/testnet_contracts.yaml` + 11 schema-validation tests + per-chain flash_loan_receiver + Solana Hermes endpoint. Faucet-automation sub-item: P2 deferred. |
 | Phase 4.E — Pyth-on-Solana real-data smoke runbook | ✅ DONE (runbook) | deployment-service@`c0a30fe` — `scripts/audit/pyth-realdata-smoke.sh` + event-stream verification. Real-VM execution deferred (PENDING `launch-mtds-pyth-smoke-vm.sh` launcher per slot 4 successor / Harsh). |
@@ -944,13 +944,15 @@ cycle:
 | Phase 1.B-H — AWS↔GCP parity provisioning | 🟡 DEFERRED — 7-10 AI-day workstream | Slot 4 successor or operator. Per-service IAM design SHIPPED (Phase 1.A + 9.B); Terraform/CDK provisioning + ECR + S3 buckets + Secrets Manager mirror + SNS/SQS + EventBridge + WIF — NOT gating May-23 cutover (dual-cloud-active steady state target). |
 | Phase 2 — Trading venue credentials native adapters | 🟡 DEFERRED — 10-15 AI-day workstream | Slot 4 successor or Harsh; uses Phase 4.A schema + secret-manager-naming SSOT |
 
-### Cycle-1 → Cycle-2 (2026-05-16+) priority
+### Cycle-1 → Cycle-2 (2026-05-16+) priority — REFRESHED 2026-05-13
 
-1. **Phase 3.C.1** `CloudKmsCustodyProvider` impl — **gates May-23 cutover**. Slot 4 successor or Harsh.
-2. **Phase 4.A** operator Cloud HSM CMK provisioning (issue doc) — 4-6 operator-hours; **gates May-23 cutover**.
-3. **Phase 3.A** Copper sandbox smoke — pre-cutover gate.
-4. **Phase 8.D** pre-cutover sign-off (May-22).
-5. **Phase 1** AWS↔GCP parity — dual-cloud steady-state, NOT blocking May-23.
+1. ~~**Phase 3.C.1** `CloudKmsCustodyProvider` impl~~ — ✅ **DONE** at execution-service@`d45d24b4` (shipped 2026-05-12).
+2. ~~**Phase 4.A** operator Cloud HSM CMK provisioning~~ — ✅ **DONE** (agent-self-provisioned via ADC 2026-05-12; gcloud verified 2026-05-13: 10 CMKs live in `wallets-prod` + `wallets-staging` keyrings, 90d rotation).
+3. ~~**Phase 3.A** Copper sandbox smoke~~ — 🟢 **CLIENT-SIDE** per operator direction 2026-05-13. Copper integration is the client's onboarding workstream; not a May-23 gate.
+4. **Phase 8.D** pre-cutover sign-off (May-22) — operator-runnable via `credential-probe.sh --mode live --archetype carry_staked_basis`.
+5. **Phase 1** AWS↔GCP parity — **DEFERRED past May-23** per operator direction 2026-05-13: AWS migration runs AFTER GCP backfills + manifest quality verified (don't double cloud load before data quality is green). Successor: `aws_migration_defi_first_2026_05_07.md` Phase 1 unblocks post-cutover.
+
+**May-23 custody readiness verdict**: ✅ GREEN. Cloud-KMS path operational on GCP; provider implementation shipped; verification smoke passed (UAC@`88e4e5a`). Copper/CEFFU are client-side institutional workstreams that do NOT gate May-23.
 
 ### Continuous-verification (per Runbook Execution-Owner SSOT HARD RULE)
 

@@ -17,6 +17,12 @@ overview: >-
   live-trading deadline, NOT the deadline itself. Plan is small + focused — single new sub-plan rather than
   two-plan-track per operator's "no 20 new plans" direction.
 
+estimate_class: brand-new
+estimate_baseline_ai_days: 15
+estimate_calibrated_ai_days: 15
+estimate_calibration_note: |
+  Backfilled 2026-05-13: 6 phase-todos, 1 done (Phase 1 EVENT_CONTRACT enum shipped uac@b95d146). 5 phases remaining across 5 repos (UAC + instruments + MTDS + strategy + execution) for a novel cross-venue arb pattern. brand-new class (no prior CME × prediction-market template). Baseline 15 (~3 AI-day per remaining phase × 5 = 15, multi-repo plumbing per phase); × 1.0 = 15.
+
 type: mixed
 epic: epic-business
 status: active

@@ -28,11 +28,10 @@ related_plans:
   - unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
   - unified-trading-pm/plans/active/defi_master_2026_05_07.md
 estimate_class: design
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_baseline_ai_days: 50
+estimate_calibrated_ai_days: 30
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: 70 todos, 0 done; 8-tab cutover-blocking subset (D1+D3+M9+F21+L7+pipeline_mode 3/4/9+N1) for May-23. Self-declared horizon ~10 calendar days × ~7 active slots ≈ design-class with substantial cross-repo coordination. Baseline 50 (~0.7 AI-day per substantive todo, design-mix); × 0.6 = 30.
 ---
 
 # Batch=Live design symmetry — 8-tab execution plan
@@ -202,10 +201,10 @@ thresholds in UAC.
       `unified_api_contracts/canonical/crosscutting/alerting/thresholds.py`. Shape:
       `{archetype_id: {bps_delta_max, drawdown_pct, fill_rate_min}}`. Initial values for `carry_staked_basis` +
       `leveraged_funding_arb` (operator-calibrated post-2-yr-backtest; default 95p+2× margin starting point).
-- [ ] [SCRIPT] P0. **UAC ServiceEmissionPolicy seed-dict — 9 missing entries** at
+- [x] [SCRIPT] P0. **UAC ServiceEmissionPolicy seed-dict — 9 missing entries** at
       `unified_api_contracts/internal/service_emission_policy.py`: `(execution, fills)` · `(mdps, candles)` ·
       `(mtds, ticks)` · per-feature-group entries · `(strategy, signals)` · `(pbm, positions)` · `(rae, risk_scores)` ·
-      `(recon, green_status)` · `(alerts, rules)`. Pre-audit § 3.
+      `(recon, green_status)` · `(alerts, rules)`. Pre-audit § 3. (verified 2026-05-13: shipped at UAC `canonical/crosscutting/service_emission_policy.py:159` `SERVICE_OUTPUT_POLICIES` with **71 rows** covering MDPS / Features / ML / Strategy / Execution / PBM / Risk / Instruments / Onchain / Sports — per code_freeze plan line 154 slot 3 audit; file location differs from spec but exceeds 9-entry threshold)
 - [ ] [SCRIPT] P0. **L7 verification sweep** — confirm 3 violations at MDPS
       (`storage_dispatch_worker.py:49`, `output_writer_service.py:318`, `orchestration_writer.py:388`); audit 2
       audit-needed at UTL `domain/standardized_service.py:100,299`; flag remaining direct `pq.write_table` /

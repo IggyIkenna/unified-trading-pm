@@ -34,12 +34,11 @@ isProject: false
 related:
   - sports_uac_schema_contracts_registration_2026_04_24.plan.md (archived)
   - data_status_drilldown_shard_atom_alignment_2026_05_07.md
-estimate_class: design
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_class: refactor
+estimate_baseline_ai_days: 8
+estimate_calibrated_ai_days: 3.2
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: 16 todos, 13 done (near complete; 3 left). Reclassified design→refactor — mechanical UAC normalizer flatten + adapter writer updates + downstream feature consumers; per-payload-key column additions, not closed-set design calls. Baseline 8 (16 todos × ~0.5 mech), × 0.4 = 3.2. # operator-confirm class — borderline refactor/design.
 ---
 
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)

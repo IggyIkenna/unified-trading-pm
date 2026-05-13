@@ -1,8 +1,14 @@
 ---
 type: plan
 asset_group: cross-cutting
-priority: P0
-deadline: 2026-05-23
+priority: P1
+deadline: 2026-06-04
+prior_deadline: 2026-05-23
+deadline_change_reason: |
+  Operator direction 2026-05-13: AWS migration runs AFTER GCP backfills + manifest quality verification.
+  Rationale — don't double cloud load before data quality is confirmed green on the primary cloud.
+  May-23 cutover ships on GCP-only; AWS dual-cloud parity becomes a post-cutover stabilisation goal.
+  Downgraded P0 → P1; deadline 2026-05-23 → 2026-06-04 (≤2 weeks post-cutover, sliding by GCP-green-date).
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -15,13 +21,20 @@ gates:
 supersedes_recommendation:
   - plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md
 estimate_class: infra
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_baseline_ai_days: 40
+estimate_calibrated_ai_days: 32
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
-  Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: 72 todos, 8 done; 64 remaining infra-heavy work (cross-cloud rsync + bucket SSOT alignment + Phase 5 cutover + drift verification). Baseline 40 (~0.6 AI-day per remaining infra todo factoring in real-infra verification overhead per CLAUDE.md "Plans Run To Actual Completion"); × 0.8 = 32.
 ---
 
+> **🟢 SEQUENCING UPDATE 2026-05-13 — AWS AFTER GCP** (operator direction)
+>
+> AWS migration is no longer May-23 critical path. **GCP-only ships May-23**; AWS dual-cloud parity becomes
+> post-cutover (target 2026-06-04, sliding by GCP-green-date). Don't double cloud load before manifest +
+> data-quality is confirmed green on GCP primary. Phases 1-4 (audit + provisioning + ECR + secrets) can run
+> in parallel with GCP backfills (no live blast radius); **Phase 5 cross-cloud data rsync** and **Phase 6
+> ECS Fargate deployment** are GATED on master plan Gate 4 (GCP manifest+data-quality verification).
+>
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
 > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)

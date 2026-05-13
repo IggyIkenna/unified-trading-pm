@@ -19,11 +19,10 @@ related_archetypes:
   - RECURSIVE_STAKED
   - all archetypes touched by LeveragedLegController
 estimate_class: design
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_baseline_ai_days: 20
+estimate_calibrated_ai_days: 12
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: 40 todos, 17 done; multi-stream design+UAC matrix flip + archetype-doc rewrites + UAC enum audit + tracer + P&L attribution. Streams A-E parallel-shippable. Baseline 20 (~0.5 AI-day per substantive todo across remaining ~23); × 0.6 = 12.
 ---
 
 # DeFi archetypes canonicalisation + venue-matrix correction

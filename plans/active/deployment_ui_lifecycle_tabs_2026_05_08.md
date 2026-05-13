@@ -66,6 +66,12 @@ depends_on:
   - launcher-scripts-consolidation-into-deployment-service-2026-05-07
   - infrastructure-master-2026-05-07
 
+estimate_class: brand-new
+estimate_baseline_ai_days: 30
+estimate_calibrated_ai_days: 30
+estimate_calibration_note: |
+  Backfilled 2026-05-13: 37 nested phase todos (Phase A-F lifecycle/cloud/env/service axes + Experiments tracker + env-tiered hosting). brand-new class — single SSOT for everything deployable + greenfield Experiments tracker + env-tiered self-hosting infra slice; no prior template combining all 4 axes. Baseline 30 (~0.8 AI-day per substantive todo across 37); × 1.0 = 30. # operator-confirm — borderline brand-new/design (parts are re-shape of existing infra).
+
 todos:
   # ──────────────────────────────────────────────────────────────────────
   # Phase A — Foundation: lifecycle-class taxonomy + naming convention SSOT

@@ -43,11 +43,10 @@ related:
 todos: []
 isProject: false
 estimate_class: design
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_baseline_ai_days: 15
+estimate_calibrated_ai_days: 9
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: 30 todos, 0 done; cross-repo regression-test net (Python unit + Vitest + Playwright e2e) across deployment-api/ui + UAC + UTL + PM. Design class (test contract surface design; building matrices). Baseline 15 (~0.5 AI-day per substantive todo, mech-leaning); × 0.6 = 9.0.
 ---
 
 # Comprehensive data-status test coverage

@@ -11,11 +11,10 @@ created: 2026-05-08
 shipped: 2026-05-08
 migrated_from: feature_batch_handler_abc_zero_consumers_2026_05_08.md (issue doc)
 estimate_class: design
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.3
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: status:complete (shipped UTL@abeb5bc3 + features-service@7335bbef 2026-05-08). Tiny residual baseline 0.5 × 0.6 = 0.3 for any final flips. **FLAG**: plan is complete; should move to plans/archive/ at next archival pass (no live work remaining).
 ---
 
 # Features ModeHandler ABC lift — successor plan

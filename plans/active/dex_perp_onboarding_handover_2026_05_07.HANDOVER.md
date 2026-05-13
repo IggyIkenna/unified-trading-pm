@@ -4,11 +4,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 created: 2026-05-07
 estimate_class: design
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_baseline_ai_days: 10
+estimate_calibrated_ai_days: 6
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: handover doc, 14 follow-up todos / 0 done — funding-rate forward-poll wiring + per-venue strategy archetype slots + cross-venue arb config. Design class (per-DEX integration shape decisions). Baseline 10 (~0.7 AI-day per substantive follow-up); × 0.6 = 6.
 ---
 
 # DEX perp onboarding — what shipped, what's open, how to make money on these venues

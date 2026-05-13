@@ -481,6 +481,10 @@ Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phas
       the 4 data_types and confirm full per-row column set (xG, shots-on-target, possession, goal-events with minute,
       starting-XI per slot, etc.). [AUDIT 2026-05-07: BLOCKED-ON above flatten ship + re-fetch VM]
 
+**Operational verification owner**: `plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` (P0,
+deadline 2026-05-14 EOD) — folded into this epic 2026-05-13 (was orphan per inventory dashboard); covers Phase 3.B
+live-API smoke (✅ PASSED 2026-05-13) + Phase 3.C EPL forward-poll VM verification.
+
 #### C.2 — ODDS in instruments-service: provenance audit + canonical-home decision
 
 The `data_type=odds` row appears under instruments-service in deployment-ui. Three plausible writers: odds_api (which

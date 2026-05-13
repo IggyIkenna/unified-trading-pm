@@ -6,6 +6,8 @@ created: 2026-05-13
 deadline: 2026-05-15
 estimate_class: design
 estimate_calibrated_ai_days: 1.5
+parent_epic: master_to_live_defi_2026_05_23.md
+priority: P1
 ---
 
 ## Executive Summary

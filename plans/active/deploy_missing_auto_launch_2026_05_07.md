@@ -31,11 +31,10 @@ isProject: false
 related:
   - data_status_drilldown_shard_atom_alignment_2026_05_07.md
 estimate_class: infra
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
+estimate_baseline_ai_days: 9
+estimate_calibrated_ai_days: 7.2
 estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
-  Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Backfilled 2026-05-13: 14 todos, 6 done; 8 remaining covering deployment-api→gcloud auto-launch endpoint + tarball-refresh wiring + IAM/audit + per-VM observability + idempotency guards. infra class (real auto-launch surface, security review). Baseline 9 (~1.1 AI-day per remaining infra todo); × 0.8 = 7.2.
 ---
 
 # Deploy-Missing auto-launch (preview -> auto)
