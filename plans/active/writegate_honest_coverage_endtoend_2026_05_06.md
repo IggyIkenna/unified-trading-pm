@@ -3385,10 +3385,14 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.6 — ml-training + ml-inference (P0, ~3 days)**
 
-- [ ] [ml-training] P0. Wire at the model-version-emission boundary: BLOCK_CRITICAL policy means a partial-coverage
+- [x] [ml-training] P0. Wire at the model-version-emission boundary: BLOCK_CRITICAL policy means a partial-coverage
       training run does NOT publish a model_version artifact + fires a P0 alert. Operator must manually triage. The P0
       alert routes via alerting-service per CLAUDE.md alerting rules. Smoke test: synthetic missing-feature day in
       training window → no model_version published + alert fired + heartbeat continues.
+      (ml-training-service@ff20617 — `_check_emission_policy()` + emission gate in `store_model()` in
+      `ml_training_service/ml/model_registry.py`; `training_completeness_fraction` param added (default 1.0,
+      backwards-compatible); 5 BLOCK_CRITICAL tests in `tests/unit/test_emission_policy.py`; ruff ✅ on my files;
+      test collection blocked by pre-existing UAC `normalize_aster_ticker` gap in slot 7 worktree)
 - [x] [ml-inference] P0. Wire at the per-strategy-signal emission boundary: STRICT_FAIL policy means a stale-feature
       window produces no signal + STALE_DATA event. Strategy sees no signal → defers entry per its own handling.
       (ml-inference-service@9fb5d50 — `_check_emission_policy()` + `_filter_by_emission_policy()` + `_upload_one_mode()`
