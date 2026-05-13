@@ -1613,6 +1613,51 @@ else
     log_success "STEP 5.70: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# STEP 5.71 — Emission-policy paired-callsite enforcement (writegate slice c Phase 6.9)
+#
+# For every service repo whose output data_types appear in UAC SERVICE_OUTPUT_POLICIES,
+# asserts that every record_captured() callsite ALSO has a paired publish_with_policy() /
+# publish_with_manifest_lookup() call within the same function body.
+#
+# Catches drift where a service-team adds a new derived-output adapter and wires
+# record_captured() but forgets to wire the companion emission-policy helper.
+#
+# Escape hatch: add '# QG-allow: emission-policy-not-applicable' on the record_captured()
+# line to mark input-data captures (not derived-output boundaries).
+#
+# Baseline ratchet: emission_policy_paired_callsites_baseline.yaml (starts empty — Phase
+# 6.3-6.8 wired all callsites; only SHRINKS as remaining services migrate).
+#
+# Plan: writegate_honest_coverage_endtoend_2026_05_06.md Phase 6.9.
+# SSOT: CLAUDE.md "Service-output emission policy (writegate slice b/c)".
+_EMISSION_POLICY_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_emission_policy_paired_callsites.py"
+if [ -f "$_EMISSION_POLICY_CHECKER" ]; then
+    _EP_REPO=$(basename "$PROJECT_ROOT")
+    _EP_WS="$REPO_ROOT"
+    _EP_BASELINE="${REPO_ROOT}/unified-trading-pm/baselines/emission_policy_paired_callsites_baseline.yaml"
+    _EP_BASELINE_ARG=()
+    [ -f "$_EP_BASELINE" ] && _EP_BASELINE_ARG=(--baseline "$_EP_BASELINE")
+    if $PYTHON_CMD "$_EMISSION_POLICY_CHECKER" \
+            --workspace-root "$_EP_WS" --scope "$_EP_REPO" "${_EP_BASELINE_ARG[@]}" >/tmp/emission_policy_paired_qg.log 2>&1; then
+        # exit 0 — either no violations, or only baselined ones.
+        if grep -q '^\[STEP 5.71\] OK' /tmp/emission_policy_paired_qg.log 2>/dev/null; then
+            _ep_baselined_count=$(grep -c '^\[WARN\]' /tmp/emission_policy_paired_qg.log 2>/dev/null || echo 0)
+            if [ "$_ep_baselined_count" -gt 0 ]; then
+                log_warn "STEP 5.71: ${_ep_baselined_count} baselined record_captured() callsite(s) missing publish_with_policy() (grandfathered pending Phase 6.3-6.8 rollout); 0 new"
+            else
+                log_success "STEP 5.71: All record_captured() callsites in scope have paired emission-policy calls (writegate Phase 6.9)"
+            fi
+        fi
+    else
+        log_fail "STEP 5.71: NEW record_captured() callsite(s) without paired publish_with_policy() / publish_with_manifest_lookup(). Wire the emission-policy helper or add '# QG-allow: emission-policy-not-applicable' on each input-data record_captured() line:"
+        cat /tmp/emission_policy_paired_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_emission_policy_paired_callsites.py --workspace-root $_EP_WS --scope $_EP_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.71: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)

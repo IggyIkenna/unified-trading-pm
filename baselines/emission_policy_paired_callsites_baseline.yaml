@@ -1,0 +1,22 @@
+# Baseline for QG STEP 5.71 — service emission-policy paired-callsite ratchet.
+#
+# Each entry is a "<repo>::<file>::<func_name>" triple that is allowed to have
+# a record_captured() call WITHOUT a paired publish_with_policy() /
+# publish_with_manifest_lookup() call in the same function body.
+#
+# This baseline starts EMPTY: Phase 6.3-6.9 wired all existing callsites.
+# Any new violation MUST be fixed (add the policy call) or have a
+# '# QG-allow: emission-policy-not-applicable' marker added on the
+# record_captured() line.
+#
+# NEVER add entries here to work around a failure — fix the callsite.
+# Shrink this baseline (remove entries) as services migrate.
+#
+# SSOT: writegate_honest_coverage_endtoend_2026_05_06.md Phase 6.9 +
+# CLAUDE.md "Service-output emission policy (writegate slice b/c)".
+#
+# Seeded 2026-05-13 (slot 7, Ikenna) — Phase 6.9 QG STEP 5.71 ship.
+
+note: "Seeded 2026-05-13 Phase 6.9 ship — 0 violations (all callsites wired via Phase 6.3-6.8)."
+
+violations: []

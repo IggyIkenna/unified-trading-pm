@@ -763,6 +763,158 @@ The structured per-scenario specs above are the design substrate for compressed-
 
 Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C `design-shipped`; 1.D `design-shipped` (seed library design; UAC Pydantic instantiation code = Day 2 implementation slot); Phase 2.E `design-shipped`.
 
+## Phase 2 — Price-shock scenarios design (design-shipped 2026-05-13, slot 7)
+
+> **Status**: `design-shipped` — the 4 scenarios below are codified as `ScenarioOverlay` instances in UAC@`33630a6`
+> (`registry/scenarios/{cefi,defi,cross_asset}.py`). Full implementation spec lives in the scratch_scenarios_day1
+> design fragments (files 07-10) which are the authoritative per-scenario SSOT. This section provides the
+> Phase-2-required summary of magnitude/duration/correlation per scenario, archetype stress-test mapping, and
+> cross-references to existing risk / kill-switch / execution circuit-breaker SSOTs.
+>
+> **Cross-references used throughout this section** (do NOT redesign):
+> - Risk-and-exposure-service thresholds: `codex/04-architecture/circuit-breaker-rule-taxonomy.md`
+> - Position-balance-monitor breach logic: `risk_simulations_limits_alerting_2026_05_08.md`
+> - Kill-switch ladder: `codex/04-architecture/kill-switch-circuit-breaker.md`
+> - Execution-service circuit breakers: `execution-service/execution_service/circuit_breakers/`
+
+- [x] [DESIGN] P0. **2.P1 Flash crash** — sudden multi-venue price drop. Design-shipped 2026-05-13 (design fragment [`scratch_scenarios_day1/08_cross_asset_flash_crash.md`](scratch_scenarios_day1/08_cross_asset_flash_crash.md); UAC registry instance `cross_asset_flash_crash` UAC@`33630a6`).
+
+  **Scenario ID**: `cross_asset_flash_crash`
+  **Category**: `PRICE_SHOCK` + `CROSS_ASSET`
+
+  **Real-world referent**: 2020-03-12 "Black Thursday" — ETH −50% in 2h, BTC −50% in 2h; COVID-onset deleveraging cascade; cross-venue liquidation cascade with funding inversion. Secondary referents: 2022-11-08 FTX disclosure (BTC −25% in 6h), 2024-08-05 JPY carry unwind (BTC/ETH −20%, correlated to equity vol spike).
+
+  **Magnitude curve**:
+  - Default: −1500bps (−15%) over 180s (3min); **30sigma on 30-day rolling per-venue ATR**.
+  - Sub-variants: (a) `moderate` −750bps / 120s; (b) `catastrophic` −3000bps / 60s; (c) `overshoot_then_revert` −1500bps drop → +300bps bounce → settles at −1200bps over 1800s.
+  - Volume: 10x baseline during crash; book-depth drops to 30% baseline (liquidity withdrawal via `BookSpoof(book_depth_scale=0.3)`).
+  - Recovery curve: `partial_50pct` — bounces back 50% over 1800s (75% of historical flash crashes); `no_recovery` (FTX-style structural, 25% of cases).
+
+  **Duration distribution**:
+  - Crash: 60–300s (operator-configurable; median 180s based on 2020-03-12 / 2022-11-08 / 2024-08-05 data).
+  - Recovery: 0–7200s depending on variant. **Bimodal**: 75th-percentile historical crash reverts >50% within 1h; 25th-percentile persist (FTX-style), with no full reversion for weeks.
+  - P99 flash crash duration (full reversion): 30min for spot-only; multi-day for structural events.
+
+  **Cross-venue correlation assumption**:
+  - CeFi perp venues (Bybit / Deribit / Binance / OKX / Hyperliquid / Aster): **extremely high (>0.95)** — all 6 venues receive the shock within `cross_venue_propagation_ms_p95=500ms` (exchange-arb-bot speed). Tests that no single-venue circuit breaker fires without global kill.
+  - DeFi spot legs (Uniswap V3 on Ethereum / Arbitrum / Base): **HIGH (>0.7)** with 30–180s lag (block-time discretization). Pyth feed publishes new low; Chainlink heartbeat lags by up to 20min.
+  - Uncorrelated assets (equity / FX during crypto-only crash): **MODERATE (0.4–0.6)** — tests asset-group isolation so TradFi positions are not incorrectly blocked.
+
+  **Archetype stress-tests**:
+  - `carry_staked_basis` (PRIMARY): LST de-peg risk + hedge-leg liquidation; expected: `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` + `KILL_ALL_LIVE` (if global drawdown breach) arms within 30s; breakers `DRAWDOWN_DAILY_BPS` + `LIQUIDATION_CASCADE_RISK` trip.
+  - `ARBITRAGE_PRICE_DISPERSION` (PRIMARY): basis math degenerates under panic; expected: `KILL_PER_ARCHETYPE_ARBITRAGE_PRICE_DISPERSION` arms within 30s; breakers `DRAWDOWN_DAILY_BPS` + `BASIS_INVERSION_BPS` trip.
+
+  **Alerting rule fired**: `RISK_RULE_BLOCKED` + `CIRCUIT_BREAKER_TRIPPED` + `KILL_SWITCH_ARMED` (all `synthetic=true`).
+  **Kill-switch ladder**: `KILL_ALL` → `MANUAL_UNKILL` (per `codex/04-architecture/kill-switch-circuit-breaker.md` BreakerAction table). Recovery guard: "realized-vol back within 2x of 30-day baseline for 1800s contiguous AND drawdown < 50% of pre-crash level."
+  **Execution circuit-breaker**: `AdversarialMatchingEngine` (execution-service Phase 3.E, `execution-service@d0ec76f1`) fires `RejectFills` + `LatencyInject` during crash window.
+
+- [x] [DESIGN] P0. **2.P2 Basis blowout** — perp-spot basis divergence. Design-shipped 2026-05-13 (design fragment [`scratch_scenarios_day1/09_cross_asset_basis_blowout.md`](scratch_scenarios_day1/09_cross_asset_basis_blowout.md); UAC registry instance `cross_asset_basis_blowout_perp_spot` UAC@`33630a6`).
+
+  **Scenario ID**: `cross_asset_basis_blowout_perp_spot`
+  **Category**: `PRICE_SHOCK` + `CROSS_ASSET`
+
+  **Real-world referent**: 2022-05-09 Terra/LUNA collapse — stETH-ETH peg blowout −7% (3AC + Celsius unwind); perp basis on BTC/ETH inverted across all venues as leveraged longs unwound. Secondary referents: 2021-01-04 Bitfinex BTC-PERP +8% above spot (Tesla/Bitcoin FOMO); 2024-03 ETH staking-yield-perp spreads +400bps pre-Shanghai; 2025-02 Hyperliquid memecoin perps 50%+ above DEX spot.
+
+  **Magnitude curve**:
+  - Default: **500bps** (5% absolute basis deviation; approx 25sigma on 30-day rolling per-cluster basis distribution).
+  - Sub-variants: (a) `moderate` 200bps / 30min; (b) `severe` 500bps / 4h (median); (c) `catastrophic` 1000bps (stETH-ETH 2022-06-15 scale at 6h+).
+  - Direction: `perp_above_spot` (long-bias, positive basis, funding positive) | `perp_below_spot` (short-bias, negative basis) | `multi_venue_inconsistent` (blowout on 1 of 6 venues only — tests cross-venue dispersion alpha generation).
+  - Funding auto-rebalances within next funding period as the synthetic basis divergence crystallizes.
+
+  **Duration distribution**:
+  - Intraday dislocation: 30min (75th percentile of historical basis blowouts).
+  - Sustained structural: 4h (one funding period, median); up to 3 weeks (3AC-collapse scale).
+  - **Right-skewed distribution** — most (80%+) resolve within 8h; tail events (LUNA collapse, stETH 2022) persist weeks.
+
+  **Cross-venue correlation assumption**:
+  - Asset-wide blowout (BTC/ETH basis rich on all venues): **HIGH (>0.8)** — perp arbitrage bots propagate within seconds.
+  - Venue-idiosyncratic blowout (Hyperliquid memecoin, one venue): **LOW (<0.3)** — tests that risk does NOT fire a global kill-switch when only one venue is dislocated.
+  - LST-ETH sub-case (`carry_staked_basis`): DeFi spot leg (Curve / Uniswap stETH-ETH pool) diverges from CeFi perp with 30–180s lag; correlation = MODERATE (0.4–0.6) between pool and CEX feeds.
+
+  **Archetype stress-tests**:
+  - `ARBITRAGE_PRICE_DISPERSION` (PRIMARY): initial blowout generates large entry signal → `MAX_POSITION_SIZE_PER_INSTRUMENT` + `MAX_LEVERAGE` fires → `SCALE_DOWN`; if basis widens post-entry (adverse): `DRAWDOWN_DAILY_BPS` + `BASIS_INVERSION_BPS` trip → `KILL_PER_ARCHETYPE_ARBITRAGE_PRICE_DISPERSION` within 60s.
+  - `carry_staked_basis` (SECONDARY): stETH-ETH basis blowout triggers `DRAWDOWN_DAILY_BPS` + `ORACLE_DEVIATION_BPS` → `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` + FAST_UNWIND within 60s.
+
+  **Alerting rule fired**: `RISK_RULE_SCALED_DOWN` (initial signal cap) → `RISK_RULE_BLOCKED` + `CIRCUIT_BREAKER_TRIPPED` + `KILL_SWITCH_ARMED` if basis widens post-entry.
+  **Kill-switch ladder**: `SCALE_DOWN` → `AUTO_COOLDOWN` (initial cap); escalates to `KILL_ALL` → `MANUAL_UNKILL` if adverse move persists. Recovery guard: "basis returned within 50bps of baseline for 3600s contiguous AND drawdown recovered to within 25% of pre-blowout level."
+  **Execution circuit-breaker**: `AdversarialMatchingEngine` fires `BookSpoof` (asymmetric liquidity withdrawal on perp leg) during blowout window; `RejectFills` if basis widening exceeds safety threshold.
+
+- [x] [DESIGN] P0. **2.P3 Funding-rate spike** — perp funding rate outlier (5sigma+). Design-shipped 2026-05-13 (design fragment [`scratch_scenarios_day1/07_cefi_funding_spike_10x.md`](scratch_scenarios_day1/07_cefi_funding_spike_10x.md); UAC registry instance `cefi_funding_spike_10x` UAC@`33630a6`).
+
+  **Scenario ID**: `cefi_funding_spike_10x`
+  **Category**: `PRICE_SHOCK` (funding rate is a price the strategy pays/receives)
+
+  **Real-world referent**: 2021-04-18 BTC funding rate hit ~100%/yr annualised on Binance / Bybit during the bull-market peak (approx. 0.1%/8h = 10x baseline of 0.01%/8h). Secondary referents: Bybit ETHUSDT 2024-04-12 (FTX aftermath) +0.375%/8h (approx 410% annualised); Hyperliquid 2025-01 JLP funding storm during memecoin volatility; Binance BTCUSDT 2022-11-08 (FTX disclosure) −0.5%/8h.
+
+  **Magnitude curve**:
+  - Default: **10x multiplier** on baseline funding rate — 0.01%/8h → 0.1%/8h (approx 110% annualised). **~30sigma on 30-day rolling per-venue funding-rate distribution**.
+  - Sub-variants: (a) `moderate` 5x / 0.05%/8h; (b) `severe` 10x / 0.1%/8h (default); (c) `extreme` 20x / 0.2%/8h (Hyperliquid memecoin scale); (d) `negative_extreme` −10x (perma-short funding reversal).
+  - Recovery curve: `step` (instant reset at next funding tick) | `linear_28800s` (gradual over 1 funding period).
+  - Applied to ONE `(venue, instrument)` pair by default; optionally multi-venue for correlated-stress case.
+
+  **Duration distribution**:
+  - 1 funding period (8h on Bybit / Binance; 1h on Hyperliquid; 4h on Aster) is the canonical test duration.
+  - Extreme funding spikes typically resolve within 1–2 funding periods (approx 8–16h); 5% persist >5 periods (approx 1.7–2 days).
+  - **Bimodal**: spike-and-snap (majority: resolves < 2 periods); sustained-elevated (minority: >5 periods, forces position restructuring).
+
+  **Cross-venue correlation assumption**:
+  - Top-5 venues during BTC/ETH systemic stress: **HIGH (>0.7)** — all venues see funding move in same direction simultaneously (FTX-style events correlated all venues).
+  - Venue-idiosyncratic (Hyperliquid memecoin storm, single asset): **LOW (<0.2)** — scenario MUST support both `correlated_all_venues` and `isolated_single_venue` sub-cases to test the dispersion alpha system's resilience to venue-specific noise.
+  - `ARBITRAGE_PRICE_DISPERSION` archetype is designed to PROFIT from cross-venue funding divergence; the scenario must validate that risk limits correctly cap oversizing of this signal.
+
+  **Archetype stress-tests**:
+  - `ARBITRAGE_PRICE_DISPERSION` (PRIMARY): `FUNDING_RATE_FLIP_BPS` + `BASIS_INVERSION_BPS` breakers trip → `BLOCK_NEW` on new entries; `SCALE_DOWN` on existing positions proportional to spike magnitude; `RISK_RULE_BLOCKED` + `RISK_RULE_SCALED_DOWN` within 60s of funding tick.
+  - `carry_staked_basis` (SECONDARY): hedge-leg pays funding cost; spike erodes carry margin → per-archetype `FUNDING_RATE_FLIP_BPS` breaker fires → `SCALE_DOWN` on rebalance frequency; `RISK_RULE_SCALED_DOWN` within 60s.
+
+  **Alerting rule fired**: `RISK_RULE_BLOCKED` + `RISK_RULE_SCALED_DOWN` (both `synthetic=true`; no on-call page per alerting-service `_is_synthetic()` short-circuit, Phase 3.F).
+  **Kill-switch ladder**: `SCALE_DOWN` → `AUTO_COOLDOWN` (operational character — not a safety event unless breaker re-fires >3 times within 24h, which triggers `MANUAL_UNKILL`). Recovery guard: "funding rate < baseline x 3 for one full funding period contiguous." (per `codex/04-architecture/kill-switch-circuit-breaker.md` BreakerRecoveryMode table).
+  **Execution circuit-breaker**: `AdversarialMatchingEngine` fires `LatencyInject` (venue latency spikes during funding settlement) but NOT `RejectFills` — funding spike is operational, not a safety halt.
+
+- [x] [DESIGN] P0. **2.P4 Depeg** — stablecoin / wrapped-asset de-peg. Design-shipped 2026-05-13 (design fragment [`scratch_scenarios_day1/10_defi_stablecoin_depeg.md`](scratch_scenarios_day1/10_defi_stablecoin_depeg.md); UAC registry instance `defi_stablecoin_depeg` UAC@`33630a6`).
+
+  **Scenario ID**: `defi_stablecoin_depeg`
+  **Category**: `PRICE_SHOCK` + `DATA_CORRUPTION` (de-peg invalidates derived value-at-peg features)
+
+  **Real-world referent (two canonical events)**:
+  - **2023-03-11 USDC de-peg to $0.87** (−13%) during Silicon Valley Bank collapse. Recovery: 72h after Treasury backstop. Impact: Chainlink aggregator `0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6` published $0.87 for 18h; Aave paused USDC as collateral; Curve 3pool depegged simultaneously. Full recovery within 3 days.
+  - **2022-06-13 stETH de-peg to 0.9404 ETH** during 3AC + Celsius unwind. Recovery: 6+ months (full repeg post-Merge October 2022). Impact: carry_staked_basis hedge leg basis inverted; recursive-borrow health-factors deteriorated.
+
+  **Magnitude curve**:
+  - Tiered response ladder (per operator direction 2026-05-12 in design fragment):
+    - **−100bps (−1%)**: MONITOR only; alert operator; no auto-action.
+    - **−300bps (−3%)**: `SCALE_DOWN` — halve new entries; pause cross-stable arb.
+    - **−500bps (−5%)**: **`KILL_ALL` + `FAST_UNWIND`** — recovery_mode=`MANUAL_UNKILL`. This threshold set at 5% because at 5% depeg, recursive-borrow Aave health-factor recalc + perp-denominator drift cost exceeds peg-restore wait-cost (per backtest on 2023-03 USDC + 2022-06 stETH data).
+    - **−1000bps (−10%+)**: EMERGENCY — all archetypes referencing the stable enter EMERGENCY mode + crystallize stable→ETH/BTC via cheapest path.
+  - **Per-stable override**: algo-adjacent stables (USDE / CRVUSD / FRAX) at HALF the thresholds (KILL_ALL at −250bps) due to historically higher fragility.
+  - Recovery variants: (a) `instant_recovery` (Treasury-intervention style, 6–12h); (b) `linear_recovery_7d`; (c) `no_recovery` (UST-style death spiral).
+
+  **Duration distribution**:
+  - Typical (collateralised stables): 6h–72h (90% of historical instances). USDC 2023-03 = 72h; PYUSD 2024-07 approx 2 weeks.
+  - Structural (algo stables): weeks to permanent (UST 2022 = permanent).
+  - **Bimodal**: 90% of de-pegs resolve within 72h; 10% are structural.
+  - The scenario's 3 recovery variants test the full CDF — operator picks variant matching the stress scenario being exercised.
+
+  **Cross-venue correlation assumption**:
+  - Per-stable isolation: **LOW (<0.2)** — USDC, USDT, DAI, USDE each have distinct issuers + collateral, so de-pegs are normally idiosyncratic. Scenario supports isolated-stable (USDC only) as the default.
+  - Multi-stable cascade (systemic bank-run): **MODERATE (0.4–0.6)** — 2023-03-11 USDC depeg dragged DAI (50%+ USDC backing) + FRAX down. Scenario supports `correlated_multi` sub-variant (`affected_stables: frozenset({"USDC", "DAI", "FRAX"})`).
+  - CeFi perp venues (USDT-quoted instruments): **LOW** for USDT itself under normal conditions; **HIGH** in multi-stable cascades where USDT bid-ask spreads widen across all venues simultaneously.
+  - Composes with `defi_liquidity_drain_lending_pool` (depeg triggers protocol pauses + utilization spikes on Aave/Morpho) and `defi_oracle_deviation_30sigma` (oracle disagrees with AMM-derived peg mid-depeg).
+
+  **Archetype stress-tests**:
+  - `carry_staked_basis` (PRIMARY): USDC borrow leg + LST yield numeraire both impacted. Tiered response per ladder above; `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` arms at −500bps within 60s; EMERGENCY crystallization at −1000bps. Breakers: `ORACLE_DEVIATION_BPS` + `LIQUIDATION_CASCADE_RISK` + `DRAWDOWN_DAILY_BPS`.
+  - `ARBITRAGE_PRICE_DISPERSION` (SECONDARY): USDT-quoted perps require denominator correction; basis-curve feature gets noise from USDT-USD adjustment. `SCALE_DOWN` on USDT-quoted leg at −300bps; `KILL_ALL` on USDT-quoted subset only at −500bps (preserve USD-quoted / coin-margined positions).
+
+  **Alerting rule fired**: `RISK_RULE_BLOCKED` + `KILL_SWITCH_ARMED` + multiple `CRITICAL` alerts (`synthetic=true`); manual_unkill expected for catastrophic tier.
+  **Kill-switch ladder**: `KILL_ALL` → `MANUAL_UNKILL` for all catastrophic-tier outcomes. Recovery guard: "peg-deviation < 50bps for 86400s contiguous AND issuer not in `Paused` state." (per `codex/04-architecture/kill-switch-circuit-breaker.md` BreakerRecoveryMode).
+  **Execution circuit-breaker**: `AdversarialMatchingEngine` fires `RejectFills` on stable-denominated orders when peg < −500bps threshold; `LatencyInject` simulates DEX slippage surge as AMM reprices the depegged stable.
+
+**Full-execution criterion for Phase 2**:
+
+- [x] All 4 price-shock scenario designs documented with magnitude/duration/correlation per scenario. (design-shipped 2026-05-13; authoritative specs at `scratch_scenarios_day1/` files 07-10; this section is the Phase-2 plan-body summary)
+- [x] Real historical references cited per scenario (flash crash: 2020-03-12; basis blowout: 2022-05-09 Terra/LUNA + 2022-06-13 stETH; funding-rate spike: 2021-04-18 BTC 100%/yr; depeg: 2023-03-11 USDC + 2022-06-13 stETH). (evidence: design fragments 07-10 in `scratch_scenarios_day1/`)
+- [x] Cross-references to risk + kill-switch + execution circuit-breaker SSOTs cited per scenario. (evidence: `codex/04-architecture/circuit-breaker-rule-taxonomy.md`, `codex/04-architecture/kill-switch-circuit-breaker.md`, execution-service Phase 3.E `AdversarialMatchingEngine`)
+- [x] UAC `ScenarioOverlay` instances for all 4 scenarios shipped in UAC@`33630a6`. (evidence: `registry/scenarios/{cefi,defi,cross_asset}.py` — `cefi_funding_spike_10x`, `cross_asset_flash_crash`, `cross_asset_basis_blowout_perp_spot`, `defi_stablecoin_depeg`)
+
 ## Audit findings
 
 (Phase 0 sub-agents fill this section — left empty at plan creation.)
