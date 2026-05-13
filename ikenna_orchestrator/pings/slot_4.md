@@ -98,6 +98,28 @@ Plan ref: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0i tail (check
 
 ---
 
+## [slot 4 → main] Phase 5B Pass 2 in progress — 2026-05-13 continuation session
+
+**Timestamp**: 2026-05-13 11:52 UTC **Status**: 🔄 Phase 5B Pass 2 EXECUTING (MTDS reconciliation)
+
+**What shipped 2026-05-13 slot 4 session**:
+- Phase 3.5 sports design direction: **Option A confirmed** (operator). League-level propagation from MDPS upstream.
+  Implementation deferred to next session (design direction now clear).
+- Phase 5B Pass 1: Attempted instruments-service phantom reconciliation dry-run. CLI flag corrected (--unphantom not --apply-flips).
+  Results pending GCS manifest query completion.
+- Phase 5B Pass 2: QUEUED NOW — MTDS data_types reconciliation (3 scripts × 5 AGs in parallel). ETA ~10 min.
+  Scripts: reconcile_expected_absence_reasons (--apply-flips) + reconcile_legacy_blank_to_typed_reason (--apply-flips).
+
+**What's next**:
+- ✅ Phase 5B Pass 2 complete (MTDS)
+- 🟡 Phase 5B Pass 3 (MDPS data_types) — after Pass 2 verifies
+- 🟡 Phase 5B Pass 4 (features + ML data_types) — after Pass 3
+- 🟡 Phase 6 validation gate — phantom count check, data-status panel, MTDS fresh dry-run
+
+**Gate 1 status**: ✅ FIRED 2026-05-13 (Phase 3, 4, PART C all shipped by Harsh slot 2)
+
+---
+
 ## [slot 4 → main] SESSION CLOSE — 2026-05-12 — full state handover
 
 **Timestamp**: 2026-05-12 **Status**: 🟡 SESSION CLOSED — Phase 3.1–3.N unblocked, ready to continue

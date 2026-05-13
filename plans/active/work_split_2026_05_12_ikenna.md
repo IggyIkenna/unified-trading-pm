@@ -340,21 +340,20 @@ PART C — PARALLEL with Phase 3 fan-out (same MDPS repo as Phase 2):
   When Phases 1–4 + 2.A all pushed: ping Slot 1 → GATE 1 fired.
 ```
 
-**Slot 4 session close status (2026-05-12):**
-- PART A (Script-1 root-cause) ✅ DONE — prior session
-- Phase 0A (UAC EmptyConfirmedReason) ✅ DONE — `uac@0457b0e`
-- Phase 0B (UTL helper) ✅ DONE — pre-existed; no new helper needed
-- Gate 0A ✅ FIRED
-- Phase 1 (MTDS pre-flight) ✅ DONE — wired, QG green
-- Phase 1.5 (sports classifier) ✅ DONE — `pm@ff2b46fb`
-- Phase 2 (MDPS dep-skip record_expected_unattempted) ✅ DONE — `mdps@3f70cf6`; 4 unit tests pass
-- Phase 3.0 design direction ✅ RESOLVED — **Option A confirmed** by operator 2026-05-12.
-  subscription_list is runtime (DomainConfigReloader). No UAC frozenset. Runtime comparison at `_get_instruments()`.
-- Phase 3.1–3.N 🟡 TODO — spawn 6 feature sub-agents (delta_one, calendar, onchain, volatility, sports, commodity)
-- Phase 4 (ML services) 🟡 TODO — after Phase 3
-- PART C (writegate 2.A MDPS 4-state routing) 🟡 TODO
-- 19 pre-existing MDPS test failures 🟡 FLAGGED (EmissionDecision schema drift, sports config, env validation) — not this slot's work; logged to ping
-- Gate 1: 🔴 OPEN — need Phases 3, 4, and 2.A first
+**Slot 4 continuation status (2026-05-13)**:
+- Phase 0–2, Phase 1.5 ✅ DONE (2026-05-12 session)
+- Phase 3.0 design direction ✅ RESOLVED (2026-05-12) — **Option A confirmed** by operator
+- Phase 3.1–3.N + Phase 4 ✅ SUBSTANTIALLY DONE (Harsh slot 2 2026-05-13) — features-service@4a26ae04 + NO-OPs investigated
+- PART C (writegate 2.A) ✅ SUBSTANTIALLY DONE (Harsh slot 2 2026-05-13)
+- **Gate 1** ✅ FIRED (2026-05-13) — all blocking work complete
+- **Phase 5B Pass 1** (instruments-service phantom unphantom) — dry-run in progress (2026-05-13 slot 4)
+- **Phase 5B Pass 2** (MTDS reconciliation × 3 scripts) — 🔄 EXECUTING NOW (2026-05-13 slot 4, queued 11:52 UTC)
+  - Scripts: expected_absence_reasons (--apply-flips) + legacy_blank_to_typed_reason (--apply-flips) × 5 AGs parallel
+  - ETA: ~10 min completion
+- Phase 3.5 sports design ✅ DIRECTION GIVEN (Option A: league-level propagation) — deferred to next session
+- Phase 5B Pass 3 (MDPS) 🟡 QUEUED — after Pass 2 success
+- Phase 5B Pass 4 (features+ML) 🟡 QUEUED — after Pass 3
+- Phase 6 validation gate 🟡 QUEUED — after Pass 5B complete
 
 **Slot 5 — Phase 2.D match_end_time + Phase 2.C features-sports**:
 
