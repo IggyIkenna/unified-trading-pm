@@ -5,9 +5,9 @@ date: 2026-05-13
 deadline: 2026-05-23
 last_updated: 2026-05-13
 owner: claude-code
-status: pending_approval
+status: in_progress
 priority: P0
-phase: phase_0_pre_audit_complete
+phase: phase_1_complete
 domain: tradfi
 asset_group: tradfi
 type: schema-migration
@@ -106,19 +106,20 @@ No callsite is at risk of dropping `expiration` silently; the flip-to-required i
 | features-service         | TradFi features may join on contract lifecycle phase           | Low (new consumer)          |
 | strategy-service         | FuturesRollInstruction may bind to LifecyclePhase enum         | Low (new consumer)          |
 
-## Phase 1 — UAC schema change (BLOCKED on orchestrator approval)
+## Phase 1 — UAC schema change (✅ COMPLETE 2026-05-13)
 
-- [ ] [SCRIPT] P0. Create `unified_api_contracts/canonical/domain/derivatives/futures.py` with: -
-      `FuturesContractLifecyclePhase` StrEnum: `LISTED | ACTIVE | IN_FIRST_NOTICE | IN_DELIVERY | EXPIRED | SETTLED` -
-      `CanonicalFuturesContract` (CanonicalBase) with 5 hard-required date/datetime fields (`expiry_date`,
-      `last_trading_date`, `first_notice_date`, `delivery_date`, `settlement_date`) + `lifecycle_phase` + `venue`,
-      `root`, `contract_symbol` (e.g. "ESH26"), `contract_month`, `contract_year`, `tick_size`, `contract_size`. Each
-      date has explicit timezone (CME Central Time for CME products; venue-local for non-CME). - Re-export from
-      `canonical/domain/derivatives/__init__.py` next to `CanonicalOptionsChainEntry`.
-- [ ] [SCRIPT] P0. Flip `CanonicalOptionsChainEntry.expiration` from `AwareDatetime | None = None` to `AwareDatetime`
-      (required). Update class docstring.
-- [ ] [TEST] P0. Unit tests: instantiate `CanonicalFuturesContract` with all required fields; assert
-      `TypeError`/`ValidationError` if any required field omitted. Same for `CanonicalOptionsChainEntry.expiration`.
+- [x] [SCRIPT] P0. Create `unified_api_contracts/canonical/domain/derivatives/futures.py` with
+      `FuturesContractLifecyclePhase` StrEnum + `CanonicalFuturesContract`. Re-export from
+      `canonical/domain/derivatives/__init__.py` next to `CanonicalOptionsChainEntry`. **COMPLETED Phase 1A
+      2026-05-13**: UAC@2ac74e2 — shipped greenfield class + enum. 13 unit tests verify required-field enforcement
+      (ValidationError on each missing required field), extra-field rejection, contract_month/year bounds.
+- [x] [SCRIPT] P0. Flip `CanonicalOptionsChainEntry.expiration` from `AwareDatetime | None = None` to `AwareDatetime`
+      (required). Update class docstring. **COMPLETED Phase 1B 2026-05-13**: UAC@dd407ae — flipped schema + NEW
+      `_parse_deribit_option_expiry()` helper (parses BTC-28JUN24-70000-C → 2024-06-28 08:00 UTC). Fixed 2 callsites
+      that hardcoded `expiration=None` (Deribit mark-price WS + Deribit greeks-when-expiration_ms-None). Added fail-loud
+      guards in 2 Databento callsites (raises ValueError when `raw.expiration` falsy).
+- [x] [TEST] P0. Unit tests for both schema enforcement + parser edge cases. **COMPLETED 2026-05-13**: 25 tests total
+      across `tests/test_canonical_futures_contract.py` (13) + `tests/test_options_expiration_required.py` (12).
 
 ## Phase 2 — Pre-audit grep manifest (✅ COMPLETE — see Phase 0)
 

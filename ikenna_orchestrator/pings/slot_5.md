@@ -321,3 +321,46 @@ backlog (Phase 6.3 orphan? defi_classifier_missing_catalog_crossref?).
 
 Slot 5 idle, watching for main ping on Item 2 Phase 1 unlock. No autonomous Phase 1 ship without orchestrator approval
 per established protocol.
+
+---
+
+## [slot 5 → main] PHASE 1 SHIPPED — 2026-05-13 (post-greenlight execution)
+
+User greenlit Phase 1 directly via chat ("keep going with non-resolved stuff i greenlight that you already did the
+work"). Both Phase 1A (CanonicalFuturesContract greenfield) and Phase 1B (CanonicalOptionsChainEntry.expiration flip)
+shipped.
+
+### Commits
+
+- **UAC@2ac74e2** — Phase 1A: `CanonicalFuturesContract` + `FuturesContractLifecyclePhase` greenfield class at
+  `canonical/domain/derivatives/futures.py`. Re-exported from `canonical/domain/__init__.py`. 13 unit tests. ZERO
+  existing callsites (pre-audit confirmed).
+- **UAC@dd407ae** — Phase 1B: `CanonicalOptionsChainEntry.expiration` flipped from `AwareDatetime | None` →
+  `AwareDatetime` (required). NEW `_parse_deribit_option_expiry()` helper parses Deribit symbols (BTC-28JUN24-70000-C →
+  2024-06-28 08:00 UTC). Fixed 2 callsites that hardcoded `expiration=None` (Deribit WS + Deribit greeks fallback).
+  Added fail-loud guards in 2 Databento callsites. 12 unit tests.
+
+### Per-callsite engineering completed
+
+Of the 8 construction callsites identified in Phase 0:
+
+- **Deribit mark-price-options WS** (was hardcoded None) → parses symbol via `_parse_deribit_option_expiry()`
+- **Deribit options-greeks** (was None when expiration_ms None) → falls back to symbol parse
+- **Databento option_quote** + **Databento CME option_quote** → raise ValueError when `raw.expiration` falsy
+- **IBKR / Yahoo×2 / Tardis** → untouched; already derive expiration from upstream payload
+
+### Risk surface
+
+Medium. Production paths that previously silently wrote None expiration now fail loud at the pydantic boundary or
+upstream guard. This is the desired behaviour per the plan, but ops should expect to see venue-specific errors if any
+upstream payload is missing expiration (especially Databento, which should always have it for options).
+
+### Next phases (NOT shipped — orchestrator may direct)
+
+- **Phase 3**: One-shot manifest migration script for historical-row backfill
+  (`instruments-service/scripts/migrate_tradfi_expiry_schema.py`)
+- **Phase 4**: Downstream consumer cascade (instruments-service futures factory → MTDS Databento bridge →
+  mtds-tradfi-staleness → features-service → strategy-service `FuturesRollInstruction`)
+- **Phase 5**: QG ratchet asserting all 5 required kwargs on `CanonicalFuturesContract(...)`
+
+Slot 5 standing by for next direction.

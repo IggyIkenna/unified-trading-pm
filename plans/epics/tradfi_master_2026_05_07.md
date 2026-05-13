@@ -244,17 +244,23 @@ hard-schema enforcement workspace-wide flips `record_failed(SCHEMA_VALIDATION_FA
 should be required have nulls; landing the workspace-wide enforcement BEFORE futures schemas become required would
 mass-fail every existing futures row.
 
-- [ ] [SCRIPT] P0. **Q1 — `CanonicalFuturesContract` schema** at `unified_api_contracts/canonical/domain/_tradfi.py`.
+- [x] [SCRIPT] P0. **Q1 — `CanonicalFuturesContract` schema** at `unified_api_contracts/canonical/domain/_tradfi.py`.
       Hard-required fields: `expiry_date`, `last_trading_date`, `first_notice_date`, `delivery_date`, `settlement_date`.
       Each is a date or datetime with explicit timezone (CME Central Time for CME products; venue-local for non-CME).
       NEW StrEnum `FuturesContractLifecyclePhase`: `LISTED`, `ACTIVE`, `IN_FIRST_NOTICE`, `IN_DELIVERY`, `EXPIRED`,
       `SETTLED`. Populate from Databento metadata at instruments-service write-time. Without these fields, contract roll
-      detection breaks + odds settlement timing breaks (the issue's root concern).
-- [ ] [SCRIPT] P0. **Q2 — `CanonicalOptionsChainEntry.expiration` flip nullable → required.** Same module. Schema
+      detection breaks + odds settlement timing breaks (the issue's root concern). **COMPLETED 2026-05-13 Phase 1A**:
+      UAC@2ac74e2 — shipped CanonicalFuturesContract + FuturesContractLifecyclePhase at
+      `canonical/domain/derivatives/futures.py` (sibling to options.py + tradfi_roots.py, not `_tradfi.py` as plan text
+      suggested) + 13 unit tests. Greenfield class, zero existing callsites. Downstream consumers wire in
+      `tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md` Phase 4 cascade.
+- [x] [SCRIPT] P0. **Q2 — `CanonicalOptionsChainEntry.expiration` flip nullable → required.** Same module. Schema
       already has the field but it's nullable; flip to required + back-fill from Databento metadata at write-time.
       One-shot migration: walk existing options-chain manifest rows; for any row missing expiration, fail loud (do NOT
       silently fill — operator decides whether to re-fetch or `record_failed(SCHEMA_INCOMPLETE_HISTORICAL)` per missing
-      row).
+      row). **COMPLETED 2026-05-13 Phase 1B**: UAC@dd407ae — flipped expiration to required + added
+      `_parse_deribit_option_expiry()` helper (fixes 2 callsites that hardcoded None) + fail-loud guards in 2 Databento
+      callsites + 12 unit tests. Historical-row backfill deferred to plan Phase 3 (one-shot migration script).
 - [ ] [SCRIPT] P0. **One-shot manifest migration script** under
       `instruments-service/scripts/migrate_tradfi_expiry_schema.py` mirroring existing migration patterns (idempotent,
       dry-run + apply, per-blob CAS via `if_generation_match`, `2*workers` HTTP pool per workspace rules).
