@@ -93,3 +93,27 @@ files). Structural F601 (duplicate dict key) fixes applied:
 
 - `test_data_freshness.py`: 28 failures on `asset_group` vs `asset_class` field name mismatch (existed in HEAD before
   rename work; pre-existing foreign issue).
+
+---
+
+## [slot 6 → main] 2026-05-12 EOD — Part D: Validation + backtest harnesses Day-2-4 scope
+
+**Status**: SCOPE DECISION — Phase 2 + Phase 3C validation in parallel, then Phase 8A/B/C.
+
+**Plan**: `defi_simulation_realism_2026_05_10.md` Phases 2, 3C, 8A/B/C per slot-6 Day-2-4 extension scope.
+
+**Why now**: Features-service consolidation (Part C) cleared registry noise. Validation harnesses are the open critical
+path — Phases 2-7 implementations shipped (execution-service@... per plan). Validation results pending; Phase 8 (1-year
+backtest replays) blocked on Phase 2/3C validation green.
+
+**Parallel workstreams**:
+
+- **Phase 2 validation** (~3-5 AI-days): per-pool-shape golden-fixture writing (7 shapes) + Tenderly-fork comparison
+  runner + per-shape historical-swap validation (sample on-chain Swap events, within X bps threshold per-shape).
+- **Phase 3C validation** (~3-5 AI-days, independent): Aave V3 historical large-supply event collection (≥50 events
+  >$10M) + post-trade rate simulation vs on-chain realized rate comparison (≤10bps tolerance).
+
+**Unblocks**: Phase 8A/B/C (1-year replay harnesses) once validation results land green.
+
+**Day-2-4 allocation**: Phase 2 + Phase 3C Day 2-3 (parallel) → Phase 8A/B/C Day 3-4 (serial, depends on validation
+green).
