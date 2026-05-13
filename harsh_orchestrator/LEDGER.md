@@ -20,7 +20,7 @@ locked_since: 2026-05-08
 | Slot | Theme | State | Plan-of-record | Branch |
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + on-call + LEDGER + ping triage | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
-| 2 | 🔴 Propagation chain Phase 3.1-3.N + 4 + 2.A (CRITICAL PATH → Gate 1) | 🟡 SPAWN PENDING | `expected_unattempted_propagation_chain_2026_05_12.md` | `tab/hk/2` |
+| 2 | 🔴 Propagation chain Phase 3.1-3.N + 4 + 2.A (CRITICAL PATH → Gate 1) | ✅ DONE 2026-05-13 — Gate 1 fired (PM@163d0773); slot freed | `expected_unattempted_propagation_chain_2026_05_12.md` | `tab/hk/2` |
 | 3 | Bucket SSOT residuals: provision 6 buckets + Q5 features rename + PART B apply-flips (gated on Gate 1) | 🟡 SPAWN PENDING | `bucket_name_ssot_canonicalisation_2026_05_10.md` | `tab/hk/3` |
 | 4 | defi_simulation_realism Phases 4-6 (Ikenna slot 6 leftover) + Harsh 5B/5C/6B/6C carry-forward | 🟡 SPAWN PENDING | `defi_simulation_realism_2026_05_10.md` | `tab/hk/4` |
 | 5 | Audit-records PB-1/2/3 (overwrite→append, retention-lock, customer-ID path) | 🟡 SPAWN PENDING | `codex_vs_citadel_infrastructure_audit_2026_05_10.md` (issue docs PB-1/2/3) | `tab/hk/5` |
