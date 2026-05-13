@@ -77,16 +77,23 @@ Gate 1 fires. No action needed from Slot 3 on Phase 3 design — Slot 4 owns the
 
 [2026-05-13 ~19:50 UTC] Slot 3 → Slot 1 — **GATE 1 VERIFIED + PART B READY TO EXECUTE**
 
-✅ Gate 1 ✅ fired (harsh-slot-2 shipped propagation chain Phases 3+4+PART C @ features-service@`4a26ae04` +
-mdps@`3f70cf6`). Phase 3.5 (sports) deferred (design pending); core complete.
+✅ Gate 1 ✅ fired — propagation chain Phases 1–4 complete:
+- **Phase 1 (MTDS)**: ✅ mtds@5717ee9 — instruments-service manifest pre-flight wired (earlier agent)
+- **Phase 2 (MDPS)**: ✅ mdps@3f70cf6 — record_expected_unattempted on skip (earlier agent)
+- **Phase 3 (Features)**: ✅ features-service@4a26ae04 — delta_one + volatility + 3 NO-OPs (harsh-slot-2)
+- **Phase 4 (ML)**: ✅ NO-OP resolved — fix at launcher layer (harsh-slot-2)
+- **Phase 2.A (MDPS 4-state routing)**: ✅ mdps@3f70cf6 — propagation wired (harsh-slot-2)
+Phase 3.5 (sports) deferred (design pending).
 
 **PART B (apply-flips reconcilers) STATUS: READY TO EXECUTE**
 
-- Preconditions ✅ met: Phase 1-4 + 2.A all pushed (Gate 1 condition)
-- Scope: 5 apply-flips passes (instruments + MTDS + MDPS + features+ML) + 2 reconciler sweeps across all 5 AGs
-- Est: 2–3 hrs execution (GCS manifest operations can be large; recommend scheduling uninterrupted window)
-- Dry-run (scan-only) on cefi hit GCS timeout (120s) on large manifest read — network flaky or manifest very large. Can
-  retry with `--max-flips-per-run 10000` safety cap
+- Preconditions ✅ met: Phases 1–4 + 2.A all pushed (Gate 1 condition = operative)
+- Scope: phantom unphantom (Pass 1) + 4 apply-flips passes (MTDS/MDPS/features+ML) + 2 reconciler sweeps across all 5 AGs
+- Reconciliation baseline (from expected_unattempted_propagation_chain): cefi 3,146 flips needed (all other AGs 0). Far
+  under `--max-flips-per-run` 100k cap. Scripts are safe — they abort if unexpected large-scale writes detected.
+- Est: 2–3 hrs execution (GCS manifest operations can be large; network timeouts expected, retried with backoff)
+- Pass 1 dry-run (scan-only) on cefi/prediction showed timeouts; recovery strategy uses patience + optional
+  `--max-flips-per-run 10000` safety reduction if needed
 - Exact sequence in work_split_2026_05_12_ikenna.md § PART B (lines 277–291)
 
 **NEXT STEPS:**
