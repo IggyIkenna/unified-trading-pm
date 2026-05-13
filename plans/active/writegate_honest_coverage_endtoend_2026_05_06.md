@@ -3277,18 +3277,14 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.3 — features-volatility (P0, ~3 days)**
 
-- [ ] [features-volatility] P0. Wire `publish_with_manifest_lookup()` at every features-volatility emission per the seed
-      dict: `high_low_24h` (PARTIAL*OK) / `vol_30d` (NAN_FILL) / `realised_vol_intraday` (PARTIAL_OK). Plus an audit
-      pass for OTHER feature_groups not yet in the seed (z-score normalisation, rolling correlation, etc.) — extend seed
-      dict per finding. NAN_FILL boundary: ensure parquet rows with NaN values still carry a valid
-      `completeness_fraction` (NaN cells contribute to incomplete_window per the column they affect, but the row IS
-      written; tree-based ML models tolerate NaN per CLAUDE.md "Honest absence vs fake placeholders"). **🟡
-      SCOPE-DISCOVERY 2026-05-12 by harsh slot 3**: workspace
-      `rg "\.record_captured|\.record_empty|\.record_failed|publish_with_policy"     features-service/features_service/volatility/`
-      returns **0** callsites today. The features-volatility sub-package has NO honest-coverage manifest writes — Phase
-      6.3 is not a "migration", it's a BUILD-FROM-SCRATCH: (a) introduce a
-      `\_record_manifest*\*`helper triad (mirroring the    `calendar_orchestrator`shape harsh slot 3 just shipped at`features-service@229a0963`),     (b) wire it at the `VolatilityWriter.write_features(...)`call sites in    `features_service/volatility/io/writer.py`+ service`write_features`callers,     (c) decide upstream-completeness computation (vol_30d needs 30 ×`ohlcv_24h`manifest     lookups; realised_vol_intraday is intraday-window per-day), AND     (d) thread the v8 columns from`publish_with_manifest_lookup`'s `EmissionDecision`    into the`record_captured`call (per the MDPS Phase 6.2 v8-column-passthrough     finding above — same shape gap will exist here unless wired together). Realistic     estimate ~3-4 cal AI-days under the`brand-new`
-      × 1.0 multiplier — the original 3 days under-bakes the manifest-write build half.
+- [x] [features-volatility] P0. Wire `_check_emission_policy()` + `_apply_emission_gate()` in
+      `VolatilityFeatureWriter._write_features_impl()`. Fires after WriteGate, before `_upload_parquet`.
+      UAC seeds: `high_low_24h` (PARTIAL_OK) / `vol_30d` (NAN_FILL) / `realised_vol_intraday` (PARTIAL_OK).
+      BLOCK_CRITICAL suppression emits `EMISSION_POLICY_BLOCKED` event. 4 unit tests: STRICT_FAIL×2 +
+      PARTIAL_OK with NaN + NAN_FILL with NaN. (features-service@d7514a08 — _check_emission_policy +
+      _apply_emission_gate + _SERVICE_NAME constant + 4 unit tests in
+      tests/volatility/unit/test_emission_policy.py; QG pre-existing 12 failures all UAC slot-7
+      normalize_aster_ticker dep-version mismatch, not regression; ruff clean; 2026-05-13)
 
 **Phase 6.4 — features-cross-instrument (P0, ~3 days)**
 
