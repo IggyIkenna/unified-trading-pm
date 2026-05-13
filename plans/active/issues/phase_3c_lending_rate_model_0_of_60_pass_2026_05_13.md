@@ -78,12 +78,27 @@ Investigation steps:
 **Owner**: slot 6 follow-up next cycle (Day-5+) OR Harsh slot 4 if Ikenna scope-shifted. Not blocking today's other work
 — Phase 2 AMM golden validation is a separate code path (matcher quote vs captured fixture, NO rate impact dep).
 
+## Fix shipped (2026-05-13)
+
+**Root cause confirmed**: Hypothesis 2 (IRM parameter source mismatch). The USDC Aave V3 IRM has been governance-updated
+to `slope1=0.06` (was 0.04) and `optimal_utilization=0.92` (was 0.90). Math: stale params at U=86% produce
+supply_rate≈2.96% vs live params ≈4.34% — exactly matching the observed sim≈2.7% vs realized≈4.36% gap.
+
+**Fix**: `execution-service@abb526a98` — `_fetch_irm_params_live()` fetches on-chain IRM params per event via
+`Pool.getReserveData → interestRateStrategyAddress → ReserveStrategy.getVariableRateSlope1/2 / getBaseVariableBorrowRate / OPTIMAL_USAGE_RATIO`.
+Strategy-addr cache reduces RPC calls (governance updates rare; many events share same strategy). Reserve factor
+extracted from `configuration.data` bits 64-79 in bps. Params stored in fixture for offline re-runs.
+
+**VM re-run**: `aave-lending-rate-val-20260513-182201`, corr_id `8849FD14-B34D-43F8-B6CA-5265DCA2CCAB`. Awaiting results
+at
+`gs://central-element-323112-defi-validation/results/lending/2026-05-13/8849FD14-B34D-43F8-B6CA-5265DCA2CCAB/results.json`.
+
 ## Execution metadata
 
 ```yaml
 execution:
-  owner: slot 6 follow-up (defi_simulation_realism next cycle) — investigation
-  cadence: one-shot diagnostic; recurring once fixed via amm-golden-* recurring VM
-  verifier: pass-rate ≥ 90% within 10 bps on relaunch of aave-lending-rate-validation VM
-  last_executed: 2026-05-13 (0/60 pass — failing)
+  owner: slot 6 (fix shipped 2026-05-13; VM re-run in progress)
+  cadence: one-shot; recurring once pass-rate verified via amm-golden-* recurring VM
+  verifier: pass-rate ≥ 90% within 10 bps on aave-lending-rate-validation VM results.json
+  last_executed: 2026-05-13 (fix run: 8849FD14-B34D-43F8-B6CA-5265DCA2CCAB — pending)
 ```
