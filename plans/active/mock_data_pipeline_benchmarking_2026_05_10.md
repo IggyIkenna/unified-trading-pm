@@ -214,9 +214,10 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       shipped for strategy-service (`GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix;
       strategy@`a03d12e`) and ml-inference-service (`FeatureSubscriber.read()` override check; ml-inference@`0206358`).
       Harness `mtds_read` command fixed (`--operation fetch` → `--operation download`; utl@`7eceaba`).
-      **DEFERRED remains**: (1) MTDS reader wire-in (`databento_reader.py` / `tardis_reader.py` use a different path
-      and still bypass override — no approach landed yet); (2) subprocess-mode harness run + schema-drift assertion
-      (requires VM, needs operator sign-off); (3) slot-8 handshake items below.
+      **PARTIAL progress**: (1) ✅ MTDS reader wire-in shipped — `TickDataHandler.process()` early-return when
+      `get_synthetic_input_override()` is set (skips Tardis/Databento external-API calls, which bypass
+      `resolve_bucket_uri`; mtds@`82639e0`). **DEFERRED remains**: (2) subprocess-mode harness run + schema-drift
+      assertion (requires VM, needs operator sign-off); (3) slot-8 handshake items below.
       Run each generator's output through the prod MTDS / MDPS / features-* reader for that `(asset_group, data_type)`
       (via the harness `subprocess` mode once Phase 4 wires the `--synthetic-input-uri` flag) and assert NO schema-drift
       error (CLAUDE.md "Reader/schema-drift bug → RAISE LOUD"). Any column the prod reader expects that the Phase 2.A
@@ -570,7 +571,7 @@ uniformly across the 5 chain shards.
 | Phase 2 (UTL generator + profiler + harness) | ✅ done — utl@`ca9c346` (54 tests) | — |
 | Phase 3.A / 3.B (per-archetype generators) | ✅ design-shipped (Phase 1.B specs + Phase 2.A domain logic) | — |
 | Phase 3.C (real-backfill row-count calibration) | ✅ done — uac@`04cb9f5`; CEFI_TRADES 18M calibrated (was 10x too low); 12 specs → `# ESTIMATE`; axis-2 byte-size deferred (features-onchain EMPTY) | 3.C-followup todos added above |
-| Phase 3.D (prod-reader schema-parity verification) | 🟡 partial (P1) | strategy@`a03d12e` + ml-inference@`0206358` wired; MTDS reader + subprocess run + slot-8 items remain |
+| Phase 3.D (prod-reader schema-parity verification) | 🟡 partial (P1) | strategy@`a03d12e` + ml-inference@`0206358` + mtds@`82639e0` wired; subprocess run + slot-8 items remain |
 | Phase 4.A (benchmark CLI) | ✅ done — utl@`457fe19` (`python -m unified_trading_library.synthetic`) | — |
 | Phase 4.B (per-stage profiler integration) | ✅ done — in `BenchmarkHarness` | — |
 | Phase 4.C (profile-parquet emit) | ✅ done — in `cli.main` | — |
