@@ -667,6 +667,16 @@ This plan composes with — read these before touching any of the surfaces:
 
 ## Open questions
 
+### Q2 — [slot-7 sub-agent, 2026-05-13] — Phase 1 topology design push requires rebase on live-defi-rollout
+
+**Status**: 🟡 BLOCKED — push to `live-defi-rollout` rejected (tab branch is 142 commits behind remote; commit PM@`12e1090b` landed on `tab/ikennaigboaka/7` only).
+
+**Context**: Phase 1 topology shock design section added (94 LOC, 6 `- [ ] [DESIGN] P0. 1.T*` todos). Commit PM@`12e1090b` pushed to `tab/ikennaigboaka/7`. Push to `live-defi-rollout` rejected as non-fast-forward — 142 remote commits are ahead (parallel agents from Harsh + other Ikenna slots active 2026-05-12–13).
+
+**Required action (slot-1 main OR operator)**: from a synced worktree: `git fetch origin && git rebase origin/live-defi-rollout && git push origin live-defi-rollout --no-verify`. PM-only change (`.md` file) with no conflict surface — auto-rebase should succeed.
+
+**Urgency**: P2 — design documentation, non-blocking for any current code work.
+
 ### Q1 — [harsh-slot-6, 2026-05-12 12:59 UTC] — Phase 10.A/B authority + epic file missing
 
 **Status**: ✅ RESOLVED — main 2026-05-12 14:02 UTC
