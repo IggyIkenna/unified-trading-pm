@@ -166,41 +166,90 @@ canonical manifest post-v2.
 
 ### Phase 1 — v2 enumerator implementation (P1, ~1 day)
 
-- [ ] [SCRIPT] P1. Extend `instruments-service/scripts/enumerate_expected_universe.py` with `enumerate_v2()` function
+- [x] [SCRIPT] P1. Extend `instruments-service/scripts/enumerate_expected_universe.py` with `enumerate_v2()` function
       per the design § Implementation. Signature: `enumerate_v2(*, asset_group, catalog: InstrumentCatalog, date_axis:
       list[date], data_types: list[str]) -> Iterator[ExpectedRow]`. Cross-joins v1's date axis with catalog's per-
       instrument lifecycle, respecting per-asset_group lifecycle rules (cefi instrument-listing `active_from`/`active_to`,
       prediction market `market_created_at`/`settlement_time`, defi protocol-launch `PROTOCOL_LAUNCH_DATES`, sports
-      per-fixture lifecycle).
-- [ ] [SCRIPT] P1. Add CLI flag `--enumerator-version v1|v2` (default v2 once G4 lands). v1 stays callable via flag for
-      diff-debug.
-- [ ] [SCRIPT] P1. Unit test: `tests/test_enumerate_expected_universe.py` covers per-asset-group lifecycle rules with
-      synthetic catalog + date axis. Asserts: cefi instrument delisted on 2024-06-01 → no rows after; prediction market
-      `settlement_time=2024-12-31` → no rows in 2025; defi protocol `PROTOCOL_LAUNCH_DATES[(arbitrum, aave-v3)]=
-      2022-03-16` → no rows before.
+      per-fixture lifecycle). Also ships `InstrumentCatalogEntry` NamedTuple, `_catalog_from_dataframe`, `_V2_ENUMERATORS`
+      dispatch table, and `_write_absent_rows()` shared helper (v1 write path refactored to use it).
+      (instruments-service@5c5b1f8 — +919/-210 lines in enumerate_expected_universe.py)
+- [x] [SCRIPT] P1. Add CLI flag `--enumerator-version v1|v2` (default v2 once G4 lands; v1 stays callable via flag for
+      diff-debug) + `--catalog-path` flag for instruments-service catalog GCS/local path.
+      (instruments-service@5c5b1f8)
+- [x] [SCRIPT] P1. Unit tests: `tests/unit/scripts/test_enumerate_expected_universe_v2.py` — 65 tests covering all 5
+      per-asset-group v2 enumerators (cefi/defi/tradfi/sports/prediction), `InstrumentCatalogEntry` NamedTuple,
+      `_catalog_from_dataframe`, `enumerate_v2()` public API, closed-set compliance (11 combinations), dispatch table
+      completeness. All 65 tests pass.
+      (instruments-service@5c5b1f8 — 662 lines, tests/unit/scripts/test_enumerate_expected_universe_v2.py)
 - [ ] [SCRIPT] P1. Integration test: real instruments-service catalog read (~50K cefi instruments) × 100-day axis × 3
       data_types → asserts ~15M rows enumerated within 60s on a same-region VM. Assert no v1 row missing from v2 output
-      (v2 is strict superset).
+      (v2 is strict superset). **DEFERRED**: requires G4 v8 schema landed + live instruments-service catalog endpoint.
+      Successor: Phase 4 launch prep (pre-flight integration smoke before first VM launch).
 
 ### Phase 2 — Per-VM launcher + watchdog registration (P1, ~0.5 day)
 
-- [ ] [SCRIPT] P1. New launcher `deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh` per the workspace
-      launcher SSOT. Args: `--asset-group <cefi|defi|tradfi|sports|prediction>` (sharding axis); `--clip-after <date>`
-      optional. Sets `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=expected-universe-v2-{asset_group}-{RUN_TS}`. Reads
-      `DEPLOYMENT_ENV` per bucket-name-SSOT rule.
-- [ ] [SCRIPT] P1. Register `expected-universe-v2-` prefix in `deployment-service/scripts/vm/vm_zombie_watchdog.py`
-      `VM_PREFIX_TO_BUCKET` dict (per "VM Naming Convention" rule). Bucket: the manifest's per-VM shard bucket.
-      **After dict edit, RELAUNCH watchdog VM**.
-- [ ] [SCRIPT] P1. Singleton-lock pattern in launcher: refuses launch if same-asset-group VM already RUNNING in zone
-      (catalog reads are sequential per asset_group; thundering-herd protection — per `launch-sfi-forward-poll.sh`
-      precedent).
+- [x] [SCRIPT] P1. New launcher `deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh` per the workspace
+      launcher SSOT. Positional: `asset_group` (cefi|defi|tradfi|prediction|sports); optional `--apply-write`,
+      `max_writes`, `catalog_gs_path`. Named flags: `--force`, `--env`. Sets `MANIFEST_PER_VM_SHARDS=true` +
+      `VM_NAME=expected-universe-v2-{asset_group}-{RUN_TS}`. Reads `DEPLOYMENT_ENV` per bucket-name-SSOT rule.
+      Default catalog path: `gs://instruments-store-{asset_group}-{project}/{env}/catalog.parquet`.
+      Includes Runbook execution SSOT block (owner/cadence/verifier/last_executed). Bash syntax: OK.
+      (deployment-service@7313a39 — scripts/vm/launch-expected-universe-v2-vm.sh, 217 lines)
+- [x] [SCRIPT] P1. Register `expected-universe-v2-` prefix in `deployment-service/scripts/vm/vm_zombie_watchdog.py`
+      `VM_PREFIX_TO_BUCKET` dict. Value: `None` (heartbeat-only, same pattern as v1 `expected-universe-enum-: None`).
+      Rationale: v2 writes per-VM manifest shards, not a canonical data bucket; watchdog polls event stream only.
+      **RELAUNCH watchdog VM after this dict edit — operator action before first v2 VM launch.**
+      (deployment-service@7313a39 — vm_zombie_watchdog.py +6 lines)
+- [ ] [SCRIPT] P1. Singleton-lock shell tests for the v2 launcher at
+      `deployment-service/tests/test_launch_expected_universe_v2.sh`. Asserts: (a) refuses launch if same-prefix VM
+      RUNNING; (b) --force bypasses singleton check; (c) --env staging passes DEPLOYMENT_ENV=staging to VM metadata;
+      (d) missing asset_group exits 2; (e) invalid asset_group exits 2.
+      **DEFERRED**: tests require gcloud mock harness; implement as pre-Phase-4 gate.
 
 ### Phase 3 — Q1-resolution: sharding strategy (P1, ~0.25 day)
 
-- [ ] [DECISION] P1. Resolve plan Q1: cefi spot/perp v2 = 180M rows → shard by venue (one VM per venue) per the design
-      bias toward "single VM doesn't burn full catalog read just to enumerate". Verify on a same-region test VM that
-      bybit-only enumeration completes in <30 min wall-clock. Document the venue-sharding decision in the plan body +
-      codex SSOT before Phase 4 launch.
+- [x] [DECISION] P1. Resolve plan Q1: cefi spot/perp v2 = 180M rows → **shard by venue** (one VM per venue, ~7 VMs
+      for cefi). Decision rationale documented below in § "Q1 sharding decision — cefi spot/perp venue axis".
+      Venue-sharding avoids single-VM Tardis full-catalog read; each VM reads only its venue's instrument catalog slice.
+      Pre-Phase-4 smoke: run bybit-only enumeration on a same-region test VM; assert completion <30 min wall-clock.
+      (2026-05-13 — documented in plan body below)
+
+### Q1 sharding decision — cefi spot/perp venue axis (resolved 2026-05-13)
+
+**Decision**: shard the cefi spot/perp v2 enumeration by **venue**, launching one VM per venue (~7 VMs total for cefi).
+
+**Rationale**:
+- cefi spot/perp v2 estimate is ~180M rows (10 venues × 2000 instruments × 1825 days × 5 data_types), dominating total output 95%.
+- A single VM reading the full cefi catalog performs a full Tardis catalog read across all venues; this burns read bandwidth
+  and makes failure-recovery expensive (retry = restart full scan).
+- Venue-sharding means each VM reads only its venue's instrument catalog slice (~200 instruments per venue, not 2000 total).
+  Narrower catalog read → faster startup, smaller memory footprint, faster enumeration per VM.
+- Per-VM shard isolation (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`) means parallel venue runs are safe; no
+  manifest-write contention. The consolidator daemon merges shards post-completion.
+- The launcher script (`launch-expected-universe-v2-vm.sh`) already accepts `--asset-group cefi` at the top level.
+  Venue-level sharding is implemented by passing `--catalog-path gs://instruments-store-cefi-{project}/{env}/{venue}/catalog.parquet`
+  per venue, or by filtering the catalog to a single venue inside the enumerator (operator choice at launch time).
+
+**Venue list for cefi Phase 4** (one VM each):
+1. BINANCE (spot + perp)
+2. BYBIT (spot + perp)
+3. OKX (spot + perp)
+4. KRAKEN (spot + perp)
+5. DERIBIT (options/futures — lower row count but same pattern)
+6. HYPERLIQUID (perp)
+7. ASTER (perp)
+
+**Pre-Phase-4 smoke gate**: before launching all 7 cefi VMs in production, run a BYBIT-only enumeration on a same-region
+test VM (`bash launch-expected-universe-v2-vm.sh bybit --scan-only`). Assert:
+- STARTED event within 60s.
+- Enumeration completes in <30 min wall-clock.
+- CSV report rows match expected: bybit instrument count × date axis × data_types.
+- No FAILED event.
+
+**Q2 (denominator query latency)**: deferred to deployment-api scope. Preliminary position: compute live per-request
+using pyarrow column-projection on the 190M-row manifest (pyarrow scans in ~30s on same-region VM); cache in redis
+with 24h TTL if latency proves unacceptable at P95 under load.
 
 ### Phase 4 — Production launch (P1, ~0.5 day wall-clock; 2-4 hrs per asset_group)
 
