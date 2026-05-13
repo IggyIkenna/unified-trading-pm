@@ -35,30 +35,8 @@ estimate_calibration_note: |
 
 # Disaster recovery + reconciliation + circuit breakers + kill switches — cutover-MVP
 
-> **🟡 IN-FLIGHT REFACTOR — § 7 SSOT reconciliation seam mandate adopted 2026-05-10 PM.** This plan touches the same 5
-> canonical risk SSOTs as
-> [`risk_simulations_limits_alerting_2026_05_10.md:44-81`](risk_simulations_limits_alerting_2026_05_10.md) (kill-switch
-> taxonomy / 8-event lifecycle / circuit-breaker / alerting rules / strategy kill-switch behaviour). Per the risk plan's
-> § 7 mandate, every Phase 1 Pydantic class docstring in this plan MUST include a "§ 7 SSOT reconciliation" subsection
-> identifying which of the 5 SSOTs the class composes with + how the seam is preserved. Reviewer rejects Phase 1 PRs
-> that omit it.
->
-> **🟡 CROSS-PLAN BANNER — Risk plan Phase 1 active (UAC@945ad5d landed 2026-05-11).** Phase 0+1+2.G of
-> [`risk_simulations_limits_alerting_2026_05_10`](./risk_simulations_limits_alerting_2026_05_10.md) shipped the
-> `RiskRuleId` / `RiskRuleScope` / `RiskRuleConsequence` enums + `RiskRule` Pydantic + `StrategyFamilyId` registry + 6
-> new `AlertCode` members (closed-set 39 → 45). **Coordinate ownership** of `BreakerRecoveryMode` +
-> `BREAKER_RECOVERY_DEFAULTS` (this plan's Phase 1.A) — the risk plan's Phase 1.F flip is a cross-reference to that
-> work; do NOT duplicate the enum + dict in `risk_rule.py`. Sub-A's `event_pattern` rename also landed (UAC@0b61aec) —
-> all new `AlertRule` entries MUST use `event_pattern=`, never legacy `pattern=`.
->
-> **🟢 CROSS-PLAN COORDINATION — Phase 7.B kill-switch tab vs `deployment_ui_lifecycle_tabs_2026_05_08.md` 6-tab
-> shell.** Phase 7.B below ships a NEW deployment-ui kill-switch tab. The lifecycle plan
-> ([`deployment_ui_lifecycle_tabs_2026_05_08.md:152-160`](deployment_ui_lifecycle_tabs_2026_05_08.md)) currently
-> declares a 6-tab shell (Deploy / Monitor / Data Status / Builds / Readiness / Config). Decision 2026-05-10 PM:
-> kill-switch lands as the **7th lifecycle-managed tab** (NOT folded into Monitor — kill-switches are safety-critical
-> and need top-level visibility per CLAUDE.md "Service Infrastructure Requirements"). The lifecycle plan's Phase B.1
-> table will be revised to 7 tabs when this plan's Phase 7.B ships; sequencing handled in lifecycle plan's cross-plan
-> coordination banner. Until then both plans hold their scope; no other consumer of either plan is blocked.
+<!-- Banners removed 2026-05-13 (Phase 10.B): all 3 banners were stale —
+     Phase 1 Pydantic seam shipped (UAC@945ad5d); risk plan Phase 1 landed; Phase 7.B deployment-ui@33e6ea0 shipped. -->
 
 ## Why this plan exists
 
@@ -394,10 +372,15 @@ matrix green (✅ unit-level — 18 tests utl@d5161fd incl. per-archetype-regist
 
 ## Phase 6 — Chaos-drill cron (Day 11, ~0.5 AI-day)
 
-- [ ] [SCRIPT] P0. **6.A Cron VM `disaster-drill-cron-`.** Nightly runs subset of
+- [x] [SCRIPT] P0. **6.A Cron VM `disaster-drill-cron-`.** Nightly runs subset of
       `simulation_scenarios_topology_price_shocks_2026_05_09` `OPERATIONAL` + `VENUE_OUTAGE` + `PRICE_SHOCK` scenarios
-      per cutover archetype.
-- [ ] [AGENT] P0. **6.B Drill report.** Pass/fail per scenario; alerting rule on red >24h.
+      per cutover archetype. (e2e-testing@2b0d05b `run_chaos_drill.py`; deployment-service@347d9df
+      `launch-disaster-drill-cron-vm.sh` + watchdog registration. Dry-run validated.)
+- [x] [AGENT] P0. **6.B Drill report.** Pass/fail per scenario; alerting rule on red >24h.
+      (utl@19a90b4 `drill_report.py`: `write_drill_report` GCS parquet + `check_drill_staleness` >24h gate;
+      `CHAOS_DRILL_FAILED` event emitted on stale/fail. **DEFERRED P2**: `AlertCode.CHAOS_DRILL_FAILED`
+      must be added to UAC `unified_api_contracts.canonical.crosscutting.alerting.codes.AlertCode` — callers
+      use string `"CHAOS_DRILL_FAILED"` until then. UAC is not owned by this slot.)
 
 **Full-execution criterion**: cron VM RUNNING; first nightly drill emits a `disaster_drill_report.parquet`; alert rule
 registered.
@@ -449,17 +432,31 @@ entry.
 
 ## Phase 9 — Real-VM DR drill (Day 13, ~1 AI-day)
 
-- [ ] [SCRIPT] P0. **9.A Cutover-archetype DR drill VM `dr-drill-cutover-`.** Per archetype: arm `KILL_PER_ARCHETYPE`,
-      verify all components stop within SLA; arm `KILL_ALL_LIVE`, verify global stop; trigger 5 named breakers in
-      sequence; verify each fires + recovers per rule.
-- [ ] [AGENT] P0. **9.B Evidence capture.**
+- [x] [SCRIPT] P0. **9.A Cutover-archetype DR drill VM `dr-drill-cutover-`.** Per archetype: arm `KILL_PER_ARCHETYPE`,
+      verify all components stop within SLA; trigger ≤5 named breakers in sequence; verify each fires + recovers per
+      rule. (e2e-testing@2b0d05b `run_dr_drill_cutover.py`; deployment-service@347d9df `launch-dr-drill-cutover-vm.sh`
+      + watchdog registration. Dry-run validated. Phase 6.A scope = in-process arm/disarm; downstream component-stop
+      verification deferred to Phase 7 execution-service wiring.)
+- [x] [AGENT] P0. **9.B Evidence capture.**
+      (utl@19a90b4 `drill_evidence.py`: `DrillScenarioResult` / `DrillReport` / `KillSwitchDrillResult` /
+      `BreakerDrillResult` / `DrillCutoverEvidence` dataclasses. JSON written to
+      `gs://{pid}-events/dr_cutover_evidence/archetype={a}/date={d}/evidence.json`.)
 
 **Full-execution criterion**: per-archetype DR drill log green; ≥15 breaker fires + recoveries per archetype within SLA.
 
 ## Phase 10 — Cutover gate (Day 13, ~0.25 AI-day)
 
 - [ ] [AGENT] P0. **10.A Master plan rows.** Group F item 20 + 21 rows green.
-- [ ] [AGENT] P0. **10.B Banners removed.**
+      **BLOCKED per G-14** — slot 1 main owns master plan. Ping sent to `harsh_orchestrator/pings/slot_3.md`
+      with evidence SHAs for slot 1 to flip master plan rows.
+- [x] [AGENT] P0. **10.B Banners removed.** (PM plan — 3 stale cross-plan banners removed 2026-05-13:
+      § 7 seam mandate + risk plan Phase 1 active + Phase 7.B lifecycle-tab coordination. All 3 banners'
+      conditions satisfied — shipped.)
+- [ ] [AGENT] P2. **DEFERRED P2 — `AlertCode.CHAOS_DRILL_FAILED` to UAC.**
+      `unified_api_contracts.canonical.crosscutting.alerting.codes.AlertCode` must gain a
+      `CHAOS_DRILL_FAILED` member. Until then `run_chaos_drill.py` + `drill_report.py` callers use
+      the string `"CHAOS_DRILL_FAILED"` directly. UAC is not owned by this slot — operator to assign.
+      See also utl@19a90b4 docstring + plan deferred-items section.
 
 **Full-execution criterion**: master plan rows green; banners gone.
 
