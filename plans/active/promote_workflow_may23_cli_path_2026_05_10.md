@@ -263,17 +263,19 @@ paper/live deployment exists.
 
 ## Phase 1 smoke-gaps → Phase 2 todos (discovered 2026-05-12 smoke run)
 
-- [ ] [AGENT] P0. **Wire `ServiceBootstrap` into `colocated_engine.py`** so paper/live VMs emit
+- [x] [AGENT] P0. **Wire `ServiceBootstrap` into `colocated_engine.py`** so paper/live VMs emit
       `STARTED`/`STOPPED`/`FAILED` to `gs://central-element-323112-events/events/strategy-service/`.
       Currently `colocated_engine.py` has no ServiceBootstrap; events go to the deployment heartbeat archive only.
       Required for "No fire-and-forget VM launches" HARD RULE compliance.
+      (e2e-testing@afd0c16 — used setup_events()+log_event() directly; full ServiceBootstrap incompatible with asyncio CLI structure)
 - [x] [AGENT] P0. **Register `carry_staked_basis` (and `leveraged_funding_arb`) in `V2BatchHarness`** resolver.
       Observed error: `Unknown strategy: carry_staked_basis -- V2BatchHarness: no resolver entry for strategy_type`.
       Phase 2 must add resolver entry (or confirm the archetype slug → strategy_type mapping).
       (strategy-service@61dc112 + e2e-testing@8427dc0 — lowercase aliases added to _DEFI/_CEFI
       in archetype_slot_resolver.py + STRATEGY_CATEGORIES in colocated_engine.py; tarballs refreshed 14:39 UTC 2026-05-12)
-- [ ] [AGENT] P1. **Add self-delete on startup-script failure** in `setup-data-pipeline-vm.sh`. When `set -euo pipefail`
+- [x] [AGENT] P1. **Add self-delete on startup-script failure** in `setup-data-pipeline-vm.sh`. When `set -euo pipefail`
       exits the script early (e.g. dep conflict), the VM stays RUNNING indefinitely. Add a `trap "gcloud compute instances delete \$(hostname) ..." ERR EXIT` at script top for strategy-paper/live tasks.
+      (deployment-service@ab6bfd2 — chained gcloud delete with ';' after VM_BACKFILL_CMD in strategy-paper/live block; resolves zone from metadata at launch so delete runs on any exit code)
 
 ## Phase 2 — Operator pre-flight checklist (P0, ~0.5d, SEQUENTIAL after Phase 1)
 
@@ -780,8 +782,8 @@ differs.
 | --- | --- | --- |
 | Phase 1 — launcher scripts + infra | ✅ DONE (deployment-service@87f12f1 + watchdog bounced + smoke-pass @4a4e2e1) | — |
 | Phase 2 P0 — V2BatchHarness resolver aliases (`carry_staked_basis` + `leveraged_funding_arb`) | ✅ CODE SHIPPED (strategy-service@61dc112 + e2e-testing@8427dc0); NOT end-to-end VM-verified — smoke VM `strategy-paper-carry-staked-basis-20260512-200952` deleted per operator request before completion | Next session: re-run smoke VM with operator approval to verify resolver end-to-end |
-| Phase 2 P0 — Wire `ServiceBootstrap` into `colocated_engine.py` | ⏭ DEFERRED | Required for "No fire-and-forget" rule; no STARTED/STOPPED/FAILED in strategy-service archive until done |
-| Phase 2 P1 — Add self-delete `trap` on startup-script failure in `setup-data-pipeline-vm.sh` | ⏭ DEFERRED | VM stays RUNNING indefinitely on install failure without this |
+| Phase 2 P0 — Wire `ServiceBootstrap` into `colocated_engine.py` | ✅ DONE (e2e-testing@afd0c16 2026-05-13) | setup_events()+log_event() used; full ServiceBootstrap incompatible with asyncio CLI |
+| Phase 2 P1 — Add self-delete `trap` on startup-script failure in `setup-data-pipeline-vm.sh` | ✅ DONE (deployment-service@ab6bfd2 2026-05-13) | gcloud delete chained with ';' after VM_BACKFILL_CMD in strategy-paper/live block |
 | Phases 3–10 | ⏭ DEFERRED | Require operator-approved actions (Copper sub-account, Tenderly fork, live rehearsal, etc.) per plan body |
 
 **Session notes (2026-05-12 harsh-promote-workflow-tab)**:
