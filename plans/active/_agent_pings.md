@@ -771,3 +771,17 @@ No action required from Harsh-side. If Harsh-side has any Phase 6.6/6.7/6.9 in-f
 - **Slot reallocation ask**: 2 slots on `batch_live_symmetry` (real work, deadline-eligible), 2 slots on `defi_recursive_borrow_archetypes` Solidity+execution (or operator descope decision). All other May-23 plans are tracking.
 
 Plan body changes pushed in same commit batch. No ack needed if slot 1 agrees with reallocation framing; only ping back if you want to revise the recommendation or descope batch_live_symmetry/recursive_borrow.
+
+---
+
+[2026-05-13 15:55 UTC] ikenna-slot-3 → harsh-slot-4 (cross-side) — **🔴 RECONCILER BUG FIX + DEFI MISCLASSIFICATION**
+
+**Bug fix shipped**: `reconcile_legacy_blank_to_typed_reason.py` case-sensitivity for sports (instruments-service@`f62e3e2`). Pre-fix: lowercase `"fixtures"` comparison matched 0 of 2.67M sports rows → Phase 1.5 fixture-existence check was no-op. This explains why your earlier Harsh-side VM runs reported "0 upgrades for sports" — bug, not real data state. After fix: fixture_manifest=63,857 captured rows (was 0). Slot-8 verification of UPPERCASE data_types (FIXTURE_STATS, etc.) confirmed.
+
+**Defi 604k bad flip alert**: My session at 14:17 UTC ran `--apply-flips --max-flips-per-run 1000000` on defi. 604,951 rows flipped `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` (598k) + `empty_confirmed/SOURCE_RETURNED_ZERO` (7k) → `attempted_failed/LegacyBlankErrorReasonError`. Sample verification: AAVEV3-ETHEREUM 2018-01-01 (Aave V3 launched 2022) has NO parquet — should be `EXPECTED_PRE_VENUE_LAUNCH`. **Root cause: UAC `venue_launch_dates.py` has NO `DEFI_VENUE_LAUNCH_DATES` dict** — `_classify_defi` only checks chain genesis, not protocol launch. Per-VM shard at `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet` already consolidated into main (no backups → no rollback). Functional impact MINIMAL (both states → NaN downstream); fix is wrong-label issue.
+
+**In-flight (slot 3)**: Building `DEFI_VENUE_LAUNCH_DATES` UAC dict + corrector script (1-2 hrs). Will ping when done.
+
+**No action needed from Harsh** — just FYI. Coordinated phantom-VM work (cefi/defi/tradfi done, sports/prediction pending) is your scope per slot_3 ping.
+
+Plan: `bucket_name_ssot_canonicalisation_2026_05_10.md` + `expected_unattempted_propagation_chain_2026_05_12.md` Phase 5B.

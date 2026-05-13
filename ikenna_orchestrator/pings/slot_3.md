@@ -130,3 +130,40 @@ Phase 3.5 (sports) deferred (design pending).
 - deploy_missing_auto_launch Phases 2-4 (1-2d) — no blockers Both on critical path (May-23 cutover).
 
 **Next immediate action**: Monitor Pass 1 completion; initiate Passes 2-6 in strict sequence once Pass 1 ✅.
+
+---
+
+[2026-05-13 ~15:55 UTC] Slot 3 → Slot 1 — **MULTIPLE BUGS FOUND + PARTIAL FIX SHIPPED**
+
+Pass 1 (phantom reconciler --unphantom locally) FAILED with exit 144 (OOM/network) after ~45min — confirming CLAUDE.md rule that phantom audit must run on GCE VM. Slot 4 already did cefi/defi/tradfi phantom apply-flips on VMs (7,497 phantoms flipped). Sports + prediction phantom VMs still need launching (slot 4 owns).
+
+**Pivoted to legacy_blank reconciler (smaller scope, local-runnable). Found and fixed bugs:**
+
+**Bug 1 ✅ FIXED**: `reconcile_legacy_blank_to_typed_reason.py` had case-sensitive `data_type == "fixtures"` (lowercase). Sports manifest writes UPPERCASE (`FIXTURES`, `FIXTURE_STATS`, etc.) per slot-8 verification 2026-05-13. Pre-fix: matched 0 of 2.67M sports rows → fixture-existence Phase 1.5 check was no-op → 1.87M sports candidates wrongly reported "0 upgrades" on previous runs. Fixed at instruments-service@`f62e3e2` (case-insensitive comparison). Confirmed working: re-run after fix shows fixture_manifest=63,857 captured rows (was 0). Sports legitimately produces 0 upgrades per CLAUDE.md SSOT "sports/prediction CAN have empty_confirmed at instrument-day grain".
+
+**Bug 2 ⚠️ NOT YET FIXED — DEFI_VENUE_LAUNCH_DATES MISSING**:
+- UAC `venue_launch_dates.py` has `CEFI_VENUE_LAUNCH_DATES` + `PREDICTION_VENUE_LAUNCH_DATES` but NO `DEFI_VENUE_LAUNCH_DATES` dict
+- `_classify_defi` only checks chain genesis (Ethereum 2015), not protocol launch (Aave V3 2022)
+- Consequence: 604,951 defi rows wrongly flipped this session by me at 14:17 UTC:
+  - 598,040 `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` → `attempted_failed/LegacyBlankErrorReasonError`
+  - 6,911 `empty_confirmed/SOURCE_RETURNED_ZERO` → `attempted_failed/LegacyBlankErrorReasonError`
+- Sample verification: AAVEV3-ETHEREUM 2018-01-01 has NO parquet data (Aave V3 launched 2022). Should be `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`, not `attempted_failed`.
+- Per-VM shard: `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet` (already consolidated into main manifest at 14:46 UTC; no backups exist — no rollback possible).
+- **Functional impact MINIMAL**: downstream readers treat both `attempted_failed` and `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` as "write NaN, don't forward-fill". Issue is wrong reason label in data-status panel, NOT data corruption.
+
+**Bug 3 ⚠️ POTENTIALLY SIMILAR — cefi 3,146 bad flips** (same session): same root cause likely (no DEFI/CEFI venue launch check). Per-VM shard: `gs://market-data-tick-cefi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet`. Audit pending.
+
+**Now executing**: per operator direction "do this please dont defer":
+1. Build `DEFI_VENUE_LAUNCH_DATES` dict in UAC (research ~50 protocols)
+2. Update `_classify_defi` to use it (mirror of `_classify_cefi`)
+3. Write corrector script (reads attempted_failed/LegacyBlankErrorReasonError rows, re-runs classifier with new logic, flips back to empty_confirmed/EXPECTED_* where applicable)
+4. Run corrector for defi (604k) + cefi (3,146)
+5. QG + push + plan flips
+
+**Issue docs**:
+- `plans/active/issues/defi_legacy_blank_reclassification_2026_05_13.md` (filed earlier)
+- Updating with DEFI_VENUE_LAUNCH_DATES + sports case-fix evidence now
+
+**Cross-side coord with slot 4 (Harsh)**: Cefi/defi/tradfi phantom apply-flips done on VMs (7,497 rows). Sports + prediction phantom VMs still needed.
+
+**Estimated time to ship corrector**: 1-2 hours (research + UAC dict + corrector script + run + verify + push).
