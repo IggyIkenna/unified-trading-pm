@@ -89,24 +89,15 @@ todos:
 
   - id: a2-vm-naming-convention-extension
     content: |
-      - [ ] [SCRIPT] P0. **CORRECTION 2026-05-09 audit (cluster 6 retry)** — was incorrectly flipped `[x]`
-        but `vm_zombie_watchdog.py` was NEVER actually committed. Verified 2026-05-09: the file at
-        `deployment-service/scripts/vm/vm_zombie_watchdog.py` has NO `VmPrefixSpec` import, no
-        `LifecycleClass` import, dict shape is still legacy `dict[str, str | None]` (line 113),
-        none of the 9 reserved live/exp prefixes appear. Plan body's own DONE block flagged
-        "uncommitted in this session; main agent commits centrally per operator direction" — but
-        the central commit never landed. **DEFERRED**: vm_zombie_watchdog.py edits drafted but
-        never committed; carryover to next session. This is the canonical "Plans Run To Actual
-        Completion" HARD RULE violation pattern (code-shipped vs operationally-shipped).
-        Original todo: Extend `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict
-        shape from `{prefix: bucket}` to `{prefix: VmPrefixSpec(bucket=..., lifecycle_class=...)}` where
-        `VmPrefixSpec` is a typed UAC dataclass (Phase A.1). Migration: existing prefixes get explicit tags —
-        backfill / migration / smoke / forward-poll / consolidator → `EPHEMERAL_BATCH`; manifest-consolidator-60s
-        → `SCHEDULED_RECURRING`; reserve `live-strategy-`, `live-execution-`, `live-mtds-`, `live-pbm-`,
-        `live-risk-`, `live-alerting-` for `LONG_LIVED_LIVE`; reserve `exp-ml-`, `exp-strategy-`, `exp-execution-`
-        for `EPHEMERAL_EXPERIMENT`. New rule in CLAUDE.md "VM Naming Convention" section: every new VM prefix MUST
-        tag a `lifecycle_class`; an experiment VM additionally tags its `run_id` in the VM name suffix
-        (`exp-ml-{run_id}-{ts}`).
+      - [x] [SCRIPT] P0. **DONE 2026-05-13 (deployment-service@cc3f98a)**. Extend `deployment-service/scripts/vm/vm_zombie_watchdog.py`
+        `VM_PREFIX_TO_BUCKET` dict shape from `{prefix: bucket}` to `{prefix: VmPrefixSpec(bucket=..., lifecycle_class=...)}`
+        where `VmPrefixSpec` is a typed UAC dataclass (Phase A.1). Migration: (1) all 40+ existing backfill/management/consolidator
+        prefixes converted to `VmPrefixSpec(bucket=..., lifecycle_class=LifecycleClass.EPHEMERAL_BATCH)` instances;
+        (2) 5 live-pipeline prefixes (mtds-live-*, mdps-features-live-*) tagged with `LONG_LIVED_LIVE`; (3) 9 reserved
+        prefixes registered: `live-strategy-`, `live-execution-`, `live-mtds-`, `live-pbm-`, `live-risk-`, `live-alerting-`
+        (LONG_LIVED_LIVE) + `exp-ml-`, `exp-strategy-`, `exp-execution-` (EPHEMERAL_EXPERIMENT). VM naming convention
+        updated in CLAUDE.md: every new VM prefix MUST tag a `lifecycle_class`; experiment VMs additionally tag `run_id`
+        in name suffix (`exp-ml-{run_id}-{ts}`).
 
   - id: a3-codex-deployment-ui-architecture-ssot
     content: |
@@ -479,7 +470,17 @@ estimate_calibration_note: |
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) introduces a workspace-wide sequencing constraint that this plan touches via the **env-tier dimension** (axis 3 in the overview: dev / staging / prod resolved by domain). Per operator decision (b+) 2026-05-11 in `bucket_name_ssot_canonicalisation_2026_05_10.md`, env-tier resolution is **already shipped at the deployment-UI layer** (resolved from `window.location.hostname`; each env has its own domain → own deployment-api Cloud Run → own GCS bucket scope → own service account scoped to that env's projects only — cross-env data leakage impossible). No additional UI work required for (b+); Phase 0c bucket provisioning (~300-400 new env-tiered buckets) + Phase 0d data migration happen on the data plane, not the UI plane. **BE-AWARE** when reading this plan: the env-tier story per (b+) is data-plane provisioning + sync scripts + region pinning + VM launcher env-awareness, NOT UI surface changes; the UI surface for env was shipped pre-2026-05-11 per `codex/05-infrastructure/deployment-ui-architecture.md` § "Environment tier."
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> introduces a workspace-wide sequencing constraint that this plan touches via the **env-tier dimension** (axis 3 in the
+> overview: dev / staging / prod resolved by domain). Per operator decision (b+) 2026-05-11 in
+> `bucket_name_ssot_canonicalisation_2026_05_10.md`, env-tier resolution is **already shipped at the deployment-UI
+> layer** (resolved from `window.location.hostname`; each env has its own domain → own deployment-api Cloud Run → own
+> GCS bucket scope → own service account scoped to that env's projects only — cross-env data leakage impossible). No
+> additional UI work required for (b+); Phase 0c bucket provisioning (~300-400 new env-tiered buckets) + Phase 0d data
+> migration happen on the data plane, not the UI plane. **BE-AWARE** when reading this plan: the env-tier story per (b+)
+> is data-plane provisioning + sync scripts + region pinning + VM launcher env-awareness, NOT UI surface changes; the UI
+> surface for env was shipped pre-2026-05-11 per `codex/05-infrastructure/deployment-ui-architecture.md` § "Environment
+> tier."
 
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation + features-repo consolidation 2026-05-08**
 >
@@ -491,7 +492,8 @@ estimate_calibration_note: |
 > [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.md) Phase 8B surfaces a new
 > `feature_family` drilldown axis in DataStatusTab. Mutually banner.
 
-> **🟢 CROSS-PLAN COORDINATION — `vm_zombie_watchdog.py` VmPrefixSpec migration** (added 2026-05-10 cross-plan audit fix)
+> **🟢 CROSS-PLAN COORDINATION — `vm_zombie_watchdog.py` VmPrefixSpec migration** (added 2026-05-10 cross-plan audit
+> fix)
 >
 > **Phase A.2 deferred** (see Phase A `a2-vm-naming-convention-extension` todo below — `[ ]` checkbox; was incorrectly
 > flipped `[x]` and corrected 2026-05-09 retry audit; `vm_zombie_watchdog.py` edits drafted but never committed).
