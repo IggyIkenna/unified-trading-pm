@@ -89,16 +89,25 @@ supply_rate≈2.96% vs live params ≈4.34% — exactly matching the observed si
 Strategy-addr cache reduces RPC calls (governance updates rare; many events share same strategy). Reserve factor
 extracted from `configuration.data` bits 64-79 in bps. Params stored in fixture for offline re-runs.
 
-**VM re-run**: `aave-lending-rate-val-20260513-182201`, corr_id `8849FD14-B34D-43F8-B6CA-5265DCA2CCAB`. Awaiting results
-at
-`gs://central-element-323112-defi-validation/results/lending/2026-05-13/8849FD14-B34D-43F8-B6CA-5265DCA2CCAB/results.json`.
+**VM re-run 1 (FAILED)**: `aave-lending-rate-val-20260513-182201`, corr_id `8849FD14-B34D-43F8-B6CA-5265DCA2CCAB`.
+Failed on startup: `ImportError: cannot import name 'EmissionDecision' from 'unified_trading_library'` —
+`execution_service/engine/orchestrator.py:18` imports `EmissionDecision` but it was not re-exported from UTL
+`__init__.py`.
+
+**Secondary fix**: `unified-trading-library@712943d8` — added `EmissionDecision`, `publish_with_policy`,
+`InvalidCompletenessFractionError`, `publish_with_manifest_lookup` to UTL `__init__.py` `__all__`. Tarballs refreshed
+(UTL + execution-service both rebuilt `2026-05-13T17:39–17:40Z`).
+
+**VM re-run 2 (IN PROGRESS)**: `aave-lending-rate-val-20260513-184158`, corr_id `044C83D0-DE9D-47BC-8595-E68B30445D17`.
+Results at
+`gs://central-element-323112-defi-validation/results/lending/2026-05-13/044C83D0-DE9D-47BC-8595-E68B30445D17/results.json`.
 
 ## Execution metadata
 
 ```yaml
 execution:
-  owner: slot 6 (fix shipped 2026-05-13; VM re-run in progress)
+  owner: slot 6 (fix shipped 2026-05-13; VM re-run 2 in progress)
   cadence: one-shot; recurring once pass-rate verified via amm-golden-* recurring VM
   verifier: pass-rate ≥ 90% within 10 bps on aave-lending-rate-validation VM results.json
-  last_executed: 2026-05-13 (fix run: 8849FD14-B34D-43F8-B6CA-5265DCA2CCAB — pending)
+  last_executed: 2026-05-13 (fix run 2: 044C83D0-DE9D-47BC-8595-E68B30445D17 — pending)
 ```
