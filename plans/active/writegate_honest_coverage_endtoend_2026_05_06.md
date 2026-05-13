@@ -28,12 +28,12 @@ estimate_calibration_note: |
 
 ### Operator decisions (locked 2026-05-12)
 
-| Question                      | Decision                                                                                                                                                |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 2.B amendment F         | **Option α** — orchestrator-boundary at `engine/orchestrator.py:2186-2218`; generalise ES.OPT manual check to all `BUNDLED_DATA_TYPES`; single SSOT     |
-| Phase 6.8 instruments-service | **Option (a)** — migrate all 41 `.add()` callsites → `record_captured()` then wire `publish_with_policy`; remove legacy path entirely                   |
+| Question                      | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 2.B amendment F         | **Option α** — orchestrator-boundary at `engine/orchestrator.py:2186-2218`; generalise ES.OPT manual check to all `BUNDLED_DATA_TYPES`; single SSOT                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Phase 6.8 instruments-service | **Option (a)** — migrate all 41 `.add()` callsites → `record_captured()` then wire `publish_with_policy`; remove legacy path entirely                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Phase 2.D — all fields        | **SHIPS NOW (full scope, 2026-05-12)**: (1) `match_end_time` = SFI progressive-stats freeze. (2) `announced_at` = API Football fixture object (retroactive). (3) `SFI_DATA_LAG_P95_SECONDS` UAC constant + `UNDERSTAT_DATA_LAG_P95_SECONDS` + `FOOTYSTATS_DATA_LAG_P95_SECONDS` + `API_FOOTBALL_RESULT_LAG_P95_SECONDS` + `OPEN_METEO_HISTORICAL_LAG_SECONDS` — all in new `UAC registry/source_data_latency.py`. (4) `report_time = match_end_time + SOURCE_LAG` per source. (5) POSTPONED/CANCELLED both historical AND live: instruments-service API Football forward-poll overwrites manifest with `record_empty(reason=EXPECTED_FIXTURE_POSTPONED/CANCELLED)`; manifest audit trail records the transition — no separate state-machine needed. |
-| CeFi Tardis re-shape          | **Option A** — re-rescan all 252 shards; do not derive from existing parquet                                                                            |
+| CeFi Tardis re-shape          | **Option A** — re-rescan all 252 shards; do not derive from existing parquet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### Phase/Wave status
 
@@ -3230,8 +3230,8 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       Adapters that DO transform source responses (`umi_tick_provider._fetch_databento_ohlcv_1m_async` → Databento
       direct `ohlcv_1m` feed; `gas_price_adapter._aggregate` → block-level fee rollup to hourly/daily; Hyperliquid
       `_aggregate` → orderbook depth bucketing) are **source-side transformations**, NOT aggregations of MTDS upstream
-      rows — MTDS is the originator for these data_types, so the slice (c) service-output policy doesn't apply (policy
-      gates derived outputs against _upstream service_ completeness; MTDS reads from external APIs, not from another
+      rows — MTDS is the originator for these data*types, so the slice (c) service-output policy doesn't apply (policy
+      gates derived outputs against \_upstream service* completeness; MTDS reads from external APIs, not from another
       MTDS service). MDPS retains exclusive ownership of `ohlcv_1m:from_trades` / `ohlcv_24h` / `book_snapshot_5`
       policy-gated paths per Phase 6.2. **No `(market-tick-data-service, *)` seed-dict entry needed.** Drift-watch: if a
       future MTDS handler reads from a _prior MTDS write_ to compute a derived row (cross-handler aggregation), that's
@@ -3296,8 +3296,8 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       (NAN_FILL). The STRICT_FAIL case is critical: a paired_spec row written when ONE leg has stale upstream is a
       leak-bias trap that produces confidently-wrong signal. Validate with a dedicated test: synthetic upstream where
       leg A is fully captured but leg B has 1% gaps → assert NO `paired_spec` row is written for the affected window +
-      STALE_DATA event fires.
-      (features-service@e31ef632 — _check_emission_policy + 4 unit tests + UTL top-level export @09116fa3; 4/4 pass)
+      STALE_DATA event fires. (features-service@e31ef632 — \_check_emission_policy + 4 unit tests + UTL top-level export
+      @09116fa3; 4/4 pass)
 
 **Phase 6.5 — Other features-\* services (P1, ~5 days bundled)**
 
@@ -3310,15 +3310,22 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 - [x] [features-onchain-service] P1. Audit for derived emissions (LST yield curves, gas-fee aggregates, vault-state
       summaries). **Seed shipped 2026-05-11 @uac@b570d49 — 11 entries** (lending_rates / lst_yields / onchain_perps /
       utilization / flash_loan_availability / rate_impact STRICT_FAIL; risk_params + health_factor BLOCK_CRITICAL;
-      macro_sentiment / rewards / liquidation_events PARTIAL_OK). **WIRED 2026-05-12
-      @features-service@6cbf50ff**: `_check_emission_policy()` + `_apply_emission_gate()` + `_handle_write_error()` in
+      macro_sentiment / rewards / liquidation_events PARTIAL_OK). **WIRED 2026-05-12 @features-service@6cbf50ff**:
+      `_check_emission_policy()` + `_apply_emission_gate()` + `_handle_write_error()` in
       `features_service/onchain/app/core/feature_writer.py`; emission check fires once per feature_group per date at
       `write_features()` write boundary; BLOCK_CRITICAL emits `EMISSION_POLICY_BLOCKED` alert event; 4 mode-routing
       tests in `tests/onchain/unit/test_emission_policy.py`.
 - [x] [features-sports-service] P1. Audit + seed (fixture-stat aggregates, transfer-window features, line-movement
       metrics). **Seed shipped 2026-05-11 @uac@b570d49 — 7 entries** (fixture_features / derived_features
       current+historical NAN_FILL; odds_features:current STRICT_FAIL, odds_features:historical NAN_FILL;
-      live_feature_subset STRICT_FAIL). **DEFERRED**: wiring at exporter + batch_handler emission points.
+      live_feature_subset STRICT_FAIL). **WIRED 2026-05-13 @features-service@a93dc3b4**: `_SERVICE_NAME` +
+      `_FEATURE_GROUP_EMISSION_KEY` + `_check_emission_policy()` (pandas completeness:
+      `df.isna().sum().sum() / df.size`) in `features_service/sports/cli/handlers/batch_handler.py`; emission check
+      fires at `_run_feature_group()` write boundary before `_write_per_league()`; suppression short-circuits to
+      `table_outcomes[group] = ("suppressed", ...)`; all 3 batch groups (:historical variant → NAN_FILL); 4 mode-routing
+      tests in `tests/sports/unit/test_emission_policy.py`. **STILL DEFERRED**: live_handler wiring for
+      live_feature_subset (STRICT_FAIL). **DEFERRED-PER-TASK**: exporter-level wiring (not in batch_handler scope of
+      this sub-task).
 - [x] [features-cross-instrument-service (prediction scope)] P1. Audit + seed (canonical-question-group bundle metrics,
       market-mid time-series). **Seed shipped 2026-05-11 @uac@b570d49 — 6 polymarket entries**
       (polymarket_crowd_sentiment + polymarket_trade_flow + polymarket_whale_activity +
@@ -3330,23 +3337,22 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       / cointegration / liquidation_band_prediction / dxy_momentum NAN_FILL; cme_gap PARTIAL_OK; cross_venue_spreads /
       book_depth_bands / liquidity_walls / liquidation_clusters / flow_interaction / composite_sr /
       paired_price_dispersion STRICT_FAIL); delta-one (9 anchors); multi-timeframe (4 cross-TF alignment groups all
-      STRICT_FAIL on paired_spec precedent). **DEFERRED**: per-service wiring of `publish_with_policy()`.
-      **DELTA-ONE WIRED 2026-05-12 @features-service@5e24a18c**: `_check_emission_policy()` + `_apply_emission_policy()`
-      in `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
+      STRICT_FAIL on paired_spec precedent). **DEFERRED**: per-service wiring of `publish_with_policy()`. **DELTA-ONE
+      WIRED 2026-05-12 @features-service@5e24a18c**: `_check_emission_policy()` + `_apply_emission_policy()` in
+      `features_service/delta_one/cli/handlers/batch_handler.py`; 4 mode-routing tests in
       `tests/delta_one/unit/test_emission_policy.py`. cross-instrument wired @features-service@e31ef632 (Phase 6.4).
-      **STILL DEFERRED**: multi-timeframe wiring + sports wiring. **onchain wiring DONE @features-service@6cbf50ff**.
-      **CALENDAR WIRED 2026-05-12 @features-service@4623c669 + @uac@c85ecc4**: UAC seeds added
-      (time_features NAN_FILL; economic_events PARTIAL_OK); `_SERVICE_NAME` + `_check_emission_policy()` wired in
-      `features_service/calendar/cli/handlers/batch_handler.py`; completeness_fraction from binary rows_written check
-      (calendar is deterministic — no partial DataFrame at batch_handler boundary); 4 mode-routing tests in
-      `tests/calendar/unit/test_emission_policy.py`.
-      **COMMODITY WIRED 2026-05-12 @features-service@9f4b6427 + @uac@82c7405**: UAC seeds added
-      (storage_alpha / crude_storage_alpha / price_momentum NAN_FILL; weather_delta / cot_positioning / rig_count
-      PARTIAL_OK — weekly-cadence sources with expected source gaps); `_SERVICE_NAME` + `_check_emission_policy()`
-      + `_check_and_write_signal()` wired in `features_service/commodity/cli/handlers/batch_handler.py`;
-      emission check fires once per factor_group before `_write_signal_to_gcs` — any STRICT_FAIL suppression
-      aborts the full signal write (consistent with _has_full_factor_coverage fail-loud);
-      4 mode-routing tests in `tests/commodity/unit/test_emission_policy.py`.
+      **STILL DEFERRED**: multi-timeframe wiring. **onchain wiring DONE @features-service@6cbf50ff**. **SPORTS
+      BATCH_HANDLER WIRED 2026-05-13 @features-service@a93dc3b4**. **CALENDAR WIRED 2026-05-12
+      @features-service@4623c669 + @uac@c85ecc4**: UAC seeds added (time_features NAN_FILL; economic_events PARTIAL_OK);
+      `_SERVICE_NAME` + `_check_emission_policy()` wired in `features_service/calendar/cli/handlers/batch_handler.py`;
+      completeness_fraction from binary rows_written check (calendar is deterministic — no partial DataFrame at
+      batch_handler boundary); 4 mode-routing tests in `tests/calendar/unit/test_emission_policy.py`. **COMMODITY WIRED
+      2026-05-12 @features-service@9f4b6427 + @uac@82c7405**: UAC seeds added (storage_alpha / crude_storage_alpha /
+      price_momentum NAN_FILL; weather_delta / cot_positioning / rig_count PARTIAL_OK — weekly-cadence sources with
+      expected source gaps); `_SERVICE_NAME` + `_check_emission_policy()` + `_check_and_write_signal()` wired in
+      `features_service/commodity/cli/handlers/batch_handler.py`; emission check fires once per factor_group before
+      `_write_signal_to_gcs` — any STRICT_FAIL suppression aborts the full signal write (consistent with
+      \_has_full_factor_coverage fail-loud); 4 mode-routing tests in `tests/commodity/unit/test_emission_policy.py`.
 
 **Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
 
