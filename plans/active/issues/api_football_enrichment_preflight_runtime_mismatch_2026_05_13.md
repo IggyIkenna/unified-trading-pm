@@ -5,6 +5,7 @@ title:
 created: 2026-05-13
 author: ikenna-slot-8
 severity: P1
+status: ✅ FIXED 2026-05-13 — instruments-service@4c5b68a (Option C consumer-side silent no-op)
 source:
   - instruments-service/instruments_service/engine/orchestrator.py (pre-flight check vs fixture_mapping_write)
   - VM af-backfill-20260513-161517 logs (failed 2026-05-13 15:18:55 UTC)

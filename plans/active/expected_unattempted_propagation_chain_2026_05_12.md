@@ -387,10 +387,10 @@ stays injection-friendly.
 
 - [x] [CODE] P0. Add `record_expected_unattempted` call in MDPS `DependencyChecker` when skipping due to absent MTDS
       shard. Pass `manifest_writer` reference at construction if not already present. Add 2 unit tests (absent shard →
-      expected_unattempted recorded; present shard → no call).
-      (mdps@3f70cf6 — implemented via `_record_expected_unattempted_on_skip` in orchestration_service.py at the
-      `process_category` skip point rather than DependencyChecker directly; 4 unit tests cover both present-shard no-op
-      and absent-shard write paths. Injecting into DependencyChecker rejected: it lacks data_types/timeframes context.)
+      expected_unattempted recorded; present shard → no call). (mdps@3f70cf6 — implemented via
+      `_record_expected_unattempted_on_skip` in orchestration_service.py at the `process_category` skip point rather
+      than DependencyChecker directly; 4 unit tests cover both present-shard no-op and absent-shard write paths.
+      Injecting into DependencyChecker rejected: it lacks data_types/timeframes context.)
 - [x] [QG] P0. `cd market-data-processing-service && bash scripts/quality-gates.sh`. Push. (mdps@3f70cf6 — pushed)
 
 ---
@@ -433,19 +433,18 @@ grep -rn "subscription_list\|SUBSCRIPTION_LIST\|MVP\|mvp_instruments" \
 
   **DESIGN DISCOVERY (2026-05-12 slot 4)**: `InstrumentDomainConfig.subscription_list` in all features modules
   (delta_one, calendar, onchain, volatility, commodity, sports, cross_instrument, multi_timeframe) is a **runtime-
-  loaded dynamic list** from GCP config (DomainConfigReloader pattern — UTL `config_interface/domain_configs.py:67`).
-  It is NOT a static compile-time constant. The original Phase 3.0 plan to "grep subscription_list values and
-  extract the union → static frozenset in UAC" does NOT work — the values are environment-specific runtime config.
+  loaded dynamic list** from GCP config (DomainConfigReloader pattern — UTL `config_interface/domain_configs.py:67`). It
+  is NOT a static compile-time constant. The original Phase 3.0 plan to "grep subscription_list values and extract the
+  union → static frozenset in UAC" does NOT work — the values are environment-specific runtime config.
 
-  **✅ OPERATOR DIRECTION RECEIVED 2026-05-12 (slot 4 session)**: Option A confirmed.
-  subscription_list IS the features-service scope gate at runtime; sub-agents do NOT change what gets processed.
-  No UAC frozenset needed. Implementation: at `_get_instruments()` call point in each batch handler,
-  compare full catalog result with post-`_filter_*_instruments()` set, write `expected_unattempted` for remainder.
-
+  **✅ OPERATOR DIRECTION RECEIVED 2026-05-12 (slot 4 session)**: Option A confirmed. subscription*list IS the
+  features-service scope gate at runtime; sub-agents do NOT change what gets processed. No UAC frozenset needed.
+  Implementation: at `_get_instruments()` call point in each batch handler, compare full catalog result with
+  post-`\_filter*\*\_instruments()`set, write`expected_unattempted` for remainder.
   - ~~Option A (runtime comparison): At each module's batch_handler startup, fetch all candidate instruments from~~
     ~~instruments-service catalog; compare with runtime `InstrumentDomainConfig.subscription_list`; write~~
-    ~~`expected_unattempted(EXPECTED_OUTSIDE_PROCESSING_SCOPE)` for each instrument in catalog but NOT in list.~~
-    ~~No UAC frozenset needed — the subscription_list IS the scope gate at runtime.~~ **← CHOSEN**
+    ~~`expected_unattempted(EXPECTED_OUTSIDE_PROCESSING_SCOPE)` for each instrument in catalog but NOT in list.~~ ~~No
+    UAC frozenset needed — the subscription_list IS the scope gate at runtime.~~ **← CHOSEN**
   - ~~Option B (static UAC constant)~~ — rejected (staleness risk on runtime config changes).
   - ~~Option C (skip Phase 3.0)~~ — rejected (no manifest honesty without the write).
 
@@ -474,43 +473,41 @@ for instrument_id in all_candidate_instruments - in_scope_instruments:
 ```
 
 - [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `delta_one` batch handler.
-      (features-service@4a26ae04 — `_expected_unattempted.py` helper + `_resolve_instrument_list`
-      catalog/in_scope comparison + 5 unit tests pass; Harsh slot 2 2026-05-13)
-- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `calendar` batch handler.
-      **NO-OP** — calendar is event-driven (`feature_group=time_features|economic_events` × `date` shard
-      atom, no `instrument_id` dimension). `_manifest_row_key` at `calendar_orchestrator.py:216–222`
-      explicitly documents "Calendar features have no venue/instrument"; `_get_active_instruments` is loaded
-      by `config_reloaders.py` but never consumed by the batch handler or orchestrator. No catalog-vs-scope
-      gate exists; force-wiring would fabricate a nonexistent instrument catalog. (sub-agent investigation
-      2026-05-13; Harsh slot 2)
-- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `onchain` batch handler.
-      **NO-OP** — onchain dispatches by `feature_group` name across 11 chain-event/protocol-driven groups
-      (Aave rates, LST yields, perp funding, etc.). Manifest grain is `(feature_group, date)`. The
-      `lst_filter` in `lst_rewards_bootstrap.py:161` is a collector-level optional filter (defaults to
-      None=ALL LSTs), not the same shape as a catalog-vs-subscription_list filter. Same
-      `subscription_list`-loaded-but-unused pattern as calendar. (sub-agent investigation 2026-05-13)
+      (features-service@4a26ae04 — `_expected_unattempted.py` helper + `_resolve_instrument_list` catalog/in_scope
+      comparison + 5 unit tests pass; Harsh slot 2 2026-05-13)
+- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `calendar` batch handler. **NO-OP** — calendar is
+      event-driven (`feature_group=time_features|economic_events` × `date` shard atom, no `instrument_id` dimension).
+      `_manifest_row_key` at `calendar_orchestrator.py:216–222` explicitly documents "Calendar features have no
+      venue/instrument"; `_get_active_instruments` is loaded by `config_reloaders.py` but never consumed by the batch
+      handler or orchestrator. No catalog-vs-scope gate exists; force-wiring would fabricate a nonexistent instrument
+      catalog. (sub-agent investigation 2026-05-13; Harsh slot 2)
+- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `onchain` batch handler. **NO-OP** — onchain
+      dispatches by `feature_group` name across 11 chain-event/protocol-driven groups (Aave rates, LST yields, perp
+      funding, etc.). Manifest grain is `(feature_group, date)`. The `lst_filter` in `lst_rewards_bootstrap.py:161` is a
+      collector-level optional filter (defaults to None=ALL LSTs), not the same shape as a catalog-vs-subscription_list
+      filter. Same `subscription_list`-loaded-but-unused pattern as calendar. (sub-agent investigation 2026-05-13)
 - [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `volatility` batch handler.
-      (features-service@4a26ae04 — `_record_out_of_scope_instruments` private method + `_run_processing`
-      wiring + 6 unit tests pass; `_get_instruments` IS catalog+scope combined for volatility, so the
-      `max_results` boundary defines out-of-scope; Harsh slot 2 2026-05-13)
-- [ ] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `sports` batch handler.
-      **NO-OP-WITH-INVESTIGATION-NEEDED** — sports has no `_get_instruments` catalog query; `league_ids`
-      CLI arg at `batch_handler.py:769` is a per-shard filter applied to provider responses, not a
-      catalog-vs-scope gate. The correct fix is UPSTREAM (MDPS Phase 2 propagates instruments-service
-      manifest empties down — partially shipped at mdps@3f70cf6). Sub-agent recommends: (a) record
-      `expected_unattempted` for leagues in `league_ids` that produced no data, (b) defer the
-      catalog-enumeration approach to a Phase 3.5 design call. Operator direction needed.
-      **DEFERRED** — Phase 3.5 design call required. (sub-agent investigation 2026-05-13)
-- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `commodity` batch handler (if exists).
-      **NO-OP** — `(if exists)` caveat resolved: commodity has no upstream catalog. `enabled_commodities`
-      = `["NG", "CL"]` IS the full universe; no catalog-minus-scope dichotomy exists. Manifest grain is
-      `(commodity_code, date)`. (sub-agent investigation 2026-05-13)
-- [x] [QG] P1. `cd features-service && bash scripts/quality-gates.sh`. Push.
-      (features-service@4a26ae04 pushed to live-defi-rollout 2026-05-13. Local QG green on lint /
-      basedpyright / tests / file-size / codex / import patterns. Pre-existing-foreign validator failure
-      in `api_keys_wallets_accounts_readiness_2026_05_10.md` broken markdown link to non-existent
-      `pre-cutover-test-wallets-runbook.md` — confirmed pre-existing via stash; reported as
-      finding under the owning plan; Harsh slot 2)
+      (features-service@4a26ae04 — `_record_out_of_scope_instruments` private method + `_run_processing` wiring + 6 unit
+      tests pass; `_get_instruments` IS catalog+scope combined for volatility, so the `max_results` boundary defines
+      out-of-scope; Harsh slot 2 2026-05-13)
+- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `sports` batch handler. (features-service@a58480fb
+      — Phase 3.5 Option A shipped 2026-05-13 by Slot 8. `_write_per_league` gains kw-only `manifest` param; after the
+      `df.groupby("league_id")` loop, iterates `league_filter` and emits
+      `manifest.record_expected_unattempted(row_key={"date", "feature_group",     "data_type", "league_id"}, feature_family="sports", pipeline_mode=...)`
+      for any league in the CLI filter that produced zero upstream rows. 2 unit tests added:
+      `test_write_per_league_records_captured_for_present_leagues` (no EU call when data exists) +
+      `test_write_per_league_records_expected_unattempted_for_missing_leagues` (1 EU call for the zero-row league with
+      correct row_key). Operator-confirmed Option A direction 2026-05-13. League-level MDPS→features propagation: does
+      NOT change what gets processed — just records honest absence when MDPS upstream says skip.)
+- [x] [CODE] P1. Wire `expected_unattempted` for non-MVP in features `commodity` batch handler (if exists). **NO-OP** —
+      `(if exists)` caveat resolved: commodity has no upstream catalog. `enabled_commodities` = `["NG", "CL"]` IS the
+      full universe; no catalog-minus-scope dichotomy exists. Manifest grain is `(commodity_code, date)`. (sub-agent
+      investigation 2026-05-13)
+- [x] [QG] P1. `cd features-service && bash scripts/quality-gates.sh`. Push. (features-service@4a26ae04 pushed to
+      live-defi-rollout 2026-05-13. Local QG green on lint / basedpyright / tests / file-size / codex / import patterns.
+      Pre-existing-foreign validator failure in `api_keys_wallets_accounts_readiness_2026_05_10.md` broken markdown link
+      to non-existent `pre-cutover-test-wallets-runbook.md` — confirmed pre-existing via stash; reported as finding
+      under the owning plan; Harsh slot 2)
 
 ---
 
@@ -529,26 +526,24 @@ grep -rn "subscription_list\|instrument_list\|scope\|predict.*instrument" \
 ```
 
 - [x] [CODE] P2. Pre-audit: extract ML instrument scope → add `ML_SCOPE_INSTRUMENTS` to UAC
-      `registry/processing_scope.py` (same file as Phase 3.0).
-      **NO-OP** — same Option A rationale as Phase 3.0: ML services don't have a static scope list to
-      extract. ml-training takes instruments via CLI `--instruments`; ml-inference takes them via
-      `BatchHandler.handle(instrument_ids=[...])`. No UAC constant needed. (sub-agent investigation
-      2026-05-13)
-- [x] [CODE] P2. Wire `expected_unattempted` for out-of-scope instruments in `ml-training` batch handler.
-      **NO-OP** — ml-training-service trains models on CLI-injected instrument lists; never queries an
-      instruments-service catalog internally. `ManifestWriter` is used in `model_registry.store_model()`
-      to track ML training artifacts (`model_family`, `training_period`, `job_id`), NOT per-instrument
-      data availability. Wiring would be a category error: emitting ML-training-scope metadata into the
-      data-availability manifest. Correct fix is at the launcher/orchestrator layer (VM that invokes
-      ml-training), not inside the service. (sub-agent investigation 2026-05-13; Harsh slot 2)
+      `registry/processing_scope.py` (same file as Phase 3.0). **NO-OP** — same Option A rationale as Phase 3.0: ML
+      services don't have a static scope list to extract. ml-training takes instruments via CLI `--instruments`;
+      ml-inference takes them via `BatchHandler.handle(instrument_ids=[...])`. No UAC constant needed. (sub-agent
+      investigation 2026-05-13)
+- [x] [CODE] P2. Wire `expected_unattempted` for out-of-scope instruments in `ml-training` batch handler. **NO-OP** —
+      ml-training-service trains models on CLI-injected instrument lists; never queries an instruments-service catalog
+      internally. `ManifestWriter` is used in `model_registry.store_model()` to track ML training artifacts
+      (`model_family`, `training_period`, `job_id`), NOT per-instrument data availability. Wiring would be a category
+      error: emitting ML-training-scope metadata into the data-availability manifest. Correct fix is at the
+      launcher/orchestrator layer (VM that invokes ml-training), not inside the service. (sub-agent investigation
+      2026-05-13; Harsh slot 2)
 - [x] [CODE] P2. Wire `expected_unattempted` for out-of-scope instruments in `ml-inference-service` batch handler.
       **NO-OP** — same architecture as ml-training: instrument list is externally injected via
-      `resolve_instrument_ids()` in `cli/parser.py` (CLI arg or hardcoded category default). No catalog
-      query; no internal scope filter. `InstrumentDomainConfig.subscription_list` is loaded in
-      `config_reloaders.py:40,48` for log-line use only — never gates inference. (sub-agent investigation
-      2026-05-13; Harsh slot 2)
-- [x] [QG] P2. QG on each repo. Push.
-      **N/A** — no code changes shipped for Phase 4 (both ml services NO-OP). No QG run needed.
+      `resolve_instrument_ids()` in `cli/parser.py` (CLI arg or hardcoded category default). No catalog query; no
+      internal scope filter. `InstrumentDomainConfig.subscription_list` is loaded in `config_reloaders.py:40,48` for
+      log-line use only — never gates inference. (sub-agent investigation 2026-05-13; Harsh slot 2)
+- [x] [QG] P2. QG on each repo. Push. **N/A** — no code changes shipped for Phase 4 (both ml services NO-OP). No QG run
+      needed.
 
 ---
 
@@ -585,13 +580,15 @@ wait
 
 Record baseline phantom counts per asset_group in `## Reconciliation baseline` section below.
 
-- [x] [SCRIPT] P0. Run dry-run baseline across all 5 asset_groups × 3 scripts. Record counts below.
-      (2/3 done: absence-reason + legacy-blank scanned locally 2026-05-12 Slot 3 — results in baseline table above.
-      **DEFERRED**: phantom audit — CLAUDE.md requires GCE VM; pending dedicated VM launch on same-region instance.)
+- [x] [SCRIPT] P0. Run dry-run baseline across all 5 asset_groups × 3 scripts. Record counts below. (2/3 done:
+      absence-reason + legacy-blank scanned locally 2026-05-12 Slot 3 — results in baseline table above. **DEFERRED**:
+      phantom audit — CLAUDE.md requires GCE VM; pending dedicated VM launch on same-region instance.)
 
 ### Phase 5B — Apply-flips in dependency order (AFTER Phases 1–4 shipped)
 
-Run in strict sequence. **CLI flags corrected 2026-05-13**: `reconcile_phantom_manifest_rows_all.py` uses `--unphantom` (not `--apply-flips`). The other 3 reconcilers (`expected_absence_reasons`, `legacy_blank_to_typed_reason`, `cefi_tardis_thirdkey_drift`) use `--apply-flips`.
+Run in strict sequence. **CLI flags corrected 2026-05-13**: `reconcile_phantom_manifest_rows_all.py` uses `--unphantom`
+(not `--apply-flips`). The other 3 reconcilers (`expected_absence_reasons`, `legacy_blank_to_typed_reason`,
+`cefi_tardis_thirdkey_drift`) use `--apply-flips`.
 
 ```bash
 # Pass 1: instruments-service reference data_types FIRST (root)
@@ -620,42 +617,40 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
 # Pass 4: features (depends on Pass 3)
 ```
 
-- [x] [SCRIPT] P0. Pass 1 apply-flips: instruments-service phantoms, all 5 asset_groups.
-      **DONE 2026-05-13** — `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713` VMs flipped
-      7,497 phantoms (cefi 2,223 + defi 1,298 + tradfi 3,976). Sports + prediction phantom apply
-      ran later via `defi-phantom-recon-{sports,prediction}-20260513-1625*` after retired-type
-      cleanup completed (slot 4 2026-05-13).
-- [x] [SCRIPT] P0. Pass 2 apply-flips: expected_absence_reasons + legacy_blank_to_typed_reason
-      across all 5 asset_groups. **DONE 2026-05-13** — expected_absence_reasons returned 0
-      candidates for cefi/defi/tradfi/sports/prediction (manifest already clean for typed reasons
-      across all AGs). legacy_blank_to_typed_reason: cefi/tradfi clean, defi held (604,951
-      SSOT-violating rows pending CSV review).
-- [ ] [SCRIPT] P1. Pass 3 apply-flips: MDPS data_types. Verify MDPS manifest clean.
-      **DEFERRED** — MDPS sources its manifest from MTDS output; MTDS-level apply-flips flow
-      downstream. Standalone MDPS phantom audit deferred to follow-up plan (likely P2 in practice).
-- [ ] [SCRIPT] P1. Pass 4 apply-flips: features + ML data_types. Verify features manifest clean.
-      **DEFERRED** — features + ML write computed-output manifests, not raw-capture manifests.
-      Phantom audit semantics differ (no GCS parquet to compare against for a derived feature);
-      defer to a separate follow-up plan with the right validation pattern.
+- [x] [SCRIPT] P0. Pass 1 apply-flips: instruments-service phantoms, all 5 asset_groups. **DONE 2026-05-13** —
+      `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713` VMs flipped 7,497 phantoms (cefi 2,223 + defi 1,298 +
+      tradfi 3,976). Sports + prediction phantom apply ran later via
+      `defi-phantom-recon-{sports,prediction}-20260513-1625*` after retired-type cleanup completed (slot 4 2026-05-13).
+- [x] [SCRIPT] P0. Pass 2 apply-flips: expected_absence_reasons + legacy_blank_to_typed_reason across all 5
+      asset_groups. **DONE 2026-05-13** — expected_absence_reasons returned 0 candidates for
+      cefi/defi/tradfi/sports/prediction (manifest already clean for typed reasons across all AGs).
+      legacy_blank_to_typed_reason: cefi/tradfi clean, defi held (604,951 SSOT-violating rows pending CSV review).
+- [ ] [SCRIPT] P1. Pass 3 apply-flips: MDPS data_types. Verify MDPS manifest clean. **DEFERRED** — MDPS sources its
+      manifest from MTDS output; MTDS-level apply-flips flow downstream. Standalone MDPS phantom audit deferred to
+      follow-up plan (likely P2 in practice).
+- [ ] [SCRIPT] P1. Pass 4 apply-flips: features + ML data_types. Verify features manifest clean. **DEFERRED** —
+      features + ML write computed-output manifests, not raw-capture manifests. Phantom audit semantics differ (no GCS
+      parquet to compare against for a derived feature); defer to a separate follow-up plan with the right validation
+      pattern.
 
 **Special handling — sports retired-data-types (slot 4 2026-05-13)**:
 
-- [x] [SCRIPT] P0. Sports retired-data-type migration: TRANSFERMARKT_LEAGUES + SFI_LEAGUES +
-      SFI_STANDINGS rows flipped to `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` via VM
-      `migrate-sports-retired-20260513-160205` running `instruments-service@50346ed` script
-      `migrate_sports_retired_types_2026_05_13.py --apply`. **88,779 rows flipped**.
-- [x] [SCRIPT] P0. GCS parquet cleanup: `entity=transfermarkt_leagues/` + `entity=sfi_leagues/`
-      deletion via `gcloud storage rm -r`. **Running locally 2026-05-13 16:12 UTC** (~75K + ~13K
-      day directories). `entity=standings/` SKIPPED pending issue resolution:
+- [x] [SCRIPT] P0. Sports retired-data-type migration: TRANSFERMARKT_LEAGUES + SFI_LEAGUES + SFI_STANDINGS rows flipped
+      to `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` via VM `migrate-sports-retired-20260513-160205` running
+      `instruments-service@50346ed` script `migrate_sports_retired_types_2026_05_13.py --apply`. **88,779 rows
+      flipped**.
+- [x] [SCRIPT] P0. GCS parquet cleanup: `entity=transfermarkt_leagues/` + `entity=sfi_leagues/` deletion via
+      `gcloud storage rm -r`. **Running locally 2026-05-13 16:12 UTC** (~75K + ~13K day directories).
+      `entity=standings/` SKIPPED pending issue resolution:
       `plans/active/issues/standings_entity_gcs_ambiguity_2026_05_13.md`.
 
 **Special handling — defi script-3 legacy_blank flips (held pending review)**:
 
-- [ ] [SCRIPT] P0. Apply 604,951 defi script-3 flips (`empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`
-      → `attempted_failed/LegacyBlankErrorReasonError`) after CSV review. **HELD 2026-05-13** —
-      Round 3 dry-run found 604,951 SSOT-violating rows (defi/cefi/tradfi cannot have empty_confirmed
-      at instrument-day grain per CLAUDE.md). Awaiting Ikenna review of CSV at
-      `/tmp/recon-legacy-typed-defi-20260513-135213.csv` (on VM — needs export to GCS for review).
+- [ ] [SCRIPT] P0. Apply 604,951 defi script-3 flips (`empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` →
+      `attempted_failed/LegacyBlankErrorReasonError`) after CSV review. **HELD 2026-05-13** — Round 3 dry-run found
+      604,951 SSOT-violating rows (defi/cefi/tradfi cannot have empty_confirmed at instrument-day grain per CLAUDE.md).
+      Awaiting Ikenna review of CSV at `/tmp/recon-legacy-typed-defi-20260513-135213.csv` (on VM — needs export to GCS
+      for review).
 
 ---
 
@@ -687,23 +682,23 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
 > Baseline populated 2026-05-12 Slot 3. Phantom audit requires GCE VM (CLAUDE.md rule) — pending VM launch.
 > absence-reason + legacy-blank scans run locally from `.tabs/3/` worktree.
 
-| Script         | Asset group | Phantom count (dry-run) | Empty reason nulls               | Legacy blank reasons | Date run   |
-| -------------- | ----------- | ----------------------- | -------------------------------- | -------------------- | ---------- |
-| phantom        | cefi        | PENDING (GCE VM req.)   | —                                | —                    | —          |
-| phantom        | defi        | PENDING (GCE VM req.)   | —                                | —                    | —          |
-| phantom        | tradfi      | PENDING (GCE VM req.)   | —                                | —                    | —          |
-| phantom        | sports      | PENDING (GCE VM req.)   | —                                | —                    | —          |
-| phantom        | prediction  | PENDING (GCE VM req.)   | —                                | —                    | —          |
-| absence-reason | cefi        | —                       | **3,146** (all SOURCE_RETURNED_ZERO) | —                | 2026-05-12 |
-| absence-reason | defi        | —                       | 0                                | —                    | 2026-05-12 |
-| absence-reason | tradfi      | —                       | 0                                | —                    | 2026-05-12 |
-| absence-reason | sports      | —                       | 0                                | —                    | 2026-05-12 |
-| absence-reason | prediction  | —                       | 0                                | —                    | 2026-05-12 |
-| legacy-blank   | cefi        | —                       | —                                | 0 (2,632,931 scanned) | 2026-05-12 |
-| legacy-blank   | defi        | —                       | —                                | 0 (604,951 candidates, 0 upgrades) | 2026-05-12 |
-| legacy-blank   | tradfi      | —                       | —                                | 0                    | 2026-05-12 |
-| legacy-blank   | sports      | —                       | —                                | 0 (1,868,285 candidates, 0 upgrades) | 2026-05-12 |
-| legacy-blank   | prediction  | —                       | —                                | 0 (41 candidates, 0 upgrades) | 2026-05-12 |
+| Script         | Asset group | Phantom count (dry-run) | Empty reason nulls                   | Legacy blank reasons                 | Date run   |
+| -------------- | ----------- | ----------------------- | ------------------------------------ | ------------------------------------ | ---------- |
+| phantom        | cefi        | PENDING (GCE VM req.)   | —                                    | —                                    | —          |
+| phantom        | defi        | PENDING (GCE VM req.)   | —                                    | —                                    | —          |
+| phantom        | tradfi      | PENDING (GCE VM req.)   | —                                    | —                                    | —          |
+| phantom        | sports      | PENDING (GCE VM req.)   | —                                    | —                                    | —          |
+| phantom        | prediction  | PENDING (GCE VM req.)   | —                                    | —                                    | —          |
+| absence-reason | cefi        | —                       | **3,146** (all SOURCE_RETURNED_ZERO) | —                                    | 2026-05-12 |
+| absence-reason | defi        | —                       | 0                                    | —                                    | 2026-05-12 |
+| absence-reason | tradfi      | —                       | 0                                    | —                                    | 2026-05-12 |
+| absence-reason | sports      | —                       | 0                                    | —                                    | 2026-05-12 |
+| absence-reason | prediction  | —                       | 0                                    | —                                    | 2026-05-12 |
+| legacy-blank   | cefi        | —                       | —                                    | 0 (2,632,931 scanned)                | 2026-05-12 |
+| legacy-blank   | defi        | —                       | —                                    | 0 (604,951 candidates, 0 upgrades)   | 2026-05-12 |
+| legacy-blank   | tradfi      | —                       | —                                    | 0                                    | 2026-05-12 |
+| legacy-blank   | sports      | —                       | —                                    | 0 (1,868,285 candidates, 0 upgrades) | 2026-05-12 |
+| legacy-blank   | prediction  | —                       | —                                    | 0 (41 candidates, 0 upgrades)        | 2026-05-12 |
 
 **Key finding**: cefi has **3,146 empty_confirmed rows** with null `error_reason` (all propose `SOURCE_RETURNED_ZERO`).
 These are the only apply-flip candidates. All defi/tradfi/sports/prediction are clean.
@@ -749,27 +744,27 @@ for module in ["delta_one", "calendar", "onchain", "volatility", "sports", "comm
 
 ## Deferred work after 2026-05-13 Harsh-slot-2 session
 
-| Phase / item | Status as of 2026-05-13 | Successor / blocker |
-|---|---|---|
-| Phase 3.1 (delta_one) | ✅ DONE — features-service@4a26ae04 (Option A wiring + 5 unit tests) | n/a |
-| Phase 3.2 (calendar) | ✅ NO-OP-DONE — event-driven, no instrument-grain shard | n/a (architectural mismatch) |
-| Phase 3.3 (onchain) | ✅ NO-OP-DONE — 11 chain-event feature groups, no instrument catalog | n/a (architectural mismatch) |
-| Phase 3.4 (volatility) | ✅ DONE — features-service@4a26ae04 (Option A wiring + 6 unit tests) | n/a |
-| Phase 3.5 (sports) | 🟡 DEFERRED — needs Phase 3.5 design call beyond Option A (league_ids is shard filter, not catalog gate); correct upstream fix is MDPS→features propagation | Successor: operator triage + Phase 3.5 design decision; not blocking Gate 1 |
-| Phase 3.6 (commodity) | ✅ NO-OP-DONE — enabled_commodities IS the full universe | n/a (architectural mismatch) |
-| Phase 4 (ml-training, ml-inference) | ✅ NO-OP-DONE — externally-injected instrument lists; correct fix at launcher layer | n/a |
+| Phase / item                                  | Status as of 2026-05-13                                                                                                                                                                                                                                                                                                                                                          | Successor / blocker                                                                                                                                                                                               |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 3.1 (delta_one)                         | ✅ DONE — features-service@4a26ae04 (Option A wiring + 5 unit tests)                                                                                                                                                                                                                                                                                                             | n/a                                                                                                                                                                                                               |
+| Phase 3.2 (calendar)                          | ✅ NO-OP-DONE — event-driven, no instrument-grain shard                                                                                                                                                                                                                                                                                                                          | n/a (architectural mismatch)                                                                                                                                                                                      |
+| Phase 3.3 (onchain)                           | ✅ NO-OP-DONE — 11 chain-event feature groups, no instrument catalog                                                                                                                                                                                                                                                                                                             | n/a (architectural mismatch)                                                                                                                                                                                      |
+| Phase 3.4 (volatility)                        | ✅ DONE — features-service@4a26ae04 (Option A wiring + 6 unit tests)                                                                                                                                                                                                                                                                                                             | n/a                                                                                                                                                                                                               |
+| Phase 3.5 (sports)                            | 🟡 DEFERRED — needs Phase 3.5 design call beyond Option A (league_ids is shard filter, not catalog gate); correct upstream fix is MDPS→features propagation                                                                                                                                                                                                                      | Successor: operator triage + Phase 3.5 design decision; not blocking Gate 1                                                                                                                                       |
+| Phase 3.6 (commodity)                         | ✅ NO-OP-DONE — enabled_commodities IS the full universe                                                                                                                                                                                                                                                                                                                         | n/a (architectural mismatch)                                                                                                                                                                                      |
+| Phase 4 (ml-training, ml-inference)           | ✅ NO-OP-DONE — externally-injected instrument lists; correct fix at launcher layer                                                                                                                                                                                                                                                                                              | n/a                                                                                                                                                                                                               |
 | PART C (writegate 2.A — MDPS 4-state routing) | ✅ SUBSTANTIALLY-DONE — `_create_empty_output` deleted (only docstring residuals remain), `expected_unattempted` propagation wired at date-level dep-check gate via `_record_expected_unattempted_on_skip` (mdps@3f70cf6, Ikenna slot 4 2026-05-12). One-line docstring cleanup at `tests/unit/test_futures_chain_adapter.py` shipped at mdps@f50db4e (Harsh slot 2 2026-05-13). | Successor: writegate Phase 6.x for per-shard upstream `capture_status` branching on adapter input (`live_workers.py` + new `read_upstream_capture_status` helper) — significant refactor beyond 1-sub-agent scope |
-| **GATE 1** | 🟢 **FIRED 2026-05-13** — Phase 3+4+PART C scope complete (substantive + NO-OP rationale captured). Slot 3 (Bucket SSOT PART B) + Slot 6 (TradFi phantom-audit apply-flips) unblocked. | n/a |
+| **GATE 1**                                    | 🟢 **FIRED 2026-05-13** — Phase 3+4+PART C scope complete (substantive + NO-OP rationale captured). Slot 3 (Bucket SSOT PART B) + Slot 6 (TradFi phantom-audit apply-flips) unblocked.                                                                                                                                                                                           | n/a                                                                                                                                                                                                               |
 
 ### Finding (foreign) — pre-existing broken plan link
 
 `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` references
-`plans/active/pre-cutover-test-wallets-runbook.md` which does not exist on `origin/live-defi-rollout`
-or in the local worktree. Verified pre-existing via `git stash` round-trip (validator
-`run_validators.py --scope all` reports `BROKEN: active/api_keys_wallets_accounts_readiness_2026_05_10.md`
-both before and after my changes). This blocks the production-readiness QG step on every
-features-service / MDPS run. Owner of `api_keys_wallets_accounts_readiness_2026_05_10.md` should
-either create the missing runbook stub or update the markdown link.
+`plans/active/pre-cutover-test-wallets-runbook.md` which does not exist on `origin/live-defi-rollout` or in the local
+worktree. Verified pre-existing via `git stash` round-trip (validator `run_validators.py --scope all` reports
+`BROKEN: active/api_keys_wallets_accounts_readiness_2026_05_10.md` both before and after my changes). This blocks the
+production-readiness QG step on every features-service / MDPS run. Owner of
+`api_keys_wallets_accounts_readiness_2026_05_10.md` should either create the missing runbook stub or update the markdown
+link.
 
 ---
 
@@ -778,55 +773,59 @@ either create the missing runbook stub or update the markdown link.
 **Discovered**: Round 3 phantom dry-run (post-tarball-refresh) for sports identified 99,620 phantom captures.
 Distribution by data_type:
 
-| Data Type | Phantoms | Status |
-|-----------|----------|--------|
-| TRANSFERMARKT_LEAGUES | 75,960 | **RETIRED 2026-05-05** — moved to UAC `TRANSFERMARKT_IDS` constant |
-| SFI_LEAGUES | 12,777 | **RETIRED 2026-05-05** — moved to UAC `SOCCER_FOOTBALL_INFO_IDS` constant |
-| INJURIES | 9,843 | REAL phantoms (api_football) — phantom reconciler handles |
-| Other | ~1,040 | Mixed — likely real phantoms |
+| Data Type             | Phantoms | Status                                                                    |
+| --------------------- | -------- | ------------------------------------------------------------------------- |
+| TRANSFERMARKT_LEAGUES | 75,960   | **RETIRED 2026-05-05** — moved to UAC `TRANSFERMARKT_IDS` constant        |
+| SFI_LEAGUES           | 12,777   | **RETIRED 2026-05-05** — moved to UAC `SOCCER_FOOTBALL_INFO_IDS` constant |
+| INJURIES              | 9,843    | REAL phantoms (api_football) — phantom reconciler handles                 |
+| Other                 | ~1,040   | Mixed — likely real phantoms                                              |
 
-**88,737 of the 99,620 "phantoms" are LEGACY rows from RETIRED data types.** These are NOT real phantoms (the data
-type itself no longer exists). They should be flipped to `empty_confirmed` + `error_reason=EXPECTED_DEPRECATED_DATA_TYPE`
-per `manifest_migration_master_2026_05_07.md` § C.1 LEAGUES kill (UAC reason code shipped `uac@97dccc3`).
+**88,737 of the 99,620 "phantoms" are LEGACY rows from RETIRED data types.** These are NOT real phantoms (the data type
+itself no longer exists). They should be flipped to `empty_confirmed` + `error_reason=EXPECTED_DEPRECATED_DATA_TYPE` per
+`manifest_migration_master_2026_05_07.md` § C.1 LEAGUES kill (UAC reason code shipped `uac@97dccc3`).
 
 **Why this matters**: Running `--unphantom` on sports would flip 88,737 retired-data-type rows to `attempted_failed`,
-which is the WRONG state. The migration script approach is correct: flip to `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE`
-which clips the denominator in deployment-api data-status panel (per codex SSOT).
+which is the WRONG state. The migration script approach is correct: flip to
+`empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` which clips the denominator in deployment-api data-status panel (per
+codex SSOT).
 
 **Existing migration script** (`instruments-service/scripts/migrate_leagues_kill_2026_05_07.py`):
+
 - Handles ONLY `LEAGUES` (api_football data type) — `RETIRED_DATA_TYPE = "LEAGUES"` hardcoded
 - DOES NOT handle TRANSFERMARKT_LEAGUES, SFI_LEAGUES, SFI_STANDINGS
 
 **Slot 4 task (assigned 2026-05-13)**:
+
 1. Generalize `migrate_leagues_kill_2026_05_07.py` to accept multiple retired data_types (parameterize the constant)
 2. Run via same-region GCE VM with `--apply` against sports manifest
 3. After successful flip + panel verification, delete daily parquets via `gcloud storage rm -r`
 4. THEN run phantom reconciler `--unphantom` on remaining ~10,883 real phantoms (INJURIES + others)
 
 **Follow-up tech debt** (deferred to separate plan):
-- instruments-service `engine/orchestrator.py` still has TRANSFERMARKT_LEAGUES + SFI_LEAGUES + SFI_STANDINGS entries
-  in `_DATA_TYPE_TO_PIPELINE_MODE` (lines 156-160) and entity-wanted dispatching (multiple sites). Code should be
-  cleanly removed (write-path kill, similar to api_football LEAGUES kill at `instruments-service@93efebf`).
+
+- instruments-service `engine/orchestrator.py` still has TRANSFERMARKT_LEAGUES + SFI_LEAGUES + SFI_STANDINGS entries in
+  `_DATA_TYPE_TO_PIPELINE_MODE` (lines 156-160) and entity-wanted dispatching (multiple sites). Code should be cleanly
+  removed (write-path kill, similar to api_football LEAGUES kill at `instruments-service@93efebf`).
 - deployment-api `data_status_service.py` has 6+ references that should filter retired types out of the panel.
 
 ---
 
 ## Deferred work after 2026-05-12 slot-4-session-close session
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-|---|---|---|
-| Phase 0A (UAC: EXPECTED_OUTSIDE_PROCESSING_SCOPE + EXPECTED_UPSTREAM_EMPTY) | ✅ DONE — `uac@0457b0e` pushed to live-defi-rollout | Gate 0A fired |
-| Phase 0B (UTL read_availability_index helper) | ✅ DONE — pre-existed in `manifest_writer.py:3257`; no new helper needed | Gate 0A fired |
-| Phase 1 (MTDS pre-flight wired to instruments-service manifest) | ✅ DONE — `uac@0457b0e` (same push included MTDS wiring) — see slot 4 ping Gate 0A | Phases 3+4 can proceed |
-| Phase 1.5 (sports classifier fixture-existence fix) | ✅ DONE — `pm@ff2b46fb` per slot 4 ping | Unblocked |
-| Phase 2 (MDPS record_expected_unattempted on dep-skip) | ✅ DONE — `mdps@3f70cf6`; 4 unit tests pass; codex updated | Phase 3 can proceed |
-| Phase 3.0 design blocker (subscription_list runtime vs static) | ✅ RESOLVED — Option A confirmed by operator 2026-05-12. No UAC frozenset; runtime comparison at `_get_instruments()` call. | Phase 3.1–3.N unblocked |
-| Phase 3.1–3.N (6 features modules — delta_one, calendar, onchain, volatility, sports, commodity) | 🟡 TODO — unblocked by Option A confirmation. Next slot to pick up: fan-out 6 sub-agents simultaneously per spawn template above. | Successor: next slot run of this plan |
-| Phase 4 (ml-training + ml-inference expected_unattempted) | 🟡 TODO — blocked until Phase 3 ships (same pattern). | Successor: after Phase 3 fan-out |
-| Phase 2.A (PART C — writegate MDPS 4-state routing + v6 columns) | 🟡 TODO — in work_split slot 4 carry-forward. | Successor: writegate_honest_coverage_endtoend_2026_05_06.md Phase 6.x |
-| Phase 5 (manifest reconciliation apply-flips) | 🔴 BLOCKED until Phases 1–4 all shipped | Successor: after Phase 4 done |
-| Phase 6 (validation gate phantom count sign-off) | 🔴 BLOCKED until Phase 5 done | Successor: final QG pass |
-| 19 pre-existing MDPS test failures (EmissionDecision schema drift + sports config + env validation) | 🟡 FLAGGED — not caused by this work. UTL added `service_emission_state` + `last_emission_decision_at` required args to `EmissionDecision.__init__`; MDPS tests use old signature. Logged in slot_4.md ping. Owner: UTL/writegate team. | Issue: operator triage |
+| Phase / item                                                                                        | Status as of 2026-05-12                                                                                                                                                                                                                 | Successor / blocker                                                   |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Phase 0A (UAC: EXPECTED_OUTSIDE_PROCESSING_SCOPE + EXPECTED_UPSTREAM_EMPTY)                         | ✅ DONE — `uac@0457b0e` pushed to live-defi-rollout                                                                                                                                                                                     | Gate 0A fired                                                         |
+| Phase 0B (UTL read_availability_index helper)                                                       | ✅ DONE — pre-existed in `manifest_writer.py:3257`; no new helper needed                                                                                                                                                                | Gate 0A fired                                                         |
+| Phase 1 (MTDS pre-flight wired to instruments-service manifest)                                     | ✅ DONE — `uac@0457b0e` (same push included MTDS wiring) — see slot 4 ping Gate 0A                                                                                                                                                      | Phases 3+4 can proceed                                                |
+| Phase 1.5 (sports classifier fixture-existence fix)                                                 | ✅ DONE — `pm@ff2b46fb` per slot 4 ping                                                                                                                                                                                                 | Unblocked                                                             |
+| Phase 2 (MDPS record_expected_unattempted on dep-skip)                                              | ✅ DONE — `mdps@3f70cf6`; 4 unit tests pass; codex updated                                                                                                                                                                              | Phase 3 can proceed                                                   |
+| Phase 3.0 design blocker (subscription_list runtime vs static)                                      | ✅ RESOLVED — Option A confirmed by operator 2026-05-12. No UAC frozenset; runtime comparison at `_get_instruments()` call.                                                                                                             | Phase 3.1–3.N unblocked                                               |
+| Phase 3.1–3.N (6 features modules — delta_one, calendar, onchain, volatility, sports, commodity)    | 🟡 TODO — unblocked by Option A confirmation. Next slot to pick up: fan-out 6 sub-agents simultaneously per spawn template above.                                                                                                       | Successor: next slot run of this plan                                 |
+| Phase 4 (ml-training + ml-inference expected_unattempted)                                           | 🟡 TODO — blocked until Phase 3 ships (same pattern).                                                                                                                                                                                   | Successor: after Phase 3 fan-out                                      |
+| Phase 2.A (PART C — writegate MDPS 4-state routing + v6 columns)                                    | 🟡 TODO — in work_split slot 4 carry-forward.                                                                                                                                                                                           | Successor: writegate_honest_coverage_endtoend_2026_05_06.md Phase 6.x |
+| Phase 5 (manifest reconciliation apply-flips)                                                       | 🔴 BLOCKED until Phases 1–4 all shipped                                                                                                                                                                                                 | Successor: after Phase 4 done                                         |
+| Phase 6 (validation gate phantom count sign-off)                                                    | 🔴 BLOCKED until Phase 5 done                                                                                                                                                                                                           | Successor: final QG pass                                              |
+| 19 pre-existing MDPS test failures (EmissionDecision schema drift + sports config + env validation) | 🟡 FLAGGED — not caused by this work. UTL added `service_emission_state` + `last_emission_decision_at` required args to `EmissionDecision.__init__`; MDPS tests use old signature. Logged in slot_4.md ping. Owner: UTL/writegate team. | Issue: operator triage                                                |
 
 ---
 
