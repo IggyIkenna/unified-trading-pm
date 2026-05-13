@@ -1,10 +1,19 @@
 ---
 title: Wave-2 — Polymarket / Kalshi record_captured_from_counts proper SSOT migration
 type: sub-plan
-status: planned
+status: active
 created: 2026-05-09
-deadline: post-cutover (target 2026-06-15)
-horizon: scope-bounded
+deadline: 2026-05-23 (Polymarket subset) / 2026-06-15 (Kalshi + opinion.trade)
+prior_deadline: post-cutover (target 2026-06-15)
+deadline_change_reason: |
+  Operator direction 2026-05-13: split scope. Polymarket subset PULLED FORWARD into May-23 (live prediction
+  market trading runs at May-23 cutover — bundled-shard SSOT correctness matters when live trades land).
+  Kalshi + opinion.trade STAY post-cutover (no live trading on those venues at May-23; their adapter migration
+  can follow when bundle adapters land).
+  Venue-agnostic phases (1 helper, 2 deprecation banner, 4 legacy delete, 5 codex update) ALL ship May-23 — they're
+  the foundation. Phase 3 splits: Polymarket migration ships May-23; Kalshi + opinion.trade migration → 2026-06-15.
+priority: P1
+horizon: pre-May-23 (Polymarket) / scope-bounded post-cutover (Kalshi + opinion.trade)
 companion_to: plans/epics/predictions_master_2026_05_07.md
 migrated_from: predictions_master_2026_05_07.md Q2/A2 option δ
 locked_by: live-defi-rollout

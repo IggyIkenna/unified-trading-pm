@@ -252,6 +252,16 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
 
 Every emitter must use `AlertCode` enum, not raw strings. Fail-loud on unknown.
 
+> **🟢 4 DeFi-specific codes PULLED FORWARD May-23 (operator direction 2026-05-13)** —
+> `DEFI_AAVE_UTILIZATION_SPIKE` / `DEFI_FUNDING_RATE_FLIP` / `DEFI_FEATURE_STALE` /
+> `DEFI_WEETH_DEPEG` features-onchain emission sites now in-scope pre-cutover. Was
+> previously deferred per master plan Group F item 22 "Sub-B finding (calculators not
+> yet wired; defi_master Fork 1 territory)"; reversed per operator rationale "throughput
+> margin (~5-6x), no descope, perfect cutover" — ~0.5-1 cal-AI-days against ~1,880
+> cal-day capacity in next 9 days. The 4 codes already exist in the AlertCode enum
+> (shipped UAC@`d00326d`); only the producer-side emission wiring is the pull-forward
+> scope. See per-code todo below.
+
 - [ ] [SCRIPT] P0. `risk-and-exposure-service/`: emit `BALANCE_DRIFT`, `MARGIN_THRESHOLD_BREACH`, `CIRCUIT_BREAKER_OPEN`
       using `AlertCode.X`.
 - [ ] [SCRIPT] P0. `position-balance-monitor-service/`: emit `BALANCE_DRIFT`, `POSITION_DRIFT`.
@@ -260,6 +270,17 @@ Every emitter must use `AlertCode` enum, not raw strings. Fail-loud on unknown.
 - [ ] [SCRIPT] P0. `features-service (onchain family)/`: emit `DEFI_HEALTH_FACTOR_CRITICAL` (from Aave health-factor calculator),
       `DEFI_AAVE_UTILIZATION_SPIKE` (from Aave pool-utilization calc), `DEFI_FUNDING_RATE_FLIP` (from perp funding
       calc), `DEFI_FEATURE_STALE` (from feature-staleness watchdog), `DEFI_WEETH_DEPEG` (from LST-peg deviation calc).
+- [ ] [SCRIPT] P1. **🟢 PULLED FORWARD May-23** (operator direction 2026-05-13) — features-onchain emission sites
+      for the 4 DeFi-specific codes, per-calculator wiring breakdown (composes with parent P0 todo above):
+  - [ ] `DEFI_AAVE_UTILIZATION_SPIKE` — emit from Aave pool-utilization calc when utilization crosses
+        `defi_aave_utilization_spike_bps` threshold (9500 BPS_OF_ONE default; per-archetype override 9000 for
+        `ARBITRAGE_PRICE_DISPERSION` funding-rate-dispersion per `ALERT_THRESHOLDS`).
+  - [ ] `DEFI_FUNDING_RATE_FLIP` — emit from perp funding calc when 5-min funding-rate magnitude crosses
+        `defi_funding_rate_flip_bps_5m` (100 BPS default).
+  - [ ] `DEFI_FEATURE_STALE` — emit from feature-staleness watchdog when LST yield read freshness exceeds
+        `defi_feature_stale_minutes` (15 min default).
+  - [ ] `DEFI_WEETH_DEPEG` — emit from LST-peg deviation calc when 5-min peg deviation crosses
+        `defi_weeth_depeg_bps` (50 BPS_OF_ONE = 0.5% default).
 - [ ] [SCRIPT] P0. Each emitter: add unit test asserting alert payload conforms to `DefiAlert` envelope + `AlertCode`
       enum value.
 - [ ] [QG] P0. Per-service QG pass on each emitter repo.

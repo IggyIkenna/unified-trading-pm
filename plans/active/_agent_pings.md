@@ -810,3 +810,32 @@ Plan: `bucket_name_ssot_canonicalisation_2026_05_10.md` + `expected_unattempted_
 Plan body annotated: `wallet_treasury_post_cutover_custody_signing_2026_06_01.md` PULL-FORWARD frontmatter + section.
 
 **No Harsh action required**. If Harsh-side wants to pull additional post-cutover items into the same window (operator-flagged "more to the 15th deadline"), feel free — capacity headroom is symmetric. Ping me if any pulled items collide with Harsh-side scope.
+
+---
+
+[2026-05-13 17:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — 🟢 **7 items PULLED FORWARD into May-23 cutover scope** (operator direction 2026-05-13: "we have throughput margin, no descope, perfect cutover"). Total +~12 cal-AI-days against ~1,880 cal-day capacity remaining = still well within ~5-6× safety margin.
+
+**Pulled from post-cutover → May-23 (frontmatter deadlines updated)**:
+
+1. **`basefc_validation_flip_2026_05_10.md`** (~3.0 cal-AI-days, P1) — mandatory ClassVar enforcement across 75 BaseFeatureCalculators. Operator rationale: "validation is important and we have space" — type-safety hardening on production strategies pre-cutover, not retrofitted after.
+2. **`governance_qg_automation_gaps_post_cutover_2026_05_12.md`** (~3.0 cal-AI-days, P1) — HARD RULE automation + QG ratchet gaps. Operator rationale: "QG is key to good trading hardened" — live trading runs with full HARD RULE enforcement from day 1. Filename retains `_post_cutover_` suffix (not renamed to avoid cross-ref churn).
+3. **`wave2_polymarket_record_captured_from_counts_2026_05_09.md`** SPLIT (~2.0 cal-AI-days for Polymarket subset, P1) — Polymarket pulled forward, Kalshi + opinion.trade stay post-cutover (no live trading on those venues at May-23). Phases 1/2/4/5 (helper, deprecation, deletion, codex update) all ship May-23 as foundation; Phase 3 splits per-venue.
+4. **`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`** (~1.8 cal-AI-days, P2) — codex doc currency stamps + duplicate dedup. Operator rationale: "quick and valuable, should be included" — tightens SSOT surface agents read every session.
+
+**Pulled from inside other plans → May-23 (re-flipped from deferred annotations)**:
+
+5. **Treasury rollup endpoint `/api/treasury/rollup`** (~1-2 cal-AI-days) — was Phase 3.D OPEN in `api_keys_wallets_accounts_readiness_2026_05_10.md` deferred "Day 2 next cycle for collision avoidance with slot 8 cross_cutting #4". Status flipped 🟡 OPEN → 🟢 PULLED FORWARD May-23. Owner: deployment-api scope (collision now resolvable; slot 8 cross_cutting #4 has shipped).
+6. **DART manual-trade UX full refactor** (~2.4 cal-AI-days, P1) — was archived in `plans/archive/issues/dart_manual_trade_ui_build_2026_05_10.md` Phase C remainder. Created NEW active plan `plans/active/dart_manual_trade_ux_refactor_2026_05_13.md` with `migrated_from:` provenance. Scope: Sheet → dedicated `/dart/terminal/manual/*` route extraction (currently 1,256-line panel) + unified `lib/api/dart-client.ts` + full-flow Playwright e2e. Master plan Group G Item 23 row updated.
+7. **4 DeFi-specific alert codes** (~1 cal-AI-day, P1) — `DEFI_AAVE_UTILIZATION_SPIKE` / `DEFI_FUNDING_RATE_FLIP` / `DEFI_FEATURE_STALE` / `DEFI_WEETH_DEPEG`. Codes already exist in UAC AlertCode enum (UAC@d00326d shipped); pull-forward scope is features-onchain producer-side emission wiring + alerting-service rule wiring. Added as nested P1 todos under `alerting_service_live_rules_2026_05_07.md` Phase 3 with threshold refs (9500 BPS / 100 BPS / 15 min / 50 BPS defaults). Real production safety for DeFi live trading.
+
+**Master plan + sub-plan body updates**:
+- Group F item 22 + Group G item 23 + Week-2 Treasury row all updated with pull-forward annotations.
+- Inventory dashboard regen-pending in this commit batch.
+
+**Slot allocation impact** (TOTAL pre-cutover stack now ~322 cal-AI-days vs ~290 prior):
+
+- No new slot reallocation ask beyond yesterday's (batch_live_symmetry ×2 + recursive_borrow Solidity+execution ×2).
+- Pulled-forward items fit existing slot capacity — they're each <3 cal-AI-days; can absorb into next-cycle scope-extension layers per continuation_prompts pattern OR distribute across underutilized slots.
+- Slots best-suited per item: basefc → features-service maintainer pair (UTL + features); governance_qg → slot 1 main or platform slot; wave2_polymarket → MTDS/prediction slot; codex_doc_currency → any researcher slot; treasury rollup → deployment-api slot; DART UX → UTS-UI slot; DeFi alert codes → features-onchain + alerting slot.
+
+**TOP ASK**: confirm slots 1 main (governance_qg) + 1 features (basefc + DeFi alert codes producer wiring) + 1 deployment-api (treasury rollup) + 1 UTS-UI (DART UX) + 1 prediction/MTDS (wave2_polymarket Polymarket subset) + 1 codex/research (codex_doc_currency) ≈ 6 slot-touches across next 9 days. Most can fit existing cycles without new spawns. **No descope. Perfect cutover.**

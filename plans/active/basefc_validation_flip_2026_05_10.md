@@ -2,7 +2,13 @@
 title: "BaseFeatureCalculator validation flip — mandatory ClassVar enforcement across 75 calcs (paradigm-split rollout)"
 status: active
 created: 2026-05-10
-deadline: post-cutover (P1 — type-safety hardening, not correctness blocker)
+deadline: 2026-05-23
+prior_deadline: post-cutover (P1 — type-safety hardening, not correctness blocker)
+deadline_change_reason: |
+  Operator direction 2026-05-13: pulled forward into May-23 scope. "Validation is important and we have space" —
+  workspace throughput at ~200 cal-AI-days/day vs ~310 cal-days May-23 remaining = ~5-6x margin.
+  Type-safety hardening across 75 calculators improves cutover confidence on production strategies.
+priority: P1
 horizon: 1-2 week scope-bounded
 spawned_from: plans/archive/issues/basefc_validation_flip_audit_2026_05_08.md (archived 2026-05-10)
 locked_by: live-defi-rollout

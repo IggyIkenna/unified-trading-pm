@@ -3,8 +3,16 @@ title: Governance HARD RULE automation + QG ratchet gaps (post-cutover)
 type: plan
 status: active
 created: 2026-05-12
-deadline: 2026-08-31
-horizon: 3-month post-cutover backlog
+deadline: 2026-05-23
+prior_deadline: 2026-08-31
+deadline_change_reason: |
+  Operator direction 2026-05-13: pulled forward into May-23 scope. "QG is key to good trading hardened" —
+  fixing governance automation + ratchet gaps pre-cutover means live trading runs with full HARD RULE
+  enforcement from day 1, not retrofitted after. Filename retains _post_cutover_ suffix from prior planning
+  (not renamed to avoid cross-ref churn).
+priority: P1
+horizon: pre-May-23 cutover (pulled forward 2026-05-13)
+prior_horizon: 3-month post-cutover backlog
 companion_to: codex_vs_citadel_infrastructure_audit_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-12

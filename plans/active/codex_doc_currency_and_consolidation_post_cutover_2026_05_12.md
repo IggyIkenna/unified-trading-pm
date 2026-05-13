@@ -3,8 +3,16 @@ title: Codex doc currency stamps + duplicate-doc consolidation (post-cutover)
 type: plan
 status: active
 created: 2026-05-12
-deadline: 2026-08-31
-horizon: 3-month post-cutover backlog
+deadline: 2026-05-23
+prior_deadline: 2026-08-31
+deadline_change_reason: |
+  Operator direction 2026-05-13: pulled forward into May-23 scope. "This is quick and valuable and should be
+  included" — codex doc currency stamps + duplicate dedup tightens the SSOT surface that agents read every
+  session. ~1.8 cal-AI-days within current ~5-6x throughput margin. Filename retains _post_cutover_ suffix
+  from prior planning (not renamed to avoid cross-ref churn).
+priority: P2
+horizon: pre-May-23 cutover (pulled forward 2026-05-13)
+prior_horizon: 3-month post-cutover backlog
 companion_to: codex_vs_citadel_infrastructure_audit_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
