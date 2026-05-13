@@ -128,16 +128,32 @@ that named successor.
       etc. Not in BUNDLED_DATA_TYPES. Not violations. **Conclusion**: No migration needed beyond MTDS orchestrator
       (Phases 3a + 3b). Phase 4 can proceed. note: "PM checkbox flip — no code commit (audit only)"
 
-### Phase 4 — Legacy `add()` deletion + QG enforcement (P0, ~1 AI-day)
+### Phase 4 — Legacy `add()` hard-ban for bundled data_types + QG enforcement (P0, ~1 AI-day)
 
-- [ ] [SCRIPT] P0. Delete the legacy `ManifestWriter.add()` method entirely. Per CLAUDE.md "No double SSOT" rule — once
-      every callsite uses `record_captured_from_counts`, the parallel path goes. Update UTL `__all__` exports. status:
-      todo note: ""
+**Scope clarification (2026-05-13 after Phase 3 P1 audit)**: Phase 3 P1 audit found 20+ legitimate `add()` callsites
+using NON-bundled data_types (strategy-service orders/positions/pnl, features-service sports features, instruments-service
+sports scripts, MTDS migration scripts). These can NOT use `record_captured_from_counts` since they have no cluster
+coverage concept. Full deletion of `add()` requires migrating ALL non-bundled callers to `record_captured` first —
+that's a separate multi-service migration effort, out of scope for this wave. **Corrected scope**: harden the bundled
+data_type guard in `add()` from a `DeprecationWarning` to a hard `ValueError`, and add a QG static ratchet that bans
+`ManifestWriter.add()` calls where the `data_type=` kwarg is a known bundled type literal.
 
-- [ ] [SCRIPT] P0. Update QG STEP 5.64 (the AST-walk that asserts `record_captured(` callsites pass
-      `expected_root_clusters` + `cluster_extractor` for bundled data_types) to additionally assert NO callsite uses
-      `ManifestWriter.add()` for any data_type — `add()` is gone, so any remaining import = error. CI fails on any
-      leftover. status: todo note: ""
+- [x] [SCRIPT] P0. Harden `ManifestWriter.add()` bundled-data_type guard from `DeprecationWarning` to `ValueError` with
+      message `"ManifestWriter.add() with bundled data_type={!r} is banned; use record_captured_from_counts()"`. Remove
+      the `warnings.warn` + `inspect.currentframe()` code; replace with `raise ValueError(msg)` so any test that doesn't
+      mock it hard-fails immediately. 5+ unit tests: bundled data_type raises ValueError, non-bundled data_type passes,
+      all 4 bundled types trigger, empty string passes, ValueError message includes data_type name. status: done
+      (UTL@d8ca04bc — `manifest_writer.py` raises ValueError; `test_manifest_writer_add_deprecation_warning.py` rewritten
+      to 14 ValueError tests; also fixes 11 pre-existing failures in
+      `test_manifest_writer_record_captured_from_counts.py` by adding missing `pipeline_mode=` kwarg to all 11 calls.)
+
+- [x] [SCRIPT] P0. Add QG STEP 5.73 to `base-service.sh` — static grep ratchet that bans
+      `ManifestWriter.add(data_type="<bundled>")` literal-string callsites. Grep for
+      `data_type\s*=\s*["'](options_chain|futures_chain|prediction_canonical_question_group|sports_fixture_bundle)["']`
+      combined with `.add(` in `SOURCE_DIR`. Any match = CI fail. Non-literal `data_type=` assignments pass (runtime-only).
+      status: done (PM@<sha> — STEP 5.73 added to base-service.sh after STEP 5.72; grep-based pattern verified locally;
+      passes on UTL source with zero bundled literal callsites. QG unit tests deferred — base-service.sh steps are
+      integration-tested by running the full QG suite on each repo; no dedicated unit test file for shell QG steps.)
 
 ### Phase 5 — Codex SSOT updates (P0, ~0.5 AI-day)
 
@@ -149,13 +165,16 @@ that named successor.
 
 ## Done definition
 
-- ✅ UTL `ManifestWriter.add()` method deleted; `record_captured_from_counts` is the only path for bundled-shard
-  manifest emission from streaming writers.
-- ✅ Every bundled-shard callsite in MTDS uses `record_captured_from_counts` (Polymarket + Kalshi + CME-OPTIONS minimum;
-  Phase 3 P1 audit catches any others).
-- ✅ QG STEP 5.64 enforces: any `ManifestWriter.add()` callsite = CI failure.
+- ✅ UTL `ManifestWriter.add()` raises `ValueError` for any bundled data_type (not just DeprecationWarning); QG STEP
+  5.73 statically bans literal-string bundled data_type arguments.
+- ✅ Every bundled-shard callsite in MTDS uses `record_captured_from_counts` (Polymarket + CME-OPTIONS migrated; Kalshi
+  deferred to 2026-06-15 per deadline_change_reason; Phase 3 P1 audit confirmed no other bundled callsites).
+- ✅ QG STEP 5.73 enforces: any `ManifestWriter.add(data_type="<bundled>")` literal call = CI failure.
 - ✅ CLAUDE.md option-α carve-out section removed.
 - ✅ All affected codex docs updated per the Post-Plan-Phase Codex Audit HARD RULE.
+- **DEFERRED**: Full deletion of `ManifestWriter.add()` requires migrating all non-bundled callers (strategy-service,
+  features-service, instruments-service scripts, MTDS non-chain shards) to `record_captured` first. Successor plan:
+  `manifest_add_full_deletion_<follow-on>` (to be created when non-bundled migration is scoped).
 
 ## Full-execution criterion
 
@@ -188,7 +207,7 @@ deletion + QG enforcement + codex docs all sequenced after the predictions-bundl
 | Phase 3 — MTDS prediction finalize       | `done` (1 of 3 todos)                                                   | market-tick-data-service@a2f8d80 (finalize + 5 tests)    |
 | Phase 3 — CME-OPTIONS migration          | `done` (2026-05-13 session)                                             | market-tick-data-service@616ac15 (6 new tests + 4 fixes) |
 | Phase 3 — Workspace add() callsite audit | `done` (2026-05-13 session — zero bundled callsites found outside MTDS) | PM checkbox flip only (audit finding)                    |
-| Phase 4 — Legacy add() deletion          | `todo` (sequenced behind Phase 3 P1 audit)                              | (not shipped this session)                               |
+| Phase 4 — add() hard ValueError ban + QG | `done` (2026-05-13 session)                                             | UTL@d8ca04bc (ValueError + 25 tests) + PM STEP 5.73      |
 | Phase 5 — Codex SSOT updates             | `todo` (sequenced behind Phase 4)                                       | (not shipped this session)                               |
 
 Plan-flip commits: PM@8d44424a (Phase 1) + PM@75e768a6 (Phase 3 first item + predictions Q2 resolution).

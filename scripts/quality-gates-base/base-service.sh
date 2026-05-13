@@ -1681,6 +1681,32 @@ else
     log_success "STEP 5.72: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.73: ManifestWriter.add() with bundled data_type literal — banned ──
+#
+# ManifestWriter.add() raises ValueError for any bundled data_type (options_chain,
+# futures_chain, prediction_canonical_question_group, sports_fixture_bundle) since
+# wave2_polymarket_record_captured_from_counts_2026_05_09 Phase 4. This step bans
+# literal-string bundled data_type arguments at the call-site level.
+#
+# Note: only literal-string "data_type=..." kwargs are detectable by static grep.
+# Runtime-resolved data_type assignments (data_type=variable) pass through — they
+# would fail at test/runtime when the ValueError fires.
+#
+# Plan: wave2_polymarket_record_captured_from_counts_2026_05_09 Phase 4 item 2.
+if [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
+    _BUNDLED_TYPES_PATTERN='data_type\s*=\s*["\x27](options_chain|futures_chain|prediction_canonical_question_group|sports_fixture_bundle)["\x27]'
+    if grep -rn --include="*.py" -E "$_BUNDLED_TYPES_PATTERN" "${SOURCE_DIR}" | grep -v "^Binary" | grep -v "BUNDLED_DATA_TYPES" | grep -q "\.add("; then
+        # A literal bundled data_type arg was passed to an .add() call.
+        log_fail "STEP 5.73: ManifestWriter.add() called with literal bundled data_type. Use record_captured_from_counts() instead (wave2_polymarket plan Phase 4). Offending lines:"
+        grep -rn --include="*.py" -E "$_BUNDLED_TYPES_PATTERN" "${SOURCE_DIR}" | grep -v "BUNDLED_DATA_TYPES" | grep "\.add("
+        V=$(( V + 1 ))
+    else
+        log_success "STEP 5.73: No ManifestWriter.add() calls with literal bundled data_type"
+    fi
+else
+    log_success "STEP 5.73: skipped (SOURCE_DIR not set or not a directory)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
