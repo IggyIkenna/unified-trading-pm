@@ -47,16 +47,6 @@ estimate_calibration_note: |
 > ownership boundary so static + dynamic rules don't conflict. Question doc:
 > [`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md).
 
-> **🟡 CROSS-PLAN BANNER — Risk-rule taxonomy active (2026-05-10 → 2026-05-23)**
->
-> [`risk_simulations_limits_alerting_2026_05_10`](./risk_simulations_limits_alerting_2026_05_10.md) Phase 1.E extends
-> this plan's `AlertCode` closed-set with 6 new members (`RISK_RULE_BLOCKED` / `RISK_RULE_SCALED_DOWN` /
-> `RISK_RULE_MONITOR_FIRED` / `RISK_RULE_TEST_ONLY_ROUTED` / `KILL_SWITCH_AUTO_RECOVERED` /
-> `KILL_SWITCH_MANUAL_UNKILLED`) — closed-set grows 39 → 45 (UAC@945ad5d). **Coordinate ownership**: this plan owns the
-> AlertCode taxonomy + `LIVE_ALERT_RULES` registry; the risk plan owns the `RiskRule` Pydantic + the
-> `CONSEQUENCE_ALERT_CODES` mapping. The 6 corresponding `LIVE_ALERT_RULES` entries will be seeded by this plan's
-> maintainer after Sub-A's `event_pattern` rename (UAC@0b61aec) propagates to all consumers. Reviewers reject any
-> attempt to add `RiskRule*` entries to `LIVE_ALERT_RULES` from outside this plan's scope.
 
 Closes the "alerting plan does not exist" anomaly flagged by the 2026-05-07 audit (see
 `_AUDIT_2026_05_07_dependency_graph.md` operator action item #1). The alerting-**service** itself already exists
