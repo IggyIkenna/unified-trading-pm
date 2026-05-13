@@ -22,12 +22,12 @@ locked_since: 2026-05-08
 | 1 | Main orchestrator + on-call + LEDGER + ping triage | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
 | 2 | 🆕 Wave 3: launcher_scripts_consolidation finalisation (73% → 100%) | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 2" below | `launcher_scripts_consolidation_into_deployment_service_2026_05_07.md` | `tab/hk/2` |
 | 3 | 🆕 Wave 3: execution-service C901 cleanup + deployment-service pytest-timeout fix | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 3" below | (multi-blocker — see brief) | `tab/hk/3` |
-| 4 | (UNASSIGNED — operator holding for the "17 pre-existing test failures" question; do NOT auto-assign) | 🟪 ON HOLD per operator | — | `tab/hk/4` |
+| 4 | (ON HOLD per operator — pending operator on "17 pre-existing test failures" question. When slot 4 resumes, also pop slot 4's own stash@{0} `slot4-preserved-foreign-wip-service_entry` in `.tabs/4/strategy-service`: `service_entry.py --synthetic-input-uri` arg = Phase 3.D/4.A-tail of mock_data plan — commit + FF-push.) | 🟪 ON HOLD per operator | — | `tab/hk/4` |
 | 5 | (cleanup done 2026-05-13 — local tab/hk/5 hard-reset to LDR; cc62f02 preserved on origin/tab/hk/5 as historical record) | 🟪 RESERVE (ready) | — | `tab/hk/5` |
 | 6 | 🆕 Wave 3: per_agent_worktrees finalisation + api_football flattening finalisation | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 6" below | `per_agent_worktrees_2026_05_10.md` + `api_football_minimal_flattening_removal_2026_05_07.md` | `tab/hk/6` |
 | 7 | 🆕 Wave 3: cross_asset Phase 6 validation suite (1G + 6A/6B/6C/6D) — **Opus 4.7** | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 7" below | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6 | `tab/hk/7` |
 | 8 | (cleanup done 2026-05-13 — local tab/hk/8 hard-reset to LDR; 949185c preserved on origin/tab/hk/8 as historical record) | 🟪 RESERVE (ready) | — | `tab/hk/8` |
-| 9 | 🆕 Wave 3: Sports classifier extension P1 (audit re-open) + foreign-WIP pop (slot 4's stash@{0} = slot 9's Phase 3.D/4.A-tail scope) | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 9" below | `issues/sports_classifier_extension_followup_2026_05_13.md` + slot 4 stash@{0} | `tab/hk/9` |
+| 9 | 🆕 Wave 3: Sports classifier extension P1 (Wave 1 audit re-open — slot 9's own grep-miss) | 🟡 NEW (Wave 3) — see § "Wave 3 task briefs — Slot 9" below | `issues/sports_classifier_extension_followup_2026_05_13.md` | `tab/hk/9` |
 | 10 | dex_perp Phase 2A/2D/2E + 2F P2 + EigenLayer Phase 3A/3B + Phase 4A/4B + codex 5.1/5.2 | ✅ DONE 2026-05-13 — all in-scope shipped (MDPS@c30d8e0 cherry-picked by main to rescue foot-gun #5: MDPS 19-test fix had been left on tab/hk/10 only); worktree reset complete; 4 items DEFERRED with successor refs in plan body | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
@@ -195,18 +195,15 @@ Each row is a full task brief. After `--reset-slot N` (done 2026-05-13 09:35 UTC
 - **Done-def**: 5 P0 items shipped with evidence; QGs green across 4 repos; coverage % numbers documented in plan body.
 - **Why Opus**: Multi-callsite workspace-grep audit + cross-repo QG. Audit recommended Opus for this shape.
 
-### Slot 9 — Sports classifier extension P1 (audit re-open) + foreign-WIP pop (Sonnet 4.6 / thinking: high)
+### Slot 9 — Sports classifier extension P1 (Wave 1 audit re-open) (Sonnet 4.6 / thinking: high)
 
-- **Owned repos**: `unified-trading-library` + `instruments-service` + `strategy-service` (for stash) + `unified-trading-pm`
-- **Plans-of-record**:
-  - [`plans/active/issues/sports_classifier_extension_followup_2026_05_13.md`](../plans/active/issues/sports_classifier_extension_followup_2026_05_13.md) — Wave 1 audit re-open (slot 9's own grep-miss); P1
-  - Slot 4's stash@{0} in `.tabs/4/strategy-service` named `slot4-preserved-foreign-wip-service_entry` — `cli/service_entry.py` adds `--synthetic-input-uri` arg (Phase 3.D/4.A-tail = slot 9's mock_data scope)
+- **Owned repos**: `unified-trading-library` + `instruments-service` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/issues/sports_classifier_extension_followup_2026_05_13.md`](../plans/active/issues/sports_classifier_extension_followup_2026_05_13.md) — Wave 1 audit re-open (slot 9's own grep-miss); P1
 - **Task**:
-  1. **Pop stash + commit `service_entry.py --synthetic-input-uri`**: it's slot 9's scope per mock_data plan. From `.tabs/9/strategy-service`: `git stash list` won't show slot 4's stash (different worktree); fetch the diff from `.tabs/4/strategy-service` via `git -C .tabs/4/strategy-service stash show -p stash@{0} > /tmp/foreign-wip.patch && git apply /tmp/foreign-wip.patch` (or similar). Commit + FF-push. Then `git -C .tabs/4/strategy-service stash drop stash@{0}` to clean up.
-  2. **Sports classifier extension** per issue doc § "What needs to happen": read `_classify_sports:191` body BEFORE concluding (GREP-THEN-READ HARD RULE — slot 9's Wave 1 failure was exactly this). Implement 4 sports rules (EXPECTED_PAUSED_LEAGUE / EXPECTED_PRE_SEASON / EXPECTED_POST_SEASON / EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE) in priority order; query instruments-service sports SSOT for league calendars + source-coverage windows; ≥4 unit tests per rule (16 total).
-  3. Re-run Script 3 DRY-RUN for sports after classifier extension; verify non-zero upgrades. NO apply-flips.
-- **Done-def**: stash@{0} committed; 4 sports rules shipped in UTL with 16 tests green; Script 3 dry-run shows non-zero upgrades for sports.
-- **Why this**: Slot 9 is the natural owner — Wave 1 audit re-opened their scope; their context is fresh on UTL classifier. The `service_entry.py` arg is also their plan's Phase 4.A-tail.
+  1. **Sports classifier extension** per issue doc § "What needs to happen": **READ `_classify_sports:191` function body BEFORE concluding** (GREP-THEN-READ HARD RULE — slot 9's Wave 1 failure was exactly this anti-pattern). Implement 4 sports rules (EXPECTED_PAUSED_LEAGUE / EXPECTED_PRE_SEASON / EXPECTED_POST_SEASON / EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE) in priority order; query instruments-service sports SSOT for league calendars + source-coverage windows; ≥4 unit tests per rule (16 total).
+  2. Re-run Script 3 DRY-RUN for sports after classifier extension (verify non-zero upgrades). NO apply-flips (Ikenna's hold).
+- **Done-def**: 4 sports rules shipped in UTL with 16 tests green; Script 3 dry-run shows non-zero upgrades for sports.
+- **NOT slot 9's scope**: slot 4's stash@{0} in `.tabs/4/strategy-service` (`service_entry.py --synthetic-input-uri`) — that's **slot 4's own worktree cleanup**, handled by slot 4 when they resume (alongside the 17-test-failures question). Even though the content lands in slot 9's mock_data plan scope, the stash cleanup ownership = the worktree owner = slot 4.
 
 ### Slots 5, 8 — RESERVE (no assignment)
 Both cleaned + ready. Available for spillover absorption if any Wave 3 slot finishes early or operator picks a reserve-list item to assign.
