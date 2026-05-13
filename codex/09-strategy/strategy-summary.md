@@ -22,38 +22,38 @@ reference-only.
 A strategy's identity has **5 layers** : family → archetype → instance → config → derived categories. Communication with
 execution happens through a **polymorphic `StrategyInstruction`** with 14 action types (TRADE, SWAP, LEND, BORROW,
 STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL, **CONVERT_DUST, LP_MINT, LP_BURN**) — the latter 3 added with
-the Phase 9 DeFi LP archetypes (LP_MINT + LP_BURN are 2 distinct enum members, not one slash-pair).
-SSOT: `unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2`.
+the Phase 9 DeFi LP archetypes (LP_MINT + LP_BURN are 2 distinct enum members, not one slash-pair). SSOT:
+`unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2`.
 
 > **2026-05-08 drift correction.** Pre-2026-05-08 this doc described 8 families / 18 archetypes — those numbers were the
 > 2026-04-17 baseline before the Phase 9 expansion. The UAC enum is canonical; if this doc disagrees with
 > `unified_api_contracts/internal/architecture_v2/enums.py`, the enum wins. Refresh trigger: slot 8 Strategy-area Phase
 > 1.B audit (2026-05-12; see
 > [`plans/archive/issues/codex_audit_strategy_2026_05_12.md`](../../plans/archive/issues/codex_audit_strategy_2026_05_12.md)
-> ST-1/ST-2/ST-14 — the prior `cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md` issue-doc reference is
-> no longer at the listed path; the audit chain now anchors on the Phase 1.B issue doc + the
+> ST-1/ST-2/ST-14 — the prior `cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md` issue-doc reference is no
+> longer at the listed path; the audit chain now anchors on the Phase 1.B issue doc + the
 > `codex_vs_citadel_infrastructure_audit_2026_05_10.md` parent plan).
 
-> **Static enforcement of "the enum wins"** (codex audit ST-10 2026-05-12): the QG ratchet `check_strategy_taxonomy_counts.py`
-> (planned at `unified-trading-pm/scripts/quality_gates/`) parses `enums.py` member counts + greps codex `.md` files for
-> hard-count patterns (`\d+ archetype` / `\d+ families` / `\d+ action types`) + fails on mismatch. Would have caught
-> the ST-1 / ST-2 / ST-3 / ST-6 drift cluster automatically. Ships under the Strategy-area Phase 4 follow-up. Until
-> the QG ships, reviewers reject codex `.md` PRs that change hard counts without a same-PR `enums.py` edit.
+> **Static enforcement of "the enum wins"** (codex audit ST-10 2026-05-12): the QG ratchet
+> `check_strategy_taxonomy_counts.py` (planned at `unified-trading-pm/scripts/quality_gates/`) parses `enums.py` member
+> counts + greps codex `.md` files for hard-count patterns (`\d+ archetype` / `\d+ families` / `\d+ action types`) +
+> fails on mismatch. Would have caught the ST-1 / ST-2 / ST-3 / ST-6 drift cluster automatically. Ships under the
+> Strategy-area Phase 4 follow-up. Until the QG ships, reviewers reject codex `.md` PRs that change hard counts without
+> a same-PR `enums.py` edit.
 
 > **Strategy-service co-location invariants** (codex audit ST-8 + ST-9 2026-05-12):
 >
 > - `strategy_service/engine/` MUST have ZERO imports from `strategy_service/adapters/` — co-location boundary per
->   `python-backend.md` "engine/adapters/cli structure". Enforcement: `strategy_service/topology_enforcement.py`
->   (verify coverage; if it doesn't statically check engine→adapter, add a `grep`-on-engine-imports or AST-walk to
+>   `python-backend.md` "engine/adapters/cli structure". Enforcement: `strategy_service/topology_enforcement.py` (verify
+>   coverage; if it doesn't statically check engine→adapter, add a `grep`-on-engine-imports or AST-walk to
 >   `strategy-service/scripts/quality-gates.sh`).
-> - `strategy_service/signal_broadcast/` (12 modules) MUST satisfy the 5 service-infrastructure invariants enumerated
->   in [`codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md`](../14-customer-journeys/shared-core/signal-broadcast-architecture.md):
+> - `strategy_service/signal_broadcast/` (12 modules) MUST satisfy the 5 service-infrastructure invariants enumerated in
+>   [`codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md`](../14-customer-journeys/shared-core/signal-broadcast-architecture.md):
 >   `ServiceBootstrap` wired · `make_health_router` with nested `signal_broadcast` `data_freshness` callback · typed
->   `SignalBroadcastConfig` reloaders · zero local schema definitions (UAC `signal_broadcast` facade) ·
->   `ApiKeyReloader` for HMAC creds (NOT one-shot `validate_api_keys_for_venues()`). Statically asserted via
->   `failure_isolation.py` using `classify_venue_error()` + emitting `ADAPTER_FETCH_FAILED`; `credentials.py`
->   importing `ApiKeyReloader`. QG-step wiring to be added to strategy-service `scripts/quality-gates.sh` under
->   Phase 4 follow-up.
+>   `SignalBroadcastConfig` reloaders · zero local schema definitions (UAC `signal_broadcast` facade) · `ApiKeyReloader`
+>   for HMAC creds (NOT one-shot `validate_api_keys_for_venues()`). Statically asserted via `failure_isolation.py` using
+>   `classify_venue_error()` + emitting `ADAPTER_FETCH_FAILED`; `credentials.py` importing `ApiKeyReloader`. QG-step
+>   wiring to be added to strategy-service `scripts/quality-gates.sh` under Phase 4 follow-up.
 
 **Main use / why it exists:**
 
@@ -68,7 +68,11 @@ SSOT: `unified_api_contracts.internal.architecture_v2.enums.InstructionActionV2`
    event-driven primitive (`TRANSFER` / `BRIDGE` / `AllocationDirective`).
 4. **Versioned, opt-in artifacts** for feature groups, ML models, execution policies, risk policies, venue capabilities
    — no auto-upgrades.
-5. **Batch = live** via the benchmark-fills contract, so strategy alpha is isolated from execution alpha.
+5. **Batch = live** via the benchmark-fills contract, so strategy alpha is isolated from execution alpha. See
+   [`pnl-attribution.md § 7`](architecture-v2/cross-cutting/pnl-attribution.md#7-factor--layer-dual-axis--closed-sets-stay-decoupled)
+   for the factor × layer decomposition (16-factor closed set, `STRATEGY` vs `EXECUTION` layers, 5 decomposition
+   invariants) that this batch=live contract enables. `STRATEGY_ALPHA` and `EXECUTION_ALPHA` are derived rollup views,
+   not enum members.
 6. **Target ceiling** of ~240-300 strategy instances without code explosion.
 
 **How it's used in practice:** Implementers read the protocol spec + identity-versioning rules; strategy designers pick
@@ -255,17 +259,17 @@ unwind respects LST unbonding period.
 
 **`CARRY_RECURSIVE_BORROW_LENDING_ONLY`** —
 [archetypes/carry-recursive-borrow-lending-only.md](architecture-v2/archetypes/carry-recursive-borrow-lending-only.md)
-Family 1 — pure-lending recursive arb (no perp leg, no LST-staking-yield leg). LST collateral on Aave V3 E-Mode at
-0.93 LTV; borrow ETH; swap back to LST on Uniswap V3; redeposit; repeat. Closed-form `E_actual = base` — recursion
-amplifies SPREAD not directional exposure. Top-7 May-23 cells across Aave V3 Ethereum / Arbitrum / Base; expected
-APR 6-10% net for canonical wstETH/WETH cell. Added 2026-05-12.
+Family 1 — pure-lending recursive arb (no perp leg, no LST-staking-yield leg). LST collateral on Aave V3 E-Mode at 0.93
+LTV; borrow ETH; swap back to LST on Uniswap V3; redeposit; repeat. Closed-form `E_actual = base` — recursion amplifies
+SPREAD not directional exposure. Top-7 May-23 cells across Aave V3 Ethereum / Arbitrum / Base; expected APR 6-10% net
+for canonical wstETH/WETH cell. Added 2026-05-12.
 
 **`CARRY_RECURSIVE_BORROW_PERP_HEDGED`** —
 [archetypes/carry-recursive-borrow-perp-hedged.md](architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md)
 Family 2 — Family 1 + USDC-margined ETH perp short for delta neutrality. Net APR formula
 `R_lend + R_fund + R_usdc - gas - slippage` ≈ 17.4% for wstETH/WETH cell at +12% funding regime. HL PRIMARY + Bybit
-SECONDARY (50% cap first 30d post-cutover per Feb-2025 hack). PerpHedgeSizer rebalances on band breach > 5% of
-E_actual. Added 2026-05-12.
+SECONDARY (50% cap first 30d post-cutover per Feb-2025 hack). PerpHedgeSizer rebalances on band breach > 5% of E_actual.
+Added 2026-05-12.
 
 **`YIELD_ROTATION_LENDING`** —
 [archetypes/yield-rotation-lending.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md)
@@ -786,23 +790,21 @@ Documents the post-v1-delete shape of the strategy registry — the ONE place in
 and 55-entry `_DEFAULT_STRATEGIES` were deleted 2026-04-21. v2 registry is **derived, not hand-maintained** — generated
 from `archetype_capability_manifest.json`, flattening 55 archetypes × their cells' representative slot labels
 (originally sized for 18 archetypes / 96 entries on 2026-04-20; expanded by Phase 9 to 53, then to 55 by the
-`CARRY_RECURSIVE_STAKED` split — see UAC `StrategyArchetype` enum SSOT).
-Public API signatures preserved so consumers need no call-site changes. Key v1→v2 field drift: `strategy_id` changed
-from flat ID (e.g. `DEFI_ETH_BASIS_HUF_1H`) to slot-label grammar; `execution_mode`, `strategy_type`,
-`default_timeframe` all removed (now archetype-derived).
+`CARRY_RECURSIVE_STAKED` split — see UAC `StrategyArchetype` enum SSOT). Public API signatures preserved so consumers
+need no call-site changes. Key v1→v2 field drift: `strategy_id` changed from flat ID (e.g. `DEFI_ETH_BASIS_HUF_1H`) to
+slot-label grammar; `execution_mode`, `strategy_type`, `default_timeframe` all removed (now archetype-derived).
 
 **4. category-instrument-coverage.md** —
 [category-instrument-coverage.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/category-instrument-coverage.md)
-SSOT matrix: for every one of the 55 archetypes (originally 18 on 2026-04-20; expanded to 53 in Phase 9; then to 55
-by the `CARRY_RECURSIVE_STAKED` split — 35+ new archetypes await their cell declarations), every
-`(category, instrument_type)` cell is declared SUPPORTED / PARTIAL /
-BLOCKED / N/A with representative venues, signal variant, gap reason, and fully-spelled slot-label examples. Category is
-always derived from the execution venue — the same `ARBITRAGE_PRICE_DISPERSION` engine runs CeFi, DeFi, or Unity
-event-settled markets; only venue params differ. As of 2026-04-20 snapshot: only
-`STAT_ARB_PAIRS_FIXED × CEFI × spot|perp` cells are `PUBLIC`; all others default to `INVESTMENT_MANAGEMENT_RESERVED`.
-Key IM-reserved cells currently live: ML Directional Continuous × CeFi (Jun 2026), ML Directional Continuous × TradFi
-dated futures (Sept 2026), Vol Trading Options × TradFi (Oct 2026 India options), ML Directional Event-Settled × Sports
-(Jun 2026, capacity-bound).
+SSOT matrix: for every one of the 55 archetypes (originally 18 on 2026-04-20; expanded to 53 in Phase 9; then to 55 by
+the `CARRY_RECURSIVE_STAKED` split — 35+ new archetypes await their cell declarations), every
+`(category, instrument_type)` cell is declared SUPPORTED / PARTIAL / BLOCKED / N/A with representative venues, signal
+variant, gap reason, and fully-spelled slot-label examples. Category is always derived from the execution venue — the
+same `ARBITRAGE_PRICE_DISPERSION` engine runs CeFi, DeFi, or Unity event-settled markets; only venue params differ. As
+of 2026-04-20 snapshot: only `STAT_ARB_PAIRS_FIXED × CEFI × spot|perp` cells are `PUBLIC`; all others default to
+`INVESTMENT_MANAGEMENT_RESERVED`. Key IM-reserved cells currently live: ML Directional Continuous × CeFi (Jun 2026), ML
+Directional Continuous × TradFi dated futures (Sept 2026), Vol Trading Options × TradFi (Oct 2026 India options), ML
+Directional Event-Settled × Sports (Jun 2026, capacity-bound).
 
 **5. uac-registry-gaps.md** —
 [uac-registry-gaps.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/uac-registry-gaps.md)

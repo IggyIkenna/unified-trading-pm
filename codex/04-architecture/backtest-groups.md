@@ -243,6 +243,11 @@ See memory feedback `run_backtests_on_vms.md`: always use colocated VMs, never l
 - Execution policy: [execution-policy.md](execution-policy.md)
 - Artifact versioning: [artifact-versioning.md](artifact-versioning.md)
 - Strategy-execution protocol: [strategy-execution-protocol.md](strategy-execution-protocol.md)
+- PnL attribution: Group C execution fills (SIMULATED vs BENCHMARK) feed the UTL attribution joiner — the
+  `strategy_alpha` vs `execution_alpha` split is computed from the Group B/C fill difference. Factor × layer contract:
+  [../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md](../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+- Client reporting output (per-client parquet + API + UI surface):
+  [client-reporting-architecture.md](client-reporting-architecture.md)
 
 ## Not in this doc
 
