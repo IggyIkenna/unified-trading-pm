@@ -127,8 +127,8 @@ execution:
 ## Update 2026-05-13 18:30 UTC — re-run regression
 
 After applying live-IRM-fetch fix (`execution-service@abb526a98`), re-launched VM
-`aave-lending-rate-val-20260513-185210` (corr_id `DC2E6F61-...`). Result: **0 events collected** in 5.5 min scan of 1.78M
-blocks. Previous run @ `a3639fdd6` (no IRM fix) found 60 events in the SAME block range.
+`aave-lending-rate-val-20260513-185210` (corr_id `DC2E6F61-...`). Result: **0 events collected** in 5.5 min scan of
+1.78M blocks. Previous run @ `a3639fdd6` (no IRM fix) found 60 events in the SAME block range.
 
 The diff `a3639fdd6..abb526a98` shows NO modifications to `_collect_supply_events` itself — only additions for live IRM
 fetch (`_fetch_irm_params_live`, `_RESERVE_STRATEGY_ABI`, `_POOL_FULL_ABI`, `_IRM_STRATEGY_CACHE`) plus modifications to
@@ -145,5 +145,35 @@ with the pool contract dispatch somehow.
 collector. Or: add per-batch progress logging + log first 1 successful event's log fields verbatim to compare against
 the old run's output.
 
-Status: **STILL BLOCKED** — Phase 3C validation gate NOT met (now FROM A DIFFERENT angle: collector returns 0 events,
-not 60-with-wrong-model). Infrastructure remains green; both bugs to fix.
+## Update 2026-05-13 19:25 UTC — root cause found + fixed
+
+**Local reproduction confirmed**: ran `_collect_supply_events` locally with `WEB3_PROVIDER_URI` set. 0 events from
+blocks 20_800_000-20_810_000 AND 23_308_000-23_310_000 with the `abb526a98` code.
+
+**Root cause: THREE bugs in `_collect_supply_events` / module constants**:
+
+1. **`SUPPLY_EVENT_TOPIC` wrong hash** (primary — causes 0 events). The constant was
+   `0x2b627736bca15cd5381dcf80b0bf11fd197d01a037c39b43f845d78260a95637` but the correct keccak256 of
+   `Supply(address,address,address,uint256,uint16)` is
+   `0x2b627736bca15cd5381dcf80b0bf11fd197d01a037c52b927a881a10fb73ba61`. The wrong topic returned 0 results from
+   `eth_getLogs` on any block range — verified locally and against on-chain. This bug existed since the FIRST commit
+   `a3639fdd6`; the "60 events" from the first VM run may have used a different Alchemy key via Secret Manager with a
+   different endpoint that was more permissive, or the first run actually had 0 collection and the fixture was
+   pre-populated from some other source.
+
+2. **`TARGET_START_BLOCK` / `TARGET_END_BLOCK` wrong era**. `20_800_000` = Sep 2024 (not Sep 2025); `22_500_000` = Jan
+   2026 (not May 2026). Correct values: `23_300_000` (Sep 2025) and `25_086_000` (May 2026). The VM launcher overrides
+   these via CLI args, so VM runs were correct, but local pytest runs and the comment were misleading.
+
+3. **Data decode offset bug** (secondary — causes wrong amount when data has `0x` prefix). `HexBytes.hex()` returns
+   `0x...`-prefixed string; `data_str[64:128]` started 2 hex chars into the wrong word, producing astronomical garbage
+   amounts. Fixed by stripping `0x` before index arithmetic.
+
+**Fix**: `execution-service@dbd34868d` — corrected all three bugs. Local verification: 1 event at block 23308002,
+`amount=40719791500000` decoded to `40,719,791.50 USDT` (correctly above 10M threshold).
+
+**VM re-run 4 (IN PROGRESS)**: `aave-lending-rate-val-20260513-192426`, corr_id `C2F31B23-8794-4909-BCFE-95FB51AA9641`.
+Results at
+`gs://central-element-323112-defi-validation/results/lending/2026-05-13/C2F31B23-8794-4909-BCFE-95FB51AA9641/results.json`.
+
+Status: **FIX SHIPPED** — code correct, VM running. Awaiting results.json to confirm ≥90% pass rate.
