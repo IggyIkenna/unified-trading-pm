@@ -227,11 +227,10 @@ feature available to downstream strategy-service consumers.
 
 ### 4A: Archetype doc update (PARALLEL with 4B)
 
-- [ ] [DOC] P1. **Update `carry-staked-basis.md` archetype doc.** In
-      `unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`: add Drift/JitoSOL+mSOL as
-      Solana-native hedge leg option (alongside existing Bybit/Deribit stETH entries). LST-margin venue summary: Bybit
-      (stETH UTA), Deribit (stETH), Drift (JitoSOL+mSOL). Mark OKX as "pending live API verification" (not confirmed).
-      Mark Binance as "no LST margin — USDC/BTC/ETH only".
+- [x] [DOC] P1. **Update `carry-staked-basis.md` archetype doc.** (PM@this-commit) Matrix table already had DRIFT/JitoSOL+mSOL,
+      Deribit/stETH, Bybit/stETH+METH. Updated OKX row to explicitly label "pending live API verification, not yet confirmed"
+      (was "haircut TBD per Stream A live probe" — same meaning, now explicit). Binance row already correct
+      (BTC/ETH/BNB/etc. only, no LST margin). Codex doc reflects current state.
 
 ### 4B: stETH collateral live verification script (PARALLEL with 4A)
 
