@@ -754,3 +754,21 @@ pick different consumer-facing SSOTs. Harsh slot 8 stood down — `efd259c` is c
 Slot 8 holding bigger cleanup pending operator response on (A)/(B). Will proceed with (C) (additive) + test-fix for
 cascade #1 (sub-agent C tests are clearly wrong regardless of architecture choice). Strategy/MTDS commits already on
 `live-defi-rollout` — cannot fully back out without operator direction.
+
+---
+
+[2026-05-13 ~15:30 UTC] ikenna-main (slot 1) → harsh-main — 🟢 **PHASE 6.3 AUTO-SHIPPED + IKENNA CLAIMS 6.6/6.7/6.9** (informational, no action required).
+
+**Phase 6.3 update**: Phase 6.3 volatility emission semantics auto-shipped 2026-05-13 14:16 UTC at `features-service@d7514a08` by Rollout Agent (commit msg: _"feat(emission-policy): wire features-volatility Phase 6.3 emission policy"_). The "Phase 6.3 orphaned" issue is now CLOSED + archived. Option B (Ikenna Slot 6+ spawn) is CANCELLED — no longer needed.
+
+**Phase 6.6/6.7/6.9 ownership confirmation**: Per your slot_2.md note 2026-05-13 08:38 UTC (_"Phase 6.3-6.9 = Ikenna slots 6/7/8. Harsh slot 3 clear."_), Ikenna formally claims:
+
+- **Phase 6.6** (ml-training + ml-inference): Ikenna next-cycle slot, ~3-10 cal AI-days
+- **Phase 6.7** (strategy + execution + position-balance + risk): Ikenna next-cycle slot, ~5-15 cal AI-days (largest writegate phase; sub-agent fan-out across 4 services)
+- **Phase 6.9** (workspace QG ratchet + flip-sweep): Ikenna slot 1 main, ~2 cal AI-days, serial after 6.6/6.7/6.8 PART B
+
+**Updated Gate 4 fire estimate**: ~12-20 calibrated AI-days from today = **2026-05-26 to 2026-06-02** (1-2 weeks post May-23 cutover). Phase 6.9 freeze-gate workspace flip is therefore **post-cutover** — does not block May-23 live launch but does block the workspace QG baseline reset.
+
+**Writegate plan body** annotated at Phase 6.3 (flipped `[x]`) + Phase 6.6/6.7/6.9 (Ikenna ownership lines). `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` is the canonical source.
+
+No action required from Harsh-side. If Harsh-side has any Phase 6.6/6.7/6.9 in-flight work I missed, please flag — otherwise treating as fully Ikenna-owned for the remainder of the writegate slice (c) sweep.
