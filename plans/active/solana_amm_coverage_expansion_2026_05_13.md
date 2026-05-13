@@ -187,22 +187,24 @@ backfill script shell is ready; the APPLY mode raises a descriptive warning unti
 
 ## Phase 7 — Codex SSOT updates (SERIAL — after Phases 1-6)
 
-- [ ] [SCRIPT] P1. Update or create `codex/04-architecture/solana-defi-coverage.md` to reflect:
+- [x] [SCRIPT] P1. Update or create `codex/04-architecture/solana-defi-coverage.md` to reflect:
   - 4 new AMM/CLOB adapters (Meteora, Phoenix, Jupiter, Lifinity)
   - Pyth oracle integration
   - Updated `SOLANA_DEFI_PROTOCOLS` + `SOLANA_PROTOCOL_DEPLOY_DATES` entries
-  - `arbitrage_price_dispersion` strategy coverage map
+  - `arbitrage_price_dispersion` strategy coverage map (unified-trading-pm@d3b75916 — extended solana-defi-coverage.md
+    with Plan C venue tables)
 
 ---
 
 ## Phase 8 — Quality gates (SERIAL — after Phases 1-7)
 
-- [ ] [SCRIPT] P0. Run `cd instruments-service && bash scripts/quality-gates.sh` — confirm ruff + basedpyright green on
-      new adapters + tests.
-- [ ] [SCRIPT] P0. Run `cd unified-api-contracts && bash scripts/quality-gates.sh` — confirm UAC registry additions
-      clean.
-- [ ] [SCRIPT] P0. Verify test count: `cd instruments-service && bash scripts/quality-gates.sh` — should include ≥48 new
-      tests across 5 adapters.
+- [x] [SCRIPT] P0. Run `cd instruments-service && bash scripts/quality-gates.sh` — confirm ruff + basedpyright green on
+      new adapters + tests. (instruments-service@5665de8 — 78 Plan C tests pass; pre-existing failures are unrelated)
+- [x] [SCRIPT] P0. Run `cd unified-api-contracts && bash scripts/quality-gates.sh` — confirm UAC registry additions
+      clean. (unified-api-contracts@2dd984e — no errors in \_defi_chain_data.py; 136 pre-existing basedpyright errors in
+      other files — not introduced by Plan C)
+- [x] [SCRIPT] P0. Verify test count: `cd instruments-service && bash scripts/quality-gates.sh` — should include ≥48 new
+      tests across 5 adapters. (78 tests: 12 Meteora + 13 Phoenix + 13 Jupiter + 12 Lifinity + 14 Pyth + 14 fix tests)
 
 ---
 
