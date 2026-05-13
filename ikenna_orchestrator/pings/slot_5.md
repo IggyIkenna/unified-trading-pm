@@ -53,9 +53,9 @@
 
 ### What shipped this session (all on live-defi-rollout)
 
-- `instruments-service@af06124` — `detect_match_end_time()` + `report_time` wired into SFI progressive-stats
-  write path (per-row `match_end_time` + `report_time` ISO string columns); also fixed push refspec bug
-  (needed `HEAD:live-defi-rollout` not `live-defi-rollout`)
+- `instruments-service@af06124` — `detect_match_end_time()` + `report_time` wired into SFI progressive-stats write path
+  (per-row `match_end_time` + `report_time` ISO string columns); also fixed push refspec bug (needed
+  `HEAD:live-defi-rollout` not `live-defi-rollout`)
 - `unified-api-contracts@1a831b0` — `MatchStatus` canonical StrEnum SSOT
   (`unified_api_contracts/canonical/domain/sports/fixture_status.py`): 9 states, `AF_STATUS_SHORT_MAP`,
   `from_af_short()`, `COMPLETED_STATUSES` / `IN_PROGRESS_STATUSES` / `TERMINAL_STATUSES` / `PRE_MATCH_STATUSES` /
@@ -70,17 +70,17 @@
 ### LDR sync performed
 
 - All 3 repos rebased onto latest `live-defi-rollout` during session
-- UAC `honest_coverage.py` conflict resolved: kept all 4 new members
-  (`EXPECTED_OUTSIDE_PROCESSING_SCOPE` + `EXPECTED_UPSTREAM_EMPTY` from LDR +
-  `EXPECTED_FIXTURE_POSTPONED` + `EXPECTED_FIXTURE_CANCELLED` from slot 5)
-- UAC `domain/__init__.py:266` broken `get_expected_bookmakers` import was ALREADY fixed by LDR (foreign agent)
-  before we merged — no action needed
+- UAC `honest_coverage.py` conflict resolved: kept all 4 new members (`EXPECTED_OUTSIDE_PROCESSING_SCOPE` +
+  `EXPECTED_UPSTREAM_EMPTY` from LDR + `EXPECTED_FIXTURE_POSTPONED` + `EXPECTED_FIXTURE_CANCELLED` from slot 5)
+- UAC `domain/__init__.py:266` broken `get_expected_bookmakers` import was ALREADY fixed by LDR (foreign agent) before
+  we merged — no action needed
 
 ### Session-close deferred scoreboard
 
 Full table in `plans/epics/sports_master_2026_05_07.md` § "Deferred work after 2026-05-12 slot-5 session".
 
 **Best next-agent entry points** (no blockers):
+
 1. C.7 Follow-up #3 MATCHES `team_a_*` → `home_*` field mapping fix (FootyStats normalizer quick win)
 2. C.4 Transfermarkt per-player `normalize_player_values` flatten (self-contained UAC + IS)
 3. C.6 Step 2 `SFI_PROGRESSIVE_STATS` contract columns (UAC-only schema addition)
@@ -97,14 +97,97 @@ Full table in `plans/epics/sports_master_2026_05_07.md` § "Deferred work after 
 instruments-service tests should unblock immediately.
 
 **Phase 2.D deferred items** — operator ack:
-- `report_time` derivation not wired: ✅ Confirmed deferred. Add as `- [ ]` todo in `sports_master` or
-  the instruments-service plan before closing Phase 2.D in your slot.
+
+- `report_time` derivation not wired: ✅ Confirmed deferred. Add as `- [ ]` todo in `sports_master` or the
+  instruments-service plan before closing Phase 2.D in your slot.
 - `assert_available_at_present` wiring: ✅ Deferred to Phase 2.E or sports_master carry-forward. Neither blocks PART B.
 
-**PART B (Phase 2.C features-sports stubs)**: PART B depends on your OWN `defi_recursive_borrow_archetypes`
-Phases 1-2 design closing (not a cross-slot gate). If defi_recursive Phases 1-2 are done, proceed to PART B now.
-Spawn prompt for PART B is in `work_split_2026_05_12_ikenna.md` at the Slot 5 section. If defi_recursive Phases 1-2
-are still in flight, continue that work — PART B queues behind it within your slot.
+**PART B (Phase 2.C features-sports stubs)**: PART B depends on your OWN `defi_recursive_borrow_archetypes` Phases 1-2
+design closing (not a cross-slot gate). If defi_recursive Phases 1-2 are done, proceed to PART B now. Spawn prompt for
+PART B is in `work_split_2026_05_12_ikenna.md` at the Slot 5 section. If defi_recursive Phases 1-2 are still in flight,
+continue that work — PART B queues behind it within your slot.
 
 **`test_sports_adapters.py` DRAFTKINGS failure**: Pre-existing sports config change — not caused by your Phase 2.D.
 Leave as pre-existing baseline; do NOT block your session on it.
+
+---
+
+## [slot 5 → main] 2026-05-13 — session-close summary + 2 unassigned items needing routing
+
+**Status**: ✅ 16-commit session shipped; sports_master substantially advanced; UAC workspace-wide outage root-caused +
+fixed
+
+### What shipped this session (slot 5)
+
+**sports_master commits**:
+
+- `UAC@1848647` — C.6 Step 2: SFI_PROGRESSIVE_STATS ft_timer + match_end_time columns
+- `UTL@89c0ae15` — C.6 Step 3: resolve_match_end_time() cascade resolver (5-tier priority)
+- `UAC@3b29f7e` — C.4 partial: normalize_player_values() + per-player SPORTS_PLAYER_VALUES schema (7→11 cols)
+- `UAC@ac12d80` — C.7 Follow-up #1: normalize_api_football_standing flatten + SPORTS_STANDINGS schema (14→32 cols)
+- `UAC@0ba9e5b` — C.6 Step 1 UAC half: match_end_time column on SPORTS_FIXTURES schema
+- `UTL@520cbb2a` — 8 unit tests for resolve_match_end_time cascade
+- `UAC@f854359` — 6 unit tests for normalize_player_values
+- `UAC@3dc6f17` + `UAC@0ba9e5b-test` — schema column-count test updates (prevents CI breakage)
+- `PM@1a86b6ab` — Codex SSOT: codex/02-data/sports-fixtures-lifecycle.md (8-state lifecycle + per-state available_at +
+  cross-source verifier design)
+- `PM@489e6a18` — Codex SSOT: codex/02-data/match-end-time-cascade.md (cascade priority + wiring guidance)
+- Plus 5 plan checkbox/scoreboard flips
+
+**Workspace-wide unblock**:
+
+- `UAC@f008af9` — restored 15 ticker re-exports in `unified_api_contracts/normalize_utils/tickers.py` (file was a
+  10-line stub; every UAC consumer was failing ImportError on `normalize_aster_ticker`). Harsh's
+  `test_new_orchestrator.py` import workaround now no longer needed.
+
+### sports_master scoreboard delta
+
+| Item                                   | Before        | After                                      |
+| -------------------------------------- | ------------- | ------------------------------------------ |
+| C.4 Transfermarkt per-player flatten   | `[ ]`         | `[~]` UAC half shipped                     |
+| C.6 Step 1: AF FIXTURES match_end_time | `[ ]`         | `[~]` UAC half shipped (IS wiring pending) |
+| C.6 Step 2: SFI_PROGRESSIVE_STATS cols | `[ ]`         | `[x]` shipped                              |
+| C.6 Step 3: UTL cascade resolver       | `[ ]`         | `[x]` shipped                              |
+| C.7 Follow-up #1: STANDINGS flatten    | `[ ]`         | `[~]` UAC half shipped (migration pending) |
+| C.7 Follow-up #3: MATCHES field map    | shipped prior | `[x]` confirmed                            |
+| Cross-source fixture status verifier   | `[ ]`         | `[x]` design-shipped                       |
+| Codex doc sports-fixtures-lifecycle.md | `[ ]`         | `[x]` shipped                              |
+
+### 🟡 2 UAC-only quick wins surveyed (NOT in any current work-split) — needs routing
+
+I surveyed `tradfi_master` and `predictions_master` for further easy wins. **Neither of these is in
+`work_split_2026_05_13_harsh.md` and there is no `work_split_2026_05_13_ikenna.md` yet** (no main-orchestrator split has
+been drafted for Ikenna's side today). Please decide whether to route to a slot or defer:
+
+1. **TradFi — `MarketSession` / `SessionPhase` enums + `VENUE_SESSION_SCHEDULE` SSOT** (`tradfi_master` line ~280):
+   - Pure UAC scaffold (StrEnums + dict typed alias) at `unified_api_contracts/canonical/crosscutting/market_session.py`
+   - Closed sets: `MarketSession ∈ {REGULAR, PRE_MARKET, POST_MARKET, OVERNIGHT, HALTED, CLOSED}`,
+     `SessionPhase ∈ {OPEN_AUCTION, CONTINUOUS, CLOSE_AUCTION, AFTER_HOURS_AUCTION, NONE}`
+   - Unblocks: Databento `session_type` column stamping + features-\* `session=REGULAR` default filters + execution
+     `OutOfSessionOrderError`
+   - Cross-plan banner: coordinates with `mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08` (liquidity
+     baselines must be session-typed)
+   - **Est ~1-2h** (scaffold + closed-set; venue schedule dict can land iteratively per-venue)
+   - **Blocker for me**: I don't have the canonical venue session schedules memorized; would need to look up
+     CME/NYSE/Nasdaq/ICE/CBOE pre/post hours. Slot familiar with TradFi data sources is a better fit.
+
+2. **TradFi — Q1+Q2 `CanonicalFuturesContract` hard-required expiry/lifecycle fields** (`tradfi_master` line ~246):
+   - UAC schema change: `CanonicalFuturesContract` requires `expiry_date`, `last_trading_date`, `first_notice_date`,
+     `delivery_date`, `settlement_date` + new StrEnum `FuturesContractLifecyclePhase`
+   - **EXPLICITLY BANNERED**: "this is breaking change to UAC schemas. Ships SEQUENCED with hard-schema-enforcement
+     plan" — must NOT land standalone or it'll mass-fail every existing tradfi row.
+   - **Blocker for me**: hard-schema enforcement plan sequencing — needs main-orchestrator approval + coordination
+     window. I should NOT touch this without explicit assignment per the cross-plan banner.
+
+### Predictions epic survey
+
+- 42 open todos; mostly IS/MTDS work for predictions instrument capture flow (market_created_at / resolution_time /
+  settlement_time lifecycle).
+- `canonical_question_group` schema is the obvious UAC-only piece but I couldn't locate a clean "P0 design ready, just
+  write the schema" todo — looked like it needs the predictions market-creation-time decision settled first.
+- **Recommendation**: defer until predictions slot owner re-engages.
+
+### Standing by
+
+Slot 5 is **idle and ready** if you want to assign either TradFi item (with the caveats above) or anything else. Will
+not proceed autonomously on the bannered Q1+Q2 work.
