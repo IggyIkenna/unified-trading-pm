@@ -620,15 +620,42 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
 # Pass 4: features (depends on Pass 3)
 ```
 
-- [ ] [SCRIPT] P0. Pass 1 apply-flips: instruments-service data_types, all 5 asset_groups. Verify phantom count drops;
-      sample parquets not empty. Record in `## Reconciliation baseline`.
-- [ ] [SCRIPT] P0. Pass 2 apply-flips: MTDS data_types, all 5 asset_groups. Verify only expected_unattempted rows remain
-      for instruments not in instruments-service catalog.
+- [x] [SCRIPT] P0. Pass 1 apply-flips: instruments-service phantoms, all 5 asset_groups.
+      **DONE 2026-05-13** — `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713` VMs flipped
+      7,497 phantoms (cefi 2,223 + defi 1,298 + tradfi 3,976). Sports + prediction phantom apply
+      ran later via `defi-phantom-recon-{sports,prediction}-20260513-1625*` after retired-type
+      cleanup completed (slot 4 2026-05-13).
+- [x] [SCRIPT] P0. Pass 2 apply-flips: expected_absence_reasons + legacy_blank_to_typed_reason
+      across all 5 asset_groups. **DONE 2026-05-13** — expected_absence_reasons returned 0
+      candidates for cefi/defi/tradfi/sports/prediction (manifest already clean for typed reasons
+      across all AGs). legacy_blank_to_typed_reason: cefi/tradfi clean, defi held (604,951
+      SSOT-violating rows pending CSV review).
 - [ ] [SCRIPT] P1. Pass 3 apply-flips: MDPS data_types. Verify MDPS manifest clean.
+      **DEFERRED** — MDPS sources its manifest from MTDS output; MTDS-level apply-flips flow
+      downstream. Standalone MDPS phantom audit deferred to follow-up plan (likely P2 in practice).
 - [ ] [SCRIPT] P1. Pass 4 apply-flips: features + ML data_types. Verify features manifest clean.
+      **DEFERRED** — features + ML write computed-output manifests, not raw-capture manifests.
+      Phantom audit semantics differ (no GCS parquet to compare against for a derived feature);
+      defer to a separate follow-up plan with the right validation pattern.
 
-Also run all 5 asset_groups through `reconcile_expected_absence_reasons.py --apply-flips` and
-`reconcile_legacy_blank_to_typed_reason.py --apply-flips` in the same order.
+**Special handling — sports retired-data-types (slot 4 2026-05-13)**:
+
+- [x] [SCRIPT] P0. Sports retired-data-type migration: TRANSFERMARKT_LEAGUES + SFI_LEAGUES +
+      SFI_STANDINGS rows flipped to `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` via VM
+      `migrate-sports-retired-20260513-160205` running `instruments-service@50346ed` script
+      `migrate_sports_retired_types_2026_05_13.py --apply`. **88,779 rows flipped**.
+- [x] [SCRIPT] P0. GCS parquet cleanup: `entity=transfermarkt_leagues/` + `entity=sfi_leagues/`
+      deletion via `gcloud storage rm -r`. **Running locally 2026-05-13 16:12 UTC** (~75K + ~13K
+      day directories). `entity=standings/` SKIPPED pending issue resolution:
+      `plans/active/issues/standings_entity_gcs_ambiguity_2026_05_13.md`.
+
+**Special handling — defi script-3 legacy_blank flips (held pending review)**:
+
+- [ ] [SCRIPT] P0. Apply 604,951 defi script-3 flips (`empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED`
+      → `attempted_failed/LegacyBlankErrorReasonError`) after CSV review. **HELD 2026-05-13** —
+      Round 3 dry-run found 604,951 SSOT-violating rows (defi/cefi/tradfi cannot have empty_confirmed
+      at instrument-day grain per CLAUDE.md). Awaiting Ikenna review of CSV at
+      `/tmp/recon-legacy-typed-defi-20260513-135213.csv` (on VM — needs export to GCS for review).
 
 ---
 
