@@ -270,17 +270,26 @@ Every emitter must use `AlertCode` enum, not raw strings. Fail-loud on unknown.
 - [ ] [SCRIPT] P0. `features-service (onchain family)/`: emit `DEFI_HEALTH_FACTOR_CRITICAL` (from Aave health-factor calculator),
       `DEFI_AAVE_UTILIZATION_SPIKE` (from Aave pool-utilization calc), `DEFI_FUNDING_RATE_FLIP` (from perp funding
       calc), `DEFI_FEATURE_STALE` (from feature-staleness watchdog), `DEFI_WEETH_DEPEG` (from LST-peg deviation calc).
-- [ ] [SCRIPT] P1. **🟢 PULLED FORWARD May-23** (operator direction 2026-05-13) — features-onchain emission sites
-      for the 4 DeFi-specific codes, per-calculator wiring breakdown (composes with parent P0 todo above):
-  - [ ] `DEFI_AAVE_UTILIZATION_SPIKE` — emit from Aave pool-utilization calc when utilization crosses
-        `defi_aave_utilization_spike_bps` threshold (9500 BPS_OF_ONE default; per-archetype override 9000 for
-        `ARBITRAGE_PRICE_DISPERSION` funding-rate-dispersion per `ALERT_THRESHOLDS`).
-  - [ ] `DEFI_FUNDING_RATE_FLIP` — emit from perp funding calc when 5-min funding-rate magnitude crosses
-        `defi_funding_rate_flip_bps_5m` (100 BPS default).
-  - [ ] `DEFI_FEATURE_STALE` — emit from feature-staleness watchdog when LST yield read freshness exceeds
-        `defi_feature_stale_minutes` (15 min default).
-  - [ ] `DEFI_WEETH_DEPEG` — emit from LST-peg deviation calc when 5-min peg deviation crosses
-        `defi_weeth_depeg_bps` (50 BPS_OF_ONE = 0.5% default).
+- [x] [SCRIPT] P1. **🟢 PULLED FORWARD May-23** (operator direction 2026-05-13) — features-onchain emission sites
+      for the 4 DeFi-specific codes, per-calculator wiring breakdown (composes with parent P0 todo above).
+      (alerting-service@12411e0 — Slot 8 2026-05-13. Producer-side wired via new
+      `defi_feature_event_handler.py` bridging 4 canonical feature event names to the existing check_* rules in
+      `defi_rules.py`. Rule wiring: `code=AlertCode.DEFI_*` field populated on each check_* return; `route_defi_alert`
+      prefers `alert.code.value` per producer-migration window 2026-05-08+. Alert-subscriber dispatch table extended
+      to route DeFi feature events. 10 new unit tests pass alongside existing 34.)
+  - [x] `DEFI_AAVE_UTILIZATION_SPIKE` — `check_aave_utilization` returns DefiAlert with
+        `code=AlertCode.DEFI_AAVE_UTILIZATION_SPIKE`; producer via `DEFI_FEATURE_AAVE_UTILIZATION` event_name +
+        `_build_aave_utilization_alert` builder; UAC threshold `defi_aave_utilization_spike_bps` (9500/9000
+        per-archetype) applied. (alerting-service@12411e0)
+  - [x] `DEFI_FUNDING_RATE_FLIP` — `check_funding_rate_flip` returns DefiAlert with
+        `code=AlertCode.DEFI_FUNDING_RATE_FLIP`; producer via `DEFI_FEATURE_PERP_FUNDING_RATE` event_name. UAC
+        threshold `defi_funding_rate_flip_bps_5m` (100 BPS default). (alerting-service@12411e0)
+  - [x] `DEFI_FEATURE_STALE` — `check_feature_staleness` returns DefiAlert with `code=AlertCode.DEFI_FEATURE_STALE`;
+        producer via `DEFI_FEATURE_STALENESS` event_name. UAC threshold `defi_feature_stale_minutes` (15 min
+        default; 2x-SLA rule). (alerting-service@12411e0)
+  - [x] `DEFI_WEETH_DEPEG` — `check_weeth_depeg` returns DefiAlert with `code=AlertCode.DEFI_WEETH_DEPEG`;
+        producer via `DEFI_FEATURE_WEETH_ETH_RATE` event_name. UAC threshold `defi_weeth_depeg_bps`
+        (50 BPS_OF_ONE = 0.5% default). (alerting-service@12411e0)
 - [ ] [SCRIPT] P0. Each emitter: add unit test asserting alert payload conforms to `DefiAlert` envelope + `AlertCode`
       enum value.
 - [ ] [QG] P0. Per-service QG pass on each emitter repo.
