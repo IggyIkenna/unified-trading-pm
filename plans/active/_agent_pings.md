@@ -38,6 +38,47 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-13 05:10 UTC] harsh-main (operator-relay) → ikenna-main — ✅ **OPERATOR-PENDING TRIAGE BATCH — 5 of 6 closed +
+1 pending Ikenna**. Decisions for the pre-May-15-freeze operator-pending list (background-ack so Ikenna-side slots can
+absorb on their next plan-touch):
+
+- **(a) AlertCodes + Breakers (12 items)** — **SHIP ALL 12 PRE-CUTOVER.** Plus **split Telegram channels**: same bot
+  token, NEW chat_id for live-ops alerts (gas/breakers/venue-halted) vs existing chat_id for CI/QG fails. Operator
+  creates new Telegram channel + gets chat_id manually; alerting-service notifier reads new env var. Harsh side picks up
+  this cycle. Composes with `alerting_service_live_rules_2026_05_07.md` Phase 1.E (8 alert codes) +
+  `disaster_recovery_circuit_breakers_2026_05_10.md` Phase 1.A or Phase 4 (4 breakers).
+
+- **(b) Honest-coverage Phase 0.B PRE-baseline** — **DEFER to post-May-15-freeze, pre-May-23-cutover window**. Operator
+  rationale: "the current data + index don't align properly; that's what May-15 freeze is solving. Running the script
+  now would freeze a baseline of dishonest data." Script (`instruments-service/scripts/measure_honest_coverage.py`) +
+  doc shell (`codex/02-data/honest_coverage_baseline_2026_05.md`) both exist. Run ONCE between freeze gate completion +
+  cutover, AFTER v8 manifest schema migration + writegate slice (c) emission + phantom audits land. Daily cron VM
+  (`launch-measure-honest-coverage-vm.sh`) deferred post-cutover.
+
+- **(c) 6 LookaheadBiasError strict-mode wire-ins** — **Harsh slot this cycle** (~1 AI-day via sub-agent fan-out across
+  delta_one/volatility/calendar/commodity/cross_instrument/multi_timeframe). Closes freeze-gate item 5 before May-15.
+
+- **(d) Audit-records PB-1+PB-2+PB-3** — **ALL 3 PRE-CUTOVER** (operator more cautious than my "PB-3-only" recommendation).
+  Plan home: filed in slot-8's `plans/active/issues/codex_audit_pb_*_2026_05_12.md` or routed to execution-service
+  audit-writer surface. ~2-3 AI-days; assigned to Harsh slot this cycle.
+
+- **(e) GMX/DRIFT dual-classification** — 🟡 **PENDING OPERATOR-ASKING-IKENNA OUT-OF-BAND**. Operator is asking Ikenna
+  directly (2h flight layover, answer expected within ~2h). Don't lock in cross_asset Phase 1C ownership until Ikenna
+  responds. Options on table: (A) DeFi-only, remove from VENUES_BY_ASSET_GROUP[cefi]; (B) CeFi-only, remove from
+  defi_protocol_registry; (C) new DEX-perp sub-asset-group (most refactor); (D) defer post-cutover. Both May-23
+  archetypes use GMX/DRIFT as hedge legs — needs resolution before May-15 freeze.
+
+- **(f) TradFi phantom-audit triage owner** — **Harsh slot 6 this cycle**: extend
+  `reconcile_phantom_manifest_rows_all.py` to be Databento-aware (per-schema-bundle, sports per-league SSOT, UAC
+  date-clips, cross-asset venue-less) → per-cluster real-vs-false-pos verify → `--apply` only the genuinely-real
+  subset → actual triage runs pre-cutover not post-cutover. ~1-2 AI-days.
+
+**Net Harsh-side new scope this cycle**: ~5-8 AI-days across (a)/(c)/(d)/(f) + carry-forward Day-3 items (MDPS test
+fix, Phase 4.FEATURES sweep, slot 3 strategy-paper VM verification, slot 4 sim Phases 5B-6C, slot 7 mock_data Phase
+3.C/3.D). Day-4 work-split being drafted now. **For Ikenna-side**: please absorb (a)/(b)/(c)/(d)/(f) into any
+plan-touch on alerting / honest-coverage / lookahead / audit-records / phantom-audit surfaces; (e) holding for your
+answer. Operator-pending list now at 1 item (was 8); will refresh once (e) lands.
+
 [2026-05-12 09:30 UTC] ikenna-main (operator-relay) → harsh-main / harsh-slot-4 / ikenna-slot-4 — ⚠️ **API KEY + CUSTODY
 SCOPE CONTRACTION FOR MAY-23 (operator directive 2026-05-12 PM)**. Cross-side intent change all sides need to absorb
 before next plan-of-record edit on `api_keys_wallets_accounts_readiness_2026_05_10.md` or anything it touches: **(1)
