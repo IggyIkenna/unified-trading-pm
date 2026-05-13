@@ -932,3 +932,59 @@ Plan + codex + epic edits + sub-plan cross-refs all pushing in this commit batch
 **No new slot ask** beyond prior pings — corrections to in-flight scope. But **Phase 5 big-SKU strategy in compute_optimization is now CRITICAL** (was "important"); the 5-yr CeFi/TradFi/Sports + commodity futures pushes worker count 2.5× and m3-ultramem-160 / c3-highcpu-176 multi-SKU concurrency becomes the wall-clock-saving lever.
 
 **No descope, perfect cutover** — operator direction holds. The 5-yr extension is scope ADDITION (better walk-forward validation), not scope reduction.
+
+---
+
+[2026-05-13 19:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — 📅 **Cutover-window critical-path timeline shipped** (answers operator question: "by what date is X done; do plans encode these checkpoints").
+
+**NEW codex SSOT**: [`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md). Companion to MVP universe SSOT. Read at every slot 1 morning ledger sweep through 2026-05-23.
+
+**Key dates committed**:
+
+| Date | Checkpoint | Track |
+|---|---|---|
+| 2026-05-13 → today | Parallel-track work starts NOW (compute_opt, UI, code-only, CI/CD) | parallel — no backfill dependency |
+| 2026-05-15 (Fri) | Manifest schema v8 LOCKED; instruments-service backfill complete; bucket provisioning done | serial |
+| 2026-05-15 → 05-17 | MTDS backfill drain (~2-3 days, all 5 asset_groups parallel) | serial |
+| 2026-05-17 → 05-18 | MDPS + features backfill — pricing data READY for MVP | serial |
+| 2026-05-18 (Mon) | CI/CD on main + tarball/image decision must be GREEN | parallel |
+| 2026-05-18 → 05-19 | ML experiments START (Sports 5 leagues + CeFi BTC/ETH + TradFi ES) IN PARALLEL with DeFi strategy backtests (rule-based, minimal ML) | parallel after data ready |
+| 2026-05-19 → 05-21 | Execution-alpha + paper trading testnet + live wallet funding + CeFi credentials wired | parallel |
+| 2026-05-20 (Wed) | DART UI + deployment UI ready for cutover; treasury sharp | parallel — ships from today |
+| 2026-05-21 (Thu) | End-to-end dress rehearsal on real data | serial |
+| 2026-05-22 (Fri) | Pre-cutover sign-off gate (credential-probe.sh --mode live = 100% pass) | serial |
+| 2026-05-23 (Sat) | CUTOVER — live trading begins | — |
+
+**Two-track distinction (the throughput-saving insight)**:
+- **Serial data-pipeline track**: manifest → instruments → MTDS → MDPS → features → ML/strategy backtest. Sequence-bound.
+- **Parallel code-and-tests track**: 13 workstreams listed in the doc — Tier A archetype code, Tier B options-strategy (architecture-driver), compute_optimization Phases 0-5, DART UI, deployment UI, CI/CD QG sweep, treasury verification, basefc_validation_flip, governance_qg, codex_doc_currency, 4 DeFi alert codes, treasury rollup, risk + DR scripts. **All schema-stable on mock data — run RIGHT NOW alongside real backfill.**
+
+**Per-archetype ML/backtest sizing** (operator estimate: ~0.5 day per backtest/strategy/ML optimization, multiple strategies + concurrent loops):
+- ml-continuous (CeFi 30 + ES): ~5 cal-AI-days
+- ml-settled (Sports Top-5 EU × 4 markets): ~5 cal-AI-days
+- arbitrage-funding-rate (CeFi × 6 venues): ~3 cal-AI-days
+- arbitrage-sports-book (Polymarket × Betfair Top-5): ~2 cal-AI-days
+- arbitrage-event-markets (Polymarket × CME): ~1 cal-AI-day
+- defi-carry-family (7 archetypes): ~3.5 cal-AI-days
+- **TOTAL Tier A backtest/ML completion: ~19.5 cal-AI-days = <1 day workspace wall-clock with concurrent slot fan-out**
+
+**Action items SPAWNED by this timeline** (orchestrator should ping epic owners to add per-checkpoint dates to plan bodies):
+1. `ml_and_features_master_2026_05_07.md` — add per-asset_group ML kickoff date (2026-05-19)
+2. `defi_master_2026_05_07.md` — add DeFi strategy + execution backtest start date (2026-05-19)
+3. `wallet_treasury_client_flow_2026_05_10.md` — add live wallet funding + CeFi credentials gate (2026-05-20)
+4. `dart_manual_trade_ux_refactor_2026_05_13.md` + `deployment_ui_lifecycle_tabs_2026_05_08.md` — add ready-for-cutover date (2026-05-20)
+5. `promote_workflow_may23_cli_path_2026_05_10.md` — add CI/CD vs tarball decision milestone (2026-05-18)
+
+Current per-plan frontmatter says `deadline: 2026-05-23` for all, which is correct but doesn't surface intermediate milestones. Plan-body refresh is a slot 1 main + epic owners coordinated next step.
+
+**Slot scheduling guidance** (per-day allocation from today through 2026-05-23) is in the codex doc § "Slot scheduling guidance". TL;DR for today:
+- 8 slots TODAY can run parallel-track (no backfill dependency)
+- Day-3 freeze gate adds manifest reconciler + bucket provisioning slots
+- Day-7 ML kickoff = 6 archetype slots in parallel + 2 supporting (ml-training grid + execution-alpha)
+
+**No descope. ~571 cal-AI-days remaining vs ~2000 cal-AI-day capacity over 10 days = still ~3.5× safety margin even with the 5-yr extension + 7 pulled-forward items.**
+
+**TOP ASK from slot 1**:
+1. Acknowledge the timeline doc as canonical for cutover orchestration.
+2. Action items 1-5 above — orchestrator to ping epic owners (or assign as slot work).
+3. No new descope. Slot reallocation asks from prior pings (batch_live_symmetry ×2 + recursive_borrow ×2 + 6 pulled-forward slot-touches) still stand.

@@ -150,10 +150,10 @@ Rough back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~2
 - [ ] [SCRIPT] P0. Run the extended matrix on the 3 slowest stages identified in Phase 0. Output: `codex/05-infrastructure/runtime-tiers-and-deployment.md` § "Per-stage SKU recommendation matrix" UPDATE with cutover-window-sized recommendations.
 - [ ] [SCRIPT] P1. Spot-instance / preemptible-VM viability check: for the longest-running shapes, would preemptible save ≥40% cost? If yes, design checkpoint-restart for those stages (post-cutover wire-in).
 
-### Phase 6 — Orchestrator dependency-ordering doc (Days 8-9, ~0.5 cal-AI-day)
+### Phase 6 — Orchestrator dependency-ordering doc (PULLED FORWARD 2026-05-13, ~0.5 cal-AI-day)
 
-- [ ] [SCRIPT] P0. Write `codex/08-workflows/cutover-window-dependency-order.md` (NEW). Per-stage table: (a) blocking on real-backfill? (b) can-run-in-parallel-with-backfill? (c) downstream consumer count, (d) cutover-window wall-clock target, (e) SKU recommendation, (f) max-parallel ceiling.
-- [ ] [SCRIPT] P0. Cross-reference from master plan Group F items 17/18/20/21 + `code_freeze_migrate_backfill_sequencing` Phase 2/3 cutover-window section.
+- [x] [SCRIPT] P0. **SHIPPED 2026-05-13** — `codex/08-workflows/cutover-window-dependency-order.md` authored with full 2026-05-13→05-23 checkpoint timeline, serial data-pipeline track vs parallel code-and-tests track distinction, per-asset_group backtest window (5yr CeFi/TradFi/Sports, 2yr DeFi/Prediction), per-Tier-A archetype sizing (operator estimate ~0.5 day per backtest/strategy/ML optimization with concurrent loops), and slot-scheduling guidance for slot 1 main per-day allocation. Cross-references master plan + per-asset-group epics.
+- [ ] [SCRIPT] P0. Cross-reference from master plan Group F items 17/18/20/21 + `code_freeze_migrate_backfill_sequencing` Phase 2/3 cutover-window section. (Master plan banner already references via MVP SSOT row 2026-05-13; broader F17/18/20/21 row references to dependency-order doc pending.)
 
 ### Phase 7 — Performance-targets codex SSOT (Day 9-10, ~0.3 cal-AI-day)
 
