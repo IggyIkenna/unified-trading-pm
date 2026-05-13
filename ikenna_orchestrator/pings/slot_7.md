@@ -98,6 +98,58 @@ UAC: tab branch pushed; quickmerge deferred if foreign dirty files still present
 
 ---
 
+## [slot 7 → main] WAVE 5 CLOSE — wallet_treasury OPERATOR-READY (2026-05-13)
+
+**Status**: ✅ ALL 5 WAVES COMPLETE — 19 sub-agents shipped — wallet_treasury fully operator-runnable end-to-end
+
+### Wave 5 — wallet_treasury Phase 9+10 operator-ready (1 sub-agent)
+
+| Deliverable | Commit |
+|-------------|--------|
+| VM launcher `launch-wallet-treasury-cutover-vm.sh` (254 lines, singleton-locked, 10 lifecycle steps, event-stream verification, --force bypass) + watchdog dict registration | deployment-service@0c7478f |
+| Evidence capture `capture_phase_9_evidence.py` (468 lines; per-stage event log + statement parquet + HWM ledger + withdrawal audit + reconciliation diff < $0.01; exit 0 only when all 12 expected events present) | position-balance-monitor-service@3c2a341 |
+| Phase 10 operator-runnable checklist in plan body + READY-FOR-OPERATOR annotation on Phase 9 | unified-trading-pm@0fff0dfd |
+
+### One-command operator path (when back from flights)
+
+```bash
+bash deployment-service/scripts/vm/launch-wallet-treasury-cutover-vm.sh
+# wait ~24h
+python3 position-balance-monitor-service/scripts/capture_phase_9_evidence.py --run-id wallet-treasury-cutover-<timestamp>
+# then flip Phase 10.A + 10.B checkboxes per the operator checklist
+```
+
+**Operator action required (per workspace rules)**:
+- Relaunch watchdog VM after dict update: `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh` (without it the new `wallet-treasury-cutover-` prefix is invisible to zombie watchdog — silent money burn if VM gets stuck)
+
+### Net slot 7 cycle totals (Day-2 + Day-3 + Wave 5)
+
+- **19 parallel sub-agents** shipped
+- **12 repos touched**
+- **117+ tests** added (75 unit + 21 integration + 21 Playwright)
+- **30+ plan checkboxes flipped**
+- **8 new codex sections** + 1 new QG STEP ratchet
+- **Phase 6.3-6.9 emission policy ship-gate**: ✅ READY across 9 services
+- **wallet_treasury client flow**: Phase 6.A-6.D shipped + 9.A/9.B/10 operator-ready
+- **DART manual-trade UX refactor**: Phase C remainder DONE
+- **simulation_scenarios**: Phase 1-9 + 8 codex sections + successor plan stub
+- **DR + alerting + writegate Phase 2.A**: 8 AlertCodes + 4 CircuitBreakerIds + 2 error classes
+- **Stale features-*-service refs sweep**: 693 → 0 across plans + codex + CLAUDE.md
+
+### What's left for slot 7
+
+- **wallet_treasury Phase 7.A/7.B** — needs operator (KYC stub approval + Copper/CEFFU/DeFi PK ping setup; these are GENUINE operator decisions)
+- **wallet_treasury Phase 9.A** — operator runs the 1-command launcher when ready (24h dry-run; operator-supervised by workspace pattern)
+- **wallet_treasury Phase 9.B + 10.A + 10.B** — mechanical agent-doable after 9.A captures evidence (~5 min of plan flips)
+
+**Slot 7 is in idle state** — no remaining agent-doable work pre-cutover until operator runs Phase 9.A or assigns new scope.
+
+### Standing-by signal
+
+Next 15-min wakeup will pull LDR + check for any new directives. If nothing new, slot 7 holds capacity for cross-side overflow or new operator scope.
+
+---
+
 ## [slot 7 → main] FULL DAY-2-3 SHIP CYCLE — 2026-05-13 (18 sub-agents)
 
 **Status**: ✅ ALL 4 WAVES COMPLETE — DAY-3 reassignment stack FULLY SHIPPED + Phase 6.3-6.9 + week's Treasury/DART scope
