@@ -119,6 +119,79 @@ Pre-launch manifest rows (2018-01-01 start date) were incorrectly `expected_unat
 All Solana perp DEX venues use the conservative floor date in `_solana_utils.SOLANA_PROTOCOL_DEPLOY_DATES`. Manifest
 rows before the floor date are `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`.
 
+## Venue Registry — Plan E: Restaking (InstrumentType=YIELD_BEARING)
+
+> Added 2026-05-13 per `plans/active/solana_restaking_rewards_coverage_2026_05_13.md`.
+
+| Venue                | UAC Key                                              | Program ID (best-guess)                         | Deploy Date | Adapter                           | Status                                           |
+| -------------------- | ---------------------------------------------------- | ----------------------------------------------- | ----------- | --------------------------------- | ------------------------------------------------ |
+| JITORESTAKING-SOLANA | `CANONICAL_VENUE_TO_ADAPTER["JITORESTAKING-SOLANA"]` | Jito Vault Program (multiple VRT mints)         | 2024-08-01  | `adapters/defi/jito_restaking.py` | ✅ shipped (Plan A)                              |
+| SOLAYER-SOLANA       | `SOLANA_DEFI_PROTOCOLS["solayer"]`                   | `SolayerEndoAVSSo11111111111111111111111111112` | 2024-04-01  | `adapters/defi/solayer.py`        | ✅ shipped (Plan E)                              |
+| PICASSO-SOLANA       | `SOLANA_DEFI_PROTOCOLS["picasso"]`                   | `5nMau41MBCMmPfQHs9FMgzMgCJVA1VdJBV9kLnzBNNDn`  | 2023-05-01  | `adapters/defi/picasso.py`        | ✅ shipped (Plan E) ⚠️ addr pending verification |
+| CAMBRIAN-SOLANA      | `SOLANA_DEFI_PROTOCOLS["cambrian"]`                  | `CAMBr1ANreStakingVau1tProgramSo1ana...`        | 2024-06-01  | `adapters/defi/cambrian.py`       | ✅ shipped (Plan E) ⚠️ addr pending verification |
+
+> **Note on program IDs**: Picasso and Cambrian program IDs are best-guess placeholders as of 2026-05-13. Update from
+> official docs when published. Tests assert structural invariants, not specific addresses — no test changes needed when
+> addresses are updated.
+
+## Restaking layer
+
+### What is restaking?
+
+Restaking is a second staking layer on top of LSTs. Users stake JitoSOL/mSOL/SOL into a restaking protocol to earn
+additional AVS (Actively Validated Service) / operator rewards on top of base LST staking yield. Total carry = base
+staking APY + restaking AVS premium.
+
+**Why this matters for `carry_staked_basis`:** Without restaking reward visibility, the archetype under-reports carry by
+the AVS premium component, causing P&L to appear worse than actual. Restaking coverage closes the attribution gap.
+
+### Restaking data type taxonomy (SSOT)
+
+| Data type                      | Semantic                                                      | Availability                       |
+| ------------------------------ | ------------------------------------------------------------- | ---------------------------------- |
+| `restaking_rewards`            | Per-epoch/operator reward accrual rate (APY + absolute)       | REST API / RPC (future MTDS scope) |
+| `restaking_operator_set`       | Active operators/NCNs securing a vault                        | On-chain account reads             |
+| `cross_chain_restaking_routes` | Available cross-chain paths for restaked assets (Picasso ICS) | API / SDK                          |
+| `lst_rates`                    | Exchange rate (underlying SOL per receipt token)              | Stake pool state accounts          |
+
+### Jito Restaking (already shipped — Plan A)
+
+`jito_restaking.py` covers Jito VRT (Vault Receipt Token) vaults — the first generalised restaking primitive on Solana
+(launched 2024-08-01). Instruments: JTORK-EZSOL (Renzo), JTORK-FRAGSOL (Fragmetric), JTORK-KYSOL (Kyros). Uses
+`venue="JITORESTAKING-SOLANA"` (distinct from `jito.py` which covers the Jito LST JitoSOL at `venue="JITO-SOLANA"`).
+
+### Solayer (Plan E)
+
+`solayer.py` covers Solayer's endogenous AVS restaking. Primary instrument: sSOL (Solayer Staked SOL). Two vault routes:
+SOL collateral + JitoSOL collateral (triple-layer: base staking
+
+- Jito MEV + Solayer AVS). `venue="SOLAYER-SOLANA"`.
+
+### Picasso (Plan E)
+
+`picasso.py` covers Picasso Network cross-chain restaking. Primary instrument: pSOL (Picasso cross-chain restaked SOL).
+Users secure ICS (Inter-Chain Security) cross-chain services. `venue="PICASSO-SOLANA"`. Program ID requires verification
+from official docs (placeholder used).
+
+### Cambrian (Plan E)
+
+`cambrian.py` covers Cambrian Network foundational AVS restaking primitives. Instruments: cSOL
+
+- cSOL-JITOSOL. `venue="CAMBRIAN-SOLANA"`. Vault addresses require verification from official Cambrian program registry
+  (placeholders used; tests are address-agnostic).
+
+### carry_staked_basis cross-reference
+
+SSOT for archetype carry computation: `codex/09-strategy/architecture-v2/archetypes/`. Restaking rewards are a
+second-order yield source; the archetype should aggregate:
+
+1. Base SOL staking APY (from `lst_rates` data type)
+2. Restaking AVS premium (from `restaking_rewards` data type)
+
+Until MTDS restaking source wiring is complete, restaking APY is not captured in historical parquets. Reference data
+(instrument discovery) is available via Plan E adapters. MTDS wiring tracked in
+`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`.
+
 ## Deferred
 
 ### MTDS Solana source wiring (Plan B — perp DEX)
@@ -135,10 +208,17 @@ MTDS spot/oracle source wiring is **NOT IN PLAN C**. The backfill script skeleto
 (`instruments-service/scripts/backfill_solana_dex_swaps_2026_05_13.py`) is a dry-run skeleton — APPLY mode raises a
 warning until MTDS pipeline wiring is complete. Successor: MTDS Solana AMM/oracle pipeline wiring plan (not yet filed).
 
+### MTDS Solana restaking source wiring (Plan E — restaking layer)
+
+MTDS restaking reward source wiring is **NOT IN PLAN E**. Plan E ships reference data (instrument discovery) only.
+Actual per-epoch AVS reward rates require MTDS source wiring. Tracked in
+`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`.
+
 ## Cross-references
 
 - Plan B: `plans/active/solana_perp_dex_adapters_2026_05_13.md`
 - Plan C: `plans/active/solana_amm_coverage_expansion_2026_05_13.md`
+- Plan E (restaking layer): `plans/active/solana_restaking_rewards_coverage_2026_05_13.md`
 - Issue doc: `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`
 - UAC SSOT: `unified_api_contracts/registry/capability_declarations/_defi_chain_data.py` § `SOLANA_DEFI_PROTOCOLS`
 - Factory: `instruments-service/instruments_service/reference_data/factory.py`
