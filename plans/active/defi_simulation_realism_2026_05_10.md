@@ -331,7 +331,13 @@ Owner: harsh + parallel agent.
       `live_slope1/slope2/optimal_utilization/reserve_factor` in fixture; `_reconstruct_lending_market_state` reads live
       fields first, falls back to stale defaults only with WARNING. Math: stale slope1=0.04 at U=86% = 2.96% vs live
       slope1=0.06 = 4.34% (matches sim≈2.7% vs realized≈4.36% divergence). VM re-run launched:
-      `aave-lending-rate-val-20260513-182201` corr_id `8849FD14-B34D-43F8-B6CA-5265DCA2CCAB`.)
+      `aave-lending-rate-val-20260513-182201` corr_id `8849FD14-B34D-43F8-B6CA-5265DCA2CCAB`. **v4 RUN 2026-05-13 EOD**
+      (execution-service@`0ff6615cb`): added V2 strategy ABI (`getInterestRateData(asset)` for Aave V3.1+) + per-asset
+      cache key (was global → DAI cache pollution from USDT params). VM `aave-lending-rate-val-20260513-205909` corr_id
+      `51A5DE7C-...`. **Result: 33/60 = 55% pass rate** — INFRA ✅ OPERATIONALLY GREEN; VALIDATION GATE 🟡 PARTIAL (USDC
+      22/26 = 85%, USDT 11/20 = 55%, DAI 0/14 = 0%). Two next-cycle fixes filed in issue doc: (a) DAI 0/14 root-cause
+      investigation, (b) pre-trade block off-by-one 1-line fix (expected to lift 55% → ~90%+). All 5 bugs fixed in
+      cumulative chain are real correctness wins.)
   - [x] **3C.1 — Event Collector** (RPC `eth_getLogs` batching). Query mainnet for Aave V3 Pool `Supply` events Sep 2025
         → May 2026; filter events >$10M `amount`; extract (block, txhash, pool_address, asset, user, amount, timestamp).
         Target ≥50 events. Store as JSON fixture `tests/defi_execution/integration/fixtures/aave_large_supplies.json`.
