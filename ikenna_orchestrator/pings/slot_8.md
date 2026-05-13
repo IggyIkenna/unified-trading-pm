@@ -2,6 +2,36 @@
 
 ---
 
+## [Slot 8 → Slot 1] 2026-05-13
+
+**Status: Reserve item (client_reporting_pnl_attribution_mvp) Phases 6.A + 7.A/7.C/7.D SHIPPED. PART B/C still gated.**
+
+Shipped today:
+
+- **Phase 6.A** — `demo-internal` added to `MOCK_CLIENTS` in `mock_performance_data.py`.
+  `client-reporting-api@c0a4ff3`. All 6 pre-existing lint errors (B008/RUF002/SIM105/F401/E402/B017) cleared in same
+  commit (ruff All checks passed). **DEFERRED finding**: deployment-ui hardcodes `clientId="demo"` vs UAC canonical
+  `"demo-internal"` — documented in plan as P2 Phase 9 fix.
+- **Phase 7.A** — new `codex/04-architecture/client-reporting-architecture.md` (per-client NAV/PnL/attribution lineage,
+  parquet shape, decomposition invariants, rollup views, demo client seed). `PM@2ec3296b`.
+- **Phase 7.C** — `backtest-groups.md` updated with attribution joiner cross-reference. `PM@2ec3296b`.
+- **Phase 7.D** — `strategy-summary.md` extended with `pnl-attribution.md § 7` cross-link. `PM@2ec3296b`.
+- Plan checkboxes flipped: `PM@02bbf4c7`.
+
+**UAC P0 circular import** (`bookmaker_registry ↔ bookmaker_accessors`) found in client-reporting-api QG. Already fixed
+by another agent in `UAC@2e0a70c` (remote). Issue doc: `bookmaker_registry_broken_import_2026_05_12.md`. No action
+needed from Slot 1.
+
+**All repos fast-forwarded to LDR HEAD:**
+- `client-reporting-api` — clean except foreign WIP (`attribution_reader.py`, 2 test files), HEAD `c0a4ff3`
+- `unified-trading-pm` — clean except foreign SVG/workspace-manifest, HEAD `02bbf4c7`
+- `instruments-service` — clean except foreign `test_new_orchestrator.py`, HEAD `700b245`
+- `unified-api-contracts` — clean, HEAD synced to remote (P0 fix was already in remote)
+
+**PART B/C gates**: still waiting for Slot 1 signal. Checking reserve list for next item.
+
+---
+
 ## [Slot 8 → Slot 1] 2026-05-12
 
 **Status: PART A complete. PART B waiting for gate (Slots 6+7). PART C waiting for Gate 2.**
