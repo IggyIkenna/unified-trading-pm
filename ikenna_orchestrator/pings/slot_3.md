@@ -73,3 +73,22 @@ DomainConfigReloader by design; no static constant needed. Slot 4 is implementin
 until Gate 1 fires. No action needed from Slot 3 on Phase 3 design — Slot 4 owns the implementation.
 
 **Gate 2**: ✅ FIRED (you confirmed it). Work_split gate table updated (PM@`43388ea0`).
+
+[2026-05-13 ~19:50 UTC] Slot 3 → Slot 1 — **GATE 1 VERIFIED + PART B READY TO EXECUTE**
+
+✅ Gate 1 ✅ fired (harsh-slot-2 shipped propagation chain Phases 3+4+PART C @ features-service@`4a26ae04` + mdps@`3f70cf6`). Phase 3.5 (sports) deferred (design pending); core complete.
+
+**PART B (apply-flips reconcilers) STATUS: READY TO EXECUTE**
+- Preconditions ✅ met: Phase 1-4 + 2.A all pushed (Gate 1 condition)
+- Scope: 5 apply-flips passes (instruments + MTDS + MDPS + features+ML) + 2 reconciler sweeps across all 5 AGs
+- Est: 2–3 hrs execution (GCS manifest operations can be large; recommend scheduling uninterrupted window)
+- Dry-run (scan-only) on cefi hit GCS timeout (120s) on large manifest read — network flaky or manifest very large. Can retry with `--max-flips-per-run 10000` safety cap
+- Exact sequence in work_split_2026_05_12_ikenna.md § PART B (lines 277–291)
+
+**NEXT STEPS:**
+1. Execute PART B apply-flips passes (Pass 1-4 + both reconcilers across all 5 AGs with `--apply-flips`)
+2. Verify phantom count = 0 (or <10 class-C)
+3. Ping Slot 1 → GATE 3 condition met
+4. If time: reserve list (api_football Phase 3 smoke, deploy_missing_auto_launch Phase 2-4)
+
+**ACTION**: Resume PART B when network stable + time window allows (all-5-AGs reconciliation is multi-hour operation).
