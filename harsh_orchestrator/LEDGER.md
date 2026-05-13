@@ -23,12 +23,12 @@ locked_since: 2026-05-08
 | 2 | risk_simulations finalisation (82% → 100%; P0 items + P1 stablecoin) | 🟡 READY-TO-SPAWN | `risk_simulations_limits_alerting_2026_05_10.md` | `tab/hk/2` |
 | 3 | DR Phase 6+9+10 finalisation (AGENT items + SCRIPT prep only; NO VM launch) | 🟡 READY-TO-SPAWN | `disaster_recovery_circuit_breakers_2026_05_10.md` | `tab/hk/3` |
 | 4 | 🐛 Script 3 classifier P1 fix (instruments-service ↔ UTL signature) + arbitrage_price_dispersion final 2 items | 🟡 READY-TO-SPAWN | `issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` + `arbitrage_price_dispersion_finalisation_2026_05_09.md` | `tab/hk/4` |
-| 5 | (HELD — rebase failed during Wave 2 reset; suspected cause: tab/hk/5 MTDS cc62f02 Day-2 collision casualty can't apply over LDR's canonical Phase 3.5) | 🔴 HOLD-FOR-CLEANUP | — | `tab/hk/5` |
+| 5 | (cleanup done 2026-05-13 — local tab/hk/5 hard-reset to LDR; cc62f02 preserved on origin/tab/hk/5 as historical record) | 🟪 RESERVE (ready) | — | `tab/hk/5` |
 | 6 | wave3x_residual_ssots finalisation (73% → 100%) | 🟡 READY-TO-SPAWN | `wave3x_residual_ssots_2026_05_08.md` | `tab/hk/6` |
 | 7 | cross_asset Phase 5A/5B/5C TradFi ETF + futures-roots consolidation | 🟡 READY-TO-SPAWN | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 5 | `tab/hk/7` |
-| 8 | (HELD — UAC rebase failed during Wave 2 reset; suspected cause: tab/hk/8 UAC 949185c collision casualty can't apply over Ikenna's canonical efd259c) | 🔴 HOLD-FOR-CLEANUP | — | `tab/hk/8` |
+| 8 | (cleanup done 2026-05-13 — local tab/hk/8 hard-reset to LDR; 949185c preserved on origin/tab/hk/8 as historical record) | 🟪 RESERVE (ready) | — | `tab/hk/8` |
 | 9 | 🆕 mock_data Phase 3.D per-reader threading (MTDS Tardis/Databento + ml-inference + strategy) — taken over from slot 5 since slot 5 is held | 🟡 READY-TO-SPAWN | `mock_data_pipeline_benchmarking_2026_05_10.md` | `tab/hk/9` |
-| 10 | dex_perp Phase 2A/2D/2E + 2F P2 + EigenLayer Phase 3A/3B + Phase 4A/4B + codex 5.1/5.2 | ✅ DONE 2026-05-13 — all in-scope shipped; 4 items DEFERRED with successor refs; slot worktree NOT yet reset (deferred to cleanup pass) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
+| 10 | dex_perp Phase 2A/2D/2E + 2F P2 + EigenLayer Phase 3A/3B + Phase 4A/4B + codex 5.1/5.2 | ✅ DONE 2026-05-13 — all in-scope shipped (MDPS@c30d8e0 cherry-picked by main to rescue foot-gun #5: MDPS 19-test fix had been left on tab/hk/10 only); worktree reset complete; 4 items DEFERRED with successor refs in plan body | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
 - Slot 2 ✅ DONE (PM@3b317e65) — propagation chain Gate 1 fired
@@ -43,10 +43,12 @@ locked_since: 2026-05-08
 - Slot 8 — UAC rebase failed (collision casualty 949185c); deferred to manual cleanup
 - Slot 10 — skipped per operator (still working at reset time); finished after reset
 
-**Cleanup queue** (slot 1 to handle when operator gives go):
-- Slot 5: hard-reset `tab/hk/5` to LDR (discards cc62f02 — durable on origin/tab/hk/5 as historical record)
-- Slot 8: hard-reset UAC `tab/hk/8` to LDR (discards 949185c — durable on origin/tab/hk/8 as historical record)
-- Slot 10: verify all reported-shipped work is on LDR (foot-gun #5 check) + reset worktree
+**Cleanup queue (DONE 2026-05-13 ~11:55 UTC)**:
+- ✅ Slot 5 reset: local tab/hk/5 hard-reset to LDR; cc62f02 preserved on origin/tab/hk/5
+- ✅ Slot 8 reset: local tab/hk/8 hard-reset to LDR; 949185c preserved on origin/tab/hk/8
+- ✅ Slot 10 foot-gun #5 intercept: MDPS@0c92b91 (19-test fix) was NOT on LDR despite slot 10's "all work synced" claim. Main cherry-picked to LDR as MDPS@c30d8e0; slot 10 worktree reset clean.
+
+All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
 
 **Critical-path sequencing (slot 1 monitors during Wave 2)**:
 1. Slot 4 ships Script 3 classifier fix → unblocks defi/sports/prediction legacy-blank reclassification (deferred apply-flips still pending post-cutover)
