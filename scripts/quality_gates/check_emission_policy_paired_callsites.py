@@ -167,7 +167,9 @@ class Baseline:
 
 
 def _baseline_path() -> Path:
-    return Path(__file__).resolve().parent.parent.parent / "baselines" / "emission_policy_paired_callsites_baseline.yaml"
+    return (
+        Path(__file__).resolve().parent.parent.parent / "baselines" / "emission_policy_paired_callsites_baseline.yaml"
+    )
 
 
 def load_baseline() -> Baseline:
@@ -316,9 +318,19 @@ def load_policy_service_names(workspace_root: Path) -> frozenset[str]:
     """
     # Try to grep the UAC source file directly (no import needed).
     uac_candidates = [
-        workspace_root / "unified-api-contracts" / "unified_api_contracts" / "canonical" / "crosscutting" / "service_emission_policy.py",
+        workspace_root
+        / "unified-api-contracts"
+        / "unified_api_contracts"
+        / "canonical"
+        / "crosscutting"
+        / "service_emission_policy.py",
         # Handle per-tab worktree layout where UAC is at sibling path.
-        workspace_root.parent / "unified-api-contracts" / "unified_api_contracts" / "canonical" / "crosscutting" / "service_emission_policy.py",
+        workspace_root.parent
+        / "unified-api-contracts"
+        / "unified_api_contracts"
+        / "canonical"
+        / "crosscutting"
+        / "service_emission_policy.py",
     ]
     for candidate in uac_candidates:
         if candidate.is_file():
@@ -474,7 +486,10 @@ def main(argv: list[str] | None = None) -> int:
     # Load policy service names (closed-set check).
     policy_services = load_policy_service_names(workspace_root)
     if not policy_services:
-        print("[STEP 5.71] WARNING: could not load SERVICE_OUTPUT_POLICIES service list; proceeding with empty set.", file=sys.stderr)
+        print(
+            "[STEP 5.71] WARNING: could not load SERVICE_OUTPUT_POLICIES service list; proceeding with empty set.",
+            file=sys.stderr,
+        )
 
     # Resolve scopes.
     scopes = resolve_scopes(workspace_root, args.scope, policy_services)
@@ -529,7 +544,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if not all_violations:
-        print("[STEP 5.71] OK — all record_captured() callsites in scope have paired emission-policy calls.", file=sys.stderr)
+        print(
+            "[STEP 5.71] OK — all record_captured() callsites in scope have paired emission-policy calls.",
+            file=sys.stderr,
+        )
     else:
         print(
             f"[STEP 5.71] OK — {len(baselined)} baselined violation(s) (non-blocking); 0 new.",
