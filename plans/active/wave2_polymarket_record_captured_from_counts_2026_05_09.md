@@ -161,7 +161,7 @@ data_type guard in `add()` from a `DeprecationWarning` to a hard `ValueError`, a
       / Kalshi option-α carve-out (added 2026-05-09; carve-out cites this Wave-2 as named successor). Update
       `codex/02-data/availability-manifest-and-data-status.md` to document `record_captured_from_counts` as the
       streaming-writer companion to `record_captured`. Update `codex/04-architecture/shard-level-failure-isolation.md`
-      if it references the legacy `add()` path. status: done (PM@<sha> — CLAUDE.md: no option-α carve-out found
+      if it references the legacy `add()` path. status: done (PM@d93a9952 — CLAUDE.md: no option-alpha carve-out found
       (was never added to CLAUDE.md; plan referenced a future addition that did not land); codex
       `availability-manifest-and-data-status.md` updated with Phase 4 ValueError ban + QG STEP 5.73 note + pipeline_mode
       required kwarg documentation; shard-level-failure-isolation.md: no add() references found, no update needed.)
@@ -211,7 +211,7 @@ deletion + QG enforcement + codex docs all sequenced after the predictions-bundl
 | Phase 3 — CME-OPTIONS migration          | `done` (2026-05-13 session)                                             | market-tick-data-service@616ac15 (6 new tests + 4 fixes) |
 | Phase 3 — Workspace add() callsite audit | `done` (2026-05-13 session — zero bundled callsites found outside MTDS) | PM checkbox flip only (audit finding)                    |
 | Phase 4 — add() hard ValueError ban + QG | `done` (2026-05-13 session)                                             | UTL@d8ca04bc (ValueError + 25 tests) + PM STEP 5.73      |
-| Phase 5 — Codex SSOT updates             | `done` (2026-05-13 session)                                             | PM@<sha> codex availability-manifest doc updated          |
+| Phase 5 — Codex SSOT updates             | `done` (2026-05-13 session)                                             | PM@d93a9952 codex availability-manifest doc updated          |
 
 Plan-flip commits: PM@8d44424a (Phase 1) + PM@75e768a6 (Phase 3 first item + predictions Q2 resolution)
-+ PM@b36c789b (Phase 2 + 3b) + PM@e0730a21 (Phase 3 P1 audit) + PM@ce40d8ab (Phase 4) + PM@<this> (Phase 5).
++ PM@b36c789b (Phase 2 + 3b) + PM@e0730a21 (Phase 3 P1 audit) + PM@ce40d8ab (Phase 4) + PM@d93a9952 (Phase 5).
