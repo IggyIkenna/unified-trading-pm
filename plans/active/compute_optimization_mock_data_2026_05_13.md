@@ -125,12 +125,12 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
 - [x] [SCRIPT] P0. Read benchmark Phase 5/6 output parquets from `gs://central-element-323112-benchmark-reports/` and
       produce per-stage `compute_bound_vs_io_bound` classification. For each stage: (a) CPU% headroom, (b) RSS at p95,
       (c) read/write bytes ratio, (d) thread count observed, (e) per-core scalability prediction. Output:
-      `codex/06-coding-standards/performance-targets.md` § Per-stage bottleneck table. (unified-trading-pm@COMMIT_SHA —
+      `codex/06-coding-standards/performance-targets.md` § Per-stage bottleneck table. (unified-trading-pm@c36a5bfb —
       see Phase 0 commit)
 - [x] [SCRIPT] P0. Identify the **3 slowest stages** (by total cutover-window contribution = wall-clock × call-count ×
       scale-factor). These are the optimization priorities. Top-3: (1) features_compute ~64,900 hrs serial — DEFERRED
       benchmark (talib); (2) mtds_read ~10,360 hrs — MEASURED, I/O-bound; (3) mdps_compute ~9,270 hrs — DEFERRED
-      benchmark (exchange_calendars). (unified-trading-pm@COMMIT_SHA — see Phase 0 commit)
+      benchmark (exchange_calendars). (unified-trading-pm@c36a5bfb — see Phase 0 commit)
 
 ### Phase 1 — Per-day fan-out wrapper for backtest config-grid (Days 2-3, ~1.5 cal-AI-days)
 
