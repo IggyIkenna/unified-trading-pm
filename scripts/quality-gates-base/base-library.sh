@@ -726,6 +726,23 @@ else
     log_warn "vulture not found — skipping dead-code check (install: uv pip install vulture)"
 fi
 
+# ── STEP 5.72: chain-set inclusion invariant on UAC chain_env ─────────────────
+# Mirrors base-service.sh STEP 5.72. Enforces
+# MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES on the
+# UAC chain_env registries. Closes cross_asset_group_catalogue_audit Phase
+# 1F-extend (DF-7).
+_CHAIN_INCLUSION_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_chain_set_inclusion.py"
+if [ -f "$_CHAIN_INCLUSION_CHECKER" ]; then
+    if $PYTHON_CMD "$_CHAIN_INCLUSION_CHECKER" >/tmp/chain_set_inclusion_qg_lib.log 2>&1; then
+        log_ok "STEP 5.72: UAC chain_env MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES"
+    else
+        log_fail "STEP 5.72: UAC chain_env inclusion invariant violated (DF-7). Output:"
+        cat /tmp/chain_set_inclusion_qg_lib.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_chain_set_inclusion.py"
+        exit 1
+    fi
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"

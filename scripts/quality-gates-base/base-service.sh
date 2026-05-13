@@ -1658,6 +1658,29 @@ else
     log_success "STEP 5.71: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.72: chain-set inclusion invariant on UAC chain_env ─────────────────
+#
+# Enforces MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES
+# (via chain_id reverse-lookup) on the UAC chain_env registries. Drift between
+# these three dicts produces silent zero-shard coverage in the honest-coverage
+# panel — reference DF-7 in cross_asset_group_catalogue_audit_2026_05_10.md.
+#
+# Closes the Phase 1F-extend `check_chain_set_inclusion.py QG ratchet`
+# carry-forward (cross_asset Phase 6A).
+_CHAIN_INCLUSION_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_chain_set_inclusion.py"
+if [ -f "$_CHAIN_INCLUSION_CHECKER" ]; then
+    if $PYTHON_CMD "$_CHAIN_INCLUSION_CHECKER" >/tmp/chain_set_inclusion_qg.log 2>&1; then
+        log_success "STEP 5.72: UAC chain_env MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES"
+    else
+        log_fail "STEP 5.72: UAC chain_env inclusion invariant violated (DF-7). Output:"
+        cat /tmp/chain_set_inclusion_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_chain_set_inclusion.py"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.72: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
