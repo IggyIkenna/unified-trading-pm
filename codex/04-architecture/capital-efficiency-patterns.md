@@ -264,8 +264,8 @@ CapitalAtRiskCeiling(
 ```
 
 A rule with this trigger is scoped per archetype (`RiskRuleScope.PER_ARCHETYPE`); its evaluator queries the family
-aggregator for the archetype's 95% VaR under the named scenario and compares to `max_var_usd`. Breach → `BLOCK` —
-the archetype cannot open new positions until the VaR drops below the ceiling.
+aggregator for the archetype's 95% VaR under the named scenario and compares to `max_var_usd`. Breach → `BLOCK` — the
+archetype cannot open new positions until the VaR drops below the ceiling.
 
 The same scope axis carries **per-account** `MaxGrossExposure` + `MaxNetExposure` triggers (closed-union members in
 [risk-rule-taxonomy.md](risk-rule-taxonomy.md#riskruletrigger-uac-canonicalcrosscuttingrisk_rulepy)) that bound the
@@ -275,19 +275,20 @@ account-wide gross/net regardless of how cleverly the capital-efficiency pattern
    combination must respect; independent of per-archetype tuning.
 2. **Per-archetype CaR ceiling** (`CAPITAL_AT_RISK_CEILING`) — bounds the tail exposure of each archetype's chosen
    pattern stack (e.g. Pattern 4 LTV loop + Pattern 10 atomic composite for `carry_recursive_staked`).
-3. **Family aggregate** (`FAMILY_GROSS_EXPOSURE_CAP`, `FAMILY_CAPITAL_AT_RISK_CEILING`, `FAMILY_CORRELATION_WITH_OTHER_FAMILY`)
-   — the **family aggregator** in UTL rolls up per-archetype state into per-family state (sum-of-positions + max
-   drawdown + cross-family correlation matrix from rolling returns) and feeds rule_evaluator at family scope. This is
-   the layer that catches "all LST-family + funding-arb-family share oracle-risk exposure on Pyth Solana" —
-   per-archetype rules would miss the cross-family correlation; the aggregator surfaces it.
+3. **Family aggregate** (`FAMILY_GROSS_EXPOSURE_CAP`, `FAMILY_CAPITAL_AT_RISK_CEILING`,
+   `FAMILY_CORRELATION_WITH_OTHER_FAMILY`) — the **family aggregator** in UTL rolls up per-archetype state into
+   per-family state (sum-of-positions + max drawdown + cross-family correlation matrix from rolling returns) and feeds
+   rule_evaluator at family scope. This is the layer that catches "all LST-family + funding-arb-family share oracle-risk
+   exposure on Pyth Solana" — per-archetype rules would miss the cross-family correlation; the aggregator surfaces it.
 
 Capital-allocation gates compose with these risk-rule pre-flight checks: every order goes through
-[`risk_preflight(order, context)`](risk-preflight-flow.md) BEFORE reaching execution-service. If any of the three
-layers above fires `BLOCK`, the order is rejected at Layer 2; if `SCALE_DOWN` fires (e.g. correlation creeping toward
-the family-level ceiling), the order proceeds at the min-aggregated scale_factor. The capital-efficiency patterns are
-NOT preflight-aware — they're pure structural setups; the rule registry is the gate that bounds their joint exposure.
+[`risk_preflight(order, context)`](risk-preflight-flow.md) BEFORE reaching execution-service. If any of the three layers
+above fires `BLOCK`, the order is rejected at Layer 2; if `SCALE_DOWN` fires (e.g. correlation creeping toward the
+family-level ceiling), the order proceeds at the min-aggregated scale_factor. The capital-efficiency patterns are NOT
+preflight-aware — they're pure structural setups; the rule registry is the gate that bounds their joint exposure.
 
-See [risk-rule-taxonomy.md § `RiskRuleTrigger`](risk-rule-taxonomy.md#riskruletrigger-uac-canonicalcrosscuttingrisk_rulepy)
+See
+[risk-rule-taxonomy.md § `RiskRuleTrigger`](risk-rule-taxonomy.md#riskruletrigger-uac-canonicalcrosscuttingrisk_rulepy)
 for the full closed-union of trigger types + [risk-preflight-flow.md](risk-preflight-flow.md) for the every-order
 integration path.
 
@@ -322,10 +323,58 @@ integration path.
   [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Risk rule taxonomy (closed-set RiskRuleId / RiskRuleScope / RiskRuleTrigger):
   [risk-rule-taxonomy.md](risk-rule-taxonomy.md)
-- Risk pre-flight aggregation (every-order path):
-  [risk-preflight-flow.md](risk-preflight-flow.md)
-- Risk-breaker escalation seam (cross-pattern joint risk):
-  [risk-breaker-seam.md](risk-breaker-seam.md)
+- Risk pre-flight aggregation (every-order path): [risk-preflight-flow.md](risk-preflight-flow.md)
+- Risk-breaker escalation seam (cross-pattern joint risk): [risk-breaker-seam.md](risk-breaker-seam.md)
+
+## Per-Client Capital Allocation
+
+Capital is allocated to archetypes **per client** via `ClientShareClassSubscription`. Each subscription declares a
+percentage allocation for a specific archetype; the `AllocationEngine` in UTL routes capital accordingly.
+
+### Allocation rules
+
+- `AllocationEngine` resolves per-archetype capital by multiplying the archetype's total available capital by
+  `allocation_pct` from each active `ClientShareClassSubscription`.
+- When **multiple clients** subscribe to the same archetype, their `allocation_pct` values are summed across all active
+  subscriptions. The sum MUST be ≤ 100% across all clients for a given archetype — the engine enforces this invariant at
+  subscription write time and at every allocation decision.
+- The engine emits an `AllocationDecisionEvent` for each `AllocationDecision` produced; downstream consumers
+  (position-balance-monitor, risk-and-exposure-service) react to these events.
+
+### Suspension on drawdown
+
+When a client's drawdown for a given (client, archetype) pair exceeds `ClientRiskPreferences.max_drawdown_pct`, the
+corresponding `ClientShareClassSubscription` transitions to `SUSPENDED_DRAWDOWN`. The `AllocationEngine` treats any
+subscription with `status == SUSPENDED_DRAWDOWN` as having `allocation_pct = 0` — **no capital is allocated to that
+(client, archetype) pair** until the subscription is manually re-activated by an operator.
+
+This ensures a single client hitting their drawdown limit does not disrupt other clients' allocations on the same
+archetype — the suspended subscription's share is simply unallocated (not redistributed).
+
+### Example
+
+| Client      | Archetype                    | `allocation_pct` | Status               | Capital allocated      |
+| ----------- | ---------------------------- | ---------------- | -------------------- | ---------------------- |
+| demo-client | `carry_staked_basis`         | 60%              | `ACTIVE`             | 60% of archetype total |
+| client-B    | `carry_staked_basis`         | 30%              | `ACTIVE`             | 30% of archetype total |
+| client-C    | `carry_staked_basis`         | 10%              | `SUSPENDED_DRAWDOWN` | 0% (suspended)         |
+| demo-client | `arbitrage_price_dispersion` | 80%              | `ACTIVE`             | 80% of archetype total |
+
+In this example, `carry_staked_basis` has 90% allocated (60 + 30; client-C's 10% is suspended). The remaining 10% is
+unallocated.
+
+### Cross-references
+
+- UAC `ClientShareClassSubscription` — subscription type; fields: `client_id`, `share_class_id`, `archetype`,
+  `allocation_pct`, `status` (`ACTIVE` / `SUSPENDED_DRAWDOWN` / `TERMINATED`)
+- UAC `AllocationDecision` — per-(client, archetype) capital allocation output; fields: `client_id`, `archetype`,
+  `allocated_usd`, `allocation_pct`, `reason`
+- UAC `AllocationDecisionEvent` — event emitted on each decision; consumed by PBMS + risk service
+- UTL `AllocationEngine` — resolves allocations per archetype; enforces sum ≤ 100%; emits `AllocationDecisionEvent`
+- Client lifecycle prerequisite: subscriptions require `ClientOnboardingState == SUBSCRIBED` (or later) —
+  [`client-lifecycle-state-machine.md`](client-lifecycle-state-machine.md)
+- Plan: `wallet_treasury_client_flow_2026_05_10.md` Phase 2.C (UAC subscription types) + Phase 3.C (AllocationEngine
+  UTL)
 
 ## Not in this doc
 
