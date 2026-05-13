@@ -208,8 +208,11 @@ read `DEPLOYMENT_ENV`. SSOT: `plans/active/bucket_name_ssot_canonicalisation_202
 - **Sports source coverage windows**: UAC `SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START` + `KNOWN_COVERAGE_GAPS`
   - `clip_dates_to_source_coverage()` + `is_in_known_gap()`.
 - **VIX 15m source layering**: Barchart preload (2020-01-02 → 2025-11-12) + Yahoo rolling 60d window + 2025-11-13 →
-  today−60d honest gap. UAC `BARCHART_VIX_FIRST/LAST_DATE`, `YAHOO_VIX_15M_WINDOW_DAYS`, `is_vix_15m_gap_date()`. Route:
-  MTDS `umi_tick_provider.py` (CBOE, ohlcv_15m) → `_fetch_yahoo_vix_15m` BEFORE generic Databento.
+  today−60d honest gap. UAC constants `BARCHART_VIX_FIRST/LAST_DATE`, `YAHOO_VIX_15M_WINDOW_DAYS`,
+  `is_vix_15m_gap_date()`, `get_vix_15m_source()` in `unified_api_contracts/registry/data_source_continuity.py`
+  (NOT `canonical/crosscutting/honest_coverage.py` — that module only references the gap via the
+  `EXPECTED_KNOWN_SOURCE_GAP` empty-reason for per-shard recording). Route: MTDS `umi_tick_provider.py`
+  (CBOE, ohlcv_15m) → `_fetch_yahoo_vix_15m` BEFORE generic Databento.
 - **Manifest concurrency principle** — read-once + per-date freshness check + write-time CAS for any multi-worker
   manifest consumer. TTL 60s. Reference impl: `/tmp/fill_missing_ohlcv.py` (`_refresh_captured_cache`). SSOT:
   `codex/02-data/availability-manifest-and-data-status.md`.
