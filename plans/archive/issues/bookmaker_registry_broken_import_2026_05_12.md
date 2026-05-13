@@ -3,14 +3,27 @@ title:
   "UAC canonical/domain/__init__.py:266 imports get_expected_bookmakers from wrong module — blocks all
   instruments-service tests"
 created: 2026-05-12
+resolved: 2026-05-12
 author: ikenna
+resolved_by: Harsh slot 2 (UAC@b73949d)
 source:
   - slot 5 Phase 2.D work session 2026-05-12
   - instruments-service QG test collection failure
-locked_by: live-defi-rollout
-locked_since: 2026-05-12
+status: RESOLVED
 severity: P0
-suggested_owner: operator triage (foreign-modified file — bookmaker_registry.py dirty in UAC worktree)
+---
+
+## ✅ RESOLVED 2026-05-12
+
+Fixed by Harsh slot 2 — `unified-api-contracts@b73949d` corrected the import path
+(`from .sports.bookmaker_registry import get_expected_bookmakers` →
+`from .sports.bookmaker_accessors import get_expected_bookmakers`).
+
+Verified via Slot 2 DONE-ping in `harsh_orchestrator/pings/slot_2.md` + PM coordination
+ledger `pm_coordination_ledger_2026_05_13.md` § "Active Issues" table.
+
+Moved from `plans/active/issues/` → `plans/archive/issues/` on 2026-05-13.
+
 ---
 
 ## What I found

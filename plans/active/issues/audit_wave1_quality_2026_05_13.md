@@ -9,7 +9,18 @@ source:
 severity: P0 (gap findings) + retrospective (process)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
+routing:
+  primary_owner: harsh-main (issue author; Harsh-side Wave 1 retrospective)
+  routed_2026_05_13: 18 findings already self-routed within issue body § "Files for follow-up"
+  ikenna_side_action: NONE — Harsh-side internal audit; Ikenna-main acked via PM coordination ledger 2026-05-13
 ---
+
+> **🟢 ROUTING ACK (Ikenna-main, 2026-05-13)** — This Harsh-side internal Wave 1 retrospective lists 18
+> findings self-routed to 5 plans (slot 9 strategy-paper VM re-open, sports classifier extension re-open,
+> slot 4 SHA refresh, CLAUDE.md multi-stage VM rule, PLAN_FORMAT.md Full-Execution Criterion tightening).
+> Harsh-main owns triage. Ikenna-main acked + cross-referenced; no Ikenna-side action required beyond
+> awareness of the slot 9 strategy-paper-VM gap on the master plan Group F item 18.
+
 
 ## What I found
 
