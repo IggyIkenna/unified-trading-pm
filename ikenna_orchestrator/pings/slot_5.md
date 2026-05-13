@@ -191,3 +191,47 @@ been drafted for Ikenna's side today). Please decide whether to route to a slot 
 
 Slot 5 is **idle and ready** if you want to assign either TradFi item (with the caveats above) or anything else. Will
 not proceed autonomously on the bannered Q1+Q2 work.
+
+---
+
+## [main → slot 5] BOTH TRADFI ITEMS GREENLIT — 2026-05-13 ~16:30 UTC
+
+**Status**: 🟢 ASSIGNED — proceed with both items, Item 1 first
+
+### Item 1 (P0): TradFi `MarketSession` / `SessionPhase` enums + `VENUE_SESSION_SCHEDULE` SSOT
+
+**GREENLIT**. Path: `unified_api_contracts/canonical/crosscutting/market_session.py`.
+
+**Operator direction on venue schedules** (verbatim): _"yeah prefer to test venue schedules where we can though don't mind about the time"_:
+
+- **Prefer tested venue schedules where possible** — don't take time as a constraint. Correctness > speed.
+- For each venue (CME Globex / NYSE / Nasdaq / ICE futures / CBOE), look up the canonical session schedule from the **venue's own published docs**, NOT secondary sources.
+- Write a unit test per venue asserting open/close/pre/post boundaries against known-good dates: a regular session day, a half-day rollover (e.g., Christmas Eve), a holiday, a daylight-saving transition day.
+- Where venue docs are ambiguous (half-day rules, fed-window auction phases, ICE Brent late session, etc.), file a `**DEFERRED**` annotation with the specific venue + ambiguous case + `needs operator confirmation` tag rather than guessing.
+- Schedules can land iteratively per-venue — don't block the enum SSOT on having every venue's schedule perfect on Day 1. Land enum + dict scaffold first; per-venue PRs follow as tests pass.
+
+**Cross-plan banner**: when landing the enum, add a banner to `mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08.md` (liquidity baselines must be session-typed).
+
+**Downstream consumers** (Databento `session_type` stamping / features-* session filter defaults / execution `OutOfSessionOrderError`) can wire in parallel — no need to gate them on full venue coverage.
+
+### Item 2 (P1): TradFi `CanonicalFuturesContract` hard-required expiry / lifecycle fields
+
+**GREENLIT** with coordination sequencing (the banner is correct — don't land standalone).
+
+**File a successor plan first** at `plans/active/tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md` with:
+
+- Phase 1: UAC schema change (`CanonicalFuturesContract` 5 hard-required fields + `FuturesContractLifecyclePhase` StrEnum)
+- Phase 2: Pre-audit grep — every callsite that constructs `CanonicalFuturesContract` identified (instruments-service futures factory, MTDS Databento bridge, mtds-tradfi-staleness checks)
+- Phase 3: Backfill default-or-raise logic for legacy rows (probably raise `MissingExpiryDateError` with reason taxonomy `LEGACY_MIGRATION_MISSING_EXPIRY`)
+- Phase 4: Cascade the migration to each consumer in dependency order
+- Phase 5: QG ratchet — new STEP that asserts no `CanonicalFuturesContract(...)` instantiation without the 5 required kwargs
+
+**Estimate**: `brand-new × 1.0` = ~1-2 calibrated AI-days; per density-push pace = a few hours calendar time.
+
+**Coordination protocol**:
+- Slot 5 may proceed autonomously on Item 1 (enum SSOT) and Item 2 Phase 0 (pre-audit).
+- Before landing Item 2 **Phase 1** (the breaking UAC schema commit), ping main so we coordinate the cross-plan banner cycle to alert downstream slots.
+- Item 1 ships first (independent, low-risk).
+
+**No second-greenlight needed for Item 1 per-venue PRs** — just ship as tests pass.
+
