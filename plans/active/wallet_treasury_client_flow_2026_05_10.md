@@ -195,8 +195,11 @@ all UAC imports. (unified-api-contracts@bb4a718)
 - [x] [AGENT] P0. **3.A position-balance per-client lineage.** Reuses `client_reporting_pnl_attribution_mvp_2026_05_10`
       Phase 3.A migration; ensure trade-id → client-id resolution stable. (pbm@c3cde53 — ClientIdResolver +
       PositionTracker wiring + 21 unit tests; QG green)
-- [ ] [AGENT] P0. **3.B execution-service custody-pinger pre-trade.** Before any live order, pings the relevant custody
-      endpoint; failure → `CustodyDisconnect` breaker fires (per DR plan).
+- [x] [AGENT] P0. **3.B execution-service custody-pinger pre-trade.** Before any live order, pings the relevant custody
+      endpoint; failure → `CustodyDisconnect` breaker fires (per DR plan). (execution-service@232d8e26c —
+      CustodyPreTradePinger + resolve_treasury_source() + 60s TTL cache + per-source asyncio.Lock dedup +
+      CUSTODY_DISCONNECT breaker wiring + CustodyDisconnectError + orchestrator Layer-3 pre-flight hook + 32 unit tests;
+      ruff+basedpyright clean)
 - [x] [AGENT] P0. **3.C Allocation engine subscription.** Strategy-service signal generator queries
       `allocation/engine.py` per signal to size per-client. (strategy-service@9a36f77 — AllocationSizer +
       PerClientSignal frozen envelope + InMemorySubscriptionRepository + 23 unit tests; QG green)
