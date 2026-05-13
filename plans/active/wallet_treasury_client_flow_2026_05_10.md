@@ -192,8 +192,9 @@ all UAC imports. (unified-api-contracts@bb4a718)
 
 ## Phase 3 — Per-service per-client lineage migration (Days 6-8, ~2 AI-days, 3 parallel sub-agents)
 
-- [ ] [AGENT] P0. **3.A position-balance per-client lineage.** Reuses `client_reporting_pnl_attribution_mvp_2026_05_10`
-      Phase 3.A migration; ensure trade-id → client-id resolution stable.
+- [x] [AGENT] P0. **3.A position-balance per-client lineage.** Reuses `client_reporting_pnl_attribution_mvp_2026_05_10`
+      Phase 3.A migration; ensure trade-id → client-id resolution stable. (pbm@c3cde53 — ClientIdResolver +
+      PositionTracker wiring + 21 unit tests; QG green)
 - [ ] [AGENT] P0. **3.B execution-service custody-pinger pre-trade.** Before any live order, pings the relevant custody
       endpoint; failure → `CustodyDisconnect` breaker fires (per DR plan).
 - [ ] [AGENT] P0. **3.C Allocation engine subscription.** Strategy-service signal generator queries
