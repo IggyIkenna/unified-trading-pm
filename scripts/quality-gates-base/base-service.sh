@@ -1707,6 +1707,33 @@ else
     log_success "STEP 5.73: skipped (SOURCE_DIR not set or not a directory)"
 fi
 
+# ── STEP 5.74: MDPS bar-boundary truncation-bypass static check ───────────────
+#
+# Asserts MDPS source does NOT use inline timestamp-truncation bypasses
+# (pd.Timestamp.floor / round / .replace(minute=0, ...) / polars dt.truncate).
+# These bypass the canonical compute_bar_close_boundary() SSOT.
+#
+# Plan: available_at_lookahead_bias_completion_2026_05_08 Phase 0.7 Item 3.
+# Pairs with MDPS@3836363 (Phase 0.7 Item 2: write-gate runtime enforcement).
+#
+# Per-line opt-out: `# noqa: bar-boundary-truncation`.
+_BAR_BOUNDARY_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_mdps_bar_boundary_compliance.py"
+if [ -f "$_BAR_BOUNDARY_CHECKER" ] && [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
+    # Scope to MDPS / market-data-processing-service only (MDPS-specific contract)
+    if [[ "$REPO" == "market-data-processing-service" ]] || [[ "$REPO" == "mdps" ]]; then
+        if python3 "$_BAR_BOUNDARY_CHECKER" --source-dir "${SOURCE_DIR}"; then
+            log_success "STEP 5.74: No bar-boundary truncation bypasses found"
+        else
+            log_fail "STEP 5.74: MDPS bar-boundary truncation bypass(es) found — use compute_bar_close_boundary() helper"
+            V=$(( V + 1 ))
+        fi
+    else
+        log_success "STEP 5.74: skipped (non-MDPS repo)"
+    fi
+else
+    log_success "STEP 5.74: skipped (checker or SOURCE_DIR not provisioned)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)

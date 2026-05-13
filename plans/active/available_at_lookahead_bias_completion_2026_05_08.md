@@ -234,17 +234,22 @@ todos:
       default; `--apply-flips --confirm` gate; `--max-flips` halt-safety cap; operator-runnable on same-region GCE VM
       for apply step).
 
-- [ ] [SCRIPT] P0. **MDPS write-gate enforcement — bar boundary + `available_at`**. Extend
-      `ManifestWriter.record_captured` validation (or MDPS-side wrapper) to reject any bar whose
-      `(t_open, t_close, available_at)` triple violates the UTC-midnight-aligned + `available_at == t_close` contract.
-      Typed error: `BarBoundaryViolationError`. **DEFERRED**: paired sub-agent run 2026-05-13 hit API error after Item 1
-      (reconciler) shipped; partial scaffolding discarded. Successor: next sub-agent dispatch.
+- [x] [SCRIPT] P0. **MDPS write-gate enforcement — bar boundary + `available_at`** (shipped MDPS@`3836363`
+      2026-05-13). UAC `BarBoundaryViolationError` + `assert_bar_boundary_contract` already shipped
+      (canonical/crosscutting/bar_boundary.py); MDPS `_validate_stamped_candle_bar_boundary` extended to raise the
+      new MDPS `MalformedBarBoundaryError` on NaT in `timestamp` or `available_at` columns BEFORE the UAC contract
+      check. Dedicated test suite at `tests/unit/test_bar_boundary_write_gate.py` (≥14 tests) covers valid bars,
+      BarBoundaryViolationError on each clause, MalformedBarBoundaryError on NaT.
 
-- [ ] [SCRIPT] P0. **QG static check — MDPS bar emission**. AST-walk MDPS calculators that write parquets. Assert: every
-      bar-emitting code path calls `compute_bar_close_boundary` (or imports the UTL helper); no inline
-      `pd.Timestamp.floor` / `pd.Timestamp.round` / `dt.replace(...)` patterns that bypass the SSOT. Mirror writegate
-      STEP 5.64 (cluster validation static check). **DEFERRED**: same sub-agent run as Item 2; bundle with Item 2 in
-      next sub-agent dispatch.
+- [x] [SCRIPT] P0. **QG static check — MDPS bar emission** (shipped PM 2026-05-13 with this commit).
+      `unified-trading-pm/scripts/quality_gates/check_mdps_bar_boundary_compliance.py` AST-walks MDPS sources for
+      banned inline truncation patterns: `pd.Timestamp.floor("1h")` / `pd.Timestamp.round("15min")` /
+      `dt.replace(minute=0, second=0, microsecond=0)` / polars `dt.truncate("1h")`. Honours
+      `# noqa: bar-boundary-truncation` per-line opt-out. Wired as STEP 5.74 in
+      `scripts/quality-gates-base/base-service.sh` (scoped to MDPS repo only). 12 unit tests at
+      `scripts/quality_gates/tests/test_check_mdps_bar_boundary_compliance.py` cover valid sources, each banned
+      pattern, mixed-file detection, tests/ exclusion, noqa opt-out, docstring false-positive immunity,
+      syntax-error graceful handling, nonexistent-source-dir error code.
 
 ---
 
