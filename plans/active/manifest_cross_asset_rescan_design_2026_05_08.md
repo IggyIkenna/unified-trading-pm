@@ -24,7 +24,7 @@ estimate_calibration_note: |
   Updated 2026-05-13 (slot 6 substantive touch).
 ---
 
-> **🟢 VMs RUNNING 2026-05-13 07:47 UTC (run 2)** — 5 manifest-recon-all VMs relaunched (deployment-service@2ca80d5 fixes python double-substitution). All 3 reconcilers running per VM. ETA: defi ~14 min, sports/prediction ~10 min, cefi/tradfi ~45-60 min. Do NOT modify manifest or reconciler scripts until VMs complete. VM names: `manifest-recon-{defi,cefi,tradfi,sports,prediction}-20260513-074{716,736}`. Run 1 (07:21) failed silently — setup script substitution doubled venv path.
+> **✅ VMs COMPLETE 2026-05-13 ~09:00 UTC (run 2)** — All 5 manifest-recon-all VMs completed successfully. Logs at `gs://deployment-scripts-central-element-323112/vm-logs/manifest-recon-{ag}-20260513-074{716,736}/run.log`. Gate 3 results populated below. Apply-flips blocked on Gate 1 (slot 2 ping).
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -202,10 +202,11 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) — pass 1 completes before pass 2 starts.
       Implement as sequential VM invocations or as a sequenced CLI flag `--pass 1|2|3|4` that the launcher orchestrates.
       **Blocker**: launcher not yet shipped (see "Launcher script" section above).
-- [ ] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
-      before `--apply-flips`. (deployment-service@b5f25cc 2026-05-13): 5 VMs launched via new `launch-manifest-recon-all-vm.sh`.
-      Run 1 failed silently (python path doubled by setup-script substitution); fixed in deployment-service@2ca80d5.
-      Run 2 (07:47 UTC) in flight: `manifest-recon-{ag}-20260513-074{716,736}`. **IN FLIGHT** — results pending.
+- [x] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
+      before `--apply-flips`. (deployment-service@b5f25cc + @2ca80d5 2026-05-13): 5 VMs completed — Gate 3 results
+      section populated. Run 1 failed silently (python path doubled by setup-script substitution); fixed in
+      deployment-service@2ca80d5. Run 2 (07:47 UTC) all completed ~09:00 UTC.
+      Log root: `gs://deployment-scripts-central-element-323112/vm-logs/manifest-recon-{ag}-20260513-074{716,736}/run.log`
 - [ ] [SCRIPT] P1. **PRE_CUTOVER — switch all 3 reconciliation scripts to `resolve_bucket_name`** (blocked on physical
       bucket migration landing). Currently all 3 scripts hardcode legacy non-env-tiered bucket names (e.g.
       `market-data-tick-cefi-{PROJECT_ID}`) violating the bucket-name SSOT (b+) codified 2026-05-11.
@@ -276,6 +277,60 @@ MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-legacy-cefi-$(date +%Y%m%d) \
   python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --asset-group cefi --apply-flips
 # ... (defi / tradfi / sports / prediction)
 ```
+
+## Phantom audit Gate 3 results — 2026-05-13
+
+Run 2 (07:47 UTC), deployment-service@2ca80d5. All 5 VMs completed ~09:00 UTC.
+VM names: `manifest-recon-{defi,cefi,tradfi,sports,prediction}-20260513-074{716,736}`.
+
+### Script 1 — Phantom captures (manifest `captured`, parquet missing)
+
+| asset_group | Captured rows scanned | Real captures | **Phantom captures** | Top phantom data_types |
+| ----------- | --------------------: | ------------: | -------------------: | ---------------------- |
+| defi        | 312,900               | 311,602       | **1,298**            | rewards (1,298) |
+| cefi        | 1,292,929             | 1,290,706     | **2,223**            | options_chain 435, futures_chain 401, trades 381, derivative_ticker 367, book_snapshot_5 363 |
+| tradfi      | 96,101                | 92,125        | **3,976**            | trades 1,017, tbbo 1,017, ohlcv_1m 904 |
+| sports      | 686,086               | 586,466       | **99,620**           | TRANSFERMARKT_LEAGUES 75,960, SFI_LEAGUES 12,777, INJURIES 9,843 |
+| prediction  | 14,474                | 14,424        | **50**               | trades 50 |
+| **TOTAL**   | **2,402,490**         | **2,295,323** | **107,167**          | |
+
+> **Notable**: sports 99,620 phantoms (TRANSFERMARKT_LEAGUES dominant at 75,960) vs 354 in 2026-05-04 audit — scope
+> difference (all manifest rows vs partial prior audit) or accumulated debt. cefi has 1,453 phantoms with blank venue
+> (likely schema_v4 vestigial rows not fully filtered) + 136 at DERIBIT + 111 at UNKNOWN. tradfi trades+tbbo = 2,034
+> of 3,976 (Databento paired-schema artifact; axis 7 eliminates false positives here but real phantoms remain).
+
+### Script 2 — `empty_confirmed` with NULL `error_reason`
+
+| asset_group | Total manifest rows | Null-reason rows | Distribution |
+| ----------- | ------------------: | ---------------: | ------------ |
+| defi        | 1,606,190           | 0                | — |
+| cefi        | 2,632,931           | **3,146**        | all `SOURCE_RETURNED_ZERO` — ready for apply-flip |
+| tradfi      | 141,401             | 0                | — |
+| sports      | 2,675,696           | 0                | — |
+| prediction  | 16,812              | 0                | — |
+
+### Script 3 — Legacy-blank upgradeable to typed `EXPECTED_*` reason
+
+> **⚠️ Classifier broken**: `classify_blank_reason_row() got an unexpected keyword argument 'fixture_manifest'` —
+> per-row failure for all candidate rows in defi/sports/prediction. Script continues (non-fatal), result is 0 upgrades.
+> Filed as issue: `plans/active/issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` (P1).
+
+| asset_group | Candidates (% of manifest) | Upgrades | Notes |
+| ----------- | -------------------------: | -------: | ----- |
+| defi        | 604,951 (37.66%)           | 0        | classifier `fixture_manifest` kwarg error — all rows fail |
+| cefi        | 0                          | 0        | clean — no legacy-blank candidates |
+| tradfi      | 0                          | 0        | clean — no legacy-blank candidates |
+| sports      | 1,868,285 (69.82%)         | 0        | classifier `fixture_manifest` kwarg error — all rows fail |
+| prediction  | 41 (0.24%)                 | 0        | classifier `fixture_manifest` kwarg error — all rows fail |
+
+### Gate 3 → Gate 4 gate status
+
+| Gate | Condition | Status |
+| ---- | --------- | ------ |
+| Gate 1 | Slot 2 `expected_unattempted_propagation_chain` Phase 3+4+2.A complete | 🔴 NOT FIRED — waiting on slot 2 ping |
+| Script 3 classifier | `classify_blank_reason_row()` `fixture_manifest` kwarg fix | 🔴 BLOCKED — issue filed P1 |
+| cefi Script 2 apply | 3,146 null-reason → `SOURCE_RETURNED_ZERO` stamp | 🟡 READY (no Gate 1 dependency for Script 2) |
+| phantom apply-flips | Scripts 1+3 `--apply-flips` per AG | 🔴 BLOCKED on Gate 1 + Script 3 fix |
 
 ## Open questions
 
