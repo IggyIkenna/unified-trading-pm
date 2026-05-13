@@ -177,3 +177,63 @@ Results at
 `gs://central-element-323112-defi-validation/results/lending/2026-05-13/C2F31B23-8794-4909-BCFE-95FB51AA9641/results.json`.
 
 Status: **FIX SHIPPED** — code correct, VM running. Awaiting results.json to confirm ≥90% pass rate.
+
+---
+
+## Update 2026-05-13 19:30 UTC — v3 run (3 collector bugs FIXED, IRM ABI mismatch surfaces)
+
+VM `aave-lending-rate-val-20260513-192426` (corr_id `C2F31B23-...`) — fix `execution-service@dbd34868d` shipped 3
+collector bugs:
+
+1. ✅ Wrong `SUPPLY_EVENT_TOPIC` hash (`...39b43f845d78260a95637` → `...52b927a881a10fb73ba61`)
+2. ✅ Stale default block range constants (didn't affect VM via CLI, but confused local tests)
+3. ✅ HexBytes `0x`-prefix offset in amount decoder
+
+**Result**: 60 events collected correctly (e.g. event 0: block 23308002 USDT 40,719,791.50 — matches prior fixture).
+
+**But: 4th bug — IRM ABI mismatch**. Every event logs `_fetch_irm_params_live: getBaseVariableBorrowRate failed for
+<strategy>: ('execution reverted', 'no data')`. Strategy contract at e.g. `0x9ec6F08190DeA04A54f8Afc53Db96134e5E3FdFB`
+is `DefaultReserveInterestRateStrategyV2` (Aave V3.1+), which exposes `getInterestRateData(address asset)` returning
+a struct — NOT the legacy `getBaseVariableBorrowRate()` / `getVariableRateSlope1()` / `getVariableRateSlope2()` /
+`OPTIMAL_USAGE_RATIO()` getters the harness ABI assumes.
+
+**Effect**: live IRM fetch fails for ALL 60 events → harness falls back to stale `AAVE_V3_RATE_MODEL_DEFAULTS_BY_ASSET`
+→ same 0/60 pass rate as v1, same outlier pattern (`sim ≈ 2.7-3.0% vs realized ≈ 4.5%`).
+
+## Next-cycle fix
+
+Extend `_fetch_irm_params_live` to handle Aave V3.1+ strategy ABI:
+
+1. Try legacy individual getters first (existing code path; works for older V3 reserves if any remain).
+2. On `('execution reverted', 'no data')` → try V2 strategy:
+   ```python
+   _STRATEGY_V2_ABI = [{
+       "inputs": [{"name": "reserve", "type": "address"}],
+       "name": "getInterestRateData",
+       "outputs": [{"name": "", "type": "tuple", "components": [
+           {"name": "optimalUsageRatio", "type": "uint16"},          # in bps (0-10000) per V2 spec
+           {"name": "baseVariableBorrowRate", "type": "uint32"},     # in bps × 100 (4-decimal precision)
+           {"name": "variableRateSlope1", "type": "uint32"},
+           {"name": "variableRateSlope2", "type": "uint32"},
+       ]}],
+       "stateMutability": "view", "type": "function",
+   }]
+   ```
+   Verify the exact V2 struct shape from `DefaultReserveInterestRateStrategyV2.sol` — Aave V3.1+ stores params as
+   `uint32` in bps × 100 (4-decimal precision), NOT in RAY.
+3. Convert V2 fields to fractional Decimals + return same dict shape as legacy path.
+4. Re-run VM; expect ≥90% pass rate.
+
+**Owner**: slot 6 follow-up next cycle. Estimated 0.5-1 cal AI-day (focused ABI extension + verification re-run).
+
+## Status board (cumulative across 3 runs)
+
+| Run | VM | Collector | IRM source | Pass rate | Root cause |
+|-----|----|-----------|-----------|-----------|------------|
+| v1 (2026-05-13 16:38) | `...173601` | ✅ 60 events | static stale | 0/60 | Static defaults too low (governance drift) |
+| v2 (2026-05-13 18:00) | `...185210` | ❌ 0 events | n/a | n/a | 3 collector bugs (topic hash, hex offset) |
+| v3 (2026-05-13 19:24) | `...192426` | ✅ 60 events | static stale (live fetch reverts) | 0/60 | Aave V3.1+ strategy ABI not handled |
+
+**Infrastructure status**: ✅ OPERATIONALLY GREEN — VM lifecycle, event stream, GCS persistence, dual-branch deploys
+all working. The data flowing is REAL (collector verified, rates real, comparison real). Only the IRM-param source needs
+to switch from stale-static to live-V2-strategy.
