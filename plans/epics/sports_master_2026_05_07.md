@@ -557,7 +557,8 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
       compute `match_end_time ≈ kickoff + periods.second.duration + et.duration +     injury_time` from the API
       response. Add `match_end_time` column to UAC FIXTURES contract. [AUDIT 2026-05-07: FRESH — actionable] **PARTIAL
       2026-05-12 slot 5 (instruments-service@9bffca2)**: UAC field `match_end_time: datetime | None` added to
-      `CanonicalFixture`; `detect_match_end_time()` helper shipped in SFI adapter. The write-path call
+      `CanonicalFixture`; `detect_match_end_time()` helper shipped in SFI adapter. **UAC HALF SHIPPED 2026-05-13**:
+      UAC@0ba9e5b — `match_end_time` column added to SPORTS_FIXTURES schema (parquet-level). The write-path call
       (instruments-service SFI progressive-stats writer → populate `fixture.match_end_time`) is NOT yet wired.
       **DEFERRED**: wire `detect_match_end_time()` result into instruments-service SFI progressive-stats write path so
       the `match_end_time` field is populated on the written `CanonicalFixture` object.
@@ -922,20 +923,20 @@ typed empty reasons (GREEN at orchestrator/triggers).
 Session shipped: instruments-service@af06124 (SFI report_time), UAC@1a831b0 (MatchStatus SSOT), plan flips for B.1
 Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 
-| Phase / item                                        | Status as of 2026-05-12 | Successor / blocker                                                                        |
-| --------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------ |
-| B.1 Phase 4: manifest flip + re-fetch VM            | `[ ]` NOT RUN           | Operational — needs VM launch + manifest migration; no code gap                            |
-| C.4 Transfermarkt per-player flatten                | `[~]` partial-shipped   | UAC@3b29f7e — normalizer + schema done; migration/test deferred pending features-sports    |
-| C.6 Step 1: AF FIXTURES write-path `match_end_time` | `[ ]` open              | UAC `CanonicalFixture.match_end_time` exists; need AF write-path wiring in IS orchestrator |
-| C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns  | `[x]` shipped           | UAC@1848647 — added ft_timer + match_end_time columns; next: Step 3 (UTL resolver)         |
-| C.6 Step 3: UTL `resolve_match_end_time()` cascade  | `[x]` shipped           | UTL@89c0ae15 — cascade resolver with NamedTuple return; next: Step 4 wiring                |
-| C.6 assert_available_at_present wiring              | `[ ]` blocked           | Blocked on Step 3 UTL helper                                                               |
-| C.7 Follow-up #1: STANDINGS flatten                 | `[ ]` open              | Same B.1 pattern; isolated AF endpoint                                                     |
-| C.7 Follow-up #3: MATCHES `team_a_*` → `home_*`     | `[x]` shipped           | UAC@4e23bd9 — FootyStats field mappings (12 home/away variants); migration deferred        |
-| MatchStatus adapter migration                       | `[ ]` open (DEFERRED)   | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters      |
-| Cross-source fixture status verifier                | `[ ]` open              | Uses MatchStatus SSOT (now shipped); no other blocker                                      |
-| Codex doc `sports-fixtures-lifecycle.md`            | `[ ]` open              | Write after cross-source verifier design settles                                           |
-| FIXTURES schema split (SCHEDULE + OUTCOMES)         | `[ ]` P0 open           | Large — coordinate with writegate strict-mode flip                                         |
+| Phase / item                                        | Status as of 2026-05-12 | Successor / blocker                                                                     |
+| --------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------- |
+| B.1 Phase 4: manifest flip + re-fetch VM            | `[ ]` NOT RUN           | Operational — needs VM launch + manifest migration; no code gap                         |
+| C.4 Transfermarkt per-player flatten                | `[~]` partial-shipped   | UAC@3b29f7e — normalizer + schema done; migration/test deferred pending features-sports |
+| C.6 Step 1: AF FIXTURES write-path `match_end_time` | `[~]` UAC-half-shipped  | UAC@0ba9e5b — schema column added; IS orchestrator write-path wiring still pending      |
+| C.6 Step 2: SFI_PROGRESSIVE_STATS contract columns  | `[x]` shipped           | UAC@1848647 — added ft_timer + match_end_time columns; next: Step 3 (UTL resolver)      |
+| C.6 Step 3: UTL `resolve_match_end_time()` cascade  | `[x]` shipped           | UTL@89c0ae15 — cascade resolver with NamedTuple return; next: Step 4 wiring             |
+| C.6 assert_available_at_present wiring              | `[ ]` blocked           | Blocked on Step 3 UTL helper                                                            |
+| C.7 Follow-up #1: STANDINGS flatten                 | `[ ]` open              | Same B.1 pattern; isolated AF endpoint                                                  |
+| C.7 Follow-up #3: MATCHES `team_a_*` → `home_*`     | `[x]` shipped           | UAC@4e23bd9 — FootyStats field mappings (12 home/away variants); migration deferred     |
+| MatchStatus adapter migration                       | `[ ]` open (DEFERRED)   | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters   |
+| Cross-source fixture status verifier                | `[ ]` open              | Uses MatchStatus SSOT (now shipped); no other blocker                                   |
+| Codex doc `sports-fixtures-lifecycle.md`            | `[ ]` open              | Write after cross-source verifier design settles                                        |
+| FIXTURES schema split (SCHEDULE + OUTCOMES)         | `[ ]` P0 open           | Large — coordinate with writegate strict-mode flip                                      |
 
 **Next-agent entry point**: Pick any item from this table that has no blocker. Best candidates in priority order:
 
