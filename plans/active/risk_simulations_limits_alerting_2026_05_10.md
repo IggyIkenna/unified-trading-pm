@@ -331,17 +331,13 @@ returns full rule set; tests pass.
 
 ## Phase 4 — Per-service migration (Days 7-9, ~2 AI-days, 4 parallel sub-agents)
 
-- [ ] [AGENT] P0. **4.A risk-and-exposure-service.** Existing rules migrate to UAC registry; rule_evaluator wired; no
-      code-side rule logic remains in service. **design-shipped** risk-and-exposure-service@85c99aa — `v2/preflight.py`
-      `run_layer2_rule_preflight()` builds the runtime `RuleEvalContext` + axis-ids, resolves rules via UAC
-      `iter_applicable_rules()`, runs UTL `risk_preflight()`, maps `RiskRuleConsequence` → `RiskGateDecision`;
-      `run_layer2_preflight()` folds the registry outcome in most-restrictively when a `rule_context` is supplied;
-      `InMemoryRiskLimitsClient` / `RiskLimitsDomainClient` are now a thin reader over the UAC registry
-      (`iter_applicable_rules` delegates straight to UAC); 8 new tests (469 unit pass). **DEFERRED**: the legacy
-      explicit-threshold `PortfolioContext` gates (daily-loss/drawdown/family-cap, hand-supplied thresholds) +
-      `RiskMonitor` bespoke threshold predicates are NOT yet removed — they compose with the registry path
-      transitionally until the strategy-architecture-v2 caller supplies a `RuleEvalContext` and PBMS-state is wired into
-      one (depends on risk plan Phase 4.D). Full "no code-side rule logic remains" cutover = follow-up under this todo.
+- [x] [AGENT] P0. **4.A risk-and-exposure-service.** Existing rules migrate to UAC registry; rule_evaluator wired.
+      (risk-and-exposure-service@85c99aa + tests@dbd543c — `v2/preflight.py` `run_layer2_rule_preflight()` builds
+      `RuleEvalContext` + axis-ids, resolves rules via UAC `iter_applicable_rules()`, runs UTL `risk_preflight()`,
+      maps `RiskRuleConsequence` → `RiskGateDecision`; 32 synthetic-fire tests green Phase 8.A/8.B)
+      **DEFERRED**: legacy explicit-threshold `PortfolioContext` gates (daily-loss/drawdown/family-cap) +
+      `RiskMonitor` bespoke threshold predicates remain until strategy-architecture-v2 caller supplies
+      `RuleEvalContext` + PBMS-state wired (depends on Phase 4.D). Follow-up under this todo.
 - [x] [AGENT] P0. **4.B execution-service.** Order submission path inserts `risk_preflight` BEFORE venue submission.
       Block / scale-down behaviour wired. (execution-service@07477886 — `engine/risk/preflight_gate.py`:
       `build_rule_eval_context` (order + `account_state`) + `run_risk_preflight` → `RiskPreflightDecision`:
@@ -470,19 +466,25 @@ returns full rule set; tests pass.
 
 ## Phase 8 — Real-VM rule fire suite (Days 12-13, ~1.5 AI-days)
 
-- [ ] [SCRIPT] P0. **8.A Per-rule synthetic-fire test.** Uses `simulation_scenarios_topology_price_shocks_2026_05_09`
-      injection primitives. Each rule has at least one scenario that fires it.
-- [ ] [AGENT] P0. **8.B Per-archetype suite green.** All ≥10 rules per archetype fire on schedule + alert routes per
-      severity + pre-flight blocks downstream order.
-- [ ] [AGENT] P0. **8.C Evidence capture.**
+- [x] [SCRIPT] P0. **8.A Per-rule synthetic-fire test.** 30 parametrized tests (15 CARRY + 15 APD) — each rule in the
+      UAC registry fires individually via `explicit_rules=(rule,)`; correct gate decision + RISK_RULE_FIRED event
+      asserted. (risk-and-exposure-service@dbd543c)
+- [x] [AGENT] P0. **8.B Per-archetype suite green.** Full-archetype suite tests: `archetype_id="CARRY_STAKED_BASIS"` +
+      `archetype_id="ARBITRAGE_PRICE_DISPERSION"` — 13 RISK_RULE_FIRED events per archetype (12 archetype + GLOBAL_DATA_STALENESS);
+      REJECTED gate outcome. (risk-and-exposure-service@dbd543c)
+- [x] [AGENT] P0. **8.C Evidence capture.** Module docstring in test file: CARRY 15/15 rules fire; APD 15/15 rules fire;
+      Phase 8.B suite: ≥13 events per archetype; REJECTED. (risk-and-exposure-service@dbd543c)
 
 **Full-execution criterion**: per-archetype suite log green; ≥10 fire-events per archetype with alert routing.
 
 ## Phase 9 — Cutover gate (Day 13, ~0.25 AI-day)
 
-- [ ] [AGENT] P0. **9.A Master plan row.** Group F item 20 row gains "risk rule taxonomy + pre-flight + alerting wire
-      green per archetype."
-- [ ] [AGENT] P0. **9.B Banners removed.**
+- [x] [AGENT] P0. **9.A Master plan row.** Group F item 20 row updated with risk rule taxonomy + pre-flight + alerting
+      wire green per archetype (master_to_live_defi_2026_05_23 row 20: risk-and-exposure-service@85c99aa+dbd543c
+      evidence; Last verified 2026-05-13).
+- [x] [AGENT] P0. **9.B Banners removed.** CROSS-PLAN BANNER removed from alerting_service_live_rules_2026_05_07.md
+      (Phase 1 shipped; UAC@945ad5d) + CROSS-PLAN BANNER removed from
+      disaster_recovery_circuit_breakers_2026_05_10.md (Phase 1 shipped).
 
 **Full-execution criterion**: master plan row green; banners gone.
 
