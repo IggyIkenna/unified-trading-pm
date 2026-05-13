@@ -104,7 +104,17 @@ features-sports may join post-match stats to a still-running fixture and produce
 
 ### Decision logic (informal)
 
+Per-source helpers shipped UAC@55fce73 (2026-05-13) — each adapter computes its canonical `MatchStatus` via a typed
+classmethod, then the verifier composes them:
+
 ```python
+from unified_api_contracts.canonical.domain.sports.fixture_status import (
+    AF_COMPLETED_CODES,
+    COMPLETED_STATUSES,
+    MatchStatus,
+)
+
+
 def derive_consensus_state(
     af_status: MatchStatus | None,
     sfi_state: MatchStatus | None,
@@ -114,12 +124,26 @@ def derive_consensus_state(
     """Returns (consensus_state, confidence_pct, disagreeing_sources)."""
     votes = [s for s in (af_status, sfi_state, fs_status) if s is not None]
     if not votes:
-        return (MatchStatus.UNKNOWN, 0.0, ["all_sources_missing"])
+        return (MatchStatus.SCHEDULED, 0.0, ["all_sources_missing"])
     if us_present:
         # Understat only emits for completed matches in covered leagues
-        votes.append(MatchStatus.MATCH_END)
+        votes.append(MatchStatus.FINISHED)
     # Majority vote; tie-break by api_football (highest fidelity)
     ...
+```
+
+Each per-source input is built via the typed classmethod:
+
+```python
+af_status = MatchStatus.from_af_short(af_fixture.status.short)
+fs_status = MatchStatus.from_footystats_status(fs_match.status)
+sfi_state = MatchStatus.from_sfi_state(
+    timer_seconds=sfi_snapshot.timer_seconds,
+    ht_start_timer=sfi_snapshot.ht_start_timer,
+    ht_end_timer=sfi_snapshot.ht_end_timer,
+    frozen=detect_match_end_time_result.is_frozen,
+)
+us_present = bool(understat_xg_row)  # any row at all means match has completed
 ```
 
 ### Adapter integration
@@ -127,10 +151,11 @@ def derive_consensus_state(
 Each adapter MUST stamp its derived `MatchStatus` using the UAC SSOT enum, NOT ad-hoc string sets. This is the
 "MatchStatus adapter migration" todo currently DEFERRED in sports_master:
 
-- Replace `{"FT", "AET", "PEN"}` literal sets with `AF_COMPLETED_CODES` constant
-- Replace `status in ("complete",)` checks with `status == MatchStatus.MATCH_END`
-- Wire UAC's `MatchStatus.from_api_football_status_short()` / `.from_footystats_status()` / `.from_sfi_state()` helpers
-  across the 4 adapters
+- Replace `{"FT", "AET", "PEN"}` literal sets with `AF_COMPLETED_CODES` constant (`{FT, AET, PEN, AWD, WO}`
+  post-UAC@a1ac330 — includes walkover-finished)
+- Replace `status in ("complete",)` checks with `status == MatchStatus.FINISHED`
+- Wire UAC's `MatchStatus.from_af_short()` / `.from_footystats_status()` / `.from_sfi_state()` classmethods (all shipped
+  UAC@55fce73) across the 4 adapters — no more ad-hoc string normalization per source.
 
 This unblocks the verifier (which presumes every adapter produces canonical `MatchStatus`).
 
