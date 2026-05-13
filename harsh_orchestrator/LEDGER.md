@@ -12,31 +12,40 @@ locked_since: 2026-05-08
 
 ---
 
-## Current shift: 2026-05-13 (Day-4, Harsh-side ONLY)
+## Current shift: 2026-05-13 Wave 2 (Day-4 PM, Harsh-side ONLY)
 
-**Work-split**: [`plans/active/work_split_2026_05_13_harsh.md`](../plans/active/work_split_2026_05_13_harsh.md)
-**Model**: Sonnet 4.6 / thinking: high (all slots except where noted). Slot 1 + slot 2 → Opus 4.7.
+**Work-split**: [`plans/active/work_split_2026_05_13_harsh.md`](../plans/active/work_split_2026_05_13_harsh.md) § "Wave 2"
+**Model**: Sonnet 4.6 / thinking: high (all slots). Wave 1 closed; lunch break; 6 implementor slots for Wave 2.
 
 | Slot | Theme | State | Plan-of-record | Branch |
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + on-call + LEDGER + ping triage | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
-| 2 | 🔴 Propagation chain Phase 3.1-3.N + 4 + 2.A (CRITICAL PATH → Gate 1) | ✅ DONE 2026-05-13 — Gate 1 fired (PM@163d0773); slot freed | `expected_unattempted_propagation_chain_2026_05_12.md` | `tab/hk/2` |
-| 3 | Bucket SSOT residuals: provision 6 buckets + Q5 features rename + PART B apply-flips (gated on Gate 1) | ✅ DONE 2026-05-13 — GCP 3/3 buckets shipped; AWS 3/3 deferred Phase 2.6; Q5 already done; PART B reassignable | `bucket_name_ssot_canonicalisation_2026_05_10.md` | `tab/hk/3` |
-| 4 | defi_simulation_realism Phases 4-6 (Ikenna slot 6 leftover) + Harsh 5B/5C/6B/6C carry-forward | ✅ DONE 2026-05-13 — Phase 8A-D rescued via cherry-pick (execution-service@38b3e8a5, foot-gun #5 intercept); 5B/5C/6B/6C reassignable | `defi_simulation_realism_2026_05_10.md` | `tab/hk/4` |
-| 5 | Audit-records PB-1/2/3 (overwrite→append, retention-lock, customer-ID path) | ✅ DONE 2026-05-13 — PB-1/2/3 shipped; AWS bucket DEFERRED Phase 2.6; cc62f02 collision casualty abandoned | `codex_vs_citadel_infrastructure_audit_2026_05_10.md` (issue docs PB-1/2/3) | `tab/hk/5` |
-| 6 | TradFi phantom-audit Databento-aware + 15 dry-runs + apply-flips + Gate 3 GCE phantom audit | ✅ DONE 2026-05-13 — manifest reconciliation held per Ikenna direction; rescan VMs auto-shut clean; Gate 4 partial | `manifest_cross_asset_rescan_design_2026_05_08.md` | `tab/hk/6` |
-| 7 | 12 AlertCodes + 4 Breakers PRE-cutover + Telegram channel split + mock_data Phase 3.C/3.D tail | ✅ DONE 2026-05-13 — Phase 1.E + 1.F shipped; mock_data Phase 3.D + Telegram chat_id DEFERRED-PER-USER | `alerting_service_live_rules_2026_05_07.md` + `disaster_recovery_circuit_breakers_2026_05_10.md` + `mock_data_pipeline_benchmarking_2026_05_10.md` | `tab/hk/7` |
-| 8 | 🆕 GMX/DRIFT venue capability refactor — REVERT DEFI_VENUE_AXIS_OVERRIDES (UAC@7c8482e); 3-sub-agent fan-out | ✅ DONE 2026-05-13 — slot 8's UAC revert collided with Ikenna's UAC@efd259c (canonical wins); operator triage A/B/C deferred to next cycle | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1C | `tab/hk/8` |
-| 9 | Sports+Prediction reconciler classifier extension + 6 LookaheadBias strict-mode wire-ins + strategy-paper VM verify | ✅ DONE 2026-05-13 — all 3 tasks shipped; freeze-gate item 5 closed 8/8 | UTL `legacy_reason_classifier.py` + freeze-gate item 5 + `promote_workflow_may23_cli_path_2026_05_10.md` | `tab/hk/9` |
-| 10 | MDPS 19 test fixes + Phase 4.FEATURES sweep (freeze-gate item 3 → 9/9) + dex_perp Phase 2 + EigenLayer Phase 3 | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` | 🟡 SPAWN PENDING |
+| 2 | risk_simulations finalisation (82% → 100%; P0 items + P1 stablecoin) | 🟡 READY-TO-SPAWN | `risk_simulations_limits_alerting_2026_05_10.md` | `tab/hk/2` |
+| 3 | DR Phase 6+9+10 finalisation (AGENT items + SCRIPT prep only; NO VM launch) | 🟡 READY-TO-SPAWN | `disaster_recovery_circuit_breakers_2026_05_10.md` | `tab/hk/3` |
+| 4 | 🐛 Script 3 classifier P1 fix (instruments-service ↔ UTL signature) + arbitrage_price_dispersion final 2 items | 🟡 READY-TO-SPAWN | `issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` + `arbitrage_price_dispersion_finalisation_2026_05_09.md` | `tab/hk/4` |
+| 5 | mock_data Phase 3.D per-reader threading (MTDS Tardis/Databento + ml-inference + strategy) | 🟡 READY-TO-SPAWN | `mock_data_pipeline_benchmarking_2026_05_10.md` | `tab/hk/5` |
+| 6 | wave3x_residual_ssots finalisation (73% → 100%) | 🟡 READY-TO-SPAWN | `wave3x_residual_ssots_2026_05_08.md` | `tab/hk/6` |
+| 7 | cross_asset Phase 5A/5B/5C TradFi ETF + futures-roots consolidation | 🟡 READY-TO-SPAWN | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 5 | `tab/hk/7` |
+| 8 | (reserve — spillover absorption from slots 2-7) | 🟪 RESERVE | — | `tab/hk/8` |
+| 9 | (reserve — spillover absorption from slots 2-7) | 🟪 RESERVE | — | `tab/hk/9` |
+| 10 | dex_perp Phase 2B/2C + EigenLayer Phase 3 (carry from Wave 1) | 🟢 IN FLIGHT | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
-**Critical-path sequencing (slot 1 monitors)**:
-1. Slot 2 Gate 1 fires → immediately ping slot 3 + slot 6 to start PART B / apply-flips
-2. Slot 10 closes Phase 4.FEATURES → freeze-gate item 3 hits 9/9
-3. Slot 8 UAC revert lands → ping operator; flag downstream strategy-service archetype consumers
-4. Slots 4/5/6/7/9 fully independent — run in parallel from boot
+**Wave 1 closeout** (commits on LDR for the record):
+- Slot 2 ✅ DONE (PM@3b317e65) — propagation chain Gate 1 fired
+- Slot 3 ✅ DONE (PM@3a16656d) — GCP 3 buckets shipped, AWS deferred Phase 2.6
+- Slot 4 ✅ DONE (PM@42755747) — Phase 8A-D rescued via cherry-pick (execution-service@38b3e8a5, foot-gun #5 intercept)
+- Slots 5-9 ✅ DONE (PM@3d3d5c14) — batch closure; full per-slot detail in pings/slot_N.md
+- Slot 10 🟢 still working
 
-**Operator-pending**: None. Q7(b) resolved (deployment-service@acf00a7, buckets provisioned). Slot 3 PART B waits on Gate 1 (slot 2) only.
+**Critical-path sequencing (slot 1 monitors during Wave 2)**:
+1. Slot 4 ships Script 3 classifier fix → unblocks defi/sports/prediction legacy-blank reclassification (deferred apply-flips still pending operator post-cutover)
+2. Slot 10 finishes dex_perp Phase 2 + EigenLayer → freeze-gate item 3 fully verified
+3. Slots 2/3/5/6/7 fully independent — run in parallel
+4. New HARD RULE: LDR-alignment cadence (codified 2026-05-13 PM@f49d5f7d). Slots that boot must rebase ALL owned repos; FF-push per shippable unit, not end-of-session
+
+**Pre-lunch spawn picks** (safest for unattended start): **slot 4** (smallest scope, ~30-90 min) and **slot 2** (well-defined P0 items, FF-pushes steadily). Spawn prompts in work-split § "Spawn prompts (Wave 2)".
+
+**Operator-pending**: None blocking Wave 2. Carry-forward (post-lunch operator decisions): slot 8's A/B/C UAC architecture triage (deferred; lives in cross-side `_agent_pings.md`); Telegram OPS chat_id (operator action); AWS bucket creation (Phase 2.6 window, needs GCE VM with aws CLI).
 
 ---
 
