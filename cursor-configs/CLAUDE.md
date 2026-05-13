@@ -544,7 +544,7 @@ Every todo's first content line MUST start with `- [x]` / `- [ ]`. Format: `- [x
 | `plans/active/`               | `<slug>.md`                                             |
 | `plans/epics/` (masters)      | `<slug>.md`                                             |
 | `plans/epics/` (May-23 epics) | `<slug>.epic.md`                                        |
-| `plans/archive/`              | `<slug>.plan.md` (DO NOT rename)                        |
+| `plans/archive/`              | keep existing extension on move — DO NOT rename         |
 | `plans/ai/`                   | `<slug>.plan.md` (promotion to active renames to `.md`) |
 
 **3-layer model**: cutover master (`master_to_live_defi_2026_05_23.md`) → epics (`plans/epics/*.epic.md` for May-23,
