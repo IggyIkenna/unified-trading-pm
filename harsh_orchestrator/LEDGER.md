@@ -36,7 +36,7 @@ locked_since: 2026-05-08
 3. Slot 8 UAC revert lands → ping operator; flag downstream strategy-service archetype consumers
 4. Slots 4/5/6/7/9 fully independent — run in parallel from boot
 
-**Operator-pending**: Q7(b) bucket shape (pnl/positions/risk-store-defi GCP, Ikenna response pending). Slot 3 holds PART B until resolved.
+**Operator-pending**: None. Q7(b) resolved (deployment-service@acf00a7, buckets provisioned). Slot 3 PART B waits on Gate 1 (slot 2) only.
 
 ---
 
@@ -49,6 +49,8 @@ You are slot N. Do this in order, nothing else until done:
 3. Read today's **work-split § "Slot N"** for full task brief, done-definition, and repos owned.
 4. Read your **plan-of-record** — scan open `- [ ]` todos for your phase.
 5. Append boot ack to [`pings/slot_N.md`](pings/) using `date -u` for timestamp, then start work.
+
+**COMPACT-CYCLE GUARD**: Do NOT read repo-level `.claude/CLAUDE.md` files from repos you're working in — the workspace CLAUDE.md (auto-loaded in system context) covers all critical cross-cutting rules. Only read a repo's CLAUDE.md if it's explicitly named in your task brief.
 
 ---
 
