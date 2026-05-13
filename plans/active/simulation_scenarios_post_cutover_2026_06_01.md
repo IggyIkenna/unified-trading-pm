@@ -1,12 +1,14 @@
 ---
 title: Simulation scenarios — post-cutover broader regression matrix (deferred from May-23 sprint)
-type: sub-plan
-status: planned
+type: plan
+status: scheduled
+target_start: 2026-06-01
 created: 2026-05-10
 deadline: post-cutover (target 2026-07-15)
 horizon: scope-bounded (~6-9 weeks after cutover)
+parent_plan: plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
 companion_to: plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
-migrated_from: simulation_scenarios_topology_price_shocks_2026_05_09.md (Phase 4-9 broader scope deferred 2026-05-10 per Audit C Finding C-5)
+migrated_from: simulation_scenarios_topology_price_shocks_2026_05_09.md (Phase 4-9 broader scope deferred 2026-05-10 per Audit C Finding C-5; Phase 6/7 coverage matrix + probability table added 2026-05-13 slot 7)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 estimate_class: infra
@@ -39,6 +41,37 @@ This post-cutover plan picks up the **broader regression matrix** for full cover
 - DART manual-trade rehearsal exercising scenario injection from operator UI.
 - Full per-archetype regression matrix on real VMs across every archetype (not just the 2 LIVE ones — also the BATCH
   archetypes for completeness).
+
+## Carry-forward table — every `deferred-after-successor` item from parent plan
+
+Every phase explicitly marked `deferred-after-successor` in `simulation_scenarios_topology_price_shocks_2026_05_09.md`
+is enumerated here per Plan Archival HARD RULE (§ "Migrate every deferred item").
+
+| Parent plan phase | Status in parent | What it contains | Successor phase here | Deferred-since |
+|---|---|---|---|---|
+| Phase 3.A — MTDS raw-tick overlay | `deferred-after-successor` | `market-tick-data-service` adapters' fetch-result post-processing wire-in | Phase 1 (3.A) | 2026-05-10 |
+| Phase 3.B — MDPS feature-layer overlay | `deferred-after-successor` | `mdps/engine/orchestrator.py` injection point after honest-absence guard | Phase 1 (3.B) | 2026-05-10 |
+| Phase 3.C — features-* overlay tap | `deferred-after-successor` | `features-service/feature_calculator` calculator wire-in | Phase 1 (3.C) | 2026-05-10 |
+| Phase 3.D — strategy-service signal tap | `deferred-after-successor` | strategy-service signal tap + outcome hook | Phase 1 (3.D) | 2026-05-10 |
+| Phase 3.G — manifest scenario_id column | `deferred-after-successor` | `unified_trading_library/manifest/writer.py` scenario_id propagation | Phase 1 (3.G) | 2026-05-10 |
+| Phase 4.A — CeFi scenario library | `deferred-after-successor` (net new 6 scenarios) | `cefi_tick_gap_15min`, `cefi_book_thin`, `cefi_perp_basis_inversion`, `cefi_options_chain_partial_strikes`, `cefi_liquidation_cascade`, `cefi_funding_settlement_skew` | Phase 2 (4.A) | 2026-05-10 |
+| Phase 4.B — DeFi scenario library | `deferred-after-successor` (net new 5 scenarios) | `defi_lst_depeg_5pct`, `defi_subgraph_lag_60min`, `defi_chain_reorg_5block`, `defi_flash_loan_revert`, `defi_aave_utilization_99pct` | Phase 2 (4.B) | 2026-05-10 |
+| Phase 4.C — TradFi scenario library | `deferred-after-successor` (6 scenarios) | Full TradFi set | Phase 2 (4.C) | 2026-05-10 |
+| Phase 4.D — Sports scenario library | `deferred-after-successor` (4 scenarios) | Full Sports set | Phase 2 (4.D) | 2026-05-10 |
+| Phase 4.E — Prediction scenario library | `deferred-after-successor` (4 scenarios) | Full Prediction set | Phase 2 (4.E) | 2026-05-10 |
+| Phase 4.F — Cross-asset scenario library | `deferred-after-successor` (3 net new) | `cross_asset_correlation_break_btc_eth`, `cross_chain_bridge_outage`, `cross_archetype_capital_contention` | Phase 2 (4.F) | 2026-05-10 |
+| Phase 6.A — Backtest CLI `--scenario` flag | `deferred-after-successor` | Unified backtest CLI extension | Phase 3 (6.A) | 2026-05-10 |
+| Phase 6.B — Backtest pipeline wiring | `deferred-after-successor` | `ScenarioContext` instantiation from CLI flag | Phase 3 (6.B) | 2026-05-10 |
+| Phase 7 — Codex SSOT sweep | `deferred-after-successor` | `scenario-injection-architecture.md` + 2 new codex docs (Phase 8.B-I partially completed 2026-05-13) | Phase 4 | 2026-05-10 |
+| Phase 8 — DART rehearsal | `deferred-after-successor` | Scenario injection from operator UI; manual-approval gate | Phase 5 | 2026-05-10 |
+| Phase 9 — Full per-archetype VM matrix | `deferred-after-successor` | All scenarios × all archetypes on real VMs; 150-200 cells | Phase 6 | 2026-05-10 |
+| **Phase 6 coverage matrix spec** | `design-shipped 2026-05-13` | 16-cell pre-cutover matrix with 4-tuple per cell (breaker/alert/recovery/validation); informs Phase 6 run | Phase 6 (spec consumed) | — (design done) |
+| **Phase 7 probability/expected-loss table** | `design-shipped 2026-05-13` | Per-scenario probability_weight + expected_loss_bps + recovery_time_hours; historical calibration | Phase 6 (spec consumed) | — (design done) |
+
+**Note**: Phase 8.B-I codex additions (scenario authoring guide, archetype selection, runner usage, report shape,
+adversarial wiring, provenance, archive, operator runbook) were shipped 2026-05-13 at PM@`91577006` as design artefacts
+that support Phase 4 of this plan. Phase 4 todo (codex SSOT sweep) still applies for the remaining 2 new codex docs
+(`codex/03-services/simulation-scenarios.md` + `codex/02-data/scenario-overlay-write-time-semantics.md`).
 
 ## Why deferred
 
