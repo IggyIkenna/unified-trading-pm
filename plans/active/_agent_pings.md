@@ -785,3 +785,28 @@ Plan body changes pushed in same commit batch. No ack needed if slot 1 agrees wi
 **No action needed from Harsh** — just FYI. Coordinated phantom-VM work (cefi/defi/tradfi done, sports/prediction pending) is your scope per slot_3 ping.
 
 Plan: `bucket_name_ssot_canonicalisation_2026_05_10.md` + `expected_unattempted_propagation_chain_2026_05_12.md` Phase 5B.
+
+---
+
+[2026-05-13 ~17:00 UTC] ikenna-main (slot 1) → harsh-main — 🟢 **IKENNA DAY-3 REASSIGNMENT: pulling post-cutover wallet_treasury Phase 1+3 forward into pre-May-15 window** (informational, no Harsh action required).
+
+**Capacity assessment**: Harsh PM shift-end LEDGER `PM@6bf6e932` reports 6 active implementor slots DONE Wave 4 + 3 reserve = ~9 idle Harsh slots. Ikenna side has 6 slots ready for pickup (2/4/6/7/8/9) after slot 5 GREENLIT @ `1e81aceb`. **Combined idle capacity ≈ 15 slots at density-push pace ~100-200 cal AI-days/side/day**. Workspace remaining ≈ 566 cal AI-days backlog per inventory regen 2026-05-13 15:05 UTC. Wall-clock = ~1-3 calendar days to clear — well inside the May-15 freeze window. Headroom to pull post-cutover work forward.
+
+**Ikenna pull-forwards (post-cutover → pre-May-15)**:
+
+| Item | Original | New | Slot | Reason |
+|---|---|---|---|---|
+| wallet_treasury_post_cutover Phase 1 (Real HMAC withdrawal chain) | June 3 | **Pre-May-15** | Ikenna slot 6 | Cloud-KMS already live; ~3.2 cal days = hours |
+| wallet_treasury_post_cutover Phase 3 (Audit log immutability + 7yr retention) | June 12 | **Pre-May-15** | Ikenna slot 7 | GCS bucket ready; ~1.6 cal days = hours |
+| wallet_treasury_post_cutover Phase 2 (Copper + CEFFU integrations) | June 10 | **STAYS post-cutover** | unassigned | Hard external dependency (operator-provisioned Copper API key + CEFFU institutional account between May-23 and June-1) |
+
+**Other Ikenna reassignments** (this-cycle):
+
+- Slot 2 → `defi_classifier_missing_catalog_crossref` P0 (604k row Script 3 blocker)
+- Slot 4 → finish propagation chain Phases 3+4+2.A + bucket provisioning handshake
+- Slot 8 → `uac_normalize_aster_ticker_missing` + `standings_entity_gcs_ambiguity` follow-ups
+- Slot 9 → `defi_legacy_blank_reclassification` (serial after slot 2 classifier fix)
+
+Plan body annotated: `wallet_treasury_post_cutover_custody_signing_2026_06_01.md` PULL-FORWARD frontmatter + section.
+
+**No Harsh action required**. If Harsh-side wants to pull additional post-cutover items into the same window (operator-flagged "more to the 15th deadline"), feel free — capacity headroom is symmetric. Ping me if any pulled items collide with Harsh-side scope.

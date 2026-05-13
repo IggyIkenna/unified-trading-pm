@@ -1,5 +1,56 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] DAY-3 reassignment — pulling post-cutover work into May-15 freeze window — 2026-05-13 ~17:00 UTC
+
+**Why now**: Harsh-side reported all 6 active implementor slots DONE Wave 4 at PM@`6bf6e932`. Combined idle Ikenna+Harsh capacity ≈ 15 slots. At density-push pace ~100-200 cal AI-days/side/day, the workspace's remaining 566 cal AI-days backlog (per latest inventory regen `2026-05-13 15:05 UTC`) clears in 1.5-3 calendar days at full capacity. We're 2 days from May-15 freeze gate, 10 days from May-23 cutover — there's room to pull post-cutover work into the pre-freeze window.
+
+### Pull-forward targets (post-cutover → pre-May-15)
+
+| Item | Original schedule | New schedule | Pulled because |
+|---|---|---|---|
+| **wallet_treasury_post_cutover Phase 1** (Real HMAC withdrawal chain) | June 3 (`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`) | **Pre-May-15** | Cloud-KMS already live; ~3.2 cal days = hours at density-push pace |
+| **wallet_treasury_post_cutover Phase 3** (Audit log immutability + GCS 7yr retention) | June 12 | **Pre-May-15** | GCS bucket already ready; ~1.6 cal days = hours |
+| **wallet_treasury_post_cutover Phase 2** (Real Copper + CEFFU integrations) | June 10 | **STAYS post-cutover** | Operator dependency: Copper API key + CEFFU institutional account not provisioned until between May-23 and June-1 |
+
+### Ikenna-side reassignment table (DAY-3, effective immediately)
+
+| Slot | Status | New direction | Plan-of-record |
+|------|--------|---------------|----------------|
+| **1 main** | 🟢 active | Coordination + reassignment + post-pull master plan refresh | this file + master plan |
+| **2** | 🟡 ready for pickup | **PICK UP**: `defi_classifier_missing_catalog_crossref_2026_05_13.md` (P0 — 604k row Script 3 blocker; root-cause fix in UTL `_classify_defi` + instruments-service catalog cross-ref) | issue doc + `legacy_reason_classifier.py` + reconciler |
+| **3** | 🟢 in flight (~1-2h) | Continue: ship sports corrector (corrector script + UAC dict + run + verify) | per most recent slot_3.md tail |
+| **4** | 🟡 SESSION CLOSE last update | **PICK UP**: finish propagation chain Phases 3+4+2.A + 6-bucket provisioning handshake (slot 8 awaiting) | `expected_unattempted_propagation_chain_2026_05_12.md` + bucket_name_ssot |
+| **5** | 🟢 in flight | Continue: TradFi `MarketSession` SSOT + `CanonicalFuturesContract` lifecycle fields (greenlit @1e81aceb) | slot_5.md GREENLIT entry above |
+| **6** | 🟡 ready for pickup | **PICK UP — PULL FORWARD**: `wallet_treasury_post_cutover` Phase 1 (Real HMAC withdrawal approval chain). Wire `sign_withdrawal_approval()` using Cloud-KMS; deployment-api `/api/clients/{id}/withdrawal/{id}/approve` endpoint; 8 unit tests (single-sig, 2-of-2, M-of-N multisig) | `wallet_treasury_post_cutover_custody_signing_2026_06_01.md` Phase 1 |
+| **7** | 🟡 ready for pickup | **PICK UP — PULL FORWARD**: `wallet_treasury_post_cutover` Phase 3 (Audit log immutability). Enable GCS Object Versioning + 7-year retention lock on audit bucket; wire deployment-api withdrawal calls into Cloud Audit Logs; 4 compliance tests | `wallet_treasury_post_cutover_custody_signing_2026_06_01.md` Phase 3 |
+| **8** | 🟡 ready for pickup | **PICK UP**: 2 P1 follow-ups — (a) `uac_normalize_aster_ticker_missing_2026_05_13.md` (1-line restore in UAC `tickers.py` re-exports); (b) `standings_entity_gcs_ambiguity_2026_05_13.md` resolution | both issue docs |
+| **9** | 🟡 ready for pickup | **PICK UP**: `defi_legacy_blank_reclassification_2026_05_13.md` (Script 3 follow-up — gates on Slot 2 fixing classifier first; serial dependency. Slot 9 starts pre-audit grep + design while Slot 2 ships classifier fix) | issue doc + reconciler |
+
+**Sub-agent fan-out OK**: Slot 6 + Slot 7 wallet_treasury work touches different code paths (signing vs audit log) — fully parallel. Slot 2 + Slot 9 defi classifier work has a serial dep (Slot 2 ships first); Slot 9 design phase can overlap.
+
+### What I'm NOT pulling forward (and why)
+
+- **wallet_treasury Phase 2** (Copper + CEFFU custody integrations) — hard external dependency on operator-provided Copper API key + CEFFU institutional account. Cannot ship without those credentials. STAYS June 1+.
+- **Master plan Group A through G items that are "manual sign-off" or "operator-only"** — out of agent scope.
+- **117 UTL test failures** (`pipeline_mode` hardening debt from Harsh slot 9) — Harsh explicitly retained ownership in cross-side FYI (`fbd8d419`); not pulling unless operator wants Ikenna to absorb.
+- **Phase 4.DEFAULT-REMOVAL final tail** — gating freeze-gate item 3, currently in Harsh's lap; will monitor.
+
+### Updated capacity math
+
+- Ikenna idle slots: 2, 4, 6, 7, 8, 9 (6 reassigned this round)
+- Ikenna in flight: 3, 5 (will close in hours)
+- Harsh idle slots (per shift-end LEDGER): 5, 8, 10 reserve + 2/3/4/6/7/9 all Wave 4 DONE (ready for Wave 5)
+- Total combined capacity: ~15 slots at ~5-7× density-push compression each
+- Remaining workspace backlog: 566 cal AI-days
+- Wall-clock estimate: **~1-3 calendar days to clear backlog** at full capacity — well inside the May-15 freeze window
+
+### Cross-side ping
+
+Filed in `plans/active/_agent_pings.md` informing Harsh-main of (a) Ikenna pull-forwards from post-cutover; (b) wallet_treasury Phase 2 stays post-cutover; (c) capacity assessment.
+
+---
+
+
 ## [slot 1 main] Writegate Phase 6.x scoreboard refresh + 6.6/6.7/6.9 assignment — 2026-05-13
 
 **Status**: ✅ Phase 6.3 AUTO-SHIPPED; ✅ Phases 6.6/6.7/6.9 ASSIGNED to Ikenna

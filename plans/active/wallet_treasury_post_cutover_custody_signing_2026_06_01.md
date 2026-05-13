@@ -1,10 +1,11 @@
 ---
-title: "Wallet / Treasury — Post-Cutover Custody + Signing (June 1+)"
+title: "Wallet / Treasury — Phase 1+3 PULLED FORWARD pre-May-15; Phase 2 stays post-cutover (June 1+)"
 created: 2026-05-13
+updated: 2026-05-13
 type: plan
-status: pending-gate
-deadline: 2026-06-15
-horizon: 15-day post-cutover sprint
+status: phase-1-3-pulled-forward + phase-2-pending-operator-credentials
+deadline: 2026-05-15 (Phase 1 + Phase 3) / 2026-06-15 (Phase 2)
+horizon: split — 2 days pre-freeze for Phase 1+3; 15-day post-cutover for Phase 2
 predecessor: wallet_treasury_client_flow_2026_05_10.md (deferred Q3 + Q5 from design decisions 2026-05-13)
 companion_to: master_to_live_defi_2026_05_23.md Group G (post-cutover operator UX + compliance)
 locked_by: live-defi-rollout
@@ -13,7 +14,27 @@ estimate_class: infra
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 9.6
 parent_epic: master_to_live_defi_2026_05_23.md
-priority: P2
+priority: P1 (Phase 1+3 pulled-forward) / P2 (Phase 2 post-cutover)
+---
+
+## 🟢 PULL-FORWARD UPDATE 2026-05-13 ~17:00 UTC (slot 1 main)
+
+Per density-push capacity assessment, **Phase 1 (Real HMAC withdrawal approval chain) and Phase 3 (Audit log
+immutability + 7-year retention) PULLED FORWARD to pre-May-15 freeze window**. Phase 2 (Real Copper + CEFFU
+integrations) STAYS post-cutover due to hard external dependency (operator-provisioned Copper API key + CEFFU
+institutional account between May-23 and June-1).
+
+**Slot assignments**:
+- **Phase 1** → Ikenna slot 6 (Cloud-KMS withdrawal signing + deployment-api endpoint + 8 unit tests, ~3.2 cal days = hours)
+- **Phase 2** → Stays unassigned until operator credentials provisioned (June 1+)
+- **Phase 3** → Ikenna slot 7 (GCS Object Versioning + 7-year retention lock + Cloud Audit Logs + 4 compliance tests, ~1.6 cal days = hours)
+
+Phase 1 + Phase 3 are fully independent — touch different code paths — parallel across slots 6+7. ~4.8 cal AI-days
+combined → ~hours calendar time at density-push pace (~100-200 cal AI-days/side/day).
+
+**Rationale**: workspace remaining backlog ≈ 566 cal AI-days; combined idle capacity ≈ 15 slots at ~5-7× compression;
+operator guidance "well over halfway to May-23 already" + "100-200 AI-days per day" + "more to the 15th deadline".
+
 ---
 
 # Wallet / Treasury — Post-Cutover Custody + Signing (June 1+)
