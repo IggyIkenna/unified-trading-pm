@@ -1,12 +1,23 @@
 ---
 title: "strategy-service: pre-existing RUF002 lint failures (ambiguous σ) in dynamic_hedge_ratio.py"
 created: 2026-05-13
+resolved: 2026-05-13
 author: slot-4-harsh
+resolved_by: slot-4-harsh (strategy-service@88f77c0 + strategy-service@fe1e81d)
 source:
   - arbitrage_price_dispersion_finalisation_2026_05_09
+status: RESOLVED
 severity: P2
-locked_by: live-defi-rollout
-locked_since: 2026-05-13
+---
+
+## ✅ RESOLVED 2026-05-13
+
+Fixed by slot-4-harsh — σ → `sigma` in `dynamic_hedge_ratio.py:21` + `test_dynamic_hedge_ratio.py:88` +
+`gcs_feature_provider.py` (latter also fixed C901 complexity via `_load_date_frames()` extraction).
+QG lint now clean (0 RUF002 errors). Commits: `strategy-service@88f77c0` + `strategy-service@fe1e81d`.
+
+Moved from `plans/active/issues/` → `plans/archive/issues/` on 2026-05-13.
+
 ---
 
 ## What I found

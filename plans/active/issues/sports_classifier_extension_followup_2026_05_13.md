@@ -8,7 +8,17 @@ source:
 severity: P1
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
+routing:
+  primary_owner: next-cycle Harsh slot (UTL + instruments-service scope per issue body)
+  composes_with: classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md (parallel P1, both gate Script 3 sports apply-flips)
+  ikenna_side_action: NONE — Harsh-side scope; Ikenna-main acked
 ---
+
+> **🟢 ROUTING ACK (Ikenna-main, 2026-05-13)** — P1 self-routed to next-cycle Harsh slot. Scope is fully
+> spec'd in issue body (4 sports rules, lookup pointers, test counts, ordering). Composes with
+> `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` (parallel P1) — both gate Script 3 sports
+> apply-flips. No Ikenna-side action; Harsh-main owns slot assignment in next-cycle work-split.
+
 
 ## What I found
 
