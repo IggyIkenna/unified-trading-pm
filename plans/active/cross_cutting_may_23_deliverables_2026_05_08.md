@@ -126,24 +126,24 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 - [ ] [BUILD] **DART manual DeFi swap / lend / borrow / stake** for the carry-staked-basis archetype across enabled
       chains. Owner: Harsh T6.
 - [x] [BUILD] **DART manual CeFi order placement** across the 4 live CeFi venues (Bybit / Deribit / Binance / OKX).
-      Owner: Harsh T6. **SHIPPED 2026-05-12 (Harsh slot 6)**: Aster added to VENUES (`unified-trading-system-ui@21666537`);
-      `single-order-form.tsx` venue + algo dropdowns switched from `constants.ts` hardcoded arrays to `useVenues()` +
-      `useAlgos()` hooks (`hooks/api/use-orders.ts:26-50`) with static-constant fallback
-      (`unified-trading-system-ui@55e8b9cb`). **FOLLOW-UP (operator-runnable)**: browser-test venue + algo dropdowns
-      in manual trading panel (`cd unified-trading-system-ui && npm install && npm run dev` — no browser in tab-6
-      worktree). Backend (manual instruction API) was already present from Ikenna T8 UAC contract layer.
+      Owner: Harsh T6. **SHIPPED 2026-05-12 (Harsh slot 6)**: Aster added to VENUES
+      (`unified-trading-system-ui@21666537`); `single-order-form.tsx` venue + algo dropdowns switched from
+      `constants.ts` hardcoded arrays to `useVenues()` + `useAlgos()` hooks (`hooks/api/use-orders.ts:26-50`) with
+      static-constant fallback (`unified-trading-system-ui@55e8b9cb`). **FOLLOW-UP (operator-runnable)**: browser-test
+      venue + algo dropdowns in manual trading panel (`cd unified-trading-system-ui && npm install && npm run dev` — no
+      browser in tab-6 worktree). Backend (manual instruction API) was already present from Ikenna T8 UAC contract
+      layer.
 - [x] [BUILD] **DART manual ML training trigger** (pause-resume model retraining for any in-flight ML archetype). Owner:
       Harsh T6. **SHIPPED 2026-05-12 (Harsh slot 6) @ml-training-service@`05dc363`** — NEW
       `ml-training-service/ml_training_service/api/training_control_api.py` (175 lines): 3 routes
       (`POST /training/{archetype}/{action}` PAUSE/RESUME/RETRAIN, `GET /training/{archetype}/status`,
-      `GET /training/audit/{request_id}` 501 TBD pending GCS read path) + in-process `_ARCHETYPE_STATUS` state
-      + audit-log persistence via UAC `manual_audit_paths` (caught-and-logged pre-Phase-0i `BucketNamingError`
-      compat) + path/body archetype+action mismatch 422; mounted in `api/main.py` alongside health router;
-      11 unit tests in `tests/unit/test_training_control_api.py` (pause/resume/retrain happy-path,
-      mismatch 422, invalid-action 422, in-process state visible via /status, audit-log called, /audit/{id}
-      501 TBD). Audit-log writer is BLOCKED on slot-4 `bucket_name_ssot_canonicalisation_2026_05_10.md`
-      Phase 0i (`manual-audit` kind in `cloud-providers.yaml`) — handled gracefully in `_persist_audit_log`
-      via try/except so the API stays live.
+      `GET /training/audit/{request_id}` 501 TBD pending GCS read path) + in-process `_ARCHETYPE_STATUS` state +
+      audit-log persistence via UAC `manual_audit_paths` (caught-and-logged pre-Phase-0i `BucketNamingError` compat) +
+      path/body archetype+action mismatch 422; mounted in `api/main.py` alongside health router; 11 unit tests in
+      `tests/unit/test_training_control_api.py` (pause/resume/retrain happy-path, mismatch 422, invalid-action 422,
+      in-process state visible via /status, audit-log called, /audit/{id} 501 TBD). Audit-log writer is BLOCKED on
+      slot-4 `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0i (`manual-audit` kind in `cloud-providers.yaml`)
+      — handled gracefully in `_persist_audit_log` via try/except so the API stays live.
 - [ ] [BUILD] **DART manual sports bet placement** for sports backtest exec validation. Owner: Harsh T6.
 - [ ] [BUILD] **DART manual prediction-market trade** for Polymarket / Kalshi / Opinion-Trade / CME-event-arb backtest.
       Owner: Harsh T6.
@@ -703,13 +703,13 @@ implementations would post / persist.
    closed-set discipline. Existing `OperationType` StrEnum at
    `unified_api_contracts/canonical/domain/execution/base.py:65` ALREADY covers all 19 DeFi + CeFi action verbs (SWAP /
    STAKE / UNSTAKE / LEND / BORROW / REPAY / WITHDRAW / DEPOSIT / FLASH_BORROW / FLASH_REPAY / ADD_LIQUIDITY /
-   REMOVE_LIQUIDITY / REBALANCE_RANGE / COLLECT_FEES / CLAIM_REWARD / SELL_REWARD / TRANSFER / TRADE / REBALANCE /
-   BUY / SELL). **Decision (system-first):** existing `OperationType` IS the canonical DART trade-action enum; no
-   duplicate. Document the mapping in codex; runtime constraint can be tightened post-cutover via Pydantic
+   REMOVE_LIQUIDITY / REBALANCE_RANGE / COLLECT_FEES / CLAIM_REWARD / SELL_REWARD / TRANSFER / TRADE / REBALANCE / BUY /
+   SELL). **Decision (system-first):** existing `OperationType` IS the canonical DART trade-action enum; no duplicate.
+   Document the mapping in codex; runtime constraint can be tightened post-cutover via Pydantic
    `Annotated[str, AfterValidator(...)]` once Harsh T6 enumerates the actual endpoint payloads.
 2. **No ML training-control contract** — DART BUILD #3 is the only one without an existing API; `ml-training-service`
-   only ships health endpoints today (verified at `ml-training-service/ml_training_service/api/main.py`). Need
-   request / response Pydantic models + a closed-set action enum.
+   only ships health endpoints today (verified at `ml-training-service/ml_training_service/api/main.py`). Need request /
+   response Pydantic models + a closed-set action enum.
 3. **No persistence shape for the audit log** — `manual-trade-booking.md` referenced `persist_audit_log()` but no
    `ManualInstructionAuditLog` Pydantic model existed. pnl-attribution / batch-live-reconciliation / alerting all need
    this row shape to consume manual actions alongside automated fills.
@@ -718,8 +718,8 @@ implementations would post / persist.
 
 - [x] [DESIGN+UAC] **DART manual-action UAC contract layer** (Ikenna T8). 4 new types in
       `unified_api_contracts/internal/execution.py`:
-  - `ManualMLTrainingAction` StrEnum (`PAUSE` / `RESUME` / `RETRAIN`) — closed-set training-control verbs distinct
-    from `OperationType` (trade actions).
+  - `ManualMLTrainingAction` StrEnum (`PAUSE` / `RESUME` / `RETRAIN`) — closed-set training-control verbs distinct from
+    `OperationType` (trade actions).
   - `MLTrainingControlRequest` / `MLTrainingControlResponse` — DART BUILD #3 endpoint contract for
     `ml-training-service POST /training/{archetype}/{action}`.
   - `ManualAuditCategory` StrEnum (`MANUAL_TRADE` / `ML_TRAINING_CONTROL`) — closed-set dispatch axis for the unified
@@ -729,8 +729,8 @@ implementations would post / persist.
   - 7 unit tests in `tests/unit/test_dart_manual_action_contracts.py` (closed-set membership · request/response
     correlation · both audit-row category dispatches). basedpyright clean.
   - Codex doc updated:
-    [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md)
-    — added "ML training-control actions" endpoint table + "Audit log surface" section + extended SSOT pointer list.
+    [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — added "ML
+    training-control actions" endpoint table + "Audit log surface" section + extended SSOT pointer list.
 
 ### Cross-side handoff status (Ikenna T8 → Harsh T6)
 
@@ -748,18 +748,19 @@ implementations would post / persist.
 ### Why no parallel SSOT
 
 `OperationType` StrEnum at `unified_api_contracts/canonical/domain/execution/base.py:65` already enumerates every DeFi
-+ CeFi action verb. Per CLAUDE.md "System-First Architecture (No Ad-Hoc Solutions)" + "Grep-Then-Read" — verified
-existing canonical surface BEFORE adding new code. Net new code touches ONLY the gaps (training-control axis +
-audit-log persistence shape) where no canonical SSOT exists.
+
+- CeFi action verb. Per CLAUDE.md "System-First Architecture (No Ad-Hoc Solutions)" + "Grep-Then-Read" — verified
+  existing canonical surface BEFORE adding new code. Net new code touches ONLY the gaps (training-control axis +
+  audit-log persistence shape) where no canonical SSOT exists.
 
 ### What this leaves for the cycle
 
-- Harsh T6's 5 [BUILD] subitems (#4 BUILDs 1-5) — UNBLOCKED at the UAC layer; mechanical wiring of UI panels +
-  endpoint handlers + audit-log persistence remains.
+- Harsh T6's 5 [BUILD] subitems (#4 BUILDs 1-5) — UNBLOCKED at the UAC layer; mechanical wiring of UI panels + endpoint
+  handlers + audit-log persistence remains.
 - Tab 6.A's strategy ID grammar still 🟡 BLOCKED on operator triage of the parallel-SSOT issue doc; DART surfaces
   consume whichever grammar lands (shape-agnostic at the UAC layer).
-- Harsh T6 should also constrain `ManualInstruction.order_type: str` to `OperationType.value` membership at the
-  endpoint validator (Pydantic `field_validator`); no UAC change needed, just runtime guard.
+- Harsh T6 should also constrain `ManualInstruction.order_type: str` to `OperationType.value` membership at the endpoint
+  validator (Pydantic `field_validator`); no UAC change needed, just runtime guard.
 
 ### DONE-2026-05-12 Day-2 (Ikenna T8 slot 8) — DART wallet-tier wiring
 
@@ -775,12 +776,11 @@ Day-2 extension of the cross_cutting #4 contract layer; consumes slot 4's wallet
     `/manual/instruction` API boundary by execution-service runtime; persisted into audit log.
   - `ManualInstructionAuditLog` extended with `wallet_id` (top-level mirror for indexed audit-log queries by wallet
     without joining through embedded body) + `wallet_spending_check: WalletSpendingPreCheckResult | None`.
-  - 5 new unit tests added to `tests/unit/test_dart_manual_action_contracts.py` (12/12 total pass; basedpyright
-    clean).
+  - 5 new unit tests added to `tests/unit/test_dart_manual_action_contracts.py` (12/12 total pass; basedpyright clean).
   - Codex doc extended:
     [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — added
-    "Wallet-tier wiring (DeFi manual trades)" section covering the validation algorithm + UI surface mapping for
-    Harsh T6.
+    "Wallet-tier wiring (DeFi manual trades)" section covering the validation algorithm + UI surface mapping for Harsh
+    T6.
 
 **Validation algorithm (execution-service runtime, NOT UAC)**:
 
@@ -795,10 +795,11 @@ Day-2 extension of the cross_cutting #4 contract layer; consumes slot 4's wallet
 disabled rows for armed kill-switches) + per-row kill-switch button + spending-caps display with remaining-headroom
 indicator + `POST /manual/instruction/precheck` dry-run validation echo before submit.
 
-**Cross-side handoff to slot 4 (wallet schema owner)**: contract layer is shape-agnostic for the per-wallet
-kill-switch event audit-log shape — current proposal uses a stub `ManualInstruction` row with `manual_instruction=None`
-+ `wallet_spending_check` populated; final shape may move to a dedicated `KillSwitchAction` audit category in a
-follow-up cycle. Slot 4 to flag if the proposed shape conflicts with their `KillSwitchBus` event surface.
+**Cross-side handoff to slot 4 (wallet schema owner)**: contract layer is shape-agnostic for the per-wallet kill-switch
+event audit-log shape — current proposal uses a stub `ManualInstruction` row with `manual_instruction=None`
+
+- `wallet_spending_check` populated; final shape may move to a dedicated `KillSwitchAction` audit category in a
+  follow-up cycle. Slot 4 to flag if the proposed shape conflicts with their `KillSwitchBus` event surface.
 
 ### DONE-2026-05-12 Day-3 (Ikenna T8 slot 8) — DART precheck endpoint + audit-log persistence SSOT
 
@@ -815,64 +816,65 @@ Day-3 closure of cross_cutting #4 contract scope; rounds out the UAC contract la
   - `OBJECT_KEY_TEMPLATE = "manual_audit/{date}/{action_category}/{audit_id}.jsonl"` — env-tiered bucket, UTC-date
     partition, action-category sub-partition for selective reads.
   - `manual_audit_object_key(...)` + `manual_audit_date_prefix(...)` helpers; both reject path separators.
-  - 8 new unit tests (constants / template shape / both category keys / empty + separator rejection / date prefix /
-    UTC date partition); 22/22 total pass. basedpyright clean.
+  - 8 new unit tests (constants / template shape / both category keys / empty + separator rejection / date prefix / UTC
+    date partition); 22/22 total pass. basedpyright clean.
   - Codex doc extended:
     [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — added
     "Audit log persistence (GCS / S3)" section covering object-key shape + bucket-name resolution + retention
     rationale + date partition + action-category sub-partition + file format.
 
 **Cross-side handoff to slot 4 (bucket-name SSOT owner)**: annotated
-[`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md)
-Phase 0i tail with a NEW P1 todo proposing the `manual-audit` bucket kind addition to `cloud-providers.yaml` (6
-buckets: 3 envs × 2 clouds; retention/lifecycle config: ≥7y compliance + Coldline-after-90d for cost). Pre-addition,
+[`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md) Phase
+0i tail with a NEW P1 todo proposing the `manual-audit` bucket kind addition to `cloud-providers.yaml` (6 buckets: 3
+envs × 2 clouds; retention/lifecycle config: ≥7y compliance + Coldline-after-90d for cost). Pre-addition,
 execution-service + ml-training-service audit-log writers BLOCK on this entry; UAC path SSOT module already declares
 `BUCKET_KIND_MANUAL_AUDIT = "manual-audit"` to mark the dependency.
 
 ### Cross_cutting #4 contract scope — final scoreboard
 
-| Layer                                  | Status                              | Commit                               |
-| -------------------------------------- | ----------------------------------- | ------------------------------------ |
-| Manual trade action (`OperationType`)  | ✅ existing UAC SSOT (no-op design)  | `unified_api_contracts/canonical/domain/execution/base.py:65` |
-| Manual trade execution mode            | ✅ existing UAC SSOT (no-op design)  | `unified_api_contracts/internal/execution.py:ManualExecutionMode` |
-| ML training-control action axis        | ✅ Day-1 ship                        | `uac@336b486`                        |
-| Audit-log dispatch category            | ✅ Day-1 ship                        | `uac@336b486`                        |
-| Audit-log Pydantic schema              | ✅ Day-1 ship                        | `uac@336b486`                        |
-| Wallet provenance on instruction       | ✅ Day-2 ship                        | `uac@1d8a059`                        |
-| Wallet-tier kill-switch + caps check   | ✅ Day-2 ship                        | `uac@1d8a059`                        |
-| Pre-trade validation endpoint          | ✅ Day-3 ship                        | `uac@fe8e50e`                        |
-| Audit-log persistence path SSOT        | ✅ Day-3 ship                        | `uac@003b5ff`                        |
-| `manual-audit` bucket-kind in yaml     | 🟡 cross-side, slot 4 Phase 0i tail | annotated PM `bucket_name_ssot` plan |
+| Layer                                 | Status                              | Commit                                                            |
+| ------------------------------------- | ----------------------------------- | ----------------------------------------------------------------- |
+| Manual trade action (`OperationType`) | ✅ existing UAC SSOT (no-op design) | `unified_api_contracts/canonical/domain/execution/base.py:65`     |
+| Manual trade execution mode           | ✅ existing UAC SSOT (no-op design) | `unified_api_contracts/internal/execution.py:ManualExecutionMode` |
+| ML training-control action axis       | ✅ Day-1 ship                       | `uac@336b486`                                                     |
+| Audit-log dispatch category           | ✅ Day-1 ship                       | `uac@336b486`                                                     |
+| Audit-log Pydantic schema             | ✅ Day-1 ship                       | `uac@336b486`                                                     |
+| Wallet provenance on instruction      | ✅ Day-2 ship                       | `uac@1d8a059`                                                     |
+| Wallet-tier kill-switch + caps check  | ✅ Day-2 ship                       | `uac@1d8a059`                                                     |
+| Pre-trade validation endpoint         | ✅ Day-3 ship                       | `uac@fe8e50e`                                                     |
+| Audit-log persistence path SSOT       | ✅ Day-3 ship                       | `uac@003b5ff`                                                     |
+| `manual-audit` bucket-kind in yaml    | 🟡 cross-side, slot 4 Phase 0i tail | annotated PM `bucket_name_ssot` plan                              |
 
 **End state**: every contract layer Harsh T6 needs for the 5 DART manual surfaces (+ the underlying ML training trigger
-+ audit-log persistence) is shipped in UAC with closed-set semantics + Pydantic models + unit-tested helpers. The
-remaining work is implementation wiring (execution-service runtime + ml-training-service runtime + DART UI panel +
-position-balance-monitor-service rolling-window query for wallet caps) — all owned by Harsh T6 cross-side per the
-spawn brief's "Ikenna designs / Harsh implements" handoff.
+
+- audit-log persistence) is shipped in UAC with closed-set semantics + Pydantic models + unit-tested helpers. The
+  remaining work is implementation wiring (execution-service runtime + ml-training-service runtime + DART UI panel +
+  position-balance-monitor-service rolling-window query for wallet caps) — all owned by Harsh T6 cross-side per the
+  spawn brief's "Ikenna designs / Harsh implements" handoff.
 
 ## DART #4 [BUILD] implementation pre-audit (Tab 6 / Harsh slot 6, 2026-05-12)
 
-Citadel § 1 pre-audit before touching code. Grep-then-read pass over every surface the 5 [BUILD] subitems touch.
-**Net finding**: the UAC contract layer is fully shipped (Ikenna T8 Day-1/2/3 above); the **codex design docs are
-remarkably complete** (`dart-manual-trade-spec.md` § 4 + `manual-trade-booking.md` cover schema / endpoints / audit-log
-/ wallet-tier / UI surface mapping). What is NOT yet built is **runtime wiring + UI components**. The 5 BUILDs reduce to
+Citadel § 1 pre-audit before touching code. Grep-then-read pass over every surface the 5 [BUILD] subitems touch. **Net
+finding**: the UAC contract layer is fully shipped (Ikenna T8 Day-1/2/3 above); the **codex design docs are remarkably
+complete** (`dart-manual-trade-spec.md` § 4 + `manual-trade-booking.md` cover schema / endpoints / audit-log /
+wallet-tier / UI surface mapping). What is NOT yet built is **runtime wiring + UI components**. The 5 BUILDs reduce to
 ~3 net-new artefacts + ~2 verification-and-extend passes. Cross-side gating: BUILD-#1 wallet-tier validation needs
-slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log *writers* in BUILD #1 + #3 block on the
+slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log _writers_ in BUILD #1 + #3 block on the
 `manual-audit` bucket-kind in `cloud-providers.yaml` (slot-4 `bucket_name_ssot` Phase 0i tail).
 
 ### State-of-the-world per surface
 
-| Surface | Exists today | What's missing |
-|---|---|---|
-| UAC `internal/execution.py` | `ManualInstruction` (+ `wallet_id`, `order_type: str`), `ManualExecutionMode`, `ManualMLTrainingAction`, `MLTrainingControlRequest/Response`, `ManualAuditCategory`, `WalletSpendingPreCheckResult`, `ManualInstructionPrecheckResponse`, `ManualInstructionAuditLog` — all unit-tested (22 tests) | nothing — contract layer DONE (Ikenna T8) |
-| UAC `internal/manual_audit_paths.py` | path-helper module + `BUCKET_KIND_MANUAL_AUDIT` | the `manual-audit` bucket-kind row in `deployment-service/configs/cloud-providers.yaml` (slot-4 Phase 0i tail, 🟡 cross-side) |
-| UAC `internal/domain/defi/wallet_config.py` | `WalletProvisioningConfig` + `SpendingCaps` + `SigningSurface` + `kill_switch_id` + `allowed_protocols` (slot-4, `uac@d721b6a`) | nothing — consumed read-only by the validation algorithm |
-| UAC `canonical/domain/execution/base.py:65` `OperationType` | 19 DeFi+CeFi action verbs (SWAP/STAKE/UNSTAKE/LEND/BORROW/REPAY/…/BUY/SELL) | nothing — IS the canonical DART trade-action enum; just needs an endpoint-boundary membership validator on `ManualInstruction.order_type` |
-| execution-service `api/manual_instruction_api.py` (25 KB, exists) | `POST /manual/instruction` (EXECUTE + RECORD_ONLY), `/manual/cancel`, `/manual/amend`, `GET /manual/instructions/{id}`, `GET /manual/venues` (dynamic from `CAPABILITY_DECLARATIONS` via `_get_supported_venues()` + `@lru_cache`), `_SUPPORTED_ALGOS` list, `ManualInstructionRequest` validator | (a) `wallet_id` field not handled; (b) NO wallet-tier validation algorithm (kill-switch + 4 SpendingCaps checks); (c) NO `POST /manual/instruction/precheck` dry-run endpoint; (d) `order_type` accepted as free string — needs `OperationType.value` membership guard; (e) NO `GET /manual/algos` route (doc lists it; only `/manual/venues` exists); (f) audit-log persist (`ManualInstructionAuditLog` → `manual_audit_paths` → `resolve_bucket_name(kind="manual-audit")`) not wired |
-| ml-training-service `api/` | `main.py` + health endpoints only | NEW `api/training_control_api.py` — `POST /training/{archetype}/{action}` (`pause`/`resume`/`retrain`), `GET /training/{archetype}/status`, `GET /training/audit/{request_id}`; consumes `MLTrainingControlRequest/Response`; persists `ManualInstructionAuditLog` with `action_category=ML_TRAINING_CONTROL`; mount router in `main.py`. Backend lifecycle action: wire to the existing ml-training-service training-loop control (the CLI surfaces an equivalent — verify the in-process hook before May-23) |
-| position-balance-monitor-service | (rolling-window spend not exposed for wallet caps) | NEW endpoint/query: rolling 1h + 24h USD spend per `wallet_id` — drives validation-algorithm steps 3-4 in execution-service |
-| UI `components/trading/manual/manual-trading-panel.tsx` (235 L) + `single-order-form.tsx` + `mass-quote-panel.tsx` + `constants.ts` + `types.ts` | CeFi single-order + mass-quote, side/orderType/instrument/venue/qty/price/strategyId/algo+algoParams (TWAP/VWAP/ICEBERG/SOR/BEST_PRICE/BENCHMARK_FILL)/executionMode(execute\|record_only)/counterparty/sourceReference; `strategy_id` already a payload field; venue + algo lists come from **hardcoded `constants.ts`** (`VENUES` has Hyperliquid, **no Aster**; no DeFi protocols/chains) | (a) NO "DeFi Action" tab — needs chain selector → protocol selector → action selector (`OperationType` subset) + wallet selector (disabled rows for armed kill-switch) + spending-caps display w/ headroom + `POST …/precheck` dry-run echo before submit; (b) venue/algo lists should switch from `constants.ts` to the dynamic `GET /manual/venues` + `GET /manual/algos` endpoints (eliminates the Aster-missing drift); (c) NO `category`/`asset_group` selector on the in-context panel (back-office `/services/trading/book` page reportedly has Category tabs per `manual-trade-booking.md` § "UI Surfaces" — verify); (d) NO `MlTrainingControlPanel` component under `components/dart/` + NO `/services/dart/ml-training` route (closest existing primitive: `components/dart/strategy-param-version-bump-modal.tsx`); (e) sports/prediction backtest surfaces (instrument=fixture_id|market_id, side=home/away/draw, `OperationalMode.BACKTEST`) — verify whether the panel already routes these categories, extend if not |
-| UI `components/dart/` | `automation-toggle.tsx`, `strategy-param-version-bump-modal.tsx`, `trade-monitor.tsx` + `/services/dart/{terminal,locked}/page.tsx` routes | `MlTrainingControlPanel.tsx` + `ml-training/page.tsx` route (BUILD #3 UI) |
+| Surface                                                                                                                                          | Exists today                                                                                                                                                                                                                                                                                                                                                                                 | What's missing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| UAC `internal/execution.py`                                                                                                                      | `ManualInstruction` (+ `wallet_id`, `order_type: str`), `ManualExecutionMode`, `ManualMLTrainingAction`, `MLTrainingControlRequest/Response`, `ManualAuditCategory`, `WalletSpendingPreCheckResult`, `ManualInstructionPrecheckResponse`, `ManualInstructionAuditLog` — all unit-tested (22 tests)                                                                                           | nothing — contract layer DONE (Ikenna T8)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| UAC `internal/manual_audit_paths.py`                                                                                                             | path-helper module + `BUCKET_KIND_MANUAL_AUDIT`                                                                                                                                                                                                                                                                                                                                              | the `manual-audit` bucket-kind row in `deployment-service/configs/cloud-providers.yaml` (slot-4 Phase 0i tail, 🟡 cross-side)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| UAC `internal/domain/defi/wallet_config.py`                                                                                                      | `WalletProvisioningConfig` + `SpendingCaps` + `SigningSurface` + `kill_switch_id` + `allowed_protocols` (slot-4, `uac@d721b6a`)                                                                                                                                                                                                                                                              | nothing — consumed read-only by the validation algorithm                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| UAC `canonical/domain/execution/base.py:65` `OperationType`                                                                                      | 19 DeFi+CeFi action verbs (SWAP/STAKE/UNSTAKE/LEND/BORROW/REPAY/…/BUY/SELL)                                                                                                                                                                                                                                                                                                                  | nothing — IS the canonical DART trade-action enum; just needs an endpoint-boundary membership validator on `ManualInstruction.order_type`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| execution-service `api/manual_instruction_api.py` (25 KB, exists)                                                                                | `POST /manual/instruction` (EXECUTE + RECORD_ONLY), `/manual/cancel`, `/manual/amend`, `GET /manual/instructions/{id}`, `GET /manual/venues` (dynamic from `CAPABILITY_DECLARATIONS` via `_get_supported_venues()` + `@lru_cache`), `_SUPPORTED_ALGOS` list, `ManualInstructionRequest` validator                                                                                            | (a) `wallet_id` field not handled; (b) NO wallet-tier validation algorithm (kill-switch + 4 SpendingCaps checks); (c) NO `POST /manual/instruction/precheck` dry-run endpoint; (d) `order_type` accepted as free string — needs `OperationType.value` membership guard; (e) NO `GET /manual/algos` route (doc lists it; only `/manual/venues` exists); (f) audit-log persist (`ManualInstructionAuditLog` → `manual_audit_paths` → `resolve_bucket_name(kind="manual-audit")`) not wired                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ml-training-service `api/`                                                                                                                       | `main.py` + health endpoints only                                                                                                                                                                                                                                                                                                                                                            | NEW `api/training_control_api.py` — `POST /training/{archetype}/{action}` (`pause`/`resume`/`retrain`), `GET /training/{archetype}/status`, `GET /training/audit/{request_id}`; consumes `MLTrainingControlRequest/Response`; persists `ManualInstructionAuditLog` with `action_category=ML_TRAINING_CONTROL`; mount router in `main.py`. Backend lifecycle action: wire to the existing ml-training-service training-loop control (the CLI surfaces an equivalent — verify the in-process hook before May-23)                                                                                                                                                                                                                                                                                                                                                                                 |
+| position-balance-monitor-service                                                                                                                 | (rolling-window spend not exposed for wallet caps)                                                                                                                                                                                                                                                                                                                                           | NEW endpoint/query: rolling 1h + 24h USD spend per `wallet_id` — drives validation-algorithm steps 3-4 in execution-service                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| UI `components/trading/manual/manual-trading-panel.tsx` (235 L) + `single-order-form.tsx` + `mass-quote-panel.tsx` + `constants.ts` + `types.ts` | CeFi single-order + mass-quote, side/orderType/instrument/venue/qty/price/strategyId/algo+algoParams (TWAP/VWAP/ICEBERG/SOR/BEST_PRICE/BENCHMARK_FILL)/executionMode(execute\|record_only)/counterparty/sourceReference; `strategy_id` already a payload field; venue + algo lists come from **hardcoded `constants.ts`** (`VENUES` has Hyperliquid, **no Aster**; no DeFi protocols/chains) | (a) NO "DeFi Action" tab — needs chain selector → protocol selector → action selector (`OperationType` subset) + wallet selector (disabled rows for armed kill-switch) + spending-caps display w/ headroom + `POST …/precheck` dry-run echo before submit; (b) venue/algo lists should switch from `constants.ts` to the dynamic `GET /manual/venues` + `GET /manual/algos` endpoints (eliminates the Aster-missing drift); (c) NO `category`/`asset_group` selector on the in-context panel (back-office `/services/trading/book` page reportedly has Category tabs per `manual-trade-booking.md` § "UI Surfaces" — verify); (d) NO `MlTrainingControlPanel` component under `components/dart/` + NO `/services/dart/ml-training` route (closest existing primitive: `components/dart/strategy-param-version-bump-modal.tsx`); (e) sports/prediction backtest surfaces (instrument=fixture_id | market_id, side=home/away/draw, `OperationalMode.BACKTEST`) — verify whether the panel already routes these categories, extend if not |
+| UI `components/dart/`                                                                                                                            | `automation-toggle.tsx`, `strategy-param-version-bump-modal.tsx`, `trade-monitor.tsx` + `/services/dart/{terminal,locked}/page.tsx` routes                                                                                                                                                                                                                                                   | `MlTrainingControlPanel.tsx` + `ml-training/page.tsx` route (BUILD #3 UI)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ### BUILD-by-BUILD work breakdown (post-pre-audit)
 
@@ -892,10 +894,10 @@ slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log *writ
   shipped — verification only.
 - **BUILD #3 — DART manual ML training trigger** (pause/resume/retrain per ML archetype). _Net-new (greenfield)._
   Backend: NEW `ml-training-service/ml_training_service/api/training_control_api.py` (3 endpoints above) + mount in
-  `api/main.py` + wire `pause`/`resume`/`retrain` to the existing training-loop control primitive (CLI equivalent
-  exists — locate the in-process hook) + audit-log persist (`ML_TRAINING_CONTROL` category; BLOCKED on slot-4
-  bucket-kind). UI: NEW `MlTrainingControlPanel.tsx` under `components/dart/` mounting at `/services/dart/ml-training`;
-  per-archetype model-registry row → `pause`/`resume`/`retrain` buttons → `POST /training/{archetype}/{action}`.
+  `api/main.py` + wire `pause`/`resume`/`retrain` to the existing training-loop control primitive (CLI equivalent exists
+  — locate the in-process hook) + audit-log persist (`ML_TRAINING_CONTROL` category; BLOCKED on slot-4 bucket-kind). UI:
+  NEW `MlTrainingControlPanel.tsx` under `components/dart/` mounting at `/services/dart/ml-training`; per-archetype
+  model-registry row → `pause`/`resume`/`retrain` buttons → `POST /training/{archetype}/{action}`.
 - **BUILD #4 — DART manual sports bet placement** (backtest exec-validation only). _Verify + small extend._ Verify the
   manual panel routes a `sports` category (instrument=fixture_id, side=home/away/draw); backend = execution-service
   matching-engine path with `OperationalMode.BACKTEST` (no live wiring). If the panel lacks a sports category surface,
@@ -916,65 +918,66 @@ slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log *writ
   the yaml entry exists).
 - **Tab 6.A strategy_id grammar** — still 🟡 BLOCKED on operator triage; DART surfaces are shape-agnostic at the UAC
   layer (the `strategy_id: str` field already exists on `ManualInstruction` + the UI panel); the only thing the grammar
-  decision affects is whether the UI *auto-derives* `strategy_id` from selected archetype+venue+instrument-type vs.
+  decision affects is whether the UI _auto-derives_ `strategy_id` from selected archetype+venue+instrument-type vs.
   leaves it operator-entered. Not blocking the BUILD wiring.
 
 ### Discoveries during pre-audit (Capture-Discoveries-As-Plan-Todos HARD RULE)
 
-- [x] **D1 — P1 — `order_type` semantic-mismatch — ✅ RESOLVED 2026-05-13 (Ikenna slot 8).** Design
-  decision: **keep `order_type` as the execution algo (HOW) + add new `operation_type: str = ""`
-  field to `ManualInstruction` as the operation verb (WHAT)**. Zero breaking change — default empty,
-  all existing CeFi code unchanged. `ManualInstructionRequest.instruction_type` (already exists at
-  `manual_schemas.py:45`) is the request-side field; execution-service BUILD #1 wiring populates
-  `ManualInstruction.operation_type` from it. Contract shipped at `uac@14a0292` —
-  `unified_api_contracts/internal/execution.py`. Harsh BUILD #1 backend wiring is now UNBLOCKED for
-  `operation_type` (still blocked on slot-5 kill-switch spec + slot-4 manual-audit bucket until those
-  land). D4 approved approach: see D4 annotation below. Provenance: Harsh slot-6 pre-audit 2026-05-12 +
-  Ikenna slot-8 resolution 2026-05-13.
+- [x] **D1 — P1 — `order_type` semantic-mismatch — ✅ RESOLVED 2026-05-13 (Ikenna slot 8).** Design decision: **keep
+      `order_type` as the execution algo (HOW) + add new `operation_type: str = ""` field to `ManualInstruction` as the
+      operation verb (WHAT)**. Zero breaking change — default empty, all existing CeFi code unchanged.
+      `ManualInstructionRequest.instruction_type` (already exists at `manual_schemas.py:45`) is the request-side field;
+      execution-service BUILD #1 wiring populates `ManualInstruction.operation_type` from it. Contract shipped at
+      `uac@14a0292` — `unified_api_contracts/internal/execution.py`. Harsh BUILD #1 backend wiring is now UNBLOCKED for
+      `operation_type` (still blocked on slot-5 kill-switch spec + slot-4 manual-audit bucket until those land). D4
+      approved approach: see D4 annotation below. Provenance: Harsh slot-6 pre-audit 2026-05-12 + Ikenna slot-8
+      resolution 2026-05-13.
 - [x] **D2 — P2 — `manual-trade-booking.md` "Dynamic Venue List" claim drifts from the UI.** The codex doc says the
-  venue list "resolves dynamically from UAC `CAPABILITY_DECLARATIONS`" — true on the backend (`_get_supported_venues()`)
-  but the **UI** (`components/trading/manual/single-order-form.tsx:13` → `constants.ts` `VENUES`) uses a hand-maintained
-  hardcoded list (missing Aster; no DeFi protocols/chains). Folded into BUILD #2's UI work (switch the dropdowns to
-  `GET /manual/venues` + `GET /manual/algos`). **PARTIAL-RESOLVE 2026-05-12 (Harsh slot 6)**:
-  `GET /manual/algos` route IS already shipped at `execution_service/api/manual_instruction_api.py:676` (returns
-  `_SUPPORTED_ALGOS`). Pre-audit claim "no route" was stale. Backend half is complete — `/manual/venues` +
-  `/manual/algos` both serve dynamic lists. **PARTIAL-FIX 2026-05-12 (Harsh slot 6) @unified-trading-system-ui@`21666537`**:
-  added `Aster` to `components/trading/manual/constants.ts` `VENUES` (ordered after `Hyperliquid`, the other perp DEX)
-  to close the immediate Aster-gap; doesn't replace the proper dynamic-endpoint switch but unblocks operator selection
-  of Aster pre-cutover. **SHIPPED 2026-05-12 (Harsh slot 6)**: switched `single-order-form.tsx` venue + algo dropdowns
-  from `constants.ts` hardcoded arrays to `useVenues()` + `useAlgos()` hooks (`hooks/api/use-orders.ts:26-50`);
-  response mapped via `(data as {data?: Array<{name|type: string}>})?.data?.map(...)` with static-constant fallback
-  while loading. Commits: `unified-trading-system-ui@<sha>` (pending browser-test push below).
-  **FOLLOW-UP (operator-runnable)**: browser-test the Venue + Algo dropdowns in manual trading panel to confirm
-  dynamic data loads (no `node_modules` installed in tab-6 worktree). Run:
+      venue list "resolves dynamically from UAC `CAPABILITY_DECLARATIONS`" — true on the backend
+      (`_get_supported_venues()`) but the **UI** (`components/trading/manual/single-order-form.tsx:13` → `constants.ts`
+      `VENUES`) uses a hand-maintained hardcoded list (missing Aster; no DeFi protocols/chains). Folded into BUILD #2's
+      UI work (switch the dropdowns to `GET /manual/venues` + `GET /manual/algos`). **PARTIAL-RESOLVE 2026-05-12 (Harsh
+      slot 6)**: `GET /manual/algos` route IS already shipped at `execution_service/api/manual_instruction_api.py:676`
+      (returns `_SUPPORTED_ALGOS`). Pre-audit claim "no route" was stale. Backend half is complete — `/manual/venues` +
+      `/manual/algos` both serve dynamic lists. **PARTIAL-FIX 2026-05-12 (Harsh slot 6)
+      @unified-trading-system-ui@`21666537`**: added `Aster` to `components/trading/manual/constants.ts` `VENUES`
+      (ordered after `Hyperliquid`, the other perp DEX) to close the immediate Aster-gap; doesn't replace the proper
+      dynamic-endpoint switch but unblocks operator selection of Aster pre-cutover. **SHIPPED 2026-05-12 (Harsh
+      slot 6)**: switched `single-order-form.tsx` venue + algo dropdowns from `constants.ts` hardcoded arrays to
+      `useVenues()` + `useAlgos()` hooks (`hooks/api/use-orders.ts:26-50`); response mapped via
+      `(data as {data?: Array<{name|type: string}>})?.data?.map(...)` with static-constant fallback while loading.
+      Commits: `unified-trading-system-ui@<sha>` (pending browser-test push below). **FOLLOW-UP (operator-runnable)**:
+      browser-test the Venue + Algo dropdowns in manual trading panel to confirm dynamic data loads (no `node_modules`
+      installed in tab-6 worktree). Run:
   ```bash
   cd unified-trading-system-ui && npm install && npm run dev
   ```
-  Then open the manual trading panel + verify Venue/Algo selects show API-driven options (fallback to constants while API loads). Provenance: Harsh slot-6 pre-audit 2026-05-12 + grep-then-read verification + Day-2/Day-3 UI fix.
+  Then open the manual trading panel + verify Venue/Algo selects show API-driven options (fallback to constants while
+  API loads). Provenance: Harsh slot-6 pre-audit 2026-05-12 + grep-then-read verification + Day-2/Day-3 UI fix.
 - [ ] **D3 — P2 — `dart-manual-trade-spec.md` § 5 still says strategy_id grammar is "🟡 BLOCKED pending operator triage"
-  but this plan's open question #2/#3 (lines 172-184) marks it ✅ RESOLVED 2026-05-08 via Option A** (existing 6-axis UAC
-  v2 `archetype@venue-asset-instrument-period-quote-env` grammar is canonical; no `vN`). Doc-drift in the spec doc Harsh
-  T6 implements against. Fix as a 2-line consistency edit when BUILD wiring starts (or sooner — it's the deliverable-#4
-  SSOT). Provenance: Harsh slot-6 pre-audit 2026-05-12.
+      but this plan's open question #2/#3 (lines 172-184) marks it ✅ RESOLVED 2026-05-08 via Option A** (existing
+      6-axis UAC v2 `archetype@venue-asset-instrument-period-quote-env` grammar is canonical; no `vN`). Doc-drift in the
+      spec doc Harsh T6 implements against. Fix as a 2-line consistency edit when BUILD wiring starts (or sooner — it's
+      the deliverable-#4 SSOT). Provenance: Harsh slot-6 pre-audit 2026-05-12.
 
 ### Status as of 2026-05-12 (Day 1, Harsh slot 6)
 
 Pre-audit shipped (this section + the per-BUILD breakdown + discoveries D1-D3). The 5 [BUILD] checkboxes (lines 126-134
-above) stay `- [ ]` — implementation wiring not yet started; BUILD #1 backend is **🟡 BLOCKED on D1** (Ikenna `order_type`
-design call) **+ slot-5 kill-switch spec (EOD Day 2) + slot-4 bucket-kind (Phase 0i)**; BUILDs #2/#4/#5 are verify-and-
-extend and unblocked once the UI work picks up; BUILD #3 is greenfield + unblocked at the contract layer (audit-log
-write leg blocked on slot-4 bucket-kind only). **DEFERRED to Day-2+**: all BUILD #1-#5 runtime + UI wiring per the
-breakdown above. The "just add an `order_type` validator" first-impl candidate turned out to need D1's design call —
-re-prioritised: first unblocked impl when wiring starts is the **BUILD #3 ml-training-service `training_control_api.py`
-scaffold** (greenfield, contract layer shipped, no cross-side design needed beyond locating the in-process training-loop
-control hook).
+above) stay `- [ ]` — implementation wiring not yet started; BUILD #1 backend is **🟡 BLOCKED on D1** (Ikenna
+`order_type` design call) **+ slot-5 kill-switch spec (EOD Day 2) + slot-4 bucket-kind (Phase 0i)**; BUILDs #2/#4/#5 are
+verify-and- extend and unblocked once the UI work picks up; BUILD #3 is greenfield + unblocked at the contract layer
+(audit-log write leg blocked on slot-4 bucket-kind only). **DEFERRED to Day-2+**: all BUILD #1-#5 runtime + UI wiring
+per the breakdown above. The "just add an `order_type` validator" first-impl candidate turned out to need D1's design
+call — re-prioritised: first unblocked impl when wiring starts is the **BUILD #3 ml-training-service
+`training_control_api.py` scaffold** (greenfield, contract layer shipped, no cross-side design needed beyond locating
+the in-process training-loop control hook).
 
 ### Status as of 2026-05-12 (Day 2 RESUME, Harsh slot 6)
 
-**BUILD #3 ✅ SHIPPED** at `ml-training-service@05dc363` (on origin/live-defi-rollout) — see flipped checkbox at line 130.
-Greenfield scaffold + 3 routes + 11 unit tests; FastAPI router mounted in `api/main.py` alongside the health router;
-audit-log persistence gracefully falls back to "skipped + logged" pre-Phase-0i (`manual-audit` bucket-kind) so the API
-stays live. Plan checkbox flipped this commit.
+**BUILD #3 ✅ SHIPPED** at `ml-training-service@05dc363` (on origin/live-defi-rollout) — see flipped checkbox at
+line 130. Greenfield scaffold + 3 routes + 11 unit tests; FastAPI router mounted in `api/main.py` alongside the health
+router; audit-log persistence gracefully falls back to "skipped + logged" pre-Phase-0i (`manual-audit` bucket-kind) so
+the API stays live. Plan checkbox flipped this commit.
 
 **D2 backend half PARTIAL-RESOLVED**: `GET /manual/algos` IS shipped at
 `execution_service/api/manual_instruction_api.py:676` (returns `_SUPPORTED_ALGOS`). Pre-audit claim "no route" was
@@ -982,70 +985,69 @@ stale. Remaining D2 work is UI-side (switch dropdowns from `constants.ts` to dyn
 
 **BUILDs #2 / #4 / #5 backend-side verification (Citadel § 1 grep-then-read pass)**:
 
-| Surface | Verified state (2026-05-12 Day 2) |
-|---|---|
-| `execution_service/api/manual_instruction_api.py` `_get_supported_venues()` | Iterates UAC `CAPABILITY_DECLARATIONS` — includes a venue if `supports_trading=True` OR `operation_details` is non-empty. `@lru_cache(maxsize=1)`; fallback set for empty-registry safety. |
-| Aster (BUILD #2 `+ Hyperliquid + Aster`) | ✅ Registered in UAC `_cefi.CEFI_CAPABILITIES` (line 771) as `_ASTER` with `operation_details["place_order"]` set ⇒ INCLUDED in `_get_supported_venues()`. Pre-audit D2's "missing Aster" claim was UI-only (`constants.ts`); backend has it. |
-| Sports venues (BUILD #4 Betfair/Pinnacle/Matchbook/Onexbet etc.) | ✅ In UAC `_sports.SPORTS_CAPABILITIES` (lines 421-441). Betfair declares `"execution": ["place_orders", "cancel_orders", "replace_orders", "list_current_orders"]` + `operation_details["place_orders"]` ⇒ INCLUDED. Pinnacle declares no execution ops (market+reference only) so NOT in trading-venue set — correct (Pinnacle is odds-data only, not a sportsbook). Matchbook + Onexbet + Metabet have `execution` domain. |
+| Surface                                                                                            | Verified state (2026-05-12 Day 2)                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `execution_service/api/manual_instruction_api.py` `_get_supported_venues()`                        | Iterates UAC `CAPABILITY_DECLARATIONS` — includes a venue if `supports_trading=True` OR `operation_details` is non-empty. `@lru_cache(maxsize=1)`; fallback set for empty-registry safety.                                                                                                                                                                                                                                                |
+| Aster (BUILD #2 `+ Hyperliquid + Aster`)                                                           | ✅ Registered in UAC `_cefi.CEFI_CAPABILITIES` (line 771) as `_ASTER` with `operation_details["place_order"]` set ⇒ INCLUDED in `_get_supported_venues()`. Pre-audit D2's "missing Aster" claim was UI-only (`constants.ts`); backend has it.                                                                                                                                                                                             |
+| Sports venues (BUILD #4 Betfair/Pinnacle/Matchbook/Onexbet etc.)                                   | ✅ In UAC `_sports.SPORTS_CAPABILITIES` (lines 421-441). Betfair declares `"execution": ["place_orders", "cancel_orders", "replace_orders", "list_current_orders"]` + `operation_details["place_orders"]` ⇒ INCLUDED. Pinnacle declares no execution ops (market+reference only) so NOT in trading-venue set — correct (Pinnacle is odds-data only, not a sportsbook). Matchbook + Onexbet + Metabet have `execution` domain.             |
 | Prediction venues (BUILD #5 Polymarket / Kalshi / Manifold; Opinion-Trade + CME-event-arb stretch) | ✅ Polymarket + Kalshi + Manifold registered in `_sports.SPORTS_CAPABILITIES`. Polymarket declares `"execution"` ops + `operation_details` ⇒ INCLUDED. Kalshi declares `"execution"` ops + `operation_details` ⇒ INCLUDED. Manifold capability is in `SPORTS_CAPABILITIES` (line 431) — verify its `execution`+operation_details if Manifold-routing is exercised pre-cutover. Opinion-Trade + CME-event-arb are stretch; not registered. |
-| `OperationalMode` (UAC `internal/modes.py:181`) | ✅ Closed set: `LIVE` / `MANUAL` / `BACKTEST` / `PAPER`. Per-service env-var (`OPERATIONAL_MODE`); not per-instruction. BACKTEST routes through the matching-engine path. |
-| execution-service matching-engine | ✅ Sports matching exists (`execution_service/matching_engine/sports_matching.py`); prediction handler exists (`engine/handlers/prediction_handler.py`); Polymarket CLOB adapter exists (`sports_execution/adapters/exchanges/polymarket_clob.py`). |
-| `ManualInstruction` (UAC `internal/execution.py`) | ✅ Carries `venue` + `instrument_key` + `side` + `quantity` + `price`. BUILD #4 needs `instrument=fixture_id` + `side=home/away/draw` — `instrument_key: str` is shape-agnostic, accepts any canonical string; `side: str` accepts arbitrary strings (validated `BUY`/`SELL` only at `_validate_instruction_request` line 154-168 — **D4 finding** below). |
+| `OperationalMode` (UAC `internal/modes.py:181`)                                                    | ✅ Closed set: `LIVE` / `MANUAL` / `BACKTEST` / `PAPER`. Per-service env-var (`OPERATIONAL_MODE`); not per-instruction. BACKTEST routes through the matching-engine path.                                                                                                                                                                                                                                                                 |
+| execution-service matching-engine                                                                  | ✅ Sports matching exists (`execution_service/matching_engine/sports_matching.py`); prediction handler exists (`engine/handlers/prediction_handler.py`); Polymarket CLOB adapter exists (`sports_execution/adapters/exchanges/polymarket_clob.py`).                                                                                                                                                                                       |
+| `ManualInstruction` (UAC `internal/execution.py`)                                                  | ✅ Carries `venue` + `instrument_key` + `side` + `quantity` + `price`. BUILD #4 needs `instrument=fixture_id` + `side=home/away/draw` — `instrument_key: str` is shape-agnostic, accepts any canonical string; `side: str` accepts arbitrary strings (validated `BUY`/`SELL` only at `_validate_instruction_request` line 154-168 — **D4 finding** below).                                                                                |
 
 #### Discoveries Day-2 (Capture-Discoveries-As-Plan-Todos HARD RULE)
 
-- [ ] **D4 — P1 — `side.upper() not in ("BUY", "SELL")` validator at `manual_instruction_api.py:154` rejects sports / prediction sides (`home`/`away`/`draw` / `yes`/`no`).**
-      BUILD #4 + BUILD #5 require submitting a manual `ManualInstruction` with `side="HOME"` (sports binary on a fixture) or
-      `side="YES"`/`"NO"` (prediction market). The current validator hard-rejects anything outside `BUY`/`SELL` with HTTP 400.
-      To unblock BUILDs #4/#5, the validator needs to accept the appropriate side set per the asset_group / venue context.
-      Options:
-        (a) Branch on the resolved venue's `asset_group` (cefi/defi → BUY/SELL; sports → HOME/AWAY/DRAW/OVER/UNDER;
-            prediction → YES/NO/BUY/SELL) — needs an `asset_group` lookup helper from the venue.
-        (b) Widen the validator to accept a closed-set union across all asset_groups + add the resolved-venue check
-            downstream at the matching-engine boundary.
-        (c) Add an `operational_mode=BACKTEST` short-circuit that loosens the side validation (since backtest fills are
-            simulated; the matching-engine validates side semantics per-asset-group).
-      **Recommendation**: (a) + the venue→asset_group lookup helper lives in UAC. Net-new code only at the validator
-      branch; existing matching-engine + adapter side-validation is unchanged.
-      Provenance: Harsh slot-6 Day-2 audit 2026-05-12 — grep-then-read pass on `_validate_instruction_request` lines
-      116-186 + UAC `SPORTS_CAPABILITIES`. **Scope**: BUILD #4 + BUILD #5 backend-wiring tail; non-blocking for D1
-      (operation_type design call) but is the second backend gate after D1.
-      **✅ APPROVED 2026-05-13 (Ikenna slot 8)**: implement option (a). Helper signature:
-      `unified_api_contracts.execution.get_venue_asset_group(venue: str) -> str` — reads from
-      `CAPABILITY_DECLARATIONS` (already used by `_get_supported_venues()`). Side closed sets:
-      `cefi`/`defi` → `{"BUY","SELL"}`; `sports` → `{"HOME","AWAY","DRAW","OVER","UNDER"}`;
-      `prediction` → `{"YES","NO","BUY","SELL"}`. Unknown venue → fall back to `{"BUY","SELL"}` (safe
-      default; matching-engine validates further). Harsh BUILD #4/#5 wiring can proceed on this spec.
+- [x] **D4 — P1 — `side.upper() not in ("BUY", "SELL")` validator at `manual_instruction_api.py:154` rejects sports /
+      prediction sides (`home`/`away`/`draw` / `yes`/`no`). ✅ UAC helper shipped `UAC@51f6e28` 2026-05-13 (Ikenna slot
+      8). Execution-service wiring remains in BUILD #4/#5 checkboxes.** BUILD #4 + BUILD #5 require submitting a manual
+      `ManualInstruction` with `side="HOME"` (sports binary on a fixture) or `side="YES"`/`"NO"` (prediction market).
+      The current validator hard-rejects anything outside `BUY`/`SELL` with HTTP 400. To unblock BUILDs #4/#5, the
+      validator needs to accept the appropriate side set per the asset_group / venue context. Options: (a) Branch on the
+      resolved venue's `asset_group` (cefi/defi → BUY/SELL; sports → HOME/AWAY/DRAW/OVER/UNDER; prediction →
+      YES/NO/BUY/SELL) — needs an `asset_group` lookup helper from the venue. (b) Widen the validator to accept a
+      closed-set union across all asset_groups + add the resolved-venue check downstream at the matching-engine
+      boundary. (c) Add an `operational_mode=BACKTEST` short-circuit that loosens the side validation (since backtest
+      fills are simulated; the matching-engine validates side semantics per-asset-group). **Recommendation**: (a) + the
+      venue→asset_group lookup helper lives in UAC. Net-new code only at the validator branch; existing
+      matching-engine + adapter side-validation is unchanged. Provenance: Harsh slot-6 Day-2 audit 2026-05-12 —
+      grep-then-read pass on `_validate_instruction_request` lines 116-186 + UAC `SPORTS_CAPABILITIES`. **Scope**: BUILD
+      #4 + BUILD #5 backend-wiring tail; non-blocking for D1 (operation_type design call) but is the second backend gate
+      after D1. **✅ APPROVED 2026-05-13 (Ikenna slot 8)**: implement option (a). Helper signature:
+      `unified_api_contracts.execution.get_venue_asset_group(venue: str) -> str` — reads from `CAPABILITY_DECLARATIONS`
+      (already used by `_get_supported_venues()`). Side closed sets: `cefi`/`defi` → `{"BUY","SELL"}`; `sports` →
+      `{"HOME","AWAY","DRAW","OVER","UNDER"}`; `prediction` → `{"YES","NO","BUY","SELL"}`. Unknown venue → fall back to
+      `{"BUY","SELL"}` (safe default; matching-engine validates further). Harsh BUILD #4/#5 wiring can proceed on this
+      spec.
 
 - [ ] **D5 — P2 — `_SUPPORTED_ALGOS` hardcoded list in `manual_instruction_api.py:113` covers only CeFi exec algos
-      (MARKET / TWAP / VWAP / ICEBERG / SOR / BEST_PRICE / BENCHMARK_FILL).**
-      For BUILD #1 (DeFi) the operator needs to select an `OperationType` verb (SWAP / STAKE / UNSTAKE / LEND / BORROW
-      etc.) rather than an algo. For BUILD #4/#5 (sports/prediction) the operator places a single bet/order — likely
-      `MARKET` is sufficient (matching-engine fills against the canonical CLOB / odds book). For BUILD #2 the current
-      algo list is correct. Bundles into D1 (the `order_type` semantic-mismatch design call) — D1's resolution
-      determines whether `algo` becomes asset-group-conditional or splits into `algo`+`operation_type`. No standalone
-      D5 fix until D1 lands.
-      Provenance: Harsh slot-6 Day-2 audit 2026-05-12.
+      (MARKET / TWAP / VWAP / ICEBERG / SOR / BEST_PRICE / BENCHMARK_FILL).** For BUILD #1 (DeFi) the operator needs to
+      select an `OperationType` verb (SWAP / STAKE / UNSTAKE / LEND / BORROW etc.) rather than an algo. For BUILD #4/#5
+      (sports/prediction) the operator places a single bet/order — likely `MARKET` is sufficient (matching-engine fills
+      against the canonical CLOB / odds book). For BUILD #2 the current algo list is correct. Bundles into D1 (the
+      `order_type` semantic-mismatch design call) — D1's resolution determines whether `algo` becomes
+      asset-group-conditional or splits into `algo`+`operation_type`. No standalone D5 fix until D1 lands. Provenance:
+      Harsh slot-6 Day-2 audit 2026-05-12.
 
 #### Cross-side handshake status (Day-3, Ikenna slot 8, 2026-05-13)
 
 - **Ikenna T8 → Harsh T6 contract layer** — ✅ DONE per the 4 DONE blocks above (Day-1 + Day-2 + Day-3 contract layers).
 - **slot 5 → Harsh T6 (BUILD #1 kill-switch)** — status unchanged.
-- **slot 4 → Harsh T6 (BUILD #1 + #3 audit-log writers)** — ✅ **UNBLOCKED**: `manual-audit` bucket-kind shipped
-  in `deployment-service/configs/cloud-providers.yaml` at `deployment-service@00a1288` (slot 8 reserve item
+- **slot 4 → Harsh T6 (BUILD #1 + #3 audit-log writers)** — ✅ **UNBLOCKED**: `manual-audit` bucket-kind shipped in
+  `deployment-service/configs/cloud-providers.yaml` at `deployment-service@00a1288` (slot 8 reserve item
   bucket_name_ssot Phase 0i 2026-05-13). BUILD #3 try/except now resolves; BUILD #1 audit-log leg also clear.
 - **D1 (`ManualInstruction.operation_type`)** — ✅ **RESOLVED 2026-05-13 (Ikenna slot 8)**: `operation_type: str = ""`
-  added to `ManualInstruction` at `uac@14a0292`. BUILD #1 backend `operation_type` wiring is UNBLOCKED.
-  Remaining BUILD #1 blocks: slot-5 kill-switch spec only.
+  added to `ManualInstruction` at `uac@14a0292`. BUILD #1 backend `operation_type` wiring is UNBLOCKED. Remaining BUILD
+  #1 blocks: slot-5 kill-switch spec only.
 - **D4 (side validator for sports/prediction)** — ✅ **APPROVED 2026-05-13 (Ikenna slot 8)**: option (a) with
   `get_venue_asset_group()` UAC helper. See D4 annotation above for full spec. BUILD #4/#5 wiring can proceed.
 
 #### What Day-2 leaves for the cycle
 
 - BUILD #1 backend wiring — 🟡 BLOCKED on D1.
-- BUILD #2 UI (switch `constants.ts` dropdowns to dynamic `/manual/venues` + `/manual/algos`) — `unified-trading-system-ui`
-  repo; out of execution-service scope. Backend half is verified-and-complete (see audit table above).
-- BUILD #3 backend ✅ SHIPPED. UI follow-up (`MlTrainingControlPanel.tsx` under `components/dart/` + `/services/dart/ml-training`
-  route) is UI repo work.
-- BUILD #4 + BUILD #5 backend tail — **D4 side-validator widening** (1-2 AI-hour task once D1 resolves the `operation_type`
-  shape). UI surface is `unified-trading-system-ui` repo work.
+- BUILD #2 UI (switch `constants.ts` dropdowns to dynamic `/manual/venues` + `/manual/algos`) —
+  `unified-trading-system-ui` repo; out of execution-service scope. Backend half is verified-and-complete (see audit
+  table above).
+- BUILD #3 backend ✅ SHIPPED. UI follow-up (`MlTrainingControlPanel.tsx` under `components/dart/` +
+  `/services/dart/ml-training` route) is UI repo work.
+- BUILD #4 + BUILD #5 backend tail — **D4 side-validator widening** (1-2 AI-hour task once D1 resolves the
+  `operation_type` shape). UI surface is `unified-trading-system-ui` repo work.
