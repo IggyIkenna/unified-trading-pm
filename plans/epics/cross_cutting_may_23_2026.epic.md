@@ -152,7 +152,7 @@ trading goal directly.
       archetypes need fully-seeded `ArchetypeConfig` (CARRY_STAKED_BASIS Solana + Ethereum; CARRY_BASIS_PERP × 6 perp
       venues; ML_DIRECTIONAL_CONTINUOUS × 3 venues OKX/Binance/Bybit). Backtest-only archetypes consume catalogue rows
       by `(archetype, asset_group)` lookup via `is_archetype_live(archetype, asset_group)` helper. Full cross-product
-      enumeration tracked as post-cutover sweep. See `plans/active/operator_decisions_2026_05_08.md`.
+      enumeration tracked as post-cutover sweep. See `plans/archive/operator_decisions_2026_05_08.plan.md`.
 - [x] ✓ **DART manual-trade lane scope — RESOLVED 2026-05-08.** **Operator-only manual** (Ikenna + Harsh) for May 23.
       Third-party broker-style DART (external operators executing on behalf of clients) DEFERRED post-cutover. The
       May-23 deliverable is the 7-day live cefi_ml + DeFi run on a single client; no external operators in scope.

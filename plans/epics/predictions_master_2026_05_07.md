@@ -87,10 +87,11 @@ Covers:
 - **Predictions ML half of `sports_predictions_e2e`**: ml-training Model 2A walk-forward + arb_calculator + Group E/F ML
   gates. Sports half (288M ODDS_API row migration + MDPS bucketing + FSS) lives in `sports_master`.
 
-**MVP backtest scope** (per [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)):
-Polymarket subset only by May-23 (BTC_UP_DOWN_HOURLY + other canonical question groups in scope). Kalshi +
-opinion.trade backtest/live → 2026-06-15 (per wave2_polymarket plan split 2026-05-13). Tier A archetypes touching
-Prediction: arbitrage-event-markets (Polymarket vs CME) + arbitrage-sports-book (Polymarket vs Betfair).
+**MVP backtest scope** (per
+[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)):
+Polymarket subset only by May-23 (BTC_UP_DOWN_HOURLY + other canonical question groups in scope). Kalshi + opinion.trade
+backtest/live → 2026-06-15 (per wave2_polymarket plan split 2026-05-13). Tier A archetypes touching Prediction:
+arbitrage-event-markets (Polymarket vs CME) + arbitrage-sports-book (Polymarket vs Betfair).
 
 ## Current state (2026-05-07)
 
@@ -705,7 +706,7 @@ features predict.
 - [x] ✓ **Canonical question groups for May 23 — RESOLVED 2026-05-08.** **3 canonical groups, backtest-only**:
       `BTC_UP_DOWN_HOURLY` (24/day; HOURLY lifecycle), `SPX_UP_DOWN_DAILY` (1/day; cross-asset feed for tradfi S&P
       prediction), `BTC_UP_DOWN_DAILY` (1/day; cross-asset feed for cefi_ml diagnostic calibration). ELECTION + CPI
-      DEFERRED post-cutover. See `plans/active/operator_decisions_2026_05_08.md`.
+      DEFERRED post-cutover. See `plans/archive/operator_decisions_2026_05_08.plan.md`.
 - [x] ✓ **CME event futures inventory — RESOLVED 2026-05-08.** **OUT for May-23 cross-venue arb.** The price-arb May-23
       deliverable per `tradfi_master:deliverable B` covers FUTURES products (CME same-day-expiry + ETF↔future +
       cross-venue ETF). CME event-contracts (binary outcomes) need a separate MTDS adapter + instruments-service catalog

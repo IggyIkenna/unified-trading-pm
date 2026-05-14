@@ -138,7 +138,7 @@ Covers:
 - **`plans/active/sports_retired_data_types_code_cleanup_2026_05_13.md`** — Retired-data-type cleanup (refactor class,
   ~1.2 cal-AI-days, deadline 2026-05-20). Removes stale references to data types that were retired in the manifest
   migration.
-- **`plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md`** — Phase 3B/3C api-football smoke +
+- **`plans/archive/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md`** — Phase 3B/3C api-football smoke +
   forward-poll operational verification (P0, deadline 2026-05-14 EOD).
 - **`plans/active/api_football_minimal_flattening_removal_2026_05_07.md`** — API-football payload flattening removal
   (near complete, 13/16 done).
@@ -498,7 +498,7 @@ Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phas
       the 4 data_types and confirm full per-row column set (xG, shots-on-target, possession, goal-events with minute,
       starting-XI per slot, etc.). [AUDIT 2026-05-07: BLOCKED-ON above flatten ship + re-fetch VM]
 
-**Operational verification owner**: `plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` (P0,
+**Operational verification owner**: `plans/archive/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` (P0,
 deadline 2026-05-14 EOD) — folded into this epic 2026-05-13 (was orphan per inventory dashboard); covers Phase 3.B
 live-API smoke (✅ PASSED 2026-05-13) + Phase 3.C EPL forward-poll VM verification.
 
@@ -889,7 +889,7 @@ backtest in the unified pipeline. No live trading. Bugs/backfills/schema fixes i
 - [x] ✓ **Which sports ML archetype — RESOLVED 2026-05-08.** **Match-outcome (1X2)**. Most data-rich label, best
       signal-to-noise (FSS progressive + lineups + injuries + odds movement → home/draw/away), cleanest walk-forward
       validation. Goal-scorer + in-play live-odds DEFERRED post-cutover. See
-      `plans/active/operator_decisions_2026_05_08.md`.
+      `plans/archive/operator_decisions_2026_05_08.plan.md`.
 - [x] ✓ **Leagues in scope — RESOLVED 2026-05-08.** **Top-5 European tier** for May-23 backtest deliverable: EPL +
       LaLiga + Serie A + Bundesliga + Ligue 1. Deepest historical coverage, tightest market-making, most consistent
       fixture metadata. MLS + all-leagues DEFERRED post-cutover.
@@ -979,7 +979,7 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 - Sibling asset_group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - Sports rename plan (KEPT ACTIVE — its own DAG):
-  [`sports_data_available_at_rename_2026_05_07.md`](../archive/sports_data_available_at_rename_2026_05_07.md).
+  [`sports_data_available_at_rename_2026_05_07.md`](../archive/sports_data_available_at_rename_2026_05_07.plan.md).
 - Sports phantom-fixtures-recovery handover: `plans/ai/_sports_phantom_fixtures_recovery_handover_2026_05_06.md`.
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
   [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per

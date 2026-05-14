@@ -567,6 +567,6 @@ Active sub-plans owned by or closely coordinated with this epic:
 
 ## Source plan archive references
 
-- [`plans/archive/strategy_architecture_v2_finalization_2026_04_19.md`](../archive/strategy_architecture_v2_finalization_2026_04_19.md)
-- [`plans/archive/dart_ux_cockpit_refactor_2026_04_29.md`](../archive/dart_ux_cockpit_refactor_2026_04_29.md)
-- [`plans/archive/consolidated_strategy_and_ui_2026_04_15.md`](../archive/consolidated_strategy_and_ui_2026_04_15.md)
+- [`plans/archive/strategy_architecture_v2_finalization_2026_04_19.md`](../archive/strategy_architecture_v2_finalization_2026_04_19.plan.md)
+- [`plans/archive/dart_ux_cockpit_refactor_2026_04_29.md`](../archive/dart_ux_cockpit_refactor_2026_04_29.plan.md)
+- [`plans/archive/consolidated_strategy_and_ui_2026_04_15.md`](../archive/consolidated_strategy_and_ui_2026_04_15.plan.md)

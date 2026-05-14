@@ -109,10 +109,11 @@ Single source of truth for **CeFi asset_group** work toward live DeFi 2026-05-23
 - **MTDS coverage to 100% for the CeFi slice** (per-instrument-per-day for spot/perp; bundled-by-root for
   options/futures).
 
-**MVP backtest scope** (per [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)):
-~30 MVP coins × 6 perp venues for arbitrage-funding-rate archetype. Dust-conversion spot coins (e.g. EIGEN) captured
-for prices, NOT in backtest config-grid. Data capture remains broad (all instruments per venue catalog). Tier A
-archetypes touching CeFi: ml-continuous + arbitrage-funding-rate + defi-carry-family (perp hedge legs).
+**MVP backtest scope** (per
+[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)): ~30 MVP
+coins × 6 perp venues for arbitrage-funding-rate archetype. Dust-conversion spot coins (e.g. EIGEN) captured for prices,
+NOT in backtest config-grid. Data capture remains broad (all instruments per venue catalog). Tier A archetypes touching
+CeFi: ml-continuous + arbitrage-funding-rate + defi-carry-family (perp hedge legs).
 
 **Not covered here** (out of asset_group scope):
 
@@ -347,8 +348,8 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
       deployment-stack rollup fast-path live; reverify after drain 2026-05-09]
 - [ ] [AGENT] P0. Port phantom-audit + manifest-rebuild scripts to CeFi (current scripts target sports/multi-asset).
       [AUDIT 2026-05-07: DONE — `reconcile_phantom_manifest_rows_all.py` is multi-asset-group with `--asset-group cefi`
-      flag per CLAUDE.md, used 2026-05-04 to reduce 130k→354 false-positives on cefi (per MEMORY)]
-      [SLOT-6 RAN 2026-05-11 — `launch-defi-phantom-recon-vm.sh cefi --dry-run` → `defi-phantom-recon-cefi-20260511-193451`
+      flag per CLAUDE.md, used 2026-05-04 to reduce 130k→354 false-positives on cefi (per MEMORY)] [SLOT-6 RAN
+      2026-05-11 — `launch-defi-phantom-recon-vm.sh cefi --dry-run` → `defi-phantom-recon-cefi-20260511-193451`
       (e2-standard-4, asia-northeast1-c; 129220 prefixes @~370/sec; completed 14:16 UTC, exit 0, VM self-deleted):
       **1290706 real captures / 2223 "phantom captures" = 0.17% phantom rate — UNDER the <0.5% criterion** (line 292 of
       this plan). Residual 2223 spread across drift-axis-suspicious clusters: blank `venue` 1453, DERIBIT 136 (mostly
@@ -361,7 +362,8 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
       existence, then either add the missing drift axis to `reconcile_phantom_manifest_rows_all.py`'s cefi templates
       (for false-positives) or `--apply` only the genuinely-real subset. Criterion-met for now (0.17% < 0.5%); full
       classification is the residual work. Cross-ref: `code_freeze_migrate_backfill_sequencing_2026_05_10.md`
-      DONE-2026-05-11 deferral table (phantom-audit row) + `harsh_orchestrator/pings/slot_6.md` 2026-05-11 14:00/14:18 UTC.]
+      DONE-2026-05-11 deferral table (phantom-audit row) + `harsh_orchestrator/pings/slot_6.md` 2026-05-11 14:00/14:18
+      UTC.]
 - [ ] [AGENT] P0. Monitor + reap zombie VMs (`gcloud compute instances list` + parallel-delete pattern per workspace
       VM-naming convention). [AUDIT 2026-05-07: IN-FLIGHT — `vm-zombie-watchdog-20260506-175221` RUNNING; ongoing role;
       treat as forever-todo]
@@ -524,7 +526,7 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
       directional prediction signal. Deployed in production on real capital ≥7 days. Venues: OKX + Binance + Bybit
       (deepest liquidity, lowest unit cost; Deribit deferred to post-cutover). Wires through
       `mlr-p4-strategy-calibrated-signals` + `mlr-p4-cost-aware-strategy` + live model registry / hot-reload / per-trade
-      `model_version` tagging — all P0 May-23-blockers. See `plans/active/operator_decisions_2026_05_08.md`.
+      `model_version` tagging — all P0 May-23-blockers. See `plans/archive/operator_decisions_2026_05_08.plan.md`.
 - [x] ✓ **Model retraining cadence — RESOLVED 2026-05-08.** **Daily** — overnight retrain via ml-training (UTC
       midnight + 30min buffer for tick-data settlement); ml-inference hot-reload picks up new model_version on next
       day-open. Feature staleness budget = 24h hard ceiling, 6h soft target. Alerting thresholds: `ML_SIGNAL_STALENESS`
@@ -551,7 +553,7 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 - Write-gate cluster:
   [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Shard granularity:
-  [`shard_granularity_ssot_propagation_2026_05_06.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.md).
+  [`shard_granularity_ssot_propagation_2026_05_06.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.plan.md).
 - Sibling asset_group umbrellas: `defi_master_2026_05_07`, `tradfi_master_2026_05_07`, `sports_master_2026_05_07`,
   `predictions_master_2026_05_07`.
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:

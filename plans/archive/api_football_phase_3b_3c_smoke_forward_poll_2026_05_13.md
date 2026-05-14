@@ -157,23 +157,23 @@ verification, Phase 3.B is operationally validated.
     Phase 3.B operationally validated.
 
 - ✅ **Phase 3.C**: EPL forward-poll completed, GCS parquet + schema registry verified (2026-05-14) ✓ DONE
-  - **What ran**: `launch-api-football-backfill-vm.sh --entity FIXTURE_STATS --start-date 2026-05-13 --end-date
-    2026-05-13 --force` (VM: `af-backfill-20260514-103705`, zone `asia-northeast1-c`). Tarball refreshed before
-    launch. EPL fixture 1379275 (Manchester City 3-0 Crystal Palace, `status_short=FT`) confirmed via API-Football
-    direct query and present in GCS fixtures parquet for 2026-05-13.
+  - **What ran**:
+    `launch-api-football-backfill-vm.sh --entity FIXTURE_STATS --start-date 2026-05-13 --end-date 2026-05-13 --force`
+    (VM: `af-backfill-20260514-103705`, zone `asia-northeast1-c`). Tarball refreshed before launch. EPL fixture 1379275
+    (Manchester City 3-0 Crystal Palace, `status_short=FT`) confirmed via API-Football direct query and present in GCS
+    fixtures parquet for 2026-05-13.
   - **Verification**:
-    1. **GCS parquet written**: `gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2026-05-13/entity=fixture_stats/league=EPL/fixture_stats.parquet`
-       — Shape **(2, 23)** — new per-team narrow format. Columns: `fixture_id, team_id, team_name, is_home,
-       shots_on_target, shots_off_target, shots_total, shots_blocked, shots_inside_box, shots_outside_box, fouls,
-       corners, offsides, ball_possession_pct, yellow_cards, red_cards, goalkeeper_saves, passes_total,
-       passes_accurate, passes_pct, expected_goals, goals_prevented, data_available_at`. Manchester City:
-       shots_total=15, xg=1.56 | Crystal Palace: shots_total=6, xg=0.68.
+    1. **GCS parquet written**:
+       `gs://instruments-store-sports-central-element-323112/sports_reference/by_date/day=2026-05-13/entity=fixture_stats/league=EPL/fixture_stats.parquet`
+       — Shape **(2, 23)** — new per-team narrow format. Columns:
+       `fixture_id, team_id, team_name, is_home, shots_on_target, shots_off_target, shots_total, shots_blocked, shots_inside_box, shots_outside_box, fouls, corners, offsides, ball_possession_pct, yellow_cards, red_cards, goalkeeper_saves, passes_total, passes_accurate, passes_pct, expected_goals, goals_prevented, data_available_at`.
+       Manchester City: shots_total=15, xg=1.56 | Crystal Palace: shots_total=6, xg=0.68.
     2. **Old schema contrast**: 2026-04-20 fixture_stats = 27 cols × 1 row (wide `home_X/away_X` per-fixture format,
        pre-migration). 2026-05-13 = 23 cols × 2 rows (per-team narrow format, post-migration). Migration confirmed.
-    3. **Schema registry**: `GET /api/data-status/schema?...&data_type=FIXTURE_STATS` → `registered: true, source:
-       CONTRACT_REGISTRY, columns: 23`. Screenshot saved: `phase3c_schema_evidence.png`.
-    4. **Manifest entry**: 1 new entry added to availability index (manually flushed via ManifestWriter after VM
-       atexit race; index total 2,626,648 entries).
+    3. **Schema registry**: `GET /api/data-status/schema?...&data_type=FIXTURE_STATS` →
+       `registered: true, source: CONTRACT_REGISTRY, columns: 23`. Screenshot saved: `phase3c_schema_evidence.png`.
+    4. **Manifest entry**: 1 new entry added to availability index (manually flushed via ManifestWriter after VM atexit
+       race; index total 2,626,648 entries).
 
 ---
 
@@ -200,15 +200,15 @@ verification, Phase 3.B is operationally validated.
 
 ## Deferred work after 2026-05-14 slot-2-api-football session
 
-| Phase / item | Status as of 2026-05-14 | Successor / blocker |
-|---|---|---|
-| Phase 3.C VM execution | ✅ DONE — FIXTURE_STATS parquet written (2×23 cols, EPL) | — |
-| Phase 3.C manifest flush | ✅ DONE — 1 new entry (manual flush via ManifestWriter) | — |
-| Phase 3.C schema verify | ✅ DONE — CONTRACT_REGISTRY 23 cols, screenshot captured | — |
+| Phase / item                       | Status as of 2026-05-14                                                                                                                                                         | Successor / blocker                                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Phase 3.C VM execution             | ✅ DONE — FIXTURE_STATS parquet written (2×23 cols, EPL)                                                                                                                        | —                                                                                                         |
+| Phase 3.C manifest flush           | ✅ DONE — 1 new entry (manual flush via ManifestWriter)                                                                                                                         | —                                                                                                         |
+| Phase 3.C schema verify            | ✅ DONE — CONTRACT_REGISTRY 23 cols, screenshot captured                                                                                                                        | —                                                                                                         |
 | orchestrator zero-fixture-path bug | **DEFERRED** — `recovery_fixture_ids` does not bypass `_read_fixture_ids_from_gcs`; hardcoded `fixture_ids_override=[]` ignores the allowlist entirely. Issue filed separately. | Issue doc needed — `plans/active/issues/orchestrator_zero_fixture_path_recovery_bypass_bug_2026_05_14.md` |
-| Phase 4 (reprocessor) | **DEFERRED** — optional per parent plan; forward-poll covers future dates naturally | `api_football_minimal_flattening_removal_2026_05_07.md` Phase 4 |
-| Phase 5 plan closeout | **DEFERRED** — original plan `locked_by: live-defi-rollout`; unlock + archive after live-defi gate | Operator: unlock `api_football_minimal_flattening_removal_2026_05_07.md` |
-| deployment-ui manifest visibility | **DEFERRED** — local dev shows "development (fallback)"; manifest reads fail → 0/0 shards. Production env reads correctly via GCS fuse. | Not a bug; no action required for Phase 3.C. |
+| Phase 4 (reprocessor)              | **DEFERRED** — optional per parent plan; forward-poll covers future dates naturally                                                                                             | `api_football_minimal_flattening_removal_2026_05_07.md` Phase 4                                           |
+| Phase 5 plan closeout              | **DEFERRED** — original plan `locked_by: live-defi-rollout`; unlock + archive after live-defi gate                                                                              | Operator: unlock `api_football_minimal_flattening_removal_2026_05_07.md`                                  |
+| deployment-ui manifest visibility  | **DEFERRED** — local dev shows "development (fallback)"; manifest reads fail → 0/0 shards. Production env reads correctly via GCS fuse.                                         | Not a bug; no action required for Phase 3.C.                                                              |
 
 ## Temporary states + their canonical follow-up plans
 
@@ -222,12 +222,13 @@ verification, Phase 3.B is operationally validated.
 Phase 3.B ✅ DONE 2026-05-13 | Phase 3.C ✅ DONE 2026-05-14
 
 **Phase 3.C summary**:
-- EPL fixture 1379275 (Man City 3-0 Crystal Palace) confirmed via API-Football direct query + written to GCS
-  fixtures parquet for 2026-05-13
+
+- EPL fixture 1379275 (Man City 3-0 Crystal Palace) confirmed via API-Football direct query + written to GCS fixtures
+  parquet for 2026-05-13
 - VM `af-backfill-20260514-103705` ran FIXTURE_STATS entity; wrote 2-row × 23-col narrow per-team parquet to
   `sports_reference/by_date/day=2026-05-13/entity=fixture_stats/league=EPL/`
-- Schema registry confirmed 23 cols (not old 2-col minimal). Migration from 27-col wide format to 23-col per-team
-  narrow format verified.
+- Schema registry confirmed 23 cols (not old 2-col minimal). Migration from 27-col wide format to 23-col per-team narrow
+  format verified.
 - Manifest flushed (1 new entry, total 2,626,648)
 - Issue filed: deployment-api missing `position_balance_monitor_service` dep (d72afe3e)
 - Issue doc needed: orchestrator zero-fixture-path recovery bypass bug (deferred — see scoreboard above)

@@ -428,7 +428,7 @@ sub-plan; this section is a pointer.
 - Write-gate cluster:
   [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Asset_group vocabulary:
-  [`venue_axis_asset_group_vocabulary_2026_04_25.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.md).
+  [`venue_axis_asset_group_vocabulary_2026_04_25.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md).
 - Per-asset-group umbrellas: `cefi_master_2026_05_07`, `defi_master_2026_05_07`, `tradfi_master_2026_05_07`,
   `sports_master_2026_05_07`, `predictions_master_2026_05_07`.
 - Manifest SSOT codex: `codex/02-data/availability-manifest-and-data-status.md`.
@@ -444,6 +444,7 @@ Active sub-plans owned by or closely coordinated with this epic:
 | [`active/features_service_qg_cleanup_2026_05_11`](../active/features_service_qg_cleanup_2026_05_11.md)       | Features service QG cleanup — quality-gate repair for features-\* service family                            | Active |
 | [`active/compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md) | Compute optimization + mock data — backtest compute sizing + mock-data pipeline benchmarking                | Active |
 | [`active/context_fill_optimization_2026_05_14`](../active/context_fill_optimization_2026_05_14.md)           | Context fill optimization — agent context efficiency + prompt-fill compression for long-running slots       | Active |
+| [`active/gate_3_phantom_audit_runbook_2026_05_13`](../active/gate_3_phantom_audit_runbook_2026_05_13.md)     | Gate 3 phantom-audit execution runbook — one-shot phantom reconciliation pre-2026-05-15 freeze gate         | Active |
 
 ## Folded plans (archived 2026-05-07)
 
