@@ -10,11 +10,52 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---
 
-> **🟢 VM RUNNING — features-onchain smoke `features-onchain-defi-backfill-20260514-143829` (2026-04-08→2026-04-13, 5 days) launched 2026-05-14 14:38 UTC. Operator approved.**
-> **🟢 VM RUNNING — MTDS lst_rates smoke `mtds-lst-rates-20260514-143803` (2026-04-15→2026-04-19, 4 days) launched 2026-05-14 14:38 UTC. Operator approved.**
-> Remove banners when both VMs reach STOPPED.
+> **🟢 VM RUNNING — MDPS DeFi smoke `mdps-backfill-defi-20260514-152157` (2026-04-08→2026-04-12, 5 days) launched 2026-05-14 15:22 UTC. Pre-authorized (<1 week). Unblocks features-onchain once complete.**
+> Remove banner when VM reaches STOPPED.
 
-## What I found
+## Smoke run results (2026-05-14)
+
+Both smoke VMs launched at 14:38 UTC completed quickly (auto-deleted on exit). Results:
+
+**MTDS lst_rates smoke `mtds-lst-rates-20260514-143803` (2026-04-15→2026-04-19) — rc=0, SKIPPED ALL 5 DAYS**
+- "Skipping LST rates for 2026-04-15 — all expected sentinels already captured" × 5 days
+- Finding: lst_rates data already exists in `market-data-tick-defi-central-element-323112/lst_rates/` back to
+  2020-01-01. Coverage confirmed through at least 2026-04-14 (gsutil ls tail) and 2026-04-19 (sentinel captured).
+- The original issue's "lst_rates 30 days stale" observation used `market-data-tick-defi-prd-central-element-323112`
+  (different bucket). The non-prd bucket that services actually use has full coverage.
+
+**features-onchain smoke `features-onchain-defi-backfill-20260514-143829` (2026-04-08→2026-04-13) — rc=1, FAILED**
+```
+ERROR DEPENDENCY CHECK FAILED
+Missing: market-data-processing-service
+Path: gs://market-data-tick-defi-central-element-323112/processed_candles/by_date/day=2026-04-08/
+Date: 2026-04-08 / Asset group: DEFI
+```
+**Root cause (corrected)**: features-onchain-service requires **MDPS processed_candles** as its primary upstream
+dependency, NOT MTDS lst_rates directly. The dependency chain is:
+```
+MTDS raw_tick_data → MDPS processed_candles → features-onchain → features-onchain-central-element-323112
+```
+MDPS has NEVER been run for DeFi. The bucket `market-data-tick-defi-central-element-323112/processed_candles/` is
+completely empty (0 objects).
+
+**Corrected unblocking path for B-015**:
+1. ✅ MTDS raw_tick_data — `market-data-tick-defi-central-element-323112/raw_tick_data/` exists from 2020-01-01
+2. ✅ MTDS lst_rates — `market-data-tick-defi-central-element-323112/lst_rates/` exists from 2020-01-01 through
+   at least 2026-04-19
+3. 🟢 **MDPS DeFi backfill** — `mdps-backfill-defi-20260514-152157` launched 2026-05-14 15:22 UTC for
+   2026-04-08→2026-04-12 (5 days, pre-authorized). Will produce
+   `market-data-tick-defi-central-element-323112/processed_candles/`
+4. ⏳ features-onchain — will rerun for 2026-04-08→2026-04-12 once MDPS completes
+5. ⏳ B-015 carry_staked_basis paper backtest — target window **2026-04-08→2026-04-12**
+
+**B-015 window correction**: original ping to Harsh slot 9 cited 2026-05-01→2026-05-07. That window has no
+lst_rates data (coverage ends 2026-04-14 in prd bucket; non-prd also ends ~2026-04-19). Corrected window:
+**2026-04-08 → 2026-04-12** (5 days; all three sources confirmed present in non-prd bucket).
+
+---
+
+## What I found (original)
 
 During B-015 Phase 1 prereq check (carry_staked_basis paper backtest pipeline-state
 verification, item (c) — features-service DeFi feature parquets), both DeFi feature
