@@ -1486,3 +1486,14 @@ Each successor plan landed before this plan archives, per "Plan Archival HARD RU
 Sum sequential critical path: P1 (5) → P3 (2) → P5 (4) → P7 (2) → P9 (3) → P12 (2) → P13 (1) = 19 days. With
 parallelisation (P2 || P1, P4 || P1+P2+P3, P6 || P5, P8 || P7, P10 rolling, P11 after P9): **~17 calendar AI-days**
 end-to-end. Fits the May-23 cutover if started no later than 2026-05-12.
+
+## DONE-2026-05-14 — slot 9 (Harsh `harsh-slot-9`) Descope annotation + successor plan filing
+
+> Slot 9 Day-3 Wave 1 task: defi_recursive_borrow DESCOPE annotation + successor plan. Plan-writing only, no code.
+
+| Commit | Repo | Scope |
+| ------ | ---- | ----- |
+| `PM@082f217f` | unified-trading-pm | Descope banner (DESCOPED 2026-05-14) added to plan top; frontmatter updated (status: partial-shipped-descoped + successor_plan field); "Deferred work — migrated to successor plan" section filed with 13-row migration table (Phase 0 banners → Phase 13 live deploy). Successor plan `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` created with all [ ] todos migrated with MIGRATED FROM provenance. |
+| `PM@3acaae6f` | unified-trading-pm | Master plan inventory regenerated: 74 plans / 43% done / 575 cal AI-days remaining; successor plan row added. |
+
+**Done-def met**: current plan annotated with descope decision + successor banner ✅; successor plan filed at `plans/active/` ✅; master plan inventory regenerated ✅.
