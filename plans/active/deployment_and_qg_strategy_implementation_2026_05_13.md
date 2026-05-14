@@ -79,7 +79,7 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 **Cluster D — Test failures** (5 parallel slots, 4-6 cal-AI-hours after Cluster C propagates):
 - [ ] [AGENT] P0. `instruments-service`: 74 failed (`test_new_orchestrator`, `test_sports_fixtures_daily_repoll`). Biggest unknown — diagnose-before-fix.
 - [ ] [AGENT] P0. `ml-inference-service`: 6f + 33e (`test_prediction_publisher_helpers`, `test_emission_policy_per_strategy_signal`). Re-run after UTL@67c532bd propagation.
-- [ ] [AGENT] P0. `position-balance-monitor-service`: ImportError cascade — re-run after UTL.
+- [x] [AGENT] P0. `position-balance-monitor-service`: ImportError cascade — re-run after UTL. (position-balance-monitor-service@8837338 — 799 tests pass; root cause: `instrument_type="PERP"` in base.py + test drifted from UAC contract which uses `"PERPETUAL"`; both fixed)
 - [ ] [AGENT] P0. `strategy-service`: 4f in `test_cdc_strategy_state::TestSignalPublisherEmitsTradeAlertEvent`. Re-run after UTL.
 - [ ] [AGENT] P0. `MDPS`: 2f in `test_canonical_writer_record_helpers`. Near-pass.
 - [ ] [AGENT] P0. `features-service`: 1 import error in `test_volatility_expected_unattempted`. Re-run after UTL.
