@@ -332,3 +332,33 @@ Estimated next-cycle effort: 0.5 cal AI-day (focused investigation + 2 small cod
   above to close the remaining 35 pp gap.
 - **Cumulative work**: 5 bug fixes shipped across `execution-service` + 1 P1 issue with full diagnostic state for the
   next cycle.
+
+---
+
+## Update 2026-05-14 — 5th bug (block off-by-one) SHIPPED + UAC defaults updated
+
+**Fix shipped**: `execution-service@70825a432`:
+- `cache_key_before = (asset, block)` → `(asset, max(block - 1, 1))` — pre-supply state
+- `cache_key_after = (asset, block + 1)` → `(asset, block)` — post-supply state (comparison target)
+- `_fetch_atoken_total_supply_at_block(..., block)` → `(..., max(block - 1, 1))`
+- `after_rate_apy_pct` (now block N = post-supply) is the realized comparison target (unchanged semantics, now correct)
+
+**UAC static defaults updated**: `unified-api-contracts@215ed3e`:
+- USDC: slope1 0.04→0.065, optimal 0.90→0.92, slope2 0.60→0.20 (V2 ABI verified, block 23364831)
+- USDT: slope1 0.04→0.065, optimal 0.90→0.92, slope2 0.60→0.14 (per-asset V2 params)
+- DAI: slope1 0.04→0.055, optimal 0.90→0.92, slope2 0.75→0.35 (best estimate; live fetch is primary)
+- Added WBTC (optimal=0.45, slope1=0.04, slope2=3.00), updated wstETH optimal 0.80→0.45, added rETH
+
+**Expected outcome** (from issue doc analysis): USDT 55% → ~90%+, USDC 85% → 90%+.
+DAI requires VM re-run to confirm — live IRM fetch is the primary path; static defaults are fallback.
+
+**Next step**: VM re-run with updated code. Operator to launch:
+```bash
+bash deployment-service/scripts/vm/launch-aave-lending-rate-validation.sh \
+  --corr-id "$(uuidgen)" --mode live
+```
+Target: ≥90% pass rate (USDC + USDT should clear; DAI TBD pending RPC verification).
+
+**Remaining open items**:
+- DAI IRM source verification (requires `WEB3_PROVIDER_URI` and print of live_params for DAI events)
+- VM re-run to confirm fix closes the 35pp gap

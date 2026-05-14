@@ -24,6 +24,10 @@ related_plans:
 
 # Predictions Master — asset_group umbrella
 
+> **🟡 IN-FLIGHT REFACTOR — `available_at` adapter stamping** (coordinated by
+> `available_at_lookahead_bias_completion_2026_05_08` Phase 1). Re-verify per-adapter `available_at` stamping wiring
+> before adding new adapters to this plan.
+
 ## Codex SSOTs
 
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code

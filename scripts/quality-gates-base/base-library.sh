@@ -701,7 +701,13 @@ else
   log_success "STEP 5.23: UAC import surface (exempt repo)"
 fi
 
-[[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
+# CODEX_MAX_VIOLATIONS: repos with pre-existing violations can set a ceiling.
+# The goal is to ratchet this down to 0 over time.
+_max_v=${CODEX_MAX_VIOLATIONS:-0}
+if [[ $V -gt $_max_v ]]; then
+    log_fail "Codex compliance FAILED: $V violations (max allowed: $_max_v)"
+    exit 1
+fi
 log_success "Codex compliance PASSED"
 
 # ── [5.6] DEAD CODE DETECTION (vulture — warn/fail thresholds) ───────────────
