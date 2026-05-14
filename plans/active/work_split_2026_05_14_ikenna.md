@@ -53,26 +53,26 @@ locked_since: 2026-05-14
 Slot 1 = main orchestrator (continuous; not counted in the 200). Stacks below are deep — slot owner ships top-down and
 pulls in-stack reserve when each item closes.
 
-| Slot               | Theme                                                               | Cal AI-days |
-| ------------------ | ------------------------------------------------------------------- | ----------- |
-| 1                  | Main orchestrator (continuous, uncounted)                           | —           |
-| 2                  | DeFi classification + catalogue + Polymarket subset                 | ~24         |
-| 3                  | Perp venue adapters + Solana RPC + DEX/Drift expansion              | ~25         |
-| 4                  | Sports classifier + propagation chain + phantom apply-flips         | ~25         |
-| 5                  | TradFi Item 2 cascade + tradfi backfill prep + Solana C             | ~25         |
-| 6                  | Wallet/Treasury Phase 1 + DeFi alerts + custody wiring              | ~24         |
-| 7                  | Treasury rollup endpoint + Phase 3 audit + DART manual-trade        | ~25         |
-| 8                  | SHARD_AXIS_MATRIX drift + audit cleanup + ops verification          | ~25         |
-| ~~9~~              | **REASSIGNED 2026-05-14 15:30 UTC** → folded across slots 2/5/6/7/8 (PC concurrency cap = 8 tabs) | ~~27~~ |
-| ~~10~~             | **REASSIGNED 2026-05-14** → folded into slot 7 writegate stack                                   | ~~4~~  |
-| ~~11~~             | **REASSIGNED 2026-05-14** → folded across slots 4/6/8 + cbETH DEFERRED + Kraken to slot 3        | ~~7.4~~|
-| **Subtotal**       | (8 implementer slots, baseline)                                     | **~200**    |
-| **+ V2 ext**       | (see § "V2 extension — +72 cal AI-days" below)                      | **+72**     |
-| **+ Orphans**      | (6 items: 11/12 May reserve + MTDS clusters + banners + slot 10)    | **+16**     |
-| **+ Slot 11**      | (new-issue absorb + sports + Tardis + cbETH + Kraken)               | **+7.4**    |
-| **+ Slot 6 #11**   | (phase_3c lending model — UNBOUNDED per operator)                   | **+7.2**    |
-| **+ Harsh absorb** | (8 Harsh 14 May items reassigned across slots)                      | **+7**      |
-| **Total**          | (8 implementer + emergency slots 10+11)                             | **~310**    |
+| Slot               | Theme                                                                                             | Cal AI-days |
+| ------------------ | ------------------------------------------------------------------------------------------------- | ----------- |
+| 1                  | Main orchestrator (continuous, uncounted)                                                         | —           |
+| 2                  | DeFi classification + catalogue + Polymarket subset                                               | ~24         |
+| 3                  | Perp venue adapters + Solana RPC + DEX/Drift expansion                                            | ~25         |
+| 4                  | Sports classifier + propagation chain + phantom apply-flips                                       | ~25         |
+| 5                  | TradFi Item 2 cascade + tradfi backfill prep + Solana C                                           | ~25         |
+| 6                  | Wallet/Treasury Phase 1 + DeFi alerts + custody wiring                                            | ~24         |
+| 7                  | Treasury rollup endpoint + Phase 3 audit + DART manual-trade                                      | ~25         |
+| 8                  | SHARD_AXIS_MATRIX drift + audit cleanup + ops verification                                        | ~25         |
+| ~~9~~              | **REASSIGNED 2026-05-14 15:30 UTC** → folded across slots 2/5/6/7/8 (PC concurrency cap = 8 tabs) | ~~27~~      |
+| ~~10~~             | **REASSIGNED 2026-05-14** → folded into slot 7 writegate stack                                    | ~~4~~       |
+| ~~11~~             | **REASSIGNED 2026-05-14** → folded across slots 4/6/8 + cbETH DEFERRED + Kraken to slot 3         | ~~7.4~~     |
+| **Subtotal**       | (8 implementer slots, baseline)                                                                   | **~200**    |
+| **+ V2 ext**       | (see § "V2 extension — +72 cal AI-days" below)                                                    | **+72**     |
+| **+ Orphans**      | (6 items: 11/12 May reserve + MTDS clusters + banners + slot 10)                                  | **+16**     |
+| **+ Slot 11**      | (new-issue absorb + sports + Tardis + cbETH + Kraken)                                             | **+7.4**    |
+| **+ Slot 6 #11**   | (phase_3c lending model — UNBOUNDED per operator)                                                 | **+7.2**    |
+| **+ Harsh absorb** | (8 Harsh 14 May items reassigned across slots)                                                    | **+7**      |
+| **Total**          | (8 implementer + emergency slots 10+11)                                                           | **~310**    |
 
 ---
 
@@ -141,8 +141,11 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
    `defi_master_2026_05_07` venue matrix. (infra 0.8×, ~5 = 4.0 cal)
 6. **Drift JitoSOL+mSOL basis-pair build-out** — eligibility wiring for `carry_staked_basis` per archetype matrix.
    (design 0.6×, ~4 = 2.4 cal)
-7. **Hyperliquid arb_price_dispersion eligibility check** — verify USDC-margin compatibility per archetype matrix.
-   (research 1.2×, ~2 = 2.4 cal)
+7. ✅ **Hyperliquid arb_price_dispersion eligibility check** — verify USDC-margin compatibility per archetype matrix.
+   (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14): USDC margin accepted (0 haircut) → eligible for
+   `arbitrage_price_dispersion`. perp_funding capability gap fixed: UAC@052120d (HYPERLIQUID+ASTER in
+   VENUE_DATA_TYPE_CAPABILITIES) + strategy-service@c7a3f92 (4 tests). DRIFT/GMX DeFi-only reclassification also shipped
+   as part of the same UAC commit.
 8. ✅ **Cluster D ml-inference test failures** (Phase 0 cluster D, ml-inference-half). (refactor 0.4×, ~2 = 0.8 cal)
    **DONE** (2026-05-14 sub-agent): ml-inference@7e37109 — STEP 5.63 false-positive docstring fix + STEP 5.64
    `emit_preflight_skip()` added to `batch_handler.py` dependency-missing branches.
@@ -247,24 +250,24 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
 4. **`api_keys_wallets_accounts_readiness_2026_05_10` Phase 8.D pre-cutover gate items** — finalize gate checklist
    verification. (research 1.2×, ~3 = 3.6 cal)
 5. ✅ **Kill-switch arming + manual-trade UX gate** — operator-only arming surface; build the UI gate that requires
-   explicit operator action before live trading. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14):
-   ManualPendingQueue engine + 4 API endpoints shipped at `execution-service@1e119a61f`;
-   ManualTradeGateDialog + dart-client.ts + mock fixtures shipped at `unified-trading-system-ui@13b94ca9`.
+   explicit operator action before live trading. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): ManualPendingQueue
+   engine + 4 API endpoints shipped at `execution-service@1e119a61f`; ManualTradeGateDialog + dart-client.ts + mock
+   fixtures shipped at `unified-trading-system-ui@13b94ca9`.
 6. ✅ **Custody adapter Cloud-KMS wiring smoke** — verify the `signing_surface` config flip path works against real
    Cloud-KMS endpoint (existing 10 CMKs, asia-northeast1). (infra 0.8×, ~2 = 1.6 cal) **DONE** (2026-05-14):
    requires_credentials marker registered + TestCloudKmsLiveEndpointSmoke class (2 integration tests, skip by default)
    at `execution-service@1ee9e8001`. Unit tests covering full dispatch chain already present.
 7. ✅ **`alerting_runbook_and_operator_ux_post_cutover_2026_05_12` Ikenna-half** — push remaining operator UX items.
-   (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14):
-   Groups A/B/C/E/F shipped (runbook + 4 doc edits). Groups D/G: design calls documented + implementation deferred
-   to UI/deployment-ui slot (out of PM-repo scope). All at `unified-trading-pm@slot6-item7`.
+   (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): Groups A/B/C/E/F shipped (runbook + 4 doc edits). Groups D/G:
+   design calls documented + implementation deferred to UI/deployment-ui slot (out of PM-repo scope). All at
+   `unified-trading-pm@slot6-item7`.
 8. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 1** — pre-cutover audit-records gate. (research 1.2×, ~3 =
    3.6 cal)
 9. **`available_at_lookahead_bias_completion_2026_05_08` sweep** — close remaining stamping helper consumers. (refactor
    0.4×, ~4 = 1.6 cal)
-10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the custody-side
-    gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14):
-    pvl-p23c shipped in full — backend + API client + UI component + 3 vitest tests + mock fixtures.
+10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the
+    custody-side gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): pvl-p23c
+    shipped in full — backend + API client + UI component + 3 vitest tests + mock fixtures.
 11. **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per operator**
     — 0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate. Root cause
     likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3 `DefaultReserveInterestRateStrategy`
@@ -328,10 +331,11 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
 1. ✅ **`deployment_api_shard_axis_matrix_uac_drift_2026_05_14` P1** — fix 13 test failures from SHARD_AXIS_MATRIX
    drift; UAC carveouts already shipped, this is the deployment-api alignment. (refactor 0.4×, ~2 = 0.8 cal) **DONE**:
    `deployment-api@40f7769` — 4 test files updated, 13/13 failures resolved. (2026-05-14 session 1)
-2. 🔄 **`solana_defi_coverage_gaps` successor plan D** — venue naming reconciliation (MARINADE/RAYDIUM/ORCA/KAMINO/SOLEND/MARGINFI/DRIFT/JITO → canonical {PROTOCOL}-SOLANA). (design 0.6×, ~4 = 2.4 cal)
-   **PHASE 1 DONE** (2026-05-14): `instruments-service@2639f8e` — migration script + 7 unit tests. QG green.
-   Phase 2 dry-run in progress: 169 Cat A rows + 59 Cat B rows found in prod manifest.
-   Phase 3 (VM migration) deferred to operator-authorized backfill slot.
+2. 🔄 **`solana_defi_coverage_gaps` successor plan D** — venue naming reconciliation
+   (MARINADE/RAYDIUM/ORCA/KAMINO/SOLEND/MARGINFI/DRIFT/JITO → canonical {PROTOCOL}-SOLANA). (design 0.6×, ~4 = 2.4 cal)
+   **PHASE 1 DONE** (2026-05-14): `instruments-service@2639f8e` — migration script + 7 unit tests. QG green. Phase 2
+   dry-run in progress: 169 Cat A rows + 59 Cat B rows found in prod manifest. Phase 3 (VM migration) deferred to
+   operator-authorized backfill slot.
 3. ✅ **`AUDIT_pre_may_8_cleanup_2026_05_13`** — close out pre-May-8 cleanup audit items. (refactor 0.4×, ~3 = 1.2 cal)
    **DONE** (2026-05-14 audit pass): All 3 flagged action items already resolved by other agents — (a) wave3x Track D:
    EXPECTED_KNOWN_SOURCE_GAP already shipped UAC@174f401, status table already `done`; (b) launcher_scripts Phases 2/3:
@@ -463,64 +467,64 @@ and need the verdict to compute their Phase 1 close.
 
 ## SLOT 9-10-11 REASSIGNMENT — 2026-05-14 15:30 UTC (operator PC concurrency cap = 8 tabs)
 
-Slots 9/10/11 work folded across existing slots 2-8 + slot 1 main. All items remain in May-23 scope.
-All 8 active agents are pinged to re-pull LDR + read their updated stack.
+Slots 9/10/11 work folded across existing slots 2-8 + slot 1 main. All items remain in May-23 scope. All 8 active agents
+are pinged to re-pull LDR + read their updated stack.
 
 ### Slot 9 work distribution (~27 cal AI-days, additive)
 
-| Slot 9 item | New owner | Rationale |
-| --- | --- | --- |
-| Cluster A ×→x sed mechanical (~0.2) | **Slot 6** | Small mechanical fits slot 6 cleanup |
-| `solana_defi_coverage_gaps` successor E — Kamino/Marinade Native (~2.4) | **Slot 2** | DeFi catalogue theme |
-| `honest_coverage_cron_vm_scheduling` (~2.4) | **Slot 8** | Audit/ops verification theme |
-| `mtf_intraday_micro_regime_policy` 2 dict entries (~0.6) | **Slot 5** | TradFi-adjacent micro-regime |
-| `strategy_paper_vm_nautilus_trader_missing_dep` re-verify (~0.2) | **Slot 6** | Tiny mechanical |
-| `cross_asset_instruments_service_scope` triage (~3.6) | **Slot 2** | DeFi catalogue + cross-asset |
-| `bucket_name_ssot_canonicalisation_2026_05_10` workspace flip (~1.6) | **Slot 8** | Audit cleanup |
-| `cme_polymarket_arb_2026_05_08` close-out (~2.4) | **Slot 2** | DeFi/Polymarket overlap |
-| `arbitrage_price_dispersion_finalisation_2026_05_09` (~3.6) | **Slot 3** | Perp venue + DEX theme |
-| `code_freeze_migrate_backfill_sequencing_2026_05_10` audit (~3.6) | **Slot 8** | Audit theme |
-| Phase 6.9 workspace QG flip-sweep (~2.4) | **Slot 7** | Writegate Phase 6.x owner |
-| `governance_qg_automation_gaps_post_cutover` codification (~3.0) | **Slot 1 main** | Orchestrator-flavoured |
-| ORPHAN MTDS test cluster E — tardis network-mocking (~0.4) | **Slot 6** | Mechanical mock-wiring |
-| ORPHAN Stream C C-enum.3+4 archetype enum flips (~1.8) | **Slot 2** | DeFi archetype canonicalisation |
-| V2: `writegate Phase 6.9 expanded scope` (12.6 cal left) | **Slot 7** | Writegate owner |
-| V2: `expected_universe_v2_design_2026_05_08` (3.6 cal) | **Slot 4** | Sports/prediction universe |
-| V2: `deploy_missing_auto_launch_2026_05_07` close (4.1 cal) | **Slot 8** | Cross-cutting cleanup |
+| Slot 9 item                                                             | New owner       | Rationale                            |
+| ----------------------------------------------------------------------- | --------------- | ------------------------------------ |
+| Cluster A ×→x sed mechanical (~0.2)                                     | **Slot 6**      | Small mechanical fits slot 6 cleanup |
+| `solana_defi_coverage_gaps` successor E — Kamino/Marinade Native (~2.4) | **Slot 2**      | DeFi catalogue theme                 |
+| `honest_coverage_cron_vm_scheduling` (~2.4)                             | **Slot 8**      | Audit/ops verification theme         |
+| `mtf_intraday_micro_regime_policy` 2 dict entries (~0.6)                | **Slot 5**      | TradFi-adjacent micro-regime         |
+| `strategy_paper_vm_nautilus_trader_missing_dep` re-verify (~0.2)        | **Slot 6**      | Tiny mechanical                      |
+| `cross_asset_instruments_service_scope` triage (~3.6)                   | **Slot 2**      | DeFi catalogue + cross-asset         |
+| `bucket_name_ssot_canonicalisation_2026_05_10` workspace flip (~1.6)    | **Slot 8**      | Audit cleanup                        |
+| `cme_polymarket_arb_2026_05_08` close-out (~2.4)                        | **Slot 2**      | DeFi/Polymarket overlap              |
+| `arbitrage_price_dispersion_finalisation_2026_05_09` (~3.6)             | **Slot 3**      | Perp venue + DEX theme               |
+| `code_freeze_migrate_backfill_sequencing_2026_05_10` audit (~3.6)       | **Slot 8**      | Audit theme                          |
+| Phase 6.9 workspace QG flip-sweep (~2.4)                                | **Slot 7**      | Writegate Phase 6.x owner            |
+| `governance_qg_automation_gaps_post_cutover` codification (~3.0)        | **Slot 1 main** | Orchestrator-flavoured               |
+| ORPHAN MTDS test cluster E — tardis network-mocking (~0.4)              | **Slot 6**      | Mechanical mock-wiring               |
+| ORPHAN Stream C C-enum.3+4 archetype enum flips (~1.8)                  | **Slot 2**      | DeFi archetype canonicalisation      |
+| V2: `writegate Phase 6.9 expanded scope` (12.6 cal left)                | **Slot 7**      | Writegate owner                      |
+| V2: `expected_universe_v2_design_2026_05_08` (3.6 cal)                  | **Slot 4**      | Sports/prediction universe           |
+| V2: `deploy_missing_auto_launch_2026_05_07` close (4.1 cal)             | **Slot 8**      | Cross-cutting cleanup                |
 
 ### Slot 10 work distribution (~4 cal AI-days)
 
-All of slot 10 (writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit across 9 services) → **Slot 7**, who owns
-writegate Phase 6.x already. Slot 7 confirms β verdict + flips Gate 4 row in master plan.
+All of slot 10 (writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit across 9 services) → **Slot 7**, who owns writegate Phase
+6.x already. Slot 7 confirms β verdict + flips Gate 4 row in master plan.
 
 ### Slot 11 work distribution (~7.4 cal AI-days; cbETH retracted, Kraken re-classed)
 
-| Slot 11 item | New owner | Rationale |
-| --- | --- | --- |
-| alerting D.5+D.7 codex violations (~0.4) | **Slot 6** | Alerting theme |
-| features-service size violations 3 files (~0.4) | **Slot 4** | Sports `batch_handler.py` 914L (slot 4 owns sports); other 2 mechanical decomposition |
-| Tardis docstring + codex (✅ DONE PM@468c7e8d) | — | Already shipped |
-| Sports scrapers cross-links (✅ DONE PM@3e349c65) | — | Already shipped |
-| Phase 1 freeze-gate audit (✅ DONE PM@e67f5ce3) | — | Already shipped |
-| **cbETH adapter scaffold + Coinbase API credential ask** | **DEFERRED post-cutover** | Operator review 2026-05-14: on-chain `exchangeRate()` is canonical SSOT (`market-tick-data-service/.../lst_rates_handler.py:100` cbETH config + PM@3a7a4914 "exchangeRate() is SSOT, DefiLlama is non-goal" + cbETH smoke shipped at MTDS@f0b1f7f9). The Coinbase Institutional REST is a nice-to-have richer-data source, NOT a May-23 blocker. Mark cbETH adapter scaffold `**DEFERRED**` + master plan row update from `BLOCKED-CREDENTIALS` → `DEFERRED post-cutover`. |
-| **Kraken CeFi adapter (live + historic) — keep in scope** (~1.8) | **Slot 3** | Operator confirmed 2026-05-14: API key incoming (already onboarded at Kraken Pro). Build adapter for BOTH historic (via Tardis `tardis_shared.py` — Tardis paid commercial subscription already operator-acked as BLOCKED-CREDENTIALS) AND live (direct Kraken REST + WS). Placeholder credential vault entries `kraken-api-key` / `kraken-api-secret` to be filled when key arrives. Status: `BLOCKED-CREDENTIALS-OPERATOR-INCOMING` — scaffold + unit tests ship in May-23; live integration tests run on credential arrival. Fits slot 3 (perp venue adapters + Solana RPC theme). |
-| Master plan row updates: cbETH → DEFERRED; Kraken → CREDENTIALS-INCOMING (~0.4) | **Slot 8** | Audit cleanup |
+| Slot 11 item                                                                    | New owner                 | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| alerting D.5+D.7 codex violations (~0.4)                                        | **Slot 6**                | Alerting theme                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| features-service size violations 3 files (~0.4)                                 | **Slot 4**                | Sports `batch_handler.py` 914L (slot 4 owns sports); other 2 mechanical decomposition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Tardis docstring + codex (✅ DONE PM@468c7e8d)                                  | —                         | Already shipped                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Sports scrapers cross-links (✅ DONE PM@3e349c65)                               | —                         | Already shipped                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Phase 1 freeze-gate audit (✅ DONE PM@e67f5ce3)                                 | —                         | Already shipped                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **cbETH adapter scaffold + Coinbase API credential ask**                        | **DEFERRED post-cutover** | Operator review 2026-05-14: on-chain `exchangeRate()` is canonical SSOT (`market-tick-data-service/.../lst_rates_handler.py:100` cbETH config + PM@3a7a4914 "exchangeRate() is SSOT, DefiLlama is non-goal" + cbETH smoke shipped at MTDS@f0b1f7f9). The Coinbase Institutional REST is a nice-to-have richer-data source, NOT a May-23 blocker. Mark cbETH adapter scaffold `**DEFERRED**` + master plan row update from `BLOCKED-CREDENTIALS` → `DEFERRED post-cutover`.                                                                                                            |
+| **Kraken CeFi adapter (live + historic) — keep in scope** (~1.8)                | **Slot 3**                | Operator confirmed 2026-05-14: API key incoming (already onboarded at Kraken Pro). Build adapter for BOTH historic (via Tardis `tardis_shared.py` — Tardis paid commercial subscription already operator-acked as BLOCKED-CREDENTIALS) AND live (direct Kraken REST + WS). Placeholder credential vault entries `kraken-api-key` / `kraken-api-secret` to be filled when key arrives. Status: `BLOCKED-CREDENTIALS-OPERATOR-INCOMING` — scaffold + unit tests ship in May-23; live integration tests run on credential arrival. Fits slot 3 (perp venue adapters + Solana RPC theme). |
+| Master plan row updates: cbETH → DEFERRED; Kraken → CREDENTIALS-INCOMING (~0.4) | **Slot 8**                | Audit cleanup                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ### Net additions per slot (~38 cal AI-days redistributed)
 
-| Slot | Added from 9/10/11 | New slot total |
-| --- | --- | --- |
-| 2 | ~10.2 | ~34 |
-| 3 | ~5.4 | ~30 |
-| 4 | ~4.0 | ~29 |
-| 5 | ~0.6 | ~25.6 |
-| 6 | ~1.2 | ~25 |
-| 7 | ~18.8 (all of slot 10 + Phase 6.9 flip-sweep + V2 writegate 12.6 cal) | ~44 |
-| 8 | ~9.7 | ~35 |
-| 1 main | ~3.0 | (continuous) |
+| Slot   | Added from 9/10/11                                                    | New slot total |
+| ------ | --------------------------------------------------------------------- | -------------- |
+| 2      | ~10.2                                                                 | ~34            |
+| 3      | ~5.4                                                                  | ~30            |
+| 4      | ~4.0                                                                  | ~29            |
+| 5      | ~0.6                                                                  | ~25.6          |
+| 6      | ~1.2                                                                  | ~25            |
+| 7      | ~18.8 (all of slot 10 + Phase 6.9 flip-sweep + V2 writegate 12.6 cal) | ~44            |
+| 8      | ~9.7                                                                  | ~35            |
+| 1 main | ~3.0                                                                  | (continuous)   |
 
-Stack totals span ~25-44 cal AI-days across slots over 9 calendar days to May-23 — comfortable at
-density-push pace (~100-200 cal/side/day).
+Stack totals span ~25-44 cal AI-days across slots over 9 calendar days to May-23 — comfortable at density-push pace
+(~100-200 cal/side/day).
 
 ---
 
