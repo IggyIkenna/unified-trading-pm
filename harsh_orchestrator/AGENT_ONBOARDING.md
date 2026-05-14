@@ -103,6 +103,51 @@ message Harsh directly — slot 1 is your conversational dispatcher; you CAN spa
 entry's "Sub-agent fan-out" hint, but only for mechanical / audit work, never cross-cutting design, and you MUST paste
 the full ruleset at the top of every Task prompt (see § "Sub-agent fan-out — discipline" below).
 
+## Lever 1 + 2 — autonomous slot pivoting + auto-poll (codified 2026-05-14)
+
+**New orchestration model** reduces main-orchestrator burden by ~80%. Two mechanisms:
+
+### Lever 1 — Multi-item continuation prompts (autonomous pivoting)
+
+If today's session uses a `plans/active/continuation_prompts_harsh_<YYYY_MM_DD>.md` doc (template at
+[`CONTINUATION_PROMPTS_TEMPLATE.md`](CONTINUATION_PROMPTS_TEMPLATE.md)), your slot section lists **3-5 items in priority
+order** + a "SCOPE EXTENSION reserve" list.
+
+**Auto-pivot rule**: ship items in order. After DONE-pinging item 1, **immediately START item 2** without waiting for
+main dispatch. If you finish all priority items, pull from SCOPE EXTENSION reserve. Main reads your DONE pings on its
+own cadence — no acknowledgment delay.
+
+**Stop conditions** (drop a BLOCKED ping + stand by — do NOT pivot):
+1. Cross-side handshake required (Ikenna ACK on UAC change, etc.)
+2. Ambiguous design decision (when fix could go either way)
+3. Foreign-file collision (untracked / unfamiliar files in your scope)
+4. Plan-of-record says "AWAITING USER DIRECTION"
+
+### Lever 2 — Mechanical auto-poller
+
+Script: [`../scripts/agents/harsh_auto_poll.sh`](../scripts/agents/harsh_auto_poll.sh). Runs every ~3 min (cron or
+`--watch` self-loop), unattended. Handles **only mechanical orchestrator work** (no judgment):
+
+- New STARTED ping → flips LEDGER row to 🟢 IN FLIGHT, commits + pushes
+- DONE / BLOCKED / 🚨 BIG-finding ping → appends to `harsh_orchestrator/auto_poll_log/operator_alerts.log` for next main wake-up
+- Cross-side Ikenna → Harsh ping → appends to alerts log
+- FF-only pull (won't auto-rebase if local diverges — alerts operator)
+- Exit codes: 0 = clean, 1 = mechanical edits, 2 = needs main, 3 = error
+- New BACKLOG dispatch picks remain main's job (judgment work — Prereq+Repos fit check)
+
+Companion: [`THEMATIC_CLUSTERS.md`](THEMATIC_CLUSTERS.md) — stable per-slot theme map across cycles.
+
+**Implication for slots**: ping-format consistency matters more than before. Use the standard tags:
+- `slot-N — STARTED <theme>` for STARTED pings
+- `slot-N — ✅ DONE <theme>: <sha-list>` for DONE pings
+- `[slot N → main] — BLOCKED: <what>` for BLOCKED pings
+
+The auto-poller pattern-matches these. Non-standard phrasing won't escalate properly.
+
+### Lever 3 — Model A migration (future, when work-split predictable)
+
+Not active yet. See `CONTINUATION_PROMPTS_TEMPLATE.md` § "Migration to Model A" for readiness criteria.
+
 ## Reading order (do this first, in sequence)
 
 1. **THIS file** — confirm your role + the git discipline (the "Git discipline under per-slot worktrees" section above).
