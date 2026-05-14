@@ -52,7 +52,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 Cluster E slot 8 tsc done (Tab 2 UAC already on LDR ✅)
 
 ### B-004 · strategy-service 2 remaining test failures
-- **Status**: DISPATCHED → slot 7 2026-05-14
+- **Status**: DONE @strategy-service@PM@2acbd9bb 2026-05-14 (slot 9 — UTL@67c532bd propagation resolved all 4 failures; 1544 tests pass; no code change needed)
 - **Task**: Slot 4 Wave 2 fixed 15/17 pre-existing failures. 2 remain (likely from `TestResolverFactoryCoverage` or `test_factory_builds_all_v1_archetypes` group). Diagnose-first: read test + code-under-test. Fix code if code drifted; fix test if test drifted from SSOT; file issue doc if ambiguous. QG green.
 - **Repos**: `strategy-service`
 - **Est**: 1h · **Model**: Sonnet
@@ -179,7 +179,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-003 batch_live Tab 3 L2 fix-batch | slot 8 | PM@06c6213c ✅ |
 | 2026-05-14 | B-001 deployment-api tarball-block | slot 7 | DISPATCHED |
 | 2026-05-14 | B-002 deployment-ui env selector lock | slot 7 | DISPATCHED |
-| 2026-05-14 | B-004 strategy-service 2 remaining test failures | slot 7 | DISPATCHED |
+| 2026-05-14 | B-004 strategy-service 2 remaining test failures | slot 9 | strategy-service@PM@2acbd9bb ✅ |
 | 2026-05-14 | B-005 Writegate Phase 6.9 features-sports | slot 5 | DISPATCHED |
 | 2026-05-14 | B-017 defi_recursive_borrow successor plan | slot 5 | DISPATCHED |
 | 2026-05-14 | B-007 Phase 8.A manifest writer coverage | slot 8 | DISPATCHED |
