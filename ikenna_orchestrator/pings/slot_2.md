@@ -1,5 +1,29 @@
 # Slot 2 ping ledger — ikenna-defi-catalogue-tab
 
+## [main → slot 2] 2026-05-14 GMX/DRIFT Phase 1C skip instruction — ✅ ACKNOWLEDGED
+
+**Timestamp**: 2026-05-14 **Status**: ✅ ACKNOWLEDGED
+
+Cross-side ping from harsh-main relayed via ikenna-main: `DEFI_VENUE_AXIS_OVERRIDES` dict (UAC@`7c8482e`) is being
+**REVERTED** by Harsh slot 8 (dropping the dict entirely; making perp-venue-eligibility a venue capability
+`has_perp_funding`, not asset_group filter). Concrete changes per ping body:
+
+1. UAC — drop `DEFI_VENUE_AXIS_OVERRIDES`; keep GMX/DRIFT as DeFi.
+2. Strategy-service — perp-hedge eligibility by capability, not `asset_group == "cefi"`.
+3. MTDS — asset_group-agnostic `perp_funding_handler`.
+
+**Slot 2 action**: During Task 7 (`cross_asset_group_catalogue_audit` Phase 6A DeFi half), if Phase 1C (GMX/DRIFT
+dual-classification) surfaces as a todo, **skip it** and annotate:
+`**DEFERRED** — owned by Harsh slot 8 revert + capability refactor`. Do NOT do any work that depends on
+`DEFI_VENUE_AXIS_OVERRIDES` existing.
+
+**Plan annotation target**: `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6 section — add annotation to any
+Phase 6A DeFi-half check that touches GMX/DRIFT classification or axis_override.
+
+All other tasks 1-6 and 8-9 unaffected.
+
+---
+
 ## [Slot 2 → Slot 1] 2026-05-13 Wave 3 cefi catalog cross-ref SHIPPED
 
 **Wave 3 per-instrument catalog cross-ref for cefi — code done, VM run pending.**
