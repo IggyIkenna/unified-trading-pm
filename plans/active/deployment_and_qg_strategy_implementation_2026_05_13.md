@@ -55,7 +55,7 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 > **UPDATE 2026-05-13 evening**: Cluster C closed at `unified-trading-library@67c532bd` — `EmissionDecision` + `publish_with_policy` + `InvalidCompletenessFractionError` + `publish_with_manifest_lookup` now exported. Prior owner's 26-file pending ruff format WIP also finalized. Unblocks PBM + features-service + ml-inference cascade.
 
 **Cluster A — Workspace-wide mechanical** (1 slot serial, 0.5 cal-AI-day):
-- [ ] [AGENT] P0. `×→x` sed: UAC (134 RUF003 in `registry/risk_rules/venue.py`), MTDS (2 RUF002 in `tests/unit/test_lst_rates_handler.py:223`), client-reporting-api (1+ in `attribution.py:7`). Single per-repo command.
+- [ ] [AGENT] P0. `×→x` sed: UAC (134 RUF003 in `registry/risk_rules/venue.py`), MTDS (2 RUF002 in `tests/unit/test_lst_rates_handler.py:223`), client-reporting-api (1+ in `attribution.py:7`). Single per-repo command. **NOTE**: client-reporting-api × fixed at client-reporting-api@e936eb4 (absorbed by slot 7 B008 sweep); UAC + MTDS still open.
 - [ ] [AGENT] P0. PM `python check-import-patterns.py --fix`.
 - [ ] [AGENT] P0. Verify untracked `2026-05-11` file in PM root (foreign or trash).
 
@@ -66,7 +66,7 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 - [ ] [AGENT] P0. `ml-training-service`: 6 C901 in `cloud_feature_provider.py`. Mixed extract + noqa.
 - [ ] [AGENT] P0. `deployment-api`: 9 C901 (`_build_leaf_parquet_candidates` 21>10, `_sports_honest_coverage` 22>10 in `services/data_status_drilldown.py` + `data_status_service.py`). Extract-method 3-4; noqa rest.
 - [ ] [AGENT] P0. `alerting-service`: 4 N802 SHOUTY_CASE test names in `tests/unit/notifiers/test_router_*.py`. Rename or `# noqa: N802` if intentionally documenting event-codes.
-- [ ] [AGENT] P0. `client-reporting-api`: B008 Query-as-arg-default in `attribution.py:237+`. Refactor to default-factory.
+- [x] [AGENT] P0. `client-reporting-api`: B008 Query-as-arg-default in `attribution.py:237+`. Refactor to default-factory. (client-reporting-api@e936eb4 — Annotated[date|None, Query(...)] pattern; RUF002 × also fixed; SIM105/F401/E402/B017 pre-existing fixes absorbed; lint clean; 358 tests pass)
 
 **Operator decision LOCKED 2026-05-13**: C901 = mixed approach with UAC-registry carveout.
 
