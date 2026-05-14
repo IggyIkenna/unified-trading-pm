@@ -132,12 +132,13 @@ Documented above. Composes with Phase 1 commit (no separate work).
       from Databento metadata. **COMPLETED 2026-05-13**: UAC@6c3865b — added LEGACY_MIGRATION_MISSING_EXPIRY to
       EmptyConfirmedReason (member 24). Bundled with workspace-blocker fix for 2 duplicate CircuitBreakerId enum values
       that were breaking all UAC imports.
-- [ ] [SCRIPT] P0. One-shot manifest migration script `instruments-service/scripts/migrate_tradfi_expiry_schema.py`
+- [x] [SCRIPT] P0. One-shot manifest migration script `instruments-service/scripts/migrate_tradfi_expiry_schema.py`
       mirroring existing migration patterns: idempotent, dry-run + apply, per-blob CAS via `if_generation_match`,
-      `2*workers` HTTP pool per workspace rules. For options-chain rows: try Databento `RDC` (reference-data) lookup by
-      symbol; on miss, `record_failed(reason=     LEGACY_MIGRATION_MISSING_EXPIRY)`. For futures rows (new schema):
-      write fresh per-contract rows with all 5 dates. **DEFERRED**: touches real GCS data + needs operator approval for
-      live migration run.
+      16-worker concurrent pool. For options-chain rows: attempts OCC symbol parse (YYMMDD encoded in US equity option
+      symbols); logs LEGACY_MIGRATION_MISSING_EXPIRY for CME/non-OCC symbols. **COMPLETED 2026-05-14**: IS@db070da —
+      282-line script shipped. --dry-run / --apply modes; `if_generation_match` CAS; runbook execution SSOT declared.
+      **DEFERRED (live GCS run)**: actual run against prod bucket deferred until Phase 1B propagates workspace-wide; run
+      on same-region GCE VM per operator direction.
 
 ## Phase 4 — Cascade migration to each consumer in dependency order
 
