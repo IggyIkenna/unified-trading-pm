@@ -29,10 +29,10 @@ locked_since: 2026-05-08
 | Slot | Theme | State | Plan-of-record | Branch |
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + Phase 0 monitoring + spawn cadence | 🟢 ONLINE | (this LEDGER) | `tab/hk/1` |
-| 2 | **Phase 0 remaining** — alerting-service N802 + MDPS/features/ml-inference test failures + deployment-service timeout re-run | 🟡 AWAITING (direction given @11:06) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B/D/F | `tab/hk/2` |
+| 2 | **Phase 0 verify + B-011 follow-on** — features-service ✅ slot 4 fixed; ml-inference → slot 4; Cluster F → slot 5; verify QG then stand by for B-011 after Phase 0 green | 🟢 IN FLIGHT | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B/D/F | `tab/hk/2` |
 | 3 | **B-010** — Phase 8.A archetype validation coverage (strategy-service carry+arb branches, 90% target) | 🟡 AWAITING (direction given after DONE @11:25) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/3` |
-| 4 | **Phase 0 Cluster D** — MDPS + features-service test failures after UTL@67c532bd | ⚠️ SILENT — no STARTED ping; confirm agent running | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/4` |
-| 5 | **B-005+B-017** — Writegate Phase 6.9 features-sports + defi_recursive_borrow successor plan | 🟡 AWAITING (direction given @11:00) | `writegate_honest_coverage_endtoend_2026_05_06.md` § 6.9 | `tab/hk/5` |
+| 4 | **Phase 0 ml-inference + B-006 follow-on** — ml-inference-service 6f+33e diagnose+fix; then B-006 service startup coverage after Phase 0 green | 🟡 AWAITING (direction given after DONE @11:26) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D + Phase 8.A | `tab/hk/4` |
+| 5 | **Phase 0 Cluster F + B-009 follow-on** — deployment-service QG timeout re-run; then B-009 kill switch coverage after Phase 0 green | 🟡 AWAITING (direction given; B-005+B-017 done by prior) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster F + Phase 8.A | `tab/hk/5` |
 | 6 | **Phase 0 Cluster D+E** — instruments-service 74 failures + deployment-ui 21 vitest failures | 🟡 AWAITING (direction given @11:15) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D/E | `tab/hk/6` |
 | 7 | **B-013** — Phase 2 deploy-ready tracking (B-001 ✅ B-002 ✅; B-004 skipped — already done) | 🟡 AWAITING (direction given after B-002 DONE @16:52) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 2 | `tab/hk/7` |
 | 8 | **B-007+B-008** — Phase 8.A manifest writer + emission publisher coverage (UTL) | 🟡 AWAITING (direction given @11:00) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/8` |
@@ -109,6 +109,49 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
   - `deployment-service`: prior QG run timed out >5min. Re-run `bash scripts/quality-gates.sh` with extended budget (15min). If passes: flip Cluster F checkbox in plan + commit. If fails: diagnose and fix.
 
 - **Done-def**: All 5 items QG green + plan checkboxes flipped per item. Ping DONE with per-repo SHAs.
+
+### Slot 4 — Phase 0 ml-inference absorption + B-006 follow-on (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: Phase 0 Cluster D — features-service@38b43ea6 QG green; strategy-service@3ff75a2 2 failures fixed.
+
+- **Owned repos**: `ml-inference-service` + then `execution-service` + `risk-and-exposure-service` + `features-service` + `market-tick-data-service` + `instruments-service` (for B-006) + `unified-trading-pm`
+- **Task — 2 items, work in sequence**:
+
+  **Item 1 (immediate) — Phase 0 Cluster D absorption: ml-inference-service 6f+33e**
+  - Absorbed from slot 2 (slot 2 redirected; do NOT wait for slot 2 to do it).
+  - `ml-inference-service`: 6 failures + 33 errors in `test_prediction_publisher_helpers` + `test_emission_policy_per_strategy_signal`. Diagnose-first: run `bash scripts/quality-gates.sh 2>&1 | grep -E "FAILED|ERROR"` from `ml-inference-service/`. Read failing test + code-under-test. Likely UTL@67c532bd import path drift. Fix import paths to canonical UTL surface OR fix logic if code drifted. QG green. Commit + push. Flip plan Cluster D ml-inference checkbox.
+
+  **Item 2 (after Phase 0 green) — B-006: Phase 8.A service startup coverage**
+  - Wait until Phase 0 all clusters report QG green (slots 6, 9, 2 will ping DONE when done). Then start B-006.
+  - Target: 100% coverage on STARTED/STOPPED/FAILED bootstrap paths across 5 services (execution, risk, features, MDPS, instruments).
+  - Sub-agent fan-out per service (within this slot, serialise commits). For each: run `bash scripts/quality-gates.sh`; identify uncovered lines in `ServiceBootstrap` call path; add unit tests hitting STARTED/STOPPED/FAILED lifecycle events.
+  - QG green per service. Commit + push per service. Flip plan Phase 8.A "service startup" checkbox.
+
+- **Done-def for Item 1**: ml-inference-service QG green, plan checkbox flipped.
+- **Done-def for Item 2**: 0 uncovered lines in startup/shutdown paths for all 5 services; QG green; plan checkbox flipped.
+- **NOTE**: Do NOT start Item 2 until Phase 0 is all clear. Ping main if you complete Item 1 and Phase 0 is still red (pick up B-011 instead if deployment-service Cluster F is done but Phase 0 still has open items).
+
+### Slot 5 — Phase 0 Cluster F absorption + B-009 follow-on (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: B-005 (Writegate Phase 6.9 — features-service@0de7fee6 already wired by prior commits; confirmed) + B-017 (defi_recursive_borrow successor plan filed by slot 9; confirmed). Both done by prior agents.
+
+- **Owned repos**: `deployment-service` + then `risk-and-exposure-service` + `execution-service` (for B-009) + `unified-trading-pm`
+- **Task — 2 items, work in sequence**:
+
+  **Item 1 (immediate) — Phase 0 Cluster F absorption: deployment-service QG timeout re-run**
+  - Absorbed from slot 2 (slot 2 redirected).
+  - `deployment-service`: prior QG run timed out >5min (VM script tests). Re-run `bash scripts/quality-gates.sh` with extended budget (15min). If passes: flip Cluster F checkbox in `deployment_and_qg_strategy_implementation_2026_05_13.md` + commit + push.
+  - If still fails: read the failure. Diagnose-first: is it a real test failure OR just a timeout from slow VM launch simulation? If fixable: fix. If ambiguous: file issue doc with full QG output excerpt. QG as clean as you can get it.
+
+  **Item 2 (after Phase 0 green) — B-009: Phase 8.A kill switch + circuit breaker coverage**
+  - Wait until Phase 0 all clusters green. Then start B-009.
+  - Target: 100% coverage on `KILL_SWITCH_ACTIVATED` + `CIRCUIT_BREAKER_OPEN` event paths in `risk-and-exposure-service` + `execution-service`.
+  - Tests: (a) kill switch fires → no further orders emitted; (b) circuit breaker trips on N consecutive failures → `CIRCUIT_BREAKER_OPEN` event emitted; (c) deactivation re-arms. Verify: no order emitted after kill switch without explicit deactivation.
+  - QG green per service. Commit + push per service. Flip plan Phase 8.A "kill switch" checkbox.
+
+- **Done-def for Item 1**: deployment-service QG result recorded (green + checkbox flipped OR issue doc filed).
+- **Done-def for Item 2**: 100% coverage on kill switch + circuit breaker paths; plan checkbox flipped.
+- **NOTE**: Do NOT start Item 2 until Phase 0 is all clear.
 
 ### Slot 3 — B-010: Phase 8.A archetype validation coverage (Sonnet 4.6 / thinking: medium)
 

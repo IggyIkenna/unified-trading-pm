@@ -59,7 +59,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Plan-ref**: `strategy-service/tests/` (no plan-of-record; standalone fix)
 
 ### B-005 · Writegate Phase 6.9 — features-sports emission policy
-- **Status**: DISPATCHED → slot 5 2026-05-14
+- **Status**: DONE @features-service@0de7fee6 2026-05-14 (already wired by prior commits on LDR; slot 5 confirmed — no action needed)
 - **Task**: Wire `publish_with_policy` at the sports live-handler write boundary in `features-service` (same pattern as Phase 6.5 batch_handler@a93dc3b4 but for sports live path). Add STRICT_FAIL seed in UAC if missing. QG green.
 - **Repos**: `features-service` + `unified-api-contracts` (if seed missing) + `unified-trading-pm`
 - **Est**: 2h · **Model**: Sonnet
@@ -67,7 +67,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: UTL@67c532bd on LDR ✅
 
 ### B-006 · Phase 8.A surface-1 — service startup coverage
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 4 2026-05-14 (start after Phase 0 Cluster D/E/F fully green)
 - **Task**: 100% coverage target on STARTED/STOPPED/FAILED bootstrap paths. Sub-agent fan-out across 5 services (execution, risk, features, MDPS, instruments). For each: run `bash scripts/quality-gates.sh`; identify uncovered lines in `ServiceBootstrap` call path; add unit tests hitting the lifecycle events. Target: 0 uncovered lines in startup/shutdown paths.
 - **Repos**: `execution-service` + `risk-and-exposure-service` + `features-service` + `market-tick-data-service` + `instruments-service`
 - **Est**: 4h (sub-agent fan-out within slot) · **Model**: Sonnet
@@ -91,7 +91,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 Cluster D done
 
 ### B-009 · Phase 8.A surface-4 — kill switch + circuit breaker coverage
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 5 2026-05-14 (start after Phase 0 all clusters green)
 - **Task**: 100% coverage on `KILL_SWITCH_ACTIVATED` + `CIRCUIT_BREAKER_OPEN` event paths. Test: kill switch fires → no further orders emitted; circuit breaker trips on N consecutive failures → CIRCUIT_BREAKER_OPEN event emitted; deactivation re-arms. Verify: no order emitted after kill switch without explicit deactivation.
 - **Repos**: `risk-and-exposure-service` + `execution-service`
 - **Est**: 3h · **Model**: Sonnet
@@ -163,7 +163,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Same as B-015
 
 ### B-017 · defi_recursive_borrow DESCOPE — successor plan filing (doc-only)
-- **Status**: DISPATCHED → slot 5 2026-05-14
+- **Status**: DONE @PM 2026-05-14 (slot 9 filed successor plan; slot 5 confirmed — no action needed)
 - **Task**: File the post-cutover successor plan for `defi_recursive_borrow_archetypes_2026_05_10.md`. Steps: (1) annotate current plan body with descope decision ("May-23 ships archetype documented; Phase 2-3 Solidity + execution halves deferred"); (2) file `plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` with `migrated_from:` frontmatter + migrated todos with `**MIGRATED FROM:**` provenance; (3) add successor banner to current plan; (4) rerun `python3 scripts/plans/regenerate_active_plan_inventory.py`. PM only — no code changes.
 - **Repos**: `unified-trading-pm`
 - **Est**: 1h · **Model**: Sonnet
@@ -187,6 +187,10 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-002 deployment-ui env selector lock | slot 7 | deployment-api@f0c0c43+deployment-ui@2c8de22 ✅ |
 | 2026-05-14 | B-010 Phase 8.A archetype validation coverage | slot 3 | DISPATCHED |
 | 2026-05-14 | B-013 Phase 2 deploy-ready tracking | slot 7 | DISPATCHED |
+| 2026-05-14 | B-005 Writegate Phase 6.9 features-sports | slot 5 | features-service@0de7fee6 ✅ (prior commits; slot 5 confirmed) |
+| 2026-05-14 | B-017 defi_recursive_borrow successor plan | slot 5 | PM ✅ (slot 9 filed; slot 5 confirmed) |
+| 2026-05-14 | B-006 Phase 8.A service startup coverage | slot 4 | DISPATCHED (after Phase 0 green) |
+| 2026-05-14 | B-009 Phase 8.A kill switch coverage | slot 5 | DISPATCHED (after Phase 0 green) |
 
 ---
 
