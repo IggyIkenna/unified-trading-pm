@@ -35,7 +35,7 @@ locked_since: 2026-05-08
 | 6 | 🟢 **Wave 1** — Phase 1 freeze-gate readiness audit (read-only verification of items #1-#6) | ✅ DONE (05:00 UTC — all 6/6 items GREEN, PM@33e6b308) | `master_to_live_defi_2026_05_23.md` "Phase 1 freeze-gate items status" + writegate plan Phase 4 | `tab/hk/6` |
 | 7 | 🟢 **Wave 1** — Slot 7 Wave 4 carry-forward sweep (UI `ui-reference-data.json` copies + 6C UI-drilldown smoke + ICE US softs disambiguation) | 🟢 IN FLIGHT (STARTED 04:40 UTC) | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6C + Phase 1D consumer migration | `tab/hk/7` |
 | 8 | 🟠 **Wave 3** — batch_live_symmetry Tab 3 + UAC + QG STEPs (enforcement half) | 🟠 PENDING cross-side handshake (paired with slot 5). See § "Day-3 Wave 3 — pending handshake" | `batch_live_symmetry_2026_05_10.md` Tab 3 + new QG STEP | `tab/hk/8` |
-| 9 | 🟢 **Wave 1** — defi_recursive_borrow DESCOPE successor plan + plan-body annotation | 🟢 IN FLIGHT (STARTED 04:32 UTC) | `defi_recursive_borrow_archetypes_2026_05_10.md` descope + new successor plan | `tab/hk/9` |
+| 9 | 🟢 **Wave 1** — defi_recursive_borrow DESCOPE successor plan + plan-body annotation | ✅ DONE (05:02 UTC — PM@082f217f+3acaae6f+a2c79dbb) | `defi_recursive_borrow_archetypes_2026_05_10.md` descope + new successor plan | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
