@@ -33,7 +33,7 @@ locked_since: 2026-05-08
 | 4 | 🔁 **Continuation** — writegate Phase 6.8 instruments-service (41 `.add()` → `record_captured()`, P0) | 🆕 READY — see § "Day-3 continuation task briefs — Slot 4" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.8 | `tab/hk/4` |
 | 5 | 🟠 **Wave 3** — batch_live_symmetry Tabs 1-2 (codex docs half) | 🟠 PENDING cross-side handshake (plan `operator: ikenna`). See § "Day-3 Wave 3 — pending handshake" | `batch_live_symmetry_2026_05_10.md` Tabs 1-2 | `tab/hk/5` |
 | 6 | 🔁 **Continuation** — writegate Phase 6.5 remaining open items (sports live_feature_subset live_handler + P2 findings: delta-one NAN_FILL policy / cross-instrument seed-drift / multi-timeframe cross-TF) | 🆕 READY — see § "Day-3 continuation task briefs — Slot 6" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.5 open `- [ ]` todos | `tab/hk/6` |
-| 7 | 🟢 **Wave 1** — Slot 7 Wave 4 carry-forward sweep (UI `ui-reference-data.json` copies + 6C UI-drilldown smoke + ICE US softs disambiguation) | ✅ DONE (05:00 UTC — ui@776d172c + PM@7bda50eb; 4 UI gaps filed; ICE softs → IFUS.IMPACT canonical) | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6C + Phase 1D consumer migration | `tab/hk/7` |
+| 7 | 🔁 **Continuation** — Data Status UI Phase 2F: deployment-api/UI gap fixes (GAP-2/3/4 + GAP-1 or issue doc) | 🆕 READY — see § "Day-3 continuation task briefs — Slot 7" | `data_status_ui_phase_2f.md` (to create) + `deployment-api` + `deployment-ui` | `tab/hk/7` |
 | 8 | 🟠 **Wave 3** — batch_live_symmetry Tab 3 + UAC + QG STEPs (enforcement half) | 🟠 PENDING cross-side handshake (paired with slot 5). See § "Day-3 Wave 3 — pending handshake" | `batch_live_symmetry_2026_05_10.md` Tab 3 + new QG STEP | `tab/hk/8` |
 | 9 | 🔁 **Continuation** — peripheral scripts pipeline_mode fix (10 scripts) + workspace-manifest QG step 6 investigation | 🆕 READY — see § "Day-3 continuation task briefs — Slot 9" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4 + strategy-service QG step 6 flag | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
@@ -60,7 +60,7 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
 
 ---
 
-## Day-3 continuation task briefs — 2026-05-14 (slots 4/6/9 post-first-task)
+## Day-3 continuation task briefs — 2026-05-14 (slots 4/6/7/9 post-first-task)
 
 ### Slot 4 — writegate Phase 6.8 instruments-service (Sonnet 4.6 / thinking: high)
 
@@ -91,6 +91,27 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
   6. Plan-flip each `[ ]` todo as shipped. FF-push per unit.
 - **Done-def**: All open `- [ ]` Phase 6.5 todos resolved (fixed or filed as issue doc) + QG green.
 - **Scope boundary**: Do NOT touch Phase 6.6 (ml-training / ml-inference) — Ikenna-owned.
+
+### Slot 7 — Data Status UI Phase 2F: deployment-api/UI gap fixes from 6C smoke (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `deployment-api` + `deployment-ui` + `unified-trading-pm`
+- **Plan-of-record**: First action = create `plans/active/data_status_ui_phase_2f.md` as the plan file for these 4 gaps (referenced from cross_asset plan line ~610 but never filed). Use it as your single plan-of-record for this slot.
+- **Context**: Slot 7 Day-3 Wave 1 ran the 6C UI-drilldown smoke (deployment-stack up, Data Status panel loaded) and found 4 gaps. Implement what's unambiguous; file issue doc for anything needing spec/design.
+- **Task — 4 gaps, work in order**:
+  1. **GAP-2 — `cross_asset` absent from breakdown/filter** (mechanical UI fix):
+     - `grep -rn "asset_group\|assetGroup\|CEFI\|TRADFI\|DEFI" deployment-ui/src/ --include="*.ts" --include="*.tsx" | grep -i filter | head -20`
+     - Find the filter button array that lists CEFI/TRADFI/DEFI and add `CROSS_ASSET` (or `cross_asset`). Also check deployment-api router for `/data-status` — add `cross_asset` to any hardcoded allowlist.
+     - Verify: `pnpm build` in deployment-ui; `bash scripts/quality-gates.sh` in deployment-api.
+  2. **GAP-3 — SPORTS/PREDICTION absent from Asset Groups filter** (mechanical UI fix, same pattern as GAP-2):
+     - Add `SPORTS` + `PREDICTION` to the same filter array. Check backend asset_group allowlist too.
+  3. **GAP-4 — asset group rows not interactive** (UI behavior change):
+     - Find the Data Status breakdown table/component. Add `onClick` → navigate to `?asset_group=X` or existing drilldown route. If no drilldown route exists for these groups → file as issue doc (scope too large for this slot, needs route design).
+  4. **GAP-1 — `GET /api/data-status/honest-coverage` → 404** (new deployment-api endpoint):
+     - Grep deployment-api router files for the endpoint. If endpoint spec is clear from adjacent code (e.g., `/data-status/coverage` or `/data-status/summary` already exists and this is a variant) → implement it.
+     - If spec is ambiguous (unclear response shape, unclear data source) → file issue doc with proposed spec. Do NOT guess implementation for a new public API endpoint.
+- **Plan file**: Create `data_status_ui_phase_2f.md` with standard format (`estimate_class: design`, baseline ~3 AI-days, calibrated ~1.8), enumerate all 4 gaps as `- [ ]` todos, flip each as you ship.
+- **Done-def**: `data_status_ui_phase_2f.md` plan created; GAP-2 + GAP-3 implemented + QG green; GAP-4 implemented OR issue doc filed; GAP-1 implemented OR issue doc filed with proposed spec. FF-push per shippable unit.
+- **Scope boundary**: Do NOT touch data_status_drilldown_shard_atom_alignment plan Phase 3 (Ikenna-adjacent). Do NOT touch honest-coverage Python script (`measure_honest_coverage.py`). UI + deployment-api only.
 
 ### Slot 9 — peripheral scripts pipeline_mode fix + workspace-manifest QG step 6 investigation (Sonnet 4.6 / thinking: high)
 
