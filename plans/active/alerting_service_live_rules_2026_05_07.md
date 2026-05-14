@@ -471,8 +471,9 @@ reviews + tunes thresholds.
 
 Synthetic-alert injection + full operator-flow verification on prod-equivalent env.
 
-- [ ] [SCRIPT] P0. Add `alerting-service/scripts/inject_synthetic_alert.py` — emits a `DefiAlert` with `synthetic=true`
-      flag for each `AlertCode`, one at a time.
+- [x] [SCRIPT] P0. Add `alerting-service/scripts/inject_synthetic_alert.py` — emits a `DefiAlert` with `synthetic=true`
+      flag for each `AlertCode`, one at a time. (alerting-service@6d4f222 — 76 codes, all fire
+      ALERT_SUPPRESSED_SYNTHETIC + PERSISTENCE_COMPLETED, QG green)
 - [ ] [HUMAN] P0. Rehearsal session: operator runs script for each of 15 alert codes; verifies (a) alert lands in
       correct channel, (b) DART panel shows alert, (c) ack flow works, (d) escalate flow works (synthetic PD page), (e)
       runbook deep-link works, (f) auto-resolve works.
