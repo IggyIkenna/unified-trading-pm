@@ -94,7 +94,7 @@ def main() -> None:
         print("ERROR: no rows received from stdin", file=sys.stderr)
         sys.exit(1)
 
-    from unified_trading_library.cloud_interface import upload_to_storage
+    from unified_trading_library import upload_to_storage
 
     parquet_map = _build_parquet_bytes(rows)
 

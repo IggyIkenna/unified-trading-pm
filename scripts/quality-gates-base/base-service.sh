@@ -1865,6 +1865,155 @@ else
     log_success "STEP 5.78: skipped (SOURCE_DIR not set or not a directory)"
 fi
 
+# ── STEP 5.79: dockerfile-base-pin — production Dockerfiles must use @sha256:digest ─
+#
+# Every production-bound Dockerfile base image MUST be pinned to a digest
+# (`@sha256:<hex>`) rather than a mutable `:tag` (including `:latest`).
+# Tag-pinned images silently drift when the upstream image is re-tagged —
+# the container you tested is NOT what runs in production after any registry update.
+#
+# Exemptions: `FROM scratch` (no registry image), `--platform` flag is stripped
+# before checking, multi-stage alias re-references (`FROM build-stage AS ...`
+# within the same file) are exempt.
+#
+# Date-gated ratchet: WARN before 2026-05-15, FAIL (exit 1) from 2026-05-15.
+# Remediation: pin base images per Phase 5 (deployment_and_qg_strategy_implementation_2026_05_13.md).
+_RATCHET_579="2026-05-15"
+_TODAY_579=$(date +%Y-%m-%d)
+_DF_VIOLATIONS_579=()
+while IFS= read -r -d '' _df_579; do
+    _stage_aliases_579=()
+    while IFS= read -r _line_579; do
+        [[ "$_line_579" =~ ^[[:space:]]*FROM[[:space:]] ]] || continue
+        _img_579=$(echo "$_line_579" | sed 's/^[[:space:]]*FROM[[:space:]]*//' | sed 's/[[:space:]]*--platform=[^[:space:]]*//' | awk '{print $1}')
+        [[ "$_img_579" == "scratch" ]] && continue
+        # Register multi-stage aliases (FROM x AS alias → alias is a local ref, not a registry image)
+        _alias_579=$(echo "$_line_579" | grep -oi '[[:space:]]AS[[:space:]]*[a-z0-9_-]*' | awk '{print $NF}' || true)
+        [[ -n "$_alias_579" ]] && _stage_aliases_579+=("$_alias_579")
+        # Skip if image is a known local stage alias
+        _is_alias_579=0
+        for _a_579 in "${_stage_aliases_579[@]:-}"; do
+            [[ "$_img_579" == "$_a_579" ]] && _is_alias_579=1 && break
+        done
+        [[ "$_is_alias_579" -eq 1 ]] && continue
+        [[ "$_img_579" == *"@sha256:"* ]] || _DF_VIOLATIONS_579+=("$_df_579: $_line_579")
+    done < "$_df_579"
+done < <(find . \( -name "Dockerfile" -o -name "Dockerfile.*" \) \
+    -not -path "./.venv*/*" -not -path "./build/*" \
+    -not -path "./node_modules/*" -not -path "./.git/*" \
+    -print0 2>/dev/null)
+if [ ${#_DF_VIOLATIONS_579[@]} -gt 0 ]; then
+    if [[ "$_TODAY_579" < "$_RATCHET_579" ]]; then
+        log_warn "STEP 5.79 [PENDING-RATCHET ${_RATCHET_579}]: dockerfile-base-pin — Dockerfiles using :tag instead of @sha256:digest (fails from ${_RATCHET_579}; remediate via Phase 5):"
+        printf "    %s\n" "${_DF_VIOLATIONS_579[@]}"
+    else
+        log_fail "STEP 5.79: dockerfile-base-pin — production Dockerfile uses :tag instead of @sha256:digest (pin via Phase 5, deployment_and_qg_strategy_implementation_2026_05_13.md):"
+        printf "    %s\n" "${_DF_VIOLATIONS_579[@]}"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.79: dockerfile-base-pin — all Dockerfiles use @sha256: digest pinning (or no Dockerfiles present)"
+fi
+
+# ── STEP 5.80: tarball-manifest-present — tarball uploads must write sibling manifest.json ─
+#
+# Every tarball upload by create-code-tarballs.sh MUST write a sibling
+# `<repo>@<commit-sha>.manifest.json` containing repo, commit_sha, pyproject_version,
+# git_status_clean, created_at, created_by. Without this manifest the VM boot-time
+# commit-sha assertion has no source to compare against.
+#
+# Scope: deployment-service only (owns create-code-tarballs.sh). All other repos: skip.
+#
+# Date-gated ratchet: WARN before 2026-05-15, FAIL from 2026-05-15.
+# Remediation: update create-code-tarballs.sh per Phase 3 (deployment_and_qg_strategy_implementation_2026_05_13.md).
+_RATCHET_580="2026-05-15"
+_TODAY_580=$(date +%Y-%m-%d)
+_TARBALL_SH_580="scripts/vm/create-code-tarballs.sh"
+if [ "${REPO:-}" = "deployment-service" ]; then
+    if [ -f "$_TARBALL_SH_580" ]; then
+        if grep -q "manifest\.json" "$_TARBALL_SH_580" 2>/dev/null; then
+            log_success "STEP 5.80: tarball-manifest-present — create-code-tarballs.sh writes sibling manifest.json"
+        else
+            if [[ "$_TODAY_580" < "$_RATCHET_580" ]]; then
+                log_warn "STEP 5.80 [PENDING-RATCHET ${_RATCHET_580}]: tarball-manifest-present — create-code-tarballs.sh does not write sibling manifest.json (fails from ${_RATCHET_580}; remediate via Phase 3)"
+            else
+                log_fail "STEP 5.80: tarball-manifest-present — create-code-tarballs.sh missing sibling manifest.json write. Add per Phase 3 (deployment_and_qg_strategy_implementation_2026_05_13.md)."
+                V=$(( V + 1 ))
+            fi
+        fi
+    else
+        log_success "STEP 5.80: tarball-manifest-present — skipped (create-code-tarballs.sh not found in deployment-service)"
+    fi
+else
+    log_success "STEP 5.80: tarball-manifest-present — skipped (${REPO:-unknown}: not deployment-service)"
+fi
+
+# ── STEP 5.81: tarball-env-block — deployment-api must gate staging/prod tarball uploads ─
+#
+# deployment-api MUST reject tarball-deploy requests for staging/prod environments
+# unless an explicit override flag is present. Without this gate, an operator can
+# accidentally promote an untested tarball straight to production.
+#
+# Check: deployment-api Python source must reference DEPLOYMENT_ENV check alongside
+# tarball-related code, or carry an explicit env-tier override guard.
+#
+# Scope: deployment-api only. All other repos: skip.
+#
+# Date-gated ratchet: WARN before 2026-05-17, FAIL from 2026-05-17.
+# Remediation: wire env-tier override guard per Phase 1 (deployment_and_qg_strategy_implementation_2026_05_13.md).
+_RATCHET_581="2026-05-17"
+_TODAY_581=$(date +%Y-%m-%d)
+if [ "${REPO:-}" = "deployment-api" ] && [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
+    _HAS_TARBALL_581=$(grep -rl "tarball\|TARBALL\|TarballDeploy\|tarball_deploy" "${SOURCE_DIR}/" --include="*.py" 2>/dev/null || true)
+    if [ -n "$_HAS_TARBALL_581" ]; then
+        _HAS_ENV_BLOCK_581=$(grep -rl "DEPLOYMENT_ENV\|deployment_env\|staging_override\|prod_override\|allow_tarball\|tarball_override\|env_tier_check" "${SOURCE_DIR}/" --include="*.py" 2>/dev/null || true)
+        if [ -n "$_HAS_ENV_BLOCK_581" ]; then
+            log_success "STEP 5.81: tarball-env-block — deployment-api has env-tier guard for staging/prod tarball uploads"
+        else
+            if [[ "$_TODAY_581" < "$_RATCHET_581" ]]; then
+                log_warn "STEP 5.81 [PENDING-RATCHET ${_RATCHET_581}]: tarball-env-block — deployment-api has tarball code but no env-tier block for staging/prod (fails from ${_RATCHET_581}; remediate via Phase 1)"
+            else
+                log_fail "STEP 5.81: tarball-env-block — deployment-api allows tarball uploads without staging/prod env-tier guard. Wire DEPLOYMENT_ENV check per Phase 1 (deployment_and_qg_strategy_implementation_2026_05_13.md)."
+                V=$(( V + 1 ))
+            fi
+        fi
+    else
+        log_success "STEP 5.81: tarball-env-block — skipped (no tarball-related code found in deployment-api source)"
+    fi
+else
+    log_success "STEP 5.81: tarball-env-block — skipped (${REPO:-unknown}: not deployment-api or SOURCE_DIR absent)"
+fi
+
+# ── STEP 5.82: image-build-on-staging-merge — staging merges must trigger cloud-build ─
+#
+# Every merge to the staging branch MUST trigger a cloud-build image build so
+# the image exists in Artifact Registry before the staging deploy runs. Without this,
+# staging deploys use a stale image from the previous cycle — silently wrong.
+#
+# Check: if .github/workflows/ contains a staging-branch push trigger, a corresponding
+# cloud-build / gcloud builds invocation must also be present in the same workflow dir.
+#
+# Date-gated ratchet: WARN before 2026-05-17, FAIL from 2026-05-17.
+# Remediation: wire cloud-build trigger on staging push per Phase 5 (deployment_and_qg_strategy_implementation_2026_05_13.md).
+_RATCHET_582="2026-05-17"
+_TODAY_582=$(date +%Y-%m-%d)
+if [ -d ".github/workflows" ]; then
+    _HAS_STAGING_582=$(grep -rl "staging" .github/workflows/ 2>/dev/null || true)
+    _HAS_BUILD_582=$(grep -rl "cloudbuild\|cloud-build\|gcloud builds\|google-github-actions/deploy-cloudrun\|buildTrigger" .github/workflows/ 2>/dev/null || true)
+    if [ -n "$_HAS_STAGING_582" ] && [ -z "$_HAS_BUILD_582" ]; then
+        if [[ "$_TODAY_582" < "$_RATCHET_582" ]]; then
+            log_warn "STEP 5.82 [PENDING-RATCHET ${_RATCHET_582}]: image-build-on-staging-merge — staging workflow present but no cloud-build trigger found (fails from ${_RATCHET_582}; remediate via Phase 5)"
+        else
+            log_fail "STEP 5.82: image-build-on-staging-merge — staging branch workflow does not trigger cloud-build. Wire image-build trigger per Phase 5 (deployment_and_qg_strategy_implementation_2026_05_13.md)."
+            V=$(( V + 1 ))
+        fi
+    else
+        log_success "STEP 5.82: image-build-on-staging-merge — OK (cloud-build trigger present or no staging workflow)"
+    fi
+else
+    log_success "STEP 5.82: image-build-on-staging-merge — skipped (no .github/workflows/)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
