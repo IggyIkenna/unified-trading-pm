@@ -504,4 +504,41 @@ Ready to proceed with Phase 4. Plan specifies 5 consumers in dependency order:
 
 Will proceed with Phase 4 Item 1 (instruments-service futures factory) immediately.
 
+---
+
+## [slot 5 → main] Phase 4.1 + 4.2 SHIPPED — 2026-05-14
+
+**Status**: ✅ Phase 4.1 (instruments-service futures factory) + 4.2 (IS write-path) complete
+
+### Commits
+
+- **IS@bcb34b9** — `get_canonical_futures_contracts()` inline adapter method (61 lines) in
+  `instruments_service/reference_data/adapters/tradfi/databento.py`.
+- **IS@0c59485** — `instruments_service/reference_data/adapters/tradfi/futures_factory.py` (330 lines): full standalone
+  factory with `_parse_futures_symbol()`, `_derive_lifecycle_dates()` (physical/cash-settled conventions),
+  `_classify_lifecycle_phase()`, `build_futures_contracts()`. 29 unit tests in
+  `tests/unit/reference_data/adapters/tradfi/test_futures_factory.py` (all green).
+- **IS@2be7e4b** — Phase 4.2: `_write_futures_contracts()` helper added to IS orchestrator
+  (`instruments_service/engine/orchestrator.py`). Called after `_write_venue()` for CME/ICE venues; writes
+  `futures_contracts.parquet` to same `day={D}/venue={V}` partition as `instruments.parquet`. 7 unit tests in
+  `tests/unit/test_orchestrator_futures_contracts.py` (all green).
+- **PM@dae40306** — Phase 4.1 plan flip. **PM@199382b7** — Phase 4.2 plan flip.
+
+### Phase 4 checklist state
+
+- ✅ UAC top-level facade export (UAC@f514779)
+- ✅ instruments-service futures factory (IS@bcb34b9 + IS@0c59485)
+- ✅ instruments-service write-path `futures_contracts.parquet` (IS@2be7e4b) — Phase 4.2 done
+- ⏸️ Phase 4.3 (mtds-tradfi-staleness): consume `expiry_date` for per-contract staleness gates — **NEXT**
+- ⏸️ Phase 4.4 (features-service): lifecycle-phase-aware contract roll features
+- ⏸️ Phase 4.5 (strategy-service): `FuturesRollInstruction.lifecycle_phase` binding
+
+### Architecture note: Phase 4.2 in IS not MTDS
+
+The plan said "MTDS Databento bridge stamps CanonicalFuturesContract". After exploration, the correct placement is
+instruments-service (not MTDS): IS is the reference-data owner; `futures_contracts.parquet` lives alongside
+`instruments.parquet` in the instruments GCS bucket. MTDS consumers (staleness, features) read from IS GCS.
+
+Proceeding to Phase 4.3 (mtds-tradfi-staleness) next.
+
 
