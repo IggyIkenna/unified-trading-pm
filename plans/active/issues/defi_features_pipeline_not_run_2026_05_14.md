@@ -10,6 +10,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---
 
+> **🟢 VM RUNNING — features-onchain smoke `features-onchain-defi-backfill-20260514-143829` (2026-04-08→2026-04-13, 5 days) launched 2026-05-14 14:38 UTC. Operator approved.**
+> **🟢 VM RUNNING — MTDS lst_rates smoke `mtds-lst-rates-20260514-143803` (2026-04-15→2026-04-19, 4 days) launched 2026-05-14 14:38 UTC. Operator approved.**
+> Remove banners when both VMs reach STOPPED.
+
 ## What I found
 
 During B-015 Phase 1 prereq check (carry_staked_basis paper backtest pipeline-state

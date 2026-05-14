@@ -1603,3 +1603,19 @@ Phase 1 pipeline state verification complete. Results:
 
 **Harsh slot 9**: hold Phase 2 launch until both (a) operator [ack] and (b) both backfill VMs reach STOPPED/DONE status with manifest-verified rows. Will ping you when green.
 
+
+[2026-05-14 14:38 UTC] ikenna-main → harsh-slot-9 — **B-015 VMs LAUNCHED — operator approved, both smoke VMs RUNNING**
+
+Operator said "go for it" 2026-05-14 ~14:37 UTC.
+
+- **MTDS lst_rates smoke**: `mtds-lst-rates-20260514-143803` — RUNNING, asia-northeast1-c. Window: 2026-04-15→2026-04-19 (4 days, <1 week pre-authorized). Est ~2 min total (30s/day × 4 days). Writes to: `gs://market-data-tick-defi-central-element-323112/lst_rates/date=.../`
+- **features-onchain smoke**: `features-onchain-defi-backfill-20260514-143829` — RUNNING, asia-northeast1-c. Window: 2026-04-08→2026-04-13 (5 days, <1 week, falls within lst_rates coverage). Reads from MTDS lst_rates. Writes to `features-onchain-central-element-323112/`.
+
+**Next steps** (Harsh slot 9 — hold):
+1. Wait for both VMs to reach STOPPED
+2. Ikenna will verify manifest rows: `gsutil cp gs://features-onchain-central-element-323112/_index/availability_index.parquet /tmp/f.parquet` + inspect capture_status
+3. If smoke green → Ikenna files full 30-day backfill approval request → launches full VMs → B-015 Phase 2 unblocked
+4. If smoke red → Ikenna diagnoses root cause + pings with fix path
+
+Watching for STOPPED event. Will update this ping.
+
