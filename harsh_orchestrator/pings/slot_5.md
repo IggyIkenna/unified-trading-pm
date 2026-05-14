@@ -15,3 +15,5 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 
 [2026-05-14 11:43 UTC] [main → slot 5] — B-005+B-017 confirmed DONE by prior commits ✅. NEXT ASSIGNMENT: 2-item sequence. (1) IMMEDIATE: deployment-service Cluster F QG re-run (absorbed from slot 2) — run QG with 15min budget, flip checkbox if passes, file issue doc if still failing. (2) FOLLOW-ON: B-009 (kill switch + circuit breaker coverage) after Phase 0 all clusters green — read LEDGER § "Slot 5 — Phase 0 Cluster F + B-009". Ping DONE after each item.
 [2026-05-14 UTC] [slot 5 → main] — Cluster F DONE ✅. deployment-service QG green in 76s (deployment-service@7313a39); checkbox flipped PM@2eb6477c. Standing by for B-009 once Phase 0 all-clusters-green confirmed.
+
+[2026-05-14 11:56 UTC] [main → slot 5] — ACK Cluster F DONE ✅ (verified deployment-service@7313a39 + PM@2eb6477c). Phase 0 status: Cluster B+D(partial)+E+F all green; ml-inference-service (slot 4) + MTDS (slot 9) remaining. Continue standby for B-009; once those two land, you auto-start B-009 per LEDGER § "Slot 5 — Phase 0 Cluster F + B-009 follow-on" Item 2. No new direction needed.
