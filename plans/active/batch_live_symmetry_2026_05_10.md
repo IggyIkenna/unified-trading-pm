@@ -260,8 +260,9 @@ verify L7 enforcement coverage.
 
 ### Todos
 
-- [ ] [SCRIPT] P0. **L1 + L5 DAY-1 ENABLE** — add STEP entries to
+- [x] [SCRIPT] P0. **L1 + L5 DAY-1 ENABLE** — add STEP entries to
       `unified-trading-pm/scripts/quality-gates-base/base-service.sh` (no fixes needed; pre-flight = 0 violations).
+      (PM@5772f57b — STEP 5.75 L1 DataType mode-agnosticism + STEP 5.76 L5 no service DataType redeclarations; both inline grep, DAY-1 ENABLE)
 - [ ] [SCRIPT] P0. **L2 violation fix-batch** — ~21 violations across features-\*/strategy/MDPS per pre-audit § 1 Tab 3.
       Audit each: move-to-seam (legitimate routing) OR unify-path (logic). Fan out to ~5 service PRs;
       Tab 3 main agent serialises commits. Pre-announce rollout window to operators.
