@@ -87,9 +87,9 @@ truly workspace-global rules at the root level.
 
 ## Recommended execution order
 
-- [ ] [DOC] P0. Trim CLAUDE.md from ~999 lines to ~400 lines — strip inline content wherever
+- [x] [DOC] P0. Trim CLAUDE.md from ~999 lines to ~400 lines — strip inline content wherever
   a codex SSOT pointer already exists. Verify no rule is lost (all content moves to codex, not
-  deleted). Budget: target ≤400 lines / 25KB.
+  deleted). Budget: target ≤400 lines / 25KB. (6a08f50c — 399 lines / 25.3KB; all rules preserved, inline content compressed to 1-3 lines + SSOT pointer)
 
 - [ ] [SCRIPT] P1. Rewrite orchestrator loop to use Agent sub-agent for poll execution — main
   context receives ≤150 word summary per cycle instead of raw tool results. Update spawn prompt
