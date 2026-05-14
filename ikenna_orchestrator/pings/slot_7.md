@@ -1,5 +1,36 @@
 # Slot 7 — Intra-side ping ledger
 
+## [slot 7 → main] CONTINUATION SESSION — 2026-05-14 (post-compaction)
+
+**Status**: ✅ DONE — continuation of prior slot-7 session after context compaction
+
+### What shipped this continuation
+
+| Item | Commit | Notes |
+|------|--------|-------|
+| data_status_drilldown Phase 0 — 5-sample GCS parquet audit | PM@31c6a5c0 | All 5 asset groups confirmed non-NaN; 2 cosmetic path discrepancies documented (DeFi venue→chain order, TradFi underlying= label) |
+| data_status_drilldown deferred scoreboard update | PM@36ce588c | Scoreboard row updated to DONE |
+
+### State review (tasks from spawn prompt)
+
+| Task | Status |
+|------|--------|
+| Task 1: wallet_treasury Phase 3 audit log immutability | ✅ DONE (prior session) |
+| Task 2: treasury rollup endpoint | ✅ DONE (pre-verified) |
+| Task 3: DART plan status | ✅ DONE (pre-verified) |
+| Task 4: risk-and-exposure-service B008 fix | ✅ DONE (prior session, LDR@d1d43db) |
+| Task 5: audit_records_pb Phase 2+3 | BLOCKED — foreign QG pre-existing issues (C901 + pytest-timeout) |
+| Task 6.B: position seed demo-internal | ✅ DONE (pbms@9dcb05a) |
+| Task 7: context_fill CLAUDE.md trim | ✅ DONE (PM@6a08f50c — 399 lines, already shipped by another slot) |
+| Task 8: data_status_drilldown Phase 0 parquet audit | ✅ DONE (PM@31c6a5c0 this session) |
+| Task 9: compute_optimization Phase 1 VERIFY | ✅ DONE (scoreboard at PM@018b4aef) |
+
+### Slot 7 standing by
+
+All spawn prompt tasks either DONE or blocked on operator/foreign fixes. No remaining agent-doable work from this stack.
+
+---
+
 ## [slot 7 → main] PART A complete — 2026-05-12
 
 **Status**: ✅ DONE
