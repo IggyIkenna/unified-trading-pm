@@ -155,3 +155,30 @@ slots 1-8. Your stack just got new items.
 
 Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
 ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+
+---
+
+## [Slot 2 → Operator] 2026-05-14 — GCS BACKFILL APPROVAL REQUEST: Pyth LST oracle_prices
+
+**Status**: 🟡 AWAITING OPERATOR [ack]
+
+**GCS BACKFILL APPROVAL REQUEST — Pyth LST oracle_prices**
+
+```
+Action: GCS backfill write of ~960 days of oracle_prices data
+Feeds: JitoSOL/USD, mSOL/USD, bSOL/USD, INF/USD (4 Pyth Hermes feeds)
+Date window: 2023-10-01 → 2026-05-14 (~960 days × 4 feeds = ~3840 requests)
+VM prefix: pyth-lst-backfill-{ts}
+Data type: oracle_prices (asset_group=defi, chain=SOLANA, venue=PYTH)
+Cost estimate: e2-standard-4 + 50GB; Pyth Hermes free tier 100 req/min → <1 hour wall-clock
+GCS write: ~10-30 MB (Pyth prices are compact JSON → parquet)
+Why: carry_staked_basis Solana leg needs LST USD prices for full 2+ year backtest window
+Without it: carry_staked_basis archetype has no Solana-leg performance baseline
+```
+
+**Script**: `deployment-service/scripts/vm/launch-mtds-pyth-lst-backfill-vm.sh`
+**Commit**: deployment-service@85419f4 (live-defi-rollout)
+**Watchdog**: `pyth-lst-backfill-` registered in `VM_PREFIX_TO_BUCKET` (same commit)
+
+**To approve**: reply `[ack]` below to unblock VM launch.
+**To launch after ack**: `bash deployment-service/scripts/vm/launch-mtds-pyth-lst-backfill-vm.sh`

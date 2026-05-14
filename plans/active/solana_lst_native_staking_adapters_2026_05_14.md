@@ -117,10 +117,12 @@ The infrastructure exists (Pyth Hermes feeds for JITOSOL/mSOL/bSOL/INF landed 20
       bSOL/USD feed page - INF: verify against Pyth INF/USD feed page
 - [ ] [MTDS] P0. Confirm `oracle_prices_handler.py` `process()` dispatches `SOLANA` chain correctly for the LST venues
       (e.g., `JITO-SOLANA` or `JITO`). Add routing test if missing.
-- [ ] [deployment-service] P0. Add VM launcher for `staked_token_oracle_prices` backfill covering `2023-10-01` (Pyth
+- [x] [deployment-service] P0. Add VM launcher for `staked_token_oracle_prices` backfill covering `2023-10-01` (Pyth
       archive start) → today for JITO-SOLANA + MARINADE-SOLANA + SOLBLAZE-SOLANA. VM name prefix: `pyth-lst-backfill`
       (register in `VM_PREFIX_TO_BUCKET`). Backfill window: 7+ months → **REQUIRES operator ping before launch** per GCS
       backfill rule.
+      (deployment-service@85419f4 — launcher + watchdog registration done; operator ping filed in pings/slot_2.md;
+      **[BLOCKED-OPERATOR-ACK — pinging operator]** launch held until [ack])
 
 **Done definition**: VM launcher script exists; awaiting operator approval ping.
 
