@@ -147,13 +147,21 @@ Documented above. Composes with Phase 1 commit (no separate work).
 
 Order matters: every consumer must adopt the new types BEFORE the workspace-wide hard-schema enforcement lands.
 
-1. **instruments-service**: futures factory emits `CanonicalFuturesContract` per known root/month combo.
-2. **market-tick-data-service**: Databento bridge stamps `CanonicalFuturesContract` on the write-path; reads from RDC.
-3. **mtds-tradfi-staleness**: consume `CanonicalFuturesContract.expiry_date` for per-contract staleness gates.
-4. **features-service**: lifecycle-phase-aware contract roll features.
-5. **strategy-service**: `FuturesRollInstruction.lifecycle_phase: FuturesContractLifecyclePhase` binding.
-
-Each consumer flip is its own commit + push + tests.
+- [x] [SCRIPT] P0. Pre-req: export `CanonicalFuturesContract` + `FuturesContractLifecyclePhase` from UAC public
+      `__init__.py` (imports + `__all__`). Required before any consumer can import via Citadel import rules. **COMPLETED
+      2026-05-14**: UAC@f514779 — both symbols added to top-level facade.
+- [x] [SCRIPT] P0. **instruments-service** (4.1): add `get_canonical_futures_contracts(venue, underlying)` to
+      `instruments_service/reference_data/adapters/tradfi/databento.py`. Calls `get_instruments(FUTURE)`, derives
+      contract_month/year from expiry, sets all 5 required date fields to `expiry.date()` (conservative), derives
+      `lifecycle_phase` (ACTIVE vs EXPIRED). **COMPLETED 2026-05-14**: IS@bcb34b9 — 61-line method shipped.
+      `CanonicalFuturesContract` + `FuturesContractLifecyclePhase` imported from UAC public surface.
+- [ ] [SCRIPT] P1. **market-tick-data-service** (4.2): Databento bridge stamps `CanonicalFuturesContract` on the
+      write-path; reads from RDC. Each consumer flip is its own commit + push + tests.
+- [ ] [SCRIPT] P1. **mtds-tradfi-staleness** (4.3): consume `CanonicalFuturesContract.expiry_date` for per-contract
+      staleness gates.
+- [ ] [SCRIPT] P1. **features-service** (4.4): lifecycle-phase-aware contract roll features.
+- [ ] [SCRIPT] P1. **strategy-service** (4.5): `FuturesRollInstruction.lifecycle_phase: FuturesContractLifecyclePhase`
+      binding.
 
 ## Phase 5 — QG ratchet (✅ COMPLETE 2026-05-13)
 
