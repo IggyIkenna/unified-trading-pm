@@ -1,10 +1,10 @@
 ---
-title: Ikenna's daily work-split — 2026-05-14 (Day-3 density-push, ~200 cal AI-days, pre-cutover stack)
+title: Ikenna's daily work-split — 2026-05-14 (Day-3 density-push, ~272 cal AI-days, pre-cutover stack)
 type: coordination-doc
 status: active
 created: 2026-05-14
 deadline: 2026-05-23 (live DeFi cutover)
-horizon: ~9 calendar days (14 May → 23 May); ~200 cal AI-days across 8 implementer slots
+horizon: ~9 calendar days (14 May → 23 May); ~272 cal AI-days across 8 implementer slots (200 baseline + 72 v2 extension)
 companion_to: plans/active/work_split_2026_05_14_harsh.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
@@ -61,7 +61,9 @@ pulls in-stack reserve when each item closes.
 | 7    | Treasury rollup endpoint + Phase 3 audit + DART manual-trade     | ~25         |
 | 8    | SHARD_AXIS_MATRIX drift + audit cleanup + ops verification       | ~25         |
 | 9    | Mechanical (Cluster A sed) + governance + cron/ratchet sweep     | ~27         |
-| **Total** | (8 implementer slots)                                       | **~200**    |
+| **Subtotal** | (8 implementer slots, baseline)                          | **~200**    |
+| **+ V2 ext** | (see § "V2 extension — +72 cal AI-days" below)          | **+72**     |
+| **Total**    | (8 implementer slots, baseline + v2)                     | **~272**    |
 
 ---
 
@@ -380,6 +382,59 @@ density-push absorption — every slot has a deep stack.
 - Copper / CEFFU integrations — CLIENT-SIDE, NOT our blocker (config-only flip when client provisions).
 - Fireblocks institutional custody — June-15+ scope, not this cycle.
 - Any GCS backfill ≥1 week without explicit operator approval ping in slot_N.md.
+
+---
+
+## V2 extension — +72 cal AI-days (drives workspace remaining toward ~200)
+
+Pulled from top remaining plans in the inventory dashboard (regenerated 2026-05-14 12:14 UTC, 580 cal total, 77
+plans). Each slot picks up its v2 items AFTER its main stack lands; this is overflow, not replacement.
+
+| Slot | V2 item                                                                                                   | Plan                                                                  | Cal |
+| ---- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --- |
+| 2    | **`defi_catalogue_chain_primitives_2026_05_10` push** — remaining 21 open todos (currently 47/68, 63.5 cal left); split into 2-3 batches and ship | `defi_catalogue_chain_primitives_2026_05_10.md`                       | +9  |
+| 3    | **`live_pipeline_mtds_mdps_features_2026_05_08` Ikenna-half** (15.0 cal total; instruments_live_master May-23 deadline) — DeFi instrument live-pipeline activation | `live_pipeline_mtds_mdps_features_2026_05_08.md`                      | +9  |
+| 4    | **`topology_qgroup_gap_closure_2026_05_09` (9.6 cal, May-23)** + **`simulation_scenarios_topology_price_shocks_2026_05_09` sports-half subset** | `topology_qgroup_gap_closure_2026_05_09.md` + topology shocks         | +9  |
+| 5    | **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting subset** — pull TradFi + cross-asset-group sequencing items (plan is 123.5 cal total; Ikenna takes the cross-cutting cap of ~9, rest stays Harsh-side cefi_master) | `code_freeze_migrate_backfill_sequencing_2026_05_10.md`               | +9  |
+| 6    | **`api_keys_wallets_accounts_readiness_2026_05_10` more Phase 8 items** (40.0 cal left, 33/87, May-23) + **`alerting_service_live_rules_2026_05_07` close** (4.5 cal, 43/65, May-23) | api_keys_wallets + alerting_service_live_rules                        | +9  |
+| 7    | **`cross_cutting_may_23_deliverables_2026_05_08` Ikenna-half** (13.4 cal, 17/30) + **`mtds_per_instrument_download_api_2026_04_24`** (3.3 cal, 6/19) + **`mdps_streaming_and_backpressure_2026_05_07`** (3.0 cal, 0/7) | 3-plan parallel: cross_cutting deliverables + mtds per-instrument + mdps streaming | +9 |
+| 8    | **`deployment_and_qg_strategy_implementation_2026_05_13`** (12.3 cal, 20/52) + **`hard_schema_enforcement_2026_05_08`** (4.8 cal) + **`gcs_migration_bundle_pipeline_mode_2026_05_08`** (4.8 cal, May-15 deadline) | deployment_and_qg + hard_schema_enforcement + gcs_migration_bundle    | +9  |
+| 9    | **`writegate_honest_coverage_endtoend_2026_05_06` Phase 6.9 expanded scope** (12.6 cal, 117/246) + **`expected_universe_v2_design_2026_05_08`** (3.6 cal) + **`deploy_missing_auto_launch_2026_05_07` close** (4.1 cal, 6/14) | writegate Phase 6.9 + expected_universe_v2 + deploy_missing_auto_launch | +9  |
+| **Total V2** |                                                                                                | (8 implementer slots × +9)                                            | **+72** |
+
+**Note on `code_freeze_migrate_backfill_sequencing_2026_05_10` (slot 5 v2)**: this plan is 123.5 cal total
+and owned by cefi_master (Harsh-side). Ikenna takes only the **cross-cutting subset** (~9 cal) — TradFi-side migration
+sequencing items + cross-asset bucket-name SSOT items that overlap with Ikenna slot 5+9's existing themes. The bulk
+(~115 cal) stays Harsh-side for 15-22 May absorption.
+
+**Note on `aws_migration_defi_first_2026_05_07`** (28.4 cal in dashboard): DEFERRED past 2026-05-23 per operator
+direction; NOT pulled into this v2 extension.
+
+**Note on `defi_recursive_borrow_archetypes_2026_05_10`** (38.9 cal) + `defi_recursive_borrow_archetypes_post_cutover_2026_06_01`
+(24.0 cal): DESCOPED + post-cutover successor per operator; NOT pulled.
+
+**Note on `batch_live_symmetry_2026_05_10`** (20.6 cal): Harsh-side today (slots 5+8); NOT pulled.
+
+**Note on `simulation_scenarios_post_cutover_2026_06_01`** (15.2 cal): post-cutover target 2026-07-15; NOT pulled.
+
+**Note on `promote_workflow_post_cutover_ui_pipeline_2026_05_10`** (20.0 cal): deadline 2026-07-04 post-cutover; NOT
+pulled.
+
+---
+
+## Math — burn vs workspace remaining
+
+| Source | Cal AI-days |
+| --- | --- |
+| Workspace-wide remaining (auto-inventory 2026-05-14 12:14 UTC, 77 plans) | **580** |
+| Ikenna 14 May split baseline (200) + v2 extension (72) | −272 |
+| Harsh 14 May split (today closeout only — 8 days remain 15-23 May for him to absorb the rest) | −8 |
+| **Remaining workspace cal AI-days after both 14 May splits land** | **~300** |
+
+Note: 300 not 200 because some Ikenna v2 items (e.g., new HMAC chain, new DeFi alert codes) are NEW work not yet
+checkboxed in active plans — when they land they net out a smaller portion of the dashboard 580. Net burn against
+the dashboard is closer to ~250 from Ikenna's 272, so realistic remaining ≈ **~320 cal AI-days** for Harsh to absorb
+across 15-23 May (~40 cal/day × 8 days = comfortable at density-push pace).
 
 ---
 
