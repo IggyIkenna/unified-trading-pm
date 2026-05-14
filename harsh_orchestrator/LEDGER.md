@@ -29,13 +29,13 @@ locked_since: 2026-05-08
 | Slot | Theme | State | Plan-of-record | Branch |
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + Phase 0 monitoring + spawn cadence | 🟢 ONLINE | (this LEDGER) | `tab/hk/1` |
-| 2 | **Phase 0 verify + B-011 follow-on** — features-service ✅ slot 4 fixed; ml-inference → slot 4; Cluster F → slot 5; verify QG then stand by for B-011 after Phase 0 green | 🟢 IN FLIGHT | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B/D/F | `tab/hk/2` |
+| 2 | **B-011** — Phase 8.A VM deploy scripts coverage (deployment-service); start after slot 5 finishes Cluster F + Phase 0 green | 🟡 AWAITING (B-011 pre-assigned; stand by) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/2` |
 | 3 | **B-010** — Phase 8.A archetype validation coverage (strategy-service carry+arb branches, 90% target) | 🟡 AWAITING (direction given after DONE @11:25) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/3` |
 | 4 | **Phase 0 ml-inference + B-006 follow-on** — ml-inference-service 6f+33e diagnose+fix; then B-006 service startup coverage after Phase 0 green | 🟡 AWAITING (direction given after DONE @11:26) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D + Phase 8.A | `tab/hk/4` |
 | 5 | **Phase 0 Cluster F + B-009 follow-on** — deployment-service QG timeout re-run; then B-009 kill switch coverage after Phase 0 green | 🟡 AWAITING (direction given; B-005+B-017 done by prior) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster F + Phase 8.A | `tab/hk/5` |
-| 6 | **Phase 0 Cluster D+E** — instruments-service 74 failures + deployment-ui 21 vitest failures | 🟡 AWAITING (direction given @11:15) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D/E | `tab/hk/6` |
+| 6 | **B-012** — Phase 8.A custody + wallet signing coverage (execution-service + UTL; Cluster D+E DONE ✅ @17:10) | 🟡 AWAITING (direction given after DONE @17:10) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/6` |
 | 7 | **B-013** — Phase 2 deploy-ready tracking (B-001 ✅ B-002 ✅; B-004 skipped — already done) | 🟡 AWAITING (direction given after B-002 DONE @16:52) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 2 | `tab/hk/7` |
-| 8 | **B-007+B-008** — Phase 8.A manifest writer + emission publisher coverage (UTL) | 🟡 AWAITING (direction given @11:00) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/8` |
+| 8 | **B-014** — Phase 3 QG ratchet STEPs enable + rollout (B-007+B-008 DONE; prep now, rollout after B-006-B-012 all green) | 🟡 AWAITING (direction given after B-007+B-008 DONE) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 3 | `tab/hk/8` |
 | 9 | **Phase 0 Cluster D + MTDS remaining failures** — PBM DONE; B-004 DONE (UTL propagation); continuing MTDS test failures | 🟢 IN FLIGHT (STARTED @10:21; MTDS ongoing) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
@@ -181,6 +181,62 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
   3. Flip plan Phase 2 checkbox with SHA evidence. Commit + push per repo.
 - **Done-def**: `/api/repos/deploy-ready` endpoint live in deployment-api with unit tests; deployment-ui panel renders readiness table + `pnpm build` passes; plan checkbox flipped.
 - **No big decisions**: if QG snapshot store location is ambiguous, grep deployment-api for existing snapshot read patterns (`grep -rn "snapshot\|qg_result\|quality_gate" deployment_api/`).
+
+### Slot 6 — B-012: Phase 8.A custody + wallet signing coverage (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: Phase 0 Cluster D+E — instruments-service 74 failures already resolved (UTL legacy_reason_classifier patch unified-trading-library@d78dd02) + deployment-ui 21 vitest failures → 0 (deployment-ui@b6e4e22; pnpm build green).
+
+- **Owned repos**: `execution-service` + `unified-trading-library` + `unified-trading-pm`
+- **Task**: 100% coverage on `WalletProvisioningConfig` load + `signing_surface` dispatch in `execution-service`.
+  - Step 1: `bash scripts/quality-gates.sh 2>&1 | grep "coverage"` from `execution-service/` — baseline coverage on wallet + signing paths.
+  - Step 2: Locate `WalletProvisioningConfig` and `signing_surface` in `execution-service/` — `grep -rn "WalletProvisioningConfig\|signing_surface\|CLOUD_KMS_ENCRYPTED" execution_service/ --include="*.py"`.
+  - Step 3: Add unit tests (mock at KMS client level — NO real keys):
+    - (a) `CLOUD_KMS_ENCRYPTED` path: `signing_surface` dispatches to KMS mock → signs correctly → no exception.
+    - (b) Wrong/missing `signing_surface` config → raises loud error at boot (not at trade time). Assert exception raised on `WalletProvisioningConfig.load()`.
+    - (c) Config validation: required fields missing → `ValueError` at config-parse time.
+  - Step 4: If UTL `signing_surface` helpers are undertested, add parallel tests in `unified-trading-library/` using same mock pattern.
+  - Step 5: `bash scripts/quality-gates.sh` green in both repos. Commit + push per repo. Flip plan Phase 8.A "custody + wallet" checkbox.
+- **Done-def**: 100% coverage on `WalletProvisioningConfig` load + `signing_surface` dispatch; QG green in both repos; plan checkbox flipped with SHA evidence.
+- **Note**: **Start immediately** — execution-service + UTL are Phase-0-clean (no Phase 0 blocker on these repos). No need to wait for other Phase 0 clusters.
+- **Mock rule**: mock at the KMS client level. Never hit real KMS endpoints. Use `unittest.mock.patch` on the KMS client's `sign` method.
+
+### Slot 2 — B-011: Phase 8.A VM deploy scripts coverage (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: Phase 0 remaining (alerting-service already done by slot 6; features-service QG green @38b43ea6; ml-inference absorbed by slot 4; deployment-service Cluster F absorbed by slot 5). Stand by: verify features-service QG green, then start B-011.
+
+- **Owned repos**: `deployment-service` + `unified-trading-pm`
+- **Task**: 95% coverage on `deployment-service/scripts/vm/launch-*.sh` paths + Python helpers.
+  - **Start condition**: wait for Phase 0 all clusters green (slots 5, 6, 9 will DONE-ping; slot 4 also). Do NOT start B-011 work until Phase 0 is fully clear.
+  - Step 1: `shellcheck deployment-service/scripts/vm/launch-*.sh` — fix any warnings/errors. These are bash scripts; shellcheck is the linter.
+  - Step 2: For each launcher: identify the Python-level singleton-lock check (`grep -rn "singleton_lock\|is_vm_running\|VM_PREFIX_TO_BUCKET" deployment_service/` — find the dict + check function). Add unit tests:
+    - (a) Singleton-lock fires: same-prefix VM already RUNNING → launcher refuses (exits non-zero or raises).
+    - (b) No collision: VM not running → launcher proceeds.
+  - Step 3: Zombie-watchdog dict registration: `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py` — test that all VM prefixes from `launch-*.sh` scripts appear as keys in this dict.
+  - Step 4: Tarball URI construction: test that the tarball path resolves to the correct bucket name via `resolve_bucket_name()` (NOT an inline f-string).
+  - Step 5: `bash scripts/quality-gates.sh` green. Commit + push. Flip plan Phase 8.A "VM deploy scripts" checkbox.
+- **Done-def**: shellcheck clean; unit tests covering singleton-lock + zombie-watchdog registration + tarball-URI; QG green; plan checkbox flipped.
+- **Key rule**: VM naming — first segment must be a prefix in `VM_PREFIX_TO_BUCKET`. If any new VM prefixes are discovered that are NOT registered → file issue doc immediately (silent zombie-watchdog blindspot = silent money burn).
+
+### Slot 8 — B-014: Phase 3 QG ratchet STEPs enable + rollout (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: B-007 (UTL manifest writer coverage — 100%) + B-008 (UTL emission publisher coverage — 100%; unified-trading-library QG green; plan checkboxes flipped).
+
+- **Owned repos**: `deployment-service` (base-service.sh template) + all service repos that consume it + `unified-trading-pm`
+- **Task**: Enable new QG STEP X.N1 (tarball-env-block) + X.N2 (coverage-targets-enforcement) + X.N3 in `base-service.sh` template, then roll out to all service repos.
+  - **START CONDITION (CRITICAL)**: Do NOT start rollout until ALL of B-006 + B-009 + B-010 + B-011 + B-012 are DONE (all DONE pings from slots 4, 5, 3, 2, 6). Use the wait time to prep: read the plan, read `base-service.sh`, identify exactly which STEP lines to enable.
+  - **Prep (do now while waiting)**:
+    - Read `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 3 for exact STEP identifiers.
+    - Read `deployment-service/scripts/base-service.sh` — find the STEP X.N1/X.N2/X.N3 lines (grep: `grep -n "STEP\|X\.N" deployment-service/scripts/base-service.sh`).
+    - Identify which lines are disabled (commented-out or gated) vs enabled.
+    - Draft the exact edits needed (line numbers + replacement text). Do NOT apply yet.
+  - **Rollout (after all B-006-B-012 DONE)**:
+    1. Apply STEP enables in `base-service.sh` template in PM SSOT (`unified-trading-pm/scripts/workflow-templates/base-service.sh` or wherever the template lives).
+    2. Run: `bash unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py` — propagates updated template to all service repos.
+    3. Run `bash scripts/quality-gates.sh` in each service repo — verify all pass with new STEPs (if any fail, fix the underlying coverage/env-block issue in that repo before moving on).
+    4. Commit + push per repo. Flip plan Phase 3 checkbox.
+  - **Never**: skip a service repo that fails; fix the root cause, then rollout continues.
+- **Done-def**: All service repos pass QG with new STEP X.N1+X.N2+X.N3 enabled; template propagated; plan checkbox flipped.
+- **Ping pattern**: When all B-006-B-012 DONE pings land (watch LEDGER), ping main `slot-8 — READY TO ROLLOUT, B-006/B-009/B-010/B-011/B-012 all confirmed DONE` — then proceed without waiting for main acknowledgment.
 
 ### Slot 5 — B-005 + B-017: Writegate Phase 6.9 + defi_recursive_borrow successor plan (Sonnet 4.6 / thinking: medium)
 

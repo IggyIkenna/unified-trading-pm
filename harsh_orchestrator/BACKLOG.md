@@ -107,7 +107,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: B-004 (remaining test failures fixed first)
 
 ### B-011 · Phase 8.A surface-6 — VM deploy script coverage
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 2 2026-05-14 (start after slot 5 finishes deployment-service Cluster F + Phase 0 green)
 - **Task**: 95% coverage on `deployment-service/scripts/vm/launch-*.sh` paths. Bash-level: `shellcheck` all launchers. Python-level: unit tests for singleton-lock check, zombie-watchdog dict registration, tarball-uri construction. Verify `VM_PREFIX_TO_BUCKET` dict registration for any new VM prefixes.
 - **Repos**: `deployment-service`
 - **Est**: 3h · **Model**: Sonnet
@@ -115,7 +115,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 all clusters green
 
 ### B-012 · Phase 8.A surface-7 — custody + wallet signing coverage
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 6 2026-05-14 (execution-service + UTL are clean; start now — no Phase 0 blocker on these repos)
 - **Task**: 100% coverage on `WalletProvisioningConfig` load + `signing_surface` dispatch in execution-service. Test: CLOUD_KMS_ENCRYPTED path signs correctly; wrong config → raises loud at boot (not at trade time). Mock signing at the KMS client level (no real keys).
 - **Repos**: `execution-service` + `unified-trading-library`
 - **Est**: 3h · **Model**: Sonnet
@@ -135,7 +135,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: B-001 + B-002 (Phase 1 env-locking done first)
 
 ### B-014 · Phase 3 — QG ratchet STEPs enable + rollout
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 8 2026-05-14 (prep now; start rollout only after B-006/B-009/B-010/B-011/B-012 all DONE)
 - **Task**: Enable STEP X.N1 (tarball-env-block), X.N2 (coverage-targets-enforcement), X.N3 in `base-service.sh` template. Run rollout: `bash scripts/propagation/rollout-quality-gates-unified.py`. Verify all service repos pass with new STEPs. Commit + push per repo.
 - **Repos**: `deployment-service` (base-service.sh) + all service repos
 - **Est**: 2h · **Model**: Sonnet
@@ -191,6 +191,9 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-017 defi_recursive_borrow successor plan | slot 5 | PM ✅ (slot 9 filed; slot 5 confirmed) |
 | 2026-05-14 | B-006 Phase 8.A service startup coverage | slot 4 | DISPATCHED (after Phase 0 green) |
 | 2026-05-14 | B-009 Phase 8.A kill switch coverage | slot 5 | DISPATCHED (after Phase 0 green) |
+| 2026-05-14 | B-011 Phase 8.A VM deploy scripts coverage | slot 2 | DISPATCHED (after slot 5 + Phase 0 green) |
+| 2026-05-14 | B-012 Phase 8.A custody + wallet signing coverage | slot 6 | DISPATCHED |
+| 2026-05-14 | B-014 Phase 3 QG ratchet STEPs enable + rollout | slot 8 | DISPATCHED (prep now; rollout after B-006-B-012 all DONE) |
 
 ---
 
