@@ -32,11 +32,11 @@ locked_since: 2026-05-08
 | 2 | **B-011** — Phase 8.A VM deploy scripts coverage (deployment-service); start after slot 5 finishes Cluster F + Phase 0 green | 🟡 AWAITING (B-011 pre-assigned; stand by) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/2` |
 | 3 | **B-010** — Phase 8.A archetype validation coverage (strategy-service carry+arb branches, 90% target) | 🟡 AWAITING (direction given after DONE @11:25) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/3` |
 | 4 | **Phase 0 ml-inference + B-006 follow-on** — ml-inference-service 6f+33e diagnose+fix; then B-006 service startup coverage after Phase 0 green | 🟡 AWAITING (direction given after DONE @11:26) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D + Phase 8.A | `tab/hk/4` |
-| 5 | **B-009 standby** — Cluster F DONE ✅ + proactive Cluster A/B sweep (risk-and-exposure-service@190f34b + PM@61b1809f); B-009 waiting on Phase 0 ml-inference (slot 4) + MTDS (slot 9) | 🟡 AWAITING (Cluster F+A/B DONE; B-009 standby for Phase 0 all-green) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/5` |
+| 5 | **B-009** — Phase 8.A kill switch + circuit breaker coverage (Cluster F + Cluster A/B proactive DONE ✅; pnl-attribution C901 DONE per operator @12:04) | 🟡 AWAITING (B-009 unblocked — start NOW; Phase 0 ml-inference closing under slot 4) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/5` |
 | 6 | **B-012** — Phase 8.A custody + wallet signing coverage (execution-service + UTL; Cluster D+E DONE ✅ @17:10) | 🟢 IN FLIGHT (STARTED @17:47) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/6` |
 | 7 | **B-013** — Phase 2 deploy-ready tracking (B-001 ✅ B-002 ✅; B-004 skipped — already done) | 🟡 AWAITING (direction given after B-002 DONE @16:52) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 2 | `tab/hk/7` |
 | 8 | **B-014** — Phase 3 QG ratchet STEPs enable + rollout (B-007+B-008 DONE; prep now, rollout after B-006-B-012 all green) | 🟡 AWAITING (direction given after B-007+B-008 DONE) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 3 | `tab/hk/8` |
-| 9 | **Phase 0 Cluster D + MTDS remaining failures** — PBM DONE; B-004 DONE (UTL propagation); continuing MTDS test failures | 🟢 IN FLIGHT (STARTED @10:21; MTDS ongoing) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/9` |
+| 9 | **B-015** — DeFi carry_staked_basis paper backtest run (MTDS DONE per operator @12:04; cross-side prereq check + 30-day paper run + monitor) | 🟡 AWAITING (B-015 dispatched; cross-side pipeline-readiness check first) | `defi_master_2026_05_07.md` § "paper-trade gate" | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
@@ -216,6 +216,31 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
   - Step 5: `bash scripts/quality-gates.sh` green. Commit + push. Flip plan Phase 8.A "VM deploy scripts" checkbox.
 - **Done-def**: shellcheck clean; unit tests covering singleton-lock + zombie-watchdog registration + tarball-URI; QG green; plan checkbox flipped.
 - **Key rule**: VM naming — first segment must be a prefix in `VM_PREFIX_TO_BUCKET`. If any new VM prefixes are discovered that are NOT registered → file issue doc immediately (silent zombie-watchdog blindspot = silent money burn).
+
+### Slot 9 — B-015: DeFi carry_staked_basis paper backtest run (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: Phase 0 Cluster D (PBM@8837338) + Day-3 Part A peripheral pipeline_mode (features-service@268919ad + mtds@bc77f94) + Day-3 Part B QG step 6 (PM@5c1cfc7f) + B-004 verification + MTDS remaining failures (per operator @12:04).
+
+- **Owned repos**: `strategy-service` + `execution-service` + `e2e-testing` + `unified-trading-pm`
+- **Task — 3-phase**: (1) cross-side prereq check; (2) launch paper backtest; (3) 30-day monitor + verify.
+
+  **Phase 1 — Cross-side prereq check (FIRST, before any launch)**:
+  - Read `plans/active/defi_master_2026_05_07.md` § "paper-trade gate" for context on what "DeFi pipeline green end-to-end" means.
+  - Verify pipeline state on-disk: (a) `instruments-service` DeFi instrument refdata exists in GCS at `gs://central-element-323112-instruments-defi/...`; (b) MTDS DeFi market-data parquets exist for last 30 days; (c) `features-service` DeFi feature parquets exist; (d) `strategy-service` `carry_staked_basis` archetype factory resolves cleanly (`bash scripts/quality-gates.sh` on strategy-service passes for archetype paths); (e) `execution-service` paper-mode adapter for DeFi venues responds.
+  - File cross-side ping at `plans/active/_agent_pings.md`: `[YYYY-MM-DD HH:MM UTC] harsh-slot-9 → ikenna-main — B-015 pipeline-readiness check: list of (a)-(e) verified green. Need Ikenna confirmation of: backtest start_date, paper-mode bankroll cap, hedge venue list for short leg. BLOCKING B-015 launch until confirm.` Wait for Ikenna ACK before Phase 2.
+
+  **Phase 2 — Launch paper backtest** (after Ikenna ACK):
+  - Launch via `e2e-testing` colocated_engine in paper mode with start_date + bankroll per Ikenna's confirm. Command shape (verify exact CLI per `e2e-testing/scripts/defi/` README): `python scripts/defi/colocated_engine.py --archetype carry_staked_basis --mode paper --start-date <YYYY-MM-DD> --duration 30d --asset-group defi`.
+  - Tag the run with `correlation_id` for event-stream tracking. Capture VM name + PID for reference.
+
+  **Phase 3 — 30-day monitor + verify**:
+  - Watch event stream at `gs://central-element-323112-events/events/strategy-service/.../*.jsonl` — confirm STARTED + per-day progress events.
+  - Verify per-day: (a) P&L attribution row written; (b) hedge leg fills observed at CeFi perp venues (Bybit/Deribit/OKX); (c) LST margin positions tracked; (d) no kill-switch / circuit-breaker events.
+  - At day-30 STOPPED event: pull P&L summary + commit attribution report to `e2e-testing/reports/defi_paper_runs/carry_staked_basis_<YYYY-MM-DD>.md`. Ping DONE with full SHA list + report path.
+
+- **Done-def**: Phase 1 cross-side ping landed + Ikenna ACK; Phase 2 launch verified via event stream STARTED; Phase 3 30-day STOPPED event + P&L attribution report committed.
+- **NOTE — cross-side gate**: do NOT skip Phase 1. Launching paper backtest without Ikenna's confirm on start-date/bankroll/hedge-list risks invalid backtest config + wasted compute. Wait for ACK.
+- **Escalation**: if Phase 1 reveals pipeline gap (e.g., missing instrument refdata, broken adapter), file P1 issue doc + ping main; do NOT silently work around it.
 
 ### Slot 8 — B-014: Phase 3 QG ratchet STEPs enable + rollout (Sonnet 4.6 / thinking: medium)
 

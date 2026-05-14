@@ -147,7 +147,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 ## Tier 3 — Cross-side dependency / operator decision needed
 
 ### B-015 · DeFi carry_staked_basis backtest run (paper mode)
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 9 2026-05-14 (Phase 1 cross-side prereq check FIRST; launch after Ikenna ACK)
 - **Task**: Run `carry_staked_basis` archetype end-to-end in paper/batch mode for 30 days. Verify P&L attribution, hedge leg fills, LST margin positions. Monitor event stream.
 - **Repos**: `strategy-service` + `execution-service` + `e2e-testing`
 - **Est**: 4h (launch + monitor) · **Model**: Sonnet
@@ -194,6 +194,8 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-011 Phase 8.A VM deploy scripts coverage | slot 2 | DISPATCHED (after slot 5 + Phase 0 green) |
 | 2026-05-14 | B-012 Phase 8.A custody + wallet signing coverage | slot 6 | DISPATCHED |
 | 2026-05-14 | B-014 Phase 3 QG ratchet STEPs enable + rollout | slot 8 | DISPATCHED (prep now; rollout after B-006-B-012 all DONE) |
+| 2026-05-14 | B-009 Phase 8.A kill switch + circuit breaker coverage | slot 5 | START (Phase 0 effectively green per operator @12:04) |
+| 2026-05-14 | B-015 DeFi carry_staked_basis paper backtest | slot 9 | DISPATCHED (Phase 1 cross-side prereq check FIRST) |
 
 ---
 
