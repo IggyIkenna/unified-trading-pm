@@ -149,8 +149,9 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
 8. ✅ **Cluster D ml-inference test failures** (Phase 0 cluster D, ml-inference-half). (refactor 0.4×, ~2 = 0.8 cal)
    **DONE** (2026-05-14 sub-agent): ml-inference@7e37109 — STEP 5.63 false-positive docstring fix + STEP 5.64
    `emit_preflight_skip()` added to `batch_handler.py` dependency-missing branches.
-9. **Aster + Bybit UTA eligibility verification for carry_staked_basis** — LST_AS_MARGIN per archetype matrix. (research
-   1.2×, ~3 = 3.6 cal)
+9. ✅ **Aster + Bybit UTA eligibility verification for carry_staked_basis** — LST_AS_MARGIN per archetype matrix. (research
+   1.2×, ~3 = 3.6 cal) **DONE** (2026-05-14): strategy-service@ab8661e — ASTER=no LST (USDC/USDT-only), BYBIT UTA
+   stETH=True (10% haircut) → lido-bybit slot unlocked; `TestAsterBybitUtaLstEligibility` test class added.
 10. ✅ **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` clusters B + C** — Alchemy `_get_rpc_url`
     API drift + g9_regression classifier event-shape drift. (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14
     sub-agent): Cluster B already passing (no fix needed); Cluster C — MTDS@a54dc62 — `_safe_classify` re-exported from
