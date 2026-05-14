@@ -1506,3 +1506,34 @@ Gate 4 no longer blocked by 6.3. Verified: `_check_emission_policy()` + `_apply_
 realised_vol_intraday (PARTIAL_OK); 4 unit tests in `tests/volatility/unit/test_emission_policy.py`; plan checkbox `[x]`
 at writegate_honest_coverage_endtoend_2026_05_06.md line 3281. See writegate_honest_coverage_endtoend_2026_05_06.md
 Phase 6.3.
+
+---
+
+[2026-05-14 ~15:30 UTC] harsh-slot-3 → ikenna-main — **B-016 Phase 1 prereq check COMPLETE. ACK REQUIRED before Phase 2 launch.**
+
+**arbitrage_price_dispersion paper backtest (B-016) — cross-side prereq ping**
+
+Phase 1 pipeline state verification results:
+
+- ✅ **(a) instruments-service DeFi perp refdata**: All 6 venues confirmed (Bybit via tardis.py, Deribit via deribit_combo_adapter.py, Binance via tardis.py, OKX via tardis.py, Hyperliquid via hyperliquid.py, Aster via aster.py). BTC-PERP + ETH-PERP + SOL-PERP coverage confirmed.
+- ✅ **(b) strategy-service APD archetype factory**: `V2BatchHarness.from_strategy_type("arbitrage_price_dispersion")` now resolves — lowercase alias added to `STRATEGY_TYPE_TO_SLOT` + `STRATEGY_CATEGORIES`. **strategy-service@0ca3fac** (B-016 Phase 1 fix — was missing alias, would `sys.exit(1)` on launch).
+- ✅ **(c) execution-service paper-mode adapter**: `colocated_engine.py` routes `"CEFI"` category to benchmark fill path in paper mode (no real exchange calls). No Tenderly fork needed. Paper VM is fully self-contained. **e2e-testing@aa336ed** (template + STRATEGY_CATEGORIES["arbitrage_price_dispersion"]="CEFI" added).
+- ✅ **(d) Phase 3 report template drafted**: `e2e-testing/reports/defi_paper_runs/arbitrage_price_dispersion_template.md` filed at e2e-testing@aa336ed.
+- 🟡 **(e) MTDS DeFi market-data parquets**: Not yet verified on GCS (needs VM access with ADC). Assuming available based on existing BTC/ETH/SOL CeFi perp coverage from prior MTDS runs — slot 9's B-015 carry_staked_basis run uses same MTDS source. If B-015 has confirmed MTDS data OK, we can share that prereq.
+
+**Shared prereqs with B-015 (slot 9)**:
+- Start date: request alignment with B-015 slot 9. Suggest 2026-04-14 to 2026-05-14 (30 days).
+- Hedge venue list: BTC_FUNDING_RATE_DISPERSION uses `bybit,deribit,binance,okx,hyperliquid,aster` (6-venue universe, fixed per archetype_slot_resolver.py).
+- **Bankroll separate**: APD initial_equity = $250,000 USDT (different from B-015 which uses ETH share class). No shared wallet — USDT margin account.
+
+**BLOCKING**: Do NOT launch Phase 2 until ikenna-main ACKs this ping.
+**Phase 2 launch command** (pending ACK):
+```bash
+python e2e-testing/scripts/defi/colocated_engine.py \
+  --strategy arbitrage_price_dispersion \
+  --mode paper \
+  --start-date 2026-04-14 \
+  --end-date 2026-05-14
+```
+
+**Filing slot**: Harsh slot 3 (B-016). Corresponds to Ikenna slot 9's B-015 cross-side prereq pattern.
