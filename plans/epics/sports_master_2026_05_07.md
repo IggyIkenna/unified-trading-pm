@@ -193,6 +193,12 @@ Closes:
 - `plans/active/issues/catalogue_audit_sports_2026_05_12.md` SP-13 (P0 phantom-import-path bug; resolved by 14-row
   deletion + 4-row rewrite).
 
+**Successor plan (2026-05-14)**:
+[`plans/active/sports_scrapers_post_cutover_2026_06_01.md`](../active/sports_scrapers_post_cutover_2026_06_01.md) —
+`BLOCKED-OPERATOR-DECISION`; CREDENTIAL APPROVAL REQUEST pre-filled per CLAUDE.md "External Data Is Always Available"
+HARD RULE. Status cross-linked to `master_to_live_defi_2026_05_23.md` § "Workspace-coordination + post-cutover successor
+plans" (PM@`82d73711`).
+
 ## Current state (2026-05-07)
 
 - **honest-coverage architecture**: 16/49 = 33% done. Phase 1 UAC `UpstreamReq` + `in_coverage` started; Phase 2

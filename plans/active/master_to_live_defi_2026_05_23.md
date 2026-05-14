@@ -1653,6 +1653,12 @@ sign-off + Phase 7 cutover gate = next-cycle scope.
   `wallet_treasury_client_flow_2026_05_10.md`: real HMAC withdrawal approval chain (replaces May-23 button-click stub) +
   real Copper + CEFFU integrations + GCS audit log immutability + retention lock. Feeds Group G item 23 (operator UX for
   withdrawals). Folded into master 2026-05-13 (was orphan).
+- [`sports_scrapers_post_cutover_2026_06_01`](./sports_scrapers_post_cutover_2026_06_01.md) —
+  **BLOCKED-OPERATOR-DECISION** — 14 UK/EU + 2 US scraper adapters; operator chose 2026-05-12 not to pursue for May-23.
+  Successor plan filed 2026-05-14 per CLAUDE.md "External Data Is Always Available" HARD RULE (PM@`dba80b61`).
+  Activation requires operator KYC account sign-up at 14 books + GeoComply/XPoint subscription; CREDENTIAL APPROVAL
+  REQUEST pre-filled in plan body. Predecessor: `sports_master_2026_05_07.md` § "Scrapers DEFERRED-INDEFINITELY
+  2026-05-12 per operator".
 
 **Successor plans for partial implementations (per CLAUDE.md "Temporary state must have a named successor plan" rule):**
 
@@ -1811,15 +1817,14 @@ Agent 5):
       **Blockers**: funding_oi calculator backfill VMs in flight 2026-05-05; cross-venue funding spread feature;
       4-service QG; Hyperliquid + Aster live execution wiring (Lighter + Pacifica shipped, but Hyperliquid + Aster
       pending).
-- [ ] 2-year P&L variance batch run completed across config grid for both archetypes (Group F item 18). 🚨
-      **VM-shape sizing**: benchmark report `gs://central-element-323112-benchmark-reports/benchmark_report/` shows
-      c2-standard-8 within budget for `mtds_read` (~8s P95) + `strategy` (~6.5s P95). `features`/`mdps_compute`/
-      `matching_engine`/`ml_inference` stages failed in benchmark (blocked on Phase 3.D per-reader threading).
-      Sized VM: c2-standard-8 minimum (upgrade to c3-highcpu-44 if features/mdps blocked stages cause OOM post-fix).
-      **Budget assertion**: `UTL.synthetic.check_budget()` at f942dc54.
-      **AUTHOR-MISSING**: no `run_2yr_config_grid_backtest.py` exists yet — P0 follow-up filed in work-stream F §
-      Deep-audit P0 follow-ups. Owner: Agent 4. Existing `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py`
-      are tracing/simulation, NOT config-grid sweeps.
+- [ ] 2-year P&L variance batch run completed across config grid for both archetypes (Group F item 18). 🚨 **VM-shape
+      sizing**: benchmark report `gs://central-element-323112-benchmark-reports/benchmark_report/` shows c2-standard-8
+      within budget for `mtds_read` (~8s P95) + `strategy` (~6.5s P95). `features`/`mdps_compute`/
+      `matching_engine`/`ml_inference` stages failed in benchmark (blocked on Phase 3.D per-reader threading). Sized VM:
+      c2-standard-8 minimum (upgrade to c3-highcpu-44 if features/mdps blocked stages cause OOM post-fix). **Budget
+      assertion**: `UTL.synthetic.check_budget()` at f942dc54. **AUTHOR-MISSING**: no `run_2yr_config_grid_backtest.py`
+      exists yet — P0 follow-up filed in work-stream F § Deep-audit P0 follow-ups. Owner: Agent 4. Existing
+      `trace_carry_staked_basis.py` + `trace_all_carry_archetypes.py` are tracing/simulation, NOT config-grid sweeps.
 - [ ] Execution-service connectors validated on testnet (Group F item 20). 🚨 **9 connectors NOT YET validated** —
       master plan assumes testnet wiring exists; deep audit found 0 testnet branch paths in execution-service. Owner:
       Agent 4 (CeFi side) + Agent 4 (DeFi side). Tenderly fork fixtures shipped DeFi-side per
