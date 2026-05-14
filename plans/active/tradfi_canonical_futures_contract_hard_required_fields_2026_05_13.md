@@ -150,11 +150,13 @@ Order matters: every consumer must adopt the new types BEFORE the workspace-wide
 - [x] [SCRIPT] P0. Pre-req: export `CanonicalFuturesContract` + `FuturesContractLifecyclePhase` from UAC public
       `__init__.py` (imports + `__all__`). Required before any consumer can import via Citadel import rules. **COMPLETED
       2026-05-14**: UAC@f514779 — both symbols added to top-level facade.
-- [x] [SCRIPT] P0. **instruments-service** (4.1): add `get_canonical_futures_contracts(venue, underlying)` to
-      `instruments_service/reference_data/adapters/tradfi/databento.py`. Calls `get_instruments(FUTURE)`, derives
-      contract_month/year from expiry, sets all 5 required date fields to `expiry.date()` (conservative), derives
-      `lifecycle_phase` (ACTIVE vs EXPIRED). **COMPLETED 2026-05-14**: IS@bcb34b9 — 61-line method shipped.
-      `CanonicalFuturesContract` + `FuturesContractLifecyclePhase` imported from UAC public surface.
+- [x] [SCRIPT] P0. **instruments-service** (4.1): `futures_factory.py` standalone module with
+      `build_futures_contracts(records, today)`: parses root/month/year from raw_symbol, derives all 5
+      lifecycle dates (physical-delivery vs cash-settled conventions), classifies all 6
+      `FuturesContractLifecyclePhase` values. **COMPLETED 2026-05-14**: IS@bcb34b9 (inline adapter method
+      — 61 lines) + IS@0c59485 (standalone factory module — 330 lines, physical delivery convention,
+      all 6 lifecycle phases, 29 unit tests green in
+      `tests/unit/reference_data/adapters/tradfi/test_futures_factory.py`).
 - [ ] [SCRIPT] P1. **market-tick-data-service** (4.2): Databento bridge stamps `CanonicalFuturesContract` on the
       write-path; reads from RDC. Each consumer flip is its own commit + push + tests.
 - [ ] [SCRIPT] P1. **mtds-tradfi-staleness** (4.3): consume `CanonicalFuturesContract.expiry_date` for per-contract

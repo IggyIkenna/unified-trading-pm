@@ -99,7 +99,12 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
 3. Verify B-014 rollout (slot 8) completed cleanly across all consumer service repos; if any QG failures, fix.
 4. Verify B-011 (slot 2) work is complete; check plan checkbox status.
 5. Run `regenerate_active_plan_inventory.py` to refresh master plan dashboard.
-6. Begin morning slot reset + new day work-split.
+6. **NEW (Lever 1+2 adoption)** — Review draft orchestration upgrade docs before slot dispatch:
+   - [`THEMATIC_CLUSTERS.md`](THEMATIC_CLUSTERS.md) (stable per-slot theme map; review for accuracy)
+   - [`../plans/active/continuation_prompts_harsh_2026_05_15.md`](../plans/active/continuation_prompts_harsh_2026_05_15.md) (Day-1 instance with per-slot multi-item queues)
+   - [`../scripts/agents/harsh_auto_poll.sh`](../scripts/agents/harsh_auto_poll.sh) (mechanical poller; run `--dry-run` once, then cron-schedule or tmux `--watch`)
+7. Drop ONE "Day-1 START" ping per slot pointing to their continuation_prompts section — stand back, let slots self-pivot.
+8. Begin morning slot reset (only if themes shift; per Lever 3, themes are stable across cycles).
 
 ---
 

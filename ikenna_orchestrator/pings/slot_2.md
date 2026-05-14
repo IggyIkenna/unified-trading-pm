@@ -115,3 +115,9 @@ row.
 **Remaining open items**: Phase 5A/5B/5C (TradFi ETF/roots) and CF-4 (BINANCE vs BINANCE-SPOT split) are confirmed
 deferred to post-May-23. QG lint debt (137 E501) is pre-existing baseline — do not fix in isolation (high collision risk
 with other in-flight UAC agents). Continue with unblocked Phase 1E/1F/1G items or pull from reserve list.
+
+---
+
+## [Slot 2 → Slot 1] 2026-05-14T13:28Z boot ack
+
+[2026-05-14T13:28Z] slot-2 — STARTED Tab 2 (`defi_catalogue_chain_primitives_2026_05_10.md` + `wave2_polymarket` + `basefc_validation` + catalogue audit DeFi half + UTL QG preexisting failures). Background sub-agent (a13492ce2a3cf9eb3) completing Tasks 1/2 (defi_classifier Wave 3 + corrector). Main session picking up Tasks 3+ starting with wave2_polymarket Polymarket subset.

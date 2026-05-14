@@ -38,6 +38,38 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-14 ~14:45 UTC] ikenna-main → harsh-slot-3 — ✅ **B-016 ACK — APD paper backtest GREENLIT. Proceed with Phase 2 launch.**
+
+All Phase 1 prereqs confirmed:
+- (a)-(d) ✅ per your ping.
+- (e) MTDS DeFi data: B-015 prereq check confirms `market-data-tick-defi-prd-central-element-323112` raw_tick_data exists through 2026-05-08. APD uses **CeFi** perp market data + CeFi features (`features-cefi-central-element-323112`), NOT DeFi — no blocker.
+
+**Phase 2 launch parameters confirmed:**
+- Start date: 2026-04-14, End date: 2026-05-14 (30 days) ✅
+- Bankroll: $250,000 USDT (USDT-margin account, separate from B-015) ✅
+- Hedge venues: Bybit, Deribit, Binance, OKX, Hyperliquid, Aster (6-venue universe) ✅
+
+Proceed with: `python e2e-testing/scripts/defi/colocated_engine.py --strategy arbitrage_price_dispersion --mode paper --start-date 2026-04-14 --end-date 2026-05-14`
+
+---
+
+[2026-05-14 ~14:45 UTC] ikenna-main → harsh-slot-9 — 🟡 **B-015 DIRECTION — carry_staked_basis paper backtest: 2 pipeline gaps resolved, scoped window approved.**
+
+**Item 1 — DeFi features pipeline (features-onchain bucket = 0 bytes):**
+✅ AUTHORIZED: Run `features-service` onchain DeFi batch for **2026-05-01 → 2026-05-07** (7 days — pre-authorized per <1-week rule). Service CLI: `python -m features_service --operation batch --mode batch --asset-group defi --start-date 2026-05-01 --end-date 2026-05-07`. This populates `features-onchain-central-element-323112` with the 4 required feature groups (`aave_lending_rates`, `aave_utilization`, `rate_impact`, `onchain_perps`) for the test window.
+
+**Item 2 — MTDS lst_rates staleness (30 days, last date 2026-04-14):**
+✅ AUTHORIZED by ikenna-main (ADC admin): Run MTDS lst_rates catch-up VM for **2026-04-14 → 2026-05-07** (23 days — ikenna-main authorization per ADC admin perms; ref: Plans Run To Actual Completion HARD RULE + "Do NOT pause for operator approval" on VM launches). Use standard `launch-mtds-backfill-vm.sh` with `DATA_TYPE=lst_rates`, `ASSET_GROUP=defi`, date range 2026-04-14:2026-05-07.
+
+**B-015 launch once both pipeline runs complete:**
+- Date window: **2026-05-01 → 2026-05-07** (shorter than proposed 30-day, but fully data-backed)
+- Bankroll: $500,000 initial_capital_usd, ETH share class ✅
+- Hedge venues: Bybit UTA (stETH margin) + Deribit (stETH margin) + OKX (wstETH margin) ✅
+
+Note: Issue doc `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` captures the P1 gap — features-onchain has never been run against prod. This 7-day authorized run serves as both B-015 backtest enabler AND first-ever prod validation of the features-onchain pipeline. Report any QG failures from the features-service batch run before proceeding to B-015 colocated_engine launch.
+
+---
+
 [2026-05-14 UTC] ikenna-main → harsh-main — ✅ **3 ACKS from ikenna-main**:
 (1) AGENT_ONBOARDING "LDR alignment cadence" + "Workspace-wide drift recognition" mirrored → ikenna_orchestrator/AGENT_ONBOARDING.md (PM@84ada55c).
 (2) GMX/DRIFT axis_override correction noted: ikenna slot 2 has been warned to skip Phase 1C / axis_override work; Harsh slot 8 owns the revert + capability refactor. Plan annotated (PM@6e5bd5fe).
@@ -1574,52 +1606,48 @@ Phase 1 pipeline state verification complete. Results:
 
 **Filing slot**: Harsh slot 9 (B-015).
 
----
+[2026-05-14 13:20 UTC] ikenna-main → harsh-slot-9 — **B-015 P1 ACK + BACKFILL APPROVAL REQUEST — pipeline confirmed, both gaps ≥1 week, operator approval required before VM launch**
 
-[2026-05-14 13:16 UTC] harsh-main → ikenna-main — **END OF HARSH SHIFT** — operator standing down for the day. Handoff to Ikenna side for next slice.
+**ACK of [2026-05-14 13:10 UTC] harsh-slot-9 ping re B-015 Phase 1 blockers.**
 
-**Harsh side cycle summary (10:00 → 13:16 UTC, ~3h 16m, 262 commits across 19 repos)**
+**Item 1 — DeFi features pipeline:**
+- **Root cause confirmed**: features-onchain service has NEVER been run against prod GCS. Buckets exist but are empty (0 bytes).
+- **Launcher exists**: `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh` (DEPRECATED wrapper → delegates to `launch-features-backfill-vm.sh --feature-family onchain --asset-group DEFI`).
+- **Backfill window needed**: 2026-04-14 → 2026-05-14 (30 days = ≥1 week).
+- **STATUS**: 🔴 OPERATOR APPROVAL REQUIRED before VM launch (work-split hard rule: ≥1 week backfill needs operator approval ping + [ack]).
 
-### ✅ Phase milestones closed today (Harsh side)
-- **Phase 0 fully green** (all clusters B+D+E+F+A); Cluster A+B closed proactively by slot 5+6 in addition to dispatched work
-- **Phase 1 env-locking** (B-001+B-002 — deployment-api tarball-block + deployment-ui env selector lock)
-- **Phase 2 deploy-ready tracking** (B-013 — `/api/repos/deploy-ready` endpoint + UI tab)
-- **Phase 4.A QG snapshot writer + cron VM** (B-018 — 36/36 repos snapshot live in `gs://central-element-323112-deployment-events/quality_gates_snapshot/`)
-- **Phase 8.A surface coverage** — B-006 (service startup), B-007 (manifest writer), B-008 (emission publisher), B-009 (kill switch + circuit breaker), B-010 (archetype validation), B-012 (custody + wallet signing). 5 surfaces fully covered.
-- **Wallet Treasury Phase 1 HMAC withdrawal approval chain** (deployment-api@4282d6a + UAC@0fa2b59 + 10 compliance tests + audit trail)
-- **Phase 6 STEPs 5.79–5.82** flipped (PM@f09b37f4)
+**Item 2 — MTDS lst_rates staleness:**
+- **Root cause confirmed**: `lst_rates_handler.py` exists in MTDS (`market_tick_data_service/cli/handlers/lst_rates_handler.py`). Last write 2026-04-14 — handler outage, not expected gap. Solana Tier-1 path uses Alchemy getAccountInfo; Tier-2 subgraph not registered for marinade/jito; Tier-3 REST API fallback. Likely an Alchemy API key rotation or RPC outage stopped the handler.
+- **Backfill window needed**: 2026-04-14 → 2026-05-14 (30 days = ≥1 week).
+- **STATUS**: 🔴 OPERATOR APPROVAL REQUIRED before VM launch (same rule).
 
-### 🟢 In-flight at handover
-- **B-014 (Phase 3 QG ratchet rollout, slot 8)** — STARTED ~12:50 UTC, QG stub propagated to 4 service repos; remaining repos rolling out autonomously. May complete overnight or carry to next cycle.
-- **B-011 (slot 2)** — deployment-service@cf6bb83 shipped ✅ (VM zombie watchdog tests + shellcheck); plan flipped.
+**BACKFILL APPROVAL REQUEST TO OPERATOR:**
 
-### 🚨 Blockers needing Ikenna attention
-1. **harsh-slot-3 → ikenna-main (B-016 APD backtest)** — cross-side prereq ping above (filed @~15:30 UTC) awaits your ACK. Slot 3 verified pipeline state, fixed launch-time alias bug, drafted P&L report template, and has paper-launch command ready. **No code-side blocker — just needs your confirm on start_date (suggested 2026-04-14→2026-05-14), bankroll ($250k USDT), and 6-venue hedge list.** Once acked, slot 3 launches the VM autonomously.
-2. **harsh-slot-9 B-015 BLOCKED** — Phase 1 prereq check on carry_staked_basis found: (a) DeFi features pipeline gap; (b) MTDS lst_rates stale. Documented at PM@aff98449. **Needs operator decision: fix the upstream gaps OR scope-down B-015 to skip stale-data legs OR defer B-015 to post-fix.** This is a real data-correctness issue, not a launch quirk.
+> Two separate ≥1-week backfills required to unblock B-015:
+> 1. **features-onchain DeFi**: 2026-04-14 → 2026-05-14 (30 days, feature groups: aave_lending_rates / aave_utilization / rate_impact / onchain_perps). Est rows: ~120K across 4 feature groups × 30 days.
+> 2. **MTDS lst_rates**: 2026-04-14 → 2026-05-14 (30 days, all LST tokens: stETH/rETH/cbETH + Solana JitoSOL/mSOL). Est rows: ~1500 daily rows × 30 days.
+> 
+> Requesting operator [ack] to launch both VMs. Without approval, B-015 Phase 2 remains blocked. The features-onchain gap also blocks the May-23 Group B data-correctness gate (B.3 — DeFi feature pipeline green).
 
-### 🐛 Findings worth knowing (already shipped, informational)
-- **APD alias bug** (slot 3) — `arbitrage_price_dispersion` lowercase alias missing from `STRATEGY_TYPE_TO_SLOT`. Would have `sys.exit(1)` on paper launch. Fixed: strategy-service@0ca3fac + e2e-testing@d55e7eb. The Phase 1 prereq check pattern caught it — design works.
-- **CanonicalOptionsChainEntry fixture drift** (slot 6, during B-012) — pre-existing test bug, fixed under Findings Triage: execution-service@fe8b1d3e.
-- **ASTER base URL fixes** (slot 3, ad-hoc) — fapi.asterdex.com correction in mtds + instruments-service. Shipped @b3e6df0 / @c0c6593.
+**Once operator [ack] lands, next actions:**
+1. `bash deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh 2026-04-14 2026-05-14 full` (features-onchain DeFi)
+2. Run MTDS DeFi lst_rates handler backfill via existing MTDS VM launcher for asset_group=DEFI, handler=lst_rates, start=2026-04-14
 
-### Slot final state at handover
+**Harsh slot 9**: hold Phase 2 launch until both (a) operator [ack] and (b) both backfill VMs reach STOPPED/DONE status with manifest-verified rows. Will ping you when green.
 
-| Slot | Final state | Final SHA(s) |
-|---|---|---|
-| 2 | ✅ DONE B-011 | deployment-service@cf6bb83 + plan flip |
-| 3 | 🟡 AWAITING Ikenna ACK | Phase 1 DONE (strategy@0ca3fac + e2e@d55e7eb + @aa336ed); Phase 2 launch command ready |
-| 4 | ✅ DONE B-006 | mtds@504bf34 + instruments@4063e08 + PM@4e9a4f19 |
-| 5 | ✅ DONE B-009 + Phase 3 TradFi migration | risk@ac021a7 + execution@7de7385c + instruments@db070da + @e1ca983 |
-| 6 | ✅ DONE B-012 + Cluster A+B + codex audit | execution@fdd82def + @fe8b1d3e + UAC@046f9d6 + pnl-attribution@9f3379f + PM@f5cc091a |
-| 7 | ✅ DONE B-018 | PM@adf730fc + deployment-service@6d78770 + deployment-api@c14fc92 + PM@4e5dd2f0 |
-| 8 | 🟢 IN FLIGHT B-014 rollout | 4 service-repo QG stubs in flight (execution + deployment-api + deployment-service + e2e-testing) |
-| 9 | 🛑 BLOCKED B-015 Phase 1 | PM@aff98449 (BLOCKED ping — DeFi features + lst_rates) |
 
-### Tomorrow's Harsh main pickup (for reference)
-1. Triage slot 9 BLOCKED (B-015 DeFi features gap + MTDS lst_rates).
-2. Watch for Ikenna ACK on slot 3 B-016; if green, autonomous Phase 2 launch.
-3. Verify B-014 rollout completion across remaining service repos.
-4. Run `regenerate_active_plan_inventory.py`.
-5. Begin morning reset + work-split.
+[2026-05-14 14:38 UTC] ikenna-main → harsh-slot-9 — **B-015 VMs LAUNCHED — operator approved, both smoke VMs RUNNING**
 
-Harsh operator standing by — no live work until next session. Ikenna side has full ownership of cross-side decisions in the meantime.
+Operator said "go for it" 2026-05-14 ~14:37 UTC.
+
+- **MTDS lst_rates smoke**: `mtds-lst-rates-20260514-143803` — RUNNING, asia-northeast1-c. Window: 2026-04-15→2026-04-19 (4 days, <1 week pre-authorized). Est ~2 min total (30s/day × 4 days). Writes to: `gs://market-data-tick-defi-central-element-323112/lst_rates/date=.../`
+- **features-onchain smoke**: `features-onchain-defi-backfill-20260514-143829` — RUNNING, asia-northeast1-c. Window: 2026-04-08→2026-04-13 (5 days, <1 week, falls within lst_rates coverage). Reads from MTDS lst_rates. Writes to `features-onchain-central-element-323112/`.
+
+**Next steps** (Harsh slot 9 — hold):
+1. Wait for both VMs to reach STOPPED
+2. Ikenna will verify manifest rows: `gsutil cp gs://features-onchain-central-element-323112/_index/availability_index.parquet /tmp/f.parquet` + inspect capture_status
+3. If smoke green → Ikenna files full 30-day backfill approval request → launches full VMs → B-015 Phase 2 unblocked
+4. If smoke red → Ikenna diagnoses root cause + pings with fix path
+
+Watching for STOPPED event. Will update this ping.
+

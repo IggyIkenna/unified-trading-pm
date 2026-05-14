@@ -401,3 +401,10 @@ All 9 slot-7 baseline items (work_split_2026_05_14_ikenna.md § Slot 7) are done
 - STEP 5.69: batch-live-recon + deployment-api inline gs:// formatters (107 occurrences)
 - QG timeout (367s > 300s workspace-wide)
 - **NEW Finding (filed P1 issue)**: UAC `normalize_aster_ticker` missing from `tickers.py` (imported in `__init__.py`, breaking test collection for emission_policy tests; UAC-only fix needed)
+
+---
+
+## [slot 7 → main] BOOT ACK — 2026-05-14 13:20 UTC
+
+[2026-05-14 13:20 UTC] slot-7 — STARTED (re-boot post-compaction). All baseline done. Starting B-015 P1 ACK + backfill approval request for DeFi features pipeline + MTDS lst_rates gap.
+
