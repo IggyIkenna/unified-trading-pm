@@ -475,8 +475,85 @@ clock-skew falls back to conservative latest-watermark (never emit beyond the sl
 
 ---
 
-## §11 References + cross-refs
+## §11 Per-asset-group batch/live docs
 
+Each asset group has its own narrative doc covering the group-specific matcher, shard atom, empty rules, and any
+domain quirks. All docs anchor on the invariants in §1-§4 above.
+
+| Asset group | Doc                                          | Status (2026-05-14)      |
+| ----------- | -------------------------------------------- | ------------------------ |
+| `cefi`      | [`cefi-batch-live.md`](cefi-batch-live.md)  | ✅ SHIPPED (Tab 1)        |
+| `defi`      | DeFi-specific notes in §5 AMMMatcher + [`amm-slippage-simulation.md`](amm-slippage-simulation.md) | Partial — AMM matcher spec shipped; full narrative pending |
+| `tradfi`    | `tradfi-batch-live.md`                       | **POST-CUTOVER** (Tab 1 P2) |
+| `sports`    | §7 above covers sports-specific notes        | Inline (sufficient for May-23) |
+| `prediction`| `prediction-batch-live.md`                   | **POST-CUTOVER** (Tab 1 P2) |
+
+---
+
+## §12 UI mode-context guidance
+
+The deployment-UI (`deployment-ui`) surfaces batch/live mode to the operator via `ExecutionModeContext`. This section
+codifies how UI mode-context wires to the batch=live engineering invariant.
+
+**Canonical provider**: `unified-trading-system-ui/lib/execution-mode-context.tsx:19-43`.
+
+```typescript
+// Provider canonical — do NOT redeclare elsewhere in the UI codebase
+export const ExecutionModeContext = createContext<ExecutionModeContextValue>({
+  mode: "live",  // default
+  setMode: () => undefined,
+  config: DEFAULT_MODE_CONFIG,
+  isLive: true,
+  isPaper: false,
+  isBatch: false,
+});
+```
+
+**What is mode-driven in the UI**:
+- The `mode` value controls which time-slice the Data-Status API query uses (batch → historical shard; live → current
+  live shard). The widget tree is IDENTICAL — only the query-key changes.
+- The mode-toggle in `deployment-ui` corresponds to `RuntimeMode` (batch vs live). It does NOT control
+  `OperationalMode` (live vs paper vs backtest) — that is a strategy-catalogue concern, not a data-pipeline concern.
+
+**What is NOT mode-driven**:
+- Widget tree branching by mode (`<BatchDataStatus />` vs `<LiveDataStatus />`) — FORBIDDEN. Single component, mode
+  prop.
+- New page routes per mode — FORBIDDEN. Mode is a filter, not a navigation axis.
+- Separate data sources per mode — FORBIDDEN. Same `/api/data-status` endpoint; mode changes the query parameter.
+
+**L3 violation**: `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` redeclares `RuntimeMode`
+locally instead of importing from UAC. Tab 3 ships the fix (re-export from UAC). Until Tab 3 lands, UI uses its local
+copy. Do NOT propagate the local copy to new files.
+
+**SSOT for mode-axis semantics**: [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md).
+
+---
+
+## §13 Consolidated anti-patterns
+
+The following anti-patterns are drawn from CLAUDE.md § "Batch = Live", `pipeline-mode-partition.md`, and
+`replay-subsystem.md`. Consolidated here for discoverability.
+
+1. **Separate live-only data_types** — `LINEUPS_PRE_MATCH` vs `LINEUPS_POST_MATCH` is FORBIDDEN. One data_type, mode
+   determines source. SSOT: `pipeline-mode-partition.md`.
+2. **Distinct field sets in live + batch parquets** — identical schema required. Source doesn't change the shape.
+3. **Deriving `available_at` at read-time** — stamp at write-time only. Read-time derivation causes lookahead bias.
+4. **`pipeline_mode=replay`** — replay output writes to `pipeline_mode=live_websocket`. Replay is operational, not
+   data-shape. SSOT: `replay-subsystem.md` anti-patterns.
+5. **Building a standalone backtest engine per asset_group** — FORBIDDEN. All fills route through
+   `execution-service/matching_engine/`.
+6. **Mode conditional inside business logic** — belongs only at the 4 seams in §2. See `mode-axis-discipline.md` AP-1.
+7. **`LIVE_*` event-prefix members** — encode mode in payload field, not in type name. Post-cutover fix (Block G1).
+8. **UI RuntimeMode redeclaration** — import from UAC, never redeclare. Tab 3 L3 fix.
+9. **`os.getenv()` to read mode** — use `UnifiedCloudConfig`. Mode is injected as env var; services receive it via
+   config, never read it directly.
+
+---
+
+## §14 References + cross-refs
+
+- **Per-asset-group batch/live docs**: [`cefi-batch-live.md`](cefi-batch-live.md) · `tradfi-batch-live.md` (post-cutover) · `prediction-batch-live.md` (post-cutover)
+- **Mode-axis discipline**: [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md) (cartesian product + anti-patterns)
 - **Live pipeline architecture**:
   [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) (MTDS
   standalone + MDPS+features-asset-scoped colocated topology, Redis Stream cascade)

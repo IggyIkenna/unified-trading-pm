@@ -134,11 +134,13 @@ is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complet
 
 ### Todos
 
-- [ ] [AGENT] P0. **NEW** `codex/04-architecture/cefi-batch-live.md` — per-asset-group narrative for cefi (matcher
+- [x] [AGENT] P0. **NEW** `codex/04-architecture/cefi-batch-live.md` — per-asset-group narrative for cefi (matcher
       pattern + shard atomicity + venue list per pre-audit § 1 Tab 1). Cross-link to `batch-live-architecture.md` § 5.
-- [ ] [AGENT] P0. **NEW** `codex/06-coding-standards/mode-axis-discipline.md` — cartesian product table for `RuntimeMode`
+      (PM@6153d9ea — 144-line doc: 7 CeFi venues, L2Matcher, shard atom + empty rules, DeFi hedge-leg integration)
+- [x] [AGENT] P0. **NEW** `codex/06-coding-standards/mode-axis-discipline.md` — cartesian product table for `RuntimeMode`
       × `OperationalMode` × `BatchExecutionMode` × `MaturityPhase`. Anti-pattern list (no LIVE_/BATCH_ prefix in event
       names · no UI redeclarations · no mode-conditional outside seam). Cite pre-audit § 1.
+      (PM@6153d9ea — 245-line doc: 4 axes, valid-combo table, 6 anti-patterns, QG STEP L1-L7 status)
 - [ ] [AGENT] P0. **UPDATE** `codex/04-architecture/batch-live-architecture.md` — add (a) cross-asset-group meta section
       pointing to cefi-batch-live.md / tradfi-batch-live.md (post-cutover) / prediction-batch-live.md (post-cutover);
       (b) UI mode-context guidance (ExecutionModeContext canonical at
