@@ -29,14 +29,14 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 ## Tier 1 — Dispatch-ready (no cross-side blocker)
 
 ### B-001 · Phase 1 env-locking — deployment-api tarball-block
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 7 2026-05-14
 - **Task**: Add env-aware validation in `deployment-api` to reject tarball deploy method for staging/prod (HTTP 400). `--override-tarball-block` emergency flag with audit log. Unit tests: dev allows both, staging+prod reject without override.
 - **Repos**: `deployment-api`
 - **Est**: 2h · **Model**: Sonnet
 - **Plan-ref**: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 1
 
 ### B-002 · Phase 1 env-locking — deployment-ui env selector lock
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 7 2026-05-14
 - **Task**: In deployment-ui, grey out / disable tarball deploy option when env selector is staging/prod. Show tooltip "tarball blocked in staging/prod — use image deploy". QG: `pnpm build` + vitest green.
 - **Repos**: `deployment-ui`
 - **Est**: 2h · **Model**: Sonnet
@@ -52,7 +52,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 Cluster E slot 8 tsc done (Tab 2 UAC already on LDR ✅)
 
 ### B-004 · strategy-service 2 remaining test failures
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 7 2026-05-14
 - **Task**: Slot 4 Wave 2 fixed 15/17 pre-existing failures. 2 remain (likely from `TestResolverFactoryCoverage` or `test_factory_builds_all_v1_archetypes` group). Diagnose-first: read test + code-under-test. Fix code if code drifted; fix test if test drifted from SSOT; file issue doc if ambiguous. QG green.
 - **Repos**: `strategy-service`
 - **Est**: 1h · **Model**: Sonnet
@@ -168,7 +168,10 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 
 | Date | Item | Slot | Done SHA |
 |------|------|------|----------|
-| — | — | — | — |
+| 2026-05-14 | B-007 client-reporting-api B008 sweep | slot 7 | client-reporting-api@e936eb4 + PM@130dcd5e |
+| 2026-05-14 | B-001 deployment-api tarball-block | slot 7 | DISPATCHED |
+| 2026-05-14 | B-002 deployment-ui env selector lock | slot 7 | DISPATCHED |
+| 2026-05-14 | B-004 strategy-service 2 remaining test failures | slot 7 | DISPATCHED |
 
 ---
 

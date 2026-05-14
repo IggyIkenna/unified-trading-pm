@@ -34,7 +34,7 @@ locked_since: 2026-05-08
 | 4 | **Phase 0 Cluster D** — MDPS + features-service test failures after UTL@67c532bd | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/4` |
 | 5 | **Phase 0 Cluster B** — deployment-api C901 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/5` |
 | 6 | **Phase 0 Cluster B** — alerting-service N802 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/6` |
-| 7 | **Phase 0 Cluster B** — client-reporting-api B008 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/7` |
+| 7 | **B-001+B-002+B-004** — Phase 1 env-locking (dep-api + dep-ui) + strategy-service 2 test failures | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 1 | `tab/hk/7` |
 | 8 | **Phase 0 Cluster E** — UTS-UI tsc errors (+ batch_live Tab 3 carry-forward if time) | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster E | `tab/hk/8` |
 | 9 | **Phase 0 Cluster D** — position-balance-monitor-service test failures | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
@@ -133,6 +133,31 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
   3. Fix all 4. `bash scripts/quality-gates.sh` clean.
   4. Commit + push. Flip plan checkbox.
 - **Done-def**: QG clean for alerting-service on N802; plan checkbox flipped.
+
+### Slot 7 — B-001 + B-002 + B-004: Phase 1 env-locking + strategy test fixes (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: client-reporting-api B008 sweep (client-reporting-api@e936eb4 + PM@130dcd5e). 358 tests pass. P2 coverage gap issue filed.
+
+- **Owned repos**: `deployment-api` + `deployment-ui` + `strategy-service` + `unified-trading-pm`
+- **Task — 3 items, work in order**:
+
+  **Item 1 — B-001: deployment-api env-locking (tarball-block)**
+  - Add env-aware validation in `deployment-api`: reject tarball deploy method when `DEPLOYMENT_ENV` is `staging` or `prod` → HTTP 400 with clear error message referencing the codex SSOT.
+  - Add `--override-tarball-block` emergency flag (logs audit entry, allows through).
+  - Unit tests: dev allows both tarball + image; staging/prod reject tarball without override; override succeeds + audit row written.
+  - `bash scripts/quality-gates.sh` green. Commit + push (`deployment-api`). Flip plan checkbox in `deployment_and_qg_strategy_implementation_2026_05_13.md` Phase 1. Commit + push (`unified-trading-pm`).
+
+  **Item 2 — B-002: deployment-ui env selector lock**
+  - In deployment-ui: grey out / disable the tarball deploy option in the deploy modal when env selector shows `staging` or `prod`. Show tooltip: `"Tarball deploy blocked in staging/prod — use image deploy"`.
+  - Read existing env selector component first (`grep -rn "tarball\|DEPLOYMENT_ENV\|envSelector" deployment-ui/src/`).
+  - `pnpm build` + vitest green. Commit + push (`deployment-ui`).
+
+  **Item 3 — B-004: strategy-service 2 remaining test failures**
+  - Slot 4 Wave 2 fixed 15/17 test failures. 2 remain — diagnose-first. Run `bash scripts/quality-gates.sh` from `strategy-service/`. Read both sides (test + code) for each failure. Fix code if drifted; fix test if drifted from SSOT; file issue doc if ambiguous.
+  - Commit + push (`strategy-service`).
+
+- **Done-def**: All 3 items shipped: deployment-api QG green + tarball-block active; deployment-ui build green + UI locks in staging/prod; strategy-service 2 failures resolved or issue docs filed.
+- **No big decisions needed** — if tarball-block implementation is ambiguous (e.g., unclear how DEPLOYMENT_ENV is read in deployment-api), grep for existing env-check patterns in the codebase first.
 
 ### Slot 7 — Phase 0 Cluster B: client-reporting-api B008 lint sweep (Sonnet 4.6 / thinking: high)
 
