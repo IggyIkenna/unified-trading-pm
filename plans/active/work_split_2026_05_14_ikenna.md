@@ -258,11 +258,13 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
    requires_credentials marker registered + TestCloudKmsLiveEndpointSmoke class (2 integration tests, skip by default)
    at `execution-service@1ee9e8001`. Unit tests covering full dispatch chain already present.
 7. ✅ **`alerting_runbook_and_operator_ux_post_cutover_2026_05_12` Ikenna-half** — push remaining operator UX items.
-   (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): Groups A/B/C/E/F shipped (runbook + 4 doc edits). Groups D/G:
-   design calls documented + implementation deferred to UI/deployment-ui slot (out of PM-repo scope). All at
-   `unified-trading-pm@slot6-item7`.
-8. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 1** — pre-cutover audit-records gate. (research 1.2×, ~3 =
-   3.6 cal)
+   (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14):
+   Groups A/B/C/E/F shipped (runbook + 4 doc edits). Groups D/G: design calls documented + implementation deferred
+   to UI/deployment-ui slot (out of PM-repo scope). All at `unified-trading-pm@slot6-item7`.
+8. ✅ **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 1** — pre-cutover audit-records gate. (research 1.2×, ~3 =
+   3.6 cal) **DONE** (prior session — all 4 phases complete per plan):
+   execution-service@51f1f879 (audit_log.py + callers + 9 tests) + deployment-service@c3ac1c5 (cloud-providers.yaml +
+   provision script) + GCP bucket locked (isLocked=True) + AWS bucket COMPLIANCE-7yr. Plan fully checked off.
 9. **`available_at_lookahead_bias_completion_2026_05_08` sweep** — close remaining stamping helper consumers. (refactor
    0.4×, ~4 = 1.6 cal)
 10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the
