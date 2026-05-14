@@ -135,10 +135,13 @@ Documented above. Composes with Phase 1 commit (no separate work).
 - [x] [SCRIPT] P0. One-shot manifest migration script `instruments-service/scripts/migrate_tradfi_expiry_schema.py`
       mirroring existing migration patterns: idempotent, dry-run + apply, per-blob CAS via `if_generation_match`,
       16-worker concurrent pool. For options-chain rows: attempts OCC symbol parse (YYMMDD encoded in US equity option
-      symbols); logs LEGACY_MIGRATION_MISSING_EXPIRY for CME/non-OCC symbols. **COMPLETED 2026-05-14**: IS@db070da —
-      282-line script shipped. --dry-run / --apply modes; `if_generation_match` CAS; runbook execution SSOT declared.
-      **DEFERRED (live GCS run)**: actual run against prod bucket deferred until Phase 1B propagates workspace-wide; run
-      on same-region GCE VM per operator direction.
+      symbols); logs LEGACY_MIGRATION_MISSING_EXPIRY for CME/non-OCC symbols. **COMPLETED 2026-05-14**: IS@db070da
+      (script) + IS@e1ca983 (15 unit tests green). --dry-run / --apply modes; `if_generation_match` CAS; runbook
+      execution SSOT declared. **DEFERRED (live GCS run)**: actual run against prod bucket deferred until Phase 1B
+      propagates workspace-wide; run on same-region GCE VM per operator direction.
+- [x] [TEST] P0. 15 unit tests for migration script covering OCC parsing, dry-run gate, apply+CAS,
+      idempotent skip, rdc-miss, download error. **COMPLETED 2026-05-14**: IS@e1ca983 — all 15 green in
+      `tests/unit/migrations/test_migrate_tradfi_expiry_schema.py`.
 
 ## Phase 4 — Cascade migration to each consumer in dependency order
 
