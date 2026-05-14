@@ -193,6 +193,11 @@ Covers:
   funding spread; renamed from legacy `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07, see
   [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)).
   7-day continuous run on real wallet.
+- **2 DeFi archetypes code+test+backtest READY-TO-GO-LIVE (toggle OFF at cutover)**: `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
+  + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` — per operator direction 2026-05-14 ("i want defi_recursive_borrow and
+  recursive staking in 23rd may though even if not essential for defi i want it backtested coded up and tested ready to
+  go live"). Phases 4-11 implementation in May-23 scope; Ikenna slots 2+3+6 own it. Live toggle ON post-cutover per
+  operator call. Plan: [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md).
 - **2 DeFi perp DEXs live**: Hyperliquid + Aster. Plus historical-replay backfill for Lighter / Extended / Pacifica
   (originally scoped under CeFi venue expansion but they are DeFi by asset_group).
 - **DeFi data pipeline E2E**: features-onchain → strategy → execution. 8 archetypes pass Phase 1 batch e2e (per

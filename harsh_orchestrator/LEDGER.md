@@ -30,11 +30,11 @@ locked_since: 2026-05-08
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + Phase 0 monitoring + spawn cadence | 🟢 ONLINE | (this LEDGER) | `tab/hk/1` |
 | 2 | **B-011** — Phase 8.A VM deploy scripts coverage (deployment-service); GREEN LIGHT @12:08 (Phase 0 effectively green per operator @12:04) | 🟡 AWAITING (B-011 green-lit; start NOW) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/2` |
-| 3 | **B-016** — DeFi arbitrage_price_dispersion paper backtest run (B-010 DONE ✅ strategy-service@4ede3b2 93.18% archetype coverage; cross-side prereq check + 30-day paper run + monitor) | 🟡 AWAITING (B-016 dispatched; cross-side pipeline-readiness check first) | `defi_master_2026_05_07.md` § "paper-trade gate" | `tab/hk/3` |
-| 4 | **Phase 0 ml-inference + B-006 follow-on** — ml-inference-service 6f+33e diagnose+fix; then B-006 service startup coverage after Phase 0 green | 🟡 AWAITING (direction given after DONE @11:26) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D + Phase 8.A | `tab/hk/4` |
-| 5 | **B-009** — Phase 8.A kill switch + circuit breaker coverage (Cluster F + Cluster A/B proactive DONE ✅; pnl-attribution C901 DONE per operator @12:04) | 🟡 AWAITING (B-009 unblocked — start NOW; Phase 0 ml-inference closing under slot 4) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/5` |
-| 6 | **B-012** — Phase 8.A custody + wallet signing coverage (execution-service + UTL; Cluster D+E DONE ✅ @17:10) | 🟢 IN FLIGHT (STARTED @17:47) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/6` |
-| 7 | **B-013 DONE ✅** — Phase 2 deploy-ready tracking (deployment-api@1f22e22 + deployment-ui@2dfefa1 + PM@b6e58906); standby for next assignment (all Tier 1-3 BACKLOG items dispatched) | 🟡 AWAITING (standby; B-013 DONE @17:55) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 2 | `tab/hk/7` |
+| 3 | **B-016** — DeFi arbitrage_price_dispersion paper backtest run (B-010 DONE ✅ strategy-service@4ede3b2 93.18% archetype coverage; cross-side prereq check + 30-day paper run + monitor) | 🟢 IN FLIGHT (STARTED Phase 1 prereq check @14:30) | `defi_master_2026_05_07.md` § "paper-trade gate" | `tab/hk/3` |
+| 4 | **B-006** — Phase 8.A service startup coverage (ml-inference Phase 0 DONE ✅ ml-inference-service@66726b4 + UTL@f73923e + PM@b1a7aa5d; Phase 0 now FULLY green — B-006 unblocked) | 🟢 IN FLIGHT (STARTED B-006 @12:25; sub-agent fan-out across 5 services) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/4` |
+| 5 | **B-009** — Phase 8.A kill switch + circuit breaker coverage (Cluster F + Cluster A/B proactive DONE ✅; pnl-attribution C901 DONE per operator @12:04) | 🟢 IN FLIGHT (STARTED B-009; reading source + identifying coverage gaps) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/5` |
+| 6 | **Cluster A+B follow-on** — UAC ×→x (2 remaining in registry/risk_rules/venue.py) + pnl-attribution-service 3 C901 (post B-012 DONE @18:30) | 🟢 IN FLIGHT (STARTED @18:35) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 0 Cluster A+B | `tab/hk/6` |
+| 7 | **B-018** — Phase 4.A daily QG snapshot writer + cron VM (B-013 DONE ✅; natural follow-on — write-side of deploy-ready read endpoint) | 🟢 IN FLIGHT (STARTED @18:10) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 4 | `tab/hk/7` |
 | 8 | **B-014** — Phase 3 QG ratchet STEPs enable + rollout (B-007+B-008 DONE; prep now, rollout after B-006-B-012 all green) | 🟡 AWAITING (direction given after B-007+B-008 DONE) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 3 | `tab/hk/8` |
 | 9 | **B-015** — DeFi carry_staked_basis paper backtest run (MTDS DONE per operator @12:04; cross-side prereq check + 30-day paper run + monitor) | 🟡 AWAITING (B-015 dispatched; cross-side pipeline-readiness check first) | `defi_master_2026_05_07.md` § "paper-trade gate" | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
@@ -244,6 +244,34 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
 - **NOTE — cross-side gate**: do NOT skip Phase 1. Same rule as B-015 — invalid backtest config = wasted compute. Wait for ACK.
 - **NOTE — parallel with slot 9**: if slot 9 hits a Phase 1 blocker (missing instrument refdata, broken adapter), expect a similar blocker on your side. Coordinate via cross-side ping ledger, not parallel duplicate diagnosis.
 - **Escalation**: if Phase 1 reveals dispersion-specific pipeline gap (e.g., missing per-venue dispersion feature, broken multi-venue execution adapter), file P1 issue doc + ping main.
+
+### Slot 7 — B-018: Phase 4.A daily QG snapshot writer + cron VM (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: B-013 Phase 2 deploy-ready tracking (deployment-api@1f22e22 GET /api/repos/deploy-ready + 19 unit tests; deployment-ui@2dfefa1 DeploymentReadinessTab + 6 vitest tests; PM plan Phase 4.B checkboxes flipped @ PM@b6e58906).
+
+- **Owned repos**: `unified-trading-pm` (snapshot.sh script) + `deployment-service` (cron VM launcher) + `unified-trading-pm` (plan checkbox)
+- **Task — 4 items, work in order**:
+
+  **Item 1 — Author `snapshot.sh` writer (Phase 4 line 1)**:
+  - Create `unified-trading-pm/scripts/quality_gates/snapshot.sh`. Walks all repos in `workspace-manifest.json`. For each repo: `cd <repo> && bash scripts/quality-gates.sh --quick 2>&1 | tee /tmp/qg-<repo>.log; EXIT=$?`. Capture: `repo`, `pull_sha` (current `git rev-parse HEAD`), `qg_status` (green if EXIT=0 else red), `failing_step` (extract from log if red), `first_error_line` (extract from log if red), `duration_seconds`, `snapshot_at` (UTC ISO).
+  - Output: Python helper `unified-trading-pm/scripts/quality_gates/snapshot_to_parquet.py` — collects per-repo dicts → writes `quality_gates_snapshot_YYYY_MM_DD.parquet` to `gs://${PROJECT_ID}-deployment-events/quality_gates_snapshot/` via UCI `get_storage_client()`.
+  - Parallelize: run 8 repos in parallel batches (`xargs -P 8`). Total runtime target ≤ 5 min for full workspace.
+
+  **Item 2 — Cron VM launcher (Phase 4 line 1 cron requirement)**:
+  - Author `deployment-service/scripts/vm/launch-qg-snapshot-vm.sh` — boots e2-small VM in `asia-northeast1`, pulls latest `unified-trading-library:latest`, runs `bash unified-trading-pm/scripts/quality_gates/snapshot.sh`, then auto-shutdown.
+  - Singleton-locked (refuse launch if same-prefix VM running). Register `qg-snapshot` prefix in `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict.
+  - Cloud Scheduler trigger: daily at 06:00 UTC. Schedule via `gcloud scheduler jobs create`.
+
+  **Item 3 — Smoke test then full run**:
+  - Smoke-test snapshot on 3 repos first (`unified-trading-pm`, `deployment-api`, `unified-trading-library`). Verify parquet lands in GCS + readable via deployment-api's `/api/repos/deploy-ready` endpoint (Phase 4.B read-side from B-013).
+  - Then full workspace run. Verify all 60+ repos covered.
+
+  **Item 4 — Plan checkbox flip + commit/push**:
+  - Flip `- [ ]` → `- [x]` for Phase 4 line 1 in `deployment_and_qg_strategy_implementation_2026_05_13.md`.
+  - Commit + push per repo. Ping DONE with SHAs.
+
+- **Done-def**: snapshot.sh + cron VM launcher shipped; smoke test passes on 3 repos; full workspace run succeeds; `/api/repos/deploy-ready` endpoint reads snapshot data; plan checkbox flipped.
+- **Note — coordinates with B-013**: B-013's read endpoint already exists. Verify B-018's snapshot data shape matches B-013's expected parquet schema (re-read `deployment_api/services/deploy_ready.py` to confirm column names + types).
 
 ### Slot 9 — B-015: DeFi carry_staked_basis paper backtest run (Sonnet 4.6 / thinking: medium)
 

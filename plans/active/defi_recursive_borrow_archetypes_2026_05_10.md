@@ -3,20 +3,27 @@ title:
   DeFi recursive-borrow archetypes — Family 1 (recursive lending arb) + Family 2 (long-funding-perp recursive-borrow)
   implementation
 type: implementation
-status: partial-shipped-descoped
+status: active
 created: 2026-05-10
-descoped: 2026-05-14
-descoped_by: harsh-slot-9
-descope_reason: >
-  recursive_borrow NOT in May-23 live cutover scope. Master plan commits only carry_staked_basis +
-  arbitrage_price_dispersion for live by 2026-05-23. Archetype-documented half (UAC schemas + strategy-service
-  Phase 3 + 4 codex docs) shipped; implementation half (Solidity + execution-service + UI) deferred to
-  successor plan.
+descope_reversed: 2026-05-13
+descope_reversal_reason: >
+  Operator direction 2026-05-13 evening: "i want defi_recursive_borrow and recursive staking in 23rd may though
+  even if not essential for defi i want it backtested coded up and tested ready to go live". Full implementation
+  half (Phase 4 Solidity RecursiveLeverageReceiver.sol + Phase 5 execution-service RecursiveLoopOrchestrator +
+  Phase 6 Hyperliquid LIVE perp connector wire-up + Phase 7 PerpHedgeSizer + Phase 8 HealthFactorMonitor +
+  LiquidationProximityCircuit + alerting + Phase 10 codex SSOT updates + Phase 11 deployment-api + deployment-ui
+  surface) PULLED BACK INTO May-23 scope. Live trading toggle OFF at cutover (per master plan commits to only
+  carry_staked_basis + arbitrage_price_dispersion for live trading) but code + tests + backtests + paper-trade
+  testnet smoke READY-TO-GO-LIVE by 2026-05-23.
+prior_descope: 2026-05-14 by harsh-slot-9 (now REVERSED per operator direction 2026-05-13 evening)
 successor_plan: plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md
+  (NOTE: post-cutover plan now covers ONLY post-cutover scope-expansion items, NOT the May-23 implementation
+  half which is back in this plan's scope per operator direction 2026-05-13)
 author: ikenna
 operator: ikenna
 target_deadline: 2026-05-23
-horizon: pre-cutover (archetype-documented half only; implementation deferred)
+horizon: pre-cutover (FULL implementation incl. Phases 4-11; ready-to-go-live not live-at-cutover)
+priority: P0
 companion_to: plans/active/master_to_live_defi_2026_05_23.md
 spawned_from: plans/questions/defi_recursive_borrow_archetypes_2026_05_08.md
 related_plans:
