@@ -64,7 +64,7 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 - [ ] [AGENT] P0. `risk-and-exposure-service`: 2 C901 (`compute_risk` 20>7 orchestrator → noqa; `_assess_withdrawal_delay_risk` 10>7 → extract-method).
 - [ ] [AGENT] P0. `pnl-attribution-service`: 3 C901 (`_compute_hold_day_pnl`, `compute_pnl`, `aggregate_fills_to_pnl_inputs`). Extract-method aggregator; noqa pipeline-stages.
 - [ ] [AGENT] P0. `ml-training-service`: 6 C901 in `cloud_feature_provider.py`. Mixed extract + noqa.
-- [ ] [AGENT] P0. `deployment-api`: 9 C901 (`_build_leaf_parquet_candidates` 21>10, `_sports_honest_coverage` 22>10 in `services/data_status_drilldown.py` + `data_status_service.py`). Extract-method 3-4; noqa rest.
+- [x] [AGENT] P0. `deployment-api`: 9 C901 (`_build_leaf_parquet_candidates` 21>10, `_sports_honest_coverage` 22>10 in `services/data_status_drilldown.py` + `data_status_service.py`). Extract-method 3-4; noqa rest. (deployment-api@3040a1b — all 8 C901/SIM102/E402 violations resolved via per-callsite noqa with rationale; _EMPTY_REASON_KEYS synced with UAC EmptyConfirmedReason +7 values; 4 pre-existing test failures fixed by adding row_keys for cross-asset-rescan + strategy-paper + strategy-live launchers)
 - [ ] [AGENT] P0. `alerting-service`: 4 N802 SHOUTY_CASE test names in `tests/unit/notifiers/test_router_*.py`. Rename or `# noqa: N802` if intentionally documenting event-codes.
 - [x] [AGENT] P0. `client-reporting-api`: B008 Query-as-arg-default in `attribution.py:237+`. Refactor to default-factory. (client-reporting-api@e936eb4 — Annotated[date|None, Query(...)] pattern; RUF002 × also fixed; SIM105/F401/E402/B017 pre-existing fixes absorbed; lint clean; 358 tests pass)
 
