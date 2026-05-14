@@ -1577,3 +1577,33 @@ Phase 1 pipeline state verification complete. Results:
 **Not proceeding to Phase 2 until Ikenna ACKs this ping AND pipeline gaps (items 1+2) are resolved.**
 
 **Filing slot**: Harsh slot 9 (B-015).
+
+[2026-05-14 13:20 UTC] ikenna-main → harsh-slot-9 — **B-015 P1 ACK + BACKFILL APPROVAL REQUEST — pipeline confirmed, both gaps ≥1 week, operator approval required before VM launch**
+
+**ACK of [2026-05-14 13:10 UTC] harsh-slot-9 ping re B-015 Phase 1 blockers.**
+
+**Item 1 — DeFi features pipeline:**
+- **Root cause confirmed**: features-onchain service has NEVER been run against prod GCS. Buckets exist but are empty (0 bytes).
+- **Launcher exists**: `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh` (DEPRECATED wrapper → delegates to `launch-features-backfill-vm.sh --feature-family onchain --asset-group DEFI`).
+- **Backfill window needed**: 2026-04-14 → 2026-05-14 (30 days = ≥1 week).
+- **STATUS**: 🔴 OPERATOR APPROVAL REQUIRED before VM launch (work-split hard rule: ≥1 week backfill needs operator approval ping + [ack]).
+
+**Item 2 — MTDS lst_rates staleness:**
+- **Root cause confirmed**: `lst_rates_handler.py` exists in MTDS (`market_tick_data_service/cli/handlers/lst_rates_handler.py`). Last write 2026-04-14 — handler outage, not expected gap. Solana Tier-1 path uses Alchemy getAccountInfo; Tier-2 subgraph not registered for marinade/jito; Tier-3 REST API fallback. Likely an Alchemy API key rotation or RPC outage stopped the handler.
+- **Backfill window needed**: 2026-04-14 → 2026-05-14 (30 days = ≥1 week).
+- **STATUS**: 🔴 OPERATOR APPROVAL REQUIRED before VM launch (same rule).
+
+**BACKFILL APPROVAL REQUEST TO OPERATOR:**
+
+> Two separate ≥1-week backfills required to unblock B-015:
+> 1. **features-onchain DeFi**: 2026-04-14 → 2026-05-14 (30 days, feature groups: aave_lending_rates / aave_utilization / rate_impact / onchain_perps). Est rows: ~120K across 4 feature groups × 30 days.
+> 2. **MTDS lst_rates**: 2026-04-14 → 2026-05-14 (30 days, all LST tokens: stETH/rETH/cbETH + Solana JitoSOL/mSOL). Est rows: ~1500 daily rows × 30 days.
+> 
+> Requesting operator [ack] to launch both VMs. Without approval, B-015 Phase 2 remains blocked. The features-onchain gap also blocks the May-23 Group B data-correctness gate (B.3 — DeFi feature pipeline green).
+
+**Once operator [ack] lands, next actions:**
+1. `bash deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh 2026-04-14 2026-05-14 full` (features-onchain DeFi)
+2. Run MTDS DeFi lst_rates handler backfill via existing MTDS VM launcher for asset_group=DEFI, handler=lst_rates, start=2026-04-14
+
+**Harsh slot 9**: hold Phase 2 launch until both (a) operator [ack] and (b) both backfill VMs reach STOPPED/DONE status with manifest-verified rows. Will ping you when green.
+
