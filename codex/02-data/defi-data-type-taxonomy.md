@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-14
 ---
 
 # DeFi Data-Type Taxonomy
@@ -208,30 +209,30 @@ For each protocol in the catalogue, this matrix declares which data_types are ca
 | Ethena | ◐ DefiLlama only | ✗ | ✗ |
 | Jito (Solana) | ✅ Pyth-based, ~monthly | ✅ Pyth | ✗ |
 | Marinade (Solana) | ✅ Pyth-based, ~monthly | ✅ Pyth | ✗ |
-| Rocket Pool | ✗ | ✗ | ✗ |
-| Solblaze | ✗ | ✗ | ✗ |
+| Rocket Pool | ◐ adapter shipped (lst_rocket_pool_adapter.py, no backfill yet) | ✗ | ✗ |
+| Solblaze | ◐ adapter shipped (lst_solblaze_adapter.py, no backfill yet) | ✗ | ✗ |
 
 ### Vault
 
 | Protocol | vault_share_price | vault_apy | vault_tvl |
 | -------- | ----------------- | --------- | --------- |
-| Yearn | ✗ | ✗ | ✗ |
-| Convex | ✗ | ✗ | ✗ |
-| Beefy | ✗ | ✗ | ✗ |
-| Pendle | ✗ | ✗ | ✗ |
-| Idle | ✗ | ✗ | ✗ |
+| Yearn | ◐ MTDS adapter shipped (vault_yearn_adapter.py), instruments adapter shipped (yearn.py), no backfill | ✗ | ✗ |
+| Convex | ◐ MTDS adapter shipped (vault_convex_adapter.py), instruments adapter shipped (convex.py), no backfill | ✗ | ✗ |
+| Beefy | ◐ MTDS adapter shipped (vault_beefy_adapter.py), instruments adapter shipped (beefy.py), no backfill | ✗ | ✗ |
+| Pendle | ◐ MTDS adapter shipped (vault_pendle_adapter.py), instruments adapter shipped (pendle.py), no backfill | ✗ | ✗ |
+| Idle | ◐ MTDS adapter shipped (vault_idle_adapter.py), instruments adapter shipped (idle.py), no backfill | ✗ | ✗ |
 
 ### Restaking + LRT
 
 | Protocol | restaking_rewards | restaking_yields | slashing_events |
 | -------- | ----------------- | ---------------- | --------------- |
 | EigenLayer | ✗ (declared in UAC, no adapter) | ✗ | ✗ |
-| Symbiotic | ✗ | ✗ | ✗ |
-| Karak | ✗ | ✗ | ✗ |
-| Renzo | ✗ | ✗ | ✗ |
-| KelpDAO | ✗ | ✗ | ✗ |
-| Puffer | ✗ | ✗ | ✗ |
-| Jito restaking (Solana) | ✗ | ✗ | ✗ |
+| Symbiotic | ◐ MTDS adapter shipped (restaking_symbiotic_adapter.py), instruments adapter shipped (symbiotic.py), no backfill | ✗ | ✗ |
+| Karak | ◐ MTDS adapter shipped (restaking_karak_adapter.py), instruments adapter shipped (karak.py), no backfill | ✗ | ✗ |
+| Renzo | ◐ instruments adapter shipped (renzo.py), no MTDS adapter, no backfill | ✗ | ✗ |
+| KelpDAO | ◐ instruments adapter shipped (kelpdao.py), no MTDS adapter, no backfill | ✗ | ✗ |
+| Puffer | ◐ instruments adapter shipped (puffer.py), no MTDS adapter, no backfill | ✗ | ✗ |
+| Jito restaking (Solana) | ◐ MTDS adapter shipped (restaking_jito_adapter.py), instruments adapter shipped (jito_restaking.py), no backfill | ✗ | ✗ |
 
 ### Governance
 
