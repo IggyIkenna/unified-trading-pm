@@ -698,23 +698,23 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
 > Baseline populated 2026-05-12 Slot 3. Phantom audit requires GCE VM (CLAUDE.md rule) — pending VM launch.
 > absence-reason + legacy-blank scans run locally from `.tabs/3/` worktree.
 
-| Script         | Asset group | Phantom count (dry-run)                                        | Empty reason nulls                   | Legacy blank reasons                 | Date run   |
-| -------------- | ----------- | -------------------------------------------------------------- | ------------------------------------ | ------------------------------------ | ---------- |
-| phantom        | cefi        | PENDING (GCE VM req.)                                          | —                                    | —                                    | —          |
-| phantom        | defi        | PENDING (GCE VM req.)                                          | —                                    | —                                    | —          |
-| phantom        | tradfi      | PENDING (GCE VM req.)                                          | —                                    | —                                    | —          |
-| phantom        | sports      | **0** (post-retired-type-cleanup)                              | —                                    | —                                    | 2026-05-14 |
-| phantom        | prediction  | IN PROGRESS (VM defi-phantom-recon-prediction-20260514-174259) | —                                    | —                                    | 2026-05-14 |
-| absence-reason | cefi        | —                                                              | **3,146** (all SOURCE_RETURNED_ZERO) | —                                    | 2026-05-12 |
-| absence-reason | defi        | —                                                              | 0                                    | —                                    | 2026-05-12 |
-| absence-reason | tradfi      | —                                                              | 0                                    | —                                    | 2026-05-12 |
-| absence-reason | sports      | —                                                              | 0                                    | —                                    | 2026-05-12 |
-| absence-reason | prediction  | —                                                              | 0                                    | —                                    | 2026-05-12 |
-| legacy-blank   | cefi        | —                                                              | —                                    | 0 (2,632,931 scanned)                | 2026-05-12 |
-| legacy-blank   | defi        | —                                                              | —                                    | 0 (604,951 candidates, 0 upgrades)   | 2026-05-12 |
-| legacy-blank   | tradfi      | —                                                              | —                                    | 0                                    | 2026-05-12 |
-| legacy-blank   | sports      | —                                                              | —                                    | 0 (1,868,285 candidates, 0 upgrades) | 2026-05-12 |
-| legacy-blank   | prediction  | —                                                              | —                                    | 0 (41 candidates, 0 upgrades)        | 2026-05-12 |
+| Script         | Asset group | Phantom count (dry-run)           | Empty reason nulls                   | Legacy blank reasons                 | Date run   |
+| -------------- | ----------- | --------------------------------- | ------------------------------------ | ------------------------------------ | ---------- |
+| phantom        | cefi        | PENDING (GCE VM req.)             | —                                    | —                                    | —          |
+| phantom        | defi        | PENDING (GCE VM req.)             | —                                    | —                                    | —          |
+| phantom        | tradfi      | PENDING (GCE VM req.)             | —                                    | —                                    | —          |
+| phantom        | sports      | **0** (post-retired-type-cleanup) | —                                    | —                                    | 2026-05-14 |
+| phantom        | prediction  | **0** (post-retired-type-cleanup) | —                                    | —                                    | 2026-05-14 |
+| absence-reason | cefi        | —                                 | **3,146** (all SOURCE_RETURNED_ZERO) | —                                    | 2026-05-12 |
+| absence-reason | defi        | —                                 | 0                                    | —                                    | 2026-05-12 |
+| absence-reason | tradfi      | —                                 | 0                                    | —                                    | 2026-05-12 |
+| absence-reason | sports      | —                                 | 0                                    | —                                    | 2026-05-12 |
+| absence-reason | prediction  | —                                 | 0                                    | —                                    | 2026-05-12 |
+| legacy-blank   | cefi        | —                                 | —                                    | 0 (2,632,931 scanned)                | 2026-05-12 |
+| legacy-blank   | defi        | —                                 | —                                    | 0 (604,951 candidates, 0 upgrades)   | 2026-05-12 |
+| legacy-blank   | tradfi      | —                                 | —                                    | 0                                    | 2026-05-12 |
+| legacy-blank   | sports      | —                                 | —                                    | 0 (1,868,285 candidates, 0 upgrades) | 2026-05-12 |
+| legacy-blank   | prediction  | —                                 | —                                    | 0 (41 candidates, 0 upgrades)        | 2026-05-12 |
 
 **Key finding**: cefi has **3,146 empty_confirmed rows** with null `error_reason` (all propose `SOURCE_RETURNED_ZERO`).
 These are the only apply-flip candidates. All defi/tradfi/sports/prediction are clean.
