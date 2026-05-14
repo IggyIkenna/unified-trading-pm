@@ -131,3 +131,15 @@ green).
 - `unified-trading-pm@ab5292f9` — plan flip + this ping
 
 **Note for slot 7**: The `approve_withdrawal` endpoint was already shipped by the upstream (concurrent agent on live-defi-rollout) with the richer `withdrawal_approval_rules` registry-driven version. My conflict resolution deferred to that version. Phase 3 (GCS versioning + retention lock + compliance tests) is yours to proceed with independently.
+
+---
+
+## [slot 6 → main] 2026-05-14 13:20 UTC — BOOT ACK (context reload)
+
+**Status**: STARTED — resuming slot 6 work stack.
+
+Context resumed from prior session. LDR FF-pull complete (all repos current except market-tick-data-service which has diverging local commits — not in slot 6 scope). features-service rebase conflict resolved (live_handler.py — kept `_check_live_emission_policy` + renamed `_SERVICE_NAME` to `"features-service"`). Dual-pushed to LDR.
+
+Starting: **Item 2 — 4 DeFi-specific alert codes producer-side wiring** (features-service onchain).
+
+Items 1 (Phase 1 HMAC chain), 3A (Phase 3 audit GCS versioning) — already DONE per prior session.
