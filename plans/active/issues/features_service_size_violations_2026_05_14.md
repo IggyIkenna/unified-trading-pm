@@ -3,6 +3,7 @@ title: features-service codex compliance — 2 remaining size violations (Ikenna
 created: 2026-05-14
 author: harsh-slot-5
 severity: P2
+status: RESOLVED — features-service@29cd4ea6 (2026-05-14 slot-11)
 source:
   - features-service QG codex compliance step (step 5/6)
 locked_by: live-defi-rollout
