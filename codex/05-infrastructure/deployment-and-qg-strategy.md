@@ -195,6 +195,21 @@ Per operator clarification 2026-05-13: PM + UAC + deployment-service are root de
 - Pre-commit check (CLAUDE.md `Commit + Push + Flip` Half 1 mandatory pre-commit check) catches accidental cross-agent
   bundling
 
+## QG complexity (C901) policy — UAC carveout (operator decision 2026-05-13)
+
+**Closed-set decision** locked 2026-05-13 — encoded here as workspace SSOT for the C901 lint rule:
+
+| Layer | Policy | Rationale |
+|---|---|---|
+| **UAC** (`unified-api-contracts/**`) — registry + capability_declarations + internal/architecture_v2 + canonical/crosscutting enumerations | **Blanket C901 ignore via `[tool.ruff.lint.per-file-ignores]`** in UAC `pyproject.toml`. Per-file rationale comment required at top of any file added to the ignore list. | UAC is registry/declarative, not algorithmic. `KNOWN_VENUE_TOKENS`, `STRATEGY_FAMILY_REGISTRY`, `paired_dispersion_catalog`, `capability_declarations/*`, `ARCHETYPE_CONFIG_SEED`, `VENUE_DATA_TYPE_CAPABILITIES` enumerate closed sets. Lowering complexity = artificial extraction that fragments registry view + harms grep-ability. |
+| **UTL** (`unified-trading-library/**`) | Mixed — extract-method where genuine; `# noqa: C901` with per-line rationale where legitimate orchestrator (e.g., `ManifestWriter._check_cluster_coverage` orchestrating bundled-shard validation gates is legitimately complex). | UTL is library + orchestration boundary; some functions are pipeline-stages that must stay linear for audit clarity. |
+| **Service code** (`*-service/**`, `deployment-api/**`, `deployment-ui/**`, etc.) | Mixed — extract-method where the function does multiple concerns; `# noqa: C901` with rationale where genuine orchestrator (e.g., `submit_manual_instruction`, `_build_leaf_parquet_candidates` — both legitimately need linear audit-trail readable flow). | Most C901 in service code is real complexity that should be decomposed; some are genuine orchestrators. |
+| **Test code** (`tests/**`) | `noqa: C901` permitted freely; test setup often has linear setup-then-act-then-assert that mirrors the unit under test. | Tests measure code, they're not the code. |
+
+**Threshold itself**: current C901 threshold is 7 in some repos (very tight) and 10 in others (default). Operator may consider raising back to 10 in a future cycle if mixed-approach leaves too many legitimate orchestrators carrying `noqa` comments. **Action item**: harmonize threshold to 10 workspace-wide via QG STEP base-service.sh (deferred — not blocking May-23).
+
+**Long-term direction**: complexity is a structural-coupling proxy, not a correctness check. The real correctness gate is test coverage on the function (Phase 8 target = 100% on validation + orchestrator surfaces). A C901 orchestrator at 95% test coverage is safer than an extract-method-split orchestrator at 60% test coverage.
+
 ## Open risks
 
 | Risk                                                                                                                  | Likelihood                                 | Mitigation                                                                                             |

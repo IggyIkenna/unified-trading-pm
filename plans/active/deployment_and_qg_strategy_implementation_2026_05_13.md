@@ -68,7 +68,11 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 - [ ] [AGENT] P0. `alerting-service`: 4 N802 SHOUTY_CASE test names in `tests/unit/notifiers/test_router_*.py`. Rename or `# noqa: N802` if intentionally documenting event-codes.
 - [ ] [AGENT] P0. `client-reporting-api`: B008 Query-as-arg-default in `attribution.py:237+`. Refactor to default-factory.
 
-**Operator decision flagged**: C901 threshold permanent-lower vs mixed-noqa? **Default = mixed** (extract-method genuine, noqa legitimate orchestrators).
+**Operator decision LOCKED 2026-05-13**: C901 = mixed approach with UAC-registry carveout.
+
+- **UAC** (`unified-api-contracts/`): blanket `# noqa: C901` allowed (with per-file rationale comment). UAC is **registry/declarative**, not algorithmic — `KNOWN_VENUE_TOKENS`, `STRATEGY_FAMILY_REGISTRY`, `paired_dispersion_catalog`, `capability_declarations/*`, `ARCHETYPE_CONFIG_SEED`, `VENUE_DATA_TYPE_CAPABILITIES`, etc. enumerate closed sets. Lowering complexity = artificial extraction that fragments the registry view + harms grep-ability. UAC should arguably be **excluded from C901 entirely** at the repo `pyproject.toml` level (`[tool.ruff.lint.per-file-ignores]` block). Action: add `unified-api-contracts/**/registry/**` + `unified-api-contracts/**/internal/architecture_v2/**` to the per-file-ignores list with rationale comment.
+- **Service code** (everything else): mixed — extract-method where the function does multiple concerns; `# noqa: C901` where it's a legitimate orchestrator/pipeline-stage. Per-noqa comment required justifying why it's an orchestrator (e.g., `# noqa: C901 — manual instruction orchestrator; linear audit-trail required`).
+- **Long-term**: the 7-line C901 threshold may itself be too tight (default is 10). Operator may consider raising back to 10 in a future cycle if mixed-approach leaves too many legitimate orchestrators carrying noqa.
 
 **Cluster C** ✅ CLOSED at `unified-trading-library@67c532bd`.
 
