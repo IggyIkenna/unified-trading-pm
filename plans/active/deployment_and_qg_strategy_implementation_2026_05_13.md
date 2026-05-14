@@ -142,12 +142,12 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 
 > **PULLED-FORWARD COMPANION** with `governance_qg_automation_gaps_post_cutover_2026_05_12.md` (deadline pulled to 2026-05-23 per operator direction 2026-05-13).
 
-- [ ] [AGENT] P0. **New QG STEPs** in `unified-trading-pm/scripts/quality_gates/`:
-  - **STEP X.N1**: `dockerfile-base-pin` — fail if production-bound Dockerfile uses `:tag` not `@sha256:digest`. Ratchet starting 2026-05-15.
-  - **STEP X.N2**: `tarball-manifest-present` — fail if tarball upload missing sibling manifest.json. Ratchet starting 2026-05-15.
-  - **STEP X.N3**: `tarball-env-block` — fail if deployment-api code allows tarball for staging/prod without explicit override. Ratchet starting 2026-05-17.
-  - **STEP X.N4**: `image-build-on-staging-merge` — fail if staging-branch merge doesn't trigger cloud-build. Ratchet starting 2026-05-17.
-- [ ] [AGENT] P0. **Wire ratchets via `quality_gates/base-service.sh` registration** — per CLAUDE.md QG ratchet pattern.
+- [x] [AGENT] P0. **New QG STEPs** in `unified-trading-pm/scripts/quality_gates/`: (PM@22cd5d61 — STEP 5.79/5.80/5.81/5.82 added to base-service.sh; date-gated ratchets WARN today, FAIL from 2026-05-15/05-17; QG verified on risk-and-exposure-service: 5.79⚠️PENDING + 5.80✅SKIP + 5.81✅SKIP + 5.82⚠️PENDING; ✅ ALL QUALITY GATES PASSED 82s)
+  - **STEP 5.79 (X.N1)**: `dockerfile-base-pin` — fail if production-bound Dockerfile uses `:tag` not `@sha256:digest`. Ratchet starting 2026-05-15.
+  - **STEP 5.80 (X.N2)**: `tarball-manifest-present` — fail if tarball upload missing sibling manifest.json. Ratchet starting 2026-05-15.
+  - **STEP 5.81 (X.N3)**: `tarball-env-block` — fail if deployment-api code allows tarball for staging/prod without explicit override. Ratchet starting 2026-05-17.
+  - **STEP 5.82 (X.N4)**: `image-build-on-staging-merge` — fail if staging-branch merge doesn't trigger cloud-build. Ratchet starting 2026-05-17.
+- [x] [AGENT] P0. **Wire ratchets via `quality_gates/base-service.sh` registration** — per CLAUDE.md QG ratchet pattern. (PM@22cd5d61 — STEP 5.79-5.82 inline-bash blocks added to base-service.sh after STEP 5.78; rollout-quality-gates-unified.py ran: 26 repos updated)
 
 **Owner**: governance slot (single owner — these touch the QG script registry).
 **Dependencies**: Phase 1 + Phase 3 + Phase 5 shipped.
