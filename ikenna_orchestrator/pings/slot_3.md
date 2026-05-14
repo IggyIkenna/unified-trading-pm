@@ -330,3 +330,39 @@ ASTER/EXTENDED adapter-debug slot assignment, 5 Solana successor plan slot assig
 adapters + Solana RPC + DEX/Drift (~25 cal AI-days) **Task stack**: items 1-9 from work_split_2026_05_14_ikenna.md §
 Slot 3 **Starting with**: Item 1 — ASTER + EXTENDED-STARKNET P0 root-cause adapter fix **LDR sync**: UTL pulled (30
 files), PM pulled (12 files), UAC pulled (fast-forward), instruments-service pull in progress (foreign WIP stashed)
+
+---
+
+[2026-05-14 ~15:15 UTC] Slot 3 → Slot 1 — **TASKS 1/2/3 ALL SHIPPED** (2026-05-14 session)
+
+### Task 1 (P0) ✅ ASTER 0% capture fix — 2 repos
+
+- **instruments-service@`c0c6593`** — `AsterReferenceDataAdapter._BASE` → `https://fapi.asterdex.com`; URL regression
+  tests added (`TestAsterAdapterEndpointUrl`)
+- **MTDS@`7d45b21`** (pushed to LDR): `AsterBaseClient.base_url_futures` → `https://fapi.asterdex.com`,
+  `base_url_spot` → `https://api.asterdex.com`
+- Root cause: Aster domain migration from `aster.exchange` → `asterdex.com` (2026 branding). All 17,681
+  attempted_failed rows should retry and produce captured data once VM relaunched.
+
+### Task 2 (P0) ✅ EXTENDED-STARKNET diagnosis docstring — instruments-service
+
+- **instruments-service@`7c2fc5f`** — Added diagnosis docstring to `ExtendedReferenceDataAdapter`:
+  "Only 15 rows (2026-04-30), likely transient API failure. Endpoint correct: `api.starknet.extended.exchange/api/v1`."
+  Operational not structural.
+
+### Task 3 (P1) ✅ Helius Solana RPC wiring — MTDS
+
+- **MTDS@`05b705a`** (pushed to LDR as `70afae8` rebased): Helius already present in UAC
+  `SOLANA_RPC_TEMPLATES["helius"]`. Gap was MTDS hardcoding "alchemy" in 3 locations.
+- Changes shipped:
+  1. `MarketDataProviderConfig` — new fields: `solana_rpc_provider` (default "alchemy"), `helius_api_key`,
+     `helius_secret_name`
+  2. `AlchemyBaseClient.get_rpc_url()` — reads `cfg.solana_rpc_provider` via `get_market_config()`;
+     unknown provider logs valid options + falls back to "alchemy"
+  3. `SolanaGasFeeClient.__init__` — `provider: str = "alchemy"` param; uses
+     `SOLANA_RPC_TEMPLATES.get(provider, ...)` for URL template selection
+  4. `gas_fee_handler.py` — `_collect_solana_historical` + `_collect_solana_live` both read
+     `SOLANA_RPC_PROVIDER` from config; imports fixed (`...market_interface.config`)
+- To route Solana through Helius: set `SOLANA_RPC_PROVIDER=helius` env var on VM.
+
+**Currently in progress**: Task 4 (P1) — Pyth Hermes batch + PythNet live integration in MTDS
