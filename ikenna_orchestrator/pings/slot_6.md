@@ -143,3 +143,57 @@ Context resumed from prior session. LDR FF-pull complete (all repos current exce
 Starting: **Item 2 — 4 DeFi-specific alert codes producer-side wiring** (features-service onchain).
 
 Items 1 (Phase 1 HMAC chain), 3A (Phase 3 audit GCS versioning) — already DONE per prior session.
+
+---
+
+## [slot 6 → OPERATOR] 2026-05-14 — CREDENTIAL READINESS ALERT (Phase 8.D probe results)
+
+**Status**: BLOCKED-OPERATOR-ACTION — probe returns 7/34 PASS for `--mode live --archetype carry_staked_basis`.
+
+**🔴 CRITICAL — Must action before May-23:**
+
+1. **10 wrapped wallet private keys missing** — these are the signing keys for live trading.
+   Per `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`:
+   - Wrap each wallet private key with Cloud KMS CMK `defi-wallet-private-key-wrapped`
+   - Push to SM as: `csb-eth-hot-lido-v1-wrapped`, `csb-arb-hot-lido-v1-wrapped`,
+     `csb-base-hot-aave-v1-wrapped`, `csb-poly-hot-aave-v1-wrapped`, `csb-sol-hot-jito-v1-wrapped`,
+     `gas-reserve-eth-v1-wrapped`, `gas-reserve-arb-v1-wrapped`, `gas-reserve-base-v1-wrapped`,
+     `gas-reserve-poly-v1-wrapped`, `gas-reserve-sol-v1-wrapped`
+
+2. **11 naming drift aliases needed** — secrets exist under legacy names, canonical aliases missing:
+   ```bash
+   # Run these to create canonical aliases (copy value from legacy secret):
+   gcloud secrets versions access latest --secret=binance-trade-api-key-secret | \
+     gcloud secrets create binance-trade-api-secret --data-file=-
+   gcloud secrets versions access latest --secret=deribit-trade-api-key-secret | \
+     gcloud secrets create deribit-trade-api-secret --data-file=-
+   gcloud secrets versions access latest --secret=bybit_api_key | \
+     gcloud secrets create bybit-trade-api-key --data-file=-
+   gcloud secrets versions access latest --secret=bybit_api_secret | \
+     gcloud secrets create bybit-trade-api-secret --data-file=-
+   gcloud secrets versions access latest --secret=bybit_api_key | \
+     gcloud secrets create bybit-read-api-key --data-file=-
+   gcloud secrets versions access latest --secret=hyperliquid-trade-key | \
+     gcloud secrets create hyperliquid-trade-api-key --data-file=-
+   gcloud secrets versions access latest --secret=aster-api-key | \
+     gcloud secrets create aster-trade-api-key --data-file=-
+   gcloud secrets versions access latest --secret=alerting-telegram-bot-token | \
+     gcloud secrets create telegram-bot-token-prod --data-file=-
+   # OKX: pick which exec-XX-okx-* entry is the live-trading account:
+   gcloud secrets versions access latest --secret=exec-<XX>-okx-api-key | \
+     gcloud secrets create okx-trade-api-key --data-file=-
+   gcloud secrets versions access latest --secret=exec-<XX>-okx-api-secret | \
+     gcloud secrets create okx-trade-api-secret --data-file=-
+   gcloud secrets versions access latest --secret=exec-<XX>-okx-passphrase | \
+     gcloud secrets create okx-trade-passphrase --data-file=-
+   ```
+
+3. **3 infra keys to provision**:
+   - `helius-key` — Solana RPC (Helius account needed)
+   - `coingecko-key` — CoinGecko Pro API key
+   - `anthropic-api-key` — exists in SM with 0 versions; add version with key value
+
+**🟢 Not May-23 blocking** (other tracks): `kalshi-api-key`, `api-football-key`, `footystats-key`
+
+**Full analysis**: `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 8.D annotation.
+**Re-run gate**: `bash deployment-service/scripts/audit/credential-probe.sh --mode live --archetype carry_staked_basis`

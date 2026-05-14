@@ -744,6 +744,25 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
 
 - [ ] [SCRIPT] P0. **8.D — Pre-cutover sign-off gate.** Audit script run within 24h of May-23 cutover; output 100% pass
       for Block I.6 criteria. Operator review + manual approval before live-trading kill-switch flip.
+      **PROBE RUN 2026-05-14 (Slot 6)**: `credential-probe.sh --mode live --archetype carry_staked_basis` →
+      PASS: 7/34 | FAIL: 27/34 | SKIP: 9 (post-cutover). Root-cause triage:
+      - **🔴 10 wrapped wallet keys missing** — `csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` +
+        `gas-reserve-{eth,arb,base,poly,sol}-v1-wrapped` — must provision via pre-cutover-test-wallets-runbook
+        BEFORE May-23. Operator action: wrap private keys + push to SM per `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`.
+      - **🟡 11 naming drift items** — exist in SM under legacy names, need canonical aliases:
+        `binance-trade-api-secret` (→`binance-trade-api-key-secret`),
+        `deribit-trade-api-secret` (→`deribit-trade-api-key-secret`),
+        `bybit-trade-api-key` (→`bybit_api_key`), `bybit-trade-api-secret` (→`bybit_api_secret`),
+        `bybit-read-api-key` (→`bybit_api_key`), `hyperliquid-trade-api-key` (→`hyperliquid-trade-key`),
+        `okx-trade-api-key/secret/passphrase` (→`exec-ik-okx-*`),
+        `aster-trade-api-key` (→`aster-api-key`),
+        `telegram-bot-token-prod` (→`alerting-telegram-bot-token`).
+        Operator action: `gcloud secrets create <canonical-name> + versions add` per each alias.
+      - **🟡 3 infra keys missing** — `helius-key` (Solana RPC), `coingecko-key` (DeFi prices),
+        `anthropic-api-key` (exists, 0 versions — needs version added).
+      - **🟢 Not May-23 blocking** — `kalshi-api-key`, `api-football-key`, `footystats-key` (non-DeFi tracks).
+      **Status: BLOCKED-OPERATOR-ACTION** — May-23 gate requires operator to action all 🔴+🟡 items ≥24h before cutover.
+      Plan checkbox flips to `[x]` only after probe returns 100% PASS within 24h of May-23.
 
 **Phase 8 done definition** (full-execution criterion):
 
