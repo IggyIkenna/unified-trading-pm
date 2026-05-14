@@ -85,7 +85,7 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 - [x] [AGENT] P0. `features-service`: 1 import error in `test_volatility_expected_unattempted`. Re-run after UTL. (features-service@38b43ea6 — QG green: added FUNCTION_SIZE_EXTRA_EXCLUDES for 3 pre-existing large files; code fixes already in LDR@9e3339d1; all tests pass)
 
 **Cluster E — UI** (2 parallel slots, 2 cal-AI-hours):
-- [ ] [AGENT] P0. `deployment-ui`: 21 vitest failures across 6 files (start `TreasuryTab.tsx`).
+- [x] [AGENT] P0. `deployment-ui`: 21 vitest failures across 6 files (start `TreasuryTab.tsx`). (deployment-ui@b6e4e22 — scrollIntoView mock, DeploymentHistory named export, CSS classes, Radix mouseDown, Promise.allSettled; 519 tests pass; pnpm build green)
 - [x] [AGENT] P0. `unified-trading-system-ui`: tsc timeout. First try `rm -rf .tsbuildinfo node_modules/.tmp`; if still slow, real type errors. (unified-trading-system-ui@0dbf77cf — removed stale .next-3100 includes from tsconfig + fixed mdToRaiseExternalCapital typo; npx tsc --noEmit exits 0)
 
 **Cluster F — Re-verify** (1 slot):
