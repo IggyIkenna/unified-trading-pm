@@ -1,5 +1,18 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-14 13:23 UTC — BOOT ACK
+
+**Status**: 🟢 SLOT 4 ACTIVE — continuing 2026-05-14 session
+
+Continuing sports classifier + retired data types cleanup. Currently executing:
+
+- `sports_retired_data_types_code_cleanup` Phase 1 — instruments-service orchestrator.py cleanup (in-flight, QG running)
+- Items 1-3 from work_split_2026_05_14 already DONE (sports classifier gaps: utl@79c72bad, uac@17a0f82)
+
+Next after Phase 1 QG passes: Phase 2 deployment-api data_status_service.py + plan checkboxes flip.
+
+---
+
 Intra-side ping ledger for Slot 4 (propagation chain Phases 0–4 + MDPS 4-state contract + Script-1 root-cause).
 Bidirectional: main → slot 4 and slot 4 → main.
 
@@ -11,11 +24,11 @@ Bidirectional: main → slot 4 and slot 4 → main.
 
 ### Shipped this session
 
-| Task | What | Commits | Status |
-| --- | --- | --- | --- |
-| Task 1 | Sports classifier 3-gap fix (PLAYER_VALUES cadence + SFI/footystats/open_meteo fixture-pin) | uac@f804304, utl@462170c4 | ✅ DONE (prior session) |
-| Task 2 | Parent issue `sports_classifier_extension_followup_2026_05_13.md` RESOLVED + 3 child cross-links | pm@48db1ae0 | ✅ DONE |
-| Task 12 | MTDS prediction venue wiring fix: `smarkets` + `betdaq` added to PLANNED_VENUES | mtds@4c58c5c | ✅ DONE |
+| Task    | What                                                                                             | Commits                   | Status                  |
+| ------- | ------------------------------------------------------------------------------------------------ | ------------------------- | ----------------------- |
+| Task 1  | Sports classifier 3-gap fix (PLAYER_VALUES cadence + SFI/footystats/open_meteo fixture-pin)      | uac@f804304, utl@462170c4 | ✅ DONE (prior session) |
+| Task 2  | Parent issue `sports_classifier_extension_followup_2026_05_13.md` RESOLVED + 3 child cross-links | pm@48db1ae0               | ✅ DONE                 |
+| Task 12 | MTDS prediction venue wiring fix: `smarkets` + `betdaq` added to PLANNED_VENUES                  | mtds@4c58c5c              | ✅ DONE                 |
 
 ### Task 12 root-cause analysis (read-both-sides discipline applied)
 
@@ -29,20 +42,20 @@ Bidirectional: main → slot 4 and slot 4 → main.
 
 ### Deferred work scoreboard — 2026-05-14 session
 
-| Item | Status | Successor / Blocker |
-| --- | --- | --- |
-| Task 3 (propagation Phase 3.1-3.N) | ✅ ALL DONE — Harsh slot 2 shipped features-service@4a26ae04 (delta_one + volatility); calendar/onchain/commodity NO-OP; sports@a58480fb | n/a |
-| Task 4 (Phase 4 ML) | ✅ ALL NO-OP — externally-injected instrument lists | n/a |
-| Task 5 (bucket provisioning GCP+AWS 6 buckets) | 🔴 NOT STARTED — manual GCS/S3 provisioning + retention policy; ADC admin authorized | Successor: next slot4 session or standalone manual run |
-| Task 6 (sports/prediction phantom apply-flips VM) | 🔴 NOT STARTED — waiting on bucket provisioning + hold on sports apply-flips per Ikenna direction | Blocker: operator ack on sports apply-flips hold; GCS backfill rule applies |
-| Task 7 (strategy-service Cluster D test failures) | 🔴 NOT STARTED | Successor: next cycle |
-| Task 8 (sports_master coverage audit) | 🔴 NOT STARTED | Successor: next cycle |
-| Task 9 (api_football_minimal_flattening_removal) | 🔴 NOT STARTED | Successor: next cycle |
-| Task 10 (sports_retired_data_types cleanup) | 🟡 PARTIAL — migration VM ran 2026-05-13 (88,779 rows flipped); GCS deletion running; instruments-service code cleanup pending | Successor: instruments-service orchestrator TRANSFERMARKT_LEAGUES/SFI_LEAGUES/SFI_STANDINGS reference removal |
-| Task 11 (data_status test coverage sports-half) | 🔴 NOT STARTED | Successor: next cycle |
-| Phase 5 Pass 3+4 (MDPS + features apply-flips) | 🟡 DEFERRED per plan | Successor: `expected_unattempted_propagation_chain_2026_05_12.md` Phase 5 |
-| Phase 6 (validation gates) | 🔴 ALL OPEN | Successor: after Phase 5 Pass 3+4 |
-| QG verification on MTDS factory.py change | 🟡 IN PROGRESS — `bash scripts/quality-gates.sh` running in background | Auto-completes |
+| Item                                              | Status                                                                                                                                   | Successor / Blocker                                                                                           |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Task 3 (propagation Phase 3.1-3.N)                | ✅ ALL DONE — Harsh slot 2 shipped features-service@4a26ae04 (delta_one + volatility); calendar/onchain/commodity NO-OP; sports@a58480fb | n/a                                                                                                           |
+| Task 4 (Phase 4 ML)                               | ✅ ALL NO-OP — externally-injected instrument lists                                                                                      | n/a                                                                                                           |
+| Task 5 (bucket provisioning GCP+AWS 6 buckets)    | 🔴 NOT STARTED — manual GCS/S3 provisioning + retention policy; ADC admin authorized                                                     | Successor: next slot4 session or standalone manual run                                                        |
+| Task 6 (sports/prediction phantom apply-flips VM) | 🔴 NOT STARTED — waiting on bucket provisioning + hold on sports apply-flips per Ikenna direction                                        | Blocker: operator ack on sports apply-flips hold; GCS backfill rule applies                                   |
+| Task 7 (strategy-service Cluster D test failures) | 🔴 NOT STARTED                                                                                                                           | Successor: next cycle                                                                                         |
+| Task 8 (sports_master coverage audit)             | 🔴 NOT STARTED                                                                                                                           | Successor: next cycle                                                                                         |
+| Task 9 (api_football_minimal_flattening_removal)  | 🔴 NOT STARTED                                                                                                                           | Successor: next cycle                                                                                         |
+| Task 10 (sports_retired_data_types cleanup)       | 🟡 PARTIAL — migration VM ran 2026-05-13 (88,779 rows flipped); GCS deletion running; instruments-service code cleanup pending           | Successor: instruments-service orchestrator TRANSFERMARKT_LEAGUES/SFI_LEAGUES/SFI_STANDINGS reference removal |
+| Task 11 (data_status test coverage sports-half)   | 🔴 NOT STARTED                                                                                                                           | Successor: next cycle                                                                                         |
+| Phase 5 Pass 3+4 (MDPS + features apply-flips)    | 🟡 DEFERRED per plan                                                                                                                     | Successor: `expected_unattempted_propagation_chain_2026_05_12.md` Phase 5                                     |
+| Phase 6 (validation gates)                        | 🔴 ALL OPEN                                                                                                                              | Successor: after Phase 5 Pass 3+4                                                                             |
+| QG verification on MTDS factory.py change         | 🟡 IN PROGRESS — `bash scripts/quality-gates.sh` running in background                                                                   | Auto-completes                                                                                                |
 
 ---
 
@@ -331,3 +344,11 @@ Phase 2 code is clean — failures confirmed pre-existing before any Phase 2 cha
 
 `tests/unit/test_defi_bypass_routing.py` — unstaged modification (removes one import line). Left untouched per
 multi-agent isolation rules. Not slot 4 scope.
+
+---
+
+[2026-05-14 16:04 UTC] slot-4-ikenna — RE-BOOT after context compaction. Items 1-2 (sports classifier + parent), 5
+(6-bucket GCP confirmed), 7 (strategy-service Cluster D), 10-12 (sports_retired + data_status_comprehensive + MTDS venue
+wiring) DONE. Phase 3.0 checkbox flipped, Phase 6 codex update shipped (PM@82111516 + PM@c5785dd9). Resuming: item 3
+(propagation chain PART C deferred check), item 4 (Phase 3 research + Phase 6 validation), item 6 (sports/prediction
+phantom apply-flips VM), item 8 (sports_master data_type universe audit). Starting with item 8.
