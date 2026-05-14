@@ -12,23 +12,31 @@ locked_since: 2026-05-08
 
 ---
 
-## Current shift: 2026-05-13 Wave 2 (Day-4 PM, Harsh-side ONLY)
+## Current shift: 2026-05-14 Day-3 of density push (Wave 1 — closeout + freeze-gate eve, Harsh-side)
 
-**Work-split**: [`plans/active/work_split_2026_05_13_harsh.md`](../plans/active/work_split_2026_05_13_harsh.md) § "Wave 2"
-**Model**: Sonnet 4.6 / thinking: high (all slots). Wave 1 closed; reset done on 6 of 8 slots; 6 implementor slots active (2, 3, 4, 6, 7, 9); 3 held for cleanup (5, 8, 10).
+**Work-split**: [`plans/active/work_split_2026_05_14_harsh.md`](../plans/active/work_split_2026_05_14_harsh.md) § "Today's slot assignments"
+**Model**: Sonnet 4.6 / thinking: high (all slots).
+**Cycle context**: Day-3 of 4-day density push (2026-05-12 → 2026-05-15). Phase 1 freeze gate fires TOMORROW.
+**Operator direction (this turn)**: spawn clear+stable Wave 1 slots first; Wave 2 (test sweeps) queued; Wave 3 (`batch_live_symmetry`) pending cross-side Ikenna handshake.
 
-| Slot | Theme | State | Plan-of-record | Branch |
-|------|-------|-------|----------------|--------|
-| 1 | Main orchestrator + on-call + LEDGER + ping triage | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
-| 2 | data_status_drilldown Phase 7 P1+P2 — venue-detail panel fixes + observability fields | ✅ DONE Wave 4 — Phase 7 P1: manifest_reader pagination + total_instruments_unfiltered (deployment-service@99acc13 + deployment-api@0b853ba); VenueDetailResult top_instruments→instruments rename + "showing N of M" + day??date fix (deployment-ui@a67c32f). Phase 7 P2: missing_dates sample label (deployment-ui@8ce86fa); totals_source rollup/manifest field (deployment-api@b73ce3b + deployment-ui@0529c0a). Plan 31/41 done. Scoreboard in plan body. Shift end called by operator. | `data_status_drilldown_shard_atom_alignment_2026_05_07.md` | `tab/hk/2` |
-| 3 | execution-service C901 cleanup + pytest-timeout + Wave 4 pre-existing-test/codex cleanup | ✅ DONE Wave 4 — Wave 3: C901 (execution-service@2dee623f rpc_fallback __init__ 11→2 + manual_instruction_api 12→8); Wave 4: 7 pre-existing test failures fixed (execution-service@9758f9fc, 2656 tests pass); partial codex reduction 25→22 (execution-service@6a993bdb, stopped per operator direction). DEFERRED: 1 remaining codex violation to hit threshold. Surfaced 2 P0/P1 issue docs for defi 604,951-row finding follow-up (`defi_classifier_missing_catalog_crossref_2026_05_13.md` + `defi_legacy_blank_reclassification_2026_05_13.md`). | `issues/pool_state_result_import_error_2026_05_13.md` + execution-service Wave 4 | `tab/hk/3` |
-| 4 | Script 3 classifier P1 + arbitrage_price_dispersion final + Wave 4 17-test-fix (Findings Triage HARD RULE applied) | ✅ DONE Wave 4 — Wave 2: arbitrage 20/20 (strategy-service@33697ce + PM@56b83750); classifier kwarg RESOLVED-AS-STALE (no code fix needed, stale VM tarballs pre-UTL@290a415; PM@a9a6b0d0 issue doc updated); Wave 4: 15 of 17 pre-existing strategy-service test failures fixed (strategy-service@114f8b2); +sigma RUF002 fix (strategy-service@fe1e81d) + C901 refactor (strategy-service@88f77c0) + service_entry --synthetic-input-uri stash-pop (strategy-service@08ac033, Phase 3.D/4.A-tail). 🔴 BIG FINDING from Wave 2: Script 3 dry-run showed defi 604,951 rows would flip to attempted_failed/LegacyBlankErrorReasonError — properly tracked in 2 new issue docs (P0 + P1). | `issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` + `arbitrage_price_dispersion_finalisation_2026_05_09.md` + Wave 4 strategy-service tests | `tab/hk/4` |
-| 5 | (cleanup done 2026-05-13 — local tab/hk/5 hard-reset to LDR; cc62f02 preserved on origin/tab/hk/5 as historical record) | 🟪 RESERVE (ready) | — | `tab/hk/5` |
-| 6 | wave3x_residual_ssots + per_agent_worktrees + api_football finalisation | ✅ DONE Wave 3 — Wave 2: Track D DOCS codex stub (PM@84e29700); scoreboard + DONE block (PM@580176e7); 4 deferred items documented. Wave 3: per_agent_worktrees 30/30 + api_football 13/16 (3 DEFERRED operator-executable post-cutover); Phase 4.5 P1 ping-doc reset + rollup helper (PM@2f710f9a). Slot 6 reported "honest gap": LEDGER regression from Ikenna merge 634e15d9 unflagged — addressed in this consolidated re-flip. | `wave3x_residual_ssots_2026_05_08.md` + `per_agent_worktrees_2026_05_10.md` + `api_football_minimal_flattening_removal_2026_05_07.md` | `tab/hk/6` |
-| 7 | cross_asset Phase 5/6/7 + Wave 4 Phase 1D producer-side + STEP 5.72 QG ratchet + force-push recovery | ✅ DONE Wave 4 SHIFT-END — Wave 2: Phase 5A/5B/5C verified clean + Phase 5E T-WTI added (UAC@4b97104) + Phase 7G VIX-15m doc-pointer fix (PM@f9f61000). Wave 3: Phase 6 validation suite (PM@dcba3c6e + live coverage % baselines: cefi 49.48 / defi 19.48 / tradfi 69.71 / sports 99.79 / prediction 86.19). Wave 4: TRADER_JOEV2 producer-side migration across 3 backend repos (UAC@da3ef9b + instruments-service@dd03a15 + MTDS@3cf0f09 — DF-17 P2 closed) + STEP 5.72 chain-set inclusion QG ratchet (PM@fd9aee9e — DF-7 closed). Plus 13:51 UTC force-push recovery: wallet_treasury Phase 1 contracts (UAC@e7c12fa) + RUF003 fix (UAC@861d2a6) cherry-picked from reflog after `semver-rollout[bot]` force-push dropped UAC@ca36caa + UAC@3a04308. Slot 7 cherry-picked + restored work each round (4 PM force-pushes today). | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1D/5/6/7 + `wallet_treasury_client_flow_2026_05_10.md` Phase 1 | `tab/hk/7` |
-| 8 | (cleanup done 2026-05-13 — local tab/hk/8 hard-reset to LDR; 949185c preserved on origin/tab/hk/8 as historical record) | 🟪 RESERVE (ready) | — | `tab/hk/8` |
-| 9 | mock_data Phase 3.D + Sports classifier extension P1 (Wave 1 audit re-open) | ✅ DONE Wave 3 — Wave 2: MTDS reader wired (mtds@82639e0 TickDataHandler synthetic-override early-return); PM@33a40116 plan flip; Phase 3.D ALL 3 readers DONE. Wave 3: GREP-THEN-READ correctly applied — read `_classify_sports:191` and found all 4 rules ALREADY SHIPPED at UTL@3fbc6b3 (Wave 1 audit-re-open was test-coverage gap, not implementation gap). Shipped: 11 new sports rule tests (UTL@3928e3a, 52 total all pass: 4×PAUSED_LEAGUE + 3×PRE_SEASON + 3×POST_SEASON + 1×SOURCE_DOES_NOT_COVER) + Script 3 sports DRY-RUN (PM@d5bb92fd: 0 upgrades of 1.87M candidates — expected given KNOWN_COVERAGE_GAPS={} and narrow venue/field matching). SIDE-FINDING: 117 pre-existing UTL test failures (`ManifestWriter.record_empty()` missing `pipeline_mode` kwarg from UTL@547ff3c API drift) — unassigned, operator-pending. | `issues/sports_classifier_extension_followup_2026_05_13.md` + `mock_data_pipeline_benchmarking_2026_05_10.md` | `tab/hk/9` |
-| 10 | dex_perp Phase 2A/2D/2E + 2F P2 + EigenLayer Phase 3A/3B + Phase 4A/4B + codex 5.1/5.2 | ✅ DONE 2026-05-13 — all in-scope shipped (MDPS@c30d8e0 cherry-picked by main to rescue foot-gun #5: MDPS 19-test fix had been left on tab/hk/10 only); worktree reset complete; 4 items DEFERRED with successor refs in plan body | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
+**Wave structure today**:
+
+- **Wave 1** — slot 2/6/7/9 — clear/stable/low-risk, spawn first.
+- **Wave 2** — slot 3/4 — test-fix sweeps (mechanical but bigger surface), spawn after Wave 1 in flight.
+- **Wave 3** — slot 5/8 — `batch_live_symmetry` Tabs 1-3, pending cross-side handshake with Ikenna (plan `operator: ikenna`; Ikenna's PM@`e1e67656` audit asked Harsh to take Tabs 1-3 but explicit cross-side ack not yet exchanged).
+
+| Slot | Theme (today) | State | Plan-of-record | Branch |
+|------|---------------|-------|----------------|--------|
+| 1 | Main orchestrator + freeze-gate monitoring + Wave 1/2/3 spawn cadence | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
+| 2 | 🟢 **Wave 1** — api_football Phase 3.C EPL forward-poll VM + UI verify (P0, deadline today EOD) | 🆕 READY TO SPAWN — see § "Day-3 Wave 1 task briefs" | `issues/../api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` | `tab/hk/2` |
+| 3 | 🟡 **Wave 2** — 117 UTL test-fixture sweep (pipeline_mode kwarg) | 🟡 QUEUED — spawn after Wave 1 in flight. See § "Day-3 Wave 2 task briefs" | UTL@`547ff3c` API drift (issue doc to file) + writegate plan Phase 4 | `tab/hk/3` |
+| 4 | 🟡 **Wave 2** — 2-of-17 remaining strategy-service test failures (Findings Triage diagnose-first) | 🟡 QUEUED — spawn after Wave 1 in flight. See § "Day-3 Wave 2 task briefs" | strategy-service test suite + slot 4 carry-forward from yesterday | `tab/hk/4` |
+| 5 | 🟠 **Wave 3** — batch_live_symmetry Tabs 1-2 (codex docs half) | 🟠 PENDING cross-side handshake (plan `operator: ikenna`). See § "Day-3 Wave 3 — pending handshake" | `batch_live_symmetry_2026_05_10.md` Tabs 1-2 | `tab/hk/5` |
+| 6 | 🟢 **Wave 1** — Phase 1 freeze-gate readiness audit (read-only verification of items #1-#6) | 🆕 READY TO SPAWN — see § "Day-3 Wave 1 task briefs" | `master_to_live_defi_2026_05_23.md` "Phase 1 freeze-gate items status" + writegate plan Phase 4 | `tab/hk/6` |
+| 7 | 🟢 **Wave 1** — Slot 7 Wave 4 carry-forward sweep (UI `ui-reference-data.json` copies + 6C UI-drilldown smoke + ICE US softs disambiguation) | 🆕 READY TO SPAWN — see § "Day-3 Wave 1 task briefs" | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6C + Phase 1D consumer migration | `tab/hk/7` |
+| 8 | 🟠 **Wave 3** — batch_live_symmetry Tab 3 + UAC + QG STEPs (enforcement half) | 🟠 PENDING cross-side handshake (paired with slot 5). See § "Day-3 Wave 3 — pending handshake" | `batch_live_symmetry_2026_05_10.md` Tab 3 + new QG STEP | `tab/hk/8` |
+| 9 | 🟢 **Wave 1** — defi_recursive_borrow DESCOPE successor plan + plan-body annotation | 🆕 READY TO SPAWN — see § "Day-3 Wave 1 task briefs" | `defi_recursive_borrow_archetypes_2026_05_10.md` descope + new successor plan | `tab/hk/9` |
+| 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
 - Slot 2 ✅ DONE (PM@3b317e65) — propagation chain Gate 1 fired
@@ -49,6 +57,107 @@ locked_since: 2026-05-08
 - ✅ Slot 10 foot-gun #5 intercept: MDPS@0c92b91 (19-test fix) was NOT on LDR despite slot 10's "all work synced" claim. Main cherry-picked to LDR as MDPS@c30d8e0; slot 10 worktree reset clean.
 
 All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
+
+---
+
+## Day-3 Wave 1 task briefs — 2026-05-14 (clear/stable; spawn first)
+
+### Slot 2 — api_football Phase 3.C EPL forward-poll VM + UI verify (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `instruments-service` + `deployment-service` (tarball + VM launcher) + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md`](../plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md) (Phase 3.B ✅ DONE 2026-05-13; this is Phase 3.C only)
+- **Task**:
+  1. Refresh VM tarball: `bash deployment-service/scripts/vm/create-code-tarballs.sh --sports-only`. Verify tarball @ `gs://deployment-scripts-${PID}/code/`.
+  2. Launch EPL forward-poll VM: `bash deployment-service/scripts/vm/launch-sports-instruments-reference-vm.sh --asset-group sports --start-date 2026-05-13 --end-date 2026-05-13`. NOT a reconciliation VM — Ikenna's hold does NOT apply.
+  3. Monitor execution 1-2 hours wall clock — `gs://${PROJECT_ID}-events/events/instruments-service/` for `INSTRUMENT_ENTITY_CAPTURED` events; abort on `ADAPTER_FETCH_FAILED`.
+  4. Verify data-status panel schema: open deployment-ui → Data Status → Sports → Match → Fixtures → Schema modal: FIXTURE_STATS shows ~18 columns (not old 2-column schema). Screenshot.
+  5. Spot-check features-sports calculator if any depend on fixture_stats (skip if no calculator exists yet).
+  6. Plan-flip Phase 3.C `[x]` with VM-run evidence + screenshot. Write DONE-2026-05-14 block. FF-push per shippable unit.
+- **Done-def**: Plan body Phase 3.C `[x]` flipped with VM-run evidence + screenshot + features verification (or skip-noted); api_football plan DONE-2026-05-14 block. Schema rows on UI match expected per-data_type column counts.
+- **Credentials**: `gcloud secrets versions access latest --secret=api-football-api-key` (already-verified in Phase 3.B 2026-05-13).
+- **No big decisions needed.**
+
+### Slot 6 — Phase 1 freeze-gate readiness audit (Sonnet 4.6 / thinking: high; read-only audit)
+
+- **Owned repos**: `unified-trading-pm` (output only) + workspace-wide read-only grep
+- **Plan-of-record**: [`plans/active/master_to_live_defi_2026_05_23.md`](../plans/active/master_to_live_defi_2026_05_23.md) § "Phase 1 freeze-gate items status (post Day-1 EOD)" + [`writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 4
+- **Task**: For each of the 6 freeze-gate items, run workspace-wide grep + verification — confirm plan-flip matches on-disk reality. Items #3 (PipelineMode 37-callsite migration) + #6 (LookaheadBiasError strict-mode features-\*) are the two 🟡 partials from Day-2 EOD; specifically:
+  1. Item #3: workspace-grep for `pipeline_mode=` at every `record_*` callsite + verify QG STEP 5.68 baseline `0 new occurrences`. If any callsite still uses default, file as P0 with file:line.
+  2. Item #6: workspace-grep for `LookaheadBiasError` strict-mode wire-ins across `features-*-service/`. Verify all 8 families (delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe / onchain / sports) have `strict=True` enforcement at writer boundary.
+  3. Items #1-#2, #4-#5: spot-check evidence cited in master plan against actual SHA + grep proof.
+  4. Write audit report at `plans/active/issues/freeze_gate_readiness_audit_2026_05_14.md` if ANY mismatch found; OR ack as report at master plan inline + ping `harsh_orchestrator/pings/slot_6.md`.
+- **Done-def**: All 6 items confirmed green-on-disk; if mismatch found, P0 issue doc filed + slot 1 main pinged.
+- **No big decisions needed.**
+
+### Slot 7 — Slot 7 Wave 4 carry-forward sweep (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `unified-trading-system-ui` + `unified-trading-pm` + read-only on UAC + instruments-service
+- **Plan-of-record**: [`plans/active/cross_asset_group_catalogue_audit_2026_05_10.md`](../plans/active/cross_asset_group_catalogue_audit_2026_05_10.md) Phase 6C + Phase 1D consumer migration
+- **Task**: 3 items, ship in order:
+  1. **UI `ui-reference-data.json` copies** — slot 7 Wave 4 shipped TRADER_JOEV2 producer-side migration across 3 backend repos (UAC@`da3ef9b` + instruments-service@`dd03a15` + MTDS@`3cf0f09`). Consumer side: 4 `ui-reference-data.json` copies in `unified-trading-system-ui` need the same TRADER_JOEV2/TRADERJOEV2 fix. Find via `grep -rn TRADER unified-trading-system-ui/`. Update each + run UI build smoke (`pnpm build`) to confirm no schema breakage.
+  2. **6C UI-drilldown smoke** — start deployment-stack (`bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`). Verify which UI panels work pre-cutover. Walk Data Status → cross_asset drilldown for at least 1 venue per asset_group; capture screenshots OR report gaps as issue doc.
+  3. **ICE US softs (CT/CC/KC/SB/OJ/DX) dataset disambiguation** — `tradfi_symbology.py` (IFUS.IMPACT) vs `tradfi_instrument_universe.py` (GLBX.MDP3) — reconcile to single dataset per softs symbol OR file design-call issue doc with proposed dataset + reasoning.
+- **Done-def**: 4 UI copies updated + build green; 6C smoke walk-through done with screenshots OR gap report; ICE US softs disambiguated or filed.
+- **No big decisions needed** (DF-5 sDAI design call DEFERRED post-cutover per master plan scope; do NOT touch).
+
+### Slot 9 — defi_recursive_borrow DESCOPE successor plan + plan-body annotation (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `unified-trading-pm` only (no code changes)
+- **Plan-of-record**: [`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md) descope + new successor plan
+- **Task**:
+  1. Read current plan body — understand which phases are shipped vs unshipped vs partial. Per Ikenna audit batch PM@`e1e67656`: ~7% truly done (UAC half), Solidity (`RecursiveLeverageReceiver.sol`) + execution-service orchestrator + strategy-service tracer + codex + deployment-ui halves genuinely unshipped.
+  2. Annotate current plan body with descope decision: "May-23 ships archetype documented; Phase 2-3 Solidity + execution halves deferred to successor". Reference master plan only commits `carry_staked_basis` + `arbitrage_price_dispersion` for May-23 live (recursive_borrow not in live cutover scope).
+  3. File new successor plan `plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` (or `_2026_06_15.md`) with:
+     - `migrated_from: defi_recursive_borrow_archetypes_2026_05_10.md`
+     - `estimate_class: design` + `estimate_baseline_ai_days` + `estimate_calibrated_ai_days` (use Ikenna's audit estimate: Solidity + execution + strategy + codex + UI halves, multi-week scope)
+     - Migrated todos with `**MIGRATED FROM:** defi_recursive_borrow_archetypes_2026_05_10.md` provenance per CLAUDE.md "Plan Archival" HARD RULE
+     - Successor-plan banner on current plan
+  4. Update master plan inventory dashboard line for recursive_borrow (rerun `python3 scripts/plans/regenerate_active_plan_inventory.py`).
+- **Done-def**: Current plan annotated with descope decision + successor banner; successor plan filed at `plans/active/`; master plan inventory regenerated.
+- **No big decisions needed** (descope decision pre-confirmed by operator this morning).
+
+---
+
+## Day-3 Wave 2 task briefs — 2026-05-14 (queued; spawn after Wave 1 in flight)
+
+### Slot 3 — 117 UTL test-fixture sweep (Sonnet 4.6 / thinking: high; mechanical sweep)
+
+- **Owned repos**: `unified-trading-library` + `unified-trading-pm`
+- **Plan-of-record**: UTL@`547ff3c` API drift (file issue doc if root-cause needs design) + [`writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 4 follow-up
+- **Task**: UTL Phase 4.DEFAULT-REMOVAL (UTL@`547ff3c`) added `pipeline_mode` as a required kwarg to all `ManifestWriter.record_*` methods. Test fixtures across UTL test suite call the old signature → 117 test failures yesterday per slot 9's side-finding. Sweep:
+  1. Use repo-local `.venv` (NOT workspace `.venv-workspace`) per CLAUDE.md venv rule. Run `bash scripts/quality-gates.sh` from `unified-trading-library/` to reproduce + count failures.
+  2. Sweep tests under `unified-trading-library/tests/` — add `pipeline_mode="batch"` (or `pipeline_mode=PipelineMode.BATCH` if importing the enum) to all `record_captured` / `record_empty` / `record_failed` / `record_expected_unattempted` callsites that lack it. Scope: ~35 `record_empty` + ~37 `record_captured` + ~14 `record_failed` + ~4 `record_expected_unattempted` test callsites.
+  3. Re-run QG; surface any non-mechanical failures as issue docs (file under `plans/active/issues/` with `severity: P1`).
+  4. Plan-flip the writegate plan Phase 4 follow-up checkbox (if exists) OR file issue doc closing 117-test-failure side-finding.
+- **Done-def**: 117 UTL tests pass via `bash scripts/quality-gates.sh`; pre-existing-foreign issues (non-mechanical) filed as issue docs with owner-tag.
+- **GREP-THEN-READ warning**: before mass-replacing, read 3 sample test callsites + the UTL `record_*` signature to confirm correct kwarg name + value. Don't grep-then-replace blindly.
+- **No big decisions needed.**
+
+### Slot 4 — 2-of-17 remaining strategy-service test failures (Sonnet 4.6 / thinking: high; diagnose-first)
+
+- **Owned repos**: `strategy-service` + `unified-trading-pm` (for issue docs if needed)
+- **Plan-of-record**: strategy-service test suite (slot 4's Wave 4 carry-forward from strategy-service@`114f8b2`)
+- **Task**: Slot 4 yesterday fixed 15 of 17 pre-existing strategy-service test failures at strategy-service@`114f8b2`. 2 remaining — identify which 2 from yesterday's 14:30 UTC slot 4 ping list (TestResolverFactoryCoverage + test_factory_builds_all_v1_archetypes + test_target_universe + test_coverage_uncovered_modules + test_risk_preflight_gate + test_error_handling). Apply Findings Triage HARD RULE diagnose-first principle:
+  1. Use strategy-service local `.venv` (NOT workspace venv) per CLAUDE.md venv rule. Run `bash scripts/quality-gates.sh` from `strategy-service/` to identify the 2 remaining failures.
+  2. For each failure: read BOTH sides of the contract (test + code-under-test). Diagnose: is code stale or is test stale per current SSOT?
+  3. If code stale → fix code; if test stale → fix test; if genuinely ambiguous → file issue doc with explicit "needs design call" diagnosis.
+  4. Plan-flip OR file issue.
+- **Done-def**: 2 remaining strategy-service tests EITHER fixed OR filed as issue doc with explicit "needs design call" diagnosis.
+- **No big decisions needed** (Findings Triage HARD RULE codified yesterday in CLAUDE.md — diagnose-first, don't just patch tests blindly).
+
+---
+
+## Day-3 Wave 3 — pending cross-side handshake (2026-05-14)
+
+### Slots 5 + 8 — batch_live_symmetry Tabs 1-3 (Sonnet 4.6 / thinking: high; paired slot work)
+
+- **Status**: 🟠 HOLD until cross-side handshake with Ikenna-main acked. Plan frontmatter says `operator: ikenna`; Ikenna's audit PM@`e1e67656` recommended Harsh take Tabs 1-3 but explicit cross-side ack not yet exchanged. Slot 1 main owes Ikenna-main a `_agent_pings.md` entry confirming Harsh-side ownership of Tabs 1-3 BEFORE these slots spawn.
+- **Owned repos** (when unblocked): `unified-trading-pm` (codex) + `unified-api-contracts` + per-service test wiring
+- **Plan-of-record**: [`plans/active/batch_live_symmetry_2026_05_10.md`](../plans/active/batch_live_symmetry_2026_05_10.md) Tabs 1-3
+- **Scope (when unblocked)**:
+  - Slot 5 → Tabs 1-2 (codex docs half): `codex/02-data/cefi-batch-live.md` + `codex/06-coding-standards/mode-axis-discipline.md`
+  - Slot 8 → Tab 3 (enforcement half): UAC batch-live contract + QG STEP ratchet banning live-only data_types diverging from batch shape
+- **Next step**: slot 1 main writes cross-side ping to `plans/active/_agent_pings.md` confirming Harsh ownership of Tabs 1-3, awaits Ikenna ack, then spawns slots 5 + 8.
 
 ---
 
