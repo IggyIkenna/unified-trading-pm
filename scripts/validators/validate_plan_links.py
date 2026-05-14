@@ -33,7 +33,12 @@ def main() -> int:
 
     broken: list[tuple[str, str]] = []
     for path in plans_dir.glob("*.md"):
-        content: str = path.read_text()
+        raw_content: str = path.read_text()
+        # Strip fenced code blocks (```...```) and inline code spans (`...`)
+        # before link extraction so that regex patterns inside code do not
+        # false-positive as broken links.
+        content = re.sub(r"```.*?```", "", raw_content, flags=re.DOTALL)
+        content = re.sub(r"`[^`]+`", "", content)
         for m in re.finditer(r"\]\(([^)]+)\)", content):
             link = m.group(1).strip()
             if link.startswith("http") or link.startswith("#") or " " in link:

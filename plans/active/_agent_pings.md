@@ -919,7 +919,7 @@ Plan + codex + epic edits + sub-plan cross-refs all pushing in this commit batch
    - **Both** — same archetype family, exit-rule distinguishes:
      - `CARRY_BASIS_DATED` (held to expiry capturing basis convergence)
      - `ARBITRAGE_PRICE_DISPERSION` config variant `dated-cross-venue` (closed early when convergence sufficient)
-   - **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](../plans/active/defi_master_2026_05_07.md) **Fork 1** — DeFi master owns the archetype family even though it spans cross-asset (single owner avoids cross-plan ambiguity).
+   - **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) **Fork 1** — DeFi master owns the archetype family even though it spans cross-asset (single owner avoids cross-plan ambiguity).
    - **Shared infrastructure**: `paired_price_dispersion` calculator in features-cross-instrument-service powers BOTH. Catalog pair specs at UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
    - **Specs in scope** (per defi_master 2026-05-06 + commodity-futures addition 2026-05-13): 7 existing CARRY_BASIS_DATED + NASDAQ-IBIT/CME-MBT + NASDAQ-ETHA/CME-MET + DERIBIT spot-vs-dated (BTC+ETH) + GLD/CME-GC + USO/CME-CL + UNG/CME-NG. ARBITRAGE_PRICE_DISPERSION adds CME-MBT vs DERIBIT-dated + CME-MET vs DERIBIT-dated.
    - **Funding-rate variant** (perp funding spread cross-venue) = same ARBITRAGE_PRICE_DISPERSION archetype, `funding-rate-dispersion` config variant, also in defi_master Fork 1, also Tier A.
