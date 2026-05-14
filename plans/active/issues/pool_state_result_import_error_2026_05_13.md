@@ -5,8 +5,22 @@ author: slot-3-wave3
 source:
   - execution-service/execution_service/defi_execution/protocols/__init__.py
 severity: P1
+status: RESOLVED
+resolved_at: 2026-05-14
+resolved_by: slot-2-wave2
+resolution_commit: execution-service@09198760
 suggested_owner: "operator triage"
 ---
+
+## ✅ RESOLVED 2026-05-14 (slot-2-wave2)
+
+Already fixed on LDR by execution-service@`09198760` (2026-05-13 19:27 IST) — root cause was ruff AUTO-FIX stripping `PoolStateResult`/`SwapQuoteResult`/`SwapResult` aliases from `protocols/base.py` because they appear unused within `base.py` itself (they exist only as re-exports for `protocols/__init__.py` and `uniswap.py` consumers). Fix: added `# noqa: F401` to each of the three aliased imports.
+
+**Diagnose-first verification (2026-05-14 06:35 UTC, slot-2-wave2 resume)**:
+- `python -c "from execution_service.defi_execution.protocols import PoolStateResult"` → ✅ succeeds, resolves to `unified_api_contracts.internal.domain.execution_service.results.DeFiPoolStateResult`.
+- `pytest --collect-only tests/` → 7921 tests collected. 5 remaining collection errors are unrelated (`get_testnet_contract_registry` UTL top-level export gap + 4 sports_execution adapter modules) — separate issues, not PoolStateResult.
+
+No further action on this issue.
 
 ## What I found
 
