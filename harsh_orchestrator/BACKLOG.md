@@ -36,7 +36,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Plan-ref**: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 1
 
 ### B-002 · Phase 1 env-locking — deployment-ui env selector lock
-- **Status**: DISPATCHED → slot 7 2026-05-14
+- **Status**: DONE @deployment-api@f0c0c43+deployment-ui@2c8de22 2026-05-14 (slot 7 — tarball-from-local radio blocked for staging/prod; 18 vitest pass; plan checkbox flipped)
 - **Task**: In deployment-ui, grey out / disable tarball deploy option when env selector is staging/prod. Show tooltip "tarball blocked in staging/prod — use image deploy". QG: `pnpm build` + vitest green.
 - **Repos**: `deployment-ui`
 - **Est**: 2h · **Model**: Sonnet
@@ -99,7 +99,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 all clusters green
 
 ### B-010 · Phase 8.A surface-5 — validation logic coverage (per-archetype)
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 3 2026-05-14
 - **Task**: 90% coverage on per-archetype calc validation paths in `strategy-service`. Target: `carry_staked_basis` + `arbitrage_price_dispersion` validation branches. Sub-agent fan-out per archetype. Run `bash scripts/quality-gates.sh`.
 - **Repos**: `strategy-service`
 - **Est**: 4h (sub-agent fan-out) · **Model**: Sonnet
@@ -127,7 +127,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 ## Tier 2 — Ready after Tier 1 lands
 
 ### B-013 · Phase 2 — 99%-repo deploy-ready tracking
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 7 2026-05-14
 - **Task**: New deployment-api endpoint `/api/repos/deploy-ready` — walks last 5 daily QG snapshots per repo; returns `deploy_ready: true` if all 5 green + zero P0 issue docs + no `🟡 IN-FLIGHT REFACTOR` banner. Deployment-ui panel showing per-repo readiness.
 - **Repos**: `deployment-api` + `deployment-ui`
 - **Est**: 3h · **Model**: Sonnet
@@ -184,6 +184,9 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-017 defi_recursive_borrow successor plan | slot 5 | DISPATCHED |
 | 2026-05-14 | B-007 Phase 8.A manifest writer coverage | slot 8 | DISPATCHED |
 | 2026-05-14 | B-008 Phase 8.A emission publisher coverage | slot 8 | DISPATCHED |
+| 2026-05-14 | B-002 deployment-ui env selector lock | slot 7 | deployment-api@f0c0c43+deployment-ui@2c8de22 ✅ |
+| 2026-05-14 | B-010 Phase 8.A archetype validation coverage | slot 3 | DISPATCHED |
+| 2026-05-14 | B-013 Phase 2 deploy-ready tracking | slot 7 | DISPATCHED |
 
 ---
 

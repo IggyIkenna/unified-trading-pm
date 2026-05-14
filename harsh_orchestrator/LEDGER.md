@@ -30,11 +30,11 @@ locked_since: 2026-05-08
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + Phase 0 monitoring + spawn cadence | 🟢 ONLINE | (this LEDGER) | `tab/hk/1` |
 | 2 | **Phase 0 remaining** — alerting-service N802 + MDPS/features/ml-inference test failures + deployment-service timeout re-run | 🟡 AWAITING (direction given @11:06) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B/D/F | `tab/hk/2` |
-| 3 | **Phase 0 Reserve** — peripheral scripts pipeline_mode kwarg sweep (10 scripts) | 🟢 IN FLIGHT (STARTED @10:20) | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4 peripheral | `tab/hk/3` |
+| 3 | **B-010** — Phase 8.A archetype validation coverage (strategy-service carry+arb branches, 90% target) | 🟡 AWAITING (direction given after DONE @11:25) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/3` |
 | 4 | **Phase 0 Cluster D** — MDPS + features-service test failures after UTL@67c532bd | ⚠️ SILENT — no STARTED ping; confirm agent running | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/4` |
 | 5 | **B-005+B-017** — Writegate Phase 6.9 features-sports + defi_recursive_borrow successor plan | 🟡 AWAITING (direction given @11:00) | `writegate_honest_coverage_endtoend_2026_05_06.md` § 6.9 | `tab/hk/5` |
 | 6 | **Phase 0 Cluster D+E** — instruments-service 74 failures + deployment-ui 21 vitest failures | 🟡 AWAITING (direction given @11:15) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D/E | `tab/hk/6` |
-| 7 | **B-001+B-002** — Phase 1 env-locking; B-001 DONE @deployment-api@0574e9e; B-002 in progress | 🟢 IN FLIGHT (B-001 ✅ B-002 🔄) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 1 | `tab/hk/7` |
+| 7 | **B-013** — Phase 2 deploy-ready tracking (B-001 ✅ B-002 ✅; B-004 skipped — already done) | 🟡 AWAITING (direction given after B-002 DONE @16:52) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 2 | `tab/hk/7` |
 | 8 | **B-007+B-008** — Phase 8.A manifest writer + emission publisher coverage (UTL) | 🟡 AWAITING (direction given @11:00) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/8` |
 | 9 | **Phase 0 Cluster D + MTDS remaining failures** — PBM DONE; B-004 DONE (UTL propagation); continuing MTDS test failures | 🟢 IN FLIGHT (STARTED @10:21; MTDS ongoing) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
@@ -109,6 +109,35 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
   - `deployment-service`: prior QG run timed out >5min. Re-run `bash scripts/quality-gates.sh` with extended budget (15min). If passes: flip Cluster F checkbox in plan + commit. If fails: diagnose and fix.
 
 - **Done-def**: All 5 items QG green + plan checkboxes flipped per item. Ping DONE with per-repo SHAs.
+
+### Slot 3 — B-010: Phase 8.A archetype validation coverage (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: Phase 0 Reserve peripheral scripts pipeline_mode sweep (features-service@9e3339d1; all 10 scripts confirmed upstream; MTDS 53-failure P1 issue doc filed).
+
+- **Owned repos**: `strategy-service` + `unified-trading-pm`
+- **Task**: 90% coverage on per-archetype calc validation paths in `strategy-service`.
+  - Target archetypes: `carry_staked_basis` + `arbitrage_price_dispersion` validation branches.
+  - Sub-agent fan-out per archetype is allowed WITHIN this slot (same worktree, serialise commits).
+  - Step 1: `bash scripts/quality-gates.sh 2>&1 | grep "coverage"` from `strategy-service/` — confirm current coverage baseline for validation paths.
+  - Step 2: Locate validation logic per archetype: `grep -rn "validate\|_validate\|ValidationError" strategy_service/archetypes/ --include="*.py"`.
+  - Step 3: Add unit tests hitting each validation branch: good input passes, bad input raises specific error, edge cases (None, out-of-range) handled.
+  - Step 4: Re-run QG — coverage ≥ 90% on validation paths.
+  - Step 5: Commit + push per archetype group. Flip plan Phase 8.A "archetype calcs" checkbox with SHA evidence.
+- **Done-def**: strategy-service QG green; ≥90% coverage on `carry_staked_basis` + `arbitrage_price_dispersion` validation branches; plan checkbox flipped with SHAs.
+- **Note**: B-004 prerequisite is fully met (UTL@67c532bd propagation resolved all 4 strategy-service failures; 1544 tests pass). Do NOT re-fix B-004.
+
+### Slot 7 — B-013: Phase 2 deploy-ready tracking endpoint + UI panel (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous tasks DONE**: B-001 (deployment-api@0574e9e tarball-block) + B-002 (deployment-api@f0c0c43 + deployment-ui@2c8de22 env selector lock; 18 vitest pass).
+> ⚠️ **STOP B-004**: strategy-service failures already resolved (UTL@67c532bd propagation; 1544 tests pass; no code change needed). B-004 is DONE. Do NOT work on it.
+
+- **Owned repos**: `deployment-api` + `deployment-ui` + `unified-trading-pm`
+- **Task**:
+  1. **deployment-api** — new endpoint `GET /api/repos/deploy-ready`: walks last 5 daily QG snapshots per repo; returns `{"repo": ..., "deploy_ready": true/false, "reason": "..."}` per repo. Rules: `deploy_ready: true` iff all 5 snapshots green AND zero open P0 issue docs AND no `🟡 IN-FLIGHT REFACTOR` banner in the repo's active plan. Add endpoint to router + unit tests (mock snapshot store; test green-5 case + failing-snapshot case + P0-issue-doc case). `bash scripts/quality-gates.sh` green.
+  2. **deployment-ui** — new panel showing per-repo readiness table from above endpoint. Minimal: `repo | deploy_ready | reason` columns, auto-refreshes every 60s. Integrate with existing deployment-ui component structure. `pnpm build` + vitest green.
+  3. Flip plan Phase 2 checkbox with SHA evidence. Commit + push per repo.
+- **Done-def**: `/api/repos/deploy-ready` endpoint live in deployment-api with unit tests; deployment-ui panel renders readiness table + `pnpm build` passes; plan checkbox flipped.
+- **No big decisions**: if QG snapshot store location is ambiguous, grep deployment-api for existing snapshot read patterns (`grep -rn "snapshot\|qg_result\|quality_gate" deployment_api/`).
 
 ### Slot 5 — B-005 + B-017: Writegate Phase 6.9 + defi_recursive_borrow successor plan (Sonnet 4.6 / thinking: medium)
 
