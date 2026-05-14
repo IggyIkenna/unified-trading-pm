@@ -165,7 +165,9 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
     API drift + g9_regression classifier event-shape drift. (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14
     sub-agent): Cluster B already passing (no fix needed); Cluster C — MTDS@a54dc62 — `_safe_classify` re-exported from
     `migrate_tradfi_canonical.py` entry module.
-11. **Reserve**: in-stack on Solana RPC ratelimit handling + DEX venue catch-up.
+11. ✅ **Reserve**: in-stack on Solana RPC ratelimit handling + DEX venue catch-up — Phase 2 SANCTUM instruments-service
+    adapter shipped: `sanctum.py` (INF + JUPSOL + LAINESOL, _solana_utils pattern) + factory registration +
+    8 unit tests. (instruments-service@e149995 + f44f0dc; PM plan Phase 2 checkboxes flipped @169132e7)
 
 Backfill flag: item 3 + 5 + 6 — Solana validation backfills <1 week OK without approval.
 
