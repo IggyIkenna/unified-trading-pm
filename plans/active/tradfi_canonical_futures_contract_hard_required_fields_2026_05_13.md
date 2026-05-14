@@ -165,8 +165,15 @@ Order matters: every consumer must adopt the new types BEFORE the workspace-wide
       `tests/unit/test_orchestrator_futures_contracts.py`. Note: implementation is in instruments-service (not MTDS) as
       the instruments write-path is the correct home; the "RDC" reference in plan = IS GCS parquets; MTDS staleness
       consumer covered in Phase 4.3.
-- [ ] [SCRIPT] P1. **mtds-tradfi-staleness** (4.3): consume `CanonicalFuturesContract.expiry_date` for per-contract
-      staleness gates.
+- [x] [SCRIPT] P1. **mtds-tradfi-staleness** (4.3): consume `CanonicalFuturesContract.expiry_date` for per-contract
+      staleness gates. **COMPLETED 2026-05-14**: UAC@421bb21 — `is_tradfi_futures_instrument_active(instrument_id,
+      as_of_date_str)` pure UAC function added to `registry/market_data_categories.py`; parses CME/ICE symbol format
+      (ESH26, CLZ6, BRN.H26) to filter expired contracts from Tier-3 sentinel denominator; exported from
+      `registry/__init__.py`. MTDS@103540f — wired in Tier-3 sentinel pass for `asset_group_of_venue == "TRADFI"`;
+      filters `expected_instruments` list before emitting `SOURCE_RETURNED_ZERO` sentinels. 28 unit tests green in
+      `tests/unit/test_tradfi_futures_staleness.py`. Architecture: conservative last-day-of-contract-month
+      approximation (fail-open for unknown symbols); full-precision `expiry_date` gate from IS parquet is a
+      Phase 4.3+ precision upgrade.
 - [ ] [SCRIPT] P1. **features-service** (4.4): lifecycle-phase-aware contract roll features.
 - [ ] [SCRIPT] P1. **strategy-service** (4.5): `FuturesRollInstruction.lifecycle_phase: FuturesContractLifecyclePhase`
       binding.
