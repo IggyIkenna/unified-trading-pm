@@ -139,8 +139,10 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
    SANCTUM+SOLBLAZE+Pyth+native_staking_rates+backfill).
 5. **DEX perp + venue data expansion** — pickup from yesterday's Harsh slot 10 close; extend to additional venues per
    `defi_master_2026_05_07` venue matrix. (infra 0.8×, ~5 = 4.0 cal)
-6. **Drift JitoSOL+mSOL basis-pair build-out** — eligibility wiring for `carry_staked_basis` per archetype matrix.
-   (design 0.6×, ~4 = 2.4 cal)
+6. ✅ **Drift JitoSOL+mSOL basis-pair build-out** — eligibility wiring for `carry_staked_basis` per archetype matrix.
+   (design 0.6×, ~4 = 2.4 cal) **DONE** (2026-05-14): strategy-service@6ff86fe — DRIFT-SOLANA perp_funding in UAC;
+   xfail test removed; TestDriftSolanaLstEligibility + perp_hedge_candidates test added; jito-drift + marinade-drift
+   slots verified; 48 tests pass.
 7. ✅ **Hyperliquid arb_price_dispersion eligibility check** — verify USDC-margin compatibility per archetype matrix.
    (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14): USDC margin accepted (0 haircut) → eligible for
    `arbitrage_price_dispersion`. perp_funding capability gap fixed: UAC@052120d (HYPERLIQUID+ASTER in
