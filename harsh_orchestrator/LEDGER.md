@@ -28,14 +28,14 @@ locked_since: 2026-05-08
 | Slot | Theme (today) | State | Plan-of-record | Branch |
 |------|---------------|-------|----------------|--------|
 | 1 | Main orchestrator + freeze-gate monitoring + Wave 1/2/3 spawn cadence | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
-| 2 | 🟢 **Wave 1** — api_football Phase 3.C EPL forward-poll VM + UI verify (P0, deadline today EOD) | 🆕 READY TO SPAWN — see § "Day-3 Wave 1 task briefs" | `issues/../api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` | `tab/hk/2` |
-| 3 | 🟡 **Wave 2** — 117 UTL test-fixture sweep (pipeline_mode kwarg) | 🟡 QUEUED — spawn after Wave 1 in flight. See § "Day-3 Wave 2 task briefs" | UTL@`547ff3c` API drift (issue doc to file) + writegate plan Phase 4 | `tab/hk/3` |
-| 4 | 🟡 **Wave 2** — 2-of-17 remaining strategy-service test failures (Findings Triage diagnose-first) | 🟡 QUEUED — spawn after Wave 1 in flight. See § "Day-3 Wave 2 task briefs" | strategy-service test suite + slot 4 carry-forward from yesterday | `tab/hk/4` |
+| 2 | 🟢 **Wave 1** — api_football Phase 3.C EPL forward-poll VM + UI verify (P0, deadline today EOD) | 🟢 IN FLIGHT (STARTED 04:31 UTC) | `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` | `tab/hk/2` |
+| 3 | 🟡 **Wave 2** — 117 UTL test-fixture sweep (pipeline_mode kwarg) | 🟢 IN FLIGHT (STARTED 04:31 UTC) | UTL@`547ff3c` API drift + writegate plan Phase 4 | `tab/hk/3` |
+| 4 | 🟡 **Wave 2** — 2-of-17 remaining strategy-service test failures (Findings Triage diagnose-first) | 🟢 IN FLIGHT (STARTED 04:31 UTC) | strategy-service test suite + slot 4 carry-forward from yesterday | `tab/hk/4` |
 | 5 | 🟠 **Wave 3** — batch_live_symmetry Tabs 1-2 (codex docs half) | 🟠 PENDING cross-side handshake (plan `operator: ikenna`). See § "Day-3 Wave 3 — pending handshake" | `batch_live_symmetry_2026_05_10.md` Tabs 1-2 | `tab/hk/5` |
-| 6 | 🟢 **Wave 1** — Phase 1 freeze-gate readiness audit (read-only verification of items #1-#6) | 🆕 READY TO SPAWN — see § "Day-3 Wave 1 task briefs" | `master_to_live_defi_2026_05_23.md` "Phase 1 freeze-gate items status" + writegate plan Phase 4 | `tab/hk/6` |
+| 6 | 🟢 **Wave 1** — Phase 1 freeze-gate readiness audit (read-only verification of items #1-#6) | 🟢 IN FLIGHT (STARTED 04:34 UTC) | `master_to_live_defi_2026_05_23.md` "Phase 1 freeze-gate items status" + writegate plan Phase 4 | `tab/hk/6` |
 | 7 | 🟢 **Wave 1** — Slot 7 Wave 4 carry-forward sweep (UI `ui-reference-data.json` copies + 6C UI-drilldown smoke + ICE US softs disambiguation) | 🆕 READY TO SPAWN — see § "Day-3 Wave 1 task briefs" | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6C + Phase 1D consumer migration | `tab/hk/7` |
 | 8 | 🟠 **Wave 3** — batch_live_symmetry Tab 3 + UAC + QG STEPs (enforcement half) | 🟠 PENDING cross-side handshake (paired with slot 5). See § "Day-3 Wave 3 — pending handshake" | `batch_live_symmetry_2026_05_10.md` Tab 3 + new QG STEP | `tab/hk/8` |
-| 9 | 🟢 **Wave 1** — defi_recursive_borrow DESCOPE successor plan + plan-body annotation | 🆕 READY TO SPAWN — see § "Day-3 Wave 1 task briefs" | `defi_recursive_borrow_archetypes_2026_05_10.md` descope + new successor plan | `tab/hk/9` |
+| 9 | 🟢 **Wave 1** — defi_recursive_borrow DESCOPE successor plan + plan-body annotation | 🟢 IN FLIGHT (STARTED 04:32 UTC) | `defi_recursive_borrow_archetypes_2026_05_10.md` descope + new successor plan | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
