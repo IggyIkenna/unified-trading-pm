@@ -426,6 +426,17 @@ You are slot N (Ikenna side). Do this in order, nothing else until done:
 GCS backfill rule: if any item triggers a backfill of ≥1 week of data, STOP and ping operator via slot_N.md before
 launching the VM. Backfills of <1 week for testing / validation / smoke are pre-authorized — go ahead.
 
+**Adapter/data-source HARD RULE (codified 2026-05-14)**: if you hit a "no data available" wall on any adapter,
+handler, or data-source client (instruments-service, MTDS, or anywhere else), **DO NOT** defer / descope / move to
+post-cutover. Data EXISTS for every asset_group × archetype — the unblock is a credential ask, not a scope cut.
+Banned reasoning: "no public API" / "free tier exhausted" / "no test data" / "subscription required". Required:
+(1) build the adapter scaffold anyway (UAC + auth + retry + error class + manifest emission + unit tests against
+mocks + integration tests marked `@pytest.mark.requires_credentials`); (2) file `CREDENTIAL APPROVAL REQUEST` in
+your slot_N.md with vendor / tier / cost / account-needed / what-it-unblocks; (3) plan status = `BLOCKED-CREDENTIALS`
+(NOT `DEFERRED`, NOT `POST-CUTOVER`); plan-flip is `- [ ] [BLOCKED-CREDENTIALS — pinging operator at <sha>]`; never
+move adapter to a post-cutover plan without explicit operator [ack]. Full SSOT: CLAUDE.md § "External Data Is Always
+Available".
+
 **Plan-flip cadence (HARD RULE — re-emphasized because this is the #1 source of wasted reallocation)**:
 every time you ship a shippable unit you MUST do BOTH halves in the same logical unit, NOT batched at session end:
 

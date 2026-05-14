@@ -192,6 +192,38 @@ top-of-file `> **🟢 VM RUNNING — ...**` or `> **🟡 IN-FLIGHT REFACTOR — 
 work is influenced. Banner-add is part of the launch / refactor-start logical unit; banner-removal owned by you when the
 VM auto-shutdowns or the refactor lands.
 
+### 6. External Data Is Always Available — Never Silently Defer Adapters (HARD RULE codified 2026-05-14)
+
+If you're working an adapter, handler, or data-source client in `instruments-service` or MTDS (or anywhere else) and
+hit a "no data available" wall — **the unblock is a credential ask to operator, NOT a scope cut**. Data exists for
+every asset_group and every MVP archetype. Free-tier exhausted? Upgrade. No public API? There's a paid tier (Helius,
+Alchemy paid, Glassnode, Kaiko, Tardis, Databento, Sportradar, etc.).
+
+**Banned reasoning** (any of these leading to scope removal = rule violation): "no public API"; "free tier exhausted";
+"no test data"; "subscription required"; "couldn't reproduce in sandbox".
+
+**Required steps when you hit the wall**:
+
+1. **Build the adapter scaffold anyway** — UAC contract, auth shape, retry/backoff, error classification, manifest
+   emission. Unit tests against mocks (per vendor docs). Integration tests marked `@pytest.mark.requires_credentials`
+   and skipped by default.
+2. **File operator-credential request in `pings/slot_<N>.md`** with this exact shape:
+   ```
+   CREDENTIAL APPROVAL REQUEST — <adapter_name>
+   Vendor: <name + tier + cost estimate>
+   What I need: <API key | OAuth | account signup | hardware 2FA>
+   Account: <existing operator email | new account needed>
+   Unblocks: <asset_group × archetype combos + which May-23 gate>
+   Without it: integration tests skip; adapter dormant
+   ```
+3. **Adapter stays ON the live list.** Status = `BLOCKED-CREDENTIALS` (closed-set), NOT `DEFERRED`, NOT
+   `POST-CUTOVER`. Plan-flip: `- [ ] [BLOCKED-CREDENTIALS — pinging operator at <commit-sha>]`. NEVER move adapter to
+   a post-cutover plan without explicit operator [ack] on the slot ping.
+4. **Status taxonomy** (closed set): `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` / `BLOCKED-UPSTREAM-OUTAGE` /
+   `DEFERRED` (only valid with named successor + operator ack). Ad-hoc "deferred" language is rejected.
+
+**Full SSOT**: CLAUDE.md § "External Data Is Always Available — Never Silently Defer Adapters (HARD RULE)".
+
 ## Boot ack template (paste this into `_agent_pings.md` after reading)
 
 ```text
