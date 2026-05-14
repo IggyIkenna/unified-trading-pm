@@ -207,10 +207,50 @@ corrections (all rows fall through to `SOURCE_RETURNED_ZERO`) and exit cleanly �
 
 **Status: code shipped, VM run pending.**
 
+## UPDATE 2026-05-14 — RESOLVED (defi) by slot 2 — Wave 3 per-instrument catalog cross-ref shipped for defi
+
+**Slot 2 (ikenna tab/2) shipped the full Wave 3 per-instrument catalog cross-reference for defi.**
+
+### What was implemented
+
+- **UTL@`513d79fb`** (`live-defi-rollout`) — `legacy_reason_classifier._classify_defi` extended:
+  - Priority 1: `get_venue_launch_date("defi", venue)` → `EXPECTED_PRE_VENUE_LAUNCH` (unchanged).
+  - Priority 2: `get_chain_genesis_date(chain)` → `EXPECTED_PRE_GENESIS_CHAIN` (unchanged).
+  - Priority 3 (NEW): `read_instruments_catalog_bounds("defi", venue, inst_id)` → `EXPECTED_INSTRUMENT_NOT_LISTED` if
+    `day < bounds.available_from`, → `EXPECTED_INSTRUMENT_DELISTED` if `day > bounds.available_to`.
+  - Exception wrapper ensures any catalog read error falls through to `SOURCE_RETURNED_ZERO`.
+  - Removed dead duplicate PLAYER_VALUES block (tried to import nonexistent `is_player_values_update_day`).
+  - Added `TestClassifyDefiCatalogCrossRef` (11 tests) in `test_instruments_catalog_reader.py`.
+
+- **instruments-service@`<pending-push>`** (`live-defi-rollout`) — new corrector script
+  `scripts/reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py`:
+  - Candidate mask: `capture_status=attempted_failed AND error_reason.startswith("LegacyBlankErrorReasonError")`.
+  - Re-classifies via extended `classify_blank_reason_row("defi", row)`.
+  - Correction condition: `new_status == "empty_confirmed" AND new_reason in VALID_CORRECTION_REASONS`.
+  - Per-VM shard isolation + `--max-flips 1000000` halt-safety + `--confirm` intent gate.
+  - 13 unit tests (constants, mask, dry-run smoke, apply-flips fixture, idempotency, env guards) — QG running.
+
+### Pending operational step
+
+The corrector must be **run on a GCE VM in asia-northeast1** with:
+
+```bash
+MANIFEST_PER_VM_SHARDS=true VM_NAME=ikenna-slot2-corrector-defi-<date> \
+python scripts/reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py \
+  --asset-group defi --apply-flips --max-flips 1000000 --confirm
+```
+
+The instruments-service catalog parquet (`reference_data/instruments/defi/all.parquet`) must be built first via
+`instruments-service build-catalogue --asset-group defi`. Without the catalog built on GCS, the corrector will find no
+corrections (all rows fall through to `SOURCE_RETURNED_ZERO`) and exit cleanly — no harm done.
+
+**Status: code shipped, VM run pending.**
+
 ## Provenance
 
 - Slot 8 (ikenna tab/8) flagged 2026-05-13 ~16:15 UTC after Slot 3 ran into 100k cap on defi
 - Slot 3 (ikenna tab/3) executed reconciler, hit cap, paused PART B defi apply-flips
 - Slot 2 (ikenna tab/2) implemented Wave 3 cefi catalog cross-ref 2026-05-13 ~17:50 UTC
+- Slot 2 (ikenna tab/2) implemented Wave 3 defi catalog cross-ref 2026-05-14 (UTL@513d79fb)
 - Earlier context: `_classify_cefi:296-298` docstring TODO explicit; `_classify_defi:256-279` lacks catalog branch
   silently
