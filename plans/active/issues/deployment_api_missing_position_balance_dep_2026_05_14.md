@@ -7,8 +7,27 @@ source:
   - deployment-api/pyproject.toml
   - unified-trading-pm/workspace-manifest.json
 severity: P1
+status: RESOLVED
+resolved_at: 2026-05-14
+resolved_by: slot-2-wave2
+resolution_commits:
+  - deployment-api@edce262
+  - unified-trading-pm@<this commit>
 suggested_owner: deployment-api maintainer / operator triage
 ---
+
+## ✅ RESOLVED 2026-05-14 (slot-2-wave2)
+
+Shipped both halves of the fix:
+
+1. **deployment-api@edce262** — added `position-balance-monitor-service>=0.1.0,<1.0.0` to `[project.dependencies]` + matching `[tool.uv.sources]` editable path. `uv.lock` regenerated via `uv sync`.
+2. **unified-trading-pm@<this commit>** — added `position-balance-monitor-service` (>=0.1.0,<1.0.0, required=true) to `workspace-manifest.json` deployment-api dependencies array. `canonical-dependency-manifest.json` + `derived-dependency-manifest.json` regenerated.
+
+**Verification**:
+- `.venv/bin/python -c "from deployment_api.routes import treasury_routes"` → ✅ succeeds.
+- `bash run-version-alignment.sh --json` → no new misalignments introduced (pre-existing e2e-testing + UTL freezegun + features-service self-version drift are unrelated).
+
+deployment-api topo position (level 6) → position-balance-monitor-service (level 5) ordering already correct in `topologicalOrder` — no level change needed.
 
 ## What I found
 

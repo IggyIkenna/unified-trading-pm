@@ -220,6 +220,11 @@
           "name": "deployment-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "position-balance-monitor-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "completion_path": "cefi",

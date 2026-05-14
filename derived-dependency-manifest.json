@@ -856,6 +856,12 @@
         "scipy": [
           "scipy>=1.15.0,<2.0.0"
         ],
+        "solana": [
+          "solana>=0.36.0,<1.0.0"
+        ],
+        "solders": [
+          "solders>=0.27.0,<1.0.0"
+        ],
         "sse-starlette": [
           "sse-starlette>=1.6.1,<2.0.0"
         ],
@@ -871,12 +877,15 @@
         "types-requests": [
           "types-requests>=2.32.0,<3.0.0"
         ],
+        "web3": [
+          "web3>=6.0.0,<7.0.0"
+        ],
         "yfinance": [
           "yfinance>=0.2.66,<1.0.0"
         ]
       },
       "internal_count": 2,
-      "external_count": 44
+      "external_count": 47
     },
     "features-sports-service": {
       "skipped": true,
@@ -887,80 +896,8 @@
       "reason": "not a directory"
     },
     "fund-administration-service": {
-      "internal_deps": {
-        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
-        "unified-trading-library": "unified-trading-library>=0.1.0,<2.0.0"
-      },
-      "external_deps": {
-        "aiohttp": [
-          "aiohttp>=3.13.4,<4.0.0"
-        ],
-        "bandit": [
-          "bandit>=1.7.0,<2.0.0"
-        ],
-        "basedpyright": [
-          "basedpyright==1.38.2"
-        ],
-        "fastapi<1.0.0,": [
-          "fastapi<1.0.0,>=0.115.0"
-        ],
-        "httpx": [
-          "httpx>=0.28.1,<1.0.0"
-        ],
-        "pip-audit": [
-          "pip-audit>=2.7.0,<3.0.0"
-        ],
-        "prometheus-client": [
-          "prometheus-client>=0.20.0,<1.0.0"
-        ],
-        "psutil": [
-          "psutil>=6.0.0,<7.0.0"
-        ],
-        "pydantic": [
-          "pydantic>=2.12.5,<3.0.0"
-        ],
-        "pydantic-settings": [
-          "pydantic-settings>=2.12.0,<3.0.0"
-        ],
-        "pytest": [
-          "pytest>=9.0.3,<10.0.0"
-        ],
-        "pytest-asyncio": [
-          "pytest-asyncio>=0.25.0,<2.0.0"
-        ],
-        "pytest-cov": [
-          "pytest-cov>=7.0.0,<8.0.0"
-        ],
-        "pytest-mock": [
-          "pytest-mock>=3.15.0,<4.0.0"
-        ],
-        "pytest-socket": [
-          "pytest-socket>=0.7.0,<1.0.0"
-        ],
-        "pytest-timeout": [
-          "pytest-timeout>=2.4.0,<3.0.0"
-        ],
-        "pytest-xdist<4.0.0,": [
-          "pytest-xdist<4.0.0,>=3.6.0"
-        ],
-        "python-multipart": [
-          "python-multipart>=0.0.26,<1.0.0"
-        ],
-        "requests": [
-          "requests>=2.33.0,<3.0.0"
-        ],
-        "ruff": [
-          "ruff==0.15.0"
-        ],
-        "starlette<1.0.0,": [
-          "starlette<1.0.0,>=0.52.1"
-        ],
-        "uvicorn": [
-          "uvicorn[standard]>=0.27.0,<1.0.0"
-        ]
-      },
-      "internal_count": 2,
-      "external_count": 22
+      "skipped": true,
+      "reason": "not a directory"
     },
     "market-data-processing-service": {
       "internal_deps": {
@@ -2160,6 +2097,7 @@
     "deployment-api": {
       "internal_deps": {
         "deployment-service": "deployment-service>=0.1.0,<1.0.0",
+        "position-balance-monitor-service": "position-balance-monitor-service>=0.1.0,<1.0.0",
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -2252,7 +2190,7 @@
           "uvicorn[standard]>=0.27.0,<1.0.0"
         ]
       },
-      "internal_count": 3,
+      "internal_count": 4,
       "external_count": 29
     },
     "deployment-service": {
@@ -2346,6 +2284,25 @@
       "external_deps": {},
       "internal_count": 0,
       "external_count": 0
+    },
+    "e2e-testing": {
+      "internal_deps": {},
+      "external_deps": {
+        "httpx": [
+          "httpx>=0.27"
+        ],
+        "pytest": [
+          "pytest>=8.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.24"
+        ],
+        "websockets": [
+          "websockets>=13.0"
+        ]
+      },
+      "internal_count": 0,
+      "external_count": 4
     },
     "ibkr-gateway-infra": {
       "internal_deps": {},
