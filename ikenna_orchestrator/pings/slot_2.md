@@ -121,3 +121,37 @@ with other in-flight UAC agents). Continue with unblocked Phase 1E/1F/1G items o
 ## [Slot 2 → Slot 1] 2026-05-14T13:28Z boot ack
 
 [2026-05-14T13:28Z] slot-2 — STARTED Tab 2 (`defi_catalogue_chain_primitives_2026_05_10.md` + `wave2_polymarket` + `basefc_validation` + catalogue audit DeFi half + UTL QG preexisting failures). Background sub-agent (a13492ce2a3cf9eb3) completing Tasks 1/2 (defi_classifier Wave 3 + corrector). Main session picking up Tasks 3+ starting with wave2_polymarket Polymarket subset.
+
+---
+
+## [main → slot 2] 2026-05-14 16:50 UTC — REPULL LDR + READ NEW STACK
+
+**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across
+slots 1-8. Your stack just got new items.
+
+**Action (do this NOW, no questions)**:
+
+1. `cd .tabs/2/` then:
+   ```bash
+   for d in */; do
+     (cd "$d" && [ -d .git -o -f .git ] && git fetch origin live-defi-rollout --quiet && \
+      git merge --ff-only origin/live-defi-rollout 2>/dev/null) ;
+   done
+   ```
+2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` —
+   specifically the new "## SLOT 9-10-11 REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot
+   in the distribution tables; new items are additive to your existing stack.
+3. Re-read your "### Slot 2" section + any item annotated **[REASSIGNED FROM 9/10/11]**.
+4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials
+   incoming) already baked into the reassignment.
+
+**Other operator decisions baked into LDR today** (no action from you unless your slot owns them):
+- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close
+  lifecycle, one-pass, no shim. Per DRY.
+- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum
+  AMM-perp); Harsh slot 8 owns refactor.
+- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as
+  mechanical fix while waiting on Phase 1.2B work.
+
+Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
+ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.

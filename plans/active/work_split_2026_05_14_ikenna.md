@@ -63,9 +63,9 @@ pulls in-stack reserve when each item closes.
 | 6                  | Wallet/Treasury Phase 1 + DeFi alerts + custody wiring              | ~24         |
 | 7                  | Treasury rollup endpoint + Phase 3 audit + DART manual-trade        | ~25         |
 | 8                  | SHARD_AXIS_MATRIX drift + audit cleanup + ops verification          | ~25         |
-| 9                  | Mechanical (Cluster A sed) + governance + cron/ratchet sweep        | ~27         |
-| 10                 | **[EMERGENCY]** writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit        | ~4          |
-| 11                 | **[EMERGENCY]** new-issue absorb + sports + Tardis + cbETH + Kraken | ~7.4        |
+| ~~9~~              | **REASSIGNED 2026-05-14 15:30 UTC** → folded across slots 2/5/6/7/8 (PC concurrency cap = 8 tabs) | ~~27~~ |
+| ~~10~~             | **REASSIGNED 2026-05-14** → folded into slot 7 writegate stack                                   | ~~4~~  |
+| ~~11~~             | **REASSIGNED 2026-05-14** → folded across slots 4/6/8 + cbETH DEFERRED + Kraken to slot 3        | ~~7.4~~|
 | **Subtotal**       | (8 implementer slots, baseline)                                     | **~200**    |
 | **+ V2 ext**       | (see § "V2 extension — +72 cal AI-days" below)                      | **+72**     |
 | **+ Orphans**      | (6 items: 11/12 May reserve + MTDS clusters + banners + slot 10)    | **+16**     |
@@ -461,7 +461,70 @@ and need the verdict to compute their Phase 1 close.
 
 ---
 
-### Slot 11 — EMERGENCY: new-issue absorption + sports + Tardis + cbETH + Kraken — ~7.4 cal AI-days
+## SLOT 9-10-11 REASSIGNMENT — 2026-05-14 15:30 UTC (operator PC concurrency cap = 8 tabs)
+
+Slots 9/10/11 work folded across existing slots 2-8 + slot 1 main. All items remain in May-23 scope.
+All 8 active agents are pinged to re-pull LDR + read their updated stack.
+
+### Slot 9 work distribution (~27 cal AI-days, additive)
+
+| Slot 9 item | New owner | Rationale |
+| --- | --- | --- |
+| Cluster A ×→x sed mechanical (~0.2) | **Slot 6** | Small mechanical fits slot 6 cleanup |
+| `solana_defi_coverage_gaps` successor E — Kamino/Marinade Native (~2.4) | **Slot 2** | DeFi catalogue theme |
+| `honest_coverage_cron_vm_scheduling` (~2.4) | **Slot 8** | Audit/ops verification theme |
+| `mtf_intraday_micro_regime_policy` 2 dict entries (~0.6) | **Slot 5** | TradFi-adjacent micro-regime |
+| `strategy_paper_vm_nautilus_trader_missing_dep` re-verify (~0.2) | **Slot 6** | Tiny mechanical |
+| `cross_asset_instruments_service_scope` triage (~3.6) | **Slot 2** | DeFi catalogue + cross-asset |
+| `bucket_name_ssot_canonicalisation_2026_05_10` workspace flip (~1.6) | **Slot 8** | Audit cleanup |
+| `cme_polymarket_arb_2026_05_08` close-out (~2.4) | **Slot 2** | DeFi/Polymarket overlap |
+| `arbitrage_price_dispersion_finalisation_2026_05_09` (~3.6) | **Slot 3** | Perp venue + DEX theme |
+| `code_freeze_migrate_backfill_sequencing_2026_05_10` audit (~3.6) | **Slot 8** | Audit theme |
+| Phase 6.9 workspace QG flip-sweep (~2.4) | **Slot 7** | Writegate Phase 6.x owner |
+| `governance_qg_automation_gaps_post_cutover` codification (~3.0) | **Slot 1 main** | Orchestrator-flavoured |
+| ORPHAN MTDS test cluster E — tardis network-mocking (~0.4) | **Slot 6** | Mechanical mock-wiring |
+| ORPHAN Stream C C-enum.3+4 archetype enum flips (~1.8) | **Slot 2** | DeFi archetype canonicalisation |
+| V2: `writegate Phase 6.9 expanded scope` (12.6 cal left) | **Slot 7** | Writegate owner |
+| V2: `expected_universe_v2_design_2026_05_08` (3.6 cal) | **Slot 4** | Sports/prediction universe |
+| V2: `deploy_missing_auto_launch_2026_05_07` close (4.1 cal) | **Slot 8** | Cross-cutting cleanup |
+
+### Slot 10 work distribution (~4 cal AI-days)
+
+All of slot 10 (writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit across 9 services) → **Slot 7**, who owns
+writegate Phase 6.x already. Slot 7 confirms β verdict + flips Gate 4 row in master plan.
+
+### Slot 11 work distribution (~7.4 cal AI-days; cbETH retracted, Kraken re-classed)
+
+| Slot 11 item | New owner | Rationale |
+| --- | --- | --- |
+| alerting D.5+D.7 codex violations (~0.4) | **Slot 6** | Alerting theme |
+| features-service size violations 3 files (~0.4) | **Slot 4** | Sports `batch_handler.py` 914L (slot 4 owns sports); other 2 mechanical decomposition |
+| Tardis docstring + codex (✅ DONE PM@468c7e8d) | — | Already shipped |
+| Sports scrapers cross-links (✅ DONE PM@3e349c65) | — | Already shipped |
+| Phase 1 freeze-gate audit (✅ DONE PM@e67f5ce3) | — | Already shipped |
+| **cbETH adapter scaffold + Coinbase API credential ask** | **DEFERRED post-cutover** | Operator review 2026-05-14: on-chain `exchangeRate()` is canonical SSOT (`market-tick-data-service/.../lst_rates_handler.py:100` cbETH config + PM@3a7a4914 "exchangeRate() is SSOT, DefiLlama is non-goal" + cbETH smoke shipped at MTDS@f0b1f7f9). The Coinbase Institutional REST is a nice-to-have richer-data source, NOT a May-23 blocker. Mark cbETH adapter scaffold `**DEFERRED**` + master plan row update from `BLOCKED-CREDENTIALS` → `DEFERRED post-cutover`. |
+| **Kraken CeFi adapter (live + historic) — keep in scope** (~1.8) | **Slot 3** | Operator confirmed 2026-05-14: API key incoming (already onboarded at Kraken Pro). Build adapter for BOTH historic (via Tardis `tardis_shared.py` — Tardis paid commercial subscription already operator-acked as BLOCKED-CREDENTIALS) AND live (direct Kraken REST + WS). Placeholder credential vault entries `kraken-api-key` / `kraken-api-secret` to be filled when key arrives. Status: `BLOCKED-CREDENTIALS-OPERATOR-INCOMING` — scaffold + unit tests ship in May-23; live integration tests run on credential arrival. Fits slot 3 (perp venue adapters + Solana RPC theme). |
+| Master plan row updates: cbETH → DEFERRED; Kraken → CREDENTIALS-INCOMING (~0.4) | **Slot 8** | Audit cleanup |
+
+### Net additions per slot (~38 cal AI-days redistributed)
+
+| Slot | Added from 9/10/11 | New slot total |
+| --- | --- | --- |
+| 2 | ~10.2 | ~34 |
+| 3 | ~5.4 | ~30 |
+| 4 | ~4.0 | ~29 |
+| 5 | ~0.6 | ~25.6 |
+| 6 | ~1.2 | ~25 |
+| 7 | ~18.8 (all of slot 10 + Phase 6.9 flip-sweep + V2 writegate 12.6 cal) | ~44 |
+| 8 | ~9.7 | ~35 |
+| 1 main | ~3.0 | (continuous) |
+
+Stack totals span ~25-44 cal AI-days across slots over 9 calendar days to May-23 — comfortable at
+density-push pace (~100-200 cal/side/day).
+
+---
+
+### Slot 11 — REASSIGNED (historical section below — see SLOT 9-10-11 REASSIGNMENT above for current owners)
 
 **Source**: operator direction 2026-05-14 ~15:00 UTC. (1) Harsh-side ending early — Ikenna absorbs Harsh's new-issue
 pickups. (2) Sports scrapers formalisation per HARD RULE. (3) Tardis docstring clarification. (4) Deep coverage scan

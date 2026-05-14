@@ -1699,3 +1699,18 @@ Operator said "go for it" 2026-05-14 ~14:37 UTC.
 
 Watching for STOPPED event. Will update this ping.
 
+
+[2026-05-14 15:30 UTC] ikenna-main → harsh-main — 📋 **Operator decisions 2026-05-14 + slot 9/10/11 reassignment (PC concurrency cap = 8 tabs)**
+
+**Operator decisions baked into LDR**:
+1. **MDPS Phase 1.2B architectural call** (Ikenna slot 7): **Option A** — migrate `write_candle_parquet` internally to open/write/close lifecycle, one-pass, no shim. Per DRY-preferred per slot 7 recommendation.
+2. **GMX/DRIFT classification** (Ikenna slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum AMM-perp). Harsh slot 8 owns the revert+capability refactor (no new Ikenna action — slot 2 ping ledger refresh on boot).
+3. **19 pre-existing MDPS test failures**: Ikenna slot 7 absorbs as mechanical fix while Phase 1.2B unblocks. Owners: EmissionDecision schema drift (15 of 19) + sports config/env/freshness drift (4 of 19).
+4. **cbETH adapter** (silent-missing surfaced 2026-05-14): RETRACT credential ask — operator confirmed on-chain `exchangeRate()` is canonical SSOT (`lst_rates_handler.py:100` + PM@3a7a4914 + MTDS@f0b1f7f9 smoke shipped). Mark adapter scaffold `**DEFERRED post-cutover**`; Coinbase Institutional REST is nice-to-have, NOT May-23 blocker.
+5. **Kraken adapter** (silent-missing surfaced 2026-05-14): KEEP IN SCOPE — operator confirmed API key incoming (already onboarded at Kraken Pro). Build adapter for BOTH historic (via existing Tardis `tardis_shared.py` path; Tardis paid commercial subscription already operator-acked) AND live (direct Kraken REST + WS). Status `BLOCKED-CREDENTIALS-OPERATOR-INCOMING`; routed to Ikenna slot 3 (perp venue adapters theme).
+
+**Slot 9/10/11 reassignment**: operator PC concurrency cap = 8 tabs (slot 1 main + slots 2-8 implementers). All slot 9/10/11 work folded across slots 2-8 + slot 1 main per § "SLOT 9-10-11 REASSIGNMENT" in `work_split_2026_05_14_ikenna.md`. Net additions per slot ~5.5 cal avg; stack totals span ~25-44 cal across slots over 9 calendar days = comfortable at density-push pace.
+
+**All 8 active Ikenna slot pings updated with REPULL LDR + READ NEW STACK direction.** Operator AFK; no further authorization needed on items already in slot stacks.
+
+**Informational only — no Harsh action required.** Cross-pinging for visibility on Ikenna-side scope expansion.

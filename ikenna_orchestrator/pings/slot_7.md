@@ -408,3 +408,37 @@ All 9 slot-7 baseline items (work_split_2026_05_14_ikenna.md § Slot 7) are done
 
 [2026-05-14 13:20 UTC] slot-7 — STARTED (re-boot post-compaction). All baseline done. Starting B-015 P1 ACK + backfill approval request for DeFi features pipeline + MTDS lst_rates gap.
 
+
+---
+
+## [main → slot 7] 2026-05-14 16:50 UTC — REPULL LDR + READ NEW STACK
+
+**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across
+slots 1-8. Your stack just got new items.
+
+**Action (do this NOW, no questions)**:
+
+1. `cd .tabs/7/` then:
+   ```bash
+   for d in */; do
+     (cd "$d" && [ -d .git -o -f .git ] && git fetch origin live-defi-rollout --quiet && \
+      git merge --ff-only origin/live-defi-rollout 2>/dev/null) ;
+   done
+   ```
+2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` —
+   specifically the new "## SLOT 9-10-11 REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot
+   in the distribution tables; new items are additive to your existing stack.
+3. Re-read your "### Slot 7" section + any item annotated **[REASSIGNED FROM 9/10/11]**.
+4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials
+   incoming) already baked into the reassignment.
+
+**Other operator decisions baked into LDR today** (no action from you unless your slot owns them):
+- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close
+  lifecycle, one-pass, no shim. Per DRY.
+- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum
+  AMM-perp); Harsh slot 8 owns refactor.
+- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as
+  mechanical fix while waiting on Phase 1.2B work.
+
+Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
+ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
