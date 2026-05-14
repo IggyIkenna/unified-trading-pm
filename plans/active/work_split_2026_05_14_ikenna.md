@@ -53,23 +53,26 @@ locked_since: 2026-05-14
 Slot 1 = main orchestrator (continuous; not counted in the 200). Stacks below are deep — slot owner ships top-down and
 pulls in-stack reserve when each item closes.
 
-| Slot          | Theme                                                        | Cal AI-days |
-| ------------- | ------------------------------------------------------------ | ----------- |
-| 1             | Main orchestrator (continuous, uncounted)                    | —           |
-| 2             | DeFi classification + catalogue + Polymarket subset          | ~24         |
-| 3             | Perp venue adapters + Solana RPC + DEX/Drift expansion       | ~25         |
-| 4             | Sports classifier + propagation chain + phantom apply-flips  | ~25         |
-| 5             | TradFi Item 2 cascade + tradfi backfill prep + Solana C      | ~25         |
-| 6             | Wallet/Treasury Phase 1 + DeFi alerts + custody wiring       | ~24         |
-| 7             | Treasury rollup endpoint + Phase 3 audit + DART manual-trade | ~25         |
-| 8             | SHARD_AXIS_MATRIX drift + audit cleanup + ops verification   | ~25         |
-| 9             | Mechanical (Cluster A sed) + governance + cron/ratchet sweep | ~27         |
-| 10            | **[EMERGENCY]** writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit | ~4          |
-| **Subtotal**  | (8 implementer slots, baseline)                              | **~200**    |
-| **+ V2 ext**  | (see § "V2 extension — +72 cal AI-days" below)               | **+72**     |
-| **+ Orphans** | (6 items absorbed from 11+12 May splits + MTDS issue +       |             |
-|               | batch_live_symmetry banners + slot 10 Phase 6.3)             | **+16**     |
-| **Total**     | (8 implementer slots + emergency slot 10)                    | **~288**    |
+| Slot | Theme                                                            | Cal AI-days |
+| ---- | ---------------------------------------------------------------- | ----------- |
+| 1    | Main orchestrator (continuous, uncounted)                        | —           |
+| 2    | DeFi classification + catalogue + Polymarket subset              | ~24         |
+| 3    | Perp venue adapters + Solana RPC + DEX/Drift expansion           | ~25         |
+| 4    | Sports classifier + propagation chain + phantom apply-flips      | ~25         |
+| 5    | TradFi Item 2 cascade + tradfi backfill prep + Solana C          | ~25         |
+| 6    | Wallet/Treasury Phase 1 + DeFi alerts + custody wiring           | ~24         |
+| 7    | Treasury rollup endpoint + Phase 3 audit + DART manual-trade     | ~25         |
+| 8    | SHARD_AXIS_MATRIX drift + audit cleanup + ops verification       | ~25         |
+| 9    | Mechanical (Cluster A sed) + governance + cron/ratchet sweep     | ~27         |
+| 10   | **[EMERGENCY]** writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit     | ~4          |
+| 11   | **[EMERGENCY]** new-issue absorb + sports + Tardis + cbETH + Kraken | ~7.4     |
+| **Subtotal** | (8 implementer slots, baseline)                          | **~200**    |
+| **+ V2 ext** | (see § "V2 extension — +72 cal AI-days" below)          | **+72**     |
+| **+ Orphans**| (6 items: 11/12 May reserve + MTDS clusters + banners + slot 10) | **+16**     |
+| **+ Slot 11** | (new-issue absorb + sports + Tardis + cbETH + Kraken)   | **+7.4**    |
+| **+ Slot 6 #11** | (phase_3c lending model — UNBOUNDED per operator)    | **+7.2**    |
+| **+ Harsh absorb** | (8 Harsh 14 May items reassigned across slots)     | **+7**      |
+| **Total**    | (8 implementer + emergency slots 10+11)                  | **~310**    |
 
 ---
 
@@ -243,13 +246,24 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
    Cloud-KMS endpoint (existing 10 CMKs, asia-northeast1). (infra 0.8×, ~2 = 1.6 cal)
 7. **`alerting_runbook_and_operator_ux_post_cutover_2026_05_12` Ikenna-half** — push remaining operator UX items.
    (design 0.6×, ~3 = 1.8 cal)
-8. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 1** — pre-cutover audit-records gate. (research 1.2×, ~3 =
-   3.6 cal)
-9. **`available_at_lookahead_bias_completion_2026_05_08` sweep** — close remaining stamping helper consumers. (refactor
-   0.4×, ~4 = 1.6 cal)
-10. **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the custody-side
-    gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal)
-11. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
+8. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 1** — pre-cutover audit-records gate. (research 1.2×,
+   ~3 = 3.6 cal)
+9. **`available_at_lookahead_bias_completion_2026_05_08` sweep** — close remaining stamping helper consumers.
+   (refactor 0.4×, ~4 = 1.6 cal)
+10. **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the
+    custody-side gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal)
+11. **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per operator** —
+    0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate. Root cause
+    likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3 `DefaultReserveInterestRateStrategy`
+    contract on mainnet (per-asset deployment addresses) + extract canonical `optimalUsageRatio` /
+    `baseVariableBorrowRate` / `variableRateSlope1` / `variableRateSlope2` per asset; (b) cross-ref against current
+    `LendingRateImpactCalculator.IRM_PARAMS` in `execution-service/.../matching_engine/lending/rate_impact.py`; (c)
+    update params from on-chain truth + re-run harness; (d) verify slope2 (post-optimal) path is implemented; (e)
+    cross-check `reserveFactor` is applied correctly (`supplyRate = borrowRate × utilization × (1 - reserveFactor)`);
+    (f) iterate to ≤10bps median. Operator direction 2026-05-14: "every problem solved" — no time cap. Spawn
+    Tenderly-fork sub-agent for parallel param-sweep if step (a) shows ≥3 assets out of date. (research 1.2×, ~6
+    baseline = 7.2 cal; could be more depending on root cause)
+12. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
 
 Backfill flag: none for this slot (custody + alerting are config + code, not data).
 
@@ -429,6 +443,87 @@ Total: ~4.4 cal AI-days. Single-shippable-unit closure of Gate 4 framing.
 
 **Cross-side handshake**: cross-ping Harsh slot 6 + harsh-main when slot 10 boots — they own freeze-gate close-out today
 and need the verdict to compute their Phase 1 close.
+
+---
+
+### Slot 11 — EMERGENCY: new-issue absorption + sports + Tardis + cbETH + Kraken — ~7.4 cal AI-days
+
+**Source**: operator direction 2026-05-14 ~15:00 UTC. (1) Harsh-side ending early — Ikenna absorbs Harsh's new-issue
+pickups. (2) Sports scrapers formalisation per HARD RULE. (3) Tardis docstring clarification. (4) Deep coverage scan
+2026-05-14 surfaced 2 silent-missing adapters (Coinbase cbETH + Kraken) — must be built with `BLOCKED-CREDENTIALS`
+status per "External Data Is Always Available" HARD RULE. Slot 11 is a fresh spawn beyond standard 9 + emergency
+slot 10.
+
+1. **`alerting_service_codex_violations_d5_d7_2026_05_14`** — 4 codex compliance fixes in
+   `alerting_service/subscribers/governance_forum_watcher.py` + `stablecoin_issuer_pause_subscriber.py`:
+   raw `response.json()` → Pydantic `model_validate()`; empty-string fallbacks → fail fast.
+   (refactor 0.4×, ~1 = 0.4 cal)
+2. **`features_service_size_violations_2026_05_14`** (P2 Ikenna-owned) — 3 size violations:
+   `sports/cli/handlers/batch_handler.py` 914L (max 900); `cross_instrument/.../stablecoin_aggregate_exposure.py:compute()`
+   89L (max 50); `onchain/.../eigen_rewards_calculator.py:_calculate_from_mtds()` 56L (max 50). Decomposition along
+   natural boundaries; blocks features-service CI green. (refactor 0.4×, ~1 = 0.4 cal)
+3. **Tardis stream client docstring + codex clarity sweep** — Tardis historical-data 403 is **separate paid commercial
+   subscription** (not academic tier). Actions: (a) docstring update at
+   `market-tick-data-service/.../tardis_stream_client.py:158` — _ALREADY APPLIED IN-FLIGHT in this session at
+   `mtds@<TBD-sha-on-push>`_; verify it landed on LDR. (b) add 2-line note to
+   `codex/04-architecture/interface-credential-convention.md` § Tardis. (c) verify error message references the codex
+   doc for operator visibility. (research 1.2×, ~0.5 = 0.6 cal)
+4. **Sports scrapers `BLOCKED-OPERATOR-DECISION` cross-link verification** — per operator pick 2026-05-14 (B + light C):
+   (a) `master_to_live_defi_2026_05_23.md` § "Deferred / blocked-on-operator items" row added in this session
+   (`dba80b61` — verify on LDR). (b) successor plan `plans/active/sports_scrapers_post_cutover_2026_06_01.md` filed
+   (`dba80b61` — verify). (c) any remaining annotation in `sports_master_2026_05_07.md:153-176` updated to point at the
+   new master-plan row + successor. (design 0.6×, ~1 = 0.6 cal)
+5. **Phase 1 freeze-gate audit** (absorbed from Harsh slot 6) — read-only verification that master plan freeze-gate
+   items #1-#6 are actually green on disk; file gap issue docs if mismatch. (research 1.2×, ~1.5 = 1.8 cal)
+6. **🔴 Coinbase cbETH LST APR adapter (SILENT-MISSING from 2026-05-14 deep coverage scan)** — no adapter file in either
+   `instruments-service/.../reference_data/adapters/` or `mtds/.../market_interface/`. Required for
+   `carry_staked_basis` × DeFi cell. Per HARD RULE: (a) build SCAFFOLD anyway — UAC contract additions for cbETH APR +
+   supply/redemption rates + auth shape + retry/backoff + error classification + manifest emission per writegate Phase
+   6.x; unit tests against mocks (per Coinbase API docs); integration tests marked `@pytest.mark.requires_credentials`.
+   (b) file `CREDENTIAL APPROVAL REQUEST` in `ikenna_orchestrator/pings/slot_11.md`: vendor=Coinbase Institutional API,
+   tier=read-only API key, cost=$0 (free tier read-only), unblocks=`carry_staked_basis` cbETH leg eligibility for May-23.
+   (c) status: `BLOCKED-CREDENTIALS` until operator [ack]; do NOT move to a post-cutover plan. (design 0.6×, ~3 =
+   1.8 cal)
+7. **🔴 Kraken CeFi perp + spot adapter (SILENT-MISSING)** — no dedicated adapter; CCXT fallback insufficient for May-23
+   SLAs (rate limits + ticker normalization gaps). Required for `arbitrage_price_dispersion` × CeFi (7th venue) AND
+   `carry_staked_basis` × CeFi hedge-leg. Per HARD RULE: (a) build SCAFFOLD — direct Kraken REST + WebSocket; UAC +
+   auth + manifest emission; unit tests against mocks. (b) file `CREDENTIAL APPROVAL REQUEST`: vendor=Kraken Pro API,
+   tier=read-only API key (no withdraw permissions), cost=$0 (free tier), unblocks=full 7-venue CeFi coverage + 1 hedge
+   venue for `carry_staked_basis`. (c) `BLOCKED-CREDENTIALS` until [ack]. (design 0.6×, ~3 = 1.8 cal)
+
+Total slot 11: ~7.4 cal AI-days. Fresh spawn from script — operator runs `setup-tab-worktrees.sh --add-slot 11` if not
+already present.
+
+---
+
+## Harsh 14 May absorption — reassigned 2026-05-14 (Harsh side ending early)
+
+**Source**: operator direction 2026-05-14 ~15:00 UTC. Harsh-side stopping for the day. ALL Harsh 14 May items that
+are NOT YET FF'd to LDR (or are partial) absorbed by Ikenna. **Additive to existing Ikenna slot stacks — does NOT
+remove pre-existing Ikenna work.** Slot owners pick up the absorbed item AFTER their existing top-of-stack lands.
+
+**Pickup discipline**: before starting an absorbed item, slot owner runs:
+```bash
+git -C ../<repo> fetch origin live-defi-rollout
+git -C ../<repo> log origin/live-defi-rollout --oneline --since=2026-05-14 --author=harsh
+```
+If the item is already shipped by Harsh → flip absorbed item to `[x] (harsh-shipped @ <sha>)` and skip.
+
+| Harsh 14 May item | Plan-of-record | Ikenna pickup slot | Rationale |
+| --- | --- | --- | --- |
+| Slot 2 — `api_football_phase_3b_3c_smoke_forward_poll` (P0 EOD) | `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` | **Slot 4** | Sports owner; P0 today |
+| Slot 3 — 117 UTL test-fixture sweep (`pipeline_mode` kwarg) | UTL@`547ff3c` + writegate Phase 4 | **Slot 9** | Mechanical refactor; slot 9 has Cluster A sed + workspace ratchet sweep |
+| Slot 4 — 2 of 17 strategy-service test failures | strategy-service test suite | **Slot 2** | Already has Cluster D instruments-service tests + utl_qg failures (research-flavoured triage) |
+| Slot 5 — batch_live_symmetry Tabs 1-2 codex docs | `batch_live_symmetry_2026_05_10.md` Tabs 1-2 | **Slot 8** | Already pair-slotted on Tab 2 + banners (item #12) |
+| Slot 6 — Phase 1 freeze-gate readiness audit (read-only) | `master_to_live_defi_2026_05_23.md` § "Phase 1 status" | **Slot 11** (item #5) | Orchestrator-flavoured; absorbed into slot 11 |
+| Slot 7 (a) — UI `ui-reference-data.json` TRADER_JOEV2 update | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1D | **Slot 5** | TradFi/cross-asset theme |
+| Slot 7 (b) — cross_asset Phase 6C UI-drilldown | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6C | **Slot 7** | Natural extension of slot 7 item #8 (data_status_drilldown_shard_atom_alignment) |
+| Slot 7 (c) — ICE US softs (CT/CC/KC/SB/OJ/DX) disambiguation | `cross_asset_group_catalogue_audit_2026_05_10` + `ice_us_softs_dataset_disambiguation` issue | **Slot 5** | TradFi venue/symbology theme |
+| Slot 8 — batch_live_symmetry Tab 3 + UAC + QG STEPs | `batch_live_symmetry_2026_05_10.md` Tabs 3+ | **Slot 8** | Already pair-slotted on Tab 2; Tab 3 extension same slot |
+| Slot 9 — defi_recursive_borrow DESCOPE successor | `defi_recursive_borrow_archetypes_2026_05_10.md` | **REVERSED** | Operator direction 2026-05-14: DESCOPE REVERSED, recursive_borrow IS in May-23 scope. No successor needed. |
+
+**Estimated added load**: ~7 cal AI-days across the Ikenna stack. Stack revised total: ~288 (pre-Harsh-absorb) +
+7 (Harsh absorption) + 7.2 (slot 6 item #11 phase_3c lending) + 7.4 (slot 11) = **~310 cal AI-days**.
 
 ---
 
