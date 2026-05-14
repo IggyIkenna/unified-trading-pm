@@ -153,10 +153,10 @@ builder, every preflight skip, every record_expected_empty reason.
       `clip_dates_to_source_coverage(source, start, end, data_type=dt)` correctly drops pre-coverage dates.
       (UAC@6f2db1f — 20 tests covering clip_dates_to_source_coverage behaviour + completeness + DATA_TYPE_COVERAGE_START
       integrity; 20/20 pass)
-- [ ] [market-tick-data-service] P0. `tests/unit/test_vix_15m_source_layering.py` — assert the routing surface in
+- [x] [market-tick-data-service] P0. `tests/unit/test_vix_15m_source_layering.py` — assert the routing surface in
       `umi_tick_provider.py` sends pre-2025-11-13 dates to Barchart preload (no Yahoo round-trip), 2025-11-13 →
-      today−60d to the honest-gap branch, and post-today−60d to Yahoo. Catches the VIX 15m source-layering incident
-      (closeout 2026-05-06 manual fill).
+      today−60d to the honest-gap branch, and post-today−60d to Yahoo. (already shipped — 10/10 pass verified
+      2026-05-14 slot 4)
 - [x] [deployment-api] P0. `tests/unit/test_data_status_denominator_clips_pre_cutoff_days.py` — assert the data- status
       panel's denominator excludes pre-cutoff days, so the panel doesn't render thousands of phantom- missing pre-launch
       days for chains/protocols that didn't exist yet. (deployment-api@6ab227b — test exists + passes)
