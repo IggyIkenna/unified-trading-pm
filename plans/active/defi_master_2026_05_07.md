@@ -56,6 +56,10 @@ estimate_calibration_note: |
 > (Phase 4.D validation owner) OR Solana devnet wiring for jitoSOL/mSOL/bSOL (Phase 4.C `pvl-p20c` owner). Question doc:
 > [`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md).
 
+> **🟡 IN-FLIGHT REFACTOR — `available_at` adapter stamping** (coordinated by
+> `available_at_lookahead_bias_completion_2026_05_08` Phase 1). Re-verify per-adapter `available_at` stamping wiring
+> before adding new DeFi adapters to this plan.
+
 ## Codex SSOTs
 
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code

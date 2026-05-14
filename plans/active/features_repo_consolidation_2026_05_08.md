@@ -958,6 +958,10 @@ estimate_calibration_note: |
 
 # features-\* repo consolidation (2026-05-08)
 
+> **🟡 IN-FLIGHT REFACTOR — `available_at` adapter stamping** (coordinated by
+> `available_at_lookahead_bias_completion_2026_05_08` Phase 1). Phase 5.c of this plan lifts `available_at` stamping
+> helpers into UTL — coordinate with that plan's Phase 1 before lifting.
+
 ## Why this plan exists
 
 Pre-requisite for `live_pipeline_mtds_mdps_features_2026_05_08.md` — the live pipeline topology assumes a SINGLE
@@ -1196,9 +1200,9 @@ FeatureBatchHandler / ManifestFreshnessCache greenfields if not landed by `ml_an
 
 Plan-body Phase 4.1 talked about `features_<f1>` importing from `features_<f2>` as a routine concern (cross-instrument
 depending on delta-one outputs, etc.). **Phase 0 audit found ZERO production cross-family imports.** Only ONE
-cross-family Python dep exists workspace-wide: `features-service (delta-one family)/tests/unit/.../test_temporal.py` imports
-`features_calendar_service`. Phase 4.1's grep+sed pass is essentially trivial — one test-file rewrite + the 11 external
-import lines documented in Phase 0 § (b).
+cross-family Python dep exists workspace-wide: `features-service (delta-one family)/tests/unit/.../test_temporal.py`
+imports `features_calendar_service`. Phase 4.1's grep+sed pass is essentially trivial — one test-file rewrite + the 11
+external import lines documented in Phase 0 § (b).
 
 **Action — none required.** Phase 4.1 is shorter than scoped; no plan change. Documented for future agent so they don't
 expect to find dozens of cross-family imports.
@@ -1327,9 +1331,9 @@ single import commit.
 **Severity**: P3 / out-of-plan finding / file as separate issue.
 
 Phase 3 sub-agent discovered a literal file named `=0.3.0` (140 bytes, contents = stdout of an `uv pip install` run that
-got redirected via shell-glob bug `>= 0.3.0`) in the `features-service (cross-instrument family)` source repo. Stripped during
-Phase 3 restructure. **Out-of-scope for this plan** — but worth filing as an issue against the source repo before Phase
-7 archives it (otherwise the bug history is preserved in the consolidation merge but the source-repo commit is not
+got redirected via shell-glob bug `>= 0.3.0`) in the `features-service (cross-instrument family)` source repo. Stripped
+during Phase 3 restructure. **Out-of-scope for this plan** — but worth filing as an issue against the source repo before
+Phase 7 archives it (otherwise the bug history is preserved in the consolidation merge but the source-repo commit is not
 addressable as a regression).
 
 **Action**: NONE required — stray file already stripped during Phase 3 restructure (per finding text above). Originally
@@ -1524,8 +1528,8 @@ evening.
   the Phase 2 stub per inspection — `STUB — Phase 2 skeleton`. Family `run()` entry-points to be added to each
   `features_service/<family>/__init__.py`; new `tests/unit/test_cli_dispatch.py` to be written.
 - **F2 is a NO-OP.** `features_service/onchain/config.py` already imports `UnifiedCloudConfig` (line 13) and extends it
-  (line 17) — the subtree merge brought the modern shape. Audit was reading the legacy `features-service (onchain family)` repo
-  state pre-merge. Mark F2 resolved with no code change.
+  (line 17) — the subtree merge brought the modern shape. Audit was reading the legacy
+  `features-service (onchain family)` repo state pre-merge. Mark F2 resolved with no code change.
 - **F6 is real.** `grep` finds 2 `manifest.add(` call sites in `features_service/sports/cli/handlers/batch_handler.py`
   lines 797, 805. Other families' `.add(` calls in the loose grep are dict/list/set call false-positives but a precise
   audit during the F6 fix wave confirms the exact set.
@@ -1815,23 +1819,23 @@ Both folded into Q1 recommendation (a)+(b) for a named successor plan.
 
 **Status**: ✅ RESOLVED — operator approved recommendations (a)+(b)+(c) (2026-05-11).
 
-- **(a) Successor plan SPAWNED** — slot 1 created [`features_service_qg_cleanup_2026_05_11.md`](features_service_qg_cleanup_2026_05_11.md):
-  Phase 1 = the QG-codex cleanup (fixed the **proper way** — root cause, **NOT** per-package-ignore restoration; per
-  operator _"slot 2 can solve the quality-gates codex issues and make it solid"_); Phase 2 = the full byte-for-byte
-  parity run (`blocked_by` `code_freeze` Phase 3 backfills — per operator _"we need the data so it is blocked until we
-  have the proper data in gcs buckets"_); Phase 3 = the F9 org transfer (P2, **non-blocking** — per operator _"F9
-  regarding the repo owner is nothing major… we can do that anytime… I don't think it's a blocker"_; do it anytime once
-  features-service is QG-green and solid).
+- **(a) Successor plan SPAWNED** — slot 1 created
+  [`features_service_qg_cleanup_2026_05_11.md`](features_service_qg_cleanup_2026_05_11.md): Phase 1 = the QG-codex
+  cleanup (fixed the **proper way** — root cause, **NOT** per-package-ignore restoration; per operator _"slot 2 can
+  solve the quality-gates codex issues and make it solid"_); Phase 2 = the full byte-for-byte parity run (`blocked_by`
+  `code_freeze` Phase 3 backfills — per operator _"we need the data so it is blocked until we have the proper data in
+  gcs buckets"_); Phase 3 = the F9 org transfer (P2, **non-blocking** — per operator _"F9 regarding the repo owner is
+  nothing major… we can do that anytime… I don't think it's a blocker"_; do it anytime once features-service is QG-green
+  and solid).
 - **(b) Phase 4.6 + Phase 6 annotated** `**DEFERRED → features_service_qg_cleanup_2026_05_11.md**` (checkboxes stay
   `- [ ]` until the successor plan flips them with QG-green / parity-run evidence respectively).
-- **(c) F9** — operator: not a blocker; the `CosmicTrader → IggyIkenna` transfer lives in the successor plan Phase 3,
-  do anytime.
+- **(c) F9** — operator: not a blocker; the `CosmicTrader → IggyIkenna` transfer lives in the successor plan Phase 3, do
+  anytime.
 - **Work-split status**: features-consolidation is treated as **~done** — Phase 7 (deployable + 8 repos archived) ✅;
   the residual (QG-cleanup + parity-run + org-transfer) is the successor plan, and **none of it gates the May-23
   cutover**. **slot 2's next move**: take `features_service_qg_cleanup_2026_05_11.md` Phase 1 (QG-codex cleanup). Once
-  this plan's `## DONE` block is in (plus the Phase 4.6/6/F9 successor pointers removed), `features_repo_consolidation_2026_05_08.md`
-  can archive cleanly per the "Plan Archival HARD RULE."
-
+  this plan's `## DONE` block is in (plus the Phase 4.6/6/F9 successor pointers removed),
+  `features_repo_consolidation_2026_05_08.md` can archive cleanly per the "Plan Archival HARD RULE."
 
 ### Deferred work after 2026-05-11 slot-2 session
 

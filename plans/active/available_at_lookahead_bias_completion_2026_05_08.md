@@ -234,22 +234,22 @@ todos:
       default; `--apply-flips --confirm` gate; `--max-flips` halt-safety cap; operator-runnable on same-region GCE VM
       for apply step).
 
-- [x] [SCRIPT] P0. **MDPS write-gate enforcement — bar boundary + `available_at`** (shipped MDPS@`3836363`
-      2026-05-13). UAC `BarBoundaryViolationError` + `assert_bar_boundary_contract` already shipped
-      (canonical/crosscutting/bar_boundary.py); MDPS `_validate_stamped_candle_bar_boundary` extended to raise the
-      new MDPS `MalformedBarBoundaryError` on NaT in `timestamp` or `available_at` columns BEFORE the UAC contract
-      check. Dedicated test suite at `tests/unit/test_bar_boundary_write_gate.py` (≥14 tests) covers valid bars,
+- [x] [SCRIPT] P0. **MDPS write-gate enforcement — bar boundary + `available_at`** (shipped MDPS@`3836363` 2026-05-13).
+      UAC `BarBoundaryViolationError` + `assert_bar_boundary_contract` already shipped
+      (canonical/crosscutting/bar_boundary.py); MDPS `_validate_stamped_candle_bar_boundary` extended to raise the new
+      MDPS `MalformedBarBoundaryError` on NaT in `timestamp` or `available_at` columns BEFORE the UAC contract check.
+      Dedicated test suite at `tests/unit/test_bar_boundary_write_gate.py` (≥14 tests) covers valid bars,
       BarBoundaryViolationError on each clause, MalformedBarBoundaryError on NaT.
 
 - [x] [SCRIPT] P0. **QG static check — MDPS bar emission** (shipped PM 2026-05-13 with this commit).
-      `unified-trading-pm/scripts/quality_gates/check_mdps_bar_boundary_compliance.py` AST-walks MDPS sources for
-      banned inline truncation patterns: `pd.Timestamp.floor("1h")` / `pd.Timestamp.round("15min")` /
+      `unified-trading-pm/scripts/quality_gates/check_mdps_bar_boundary_compliance.py` AST-walks MDPS sources for banned
+      inline truncation patterns: `pd.Timestamp.floor("1h")` / `pd.Timestamp.round("15min")` /
       `dt.replace(minute=0, second=0, microsecond=0)` / polars `dt.truncate("1h")`. Honours
       `# noqa: bar-boundary-truncation` per-line opt-out. Wired as STEP 5.74 in
       `scripts/quality-gates-base/base-service.sh` (scoped to MDPS repo only). 12 unit tests at
-      `scripts/quality_gates/tests/test_check_mdps_bar_boundary_compliance.py` cover valid sources, each banned
-      pattern, mixed-file detection, tests/ exclusion, noqa opt-out, docstring false-positive immunity,
-      syntax-error graceful handling, nonexistent-source-dir error code.
+      `scripts/quality_gates/tests/test_check_mdps_bar_boundary_compliance.py` cover valid sources, each banned pattern,
+      mixed-file detection, tests/ exclusion, noqa opt-out, docstring false-positive immunity, syntax-error graceful
+      handling, nonexistent-source-dir error code.
 
 ---
 
@@ -520,11 +520,13 @@ todos:
       `classify_empty_response(asset_group, data_type, rows, expected) -> EmptyDecision` lifts the logic. Each adapter
       calls it before write.
 
-- [ ] [SCRIPT] P1. **`assert_available_at_present` exception for legitimately-empty parquets**. Today the guard raises
+- [x] [SCRIPT] P1. **`assert_available_at_present` exception for legitimately-empty parquets**. Today the guard raises
       if column missing OR any null. For empty parquets (zero rows), the column-presence check should be skipped (no
       rows, no available_at to check) — but the column must still be declared in the schema so downstream readers don't
       fail. Add: `if df.empty and "available_at" not in df.columns: log_warning(); return` to
-      `assert_available_at_present`. Coordinate with writegate Phase 1A owner.
+      `assert_available_at_present`. Coordinate with writegate Phase 1A owner. **DONE 2026-05-14**:
+      `unified-trading-library@e42a8027` — warning added; empty DataFrames missing column log a schema drift warning and
+      return (no raise).
 
 ---
 
@@ -532,20 +534,30 @@ todos:
 
 This plan is a **coordinator**. Banners must be added to:
 
-- [ ] [SCRIPT] P0. **Banner — `defi_master_2026_05_07`**. Top-of-file:
+- [x] [SCRIPT] P0. **Banner — `defi_master_2026_05_07`**. Top-of-file:
       `> 🟡 IN-FLIGHT REFACTOR — `available_at` adapter stamping owned coordinated by available_at_lookahead_bias_completion_2026_05_08 Phase 1. Re-verify per-DeFi-adapter stamping wiring before adding new defi adapters.`
-- [ ] [SCRIPT] P0. **Banner — `cefi_master_2026_05_07`**. Same shape, Phase 1 reference.
-- [ ] [SCRIPT] P0. **Banner — `tradfi_master_2026_05_07`**. Same shape, Phase 1 reference.
-- [ ] [SCRIPT] P0. **Banner — `predictions_master_2026_05_07`**. Phase 1 + lifecycle-bounded clip.
-- [ ] [SCRIPT] P0. **Banner — `sports_master_2026_05_07`**. Phase 1 partial-shipped pointer + Phase 4 expansion pointer.
-- [ ] [SCRIPT] P0. **Banner — `ml_and_features_master_2026_05_07`**. Tab 12 (Phase 6) + FEATURE_REQUIRED_INPUTS
-      expansion (Phase 4) reference.
-- [ ] [SCRIPT] P0. **Banner — `features_repo_consolidation_2026_05_08`**. Tab 12 wiring (Phase 5.c) sequenced after this
-      plan's Phase 0+1.
-- [ ] [SCRIPT] P0. **Banner — `live_pipeline_mtds_mdps_features_2026_05_08`**. MDPS bar boundary contract (Phase 0 here)
-      is foundational.
+      **DONE 2026-05-14**: banner added after existing refactor banners before `## Codex SSOTs`.
+- [x] [SCRIPT] P0. **Banner — `cefi_master_2026_05_07`**. Same shape, Phase 1 reference. **DONE 2026-05-14**: banner
+      added after `# CeFi Master — asset_group umbrella` heading.
+- [x] [SCRIPT] P0. **Banner — `tradfi_master_2026_05_07`**. Same shape, Phase 1 reference. **DONE 2026-05-14**: banner
+      added after `# TradFi Master — asset_group umbrella` heading.
+- [x] [SCRIPT] P0. **Banner — `predictions_master_2026_05_07`**. Phase 1 + lifecycle-bounded clip. **DONE 2026-05-14**:
+      banner added after `# Predictions Master — asset_group umbrella` heading.
+- [x] [SCRIPT] P0. **Banner — `sports_master_2026_05_07`**. Phase 1 partial-shipped pointer + Phase 4 expansion pointer.
+      **DONE 2026-05-14**: banner added after `# Sports Master — asset_group umbrella` heading (note: existing STAMPING
+      SCOPE banner is sports-specific; this is the general coordination banner).
+- [x] [SCRIPT] P0. **Banner — `ml_and_features_master_2026_05_07`**. Tab 12 (Phase 6) + FEATURE_REQUIRED_INPUTS
+      expansion (Phase 4) reference. **DONE 2026-05-14**: banner added after existing repo consolidation + live pipeline
+      banners.
+- [x] [SCRIPT] P0. **Banner — `features_repo_consolidation_2026_05_08`**. Tab 12 wiring (Phase 5.c) sequenced after this
+      plan's Phase 0+1. **DONE 2026-05-14**: banner added after H1 heading at line 959, with Phase 5.c lift reference.
+- [x] [SCRIPT] P0. **Banner — `live_pipeline_mtds_mdps_features_2026_05_08`**. MDPS bar boundary contract (Phase 0 here)
+      is foundational. **DONE 2026-05-14**: banner added after H1 heading at line 1064, with Phase 0 MDPS bar boundary
+      reference.
 - [ ] [SCRIPT] P0. **Banner — `master_to_live_defi_2026_05_23`**. Group F batch-vs-live reconciliation needs honest
-      `available_at` — this plan unblocks.
+      `available_at` — this plan unblocks. **DEFERRED — slot 1 owns master plan** per CLAUDE.md slot-precedence rule.
+      Requesting slot 1 to add:
+      `> **🟡 IN-FLIGHT REFACTOR — available_at adapter stamping** (coordinated by available_at_lookahead_bias_completion_2026_05_08 Phase 1). Group F batch-vs-live reconciliation depends on honest available_at propagation.`
 
 ---
 

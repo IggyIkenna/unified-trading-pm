@@ -43,6 +43,10 @@ locked_since: 2026-05-07
 > Naming disambiguation: "features consolidation" in THIS plan = feature-DATA consolidation (pre-joined wide parquet for
 > ml-training reads); features_repo_consolidation = REPO consolidation. Different scopes; both ship pre-May-23.
 
+> **🟡 IN-FLIGHT REFACTOR — `available_at` adapter stamping** (coordinated by
+> `available_at_lookahead_bias_completion_2026_05_08` Phase 1). Re-verify per-adapter `available_at` stamping wiring
+> before adding new adapters to this plan.
+
 > **Consolidation 2026-05-07**: this umbrella folds 4 previously-standalone plans
 > (`feature_dag_uac_ssot_and_features_coverage` / `features_consolidation_and_drilldown` /
 > `ml_training_feature_read_perf` / `consolidated_ml_advanced_pipeline`) into one SSOT covering the full **UAC
@@ -80,11 +84,13 @@ deployment-api/ui) and the same downstream consumer chain. Splitting them across
 owned `LookaheadBiasError` strict-mode wiring, the `ManifestFreshnessCache` adoption, or the `FeatureBatchHandler` lift;
 the umbrella collapses that ambiguity by sequencing the work as a single critical path.
 
-**MVP backtest scope** (per [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)):
-ML training data volume bounded by Tier A archetype universe: ~6M training rows total across all archetypes
-(TradFi S&P ~365K, DeFi carry ~1.3M, CeFi perp arb ~2.6M, Sports ~800K, Prediction ~900K). ml-continuous (CeFi + ES)
-+ ml-settled (Sports) are the two ML archetype families May-23 must complete; broader ML framework supports the rest
-code-ready.
+**MVP backtest scope** (per
+[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)): ML
+training data volume bounded by Tier A archetype universe: ~6M training rows total across all archetypes (TradFi S&P
+~365K, DeFi carry ~1.3M, CeFi perp arb ~2.6M, Sports ~800K, Prediction ~900K). ml-continuous (CeFi + ES)
+
+- ml-settled (Sports) are the two ML archetype families May-23 must complete; broader ML framework supports the rest
+  code-ready.
 
 ## Codex SSOTs
 
