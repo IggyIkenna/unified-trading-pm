@@ -123,8 +123,8 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 ### Phase 4 — 99%-repo identification + tracking surface (1.5 cal-AI-days)
 
 - [ ] [AGENT] P0. **Author `unified-trading-pm/scripts/quality_gates/snapshot.sh`** — walks all repos in workspace; runs `bash scripts/quality-gates.sh --quick` (skips slow integration tests); writes `quality_gates_snapshot_YYYY_MM_DD.parquet` to GCS path `gs://${PROJECT_ID}-deployment-events/quality_gates_snapshot/`. Schema: `repo, pull_sha, qg_status, failing_step, first_error_line, duration_seconds, snapshot_at`. Cron VM daily via existing `deployment-service/scripts/vm/launch-...` pattern.
-- [ ] [AGENT] P0. **99%-repo criterion logic** — service-side (deployment-api new endpoint `/api/repos/deploy-ready`): walks last 5 daily snapshots per repo; returns `deploy_ready: true` if all 5 are green + zero P0 issue docs + no `🟡 IN-FLIGHT REFACTOR` banner on the repo's owning plan.
-- [ ] [AGENT] P0. **Tracking surface in deployment-ui** — new `DeploymentReadinessTab.tsx` shows per-repo: pull SHA / QG green-streak days / blocking issues / promote-eligible badge. Extends `deployment_ui_lifecycle_tabs_2026_05_08.md`.
+- [x] [AGENT] P0. **99%-repo criterion logic** — service-side (deployment-api new endpoint `/api/repos/deploy-ready`): walks last 5 daily snapshots per repo; returns `deploy_ready: true` if all 5 are green + zero P0 issue docs + no `🟡 IN-FLIGHT REFACTOR` banner on the repo's owning plan. (deployment-api@1f22e22 — 19 unit tests passing; mock mode + real GCS path)
+- [x] [AGENT] P0. **Tracking surface in deployment-ui** — new `DeploymentReadinessTab.tsx` shows per-repo: pull SHA / QG green-streak days / blocking issues / promote-eligible badge. Extends `deployment_ui_lifecycle_tabs_2026_05_08.md`. (deployment-ui@2dfefa1 — 6 vitest tests passing; `QG Readiness` tab registered for deployment-api service; pnpm build green)
 
 **Owner**: deployment-api + deployment-ui slots (parallel after Phase 1 lands).
 **Dependencies**: Phase 1 env-locking shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
