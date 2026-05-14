@@ -78,17 +78,19 @@ Gate 1 fires. No action needed from Slot 3 on Phase 3 design — Slot 4 owns the
 [2026-05-13 ~19:50 UTC] Slot 3 → Slot 1 — **GATE 1 VERIFIED + PART B READY TO EXECUTE**
 
 ✅ Gate 1 ✅ fired — propagation chain Phases 1–4 complete:
+
 - **Phase 1 (MTDS)**: ✅ mtds@5717ee9 — instruments-service manifest pre-flight wired (earlier agent)
 - **Phase 2 (MDPS)**: ✅ mdps@3f70cf6 — record_expected_unattempted on skip (earlier agent)
 - **Phase 3 (Features)**: ✅ features-service@4a26ae04 — delta_one + volatility + 3 NO-OPs (harsh-slot-2)
 - **Phase 4 (ML)**: ✅ NO-OP resolved — fix at launcher layer (harsh-slot-2)
-- **Phase 2.A (MDPS 4-state routing)**: ✅ mdps@3f70cf6 — propagation wired (harsh-slot-2)
-Phase 3.5 (sports) deferred (design pending).
+- **Phase 2.A (MDPS 4-state routing)**: ✅ mdps@3f70cf6 — propagation wired (harsh-slot-2) Phase 3.5 (sports) deferred
+  (design pending).
 
 **PART B (apply-flips reconcilers) STATUS: READY TO EXECUTE**
 
 - Preconditions ✅ met: Phases 1–4 + 2.A all pushed (Gate 1 condition = operative)
-- Scope: phantom unphantom (Pass 1) + 4 apply-flips passes (MTDS/MDPS/features+ML) + 2 reconciler sweeps across all 5 AGs
+- Scope: phantom unphantom (Pass 1) + 4 apply-flips passes (MTDS/MDPS/features+ML) + 2 reconciler sweeps across all 5
+  AGs
 - Reconciliation baseline (from expected_unattempted_propagation_chain): cefi 3,146 flips needed (all other AGs 0). Far
   under `--max-flips-per-run` 100k cap. Scripts are safe — they abort if unexpected large-scale writes detected.
 - Est: 2–3 hrs execution (GCS manifest operations can be large; network timeouts expected, retried with backoff)
@@ -135,127 +137,196 @@ Phase 3.5 (sports) deferred (design pending).
 
 [2026-05-13 ~15:55 UTC] Slot 3 → Slot 1 — **MULTIPLE BUGS FOUND + PARTIAL FIX SHIPPED**
 
-Pass 1 (phantom reconciler --unphantom locally) FAILED with exit 144 (OOM/network) after ~45min — confirming CLAUDE.md rule that phantom audit must run on GCE VM. Slot 4 already did cefi/defi/tradfi phantom apply-flips on VMs (7,497 phantoms flipped). Sports + prediction phantom VMs still need launching (slot 4 owns).
+Pass 1 (phantom reconciler --unphantom locally) FAILED with exit 144 (OOM/network) after ~45min — confirming CLAUDE.md
+rule that phantom audit must run on GCE VM. Slot 4 already did cefi/defi/tradfi phantom apply-flips on VMs (7,497
+phantoms flipped). Sports + prediction phantom VMs still need launching (slot 4 owns).
 
 **Pivoted to legacy_blank reconciler (smaller scope, local-runnable). Found and fixed bugs:**
 
-**Bug 1 ✅ FIXED**: `reconcile_legacy_blank_to_typed_reason.py` had case-sensitive `data_type == "fixtures"` (lowercase). Sports manifest writes UPPERCASE (`FIXTURES`, `FIXTURE_STATS`, etc.) per slot-8 verification 2026-05-13. Pre-fix: matched 0 of 2.67M sports rows → fixture-existence Phase 1.5 check was no-op → 1.87M sports candidates wrongly reported "0 upgrades" on previous runs. Fixed at instruments-service@`f62e3e2` (case-insensitive comparison). Confirmed working: re-run after fix shows fixture_manifest=63,857 captured rows (was 0). Sports legitimately produces 0 upgrades per CLAUDE.md SSOT "sports/prediction CAN have empty_confirmed at instrument-day grain".
+**Bug 1 ✅ FIXED**: `reconcile_legacy_blank_to_typed_reason.py` had case-sensitive `data_type == "fixtures"`
+(lowercase). Sports manifest writes UPPERCASE (`FIXTURES`, `FIXTURE_STATS`, etc.) per slot-8 verification 2026-05-13.
+Pre-fix: matched 0 of 2.67M sports rows → fixture-existence Phase 1.5 check was no-op → 1.87M sports candidates wrongly
+reported "0 upgrades" on previous runs. Fixed at instruments-service@`f62e3e2` (case-insensitive comparison). Confirmed
+working: re-run after fix shows fixture_manifest=63,857 captured rows (was 0). Sports legitimately produces 0 upgrades
+per CLAUDE.md SSOT "sports/prediction CAN have empty_confirmed at instrument-day grain".
 
 **Bug 2 ⚠️ NOT YET FIXED — DEFI_VENUE_LAUNCH_DATES MISSING**:
-- UAC `venue_launch_dates.py` has `CEFI_VENUE_LAUNCH_DATES` + `PREDICTION_VENUE_LAUNCH_DATES` but NO `DEFI_VENUE_LAUNCH_DATES` dict
+
+- UAC `venue_launch_dates.py` has `CEFI_VENUE_LAUNCH_DATES` + `PREDICTION_VENUE_LAUNCH_DATES` but NO
+  `DEFI_VENUE_LAUNCH_DATES` dict
 - `_classify_defi` only checks chain genesis (Ethereum 2015), not protocol launch (Aave V3 2022)
 - Consequence: 604,951 defi rows wrongly flipped this session by me at 14:17 UTC:
   - 598,040 `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` → `attempted_failed/LegacyBlankErrorReasonError`
   - 6,911 `empty_confirmed/SOURCE_RETURNED_ZERO` → `attempted_failed/LegacyBlankErrorReasonError`
-- Sample verification: AAVEV3-ETHEREUM 2018-01-01 has NO parquet data (Aave V3 launched 2022). Should be `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`, not `attempted_failed`.
-- Per-VM shard: `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet` (already consolidated into main manifest at 14:46 UTC; no backups exist — no rollback possible).
-- **Functional impact MINIMAL**: downstream readers treat both `attempted_failed` and `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` as "write NaN, don't forward-fill". Issue is wrong reason label in data-status panel, NOT data corruption.
+- Sample verification: AAVEV3-ETHEREUM 2018-01-01 has NO parquet data (Aave V3 launched 2022). Should be
+  `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`, not `attempted_failed`.
+- Per-VM shard: `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet`
+  (already consolidated into main manifest at 14:46 UTC; no backups exist — no rollback possible).
+- **Functional impact MINIMAL**: downstream readers treat both `attempted_failed` and
+  `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` as "write NaN, don't forward-fill". Issue is wrong reason label in
+  data-status panel, NOT data corruption.
 
-**Bug 3 ⚠️ POTENTIALLY SIMILAR — cefi 3,146 bad flips** (same session): same root cause likely (no DEFI/CEFI venue launch check). Per-VM shard: `gs://market-data-tick-cefi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet`. Audit pending.
+**Bug 3 ⚠️ POTENTIALLY SIMILAR — cefi 3,146 bad flips** (same session): same root cause likely (no DEFI/CEFI venue
+launch check). Per-VM shard:
+`gs://market-data-tick-cefi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet`. Audit pending.
 
 **Now executing**: per operator direction "do this please dont defer":
+
 1. Build `DEFI_VENUE_LAUNCH_DATES` dict in UAC (research ~50 protocols)
 2. Update `_classify_defi` to use it (mirror of `_classify_cefi`)
-3. Write corrector script (reads attempted_failed/LegacyBlankErrorReasonError rows, re-runs classifier with new logic, flips back to empty_confirmed/EXPECTED_* where applicable)
+3. Write corrector script (reads attempted*failed/LegacyBlankErrorReasonError rows, re-runs classifier with new logic,
+   flips back to empty_confirmed/EXPECTED*\* where applicable)
 4. Run corrector for defi (604k) + cefi (3,146)
 5. QG + push + plan flips
 
 **Issue docs**:
+
 - `plans/active/issues/defi_legacy_blank_reclassification_2026_05_13.md` (filed earlier)
 - Updating with DEFI_VENUE_LAUNCH_DATES + sports case-fix evidence now
 
-**Cross-side coord with slot 4 (Harsh)**: Cefi/defi/tradfi phantom apply-flips done on VMs (7,497 rows). Sports + prediction phantom VMs still needed.
+**Cross-side coord with slot 4 (Harsh)**: Cefi/defi/tradfi phantom apply-flips done on VMs (7,497 rows). Sports +
+prediction phantom VMs still needed.
 
 **Estimated time to ship corrector**: 1-2 hours (research + UAC dict + corrector script + run + verify + push).
 
 ---
 
-[2026-05-13 ~16:25 BST] Slot 3 → Slot 1 — **✅ FULL SMART FIX SHIPPED** (per operator direction "do this please dont defer")
+[2026-05-13 ~16:25 BST] Slot 3 → Slot 1 — **✅ FULL SMART FIX SHIPPED** (per operator direction "do this please dont
+defer")
 
 All 4 deliverables landed in ~1 hour focused work:
 
-1. **UAC@`ca62a19`** — `DEFI_VENUE_LAUNCH_DATES` dict (40 protocol-chain combos: Aave V3 × 9 chains, Compound V3 × 6, Uniswap V2/V3/V4, SushiSwap V3, Curve, Balancer, Lido, Frax, Rocket Pool, Ether.fi, Ethena, Yearn V3, Morpho Vaults, Maker, GMX × 2, Kamino/Jito/Marinade/Drift/Raydium/Orca on Solana).
-2. **UTL@`b0c38a21`** — `_classify_defi` now checks venue launch (mirror of `_classify_cefi`). Priority: pre-protocol-launch → `EXPECTED_PRE_VENUE_LAUNCH`; pre-chain-genesis → `EXPECTED_PRE_GENESIS_CHAIN`; default → `SOURCE_RETURNED_ZERO`.
-3. **instruments-service@`fafaa0c`** — corrector script `scripts/reconcile_correct_legacy_blank_misflips_2026_05_13.py` (one-shot tool, idempotent on already-corrected rows).
+1. **UAC@`ca62a19`** — `DEFI_VENUE_LAUNCH_DATES` dict (40 protocol-chain combos: Aave V3 × 9 chains, Compound V3 × 6,
+   Uniswap V2/V3/V4, SushiSwap V3, Curve, Balancer, Lido, Frax, Rocket Pool, Ether.fi, Ethena, Yearn V3, Morpho Vaults,
+   Maker, GMX × 2, Kamino/Jito/Marinade/Drift/Raydium/Orca on Solana).
+2. **UTL@`b0c38a21`** — `_classify_defi` now checks venue launch (mirror of `_classify_cefi`). Priority:
+   pre-protocol-launch → `EXPECTED_PRE_VENUE_LAUNCH`; pre-chain-genesis → `EXPECTED_PRE_GENESIS_CHAIN`; default →
+   `SOURCE_RETURNED_ZERO`.
+3. **instruments-service@`fafaa0c`** — corrector script `scripts/reconcile_correct_legacy_blank_misflips_2026_05_13.py`
+   (one-shot tool, idempotent on already-corrected rows).
 4. **instruments-service@`f62e3e2`** — sports case-fix (already documented above).
 
 **Corrector run outcomes**:
-- **Defi**: 605,070 candidates → **599,486 corrected** to `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` (5,584 correctly stay attempted_failed — post-launch dates). Per-VM shard: `gs://market-data-tick-defi.../_index/per_vm/ikenna-slot3-corrector.parquet`. Elapsed 14s.
-- **Cefi**: 789,201 candidates scanned, **0 corrections** — all at post-launch dates per existing `CEFI_VENUE_LAUNCH_DATES`. ~786k of the 789k pre-date my session (from prior Harsh slot 4 VM runs). These need re-fetch attempts, not classification fixes.
 
-**Sample-verified corrections** (5/5 ✅ no parquet on disk, as expected — proves the fix is directionally correct, not just shifting labels).
+- **Defi**: 605,070 candidates → **599,486 corrected** to `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` (5,584 correctly
+  stay attempted_failed — post-launch dates). Per-VM shard:
+  `gs://market-data-tick-defi.../_index/per_vm/ikenna-slot3-corrector.parquet`. Elapsed 14s.
+- **Cefi**: 789,201 candidates scanned, **0 corrections** — all at post-launch dates per existing
+  `CEFI_VENUE_LAUNCH_DATES`. ~786k of the 789k pre-date my session (from prior Harsh slot 4 VM runs). These need
+  re-fetch attempts, not classification fixes.
 
-**Defi capture-state post-correction**:
-| Status | Count | % |
-|---|---|---|
-| empty_confirmed | 688,220 | 42.8% |
-| attempted_failed | 606,368 | 37.8% |
-| **captured** | **311,602** | **19.4%** |
+**Sample-verified corrections** (5/5 ✅ no parquet on disk, as expected — proves the fix is directionally correct, not
+just shifting labels).
 
-We DO have 311k captured defi rows (UNISWAPV3 187k, MORPHO 45k, AAVEV3 29k, etc.). Pre-correction, the 599k were mis-labelled as "attempted_failed" (false-positive failures); now correctly labelled as pre-protocol-launch.
+**Defi capture-state post-correction**: | Status | Count | % | |---|---|---| | empty_confirmed | 688,220 | 42.8% | |
+attempted_failed | 606,368 | 37.8% | | **captured** | **311,602** | **19.4%** |
 
-**Issue doc** `plans/active/issues/defi_legacy_blank_reclassification_2026_05_13.md` updated with full RESOLVED section + commit refs + verification evidence + cefi 789k follow-up flagged for operator triage.
+We DO have 311k captured defi rows (UNISWAPV3 187k, MORPHO 45k, AAVEV3 29k, etc.). Pre-correction, the 599k were
+mis-labelled as "attempted_failed" (false-positive failures); now correctly labelled as pre-protocol-launch.
+
+**Issue doc** `plans/active/issues/defi_legacy_blank_reclassification_2026_05_13.md` updated with full RESOLVED
+section + commit refs + verification evidence + cefi 789k follow-up flagged for operator triage.
 
 **Cross-side ping** to harsh-slot-4 already posted (sports case-fix evidence + defi misclass alert).
 
-**Wake-up timer set for 16:44 BST** (15 min) — will pull LDR + check slot 1 pings for any new work after this session. Operator wants work continuing today even if market tomorrow/Friday.
+**Wake-up timer set for 16:44 BST** (15 min) — will pull LDR + check slot 1 pings for any new work after this session.
+Operator wants work continuing today even if market tomorrow/Friday.
 
-**Status**: PART B core scope (legacy blank reconciliation) complete. Sports/prediction phantom apply-flips on VMs remain pending (slot 4 owns per work-split). All slot-3-owned work in this surface is shipped.
+**Status**: PART B core scope (legacy blank reconciliation) complete. Sports/prediction phantom apply-flips on VMs
+remain pending (slot 4 owns per work-split). All slot-3-owned work in this surface is shipped.
 
 ---
 
 [2026-05-13 ~18:50 BST] Slot 3 → Slot 1 — **🟢 SESSION CLOSEOUT: A → B → C → D all addressed (3 SHIPPED + 1 DEFERRED)**
 
-Per operator direction "do A then B then C then D, all, do properly, no shortcuts, research before assuming things don't exist", the following was delivered in this session (~5 hrs):
+Per operator direction "do A then B then C then D, all, do properly, no shortcuts, research before assuming things don't
+exist", the following was delivered in this session (~5 hrs):
 
 ### A. Wave 3 per-instrument catalog cross-ref ✅ FULLY SHIPPED
-- **UTL@`76d525fc`**: new `instrument_lifecycle_loader.py` + Wave 3 cross-ref wired into `classify_blank_reason_row` (cefi/defi/tradfi branch checks per-instrument `(venue, instrument_id)` lifecycle bounds before flipping to `attempted_failed`).
+
+- **UTL@`76d525fc`**: new `instrument_lifecycle_loader.py` + Wave 3 cross-ref wired into `classify_blank_reason_row`
+  (cefi/defi/tradfi branch checks per-instrument `(venue, instrument_id)` lifecycle bounds before flipping to
+  `attempted_failed`).
 - **instruments-service@`8d91889` → `35f920e`**: corrector script loads lifecycle map + passes to classifier.
-- **Corrector ran**: cefi 789,201 candidates → **40,980 rows** flipped from `attempted_failed/LegacyBlankErrorReasonError` → `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` (per-VM shard `ikenna-slot3-wave3-corrector.parquet`). Defi: 0 new corrections (already handled by morning's venue-launch fix).
+- **Corrector ran**: cefi 789,201 candidates → **40,980 rows** flipped from
+  `attempted_failed/LegacyBlankErrorReasonError` → `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` (per-VM shard
+  `ikenna-slot3-wave3-corrector.parquet`). Defi: 0 new corrections (already handled by morning's venue-launch fix).
 - Issue doc `defi_classifier_missing_catalog_crossref` updated with shipped evidence (severity P0 → P1).
 
 ### B. Emerging perp adapter debug 🟡 DISCOVERED 3/5 ARE MIS-FLIPS (not adapter failures)
+
 Per operator question "was the data in the right place else need to ping and file issue to migrate data":
-- Direct GCS spot-checks (5 random dates per venue at canonical `raw_tick_data/by_date/day=*/asset_group=cefi/venue=*/` prefix):
-  - **HYPERLIQUID ✅ data exists** (5/5 random failed-rows have real parquet); 30,658 attempted_failed rows are MIS-FLIPS not adapter failure
+
+- Direct GCS spot-checks (5 random dates per venue at canonical `raw_tick_data/by_date/day=*/asset_group=cefi/venue=*/`
+  prefix):
+  - **HYPERLIQUID ✅ data exists** (5/5 random failed-rows have real parquet); 30,658 attempted_failed rows are
+    MIS-FLIPS not adapter failure
   - **LIGHTER-ZKSYNC ✅ data exists** (3,150 rows mis-flipped)
   - **PACIFICA-SOLANA ✅ data exists** (4,768 rows mis-flipped)
   - **ASTER ❌ no data** (17,681 rows; adapter genuinely broken)
   - **EXTENDED-STARKNET ❌ no data** (15 rows; recently activated, never produced output)
-- **Reverse-phantom reconciler SHIPPED**: `instruments-service@35f920e` `scripts/reconcile_attempted_failed_to_captured_2026_05_13.py` (sister to forward-phantom script; flips attempted_failed → captured when parquet exists; bulk-listing strategy, per-VM shard isolation enforced).
-- **Run deferred to GCE VM**: local manifest load on 38MB cefi parquet timed out at 30+ min. Per CLAUDE.md "Manifest phantom audit … Always run on same-region GCE VM" — same applies to reverse-phantom. Recommend launching a `manifest-reverse-phantom-cefi-*` VM via the standard deployment-service launcher pattern.
-- Issue doc `emerging_perp_venue_adapters_broken` updated with full data-existence audit table + ASTER/EXTENDED isolated as the genuine 2 of 5 needing adapter debug.
+- **Reverse-phantom reconciler SHIPPED**: `instruments-service@35f920e`
+  `scripts/reconcile_attempted_failed_to_captured_2026_05_13.py` (sister to forward-phantom script; flips
+  attempted_failed → captured when parquet exists; bulk-listing strategy, per-VM shard isolation enforced).
+- **Run deferred to GCE VM**: local manifest load on 38MB cefi parquet timed out at 30+ min. Per CLAUDE.md "Manifest
+  phantom audit … Always run on same-region GCE VM" — same applies to reverse-phantom. Recommend launching a
+  `manifest-reverse-phantom-cefi-*` VM via the standard deployment-service launcher pattern.
+- Issue doc `emerging_perp_venue_adapters_broken` updated with full data-existence audit table + ASTER/EXTENDED isolated
+  as the genuine 2 of 5 needing adapter debug.
 
 ### C. Solana DeFi coverage research 🟡 REFINED SUCCESSOR PLAN SCOPE (implementation deferred)
+
 - Per operator "research all options before assuming things don't exist", deeper grep reveals:
-  - **SANCTUM** IS in UAC (`registry/risk_rules/venue.py:318 _SANCTUM_RULES`); instruments-service adapter is the only missing piece.
-  - **Pyth Hermes IS wired in MTDS** (`oracle_prices_handler.py:375,708 _fetch_pyth_hermes_latest`); staked-token oracle prices for JITOSOL/mSOL/bSOL/INF could extend existing `oracle_prices` data_type instead of a new data_type.
+  - **SANCTUM** IS in UAC (`registry/risk_rules/venue.py:318 _SANCTUM_RULES`); instruments-service adapter is the only
+    missing piece.
+  - **Pyth Hermes IS wired in MTDS** (`oracle_prices_handler.py:375,708 _fetch_pyth_hermes_latest`); staked-token oracle
+    prices for JITOSOL/mSOL/bSOL/INF could extend existing `oracle_prices` data_type instead of a new data_type.
   - **`native_staking_apr`** declared in UAC `sim_schemas.py:101-103`; schema acknowledged, capture missing.
-  - **strategy_family** SSOT already targets "LST tracking-error vs SOL, restaking yields" — strategy layer expects these feeds, capture layer hasn't shipped.
-- Refined successor plan scope: ~5-10 slot-AI-days total across 5 plans (A-E). Issue doc `solana_defi_coverage_gaps` updated.
-- **Actual implementation deferred** — multiple adapter writes + UAC schema work, each ~1-2 slot days. Recommend operator assigns slot per successor plan.
+  - **strategy_family** SSOT already targets "LST tracking-error vs SOL, restaking yields" — strategy layer expects
+    these feeds, capture layer hasn't shipped.
+- Refined successor plan scope: ~5-10 slot-AI-days total across 5 plans (A-E). Issue doc `solana_defi_coverage_gaps`
+  updated.
+- **Actual implementation deferred** — multiple adapter writes + UAC schema work, each ~1-2 slot days. Recommend
+  operator assigns slot per successor plan.
 
 ### D. wave2_polymarket Polymarket subset 🟠 NOT STARTED
-Pulled forward by harsh-side audit (Phase 1/2/4/5 ship May-23 + Phase 3 Polymarket subset). Out of scope for this session — recommend prediction/MTDS slot pickup.
+
+Pulled forward by harsh-side audit (Phase 1/2/4/5 ship May-23 + Phase 3 Polymarket subset). Out of scope for this
+session — recommend prediction/MTDS slot pickup.
 
 ### Net session shipping summary
-| Repo | Commits | What |
-|---|---|---|
-| UAC | `ca62a19` | DEFI_VENUE_LAUNCH_DATES (40 protocol-chain combos) |
-| UTL | `b0c38a21`, `76d525fc` | _classify_defi venue-launch + Wave 3 lifecycle + instrument_lifecycle_loader.py |
-| instruments-service | `f62e3e2`, `fafaa0c`, `8d91889`/`35f920e` | sports case-fix + corrector + reverse-phantom |
-| PM | `8ba34474`, `9a9454ab`, `ae4e3eef` + many earlier | 4 P0/P1 issue docs + cross-side pings |
+
+| Repo                | Commits                                           | What                                                                             |
+| ------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| UAC                 | `ca62a19`                                         | DEFI_VENUE_LAUNCH_DATES (40 protocol-chain combos)                               |
+| UTL                 | `b0c38a21`, `76d525fc`                            | \_classify_defi venue-launch + Wave 3 lifecycle + instrument_lifecycle_loader.py |
+| instruments-service | `f62e3e2`, `fafaa0c`, `8d91889`/`35f920e`         | sports case-fix + corrector + reverse-phantom                                    |
+| PM                  | `8ba34474`, `9a9454ab`, `ae4e3eef` + many earlier | 4 P0/P1 issue docs + cross-side pings                                            |
 
 **Manifest cleanup applied this session**:
+
 - defi venue-launch: 599,486 rows → EXPECTED_PRE_VENUE_LAUNCH (per-VM shard `ikenna-slot3-corrector.parquet`)
 - cefi Wave 3: 40,980 rows → EXPECTED_INSTRUMENT_NOT_LISTED (per-VM shard `ikenna-slot3-wave3-corrector.parquet`)
-- = **640,466 rows reclassified to proper EXPECTED_* states**
+- = **640,466 rows reclassified to proper EXPECTED\_\* states**
 - HYPERLIQUID/LIGHTER/PACIFICA reverse-phantom run deferred to GCE VM (script ready)
 
 ### Operator-facing P0/P1 issues newly filed/updated this session
+
 1. `defi_legacy_blank_reclassification_2026_05_13.md` (RESOLVED — original 604k bad-flip issue)
-2. `defi_classifier_missing_catalog_crossref_2026_05_13.md` (partially resolved — venue-launch shipped, per-instrument crossref Wave 3 SHIPPED via 9a9454ab UTL@76d525fc)
-3. `emerging_perp_venue_adapters_broken_2026_05_13.md` (refined — 2 of 5 genuine; reverse-phantom script available for the 3 mis-flip venues)
+2. `defi_classifier_missing_catalog_crossref_2026_05_13.md` (partially resolved — venue-launch shipped, per-instrument
+   crossref Wave 3 SHIPPED via 9a9454ab UTL@76d525fc)
+3. `emerging_perp_venue_adapters_broken_2026_05_13.md` (refined — 2 of 5 genuine; reverse-phantom script available for
+   the 3 mis-flip venues)
 4. `solana_defi_coverage_gaps_2026_05_13.md` (refined scope to ~5-10 slot-AI-days across 5 successor plans)
 
-Slot 3 standing by. Operator direction needed for: HYPERLIQUID reverse-phantom GCE VM launch (or assign to slot 4), ASTER/EXTENDED adapter-debug slot assignment, 5 Solana successor plan slot assignments.
+Slot 3 standing by. Operator direction needed for: HYPERLIQUID reverse-phantom GCE VM launch (or assign to slot 4),
+ASTER/EXTENDED adapter-debug slot assignment, 5 Solana successor plan slot assignments.
+
+---
+
+## [slot-3 → main] 2026-05-14 session boot ack
+
+**Date**: $(date -u +"%Y-%m-%dT%H:%MZ") **Status**: BOOTED — Slot 3 resuming for 2026-05-14 cycle **Theme**: Perp venue
+adapters + Solana RPC + DEX/Drift (~25 cal AI-days) **Task stack**: items 1-9 from work_split_2026_05_14_ikenna.md §
+Slot 3 **Starting with**: Item 1 — ASTER + EXTENDED-STARKNET P0 root-cause adapter fix **LDR sync**: UTL pulled (30
+files), PM pulled (12 files), UAC pulled (fast-forward), instruments-service pull in progress (foreign WIP stashed)
