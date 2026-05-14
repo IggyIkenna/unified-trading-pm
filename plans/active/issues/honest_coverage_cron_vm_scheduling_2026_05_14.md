@@ -45,3 +45,17 @@ execution:
   cadence: one-shot (VM scheduling) + daily cron
   verifier: gs://central-element-323112-honest-coverage/{date}/coverage.json exists after VM run
   last_executed: NEVER
+
+## Resolution
+
+**UI half ✅ RESOLVED** (2026-05-14 — harsh-slot-7 Wave 2):
+
+- `deployment-ui@365c32f` — `HonestCoverageCard.tsx` now renders a neutral info card
+  "Coverage data not yet computed for {date}." (with `Info` icon) when the 404 path returns null,
+  replacing the prior silent-hide behavior. Recommended decision #3 implemented.
+
+**Cron VM half — still operator/Ikenna territory**:
+
+- Recommended decision #1 (schedule `launch-measure-honest-coverage-vm.sh` as daily cron + watchdog
+  dict registration) and #2 (backfill recent-date coverage files) remain open. VM-launcher infra is
+  outside slot 7's owned-repos. Tracked here pending operator schedule / Ikenna VM-infra hand-off.

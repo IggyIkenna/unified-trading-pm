@@ -138,3 +138,16 @@ After the fix, `ROOT_SYMBOL_MAP` additions are also needed: "CC" → "COCOA", "K
 - Also: `tradfi_master_2026_05_07.md` (ICE coverage dict gaps: TF-3 `ICE` missing from TRADFI_TICKER_COVERAGE_START)
 - UAC file: `unified_api_contracts/canonical/domain/derivatives/tradfi_roots.py`
 - UAC file: `unified_api_contracts/registry/tradfi_instrument_universe.py:110`
+
+## Resolution
+
+✅ **RESOLVED** (2026-05-14 — shipped by harsh-main during OOM recovery):
+
+- `unified-api-contracts@2fb27f8` (feat(tradfi): add ICE US softs (CT/CC/KC/SB/OJ/DX) to TRADFI_ROOTS + fix CT dataset routing):
+  - Fix 1 — `tradfi_roots.py`: added CT / CC / KC / SB / OJ / DX under ICE Futures US (IFUS.IMPACT)
+    after the ICE Europe entries; DX classified as `fx` (currency basket).
+  - Fix 2 — `tradfi_instrument_universe.py`: removed CT.FUT from `_CME_COMMODITY_FUTURES` (was
+    incorrectly mapped to CME/GLBX.MDP3; CT trades on ICE Futures US only). Added `_ICE_US_FUTURES`
+    list (CT / CC / KC / SB / OJ / DX, IFUS.IMPACT) wired into `TRADFI_DATABENTO_INSTRUMENTS`. Added
+    CC / KC / SB / OJ / DX to `EXCHANGE_CODE_TO_NAME`.
+  - Fix 3 — UAC QG green.
