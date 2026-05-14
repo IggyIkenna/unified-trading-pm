@@ -10,8 +10,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---
 
-> **🟢 VM RUNNING — MDPS DeFi smoke `mdps-backfill-defi-20260514-152157` (2026-04-08→2026-04-12, 5 days) launched 2026-05-14 15:22 UTC. Pre-authorized (<1 week). Unblocks features-onchain once complete.**
-> Remove banner when VM reaches STOPPED.
+> **🔴 OPERATOR ESCALATION REQUIRED — B-015 blocked by MTDS DeFi protocol collection gap. See § "MDPS smoke findings" below. All three smoke runs completed; root cause identified as deeper than originally scoped.**
 
 ## Smoke run results (2026-05-14)
 
@@ -52,6 +51,48 @@ completely empty (0 objects).
 **B-015 window correction**: original ping to Harsh slot 9 cited 2026-05-01→2026-05-07. That window has no
 lst_rates data (coverage ends 2026-04-14 in prd bucket; non-prd also ends ~2026-04-19). Corrected window:
 **2026-04-08 → 2026-04-12** (5 days; all three sources confirmed present in non-prd bucket).
+
+**MDPS smoke `mdps-backfill-defi-20260514-152157` (2026-04-08→2026-04-12) — rc=0, 0 CANDLES PRODUCED**
+
+MDPS ran successfully but produced 0 processed_candles. Log reveals:
+
+```
+Processing missing data_types for defi/2026-04-08: ['dex_swaps']
+Listed 0 files from raw_tick_data/by_date/day=2026-04-08/ for data_type=dex_swaps
+Skipped 1 data_types with no upstream data for defi/2026-04-08: ['dex_swaps']
+Total: 0 candles, 0 success, 0 failed
+```
+
+**Root cause (final)**: The MDPS manifest has all DeFi data_types (except `dex_swaps`) marked as
+`empty_confirmed` — meaning MTDS has confirmed "no raw tick data available" for them. Raw tick data
+bucket inspection confirms: **MTDS has only collected `vault_share_price` data (ETHENA, FRAX) for
+DeFi. The strategy-required data_types have NEVER been collected by MTDS:**
+
+| Data type needed for B-015 | MTDS collection status |
+| --- | --- |
+| `lending_indices` (Aave base/supply rates) | ❌ `empty_confirmed` — never collected |
+| `risk_params` (Aave utilization/LTV params) | ❌ `empty_confirmed` — never collected |
+| `perp_funding` (Drift/GMX funding rates) | ❌ `empty_confirmed` — never collected |
+| `oracle_prices` (Chainlink/Pyth price feeds) | ❌ `empty_confirmed` — never collected |
+| `dex_swaps` (Uniswap/Curve swap data) | ❌ no raw files (not in manifest = never processed) |
+| `vault_share_price` (ETHENA/FRAX yields) | ✅ raw files exist but `empty_confirmed` in manifest |
+
+**Corrected unblocking path (requires operator direction):**
+1. ⛔ **MTDS DeFi protocol collection** — MTDS handlers for `lending_indices` (Aave), `risk_params`
+   (Aave), `perp_funding` (Drift/GMX), `oracle_prices` need to be identified and run. These are
+   the handlers that collect DeFi protocol-level on-chain data. Without this step, MDPS has nothing
+   to aggregate and features-onchain has nothing to read.
+2. → MDPS DeFi aggregation (will produce processed_candles once raw data exists)
+3. → features-onchain (will compute features from processed_candles)
+4. → B-015 backtest
+
+**Operator questions (needed to unblock):**
+- Q1: Has the MTDS Aave lending adapter (`lending_indices` handler) ever been run? Is there a VM
+  launcher script for it? (e.g., `launch-mtds-aave-backfill-vm.sh` or similar)
+- Q2: Has the MTDS perp funding adapter for DeFi venues (Drift, GMX) ever been run?
+- Q3: What date range does each DeFi protocol handler support (Aave V3 launch = 2023-01-27)?
+- Q4: Is the B-015 window (2026-04-08→2026-04-12) within MTDS DeFi protocol coverage, or do we
+  need to run a full history backfill first?
 
 ---
 

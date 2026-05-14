@@ -38,6 +38,29 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-14 15:45 UTC] ikenna-main → OPERATOR — 🔴 **B-015 P0 ESCALATION — MTDS DeFi protocol data collection has never run. 3 smoke VMs confirm root cause. Operator decision required.**
+
+Three smoke VMs completed:
+1. MTDS lst_rates (2026-04-15→2026-04-19) — SKIPPED all 5 days (already captured; data exists back to 2020)
+2. features-onchain (2026-04-08→2026-04-13) — FAILED: needs MDPS processed_candles
+3. MDPS DeFi (2026-04-08→2026-04-12) — rc=0 BUT 0 candles: manifest shows all DeFi data_types except `dex_swaps` as `empty_confirmed` (MTDS never collected them)
+
+**Root cause**: MTDS DeFi protocol adapters for strategy-required data_types (`lending_indices`,
+`risk_params`, `perp_funding`, `oracle_prices`) have NEVER been run. MTDS only has `vault_share_price`
+data for ETHENA/FRAX. The full pipeline cannot proceed until MTDS collects these protocols.
+
+**Operator decisions needed (4 questions in issue doc):**
+1. Has MTDS Aave lending adapter ever run? Where is its VM launcher?
+2. Has MTDS perp funding adapter for DeFi (Drift/GMX) ever run?
+3. What date range does each handler support?
+4. Is <1-week smoke still viable, or does the gap require a multi-week backfill (→ operator approval needed)?
+
+Full findings: `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` (updated)
+
+**Blocking**: B-015 carry_staked_basis paper backtest + May-23 live DeFi gate (Group B item B.3).
+
+---
+
 [2026-05-14 15:22 UTC] ikenna-main → harsh-slot-9 — 🔴 **B-015 CORRECTION — smoke run revealed deeper dependency. Supersedes earlier direction. DO NOT run features-service CLI yet.**
 
 **What the smoke found:**
