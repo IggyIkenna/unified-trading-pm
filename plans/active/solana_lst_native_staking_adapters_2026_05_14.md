@@ -93,13 +93,12 @@ Two May-23 DeFi archetypes require Solana LST data:
 
 ## Phase 3 — SOLBLAZE MTDS wiring (P1)
 
-- [ ] [instruments-service] P1. Verify `SOLBLAZE-SOLANA` (or `BLAZESTAKE-SOLANA`) has a `ReferenceDataAdapter` in
-      instruments-service. If missing, create following SANCTUM pattern from Phase 2 — source: `api.blazestake.com` or
-      `solblaze.org` public API.
-- [ ] [MTDS] P1. Wire SOLBLAZE into MTDS `defi_lst_handler.py` (or equivalent LST rates handler): - Read
-      `SOLBLAZE-SOLANA` from instruments config. - Fetch `lst_rates` via instruments-service reference data. - Emit
-      manifest `record_captured()` per day per instrument. - `record_empty(reason=EXPECTED_PRE_VENUE_LAUNCH)` for dates
-      before BlazeStake mainnet (`2022-11-01`, conservative).
+- [x] [instruments-service] P1. Verify `SOLBLAZE-SOLANA` has a `ReferenceDataAdapter` in instruments-service.
+      Already exists — `instruments_service/reference_data/adapters/defi/solblaze.py` + factory wired.
+      (pre-existing, no commit needed)
+- [x] [MTDS] P1. Wire SOLBLAZE (bSOL) into MTDS `solana_lst_archival.py` (3-tier Solana LST rate fetcher):
+      Tier 1 Alchemy getAccountInfo + Tier 2 subgraph + Tier 3 BlazeStake REST. Pre-launch guard 2022-11-01.
+      Freshness cache wired. 27 tests pass. (MTDS@0636dd4)
 
 **QG gate**: `bash scripts/quality-gates.sh` in MTDS.
 
