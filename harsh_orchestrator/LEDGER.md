@@ -28,12 +28,12 @@ locked_since: 2026-05-08
 | Slot | Theme (today) | State | Plan-of-record | Branch |
 |------|---------------|-------|----------------|--------|
 | 1 | Main orchestrator + freeze-gate monitoring + Wave 1/2/3 spawn cadence | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
-| 2 | 🟢 **Wave 1** — api_football Phase 3.C EPL forward-poll VM + UI verify (P0, deadline today EOD) | 🟢 IN FLIGHT (STARTED 04:31 UTC) | `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` | `tab/hk/2` |
+| 2 | ✅ **Wave 1 DONE** — api_football Phase 3.C EPL forward-poll VM + UI verify. 🔁 **Wave 2** — pool_state_result_import_error (execution-service P1) + deployment_api missing dep (P1) | ✅ DONE Phase 3.C (d7246efe); 🆕 READY Wave 2 — see § "Day-3 Wave 2 continuation — Slot 2" | `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` ✅ → `issues/pool_state_result_import_error_2026_05_13.md` | `tab/hk/2` |
 | 3 | 🟡 **Wave 2** — 117 UTL test-fixture sweep (pipeline_mode kwarg) | 🟢 IN FLIGHT (STARTED 04:31 UTC) | UTL@`547ff3c` API drift + writegate plan Phase 4 | `tab/hk/3` |
 | 4 | 🔁 **Continuation** — writegate Phase 6.8 instruments-service (41 `.add()` → `record_captured()`, P0) | 🆕 READY — see § "Day-3 continuation task briefs — Slot 4" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.8 | `tab/hk/4` |
 | 5 | 🟢 **Wave 3** — batch_live_symmetry Tabs 1-2 (codex docs half) | 🆕 READY — cross-side ack confirmed (Ikenna 37b90a3a ~18:00 UTC 2026-05-13). See § "Day-3 Wave 3 task briefs — Slot 5" | `batch_live_symmetry_2026_05_10.md` Tabs 1-2 | `tab/hk/5` |
-| 6 | 🔁 **Continuation** — writegate Phase 6.5 remaining open items (sports live_feature_subset live_handler + P2 findings: delta-one NAN_FILL policy / cross-instrument seed-drift / multi-timeframe cross-TF) | 🆕 READY — see § "Day-3 continuation task briefs — Slot 6" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.5 open `- [ ]` todos | `tab/hk/6` |
-| 7 | 🔁 **Continuation** — Data Status UI Phase 2F: deployment-api/UI gap fixes (GAP-2/3/4 + GAP-1 or issue doc) | 🟢 IN FLIGHT (STARTED 05:06 UTC) | `data_status_ui_phase_2f.md` (to create) + `deployment-api` + `deployment-ui` | `tab/hk/7` |
+| 6 | ✅ **Continuation DONE** — writegate Phase 6.5 P2 items + MTF cross-TF seeded. 🔁 **Wave 2** — api_football enrichment preflight mismatch (instruments-service P1) + orchestrator zero-fixture bypass bug (P2) | ✅ DONE Phase 6.5 (e579fca7); 🆕 READY Wave 2 — see § "Day-3 Wave 2 continuation — Slot 6" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.5 ✅ → `issues/api_football_enrichment_preflight_runtime_mismatch_2026_05_13.md` | `tab/hk/6` |
+| 7 | ✅ **Continuation DONE** — Data Status UI Phase 2F: all 4 gaps shipped (GAP-3 sharding YAML + GAP-4 interactive rows + issue docs for GAP-1/2). 🔁 **Wave 2** — ice_us_softs UAC fix (P2) + honest-coverage 404 graceful UI (P2) | ✅ DONE Phase 2F (48a71dde + dd6c1cc); 🆕 READY Wave 2 — see § "Day-3 Wave 2 continuation — Slot 7" | `data_status_ui_phase_2f.md` ✅ → `issues/ice_us_softs_dataset_disambiguation_2026_05_14.md` | `tab/hk/7` |
 | 8 | 🟢 **Wave 3** — batch_live_symmetry Tab 3 + UAC + QG STEPs (enforcement half) | 🆕 READY — cross-side ack confirmed (same as slot 5). See § "Day-3 Wave 3 task briefs — Slot 8" | `batch_live_symmetry_2026_05_10.md` Tab 3 + new QG STEP | `tab/hk/8` |
 | 9 | 🔁 **Continuation** — peripheral scripts pipeline_mode fix (10 scripts) + workspace-manifest QG step 6 investigation | 🆕 READY — see § "Day-3 continuation task briefs — Slot 9" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4 + strategy-service QG step 6 flag | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
@@ -57,6 +57,48 @@ locked_since: 2026-05-08
 - ✅ Slot 10 foot-gun #5 intercept: MDPS@0c92b91 (19-test fix) was NOT on LDR despite slot 10's "all work synced" claim. Main cherry-picked to LDR as MDPS@c30d8e0; slot 10 worktree reset clean.
 
 All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
+
+---
+
+## Day-3 Wave 2 continuation — 2026-05-14 (slots 2/6/7 post-second-task)
+
+### Slot 2 — P1 bug fixes: pool_state_result ImportError + deployment-api missing dep (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `execution-service` + `deployment-api` + `unified-trading-pm`
+- **Issue docs**:
+  - [`plans/active/issues/pool_state_result_import_error_2026_05_13.md`](../plans/active/issues/pool_state_result_import_error_2026_05_13.md) (P1 — blocks all execution-service test collection)
+  - [`plans/active/issues/deployment_api_missing_position_balance_dep_2026_05_14.md`](../plans/active/issues/deployment_api_missing_position_balance_dep_2026_05_14.md) (P1 — Docker/CI broken)
+- **Task**:
+  1. **Fix PoolStateResult import** (execution-service): `execution_service/defi_execution/protocols/__init__.py:78` imports `PoolStateResult` which was renamed. Run `git -C execution-service log --all --oneline -20 | head -20` + `grep -r "PoolStateResult\|class.*PoolState" execution_service/` to find the new symbol name. Fix the import. Run `bash scripts/quality-gates.sh` — test collection must unblock. FF-push.
+  2. **Fix deployment-api missing dep**: Add `position-balance-monitor-service` to `deployment-api/pyproject.toml` `[project.dependencies]` + `workspace-manifest.json` `deps` list for deployment-api. Run `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh` to align versions. FF-push per repo. Mark both issue docs as RESOLVED with SHAs.
+- **Done-def**: execution-service `bash scripts/quality-gates.sh` step 3 (test collection) passes (no ImportError); deployment-api Docker build would succeed (verify with `cd deployment-api && bash scripts/quality-gates.sh`); both issue docs flipped to RESOLVED.
+- **No big decisions needed** — diagnose-first rule applies (read function body before patching; if PoolStateResult was deleted vs renamed, that's different fixes).
+
+### Slot 6 — instruments-service bug fixes: enrichment preflight + zero-fixture bypass (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `instruments-service` + `unified-trading-pm`
+- **Issue docs**:
+  - [`plans/active/issues/api_football_enrichment_preflight_runtime_mismatch_2026_05_13.md`](../plans/active/issues/api_football_enrichment_preflight_runtime_mismatch_2026_05_13.md) (P1)
+  - [`plans/active/issues/orchestrator_zero_fixture_path_recovery_bypass_bug_2026_05_14.md`](../plans/active/issues/orchestrator_zero_fixture_path_recovery_bypass_bug_2026_05_14.md) (P2)
+- **Task**:
+  1. **Enrichment preflight fix**: Read the issue doc carefully. Locate the enrichment entry point in `instruments-service/` (grep `enrichment_mode\|preflight\|instruments.parquet`). The issue: enrichment mode entered without verifying the instruments parquet exists first. Fix: add existence check before entering enrichment path; if missing → either auto-build mapping from fixtures OR raise clear `DependencyError`. Use `Findings Triage` rule: read BOTH sides of the contract before picking fix direction. FF-push.
+  2. **Zero-fixture bypass bug**: Read the issue doc. Locate `recovery_fixture_ids` usage in the orchestrator. The bug: zero-fixture fast path fires even when `recovery_fixture_ids` are provided. Fix: guard the fast path with `if not recovery_fixture_ids:`. FF-push.
+  3. Mark both issue docs as RESOLVED with SHAs in body. FF-push (PM).
+- **Done-def**: Both issue docs marked RESOLVED; `bash scripts/quality-gates.sh` green in instruments-service; enrichment mode doesn't crash on missing instruments.parquet.
+- **No big decisions needed** — diagnose-first rule applies. Both fixes are single-repo surgical.
+
+### Slot 7 — UAC ice_us_softs fix + honest-coverage 404 graceful UI (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `unified-api-contracts` + `deployment-ui` + `unified-trading-pm`
+- **Issue docs**:
+  - [`plans/active/issues/ice_us_softs_dataset_disambiguation_2026_05_14.md`](../plans/active/issues/ice_us_softs_dataset_disambiguation_2026_05_14.md) (P2 — UAC TRADFI_ROOTS missing 6 ICE US softs)
+  - [`plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md`](../plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md) (P2 — honest-coverage 404 shows error state instead of graceful message)
+- **Task**:
+  1. **ICE US softs UAC fix**: Read `unified_api_contracts/canonical/domain/derivatives/tradfi_roots.py` (or wherever TRADFI_ROOTS lives). Add CT/CC/KC/SB/OJ/DX to TRADFI_ROOTS with `IFUS.IMPACT` venue. Fix any stale CME entries for CT. Run QG (`bash scripts/quality-gates.sh`). FF-push. Mark issue doc RESOLVED.
+  2. **Honest-coverage graceful 404 in UI**: Locate the honest-coverage fetch in deployment-ui (grep `honest-coverage\|honestCoverage\|honest_coverage`). The fetch currently returns 404 when no data for the date → UI shows error state. Change: treat HTTP 404 from `/api/data-status/honest-coverage` as "data not yet computed" — show a neutral info message (`"Coverage data not yet computed for this date"`) instead of an error state. Run `pnpm build` + QG. FF-push.
+  3. Update both issue docs with RESOLVED + SHAs. FF-push (PM).
+- **Done-def**: TRADFI_ROOTS includes CT/CC/KC/SB/OJ/DX with IFUS.IMPACT; UAC QG green; deployment-ui shows graceful message on 404 from honest-coverage; both issue docs RESOLVED.
+- **GREP-THEN-READ warning**: Read the TRADFI_ROOTS source dict body before adding — confirm CT is actually CME vs ICE before patching. Don't assume from the issue doc alone.
 
 ---
 

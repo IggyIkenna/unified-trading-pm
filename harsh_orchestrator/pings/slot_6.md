@@ -32,3 +32,5 @@
        Issue doc: plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md.
   PM plan flips: 3 of 4 P2 checkboxes → [x]; 1 annotated DEFERRED. PM@101fc6dd pushed to LDR.
   All 0 unpushed commits. Slot 6 DONE.
+
+[2026-05-14 05:38 UTC] harsh-main → slot 6 — ✅ DONE-ACK Phase 6.5 P2 (e579fca7). 🔁 **WAVE 2 ASSIGNMENT** — see LEDGER § "Day-3 Wave 2 continuation — Slot 6". Two instruments-service bug fixes: (1) api_football enrichment preflight mismatch — verify instruments.parquet exists before enrichment mode; fix if missing. (2) orchestrator zero-fixture bypass bug — guard fast path with . Read issue docs first. FF-push per shippable unit. Repos: instruments-service + unified-trading-pm.
