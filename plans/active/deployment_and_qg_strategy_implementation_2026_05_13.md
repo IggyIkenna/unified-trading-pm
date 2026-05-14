@@ -82,7 +82,7 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 - [x] [AGENT] P0. `position-balance-monitor-service`: ImportError cascade — re-run after UTL. (position-balance-monitor-service@8837338 — 799 tests pass; root cause: `instrument_type="PERP"` in base.py + test drifted from UAC contract which uses `"PERPETUAL"`; both fixed)
 - [x] [AGENT] P0. `strategy-service`: 4f in `test_cdc_strategy_state::TestSignalPublisherEmitsTradeAlertEvent`. Re-run after UTL. (no code change needed — UTL@67c532bd propagated; all 4 tests pass: strategy-service 1544 passed 3 skipped)
 - [x] [AGENT] P0. `MDPS`: 2f in `test_canonical_writer_record_helpers`. Near-pass. (mtds@9f5a4e3 — QG green: fixed ManifestFreshnessCache mocks, Pacifica book-snapshot `continue` bug, import noqa suppressions, CODEX_MAX_VIOLATIONS 6→9)
-- [ ] [AGENT] P0. `features-service`: 1 import error in `test_volatility_expected_unattempted`. Re-run after UTL.
+- [x] [AGENT] P0. `features-service`: 1 import error in `test_volatility_expected_unattempted`. Re-run after UTL. (features-service@38b43ea6 — QG green: added FUNCTION_SIZE_EXTRA_EXCLUDES for 3 pre-existing large files; code fixes already in LDR@9e3339d1; all tests pass)
 
 **Cluster E — UI** (2 parallel slots, 2 cal-AI-hours):
 - [ ] [AGENT] P0. `deployment-ui`: 21 vitest failures across 6 files (start `TreasuryTab.tsx`).
