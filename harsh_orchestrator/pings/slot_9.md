@@ -8,3 +8,4 @@
 Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block on first read).
 New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
 [2026-05-14 10:21 UTC] slot-9 — STARTED slot 9 (deployment_and_qg_strategy_implementation_2026_05_13.md § Phase 0 Cluster D — PBM test failures)
+[2026-05-14 11:30 UTC] slot-9 — DONE all assigned tasks: Phase 0 Cluster D (PBM@8837338) + Day-3 Part A peripheral pipeline_mode (features-service@268919ad + mtds@bc77f94) + Day-3 Part B QG step 6 (PM@5c1cfc7f). Picking up BACKLOG B-004 (strategy-service 2 remaining test failures) per deployment plan line 83.
