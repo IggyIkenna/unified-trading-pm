@@ -1547,3 +1547,33 @@ python e2e-testing/scripts/defi/colocated_engine.py \
 ```
 
 **Filing slot**: Harsh slot 3 (B-016). Corresponds to Ikenna slot 9's B-015 cross-side prereq pattern.
+
+---
+
+[2026-05-14 13:10 UTC] harsh-slot-9 → ikenna-main — **B-015 Phase 1 BLOCKED — DeFi feature pipeline gap + MTDS lst_rates stale. P1 issue filed. ACK + resolution direction required.**
+
+**carry_staked_basis paper backtest (B-015) — Phase 1 prereq check results**
+
+Phase 1 pipeline state verification complete. Results:
+
+- ✅ **(a) instruments-store-defi**: `instruments-store-defi-prd-central-element-323112` exists, has catalogue data (2020-03-01 through 2025-03-01 snapshots). OK.
+- ⚠️ **(b) MTDS DeFi market-data parquets**: `market-data-tick-defi-prd-central-element-323112` exists. `raw_tick_data/by_date/` through `day=2026-05-08` (6 days stale). **`lst_rates/` last date = 2026-04-14 (30 days stale)** — lst_rates is the primary staking-yield signal for carry_staked_basis. Appears to be a handler outage, not expected gap.
+- ❌ **(c) DeFi feature parquets — P1 GAP**: `features-onchain-central-element-323112` = 0 bytes. `features-delta-one-defi-prd-central-element-323112` = 0 bytes. **Both DeFi feature buckets empty.** The features-onchain pipeline for DeFi has never produced output in GCS. `colocated_engine.py` silently falls through to empty feature dict on fetch failure — paper backtest would produce meaningless P&L. Issue doc: `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md`.
+- ✅ **(d) carry_staked_basis strategy factory**: `StrategyArchetype.CARRY_STAKED_BASIS: CarryStakedBasisEngine` at strategy-service factory.py:62. OK.
+- ✅ **(e) execution-service paper mode**: `create_paper_matching_engine()` exists + DeFi execution module present. OK.
+
+**BLOCKING B-015 Phase 2 launch on two items:**
+
+1. **DeFi feature pipeline gap (P1)**: Which service produces `aave_lending_rates` / `aave_utilization` / `rate_impact` / `onchain_perps` feature parquets for `features-onchain-central-element-323112`? Has it ever been run against prod? Backfill plan + timeline needed before B-015 can launch.
+
+2. **MTDS lst_rates staleness**: `lst_rates/` data stopped at 2026-04-14. Which MTDS handler produces this? Is it paused/broken? Needs catch-up before the B-015 backtest window (2026-04-14 → 2026-05-14) is valid.
+
+**Shared prereqs with B-016 (slot 3 / arbitrage_price_dispersion):**
+- B-016 uses CeFi features (`features-cefi-central-element-323112`) — separate question.
+- B-015 start_date suggestion: 2026-04-14 → 2026-05-14 (pending Ikenna confirmation of bankroll + hedge venue list).
+- B-015 bankroll: $500,000 initial_capital_usd (80/20 treasury split), ETH share class per LEDGER. Confirm or override.
+- B-015 hedge venue list: Bybit UTA (stETH margin), Deribit (stETH margin), OKX (wstETH margin). Confirm universe.
+
+**Not proceeding to Phase 2 until Ikenna ACKs this ping AND pipeline gaps (items 1+2) are resolved.**
+
+**Filing slot**: Harsh slot 9 (B-015).
