@@ -9,7 +9,7 @@
 #   owner:   qg-snapshot cron VM (deployment-service/scripts/vm/launch-qg-snapshot-vm.sh)
 #   cadence: daily 06:00 UTC via Cloud Scheduler
 #   verifier: gs://{pid}-deployment-events/quality_gates_snapshot/ gains new blobs
-#   last_executed: NEVER
+#   last_executed: 2026-05-14 (local smoke + full workspace run: 36 repos, 36 parquets → gs://central-element-323112-deployment-events/quality_gates_snapshot/)
 #
 # Usage (standalone smoke):
 #   WORKSPACE_ROOT=/home/hk/unified-trading-system-repos \
