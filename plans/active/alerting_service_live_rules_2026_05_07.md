@@ -25,6 +25,14 @@ estimate_calibration_note: |
 
 # Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging
 
+> **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
+>
+> [`batch_live_symmetry_2026_05_10`](batch_live_symmetry_2026_05_10.md) Tab 2 ships `RECON_GREEN_THRESHOLDS` dict at
+> `unified_api_contracts/canonical/crosscutting/alerting/thresholds.py` for `carry_staked_basis` +
+> `leveraged_funding_arb`. **Before adding new alerting thresholds or recon configs** — check if the canonical
+> `RECON_GREEN_THRESHOLDS` dict in UAC already covers your archetype. Tab 8 (recon-green calibration) depends on Tab 2
+> shipping these thresholds.
+
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation 2026-05-08**
 >
 > [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 9 EXTENDS this

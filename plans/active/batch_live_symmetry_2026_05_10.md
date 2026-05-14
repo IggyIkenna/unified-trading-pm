@@ -111,9 +111,9 @@ the run-side.
 Per CLAUDE.md "Cross-Plan Coordination Banners" HARD RULE — every Tab adds banners to every other active plan whose work
 is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complete before Tab 2 starts.
 
-- [ ] [AGENT] P0. Land 🟡 IN-FLIGHT REFACTOR banners from Tab 1 onto: `master_to_live_defi_2026_05_23.md` ·
+- [x] [AGENT] P0. Land 🟡 IN-FLIGHT REFACTOR banners from Tab 1 onto: `master_to_live_defi_2026_05_23.md` ·
       `live_pipeline_mtds_mdps_features_2026_05_08.md` · `features_repo_consolidation_2026_05_08.md` ·
-      `alerting_service_live_rules_2026_05_07.md`. (Pre-audit § 4)
+      `alerting_service_live_rules_2026_05_07.md`. (Pre-audit § 4) (PM@HEAD)
 - [ ] [AGENT] P0. Land BE-AWARE / RE-VERIFY banners from Tab 2 onto: `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
       · `manifest_schema_final_gate_2026_05_09.md` · `live_pipeline_mtds_mdps_features_2026_05_08.md` ·
       `defi_master_2026_05_07.md`.
@@ -141,11 +141,11 @@ is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complet
       × `OperationalMode` × `BatchExecutionMode` × `MaturityPhase`. Anti-pattern list (no LIVE_/BATCH_ prefix in event
       names · no UI redeclarations · no mode-conditional outside seam). Cite pre-audit § 1.
       (PM@6153d9ea — 245-line doc: 4 axes, valid-combo table, 6 anti-patterns, QG STEP L1-L7 status)
-- [ ] [AGENT] P0. **UPDATE** `codex/04-architecture/batch-live-architecture.md` — add (a) cross-asset-group meta section
+- [x] [AGENT] P0. **UPDATE** `codex/04-architecture/batch-live-architecture.md` — add (a) cross-asset-group meta section
       pointing to cefi-batch-live.md / tradfi-batch-live.md (post-cutover) / prediction-batch-live.md (post-cutover);
       (b) UI mode-context guidance (ExecutionModeContext canonical at
       `unified-trading-system-ui/lib/execution-mode-context.tsx:19-43`); (c) consolidated anti-patterns from CLAUDE.md +
-      pipeline-mode-partition.md + replay-subsystem.md.
+      pipeline-mode-partition.md + replay-subsystem.md. (PM@9df278ef)
 - [x] [AGENT] P0. **UPDATE** `codex/06-coding-standards/quality-gates.md` — STEP entries for L1 (data_type
       mode-agnosticism) · L2 (no mode-conditional outside seam) · L3 (RuntimeMode declared once) · L7
       (`assert_available_at_present` enforcement). Defer L4/L5/L6 entries to post-cutover. (PM@HEAD)

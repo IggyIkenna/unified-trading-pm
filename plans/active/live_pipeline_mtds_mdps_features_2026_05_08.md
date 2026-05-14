@@ -1040,6 +1040,14 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
+>
+> [`batch_live_symmetry_2026_05_10`](batch_live_symmetry_2026_05_10.md) is establishing QG STEPs L1-L7 (mode-axis
+> enforcement). **Before touching**: replay subsystem `ReplayPublisher` / `ReplayWatermarkKV`, `RuntimeMode` branches,
+> or `record_captured()` callsites in MTDS/MDPS — read `codex/06-coding-standards/mode-axis-discipline.md` first.
+> STEP L7 fix-list includes 3 MDPS callsites (`storage_dispatch_worker.py:49`, `output_writer_service.py:318`,
+> `orchestration_writer.py:388`); Slot 5 produces fix-list (Tab 2), MDPS owner lands fixes.
+
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
 > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)

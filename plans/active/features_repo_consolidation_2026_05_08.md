@@ -940,6 +940,14 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
+>
+> [`batch_live_symmetry_2026_05_10`](batch_live_symmetry_2026_05_10.md) Tab 4 lifts `commodity` / `cross_instrument` /
+> `multi_timeframe` / `calendar` from bare classes to UTL `ModeHandler` ABC. **Before touching** those 4 family handlers
+> or the `ModeHandler` ABC itself — read `codex/04-architecture/features-service-architecture.md` § "ModeHandler lift
+> status post-Tab-4". Tab 4 is in-flight on `batch_live_symmetry_2026_05_10`; changes to those families should be
+> coordinated with Tab 4 owner to avoid clobbering the lift.
+
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
 >
 > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)

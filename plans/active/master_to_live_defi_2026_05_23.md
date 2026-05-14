@@ -38,6 +38,15 @@ overview:
   start writing code in the affected area.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
+>
+> [`batch_live_symmetry_2026_05_10`](batch_live_symmetry_2026_05_10.md) is establishing codex SSOTs for mode-axis
+> discipline (4-axis cartesian product + anti-patterns), per-asset-group batch/live docs (cefi ✅ shipped), and QG STEPs
+> L1-L7 enforcement. **Before touching**: mode enums (`RuntimeMode` / `OperationalMode` / `BatchExecutionMode`),
+> batch/live seam logic, `DataType` enum members, or `record_captured()` callsites — read
+> `codex/06-coding-standards/mode-axis-discipline.md` + `codex/04-architecture/batch-live-architecture.md §2` first.
+> Tab 2 (UAC `BatchExecutionMode` canonical location) gates Slot 8 L3 STEP enable.
+
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
 > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
