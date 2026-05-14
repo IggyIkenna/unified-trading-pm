@@ -602,7 +602,7 @@ todos:
 
   - id: phase-7-replay-subsystem
     content: |
-      - [ ] [AGENT] P0. Phase 7 — Replay subsystem. PARALLEL with Phase 6 (different code path).
+      - [x] [AGENT] P0. Phase 7 — Replay subsystem. PARALLEL with Phase 6 (different code path). (MTDS@9358c54 — replay/runner.py ReplayRunner + HistoricalWindowFetcher Protocol + InstrumentWindowData; cli/handlers/replay_handler.py ReplayHandler; cli/main.py "replay" op registration; 12 unit tests; QG clean. HISTORICAL_WINDOW_FETCHER_FACTORIES empty — per-venue fetchers ship with Phase 3.5 rollout same as WSFeedConnector.)
 
         Site: NEW launcher `deployment-service/scripts/vm/launch-replay-cascade.sh` + NEW MTDS+MDPS+features
         replay entry-points.
@@ -652,8 +652,8 @@ todos:
         **Operationally**: replay VMs use the same launcher template as live VMs but with `--mode replay
         --start --end --shard-key` flags; register `replay-` VM-name prefix in `VM_PREFIX_TO_BUCKET` per
         workspace VM-naming rule.
-    status: todo
-    note: ""
+    status: done
+    note: "2026-05-14 slot-3 ikenna — MTDS@9358c54 ships 7.1 (ReplayRunner + HistoricalWindowFetcher + InstrumentWindowData + ReplayHandler + operation 'replay' registration) + 7.3 smooth handoff (finalize at last period_end) + 7.4 backstop (REPLAY_BACKSTOP_REACHED + halt at coverage_limit). 7.2 MDPS consumer reuse is pre-existing (live_aggregator.py Phase 3 MDPS consumer is already replay-unaware by design — events flow through same XREADGROUP calls). 12 unit tests: N-window stream, handoff finalize, double-publish None-return, backstop halt+event. QG clean. Per-venue HistoricalWindowFetcher factories ship with Phase 3.5 de-risk rollout."
 
   - id: phase-8-health-api-extension
     content: |
