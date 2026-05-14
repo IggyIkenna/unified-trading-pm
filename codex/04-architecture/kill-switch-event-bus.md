@@ -97,6 +97,14 @@ Provenance gating rules:
   construction site (testnet bus + live bus are separate singletons; the chaos-drill cron only has a handle to the
   testnet bus).
 
+**Why `SCHEDULED_DRILL` is treated as operator-equivalent for `KILL_ALL_LIVE`**: A `SCHEDULED_DRILL` event is a
+nightly disaster-recovery (DR) drill that runs on the live account with an operator present in the drill window.
+Unlike `SCENARIO_SYNTHETIC` (fully unattended chaos-cron on testnet), every `SCHEDULED_DRILL` arm requires a human
+operator to have pre-approved the drill time-window and to be monitoring the recovery sequence. The drill runner VM
+carries a `source-vm-tag` in the audit log distinguishing it from a human click (`OPERATOR_MANUAL`), but the
+operator-attendance requirement makes the risk profile equivalent. Both provenances satisfy the "human-in-the-loop"
+constraint for `KILL_ALL_LIVE` arming.
+
 ## Event shapes
 
 ### `KillSwitchArmRequest` (inbound)

@@ -236,6 +236,8 @@ def test_event_publication_invokes_event_sink():
 | Exchange REST APIs (Hyperliquid, etc.) | `responses` library (`passthrough=False`) | HTTP-level intercept; proves zero live calls               |
 | WebSocket market data feeds            | `MockWebSocketFeed` (UMI)                 | In-process WS server; deterministic tick replay            |
 | DeFi on-chain protocols                | Sim mode + `responses passthrough=False`  | Pure in-process arithmetic; assert zero I/O                |
+| DeFi on-chain integration              | Tenderly VNet fork fixture                | Real EVM state; fixture in `execution-service/tests/defi_execution/integration/conftest.py` |
+| IBKR TWS gateway                       | `MagicMock(spec=IB)`                      | IBKR SDK is stateful; spec mock prevents attribute drift   |
 | VCR cassette re-use                    | vcrpy cassette in UAC                     | Protocol-faithful for REST; use for external API contracts |
 
 **Key rule**: If the GCP/AWS SDK is on the call path, use an emulator or moto — not `unittest.mock.patch` on internals.

@@ -250,10 +250,14 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
    explicit operator action before live trading. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14):
    ManualPendingQueue engine + 4 API endpoints shipped at `execution-service@1e119a61f`;
    ManualTradeGateDialog + dart-client.ts + mock fixtures shipped at `unified-trading-system-ui@13b94ca9`.
-6. **Custody adapter Cloud-KMS wiring smoke** — verify the `signing_surface` config flip path works against real
-   Cloud-KMS endpoint (existing 10 CMKs, asia-northeast1). (infra 0.8×, ~2 = 1.6 cal)
-7. **`alerting_runbook_and_operator_ux_post_cutover_2026_05_12` Ikenna-half** — push remaining operator UX items.
-   (design 0.6×, ~3 = 1.8 cal)
+6. ✅ **Custody adapter Cloud-KMS wiring smoke** — verify the `signing_surface` config flip path works against real
+   Cloud-KMS endpoint (existing 10 CMKs, asia-northeast1). (infra 0.8×, ~2 = 1.6 cal) **DONE** (2026-05-14):
+   requires_credentials marker registered + TestCloudKmsLiveEndpointSmoke class (2 integration tests, skip by default)
+   at `execution-service@1ee9e8001`. Unit tests covering full dispatch chain already present.
+7. ✅ **`alerting_runbook_and_operator_ux_post_cutover_2026_05_12` Ikenna-half** — push remaining operator UX items.
+   (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14):
+   Groups A/B/C/E/F shipped (runbook + 4 doc edits). Groups D/G: design calls documented + implementation deferred
+   to UI/deployment-ui slot (out of PM-repo scope). All at `unified-trading-pm@slot6-item7`.
 8. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 1** — pre-cutover audit-records gate. (research 1.2×, ~3 =
    3.6 cal)
 9. **`available_at_lookahead_bias_completion_2026_05_08` sweep** — close remaining stamping helper consumers. (refactor

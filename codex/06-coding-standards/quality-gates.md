@@ -157,6 +157,10 @@ auto-format step.
 **`--agent` flag** (for agents and CI): implies `--skip-tests` + skip act. Quickmerge becomes
 lint/format/typecheck/codex only — the same things that could silently break during commit staging.
 
+**Two-pass model for agents**: Pass 1 (`quality-gates.sh`) is the ONLY time tests run in the agent workflow. Pass 2
+(`quickmerge --agent`) deliberately skips tests — they already passed in Pass 1 and re-running them wastes CI budget
+without adding signal. Agents MUST NOT skip Pass 1 to save time; the test gate is the correctness proof.
+
 **`--quick` flag** (human shortcut): skip act only; tests still run. Use when you want act simulation skipped but want
 test re-validation.
 

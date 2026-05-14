@@ -200,6 +200,12 @@ Items 1 (Phase 1 HMAC chain), 3A (Phase 3 audit GCS versioning) — already DONE
 
 ---
 
+## [slot 6 BOOT ACK] 2026-05-14 16:08 UTC — context reload, resuming stack
+
+LDR sync complete. Items 1-5, 10 DONE. Starting Item 6: Custody adapter Cloud-KMS wiring smoke (`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`).
+
+---
+
 ## [slot 6 → main] 2026-05-14 — pvl-p23c ManualTradeGateDialog SHIPPED
 
 **Status**: DONE — pvl-p23c fully shipped (Group G Item 23).

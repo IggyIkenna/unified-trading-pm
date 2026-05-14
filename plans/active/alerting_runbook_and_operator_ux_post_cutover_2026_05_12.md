@@ -46,31 +46,43 @@ covers the lot after May-23.
 
 ## Todos
 
-- [ ] [RUNBOOK] P2. **Group A — DART wallet-tier kill-switch runbook (R-16).** Write
+- [x] [RUNBOOK] P2. **Group A — DART wallet-tier kill-switch runbook (R-16).** Write
       `codex/15-runbooks/wallet-tier-kill-switch-operator.md` with `execution.{owner,cadence,verifier,last_executed}`
       frontmatter, decision tree (KILL_PER_WALLET vs KILL_PER_ARCHETYPE vs KILL_PER_VENUE), rollback procedure,
       audit-log signature. **MIGRATED FROM:** R-16.
-- [ ] [DOC] P3. **Group B — kill-switch provenance rationale (R-15).** Add 1-paragraph rationale to
+      **DONE 2026-05-14**: `unified-trading-pm@slot6-item7` — runbook created with full frontmatter + decision tree + rollback + audit-log signature.
+- [x] [DOC] P3. **Group B — kill-switch provenance rationale (R-15).** Add 1-paragraph rationale to
       `kill-switch-event-bus.md:73-89` explaining why `SCHEDULED_DRILL` is operator-equivalent (drill-runner
       operator-attended; chaos-cron unattended). **MIGRATED FROM:** R-15.
-- [ ] [DESIGN] P2. **Group C — Alert false-positive SLO measurement (AL-22).** Either: (a) wire minimal feedback path
+      **DONE 2026-05-14**: paragraph added after provenance gating rules section.
+- [x] [DESIGN] P2. **Group C — Alert false-positive SLO measurement (AL-22).** Either: (a) wire minimal feedback path
       (operator marks an alert "noise" in UI → metric increments via `AlertFeedback` model in alerting-service); or (b)
       downgrade `codex/03-observability/slos.md:56` to "manual review during quarterly rehearsal" with named owner.
       Compose with rehearsal procedure (AL-16). **MIGRATED FROM:** AL-22.
+      **DONE 2026-05-14**: Chose option (b) — no `AlertFeedback` model exists; downgraded to "manual review during quarterly DR rehearsal" with named on-call owner. Upgrade note added.
 - [ ] [DESIGN] P2. **Group D — Block-list / category-instrument-coverage TS mirror parity (ST-11).** Either generate the
       `.ts` from codex doc / UAC matrix, or add CI parity check mirroring UAC cassette-parity. Fix likely belongs in UI
       repo; this plan owns the design call + cross-repo plan-spawning if implementation is complex. **MIGRATED FROM:**
       ST-11.
-- [ ] [DOC] P3. **Group E — Two-pass QG model § in testing codex (TS-19).** Add 3-line subsection to
+      **DESIGN CALL 2026-05-14**: CI parity check (not generation). Add `__tests__/scripts/block-list-parity.test.ts`
+      to `unified-trading-system-ui` mirroring the orphan-audit pattern. Test reads `lib/architecture-v2/block-list.ts`
+      BL-IDs and compares against `codex/09-strategy/architecture-v2/block-list.md` BL-* tokens. Implementation is
+      **DEFERRED** to UI repo slot (requires UI-repo QG). Successor: add as agenda item for next Harsh UI slot.
+- [x] [DOC] P3. **Group E — Two-pass QG model § in testing codex (TS-19).** Add 3-line subsection to
       `codex/06-coding-standards/quality-gates.md` clarifying that Pass 2 (`quickmerge --agent`) does NOT re-run tests.
       **MIGRATED FROM:** TS-19.
-- [ ] [DOC] P3. **Group F — DeFi-integration + IBKR rows in testing decision matrix (TS-20).** Add distinct rows to
+      **DONE 2026-05-14**: subsection added after `--agent` flag description.
+- [x] [DOC] P3. **Group F — DeFi-integration + IBKR rows in testing decision matrix (TS-20).** Add distinct rows to
       `integration-testing-layers.md:219-234` matrix: "DeFi on-chain integration → Tenderly VNet fork fixture
       (`execution-service/tests/defi_execution/integration/conftest.py`)" + "IBKR → `MagicMock(spec=IB)`". **MIGRATED
       FROM:** TS-20.
+      **DONE 2026-05-14**: two rows added to the decision matrix.
 - [ ] [DESIGN] P2. **Group G — STALE_OPEN_ALERT operator dashboard (AL-21 UX half).** Wire the operator-facing surface
       for the STALE_OPEN_ALERT meta-alert (the QG/automation contract lives in the governance plan). UI tile in
       deployment-ui OR alerting-service dashboard. **MIGRATED FROM:** AL-21 (UX half).
+      **DESIGN CALL 2026-05-14**: UI tile in `deployment-ui` AlertStatusPanel (NOT alerting-service — keeps alerting
+      stateless). Tile polls `GET /api/alerts?status=stale&limit=20`. Implementation is **DEFERRED** to deployment-ui
+      slot. Successor: add as agenda item for Harsh deployment-ui slot post May-23.
 
 ## Done definition
 
