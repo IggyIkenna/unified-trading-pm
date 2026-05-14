@@ -127,7 +127,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 ## Tier 2 — Ready after Tier 1 lands
 
 ### B-013 · Phase 2 — 99%-repo deploy-ready tracking
-- **Status**: DISPATCHED → slot 7 2026-05-14
+- **Status**: DONE @deployment-api@1f22e22+deployment-ui@2dfefa1+PM@b6e58906 2026-05-14 (slot 7 — endpoint + UI tab; 19 unit tests + 6 vitest; pnpm build green)
 - **Task**: New deployment-api endpoint `/api/repos/deploy-ready` — walks last 5 daily QG snapshots per repo; returns `deploy_ready: true` if all 5 green + zero P0 issue docs + no `🟡 IN-FLIGHT REFACTOR` banner. Deployment-ui panel showing per-repo readiness.
 - **Repos**: `deployment-api` + `deployment-ui`
 - **Est**: 3h · **Model**: Sonnet
@@ -198,6 +198,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-015 DeFi carry_staked_basis paper backtest | slot 9 | DISPATCHED (Phase 1 cross-side prereq check FIRST) |
 | 2026-05-14 | B-010 Phase 8.A archetype validation coverage | slot 3 | strategy-service@4ede3b2 + PM@4f4df625 ✅ (93.18% coverage; 38 new tests) |
 | 2026-05-14 | B-016 DeFi arbitrage_price_dispersion paper backtest | slot 3 | DISPATCHED (parallel with B-015; Phase 1 cross-side prereq check FIRST) |
+| 2026-05-14 | B-013 Phase 2 deploy-ready tracking | slot 7 | deployment-api@1f22e22 + deployment-ui@2dfefa1 + PM@b6e58906 ✅ |
 
 ---
 
