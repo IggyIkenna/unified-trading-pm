@@ -294,6 +294,15 @@ verify L7 enforcement coverage.
 - [ ] [SCRIPT] P0. **L2 violation fix-batch** — ~21 violations across features-\*/strategy/MDPS per pre-audit § 1 Tab 3.
       Audit each: move-to-seam (legitimate routing) OR unify-path (logic). Fan out to ~5 service PRs;
       Tab 3 main agent serialises commits. Pre-announce rollout window to operators.
+      **DEFERRED** (2026-05-14 slot-8): (a) execution-service sports_factory.py renamed `mode`→`trading_mode` to prevent
+      false-positive STEP 5.77 detection (semantic fix, not one of the 21 — execution-service@9ff0023b); (b) bulk 21
+      violations (features-service/strategy/MDPS) require per-service context outside slot-8 scope — must be done by
+      next Tab 3 spawn reading pre-audit manifest § 1 Tab 3; (c) instruments-service ADDITIONAL FINDINGS (not in pre-audit
+      21): `reference_data/factory.py:462,481` = EXEMPT (legitimate source-selection seam — factory routes live→CCXT/GCS
+      vs batch→Tardis/Databento, matches batch=live "only SOURCE differs" principle);
+      `engine/orchestrator.py:1653,2072` = TRUE violations (DeFi batch caching + early-exit in engine layer, not CLI
+      seam) — see Q3; `alerting-service/main.py:199` = EXEMPT (top-level async main dispatch after CLI arg parsing).
+      Successor: next Tab 3 agent (features-service/strategy/MDPS 21 violations) + Q3 for instruments-service.
 - [ ] [SCRIPT] P0. **L2 STEP enable** — only after fix-batch lands + workspace CI green for 2h.
 - [x] [SCRIPT] P0. **L3 violation fix-batch** — UAC re-export RuntimeMode from UTL canonical (1 PR);
       `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` re-export from UAC (1 PR).
@@ -304,7 +313,8 @@ verify L7 enforcement coverage.
 - [ ] [SCRIPT] P0. **L7 enforcement verification sweep** — AST-walk every `record_captured(` callsite per pre-audit
       Manifest 2; ensure UTL `assert_available_at_present` fires on every write path; STEP entry already implicit via
       STEP 5.64 — extend AST coverage.
-- [ ] [SCRIPT] P1. **L4/L5/L6 DEFER** — post-cutover (per defaults #2).
+- [x] [SCRIPT] P1. **L4/L5/L6 DEFER** — post-cutover (per defaults #2).
+      (Documented in § "Temporary states"; L4=LIVE_* rename, L5=schema-parity gate, L6=executor-factory enforcement; all post-cutover per defaults table D5)
 - [ ] [SCRIPT] P0. PM repo: `bash scripts/quality-gates.sh` + push.
 
 ### Spawn prompt
@@ -707,6 +717,7 @@ This plan archives when:
 |---|----------|--------|---------|
 | Q1 | **L3 UI deferred** — `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` declares `class RuntimeMode` as a deliberate copy (the UI Python context = `unified-internal-contracts` package, which mirrors UAC schemas without importing from UAC). Fix options: (A) add UAC as a dep to the UI Python context; (B) keep the copy and exempt from STEP 5.78 (current approach). Current choice: B (exempted). Requires design call before closing. | 🟡 BLOCKED | Operator design call |
 | Q2 | **L3 canonical location CLAUDE.md correction** — CLAUDE.md says "RuntimeMode canonical location: UTL constants.py:18" but UAC is T0 (no deps) so UAC is the correct canonical. CLAUDE.md needs updating. Deferred to PM codex update. | 🟡 BLOCKED | PM codex update slot |
+| Q3 | **L2 instruments-service orchestrator.py violations** — `engine/orchestrator.py:1653` (`if defi_active and mode == "batch"`: batch uses cached DeFi universe, live fetches fresh) and `:2072` (`if is_defi_only and mode == "batch"`: zero-record early exit for pre-genesis dates) are true L2 violations in the engine layer (not CLI seam). Not in original pre-audit 21. Options: (A) move caching decision to CLI handler; (B) inject DeFi-cache-strategy object at CLI seam; (C) baseline in STEP 5.77 as known-exceptions until (A)/(B) lands. | 🟡 BLOCKED | Operator design call on DeFi caching architecture |
 
 ## Deferred work after 2026-05-14 slot-5 session
 
@@ -722,6 +733,20 @@ This plan archives when:
 | Tab 1 — codex docs (prev session) | ✅ DONE per previous session | PM@6153d9ea area |
 
 **Tab 5 action item** (captured here per Capture Discoveries rule): L7 fix-list names 25+ MDPS defi handlers that need `available_at` stamp + `record_captured(df=...)` migration. Pre-audit file names were stale (main workspace). Tab 5 owner must use the file list in Tab 2 L7 checkbox body above.
+
+## Deferred work after 2026-05-14 slot-8 session
+
+| Phase / item | Status as of 2026-05-14 | Successor / blocker |
+|---|---|---|
+| Tab 3 L1+L5 STEP enable (STEP 5.75+5.76) | ✅ DONE — PM@5772f57b | No successor |
+| Tab 3 L3 fix-batch (UTL re-export from UAC) | ✅ DONE — UTL@ebed394; UI copy exempted per Q1 | No successor |
+| Tab 3 L3 STEP enable (STEP 5.78) | ✅ DONE — PM@882faaa0 | No successor |
+| Tab 3 L4/L5/L6 DEFER annotation | ✅ DONE — annotated in Temporary states; checkbox flipped | No successor |
+| execution-service `mode`→`trading_mode` rename | ✅ DONE — execution-service@9ff0023b (false-positive prevention for STEP 5.77) | No successor |
+| Tab 3 L2 fix-batch (21 violations: features-service/strategy/MDPS) | 🟡 DEFERRED — untouched; needs next Tab 3 spawn with pre-audit § 1 context | Next Tab 3 agent must read pre-audit manifest § 1 Tab 3 before touching |
+| Tab 3 L2 instruments-service orchestrator.py×2 true violations | 🟡 BLOCKED — design call needed (Q3) | Operator on DeFi caching architecture |
+| Tab 3 L2 STEP 5.77 enable | 🟡 DEFERRED — blocked on full L2 fix-batch landing | After fix-batch + 2h CI green |
+| Tab 3 L7 verification sweep | 🟡 DEFERRED — not started this session | Next Tab 3 spawn; read STEP 5.64 template first |
 
 ## Temporary states + their canonical follow-up plans
 
