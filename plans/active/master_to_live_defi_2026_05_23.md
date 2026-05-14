@@ -1082,14 +1082,12 @@ sign-off.
 >
 > - **#1 Schema columns frozen** ✅ (slot 6 Cycle 0; UAC@`174f401`)
 > - **#2 error_reason taxonomy** ✅ (slot 6 + slot 3)
-> - **#3 37-callsite migration** 🟡 (slot 2 writegate (c) Phase 6.2 MDPS POC ✅ shipped MDPS@`311614a`; slot 3 DAY-2
->   PipelineMode sweep — operator-approved Q1+Q2 PM@`4c573302` — covers remainder; Day-2 morning landing)
+> - **#3 37-callsite migration** ✅ (Day-2 PipelineMode sweep complete; QG STEP 5.68 workspace-wide confirmed `0 baselined, 0 new occurrences` — Day-3 audit 2026-05-14 by slot 6)
 > - **#4 ServiceEmissionPolicy seed dict locked** ✅ (slot 6 + slot 2)
 > - **#5 available_at per-row stamping** ✅ (slot 3 + slot 4 + slot 8)
-> - **#6 LookaheadBiasError strict-mode features-\*** 🟡 (slot 3 Day-2-4 extension covers + slot 4 design dep)
+> - **#6 LookaheadBiasError strict-mode features-\*** ✅ (all 8 families confirmed: delta_one/volatility/calendar/multi_timeframe/cross_instrument/sports — `PointInTimeEnforcer(strict=True)`; onchain — `strict=not mock_mode` (production=True); commodity — direct `raise LookaheadBiasError` for negative staleness. Day-3 audit 2026-05-14 by slot 6)
 >
-> **5/6 ✅ + 2 🟡 PARTIAL**. PipelineMode sweep closes item #3 on Day 2 morning. Features-\* strict-mode (#6) on track
-> per slot 3+4 coordination.
+> **6/6 ✅ ALL ITEMS CONFIRMED GREEN** — Day-3 audit 2026-05-14 by slot 6 (read-only workspace-grep verification). Gate fires tomorrow 2026-05-15. No P0 gaps found.
 >
 > **2026-05-12 Day-1 EOD shipments by slot** (all on origin/live-defi-rollout):
 >
