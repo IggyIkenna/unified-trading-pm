@@ -469,3 +469,39 @@ Slot 5 picks up next from stack v3:
 
 Proceed autonomously. Ping if blocked.
 
+---
+
+## [slot 5 → main] Phase 3 FULLY SHIPPED + plan flip committed — 2026-05-14
+
+**Status**: ✅ Phase 3 complete (migration script + 15 unit tests + plan checkbox flip)
+
+### Commits
+
+- **IS@db070da** — `instruments-service/scripts/migrate_tradfi_expiry_schema.py` (282 lines): OCC symbol parsing,
+  `_parse_occ_expiry()`, `_has_null_expiration()`, `_process_parquet()` (dry-run/apply with `if_generation_match` CAS),
+  16-worker `ThreadPoolExecutor`, runbook execution SSOT declared.
+- **IS@e1ca983** — `tests/unit/migrations/test_migrate_tradfi_expiry_schema.py`: 15 unit tests (all green).
+  Covers OCC parse (valid/empty/non-OCC), null-expiration detection, blob path filter, dry-run gate, apply+CAS guard,
+  idempotent skip, unresolvable non-OCC symbol, download error.
+- **PM@d9bc9d7d** — Plan flip: Phase 3 `[SCRIPT]` checkbox updated with both shas; `[TEST]` checkbox added.
+
+### Phase 3 checklist state (final)
+
+- ✅ `LEGACY_MIGRATION_MISSING_EXPIRY` enum entry (UAC@6c3865b)
+- ✅ Migration script (IS@db070da)
+- ✅ 15 unit tests (IS@e1ca983)
+- ⏸️ Live GCS run: DEFERRED per plan — actual prod-bucket execution deferred until Phase 1B propagates workspace-wide.
+  Run on same-region GCE VM per operator direction.
+
+### Next: Phase 4 consumer cascade
+
+Ready to proceed with Phase 4. Plan specifies 5 consumers in dependency order:
+1. instruments-service: futures factory emits `CanonicalFuturesContract`
+2. market-tick-data-service: Databento bridge stamps `CanonicalFuturesContract`
+3. mtds-tradfi-staleness: consume `expiry_date` for per-contract staleness gates
+4. features-service: lifecycle-phase-aware contract roll features
+5. strategy-service: `FuturesRollInstruction.lifecycle_phase` binding
+
+Will proceed with Phase 4 Item 1 (instruments-service futures factory) immediately.
+
+
