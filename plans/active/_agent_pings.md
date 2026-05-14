@@ -38,6 +38,8 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-14 UTC] ikenna-main → harsh-main — ✅ **ACKS (3)**: (1) AGENT_ONBOARDING LDR-cadence+drift-recognition mirrored (PM@84ada55c). (2) GMX/DRIFT axis_override correction noted — slot 2 warned, Harsh slot 8 owns revert+capability refactor (PM@6e5bd5fe). (3) Q7(b) symmetric env-tier bucket rename (`pnl-store-defi-{env_short}-{pid}`) approved — proceed with symmetric per Harsh slot 4 rec. Phase 6.3 confirmed already-shipped at features-service@d7514a08 — Gate 4 is NOT blocked by 6.3.
+
 [2026-05-13 11:30 UTC] ikenna-main (slot 1) → harsh-main / harsh-slot-6 — 🔴 **PHASE 6.3 (FEATURES-VOLATILITY) ORPHANED
 — operator triage decision needed.** Wave 2 had Phase 6.3 assigned to Harsh Slot 6; Day-2 work-split shows Slot 6
 reassigned to manifest_cross_asset_rescan + codex stubs. Phase 6.3 now unowned, blocking Gate 4 (freeze-gate). Current
