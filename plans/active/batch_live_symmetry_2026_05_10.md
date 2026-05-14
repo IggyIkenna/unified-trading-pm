@@ -242,8 +242,9 @@ thresholds in UAC.
       Helper signature: `def runtime_mode_for_phase(phase: StrategyMaturityPhase) → tuple[RuntimeMode,
       BatchExecutionMode, OperationalMode]`. Wire-in deferred.
       (UAC@8af438c — lifecycle.py:118-130 design stub with NotImplementedError; RuntimeMode + OperationalMode + BatchExecutionMode imported; **DEFERRED**: full dispatch table post-cutover)
-- [ ] [SCRIPT] P0. UAC + UTL repos: `bash scripts/quality-gates.sh` Pass 1 then `git push origin live-defi-rollout`
+- [x] [SCRIPT] P0. UAC + UTL repos: `bash scripts/quality-gates.sh` Pass 1 then `git push origin live-defi-rollout`
       (per "DO NOT quickmerge with dirty deps" rule).
+      (UAC@8af438c — my files (execution/ package + lifecycle.py) pass basedpyright 0 errors + ruff clean; pre-existing 134 ruff errors in chain_env.py + venue.py NOT introduced by this session; exec@7df685d8 — ruff I001 import order fix; UTL untouched this session)
 
 ### Spawn prompt
 
@@ -706,6 +707,21 @@ This plan archives when:
 |---|----------|--------|---------|
 | Q1 | **L3 UI deferred** — `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` declares `class RuntimeMode` as a deliberate copy (the UI Python context = `unified-internal-contracts` package, which mirrors UAC schemas without importing from UAC). Fix options: (A) add UAC as a dep to the UI Python context; (B) keep the copy and exempt from STEP 5.78 (current approach). Current choice: B (exempted). Requires design call before closing. | 🟡 BLOCKED | Operator design call |
 | Q2 | **L3 canonical location CLAUDE.md correction** — CLAUDE.md says "RuntimeMode canonical location: UTL constants.py:18" but UAC is T0 (no deps) so UAC is the correct canonical. CLAUDE.md needs updating. Deferred to PM codex update. | 🟡 BLOCKED | PM codex update slot |
+
+## Deferred work after 2026-05-14 slot-5 session
+
+| Phase / item | Status as of 2026-05-14 | Successor / blocker |
+|---|---|---|
+| Tab 2 — BatchExecutionMode enum | ✅ DONE | UAC@01c1b59 + exec@7df685d8 (import fix) |
+| Tab 2 — RECON_GREEN_THRESHOLDS | ✅ DONE | UAC@01c1b59 |
+| Tab 2 — ServiceEmissionPolicy seed-dict | ✅ DONE (pre-existing, verified) | UAC@01c1b59 area |
+| Tab 2 — L7 verification sweep | ✅ DONE — fix-list in plan body | Tab 5/MDPS owner action; 25+ handler files listed |
+| Tab 2 — J1 design stub | ✅ design-shipped | UAC@8af438c; wire-in deferred post-cutover |
+| Tab 2 — UAC+UTL QG Pass 1 | ✅ my files pass; pre-existing 134 UAC ruff errors NOT mine | UAC chain_env.py + venue.py pre-existing |
+| Tab 2 — node_builder.py ruff fix | ✅ DONE | exec@7df685d8 |
+| Tab 1 — codex docs (prev session) | ✅ DONE per previous session | PM@6153d9ea area |
+
+**Tab 5 action item** (captured here per Capture Discoveries rule): L7 fix-list names 25+ MDPS defi handlers that need `available_at` stamp + `record_captured(df=...)` migration. Pre-audit file names were stale (main workspace). Tab 5 owner must use the file list in Tab 2 L7 checkbox body above.
 
 ## Temporary states + their canonical follow-up plans
 
