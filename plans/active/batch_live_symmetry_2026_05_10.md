@@ -195,26 +195,53 @@ thresholds in UAC.
 
 ### Todos
 
-- [ ] [SCRIPT] P0. **UAC `BatchExecutionMode` enum extraction** — ship enum lookup module at
+- [x] [SCRIPT] P0. **UAC `BatchExecutionMode` enum extraction** — ship enum lookup module at
       `unified_api_contracts/canonical/crosscutting/execution/batch_execution_mode.py`; replace hardcoded
       `"NORMAL"|"BENCHMARK_FILL"` strings at `execution-service/.../engine/backtest/node_builder.py:496-504,631-632`
       with enum-driven dispatch. Pre-audit Manifest 7.
-- [ ] [SCRIPT] P0. **UAC `RECON_GREEN_THRESHOLDS` SSOT** — ship dict at
+      (UAC@01c1b59 — canonical/crosscutting/execution/ package; exec@b30167e2 — node_builder.py 3 callsites migrated to BATCH_FILL_ALGO_TYPES + BENCHMARK_FILL_ALGO_TYPE constants)
+- [x] [SCRIPT] P0. **UAC `RECON_GREEN_THRESHOLDS` SSOT** — ship dict at
       `unified_api_contracts/canonical/crosscutting/alerting/thresholds.py`. Shape:
       `{archetype_id: {bps_delta_max, drawdown_pct, fill_rate_min}}`. Initial values for `carry_staked_basis` +
       `leveraged_funding_arb` (operator-calibrated post-2-yr-backtest; default 95p+2× margin starting point).
+      (UAC@01c1b59 — thresholds.py appended with RECON_GREEN_THRESHOLDS dict; carry_staked_basis bps_delta_max=50/drawdown_pct=2.0/fill_rate_min=0.95, leveraged_funding_arb bps_delta_max=75/drawdown_pct=3.0/fill_rate_min=0.92)
 - [x] [SCRIPT] P0. **UAC ServiceEmissionPolicy seed-dict — 9 missing entries** at
       `unified_api_contracts/internal/service_emission_policy.py`: `(execution, fills)` · `(mdps, candles)` ·
       `(mtds, ticks)` · per-feature-group entries · `(strategy, signals)` · `(pbm, positions)` · `(rae, risk_scores)` ·
       `(recon, green_status)` · `(alerts, rules)`. Pre-audit § 3. (verified 2026-05-13: shipped at UAC `canonical/crosscutting/service_emission_policy.py:159` `SERVICE_OUTPUT_POLICIES` with **71 rows** covering MDPS / Features / ML / Strategy / Execution / PBM / Risk / Instruments / Onchain / Sports — per code_freeze plan line 154 slot 3 audit; file location differs from spec but exceeds 9-entry threshold)
-- [ ] [SCRIPT] P0. **L7 verification sweep** — confirm 3 violations at MDPS
+- [x] [SCRIPT] P0. **L7 verification sweep** — confirm 3 violations at MDPS
       (`storage_dispatch_worker.py:49`, `output_writer_service.py:318`, `orchestration_writer.py:388`); audit 2
       audit-needed at UTL `domain/standardized_service.py:100,299`; flag remaining direct `pq.write_table` /
       `to_parquet` callsites; fix-list handed to MDPS / UTL owners. Pre-audit Manifest 2.
-- [ ] [SCRIPT] P1. **J1 phase→mode helper signature** (DEFER — defaults #2 says J1 wiring post-cutover; ship signature
-      contract only as design stub at `unified_api_contracts/internal/domain/strategy_service/lifecycle.py:91-116`).
+      (sweep complete 2026-05-14 — see fix-list below)
+
+      **L7 FIX-LIST (Tab 5/MDPS owner action required)**:
+      Pre-audit named files (`storage_dispatch_worker.py`, `output_writer_service.py`, `orchestration_writer.py`) do
+      NOT exist in LDR MDPS worktree — pre-audit was derived from main workspace. Actual violations found by
+      sweeping `.tabs/5/market-tick-data-service/`:
+      25+ `to_parquet` callsites across defi handlers — NONE stamp `available_at` on df before serialization. No
+      `record_captured(df=...)` flow yet (handlers use `record_captured(row_count=N)` form, bypassing internal
+      `assert_available_at_present`). Files: `token_transfers_handler.py:183` · `governance_events_handler.py:120`
+      · `liquidation_events_handler.py:187` · `vault_share_price_handler.py:268,470` · `mev_events_handler.py:120`
+      · `eigenlayer_rewards_handler.py:305` · `dex_pools_handler.py:554` · `perp_funding_handler.py:405,545,703`
+      · `solana_defi_handler.py:68` · `gas_fee_handler.py:545,622,707,839,914` · `oracle_prices_handler.py:618`
+      · `lending_indices_handler.py:565` · `bridge_events_handler.py:138` · `dex_swaps_handler.py:561`
+      · `position_data_handler.py:120,170` · `flash_loan_events_handler.py:137` · `data_manifest_handler.py:531`
+      · `lst_rates_handler.py:443,517` · `liquidations_handler.py:478` · `evm_defi_handler.py:475,546`
+      Full v8 `record_captured(df=...)` migration tracked in `_defi_manifest.py:148-149` comment.
+      **Tab 5 action**: include these handlers in L7 migration batch.
+
+      **UTL audit (AUDIT-NEEDED — UTL owner decision)**:
+      `domain/standardized_service.py:100` (`_serialize_upload_item`) + `:299` (`upload_to_gcs`) — generic
+      serialization helpers converting DataFrame to parquet bytes for GCS upload. NOT directly a manifest write
+      path. Whether callers stamp `available_at` before passing df is caller-dependent. UTL owner should audit
+      callers and confirm whether assert is needed at this layer.
+
+- [x] [SCRIPT] P1. **J1 phase→mode helper signature** (DEFER — defaults #2 says J1 wiring post-cutover; ship signature
+      contract only as design stub at `unified_api_contracts/internal/domain/strategy_service/lifecycle.py`).
       Helper signature: `def runtime_mode_for_phase(phase: StrategyMaturityPhase) → tuple[RuntimeMode,
       BatchExecutionMode, OperationalMode]`. Wire-in deferred.
+      (UAC@8af438c — lifecycle.py:118-130 design stub with NotImplementedError; RuntimeMode + OperationalMode + BatchExecutionMode imported; **DEFERRED**: full dispatch table post-cutover)
 - [ ] [SCRIPT] P0. UAC + UTL repos: `bash scripts/quality-gates.sh` Pass 1 then `git push origin live-defi-rollout`
       (per "DO NOT quickmerge with dirty deps" rule).
 
