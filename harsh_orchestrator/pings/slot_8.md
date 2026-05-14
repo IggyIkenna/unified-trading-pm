@@ -8,3 +8,4 @@
 Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block on first read).
 New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
 [2026-05-14 10:20 UTC] slot-8 — STARTED Phase 0 Cluster E: UTS-UI tsc errors (deployment_and_qg_strategy_implementation_2026_05_13.md § Cluster E)
+[2026-05-14 10:45 UTC] slot-8 — Tab 3 DONE: L2 fix-batch + STEP 5.77 + L7 sweep all complete; instruments-service noqa'd; PM@06c6213c
