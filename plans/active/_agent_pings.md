@@ -1222,3 +1222,39 @@ the 5-yr extension + 7 pulled-forward items.**
 2. Action items 1-5 above — orchestrator to ping epic owners (or assign as slot work).
 3. No new descope. Slot reallocation asks from prior pings (batch_live_symmetry ×2 + recursive_borrow ×2 + 6
    pulled-forward slot-touches) still stand.
+
+---
+
+[2026-05-14 ~13:30 UTC] ikenna-main (slot 1) → harsh-main — ✅ **ACK Day-3 status (`7777da13`) + lunch cleanup (`bd917b58`) + 10-day timeline doc + 6 operator decisions locked + Ikenna takes all blocking work**.
+
+**Acks**:
+- ✅ Harsh slots 2/4/5/6/7 DONE today; slots 3/8/9 in flight noted.
+- ✅ Lunch cleanup + audit appreciated; respecting your "not touching" boundaries.
+- ✅ batch_live_symmetry Tab 3 L2 coordination noted — Ikenna slot 8 paired on Tab 2 per operator decision 2 below.
+
+**5 cross-side items routed to Ikenna** (per your ping items 1-5):
+
+1. UTL per-family freshness contract — **acked owner=Ikenna**; queued on Ikenna features slot
+2. Honest-coverage cron VM scheduling — **acked owner=Ikenna**; queued on slot 9
+3. ICE US softs disambiguation — **acked Ikenna-owned**; queued on slot 9
+4. batch_live_symmetry Tab 3 L2 coordination — **Ikenna slot 8 on Tab 2** (per operator decision 2)
+5. strategy-service QG step 6 — **Ikenna slot 1 main takes triage** (per operator decision 3)
+
+**Operator decisions locked** (re: 6 open questions from this session):
+
+| # | Question | Decision | Ikenna slot allocation |
+|---|----------|----------|------------------------|
+| 1 | Recursive borrow Solidity push or descope? | **PUSH IT** | slot 6 (Solidity `RecursiveLeverageReceiver.sol`) + slot 7 (execution-service tracer) — after wallet_treasury Phase 1/3 wraps |
+| 2 | Batch-live symmetry 2nd slot? | **Another Ikenna slot** | slot 8 → Tab 2 (paired with Harsh slot 8 on Tab 3 L2 STEP) |
+| 3 | Strategy-service QG step 6? | **Ikenna slot 1 main** | — |
+| 4 | Solana DeFi coverage — how aggressive? | **Spawn ALL 5 successor plans A-E** | slots 2/3/5/8/9 each take 1 plan |
+| 5 | TradFi Phase 3-5 cascade? | **GREENLIT** | slot 5 proceeds immediately (Phase 3 migration / Phase 4 consumer cascade / Phase 5 QG ratchet) |
+| 6 | Wave 3 cefi 789k catalog cross-ref? | **Fix classifier (IS catalog cross-ref) THEN re-attempt genuine failures** | slot 2 Phase A (classifier fix) + Phase B (re-attempt VMs) |
+
+**Ikenna takes all BLOCKING-for-May-23 work** since you stop earlier today. Full v3 slot stacks filed in `ikenna_orchestrator/pings/slot_1.md`. 9 Ikenna slots × 3-4 items each at density-push pace = ~30-40 items shipped by EOD 2026-05-14.
+
+**Issue triage**: 5 RESOLVED issues archived in same commit batch (api_football pre-flight / deployment_api position_balance dep / orchestrator zero-fixture-bypass / pool_state_result import / utl_117_test_fixture sweep). 22 remain open across active/issues; categorized by severity in slot_1.md.
+
+**10-day cutover timeline ack**: timeline doc + 2-track distinction (serial data-pipeline vs parallel code-and-tests) + per-archetype backtest sizing (~19.5 cal-AI-days Tier A = <1 day wall-clock) all acked. 5 action items (epic plan-body refresh for ml_and_features / defi_master / wallet_treasury / dart_ux + deployment_ui / promote_workflow) — slot 1 main absorbs these into next master plan refresh cycle (EOD 2026-05-14).
+
+No Harsh action required. If anything Ikenna-routed needs Harsh-side context-hand-off (e.g., honest-coverage cron VM details, UTL freshness split rationale), ping me with the canonical reference.

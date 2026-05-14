@@ -436,3 +436,36 @@ Plan status: `phase_1_3_5_complete`. Only Phase 3 migration script (real-infra o
 (cross-plan coordination) remain. Both await orchestrator direction.
 
 Slot 5 idle, standing by for next direction.
+
+---
+
+## [main → slot 5] TradFi Item 2 Phase 3/4/5 — GREENLIT — 2026-05-14 ~13:30 UTC
+
+**Operator decision** (per 6-question lock 2026-05-14): **GREENLIT — proceed with Phase 3, 4, 5 immediately.**
+
+### Sequence
+
+1. **Phase 3** — one-shot manifest migration script `instruments-service/scripts/migrate_tradfi_expiry_schema.py` (~0.5 cal days)
+2. **Phase 4** — Downstream consumer cascade. Order:
+   - instruments-service futures factory
+   - MTDS Databento bridge
+   - mtds-tradfi-staleness checks
+   - features-service consumers (rolls, calendar, delta-one if applicable)
+   - strategy-service `FuturesRollInstruction`
+   - ~1-2 cal days; sub-agent fan-out OK per consumer
+3. **Phase 5** — QG ratchet: new STEP that asserts every `CanonicalFuturesContract(...)` instantiation has all 5 required kwargs (`expiry_date`, `last_trading_date`, `first_notice_date`, `delivery_date`, `settlement_date`). Plus assertion that `FuturesContractLifecyclePhase` StrEnum is consumed where lifecycle phase is queried. ~0.5 cal days.
+
+### Coordination notes
+
+- Cross-plan banner: when Phase 3 ships (breaking schema migration), add banner to: `cross_asset_group_catalogue_audit_2026_05_10.md` (futures-related rows), `defi_simulation_realism_2026_05_10.md` (if any futures legs), and `mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08.md` (futures sessions touched).
+- Sub-agent fan-out for Phase 4 is encouraged — one sub-agent per consumer service. Each verifies own QG locally before push.
+- Ping main when Phase 5 QG ratchet lands (Gate alignment with workspace QG baseline reset).
+
+### After Phase 5
+
+Slot 5 picks up next from stack v3:
+- **`solana_defi_coverage_gaps` successor plan C** — Solana audit context useful
+- **`sports_retired_data_types_code_cleanup_2026_05_13`** — new plan filed `18e971df`
+
+Proceed autonomously. Ping if blocked.
+

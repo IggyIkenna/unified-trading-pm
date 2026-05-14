@@ -1,5 +1,134 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] DAY-3 v3 — operator decisions locked + Ikenna takes all BLOCKING work — 2026-05-14 ~13:30 UTC
+
+**Operator context**: Harsh-side stops earlier today than Ikenna. Per operator direction: Ikenna takes all blocking-for-May-23 work; Harsh keeps shippable-today items only. Pace remains ~200 cal AI-days/side/day.
+
+### 6 operator decisions locked (2026-05-14)
+
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | Recursive borrow archetype — push or descope? | **PUSH IT** — allocate 1 Solidity slot + 1 execution-service slot for May-23 build |
+| 2 | Batch-live symmetry — who takes 2nd slot (Tab 2 / L2 fix-batch)? | **Another Ikenna slot** (in addition to slot 3 on Tab 1) |
+| 3 | Strategy-service QG step 6 production-readiness — who triages? | **Ikenna slot 1 main (me)** |
+| 4 | Solana DeFi coverage gaps — how aggressively? | **Spawn ALL 5 successor plans A-E** (one slot per plan) |
+| 5 | TradFi futures contract migration Phase 3-5 — greenlight? | **YES** — Slot 5 proceeds immediately |
+| 6 | Wave 3 cefi 789k catalog cross-ref — labelling-only or re-attempt? | **Fix classifier (IS catalog `available_from`/`available_to` cross-ref) THEN re-attempt the rows that are still genuinely failing after the fix** |
+
+### Archived 5 RESOLVED issues (this commit)
+
+- `api_football_enrichment_preflight_runtime_mismatch_2026_05_13` (instruments-service@4c5b68a)
+- `deployment_api_missing_position_balance_dep_2026_05_14`
+- `orchestrator_zero_fixture_path_recovery_bypass_bug_2026_05_14` (instruments-service@b91b88a)
+- `pool_state_result_import_error_2026_05_13`
+- `utl_117_test_fixture_pipeline_mode_sweep_closed_2026_05_14` (utl@26ded7d)
+
+### Cross-side items routed to Ikenna (per Harsh-main `7777da13` ping)
+
+1. **UTL per-family freshness contract** — utl@26ded7d xfailed 9 tests, owner=Ikenna per UAC FEATURE_FRESHNESS split (UAC@c3f3562)
+2. **Honest-coverage cron VM scheduling** — UI half resolved (deployment-ui@365c32f); cron VM piece = Ikenna
+3. **ICE US softs dataset disambiguation** — UAC write needed; Ikenna-owned (P2)
+4. **batch_live_symmetry Tab 3 L2 fix-batch** — ~21 violations in features-* / strategy / MDPS; pre-announce ping coming from Harsh slot 8 before STEP enable
+5. **strategy-service QG step 6** — pre-existing, **Ikenna slot 1 main** (me) takes triage per decision 3
+
+---
+
+### Full slot stacks v3 (Ikenna — all BLOCKING work)
+
+#### Slot 1 main (me)
+1. ✅ This v3 reassignment + ops decisions filing
+2. **`strategy_service_qg_step6_production_readiness_newly_exposed_2026_05_14`** — triage + fix workspace-manifest.json gate (decision 3)
+3. **`governance_qg_automation_gaps_post_cutover_2026_05_12`** (~3 cal days, P1) — HARD RULE automation + QG ratchet authoring
+4. **Phase 6.9 workspace QG flip-sweep** (~2 cal days) — Gate 4 firing (serial after 6.6/6.7/6.8 PART B)
+5. **`audit_wave1_quality_2026_05_13` follow-through** — coordinate the 18 findings with relevant plan owners
+6. **Master plan refresh** + inventory regenerator (EOD)
+7. **`codex_doc_currency_and_consolidation_post_cutover_2026_05_12`** (~1.8 cal days, P2)
+
+#### Slot 2
+1. **`defi_classifier_missing_catalog_crossref_2026_05_13`** — Wave 3 per-instrument catalog cross-ref. **Two-phase per operator decision 6**:
+   - Phase A: wire `_classify_defi` + `_classify_cefi` to consult instruments-service catalog `available_from` / `available_to` dates (new helper, mirror of venue-launch-date logic)
+   - Phase B: after Phase A re-runs Script 3 with the catalog cross-ref, identify the rows that STILL flag as `attempted_failed` (these are genuine failures) and queue them for re-attempt VMs
+2. **`wave2_polymarket_record_captured_from_counts_2026_05_09`** Polymarket subset (~2 cal days, P1)
+3. **`solana_defi_coverage_gaps_2026_05_13` successor plan B** (Lido / Marinade / Jito LST capture)
+4. **`utl_qg_preexisting_failures_2026_05_14`** — pre-existing UTL QG failures; pick after main scope
+
+#### Slot 3 (just freed; has emerging_perp context already loaded)
+1. **`emerging_perp_venue_adapters_broken_2026_05_13`** P0 — root-cause + adapter fix (already in flight per prior ping)
+2. **`emerging_perp_adapters_diagnosed_2026_05_13`** P0 — sibling issue; same context
+3. **`solana_defi_coverage_gaps_2026_05_13` successor plan A** — full audit context already loaded
+4. **`batch_live_symmetry` Tab 1** — codex `cefi-batch-live.md` + `mode-axis-discipline.md`
+5. **`helius_solana_rpc_for_validation_2026_05_13`** P1 — Solana RPC validation, gates archetype hedge legs
+
+#### Slot 4 (in flight on sports gaps + propagation chain)
+1. **3 sports classifier gap issues** (already claimed):
+   - `sports_classifier_sfi_footystats_fixture_pin_2026_05_13` (P1)
+   - `sports_classifier_player_values_cadence_2026_05_13` (P1)
+   - `sports_classifier_weather_no_fixture_2026_05_13` (P2)
+2. **`sports_classifier_extension_followup_2026_05_13`** (parent issue)
+3. **Propagation chain Phase 3.1-3.N** — 6 sub-agents (delta_one / calendar / onchain / volatility / sports / commodity)
+4. **Phase 4 ml-training + ml-inference** propagation
+5. **PART C writegate 2.A** — MDPS 4-state output routing
+6. **`expected_unattempted_propagation_gap_2026_05_12`** P1 — finish propagation chain
+7. **6-bucket provisioning** (3 envs × 2 clouds, ≥7yr retention) — slot 8 awaiting handoff
+8. **Sports/prediction phantom apply-flips on VMs**
+
+#### Slot 5 (TradFi Item 1+2 Phase 1A+1B shipped — Phase 3-5 GREENLIT per decision 5)
+1. **TradFi Item 2 Phase 3** — one-shot manifest migration script `migrate_tradfi_expiry_schema.py` (~0.5 cal days) **GREENLIT**
+2. **TradFi Item 2 Phase 4** — Downstream consumer cascade: instruments-service futures factory → MTDS Databento bridge → mtds-tradfi-staleness → features-service → strategy-service `FuturesRollInstruction` (~1-2 cal days) **GREENLIT**
+3. **TradFi Item 2 Phase 5** — QG ratchet asserting 5 required kwargs on `CanonicalFuturesContract(...)` (~0.5 cal days) **GREENLIT**
+4. **`solana_defi_coverage_gaps` successor plan C** — pick after TradFi cascade
+5. **`sports_retired_data_types_code_cleanup_2026_05_13`** (new plan from 18e971df)
+
+#### Slot 6 (wallet_treasury Phase 1 in flight)
+1. **wallet_treasury_post_cutover Phase 1** — Real HMAC withdrawal chain (~3.2 cal days)
+2. **`defi_recursive_borrow_archetypes` Solidity** — `RecursiveLeverageReceiver.sol` build per **decision 1 PUSH IT** (~2-3 cal days; brand-new × 1.0)
+3. **4 DeFi-specific alert codes** wiring — features-onchain producer-side + alerting-service rules (~1 cal day)
+4. After: features tail
+
+#### Slot 7 (wallet_treasury Phase 3 in flight)
+1. **wallet_treasury_post_cutover Phase 3** — Audit log immutability + 7yr retention (~1.6 cal days)
+2. **`defi_recursive_borrow_archetypes` execution-service orchestrator + strategy-service tracer** per **decision 1 PUSH IT** (~3-5 cal days)
+3. **Treasury rollup endpoint `/api/treasury/rollup`** — deployment-api Phase 3.D (~1-2 cal days)
+4. **DART manual-trade UX refactor** (~2.4 cal days)
+
+#### Slot 8 (slot 3 took emerging_perp; reassign per decision 2)
+1. **`batch_live_symmetry` Tab 2** — second Ikenna slot per **decision 2** (Tab 2 + L2 fix-batch coordination with Harsh slot 8 on Tab 3 L2 STEP). Watch for Harsh slot 8 pre-announce ping before L2 STEP enable.
+2. **`solana_defi_coverage_gaps` successor plan D** — per **decision 4 ALL 5 plans spawned**
+3. **`AUDIT_pre_may_8_cleanup_2026_05_13`** (P1)
+4. **`classify_blank_reason_fixture_manifest_kwarg_2026_05_13`** ops verification — refresh tarballs + Script 3 re-run for defi/sports/prediction
+
+#### Slot 9
+1. **`solana_defi_coverage_gaps` successor plan E** — per **decision 4 ALL 5 plans spawned**
+2. **`cross_asset_instruments_service_scope_2026_05_14`** triage
+3. **`mtf_intraday_micro_regime_policy_2026_05_14`** triage
+4. **`strategy_paper_vm_nautilus_trader_missing_dep_2026_05_14`** — wire missing dep (likely simple)
+5. **`ice_us_softs_dataset_disambiguation_2026_05_14`** P2 — UAC write per Harsh ping item 3
+6. **`honest_coverage_cron_vm_scheduling_2026_05_14`** — cron VM piece per Harsh ping item 2
+
+### Harsh-side queue (SHIPPABLE-TODAY only)
+
+- Slot 4 in flight (sports gaps + Tab 3 L3 STEP)
+- Slot 8 in flight (batch_live_symmetry Tab 3 L2/L3 — coordinate with Ikenna slot 8 on Tab 2)
+- Slot 9 in flight
+- Slots 2/5/6/7 ✅ done; can pick reserves OR rest
+
+**No new Harsh-side asks from Ikenna.** Harsh-main does workspace cleanup + audit during early stop window.
+
+### Capacity math
+
+- 9 Ikenna slots × 3-4 items each in stack × density-push pace 200 cal AI-days/side/day = ~30-40 items shipped by EOD 2026-05-14
+- 5 Solana successor plans (A-E) parallel across Ikenna slots 2/3/5/8/9
+- `defi_recursive_borrow_archetypes` 2-slot push (slots 6+7 absorb Solidity + execution after wallet_treasury) lands within cycle
+- Phase 6.6/6.7/6.9 writegate tail completes pre-2026-05-15 freeze
+- **No descope. Perfect cutover.**
+
+### Operator decisions still pending (NONE)
+
+All 6 prior open questions resolved with this commit. If new questions surface, file them in slot_1.md or `_agent_pings.md`.
+
+---
+
+
 ## [slot 1 main] DAY-3 REASSIGNMENT v2 — full slot stacks for May-23 cutover — 2026-05-13 ~19:00 UTC
 
 **Operator direction**: _"anything within 23rd may cutover so that each slot has a decent list because we are moving at 200 ai days per day"_
