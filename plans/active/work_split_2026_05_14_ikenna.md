@@ -38,8 +38,7 @@ locked_since: 2026-05-14
    `deployment-service/scripts/vm/` with `VM_PREFIX_TO_BUCKET` entry. No fire-and-forget.
 3. **Active event-stream verification** — STARTED within 60s + ≥1 progress event/hour + STOPPED at exit; SSH-tail is
    dev-only.
-4. **Defi recursive borrow Solidity + execution-service halves**: DESCOPED per operator decision 2026-05-13. Harsh
-   slot 9 ships the descope successor plan. Ikenna does NOT pick up either half this cycle.
+4. **Defi recursive borrow Phases 4-11**: **DESCOPE REVERSED** per operator direction 2026-05-14. "i want defi_recursive_borrow and recursive staking in 23rd may though even if not essential for defi i want it backtested coded up and tested ready to go live". Implementation PULLED INTO THIS SPLIT — see § "Day-3 operator direction: recursive_borrow scope-extension" at bottom.
 5. **Wallet/Treasury Phase 2** (Copper / CEFFU integrations): CLIENT-SIDE, NOT our blocker. Config-only flip on
    `WalletProvisioningConfig.signing_surface` when client provisions credentials.
 
@@ -377,8 +376,6 @@ density-push absorption — every slot has a deep stack.
 
 - AWS migration (`aws_migration_defi_first_2026_05_07.md`) — DEFERRED past 2026-05-23 per 2026-05-13 operator
   direction.
-- `defi_recursive_borrow_archetypes` Solidity + execution halves — DESCOPED per 2026-05-13 operator (Harsh slot 9
-  files successor).
 - Copper / CEFFU integrations — CLIENT-SIDE, NOT our blocker (config-only flip when client provisions).
 - Fireblocks institutional custody — June-15+ scope, not this cycle.
 - Any GCS backfill ≥1 week without explicit operator approval ping in slot_N.md.
@@ -410,8 +407,7 @@ sequencing items + cross-asset bucket-name SSOT items that overlap with Ikenna s
 **Note on `aws_migration_defi_first_2026_05_07`** (28.4 cal in dashboard): DEFERRED past 2026-05-23 per operator
 direction; NOT pulled into this v2 extension.
 
-**Note on `defi_recursive_borrow_archetypes_2026_05_10`** (38.9 cal) + `defi_recursive_borrow_archetypes_post_cutover_2026_06_01`
-(24.0 cal): DESCOPED + post-cutover successor per operator; NOT pulled.
+**Note on `defi_recursive_borrow_archetypes_2026_05_10`** (38.9 cal): **DESCOPE REVERSED 2026-05-14** — Phases 4-11 pulled into May-23 scope per operator. Assigned: Phases 4+5+12 → Slot 2; Phase 6 → Slot 3; Phases 7+8 → Slot 6. See § "Day-3 operator direction: recursive_borrow scope-extension" below. `defi_recursive_borrow_archetypes_post_cutover_2026_06_01` (24.0 cal): scope-narrowed to only genuine post-cutover items — Phases 4-13 are back in May-23 scope.
 
 **Note on `batch_live_symmetry_2026_05_10`** (20.6 cal): Harsh-side today (slots 5+8); NOT pulled.
 
@@ -427,14 +423,31 @@ pulled.
 | Source | Cal AI-days |
 | --- | --- |
 | Workspace-wide remaining (auto-inventory 2026-05-14 12:14 UTC, 77 plans) | **580** |
-| Ikenna 14 May split baseline (200) + v2 extension (72) | −272 |
+| Ikenna 14 May split baseline (200) + v2 extension (72) + recursive_borrow reversal (~22) | −294 |
 | Harsh 14 May split (today closeout only — 8 days remain 15-23 May for him to absorb the rest) | −8 |
-| **Remaining workspace cal AI-days after both 14 May splits land** | **~300** |
+| **Remaining workspace cal AI-days after both 14 May splits land** | **~278** |
 
-Note: 300 not 200 because some Ikenna v2 items (e.g., new HMAC chain, new DeFi alert codes) are NEW work not yet
-checkboxed in active plans — when they land they net out a smaller portion of the dashboard 580. Net burn against
-the dashboard is closer to ~250 from Ikenna's 272, so realistic remaining ≈ **~320 cal AI-days** for Harsh to absorb
-across 15-23 May (~40 cal/day × 8 days = comfortable at density-push pace).
+Note: Net burn against dashboard is closer to ~265 (some items are NEW work not yet checkboxed). Realistic remaining ≈ **~300 cal AI-days** for Harsh to absorb across 15-23 May (~37 cal/day × 8 days = comfortable at density-push pace).
+
+---
+
+## Day-3 operator direction: recursive_borrow scope-extension (2026-05-14)
+
+**Operator direction 2026-05-14**: "i want defi_recursive_borrow and recursive staking in 23rd may though even if not essential for defi i want it backtested coded up and tested ready to go live". Descope reversed.
+
+**Slot assignments** (Phases 4-11, code+test+backtest READY-TO-GO-LIVE, live toggle OFF at cutover):
+
+| Phases | Slot | Rationale |
+| --- | --- | --- |
+| Phase 4 (Solidity `RecursiveLeverageReceiver.sol` extending `FlashLoanReceiver.sol`) + Phase 5 (`RecursiveLoopOrchestrator` in execution-service) + Phase 12 (backtest harness e2e — both archetypes on testnet) | **Slot 2** (DeFi classification + catalogue) | Core DeFi implementation slot |
+| Phase 6 (Hyperliquid LIVE perp connector — EIP-712 signing + REST POST `/exchange` + WS `user_events`) | **Slot 3** (Perp venue adapters + DEX/Drift) | Phase 6 is a perp adapter — natural fit with Slot 3's theme |
+| Phase 7 (`PerpHedgeSizer` — `_HYPERLIQUID_RULES` $500k cap pre-trade check) + Phase 8 (`HealthFactorMonitor` + `LiquidationProximityCircuit` alerts) | **Slot 6** (Wallet/Treasury + DeFi alerts + custody) | Health monitors + position alerts fit Slot 6's DeFi alert theme |
+
+**Critical prerequisite in Slot 2's existing theme**: `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` enum values ALREADY in UAC `internal/architecture_v2/enums.py`. `ARCHETYPE_CONFIG_SEED` ALREADY has both keys. Missing: `_ARCHETYPE_ENGINE_MAP` in `strategy-service/engine/strategies/v2/factory.py:63` lacks both entries — Slot 2 adds these before Phase 12 backtest.
+
+**Defi_catalogue dependency**: Phase 3 lending-indices fix (already in Slot 2's existing scope) is required for Family 2 backtest accuracy. Not a hard blocker for Phases 4-8 coding.
+
+**Harsh slot 9**: lightweight ack + plan-body verification + cross-ping only (~0.5 cal research). All implementation Ikenna-side.
 
 ---
 

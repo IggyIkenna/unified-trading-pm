@@ -1,13 +1,21 @@
 ---
-title: DeFi recursive-borrow archetypes — post-cutover implementation (Phases 4-13)
+title: DeFi recursive-borrow archetypes — post-cutover scope-expansion (NOT the May-23 implementation)
 type: implementation
-status: planned
+status: scope-narrowed
 created: 2026-05-14
-author: harsh-slot-9
+descope_reversed: 2026-05-13
+descope_reversal_reason: |
+  Operator direction 2026-05-13 evening: recursive_borrow Phases 4-13 PULLED BACK into May-23 scope (parent plan
+  defi_recursive_borrow_archetypes_2026_05_10.md status reverted from partial-shipped-descoped → active).
+  This post-cutover plan no longer owns Phases 4-13 of the parent. It retains scope ONLY for post-cutover
+  scope-expansion items beyond the original Phase 1-13 surface (multi-archetype-family expansion, additional
+  venue support, perf optimization based on production observations). May-23 ships with Phases 4-13
+  READY-TO-GO-LIVE (live trading toggle OFF, code + tests + backtests + paper-trade testnet smoke verified).
+author: harsh-slot-9 (original) — scope narrowed 2026-05-13 (audit slot per operator)
 operator: ikenna
-target_deadline: 2026-06-01
-horizon: post-may23-cutover
-migrated_from: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
+target_deadline: 2026-06-15 (post-cutover scope-expansion only)
+horizon: post-may23-cutover (scope-expansion follow-on; NOT implementation deferral)
+migrated_from: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md (REVERSED for Phases 4-13)
 companion_to: plans/active/master_to_live_defi_2026_05_23.md
 related_plans:
   - plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
