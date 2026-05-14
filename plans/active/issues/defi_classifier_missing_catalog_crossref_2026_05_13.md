@@ -222,13 +222,13 @@ corrections (all rows fall through to `SOURCE_RETURNED_ZERO`) and exit cleanly �
   - Removed dead duplicate PLAYER_VALUES block (tried to import nonexistent `is_player_values_update_day`).
   - Added `TestClassifyDefiCatalogCrossRef` (11 tests) in `test_instruments_catalog_reader.py`.
 
-- **instruments-service@`<pending-push>`** (`live-defi-rollout`) — new corrector script
+- **instruments-service@`3670534`** (`live-defi-rollout`) — new corrector script
   `scripts/reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py`:
   - Candidate mask: `capture_status=attempted_failed AND error_reason.startswith("LegacyBlankErrorReasonError")`.
   - Re-classifies via extended `classify_blank_reason_row("defi", row)`.
   - Correction condition: `new_status == "empty_confirmed" AND new_reason in VALID_CORRECTION_REASONS`.
   - Per-VM shard isolation + `--max-flips 1000000` halt-safety + `--confirm` intent gate.
-  - 13 unit tests (constants, mask, dry-run smoke, apply-flips fixture, idempotency, env guards) — QG running.
+  - 13 unit tests (constants, mask, dry-run smoke, apply-flips fixture, idempotency, env guards) — all green.
 
 ### Pending operational step
 
@@ -251,6 +251,6 @@ corrections (all rows fall through to `SOURCE_RETURNED_ZERO`) and exit cleanly �
 - Slot 8 (ikenna tab/8) flagged 2026-05-13 ~16:15 UTC after Slot 3 ran into 100k cap on defi
 - Slot 3 (ikenna tab/3) executed reconciler, hit cap, paused PART B defi apply-flips
 - Slot 2 (ikenna tab/2) implemented Wave 3 cefi catalog cross-ref 2026-05-13 ~17:50 UTC
-- Slot 2 (ikenna tab/2) implemented Wave 3 defi catalog cross-ref 2026-05-14 (UTL@513d79fb)
+- Slot 2 (ikenna tab/2) implemented Wave 3 defi catalog cross-ref 2026-05-14 (UTL@513d79fb, instruments-service@3670534)
 - Earlier context: `_classify_cefi:296-298` docstring TODO explicit; `_classify_defi:256-279` lacks catalog branch
   silently
