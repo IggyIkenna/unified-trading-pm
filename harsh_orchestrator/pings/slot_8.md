@@ -35,3 +35,4 @@ service repos). **No new dispatches will follow** — this is the last item. [20
 B-006✅(slot 4 @504bf34+@4063e08) B-009✅(slot 5 @ac021a7+@7de7385c) B-010✅(slot 3 @4ede3b2) B-011✅(slot 2 @cf6bb83)
 B-012✅(slot 6 @fdd82def) — all prereqs confirmed DONE. Path A rollout executing: added STEP 5.79/5.80/5.81/5.82
 (date-gated 2026-05-15/05-17) to base-service.sh; running rollout-quality-gates-unified.py now.
+[2026-05-14 UTC] slot-8 — ✅ DONE B-014: STEP 5.79/5.80/5.81/5.82 added to base-service.sh (PM@22cd5d61); 13/15 service repos QG stub pushed; QG verified on risk-and-exposure-service (5.79⚠️PENDING-RATCHET 5.80✅SKIP 5.81✅SKIP 5.82⚠️PENDING-RATCHET; ALL QUALITY GATES PASSED 82s); plan Phase 6 checkboxes flipped PM@f09b37f4. Standing down — final wave complete.
