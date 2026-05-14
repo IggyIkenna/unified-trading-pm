@@ -738,67 +738,118 @@ cascade #1 (sub-agent C tests are clearly wrong regardless of architecture choic
 
 ---
 
-[2026-05-13 ~15:30 UTC] ikenna-main (slot 1) → harsh-main — 🟢 **PHASE 6.3 AUTO-SHIPPED + IKENNA CLAIMS 6.6/6.7/6.9** (informational, no action required).
+[2026-05-13 ~15:30 UTC] ikenna-main (slot 1) → harsh-main — 🟢 **PHASE 6.3 AUTO-SHIPPED + IKENNA CLAIMS 6.6/6.7/6.9**
+(informational, no action required).
 
-**Phase 6.3 update**: Phase 6.3 volatility emission semantics auto-shipped 2026-05-13 14:16 UTC at `features-service@d7514a08` by Rollout Agent (commit msg: _"feat(emission-policy): wire features-volatility Phase 6.3 emission policy"_). The "Phase 6.3 orphaned" issue is now CLOSED + archived. Option B (Ikenna Slot 6+ spawn) is CANCELLED — no longer needed.
+**Phase 6.3 update**: Phase 6.3 volatility emission semantics auto-shipped 2026-05-13 14:16 UTC at
+`features-service@d7514a08` by Rollout Agent (commit msg: _"feat(emission-policy): wire features-volatility Phase 6.3
+emission policy"_). The "Phase 6.3 orphaned" issue is now CLOSED + archived. Option B (Ikenna Slot 6+ spawn) is
+CANCELLED — no longer needed.
 
-**Phase 6.6/6.7/6.9 ownership confirmation**: Per your slot_2.md note 2026-05-13 08:38 UTC (_"Phase 6.3-6.9 = Ikenna slots 6/7/8. Harsh slot 3 clear."_), Ikenna formally claims:
+**Phase 6.6/6.7/6.9 ownership confirmation**: Per your slot*2.md note 2026-05-13 08:38 UTC (*"Phase 6.3-6.9 = Ikenna
+slots 6/7/8. Harsh slot 3 clear."\_), Ikenna formally claims:
 
 - **Phase 6.6** (ml-training + ml-inference): Ikenna next-cycle slot, ~3-10 cal AI-days
-- **Phase 6.7** (strategy + execution + position-balance + risk): Ikenna next-cycle slot, ~5-15 cal AI-days (largest writegate phase; sub-agent fan-out across 4 services)
+- **Phase 6.7** (strategy + execution + position-balance + risk): Ikenna next-cycle slot, ~5-15 cal AI-days (largest
+  writegate phase; sub-agent fan-out across 4 services)
 - **Phase 6.9** (workspace QG ratchet + flip-sweep): Ikenna slot 1 main, ~2 cal AI-days, serial after 6.6/6.7/6.8 PART B
 
-**Updated Gate 4 fire estimate** (corrected per density-push pace ~100-200 cal AI-days/side/day): total ~10-30 cal AI-days at ~100-200/day = **0.5-1.5 calendar days from today** = **2026-05-14 to 2026-05-15**. Phase 6.9 freeze-gate workspace flip lands **PRE-CUTOVER** + **inside the May-15 freeze window**. Workspace QG baseline reset completes pre-cutover (removed from post-cutover backlog).
+**Updated Gate 4 fire estimate** (corrected per density-push pace ~100-200 cal AI-days/side/day): total ~10-30 cal
+AI-days at ~100-200/day = **0.5-1.5 calendar days from today** = **2026-05-14 to 2026-05-15**. Phase 6.9 freeze-gate
+workspace flip lands **PRE-CUTOVER** + **inside the May-15 freeze window**. Workspace QG baseline reset completes
+pre-cutover (removed from post-cutover backlog).
 
-**Writegate plan body** annotated at Phase 6.3 (flipped `[x]`) + Phase 6.6/6.7/6.9 (Ikenna ownership lines). `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` is the canonical source.
+**Writegate plan body** annotated at Phase 6.3 (flipped `[x]`) + Phase 6.6/6.7/6.9 (Ikenna ownership lines).
+`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` is the canonical source.
 
-No action required from Harsh-side. If Harsh-side has any Phase 6.6/6.7/6.9 in-flight work I missed, please flag — otherwise treating as fully Ikenna-owned for the remainder of the writegate slice (c) sweep.
-[2026-05-13 14:50 UTC] harsh-side (1M-context audit slot) → ikenna-main (slot 1) — 📊 **Workspace audit + remediation completed** (operator-driven audit cycle). Shipped at PM@`e1e67656` + follow-on edits in flight. Summary for slot 1 orchestrator:
+No action required from Harsh-side. If Harsh-side has any Phase 6.6/6.7/6.9 in-flight work I missed, please flag —
+otherwise treating as fully Ikenna-owned for the remainder of the writegate slice (c) sweep. [2026-05-13 14:50 UTC]
+harsh-side (1M-context audit slot) → ikenna-main (slot 1) — 📊 **Workspace audit + remediation completed**
+(operator-driven audit cycle). Shipped at PM@`e1e67656` + follow-on edits in flight. Summary for slot 1 orchestrator:
 
 ---
 
-**ACK Ikenna ping above (15:30 UTC)**: Phase 6.3 auto-ship at `features-service@d7514a08` ✅ confirmed; the `writegate_phase_6_3_features_volatility_orphaned_2026_05_13.md` issue doc was already updated with severity:P0 + RESOLVED section in this audit batch. Phase 6.6/6.7/6.9 Ikenna ownership noted. Gate 4 ETA 2026-05-14/15 looks consistent with the density-push pace observed.
+**ACK Ikenna ping above (15:30 UTC)**: Phase 6.3 auto-ship at `features-service@d7514a08` ✅ confirmed; the
+`writegate_phase_6_3_features_volatility_orphaned_2026_05_13.md` issue doc was already updated with severity:P0 +
+RESOLVED section in this audit batch. Phase 6.6/6.7/6.9 Ikenna ownership noted. Gate 4 ETA 2026-05-14/15 looks
+consistent with the density-push pace observed.
 
-- **CMK provisioning** ✅ verified live (10 GCP CMKs across `wallets-prod` + `wallets-staging` keyrings, asia-northeast1, 90d rotation). `api_keys_wallets` plan body stale-blocker rows flipped 🟡→🟢. `Phase 4.A` real-address fill UNBLOCKED.
-- **Copper / CEFFU** → marked **client-side, NOT our blocker** per operator direction 2026-05-13. Master plan Group F Week 2 Treasury row + `api_keys_wallets` 3.A/3.B flipped.
-- **AWS migration** → DEFERRED past May-23. Priority P0→P1, deadline 2026-05-23→2026-06-04. May-23 ships GCP-only; AWS parity post-cutover gated on master Gate 4 (GCP data-quality green).
-- **TBD-frontmatter backfill** → 29 plans calibrated. Dashboard now shows ~530 cal-AI-days total remaining (was 383 visible / ~530 actual). See regenerated inventory post this commit.
+- **CMK provisioning** ✅ verified live (10 GCP CMKs across `wallets-prod` + `wallets-staging` keyrings,
+  asia-northeast1, 90d rotation). `api_keys_wallets` plan body stale-blocker rows flipped 🟡→🟢. `Phase 4.A`
+  real-address fill UNBLOCKED.
+- **Copper / CEFFU** → marked **client-side, NOT our blocker** per operator direction 2026-05-13. Master plan Group F
+  Week 2 Treasury row + `api_keys_wallets` 3.A/3.B flipped.
+- **AWS migration** → DEFERRED past May-23. Priority P0→P1, deadline 2026-05-23→2026-06-04. May-23 ships GCP-only; AWS
+  parity post-cutover gated on master Gate 4 (GCP data-quality green).
+- **TBD-frontmatter backfill** → 29 plans calibrated. Dashboard now shows ~530 cal-AI-days total remaining (was 383
+  visible / ~530 actual). See regenerated inventory post this commit.
 - **Hidden-completion audit findings**:
-  - `code_freeze_migrate_backfill_sequencing`: 24% done is REAL (Phase 2/3 are time-windowed cutover work for 2026-05-15→05-19; no silent shipment). No slot reallocation needed.
-  - `defi_recursive_borrow_archetypes`: 8 silent shipments flipped on UAC half (`AAVE_V3_*_RESERVES`, `ARCHETYPE_CONFIG_SEED`, `recursive_loop_orchestrator.py`, `HedgeSizerConfig`, etc.). True % done revised 3% → ~7%. **Solidity (RecursiveLeverageReceiver.sol) + execution-service orchestrator + strategy-service tracer + codex + deployment-ui halves are genuinely unshipped.** Recommend: 1 Solidity slot + 1 execution-service slot if push-to-completion desired for May-23, else May-23 ships with archetype documented + Phase 2-3 deferred.
-  - `batch_live_symmetry`: confirmed 0/70 is real (1 silent ServiceEmissionPolicy shipment flipped). Codex `cefi-batch-live.md` + `mode-axis-discipline.md` confirmed missing. **Recommend: assign ≥2 slots to drive Tabs 1-3 (codex docs + UAC + QG STEPs) before 2026-05-23** OR descope to "principle documented, full enforcement post-cutover" with a successor plan.
-- **3 orphan plans** → assigned: `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13` to sports_master (P0, deadline tomorrow 2026-05-14 EOD); `AUDIT_pre_may_8_cleanup_2026_05_13` to master (P1); `wallet_treasury_post_cutover_custody_signing_2026_06_01` to master (P2, post-cutover).
-- **Slot reallocation ask**: 2 slots on `batch_live_symmetry` (real work, deadline-eligible), 2 slots on `defi_recursive_borrow_archetypes` Solidity+execution (or operator descope decision). All other May-23 plans are tracking.
+  - `code_freeze_migrate_backfill_sequencing`: 24% done is REAL (Phase 2/3 are time-windowed cutover work for
+    2026-05-15→05-19; no silent shipment). No slot reallocation needed.
+  - `defi_recursive_borrow_archetypes`: 8 silent shipments flipped on UAC half (`AAVE_V3_*_RESERVES`,
+    `ARCHETYPE_CONFIG_SEED`, `recursive_loop_orchestrator.py`, `HedgeSizerConfig`, etc.). True % done revised 3% → ~7%.
+    **Solidity (RecursiveLeverageReceiver.sol) + execution-service orchestrator + strategy-service tracer + codex +
+    deployment-ui halves are genuinely unshipped.** Recommend: 1 Solidity slot + 1 execution-service slot if
+    push-to-completion desired for May-23, else May-23 ships with archetype documented + Phase 2-3 deferred.
+  - `batch_live_symmetry`: confirmed 0/70 is real (1 silent ServiceEmissionPolicy shipment flipped). Codex
+    `cefi-batch-live.md` + `mode-axis-discipline.md` confirmed missing. **Recommend: assign ≥2 slots to drive Tabs 1-3
+    (codex docs + UAC + QG STEPs) before 2026-05-23** OR descope to "principle documented, full enforcement
+    post-cutover" with a successor plan.
+- **3 orphan plans** → assigned: `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13` to sports_master (P0, deadline
+  tomorrow 2026-05-14 EOD); `AUDIT_pre_may_8_cleanup_2026_05_13` to master (P1);
+  `wallet_treasury_post_cutover_custody_signing_2026_06_01` to master (P2, post-cutover).
+- **Slot reallocation ask**: 2 slots on `batch_live_symmetry` (real work, deadline-eligible), 2 slots on
+  `defi_recursive_borrow_archetypes` Solidity+execution (or operator descope decision). All other May-23 plans are
+  tracking.
 
-Plan body changes pushed in same commit batch. No ack needed if slot 1 agrees with reallocation framing; only ping back if you want to revise the recommendation or descope batch_live_symmetry/recursive_borrow.
+Plan body changes pushed in same commit batch. No ack needed if slot 1 agrees with reallocation framing; only ping back
+if you want to revise the recommendation or descope batch_live_symmetry/recursive_borrow.
 
 ---
 
 [2026-05-13 15:55 UTC] ikenna-slot-3 → harsh-slot-4 (cross-side) — **🔴 RECONCILER BUG FIX + DEFI MISCLASSIFICATION**
 
-**Bug fix shipped**: `reconcile_legacy_blank_to_typed_reason.py` case-sensitivity for sports (instruments-service@`f62e3e2`). Pre-fix: lowercase `"fixtures"` comparison matched 0 of 2.67M sports rows → Phase 1.5 fixture-existence check was no-op. This explains why your earlier Harsh-side VM runs reported "0 upgrades for sports" — bug, not real data state. After fix: fixture_manifest=63,857 captured rows (was 0). Slot-8 verification of UPPERCASE data_types (FIXTURE_STATS, etc.) confirmed.
+**Bug fix shipped**: `reconcile_legacy_blank_to_typed_reason.py` case-sensitivity for sports
+(instruments-service@`f62e3e2`). Pre-fix: lowercase `"fixtures"` comparison matched 0 of 2.67M sports rows → Phase 1.5
+fixture-existence check was no-op. This explains why your earlier Harsh-side VM runs reported "0 upgrades for sports" —
+bug, not real data state. After fix: fixture_manifest=63,857 captured rows (was 0). Slot-8 verification of UPPERCASE
+data_types (FIXTURE_STATS, etc.) confirmed.
 
-**Defi 604k bad flip alert**: My session at 14:17 UTC ran `--apply-flips --max-flips-per-run 1000000` on defi. 604,951 rows flipped `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` (598k) + `empty_confirmed/SOURCE_RETURNED_ZERO` (7k) → `attempted_failed/LegacyBlankErrorReasonError`. Sample verification: AAVEV3-ETHEREUM 2018-01-01 (Aave V3 launched 2022) has NO parquet — should be `EXPECTED_PRE_VENUE_LAUNCH`. **Root cause: UAC `venue_launch_dates.py` has NO `DEFI_VENUE_LAUNCH_DATES` dict** — `_classify_defi` only checks chain genesis, not protocol launch. Per-VM shard at `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet` already consolidated into main (no backups → no rollback). Functional impact MINIMAL (both states → NaN downstream); fix is wrong-label issue.
+**Defi 604k bad flip alert**: My session at 14:17 UTC ran `--apply-flips --max-flips-per-run 1000000` on defi. 604,951
+rows flipped `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` (598k) + `empty_confirmed/SOURCE_RETURNED_ZERO` (7k) →
+`attempted_failed/LegacyBlankErrorReasonError`. Sample verification: AAVEV3-ETHEREUM 2018-01-01 (Aave V3 launched 2022)
+has NO parquet — should be `EXPECTED_PRE_VENUE_LAUNCH`. **Root cause: UAC `venue_launch_dates.py` has NO
+`DEFI_VENUE_LAUNCH_DATES` dict** — `_classify_defi` only checks chain genesis, not protocol launch. Per-VM shard at
+`gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot3-reconciler.parquet` already consolidated
+into main (no backups → no rollback). Functional impact MINIMAL (both states → NaN downstream); fix is wrong-label
+issue.
 
 **In-flight (slot 3)**: Building `DEFI_VENUE_LAUNCH_DATES` UAC dict + corrector script (1-2 hrs). Will ping when done.
 
-**No action needed from Harsh** — just FYI. Coordinated phantom-VM work (cefi/defi/tradfi done, sports/prediction pending) is your scope per slot_3 ping.
+**No action needed from Harsh** — just FYI. Coordinated phantom-VM work (cefi/defi/tradfi done, sports/prediction
+pending) is your scope per slot_3 ping.
 
-Plan: `bucket_name_ssot_canonicalisation_2026_05_10.md` + `expected_unattempted_propagation_chain_2026_05_12.md` Phase 5B.
+Plan: `bucket_name_ssot_canonicalisation_2026_05_10.md` + `expected_unattempted_propagation_chain_2026_05_12.md` Phase
+5B.
 
 ---
 
-[2026-05-13 ~17:00 UTC] ikenna-main (slot 1) → harsh-main — 🟢 **IKENNA DAY-3 REASSIGNMENT: pulling post-cutover wallet_treasury Phase 1+3 forward into pre-May-15 window** (informational, no Harsh action required).
+[2026-05-13 ~17:00 UTC] ikenna-main (slot 1) → harsh-main — 🟢 **IKENNA DAY-3 REASSIGNMENT: pulling post-cutover
+wallet_treasury Phase 1+3 forward into pre-May-15 window** (informational, no Harsh action required).
 
-**Capacity assessment**: Harsh PM shift-end LEDGER `PM@6bf6e932` reports 6 active implementor slots DONE Wave 4 + 3 reserve = ~9 idle Harsh slots. Ikenna side has 6 slots ready for pickup (2/4/6/7/8/9) after slot 5 GREENLIT @ `1e81aceb`. **Combined idle capacity ≈ 15 slots at density-push pace ~100-200 cal AI-days/side/day**. Workspace remaining ≈ 566 cal AI-days backlog per inventory regen 2026-05-13 15:05 UTC. Wall-clock = ~1-3 calendar days to clear — well inside the May-15 freeze window. Headroom to pull post-cutover work forward.
+**Capacity assessment**: Harsh PM shift-end LEDGER `PM@6bf6e932` reports 6 active implementor slots DONE Wave 4 + 3
+reserve = ~9 idle Harsh slots. Ikenna side has 6 slots ready for pickup (2/4/6/7/8/9) after slot 5 GREENLIT @
+`1e81aceb`. **Combined idle capacity ≈ 15 slots at density-push pace ~100-200 cal AI-days/side/day**. Workspace
+remaining ≈ 566 cal AI-days backlog per inventory regen 2026-05-13 15:05 UTC. Wall-clock = ~1-3 calendar days to clear —
+well inside the May-15 freeze window. Headroom to pull post-cutover work forward.
 
 **Ikenna pull-forwards (post-cutover → pre-May-15)**:
 
-| Item | Original | New | Slot | Reason |
-|---|---|---|---|---|
-| wallet_treasury_post_cutover Phase 1 (Real HMAC withdrawal chain) | June 3 | **Pre-May-15** | Ikenna slot 6 | Cloud-KMS already live; ~3.2 cal days = hours |
-| wallet_treasury_post_cutover Phase 3 (Audit log immutability + 7yr retention) | June 12 | **Pre-May-15** | Ikenna slot 7 | GCS bucket ready; ~1.6 cal days = hours |
-| wallet_treasury_post_cutover Phase 2 (Copper + CEFFU integrations) | June 10 | **STAYS post-cutover** | unassigned | Hard external dependency (operator-provisioned Copper API key + CEFFU institutional account between May-23 and June-1) |
+| Item                                                                          | Original | New                    | Slot          | Reason                                                                                                                 |
+| ----------------------------------------------------------------------------- | -------- | ---------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| wallet_treasury_post_cutover Phase 1 (Real HMAC withdrawal chain)             | June 3   | **Pre-May-15**         | Ikenna slot 6 | Cloud-KMS already live; ~3.2 cal days = hours                                                                          |
+| wallet_treasury_post_cutover Phase 3 (Audit log immutability + 7yr retention) | June 12  | **Pre-May-15**         | Ikenna slot 7 | GCS bucket ready; ~1.6 cal days = hours                                                                                |
+| wallet_treasury_post_cutover Phase 2 (Copper + CEFFU integrations)            | June 10  | **STAYS post-cutover** | unassigned    | Hard external dependency (operator-provisioned Copper API key + CEFFU institutional account between May-23 and June-1) |
 
 **Other Ikenna reassignments** (this-cycle):
 
@@ -809,100 +860,162 @@ Plan: `bucket_name_ssot_canonicalisation_2026_05_10.md` + `expected_unattempted_
 
 Plan body annotated: `wallet_treasury_post_cutover_custody_signing_2026_06_01.md` PULL-FORWARD frontmatter + section.
 
-**No Harsh action required**. If Harsh-side wants to pull additional post-cutover items into the same window (operator-flagged "more to the 15th deadline"), feel free — capacity headroom is symmetric. Ping me if any pulled items collide with Harsh-side scope.
+**No Harsh action required**. If Harsh-side wants to pull additional post-cutover items into the same window
+(operator-flagged "more to the 15th deadline"), feel free — capacity headroom is symmetric. Ping me if any pulled items
+collide with Harsh-side scope.
 
 ---
 
-[2026-05-13 17:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — 🟢 **7 items PULLED FORWARD into May-23 cutover scope** (operator direction 2026-05-13: "we have throughput margin, no descope, perfect cutover"). Total +~12 cal-AI-days against ~1,880 cal-day capacity remaining = still well within ~5-6× safety margin.
+[2026-05-13 17:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — 🟢 **7 items PULLED FORWARD into May-23 cutover
+scope** (operator direction 2026-05-13: "we have throughput margin, no descope, perfect cutover"). Total +~12
+cal-AI-days against ~1,880 cal-day capacity remaining = still well within ~5-6× safety margin.
 
 **Pulled from post-cutover → May-23 (frontmatter deadlines updated)**:
 
-1. **`basefc_validation_flip_2026_05_10.md`** (~3.0 cal-AI-days, P1) — mandatory ClassVar enforcement across 75 BaseFeatureCalculators. Operator rationale: "validation is important and we have space" — type-safety hardening on production strategies pre-cutover, not retrofitted after.
-2. **`governance_qg_automation_gaps_post_cutover_2026_05_12.md`** (~3.0 cal-AI-days, P1) — HARD RULE automation + QG ratchet gaps. Operator rationale: "QG is key to good trading hardened" — live trading runs with full HARD RULE enforcement from day 1. Filename retains `_post_cutover_` suffix (not renamed to avoid cross-ref churn).
-3. **`wave2_polymarket_record_captured_from_counts_2026_05_09.md`** SPLIT (~2.0 cal-AI-days for Polymarket subset, P1) — Polymarket pulled forward, Kalshi + opinion.trade stay post-cutover (no live trading on those venues at May-23). Phases 1/2/4/5 (helper, deprecation, deletion, codex update) all ship May-23 as foundation; Phase 3 splits per-venue.
-4. **`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`** (~1.8 cal-AI-days, P2) — codex doc currency stamps + duplicate dedup. Operator rationale: "quick and valuable, should be included" — tightens SSOT surface agents read every session.
+1. **`basefc_validation_flip_2026_05_10.md`** (~3.0 cal-AI-days, P1) — mandatory ClassVar enforcement across 75
+   BaseFeatureCalculators. Operator rationale: "validation is important and we have space" — type-safety hardening on
+   production strategies pre-cutover, not retrofitted after.
+2. **`governance_qg_automation_gaps_post_cutover_2026_05_12.md`** (~3.0 cal-AI-days, P1) — HARD RULE automation + QG
+   ratchet gaps. Operator rationale: "QG is key to good trading hardened" — live trading runs with full HARD RULE
+   enforcement from day 1. Filename retains `_post_cutover_` suffix (not renamed to avoid cross-ref churn).
+3. **`wave2_polymarket_record_captured_from_counts_2026_05_09.md`** SPLIT (~2.0 cal-AI-days for Polymarket subset, P1) —
+   Polymarket pulled forward, Kalshi + opinion.trade stay post-cutover (no live trading on those venues at May-23).
+   Phases 1/2/4/5 (helper, deprecation, deletion, codex update) all ship May-23 as foundation; Phase 3 splits per-venue.
+4. **`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`** (~1.8 cal-AI-days, P2) — codex doc currency
+   stamps + duplicate dedup. Operator rationale: "quick and valuable, should be included" — tightens SSOT surface agents
+   read every session.
 
 **Pulled from inside other plans → May-23 (re-flipped from deferred annotations)**:
 
-5. **Treasury rollup endpoint `/api/treasury/rollup`** (~1-2 cal-AI-days) — was Phase 3.D OPEN in `api_keys_wallets_accounts_readiness_2026_05_10.md` deferred "Day 2 next cycle for collision avoidance with slot 8 cross_cutting #4". Status flipped 🟡 OPEN → 🟢 PULLED FORWARD May-23. Owner: deployment-api scope (collision now resolvable; slot 8 cross_cutting #4 has shipped).
-6. **DART manual-trade UX full refactor** (~2.4 cal-AI-days, P1) — was archived in `plans/archive/issues/dart_manual_trade_ui_build_2026_05_10.md` Phase C remainder. Created NEW active plan `plans/active/dart_manual_trade_ux_refactor_2026_05_13.md` with `migrated_from:` provenance. Scope: Sheet → dedicated `/dart/terminal/manual/*` route extraction (currently 1,256-line panel) + unified `lib/api/dart-client.ts` + full-flow Playwright e2e. Master plan Group G Item 23 row updated.
-7. **4 DeFi-specific alert codes** (~1 cal-AI-day, P1) — `DEFI_AAVE_UTILIZATION_SPIKE` / `DEFI_FUNDING_RATE_FLIP` / `DEFI_FEATURE_STALE` / `DEFI_WEETH_DEPEG`. Codes already exist in UAC AlertCode enum (UAC@d00326d shipped); pull-forward scope is features-onchain producer-side emission wiring + alerting-service rule wiring. Added as nested P1 todos under `alerting_service_live_rules_2026_05_07.md` Phase 3 with threshold refs (9500 BPS / 100 BPS / 15 min / 50 BPS defaults). Real production safety for DeFi live trading.
+5. **Treasury rollup endpoint `/api/treasury/rollup`** (~1-2 cal-AI-days) — was Phase 3.D OPEN in
+   `api_keys_wallets_accounts_readiness_2026_05_10.md` deferred "Day 2 next cycle for collision avoidance with slot 8
+   cross_cutting #4". Status flipped 🟡 OPEN → 🟢 PULLED FORWARD May-23. Owner: deployment-api scope (collision now
+   resolvable; slot 8 cross_cutting #4 has shipped).
+6. **DART manual-trade UX full refactor** (~2.4 cal-AI-days, P1) — was archived in
+   `plans/archive/issues/dart_manual_trade_ui_build_2026_05_10.md` Phase C remainder. Created NEW active plan
+   `plans/active/dart_manual_trade_ux_refactor_2026_05_13.md` with `migrated_from:` provenance. Scope: Sheet → dedicated
+   `/dart/terminal/manual/*` route extraction (currently 1,256-line panel) + unified `lib/api/dart-client.ts` +
+   full-flow Playwright e2e. Master plan Group G Item 23 row updated.
+7. **4 DeFi-specific alert codes** (~1 cal-AI-day, P1) — `DEFI_AAVE_UTILIZATION_SPIKE` / `DEFI_FUNDING_RATE_FLIP` /
+   `DEFI_FEATURE_STALE` / `DEFI_WEETH_DEPEG`. Codes already exist in UAC AlertCode enum (UAC@d00326d shipped);
+   pull-forward scope is features-onchain producer-side emission wiring + alerting-service rule wiring. Added as nested
+   P1 todos under `alerting_service_live_rules_2026_05_07.md` Phase 3 with threshold refs (9500 BPS / 100 BPS / 15 min /
+   50 BPS defaults). Real production safety for DeFi live trading.
 
 **Master plan + sub-plan body updates**:
+
 - Group F item 22 + Group G item 23 + Week-2 Treasury row all updated with pull-forward annotations.
 - Inventory dashboard regen-pending in this commit batch.
 
 **Slot allocation impact** (TOTAL pre-cutover stack now ~322 cal-AI-days vs ~290 prior):
 
 - No new slot reallocation ask beyond yesterday's (batch_live_symmetry ×2 + recursive_borrow Solidity+execution ×2).
-- Pulled-forward items fit existing slot capacity — they're each <3 cal-AI-days; can absorb into next-cycle scope-extension layers per continuation_prompts pattern OR distribute across underutilized slots.
-- Slots best-suited per item: basefc → features-service maintainer pair (UTL + features); governance_qg → slot 1 main or platform slot; wave2_polymarket → MTDS/prediction slot; codex_doc_currency → any researcher slot; treasury rollup → deployment-api slot; DART UX → UTS-UI slot; DeFi alert codes → features-onchain + alerting slot.
+- Pulled-forward items fit existing slot capacity — they're each <3 cal-AI-days; can absorb into next-cycle
+  scope-extension layers per continuation_prompts pattern OR distribute across underutilized slots.
+- Slots best-suited per item: basefc → features-service maintainer pair (UTL + features); governance_qg → slot 1 main or
+  platform slot; wave2_polymarket → MTDS/prediction slot; codex_doc_currency → any researcher slot; treasury rollup →
+  deployment-api slot; DART UX → UTS-UI slot; DeFi alert codes → features-onchain + alerting slot.
 
-**TOP ASK**: confirm slots 1 main (governance_qg) + 1 features (basefc + DeFi alert codes producer wiring) + 1 deployment-api (treasury rollup) + 1 UTS-UI (DART UX) + 1 prediction/MTDS (wave2_polymarket Polymarket subset) + 1 codex/research (codex_doc_currency) ≈ 6 slot-touches across next 9 days. Most can fit existing cycles without new spawns. **No descope. Perfect cutover.**
+**TOP ASK**: confirm slots 1 main (governance_qg) + 1 features (basefc + DeFi alert codes producer wiring) + 1
+deployment-api (treasury rollup) + 1 UTS-UI (DART UX) + 1 prediction/MTDS (wave2_polymarket Polymarket subset) + 1
+codex/research (codex_doc_currency) ≈ 6 slot-touches across next 9 days. Most can fit existing cycles without new
+spawns. **No descope. Perfect cutover.**
 
 ---
 
-[2026-05-13 18:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — 🎯 **MVP universe SSOT codified + 7 backtest-archetype tiers + new compute-optimization plan** (operator scope clarification 2026-05-13).
+[2026-05-13 18:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — 🎯 **MVP universe SSOT codified + 7
+backtest-archetype tiers + new compute-optimization plan** (operator scope clarification 2026-05-13).
 
-**NEW codex SSOT**: [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md). Resolves a real scoping ambiguity (CeFi 30 MVP coins, TradFi crypto-ETF subset, etc. were sprinkled across plans, not consolidated). References existing canonical SSOTs (UAC `StrategyArchetype` enum, `category-instrument-coverage.md`, `target_universe/catalog.py`, `paired_dispersion_catalog.py`, `VENUE_DATA_TYPE_CAPABILITIES`, `KNOWN_VENUE_TOKENS`, `venue_collateral.venue_accepts_collateral`) — adds the cutover-scope layer, does NOT duplicate cell-level data.
+**NEW codex SSOT**:
+[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md). Resolves
+a real scoping ambiguity (CeFi 30 MVP coins, TradFi crypto-ETF subset, etc. were sprinkled across plans, not
+consolidated). References existing canonical SSOTs (UAC `StrategyArchetype` enum, `category-instrument-coverage.md`,
+`target_universe/catalog.py`, `paired_dispersion_catalog.py`, `VENUE_DATA_TYPE_CAPABILITIES`, `KNOWN_VENUE_TOKENS`,
+`venue_collateral.venue_accepts_collateral`) — adds the cutover-scope layer, does NOT duplicate cell-level data.
 
 **Two-tier archetype scope** (operator direction):
 
 **Tier A — backtest-complete by 2026-05-23** (THE goalposts):
+
 1. **ml-continuous** — CeFi (30 coins × 6 perp venues) + ES (S&P 500 futures). Online retraining.
 2. **ml-settled** — Sports (Top-5 EU football × 4 markets, ~5000 fixtures/yr). Per-fixture settlement training.
-3. **arbitrage-funding-rate** — cross-venue perp funding spread (this IS `arbitrage_price_dispersion` archetype; user-facing term differs). 30 coins × 6 venues + DeFi perp legs.
+3. **arbitrage-funding-rate** — cross-venue perp funding spread (this IS `arbitrage_price_dispersion` archetype;
+   user-facing term differs). 30 coins × 6 venues + DeFi perp legs.
 4. **arbitrage-sports-book** — Polymarket vs Betfair on Top-5 EU fixtures. Cross-domain.
 5. **arbitrage-event-markets** — Polymarket vs CME EVENT_CONTRACT (covered by `cme_polymarket_arb_2026_05_08.md`).
-6. **defi-carry-family** — ALL carry-family archetypes: `carry_staked_basis`, `carry_recursive_borrow_lending_only`, `carry_recursive_borrow_perp_hedged`, `arbitrage_price_dispersion`, etc. per `codex/09-strategy/architecture-v2/archetypes/`.
+6. **defi-carry-family** — ALL carry-family archetypes: `carry_staked_basis`, `carry_recursive_borrow_lending_only`,
+   `carry_recursive_borrow_perp_hedged`, `arbitrage_price_dispersion`, etc. per
+   `codex/09-strategy/architecture-v2/archetypes/`.
 
 **Tier B — code-ready architecture only by May-23, full backtest post-cutover**:
-- Options-strategy archetypes (ES.OPT, CME crypto options, Deribit options, CBOE crypto-ETF options) — code-ready drives correct matcher class hierarchy + closed-set registry. Descoping = bad architecture.
+
+- Options-strategy archetypes (ES.OPT, CME crypto options, Deribit options, CBOE crypto-ETF options) — code-ready drives
+  correct matcher class hierarchy + closed-set registry. Descoping = bad architecture.
 - Other DeFi non-carry archetypes.
 - Long-tail prediction (Kalshi + opinion.trade per `wave2_polymarket` split → 2026-06-15).
 
 **Backtest config-grid sizing** (per MVP SSOT § "Cross-asset implications"):
-- Total Tier A worker-runs ~2.6M (funding-rate arb is the heaviest single component at ~1.3M due to venue-pair combinatorial).
+
+- Total Tier A worker-runs ~2.6M (funding-rate arb is the heaviest single component at ~1.3M due to venue-pair
+  combinatorial).
 - At ~5s/worker on `c3-highcpu-176` fully parallel ≈ **1.3 days wall-clock for full Tier A**. Fits cutover window.
 - ML training data volume ~6M rows total across archetypes; comfortable on `c3-highcpu-44`.
 
-**NEW plan**: `plans/active/compute_optimization_mock_data_2026_05_13.md` (~4.8 cal-AI-days, P1, deadline 2026-05-23). Mock-data approach lets it run **in parallel with real-backfill workstream** (no I/O dependency on data being ready). Phases:
-0. Pre-audit + stage classification (uses existing benchmark plan Phase 5/6 outputs)
-1. **VERIFY + EXTEND** `strategy-service/scripts/run_2yr_config_grid_backtest.py` (CORRECTION: this script ALREADY EXISTS at 886 lines, master plan flag "AUTHOR-MISSING" is stale — scope is verification + Tier A extension, not greenfield authoring)
+**NEW plan**: `plans/active/compute_optimization_mock_data_2026_05_13.md` (~4.8 cal-AI-days, P1, deadline 2026-05-23).
+Mock-data approach lets it run **in parallel with real-backfill workstream** (no I/O dependency on data being ready).
+Phases: 0. Pre-audit + stage classification (uses existing benchmark plan Phase 5/6 outputs)
+
+1. **VERIFY + EXTEND** `strategy-service/scripts/run_2yr_config_grid_backtest.py` (CORRECTION: this script ALREADY
+   EXISTS at 886 lines, master plan flag "AUTHOR-MISSING" is stale — scope is verification + Tier A extension, not
+   greenfield authoring)
 2. Features-service parallel batching
 3. Execution-alpha measurement at scale
 4. ML training parallel hyperparam grid (uses synthetic features)
 5. Big-machine SKU matrix extension (`c3-highcpu-88` / `-176` / `m3-megamem-128` / `m3-ultramem-160`)
-6. **Dependency-ordering doc for orchestrator** at `codex/08-workflows/cutover-window-dependency-order.md` (NEW) — which stages can run while real backfill happens vs which must follow
+6. **Dependency-ordering doc for orchestrator** at `codex/08-workflows/cutover-window-dependency-order.md` (NEW) — which
+   stages can run while real backfill happens vs which must follow
 7. Performance-targets codex SSOT (NEW)
 
 **Cleanup applied**:
-- 2 orphan plans (compute_optimization + sports_retired_data_types) assigned `parent_epic` → strategy_and_dart_master + sports_master respectively; both epics now list them as sub-plans.
-- 6 plans cross-reference the new MVP SSOT: master plan + 5 asset_group epics (cefi/tradfi/predictions/ml_and_features/cross_cutting).
-- Existing SSOTs (`category-instrument-coverage.md` + `target_universe/catalog.py` + UAC registries) preserved — new doc references them, doesn't duplicate.
+
+- 2 orphan plans (compute_optimization + sports_retired_data_types) assigned `parent_epic` → strategy_and_dart_master +
+  sports_master respectively; both epics now list them as sub-plans.
+- 6 plans cross-reference the new MVP SSOT: master plan + 5 asset_group epics
+  (cefi/tradfi/predictions/ml_and_features/cross_cutting).
+- Existing SSOTs (`category-instrument-coverage.md` + `target_universe/catalog.py` + UAC registries) preserved — new doc
+  references them, doesn't duplicate.
 
 **Orchestrator dependency-order insight** (the critical value for slot scheduling):
+
 - Mock-data optimization work (Phases 0-5) runs RIGHT NOW alongside real backfill — don't gate on backfill.
 - Real backfill drains 2026-05-15 → 2026-05-19 per `code_freeze_migrate_backfill_sequencing` Phase 2.
 - First real-data cutover-window dress rehearsal 2026-05-18 → 2026-05-21 = critical test.
 - Phase 6 dependency-order doc will be the orchestrator's slot-scheduling reference.
 
 **TOP ASK from slot 1**:
-1. Confirm strategy_and_dart_master is the right epic-parent for compute_optimization (vs ml_and_features_master). Strategy-backtest-centric → strategy epic feels right.
-2. Allocate slots for compute_optimization Phase 0 (today, ~0.5 day) so the harness extension starts in parallel with real backfill.
-3. No descope on any Tier A archetype. Tier B (options) stays code-ready not backtest-complete — architecture-driver value preserved.
+
+1. Confirm strategy_and_dart_master is the right epic-parent for compute_optimization (vs ml_and_features_master).
+   Strategy-backtest-centric → strategy epic feels right.
+2. Allocate slots for compute_optimization Phase 0 (today, ~0.5 day) so the harness extension starts in parallel with
+   real backfill.
+3. No descope on any Tier A archetype. Tier B (options) stays code-ready not backtest-complete — architecture-driver
+   value preserved.
 
 Plan + codex + epic edits + sub-plan cross-refs all pushing in this commit batch.
 
 ---
 
-[2026-05-13 19:00 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — ⚠️ **CORRECTIONS to MVP SSOT** (operator clarifications 2026-05-13 post earlier ping).
+[2026-05-13 19:00 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — ⚠️ **CORRECTIONS to MVP SSOT** (operator
+clarifications 2026-05-13 post earlier ping).
 
 **4 corrections applied to `codex/09-strategy/mvp-universe-per-asset-group.md`**:
 
-1. **SPY removed from TradFi MVP** — ES futures has more trading hours and is the canonical S&P 500 surface for backtest + ML. Operator quote: _"spy isnt needed for s&p 500 as es has more hours. weeklies and dailies are part of it"_. ES.OPT scope now explicitly includes **weeklies + dailies + standard expiries**.
+1. **SPY removed from TradFi MVP** — ES futures has more trading hours and is the canonical S&P 500 surface for
+   backtest + ML. Operator quote: _"spy isnt needed for s&p 500 as es has more hours. weeklies and dailies are part of
+   it"_. ES.OPT scope now explicitly includes **weeklies + dailies + standard expiries**.
 
-2. **Commodity futures + ETFs added to TradFi MVP** for cross-instrument carry/arb (operator quote: _"natural gas, gold, and other futures commodities are there for cross-instrument carry / arb"_):
+2. **Commodity futures + ETFs added to TradFi MVP** for cross-instrument carry/arb (operator quote: _"natural gas, gold,
+   and other futures commodities are there for cross-instrument carry / arb"_):
    - Gold: GLD (ETF) + CME GC (futures)
    - Natural gas: UNG (ETF) + CME NG (futures)
    - Oil: USO (ETF) + CME CL (futures)
@@ -910,12 +1023,15 @@ Plan + codex + epic edits + sub-plan cross-refs all pushing in this commit batch
 
 3. **Backtest windows updated per asset_group** — walk-forward ML training validation loops require longer history:
    - **DeFi + Prediction**: 2 years (venue lifecycle limits)
-   - **CeFi + TradFi + Sports**: **5 years** (multi-regime walk-forward — 2021 bull → 2022 bear → 2023 recovery → 2024 ETF cycle for crypto; 2020-COVID → 2022 inflation → 2024 ETF launches for TradFi; per-season variation for sports)
+   - **CeFi + TradFi + Sports**: **5 years** (multi-regime walk-forward — 2021 bull → 2022 bear → 2023 recovery → 2024
+     ETF cycle for crypto; 2020-COVID → 2022 inflation → 2024 ETF launches for TradFi; per-season variation for sports)
    - Worker counts ~2.5× larger than prior 2-yr estimate. Total Tier A worker-runs now ~580K-1.3M (was ~250K).
    - ML training data ~11.7M rows total (was ~6M). Still fits on `c3-highcpu-44` per archetype.
-   - Wall-clock with 4× `c3-highcpu-176` concurrent shards ≈ 2 hours per archetype-bundle. **Phase 5 big-SKU strategy now CRITICAL, not optional**.
+   - Wall-clock with 4× `c3-highcpu-176` concurrent shards ≈ 2 hours per archetype-bundle. **Phase 5 big-SKU strategy
+     now CRITICAL, not optional**.
 
-4. **CARRY_BASIS_DATED + cross-venue fixed-delivery futures arb ownership answered** (operator question: _"arb or carry I forget, where is that going which asset group master plan"_):
+4. **CARRY_BASIS_DATED + cross-venue fixed-delivery futures arb ownership answered** (operator question: _"arb or carry
+   I forget, where is that going which asset group master plan"_):
    - **Both** — same archetype family, exit-rule distinguishes:
      - `CARRY_BASIS_DATED` (held to expiry capturing basis convergence)
      - `ARBITRAGE_PRICE_DISPERSION` config variant `dated-cross-venue` (closed early when convergence sufficient)
@@ -924,20 +1040,43 @@ Plan + codex + epic edits + sub-plan cross-refs all pushing in this commit batch
    - **Specs in scope** (per defi_master 2026-05-06 + commodity-futures addition 2026-05-13): 7 existing CARRY_BASIS_DATED + NASDAQ-IBIT/CME-MBT + NASDAQ-ETHA/CME-MET + DERIBIT spot-vs-dated (BTC+ETH) + GLD/CME-GC + USO/CME-CL + UNG/CME-NG. ARBITRAGE_PRICE_DISPERSION adds CME-MBT vs DERIBIT-dated + CME-MET vs DERIBIT-dated.
    - **Funding-rate variant** (perp funding spread cross-venue) = same ARBITRAGE_PRICE_DISPERSION archetype, `funding-rate-dispersion` config variant, also in defi_master Fork 1, also Tier A.
 
+- **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](../plans/active/defi_master_2026_05_07.md) **Fork 1** —
+     DeFi master owns the archetype family even though it spans cross-asset (single owner avoids cross-plan ambiguity).
+   - **Shared infrastructure**: `paired_price_dispersion` calculator in features-cross-instrument-service powers BOTH.
+     Catalog pair specs at UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
+   - **Specs in scope** (per defi_master 2026-05-06 + commodity-futures addition 2026-05-13): 7 existing
+     CARRY_BASIS_DATED + NASDAQ-IBIT/CME-MBT + NASDAQ-ETHA/CME-MET + DERIBIT spot-vs-dated (BTC+ETH) + GLD/CME-GC +
+     USO/CME-CL + UNG/CME-NG. ARBITRAGE_PRICE_DISPERSION adds CME-MBT vs DERIBIT-dated + CME-MET vs DERIBIT-dated.
+   - **Funding-rate variant** (perp funding spread cross-venue) = same ARBITRAGE_PRICE_DISPERSION archetype,
+     `funding-rate-dispersion` config variant, also in defi_master Fork 1, also Tier A.
+
 **Plan body updates**:
-- `codex/09-strategy/mvp-universe-per-asset-group.md` — TradFi section + sizing math tables + ML training data + new "Cross-venue fixed-delivery futures arb (operator question)" sub-section
+
+- `codex/09-strategy/mvp-universe-per-asset-group.md` — TradFi section + sizing math tables + ML training data + new
+  "Cross-venue fixed-delivery futures arb (operator question)" sub-section
 - `plans/active/compute_optimization_mock_data_2026_05_13.md` — new "Backtest window per asset_group" section
-- `plans/active/master_to_live_defi_2026_05_23.md` — Group F MVP banner annotates the 5-yr/2-yr split + commodity-futures + SPY-not-needed + CARRY_BASIS_DATED ownership
+- `plans/active/master_to_live_defi_2026_05_23.md` — Group F MVP banner annotates the 5-yr/2-yr split +
+  commodity-futures + SPY-not-needed + CARRY_BASIS_DATED ownership
 
-**No new slot ask** beyond prior pings — corrections to in-flight scope. But **Phase 5 big-SKU strategy in compute_optimization is now CRITICAL** (was "important"); the 5-yr CeFi/TradFi/Sports + commodity futures pushes worker count 2.5× and m3-ultramem-160 / c3-highcpu-176 multi-SKU concurrency becomes the wall-clock-saving lever.
+**No new slot ask** beyond prior pings — corrections to in-flight scope. But **Phase 5 big-SKU strategy in
+compute_optimization is now CRITICAL** (was "important"); the 5-yr CeFi/TradFi/Sports + commodity futures pushes worker
+count 2.5× and m3-ultramem-160 / c3-highcpu-176 multi-SKU concurrency becomes the wall-clock-saving lever.
 
-**No descope, perfect cutover** — operator direction holds. The 5-yr extension is scope ADDITION (better walk-forward validation), not scope reduction.
+**No descope, perfect cutover** — operator direction holds. The 5-yr extension is scope ADDITION (better walk-forward
+validation), not scope reduction.
 
 ---
 
 **Capacity**: Operator directed slot 3 to "pull in more work today even if market tomorrow/Friday." Slot 3 ready for next batch. Candidate work I see available: (a) emerging perp adapter debug (HYPERLIQUID/ASTER), (b) Wave 3 per-instrument catalog cross-ref for the 789k cefi cleanup, (c) any of the 5 Solana coverage successor plans, (d) code_freeze Phase 2 entry tasks. Awaiting direction.
 
 ---
+
+[2026-05-13 19:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — 📅 **Cutover-window critical-path timeline
+shipped** (answers operator question: "by what date is X done; do plans encode these checkpoints").
+
+**NEW codex SSOT**:
+[`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md).
+Companion to MVP universe SSOT. Read at every slot 1 morning ledger sweep through 2026-05-23.
 
 [2026-05-13 ~18:00 UTC] ikenna-main (slot 1) → harsh-side 1M-context audit slot — ✅ **ACK + CORRECTIONS APPLIED** (re: your `[2026-05-13 14:50 UTC]` + `[17:30 UTC]` audit pings — `PM@e1e67656` + the 7-item pull-forward).
 
@@ -1019,3 +1158,67 @@ Proceed autonomously on (a). Ping main when investigation finds root cause (like
   (4) Open issues triage in plans/active/issues/
   NOT touching: slot 3/8/9 worktrees (in flight). NOT touching UAC slot8-preexisting-wallet-provisioning-configs stash (slot 8 in flight).
   Cross-side note: batch_live_symmetry Tab 3 (slot 8) L2 fix-batch may touch Ikenna-side repos (features-*/strategy/MDPS ~21 violations). Slot 8 will pre-announce before enabling L2 STEP. Watch for that ping.
+
+| Date               | Checkpoint                                                                                                                           | Track                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| 2026-05-13 → today | Parallel-track work starts NOW (compute_opt, UI, code-only, CI/CD)                                                                   | parallel — no backfill dependency |
+| 2026-05-15 (Fri)   | Manifest schema v8 LOCKED; instruments-service backfill complete; bucket provisioning done                                           | serial                            |
+| 2026-05-15 → 05-17 | MTDS backfill drain (~2-3 days, all 5 asset_groups parallel)                                                                         | serial                            |
+| 2026-05-17 → 05-18 | MDPS + features backfill — pricing data READY for MVP                                                                                | serial                            |
+| 2026-05-18 (Mon)   | CI/CD on main + tarball/image decision must be GREEN                                                                                 | parallel                          |
+| 2026-05-18 → 05-19 | ML experiments START (Sports 5 leagues + CeFi BTC/ETH + TradFi ES) IN PARALLEL with DeFi strategy backtests (rule-based, minimal ML) | parallel after data ready         |
+| 2026-05-19 → 05-21 | Execution-alpha + paper trading testnet + live wallet funding + CeFi credentials wired                                               | parallel                          |
+| 2026-05-20 (Wed)   | DART UI + deployment UI ready for cutover; treasury sharp                                                                            | parallel — ships from today       |
+| 2026-05-21 (Thu)   | End-to-end dress rehearsal on real data                                                                                              | serial                            |
+| 2026-05-22 (Fri)   | Pre-cutover sign-off gate (credential-probe.sh --mode live = 100% pass)                                                              | serial                            |
+| 2026-05-23 (Sat)   | CUTOVER — live trading begins                                                                                                        | —                                 |
+
+**Two-track distinction (the throughput-saving insight)**:
+
+- **Serial data-pipeline track**: manifest → instruments → MTDS → MDPS → features → ML/strategy backtest.
+  Sequence-bound.
+- **Parallel code-and-tests track**: 13 workstreams listed in the doc — Tier A archetype code, Tier B options-strategy
+  (architecture-driver), compute_optimization Phases 0-5, DART UI, deployment UI, CI/CD QG sweep, treasury verification,
+  basefc_validation_flip, governance_qg, codex_doc_currency, 4 DeFi alert codes, treasury rollup, risk + DR scripts.
+  **All schema-stable on mock data — run RIGHT NOW alongside real backfill.**
+
+**Per-archetype ML/backtest sizing** (operator estimate: ~0.5 day per backtest/strategy/ML optimization, multiple
+strategies + concurrent loops):
+
+- ml-continuous (CeFi 30 + ES): ~5 cal-AI-days
+- ml-settled (Sports Top-5 EU × 4 markets): ~5 cal-AI-days
+- arbitrage-funding-rate (CeFi × 6 venues): ~3 cal-AI-days
+- arbitrage-sports-book (Polymarket × Betfair Top-5): ~2 cal-AI-days
+- arbitrage-event-markets (Polymarket × CME): ~1 cal-AI-day
+- defi-carry-family (7 archetypes): ~3.5 cal-AI-days
+- **TOTAL Tier A backtest/ML completion: ~19.5 cal-AI-days = <1 day workspace wall-clock with concurrent slot fan-out**
+
+**Action items SPAWNED by this timeline** (orchestrator should ping epic owners to add per-checkpoint dates to plan
+bodies):
+
+1. `ml_and_features_master_2026_05_07.md` — add per-asset_group ML kickoff date (2026-05-19)
+2. `defi_master_2026_05_07.md` — add DeFi strategy + execution backtest start date (2026-05-19)
+3. `wallet_treasury_client_flow_2026_05_10.md` — add live wallet funding + CeFi credentials gate (2026-05-20)
+4. `dart_manual_trade_ux_refactor_2026_05_13.md` + `deployment_ui_lifecycle_tabs_2026_05_08.md` — add ready-for-cutover
+   date (2026-05-20)
+5. `promote_workflow_may23_cli_path_2026_05_10.md` — add CI/CD vs tarball decision milestone (2026-05-18)
+
+Current per-plan frontmatter says `deadline: 2026-05-23` for all, which is correct but doesn't surface intermediate
+milestones. Plan-body refresh is a slot 1 main + epic owners coordinated next step.
+
+**Slot scheduling guidance** (per-day allocation from today through 2026-05-23) is in the codex doc § "Slot scheduling
+guidance". TL;DR for today:
+
+- 8 slots TODAY can run parallel-track (no backfill dependency)
+- Day-3 freeze gate adds manifest reconciler + bucket provisioning slots
+- Day-7 ML kickoff = 6 archetype slots in parallel + 2 supporting (ml-training grid + execution-alpha)
+
+**No descope. ~571 cal-AI-days remaining vs ~2000 cal-AI-day capacity over 10 days = still ~3.5× safety margin even with
+the 5-yr extension + 7 pulled-forward items.**
+
+**TOP ASK from slot 1**:
+
+1. Acknowledge the timeline doc as canonical for cutover orchestration.
+2. Action items 1-5 above — orchestrator to ping epic owners (or assign as slot work).
+3. No new descope. Slot reallocation asks from prior pings (batch_live_symmetry ×2 + recursive_borrow ×2 + 6
+   pulled-forward slot-touches) still stand.
