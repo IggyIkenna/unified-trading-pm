@@ -44,7 +44,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Note**: Can run parallel with B-001; both read same env config shape.
 
 ### B-003 · batch_live Tab 3 — L2 fix-batch (21 violations)
-- **Status**: QUEUED
+- **Status**: DONE @PM@06c6213c 2026-05-14 (slot 8)
 - **Task**: 21 L2 violations across `features-service`, `strategy-service`, `market-tick-data-service` — mode-axis discipline (RuntimeMode × BatchExecutionMode misuses). Read `batch_live_symmetry_2026_05_10.md` § Tab 3 § "L2 fix-batch" for the exact file:line list. Fix each: move to seam OR unify path. Serialise commits within slot (no parallel sub-agents on same repo). Then enable L2 STEP in base-service.sh.
 - **Repos**: `features-service` + `strategy-service` + `market-tick-data-service` + `unified-trading-pm`
 - **Est**: 3h · **Model**: Sonnet
@@ -59,7 +59,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Plan-ref**: `strategy-service/tests/` (no plan-of-record; standalone fix)
 
 ### B-005 · Writegate Phase 6.9 — features-sports emission policy
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 5 2026-05-14
 - **Task**: Wire `publish_with_policy` at the sports live-handler write boundary in `features-service` (same pattern as Phase 6.5 batch_handler@a93dc3b4 but for sports live path). Add STRICT_FAIL seed in UAC if missing. QG green.
 - **Repos**: `features-service` + `unified-api-contracts` (if seed missing) + `unified-trading-pm`
 - **Est**: 2h · **Model**: Sonnet
@@ -75,7 +75,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 all clusters green (QG must be clean before coverage work)
 
 ### B-007 · Phase 8.A surface-2 — manifest writer coverage
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 8 2026-05-14
 - **Task**: 100% coverage on `ManifestWriter.record_*` call paths in UTL. Add tests for: `record_captured` happy-path, `record_empty` with each reason taxonomy entry, `record_failed` with `attempted_at`, `record_expected_unattempted`. Verify `assert_available_at_present` fires on every `record_captured` path.
 - **Repos**: `unified-trading-library`
 - **Est**: 3h · **Model**: Sonnet
@@ -83,7 +83,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 Cluster D done (UTL test suite green)
 
 ### B-008 · Phase 8.A surface-3 — emission publisher coverage
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 8 2026-05-14
 - **Task**: 100% coverage on `publish_with_policy` + `_publish_emission_check` + `_resolve_policy_output_data_type` in UTL. Add unit tests: STRICT_FAIL policy blocks on mismatched output; WARN_ONLY policy logs but passes; NAN_FILL policy fills NaN correctly. Run `bash scripts/quality-gates.sh` — all tests green.
 - **Repos**: `unified-trading-library`
 - **Est**: 3h · **Model**: Sonnet
@@ -162,16 +162,28 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Plan-ref**: `plans/active/defi_master_2026_05_07.md` § "paper-trade gate"
 - **Prereq**: Same as B-015
 
+### B-017 · defi_recursive_borrow DESCOPE — successor plan filing (doc-only)
+- **Status**: DISPATCHED → slot 5 2026-05-14
+- **Task**: File the post-cutover successor plan for `defi_recursive_borrow_archetypes_2026_05_10.md`. Steps: (1) annotate current plan body with descope decision ("May-23 ships archetype documented; Phase 2-3 Solidity + execution halves deferred"); (2) file `plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` with `migrated_from:` frontmatter + migrated todos with `**MIGRATED FROM:**` provenance; (3) add successor banner to current plan; (4) rerun `python3 scripts/plans/regenerate_active_plan_inventory.py`. PM only — no code changes.
+- **Repos**: `unified-trading-pm`
+- **Est**: 1h · **Model**: Sonnet
+- **Plan-ref**: `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` + CLAUDE.md § "Plan Archival"
+
 ---
 
 ## Dispatch log
 
 | Date | Item | Slot | Done SHA |
 |------|------|------|----------|
-| 2026-05-14 | B-007 client-reporting-api B008 sweep | slot 7 | client-reporting-api@e936eb4 + PM@130dcd5e |
+| 2026-05-14 | B-007 client-reporting-api B008 sweep | slot 7 | client-reporting-api@e936eb4 + PM@130dcd5e ✅ |
+| 2026-05-14 | B-003 batch_live Tab 3 L2 fix-batch | slot 8 | PM@06c6213c ✅ |
 | 2026-05-14 | B-001 deployment-api tarball-block | slot 7 | DISPATCHED |
 | 2026-05-14 | B-002 deployment-ui env selector lock | slot 7 | DISPATCHED |
 | 2026-05-14 | B-004 strategy-service 2 remaining test failures | slot 7 | DISPATCHED |
+| 2026-05-14 | B-005 Writegate Phase 6.9 features-sports | slot 5 | DISPATCHED |
+| 2026-05-14 | B-017 defi_recursive_borrow successor plan | slot 5 | DISPATCHED |
+| 2026-05-14 | B-007 Phase 8.A manifest writer coverage | slot 8 | DISPATCHED |
+| 2026-05-14 | B-008 Phase 8.A emission publisher coverage | slot 8 | DISPATCHED |
 
 ---
 

@@ -32,10 +32,10 @@ locked_since: 2026-05-08
 | 2 | **Phase 0 Cluster B** — ml-training-service C901 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/2` |
 | 3 | **Phase 0 Reserve** — peripheral scripts pipeline_mode kwarg sweep (10 scripts) | 🔄 SPAWN PENDING | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4 peripheral | `tab/hk/3` |
 | 4 | **Phase 0 Cluster D** — MDPS + features-service test failures after UTL@67c532bd | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/4` |
-| 5 | **Phase 0 Cluster B** — deployment-api C901 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/5` |
+| 5 | **B-005+B-017** — Writegate Phase 6.9 features-sports + defi_recursive_borrow successor plan | 🔄 SPAWN PENDING | `writegate_honest_coverage_endtoend_2026_05_06.md` § 6.9 | `tab/hk/5` |
 | 6 | **Phase 0 Cluster B** — alerting-service N802 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/6` |
 | 7 | **B-001+B-002+B-004** — Phase 1 env-locking (dep-api + dep-ui) + strategy-service 2 test failures | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 1 | `tab/hk/7` |
-| 8 | **Phase 0 Cluster E** — UTS-UI tsc errors (+ batch_live Tab 3 carry-forward if time) | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster E | `tab/hk/8` |
+| 8 | **B-007+B-008** — Phase 8.A manifest writer + emission publisher coverage (UTL) | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/8` |
 | 9 | **Phase 0 Cluster D** — position-balance-monitor-service test failures | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
@@ -65,6 +65,49 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
 
 > All 8 slots (2-9) reset via `setup-tab-worktrees.sh --reset-slot N`. Worktrees on `tab/hk/N` matching `origin/live-defi-rollout`.
 > UTL@67c532bd confirmed on LDR — Cluster D unblocked. Cluster A+C closed by Ikenna. Cluster F on Ikenna slot 1.
+
+### Slot 5 — B-005 + B-017: Writegate Phase 6.9 + defi_recursive_borrow successor plan (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: deployment-api C901 sweep (deployment-api@3040a1b + PM@910eb257). 13 pre-existing test failures (SHARD_AXIS_MATRIX UAC alignment) — NOT yours, filed as issue, skip.
+
+- **Owned repos**: `features-service` + `unified-api-contracts` (if seed missing) + `unified-trading-pm`
+- **Task — 2 items, work in order**:
+
+  **Item 1 — B-005: Writegate Phase 6.9 features-sports emission policy**
+  - Read `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.9 for context. Wire `publish_with_policy` at the sports live-handler write boundary in `features-service` — same pattern as Phase 6.5 batch_handler (committed at features-service@a93dc3b4). Open `features_service/sports/cli/handlers/live_handler.py` — find the write boundary — add `_check_emission_policy()` call.
+  - If UAC STRICT_FAIL policy seed for the sports live data_type is missing from `SERVICE_OUTPUT_POLICIES`: add it (same structure as nearby entries). `bash scripts/quality-gates.sh` green in both repos.
+  - Commit + push per repo. Flip plan Phase 6.9 checkbox with SHA evidence.
+
+  **Item 2 — B-017: defi_recursive_borrow DESCOPE successor plan**
+  - Read `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — understand shipped vs unshipped phases (UAC half ~7% done; Solidity + execution + strategy + codex + UI halves unshipped per Ikenna audit PM@e1e67656).
+  - Annotate plan body with descope block: "May-23 scope = archetype documented only; Phase 2-3 Solidity + execution deferred to successor."
+  - File `plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` with `migrated_from:` frontmatter + all unshipped todos migrated with `**MIGRATED FROM:**` provenance.
+  - Add successor banner to current plan. Run `python3 scripts/plans/regenerate_active_plan_inventory.py`. Commit + push (PM).
+
+- **Done-def**: Phase 6.9 `publish_with_policy` wired + QG green; recursive_borrow successor plan filed + inventory regenerated.
+
+### Slot 8 — B-007 + B-008: Phase 8.A UTL coverage — manifest writer + emission publisher (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: batch_live Tab 3 L2 fix-batch + STEP 5.77 + L7 sweep (PM@06c6213c).
+
+- **Owned repos**: `unified-trading-library` + `unified-trading-pm`
+- **Task — 2 items, work sequentially in same repo**:
+
+  **Item 1 — B-007: manifest writer coverage**
+  - Target: 100% coverage on `ManifestWriter.record_*` call paths in UTL.
+  - Run `bash scripts/quality-gates.sh` from `unified-trading-library/` first — confirm current coverage baseline.
+  - Add tests under `unified-trading-library/tests/` covering: `record_captured` happy-path with `available_at` stamp; `record_empty` with 3+ distinct `EmptyConfirmedReason` entries; `record_failed` with `attempted_at` set; `record_expected_unattempted`; `assert_available_at_present` fires on every `record_captured` call.
+  - Re-run QG — coverage must be >= prior baseline + new lines covered.
+  - Commit + push. Flip plan checkbox.
+
+  **Item 2 — B-008: emission publisher coverage**
+  - Target: 100% coverage on `publish_with_policy` + `_publish_emission_check` + `_resolve_policy_output_data_type` in UTL.
+  - Add tests: STRICT_FAIL policy blocks when output data_type mismatches policy; WARN_ONLY policy logs warning but passes through; NAN_FILL fills NaN columns per policy config; unknown policy → raises loud at config-load time.
+  - Re-run QG — all tests green + coverage target met.
+  - Commit + push. Flip plan checkbox.
+
+- **Done-def**: Both UTL coverage targets met; `bash scripts/quality-gates.sh` green; plan checkboxes flipped with SHA evidence.
+- **Note**: Both items are UTL-only. Use repo-local `.venv` (NOT `.venv-workspace`) per venv split rule.
 
 ### Slot 2 — Phase 0 Cluster B: ml-training-service C901 lint sweep (Sonnet 4.6 / thinking: high)
 

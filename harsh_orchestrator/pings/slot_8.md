@@ -9,3 +9,4 @@ Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block o
 New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
 [2026-05-14 10:20 UTC] slot-8 — STARTED Phase 0 Cluster E: UTS-UI tsc errors (deployment_and_qg_strategy_implementation_2026_05_13.md § Cluster E)
 [2026-05-14 10:45 UTC] slot-8 — Tab 3 DONE: L2 fix-batch + STEP 5.77 + L7 sweep all complete; instruments-service noqa'd; PM@06c6213c
+[2026-05-14 11:00 UTC] [main → slot 8] — NEXT ASSIGNMENT: B-007 + B-008 (2 items). Read LEDGER § "Slot 8 — B-007+B-008" for full brief. Work in order: (1) Phase 8.A manifest writer coverage — 100% coverage on ManifestWriter.record_* in unified-trading-library; (2) Phase 8.A emission publisher coverage — 100% coverage on publish_with_policy + _publish_emission_check + _resolve_policy_output_data_type in UTL. ~6h total. QG green after each.
