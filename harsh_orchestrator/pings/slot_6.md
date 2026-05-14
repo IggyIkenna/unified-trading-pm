@@ -17,3 +17,18 @@
 [2026-05-14 05:00 UTC] slot-6-w1 — ✅ DONE. Phase 1 freeze-gate audit COMPLETE — all 6/6 items confirmed GREEN on disk. #3: QG STEP 5.68 `0 baselined, 0 new occurrences`. #6: all 8 features-* families strict=True LookaheadBiasError enforcement confirmed. Inline ack at master plan + pushed PM@33e6b308. No P0 gaps. Slot 6 DONE.
 
 [2026-05-14 04:59 UTC] harsh-main → slot 6 — 🔁 **CONTINUATION ASSIGNMENT** — see LEDGER § "Day-3 continuation task briefs — Slot 6". Scope: **writegate Phase 6.5 remaining open todos** (features-service). Open items: (1) sports live_feature_subset live_handler STRICT_FAIL wiring (STILL DEFERRED per @a93dc3b4 task boundary); (2) P2 delta-one ~24 ohlcv NAN_FILL policy seed verification; (3) P2 cross-instrument seed-vs-registry drift check; (4) P2 multi-timeframe cross-TF aggregate STRICT_FAIL policy verification. Grep-then-read each before changing. Fix if clear; file P2 issue doc if needs design call. QG green after each fix. Plan: `writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.5 open `- [ ]` todos. Do NOT touch Phase 6.6 (ml/ml-inference) — Ikenna-owned. FF-push per shippable unit.
+
+[2026-05-14 06:05 UTC] slot-6-continuation — ✅ DONE. Phase 6.5 P2 continuation COMPLETE.
+  Shipped:
+  (1) sports live_handler: `_check_live_emission_policy()` + `pre_publish_gate` callback in PubSubSubscriber
+      → features-service@0de7fee6 (pushed to LDR); 4 tests added.
+  (2) delta-one UAC key mismatch fixed: orphaned `("features-service", ...)` entries replaced with correct
+      `("features-delta-one-service", ...)` for all 21 FEATURE_GROUPS; uac@07b4992.
+  (3) cross-instrument seed-vs-registry drift: `paired_spec` + `pairwise_correlation` confirmed absent from
+      CALCULATOR_REGISTRY; documented as preserve-as-is per plan decision.
+  (4a) tf_risk_reward + wedge_confluence: confirmed cross-TF → added to UAC seed dict (uac@466d93c) +
+       _SEEDED_FEATURE_GROUPS (features-service@47865006); 2 tests in TestNewSeededGroupsStrictFail.
+  (4b) intraday_regime + micro_regime: confirmed single-TF (1h/1m OHLCV); policy ambiguous; DEFERRED to operator.
+       Issue doc: plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md.
+  PM plan flips: 3 of 4 P2 checkboxes → [x]; 1 annotated DEFERRED. PM@101fc6dd pushed to LDR.
+  All 0 unpushed commits. Slot 6 DONE.
