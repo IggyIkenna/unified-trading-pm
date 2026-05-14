@@ -33,8 +33,8 @@ locked_since: 2026-05-08
 | 3 | **Phase 0 Reserve** — peripheral scripts pipeline_mode kwarg sweep (10 scripts) | 🟢 IN FLIGHT (STARTED @10:20) | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4 peripheral | `tab/hk/3` |
 | 4 | **Phase 0 Cluster D** — MDPS + features-service test failures after UTL@67c532bd | ⚠️ SILENT — no STARTED ping; confirm agent running | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/4` |
 | 5 | **B-005+B-017** — Writegate Phase 6.9 features-sports + defi_recursive_borrow successor plan | 🟡 AWAITING (direction given @11:00) | `writegate_honest_coverage_endtoend_2026_05_06.md` § 6.9 | `tab/hk/5` |
-| 6 | **Phase 0 Cluster B** — alerting-service N802 lint sweep | ⚠️ SILENT — no STARTED ping; confirm agent running | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/6` |
-| 7 | **B-001+B-002** — Phase 1 env-locking (dep-api + dep-ui) [B-004 DONE by slot 9] | 🟡 AWAITING (direction given @11:00) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 1 | `tab/hk/7` |
+| 6 | **Phase 0 Cluster D+E** — instruments-service 74 failures + deployment-ui 21 vitest failures | 🟡 AWAITING (direction given @11:15) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D/E | `tab/hk/6` |
+| 7 | **B-001+B-002** — Phase 1 env-locking; B-001 DONE @deployment-api@0574e9e; B-002 in progress | 🟢 IN FLIGHT (B-001 ✅ B-002 🔄) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 1 | `tab/hk/7` |
 | 8 | **B-007+B-008** — Phase 8.A manifest writer + emission publisher coverage (UTL) | 🟡 AWAITING (direction given @11:00) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/8` |
 | 9 | **Phase 0 Cluster D + MTDS remaining failures** — PBM DONE; B-004 DONE (UTL propagation); continuing MTDS test failures | 🟢 IN FLIGHT (STARTED @10:21; MTDS ongoing) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
@@ -65,6 +65,26 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
 
 > All 8 slots (2-9) reset via `setup-tab-worktrees.sh --reset-slot N`. Worktrees on `tab/hk/N` matching `origin/live-defi-rollout`.
 > UTL@67c532bd confirmed on LDR — Cluster D unblocked. Cluster A+C closed by Ikenna. Cluster F on Ikenna slot 1.
+
+### Slot 6 — Phase 0 Cluster D+E: instruments-service failures + deployment-ui vitest (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: alerting-service N802 lint sweep (alerting-service@74761a5 + @75f0404; 451 tests pass; 4 D.5+D.7 codex violations filed as issue doc).
+
+- **Owned repos**: `instruments-service` + `deployment-ui`
+- **Task — 2 items, work in order**:
+
+  **Item 1 — Cluster D: instruments-service 74 test failures (diagnose-first)**
+  - `instruments-service`: 74 failed (`test_new_orchestrator`, `test_sports_fixtures_daily_repoll`). This is the biggest unknown in Phase 0. Diagnose-first rule applies.
+  - Run `bash scripts/quality-gates.sh` and capture the full failure output. Read failing test bodies + code-under-test. Determine: (a) test drifted from new UTL@67c532bd API → fix test; (b) code drifted → fix code; (c) unrelated pre-existing failure → file issue doc + noqa if scope-limited.
+  - Fix what you can diagnose clearly. If root cause ambiguous after 30 min, file `plans/active/issues/instruments_service_test_failures_<YYYY_MM_DD>.md` and proceed.
+  - Commit + push per fix. Flip plan checkbox with SHA evidence.
+
+  **Item 2 — Cluster E: deployment-ui 21 vitest failures**
+  - `deployment-ui`: 21 vitest failures across 6 files (start with `TreasuryTab.tsx` failures per plan).
+  - Run `cd deployment-ui && pnpm test --run 2>&1 | head -100` to see failure summary. Diagnose-first: read failing test + component. Likely MSW mock drift or prop type change from Phase 1 env-locking guard additions. Fix tests. `pnpm build` must also pass.
+  - Commit + push. Flip plan Cluster E checkbox.
+
+- **Done-def**: instruments-service QG green OR issue doc filed for ambiguous failures; deployment-ui 21 vitest green + `pnpm build` passes. Ping DONE with SHAs.
 
 ### Slot 2 — Phase 0 remaining: Cluster B alerting-service + Cluster D MDPS/features/ml-inference + Cluster F deployment-service (Sonnet 4.6 / thinking: medium)
 
