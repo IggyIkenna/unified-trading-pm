@@ -221,7 +221,7 @@ paper/live deployment exists.
     - setup-data-pipeline-vm.sh startup failure leaves VM RUNNING indefinitely (self-delete only triggers via
       vm-exec-with-gcs-tee.sh which doesn't run when install fails). Phase 2 should add self-delete on script error.
 
-- [ ] [SCRIPT] P0. **🔴 RE-RUN smoke VM after slot 9 wire-ins (FOOT-GUN intercept 2026-05-13 wave-1 audit)**.
+- [x] [SCRIPT] P0. **🔴 RE-RUN smoke VM after slot 9 wire-ins (FOOT-GUN intercept 2026-05-13 wave-1 audit)**.
       Slot 9 (Day-4 2026-05-13) shipped wire-ins addressing all 3 gaps above (e2e-testing@`afd0c16` ServiceBootstrap +
       GcsEventSink for paper/live; deployment-service@`ab6bfd2` strategy-paper/live self-delete on engine exit) BUT
       did NOT re-run the smoke VM to verify the wire-ins close the gaps in production. Slot 9's ping at 08:10 UTC
@@ -241,6 +241,7 @@ paper/live deployment exists.
   - **Successor if FAILS**: file new issue doc `plans/active/issues/strategy_paper_vm_post_slot9_failure_2026_05_13.md`
     documenting which of the 4 critical assertions failed + which wire-in is incomplete.
   - **Audit ref**: `plans/active/issues/audit_wave1_quality_2026_05_13.md` § "Critical follow-ups" item 1.
+  - **DONE 2026-05-14 slot-9 post-OOM**: Bug found + fixed first: `args.mode='paper'` passed directly to `setup_events()` → `ValueError: Invalid mode: paper` (only `batch/live/local/test` accepted). Fix: e2e-testing@`f0b63ee` maps `'paper'→'live'` before call. Tarball refreshed + VM #2 launched. VM=`strategy-paper-carry-staked-basis-20260514-121752`. Event path correction: plan said `events/strategy-service/`; actual path is `events/colocated-engine/` (`service_name="colocated-engine"` in code). Wire-in assertions: GcsEventSink ✅ STARTED `2026-05-14T06:50:24.940577Z` ✅ VM self-deleted ✅ FAILED `2026-05-14T06:50:29.120987Z` (`No module named 'nautilus_trader'`) ✅. 10min progress N/A (engine crashed before first tick on pre-existing missing dep — NOT a wire-in failure). Wire-ins (afd0c16 + ab6bfd2) VERIFIED. Filing separate issue for nautilus_trader missing dep: `plans/active/issues/strategy_paper_vm_nautilus_trader_missing_dep_2026_05_14.md`.
 
 - [ ] [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** once
       [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 ships
