@@ -6,9 +6,12 @@
 #
 #   1. Fetches origin/<integration-branch> (default: live-defi-rollout).
 #   2. Skips the repo if working tree is DIRTY (any uncommitted change).
-#   3. Skips the repo if local branch is AHEAD of remote (has unpushed commits).
+#   3. Skips the repo if local branch is AHEAD of remote (has unpushed commits —
+#      i.e. the LOCAL tab branch has commits that aren't yet on `live-defi-rollout`).
 #   4. Skips the repo if local + remote have DIVERGED (would need rebase/merge).
-#   5. Otherwise: fast-forwards the local branch to match origin/<integration-branch>.
+#   5. Otherwise (local strictly BEHIND remote): fast-forwards the local branch to
+#      match origin/<integration-branch>. This is the only case where the script
+#      mutates local state; FF-only never loses work.
 #
 # Never destructive. Never runs `merge --no-ff`, never `rebase`, never `reset --hard`.
 # Exits 0 always (cron-safe). Per-repo status logged to stdout + the rotating log file.
