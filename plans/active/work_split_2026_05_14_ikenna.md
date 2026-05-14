@@ -303,7 +303,11 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
    `deployment-api@40f7769` — 4 test files updated, 13/13 failures resolved. (2026-05-14 session 1)
 2. **`solana_defi_coverage_gaps` successor plan D** — Phoenix / Orca / Raydium DEX integration design + first-phase
    ship. (design 0.6×, ~4 = 2.4 cal)
-3. **`AUDIT_pre_may_8_cleanup_2026_05_13`** — close out pre-May-8 cleanup audit items. (refactor 0.4×, ~3 = 1.2 cal)
+3. ✅ **`AUDIT_pre_may_8_cleanup_2026_05_13`** — close out pre-May-8 cleanup audit items. (refactor 0.4×, ~3 = 1.2 cal)
+   **DONE** (2026-05-14 audit pass): All 3 flagged action items already resolved by other agents — (a) wave3x Track D:
+   EXPECTED_KNOWN_SOURCE_GAP already shipped UAC@174f401, status table already `done`; (b) launcher_scripts Phases 2/3:
+   already annotated DEFERRED-PER-AUDIT per PM@724a2029; (c) deployment_ui_lifecycle_tabs A.2 false positive: corrected
+   2026-05-13 deployment-service@cc3f98a. Audit doc is self-resolved; no action items remain.
 4. ✅ **`classify_blank_reason_fixture_manifest_kwarg` ops verification** — tarball refresh + Script 3 re-run + verify
    `record_empty(reason=...)` end-to-end. (infra 0.8×, ~2 = 1.6 cal) **DONE** (2026-05-14): Tarball refresh at
    2026-05-14T13:12. 3 dry-run VMs completed (defi/sports/prediction). Sports: 1,829,839 candidates, `fixture_manifest`
@@ -319,10 +323,16 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
    DONE** (2026-05-14 PM@fb95ad32): Phase 0 audit complete — 9 tests already shipped across deployment-api + UAC,
    checkboxes flipped A.3/A.4/B.3/B.4/C.1/C.4/C.5/D.1/D.3. C.2 sports deferred to slot 4. Remaining: A.1/A.2 (new tests
    needed), B.1/B.2, D.4, E.1-5, F.1-6 — Phase 1-6 still to ship.
-7. **`data_status_ui_phase_2f.md`** — close out Phase 2F UI items. (design 0.6×, ~3 = 1.8 cal)
-8. **`codex_doc_currency_and_consolidation_post_cutover_2026_05_12` pickup** — refresh codex doc currency for any
-   contract drift surfaced this cycle. (research 1.2×, ~3 = 3.6 cal)
-9. **`codex_vs_citadel_infrastructure_audit_2026_05_10`** — close out infra audit items. (research 1.2×, ~3 = 3.6 cal)
+7. ✅ **`data_status_ui_phase_2f.md`** — close out Phase 2F UI items. (design 0.6×, ~3 = 1.8 cal) **ALREADY DONE by
+   Harsh slot 7** (2026-05-14): All 4 P0 checkboxes flipped. GAP-3/4 code shipped (deployment-api@PM@a59d1571 +
+   deployment-ui@dd6c1cc). Issue docs filed for GAP-1 + GAP-2. No action needed.
+8. ✅ **`codex_doc_currency_and_consolidation_post_cutover_2026_05_12` pickup** — refresh codex doc currency for any
+   contract drift surfaced this cycle. (research 1.2×, ~3 = 3.6 cal) **ALREADY DONE** (2026-05-13 PM@640c38d1 by earlier
+   slot 8): All 4 sweeps done — currency stamps + duplicate consolidation + cross-ref edits + D-14 resolution. Plan
+   complete.
+9. ✅ **`codex_vs_citadel_infrastructure_audit_2026_05_10`** — close out infra audit items. (research 1.2×, ~3 = 3.6
+   cal) **OPERATOR-GATED** (no action this session): All agent-executable items done. 2 open items (2.C + 6.B) blocked
+   on 3 operator decisions (R-10/R-11/AL-14). Awaiting operator input.
 10. **`defi_simulation_realism_2026_05_10` audit-half** — review + close any items overlapping with our archetype
     matrix. (research 1.2×, ~3 = 3.6 cal)
 11. **`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`** — close out canonicalisation items. (design 0.6×,
