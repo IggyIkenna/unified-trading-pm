@@ -3320,9 +3320,11 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       `df.isna().sum().sum() / df.size`) in `features_service/sports/cli/handlers/batch_handler.py`; emission check
       fires at `_run_feature_group()` write boundary before `_write_per_league()`; suppression short-circuits to
       `table_outcomes[group] = ("suppressed", ...)`; all 3 batch groups (:historical variant → NAN_FILL); 4 mode-routing
-      tests in `tests/sports/unit/test_emission_policy.py`. **STILL DEFERRED**: live_handler wiring for
-      live_feature_subset (STRICT_FAIL). **DEFERRED-PER-TASK**: exporter-level wiring (not in batch_handler scope of
-      this sub-task).
+      tests in `tests/sports/unit/test_emission_policy.py`. **LIVE_HANDLER WIRED 2026-05-14
+      @features-service@0de7fee6**: `_check_live_emission_policy()` (completeness from LIVE_FEATURE_SUBSET key presence
+      in record dict) + `pre_publish_gate` callback in `PubSubSubscriber` suppresses PubSub publish on STRICT_FAIL with
+      completeness < 1.0; 4 mode-routing tests added to `tests/sports/unit/test_emission_policy.py`.
+      **DEFERRED-PER-TASK**: exporter-level wiring (not in batch_handler scope of this sub-task).
 - [x] [features-service (cross-instrument family) (prediction scope)] P1. Audit + seed (canonical-question-group bundle
       metrics, market-mid time-series). **Seed shipped 2026-05-11 @uac@b570d49 — 6 polymarket entries**
       (polymarket_crowd_sentiment + polymarket_trade_flow + polymarket_whale_activity +
@@ -3363,7 +3365,7 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
 
 **Phase 6.5 findings (captured 2026-05-11)** — folded forward per Capture-Discoveries-Immediately HARD RULE:
 
-- [ ] [features-service (delta-one family)] P2. ~24 ohlcv-derived feature*groups share NAN_FILL policy (e.g.
+- [x] [features-service (delta-one family)] P2. ~24 ohlcv-derived feature*groups share NAN_FILL policy (e.g.
       moving_averages, oscillators, momentum, vwap, candlestick_patterns, market_structure, returns, streaks,
       supply_demand_zones, fibonacci, level_confluence, signal_confirmation, confluence, statistical_anomaly,
       order_flow_inference, polynomial_trendlines, risk_reward, wedge_quality, return_kurtosis, swing_outcome_targets,
@@ -3371,19 +3373,28 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       `OHLCV_DERIVED_FEATURE_GROUPS: frozenset[str]` + auto-population loop at module load time, OR wildcard convention
       `("features-service (delta-one family)",
       "ohlcv*\*")`.     Defer to Phase-2 expansion alongside the per-service `publish_with_policy()` wiring.
-- [ ] [features-service (cross-instrument family)] P2. **Seed-vs-registry drift flag**: original seed `paired_spec` +
+      (uac@07b4992 2026-05-14: replaced orphaned `("features-service", ...)` keys with correct
+      `("features-delta-one-service", ...)` entries for all 21 FEATURE_GROUPS including NAN_FILL bucket;
+      catch-all fallback = STRICT_FAIL; explicit seeds now route correctly.)
+- [x] [features-service (cross-instrument family)] P2. **Seed-vs-registry drift flag**: original seed `paired_spec` +
       `pairwise_correlation` entries do NOT appear as `feature_group` names in the live `CALCULATOR_REGISTRY`
       (`features-service/features_service/cross_instrument/engine/orchestrator.py`). Closest live names:
       `paired_price_dispersion` (now seeded STRICT_FAIL) + `cross_asset_correlation` (now seeded NAN_FILL). **Triage
       decision needed**: (a) intentional umbrella keys covering multiple groups, (b) reserved for future
       re-architecture, (c) drift to be renamed. Preserved as-is in this seed extension; route to slice-(c) wave-2
-      cleanup.
+      cleanup. (2026-05-14: CALCULATOR_REGISTRY confirmed — `paired_spec` + `pairwise_correlation` NOT in registry;
+      `paired_price_dispersion` + `cross_asset_correlation` are live. Decision: preserve-as-is per plan. Documented.)
 - [ ] [features-service (multi-timeframe family)] P2. **Single-TF vs cross-TF ambiguity**: `intraday_regime` +
       `micro_regime` may be single-TF derived (NAN_FILL ML feature, belongs in delta-one's bucket) rather than cross-TF
       aligned (STRICT_FAIL on paired_spec precedent). Not seeded pending operator/service-maintainer confirmation.
-- [ ] [features-service (multi-timeframe family)] P2. `tf_risk_reward` + `wedge_confluence` are also cross-TF aggregates
+      **DEFERRED 2026-05-14**: Confirmed single-TF via code reading (intraday_regime=1h OHLCV; micro_regime=1m OHLCV);
+      policy ambiguous (NAN_FILL vs STRICT_FAIL needs operator call). Issue doc filed:
+      `plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md`. Awaiting operator classification.
+- [x] [features-service (multi-timeframe family)] P2. `tf_risk_reward` + `wedge_confluence` are also cross-TF aggregates
       consuming poly-fit + ATR across timeframes (same STRICT_FAIL reasoning as the 4 seeded entries). Not seeded
       because operator estimate was ~2 entries; add in Phase-2 alongside the rest of the wedge/RR layer.
+      (uac@466d93c + features-service@47865006 2026-05-14: both added to UAC seed dict +
+      `_SEEDED_FEATURE_GROUPS` frozenset; 2 tests in TestNewSeededGroupsStrictFail.)
 
 **Phase 6.6 — ml-training + ml-inference (P0, ~3-10 cal AI-days)** — 👉 **OWNER: Ikenna (this-cycle Wave 4/5 spawn —
 pre-2026-05-15 freeze)**
@@ -3588,9 +3599,14 @@ repo).
 - MDPS P1: v8 manifest columns (service_emission_state / completeness_fraction) not forwarded to record_captured in
   write_candle_parquet — annotated at Phase 6.2 P1 todo (line ~3265)
 - MDPS P1: audit other MDPS calculators for ungated derived outputs — annotated at Phase 6.2 P1 todo
-- features-service Phase 6.5 P2 items: 24 ohlcv-derived NAN_FILL groups; seed-vs-registry drift (paired_spec);
-  intraday_regime/micro_regime ambiguity; tf_risk_reward/wedge_confluence additions — all annotated as open P2 todos in
-  Phase 6.5 findings block
+- features-service Phase 6.5 P2 items (2026-05-14 resolution):
+  - ✅ 24 ohlcv-derived NAN_FILL groups — fixed via UAC key correction (uac@07b4992; orphaned `features-service` keys
+    replaced with correct `features-delta-one-service` keys for all 21 FEATURE_GROUPS)
+  - ✅ seed-vs-registry drift (paired_spec) — documented, preserved-as-is per plan decision
+  - ✅ tf_risk_reward + wedge_confluence — added to UAC + _SEEDED_FEATURE_GROUPS (uac@466d93c;
+    features-service@47865006)
+  - 🟡 intraday_regime/micro_regime ambiguity — DEFERRED awaiting operator classification (NAN_FILL vs STRICT_FAIL);
+    issue doc: plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md
 
 **Coordination with prior waves + cross-plan banners**
 
