@@ -54,15 +54,19 @@ Two May-23 DeFi archetypes require Solana LST data:
 
 ## Phase 1 — UAC capability declarations (P0)
 
-- [ ] [UAC] P0. Add `SANCTUM-SOLANA` to `DEFI_VENUE_LAUNCH_DATES` in `unified_api_contracts/registry/chain_env.py`.
+- [x] [UAC] P0. Add `SANCTUM-SOLANA` to `DEFI_VENUE_LAUNCH_DATES` in `unified_api_contracts/registry/chain_env.py`.
       Launch date: `"2023-06-01"` (Sanctum v1 mainnet launch, conservative). Chain = SOLANA. Asset class = LST.
-- [ ] [UAC] P0. Add `SANCTUM-SOLANA` to `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` in
+      (UAC@75ee9c4 — chain_env.py PROTOCOL_LAUNCH_DATES entry added)
+- [x] [UAC] P0. Add `SANCTUM-SOLANA` to `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` in
       `unified_api_contracts/registry/capability_declarations/_defi_coverage.py` so data-status does not flag historical
       days as missing until first parquet write lands.
-- [ ] [UAC] P0. Add `SOLBLAZE-SOLANA` to `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` (same reason — adapter exists but MTDS
+      (UAC@75ee9c4 — added with Phase 2 removal note)
+- [x] [UAC] P0. Add `SOLBLAZE-SOLANA` to `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` (same reason — adapter exists but MTDS
       hasn't scheduled capture yet).
-- [ ] [UAC] P0. Verify `JITO-SOLANA` and `MARINADE-SOLANA` are NOT in `EMPTY_OR_DEPRECATED_DEFI_VENUES` (they are real
+      (UAC@75ee9c4 — added with Phase 3 removal note)
+- [x] [UAC] P0. Verify `JITO-SOLANA` and `MARINADE-SOLANA` are NOT in `EMPTY_OR_DEPRECATED_DEFI_VENUES` (they are real
       venues, just have 0% capture due to VM never running). If incorrectly listed there, remove.
+      (UAC@75ee9c4 — verified: only TRADER_JOEV2-AVALANCHE, UNISWAPV3-POLYGON, GMX-AVALANCHE in that set; no action needed)
 
 **QG gate**: `bash scripts/quality-gates.sh` in UAC.
 
