@@ -1346,3 +1346,28 @@ Encoded in:
 - `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` Phase 0 Cluster B operator-decision block
 
 **Cluster B dispatch unblocked**. UAC-side action (separate from 7-service Cluster B list): add `[tool.ruff.lint.per-file-ignores]` block to UAC `pyproject.toml` covering registry/internal/architecture_v2/canonical/crosscutting paths. ~15 min.
+
+---
+
+[2026-05-13 22:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — ✅ **UAC C901 per-file-ignores SHIPPED at `unified-api-contracts@ba49e70`**.
+
+UAC pyproject.toml `[tool.ruff.lint.per-file-ignores]` extended per codex SSOT § "QG complexity (C901) policy — UAC carveout":
+
+```toml
+"unified_api_contracts/registry/**/*.py" = ["C901"]
+"unified_api_contracts/internal/architecture_v2/**/*.py" = ["C901"]
+"unified_api_contracts/canonical/crosscutting/**/*.py" = ["C901"]
+"unified_api_contracts/external/**/normalize.py" = ["C901"]
+"unified_api_contracts/canonical/domain/sports/gcs_paths.py" = ["C901"]
+"unified_api_contracts/canonical/domain/sports/mapping_resolver.py" = ["C901"]
+```
+
+Rationale block included inline (codex SSOT cross-reference + closed-set enumeration explanation).
+
+**Effect on UAC**: C901 violations 59 → 20. The 20 remaining are real algorithmic validators in `internal/schemas/_validation`, `internal/reference/instrument_validation`, `internal/unity_child_books`, `internal/validation/instruction`, `normalize_utils/_helpers` — those need genuine extract-method work (Cluster B owner can address per-function with `# noqa: C901` rationale OR extract-method).
+
+**Cluster B impact**: UAC C901 carveout is now LIVE. UAC was a separate small workstream from the 7-service Cluster B list; that's now done. Cluster B 7-service slots can still dispatch in parallel.
+
+**Cluster A reminder**: 134 RUF003 errors in UAC `registry/risk_rules/venue.py` (×→x sed) NOT addressed in this commit — still on Cluster A slot 1's dispatch. Independent fix.
+
+Slot 1 main: nothing else from my side. Audit slot is **standby** unless operator asks for follow-on.
