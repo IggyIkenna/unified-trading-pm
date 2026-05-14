@@ -299,6 +299,51 @@ Day-2 (this session): 14 parallel sub-agents shipped. ~5-7× calibrated pace per
 
 ---
 
+## [slot 7 → main] DAY-3 EOD SCOREBOARD — 2026-05-14
+
+**Status**: ✅ BASELINE COMPLETE — 6 sub-agents shipped all 9 slot-7 baseline items; Wave 7 sub-agent G in flight for MTDS V2 extension
+
+### Wave 6 — 2026-05-14 baseline stack (6 sub-agents)
+
+| Deliverable | Commits | Tests |
+|-------------|---------|-------|
+| wallet_treasury Phase 3: `_emit_cloud_audit_log()` + POST /api/clients/{id}/treasury/withdraw stub + 6 compliance tests | deployment-api@5cf2fa1 + deployment-api@df36ef4 | 6/6 ✅ |
+| wallet_treasury Phase 3: GCS Object Versioning added to `provision_audit_records_retention_lock.sh` | deployment-service@5f721ab | — |
+| wallet_treasury compliance: `test_audit_log_compliance.py` 10 tests (versioning + retention lock + immutable path) | deployment-api@df36ef4 | 10/10 ✅ |
+| risk-and-exposure-service Cluster B lint sweep (B008 Annotated pattern) | risk-and-exposure-service@d1d43db | — |
+| audit_records Phase 4 QG: execution-service C901 cleared (Harsh@190f34b); deployment-service pytest-timeout fixed | execution-service@51f1f879 | 9/9 ✅ |
+| AWS S3 audit-records bucket: `unified-trading-audit-records-prd-427895769566` COMPLIANCE 7yr lock | infra op | — |
+| CLAUDE.md trim: 1188 lines/73.4KB → 399 lines/25.3KB; all 32 sections preserved; SSOT pointers compressed | unified-trading-pm@6a08f50c | — |
+| client_reporting Phase 6.B: `seed_demo_client_positions()` 5 synthetic positions, 2 archetypes | position-balance-monitor-service@b63277b | 3/3 ✅ |
+| compute_optimization: `run_execution_alpha_measurement.py` scaffold + `test_execution_alpha_smoke.py` | execution-service@fa18c3a1b + strategy-service@fc634e3 | 8/8 ✅ |
+| features-service `--worker-count` ProcessPoolExecutor fan-out | features-service@722697d3 | — |
+| data_status_drilldown Phase 0 SHARD_AXIS_MATRIX audit (no drift); Phase 1 download-csv DEFERRED annotation | unified-trading-pm@d6c36c52 | — |
+
+### Wave 7 — V2 extension (1 sub-agent in flight, 1 item resolved directly)
+
+| Item | Status |
+|------|--------|
+| cross_cutting `Client model in UAC stable` checkbox flip (already resolved uac@3cae1c2 2026-05-08) | ✅ unified-trading-pm@3dbc13e3 |
+| MTDS Phase 1.5: chain + canonical_question_group axes + tests + QG + quickmerge | 🔄 Sub-agent G in flight |
+| MTDS Phase 2: replace 11 `pd.read_parquet` direct calls with `CanonicalParquetReader.read_shard()` | 🔄 Sub-agent G in flight (after Phase 1.5) |
+| MDPS Phase 1.2B: `_streaming_write_per_tf` lifecycle migration | ❌ BLOCKED — operator triage required (Options A/B/C, issue doc: `plans/archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`) |
+| MDPS Phase 2: ResourceProfiler.on_memory_warning wiring | ❌ DEFERRED-AFTER-PHASE-1.2B |
+
+### MDPS blocker — operator action required
+
+Phase 1.2B is blocked on an architectural decision between three options:
+- **Option A** (preferred per DRY): Migrate `write_candle_parquet` internally to use `open/write/close` lifecycle; Phase 1.2B then calls the updated `write_candle_parquet` (no dual-SSOT). One-pass migration, no shim.
+- **Option B**: Ship Phase 1.2B as-spec'd (accept temp dual-SSOT lifecycle with named successor plan). Faster to ship; creates a lifecycle divergence that needs cleanup.
+- **Option C**: Re-scope Phase 1.2B+2 into a new lifecycle-unification plan that migrates ALL callers in one sweep.
+
+Operator: pick A/B/C in a ping reply to unblock Phase 1.2B + Phase 2 ResourceProfiler.
+
+### Slot 7 baseline scope: FULLY SHIPPED
+
+All 9 slot-7 baseline items (work_split_2026_05_14_ikenna.md § Slot 7) are done or in active flight. V2 extension in progress (sub-agent G). MDPS item remains operator-blocked.
+
+---
+
 ## [slot 7 → main] PART C complete — 2026-05-13
 
 **Status**: ✅ DONE (Day-2)
