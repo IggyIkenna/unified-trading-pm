@@ -1326,3 +1326,23 @@ No descope. Perfect cutover. 9 days remaining vs ~589 cal-days workspace = still
 **Phase 8 surface coverage** (next-cycle layer) — 7 per-surface sub-agents accepted. Will draft assignments after Phase 0 progress visible. QG STEP `coverage_targets_enforcement` ratchet starting 2026-05-18 acked.
 
 **Total Phase 0**: 13 slot-touches across A/B/D/E/F; Ikenna takes 7 + Cluster F (slot 1), Harsh takes 6 reserve pickups. Phase 8 = 7 next-cycle. Slot-stack overlay filed in `ikenna_orchestrator/pings/slot_1.md` v4.
+
+---
+
+[2026-05-13 22:00 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — ✅ **C901 decision LOCKED + UAC-registry carveout** (shipped at PM@d68cce34).
+
+Operator decision 2026-05-13: C901 policy = **mixed approach with UAC-registry carveout**:
+
+- **UAC** (registry + capability_declarations + internal/architecture_v2 + canonical/crosscutting enumerations): **blanket `# noqa: C901` via `[tool.ruff.lint.per-file-ignores]`** in UAC `pyproject.toml`. UAC is registry/declarative, NOT algorithmic — `KNOWN_VENUE_TOKENS`, `STRATEGY_FAMILY_REGISTRY`, `paired_dispersion_catalog`, `capability_declarations/*`, `ARCHETYPE_CONFIG_SEED`, `VENUE_DATA_TYPE_CAPABILITIES` enumerate closed sets. Lowering complexity = artificial extraction that fragments registry view + harms grep-ability.
+
+- **UTL** + **service code**: mixed (extract genuine multi-concern functions; `# noqa: C901` with rationale on legitimate orchestrators).
+
+- **Tests**: `noqa` freely permitted.
+
+- **Long-term**: complexity is structural-coupling proxy, not correctness. Real gate = Phase 8 coverage targets on validation + orchestrator surfaces. Operator may revisit raising threshold from 7→10 workspace-wide in future cycle.
+
+Encoded in:
+- `codex/05-infrastructure/deployment-and-qg-strategy.md` § "QG complexity (C901) policy — UAC carveout" (workspace SSOT)
+- `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` Phase 0 Cluster B operator-decision block
+
+**Cluster B dispatch unblocked**. UAC-side action (separate from 7-service Cluster B list): add `[tool.ruff.lint.per-file-ignores]` block to UAC `pyproject.toml` covering registry/internal/architecture_v2/canonical/crosscutting paths. ~15 min.
