@@ -12,30 +12,31 @@ locked_since: 2026-05-08
 
 ---
 
-## Current shift: 2026-05-14 Day-3 of density push (Wave 1 — closeout + freeze-gate eve, Harsh-side)
+## Current shift: 2026-05-14 afternoon — Phase 0 QG clean-start (Harsh-side)
 
-**Work-split**: [`plans/active/work_split_2026_05_14_harsh.md`](../plans/active/work_split_2026_05_14_harsh.md) § "Today's slot assignments"
+**Work-split**: [`plans/active/work_split_2026_05_14_harsh.md`](../plans/active/work_split_2026_05_14_harsh.md)
 **Model**: Sonnet 4.6 / thinking: high (all slots).
-**Cycle context**: Day-3 of 4-day density push (2026-05-12 → 2026-05-15). Phase 1 freeze gate fires TOMORROW.
-**Operator direction (this turn)**: spawn clear+stable Wave 1 slots first; Wave 2 (test sweeps) queued; Wave 3 (`batch_live_symmetry`) pending cross-side Ikenna handshake.
+**Cycle context**: Day-3 of 4-day density push (2026-05-12 → 2026-05-15). Phase 0 = QG clean-start sweep needed before Phase 8 surface-coverage.
+**Operator direction**: All Wave 1-3 agents done. Reset all 8 slots. Spawn Phase 0 clusters simultaneously. Slot 3 = reserve (peripheral scripts pipeline_mode sweep from old slot 9 Wave 2 Part A).
 
-**Wave structure today**:
+**Phase 0 cluster structure (Harsh side)**:
 
-- **Wave 1** — slot 2/6/7/9 — clear/stable/low-risk, spawn first.
-- **Wave 2** — slot 3/4 — test-fix sweeps (mechanical but bigger surface), spawn after Wave 1 in flight.
-- **Wave 3** — slot 5/8 — `batch_live_symmetry` Tabs 1-3, pending cross-side handshake with Ikenna (plan `operator: ikenna`; Ikenna's PM@`e1e67656` audit asked Harsh to take Tabs 1-3 but explicit cross-side ack not yet exchanged).
+- **Cluster B** — slots 2/5/6/7 — C901+N802+B008 lint sweep (parallel, mechanical).
+- **Cluster D** — slots 4/9 — test failures in MDPS + features-service + PBM after UTL@67c532bd. Ready NOW (UTL on LDR).
+- **Cluster E** — slot 8 — UTS-UI tsc (+ batch_live Tab 3 carry-forward deferred).
+- **Reserve** — slot 3 — peripheral scripts pipeline_mode kwarg sweep (10 scripts).
 
-| Slot | Theme (today) | State | Plan-of-record | Branch |
-|------|---------------|-------|----------------|--------|
-| 1 | Main orchestrator + freeze-gate monitoring + Wave 1/2/3 spawn cadence | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
-| 2 | ✅ **Wave 2 DONE** — P1.1 PoolStateResult (already fixed, RESOLVED) + P1.2 deployment-api missing dep (edce262 + PM@1d472ee9). Going quiet. | ✅ DONE Wave 2 (deployment-api@edce262 + PM@1d472ee9). Ready for reassignment. | `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` ✅ → `issues/pool_state_result_import_error_2026_05_13.md` ✅ | `tab/hk/2` |
-| 3 | ✅ **Wave 2 DONE** — 117 UTL pipeline_mode kwarg sweep complete (utl@26ded7d). 3482 tests pass, 9 xfailed (per-family freshness; issue doc filed, owner=Ikenna). Going quiet. | ✅ DONE (utl@26ded7d). Ready for reassignment. | `unified-trading-library` pipeline_mode sweep ✅ | `tab/hk/3` |
-| 4 | 🟡 **SCOPE QUESTION** — Phase 6.8 already shipped (instruments-service@27fbc90+29d511d). 28 stashed files = Phase 6.8 follow-up test-fixture sweep. Awaiting operator direction: (b) pop stash + commit cleanup, or (a/c) new assignment. | 🟡 BLOCKED — standing by for operator direction on stash@{0} "slot4-pre-rebase-instruments-2026-05-14". | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.8 ✅ | `tab/hk/4` |
-| 5 | ✅ **Wave 3 DONE** — batch_live_symmetry Tabs 1+2 complete (UAC@01c1b59 + exec@b30167e2 + PM@2c547d64). L7 fix-list issued to Tab 5 MDPS owner. Going quiet. | ✅ DONE (UAC@01c1b59 + exec@b30167e2+7df685d8 + PM@88093918+2c547d64). Ready for reassignment. | `batch_live_symmetry_2026_05_10.md` Tabs 1-2 ✅ | `tab/hk/5` |
-| 6 | ✅ **Wave 2 DONE** — zero-fixture bypass (instruments-service@b91b88a + PM@23c0f3b5); enrichment-preflight already fixed 2026-05-13. Going quiet. | ✅ DONE Wave 2 (instruments-service@b91b88a + PM@23c0f3b5). Ready for reassignment. | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.5 ✅ → instruments-service Wave 2 ✅ | `tab/hk/6` |
-| 7 | ✅ **Wave 2 DONE** — HonestCoverageCard graceful 404 (deployment-ui@365c32f); ICE softs + issue docs RESOLVED. Cron VM half still operator/Ikenna. Going quiet. | ✅ DONE Wave 2 (deployment-ui@365c32f). Ready for reassignment. | `data_status_ui_phase_2f.md` ✅ → `issues/honest_coverage_cron_vm_scheduling_2026_05_14.md` (cron VM half open) | `tab/hk/7` |
-| 8 | ✅ **Wave 3 PARTIAL DONE** — L1+L5 STEPs (PM@5772f57b), L3 UTL fix (UTL@ebed394) + STEP 5.78, L2 sports_factory rename (exec@9ff0023b). DEFERRED: L2 fix-batch (21 violations), L2 STEP 5.77, L7 sweep. Q3 filed (instruments-service L2 design call). | ✅ DONE shipped items. **Carry-forward**: L2 fix-batch + L2 STEP + L7 sweep → next Tab 3 slot. Q3 instruments-service L2 → operator design call. | `batch_live_symmetry_2026_05_10.md` Tab 3 (partial) | `tab/hk/8` |
-| 9 | ✅ **P0 reserve DONE** — paper VM wire-in smoke (e2e-testing@f0b63ee, bug fix 'paper'→'live'); promote_workflow Phase 1 RE-RUN ✅; nautilus_trader dep bug filed. Going quiet. | ✅ DONE P0 reserve (e2e-testing@f0b63ee + PM@449a4dfc). Issue: strategy_paper_vm_nautilus_trader_missing_dep. Ready for reassignment. | `promote_workflow_may23_cli_path_2026_05_10.md` Phase 1 ✅ | `tab/hk/9` |
+| Slot | Theme | State | Plan-of-record | Branch |
+|------|-------|-------|----------------|--------|
+| 1 | Main orchestrator + Phase 0 monitoring + spawn cadence | 🟢 ONLINE | (this LEDGER) | `tab/hk/1` |
+| 2 | **Phase 0 Cluster B** — ml-training-service C901 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/2` |
+| 3 | **Phase 0 Reserve** — peripheral scripts pipeline_mode kwarg sweep (10 scripts) | 🔄 SPAWN PENDING | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4 peripheral | `tab/hk/3` |
+| 4 | **Phase 0 Cluster D** — MDPS + features-service test failures after UTL@67c532bd | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/4` |
+| 5 | **Phase 0 Cluster B** — deployment-api C901 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/5` |
+| 6 | **Phase 0 Cluster B** — alerting-service N802 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/6` |
+| 7 | **Phase 0 Cluster B** — client-reporting-api B008 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/7` |
+| 8 | **Phase 0 Cluster E** — UTS-UI tsc errors (+ batch_live Tab 3 carry-forward if time) | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster E | `tab/hk/8` |
+| 9 | **Phase 0 Cluster D** — position-balance-monitor-service test failures | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
@@ -57,6 +58,120 @@ locked_since: 2026-05-08
 - ✅ Slot 10 foot-gun #5 intercept: MDPS@0c92b91 (19-test fix) was NOT on LDR despite slot 10's "all work synced" claim. Main cherry-picked to LDR as MDPS@c30d8e0; slot 10 worktree reset clean.
 
 All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
+
+---
+
+## Phase 0 QG clean-start task briefs — 2026-05-14 afternoon (all slots fresh)
+
+> All 8 slots (2-9) reset via `setup-tab-worktrees.sh --reset-slot N`. Worktrees on `tab/hk/N` matching `origin/live-defi-rollout`.
+> UTL@67c532bd confirmed on LDR — Cluster D unblocked. Cluster A+C closed by Ikenna. Cluster F on Ikenna slot 1.
+
+### Slot 2 — Phase 0 Cluster B: ml-training-service C901 lint sweep (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `ml-training-service` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md) § "Phase 0 Cluster B"
+- **Task**: 6 C901 violations in `ml-training-service/ml_training_service/cloud_feature_provider.py`. Mixed extract + noqa:
+  1. `bash scripts/quality-gates.sh 2>&1 | grep "C901\|N802\|B008"` from `ml-training-service/` root — confirm exact violations + line numbers.
+  2. For each: read the function body first (grep-then-read rule). Assess: multiple-concern function → `extract-method`; legitimate pipeline-stage orchestrator → `# noqa: C901 — <rationale>`.
+  3. Fix all 6. Run `bash scripts/quality-gates.sh` again — must be clean (0 C901/N802/B008 in ml-training-service).
+  4. Commit + push: `fix(ml-training-service): Phase 0 C901 lint sweep — extract + noqa`.
+  5. Flip `- [ ]` checkbox for ml-training-service in the plan. Commit + push (PM).
+- **Done-def**: QG clean for ml-training-service on C901; plan checkbox flipped with commit SHA evidence.
+- **C901 policy**: mixed-noqa (per-callsite). UAC carveout does NOT apply to service code. Per-noqa comment required. SSOT: `codex/05-infrastructure/deployment-and-qg-strategy.md` § "QG complexity (C901) policy".
+
+### Slot 3 — Phase 0 Reserve: peripheral scripts pipeline_mode kwarg sweep (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `market-tick-data-service` + `features-service` + `unified-trading-library` + `instruments-service` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 4 (manifest writer API, peripheral scripts follow-up)
+- **Task**: 10 peripheral scripts still call `record_captured/record_empty/record_failed/record_expected_unattempted` without `pipeline_mode` kwarg — will fail at runtime. Sweep:
+  1. `market-tick-data-service/scripts/mtds_reconcile_partial_bundles.py`
+  2. `market-tick-data-service/scripts/build_continuous_es.py`
+  3. `market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py`
+  4. `features-service/scripts/sports/features_sports_reconcile_available_at.py`
+  5. `features-service/scripts/sports/backfill_fixture_features_manifest.py`
+  6. `features-service/scripts/sports/compute_sfi_progressive_only.py`
+  7. `unified-trading-library/unified_trading_library/manifest_completeness.py`
+  8. `unified-trading-library/unified_trading_library/options_cluster_lookup.py`
+  9. `instruments-service/scripts/backfill_drift_funding_2026_05_13.py`
+  10. `unified-trading-library/unified_trading_library/manifest_freshness.py`
+  For each: **read the callsite** → determine correct `pipeline_mode` from context (batch/reconcile scripts → `PipelineMode.BATCH`) → add `pipeline_mode=PipelineMode.BATCH` kwarg → commit + push per repo (one commit per repo, not per file).
+- **Done-def**: All 10 scripts have `pipeline_mode` kwarg; `bash scripts/quality-gates.sh` green in each touched repo; plan checkbox flipped.
+- **GREP-THEN-READ**: read 1 callsite per script before adding kwarg — confirm the import path for `PipelineMode` in each file's context.
+
+### Slot 4 — Phase 0 Cluster D: MDPS + features-service test failures (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `market-tick-data-service` + `features-service` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md) § "Phase 0 Cluster D"
+- **Context**: UTL@67c532bd exported `EmissionDecision` + `publish_with_policy` + related symbols. Downstream repos that imported these from private paths will now see import resolution changes → test failures.
+- **Task**:
+  1. `bash scripts/quality-gates.sh 2>&1 | grep -E "FAILED|ERROR|ImportError|ModuleNotFoundError"` from `market-tick-data-service/` root — reproduce + count failures.
+  2. Same from `features-service/` root.
+  3. For each failure: diagnose-first. Read import path in failing test/module vs new UTL export surface. Fix import to use the canonical UTL export path (`from unified_trading_library import ...`).
+  4. Re-run QG for each repo — must be green.
+  5. Commit + push per repo. Flip plan checkboxes.
+- **Done-def**: MDPS `bash scripts/quality-gates.sh` green; features-service `bash scripts/quality-gates.sh` green; plan checkboxes flipped with SHA evidence.
+- **Diagnose-first**: if a failure is NOT an import error but a logic failure → read both sides of the contract. Fix code if code drifted; fix test if test drifted from new SSOT. File issue doc if ambiguous.
+
+### Slot 5 — Phase 0 Cluster B: deployment-api C901 lint sweep (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `deployment-api` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md) § "Phase 0 Cluster B"
+- **Task**: 9 C901 violations in `deployment-api/` — specifically `_build_leaf_parquet_candidates` (21>10) and `_sports_honest_coverage` (22>10) in `services/data_status_drilldown.py` + `data_status_service.py`. Extract-method 3-4 of them; noqa the rest:
+  1. `bash scripts/quality-gates.sh 2>&1 | grep "C901"` from `deployment-api/` root — confirm violations + exact functions.
+  2. For each: read body. Functions doing 3+ distinct concerns → extract private helpers. Functions that are legitimate linear-query pipelines → `# noqa: C901 — <rationale>`.
+  3. Fix all. `bash scripts/quality-gates.sh` clean.
+  4. Commit + push. Flip plan checkbox.
+- **Done-def**: QG clean for deployment-api on C901; plan checkbox flipped.
+
+### Slot 6 — Phase 0 Cluster B: alerting-service N802 lint sweep (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `alerting-service` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md) § "Phase 0 Cluster B"
+- **Task**: 4 N802 SHOUTY_CASE test names in `alerting-service/tests/unit/notifiers/test_router_*.py`. N802 = function names that are lowercase-only in Python convention; test names that use UPPER_CASE trigger it:
+  1. `bash scripts/quality-gates.sh 2>&1 | grep "N802"` from `alerting-service/` root — confirm exact 4 functions.
+  2. Assess each: if function names encode event codes intentionally (e.g., `test_ALERT_THRESHOLD_BREACHED_routes_correctly`) → `# noqa: N802 — event code in name; intentional`. If purely stylistic and rename is safe → rename to `test_alert_threshold_breached_routes_correctly`.
+  3. Fix all 4. `bash scripts/quality-gates.sh` clean.
+  4. Commit + push. Flip plan checkbox.
+- **Done-def**: QG clean for alerting-service on N802; plan checkbox flipped.
+
+### Slot 7 — Phase 0 Cluster B: client-reporting-api B008 lint sweep (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `client-reporting-api` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md) § "Phase 0 Cluster B"
+- **Task**: B008 = `Query()` / mutable-default used as function argument default in `client-reporting-api/client_reporting_api/attribution.py:237+`. FastAPI pattern; requires default-factory refactor:
+  1. `bash scripts/quality-gates.sh 2>&1 | grep "B008"` from `client-reporting-api/` root — confirm exact callsites.
+  2. Read line 237+ of `attribution.py`. B008 fires when `Depends(...)` or `Query(...)` are default arg values. FastAPI canonical fix: move to `Annotated[T, Depends(...)]` signature or use `= fastapi.Depends(...)` with explicit `Optional` typing.
+  3. Also check `cluster A` residual: `rg "×" client_reporting_api/ --type py` — if any `×` symbols from RUF002 → replace with `x`. (Cluster A sed sweep, Ikenna-owned, but this is 1 file — absorb it if found.)
+  4. `bash scripts/quality-gates.sh` clean.
+  5. Commit + push. Flip plan checkbox.
+- **Done-def**: QG clean for client-reporting-api on B008 (and residual RUF002 if any); plan checkbox flipped.
+
+### Slot 8 — Phase 0 Cluster E: UTS-UI tsc errors (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `unified-trading-system-ui` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md) § "Phase 0 Cluster E"
+- **Task**: UTS-UI has tsc type errors blocking QG:
+  1. `cd unified-trading-system-ui && npx tsc --noEmit 2>&1 | head -60` — reproduce + count errors.
+  2. Fix each: read the failing line, understand the type contract. Common patterns: missing type annotation, `any` types introduced by Ikenna-side slot work, React prop types mismatches.
+  3. Run `npx tsc --noEmit` again — must be clean (0 errors).
+  4. Run `pnpm build` — must succeed.
+  5. Commit + push. Flip plan checkbox.
+  - **Time-boxed**: if tsc errors are >15 files or require design decisions → file issue doc per file with proposed fix; flip partial done.
+  - **batch_live Tab 3 carry-forward**: L2 fix-batch (21 violations across features-*/strategy/MDPS) is the deferred Tab 3 work from slot 8 Wave 3. Only pick this up if UTS-UI tsc finishes in <2h. If time remains, read `batch_live_symmetry_2026_05_10.md` § Tab 3 for the L2 fix list.
+- **Done-def**: `npx tsc --noEmit` exits 0; `pnpm build` exits 0; plan checkbox flipped.
+
+### Slot 9 — Phase 0 Cluster D: position-balance-monitor-service test failures (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `position-balance-monitor-service` + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md) § "Phase 0 Cluster D"
+- **Context**: UTL@67c532bd changes to `EmissionDecision` / `publish_with_policy` export paths may cascade into PBM test failures.
+- **Task**:
+  1. `bash scripts/quality-gates.sh 2>&1 | grep -E "FAILED|ERROR|ImportError"` from `position-balance-monitor-service/` — reproduce + count.
+  2. Diagnose-first for each failure (import path change vs logic drift vs pre-existing).
+  3. Fix import paths to use canonical UTL export surface. Fix logic if code drifted from SSOT.
+  4. Re-run QG — green.
+  5. Commit + push. Flip plan checkbox.
+- **Done-def**: PBM `bash scripts/quality-gates.sh` green; plan checkbox flipped with SHA.
 
 ---
 
