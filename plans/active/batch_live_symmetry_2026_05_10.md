@@ -149,11 +149,11 @@ is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complet
 - [x] [AGENT] P0. **UPDATE** `codex/06-coding-standards/quality-gates.md` — STEP entries for L1 (data_type
       mode-agnosticism) · L2 (no mode-conditional outside seam) · L3 (RuntimeMode declared once) · L7
       (`assert_available_at_present` enforcement). Defer L4/L5/L6 entries to post-cutover. (PM@HEAD)
-- [ ] [AGENT] P1. **UPDATE** `codex/05-infrastructure/replay-subsystem.md` — implementation status (UTL
+- [x] [AGENT] P1. **UPDATE** `codex/05-infrastructure/replay-subsystem.md` — implementation status (UTL
       `streaming/replay.py:61-200+` shipped) + REPLAY_BACKSTOP_REACHED wiring (Phase 7 deployment + alerting hook
-      pending).
-- [ ] [AGENT] P1. **UPDATE** `codex/04-architecture/features-service-architecture.md` — sports + calendar live-handler
-      timeline (post-cutover gating); ModeHandler lift status post-Tab-4.
+      pending). (PM@HEAD)
+- [x] [AGENT] P1. **UPDATE** `codex/04-architecture/features-service-architecture.md` — sports + calendar live-handler
+      timeline (post-cutover gating); ModeHandler lift status post-Tab-4. (PM@HEAD)
 - [ ] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/tradfi-batch-live.md` — placeholder section.
 - [ ] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/prediction-batch-live.md` — placeholder section.
 
