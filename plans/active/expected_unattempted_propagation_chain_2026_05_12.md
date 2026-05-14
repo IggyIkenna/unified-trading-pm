@@ -678,8 +678,10 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
 - [ ] [VALIDATE] P1.
       `data_capture_rate = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` is
       non-zero denominator (expected universe enumerated) across all asset_groups.
-- [ ] [CODEX] P1. Update `codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight chain"
+- [x] [CODEX] P1. Update `codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight chain"
       to document the instruments→MTDS→MDPS→features propagation pattern + the two new EmptyConfirmedReason values.
+      (PM@82111516 — § "Expected-universe pre-flight chain" added with per-layer pre-flight table + MDPS downstream
+      consumption contract + 3 new EmptyConfirmedReason values + implementation refs)
 - [ ] [FLIP] P0. Flip this plan's parent epic gate: manifest_evolution_master G3 can now proceed (enumerator runs on top
       of the runtime propagation chain, not instead of it).
 
