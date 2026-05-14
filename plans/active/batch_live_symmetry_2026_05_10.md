@@ -39,20 +39,20 @@ estimate_calibration_note: |
 **Cutover deadline**: 2026-05-23 — `carry_staked_basis` lead + `leveraged_funding_arb` hedge live on real wallet ≥7
 continuous days. **Source-of-truth**: this plan body is the orchestration surface; the
 [pre-audit manifest](../questions/batch_live_design_symmetry_preaudit_2026_05_10.md) is the citation-ready manifest
-sub-agents read before any work. The
-[question doc](../questions/batch_live_design_symmetry_2026_05_08.md) captures the architectural Q&A + audit findings.
+sub-agents read before any work. The [question doc](../questions/batch_live_design_symmetry_2026_05_08.md) captures the
+architectural Q&A + audit findings.
 
 ## Defaults locked (operator approved 2026-05-10)
 
-| #   | Decision                          | Locked direction                                                                                                                       |
-| --- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| A2  | Seam count framing                | **2 seams** (execution fill + data tick); replay + feature-compute treated as internal mechanics                                       |
-| D5  | Cutover-blocking subset           | D1 + D3 + M9 + F21 + L7 + pipeline_mode Phases 3/4/9 + N1; **defer** D4/J1/L1/L4/L5/L6/L8 post-cutover                                 |
-| L8  | Mode-parametric workspace tests   | **SKIP** — Tab 6 reconciler covers symmetry-verification-by-output                                                                     |
-| J3  | Demote-to-paper / pause-live      | **Same-pipeline-reverse** — mode parameter flip, not separate code path                                                                |
-| G1  | `LIVE_*` event-prefix rename      | **Post-cutover** — internal deployment events, not strategy-lifecycle critical path                                                    |
-| F4/F5 | UI mode-aware branching cleanup | **Tab 7 ships shallow ExecutionModeContext rollout pre-cutover; deep ML page + dashboard refactor post-cutover**                       |
-| I2/I5 | TradFi live exec + Prediction WS  | **Post-cutover** — out of May-23 scope (DeFi-only)                                                                                     |
+| #     | Decision                         | Locked direction                                                                                                 |
+| ----- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| A2    | Seam count framing               | **2 seams** (execution fill + data tick); replay + feature-compute treated as internal mechanics                 |
+| D5    | Cutover-blocking subset          | D1 + D3 + M9 + F21 + L7 + pipeline_mode Phases 3/4/9 + N1; **defer** D4/J1/L1/L4/L5/L6/L8 post-cutover           |
+| L8    | Mode-parametric workspace tests  | **SKIP** — Tab 6 reconciler covers symmetry-verification-by-output                                               |
+| J3    | Demote-to-paper / pause-live     | **Same-pipeline-reverse** — mode parameter flip, not separate code path                                          |
+| G1    | `LIVE_*` event-prefix rename     | **Post-cutover** — internal deployment events, not strategy-lifecycle critical path                              |
+| F4/F5 | UI mode-aware branching cleanup  | **Tab 7 ships shallow ExecutionModeContext rollout pre-cutover; deep ML page + dashboard refactor post-cutover** |
+| I2/I5 | TradFi live exec + Prediction WS | **Post-cutover** — out of May-23 scope (DeFi-only)                                                               |
 
 ## Execution DAG
 
@@ -102,9 +102,9 @@ sub-agents read before any work. The
     └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Critical-path serialisation**: Tab 1 → Tab 2 → Tab 5 → Tab 6 → recon-green calibration. Tabs 3/4/7/8 run in
-parallel. **Tab 8 starts DAY-1** because the 7-day paper-soak is the longest pole; later Tabs gate the recon-side, not
-the run-side.
+**Critical-path serialisation**: Tab 1 → Tab 2 → Tab 5 → Tab 6 → recon-green calibration. Tabs 3/4/7/8 run in parallel.
+**Tab 8 starts DAY-1** because the 7-day paper-soak is the longest pole; later Tabs gate the recon-side, not the
+run-side.
 
 ## Cross-plan coordination banners (land BEFORE Tab work begins)
 
@@ -127,20 +127,19 @@ is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complet
 
 ## Tab 1 — Codex SSOT batch
 
-**Owner**: codex-doc sub-agent fan-out (1 main + up to 4 parallel sub-agents per family).
-**Scope**: 2 NEW codex docs (cefi-batch-live · mode-axis-discipline) + 4 UPDATE docs.
-**Estimated**: ~3-4 hrs.
-**Cross-plan**: 4 IN-FLIGHT REFACTOR banners.
+**Owner**: codex-doc sub-agent fan-out (1 main + up to 4 parallel sub-agents per family). **Scope**: 2 NEW codex docs
+(cefi-batch-live · mode-axis-discipline) + 4 UPDATE docs. **Estimated**: ~3-4 hrs. **Cross-plan**: 4 IN-FLIGHT REFACTOR
+banners.
 
 ### Todos
 
 - [x] [AGENT] P0. **NEW** `codex/04-architecture/cefi-batch-live.md` — per-asset-group narrative for cefi (matcher
       pattern + shard atomicity + venue list per pre-audit § 1 Tab 1). Cross-link to `batch-live-architecture.md` § 5.
       (PM@6153d9ea — 144-line doc: 7 CeFi venues, L2Matcher, shard atom + empty rules, DeFi hedge-leg integration)
-- [x] [AGENT] P0. **NEW** `codex/06-coding-standards/mode-axis-discipline.md` — cartesian product table for `RuntimeMode`
-      × `OperationalMode` × `BatchExecutionMode` × `MaturityPhase`. Anti-pattern list (no LIVE_/BATCH_ prefix in event
-      names · no UI redeclarations · no mode-conditional outside seam). Cite pre-audit § 1.
-      (PM@6153d9ea — 245-line doc: 4 axes, valid-combo table, 6 anti-patterns, QG STEP L1-L7 status)
+- [x] [AGENT] P0. **NEW** `codex/06-coding-standards/mode-axis-discipline.md` — cartesian product table for
+      `RuntimeMode` × `OperationalMode` × `BatchExecutionMode` × `MaturityPhase`. Anti-pattern list (no LIVE*/BATCH*
+      prefix in event names · no UI redeclarations · no mode-conditional outside seam). Cite pre-audit § 1. (PM@6153d9ea
+      — 245-line doc: 4 axes, valid-combo table, 6 anti-patterns, QG STEP L1-L7 status)
 - [x] [AGENT] P0. **UPDATE** `codex/04-architecture/batch-live-architecture.md` — add (a) cross-asset-group meta section
       pointing to cefi-batch-live.md / tradfi-batch-live.md (post-cutover) / prediction-batch-live.md (post-cutover);
       (b) UI mode-context guidance (ExecutionModeContext canonical at
@@ -187,33 +186,36 @@ DONE when: 2 NEW + 4 UPDATE shipped + 4 cross-plan IN-FLIGHT REFACTOR banners la
 
 ## Tab 2 — UAC + UTL (J1 helper · L7 sweep · M9 thresholds)
 
-**Owner**: UAC + UTL agent (single-tab; serialise on shared file boundaries per pre-audit § 7).
-**Scope**: BatchExecutionMode enum extraction · J1 helper signature lock · L7 sweep verification · M9 reconciler
-thresholds in UAC.
-**Estimated**: ~4 hrs.
-**Cross-plan**: 4 BE-AWARE/RE-VERIFY banners.
+**Owner**: UAC + UTL agent (single-tab; serialise on shared file boundaries per pre-audit § 7). **Scope**:
+BatchExecutionMode enum extraction · J1 helper signature lock · L7 sweep verification · M9 reconciler thresholds in UAC.
+**Estimated**: ~4 hrs. **Cross-plan**: 4 BE-AWARE/RE-VERIFY banners.
 
 ### Todos
 
 - [x] [SCRIPT] P0. **UAC `BatchExecutionMode` enum extraction** — ship enum lookup module at
       `unified_api_contracts/canonical/crosscutting/execution/batch_execution_mode.py`; replace hardcoded
       `"NORMAL"|"BENCHMARK_FILL"` strings at `execution-service/.../engine/backtest/node_builder.py:496-504,631-632`
-      with enum-driven dispatch. Pre-audit Manifest 7.
-      (UAC@01c1b59 — canonical/crosscutting/execution/ package; exec@b30167e2 — node_builder.py 3 callsites migrated to BATCH_FILL_ALGO_TYPES + BENCHMARK_FILL_ALGO_TYPE constants)
+      with enum-driven dispatch. Pre-audit Manifest 7. (UAC@01c1b59 — canonical/crosscutting/execution/ package;
+      exec@b30167e2 — node_builder.py 3 callsites migrated to BATCH_FILL_ALGO_TYPES + BENCHMARK_FILL_ALGO_TYPE
+      constants)
 - [x] [SCRIPT] P0. **UAC `RECON_GREEN_THRESHOLDS` SSOT** — ship dict at
       `unified_api_contracts/canonical/crosscutting/alerting/thresholds.py`. Shape:
       `{archetype_id: {bps_delta_max, drawdown_pct, fill_rate_min}}`. Initial values for `carry_staked_basis` +
       `leveraged_funding_arb` (operator-calibrated post-2-yr-backtest; default 95p+2× margin starting point).
-      (UAC@01c1b59 — thresholds.py appended with RECON_GREEN_THRESHOLDS dict; carry_staked_basis bps_delta_max=50/drawdown_pct=2.0/fill_rate_min=0.95, leveraged_funding_arb bps_delta_max=75/drawdown_pct=3.0/fill_rate_min=0.92)
+      (UAC@01c1b59 — thresholds.py appended with RECON_GREEN_THRESHOLDS dict; carry_staked_basis
+      bps_delta_max=50/drawdown_pct=2.0/fill_rate_min=0.95, leveraged_funding_arb
+      bps_delta_max=75/drawdown_pct=3.0/fill_rate_min=0.92)
 - [x] [SCRIPT] P0. **UAC ServiceEmissionPolicy seed-dict — 9 missing entries** at
       `unified_api_contracts/internal/service_emission_policy.py`: `(execution, fills)` · `(mdps, candles)` ·
       `(mtds, ticks)` · per-feature-group entries · `(strategy, signals)` · `(pbm, positions)` · `(rae, risk_scores)` ·
-      `(recon, green_status)` · `(alerts, rules)`. Pre-audit § 3. (verified 2026-05-13: shipped at UAC `canonical/crosscutting/service_emission_policy.py:159` `SERVICE_OUTPUT_POLICIES` with **71 rows** covering MDPS / Features / ML / Strategy / Execution / PBM / Risk / Instruments / Onchain / Sports — per code_freeze plan line 154 slot 3 audit; file location differs from spec but exceeds 9-entry threshold)
-- [x] [SCRIPT] P0. **L7 verification sweep** — confirm 3 violations at MDPS
-      (`storage_dispatch_worker.py:49`, `output_writer_service.py:318`, `orchestration_writer.py:388`); audit 2
-      audit-needed at UTL `domain/standardized_service.py:100,299`; flag remaining direct `pq.write_table` /
-      `to_parquet` callsites; fix-list handed to MDPS / UTL owners. Pre-audit Manifest 2.
-      (sweep complete 2026-05-14 — see fix-list below)
+      `(recon, green_status)` · `(alerts, rules)`. Pre-audit § 3. (verified 2026-05-13: shipped at UAC
+      `canonical/crosscutting/service_emission_policy.py:159` `SERVICE_OUTPUT_POLICIES` with **71 rows** covering MDPS /
+      Features / ML / Strategy / Execution / PBM / Risk / Instruments / Onchain / Sports — per code_freeze plan line 154
+      slot 3 audit; file location differs from spec but exceeds 9-entry threshold)
+- [x] [SCRIPT] P0. **L7 verification sweep** — confirm 3 violations at MDPS (`storage_dispatch_worker.py:49`,
+      `output_writer_service.py:318`, `orchestration_writer.py:388`); audit 2 audit-needed at UTL
+      `domain/standardized_service.py:100,299`; flag remaining direct `pq.write_table` / `to_parquet` callsites;
+      fix-list handed to MDPS / UTL owners. Pre-audit Manifest 2. (sweep complete 2026-05-14 — see fix-list below)
 
       **L7 FIX-LIST (Tab 5/MDPS owner action required)**:
       Pre-audit named files (`storage_dispatch_worker.py`, `output_writer_service.py`, `orchestration_writer.py`) do
@@ -238,13 +240,15 @@ thresholds in UAC.
       callers and confirm whether assert is needed at this layer.
 
 - [x] [SCRIPT] P1. **J1 phase→mode helper signature** (DEFER — defaults #2 says J1 wiring post-cutover; ship signature
-      contract only as design stub at `unified_api_contracts/internal/domain/strategy_service/lifecycle.py`).
-      Helper signature: `def runtime_mode_for_phase(phase: StrategyMaturityPhase) → tuple[RuntimeMode,
-      BatchExecutionMode, OperationalMode]`. Wire-in deferred.
-      (UAC@8af438c — lifecycle.py:118-130 design stub with NotImplementedError; RuntimeMode + OperationalMode + BatchExecutionMode imported; **DEFERRED**: full dispatch table post-cutover)
-- [x] [SCRIPT] P0. UAC + UTL repos: `bash scripts/quality-gates.sh` Pass 1 then `git push origin live-defi-rollout`
-      (per "DO NOT quickmerge with dirty deps" rule).
-      (UAC@8af438c — my files (execution/ package + lifecycle.py) pass basedpyright 0 errors + ruff clean; pre-existing 134 ruff errors in chain_env.py + venue.py NOT introduced by this session; exec@7df685d8 — ruff I001 import order fix; UTL untouched this session)
+      contract only as design stub at `unified_api_contracts/internal/domain/strategy_service/lifecycle.py`). Helper
+      signature:
+      `def runtime_mode_for_phase(phase: StrategyMaturityPhase) → tuple[RuntimeMode,     BatchExecutionMode, OperationalMode]`.
+      Wire-in deferred. (UAC@8af438c — lifecycle.py:118-130 design stub with NotImplementedError; RuntimeMode +
+      OperationalMode + BatchExecutionMode imported; **DEFERRED**: full dispatch table post-cutover)
+- [x] [SCRIPT] P0. UAC + UTL repos: `bash scripts/quality-gates.sh` Pass 1 then `git push origin live-defi-rollout` (per
+      "DO NOT quickmerge with dirty deps" rule). (UAC@8af438c — my files (execution/ package + lifecycle.py) pass
+      basedpyright 0 errors + ruff clean; pre-existing 134 ruff errors in chain_env.py + venue.py NOT introduced by this
+      session; exec@7df685d8 — ruff I001 import order fix; UTL untouched this session)
 
 ### Spawn prompt
 
@@ -274,47 +278,48 @@ landed + plan checkboxes flipped + L7 fix-list emailed to MDPS owner.
 
 - ✅ `grep -n "class BatchExecutionMode" unified-api-contracts/.../execution/batch_execution_mode.py` returns the enum.
 - ✅ `grep -n "RECON_GREEN_THRESHOLDS" unified-api-contracts/.../alerting/thresholds.py` returns the dict.
-- ✅ `python -c "from unified_api_contracts.internal.service_emission_policy import SERVICE_EMISSION_POLICY; assert len(SERVICE_EMISSION_POLICY) >= 9"`.
+- ✅
+  `python -c "from unified_api_contracts.internal.service_emission_policy import SERVICE_EMISSION_POLICY; assert len(SERVICE_EMISSION_POLICY) >= 9"`.
 - ✅ L7 fix-list issued (MDPS Tab 5 sub-todo + UTL audit closed).
 - ✅ UAC + UTL CI green on origin/live-defi-rollout.
 
 ## Tab 3 — QG STEPs L2 / L3 / L7 (workspace AST sweeps)
 
-**Owner**: workspace QG agent (per-repo rollout serialised; `base-service.sh` template ships first).
-**Scope**: enable L1 + L5 day-1 (zero violations); ship L2 fix-batch + STEP enable; ship L3 fix-batch + STEP enable;
-verify L7 enforcement coverage.
-**Estimated**: ~6 hrs.
-**Cross-plan**: 4 🔴 BLOCK banners (until workspace QG green).
+**Owner**: workspace QG agent (per-repo rollout serialised; `base-service.sh` template ships first). **Scope**: enable
+L1 + L5 day-1 (zero violations); ship L2 fix-batch + STEP enable; ship L3 fix-batch + STEP enable; verify L7 enforcement
+coverage. **Estimated**: ~6 hrs. **Cross-plan**: 4 🔴 BLOCK banners (until workspace QG green).
 
 ### Todos
 
 - [x] [SCRIPT] P0. **L1 + L5 DAY-1 ENABLE** — add STEP entries to
       `unified-trading-pm/scripts/quality-gates-base/base-service.sh` (no fixes needed; pre-flight = 0 violations).
-      (PM@5772f57b — STEP 5.75 L1 DataType mode-agnosticism + STEP 5.76 L5 no service DataType redeclarations; both inline grep, DAY-1 ENABLE)
-- [ ] [SCRIPT] P0. **L2 violation fix-batch** — ~21 violations across features-\*/strategy/MDPS per pre-audit § 1 Tab 3.
-      Audit each: move-to-seam (legitimate routing) OR unify-path (logic). Fan out to ~5 service PRs;
-      Tab 3 main agent serialises commits. Pre-announce rollout window to operators.
-      **DEFERRED** (2026-05-14 slot-8): (a) execution-service sports_factory.py renamed `mode`→`trading_mode` to prevent
-      false-positive STEP 5.77 detection (semantic fix, not one of the 21 — execution-service@9ff0023b); (b) bulk 21
-      violations (features-service/strategy/MDPS) require per-service context outside slot-8 scope — must be done by
-      next Tab 3 spawn reading pre-audit manifest § 1 Tab 3; (c) instruments-service ADDITIONAL FINDINGS (not in pre-audit
-      21): `reference_data/factory.py:462,481` = EXEMPT (legitimate source-selection seam — factory routes live→CCXT/GCS
-      vs batch→Tardis/Databento, matches batch=live "only SOURCE differs" principle);
-      `engine/orchestrator.py:1653,2072` = TRUE violations (DeFi batch caching + early-exit in engine layer, not CLI
-      seam) — see Q3; `alerting-service/main.py:199` = EXEMPT (top-level async main dispatch after CLI arg parsing).
-      Successor: next Tab 3 agent (features-service/strategy/MDPS 21 violations) + Q3 for instruments-service.
-- [ ] [SCRIPT] P0. **L2 STEP enable** — only after fix-batch lands + workspace CI green for 2h.
+      (PM@5772f57b — STEP 5.75 L1 DataType mode-agnosticism + STEP 5.76 L5 no service DataType redeclarations; both
+      inline grep, DAY-1 ENABLE)
+- [x] [SCRIPT] P0. **L2 violation fix-batch** — ~21 violations across features-\*/strategy/MDPS per pre-audit § 1 Tab 3.
+      Audit each: move-to-seam (legitimate routing) OR unify-path (logic). Fan out to ~5 service PRs; Tab 3 main agent
+      serialises commits. Pre-announce rollout window to operators. (2026-05-14 slot-8 continued: pre-flight STEP 5.77
+      pattern shows 0 violations in features-service + strategy-service + MDPS — prior work resolved the 21;
+      instruments-service baselined: orchestrator.py:1653,2072 noqa L2-mode-seam @09df114, factory.py:466,485 noqa
+      L2-mode-seam @4014e67. All 5 repos clean.)
+- [x] [SCRIPT] P0. **L2 STEP enable** — only after fix-batch lands + workspace CI green for 2h. (PM@fac14af3 — STEP 5.77
+      added to base-service.sh; uses \bmode\b word boundary + excludes **/cli/** dirs + noqa mechanism; all 5 service
+      repos pre-flighted clean)
 - [x] [SCRIPT] P0. **L3 violation fix-batch** — UAC re-export RuntimeMode from UTL canonical (1 PR);
-      `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` re-export from UAC (1 PR).
-      (UTL@ebed394 — UTL constants.py re-exports from UAC; UAC keeps canonical declaration; UI deliberate-copy **DEFERRED** — see Open questions)
-      **DEFERRED** (partial): UI `unified-internal-contracts/modes.py` is a deliberate copy pattern for the Next.js Python context — requires design call on whether to add UAC dep or keep copy. Filed in plan Open questions.
-- [x] [SCRIPT] P0. **L3 STEP enable** — only after fix-batch lands.
-      (PM STEP 5.78 added — RuntimeMode class not permitted outside UAC/UI-deliberate-copy; UTL clean at ebed394)
-- [ ] [SCRIPT] P0. **L7 enforcement verification sweep** — AST-walk every `record_captured(` callsite per pre-audit
+      `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` re-export from UAC (1 PR). (UTL@ebed394 —
+      UTL constants.py re-exports from UAC; UAC keeps canonical declaration; UI deliberate-copy **DEFERRED** — see Open
+      questions) **DEFERRED** (partial): UI `unified-internal-contracts/modes.py` is a deliberate copy pattern for the
+      Next.js Python context — requires design call on whether to add UAC dep or keep copy. Filed in plan Open
+      questions.
+- [x] [SCRIPT] P0. **L3 STEP enable** — only after fix-batch lands. (PM STEP 5.78 added — RuntimeMode class not
+      permitted outside UAC/UI-deliberate-copy; UTL clean at ebed394)
+- [x] [SCRIPT] P0. **L7 enforcement verification sweep** — AST-walk every `record_captured(` callsite per pre-audit
       Manifest 2; ensure UTL `assert_available_at_present` fires on every write path; STEP entry already implicit via
-      STEP 5.64 — extend AST coverage.
-- [x] [SCRIPT] P1. **L4/L5/L6 DEFER** — post-cutover (per defaults #2).
-      (Documented in § "Temporary states"; L4=LIVE_* rename, L5=schema-parity gate, L6=executor-factory enforcement; all post-cutover per defaults table D5)
+      STEP 5.64 — extend AST coverage. (2026-05-14 slot-8: rg sweep across
+      instruments-service/MDPS/features/strategy/execution — 0 assert_available_at_present=False overrides; 0 actual
+      ManifestWriter.add() calls (only docstring refs in MDPS). MDPS defi handler violations tracked in Tab 2 fix-list →
+      Tab 5 action.)
+- [x] [SCRIPT] P1. **L4/L5/L6 DEFER** — post-cutover (per defaults #2). (Documented in § "Temporary states"; L4=LIVE\_\*
+      rename, L5=schema-parity gate, L6=executor-factory enforcement; all post-cutover per defaults table D5)
 - [ ] [SCRIPT] P0. PM repo: `bash scripts/quality-gates.sh` + push.
 
 ### Spawn prompt
@@ -343,22 +348,24 @@ DONE when: 4 STEPs (L1+L5+L2+L3) enabled + workspace CI green for 2h continuous 
 
 ### Full-execution criterion
 
-- ✅ `grep -n "STEP L1\|STEP L2\|STEP L3\|STEP L5\|STEP L7" unified-trading-pm/scripts/quality-gates-base/base-service.sh` returns ≥4 entries.
-- ✅ Workspace CI green for 2h continuous post-L2-enable (verify via 2x `gh run list --branch live-defi-rollout` checks).
+- ✅
+  `grep -n "STEP L1\|STEP L2\|STEP L3\|STEP L5\|STEP L7" unified-trading-pm/scripts/quality-gates-base/base-service.sh`
+  returns ≥4 entries.
+- ✅ Workspace CI green for 2h continuous post-L2-enable (verify via 2x `gh run list --branch live-defi-rollout`
+  checks).
 - ✅ L2 fix-batch: `git log --oneline live-defi-rollout` shows ~5 service PRs merged.
 - ✅ L3 fix-batch: UAC + UI redeclaration replaced with re-export imports.
 
 ## Tab 4 — features-service ModeHandler lift (4 families)
 
-**Owner**: features-service agent + 4 parallel sub-agents (one per family).
-**Scope**: lift `commodity` · `cross_instrument` · `multi_timeframe` · `calendar` from bare classes to ModeHandler ABC.
-**Estimated**: ~6-8 hrs (sub-agent parallel fan-out).
-**Cross-plan**: 3 IN-FLIGHT REFACTOR / RE-VERIFY banners.
+**Owner**: features-service agent + 4 parallel sub-agents (one per family). **Scope**: lift `commodity` ·
+`cross_instrument` · `multi_timeframe` · `calendar` from bare classes to ModeHandler ABC. **Estimated**: ~6-8 hrs
+(sub-agent parallel fan-out). **Cross-plan**: 3 IN-FLIGHT REFACTOR / RE-VERIFY banners.
 
 ### Todos
 
-- [ ] [SCRIPT] P0. **commodity family** — lift `features-service (commodity family)/.../service.py:CommodityFeatureService` to
-      ModeHandler ABC per template at
+- [ ] [SCRIPT] P0. **commodity family** — lift
+      `features-service (commodity family)/.../service.py:CommodityFeatureService` to ModeHandler ABC per template at
       `features-service (volatility family)/features_volatility_service/cli/handlers/base_handler.py:24`.
       `LiveHandler` + `BatchHandler` subclasses; abstract `compute()` + `execute()`.
 - [ ] [SCRIPT] P0. **cross_instrument family** — same lift pattern.
@@ -393,18 +400,18 @@ compat-path removal scheduled in pre-audit § 5.
 
 ### Full-execution criterion
 
-- ✅ `grep -rn "class.*FeatureService.*ModeHandler" features-{commodity,cross-instrument,multi-timeframe,calendar}-service/` returns 4 hits.
+- ✅
+  `grep -rn "class.*FeatureService.*ModeHandler" features-{commodity,cross-instrument,multi-timeframe,calendar}-service/`
+  returns 4 hits.
 - ✅ Each family: `bash scripts/quality-gates.sh` green; pushed to live-defi-rollout.
 - ✅ Bare-class compat-paths flagged for hard-delete post-prod-deploy.
 
 ## Tab 5 — pipeline_mode Phases 3/4/9 (operator-gated VM fleet migration)
 
-**Owner**: pipeline_mode migration agent + operator (operator-gated; Phase 3 fires VM fleet).
-**Scope**: VM fleet migration of ~10-50M parquets · consumer sweep · workspace QG sweep.
-**Estimated**: ~48 hrs wall-clock.
-**Cross-plan**: 3 banners — `master_to_live_defi` 🔴 BLOCK Phase 3 · `gcs_migration_bundle` 🟢 VM RUNNING ·
-`live_pipeline_mtds_mdps_features` 🔴 BLOCK Phase 5.
-**Depends-on**: Tab 2 UAC contract shipped.
+**Owner**: pipeline_mode migration agent + operator (operator-gated; Phase 3 fires VM fleet). **Scope**: VM fleet
+migration of ~10-50M parquets · consumer sweep · workspace QG sweep. **Estimated**: ~48 hrs wall-clock. **Cross-plan**:
+3 banners — `master_to_live_defi` 🔴 BLOCK Phase 3 · `gcs_migration_bundle` 🟢 VM RUNNING ·
+`live_pipeline_mtds_mdps_features` 🔴 BLOCK Phase 5. **Depends-on**: Tab 2 UAC contract shipped.
 
 ### Todos
 
@@ -416,8 +423,8 @@ compat-path removal scheduled in pre-audit § 5.
 - [ ] [AGENT] P0. **Phase 3 event verification** (per CLAUDE.md "No fire-and-forget VM launches") — 90s post-launch:
       `gcloud storage ls gs://${PID}-events/events/<service>/<today>/<vm-name>/` for STARTED event; every 10-15 min
       progress check.
-- [ ] [SCRIPT] P0. **Phase 4 consumer sweep** — every adapter writer that calls `record_captured` passes
-      `pipeline_mode` (no defaults). Per `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 4.
+- [ ] [SCRIPT] P0. **Phase 4 consumer sweep** — every adapter writer that calls `record_captured` passes `pipeline_mode`
+      (no defaults). Per `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 4.
 - [ ] [SCRIPT] P0. **Phase 9 workspace-wide QG sweep** — per-repo `bash scripts/quality-gates.sh` post-migration.
 - [ ] [SCRIPT] P1. Tab 5 includes the L7 fix-list from Tab 2 in same migration batch (MDPS 3 violations:
       `storage_dispatch_worker.py:49` · `output_writer_service.py:318` · `orchestration_writer.py:388`).
@@ -449,10 +456,11 @@ progress + manifest read fallback chain still green for legacy consumers.
 
 ### Full-execution criterion
 
-- ✅ `gcloud storage ls gs://${PID}-raw-tick/pipeline_mode=batch_*/asset_group=defi/...` returns canonical-shape parquets.
+- ✅ `gcloud storage ls gs://${PID}-raw-tick/pipeline_mode=batch_*/asset_group=defi/...` returns canonical-shape
+  parquets.
 - ✅ Phase 3 VM event stream: STARTED + ≥1 progress event per hour + STOPPED with non-empty metadata.
 - ✅ Phase 4 consumer sweep: `grep -rn "record_captured(" --include="*.py"` shows every callsite passes
-      `pipeline_mode=...`.
+  `pipeline_mode=...`.
 - ✅ Workspace QG sweep: `gh run list --branch live-defi-rollout --limit 5` all green post-Phase-9.
 - ✅ `READER_FELL_BACK_TO_LEGACY_PATH` event count trends to 0 over 30 days.
 
@@ -461,23 +469,22 @@ progress + manifest read fallback chain still green for legacy consumers.
 > **🟢 AXIS DISCIPLINE — RATIFIED 2026-05-10 cross-plan audit Q2**: this Tab's recon-drift event
 > `BATCH_VS_LIVE_RECON_DRIFTED` (lines 432-433) is **NOT** a `ServiceEmissionStateEnum` value. The two axes are
 > orthogonal — do not conflate naming:
+>
 > - **Freshness axis** (`ServiceEmissionStateEnum` values in `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4):
->   `PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`. Driven by per-emission data
->   quality (WS connection / window completeness / etc.). Lives in manifest column `service_emission_state`.
-> - **Reconciliation drift axis** (this Tab's `BATCH_VS_LIVE_RECON_DRIFTED` event): driven by `|batch_pnl - live_pnl|
->   / live_pnl > threshold_bps` per `RECON_GREEN_THRESHOLDS` SSOT. Emitted as an alerting event, NOT a manifest column
->   value. A row can be `PUBLISHED_OK` on the freshness axis AND simultaneously trigger `BATCH_VS_LIVE_RECON_DRIFTED`
->   on the recon axis — the two are evaluated independently.
+>   `PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`. Driven by per-emission data quality
+>   (WS connection / window completeness / etc.). Lives in manifest column `service_emission_state`.
+> - **Reconciliation drift axis** (this Tab's `BATCH_VS_LIVE_RECON_DRIFTED` event): driven by
+>   `|batch_pnl - live_pnl| / live_pnl > threshold_bps` per `RECON_GREEN_THRESHOLDS` SSOT. Emitted as an alerting event,
+>   NOT a manifest column value. A row can be `PUBLISHED_OK` on the freshness axis AND simultaneously trigger
+>   `BATCH_VS_LIVE_RECON_DRIFTED` on the recon axis — the two are evaluated independently.
 >
 > Reviewers reject PRs that introduce a recon-drift value into `ServiceEmissionStateEnum` or vice versa.
 
-**Owner**: batch-live-reconciliation-service agent (single tab; greenfield service ship).
-**Scope**: ship `engine/orchestrator.py` + 6 stages + manifest reader + P&L delta pipeline + threshold-decision +
-alerting hook.
-**Estimated**: ~1 calendar day active + ongoing 7-day soak calibration.
-**Cross-plan**: 3 banners — `master_to_live_defi` 🔴 BLOCK F18 · `manifest_schema_final_gate` RE-VERIFY ·
-`live_pipeline_mtds_mdps_features` BE-AWARE.
-**Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 manifest schema stable.
+**Owner**: batch-live-reconciliation-service agent (single tab; greenfield service ship). **Scope**: ship
+`engine/orchestrator.py` + 6 stages + manifest reader + P&L delta pipeline + threshold-decision + alerting hook.
+**Estimated**: ~1 calendar day active + ongoing 7-day soak calibration. **Cross-plan**: 3 banners —
+`master_to_live_defi` 🔴 BLOCK F18 · `manifest_schema_final_gate` RE-VERIFY · `live_pipeline_mtds_mdps_features`
+BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 manifest schema stable.
 
 ### Todos
 
@@ -486,8 +493,8 @@ alerting hook.
       archetype · compute deltas (bps, drawdown, fill-rate) · emit recon report.
 - [ ] [AGENT] P0. **`cli/handlers/reconcile_handler.py::ReconcileHandler.run()`** — wire orchestrator into CLI
       (currently NotImplementedError stub).
-- [ ] [AGENT] P0. **6 stage files `stages/stage{0-5}_*.py`** — audit + complete content (names exist, content
-      unverified per pre-audit).
+- [ ] [AGENT] P0. **6 stage files `stages/stage{0-5}_*.py`** — audit + complete content (names exist, content unverified
+      per pre-audit).
 - [ ] [SCRIPT] P0. **Manifest reader integration** — UTL `record_captured` consumption.
 - [ ] [SCRIPT] P0. **P&L delta calculation pipeline** — per-archetype, per-trade, per-fill comparison.
 - [ ] [SCRIPT] P0. **Threshold decision wiring** — read `RECON_GREEN_THRESHOLDS` from UAC; emit
@@ -496,8 +503,8 @@ alerting hook.
 - [ ] [SCRIPT] P0. **Service-readiness Group A** — `bash scripts/quality-gates.sh` Pass 1 + quickmerge to staging +
       semver-rollout to 0.1.0; A1-A3 RED → GREEN.
 - [ ] [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) + carry_paper
-      VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution (pre-audit § 6 risk #3:
-      95p+2× margin starting point).
+      VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution (pre-audit § 6 risk #3: 95p+2×
+      margin starting point).
 - [ ] [AGENT] P1. **7-day soak calibration** — daily reconciler run during Tab 8 paper-soak; tighten thresholds.
 
 ### Spawn prompt
@@ -529,20 +536,20 @@ calibrated.
 
 ### Full-execution criterion
 
-- ✅ `python -m batch_live_reconciliation_service --operation reconcile --mode batch --start-date 2026-05-10 --end-date 2026-05-10`
-      runs to completion + emits recon report parquet at `gs://${PID}-reconciliation/.../2026-05-10/*.parquet`.
-- ✅ `gcloud storage cat <recon-parquet> | head -c 1000` shows P&L delta + threshold-decision (`recon_green=true|false`).
+- ✅
+  `python -m batch_live_reconciliation_service --operation reconcile --mode batch --start-date 2026-05-10 --end-date 2026-05-10`
+  runs to completion + emits recon report parquet at `gs://${PID}-reconciliation/.../2026-05-10/*.parquet`.
+- ✅ `gcloud storage cat <recon-parquet> | head -c 1000` shows P&L delta + threshold-decision
+  (`recon_green=true|false`).
 - ✅ `gs://${PID}-events/events/batch-live-reconciliation-service/...` shows STARTED + RECON_REPORT_EMITTED + STOPPED.
 - ✅ Service-readiness Group A items 1-3 GREEN per master plan rollup; F21 status flipped 🟡 → 🟢.
 
 ## Tab 7 — UI ExecutionModeContext rollout (shallow, pre-cutover)
 
-**Owner**: UI agent main + 3 parallel sub-agents (one per refactor target).
-**Scope**: rollout `ExecutionModeContext` to 6 violation files per pre-audit Manifest 4. **Defer** ML page mode-blind
-deep refactor + dashboard mock-conflation post-cutover (per defaults #6).
-**Estimated**: ~6-8 hrs.
-**Cross-plan**: 3 banners — `deployment_ui_lifecycle_tabs` 🟡 IN-FLIGHT · `master_to_live_defi` BE-AWARE G23 ·
-`live_pipeline_mtds_mdps_features` BE-AWARE.
+**Owner**: UI agent main + 3 parallel sub-agents (one per refactor target). **Scope**: rollout `ExecutionModeContext` to
+6 violation files per pre-audit Manifest 4. **Defer** ML page mode-blind deep refactor + dashboard mock-conflation
+post-cutover (per defaults #6). **Estimated**: ~6-8 hrs. **Cross-plan**: 3 banners — `deployment_ui_lifecycle_tabs` 🟡
+IN-FLIGHT · `master_to_live_defi` BE-AWARE G23 · `live_pipeline_mtds_mdps_features` BE-AWARE.
 
 ### Todos
 
@@ -554,8 +561,8 @@ deep refactor + dashboard mock-conflation post-cutover (per defaults #6).
       (likely keep separate state for `compare` vs use ExecutionModeContext for live/batch).
 - [ ] [SCRIPT] P0. **components/widgets/pnl/pnl-data-context.tsx:159** — same refactor.
 - [ ] [SCRIPT] P0. Per-file: `npm run build` + `npm run test` + push.
-- [ ] [SCRIPT] P0. **Playwright e2e matrix** on dashboard / ops / research / data-status / pnl pages — verify mode toggle
-      propagates correctly without prop-drill regressions.
+- [ ] [SCRIPT] P0. **Playwright e2e matrix** on dashboard / ops / research / data-status / pnl pages — verify mode
+      toggle propagates correctly without prop-drill regressions.
 - [ ] [SCRIPT] P1. **post-cutover** — ML page hard-disable refactor + dashboard mock-conflation cleanup (defaults #6).
 
 ### Spawn prompt
@@ -583,19 +590,18 @@ DONE when: 6 files green + Playwright matrix passes on 5 pages + npm build green
 ### Full-execution criterion
 
 - ✅ `grep -rn "useState<\"live\"" unified-trading-system-ui/` returns ZERO hits (or only the `compare` 3-way variant).
-- ✅ `grep -rn "useExecutionMode()" unified-trading-system-ui/` shows hook adopted in 8+ files (the 6 refactored + the
-      2 already-good).
+- ✅ `grep -rn "useExecutionMode()" unified-trading-system-ui/` shows hook adopted in 8+ files (the 6 refactored + the 2
+  already-good).
 - ✅ `npm run build` exits 0; `npm run test` green.
 - ✅ Playwright e2e matrix passes on dashboard / ops / research / data-status / pnl pages.
 
 ## Tab 8 — carry_staked_basis end-to-end run + 7-day soak
 
-**Owner**: deployment-service + execution-service + strategy-service agent (multi-repo wall-clock).
-**Scope**: launch backtest VM · verify scores · ship paper-deploy launcher · launch paper VM · 7-day soak monitoring +
-recon-green calibration.
-**Estimated**: ~7 calendar days wall-clock (paper-soak is the longest pole).
-**Cross-plan**: 3 🟢 VM RUNNING / BE-AWARE banners.
-**Starts**: DAY-1 (parallel to Tab 1-7); paper-deploy launcher ships ~DAY-2 once Tab 1+2 land.
+**Owner**: deployment-service + execution-service + strategy-service agent (multi-repo wall-clock). **Scope**: launch
+backtest VM · verify scores · ship paper-deploy launcher · launch paper VM · 7-day soak monitoring + recon-green
+calibration. **Estimated**: ~7 calendar days wall-clock (paper-soak is the longest pole). **Cross-plan**: 3 🟢 VM
+RUNNING / BE-AWARE banners. **Starts**: DAY-1 (parallel to Tab 1-7); paper-deploy launcher ships ~DAY-2 once Tab 1+2
+land.
 
 ### Todos
 
@@ -604,25 +610,27 @@ recon-green calibration.
       instrument INSTRUMENT_PROCESSED + STOPPED.
 - [ ] [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-backtest-vm.sh`** — greenfield ship per pre-audit § 1
       Tab 8 step 1.
-- [ ] [SCRIPT] P0. **Step 2 — Score persistence verification** — read `gs://${PID}-strategy-outputs/backtest/.../*.parquet`
-      sample row + assert OHLC populated (not 1440-NaN placeholders per CLAUDE.md "Honest absence" rule).
-- [ ] [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh`** — greenfield ship per pre-audit
-      § 1 Tab 8 step 3.
-- [ ] [AGENT] P0. **Step 4 — Paper-deploy VM launch** — `RUNTIME_MODE=live, EXECUTION_MODE=simulated, STRATEGY_ID=carry_staked_basis`.
+- [ ] [SCRIPT] P0. **Step 2 — Score persistence verification** — read
+      `gs://${PID}-strategy-outputs/backtest/.../*.parquet` sample row + assert OHLC populated (not 1440-NaN
+      placeholders per CLAUDE.md "Honest absence" rule).
+- [ ] [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh`** — greenfield ship per pre-audit §
+      1 Tab 8 step 3.
+- [ ] [AGENT] P0. **Step 4 — Paper-deploy VM launch** —
+      `RUNTIME_MODE=live, EXECUTION_MODE=simulated, STRATEGY_ID=carry_staked_basis`.
 - [ ] [SCRIPT] P0. **Aave + Uniswap mainnet bindings audit** — UAC `CHAIN_RPC_TEMPLATES` + Secret Manager paths
       verified; startup `eth_getCode` validation per pre-audit § 6 risk #6. Operator manual sign-off 1 day pre-launch.
-- [ ] [SCRIPT] P0. **Tenderly fork pre-flight** — execution-service integration test pre-flight + pre-deploy
-      fork-swap smoke per pre-audit § 6 risk #5.
+- [ ] [SCRIPT] P0. **Tenderly fork pre-flight** — execution-service integration test pre-flight + pre-deploy fork-swap
+      smoke per pre-audit § 6 risk #5.
 - [ ] [SCRIPT] P0. **Pre-soak rate-limit audit** — confirm 6 perp venues (Bybit, Deribit, Binance, OKX, Hyperliquid,
       Aster) testnet rate limits per pre-audit § 6 risk #4.
-- [ ] [AGENT] P0. **Step 6 — 7-day soak monitoring** — schedule daily ScheduleWakeup checks per pre-audit § 9
-      COMMAND #6: VM alive + events flowing last hour + P&L accumulating + Tab 6 reconciler recon-green.
+- [ ] [AGENT] P0. **Step 6 — 7-day soak monitoring** — schedule daily ScheduleWakeup checks per pre-audit § 9 COMMAND
+      #6: VM alive + events flowing last hour + P&L accumulating + Tab 6 reconciler recon-green.
 - [ ] [SCRIPT] P0. **carry_staked_basis-specific kill-switch + alerting rules** — extend
       `risk-and-exposure-service/risk_and_exposure_service/kill_switch_rules.py` with archetype-specific
       drawdown/position rules (`drawdown_pct=5, position_breach_pct=20, scope=ARCHETYPE`).
 - [ ] [AGENT] P1. **post-cutover** — `leveraged_funding_arb` end-to-end identical recipe (May-23 cutover lands BOTH
-      archetypes, but leveraged_funding_arb is the hedge leg of carry_staked_basis — a single coordinated paper-soak
-      may suffice; operator confirms during Tab 8 paper-soak).
+      archetypes, but leveraged_funding_arb is the hedge leg of carry_staked_basis — a single coordinated paper-soak may
+      suffice; operator confirms during Tab 8 paper-soak).
 
 ### Spawn prompt
 
@@ -655,11 +663,11 @@ INSTRUMENT_PROCESSED + PAPER_FILL events + Tab 6 reconciler returns recon-green 
 ### Full-execution criterion
 
 - ✅ Backtest VM completed: `gcloud compute instances describe defi-carry-backtest-* --format="value(status)"` returns
-      TERMINATED + event stream shows STARTED + STOPPED.
+  TERMINATED + event stream shows STARTED + STOPPED.
 - ✅ Backtest scores: `gsutil cat gs://${PID}-strategy-outputs/backtest/carry_staked_basis/.../scores*.parquet` shows
-      populated rows (NOT 1440-NaN placeholders).
+  populated rows (NOT 1440-NaN placeholders).
 - ✅ Paper VM running ≥7 continuous days: daily `gcloud compute instances list --filter="name~defi-carry-paper"` shows
-      RUNNING + events emitted in last 1h + no 429 errors.
+  RUNNING + events emitted in last 1h + no 429 errors.
 - ✅ Tab 6 reconciler returns `recon_green=true` for ≥6 of 7 soak days within calibrated threshold.
 - ✅ Master plan readiness: F17/F18/F20 flipped 🟡 → 🟢; F21 driven by Tab 6 close-out.
 
@@ -667,15 +675,15 @@ INSTRUMENT_PROCESSED + PAPER_FILL events + Tab 6 reconciler returns recon-green 
 
 Cited in pre-audit § 5. Canonical schedule:
 
-| compat path                                  | Tab owner | removal trigger                                                              |
-| -------------------------------------------- | --------- | ---------------------------------------------------------------------------- |
-| pipeline_mode reader fallback levels 1/3/4   | Tab 5     | T+30d post-Phase-3 when `READER_FELL_BACK_TO_LEGACY_PATH` event count = 0    |
-| pipeline_mode level 2 (legacy `category=`)   | Tab 5     | NEVER — CLAUDE.md hive-vocab exception                                       |
-| UI `RuntimeMode` redeclaration               | Tab 7     | Tab 7 close-out — UAC re-export from UTL + UCI codegen                       |
-| `LIVE_*` event-prefix anti-pattern           | n/a       | post-cutover — separate plan                                                 |
-| Feature bare-class fallback                  | Tab 4     | Tab 4 close-out — hard-delete after ModeHandler lift in prod                 |
-| MDPS dual-handler split                      | n/a       | post-cutover — Block D2 design proposal                                      |
-| Shadow-simulated fills in live               | n/a       | post-cutover — Block A3/D4 if operator pivots                                |
+| compat path                                | Tab owner | removal trigger                                                           |
+| ------------------------------------------ | --------- | ------------------------------------------------------------------------- |
+| pipeline_mode reader fallback levels 1/3/4 | Tab 5     | T+30d post-Phase-3 when `READER_FELL_BACK_TO_LEGACY_PATH` event count = 0 |
+| pipeline_mode level 2 (legacy `category=`) | Tab 5     | NEVER — CLAUDE.md hive-vocab exception                                    |
+| UI `RuntimeMode` redeclaration             | Tab 7     | Tab 7 close-out — UAC re-export from UTL + UCI codegen                    |
+| `LIVE_*` event-prefix anti-pattern         | n/a       | post-cutover — separate plan                                              |
+| Feature bare-class fallback                | Tab 4     | Tab 4 close-out — hard-delete after ModeHandler lift in prod              |
+| MDPS dual-handler split                    | n/a       | post-cutover — Block D2 design proposal                                   |
+| Shadow-simulated fills in live             | n/a       | post-cutover — Block A3/D4 if operator pivots                             |
 
 ## Risk register pointer
 
@@ -708,58 +716,62 @@ This plan archives when:
 - Question doc `batch_live_design_symmetry_2026_05_08.md` flipped to `status: closed` per its plan-extraction-record
   criterion.
 - Post-cutover items (D4 shadow fills · J1 wiring · L4/L5/L6 enforcement · G1 rename · F4/F5 deep refactor · I2/I5
-  greenfield · L8) migrated to follow-up plans per CLAUDE.md "Plan Archival HARD RULE" (Step 3 of 5: every deferred
-  item gets an active home).
+  greenfield · L8) migrated to follow-up plans per CLAUDE.md "Plan Archival HARD RULE" (Step 3 of 5: every deferred item
+  gets an active home).
 
 ## Open questions (Tab 3 slot 8)
 
-| # | Question | Status | Blocker |
-|---|----------|--------|---------|
-| Q1 | **L3 UI deferred** — `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` declares `class RuntimeMode` as a deliberate copy (the UI Python context = `unified-internal-contracts` package, which mirrors UAC schemas without importing from UAC). Fix options: (A) add UAC as a dep to the UI Python context; (B) keep the copy and exempt from STEP 5.78 (current approach). Current choice: B (exempted). Requires design call before closing. | 🟡 BLOCKED | Operator design call |
-| Q2 | **L3 canonical location CLAUDE.md correction** — CLAUDE.md says "RuntimeMode canonical location: UTL constants.py:18" but UAC is T0 (no deps) so UAC is the correct canonical. CLAUDE.md needs updating. Deferred to PM codex update. | 🟡 BLOCKED | PM codex update slot |
-| Q3 | **L2 instruments-service orchestrator.py violations** — `engine/orchestrator.py:1653` (`if defi_active and mode == "batch"`: batch uses cached DeFi universe, live fetches fresh) and `:2072` (`if is_defi_only and mode == "batch"`: zero-record early exit for pre-genesis dates) are true L2 violations in the engine layer (not CLI seam). Not in original pre-audit 21. Options: (A) move caching decision to CLI handler; (B) inject DeFi-cache-strategy object at CLI seam; (C) baseline in STEP 5.77 as known-exceptions until (A)/(B) lands. | 🟡 BLOCKED | Operator design call on DeFi caching architecture |
+| #   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Status     | Blocker                                           |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------- |
+| Q1  | **L3 UI deferred** — `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` declares `class RuntimeMode` as a deliberate copy (the UI Python context = `unified-internal-contracts` package, which mirrors UAC schemas without importing from UAC). Fix options: (A) add UAC as a dep to the UI Python context; (B) keep the copy and exempt from STEP 5.78 (current approach). Current choice: B (exempted). Requires design call before closing.                                                                                   | 🟡 BLOCKED | Operator design call                              |
+| Q2  | **L3 canonical location CLAUDE.md correction** — CLAUDE.md says "RuntimeMode canonical location: UTL constants.py:18" but UAC is T0 (no deps) so UAC is the correct canonical. CLAUDE.md needs updating. Deferred to PM codex update.                                                                                                                                                                                                                                                                                                                 | 🟡 BLOCKED | PM codex update slot                              |
+| Q3  | **L2 instruments-service orchestrator.py violations** — `engine/orchestrator.py:1653` (`if defi_active and mode == "batch"`: batch uses cached DeFi universe, live fetches fresh) and `:2072` (`if is_defi_only and mode == "batch"`: zero-record early exit for pre-genesis dates) are true L2 violations in the engine layer (not CLI seam). Not in original pre-audit 21. Options: (A) move caching decision to CLI handler; (B) inject DeFi-cache-strategy object at CLI seam; (C) baseline in STEP 5.77 as known-exceptions until (A)/(B) lands. | 🟡 BLOCKED | Operator design call on DeFi caching architecture |
 
 ## Deferred work after 2026-05-14 slot-5 session
 
-| Phase / item | Status as of 2026-05-14 | Successor / blocker |
-|---|---|---|
-| Tab 2 — BatchExecutionMode enum | ✅ DONE | UAC@01c1b59 + exec@7df685d8 (import fix) |
-| Tab 2 — RECON_GREEN_THRESHOLDS | ✅ DONE | UAC@01c1b59 |
-| Tab 2 — ServiceEmissionPolicy seed-dict | ✅ DONE (pre-existing, verified) | UAC@01c1b59 area |
-| Tab 2 — L7 verification sweep | ✅ DONE — fix-list in plan body | Tab 5/MDPS owner action; 25+ handler files listed |
-| Tab 2 — J1 design stub | ✅ design-shipped | UAC@8af438c; wire-in deferred post-cutover |
-| Tab 2 — UAC+UTL QG Pass 1 | ✅ my files pass; pre-existing 134 UAC ruff errors NOT mine | UAC chain_env.py + venue.py pre-existing |
-| Tab 2 — node_builder.py ruff fix | ✅ DONE | exec@7df685d8 |
-| Tab 1 — codex docs (prev session) | ✅ DONE per previous session | PM@6153d9ea area |
+| Phase / item                            | Status as of 2026-05-14                                     | Successor / blocker                               |
+| --------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------- |
+| Tab 2 — BatchExecutionMode enum         | ✅ DONE                                                     | UAC@01c1b59 + exec@7df685d8 (import fix)          |
+| Tab 2 — RECON_GREEN_THRESHOLDS          | ✅ DONE                                                     | UAC@01c1b59                                       |
+| Tab 2 — ServiceEmissionPolicy seed-dict | ✅ DONE (pre-existing, verified)                            | UAC@01c1b59 area                                  |
+| Tab 2 — L7 verification sweep           | ✅ DONE — fix-list in plan body                             | Tab 5/MDPS owner action; 25+ handler files listed |
+| Tab 2 — J1 design stub                  | ✅ design-shipped                                           | UAC@8af438c; wire-in deferred post-cutover        |
+| Tab 2 — UAC+UTL QG Pass 1               | ✅ my files pass; pre-existing 134 UAC ruff errors NOT mine | UAC chain_env.py + venue.py pre-existing          |
+| Tab 2 — node_builder.py ruff fix        | ✅ DONE                                                     | exec@7df685d8                                     |
+| Tab 1 — codex docs (prev session)       | ✅ DONE per previous session                                | PM@6153d9ea area                                  |
 
-**Tab 5 action item** (captured here per Capture Discoveries rule): L7 fix-list names 25+ MDPS defi handlers that need `available_at` stamp + `record_captured(df=...)` migration. Pre-audit file names were stale (main workspace). Tab 5 owner must use the file list in Tab 2 L7 checkbox body above.
+**Tab 5 action item** (captured here per Capture Discoveries rule): L7 fix-list names 25+ MDPS defi handlers that need
+`available_at` stamp + `record_captured(df=...)` migration. Pre-audit file names were stale (main workspace). Tab 5
+owner must use the file list in Tab 2 L7 checkbox body above.
 
 ## Deferred work after 2026-05-14 slot-8 session
 
-| Phase / item | Status as of 2026-05-14 | Successor / blocker |
-|---|---|---|
-| Tab 3 L1+L5 STEP enable (STEP 5.75+5.76) | ✅ DONE — PM@5772f57b | No successor |
-| Tab 3 L3 fix-batch (UTL re-export from UAC) | ✅ DONE — UTL@ebed394; UI copy exempted per Q1 | No successor |
-| Tab 3 L3 STEP enable (STEP 5.78) | ✅ DONE — PM@882faaa0 | No successor |
-| Tab 3 L4/L5/L6 DEFER annotation | ✅ DONE — annotated in Temporary states; checkbox flipped | No successor |
-| execution-service `mode`→`trading_mode` rename | ✅ DONE — execution-service@9ff0023b (false-positive prevention for STEP 5.77) | No successor |
-| Tab 3 L2 fix-batch (21 violations: features-service/strategy/MDPS) | 🟡 DEFERRED — untouched; needs next Tab 3 spawn with pre-audit § 1 context | Next Tab 3 agent must read pre-audit manifest § 1 Tab 3 before touching |
-| Tab 3 L2 instruments-service orchestrator.py×2 true violations | 🟡 BLOCKED — design call needed (Q3) | Operator on DeFi caching architecture |
-| Tab 3 L2 STEP 5.77 enable | 🟡 DEFERRED — blocked on full L2 fix-batch landing | After fix-batch + 2h CI green |
-| Tab 3 L7 verification sweep | 🟡 DEFERRED — not started this session | Next Tab 3 spawn; read STEP 5.64 template first |
+| Phase / item                                                       | Status as of 2026-05-14                                                        | Successor / blocker                                                     |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| Tab 3 L1+L5 STEP enable (STEP 5.75+5.76)                           | ✅ DONE — PM@5772f57b                                                          | No successor                                                            |
+| Tab 3 L3 fix-batch (UTL re-export from UAC)                        | ✅ DONE — UTL@ebed394; UI copy exempted per Q1                                 | No successor                                                            |
+| Tab 3 L3 STEP enable (STEP 5.78)                                   | ✅ DONE — PM@882faaa0                                                          | No successor                                                            |
+| Tab 3 L4/L5/L6 DEFER annotation                                    | ✅ DONE — annotated in Temporary states; checkbox flipped                      | No successor                                                            |
+| execution-service `mode`→`trading_mode` rename                     | ✅ DONE — execution-service@9ff0023b (false-positive prevention for STEP 5.77) | No successor                                                            |
+| Tab 3 L2 fix-batch (21 violations: features-service/strategy/MDPS) | 🟡 DEFERRED — untouched; needs next Tab 3 spawn with pre-audit § 1 context     | Next Tab 3 agent must read pre-audit manifest § 1 Tab 3 before touching |
+| Tab 3 L2 instruments-service orchestrator.py×2 true violations     | 🟡 BLOCKED — design call needed (Q3)                                           | Operator on DeFi caching architecture                                   |
+| Tab 3 L2 STEP 5.77 enable                                          | 🟡 DEFERRED — blocked on full L2 fix-batch landing                             | After fix-batch + 2h CI green                                           |
+| Tab 3 L7 verification sweep                                        | 🟡 DEFERRED — not started this session                                         | Next Tab 3 spawn; read STEP 5.64 template first                         |
 
 ## Temporary states + their canonical follow-up plans
 
-- **D4 Shadow-simulated fills in live**: deferred post-cutover — successor `plans/active/shadow_simulated_fills_<post>.md` (TBD).
+- **D4 Shadow-simulated fills in live**: deferred post-cutover — successor
+  `plans/active/shadow_simulated_fills_<post>.md` (TBD).
 - **J1 phase→mode helper full wiring**: signature shipped in Tab 2 P1; wire-in deferred — successor TBD.
-- **L4 LIVE_ event-prefix rename**: post-cutover — successor `plans/active/event_prefix_rename_<post>.md` (TBD).
+- **L4 LIVE\_ event-prefix rename**: post-cutover — successor `plans/active/event_prefix_rename_<post>.md` (TBD).
 - **L5 schema-parity comparative gate**: post-cutover (already mode-agnostic by design) — successor optional.
 - **L6 executor factory single-file enforcement**: depends on D3 factory shipping in Tab 2; STEP enable post-Tab-2.
 - **L8 mode-parametric workspace tests**: skipped per defaults #3.
-- **G1 LIVE_ event rename**: post-cutover — successor TBD.
+- **G1 LIVE\_ event rename**: post-cutover — successor TBD.
 - **F4/F5 deep UI refactor (ML page hard-disable + dashboard mock-conflation)**: post-cutover — successor
   `plans/active/ui_mode_refactor_<post>.md` (TBD).
-- **I2 TradFi live execution greenfield**: post-cutover — successor `plans/active/tradfi_live_execution_<post>.md` (TBD).
+- **I2 TradFi live execution greenfield**: post-cutover — successor `plans/active/tradfi_live_execution_<post>.md`
+  (TBD).
 - **I5 Prediction live WebSocket greenfield**: post-cutover — successor
   `plans/active/prediction_live_websocket_<post>.md` (TBD).
 - **`tradfi-batch-live.md` + `prediction-batch-live.md` codex docs**: stubs only in Tab 1 P2; full content post-cutover.

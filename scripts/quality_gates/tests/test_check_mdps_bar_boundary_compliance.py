@@ -15,9 +15,7 @@ from pathlib import Path
 
 import pytest
 
-_CHECKER_SCRIPT = (
-    Path(__file__).parent.parent / "check_mdps_bar_boundary_compliance.py"
-).resolve()
+_CHECKER_SCRIPT = (Path(__file__).parent.parent / "check_mdps_bar_boundary_compliance.py").resolve()
 
 
 def _write(file: Path, content: str) -> Path:
@@ -42,7 +40,7 @@ def test_valid_source_uses_compute_bar_close_boundary(tmp_path: Path) -> None:
     _write(
         tmp_path / "valid.py",
         """
-from unified_trading_library.availability_stamping import compute_bar_close_boundary
+from unified_trading_library import compute_bar_close_boundary
 
 def emit_bar(ts, tf):
     return compute_bar_close_boundary(ts, tf)
@@ -134,7 +132,7 @@ def test_mixed_file_one_violation_among_many_valid(tmp_path: Path) -> None:
     _write(
         tmp_path / "mixed.py",
         """
-from unified_trading_library.availability_stamping import compute_bar_close_boundary
+from unified_trading_library import compute_bar_close_boundary
 import pandas as pd
 
 def good_1(ts, tf):

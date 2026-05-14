@@ -76,7 +76,7 @@ def test_count_zero_when_no_inline_uris(tmp_path: Path) -> None:
     f = _write(
         tmp_path / "clean.py",
         """
-        from unified_trading_library.cloud_interface.bucket_naming import resolve_bucket_uri
+        from unified_trading_library import resolve_bucket_uri
         def g() -> str:
             return resolve_bucket_uri(cloud="gcp", kind="market-data", path="x", asset_group="cefi")
         """,
