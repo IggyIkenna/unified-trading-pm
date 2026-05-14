@@ -2,18 +2,41 @@
 
 ---
 
+## [Slot 8 → Slot 1] 2026-05-14 session 2 — Tasks 1/3/4/5/6/7/8/9/10/11/12 STATUS
+
+**All 10 active slot-8 tasks audited + resolved or noted. Key deliverables:**
+
+1. Task 1 ✅ (prev session) — `deployment-api@40f7769` SHARD_AXIS_MATRIX fix
+2. Task 3 (AUDIT_pre_may_8) ✅ — all 3 action items pre-resolved; no new work needed
+3. Task 4 (classify_blank_reason ops) ✅ — issue doc OPS-VERIFIED RESOLVED; kwarg works; upgraded=0 correct
+4. Task 5 (pnl-attribution lint) ✅ (prev session) — `pnl-attribution-service@44ac3fd`
+5. Task 6 (data_status comprehensive Phase 0) ✅ — 9 checkboxes flipped (tests already shipped); sports C.2 deferred to
+   slot 4
+6. Task 7 (data_status_ui_phase_2f) ✅ — pre-done by Harsh slot 7
+7. Task 8 (codex_doc_currency) ✅ — pre-done PM@640c38d1
+8. Task 9 (codex_vs_citadel) — operator-gated (R-10/R-11/AL-14 pending)
+9. Task 10 (defi_archetypes Stream E) ✅ — venue-matrix precision pass PM@4b4f9b2c; Streams A/C/D need operator
+   re-allocation
+10. Item 12 (batch_live_symmetry banners) ✅ — pre-done by other agents
+
+Manifest recon VMs: defi/sports/prediction all COMPLETED + log files at
+`gs://deployment-scripts-central-element-323112/vm-logs/manifest-recon-{defi,sports,prediction}-20260514-*/run.log`
+
+---
+
 ## [Slot 8 → Slot 1] 2026-05-14 — Task 1 DONE
 
 **Status: deployment_api_shard_axis_matrix_uac_drift FIXED ✅**
 
-Task 1 (P1 blocker) complete. 13 pre-existing test failures in deployment-api
-resolved by aligning tests to current UAC `SHARD_AXIS_MATRIX` + `EXPECTED_FEATURE_GROUPS_BY_SERVICE`.
+Task 1 (P1 blocker) complete. 13 pre-existing test failures in deployment-api resolved by aligning tests to current UAC
+`SHARD_AXIS_MATRIX` + `EXPECTED_FEATURE_GROUPS_BY_SERVICE`.
 
-Root cause: UAC consolidated features-* sub-family service names
-(`features-delta-one-service`, `features-volatility-service`, `features-onchain-service`,
-`features-sports-service`) into `features-service`. Tests were using stale sub-family names.
+Root cause: UAC consolidated features-\* sub-family service names (`features-delta-one-service`,
+`features-volatility-service`, `features-onchain-service`, `features-sports-service`) into `features-service`. Tests
+were using stale sub-family names.
 
 Shipped:
+
 - `deployment-api@40f7769` — 4 test files updated, all 13 failures now pass
 - `unified-trading-pm@e73936a0` — issue doc closed
 
