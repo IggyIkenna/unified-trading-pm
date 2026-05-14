@@ -429,3 +429,29 @@ slots 1-8. Your stack just got new items.
 
 Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
 ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+
+---
+
+[2026-05-14] Slot 3 → Operator — **CREDENTIAL APPROVAL REQUEST — Kraken Pro API**
+
+```
+CREDENTIAL APPROVAL REQUEST — Kraken CCXT live instrument discovery
+Vendor: Kraken Pro API — read-only API key (no withdraw permissions)
+Tier: free (read-only market data endpoints are $0 on Kraken Pro)
+What I need: kraken-api-key + kraken-api-secret (read-only scope)
+  → store in Secret Manager as 'kraken-api-key' / 'kraken-api-secret'
+Account to use: existing Kraken Pro account (operator already onboarded per work_split note)
+Unblocks:
+  - instruments-service live mode: KRAKEN-SPOT + KRAKEN-FUTURES instrument discovery
+    via ccxt.kraken + ccxt.krakenfutures (public endpoints work without auth; key needed
+    for private rate-limit tier + authenticated market metadata)
+  - arbitrage_price_dispersion × CeFi: 7th venue (full venue coverage)
+  - carry_staked_basis × CeFi hedge-leg: Kraken perp funding rates
+Without it: unit + scaffold shipped at instruments-service@da462af; live discovery
+  uses public CCXT endpoints (no auth needed for instrument list); integration tests
+  skip via @pytest.mark.requires_credentials; adapter is dormant for authenticated paths
+```
+
+Status: `BLOCKED-CREDENTIALS-OPERATOR-INCOMING` (operator confirmed key incoming on 2026-05-14).
+Scaffold at instruments-service@`da462af` — KRAKEN-SPOT→ccxt.kraken, KRAKEN-FUTURES→ccxt.krakenfutures.
+Historic batch already wired via Tardis (CANONICAL_VENUE_TO_ADAPTER → "tardis").
