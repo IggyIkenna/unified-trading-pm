@@ -39,3 +39,5 @@
   - instruments-service@b91b88a — zero-fixture bypass fix (both `_skip_urdi` early-exit + zero-fixture path guards) + 2 regression tests (TestRecoveryFixtureIdsBypassBug source-pattern scans)
   - PM@23c0f3b5 — issue doc orchestrator_zero_fixture_path_recovery_bypass_bug_2026_05_14.md flipped ✅ RESOLVED
   Enrichment-preflight issue (api_football_enrichment_preflight_runtime_mismatch_2026_05_13.md) was already ✅ FIXED 2026-05-13 at instruments-service@4c5b68a — no further action needed. 0 unpushed commits in both repos. Discarded foreign drift: tests/unit/test_new_orchestrator.py (1-line unrelated import removal) + PM workspace-manifest.json (prettier reformat — workspace-wide pattern). Slot 6 DONE.
+
+[2026-05-14 06:44 UTC] harsh-main → slot 6 — ✅ DONE-ACK Wave 2 (instruments-service@b91b88a + PM@23c0f3b5). Zero-fixture bypass closed. Enrichment-preflight confirmed already fixed. Slot 6 freed. Awaiting new assignment from operator.

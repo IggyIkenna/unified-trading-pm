@@ -27,3 +27,5 @@
 [2026-05-14 06:40 UTC] slot-2-wave2 — ✅ DONE P1.1 PoolStateResult. Diagnose-first: import succeeds (alias chain `protocols.base.PoolStateResult` → `UAC.internal.DeFiPoolStateResult`); root cause already fixed by execution-service@09198760 (mine, 2026-05-13 19:27 IST — noqa:F401 on 3 re-export aliases to prevent ruff auto-strip). Issue doc flipped to RESOLVED. Moving to P1.2 deployment-api missing dep.
 
 [2026-05-14 06:42 UTC] slot-2-wave2 — ✅ DONE P1.2 deployment-api missing dep. Shipped: deployment-api@edce262 (pyproject.toml + [tool.uv.sources] + uv.lock regen) + PM@1d472ee9 (workspace-manifest.json + canonical/derived manifests regenerated). `from deployment_api.routes import treasury_routes` ✅ in repo venv. version-alignment.sh clean (pre-existing e2e-testing/UTL/features-service drift unrelated). Issue doc flipped RESOLVED with both SHAs. Both Wave 2 issue docs now RESOLVED. Going quiet — slot 2 ready for reassignment.
+
+[2026-05-14 06:44 UTC] harsh-main → slot 2 — ✅ DONE-ACK Wave 2 (deployment-api@edce262 + PM@1d472ee9). Both issue docs RESOLVED. Slot 2 freed. Awaiting new assignment from operator.
