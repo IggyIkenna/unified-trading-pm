@@ -1,16 +1,9 @@
-# Slot 5 ping file — 2026-05-13 (Day-4)
+# Slot 5 ping file — re-themed 2026-05-14
 
 > Doorbell only. One line per active blocker/question (slot N → main) or direction (main → slot N).
 > Full Q&A lives in the slot's plan-of-record § "Open questions". Resolved entries removed by main.
 > Format: `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-13 07:02 UTC] slot-5 — STARTED (plans/active/audit_records_pb_1_2_3_pre_cutover_2026_05_13.md)
-[2026-05-13 08:30 UTC] slot-5 — DONE PB-1+PB-2+PB-3 code shipped. GCP audit-records bucket provisioned+locked. AWS bucket DEFERRED (aws CLI unavailable). Pre-existing QG blockers: rpc_fallback.py C901 (execution-service) + pytest-timeout missing (deployment-service). SHAs: exec@51f1f879 deploy@4137363 pm@6cbdf3e7
-[2026-05-13 08:58 UTC] harsh-main → slot 5 — ✅ DONE-ACK. Slot 5 shutdown clean. PB-1/2/3 work on LDR. tab/hk/5 commits: PM 7eda99dd (stale Day-2 handover ping, on LDR as 91a24ecc) + MTDS cc62f02 (Phase 3.5 collision casualty from 2026-05-11, INTENTIONALLY abandoned per its own commit message — Ikenna ab17cc3 + ComsicTrader 4d45208 jointly cover Phase 3.5 on LDR; handler wire-in deferred to later phase). 6 dirty files (ruff format drift across exec/deploy/UAC/PM) discarded. AWS bucket + Telegram chat_id DEFERRED-PER-USER. Slot freed.
-
-[2026-05-14 05:09 UTC] harsh-main → slot 5 — 🟢 **CLEARED TO SPAWN — batch_live_symmetry cross-side ack received**. Ikenna explicitly acked at ~18:00 UTC 2026-05-13 (cross-side ping, commit 37b90a3a): _"batch_live_symmetry 0/70 real — agreed it's deadline-eligible… happy for Harsh-side to take it."_ Operator baked this into today's work-split (slots 5 + 8). See LEDGER § "Day-3 Wave 3 — batch_live_symmetry (slots 5+8)" for full spawn brief. Your scope: **Tabs 1-2 (codex docs half)** — write `codex/02-data/cefi-batch-live.md` + `codex/06-coding-standards/mode-axis-discipline.md`. Repos: unified-trading-pm only (plan-writing + codex). QG green. FF-push per doc. Plan: `batch_live_symmetry_2026_05_10.md` Tabs 1-2.
-[2026-05-14 06:44 UTC] harsh-slot-5 — STARTED Wave 3 batch_live_symmetry Tabs 1+2 (codex SSOT + UAC contract). Worktree aligned to LDR.
-[2026-05-14 07:08 UTC] harsh-slot-5 → slot-8 — ✅ BatchExecutionMode canonical package ON LDR (UAC@01c1b59). canonical/crosscutting/execution/__init__.py + batch_execution_mode.py live. RECON_GREEN_THRESHOLDS also added to thresholds.py. Slot 8 can NOW enable L3 STEP (RuntimeMode single SSOT check). Waiting on: node_builder.py migration + L7 sweep fix-list.
-[2026-05-14 08:45 UTC] harsh-slot-5 — ✅ DONE Wave 3 batch_live_symmetry Tabs 1+2. All Tab 2 items complete: BatchExecutionMode (UAC@01c1b59), RECON_GREEN_THRESHOLDS (UAC@01c1b59), node_builder migration (exec@b30167e2, ruff fix exec@7df685d8), L7 sweep fix-list (PM@88093918 — 25+ MDPS defi handlers listed, Tab 5 owner action), J1 design stub (UAC@8af438c, wire-in deferred). Session scoreboard at PM@2c547d64. Tab 5 MDPS owner: use L7 fix-list in plan body (pre-audit file names were stale).
-
-[2026-05-14 07:20 UTC] harsh-main → slot 5 — ✅ DONE-ACK Wave 3 Tabs 1+2 (UAC@01c1b59 + exec@b30167e2+7df685d8 + PM@88093918+2c547d64). L7 fix-list noted for Tab 5 MDPS owner. Slot 5 freed. Awaiting new assignment.
+[2026-05-14 10:10 UTC] [main → slot 5] — RE-THEMED via --reset-slot.
+Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block on first read).
+New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).

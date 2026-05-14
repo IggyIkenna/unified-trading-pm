@@ -20,29 +20,29 @@ estimate_calibrated_ai_days: 2.4
 
 # Alerting lifecycle SLO + DART runbook + operator-UX gaps (post-cutover)
 
-> **MIGRATED FROM:** `codex_vs_citadel_infrastructure_audit_2026_05_10` — Phase 5 POST_CUTOVER consolidation
-> 2026-05-12. Source area issue docs:
-> `plans/archive/issues/codex_audit_alerting_2026_05_12.md` (AL-22), `codex_audit_risk_2026_05_12.md` (R-15, R-16),
-> `codex_audit_strategy_2026_05_12.md` (ST-11), `codex_audit_testing_2026_05_12.md` (TS-19, TS-20).
+> **MIGRATED FROM:** `codex_vs_citadel_infrastructure_audit_2026_05_10` — Phase 5 POST_CUTOVER consolidation 2026-05-12.
+> Source area issue docs: `plans/archive/issues/codex_audit_alerting_2026_05_12.md` (AL-22),
+> `codex_audit_risk_2026_05_12.md` (R-15, R-16), `codex_audit_strategy_2026_05_12.md` (ST-11),
+> `codex_audit_testing_2026_05_12.md` (TS-19, TS-20).
 
 ## Why this plan exists
 
-A cluster of POST_CUTOVER findings share one shape: **operator-facing surfaces (runbooks, dashboards, decision
-matrices) lack the codex-side discoverability required for someone walking up cold during an incident**. Each
-individual gap is small; together they form an operator-UX debt that compounds when on-call rotates. Group them so
-one operator-UX sweep covers the lot after May-23.
+A cluster of POST_CUTOVER findings share one shape: **operator-facing surfaces (runbooks, dashboards, decision matrices)
+lack the codex-side discoverability required for someone walking up cold during an incident**. Each individual gap is
+small; together they form an operator-UX debt that compounds when on-call rotates. Group them so one operator-UX sweep
+covers the lot after May-23.
 
 ## Scope — migrated findings (7 operator-UX items)
 
-| Finding | Source area | Description |
-|---|---|---|
-| AL-22 | alerting | `codex/03-observability/slos.md:56` declares alerting-service "Alert false-positive rate < 1% — tracked via feedback" but no `AlertFeedback` model / metric exists. Wire feedback path OR downgrade SLO to "manual review during quarterly rehearsal" with named owner |
-| R-15 | risk | `kill-switch-event-bus.md:73-89` says `KILL_ALL_LIVE` arming must have provenance `OPERATOR_MANUAL` or `SCHEDULED_DRILL` — but doc doesn't explain why `SCHEDULED_DRILL` is treated as operator-equivalent. Add 1-paragraph rationale |
-| R-16 | risk | Wallet-tier kill-switch arm via DART operator UI shipped slot 8 but no runbook doc exists for: when to arm KILL_PER_WALLET vs KILL_PER_ARCHETYPE, rollback procedure, audit-log line confirming the arm landed. CLAUDE.md "Runbook Execution-Owner SSOT" requires every operator-runnable runbook to declare `execution.{owner,cadence,verifier,last_executed}` |
-| ST-11 | strategy | `block-list.md` and `category-instrument-coverage.md` have UI runtime mirrors (`unified-trading-system-ui/lib/architecture-v2/block-list.ts`) kept in sync **manually**. Either generate from codex/UAC matrix, or add CI parity check (mirror UAC's cassette-parity pattern) |
-| TS-19 | testing | No codex doc states the "two-pass QG model for agents" (Pass 1 = full `quality-gates.sh` incl. tests; Pass 2 = `quickmerge --agent` skips tests). It's in CLAUDE.md + `.claude/rules/python-backend.md` but not in `codex/06-coding-standards/quality-gates.md`. Add 3-line subsection |
-| TS-20 | testing | `integration-testing-layers.md:219-234` decision matrix conflates DeFi-unit (sim/responses) with DeFi-integration (Tenderly fork). ADD distinct row "DeFi on-chain integration → Tenderly VNet fork fixture"; also add IBKR row |
-| AL-21 (UX half) | alerting | `STALE_OPEN_ALERT` meta-alert needs operator dashboard surface (the QG/automation half lives in `governance_qg_automation_gaps_post_cutover_2026_05_12.md`) |
+| Finding         | Source area | Description                                                                                                                                                                                                                                                                                                                                                     |
+| --------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AL-22           | alerting    | `codex/03-observability/slos.md:56` declares alerting-service "Alert false-positive rate < 1% — tracked via feedback" but no `AlertFeedback` model / metric exists. Wire feedback path OR downgrade SLO to "manual review during quarterly rehearsal" with named owner                                                                                          |
+| R-15            | risk        | `kill-switch-event-bus.md:73-89` says `KILL_ALL_LIVE` arming must have provenance `OPERATOR_MANUAL` or `SCHEDULED_DRILL` — but doc doesn't explain why `SCHEDULED_DRILL` is treated as operator-equivalent. Add 1-paragraph rationale                                                                                                                           |
+| R-16            | risk        | Wallet-tier kill-switch arm via DART operator UI shipped slot 8 but no runbook doc exists for: when to arm KILL_PER_WALLET vs KILL_PER_ARCHETYPE, rollback procedure, audit-log line confirming the arm landed. CLAUDE.md "Runbook Execution-Owner SSOT" requires every operator-runnable runbook to declare `execution.{owner,cadence,verifier,last_executed}` |
+| ST-11           | strategy    | `block-list.md` and `category-instrument-coverage.md` have UI runtime mirrors (`unified-trading-system-ui/lib/architecture-v2/block-list.ts`) kept in sync **manually**. Either generate from codex/UAC matrix, or add CI parity check (mirror UAC's cassette-parity pattern)                                                                                   |
+| TS-19           | testing     | No codex doc states the "two-pass QG model for agents" (Pass 1 = full `quality-gates.sh` incl. tests; Pass 2 = `quickmerge --agent` skips tests). It's in CLAUDE.md + `.claude/rules/python-backend.md` but not in `codex/06-coding-standards/quality-gates.md`. Add 3-line subsection                                                                          |
+| TS-20           | testing     | `integration-testing-layers.md:219-234` decision matrix conflates DeFi-unit (sim/responses) with DeFi-integration (Tenderly fork). ADD distinct row "DeFi on-chain integration → Tenderly VNet fork fixture"; also add IBKR row                                                                                                                                 |
+| AL-21 (UX half) | alerting    | `STALE_OPEN_ALERT` meta-alert needs operator dashboard surface (the QG/automation half lives in `governance_qg_automation_gaps_post_cutover_2026_05_12.md`)                                                                                                                                                                                                     |
 
 ## Todos
 
@@ -53,24 +53,24 @@ one operator-UX sweep covers the lot after May-23.
 - [ ] [DOC] P3. **Group B — kill-switch provenance rationale (R-15).** Add 1-paragraph rationale to
       `kill-switch-event-bus.md:73-89` explaining why `SCHEDULED_DRILL` is operator-equivalent (drill-runner
       operator-attended; chaos-cron unattended). **MIGRATED FROM:** R-15.
-- [ ] [DESIGN] P2. **Group C — Alert false-positive SLO measurement (AL-22).** Either: (a) wire minimal feedback
-      path (operator marks an alert "noise" in UI → metric increments via `AlertFeedback` model in
-      alerting-service); or (b) downgrade `codex/03-observability/slos.md:56` to "manual review during quarterly
-      rehearsal" with named owner. Compose with rehearsal procedure (AL-16). **MIGRATED FROM:** AL-22.
-- [ ] [DESIGN] P2. **Group D — Block-list / category-instrument-coverage TS mirror parity (ST-11).** Either
-      generate the `.ts` from codex doc / UAC matrix, or add CI parity check mirroring UAC cassette-parity. Fix
-      likely belongs in UI repo; this plan owns the design call + cross-repo plan-spawning if implementation is
-      complex. **MIGRATED FROM:** ST-11.
+- [ ] [DESIGN] P2. **Group C — Alert false-positive SLO measurement (AL-22).** Either: (a) wire minimal feedback path
+      (operator marks an alert "noise" in UI → metric increments via `AlertFeedback` model in alerting-service); or (b)
+      downgrade `codex/03-observability/slos.md:56` to "manual review during quarterly rehearsal" with named owner.
+      Compose with rehearsal procedure (AL-16). **MIGRATED FROM:** AL-22.
+- [ ] [DESIGN] P2. **Group D — Block-list / category-instrument-coverage TS mirror parity (ST-11).** Either generate the
+      `.ts` from codex doc / UAC matrix, or add CI parity check mirroring UAC cassette-parity. Fix likely belongs in UI
+      repo; this plan owns the design call + cross-repo plan-spawning if implementation is complex. **MIGRATED FROM:**
+      ST-11.
 - [ ] [DOC] P3. **Group E — Two-pass QG model § in testing codex (TS-19).** Add 3-line subsection to
-      `codex/06-coding-standards/quality-gates.md` clarifying that Pass 2 (`quickmerge --agent`) does NOT re-run
-      tests. **MIGRATED FROM:** TS-19.
+      `codex/06-coding-standards/quality-gates.md` clarifying that Pass 2 (`quickmerge --agent`) does NOT re-run tests.
+      **MIGRATED FROM:** TS-19.
 - [ ] [DOC] P3. **Group F — DeFi-integration + IBKR rows in testing decision matrix (TS-20).** Add distinct rows to
       `integration-testing-layers.md:219-234` matrix: "DeFi on-chain integration → Tenderly VNet fork fixture
-      (`execution-service/tests/defi_execution/integration/conftest.py`)" + "IBKR → `MagicMock(spec=IB)`".
-      **MIGRATED FROM:** TS-20.
-- [ ] [DESIGN] P2. **Group G — STALE_OPEN_ALERT operator dashboard (AL-21 UX half).** Wire the operator-facing
-      surface for the STALE_OPEN_ALERT meta-alert (the QG/automation contract lives in the governance plan). UI
-      tile in deployment-ui OR alerting-service dashboard. **MIGRATED FROM:** AL-21 (UX half).
+      (`execution-service/tests/defi_execution/integration/conftest.py`)" + "IBKR → `MagicMock(spec=IB)`". **MIGRATED
+      FROM:** TS-20.
+- [ ] [DESIGN] P2. **Group G — STALE_OPEN_ALERT operator dashboard (AL-21 UX half).** Wire the operator-facing surface
+      for the STALE_OPEN_ALERT meta-alert (the QG/automation contract lives in the governance plan). UI tile in
+      deployment-ui OR alerting-service dashboard. **MIGRATED FROM:** AL-21 (UX half).
 
 ## Done definition
 
