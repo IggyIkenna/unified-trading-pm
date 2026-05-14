@@ -265,17 +265,81 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
 
 ---
 
-## Day-3 Wave 3 — pending cross-side handshake (2026-05-14)
+## Day-3 Wave 3 — batch_live_symmetry (2026-05-14)
 
 ### Slots 5 + 8 — batch_live_symmetry Tabs 1-3 (Sonnet 4.6 / thinking: high; paired slot work)
 
-- **Status**: 🟠 HOLD until cross-side handshake with Ikenna-main acked. Plan frontmatter says `operator: ikenna`; Ikenna's audit PM@`e1e67656` recommended Harsh take Tabs 1-3 but explicit cross-side ack not yet exchanged. Slot 1 main owes Ikenna-main a `_agent_pings.md` entry confirming Harsh-side ownership of Tabs 1-3 BEFORE these slots spawn.
-- **Owned repos** (when unblocked): `unified-trading-pm` (codex) + `unified-api-contracts` + per-service test wiring
+- **Status**: ✅ CLEARED — operator override 2026-05-14. Cross-side handshake deferred; Harsh-side ownership of Tabs 1-3 confirmed by operator. Slots 5 + 8 ready to spawn fresh.
+- **Owned repos**: `unified-trading-pm` (codex) + `unified-api-contracts` + per-service test wiring
 - **Plan-of-record**: [`plans/active/batch_live_symmetry_2026_05_10.md`](../plans/active/batch_live_symmetry_2026_05_10.md) Tabs 1-3
-- **Scope (when unblocked)**:
-  - Slot 5 → Tabs 1-2 (codex docs half): `codex/02-data/cefi-batch-live.md` + `codex/06-coding-standards/mode-axis-discipline.md`
-  - Slot 8 → Tab 3 (enforcement half): UAC batch-live contract + QG STEP ratchet banning live-only data_types diverging from batch shape
-- **Next step**: slot 1 main writes cross-side ping to `plans/active/_agent_pings.md` confirming Harsh ownership of Tabs 1-3, awaits Ikenna ack, then spawns slots 5 + 8.
+
+---
+
+### Day-3 Wave 3 task briefs — Slot 5 (batch_live_symmetry Tabs 1-2)
+
+**Model**: Sonnet 4.6 / thinking: high
+**Worktree**: `.tabs/5/` — fresh spawn, align all repos to origin/live-defi-rollout before starting
+**Owned repos**: `unified-trading-pm` (codex docs) + `unified-api-contracts` (Tab 2 UAC contract)
+
+**Scope — Tab 1 (codex SSOT batch)**:
+- NEW `codex/04-architecture/cefi-batch-live.md` — per-asset-group narrative for cefi (matcher pattern + shard atomicity + venue list per pre-audit § 1 Tab 1). Cross-link to `batch-live-architecture.md` § 5.
+- NEW `codex/06-coding-standards/mode-axis-discipline.md` — cartesian product table for `RuntimeMode` × `OperationalMode` × `BatchExecutionMode` × `MaturityPhase`. Anti-pattern list. Cite pre-audit § 1.
+- UPDATE `codex/04-architecture/batch-live-architecture.md` — add cross-asset-group meta section + UI mode-context guidance + consolidated anti-patterns.
+- UPDATE `codex/06-coding-standards/quality-gates.md` — STEP entries for L1/L2/L3/L7. Defer L4/L5/L6.
+- UPDATE `codex/05-infrastructure/replay-subsystem.md` — implementation status + REPLAY_BACKSTOP_REACHED wiring note.
+- UPDATE `codex/04-architecture/features-service-architecture.md` — sports + calendar live-handler timeline.
+- Land 4 IN-FLIGHT REFACTOR banners at top of cross-plan target files.
+
+**Scope — Tab 2 (UAC + UTL)**:
+- Ship `unified_api_contracts/canonical/crosscutting/execution/batch_execution_mode.py` — `BatchExecutionMode` enum.
+- Ship `unified_api_contracts/canonical/crosscutting/alerting/thresholds.py` — `RECON_GREEN_THRESHOLDS` dict with initial values for `carry_staked_basis` + `leveraged_funding_arb`.
+- ServiceEmissionPolicy: audit existing `SERVICE_OUTPUT_POLICIES` (71 rows already shipped per slot 3 audit). Verify the 9 originally-specified entries are present; flip that checkbox if ✅.
+- L7 verification sweep — confirm 3 violations at MDPS (`storage_dispatch_worker.py:49`, `output_writer_service.py:318`, `orchestration_writer.py:388`); audit 2 at UTL `domain/standardized_service.py:100,299`; produce fix-list (NOT fixes — hand to Tab 3/MDPS owner).
+- J1 helper: ship design stub only at `unified_api_contracts/internal/domain/strategy_service/lifecycle.py:91-116` (wire-in deferred post-cutover per defaults #2).
+- QG green on both repos before push.
+
+**Done-def**:
+- Tab 1: 2 NEW + 4 UPDATE codex docs committed to PM + pushed. 4 cross-plan banners landed. Plan checkboxes flipped.
+- Tab 2: BatchExecutionMode enum + RECON_GREEN_THRESHOLDS + L7 fix-list committed to UAC + pushed. QG green.
+
+**Pre-reads** (before any work):
+1. `plans/active/batch_live_symmetry_2026_05_10.md` § Tab 1 + § Tab 2
+2. `plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md` § 1.Tab1 + § 1.Tab2 + § 3 + § 7
+3. `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
+4. The 6 codex docs in plan frontmatter `related_codex`
+
+---
+
+### Day-3 Wave 3 task briefs — Slot 8 (batch_live_symmetry Tab 3)
+
+**Model**: Sonnet 4.6 / thinking: high
+**Worktree**: `.tabs/8/` — fresh spawn, align all repos to origin/live-defi-rollout before starting
+**Owned repos**: `unified-trading-pm` (base-service.sh template) + all service repos touched by L1/L2/L3/L7 STEPs
+
+**Scope — Tab 3 (QG STEPs L2/L3/L7 workspace AST sweeps)**:
+- L1 + L5 DAY-1 ENABLE — add STEP entries to `scripts/quality-gates-base/base-service.sh`. Pre-flight = 0 violations so no fixes needed first.
+- L2 violation fix-batch — ~21 violations across features-\*/strategy/MDPS per pre-audit § 1 Tab 3. Audit each: move-to-seam OR unify-path. Fan out to ~5 service commits; serialise commits within this slot to avoid collision per pre-audit § 7.
+- L2 STEP enable — only AFTER fix-batch lands + workspace CI green.
+- L3 violation fix-batch — UAC re-export RuntimeMode from UTL canonical (1 PR); `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` re-export from UAC (1 PR).
+- L3 STEP enable — only after fix-batch lands.
+- L7 enforcement verification sweep — AST-walk every `record_captured(` callsite; ensure UTL `assert_available_at_present` fires on every write path.
+- PM QG green + push after each STEP enable.
+
+**Critical sequencing constraint**: Tab 3 depends on Tab 2's `BatchExecutionMode` enum being on LDR first (Slot 5 ships Tab 2). Check that `unified_api_contracts/canonical/crosscutting/execution/batch_execution_mode.py` exists on origin/live-defi-rollout before enabling L3 STEP. If Slot 5 is still in flight, do L1/L5/L2 work first and hold L3 until UAC is visible on LDR.
+
+**Done-def**:
+- 4 STEPs (L1+L5+L2+L3) enabled in `base-service.sh` template + rollout-propagated to all service repos.
+- L2 fix-batch: ~5 service commits on LDR.
+- L3 fix-batch: UAC + UI redeclaration replaced with re-export imports.
+- L7 audit complete with fix-list issued.
+- Workspace CI green for 2h continuous post-L2-enable.
+- Plan checkboxes flipped per shippable unit.
+
+**Pre-reads** (before any work):
+1. `plans/active/batch_live_symmetry_2026_05_10.md` § Tab 3
+2. `plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md` § 1.Tab3
+3. `scripts/quality-gates-base/base-service.sh` (understand existing STEP structure)
+4. `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
 
 ---
 
