@@ -267,9 +267,12 @@ verify L7 enforcement coverage.
       Audit each: move-to-seam (legitimate routing) OR unify-path (logic). Fan out to ~5 service PRs;
       Tab 3 main agent serialises commits. Pre-announce rollout window to operators.
 - [ ] [SCRIPT] P0. **L2 STEP enable** — only after fix-batch lands + workspace CI green for 2h.
-- [ ] [SCRIPT] P0. **L3 violation fix-batch** — UAC re-export RuntimeMode from UTL canonical (1 PR);
+- [x] [SCRIPT] P0. **L3 violation fix-batch** — UAC re-export RuntimeMode from UTL canonical (1 PR);
       `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` re-export from UAC (1 PR).
-- [ ] [SCRIPT] P0. **L3 STEP enable** — only after fix-batch lands.
+      (UTL@ebed394 — UTL constants.py re-exports from UAC; UAC keeps canonical declaration; UI deliberate-copy **DEFERRED** — see Open questions)
+      **DEFERRED** (partial): UI `unified-internal-contracts/modes.py` is a deliberate copy pattern for the Next.js Python context — requires design call on whether to add UAC dep or keep copy. Filed in plan Open questions.
+- [x] [SCRIPT] P0. **L3 STEP enable** — only after fix-batch lands.
+      (PM STEP 5.78 added — RuntimeMode class not permitted outside UAC/UI-deliberate-copy; UTL clean at ebed394)
 - [ ] [SCRIPT] P0. **L7 enforcement verification sweep** — AST-walk every `record_captured(` callsite per pre-audit
       Manifest 2; ensure UTL `assert_available_at_present` fires on every write path; STEP entry already implicit via
       STEP 5.64 — extend AST coverage.
@@ -669,6 +672,13 @@ This plan archives when:
 - Post-cutover items (D4 shadow fills · J1 wiring · L4/L5/L6 enforcement · G1 rename · F4/F5 deep refactor · I2/I5
   greenfield · L8) migrated to follow-up plans per CLAUDE.md "Plan Archival HARD RULE" (Step 3 of 5: every deferred
   item gets an active home).
+
+## Open questions (Tab 3 slot 8)
+
+| # | Question | Status | Blocker |
+|---|----------|--------|---------|
+| Q1 | **L3 UI deferred** — `unified-trading-system-ui/context/internal-contracts/schemas/modes.py` declares `class RuntimeMode` as a deliberate copy (the UI Python context = `unified-internal-contracts` package, which mirrors UAC schemas without importing from UAC). Fix options: (A) add UAC as a dep to the UI Python context; (B) keep the copy and exempt from STEP 5.78 (current approach). Current choice: B (exempted). Requires design call before closing. | 🟡 BLOCKED | Operator design call |
+| Q2 | **L3 canonical location CLAUDE.md correction** — CLAUDE.md says "RuntimeMode canonical location: UTL constants.py:18" but UAC is T0 (no deps) so UAC is the correct canonical. CLAUDE.md needs updating. Deferred to PM codex update. | 🟡 BLOCKED | PM codex update slot |
 
 ## Temporary states + their canonical follow-up plans
 

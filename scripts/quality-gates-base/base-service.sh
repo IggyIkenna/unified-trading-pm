@@ -1795,6 +1795,38 @@ else
     log_success "STEP 5.76: skipped (SOURCE_DIR not set or not a directory)"
 fi
 
+# ── STEP 5.78: L3 — RuntimeMode declared once (UAC internal/modes.py) ─────────
+#
+# RuntimeMode is a T0 canonical type (unified-api-contracts, no dependencies).
+# All other repos MUST re-export from UAC, never redeclare locally.
+#
+# Violation pattern: 'class RuntimeMode' outside unified-api-contracts.
+# UAC is self-exempt (canonical owner). UTL is fixed (ebed394): re-exports
+# from UAC. UI unified-internal-contracts deliberate copy pattern is DEFERRED
+# (see batch_live_symmetry_2026_05_10.md Tab 3 L3).
+#
+# UAC QG skip: UAC is the canonical owner.
+# UI QG skip: unified-trading-system-ui is a deliberate copy (deferred L3 fix).
+# UTL QG: UTL now re-exports from UAC — this STEP confirms no regression.
+#
+# Plan: batch_live_symmetry_2026_05_10.md Tab 3 L3.
+if [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
+    if [[ "${REPO:-}" == "unified-api-contracts" ]] || [[ "${REPO:-}" == "unified-trading-system-ui" ]]; then
+        log_success "STEP 5.78: skipped (${REPO} is exempt — canonical owner or deliberate-copy pattern)"
+    else
+        _L3_HITS=$(rg -n --type py "^class RuntimeMode\b" "${SOURCE_DIR}/" 2>/dev/null || true)
+        if [ -n "$_L3_HITS" ]; then
+            log_fail "STEP 5.78: Service-level RuntimeMode class declaration found — import from unified_api_contracts.internal.modes instead (batch_live_symmetry L3). Only UAC internal/modes.py may declare RuntimeMode."
+            printf "  %s\n" "$_L3_HITS"
+            V=$(( V + 1 ))
+        else
+            log_success "STEP 5.78: No local RuntimeMode redeclarations (re-exports UAC canonical)"
+        fi
+    fi
+else
+    log_success "STEP 5.78: skipped (SOURCE_DIR not set or not a directory)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
