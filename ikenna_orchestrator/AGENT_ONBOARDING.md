@@ -18,6 +18,41 @@ locked_since: 2026-05-08
 > orchestration surface — both report to the workspace-shared
 > [`plans/active/_agent_pings.md`](../plans/active/_agent_pings.md) for cross-side comms only.
 
+### LDR alignment cadence (HARD RULE — codified 2026-05-13 after repeated foot-gun #5)
+
+**Three checkpoints, all required:**
+
+1. **Boot — rebase every owned repo onto LDR.** Not just PM; for every repo in your work-split § "Slot N" "Repos owned":
+
+   ```bash
+   cd "${WORKSPACE_ROOT}/.tabs/2/<repo>" && git fetch origin --quiet && git rebase origin/live-defi-rollout
+   ```
+
+   Stale base → outdated assumptions + messy merges later.
+
+2. **During work — FF-push per shippable unit, NOT end-of-session.** After every `git commit` on `tab/ikennaigboaka/2`,
+   immediately push to LDR (conditional rebase first if behind). Do NOT batch 5-10 commits "to push at the end" — that
+   IS foot-gun #5.
+
+3. **Pre-shutdown — verify your work is on LDR.** Before ending your session for ANY reason (idle / lunch /
+   context-window / operator-close), in each owned repo:
+   ```bash
+   git rev-list --count HEAD ^origin/live-defi-rollout    # must be 0
+   ```
+   Non-zero → push remaining commits per (2) before closing.
+
+**Why this matters**: operator + Harsh run 5-10 parallel slots per side. Agents pick up work / unblock based on LDR
+state. If you ship 3 plans in your first 2 hours but they sit on `tab/ikennaigboaka/2` only, every slot blocked on that
+work waits unnecessarily. Worse: plan-flips `[x]` claim work is shipped while LDR lacks it. Reference: 2026-05-13 Harsh
+slot 4 rescued by main cherry-picking Phase 8A-D after slot self-ack'd DONE with work invisible to LDR.
+
+### Workspace-wide drift recognition (codified 2026-05-13)
+
+If you find 10+ dirty files at boot that look like ruff format / unused-imports cleanup (function signature wrapping,
+import reorders, tuple multi-line formatting), and the same pattern is dirty in other slots' worktrees, it's
+**workspace-wide foreign drift** — NOT yours, NOT real WIP. Discard with `git checkout -- .` per repo. Don't try to
+commit/integrate it. (2026-05-13: multiple slots had 20-30 dirty files in UAC/UTL — same diff, all discardable.)
+
 ## Your role in 3 sentences
 
 You are **Tab N**, a scoped implementer spawned by Ikenna's main orchestrator agent (Tab 1, a separate Claude Code
