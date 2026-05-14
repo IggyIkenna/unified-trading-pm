@@ -33,7 +33,17 @@ estimate_calibration_note: |
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) introduces a workspace-wide sequencing constraint. Per operator decision (b+) 2026-05-11, all bucket-naming reads/writes route through the yaml SSOT (`deployment-service/configs/cloud-providers.yaml`) via `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`. **Required for this plan**: any client-reporting output bucket (per-client NAV / PnL parquets) + pnl-attribution archetype-bucket output MUST use the resolver, never inline f-string `f"gs://{bucket}/..."` (QG STEP 5.69 ratchet enforces). Env-tier (prod/staging/dev) is in the bucket NAME; archetype + per-client partition is in the PATH. Phase 0c bucket provisioning (~300-400 env-tiered buckets) lands during Phase 2 (2026-05-15→05-19); client-reporting buckets are part of that provisioning if not already covered. **BE-AWARE** when scoping pnl-attribution output paths — coordinate with `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0b yaml additive corrections to ensure the canonical SSOT names every bucket this plan writes.
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> introduces a workspace-wide sequencing constraint. Per operator decision (b+) 2026-05-11, all bucket-naming
+> reads/writes route through the yaml SSOT (`deployment-service/configs/cloud-providers.yaml`) via
+> `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`. **Required for this plan**: any
+> client-reporting output bucket (per-client NAV / PnL parquets) + pnl-attribution archetype-bucket output MUST use the
+> resolver, never inline f-string `f"gs://{bucket}/..."` (QG STEP 5.69 ratchet enforces). Env-tier (prod/staging/dev) is
+> in the bucket NAME; archetype + per-client partition is in the PATH. Phase 0c bucket provisioning (~300-400 env-tiered
+> buckets) lands during Phase 2 (2026-05-15→05-19); client-reporting buckets are part of that provisioning if not
+> already covered. **BE-AWARE** when scoping pnl-attribution output paths — coordinate with
+> `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0b yaml additive corrections to ensure the canonical SSOT
+> names every bucket this plan writes.
 
 ## Why this plan exists
 
@@ -96,22 +106,27 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 
 ## Phase 0 — Pre-audit (Day 1, ~0.5 AI-day, 3 parallel sub-agents)
 
-- [ ] [AGENT] P0. **0.A Existing PnL emission audit.** position-balance + execution-service event streams: what's
+- [x] [AGENT] P0. **0.A Existing PnL emission audit.** position-balance + execution-service event streams: what's
       emitted today, what's missing for per-client decomposition, what's the current correlation_id flow.
-- [ ] [AGENT] P0. **0.B Existing client-reporting-api audit.** What endpoints exist, what's mocked, what's wired to real
-      data.
-- [x] [SCRIPT] P0. **0.C Banners on cross-plan files.** (PM@pending — banners added to wallet_treasury_client_flow, risk_simulations_limits_alerting, promote_workflow_may23_cli_path 2026-05-12)
+      (PM@retroactive-2026-05-14 — findings in § Audit findings)
+- [x] [AGENT] P0. **0.B Existing client-reporting-api audit.** What endpoints exist, what's mocked, what's wired to real
+      data. (PM@retroactive-2026-05-14 — findings in § Audit findings)
+- [x] [SCRIPT] P0. **0.C Banners on cross-plan files.** (PM@pending — banners added to wallet_treasury_client_flow,
+      risk_simulations_limits_alerting, promote_workflow_may23_cli_path 2026-05-12)
 
 **Full-execution criterion**: § Audit findings populated; banners on 3 plans.
 
-> **DEFERRED**: 0.A + 0.B pre-audit not yet done (Phase 1 shipped first per operator reserve direction). 0.A/0.B to be run as Phase 2 prep — see `## Deferred work` section below.
+> **DEFERRED**: 0.A + 0.B pre-audit not yet done (Phase 1 shipped first per operator reserve direction). 0.A/0.B to be
+> run as Phase 2 prep — see `## Deferred work` section below.
 
 ## Phase 1 — UAC client-reporting contracts (Days 2-3, ~1.5 AI-days)
 
 - [x] [AGENT] P0. **1.A `ClientId` + `ClientShareClass` + `ClientReportingMode` enums.** Closed sets;
-      `ClientReportingMode ∈ {DEMO, PAPER, LIVE}`. (UAC@b3233e5 — `ClientReportingMode(StrEnum)` in `internal/reporting/client_reporting.py`; reuses `ShareClass` from `canonical/crosscutting/share_class.py`)
+      `ClientReportingMode ∈ {DEMO, PAPER, LIVE}`. (UAC@b3233e5 — `ClientReportingMode(StrEnum)` in
+      `internal/reporting/client_reporting.py`; reuses `ShareClass` from `canonical/crosscutting/share_class.py`)
 - [x] [AGENT] P0. **1.B `ClientPosition` + `ClientPnLEntry` + `ClientNAV` Pydantic dataclasses.** Per-position lineage
-      (archetype_id, strategy_leg_id, trade_id, venue, instrument, qty, mark, cost-basis, realized-pnl, unrealized-pnl). (UAC@b3233e5 — all three in `internal/reporting/client_reporting.py`; PII field on `client_id`)
+      (archetype_id, strategy_leg_id, trade_id, venue, instrument, qty, mark, cost-basis, realized-pnl, unrealized-pnl).
+      (UAC@b3233e5 — all three in `internal/reporting/client_reporting.py`; PII field on `client_id`)
 - [x] [AGENT] P0. **1.C `PnLAttributionRow` factor × layer dual-axis** (per
       `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` Hard Rule #4 + § PnLAttribution Schema + §
       Plan-vs-codex factor name mapping). Row carries `factor: PnLFactor` (canonical 16-factor closed set: `DELTA` /
@@ -124,16 +139,20 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
       Pre-codex names mapped per the codex § Plan-vs-codex factor name mapping table: `FINANCING` / `BORROW` →
       `factor=CARRY` (sub-factor metadata); `REBALANCE` → not a factor (`PnLMetadata.fill_reason` instead);
       `HWM_CRYSTALLIZATION` → separate `FeeRecognitionRow` table (NEW UAC type owned by
-      `wallet_treasury_client_flow_2026_05_10` Phase 4.C extension — see this plan's Phase 5.C2 + cross-plan banner). (UAC@b3233e5 — `PnLFactor`, `PnLLayer`, `PnLAttributionRow` frozen dataclass, `PnLAttribution` BaseModel in `internal/risk.py`)
+      `wallet_treasury_client_flow_2026_05_10` Phase 4.C extension — see this plan's Phase 5.C2 + cross-plan banner).
+      (UAC@b3233e5 — `PnLFactor`, `PnLLayer`, `PnLAttributionRow` frozen dataclass, `PnLAttribution` BaseModel in
+      `internal/risk.py`)
 - [x] [AGENT] P0. **1.D Registry seed.** `registry/client_share_classes.py` with the demo share class + the live-DeFi
-      cutover share class. (UAC@b3233e5 — `DEMO_CLIENT_SEED` + `LIVE_DEFI_CUTOVER_ARCHETYPES` in `registry/client_share_classes.py`)
+      cutover share class. (UAC@b3233e5 — `DEMO_CLIENT_SEED` + `LIVE_DEFI_CUTOVER_ARCHETYPES` in
+      `registry/client_share_classes.py`)
 - [x] [AGENT] P0. **1.E Tests** (per codex § Decomposition Invariants). ≥20 unit tests covering: round-trip
       serialisation, factor closed-set assertion (every row's `factor ∈ PnLFactor`), layer closed-set assertion
       (`layer ∈ PnLLayer`), per-mode coverage, **factor × layer dual-axis invariants**:
       `sum(rows over both layers, all factors) == realised_total_pnl`,
       `sum(rows where layer=STRATEGY) == strategy_alpha_total` (matches BENCHMARK matching-engine sum from
       execution-service), `sum(rows where layer=EXECUTION) == execution_alpha_total` (live − BENCHMARK residual),
-      `RESIDUAL` factor magnitude `< 1% of |total_pnl|`. Loud failure on violation; no silent placeholder. (UAC@b3233e5 — 42 tests in `tests/internal/unit/test_pnl_attribution_contracts.py`; 42/42 pass)
+      `RESIDUAL` factor magnitude `< 1% of |total_pnl|`. Loud failure on violation; no silent placeholder. (UAC@b3233e5
+      — 42 tests in `tests/internal/unit/test_pnl_attribution_contracts.py`; 42/42 pass)
 
 **Full-execution criterion**: UAC PR pushed; QG green; round-trip test passes.
 
@@ -144,15 +163,18 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
       NOT silent zero (per honest-absence rule). (UTL@75de9d5 — join_attribution_streams + JoinError; 9 tests)
 - [x] [AGENT] P0. **2.B `pnl_attribution/emitter.py`.** Per (client, archetype, day) parquet emit at
       `gs://{pid}-client-reports/{client_id}/{archetype}/{YYYY-MM-DD}/attribution.parquet`. Reuses Tab 4's
-      `bucket_naming.py` SSOT. (UTL@75de9d5 + deployment-service@d64de36 — emit_attribution_parquet; kind=client-reports added to cloud-providers.yaml)
+      `bucket_naming.py` SSOT. (UTL@75de9d5 + deployment-service@d64de36 — emit_attribution_parquet; kind=client-reports
+      added to cloud-providers.yaml)
 - [x] [AGENT] P0. **2.C Decomposition-sum invariant check** — UTL helper at
       `unified_trading_library.pnl_attribution.invariants.assert_decomposition_invariants()` (canonical name fixed by
       codex § Decomposition Invariants). Per-day per-client enforces all 5 invariants: closed-set coverage
       (`sum(rows, all factors, both layers) == realised_total_pnl == ClientNAV.delta`), STRATEGY-layer sum =
       strategy_alpha_total (BENCHMARK matching-engine sum), EXECUTION-layer sum = execution_alpha_total (live −
       BENCHMARK residual), RESIDUAL `< 1% of |total_pnl|`, every row's `factor ∈ PnLFactor` and `layer ∈ PnLLayer`
-      closed sets. Fails loud on violation. (UTL@75de9d5 — assert_decomposition_invariants + DecompositionInvariantError; 16 tests)
-- [x] [AGENT] P0. **2.D Tests.** ≥30 unit tests; mocked event streams; invariant assertion. (UTL@75de9d5 — 35/35 pass: 16 invariant + 9 joiner + 10 emitter)
+      closed sets. Fails loud on violation. (UTL@75de9d5 — assert_decomposition_invariants +
+      DecompositionInvariantError; 16 tests)
+- [x] [AGENT] P0. **2.D Tests.** ≥30 unit tests; mocked event streams; invariant assertion. (UTL@75de9d5 — 35/35 pass:
+      16 invariant + 9 joiner + 10 emitter)
 
 **Full-execution criterion**: UTL PR pushed; QG green; integration test on stub streams emits non-empty parquet.
 
@@ -160,8 +182,8 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 
 - [x] [AGENT] P0. **3.A position-balance emit-with-lineage.** Every position event carries
       `(client_id, archetype_id, strategy_leg_id, trade_id)`. Backfill via existing correlation_id where available;
-      gap-fill via execution-service trade lineage.
-      (position-balance-monitor-service@14f25b9 — added archetype_id, strategy_leg_id, trade_id to Position + LocalFillRecord; QG 6/6 tests pass)
+      gap-fill via execution-service trade lineage. (position-balance-monitor-service@14f25b9 — added archetype_id,
+      strategy_leg_id, trade_id to Position + LocalFillRecord; QG 6/6 tests pass)
 - [x] [AGENT] P0. **3.B execution-service per-client factor × layer emit.** Matching engine already runs in BENCHMARK
       and SIMULATED (or live) modes per `codex/04-architecture/batch-live-architecture.md §5`. Wire emit so every fill
       produces `PnLAttributionRow`s tagged with `layer=STRATEGY` (factor decomposition of BENCHMARK fill) AND
@@ -170,17 +192,17 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
       `CARRY` / `GREEKS` / `SETTLEMENT` / `FX` rows are mostly `layer=STRATEGY`; `FEES` / `REBATE` split per
       modelled-vs-surprise. Banned: emitting `STRATEGY_ALPHA` / `EXECUTION_ALPHA` as factor names (they're derived
       sum-by-layer aggregates). `FINANCING` mapped to `factor=CARRY` per codex name-mapping table.
-      (execution-service@a4145838 — pnl_attribution/ module: FillAttributionContext + build_attribution_rows + 6 test classes 5462 passed)
+      (execution-service@a4145838 — pnl_attribution/ module: FillAttributionContext + build_attribution_rows + 6 test
+      classes 5462 passed)
 - [x] [AGENT] P0. **3.C Funding + fee + financing aux emit.** MTDS funding events + execution fee events + custody
-      financing events all gain `client_id` via subscription mapping.
-      **RESOLVED via architecture analysis 2026-05-12**: No MTDS change needed. The `client_id` enrichment is handled
-      by `FillAttributionContext.client_id` (Phase 3.B — every `build_attribution_rows` call receives `ctx.client_id`
-      from the calling code which already has it from position events, which carry `client_id` via Phase 3.A).
-      MTDS funding rates are instrument-level inputs; the caller (emitter consumer) knows the client and passes it
-      through `FillAttributionContext.funding_amount`. The `joiner.py` (Phase 2.A) confirms this: it concatenates
-      pre-built `PnLAttributionRow` streams where each row already has `client_id`. No subscription-mapping layer
-      needs to be added to MTDS, UTL config, or UAC.
-      (Design analysis: slot-8 2026-05-12)
+      financing events all gain `client_id` via subscription mapping. **RESOLVED via architecture analysis 2026-05-12**:
+      No MTDS change needed. The `client_id` enrichment is handled by `FillAttributionContext.client_id` (Phase 3.B —
+      every `build_attribution_rows` call receives `ctx.client_id` from the calling code which already has it from
+      position events, which carry `client_id` via Phase 3.A). MTDS funding rates are instrument-level inputs; the
+      caller (emitter consumer) knows the client and passes it through `FillAttributionContext.funding_amount`. The
+      `joiner.py` (Phase 2.A) confirms this: it concatenates pre-built `PnLAttributionRow` streams where each row
+      already has `client_id`. No subscription-mapping layer needs to be added to MTDS, UTL config, or UAC. (Design
+      analysis: slot-8 2026-05-12)
 
 **Full-execution criterion**: 3 service repos green; sample event-stream read shows `client_id` on every relevant event.
 
@@ -188,8 +210,8 @@ operator-visible UI — and defers multi-client invoicing + share-class accounti
 
 - [x] [AGENT] P0. **4.A `/api/clients/{id}/nav` endpoint.** Reads UAC `ClientNAV` shape from parquet; supports
       time-range query. (client-reporting-api@a2555fa — nav route + mock/live helpers + 4 tests)
-- [x] [AGENT] P0. **4.B `/api/clients/{id}/pnl` endpoint.** Returns daily PnL series.
-      (client-reporting-api@a2555fa — pnl route + strategy/execution split aggregation + 3 tests)
+- [x] [AGENT] P0. **4.B `/api/clients/{id}/pnl` endpoint.** Returns daily PnL series. (client-reporting-api@a2555fa —
+      pnl route + strategy/execution split aggregation + 3 tests)
 - [x] [AGENT] P0. **4.C `/api/clients/{id}/positions` endpoint.** Current open positions + cost basis.
       (client-reporting-api@a2555fa — positions route returns mock MVP; real feed Phase 8)
 - [x] [AGENT] P0. **4.D `/api/clients/{id}/attribution` endpoint.** PnL waterfall by component.
@@ -200,19 +222,24 @@ Run revision.
 
 ## Phase 5 — deployment-ui ClientReporting tab (Days 8-10, ~1.5 AI-days)
 
-- [x] [AGENT] P0. **5.A NAV time-series chart.** Per-client; range-selector. (deployment-ui@0044f96 — NavChart in ClientReportingTab.tsx; client-ID input + date range pickers)
-- [x] [AGENT] P0. **5.B PnL waterfall chart.** Per-archetype × per-component; reuses Recharts patterns. (deployment-ui@0044f96 — PnLChart stacked BarChart + AttributionChart waterfall in ClientReportingTab.tsx)
-- [x] [AGENT] P0. **5.C Per-leg drilldown.** Click an archetype bar → per-strategy-leg detail. (deployment-ui@0044f96 — DrilldownTable in ClientReportingTab.tsx; click attribution bar to filter)
+- [x] [AGENT] P0. **5.A NAV time-series chart.** Per-client; range-selector. (deployment-ui@0044f96 — NavChart in
+      ClientReportingTab.tsx; client-ID input + date range pickers)
+- [x] [AGENT] P0. **5.B PnL waterfall chart.** Per-archetype × per-component; reuses Recharts patterns.
+      (deployment-ui@0044f96 — PnLChart stacked BarChart + AttributionChart waterfall in ClientReportingTab.tsx)
+- [x] [AGENT] P0. **5.C Per-leg drilldown.** Click an archetype bar → per-strategy-leg detail. (deployment-ui@0044f96 —
+      DrilldownTable in ClientReportingTab.tsx; click attribution bar to filter)
 - [ ] [AGENT] P0. **5.C2 HWM crystallization timeline.** Per share-class HWM-vs-NAV chart with crystallization-event
       markers; per-period perf-fee summary card (period_start / period_end / hwm_at_start / hwm_at_end / gross_pnl /
       perf_fee_amount / perf_fee_rate). Reads from `wallet_treasury_client_flow_2026_05_10` Phase 5.F audit log +
       `PerformanceFeeCrystallizedEvent` stream + the NEW `FeeRecognitionRow` parquet that Phase 4.C of the wallet plan
       emits. **Joins INTO the NAV waterfall view as a separate row class** (NOT a `PnLAttributionRow.factor` value);
       keeps factor × layer attribution decoupled from fee-recognition accounting per codex `pnl-attribution.md` Hard
-      Rule #4 + § Plan-vs-codex factor name mapping.
-      **DEFERRED**: blocked on `wallet_treasury_client_flow_2026_05_10` Phase 4.C (FeeRecognitionRow emit). Placeholder card renders in UI (opacity-60) at deployment-ui@0044f96.
-- [x] [AGENT] P0. **5.D Operator-MVP.** Demo client visible by default; switcher for future clients. (deployment-ui@0044f96 — default clientId="demo", input field for override)
-- [x] [AGENT] P0. **5.E Playwright smoke.** End-to-end test confirms tab loads + cards render against live API. (deployment-ui@0044f96 — 4 tests in tests/smoke/client_reporting_tab.spec.ts)
+      Rule #4 + § Plan-vs-codex factor name mapping. **DEFERRED**: blocked on `wallet_treasury_client_flow_2026_05_10`
+      Phase 4.C (FeeRecognitionRow emit). Placeholder card renders in UI (opacity-60) at deployment-ui@0044f96.
+- [x] [AGENT] P0. **5.D Operator-MVP.** Demo client visible by default; switcher for future clients.
+      (deployment-ui@0044f96 — default clientId="demo", input field for override)
+- [x] [AGENT] P0. **5.E Playwright smoke.** End-to-end test confirms tab loads + cards render against live API.
+      (deployment-ui@0044f96 — 4 tests in tests/smoke/client_reporting_tab.spec.ts)
 
 **Full-execution criterion**: deployment-ui shows demo client NAV + PnL + waterfall against real cutover-archetype data.
 
@@ -220,10 +247,9 @@ Run revision.
 
 - [x] [AGENT] P0. **6.A Seed config.** UAC registry: 1 demo client, both cutover archetypes subscribed, demo share
       class. (UAC registry seeded Phase 1.D; mock_performance_data.py "demo-internal" entry added
-      client-reporting-api@c0a4ff3 2026-05-13)
-      **DEFERRED finding**: deployment-ui Phase 5.D hardcodes `clientId="demo"` but UAC canonical is
-      `"demo-internal"`. UI has an override input field — functional, but should be aligned. Track as
-      deployment-ui P2 fix in Phase 9 or follow-up plan.
+      client-reporting-api@c0a4ff3 2026-05-13) **DEFERRED finding**: deployment-ui Phase 5.D hardcodes `clientId="demo"`
+      but UAC canonical is `"demo-internal"`. UI has an override input field — functional, but should be aligned. Track
+      as deployment-ui P2 fix in Phase 9 or follow-up plan.
 - [x] [AGENT] P0. **6.B Position seeding.** position-balance bootstraps demo client's positions from existing
       paper-trade state. (position-balance-monitor-service@b63277b 2026-05-14 — `demo/seed_demo_positions.py` +
       `tests/unit/demo/test_seed_demo_positions.py`; 3 unit tests green; synthetic ClientPosition for
@@ -246,9 +272,8 @@ Run revision.
       16-factor closed set). **Did NOT create the previously-planned NEW `pnl-attribution-decomposition.md` doc** —
       would have duplicated the canonical SSOT and created codex drift; per codex governance "extend existing doc, don't
       fork."
-- [x] [AGENT] P0. **7.C UPDATE `backtest-groups.md`** — attribution emit applies to backtest groups.
-      (PM@2ec3296b 2026-05-13 — added Group C fills → UTL attribution joiner cross-ref + client-reporting-architecture
-      pointer)
+- [x] [AGENT] P0. **7.C UPDATE `backtest-groups.md`** — attribution emit applies to backtest groups. (PM@2ec3296b
+      2026-05-13 — added Group C fills → UTL attribution joiner cross-ref + client-reporting-architecture pointer)
 - [x] [AGENT] P0. **7.D UPDATE `strategy-summary.md`** — cross-link to `pnl-attribution.md § 4` (factor × layer dual
       axis) for strategy-alpha vs execution-alpha framing; do NOT inline the explanation (lives in pnl-attribution.md).
       (PM@2ec3296b 2026-05-13 — extended "Batch = live" item with pnl-attribution.md § 7 cross-link + decomposition
@@ -269,8 +294,8 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 ## Phase 9 — Cutover gate (Day 12, ~0.25 AI-day)
 
 - [x] [AGENT] P0. **9.A Master plan extension.** Group F item 22 row: "Demo client NAV + PnL attribution visible
-      end-to-end." (PM@2909787b 2026-05-14 — master plan item 22 status updated to reflect Phases 1-7 + 6.B done;
-      Phase 8 VM run still pending)
+      end-to-end." (PM@2909787b 2026-05-14 — master plan item 22 status updated to reflect Phases 1-7 + 6.B done; Phase
+      8 VM run still pending)
 - [x] [AGENT] P0. **9.B Banners removed.** (PM@2909787b 2026-05-14 — client-reporting Phase 1 banner removed from
       promote_workflow_may23_cli_path_2026_05_10.md; Phase 1 contracts long-landed, refactor complete)
 
@@ -287,19 +312,19 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 
 ## Deferred work after 2026-05-12 slot-8 Day-4 session
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-| ------------ | ----------------------- | ------------------- |
-| 0.A Existing PnL emission audit | **DEFERRED** — Phase 1 shipped first per operator reserve-plan direction; audit not done | Run as Phase 2 prep before 2.A joiner starts — add as first step in Phase 2 |
-| 0.B Existing client-reporting-api audit | **DEFERRED** — same as 0.A | Run before Phase 4 API endpoints |
-| Phase 1.A-1.E UAC contracts | ✅ DONE (UAC@b3233e5) | 42/42 tests pass; pushed to live-defi-rollout |
-| Phase 2.A-2.D UTL pnl_attribution | ✅ DONE (UTL@75de9d5 + deployment-service@d64de36) | joiner, emitter, invariants, 35/35 tests; client-reports bucket kind added |
-| Phase 3.A PBM lineage fields | ✅ DONE (position-balance-monitor-service@14f25b9) | archetype_id/strategy_leg_id/trade_id on Position + LocalFillRecord; QG pass |
-| Phase 3.B execution-service pnl_attribution | ✅ DONE (execution-service@a4145838) | FillAttributionContext + build_attribution_rows; 6 test classes 5462 passed |
-| Phase 3.C MTDS client_id enrichment | ✅ RESOLVED-VIA-ARCHITECTURE — no MTDS change needed (see checkbox annotation) | Architecture: FillAttributionContext.client_id already carries it; joiner confirms |
-| Phase 4.A-4.D client-reporting-api routes | ✅ DONE (client-reporting-api@a2555fa) | 4 routes + reader + stubs + 15 tests; pushed to live-defi-rollout |
-| Phase 5.A-5.E deployment-ui | ✅ DONE (deployment-ui@0044f96) | ClientReportingTab, clientReporting.ts, App.tsx wiring, 4 Playwright smoke tests |
-| Phase 5.C2 HWM crystallization | **DEFERRED** — blocked on wallet_treasury_client_flow_2026_05_10 Phase 4.C (FeeRecognitionRow emit) | Placeholder card in UI at opacity-60; unblock after wallet plan Phase 4.C ships |
-| Phase 6-9 | TODO | Next: Phase 6 demo client seed |
+| Phase / item                                | Status as of 2026-05-12                                                                             | Successor / blocker                                                                |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 0.A Existing PnL emission audit             | **DEFERRED** — Phase 1 shipped first per operator reserve-plan direction; audit not done            | Run as Phase 2 prep before 2.A joiner starts — add as first step in Phase 2        |
+| 0.B Existing client-reporting-api audit     | **DEFERRED** — same as 0.A                                                                          | Run before Phase 4 API endpoints                                                   |
+| Phase 1.A-1.E UAC contracts                 | ✅ DONE (UAC@b3233e5)                                                                               | 42/42 tests pass; pushed to live-defi-rollout                                      |
+| Phase 2.A-2.D UTL pnl_attribution           | ✅ DONE (UTL@75de9d5 + deployment-service@d64de36)                                                  | joiner, emitter, invariants, 35/35 tests; client-reports bucket kind added         |
+| Phase 3.A PBM lineage fields                | ✅ DONE (position-balance-monitor-service@14f25b9)                                                  | archetype_id/strategy_leg_id/trade_id on Position + LocalFillRecord; QG pass       |
+| Phase 3.B execution-service pnl_attribution | ✅ DONE (execution-service@a4145838)                                                                | FillAttributionContext + build_attribution_rows; 6 test classes 5462 passed        |
+| Phase 3.C MTDS client_id enrichment         | ✅ RESOLVED-VIA-ARCHITECTURE — no MTDS change needed (see checkbox annotation)                      | Architecture: FillAttributionContext.client_id already carries it; joiner confirms |
+| Phase 4.A-4.D client-reporting-api routes   | ✅ DONE (client-reporting-api@a2555fa)                                                              | 4 routes + reader + stubs + 15 tests; pushed to live-defi-rollout                  |
+| Phase 5.A-5.E deployment-ui                 | ✅ DONE (deployment-ui@0044f96)                                                                     | ClientReportingTab, clientReporting.ts, App.tsx wiring, 4 Playwright smoke tests   |
+| Phase 5.C2 HWM crystallization              | **DEFERRED** — blocked on wallet_treasury_client_flow_2026_05_10 Phase 4.C (FeeRecognitionRow emit) | Placeholder card in UI at opacity-60; unblock after wallet plan Phase 4.C ships    |
+| Phase 6-9                                   | TODO                                                                                                | Next: Phase 6 demo client seed                                                     |
 
 ## Deferred work after 2026-05-10 plan-creation session
 
@@ -330,7 +355,50 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 
 ## Audit findings
 
-(Phase 0 sub-agents fill.)
+_Retroactively populated 2026-05-14 after Phases 1-7 shipped (Phase 0 was deferred per operator reserve direction)._
+
+### Phase 0.A — PnL emission audit (position-balance + execution-service)
+
+**Position-Balance-Monitor-Service** (state after Phase 3.A shipped):
+
+- Emitters: `NAVSnapshotPublisher` → `FundNAVSnapshot` webhook; `MarginEventEmitter` → `MarginEvent` Pub/Sub.
+- `Position` and `LocalFillRecord` models carry `client_id`, `archetype_id`, `strategy_leg_id`, `trade_id` (added in
+  Phase 3.A at `position-balance-monitor-service@14f25b9`).
+- No dedicated `correlation_id` field on `Position` — `correlation_id` is extracted from the incoming raw fill event
+  payload (`raw_data.get("correlation_id")`) or UUID-generated if absent; injected by upstream Pub/Sub producer
+  (execution-service fill path).
+- **Gap before Phase 3.A**: `Position` had no `archetype_id` / `strategy_leg_id` / `trade_id` — per-client PnL
+  decomposition was impossible without these fields.
+
+**Execution-Service** (state after Phase 3.B shipped):
+
+- `pnl_attribution/rows.py`: `FillAttributionContext` dataclass holds per-fill decomposition amounts (`delta_amount`,
+  `funding_amount`, `basis_amount`, `carry_amount`, `financing_amount`, `greeks_amount`, `settlement_amount`,
+  `fx_amount`, `fee_amount_modelled`, `fee_amount_actual`) + lineage fields (`client_id`, `archetype_id`, `fill_id`,
+  `venue`).
+- `build_attribution_rows()` outputs `list[PnLAttributionRow]` with factor × layer decomposition: STRATEGY rows cover
+  DELTA/FUNDING/BASIS/CARRY/GREEKS/SETTLEMENT/FX/FEES(modelled); EXECUTION rows cover SLIPPAGE + FEES(surprise);
+  zero-amount rows omitted.
+- `BenchmarkMatcher` has lending-rate-impact mode (Phase 3B) vs legacy benchmark-price mode. No separate SIMULATED/LIVE
+  distinction in engine — caller passes the relevant fill price; the BENCHMARK vs live delta is computed at the
+  `FillAttributionContext` level.
+- **Gap before Phase 3.B**: no factor-decomposed attribution rows emitted from execution-service; matching engine had no
+  client_id linkage on fill output.
+
+### Phase 0.B — Client-reporting-api audit (state after Phase 4 shipped)
+
+- 17+ router groups registered in `api/main.py` including `/api/v1/clients`, `/api/v1/pnl`, `/api/v1/attribution`,
+  `/api/v1/performance`, `/api/v1/trades`, `/api/v1/reports`, `/api/v1/exports`, `/api/v1/invoices`,
+  `/api/v1/compliance`, `/api/v1/tax`, and others.
+- All routes have a mock-mode fallback (`CLOUD_MOCK_MODE=true` → synthetic data from `mock_data.py`). Live mode routes
+  fetch from `ExchangeDataCollector` (OKX/Binance) or parquet backfill store.
+- Phase 4 added `/api/clients/{id}/nav`, `/{id}/pnl`, `/{id}/positions`, `/{id}/attribution` at
+  `client-reporting-api@a2555fa` — 15 tests green; nav/pnl/attribution routes read from UAC
+  `ClientNAV`/`PnLAttributionRow` parquet shapes; positions route returns mock MVP (real feed wired in Phase 8).
+- Mock seed at `mock_performance_data.py`: 5+ MOCK_REPORTS, MOCK_POSITIONS, MOCK_BALANCE_BREAKDOWN,
+  `get_mock_performance_summary()`.
+- **Gap before Phase 4**: `/api/clients/*` endpoints did not exist; existing `/api/v1/performance` returned
+  exchange-level snapshots with no per-client PnL decomposition.
 
 ## DONE block
 
