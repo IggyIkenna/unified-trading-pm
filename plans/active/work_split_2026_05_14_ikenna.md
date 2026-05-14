@@ -238,7 +238,8 @@ Plan-of-record fan-out: `wallet_treasury_post_cutover_custody_signing_2026_06_01
    `wallet_treasury_client_flow_2026_05_10.md` Q1 ack. (design 0.6×, ~3 = 1.8 cal)
 3. **DART manual-trade UX refactor implementation half** (`dart_manual_trade_ux_refactor_2026_05_13.md`) —
    operator surface for live manual trade gate. (design 0.6×, ~4 = 2.4 cal)
-4. **Cluster B risk-and-exposure-service lint sweep** — C901+N802+B008. (refactor 0.4×, ~2 = 0.8 cal)
+4. ✅ **Cluster B risk-and-exposure-service lint sweep** — C901+N802+B008. (refactor 0.4×, ~2 = 0.8 cal)
+   Done: B008 fixed (Annotated pattern) risk-and-exposure-service@d1d43db; C901 fixed by Harsh risk-and-exposure-service@190f34b (noqa on compute_risk + _tally_illiquid_positions helper). All 3 violation types cleared.
 5. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 2-3** — close pre-cutover audit gate items
    (slot 6 takes Phase 1; this slot takes 2+3). (research 1.2×, ~4 = 4.8 cal)
 6. **`client_reporting_pnl_attribution_mvp_2026_05_10` Ikenna pickup** — push open todos workspace-wide. (design
