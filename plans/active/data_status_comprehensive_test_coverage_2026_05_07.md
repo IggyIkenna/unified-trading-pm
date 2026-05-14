@@ -148,11 +148,11 @@ builder, every preflight skip, every record_expected_empty reason.
       `PROTOCOL_LAUNCH_DATES`, assert `_mtds_expected_dates_cached` returns empty when the window predates
       `max(chain_genesis, protocol_launch)` and non-empty when it postdates. Catches the regression where one cutoff is
       honored but the other isn't. (deployment-api@6ab227b — test exists + passes)
-- [ ] [unified-api-contracts] P0. `tests/test_sports_source_coverage_propagation.py` — for every (source, data_type) in
+- [x] [unified-api-contracts] P0. `tests/test_sports_source_coverage_propagation.py` — for every (source, data_type) in
       `SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START`, assert
       `clip_dates_to_source_coverage(source, start, end, data_type=dt)` correctly drops pre-coverage dates.
-      **DEFERRED**: sports-domain work; owned by slot 4 (sports track). Successor: `sports_master_2026_05_07.md` Phase 4
-      coverage tests.
+      (UAC@6f2db1f — 20 tests covering clip_dates_to_source_coverage behaviour + completeness + DATA_TYPE_COVERAGE_START
+      integrity; 20/20 pass)
 - [ ] [market-tick-data-service] P0. `tests/unit/test_vix_15m_source_layering.py` — assert the routing surface in
       `umi_tick_provider.py` sends pre-2025-11-13 dates to Barchart preload (no Yahoo round-trip), 2025-11-13 →
       today−60d to the honest-gap branch, and post-today−60d to Yahoo. Catches the VIX 15m source-layering incident
