@@ -29,14 +29,14 @@ locked_since: 2026-05-08
 | Slot | Theme | State | Plan-of-record | Branch |
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + Phase 0 monitoring + spawn cadence | 🟢 ONLINE | (this LEDGER) | `tab/hk/1` |
-| 2 | **Phase 0 Cluster B** — ml-training-service C901 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/2` |
-| 3 | **Phase 0 Reserve** — peripheral scripts pipeline_mode kwarg sweep (10 scripts) | 🔄 SPAWN PENDING | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4 peripheral | `tab/hk/3` |
-| 4 | **Phase 0 Cluster D** — MDPS + features-service test failures after UTL@67c532bd | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/4` |
-| 5 | **B-005+B-017** — Writegate Phase 6.9 features-sports + defi_recursive_borrow successor plan | 🔄 SPAWN PENDING | `writegate_honest_coverage_endtoend_2026_05_06.md` § 6.9 | `tab/hk/5` |
-| 6 | **Phase 0 Cluster B** — alerting-service N802 lint sweep | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/6` |
-| 7 | **B-001+B-002+B-004** — Phase 1 env-locking (dep-api + dep-ui) + strategy-service 2 test failures | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 1 | `tab/hk/7` |
-| 8 | **B-007+B-008** — Phase 8.A manifest writer + emission publisher coverage (UTL) | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/8` |
-| 9 | **Phase 0 Cluster D** — position-balance-monitor-service test failures | 🔄 SPAWN PENDING | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/9` |
+| 2 | **Phase 0 Cluster B** — ml-training-service C901 lint sweep | 🟢 IN FLIGHT (STARTED @10:19) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/2` |
+| 3 | **Phase 0 Reserve** — peripheral scripts pipeline_mode kwarg sweep (10 scripts) | 🟢 IN FLIGHT (STARTED @10:20) | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4 peripheral | `tab/hk/3` |
+| 4 | **Phase 0 Cluster D** — MDPS + features-service test failures after UTL@67c532bd | ⚠️ SILENT — no STARTED ping; confirm agent running | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/4` |
+| 5 | **B-005+B-017** — Writegate Phase 6.9 features-sports + defi_recursive_borrow successor plan | 🟡 AWAITING (direction given @11:00) | `writegate_honest_coverage_endtoend_2026_05_06.md` § 6.9 | `tab/hk/5` |
+| 6 | **Phase 0 Cluster B** — alerting-service N802 lint sweep | ⚠️ SILENT — no STARTED ping; confirm agent running | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster B | `tab/hk/6` |
+| 7 | **B-001+B-002+B-004** — Phase 1 env-locking (dep-api + dep-ui) + strategy-service 2 test failures | 🟡 AWAITING (direction given @11:00) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 1 | `tab/hk/7` |
+| 8 | **B-007+B-008** — Phase 8.A manifest writer + emission publisher coverage (UTL) | 🟡 AWAITING (direction given @11:00) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/8` |
+| 9 | **Phase 0 Cluster D** — PBM test failures | ✅ DONE (PBM@8837338) ⚠️ SELF-ASSIGNED B-004 — COLLISION with slot 7; operator decision pending | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
