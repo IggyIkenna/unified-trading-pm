@@ -897,6 +897,7 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
       **Decision needed before Phase 5 below ships.**
 - [ ] [SCRIPT] P1. **Phase 5 — Extended unblocking.** Starknet RPC template + OHLCV adapter for Extended. Blocked until
       Phase 1 ships Starknet chain entry + Phase 4 asset_group decision.
+- [ ] [SCRIPT] P1. Fix HYPERLIQUID adapter stub — currently raises `NotImplementedError` for `fetch_historical_ohlcv`. Wire to real Hyperliquid Info API endpoint. **DEFERRED**: not on critical path for paper-trade cutover (perp hedge leg uses Binance/Bybit/OKX first). Issue: plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md
 
 ### Hardcoded on-chain-derivable values audit (migrated from `defi_eliminate_hardcoded_onchain_derivable_values_2026_05_08`)
 

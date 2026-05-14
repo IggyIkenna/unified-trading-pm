@@ -105,3 +105,4 @@ None — all gaps resolved (2 code fixes, 2 issue docs).
 
 - Honest-coverage cron VM scheduling → `plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md`
 - cross_asset instruments-service scope → `plans/active/issues/cross_asset_instruments_service_scope_2026_05_14.md`
+- [ ] [INFRA] P2. Wire cron VM launcher for the data-status refresh job: create a singleton-locked launcher under `deployment-service/scripts/vm/`, register prefix in `VM_PREFIX_TO_BUCKET` (vm_zombie_watchdog.py), launch with `DEPLOYMENT_ENV` set. **DEFERRED**: held until live cutover is closer. Successor: this item.

@@ -541,6 +541,7 @@ Owner: ikenna for sign-off + harsh for runs.
   - **Net**: 0 of 4 owned repos green at HEAD. Every blocker is documented foreign-plan debt; none are introduced by
     Phase 1-5 of THIS plan. 6D criterion (Phase 1-5 QGs green) is **architecturally met for this plan's deltas** but
     blocked on cross-plan QG-debt cleanup. **DEFERRED → cross-side ping to slot 1 main + the named owning plans**.
+- [ ] [DOC] P1. Write ICE US softs venue entry to UAC capability declarations (`unified_api_contracts/registry/capability_declarations/`) — disambiguation confirmed: ICE US softs = physical commodity futures (FCOJ, cotton, coffee, sugar, cocoa). Shard granularity: per-instrument-day. **DEFERRED**: held pending operator decision on which UAC module hosts physical-commodity softs. Issue: plans/active/issues/ice_us_softs_dataset_disambiguation_2026_05_14.md
 
 **Full-execution criterion**:
 
