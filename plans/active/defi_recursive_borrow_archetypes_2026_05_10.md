@@ -3,12 +3,20 @@ title:
   DeFi recursive-borrow archetypes — Family 1 (recursive lending arb) + Family 2 (long-funding-perp recursive-borrow)
   implementation
 type: implementation
-status: planned
+status: partial-shipped-descoped
 created: 2026-05-10
+descoped: 2026-05-14
+descoped_by: harsh-slot-9
+descope_reason: >
+  recursive_borrow NOT in May-23 live cutover scope. Master plan commits only carry_staked_basis +
+  arbitrage_price_dispersion for live by 2026-05-23. Archetype-documented half (UAC schemas + strategy-service
+  Phase 3 + 4 codex docs) shipped; implementation half (Solidity + execution-service + UI) deferred to
+  successor plan.
+successor_plan: plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md
 author: ikenna
 operator: ikenna
 target_deadline: 2026-05-23
-horizon: pre-cutover
+horizon: pre-cutover (archetype-documented half only; implementation deferred)
 companion_to: plans/active/master_to_live_defi_2026_05_23.md
 spawned_from: plans/questions/defi_recursive_borrow_archetypes_2026_05_08.md
 related_plans:
@@ -49,6 +57,25 @@ estimate_calibration_note: |
 > as STALE (pre-audit 2026-05-11 slot 3 + 2026-05-12 slot 2). Remaining work (recent-days catch-up VM, P1
 > ManifestFreshnessCache wire-in) does NOT block Family-1 design; pulls fix Day 3 (2026-05-14). **Slot 5: start
 > Family-1 design Day 1**.
+
+> **🔴 DESCOPED 2026-05-14 — NOT in May-23 live cutover** (Harsh-side slot 9; operator pre-confirmed 2026-05-14 morning)
+>
+> `recursive_borrow` archetypes are **NOT** in the May-23 live cutover scope. Master plan only commits
+> `carry_staked_basis` + `arbitrage_price_dispersion` for live by 2026-05-23. This plan's **archetype-documented
+> half shipped** (UAC schemas, strategy-service factory/catalog, 4 codex docs — see DONE blocks below). The
+> **implementation half is deferred post-cutover** to the successor plan:
+> [`plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`](defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
+>
+> **What shipped** (stays in this plan): UAC `recursive_loop_orchestrator.py` + `perp_hedge_sizer.py` schemas;
+> archetype enum values (`CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`);
+> `ARCHETYPE_CONFIG_SEED` rows; 15 `DefiErrorCode` entries; 5 `AlertCode` entries; `ARCHETYPE_CONCENTRATION_MULTIPLIER`;
+> `UNISWAP_SWAP_ROUTER_BY_CHAIN` registry; strategy-service factory routing + 17 catalog cells + tracer (Phase 3 ✅);
+> 4 codex docs (Family 1/2 archetypes + `carry-recursive-staked.md` + `strategy-summary.md` patches).
+>
+> **Deferred to successor** (Phases 2-remaining, 4, 5, 6, 7, 8, 9, 11, 12, 13): Solidity
+> `RecursiveLeverageReceiver.sol`; execution-service `RecursiveLoopOrchestrator` + Hyperliquid LIVE wire-up +
+> `PerpHedgeSizer` + `HealthFactorMonitor`; matching-engine DeFi cost model; deployment-api/UI components; backtest
+> runs; live deploy. See `## Deferred work — migrated to successor plan` section below.
 
 ## Why this plan exists
 
@@ -1276,6 +1303,39 @@ treasury rebalance reflects expected yield; plan archived per HARD RULE.
 
 **Full-execution criterion:** ≥7 days of `gs://${PID}-events/events/strategy/defi-recursive-*/` events with daily P&L
 metadata; reconciliation report green; operator sign-off in plan archival commit.
+
+## Deferred work — migrated to successor plan
+
+> Added 2026-05-14 per descope decision. Successor: [`plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`](defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
+
+**MIGRATED FROM: `defi_recursive_borrow_archetypes_2026_05_10.md`**
+
+Every item below is a `[ ]` todo in this plan body. All have been copied verbatim into the successor plan with
+`**MIGRATED FROM:** defi_recursive_borrow_archetypes_2026_05_10.md` provenance per CLAUDE.md "Plan Archival" HARD RULE.
+
+| Phase | Item | Successor plan section |
+| ----- | ---- | ---------------------- |
+| Phase 0 | Cross-plan coordination banners (4 × `- [ ] [BANNER]`) | Successor § Phase 0 Deferred carry-forward |
+| Phase 2 | UAC config schema extension (LendingProtocol enum, PerpVenue, backfill defaults, schema test, docstring update) | Successor § Phase 2 |
+| Phase 3 | Peripheral-script QG wiring (deferred pending Phase 12 smoke script) | Successor § Phase 3 carry-forward |
+| Phase 4 | `RecursiveLeverageReceiver.sol` — Option A action-encoder, foundry tests, UAC extension, deploy scripts, Sepolia+mainnet+Base deploy | Successor § Phase 4 |
+| Phase 5 | `RecursiveLoopOrchestrator` — Python module, 3 drivers, action-encoder helpers, 12 tests, Tenderly run | Successor § Phase 5 |
+| Phase 6 | Hyperliquid LIVE wire-up — DELETE duplicate, REST POST, EIP-712 signing, ApiKeyReloader, bridge helpers, equity×0.9 fix | Successor § Phase 6 |
+| Phase 7 | `PerpHedgeSizer` — Python module, `_read_E_from_aave_and_er`, 8 unit + 1 integration tests, treasury resolver | Successor § Phase 7 |
+| Phase 8 | `HealthFactorMonitor` + `LiquidationProximityCircuit` + 7 new alert codes + deployment-ui runbook | Successor § Phase 8 |
+| Phase 9 | Matching-engine DeFi cost model (gas, slippage, flash premium) + backtest replay + batch P&L curves | Successor § Phase 9 |
+| Phase 10 | Remaining codex docs: `flash-loan-receiver.md` extended-receiver; `venue-collateral` Family 1/2 sections; `recursive-borrow-backtest-*.md` (×2); `batch-live-architecture.md` archetype-grain; `cefi-perp-leg-bybit.md` | Successor § Phase 10 |
+| Phase 11 | deployment-api endpoint + 4 UI components (`ArchetypeMatrix`, `HealthFactorMonitorTile`, `RecursiveBorrowDrilldown`, `BacktestResultsPanel`) | Successor § Phase 11 |
+| Phase 12 | Backtest runs, paper-trade smoke, batch-vs-live recon | Successor § Phase 12 |
+| Phase 13 | Live deploy — launcher script, treasury allocation, 7-day live VM, plan archival | Successor § Phase 13 |
+| UAC P0/P1/P2 | Remaining UAC reserve-params todos (docstring update, RETH, 12+ missing Eth reserves, Compound Arb/Base, Spark, Morpho LLTV, USDC.e hygiene) | Successor § UAC carry-forward |
+| Family 2 gaps | `PerpVenue` ambiguity resolver, execution-service HL connector consolidation + bridge + live wire-up, Bybit counterparty cap, per-archetype subaccount, batch-live-recon WS parity | Successor § Family 2 carry-forward |
+| Phase 12 design gates | `backtest_scenarios.py` UAC module (14 scenarios), test parametrisation, oracle-deviation feature, 2 Phase 12 codex docs | Successor § Phase 12 design carry-forward |
+
+**What does NOT migrate** (shipped, stays in this plan as ✅):
+- UAC schemas: `recursive_loop_orchestrator.py`, `perp_hedge_sizer.py`, enum values, error/alert codes, `ARCHETYPE_CONFIG_SEED`, concentration multiplier, SwapRouter02 registry, reserve-params chain-dispatch + Arb/Base reserves + E-Mode
+- Strategy-service Phase 3: factory dispatch (17 cells), tracer, test suite
+- Codex Phase 10 (partial): `carry-recursive-borrow-lending-only.md`, `carry-recursive-borrow-perp-hedged.md`, `carry-recursive-staked.md` patches, `strategy-summary.md` patches
 
 ## DONE-2026-05-15 — slot 5 (Ikenna `ikenna-recursive-borrow-tab`) Days 1-4 full cycle ship 2026-05-12
 
