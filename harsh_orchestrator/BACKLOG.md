@@ -155,7 +155,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: DeFi pipeline green end-to-end (instruments → MTDS → features → strategy → execution); Ikenna confirms backtest start date ready
 
 ### B-016 · DeFi arbitrage_price_dispersion backtest run (paper mode)
-- **Status**: QUEUED
+- **Status**: DISPATCHED → slot 3 2026-05-14 (parallel with B-015; cross-side prereq check first)
 - **Task**: Same shape as B-015 for `arbitrage_price_dispersion`. Parallel with B-015 if separate slots.
 - **Repos**: `strategy-service` + `execution-service` + `e2e-testing`
 - **Est**: 4h · **Model**: Sonnet
@@ -196,6 +196,8 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-014 Phase 3 QG ratchet STEPs enable + rollout | slot 8 | DISPATCHED (prep now; rollout after B-006-B-012 all DONE) |
 | 2026-05-14 | B-009 Phase 8.A kill switch + circuit breaker coverage | slot 5 | START (Phase 0 effectively green per operator @12:04) |
 | 2026-05-14 | B-015 DeFi carry_staked_basis paper backtest | slot 9 | DISPATCHED (Phase 1 cross-side prereq check FIRST) |
+| 2026-05-14 | B-010 Phase 8.A archetype validation coverage | slot 3 | strategy-service@4ede3b2 + PM@4f4df625 ✅ (93.18% coverage; 38 new tests) |
+| 2026-05-14 | B-016 DeFi arbitrage_price_dispersion paper backtest | slot 3 | DISPATCHED (parallel with B-015; Phase 1 cross-side prereq check FIRST) |
 
 ---
 

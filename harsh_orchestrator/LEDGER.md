@@ -29,8 +29,8 @@ locked_since: 2026-05-08
 | Slot | Theme | State | Plan-of-record | Branch |
 |------|-------|-------|----------------|--------|
 | 1 | Main orchestrator + Phase 0 monitoring + spawn cadence | 🟢 ONLINE | (this LEDGER) | `tab/hk/1` |
-| 2 | **B-011** — Phase 8.A VM deploy scripts coverage (deployment-service); start after slot 5 finishes Cluster F + Phase 0 green | 🟡 AWAITING (B-011 pre-assigned; stand by) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/2` |
-| 3 | **B-010** — Phase 8.A archetype validation coverage (strategy-service carry+arb branches, 90% target) | 🟡 AWAITING (direction given after DONE @11:25) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/3` |
+| 2 | **B-011** — Phase 8.A VM deploy scripts coverage (deployment-service); GREEN LIGHT @12:08 (Phase 0 effectively green per operator @12:04) | 🟡 AWAITING (B-011 green-lit; start NOW) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/2` |
+| 3 | **B-016** — DeFi arbitrage_price_dispersion paper backtest run (B-010 DONE ✅ strategy-service@4ede3b2 93.18% archetype coverage; cross-side prereq check + 30-day paper run + monitor) | 🟡 AWAITING (B-016 dispatched; cross-side pipeline-readiness check first) | `defi_master_2026_05_07.md` § "paper-trade gate" | `tab/hk/3` |
 | 4 | **Phase 0 ml-inference + B-006 follow-on** — ml-inference-service 6f+33e diagnose+fix; then B-006 service startup coverage after Phase 0 green | 🟡 AWAITING (direction given after DONE @11:26) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Cluster D + Phase 8.A | `tab/hk/4` |
 | 5 | **B-009** — Phase 8.A kill switch + circuit breaker coverage (Cluster F + Cluster A/B proactive DONE ✅; pnl-attribution C901 DONE per operator @12:04) | 🟡 AWAITING (B-009 unblocked — start NOW; Phase 0 ml-inference closing under slot 4) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/5` |
 | 6 | **B-012** — Phase 8.A custody + wallet signing coverage (execution-service + UTL; Cluster D+E DONE ✅ @17:10) | 🟢 IN FLIGHT (STARTED @17:47) | `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 8.A | `tab/hk/6` |
@@ -216,6 +216,34 @@ All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
   - Step 5: `bash scripts/quality-gates.sh` green. Commit + push. Flip plan Phase 8.A "VM deploy scripts" checkbox.
 - **Done-def**: shellcheck clean; unit tests covering singleton-lock + zombie-watchdog registration + tarball-URI; QG green; plan checkbox flipped.
 - **Key rule**: VM naming — first segment must be a prefix in `VM_PREFIX_TO_BUCKET`. If any new VM prefixes are discovered that are NOT registered → file issue doc immediately (silent zombie-watchdog blindspot = silent money burn).
+
+### Slot 3 — B-016: DeFi arbitrage_price_dispersion paper backtest run (Sonnet 4.6 / thinking: medium)
+
+> ✅ **Previous task DONE**: B-010 (Phase 8.A archetype validation coverage — strategy-service@4ede3b2 — 38 new tests; archetype coverage 88.37% → 93.18%; basis_dated 59%→100%, staked_basis 82%→99%; QG green; plan checkbox flipped @PM@4f4df625).
+
+- **Owned repos**: `strategy-service` + `execution-service` + `e2e-testing` + `unified-trading-pm`
+- **Task — 3-phase, MIRRORS B-015 pattern for the second archetype**: (1) cross-side prereq check; (2) launch paper backtest; (3) 30-day monitor + verify.
+- **PARALLEL with slot 9 B-015**: same pipeline, different archetype. Coordinate launch timing with slot 9 — if slot 9's Phase 1 prereq check files a cross-side ping first, you can ride on Ikenna's response for shared prereqs (start_date, hedge venue list); only need separate confirm on bankroll-per-archetype.
+
+  **Phase 1 — Cross-side prereq check (FIRST, before any launch)**:
+  - Read `plans/active/defi_master_2026_05_07.md` § "paper-trade gate" for context on what "DeFi pipeline green end-to-end" means for `arbitrage_price_dispersion`.
+  - Verify pipeline state on-disk: (a) `instruments-service` DeFi instrument refdata exists for the dispersion-eligible pairs (USDC-margin perps across Binance/Bybit/OKX/Deribit/Kraken/Hyperliquid/Aster); (b) MTDS DeFi market-data parquets exist for last 30 days; (c) `features-service` price-dispersion feature parquets exist; (d) `strategy-service` `arbitrage_price_dispersion` archetype factory resolves cleanly (B-010 verified at 99% coverage on dispersion validation branches); (e) `execution-service` paper-mode adapter responds across ALL 6+ perp venues (not just LST-margin subset).
+  - Check `plans/active/_agent_pings.md` for slot 9's B-015 cross-side ping FIRST: if slot 9 has already filed `harsh-slot-9 → ikenna-main` with start_date + hedge venue confirm, ride on it. Append a sibling ping: `[YYYY-MM-DD HH:MM UTC] harsh-slot-3 → ikenna-main — B-016 pipeline-readiness check: list of (a)-(e) verified green. Riding on slot 9's start_date + hedge venue confirm; need ONLY arbitrage_price_dispersion bankroll cap separately. BLOCKING B-016 launch until confirm.` Otherwise file the full prereq ping (start_date + bankroll + hedge venue list + archetype-specific dispersion threshold config).
+  - Wait for Ikenna ACK before Phase 2.
+
+  **Phase 2 — Launch paper backtest** (after Ikenna ACK):
+  - Launch via `e2e-testing` colocated_engine in paper mode with start_date + bankroll per Ikenna's confirm. Command shape (verify exact CLI per `e2e-testing/scripts/defi/` README): `python scripts/defi/colocated_engine.py --archetype arbitrage_price_dispersion --mode paper --start-date <YYYY-MM-DD> --duration 30d --asset-group defi`.
+  - Tag the run with `correlation_id` for event-stream tracking. Capture VM name + PID for reference. Cross-link with slot 9's B-015 run correlation_id in your STARTED ping.
+
+  **Phase 3 — 30-day monitor + verify**:
+  - Watch event stream at `gs://central-element-323112-events/events/strategy-service/.../*.jsonl` — confirm STARTED + per-day progress events.
+  - Verify per-day: (a) P&L attribution row written; (b) hedge leg fills observed at applicable CeFi perp venues; (c) USDC margin positions tracked across 6+ venues; (d) dispersion thresholds firing as expected per archetype calc; (e) no kill-switch / circuit-breaker events.
+  - At day-30 STOPPED event: pull P&L summary + commit attribution report to `e2e-testing/reports/defi_paper_runs/arbitrage_price_dispersion_<YYYY-MM-DD>.md`. Ping DONE with full SHA list + report path.
+
+- **Done-def**: Phase 1 cross-side ping landed + Ikenna ACK; Phase 2 launch verified via event stream STARTED; Phase 3 30-day STOPPED event + P&L attribution report committed.
+- **NOTE — cross-side gate**: do NOT skip Phase 1. Same rule as B-015 — invalid backtest config = wasted compute. Wait for ACK.
+- **NOTE — parallel with slot 9**: if slot 9 hits a Phase 1 blocker (missing instrument refdata, broken adapter), expect a similar blocker on your side. Coordinate via cross-side ping ledger, not parallel duplicate diagnosis.
+- **Escalation**: if Phase 1 reveals dispersion-specific pipeline gap (e.g., missing per-venue dispersion feature, broken multi-venue execution adapter), file P1 issue doc + ping main.
 
 ### Slot 9 — B-015: DeFi carry_staked_basis paper backtest run (Sonnet 4.6 / thinking: medium)
 
