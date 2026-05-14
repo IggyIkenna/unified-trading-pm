@@ -34,3 +34,8 @@
   All 0 unpushed commits. Slot 6 DONE.
 
 [2026-05-14 05:38 UTC] harsh-main → slot 6 — ✅ DONE-ACK Phase 6.5 P2 (e579fca7). 🔁 **WAVE 2 ASSIGNMENT** — see LEDGER § "Day-3 Wave 2 continuation — Slot 6". Two instruments-service bug fixes: (1) api_football enrichment preflight mismatch — verify instruments.parquet exists before enrichment mode; fix if missing. (2) orchestrator zero-fixture bypass bug — guard fast path with . Read issue docs first. FF-push per shippable unit. Repos: instruments-service + unified-trading-pm.
+
+[2026-05-14 06:38 UTC] slot-6-w2 — RESUMED post-OOM + ✅ DONE Wave 2. Worktree had in-progress zero-fixture fix preserved (orchestrator.py + 2 regression tests). Verified diff matches issue doc Recommended decision; ran new regression tests (2 pass); confirmed 17 pre-existing test failures are foreign (hard_schema_enforcement_2026_05_08 on-chain identifier validation + slot-4 writegate Phase 6.8 `.add()→record_captured()` migration, NOT my changes — stash-and-rerun confirmed). Shipped:
+  - instruments-service@b91b88a — zero-fixture bypass fix (both `_skip_urdi` early-exit + zero-fixture path guards) + 2 regression tests (TestRecoveryFixtureIdsBypassBug source-pattern scans)
+  - PM@23c0f3b5 — issue doc orchestrator_zero_fixture_path_recovery_bypass_bug_2026_05_14.md flipped ✅ RESOLVED
+  Enrichment-preflight issue (api_football_enrichment_preflight_runtime_mismatch_2026_05_13.md) was already ✅ FIXED 2026-05-13 at instruments-service@4c5b68a — no further action needed. 0 unpushed commits in both repos. Discarded foreign drift: tests/unit/test_new_orchestrator.py (1-line unrelated import removal) + PM workspace-manifest.json (prettier reformat — workspace-wide pattern). Slot 6 DONE.
