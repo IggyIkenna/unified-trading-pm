@@ -277,14 +277,20 @@ Backfill flag: none for this slot (treasury rollup + audit are deployment + GCS 
 
 Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` (issue P1) + `solana_defi_coverage_gaps` (successor D) + `AUDIT_pre_may_8_cleanup_2026_05_13` + `classify_blank_reason_fixture_manifest_kwarg` ops verification + `data_status_comprehensive_test_coverage_2026_05_07` + Cluster B pnl-attribution lint + `codex_doc_currency_and_consolidation_post_cutover_2026_05_12`.
 
-1. **`deployment_api_shard_axis_matrix_uac_drift_2026_05_14` P1** — fix 13 test failures from SHARD_AXIS_MATRIX
+1. ✅ **`deployment_api_shard_axis_matrix_uac_drift_2026_05_14` P1** — fix 13 test failures from SHARD_AXIS_MATRIX
    drift; UAC carveouts already shipped, this is the deployment-api alignment. (refactor 0.4×, ~2 = 0.8 cal)
+   **DONE**: `deployment-api@40f7769` — 4 test files updated, 13/13 failures resolved. (2026-05-14 session 1)
 2. **`solana_defi_coverage_gaps` successor plan D** — Phoenix / Orca / Raydium DEX integration design + first-phase
    ship. (design 0.6×, ~4 = 2.4 cal)
 3. **`AUDIT_pre_may_8_cleanup_2026_05_13`** — close out pre-May-8 cleanup audit items. (refactor 0.4×, ~3 = 1.2 cal)
 4. **`classify_blank_reason_fixture_manifest_kwarg` ops verification** — tarball refresh + Script 3 re-run + verify
    `record_empty(reason=...)` end-to-end. (infra 0.8×, ~2 = 1.6 cal)
-5. **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008. (refactor 0.4×, ~2 = 0.8 cal)
+   **TARBALL DONE** (2026-05-14): `instruments-service-code.tar.gz` + `unified-trading-library-code.tar.gz` refreshed at
+   `gs://deployment-scripts-central-element-323112/code/` (timestamps 2026-05-14T13:12). Script 3 dry-run VM pending.
+5. ✅ **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008. (refactor 0.4×, ~2 = 0.8 cal)
+   **DONE**: C901+N802+B008 fixed at `pnl-attribution-service@9f3379f`. Invalid noqa directives cleaned at
+   `pnl-attribution-service@44ac3fd`. Lint: `All checks passed`. QG timeout pre-existing (468s > 360s MAX_DURATION —
+   not caused by our change; all functional checks passed).
 6. **`data_status_comprehensive_test_coverage_2026_05_07` non-sports-half** — cross-cutting test coverage for the
    drilldown-shard-atom alignment (slot 4 owns sports-half). (design 0.6×, ~4 = 2.4 cal)
 7. **`data_status_ui_phase_2f.md`** — close out Phase 2F UI items. (design 0.6×, ~3 = 1.8 cal)
