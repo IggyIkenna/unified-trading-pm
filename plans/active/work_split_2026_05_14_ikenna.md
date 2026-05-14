@@ -60,10 +60,12 @@ pulls in-stack reserve when each item closes.
 | 7    | Treasury rollup endpoint + Phase 3 audit + DART manual-trade     | ~25         |
 | 8    | SHARD_AXIS_MATRIX drift + audit cleanup + ops verification       | ~25         |
 | 9    | Mechanical (Cluster A sed) + governance + cron/ratchet sweep     | ~27         |
+| 10   | **[EMERGENCY]** writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit     | ~4          |
 | **Subtotal** | (8 implementer slots, baseline)                          | **~200**    |
 | **+ V2 ext** | (see § "V2 extension — +72 cal AI-days" below)          | **+72**     |
-| **+ Orphans**| (6 items absorbed from 11+12 May splits + MTDS issue)    | **+12**     |
-| **Total**    | (8 implementer slots, baseline + v2 + orphans)           | **~284**    |
+| **+ Orphans**| (6 items absorbed from 11+12 May splits + MTDS issue +   |             |
+|              |  batch_live_symmetry banners + slot 10 Phase 6.3)        | **+16**     |
+| **Total**    | (8 implementer slots + emergency slot 10)                | **~288**    |
 
 ---
 
@@ -275,14 +277,20 @@ Backfill flag: none for this slot (treasury rollup + audit are deployment + GCS 
 
 Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` (issue P1) + `solana_defi_coverage_gaps` (successor D) + `AUDIT_pre_may_8_cleanup_2026_05_13` + `classify_blank_reason_fixture_manifest_kwarg` ops verification + `data_status_comprehensive_test_coverage_2026_05_07` + Cluster B pnl-attribution lint + `codex_doc_currency_and_consolidation_post_cutover_2026_05_12`.
 
-1. **`deployment_api_shard_axis_matrix_uac_drift_2026_05_14` P1** — fix 13 test failures from SHARD_AXIS_MATRIX
+1. ✅ **`deployment_api_shard_axis_matrix_uac_drift_2026_05_14` P1** — fix 13 test failures from SHARD_AXIS_MATRIX
    drift; UAC carveouts already shipped, this is the deployment-api alignment. (refactor 0.4×, ~2 = 0.8 cal)
+   **DONE**: `deployment-api@40f7769` — 4 test files updated, 13/13 failures resolved. (2026-05-14 session 1)
 2. **`solana_defi_coverage_gaps` successor plan D** — Phoenix / Orca / Raydium DEX integration design + first-phase
    ship. (design 0.6×, ~4 = 2.4 cal)
 3. **`AUDIT_pre_may_8_cleanup_2026_05_13`** — close out pre-May-8 cleanup audit items. (refactor 0.4×, ~3 = 1.2 cal)
 4. **`classify_blank_reason_fixture_manifest_kwarg` ops verification** — tarball refresh + Script 3 re-run + verify
    `record_empty(reason=...)` end-to-end. (infra 0.8×, ~2 = 1.6 cal)
-5. **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008. (refactor 0.4×, ~2 = 0.8 cal)
+   **TARBALL DONE** (2026-05-14): `instruments-service-code.tar.gz` + `unified-trading-library-code.tar.gz` refreshed at
+   `gs://deployment-scripts-central-element-323112/code/` (timestamps 2026-05-14T13:12). Script 3 dry-run VM pending.
+5. ✅ **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008. (refactor 0.4×, ~2 = 0.8 cal)
+   **DONE**: C901+N802+B008 fixed at `pnl-attribution-service@9f3379f`. Invalid noqa directives cleaned at
+   `pnl-attribution-service@44ac3fd`. Lint: `All checks passed`. QG timeout pre-existing (468s > 360s MAX_DURATION —
+   not caused by our change; all functional checks passed).
 6. **`data_status_comprehensive_test_coverage_2026_05_07` non-sports-half** — cross-cutting test coverage for the
    drilldown-shard-atom alignment (slot 4 owns sports-half). (design 0.6×, ~4 = 2.4 cal)
 7. **`data_status_ui_phase_2f.md`** — close out Phase 2F UI items. (design 0.6×, ~3 = 1.8 cal)
@@ -294,7 +302,13 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
     matrix. (research 1.2×, ~3 = 3.6 cal)
 11. **`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`** — close out canonicalisation items.
     (design 0.6×, ~3 = 1.8 cal)
-12. **Reserve**: in-stack pickup for any UAC drift surfaced from item 1's deployment-api alignment.
+12. **[ORPHAN-2026-05-14] `batch_live_symmetry_tab2_be_aware_banners_not_landed_2026_05_14` (P0)** — Tab 2
+    DONE condition requires BE-AWARE banner landed on 4 downstream plans (`gcs_migration_bundle_pipeline_mode`,
+    `manifest_schema_final_gate`, `live_pipeline_mtds_mdps_features`, `defi_master`). Slot 5 (Harsh) shipped the
+    code but skipped the banner step. Slot 8 is the pair-slot for batch_live_symmetry Tab 2 on Ikenna side; add
+    the BE-AWARE banner text per issue doc body, then flip `batch_live_symmetry_2026_05_10:117` to `[x]`.
+    (refactor 0.4×, ~1 = 0.4 cal)
+13. **Reserve**: in-stack pickup for any UAC drift surfaced from item 1's deployment-api alignment.
 
 Backfill flag: item 4 (classify_blank_reason ops verification) — single-day re-run only, AUTHORIZED.
 
@@ -335,6 +349,42 @@ Plan-of-record fan-out: Phase 0 Cluster A `×→x sed + import-pattern fix` + `s
 
 Backfill flag: item 3 (cron VM scheduling) — defines the cron, doesn't trigger a backfill on launch. Production cron
 runs are themselves bounded jobs, not backfills.
+
+---
+
+### Slot 10 — EMERGENCY: writegate Phase 6.6 + 6.7 + 6.9 α-vs-β scope audit (Gate 4 close) — ~4 cal AI-days
+
+**Source**: 2026-05-13 11:30 UTC cross-side ping flagged Phase 6.3 as orphaned. **Already resolved on 2026-05-14**:
+Phase 6.3 auto-shipped at features-service@d7514a08 (per `_agent_pings.md` line 42 ack). The remaining open question
+is **6.6 + 6.7 + 6.9 — status "unknown"** per Harsh slot 3's 2026-05-13 audit. Operator decision 2026-05-14:
+**Option (B) — Ikenna spawns emergency slot tab**. Slot 10 is a new spawn beyond the standard 9.
+
+**Plan-of-record**: [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md)
+Phase 6.6 (ml-training + ml-inference) + Phase 6.7 (strategy + execution + position + risk) + Phase 6.9 (workspace QG
+flip-sweep + instruments-service catalog).
+
+**α-vs-β scope clarifier (READ FIRST)**: Harsh slot 3's audit found ZERO `record_captured` callsites in 9 target
+services. The original framing assumed α (build-emission-semantics-from-scratch). The likely correct framing is **β**
+— those services' outputs are signals / fills / state / reference data (NOT parquet rows) and genuinely don't need
+honest-coverage manifest emission. Slot 10 task #1 is to CONFIRM α vs β per service.
+
+1. **β-confirmation audit, batch 1** — read `__main__.py` + output paths for `ml-training` + `ml-inference` (Phase
+   6.6 scope). Identify if any parquet writes exist; cross-ref against `_resolve_policy_output_data_type` consumers.
+   (research 1.2×, ~1 = 1.2 cal)
+2. **β-confirmation audit, batch 2** — same for `strategy` + `execution` + `position-balance-monitor` + `risk` (Phase
+   6.7 scope). (research 1.2×, ~1.5 = 1.8 cal)
+3. **β-confirmation audit, batch 3** — same for `instruments-service` catalog publish path (Phase 6.9 scope).
+   (research 1.2×, ~0.5 = 0.6 cal)
+4. **Write scope-reframe decision artifact** — `plans/active/issues/writegate_phase_6_6_7_9_alpha_vs_beta_decision_2026_05_14.md`
+   with per-service α-or-β verdict + evidence. If β: flip Phase 6.6/6.7/6.9 closed-with-β-note; if α: file successor
+   plan with minimum migration scope. (design 0.6×, ~1 = 0.6 cal)
+5. **Master plan Gate 4 row update** — flip closed (β path) or deferred-with-successor (α path) per outcome. Cross-ping
+   Harsh slot 6 + Ikenna slot 1 with verdict. (refactor 0.4×, ~0.5 = 0.2 cal)
+
+Total: ~4.4 cal AI-days. Single-shippable-unit closure of Gate 4 framing.
+
+**Cross-side handshake**: cross-ping Harsh slot 6 + harsh-main when slot 10 boots — they own freeze-gate close-out
+today and need the verdict to compute their Phase 1 close.
 
 ---
 

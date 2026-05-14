@@ -96,7 +96,8 @@ Cloud-KMS available; Copper path is June-15+ scope.
       `tests/internal/unit/test_withdrawal_approval_signature.py` (unified-api-contracts@0fa2b59)
 - [x] [SCRIPT] P0. 1.2 — `execution_service/custody/withdrawal_signing.py`: `sign_withdrawal_approval()` via
       Secret Manager lazy-cached HMAC key; GCP + AWS paths; `_injected_key` test seam
-      (execution-service@b4fb55f)
+      (execution-service@b4fb55f); 5 unit tests via `_injected_key` seam (no Secret Manager calls)
+      in `tests/unit/custody/test_withdrawal_signing.py` (execution-service@98ecfdf)
 - [x] [SCRIPT] P0. 1.3 — `deployment_api/routes/client_treasury.py`:
       `POST /clients/{client_id}/withdrawal/{withdrawal_id}/approve` real HMAC chain endpoint +
       `WithdrawalApproveRequest`/`WithdrawalApproveResponse` models + `_WITHDRAWAL_CHAINS` in-memory store;
