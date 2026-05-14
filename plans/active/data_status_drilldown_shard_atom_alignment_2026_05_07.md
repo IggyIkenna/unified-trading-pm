@@ -265,11 +265,19 @@ on whatever flags exist today as a degenerate case).
 
 ### Phase 0 — Audit (sequential, no QG gate)
 
-- [ ] [audit] P0. Confirm the codex shard-atom matrix is current. Cross-check against `CLAUDE.md` "Per-asset-group
+- [x] [audit] P0. Confirm the codex shard-atom matrix is current. Cross-check against `CLAUDE.md` "Per-asset-group
       shard-key matrix" + the writer contracts in `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`. If any
       drift, raise to user — do NOT silently proceed.
+      (2026-05-14 audit — no new drift found. UAC `SHARD_AXIS_MATRIX` in `registry/data_status_axis_matrix.py` matches
+      the plan's per-asset-group shard-key table exactly. `canonical_question_group` as shard axis for prediction is
+      already the documented known-temp state with named successor `predictions_master_2026_05_07.md`. `instrument_type`
+      promoted to shard axis for MTDS/MDPS CeFi+TradFi per Phase 6 operator finding. DeFi uses `instrument_id` (not
+      `protocol_id`) per Phase 6 fix at UAC@600bd21. All 5 asset-group axis orders align with the codex drilldown
+      navigation flow documented in the matrix comments.)
 - [ ] [audit] P0. Read 5 sample on-disk parquets (one per asset_group) + confirm the canonical path matches the shard
       atom. Reference paths in `codex/02-data/per-asset-group-bucket-layouts.md`.
+      **DEFERRED-PER-USER**: requires GCS access to read sample parquets. Operator-doable smoke; not blocking current
+      Phase 1-7 work. Successor: operator manual verification or a future infra smoke harness.
 
 ### Phase 1 — deployment-api hierarchical drill-down endpoint
 
@@ -304,7 +312,9 @@ on whatever flags exist today as a degenerate case).
 - [ ] [deployment-api] P0. Adjust `download-csv` / `download-shard-csv` to accept the full leaf row_key (currently
       hard-stops at venue, day). Resolve the row_key to the canonical parquet path via UAC SSOT
       (per-asset-group-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already
-      accept partial keys; Phase 3 wire-in is the SmartDownloadButton consumer change.
+      accept partial keys (`instrument_type`, `data_type`, `chain`, `league_id`, `job_id`); Phase 3 wire-in is the
+      SmartDownloadButton consumer change. 2026-05-14 audit: `download_csv` at routes/data_status.py:1328 already
+      accepts all leaf axes as query params; no server-side change needed until Phase 3 UI wiring.
 - [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). Unit tests: 13/13 pass in `test_data_status_hierarchical.py`
       covering top-level axis routing for MTDS DEFI, filter-descent into subtree, capture-status splits, window
       clipping, empty manifest, uncovered asset_group fallback, supported-pairs enumeration.
@@ -334,9 +344,9 @@ on whatever flags exist today as a degenerate case).
       `row_key` (date / venue / data_type / instrument_type / chain / league_id). Capture-status banner already in place
       from the multi-axis plan Phase 3; no change to that surface.
 - [ ] [deployment-ui] P0. Visual smoke: walk every (service, asset_group) pair the SSOT declares; confirm the drill-down
-      depth matches the shard atom. Empty-state placeholders where writers haven't shipped. **DEFERRED** to a follow-up
-      Playwright walk; the local stack now renders the hierarchy at <http://localhost:5183/> so a manual smoke is
-      operator-doable today.
+      depth matches the shard atom. Empty-state placeholders where writers haven't shipped. **DEFERRED-PER-USER**: the
+      local stack now renders the hierarchy at <http://localhost:5183/> so a manual smoke is operator-doable today
+      (`bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`). Successor: Phase 6 Playwright walk.
 
 ### Phase 3 — Per-shard download + missing surfacing
 
@@ -400,7 +410,11 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
       convention section: pipe-delimited 6-field format, example invocations across CeFi spot / TradFi options bundle /
       DeFi protocol shard, per-service `decompose_shard_key()` adoption pattern.
 - [ ] [unified-trading-pm] P2. Plan flips to closeout once Phase 3 ships + cross-service QG passes on the affected
-      repos.
+      repos. **DEFERRED**: remaining open items are Phase 3 (SmartDownloadButton row_key wire-in), Phase 6 Playwright
+      smoke, `canonical_question_group` shard axis (→ `predictions_master_2026_05_07.md`), cross-registry consistency
+      test (→ defers until predictions Plan A), and rollup-side metric inconsistency (→
+      `infrastructure_master_2026_05_07.md`). Phase 0 Phase 2 operator visual smoke is DEFERRED-PER-USER (operator
+      runs `restart-deployment-stack.sh` + manual walk at localhost:5183).
 
 ## Success criteria
 
@@ -422,10 +436,10 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
 | Phase 7 P2 — missing_dates sample label | ✅ DONE (deployment-ui@8ce86fa) | — |
 | Phase 7 P2 — totals_source field | ✅ DONE (deployment-api@b73ce3b + deployment-ui@0529c0a) | — |
 | Codex manifest schema version drift | ✅ DONE (already resolved to v8 pre-session) | — |
-| Phase 0 audit — codex shard-atom matrix verify | `- [ ]` open, never closed | Pre-flight; Phase 1-7 implementation implicitly verified it. Close next touch if no new drift found |
-| Phase 0 audit — 5 sample parquets on-disk | `- [ ]` open, never closed | Operator-doable smoke; not blocking current work |
-| Phase 1 download-csv leaf row_key | `- [ ] **DEFERRED**` to Phase 3 | Phase 3 SmartDownloadButton consumer |
-| Phase 2 visual smoke | `- [ ] **DEFERRED**` | Operator-doable at localhost:5183 |
+| Phase 0 audit — codex shard-atom matrix verify | ✅ DONE 2026-05-14 — no drift found; UAC SHARD_AXIS_MATRIX verified against plan shard-key table | — |
+| Phase 0 audit — 5 sample parquets on-disk | `- [ ] **DEFERRED-PER-USER**` | Operator smoke at GCS; not blocking |
+| Phase 1 download-csv leaf row_key | `- [ ] **DEFERRED**` to Phase 3 | Phase 3 SmartDownloadButton consumer; endpoint already accepts all leaf axes |
+| Phase 2 visual smoke | `- [ ] **DEFERRED-PER-USER**` | Operator-doable at localhost:5183; successor Phase 6 Playwright |
 | Phase 3 /coverage-summary leaf counts | `- [ ] **DEFERRED**` | data-status multi-axis stream |
 | Phase 5 closeout | `- [ ]` pending Phase 3 completion + Playwright smoke | Deferred per above |
 | Phase 6 Playwright smoke | `- [ ] **DEFERRED**` | Operator-doable once stack running |
@@ -531,12 +545,12 @@ cannot reach the truncated tail. **Two related shape problems**:
       **Named successor**: `predictions_master_2026_05_07.md` (predictions Plan A — adds the column + Polymarket
       lifecycle). Until that lands, drilldown silently no-ops at the canonical_question_group level for every prediction
       service. NOT a regression — this is the codified temporary state per CLAUDE.md "Temporary state must have a named
-      successor plan" rule.
+      successor plan" rule. **DEFERRED** to `predictions_master_2026_05_07.md` predictions Plan A.
 
 - [ ] [UAC + UTL] P2. **Add cross-registry consistency test:** assert every shard axis in `SHARD_AXIS_MATRIX` exists in
       UTL `_ROW_KEY_COLUMNS` (or is on a documented allowlist of v8-pending-columns like `canonical_question_group`).
-      Would have caught both `protocol_id` + `canonical_question_group` at QG time. Defers until predictions Plan A
-      lands so the allowlist isn't mostly-empty.
+      Would have caught both `protocol_id` + `canonical_question_group` at QG time. **DEFERRED** until predictions Plan
+      A (`predictions_master_2026_05_07.md`) lands so the allowlist isn't mostly-empty.
 
 - [x] [codex] P2. **Manifest schema version doc drift.** `availability-manifest-and-data-status.md` § "Schema v6
       (current)" cites `MANIFEST_SCHEMA_VERSION = 6`. UTL ships v7 today (added `fixture_id`, `job_id` per the
