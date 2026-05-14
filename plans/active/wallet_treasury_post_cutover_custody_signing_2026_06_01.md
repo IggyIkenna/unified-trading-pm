@@ -88,6 +88,25 @@ approval, Cloud-KMS-only signing). This plan executes the real integrations post
 **Dependency**: Copper signing surface (operator-provisioned post-cutover; Cloud-KMS pre-Copper). This plan assumes
 Cloud-KMS available; Copper path is June-15+ scope.
 
+#### Phase 1 Implementation Todos
+
+- [x] [SCRIPT] P0. 1.1 — UAC `WithdrawalApprovalSignature` (frozen dataclass, HMAC-SHA256 `create()`/`verify()`) +
+      `WithdrawalApprovalChain` (mutable, N-of-M quorum) in
+      `unified_api_contracts/internal/domain/treasury.py` + 9 unit tests in
+      `tests/internal/unit/test_withdrawal_approval_signature.py` (unified-api-contracts@0fa2b59)
+- [x] [SCRIPT] P0. 1.2 — `execution_service/custody/withdrawal_signing.py`: `sign_withdrawal_approval()` via
+      Secret Manager lazy-cached HMAC key; GCP + AWS paths; `_injected_key` test seam
+      (execution-service@b4fb55f)
+- [x] [SCRIPT] P0. 1.3 — `deployment_api/routes/client_treasury.py`:
+      `POST /clients/{client_id}/withdrawal/{withdrawal_id}/approve` real HMAC chain endpoint +
+      `WithdrawalApproveRequest`/`WithdrawalApproveResponse` models + `_WITHDRAWAL_CHAINS` in-memory store;
+      integrates `_emit_cloud_audit_log()` from LDR; removes stub `post_client_treasury_withdraw`
+      (deployment-api@4282d6a)
+- [x] [SCRIPT] P0. 1.4 — 10 compliance tests in `tests/unit/test_treasury_compliance.py`: happy path,
+      quorum accumulation, 404/400 validation, PB-1/PB-3 audit-log compliance (deployment-api@4282d6a)
+
+**Phase 1 SHIPPED 2026-05-14 (ikenna slot 6)**.
+
 ---
 
 ### Phase 2: Real Custody Integrations (Q5 Fulfillment)
