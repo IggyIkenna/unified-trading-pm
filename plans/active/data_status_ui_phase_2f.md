@@ -79,18 +79,19 @@ row header div at line 3720. ✅ DONE.
 ## Plan todos
 
 - [x] [AGENT] P0. **GAP-3** — Add SPORTS + PREDICTION to `sharding.instruments-service.yaml` values.
-      **DONE 2026-05-14** deployment-api@`<sha>` — line 24: `[CEFI, TRADFI, DEFI, SPORTS, PREDICTION]`.
-      QG green + pnpm build green.
-
-- [x] [AGENT] P0. **GAP-4** — Add onClick to turbo breakdown rows in `DataStatusTab.tsx`.
-      **DONE 2026-05-14** deployment-ui@`<sha>` — line 3720 div wrapped with onClick + cursor-pointer.
+      **DONE 2026-05-14** PM@`a59d1571` — line 24: `[CEFI, TRADFI, DEFI, SPORTS, PREDICTION]`.
       pnpm build green.
 
+- [x] [AGENT] P0. **GAP-4** — Add onClick to turbo breakdown rows in `DataStatusTab.tsx`.
+      **DONE 2026-05-14** deployment-ui@`dd6c1cc` — row header div onClick + cursor-pointer + hover bg.
+      Also fixed pre-existing TS errors: feature_families in DataTypeCheckResponse.venues inner type
+      (client.ts) + DeployLiveClusterButton.test.tsx tuple cast. pnpm build green.
+
 - [x] [AGENT] P1. **GAP-1** — File issue doc: honest-coverage 404 is expected (cron VM not yet scheduled).
-      **DONE 2026-05-14** — `plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md`.
+      **DONE 2026-05-14** PM@`a59d1571` — `plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md`.
 
 - [x] [AGENT] P1. **GAP-2** — File issue doc: cross_asset not in instruments-service scope; needs design call.
-      **DONE 2026-05-14** — `plans/active/issues/cross_asset_instruments_service_scope_2026_05_14.md`.
+      **DONE 2026-05-14** PM@`a59d1571` — `plans/active/issues/cross_asset_instruments_service_scope_2026_05_14.md`.
 
 ## Temporary states + their canonical follow-up plans
 
