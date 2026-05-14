@@ -1258,3 +1258,35 @@ the 5-yr extension + 7 pulled-forward items.**
 **10-day cutover timeline ack**: timeline doc + 2-track distinction (serial data-pipeline vs parallel code-and-tests) + per-archetype backtest sizing (~19.5 cal-AI-days Tier A = <1 day wall-clock) all acked. 5 action items (epic plan-body refresh for ml_and_features / defi_master / wallet_treasury / dart_ux + deployment_ui / promote_workflow) — slot 1 main absorbs these into next master plan refresh cycle (EOD 2026-05-14).
 
 No Harsh action required. If anything Ikenna-routed needs Harsh-side context-hand-off (e.g., honest-coverage cron VM details, UTL freshness split rationale), ping me with the canonical reference.
+
+---
+
+[2026-05-13 21:30 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — 📋 **Phase 0 QG clean-start + Phase 8 95% surface-coverage + UTL fix landed**. Repushed after rebase chaos.
+
+**UTL fix shipped** at `unified-trading-library@67c532bd`: `EmissionDecision` + `publish_with_policy` + `InvalidCompletenessFractionError` + `publish_with_manifest_lookup` exported from UTL. Prior owner's 26-file pending ruff format WIP finalized in same commit. Unblocks PBM + features-service + ml-inference cascade.
+
+**Plan extended** `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` (9.6 → 20.0 cal-AI-days):
+
+**Phase 0 — Clean-start QG-green sweep** (3.5 cal-days, start NOW):
+- Cluster A (1 slot serial, 0.5d): `×→x` sed across UAC (134 RUF003) + MTDS (2) + client-reporting-api; PM `check-import-patterns.py --fix`
+- Cluster B (7 parallel slots, 3d): C901+N802+B008 lint sweep across exec/risk/pnl/ml-training/dep-api/alerting/client-rep
+- Cluster C ✅ CLOSED at UTL@67c532bd
+- Cluster D (5 parallel slots, 4-6h after C): test failures in instruments (74f) / ml-inference / PBM / strategy / MDPS / features — most cascade-clear once UTL@67c532bd visible
+- Cluster E (2 UI slots, 2h): deployment-ui 21 vitest + UTS-UI tsc
+- Cluster F: deployment-service re-verify with 10min budget
+
+**Phase 8 — 95% targeted surface coverage** (7 cal-days). Per-surface targets NOT per-repo:
+- 100%: service startup, validation logic, deploy-script deps, manifest writer, emission publisher, custody+wallet, kill switch
+- 95%: VM deploy scripts (`launch-*.sh`) — "avoid bad VM starts for dumb reasons"
+- 90%: per-archetype calcs, backtest engines
+- 80%: everything else
+
+7 per-surface sub-agents (surfaces span repos). QG STEP `coverage_targets_enforcement` ratchet starting 2026-05-18.
+
+**Operator decisions flagged** (default = take):
+1. C901 threshold permanent-lower vs mixed-noqa? Default: mixed.
+2. Coverage target table per Phase 8.A — accept defaults or refine?
+
+**TOP ASK**: dispatch Phase 0 Clusters A+B (1+7 slots) NOW; Cluster D after UTL propagates (~10 min); Phase 8.A+8.B targets+sub-agents in next cycle.
+
+No descope. Perfect cutover. 9 days remaining vs ~589 cal-days workspace = still ~3.5x throughput margin.

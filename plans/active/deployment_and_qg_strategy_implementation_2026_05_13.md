@@ -18,12 +18,14 @@ related_codex:
   - codex/05-infrastructure/launcher-script-ssot.md
   - codex/08-workflows/cutover-window-dependency-order.md
 estimate_class: infra
-estimate_baseline_ai_days: 12
-estimate_calibrated_ai_days: 9.6
+estimate_baseline_ai_days: 25
+estimate_calibrated_ai_days: 20.0
 estimate_calibration_note: |
-  Infra class — mix of scripting (audit scripts) + service wiring (deployment-api env-locking) + UI guards
-  (deployment-ui toggle) + ratchet (QG STEPs). 7 distinct work units below averaging ~1.5 baseline-days each.
-  Baseline 12 × 0.8 (infra multiplier) = 9.6 calibrated.
+  Infra class — original 7 work units (env-locking + act pre-flight + tarball pinning + 99%-repo + base-pin +
+  ratchet + coverage), PLUS Phase 0 clean-start QG sweep (+3.5 cal-days post-2026-05-13 QG sweep findings),
+  PLUS Phase 8 targeted 95% coverage push on validation/startup/VM-scripts/deploy-script-deps surfaces
+  (+7 cal-days per operator direction 2026-05-13). Baseline 25 × 0.8 (infra multiplier) = 20 calibrated.
+  Phase 7 (lighter coverage raise) absorbed into Phase 8 (targeted surface coverage).
 ---
 
 # Deployment + QG strategy implementation
@@ -45,6 +47,47 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 - Image base-pin audit script + Artifact Registry retention policy + tarball SHA manifest discipline: NOT shipped.
 
 ## Phased execution
+
+### Phase 0 — Clean-start QG-green sweep (3.5 cal-AI-days, START IMMEDIATELY)
+
+**Per QG sweep 2026-05-13**: zero repos green on LDR. 5 failure clusters.
+
+> **UPDATE 2026-05-13 evening**: Cluster C closed at `unified-trading-library@67c532bd` — `EmissionDecision` + `publish_with_policy` + `InvalidCompletenessFractionError` + `publish_with_manifest_lookup` now exported. Prior owner's 26-file pending ruff format WIP also finalized. Unblocks PBM + features-service + ml-inference cascade.
+
+**Cluster A — Workspace-wide mechanical** (1 slot serial, 0.5 cal-AI-day):
+- [ ] [AGENT] P0. `×→x` sed: UAC (134 RUF003 in `registry/risk_rules/venue.py`), MTDS (2 RUF002 in `tests/unit/test_lst_rates_handler.py:223`), client-reporting-api (1+ in `attribution.py:7`). Single per-repo command.
+- [ ] [AGENT] P0. PM `python check-import-patterns.py --fix`.
+- [ ] [AGENT] P0. Verify untracked `2026-05-11` file in PM root (foreign or trash).
+
+**Cluster B — C901 + N802 + B008 lint sweep** (7 parallel slots, 3 cal-AI-days):
+- [ ] [AGENT] P0. `execution-service`: 2 C901 (`submit_manual_instruction` 12>10, `__init__` 11>10). Both legitimate orchestrators → `# noqa: C901` with rationale.
+- [ ] [AGENT] P0. `risk-and-exposure-service`: 2 C901 (`compute_risk` 20>7 orchestrator → noqa; `_assess_withdrawal_delay_risk` 10>7 → extract-method).
+- [ ] [AGENT] P0. `pnl-attribution-service`: 3 C901 (`_compute_hold_day_pnl`, `compute_pnl`, `aggregate_fills_to_pnl_inputs`). Extract-method aggregator; noqa pipeline-stages.
+- [ ] [AGENT] P0. `ml-training-service`: 6 C901 in `cloud_feature_provider.py`. Mixed extract + noqa.
+- [ ] [AGENT] P0. `deployment-api`: 9 C901 (`_build_leaf_parquet_candidates` 21>10, `_sports_honest_coverage` 22>10 in `services/data_status_drilldown.py` + `data_status_service.py`). Extract-method 3-4; noqa rest.
+- [ ] [AGENT] P0. `alerting-service`: 4 N802 SHOUTY_CASE test names in `tests/unit/notifiers/test_router_*.py`. Rename or `# noqa: N802` if intentionally documenting event-codes.
+- [ ] [AGENT] P0. `client-reporting-api`: B008 Query-as-arg-default in `attribution.py:237+`. Refactor to default-factory.
+
+**Operator decision flagged**: C901 threshold permanent-lower vs mixed-noqa? **Default = mixed** (extract-method genuine, noqa legitimate orchestrators).
+
+**Cluster C** ✅ CLOSED at `unified-trading-library@67c532bd`.
+
+**Cluster D — Test failures** (5 parallel slots, 4-6 cal-AI-hours after Cluster C propagates):
+- [ ] [AGENT] P0. `instruments-service`: 74 failed (`test_new_orchestrator`, `test_sports_fixtures_daily_repoll`). Biggest unknown — diagnose-before-fix.
+- [ ] [AGENT] P0. `ml-inference-service`: 6f + 33e (`test_prediction_publisher_helpers`, `test_emission_policy_per_strategy_signal`). Re-run after UTL@67c532bd propagation.
+- [ ] [AGENT] P0. `position-balance-monitor-service`: ImportError cascade — re-run after UTL.
+- [ ] [AGENT] P0. `strategy-service`: 4f in `test_cdc_strategy_state::TestSignalPublisherEmitsTradeAlertEvent`. Re-run after UTL.
+- [ ] [AGENT] P0. `MDPS`: 2f in `test_canonical_writer_record_helpers`. Near-pass.
+- [ ] [AGENT] P0. `features-service`: 1 import error in `test_volatility_expected_unattempted`. Re-run after UTL.
+
+**Cluster E — UI** (2 parallel slots, 2 cal-AI-hours):
+- [ ] [AGENT] P0. `deployment-ui`: 21 vitest failures across 6 files (start `TreasuryTab.tsx`).
+- [ ] [AGENT] P0. `unified-trading-system-ui`: tsc timeout. First try `rm -rf .tsbuildinfo node_modules/.tmp`; if still slow, real type errors.
+
+**Cluster F — Re-verify** (1 slot):
+- [ ] [AGENT] P0. `deployment-service`: TIMEOUT >5min on prior sweep. Re-run with 10min budget; expected PASS.
+
+**Phase 0 done**: every QG-wired repo runs `bash scripts/quality-gates.sh` to clean exit on `live-defi-rollout`.
 
 ### Phase 1 — Env-locking enforcement on deployment-api + UI (2 cal-AI-days)
 
@@ -105,7 +148,53 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 **Owner**: governance slot (single owner — these touch the QG script registry).
 **Dependencies**: Phase 1 + Phase 3 + Phase 5 shipped.
 
-### Phase 7 — Coverage raise across leaf services (mechanical parallel sub-agents, 0.5 cal-AI-day)
+### Phase 8 — 95% targeted surface coverage push (operator direction 2026-05-13, 7 cal-AI-days)
+
+> **Operator framing**: "test coverage push to 95% to ensure no regression with a targeted focus on validation and startups and any VM deploy scripts dependencies and scripts needing to be fully tested to avoid bad VM starts for dumb reasons on tarballs or images".
+
+Line-coverage % alone is wrong metric. **Target the surfaces that fail cutover.**
+
+**Per-surface target table** (`unified-trading-pm/scripts/quality_gates/coverage_targets.yaml`, NEW):
+
+| Surface | Target | Reasoning |
+|---|---:|---|
+| Service startup (`ServiceBootstrap`, `make_health_router`, `api/main.py`, `cli/main.py`) | **100%** | Bad startup = dead service at cutover |
+| Validation logic (UAC `canonical/`, `internal/`, assertion helpers) | **100%** | Silent data corruption past cutover |
+| **VM deploy scripts** (`deployment-service/scripts/vm/*.sh`, `launcher-*`) | **95%** | Bad launcher = bad VM start "for dumb reasons" |
+| **Deploy-script deps** (UTL `bucket_naming`, `cloud_interface/factory`, env-aware resolvers) | **100%** | Deploy scripts call these |
+| Manifest writer + emission publisher | **100%** | Honest-absence + writegate blast radius |
+| Custody + wallet | **100%** | Live trading on real wallets |
+| Kill switch + circuit breakers | **100%** | Safety-critical |
+| Error classification | **95%** | FAIL/RETRY/SKIP routing |
+| Per-archetype calculators | **90%** | Domain logic |
+| Backtest / strategy engines | **90%** | Architecture-driver |
+| Everything else | **80%** | Reasonable baseline |
+
+**Phase 8.A — Define targets** (1 cal-AI-day):
+- [ ] [AGENT] P0. Author `unified-trading-pm/scripts/quality_gates/coverage_targets.yaml` with table above.
+- [ ] [AGENT] P0. Per-repo `coverage_targets_local.yaml` pinning each repo's surfaces.
+
+**Phase 8.B — Per-surface coverage push** (7 parallel sub-agents, 3.5 cal-AI-days). Surfaces SPAN repos; spawn per surface, not per repo:
+- [ ] [AGENT] P0. Service startup surface (1 sub-agent): every `api/main.py` + `cli/main.py` + ServiceBootstrap path tested for STARTED/STOPPED/FAILED, health-router 200, data_freshness non-None, missing-config fail-loud, bad-CLOUD_PROVIDER fail-loud, ApiKeyReloader populate.
+- [ ] [AGENT] P0. Validation logic surface (1 sub-agent): UAC canonical/ + internal/ schemas + assertion helpers. Cover happy + every validation error.
+- [ ] [AGENT] P0. **VM deploy scripts surface** (1 sub-agent): `bats` tests (or equivalent) for every `deployment-service/scripts/vm/launch-*.sh` covering env-var validation, tarball SHA assertion, singleton-lock, MANIFEST_PER_VM_SHARDS=true assertion, VM_PREFIX_TO_BUCKET registration, failure-path FAILED event emit. **CRITICAL — covers "bad VM starts for dumb reasons"**.
+- [ ] [AGENT] P0. Deploy-script-deps surface (1 sub-agent): UTL `bucket_naming.resolve_bucket_name()`, `cloud_interface/factory.py`, env-aware resolvers. Every (cloud, env, kind, asset_group) cell + failure paths.
+- [ ] [AGENT] P0. Manifest writer + emission publisher (1 sub-agent): UTL `manifest_writer.py` + `emission_publisher.py` — gaps + edge cases (multi-worker shard isolation, ManifestShaDriftError, per-asset-group empty rules).
+- [ ] [AGENT] P0. Custody + wallet (1 sub-agent): execution-service `custody/cloud_kms.py` + UAC `WalletProvisioningConfig` + signing surfaces.
+- [ ] [AGENT] P0. Kill switch + circuit breakers (1 sub-agent): UTL `kill_switch/` + UAC kill-switch event taxonomy. Cover all 3 tiers (wallet/asset_group/firm-wide).
+
+**Phase 8.C — Domain coverage** (parallel slots, 2 cal-AI-days, P1):
+- [ ] [AGENT] P1. Per-archetype calculator coverage to 90% (features-* services).
+- [ ] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes).
+- [ ] [AGENT] P1. Error classification coverage to 95%.
+
+**Phase 8.D — Ratchet** (0.5 cal-AI-day):
+- [ ] [AGENT] P0. New QG STEP `coverage_targets_enforcement` reads coverage_targets.yaml + per-repo local; fails QG if any surface below target. Ratchet starting 2026-05-18.
+
+**Phase 8.E — Daily snapshot** (0.5 cal-AI-day):
+- [ ] [AGENT] P1. Extend `quality_gates_snapshot.sh` (Phase 4) to write per-repo coverage to GCS daily. deployment-ui's `DeploymentReadinessTab` shows red/green per surface.
+
+### Phase 7 — Coverage raise across leaf services (mechanical parallel sub-agents, 0.5 cal-AI-day; absorbed into Phase 8)
 
 - [ ] [AGENT] P1. **Coverage-raise spawn prompt template** at `unified-trading-pm/cursor-configs/coverage-raise-spawn.md` — paste-ready prompt for spawning per-leaf-service sub-agents. Each sub-agent: identifies coverage gaps via `pytest --cov`, writes snapshot tests + per-branch unit tests, raises coverage by ≥5% per service.
 - [ ] [AGENT] P1. **Per-tab worktrees discipline** — coverage spawn prompts MUST cite per-tab-worktree setup (CLAUDE.md `setup-tab-worktrees.sh` infra) to avoid index contention when multiple agents touch same root deps (PM / UAC / deployment-service).
