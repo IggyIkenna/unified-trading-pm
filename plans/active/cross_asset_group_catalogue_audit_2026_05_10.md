@@ -437,7 +437,10 @@ Owner: harsh.
       spot; ES options cluster sub-series; CME event contracts. Derived sets: `ALL_ROOT_SYMBOLS`, `CME_ROOTS`,
       `OPTIONS_ENABLED_ROOTS`, `SUPPORTED_CONVERTER_ROOTS`, `CRYPTO_FUTURE_ROOTS`, `MICRO_ROOTS`,
       `ES_OPTIONS_CLUSTER_ROOTS`, `EVENT_CONTRACT_ROOTS`. ICE US softs (CT/CC/KC/SB/OJ/DX/T) deferred — dataset
-      ambiguity between 2 source files (Phase 6).
+      ambiguity between 2 source files (Phase 6). **✅ DISAMBIGUATED 2026-05-14 (slot 7 Day-3)** — `IFUS.IMPACT` is
+      canonical (see `plans/active/issues/ice_us_softs_dataset_disambiguation_2026_05_14.md`). Code fix pending UAC
+      write (ikenna): (1) add CT/CC/KC/SB/OJ/DX to `tradfi_roots.py` TRADFI_ROOTS; (2) fix CT.FUT CME→ICE +
+      add CC/KC/SB/OJ/DX in `tradfi_instrument_universe.py`.
 - [x] [AGENT] P0. **5C — Cross-asset-group registry index**. New file
       `unified-api-contracts/unified_api_contracts/canonical/asset_group_registry.py` providing:
       `python     def get_canonical_inventory(asset_group: str) -> AssetGroupInventory:         """Return canonical inventory: venues, instruments, data_types, source coverage windows."""     `
@@ -470,17 +473,12 @@ Owner: ikenna for sign-off + harsh for runs.
   - **Phase 1C revised** (UAC@`efd259c`): clean — workspace-grep for `VENUES_BY_ASSET_GROUP["cefi"]` finds 1 legit
     consumer (`instrument_validation.py:63`) which correctly reads the new (smaller) set; no phantom GMX/DRIFT-in-cefi
     references; `DEFI_PERP_VENUES` properly exposed + consumed by `mtds/tests/unit/test_perp_funding_handler.py`.
-  - **Phase 1D TRADER_JOEV2 rename**: **✅ DONE 2026-05-13 (slot 7 Wave 4, Opus 4.7/high)** producer-side migration
-    landed across 7 files in 3 owned repos: UAC@`da3ef9b` (4 files —
-    `capability_declarations/_defi.py:403` venue_prefix + `_defi_coverage.py:15` EMPTY_OR_DEPRECATED set +
-    `instrument_validation.py:47` allow-list + `openapi/ui-reference-data.json:4058` UI venue→protocol key);
-    instruments-service@`dd03a15` (2 files — `factory.py:199`
-    `_SUBGRAPH_VENUE_PREFIX_TO_PROTOCOL` + `orchestrator.py:408` `_SUBGRAPH_PROTOCOL_TO_VENUE_PREFIX`);
-    MTDS@`3cf0f09` (1 file — `_instruments_metadata.py:69` `_PROTOCOL_TO_VENUE_PREFIX`). Producers now emit canonical
-    `TRADER_JOEV2-AVALANCHE` form matching `ALL_DEFI_VENUES`; `LEGACY_DEFI_VENUE_ALIASES["TRADERJOEV2-AVALANCHE"]` kept
-    for on-disk back-compat. **REMAINING DEFERRED**: 4 UI-side `ui-reference-data.json` copies in
-    `unified-trading-system-ui` (not in slot 7 owned-repo scope) — flag for `defi_catalogue_chain_primitives_2026_05_10.md`
-    Phase 1D extension or sports/UI-side slot pickup.
+  - **Phase 1D TRADER_JOEV2 rename**: **✅ FULLY DONE 2026-05-14 (slot 7 Day-3 Wave 1, Sonnet 4.6/high)** —
+    UI-side consumer migration completed: `unified-trading-system-ui@776d172c` renames 4 `TRADERJOEV2-AVALANCHE` →
+    `TRADER_JOEV2-AVALANCHE` JSON keys across 2 files (`context/api-contracts/openapi/ui-reference-data.json` ×2 +
+    `lib/registry/ui-reference-data.json` ×2). Build smoke green (`NEXT_PUBLIC_MOCK_API=true pnpm build` — 0 errors).
+    Full producer+consumer migration now complete: UAC@`da3ef9b` + instruments-service@`dd03a15` + MTDS@`3cf0f09`
+    (producer-side, 2026-05-13) + unified-trading-system-ui@`776d172c` (consumer-side, 2026-05-14).
   - **Phase 1F-extend "22 chains" wording**: `execution-service/.../weth.py:56` says "Supports all 19 chains in the
     system" — now slightly stale (MAINNET_CHAIN_IDS has 21 EVM chains after SCROLL+ZKSYNC additions). WETH_ADDRESSES dict
     may or may not include SCROLL+ZKSYNC yet (couldn't import-load UAC due to current QG-red state in
@@ -609,18 +607,38 @@ Plan archives post-cutover with deferred-work audit per Plan Archival HARD RULE.
 | 1G — UAC QG green | ✅ PARTIAL — named blocker fixed | UAC@`3a04308` (RUF003 in `risk_rules/venue.py`); remaining 132 errors are FOREIGN-plan debt (wallet_treasury / pnl_attribution / defi_catalogue_chain_primitives) |
 | 6A — workspace-grep audit | ✅ DONE | Phase 1B/1C/5A-D clean; Phase 1D producer-side TRADER_JOEV2 hardcoding **✅ SHIPPED 2026-05-13 Wave 4** (UAC@`da3ef9b` + instruments-service@`dd03a15` + MTDS@`3cf0f09`; 4 UI-side `ui-reference-data.json` copies still deferred — `unified-trading-system-ui` repo, not in slot 7 scope); Phase 1F-extend "all 19 chains" wording in `execution-service/weth.py:56` **DEFERRED → defi_catalogue_chain_primitives**; `check_chain_set_inclusion.py` QG ratchet **✅ SHIPPED 2026-05-13 Wave 4** (PM@`fd9aee9e`, STEP 5.72) |
 | 6B — coverage % validation | ✅ DONE | Live manifests via `pd.read_parquet`: cefi=49.48% / defi=19.48% / tradfi=69.71% / sports=99.79% / prediction=86.19%. 5/5 random (ag, venue, data_type) cells self-consistent (status counts sum to total). **FINDING**: 168 empty-venue + 21 UNKNOWN-venue phantom rows in prediction manifest. |
-| 6C — end-to-end smoke | ✅ PARTIAL — script half | `instruments-service/scripts/measure_honest_coverage.py --asset-group all --output-path /tmp/coverage_slot7_20260513.json` ran clean in ~46s; JSON has 3-level rollup. **UI-drilldown half DEFERRED** to data_status_ui_phase_2f.md (needs deployment-stack running). **FINDING**: script line 162 uses deprecated `datetime.utcnow()`. |
+| 6C — end-to-end smoke | ✅ DONE — script + UI smoke | Script: `measure_honest_coverage.py --asset-group all` clean in ~46s (Wave 3). UI-drilldown smoke run 2026-05-14 (slot 7 Day-3): stack up (API 8004 ✅ UI 5183 ✅); Data Status panel loads; all 5 asset groups (CEFI/TRADFI/DEFI/SPORTS/PREDICTION) render in breakdown. **GAP-1**: `GET /api/data-status/honest-coverage` → 404 — endpoint not implemented in deployment-api (data scan returns 0/0). **GAP-2**: `cross_asset` group absent from breakdown and filter buttons. **GAP-3**: SPORTS/PREDICTION absent from Asset Groups filter (only CEFI/TRADFI/DEFI). **GAP-4**: asset group rows NOT interactive (no drilldown from breakdown). All 4 gaps filed to `data_status_ui_phase_2f.md`. **FINDING**: script line 162 uses deprecated `datetime.utcnow()`. |
 | 6D — Phase 1-5 QGs green | ✅ PARTIAL — for this plan's deltas | 4 owned repos all RED but **every blocker is documented foreign-plan debt**: UAC 132 errors (wallet_treasury contracts.py + defi_catalogue chain_env.py); instruments-service+features-service `pytest-timeout` missing (slot 3 Wave 3 brief scope); MTDS 2 errors (1 from defi_catalogue Phase 7J wire-in, 1 legacy B017). Plan's Phase 1A-1F-extend deltas don't introduce new errors. |
 
 **Carry-forward** (deferrals to next slot on this plan):
 
 - ~~`check_chain_set_inclusion.py` QG ratchet~~ — **✅ SHIPPED 2026-05-13 Wave 4** (PM@`fd9aee9e`, STEP 5.72; see DONE-2026-05-13 Wave 4 block below).
-- UI-drilldown half of 6C (needs deployment-stack live).
-- ~~TRADER_JOEV2 producer-side consumer migration~~ — **✅ SHIPPED 2026-05-13 Wave 4** for the 3 owned backend repos (UAC + instruments-service + MTDS; see DONE-2026-05-13 Wave 4 block below). 4 UI-side `ui-reference-data.json` copies in `unified-trading-system-ui` repo remain DEFERRED — fold into `defi_catalogue_chain_primitives_2026_05_10.md` Phase 1D extension or sports/UI-side slot pickup.
+- ~~UI-drilldown half of 6C~~ — **✅ DONE 2026-05-14 Day-3** (slot 7): stack smoke run; UI panel confirmed; 4 deployment-api/UI gaps filed to `data_status_ui_phase_2f.md`.
+- ~~TRADER_JOEV2 producer-side consumer migration~~ — **✅ SHIPPED 2026-05-13 Wave 4** for the 3 owned backend repos (UAC + instruments-service + MTDS; see DONE-2026-05-13 Wave 4 block below). 4 UI-side `ui-reference-data.json` copies → **✅ FULLY SHIPPED 2026-05-14 Day-3** (unified-trading-system-ui@`776d172c`).
 - DF-5 (sDAI protocol-attribution split: `LST_TOKEN_TO_PROTOCOL_ASSET["sDAI"]=("SPARK","DAI")` vs `LST_VENUE_TO_TOKENS["MAKER"]=("sDAI",)`) — DEFERRED per "deeper structural issues" annotation. Audit recommendation: consolidate to MAKER (sDAI is MakerDAO/Sky DSR vault; Spark consumes sDAI as collateral). Blocked on operator/ikenna design call + downstream test update at `tests/unit/test_lst_protocol_asset.py:73` (hard-asserts SPARK).
 
 **Cross-plan callout** (cross-side ping to slot 1 main): foreign-plan QG-debt at HEAD blocking workspace-wide green
 light — see Phase 6.6D entry for the per-plan breakdown.
+
+### DONE-2026-05-14 (Day-3 Wave 1) — slot 7 (harsh-slot-7, Sonnet 4.6) — Phase 1D UI consumer + Phase 6C UI smoke + Phase 5B disambiguation
+
+| Phase / item | Status | Evidence |
+| --- | --- | --- |
+| 1D TRADER_JOEV2 UI consumer (`unified-trading-system-ui`) | ✅ DONE | unified-trading-system-ui@`776d172c` — 4 `TRADERJOEV2-AVALANCHE` → `TRADER_JOEV2-AVALANCHE` renames across 2 JSON files (`context/api-contracts/openapi/ui-reference-data.json` ×2 + `lib/registry/ui-reference-data.json` ×2); `pnpm build` smoke green (0 errors). Full producer+consumer migration complete. |
+| 6C UI-drilldown smoke | ✅ DONE (smoke + gap report) | deployment-stack confirmed up (API 8004 ✅ UI 5183 ✅). Data Status panel renders all 5 asset groups. 4 gaps found: (1) `GET /api/data-status/honest-coverage` 404 (endpoint missing in deployment-api); (2) `cross_asset` group absent from breakdown/filter; (3) SPORTS/PREDICTION absent from filter buttons; (4) asset group rows not interactive. Gaps filed → `data_status_ui_phase_2f.md`. Screenshot: `phase6c-data-status-smoke.png`. |
+| 5B ICE US softs disambiguation | ✅ DISAMBIGUATED (code fix pending UAC write) | `plans/active/issues/ice_us_softs_dataset_disambiguation_2026_05_14.md` — IFUS.IMPACT canonical; Fix 1 (tradfi_roots.py) + Fix 2 (tradfi_instrument_universe.py CT.FUT CME→ICE + add CC/KC/SB/OJ/DX) specified. Severity P2; owner: ikenna. |
+
+**Deferred work after 2026-05-14 Day-3 session** (Half-3 scoreboard):
+
+| Phase / item | Status as of 2026-05-14 | Successor / blocker |
+| --- | --- | --- |
+| 6C deployment-api honest-coverage endpoint (GAP-1) | ❌ 404 — not implemented | `data_status_ui_phase_2f.md` (deployment-api endpoint + UI wiring) |
+| 6C cross_asset group in Data Status UI (GAP-2) | ❌ absent | `data_status_ui_phase_2f.md` Phase 2F cross_asset surfacing |
+| 6C SPORTS/PREDICTION filter buttons (GAP-3) | ❌ missing from filter | `data_status_ui_phase_2f.md` |
+| 6C asset group row drilldown (GAP-4) | ❌ rows not interactive | `data_status_ui_phase_2f.md` |
+| 5B Fix 1 — CT/CC/KC/SB/OJ/DX → tradfi_roots.py | ❌ pending UAC write | ikenna; issue doc filed 2026-05-14 |
+| 5B Fix 2 — CT.FUT CME→ICE + add CC-DX in tradfi_instrument_universe.py | ❌ pending UAC write | ikenna; issue doc filed 2026-05-14 |
+| measure_honest_coverage.py:162 `datetime.utcnow()` | ⚠️ deprecated (non-blocking) | instruments-service next QG sweep |
 
 ### DONE-2026-05-13 (Wave 4) — slot 7 (harsh-cross-asset-phase-1d, Opus 4.7/high) — Phase 1D producer-side migration + Phase 6A QG ratchet
 
@@ -632,8 +650,8 @@ light — see Phase 6.6D entry for the per-plan breakdown.
 **Carry-forward** (from Wave 4 to next slot picking up this plan):
 
 - DF-5 sDAI protocol-attribution split — needs operator/ikenna design call (recommend MAKER per audit; blocked by hard-asserting test).
-- UI-drilldown half of 6C — needs deployment-stack live (operator can run `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh` against running stack).
-- TRADER_JOEV2 producer migration in `unified-trading-system-ui` repo (4 `ui-reference-data.json` copies).
+- ~~UI-drilldown half of 6C~~ — **✅ DONE 2026-05-14 Day-3** (slot 7): 4 deployment-api/UI gaps filed to `data_status_ui_phase_2f.md`.
+- ~~TRADER_JOEV2 producer migration in `unified-trading-system-ui` repo (4 `ui-reference-data.json` copies)~~ — **✅ SHIPPED 2026-05-14 Day-3** (unified-trading-system-ui@`776d172c`).
 - Phase 1F-extend "all 19 chains" stale wording in `execution-service/weth.py:56` — DEFERRED to `defi_catalogue_chain_primitives_2026_05_10.md`.
 
 **Force-push incident notice** (operator triage):
