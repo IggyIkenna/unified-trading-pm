@@ -25,8 +25,8 @@ but 4 gaps remain:
 
 | GAP | Description | Status |
 | --- | --- | --- |
-| GAP-1 | `GET /api/data-status/honest-coverage` → 404 | ⬜ see § analysis |
-| GAP-2 | `cross_asset` absent from breakdown/filter buttons | ⬜ see § analysis |
+| GAP-1 | `GET /api/data-status/honest-coverage` → 404 | ✅ UI graceful 404 shipped (Wave 2) — see below |
+| GAP-2 | `cross_asset` absent from breakdown/filter buttons | ⬜ see § analysis (deferred to cross-service design) |
 | GAP-3 | SPORTS/PREDICTION absent from Asset Groups filter buttons | ✅ DONE — see below |
 | GAP-4 | Asset group breakdown rows not interactive (no drilldown) | ✅ DONE — see below |
 
@@ -40,8 +40,12 @@ mounted at `/api/data-status/honest-coverage`. Returns 404 when no GCS file exis
 EXPECTED — the cron VM (`launch-measure-honest-coverage-vm.sh`) hasn't run yet for today's date in
 dev/staging. The endpoint implementation is complete.
 
-**Resolution**: No code change needed. Issue doc filed for the operational gap (cron VM scheduling).
-See `plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md`.
+**Resolution**: No backend code change needed (endpoint correct as-is). Operational cron VM scheduling
+deferred to issue doc. **Wave 2 follow-up (2026-05-14)**: shipped UI-side graceful handling at
+`deployment-ui@365c32f` — `HonestCoverageCard.tsx` now renders neutral info card "Coverage data not yet
+computed for {date}." (Info icon, muted text) instead of silently unmounting. Closes UI half of
+`plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md`; cron VM scheduling half remains
+operator/Ikenna territory.
 
 ### GAP-2 — cross_asset absent from filter
 
