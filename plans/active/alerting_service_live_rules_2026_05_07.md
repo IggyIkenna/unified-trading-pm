@@ -266,11 +266,19 @@ Every emitter must use `AlertCode` enum, not raw strings. Fail-loud on unknown.
 > AlertCode enum (shipped UAC@`d00326d`); only the producer-side emission wiring is the pull-forward scope. See per-code
 > todo below.
 
-- [ ] [SCRIPT] P0. `risk-and-exposure-service/`: emit `BALANCE_DRIFT`, `MARGIN_THRESHOLD_BREACH`, `CIRCUIT_BREAKER_OPEN`
-      using `AlertCode.X`.
-- [ ] [SCRIPT] P0. `position-balance-monitor-service/`: emit `BALANCE_DRIFT`, `POSITION_DRIFT`.
-- [ ] [SCRIPT] P0. `execution-service/`: emit `KILL_SWITCH_*` from KillSwitchBus + `ORDER_REJECTION_SPIKE` from
-      rejection-tracker.
+- [x] [SCRIPT] P0. `risk-and-exposure-service/`: emit `BALANCE_DRIFT`, `MARGIN_THRESHOLD_BREACH`, `CIRCUIT_BREAKER_OPEN`
+      using `AlertCode.X`. (risk-and-exposure-service@a5aac82 — Slot 6 2026-05-14.
+      MARGIN_THRESHOLD_BREACH+CIRCUIT_BREAKER_OPEN done in prior session. BALANCE_DRIFT: added `_check_balance_drift()`
+      to `RiskMonitor` — sliding per-client equity baseline, fires when `abs(current - previous) > $1000`; emits
+      `log_event("BALANCE_DRIFT", ..., alert_code=AlertCode.BALANCE_DRIFT.value)`. 3 unit tests pass.)
+- [x] [SCRIPT] P0. `position-balance-monitor-service/`: emit `BALANCE_DRIFT`, `POSITION_DRIFT`.
+      (position-balance-monitor-service@d206ab3 — prior session. BALANCE_DRIFT in `fee_reconciliation_engine.py`;
+      POSITION_DRIFT in `reconciliation_engine.py`. Code confirmed present.)
+- [x] [SCRIPT] P0. `execution-service/`: emit `KILL_SWITCH_*` from KillSwitchBus + `ORDER_REJECTION_SPIKE` from
+      rejection-tracker. (execution-service@e78dd1bf9 — Slot 6 2026-05-14. ORDER*REJECTION_SPIKE: new
+      `engine/order_rejection_tracker.py` sliding-window tracker (5min, 10/min threshold), wired from
+      `order_adapter.py`. KILL_SWITCH*\*: `kill_switch.activate()`+`deactivate()` now stamp `alert_code` in details;
+      `kill_switch_bus_bridge` maps scope→AlertCode. 2 new unit tests pass.)
 - [x] [SCRIPT] P0. `features-service (onchain family)/`: emit `DEFI_AAVE_UTILIZATION_SPIKE` (from Aave pool-utilization
       calc), `DEFI_FUNDING_RATE_FLIP` (from perp funding calc), `DEFI_FEATURE_STALE` (from feature-staleness watchdog),
       `DEFI_WEETH_DEPEG` (from LST-peg deviation calc). (features-service@2ecb1378 — Slot 6 2026-05-14. Producer-side
@@ -284,7 +292,7 @@ Every emitter must use `AlertCode` enum, not raw strings. Fail-loud on unknown.
       the 4 DeFi-specific codes, per-calculator wiring breakdown (composes with parent P0 todo above).
       (alerting-service@12411e0 — Slot 8 2026-05-13. Producer-side wired via new `defi_feature_event_handler.py`
       bridging 4 canonical feature event names to the existing check*\* rules in `defi_rules.py`. Rule wiring:
-      `code=AlertCode.DEFI*_` field populated on each check\__ return; `route_defi_alert` prefers `alert.code.value` per
+      `code=AlertCode.DEFI*\_`field populated on each check\__ return;`route_defi_alert`prefers`alert.code.value` per
       producer-migration window 2026-05-08+. Alert-subscriber dispatch table extended to route DeFi feature events. 10
       new unit tests pass alongside existing 34.)
   - [x] `DEFI_AAVE_UTILIZATION_SPIKE` — `check_aave_utilization` returns DefiAlert with
@@ -303,7 +311,8 @@ Every emitter must use `AlertCode` enum, not raw strings. Fail-loud on unknown.
 - [x] [SCRIPT] P0. Each emitter: add unit test asserting alert payload conforms to `DefiAlert` envelope + `AlertCode`
       enum value. (features-service@2ecb1378 — 9 tests in `tests/onchain/unit/test_defi_alert_emission.py`; all pass.
       Covers all 4 pulled-forward emitters with payload-shape assertions per alerting-service consumer contracts.)
-- [ ] [QG] P0. Per-service QG pass on each emitter repo.
+- [x] [QG] P0. Per-service QG pass on each emitter repo. (Slot 6 2026-05-14. risk-and-exposure-service QG ✅ (80.70%
+      coverage); execution-service QG ✅ (23 codex violations within ratchet). All 3 emitter repos green.)
 
 ### Phase 4 — Production paging targets via Secret Manager (1 day)
 
