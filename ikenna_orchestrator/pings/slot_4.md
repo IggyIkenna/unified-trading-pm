@@ -5,6 +5,47 @@ Bidirectional: main → slot 4 and slot 4 → main.
 
 ---
 
+## [slot 4 → main] 2026-05-14 — Session close: Tasks 2 + 12 shipped; deferred scoreboard
+
+**Timestamp**: 2026-05-14 **Status**: ✅ TASKS 2+12 COMPLETE — session close
+
+### Shipped this session
+
+| Task | What | Commits | Status |
+| --- | --- | --- | --- |
+| Task 1 | Sports classifier 3-gap fix (PLAYER_VALUES cadence + SFI/footystats/open_meteo fixture-pin) | uac@f804304, utl@462170c4 | ✅ DONE (prior session) |
+| Task 2 | Parent issue `sports_classifier_extension_followup_2026_05_13.md` RESOLVED + 3 child cross-links | pm@48db1ae0 | ✅ DONE |
+| Task 12 | MTDS prediction venue wiring fix: `smarkets` + `betdaq` added to PLANNED_VENUES | mtds@4c58c5c | ✅ DONE |
+
+### Task 12 root-cause analysis (read-both-sides discipline applied)
+
+- **Test expected**: `betfair`, `smarkets`, `betdaq` all in `PLANNED_VENUES` per `test_remaining_planned_venues`
+- **Code had**: only `betfair` + `glassnode` in `PLANNED_VENUES` — `smarkets` + `betdaq` missing
+- **Diagnosis**: test was the spec; factory was the bug. Both venues are real betting exchanges:
+  - `smarkets`: in UAC `archetype_capability_matrix.py` SPORTS venues frozenset
+  - `betdaq`: known peer exchange to betfair/smarkets; test was written expecting it in PLANNED
+- **Fix**: added `smarkets: "sports"` + `betdaq: "sports"` to `PLANNED_VENUES` in `factory.py`
+- **Verification**: all 9 test assertions now pass; mtds@4c58c5c pushed to live-defi-rollout
+
+### Deferred work scoreboard — 2026-05-14 session
+
+| Item | Status | Successor / Blocker |
+| --- | --- | --- |
+| Task 3 (propagation Phase 3.1-3.N) | ✅ ALL DONE — Harsh slot 2 shipped features-service@4a26ae04 (delta_one + volatility); calendar/onchain/commodity NO-OP; sports@a58480fb | n/a |
+| Task 4 (Phase 4 ML) | ✅ ALL NO-OP — externally-injected instrument lists | n/a |
+| Task 5 (bucket provisioning GCP+AWS 6 buckets) | 🔴 NOT STARTED — manual GCS/S3 provisioning + retention policy; ADC admin authorized | Successor: next slot4 session or standalone manual run |
+| Task 6 (sports/prediction phantom apply-flips VM) | 🔴 NOT STARTED — waiting on bucket provisioning + hold on sports apply-flips per Ikenna direction | Blocker: operator ack on sports apply-flips hold; GCS backfill rule applies |
+| Task 7 (strategy-service Cluster D test failures) | 🔴 NOT STARTED | Successor: next cycle |
+| Task 8 (sports_master coverage audit) | 🔴 NOT STARTED | Successor: next cycle |
+| Task 9 (api_football_minimal_flattening_removal) | 🔴 NOT STARTED | Successor: next cycle |
+| Task 10 (sports_retired_data_types cleanup) | 🟡 PARTIAL — migration VM ran 2026-05-13 (88,779 rows flipped); GCS deletion running; instruments-service code cleanup pending | Successor: instruments-service orchestrator TRANSFERMARKT_LEAGUES/SFI_LEAGUES/SFI_STANDINGS reference removal |
+| Task 11 (data_status test coverage sports-half) | 🔴 NOT STARTED | Successor: next cycle |
+| Phase 5 Pass 3+4 (MDPS + features apply-flips) | 🟡 DEFERRED per plan | Successor: `expected_unattempted_propagation_chain_2026_05_12.md` Phase 5 |
+| Phase 6 (validation gates) | 🔴 ALL OPEN | Successor: after Phase 5 Pass 3+4 |
+| QG verification on MTDS factory.py change | 🟡 IN PROGRESS — `bash scripts/quality-gates.sh` running in background | Auto-completes |
+
+---
+
 ## [slot 4 → main] 2026-05-14 — Task 1 DONE: sports classifier 3-gap fix shipped
 
 **Timestamp**: 2026-05-14 **Status**: ✅ TASK 1 COMPLETE
