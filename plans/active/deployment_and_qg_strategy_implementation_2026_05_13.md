@@ -65,7 +65,7 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 - [ ] [AGENT] P0. `pnl-attribution-service`: 3 C901 (`_compute_hold_day_pnl`, `compute_pnl`, `aggregate_fills_to_pnl_inputs`). Extract-method aggregator; noqa pipeline-stages.
 - [x] [AGENT] P0. `ml-training-service`: 6 C901 in `cloud_feature_provider.py`. Mixed extract + noqa. (ml-training-service@5b60d5f — 5 noqa + 1 extract _generate_sports_targets → _build_legacy/_build_family helpers; lint step clean)
 - [x] [AGENT] P0. `deployment-api`: 9 C901 (`_build_leaf_parquet_candidates` 21>10, `_sports_honest_coverage` 22>10 in `services/data_status_drilldown.py` + `data_status_service.py`). Extract-method 3-4; noqa rest. (deployment-api@3040a1b — all 8 C901/SIM102/E402 violations resolved via per-callsite noqa with rationale; _EMPTY_REASON_KEYS synced with UAC EmptyConfirmedReason +7 values; 4 pre-existing test failures fixed by adding row_keys for cross-asset-rescan + strategy-paper + strategy-live launchers)
-- [ ] [AGENT] P0. `alerting-service`: 4 N802 SHOUTY_CASE test names in `tests/unit/notifiers/test_router_*.py`. Rename or `# noqa: N802` if intentionally documenting event-codes.
+- [x] [AGENT] P0. `alerting-service`: 4 N802 SHOUTY_CASE test names in `tests/unit/notifiers/test_router_*.py`. Rename or `# noqa: N802` if intentionally documenting event-codes. (alerting-service@74761a5 — all 4 SHOUTY_CASE test names renamed to lowercase snake_case; alerting-service@75f0404 — respx dep added, `_is_runtime_alert()` '*' wildcard fix, basedpyright unknown-type fixes in governance_forum_watcher.py; 451 tests pass; 4 pre-existing D.5+D.7 codex violations filed → `plans/active/issues/alerting_service_codex_violations_d5_d7_2026_05_14.md`)
 - [x] [AGENT] P0. `client-reporting-api`: B008 Query-as-arg-default in `attribution.py:237+`. Refactor to default-factory. (client-reporting-api@e936eb4 — Annotated[date|None, Query(...)] pattern; RUF002 × also fixed; SIM105/F401/E402/B017 pre-existing fixes absorbed; lint clean; 358 tests pass)
 
 **Operator decision LOCKED 2026-05-13**: C901 = mixed approach with UAC-registry carveout.
@@ -230,6 +230,7 @@ Line-coverage % alone is wrong metric. **Target the surfaces that fail cutover.*
 | Phase 0 Cluster A — PM untracked 2026-05-11 file | ✅ DONE (already clean, verified) | — |
 | Phase 0 Cluster A — UAC RUF003 × (134 violations in registry/risk_rules/venue.py) | 🟠 OPEN — not done this session | UAC owner slot; sed oneliner sufficient |
 | Phase 0 Cluster A — PM check-import-patterns.py --fix | 🟠 OPEN — not done this session | PM slot |
+| Phase 0 Cluster B — alerting-service N802 | ✅ DONE (alerting-service@74761a5 + @75f0404) | 4 pre-existing codex violations filed → `issues/alerting_service_codex_violations_d5_d7_2026_05_14.md` |
 | 13 pre-existing deployment-api test failures (SHARD_AXIS_MATRIX UAC drift) | Filed issue doc PM@9d25acdd | `plans/active/issues/deployment_api_shard_axis_matrix_uac_drift_2026_05_14.md` — needs UAC SHARD_AXIS_MATRIX audit + deployment-api alignment |
 
 ## Slot allocation suggestion (for Ikenna slot 1 main)
