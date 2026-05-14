@@ -86,7 +86,7 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 
 **Cluster E — UI** (2 parallel slots, 2 cal-AI-hours):
 - [ ] [AGENT] P0. `deployment-ui`: 21 vitest failures across 6 files (start `TreasuryTab.tsx`).
-- [ ] [AGENT] P0. `unified-trading-system-ui`: tsc timeout. First try `rm -rf .tsbuildinfo node_modules/.tmp`; if still slow, real type errors.
+- [x] [AGENT] P0. `unified-trading-system-ui`: tsc timeout. First try `rm -rf .tsbuildinfo node_modules/.tmp`; if still slow, real type errors. (unified-trading-system-ui@0dbf77cf — removed stale .next-3100 includes from tsconfig + fixed mdToRaiseExternalCapital typo; npx tsc --noEmit exits 0)
 
 **Cluster F — Re-verify** (1 slot):
 - [ ] [AGENT] P0. `deployment-service`: TIMEOUT >5min on prior sweep. Re-run with 10min budget; expected PASS.
