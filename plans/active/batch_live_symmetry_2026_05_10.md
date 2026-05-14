@@ -114,9 +114,9 @@ is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complet
 - [x] [AGENT] P0. Land 🟡 IN-FLIGHT REFACTOR banners from Tab 1 onto: `master_to_live_defi_2026_05_23.md` ·
       `live_pipeline_mtds_mdps_features_2026_05_08.md` · `features_repo_consolidation_2026_05_08.md` ·
       `alerting_service_live_rules_2026_05_07.md`. (Pre-audit § 4) (PM@HEAD)
-- [ ] [AGENT] P0. Land BE-AWARE / RE-VERIFY banners from Tab 2 onto: `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
+- [x] [AGENT] P0. Land BE-AWARE / RE-VERIFY banners from Tab 2 onto: `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
       · `manifest_schema_final_gate_2026_05_09.md` · `live_pipeline_mtds_mdps_features_2026_05_08.md` ·
-      `defi_master_2026_05_07.md`.
+      `defi_master_2026_05_07.md`. (PM@harsh-main 2026-05-14)
 - [ ] [AGENT] P0. Land 🔴 BLOCK banners from Tab 3 onto: `available_at_lookahead_bias_completion_2026_05_08.md` ·
       `writegate_honest_coverage_endtoend_2026_05_06.md` · `live_pipeline_mtds_mdps_features_2026_05_08.md` ·
       `features_repo_consolidation_2026_05_08.md` (until workspace QG green).

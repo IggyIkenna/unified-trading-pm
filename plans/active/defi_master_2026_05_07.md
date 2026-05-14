@@ -31,6 +31,11 @@ estimate_calibration_note: |
 
 # DeFi Master — asset_group umbrella
 
+> **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry 2026-05-14** (BE-AWARE)
+> `BatchExecutionMode` enum + `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59.
+> Re-verify any archetype-keyed batch/live routing code before touching pipeline_mode / reconciler
+> threshold / mode-routing logic.
+
 > **🟡 IN-FLIGHT REFACTOR — paper-vs-live workflow maturity (folded into master Group F/G 2026-05-09)**: UAC additive
 > `ExecutionTarget` / `ExecutionTrigger` enums + `decompose()` helper + `paper_target_registry` SSOT + per-chain paper
 > primitive (Tenderly fork EVM; Solana devnet for jitoSOL/mSOL/bSOL legs of `carry_staked_basis`) all compose with this

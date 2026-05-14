@@ -1048,6 +1048,11 @@ estimate_calibration_note: |
 > STEP L7 fix-list includes 3 MDPS callsites (`storage_dispatch_worker.py:49`, `output_writer_service.py:318`,
 > `orchestration_writer.py:388`); Slot 5 produces fix-list (Tab 2), MDPS owner lands fixes.
 
+> **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry Tab 2 2026-05-14** (BE-AWARE)
+> `BatchExecutionMode` enum + `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59.
+> Re-verify any archetype-keyed batch/live routing code before touching pipeline_mode / reconciler
+> threshold / mode-routing logic.
+
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
 > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
