@@ -269,9 +269,9 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 ## Phase 9 — Cutover gate (Day 12, ~0.25 AI-day)
 
 - [x] [AGENT] P0. **9.A Master plan extension.** Group F item 22 row: "Demo client NAV + PnL attribution visible
-      end-to-end." (PM@pending 2026-05-14 — master plan item 22 status updated to reflect Phases 1-7 + 6.B done;
+      end-to-end." (PM@2909787b 2026-05-14 — master plan item 22 status updated to reflect Phases 1-7 + 6.B done;
       Phase 8 VM run still pending)
-- [x] [AGENT] P0. **9.B Banners removed.** (PM@pending 2026-05-14 — client-reporting Phase 1 banner removed from
+- [x] [AGENT] P0. **9.B Banners removed.** (PM@2909787b 2026-05-14 — client-reporting Phase 1 banner removed from
       promote_workflow_may23_cli_path_2026_05_10.md; Phase 1 contracts long-landed, refactor complete)
 
 **Full-execution criterion**: master plan row green; banners gone.
