@@ -354,9 +354,24 @@ You are slot N (Ikenna side). Do this in order, nothing else until done:
 GCS backfill rule: if any item triggers a backfill of ≥1 week of data, STOP and ping operator via slot_N.md before
 launching the VM. Backfills of <1 week for testing / validation / smoke are pre-authorized — go ahead.
 
-Cadence: FF-push per shippable unit (not end-of-session). Half-1 (commit+push) + Half-2 (plan-flip) + Half-3
-(deferred-work scoreboard at session end) per CLAUDE.md. Ship top-down through the slot stack; when an item closes,
-pull from the in-stack reserve before requesting reassignment.
+**Plan-flip cadence (HARD RULE — re-emphasized because this is the #1 source of wasted reallocation)**:
+every time you ship a shippable unit you MUST do BOTH halves in the same logical unit, NOT batched at session end:
+
+  - **Half 1**: commit + PUSH (`git push origin HEAD:live-defi-rollout`). Pushed = real. Local-only ≠ shipped.
+  - **Half 2**: in the plan-of-record named for your item, flip the relevant `- [ ]` → `- [x] (commit-sha + brief
+    evidence)`. Commit the flip with `docs(plans):` prefix. PUSH it. Only AFTER both halves land do you start the
+    next item.
+
+A flipped checkbox is the orchestrator's signal that the item is done — without the flip, the next reallocation
+sweep may re-dispatch the same item to another slot. Every item in your stack above lives in a named plan-of-record;
+find the `- [ ]` line in that plan that matches your item and flip it.
+
+End-of-session: write **Half 3** — `## Deferred work after 2026-05-14 session` table in each touched plan listing
+every item's status (todo / done / blocked / deferred) so the next agent doesn't scan 1000 lines to figure out where
+you left off.
+
+Ship top-down through the slot stack; when an item closes, pull from the in-stack reserve before requesting
+reassignment.
 ```
 
 ---
