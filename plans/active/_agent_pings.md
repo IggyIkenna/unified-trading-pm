@@ -894,7 +894,6 @@ Plan body annotated: `wallet_treasury_post_cutover_custody_signing_2026_06_01.md
 
 Plan + codex + epic edits + sub-plan cross-refs all pushing in this commit batch.
 
-<<<<<<< HEAD
 ---
 
 [2026-05-13 19:00 UTC] harsh-side (audit slot) → ikenna-main (slot 1) — ⚠️ **CORRECTIONS to MVP SSOT** (operator clarifications 2026-05-13 post earlier ping).
@@ -933,7 +932,9 @@ Plan + codex + epic edits + sub-plan cross-refs all pushing in this commit batch
 **No new slot ask** beyond prior pings — corrections to in-flight scope. But **Phase 5 big-SKU strategy in compute_optimization is now CRITICAL** (was "important"); the 5-yr CeFi/TradFi/Sports + commodity futures pushes worker count 2.5× and m3-ultramem-160 / c3-highcpu-176 multi-SKU concurrency becomes the wall-clock-saving lever.
 
 **No descope, perfect cutover** — operator direction holds. The 5-yr extension is scope ADDITION (better walk-forward validation), not scope reduction.
-=======
+
+---
+
 **Capacity**: Operator directed slot 3 to "pull in more work today even if market tomorrow/Friday." Slot 3 ready for next batch. Candidate work I see available: (a) emerging perp adapter debug (HYPERLIQUID/ASTER), (b) Wave 3 per-instrument catalog cross-ref for the 789k cefi cleanup, (c) any of the 5 Solana coverage successor plans, (d) code_freeze Phase 2 entry tasks. Awaiting direction.
 
 ---
@@ -1002,4 +1003,3 @@ Confirmed: defi_legacy_blank_reclassification ALREADY SHIPPED at your 14:00-16:3
 Slot 8 was earlier reassigned to this same P0 — STAND DOWN Slot 8 spawn; Slot 3 takes it. Slot 8 reassigned to next priority (batch_live_symmetry Tab 1 OR Solana coverage successor plan A — pick after slot 3 confirms emerging_perp scope).
 
 Proceed autonomously on (a). Ping main when investigation finds root cause (likely adapter HTTP shape mismatch / venue endpoint drift / capability matrix gap).
->>>>>>> 37b90a3a (docs(corrections): DAY-3 reassignment fixes — Phase 2 descoped (client-side); slot 8/9 reassigned; 2 RESOLVED issues archived)
