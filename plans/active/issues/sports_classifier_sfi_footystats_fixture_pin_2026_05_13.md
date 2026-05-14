@@ -6,7 +6,7 @@ source:
   - expected_unattempted_propagation_chain_2026_05_12
   - sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)
 severity: P1
-status: IN_PROGRESS — slot 4 owns
+status: DONE — slot 4 (2026-05-14)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 routing:
@@ -83,6 +83,17 @@ classifications BEFORE we can flip them.
   (~1.87M), but the proposed-upgrades classification shifts from "SOURCE_RETURNED_ZERO" → mix of
   "EXPECTED_NO_FIXTURE" + "EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE" + "SOURCE_RETURNED_ZERO" (the
   real failures).
+
+## Resolution — 2026-05-14 slot 4
+
+- `uac@435abae` — `EXPECTED_NO_FIXTURE` already in `EmptyConfirmedReason` (pre-existing).
+- `utl@330864f6` — `is_fixture_scheduled(league_id, day)` helper already in `sports_fixtures.py` (pre-existing).
+- `utl@79c72bad` — `_classify_sports` fixture-pin branch: `source in {"soccer_football_info", "footystats", "open_meteo"}`
+  + `not is_fixture_scheduled(league_id, day)` → `EXPECTED_NO_FIXTURE`. 5 fixture-pin tests added
+  (SFI/footystats/open_meteo no-fixture, SFI with fixture falls through, api_football not pinned). 62/62 tests pass.
+
+**NOTE**: The fixture-pin rule also covers `open_meteo` (weather), so `sports_classifier_weather_no_fixture_2026_05_13.md`
+read-side is resolved by the same commit. Weather write-side prevention in instruments-service is deferred.
 
 ## Composes with
 
