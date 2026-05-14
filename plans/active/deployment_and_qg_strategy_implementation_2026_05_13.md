@@ -55,9 +55,9 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 > **UPDATE 2026-05-13 evening**: Cluster C closed at `unified-trading-library@67c532bd` — `EmissionDecision` + `publish_with_policy` + `InvalidCompletenessFractionError` + `publish_with_manifest_lookup` now exported. Prior owner's 26-file pending ruff format WIP also finalized. Unblocks PBM + features-service + ml-inference cascade.
 
 **Cluster A — Workspace-wide mechanical** (1 slot serial, 0.5 cal-AI-day):
-- [ ] [AGENT] P0. `×→x` sed: UAC (134 RUF003 in `registry/risk_rules/venue.py`), MTDS (2 RUF002 in `tests/unit/test_lst_rates_handler.py:223`), client-reporting-api (1+ in `attribution.py:7`). Single per-repo command. **NOTE**: client-reporting-api × fixed at client-reporting-api@e936eb4 (absorbed by slot 7 B008 sweep); UAC + MTDS still open.
+- [ ] [AGENT] P0. `×→x` sed: UAC (134 RUF003 in `registry/risk_rules/venue.py`), client-reporting-api (1+ in `attribution.py:7`). Single per-repo command. **NOTE**: client-reporting-api × fixed at client-reporting-api@e936eb4 (absorbed by slot 7 B008 sweep); MTDS × fixed at market-tick-data-service@189be0a (3 callsites: tardis_adapter.py:2136, yahoo_finance_adapter.py:10, test_lst_rates_handler.py:223); **UAC only remaining open**.
 - [ ] [AGENT] P0. PM `python check-import-patterns.py --fix`.
-- [ ] [AGENT] P0. Verify untracked `2026-05-11` file in PM root (foreign or trash).
+- [x] [AGENT] P0. Verify untracked `2026-05-11` file in PM root (foreign or trash). (PM root has NO untracked files — already cleaned up by prior agent; verified 2026-05-14)
 
 **Cluster B — C901 + N802 + B008 lint sweep** (7 parallel slots, 3 cal-AI-days):
 - [ ] [AGENT] P0. `execution-service`: 2 C901 (`submit_manual_instruction` 12>10, `__init__` 11>10). Both legitimate orchestrators → `# noqa: C901` with rationale.
