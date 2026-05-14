@@ -77,13 +77,16 @@ Two May-23 DeFi archetypes require Solana LST data:
 ## Phase 2 — SANCTUM instruments-service adapter (P0)
 
 - [x] [instruments-service] P0. Read existing Solana LST adapter pattern (e.g., `solblaze.py` or `jito.py`) in
-      instruments-service. Extend the pattern to SANCTUM. (instruments-service@346be5d)
-- [x] [instruments-service] P0. Create `adapters/defi/sanctum.py`: static registry adapter returning INF + JSOL as
-      YIELD_BEARING instruments. Factory wired. (instruments-service@346be5d)
-- [x] [instruments-service] P0. Add unit tests: 7 tests covering happy path + instrument_type filter + get_instrument
-      lookup + unsupported methods. All pass. (instruments-service@346be5d)
-- [x] [instruments-service] P0. Register `SANCTUM-SOLANA` in instruments-service factory.py so MTDS scheduler picks
-      it up. (instruments-service@346be5d)
+      instruments-service. Extend the pattern to SANCTUM.
+      (instruments-service@e149995 — read solblaze.py pattern; adopted _solana_utils.get_protocol_floor_date)
+- [x] [instruments-service] P0. Create `adapters/defi/sanctum.py`: static-registry adapter returning 3 YIELD_BEARING
+      InstrumentRecords for INF + JUPSOL + LAINESOL; gated 2023-06-01 via get_protocol_floor_date("sanctum").
+      (instruments-service@e149995 — sanctum.py created; merge-resolved@f44f0dc)
+- [x] [instruments-service] P0. Add unit tests: 8 tests covering venue prop, 3-token count, INF field validation,
+      type filter, mint lookup, symbol lookup, combined INF lookup + None, NotImplementedError for all market methods.
+      (instruments-service@f44f0dc — test_sanctum_metadata.py)
+- [x] [instruments-service] P0. Register `SANCTUM-SOLANA` in instruments-service venue registry so MTDS scheduler picks
+      it up. (instruments-service@e149995 — factory.py: CANONICAL_VENUE_TO_ADAPTER + _ADAPTERS + ADAPTER_DATA_SOURCES)
 
 **QG gate**: `bash scripts/quality-gates.sh` in instruments-service.
 
