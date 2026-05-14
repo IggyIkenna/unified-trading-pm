@@ -146,9 +146,9 @@ is influenced. **Banner rollout = Tab 0 (operator + Tab 1 owner)**, must complet
       (b) UI mode-context guidance (ExecutionModeContext canonical at
       `unified-trading-system-ui/lib/execution-mode-context.tsx:19-43`); (c) consolidated anti-patterns from CLAUDE.md +
       pipeline-mode-partition.md + replay-subsystem.md.
-- [ ] [AGENT] P0. **UPDATE** `codex/06-coding-standards/quality-gates.md` — STEP entries for L1 (data_type
+- [x] [AGENT] P0. **UPDATE** `codex/06-coding-standards/quality-gates.md` — STEP entries for L1 (data_type
       mode-agnosticism) · L2 (no mode-conditional outside seam) · L3 (RuntimeMode declared once) · L7
-      (`assert_available_at_present` enforcement). Defer L4/L5/L6 entries to post-cutover.
+      (`assert_available_at_present` enforcement). Defer L4/L5/L6 entries to post-cutover. (PM@HEAD)
 - [ ] [AGENT] P1. **UPDATE** `codex/05-infrastructure/replay-subsystem.md` — implementation status (UTL
       `streaming/replay.py:61-200+` shipped) + REPLAY_BACKSTOP_REACHED wiring (Phase 7 deployment + alerting hook
       pending).

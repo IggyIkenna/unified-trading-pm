@@ -124,6 +124,10 @@ Rules (Quick Reference)" / "Service Infrastructure Requirements".
 | 5.67 | banned NaN-placeholder method AST-walk | [STEP 5.67: Banned NaN-Placeholder / Bypass-`record_captured` AST-Walk](#step-567-banned-nan-placeholder--bypass-record_captured-ast-walk) | `scripts/quality_gates/check_banned_placeholder_methods.py` (driver) | "Honest absence vs fake placeholders" + "No double SSOT in data-saving methodology" + "Four-category empty-output decision" |
 | 5.69 | inline `f"gs://…"` / `f"s3://…"` URI ratchet | (no section here — see enforcement file)                                                                                                   | `scripts/quality_gates/check_inline_bucket_uri.py` (driver)          | "Bucket-name SSOT (b+)"                                                                                                     |
 | 5.70 | explicit `pipeline_mode=` at `record_*` calls | [STEP 5.70: Explicit `pipeline_mode=` at every `record_*` call](#step-570-explicit-pipeline_mode-at-every-record_-call-manifest-v8) | `scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (driver) | "Live = batch (CRITICAL)" + "Availability manifest v8 — `pipeline_mode` first-class column"                                 |
+| L1   | data_type enum contains `LIVE_`/`BATCH_` prefixed members | [STEP L1: DataType Mode-Prefix Ban](#step-l1-datatype-mode-prefix-ban-day-1-enable) | `scripts/quality-gates-base/base-service.sh` (pending wire-in) | "Batch = Live: Unified Pipeline Architecture" — unified DataType enum, no per-mode fork |
+| L2   | mode-conditional branches outside seams | [STEP L2: Mode-Conditional-Outside-Seam](#step-l2-mode-conditional-outside-seam-fix-required-21-violations) | `scripts/quality-gates-base/base-service.sh` (pending wire-in) | `mode-axis-discipline.md` AP-1 — business logic must not branch on `RuntimeMode` |
+| L3   | `RuntimeMode` declared outside UAC SSOT | [STEP L3: RuntimeMode Single SSOT](#step-l3-runtimemode-single-ssot-fix-required-2-violations) | `scripts/quality-gates-base/base-service.sh` (pending wire-in) | `mode-axis-discipline.md` AP-3 — SSOT: `unified_api_contracts.internal.modes.RuntimeMode` |
+| L7   | `record_captured()` missing `assert_available_at_present` | [STEP L7: record_captured assert_available_at_present](#step-l7-record_captured-assert_available_at_present-ongoing-sweep) | `scripts/quality-gates-base/base-service.sh` (ongoing ratchet) | "`available_at` is per-row, write-time" — UTL guard internal; L7 catches callsites that bypass |
 
 When a STEP appears in CI output (e.g. `STEP 5.62 FAILED: api/main.py missing make_health_router`), open the enforcement
 file's matching block for the exact assertion + the CLAUDE.md cross-ref for the rationale + the linked anchor here for
@@ -1980,6 +1984,138 @@ This is equivalent to the GitHub Actions `quality-gates.yml` workflow for librar
 3. Set in the CodeBuild project console (not in `buildspec.aws.yaml`): `AWS_ACCOUNT_ID`, and optionally `GH_PAT`,
    `CODEARTIFACT_DOMAIN`.
 4. Verify `CLOUD_PROVIDER=aws` is in `env.variables` so `UnifiedCloudConfig` selects the AWS code path.
+
+---
+
+## STEP entries — batch/live symmetry (L1-L7)
+
+> Full SSOT for the mode-axis cartesian product + anti-patterns: [`mode-axis-discipline.md`](mode-axis-discipline.md).
+> Batch/live invariant: [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md).
+> Pre-audit source: `batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`.
+>
+> Status as of 2026-05-14: L1+L5 enable DAY-1 (0 violations); L2+L3 enable after fix-batch lands (Tab 3, ~21+2
+> violations); L4+L6 post-cutover (Block G1). L7 is an ongoing ratchet sweep.
+
+---
+
+### STEP L1: DataType Mode-Prefix Ban (DAY-1 ENABLE)
+
+**Status**: DAY-1 ENABLE — 0 violations found in pre-audit.
+
+**What it catches**: `DataType` enum members with `LIVE_` or `BATCH_` prefix, e.g.:
+
+```python
+# FORBIDDEN
+class DataType(StrEnum):
+    LIVE_OHLCV_1H = "live_ohlcv_1h"
+    BATCH_OHLCV_1H = "batch_ohlcv_1h"
+```
+
+**Why**: Batch and live share IDENTICAL schemas, data_types, and fields. The only diff is which SOURCE serves a given
+`(asset_group, data_type)`. A per-mode DataType fork creates two diverging schemas — FORBIDDEN per the batch=live
+invariant.
+
+**Fix**: use a single `DataType.OHLCV_1H` member. The source is tracked by `pipeline_mode` column in the manifest (STEP
+5.70), not by the data_type name.
+
+**Enforcement**: `scripts/quality-gates-base/base-service.sh` — AST-walk on UAC DataType enum + consumer service
+enums. Wire-in pending (pre-audit confirmed 0 violations so gate enables at zero ratchet cost on Day-1).
+
+**Composes with**: STEP L5 (unified DataType enum, no per-mode fork) · STEP 5.70 (`pipeline_mode` at `record_*`).
+
+---
+
+### STEP L2: Mode-Conditional-Outside-Seam (FIX-REQUIRED, ~21 violations)
+
+**Status**: FIX-REQUIRED — ~21 violations across service codebase. Enable AFTER fix-batch lands (Tab 3 scope).
+
+**What it catches**: `if runtime_mode == "live":` / `if runtime_mode == RuntimeMode.LIVE:` / `if mode == "batch":`
+branches inside business logic (i.e., outside the 4 seams defined in `batch-live-architecture.md §2`).
+
+```python
+# FORBIDDEN — mode conditional inside business logic
+if runtime_mode == "live":
+    signal = compute_live_signal(tick)
+else:
+    signal = compute_batch_signal(bar)
+```
+
+**The 4 allowed seams** (from `batch-live-architecture.md §2`):
+
+1. Data source seam — `RuntimeMode` branch selects GCS Parquet reader vs Redis Stream subscriber.
+2. Feature seam — `RuntimeMode` branch selects GCS feature Parquet vs embedded UTL `feature_calculator`.
+3. ML inference seam — `RuntimeMode` branch selects GCS prediction Parquet vs Redis/PubSub topic.
+4. Execution fills seam — `BatchExecutionMode` branch (batch); `OperationalMode` branch (live: real vs paper).
+
+**Fix**: move the mode branch to the seam. The function called from the seam receives a canonical `FeatureVector` /
+`FillResult` regardless of which seam produced it — zero mode-conditional in the function body.
+
+**Pre-audit violation count**: ~21 (exact list in `batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`).
+
+**Enforcement**: `scripts/quality-gates-base/base-service.sh` — AST-walk for `If` nodes whose test is a mode-enum
+comparison, excluding the 4 seam files. Wire-in pending Tab 3 fix-batch.
+
+**Composes with**: STEP L3 (RuntimeMode SSOT) · `mode-axis-discipline.md` AP-1 · `batch-live-architecture.md §2`.
+
+---
+
+### STEP L3: RuntimeMode Single SSOT (FIX-REQUIRED, 2 violations)
+
+**Status**: FIX-REQUIRED — 2 violations. Enable AFTER fix-batch lands (Tab 3 scope).
+
+**What it catches**: `RuntimeMode` declared outside the UTL canonical / UAC re-export path:
+
+```typescript
+// FORBIDDEN — UI redeclaration (violation #1)
+type ExecutionMode = "live" | "batch";  // unified-trading-system-ui/context/...
+
+# FORBIDDEN — local UAC re-declaration (violation #2 — should be a re-export, not a redeclaration)
+class RuntimeMode(StrEnum):  # in a non-canonical UAC file
+    ...
+```
+
+**SSOT**: `unified_api_contracts.internal.modes.RuntimeMode`. All consumers import from there. Tab 3 ships:
+- UAC re-exports `RuntimeMode` from UTL canonical (fixing UAC-internal violation).
+- UI imports `RuntimeMode` from UAC schema bundle (fixing UI redeclaration — see `batch-live-architecture.md §12`).
+
+**Enforcement**: `scripts/quality-gates-base/base-service.sh` — `rg 'class RuntimeMode'` across workspace, excluding
+the canonical file. Wire-in pending Tab 3 fix-batch.
+
+**Composes with**: STEP L2 (mode-conditional branches) · `mode-axis-discipline.md` AP-3 · `batch-live-architecture.md
+§12`.
+
+---
+
+### STEP L7: `record_captured()` assert_available_at_present (ongoing sweep)
+
+**Status**: Ongoing ratchet — baseline shrinks per sweep cycle. Violations added to fix-list; ratchet prevents new
+ones.
+
+**What it catches**: `record_captured()` callsites that do NOT pass `assert_available_at_present=True` (or the
+equivalent UTL-internal guard). The UTL `record_captured()` implementation calls `assert_available_at_present`
+internally by default; L7 catches callsites that bypass via keyword arg override or call a raw `ManifestWriter.add()`
+directly.
+
+**Why**: `available_at` is a **per-row, write-time** stamp equal to live-pipeline-arrival. Incorrect stamps introduce
+lookahead bias in backtests (a row appears to have been available earlier than it was) — silent, hard-to-detect
+correctness bug. See CLAUDE.md "`available_at` is per-row, write-time, equal to live-pipeline-arrival".
+
+**Known violations** (pre-audit 2026-05-10):
+- `market-tick-data-service/market_tick_data_service/io/storage_dispatch_worker.py:49`
+- `market-tick-data-service/market_tick_data_service/pipeline/output_writer_service.py:318`
+- `market-tick-data-service/market_tick_data_service/pipeline/orchestration_writer.py:388`
+- `unified-trading-library/unified_trading_library/domain/standardized_service.py:100,299` (UTL internal — verify if
+  bypass is intentional or inadvertent)
+
+**Fix**: pass `assert_available_at_present=True` to `record_captured()`, or ensure the caller sets `available_at` on
+the parquet row before calling. Never set `available_at` at read-time.
+
+**Enforcement**: `scripts/quality-gates-base/base-service.sh` — `rg 'record_captured'` + AST-walk for keyword
+`assert_available_at_present=False` overrides + raw `ManifestWriter.add()` without stamp check. Ongoing ratchet:
+baseline anchored at pre-audit count; new violations fail immediately; existing baseline shrinks as sweep lands.
+
+**Composes with**: STEP 5.67 (banned NaN-placeholder) · STEP 5.70 (`pipeline_mode` explicit) · UAC
+`availability_semantics.AVAILABILITY_AT_SEMANTICS` · writegate plan Phase 3.D.5.
 
 ---
 
