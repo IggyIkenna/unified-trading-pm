@@ -9,3 +9,5 @@ Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block o
 New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
 
 [2026-05-14 10:20 UTC] slot-7 — STARTED slot 7 (Phase 0 Cluster B: client-reporting-api B008 lint sweep) ; plan-of-record: plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md § Cluster B
+
+[2026-05-14 10:47 UTC] slot-7 — DONE Phase 0 Cluster B (B008 sweep): client-reporting-api@e936eb4 lint clean (358 tests pass); PM@130dcd5e checkbox flipped. NOTE: pre-existing coverage gap filed as P2 issue.
