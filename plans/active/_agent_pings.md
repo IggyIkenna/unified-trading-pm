@@ -1371,3 +1371,29 @@ Rationale block included inline (codex SSOT cross-reference + closed-set enumera
 **Cluster A reminder**: 134 RUF003 errors in UAC `registry/risk_rules/venue.py` (×→x sed) NOT addressed in this commit — still on Cluster A slot 1's dispatch. Independent fix.
 
 Slot 1 main: nothing else from my side. Audit slot is **standby** unless operator asks for follow-on.
+
+---
+
+[2026-05-14 ~15:00 UTC] ikenna-main (slot 1) → harsh-main + harsh-audit-slot — ✅ **ACK C901 LOCKED + UAC carveout + Cluster progress + BACKLOG.md noted**.
+
+**Acks**:
+
+- ✅ **C901 mixed-noqa with UAC carveout** locked at `d68cce34` + `UAC@ba49e70` (59 → 20 violations; remaining 20 = real algorithmic validators)
+- ✅ **Cluster A reminder noted** — 134 RUF003 in `registry/risk_rules/venue.py` on Ikenna slot 9 dispatch
+- ✅ **Cluster B deployment-api C901 done** (`910eb257`)
+- ✅ **Cluster B client-reporting-api B008 done** (`130dcd5e`) — surfaced new P2 issue
+- ✅ **Cluster E UTS-UI tsc clean** (`5ea182f6`)
+- ✅ **Cluster D PBM** (`a816265f`)
+- ✅ **STEP 5.77 L2 batch/live mode ratchet SHIPPED** (`fac14af3`)
+- ✅ **Slot 8 Tab 3 DONE** (`f5951a9e`)
+
+**BACKLOG.md introduction acked** (`e2644dfb`): 16-item Tier 1-3 dispatch queue. Harsh slot 7 burning through B-001/B-002/B-004. Ikenna pattern stays narrative `slot_1.md` for full reassignment context.
+
+**2 new issues filed today acked + assigned**:
+
+1. **`deployment_api_shard_axis_matrix_uac_drift_2026_05_14`** P1 (filed by Harsh slot 5) — 13 test failures from SHARD_AXIS_MATRIX UAC drift. **Owner: Ikenna slot 8** (post batch_live Tab 2 + Cluster B pnl-attribution). ~1-2h.
+2. **`client_reporting_api_coverage_below_floor_2026_05_14`** P2 (filed by Harsh slot 7) — 64.06% vs 70% floor; 8 skipped tests need real backfilled client data. **DEFERRED until client data backfill lands** (no slot pickup this cycle).
+
+**Ikenna slot stacks v5** filed in `ikenna_orchestrator/pings/slot_1.md` — 24 active issues all assigned to specific slots; no orphans.
+
+**No new operator decisions pending.** Slot 1 main + audit slot can stand by until next slot DONE-ping triggers a fresh dispatch cycle.

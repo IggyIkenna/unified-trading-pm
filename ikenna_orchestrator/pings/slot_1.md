@@ -1,5 +1,118 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] DAY-3 v5 — Phase 0 progress + 2 new issues assigned + C901 locked — 2026-05-14 ~15:00 UTC
+
+### Progress since v4 push (3fd47835)
+
+✅ **Massive Cluster shipment**:
+- Slot 8 Tab 3 DONE (L2 + STEP 5.77 + L7 — `0f39219c` + `06c6213c` + `f5951a9e`)
+- Cluster B deployment-api C901 done (`910eb257`)
+- Cluster B client-reporting-api B008 done (`130dcd5e`)
+- Cluster E UTS-UI tsc clean (`5ea182f6`)
+- Cluster D PBM checkbox flipped (`a816265f`)
+- STEP 5.77 L2 batch/live mode comparison QG ratchet SHIPPED (`fac14af3`)
+- **C901 LOCKED**: mixed-noqa with UAC carveout encoded in codex SSOT (`d68cce34`); UAC `per-file-ignores` shipped at `UAC@ba49e70` — 59 C901 violations → 20 remaining (real algorithmic validators)
+
+### Harsh-side BACKLOG.md introduced (`e2644dfb`)
+
+`harsh_orchestrator/BACKLOG.md` — 16-item dispatch queue (Tier 1 dispatch-ready / Tier 2 unblocks / Tier 3 cross-side deps). Already dispatched:
+- B-001 (deployment-api tarball-block env-locking) → Harsh slot 7
+- B-002 (deployment-ui env selector lock) → Harsh slot 7
+- B-004 (strategy-service 2 remaining test failures) → Harsh slot 7
+
+**Ikenna pattern**: I'll continue using `ikenna_orchestrator/pings/slot_1.md` for full reassignment narrative; LEDGER stays narrative format. Harsh BACKLOG complements but doesn't replace.
+
+### 2 new issues filed today — assigned
+
+1. **`deployment_api_shard_axis_matrix_uac_drift_2026_05_14`** (P1, cross-repo UAC + deployment-api drift) — 13 test failures from SHARD_AXIS_MATRIX drift. **Owner: Ikenna slot 8** (post batch_live Tab 2 / pnl-attribution lint sweep). UAC carveouts already shipped — this is the deployment-api alignment fix. ~1-2h.
+2. **`client_reporting_api_coverage_below_floor_2026_05_14`** (P2, coverage at 64.06% vs 70% floor) — 8 skipped tests on no-backfilled-client-data. **Owner: ikenna slot 2 OR harsh-side after backfill** (deferred until backfill lands per timeline). Annotation only — no Ikenna pickup this cycle.
+
+### Updated Ikenna slot stacks v5
+
+Each slot picks Phase 0 cluster work + new issues as they ship current items:
+
+#### Slot 1 main (me)
+1. ✅ This v5 reassignment + Phase 0 ack
+2. **`strategy_service_qg_step6_production_readiness_newly_exposed`** triage (decision 3 — me)
+3. **`governance_qg_automation_gaps_post_cutover`** (~3 cal days)
+4. **Phase 6.9 workspace QG flip-sweep** (Gate 4 firing)
+5. **Cluster F deployment-service re-verify** after Phase 0 A+B clusters land
+6. **Master plan refresh** + inventory regenerator (EOD)
+
+#### Slot 2
+1. **`defi_classifier_missing_catalog_crossref` Phase A** — wire IS catalog cross-ref into `_classify_defi` + `_classify_cefi`
+2. **`defi_classifier_missing_catalog_crossref` Phase B** — re-run Script 3, queue re-attempt VMs for genuine failures
+3. **`wave2_polymarket_record_captured_from_counts` Polymarket subset** (~2 cal days, P1)
+4. **`solana_defi_coverage_gaps` successor plan B** (Lido/Marinade/Jito LST)
+5. **Cluster D instruments-service 74f test failures**
+6. **`utl_qg_preexisting_failures_2026_05_14`** P1
+
+#### Slot 3 (Phase 0 Wave 4 STARTED per `6ec4e426`)
+1. **`emerging_perp_venue_adapters_broken` P0** + **`emerging_perp_adapters_diagnosed` P0** — adapter root-cause fixes
+2. **`solana_defi_coverage_gaps` successor plan A**
+3. **`batch_live_symmetry` Tab 1** codex docs (cefi-batch-live.md + mode-axis-discipline.md)
+4. **`helius_solana_rpc_for_validation` P1**
+5. **Cluster D ml-inference test failures**
+
+#### Slot 4
+1. **3 sports classifier gap issues** (sfi_footystats / player_values / weather)
+2. **`sports_classifier_extension_followup`** (parent)
+3. **Propagation chain Phase 3.1-3.N** + Phase 4 + PART C
+4. **`expected_unattempted_propagation_gap` P1**
+5. **6-bucket provisioning** (slot 8 awaiting handoff)
+6. **Sports/prediction phantom apply-flips on VMs**
+7. **Cluster D strategy-service test failures**
+
+#### Slot 5 (boot ack + SHARD_AXIS_MATRIX drift issue filed per `9d25acdd`)
+1. **TradFi Item 2 Phase 3** migration script (GREENLIT)
+2. **TradFi Item 2 Phase 4** consumer cascade (GREENLIT)
+3. **TradFi Item 2 Phase 5** QG ratchet (GREENLIT)
+4. **`solana_defi_coverage_gaps` successor plan C**
+5. **`sports_retired_data_types_code_cleanup`**
+6. **Cluster E deployment-ui vitest** (after TradFi cascade)
+
+#### Slot 6
+1. **wallet_treasury_post_cutover Phase 1** (Real HMAC withdrawal chain)
+2. **`defi_recursive_borrow_archetypes` Solidity `RecursiveLeverageReceiver.sol`** (operator decision 1 PUSH IT)
+3. **4 DeFi-specific alert codes** producer-side + alerting wiring
+4. **Cluster B execution-service C901+N802+B008 lint sweep**
+
+#### Slot 7
+1. **wallet_treasury_post_cutover Phase 3** (Audit log immutability)
+2. **`defi_recursive_borrow_archetypes` execution-service tracer** (operator decision 1)
+3. **Treasury rollup endpoint `/api/treasury/rollup`**
+4. **DART manual-trade UX refactor**
+5. **Cluster B risk-and-exposure-service lint sweep**
+
+#### Slot 8 (Tab 3 DONE per `f5951a9e`, freed)
+1. **`batch_live_symmetry` Tab 2** (operator decision 2 — Ikenna pair-slot with Harsh slot 8 Tab 3 ✅)
+2. **🆕 `deployment_api_shard_axis_matrix_uac_drift_2026_05_14`** P1 — 13 test failures, UAC drift cross-repo
+3. **`solana_defi_coverage_gaps` successor plan D**
+4. **`AUDIT_pre_may_8_cleanup_2026_05_13`**
+5. **`classify_blank_reason_fixture_manifest_kwarg` ops verification** (tarball refresh + Script 3 re-run)
+6. **Cluster B pnl-attribution-service lint sweep**
+
+#### Slot 9 (Cluster A in flight; STARTED Phase 0 Wave 4 per `6ec4e426`)
+1. **Cluster A ×→x sed + import-pattern fix** (mechanical, ~0.5d)
+2. **`solana_defi_coverage_gaps` successor plan E**
+3. **`honest_coverage_cron_vm_scheduling`** (Harsh ping item 2)
+4. **`ice_us_softs_dataset_disambiguation`** P2 (Harsh ping item 3)
+5. **`mtf_intraday_micro_regime_policy`** (2 dict entries)
+6. **`strategy_paper_vm_nautilus_trader_missing_dep`** (add pip dep)
+7. **`cross_asset_instruments_service_scope`** triage
+
+### Updated open issues count
+
+- **Was 22 → now 24** (added shard_axis_matrix_uac_drift + client_reporting_api_coverage_below_floor)
+- **24 issues all assigned to specific Ikenna slot in stack above**
+
+### Updated open questions
+
+**NONE** — all 6 prior + 2 default-take Phase 0/8 decisions locked.
+
+---
+
+
 ## [slot 1 main] DAY-3 v4 — Phase 0 QG clean-start + Phase 8 surface coverage assigned — 2026-05-14 ~14:00 UTC
 
 **Source**: Harsh-side audit slot ping 2026-05-13 21:30 UTC (commit `ab8ca6d9`). New plan `deployment_and_qg_strategy_implementation_2026_05_13.md` extended 9.6 → 20.0 cal-AI-days.
