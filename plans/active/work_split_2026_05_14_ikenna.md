@@ -333,16 +333,19 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
 9. ✅ **`codex_vs_citadel_infrastructure_audit_2026_05_10`** — close out infra audit items. (research 1.2×, ~3 = 3.6
    cal) **OPERATOR-GATED** (no action this session): All agent-executable items done. 2 open items (2.C + 6.B) blocked
    on 3 operator decisions (R-10/R-11/AL-14). Awaiting operator input.
-10. **`defi_simulation_realism_2026_05_10` audit-half** — review + close any items overlapping with our archetype
-    matrix. (research 1.2×, ~3 = 3.6 cal)
-11. **`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`** — close out canonicalisation items. (design 0.6×,
-    ~3 = 1.8 cal)
-12. **[ORPHAN-2026-05-14] `batch_live_symmetry_tab2_be_aware_banners_not_landed_2026_05_14` (P0)** — Tab 2 DONE
-    condition requires BE-AWARE banner landed on 4 downstream plans (`gcs_migration_bundle_pipeline_mode`,
-    `manifest_schema_final_gate`, `live_pipeline_mtds_mdps_features`, `defi_master`). Slot 5 (Harsh) shipped the code
-    but skipped the banner step. Slot 8 is the pair-slot for batch_live_symmetry Tab 2 on Ikenna side; add the BE-AWARE
-    banner text per issue doc body, then flip `batch_live_symmetry_2026_05_10:117` to `[x]`. (refactor 0.4×, ~1 = 0.4
-    cal)
+10. ✅ **`defi_simulation_realism_2026_05_10` audit-half** — review + close any items overlapping with our archetype
+    matrix. (research 1.2×, ~3 = 3.6 cal) **NO OVERLAP FOUND** (2026-05-14 audit): 67 done / 28 remaining. Remaining
+    items are Phases 2-6 (AMM model implementations, lending-rate-impact simulator, governance proposal harness,
+    yield-stream simulators, hedge-ratio adjustment) — separate engineering domain from venue-matrix SSOT corrections in
+    Stream E. No items to close here; plan continues on its own track.
+11. ✅ **`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`** — close out canonicalisation items. (design
+    0.6×, ~3 = 1.8 cal) **STREAM E DONE** (PM@4b4f9b2c): Venue-matrix precision pass on master + defi_master. 3 Stream E
+    checkboxes flipped (2 P0 + 1 P1). Remaining: Streams A (live-API probe), C (11 archetype doc rewrites), D (config
+    schema updates) — these are multi-day codex + UAC work. Deferred to operator task-assignment.
+12. ✅ **[ORPHAN-2026-05-14] `batch_live_symmetry_tab2_be_aware_banners_not_landed_2026_05_14` (P0)** — Tab 2 DONE
+    condition requires BE-AWARE banner landed on 4 downstream plans. (refactor 0.4×, ~1 = 0.4 cal) **ALREADY DONE**
+    (2026-05-14 audit): All 4 plans already have batch_live_symmetry BE-AWARE banners;
+    `batch_live_symmetry_2026_05_10:117` checkbox is already `[x]`. Issue doc was stale. No action needed.
 13. **Reserve**: in-stack pickup for any UAC drift surfaced from item 1's deployment-api alignment.
 
 Backfill flag: item 4 (classify_blank_reason ops verification) — single-day re-run only, AUTHORIZED.
@@ -603,3 +606,19 @@ Ikenna-side.
 
 (None at draft time. Will populate as slot work progresses; route to `_agent_pings.md` if cross-side, or slot_N.md if
 intra-side.)
+
+---
+
+## Deferred work after 2026-05-14 slot-8-session-2 session
+
+| Phase / item                        | Status as of 2026-05-14                                                                       | Successor / blocker                                                             |
+| ----------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Task 4 — ops verification           | ✅ DONE — fixture_manifest kwarg confirmed working; upgraded=0 (correct); apply-flips on HOLD | Await Ikenna direction; manifest_cross_asset_rescan_design_2026_05_08 Q1        |
+| Task 6 Phase 0 audit                | ✅ DONE — 9 checkboxes flipped; sports C.2 deferred                                           | Phases 1-6 still to ship (A.1/A.2/B.1/B.2/D.4/E/F new tests)                    |
+| Task 10 defi_archetypes             | Stream E DONE — venue-matrix precision pass                                                   | Streams A/C/D require multi-day codex+UAC work; operator task-assignment needed |
+| Task 5 pnl-attribution lint         | ✅ DONE — @44ac3fd                                                                            | —                                                                               |
+| Task 3 AUDIT_pre_may_8              | ✅ DONE (all actions pre-resolved)                                                            | —                                                                               |
+| Task 7 data_status_ui_phase_2f      | ✅ DONE by Harsh slot 7                                                                       | —                                                                               |
+| Task 8 codex_doc_currency           | ✅ DONE by earlier slot 8 (PM@640c38d1)                                                       | —                                                                               |
+| Task 9 codex_vs_citadel             | ✅ OPERATOR-GATED — awaiting R-10/R-11/AL-14                                                  | Operator answers needed                                                         |
+| Item 12 batch_live_symmetry banners | ✅ DONE (pre-resolved by other agents)                                                        | —                                                                               |
