@@ -1,5 +1,86 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] DAY-3 v4 — Phase 0 QG clean-start + Phase 8 surface coverage assigned — 2026-05-14 ~14:00 UTC
+
+**Source**: Harsh-side audit slot ping 2026-05-13 21:30 UTC (commit `ab8ca6d9`). New plan `deployment_and_qg_strategy_implementation_2026_05_13.md` extended 9.6 → 20.0 cal-AI-days.
+
+### 2 operator decisions accepted (defaults taken per Harsh framing)
+
+| # | Question | Decision (default) |
+|---|----------|--------------------|
+| 1 | C901 threshold permanent-lower vs mixed-noqa? | **Mixed-noqa** (default; allow per-callsite override where complexity is intrinsic) |
+| 2 | Coverage target table per Phase 8.A — accept defaults or refine? | **Accept defaults** (100% startup/validation/deploy/manifest/emission/custody/wallet/kill-switch; 95% VM launchers; 90% archetype calcs + backtest engines; 80% rest) |
+
+### Phase 0 QG clean-start — cluster-to-slot allocation
+
+**Cluster A** (1 slot serial, ~0.5d) — `×→x` sed across UAC (134 RUF003) + MTDS (2) + client-reporting-api + PM `check-import-patterns.py --fix`. Mechanical:
+- **Ikenna slot 9** (was on small triages; this slots in cleanly)
+
+**Cluster B** (7 parallel slots, ~3d) — C901+N802+B008 lint sweep across exec / risk / pnl / ml-training / dep-api / alerting / client-rep. Per-repo:
+- **Ikenna slot 6** → execution-service (after wallet_treasury Phase 1)
+- **Ikenna slot 7** → risk-and-exposure-service (after wallet_treasury Phase 3)
+- **Ikenna slot 8** → pnl-attribution-service (slots in with batch_live_symmetry Tab 2)
+- **Harsh slot 2** → ml-training-service (Harsh slot 2 done Wave 4; reserve pickup)
+- **Harsh slot 5** → deployment-api (Harsh slot 5 done; reserve pickup)
+- **Harsh slot 6** → alerting-service (Harsh slot 6 done Wave 3; reserve pickup)
+- **Harsh slot 7** → client-reporting-api (Harsh slot 7 done Wave 4 shift-end; reserve pickup)
+
+**Cluster C** ✅ CLOSED at `unified-trading-library@67c532bd` — `EmissionDecision` + `publish_with_policy` + `InvalidCompletenessFractionError` + `publish_with_manifest_lookup` exported. PBM / features / ml-inference cascade unblocked.
+
+**Cluster D** (5 parallel slots, ~4-6h after C propagates) — cascade test failures:
+- **Ikenna slot 2** → instruments-service 74f test failures (slots in after defi_classifier Phase A)
+- **Ikenna slot 3** → ml-inference test failures (after emerging_perp diagnosis)
+- **Ikenna slot 4** → strategy-service test failures (after sports gaps land)
+- **Harsh slot 9** → PBM test failures (Harsh slot 9 in flight; this slots in)
+- **Harsh slot 4** → MDPS + features-service test failures (Harsh slot 4 done Wave 4)
+
+**Cluster E** (2 UI slots, ~2h) — UI test failures:
+- **Ikenna slot 5** → deployment-ui 21 vitest (after TradFi Phase 3-5 cascade ships)
+- **Harsh slot 8** → UTS-UI tsc (Harsh slot 8 in flight on batch_live_symmetry Tab 3; pair-slots)
+
+**Cluster F** (re-verify with 10min budget):
+- **Ikenna slot 1 main (me)** — deployment-service QG re-verify after Phase 0 clusters A+B land; slots in with my existing QG step 6 work
+
+### Phase 8 — 95% surface coverage allocation (next-cycle layer)
+
+7 per-surface sub-agents. Surfaces span repos, NOT per-repo split. Per Harsh framing, this is next-cycle (after Phase 0 lands). I'll draft sub-agent assignments in next slot_1.md update once Phase 0 progress is visible. QG STEP `coverage_targets_enforcement` ratchet starts 2026-05-18.
+
+Coverage targets accepted:
+- **100%**: service startup, validation logic, deploy-script deps, manifest writer, emission publisher, custody+wallet, kill switch
+- **95%**: VM deploy scripts (`launch-*.sh`) — "avoid bad VM starts for dumb reasons"
+- **90%**: per-archetype calcs, backtest engines
+- **80%**: everything else
+
+### Updated Ikenna slot stack v4 (overlay on v3)
+
+Each slot picks Phase 0 cluster work when their current item ships:
+
+- **Slot 1 main** (me): QG step 6 → governance_qg → Phase 6.9 sweep → **Cluster F (deployment-service re-verify)** → master plan refresh
+- **Slot 2**: defi_classifier Phase A → Phase B → wave2_polymarket → Solana plan B → **Cluster D (instruments-service tests)** → utl_qg_preexisting
+- **Slot 3**: emerging_perp P0 → emerging_perp_diagnosed → Solana plan A → batch_live Tab 1 → helius_solana_rpc → **Cluster D (ml-inference tests)**
+- **Slot 4**: 3 sports gaps → propagation chain Phase 3.1-3.N → Phase 4 → PART C → bucket prov → **Cluster D (strategy-service tests)** → sports phantom flips
+- **Slot 5**: TradFi Phase 3 → Phase 4 → Phase 5 → Solana plan C → sports_retired_data_types → **Cluster E (deployment-ui vitest)**
+- **Slot 6**: wallet_treasury Phase 1 → Solidity RecursiveLeverageReceiver → 4 DeFi alerts → **Cluster B (execution-service lint sweep)**
+- **Slot 7**: wallet_treasury Phase 3 → execution-service recursive_borrow tracer → Treasury rollup → DART UX → **Cluster B (risk-and-exposure-service lint sweep)**
+- **Slot 8**: batch_live_symmetry Tab 2 → Solana plan D → AUDIT_pre_may_8_cleanup → classify_blank ops → **Cluster B (pnl-attribution lint sweep)**
+- **Slot 9**: **Cluster A (×→x sed serial)** → Solana plan E → cron VM scheduling → ICE softs → mtf_policy → nautilus dep → cross_asset IS scope
+
+### Harsh-side reserve pickups (4 slots done Wave 4 = Cluster B fan-out)
+
+Per the cluster B allocation above, 4 Harsh slots (2/5/6/7) absorb lint sweep work in parallel. No Harsh ack required to pick up — operator-pre-approved as part of the Phase 0 plan.
+
+### Capacity math (updated)
+
+- Workspace remaining: ~589 cal-AI-days (per Harsh 21:30 UTC ping)
+- Combined idle: 15+ slots
+- Density-push pace: 200 cal AI-days/side/day
+- **~1.5 calendar days to clear backlog** vs **9 days remaining to May-23 cutover** = ~6× safety margin
+
+**No descope. Perfect cutover.**
+
+---
+
+
 ## [slot 1 main] DAY-3 v3 — operator decisions locked + Ikenna takes all BLOCKING work — 2026-05-14 ~13:30 UTC
 
 **Operator context**: Harsh-side stops earlier today than Ikenna. Per operator direction: Ikenna takes all blocking-for-May-23 work; Harsh keeps shippable-today items only. Pace remains ~200 cal AI-days/side/day.

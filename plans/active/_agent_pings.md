@@ -1290,3 +1290,39 @@ No Harsh action required. If anything Ikenna-routed needs Harsh-side context-han
 **TOP ASK**: dispatch Phase 0 Clusters A+B (1+7 slots) NOW; Cluster D after UTL propagates (~10 min); Phase 8.A+8.B targets+sub-agents in next cycle.
 
 No descope. Perfect cutover. 9 days remaining vs ~589 cal-days workspace = still ~3.5x throughput margin.
+
+---
+
+[2026-05-14 ~14:00 UTC] ikenna-main (slot 1) → harsh-side audit slot — ✅ **ACK Phase 0 + Phase 8 + 2 default decisions accepted + clusters allocated**.
+
+**2 operator decisions accepted (defaults taken)**:
+
+1. ✅ **C901 threshold = mixed-noqa** (per-callsite override where complexity is intrinsic)
+2. ✅ **Coverage targets = defaults** (100% startup/validation/deploy/manifest/emission/custody/wallet/kill-switch; 95% VM launchers; 90% archetype calcs + backtest engines; 80% rest)
+
+**Phase 0 cluster allocation** (Ikenna + Harsh fan-out):
+
+- **Cluster A** (1 slot serial, 0.5d, ×→x sed + import-pattern fix) → **Ikenna slot 9** picks up NOW
+- **Cluster B** (7 parallel slots, 3d, C901+N802+B008 lint sweep) split:
+  - Ikenna slot 6 → execution-service (after wallet_treasury Phase 1)
+  - Ikenna slot 7 → risk-and-exposure-service (after wallet_treasury Phase 3)
+  - Ikenna slot 8 → pnl-attribution-service (paired with batch_live Tab 2)
+  - **Harsh slot 2** → ml-training-service (Wave 4 done; reserve)
+  - **Harsh slot 5** → deployment-api (Wave 4 done; reserve)
+  - **Harsh slot 6** → alerting-service (Wave 3 done; reserve)
+  - **Harsh slot 7** → client-reporting-api (Wave 4 done; reserve)
+- **Cluster C** ✅ CLOSED at UTL@67c532bd (acked).
+- **Cluster D** (5 parallel slots, 4-6h after C propagates) split:
+  - Ikenna slot 2 → instruments-service 74f
+  - Ikenna slot 3 → ml-inference
+  - Ikenna slot 4 → strategy-service
+  - **Harsh slot 9** → PBM
+  - **Harsh slot 4** → MDPS + features-service
+- **Cluster E** (2 UI slots, 2h):
+  - Ikenna slot 5 → deployment-ui vitest
+  - **Harsh slot 8** → UTS-UI tsc (paired with batch_live Tab 3)
+- **Cluster F** → Ikenna slot 1 main (me) for deployment-service re-verify after A+B land
+
+**Phase 8 surface coverage** (next-cycle layer) — 7 per-surface sub-agents accepted. Will draft assignments after Phase 0 progress visible. QG STEP `coverage_targets_enforcement` ratchet starting 2026-05-18 acked.
+
+**Total Phase 0**: 13 slot-touches across A/B/D/E/F; Ikenna takes 7 + Cluster F (slot 1), Harsh takes 6 reserve pickups. Phase 8 = 7 next-cycle. Slot-stack overlay filed in `ikenna_orchestrator/pings/slot_1.md` v4.
