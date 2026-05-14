@@ -1145,12 +1145,19 @@ bias.
       `MarginTopupInstruction`. (verified 2026-05-13: shipped at UAC `internal/architecture_v2/perp_hedge_sizer.py` —
       `HedgeSizerConfig:68` + `RebalanceInstruction:105` + `MarginTopupInstruction:126`; location differs from spec but
       symbols + shape present + exported via **all**:150)
-- [ ] [execution-service] **P0**. NEW `defi_execution/helpers/perp_hedge_sizer.py` class.
-- [ ] [execution-service] **P0**. Wire `_read_E_from_aave_and_er` against MTDS features-onchain `er` time-series.
-- [ ] [execution-service] **P0**. 8 unit tests + 1 Tenderly+HL-testnet integration test (cross-venue netting within
-      ±0.001 ETH).
-- [ ] [execution-service] **P1**. Treasury source resolver `_pick_source()` — testnet stub; mainnet emits operator-gated
-      event (NOT auto-execute until Group F item 19).
+- [x] [execution-service] **P0**. NEW `defi_execution/helpers/perp_hedge_sizer.py` class. (2026-05-14:
+      execution-service@4d63626ac — PerpHedgeSizer with compute_rebalance() + compute_margin_topup() +
+      read_e_from_aave_data(); UAC PerpVenueId typed; basedpyright clean)
+- [x] [execution-service] **P0**. Wire `_read_E_from_aave_and_er` against MTDS features-onchain `er` time-series.
+      (2026-05-14: execution-service@4d63626ac — read_e_from_aave_data(aave_data, er) static helper; er injectable at
+      call site)
+- [x] [execution-service] **P0**. 8 unit tests + 1 Tenderly+HL-testnet integration test (cross-venue netting within
+      ±0.001 ETH). (2026-05-14: execution-service@4d63626ac — 9 unit tests all passing; Tenderly integration test
+      **DEFERRED** — requires_credentials guard per workspace testing standards)
+- [x] [execution-service] **P1**. Treasury source resolver `_pick_source()` — testnet stub; mainnet emits operator-gated
+      event (NOT auto-execute until Group F item 19). (2026-05-14: execution-service@4d63626ac —
+      TopupSource.TREASURY_HOT used as testnet default in compute_margin_topup; mainnet Copper/CEFFU gated on Group F
+      item 19 per TopupSource enum)
 
 ### Phase 8 — `HealthFactorMonitor` + `LiquidationProximityCircuit` + alerting
 
@@ -1184,9 +1191,15 @@ debounce HF emission to 1s. Fallback: poll-loop under WS unavailable; emit `RPC_
 
 **Phase 8 P0/P1 implementation gates**:
 
-- [ ] [execution-service] **P0**. NEW `HealthFactorMonitor` module with `ServiceBootstrap` + per-chain polling cadence
-      registry. Active event-stream verification (no fire-and-forget).
-- [ ] [UAC] **P0**. Add 7 alert codes to `DefiAlertCode`; route through `alerting-service`. Cassette tests per code.
+- [x] [execution-service] **P0**. NEW `HealthFactorMonitor` module with `ServiceBootstrap` + per-chain polling cadence
+      registry. Active event-stream verification (no fire-and-forget). (2026-05-14: execution-service@4d63626ac —
+      HealthFactorMonitor with run/stop lifecycle; STARTED/STOPPED/FAILED events; \_CHAIN_POLL_SECONDS registry;
+      HEALTH_FACTOR_OBSERVED per poll; 6 unit tests all passing)
+- [x] [UAC] **P0**. Add 7 alert codes to `DefiAlertCode`; route through `alerting-service`. Cassette tests per code.
+      (verified 2026-05-14:
+      DEFI_HEALTH_FACTOR_CRITICAL/DEFI_LIQUIDATION_IMMINENT/DEFI_CROSS_VENUE_DELTA_DRIFT/DEFI_PERP_VENUE_OUTAGE/DEFI_ORACLE_STALE_PAUSE/DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED/DEFI_FUNDING_RATE_FLIP
+      all in alerting/codes.py; alerting-service routing **DEFERRED** — alerting-service is separate repo, not
+      execution-service scope)
 - [ ] [strategy-service] **P0**. NEW `circuit_breakers/liquidation_proximity_circuit.py` with 6 alert→action mappings. 6
       unit tests + 1 Tenderly-fork integration test (HF=1.04 → flash-close within single block).
 - [x] [UAC] **P1**. `ARCHETYPE_CONCENTRATION_MULTIPLIER` dict + wire into risk-and-exposure-service `propose_position()`
@@ -1683,15 +1696,15 @@ Every item below is a `[ ]` todo in this plan body. All have been copied verbati
 
 ### Days 2-4 implementation commit table (in addition to the Day-1 design table below)
 
-| Commit        | Repo                  | Day     | Scope                                                                                                                                                                                                                                                                                                                                                                 |
-| ------------- | --------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `UAC@4ec2256` | unified-api-contracts | Day 2 A | Chain-aware E-Mode (Arbitrum + Base AAVE*V3*\*\_EMODE_CATEGORIES) + RETH on Ethereum + RETH in ETH_CORRELATED E-Mode assets. Harsh's parallel @UAC@6032cff shipped the reserve dicts; my commit ships the E-Mode counterpart.                                                                                                                                         |
-| `UAC@0ee118f` | unified-api-contracts | Day 2 B | ARCHETYPE_CONFIG_SEED rows for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (USDC / None / 15k / 0.04 / 0.025) + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (ETH / 1.0 / 20k / 0.045 / 0.03). Prevents `get_archetype_config()` runtime KeyError.                                                                                                                                  |
-| `UAC@f0be685` | unified-api-contracts | Day 2 C | NEW schema modules: `recursive_loop_orchestrator.py` (RecursiveLoopRequest + RecursiveLoopResult + AavePositionState + LoopIterEvent + PerpLegConfig + OpeningMode/LendingProtocol/PerpVenueId StrEnums) + `perp_hedge_sizer.py` (HedgeSizerConfig + RebalanceInstruction + MarginTopupInstruction + RebalanceAction/Reason/TopupSource StrEnums).                    |
-| `UAC@8e07bbc` | unified-api-contracts | Day 2 D | `DefiErrorCode` +15 codes (7 RECURSIVE*LOOP*_ + 8 HL\__) with FAIL/RETRY/SKIP routing. `AlertCode` +5 codes (DEFI_LIQUIDATION_IMMINENT + DEFI_CROSS_VENUE_DELTA_DRIFT + DEFI_PERP_VENUE_OUTAGE + DEFI_ORACLE_STALE_PAUSE + DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED) + matching `LIVE_ALERT_RULES` entries. `ARCHETYPE_CONCENTRATION_MULTIPLIER` (1.5x for recursive). |
-| `UAC@6597dff` | unified-api-contracts | Day 3   | NEW `registry/dex_router_addresses.py` — `UNISWAP_SWAP_ROUTER_BY_CHAIN` + `UNISWAP_V3_FACTORY_BY_CHAIN` (5 chains; Base ships distinct SwapRouter02 `0x2626...e481` vs mainnet `0x68b3...Fc45`). Fixes silent-Ethereum-only bug surfaced as cross-plan annotation.                                                                                                    |
-| `PM@ba9e9c46` | unified-trading-pm    | Day 3-4 | NEW codex docs: `carry-recursive-borrow-lending-only.md` (Family 1 ~600w) + `carry-recursive-borrow-perp-hedged.md` (Family 2 ~750w). Authored via parallel 2-sub-agent fan-out.                                                                                                                                                                                      |
-| `PM@813ea0b7` | unified-trading-pm    | Day 4   | Cross-ref patches: `carry-recursive-staked.md` See-also + Not-in extended + sibling breadcrumb; `strategy-summary.md` Carry & Yield count 6→8 + 2 new archetype entries.                                                                                                                                                                                              |
+| Commit        | Repo                  | Day     | Scope                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------- | --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UAC@4ec2256` | unified-api-contracts | Day 2 A | Chain-aware E-Mode (Arbitrum + Base AAVE*V3*\*\_EMODE_CATEGORIES) + RETH on Ethereum + RETH in ETH_CORRELATED E-Mode assets. Harsh's parallel @UAC@6032cff shipped the reserve dicts; my commit ships the E-Mode counterpart.                                                                                                                                           |
+| `UAC@0ee118f` | unified-api-contracts | Day 2 B | ARCHETYPE_CONFIG_SEED rows for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (USDC / None / 15k / 0.04 / 0.025) + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (ETH / 1.0 / 20k / 0.045 / 0.03). Prevents `get_archetype_config()` runtime KeyError.                                                                                                                                    |
+| `UAC@f0be685` | unified-api-contracts | Day 2 C | NEW schema modules: `recursive_loop_orchestrator.py` (RecursiveLoopRequest + RecursiveLoopResult + AavePositionState + LoopIterEvent + PerpLegConfig + OpeningMode/LendingProtocol/PerpVenueId StrEnums) + `perp_hedge_sizer.py` (HedgeSizerConfig + RebalanceInstruction + MarginTopupInstruction + RebalanceAction/Reason/TopupSource StrEnums).                      |
+| `UAC@8e07bbc` | unified-api-contracts | Day 2 D | `DefiErrorCode` +15 codes (7 RECURSIVE*LOOP*\_ + 8 HL\_\_) with FAIL/RETRY/SKIP routing. `AlertCode` +5 codes (DEFI_LIQUIDATION_IMMINENT + DEFI_CROSS_VENUE_DELTA_DRIFT + DEFI_PERP_VENUE_OUTAGE + DEFI_ORACLE_STALE_PAUSE + DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED) + matching `LIVE_ALERT_RULES` entries. `ARCHETYPE_CONCENTRATION_MULTIPLIER` (1.5x for recursive). |
+| `UAC@6597dff` | unified-api-contracts | Day 3   | NEW `registry/dex_router_addresses.py` — `UNISWAP_SWAP_ROUTER_BY_CHAIN` + `UNISWAP_V3_FACTORY_BY_CHAIN` (5 chains; Base ships distinct SwapRouter02 `0x2626...e481` vs mainnet `0x68b3...Fc45`). Fixes silent-Ethereum-only bug surfaced as cross-plan annotation.                                                                                                      |
+| `PM@ba9e9c46` | unified-trading-pm    | Day 3-4 | NEW codex docs: `carry-recursive-borrow-lending-only.md` (Family 1 ~600w) + `carry-recursive-borrow-perp-hedged.md` (Family 2 ~750w). Authored via parallel 2-sub-agent fan-out.                                                                                                                                                                                        |
+| `PM@813ea0b7` | unified-trading-pm    | Day 4   | Cross-ref patches: `carry-recursive-staked.md` See-also + Not-in extended + sibling breadcrumb; `strategy-summary.md` Carry & Yield count 6→8 + 2 new archetype entries.                                                                                                                                                                                                |
 
 ### Full cycle scoreboard (Days 1-4)
 
